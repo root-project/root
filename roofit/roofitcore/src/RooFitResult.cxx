@@ -1033,11 +1033,6 @@ TMatrixDSym RooFitResult::reducedCovarianceMatrix(const RooArgList& params) cons
 {
   const TMatrixDSym& V = covarianceMatrix() ;
 
-  // Handle case where V==Vred here
-  if (V.GetNcols()==params.getSize()) {
-    return V ;
-  }
-
 
   // Make sure that all given params were floating parameters in the represented fit
   RooArgList params2 ;
