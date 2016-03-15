@@ -13,7 +13,7 @@
 
 // input: - Input file (result from TMVA)
 //        - use of TMVA plotting TStyle
-void TMVA::deviations( TString fin, 
+void TMVA::deviations(TString dataset, TString fin, 
                  HistType htype , Bool_t showTarget, Bool_t useTMVAStyle  )
 {
    // set style and remove existing canvas'
@@ -35,7 +35,7 @@ void TMVA::deviations( TString fin,
    // search for the right histograms in full list of keys
    //    TList* methods = new TMap();
 
-   TIter next(file->GetListOfKeys());
+   TIter next(file->GetDirectory(dataset.Data())->GetListOfKeys());
    TKey *key(0);   
    while ((key = (TKey*)next())) {
 
@@ -95,7 +95,8 @@ void TMVA::deviations( TString fin,
                   TMVAGlob::plot_logo(1.058);
                   c[countCanvas]->Update();
 
-                  TString fname = Form( "plots/deviation_%s_%s_%s_c%i", 
+                  TString fname = Form( "%s/plots/deviation_%s_%s_%s_c%i", 
+                                        dataset.Data(),
                                         methodName.Data(), 
                                         (showTarget ? "target" : "vars"),
                                         (htype == kCompareType ? "training" : "test" ), countPlots );
