@@ -2,7 +2,7 @@
 ## \ingroup tutorial_pyroot
 ## Surfaces example
 ##
-## \macro image
+## \macro_image
 ## \macro_code
 ##
 ## \author Wim Lavrijsen
