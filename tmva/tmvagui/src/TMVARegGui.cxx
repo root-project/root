@@ -171,7 +171,7 @@ void TMVA::TMVARegGui( const char* fName ,TString dataset)
 
    RegGuiActionButton( cbar,  
                  Form( "(%i) Summary of Average Regression Deviations ", ++ic ),
-                 Form( "TMVA::regression_averagedevs(\"%s\")", fName ),
+                 Form( "TMVA::regression_averagedevs(\"%s\",\"%s\")",dataset.Data() , fName ),
                  "Plot Summary of average deviations: MVAvalue - target (macro regression_averagedevs.cxx)",
                  buttonType );
 
