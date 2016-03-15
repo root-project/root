@@ -159,7 +159,7 @@ void TMVA::TMVAMultiClassGui(const char* fName ,TString dataset)
       if (tmp.Contains( "Id" )) title = "Input variable correlations (scatter profiles)";
       MultiClassActionButton( cbar, 
                     Form( "(%i%c) %s", ic, ch++, title.Data() ),
-                    Form( "TMVA::CorrGuiMultiClass(\"%s\",\"%s\",\"%s\")", fName, str->GetString().Data(), title.Data() ),
+                    Form( "TMVA::CorrGuiMultiClass(\"%s\",\"%s\",\"%s\",\"%s\")",dataset.Data() , fName, str->GetString().Data(), title.Data() ),
                     Form( "Plots all correlation profiles between '%s'-transformed input variables (macro CorrGuiMultiClass(...))", 
                           str->GetString().Data() ),
                     buttonType, str->GetString() );
