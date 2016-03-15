@@ -7,7 +7,7 @@
 // input: - Input file (result from TMVA),
 //        - normal/decorrelated/PCA
 //        - use of TMVA plotting TStyle
-void TMVA::variablesMultiClass( TString fin , TString dirName , TString title,
+void TMVA::variablesMultiClass(TString dataset, TString fin , TString dirName , TString title,
                                 Bool_t /* isRegression */, Bool_t useTMVAStyle )
 {
    TString outfname = dirName;
@@ -27,7 +27,7 @@ void TMVA::variablesMultiClass( TString fin , TString dirName , TString title,
    // checks if file with name "fin" is already open, and if not opens one
    TFile* file = TMVAGlob::OpenFile( fin );
 
-   TDirectory* dir = (TDirectory*)file->Get( dirName );
+   TDirectory* dir = (TDirectory*)file->GetDirectory(dataset.Data())->Get( dirName );
    if (dir==0) {
       cout << "No information about " << title << " available in directory " << dirName << " of file " << fin << endl;
       return;
@@ -198,7 +198,7 @@ void TMVA::variablesMultiClass( TString fin , TString dirName , TString title,
       
       // save canvas to file
       if (countPad%noPadPerCanv==0) {
-         TString fname = Form( "plots/%s_c%i", outfname.Data(), countCanvas );
+         TString fname = dataset+Form( "/plots/%s_c%i", outfname.Data(), countCanvas );
          TMVAGlob::plot_logo();
          TMVAGlob::imgconv( canv, fname );
          createNewFig = kFALSE;
@@ -209,7 +209,7 @@ void TMVA::variablesMultiClass( TString fin , TString dirName , TString title,
    } 
    
    if (createNewFig) {
-      TString fname = Form( "plots/%s_c%i", outfname.Data(), countCanvas );
+      TString fname = dataset+Form( "/plots/%s_c%i", outfname.Data(), countCanvas );
       TMVAGlob::plot_logo();
       TMVAGlob::imgconv( canv, fname );
       createNewFig = kFALSE;
