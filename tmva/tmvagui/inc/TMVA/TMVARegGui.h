@@ -16,6 +16,6 @@ namespace TMVA{
                       const TString& buttonType, TString requiredKey = "" ); 
 
    // main GUI
-   void TMVARegGui( const char* fName = "TMVAReg.root" ); 
+   void TMVARegGui( const char* fName = "TMVAReg.root", TString dataset=""); 
 }
 #endif
