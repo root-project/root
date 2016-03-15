@@ -40,7 +40,7 @@ using namespace std;
 
 // initialize static value 
 double HypoTestInverterResult::fgAsymptoticMaxSigma      = 5; 
-
+int    HypoTestInverterResult::fgAsymptoticNumPoints      = 11;
 
 HypoTestInverterResult::HypoTestInverterResult(const char * name ) :
    SimpleInterval(name),
@@ -171,8 +171,7 @@ HypoTestInverterResult::~HypoTestInverterResult()
    fExpPValues.Delete();
 }
 
-int
-HypoTestInverterResult::ExclusionCleanup()
+int HypoTestInverterResult::ExclusionCleanup()
 {
   const int nEntries  = ArraySize();
 
@@ -216,11 +215,16 @@ HypoTestInverterResult::ExclusionCleanup()
     /////////////////////////////////////////////////////////////////////////////////////////
 
     const std::vector<double> & values = s->GetSamplingDistribution();
+    if ((int) values.size() != fgAsymptoticNumPoints) {
+       oocoutE(this,Eval) << "HypoTestInverterResult::ExclusionCleanup - invalid size of sampling distribution" << std::endl;
+       delete s;
+       break;
+    }
     
     /// expected p-values
     // special case for asymptotic results (cannot use TMath::quantile in that case)
-    if (resultIsAsymptotic) { 
-      double maxSigma = 5; // == HypoTestInverterResult::fgAsymptoticMaxSigma; // MB: HACK
+    if (resultIsAsymptotic) {
+      double maxSigma = fgAsymptoticMaxSigma;
       double dsig = 2.*maxSigma / (values.size() -1) ;         
       int  i0 = (int) TMath::Floor ( ( -nsig2 + maxSigma )/dsig + 0.5 );
       int  i1 = (int) TMath::Floor ( ( -nsig1 + maxSigma )/dsig + 0.5 );
@@ -1101,8 +1105,9 @@ SamplingDistribution *  HypoTestInverterResult::GetExpectedPValueDist(int index)
    // in case b abs sbDistribution are null assume is coming from the asymptotic calculator 
    // hard -coded this value (no really needed to be used by user)
    fgAsymptoticMaxSigma = 5; 
-   const int npoints = 11;
+   fgAsymptoticNumPoints = 2*fgAsymptoticMaxSigma+1;
    const double smax = fgAsymptoticMaxSigma;
+   const int npoints = fgAsymptoticNumPoints;
    const double dsig = 2* smax/ (npoints-1) ;
    std::vector<double> values(npoints);
    for (int i = 0; i < npoints; ++i) { 
