@@ -43,7 +43,7 @@ namespace TMVA{
 
    public:
 
-      StatDialogBDTReg( const TGWindow* p, TString wfile = "weights/TMVARegression_BDT.weights.xml", 
+      StatDialogBDTReg(TString dataset, const TGWindow* p, TString wfile, 
                      TString methName = "BDT", Int_t itree = 0 );
       virtual ~StatDialogBDTReg() {
          TMVA::DecisionTreeNode::fgIsTraining=false;
@@ -65,6 +65,7 @@ namespace TMVA{
       Int_t        fItree;
       Int_t        fNtrees;
       TCanvas*     fCanvas;
+      TString fDataset;
 
       TGNumberEntry* fInput;
 
@@ -104,10 +105,10 @@ namespace TMVA{
    static std::vector<TControlBar*> BDTReg_Global__cbar;
    
    // intermediate GUI
-   void BDT_Reg( const TString& fin = "TMVAReg.root" );
+   void BDT_Reg(TString dataset, const TString& fin = "TMVAReg.root" );
    void BDTReg_DeleteTBar(int i);
                               
-   void BDT_Reg( Int_t itree, TString wfile = "weights/TMVARegression_BDT.weights.xml", TString methName = "BDT", Bool_t useTMVAStyle = kTRUE ); 
+   void BDT_Reg(TString dataset, Int_t itree, TString wfile = "", TString methName = "BDT", Bool_t useTMVAStyle = kTRUE ); 
 
 
 }
