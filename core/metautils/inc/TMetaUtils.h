@@ -98,8 +98,6 @@ namespace propNames{
    static const std::string transient("transient");
 }
 
-extern int gErrorIgnoreLevel;
-
 // Get the array index information for a data member.
 enum DataMemberInfo__ValidArrayIndex_error_code { VALID, NOT_INT, NOT_DEF, IS_PRIVATE, UNKNOWN };
 
