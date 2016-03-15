@@ -629,5 +629,7 @@ Changes will be part of the future 6.06/04
 - Reduce autoparse occasions by autoloading libraries also based on their type_info-derived name, instead of only their normalized name [ROOT-7972].
 - Improve TClassEdit's handling of STL's default allocator, in particular for std::map [ROOT-8048]
 
+### Core
 
+- Reduce memory consumption (autoparsing) of plugins TXNetSystem/TNetXNGSystem and TQtRootGuiFactory.
 
