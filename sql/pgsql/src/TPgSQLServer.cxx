@@ -2,7 +2,7 @@
 // Author: g.p.ciceri <gp.ciceri@acm.org> 01/06/2001
 
 /*************************************************************************
- * Copyright (C) 1995-2001, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2016, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -18,6 +18,14 @@
 #include "TSQLRow.h"
 #include "TUrl.h"
 #include "TList.h"
+
+////////////////////////////////////////////////////////////////////////////////
+/// PluginManager generator function
+
+TSQLServer* ROOT_Plugin_TPgSQLServer(const char* db, const char* uid, const char* pw) {
+   return new TPgSQLServer(db, uid, pw);
+}
+
 
 ClassImp(TPgSQLServer)
 
