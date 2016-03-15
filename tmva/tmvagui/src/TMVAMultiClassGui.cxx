@@ -170,7 +170,7 @@ void TMVA::TMVAMultiClassGui(const char* fName ,TString dataset)
    title =Form( "(%i) Input Variable Linear Correlation Coefficients", ++ic );
    MultiClassActionButton( cbar,  
                  title,
-                 Form( "TMVA::correlationsMultiClass(\"%s\")", fName ),
+                 Form( "TMVA::correlationsMultiClass(\"%s\",\"%s\")",dataset.Data(), fName ),
                  "Plots signal and background correlation summaries for all input variables (macro correlationsMultiClass.cxx)", 
                  buttonType );
 

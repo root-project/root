@@ -11,7 +11,7 @@
 // input: - Input file (result from TMVA),
 //        - use of colors or grey scale
 //        - use of TMVA plotting TStyle
-void TMVA::correlationsMultiClass( TString fin , Bool_t /* isRegression */ , 
+void TMVA::correlationsMultiClass(TString dataset, TString fin , Bool_t /* isRegression */ , 
                                    Bool_t /* greyScale */ , Bool_t useTMVAStyle  )
 {
 
@@ -20,7 +20,7 @@ void TMVA::correlationsMultiClass( TString fin , Bool_t /* isRegression */ ,
 
    // checks if file with name "fin" is already open, and if not opens one
    TFile* file = TMVAGlob::OpenFile( fin );  
-   TDirectory* vardir = (TDirectory*)gDirectory->Get( "InputVariables_Id" );
+   TDirectory* vardir = (TDirectory*)file->GetDirectory(dataset.Data())->Get( "InputVariables_Id" );
    std::vector<TString> classnames(TMVAGlob::GetClassNames(vardir));
    // signal and background or regression problem
    Int_t ncls = classnames.end() - classnames.begin();
@@ -29,7 +29,7 @@ void TMVA::correlationsMultiClass( TString fin , Bool_t /* isRegression */ ,
    const Int_t width = 600;
    for (Int_t ic=0; ic<ncls; ic++) {
       hnames[ic] = TString("CorrelationMatrix")+ hnames[ic];
-      TH2* h2 = (TH2*)file->Get( hnames[ic] );
+      TH2* h2 = (TH2*)file->GetDirectory(dataset.Data())->Get( hnames[ic] );
       cout << "Looking for histo " << hnames[ic] << " in " << fin << endl;
       if(!h2) {
          cout << "Did not find histogram " << hnames[ic] << " in " << fin << endl;
@@ -82,7 +82,7 @@ void TMVA::correlationsMultiClass( TString fin , Bool_t /* isRegression */ ,
       // TMVAGlob::plot_logo( );
       c->Update();
 
-      TString fname = "plots/";
+      TString fname = dataset+"/plots/";
       fname += hnames[ic];
       TMVAGlob::imgconv( c, fname );
    }
