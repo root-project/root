@@ -425,7 +425,6 @@ TObject *TObjArray::FindObject(const TObject *iobj) const
 
 void TObjArray::Streamer(TBuffer &b)
 {
-   printf("In TObjArray::Streamer 1\n");
    UInt_t R__s, R__c;
    Int_t nobjects;
    if (b.IsReading()) {
@@ -436,14 +435,12 @@ void TObjArray::Streamer(TBuffer &b)
          fName.Streamer(b);
 
       if (GetEntriesFast() > 0) Clear();
-      printf("In TObjArray::Streamer 2\n");
 
       b >> nobjects;
       b >> fLowerBound;
       if (nobjects >= fSize) Expand(nobjects);
       fLast = -1;
       TObject *obj;
-      printf("In TObjArray::Streamer 3\n");
       for (Int_t i = 0; i < nobjects; i++) {
          obj = (TObject*) b.ReadObjectAny(TObject::Class());
          if (obj) {
@@ -451,10 +448,8 @@ void TObjArray::Streamer(TBuffer &b)
             fLast = i;
          }
       }
-      printf("In TObjArray::Streamer 4\n");
       Changed();
       b.CheckByteCount(R__s, R__c,TObjArray::IsA());
-      printf("In TObjArray::Streamer 5\n");
 
    } else {
       R__c = b.WriteVersion(TObjArray::IsA(), kTRUE);

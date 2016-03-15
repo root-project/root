@@ -724,8 +724,6 @@ void R__zipMultipleAlgorithm_RAC(int cxlevel, int *srcsize, char *src, int *tgts
 {
   int err;
   int method   = Z_DEFLATED;
-  printf("In R__zipMultipleAlgorithm_RAC(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep, int compressionAlgorithm, int entries, int *entryoffsets, int *compressedentryoffsets\n");
-  printf("entries = %d\n", entries);
   if (cxlevel <= 0) {
     *irep = 0;
     return;
@@ -848,11 +846,6 @@ void R__zipMultipleAlgorithm_RAC(int cxlevel, int *srcsize, char *src, int *tgts
        int inbufsize  = (uInt)(*srcsize);
        int outbufsize = (uInt)(*tgtsize);
        int have    = 0;
-       int cnt;
-       for(cnt=0; cnt<256; ++cnt) {
-          printf("src[%d]=%c(0x%x), ", cnt, src[cnt], src[cnt]);
-          if(cnt%6==0) printf("\n");
-       }
        compressedentryoffsets[0] = 0;
        int i;
        for (i=1; i<entries; ++i) {
@@ -861,33 +854,22 @@ void R__zipMultipleAlgorithm_RAC(int cxlevel, int *srcsize, char *src, int *tgts
           stream.avail_in  = (i == entries-1) ? (lastbyte - entryoffsets[i-1]) : (entryoffsets[i] - entryoffsets[i-1]);
           stream.next_out  = (Bytef*)(&tgt[HDRSIZE]) + compressedentryoffsets[i-1] - compressedentryoffsets[0];
           stream.avail_out = outbufsize;
-          printf("in buffer, avail_in=%d, avail_out=%d\n", stream.avail_in, stream.avail_out);
           
           err = deflate(&stream, Z_FULL_FLUSH);
 
-          printf("after deflate stream.avail_out=%u, stream.avail_in=%u\n", stream.avail_out,stream.avail_in);
           if (err != Z_OK) {
              printf("deflate error\n");
              return;
           }
           have = outbufsize - stream.avail_out;
-          printf("1.outbufsize=%d,have=%d, i=%d, lastbyte=%d, entryoffsets[%d]=%d,entryoffsets[%d]=%d,compressedentryoffsets[%d]=%d,compressedentryoffsets[%d]=%d\n",outbufsize, have, i, lastbyte, i-1,entryoffsets[i-1],i,entryoffsets[i],i-1,compressedentryoffsets[i-1],i,compressedentryoffsets[i]);
           compressedentryoffsets[i] = compressedentryoffsets[i-1] + have;
-          printf("2.outbufsize=%d,have=%d, i=%d, lastbyte=%d, entryoffsets[%d]=%d,entryoffsets[%d]=%d,compressedentryoffsets[%d]=%d,compressedentryoffsets[%d]=%d\n",outbufsize,  have, i, lastbyte, i-1,entryoffsets[i-1],i,entryoffsets[i],i-1,compressedentryoffsets[i-1],i,compressedentryoffsets[i]);
        }
 
        stream.next_in   = (Bytef*)src + lastbyte - entryoffsets[0];
        stream.avail_in  = inbufsize + entryoffsets[0] - lastbyte; // bufsize is the fObjlen, entryoffsets[0] is the fKeylen, their sum is the total length of fBufferRef
        stream.next_out  = (Bytef*)(&tgt[HDRSIZE]) + compressedentryoffsets[entries-1] - compressedentryoffsets[0];
        stream.avail_out = outbufsize;
-       printf("before, avail_in=%d,avail_out=%d\n",stream.avail_in,stream.avail_out);
        err = deflate(&stream, Z_FINISH);
-       printf("after, avail_in=%d,avail_out=%d\n",stream.avail_in,stream.avail_out);
-//##
-       for(cnt=0; cnt<256; ++cnt) {
-          printf("tgt[%d]=%c(0x%x), ", cnt, tgt[cnt], tgt[cnt]);
-          if(cnt%6==0) printf("\n");
-       }
     } else {
        err = deflate(&stream, Z_FINISH);
     }
@@ -920,7 +902,6 @@ void R__zipMultipleAlgorithm_RAC(int cxlevel, int *srcsize, char *src, int *tgts
     tgt[8] = (char)((l_in_size >> 16) & 0xff);
 
     *irep = stream.total_out + HDRSIZE;
-    printf("irep=%d\n", *irep);
     return;
   }
 }

@@ -1302,7 +1302,6 @@ void R__unzip_RAC(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep, int
       fprintf(stderr,"R__unzip: error %d in inflateInit (zlib)\n",err);
       return;
     }
-    printf("offset = %d, length = %d\n", offset, length);
 //    err = inflate(&stream, Z_FINISH);
     if (offset < 4) { // search for 0x00 0x00 0xff 0xff (4 bytes in total)
        err = inflate(&stream, Z_BLOCK);
@@ -1310,12 +1309,9 @@ void R__unzip_RAC(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep, int
           fprintf(stderr,"R__unzip: error %d in inflate (zlib)\n",err);
           return;
        }
-       uInt have = (uInt)(*tgtsize)-stream.avail_out;//##
-       printf("in unzip_RAC 1, have=%u,avail_in=%u,avail_out=%u\n",have,stream.avail_in,stream.avail_out);//##
-  
+ 
        if (length) {
           while(stream.avail_in != 0){
-             printf("in while, stream.avail_in=%u\n",stream.avail_in);
              err = inflate(&stream, Z_BLOCK);
              if (err != Z_OK) {
                 if (err == Z_STREAM_END) printf("return Z_STREAM_END\n");
@@ -1331,16 +1327,8 @@ void R__unzip_RAC(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep, int
           }
        }
 
-       have = (uInt)(*tgtsize)-stream.avail_out;//##
-       printf("in unzip_RAC 2, have=%u,avail_in=%u,avail_out=%u\n",have,stream.avail_in,stream.avail_out);//##
-          
-       int cnt;
-       for(cnt=0;cnt<256;++cnt)
-          printf("tgt[%d]=%c(0x%x), ",cnt,tgt[cnt],tgt[cnt]);
-    
        inflateEnd(&stream);
        *irep = stream.total_out;
-       printf("irep 1 =%d\n",*irep);
        return;
     } else {
        stream.next_in = stream.next_in + offset - 4;
@@ -1351,7 +1339,6 @@ void R__unzip_RAC(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep, int
        }
        if (length) {
           while(stream.avail_in != 0){
-             printf("in while, stream.avail_in=%u\n",stream.avail_in);
              err = inflate(&stream, Z_BLOCK);
              if (err != Z_OK) {
                 if (err == Z_STREAM_END) printf("return Z_STREAM_END\n");
@@ -1369,7 +1356,6 @@ void R__unzip_RAC(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep, int
        if (err == Z_OK) {
           inflateEnd(&stream);
           *irep = stream.total_out;
-          printf("irep 2 =%d\n",*irep);
           return;
        }
     }
@@ -1383,7 +1369,6 @@ void R__unzip_RAC(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep, int
     inflateEnd(&stream);
 
     *irep = stream.total_out;
-    printf("irep 3 =%d\n",*irep);
     return;
   }
   else if (src[0] == 'X' && src[1] == 'Z') {

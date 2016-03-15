@@ -387,12 +387,10 @@ Int_t TBufferFile::CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *cl
    Int_t  offset = 0;
 
    Long_t endpos = Long_t(fBuffer) + startpos + bcnt + sizeof(UInt_t);
-   printf("In TBufferFile::CheckByteCount, fBuffer=%ld, startpos=%u, bcnt=%u, endpos=%ld, fBufCur=%ld\n", Long_t(fBuffer), startpos, bcnt, endpos, fBufCur);
    if (Long_t(fBufCur) != endpos) {
       offset = Int_t(Long_t(fBufCur) - endpos);
 
       const char *name = clss ? clss->GetName() : classname ? classname : 0;
-      printf("name=%s,offset=%d\n",name,offset);
       if (name) {
          if (offset < 0) {
             Error("CheckByteCount", "object of class %s read too few bytes: %d instead of %d",
@@ -409,9 +407,7 @@ Int_t TBufferFile::CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *cl
                        name);
          }
       }
-      printf("middle point\n");
       if ( ((char *)endpos) > fBufMax ) {
-         printf("in if fBufMax=%ld, endpos=%ld\n",Long_t(fBufMax),Long_t(endpos));
          offset = fBufMax-fBufCur;
          Error("CheckByteCount",
                "Byte count probably corrupted around buffer position %d:\n\t%d for a possible maximum of %d",
@@ -420,7 +416,6 @@ Int_t TBufferFile::CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *cl
 
       } else {
 
-         printf("in else fBufMax=%ld, endpos=%ld\n",Long_t(fBufMax),Long_t(endpos));
          fBufCur = (char *) endpos;
 
       }
@@ -2391,7 +2386,6 @@ void *TBufferFile::ReadObjectAny(const TClass *clCast)
    TClass *clRef = ReadClass(clCast, &tag);
    TClass *clOnfile = 0;
    Int_t baseOffset = 0;
-   printf("In TBufferFile::ReadObjectAny 1\n");
    if (clRef && (clRef!=(TClass*)(-1)) && clCast) {
       //baseOffset will be -1 if clRef does not inherit from clCast.
       baseOffset = clRef->GetBaseClassOffset(clCast);
@@ -2414,7 +2408,6 @@ void *TBufferFile::ReadObjectAny(const TClass *clCast)
          clRef = const_cast<TClass*>(clCast);
 
       }
-      printf("In TBufferFile::ReadObjectAny 2\n");
       if (clCast->GetState() > TClass::kEmulated && clRef->GetState() <= TClass::kEmulated) {
          //we cannot mix a compiled class with an emulated class in the inheritance
          Error("ReadObject", "trying to read an emulated class (%s) to store in a compiled pointer (%s)",
@@ -2423,7 +2416,6 @@ void *TBufferFile::ReadObjectAny(const TClass *clCast)
          return 0;
       }
    }
-   printf("In TBufferFile::ReadObjectAny 3\n");
 
    // check if object has not already been read
    // (this can only happen when called via CheckObject())
@@ -2436,7 +2428,6 @@ void *TBufferFile::ReadObjectAny(const TClass *clCast)
          return (obj+baseOffset);
       }
    }
-   printf("In TBufferFile::ReadObjectAny 4\n");
 
    // unknown class, skip to next object and return 0 obj
    if (clRef == (TClass*) -1) {
@@ -2448,7 +2439,6 @@ void *TBufferFile::ReadObjectAny(const TClass *clCast)
       CheckByteCount(startpos, tag, (TClass*)0);
       return 0;
    }
-   printf("In TBufferFile::ReadObjectAny 5\n");
 
    if (!clRef) {
 
@@ -2504,10 +2494,8 @@ void *TBufferFile::ReadObjectAny(const TClass *clCast)
 
       // let the object read itself
       clRef->Streamer( obj, *this, clOnfile );
-      printf("in readobjectany and right before CheckByteCount\n");
       CheckByteCount(startpos, tag, clRef);
    }
-   printf("In TBufferFile::ReadObjectAny 6\n");
 
    return obj+baseOffset;
 }
@@ -3742,7 +3730,6 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
             // When the object was written the class was version zero, so
             // there is no StreamerInfo to be found.
             // Check that the buffer position corresponds to the byte count.
-            printf("checkbytecount in TBufferFile::ReadClassBuffer\n");
             CheckByteCount(start, count, cl);
             return 0;
          } else {
@@ -3758,11 +3745,9 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
          sinfo->BuildOld();
       }
    }
-   printf("before applysequence, class declaration file =%s, class implementation file =%s\n", cl->GetDeclFileName(),cl->GetImplFileName());
    // Deserialize the object.
    ApplySequence(*(sinfo->GetReadObjectWiseActions()), (char*)pointer);
    if (sinfo->IsRecovered()) count=0;
-   printf("after applysequence\n");
    // Check that the buffer position corresponds to the byte count.
    CheckByteCount(start, count, cl);
    return 0;
@@ -3965,7 +3950,6 @@ Int_t TBufferFile::WriteClassBuffer(const TClass *cl, void *pointer)
 
 Int_t TBufferFile::ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *obj)
 {
-   printf("in TBufferFile::ApplySequence 1\n");
    if (gDebug) {
       //loop on all active members
       TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
@@ -3978,16 +3962,11 @@ Int_t TBufferFile::ApplySequence(const TStreamerInfoActions::TActionSequence &se
 
    } else {
       //loop on all active members
-      printf("before ApplySequence iter\n");
       TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
-      printf("after ApplySequence iter\n");
       for(TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin();
           iter != end;
           ++iter) {
-         printf("In loop all active members, TConfiguredAction=%s\n",(*iter).GetName());
-         (*iter).PrintDebug(*this,obj);//##
          (*iter)(*this,obj);
-         printf("In loop all active members, end\n");
       }
    }
 
@@ -4028,7 +4007,6 @@ Int_t TBufferFile::ApplySequenceVecPtr(const TStreamerInfoActions::TActionSequen
 
 Int_t TBufferFile::ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection)
 {
-   printf("in TBufferFile::ApplySequence 2\n");
    TStreamerInfoActions::TLoopConfiguration *loopconfig = sequence.fLoopConfig;
    if (gDebug) {
 
@@ -4052,8 +4030,6 @@ Int_t TBufferFile::ApplySequence(const TStreamerInfoActions::TActionSequence &se
       for(TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin();
           iter != end;
           ++iter) {
-         printf("in TBufferFile::ApplySequence using StreamerInfoLoopAction\n");
-         (*iter).PrintDebug(*this,arr0);//##
          (*iter)(*this,start_collection,end_collection,loopconfig);
       }
    }
