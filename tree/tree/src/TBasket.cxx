@@ -907,8 +907,8 @@ void TBasket::Streamer(TBuffer &b)
          for(int i=0; i<fNevBuf+1; ++i) printf("in streamer read, fCompressedEntryOffset[%d]=%d\n",i,fCompressedEntryOffset[i]);
          return;
       }
-      if (flag%10 != 2 && flag%10 != 4) {
-         printf("flag is neither 2 nor 4, indicating there exists fEntryOffset, flag=%d\n",flag);
+      if (flag%10 != 2) {
+         printf("flag is not 2, indicating there exists fEntryOffset, flag=%d\n",flag);
          delete [] fEntryOffset;
          fEntryOffset = new Int_t[fNevBufSize];
          if (fNevBuf) b.ReadArray(fEntryOffset);
@@ -997,32 +997,11 @@ void TBasket::Streamer(TBuffer &b)
             b << flag;
          }
       } else {
-         if (fEntryOffset) {
-            if (fRandomAccessCompression && fCompressedEntryOffset) {
-               flag = 3;
-            } else {
-               flag = 1;
-            }
-         } else {
-            if (fRandomAccessCompression && fCompressedEntryOffset) {
-               flag = 4;
-            } else {
-               flag = 2;
-            }
-         }
+         flag = 1;
+         if (!fEntryOffset)  flag  = 2;
          if (fBufferRef)     flag += 10;
          if (fDisplacement)  flag += 40;
          b << flag;
-
-         if (fRandomAccessCompression && fCompressedEntryOffset && fNevBuf) {
-            b.WriteArray(fCompressedEntryOffset, fNevBuf+1);
-            if(fEntryOffset){
-               printf("fEntryOffset is not null 2\n");
-               for(int i=0; i<fNevBuf+1; ++i) printf("in streamer write, flag=%d,fBufferSize=%d,fNevBufSize=%d,fNevBuf=%d,fLast=%d,fEntryOffset[%d]=%d,fCompressedEntryOffset[%d]=%d\n",flag,fBufferSize,fNevBufSize,fNevBuf,fLast,i,fEntryOffset[i],i,fCompressedEntryOffset[i]);
-            } else {
-               printf("fEntryOffset is null 2\n");
-            }
-         }
 
          if (fEntryOffset && fNevBuf) {
             b.WriteArray(fEntryOffset, fNevBuf);
@@ -1213,9 +1192,9 @@ Int_t TBasket::WriteBuffer()
       }
       nout = noutot;
       printf("before streamer4, fNbytes=%d\n",fNbytes);
-      fKeylen += compoffkey; //##
+      fKeylen += compoffkey; // before creating TKey, we need to reserve enough space for compression entry offsets.
       Create(noutot,file);
-      fKeylen -= compoffkey; //##
+      fKeylen -= compoffkey; // reduce fKeylen back to the original length (without compression entry offsets).
       fBufferRef->SetBufferOffset(0);
       printf("streamer4,fNbytes=%d\n",fNbytes);
       Bool_t random = fRandomAccessCompression;
