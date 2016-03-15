@@ -43,7 +43,7 @@ void TMVA::RegGuiActionButton( TControlBar* cbar,
 }
 
 // main GUI
-void TMVA::TMVARegGui( const char* fName ) 
+void TMVA::TMVARegGui( const char* fName ,TString dataset) 
 {   
    // Use this script in order to run the various individual macros
    // that plot the output of TMVA (e.g. running TMVARegression.cxx),
@@ -74,8 +74,19 @@ void TMVA::TMVARegGui( const char* fName )
       cout << "==> Abort TMVARegGui, please verify filename" << endl;
       return;
    }
+   //
+   if(file->GetListOfKeys()->GetEntries()<=0)
+   {
+      cout << "==> Abort TMVARegGui, please verify if dataset exist" << endl;
+      return;
+   }
+   if( (dataset==""||dataset.IsWhitespace()) && (file->GetListOfKeys()->GetEntries()==1))
+   {
+       TKey *key=(TKey*)file->GetListOfKeys()->At(0);
+       dataset=key->GetName();
+   }
    // find all references   
-   TMVARegGui_keyContent = (TList*)file->GetListOfKeys()->Clone();
+   TMVARegGui_keyContent = (TList*)file->GetDirectory(dataset.Data())->GetListOfKeys()->Clone();
 
    // close file
    file->Close();
@@ -105,7 +116,7 @@ void TMVA::TMVARegGui( const char* fName )
       if (tmp.Contains( "Id" )) title = "Input variables and target(s) (training sample)";
       RegGuiActionButton( cbar, 
                     Form( "    (%i%c) %s    ", ic, ch++, title.Data() ),
-                    Form( "TMVA::variables(\"%s\",\"%s\",\"%s\",kTRUE)", fName, str->GetString().Data(), title.Data() ),
+                    Form( "TMVA::variables(\"%s\",\"%s\",\"%s\",\"%s\",kTRUE)",dataset.Data() , fName, str->GetString().Data(), title.Data() ),
                     Form( "Plots all '%s'-transformed input variables and target(s) (macro variables(...))", 
                           str->GetString().Data() ),
                     buttonType, str->GetString() );
@@ -121,7 +132,7 @@ void TMVA::TMVARegGui( const char* fName )
       if (tmp.Contains( "Id" )) title = "Input variable correlations (scatter profiles)";
       RegGuiActionButton( cbar, 
                     Form( "(%i%c) %s", ic, ch++, title.Data() ),
-                    Form( "TMVA::CorrGui(\"%s\",\"%s\",\"%s\",kTRUE)", fName, str->GetString().Data(), title.Data() ),
+                    Form( "TMVA::CorrGui(\"%s\",\"%s\",\"%s\",\"%s\",kTRUE)",dataset.Data() , fName, str->GetString().Data(), title.Data() ),
                     Form( "Plots all correlation profiles between '%s'-transformed input variables (macro CorrGui(...))", 
                           str->GetString().Data() ),
                     buttonType, str->GetString() );
@@ -130,7 +141,7 @@ void TMVA::TMVARegGui( const char* fName )
    // coefficients
    RegGuiActionButton( cbar,  
                  Form( "(%i) Input Variable Linear Correlation Coefficients", ++ic ),
-                 Form( "TMVA::correlations(\"%s\",kTRUE)", fName ),
+                 Form( "TMVA::correlations(\"%s\",\"%s\",kTRUE)",dataset.Data(), fName ),
                  "Plots signal and background correlation summaries for all input variables (macro correlations.cxx)", 
                  buttonType );
 
