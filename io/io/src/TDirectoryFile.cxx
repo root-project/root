@@ -692,7 +692,16 @@ void TDirectoryFile::FillBuffer(char *&buffer)
 //*-*-*-*-*-*-*-*-*-*-*-*Encode directory header into output buffer*-*-*-*-*-*
 //*-*                    =========================================
    Version_t version = TDirectoryFile::Class_Version();
-   if (fSeekKeys > TFile::kStartBigFile) version += 1000;
+   if (fSeekDir > TFile::kStartBigFile ||
+       fSeekParent > TFile::kStartBigFile ||
+       fSeekKeys > TFile::kStartBigFile )
+   {
+      // One of the address is larger than 2GB we need to use longer onfile
+      // integer, thus we increase the verison number.
+      // Note that fSeekDir and fSeekKey are not necessarily correlated, if
+      // some object are 'removed' from the file and the holes are reused.
+      version += 1000;
+   }
    tobuf(buffer, version);
    fDatimeC.FillBuffer(buffer);
    fDatimeM.FillBuffer(buffer);
