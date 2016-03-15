@@ -1630,6 +1630,16 @@ void TFitEditor::FillFunctionList(Int_t)
       fFuncList->AddEntry("pol7",   kFP_POL7);
       fFuncList->AddEntry("pol8",   kFP_POL8);
       fFuncList->AddEntry("pol9",   kFP_POL9);
+      fFuncList->AddEntry("cheb0",   kFP_CHEB0);
+      fFuncList->AddEntry("cheb1",   kFP_CHEB1);
+      fFuncList->AddEntry("cheb2",   kFP_CHEB2);
+      fFuncList->AddEntry("cheb3",   kFP_CHEB3);
+      fFuncList->AddEntry("cheb4",   kFP_CHEB4);
+      fFuncList->AddEntry("cheb5",   kFP_CHEB5);
+      fFuncList->AddEntry("cheb6",   kFP_CHEB6);
+      fFuncList->AddEntry("cheb7",   kFP_CHEB7);
+      fFuncList->AddEntry("cheb8",   kFP_CHEB8);
+      fFuncList->AddEntry("cheb9",   kFP_CHEB9);
       fFuncList->AddEntry("user",   kFP_USER);
 
       // Need to be setted this way, otherwise when the functions
@@ -1644,6 +1654,7 @@ void TFitEditor::FillFunctionList(Int_t)
    // Case for predefined 2D functions
    else if ( fTypeFit->GetSelected() == kFP_PRED2D && fDim == 2 ) {
       fFuncList->AddEntry("xygaus", kFP_XYGAUS);
+      fFuncList->AddEntry("bigaus", kFP_BIGAUS);
       fFuncList->AddEntry("xyexpo", kFP_XYEXP);
       fFuncList->AddEntry("xylandau", kFP_XYLAN);
       fFuncList->AddEntry("xylandaun", kFP_XYLANN);

@@ -221,7 +221,7 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
    // this functions use the TVirtualFitter
    if (special != 0 && !fitOption.Bound && !linear) {
       if      (special == 100)      ROOT::Fit::InitGaus  (*fitdata,f1); // gaussian
-      else if (special == 110)      ROOT::Fit::Init2DGaus(*fitdata,f1); // 2D gaussian
+      else if (special == 110 || special == 112)   ROOT::Fit::Init2DGaus(*fitdata,f1); // 2D gaussians ( xygaus or bigaus)
       else if (special == 400)      ROOT::Fit::InitGaus  (*fitdata,f1); // landau (use the same)
       else if (special == 410)      ROOT::Fit::Init2DGaus(*fitdata,f1); // 2D landau (use the same)
 
