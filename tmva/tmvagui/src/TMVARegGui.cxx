@@ -147,25 +147,25 @@ void TMVA::TMVARegGui( const char* fName ,TString dataset)
 
    RegGuiActionButton( cbar,  
                  Form( "(%ia) Regression Output Deviation versus Target (test sample)", ++ic ),
-                 Form( "TMVA::deviations(\"%s\",TMVA::kMVAType,kTRUE)", fName ),
+                 Form( "TMVA::deviations(\"%s\",\"%s\",TMVA::kMVAType,kTRUE)",dataset.Data(), fName ),
                  "Plots the deviation between regression output and target versus target on test data (macro deviations(...,0))",
                  buttonType, defaultRequiredClassifier );
 
    RegGuiActionButton( cbar,  
                  Form( "(%ib) Regression Output Deviation versus Target (training sample)", ic ),
-                 Form( "TMVA::deviations(\"%s\",TMVA::kCompareType,kTRUE)", fName ),
+                 Form( "TMVA::deviations(\"%s\",\"%s\",TMVA::kCompareType,kTRUE)",dataset.Data() , fName ),
                  "Plots the deviation between regression output and target versus target on test data (macro deviations(...,0))",
                  buttonType, defaultRequiredClassifier );
 
    RegGuiActionButton( cbar,  
                  Form( "(%ic) Regression Output Deviation versus Input Variables (test sample)", ic ),
-                 Form( "TMVA::deviations(\"%s\",TMVA::kMVAType,kFALSE)", fName ),
+                 Form( "TMVA::deviations(\"%s\",\"%s\",TMVA::kMVAType,kFALSE)",dataset.Data(), fName ),
                  "Plots the deviation between regression output and target versus target on test data (macro deviations(...,0))",
                  buttonType, defaultRequiredClassifier );
 
    RegGuiActionButton( cbar,  
                  Form( "   (%id) Regression Output Deviation versus Input Variables (training sample)   ", ic ),
-                 Form( "TMVA::deviations(\"%s\",TMVA::kCompareType,kFALSE)", fName ),
+                 Form( "TMVA::deviations(\"%s\",\"%s\",TMVA::kCompareType,kFALSE)",dataset.Data() , fName ),
                  "Plots the deviation between regression output and target versus target on test data (macro deviations(...,0))",
                  buttonType, defaultRequiredClassifier );
 
