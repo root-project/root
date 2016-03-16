@@ -1065,8 +1065,13 @@ TCling::TCling(const char *name, const char *title)
 
       std::string include;
 #ifndef ROOTINCDIR
-      include = gSystem->Getenv("ROOTSYS");
-      include += "/include";
+      if (const char* rootsys = gSystem->Getenv("ROOTSYS")) {
+         include = rootsys;
+         include += "/include";
+      } else {
+        ::Fatal("TCling::TCling", "ROOTSYS not set!");
+        exit(1);
+      }
 #else // ROOTINCDIR
       include = ROOTINCDIR;
 #endif // ROOTINCDIR
