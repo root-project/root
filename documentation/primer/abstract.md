@@ -13,3 +13,8 @@ This introductory guide illustrates the main features of ROOT which are
 relevant for the typical problems of data analysis: input and plotting of data
 from measurements and fitting of analytical functions.
 
+*Original Authors*
+- D. Piparo
+- G. Quast
+- M. Zeise
+
