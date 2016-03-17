@@ -983,7 +983,7 @@ hostname is looked up and Locate() returns the full url, including the path.
 ## Release 6.04/12
 
 ### I/O
-- Add to the TClass StreamerInfo for non-stl collections. A 'collection' here is a class for which there is a TVirtualCollectionProxy. 
+- Add to the TClass StreamerInfo for non-stl collections. A 'collection' here is a class for which there is a TVirtualCollectionProxy.
   For example this applies to ATLAS' DataVector.
 - TWebFile. Fixed ROOT-7809. Returns an error for a redirect which does not specify the new URI, rather than going into a loop.
 
@@ -1009,7 +1009,7 @@ Changes will be part of the future 6.04/14
 
 ### Build system
 
-- Added build option builtin_openssl to build OpenSSL internally. This is specially needed for the lastest Mac OSX (El Capitan) 
+- Added build option builtin_openssl to build OpenSSL internally. This is specially needed for the lastest Mac OSX (El Capitan)
 - Fix configuration of threading in LLVM.
 - Fix issue with inconsistent visibility [ROOT-7896]
 
@@ -1050,17 +1050,20 @@ Changes will be part of the future 6.04/16
 - Reduce autoparse occasions by autoloading libraries also based on their type_info-derived name, instead of only their normalized name.
 - Improve TClassEdit's handling of STL's default allocator, in particular for std::map [ROOT-8048]
 
+### Dictionaries
+- Add the -noIncludePaths and --noIncludePaths to rootcling and genereflex respectively to avoid storing in the dictionaries the include paths passed with the "-I" switch. ROOT will rely on ROOT_INCLUDE_PATH only at runtime to find headers.
+
 ### I/O
 
 - Resolve an issue when space is freed in a large `ROOT` file and a TDirectory is updated and stored the lower (less than 2GB) freed portion of the file [ROOT-8055].
- 
+
 ### TTree
 
 - Do not automatically setup read cache during TTree::Fill(). This fixes [ROOT-8031].
 
 #### Fast Cloning.
 
-- Added a cache specifically for the fast option of the TTreeCloner to significantly reduce the 
+- Added a cache specifically for the fast option of the TTreeCloner to significantly reduce the
   run-time when fast-cloning remote files to address [ROOT-5078].
 - The new cache can be controlled from the `TTreeCloner`, `TTree::CopyEntries` or `hadd` interfaces.
 - The new cache is enabled by default.
