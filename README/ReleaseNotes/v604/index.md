@@ -1005,8 +1005,6 @@ hostname is looked up and Locate() returns the full url, including the path.
 
 ## Release 6.04/14
 
-Changes will be part of the future 6.04/14
-
 ### Build system
 
 - Added build option builtin_openssl to build OpenSSL internally. This is specially needed for the lastest Mac OSX (El Capitan)
@@ -1029,9 +1027,9 @@ Changes will be part of the future 6.04/14
 
 ***
 
-## HEAD of the v6-04-00-patches branch
+## Release 6.04/16
 
-Changes will be part of the future 6.04/16
+Published on 2016-03-17.
 
 ### Core
 
@@ -1073,4 +1071,11 @@ Changes will be part of the future 6.04/16
   - From `hadd`, use the command line option `-cachesize SIZE`
 - `SIZE` should be given in number bytes and can be expressed in 'human readable form' (number followed by size unit
   like `MB, MiB, GB or GiB`, etc. or `SIZE` can be set zero to disable the cache.
+
+
+***
+
+## HEAD of the v6-04-00-patches branch
+
+Changes will be part of the future 6.04/18
 
