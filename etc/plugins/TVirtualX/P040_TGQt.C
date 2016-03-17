@@ -1,5 +1,7 @@
+TVirtualX* ROOT_Plugin_TGQt(const char*,const char*);
+
 void P040_TGQt()
 {
    gPluginMgr->AddHandler("TVirtualX", "qt", "TGQt",
-      "GQt", "TGQt(const char*,const char*)");
+      "GQt", "::ROOT_Plugin_TGQt(const char*,const char*)");
 }
