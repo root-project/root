@@ -621,7 +621,7 @@ Double_t TRandom::Uniform(Double_t x1, Double_t x2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Writes random generator status to filename.
 
-void TRandom::WriteRandom(const char *filename)
+void TRandom::WriteRandom(const char *filename) const
 {
    if (!gDirectory) return;
    char *fntmp = gSystem->ExpandPathName(filename);
