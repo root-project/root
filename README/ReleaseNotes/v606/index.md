@@ -631,5 +631,5 @@ Changes will be part of the future 6.06/04
 
 ### Core
 
-- Reduce memory consumption (autoparsing) of plugins TXNetSystem/TNetXNGSystem and TQtRootGuiFactory.
+- Reduce memory consumption (autoparsing) of plugins TXNetSystem/TNetXNGSystem and TGQt.
 
