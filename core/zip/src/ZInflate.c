@@ -1238,7 +1238,6 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
 
 void R__unzip_RAC(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep, int offset, int length)
 {
-  printf("into R__unzip_RAC\n");
   long isize;
   uch  *ibufptr,*obufptr;
   long  ibufcnt, obufcnt;

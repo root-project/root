@@ -593,7 +593,6 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file, Bool_t ra
    fBufferRef = R__InitializeReadBasketBuffer(fBufferRef, uncompressedBufferLen, file);
    rawUncompressedBuffer = fBufferRef->Buffer();
    fBuffer = rawUncompressedBuffer;
-
    oldCase = OLD_CASE_EXPRESSION;
    // Case where ROOT thinks the buffer is compressed.  Copy over the key and uncompress the object
    if (fObjlen > fNbytes-fKeylen || oldCase) {
@@ -623,7 +622,6 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file, Bool_t ra
       }
       Int_t nin, nbuf;
       Int_t nout = 0, noutot = 0, nintot = 0;
-
       // Unzip all the compressed objects in the compressed object buffer.
       while (1) {
          // Check the header for errors.
@@ -650,7 +648,6 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file, Bool_t ra
             fLast       = fBufferSize;
             fNevBuf     = 0;
             fNevBufSize = 0;
-            
             if (fEntryOffset) {
                delete [] fEntryOffset;
                fEntryOffset = 0;

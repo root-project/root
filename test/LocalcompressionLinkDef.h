@@ -6,5 +6,6 @@
 
 #pragma link C++ class TLarge+;
 #pragma link C++ class TSmall+;
+#pragma link C++ class TInt+;
 
 #endif

@@ -11,6 +11,7 @@
 
 ClassImp(TLarge)
 ClassImp(TSmall)
+ClassImp(TInt)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create an TLarge.
@@ -112,5 +113,56 @@ void TSmall::Clear(Option_t * /*option*/)
    TObject::Clear();
    for(int i=0;i<fSize;++i)
       fSmall[i] = 0;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/// Create an TFloat.
+TInt::TInt(Int_t size)
+{
+   fSize  = size;
+   fInt = new Int_t[fSize];
+   fInt[0] = Int_t(gRandom->Rndm(1));
+   for(int i=1;i<fSize;++i) {
+      fInt[i] = fInt[0];
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Create an TSmall.
+TInt::TInt(const TInt& aint) : TObject(aint)
+{
+   Int_t *intermediate = aint.GetInt();
+   Int_t size = aint.GetSize();
+   fInt = new Int_t[size];
+   for(int i=0;i<size;++i)
+      fInt[i] = intermediate[i];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+TInt::~TInt()
+{
+   Clear();
+   delete fInt;
+   fSize = 0;
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+
+void TInt::Build()
+{
+   fInt[0] = Int_t(gRandom->Rndm(1));
+   for(int i=1;i<fSize;++i) {
+      fInt[i] = fInt[0];
+   }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+void TInt::Clear(Option_t * /*option*/)
+{
+   TObject::Clear();
+   for(int i=0;i<fSize;++i)
+      fInt[i] = 0;
 }
 

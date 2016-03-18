@@ -24,14 +24,17 @@ int main(int argc, char **argv)
    Int_t nevent = 40;     // by default create 400 events
    Int_t comp   = 1;       // by default file is compressed
    Int_t read   = 0;
-   Int_t small  = 0;
+   Int_t object  = 0;
+   Int_t rac = 0;
 
    if (argc > 1)  nevent = atoi(argv[1]);
    if (argc > 2)  comp   = atoi(argv[2]);
    if (argc > 3)  read   = atoi(argv[3]);
-   if (argc > 4)  small  = atoi(argv[4]);
+   if (argc > 4)  object  = atoi(argv[4]);
+   if (argc > 5)  rac = atoi(argv[5]);
 
-//   gROOT->SetRandomAccessCompression(1);
+   if (rac) gROOT->SetRandomAccessCompression(1);
+   else gROOT->SetRandomAccessCompression(0);
 
    Int_t branchStyle = 1; //new style by default
 
@@ -39,6 +42,7 @@ int main(int argc, char **argv)
    TTree *tree;
    TLarge *eventlarge = 0;
    TSmall *eventsmall = 0;
+   TInt   *eventint   = 0;
 
    // Fill event, header and tracks with some random numbers
    //   Create a timer object to benchmark this loop
@@ -54,21 +58,29 @@ int main(int argc, char **argv)
    TBranch *branch;
 //         Read case
    if (read) {
-      if (small) {
+      if (object == 1) {
          hfile = new TFile("TSmall.root");
          tree = (TTree*)hfile->Get("T");
          branch = tree->GetBranch("event");
          branch->SetAddress(&eventsmall);
          Int_t nentries = (Int_t)tree->GetEntries();
          nevent = TMath::Min(nevent,nentries); 
-      } else {
+      } else if (object == 0) {
          hfile = new TFile("TLarge.root");
          tree = (TTree*)hfile->Get("T");
          branch = tree->GetBranch("event");
          branch->SetAddress(&eventlarge);
          Int_t nentries = (Int_t)tree->GetEntries();
          nevent = TMath::Min(nevent,nentries);
+      } else if (object == 2) {
+         hfile = new TFile("TInt.root");
+         tree = (TTree*)hfile->Get("T");
+         branch = tree->GetBranch("event");
+         branch->SetAddress(&eventint);
+         Int_t nentries = (Int_t)tree->GetEntries();
+         nevent = TMath::Min(nevent,nentries);
       }
+
       if (read == 1) {  //read sequential
          //by setting the read cache to -1 we set it to the AutoFlush value when writing
          Int_t cachesize = -1;
@@ -94,7 +106,10 @@ int main(int argc, char **argv)
             nb += tree->GetEntry(evrandom);  //read complete event in memory
          }
 */
-         nb += tree->GetEntry(0);
+//         tree->SetCacheSize(0);
+//         tree->SetCacheLearnEntries(0);
+//         tree->SetCacheEntryRange(0,nevent);
+         nb += tree->GetEntry(1);
       }
    } else {
 //         Write case
@@ -102,12 +117,15 @@ int main(int argc, char **argv)
       // Note that this file may contain any kind of ROOT objects, histograms,
       // pictures, graphics objects, detector geometries, tracks, events, etc..
       // This file is now becoming the current directory.
-    if (small) {
+    if (object == 1) {
        hfile = new TFile("TSmall.root","RECREATE","TTree benchmark ROOT file");
        eventsmall = new TSmall();
-    } else {
+    } else if (object == 0) {
        hfile = new TFile("TLarge.root","RECREATE","TTree benchmark ROOT file");
        eventlarge = new TLarge();
+    } else if (object == 2) {
+       hfile = new TFile("TInt.root","RECREATE","TTree benchmark ROOT file");
+       eventint = new TInt();
     }
 
     hfile->SetCompressionLevel(comp);
@@ -119,11 +137,14 @@ int main(int argc, char **argv)
      bufsize = 64000;
 
      TTree::SetBranchStyle(branchStyle);
-     if (small) {
+     if (object == 1) {
         branch = tree->Branch("event", &eventsmall, bufsize,0);
-     } else {
+     } else if (object == 0) {
         branch = tree->Branch("event", &eventlarge, bufsize,0);
+     } else if (object == 2) {
+        branch = tree->Branch("event", &eventint, bufsize, 0);
      }
+
      branch->SetAutoDelete(kFALSE);
      if(branchStyle) tree->BranchRef();
 
@@ -134,22 +155,25 @@ int main(int argc, char **argv)
            told=tnew;
            timer.Continue();
         }
-        if (small) {
+        if (object == 1) {
            eventsmall->Build();
-        } else {
+        } else if (object == 0) {
            eventlarge->Build();
+        } else if (object == 2) {
+           eventint->Build();
         }
         nb += tree->Fill();  //fill the tree
      }
      hfile = tree->GetCurrentFile(); //just in case we switched to a new file
      hfile->Write();
-     tree->Print();
   }
   // We own the event (since we set the branch address explicitly), we need to delete it.
-  if (small) {
+  if (object == 1) {
      delete eventsmall;  eventsmall = 0;
-  } else {
+  } else if (object == 0) {
      delete eventlarge;  eventlarge = 0;
+  } else if (object == 2) {
+     delete eventint;    eventint = 0;
   }
 
   //  Stop timer and print results

@@ -60,4 +60,24 @@ public:
    ClassDef(TSmall,1)
 };
 
+class TInt : public TObject {
+
+private:
+   Int_t         fSize;
+   Int_t        *fInt; //[fSize]
+
+public:
+   TInt(Int_t size = 6); 
+   TInt(const TInt& aint);
+   virtual ~TInt();
+   TInt &operator=(const TInt &aint);
+
+   void          Clear(Option_t *option ="");
+   void          Build();
+   Int_t         GetSize() const { return fSize; }
+   Int_t        *GetInt() const { return fInt; }
+
+   ClassDef(TInt,1)
+};
+
 #endif
