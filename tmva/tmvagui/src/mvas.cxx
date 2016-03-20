@@ -13,7 +13,7 @@
 
 // input: - Input file (result from TMVA)
 //        - use of TMVA plotting TStyle
-void TMVA::mvas( TString fin, HistType htype, Bool_t useTMVAStyle )
+void TMVA::mvas(TString dataset, TString fin, HistType htype, Bool_t useTMVAStyle )
 {
    // set style and remove existing canvas'
    TMVAGlob::Initialize( useTMVAStyle );
@@ -34,7 +34,7 @@ void TMVA::mvas( TString fin, HistType htype, Bool_t useTMVAStyle )
    Int_t countCanvas = 0;
 
    // search for the right histograms in full list of keys
-   TIter next(file->GetListOfKeys());
+   TIter next(file->GetDirectory(dataset.Data())->GetListOfKeys());
    TKey *key(0);   
    while ((key = (TKey*)next())) {
 
@@ -235,10 +235,10 @@ void TMVA::mvas( TString fin, HistType htype, Bool_t useTMVAStyle )
 
          TMVAGlob::plot_logo(1.058);
          if (Save_Images) {
-            if      (htype == kMVAType)     TMVAGlob::imgconv( c, Form("plots/mva_%s",     methodTitle.Data()) );
-            else if (htype == kProbaType)   TMVAGlob::imgconv( c, Form("plots/proba_%s",   methodTitle.Data()) ); 
-            else if (htype == kCompareType) TMVAGlob::imgconv( c, Form("plots/overtrain_%s", methodTitle.Data()) ); 
-            else                           TMVAGlob::imgconv( c, Form("plots/rarity_%s",  methodTitle.Data()) ); 
+            if      (htype == kMVAType)     TMVAGlob::imgconv( c, Form("%s/plots/mva_%s",dataset.Data(),     methodTitle.Data()) );
+            else if (htype == kProbaType)   TMVAGlob::imgconv( c, Form("%s/plots/proba_%s",dataset.Data(),   methodTitle.Data()) ); 
+            else if (htype == kCompareType) TMVAGlob::imgconv( c, Form("%s/plots/overtrain_%s",dataset.Data(), methodTitle.Data()) ); 
+            else                           TMVAGlob::imgconv( c, Form("%s/plots/rarity_%s",dataset.Data(), methodTitle.Data()) ); 
          }
          countCanvas++;
          

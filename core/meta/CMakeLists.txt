@@ -26,6 +26,8 @@ if(${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLANG_ADDITIONAL_FLAGS}")
 endif()
 
+ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS  -Wno-shadow)
+
 ROOT_OBJECT_LIBRARY(MetaLLVM ${sources})
 add_dependencies(MetaLLVM CLING)
 
@@ -33,7 +35,7 @@ ROOT_LINKER_LIBRARY(Cling
                     ${CMAKE_SOURCE_DIR}/core/metautils/src/TMetaUtils.cxx
                     $<TARGET_OBJECTS:MetaLLVM>
                     $<TARGET_OBJECTS:MetaUtilsLLVM>
-                    LIBRARIES ${CLING_LIBRARIES} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${CMAKE_TINFO_LIBS}
+                    LIBRARIES ${CLING_LIBRARIES} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT}
                     DEPENDENCIES Core RIO)
 
 ROOT_INSTALL_HEADERS()

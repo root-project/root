@@ -16,6 +16,7 @@
 #include "IncrementalExecutor.h"
 #include "IncrementalParser.h"
 #include "MultiplexInterpreterCallbacks.h"
+#include "ASTImportSource.h"
 
 #include "cling/Interpreter/CIFactory.h"
 #include "cling/Interpreter/ClangInternalState.h"
@@ -72,8 +73,6 @@ namespace {
 } // unnamed namespace
 
 namespace cling {
-  // FIXME: workaround until JIT supports exceptions
-  jmp_buf* Interpreter::m_JumpBuf;
 
   Interpreter::PushTransactionRAII::PushTransactionRAII(const Interpreter* i)
     : m_Interpreter(i) {
@@ -165,7 +164,8 @@ namespace cling {
   }
 
   Interpreter::Interpreter(int argc, const char* const *argv,
-                           const char* llvmdir /*= 0*/, bool noRuntime) :
+                           const char* llvmdir /*= 0*/, bool noRuntime,
+                           bool isChildInterp) :
     m_UniqueCounter(0), m_PrintDebug(false), m_DynamicLookupDeclared(false),
     m_DynamicLookupEnabled(false), m_RawInputEnabled(false) {
 
@@ -182,7 +182,7 @@ namespace cling {
 
     m_IncrParser.reset(new IncrementalParser(this, LeftoverArgs.size(),
                                              &LeftoverArgs[0],
-                                             llvmdir));
+                                             llvmdir, isChildInterp));
 
     Sema& SemaRef = getSema();
     Preprocessor& PP = SemaRef.getPreprocessor();
@@ -195,7 +195,8 @@ namespace cling {
                                                      /*isTemp*/true), this));
 
     if (!isInSyntaxOnlyMode())
-      m_Executor.reset(new IncrementalExecutor(SemaRef.Diags));
+      m_Executor.reset(new IncrementalExecutor(SemaRef.Diags,
+                                               getCI()->getCodeGenOpts()));
 
     // Tell the diagnostic client that we are entering file parsing mode.
     DiagnosticConsumer& DClient = getCI()->getDiagnosticClient();
@@ -203,7 +204,7 @@ namespace cling {
 
     llvm::SmallVector<IncrementalParser::ParseResultTransaction, 2>
       IncrParserTransactions;
-    m_IncrParser->Initialize(IncrParserTransactions);
+    m_IncrParser->Initialize(IncrParserTransactions, isChildInterp);
 
     handleFrontendOptions();
 
@@ -221,9 +222,41 @@ namespace cling {
       m_IncrParser->commitTransaction(I);
     // Disable suggestions for ROOT
     bool showSuggestions = !llvm::StringRef(ClingStringify(CLING_VERSION)).startswith("ROOT");
-    std::unique_ptr<InterpreterCallbacks>
-       AutoLoadCB(new AutoloadCallback(this, showSuggestions));
-    setCallbacks(std::move(AutoLoadCB));
+
+    // We need InterpreterCallbacks only if it is a parent Interpreter.
+    if (!isChildInterp) {
+      std::unique_ptr<InterpreterCallbacks>
+         AutoLoadCB(new AutoloadCallback(this, showSuggestions));
+      setCallbacks(std::move(AutoLoadCB));
+    }
+  }
+
+  ///\brief Constructor for the child Interpreter.
+  /// Passing the parent Interpreter as an argument.
+  ///
+  Interpreter::Interpreter(Interpreter &parentInterpreter, int argc,
+                           const char* const *argv,
+                           const char* llvmdir /*= 0*/, bool noRuntime) :
+    Interpreter(argc, argv, llvmdir, noRuntime, /* isChildInterp */ true) {
+    // Do the "setup" of the connection between this interpreter and
+    // its parent interpreter.
+
+    // The "bridge" between the interpreters.
+    ASTImportSource *myExternalSource =
+      new ASTImportSource(&parentInterpreter, this);
+
+    llvm::IntrusiveRefCntPtr <ExternalASTSource>
+      astContextExternalSource(myExternalSource);
+
+    getCI()->getASTContext().setExternalSource(astContextExternalSource);
+
+    // Inform the Translation Unit Decl of I2 that it has to search somewhere
+    // else to find the declarations.
+    getCI()->getASTContext().getTranslationUnitDecl()->setHasExternalVisibleStorage();
+
+    // Give my IncrementalExecutor a pointer to the Incremental executor of the
+    // parent Interpreter.
+    m_Executor->setExternalIncrementalExecutor(parentInterpreter.m_Executor.get());
   }
 
   Interpreter::~Interpreter() {
@@ -910,6 +943,32 @@ namespace cling {
     return 0;
   }
 
+  void*
+  Interpreter::compileDtorCallFor(const clang::RecordDecl* RD) {
+    void* &addr = m_DtorWrappers[RD];
+    if (addr)
+      return addr;
+
+    std::string funcname;
+    {
+      llvm::raw_string_ostream namestr(funcname);
+      namestr << "__cling_Destruct_" << RD;
+    }
+
+    std::string code = "extern \"C\" void ";
+    clang::QualType RDQT(RD->getTypeForDecl(), 0);
+    std::string typeName
+      = utils::TypeName::GetFullyQualifiedName(RDQT, RD->getASTContext());
+    std::string dtorName = RD->getNameAsString();
+    code += funcname + "(void* obj){((" + typeName + "*)obj)->~"
+      + dtorName + "();}";
+
+    // ifUniq = false: we know it's unique, no need to check.
+    addr = compileFunction(funcname, code, false /*ifUniq*/,
+                           false /*withAccessControl*/);
+    return addr;
+  }
+
   void Interpreter::createUniqueName(std::string& out) {
     out += utils::Synthesize::UniquePrefix;
     llvm::raw_string_ostream(out) << m_UniqueCounter++;
@@ -1276,12 +1335,13 @@ namespace cling {
   void Interpreter::forwardDeclare(Transaction& T, Sema& S,
                                    llvm::raw_ostream& out,
                                    bool enableMacros /*=false*/,
-                                   llvm::raw_ostream* logs /*=0*/) const {
+                                   llvm::raw_ostream* logs /*=0*/,
+                                   IgnoreFilesFunc_t ignoreFiles /*= return always false*/) const {
     llvm::raw_null_ostream null;
     if (!logs)
       logs = &null;
 
-    ForwardDeclPrinter visitor(out, *logs, S, T);
+    ForwardDeclPrinter visitor(out, *logs, S, T, 0, false, ignoreFiles);
     visitor.printStats();
 
     // Avoid assertion in the ~IncrementalParser.

@@ -24,13 +24,20 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-#include <iostream>
-
 #include "TMVA/VariableIdentityTransform.h"
 
-#ifndef ROOT_TMVA_MsgLogger
+#include "TMVA/Event.h"
 #include "TMVA/MsgLogger.h"
-#endif
+#include "TMVA/SVEvent.h"
+#include "TMVA/Types.h"
+
+#include "Rtypes.h"
+
+#include <iostream>
+
+namespace TMVA {
+   class DataSetInfo;
+}
 
 ClassImp(TMVA::VariableIdentityTransform)
 

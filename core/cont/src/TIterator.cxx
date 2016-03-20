@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TIterator
+\ingroup Containers
 Iterator abstract base class. This base class provides the interface
 for collection iterators.
 */

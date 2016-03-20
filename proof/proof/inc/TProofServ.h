@@ -39,9 +39,14 @@
 #ifndef ROOT_TTimer
 #include "TTimer.h"
 #endif
+#ifndef ROOT_TPackMgr
+#include "TPackMgr.h"
+#endif
 #ifndef ROOT_TProofQueryResult
 #include "TProofQueryResult.h"
 #endif
+
+#include <mutex>
 
 class TDataSetManager;
 class TDataSetManagerFile;
@@ -55,7 +60,7 @@ class TList;
 class TMap;
 class TMessage;
 class TMonitor;
-class TMutex;
+class TPackMgr;
 class TProof;
 class TProofLockPath;
 class TQueryResultManager;
@@ -92,8 +97,7 @@ private:
    TString       fSessionTag;       //tag for the server session
    TString       fTopSessionTag;    //tag for the global session
    TString       fSessionDir;       //directory containing session dependent files
-   TString       fPackageDir;       //directory containing packages and user libs
-   THashList    *fGlobalPackageDirList;  //list of directories containing global packages libs
+   TPackMgr     *fPackMgr;          // Default package manager
    TString       fCacheDir;         //directory containing cache of user files
    TString       fQueryDir;         //directory containing query results and status
    TString       fDataSetDir;       //directory containing info about known data sets
@@ -101,7 +105,6 @@ private:
    TString       fDataDirOpts;      //Url type options for fDataDir
    TString       fAdminPath;        //admin path for this session
    TString       fOutputFile;       //path with the temporary results of the current or last query
-   TProofLockPath *fPackageLock;    //package dir locker
    TProofLockPath *fCacheLock;      //cache dir locker
    TProofLockPath *fQueryLock;      //query dir locker
    TString       fArchivePath;      //default archive path
@@ -111,7 +114,6 @@ private:
    FILE         *fLogFile;          //log file
    Int_t         fLogFileDes;       //log file descriptor
    Long64_t      fLogFileMaxSize;   //max size for log files (enabled if > 0)
-   TList        *fEnabledPackages;  //list of enabled packages
    Int_t         fProtocol;         //protocol version number
    TString       fOrdinal;          //slave ordinal number
    Int_t         fGroupId;          //slave unique id in the active slave group
@@ -139,7 +141,7 @@ private:
 
    TList        *fWaitingQueries;   //list of TProofQueryResult waiting to be processed
    Bool_t        fIdle;             //TRUE if idle
-   TMutex       *fQMtx;             // To protect async msg queue
+   std::recursive_mutex fQMtx;      // To protect async msg queue
 
    TList        *fQueuedMsg;        //list of messages waiting to be processed
 
@@ -257,8 +259,8 @@ public:
    const char    *GetSessionTag() const { return fSessionTag; }
    const char    *GetTopSessionTag() const { return fTopSessionTag; }
    const char    *GetSessionDir() const { return fSessionDir; }
-   const char    *GetPackageDir() const { return fPackageDir; }
    const char    *GetCacheDir()    const { return fCacheDir; }
+   TPackMgr      *GetPackMgr()    const { return fPackMgr; }
    const char    *GetDataDir()    const { return fDataDir; }
    const char    *GetDataDirOpts() const { return fDataDirOpts; }
    Int_t          GetProtocol()   const { return fProtocol; }
@@ -276,7 +278,7 @@ public:
    Float_t        GetEffSessions() const { return fEffSessions; }
 
    void           GetOptions(Int_t *argc, char **argv);
-   TList         *GetEnabledPackages() const { return fEnabledPackages; }
+   TList         *GetEnabledPackages() const { return fPackMgr->GetListOfEnabled(); }
 
    static Long_t  GetVirtMemMax();
    static Long_t  GetResMemMax();
@@ -317,7 +319,7 @@ public:
    virtual void   ReleaseWorker(const char *) { }
    void           Reset(const char *dir);
    Int_t          ReceiveFile(const char *file, Bool_t bin, Long64_t size);
-   virtual Int_t  SendAsynMessage(const char *msg, Bool_t lf = kTRUE);
+   void           SendAsynMessage(const char *msg, Bool_t lf = kTRUE);
    virtual void   SendLogFile(Int_t status = 0, Int_t start = -1, Int_t end = -1);
    void           SendStatistics();
    void           SendParallel(Bool_t async = kFALSE);

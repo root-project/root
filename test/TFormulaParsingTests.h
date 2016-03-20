@@ -533,6 +533,32 @@ bool test31() {
 
 }
 
+bool test32() { 
+// test polynomial are linear and have right number
+   bool ok = true; 
+   TF1 f1("f1","pol2"); 
+   ok &= (f1.GetNumber() == 302); 
+   ok &= (f1.IsLinear() ); 
+
+   TF1 f2("f2","gaus(0)+pol1(3)"); 
+   ok &= (f2.GetNumber() == 0); 
+   ok &= (!f2.IsLinear()); 
+   return ok;
+}
+
+bool test33() {
+   // test new bigaus pre-defined funcition
+   bool ok = true;
+   TF2 f1("f1","bigaus",-10,10,-10,10);
+   ok &= (f1.GetNumber() == 112);
+   ok &= (std::string(f1.GetParName(5)) == "Rho");
+   f1.SetParameters(1,0,1,1,2,0.);
+   TF2 f2("f2","xygaus",-10,10,-10,10);
+   f2.SetParameters(1,0,1,1,2);
+   ok &= TMath::AreEqualAbs( f1.Eval(0), f2.Eval(0)/(f2.Integral(-10,10,-20,20) ), 1.E-4 );
+   if (!ok) std::cout << "Error in test33 - " << f1.Eval(0) << "  " << f2.Eval(0)/f2.Integral(-10,10,-10,10) << std::endl;
+   return ok;          
+}
 
    
 void PrintError(int itest)  { 
@@ -583,6 +609,8 @@ int runTests(bool debug = false) {
    IncrTest(itest); if (!test29() ) { PrintError(itest); }
    IncrTest(itest); if (!test30() ) { PrintError(itest); }
    IncrTest(itest); if (!test31() ) { PrintError(itest); }
+   IncrTest(itest); if (!test32() ) { PrintError(itest); }
+   IncrTest(itest); if (!test33() ) { PrintError(itest); }
 
    std::cout << ".\n";
     
@@ -591,8 +619,8 @@ int runTests(bool debug = false) {
    else {
       Error("TFORMULA Tests","%d tests failed ",int(failedTests.size()) );
       std::cout << "failed tests are : ";
-      for (auto & itest : failedTests) { 
-         std::cout << itest << "   ";
+      for (auto & ittest : failedTests) { 
+         std::cout << ittest << "   ";
       }
       std::cout << std::endl;
    }

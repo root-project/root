@@ -25,7 +25,7 @@ ClassImp(TPaletteAxis)
 ////////////////////////////////////////////////////////////////////////////////
 
 /*! \class TPaletteAxis
-\ingroup Hist
+\ingroup Histpainter
 \brief The palette painting class.
 
 A `TPaletteAxis` object is used to display the color palette when
@@ -39,7 +39,7 @@ can be retrieved doing:
 
     TPaletteAxis *palette = (TPaletteAxis*)h->GetListOfFunctions()->FindObject("palette");
 
-then the pointer `palette` can be used to change the pallette attributes.
+then the pointer `palette` can be used to change the palette attributes.
 
 Because the palette is created at painting time only, one must issue a:
 

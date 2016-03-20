@@ -10,6 +10,14 @@
 
 #if PY_VERSION_HEX >= 0x03000000
 static PyObject* PyBuffer_FromReadWriteMemory( void* ptr, int size ) {
+#if PY_VERSION_HEX > 0x03000000
+   if ( !ptr ) {        // p3 will set an exception if nullptr, just rely on size == 0
+      static long dummy[1];
+      ptr = dummy;
+      size = 0;
+   }
+#endif
+
    Py_buffer bufinfo = { ptr, NULL, size, 1, 0, 1, NULL, NULL, NULL, NULL,
 #if PY_VERSION_HEX < 0x03030000
       { 0, 0 },

@@ -68,9 +68,10 @@
 #ifndef ROOT_TMVA_TransformationHandler
 #include "TMVA/TransformationHandler.h"
 #endif
-#ifndef ROOT_TMVA_OptimizeConfigParameters
-#include "TMVA/OptimizeConfigParameters.h"
+#ifndef ROOT_TMVA_Results
+#include<TMVA/Results.h>
 #endif
+
 
 class TGraph;
 class TTree;
@@ -454,7 +455,6 @@ namespace TMVA {
 
       Bool_t           IsConstructedFromWeightFile() const { return fConstructedFromWeightFile; }
 
-
    private:
 
       // ---------- private definitions --------------------------------------------
@@ -550,7 +550,7 @@ namespace TMVA {
 
       TString          fParentDir;           // method parent name, like booster name
 
-      TString          fFileDir;             // unix sub-directory for weight files (default: "weights")
+      TString          fFileDir;             // unix sub-directory for weight files (default: DataLoader's Name + "weights")
       TString          fWeightFile;          // weight file name
 
    private:
@@ -643,7 +643,7 @@ namespace TMVA {
       Int_t            fNsmoothMVAPdf;               // number of times a histogram is smoothed before creating the PDF
 
    protected:
-
+        Results *fResults;
       ClassDef(MethodBase,0)  // Virtual base class for all TMVA method
 
    };

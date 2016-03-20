@@ -20,64 +20,63 @@ MATHCOREDS   := $(call stripsrc,$(MODDIRS)/G__MathCore.cxx)
 MATHCOREDO   := $(MATHCOREDS:.cxx=.o)
 MATHCOREDH   := $(MATHCOREDS:.cxx=.h)
 
-MATHCOREDH1  := $(MODDIRI)/TComplex.h \
-                $(MODDIRI)/TMath.h 
-MATHCOREDH2  := $(MODDIRI)/TRandom.h \
-                $(MODDIRI)/TRandom1.h \
-                $(MODDIRI)/TRandom2.h \
-                $(MODDIRI)/TRandom3.h \
-                $(MODDIRI)/Math/Random.h \
-                $(MODDIRI)/Math/RandomFunctions.h \
-                $(MODDIRI)/Math/TRandomEngine.h \
-                $(MODDIRI)/Math/MersenneTwisterEngine.h \
-                $(MODDIRI)/Math/MixMaxEngine.h \
-                $(MODDIRI)/TStatistic.h \
-                $(MODDIRI)/TKDTree.h \
-                $(MODDIRI)/TKDTreeBinning.h \
-                $(MODDIRI)/Math/KDTree.h \
-                $(MODDIRI)/Math/TDataPoint.h \
-                $(MODDIRI)/Math/TDataPointN.h \
-                $(MODDIRI)/Math/IParamFunction.h \
-                $(MODDIRI)/Math/IFunction.h \
-                $(MODDIRI)/Math/ParamFunctor.h \
-                $(MODDIRI)/Math/Functor.h \
-                $(MODDIRI)/Math/Minimizer.h \
-                $(MODDIRI)/Math/MinimizerOptions.h \
-                $(MODDIRI)/Math/MinimTransformFunction.h \
-                $(MODDIRI)/Math/MinimTransformVariable.h \
-                $(MODDIRI)/Math/BasicMinimizer.h \
-                $(MODDIRI)/Math/IntegratorOptions.h \
-                $(MODDIRI)/Math/IOptions.h \
-                $(MODDIRI)/Math/GenAlgoOptions.h \
-                $(MODDIRI)/Math/Integrator.h \
-                $(MODDIRI)/Math/VirtualIntegrator.h \
-                $(MODDIRI)/Math/AllIntegrationTypes.h \
-                $(MODDIRI)/Math/AdaptiveIntegratorMultiDim.h \
-                $(MODDIRI)/Math/IntegratorMultiDim.h \
-                $(MODDIRI)/Math/Factory.h \
-                $(MODDIRI)/Math/FitMethodFunction.h \
-                $(MODDIRI)/Math/GaussIntegrator.h \
-                $(MODDIRI)/Math/GaussLegendreIntegrator.h \
-                $(MODDIRI)/Math/RootFinder.h \
-                $(MODDIRI)/Math/IRootFinderMethod.h \
-                $(MODDIRI)/Math/RichardsonDerivator.h \
-                $(MODDIRI)/Math/BrentMethods.h \
-                $(MODDIRI)/Math/BrentMinimizer1D.h \
-                $(MODDIRI)/Math/BrentRootFinder.h \
-                $(MODDIRI)/Math/DistSampler.h \
-                $(MODDIRI)/Math/DistSamplerOptions.h \
-                $(MODDIRI)/Math/GoFTest.h \
-                $(MODDIRI)/Math/ChebyshevPol.h \
-                $(MODDIRI)/Math/SpecFuncMathCore.h \
-                $(MODDIRI)/Math/DistFuncMathCore.h
-MATHCOREDH3  := $(filter-out $(MODDIRI)/Fit/Chi2Grad%,$(wildcard $(MODDIRI)/Fit/*.h))
-MATHCOREDH3  := $(filter-out $(MODDIRI)/Fit/LinkDef%,$(MATHCOREDH3))
+MATHCOREDICTH :=  TComplex.h \
+                TMath.h \
+                TRandom.h \
+                TRandom1.h \
+                TRandom2.h \
+                TRandom3.h \
+                TStatistic.h \
+                TKDTree.h \
+                TKDTreeBinning.h \
+                Math/Random.h \
+                Math/RandomFunctions.h \
+                Math/TRandomEngine.h \
+                Math/MersenneTwisterEngine.h \
+                Math/MixMaxEngine.h \
+                Math/KDTree.h \
+                Math/TDataPoint.h \
+                Math/TDataPointN.h \
+                Math/IParamFunction.h \
+                Math/IFunction.h \
+                Math/ParamFunctor.h \
+                Math/Functor.h \
+                Math/Minimizer.h \
+                Math/MinimizerOptions.h \
+                Math/MinimTransformFunction.h \
+                Math/MinimTransformVariable.h \
+                Math/BasicMinimizer.h \
+                Math/IntegratorOptions.h \
+                Math/IOptions.h \
+                Math/GenAlgoOptions.h \
+                Math/Integrator.h \
+                Math/VirtualIntegrator.h \
+                Math/AllIntegrationTypes.h \
+                Math/AdaptiveIntegratorMultiDim.h \
+                Math/IntegratorMultiDim.h \
+                Math/Factory.h \
+                Math/FitMethodFunction.h \
+                Math/GaussIntegrator.h \
+                Math/GaussLegendreIntegrator.h \
+                Math/RootFinder.h \
+                Math/IRootFinderMethod.h \
+                Math/RichardsonDerivator.h \
+                Math/BrentMethods.h \
+                Math/BrentMinimizer1D.h \
+                Math/BrentRootFinder.h \
+                Math/DistSampler.h \
+                Math/DistSamplerOptions.h \
+                Math/GoFTest.h \
+                Math/ChebyshevPol.h \
+                Math/SpecFuncMathCore.h \
+                Math/DistFuncMathCore.h \
+		$(patsubst $(MODDIRI)/%,%,$(filter-out $(MODDIRI)/Fit/LinkDef%,$(filter-out $(MODDIRI)/Fit/Chi2Grad%,$(wildcard $(MODDIRI)/Fit/*.h))))
 
-MATHCOREH1   := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
-MATHCOREH2   := $(filter-out $(MODDIRI)/Math/LinkDef%,$(wildcard $(MODDIRI)/Math/*.h))
-MATHCOREH3   := $(filter-out $(MODDIRI)/Math/LinkDef%,$(wildcard $(MODDIRI)/Math/*.icc))
-MATHCOREH4   := $(filter-out $(MODDIRI)/Fit/LinkDef%,$(wildcard $(MODDIRI)/Fit/*.h))
-MATHCOREH    := $(MATHCOREH1) $(MATHCOREH2) $(MATHCOREH3) $(MATHCOREH4)
+MATHCOREMH1   := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
+MATHCOREMH2   := $(filter-out $(MODDIRI)/Math/LinkDef%,$(wildcard $(MODDIRI)/Math/*.h))
+MATHCOREMH3   := $(filter-out $(MODDIRI)/Math/LinkDef%,$(wildcard $(MODDIRI)/Math/*.icc))
+MATHCOREMH4   := $(filter-out $(MODDIRI)/Fit/LinkDef%,$(wildcard $(MODDIRI)/Fit/*.h))
+MATHCOREMH    := $(MATHCOREMH1) $(MATHCOREMH2) $(MATHCOREMH3) $(MATHCOREMH4)
 
 MATHCORES    := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 MATHCORECS   := $(wildcard $(MODDIRS)/*.c)
@@ -89,8 +88,7 @@ MATHCORELIB  := $(LPATH)/libMathCore.$(SOEXT)
 MATHCOREMAP  := $(MATHCORELIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/%.icc,include/%.icc,\
-	$(patsubst $(MODDIRI)/%.h,include/%.h,$(MATHCOREH)))
+ALLHDRS      += $(patsubst $(MODDIRI)/%,include/%,$(MATHCOREMH))
 ALLLIBS      += $(MATHCORELIB)
 ALLMAPS      += $(MATHCOREMAP)
 
@@ -132,15 +130,15 @@ $(MATHCORELIB): $(MATHCOREO) $(MATHCOREDO) $(ORDER_) $(MAINLIBS)
 $(call pcmrule,MATHCORE)
 	$(noop)
 
-$(MATHCOREDS):  $(MATHCOREDH1) $(MATHCOREDH2) $(MATHCOREDH3) $(MATHCOREL0) $(MATHCORELS) $(ROOTCLINGEXE) $(call pcmdep,MATHCORE)
+$(MATHCOREDS):  $(add-prefix include/,$(MATHCOREDICTH)) $(MATHCOREL0) $(MATHCORELS) $(ROOTCLINGEXE) $(call pcmdep,MATHCORE)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,MATHCORE) -c -writeEmptyRootPCM -I$(ROOT_SRCDIR) $(MATHCOREDH1) $(MATHCOREDH2) $(MATHCOREDH3) $(MATHCOREL0)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,MATHCORE) -c -writeEmptyRootPCM -I$(ROOT_SRCDIR) $(MATHCOREDICTH) $(MATHCOREL0)
 
-$(MATHCOREMAP): $(MATHCOREDH1) $(MATHCOREDH2) $(MATHCOREDH3) $(MATHCOREL0) $(MATHCORELS) $(ROOTCLINGEXE) $(call pcmdep,MATHCORE)
+$(MATHCOREMAP): $(add-prefix include/,$(MATHCOREDICTH)) $(MATHCOREL0) $(MATHCORELS) $(ROOTCLINGEXE) $(call pcmdep,MATHCORE)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCLINGSTAGE2) -r $(MATHCOREDS) $(call dictModule,MATHCORE) -c -I$(ROOT_SRCDIR) $(MATHCOREDH1) $(MATHCOREDH2) $(MATHCOREDH3) $(MATHCOREL0)
+		$(ROOTCLINGSTAGE2) -r $(MATHCOREDS) $(call dictModule,MATHCORE) -c -I$(ROOT_SRCDIR) $(MATHCOREDHICTH) $(MATHCOREL0)
 
 all-$(MODNAME): $(MATHCORELIB)
 

@@ -16,6 +16,14 @@
  * provided "as is" without express or implied warranty.                  *
  **************************************************************************/
 
+/** \class TPythia8Decayer
+    \ingroup pythia8
+
+This class implements the TVirtualMCDecayer interface using TPythia8.
+
+Author: Andreas Morsch   04/07/2008
+*/
+
 #include "TLorentzVector.h"
 #include "TPythia8.h"
 #include "TPythia8Decayer.h"

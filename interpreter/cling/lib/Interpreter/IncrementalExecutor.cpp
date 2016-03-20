@@ -16,6 +16,7 @@
 #include "cling/Utils/AST.h"
 
 #include "clang/Basic/Diagnostic.h"
+#include <clang/Frontend/CodeGenOptions.h>
 
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/Instructions.h"
@@ -43,7 +44,9 @@ using namespace llvm;
 
 namespace cling {
 
-IncrementalExecutor::IncrementalExecutor(clang::DiagnosticsEngine& diags):
+IncrementalExecutor::IncrementalExecutor(clang::DiagnosticsEngine& diags,
+                                         const clang::CodeGenOptions& CGOpt):
+  m_externalIncrementalExecutor(nullptr),
   m_CurrentAtExitModule(0)
 #if 0
   : m_Diags(diags)
@@ -57,14 +60,16 @@ IncrementalExecutor::IncrementalExecutor(clang::DiagnosticsEngine& diags):
   // can use this object yet.
   m_AtExitFuncs.reserve(256);
 
-  m_JIT.reset(new IncrementalJIT(*this, std::move(CreateHostTargetMachine())));
+  m_JIT.reset(new IncrementalJIT(*this,
+                                 std::move(CreateHostTargetMachine(CGOpt))));
 }
 
 // Keep in source: ~unique_ptr<ClingJIT> needs ClingJIT
 IncrementalExecutor::~IncrementalExecutor() {}
 
 std::unique_ptr<TargetMachine>
-  IncrementalExecutor::CreateHostTargetMachine() const {
+  IncrementalExecutor::CreateHostTargetMachine(const
+                                           clang::CodeGenOptions& CGOpt) const {
   // TODO: make this configurable.
   Triple TheTriple(sys::getProcessTriple());
 #ifdef _WIN32
@@ -89,7 +94,14 @@ std::unique_ptr<TargetMachine>
   Options.JITEmitDebugInfo = 1;
   Reloc::Model RelocModel = Reloc::Default;
   CodeModel::Model CMModel = CodeModel::JITDefault;
-  CodeGenOpt::Level OptLevel = CodeGenOpt::Less;
+  CodeGenOpt::Level OptLevel = CodeGenOpt::Default;
+  switch (CGOpt.OptimizationLevel) {
+    case 0: OptLevel = CodeGenOpt::None; break;
+    case 1: OptLevel = CodeGenOpt::Less; break;
+    case 2: OptLevel = CodeGenOpt::Default; break;
+    case 3: OptLevel = CodeGenOpt::Aggressive; break;
+    default: OptLevel = CodeGenOpt::Default;
+  }
 
   std::unique_ptr<TargetMachine> TM;
   TM.reset(TheTarget->createTargetMachine(TheTriple.getTriple(),
@@ -139,8 +151,7 @@ void* IncrementalExecutor::HandleMissingFunction(const std::string& mangled_name
   return (void*)reinterpret_cast<size_t>(unresolvedSymbol);
 }
 
-void*
-IncrementalExecutor::NotifyLazyFunctionCreators(const std::string& mangled_name)
+void* IncrementalExecutor::NotifyLazyFunctionCreators(const std::string& mangled_name)
 {
   for (std::vector<LazyFunctionCreatorFunc_t>::iterator it
          = m_lazyFuncCreator.begin(), et = m_lazyFuncCreator.end();
@@ -149,8 +160,12 @@ IncrementalExecutor::NotifyLazyFunctionCreators(const std::string& mangled_name)
     if (ret)
       return ret;
   }
+  llvm::StringRef name(mangled_name);
+  void *address = nullptr;
+  if (m_externalIncrementalExecutor)
+   address = m_externalIncrementalExecutor->getAddressOfGlobal(name);
 
-  return HandleMissingFunction(mangled_name);
+  return (address ? address : HandleMissingFunction(mangled_name));
 }
 
 #if 0
@@ -248,7 +263,7 @@ IncrementalExecutor::runStaticInitializersOnce(const Transaction& T) {
       executeInit(F->getName());
 
       initFuncs.push_back(F);
-      if (F->getName().startswith("_GLOBAL__sub_I__")) {
+      if (F->getName().startswith("_GLOBAL__sub_I_")) {
         BasicBlock& BB = F->getEntryBlock();
         for (BasicBlock::iterator I = BB.begin(), E = BB.end(); I != E; ++I)
           if (CallInst* call = dyn_cast<CallInst>(I))
@@ -334,7 +349,7 @@ void* IncrementalExecutor::getAddressOfGlobal(llvm::StringRef symbolName,
     *fromJIT = !address;
 
   if (!address)
-    return (void*)m_JIT->getSymbolAddress(symbolName);
+    return (void*)m_JIT->getSymbolAddress(symbolName, false /*no dlsym*/);
 
   return address;
 }
@@ -346,7 +361,8 @@ IncrementalExecutor::getPointerToGlobalFromJIT(const llvm::GlobalValue& GV) {
   // We don't care whether something was unresolved before.
   m_unresolvedSymbols.clear();
 
-  void* addr = (void*)m_JIT->getSymbolAddress(GV.getName());
+  void* addr = (void*)m_JIT->getSymbolAddress(GV.getName(),
+                                              false /*no dlsym*/);
 
   if (diagnoseUnresolvedSymbols(GV.getName(), "symbol"))
     return 0;

@@ -1,7 +1,11 @@
-// @(#)root/eve:$Id$
-// Author: Matevz Tadel
-
-// Shows ATLAS geometry.
+/// \file
+/// \ingroup tutorial_eve
+/// Shows ATLAS geometry.
+///
+/// \image html eve_geom_atlas.png
+/// \macro_code
+///
+/// \author Matevz Tadel
 
 void geom_atlas()
 {

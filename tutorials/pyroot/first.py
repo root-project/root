@@ -1,3 +1,12 @@
+## \file
+## \ingroup tutorial_pyroot
+## My first PyROOT interactive session
+##
+## \macro_image
+## \macro_code
+##
+## \author Wim Lavrijsen
+
 from ROOT import TCanvas, TF1, TPaveLabel, TPad, TText
 from ROOT import gROOT
 

@@ -45,19 +45,19 @@
 // Include the necessary headers to interface with the Windows registry and
 // environment.
 #ifdef _MSC_VER
-  #define WIN32_LEAN_AND_MEAN
-  #define NOGDI
-  #define NOMINMAX
-  #include <Windows.h>
-  #include <sstream>
-  #include <direct.h>
-  #define popen _popen
-  #define pclose _pclose
-  #define getcwd_func _getcwd
-  #pragma comment(lib, "Advapi32.lib")
+# define WIN32_LEAN_AND_MEAN
+# define NOGDI
+# define NOMINMAX
+# include <Windows.h>
+# include <direct.h>
+# include <sstream>
+# define popen _popen
+# define pclose _pclose
+# define getcwd_func _getcwd
+# pragma comment(lib, "Advapi32.lib")
 #else
-#include <unistd.h>
-  #define getcwd_func getcwd
+# include <unistd.h>
+# define getcwd_func getcwd
 #endif
 
 using namespace clang;
@@ -426,6 +426,13 @@ namespace {
         }
       }
 #else // _MSC_VER
+      // Skip LLVM_CXX execution if -nostdinc++ was provided.
+      for (const auto arg : args) {
+        if (!strcmp(arg, "-nostdinc++")) {
+          return;
+        }
+      }
+
       static const char *CppInclQuery =
         "echo | LC_ALL=C " LLVM_CXX " -xc++ -E -v - 2>&1 >/dev/null "
         "| awk '/^#include </,/^End of search"
@@ -518,6 +525,12 @@ namespace {
 
 // https://gcc.gnu.org/onlinedocs/libstdc++/manual/using_dual_abi.html
 #ifdef _GLIBCXX_USE_CXX11_ABI
+
+# if _GLIBCXX_USE_CXX11_ABI
+#  error "cling does not support the GCC 5 ABI yet."
+#  error "See https://sft.its.cern.ch/jira/browse/ROOT-7947"
+# endif
+
     PPOpts.addMacroDef("_GLIBCXX_USE_CXX11_ABI="
                        ClingStringify(_GLIBCXX_USE_CXX11_ABI));
 #endif
@@ -829,7 +842,6 @@ namespace {
     // want debug info
     //CI->getCodeGenOpts().setDebugInfo(clang::CodeGenOptions::FullDebugInfo);
     // CI->getCodeGenOpts().EmitDeclMetadata = 1; // For unloading, for later
-    CI->getCodeGenOpts().OptimizationLevel = 0; // see pure SSA, that comes out
     CI->getCodeGenOpts().CXXCtorDtorAliases = 0; // aliasing the complete
                                                  // ctor to the base ctor causes
                                                  // the JIT to crash

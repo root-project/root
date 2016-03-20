@@ -95,9 +95,6 @@ namespace TMVA {
 #ifndef ROOT_TMVA_PDEFoamCell
 #include "TMVA/PDEFoamCell.h"
 #endif
-#ifndef ROOT_TMVA_PDEFoamKernelBase
-#include "TMVA/PDEFoamKernelBase.h"
-#endif
 
 namespace TMVA {
 

@@ -9,9 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//-----------------------------------------------------------------------------
-//  Feb 16 2001 P.Murat: description of the decay channel
-////////////////////////////////////////////////////////////////////////////////
+/** \class TDecayChannel
+    \ingroup eg
+
+Description of the decay channel
+
+Feb 16 2001 P.Murat
+*/
 
 #include "TDecayChannel.h"
 
@@ -43,7 +47,7 @@ TDecayChannel::TDecayChannel(Int_t    NumberD,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
+///destructor
 TDecayChannel::~TDecayChannel() {
 }
 

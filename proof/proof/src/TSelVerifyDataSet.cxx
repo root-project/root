@@ -9,13 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TSelVerifyDataSet                                                    //
-//                                                                      //
-// Selector to verify dataset in parallel on workers                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TSelVerifyDataSet
+\ingroup proofkernel
+
+Selector to verify dataset in parallel on workers
+
+*/
 
 #define TSelVerifyDataSet_cxx
 

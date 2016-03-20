@@ -10,35 +10,31 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//_____________________________________________________________________________
-// TGeoTrd1 - a trapezoid with only x length varying with z. It has 4
-//   parameters, the half length in x at the low z surface, that at the
-//   high z surface, the half length in y, and in z
-//
-//_____________________________________________________________________________
-//Begin_Html
-/*
-<img src="gif/t_trd1.gif">
-*/
-//End_Html
+/** \class TGeoTrd1
+\ingroup Geometry_classes
+A trapezoid with only x length varying with z. It has 4
+parameters, the half length in x at the low z surface, that at the
+high z surface, the half length in y, and in z
 
-//Begin_Html
-/*
-<img src="gif/t_trd1divY.gif">
+Begin_Macro
+{
+   TCanvas *c = new TCanvas("c", "c",0,0,600,600);
+   new TGeoManager("trd1", "poza8");
+   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
+   TGeoMedium *med = new TGeoMedium("MED",1,mat);
+   TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
+   gGeoManager->SetTopVolume(top);
+   TGeoVolume *vol = gGeoManager->MakeTrd1("Trd1",med, 10,20,30,40);
+   vol->SetLineWidth(2);
+   top->AddNode(vol,1);
+   gGeoManager->CloseGeometry();
+   gGeoManager->SetNsegments(80);
+   top->Draw();
+   TView *view = gPad->GetView();
+   view->ShowAxis();
+}
+End_Macro
 */
-//End_Html
-
-//Begin_Html
-/*
-<img src="gif/t_trd1divZ.gif">
-*/
-//End_Html
-
-//Begin_Html
-/*
-<img src="gif/t_trd1divstepZ.gif">
-*/
-//End_Html
 
 #include "Riostream.h"
 
@@ -99,10 +95,10 @@ TGeoTrd1::TGeoTrd1(const char *name, Double_t dx1, Double_t dx2, Double_t dy, Do
 
 ////////////////////////////////////////////////////////////////////////////////
 /// ctor with an array of parameters
-/// param[0] = dx1
-/// param[1] = dx2
-/// param[2] = dy
-/// param[3] = dz
+///  - param[0] = dx1
+///  - param[1] = dx2
+///  - param[2] = dy
+///  - param[3] = dz
 
 TGeoTrd1::TGeoTrd1(Double_t *param)
          :TGeoBBox(0,0,0)
@@ -425,7 +421,7 @@ Double_t TGeoTrd1::DistFromOutside(const Double_t *point, const Double_t *dir, I
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///--- Divide this trd1 shape belonging to volume "voldiv" into ndiv volumes
+/// Divide this trd1 shape belonging to volume "voldiv" into ndiv volumes
 /// called divname, from start position with the given step. Returns pointer
 /// to created division cell volume in case of Y divisions. For Z divisions just
 /// return the pointer to the volume to be divided. In case a wrong
@@ -508,7 +504,7 @@ Double_t TGeoTrd1::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///--- Fill vector param[4] with the bounding cylinder parameters. The order
+/// Fill vector param[4] with the bounding cylinder parameters. The order
 /// is the following : Rmin, Rmax, Phi1, Phi2
 
 void TGeoTrd1::GetBoundingCylinder(Double_t *param) const
@@ -517,7 +513,7 @@ void TGeoTrd1::GetBoundingCylinder(Double_t *param) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Fills real parameters of a positioned box inside this. Returns 0 if successfull.
+/// Fills real parameters of a positioned box inside this. Returns 0 if successful.
 
 Int_t TGeoTrd1::GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_t &dx, Double_t &dy, Double_t &dz) const
 {
@@ -754,7 +750,7 @@ void TGeoTrd1::ComputeNormal_v(const Double_t *points, const Double_t *dirs, Dou
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+/// Compute distance from array of input points having directions specified by dirs. Store output in dists
 
 void TGeoTrd1::DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {
@@ -762,7 +758,7 @@ void TGeoTrd1::DistFromInside_v(const Double_t *points, const Double_t *dirs, Do
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+/// Compute distance from array of input points having directions specified by dirs. Store output in dists
 
 void TGeoTrd1::DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {

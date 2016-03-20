@@ -54,6 +54,10 @@
 #include "TArrayI.h"
 #endif
 
+#ifndef ROOT_TBuffer
+#include "TBuffer.h"
+#endif
+
 #ifndef ROOT_TDataType
 #include "TDataType.h"
 #endif
@@ -117,7 +121,7 @@ protected:
    Long64_t       fCacheSize;         //! Maximum size of file buffers
    Long64_t       fChainOffset;       //! Offset of 1st entry of this Tree in a TChain
    Long64_t       fReadEntry;         //! Number of the entry being processed
-   Long64_t       fTotalBuffers;      //! Total number of bytes in branch buffers
+   std::atomic<Long64_t> fTotalBuffers; //! Total number of bytes in branch buffers
    Int_t          fPacketSize;        //! Number of entries in one packet for parallel root
    Int_t          fNfill;             //! Local for EntryLoop
    Int_t          fDebug;             //! Debug level
@@ -145,6 +149,9 @@ protected:
    TBuffer       *fTransientBuffer;   //! Pointer to the current transient buffer.
    Bool_t         fCacheDoAutoInit;   //! true if cache auto creation or resize check is needed
    Bool_t         fCacheUserSet;      //! true if the cache setting was explicitly given by user
+   Bool_t         fIMTEnabled;        //! true if implicit multi-threading is enabled for this tree
+   UInt_t         fNEntriesSinceSorting; //! Number of entries processed since the last re-sorting of branches
+   std::vector<std::pair<Long64_t,TBranch*>> fSortedBranches; //! Branches sorted by average task time
 
    static Int_t     fgBranchStyle;      //  Old/New branch style
    static Long64_t  fgMaxTreeSize;      //  Maximum size of a file containg a Tree
@@ -152,6 +159,9 @@ protected:
 private:
    TTree(const TTree& tt);              // not implemented
    TTree& operator=(const TTree& tt);   // not implemented
+
+   void             InitializeSortedBranches();
+   void             SortBranchesByTime();
 
 protected:
    void             AddClone(TTree*);
@@ -396,6 +406,7 @@ public:
    virtual TTree          *GetFriend(const char*) const;
    virtual const char     *GetFriendAlias(TTree*) const;
    TH1                    *GetHistogram() { return GetPlayer()->GetHistogram(); }
+   virtual Bool_t          GetImplicitMT() { return fIMTEnabled; }
    virtual Int_t          *GetIndex() { return &fIndex.fArray[0]; }
    virtual Double_t       *GetIndexValues() { return &fIndexValues.fArray[0]; }
    virtual TIterator      *GetIteratorOnAllLeaves(Bool_t dir = kIterForward);
@@ -535,6 +546,7 @@ public:
    virtual void            SetFileNumber(Int_t number = 0);
    virtual void            SetEventList(TEventList* list);
    virtual void            SetEntryList(TEntryList* list, Option_t *opt="");
+   virtual void            SetImplicitMT(Bool_t enabled) { fIMTEnabled = enabled; }
    virtual void            SetMakeClass(Int_t make);
    virtual void            SetMaxEntryLoop(Long64_t maxev = kMaxEntries) { fMaxEntryLoop = maxev; } // *MENU*
    static  void            SetMaxTreeSize(Long64_t maxsize = 1900000000);

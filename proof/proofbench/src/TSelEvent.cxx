@@ -9,18 +9,17 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TSelEvent                                                            //
-//                                                                      //
-// PROOF selector for I/O benchmark test.                               //
-// For I/O benchmark, event files are read in and histograms are filled.//
-// For memory clean-up, dedicated files large enough to clean up memory //
-// cache on the machine are read in. Or memory clean-up can be          //
-// accompolished by system call on Linux machine inside SlaveBegin(..)  //
-// which should be much faster the reading in large files.              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TSelEvent
+\ingroup proofbench
+
+Selector for PROOF I/O benchmark test.
+For the I/O benchmark, event files are read in and histograms are filled.
+For memory clean-up, dedicated files large enough to clean up memory 
+cache on the machine are read in. Or memory clean-up can be 
+accompolished by system call on Linux machine inside SlaveBegin(..) 
+which should be much faster the reading in large files.
+
+*/
 
 #define TSelEvent_cxx
 

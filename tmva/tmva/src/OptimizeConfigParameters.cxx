@@ -30,14 +30,20 @@
 #include "TH2.h"
 #include "TDirectory.h"
 
-#include "TMVA/IMethod.h"   
-#include "TMVA/MethodBase.h"   
+#include "TMVA/DataSet.h"
+#include "TMVA/DataSetInfo.h"
+#include "TMVA/Event.h"
+#include "TMVA/FitterBase.h"
 #include "TMVA/GeneticFitter.h"
-#include "TMVA/MinuitFitter.h"
+#include "TMVA/IMethod.h"
 #include "TMVA/Interval.h"
-#include "TMVA/PDF.h"   
+#include "TMVA/MethodBase.h"
+#include "TMVA/MethodFDA.h"
 #include "TMVA/MsgLogger.h"
-#include "TMVA/Tools.h"   
+#include "TMVA/MinuitFitter.h"
+#include "TMVA/PDF.h"
+#include "TMVA/Tools.h"
+#include "TMVA/Types.h"
 
 ClassImp(TMVA::OptimizeConfigParameters)
    
@@ -239,6 +245,9 @@ void TMVA::OptimizeConfigParameters::optimizeFit()
                                                  // order in the vector "pars" the same as the iterator
                                                  // iterates through the tuneParameters !!!!
    }
+
+   // added to allow for transformation on input variables i.e. norm                  
+   GetMethod()->GetTransformationHandler().CalcTransformations(GetMethod()->Data()->GetEventCollection());
 
    // create the fitter
 

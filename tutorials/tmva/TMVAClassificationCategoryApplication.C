@@ -62,7 +62,7 @@ void TMVAClassificationCategoryApplication()
    for (std::map<std::string,int>::iterator it = Use.begin(); it != Use.end(); it++) {
       if (it->second) {
          TString methodName = it->first + " method";
-         TString weightfile = "weights/TMVAClassificationCategory_" + TString(it->first) + ".weights.xml";
+         TString weightfile = "dataset/weights/TMVAClassificationCategory_" + TString(it->first) + ".weights.xml";
          reader->BookMVA( methodName, weightfile ); 
       }
    }

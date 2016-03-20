@@ -43,7 +43,7 @@ void TMVA::RegGuiActionButton( TControlBar* cbar,
 }
 
 // main GUI
-void TMVA::TMVARegGui( const char* fName ) 
+void TMVA::TMVARegGui( const char* fName ,TString dataset) 
 {   
    // Use this script in order to run the various individual macros
    // that plot the output of TMVA (e.g. running TMVARegression.cxx),
@@ -74,8 +74,41 @@ void TMVA::TMVARegGui( const char* fName )
       cout << "==> Abort TMVARegGui, please verify filename" << endl;
       return;
    }
+   //
+   if(file->GetListOfKeys()->GetEntries()<=0)
+   {
+      cout << "==> Abort TMVARegGui, please verify if dataset exist" << endl;
+      return;
+   }
+   if( (dataset==""||dataset.IsWhitespace()) && (file->GetListOfKeys()->GetEntries()==1))
+   {
+       TKey *key=(TKey*)file->GetListOfKeys()->At(0);
+       dataset=key->GetName();
+   }else if((dataset==""||dataset.IsWhitespace()) && (file->GetListOfKeys()->GetEntries()>=1))
+   {
+       gROOT->Reset();
+       gStyle->SetScreenFactor(2); // if you have a large screen, select 1,2 or 1.4
+       
+       TControlBar *bar=new TControlBar("vertical","Select dataset", 0, 0);
+       bar->SetButtonWidth(300);
+       for(int i=0;i<file->GetListOfKeys()->GetEntries();i++)
+       {
+           TKey *key=(TKey*)file->GetListOfKeys()->At(i);
+           dataset=key->GetName();
+           bar->AddButton(dataset.Data(),Form("TMVA::TMVARegGui(\"%s\",\"%s\")",fName,dataset.Data()),dataset.Data());
+       }
+       
+       bar->AddSeparator();
+       bar->AddButton( "Quit",   ".q", "Quit", "button");
+
+       // set the style 
+       bar->SetTextColor("black");
+       bar->Show();
+       gROOT->SaveContext();
+       return ;
+   }
    // find all references   
-   TMVARegGui_keyContent = (TList*)file->GetListOfKeys()->Clone();
+   TMVARegGui_keyContent = (TList*)file->GetDirectory(dataset.Data())->GetListOfKeys()->Clone();
 
    // close file
    file->Close();
@@ -105,7 +138,7 @@ void TMVA::TMVARegGui( const char* fName )
       if (tmp.Contains( "Id" )) title = "Input variables and target(s) (training sample)";
       RegGuiActionButton( cbar, 
                     Form( "    (%i%c) %s    ", ic, ch++, title.Data() ),
-                    Form( "TMVA::variables(\"%s\",\"%s\",\"%s\",kTRUE)", fName, str->GetString().Data(), title.Data() ),
+                    Form( "TMVA::variables(\"%s\",\"%s\",\"%s\",\"%s\",kTRUE)",dataset.Data() , fName, str->GetString().Data(), title.Data() ),
                     Form( "Plots all '%s'-transformed input variables and target(s) (macro variables(...))", 
                           str->GetString().Data() ),
                     buttonType, str->GetString() );
@@ -121,7 +154,7 @@ void TMVA::TMVARegGui( const char* fName )
       if (tmp.Contains( "Id" )) title = "Input variable correlations (scatter profiles)";
       RegGuiActionButton( cbar, 
                     Form( "(%i%c) %s", ic, ch++, title.Data() ),
-                    Form( "TMVA::CorrGui(\"%s\",\"%s\",\"%s\",kTRUE)", fName, str->GetString().Data(), title.Data() ),
+                    Form( "TMVA::CorrGui(\"%s\",\"%s\",\"%s\",\"%s\",kTRUE)",dataset.Data() , fName, str->GetString().Data(), title.Data() ),
                     Form( "Plots all correlation profiles between '%s'-transformed input variables (macro CorrGui(...))", 
                           str->GetString().Data() ),
                     buttonType, str->GetString() );
@@ -130,67 +163,67 @@ void TMVA::TMVARegGui( const char* fName )
    // coefficients
    RegGuiActionButton( cbar,  
                  Form( "(%i) Input Variable Linear Correlation Coefficients", ++ic ),
-                 Form( "TMVA::correlations(\"%s\",kTRUE)", fName ),
+                 Form( "TMVA::correlations(\"%s\",\"%s\",kTRUE)",dataset.Data(), fName ),
                  "Plots signal and background correlation summaries for all input variables (macro correlations.cxx)", 
                  buttonType );
 
    RegGuiActionButton( cbar,  
                  Form( "(%ia) Regression Output Deviation versus Target (test sample)", ++ic ),
-                 Form( "TMVA::deviations(\"%s\",TMVA::kMVAType,kTRUE)", fName ),
+                 Form( "TMVA::deviations(\"%s\",\"%s\",TMVA::kMVAType,kTRUE)",dataset.Data(), fName ),
                  "Plots the deviation between regression output and target versus target on test data (macro deviations(...,0))",
                  buttonType, defaultRequiredClassifier );
 
    RegGuiActionButton( cbar,  
                  Form( "(%ib) Regression Output Deviation versus Target (training sample)", ic ),
-                 Form( "TMVA::deviations(\"%s\",TMVA::kCompareType,kTRUE)", fName ),
+                 Form( "TMVA::deviations(\"%s\",\"%s\",TMVA::kCompareType,kTRUE)",dataset.Data() , fName ),
                  "Plots the deviation between regression output and target versus target on test data (macro deviations(...,0))",
                  buttonType, defaultRequiredClassifier );
 
    RegGuiActionButton( cbar,  
                  Form( "(%ic) Regression Output Deviation versus Input Variables (test sample)", ic ),
-                 Form( "TMVA::deviations(\"%s\",TMVA::kMVAType,kFALSE)", fName ),
+                 Form( "TMVA::deviations(\"%s\",\"%s\",TMVA::kMVAType,kFALSE)",dataset.Data(), fName ),
                  "Plots the deviation between regression output and target versus target on test data (macro deviations(...,0))",
                  buttonType, defaultRequiredClassifier );
 
    RegGuiActionButton( cbar,  
                  Form( "   (%id) Regression Output Deviation versus Input Variables (training sample)   ", ic ),
-                 Form( "TMVA::deviations(\"%s\",TMVA::kCompareType,kFALSE)", fName ),
+                 Form( "TMVA::deviations(\"%s\",\"%s\",TMVA::kCompareType,kFALSE)",dataset.Data() , fName ),
                  "Plots the deviation between regression output and target versus target on test data (macro deviations(...,0))",
                  buttonType, defaultRequiredClassifier );
 
    RegGuiActionButton( cbar,  
                  Form( "(%i) Summary of Average Regression Deviations ", ++ic ),
-                 Form( "TMVA::regression_averagedevs(\"%s\")", fName ),
+                 Form( "TMVA::regression_averagedevs(\"%s\",\"%s\")",dataset.Data() , fName ),
                  "Plot Summary of average deviations: MVAvalue - target (macro regression_averagedevs.cxx)",
                  buttonType );
 
    RegGuiActionButton( cbar,  
                  Form( "(%ia) Network Architecture", ++ic ),
-                 Form( "TMVA::network(\"%s\")", fName ), 
+                 Form( "TMVA::network(\"%s\",\"%s\")",dataset.Data(), fName ), 
                  "Plots the MLP weights (macro network.cxx)",
                  buttonType, "MLP" );
 
    RegGuiActionButton( cbar,  
                  Form( "(%ib) Network Convergence Test", ic ),
-                 Form( "TMVA::annconvergencetest(\"%s\")", fName ), 
+                 Form( "TMVA::annconvergencetest(\"%s\",\"%s\")",dataset.Data() , fName ), 
                  "Plots error estimator versus training epoch for training and test samples (macro annconvergencetest.cxx)",
                  buttonType, "MLP" );
 
    RegGuiActionButton( cbar,  
                  Form( "(%i) Plot Foams", ++ic ),
-                 "TMVA::PlotFoams(\"weights/TMVARegression_PDEFoam.weights_foams.root\")",
+                 Form("TMVA::PlotFoams(\"%s/weights/TMVARegression_PDEFoam.weights_foams.root\")",dataset.Data()),
                  "Plot Foams (macro PlotFoams.cxx)",
                  buttonType, "PDEFoam" );
 
    RegGuiActionButton( cbar,  
                  Form( "(%i) Regression Trees (BDT)", ++ic ),
-                 Form( "TMVA::BDT_Reg(\"%s\")", fName ),
+                 Form( "TMVA::BDT_Reg(\"%s\",\"%s\")",dataset.Data() , fName ),
                  "Plots the Regression Trees trained by BDT algorithms (macro BDT_Reg(itree,...))",
                  buttonType, "BDT" );
 
    RegGuiActionButton( cbar,  
                  Form( "(%i) Regression Tree Control Plots (BDT)", ++ic ),
-                 Form( "TMVA::BDTControlPlots(\"%s\")", fName ),
+                 Form( "TMVA::BDTControlPlots(\"%s\",\"%s\")",dataset.Data(), fName ),
                  "Plots to monitor boosting and pruning of regression trees (macro BDTControlPlots.cxx)",
                  buttonType, "BDT" );
 

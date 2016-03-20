@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env @python@
 
 # ROOT command line tools module: cmdLineUtils
 # Author: Julien Ripoche
@@ -81,6 +81,9 @@ import argparse
 import glob
 import fnmatch
 import logging
+
+LOG_FORMAT = '%(levelname)s: %(message)s'
+logging.basicConfig(format=LOG_FORMAT)
 
 # The end of imports
 ##########
@@ -436,6 +439,8 @@ def getSourceListOptDict(parser, wildcards = True):
     Get the list of tuples and the dictionary with options
     """
     sourceList, args = getSourceListArgs(parser, wildcards)
+    if sourceList == []:
+        logging.error("Input file(s) not found!")
     return sourceList, vars(args)
 
 def getSourceDestListOptDict(parser, wildcards = True):
@@ -756,7 +761,7 @@ def _copyTreeSubset(sourceFile,sourcePathSplit,destFile,destPathSplit,firstEvent
     if lastEvent == -1:
         lastEvent = nbrEntries-1
     isNtuple = bigTree.InheritsFrom(ROOT.TNtuple.Class())
-    for i in xrange(firstEvent, lastEvent+1):
+    for i in range(firstEvent, lastEvent+1):
         bigTree.GetEntry(i)
         if isNtuple:
             super(ROOT.TNtuple,smallTree).Fill()
@@ -882,9 +887,9 @@ def _rootLsPrintLongLs(keyList,indent,treeListing):
             "titleWidth":1}
     date = ROOT.Long(0)
     for key in keyList:
-        time = ROOT.Long(0)
         datime = key.GetDatime()
-        datime.GetDateTime(datime.Get(),date,time)
+        time = datime.GetTime()
+        date = datime.GetDate()
         time = _prepareTime(time)
         rec = \
             [key.GetClassName(), \
@@ -1096,14 +1101,14 @@ def _createDirectories(rootFile,pathSplit,parents):
     if lenPathSplit == 0:
         pass
     elif parents:
-        for i in xrange(lenPathSplit):
+        for i in range(lenPathSplit):
             currentPathSplit = pathSplit[:i+1]
             if not (isExisting(rootFile,currentPathSplit) \
                 and isDirectory(rootFile,currentPathSplit)):
                 retcode += createDirectory(rootFile,currentPathSplit)
     else:
         doMkdir = True
-        for i in xrange(lenPathSplit-1):
+        for i in range(lenPathSplit-1):
             currentPathSplit = pathSplit[:i+1]
             if not (isExisting(rootFile,currentPathSplit) \
                 and isDirectory(rootFile,currentPathSplit)):

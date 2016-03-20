@@ -1,7 +1,14 @@
+/// \file
+/// \ingroup tutorial_gl
+/// Display a 3D histogram using GL (box option).
+///
+/// \macro_image(nobatch)
+/// \macro_code
+///
+/// \author  Timur Pocheptsov
+
 void glbox()
 {
-// Display a 3D histogram using GL (box option).
-//Author: Timur Pocheptsov
    gStyle->SetCanvasPreferGL(kTRUE);
    TCanvas *c        = new TCanvas("glc","TH3 Drawing", 100, 10, 850, 400);
    TPaveLabel *title = new TPaveLabel(0.04, 0.86, 0.96, 0.98,

@@ -12,14 +12,15 @@
 #include "TList.h"
 #endif
 
-#ifndef ROOT_TMutex
-#include "TMutex.h"
+#ifndef ROOT_TNamed
+#include "TNamed.h"
 #endif
 
 #ifndef ROOT_THttpCallArg
 #include "THttpCallArg.h"
 #endif
 
+#include <mutex>
 
 class THttpEngine;
 class THttpTimer;
@@ -46,7 +47,7 @@ protected:
    TString      fDrawPage;    //! file name for drawing of single element
    TString      fDrawPageCont; //! content of draw page
 
-   TMutex       fMutex;       //! mutex to protect list with arguments
+   std::mutex   fMutex;       //! mutex to protect list with arguments
    TList        fCallArgs;    //! submitted arguments
 
    // Here any request can be processed

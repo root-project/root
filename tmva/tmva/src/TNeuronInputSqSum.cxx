@@ -21,8 +21,9 @@
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
- 
+
 #include "TMVA/TNeuronInputSqSum.h"
 
-ClassImp(TMVA::TNeuronInputSqSum)
+#include "Rtypes.h"
 
+ClassImp(TMVA::TNeuronInputSqSum)

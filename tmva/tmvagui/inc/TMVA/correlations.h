@@ -13,7 +13,7 @@ namespace TMVA{
    // input: - Input file (result from TMVA),
    //        - use of colors or grey scale
    //        - use of TMVA plotting TStyle
-   void correlations( TString fin = "TMVA.root", Bool_t isRegression = kFALSE, 
+   void correlations(TString dataset, TString fin = "TMVA.root", Bool_t isRegression = kFALSE, 
                       Bool_t greyScale = kFALSE, Bool_t useTMVAStyle = kTRUE );
 }
 #endif

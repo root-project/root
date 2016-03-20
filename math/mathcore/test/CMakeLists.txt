@@ -7,6 +7,7 @@ set(Libraries Core RIO Net Hist Graf Graf3d Gpad Tree
               Rint Postscript Matrix Physics MathCore Thread)
 
 set(TestSource
+    testMathRandom.cxx
     testTMath.cxx
     testBinarySearch.cxx
     testSortOrder.cxx

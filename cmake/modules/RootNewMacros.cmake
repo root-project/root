@@ -8,6 +8,9 @@ if(CMAKE_VERSION VERSION_GREATER 2.8.12)
   cmake_policy(SET CMP0022 OLD) # See "cmake --help-policy CMP0022" for more details
 endif()
 
+
+set(THISDIR ${CMAKE_CURRENT_LIST_DIR})
+
 set(lib lib)
 set(bin bin)
 if(WIN32)
@@ -210,7 +213,7 @@ endmacro()
 #                                                    STAGE1 LINKDEF linkdef OPTIONS opt1 opt2 ...)
 #---------------------------------------------------------------------------------------------------
 function(ROOT_GENERATE_DICTIONARY dictionary)
-  CMAKE_PARSE_ARGUMENTS(ARG "STAGE1;MULTIDICT" "MODULE" "LINKDEF;OPTIONS;DEPENDENCIES" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "STAGE1;MULTIDICT;NOINSTALL" "MODULE" "LINKDEF;OPTIONS;DEPENDENCIES" ${ARGN})
 
   #---roottest compability---------------------------------
   if(CMAKE_ROOTTEST_DICT)
@@ -276,7 +279,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   endif()
 
   #---Set the library output directory-----------------------
-  if(DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY)
+  if(DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY AND NOT CMAKE_LIBRARY_OUTPUT_DIRECTORY STREQUAL "")
     set(library_output_dir ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
   else()
     set(library_output_dir ${CMAKE_CURRENT_BINARY_DIR})
@@ -295,7 +298,8 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     endif()
   else()
     set(library_name ${libprefix}${deduced_arg_module}${libsuffix})
-    set(pcm_name ${dictionary}_rdict.pcm)
+    set(newargs -s ${library_output_dir}/${library_name})
+    set(pcm_name ${library_output_dir}/${libprefix}${deduced_arg_module}_rdict.pcm)
     set(rootmap_name ${library_output_dir}/${libprefix}${deduced_arg_module}.rootmap)
   endif()
 
@@ -335,7 +339,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   get_filename_component(dictname ${dictionary} NAME)
 
   #---roottest compability
-  if(CMAKE_ROOTTEST_DICT OR (NOT DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY))
+  if(ARG_NOINSTALL OR CMAKE_ROOTTEST_DICT OR (NOT DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY))
     add_custom_target(${dictname} DEPENDS ${dictionary}.cxx)
   else()
     add_custom_target(${dictname} DEPENDS ${dictionary}.cxx)
@@ -482,9 +486,11 @@ function(ROOT_OBJECT_LIBRARY library)
       set(obj ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_PROJECT_NAME}.build/${CMAKE_CFG_INTDIR}/${library}.build/Objects-normal/x86_64/${name}${CMAKE_CXX_OUTPUT_EXTENSION})
     else()
       if(IS_ABSOLUTE ${s})
-        if(${s} MATCHES ${CMAKE_CURRENT_SOURCE_DIR})
+        string(REGEX REPLACE "([][.?*+|()$^-])" "\\\\\\1" escaped_source_dir "${CMAKE_CURRENT_SOURCE_DIR}")
+        string(REGEX REPLACE "([][.?*+|()$^-])" "\\\\\\1" escaped_binary_dir "${CMAKE_CURRENT_BINARY_DIR}")
+        if(${s} MATCHES "^${escaped_source_dir}")
           string(REPLACE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${library}.dir src ${s})
-        elseif(${s} MATCHES ${CMAKE_CURRENT_BINARY_DIR})
+        elseif(${s} MATCHES "^${escaped_binary_dir}")
           string(REPLACE ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${library}.dir src ${s})
         else()
           #message(WARNING "Unknown location of source ${s} for object library ${library}")
@@ -770,6 +776,7 @@ function(ROOT_ADD_TEST test)
 
   if(ARG_OUTCNVCMD)
     string(REPLACE ";" "^" _outcnvcmd "${ARG_OUTCNVCMD}")
+    string(REPLACE "=" "@" _outcnvcmd "${_outcnvcmd}")
     set(_command ${_command} -DCNVCMD=${_outcnvcmd})
   endif()
 
@@ -807,7 +814,7 @@ function(ROOT_ADD_TEST test)
   endif()
 
   #- Locate the test driver
-  find_file(ROOT_TEST_DRIVER RootTestDriver.cmake PATHS ${CMAKE_MODULE_PATH})
+  find_file(ROOT_TEST_DRIVER RootTestDriver.cmake PATHS ${THISDIR} ${CMAKE_MODULE_PATH})
   if(NOT ROOT_TEST_DRIVER)
     message(FATAL_ERROR "ROOT_ADD_TEST: RootTestDriver.cmake not found!")
   endif()

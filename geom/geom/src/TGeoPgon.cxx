@@ -10,27 +10,42 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//_____________________________________________________________________________
-// TGeoPgon - a polygone. It has at least 10 parameters :
-//            - the lower phi limit;
-//            - the range in phi;
-//            - the number of equal edges on each z plane;
-//            - the number of z planes (at least two) where the inner/outer
-//              radii are changing;
-//            - z coordinate, inner and outer radius of the inscribed cercle
-//              (distance from center to edges) for each z plane
-//
-//_____________________________________________________________________________
-//Begin_Html
-/*
-<img src="gif/t_pgon.gif">
+/** \class TGeoPgon
+\ingroup Geometry_classes
+
+A polygone. It has at least 10 parameters :
+  - the lower phi limit;
+  - the range in phi;
+  - the number of equal edges on each z plane;
+  - the number of z planes (at least two) where the inner/outer
+    radii are changing;
+  - z coordinate, inner and outer radius of the inscribed cercle
+    (distance from center to edges) for each z plane
+
+Begin_Macro(source)
+{
+   TCanvas *c = new TCanvas("c", "c",0,0,600,600);
+   new TGeoManager("pgon", "poza11");
+   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
+   TGeoMedium *med = new TGeoMedium("MED",1,mat);
+   TGeoVolume *top = gGeoManager->MakeBox("TOP",med,150,150,100);
+   gGeoManager->SetTopVolume(top);
+   TGeoVolume *vol = gGeoManager->MakePgon("PGON",med, -45.0,270.0,4,4);
+   TGeoPgon *pgon = (TGeoPgon*)(vol->GetShape());
+   pgon->DefineSection(0,-70,45,50);
+   pgon->DefineSection(1,0,35,40);
+   pgon->DefineSection(2,0,30,35);
+   pgon->DefineSection(3,70,90,100);
+   vol->SetLineWidth(2);
+   top->AddNode(vol,1);
+   gGeoManager->CloseGeometry();
+   gGeoManager->SetNsegments(80);
+   top->Draw();
+   TView *view = gPad->GetView();
+   view->ShowAxis();
+}
+End_Macro
 */
-//End_Html
-//Begin_Html
-/*
-<img src="gif/t_pgondivZ.gif">
-*/
-//End_Html
 
 #include "Riostream.h"
 
@@ -144,14 +159,13 @@ TGeoPgon::TGeoPgon(const char *name, Double_t phi, Double_t dphi, Int_t nedges, 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor in GEANT3 style
-/// param[0] = phi1
-/// param[1] = dphi
-/// param[2] = nedges
-/// param[3] = nz
-///
-/// param[4] = z1
-/// param[5] = Rmin1
-/// param[6] = Rmax1
+///  - param[0] = phi1
+///  - param[1] = dphi
+///  - param[2] = nedges
+///  - param[3] = nz
+///  - param[4] = z1
+///  - param[5] = Rmin1
+///  - param[6] = Rmax1
 /// ...
 
 TGeoPgon::TGeoPgon(Double_t *param)
@@ -962,6 +976,7 @@ Bool_t TGeoPgon::SliceCrossing(const Double_t *point, const Double_t *dir, Int_t
    }
    return kFALSE;
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Check crossing of a given pgon slice, from a starting point inside the slice
 
@@ -1260,7 +1275,7 @@ Int_t TGeoPgon::DistancetoPrimitive(Int_t px, Int_t py)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///--- Divide this polygone shape belonging to volume "voldiv" into ndiv volumes
+/// Divide this polygone shape belonging to volume "voldiv" into ndiv volumes
 /// called divname, from start position with the given step. Returns pointer
 /// to created division cell volume in case of Z divisions. Phi divisions are
 /// allowed only if nedges%ndiv=0 and create polygone "segments" with nedges/ndiv edges.
@@ -1351,7 +1366,7 @@ TGeoVolume *TGeoPgon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///--- Fill vector param[4] with the bounding cylinder parameters. The order
+/// Fill vector param[4] with the bounding cylinder parameters. The order
 /// is the following : Rmin, Rmax, Phi1, Phi2
 
 void TGeoPgon::GetBoundingCylinder(Double_t *param) const
@@ -1593,7 +1608,8 @@ void TGeoPgon::SetSegsAndPols(TBuffer3D &buff) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Computes projected pgon radius (inner or outer) corresponding to a given Z
 /// value. Fills corresponding coefficients of:
-///   Rpg(z) = a + b*z
+///  `Rpg(z) = a + b*z`
+///
 /// Note: ipl must be in range [0,fNz-2]
 
 Double_t TGeoPgon::Rpg(Double_t z, Int_t ipl, Bool_t inner, Double_t &a, Double_t &b) const
@@ -1628,7 +1644,7 @@ Double_t TGeoPgon::Rpg(Double_t z, Int_t ipl, Bool_t inner, Double_t &a, Double_
 ////////////////////////////////////////////////////////////////////////////////
 /// Computes projected distance at a given Z for a given ray inside a given sector
 /// and fills coefficients:
-///   Rproj = a + b*z
+///   `Rproj = a + b*z`
 
 Double_t TGeoPgon::Rproj(Double_t z, const Double_t *point, const Double_t *dir, Double_t cphi, Double_t sphi, Double_t &a, Double_t &b) const
 {
@@ -1918,17 +1934,7 @@ Int_t TGeoPgon::GetNmeshVertices() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-////// fill size of this 3-D object
-////    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-////    if (!painter) return;
-////    Int_t n;
-////
-////    n = fNedges+1;
-////
-////    Int_t numPoints = fNz*2*n;
-////    Int_t numSegs   = 4*(fNz*n-1+(fDphi == 360));
-////    Int_t numPolys  = 2*(fNz*n-1+(fDphi == 360));
-////    painter->AddSize3D(numPoints, numSegs, numPolys);
+/// fill size of this 3-D object
 
 void TGeoPgon::Sizeof3D() const
 {
@@ -1956,8 +1962,8 @@ const TBuffer3D & TGeoPgon::GetBuffer3D(Int_t reqSections, Bool_t localFrame) co
          }
       }
    }
-   // TODO: Push down to TGeoShape?? Wuld have to do raw sizes set first..
-   // can rest of TGeoShape be defered until after this?
+   // TODO: Push down to TGeoShape?? Would have to do raw sizes set first..
+   // can rest of TGeoShape be deferred until after this?
    if ((reqSections & TBuffer3D::kRaw) && buffer.SectionsValid(TBuffer3D::kRawSizes)) {
       SetPoints(buffer.fPnts);
       if (!buffer.fLocalFrame) {
@@ -1992,7 +1998,7 @@ void TGeoPgon::ComputeNormal_v(const Double_t *points, const Double_t *dirs, Dou
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+/// Compute distance from array of input points having directions specified by dirs. Store output in dists
 
 void TGeoPgon::DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {
@@ -2000,7 +2006,7 @@ void TGeoPgon::DistFromInside_v(const Double_t *points, const Double_t *dirs, Do
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+/// Compute distance from array of input points having directions specified by dirs. Store output in dists
 
 void TGeoPgon::DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {

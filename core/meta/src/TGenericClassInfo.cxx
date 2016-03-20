@@ -41,7 +41,7 @@ namespace Internal {
 
    TGenericClassInfo::TGenericClassInfo(const char *fullClassname,
                                         const char *declFileName, Int_t declFileLine,
-                                        const type_info &info, const Internal::TInitBehavior  *action,
+                                        const std::type_info &info, const Internal::TInitBehavior  *action,
                                         DictFuncPtr_t dictionary,
                                         TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof)
       : fAction(action), fClass(0), fClassName(fullClassname),
@@ -61,7 +61,7 @@ namespace Internal {
 
    TGenericClassInfo::TGenericClassInfo(const char *fullClassname, Int_t version,
                                         const char *declFileName, Int_t declFileLine,
-                                        const type_info &info, const Internal::TInitBehavior  *action,
+                                        const std::type_info &info, const Internal::TInitBehavior  *action,
                                         DictFuncPtr_t dictionary,
                                         TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof)
       : fAction(action), fClass(0), fClassName(fullClassname),
@@ -320,7 +320,7 @@ namespace Internal {
       return fCollectionProxyInfo;
    }
 
-   const type_info &TGenericClassInfo::GetInfo() const
+   const std::type_info &TGenericClassInfo::GetInfo() const
    {
       // Return the typeinfo value
 

@@ -35,14 +35,6 @@ class TVirtualGeoPainter;
 class THashList;
 class TGeoParallelWorld;
 
-////////////////////////////////////////////////////////////////////////////
-//                                                                        //
-// TGeoManager - The manager class for any TGeo geometry. Provides user   //
-//    interface for geometry creation, navigation, state querying,        //
-//    visualization, IO, geometry checking and other utilities.           //
-//                                                                        //
-////////////////////////////////////////////////////////////////////////////
-
 class TGeoManager : public TNamed
 {
 protected:
@@ -101,7 +93,7 @@ private :
    TObjArray            *fNodes;            //-> current branch of nodes
    TObjArray            *fOverlaps;         //-> list of geometrical overlaps
    UChar_t              *fBits;             //! bits used for voxelization
-   // Map of navigatorr arrays per thread
+   // Map of navigator arrays per thread
    typedef std::map<Long_t, TGeoNavigatorArray *>   NavigatorsMap_t;
    typedef NavigatorsMap_t::iterator                NavigatorsMapIt_t;
    typedef std::map<Long_t, Int_t>                  ThreadsMap_t;
@@ -124,10 +116,11 @@ private :
    Int_t                *fNodeIdArray;      //! array of node id's
    Int_t                 fNLevel;           // maximum accepted level in geometry
    TGeoVolume           *fPaintVolume;      //! volume currently painted
+   TGeoVolume           *fUserPaintVolume;  //!
    THashList            *fHashVolumes;      //! hash list of volumes providing fast search
    THashList            *fHashGVolumes;     //! hash list of group volumes providing fast search
-   THashList            *fHashPNE;          //-> hash list of phisical node entries
-   mutable TObjArray    *fArrayPNE;         //! array of phisical node entries
+   THashList            *fHashPNE;          //-> hash list of physical node entries
+   mutable TObjArray    *fArrayPNE;         //! array of physical node entries
    Int_t                 fSizePNEId;        // size of the array of unique ID's for PN entries
    Int_t                 fNPNEId;           // number of PN entries having a unique ID
    Int_t                *fKeyPNEId;         //[fSizePNEId] array of uid values for PN entries
@@ -197,6 +190,7 @@ public:
    Bool_t                 GetTminTmax(Double_t &tmin, Double_t &tmax) const;
    Double_t               GetTmax() const {return fTmax;}
    TGeoVolume            *GetPaintVolume() const {return fPaintVolume;}
+   TGeoVolume            *GetUserPaintVolume() const {return fUserPaintVolume;}
    Double_t               GetVisDensity() const  {return fVisDensity;}
    Int_t                  GetVisLevel() const;
    Int_t                  GetVisOption() const;
@@ -214,6 +208,7 @@ public:
    Bool_t                 SetCurrentNavigator(Int_t index);
    void                   SetBombFactors(Double_t bombx=1.3, Double_t bomby=1.3, Double_t bombz=1.3, Double_t bombr=1.3); // *MENU*
    void                   SetPaintVolume(TGeoVolume *vol) {fPaintVolume = vol;}
+   void                   SetUserPaintVolume(TGeoVolume *vol) {fUserPaintVolume = vol;}
    void                   SetTopVisible(Bool_t vis=kTRUE);
    void                   SetTminTmax(Double_t tmin=0, Double_t tmax=999);
    void                   SetDrawExtraPaths(Bool_t flag=kTRUE) {fDrawExtra=flag;}

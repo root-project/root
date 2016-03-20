@@ -36,6 +36,7 @@ setting/clearing/testing named attributes.
 #include "RooFit.h"
 #include "Riostream.h"
 
+#include "TBuffer.h"
 #include "TClass.h"
 #include "TObjString.h"
 #include "TVirtualStreamerInfo.h"

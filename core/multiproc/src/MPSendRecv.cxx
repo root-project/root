@@ -55,9 +55,10 @@ MPCodeBufPair MPRecv(TSocket *s)
    delete [] rawbuf;
 
    //receive object size
-   rawbuf = new char[sizeof(ULong_t)];
-   s->RecvRaw(rawbuf, sizeof(ULong_t));
-   bufReader.SetBuffer(rawbuf, sizeof(ULong_t), false);
+   //ULong_t is sent as 8 bytes irrespective of the size of the type
+   rawbuf = new char[8];
+   s->RecvRaw(rawbuf, 8);
+   bufReader.SetBuffer(rawbuf, 8, false);
    ULong_t classBufSize;
    bufReader.ReadULong(classBufSize);
    delete [] rawbuf;

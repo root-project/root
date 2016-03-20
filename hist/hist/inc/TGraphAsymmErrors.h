@@ -56,6 +56,8 @@ public:
    TGraphAsymmErrors& operator=(const TGraphAsymmErrors &gr);
    TGraphAsymmErrors(const TH1 *h);
    TGraphAsymmErrors(const TH1* pass, const TH1* total, Option_t *option="");
+   TGraphAsymmErrors(const char *filename, const char *format="%lg %lg %lg %lg %lg %lg", Option_t *option="");
+
    virtual ~TGraphAsymmErrors();
 
    virtual void    Apply(TF1 *f);

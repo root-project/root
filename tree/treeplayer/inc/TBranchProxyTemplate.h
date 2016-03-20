@@ -12,11 +12,9 @@
 #ifndef ROOT_TBranchProxyTemplate
 #define ROOT_TBranchProxyTemplate
 
-#if !defined(__ROOTCLING__) && !defined(G__DICTIONARY)
-# if R__BRANCHPROXY_GENERATOR_VERSION != 2
+#if R__BRANCHPROXY_GENERATOR_VERSION != 2
 // Generated source and branch proxy interface are out of sync.
-#  error "Please regenerate this file using TTree::MakeProxy()!"
-# endif
+# error "Please regenerate this file using TTree::MakeProxy()!"
 #endif
 
 #ifndef ROOT_TBranchProxy

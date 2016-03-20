@@ -1040,7 +1040,7 @@ Bool_t TQObject::Connect(TQObject *sender,
 ///
 ///       TQObject::Connect("TGButton", "Clicked()",
 ///                         "TH2F", myHist, "Draw(Option_t*)");
-///~~~
+/// ~~~
 /// cl == 0 - corresponds to function (interpereted or global)
 ///           the name of the function is defined by the slot string,
 ///           parameter receiver should be 0.

@@ -875,13 +875,13 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
 
       if(rcrdDeclNotAlreadySelected &&
          !fFirstPass){
-          
-          
-         // Before adding the decl to the selected ones, check its access. 
+
+
+         // Before adding the decl to the selected ones, check its access.
          // We do not yet support I/O of private or protected classes.
          // See ROOT-7450
          // We exclude filename selections as they can come from aclic
-         auto isFileSelection = selected->HasAttributeFileName() && 
+         auto isFileSelection = selected->HasAttributeFileName() &&
                                 selected->HasAttributePattern() &&
                                 "*" == selected->GetAttributePattern();
          auto canDeclAccess = recordDecl->getCanonicalDecl()->getAccess();
@@ -890,7 +890,7 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
             TMetaUtils::GetNormalizedName(normName,
                                           recordDecl->getASTContext().getTypeDeclType(recordDecl),
                                           fInterpreter,
-                                          fNormCtxt);            
+                                          fNormCtxt);
             auto msg = "Class or struct %s was selected but its dictionary cannot be generated: "
                        "this is a private or protected class and this is not supported. No direct "
                        "I/O operation of %s instances will be possible.\n";
@@ -1193,11 +1193,9 @@ void RScanner::Scan(const clang::ASTContext &C)
    fselectedRecordDecls.clear();
    fSelectedEnums.clear();
    fSelectedTypedefs.clear();
+   fSelectedVariables.clear();
    fSelectedFunctions.clear();
    TraverseDecl(C.getTranslationUnitDecl());
-
-   // And finally resort the results according to the rule ordering.
-   std::sort(fSelectedClasses.begin(),fSelectedClasses.end());
 }
 
 

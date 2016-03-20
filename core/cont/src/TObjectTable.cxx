@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TObjectTable
+\ingroup Containers
 This class registers all instances of TObject and its derived
 classes in a hash table. The Add() and Remove() members are called
 from the TObject ctor and dtor, respectively. Using the Print()

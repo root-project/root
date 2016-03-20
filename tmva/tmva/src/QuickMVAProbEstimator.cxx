@@ -1,12 +1,11 @@
 #include "TMVA/QuickMVAProbEstimator.h"
- 
-#include <iostream>
+
+#include "TMVA/MsgLogger.h"
+#include "TMVA/Types.h"
 
 #include "TMath.h"
 
-#ifndef ROOT_TMVA_MsgLogger
-#include "TMVA/MsgLogger.h"
-#endif
+#include <iostream>
 
 
 void TMVA::QuickMVAProbEstimator::AddEvent(Double_t val, Double_t weight, Int_t type){

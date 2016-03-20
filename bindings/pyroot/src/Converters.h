@@ -81,9 +81,9 @@ namespace PyROOT {
    PYROOT_DECLARE_BASIC_CONVERTER( Bool );
    PYROOT_DECLARE_BASIC_CONVERTER( Char );
    PYROOT_DECLARE_BASIC_CONVERTER( UChar );
-   PYROOT_DECLARE_BASIC_CONVERTER2( Short, Long );
-   PYROOT_DECLARE_BASIC_CONVERTER2( UShort, Long );
-   PYROOT_DECLARE_BASIC_CONVERTER2( Int, Long );
+   PYROOT_DECLARE_BASIC_CONVERTER( Short );
+   PYROOT_DECLARE_BASIC_CONVERTER( UShort );
+   PYROOT_DECLARE_BASIC_CONVERTER( Int );
    PYROOT_DECLARE_BASIC_CONVERTER( ULong );
    PYROOT_DECLARE_BASIC_CONVERTER2( UInt, ULong );
    PYROOT_DECLARE_BASIC_CONVERTER( LongLong );
@@ -207,6 +207,7 @@ namespace PyROOT {
       Cppyy::TCppType_t fClass;
    };
 
+   template <bool ISREFERENCE>
    class TCppObjectPtrConverter : public TCppObjectConverter {
    public:
       using TCppObjectConverter::TCppObjectConverter;
@@ -216,6 +217,9 @@ namespace PyROOT {
       virtual PyObject* FromMemory( void* address );
       virtual Bool_t ToMemory( PyObject* value, void* address );
    };
+
+   extern template class TCppObjectPtrConverter<true>;
+   extern template class TCppObjectPtrConverter<false>;
 
    class TCppObjectArrayConverter : public TCppObjectConverter {
    public:

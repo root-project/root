@@ -124,13 +124,15 @@ del isfunction, ismethod
 
 ### configuration ---------------------------------------------------------------
 class _Configuration( object ):
-   __slots__ = [ 'IgnoreCommandLineOptions', 'StartGuiThread', 'ExposeCppMacros', '_gts' ]
+   __slots__ = [ 'IgnoreCommandLineOptions', 'StartGuiThread', 'ExposeCppMacros',
+                 '_gts', 'DisableRootLogon' ]
 
    def __init__( self ):
       self.IgnoreCommandLineOptions = 0
       self.StartGuiThread = True
       self.ExposeCppMacros = False
       self._gts = []
+      self.DisableRootLogon = False
 
    def __setGTS( self, value ):
       for c in value:
@@ -493,8 +495,16 @@ class ModuleFacade( types.ModuleType ):
          if hasattr( attr_1, 'cout' ):
             self.__dict__[ 'cout' ] = attr_1.cout
 
+    # python side pythonizations (should live in their own file, if we get many)
+      def set_size(self, buf):
+         buf.SetSize(self.GetN())
+         return buf
+
+      cppyy.add_pythonization(
+         cppyy.compose_method("^TGraph(2D)?$|^TGraph.*Errors$", "GetE?[XYZ]$", set_size))
+
     # custom logon file (must be after creation of ROOT globals)
-      if hasargv and not '-n' in sys.argv:
+      if hasargv and not '-n' in sys.argv and not PyConfig.DisableRootLogon:
          rootlogon = os.path.expanduser( '~/.rootlogon.py' )
          if os.path.exists( rootlogon ):
           # could also have used execfile, but import is likely to give fewer surprises
@@ -556,21 +566,15 @@ class ModuleFacade( types.ModuleType ):
     # set the display hook
       sys.displayhook = _displayhook
 
-    # manually load libMathCore, for example to obtain gRandom
-    # This can be removed once autoloading on selected variables is available
-      _root.gSystem.Load( "libMathCore" )
-
 sys.modules[ __name__ ] = ModuleFacade( sys.modules[ __name__ ] )
 del ModuleFacade
 
-### Add some infrastructure if we are in a Jupiter Notebook ---------------------
-# We check if the ZMQ shell is in use, which is a sign of usage in the notebook.
+### Add some infrastructure if we are being imported via a Jupyter Kernel ------
 if '__IPYTHON__' in __builtins__ and __IPYTHON__:
    from IPython import get_ipython
-   pre_execute_callbacks = get_ipython().events.callbacks['pre_execute']
-   zmqIshellName = 'ZMQInteractiveShell'
-   if any(zmqIshellName == callBack.im_class.__name__ for callBack in pre_execute_callbacks if hasattr(callBack, 'im_class')):
-      import ROOTaaS.iPyROOT
+   ip = get_ipython()
+   if hasattr(ip,"kernel"):
+      import JupyROOT
 
 ### b/c of circular references, the facade needs explicit cleanup ---------------
 import atexit

@@ -20,14 +20,6 @@
 #include "TObjArray.h"
 #endif
 
-////////////////////////////////////////////////////////////////////////////
-//                                                                        //
-// TGeoPolygon - An arbitrary polygon defined by vertices. The vertices   //
-//   have to be defined CLOCKWISE in the XY plane, making either a convex //
-//   or concave polygon. No test for malformed polygons is performed.     //
-//                                                                        //
-////////////////////////////////////////////////////////////////////////////
-
 class TGeoPolygon : public TObject
 {
 public:

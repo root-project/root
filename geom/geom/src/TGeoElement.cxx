@@ -9,15 +9,30 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
-//
-// TGeoElement      - base class for chemical elements
-// TGeoElementRN    - class representing a radionuclide
-// TGeoElemIter     - iterator for decay branches
-// TGeoDecayChannel - a decay channel for a radionuclide
-// TGeoElementTable - table of elements
-//
-////////////////////////////////////////////////////////////////////////////////
+/** \class TGeoElement
+\ingroup Geometry_classes
+Base class for chemical elements
+*/
+
+/** \class TGeoElementRN
+\ingroup Geometry_classes
+Class representing a radionuclide
+*/
+
+/** \class TGeoElemIter
+\ingroup Geometry_classes
+Iterator for decay branches
+*/
+
+/** \class TGeoDecayChannel
+\ingroup Geometry_classes
+A decay channel for a radionuclide
+*/
+
+/** \class TGeoElementTable
+\ingroup Geometry_classes
+Table of elements
+*/
 
 #include "RConfigure.h"
 
@@ -374,7 +389,7 @@ void TGeoElementRN::AddDecay(TGeoDecayChannel *dc)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get number of decay chanels of this element.
+/// Get number of decay channels of this element.
 
 Int_t TGeoElementRN::GetNdecays() const
 {
@@ -953,9 +968,9 @@ void TGeoElementTable::AddElement(TGeoElement *elem)
       Error("AddElement", "Found element with same name: %s (%s). Cannot add to table.",
              orig->GetName(), orig->GetTitle());
       return;
-   }          
+   }
    fList->AddAtAndExpand(elem, fNelements++);
-}   
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a radionuclide to the table and map it.
@@ -1220,7 +1235,7 @@ TGeoIsotope *TGeoElementTable::FindIsotope(const char *name) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Retreive a radionuclide by ENDF code.
+/// Retrieve a radionuclide by ENDF code.
 
 TGeoElementRN *TGeoElementTable::GetElementRN(Int_t ENDFcode) const
 {
@@ -1235,7 +1250,7 @@ TGeoElementRN *TGeoElementTable::GetElementRN(Int_t ENDFcode) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Retreive a radionuclide by a, z, and isomeric state.
+/// Retrieve a radionuclide by a, z, and isomeric state.
 
 TGeoElementRN *TGeoElementTable::GetElementRN(Int_t a, Int_t z, Int_t iso) const
 {
@@ -1278,7 +1293,7 @@ void TGeoElementTable::Print(Option_t *option) const
    if (opt=="" || opt=="U") {
       if (fNelements>induser) printf("================\nUser elements\n================\n");
       for (Int_t iel=induser; iel<fNelements; ++iel) fList->At(iel)->Print();
-   }      
+   }
 }
 
 ClassImp(TGeoBatemanSol)

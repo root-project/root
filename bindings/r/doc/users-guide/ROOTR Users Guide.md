@@ -19,8 +19,8 @@ ROOTR also has a R events processing system, which allows to use the R graphical
 ## INSTALLATION
 To install ROOTR please read first.
 
-- [http://root.cern.ch/drupal/content/installing-root-source](http://root.cern.ch/drupal/content/installing-root-source)
-- [http://root.cern.ch/drupal/content/build-prerequisites](http://root.cern.ch/drupal/content/build-prerequisites)
+- [https://root.cern.ch/building-root](https://root.cern.ch/building-root)
+- [https://root.cern.ch/build-prerequisites](https://root.cern.ch/build-prerequisites)
 
 
 ### COMPILING ROOTR ON MAC WITH CMAKE:
@@ -31,7 +31,7 @@ To install ROOTR please read first.
 
 -  xcode
 - [http://xquartz.macosforge.org/](http://xquartz.macosforge.org/)
--  R last version [http://cran.rstudio.com/bin/macosx/R-3.1.3-mavericks.pkg](http://cran.rstudio.com/bin/macosx/R-3.1.3-mavericks.pkg)
+-  R last version [https://cran.rstudio.com/bin/macosx/R-3.2.3.pkg](https://cran.rstudio.com/bin/macosx/R-3.2.3.pkg)
 - [http://www.cmake.org/files/v3.2/cmake-3.2.1-Darwin-x86_64.dmg](http://www.cmake.org/files/v3.2/cmake-3.2.1-Darwin-x86_64.dmg)
 
 To compile with cmake added into ~/.profile
@@ -52,10 +52,17 @@ install.packages(c('Rcpp','RInside'))
 ~~~
 select a mirror and install.
 
+Install the next additional packages for R TMVA interface
+
+~~~{.sh}
+install.packages(c('C50','RSNNS','e1071','xgboost'))
+~~~
+
+
 Download code from git repo
 
 ~~~{.sh}
-git clone -b master-root-R  https://github.com/lmoneta/root.git
+git clone http://root.cern.ch/git/root.git
 ~~~
 
 To compile ROOTR lets to create a compilation directory and to activate it use cmake -Dr=ON ..
@@ -86,10 +93,17 @@ Install needed R packages, open R and in the prompt type
 install.packages(c('Rcpp','RInside'))
 ~~~
 select a mirror and install.
+
+Install the next additional packages for R TMVA interface
+
+~~~{.sh}
+install.packages(c('C50','RSNNS','e1071','xgboost'))
+~~~
+
 Download code from git repo
 
 ~~~{.sh}
-git clone -b master-root-R  https://github.com/lmoneta/root.git
+git clone http://root.cern.ch/git/root.git
 ~~~
 
 To compile ROOTR lets to create a compilation directory and to activate it use cmake -Dr=ON ..
@@ -842,6 +856,5 @@ void Integration()
 
 ## Users Guide Sites
 - http://oproject.org/tiki-index.php?page=ROOT+R+Users+Guide
-- https://root.cern.ch/drupal/content/how-use-r-root-root-r-interface
 
 

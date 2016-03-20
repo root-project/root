@@ -22,6 +22,9 @@
 #include "ROOT/TAxis.h"
 
 namespace ROOT {
+namespace Experimental {
+
+template <class HISTIMPL> class THistBinIter;
 
 namespace Hist {
 /// Iterator over n dimensional axes - an array of n axis iterators.
@@ -59,13 +62,17 @@ public:
   /// Type of the coordinate: a DIMENSIONS-dimensional array of doubles.
   using Coord_t = std::array<double, DIMENSIONS>;
 
+  THistImplPrecisionAgnosticBase() = default;
+  THistImplPrecisionAgnosticBase(const THistImplPrecisionAgnosticBase&) = default;
+  THistImplPrecisionAgnosticBase(THistImplPrecisionAgnosticBase&&) = default;
+  THistImplPrecisionAgnosticBase(std::string_view title): fTitle(title) {}
   virtual ~THistImplPrecisionAgnosticBase() {}
 
   /// Number of dimensions of this histogram.
   constexpr int GetNDim() const { return DIMENSIONS; }
   /// Number of bins of this histogram, including all overflow and underflow
   /// bins. Simply the product of all axes' number of bins.
-  virtual int GetNBins() const = 0;
+  virtual int GetNBins() const noexcept = 0;
 
   /// Given the coordinate `x`, determine the index of the bin.
   virtual int GetBinIndex(const Coord_t& x) const = 0;
@@ -82,7 +89,7 @@ public:
 
   /// The bin's uncertainty. size() of the vector is a multiple of 2:
   /// several kinds of uncertainty, same number of entries for lower and upper.
-  virtual std::vector<double> GetBinUncertainties(int binidx) const = 0;
+  virtual double GetBinUncertainty(int binidx) const = 0;
 
   /// The bin content, cast to double.
   virtual double GetBinContentAsDouble(int binidx) const = 0;
@@ -99,6 +106,9 @@ public:
   /// overflow should be included in the returned range.
   virtual Hist::AxisIterRange_t<DIMENSIONS>
     GetRange(const std::array<Hist::EOverflow, DIMENSIONS>& withOverUnder) const = 0;
+
+private:
+  std::string fTitle; ///< Histogram title.
 };
 
 
@@ -110,15 +120,31 @@ public:
  through THist, THistImpl inherits from THistImplBase, exposing only dimension
  (`DIMENSION`) and bin type (`PRECISION`).
  */
-template<int DIMENSIONS, class PRECISION>
-class THistImplBase: public THistImplPrecisionAgnosticBase<DIMENSIONS> {
+template<int DIMENSIONS, class PRECISION, class STATISTICS>
+class THistImplBase: public THistImplPrecisionAgnosticBase<DIMENSIONS>,
+                     public STATISTICS {
+private:
+  std::vector<PRECISION> fContent; ///< The histogram's bin content
+
 public:
   /// Type of a coordinate: an array of `DIMENSIONS` doubles.
   using Coord_t = typename THistImplPrecisionAgnosticBase<DIMENSIONS>::Coord_t;
   /// Type of the bin content (and thus weights).
   using Weight_t = PRECISION;
+  using Stat_t = STATISTICS;
   /// Type of the Fill(x, w) function
   using FillFunc_t = void (THistImplBase::*)(const Coord_t& x, Weight_t w);
+
+  /// Iterator support
+  using const_iterator = ROOT::Experimental::THistBinIter<const THistImplBase>;
+  using iterator = ROOT::Experimental::THistBinIter<THistImplBase>;
+
+
+  THistImplBase(size_t numBins): fContent(numBins) {}
+  THistImplBase(std::string_view title, size_t numBins):
+    THistImplPrecisionAgnosticBase<DIMENSIONS>(title), fContent(numBins) {}
+  THistImplBase(const THistImplBase&) = default;
+  THistImplBase(THistImplBase&&) = default;
 
   /// Interface function to fill a vector or array of coordinates with
   /// corresponding weights.
@@ -132,15 +158,43 @@ public:
   /// Retrieve the pointer to the overridden Fill(x, w) function.
   virtual FillFunc_t GetFillFunc() const = 0;
 
+  /// Get the number of bins in this histogram, including possible under- and
+  /// overflow bins.
+  int GetNBins() const noexcept final { return fContent.size(); }
 
   /// Get the bin content (sum of weights) for bin index `binidx`.
-  virtual PRECISION GetBinContent(int binidx) const = 0;
+  PRECISION GetBinContent(int binidx) const { return fContent[binidx]; }
+
+  /// Const access to statistics.
+  const STATISTICS& GetStat() const noexcept { return *this; }
+
+  /// Non-const access to statistics.
+  STATISTICS& GetStat() noexcept { return *this; }
 
   /// Get the bin content (sum of weights) for bin index `binidx`, cast to
   /// double.
   double GetBinContentAsDouble(int binidx) const final {
     return (double) GetBinContent(binidx);
   }
+
+  /// Add `w` to the bin at index `bin`.
+  void AddBinContent(int bin, Weight_t w) {
+    fContent[bin] += w;
+  }
+
+  /// Minimal iterator interface over all bins.
+  const_iterator begin() const noexcept { return const_iterator(*this); }
+  iterator begin() noexcept { return iterator(*this); }
+
+  /// Minimal iterator interface over all bins.
+  const_iterator end() const noexcept {
+    return const_iterator(*this, fContent.size());
+  }
+  iterator end() noexcept { return iterator(*this, fContent.size()); }
+
+  std::array_view<PRECISION> GetContent() const noexcept { return fContent; }
+  std::vector<PRECISION>& GetContent() noexcept { return fContent; }
+
 };
 } // namespace Detail
 
@@ -169,6 +223,13 @@ struct TGetBinCount {
     return std::get<I>(axes).GetNBins() * TGetBinCount<I - 1, AXES>()(axes);
   }
 };
+
+
+template<class... AXISCONFIG>
+int GetNBinsFromAxes(AXISCONFIG... axisArgs) {
+  using axesTuple = std::tuple<AXISCONFIG...>;
+  return TGetBinCount<sizeof...(AXISCONFIG) - 1, axesTuple>()(axesTuple{axisArgs...});
+}
 
 
 template <int IDX, class HISTIMPL, class AXES, bool GROW>
@@ -285,19 +346,18 @@ GetAxisView(const AXISCONFIG&...axes) noexcept {
 } // namespace Internal
 
 
-template <int DIMENSIONS, class PRECISION> class THist;
+template <int DIMENSIONS, class PRECISION, class STATISTICS> class THist;
 
 namespace Detail {
 
 template <int DIMENSIONS, class PRECISION, class STATISTICS, class... AXISCONFIG>
-class THistImpl final: public THistImplBase<DIMENSIONS, PRECISION>,
-   STATISTICS {
+class THistImpl final: public THistImplBase<DIMENSIONS, PRECISION, STATISTICS> {
   static_assert(sizeof...(AXISCONFIG) == DIMENSIONS,
                 "Number of axes must equal histogram dimension");
-  friend class THist<DIMENSIONS, PRECISION>;
+  friend class THist<DIMENSIONS, PRECISION, STATISTICS>;
 
 public:
-  using ImplBase_t = THistImplBase<DIMENSIONS, PRECISION>;
+  using ImplBase_t = THistImplBase<DIMENSIONS, PRECISION, STATISTICS>;
   using Coord_t = typename ImplBase_t::Coord_t;
   using Weight_t = typename ImplBase_t::Weight_t;
   using typename ImplBase_t::FillFunc_t;
@@ -305,23 +365,11 @@ public:
     = typename Hist::AxisIterRange_t<NDIM>;
 
 private:
-  /// Get the number of bins in this histograms, including possible under- and
-  /// overflow bins.
-  int GetNBins() const final {
-    return Internal::TGetBinCount<sizeof...(AXISCONFIG) - 1,
-       decltype(fAxes)>()(fAxes);
-  }
-
-  /// Add `w` to the bin at index `bin`.
-  void AddBinContent(int bin, Weight_t w) {
-    fContent[bin] += w;
-  }
-
   std::tuple<AXISCONFIG...> fAxes; ///< The histogram's axes
-  std::vector<PRECISION> fContent; ///< The histogram's bin content
 
 public:
-  THistImpl(STATISTICS statConfig, AXISCONFIG... axisArgs);
+  THistImpl(AXISCONFIG... axisArgs);
+  THistImpl(std::string_view title, AXISCONFIG... axisArgs);
 
   /// Retrieve the fill function for this histogram implementation, to prevent
   /// the virtual function call for high-frequency fills.
@@ -398,9 +446,8 @@ public:
     }
 #endif
 
-    for (int i = 0; i < xN.size(); ++i) {
+    for (size_t i = 0; i < xN.size(); ++i) {
       Fill(xN[i], weightN[i]);
-      STATISTICS::Fill(xN[i], weightN[i]);
     }
   }
 
@@ -408,23 +455,22 @@ public:
   /// For each element `i`, the weight `weightN[i]` will be added to the bin
   /// at the coordinate `xN[i]`
   void FillN(const std::array_view<Coord_t> xN) final {
-    for (int i = 0; i < xN.size(); ++i) {
-      Fill(xN[i]);
-      STATISTICS::Fill(xN[i]);
+    for (auto&& x: xN) {
+      Fill(x);
     }
   }
 
   /// Return the uncertainties for the given bin.
-  std::vector<double> GetBinUncertainties(int binidx) const final {
-    return STATISTICS::GetBinUncertainties(binidx, *this);
+  double GetBinUncertainty(int binidx) const final {
+    return STATISTICS::GetBinUncertainty(binidx, *this);
   }
 
   /// Add a single weight `w` to the bin at coordinate `x`.
   void Fill(const Coord_t& x, Weight_t w = 1.) {
     int bin = GetBinIndexAndGrow(x);
     if (bin >= 0)
-      AddBinContent(bin, w);
-    STATISTICS::Fill(x, w);
+      ImplBase_t::AddBinContent(bin, w);
+    STATISTICS::Fill(x, bin, w);
   }
 
   /// Get the content of the bin at position `x`.
@@ -435,11 +481,6 @@ public:
     return 0.;
   }
 
-
-  /// Get the content of the bin at bin index `binidx`.
-  PRECISION GetBinContent(int binidx) const final {
-    return fContent[binidx];
-  }
 
   /// Get the begin() and end() for each axis.
   ///
@@ -464,8 +505,17 @@ public:
 
 
 template <int DIMENSIONS, class PRECISION, class STATISTICS, class... AXISCONFIG>
-THistImpl<DIMENSIONS, PRECISION, STATISTICS, AXISCONFIG...>::THistImpl(STATISTICS statConfig, AXISCONFIG... axisArgs):
-  STATISTICS(statConfig), fAxes{axisArgs...}, fContent(GetNBins())
+THistImpl<DIMENSIONS, PRECISION, STATISTICS, AXISCONFIG...>::
+THistImpl(AXISCONFIG... axisArgs):
+  ImplBase_t(Internal::GetNBinsFromAxes(axisArgs...)),
+  fAxes{axisArgs...}
+{}
+
+template <int DIMENSIONS, class PRECISION, class STATISTICS, class... AXISCONFIG>
+THistImpl<DIMENSIONS, PRECISION, STATISTICS, AXISCONFIG...>::
+THistImpl(std::string_view title, AXISCONFIG... axisArgs):
+  ImplBase_t(title, Internal::GetNBinsFromAxes(axisArgs...)),
+  fAxes{axisArgs...}
 {}
 
 #if 0
@@ -479,6 +529,8 @@ public:
 #endif
 
 } // namespace Detail
+
+} // namespace Experimental
 } // namespace ROOT
 
 #endif

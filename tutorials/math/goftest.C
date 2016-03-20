@@ -1,15 +1,16 @@
-// ------------------------------------------------------------------------
-//
-// GoFTest tutorial macro
-//
-// Using Anderson-Darling and Kolmogorov-Smirnov goodness of fit tests
-// 1 sample test is performed comparing data with a log-normal distribution
-// and a 2 sample test is done comparing two gaussian data sets.
-//
-//
-// Author:   Bartolomeu Rabacal    6/2010
-//
-// ------------------------------------------------------------------------
+/// \file
+/// \ingroup tutorial_math
+/// GoFTest tutorial macro
+///
+/// Using Anderson-Darling and Kolmogorov-Smirnov goodness of fit tests
+/// 1 sample test is performed comparing data with a log-normal distribution
+/// and a 2 sample test is done comparing two gaussian data sets.
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Bartolomeu Rabacal
 
 #include <cassert>
 #include "TCanvas.h"
@@ -102,7 +103,7 @@ void goftest() {
    Double_t pvalueKS_2 = (*goftest_1)(ROOT::Math::GoFTest::kKS);
    assert(pvalueKS_1 == pvalueKS_2);
 
-   /* Valid but incorrect calls for the 2-samples methods of the 1-samples constucted goftest_1 */
+   /* Valid but incorrect calls for the 2-samples methods of the 1-samples constructed goftest_1 */
 #ifdef TEST_ERROR_MESSAGE
     Double_t A2 = (*goftest_1)(ROOT::Math::GoFTest::kAD2s, "t");     // Issues error message
     Double_t pvalueKS = (*goftest_1)(ROOT::Math::GoFTest::kKS2s);    // Issues error message
@@ -203,7 +204,6 @@ void goftest() {
    sprintf(str2, "p-value for K-S 2-smps test: %f", pvalueKS_1);
    pt2-> AddText(str2);
    pt2-> Draw();
-
 
    // ------------------------------------------------------------------------
    // C a s e  3 :  C r e a t e   L a n d a u  r a n d o m  s a m p l e

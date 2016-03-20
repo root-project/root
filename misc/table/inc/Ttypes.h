@@ -133,7 +133,7 @@ namespace Internal {
    public:
       static const char* fgStructName; // Need to be instantiated
       virtual TClass *CreateClass(const char *cname, Version_t id,
-                                  const type_info &info, TVirtualIsAProxy *isa,
+                                  const std::type_info &info, TVirtualIsAProxy *isa,
                                   const char *dfil, const char *ifil,
                                   Int_t dl, Int_t il) const
       {

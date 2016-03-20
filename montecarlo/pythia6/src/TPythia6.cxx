@@ -1,63 +1,66 @@
 // @(#)root/pythia6:$Id$
 // Author: Rene Brun   19/10/99
 
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-// TPythia6                                                                   //
-//                                                                            //
-// TPythia is an interface class to F77 version of Pythia 6.2                 //
-// To use this class you must install a version of pythia6.                   //
-//   see the installation instructions at                                     //
-//       http://root.cern.ch/root/Install.html                                //
-//                                                                            //
-// CERNLIB event generators, written by T.Sjostrand.                          //
-// For the details about these generators look at Pythia/Jetset manual:       //
-//                                                                            //
-//******************************************************************************
-//**                                                                          **
-//**                                                                          **
-//**  PPP  Y   Y TTTTT H   H III   A        JJJJ EEEE TTTTT  SSS  EEEE TTTTT  **
-//**  P  P  Y Y    T   H   H  I   A A          J E      T   S     E      T    **
-//**  PPP    Y     T   HHHHH  I  AAAAA         J EEE    T    SSS  EEE    T    **
-//**  P      Y     T   H   H  I  A   A      J  J E      T       S E      T    **
-//**  P      Y     T   H   H III A   A       JJ  EEEE   T    SSS  EEEE   T    **
-//**                                                                          **
-//**                                                                          **
-//**              *......*                  Welcome to the Lund Monte Carlo!  **
-//**         *:::!!:::::::::::*                                               **
-//**      *::::::!!::::::::::::::*            This is PYTHIA version 5.720    **
-//**    *::::::::!!::::::::::::::::*        Last date of change: 29 Nov 1995  **
-//**   *:::::::::!!:::::::::::::::::*                                         **
-//**   *:::::::::!!:::::::::::::::::*         This is JETSET version 7.408    **
-//**    *::::::::!!::::::::::::::::*!       Last date of change: 23 Aug 1995  **
-//**      *::::::!!::::::::::::::* !!                                         **
-//**      !! *:::!!:::::::::::*    !!                 Main author:            **
-//**      !!     !* -><- *         !!              Torbjorn Sjostrand         **
-//**      !!     !!                !!        Dept. of theoretical physics 2   **
-//**      !!     !!                !!              University of Lund         **
-//**      !!                       !!                Solvegatan 14A           **
-//**      !!        ep             !!             S-223 62 Lund, Sweden       **
-//**      !!                       !!          phone: +46 - 46 - 222 48 16    **
-//**      !!                 pp    !!          E-mail: torbjorn@thep.lu.se    **
-//**      !!   e+e-                !!                                         **
-//**      !!                       !!         Copyright Torbjorn Sjostrand    **
-//**      !!                                     and CERN, Geneva 1993        **
-//**                                                                          **
-//**                                                                          **
-//** The latest program versions and documentation is found on WWW address    **
-//** http://thep.lu.se/tf2/staff/torbjorn/Welcome.html                        **
-//**                                                                          **
-//** When you cite these programs, priority should always be given to the     **
-//** latest published description. Currently this is                          **
-//** T. Sjostrand, Computer Physics Commun. 82 (1994) 74.                     **
-//** The most recent long description (unpublished) is                        **
-//** T. Sjostrand, LU TP 95-20 and CERN-TH.7112/93 (revised August 1995).     **
-//** Also remember that the programs, to a large extent, represent original   **
-//** physics research. Other publications of special relevance to your        **
-//** studies may therefore deserve separate mention.                          **
-//**                                                                          **
-//**                                                                          **
-//******************************************************************************
+/** \class TPythia6
+    \ingroup pythia6
+
+TPythia is an interface class to F77 version of Pythia 6.2          
+
+To use this class you must install a version of pythia6.            
+See the installation instructions at                              
+  http://root.cern.ch/root/Install.html                         
+                                                                    
+CERNLIB event generators, written by T.Sjostrand.                   
+For the details about these generators look at Pythia/Jetset manual:
+
+\verbatim
+******************************************************************************
+**                                                                          **
+**                                                                          **
+**  PPP  Y   Y TTTTT H   H III   A        JJJJ EEEE TTTTT  SSS  EEEE TTTTT  **
+**  P  P  Y Y    T   H   H  I   A A          J E      T   S     E      T    **
+**  PPP    Y     T   HHHHH  I  AAAAA         J EEE    T    SSS  EEE    T    **
+**  P      Y     T   H   H  I  A   A      J  J E      T       S E      T    **
+**  P      Y     T   H   H III A   A       JJ  EEEE   T    SSS  EEEE   T    **
+**                                                                          **
+**                                                                          **
+**              *......*                  Welcome to the Lund Monte Carlo!  **
+**         *:::!!:::::::::::*                                               **
+**      *::::::!!::::::::::::::*            This is PYTHIA version 5.720    **
+**    *::::::::!!::::::::::::::::*        Last date of change: 29 Nov 1995  **
+**   *:::::::::!!:::::::::::::::::*                                         **
+**   *:::::::::!!:::::::::::::::::*         This is JETSET version 7.408    **
+**    *::::::::!!::::::::::::::::*!       Last date of change: 23 Aug 1995  **
+**      *::::::!!::::::::::::::* !!                                         **
+**      !! *:::!!:::::::::::*    !!                 Main author:            **
+**      !!     !* -><- *         !!              Torbjorn Sjostrand         **
+**      !!     !!                !!        Dept. of theoretical physics 2   **
+**      !!     !!                !!              University of Lund         **
+**      !!                       !!                Solvegatan 14A           **
+**      !!        ep             !!             S-223 62 Lund, Sweden       **
+**      !!                       !!          phone: +46 - 46 - 222 48 16    **
+**      !!                 pp    !!          E-mail: torbjorn@thep.lu.se    **
+**      !!   e+e-                !!                                         **
+**      !!                       !!         Copyright Torbjorn Sjostrand    **
+**      !!                                     and CERN, Geneva 1993        **
+**                                                                          **
+**                                                                          **
+** The latest program versions and documentation is found on WWW address    **
+** http://thep.lu.se/tf2/staff/torbjorn/Welcome.html                        **
+**                                                                          **
+** When you cite these programs, priority should always be given to the     **
+** latest published description. Currently this is                          **
+** T. Sjostrand, Computer Physics Commun. 82 (1994) 74.                     **
+** The most recent long description (unpublished) is                        **
+** T. Sjostrand, LU TP 95-20 and CERN-TH.7112/93 (revised August 1995).     **
+** Also remember that the programs, to a large extent, represent original   **
+** physics research. Other publications of special relevance to your        **
+** studies may therefore deserve separate mention.                          **
+**                                                                          **
+**                                                                          **
+******************************************************************************
+\endverbatim
+*/
 
 #include "TPythia6.h"
 
@@ -171,8 +174,11 @@ extern "C" {
 
 ClassImp(TPythia6)
 
-////////////////////////////////////////////////////////////////////////////////
-///utility class to manage the TPythia6 innstance
+/** \class TPythia6::TPythia6Cleaner
+    \ingroup pythia6
+
+Utility class to manage the TPythia6 instance
+*/
 
 TPythia6::TPythia6Cleaner::TPythia6Cleaner() {
 }
@@ -416,16 +422,16 @@ Int_t TPythia6::ImportParticles(TClonesArray *particles, Option_t *option)
 /// sets correct title. This method should preferably be called instead of PyInit.
 /// PURPOSE: to initialize the generation procedure.
 /// ARGUMENTS: See documentation for details.
-///    frame:  - specifies the frame of the experiment:
+/// -  frame:  - specifies the frame of the experiment:
 ///                "CMS","FIXT","USER","FOUR","FIVE","NONE"
-///    beam,
-///    target: - beam and target particles (with additionaly charges, tildes or "bar":
+/// -  beam,
+/// -  target: - beam and target particles (with additionaly charges, tildes or "bar":
 ///              e,nu_e,mu,nu_mu,tau,nu_tau,gamma,pi,n,p,Lambda,Sigma,Xi,Omega,
 ///              pomeron,reggeon
-///    win:    - related to energy system:
-///              for frame=="CMS" - total energy of system
-///              for frame=="FIXT" - momentum of beam particle
-///              for frame=="USER" - dummy - see documentation.
+/// -  win:    - related to energy system:
+///              - for frame=="CMS" - total energy of system
+///              - for frame=="FIXT" - momentum of beam particle
+///              - for frame=="USER" - dummy - see documentation.
 
 void TPythia6::Initialize(const char *frame, const char *beam, const char *target, float win)
 {
@@ -639,20 +645,19 @@ int TPythia6::Pychge(int kf) {
 /// Add one entry to the event record, i.e. either a parton or a
 /// particle.
 ///
-///  IP:   normally line number for the parton/particle. There are two
-///        exceptions:
-///
-///        If IP = 0: line number 1 is used and PYEXEC is called.
-///        If IP < 0: line -IP is used, with status code K(-IP,2)=2
+/// - IP:   normally line number for the parton/particle. There are two
+///         exceptions:
+///         - If IP = 0: line number 1 is used and PYEXEC is called.
+///         - If IP < 0: line -IP is used, with status code K(-IP,2)=2
 ///                   rather than 1; thus a parton system may be built
 ///                   up by filling all but the last parton of the
 ///                   system with IP < 0.
-///  KF:   parton/particle flavour code (PDG code)
-///  PE:   parton/particle energy. If PE is smaller than the mass,
-///        the parton/particle is taken to be at rest.
-///  THETA:
-///  PHI:  polar and azimuthal angle for the momentum vector of the
-///        parton/particle.
+///  - KF:   parton/particle flavour code (PDG code)
+///  - PE:   parton/particle energy. If PE is smaller than the mass,
+///          the parton/particle is taken to be at rest.
+///  - THETA:
+///  - PHI:  polar and azimuthal angle for the momentum vector of the
+///          parton/particle.
 
 void TPythia6::Py1ent(Int_t ip, Int_t kf, Double_t pe, Double_t theta, Double_t phi)
 {

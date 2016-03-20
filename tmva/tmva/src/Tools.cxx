@@ -28,8 +28,24 @@
  * (http://ttmva.sourceforge.net/LICENSE)                                         *
  **********************************************************************************/
 
-#include <algorithm>
-#include <cstdlib>
+#include "TMVA/Tools.h"
+
+#ifndef ROOT_TMVA_Config
+#include "TMVA/Config.h"
+#endif
+#ifndef ROOT_TMVA_Event
+#include "TMVA/Event.h"
+#endif
+#ifndef ROOT_TMVA_Version
+#include "TMVA/Version.h"
+#endif
+#ifndef ROOT_TMVA_PDF
+#include "TMVA/PDF.h"
+#endif
+#ifndef ROOT_TMVA_MsgLogger
+#include "TMVA/MsgLogger.h"
+#endif
+#include "TMVA/Types.h"
 
 #include "TObjString.h"
 #include "TMath.h"
@@ -49,24 +65,8 @@
 #include "TROOT.h"
 #include "TMatrixDSymEigen.h"
 
-#ifndef ROOT_TMVA_Tools
-#include "TMVA/Tools.h"
-#endif
-#ifndef ROOT_TMVA_Config
-#include "TMVA/Config.h"
-#endif
-#ifndef ROOT_TMVA_Event
-#include "TMVA/Event.h"
-#endif
-#ifndef ROOT_TMVA_Version
-#include "TMVA/Version.h"
-#endif
-#ifndef ROOT_TMVA_PDF
-#include "TMVA/PDF.h"
-#endif
-#ifndef ROOT_TMVA_MsgLogger
-#include "TMVA/MsgLogger.h"
-#endif
+#include <algorithm>
+#include <cstdlib>
 
 using namespace std;
 

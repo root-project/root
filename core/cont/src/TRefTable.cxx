@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TRefTable
+\ingroup Containers
 A TRefTable maintains the association between a referenced object
 and the parent object supporting this referenced object.
 
@@ -37,6 +38,7 @@ for quick non-persistent lookup.
 */
 
 #include "TRefTable.h"
+#include "TBuffer.h"
 #include "TObjArray.h"
 #include "TProcessID.h"
 #include <algorithm>

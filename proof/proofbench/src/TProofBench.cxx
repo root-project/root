@@ -8,14 +8,21 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+/**
+  \defgroup proofbench PROOF benchmark utilities
+  \ingroup proof
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TProofBench                                                          //
-//                                                                      //
-// Steering class for PROOF benchmarks                                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+  Set of utilities to benchmark a PROOF facility.
+  See also https://root.cern.ch/proof-benchmark-framework-tproofbench .
+
+*/
+
+/** \class TProofBench
+\ingroup proofbench
+
+  Steering class for PROOF benchmarks
+
+*/
 
 #include "RConfigure.h"
 

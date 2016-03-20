@@ -1,7 +1,11 @@
-// @(#)root/eve:$Id$
-// Author: Alja Mrak-Tadel
-
-// Demonstrates usage of EVE calorimetry classes.
+/// \file
+/// \ingroup tutorial_eve
+/// Demonstrates usage of EVE calorimetry classes.
+///
+/// \image html eve_calorimeters.png
+/// \macro_code
+///
+/// \author Alja Mrak-Tadel
 
 #include "TEveProjections.h"
 

@@ -1,13 +1,14 @@
-/////////////////////////////////////////////////////////////////////////
-//
-// 'Bayesian Calculator' RooStats tutorial macro #701
-// author: Gregory Schott
-// date Sep 2009
-//
-// This tutorial shows an example of using the BayesianCalculator class
-//
-/////////////////////////////////////////////////////////////////////////
-
+/// \file
+/// \ingroup tutorial_roostats
+/// 'Bayesian Calculator' RooStats tutorial macro #701
+///
+/// This tutorial shows an example of using the BayesianCalculator class
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Gregory Schott
 
 #include "RooRealVar.h"
 #include "RooWorkspace.h"

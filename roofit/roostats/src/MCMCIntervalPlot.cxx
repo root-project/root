@@ -18,7 +18,9 @@
 #ifndef ROOSTATS_MCMCIntervalPlot
 #include "RooStats/MCMCIntervalPlot.h"
 #endif
-#include <iostream>
+#include "RooStats/MCMCInterval.h"
+#include "RooStats/MarkovChain.h"
+
 #ifndef ROOT_TROOT
 #include "TROOT.h"
 #endif
@@ -61,6 +63,8 @@
 #ifndef ROO_GLOBAL_FUNC
 #include "RooGlobalFunc.h"
 #endif
+
+#include <iostream>
 
 // Extra draw commands
 //static const char* POSTERIOR_HIST = "posterior_hist";
@@ -402,8 +406,10 @@ void MCMCIntervalPlot::DrawHistInterval(const Option_t* options)
       for (i = 1; i <= nBins; i++) {
          // remove bins with height < cutoff
          height = copy->GetBinContent(i);
-         if (height < histCutoff)
+         if (height < histCutoff) {
             copy->SetBinContent(i, 0);
+            copy->SetBinError(i, 0);
+         }
       }
 
       hist->Scale(1/hist->GetBinContent(hist->GetMaximumBin()));
@@ -412,7 +418,8 @@ void MCMCIntervalPlot::DrawHistInterval(const Option_t* options)
       copy->SetFillStyle(1001);
       copy->SetFillColor(fShadeColor);
       hist->Draw(options);
-      copy->Draw("same");
+      // to show the interval area 
+      copy->Draw("HIST SAME");
 
       fPosteriorHistHistCopy = copy;
 
@@ -495,6 +502,7 @@ void MCMCIntervalPlot::DrawTailFractionInterval(const Option_t* options)
          center = copy->GetBinCenter(i);
          if (center < ll || center > ul)
             copy->SetBinContent(i, 0);
+            copy->SetBinError(i, 0);
       }
 
       hist->Scale(1/hist->GetBinContent(hist->GetMaximumBin()));
@@ -503,7 +511,7 @@ void MCMCIntervalPlot::DrawTailFractionInterval(const Option_t* options)
       copy->SetFillStyle(1001);
       copy->SetFillColor(fShadeColor);
       hist->Draw(options);
-      copy->Draw("same");
+      copy->Draw("hist same");
 
       // draw lower and upper limits
       TLine* llLine = new TLine(ll, 0, ll, 1);

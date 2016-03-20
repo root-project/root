@@ -9,41 +9,48 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//_____________________________________________________________________________
-// TGeoXtru
-//==========
-//   An extrusion with fixed outline shape in x-y and a sequence
-// of z extents (segments).  The overall scale of the outline scales
-// linearly between z points and the center can have an x-y offset.
-//
-// Creation of TGeoXtru shape
-//=============================
-//   A TGeoXtru represents a polygonal extrusion. It is defined by the:
-// a. 'Blueprint' of the arbitrary polygon representing any Z section. This
-//    is an arbytrary polygon (convex or not) defined by the X/Y positions of
-//    its vertices.
-// b. A sequence of Z sections ordered on the Z axis. Each section defines the
-//   'actual' parameters of the polygon at a given Z. The sections may be
-//    translated with respect to the blueprint and/or scaled. The TGeoXtru
-//   segment in between 2 Z sections is a solid represented by the linear
-//   extrusion between the 2 polygons. Two consecutive sections may be defined
-//   at same Z position.
-//
-// 1. TGeoXtru *xtru = TGeoXtru(Int_t nz);
-//   where nz=number of Z planes
-// 2. Double_t x[nvertices]; // array of X positions of blueprint polygon vertices
-//    Double_t y[nvertices]; // array of Y positions of blueprint polygon vertices
-// 3. xtru->DefinePolygon(nvertices,x,y);
-// 4. DefineSection(0, z0, x0, y0, scale0); // Z position, offset and scale for first section
-//    DefineSection(1, z1, x1, y1, scale1); // -''- secons section
-//    ....
-//    DefineSection(nz-1, zn, xn, yn, scalen); // parameters for last section
-//
-// *NOTES*
-// Currently navigation functionality not fully implemented (only Contains()).
-// Decomposition in concave polygons not implemented - drawing in solid mode
-// within x3d produces incorrect end-faces
-//_____________________________________________________________________________
+/** \class  TGeoXtru
+\ingroup Geometry_classes
+  An extrusion with fixed outline shape in x-y and a sequence
+of z extents (segments).  The overall scale of the outline scales
+linearly between z points and the center can have an x-y offset.
+
+Based on the initial implementation of R. Hatcher
+
+### Creation of TGeoXtru shape
+
+A TGeoXtru represents a polygonal extrusion. It is defined by the:
+1. 'Blueprint' of the arbitrary polygon representing any Z section. This
+   is an arbitrary polygon (convex or not) defined by the X/Y positions of
+   its vertices.
+1. A sequence of Z sections ordered on the Z axis. Each section defines the
+  'actual' parameters of the polygon at a given Z. The sections may be
+   translated with respect to the blueprint and/or scaled. The TGeoXtru
+  segment in between 2 Z sections is a solid represented by the linear
+  extrusion between the 2 polygons. Two consecutive sections may be defined
+  at same Z position.
+
+1. `TGeoXtru *xtru = TGeoXtru(Int_t nz);`
+
+   where nz=number of Z planes
+
+2. `Double_t x[nvertices]; // array of X positions of blueprint polygon vertices`
+
+   `Double_t y[nvertices]; // array of Y positions of blueprint polygon vertices`
+
+3. `xtru->DefinePolygon(nvertices,x,y);`
+
+4. `DefineSection(0, z0, x0, y0, scale0); // Z position, offset and scale for first section`
+
+   `DefineSection(1, z1, x1, y1, scale1); // -''- second section`
+   `....`
+   `DefineSection(nz-1, zn, xn, yn, scalen); // parameters for last section`
+
+#### NOTES
+Currently navigation functionality not fully implemented (only Contains()).
+Decomposition in concave polygons not implemented - drawing in solid mode
+within x3d produces incorrect end-faces
+*/
 
 #include "TGeoXtru.h"
 
@@ -221,17 +228,17 @@ TGeoXtru::TGeoXtru(Int_t nz)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor in GEANT3 style
-/// param[0] = nz  // number of z planes
+///  - param[0] = nz  // number of z planes
 ///
-/// param[1] = z1  // Z position of first plane
-/// param[2] = x1  // X position of first plane
-/// param[3] = y1  // Y position of first plane
-/// param[4] = scale1  // scale factor for first plane
+///  - param[1] = z1  // Z position of first plane
+///  - param[2] = x1  // X position of first plane
+///  - param[3] = y1  // Y position of first plane
+///  - param[4] = scale1  // scale factor for first plane
 /// ...
-/// param[4*(nz-1]+1] = zn
-/// param[4*(nz-1)+2] = xn
-/// param[4*(nz-1)+3] = yn
-/// param[4*(nz-1)+4] = scalen
+///  - param[4*(nz-1]+1] = zn
+///  - param[4*(nz-1)+2] = xn
+///  - param[4*(nz-1)+3] = yn
+///  - param[4*(nz-1)+4] = scalen
 
 TGeoXtru::TGeoXtru(Double_t *param)
          :TGeoBBox(0, 0, 0),
@@ -669,7 +676,7 @@ Double_t TGeoXtru::DistFromOutside(const Double_t *point, const Double_t *dir, I
       stepmax -= dist;
    }
    // not the case - we have to do some work...
-   // Start trackink from current iz
+   // Start tracking from current iz
    // - first solve particular case dir[2]=0
    Bool_t convex = td.fPoly->IsConvex();
    Bool_t hit = kFALSE;
@@ -712,9 +719,10 @@ Double_t TGeoXtru::DistFromOutside(const Double_t *point, const Double_t *dir, I
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Creates the polygon representing the blueprint of any Xtru section.
-///   nvert     = number of vertices >2
-///   xv[nvert] = array of X vertex positions
-///   yv[nvert] = array of Y vertex positions
+///  - nvert     = number of vertices >2
+///  - xv[nvert] = array of X vertex positions
+///  - yv[nvert] = array of Y vertex positions
+///
 /// *NOTE* should be called before DefineSection or ctor with 'param'
 
 Bool_t TGeoXtru::DefinePolygon(Int_t nvert, const Double_t *xv, const Double_t *yv)
@@ -1062,7 +1070,7 @@ Double_t TGeoXtru::SafetyToSector(const Double_t *point, Int_t iz, Double_t safm
 ////////////////////////////////////////////////////////////////////////////////
 /// computes the closest distance from given point to this shape, according
 /// to option. The matching point on the shape is stored in spoint.
-///---> localize the Z segment
+///> localize the Z segment
 
 Double_t TGeoXtru::Safety(const Double_t *point, Bool_t in) const
 {
@@ -1168,17 +1176,17 @@ void TGeoXtru::SetCurrentVertices(Double_t x0, Double_t y0, Double_t scale)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// param[0] = nz  // number of z planes
+///  - param[0] = nz  // number of z planes
 ///
-/// param[1] = z1  // Z position of first plane
-/// param[2] = x1  // X position of first plane
-/// param[3] = y1  // Y position of first plane
-/// param[4] = scale1  // scale factor for first plane
+///  - param[1] = z1  // Z position of first plane
+///  - param[2] = x1  // X position of first plane
+///  - param[3] = y1  // Y position of first plane
+///  - param[4] = scale1  // scale factor for first plane
 /// ...
-/// param[4*(nz-1]+1] = zn
-/// param[4*(nz-1)+2] = xn
-/// param[4*(nz-1)+3] = yn
-/// param[4*(nz-1)+4] = scalen
+///  - param[4*(nz-1]+1] = zn
+///  - param[4*(nz-1)+2] = xn
+///  - param[4*(nz-1)+3] = yn
+///  - param[4*(nz-1)+4] = scalen
 
 void TGeoXtru::SetDimensions(Double_t *param)
 {
@@ -1281,14 +1289,7 @@ Int_t TGeoXtru::GetNmeshVertices() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-////// fill size of this 3-D object
-////   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-////   if (!painter) return;
-////
-////   Int_t numPoints = fNz*fNvert;
-////   Int_t numSegs   = fNvert*(2*fNz-1);
-////   Int_t numPolys  = fNvert*(fNz-1)+2;
-////   painter->AddSize3D(numPoints, numSegs, numPolys);
+/// fill size of this 3-D object
 
 void TGeoXtru::Sizeof3D() const
 {
@@ -1348,7 +1349,7 @@ void TGeoXtru::ComputeNormal_v(const Double_t *points, const Double_t *dirs, Dou
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+/// Compute distance from array of input points having directions specified by dirs. Store output in dists
 
 void TGeoXtru::DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {
@@ -1356,7 +1357,7 @@ void TGeoXtru::DistFromInside_v(const Double_t *points, const Double_t *dirs, Do
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+/// Compute distance from array of input points having directions specified by dirs. Store output in dists
 
 void TGeoXtru::DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {

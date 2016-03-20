@@ -1,6 +1,12 @@
-#
-# To see the output of this macro, click begin_html <a href="gif/h1draw.gif">here</a> end_html
-#
+## \file
+## \ingroup tutorial_pyroot
+## A Simple histogram drawing example
+##
+## \macro_image
+## \macro_output
+## \macro_code
+##
+## \author Wim Lavrijsen
 
 from ROOT import TCanvas, TPad, TFile, TPaveLabel, TPaveText
 from ROOT import gROOT
@@ -17,7 +23,6 @@ pad2.Draw()
 pad3.Draw()
 #
 # We connect the ROOT file generated in a previous tutorial
-# see begin_html <a href="hsimple.C.html">An example creating/filling/saving histograms/ntuples on file</a> end_html
 #
 example = TFile( 'py-hsimple.root' )
 example.ls()

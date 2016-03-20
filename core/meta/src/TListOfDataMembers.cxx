@@ -16,6 +16,7 @@ unloaded data member.
 */
 
 #include "TListOfDataMembers.h"
+#include "TBuffer.h"
 #include "TClass.h"
 #include "TClassRef.h"
 #include "TExMap.h"

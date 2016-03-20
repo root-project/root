@@ -27,6 +27,7 @@
 
 namespace clang {
   class DiagnosticsEngine;
+  class CodeGenOptions;
 }
 
 namespace llvm {
@@ -47,6 +48,10 @@ namespace cling {
     ///\brief Our JIT interface.
     ///
     std::unique_ptr<IncrementalJIT> m_JIT;
+
+    ///\brier A pointer to the IncrementalExecutor of the parent Interpreter.
+    ///
+    IncrementalExecutor* m_externalIncrementalExecutor;
 
     ///\brief Helper that manages when the destructor of an object to be called.
     ///
@@ -127,7 +132,8 @@ namespace cling {
     clang::DiagnosticsEngine& m_Diags;
 #endif
 
-    std::unique_ptr<llvm::TargetMachine> CreateHostTargetMachine() const;
+    std::unique_ptr<llvm::TargetMachine>
+       CreateHostTargetMachine(const clang::CodeGenOptions& CGOpt) const;
 
   public:
     enum ExecutionResult {
@@ -137,9 +143,14 @@ namespace cling {
       kNumExeResults
     };
 
-    IncrementalExecutor(clang::DiagnosticsEngine& diags);
+    IncrementalExecutor(clang::DiagnosticsEngine& diags,
+                        const clang::CodeGenOptions& CGOpt);
 
     ~IncrementalExecutor();
+
+    void setExternalIncrementalExecutor(IncrementalExecutor *extIncrExec) {
+      m_externalIncrementalExecutor = extIncrExec;
+    }
 
     void installLazyFunctionCreator(LazyFunctionCreatorFunc_t fp);
 
@@ -263,7 +274,8 @@ namespace cling {
         T fun;
         void* address;
       } p2f;
-      p2f.address = (void*)m_JIT->getSymbolAddress(funcname);
+      p2f.address = (void*)m_JIT->getSymbolAddress(funcname,
+                                                   false /*no dlsym*/);
 
       // check if there is any unresolved symbol in the list
       if (diagnoseUnresolvedSymbols(funcname, "function") || !p2f.address) {

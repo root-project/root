@@ -19,23 +19,11 @@ set(MATHCORE_HEADERS TRandom.h
   Math/MersenneTwisterEngine.h Math/MixMaxEngine.h 
 )
 
-
-# ROOT_GENERATE_DICTIONARY(G__Math     TComplex.h TMath.h  LINKDEF LinkDef1.h)
-# ROOT_GENERATE_DICTIONARY(G__MathCore ${MATHCORE_HEADERS} LINKDEF LinkDef2.h)
-# ROOT_GENERATE_DICTIONARY(G__MathFit  Fit/*.h LINKDEF LinkDef3.h)
-
 ROOT_GENERATE_DICTIONARY(G__MathCore   TComplex.h TMath.h ${MATHCORE_HEADERS} Fit/*.h MODULE MathCore LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
 
-
-
 add_definitions(-DUSE_ROOT_ERROR )
-
-#ROOT_LINKER_LIBRARY(MathCore *.cxx G__Math.cxx G__MathCore.cxx G__MathFit.cxx LIBRARIES ${CMAKE_THREAD_LIBS_INIT} DEPENDENCIES Core)
-
-#use this in case of CGAL
-#find_package(CGAL)  
-#ROOT_LINKER_LIBRARY(MathCore *.cxx *.c G__MathCore.cxx LIBRARIES ${CMAKE_THREAD_LIBS_INIT} DEPENDENCIES Core ${CGAL_LIBRARY} ${GMP_LIBRARIES})
-#
+ROOT_ADD_C_FLAG(_flags -Wno-strict-overflow)  # Avoid what it seems a compiler false positive warning
+set_source_files_properties(src/triangle.c COMPILE_FLAGS "${_flags}")
 
 ROOT_LINKER_LIBRARY(MathCore *.cxx *.c G__MathCore.cxx LIBRARIES ${CMAKE_THREAD_LIBS_INIT} DEPENDENCIES Core)
 

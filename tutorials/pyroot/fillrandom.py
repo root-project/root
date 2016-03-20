@@ -1,6 +1,12 @@
-#
-# To see the output of this macro, click begin_html <a href="gif/fillrandom.gif">here</a>. end_html
-#
+## \file
+## \ingroup tutorial_pyroot
+## FillRandom example
+##
+## \macro_image
+## \macro_output
+## \macro_code
+##
+## \author Wim Lavrijsen
 
 from ROOT import TCanvas, TPad, TFormula, TF1, TPaveLabel, TH1F, TFile
 from ROOT import gROOT, gBenchmark

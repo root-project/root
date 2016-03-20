@@ -449,7 +449,7 @@ static int ReadKeys(int fd, struct FileHeader_t *fh, NSMutableString *html, QLPr
 #endif
             return -1;
          }
-         startDate = [startDate addTimeInterval: 0.1];
+         startDate = [startDate dateByAddingTimeInterval: 0.1];
       }
    }
 

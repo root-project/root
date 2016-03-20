@@ -1,13 +1,13 @@
-//////////////////////////////////////////////////////////////////////////
-//
-// 'NUMERIC ALGORITHM TUNING' RooFit tutorial macro #903 
-// 
-//  Caching of slow numeric integrals and parameterizations of slow
-//  numeric integrals
-//
-// 07/2008 - Wouter Verkerke 
-// 
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roofit
+///  'NUMERIC ALGORITHM TUNING' RooFit tutorial macro #903
+///
+///   Caching of slow numeric integrals and parameterizations of slow
+///   numeric integrals
+///
+/// \macro_code
+/// \author 07/2008 - Wouter Verkerke 
+
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"

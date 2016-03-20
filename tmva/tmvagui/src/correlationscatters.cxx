@@ -10,7 +10,7 @@
 // input: - Input file (result from TMVA),
 //        - normal/decorrelated/PCA
 //        - use of TMVA plotting TStyle
-void TMVA::correlationscatters( TString fin , TString var, 
+void TMVA::correlationscatters(TString dataset, TString fin , TString var, 
                                 TString dirName_, TString /*title */ ,
                           Bool_t isRegression ,
                           Bool_t useTMVAStyle  )
@@ -29,20 +29,19 @@ void TMVA::correlationscatters( TString fin , TString var,
         << "\" (extension: \"" << extension << "\")" << endl;
 
    // checks if file with name "fin" is already open, and if not opens one
-   //TFile* file =
-   TMVAGlob::OpenFile( fin );  
+   TFile* file = TMVAGlob::OpenFile( fin );  
 
    TString dirName = dirName_ + "/CorrelationPlots";
   
    // find out number of input variables   
-   TDirectory* vardir = (TDirectory*)gDirectory->Get( "InputVariables_Id" );
+   TDirectory* vardir = (TDirectory*)file->GetDirectory(dataset.Data())->Get("InputVariables_Id");
    if (!vardir) {
       cout << "ERROR: no such directory: \"InputVariables\"" << endl;
       return;
    }
    Int_t noVars = TMVAGlob::GetNumberOfInputVariables( vardir ); // subtraction of target(s) no longer necessary
 
-   TDirectory* dir = (TDirectory*)gDirectory->Get( dirName );
+   TDirectory* dir = (TDirectory*)file->GetDirectory(dataset.Data())->Get( dirName );
    if (dir==0) {
       cout << "No information about " << extension << " available in " << fin << endl;
       return;
@@ -160,7 +159,7 @@ void TMVA::correlationscatters( TString fin , TString var,
          if (countPad%noPadPerCanv==0) {
             canv->Update();
 
-            TString fname = Form( "plots/correlationscatter_%s_%s_c%i",var.Data(), extension.Data(), countCanvas );
+            TString fname = Form( "%s/plots/correlationscatter_%s_%s_c%i",dataset.Data(),var.Data(), extension.Data(), countCanvas );
             TMVAGlob::plot_logo();
             TMVAGlob::imgconv( canv, fname );
          }
@@ -168,7 +167,7 @@ void TMVA::correlationscatters( TString fin , TString var,
       if (countPad%noPadPerCanv!=0) {
          canv->Update();
 
-         TString fname = Form( "plots/correlationscatter_%s_%s_c%i",var.Data(), extension.Data(), countCanvas );
+         TString fname = Form( "%s/plots/correlationscatter_%s_%s_c%i",dataset.Data(),var.Data(), extension.Data(), countCanvas );
          TMVAGlob::plot_logo();
          TMVAGlob::imgconv( canv, fname );
       }

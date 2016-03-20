@@ -9,15 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TOutputListSelectorDataMap                                           //
-//                                                                      //
-// Set the selector's data members to the corresponding elements of the //
-// output list.                                                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TOutputListSelectorDataMap
+\ingroup proofkernel
 
+Set the selector's data members to the corresponding elements of the
+output list.
+
+*/
 
 #include "TOutputListSelectorDataMap.h"
 

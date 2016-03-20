@@ -21,6 +21,6 @@ namespace TMVA{
                       const TString& buttonType, TString requiredKey = "" ); 
 
    // main GUI
-   void TMVAMultiClassGui( const char* fName = "TMVAMulticlass.root" ); 
+   void TMVAMultiClassGui( const char* fName = "TMVAMulticlass.root",TString dataset="" ); 
 }
 #endif

@@ -20,6 +20,7 @@ set( LLVM_LINK_COMPONENTS
 add_cling_library(clingInterpreter
   AutoSynthesizer.cpp
   AutoloadCallback.cpp
+  ASTImportSource.cpp
   BackendPasses.cpp
   CheckEmptyTransactionTransformer.cpp
   CIFactory.cpp
@@ -41,7 +42,7 @@ add_cling_library(clingInterpreter
   NullDerefProtectionTransformer.cpp
   RequiredSymbols.cpp
   ValueExtractionSynthesizer.cpp
-  RuntimeException.cpp
+  Exception.cpp
   Transaction.cpp
   ASTTransformer.cpp
   TransactionUnloader.cpp
@@ -54,13 +55,13 @@ add_cling_library(clingInterpreter
   clangAST
   )
 
+add_dependencies(clingInterpreter clangBasic clangAST)
+
 if(NOT WIN32)
-set_source_files_properties(RuntimeException.cpp COMPILE_FLAGS -fexceptions)
+set_source_files_properties(Exception.cpp COMPILE_FLAGS -fexceptions)
 endif()
 
-set_source_files_properties(Interpreter.cpp COMPILE_FLAGS -DCLING_VERSION=${CLING_VERSION})
-
-#set_source_files_properties(RuntimeException.cpp COMPILE_FLAGS " /EHsc ")
+#set_source_files_properties(Exception.cpp COMPILE_FLAGS " /EHsc ")
 # the line above doesn't work, and it gives the following warnings:
 # cl : Command line warning D9025: overriding '/EHs' with '/EHs-'
 # cl : Command line warning D9025: overriding '/EHc' with '/EHc-'

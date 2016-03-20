@@ -71,7 +71,7 @@ The "Zoom" deactivates itself just the user release the <left-mouse button>
 To change attributes of the rulers attached to the current Pad, one may
 query its pointer first:
 
-~~~ {.cpp]
+~~~ {.cpp}
 TAxis3D *axis = TAxis3D::GetPadAxis(); // Ask axis pointer
 if (axis) {
   TAxis3D::ToggleRulers()     // To pop axes down

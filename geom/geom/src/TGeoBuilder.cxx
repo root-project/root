@@ -9,19 +9,17 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//_____________________________________________________________________________
-// TGeoBuilder
-// ============
-//
-//   Utility class for creating geometry objects.These will be associated
-//   with the current selected geometry manager object:
-//
-//      TGeoBuilder::Instance()->SetGeometry(gGeoManager);
-//
-//   The geometry builder is a singleton that may be used to build one or more
-//   geometries.
-//
-//_____________________________________________________________________________
+/** \class TGeoBuilder
+\ingroup Geometry_classes
+
+Utility class for creating geometry objects.These will be associated
+with the current selected geometry manager object:
+
+`TGeoBuilder::Instance()->SetGeometry(gGeoManager);`
+
+The geometry builder is a singleton that may be used to build one or more
+geometries.
+*/
 
 #include "TList.h"
 #include "TObjArray.h"
@@ -183,14 +181,14 @@ TGeoVolume *TGeoBuilder::MakeBox(const char *name, TGeoMedium *medium,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Make in one step a volume pointing to a paralelipiped shape with given medium.
+/// Make in one step a volume pointing to a parallelepiped shape with given medium.
 
 TGeoVolume *TGeoBuilder::MakePara(const char *name, TGeoMedium *medium,
                                     Double_t dx, Double_t dy, Double_t dz,
                                     Double_t alpha, Double_t theta, Double_t phi)
 {
    if (TMath::Abs(alpha)<TGeoShape::Tolerance() && TMath::Abs(theta)<TGeoShape::Tolerance()) {
-      Warning("MakePara","parallelipiped %s having alpha=0, theta=0 -> making box instead", name);
+      Warning("MakePara","parallelepiped %s having alpha=0, theta=0 -> making box instead", name);
       return MakeBox(name, medium, dx, dy, dz);
    }
    TGeoPara *para=0;
@@ -485,13 +483,13 @@ TGeoVolumeMulti *TGeoBuilder::MakeVolumeMulti(const char *name, TGeoMedium *medi
 /// along axis IAXIS starting at coordinate value START
 /// and having size STEP. The created volumes will have tracking
 /// media ID=NUMED (if NUMED=0 -> same media as MOTHER)
-///    The behavior of the division operation can be triggered using OPTION :
-/// OPTION (case insensitive) :
-///  N  - divide all range in NDIV cells (same effect as STEP<=0) (GSDVN in G3)
-///  NX - divide range starting with START in NDIV cells          (GSDVN2 in G3)
-///  S  - divide all range with given STEP. NDIV is computed and divisions will be centered
-///         in full range (same effect as NDIV<=0)                (GSDVS, GSDVT in G3)
-///  SX - same as DVS, but from START position.                   (GSDVS2, GSDVT2 in G3)
+///    The behavior of the division operation can be triggered using OPTION (case insensitive):
+///
+///  - N  - divide all range in NDIV cells (same effect as STEP<=0) (GSDVN in G3)
+///  - NX - divide range starting with START in NDIV cells          (GSDVN2 in G3)
+///  - S  - divide all range with given STEP. NDIV is computed and divisions will be centered
+///        in full range (same effect as NDIV<=0)                (GSDVS, GSDVT in G3)
+///  - SX - same as DVS, but from START position.                   (GSDVS2, GSDVT2 in G3)
 
 TGeoVolume *TGeoBuilder::Division(const char *name, const char *mother, Int_t iaxis,
                                   Int_t ndiv, Double_t start, Double_t step, Int_t numed, Option_t *option)
@@ -516,13 +514,13 @@ TGeoVolume *TGeoBuilder::Division(const char *name, const char *mother, Int_t ia
 ////////////////////////////////////////////////////////////////////////////////
 /// Create rotation matrix named 'mat<index>'.
 ///
-///  index    rotation matrix number
-///  theta1   polar angle for axis X
-///  phi1     azimuthal angle for axis X
-///  theta2   polar angle for axis Y
-///  phi2     azimuthal angle for axis Y
-///  theta3   polar angle for axis Z
-///  phi3     azimuthal angle for axis Z
+///  - index    rotation matrix number
+///  - theta1   polar angle for axis X
+///  - phi1     azimuthal angle for axis X
+///  - theta2   polar angle for axis Y
+///  - phi2     azimuthal angle for axis Y
+///  - theta3   polar angle for axis Z
+///  - phi3     azimuthal angle for axis Z
 ///
 
 void TGeoBuilder::Matrix(Int_t index, Double_t theta1, Double_t phi1,
@@ -579,21 +577,21 @@ TGeoMaterial *TGeoBuilder::Mixture(const char *name, Double_t *a, Double_t *z, D
 ////////////////////////////////////////////////////////////////////////////////
 /// Create tracking medium
 ///
-///  numed      tracking medium number assigned
-///  name      tracking medium name
-///  nmat      material number
-///  isvol     sensitive volume flag
-///  ifield    magnetic field
-///  fieldm    max. field value (kilogauss)
-///  tmaxfd    max. angle due to field (deg/step)
-///  stemax    max. step allowed
-///  deemax    max. fraction of energy lost in a step
-///  epsil     tracking precision (cm)
-///  stmin     min. step due to continuous processes (cm)
+///  - numed      tracking medium number assigned
+///  - name      tracking medium name
+///  - nmat      material number
+///  - isvol     sensitive volume flag
+///  - ifield    magnetic field
+///  - fieldm    max. field value (kilogauss)
+///  - tmaxfd    max. angle due to field (deg/step)
+///  - stemax    max. step allowed
+///  - deemax    max. fraction of energy lost in a step
+///  - epsil     tracking precision (cm)
+///  - stmin     min. step due to continuous processes (cm)
 ///
-///  ifield = 0 if no magnetic field; ifield = -1 if user decision in guswim;
-///  ifield = 1 if tracking performed with g3rkuta; ifield = 2 if tracking
-///  performed with g3helix; ifield = 3 if tracking performed with g3helx3.
+///  - ifield = 0 if no magnetic field; ifield = -1 if user decision in guswim;
+///  - ifield = 1 if tracking performed with g3rkuta; ifield = 2 if tracking
+///    performed with g3helix; ifield = 3 if tracking performed with g3helx3.
 ///
 
 TGeoMedium *TGeoBuilder::Medium(const char *name, Int_t numed, Int_t nmat, Int_t isvol,
@@ -610,14 +608,14 @@ TGeoMedium *TGeoBuilder::Medium(const char *name, Int_t numed, Int_t nmat, Int_t
 /// made of : a translation (x,y,z) and a rotation matrix named <matIROT>.
 /// In case npar>0, create the volume to be positioned in mother, according
 /// its actual parameters (gsposp).
-///  NAME   Volume name
-///  NUMBER Copy number of the volume
-///  MOTHER Mother volume name
-///  X      X coord. of the volume in mother ref. sys.
-///  Y      Y coord. of the volume in mother ref. sys.
-///  Z      Z coord. of the volume in mother ref. sys.
-///  IROT   Rotation matrix number w.r.t. mother ref. sys.
-///  ISONLY ONLY/MANY flag
+///  - NAME   Volume name
+///  - NUMBER Copy number of the volume
+///  - MOTHER Mother volume name
+///  - X      X coord. of the volume in mother ref. sys.
+///  - Y      Y coord. of the volume in mother ref. sys.
+///  - Z      Z coord. of the volume in mother ref. sys.
+///  - IROT   Rotation matrix number w.r.t. mother ref. sys.
+///  - ISONLY ONLY/MANY flag
 
 void TGeoBuilder::Node(const char *name, Int_t nr, const char *mother,
                        Double_t x, Double_t y, Double_t z, Int_t irot,
@@ -750,14 +748,14 @@ void TGeoBuilder::Node(const char *name, Int_t nr, const char *mother,
 /// made of : a translation (x,y,z) and a rotation matrix named <matIROT>.
 /// In case npar>0, create the volume to be positioned in mother, according
 /// its actual parameters (gsposp).
-///  NAME   Volume name
-///  NUMBER Copy number of the volume
-///  MOTHER Mother volume name
-///  X      X coord. of the volume in mother ref. sys.
-///  Y      Y coord. of the volume in mother ref. sys.
-///  Z      Z coord. of the volume in mother ref. sys.
-///  IROT   Rotation matrix number w.r.t. mother ref. sys.
-///  ISONLY ONLY/MANY flag
+///  - NAME   Volume name
+///  - NUMBER Copy number of the volume
+///  - MOTHER Mother volume name
+///  - X      X coord. of the volume in mother ref. sys.
+///  - Y      Y coord. of the volume in mother ref. sys.
+///  - Z      Z coord. of the volume in mother ref. sys.
+///  - IROT   Rotation matrix number w.r.t. mother ref. sys.
+///  - ISONLY ONLY/MANY flag
 
 void TGeoBuilder::Node(const char *name, Int_t nr, const char *mother,
                        Double_t x, Double_t y, Double_t z, Int_t irot,
@@ -886,11 +884,11 @@ void TGeoBuilder::Node(const char *name, Int_t nr, const char *mother,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a volume in GEANT3 style.
-///  NAME   Volume name
-///  SHAPE  Volume type
-///  NMED   Tracking medium number
-///  NPAR   Number of shape parameters
-///  UPAR   Vector containing shape parameters
+///  - NAME   Volume name
+///  - SHAPE  Volume type
+///  - NMED   Tracking medium number
+///  - NPAR   Number of shape parameters
+///  - UPAR   Vector containing shape parameters
 
 TGeoVolume *TGeoBuilder::Volume(const char *name, const char *shape, Int_t nmed,
                                 Float_t *upar, Int_t npar)
@@ -971,11 +969,11 @@ TGeoVolume *TGeoBuilder::Volume(const char *name, const char *shape, Int_t nmed,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a volume in GEANT3 style.
-///  NAME   Volume name
-///  SHAPE  Volume type
-///  NMED   Tracking medium number
-///  NPAR   Number of shape parameters
-///  UPAR   Vector containing shape parameters
+///  - NAME   Volume name
+///  - SHAPE  Volume type
+///  - NMED   Tracking medium number
+///  - NPAR   Number of shape parameters
+///  - UPAR   Vector containing shape parameters
 
 TGeoVolume *TGeoBuilder::Volume(const char *name, const char *shape, Int_t nmed,
                                 Double_t *upar, Int_t npar)

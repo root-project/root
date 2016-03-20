@@ -1,34 +1,40 @@
-//////////////////////////////////////
-// RooStats Model Inspector
-// Author Kyle Cranmer <cranmer@cern.ch>
-// Version 1, October 2011
-//   - based on tutorial macro by Bertrand Bellenot, Ilka Antcheva
-// Version 2, November 2011
-//   - fixes from Bertrand Bellenot <Bertrand.Bellenot@cern.ch> for scrolling window for many parameters
-//
-//
-// Usage:
-// The usage is the same as the StandardXxxDemo.C macros.
-// The macro expects a root file containing a workspace with a ModelConfig and a dataset
-// $ root
-// .L ModelInspector.C+
-// ModelInspector(fileName, workspaceName, modelConfigName, dataSetName);
-//
-// Drag the sliders to adjust the parameters of the model.
-// the min and max range of the sliders are used to define the upper & lower variation
-// the pointer position of the slider is the central blue curve.
-//
-// Click the FIT button to
-//
-// To Do:
-//  - check boxes to specify which nuisance parameters used in making variation
-//  - a button to make the profile inspector plots
-//  - a check button to use MINOS errors
-//  - have fit button show the covariance matrix from the fit
-//  - a button to make the log likelihood plots
-//  - a dialog to open the desired file
-//  - ability to see teh signal and background contributions?
-//
+/// \file
+/// \ingroup tutorial_roostats
+/// RooStats Model Inspector
+///
+/// Usage:
+/// The usage is the same as the StandardXxxDemo.C macros.
+/// The macro expects a root file containing a workspace with a ModelConfig and a dataset
+///
+/// ~~~ {.cpp}
+/// $ root
+/// .L ModelInspector.C+
+/// ModelInspector(fileName, workspaceName, modelConfigName, dataSetName);
+/// ~~~
+///
+/// Drag the sliders to adjust the parameters of the model.
+/// the min and max range of the sliders are used to define the upper & lower variation
+/// the pointer position of the slider is the central blue curve.
+///
+/// Click the FIT button to
+///
+/// To Do:
+///  - check boxes to specify which nuisance parameters used in making variation
+///  - a button to make the profile inspector plots
+///  - a check button to use MINOS errors
+///  - have fit button show the covariance matrix from the fit
+///  - a button to make the log likelihood plots
+///  - a dialog to open the desired file
+///  - ability to see the signal and background contributions?
+///
+/// \macro_code
+///
+///  - Version 1, October 2011
+///     - based on tutorial macro by Bertrand Bellenot, Ilka Antcheva
+///  - Version 2, November 2011
+///     - fixes from Bertrand Bellenot for scrolling window for many parameters
+///
+/// \author Kyle Cranmer
 
 #include "TGButton.h"
 #include "TRootEmbeddedCanvas.h"
@@ -97,7 +103,6 @@ private:
    TGHorizontalFrame   *fHframe0, *fHframe1, *fHframe2;
    TGLayoutHints       *fBly, *fBfly1, *fBfly2, *fBfly3;
    TGTripleHSlider     *fHslider1;
-  //   TGTextEntry         *fTeh1, *fTeh2, *fTeh3;
    TGTextBuffer        *fTbh1, *fTbh2, *fTbh3;
    TGCheckButton       *fCheck1, *fCheck2;
 
@@ -138,8 +143,6 @@ ModelInspectorGUI::ModelInspectorGUI(RooWorkspace* w, ModelConfig* mc, RooAbsDat
   }
   fFitRes=0;
 
-
-  //char buf[32];
    SetCleanup(kDeepCleanup);
 
    // Create an embedded canvas and add to the main frame, centered in x and y
@@ -151,11 +154,8 @@ ModelInspectorGUI::ModelInspectorGUI(RooWorkspace* w, ModelConfig* mc, RooAbsDat
    if(numCats>1){
      fCanvas->GetCanvas()->Divide(numCats);
      for(int i=0; i<numCats; ++i){
-       //   fCanvas->GetCanvas()->SetFillColor(33);
-       //   fCanvas->GetCanvas()->SetFrameFillColor(41);
        fCanvas->GetCanvas()->cd(i+1)->SetBorderMode(0);
        fCanvas->GetCanvas()->cd(i+1)->SetGrid();
-       //   fCanvas->GetCanvas()->SetLogy();
      }
    }
 
@@ -170,14 +170,12 @@ ModelInspectorGUI::ModelInspectorGUI(RooWorkspace* w, ModelConfig* mc, RooAbsDat
 
    fHframe0->Resize(200, 50);
 
-
    fHframe2 = new TGHorizontalFrame(this, 0, 0, 0);
 
    fFitButton = new TGTextButton(fHframe2,"Fit");
    fFitButton->Connect("Clicked()","ModelInspectorGUI",this,"DoFit()");
    fExitButton = new TGTextButton(fHframe2, "Exit ");
    fExitButton->Connect("Clicked()", "ModelInspectorGUI", this, "DoExit()");
-
 
    fCheck1->Connect("Clicked()", "ModelInspectorGUI", this,
                     "HandleButtons()");
@@ -194,14 +192,11 @@ ModelInspectorGUI::ModelInspectorGUI(RooWorkspace* w, ModelConfig* mc, RooAbsDat
    fBfly2 = new TGLayoutHints(kLHintsTop | kLHintsLeft,    5, 5, 5, 5);
    fBfly3 = new TGLayoutHints(kLHintsTop | kLHintsRight,   5, 5, 5, 5);
 
-   //   fHframe0->AddFrame(fCheck1, fBfly2);
-   //   fHframe0->AddFrame(fCheck2, fBfly2);
    fHframe2->AddFrame(fFitButton, fBfly2);
    fHframe2->AddFrame(fExitButton, fBfly3);
 
    AddFrame(fHframe0, fBly);
    AddFrame(fHframe2, fBly);
-
 
    // Loop over POI & NP, create slider
    // need maps of NP->slider? or just slider->NP
@@ -542,8 +537,6 @@ void ModelInspector(const char* infile = "",
       cout <<"StandardRooStatsDemoMacro: Input file " << filename << " is not found" << endl;
       return;
    }
-
-
 
   /////////////////////////////////////////////////////////////
   // Tutorial starts here

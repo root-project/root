@@ -201,7 +201,7 @@ private:
    Version_t          fClassVersion;    //Class version Identifier
    ClassInfo_t       *fClassInfo;       //pointer to CINT class info class
    TString            fContextMenuTitle;//context menu title
-   const type_info   *fTypeInfo;        //pointer to the C++ type information.
+   const std::type_info *fTypeInfo;        //pointer to the C++ type information.
    ShowMembersFunc_t  fShowMembers;     //pointer to the class's ShowMembers function
    TClassStreamer    *fStreamer;        //pointer to streamer function
    TString            fSharedLibs;      //shared libraries containing class code
@@ -247,11 +247,12 @@ private:
    mutable std::atomic<StreamerImpl_t> fStreamerImpl;  //! Pointer to the function implementing the right streaming behavior for the class represented by this object.
 #endif
 
+   Bool_t             CanSplitBaseAllow();
    TListOfFunctions  *GetMethodList();
    TMethod           *GetClassMethod(Long_t faddr);
    TMethod           *FindClassOrBaseMethodWithId(DeclId_t faddr);
    Int_t              GetBaseClassOffsetRecurse(const TClass *toBase);
-   void Init(const char *name, Version_t cversion, const type_info *info,
+   void Init(const char *name, Version_t cversion, const std::type_info *info,
              TVirtualIsAProxy *isa,
              const char *dfil, const char *ifil,
              Int_t dl, Int_t il,
@@ -337,7 +338,7 @@ public:
           const char *dfil, const char *ifil = 0,
           Int_t dl = 0, Int_t il = 0, Bool_t silent = kFALSE);
    TClass(const char *name, Version_t cversion,
-          const type_info &info, TVirtualIsAProxy *isa,
+          const std::type_info &info, TVirtualIsAProxy *isa,
           const char *dfil, const char *ifil,
           Int_t dl, Int_t il, Bool_t silent = kFALSE);
    virtual           ~TClass();
@@ -447,7 +448,7 @@ public:
    TVirtualStreamerInfo     *GetStreamerInfo(Int_t version=0) const;
    TVirtualStreamerInfo     *GetStreamerInfoAbstractEmulated(Int_t version=0) const;
    TVirtualStreamerInfo     *FindStreamerInfoAbstractEmulated(UInt_t checksum) const;
-   const type_info   *GetTypeInfo() const { return fTypeInfo; };
+   const std::type_info     *GetTypeInfo() const { return fTypeInfo; };
    Bool_t             HasDictionary();
    static Bool_t      HasDictionarySelection(const char* clname);
    void               GetMissingDictionaries(THashTable& result, bool recurse = false);
@@ -515,11 +516,11 @@ public:
    static void           RemoveClass(TClass *cl);
    static void           RemoveClassDeclId(TDictionary::DeclId_t id);
    static TClass        *GetClass(const char *name, Bool_t load = kTRUE, Bool_t silent = kFALSE);
-   static TClass        *GetClass(const type_info &typeinfo, Bool_t load = kTRUE, Bool_t silent = kFALSE);
+   static TClass        *GetClass(const std::type_info &typeinfo, Bool_t load = kTRUE, Bool_t silent = kFALSE);
    static TClass        *GetClass(ClassInfo_t *info, Bool_t load = kTRUE, Bool_t silent = kFALSE);
    static Bool_t         GetClass(DeclId_t id, std::vector<TClass*> &classes);
    static DictFuncPtr_t  GetDict (const char *cname);
-   static DictFuncPtr_t  GetDict (const type_info &info);
+   static DictFuncPtr_t  GetDict (const std::type_info &info);
 
    static Int_t       AutoBrowse(TObject *obj, TBrowser *browser);
    static ENewType    IsCallingNew();

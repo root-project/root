@@ -9,17 +9,33 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//_____________________________________________________________________________
-// TGeoEltu - elliptical tube class. It takes 3 parameters :
-// semi-axis of the ellipse along x, semi-asix of the ellipse along y
-// and half-length dz.
-//
-//_____________________________________________________________________________
-//Begin_Html
-/*
-<img src="gif/t_eltu.gif">
+/** \class TGeoEltu
+\ingroup Geometry_classes
+
+Elliptical tube  class. An elliptical tube has 3 parameters
+  - A - semi-axis of the ellipse along x
+  - B - semi-axis of the ellipse along y
+  - dz - half length in z
+
+Begin_Macro(source)
+{
+   TCanvas *c = new TCanvas("c", "c",0,0,600,600);
+   new TGeoManager("eltu", "poza6");
+   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
+   TGeoMedium *med = new TGeoMedium("MED",1,mat);
+   TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
+   gGeoManager->SetTopVolume(top);
+   TGeoVolume *vol = gGeoManager->MakeEltu("ELTU",med, 30,10,40);
+   top->AddNode(vol,1);
+   gGeoManager->CloseGeometry();
+   gGeoManager->SetNsegments(50);
+   top->Draw();
+   TView *view = gPad->GetView();
+   view->ShowAxis();
+}
+End_Macro
 */
-//End_Html
+
 
 #include "Riostream.h"
 
@@ -202,7 +218,7 @@ Double_t TGeoEltu::DistFromInside(const Double_t *point, const Double_t *dir, In
    Double_t xz=point[0]+dir[0]*sz;
    Double_t yz=point[1]+dir[1]*sz;
    if ((xz*xz/a2+yz*yz/b2)<=1) return snxt;
-   // do eliptical surface
+   // do elliptical surface
    Double_t tolerance = TGeoShape::Tolerance();
    Double_t u=dir[0]*dir[0]*b2+dir[1]*dir[1]*a2;
    Double_t v=point[0]*dir[0]*b2+point[1]*dir[1]*a2;
@@ -289,7 +305,7 @@ Double_t TGeoEltu::DistFromOutside(const Double_t *point, const Double_t *dir, I
    if ((TMath::Abs(zi)-fDz)>0) return TGeoShape::Big();
    // crossing is backwards (point inside the ellipse) in Z range
    if (tau < 0) return 0.;
-   // Point is outside and crossing the eliptical tube in Z range
+   // Point is outside and crossing the elliptical tube in Z range
    return tau;
 }
 
@@ -299,7 +315,7 @@ Double_t TGeoEltu::DistFromOutside(const Double_t *point, const Double_t *dir, I
 TGeoVolume *TGeoEltu::Divide(TGeoVolume * /*voldiv*/, const char * /*divname*/, Int_t /*iaxis*/, Int_t /*ndiv*/,
                              Double_t /*start*/, Double_t /*step*/)
 {
-   Error("Divide", "Elliptical tubes divisions not implemenetd");
+   Error("Divide", "Elliptical tubes divisions not implemented");
    return 0;
 }
 
@@ -419,7 +435,7 @@ void TGeoEltu::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set dimensions of the eliptical tube.
+/// Set dimensions of the elliptical tube.
 
 void TGeoEltu::SetEltuDimensions(Double_t a, Double_t b, Double_t dz)
 {
@@ -443,7 +459,7 @@ void TGeoEltu::SetDimensions(Double_t *param)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create eliptical tube mesh points
+/// Create elliptical tube mesh points
 
 void TGeoEltu::SetPoints(Double_t *points) const
 {
@@ -505,7 +521,7 @@ Int_t TGeoEltu::GetNmeshVertices() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create eliptical tube mesh points
+/// Create elliptical tube mesh points
 
 void TGeoEltu::SetPoints(Float_t *points) const
 {
@@ -600,7 +616,7 @@ void TGeoEltu::ComputeNormal_v(const Double_t *points, const Double_t *dirs, Dou
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+/// Compute distance from array of input points having directions specified by dirs. Store output in dists
 
 void TGeoEltu::DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {
@@ -608,7 +624,7 @@ void TGeoEltu::DistFromInside_v(const Double_t *points, const Double_t *dirs, Do
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+/// Compute distance from array of input points having directions specified by dirs. Store output in dists
 
 void TGeoEltu::DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {

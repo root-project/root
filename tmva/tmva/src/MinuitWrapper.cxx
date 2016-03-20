@@ -29,6 +29,8 @@
 
 #include "TMVA/MinuitWrapper.h"
 
+#include "TMVA/IFitterTarget.h"
+
 ClassImp(TMVA::MinuitWrapper)
 
 ////////////////////////////////////////////////////////////////////////////////

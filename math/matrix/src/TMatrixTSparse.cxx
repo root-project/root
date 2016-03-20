@@ -9,68 +9,76 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TMatrixTSparse                                                       //
-//                                                                      //
-// Template class of a general sparse matrix in the Harwell-Boeing      //
-// format                                                               //
-//                                                                      //
-// Besides the usual shape/size decsriptors of a matrix like fNrows,    //
-// fRowLwb,fNcols and fColLwb, we also store a row index, fRowIndex and //
-// column index, fColIndex only for those elements unequal zero:        //
-//                                                                      //
-// fRowIndex[0,..,fNrows]:    Stores for each row the index range of    //
-//                            the elements in the data and column array //
-// fColIndex[0,..,fNelems-1]: Stores the column number for each data    //
-//                            element != 0                              //
-//                                                                      //
-// As an example how to access all sparse data elements:                //
-//                                                                      //
-// for (Int_t irow = 0; irow < this->fNrows; irow++) {                  //
-//   const Int_t sIndex = fRowIndex[irow];                              //
-//   const Int_t eIndex = fRowIndex[irow+1];                            //
-//   for (Int_t index = sIndex; index < eIndex; index++) {              //
-//     const Int_t icol = fColIndex[index];                             //
-//     const Element data = fElements[index];                           //
-//     printf("data(%d,%d) = %.4e\n",irow+this->fRowLwb,icol+           //
-//                                               this->fColLwb,data);   //
-//   }                                                                  //
-// }                                                                    //
-//                                                                      //
-// When checking whether sparse matrices are compatible (like in an     //
-// assigment !), not only the shape parameters are compared but also    //
-// the sparse structure through fRowIndex and fColIndex .               //
-//                                                                      //
-// Several methods exist to fill a sparse matrix with data entries.     //
-// Most are the same like for dense matrices but some care has to be    //
-// taken with regard to performance. In the constructor, always the     //
-// shape of the matrix has to be specified in some form . Data can be   //
-// entered through the following methods :                              //
-// 1. constructor                                                       //
-//    TMatrixTSparse(Int_t row_lwb,Int_t row_upb,Int_t dol_lwb,         //
-//                   Int_t col_upb,Int_t nr_nonzeros,                   //
-//                   Int_t *row, Int_t *col,Element *data);            //
-//    It uses SetMatrixArray(..), see below                             //
-// 2. copy constructors                                                 //
-// 3. SetMatrixArray(Int_t nr,Int_t *irow,Int_t *icol,Element *data)   //
-//    where it is expected that the irow,icol and data array contain    //
-//    nr entries . Only the entries with non-zero data[i] value are     //
-//    inserted. Be aware that the input data array will be modified     //
-//    inside the routine for doing the necessary sorting of indices !   //
-// 4. TMatrixTSparse a(n,m); for(....) { a(i,j) = ....                  //
-//    This is a very flexible method but expensive :                    //
-//    - if no entry for slot (i,j) is found in the sparse index table   //
-//      it will be entered, which involves some memory management !     //
-//    - before invoking this method in a loop it is smart to first      //
-//      set the index table through a call to SetSparseIndex(..)        //
-// 5. SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixTBase &source)    //
-//    the matrix to be inserted at position (row_lwb,col_lwb) can be    //
-//    both dense or sparse .                                            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TMatrixTSparse
+    \ingroup Matrix
+
+ TMatrixTSparse
+
+ Template class of a general sparse matrix in the Harwell-Boeing
+ format
+
+ Besides the usual shape/size decsriptors of a matrix like fNrows,
+ fRowLwb,fNcols and fColLwb, we also store a row index, fRowIndex and
+ column index, fColIndex only for those elements unequal zero:
+
+~~~
+ fRowIndex[0,..,fNrows]:    Stores for each row the index range of
+                            the elements in the data and column array
+ fColIndex[0,..,fNelems-1]: Stores the column number for each data
+                            element != 0
+~~~
+
+ As an example how to access all sparse data elements:
+
+~~~
+ for (Int_t irow = 0; irow < this->fNrows; irow++) {
+   const Int_t sIndex = fRowIndex[irow];
+   const Int_t eIndex = fRowIndex[irow+1];
+   for (Int_t index = sIndex; index < eIndex; index++) {
+     const Int_t icol = fColIndex[index];
+     const Element data = fElements[index];
+     printf("data(%d,%d) = %.4e\n",irow+this->fRowLwb,icol+
+                                               this->fColLwb,data);
+   }
+ }
+~~~
+
+ When checking whether sparse matrices are compatible (like in an
+ assigment !), not only the shape parameters are compared but also
+ the sparse structure through fRowIndex and fColIndex .
+
+ Several methods exist to fill a sparse matrix with data entries.
+ Most are the same like for dense matrices but some care has to be
+ taken with regard to performance. In the constructor, always the
+ shape of the matrix has to be specified in some form . Data can be
+ entered through the following methods :
+ 1. constructor
+~~~
+    TMatrixTSparse(Int_t row_lwb,Int_t row_upb,Int_t dol_lwb,
+                   Int_t col_upb,Int_t nr_nonzeros,
+                   Int_t *row, Int_t *col,Element *data);
+~~~
+    It uses SetMatrixArray(..), see below
+ 2. copy constructors
+ 3. SetMatrixArray(Int_t nr,Int_t *irow,Int_t *icol,Element *data)
+    where it is expected that the irow,icol and data array contain
+    nr entries . Only the entries with non-zero data[i] value are
+    inserted. Be aware that the input data array will be modified
+    inside the routine for doing the necessary sorting of indices !
+ 4. TMatrixTSparse a(n,m); for(....) { a(i,j) = ....
+    This is a very flexible method but expensive :
+    - if no entry for slot (i,j) is found in the sparse index table
+      it will be entered, which involves some memory management !
+    - before invoking this method in a loop it is smart to first
+      set the index table through a call to SetSparseIndex(..)
+ 5. SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixTBase &source)
+    the matrix to be inserted at position (row_lwb,col_lwb) can be
+    both dense or sparse .
+
+*/
 
 #include "TMatrixTSparse.h"
+#include "TBuffer.h"
 #include "TMatrixT.h"
 #include "TMath.h"
 
@@ -1467,7 +1475,7 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::SetSparseIndexAB(const TMatrix
       }
    }
 
-   // Allocate thre necessary space in fRowIndex and fColIndex
+   // Allocate the necessary space in fRowIndex and fColIndex
    if (this->NonZeros() != nc)
       SetSparseIndex(nc);
 
@@ -1597,7 +1605,7 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::ResizeTo(Int_t nrows,Int_t ncols
 ////////////////////////////////////////////////////////////////////////////////
 /// Set size of the matrix to [row_lwb:row_upb] x [col_lwb:col_upb] with nr_nonzeros
 /// non-zero entries if nr_nonzeros > 0 .
-/// New dynamic elemenst are created, the overlapping part of the old ones are
+/// New dynamic elements are created, the overlapping part of the old ones are
 /// copied to the new structures, then the old elements are deleted.
 
 template<class Element>
@@ -2498,7 +2506,7 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::RandomizePD(Element alpha,Elem
    TMatrixTSparse<Element> tmp(TMatrixTSparse<Element>::kTransposed,*this);
    *this += tmp;
 
-   // make sure to divide the diagonal by 2 becuase the operation
+   // make sure to divide the diagonal by 2 because the operation
    // *this += tmp; adds the diagonal again
    {
       const Int_t    * const pR = this->GetRowIndexArray();

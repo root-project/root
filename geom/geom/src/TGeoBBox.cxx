@@ -10,66 +10,110 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//--------------------------------------------------------------------------
-// TGeoBBox - box class. All shape primitives inherit from this, their
-//   constructor filling automatically the parameters of the box that bounds
-//   the given shape. Defined by 6 parameters :
-//      fDX, fDY, fDZ - half lengths on X, Y and Z axis
-//      fOrigin[3]    - position of box origin
-//
-//--------------------------------------------------------------------------
-//
-//
-//--- Building boxes
-//  ==================
-//  Normally a box has to be build only with 3 parameters : dx, dy, dz
-// representing the half lengths on X, Y and Z axis. In this case, the origin
-// of the box will match the one of its reference frame. The translation of the
-// origin is used only by the constructors of all other shapes in order to
-// define their own bounding boxes. Users should be aware that building a
-// translated box that will represent a physical shape by itself will affect any
-// further positioning of other shapes inside. Therefore in order to build a
-// positioned box one should follow the recipe described in class TGeoNode.
-//
-// Creation of boxes
-// 1.   TGeoBBox *box = new TGeoBBox("BOX", 20, 30, 40);
-//Begin_Html
-/*
-<img src="gif/t_box.gif">
+/** \class TGeoBBox
+\ingroup Geometry_classes
+
+Box class. All shape primitives inherit from this, their
+  constructor filling automatically the parameters of the box that bounds
+  the given shape. Defined by 6 parameters :
+    - fDX, fDY, fDZ - half lengths on X, Y and Z axis
+    - fOrigin[3]    - position of box origin
+
+
+### Building boxes
+
+ Normally a box has to be build only with 3 parameters : dx, dy, dz
+representing the half lengths on X, Y and Z axis. In this case, the origin
+of the box will match the one of its reference frame. The translation of the
+origin is used only by the constructors of all other shapes in order to
+define their own bounding boxes. Users should be aware that building a
+translated box that will represent a physical shape by itself will affect any
+further positioning of other shapes inside. Therefore in order to build a
+positioned box one should follow the recipe described in class TGeoNode.
+
+#### Creation of boxes
+
+  - TGeoBBox *box = new TGeoBBox("BOX", 20, 30, 40);
+
+Begin_Macro(source)
+{
+   TCanvas *c = new TCanvas("c", "c",0,0,600,600);
+   new TGeoManager("box", "poza1");
+   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
+   TGeoMedium *med = new TGeoMedium("MED",1,mat);
+   TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
+   gGeoManager->SetTopVolume(top);
+   TGeoVolume *vol = gGeoManager->MakeBox("BOX",med, 20,30,40);
+   vol->SetLineWidth(2);
+   top->AddNode(vol,1);
+   gGeoManager->CloseGeometry();
+   gGeoManager->SetNsegments(80);
+   top->Draw();
+   TView *view = gPad->GetView();
+   view->ShowAxis();
+}
+End_Macro
+
+  - A volume having a box shape can be built in one step:
+    `TGeoVolume *vbox = gGeoManager->MakeBox("vbox", ptrMed, 20,30,40);`
+
+#### Divisions of boxes.
+
+  Volumes having box shape can be divided with equal-length slices on
+X, Y or Z axis. The following options are supported:
+
+  - Dividing the full range of one axis in N slices
+    `TGeoVolume *divx = vbox->Divide("SLICEX", 1, N);`
+    - here 1 stands for the division axis (1-X, 2-Y, 3-Z)
+
+Begin_Macro(source)
+{
+   TCanvas *c = new TCanvas("c", "c",0,0,600,600);
+   new TGeoManager("box", "poza1");
+   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
+   TGeoMedium *med = new TGeoMedium("MED",1,mat);
+   TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
+   gGeoManager->SetTopVolume(top);
+   TGeoVolume *vol = gGeoManager->MakeBox("BOX",med, 20,30,40);
+   vol->SetLineWidth(2);
+   top->AddNode(vol,1);
+   TGeoVolume *divx = vol->Divide("SLICE",1,8,0,0);
+   gGeoManager->CloseGeometry();
+   gGeoManager->SetNsegments(80);
+   top->Draw();
+   TView *view = gPad->GetView();
+   view->ShowAxis();
+}
+End_Macro
+
+  - Dividing in a limited range - general case.
+    `TGeoVolume *divy = vbox->Divide("SLICEY",2,N,start,step);`
+    - start = starting offset within (-fDY, fDY)
+    - step  = slicing step
+
+Begin_Macro(source)
+{
+   TCanvas *c = new TCanvas("c", "c",0,0,600,600);
+   new TGeoManager("box", "poza1");
+   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
+   TGeoMedium *med = new TGeoMedium("MED",1,mat);
+   TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
+   gGeoManager->SetTopVolume(top);
+   TGeoVolume *vol = gGeoManager->MakeBox("BOX",med, 20,30,40);
+   vol->SetLineWidth(2);
+   top->AddNode(vol,1);
+   TGeoVolume *divx = vol->Divide("SLICE",2,8,2,3);
+   gGeoManager->CloseGeometry();
+   gGeoManager->SetNsegments(80);
+   top->Draw();
+   TView *view = gPad->GetView();
+   view->ShowAxis();
+}
+End_Macro
+
+Both cases are supported by all shapes.
+See also class TGeoShape for utility methods provided by any particular shape.
 */
-//End_Html
-//
-// 2. A volume having a box shape can be built in one step:
-//      TGeoVolume *vbox = gGeoManager->MakeBox("vbox", ptrMed, 20,30,40);
-//
-// Divisions of boxes.
-//
-//   Volumes having box shape can be divided with equal-length slices on
-// X, Y or Z axis. The following options are supported:
-// a) Dividing the full range of one axis in N slices
-//      TGeoVolume *divx = vbox->Divide("SLICEX", 1, N);
-//   - here 1 stands for the division axis (1-X, 2-Y, 3-Z)
-//Begin_Html
-/*
-<img src="gif/t_boxdivX.gif">
-*/
-//End_Html
-//
-// b) Dividing in a limited range - general case.
-//      TGeoVolume *divy = vbox->Divide("SLICEY",2,N,start,step);
-//   - start = starting offset within (-fDY, fDY)
-//   - step  = slicing step
-//
-//Begin_Html
-/*
-<img src="gif/t_boxdivstepZ.gif">
-*/
-//End_Html
-//
-// Both cases are supported by all shapes.
-//   See also class TGeoShape for utility methods provided by any particular
-// shape.
-//_____________________________________________________________________________
 
 #include "Riostream.h"
 
@@ -547,8 +591,8 @@ void TGeoBBox::GetBoundingCylinder(Double_t *param) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Get area in internal units of the facet with a given index.
 /// Possible index values:
-///    0 - all facets togeather
-///    1 to 6 - facet index from bottom to top Z
+///   - 0 - all facets together
+///   - 1 to 6 - facet index from bottom to top Z
 
 Double_t TGeoBBox::GetFacetArea(Int_t index) const
 {
@@ -578,8 +622,8 @@ Double_t TGeoBBox::GetFacetArea(Int_t index) const
 /// The output array must be provided with a length of minimum 3*npoints. Returns
 /// true if operation succeeded.
 /// Possible index values:
-///    0 - all facets togeather
-///    1 to 6 - facet index from bottom to top Z
+///   - 0 - all facets together
+///   - 1 to 6 - facet index from bottom to top Z
 
 Bool_t TGeoBBox::GetPointsOnFacet(Int_t index, Int_t npoints, Double_t *array) const
 {
@@ -679,7 +723,7 @@ Bool_t TGeoBBox::GetPointsOnSegments(Int_t npoints, Double_t *array) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Fills real parameters of a positioned box inside this one. Returns 0 if successfull.
+/// Fills real parameters of a positioned box inside this one. Returns 0 if successful.
 
 Int_t TGeoBBox::GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_t &dx, Double_t &dy, Double_t &dz) const
 {
@@ -1022,7 +1066,7 @@ void TGeoBBox::ComputeNormal_v(const Double_t *points, const Double_t *dirs, Dou
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+/// Compute distance from array of input points having directions specified by dirs. Store output in dists
 
 void TGeoBBox::DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {
@@ -1030,7 +1074,7 @@ void TGeoBBox::DistFromInside_v(const Double_t *points, const Double_t *dirs, Do
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+/// Compute distance from array of input points having directions specified by dirs. Store output in dists
 
 void TGeoBBox::DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {

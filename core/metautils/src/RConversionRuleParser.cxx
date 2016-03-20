@@ -273,13 +273,13 @@ namespace ROOT
 
       it1 = rule.find( "targetClass" );
       if( it1 == rule.end() ) {
-         error_string = "WARNING: You always have to specify the targetClass ";
+         error_string = "You always have to specify the targetClass ";
          error_string += "when specyfying an IO rule";
          return false;
       }
 
       std::string className = TSchemaRuleProcessor::Trim( it1->second );
-      std::string warning = "WARNING: IO rule for class " + className;
+      std::string warning = "IO rule for class " + className;
 
       //-----------------------------------------------------------------------
       // Check if we have the source tag
@@ -320,8 +320,8 @@ namespace ROOT
          TSchemaRuleProcessor::SplitList( it2->second.substr( 1, it2->second.size()-2 ),
                                           lst );
          if( lst.empty() ) {
-            std::cout << warning << " - the list of checksums is empty";
-            std::cout << std::endl;
+            std::string warn = warning + " - the list of checksums is empty\n";
+            ROOT::TMetaUtils::Warning(0, warn.c_str());
          }
 
          for( lsIt = lst.begin(); lsIt != lst.end(); ++lsIt )
@@ -447,10 +447,11 @@ namespace ROOT
 
       for( it = mem.begin(); it != mem.end(); ++it ) {
          if( members.find( *it ) == members.end() ) {
-            std::cout << "WARNING: IO rule for class " + rule["targetClass"];
-            std::cout << " data member: " << *it << " was specified as a ";
-            std::cout << "target in the rule but doesn't seem to appear in ";
-            std::cout << "target class" << std::endl;
+            std::string warn = "IO rule for class " + rule["targetClass"];
+            warn += " data member: " + *it + " was specified as a ";
+            warn += "target in the rule but doesn't seem to appear in ";
+            warn += "target class\n";
+            ROOT::TMetaUtils::Warning(0, warn.c_str());
             return false;
          }
       }
@@ -880,9 +881,10 @@ namespace ROOT
       std::map<std::string, std::string> rule;
       std::string error_string;
       if( !ParseRule( args, rule, error_string ) ) {
-         std::cout << error_string << '\n';
-         std::cout << "The following rule has been omitted:" << std::endl;
-         std::cout << "   read " << args << std::endl;
+         error_string += "\nThe following rule has been omitted:\n   read ";
+         error_string += args;
+         error_string += "\n";
+         ROOT::TMetaUtils::Error(0, error_string.c_str());
          return;
       }
 
@@ -914,9 +916,10 @@ namespace ROOT
       std::map<std::string, std::string> rule;
       std::string error_string;
       if( !ParseRule( args, rule, error_string ) ) {
-         std::cout << error_string << '\n';
-         std::cout << "The following rule has been omitted:" << std::endl;
-         std::cout << "   readraw " << args << std::endl;
+         error_string += "\nThe following rule has been omitted:\n   readraw ";
+         error_string += args;
+         error_string += "\n";
+         ROOT::TMetaUtils::Error(0, error_string.c_str());
          return;
       }
 

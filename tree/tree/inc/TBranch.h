@@ -98,9 +98,10 @@ protected:
    TDirectory *fDirectory;       //! Pointer to directory where this branch buffers are stored
    TString     fFileName;        //  Name of file where buffers are stored ("" if in same file as Tree header)
    TBuffer    *fEntryBuffer;     //! Buffer used to directly pass the content without streaming
+   TBuffer    *fTransientBuffer; //! Pointer to the current transient buffer.
    TList      *fBrowsables;      //! List of TVirtualBranchBrowsables used for Browse()
 
-   Bool_t      fSkipZip;         //! After being read, the buffer will not be unziped.
+   Bool_t      fSkipZip;         //! After being read, the buffer will not be unzipped.
 
    typedef void (TBranch::*ReadLeaves_t)(TBuffer &b);
    ReadLeaves_t fReadLeaves;     //! Pointer to the ReadLeaves implementation to use.
@@ -185,6 +186,7 @@ public:
    virtual Bool_t    GetMakeClass() const;
    TBranch          *GetMother() const;
    TBranch          *GetSubBranch(const TBranch *br) const;
+   TBuffer          *GetTransientBuffer(Int_t size);
    Bool_t            IsAutoDelete() const;
    Bool_t            IsFolder() const;
    virtual void      KeepCircular(Long64_t maxEntries);

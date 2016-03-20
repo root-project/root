@@ -21,16 +21,12 @@
 #include "TBuffer3DTypes.h"
 #include "TMath.h"
 
-//_____________________________________________________________________________
-// TGeoScaledShape - A shape scaled by a TGeoScale transformation
-//
-//Begin_Html
-/*
-<img src="gif/TGeoScaledShape.gif">
-*/
-//End_Html
-//_____________________________________________________________________________
+/** \class TGeoScaledShape
+\ingroup Geometry_classes
 
+A shape scaled by a TGeoScale transformation
+\image html geom_scaledshape.png
+*/
 
 ClassImp(TGeoScaledShape)
 
@@ -391,7 +387,7 @@ void TGeoScaledShape::ComputeNormal_v(const Double_t *points, const Double_t *di
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+/// Compute distance from array of input points having directions specified by dirs. Store output in dists
 
 void TGeoScaledShape::DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {
@@ -399,7 +395,7 @@ void TGeoScaledShape::DistFromInside_v(const Double_t *points, const Double_t *d
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+/// Compute distance from array of input points having directions specified by dirs. Store output in dists
 
 void TGeoScaledShape::DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {

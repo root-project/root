@@ -257,7 +257,7 @@ public:
    virtual void     WriteFastArray(void  *start,  const TClass *cl, Int_t n=1, TMemberStreamer *s=0);
    virtual Int_t    WriteFastArray(void **startp, const TClass *cl, Int_t n=1, Bool_t isPreAlloc=kFALSE, TMemberStreamer *s=0);
 
-   virtual void     StreamObject(void *obj, const type_info &typeinfo, const TClass* onFileClass = 0);
+   virtual void     StreamObject(void *obj, const std::type_info &typeinfo, const TClass* onFileClass = 0);
    virtual void     StreamObject(void *obj, const char *className, const TClass* onFileClass = 0 );
    virtual void     StreamObject(void *obj, const TClass *cl, const TClass* onFileClass = 0 );
    virtual void     StreamObject(TObject *obj);

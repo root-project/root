@@ -1,3 +1,11 @@
+/// \file
+/// \ingroup tutorial_roostats
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Lorenzo Moneta
 
 using namespace RooFit;
 void TestNonCentral(){

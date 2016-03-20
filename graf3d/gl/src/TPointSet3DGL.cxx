@@ -20,9 +20,10 @@
 #include <TGLSelectRecord.h>
 #include <TGLIncludes.h>
 
-//______________________________________________________________________
-//
-// Direct OpenGL renderer for TPointSet3D.
+/** \class TPointSet3DGL
+\ingroup opengl
+Direct OpenGL renderer for TPointSet3D.
+*/
 
 ClassImp(TPointSet3DGL);
 

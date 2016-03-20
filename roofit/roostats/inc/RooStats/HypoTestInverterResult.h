@@ -211,7 +211,8 @@ protected:
 
    double fCLsCleanupThreshold;
 
-   static double fgAsymptoticMaxSigma;  /// max sigma value used to scan asymptotic expected p values 
+   static double fgAsymptoticMaxSigma;  /// max sigma value used to scan asymptotic expected p values
+   static int fgAsymptoticNumPoints;    /// number of points used to build expected p-values
 
    std::vector<double> fXValues;
 

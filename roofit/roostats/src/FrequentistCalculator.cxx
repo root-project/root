@@ -15,6 +15,8 @@ MLEs.
 
 #include "RooStats/FrequentistCalculator.h"
 #include "RooStats/ToyMCSampler.h"
+#include "RooStats/RooStatsUtils.h"
+#include "RooStats/DetailedOutputAggregator.h"
 #include "RooMinimizer.h"
 #include "RooMinuit.h"
 #include "RooProfileLL.h"

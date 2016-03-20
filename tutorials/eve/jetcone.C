@@ -1,5 +1,11 @@
-// Demonstrates usage of TEveJetCone class.
-// Author: Jochen Thaeder
+/// \file
+/// \ingroup tutorial_eve
+/// Demonstrates usage of TEveJetCone class.
+///
+/// \image html eve_jetcone.png
+/// \macro_code
+///
+/// \author Jochen Thaeder
 
 const char* esd_geom_file_name =
    "http://root.cern.ch/files/alice_ESDgeometry.root";

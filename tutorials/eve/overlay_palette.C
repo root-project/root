@@ -1,3 +1,10 @@
+/// \file
+/// \ingroup tutorial_eve
+///
+/// \macro_code
+///
+/// \author Matevz Tadel
+
 void overlay_palette()
 {
    TEveManager::Create();

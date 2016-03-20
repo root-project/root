@@ -32,14 +32,15 @@
 
 #include "TMVA/SimulatedAnnealing.h"
 
+#include "TMVA/IFitterTarget.h"
+#include "TMVA/Interval.h"
+#include "TMVA/GeneticRange.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/Timer.h"
+#include "TMVA/Types.h"
+
 #include "TRandom3.h"
 #include "TMath.h"
-
-#include "TMVA/Interval.h"
-#include "TMVA/IFitterTarget.h"
-#include "TMVA/GeneticRange.h"
-#include "TMVA/Timer.h"
-#include "TMVA/MsgLogger.h"
 
 ClassImp(TMVA::SimulatedAnnealing)
 

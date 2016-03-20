@@ -21,36 +21,39 @@
 #include "TBuffer3DTypes.h"
 #include "TMath.h"
 
-//_____________________________________________________________________________
-// TGeoHype - Hyperboloid class defined by 5 parameters. Bounded by:
-//            - Two z planes at z=+/-dz
-//            - Inner and outer lateral surfaces. These represent the surfaces
-//              described by the revolution of 2 hyperbolas about the Z axis:
-//               r^2 - (t*z)^2 = a^2
-//
-//            r = distance between hyperbola and Z axis at coordinate z
-//            t = tangent of the stereo angle (angle made by hyperbola
-//                asimptotic lines and Z axis). t=0 means cylindrical surface.
-//            a = distance between hyperbola and Z axis at z=0
-//
-//          The inner hyperbolic surface is described by:
-//              r^2 - (tin*z)^2 = rin^2
-//           - absence of the inner surface (filled hyperboloid can be forced
-//             by rin=0 and sin=0
-//          The outer hyperbolic surface is described by:
-//              r^2 - (tout*z)^2 = rout^2
-//  TGeoHype parameters: dz[cm], rin[cm], sin[deg], rout[cm], sout[deg].
-//    MANDATORY conditions:
-//           - rin < rout
-//           - rout > 0
-//           - rin^2 + (tin*dz)^2 > rout^2 + (tout*dz)^2
-//    SUPPORTED CASES:
-//           - rin = 0, tin != 0     => inner surface conical
-//           - tin=0 AND/OR tout=0   => corresponding surface(s) cyllindrical
-//             e.g. tin=0 AND tout=0 => shape becomes a tube with: rmin,rmax,dz
-//
-//_____________________________________________________________________________
+/** \class TGeoHype
+\ingroup Geometry_classes
 
+Hyperboloid class defined by 5 parameters. Bounded by:
+  - Two z planes at z=+/-dz
+  - Inner and outer lateral surfaces. These represent the surfaces
+    described by the revolution of 2 hyperbolas about the Z axis:
+     r^2 - (t*z)^2 = a^2
+
+  - r = distance between hyperbola and Z axis at coordinate z
+  - t = tangent of the stereo angle (angle made by hyperbola
+        asymptotic lines and Z axis). t=0 means cylindrical surface.
+  - a = distance between hyperbola and Z axis at z=0
+
+The inner hyperbolic surface is described by:
+    r^2 - (tin*z)^2 = rin^2
+  - absence of the inner surface (filled hyperboloid can be forced
+    by rin=0 and sin=0
+The outer hyperbolic surface is described by:
+    r^2 - (tout*z)^2 = rout^2
+TGeoHype parameters: dz[cm], rin[cm], sin[deg], rout[cm], sout[deg].
+MANDATORY conditions:
+
+  - rin < rout
+  - rout > 0
+  - rin^2 + (tin*dz)^2 > rout^2 + (tout*dz)^2
+
+SUPPORTED CASES:
+
+  - rin = 0, tin != 0     => inner surface conical
+  - tin=0 AND/OR tout=0   => corresponding surface(s) cylindrical
+    e.g. tin=0 AND tout=0 => shape becomes a tube with: rmin,rmax,dz
+*/
 
 ClassImp(TGeoHype)
 
@@ -96,11 +99,11 @@ TGeoHype::TGeoHype(const char *name,Double_t rin, Double_t stin, Double_t rout, 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor specifying a list of parameters
-/// param[0] = dz
-/// param[1] = rin
-/// param[2] = stin
-/// param[3] = rout
-/// param[4] = stout
+///  - param[0] = dz
+///  - param[1] = rin
+///  - param[2] = stin
+///  - param[3] = rout
+///  - param[4] = stout
 
 TGeoHype::TGeoHype(Double_t *param)
          :TGeoTube(param[1],param[3],param[0])
@@ -800,11 +803,11 @@ void TGeoHype::SetHypeDimensions(Double_t rin, Double_t stin, Double_t rout, Dou
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set dimensions of the hyperboloid starting from an array.
-/// param[0] = dz
-/// param[1] = rin
-/// param[2] = stin
-/// param[3] = rout
-/// param[4] = stout
+///  - param[0] = dz
+///  - param[1] = rin
+///  - param[2] = stin
+///  - param[3] = rout
+///  - param[4] = stout
 
 void TGeoHype::SetDimensions(Double_t *param)
 {
@@ -935,14 +938,7 @@ Int_t TGeoHype::GetNmeshVertices() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-////// fill size of this 3-D object
-////    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-////    if (!painter) return;
-////    Int_t n = gGeoManager->GetNsegments();
-////    Int_t numPoints = n*4;
-////    Int_t numSegs   = n*8;
-////    Int_t numPolys  = n*4;
-////    painter->AddSize3D(numPoints, numSegs, numPolys);
+/// fill size of this 3-D object
 
 void TGeoHype::Sizeof3D() const
 {
@@ -1001,7 +997,7 @@ void TGeoHype::ComputeNormal_v(const Double_t *points, const Double_t *dirs, Dou
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+/// Compute distance from array of input points having directions specified by dirs. Store output in dists
 
 void TGeoHype::DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {
@@ -1009,7 +1005,7 @@ void TGeoHype::DistFromInside_v(const Double_t *points, const Double_t *dirs, Do
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+/// Compute distance from array of input points having directions specified by dirs. Store output in dists
 
 void TGeoHype::DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {

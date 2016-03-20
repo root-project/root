@@ -91,6 +91,20 @@
 
 #include "TMVA/Reader.h"
 
+#ifndef ROOT_TMVA_Tools
+#include "TMVA/Tools.h"
+#endif
+#include "TMVA/Config.h"
+#include "TMVA/ClassifierFactory.h"
+#include "TMVA/DataSetInfo.h"
+#include "TMVA/DataSetManager.h"
+#include "TMVA/IMethod.h"
+#include "TMVA/MethodBase.h"
+#include "TMVA/MethodCuts.h"
+#include "TMVA/MethodCategory.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/Types.h"
+
 #include "TTree.h"
 #include "TLeaf.h"
 #include "TString.h"
@@ -108,15 +122,6 @@
 #include <fstream>
 
 #include <iostream>
-#ifndef ROOT_TMVA_Tools
-#include "TMVA/Tools.h"
-#endif
-#include "TMVA/Config.h"
-#include "TMVA/ClassifierFactory.h"
-#include "TMVA/IMethod.h"
-#include "TMVA/MethodCuts.h"
-#include "TMVA/MethodCategory.h"
-#include "TMVA/DataSetManager.h"
 
 ClassImp(TMVA::Reader)
 
@@ -282,6 +287,11 @@ TMVA::Reader::~Reader( void )
    delete fDataSetManager; // DSMTEST
 
    delete fLogger;
+   
+   for (auto it=fMethodMap.begin(); it!=fMethodMap.end(); it++){
+       MethodBase * kl = dynamic_cast<TMVA::MethodBase*>(it->second);
+       delete kl;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

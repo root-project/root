@@ -293,18 +293,19 @@ TView3D::~TView3D()
 ///  - IY2     - 2nd point of Y-axis
 ///  - IZ1     - 1st point of Z-axis
 ///  - IZ2     - 2nd point of Z-axis
-///
-/// ~~~ {.cpp}
-///                     8                        6
-///                    / \                      /|\
-///                 5 /   \ 7                5 / | \ 7
-///                  |\   /|                  |  |  |
-///      THETA < 90  | \6/ |     THETA > 90   | /2\ |
-///      (Top view)  |  |  |   (Bottom view)  |/   \|
-///                 1 \ | /3                 1 \   /3
-///                    \|/                      \ /
-///                     2                        4
-/// ~~~
+/*
+    ~~~ {.cpp}
+                        8                        6
+                       / \                      /|\
+                    5 /   \ 7                5 / | \ 7
+                     |\   /|                  |  |  |
+         THETA < 90  | \6/ |     THETA > 90   | /2\ |
+         (Top view)  |  |  |   (Bottom view)  |/   \|
+                    1 \ | /3                 1 \   /3
+                       \|/                      \ /
+                        2                        4
+    ~~~
+*/
 
 void TView3D::AxisVertex(Double_t ang, Double_t *av, Int_t &ix1, Int_t &ix2, Int_t &iy1, Int_t &iy2, Int_t &iz1, Int_t &iz2)
 {

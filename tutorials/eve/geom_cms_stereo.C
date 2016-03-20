@@ -1,9 +1,13 @@
-// @(#)root/eve:$Id$
-// Author: Matevz Tadel
-
-// Shows CMS geometry in stereo mode.
-// This requires quad-buffer support in the OpenGL hardware / driver,
-// otheriwse a fatal error occurs.
+/// \file
+/// \ingroup tutorial_eve
+/// Shows CMS geometry in stereo mode.
+/// This requires quad-buffer support in the OpenGL hardware / driver,
+/// otheriwse a fatal error occurs.
+///
+/// \image html eve_geom_cms_stereo.png
+/// \macro_code
+///
+/// \author Matevz Tadel
 
 void geom_cms_stereo(Bool_t quad_buf=kTRUE)
 {

@@ -42,7 +42,8 @@ public:
       kFFC,                             //Feldman-Cousins interval
       kBJeffrey,                        //Jeffrey interval (Prior ~ Beta(0.5,0.5)
       kBUniform,                        //Prior ~ Uniform = Beta(1,1)
-      kBBayesian                        //user specified Prior ~ Beta(fBeta_alpha,fBeta_beta)
+      kBBayesian,                       //user specified Prior ~ Beta(fBeta_alpha,fBeta_beta)
+      kMidP                             //Mid-P Lancaster interval
    };
 
 protected:
@@ -179,6 +180,7 @@ public:
       static Double_t Wilson(Double_t total,Double_t passed,Double_t level,Bool_t bUpper);
       static Double_t FeldmanCousins(Double_t total,Double_t passed,Double_t level,Bool_t bUpper);
       static Bool_t FeldmanCousinsInterval(Double_t total,Double_t passed,Double_t level,Double_t & lower, Double_t & upper);
+      static Double_t MidPInterval(Double_t total,Double_t passed,Double_t level,Bool_t bUpper);
       // Bayesian functions
       static Double_t Bayesian(Double_t total,Double_t passed,Double_t level,Double_t alpha,Double_t beta,Bool_t bUpper, Bool_t bShortest = false);
       // helper functions for Bayesian statistics

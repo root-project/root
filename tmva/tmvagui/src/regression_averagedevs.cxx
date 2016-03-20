@@ -13,7 +13,7 @@ b) truncated average, using best 90%
  created January 2009, Eckhard von Toerne, University of Bonn, Germany
 */
 
-void TMVA::regression_averagedevs(TString fin, Int_t Nevt, Bool_t useTMVAStyle )
+void TMVA::regression_averagedevs(TString dataset,TString fin, Int_t Nevt, Bool_t useTMVAStyle )
 {
    bool debug=false;
    if (Nevt <0)  Nevt=1000000;
@@ -21,7 +21,7 @@ void TMVA::regression_averagedevs(TString fin, Int_t Nevt, Bool_t useTMVAStyle )
    // checks if file with name "fin" is already open, and if not opens one
    TFile* file = TMVAGlob::OpenFile( fin );
    TList jobDirList;
-   TMVAGlob::GetListOfJobs(file,jobDirList);
+   TMVAGlob::GetListOfJobs((TFile*)file->GetDirectory(dataset.Data()),jobDirList);
    if (jobDirList.GetSize()==0) {
      cout << "error could not find jobs" << endl;
      return;
@@ -185,7 +185,7 @@ void TMVA::regression_averagedevs(TString fin, Int_t Nevt, Bool_t useTMVAStyle )
      // ============================================================
 
      c->Update();
-     TString fname = "plots/" + hNameRef;
+     TString fname = dataset+"/plots/" + hNameRef;
      if (__SAVE_IMAGE__) TMVAGlob::imgconv( c, fname );
    } // end loop itrgt
    return;

@@ -30,6 +30,7 @@
 #include "Math/BrentMinimizer1D.h"
 #include "Math/BrentMethods.h"
 #include "Math/IFunction.h"
+#include "Math/IFunctionfwd.h"
 
 #ifndef ROOT_Math_Error
 #include "Math/Error.h"

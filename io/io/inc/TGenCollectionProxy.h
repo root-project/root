@@ -11,6 +11,10 @@
 #ifndef ROOT_TGenCollectionProxy
 #define ROOT_TGenCollectionProxy
 
+#ifndef ROOT_TBuffer
+#include "TBuffer.h"
+#endif
+
 #ifndef ROOT_TVirtualCollectionProxy
 #include "TVirtualCollectionProxy.h"
 #endif
@@ -41,7 +45,7 @@ class TGenCollectionProxy
 public:
 
 #ifdef R__HPUX
-   typedef const type_info&      Info_t;
+   typedef const std::type_info&      Info_t;
 #else
    typedef const std::type_info& Info_t;
 #endif

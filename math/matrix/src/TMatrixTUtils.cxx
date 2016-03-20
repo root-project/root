@@ -9,26 +9,28 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// Matrix utility classes.                                              //
-//                                                                      //
-// Templates of utility classes in the Linear Algebra Package.          //
-// The following classes are defined here:                              //
-//                                                                      //
-// Different matrix views without copying data elements :               //
-//   TMatrixTRow_const        TMatrixTRow                               //
-//   TMatrixTColumn_const     TMatrixTColumn                            //
-//   TMatrixTDiag_const       TMatrixTDiag                              //
-//   TMatrixTFlat_const       TMatrixTFlat                              //
-//   TMatrixTSub_const        TMatrixTSub                               //
-//   TMatrixTSparseRow_const  TMatrixTSparseRow                         //
-//   TMatrixTSparseDiag_const TMatrixTSparseDiag                        //
-//                                                                      //
-//   TElementActionT                                                    //
-//   TElementPosActionT                                                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TMatrixTUtils
+    \ingroup Matrix
+
+ Matrix utility classes.
+
+ Templates of utility classes in the Linear Algebra Package.
+ The following classes are defined here:
+
+ Different matrix views without copying data elements :
+~~~
+   TMatrixTRow_const        TMatrixTRow
+   TMatrixTColumn_const     TMatrixTColumn
+   TMatrixTDiag_const       TMatrixTDiag
+   TMatrixTFlat_const       TMatrixTFlat
+   TMatrixTSub_const        TMatrixTSub
+   TMatrixTSparseRow_const  TMatrixTSparseRow
+   TMatrixTSparseDiag_const TMatrixTSparseDiag
+
+   TElementActionT
+   TElementPosActionT
+~~~
+*/
 
 #include "TMatrixTUtils.h"
 #include "TMatrixT.h"
@@ -1361,7 +1363,7 @@ TMatrixTSparseRow_const<Element>::TMatrixTSparseRow_const(const TMatrixTSparse<E
 template<class Element>
 Element TMatrixTSparseRow_const<Element>::operator()(Int_t i) const
 {
-  if (!fMatrix) return TMatrixTBase<Element>::NaNValue(); 
+  if (!fMatrix) return TMatrixTBase<Element>::NaNValue();
   R__ASSERT(fMatrix->IsValid());
   const Int_t acoln = i-fMatrix->GetColLwb();
   if (acoln < fMatrix->GetNcols() && acoln >= 0) {
@@ -1371,7 +1373,7 @@ Element TMatrixTSparseRow_const<Element>::operator()(Int_t i) const
   } else {
      Error("operator()","Request col(%d) outside matrix range of %d - %d",
                         i,fMatrix->GetColLwb(),fMatrix->GetColLwb()+fMatrix->GetNcols());
-     return TMatrixTBase<Element>::NaNValue(); 
+     return TMatrixTBase<Element>::NaNValue();
   }
  }
 
@@ -1399,7 +1401,7 @@ TMatrixTSparseRow<Element>::TMatrixTSparseRow(const TMatrixTSparseRow<Element> &
 template<class Element>
 Element TMatrixTSparseRow<Element>::operator()(Int_t i) const
 {
-   if (!this->fMatrix) return TMatrixTBase<Element>::NaNValue(); 
+   if (!this->fMatrix) return TMatrixTBase<Element>::NaNValue();
    R__ASSERT(this->fMatrix->IsValid());
    const Int_t acoln = i-this->fMatrix->GetColLwb();
    if (acoln < this->fMatrix->GetNcols() && acoln >= 0) {
@@ -1409,7 +1411,7 @@ Element TMatrixTSparseRow<Element>::operator()(Int_t i) const
    } else {
       Error("operator()","Request col(%d) outside matrix range of %d - %d",
             i,this->fMatrix->GetColLwb(),this->fMatrix->GetColLwb()+this->fMatrix->GetNcols());
-      return TMatrixTBase<Element>::NaNValue(); 
+      return TMatrixTBase<Element>::NaNValue();
    }
 }
 
@@ -1419,7 +1421,7 @@ Element TMatrixTSparseRow<Element>::operator()(Int_t i) const
 template<class Element>
 Element &TMatrixTSparseRow<Element>::operator()(Int_t i)
 {
-   if (!this->fMatrix) return TMatrixTBase<Element>::NaNValue(); 
+   if (!this->fMatrix) return TMatrixTBase<Element>::NaNValue();
    R__ASSERT(this->fMatrix->IsValid());
 
    const Int_t acoln = i-this->fMatrix->GetColLwb();
@@ -1447,7 +1449,7 @@ Element &TMatrixTSparseRow<Element>::operator()(Int_t i)
          return (const_cast<Element*>(this->fDataPtr))[index];
       else {
          Error("operator()(Int_t","Insert row failed");
-         return TMatrixTBase<Element>::NaNValue(); 
+         return TMatrixTBase<Element>::NaNValue();
       }
    }
 }

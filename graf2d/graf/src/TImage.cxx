@@ -27,7 +27,6 @@ image manipulations (scaling, tiling, merging, etc.) and displaying in pads.
 
 The concrete implementation of this class is done by the TASImage class. The
 methods are documented in that class.
-End_Html
 */
 
 ////////////////////////////////////////////////////////////////////////////////

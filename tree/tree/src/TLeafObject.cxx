@@ -15,6 +15,7 @@ A TLeaf for a general object derived from TObject.
 
 #include "TLeafObject.h"
 #include "TBranch.h"
+#include "TBuffer.h"
 #include "TClass.h"
 #include "TMethodCall.h"
 #include "TDataType.h"

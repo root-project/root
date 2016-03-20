@@ -20,6 +20,7 @@
 
 #include "TROOT.h"
 #include "TClass.h"
+#include "TClassEdit.h"
 #include "TVirtualX.h"
 #include "TStyle.h"
 #include "TObjectTable.h"
@@ -140,7 +141,7 @@ ClassImp(TRint)
 TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
              Int_t numOptions, Bool_t noLogo):
    TApplication(appClassName, argc, argv, options, numOptions),
-   fCaughtException(kFALSE)
+   fCaughtSignal(0)
 {
    fNcmd          = 0;
    fDefaultPrompt = "root [%d] ";
@@ -424,7 +425,7 @@ void TRint::Run(Bool_t retrn)
             // to call Getlinem(kInit, GetPrompt());
             needGetlinemInit = kTRUE;
 
-            if (error != 0 || fCaughtException) break;
+            if (error != 0 || fCaughtSignal) break;
          }
       } ENDTRY;
 
@@ -432,12 +433,12 @@ void TRint::Run(Bool_t retrn)
          if (retrn) return;
          if (error) {
             retval = error;
-         } else if (fCaughtException) {
-            retval = 1;
+         } else if (fCaughtSignal) {
+            retval = fCaughtSignal + 128;
          }
-         // Bring retval into sensible range, 0..125.
-         if (retval < 0) retval = 1;
-         else if (retval > 125) retval = 1;
+         // Bring retval into sensible range, 0..255.
+         if (retval < 0 || retval > 255)
+            retval = 255;
          Terminate(retval);
       }
 
@@ -453,10 +454,13 @@ void TRint::Run(Bool_t retrn)
    if (QuitOpt()) {
       printf("\n");
       if (retrn) return;
-      Terminate(fCaughtException ? 1 : 0);
+      Terminate(fCaughtSignal ? fCaughtSignal + 128 : 0);
    }
 
    TApplication::Run(retrn);
+
+   // Reset to happiness.
+   fCaughtSignal = 0;
 
    Getlinem(kCleanUp, 0);
 }
@@ -473,7 +477,7 @@ void TRint::PrintLogo(Bool_t lite)
       // Here, %%s results in %s after TString::Format():
       lines.emplace_back(TString::Format("Welcome to ROOT %s%%shttp://root.cern.ch",
                                          gROOT->GetVersion()));
-      lines.emplace_back(TString::Format("%%s(c) 1995-2014, The ROOT Team"));
+      lines.emplace_back(TString::Format("%%s(c) 1995-2016, The ROOT Team"));
       lines.emplace_back(TString::Format("Built for %s%%s", gSystem->GetBuildArch()));
       if (!strcmp(gROOT->GetGitBranch(), gROOT->GetGitCommit())) {
          static const char *months[] = {"January","February","March","April","May",
@@ -589,16 +593,13 @@ Bool_t TRint::HandleTermInput()
 
       if (gROOT->Timer()) timer.Start();
 
-#ifdef R__EH
-      Bool_t added = kFALSE;
-#endif
+      TTHREAD_TLS(Bool_t) added;
+      added = kFALSE; // reset on each call.
 
       // This is needed when working with remote sessions
       SetBit(kProcessRemotely);
 
-#ifdef R__EH
       try {
-#endif
          TRY {
             if (!sline.IsNull())
                LineProcessed(sline);
@@ -606,20 +607,30 @@ Bool_t TRint::HandleTermInput()
          } CATCH(excode) {
             // enable again input handler
             fInputHandler->Activate();
-#ifdef R__EH
             added = kTRUE;
-#endif
             Throw(excode);
          } ENDTRY;
-#ifdef R__EH
       }
       // handle every exception
+      catch (std::exception& e) {
+         // enable again intput handler
+         if (!added) fInputHandler->Activate();
+
+         int err;
+         char *demangledType_c = TClassEdit::DemangleTypeIdName(typeid(e), err);
+         const char* demangledType = demangledType_c;
+         if (err) {
+            demangledType_c = nullptr;
+            demangledType = "<UNKNOWN>";
+         }
+         Error("HandleTermInput()", "%s caught: %s", demangledType, e.what());
+         free(demangledType_c);
+      }
       catch (...) {
          // enable again intput handler
          if (!added) fInputHandler->Activate();
-         throw;
+         Error("HandleTermInput()", "Exception caught!");
       }
-#endif
 
       if (gROOT->Timer()) timer.Print("u");
 
@@ -636,13 +647,13 @@ Bool_t TRint::HandleTermInput()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Handle exceptions (kSigBus, kSigSegmentationViolation,
+/// Handle signals (kSigBus, kSigSegmentationViolation,
 /// kSigIllegalInstruction and kSigFloatingException) trapped in TSystem.
 /// Specific TApplication implementations may want something different here.
 
 void TRint::HandleException(Int_t sig)
 {
-   fCaughtException = kTRUE;
+   fCaughtSignal = sig;
    if (TROOT::Initialized()) {
       if (gException) {
          Getlinem(kCleanUp, 0);

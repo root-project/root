@@ -62,7 +62,9 @@ public:
          MPSend(s, PoolCode::kIdling);
          // reduce arguments if possible
          if (fCanReduce) {
-            fReducedResult = fRedFunc({res, fReducedResult}); //TODO try not to copy these into a vector, do everything by ref. std::vector<T&>?
+            using FINAL = decltype(fReducedResult);
+            using ORIGINAL = decltype(fRedFunc({res, fReducedResult}));
+            fReducedResult = ROOT::Internal::PoolUtils::ResultCaster<ORIGINAL, FINAL>::CastIfNeeded(fRedFunc({res, fReducedResult})); //TODO try not to copy these into a vector, do everything by ref. std::vector<T&>?
          } else {
             fCanReduce = true;
             fReducedResult = res;

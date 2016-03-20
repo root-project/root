@@ -9,17 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TProofBenchRunDataRead                                               //
-//                                                                      //
-// I/O-intensive PROOF benchmark test reads in event files distributed  //
-// on the cluster. Number of events processed per second and size of    //
-// events processed per second are plotted against number of active     //
-// workers. Performance rate for unit packets and performance rate      //
-// for query are plotted.                                               //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TProofBenchRunDataRead
+\ingroup proofbench
+
+I/O-intensive PROOF benchmark test reads in event files distributed
+on the cluster. Number of events processed per second and size of
+events processed per second are plotted against number of active
+workers. Performance rate for unit packets and performance rate
+for query are plotted.
+
+*/
 
 #include "RConfigure.h"
 

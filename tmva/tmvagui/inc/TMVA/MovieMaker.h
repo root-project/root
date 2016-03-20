@@ -16,11 +16,11 @@
 #include "network.h"
 namespace TMVA{
 
-   void DrawNetworkMovie( TFile* file, const TString& methodType, const TString& methodTitle );
+   void DrawNetworkMovie(TString dataset, TFile* file, const TString& methodType, const TString& methodTitle );
 
-   void DrawMLPoutputMovie( TFile* file, const TString& methodType, const TString& methodTitle );
+   void DrawMLPoutputMovie(TString dataset, TFile* file, const TString& methodType, const TString& methodTitle );
    // -----------------------------------------------------------------------------
 
-   void MovieMaker( TString methodType = "Method_MLP", TString methodTitle = "MLP" );
+   void MovieMaker(TString dataset, TString methodType = "Method_MLP", TString methodTitle = "MLP" );
 }
 #endif

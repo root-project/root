@@ -31,6 +31,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "TMVA/MethodKNN.h"
+
 // C/C++
 #include <cmath>
 #include <string>
@@ -43,9 +45,14 @@
 
 // TMVA
 #include "TMVA/ClassifierFactory.h"
-#include "TMVA/MethodKNN.h"
+#include "TMVA/DataSetInfo.h"
+#include "TMVA/Event.h"
+#include "TMVA/LDA.h"
+#include "TMVA/MethodBase.h"
+#include "TMVA/MsgLogger.h"
 #include "TMVA/Ranking.h"
 #include "TMVA/Tools.h"
+#include "TMVA/Types.h"
 
 REGISTER_METHOD(KNN)
 

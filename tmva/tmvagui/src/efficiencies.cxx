@@ -5,7 +5,7 @@
 #include "TIterator.h"
 #include "TKey.h"
 
-void TMVA::plot_efficiencies( TFile* /*file*/, Int_t type , TDirectory* BinDir)
+void TMVA::plot_efficiencies(TString dataset, TFile* /*file*/, Int_t type , TDirectory* BinDir)
 {
    // input:   - Input file (result from TMVA),
    //          - type = 1 --> plot efficiency(B) versus eff(S)
@@ -71,7 +71,7 @@ void TMVA::plot_efficiencies( TFile* /*file*/, Int_t type , TDirectory* BinDir)
 
    TList xhists;
    TList xmethods;
-   UInt_t xnm = TMVAGlob::GetListOfMethods( xmethods );
+   UInt_t xnm = TMVAGlob::GetListOfMethods( xmethods ,BinDir);
    if (xnm==0){
       cout << "ups .. no methods found in to plot ROC curve for ... give up"  << endl;
       return;
@@ -119,7 +119,7 @@ void TMVA::plot_efficiencies( TFile* /*file*/, Int_t type , TDirectory* BinDir)
 
    TList hists;
    TList methods;
-   UInt_t nm = TMVAGlob::GetListOfMethods( methods );
+   UInt_t nm = TMVAGlob::GetListOfMethods( methods,BinDir );
    if (nm==0){
       cout << "ups .. no methods found in to plot ROC curve for ... give up"  << endl;
       return;
@@ -200,18 +200,18 @@ void TMVA::plot_efficiencies( TFile* /*file*/, Int_t type , TDirectory* BinDir)
 
    c->Update();
 
-   TString fname = "plots/" + hNameRef;
+   TString fname = dataset+"/plots/" + hNameRef;
    if (TString(BinDir->GetName()).Contains("multicut")){
       TString fprepend(BinDir->GetName());
       fprepend.ReplaceAll("multicutMVA_","");
-      fname = "plots/" + fprepend + "_" + hNameRef;
+      fname = dataset+"plots/" + fprepend + "_" + hNameRef;
    }
    if (__SAVE_IMAGE__) TMVAGlob::imgconv( c, fname );
 
    return;
 }
 
-void TMVA::efficiencies( TString fin , Int_t type , Bool_t useTMVAStyle )
+void TMVA::efficiencies(TString dataset, TString fin , Int_t type , Bool_t useTMVAStyle )
 {
    // argument: type = 1 --> plot efficiency(B) versus eff(S)
    //           type = 2 --> plot rejection (B) versus efficiency (S)
@@ -220,12 +220,9 @@ void TMVA::efficiencies( TString fin , Int_t type , Bool_t useTMVAStyle )
    TMVAGlob::Initialize( useTMVAStyle );
 
    // checks if file with name "fin" is already open, and if not opens one
-   TFile *file = (TFile*)gROOT->GetListOfFiles()->FindObject(fin);
-   if (!file || !file->IsOpen()) {
-         file = new TFile(fin);
-   }
+   TFile* file = TMVAGlob::OpenFile( fin );
 
-   plot_efficiencies( file, type, gDirectory );
+   plot_efficiencies(dataset, file, type, file->GetDirectory(dataset.Data()));
 
    return;
 }

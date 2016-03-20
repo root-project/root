@@ -132,13 +132,13 @@ void generate( R & r, bool array=true) {
   // r.SetSeed(0);
   //r.SetSeed(int(pow(2,28)) );
   if (array) {
-    double x[1000];
-    double y[1000];
+    double ax[1000];
+    double ay[1000];
     for (int i = 0; i < n; i+=1000 ) {
-      r.RndmArray(1000,x);
-      r.RndmArray(1000,y);
+      r.RndmArray(1000,ax);
+      r.RndmArray(1000,ay);
       for (int j = 0; j < 1000; ++j)
-       if ( ( x[j]*x[j] + y[j]*y[j] ) <= 1.0 ) n1++;
+       if ( ( ax[j]*ax[j] + ay[j]*ay[j] ) <= 1.0 ) n1++;
     }
   }
   else {

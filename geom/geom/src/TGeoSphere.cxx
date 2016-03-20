@@ -10,19 +10,36 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//_____________________________________________________________________________
-// TGeoSphere - spherical shell class. It takes 6 parameters :
-//           - inner and outer radius Rmin, Rmax
-//           - the theta limits Tmin, Tmax
-//           - the phi limits Pmin, Pmax (the sector in phi is considered
-//             starting from Pmin to Pmax counter-clockwise
-//
-//_____________________________________________________________________________
-//Begin_Html
-/*
-<img src="gif/t_sphere.gif">
+/** \class TGeoSphere
+\ingroup Geometry_classes
+
+Spherical shell class. It takes 6 parameters :
+
+   - spherical shell class. It takes 6 parameters :
+   - inner and outer radius Rmin, Rmax
+   - the theta limits Tmin, Tmax
+   - the phi limits Pmin, Pmax (the sector in phi is considered
+     starting from Pmin to Pmax counter-clockwise
+
+Begin_Macro(source)
+{
+   TCanvas *c = new TCanvas("c", "c",0,0,600,600);
+   new TGeoManager("sphere", "poza7");
+   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
+   TGeoMedium *med = new TGeoMedium("MED",1,mat);
+   TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
+   gGeoManager->SetTopVolume(top);
+   TGeoVolume *vol = gGeoManager->MakeSphere("SPHERE",med, 30,40,60,120,30,240);
+   vol->SetLineWidth(2);
+   top->AddNode(vol,1);
+   gGeoManager->CloseGeometry();
+   gGeoManager->SetNsegments(30);
+   top->Draw();
+   TView *view = gPad->GetView();
+   view->ShowAxis();
+}
+End_Macro
 */
-//End_Html
 
 #include "Riostream.h"
 
@@ -122,7 +139,6 @@ Double_t TGeoSphere::Capacity() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// compute bounding box of the sphere
-///   Double_t xmin, xmax, ymin, ymax, zmin, zmax;
 
 void TGeoSphere::ComputeBBox()
 {
@@ -256,11 +272,11 @@ void TGeoSphere::ComputeNormal(const Double_t *point, const Double_t *dir, Doubl
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if a point in local sphere coordinates is close to a boundary within
 /// shape tolerance. Return values:
-///   0 - not close to boundary
-///   1 - close to Rmin boundary
-///   2 - close to Rmax boundary
-///   3,4 - close to phi1/phi2 boundary
-///   5,6 - close to theta1/theta2 boundary
+///  - 0 - not close to boundary
+///  - 1 - close to Rmin boundary
+///  - 2 - close to Rmax boundary
+///  - 3,4 - close to phi1/phi2 boundary
+///  - 5,6 - close to theta1/theta2 boundary
 
 Int_t TGeoSphere::IsOnBoundary(const Double_t *point) const
 {
@@ -1037,7 +1053,7 @@ Double_t TGeoSphere::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) con
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///--- Fill vector param[4] with the bounding cylinder parameters. The order
+/// Fill vector param[4] with the bounding cylinder parameters. The order
 /// is the following : Rmin, Rmax, Phi1, Phi2
 
 void TGeoSphere::GetBoundingCylinder(Double_t *param) const
@@ -1971,7 +1987,7 @@ void TGeoSphere::ComputeNormal_v(const Double_t *points, const Double_t *dirs, D
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+/// Compute distance from array of input points having directions specified by dirs. Store output in dists
 
 void TGeoSphere::DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {
@@ -1979,7 +1995,7 @@ void TGeoSphere::DistFromInside_v(const Double_t *points, const Double_t *dirs, 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+/// Compute distance from array of input points having directions specified by dirs. Store output in dists
 
 void TGeoSphere::DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {

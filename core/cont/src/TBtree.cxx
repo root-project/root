@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TBtree
+\ingroup Containers
 B-tree class. TBtree inherits from the TSeqCollection ABC.
 
 ## B-tree Implementation notes
@@ -164,8 +165,10 @@ item's own key).
 ~~~
 */
 
-#include <stdlib.h>
 #include "TBtree.h"
+#include "TBuffer.h"
+
+#include <stdlib.h>
 
 
 ClassImp(TBtree)

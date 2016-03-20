@@ -9,13 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//_____________________________________________________________________________
-// TGeoHalfSpace - A half-space defined by:
-//            p[3] - an arbitrary point on the plane
-//            n[3] - normal at the plane in point P
-//    A half-space is not really a shape, because it is infinite. The normal
-//    points "outside" the half-space
-//_____________________________________________________________________________
+/** \class TGeoHalfSpace
+\ingroup Geometry_classes
+
+A half-space defined by:
+  - p[3] - an arbitrary point on the plane
+  - n[3] - normal at the plane in point P
+A half-space is not really a shape, because it is infinite. The normal
+points "outside" the half-space
+*/
 
 #include "Riostream.h"
 #include "TGeoHalfSpace.h"
@@ -244,7 +246,7 @@ void TGeoHalfSpace::ComputeNormal_v(const Double_t *points, const Double_t *dirs
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+/// Compute distance from array of input points having directions specified by dirs. Store output in dists
 
 void TGeoHalfSpace::DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {
@@ -252,7 +254,7 @@ void TGeoHalfSpace::DistFromInside_v(const Double_t *points, const Double_t *dir
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+/// Compute distance from array of input points having directions specified by dirs. Store output in dists
 
 void TGeoHalfSpace::DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {

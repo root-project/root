@@ -21,9 +21,6 @@
 #ifndef ROOT_TFPBlock
 #include "TFPBlock.h"
 #endif
-#ifndef ROOT_TCondition
-#include "TCondition.h"
-#endif
 #ifndef ROOT_TSemaphore
 #include "TSemaphore.h"
 #endif
@@ -39,15 +36,16 @@
 #ifndef ROOT_TObjString
 #include "TObjString.h"
 #endif
-#ifndef ROOT_TMutex
-#include "TMutex.h"
-#endif
 #ifndef ROOT_TObjArray
 #include "TObjArray.h"
 #endif
 #ifndef ROOT_TStopwatch
 #include "TStopwatch.h"
 #endif
+
+#include <atomic>
+#include <condition_variable>
+#include <mutex>
 
 
 class TFilePrefetch : public TObject {
@@ -57,16 +55,15 @@ private:
    TList      *fPendingBlocks;     // list of pending blocks to be read
    TList      *fReadBlocks;        // list of blocks read
    TThread    *fConsumer;          // consumer thread
-   TMutex     *fMutexPendingList;  // mutex for the pending list
-   TMutex     *fMutexReadList;     // mutex for the list of read blocks
-   TCondition *fNewBlockAdded;     // signal the addition of a new pending block
-   TCondition *fReadBlockAdded;    // signal the addition of a new red block
-   TSemaphore *fSemMasterWorker;   // semaphore used to kill the consumer thread
-   TSemaphore *fSemWorkerMaster;   // semaphore used to notify the master that worker is killed
+   std::mutex fMutexPendingList;   // mutex for the pending list
+   std::mutex fMutexReadList;      // mutex for the list of read blocks
+   std::condition_variable fNewBlockAdded;  // signal the addition of a new pending block
+   std::condition_variable fReadBlockAdded; // signal the addition of a new red block
    TSemaphore *fSemChangeFile;     // semaphore used when changin a file in TChain
    TString     fPathCache;         // path to the cache directory
    TStopwatch  fWaitTime;          // time wating to prefetch a buffer (in usec)
    Bool_t      fThreadJoined;      // mark if async thread was joined
+   std::atomic<Bool_t> fPrefetchFinished;  // true if prefetching is over
 
    static TThread::VoidRtnFunc_t ThreadProc(void*);  //create a joinable worker thread
 
@@ -98,8 +95,9 @@ public:
    Long64_t  GetWaitTime();
 
    void      SetFile(TFile*);
-   TCondition* GetCondNewBlock() const { return fNewBlockAdded; };
+   std::condition_variable &GetCondNewBlock() { return fNewBlockAdded; };
    void      WaitFinishPrefetch();
+   Bool_t    IsPrefetchFinished() const { return fPrefetchFinished; }
 
    ClassDef(TFilePrefetch, 0);  // File block prefetcher
 };

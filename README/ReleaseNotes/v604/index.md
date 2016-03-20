@@ -50,7 +50,7 @@ The following people have contributed to this new version:
 
 ROOT now works on linuxarm64 / AArch64 / ARMv8 64-bit - thanks, David Abdurachmanov!
 
-ROOT supports GCC 5.0 (a preview thereof) and XCode 6.3, Mac OSX 10.10.3
+ROOT supports GCC 5.0 (using the GCC4 ABI) and XCode 6.3, Mac OSX 10.10.3
 
 
 #### Thread-Safety

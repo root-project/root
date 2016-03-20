@@ -108,6 +108,7 @@ IOSSDK         := @iossdk@
 
 CXX11          := @c++11@
 CXX14          := @c++14@
+CXXMODULES     := @cxxmodules@
 LIBCXX         := @libc++@
 
 EXPLICITLINK   := @explicitlink@
@@ -302,6 +303,7 @@ PYTHONLIBDIR   := @pythonlibdir@
 PYTHONLIB      := @pythonlib@
 PYTHONINCDIR   := $(filter-out /usr/include, @pythonincdir@)
 PYTHONLIBFLAGS := @pythonlibflags@
+PYTHONEXE      := @pythonexe@
 
 BUILDRUBY      := @buildruby@
 RUBYLIBDIR     := @rubylibdir@
@@ -365,6 +367,11 @@ BUILDMONALISA  := @buildmonalisa@
 MONALISALIBDIR := @monalisalibdir@
 MONALISACLILIB := @monalisalib@
 MONALISAINCDIR := $(filter-out /usr/include, @monalisaincdir@)
+
+BUILDTBB       := @buildtbb@
+TBBLIBDIR      := @tbblibdir@
+TBBLIB         := @tbblib@
+TBBINCDIR      := $(filter-out /usr/include, @tbbincdir@)
 
 SSLLIB         := @ssllib@
 SSLLIBDIR      := @ssllibdir@

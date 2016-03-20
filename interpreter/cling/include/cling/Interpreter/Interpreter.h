@@ -17,9 +17,7 @@
 #include <cstdlib>
 #include <memory>
 #include <string>
-
-// FIXME: workaround until JIT supports exceptions
-#include <setjmp.h>
+#include <unordered_map>
 
 namespace llvm {
   class raw_ostream;
@@ -43,9 +41,11 @@ namespace clang {
   class NamedDecl;
   class Parser;
   class QualType;
+  class RecordDecl;
   class Sema;
   class SourceLocation;
   class SourceManager;
+  class PresumedLoc;
 }
 
 namespace cling {
@@ -72,6 +72,9 @@ namespace cling {
   ///
   class Interpreter {
   public:
+     // IgnoreFilesFunc_t takes a const reference to avoid having to
+     // include the actual definition of PresumedLoc.
+     using IgnoreFilesFunc_t = bool (*)(const clang::PresumedLoc&);
 
     ///\brief Pushes a new transaction, which will collect the decls that came
     /// within the scope of the RAII object. Calls commit transaction at
@@ -150,6 +153,9 @@ namespace cling {
     ///
     std::unique_ptr<LookupHelper> m_LookupHelper;
 
+    ///\brief Cache of compiled destructors wrappers.
+    std::unordered_map<const clang::RecordDecl*, void*> m_DtorWrappers;
+
     ///\brief Counter used when we need unique names.
     ///
     unsigned long long m_UniqueCounter;
@@ -181,9 +187,6 @@ namespace cling {
     ///\brief Information about the last stored states through .storeState
     ///
     mutable std::vector<ClangInternalState*> m_StoredStates;
-
-    ///\brief: FIXME: workaround until JIT supports exceptions
-    static jmp_buf* m_JumpBuf;
 
     ///\brief Processes the invocation options.
     ///
@@ -275,6 +278,13 @@ namespace cling {
     ///
     void IncludeCRuntime();
 
+    ///\brier The target constructor to be called from both the
+    /// delegating constructors.
+    ///
+    Interpreter(int argc, const char* const *argv,
+                const char* llvmdir /*= 0*/, bool noRuntime,
+                bool isChildInterp);
+
   public:
     ///\brief Constructor for Interpreter.
     ///
@@ -282,7 +292,21 @@ namespace cling {
     ///\param[in] argv - arguments passed when driver is invoked.
     ///\param[in] llvmdir - ???
     ///\param[in] noRuntime - flag to control the presence of runtime universe
-    Interpreter(int argc, const char* const *argv, const char* llvmdir = 0, bool noRuntime = false);
+    ///
+    Interpreter(int argc, const char* const *argv, const char* llvmdir = 0,
+                bool noRuntime = false) :
+      Interpreter(argc, argv, llvmdir, noRuntime, false) { }
+
+    ///\brief Constructor for child Interpreter.
+    ///\param[in] parentInterpreter - the  parent interpreter of this interpreter
+    ///\param[in] argc - no. of args.
+    ///\param[in] argv - arguments passed when driver is invoked.
+    ///\param[in] llvmdir - ???
+    ///\param[in] noRuntime - flag to control the presence of runtime universe
+    ///
+    Interpreter(Interpreter &parentInterpreter,int argc, const char* const *argv,
+                const char* llvmdir = 0, bool noRuntime = true);
+
     virtual ~Interpreter();
 
     const InvocationOptions& getOptions() const { return m_Opts; }
@@ -598,6 +622,10 @@ namespace cling {
     void* compileFunction(llvm::StringRef name, llvm::StringRef code,
                           bool ifUniq = true, bool withAccessControl = true);
 
+    ///\brief Compile (and cache) destructor calls for a record decl. Used by ~Value.
+    /// They are of type extern "C" void()(void* pObj).
+    void* compileDtorCallFor(const clang::RecordDecl* RD);
+
     ///\brief Gets the address of an existing global and whether it was JITted.
     ///
     /// JIT symbols might not be immediately convertible to e.g. a function
@@ -635,11 +663,11 @@ namespace cling {
     void forwardDeclare(Transaction& T, clang::Sema& S,
                         llvm::raw_ostream& out,
                         bool enableMacros = false,
-                        llvm::raw_ostream* logs = 0) const;
+                        llvm::raw_ostream* logs = 0,
+                        IgnoreFilesFunc_t ignoreFiles =
+                          [](const clang::PresumedLoc&) { return false;}) const;
 
     friend class runtime::internal::LifetimeHandler;
-    // FIXME: workaround until JIT supports exceptions
-    static jmp_buf*& getNullDerefJump() { return m_JumpBuf; }
   };
 
   namespace internal {

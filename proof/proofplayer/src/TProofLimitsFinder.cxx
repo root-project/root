@@ -9,13 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TProofLimitsFinder                                                   //
-//                                                                      //
-// Class to find nice axis limits and synchronize them between workers  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TProofLimitsFinder
+\ingroup proofkernel
+
+Class to find axis limits and synchronize them between workers
+
+*/
 
 #include "TProofLimitsFinder.h"
 #include "TProofServ.h"

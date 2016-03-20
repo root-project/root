@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TMap
+\ingroup Containers
 TMap implements an associative array of (key,value) pairs using a
 THashTable for efficient retrieval (therefore TMap does not conserve
 the order of the entries). The hash value is calculated

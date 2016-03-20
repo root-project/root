@@ -71,3 +71,12 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		   $(ROOFITDS) $(ROOFITDH)
 
 distclean::     distclean-$(MODNAME)
+
+#FIXME: Disable modules build for roofit until the compiler issue gets fixed.
+ifeq ($(CXXMODULES),yes)
+ifeq ($(PLATFORM),macosx)
+$(ROOFITO): CXXFLAGS := $(filter-out $(ROOT_CXXMODULES_FLAGS),$(CXXFLAGS))
+         CFLAGS   := $(filter-out $(ROOT_CXXMODULES_FLAGS),$(CFLAGS))
+endif
+endif
+

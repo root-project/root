@@ -1323,13 +1323,13 @@ Double32_t m_data;     //[min,max<,nbits>]
 ```
 
 If the comment is absent or does not contain `min`, `max`,
-`nbit, the member is` `saved as a float.`
+`nbits`, the member is saved as a `float`.
 
-`If min` and `max` are present, they are saved as a 32 bits precision.
-`min` and `max` can be explicit values or be expressions of values known
-to Cling (e.g. "`pi"). `
+If `min` and `max` are present, they are saved with 32 bits precision.
+`min` and `max` can be explicit values or expressions of values known
+to Cling (e.g. `pi`).
 
-`If nbits` is present, the member is saved as `int` with '`nbit`'. For
+If `nbits` is present, the member is saved as `int` with `nbits` bits precision. For
 more details see the io tutorials `double32.C`.
 
 ![Compression and precision of Double32\_t](pictures/030000EA.png)

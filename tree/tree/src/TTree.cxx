@@ -50,7 +50,9 @@ Various kinds of branches can be added to a tree:
 - any object (inheriting from TObject). (we expect this option be the most frequent)
 - a ClonesArray. (a specialized object for collections of same class objects)
 
+
 ## Case A
+
 ~~~ {.cpp}
     TBranch *branch = tree->Branch(branchname, address, leaflist, bufsize)
 ~~~
@@ -86,7 +88,9 @@ Various kinds of branches can be added to a tree:
   TTree (i.e. you will not be able to read it back on a platform with a different
   padding strategy).
 
+
 ## Case B
+
 ~~~ {.cpp}
     TBranch *branch = tree->Branch(branchname, &p_object, bufsize, splitlevel)
     TBranch *branch = tree->Branch(branchname, className, &p_object, bufsize, splitlevel)
@@ -127,7 +131,9 @@ is not taken over by the TTree.  I.e. eventhough an object will be allocated
 by TTree::Branch if the pointer p_object is zero, the object will <b>not</b>
 be deleted when the TTree is deleted.
 
+
 ## Case C
+
 ~~~ {.cpp}
     MyClass object;
     TBranch *branch = tree->Branch(branchname, &object, bufsize, splitlevel)
@@ -146,7 +152,9 @@ Note: The 2nd parameter must be the address of a valid object.
   of the object itself. In case the object member is a TClonesArray,
   it is processed as a TObject*, only one branch.
 
+
 ## Case D
+
 ~~~ {.cpp}
     TBranch *branch = tree->Branch(branchname,clonesarray, bufsize, splitlevel)
     clonesarray is the address of a pointer to a TClonesArray.
@@ -156,7 +164,9 @@ For example, if the TClonesArray is an array of TTrack objects,
 this function will create one subbranch for each data member of
 the object TTrack.
 
+
 ## Case E
+
 ~~~ {.cpp}
     TBranch *branch = tree->Branch( branchname, STLcollection, buffsize, splitlevel);
 ~~~
@@ -381,13 +391,27 @@ End_Macro
 #include "TBranchSTL.h"
 #include "TSchemaRuleSet.h"
 #include "TFileMergeInfo.h"
+#include "ROOT/StringConv.h"
 
+#include <chrono>
 #include <cstddef>
+#include <iostream>
 #include <fstream>
 #include <sstream>
 #include <string>
 #include <stdio.h>
 #include <limits.h>
+
+#ifdef R__USE_IMT
+#include "tbb/task.h"
+#include "tbb/task_group.h"
+#include <thread>
+#include <string>
+#include <sstream>
+#endif
+
+constexpr Int_t   kNEntriesResort    = 100;
+constexpr Float_t kNEntriesResortInv = 1.f/kNEntriesResort;
 
 Int_t    TTree::fgBranchStyle = 1;  // Use new TBranch style with TBranchElement.
 Long64_t TTree::fgMaxTreeSize = 100000000000LL;
@@ -677,6 +701,8 @@ TTree::TTree()
 , fTransientBuffer(0)
 , fCacheDoAutoInit(kTRUE)
 , fCacheUserSet(kFALSE)
+, fIMTEnabled(ROOT::IsImplicitMTEnabled())
+, fNEntriesSinceSorting(0)
 {
    fMaxEntries = 1000000000;
    fMaxEntries *= 1000;
@@ -753,6 +779,8 @@ TTree::TTree(const char* name, const char* title, Int_t splitlevel /* = 99 */)
 , fTransientBuffer(0)
 , fCacheDoAutoInit(kTRUE)
 , fCacheUserSet(kFALSE)
+, fIMTEnabled(ROOT::IsImplicitMTEnabled())
+, fNEntriesSinceSorting(0)
 {
    // TAttLine state.
    SetLineColor(gStyle->GetHistLineColor());
@@ -2583,9 +2611,9 @@ TStreamerInfo* TTree::BuildStreamerInfo(TClass* cl, void* pointer /* = 0 */, Boo
 ///     T->Fill(); //loop
 ///     file->Write();
 ///     file->Close();
-///~~~
+/// ~~~
 /// but do the following:
-///~~~ {.cpp}
+/// ~~~ {.cpp}
 ///     TFile *file = new TFile("myfile.root","recreate");
 ///     TTree *T = new TTree("T","title");
 ///     T->Fill(); //loop
@@ -2846,12 +2874,19 @@ Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType
       } else {
          // In this case, it is okay if the first data member is of the right type (to support the case where we are being passed
          // a struct).
-         bool good = false;
+         bool found = false;
          if (ptrClass->IsLoaded()) {
             TIter next(ptrClass->GetListOfRealData());
             TRealData *rdm;
             while ((rdm = (TRealData*)next())) {
                if (rdm->GetThisOffset() == 0) {
+                  TDataType *dmtype = rdm->GetDataMember()->GetDataType();
+                  if (dmtype) {
+                     EDataType etype = (EDataType)dmtype->GetType();
+                     if (etype == expectedType) {
+                        found = true;
+                     }
+                  }
                   break;
                }
             }
@@ -2863,16 +2898,24 @@ Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType
                   TDataType *dmtype = dm->GetDataType();
                   if (dmtype) {
                      EDataType etype = (EDataType)dmtype->GetType();
-                     good = (etype == expectedType);
+                     if (etype == expectedType) {
+                        found = true;
+                     }
                   }
                   break;
                }
             }
          }
-         if (!good) {
-            Error("SetBranchAddress", "The pointer type given \"%s\" does not correspond to the type needed \"%s\" (%d) by the branch: %s",
-                  ptrClass->GetName(), TDataType::GetTypeName(expectedType), expectedType, branch->GetName());
+         if (found) {
+            // let's check the size.
+            TLeaf *last = (TLeaf*)branch->GetListOfLeaves()->Last();
+            long len = last->GetOffset() + last->GetLenType() * last->GetLen();
+            if (len <= ptrClass->Size()) {
+               return kMatch;
+            }
          }
+         Error("SetBranchAddress", "The pointer type given \"%s\" does not correspond to the type needed \"%s\" (%d) by the branch: %s",
+               ptrClass->GetName(), TDataType::GetTypeName(expectedType), expectedType, branch->GetName());
       }
       return kMismatch;
    }
@@ -3034,8 +3077,8 @@ TTree* TTree::CloneTree(Long64_t nentries /* = -1 */, Option_t* option /* = "" *
       if (!branch || !branch->TestBit(kDoNotProcess)) {
          continue;
       }
-//      TObjArray* branches = newtree->GetListOfBranches();
-//      Int_t nb = branches->GetEntriesFast();
+      // size might change at each iteration of the loop over the leaves.
+      nb = branches->GetEntriesFast();
       for (Long64_t i = 0; i < nb; ++i) {
          TBranch* br = (TBranch*) branches->UncheckedAt(i);
          if (br == branch) {
@@ -3338,6 +3381,24 @@ Long64_t TTree::CopyEntries(TTree* tree, Long64_t nentries /* = -1 */, Option_t*
    } else {
       onIndexError = kBuild;
    }
+   Ssiz_t cacheSizeLoc = opt.Index("cachesize=");
+   Int_t cacheSize = -1;
+   if (cacheSizeLoc != TString::kNPOS) {
+      // If the parse faile, cacheSize stays at -1.
+      Ssiz_t cacheSizeEnd = opt.Index(" ",cacheSizeLoc+10) - (cacheSizeLoc+10);
+      TSubString cacheSizeStr( opt(cacheSizeLoc+10,cacheSizeEnd) );
+      auto parseResult = ROOT::FromHumanReadableSize(cacheSizeStr,cacheSize);
+      if (parseResult == ROOT::EFromHumanReadableSize::kParseFail) {
+         Warning("CopyEntries","The cachesize option can not be parsed: %s. The default size will be used.",cacheSizeStr.String().Data());
+      } else if (parseResult == ROOT::EFromHumanReadableSize::kOverflow) {
+         double m;
+         const char *munit = nullptr;
+         ROOT::ToHumanReadableSize(std::numeric_limits<decltype(cacheSize)>::max(),false,&m,&munit);
+
+         Warning("CopyEntries","The cachesize option is too large: %s (%g%s max). The default size will be used.",cacheSizeStr.String().Data(),m,munit);
+      }
+   }
+   if (gDebug > 0 && cacheSize != -1) Info("CopyEntries","Using Cache size: %d\n",cacheSize);
 
    Long64_t nbytes = 0;
    Long64_t treeEntries = tree->GetEntriesFast();
@@ -3368,6 +3429,7 @@ Long64_t TTree::CopyEntries(TTree* tree, Long64_t nentries /* = -1 */, Option_t*
          TTreeCloner cloner(tree->GetTree(), this, option, TTreeCloner::kNoWarnings);
          if (cloner.IsValid()) {
             this->SetEntries(this->GetEntries() + tree->GetTree()->GetEntries());
+            if (cacheSize != -1) cloner.SetCacheSize(cacheSize);
             cloner.Exec();
          } else {
             if (i == 0) {
@@ -3673,9 +3735,9 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// option is the drawing option.
 ///  - See TH1::Draw for the list of all drawing options.
 ///  - If option COL is specified when varexp has three fields:
-///~~~ {.cpp}
+/// ~~~ {.cpp}
 ///      tree.Draw("e1:e2:e3","","col");
-///~~~
+/// ~~~
 ///    a 2D scatter is produced with e1 vs e2, and e3 is mapped on the color
 ///    table. The colors for e3 are evaluated once in linear scale before
 ///    painting. Therefore changing the pad to log scale along Z as no effect
@@ -3912,62 +3974,61 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// ~~~ {.cpp}
 ///     tree.Draw("myvar","Entry$%2==0");
 /// ~~~
-/// - `Entry$`      : return the current entry number (`== TTree::GetReadEntry()`)
-/// - `LocalEntry$` : return the current entry number in the current tree of a
-///   chain (`== GetTree()->GetReadEntry()`)
-/// - `Entries$`    : return the total number of entries (== TTree::GetEntries())
-/// - `Length$`     : return the total number of element of this formula for this
-///   entry (`==TTreeFormula::GetNdata()`)
-/// - `Iteration$`  : return the current iteration over this formula for this
-///   entry (i.e. varies from 0 to `Length$`).
-/// - `Length$(formula )`  : return the total number of element of the formula
-///   given as a parameter.
-/// - `Sum$(formula )`  : return the sum of the value of the elements of the
-///   formula given as a parameter.  For example the mean for all the elements in
-///   one entry can be calculated with:
-///   `Sum$(formula )/Length$(formula )`
-/// - `Min$(formula )` : return the minimun (within one TTree entry) of the value of the
-///    elements of the formula given as a parameter.
-/// - `Max$(formula )` : return the maximum (within one TTree entry) of the value of the
-///   elements of the formula given as a parameter.
-/// - `MinIf$(formula,condition)`
-/// - `MaxIf$(formula,condition)` : return the minimum (maximum) (within one TTree entry)
-///   of the value of the elements of the formula given as a parameter
-///   if they match the condition. If no element matches the condition,
-///   the result is zero.  To avoid the resulting peak at zero, use the
-///   pattern:
+/// -  `Entry$`      : return the current entry number (`== TTree::GetReadEntry()`)
+/// -  `LocalEntry$` : return the current entry number in the current tree of a
+///     chain (`== GetTree()->GetReadEntry()`)
+/// -  `Entries$`    : return the total number of entries (== TTree::GetEntries())
+/// -  `Length$`     : return the total number of element of this formula for this
+///     entry (`==TTreeFormula::GetNdata()`)
+/// -  `Iteration$`  : return the current iteration over this formula for this
+///     entry (i.e. varies from 0 to `Length$`).
+/// -  `Length$(formula )`  : return the total number of element of the formula
+///     given as a parameter.
+/// -  `Sum$(formula )`  : return the sum of the value of the elements of the
+///     formula given as a parameter.  For example the mean for all the elements in
+///     one entry can be calculated with: `Sum$(formula )/Length$(formula )`
+/// -  `Min$(formula )` : return the minimun (within one TTree entry) of the value of the
+///     elements of the formula given as a parameter.
+/// -  `Max$(formula )` : return the maximum (within one TTree entry) of the value of the
+///     elements of the formula given as a parameter.
+/// -  `MinIf$(formula,condition)`
+/// -  `MaxIf$(formula,condition)` : return the minimum (maximum) (within one TTree entry)
+///     of the value of the elements of the formula given as a parameter
+///     if they match the condition. If no element matches the condition,
+///     the result is zero.  To avoid the resulting peak at zero, use the
+///     pattern:
 /// ~~~ {.cpp}
 ///        tree->Draw("MinIf$(formula,condition)","condition");
 /// ~~~
-///   which will avoid calculation `MinIf$` for the entries that have no match
-///   for the condition.
-/// - `Alt$(primary,alternate)` : return the value of "primary" if it is available
-///   for the current iteration otherwise return the value of "alternate".
-///   For example, with arr1[3] and arr2[2]
+///     which will avoid calculation `MinIf$` for the entries that have no match
+///     for the condition.
+/// -  `Alt$(primary,alternate)` : return the value of "primary" if it is available
+///     for the current iteration otherwise return the value of "alternate".
+///     For example, with arr1[3] and arr2[2]
 /// ~~~ {.cpp}
 ///        tree->Draw("arr1+Alt$(arr2,0)");
 /// ~~~
-///   will draw arr1[0]+arr2[0] ; arr1[1]+arr2[1] and arr1[2]+0
-///   Or with a variable size array arr3
+///     will draw arr1[0]+arr2[0] ; arr1[1]+arr2[1] and arr1[2]+0
+///     Or with a variable size array arr3
 /// ~~~ {.cpp}
 ///        tree->Draw("Alt$(arr3[0],0)+Alt$(arr3[1],0)+Alt$(arr3[2],0)");
 /// ~~~
-///   will draw the sum arr3 for the index 0 to min(2,actual_size_of_arr3-1)
-///   As a comparison
+///     will draw the sum arr3 for the index 0 to min(2,actual_size_of_arr3-1)
+///     As a comparison
 /// ~~~ {.cpp}
 ///        tree->Draw("arr3[0]+arr3[1]+arr3[2]");
 /// ~~~
-///   will draw the sum arr3 for the index 0 to 2 only if the
-///   actual_size_of_arr3 is greater or equal to 3.
-///   Note that the array in 'primary' is flattened/linearized thus using
-///   Alt$ with multi-dimensional arrays of different dimensions in unlikely
-///   to yield the expected results.  To visualize a bit more what elements
-///   would be matched by TTree::Draw, TTree::Scan can be used:
+///     will draw the sum arr3 for the index 0 to 2 only if the
+///     actual_size_of_arr3 is greater or equal to 3.
+///     Note that the array in 'primary' is flattened/linearized thus using
+///     `Alt$` with multi-dimensional arrays of different dimensions in unlikely
+///     to yield the expected results.  To visualize a bit more what elements
+///     would be matched by TTree::Draw, TTree::Scan can be used:
 /// ~~~ {.cpp}
 ///        tree->Scan("arr1:Alt$(arr2,0)");
 /// ~~~
-///   will print on one line the value of arr1 and (arr2,0) that will be
-///   matched by
+///     will print on one line the value of arr1 and (arr2,0) that will be
+///     matched by
 /// ~~~ {.cpp}
 ///        tree->Draw("arr1-Alt$(arr2,0)");
 /// ~~~
@@ -3976,6 +4037,7 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// ~~~ {.cpp}
 ///     tree->Draw("(var2<20)*99+(var2>=20)*var1","");
 /// ~~~
+///
 /// ## Drawing a user function accessing the TTree data directly
 ///
 /// If the formula contains  a file name, TTree::MakeProxy will be used
@@ -4304,9 +4366,6 @@ void TTree::DropBuffers(Int_t)
 
 Int_t TTree::Fill()
 {
-   // create cache if wanted
-   if (fCacheDoAutoInit) SetCacheSizeAux();
-
    Int_t nbytes = 0;
    Int_t nerror = 0;
    Int_t nb = fBranches.GetEntriesFast();
@@ -5151,19 +5210,87 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
    Int_t i;
    Int_t nbytes = 0;
    fReadEntry = entry;
-   TBranch *branch;
 
    // create cache if wanted
    if (fCacheDoAutoInit) SetCacheSizeAux();
 
    Int_t nbranches = fBranches.GetEntriesFast();
    Int_t nb=0;
-   for (i=0;i<nbranches;i++)  {
-      branch = (TBranch*)fBranches.UncheckedAt(i);
-      nb = branch->GetEntry(entry, getall);
-      if (nb < 0) return nb;
-      nbytes += nb;
+
+   auto seqprocessing = [&]() {
+      TBranch *branch;
+      for (i=0;i<nbranches;i++)  {
+         branch = (TBranch*)fBranches.UncheckedAt(i);
+         nb = branch->GetEntry(entry, getall);
+         if (nb < 0) break;
+         nbytes += nb;
+      }
+   };
+
+#ifdef R__USE_IMT
+   if (ROOT::IsImplicitMTEnabled() && fIMTEnabled) {
+      if (fSortedBranches.empty()) InitializeSortedBranches();
+
+      Int_t errnb = 0;
+      std::atomic<Int_t> pos(0);
+      std::atomic<Int_t> nbpar(0);
+      tbb::task_group g;
+
+      for (i = 0; i < nbranches; i++) {
+         g.run([&]() {
+            // The branch to process is obtained when the task starts to run.
+            // This way, since branches are sorted, we make sure that branches
+            // leading to big tasks are processed first. If we assigned the
+            // branch at task creation time, the scheduler would not necessarily
+            // respect our sorting.
+            Int_t j = pos.fetch_add(1);
+
+            Int_t nbtask = 0;
+            auto branch = fSortedBranches[j].second;
+
+            if (gDebug > 0) {
+               std::stringstream ss;
+               ss << std::this_thread::get_id();
+               Info("GetEntry", "[IMT] Thread %lu", std::stoul(ss.str()));
+               Info("GetEntry", "[IMT] Running task for branch #%d: %s", j, branch->GetName());
+            }
+
+            std::chrono::time_point<std::chrono::system_clock> start, end;
+
+            start = std::chrono::system_clock::now();
+            nbtask = branch->GetEntry(entry, getall);
+            end = std::chrono::system_clock::now();
+
+            Long64_t tasktime = (Long64_t)std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+            fSortedBranches[j].first += tasktime;
+
+            if (nbtask < 0) errnb = nbtask;
+            else            nbpar += nbtask;
+         });
+      }
+      g.wait();
+
+      if (errnb < 0) {
+         nb = errnb;
+      }
+      else {
+         // Save the number of bytes read by the tasks
+         nbytes = nbpar;
+
+         // Re-sort branches if necessary
+         if (++fNEntriesSinceSorting == kNEntriesResort) {
+            SortBranchesByTime();
+            fNEntriesSinceSorting = 0;
+         }
+      }
    }
+   else {
+      seqprocessing();
+   }
+#else
+   seqprocessing();
+#endif
+   if (nb < 0) return nb;
 
    // GetEntry in list of friends
    if (!fFriends) return nbytes;
@@ -5185,6 +5312,51 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
       }
    }
    return nbytes;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Initializes the vector of top-level branches and sorts it by branch size.
+
+void TTree::InitializeSortedBranches()
+{
+   Int_t nbranches = fBranches.GetEntriesFast();
+   for (Int_t i = 0; i < nbranches; i++)  {
+      Long64_t bbytes = 0;
+      TBranch* branch = (TBranch*)fBranches.UncheckedAt(i);
+      if (branch) bbytes = branch->GetTotBytes("*");
+      fSortedBranches.emplace_back(bbytes, branch);
+   }
+
+   std::sort(fSortedBranches.begin(),
+             fSortedBranches.end(),
+             [](std::pair<Long64_t,TBranch*> a, std::pair<Long64_t,TBranch*> b) {
+                return a.first > b.first;
+             });
+
+   for (Int_t i = 0; i < nbranches; i++)  {
+      fSortedBranches[i].first = 0LL;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Sorts top-level branches by the last average task time recorded per branch.
+
+void TTree::SortBranchesByTime()
+{
+   Int_t nbranches = fBranches.GetEntriesFast();
+   for (Int_t i = 0; i < nbranches; i++)  {
+      fSortedBranches[i].first *= kNEntriesResortInv;
+   }
+
+   std::sort(fSortedBranches.begin(),
+             fSortedBranches.end(),
+             [](std::pair<Long64_t,TBranch*> a, std::pair<Long64_t,TBranch*> b) {
+                return a.first > b.first;
+             });
+
+   for (Int_t i = 0; i < nbranches; i++)  {
+      fSortedBranches[i].first = 0LL;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6470,7 +6642,7 @@ void TTree::OptimizeBaskets(ULong64_t maxMemory, Float_t minComp, Option_t *opti
 /// ~~~ {.cpp}
 ///     TPrincipal *principal =
 ///     (TPrincipal*)gROOT->GetListOfSpecials()->FindObject("principal");
-///  ~~~
+/// ~~~
 
 TPrincipal* TTree::Principal(const char* varexp, const char* selection, Option_t* option, Long64_t nentries, Long64_t firstentry)
 {
@@ -6646,11 +6818,11 @@ void TTree::PrintCacheStats(Option_t* option) const
 ///
 /// It may be more interesting to invoke directly the other Process function
 /// accepting a TSelector* as argument.eg
-///  ~~~ {.cpp}
+/// ~~~ {.cpp}
 ///     MySelector *selector = (MySelector*)TSelector::GetSelector(filename);
 ///     selector->CallSomeFunction(..);
 ///     mytree.Process(selector,..);
-///  ~~~
+/// ~~~
 /// ## NOTE2
 //
 /// One should not call this function twice with the same selector file
@@ -6845,8 +7017,23 @@ char TTree::GetNewlineValue(std::istream &inputStream)
 
 Long64_t TTree::ReadStream(std::istream& inputStream, const char *branchDescriptor, char delimiter)
 {
-   char newline = GetNewlineValue(inputStream);
-   std::istream& in = inputStream;
+   char newline = 0;
+   std::stringstream ss;
+   std::istream *inTemp;
+   Long_t inPos = inputStream.tellg();
+   if (!inputStream.good()) {
+      Error("ReadStream","Error reading stream");
+      return 0;
+   }
+   if (inPos == -1) {
+      ss << std::cin.rdbuf();
+      newline = GetNewlineValue(ss);
+      inTemp = &ss;
+   } else {
+      newline = GetNewlineValue(inputStream);
+      inTemp = &inputStream;
+   }
+   std::istream& in = *inTemp;
    Long64_t nlines = 0;
 
    TBranch *branch = 0;
@@ -7146,7 +7333,7 @@ void TTree::Refresh()
    fTotBytes = tree->fTotBytes;
    fZipBytes = tree->fZipBytes;
    fSavedBytes = tree->fSavedBytes;
-   fTotalBuffers = tree->fTotalBuffers;
+   fTotalBuffers = tree->fTotalBuffers.load();
 
    //loop on all branches and update them
    Int_t nleaves = fLeaves.GetEntriesFast();

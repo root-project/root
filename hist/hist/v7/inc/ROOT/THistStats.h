@@ -19,55 +19,70 @@
 #include "ROOT/RArrayView.h"
 
 namespace ROOT {
+namespace Experimental {
 
 namespace Detail {
-template <int DIMENSIONS, class PRECISION> class THistImplBase;
+template <int DIMENSIONS, class PRECISION, class STATISTICS> class THistImplBase;
 }
 
 template<int DIMENSIONS, class PRECISION>
 class THistStatEntries {
 public:
   using Coord_t = std::array<double, DIMENSIONS>;
+  using HistImpl_t = Detail::THistImplBase<DIMENSIONS, PRECISION, THistStatEntries>;
   using Weight_t = PRECISION;
+  using BinStat_t = void;
 
-  void Fill(const Coord_t& /*x*/, Weight_t /*weightN*/ = 1.) { ++fEntries; }
-  void FillN(const std::array_view<Coord_t> xN,
-             const std::array_view<Weight_t> /*weightN*/) {
-    fEntries += xN.size();
-  }
-  void FillN(const std::array_view<Coord_t> xN) {
-    fEntries += xN.size();
+  void Fill(const Coord_t& /*x*/, int /*binidx*/, Weight_t /*weightN*/ = 1.) {
+    ++fEntries;
   }
 
   int64_t GetEntries() const { return fEntries; };
 
-  std::vector<double>
-  GetBinUncertainties(int binidx, const Detail::THistImplBase<DIMENSIONS, PRECISION>& hist) const {
-    PRECISION sqrtcont = std::sqrt(std::max(hist.GetBinContent(binidx), 0.));
-    return std::vector<double>{sqrtcont, sqrtcont};
+  double GetBinUncertainty(int binidx, const HistImpl_t& hist) const {
+    return std::sqrt(std::fabs(hist.GetBinContent(binidx)));
   }
-    private:
+private:
   int64_t fEntries = 0;
 };
 
 template<int DIMENSIONS, class PRECISION>
 class THistStatUncertainty: public THistStatEntries<DIMENSIONS, PRECISION> {
+  std::vector<double> fSumWeightsSquared; ///< Sum of squared weights
+
 public:
+  /**
+   View on a THistStatUncertainty for a given bin.
+   */
+  template <class HISTIMPL>
+  class TBinStat {
+  public:
+    using HistImpl_t = HISTIMPL;
+    auto GetSumWeightsSquared() const {
+      return fHist.getStat().GetSumWeightsSquared()[fBinIndex];
+    }
+
+  private:
+    HistImpl_t& fHist;
+    size_t fBinIndex;
+  };
+
   using Base_t = THistStatEntries<DIMENSIONS, PRECISION>;
   using typename Base_t::Coord_t;
   using typename Base_t::Weight_t;
+  template <class HISTIMPL> using BinStat_t = TBinStat<HISTIMPL>;
 
-  void Fill(const Coord_t &x, Weight_t weightN = 1.) {
-    Base_t::Fill(x, weightN);
+  void Fill(const Coord_t &x, int binidx, Weight_t weight = 1.) {
+    Base_t::Fill(x, binidx, weight);
+    fSumWeightsSquared[binidx] += weight * weight;
   }
 
-  void FillN(const std::array_view<Coord_t> xN,
-             const std::array_view<Weight_t> weightN) {
-    Base_t::FillN(xN, weightN);
-  }
+  const std::vector<double>& GetSumWeightsSquared() const { return fSumWeightsSquared; }
+  std::vector<double>& GetSumWeightsSquared() { return fSumWeightsSquared; }
 
-  void FillN(const std::array_view<Coord_t> xN) {
-    Base_t::FillN(xN);
+  double GetBinUncertainty(int binidx, const Detail::THistImplBase<DIMENSIONS,
+    PRECISION, THistStatUncertainty>& /*hist*/) const {
+    return std::sqrt(fSumWeightsSquared[binidx]);
   }
 };
 
@@ -114,5 +129,6 @@ public:
   }
 };
 
+} // namespace Experimental
 } // namespace ROOT
 #endif

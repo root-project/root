@@ -249,3 +249,8 @@ import _pythonization
 _pythonization._set_backend( _backend )
 from _pythonization import *
 del _pythonization
+
+#--- CFFI style ---------------------------------------------------------
+def cppdef( src ):
+   _backend.gInterpreter.Declare( src )
+

@@ -16,14 +16,6 @@
 #include "TObject.h"
 #endif
 
-///////////////////////////////////////////////////////////////////////////
-//                                                                       //
-//  TGeoBuilder                                                          //
-//                                                                       //
-// Geometry construction class                                           //
-//                                                                       //
-///////////////////////////////////////////////////////////////////////////
-
 class TGeoMaterial;
 class TGeoMatrix;
 class TGeoMedium;

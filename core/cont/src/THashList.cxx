@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class THashList
+\ingroup Containers
 THashList implements a hybrid collection class consisting of a
 hash table and a list to store TObject's. The hash table is used for
 quick access and lookup of objects while the list allows the objects

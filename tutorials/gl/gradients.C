@@ -1,12 +1,17 @@
-//Author: Timur Pocheptsov, 19/03/2014
-//This macro requires OpenGL, you can:
-//1) call gStyle->SetCanvasPreferGL(kTRUE) before a canvas is created or
-//2) set OpenGL.CanvasPreferGL to 1 in a $ROOTSYS/etc/system.rootrc.
-
-//Features:
-//1. Radial and linear gradients
-//2. Transparent/semitransparent colours.
-
+/// \file
+/// \ingroup tutorial_gl
+/// This macro requires OpenGL, you can:
+///  1. call gStyle->SetCanvasPreferGL(kTRUE) before a canvas is created or
+///  2. set OpenGL.CanvasPreferGL to 1 in a $ROOTSYS/etc/system.rootrc.
+///
+/// Features:
+///  1. Radial and linear gradients
+///  2. Transparent/semitransparent colours.
+///
+/// \macro_image(nobatch)
+/// \macro_code
+///
+/// \author  Timur Pocheptsov
 
 //Includes for ACLiC:
 #include "TColorGradient.h"

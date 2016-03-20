@@ -14,6 +14,7 @@
 #define ROOT_Math_MixMaxEngine
 
 #include <cstdint>
+#include <vector>
 
 #ifndef ROOT_Math_TRandomEngine
 #include "Math/TRandomEngine.h"
@@ -56,17 +57,53 @@ namespace ROOT {
 
       public:
 
-         typedef  TRandomEngine BaseType; 
+         typedef  TRandomEngine BaseType;
+
+         // this should be changed for WINDOWS
+         typedef unsigned long long int StateInt_t;
+
+         
          
          MixMaxEngine(uint64_t seed=1);
 
          virtual ~MixMaxEngine();
+
+         /// get the state of the generator
+         void GetState(std::vector<StateInt_t> & state) const;
+
+         /// Get the counter (between 0 and Size-1)
+         int Counter() const;
+
+         /// Get the size of the generator
+         static int Size();
+
+         /// maximum integer that can be generated. For MIXMAX is 2^61-1         
+         static uint64_t MaxInt() { return  0x1fffffffffffffff; } //  2^61 -1 
 
          /// set the generator seed 
          void  SetSeed(unsigned int seed);
 
          /// set the generator seed using a 64 bits integer
          void SetSeed64(uint64_t seed);
+
+         ///set the full initial generator state and warm up generator by doing some iterations
+         void SetState(const std::vector<StateInt_t> & state, bool warmup = true);
+
+         /// set the counter
+         void SetCounter(int val);
+
+         // /// set the special number 
+         // static void SetSpecialNumber(uint64_t val);
+         
+         /// set the number we want to use to skip generation
+         /// higher value means higher luxury but slower
+         static void SetSkipNumber(int /*nskip */) {  } // not implemented
+
+         /// set initial number to be used in the vector.
+         /// The previous elements are skipped and not returned.
+         static void SetFirstReturnElement(int /*index */) {  } // not implemented
+
+
 
          // generate a random number (virtual interface)
          virtual double Rndm() { return Rndm_impl(); }

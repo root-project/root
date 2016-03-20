@@ -31,6 +31,7 @@
 #include "gsl/gsl_matrix.h"
 #include "gsl/gsl_multifit_nlin.h"
 #include "gsl/gsl_blas.h"
+#include "gsl/gsl_version.h"
 #include "GSLMultiFitFunctionWrapper.h"
 
 #include "Math/IFunction.h"
@@ -59,7 +60,11 @@ public:
    GSLMultiFit (const gsl_multifit_fdfsolver_type * type = 0) :
       fSolver(0),
       fVec(0),
+      fTmp(0),
       fCov(0),
+#if GSL_MAJOR_VERSION > 1
+      fJac(0),
+#endif
       fType(type)
    {
       if (fType == 0) fType = gsl_multifit_fdfsolver_lmsder; // default value
@@ -71,7 +76,11 @@ public:
    ~GSLMultiFit ()  {
       if (fSolver) gsl_multifit_fdfsolver_free(fSolver);
       if (fVec != 0) gsl_vector_free(fVec);
+      if (fTmp != 0) gsl_vector_free(fTmp);
       if (fCov != 0) gsl_matrix_free(fCov);
+#if GSL_MAJOR_VERSION > 1
+      if (fJac != 0) gsl_matrix_free(fJac);
+#endif
    }
 
 private:
@@ -97,6 +106,16 @@ public:
    void CreateSolver(unsigned int npoints, unsigned int npar) {
       if (fSolver) gsl_multifit_fdfsolver_free(fSolver);
       fSolver = gsl_multifit_fdfsolver_alloc(fType, npoints, npar);
+      if (fVec != 0) gsl_vector_free(fVec);
+      fVec = gsl_vector_alloc( npar );
+      if (fTmp != 0) gsl_vector_free(fTmp);
+      fTmp = gsl_vector_alloc( npar );
+      if (fCov != 0) gsl_matrix_free(fCov);
+      fCov = gsl_matrix_alloc( npar, npar );
+#if GSL_MAJOR_VERSION > 1
+      if (fJac != 0) gsl_matrix_free(fJac);
+      fJac = gsl_matrix_alloc( npoints, npar );
+#endif
    }
 
    /// set the solver parameters
@@ -115,11 +134,18 @@ public:
       fFunc.SetFunction(funcVec, npts, npar);
       // create solver object
       CreateSolver( npts, npar );
-      // set initial values
-      if (fVec != 0) gsl_vector_free(fVec);
-      fVec = gsl_vector_alloc( npar );
-      std::copy(x,x+npar, fVec->data);
       assert(fSolver != 0);
+      // set initial values
+      assert(fVec != 0);
+      std::copy(x,x+npar, fVec->data);
+      assert(fTmp != 0);
+      gsl_vector_set_zero(fTmp);
+      assert(fCov != 0);
+      gsl_matrix_set_zero(fCov);
+#if GSL_MAJOR_VERSION > 1
+      assert(fJac != 0);
+      gsl_matrix_set_zero(fJac);
+#endif
       return gsl_multifit_fdfsolver_set(fSolver, fFunc.GetFunc(), fVec);
    }
 
@@ -143,18 +169,24 @@ public:
    /// gradient value at the minimum
    const double * Gradient() const {
       if (fSolver == 0) return 0;
+#if GSL_MAJOR_VERSION  > 1
+      fType->gradient(fSolver->state, fVec);
+#else
       gsl_multifit_gradient(fSolver->J, fSolver->f,fVec);
+#endif
       return fVec->data;
    }
 
    /// return covariance matrix of the parameters
    const double * CovarMatrix() const {
       if (fSolver == 0) return 0;
-      if (fCov != 0) gsl_matrix_free(fCov);
-      unsigned int npar = fSolver->fdf->p;
-      fCov = gsl_matrix_alloc( npar, npar );
       static double kEpsrel = 0.0001;
+#if GSL_MAJOR_VERSION > 1
+      gsl_multifit_fdfsolver_jac (fSolver, fJac);
+      int ret = gsl_multifit_covar(fJac, kEpsrel, fCov);
+#else
       int ret = gsl_multifit_covar(fSolver->J, kEpsrel, fCov);
+#endif
       if (ret != GSL_SUCCESS) return 0;
       return fCov->data;
    }
@@ -181,10 +213,9 @@ public:
       if (g == 0) return edm;
       const double * c = CovarMatrix();
       if (c == 0) return edm;
-      gsl_vector * tmp = gsl_vector_alloc( fSolver->fdf->p );
-      int status =   gsl_blas_dgemv(CblasNoTrans, 1.0, fCov, fVec, 0.,tmp);
-      if (status == 0) status |= gsl_blas_ddot(fVec, tmp, &edm);
-      gsl_vector_free(tmp);
+      if (fTmp == 0) return edm;
+      int status =   gsl_blas_dgemv(CblasNoTrans, 1.0, fCov, fVec, 0.,fTmp);
+      if (status == 0) status |= gsl_blas_ddot(fVec, fTmp, &edm);
       if (status != 0) return -1;
       // need to divide by 2 ??
       return 0.5*edm;
@@ -198,7 +229,11 @@ private:
    gsl_multifit_fdfsolver * fSolver;
    // cached vector to avoid re-allocating every time a new one
    mutable gsl_vector * fVec;
+   mutable gsl_vector * fTmp;
    mutable gsl_matrix * fCov;
+#if GSL_MAJOR_VERSION > 1
+   mutable gsl_matrix * fJac;
+#endif
    const gsl_multifit_fdfsolver_type * fType;
 
 };

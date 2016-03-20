@@ -102,6 +102,9 @@ RooFitResult::RooFitResult(const RooFitResult& other) :
   if (other._VM) _VM = new TMatrixDSym(*other._VM) ;
   if (other._CM) _CM = new TMatrixDSym(*other._CM) ;
   if (other._GC) _GC = new TVectorD(*other._GC) ;
+
+  if (GetName())
+    appendToDir(this, kTRUE);
 }
 
 
@@ -120,7 +123,8 @@ RooFitResult::~RooFitResult()
   if (_CM) delete _CM ;
   if (_VM) delete _VM ;
   if (_GC) delete _GC ;
-
+  
+  _corrMatrix.RemoveAll();
   _corrMatrix.Delete();
 
   removeFromDir(this) ;
@@ -1029,11 +1033,6 @@ TMatrixDSym RooFitResult::reducedCovarianceMatrix(const RooArgList& params) cons
 {
   const TMatrixDSym& V = covarianceMatrix() ;
 
-  // Handle case where V==Vred here
-  if (V.GetNcols()==params.getSize()) {
-    return V ;
-  }
-
 
   // Make sure that all given params were floating parameters in the represented fit
   RooArgList params2 ;
@@ -1048,32 +1047,22 @@ TMatrixDSym RooFitResult::reducedCovarianceMatrix(const RooArgList& params) cons
     }
   }
   delete iter ;
-
-  // Need to order params in vector in same order as in covariance matrix
-  RooArgList params3 ;
-  iter = _finalPars->createIterator() ;
-  while((arg=(RooAbsArg*)iter->Next())) {
-    if (params2.find(arg->GetName())) {
-      params3.add(*arg) ;
-    }
-  }
-  delete iter ;
-
-  // Find (subset) of parameters that are stored in the covariance matrix
-  vector<int> map1, map2 ;
-  for (int i=0 ; i<_finalPars->getSize() ; i++) {
-    if (params3.find(_finalPars->at(i)->GetName())) {
-      map1.push_back(i) ;
-    } else {
-      map2.push_back(i) ;
-    }
-  }
-
-  TMatrixDSym S11, S22 ;
-  TMatrixD S12, S21 ;
-  RooMultiVarGaussian::blockDecompose(V,map1,map2,S11,S12,S21,S22) ;
-
-  return S11 ;
+   
+   // fix for bug ROOT-8044
+   // use same order given bby vector params
+   vector<int> indexMap(params2.getSize());
+   for (int i=0 ; i<params2.getSize() ; i++) {
+      indexMap[i] = _finalPars->index(params2[i].GetName());
+      assert(indexMap[i] < V.GetNrows());
+   }
+   
+   TMatrixDSym Vred(indexMap.size());
+   for (int i = 0; i < Vred.GetNrows(); ++i) {
+      for (int j = 0; j < Vred.GetNcols(); ++j) {
+         Vred(i,j) = V( indexMap[i], indexMap[j]);
+      }
+   }
+   return Vred;
 }
 
 
@@ -1387,7 +1376,9 @@ void RooFitResult::Streamer(TBuffer &R__b)
     UInt_t R__s, R__c;
     Version_t R__v = R__b.ReadVersion(&R__s, &R__c);     
     if (R__v>3) {    
-      R__b.ReadClassBuffer(RooFitResult::Class(),this,R__v,R__s,R__c);    
+      R__b.ReadClassBuffer(RooFitResult::Class(),this,R__v,R__s,R__c);
+      RooAbsArg::ioStreamerPass2Finalize();
+      _corrMatrix.SetOwner();
     } else {
       // backward compatibitily streaming 
       TNamed::Streamer(R__b);

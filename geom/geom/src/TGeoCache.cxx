@@ -9,18 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
-// Physical tree description.
-//
-//
-//
-//
-//Begin_Html
-/*
-<img src=".gif">
-*/
-//End_Html
-
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
 #include "TGeoVolume.h"
@@ -28,14 +16,14 @@
 
 //const Int_t kN3 = 3*sizeof(Double_t);
 
-
 ClassImp(TGeoNodeCache)
 
-/*************************************************************************
- * TGeoNodeCache - special pool of reusable nodes
- *
- *
- *************************************************************************/
+/** \class TGeoNodeCache
+\ingroup Geometry_classes
+
+Special pool of reusable nodes
+
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Dummy constructor
@@ -94,7 +82,7 @@ TGeoNodeCache::TGeoNodeCache(TGeoNode *top, Bool_t nodeid, Int_t capacity)
    }
    for (Int_t i=0; i<fGeoInfoStackSize; i++) {
       fInfoBranch[i] = 0;
-   }   
+   }
    fPWInfo      = 0;
    fMatrix = fMatrixBranch[0] = fMPB[0];
    fNodeBranch[0] = top;
@@ -145,7 +133,7 @@ void TGeoNodeCache::BuildIdArray()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Bulds info branch. Navigation is possible only after this step.
+/// Builds info branch. Navigation is possible only after this step.
 
 void TGeoNodeCache::BuildInfoBranch()
 {
@@ -164,7 +152,7 @@ TGeoStateInfo *TGeoNodeCache::GetMakePWInfo(Int_t nd)
    if (fPWInfo) return fPWInfo;
    fPWInfo = new TGeoStateInfo(nd);
    return fPWInfo;
-}   
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Change current path to point to the node having this id.
@@ -172,7 +160,7 @@ TGeoStateInfo *TGeoNodeCache::GetMakePWInfo(Int_t nd)
 
 void TGeoNodeCache::CdNode(Int_t nodeid) {
    if (!fNodeIdArray) {
-      Error("CdNode", "Navigation based on phisical node unuique id disabled.\n   To enable, use: gGeoManager->GetCache()->BuildIdArray()");
+      Error("CdNode", "Navigation based on physical node unique id disabled.\n   To enable, use: gGeoManager->GetCache()->BuildIdArray()");
       return;
    }
    Int_t *arr = fNodeIdArray;
@@ -455,11 +443,12 @@ void TGeoNodeCache::MasterToLocalBomb(const Double_t *master, Double_t *local) c
 
 ClassImp(TGeoCacheState)
 
-/*************************************************************************
-* TGeoCacheState - class storing the state of the cache at a given moment
-*
-*
-*************************************************************************/
+/** \class TGeoCacheState -
+\ingroup Geometry_classes
+
+Class storing the state of the cache at a given moment
+
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.

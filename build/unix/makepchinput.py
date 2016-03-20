@@ -421,6 +421,16 @@ def printModulesMessageOnScreen(selModules):
    print ("\nGenerating PCH for %s\n" %" ".join(modulesList))
 
 #-------------------------------------------------------------------------------
+def getExtraHeaders():
+   """ Get extra headers which do not fall in other special categories
+   """
+   extraHeaders=["ROOT/TSeq.h","ROOT/StringConv.h"]
+   code = "// Extra headers\n"
+   for extraHeader in extraHeaders:
+      code += '#include "%s"\n' %extraHeader
+   return code
+
+#-------------------------------------------------------------------------------
 def makePCHInput():
    """
    Create the input for the pch file, i.e. 3 files:
@@ -461,6 +471,8 @@ def makePCHInput():
       allHeadersContent += getDefUndefLines(dictName)
 
       allLinkdefsContent += getLocalLinkDefs(rootSrcDir, outdir , dirName)
+
+   allHeadersContent += getExtraHeaders()
 
    copyLinkDefs(rootSrcDir, outdir)
 

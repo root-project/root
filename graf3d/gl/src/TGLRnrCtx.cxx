@@ -30,25 +30,25 @@
 #include <algorithm>
 #include <cassert>
 
-//______________________________________________________________________
-//
-// The TGLRnrCtx class aggregates data for a given redering context as
-// needed by various parts of the ROOT's OpenGL infractructure. It
-// serves as a connecting point between the steering part of the
-// infrastructure (viewer, scene) and concrete rendering classes
-// (logical, physical shape). It is just a data-holder, there is no
-// functionality in it.
-//
-// Development notes:
-//
-// One RnrCtx is created by each viewer and it is just an extension of
-// the viewer context that changes along the render
-// descend. Separating this also has some abstract benefit of hiding
-// viewer implementation from those that do not need to know it.
-//
-// Current scene / scene-info part is always initialized by viewer,
-// scenes can assume they're ok.
+/** \class TGLRnrCtx
+\ingroup opengl
+The TGLRnrCtx class aggregates data for a given redering context as
+needed by various parts of the ROOT's OpenGL infrastructure. It
+serves as a connecting point between the steering part of the
+infrastructure (viewer, scene) and concrete rendering classes
+(logical, physical shape). It is just a data-holder, there is no
+functionality in it.
 
+Development notes:
+
+One RnrCtx is created by each viewer and it is just an extension of
+the viewer context that changes along the render
+descend. Separating this also has some abstract benefit of hiding
+viewer implementation from those that do not need to know it.
+
+Current scene / scene-info part is always initialized by viewer,
+scenes can assume they're ok.
+*/
 
 ClassImp(TGLRnrCtx);
 
@@ -273,7 +273,7 @@ void TGLRnrCtx::PushColorSet()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return reference to current color-set (top of hte stack).
+/// Return reference to current color-set (top of the stack).
 
 TGLColorSet& TGLRnrCtx::ColorSet()
 {

@@ -26,6 +26,7 @@ namespace std {
 }
 
 namespace ROOT {
+namespace Experimental {
 
   /**
    Kinds of diagnostics.
@@ -114,14 +115,14 @@ namespace ROOT {
     }
   };
 
-
+} // namespace Experimental
 } // namespace ROOT
 
 #define R__LOG_HERE(LEVEL, GROUP) \
-  TLogEntry(LEVEL, GROUP).SetFile(__FILE__).SetLine(__LINE__).SetFunction(__PRETTY_FUNCTION__)
+  ROOT::Experimental::TLogEntry(LEVEL, GROUP).SetFile(__FILE__).SetLine(__LINE__).SetFunction(__PRETTY_FUNCTION__)
 
 
-#define R__ERROR_HERE(GROUP) R__LOG_HERE(ELogLevel::kError, GROUP)
-#define R__ERROR_HERE(GROUP) R__LOG_HERE(ELogLevel::kError, GROUP)
+#define R__ERROR_HERE(GROUP) R__LOG_HERE(ROOT::Experimental::ELogLevel::kError, GROUP)
+#define R__WARNING_HERE(GROUP) R__LOG_HERE(ROOT::Experimental::ELogLevel::kWarning, GROUP)
 
 #endif

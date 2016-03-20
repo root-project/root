@@ -9,37 +9,45 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//____________________________________________________________________________
-// TGeoPolygon - Arbitrary polygon class
-//____________________________________________________________________________
-//
-// A polygon is a 2D shape defined by vertices in the XY plane. It is used by
-// TGeoXtru class for computing Contains() and Safety(). Only the pointers to
-// the actual lists of XY values are used - these are not owned by the class.
-//
-// To check if a point in XY plane is contained by a polygon, this is split
-// into an outscribed convex polygon and the remaining polygons of its subtracton
-// from the outscribed one. A point is INSIDE if it is
-// contained by the outscribed polygon but NOT by the remaining ones. Since these
-// can also be arbitrary polygons at their turn, a tree structure is formed:
-//
-//  P = Pconvex - (Pconvex-P)           where (-) means 'subtraction'
-//  Pconvex-P = P1 + P2 + ...           where (+) means 'union'
-//
-//  *Note that P1, P2, ... do not intersect each other and they are defined
-//   by subsets of the list of vertices of P. They can be split in the same
-//   way as P*
-//
-// Therefore, if C(P) represents the Boolean : 'does P contains a given point?',
-// then:
-//
-// C(P) = C(Pconvex) .and. not(C(P1) | C(P2) | ...)
-//
-// For creating a polygon without TGeoXtru class, one has to call the constructor
-// TGeoPolygon(nvert) and then SetXY(Double_t *x, Double_t *y) providing the
-// arrays of X and Y vertex positions (defined clockwise) that have to 'live' longer
-// than the polygon they will describe. This complication is due to efficiency reasons.
-// At the end one has to call the FinishPolygon() method.
+/** \class TGeoPolygon
+\ingroup Geometry_classes
+
+An arbitrary polygon defined by vertices. The vertices
+have to be defined CLOCKWISE in the XY plane, making either a convex
+or concave polygon. No test for malformed polygons is performed.
+
+A polygon is a 2D shape defined by vertices in the XY plane. It is used by
+TGeoXtru class for computing Contains() and Safety(). Only the pointers to
+the actual lists of XY values are used - these are not owned by the class.
+
+To check if a point in XY plane is contained by a polygon, this is split
+into an outscribed convex polygon and the remaining polygons of its subtraction
+from the outscribed one. A point is INSIDE if it is
+contained by the outscribed polygon but NOT by the remaining ones. Since these
+can also be arbitrary polygons at their turn, a tree structure is formed:
+
+~~~ {.cpp}
+ P = Pconvex - (Pconvex-P)           where (-) means 'subtraction'
+ Pconvex-P = P1 + P2 + ...           where (+) means 'union'
+~~~
+
+*Note that P1, P2, ... do not intersect each other and they are defined
+by subsets of the list of vertices of P. They can be split in the same
+way as P*
+
+Therefore, if C(P) represents the Boolean : 'does P contains a given point?',
+then:
+
+~~~ {.cpp}
+C(P) = C(Pconvex) .and. not(C(P1) | C(P2) | ...)
+~~~
+
+For creating a polygon without TGeoXtru class, one has to call the constructor
+TGeoPolygon(nvert) and then SetXY(Double_t *x, Double_t *y) providing the
+arrays of X and Y vertex positions (defined clockwise) that have to 'live' longer
+than the polygon they will describe. This complication is due to efficiency reasons.
+At the end one has to call the FinishPolygon() method.
+*/
 
 #include "TObjArray.h"
 #include "TGeoPolygon.h"
@@ -165,7 +173,7 @@ void TGeoPolygon::Draw(Option_t *)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Decompose polygon in a convex outscribed part and a list of daughter
-/// polygons that have to be substracted to get the actual one.
+/// polygons that have to be subtracted to get the actual one.
 
 void TGeoPolygon::FinishPolygon()
 {
@@ -325,7 +333,7 @@ void TGeoPolygon::OutscribedConvex()
       } else {
          ivnew = (iseg+1)%fNvert;
       }
-      // segment belonging to convex outscribed poligon
+      // segment belonging to convex outscribed polygon
       if (!fNconvex) indconv[fNconvex++] = iseg;
       else if (indconv[fNconvex-1] != iseg) indconv[fNconvex++] = iseg;
       if (iseg<fNvert-1) indconv[fNconvex++] = ivnew;

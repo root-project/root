@@ -41,6 +41,7 @@ namespace clang {
    class Module;
    class NamedDecl;
    class ParmVarDecl;
+   class PresumedLoc;
    class QualType;
    class RecordDecl;
    class SourceLocation;
@@ -96,8 +97,6 @@ namespace propNames{
    static const std::string persistent("persistent");
    static const std::string transient("transient");
 }
-
-extern int gErrorIgnoreLevel;
 
 // Get the array index information for a data member.
 enum DataMemberInfo__ValidArrayIndex_error_code { VALID, NOT_INT, NOT_DEF, IS_PRIVATE, UNKNOWN };
@@ -300,9 +299,6 @@ public:
 typedef std::list<RConstructorType> RConstructorTypes;
 
 // Functions -------------------------------------------------------------------
-
-//_____________________________________________________________________________
-unsigned int GetNumberOfWarningsAndErrors();
 
 //______________________________________________________________________________
 int extractAttrString(clang::Attr* attribute, std::string& attrString);
@@ -700,22 +696,105 @@ void ReplaceAll(std::string& str, const std::string& from, const std::string& to
 // Functions for the printouts -------------------------------------------------
 
 //______________________________________________________________________________
-void LevelPrint(bool prefix, int level, const char *location, const char *fmt, va_list ap);
+inline unsigned int &GetNumberOfWarningsAndErrors(){
+   static unsigned  int gNumberOfWarningsAndErrors = 0;
+   return gNumberOfWarningsAndErrors;
+}
 
 //______________________________________________________________________________
-void Error(const char *location, const char *va_(fmt), ...);
+inline int &GetErrorIgnoreLevel() {
+   static int gErrorIgnoreLevel = ROOT::TMetaUtils::kError;
+   return gErrorIgnoreLevel;
+}
 
 //______________________________________________________________________________
-void SysError(const char *location, const char *va_(fmt), ...);
+inline void LevelPrint(bool prefix, int level, const char *location, const char *fmt, va_list ap)
+{
+   if (level < GetErrorIgnoreLevel())
+      return;
+
+   const char *type = 0;
+
+   if (level >= ROOT::TMetaUtils::kInfo)
+      type = "Info";
+   if (level >= ROOT::TMetaUtils::kNote)
+      type = "Note";
+   if (level >= ROOT::TMetaUtils::kThrowOnWarning)
+      type = "Warning";
+   if (level >= ROOT::TMetaUtils::kError)
+      type = "Error";
+   if (level >= ROOT::TMetaUtils::kSysError)
+      type = "SysError";
+   if (level >= ROOT::TMetaUtils::kFatal)
+      type = "Fatal";
+
+   if (!location || !location[0]) {
+      if (prefix) fprintf(stderr, "%s: ", type);
+      vfprintf(stderr, (const char*)va_(fmt), ap);
+   } else {
+      if (prefix) fprintf(stderr, "%s in <%s>: ", type, location);
+      else fprintf(stderr, "In <%s>: ", location);
+      vfprintf(stderr, (const char*)va_(fmt), ap);
+   }
+
+   fflush(stderr);
+
+   if (GetErrorIgnoreLevel() == ROOT::TMetaUtils::kThrowOnWarning ||
+      GetErrorIgnoreLevel() > ROOT::TMetaUtils::kError){
+      ++GetNumberOfWarningsAndErrors();
+      }
+
+}
 
 //______________________________________________________________________________
-void Info(const char *location, const char *va_(fmt), ...);
+// Use this function in case an error occured.
+inline void Error(const char *location, const char *va_(fmt), ...)
+{
+   va_list ap;
+   va_start(ap,va_(fmt));
+   LevelPrint(true, ROOT::TMetaUtils::kError, location, va_(fmt), ap);
+   va_end(ap);
+}
 
 //______________________________________________________________________________
-void Warning(const char *location, const char *va_(fmt), ...);
+// Use this function in case a system (OS or GUI) related error occured.
+inline void SysError(const char *location, const char *va_(fmt), ...)
+{
+   va_list ap;
+   va_start(ap, va_(fmt));
+   LevelPrint(true, ROOT::TMetaUtils::kSysError, location, va_(fmt), ap);
+   va_end(ap);
+}
 
 //______________________________________________________________________________
-void Fatal(const char *location, const char *va_(fmt), ...);
+// Use this function for informational messages.
+inline void Info(const char *location, const char *va_(fmt), ...)
+{
+   va_list ap;
+   va_start(ap,va_(fmt));
+   LevelPrint(true, ROOT::TMetaUtils::kInfo, location, va_(fmt), ap);
+   va_end(ap);
+}
+
+//______________________________________________________________________________
+// Use this function in warning situations.
+inline void Warning(const char *location, const char *va_(fmt), ...)
+{
+   va_list ap;
+   va_start(ap,va_(fmt));
+   LevelPrint(true, ROOT::TMetaUtils::kWarning, location, va_(fmt), ap);
+   va_end(ap);
+}
+
+//______________________________________________________________________________
+// Use this function in case of a fatal error. It will abort the program.
+inline void Fatal(const char *location, const char *va_(fmt), ...)
+{
+   va_list ap;
+   va_start(ap,va_(fmt));
+   LevelPrint(true, ROOT::TMetaUtils::kFatal, location, va_(fmt), ap);
+   va_end(ap);
+}
 
 //______________________________________________________________________________
 const std::string& GetPathSeparator();
@@ -731,6 +810,7 @@ namespace AST2SourceTools {
 
 //______________________________________________________________________________
 const std::string Decls2FwdDecls(const std::vector<const clang::Decl*> &decls,
+                                 bool (*ignoreFiles)(const clang::PresumedLoc&) ,
                                  const cling::Interpreter& interp);
 
 //______________________________________________________________________________

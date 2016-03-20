@@ -18,6 +18,8 @@
 
 #include "llvm/Support/DataTypes.h"
 
+#include <string> // for memset
+
 namespace clang {
 
 /// \brief C++ constructor types.

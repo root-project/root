@@ -625,40 +625,50 @@ bool TClassEdit::IsDefAlloc(const char *allocname,
    }
    a.remove_prefix(pairlen);
 
-   const static int constlen = strlen("const ");
-   if (a.compare(0,constlen,"const ") == 0) {
-      a.remove_prefix(constlen);
+   const static int constlen = strlen("const");
+   if (a.compare(0,constlen+1,"const ") == 0) {
+      a.remove_prefix(constlen+1);
    }
 
    RemoveStd(a);
 
    string_view k = keyclassname;
    RemoveStd(k);
+   if (k.compare(0,constlen+1,"const ") == 0) {
+      k.remove_prefix(constlen+1);
+   }
 
    if (a.compare(0,k.length(),k) != 0) {
       // Now we need to compare the normalized name.
       size_t end = findNameEnd(a);
 
-      std::string keypart;
-      GetNormalizedName(keypart,std::string_view(a.data(),end));
+      std::string alloc_keypart;
+      GetNormalizedName(alloc_keypart,std::string_view(a.data(),end));
 
       std::string norm_key;
       GetNormalizedName(norm_key,k);
 
-      if (keypart != norm_key) {
-         if ( k[k.length()-1] == '*' ) {
+      if (alloc_keypart != norm_key) {
+         if ( norm_key[norm_key.length()-1] == '*' ) {
             // also check with a trailing 'const'.
-            keypart += "const";
-            if (keypart != norm_key) {
-               return false;
-            }
+            norm_key += "const";
          } else {
-            return false;
+            norm_key += " const";
+         }
+         if (alloc_keypart != norm_key) {
+           return false;
          }
       }
       a.remove_prefix(end);
    } else {
-      a.remove_prefix(k.length());
+      size_t end = k.length();
+      if ( (a[end-1] == '*') || a[end]==' ' ) {
+         size_t skipSpace = (a[end] == ' ');
+         if (a.compare(end+skipSpace,constlen,"const") == 0) {
+            end += constlen+skipSpace;
+         }
+      }
+      a.remove_prefix(end);
    }
 
    if (a[0] != ',') {

@@ -9,23 +9,27 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//_____________________________________________________________________________
-// TGeoNavigator
-//===============
-//
-//   Class providing navigation API for TGeo geometries. Several instances are
-// allowed for a single geometry.
-// A default navigator is provided for any geometry but one may add several
-// others for parallel navigation:
-//
-// TGeoNavigator *navig = new TGeoNavigator(gGeoManager);
-// Int_t inav = gGeoManager->AddNavigator(navig);
-// gGeoManager->SetCurrentNavigator(inav);
-//
-// .... and then switch back to the default navigator:
-//
-// gGeoManager->SetCurrentNavigator(0);
-//_____________________________________________________________________________
+/** \class TGeoNavigator
+\ingroup Geometry_classes
+
+  Class providing navigation API for TGeo geometries. Several instances are
+allowed for a single geometry.
+A default navigator is provided for any geometry but one may add several
+others for parallel navigation:
+
+~~~ {.cpp}
+TGeoNavigator *navig = new TGeoNavigator(gGeoManager);
+Int_t inav = gGeoManager->AddNavigator(navig);
+gGeoManager->SetCurrentNavigator(inav);
+~~~
+
+.... and then switch back to the default navigator:
+
+~~~ {.cpp}
+gGeoManager->SetCurrentNavigator(0);
+~~~
+
+*/
 
 #include "TGeoNavigator.h"
 
@@ -46,6 +50,7 @@ const Int_t kN3 = 3*sizeof(Double_t);
 ClassImp(TGeoNavigator)
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor
 
 TGeoNavigator::TGeoNavigator()
               :fStep(0.),
@@ -96,6 +101,7 @@ TGeoNavigator::TGeoNavigator()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor
 
 TGeoNavigator::TGeoNavigator(TGeoManager* geom)
               :fStep(0.),
@@ -206,7 +212,7 @@ TGeoNavigator::TGeoNavigator(const TGeoNavigator& gm)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///assignment operator
+/// assignment operator
 
 TGeoNavigator& TGeoNavigator::operator=(const TGeoNavigator& gm)
 {
@@ -375,7 +381,7 @@ Bool_t TGeoNavigator::CheckPath(const char *path) const
       ind1 = ind2;
    }
    return kTRUE;
-}    
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Change current path to point to the node having this id.
@@ -600,6 +606,15 @@ TGeoNode *TGeoNavigator::CrossBoundaryAndLocate(Bool_t downwards, TGeoNode *skip
    Double_t trmax = 1.+TMath::Abs(tr[0])+TMath::Abs(tr[1])+TMath::Abs(tr[2]);
    Double_t extra = 100.*(trmax+fStep)*gTolerance;
    const Int_t idebug = TGeoManager::GetVerboseLevel();
+   TGeoNode *crtstate[10];
+   Int_t level = fLevel+1;
+   Bool_t samepath = kFALSE;
+   if (!downwards) {
+     for (Int_t i=0; i<fLevel; ++i) {
+       crtstate[i] = GetMother(i);
+       if (i==9) break;
+     }
+   }
    fPoint[0] += extra*fDirection[0];
    fPoint[1] += extra*fDirection[1];
    fPoint[2] += extra*fDirection[2];
@@ -618,16 +633,29 @@ TGeoNode *TGeoNavigator::CrossBoundaryAndLocate(Bool_t downwards, TGeoNode *skip
       }
       if (idebug>4) {
          printf("CrossBoundaryAndLocate: entered %s\n", GetPath());
-      }   
-      return current;   
-   }   
-     
-   if ((skipnode && current == skipnode) || current->GetVolume()->IsAssembly()) {
+      }
+      return current;
+   }
+
+   if (skipnode) {
+      if ((current == skipnode) && (level == fLevel) ) {
+         samepath = kTRUE;
+         level = TMath::Min(level, 10);
+         for (Int_t i=1; i<level; i++) {
+            if (crtstate[i-1] != GetMother(i)) {
+               samepath = kFALSE;
+               break;
+            }
+         }
+      }
+   }
+
+   if (samepath || current->GetVolume()->IsAssembly()) {
       if (!fLevel) {
          fIsOutside = kTRUE;
          if (idebug>4) {
             printf("CrossBoundaryAndLocate: Exited geometry\n");
-         }   
+         }
          return fGeometry->GetCurrentNode();
       }
       CdUp();
@@ -636,17 +664,17 @@ TGeoNode *TGeoNavigator::CrossBoundaryAndLocate(Bool_t downwards, TGeoNode *skip
          fIsOutside = kTRUE;
          if (idebug>4) {
             printf("CrossBoundaryAndLocate: Exited geometry\n");
-         }   
+         }
          if (idebug>4) {
             printf("CrossBoundaryAndLocate: entered %s\n", GetPath());
-         }   
+         }
          return fCurrentNode;
       }
       return fCurrentNode;
    }
    if (idebug>4) {
       printf("CrossBoundaryAndLocate: entered %s\n", GetPath());
-   }   
+   }
    return current;
 }
 
@@ -659,6 +687,7 @@ TGeoNode *TGeoNavigator::CrossBoundaryAndLocate(Bool_t downwards, TGeoNode *skip
 /// answer to the question : "Is STEPMAX a safe step ?" returning a NULL node and filling
 /// fStep with a big number.
 /// In case frombdr=kTRUE, the isotropic safety is set to zero.
+///
 /// Note : safety distance for the current point is computed ONLY in case STEPMAX is
 ///        specified, otherwise users have to call explicitly TGeoManager::Safety() if
 ///        they want this computed for the current point.
@@ -1535,8 +1564,8 @@ TGeoNode *TGeoNavigator::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsa
       if (fLevel) CdUp();
       else        skip = 0;
       return CrossBoundaryAndLocate(kFALSE, skip);
-   }   
-   
+   }
+
    CdDown(icrossed);
    nextindex = fCurrentNode->GetVolume()->GetNextNodeIndex();
    while (nextindex>=0) {
@@ -2269,7 +2298,7 @@ Int_t TGeoNavigator::GetVirtualLevel()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Go upwards the tree until a non-overlaping node
+/// Go upwards the tree until a non-overlapping node
 
 Bool_t TGeoNavigator::GotoSafeLevel()
 {
@@ -2312,7 +2341,7 @@ Bool_t TGeoNavigator::GotoSafeLevel()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Go upwards the tree until a non-overlaping node
+/// Go upwards the tree until a non-overlapping node
 
 Int_t TGeoNavigator::GetSafeLevel() const
 {
@@ -2408,7 +2437,7 @@ Bool_t TGeoNavigator::IsSameLocation(Double_t x, Double_t y, Double_t z, Bool_t 
       FindNode(x,y,z);
       return kFALSE;
    }
-   
+
    // Check if the point is in a parallel world volume
    if (fGeometry->IsParallelWorldNav()) {
       TGeoPhysicalNode *pnode = fGeometry->GetParallelWorld()->FindNode(fPoint);
@@ -2423,7 +2452,7 @@ Bool_t TGeoNavigator::IsSameLocation(Double_t x, Double_t y, Double_t z, Bool_t 
          }
          return kFALSE;
       }
-   }      
+   }
    // check if there are daughters
    Int_t nd = vol->GetNdaughters();
    if (!nd) return kTRUE;

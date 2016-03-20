@@ -4,7 +4,7 @@
  *****************************************************************************/ 
 
 /** \class Roo1DMomentMorphFunction
-    \ingroup Roofitpdf
+    \ingroup Roofit
 
 1-dimensional morph function between a list of input functions (varlist) as a function of one input parameter (m).
 The vector mrefpoints assigns an m-number to each function in the function list.

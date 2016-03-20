@@ -63,7 +63,7 @@ static inline rtype GILCall##tcode(                                           \
 PYROOT_IMPL_GILCALL( void,         V )
 PYROOT_IMPL_GILCALL( UChar_t,      B )
 PYROOT_IMPL_GILCALL( Char_t,       C )
-//PYROOT_IMPL_GILCALL( Short_t,      H )
+PYROOT_IMPL_GILCALL( Short_t,      H )
 PYROOT_IMPL_GILCALL( Int_t,        I )
 PYROOT_IMPL_GILCALL( Long_t,       L )
 PYROOT_IMPL_GILCALL( Long64_t,     LL )
@@ -86,7 +86,8 @@ static inline Cppyy::TCppObject_t GILCallConstructor(
 }
 
 static inline PyObject* PyROOT_PyUnicode_FromInt( Int_t c ) {
-   if ( c < 0 ) return PyInt_FromLong( c ); // python chars are range(256)
+   // python chars are range(256)
+   if ( c < 0 ) return PyROOT_PyUnicode_FromFormat( "%c", 256 - std::abs(c));
    return PyROOT_PyUnicode_FromFormat( "%c", c );
 }
 
@@ -164,6 +165,15 @@ PyObject* PyROOT::TIntExecutor::Execute(
       Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
 {
    return PyInt_FromLong( (Int_t)GILCallI( method, self, ctxt ) );
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// execute <method> with argument <self, ctxt>, construct python int return value
+
+PyObject* PyROOT::TShortExecutor::Execute(
+      Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
+{
+   return PyInt_FromLong( (Short_t)GILCallH( method, self, ctxt ) );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -750,6 +760,7 @@ namespace {
    PYROOT_EXECUTOR_FACTORY( UChar )
    PYROOT_EXECUTOR_FACTORY( UCharRef )
    PYROOT_EXECUTOR_FACTORY( UCharConstRef )
+   PYROOT_EXECUTOR_FACTORY( Short )
    PYROOT_EXECUTOR_FACTORY( ShortRef )
    PYROOT_EXECUTOR_FACTORY( UShortRef )
    PYROOT_EXECUTOR_FACTORY( Int )
@@ -804,7 +815,7 @@ namespace {
       NFp_t( "const char&",        &CreateCharConstRefExecutor        ),
       NFp_t( "const signed char&", &CreateCharConstRefExecutor        ),
       NFp_t( "const unsigned char&", &CreateUCharConstRefExecutor     ),
-      NFp_t( "short",              &CreateIntExecutor                 ),
+      NFp_t( "short",              &CreateShortExecutor               ),
       NFp_t( "short&",             &CreateShortRefExecutor            ),
       NFp_t( "unsigned short",     &CreateIntExecutor                 ),
       NFp_t( "unsigned short&",    &CreateUShortRefExecutor           ),
@@ -842,6 +853,7 @@ namespace {
       NFp_t( "unsigned short*",    &CreateUShortArrayExecutor         ),
       NFp_t( "int*",               &CreateIntArrayExecutor            ),
       NFp_t( "unsigned int*",      &CreateUIntArrayExecutor           ),
+      NFp_t( "UInt_t*", /* enum */ &CreateUIntArrayExecutor           ),
       NFp_t( "long*",              &CreateLongArrayExecutor           ),
       NFp_t( "unsigned long*",     &CreateULongArrayExecutor          ),
       NFp_t( "float*",             &CreateFloatArrayExecutor          ),

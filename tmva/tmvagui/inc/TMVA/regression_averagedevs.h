@@ -10,7 +10,7 @@ namespace TMVA{
      created January 2009, Eckhard von Toerne, University of Bonn, Germany
    */
 
-   void regression_averagedevs(TString fin, Int_t Nevt=-1, Bool_t useTMVAStyle = kTRUE );
+   void regression_averagedevs(TString dataset,TString fin, Int_t Nevt=-1, Bool_t useTMVAStyle = kTRUE );
 
 }
 #endif

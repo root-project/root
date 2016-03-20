@@ -1,19 +1,19 @@
-/////////////////////////////////////////////////////////////////////////
-//
-// 'ADDITION AND CONVOLUTION' RooFit tutorial macro #209
-// 
-// Decay function p.d.fs with optional B physics 
-// effects (mixing and CP violation) that can be
-// analytically convolved with e.g. Gaussian resolution 
-// functions
-// 
-// pdf1 = decay(t,tau) (x) delta(t)
-// pdf2 = decay(t,tau) (x) gauss(t,m,s)
-// pdf3 = decay(t,tau) (x) (f*gauss1(t,m1,s1) + (1-f)*gauss2(t,m1,s1))
-// 
-// 07/2008 - Wouter Verkerke 
-//
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roofit
+///  'ADDITION AND CONVOLUTION' RooFit tutorial macro #209
+///
+///  Decay function p.d.fs with optional B physics
+///  effects (mixing and CP violation) that can be
+///  analytically convolved with e.g. Gaussian resolution
+///  functions
+///
+///  pdf1 = decay(t,tau) (x) delta(t)
+///  pdf2 = decay(t,tau) (x) gauss(t,m,s)
+///  pdf3 = decay(t,tau) (x) (f*gauss1(t,m1,s1) + (1-f)*gauss2(t,m1,s1))
+///
+/// \macro_code
+/// \author 07/2008 - Wouter Verkerke 
+
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"

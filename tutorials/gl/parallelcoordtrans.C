@@ -1,10 +1,14 @@
-// Script illustrating the use of transparency with ||-Coord.
-// It displays the same data set twice. The first time without transparency and
-// the second time with transparency. On the second plot, several clusters
-// appear.
-
-//Authors: by Timur Pocheptsov, based on macro by Olivier Couet.
-
+/// \file
+/// \ingroup tutorial_gl
+/// Script illustrating the use of transparency with ||-Coord.
+/// It displays the same data set twice. The first time without transparency and
+/// the second time with transparency. On the second plot, several clusters
+/// appear.
+///
+/// \macro_image(nobatch)
+/// \macro_code
+///
+/// \authors Timur Pocheptsov, Olivier Couet
 
 //All these includes are (only) to make the macro
 //ACLiCable.

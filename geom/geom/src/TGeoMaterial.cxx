@@ -9,13 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
-//
-//Begin_Html
-/*
-<img src="gif/t_material.jpg">
+/** \class TGeoMaterial
+\ingroup Geometry_classes
+
+Base class describing materials.
+
+\image html geom_material.jpg
 */
-//End_Html
+
 #include "Riostream.h"
 #include "TMath.h"
 #include "TObjArray.h"
@@ -325,7 +326,7 @@ char *TGeoMaterial::GetPointerName() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set radiation/absorbtion lengths. If the values are negative, their absolute value
+/// Set radiation/absorption lengths. If the values are negative, their absolute value
 /// is taken, otherwise radlen is recomputed using G3 formula.
 
 void TGeoMaterial::SetRadLen(Double_t radlen, Double_t intlen)
@@ -460,7 +461,7 @@ void TGeoMaterial::GetElementProp(Double_t &a, Double_t &z, Double_t &w, Int_t)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Retreive material index in the list of materials
+/// Retrieve material index in the list of materials
 
 Int_t TGeoMaterial::GetIndex()
 {
@@ -526,15 +527,21 @@ TGeoMaterial *TGeoMaterial::DecayMaterial(Double_t time, Double_t precision)
 /// The precision represent the minimum cumulative branching ratio for
 /// which decay products are still taken into account.
 /// To visualize the time evolution of each decay product one can use:
+/// ~~~ {.cpp}
 ///    TGeoElement *elem = population->At(index);
 ///    TGeoElementRN *elemrn = 0;
 ///    if (elem->IsRadioNuclide()) elemrn = (TGeoElementRN*)elem;
+/// ~~~
 /// One can get Ni/N1(t=0) at any moment of time. Ni is the number of atoms
 /// of one of the decay products, N1(0) is the number of atoms of the top
 /// element at t=0.
+/// ~~~ {.cpp}
 ///    Double_t fraction_weight = elemrn->Ratio()->Concentration(time);
-/// One can also display the time evolution of the fractional weigth:
+/// ~~~
+/// One can also display the time evolution of the fractional weight:
+/// ~~~ {.cpp}
 ///    elemrn->Ratio()->Draw(option);
+/// ~~~
 
 void TGeoMaterial::FillMaterialEvolution(TObjArray *population, Double_t precision)
 {
@@ -880,7 +887,7 @@ void TGeoMixture::DefineElement(Int_t /*iel*/, Int_t z, Int_t natoms)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Retreive the pointer to the element corresponding to component I.
+/// Retrieve the pointer to the element corresponding to component I.
 
 TGeoElement *TGeoMixture::GetElement(Int_t i) const
 {
@@ -1030,15 +1037,21 @@ TGeoMaterial *TGeoMixture::DecayMaterial(Double_t time, Double_t precision)
 /// The precision represent the minimum cumulative branching ratio for
 /// which decay products are still taken into account.
 /// To visualize the time evolution of each decay product one can use:
+/// ~~~ {.cpp}
 ///    TGeoElement *elem = population->At(index);
 ///    TGeoElementRN *elemrn = 0;
 ///    if (elem->IsRadioNuclide()) elemrn = (TGeoElementRN*)elem;
+/// ~~~
 /// One can get Ni/N1(t=0) at any moment of time. Ni is the number of atoms
 /// of one of the decay products, N1(0) is the number of atoms of the first top
 /// element at t=0.
+/// ~~~ {.cpp}
 ///    Double_t fraction_weight = elemrn->Ratio()->Concentration(time);
-/// One can also display the time evolution of the fractional weigth:
+/// ~~~
+/// One can also display the time evolution of the fractional weight:
+/// ~~~ {.cpp}
 ///    elemrn->Ratio()->Draw(option);
+/// ~~~
 
 void TGeoMixture::FillMaterialEvolution(TObjArray *population, Double_t precision)
 {
@@ -1066,7 +1079,7 @@ void TGeoMixture::FillMaterialEvolution(TObjArray *population, Double_t precisio
 
 ////////////////////////////////////////////////////////////////////////////////
 /// static function
-///  Compute screening factor for pair production and Bremstrahlung
+///  Compute screening factor for pair production and Bremsstrahlung
 ///  REFERENCE : EGS MANUAL SLAC 210 - UC32 - JUNE 78
 ///                        FORMULA 2.7.22
 

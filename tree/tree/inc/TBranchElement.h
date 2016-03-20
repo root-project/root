@@ -66,6 +66,18 @@ protected:
       kDecomposedObj= BIT(21)   //  More explicit alias for kMakeClass.
    };
 
+   // Note on fType values:
+   // -1 unsplit object with custom streamer at time of writing
+   //  0 unsplit object with default streamer at time of writing
+   //    OR simple data member of split object (fID==-1 for the former)
+   //  1 base class of a split object.
+   //  2 class typed data member of a split object
+   //  3 branch count of a split TClonesArray
+   // 31 data member of the content of a split TClonesArray
+   //  4 branch count of a split STL Collection.
+   // 41 data member of the content of a split STL collection
+
+
 // Data Members
 protected:
    TString                  fClassName;     //  Class name of referenced object

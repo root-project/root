@@ -1,13 +1,13 @@
-/////////////////////////////////////////////////////////////////////////
-//
-// 'VALIDATION AND MC STUDIES' RooFit tutorial macro #803
-// 
-// RooMCStudy: Using the randomizer and profile likelihood add-on models
-//
-// 
-// 07/2008 - Wouter Verkerke 
-//
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roofit
+///  'VALIDATION AND MC STUDIES' RooFit tutorial macro #803
+///
+///  RooMCStudy: Using the randomizer and profile likelihood add-on models
+///
+///
+/// \macro_code
+/// \author 07/2008 - Wouter Verkerke 
+
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"

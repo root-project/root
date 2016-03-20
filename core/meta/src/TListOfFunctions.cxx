@@ -263,17 +263,16 @@ TFunction *TListOfFunctions::Get(DeclId_t id)
 {
    if (!id) return 0;
 
+   R__LOCKGUARD(gInterpreterMutex);
+   //need the Find and possible Add to be one atomic operation
    TFunction *f = Find(id);
    if (f) return f;
 
-   R__LOCKGUARD(gInterpreterMutex);
    if (fClass) {
       if (!gInterpreter->ClassInfo_Contains(fClass->GetClassInfo(),id)) return 0;
    } else {
       if (!gInterpreter->ClassInfo_Contains(0,id)) return 0;
    }
-
-   R__LOCKGUARD(gInterpreterMutex);
 
    MethodInfo_t *m = gInterpreter->MethodInfo_Factory(id);
 

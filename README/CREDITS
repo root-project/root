@@ -335,6 +335,10 @@ N: Mary-Louise Gill
 E: m.l.gill+cern@gmail.com
 D: editline terminal interface
 
+N: Enrico Guiraud
+E: enrico.guiraud@gmail.com
+D: author of the multiproc module
+
 N: Thorsten Glebe
 E: T.Glebe@mpi-hd.mpg.de
 D: Original author of the Smatrix package
@@ -422,6 +426,10 @@ E: cholm@nbi.dk
 D: contributions to the build system (configure, Makefile.in, config.in)
 D: implementation of the principal component analysis class TPrincipal
 D: debian and redhat packaging scripts, port to GNU/Hurd (Debian)
+
+N: Burt Holzman
+E: burt@fnal.gov
+D: Contribution to TWebFile,rpdutils and sockets.
 
 N: Marian Ivanov
 E: m.ivanov@gsi.de
@@ -612,7 +620,7 @@ D: libRDAVIX, the davix client code
 
 N: Lorenzo Moneta
 E: Lorenzo.Moneta@cern.ch
-D: Math libraries
+D: Math libraries, ROOT-R, TMVA
 
 N: Miroslav Morhac
 E: fyzimiro@savba.sk (died on August 11 2011)
@@ -685,6 +693,7 @@ D: author of Carrot (http://carrot.cern.ch)
 N: Katerina Opocenska
 E: opocenska@gmail.com
 D: author of the Event Recorder
+D: author of the sub-merging technology in PROOF
 
 N: Juan Palacios
 E: Juan.Palacios@cern.ch
@@ -761,6 +770,10 @@ D: port to x32 psABI and its validation
 N: Sven Ravndal
 E: Sven.Ravndal@dresdner-bank.com
 D: initial event generator interface
+
+N: Benjamin Ragan-Kelley
+E: benjaminrk@gmail.com
+D: cling / Jupyter integration
 
 N: Reiner Rohlfs
 E: Reiner.Rohlfs@obs.unige.ch
@@ -922,3 +935,15 @@ D: contributed to Reflex
 N: Andreas Zoglauer
 E: zog@mpe.mpg.de
 D: contributed to TStyle::CreateGradientColorTable()
+
+N: Omar Andres Zapata Mesa
+E: Omar.Zapata@cern.ch
+D: ROOT-R, JupyROOT, TMVA
+
+N: Sergei Gleyzer
+E: Sergei.Gleyzer@cern.ch
+D: TMVA
+
+N: Jeromy Tompkins
+E: Tompkins@nscl.msu.edu
+D: COL2 drawing option

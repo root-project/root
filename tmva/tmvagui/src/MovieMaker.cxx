@@ -15,11 +15,11 @@
 #include <vector>
 #include "TMVA/network.h"
 
-void TMVA::DrawNetworkMovie( TFile* file, const TString& methodType, const TString& methodTitle )
+void TMVA::DrawNetworkMovie(TString dataset, TFile* file, const TString& methodType, const TString& methodTitle )
 {
 
    TString     dirname  = methodType + "/" + methodTitle + "/" + "EpochMonitoring";
-   TDirectory *epochDir = (TDirectory*)file->Get( dirname );
+   TDirectory *epochDir = (TDirectory*)file->GetDirectory(dataset.Data())->Get( dirname );
    if (!epochDir) {
       cout << "Big troubles: could not find directory \"" << dirname << "\"" << endl;
       exit(1);
@@ -54,13 +54,13 @@ void TMVA::DrawNetworkMovie( TFile* file, const TString& methodType, const TStri
       TString bulkname  = Form( "epochmonitoring___epoch_%s_weights_hist", es.Data() );
 
       // draw the network
-      if (ic <= 60) draw_network( file, epochDir, bulkname, kTRUE, es );
+      if (ic <= 60) draw_network(dataset, file, epochDir, bulkname, kTRUE, es );
       ic++;
    }
 }
 
 
-void TMVA::DrawMLPoutputMovie( TFile* file, const TString& methodType, const TString& methodTitle )
+void TMVA::DrawMLPoutputMovie(TString dataset, TFile* file, const TString& methodType, const TString& methodTitle )
 {
    gROOT->SetBatch( 1 );
 
@@ -80,7 +80,7 @@ void TMVA::DrawMLPoutputMovie( TFile* file, const TString& methodType, const TSt
    Bool_t  first = kTRUE;
             
    TString     dirname  = methodType + "/" + methodTitle + "/" + "EpochMonitoring";
-   TDirectory *epochDir = (TDirectory*)file->Get( dirname );
+   TDirectory *epochDir = (TDirectory*)file->GetDirectory(dataset.Data())->Get( dirname );
    if (!epochDir) {
       cout << "Big troubles: could not find directory \"" << dirname << "\"" << endl;
       exit(1);
@@ -208,12 +208,12 @@ void TMVA::DrawMLPoutputMovie( TFile* file, const TString& methodType, const TSt
 
 // -----------------------------------------------------------------------------
 
-void TMVA::MovieMaker( TString methodType , TString methodTitle )
+void TMVA::MovieMaker(TString dataset, TString methodType , TString methodTitle )
 {
    TString fname = "TMVA.root";
    TFile* file = TMVAGlob::OpenFile( fname );     
 
    //DrawMLPoutputMovie( file, methodType, methodTitle );
-   DrawNetworkMovie( file, methodType, methodTitle );
+   DrawNetworkMovie(dataset, file, methodType, methodTitle );
 }   
 

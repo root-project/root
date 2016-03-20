@@ -5677,7 +5677,7 @@ CXSourceLocation clang_indexLoc_getCXSourceLocation(CXIdxLoc loc);
  */
 
 /* Include the comment API for compatibility. This will eventually go away. */
-#include "clang-c/Documentation.h"
+//#include "clang-c/Documentation.h"
 
 #ifdef __cplusplus
 }

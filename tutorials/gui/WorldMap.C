@@ -1,8 +1,11 @@
-//  This macro shows how to use a TGImageMap class.
-//
-// A TGImageMap provides the functionality like a clickable image in
-// with sensitive regions (similar to MAP HTML tag).
-//Author: Valeriy Onuchin
+/// \file
+/// \ingroup tutorial_gui
+/// This macro shows how to use a TGImageMap class.
+/// A TGImageMap provides the functionality like a clickable image in with sensitive regions (similar to MAP HTML tag).
+///
+/// \macro_code
+///
+/// \author Valeriy Onuchin
 
 #include <TGPicture.h>
 #include <TGMenu.h>

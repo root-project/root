@@ -419,6 +419,7 @@ void TStyle::Copy(TObject &obj) const
    ((TStyle&)obj).fHeaderPS       = fHeaderPS;
    ((TStyle&)obj).fTitlePS        = fTitlePS;
    ((TStyle&)obj).fLineScalePS    = fLineScalePS;
+   ((TStyle&)obj).fJoinLinePS     = fJoinLinePS;
    ((TStyle&)obj).fColorModelPS   = fColorModelPS;
    ((TStyle&)obj).fTimeOffset     = fTimeOffset;
 }
@@ -546,6 +547,7 @@ void TStyle::Reset(Option_t *opt)
    fAttDate.SetTextSize(0.025);
    fAttDate.SetTextAlign(11);
    SetLineScalePS();
+   SetJoinLinePS();
    SetColorModelPS();
    SetLineStyleString(1," ");
    SetLineStyleString(2,"12 12");
@@ -1726,6 +1728,7 @@ void TStyle::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    out<<"   "<<"tmpStyle->SetPaintTextFormat("<<quote<<GetPaintTextFormat()
                                             <<quote                  <<");"<<std::endl;
    out<<"   "<<"tmpStyle->SetLineScalePS("    <<GetLineScalePS()       <<");"<<std::endl;
+   out<<"   "<<"tmpStyle->SetJoinLinePS("    <<GetJoinLinePS()       <<");"<<std::endl;
    out<<"   "<<"tmpStyle->SetColorModelPS("   <<GetColorModelPS()      <<");"<<std::endl;
    out<<"   "<<Form("tmpStyle->SetTimeOffset(%9.0f);", GetTimeOffset()) <<std::endl;
    out<<std::endl;

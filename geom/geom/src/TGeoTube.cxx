@@ -10,88 +10,104 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//_____________________________________________________________________________
-// TGeoTube - cylindrical tube class. It takes 3 parameters :
-//            inner radius, outer radius and half-length dz.
-//
-//_____________________________________________________________________________
-//Begin_Html
-/*
-<img src="gif/t_tube.gif">
+/** \class TGeoTube
+\ingroup Geometry_classes
+
+Cylindrical tube  class. A tube has 3 parameters :
+  - Rmin - minimum radius
+  - Rmax - maximum radius
+  - dz - half length
+Begin_Macro(source)
+{
+   TCanvas *c = new TCanvas("c", "c",0,0,600,600);
+   new TGeoManager("tube", "poza2");
+   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
+   TGeoMedium *med = new TGeoMedium("MED",1,mat);
+   TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
+   gGeoManager->SetTopVolume(top);
+   TGeoVolume *vol = gGeoManager->MakeTube("TUBE",med, 20,30,40);
+   vol->SetLineWidth(2);
+   top->AddNode(vol,1);
+   gGeoManager->CloseGeometry();
+   gGeoManager->SetNsegments(80);
+   top->Draw();
+   TView *view = gPad->GetView();
+   view->ShowAxis();
+}
+End_Macro
 */
-//End_Html
-//Begin_Html
-/*
-<img src="gif/t_tubedivR.gif">
+
+/** \class TGeoTubeSeg
+\ingroup Geometry_classes
+
+A phi segment of a tube. Has 5 parameters :
+  - the same 3 as a tube;
+  - first phi limit (in degrees)
+  - second phi limit
+The segment will be be placed from the first angle (first phi limit)
+to the second angle (second phi limit)
+Begin_Macro(source)
+{
+   TCanvas *c = new TCanvas("c", "c",0,0,600,600);
+   new TGeoManager("tubeseg", "poza3");
+   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
+   TGeoMedium *med = new TGeoMedium("MED",1,mat);
+   TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
+   gGeoManager->SetTopVolume(top);
+   TGeoVolume *vol = gGeoManager->MakeTubs("TUBESEG",med, 20,30,40,-30,270);
+   vol->SetLineWidth(2);
+   top->AddNode(vol,1);
+   gGeoManager->CloseGeometry();
+   gGeoManager->SetNsegments(80);
+   top->Draw();
+   TView *view = gPad->GetView();
+   view->ShowAxis();
+}
+
+End_Macro
 */
-//End_Html
-//Begin_Html
-/*
-<img src="gif/t_tubedivstepR.gif">
+
+/** \class TGeoCtub
+\ingroup Geometry_classes
+
+A tube segment cut with 2 planes. Has 11 parameters :
+  - the same 5 as a tube segment;
+  - x, y, z components of the normal to the -dZ cut plane in
+    point (0, 0, -dZ);
+  - x, y, z components of the normal to the +dZ cut plane in
+    point (0, 0, dZ);
+
+Begin_Macro(source)
+{
+   TCanvas *c = new TCanvas("c", "c",0,0,600,600);
+   new TGeoManager("ctub", "poza3");
+   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
+   TGeoMedium *med = new TGeoMedium("MED",1,mat);
+   TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
+   gGeoManager->SetTopVolume(top);
+   Double_t theta = 160.*TMath::Pi()/180.;
+   Double_t phi   = 30.*TMath::Pi()/180.;
+   Double_t nlow[3];
+   nlow[0] = TMath::Sin(theta)*TMath::Cos(phi);
+   nlow[1] = TMath::Sin(theta)*TMath::Sin(phi);
+   nlow[2] = TMath::Cos(theta);
+   theta = 20.*TMath::Pi()/180.;
+   phi   = 60.*TMath::Pi()/180.;
+   Double_t nhi[3];
+   nhi[0] = TMath::Sin(theta)*TMath::Cos(phi);
+   nhi[1] = TMath::Sin(theta)*TMath::Sin(phi);
+   nhi[2] = TMath::Cos(theta);
+   TGeoVolume *vol = gGeoManager->MakeCtub("CTUB",med, 20,30,40,-30,250, nlow[0], nlow[1], nlow[2], nhi[0],nhi[1],nhi[2]);
+   vol->SetLineWidth(2);
+   top->AddNode(vol,1);
+   gGeoManager->CloseGeometry();
+   gGeoManager->SetNsegments(80);
+   top->Draw();
+   TView *view = gPad->GetView();
+   view->ShowAxis();
+}
+End_Macro
 */
-//End_Html
-//Begin_Html
-/*
-<img src="gif/t_tubedivPHI.gif">
-*/
-//End_Html
-//Begin_Html
-/*
-<img src="gif/t_tubedivstepPHI.gif">
-*/
-//End_Html
-//Begin_Html
-/*
-<img src="gif/t_tubedivZ.gif">
-*/
-//End_Html
-//Begin_Html
-/*
-<img src="gif/t_tubedivstepZ.gif">
-*/
-//End_Html
-//_____________________________________________________________________________
-// TGeoTubeSeg - a phi segment of a tube. Has 5 parameters :
-//            - the same 3 as a tube;
-//            - first phi limit (in degrees)
-//            - second phi limit
-// The segment will be be placed from the first angle (first phi limit)
-// to the second angle (second phi limit)
-//_____________________________________________________________________________
-//Begin_Html
-/*
-<img src="gif/t_tubseg.gif">
-*/
-//End_Html
-//Begin_Html
-/*
-<img src="gif/t_tubsegdivstepR.gif">
-*/
-//End_Html
-//Begin_Html
-/*
-<img src="gif/t_tubsegdivPHI.gif">
-*/
-//End_Html
-//Begin_Html
-/*
-<img src="gif/t_tubsegdivZ.gif">
-*/
-//End_Html
-//_____________________________________________________________________________
-// TGeoCtub - a tube segment cut with 2 planes. Has 11 parameters :
-//            - the same 5 as a tube segment;
-//            - x, y, z components of the normal to the -dZ cut plane in
-//              point (0, 0, -dZ);
-//            - x, y, z components of the normal to the +dZ cut plane in
-//              point (0, 0, dZ);
-//
-//_____________________________________________________________________________
-//Begin_Html
-/*
-<img src="gif/t_ctub.gif">
-*/
-//End_Html
 
 #include "Riostream.h"
 
@@ -151,9 +167,9 @@ TGeoTube::TGeoTube(const char *name, Double_t rmin, Double_t rmax, Double_t dz)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor specifying minimum and maximum radius
-/// param[0] = Rmin
-/// param[1] = Rmax
-/// param[2] = dz
+///  - param[0] = Rmin
+///  - param[1] = Rmax
+///  - param[2] = dz
 
 TGeoTube::TGeoTube(Double_t *param)
          :TGeoBBox(0, 0, 0)
@@ -456,7 +472,7 @@ void TGeoTube::DistToTube(Double_t rsq, Double_t nsq, Double_t rdotn, Double_t r
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///--- Divide this tube shape belonging to volume "voldiv" into ndiv volumes
+/// Divide this tube shape belonging to volume "voldiv" into ndiv volumes
 /// called divname, from start position with the given step. Returns pointer
 /// to created division cell volume in case of Z divisions. For radial division
 /// creates all volumes with different shapes and returns pointer to volume that
@@ -568,7 +584,7 @@ Double_t TGeoTube::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///--- Fill vector param[4] with the bounding cylinder parameters. The order
+/// Fill vector param[4] with the bounding cylinder parameters. The order
 /// is the following : Rmin, Rmax, Phi1, Phi2, dZ
 
 void TGeoTube::GetBoundingCylinder(Double_t *param) const
@@ -1112,14 +1128,7 @@ void TGeoTube::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-////// fill size of this 3-D object
-////    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-////    if (!painter) return;
-////    Int_t n = gGeoManager->GetNsegments();
-////    Int_t numPoints = n*4;
-////    Int_t numSegs   = n*8;
-////    Int_t numPolys  = n*4;
-////    painter->AddSize3D(numPoints, numSegs, numPolys);
+/// fill size of this 3-D object
 
 void TGeoTube::Sizeof3D() const
 {
@@ -1186,7 +1195,7 @@ void TGeoTube::ComputeNormal_v(const Double_t *points, const Double_t *dirs, Dou
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+/// Compute distance from array of input points having directions specified by dirs. Store output in dists
 
 void TGeoTube::DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {
@@ -1194,7 +1203,7 @@ void TGeoTube::DistFromInside_v(const Double_t *points, const Double_t *dirs, Do
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+/// Compute distance from array of input points having directions specified by dirs. Store output in dists
 
 void TGeoTube::DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {
@@ -1252,11 +1261,11 @@ TGeoTubeSeg::TGeoTubeSeg(const char *name, Double_t rmin, Double_t rmax, Double_
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor specifying minimum and maximum radius
-/// param[0] = Rmin
-/// param[1] = Rmax
-/// param[2] = dz
-/// param[3] = phi1
-/// param[4] = phi2
+///  - param[0] = Rmin
+///  - param[1] = Rmax
+///  - param[2] = dz
+///  - param[3] = phi1
+///  - param[4] = phi2
 
 TGeoTubeSeg::TGeoTubeSeg(Double_t *param)
             :TGeoTube(0, 0, 0)
@@ -1785,7 +1794,7 @@ Double_t TGeoTubeSeg::DistFromOutside(const Double_t *point, const Double_t *dir
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///--- Divide this tube segment shape belonging to volume "voldiv" into ndiv volumes
+/// Divide this tube segment shape belonging to volume "voldiv" into ndiv volumes
 /// called divname, from start position with the given step. Returns pointer
 /// to created division cell volume in case of Z divisions. For radialdivision
 /// creates all volumes with different shapes and returns pointer to volume that
@@ -1884,7 +1893,7 @@ Double_t TGeoTubeSeg::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) co
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///--- Fill vector param[4] with the bounding cylinder parameters. The order
+/// Fill vector param[4] with the bounding cylinder parameters. The order
 /// is the following : Rmin, Rmax, Phi1, Phi2
 
 void TGeoTubeSeg::GetBoundingCylinder(Double_t *param) const
@@ -2075,7 +2084,7 @@ Double_t TGeoTubeSeg::Safety(const Double_t *point, Bool_t in) const
    }
    // Point outside the phi range
    // Compute projected radius of the (r,phi) position vector onto
-   // phi1 and phi2 edges and take the maximum for chosing the side.
+   // phi1 and phi2 edges and take the maximum for choosing the side.
    Double_t rproj = TMath::Max(point[0]*fC1+point[1]*fS1, point[0]*fC2+point[1]*fS2);
    saf[1] = fRmin-rproj;
    saf[2] = rproj-fRmax;
@@ -2145,7 +2154,7 @@ Double_t TGeoTubeSeg::SafetyS(const Double_t *point, Bool_t in, Double_t rmin, D
    }
    // Point outside the phi range
    // Compute projected radius of the (r,phi) position vector onto
-   // phi1 and phi2 edges and take the maximum for chosing the side.
+   // phi1 and phi2 edges and take the maximum for choosing the side.
    Double_t c1 = TMath::Cos(phi1);
    Double_t s1 = TMath::Sin(phi1);
    Double_t c2 = TMath::Cos(phi2);
@@ -2359,16 +2368,7 @@ Int_t TGeoTubeSeg::GetNmeshVertices() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-////// fill size of this 3-D object
-////    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-////    if (!painter) return;
-////
-////    Int_t n = gGeoManager->GetNsegments()+1;
-////    Int_t numPoints = n*4;
-////    Int_t numSegs   = n*8;
-////    Int_t numPolys  = n*4-2;
-////
-////    painter->AddSize3D(numPoints, numSegs, numPolys);
+/// fill size of this 3-D object
 
 void TGeoTubeSeg::Sizeof3D() const
 {
@@ -2433,7 +2433,7 @@ void TGeoTubeSeg::ComputeNormal_v(const Double_t *points, const Double_t *dirs, 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+/// Compute distance from array of input points having directions specified by dirs. Store output in dists
 
 void TGeoTubeSeg::DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {
@@ -2441,7 +2441,7 @@ void TGeoTubeSeg::DistFromInside_v(const Double_t *points, const Double_t *dirs,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+/// Compute distance from array of input points having directions specified by dirs. Store output in dists
 
 void TGeoTubeSeg::DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {
@@ -3250,7 +3250,7 @@ void TGeoCtub::ComputeNormal_v(const Double_t *points, const Double_t *dirs, Dou
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+/// Compute distance from array of input points having directions specified by dirs. Store output in dists
 
 void TGeoCtub::DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {
@@ -3258,7 +3258,7 @@ void TGeoCtub::DistFromInside_v(const Double_t *points, const Double_t *dirs, Do
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+/// Compute distance from array of input points having directions specified by dirs. Store output in dists
 
 void TGeoCtub::DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {

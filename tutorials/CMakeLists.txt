@@ -230,12 +230,16 @@ set(benchmarks-depends tutorial-hsimple
                        tutorial-fit-fit1
                        tutorial-fit-myfit
                        tutorial-hist-h1draw
+                       tutorial-hist-FirstContour
                        tutorial-geom-na49view
                        tutorial-tree-ntuple1
+                       tutorial-tree-spider
                        tutorial-io-hadd
                        tutorial-io-loopdir
                        tutorial-io-copyFiles)
 set(geom-na49view-depends tutorial-geom-geometry)
+set(multicore-mt102_readNtuplesFillHistosAndFit-depends tutorial-multicore-mt101_fillNtuples)
+set(multicore-mp102_readNtuplesFillHistosAndFit-depends tutorial-multicore-mp101_fillNtuples)
 
 #--many roostats tutorials depending on having creating the file first with histfactory
 foreach(tname  ModelInspector OneSidedFrequentistUpperLimitWithBands StandardBayesianMCMCDemo StandardBayesianNumericalDemo
@@ -259,7 +263,7 @@ set (tmva-TMVARegressionApplication-depends tutorial-tmva-TMVARegression)
 
 #---Define the primordial tutorials-----------------------------------
 ROOT_ADD_TEST(tutorial-hsimple COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/hsimple.C
-                PASSRC 1 FAILREGEX "Error in" "error:" LABELS tutorial)
+                PASSRC 255 FAILREGEX "Error in" "error:" LABELS tutorial)
 ROOT_ADD_TEST(tutorial-geom-geometry COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/geom/geometry.C
                 FAILREGEX "Error in" "error:" LABELS tutorial)
 
@@ -269,7 +273,7 @@ foreach(t ${tutorials})
   if(index EQUAL -1)
     set(rc 0)
   else()
-    set(rc 1)
+    set(rc 255)
   endif()
   string(REPLACE ".C" "" tname ${t})
   string(REPLACE "/" "-" tname ${tname})
@@ -326,7 +330,7 @@ if(ROOT_python_FOUND)
     if(index EQUAL -1)
       set(rc 0)
     else()
-      set(rc 1)
+      set(rc 255)
     endif()
 
     string(REPLACE ".py" "" tname ${t})

@@ -40,9 +40,12 @@
 // Multilayer Perceptron class built off of MethodANNBase
 //_______________________________________________________________________
 
-#include "TString.h"
+#include "TMVA/MethodMLP.h"
+
 #include <vector>
 #include <cmath>
+
+#include "TString.h"
 #include "TTree.h"
 #include "Riostream.h"
 #include "TFitter.h"
@@ -50,16 +53,20 @@
 #include "TMath.h"
 #include "TFile.h"
 
+#include "TMVA/Config.h"
 #include "TMVA/ClassifierFactory.h"
+#include "TMVA/DataSet.h"
+#include "TMVA/DataSetInfo.h"
+#include "TMVA/FitterBase.h"
+#include "TMVA/GeneticFitter.h"
 #include "TMVA/Interval.h"
-#include "TMVA/MethodMLP.h"
+#include "TMVA/MethodANNBase.h"
+#include "TMVA/MsgLogger.h"
 #include "TMVA/TNeuron.h"
 #include "TMVA/TSynapse.h"
 #include "TMVA/Timer.h"
-#include "TMVA/Types.h"
 #include "TMVA/Tools.h"
-#include "TMVA/GeneticFitter.h"
-#include "TMVA/Config.h"
+#include "TMVA/Types.h"
 
 #ifdef MethodMLP_UseMinuit__
 TMVA::MethodMLP* TMVA::MethodMLP::fgThis = 0;
@@ -95,6 +102,7 @@ TMVA::MethodMLP::MethodMLP( const TString& jobName,
      fDeviationsFromTargets(0),
      fWeightRange     (1.0)
 {
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -127,6 +135,13 @@ TMVA::MethodMLP::MethodMLP( DataSetInfo& theData,
 TMVA::MethodMLP::~MethodMLP()
 {
 }
+
+void TMVA::MethodMLP::Train()
+{ 
+  Train(NumCycles()); 
+}
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// MLP can handle classification with 2 classes and regression with one regression-target
@@ -218,6 +233,7 @@ void TMVA::MethodMLP::DeclareOptions()
                     "Take the events for the estimator calculations from small deviations from the desired value to large deviations only over the weight range");
 
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// process user options

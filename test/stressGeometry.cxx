@@ -76,7 +76,7 @@ typedef struct {
 } p_t;
 p_t p;
 
-const Int_t NG = 33;
+const Int_t NG = 34;
 const char *exps[NG] = {"aleph",
                         "barres",
                         "felix",
@@ -111,12 +111,12 @@ const char *exps[NG] = {"aleph",
                         "belle",
                         "atlas"
 };
-const Int_t versions[NG] =  {4, //aleph
+const Int_t versions[NG] =  {5, //aleph
                              3, //barres
                              3, //felix
                              3, //phenix
                              3, //chambers
-                             3, //p326
+                             4, //p326
                              3, //bes
                              3, //dubna
                              3, //ganil
@@ -128,22 +128,22 @@ const Int_t versions[NG] =  {4, //aleph
                              3, //na49
                              3, //wa91
                              3, //sdc
-                             3, //integral
+                             4, //integral
                              3, //ams
                              3, //brahms
-                             3, //gem
+                             4, //gem
                              3, //tesla
                              3, //btev
-                             4, //cdf
+                             5, //cdf
                              4, //hades2
-                             3, //lhcbfull
-                             3, //star
-                             3, //sld
-                             3, //cms
-                             4, //alice3
-                             3, //babar2
+                             4, //lhcbfull
+                             4, //star
+                             4, //sld
+                             4, //cms
+                             5, //alice3
+                             4, //babar2
                              3, //belle
-                             4}; //atlas
+                             5}; //atlas
 // The timings below are on my machine PIV 3GHz
 const Double_t cp_brun[NG] = {1.9,  //aleph
                               0.1,  //barres

@@ -10,34 +10,44 @@
  *************************************************************************/
 
 
-////////////////////////////////////////////////////////////////////////////////
-//   TGeoHelix - class representing a helix curve
-//
-//  A helix is a curve defined by the following equations:
-//     x = (1/c) * COS(q*phi)
-//     y = (1/c) * SIN(q*phi)
-//     z = s * alfa
-// where:
-//     c = 1/Rxy  - curvature in XY plane
-//     phi        - phi angle
-//     S = 2*PI*s - vertical separation between helix loops
-//     q = +/- 1  - (+)=left-handed, (-)=right-handed
-//
-//   In particular, a helix describes the trajectory of a charged particle in magnetic
-// field. In such case, the helix is right-handed for negative particle charge.
-// To define a helix, one must define:
-//   - the curvature - positive defined
-//   - the Z step made after one full turn of the helix
-//   - the particle charge sign
-//   - the initial particle position and direction (force normalization to unit)
-//   - the magnetic field direction
-//
-// A helix provides:
-//   - propagation to a given Z position (in global frame)
-//   Double_t *point = TGeoHelix::PropagateToZ(Double_t z);
-//   - propagation to an arbitrary plane, returning also the new point
-//   - propagation in a geometry until the next crossed surface
-//   - computation of the total track length along a helix
+/** \class TGeoHelix
+\ingroup Geometry_classes
+
+Class representing a helix curve
+
+ A helix is a curve defined by the following equations:
+
+~~~ {.cpp}
+    x = (1/c) * COS(q*phi)
+    y = (1/c) * SIN(q*phi)
+    z = s * alfa
+~~~
+
+where:
+
+~~~ {.cpp}
+    c = 1/Rxy  - curvature in XY plane
+    phi        - phi angle
+    S = 2*PI*s - vertical separation between helix loops
+    q = +/- 1  - (+)=left-handed, (-)=right-handed
+~~~
+
+  In particular, a helix describes the trajectory of a charged particle in magnetic
+field. In such case, the helix is right-handed for negative particle charge.
+To define a helix, one must define:
+  - the curvature - positive defined
+  - the Z step made after one full turn of the helix
+  - the particle charge sign
+  - the initial particle position and direction (force normalization to unit)
+  - the magnetic field direction
+
+A helix provides:
+  - propagation to a given Z position (in global frame)
+  Double_t *point = TGeoHelix::PropagateToZ(Double_t z);
+  - propagation to an arbitrary plane, returning also the new point
+  - propagation in a geometry until the next crossed surface
+  - computation of the total track length along a helix
+*/
 
 #include "TMath.h"
 #include "TGeoShape.h"
@@ -63,7 +73,7 @@ TGeoHelix::TGeoHelix()
    fQ    = 0;
    fMatrix = 0;
    TObject::SetBit(kHelixNeedUpdate, kTRUE);
-   TObject::SetBit(kHelixStraigth, kFALSE);
+   TObject::SetBit(kHelixStraight, kFALSE);
    TObject::SetBit(kHelixCircle, kFALSE);
 }
 
@@ -85,7 +95,7 @@ TGeoHelix::TGeoHelix(Double_t curvature, Double_t hstep, Int_t charge)
    fB[0] = fB[1] = fB[2] = 0.;
    fMatrix    = new TGeoHMatrix();
    TObject::SetBit(kHelixNeedUpdate, kTRUE);
-   TObject::SetBit(kHelixStraigth, kFALSE);
+   TObject::SetBit(kHelixStraight, kFALSE);
    TObject::SetBit(kHelixCircle, kFALSE);
 }
 
@@ -103,7 +113,7 @@ TGeoHelix::~TGeoHelix()
 
 Double_t TGeoHelix::ComputeSafeStep(Double_t epsil) const
 {
-   if (TestBit(kHelixStraigth) || TMath::Abs(fC)<TGeoShape::Tolerance()) return 1.E30;
+   if (TestBit(kHelixStraight) || TMath::Abs(fC)<TGeoShape::Tolerance()) return 1.E30;
    Double_t c = GetTotalCurvature();
    Double_t step = TMath::Sqrt(2.*epsil/c);
    return step;
@@ -171,8 +181,8 @@ void TGeoHelix::SetXYcurvature(Double_t curvature)
       return;
    }
    if (TMath::Abs(fC) < TGeoShape::Tolerance()) {
-      Warning("SetXYcurvature", "Curvature is zero. Helix is a straigth line.");
-      TObject::SetBit(kHelixStraigth, kTRUE);
+      Warning("SetXYcurvature", "Curvature is zero. Helix is a straight line.");
+      TObject::SetBit(kHelixStraight, kTRUE);
    }
 }
 
@@ -237,14 +247,14 @@ void TGeoHelix::ResetStep()
 ///  3. Compute the magnetic safety (maximum distance for which the field can be considered constant)
 ///  4. Call TGeoHelix::Step() having as argument the minimum between 1. and 3.
 ///  5. Repeat from 1. until the step to be made is small enough.
-///  6. Add to the total step the distance along a straigth line from the last point
+///  6. Add to the total step the distance along a straight line from the last point
 ///     to the plane/shape boundary
 
 void TGeoHelix::Step(Double_t step)
 {
    Int_t i;
    fStep += step;
-   if (TObject::TestBit(kHelixStraigth)) {
+   if (TObject::TestBit(kHelixStraight)) {
       for (i=0; i<3; i++) {
          fPoint[i] = fPointInit[i]+fStep*fDirInit[i];
          fDir[i] = fDirInit[i];
@@ -284,8 +294,8 @@ Double_t TGeoHelix::StepToPlane(Double_t *point, Double_t *norm)
    dz = point[2] - fPoint[2];
    pdn = dx*norm[0]+dy*norm[1]+dz*norm[2];
    ddn = fDir[0]*norm[0]+fDir[1]*norm[1]+fDir[2]*norm[2];
-   if (TObject::TestBit(kHelixStraigth)) {
-      // propagate straigth line to plane
+   if (TObject::TestBit(kHelixStraight)) {
+      // propagate straight line to plane
       if ((pdn*ddn) <= 0) return snext;
       snext = pdn/ddn;
       Step(snext);
@@ -336,8 +346,8 @@ void TGeoHelix::UpdateHelix()
    Double_t tr[3];
    Double_t ddb = fDirInit[0]*fB[0]+fDirInit[1]*fB[1]+fDirInit[2]*fB[2];
    if ((1.-TMath::Abs(ddb))<TGeoShape::Tolerance() || TMath::Abs(fC)<TGeoShape::Tolerance()) {
-      // helix is just a straigth line
-      TObject::SetBit(kHelixStraigth, kTRUE);
+      // helix is just a straight line
+      TObject::SetBit(kHelixStraight, kTRUE);
       fMatrix->Clear();
       return;
    }

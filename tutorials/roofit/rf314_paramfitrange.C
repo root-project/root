@@ -1,17 +1,17 @@
-//////////////////////////////////////////////////////////////////////////
-//
-// 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #314
-// 
-// Working with parameterized ranges in a fit. This an example of a
-// fit with an acceptance that changes per-event 
-//
-//  pdf = exp(-t/tau) with t[tmin,5]
-//
-//  where t and tmin are both observables in the dataset
-//
-// 07/2008 - Wouter Verkerke 
-// 
-/////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_roofit
+///  'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #314
+///
+///  Working with parameterized ranges in a fit. This an example of a
+///  fit with an acceptance that changes per-event
+///
+///   pdf = exp(-t/tau) with t[tmin,5]
+///
+///   where t and tmin are both observables in the dataset
+///
+/// \macro_code
+/// \author 07/2008 - Wouter Verkerke 
+
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"

@@ -32,6 +32,7 @@
 #include "TRandom3.h"
 
 #include "TMVA/GeneticRange.h"
+#include "TMVA/Interval.h"
 
 ClassImp(TMVA::GeneticRange)
 

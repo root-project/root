@@ -9,13 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TProofNode                                                           //
-//                                                                      //
-// PROOF worker node information                                        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TProofNodes
+\ingroup proofbench
+
+PROOF worker node information  
+
+*/
 
 #include "TProofNodes.h"
 #include "TProof.h"

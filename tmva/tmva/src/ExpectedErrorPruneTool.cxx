@@ -25,7 +25,14 @@
  **********************************************************************************/
 
 #include "TMVA/ExpectedErrorPruneTool.h"
+#include "TMVA/DecisionTree.h"
+#include "TMVA/IPruneTool.h"
 #include "TMVA/MsgLogger.h"
+#include "TMVA/Types.h"
+
+#include "RtypesCore.h"
+#include "Rtypes.h"
+#include "TMath.h"
 
 #include <map>
 

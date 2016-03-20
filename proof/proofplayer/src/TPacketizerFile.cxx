@@ -9,15 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TPacketizerFile                                                      //
-//                                                                      //
-// This packetizer generates packets which contain a single file path   //
-// to be used in process. Used for tasks generating files, like in      //
-// PROOF bench.                                                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TPacketizerFile
+\ingroup proofkernel
+
+This packetizer generates packets which contain a single file path
+to be used in process. Used for tasks generating files, like in
+PROOF bench.
+
+*/
 
 #include "TPacketizerFile.h"
 

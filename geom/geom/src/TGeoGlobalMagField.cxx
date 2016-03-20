@@ -11,21 +11,32 @@
 #include "TROOT.h"
 #include "TGeoGlobalMagField.h"
 
-//______________________________________________________________________________
-//
-//    TGeoGlobalMagField - Global magnetic field manager. Provides access to
-// and owns the actual magnetic field set via SetField(). The field is deleted
-// upon destruction of the field manager at the end of ROOT session or
-// by calling: TGeoGlobalMagField::Instance()->SetField(0). The previous
-// global field is deleted upon replacement with notification.
-//
-// The global field manager provides access to the global field via:
-//   TGeoGlobalMagField::Instance()->GetField()
-// One can directly call the Field() method of a field via the global field manager:
-//
-//   TGeoGlobalMagField::Instance()->Field(x,B)
-//
-//______________________________________________________________________________
+/** \class TGeoGlobalMagField
+\ingroup Geometry_classes
+
+Global magnetic field manager. Provides access to
+and owns the actual magnetic field set via `SetField()`. The field is deleted
+upon destruction of the field manager at the end of ROOT session or
+by calling:
+
+~~~ {.cpp}
+TGeoGlobalMagField::Instance()->SetField(0).
+~~~
+
+The previous global field is deleted upon replacement with notification.
+
+The global field manager provides access to the global field via:
+
+~~~ {.cpp}
+  TGeoGlobalMagField::Instance()->GetField()
+~~~
+
+One can directly call the Field() method of a field via the global field manager:
+
+~~~ {.cpp}
+  TGeoGlobalMagField::Instance()->Field(x,B)
+~~~
+*/
 
 ClassImp(TGeoGlobalMagField)
 

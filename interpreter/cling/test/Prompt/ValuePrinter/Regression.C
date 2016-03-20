@@ -54,3 +54,21 @@ false // CHECK: (bool) false
 
 #include <unordered_set>
 std::unordered_multiset<float> {1} // ROOT-7310
+
+// ROOT-7426
+#include <string>
+#include <vector>
+std::vector<std::string> a = { "a", "b", "c" } // CHECK: (std::vector<std::string> &) { "a", "b", "c" }
+a // CHECK: (std::vector<std::string> &) { "a", "b", "c" }
+a[0] // CHECK: ({{.*}} &) "a"
+
+// ROOT-7918
+enum H {  h = (unsigned long long )-1 };
+h // CHECK: (H) (H::h) : (unsigned long{{( long)?}}) 18446744073709551615
+
+// ROOT-7837
+auto bla=[](Double_t *x, Double_t *par, Int_t blub){return x[0]*blub;} // CHECK: ((lambda) &) @0x
+using namespace std::placeholders;
+auto fn_moo = std::bind (bla, _1,_2,10) // CHECK: ERROR in cling::executePrintValue(): this typename cannot be spelled.
+// Make sure cling survives
+12 // CHECK: (int) 12

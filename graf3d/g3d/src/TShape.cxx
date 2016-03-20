@@ -15,6 +15,7 @@
 #include "TVirtualPad.h"
 #include "TGeometry.h"
 #include "TMaterial.h"
+#include "TBuffer.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
 #include "TVirtualViewer3D.h"

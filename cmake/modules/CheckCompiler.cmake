@@ -3,12 +3,14 @@
 #---------------------------------------------------------------------------------------------------
 
 #---Enable FORTRAN (unfortunatelly is not not possible in all cases)-------------------------------
-if(fortran AND NOT WIN32 AND NOT CMAKE_GENERATOR STREQUAL Xcode AND NOT CMAKE_GENERATOR STREQUAL Ninja)
+if(fortran)
   #--Work-around for CMake issue 0009220
   if(DEFINED CMAKE_Fortran_COMPILER AND CMAKE_Fortran_COMPILER MATCHES "^$")
     set(CMAKE_Fortran_COMPILER CMAKE_Fortran_COMPILER-NOTFOUND)
   endif()
   enable_language(Fortran OPTIONAL)
+else()
+  set(CMAKE_Fortran_COMPILER CMAKE_Fortran_COMPILER-NOTFOUND)
 endif()
 
 #----Get the compiler file name (to ensure re-location)---------------------------------------------
@@ -56,7 +58,11 @@ else()
 endif()
 
 #---Set a default build type for single-configuration CMake generators if no build type is set------
-set(CMAKE_CONFIGURATION_TYPES Release MinSizeRel Debug RelWithDebInfo Optimized)
+if(WIN32)
+  set(CMAKE_CONFIGURATION_TYPES Release MinSizeRel Debug RelWithDebInfo)
+else()
+  set(CMAKE_CONFIGURATION_TYPES Release MinSizeRel Debug RelWithDebInfo Optimized)
+endif()
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Choose the type of build, options are: Release, MinSizeRel, Debug, RelWithDebInfo, Optimized." FORCE)
 endif()
@@ -87,6 +93,7 @@ if(cxx14)
     message(STATUS "Current compiler does not suppport -std=c++14 option. Switching OFF cxx14 option")
     set(cxx14 OFF CACHE BOOL "" FORCE)
   endif()
+  set(root7 On)
 endif()
 if(root7)
   if(NOT cxx14)
@@ -104,6 +111,32 @@ if(libcxx)
   endif()
 endif()
 
+
+#---Check for cxxmodules option------------------------------------------------------------
+if(cxxmodules)
+  # Copy-pasted from HandleLLVMOptions.cmake, please keep up to date.
+  set(OLD_CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS})
+  set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -fmodules -fcxx-modules")
+  # Check that we can build code with modules enabled, and that repeatedly
+  # including <cassert> still manages to respect NDEBUG properly.
+  CHECK_CXX_SOURCE_COMPILES("#undef NDEBUG
+                             #include <cassert>
+                             #define NDEBUG
+                             #include <cassert>
+                             int main() { assert(this code is not compiled); }"
+                             CXX_SUPPORTS_MODULES)
+  set(CMAKE_REQUIRED_FLAGS ${OLD_CMAKE_REQUIRED_FLAGS})
+  if (CXX_SUPPORTS_MODULES)
+    file(COPY ${CMAKE_SOURCE_DIR}/build/unix/module.modulemap DESTINATION ${ROOT_INCLUDE_DIR})
+
+    # This var is useful when we want to compile things without cxxmodules.
+    set(ROOT_CXXMODULES_FLAGS " -fmodules -fmodule-map-file=${CMAKE_BINARY_DIR}/include/module.modulemap -fmodules-cache-path=${CMAKE_BINARY_DIR}/include/pcms/")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ROOT_CXXMODULES_FLAGS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CXXMODULES_FLAGS}")
+  else()
+    message(FATAL_ERROR "cxxmodules is not supported by this compiler")
+  endif()
+endif(cxxmodules)
 
 #---Need to locate thead libraries and options to set properly some compilation flags----------------
 find_package(Threads)

@@ -1,17 +1,24 @@
-//+ Example on the  usage of the adaptive 1D integration algorithm of MathMore
-// it calculates the numerically cumulative integral of a distribution (like in this case the BreitWigner)
-// to execute the macro type it (you need to compile with AClic)
-//
-// root[0]: .x mathmoreIntegration.C+
-//
-// This tutorials require having libMathMore built with ROOT.
-//
-// To build mathmore you need to have a version of GSL >= 1.8 installed in your system
-// The ROOT configure will automatically find GSL if the script gsl-config (from GSL) is in your PATH,.
-// otherwise you need to configure root with the options --gsl-incdir and --gsl-libdir.
-//
-//
-// Authors: M. Slawinska and L. Moneta
+/// \file
+/// \ingroup tutorial_math
+/// Example on the  usage of the adaptive 1D integration algorithm of MathMore
+/// it calculates the numerically cumulative integral of a distribution (like in this case the BreitWigner)
+/// to execute the macro type it (you need to compile with AClic)
+///
+/// ~~~ {.cpp}
+/// root[0] .x mathmoreIntegration.C+
+/// ~~~
+///
+/// This tutorials require having libMathMore built with ROOT.
+///
+/// To build mathmore you need to have a version of GSL >= 1.8 installed in your system
+/// The ROOT configure will automatically find GSL if the script gsl-config (from GSL) is in your PATH,.
+/// otherwise you need to configure root with the options --gsl-incdir and --gsl-libdir.
+///
+/// \macro_image
+/// \image_output
+/// \macro_code
+///
+/// \authors M. Slawinska, L. Moneta
 
 #include "TMath.h"
 #include "TH1.h"

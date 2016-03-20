@@ -1,6 +1,10 @@
-// Model of a nucleus built from TGeo classes.
-//
-// Author: Otto Schaile
+/// \file
+/// \ingroup tutorial_gl
+/// Model of a nucleus built from TGeo classes.
+///
+/// \macro_code
+///
+/// \author Otto Schaile
 
 void nucleus(Int_t nProtons  = 40,Int_t  nNeutrons = 60)
 {

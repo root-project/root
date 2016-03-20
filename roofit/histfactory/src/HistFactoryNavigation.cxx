@@ -15,6 +15,7 @@
 #include "RooSimultaneous.h"
 #include "RooWorkspace.h"
 
+#include "RooStats/ModelConfig.h"
 #include "RooStats/HistFactory/HistFactoryNavigation.h"
 #include "RooStats/HistFactory/HistFactoryException.h"
 

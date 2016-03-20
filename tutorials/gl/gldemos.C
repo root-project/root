@@ -1,5 +1,11 @@
-// Menu for running GL demos.
-// Author: Timur Pocheptsov
+/// \file
+/// \ingroup tutorial_gl
+/// Menu for running GL demos.
+///
+/// \macro_code
+///
+/// \author Timur Pocheptsov
+
 void gldemos()
 {
    TControlBar *bar = new TControlBar("vertical", "GL painter demo",20,20);
