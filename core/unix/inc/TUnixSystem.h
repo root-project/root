@@ -31,10 +31,30 @@
 #include "TTimer.h"
 #endif
 
+#include <thread>
+#include <memory>
+
+int StackTraceExec(void *);
+
 typedef void (*SigHandler_t)(ESignals);
 
 
 class TUnixSystem : public TSystem {
+
+   friend int     StackTraceExec(void *);
+
+private:
+   struct StackTraceHelper_t {
+      static const int fStringLength = 255;
+      char             fShellExec[fStringLength];
+      char             fPidString[fStringLength];
+      char             fPidNum[fStringLength];
+      int              fParentToChild[2];
+      int              fChildToParent[2];
+      std::unique_ptr<std::thread> fHelperThread;
+   };
+
+   static StackTraceHelper_t fStackTraceHelper;
 
 protected:
    const char    *FindDynamicLibrary(TString &lib, Bool_t quiet = kFALSE);
@@ -70,6 +90,12 @@ protected:
    static int          UnixUnixService(const char *sockpath, int backlog);
    static int          UnixRecv(int sock, void *buf, int len, int flag);
    static int          UnixSend(int sock, const void *buf, int len, int flag);
+
+   // added helper static members for stacktrace
+   static char *const  kStackArgv[];
+   static char *const *GetStackArgv();
+   static void         StackTraceHelperThread();
+   void                CachePidInfo();
 
 public:
    TUnixSystem();
@@ -121,6 +147,7 @@ public:
    void              Abort(int code = 0);
    int               GetPid();
    void              StackTrace();
+   static void       StackTraceFromThread();
 
    //---- Directories ------------------------------------------
    int               MakeDirectory(const char *name);

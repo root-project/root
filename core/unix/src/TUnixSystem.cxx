@@ -40,10 +40,15 @@
 #include <algorithm>
 #include <atomic>
 
+#ifdef __linux__
+#include <syscall.h>
+#endif
+
 //#define G__OLDEXPAND
 
 #include <unistd.h>
 #include <stdlib.h>
+#include <poll.h>
 #include <sys/types.h>
 #if defined(R__SUN) || defined(R__AIX) || \
     defined(R__LINUX) || defined(R__SOLARIS) || \
@@ -400,6 +405,85 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Async-signal-safe Write functions.
+static int SignalSafeWrite(int fd, const char *text) {
+   const char *buffer = text;
+   size_t count = strlen(text);
+   ssize_t written = 0;
+   while (count) {
+      written = write(fd, buffer, count);
+      if (written == -1) {
+         if (errno == EINTR) { continue; }
+         else { return -errno; }
+      }
+      count -= written;
+      buffer += written;
+   }
+   return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Async-signal-safe Read functions.
+static int SignalSafeRead(int fd, char *inbuf, size_t len, int timeout=-1) {
+   char *buf = inbuf;
+   size_t count = len;
+   ssize_t complete = 0;
+   std::chrono::time_point<std::chrono::steady_clock> endTime = std::chrono::steady_clock::now() + std::chrono::seconds(timeout);
+   int flags;
+   if (timeout < 0) {
+      flags = O_NONBLOCK;  // Prevents us from trying to set / restore flags later.
+   } else if ((-1 == (flags = fcntl(fd, F_GETFL)))) {
+      return -errno;
+   } else { }
+   if ((flags & O_NONBLOCK) != O_NONBLOCK) {
+      if (-1 == fcntl(fd, F_SETFL, flags | O_NONBLOCK)) {
+         return -errno;
+      }
+   }
+   while (count) {
+      if (timeout >= 0) {
+         struct pollfd pollInfo{fd, POLLIN, 0};
+         int msRemaining = std::chrono::duration_cast<std::chrono::milliseconds>(endTime-std::chrono::steady_clock::now()).count();
+         if (msRemaining > 0) {
+            if (poll(&pollInfo, 1, msRemaining) == 0) {
+               if ((flags & O_NONBLOCK) != O_NONBLOCK) {
+                  fcntl(fd, F_SETFL, flags);
+               }
+               return -ETIMEDOUT;
+            }
+         } else if (msRemaining < 0) {
+            if ((flags & O_NONBLOCK) != O_NONBLOCK) {
+               fcntl(fd, F_SETFL, flags);
+            }
+            return -ETIMEDOUT;
+         } else { }
+      }
+      complete = read(fd, buf, count);
+      if (complete == -1) {
+         if (errno == EINTR) { continue; }
+         else if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) { continue; }
+         else {
+            int origErrno = errno;
+            if ((flags & O_NONBLOCK) != O_NONBLOCK) {
+               fcntl(fd, F_SETFL, flags);
+            }
+            return -origErrno;
+         }
+      }
+      count -= complete;
+      buf += complete;
+   }
+   if ((flags & O_NONBLOCK) != O_NONBLOCK) {
+      fcntl(fd, F_SETFL, flags);
+   }
+   return 0;
+}
+
+static int SignalSafeErrWrite(const char *text) {
+   return SignalSafeWrite(2, text);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Unix signal handler.
 
 static void SigHandler(ESignals sig)
@@ -582,6 +666,9 @@ TUnixSystem::~TUnixSystem()
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize Unix system interface.
 
+TUnixSystem::StackTraceHelper_t TUnixSystem::fStackTraceHelper;
+char * const TUnixSystem::kStackArgv[] = {TUnixSystem::fStackTraceHelper.fShellExec, TUnixSystem::fStackTraceHelper.fPidString, TUnixSystem::fStackTraceHelper.fPidNum, nullptr};
+
 Bool_t TUnixSystem::Init()
 {
    if (TSystem::Init())
@@ -620,6 +707,30 @@ Bool_t TUnixSystem::Init()
 #else
    gRootDir = ROOTPREFIX;
 #endif
+
+   if(snprintf(fStackTraceHelper.fShellExec, fStackTraceHelper.fStringLength-1, "/bin/sh") >= fStackTraceHelper.fStringLength) {
+      SignalSafeErrWrite("Unable to pre-allocate shell command path");
+      return kFALSE;
+   }
+
+#ifdef ROOTETCDIR
+   if(snprintf(fStackTraceHelper.fPidString, fStackTraceHelper.fStringLength-1, "%s/gdb-backtrace.sh", ROOTETCDIR) >= fStackTraceHelper.fStringLength) {
+      SignalSafeErrWrite("Unable to pre-allocate executable information");
+      return kFALSE;
+   }
+#else
+   if(snprintf(fStackTraceHelper.fPidString, fStackTraceHelper.fStringLength-1, "%s/etc/gdb-backtrace.sh", gSystem->Getenv("ROOTSYS")) >= fStackTraceHelper.fStringLength) {
+      SignalSafeErrWrite("Unable to pre-allocate executable information");
+      return kFALSE;
+   }   
+#endif
+
+   fStackTraceHelper.fParentToChild[0] = -1;
+   fStackTraceHelper.fParentToChild[1] = -1;
+   fStackTraceHelper.fChildToParent[0] = -1;
+   fStackTraceHelper.fChildToParent[1] = -1;
+
+   CachePidInfo();
 
    return kFALSE;
 }
@@ -2226,10 +2337,8 @@ void TUnixSystem::StackTrace()
       }
       gdbscript += " ";
    }
-
    TString gdbmess = gEnv->GetValue("Root.StacktraceMessage", "");
    gdbmess = gdbmess.Strip();
-
    std::cout.flush();
    fflush(stdout);
 
@@ -2358,7 +2467,6 @@ void TUnixSystem::StackTrace()
          fprintf(f, "%s\n", gdbmess.Data());
          fclose(f);
       }
-
       // use gdb to get stack trace
 #ifdef R__MACOSX
       gdbscript += GetExePath();
@@ -3599,6 +3707,7 @@ static void sighandler(int sig)
 
 void TUnixSystem::DispatchSignals(ESignals sig)
 {
+   const char* signalname = "unknown"; 
    switch (sig) {
    case kSigAlarm:
       DispatchTimers(kFALSE);
@@ -3607,8 +3716,14 @@ void TUnixSystem::DispatchSignals(ESignals sig)
       CheckChilds();
       break;
    case kSigBus:
+      signalname = "bus error";
+      break;
    case kSigSegmentationViolation:
+      signalname = "segmentation violation";
+      break;
    case kSigIllegalInstruction:
+      signalname = "illegal instruction";
+      break;
    case kSigFloatingException:
       Break("TUnixSystem::DispatchSignals", "%s", UnixSigname(sig));
       StackTrace();
@@ -3631,6 +3746,20 @@ void TUnixSystem::DispatchSignals(ESignals sig)
       fSignals->Set(sig);
       fSigcnt++;
       break;
+   }
+
+   if ((sig == kSigIllegalInstruction) || (sig == kSigSegmentationViolation) || (sig == kSigBus))
+   {
+
+      SignalSafeErrWrite("\n\nA fatal system signal has occurred: ");
+      SignalSafeErrWrite(signalname);
+      SignalSafeErrWrite("\nThe following is the call stack containing the origin of the signal.\n"
+        "NOTE:The first few functions on the stack are artifacts of processing the signal and can be ignored\n\n");
+
+      TUnixSystem::StackTraceFromThread();
+
+      signal(sig, SIG_DFL);
+      raise(sig);
    }
 
    // check a-synchronous signals
@@ -5222,4 +5351,135 @@ int TUnixSystem::GetProcInfo(ProcInfo_t *info) const
 #endif
 
    return 0;
+}
+
+static void StackTraceFork();
+
+void SetDefaultSignals() {
+   signal(SIGILL, SIG_DFL);
+   signal(SIGSEGV, SIG_DFL);
+   signal(SIGBUS, SIG_DFL);
+}
+
+void TUnixSystem::StackTraceHelperThread()
+{
+   int toParent = fStackTraceHelper.fChildToParent[1];
+   int fromParent = fStackTraceHelper.fParentToChild[0];
+   char buf[2]; buf[1] = '\0';
+   while(true) {
+      int result = SignalSafeRead(fromParent, buf, 1, 5*60);
+      if (result < 0) {
+         SetDefaultSignals();
+         close(toParent);
+         SignalSafeErrWrite("\n\nTraceback helper thread failed to read from parent: ");
+         SignalSafeErrWrite(strerror(-result));
+         SignalSafeErrWrite("\n");
+         ::abort();
+      }
+      if (buf[0] == '1') {
+          SetDefaultSignals();
+          StackTraceFork();
+          SignalSafeWrite(toParent, buf);
+      } else if (buf[0] == '2') {
+          close(toParent);
+          close(fromParent);
+          toParent = fStackTraceHelper.fChildToParent[1];
+          fromParent = fStackTraceHelper.fParentToChild[0];
+      } else if (buf[0] == '3') {
+          break;
+      } else {
+          SetDefaultSignals();
+          close(toParent);
+          SignalSafeErrWrite("\n\nTraceback helper thread got unknown command from parent: ");
+          SignalSafeErrWrite(buf);
+          SignalSafeErrWrite("\n");
+          ::abort();
+      }
+   }
+}
+
+void TUnixSystem::StackTraceFromThread()
+{
+   int result = SignalSafeWrite(fStackTraceHelper.fParentToChild[1], "1"); 
+   if (result < 0) {
+      SignalSafeErrWrite("\n\nAttempt to request stacktrace failed: ");
+      SignalSafeErrWrite(strerror(-result));
+      SignalSafeErrWrite("\n");
+      return;
+    }
+    char buf[2]; buf[1] = '\0';
+    if ((result = SignalSafeRead(fStackTraceHelper.fChildToParent[0], buf, 1)) < 0) {
+       SignalSafeErrWrite("\n\nWaiting for stacktrace completion failed: ");
+       SignalSafeErrWrite(strerror(-result));
+       SignalSafeErrWrite("\n");
+       return;
+    }
+}
+
+void StackTraceFork()
+{
+   static const int stackSize = 4*1024;
+   char childStack[stackSize];
+   char *childStackPtr = childStack + stackSize;
+   int pid =
+#ifdef __linux__
+      clone(StackTraceExec, childStackPtr, CLONE_VM|CLONE_FS|SIGCHLD, nullptr);
+#else
+      fork();
+   if (childStackPtr) {} // Suppress 'unused variable' warning on non-Linux
+   if (pid == 0) { StackTraceExec(nullptr); ::abort(); }
+#endif
+   if (pid == -1) {
+      SignalSafeErrWrite("(Attempt to perform stack dump failed.)\n");
+   } else {
+      int status;
+      if (waitpid(pid, &status, 0) == -1) {
+         SignalSafeErrWrite("(Failed to wait on stack dump output.)\n");
+      } else {}
+   }
+}
+
+int StackTraceExec(void *)
+{
+   char *const *argv = TUnixSystem::GetStackArgv();
+#ifdef __linux__
+   syscall(SYS_execve, "/bin/sh", argv, __environ);
+#else
+   execv("/bin/sh", argv);
+#endif
+   ::abort();
+   return 1;
+}
+
+char *const *TUnixSystem::GetStackArgv() {
+   return kStackArgv;
+}
+
+void TUnixSystem::CachePidInfo()
+{
+   if(snprintf(fStackTraceHelper.fPidNum, fStackTraceHelper.fStringLength-1, "%d", GetPid()) >= fStackTraceHelper.fStringLength) {
+      SignalSafeErrWrite("Unable to pre-allocate process id information");
+      return;
+   }
+
+   close(fStackTraceHelper.fChildToParent[0]);
+   close(fStackTraceHelper.fChildToParent[1]);
+   fStackTraceHelper.fChildToParent[0] = -1; fStackTraceHelper.fChildToParent[1] = -1;
+   close(fStackTraceHelper.fParentToChild[0]);
+   close(fStackTraceHelper.fParentToChild[1]);
+   fStackTraceHelper.fParentToChild[0] = -1; fStackTraceHelper.fParentToChild[1] = -1;
+
+   if (-1 == pipe2(fStackTraceHelper.fChildToParent, O_CLOEXEC)) {
+      fprintf(stdout, "pipe fStackTraceHelper.fChildToParent failed\n");
+      return;
+   }
+   if (-1 == pipe2(fStackTraceHelper.fParentToChild, O_CLOEXEC)){
+      close(fStackTraceHelper.fChildToParent[0]); close(fStackTraceHelper.fChildToParent[1]);
+      fStackTraceHelper.fChildToParent[0] = -1; fStackTraceHelper.fChildToParent[1] = -1;
+      fprintf(stdout, "pipe parentToChild failed\n");
+      return;
+   }
+
+   fStackTraceHelper.fHelperThread.reset(new std::thread(StackTraceHelperThread));
+   fStackTraceHelper.fHelperThread->detach();
 }
