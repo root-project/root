@@ -3292,13 +3292,12 @@ Bool_t TTreeFormula::BranchHasMethod(TLeaf* leafcur, TBranch* branch, const char
             // class.  Note that this implementation currently can not work if
             // one the argument is another leaf or data member of the object.
             // (Anyway we do NOT support this case).
-            TMethodCall* methodcall = new TMethodCall(cl, method, params);
-            if (methodcall->GetMethod()) {
+            TMethodCall methodcall(cl, method, params);
+            if (methodcall.GetMethod()) {
                // We have a method that works.
                // We will use it.
                return kTRUE;
             }
-            delete methodcall;
          }
       }
    }
