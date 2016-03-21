@@ -2242,11 +2242,14 @@ void TBufferJSON::WriteFastArray(const Bool_t *b, Int_t n)
 
 void TBufferJSON::WriteFastArray(const Char_t *c, Int_t n)
 {
-   if (fExpectedChain) {
+   Bool_t asarray = fExpectedChain;
+   if (Stack(0)->fElem != 0)
+      if (Stack(0)->fElem->GetType() == TStreamerInfo::kOffsetP + TStreamerInfo::kChar) asarray = kTRUE;
+
+   if (asarray) {
       TBufferJSON_WriteFastArray(c);
    } else {
       TJSONPushValue();
-
       JsonWriteConstChar(c, n);
    }
 }
