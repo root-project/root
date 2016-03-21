@@ -2235,11 +2235,14 @@ void TBufferJSON::WriteFastArray(const Char_t *c, Int_t n)
    // If array does not include any special characters,
    // it will be reproduced as CharStar node with string as attribute
 
-   if (fExpectedChain) {
+   Bool_t asarray = fExpectedChain;
+   if (Stack(0)->fElem != 0)
+      if (Stack(0)->fElem->GetType() == TStreamerInfo::kOffsetP + TStreamerInfo::kChar) asarray = kTRUE;
+
+   if (asarray) {
       TBufferJSON_WriteFastArray(c);
    } else {
       TJSONPushValue();
-
       JsonWriteConstChar(c, n);
    }
 }
