@@ -26,7 +26,8 @@
 namespace ROOT {
 namespace Experimental {
 
-template<int DIMENSIONS, class PRECISION, class STATISTICS> class THist;
+template<int DIMENSIONS, class PRECISION,
+  template <int DIMENSIONS_, class PRECISION_> class STATISTICS> class THist;
 
 namespace Internal {
 
@@ -53,7 +54,8 @@ extern template class THistPainterBase<1>;
 extern template class THistPainterBase<2>;
 extern template class THistPainterBase<3>;
 
-template <int DIMENSION, class PRECISION, class STATISTICS>
+template <int DIMENSION, class PRECISION,
+  template <int DIMENSIONS_, class PRECISION_> class STATISTICS>
 class THistDrawable final: public TDrawable {
 private:
   std::weak_ptr<THist<DIMENSION, PRECISION, STATISTICS>> fHist;

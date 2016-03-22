@@ -28,26 +28,62 @@ namespace ROOT {
 namespace Experimental {
 
 // fwd declare for fwd declare for friend declaration in THist...
-template<int DIMENSIONS, class PRECISION, class STATISTICS>
+template<int DIMENSIONS, class PRECISION,
+  template <int DIMENSIONS_, class PRECISION_> class STATISTICS>
 class THist;
 
 // fwd declare for friend declaration in THist.
-template<int DIMENSIONS, class PRECISION, class STATISTICS>
+template<int DIMENSIONS, class PRECISION,
+  template <int DIMENSIONS_, class PRECISION_> class STATISTICS>
 class THist<DIMENSIONS, PRECISION, STATISTICS>
   HistFromImpl(
   std::unique_ptr<typename THist<DIMENSIONS, PRECISION, STATISTICS>::ImplBase_t> pHistImpl);
 
-template<int DIMENSIONS, class PRECISION, class STATISTICS>
+template<int DIMENSIONS, class PRECISION,
+  template <int DIMENSIONS_, class PRECISION_> class STATISTICS>
 void swap(THist<DIMENSIONS, PRECISION, STATISTICS> &a,
           THist<DIMENSIONS, PRECISION, STATISTICS> &b) noexcept;
 
+namespace Internal {
+/**
+ \class THistStatisticsDefault
+  The default statistics should be THistStatContent for integer precision
+  histograms and THistStatUncertainty for floating point precision histograms.
+  Unfortunately that condition is not easy to express; use the following
+  construct:
+ */
+template <bool ISINTEGRAL> struct THistStatisticsDefault;
+
+/**
+ \class THistStatisticsDefault<true>
+ Specialization for integer histogram precision.
+ */
+template <>
+struct THistStatisticsDefault<true> {
+  template<int DIMENSION, class PRECISION>
+  using Stat_t = ROOT::Experimental::THistStatContent<DIMENSION, PRECISION>;
+};
+
+/**
+ \class THistStatisticsDefault<false>
+ Specialization for floating point histogram precision.
+ */
+template <>
+struct THistStatisticsDefault<false> {
+  template<int DIMENSION, class PRECISION>
+  using Stat_t = ROOT::Experimental::THistStatUncertainty<DIMENSION, PRECISION>;
+};
+
+template <int DIMENSION, class PRECISION> using THistStatUncertaintyDefault
+  = THistStatUncertainty<DIMENSION, PRECISION>;
+} // namespace Internal
 
 /**
  \class THist
  Histogram class for histograms with `DIMENSIONS` dimensions, where each bin
  count is stored by a value of type `PRECISION`. STATISTICS stores statistical
  data of the entries filled into the histogram (uncertainties etc). It defaults
- to THistStatEntries for integer PRECISION and THistStatUncertainty for others,
+ to THistStatContent for integer PRECISION and THistStatUncertainty for others,
  under the assumption that integer bin content is rarely filles with weights.
 
  A histogram counts occurrences of values or n-dimensional combinations thereof.
@@ -57,10 +93,12 @@ void swap(THist<DIMENSIONS, PRECISION, STATISTICS> &a,
  */
 
 template<int DIMENSIONS, class PRECISION,
-         class STATISTICS
-         = typename std::conditional<std::is_integral<PRECISION>::value,
-           THistStatEntries<DIMENSIONS, PRECISION>,
-           THistStatUncertainty<DIMENSIONS, PRECISION>>::type>
+  template <int DIMENSIONS_, class PRECISION_> class STATISTICS
+  /*
+         = Internal::THistStatisticsDefault<std::is_integral<PRECISION>::value>::Stat_t
+  */
+  = Internal::THistStatUncertaintyDefault
+  >
 class THist {
 public:
   /// The type of the `Detail::THistImplBase` of this histogram.
@@ -70,11 +108,11 @@ public:
   /// The type of weights
   using Weight_t = PRECISION;
   /// Statistics type
-  using Stat_t = STATISTICS;
+  using Stat_t = STATISTICS<DIMENSIONS, PRECISION>;
   /// Pointer type to `HistImpl_t::Fill`, for faster access.
   using FillFunc_t = typename ImplBase_t::FillFunc_t;
 
-  using const_iterator = THistBinIter<ImplBase_t>;
+  using const_iterator = Detail::THistBinIter<ImplBase_t>;
 
   THist() = default;
   THist(THist&&) = default;
@@ -183,15 +221,16 @@ private:
   FillFunc_t fFillFunc = nullptr; ///< Pinter to THistImpl::Fill() member function
 
   friend THist HistFromImpl<>(std::unique_ptr<ImplBase_t>);
-  friend void swap<>(THist<DIMENSIONS, PRECISION> &a,
-                     THist<DIMENSIONS, PRECISION> &b) noexcept;
+  friend void swap<>(THist<DIMENSIONS, PRECISION, STATISTICS> &a,
+                     THist<DIMENSIONS, PRECISION, STATISTICS> &b) noexcept;
 
 };
 
 /// Swap two histograms.
 ///
 /// Very efficient; swaps the `fImpl` pointers.
-template<int DIMENSIONS, class PRECISION, class STATISTICS>
+template<int DIMENSIONS, class PRECISION,
+  template <int DIMENSIONS_, class PRECISION_> class STATISTICS>
 void swap(THist<DIMENSIONS, PRECISION, STATISTICS> &a,
           THist<DIMENSIONS, PRECISION, STATISTICS> &b) noexcept {
   std::swap(a.fImpl, b.fImpl);
@@ -200,7 +239,8 @@ void swap(THist<DIMENSIONS, PRECISION, STATISTICS> &a,
 
 
 /// Adopt an external, stand-alone THistImpl. The THist will take ownership.
-template<int DIMENSIONS, class PRECISION, class STATISTICS>
+template<int DIMENSIONS, class PRECISION,
+  template <int DIMENSIONS_, class PRECISION_> class STATISTICS>
 THist<DIMENSIONS, PRECISION, STATISTICS>
 HistFromImpl(
   std::unique_ptr<typename THist<DIMENSIONS, PRECISION, STATISTICS>::ImplBase_t> pHistImpl) {
@@ -215,7 +255,8 @@ namespace Internal {
 /**
  Generate THist::fImpl from THist constructor arguments.
  */
-template<int DIMENSIONS, int IDIM, class PRECISION, class STATISTICS,
+template<int DIMENSIONS, int IDIM, class PRECISION,
+  template <int DIMENSIONS_, class PRECISION_> class STATISTICS,
   class... PROCESSEDAXISCONFIG>
 struct HistImplGen_t {
   /// Select the template argument for the next axis type, and "recurse" into
@@ -266,7 +307,8 @@ struct HistImplGen_t {
 };
 
 /// Generate THist::fImpl from constructor arguments; recursion end.
-template<int DIMENSIONS, class PRECISION, class STATISTICS,
+template<int DIMENSIONS, class PRECISION,
+  template <int DIMENSIONS_, class PRECISION_> class STATISTICS,
   class... PROCESSEDAXISCONFIG>
 /// Create the histogram, now that all axis types and initializier objects are
 /// determined.
@@ -283,7 +325,8 @@ struct HistImplGen_t<DIMENSIONS, DIMENSIONS, PRECISION, STATISTICS,
 } // namespace Internal
 
 
-template<int DIMENSIONS, class PRECISION, class STATISTICS>
+template<int DIMENSIONS, class PRECISION,
+  template <int DIMENSIONS_, class PRECISION_> class STATISTICS>
 THist<DIMENSIONS, PRECISION, STATISTICS>
 ::THist(std::array<TAxisConfig, DIMENSIONS> axes):
   fImpl{std::move(
@@ -292,7 +335,8 @@ THist<DIMENSIONS, PRECISION, STATISTICS>
   fFillFunc = fImpl->GetFillFunc();
 }
 
-template<int DIMENSIONS, class PRECISION, class STATISTICS>
+template<int DIMENSIONS, class PRECISION,
+  template <int DIMENSIONS_, class PRECISION_> class STATISTICS>
 THist<DIMENSIONS, PRECISION, STATISTICS>
 ::THist(std::string_view title, std::array<TAxisConfig, DIMENSIONS> axes):
   fImpl{std::move(
@@ -338,7 +382,8 @@ void Add(THist<DIMENSION, PRECISIONA> &to, THist<DIMENSION, PRECISIONB> &from) {
   }
 };
 
-template<int DIMENSION, class PRECISION, class STATISTICS>
+template<int DIMENSION, class PRECISION,
+  template <int DIMENSIONS_, class PRECISION_> class STATISTICS>
 std::unique_ptr <Internal::TDrawable>
 GetDrawable(std::shared_ptr<THist<DIMENSION, PRECISION, STATISTICS>> hist,
             THistDrawOptions<DIMENSION> opts = {}) {
@@ -346,7 +391,8 @@ GetDrawable(std::shared_ptr<THist<DIMENSION, PRECISION, STATISTICS>> hist,
     DIMENSION, PRECISION, STATISTICS>>(hist, opts);
 }
 
-template<int DIMENSION, class PRECISION, class STATISTICS>
+template<int DIMENSION, class PRECISION,
+  template <int DIMENSIONS_, class PRECISION_> class STATISTICS>
 std::unique_ptr <Internal::TDrawable>
 GetDrawable(std::unique_ptr<THist<DIMENSION, PRECISION, STATISTICS>> hist,
             THistDrawOptions<DIMENSION> opts = {}) {

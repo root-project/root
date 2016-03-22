@@ -20,11 +20,10 @@
 #include "ROOT/RTupleApply.h"
 
 #include "ROOT/TAxis.h"
+#include "ROOT/THistBinIter.h"
 
 namespace ROOT {
 namespace Experimental {
-
-template <class HISTIMPL> class THistBinIter;
 
 namespace Hist {
 /// Iterator over n dimensional axes - an array of n axis iterators.
@@ -43,7 +42,7 @@ enum class EOverflow {
 inline bool operator&(EOverflow a, EOverflow b) {
   return static_cast<int>(a) & static_cast<int>(b);
 }
-}
+} // namespace Hist
 
 namespace Detail {
 
@@ -73,6 +72,9 @@ public:
   /// Number of bins of this histogram, including all overflow and underflow
   /// bins. Simply the product of all axes' number of bins.
   virtual int GetNBins() const noexcept = 0;
+
+  /// Get the histogram title.
+  std::string_view GetTitle() const { return fTitle; }
 
   /// Given the coordinate `x`, determine the index of the bin.
   virtual int GetBinIndex(const Coord_t& x) const = 0;
@@ -120,29 +122,28 @@ private:
  through THist, THistImpl inherits from THistImplBase, exposing only dimension
  (`DIMENSION`) and bin type (`PRECISION`).
  */
-template<int DIMENSIONS, class PRECISION, class STATISTICS>
-class THistImplBase: public THistImplPrecisionAgnosticBase<DIMENSIONS>,
-                     public STATISTICS {
-private:
-  std::vector<PRECISION> fContent; ///< The histogram's bin content
-
+template<int DIMENSIONS, class PRECISION,
+  template <int DIMENSIONS_, class PRECISION_> class STATISTICS>
+class THistImplBase: public THistImplPrecisionAgnosticBase<DIMENSIONS> {
 public:
   /// Type of a coordinate: an array of `DIMENSIONS` doubles.
   using Coord_t = typename THistImplPrecisionAgnosticBase<DIMENSIONS>::Coord_t;
   /// Type of the bin content (and thus weights).
   using Weight_t = PRECISION;
-  using Stat_t = STATISTICS;
+  /// Type of the statistics (bin content, untertainties etc).
+  using Stat_t = STATISTICS<DIMENSIONS, PRECISION>;
+
   /// Type of the Fill(x, w) function
   using FillFunc_t = void (THistImplBase::*)(const Coord_t& x, Weight_t w);
 
-  /// Iterator support
-  using const_iterator = ROOT::Experimental::THistBinIter<const THistImplBase>;
-  using iterator = ROOT::Experimental::THistBinIter<THistImplBase>;
+private:
+  /// The histogram's bin content, uncertainties etc.
+  Stat_t fStatistics;
 
-
-  THistImplBase(size_t numBins): fContent(numBins) {}
+public:
+  THistImplBase(size_t numBins): fStatistics(numBins) {}
   THistImplBase(std::string_view title, size_t numBins):
-    THistImplPrecisionAgnosticBase<DIMENSIONS>(title), fContent(numBins) {}
+    THistImplPrecisionAgnosticBase<DIMENSIONS>(title), fStatistics(numBins) {}
   THistImplBase(const THistImplBase&) = default;
   THistImplBase(THistImplBase&&) = default;
 
@@ -160,16 +161,19 @@ public:
 
   /// Get the number of bins in this histogram, including possible under- and
   /// overflow bins.
-  int GetNBins() const noexcept final { return fContent.size(); }
+  int GetNBins() const noexcept final { return fStatistics.size(); }
 
   /// Get the bin content (sum of weights) for bin index `binidx`.
-  PRECISION GetBinContent(int binidx) const { return fContent[binidx]; }
+  Weight_t GetBinContent(int binidx) const { return fStatistics[binidx]; }
+
+  /// Get the bin content (sum of weights) for bin index `binidx` (non-const).
+  Weight_t & GetBinContent(int binidx) { return fStatistics[binidx]; }
 
   /// Const access to statistics.
-  const STATISTICS& GetStat() const noexcept { return *this; }
+  const Stat_t & GetStat() const noexcept { return fStatistics; }
 
   /// Non-const access to statistics.
-  STATISTICS& GetStat() noexcept { return *this; }
+  Stat_t & GetStat() noexcept { return fStatistics; }
 
   /// Get the bin content (sum of weights) for bin index `binidx`, cast to
   /// double.
@@ -178,23 +182,7 @@ public:
   }
 
   /// Add `w` to the bin at index `bin`.
-  void AddBinContent(int bin, Weight_t w) {
-    fContent[bin] += w;
-  }
-
-  /// Minimal iterator interface over all bins.
-  const_iterator begin() const noexcept { return const_iterator(*this); }
-  iterator begin() noexcept { return iterator(*this); }
-
-  /// Minimal iterator interface over all bins.
-  const_iterator end() const noexcept {
-    return const_iterator(*this, fContent.size());
-  }
-  iterator end() noexcept { return iterator(*this, fContent.size()); }
-
-  std::array_view<PRECISION> GetContent() const noexcept { return fContent; }
-  std::vector<PRECISION>& GetContent() noexcept { return fContent; }
-
+  void AddBinContent(int binidx, Weight_t w) { fStatistics[binidx] += w; }
 };
 } // namespace Detail
 
@@ -205,7 +193,7 @@ namespace Internal {
  */
 ///\{
 
-/// \name AxisTupleOperations
+/// \name Axis tuple operations
 /// Template operations on axis tuple.
 ///@{
 template <int IDX, class AXISTUPLE> struct TGetBinCount;
@@ -346,11 +334,13 @@ GetAxisView(const AXISCONFIG&...axes) noexcept {
 } // namespace Internal
 
 
-template <int DIMENSIONS, class PRECISION, class STATISTICS> class THist;
+template <int DIMENSIONS, class PRECISION,
+  template <int DIMENSIONS_, class PRECISION_> class STATISTICS> class THist;
 
 namespace Detail {
 
-template <int DIMENSIONS, class PRECISION, class STATISTICS, class... AXISCONFIG>
+template <int DIMENSIONS, class PRECISION,
+  template <int DIMENSIONS_, class PRECISION_> class STATISTICS, class... AXISCONFIG>
 class THistImpl final: public THistImplBase<DIMENSIONS, PRECISION, STATISTICS> {
   static_assert(sizeof...(AXISCONFIG) == DIMENSIONS,
                 "Number of axes must equal histogram dimension");
@@ -462,7 +452,7 @@ public:
 
   /// Return the uncertainties for the given bin.
   double GetBinUncertainty(int binidx) const final {
-    return STATISTICS::GetBinUncertainty(binidx, *this);
+    return this->GetStat().GetBinUncertainty(binidx);
   }
 
   /// Add a single weight `w` to the bin at coordinate `x`.
@@ -470,7 +460,7 @@ public:
     int bin = GetBinIndexAndGrow(x);
     if (bin >= 0)
       ImplBase_t::AddBinContent(bin, w);
-    STATISTICS::Fill(x, bin, w);
+    this->GetStat().Fill(x, bin, w);
   }
 
   /// Get the content of the bin at position `x`.
@@ -501,17 +491,29 @@ public:
   void GrowAxis(int /*iAxis*/, double /*x*/) {
     // TODO: Implement GrowAxis()
   }
+
+  /// \{
+  /// \name Iterator interface
+  using const_iterator = THistBinIter<const THistImpl>;
+  using iterator = THistBinIter<THistImpl>;
+  iterator begin() noexcept { return iterator(*this); }
+  const_iterator begin() const noexcept { return const_iterator(*this); }
+  iterator end() noexcept { return iterator(*this, this->GetNBins()); }
+  const_iterator end() const noexcept { return const_iterator(*this, this->GetNBins()); }
+  /// \}
 };
 
 
-template <int DIMENSIONS, class PRECISION, class STATISTICS, class... AXISCONFIG>
+template <int DIMENSIONS, class PRECISION,
+  template <int DIMENSIONS_, class PRECISION_> class STATISTICS, class... AXISCONFIG>
 THistImpl<DIMENSIONS, PRECISION, STATISTICS, AXISCONFIG...>::
 THistImpl(AXISCONFIG... axisArgs):
   ImplBase_t(Internal::GetNBinsFromAxes(axisArgs...)),
   fAxes{axisArgs...}
 {}
 
-template <int DIMENSIONS, class PRECISION, class STATISTICS, class... AXISCONFIG>
+template <int DIMENSIONS, class PRECISION,
+  template <int DIMENSIONS_, class PRECISION_> class STATISTICS, class... AXISCONFIG>
 THistImpl<DIMENSIONS, PRECISION, STATISTICS, AXISCONFIG...>::
 THistImpl(std::string_view title, AXISCONFIG... axisArgs):
   ImplBase_t(title, Internal::GetNBinsFromAxes(axisArgs...)),

@@ -21,75 +21,188 @@
 namespace ROOT {
 namespace Experimental {
 
-namespace Detail {
-template <int DIMENSIONS, class PRECISION, class STATISTICS> class THistImplBase;
-}
+/// std::vector has more template arguments; for the default storage we don't
+/// care about them, so use-decl them away:
+template<class PRECISION> using THistStatDefaultStorage
+  = std::vector<PRECISION>;
 
-template<int DIMENSIONS, class PRECISION>
-class THistStatEntries {
+/**
+ \class THistStatContent
+ Basic histogram statistics, keeping track of the bin content and the total
+ number of calls to Fill().
+ */
+template<int DIMENSIONS, class PRECISION,
+  template <class PRECISION_> class STORAGE = THistStatDefaultStorage>
+class THistStatContent {
 public:
+  /// The type of a (possibly multi-dimensional) coordinate.
   using Coord_t = std::array<double, DIMENSIONS>;
-  using HistImpl_t = Detail::THistImplBase<DIMENSIONS, PRECISION, THistStatEntries>;
+  /// The type of the weight and the bin content.
   using Weight_t = PRECISION;
-  using BinStat_t = void;
+  /// Type of the bin content array.
+  using Content_t = STORAGE<PRECISION>;
 
-  void Fill(const Coord_t& /*x*/, int /*binidx*/, Weight_t /*weightN*/ = 1.) {
+  /**
+  Const-view on a THistStatContent for a given bin.
+  */
+  class TConstBinStat {
+  public:
+    TConstBinStat(Weight_t content): fContent(content) {}
+    Weight_t GetContent() const { return fContent; }
+
+  private:
+    Weight_t fContent; ///< Content of this bin.
+  };
+
+  /**
+  Mutable view on a THistStatContent for a given bin.
+  */
+  class TBinStat {
+  public:
+    TBinStat(Weight_t& content): fContent(content) {}
+    Weight_t& GetContent() const { return fContent; }
+
+  private:
+    Weight_t& fContent; ///< Reference to the content of this bin.
+  };
+
+private:
+  /// Number of calls to Fill().
+  int64_t fEntries = 0;
+
+  /// Bin content.
+  Content_t fBinContent;
+
+public:
+  THistStatContent(size_t size): fBinContent(size) {}
+
+  /// Add weight to the bin content at binidx.
+  void Fill(const Coord_t& /*x*/, int binidx, Weight_t weight = 1.) {
+    fBinContent[binidx] += weight;
     ++fEntries;
   }
 
-  int64_t GetEntries() const { return fEntries; };
+  /// Get the number of entries filled into the histogram - i.e. the number of
+  /// calls to Fill().
+  int64_t GetEntries() const { return fEntries; }
 
-  double GetBinUncertainty(int binidx, const HistImpl_t& hist) const {
-    return std::sqrt(std::fabs(hist.GetBinContent(binidx)));
+  /// Get the number of bins.
+  size_t size() const noexcept { return fBinContent.size(); }
+
+  /// Get the bin content for the given bin.
+  Weight_t operator[](int idx) const { return fBinContent[idx]; }
+  /// Get the bin content for the given bin (non-const).
+  Weight_t& operator[](int idx) { return fBinContent[idx]; }
+
+  /// Get the bin content for the given bin.
+  Weight_t GetBinContent(int idx) const { return fBinContent[idx]; }
+  /// Get the bin content for the given bin (non-const).
+  Weight_t& GetBinContent(int idx) { return fBinContent[idx]; }
+
+  /// Retrieve the content array.
+  const Content_t& GetContentArray() const { return fBinContent; }
+  /// Retrieve the content array (non-const).
+  Content_t& GetContentArray() { return fBinContent; }
+
+  /// Calculate the bin content's uncertainty for the given bin, using Poisson
+  /// statistics on the absolute bin content.
+  Weight_t GetBinUncertainty(int binidx) const {
+    return std::sqrt(std::fabs(fBinContent[binidx]));
   }
-private:
-  int64_t fEntries = 0;
+
+  /// Get a view on the statistics values of a bin.
+  TConstBinStat GetView(int idx) const { return TConstBinStat(fBinContent[idx]); }
+  /// Get a (non-const) view on the statistics values of a bin.
+  TBinStat GetView(int idx) { return TBinStat(fBinContent[idx]); }
 };
 
-template<int DIMENSIONS, class PRECISION>
-class THistStatUncertainty: public THistStatEntries<DIMENSIONS, PRECISION> {
-  std::vector<double> fSumWeightsSquared; ///< Sum of squared weights
+
+/**
+ \class THistStatUncertainty
+ Histogram statistics to keep track of the bin content and its Poisson
+ uncertainty per bin, and the total number of calls to Fill().
+ */
+template<int DIMENSIONS, class PRECISION,
+  template <class PRECISION_> class STORAGE = THistStatDefaultStorage>
+class THistStatUncertainty: public THistStatContent<DIMENSIONS, PRECISION, STORAGE> {
 
 public:
-  /**
-   View on a THistStatUncertainty for a given bin.
-   */
-  template <class HISTIMPL>
-  class TBinStat {
-  public:
-    using HistImpl_t = HISTIMPL;
-    auto GetSumWeightsSquared() const {
-      return fHist.getStat().GetSumWeightsSquared()[fBinIndex];
-    }
-
-  private:
-    HistImpl_t& fHist;
-    size_t fBinIndex;
-  };
-
-  using Base_t = THistStatEntries<DIMENSIONS, PRECISION>;
+  using Base_t = THistStatContent<DIMENSIONS, PRECISION, STORAGE>;
   using typename Base_t::Coord_t;
   using typename Base_t::Weight_t;
-  template <class HISTIMPL> using BinStat_t = TBinStat<HISTIMPL>;
+  using typename Base_t::Content_t;
 
+  /**
+  Const-view on a THistStatUncertainty for a given bin.
+  */
+  class TConstBinStat {
+  public:
+    TConstBinStat(Weight_t content, Weight_t sumw2):
+      fContent(content), fSumW2(sumw2) {}
+    Weight_t GetContent() const { return fContent; }
+    Weight_t GetSumW2() const { return fSumW2; }
+
+  private:
+    Weight_t fContent; ///< Content of this bin.
+    Weight_t fSumW2; ///< The bin's sum of square of weights.
+  };
+
+  /**
+  Mutable view on a THistStatUncertainty for a given bin.
+  */
+  class TBinStat {
+  public:
+    TBinStat(Weight_t& content, Weight_t& sumw2):
+    fContent(content), fSumW2(sumw2) {}
+    Weight_t& GetContent() const { return fContent; }
+    Weight_t& GetSumW2() const { return fSumW2; }
+
+  private:
+    Weight_t& fContent; ///< Content of this bin.
+    Weight_t& fSumW2; ///< Uncertainty of the content of this bin.
+  };
+
+
+private:
+  /// Uncertainty of the content for each bin.
+  Content_t fSumWeightsSquared; ///< Sum of squared weights
+
+public:
+  THistStatUncertainty(size_t size): Base_t(size) {}
+
+  /// Add weight to the bin at binidx; the coordinate was x.
   void Fill(const Coord_t &x, int binidx, Weight_t weight = 1.) {
     Base_t::Fill(x, binidx, weight);
     fSumWeightsSquared[binidx] += weight * weight;
   }
 
+  /// Calculate a bin's (Poisson) uncertainty of the bin content as the
+  /// square-root of the bin's sum of squared weights.
+  Weight_t GetBinUncertainty(int binidx) const {
+    return std::sqrt(fSumWeightsSquared[binidx]);
+  }
+
+  /// Get the structure holding the sum of squares of weights.
   const std::vector<double>& GetSumWeightsSquared() const { return fSumWeightsSquared; }
+  /// Get the structure holding the sum of squares of weights (non-const).
   std::vector<double>& GetSumWeightsSquared() { return fSumWeightsSquared; }
 
-  double GetBinUncertainty(int binidx, const Detail::THistImplBase<DIMENSIONS,
-    PRECISION, THistStatUncertainty>& /*hist*/) const {
-    return std::sqrt(fSumWeightsSquared[binidx]);
+  /// Get a view on the statistics values of a bin.
+  TConstBinStat GetView(int idx) const {
+    return TConstBinStat(this->GetBinContent(idx), fSumWeightsSquared[idx]);
+  }
+  /// Get a (non-const) view on the statistics values of a bin.
+  TBinStat GetView(int idx) {
+    return TBinStat(this->GetBinContent(idx), fSumWeightsSquared[idx]);
   }
 };
 
-template<int DIMENSIONS, class PRECISION>
-class THistStatMomentUncert: public THistStatUncertainty<DIMENSIONS, PRECISION> {
+template<int DIMENSIONS, class PRECISION,
+  template <class PRECISION_> class STORAGE = THistStatDefaultStorage>
+class THistStatMomentUncert:
+  public THistStatUncertainty<DIMENSIONS, PRECISION, STORAGE> {
 public:
-  using Base_t = THistStatUncertainty<DIMENSIONS, PRECISION>;
+  using Base_t = THistStatUncertainty<DIMENSIONS, PRECISION, STORAGE>;
   using typename Base_t::Coord_t;
   using typename Base_t::Weight_t;
 
@@ -106,26 +219,35 @@ public:
   }
 };
 
-
-template<int DIMENSIONS, class PRECISION>
-class THistStatRuntime: public THistStatEntries<DIMENSIONS, PRECISION> {
+template<int DIMENSIONS, class PRECISION,
+  template <class PRECISION_> class STORAGE = THistStatDefaultStorage>
+class THistStatRuntime:
+  public THistStatContent<DIMENSIONS, PRECISION, STORAGE> {
 public:
-  using Base_t = THistStatEntries<DIMENSIONS, PRECISION>;
+  using Base_t = THistStatContent<DIMENSIONS, PRECISION, STORAGE>;
   using typename Base_t::Coord_t;
   using typename Base_t::Weight_t;
 
   THistStatRuntime(bool uncertainty, std::vector<bool> &moments);
 
-  void Fill(const Coord_t &x, Weight_t weightN = 1.) {
-    Base_t::Fill(x, weightN);
+  virtual void DoFill(const Coord_t &x, Weight_t weightN) = 0;
+  void Fill(const Coord_t &x, Weight_t weight = 1.) {
+    Base_t::Fill(x, weight);
+    DoFill(x, weight);
   }
 
+  virtual void DoFillN(const std::array_view<Coord_t> xN,
+                       const std::array_view<Weight_t> weightN) = 0;
   void FillN(const std::array_view<Coord_t> xN,
              const std::array_view<Weight_t> weightN) {
     Base_t::FillN(xN, weightN);
+    DoFill(xN, weightN);
   }
+
+  virtual void DoFillN(const std::array_view<Coord_t> xN) = 0;
   void FillN(const std::array_view<Coord_t> xN) {
     Base_t::FillN(xN);
+    DoFill(xN);
   }
 };
 
