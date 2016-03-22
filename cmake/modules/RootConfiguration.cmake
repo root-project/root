@@ -404,6 +404,10 @@ set(buildeditline ${value${editline}})
 set(cppunit)
 set(dicttype ${ROOT_DICTTYPE})
 
+
+find_program(PERL_EXECUTABLE perl)
+set(perl ${PERL_EXECUTABLE})
+
 #---RConfigure-------------------------------------------------------------------------------------------------
 set(setresuid undef)
 if(mathmore)
