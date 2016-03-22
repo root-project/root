@@ -33,6 +33,11 @@ public:
    */
   ssize_t pread(char *into, size_t n, off_t pos);
 
+  /**
+   * Return the number of file chunks downloaded to the local buffer.
+   */
+  size_t GetCount() const {return fCount;}
+
 private:
   /**
    * Create a temporary file on disk and unlink it; use it as a buffer
@@ -51,12 +56,12 @@ private:
   bool cache(off_t start, off_t end);
 
   std::vector<char> fPresent;  // A mask of all the currently present file chunks in the buffer.
-  TFile  *fFile;               // A copy of the TFile we are buffering.
-  ssize_t fSize;               // Size of the source TFile.
-  ssize_t fCount;              // Number of file chunks we have buffered.
-  ssize_t fTotal;              // Total number of chunks in source TFile.
-  int     fFd;                 // File descriptor pointing to the local file.
-  bool    fInvalid;            // Set to true if this buffer is in an invalid state
+  TFile  *fFile {nullptr};     // A copy of the TFile we are buffering.
+  ssize_t fSize = -1;          // Size of the source TFile.
+  size_t  fCount = 0;          // Number of file chunks we have buffered.
+  ssize_t fTotal = -1;         // Total number of chunks in source TFile.
+  int     fFd {-1};            // File descriptor pointing to the local file.
+  bool    fInvalid {true};     // Set to true if this buffer is in an invalid state
 };
 
 #endif  // ROOT_TFileBufferRead

@@ -12,7 +12,7 @@
 
 
 // Download files in 128MB chunks.
-#define CHUNK_SIZE 128*1024*1024
+#define CHUNK_SIZE (128*1024*1024)
 
 
 TFileBufferRead::TFileBufferRead (TFile *file) :
@@ -25,10 +25,16 @@ TFileBufferRead::TFileBufferRead (TFile *file) :
 {
    fSize = fFile->GetSize();
    fTotal = (fSize + CHUNK_SIZE - 1) / CHUNK_SIZE;
+   fPresent.resize(fTotal, 0);
 
    if (tmpfile()) {
       fInvalid = false;
    }
+}
+
+
+TFileBufferRead::~TFileBufferRead() {
+   if (fFd >= 0) {close(fFd);}
 }
 
 
@@ -70,7 +76,11 @@ ssize_t TFileBufferRead::pread(char *into, size_t n, off_t pos) {
   if (fInvalid) {
     // Note the order of arguments is different between POSIX read and
     // TFile's ReadBuffer.
-    if (!fFile->ReadBuffer(into, pos, n)) {
+    TFileCacheRead *origCache = fFile->GetCacheRead();
+    fFile->SetCacheRead(nullptr, nullptr, TFile::kDoNotDisconnect);
+    bool failed = fFile->ReadBuffer(into, pos, n);
+    fFile->SetCacheRead(origCache, nullptr, TFile::kDoNotDisconnect);
+    if (failed) {
       if (!errno) {errno = EIO;}
       return -1;
     }
@@ -94,12 +104,12 @@ bool TFileBufferRead::cache(off_t start, off_t end) {
   start = (start / CHUNK_SIZE) * CHUNK_SIZE;
   end = std::min(end, fSize);
 
-  ssize_t nread = 0;
   size_t index = start / CHUNK_SIZE;
 
   while (start < end) {
     size_t len = std::min(static_cast<off_t>(fSize - start), static_cast<off_t>(CHUNK_SIZE));
     if (!fPresent[index]) {
+
       void *window = mmap(0, len, PROT_READ | PROT_WRITE, MAP_SHARED, fFd, start);
       if (window == MAP_FAILED) {
         fInvalid = true;
@@ -109,8 +119,12 @@ bool TFileBufferRead::cache(off_t start, off_t end) {
         return false;
       }
 
-      
-      if (-1 == (nread = fFile->ReadBuffer(static_cast<char *>(window), start, len))) {
+      TFileCacheRead *origCache = fFile->GetCacheRead();
+      fFile->SetCacheRead(nullptr, nullptr, TFile::kDoNotDisconnect);
+      bool failed = fFile->ReadBuffer(static_cast<char *>(window), start, len);
+      fFile->SetCacheRead(origCache, nullptr, TFile::kDoNotDisconnect);
+
+      if (failed) {
         Warning("TFileBufferRead", "Failed to read into the buffer file.");
         fInvalid = true;
         return false;
@@ -118,26 +132,16 @@ bool TFileBufferRead::cache(off_t start, off_t end) {
 
       munmap(window, len);
 
-      if (static_cast<size_t>(nread) != len)
-      {
-        Warning("TFileBufferRead", "Unable to cache %lu byte file segment at %ld"
-                                   ": got only %ld bytes back.",
-                                   len, start, nread);
-        fInvalid = true;
-        return false;
-      }
-
       fPresent[index] = 1;
       ++fCount;
-      if (fCount == fTotal) {
-        // TODO: If we provided a more complete wrapper around the source file,
-        // we could close it once the file has been fully downloaded to local disk.
-      }
+      // TODO: If we provided a more complete wrapper around the source file,
+      // we could close it once the file has been fully downloaded to local disk.
     }
 
     start += len;
     ++index;
   }
+  return true;
 }
 
 
