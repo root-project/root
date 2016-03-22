@@ -10,8 +10,6 @@ import os
 from ROOT import TCanvas, TPaveText
 from ROOT import gROOT
 
-
-
 chelp = TCanvas( 'chelp', 'Help to run demos', 200, 10, 700, 500 )
 
 welcome = TPaveText( .1, .8, .9, .97 )
