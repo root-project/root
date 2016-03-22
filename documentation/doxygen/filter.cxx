@@ -257,10 +257,10 @@ void FilterTutorial()
          ReplaceAll(gLineString,"(nobatch)","");
          if (gPython) {
             if (nobatch) {
-               ExecuteCommand(StringFormat("./makeimage.py %s %s %s 0 1 0",
+               ExecuteCommand(StringFormat("root -l -q \"makeimage.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,true)\"",
                                           gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
             } else {
-               ExecuteCommand(StringFormat("./makeimage.py %s %s %s 0 1 1",
+               ExecuteCommand(StringFormat("root -l -b -q \"makeimage.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,true)\"",
                                           gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
             }
          } else {

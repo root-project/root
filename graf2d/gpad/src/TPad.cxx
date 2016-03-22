@@ -4586,10 +4586,7 @@ void TPad::Print(const char *filenam, Option_t *option)
          gVirtualPS = 0;
       }
 
-      if (!gSystem->AccessPathName(psname)) {
-         if (!copen) Info("Print", "%s file %s has been created", opt.Data(), psname.Data());
-         else        Info("Print", "%s file %s has been created using the current canvas", opt.Data(), psname.Data());
-      }
+      if (!gSystem->AccessPathName(psname)) Info("Print", "%s file %s has been created", opt.Data(), psname.Data());
    } else {
       // Append to existing Postscript, PDF or GIF file
       if (!ccloseb) {
@@ -4603,14 +4600,12 @@ void TPad::Print(const char *filenam, Option_t *option)
       } else {
          gVirtualPS->SetTitle("PDF");
       }
+      Info("Print", "Current canvas added to %s file %s", opt.Data(), psname.Data());
       if (mustClose) {
-         if (cclose) Info("Print", "Current canvas added to %s file %s and file closed", opt.Data(), psname.Data());
-         else        Info("Print", "%s file %s has been closed", opt.Data(), psname.Data());
          gROOT->GetListOfSpecials()->Remove(gVirtualPS);
          delete gVirtualPS;
          gVirtualPS = 0;
       } else {
-         Info("Print", "Current canvas added to %s file %s", opt.Data(), psname.Data());
          gVirtualPS = 0;
       }
    }

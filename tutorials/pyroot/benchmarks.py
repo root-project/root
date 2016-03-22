@@ -2,6 +2,7 @@
 ## \ingroup tutorial_pyroot
 ## Run benchmarks macros.
 ##
+## \macro_image
 ## \macro_code
 ##
 ## \author Wim Lavrijsen
