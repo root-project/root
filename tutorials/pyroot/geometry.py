@@ -2,7 +2,6 @@
 ## \ingroup tutorial_pyroot
 ## Geometry
 ##
-## \macro_image
 ## \macro_code
 ##
 ## \author Wim Lavrijsen

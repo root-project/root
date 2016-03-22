@@ -11,8 +11,6 @@
 from ROOT import TCanvas, TPad, TFile, TPaveLabel, TPaveText
 from ROOT import gROOT
 
-
-
 c1 = TCanvas( 'c1', 'Histogram Drawing Options', 200, 10, 700, 900 )
 
 pad1 = TPad( 'pad1', 'The pad with the function',  0.03, 0.62, 0.50, 0.92, 21 )
