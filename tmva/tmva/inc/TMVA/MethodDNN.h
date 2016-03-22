@@ -4,7 +4,7 @@
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
- * Class  : MethodNN                                                              *
+ * Class  : MethodDNN                                                              *
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
@@ -26,12 +26,12 @@
 
 //#pragma once
 
-#ifndef ROOT_TMVA_MethodNN
-#define ROOT_TMVA_MethodNN
+#ifndef ROOT_TMVA_MethodDNN
+#define ROOT_TMVA_MethodDNN
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// MethodNN                                                             //
+// MethodDNN                                                             //
 //                                                                      //
 // Neural Network implementation                                        //
 //                                                                      //
@@ -61,26 +61,26 @@
 
 namespace TMVA {
 
-    class MethodNN : public MethodBase
+    class MethodDNN : public MethodBase
    {
 
    public:
 
       // standard constructors
-      MethodNN ( const TString& jobName,
+      MethodDNN ( const TString& jobName,
                  const TString&  methodTitle,
                  DataSetInfo& theData,
                  const TString& theOption,
                  TDirectory* theTargetDir = 0 );
 
-      MethodNN ( DataSetInfo& theData,
+      MethodDNN ( DataSetInfo& theData,
                  const TString& theWeightFile,
                  TDirectory* theTargetDir = 0 );
 
-      virtual ~MethodNN();
+      virtual ~MethodDNN();
 
       virtual Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets );
-      std::vector<std::pair<int,TMVA::NN::EnumFunction>> ParseLayoutString(TString layerSpec);
+      std::vector<std::pair<int,TMVA::DNN::EnumFunction>> ParseLayoutString(TString layerSpec);
       std::vector<std::map<TString,TString>> ParseKeyValueString(TString parseString, TString blockDelim, TString tokenDelim);
 
       void Train();
@@ -130,27 +130,27 @@ namespace TMVA {
 
 
    private:
-      TMVA::NN::Net fNet;
+      TMVA::DNN::Net fNet;
       std::vector<double> fWeights;
 
       TString  fLayoutString;
-      std::vector<std::pair<int,TMVA::NN::EnumFunction>> fLayout;
+      std::vector<std::pair<int,TMVA::DNN::EnumFunction>> fLayout;
       TString  fErrorStrategy;
       TString  fTrainingStrategy;
-      TMVA::NN::ModeErrorFunction fModeErrorFunction;
+      TMVA::DNN::ModeErrorFunction fModeErrorFunction;
       std::shared_ptr<TMVA::Monitoring> fMonitoring;
       double   fSumOfSigWeights_test;
       double   fSumOfBkgWeights_test;
       bool     fResume;
       TString  fWeightInitializationStrategyString;
-      TMVA::NN::WeightInitializationStrategy fWeightInitializationStrategy;
+      TMVA::DNN::WeightInitializationStrategy fWeightInitializationStrategy;
 
-      std::vector<std::shared_ptr<TMVA::NN::Settings>> fSettings;
+      std::vector<std::shared_ptr<TMVA::DNN::Settings>> fSettings;
 
       TString  fFileName;
       double fScaleToNumEvents;
 
-      ClassDef(MethodNN,0) // neural network 
+      ClassDef(MethodDNN,0) // neural network 
    };
 
 } // namespace TMVA

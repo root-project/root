@@ -38,6 +38,7 @@
 #include <random>
 #include <thread>
 #include <future>
+#include <type_traits>
 
 #include "Pattern.h"
 #include "Monitoring.h"
@@ -50,13 +51,12 @@
 #include "TStyle.h"
 
 #include <fenv.h> // turn on or off exceptions for NaN and other numeric exceptions
-#include <type_traits>
 
 
 namespace TMVA
 {
 
-    namespace NN
+    namespace DNN
     {
 
 //    double gaussDoubl (edouble mean, double sigma);
@@ -452,7 +452,7 @@ namespace TMVA
 
             /*! \brief c'tor of LayerData
              *
-             *  C'tor of LayerData for all layers which are not the input layer; Used during the training of the NN
+             *  C'tor of LayerData for all layers which are not the input layer; Used during the training of the DNN
              * 
              * \param size size of the layer
              * \param itWeightBegin indicates the start of the weights for this layer on the weight vector
@@ -475,7 +475,7 @@ namespace TMVA
 
             /*! \brief c'tor of LayerData
              *
-             *  C'tor of LayerData for all layers which are not the input layer; Used during the application of the NN
+             *  C'tor of LayerData for all layers which are not the input layer; Used during the application of the DNN
              * 
              * \param size size of the layer
              * \param itWeightBegin indicates the start of the weights for this layer on the weight vector
@@ -619,7 +619,7 @@ namespace TMVA
             const_iterator_type m_itInputBegin; ///< iterator to the first of the nodes in the input node vector
             const_iterator_type m_itInputEnd;   ///< iterator to the end of the nodes in the input node vector
 
-            std::vector<double> m_deltas; ///< stores the deltas for the NN training 
+            std::vector<double> m_deltas; ///< stores the deltas for the DNN training 
             std::vector<double> m_valueGradients; ///< stores the gradients of the values (nodes) 
             std::vector<double> m_values; ///< stores the values of the nodes in this layer
             const_dropout_iterator m_itDropOut; ///< iterator to a container indicating if the corresponding node is to be dropped
@@ -645,7 +645,7 @@ namespace TMVA
 
 /*! \brief Layer defines the layout of a layer
  *
- *     Layer defines the layout of a specific layer in the NN
+ *     Layer defines the layout of a specific layer in the DNN
  *     Objects of this class don't hold the layer data itself (see class "LayerData")
  *  
  */
@@ -722,7 +722,7 @@ namespace TMVA
              */
             Settings (TString name,
                       size_t _convergenceSteps = 15, size_t _batchSize = 10, size_t _testRepetitions = 7, 
-                      double _factorWeightDecay = 1e-5, TMVA::NN::EnumRegularization _regularization = TMVA::NN::EnumRegularization::NONE,
+                      double _factorWeightDecay = 1e-5, TMVA::DNN::EnumRegularization _regularization = TMVA::DNN::EnumRegularization::NONE,
                       MinimizerType _eMinimizerType = MinimizerType::fSteepest, 
                       double _learningRate = 1e-5, double _momentum = 0.3, 
                       int _repetitions = 3,
@@ -764,7 +764,8 @@ namespace TMVA
 
 
 
-            virtual void testSample (double /*output*/, double /*target*/, double /*weight*/) {} ///< virtual function to be used for monitoring (callback)
+
+    virtual void testSample (double /*error*/, double /*output*/, double /*target*/, double /*weight*/) {} ///< virtual function to be used for monitoring (callback)
             virtual void startTrainCycle () ///< callback for monitoring and logging
             {
                 m_convergenceCount = 0;
@@ -796,7 +797,7 @@ namespace TMVA
 
             virtual bool hasConverged (double testError); ///< has this training converged already?
 
-            EnumRegularization regularization () const { return m_regularization; } ///< some regularization of the NN is turned on?
+            EnumRegularization regularization () const { return m_regularization; } ///< some regularization of the DNN is turned on?
 
             bool useMultithreading () const { return m_useMultithreading; } ///< is multithreading turned on?
             bool doBatchNormalization () const { return m_doBatchNormalization; }
@@ -821,7 +822,7 @@ namespace TMVA
             double m_maxProgress; ///< current limits for the progress bar
 
 
-            size_t m_convergenceSteps; ///< number of steps without improvement to consider the NN to have converged
+            size_t m_convergenceSteps; ///< number of steps without improvement to consider the DNN to have converged
             size_t m_batchSize; ///< mini-batch size
             size_t m_testRepetitions; 
             double m_factorWeightDecay;
@@ -877,7 +878,7 @@ namespace TMVA
 
 /*! \brief Settings for classification
  *
- * contains additional settings if the NN problem is classification
+ * contains additional settings if the DNN problem is classification
  */
         class ClassificationSettings : public Settings
         {
@@ -972,7 +973,7 @@ namespace TMVA
             /*     fMonitoring->ProcessEvents (); */
             /* } */
 
-            void testSample (double output, double target, double weight);
+            void testSample (double error, double output, double target, double weight);
 
             virtual void startTestCycle ();
             virtual void endTestCycle ();
@@ -1078,14 +1079,14 @@ namespace TMVA
             {
             }
 
-            void setInputSize (size_t sizeInput) { m_sizeInput = sizeInput; } ///< set the input size of the NN
-            void setOutputSize (size_t sizeOutput) { m_sizeOutput = sizeOutput; } ///< set the output size of the NN
+            void setInputSize (size_t sizeInput) { m_sizeInput = sizeInput; } ///< set the input size of the DNN
+            void setOutputSize (size_t sizeOutput) { m_sizeOutput = sizeOutput; } ///< set the output size of the DNN
             void addLayer (Layer& layer) { m_layers.push_back (layer); } ///< add a layer (layout)
             void addLayer (Layer&& layer) { m_layers.push_back (layer); } 
             void setErrorFunction (ModeErrorFunction eErrorFunction) { m_eErrorFunction = eErrorFunction; } ///< which error function is to be used
     
-            size_t inputSize () const { return m_sizeInput; } ///< input size of the NN
-            size_t outputSize () const { return m_sizeOutput; } ///< output size of the NN
+            size_t inputSize () const { return m_sizeInput; } ///< input size of the DNN
+            size_t outputSize () const { return m_sizeOutput; } ///< output size of the DNN
 
             /*! \brief set the drop out configuration
              *
@@ -1128,7 +1129,7 @@ namespace TMVA
              * \param itPatternBegin the pattern to be trained with
              * \param itPatternEnd the pattern to be trainied with
              * \param settings the settings for the training
-             * \param dropContainer the configuration for NN drop-out
+             * \param dropContainer the configuration for DNN drop-out
              */
             template <typename Iterator, typename Minimizer>
                 inline double trainCycle (Minimizer& minimizer, std::vector<double>& weights, 
@@ -1140,13 +1141,13 @@ namespace TMVA
                 std::vector<double> compute (const std::vector<double>& input, const Weights& weights) const; ///< compute the net with the given input and the given weights
 
             template <typename Weights, typename PassThrough>
-                double operator() (PassThrough& settingsAndBatch, const Weights& weights) const; ///< execute computation of the NN for one mini-batch (used by the minimizer); no computation of gradients
+                double operator() (PassThrough& settingsAndBatch, const Weights& weights) const; ///< execute computation of the DNN for one mini-batch (used by the minimizer); no computation of gradients
 
             template <typename Weights, typename PassThrough, typename OutContainer>
-                double operator() (PassThrough& settingsAndBatch, const Weights& weights, ModeOutput eFetch, OutContainer& outputContainer) const; ///< execute computation of the NN for one mini-batch; helper function
+                double operator() (PassThrough& settingsAndBatch, const Weights& weights, ModeOutput eFetch, OutContainer& outputContainer) const; ///< execute computation of the DNN for one mini-batch; helper function
     
             template <typename Weights, typename Gradients, typename PassThrough>
-                double operator() (PassThrough& settingsAndBatch, const Weights& weights, Gradients& gradients) const;  ///< execute computation of the NN for one mini-batch (used by the minimizer); returns gradients as well
+                double operator() (PassThrough& settingsAndBatch, const Weights& weights, Gradients& gradients) const;  ///< execute computation of the DNN for one mini-batch (used by the minimizer); returns gradients as well
 
             template <typename Weights, typename Gradients, typename PassThrough, typename OutContainer>
                 double operator() (PassThrough& settingsAndBatch, const Weights& weights, Gradients& gradients, ModeOutput eFetch, OutContainer& outputContainer) const;
@@ -1154,7 +1155,7 @@ namespace TMVA
 
 
 
-            /*! \brief main NN computation function
+            /*! \brief main DNN computation function
              *
              * 
              */
@@ -1171,7 +1172,7 @@ namespace TMVA
             void dE ();
 
 
-            /*! \brief computes the error of the NN
+            /*! \brief computes the error of the DNN
              *
              * 
              */
@@ -1210,8 +1211,8 @@ namespace TMVA
         private:
 
             ModeErrorFunction m_eErrorFunction; ///< denotes the error function
-            size_t m_sizeInput; ///< input size of this NN
-            size_t m_sizeOutput; ///< outut size of this NN
+            size_t m_sizeInput; ///< input size of this DNN
+            size_t m_sizeOutput; ///< outut size of this DNN
             std::vector<Layer> m_layers; ///< layer-structure-data
         };
 
@@ -1225,7 +1226,7 @@ namespace TMVA
 
 
 
-    }; // namespace NN
+    }; // namespace DNN
 }; // namespace TMVA
 
 

@@ -5,7 +5,7 @@
 
 namespace TMVA
 {
-    namespace NN
+    namespace DNN
     {
 
 
@@ -113,11 +113,11 @@ namespace TMVA
         typename LayerData::container_type LayerData::computeProbabilities ()
         {
             container_type probabilitiesContainer;
-            if (TMVA::NN::isFlagSet (ModeOutputValues::SIGMOID, m_eModeOutput))
+            if (TMVA::DNN::isFlagSet (ModeOutputValues::SIGMOID, m_eModeOutput))
             {
                 std::transform (begin (m_values), end (m_values), std::back_inserter (probabilitiesContainer), (*Sigmoid.get ()));
             }
-            else if (TMVA::NN::isFlagSet (ModeOutputValues::SOFTMAX, m_eModeOutput))
+            else if (TMVA::DNN::isFlagSet (ModeOutputValues::SOFTMAX, m_eModeOutput))
             {
                 double sum = 0;
                 probabilitiesContainer = m_values;
@@ -276,7 +276,7 @@ namespace TMVA
 /** \brief action to be done after the computation of a test sample (e.g. update some monitoring output)
  *
  */
-        void ClassificationSettings::testSample (double output, double target, double weight)
+    void ClassificationSettings::testSample (double error, double output, double target, double weight)
         {
             m_output.push_back (output);
             m_targets.push_back (target);
@@ -552,6 +552,6 @@ namespace TMVA
 
 
  
-    }; // namespace NN
+    }; // namespace DNN
 }; // namespace TMVA
 
