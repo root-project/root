@@ -453,7 +453,7 @@ int TMVAClassification( TString myMethodList = "" )
        nnOptions.Append (":"); nnOptions.Append (layoutString);
        nnOptions.Append (":"); nnOptions.Append (trainingStrategyString);
 
-       factory->BookMethod(dataloader, TMVA::Types::kNN, "NN", nnOptions ); // NN
+       factory->BookMethod(dataloader, TMVA::Types::kDNN, "DNN", nnOptions ); // NN
    }
 
 

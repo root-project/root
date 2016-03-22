@@ -4,7 +4,7 @@
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
- * Class  : MethodNN                                                              *
+ * Class  : MethodDNN                                                              *
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
@@ -35,7 +35,7 @@
 #include "TFormula.h"
 
 #include "TMVA/ClassifierFactory.h"
-#include "TMVA/MethodNN.h"
+#include "TMVA/MethodDNN.h"
 #include "TMVA/Timer.h"
 #include "TMVA/Types.h"
 #include "TMVA/Tools.h"
@@ -48,23 +48,23 @@
 #include <algorithm>
 #include <iostream>
 
-REGISTER_METHOD(NN)
+REGISTER_METHOD(DNN)
 
-ClassImp(TMVA::MethodNN)
+ClassImp(TMVA::MethodDNN)
 
 
 
 
 namespace TMVA
 {
-namespace NN
+namespace DNN
 {
 template <typename Container, typename T>
 void gaussDistribution (Container& container, T mean, T sigma)
 {
     for (auto it = begin (container), itEnd = end (container); it != itEnd; ++it)
     {
-        (*it) = NN::gaussDouble (mean, sigma);
+        (*it) = DNN::gaussDouble (mean, sigma);
     }
 }
 };
@@ -76,36 +76,36 @@ void gaussDistribution (Container& container, T mean, T sigma)
 
 
 //______________________________________________________________________________
-TMVA::MethodNN::MethodNN( const TString& jobName,
+TMVA::MethodDNN::MethodDNN( const TString& jobName,
                           const TString& methodTitle,
                           DataSetInfo& theData,
                           const TString& theOption,
                           TDirectory* theTargetDir )
-    : MethodBase( jobName, Types::kNN, methodTitle, theData, theOption, theTargetDir )
+    : MethodBase( jobName, Types::kDNN, methodTitle, theData, theOption, theTargetDir )
     , fResume (false)
 {
    // standard constructor
 }
 
 //______________________________________________________________________________
-TMVA::MethodNN::MethodNN( DataSetInfo& theData,
+TMVA::MethodDNN::MethodDNN( DataSetInfo& theData,
                           const TString& theWeightFile,
                           TDirectory* theTargetDir )
-   : MethodBase( Types::kNN, theData, theWeightFile, theTargetDir )
+   : MethodBase( Types::kDNN, theData, theWeightFile, theTargetDir )
     , fResume (false)
 {
    // constructor from a weight file
 }
 
 //______________________________________________________________________________
-TMVA::MethodNN::~MethodNN()
+TMVA::MethodDNN::~MethodDNN()
 {
    // destructor
    // nothing to be done
 }
 
 //_______________________________________________________________________
-Bool_t TMVA::MethodNN::HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t /*numberTargets*/ )
+Bool_t TMVA::MethodDNN::HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t /*numberTargets*/ )
 {
    // MLP can handle classification with 2 classes and regression with one regression-target
    if (type == Types::kClassification && numberClasses == 2 ) return kTRUE;
@@ -116,13 +116,13 @@ Bool_t TMVA::MethodNN::HasAnalysisType( Types::EAnalysisType type, UInt_t number
 }
 
 //______________________________________________________________________________
-void TMVA::MethodNN::Init()
+void TMVA::MethodDNN::Init()
 {
    // default initializations
 }
 
 //_______________________________________________________________________
-void TMVA::MethodNN::DeclareOptions()
+void TMVA::MethodDNN::DeclareOptions()
 {
    // define the options (their key words) that can be set in the option string
    // know options:
@@ -130,7 +130,7 @@ void TMVA::MethodNN::DeclareOptions()
    //    available values are:         BP   Back-Propagation <default>
    //                                  GA   Genetic Algorithm (takes a LONG time)
    //
-   // LearningRate    <float>      NN learning rate parameter
+   // LearningRate    <float>      DNN learning rate parameter
    // DecayRate       <float>      Decay rate for learning parameter
    // TestRate        <int>        Test for overtraining performed at each #th epochs
    //
@@ -170,11 +170,11 @@ void TMVA::MethodNN::DeclareOptions()
 }
 
 
-std::vector<std::pair<int,TMVA::NN::EnumFunction>> TMVA::MethodNN::ParseLayoutString(TString layerSpec)
+std::vector<std::pair<int,TMVA::DNN::EnumFunction>> TMVA::MethodDNN::ParseLayoutString(TString layerSpec)
 {
     // parse layout specification string and return a vector, each entry
     // containing the number of neurons to go in each successive layer
-    std::vector<std::pair<int,TMVA::NN::EnumFunction>> layout;
+    std::vector<std::pair<int,TMVA::DNN::EnumFunction>> layout;
     const TString delim_Layer (",");
     const TString delim_Sub ("|");
 
@@ -186,7 +186,7 @@ std::vector<std::pair<int,TMVA::NN::EnumFunction>> TMVA::MethodNN::ParseLayoutSt
     for (; layerString != NULL; layerString = (TObjString*)nextLayer ())
     {
         int numNodes = 0;
-        TMVA::NN::EnumFunction eActivationFunction = NN::EnumFunction::TANH;
+        TMVA::DNN::EnumFunction eActivationFunction = DNN::EnumFunction::TANH;
 
         TObjArray* subStrings = layerString->GetString ().Tokenize (delim_Sub);
         TIter nextToken (subStrings);
@@ -200,19 +200,19 @@ std::vector<std::pair<int,TMVA::NN::EnumFunction>> TMVA::MethodNN::ParseLayoutSt
             {
                 TString strActFnc (token->GetString ());
                 if (strActFnc == "RELU")
-                    eActivationFunction = NN::EnumFunction::RELU;
+                    eActivationFunction = DNN::EnumFunction::RELU;
                 else if (strActFnc == "TANH")
-                    eActivationFunction = NN::EnumFunction::TANH;
+                    eActivationFunction = DNN::EnumFunction::TANH;
                 else if (strActFnc == "SYMMRELU")
-                    eActivationFunction = NN::EnumFunction::SYMMRELU;
+                    eActivationFunction = DNN::EnumFunction::SYMMRELU;
                 else if (strActFnc == "SOFTSIGN")
-                    eActivationFunction = NN::EnumFunction::SOFTSIGN;
+                    eActivationFunction = DNN::EnumFunction::SOFTSIGN;
                 else if (strActFnc == "SIGMOID")
-                    eActivationFunction = NN::EnumFunction::SIGMOID;
+                    eActivationFunction = DNN::EnumFunction::SIGMOID;
                 else if (strActFnc == "LINEAR")
-                    eActivationFunction = NN::EnumFunction::LINEAR;
+                    eActivationFunction = DNN::EnumFunction::LINEAR;
                 else if (strActFnc == "GAUSS")
-                    eActivationFunction = NN::EnumFunction::GAUSS;
+                    eActivationFunction = DNN::EnumFunction::GAUSS;
             }
             break;
             case 1: // number of nodes
@@ -236,7 +236,7 @@ std::vector<std::pair<int,TMVA::NN::EnumFunction>> TMVA::MethodNN::ParseLayoutSt
 
 
 // parse key value pairs in blocks -> return vector of blocks with map of key value pairs
-std::vector<std::map<TString,TString>> TMVA::MethodNN::ParseKeyValueString(TString parseString, TString blockDelim, TString tokenDelim)
+std::vector<std::map<TString,TString>> TMVA::MethodDNN::ParseKeyValueString(TString parseString, TString blockDelim, TString tokenDelim)
 {
     std::vector<std::map<TString,TString>> blockKeyValues;
     const TString keyValueDelim ("=");
@@ -357,7 +357,7 @@ std::vector<double> fetchValue (const std::map<TString,TString>& keyValueMap, TS
 
 
 //_______________________________________________________________________
-void TMVA::MethodNN::ProcessOptions()
+void TMVA::MethodDNN::ProcessOptions()
 {
    // process user options
 //   MethodBase::ProcessOptions();
@@ -373,35 +373,35 @@ void TMVA::MethodNN::ProcessOptions()
             << Endl;
    }
 
-   fLayout = TMVA::MethodNN::ParseLayoutString (fLayoutString);
+   fLayout = TMVA::MethodDNN::ParseLayoutString (fLayoutString);
 
    //                                                                                         block-delimiter  token-delimiter
    std::vector<std::map<TString,TString>> strategyKeyValues = ParseKeyValueString (fTrainingStrategy, TString ("|"), TString (","));
 
 
    if (fWeightInitializationStrategyString == "XAVIER")
-       fWeightInitializationStrategy = TMVA::NN::WeightInitializationStrategy::XAVIER;
+       fWeightInitializationStrategy = TMVA::DNN::WeightInitializationStrategy::XAVIER;
    if (fWeightInitializationStrategyString == "XAVIERUNIFORM")
-       fWeightInitializationStrategy = TMVA::NN::WeightInitializationStrategy::XAVIERUNIFORM;
+       fWeightInitializationStrategy = TMVA::DNN::WeightInitializationStrategy::XAVIERUNIFORM;
    else if (fWeightInitializationStrategyString == "LAYERSIZE")
-       fWeightInitializationStrategy = TMVA::NN::WeightInitializationStrategy::LAYERSIZE;
+       fWeightInitializationStrategy = TMVA::DNN::WeightInitializationStrategy::LAYERSIZE;
    else if (fWeightInitializationStrategyString == "TEST")
-       fWeightInitializationStrategy = TMVA::NN::WeightInitializationStrategy::TEST;
+       fWeightInitializationStrategy = TMVA::DNN::WeightInitializationStrategy::TEST;
    else
-       fWeightInitializationStrategy = TMVA::NN::WeightInitializationStrategy::XAVIER;
+       fWeightInitializationStrategy = TMVA::DNN::WeightInitializationStrategy::XAVIER;
 
    // create settings
    if (fAnalysisType == Types::kClassification)
    {
-       if (fErrorStrategy == "SUMOFSQUARES") fModeErrorFunction = TMVA::NN::ModeErrorFunction::SUMOFSQUARES;
-       if (fErrorStrategy == "CROSSENTROPY") fModeErrorFunction = TMVA::NN::ModeErrorFunction::CROSSENTROPY;
-       if (fErrorStrategy == "MUTUALEXCLUSIVE") fModeErrorFunction = TMVA::NN::ModeErrorFunction::CROSSENTROPY_MUTUALEXCLUSIVE;
+       if (fErrorStrategy == "SUMOFSQUARES") fModeErrorFunction = TMVA::DNN::ModeErrorFunction::SUMOFSQUARES;
+       if (fErrorStrategy == "CROSSENTROPY") fModeErrorFunction = TMVA::DNN::ModeErrorFunction::CROSSENTROPY;
+       if (fErrorStrategy == "MUTUALEXCLUSIVE") fModeErrorFunction = TMVA::DNN::ModeErrorFunction::CROSSENTROPY_MUTUALEXCLUSIVE;
    }
    else if (fAnalysisType == Types::kMulticlass)
    {
-       if (fErrorStrategy == "SUMOFSQUARES") fModeErrorFunction = TMVA::NN::ModeErrorFunction::SUMOFSQUARES;
-       if (fErrorStrategy == "CROSSENTROPY") fModeErrorFunction = TMVA::NN::ModeErrorFunction::CROSSENTROPY;
-       if (fErrorStrategy == "MUTUALEXCLUSIVE") fModeErrorFunction = TMVA::NN::ModeErrorFunction::CROSSENTROPY_MUTUALEXCLUSIVE;
+       if (fErrorStrategy == "SUMOFSQUARES") fModeErrorFunction = TMVA::DNN::ModeErrorFunction::SUMOFSQUARES;
+       if (fErrorStrategy == "CROSSENTROPY") fModeErrorFunction = TMVA::DNN::ModeErrorFunction::CROSSENTROPY;
+       if (fErrorStrategy == "MUTUALEXCLUSIVE") fModeErrorFunction = TMVA::DNN::ModeErrorFunction::CROSSENTROPY_MUTUALEXCLUSIVE;
    }
    else if (fAnalysisType == Types::kRegression)
    {
@@ -412,7 +412,7 @@ void TMVA::MethodNN::ProcessOptions()
                   << "Setting error function to SUMOFSQUARES now."
                   << Endl;
        }
-       fModeErrorFunction = TMVA::NN::ModeErrorFunction::SUMOFSQUARES;
+       fModeErrorFunction = TMVA::DNN::ModeErrorFunction::SUMOFSQUARES;
    }
    
    for (auto& block : strategyKeyValues)
@@ -430,13 +430,13 @@ void TMVA::MethodNN::ProcessOptions()
        dropConfig = fetchValue (block, "DropConfig", dropConfig);
        int dropRepetitions = fetchValue (block, "DropRepetitions", 3);
 
-       TMVA::NN::EnumRegularization eRegularization = TMVA::NN::EnumRegularization::NONE;
+       TMVA::DNN::EnumRegularization eRegularization = TMVA::DNN::EnumRegularization::NONE;
        if (regularization == "L1")
-           eRegularization = TMVA::NN::EnumRegularization::L1;
+           eRegularization = TMVA::DNN::EnumRegularization::L1;
        else if (regularization == "L2")
-           eRegularization = TMVA::NN::EnumRegularization::L2;
+           eRegularization = TMVA::DNN::EnumRegularization::L2;
        else if (regularization == "L1MAX")
-           eRegularization = TMVA::NN::EnumRegularization::L1MAX;
+           eRegularization = TMVA::DNN::EnumRegularization::L1MAX;
 
 
        strMultithreading.ToUpper ();
@@ -449,11 +449,11 @@ void TMVA::MethodNN::ProcessOptions()
 
        if (fAnalysisType == Types::kClassification)
        {
-           std::shared_ptr<TMVA::NN::ClassificationSettings> ptrSettings = make_shared <TMVA::NN::ClassificationSettings> (
+           std::shared_ptr<TMVA::DNN::ClassificationSettings> ptrSettings = make_shared <TMVA::DNN::ClassificationSettings> (
                GetName  (),
                convergenceSteps, batchSize, 
                testRepetitions, factorWeightDecay,
-               eRegularization, fScaleToNumEvents, TMVA::NN::MinimizerType::fSteepest,
+               eRegularization, fScaleToNumEvents, TMVA::DNN::MinimizerType::fSteepest,
                learningRate, 
                momentum, repetitions, multithreading);
            ptrSettings->setWeightSums (fSumOfSigWeights_test, fSumOfBkgWeights_test);
@@ -461,22 +461,22 @@ void TMVA::MethodNN::ProcessOptions()
        }
        else if (fAnalysisType == Types::kMulticlass)
        {
-           std::shared_ptr<TMVA::NN::Settings> ptrSettings = make_shared <TMVA::NN::Settings> (
+           std::shared_ptr<TMVA::DNN::Settings> ptrSettings = make_shared <TMVA::DNN::Settings> (
                GetName  (),
                convergenceSteps, batchSize, 
                testRepetitions, factorWeightDecay,
-               eRegularization, TMVA::NN::MinimizerType::fSteepest,
+               eRegularization, TMVA::DNN::MinimizerType::fSteepest,
                learningRate, 
                momentum, repetitions, multithreading);
            fSettings.push_back (ptrSettings);
        }
        else if (fAnalysisType == Types::kRegression)
        {
-           std::shared_ptr<TMVA::NN::Settings> ptrSettings = make_shared <TMVA::NN::Settings> (
+           std::shared_ptr<TMVA::DNN::Settings> ptrSettings = make_shared <TMVA::DNN::Settings> (
                GetName  (),
                convergenceSteps, batchSize, 
                testRepetitions, factorWeightDecay,
-               eRegularization, TMVA::NN::MinimizerType::fSteepest,
+               eRegularization, TMVA::DNN::MinimizerType::fSteepest,
                learningRate, 
                momentum, repetitions, multithreading);
            fSettings.push_back (ptrSettings);
@@ -492,7 +492,7 @@ void TMVA::MethodNN::ProcessOptions()
 }
 
 //______________________________________________________________________________
-void TMVA::MethodNN::Train()
+void TMVA::MethodDNN::Train()
 {
     
     fMonitoring = NULL;
@@ -570,24 +570,24 @@ void TMVA::MethodNN::Train()
         auto itLayout = std::begin (fLayout), itLayoutEnd = std::end (fLayout)-1; // all layers except the last one
         for ( ; itLayout != itLayoutEnd; ++itLayout)
         {
-            fNet.addLayer (NN::Layer ((*itLayout).first, (*itLayout).second)); 
+            fNet.addLayer (DNN::Layer ((*itLayout).first, (*itLayout).second)); 
             Log() << kINFO 
                   << "Add Layer with " << (*itLayout).first << " nodes." 
                   << Endl;
         }
 
-        NN::ModeOutputValues eModeOutputValues = NN::ModeOutputValues::SIGMOID;
+        DNN::ModeOutputValues eModeOutputValues = DNN::ModeOutputValues::SIGMOID;
         if (fAnalysisType == Types::kRegression)
         {
-            eModeOutputValues = NN::ModeOutputValues::DIRECT;
+            eModeOutputValues = DNN::ModeOutputValues::DIRECT;
         }
         else if ((fAnalysisType == Types::kClassification ||
                   fAnalysisType == Types::kMulticlass) &&
-                 fModeErrorFunction == TMVA::NN::ModeErrorFunction::SUMOFSQUARES)
+                 fModeErrorFunction == TMVA::DNN::ModeErrorFunction::SUMOFSQUARES)
         {
-            eModeOutputValues = NN::ModeOutputValues::DIRECT;
+            eModeOutputValues = DNN::ModeOutputValues::DIRECT;
         }
-        fNet.addLayer (NN::Layer (outputSize, (*itLayout).second, eModeOutputValues)); 
+        fNet.addLayer (DNN::Layer (outputSize, (*itLayout).second, eModeOutputValues)); 
         Log() << kINFO 
               << "Add Layer with " << outputSize << " nodes." 
               << Endl << Endl;
@@ -610,7 +610,7 @@ void TMVA::MethodNN::Train()
     int idxSetting = 0;
     for (auto itSettings = std::begin (fSettings), itSettingsEnd = std::end (fSettings); itSettings != itSettingsEnd; ++itSettings, ++idxSetting)
     {
-        std::shared_ptr<TMVA::NN::Settings> ptrSettings = *itSettings;
+        std::shared_ptr<TMVA::DNN::Settings> ptrSettings = *itSettings;
         ptrSettings->setMonitoring (fMonitoring);
         Log() << kINFO
               << "Training with learning rate = " << ptrSettings->learningRate ()
@@ -634,9 +634,9 @@ void TMVA::MethodNN::Train()
         }
         Log () << kINFO << Endl;
         
-        if (ptrSettings->minimizerType () == TMVA::NN::MinimizerType::fSteepest)
+        if (ptrSettings->minimizerType () == TMVA::DNN::MinimizerType::fSteepest)
         {
-            NN::Steepest minimizer (ptrSettings->learningRate (), ptrSettings->momentum (), ptrSettings->repetitions ());
+            DNN::Steepest minimizer (ptrSettings->learningRate (), ptrSettings->momentum (), ptrSettings->repetitions ());
             /*E =*/fNet.train (fWeights, trainPattern, testPattern, minimizer, *ptrSettings.get ());
         }
         ptrSettings.reset ();
@@ -650,7 +650,7 @@ void TMVA::MethodNN::Train()
 
 
 //_______________________________________________________________________
-Double_t TMVA::MethodNN::GetMvaValue( Double_t* /*errLower*/, Double_t* /*errUpper*/ )
+Double_t TMVA::MethodDNN::GetMvaValue( Double_t* /*errLower*/, Double_t* /*errUpper*/ )
 {
     if (fWeights.empty ())
         return 0.0;
@@ -666,9 +666,9 @@ Double_t TMVA::MethodNN::GetMvaValue( Double_t* /*errLower*/, Double_t* /*errUpp
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// get the regression value generated by the NN
+/// get the regression value generated by the DNN
 
-const std::vector<Float_t> &TMVA::MethodNN::GetRegressionValues() 
+const std::vector<Float_t> &TMVA::MethodDNN::GetRegressionValues() 
 {
     assert (!fWeights.empty ());
     if (fWeights.empty ())
@@ -713,9 +713,9 @@ const std::vector<Float_t> &TMVA::MethodNN::GetRegressionValues()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// get the multiclass classification values generated by the NN
+/// get the multiclass classification values generated by the DNN
 
-const std::vector<Float_t> &TMVA::MethodNN::GetMulticlassValues()
+const std::vector<Float_t> &TMVA::MethodDNN::GetMulticlassValues()
 {
     if (fWeights.empty ())
         return *fRegressionReturnVal;
@@ -757,9 +757,9 @@ const std::vector<Float_t> &TMVA::MethodNN::GetMulticlassValues()
 
 
 //_______________________________________________________________________
-void TMVA::MethodNN::AddWeightsXMLTo( void* parent ) const 
+void TMVA::MethodDNN::AddWeightsXMLTo( void* parent ) const 
 {
-   // create XML description of NN classifier
+   // create XML description of DNN classifier
    // for all layers
 
    void* nn = gTools().xmlengine().NewChild(parent, 0, "Weights");
@@ -768,7 +768,7 @@ void TMVA::MethodNN::AddWeightsXMLTo( void* parent ) const
    gTools().xmlengine().NewAttr(xmlLayout, 0, "NumberLayers", gTools().StringFromInt (numLayers) );
    for (Int_t i = 0; i < numLayers; i++) 
    {
-       const TMVA::NN::Layer& layer = fNet.layers ().at (i);
+       const TMVA::DNN::Layer& layer = fNet.layers ().at (i);
        int numNodes = layer.numNodes ();
        char activationFunction = (char)(layer.activationFunctionType ());
        int outputMode = (int)layer.modeOutputValues ();
@@ -799,7 +799,7 @@ void TMVA::MethodNN::AddWeightsXMLTo( void* parent ) const
 
 
 //_______________________________________________________________________
-void TMVA::MethodNN::ReadWeightsFromXML( void* wghtnode )
+void TMVA::MethodDNN::ReadWeightsFromXML( void* wghtnode )
 {
    // read MLP from xml weight file
     fNet.clear ();
@@ -836,7 +836,7 @@ void TMVA::MethodNN::ReadWeightsFromXML( void* wghtnode )
       gTools().ReadAttr (ch, "OutputMode", outputMode);
       ch = gTools().GetNextChild(ch);
 
-      fNet.addLayer (NN::Layer (numNodes, (TMVA::NN::EnumFunction)activationFunction (0), (NN::ModeOutputValues)outputMode.Atoi ()));
+      fNet.addLayer (DNN::Layer (numNodes, (TMVA::DNN::EnumFunction)activationFunction (0), (DNN::ModeOutputValues)outputMode.Atoi ()));
    }
 
 //   std::cout << "read weights XML" << std::endl;
@@ -867,7 +867,7 @@ void TMVA::MethodNN::ReadWeightsFromXML( void* wghtnode )
 
 
 //_______________________________________________________________________
-void TMVA::MethodNN::ReadWeightsFromStream( std::istream & /*istr*/)
+void TMVA::MethodDNN::ReadWeightsFromStream( std::istream & /*istr*/)
 {
    // // destroy/clear the network then read it back in from the weights file
 
@@ -888,7 +888,7 @@ void TMVA::MethodNN::ReadWeightsFromStream( std::istream & /*istr*/)
 }
 
 //_______________________________________________________________________
-const TMVA::Ranking* TMVA::MethodNN::CreateRanking()
+const TMVA::Ranking* TMVA::MethodDNN::CreateRanking()
 {
    // compute ranking of input variables by summing function of weights
 
@@ -940,14 +940,14 @@ const TMVA::Ranking* TMVA::MethodNN::CreateRanking()
 
 
 //_______________________________________________________________________
-void TMVA::MethodNN::MakeClassSpecific( std::ostream& /*fout*/, const TString& /*className*/ ) const
+void TMVA::MethodDNN::MakeClassSpecific( std::ostream& /*fout*/, const TString& /*className*/ ) const
 {
    // write specific classifier response
-//   MethodANNBase::MakeClassSpecific(fout, className);
+//   MethodADNNBase::MakeClassSpecific(fout, className);
 }
 
 //_______________________________________________________________________
-void TMVA::MethodNN::GetHelpMessage() const
+void TMVA::MethodDNN::GetHelpMessage() const
 {
    // get help message text
    //
@@ -959,8 +959,8 @@ void TMVA::MethodNN::GetHelpMessage() const
    Log() << Endl;
    Log() << col << "--- Short description:" << colres << Endl;
    Log() << Endl;
-   Log() << "The NN neural network is a feedforward" << Endl;
-   Log() << "multilayer perceptron impementation. The NN has a user-" << Endl;
+   Log() << "The DNN neural network is a feedforward" << Endl;
+   Log() << "multilayer perceptron impementation. The DNN has a user-" << Endl;
    Log() << "defined hidden layer architecture, where the number of input (output)" << Endl;
    Log() << "nodes is determined by the input variables (output classes, i.e., " << Endl;
    Log() << "signal and one background, regression or multiclass). " << Endl;
@@ -968,7 +968,7 @@ void TMVA::MethodNN::GetHelpMessage() const
    Log() << col << "--- Performance optimisation:" << colres << Endl;
    Log() << Endl;
 
-   const char* txt = "The NN supports various options to improve performance in terms of training speed and \n \
+   const char* txt = "The DNN supports various options to improve performance in terms of training speed and \n \
 reduction of overfitting: \n \
 \n \
       - different training settings can be stacked. Such that the initial training  \n\
@@ -1074,7 +1074,7 @@ reduction of overfitting: \n \
 
 
 //_______________________________________________________________________
-void  TMVA::MethodNN::WriteMonitoringHistosToFile( void ) const
+void  TMVA::MethodDNN::WriteMonitoringHistosToFile( void ) const
 {
    // write histograms and PDFs to file for monitoring purposes
 
@@ -1085,7 +1085,7 @@ void  TMVA::MethodNN::WriteMonitoringHistosToFile( void ) const
 
 
 
-void TMVA::MethodNN::checkGradients ()
+void TMVA::MethodDNN::checkGradients ()
 {
     size_t inputSize = 1;
     size_t outputSize = 1;
@@ -1094,10 +1094,10 @@ void TMVA::MethodNN::checkGradients ()
 
     fNet.setInputSize (inputSize);
     fNet.setOutputSize (outputSize);
-    fNet.addLayer (NN::Layer (100, NN::EnumFunction::SOFTSIGN)); 
-    fNet.addLayer (NN::Layer (30, NN::EnumFunction::SOFTSIGN)); 
-    fNet.addLayer (NN::Layer (outputSize, NN::EnumFunction::LINEAR, NN::ModeOutputValues::SIGMOID)); 
-    fNet.setErrorFunction (NN::ModeErrorFunction::CROSSENTROPY);
+    fNet.addLayer (DNN::Layer (100, DNN::EnumFunction::SOFTSIGN)); 
+    fNet.addLayer (DNN::Layer (30, DNN::EnumFunction::SOFTSIGN)); 
+    fNet.addLayer (DNN::Layer (outputSize, DNN::EnumFunction::LINEAR, DNN::ModeOutputValues::SIGMOID)); 
+    fNet.setErrorFunction (DNN::ModeErrorFunction::CROSSENTROPY);
 //    net.setErrorFunction (ModeErrorFunction::SUMOFSQUARES);
 
     size_t numWeights = fNet.numWeights (inputSize);
@@ -1111,17 +1111,17 @@ void TMVA::MethodNN::checkGradients ()
         std::vector<double> output;
         for (size_t i = 0; i < inputSize; ++i)
         {
-            input.push_back (TMVA::NN::gaussDouble (0.1, 4));
+            input.push_back (TMVA::DNN::gaussDouble (0.1, 4));
         }
         for (size_t i = 0; i < outputSize; ++i)
         {
-            output.push_back (TMVA::NN::gaussDouble (0, 3));
+            output.push_back (TMVA::DNN::gaussDouble (0, 3));
         }
         pattern.push_back (Pattern (input,output));
     }
 
 
-    NN::Settings settings (TString ("checkGradients"), /*_convergenceSteps*/ 15, /*_batchSize*/ 1, /*_testRepetitions*/ 7, /*_factorWeightDecay*/ 0, /*regularization*/ TMVA::NN::EnumRegularization::NONE);
+    DNN::Settings settings (TString ("checkGradients"), /*_convergenceSteps*/ 15, /*_batchSize*/ 1, /*_testRepetitions*/ 7, /*_factorWeightDecay*/ 0, /*regularization*/ TMVA::DNN::EnumRegularization::NONE);
 
     size_t improvements = 0;
     size_t worsenings = 0;
@@ -1129,20 +1129,20 @@ void TMVA::MethodNN::checkGradients ()
     size_t largeDifferences = 0;
     for (size_t iTest = 0; iTest < 1000; ++iTest)
     {
-        TMVA::NN::uniformDouble (weights, 0.7);
+        TMVA::DNN::uniformDouble (weights, 0.7);
         std::vector<double> gradients (numWeights, 0);
-        NN::Batch batch (begin (pattern), end (pattern));
-        NN::DropContainer dropContainer;
-        std::tuple<NN::Settings&, NN::Batch&, NN::DropContainer&> settingsAndBatch (settings, batch, dropContainer);
+        DNN::Batch batch (begin (pattern), end (pattern));
+        DNN::DropContainer dropContainer;
+        std::tuple<DNN::Settings&, DNN::Batch&, DNN::DropContainer&> settingsAndBatch (settings, batch, dropContainer);
         double E = fNet (settingsAndBatch, weights, gradients);
         std::vector<double> changedWeights;
         changedWeights.assign (weights.begin (), weights.end ());
 
-        int changeWeightPosition = TMVA::NN::randomInt (numWeights);
+        int changeWeightPosition = TMVA::DNN::randomInt (numWeights);
         double dEdw = gradients.at (changeWeightPosition);
         while (dEdw == 0.0)
         {
-            changeWeightPosition = TMVA::NN::randomInt (numWeights);
+            changeWeightPosition = TMVA::DNN::randomInt (numWeights);
             dEdw = gradients.at (changeWeightPosition);
         }
 

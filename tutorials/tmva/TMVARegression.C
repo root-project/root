@@ -80,7 +80,7 @@ void TMVARegression( TString myMethodList = "" )
    // 
    // --- Neural Network
    Use["MLP"]             = 1; 
-   Use["NN"]              = 1; 
+   Use["DNN"]             = 1; 
    // 
    // --- Support Vector Machine 
    Use["SVM"]             = 0;
@@ -250,7 +250,7 @@ void TMVARegression( TString myMethodList = "" )
    if (Use["MLP"])
       factory->BookMethod( dataloader,  TMVA::Types::kMLP, "MLP", "!H:!V:VarTransform=Norm:NeuronType=tanh:NCycles=20000:HiddenLayers=N+20:TestRate=6:TrainingMethod=BFGS:Sampling=0.3:SamplingEpoch=0.8:ConvergenceImprove=1e-6:ConvergenceTests=15:!UseRegulator" );
 
-   if (Use["NN"])
+   if (Use["DNN"])
    {
 //       TString layoutString ("Layout=TANH|(N+100)*2,LINEAR");
 //       TString layoutString ("Layout=SOFTSIGN|100,SOFTSIGN|50,SOFTSIGN|20,LINEAR");
@@ -277,7 +277,7 @@ void TMVARegression( TString myMethodList = "" )
        nnOptions.Append (":"); nnOptions.Append (layoutString);
        nnOptions.Append (":"); nnOptions.Append (trainingStrategyString);
 
-       factory->BookMethod( TMVA::Types::kNN, "NN", nnOptions ); // NN
+       factory->BookMethod(dataloader, TMVA::Types::kDNN, "DNN", nnOptions ); // NN
    }
 
 

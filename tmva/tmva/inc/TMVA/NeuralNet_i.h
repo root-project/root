@@ -2,9 +2,14 @@
 #define TMVA_NEURAL_NET_I
 #pragma once
 
+
+#include <tuple>
+#include <future>
+
+
 namespace TMVA
 {
-    namespace NN
+    namespace DNN
     {
 
 
@@ -28,7 +33,7 @@ namespace TMVA
             for (auto it = begin (container), itEnd = end (container); it != itEnd; ++it)
             {
 //        (*it) = uniformFromTo (-1.0*maxValue, 1.0*maxValue);
-                (*it) = TMVA::NN::uniformFromTo (-1.0*maxValue, 1.0*maxValue);
+                (*it) = TMVA::DNN::uniformFromTo (-1.0*maxValue, 1.0*maxValue);
             }
         }
 
@@ -552,7 +557,7 @@ namespace TMVA
 
 
 
-/*! \brief apply the weights in forward direction of the NN
+/*! \brief apply the weights in forward direction of the DNN
  *
  * 
  */
@@ -807,32 +812,79 @@ namespace TMVA
                     }
 
                     testError = 0;
-                    double weightSum = 0;
+                    //double weightSum = 0;
                     settings.startTestCycle ();
-                    std::vector<double> output;
-                    for (auto it = begin (testPattern), itEnd = end (testPattern); it != itEnd; ++it)
+                    if (settings.useMultithreading ())
                     {
-                        const Pattern& p = (*it);
-                        double weight = p.weight ();
-                        Batch batch (it, it+1);
-                        output.clear ();
-                        std::tuple<Settings&, Batch&, DropContainer&> passThrough (settings, batch, dropContainerTest);
-                        double testPatternError = (*this) (passThrough, weights, ModeOutput::FETCH, output);
-                        size_t outSize = this->outputSize ();
-                        if (outSize == 1)
+                        size_t numThreads = std::thread::hardware_concurrency ();
+                        size_t patternPerThread = testPattern.size () / numThreads;
+                        std::vector<Batch> batches;
+                        auto itPat = testPattern.begin ();
+                        auto itPatEnd = testPattern.end ();
+                        for (size_t idxThread = 0; idxThread < numThreads-1; ++idxThread)
                         {
-                            for (size_t i = 0, iEnd = batch.size (); i < iEnd; ++i)
+                            batches.push_back (Batch (itPat, itPat + patternPerThread));
+                            itPat += patternPerThread;
+                        }
+                        batches.insert (batches.end (), Batch (itPat, itPatEnd));
+
+                        std::vector<std::future<std::tuple<double,std::vector<double>>>> futures;
+                        for (auto& batch : batches)
+                        {
+                            // -------------------- execute each of the batch ranges on a different thread -------------------------------
+                            futures.push_back (
+                                std::async (std::launch::async, [&]() 
+                                            {
+                                                std::vector<double> localOutput;
+                                                std::tuple<Settings&, Batch&, DropContainer&> passThrough (settings, batch, dropContainerTest);
+                                                double testBatchError = (*this) (passThrough, weights, ModeOutput::FETCH, localOutput);
+                                                return std::make_tuple (testBatchError, localOutput);
+                                            })
+                                );
+                        }
+
+                        for (auto& f : futures)
+                        {
+                            std::tuple<double,std::vector<double>> result = f.get ();
+                            testError += std::get<0>(result) / batches.size ();
+                            std::vector<double> output = std::get<1>(result);
+                            if (output.size () == testPattern.size ())
                             {
-                                const Pattern& currPattern = (*(batch.begin () + i));
-                                settings.testSample (output.at (i * outSize), currPattern.output ().at (0), currPattern.weight ());
+                                auto it = begin (testPattern);
+                                for (double out : output)
+                                {
+                                    settings.testSample (0, out, (*it).output ().at (0), (*it).weight ());
+                                    ++it;
+                                }
                             }
                         }
-                        weightSum += fabs (weight);
-                        testError += testPatternError; //*weight;
+                    
+                    }
+                    else
+                    {
+                        std::vector<double> output;
+                        for (auto it = begin (testPattern), itEnd = end (testPattern); it != itEnd; ++it)
+                        {
+                            const Pattern& p = (*it);
+                            double weight = p.weight ();
+                            Batch batch (it, it+1);
+                            output.clear ();
+                            std::tuple<Settings&, Batch&, DropContainer&> passThrough (settings, batch, dropContainerTest);
+                            double testPatternError = (*this) (passThrough, weights, ModeOutput::FETCH, output);
+                            if (output.size () == 1)
+                            {
+                                /* std::vector<double> out = (*this).compute (p.input (), weights); */
+                                /* assert (output.at (0) == out.at (0)); */
+                                settings.testSample (testPatternError, output.at (0), p.output ().at (0), weight);
+                            }
+                            //weightSum += fabs (weight);
+                            //testError += testPatternError*weight;
+                            testError += testPatternError;
+                        }
+                        testError /= testPattern.size ();
                     }
                     settings.endTestCycle ();
 //                    testError /= weightSum;
-                    testError /= testPattern.size ();
 
                     settings.computeResult (*this, weights);
 
@@ -1023,7 +1075,7 @@ namespace TMVA
             }
 
             // ------------- fetch output ------------------
-            if (TMVA::NN::isFlagSet (ModeOutputValues::DIRECT, layerData.back ().outputMode ()))
+            if (TMVA::DNN::isFlagSet (ModeOutputValues::DIRECT, layerData.back ().outputMode ()))
             {
                 std::vector<double> output;
                 output.assign (layerData.back ().valuesBegin (), layerData.back ().valuesEnd ());
@@ -1252,12 +1304,12 @@ namespace TMVA
                 for (LayerData& lastLayerData : layerPatternData.back ())
                 {
                     ModeOutputValues eModeOutput = lastLayerData.outputMode ();
-                    if (TMVA::NN::isFlagSet (ModeOutputValues::DIRECT, eModeOutput))
+                    if (TMVA::DNN::isFlagSet (ModeOutputValues::DIRECT, eModeOutput))
                     {
                         outputContainer.insert (outputContainer.end (), lastLayerData.valuesBegin (), lastLayerData.valuesEnd ());
                     }
-                    else if (TMVA::NN::isFlagSet (ModeOutputValues::SIGMOID, eModeOutput) ||
-                             TMVA::NN::isFlagSet (ModeOutputValues::SOFTMAX, eModeOutput))
+                    else if (TMVA::DNN::isFlagSet (ModeOutputValues::SIGMOID, eModeOutput) ||
+                             TMVA::DNN::isFlagSet (ModeOutputValues::SOFTMAX, eModeOutput))
                     {
                         const auto& probs = lastLayerData.probabilities ();
                         outputContainer.insert (outputContainer.end (), probs.begin (), probs.end ());
@@ -1293,7 +1345,7 @@ namespace TMVA
                                               _pattern.weight (), settings.factorWeightDecay (),
                                               settings.regularization ());
                 sumWeights += fabs (_pattern.weight ());
-                sumError += error * _pattern.weight ();
+                sumError += error;
             }
             
             if (doTraining) // training
@@ -1366,7 +1418,7 @@ namespace TMVA
                     double stdDev = sqrt (2.0/nIn);
                     for (size_t iWeight = 0, iWeightEnd = layer.numWeights (numInput); iWeight < iWeightEnd; ++iWeight)
                     {
-                        (*itWeight) = NN::gaussDouble (0.0, stdDev); // factor 2.0 for ReLU
+                        (*itWeight) = DNN::gaussDouble (0.0, stdDev); // factor 2.0 for ReLU
                         ++itWeight;
                     }
                     numInput = layer.numNodes ();
@@ -1392,7 +1444,7 @@ namespace TMVA
                     for (size_t iWeight = 0, iWeightEnd = layer.numWeights (numInput); iWeight < iWeightEnd; ++iWeight)
                     {
                     
-                        (*itWeight) = NN::uniformDouble (minVal, maxVal); // factor 2.0 for ReLU
+                        (*itWeight) = DNN::uniformDouble (minVal, maxVal); // factor 2.0 for ReLU
                         ++itWeight;
                     }
                     numInput = layer.numNodes ();
@@ -1415,7 +1467,7 @@ namespace TMVA
 //                double nIn = numInput;
                     for (size_t iWeight = 0, iWeightEnd = layer.numWeights (numInput); iWeight < iWeightEnd; ++iWeight)
                     {
-                        (*itWeight) = NN::gaussDouble (0.0, 0.1);
+                        (*itWeight) = DNN::gaussDouble (0.0, 0.1);
                         ++itWeight;
                     }
                     numInput = layer.numNodes ();
@@ -1438,7 +1490,7 @@ namespace TMVA
                     double nIn = numInput;
                     for (size_t iWeight = 0, iWeightEnd = layer.numWeights (numInput); iWeight < iWeightEnd; ++iWeight)
                     {
-                        (*itWeight) = NN::gaussDouble (0.0, sqrt (layer.numWeights (nIn))); // factor 2.0 for ReLU
+                        (*itWeight) = DNN::gaussDouble (0.0, sqrt (layer.numWeights (nIn))); // factor 2.0 for ReLU
                         ++itWeight;
                     }
                     numInput = layer.numNodes ();
@@ -1478,7 +1530,7 @@ namespace TMVA
             }
             case ModeErrorFunction::CROSSENTROPY:
             {
-                assert (!TMVA::NN::isFlagSet (ModeOutputValues::DIRECT, layerData.outputMode ()));
+                assert (!TMVA::DNN::isFlagSet (ModeOutputValues::DIRECT, layerData.outputMode ()));
                 std::vector<double> probabilities = layerData.probabilities ();
                 error = crossEntropy (begin (probabilities), end (probabilities), 
                                       begin (truth), end (truth), 
@@ -1489,7 +1541,7 @@ namespace TMVA
             }
             case ModeErrorFunction::CROSSENTROPY_MUTUALEXCLUSIVE:
             {
-                assert (!TMVA::NN::isFlagSet (ModeOutputValues::DIRECT, layerData.outputMode ()));
+                assert (!TMVA::DNN::isFlagSet (ModeOutputValues::DIRECT, layerData.outputMode ()));
                 std::vector<double> probabilities = layerData.probabilities ();
                 error = softMaxCrossEntropy (begin (probabilities), end (probabilities), 
                                              begin (truth), end (truth), 
@@ -1555,7 +1607,7 @@ namespace TMVA
                 size_t numWeights = _layer.numWeights (_inputSize);
 
                 // ------------------
-                NN::Net preNet;
+                DNN::Net preNet;
                 if (!originalDropFractions.empty ())
                 {
                     originalDropFractions.erase (originalDropFractions.begin ());
@@ -1566,13 +1618,13 @@ namespace TMVA
                 // define the preNet (pretraining-net) for this layer
                 // outputSize == inputSize, because this is an autoencoder;
                 preNet.setInputSize (_inputSize);
-                preNet.addLayer (NN::Layer (numNodes, _layer.activationFunctionType ()));
-                preNet.addLayer (NN::Layer (_inputSize, NN::EnumFunction::LINEAR, NN::ModeOutputValues::DIRECT)); 
-                preNet.setErrorFunction (NN::ModeErrorFunction::SUMOFSQUARES);
+                preNet.addLayer (DNN::Layer (numNodes, _layer.activationFunctionType ()));
+                preNet.addLayer (DNN::Layer (_inputSize, DNN::EnumFunction::LINEAR, DNN::ModeOutputValues::DIRECT)); 
+                preNet.setErrorFunction (DNN::ModeErrorFunction::SUMOFSQUARES);
                 preNet.setOutputSize (_inputSize); // outputSize is the inputSize (autoencoder)
 
                 // initialize weights
-                preNet.initializeWeights (NN::WeightInitializationStrategy::XAVIERUNIFORM, 
+                preNet.initializeWeights (DNN::WeightInitializationStrategy::XAVIERUNIFORM, 
                                           std::back_inserter (preWeights));
 
                 // overwrite already existing weights from the "general" weights
@@ -1638,7 +1690,7 @@ namespace TMVA
 
 
 
-    }; // namespace NN
+    }; // namespace DNN
 }; // namespace TMVA
 
 #endif
