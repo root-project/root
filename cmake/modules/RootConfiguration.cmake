@@ -640,12 +640,17 @@ if(WIN32)
   configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.bat ${thisrootbat} @ONLY)
 endif()
 
-install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/memprobe
-              ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.sh
+install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.sh
               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.csh
               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/setxrd.csh
               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/setxrd.sh
               ${thisrootbat}
+              PERMISSIONS OWNER_WRITE OWNER_READ
+                          GROUP_READ
+                          WORLD_READ
+              DESTINATION ${CMAKE_INSTALL_BINDIR})
+              
+install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/memprobe
               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/root-config
               ${CMAKE_SOURCE_DIR}/cmake/scripts/setenvwrap.csh
               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/roots
