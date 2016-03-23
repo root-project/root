@@ -54,7 +54,7 @@ public:
 
   /// Get a (const, for const HistImpl_t) reference to the bin-view of the
   /// histogram statistics (uncertainty etc).
-  auto GetStat() const { return fHist->GetStatistics().GetView(fIndex); }
+  auto GetStat() const { return fHist->GetStat().GetView(fIndex); }
   /// \}
 
   /// \{
