@@ -67,8 +67,8 @@ public:
   THistImplPrecisionAgnosticBase(std::string_view title): fTitle(title) {}
   virtual ~THistImplPrecisionAgnosticBase() {}
 
-  /// Number of dimensions of this histogram.
-  constexpr int GetNDim() const { return DIMENSIONS; }
+  /// Number of dimensions of the coordinates
+  static constexpr int GetNDim() { return DIMENSIONS; }
   /// Number of bins of this histogram, including all overflow and underflow
   /// bins. Simply the product of all axes' number of bins.
   virtual int GetNBins() const noexcept = 0;
@@ -122,16 +122,18 @@ private:
  through THist, THistImpl inherits from THistImplBase, exposing only dimension
  (`DIMENSION`) and bin type (`PRECISION`).
  */
-template<int DIMENSIONS, class PRECISION,
-  template <int DIMENSIONS_, class PRECISION_> class STATISTICS>
-class THistImplBase: public THistImplPrecisionAgnosticBase<DIMENSIONS> {
+template<class DATA>
+class THistImplBase: public THistImplPrecisionAgnosticBase<DATA::GetNDim()> {
 public:
-  /// Type of a coordinate: an array of `DIMENSIONS` doubles.
-  using Coord_t = typename THistImplPrecisionAgnosticBase<DIMENSIONS>::Coord_t;
+  /// Type of a coordinate: an array of `GetNDim()` doubles.
+  using Coord_t = typename THistImplPrecisionAgnosticBase<DATA::GetNDim()>::Coord_t;
+  static_assert(std::is_same<Coord_t, typename DATA::Coord_t>::value,
+                "THistImplPrecisionAgnosticBase and DATA disagree on Coord_t");
+
+  /// Type of the statistics (bin content, uncertainties etc).
+  using Stat_t = DATA;
   /// Type of the bin content (and thus weights).
-  using Weight_t = PRECISION;
-  /// Type of the statistics (bin content, untertainties etc).
-  using Stat_t = STATISTICS<DIMENSIONS, PRECISION>;
+  using Weight_t = typename DATA::Weight_t;
 
   /// Type of the Fill(x, w) function
   using FillFunc_t = void (THistImplBase::*)(const Coord_t& x, Weight_t w);
@@ -143,7 +145,7 @@ private:
 public:
   THistImplBase(size_t numBins): fStatistics(numBins) {}
   THistImplBase(std::string_view title, size_t numBins):
-    THistImplPrecisionAgnosticBase<DIMENSIONS>(title), fStatistics(numBins) {}
+    THistImplPrecisionAgnosticBase<DATA::GetNDim()>(title), fStatistics(numBins) {}
   THistImplBase(const THistImplBase&) = default;
   THistImplBase(THistImplBase&&) = default;
 
@@ -352,24 +354,22 @@ GetAxisView(const AXISCONFIG&...axes) noexcept {
 } // namespace Internal
 
 
-template <int DIMENSIONS, class PRECISION,
-  template <int DIMENSIONS_, class PRECISION_> class STATISTICS> class THist;
+template <class DATA> class THist;
 
 namespace Detail {
 
-template <int DIMENSIONS, class PRECISION,
-  template <int DIMENSIONS_, class PRECISION_> class STATISTICS, class... AXISCONFIG>
-class THistImpl final: public THistImplBase<DIMENSIONS, PRECISION, STATISTICS> {
-  static_assert(sizeof...(AXISCONFIG) == DIMENSIONS,
+template <class DATA, class... AXISCONFIG>
+class THistImpl final: public THistImplBase<DATA> {
+  static_assert(sizeof...(AXISCONFIG) == DATA::GetNDim(),
                 "Number of axes must equal histogram dimension");
-  friend class THist<DIMENSIONS, PRECISION, STATISTICS>;
+  friend class THist<DATA>;
 
 public:
-  using ImplBase_t = THistImplBase<DIMENSIONS, PRECISION, STATISTICS>;
+  using ImplBase_t = THistImplBase<DATA>;
   using Coord_t = typename ImplBase_t::Coord_t;
   using Weight_t = typename ImplBase_t::Weight_t;
   using typename ImplBase_t::FillFunc_t;
-  template <int NDIM = DIMENSIONS> using AxisIterRange_t
+  template <int NDIM = DATA::GetNDim()> using AxisIterRange_t
     = typename Hist::AxisIterRange_t<NDIM>;
 
 private:
@@ -418,7 +418,7 @@ public:
   /// e.g. for axes without over / underflow but coordinate out of range.
   int GetBinIndex(const Coord_t& x) const final {
     TAxisBase::EFindStatus status = TAxisBase::EFindStatus::kValid;
-    int ret = Internal::TGetBinIndex<DIMENSIONS - 1, THistImpl,
+    int ret = Internal::TGetBinIndex<DATA::GetNDim() - 1, THistImpl,
        decltype(fAxes), false>()(nullptr, fAxes, x, status);
     if (status != TAxisBase::EFindStatus::kValid)
       return -1;
@@ -432,7 +432,7 @@ public:
     TAxisBase::EFindStatus status = TAxisBase::EFindStatus::kCanGrow;
     int ret = - 1;
     while (status == TAxisBase::EFindStatus::kCanGrow) {
-      ret = Internal::TGetBinIndex<DIMENSIONS - 1, THistImpl, decltype(fAxes), true>()
+      ret = Internal::TGetBinIndex<DATA::GetNDim() - 1, THistImpl, decltype(fAxes), true>()
          (this, fAxes, x, status);
     }
     return ret;
@@ -441,7 +441,7 @@ public:
   /// Get the center coordinate of the bin.
   Coord_t GetBinCenter(int binidx) const final {
     using FillBinCoord_t
-      = Internal::FillBinCoord_t<DIMENSIONS - 1, Coord_t, decltype(fAxes)>;
+      = Internal::FillBinCoord_t<DATA::GetNDim() - 1, Coord_t, decltype(fAxes)>;
     Coord_t coord;
     FillBinCoord_t()(coord, fAxes, Internal::EBinCoord::kBinCenter, binidx);
     return coord;
@@ -449,7 +449,7 @@ public:
 
   /// Get the coordinate of the low limit of the bin.
   Coord_t GetBinFrom(int binidx) const final {
-    using FillBinCoord_t = Internal::FillBinCoord_t<DIMENSIONS - 1, Coord_t, decltype(fAxes)>;
+    using FillBinCoord_t = Internal::FillBinCoord_t<DATA::GetNDim() - 1, Coord_t, decltype(fAxes)>;
     Coord_t coord;
     FillBinCoord_t()(coord, fAxes, Internal::EBinCoord::kBinFrom, binidx);
     return coord;
@@ -457,7 +457,7 @@ public:
 
   /// Get the coordinate of the high limit of the bin.
   Coord_t GetBinTo(int binidx) const final {
-    using FillBinCoord_t =  Internal::FillBinCoord_t<DIMENSIONS - 1, Coord_t, decltype(fAxes)>;
+    using FillBinCoord_t =  Internal::FillBinCoord_t<DATA::GetNDim() - 1, Coord_t, decltype(fAxes)>;
     Coord_t coord;
     FillBinCoord_t()(coord, fAxes, Internal::EBinCoord::kBinTo, binidx);
     return coord;
@@ -522,10 +522,10 @@ public:
   ///
   ///\param[in] withOverUnder - Whether the begin and end should contain over-
   /// or underflow. Ignored if the axis does not support over- / underflow.
-  AxisIterRange_t<DIMENSIONS>
-     GetRange(const std::array<Hist::EOverflow, DIMENSIONS>& withOverUnder) const final {
-    std::array<std::array<TAxisBase::const_iterator, DIMENSIONS>, 2> ret;
-    Internal::FillIterRange_t<DIMENSIONS - 1, decltype(fAxes)>()(ret, fAxes, withOverUnder);
+  AxisIterRange_t<DATA::GetNDim()>
+     GetRange(const std::array<Hist::EOverflow, DATA::GetNDim()>& withOverUnder) const final {
+    std::array<std::array<TAxisBase::const_iterator, DATA::GetNDim()>, 2> ret;
+    Internal::FillIterRange_t<DATA::GetNDim() - 1, decltype(fAxes)>()(ret, fAxes, withOverUnder);
     return ret;
   }
 
@@ -550,17 +550,15 @@ public:
 };
 
 
-template <int DIMENSIONS, class PRECISION,
-  template <int DIMENSIONS_, class PRECISION_> class STATISTICS, class... AXISCONFIG>
-THistImpl<DIMENSIONS, PRECISION, STATISTICS, AXISCONFIG...>::
+template <class DATA, class... AXISCONFIG>
+THistImpl<DATA, AXISCONFIG...>::
 THistImpl(AXISCONFIG... axisArgs):
   ImplBase_t(Internal::GetNBinsFromAxes(axisArgs...)),
   fAxes{axisArgs...}
 {}
 
-template <int DIMENSIONS, class PRECISION,
-  template <int DIMENSIONS_, class PRECISION_> class STATISTICS, class... AXISCONFIG>
-THistImpl<DIMENSIONS, PRECISION, STATISTICS, AXISCONFIG...>::
+template <class DATA, class... AXISCONFIG>
+THistImpl<DATA, AXISCONFIG...>::
 THistImpl(std::string_view title, AXISCONFIG... axisArgs):
   ImplBase_t(title, Internal::GetNBinsFromAxes(axisArgs...)),
   fAxes{axisArgs...}
@@ -569,10 +567,10 @@ THistImpl(std::string_view title, AXISCONFIG... axisArgs):
 #if 0
 // In principle we can also have a runtime version of THistImpl, that does not
 // contain a tuple of concrete axis types but a vector of `TAxisConfig`.
-template <int DIMENSIONS, class PRECISION>
-class THistImplRuntime: public THistImplBase<DIMENSIONS, PRECISION> {
+template <class DATA>
+class THistImplRuntime: public THistImplBase<DATA> {
 public:
-  THistImplRuntime(std::array<TAxisConfig, DIMENSIONS>&& axisCfg);
+  THistImplRuntime(std::array<TAxisConfig, DATA::GetNDim()>&& axisCfg);
 };
 #endif
 

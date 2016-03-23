@@ -26,8 +26,7 @@
 namespace ROOT {
 namespace Experimental {
 
-template<int DIMENSIONS, class PRECISION,
-  template <int DIMENSIONS_, class PRECISION_> class STATISTICS> class THist;
+template<class DATA> class THist;
 
 namespace Internal {
 
@@ -54,22 +53,21 @@ extern template class THistPainterBase<1>;
 extern template class THistPainterBase<2>;
 extern template class THistPainterBase<3>;
 
-template <int DIMENSION, class PRECISION,
-  template <int DIMENSIONS_, class PRECISION_> class STATISTICS>
+template <class DATA>
 class THistDrawable final: public TDrawable {
 private:
-  std::weak_ptr<THist<DIMENSION, PRECISION, STATISTICS>> fHist;
-  THistDrawOptions<DIMENSION> fOpts;
+  std::weak_ptr<THist<DATA>> fHist;
+  THistDrawOptions<DATA::GetNDim()> fOpts;
 
 public:
-  THistDrawable(std::weak_ptr<THist<DIMENSION, PRECISION, STATISTICS>> hist,
-                THistDrawOptions<DIMENSION> opts): fHist(hist), fOpts(opts) {}
+  THistDrawable(std::weak_ptr<THist<DATA>> hist,
+                THistDrawOptions<DATA::GetNDim()> opts): fHist(hist), fOpts(opts) {}
 
   ~THistDrawable() = default;
 
   /// Paint the histogram
   void Paint() final {
-    THistPainterBase<DIMENSION>::GetPainter()->Paint(*this, fOpts);
+    THistPainterBase<DATA::GetNDim()>::GetPainter()->Paint(*this, fOpts);
   }
 };
 

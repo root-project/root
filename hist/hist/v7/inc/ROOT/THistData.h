@@ -1,4 +1,4 @@
-/// \file ROOT/THistStats.h
+/// \file ROOT/THistData.h
 /// \ingroup Hist ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-06-14
@@ -12,8 +12,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_THistStats_h
-#define ROOT7_THistStats_h
+#ifndef ROOT7_THistData_h
+#define ROOT7_THistData_h
 
 #include <cmath>
 #include <vector>
@@ -24,17 +24,17 @@ namespace Experimental {
 
 /// std::vector has more template arguments; for the default storage we don't
 /// care about them, so use-decl them away:
-template<class PRECISION> using THistStatDefaultStorage
+template<class PRECISION> using THistDataDefaultStorage
   = std::vector<PRECISION>;
 
 /**
- \class THistStatContent
+ \class THistDataContent
  Basic histogram statistics, keeping track of the bin content and the total
  number of calls to Fill().
  */
 template<int DIMENSIONS, class PRECISION,
-  template <class PRECISION_> class STORAGE = THistStatDefaultStorage>
-class THistStatContent {
+  template <class PRECISION_> class STORAGE = THistDataDefaultStorage>
+class THistDataContent {
 public:
   /// The type of a (possibly multi-dimensional) coordinate.
   using Coord_t = std::array<double, DIMENSIONS>;
@@ -45,7 +45,7 @@ public:
 
   /**
    \class TBinStat
-   Mutable view on a THistStatContent for a given bin.
+   Mutable view on a THistDataContent for a given bin.
    Template argument can be `Weight_t` for a const view or `Weight_t&` for a
    modifying view.
   */
@@ -67,13 +67,16 @@ private:
   Content_t fBinContent;
 
 public:
-  THistStatContent(size_t size): fBinContent(size) {}
+  THistDataContent(size_t size): fBinContent(size) {}
 
   /// Add weight to the bin content at binidx.
   void Fill(const Coord_t& /*x*/, int binidx, Weight_t weight = 1.) {
     fBinContent[binidx] += weight;
     ++fEntries;
   }
+
+  /// Number of dimensions of the coordinates
+  static constexpr int GetNDim() noexcept { return DIMENSIONS; }
 
   /// Get the number of entries filled into the histogram - i.e. the number of
   /// calls to Fill().
@@ -115,23 +118,23 @@ public:
 
 
 /**
- \class THistStatUncertainty
+ \class THistDataUncertainty
  Histogram statistics to keep track of the bin content and its Poisson
  uncertainty per bin, and the total number of calls to Fill().
  */
 template<int DIMENSIONS, class PRECISION,
-  template <class PRECISION_> class STORAGE = THistStatDefaultStorage>
-class THistStatUncertainty: public THistStatContent<DIMENSIONS, PRECISION, STORAGE> {
+  template <class PRECISION_> class STORAGE = THistDataDefaultStorage>
+class THistDataUncertainty: public THistDataContent<DIMENSIONS, PRECISION, STORAGE> {
 
 public:
-  using Base_t = THistStatContent<DIMENSIONS, PRECISION, STORAGE>;
+  using Base_t = THistDataContent<DIMENSIONS, PRECISION, STORAGE>;
   using typename Base_t::Coord_t;
   using typename Base_t::Weight_t;
   using typename Base_t::Content_t;
 
   /**
    \class TBinStat
-   View on a THistStatUncertainty for a given bin.
+   View on a THistDataUncertainty for a given bin.
    Template argument can be `Weight_t` for a const view or `Weight_t&` for a
    modifying view.
   */
@@ -155,7 +158,7 @@ private:
   Content_t fSumWeightsSquared; ///< Sum of squared weights
 
 public:
-  THistStatUncertainty(size_t size): Base_t(size), fSumWeightsSquared(size) {}
+  THistDataUncertainty(size_t size): Base_t(size), fSumWeightsSquared(size) {}
 
   /// Add weight to the bin at binidx; the coordinate was x.
   void Fill(const Coord_t &x, int binidx, Weight_t weight = 1.) {
@@ -185,11 +188,11 @@ public:
 };
 
 template<int DIMENSIONS, class PRECISION,
-  template <class PRECISION_> class STORAGE = THistStatDefaultStorage>
-class THistStatMomentUncert:
-  public THistStatUncertainty<DIMENSIONS, PRECISION, STORAGE> {
+  template <class PRECISION_> class STORAGE = THistDataDefaultStorage>
+class THistDataMomentUncert:
+  public THistDataUncertainty<DIMENSIONS, PRECISION, STORAGE> {
 public:
-  using Base_t = THistStatUncertainty<DIMENSIONS, PRECISION, STORAGE>;
+  using Base_t = THistDataUncertainty<DIMENSIONS, PRECISION, STORAGE>;
   using typename Base_t::Coord_t;
   using typename Base_t::Weight_t;
 
@@ -207,15 +210,15 @@ public:
 };
 
 template<int DIMENSIONS, class PRECISION,
-  template <class PRECISION_> class STORAGE = THistStatDefaultStorage>
-class THistStatRuntime:
-  public THistStatContent<DIMENSIONS, PRECISION, STORAGE> {
+  template <class PRECISION_> class STORAGE = THistDataDefaultStorage>
+class THistDataRuntime:
+  public THistDataContent<DIMENSIONS, PRECISION, STORAGE> {
 public:
-  using Base_t = THistStatContent<DIMENSIONS, PRECISION, STORAGE>;
+  using Base_t = THistDataContent<DIMENSIONS, PRECISION, STORAGE>;
   using typename Base_t::Coord_t;
   using typename Base_t::Weight_t;
 
-  THistStatRuntime(bool uncertainty, std::vector<bool> &moments);
+  THistDataRuntime(bool uncertainty, std::vector<bool> &moments);
 
   virtual void DoFill(const Coord_t &x, Weight_t weightN) = 0;
   void Fill(const Coord_t &x, Weight_t weight = 1.) {
