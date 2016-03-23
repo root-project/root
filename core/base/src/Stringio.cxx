@@ -195,7 +195,8 @@ ostream& operator<<(ostream& os, const TString& s)
 Bool_t TString::Gets(FILE *fp, Bool_t chop)
 {
    // Read one line from the stream, including the \n, or until EOF.
-   // Remove the trailing \n if chop is true. Returns kTRUE if data was read.
+   // Remove the trailing [\r]\n if chop is true. Returns kTRUE if data
+   // was read.
 
    char buf[256];
    Bool_t r = kFALSE;
@@ -208,7 +209,11 @@ Bool_t TString::Gets(FILE *fp, Bool_t chop)
       r = kTRUE;
    } while (!ferror(fp) && !feof(fp) && strchr(buf,'\n') == 0);
 
-   if (chop && EndsWith("\n")) Chop();
+   if (chop && EndsWith("\n")) {
+      Chop();
+      if (EndsWith("\r"))
+         Chop();
+   }
 
    return r;
 }
