@@ -3347,7 +3347,7 @@ void TF1::Update()
    if (fNormalized) {
        // need to compute the integral of the not-normalized function
        fNormalized = false;
-       fNormIntegral = Integral(fXmin,fXmax);
+       fNormIntegral = Integral(fXmin,fXmax, ROOT::Math::IntegratorOneDimOptions::DefaultRelTolerance());
        fNormalized = true;
    }
    else 
