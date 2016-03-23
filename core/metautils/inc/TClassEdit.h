@@ -175,6 +175,15 @@ namespace TClassEdit {
    std::string ShortType (const char *typeDesc, int mode);
    std::string InsertStd(const char *tname);
    const char* GetUnqualifiedName(const char*name);
+   inline bool IsUniquePtr(std::string_view name) {return 0 == name.find("unique_ptr<");};
+   inline std::string GetUniquePtrType(std::string_view name)
+   {
+      // Find the first template parameter
+      std::vector<std::string> v;
+      int i;
+      GetSplit(name.data(), v, i);
+      return v[1];
+   };
    inline char* DemangleName(const char* mangled_name, int& errorCode)
    {
    // Demangle in a portable way the name.

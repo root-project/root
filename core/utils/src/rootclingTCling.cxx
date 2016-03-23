@@ -21,6 +21,9 @@
 #include "TProtoClass.h"
 #include "TROOT.h"
 #include "TStreamerInfo.h"
+#include "TClassEdit.h"
+#include "TMetaUtils.h"
+#include <memory>
 #include <iostream>
 #include <unordered_set>
 
@@ -80,6 +83,78 @@ void AddAncestorPCMROOTFile(const char *pcmName)
    gAncestorPCMNames.emplace_back(pcmName);
 }
 
+static bool IsUniquePtrOffsetZero()
+{
+   auto regularPtr = (long *)0x42;
+   std::unique_ptr<long> uniquePtr(regularPtr);
+   auto regularPtr_2 = reinterpret_cast<long **>(&uniquePtr);
+   static bool isZero = uniquePtr.get() == *regularPtr_2;
+   uniquePtr.release();
+   if (!isZero) {
+      ROOT::TMetaUtils::Error("CloseStreamerInfoROOTFile",
+                              "UniquePtr points to %p, reinterpreting it gives %p and should have %p\n", uniquePtr.get(), *(regularPtr_2), regularPtr);
+   }
+   return isZero;
+}
+
+static bool IsUnsupportedUniquePointer(const char *normName, TDataMember *dm)
+{
+   using namespace ROOT::TMetaUtils;
+   auto dmTypeName = dm->GetTypeName();
+   if (TClassEdit::IsUniquePtr(dmTypeName)) {
+
+      if (!IsUniquePtrOffsetZero()) return true;
+
+      auto clm = TClass::GetClass(dmTypeName);
+      if (!clm) {
+         Error("CloseStreamerInfoROOTFile", "Class %s is not available.\n", dmTypeName);
+         return true;
+      }
+
+      auto upDms = clm->GetListOfDataMembers();
+      if (!upDms) {
+         Error("CloseStreamerInfoROOTFile", "Cannot determine unique pointer %s data members.\n", dmTypeName);
+         return true;
+      }
+
+      if (0 == upDms->GetSize()) {
+         Error("CloseStreamerInfoROOTFile", "Unique pointer %s has zero data members.\n", dmTypeName);
+         return true;
+      }
+
+      // We check if the unique_ptr has a default deleter
+      std::vector<std::string> out;
+      int i;
+      TClassEdit::GetSplit(dmTypeName, out, i);
+      std::string_view deleterTypeName(out[2].c_str());
+      if (0 != deleterTypeName.find("default_delete<")) {
+         Error("CloseStreamerInfoROOTFile", "I/O is supported only for unique_ptrs with a default deleter. %s::%s  appears to have a custom one, %s.\n", normName, dm->GetName(), deleterTypeName);
+         return true;
+      }
+   }
+   return false;
+}
+
+static bool IsSupportedClass(TClass *cl)
+{
+   // Check if the Class is of an unsupported type
+   using namespace ROOT::TMetaUtils;
+
+   // Check if this is a collection of unique_ptrs
+   if (ROOT::ESTLType::kNotSTL != cl->GetCollectionType()) {
+      std::vector<std::string> out;
+      int i;
+      TClassEdit::GetSplit(cl->GetName(), out, i);
+      std::string_view containedObjectTypeName(out[1].c_str());
+      if (TClassEdit::IsUniquePtr(containedObjectTypeName)) {
+         Error("CloseStreamerInfoROOTFile", "Collections of unique pointers such as the selected %s are not yet supported.\n", cl->GetName());
+         return false;
+      }
+   }
+   return true;
+
+}
+
 extern "C"
 bool CloseStreamerInfoROOTFile(bool writeEmptyRootPCM)
 {
@@ -98,14 +173,43 @@ bool CloseStreamerInfoROOTFile(bool writeEmptyRootPCM)
       return true;
    };
 
+   using namespace ROOT::TMetaUtils;
+
    TObjArray protoClasses(gClassesToStore.size());
    for (const auto & normName : gClassesToStore) {
       TClass *cl = TClass::GetClass(normName.c_str(), kTRUE /*load*/);
       if (!cl) {
-         std::cerr << "ERROR in CloseStreamerInfoROOTFile(): cannot find class "
-                   << normName << '\n';
+         Error("CloseStreamerInfoROOTFile", "Cannot find class %s.\n", normName.c_str());
          return false;
       }
+
+      if (!IsSupportedClass(cl)) return false;
+
+      // Check if a datamember is a unique_ptr and if yes that it has a default
+      // deleter.
+      auto dms = cl->GetListOfDataMembers();
+      if (!dms) {
+         Error("CloseStreamerInfoROOTFile", "Cannot find data members for %s.\n", normName.c_str());
+         return false;
+      }
+
+      for (auto dmObj : *dms) {
+         auto dm = (TDataMember *) dmObj;
+         if (!dm->IsPersistent()) continue;
+         if (IsUnsupportedUniquePointer(normName.c_str(), dm)) return false;
+         // We need this for the collections of T automatically selected by rootcling
+         if (!dm->GetDataType() && dm->IsSTLContainer()) {
+            auto dmTypeName = dm->GetTypeName();
+            auto clm = TClass::GetClass(dmTypeName);
+            if (!clm) {
+               Error("CloseStreamerInfoROOTFile", "Cannot find class %s.\n", dmTypeName);
+               return false;
+            }
+            if (!IsSupportedClass(clm)) return false;
+         }
+      }
+
+
       // Never store a proto class for a class which rootcling already has
       // an 'official' TClass (i.e. the dictionary is in libCore or libRIO).
       if (cl->IsLoaded()) continue;
@@ -127,15 +231,12 @@ bool CloseStreamerInfoROOTFile(bool writeEmptyRootPCM)
       protoClasses.AddLast(new TProtoClass(cl));
    }
 
-
    TObjArray typedefs(gTypedefsToStore.size());
-
 
    for (const auto & dtname : gTypedefsToStore) {
       TDataType *dt = (TDataType *)gROOT->GetListOfTypes()->FindObject(dtname.c_str());
       if (!dt) {
-         std::cerr << "ERROR in CloseStreamerInfoROOTFile(): cannot find typedef "
-                   << dtname << '\n';
+         Error("CloseStreamerInfoROOTFile", "Cannot find typedef %s.\n", dtname.c_str());
          return false;
       }
       if (dt->GetType() == -1) {
@@ -154,14 +255,12 @@ bool CloseStreamerInfoROOTFile(bool writeEmptyRootPCM)
          const std::string nsName = enumname.substr(0, lastSepPos - 1);
          TClass *tclassInstance = TClass::GetClass(nsName.c_str());
          if (!tclassInstance) {
-            std::cerr << "ERROR in CloseStreamerInfoROOTFile(): cannot find TClass instance for namespace "
-                      << nsName << '\n';
+            Error("CloseStreamerInfoROOTFile", "Cannot find TClass instance for namespace %s.\n", nsName.c_str());
             return false;
          }
          auto enumListPtr = tclassInstance->GetListOfEnums();
          if (!enumListPtr) {
-            std::cerr << "ERROR in CloseStreamerInfoROOTFile(): TClass instance for namespace "
-                      << nsName << " does not have any enum associated. This is an inconsistency." << '\n';
+            Error("CloseStreamerInfoROOTFile", "TClass instance for namespace %s does not have any enum associated. This is an inconsistency.\n", nsName.c_str());
             return false;
          }
          const std::string unqualifiedEnumName = enumname.substr(lastSepPos + 1);
@@ -172,8 +271,7 @@ bool CloseStreamerInfoROOTFile(bool writeEmptyRootPCM)
          if (en) en->SetTitle("");
       }
       if (!en) {
-         std::cerr << "ERROR in CloseStreamerInfoROOTFile(): cannot find enum "
-                   << enumname << '\n';
+         Error("CloseStreamerInfoROOTFile", "Cannot find enum %s.\n", enumname.c_str());
          return false;
       }
       en->Property(); // Force initialization of the bits and property fields.
@@ -182,7 +280,7 @@ bool CloseStreamerInfoROOTFile(bool writeEmptyRootPCM)
 
    if (dictFile.IsZombie())
       return false;
-   // Instead of plugins:
+// Instead of plugins:
    protoClasses.Write("__ProtoClasses", TObject::kSingleKey);
    protoClasses.Delete();
    typedefs.Write("__Typedefs", TObject::kSingleKey);
