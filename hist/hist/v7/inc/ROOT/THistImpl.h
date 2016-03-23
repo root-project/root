@@ -163,6 +163,14 @@ public:
   /// the bin reference.
   virtual void Apply(std::function<void(THistBinRef<const THistImplBase>)>) const = 0;
 
+  /// Apply a function (lambda) to all bins of the histogram. The function takes
+  /// the bin coordinate and content.
+  virtual void ApplyXC(std::function<void(const Coord_t&, Weight_t)>) const = 0;
+
+  /// Apply a function (lambda) to all bins of the histogram. The function takes
+  /// the bin coordinate, content and uncertainty ("error") of the content.
+  virtual void ApplyXCE(std::function<void(const Coord_t&, Weight_t, Weight_t)>) const = 0;
+
   /// Get the bin content (sum of weights) for the bin at coordinate x.
   virtual Weight_t GetBinContent(const Coord_t& x) const = 0;
 
@@ -382,6 +390,20 @@ public:
       op(binref);
   }
 
+  /// Apply a function (lambda) to all bins of the histogram. The function takes
+  /// the bin coordinate and content.
+  void ApplyXC(std::function<void(const Coord_t&, Weight_t)> op) const final {
+    for (auto&& binref: *this)
+      op(binref.GetBinCenter(), binref.GetContent());
+  }
+
+  /// Apply a function (lambda) to all bins of the histogram. The function takes
+  /// the bin coordinate, content and uncertainty ("error") of the content.
+  virtual void ApplyXCE(std::function<void(const Coord_t&, Weight_t, Weight_t)> op) const final {
+    for (auto&& binref: *this)
+      op(binref.GetBinCenter(), binref.GetContent(), binref.GetUncertainty());
+  }
+
 
   /// Get the axes of this histogram.
   const std::tuple<AXISCONFIG...>& GetAxes() const { return fAxes; }
@@ -471,8 +493,6 @@ public:
   /// Add a single weight `w` to the bin at coordinate `x`.
   void Fill(const Coord_t& x, Weight_t w = 1.) {
     int bin = GetBinIndexAndGrow(x);
-    if (bin >= 0)
-      ImplBase_t::AddBinContent(bin, w);
     this->GetStat().Fill(x, bin, w);
   }
 

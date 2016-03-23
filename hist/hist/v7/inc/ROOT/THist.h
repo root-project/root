@@ -380,12 +380,14 @@ void Add(THist<DIMENSION, PRECISIONA, STATISTICSA> &to,
          THist<DIMENSION, PRECISIONB, STATISTICSB> &from) {
   auto toImpl = to.GetImpl();
   auto fillFuncTo = toImpl->GetFillFunc();
-  using BinRef_t = Detail::THistBinRef<const Detail::THistImplBase<DIMENSION, PRECISIONB, STATISTICSB>>;
-  auto add = [fillFuncTo, toImpl](BinRef_t fromBin) -> void {
-    (toImpl->*fillFuncTo)(fromBin.GetBinCenter(), fromBin.GetContent());
+  using FromCoord_t = typename THist<DIMENSION, PRECISIONB, STATISTICSB>::Coord_t;
+  using FromWeight_t = typename THist<DIMENSION, PRECISIONB, STATISTICSB>::Weight_t;
+  auto add = [fillFuncTo, toImpl](const FromCoord_t& x, FromWeight_t c) -> void {
+    (toImpl->*fillFuncTo)(x, c);
+    // TODO: something nice with the uncertainty - depending on whether `to` cares
     return;
   };
-  from.GetImpl()->Apply(add);
+  from.GetImpl()->ApplyXC(add);
 };
 
 
