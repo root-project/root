@@ -91,7 +91,7 @@ public:
 
   /// The bin's uncertainty. size() of the vector is a multiple of 2:
   /// several kinds of uncertainty, same number of entries for lower and upper.
-  virtual double GetBinUncertainty(int binidx) const = 0;
+  virtual double GetBinUncertaintyAsDouble(int binidx) const = 0;
 
   /// The bin content, cast to double.
   virtual double GetBinContentAsDouble(int binidx) const = 0;
@@ -158,6 +158,16 @@ public:
 
   /// Retrieve the pointer to the overridden Fill(x, w) function.
   virtual FillFunc_t GetFillFunc() const = 0;
+
+  /// Apply a function (lambda) to all bins of the histogram. The function takes
+  /// the bin reference.
+  virtual void Apply(std::function<void(THistBinRef<const THistImplBase>)>) const = 0;
+
+  /// Get the bin content (sum of weights) for the bin at coordinate x.
+  virtual Weight_t GetBinContent(const Coord_t& x) const = 0;
+
+  /// Get the bin uncertainty for the bin at coordinate x.
+  virtual Weight_t GetBinUncertainty(const Coord_t& x) const = 0;
 
   /// Get the number of bins in this histogram, including possible under- and
   /// overflow bins.
@@ -365,6 +375,14 @@ public:
   /// the virtual function call for high-frequency fills.
   FillFunc_t GetFillFunc() const final { return (FillFunc_t)&THistImpl::Fill; }
 
+  /// Apply a function (lambda) to all bins of the histogram. The function takes
+  /// the bin reference.
+  void Apply(std::function<void(THistBinRef<const ImplBase_t>)> op) const final {
+    for (THistBinRef<const ImplBase_t>&& binref: *this)
+      op(binref);
+  }
+
+
   /// Get the axes of this histogram.
   const std::tuple<AXISCONFIG...>& GetAxes() const { return fAxes; }
 
@@ -450,11 +468,6 @@ public:
     }
   }
 
-  /// Return the uncertainties for the given bin.
-  double GetBinUncertainty(int binidx) const final {
-    return this->GetStat().GetBinUncertainty(binidx);
-  }
-
   /// Add a single weight `w` to the bin at coordinate `x`.
   void Fill(const Coord_t& x, Weight_t w = 1.) {
     int bin = GetBinIndexAndGrow(x);
@@ -464,10 +477,23 @@ public:
   }
 
   /// Get the content of the bin at position `x`.
-  PRECISION GetBinContent(const Coord_t& x) const {
+  Weight_t GetBinContent(const Coord_t& x) const final {
     int bin = GetBinIndex(x);
     if (bin >= 0)
-      return GetBinContent(bin);
+      return ImplBase_t::GetBinContent(bin);
+    return 0.;
+  }
+
+  /// Return the uncertainties for the given bin.
+  double GetBinUncertaintyAsDouble(int binidx) const final {
+    return this->GetStat().GetBinUncertainty(binidx);
+  }
+
+  /// Get the bin uncertainty for the bin at coordinate x.
+  Weight_t GetBinUncertainty(const Coord_t& x) const final {
+    int bin = GetBinIndex(x);
+    if (bin >= 0)
+      return this->GetStat().GetBinUncertainty(bin);
     return 0.;
   }
 
@@ -494,8 +520,8 @@ public:
 
   /// \{
   /// \name Iterator interface
-  using const_iterator = THistBinIter<const THistImpl>;
-  using iterator = THistBinIter<THistImpl>;
+  using const_iterator = THistBinIter<const ImplBase_t >;
+  using iterator = THistBinIter<ImplBase_t >;
   iterator begin() noexcept { return iterator(*this); }
   const_iterator begin() const noexcept { return const_iterator(*this); }
   iterator end() noexcept { return iterator(*this, this->GetNBins()); }

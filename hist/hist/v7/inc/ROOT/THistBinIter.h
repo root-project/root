@@ -38,35 +38,35 @@ public:
 
 private:
   size_t fIndex = 0; ///< Bin index
-  HistImpl_t& fHist; ///< The bin's histogram.
+  HistImpl_t* fHist; ///< The bin's histogram.
 
 public:
   /// Construct from a histogram.
-  THistBinRef(HistImpl_t& hist, size_t idx): fIndex(idx), fHist(hist) {}
+  THistBinRef(HistImpl_t& hist, size_t idx): fIndex(idx), fHist(&hist) {}
 
   /// \{
   /// \name Statistics operations
   /// Get the bin content (or reference to it, for non-const HistImpl_t).
-  auto Get() { return fHist.GetBinContent(fIndex); }
+  auto GetContent() { return fHist->GetBinContent(fIndex); }
 
   /// Get the bin uncertainty.
   auto GetUncertainty() const { return GetStat().GetUncertainty(); }
 
   /// Get a (const, for const HistImpl_t) reference to the bin-view of the
   /// histogram statistics (uncertainty etc).
-  auto GetStat() const { return fHist.GetStatistics().GetView(fIndex); }
+  auto GetStat() const { return fHist->GetStatistics().GetView(fIndex); }
   /// \}
 
   /// \{
   /// \name Bin operations
   /// Get the bin center as an array over all dimensions.
-  Coord_t GetBinCenter() const { return fHist.GetBinCenter(fIndex); }
+  Coord_t GetBinCenter() const { return fHist->GetBinCenter(fIndex); }
 
   /// Get the bin lower edge as an array over all dimensions.
-  Coord_t  GetBinFrom() const { return fHist.GetBinFrom(fIndex); }
+  Coord_t  GetBinFrom() const { return fHist->GetBinFrom(fIndex); }
 
   /// Get the bin upper edge as an array over all dimensions.
-  Coord_t  GetBinTo() const { return fHist.GetBinTo(fIndex); }
+  Coord_t  GetBinTo() const { return fHist->GetBinTo(fIndex); }
   /// \}
 };
 

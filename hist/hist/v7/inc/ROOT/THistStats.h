@@ -168,7 +168,7 @@ private:
   Content_t fSumWeightsSquared; ///< Sum of squared weights
 
 public:
-  THistStatUncertainty(size_t size): Base_t(size) {}
+  THistStatUncertainty(size_t size): Base_t(size), fSumWeightsSquared(size) {}
 
   /// Add weight to the bin at binidx; the coordinate was x.
   void Fill(const Coord_t &x, int binidx, Weight_t weight = 1.) {

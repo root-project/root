@@ -314,7 +314,8 @@ template<int DIMENSIONS, class PRECISION,
 /// determined.
 struct HistImplGen_t<DIMENSIONS, DIMENSIONS, PRECISION, STATISTICS,
   PROCESSEDAXISCONFIG...> {
-  std::unique_ptr <Detail::THistImplBase<DIMENSIONS, PRECISION, STATISTICS>>
+  using HistImplBase_t = ROOT::Experimental::Detail::THistImplBase<DIMENSIONS, PRECISION, STATISTICS>;
+  std::unique_ptr<HistImplBase_t>
   operator()(std::string_view title, const std::array<TAxisConfig, DIMENSIONS> &,
              PROCESSEDAXISCONFIG... axisArgs) {
     using HistImplt_t
@@ -370,18 +371,25 @@ typedef THist<3, int64_t> TH3LL;
 ///\}
 
 
-template<int DIMENSION, class PRECISIONA, class PRECISIONB>
-void Add(THist<DIMENSION, PRECISIONA> &to, THist<DIMENSION, PRECISIONB> &from) {
-  using ImplTo_t = typename THist<DIMENSION, PRECISIONA>::ImplBase_t;
-  using ImplFrom_t = typename THist<DIMENSION, PRECISIONB>::ImplBase_t;
-  ImplTo_t *implTo = to.GetImpl();
-  ImplFrom_t *implFrom = from.GetImpl();
-  // TODO: move into THistImpl; the loop iteration should not go through virt interfaces!
-  for (auto &&bin: from) {
-    to.Fill(implFrom->GetBinCenter(*bin), implFrom->GetBinContent(*bin));
-  }
+/// Add two histograms. This is the generic, inefficient version for now; it
+/// assumes no matching axes.
+template<int DIMENSION, class PRECISIONA, class PRECISIONB,
+  template <int DIMENSIONSA_, class PRECISIONA_> class STATISTICSA,
+  template <int DIMENSIONSB_, class PRECISIONB_> class STATISTICSB>
+void Add(THist<DIMENSION, PRECISIONA, STATISTICSA> &to,
+         THist<DIMENSION, PRECISIONB, STATISTICSB> &from) {
+  auto toImpl = to.GetImpl();
+  auto fillFuncTo = toImpl->GetFillFunc();
+  using BinRef_t = Detail::THistBinRef<const Detail::THistImplBase<DIMENSION, PRECISIONB, STATISTICSB>>;
+  auto add = [fillFuncTo, toImpl](BinRef_t fromBin) -> void {
+    (toImpl->*fillFuncTo)(fromBin.GetBinCenter(), fromBin.GetContent());
+    return;
+  };
+  from.GetImpl()->Apply(add);
 };
 
+
+/// Interface to graphics taking a unique_ptr<THist>.
 template<int DIMENSION, class PRECISION,
   template <int DIMENSIONS_, class PRECISION_> class STATISTICS>
 std::unique_ptr <Internal::TDrawable>
@@ -391,6 +399,7 @@ GetDrawable(std::shared_ptr<THist<DIMENSION, PRECISION, STATISTICS>> hist,
     DIMENSION, PRECISION, STATISTICS>>(hist, opts);
 }
 
+/// Interface to graphics taking a shared_ptr<THist>.
 template<int DIMENSION, class PRECISION,
   template <int DIMENSIONS_, class PRECISION_> class STATISTICS>
 std::unique_ptr <Internal::TDrawable>
