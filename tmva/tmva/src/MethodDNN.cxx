@@ -732,7 +732,7 @@ const std::vector<Float_t> &TMVA::MethodDNN::GetMulticlassValues()
    std::vector<Float_t> temp;
 
    UInt_t nClasses = DataInfo().GetNClasses();
-   assert (nClasses == output.outputSize ());
+   assert (nClasses == output.size());
    for (UInt_t icls = 0; icls < nClasses; icls++) {
        temp.push_back (output.at (icls));
    }
