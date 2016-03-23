@@ -90,7 +90,7 @@ public:
   explicit THist(std::array<TAxisConfig, THist::GetNDim()> axes);
 
   /// Constructor overload taking the histogram title
-  THist(std::string_view histTitle, std::array<TAxisConfig, GetNDim()> axes);
+  THist(std::string_view histTitle, std::array<TAxisConfig, THist::GetNDim()> axes);
 
   /// Constructor overload that's only available for a 1-dimensional histogram.
   template<class = typename std::enable_if<THist::GetNDim() == 1>>
