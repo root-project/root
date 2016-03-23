@@ -4762,7 +4762,7 @@ TLeaf* TTree::FindLeaf(const char* searchname)
 ///
 /// Example:
 /// ~~~ {.cpp}
-///     tree.Fit(pol4,sqrt(x)>>hsqrt,y>0)
+///     tree.Fit(pol4,"sqrt(x)>>hsqrt","y>0")
 /// ~~~
 /// will fit sqrt(x) and save the histogram as "hsqrt" in the current
 /// directory.
@@ -4773,7 +4773,7 @@ TLeaf* TTree::FindLeaf(const char* searchname)
 ///
 ///  The function returns the status of the histogram fit (see TH1::Fit)
 ///  If no entries were selected, the function returns -1;
-///   (i.e. fitResult is null is the fit is OK)
+///   (i.e. fitResult is null if the fit is OK)
 
 Int_t TTree::Fit(const char* funcname, const char* varexp, const char* selection, Option_t* option, Option_t* goption, Long64_t nentries, Long64_t firstentry)
 {
