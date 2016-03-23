@@ -6184,6 +6184,8 @@ if test "x$enable_vc" = "xyes"; then
     # with GCC and Open64 check the binutils version. If it's less than 2.18.93 the assembler doesn't know xgetbv
     case $arch in
     macos*)
+        # temporary disabled waiting for new Vc
+        enable_vc="no"
         ;;
     solaris*)
         enable_vc="no"
