@@ -15,6 +15,7 @@
 #ifndef ROOT7_THistStats_h
 #define ROOT7_THistStats_h
 
+#include <cmath>
 #include <vector>
 #include "ROOT/RArrayView.h"
 
@@ -43,27 +44,19 @@ public:
   using Content_t = STORAGE<PRECISION>;
 
   /**
-  Const-view on a THistStatContent for a given bin.
+   \class TBinStat
+   Mutable view on a THistStatContent for a given bin.
+   Template argument can be `Weight_t` for a const view or `Weight_t&` for a
+   modifying view.
   */
-  class TConstBinStat {
-  public:
-    TConstBinStat(Weight_t content): fContent(content) {}
-    Weight_t GetContent() const { return fContent; }
-
-  private:
-    Weight_t fContent; ///< Content of this bin.
-  };
-
-  /**
-  Mutable view on a THistStatContent for a given bin.
-  */
+  template <class WEIGHT>
   class TBinStat {
   public:
-    TBinStat(Weight_t& content): fContent(content) {}
-    Weight_t& GetContent() const { return fContent; }
+    TBinStat(WEIGHT content): fContent(content) {}
+    WEIGHT GetContent() const { return fContent; }
 
   private:
-    Weight_t& fContent; ///< Reference to the content of this bin.
+    WEIGHT fContent; ///< (Reference to) the content of this bin.
   };
 
 private:
@@ -111,9 +104,13 @@ public:
   }
 
   /// Get a view on the statistics values of a bin.
-  TConstBinStat GetView(int idx) const { return TConstBinStat(fBinContent[idx]); }
+  TBinStat<Weight_t> GetView(int idx) const {
+    return TBinStat<Weight_t>(fBinContent[idx]);
+  }
   /// Get a (non-const) view on the statistics values of a bin.
-  TBinStat GetView(int idx) { return TBinStat(fBinContent[idx]); }
+  TBinStat<Weight_t&> GetView(int idx) {
+    return TBinStat<Weight_t&>(fBinContent[idx]);
+  }
 };
 
 
@@ -133,35 +130,25 @@ public:
   using typename Base_t::Content_t;
 
   /**
-  Const-view on a THistStatUncertainty for a given bin.
+   \class TBinStat
+   View on a THistStatUncertainty for a given bin.
+   Template argument can be `Weight_t` for a const view or `Weight_t&` for a
+   modifying view.
   */
-  class TConstBinStat {
-  public:
-    TConstBinStat(Weight_t content, Weight_t sumw2):
-      fContent(content), fSumW2(sumw2) {}
-    Weight_t GetContent() const { return fContent; }
-    Weight_t GetSumW2() const { return fSumW2; }
-
-  private:
-    Weight_t fContent; ///< Content of this bin.
-    Weight_t fSumW2; ///< The bin's sum of square of weights.
-  };
-
-  /**
-  Mutable view on a THistStatUncertainty for a given bin.
-  */
+  template <class WEIGHT>
   class TBinStat {
   public:
-    TBinStat(Weight_t& content, Weight_t& sumw2):
-    fContent(content), fSumW2(sumw2) {}
-    Weight_t& GetContent() const { return fContent; }
-    Weight_t& GetSumW2() const { return fSumW2; }
+    TBinStat(WEIGHT content, WEIGHT sumw2):
+      fContent(content), fSumW2(sumw2) {}
+    WEIGHT GetContent() const { return fContent; }
+    WEIGHT GetSumW2() const { return fSumW2; }
+    // Can never modify this. Set GetSumW2() instead.
+    WEIGHT GetUncertainty() const { return std::sqrt(std::abs(fSumW2)); }
 
   private:
-    Weight_t& fContent; ///< Content of this bin.
-    Weight_t& fSumW2; ///< Uncertainty of the content of this bin.
+    WEIGHT fContent; ///< Content of this bin.
+    WEIGHT fSumW2; ///< The bin's sum of square of weights.
   };
-
 
 private:
   /// Uncertainty of the content for each bin.
@@ -188,12 +175,12 @@ public:
   std::vector<double>& GetSumWeightsSquared() { return fSumWeightsSquared; }
 
   /// Get a view on the statistics values of a bin.
-  TConstBinStat GetView(int idx) const {
-    return TConstBinStat(this->GetBinContent(idx), fSumWeightsSquared[idx]);
+  TBinStat<Weight_t> GetView(int idx) const {
+    return TBinStat<Weight_t>(this->GetBinContent(idx), fSumWeightsSquared[idx]);
   }
   /// Get a (non-const) view on the statistics values of a bin.
-  TBinStat GetView(int idx) {
-    return TBinStat(this->GetBinContent(idx), fSumWeightsSquared[idx]);
+  TBinStat<Weight_t&> GetView(int idx) {
+    return TBinStat<Weight_t&>(this->GetBinContent(idx), fSumWeightsSquared[idx]);
   }
 };
 
