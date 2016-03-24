@@ -93,36 +93,42 @@ public:
   THist(std::string_view histTitle, std::array<TAxisConfig, THist::GetNDim()> axes);
 
   /// Constructor overload that's only available for a 1-dimensional histogram.
-  template<class = typename std::enable_if<THist::GetNDim() == 1>>
+  template<int ENABLEIF_NDIM = DATA::GetNDim(),
+    class = typename std::enable_if<ENABLEIF_NDIM == 1>::type>
   THist(const TAxisConfig &xaxis):
     THist(std::array<TAxisConfig, 1>{{xaxis}}) { }
 
   /// Constructor overload that's only available for a 1-dimensional histogram,
   /// also passing the histogram title.
-  template<class = typename std::enable_if<THist::GetNDim() == 1>>
+  template<int ENABLEIF_NDIM = DATA::GetNDim(),
+    class = typename std::enable_if<ENABLEIF_NDIM == 1>::type>
   THist(std::string_view histTitle, const TAxisConfig &xaxis):
     THist(histTitle, std::array<TAxisConfig, 1>{{xaxis}}) { }
 
   /// Constructor overload that's only available for a 2-dimensional histogram.
-  template<class = typename std::enable_if<THist::GetNDim() == 2>>
+  template<int ENABLEIF_NDIM = DATA::GetNDim(),
+    class = typename std::enable_if<ENABLEIF_NDIM == 2>::type>
   THist(const TAxisConfig &xaxis, const TAxisConfig &yaxis):
     THist(std::array<TAxisConfig, 2>{{xaxis, yaxis}}) { }
 
   /// Constructor overload that's only available for a 2-dimensional histogram,
   /// also passing the histogram title.
-  template<class = typename std::enable_if<THist::GetNDim() == 2>>
+  template<int ENABLEIF_NDIM = DATA::GetNDim(),
+    class = typename std::enable_if<ENABLEIF_NDIM == 2>::type>
   THist(std::string_view histTitle, const TAxisConfig &xaxis, const TAxisConfig &yaxis):
     THist(histTitle, std::array<TAxisConfig, 2>{{xaxis, yaxis}}) { }
 
   /// Constructor overload that's only available for a 3-dimensional histogram.
-  template<class = typename std::enable_if<THist::GetNDim() == 3>>
+  template<int ENABLEIF_NDIM = DATA::GetNDim(),
+    class = typename std::enable_if<ENABLEIF_NDIM == 3>::type>
   THist(const TAxisConfig &xaxis, const TAxisConfig &yaxis,
         const TAxisConfig &zaxis):
     THist(std::array<TAxisConfig, 3>{{xaxis, yaxis, zaxis}}) { }
 
   /// Constructor overload that's only available for a 3-dimensional histogram,
   /// also passing the histogram title.
-  template<class = typename std::enable_if<THist::GetNDim() == 3>>
+  template<int ENABLEIF_NDIM = DATA::GetNDim(),
+    class = typename std::enable_if<ENABLEIF_NDIM == 3>::type>
   THist(std::string_view histTitle,
         const TAxisConfig &xaxis, const TAxisConfig &yaxis,
         const TAxisConfig &zaxis):
@@ -308,10 +314,10 @@ typedef THist<THistDataContent<3, int64_t>> TH3LL;
 
 /// Add two histograms. This is the generic, inefficient version for now; it
 /// assumes no matching axes.
-template<class DATAA, class DATAB>
+template<class DATAA, class DATAB,
+  class = typename std::enable_if<"Cannot add histograms with different number of dimensions!"
+                                  && DATAA::GetNDim() == DATAB::GetNDim()>::type>
 void Add(THist<DATAA> &to,THist<DATAB> &from) {
-  static_assert(DATAA::GetNDim() == DATAB::GetNDim(),
-                "Cannot add histograms with different number of dimensions!");
   auto toImpl = to.GetImpl();
   auto fillFuncTo = toImpl->GetFillFunc();
   using FromCoord_t = typename THist<DATAB>::Coord_t;
