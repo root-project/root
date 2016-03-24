@@ -316,10 +316,9 @@ void Add(THist<DATAA> &to,THist<DATAB> &from) {
   auto fillFuncTo = toImpl->GetFillFunc();
   using FromCoord_t = typename THist<DATAB>::Coord_t;
   using FromWeight_t = typename THist<DATAB>::Weight_t;
-  auto add = [fillFuncTo, toImpl](const FromCoord_t& x, FromWeight_t c) -> void {
+  auto add = [fillFuncTo, toImpl](const FromCoord_t& x, FromWeight_t c) {
     (toImpl->*fillFuncTo)(x, c);
     // TODO: something nice with the uncertainty - depending on whether `to` cares
-    return;
   };
   from.GetImpl()->ApplyXC(add);
 };
