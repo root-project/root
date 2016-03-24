@@ -219,14 +219,14 @@ TMVA::DataSetFactory::BuildInitialDataSet( DataSetInfo& dsi,
    TString splitMode;
    TString mixMode;
    UInt_t  splitSeed;
-   InitOptions( dsi, eventCounts, normMode, splitSeed, splitMode , mixMode );
 
+   InitOptions( dsi, eventCounts, normMode, splitSeed, splitMode , mixMode );
    // ======= build event-vector from input, apply preselection ===============
    EventVectorOfClassesOfTreeType tmpEventVector;
    BuildEventVector( dsi, dataInput, tmpEventVector, eventCounts );
 
    DataSet* ds = MixEvents( dsi, tmpEventVector, eventCounts,
-                            splitMode, mixMode, normMode, splitSeed);
+                            splitMode, mixMode, normMode, splitSeed );
 
    const Bool_t showCollectedOutput = kFALSE;
    if (showCollectedOutput) {
@@ -603,7 +603,7 @@ TMVA::DataSetFactory::InitOptions( TMVA::DataSetInfo& dsi,
                                    TString& normMode,
                                    UInt_t&  splitSeed,
                                    TString& splitMode,
-                                   TString& mixMode  )
+                                   TString& mixMode)
 {
    Configurable splitSpecs( dsi.GetSplitOptions() );
    splitSpecs.SetConfigName("DataSetFactory");
@@ -1605,6 +1605,4 @@ TMVA::DataSetFactory::RenormEvents( TMVA::DataSetInfo& dsi,
 
 
 }
-
-
 

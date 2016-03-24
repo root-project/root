@@ -497,11 +497,11 @@ void TMVA::Factory::WriteDataInformation(DataSetInfo&     fDataSetInfo)
 /// keeps in mind the "optimal one"... and that's the one that will later on be used
 /// in the main training loop.
 
-void TMVA::Factory::OptimizeAllMethods(TString fomType, TString fitType) 
+std::map<TString,Double_t> TMVA::Factory::OptimizeAllMethods(TString fomType, TString fitType) 
 {
 
    std::map<TString,MVector*>::iterator itrMap;
-   
+   std::map<TString,Double_t> TunedParameters;
    for(itrMap = fMethodsMap.begin();itrMap != fMethodsMap.end();itrMap++)
    {
       MVector *methods=itrMap->second;
@@ -514,7 +514,7 @@ void TMVA::Factory::OptimizeAllMethods(TString fomType, TString fitType)
 	  MethodBase* mva = dynamic_cast<MethodBase*>(*itrMethod);
 	  if (!mva) {
 	    Log() << kFATAL << "Dynamic cast to MethodBase failed" <<Endl;
-	    return;
+	    return TunedParameters;
 	  }
 
 	  if (mva->Data()->GetNTrainingEvents() < MinNoTrainingEvents) {
@@ -529,10 +529,13 @@ void TMVA::Factory::OptimizeAllMethods(TString fomType, TString fitType)
 		<< (fAnalysisType == Types::kRegression ? "Regression" : 
 		    (fAnalysisType == Types::kMulticlass ? "Multiclass classification" : "Classification")) << Endl;
 	  
-	  mva->OptimizeTuningParameters(fomType,fitType);
+	  TunedParameters = mva->OptimizeTuningParameters(fomType,fitType);
 	  Log() << kINFO << "Optimization of tuning paremters finished for Method:"<<mva->GetName() << Endl;
       }
    }
+
+   return TunedParameters;
+
 }
 
 //_______________________________________________________________________

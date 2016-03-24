@@ -163,6 +163,11 @@ namespace TMVA {
       void PrepareTrainingAndTestTree( const TCut& cut, Int_t NsigTrain, Int_t NbkgTrain, Int_t NsigTest, Int_t NbkgTest, 
                                        const TString& otherOpt="SplitMode=Random:!V" );
 
+      void PrepareTrainingAndTestTree( int foldNumber, Types::ETreeType tt );
+
+      void MakeKFoldDataSet(int numberFolds);
+      std::vector<TTree*> SplitSets(TTree * oldTree, int seedNum, int numFolds);
+
  
  
    private:
@@ -199,6 +204,11 @@ namespace TMVA {
       DataAssignType                            fDataAssignType;  //! flags for data assigning
       std::vector<TTree*>                       fTrainAssignTree; //! for each class: tmp tree if user wants to assign the events directly
       std::vector<TTree*>                       fTestAssignTree;  //! for each class: tmp tree if user wants to assign the events directly
+
+      std::vector<TTree*>                       fTrainSigTree;
+      std::vector<TTree*>                       fTrainBkgTree;
+      std::vector<TTree*>                       fTestSigTree;
+      std::vector<TTree*>                       fTestBkgTree;
 
       Int_t                                     fATreeType;          // type of event (=classIndex)
       Float_t                                   fATreeWeight;        // weight of the event

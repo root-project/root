@@ -107,7 +107,7 @@ namespace TMVA {
                               TString /*compositeOption = ""*/ ) { return 0; } 
 
       // optimize all booked methods (well, if desired by the method)
-      void OptimizeAllMethods                 (TString fomType="ROCIntegral", TString fitType="FitGA");
+      std::map<TString,Double_t> OptimizeAllMethods                 (TString fomType="ROCIntegral", TString fitType="FitGA");
       void OptimizeAllMethodsForClassification(TString fomType="ROCIntegral", TString fitType="FitGA") { OptimizeAllMethods(fomType,fitType); }
       void OptimizeAllMethodsForRegression    (TString fomType="ROCIntegral", TString fitType="FitGA") { OptimizeAllMethods(fomType,fitType); }
 
