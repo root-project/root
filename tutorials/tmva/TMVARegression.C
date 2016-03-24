@@ -80,7 +80,7 @@ void TMVARegression( TString myMethodList = "" )
    // 
    // --- Neural Network
    Use["MLP"]             = 1; 
-   Use["DNN"]             = 1; 
+   Use["DNN"]             = 0; 
    // 
    // --- Support Vector Machine 
    Use["SVM"]             = 0;

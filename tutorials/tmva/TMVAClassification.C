@@ -124,7 +124,7 @@ int TMVAClassification( TString myMethodList = "" )
    Use["MLPBNN"]          = 1; // Recommended ANN with BFGS training method and bayesian regulator
    Use["CFMlpANN"]        = 0; // Depreciated ANN from ALEPH
    Use["TMlpANN"]         = 0; // ROOT's own ANN
-   Use["DNN"]             = 1; // improved implementation of a NN
+   Use["DNN"]             = 0; // improved implementation of a NN
    //
    // --- Support Vector Machine 
    Use["SVM"]             = 1;
