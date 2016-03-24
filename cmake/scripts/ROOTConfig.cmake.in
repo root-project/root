@@ -84,7 +84,7 @@ endforeach()
 # Now set them to ROOT_LIBRARIES
 set(ROOT_LIBRARIES)
 foreach(_cpt Core Cint RIO Net Hist Graf Graf3d Gpad Tree Rint Postscript Matrix Physics MathCore Thread ${ROOT_FIND_COMPONENTS})
-  find_library(ROOT_${_cpt}_LIBRARY ${_cpt} HINTS ${ROOT_LIBRARY_DIR})
+  find_library(ROOT_${_cpt}_LIBRARY NAMES ${_cpt} lib{_cpt} HINTS ${ROOT_LIBRARY_DIR})
   if(ROOT_${_cpt}_LIBRARY)
     mark_as_advanced(ROOT_${_cpt}_LIBRARY)
     list(APPEND ROOT_LIBRARIES ${ROOT_${_cpt}_LIBRARY})
