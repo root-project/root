@@ -121,23 +121,33 @@ public:
   ///\{
 
   /// Open a file with `name` for reading.
+  ///
+  /// \note: Synchronizes multi-threaded accesses through locks.
   static TFilePtr Open(std::string_view name, const Options_t& opts = Options_t());
 
   /// Open an existing file with `name` for reading and writing. If a file with
   /// that name does not exist, an invalid TFilePtr will be returned.
+  ///
+  /// \note: Synchronizes multi-threaded accesses through locks.
   static TFilePtr OpenForUpdate(std::string_view name, const Options_t& opts = Options_t());
 
   /// Open a file with `name` for reading and writing. Fail (return an invalid
   /// `TFilePtr`) if a file with this name already exists.
+  ///
+  /// \note: Synchronizes multi-threaded accesses through locks.
   static TFilePtr Create(std::string_view name, const Options_t& opts = Options_t());
 
   /// Open a file with `name` for reading and writing. If a file with this name
   /// already exists, delete it and create a new one. Else simply create a new file.
+  ///
+  /// \note: Synchronizes multi-threaded accesses through locks.
   static TFilePtr Recreate(std::string_view name, const Options_t& opts = Options_t());
 
   ///\}
 
   /// Set the new directory used for cached reads, returns the old directory.
+  ///
+  /// \note: Synchronizes multi-threaded accesses through locks.
   static std::string SetCacheDir(std::string_view path);
 
   /// Get the directory used for cached reads.
