@@ -944,7 +944,7 @@ struct CounterCoverageMappingBuilder
 
   void VisitCallExpr(const CallExpr *E) {
     Visit(E->getCallee());
-    for (const auto &Arg : E->arguments())
+    for (const auto Arg : E->arguments())
       Visit(Arg);
     mapToken(E->getRParenLoc());
   }
@@ -1093,7 +1093,7 @@ void CoverageMappingModuleGen::emit() {
     llvm::sys::fs::make_absolute(Path);
 
     auto I = Entry.second;
-    FilenameStrs[I] = std::move(std::string(Path.begin(), Path.end()));
+    FilenameStrs[I] = std::string(Path.begin(), Path.end());
     FilenameRefs[I] = FilenameStrs[I];
   }
 

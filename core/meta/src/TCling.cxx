@@ -5226,7 +5226,7 @@ UInt_t TCling::AutoParseImplRecurse(const char *cls, bool topLevel)
          auto tokens = templateName.Tokenize("::");
          clang::NamedDecl* previousScopeAsNamedDecl = nullptr;
          clang::DeclContext* previousScopeAsContext = nullptr;
-         for (auto const & scopeObj : *tokens){
+         for (auto const scopeObj : *tokens){
             auto scopeName = ((TObjString*) scopeObj)->String().Data();
             previousScopeAsNamedDecl = cling::utils::Lookup::Named(&fInterpreter->getSema(), scopeName, previousScopeAsContext);
             // Check if we have multiple nodes in the AST with this name
