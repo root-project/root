@@ -1312,8 +1312,13 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, 
       char letter = '\243' + opSpec;
       if(opSpec == 75 || opSpec == 76) {
          newSpec.fFont = GetTextFont();
-         if (opSpec == 75) letter = '\305'; // AA Angstroem
-         if (opSpec == 76) letter = '\345'; // aa Angstroem
+         if (gVirtualX->InheritsFrom("TGCocoa")) {
+            if (opSpec == 75) letter = '\201'; // AA Angstroem
+            if (opSpec == 76) letter = '\214'; // aa Angstroem
+         } else {
+            if (opSpec == 75) letter = '\305'; // AA Angstroem
+            if (opSpec == 76) letter = '\345'; // aa Angstroem
+         }
       }
       if(opSpec == 80 || opSpec == 81) {
          if (opSpec == 80) letter = '\042'; // #forall

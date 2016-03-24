@@ -175,6 +175,8 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
   This problem was mentioned [here](https://sft.its.cern.ch/jira/browse/ROOT-8021)
 * Make sure that `TLatex` text strings containing "\" (ie: rendered using `TMathText`)
   produce an output in PDF et SVG files.
+* In TLatex, with the Cocoa backend on Mac the Angstroem characters did not render correctly.
+  This problem was mentioned [here](https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=21321)
 
 ## 3D Graphics Libraries
 
