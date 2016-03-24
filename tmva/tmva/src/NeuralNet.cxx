@@ -73,14 +73,14 @@ namespace TMVA
         LayerData::LayerData (size_t _size, 
                               const_iterator_type itWeightBegin, 
                               iterator_type itGradientBegin, 
-                              std::shared_ptr<std::function<double(double)>> activationFunction, 
-                              std::shared_ptr<std::function<double(double)>> inverseActivationFunction,
+                              std::shared_ptr<std::function<double(double)>> _activationFunction, 
+                              std::shared_ptr<std::function<double(double)>> _inverseActivationFunction,
                               ModeOutputValues eModeOutput)
             : m_size (_size)
             , m_itConstWeightBegin   (itWeightBegin)
             , m_itGradientBegin (itGradientBegin)
-            , m_activationFunction (activationFunction)
-            , m_inverseActivationFunction (inverseActivationFunction)
+            , m_activationFunction (_activationFunction)
+            , m_inverseActivationFunction (_inverseActivationFunction)
             , m_isInputLayer (false)
             , m_hasWeights (true)
             , m_hasGradients (true)
@@ -95,11 +95,11 @@ namespace TMVA
 
 
         LayerData::LayerData (size_t _size, const_iterator_type itWeightBegin, 
-                              std::shared_ptr<std::function<double(double)>> activationFunction, 
+                              std::shared_ptr<std::function<double(double)>> _activationFunction, 
                               ModeOutputValues eModeOutput)
             : m_size (_size)
             , m_itConstWeightBegin   (itWeightBegin)
-            , m_activationFunction (activationFunction)
+            , m_activationFunction (_activationFunction)
             , m_isInputLayer (false)
             , m_hasWeights (true)
             , m_hasGradients (false)
@@ -276,8 +276,9 @@ namespace TMVA
 /** \brief action to be done after the computation of a test sample (e.g. update some monitoring output)
  *
  */
-    void ClassificationSettings::testSample (double error, double output, double target, double weight)
+    void ClassificationSettings::testSample (double /*error*/, double output, double target, double weight)
         {
+            
             m_output.push_back (output);
             m_targets.push_back (target);
             m_weights.push_back (weight);

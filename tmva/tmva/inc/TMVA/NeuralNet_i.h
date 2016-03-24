@@ -1,10 +1,12 @@
 #ifndef TMVA_NEURAL_NET_I
 #define TMVA_NEURAL_NET_I
 #pragma once
-
+#pragma GCC diagnostic ignored "-Wunused-variable"
 
 #include <tuple>
 #include <future>
+
+#include "Math/Util.h"
 
 
 namespace TMVA
@@ -236,6 +238,9 @@ namespace TMVA
         template <EnumRegularization Regularization>
             inline double computeRegularization (double weight, const double& factorWeightDecay)
         {
+           MATH_UNUSED(weight);
+           MATH_UNUSED(factorWeightDecay);
+              
             return 0;
         }
 
@@ -1118,6 +1123,7 @@ namespace TMVA
         template <typename Weights, typename Gradients, typename PassThrough, typename OutContainer>
             double Net::operator() (PassThrough& settingsAndBatch, const Weights& weights, Gradients& gradients, ModeOutput eFetch, OutContainer& outputContainer) const
         {
+            MATH_UNUSED(eFetch);
             assert (numWeights () == weights.size ());
             assert (weights.size () == gradients.size ());
             double error = forward_backward(m_layers, settingsAndBatch, std::begin (weights), std::begin (gradients), std::end (gradients), 0, outputContainer, true);
@@ -1282,7 +1288,7 @@ namespace TMVA
                 // ---------------- loop over layerDatas of pattern apply non-linearities ----------------------------
                 for (size_t idxPattern = 0; idxPattern < numPattern; ++idxPattern)
                 {
-                    const LayerData& prevLayerData = prevLayerPatternData.at (idxPattern);
+//                     const LayerData& prevLayerData = prevLayerPatternData.at (idxPattern);
                     LayerData& currLayerData = currLayerPatternData.at (idxPattern);
                 
                     if (doTraining)
@@ -1604,7 +1610,7 @@ namespace TMVA
                 // compute number of weights (as a function of the number of incoming nodes)
                 // fetch number of nodes
                 size_t numNodes = _layer.numNodes ();
-                size_t numWeights = _layer.numWeights (_inputSize);
+                size_t _numWeights = _layer.numWeights (_inputSize);
 
                 // ------------------
                 DNN::Net preNet;
@@ -1628,21 +1634,21 @@ namespace TMVA
                                           std::back_inserter (preWeights));
 
                 // overwrite already existing weights from the "general" weights
-                std::copy (itWeightGeneral, itWeightGeneral+numWeights, preWeights.begin ());
-                std::copy (itWeightGeneral, itWeightGeneral+numWeights, preWeights.begin ()+numWeights); // set identical weights for the temporary output layer
+                std::copy (itWeightGeneral, itWeightGeneral+_numWeights, preWeights.begin ());
+                std::copy (itWeightGeneral, itWeightGeneral+_numWeights, preWeights.begin ()+_numWeights); // set identical weights for the temporary output layer
             
 
                 // train the "preNet"
                 preNet.train (preWeights, prePatternTrain, prePatternTest, minimizer, settings);
 
                 // fetch the pre-trained weights (without the output part of the autoencoder)
-                std::copy (std::begin (preWeights), std::begin (preWeights) + numWeights, itWeightGeneral);
+                std::copy (std::begin (preWeights), std::begin (preWeights) + _numWeights, itWeightGeneral);
 
                 // advance the iterator on the incoming weights
-                itWeightGeneral += numWeights;
+                itWeightGeneral += _numWeights;
 
                 // remove the weights of the output layer of the preNet
-                preWeights.erase (preWeights.begin () + numWeights, preWeights.end ());
+                preWeights.erase (preWeights.begin () + _numWeights, preWeights.end ());
 
                 // remove the outputLayer of the preNet
                 preNet.removeLayer ();
