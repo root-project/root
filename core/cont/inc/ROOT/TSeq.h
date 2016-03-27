@@ -101,22 +101,22 @@ namespace ROOT {
             operator++();
             return tmp;
          }
-         bool operator==(const iterator &other) {
+         bool operator==(const iterator &other) const {
             return fCounter == other.fCounter;
          }
-         bool operator!=(const iterator &other) {
+         bool operator!=(const iterator &other) const {
             return fCounter != other.fCounter;
          }
-         T operator+(int v) {
+         T operator+(int v) const {
             return fCounter + v;
          }
-         T operator-(int v) {
+         T operator-(int v) const {
             return fCounter - v;
          }
-         T operator+(const iterator &other) {
+         T operator+(const iterator &other) const {
             return fCounter + other.fCounter;
          }
-         T operator-(const iterator &other) {
+         T operator-(const iterator &other) const {
             return fCounter - other.fCounter;
          }
          iterator &operator--() {
