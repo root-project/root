@@ -26,6 +26,7 @@
 #include "TChainElement.h"
 #include "THashList.h"
 #include "TFileInfo.h"
+#include "ROOT/TSeq.h"
 #include <vector>
 #include <string>
 #include <initializer_list>
@@ -52,6 +53,7 @@ public:
    template<class F> TObjArray Map(F func, TCollection &args);
    template<class F, class T> auto Map(F func, std::initializer_list<T> args) -> std::vector<decltype(func(*args.begin()))>;
    template<class F, class T> auto Map(F func, std::vector<T> &args) -> std::vector<decltype(func(args.front()))>;
+   template<class F, class INTEGER> auto Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<decltype(func(*args.begin()))>;
    /// \endcond
 
    // MapReduce
@@ -245,6 +247,16 @@ auto TProcPool::Map(F func, std::vector<T> &args) -> std::vector<decltype(func(a
    fTask = ETask::kNoTask;
    return reslist;
 }
+
+template<class F, class INTEGER>
+auto TProcPool::Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<decltype(func(*args.begin()))>
+{
+   std::vector<INTEGER> vargs(args.size());
+   std::copy(args.begin(), args.end(), vargs.begin());
+   const auto &reslist = Map(func, vargs);
+   return reslist;
+}
+
 // tell doxygen to stop ignoring code
 /// \endcond
 
