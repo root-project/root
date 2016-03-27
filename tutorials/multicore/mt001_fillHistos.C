@@ -7,18 +7,21 @@
 ///
 /// \author Danilo Piparo
 
-Int_t mt001_fillHistos(UInt_t nWorkers = 4)
-{
+// Total amount of numbers
+const UInt_t nNumbers = 20000000U;
 
-   // Total amount of numbers
-   const UInt_t nNumbers = 20000000U;
+// The number of workers
+const UInt_t nWorkers = 4U;
+
+Int_t mt001_fillHistos()
+{
 
    // The first, fundamental operation to be performed in order to make ROOT
    // thread-aware.
    ROOT::EnableThreadSafety();
 
    // We define our work item
-   auto workItem = [nNumbers](UInt_t workerID) {
+   auto workItem = [](UInt_t workerID) {
       // One generator, file and ntuple per worker
       TRandom3 workerRndm(workerID); // Change the seed
       TFile f(Form("myFile_%u.root", workerID), "RECREATE");
@@ -33,7 +36,7 @@ Int_t mt001_fillHistos(UInt_t nWorkers = 4)
    std::vector<std::thread> workers;
 
    // Fill the "pool" with workers
-   for (UInt_t workerID = 0; workerID < nWorkers; ++workerID) {
+   for (auto workerID : ROOT::TSeqI(nWorkers)) {
       workers.emplace_back(workItem, workerID);
    }
 
@@ -41,5 +44,4 @@ Int_t mt001_fillHistos(UInt_t nWorkers = 4)
    for (auto && worker : workers) worker.join();
 
    return 0;
-
 }

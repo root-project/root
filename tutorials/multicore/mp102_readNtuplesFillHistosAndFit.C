@@ -4,23 +4,10 @@
 /// We express parallelism with multiprocessing as it is done with multithreading
 /// in mt102_readNtuplesFillHistosAndFit.
 ///
+/// \macro_output
 /// \macro_code
-///
-/// \author Danilo Piparo
 
-// Measure time in a scope
-class TimerRAII {
-   TStopwatch fTimer;
-   std::string fMeta;
-public:
-   TimerRAII(const char *meta): fMeta(meta) {
-      fTimer.Start();
-   }
-   ~TimerRAII() {
-      fTimer.Stop();
-      std::cout << fMeta << " - real time elapsed " << fTimer.RealTime() << "s" << std::endl;
-   }
-};
+/// \author Danilo Piparo
 
 Int_t mp102_readNtuplesFillHistosAndFit()
 {
@@ -32,11 +19,8 @@ Int_t mp102_readNtuplesFillHistosAndFit()
    TChain inputChain("multiCore");
    inputChain.Add("mp101_multiCore_*.root");
    TH1F outHisto("outHisto", "Random Numbers", 128, -4, 4);
-   {
-      TimerRAII t("Sequential read and fit");
-      inputChain.Draw("r >> outHisto");
-      outHisto.Fit("gaus");
-   }
+   inputChain.Draw("r >> outHisto");
+   outHisto.Fit("gaus");
 
    // We now go MP! ------------------------------------------------------------
    // TProcPool offers an interface to directly process trees and chains without
@@ -45,7 +29,6 @@ Int_t mp102_readNtuplesFillHistosAndFit()
 
    // We adapt our parallelisation to the number of input files
    const auto nFiles = inputChain.GetListOfFiles()->GetEntries();
-
 
    // This is the function invoked during the processing of the trees.
    auto workItem = [](TTreeReader & reader) {
@@ -61,12 +44,8 @@ Int_t mp102_readNtuplesFillHistosAndFit()
    TProcPool workers(nFiles);
 
    // Process the TChain
-   {
-      TimerRAII t("Parallel execution");
-      TH1F *sumHistogram = workers.ProcTree(inputChain, workItem, "multiCore");
-      sumHistogram->Fit("gaus", 0);
-   }
+   auto sumHistogram = workers.ProcTree(inputChain, workItem, "multiCore");
+   sumHistogram->Fit("gaus", 0);
 
    return 0;
-
 }

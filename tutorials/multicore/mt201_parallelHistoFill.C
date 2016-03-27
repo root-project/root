@@ -13,23 +13,9 @@
 /// \macro_code
 /// \author Danilo Piparo
 
-// Measure time in a scope
-class TimerRAII {
-   TStopwatch fTimer;
-   std::string fMeta;
-public:
-   TimerRAII(const char *meta): fMeta(meta) {
-      fTimer.Start();
-   }
-   ~TimerRAII() {
-      fTimer.Stop();
-      std::cout << fMeta << " - real time elapsed " << fTimer.RealTime() << "s" << std::endl;
-   }
-};
+const UInt_t poolSize = 4U;
 
-#include <chrono>
-
-Int_t mt201_parallelHistoFill(UInt_t poolSize = 4)
+Int_t mt201_parallelHistoFill()
 {
    TH1::AddDirectory(false);
 
@@ -57,8 +43,6 @@ Int_t mt201_parallelHistoFill(UInt_t poolSize = 4)
 
    std::vector<std::thread> pool;
 
-   TimerRAII timer("Filling Histogram in parallel and drawing it.");
-
    // A monitoring thread. This is here only to illustrate the functionality of
    // the SnapshotMerge method.
    // It allows "to spy" the multithreaded calculation without the need
@@ -82,6 +66,8 @@ Int_t mt201_parallelHistoFill(UInt_t poolSize = 4)
 
    // Merge the final result
    auto sumRandomHisto = ts_h.Merge();
+
+   std::cout << "Entries for the total sum " << sumRandomHisto->GetEntries() << std::endl;
 
    auto c = new TCanvas();
    sumRandomHisto->DrawClone();

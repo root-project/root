@@ -6,23 +6,10 @@
 /// We convey another message with this tutorial: the synergy of ROOT and
 /// STL algorithms is possible.
 ///
+/// \macro_output
 /// \macro_code
 ///
 /// \author Danilo Piparo
-
-// Measure time in a scope
-class TimerRAII {
-   TStopwatch fTimer;
-   std::string fMeta;
-public:
-   TimerRAII(const char *meta): fMeta(meta) {
-      fTimer.Start();
-   }
-   ~TimerRAII() {
-      fTimer.Stop();
-      std::cout << fMeta << " - real time elapsed " << fTimer.RealTime() << "s" << std::endl;
-   }
-};
 
 Int_t mt102_readNtuplesFillHistosAndFit()
 {
@@ -34,11 +21,8 @@ Int_t mt102_readNtuplesFillHistosAndFit()
    TChain inputChain("multiCore");
    inputChain.Add("mt101_multiCore_*.root");
    TH1F outHisto("outHisto", "Random Numbers", 128, -4, 4);
-   {
-      TimerRAII t("Sequential read and fit");
-      inputChain.Draw("r >> outHisto");
-      outHisto.Fit("gaus");
-   }
+   inputChain.Draw("r >> outHisto");
+   outHisto.Fit("gaus");
 
    // We now go MT! ------------------------------------------------------------
 
@@ -48,12 +32,10 @@ Int_t mt102_readNtuplesFillHistosAndFit()
 
    // We adapt our parallelisation to the number of input files
    const auto nFiles = inputChain.GetListOfFiles()->GetEntries();
-   std::forward_list<UInt_t> workerIDs(nFiles);
-   std::iota(std::begin(workerIDs), std::end(workerIDs), 0);
-
 
    // We define the histograms we'll fill
    std::vector<TH1F> histograms;
+   auto workerIDs = ROOT::TSeqI(nFiles);
    histograms.reserve(nFiles);
    for (auto workerID : workerIDs){
       histograms.emplace_back(TH1F(Form("outHisto_%u", workerID), "Random Numbers", 128, -4, 4));
@@ -65,7 +47,7 @@ Int_t mt102_readNtuplesFillHistosAndFit()
       TNtuple *ntuple = nullptr;
       f.GetObject("multiCore", ntuple);
       auto &histo = histograms.at(workerID);
-      for (UInt_t index = 0; index < ntuple->GetEntriesFast(); ++index) {
+      for (auto index : ROOT::TSeqL(ntuple->GetEntriesFast())) {
          ntuple->GetEntry(index);
          histo.Fill(ntuple->GetArgs()[0]);
       }
@@ -76,27 +58,22 @@ Int_t mt102_readNtuplesFillHistosAndFit()
    // Create the collection which will hold the threads, our "pool"
    std::vector<std::thread> workers;
 
-   // We measure time here as well
-   {
-      TimerRAII t("Parallel execution");
-
-      // Spawn workers
-      // Fill the "pool" with workers
-      for (auto workerID : workerIDs) {
-         workers.emplace_back(workItem, workerID);
-      }
-
-      // Now join them
-      for (auto&& worker : workers) worker.join();
-
-      // And reduce
-      std::for_each(std::begin(histograms), std::end(histograms),
-                    [&sumHistogram](const TH1F & h) {
-                       sumHistogram.Add(&h);
-                    });
-
-      sumHistogram.Fit("gaus",0);
+   // Spawn workers
+   // Fill the "pool" with workers
+   for (auto workerID : workerIDs) {
+      workers.emplace_back(workItem, workerID);
    }
+
+   // Now join them
+   for (auto&& worker : workers) worker.join();
+
+   // And reduce with a simple lambda
+   std::for_each(std::begin(histograms), std::end(histograms),
+                 [&sumHistogram](const TH1F & h) {
+                     sumHistogram.Add(&h);
+                  });
+
+   sumHistogram.Fit("gaus",0);
 
    return 0;
 
