@@ -296,7 +296,6 @@ TMVA::Reader::~Reader( void )
 
 ////////////////////////////////////////////////////////////////////////////////
 /// default initialisation (no member variables)
-/// default initialisation (no member variables)
 
 void TMVA::Reader::Init( void )
 {
