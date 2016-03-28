@@ -75,11 +75,11 @@ namespace ROOT {
       using value_type = T;
       using difference_type = typename std::make_signed<T>::type;
 
-      TSeq(T end): fBegin(), fEnd(end), fStep(1) {
+      TSeq(T theEnd): fBegin(), fEnd(theEnd), fStep(1) {
          checkIntegralType();
       }
-      TSeq(T begin, T end, T step = 1):
-         fBegin(begin), fEnd(end), fStep(step) {
+      TSeq(T theBegin, T theEnd, T theStep = 1):
+        fBegin(theBegin), fEnd(theEnd), fStep(theStep) {
          checkIntegralType();
       }
 
