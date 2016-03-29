@@ -129,7 +129,7 @@ namespace ROOT {
       /// will be sent to different threads:
       /// ~~~{.cpp}
       /// auto workItem = [](){
-      ///    auto objPtr = tthreadedObject.GetAtThisSlot();
+      ///    auto objPtr = tthreadedObject.Get();
       ///    for (auto i : ROOT::TSeqI(1000)) {
       ///       // tthreadedObject->FastMethod(i); // don't do this! Inefficient!
       ///       objPtr->FastMethod(i);
