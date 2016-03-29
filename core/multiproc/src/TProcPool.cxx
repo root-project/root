@@ -118,9 +118,9 @@ void TProcPool::ReplyToIdle(TSocket *s)
 {
    if (fNProcessed < fNToProcess) {
       //we are executing a "greedy worker" task
-      if (fTask == ETask::kMapRedWithArg)
+      if (fTask == ETask::kMapWithArg)
          MPSend(s, PoolCode::kExecFuncWithArg, fNProcessed);
-      else if (fTask == ETask::kMapRed)
+      else if (fTask == ETask::kMap)
          MPSend(s, PoolCode::kExecFunc);
       else if (fTask == ETask::kProcByRange)
          MPSend(s, PoolCode::kProcRange, fNProcessed);
