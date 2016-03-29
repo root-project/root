@@ -46,7 +46,7 @@ cells[cells.length-1].cm_config.mode = '{mimeType}';
 _jsMagicHighlight = "IPython.CodeCell.config_defaults.highlight_modes['magic_{cppMIME}'] = {{'reg':[/^%%cpp/]}};"
 
 
-_jsNotDrawableClassesPatterns = ["TGraph[23]D","TH3*","TGraphPolar","TProf*","TEve*","TF[23]","TGeo*","TPolyLine3D"]
+_jsNotDrawableClassesPatterns = ["TGraph[23]D","TH3*","TGraphPolar","TProf*","TEve*","TF[23]","TGeo*","TPolyLine3D", "TH2Poly"]
 
 
 _jsROOTSourceDir = "https://root.cern.ch/js/notebook/"
