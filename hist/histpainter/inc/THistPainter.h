@@ -89,6 +89,9 @@ public:
    virtual void       PaintBarH(Option_t *option);
    virtual void       PaintBoxes(Option_t *option);
    virtual void       PaintCandlePlot(Option_t *option);
+   virtual void       PaintOneCandle(Double_t candlePosition, Double_t candleWidth, TH1 *proj);
+   virtual void       PaintOneCandleLBox(Int_t nPoints, Double_t *x, Double_t *y, Bool_t swapXY = kFALSE, Bool_t fill = kFALSE);
+   virtual void       PaintOneCandleLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, bool swapXY = false);
    virtual void       PaintViolinPlot(Option_t *option);
    virtual void       PaintColorLevels(Option_t *option);
    virtual void       PaintColorLevelsFast(Option_t *option);
@@ -100,8 +103,8 @@ public:
    virtual void       PaintTH2PolyText(Option_t *option);
    virtual void       PaintContour(Option_t *option);
    virtual Int_t      PaintContourLine(Double_t elev1, Int_t icont1, Double_t x1, Double_t y1,
-                          Double_t elev2, Int_t icont2, Double_t x2, Double_t y2,
-                          Double_t *xarr, Double_t *yarr, Int_t *itarr, Double_t *levels);
+                                       Double_t elev2, Int_t icont2, Double_t x2, Double_t y2,
+                                       Double_t *xarr, Double_t *yarr, Int_t *itarr, Double_t *levels);
    virtual void       PaintErrors(Option_t *option);
    virtual void       Paint2DErrors(Option_t *option);
    virtual void       PaintFrame();
@@ -139,8 +142,8 @@ public:
    virtual void       ShowProjection3(Int_t px, Int_t py);
    virtual Int_t      TableInit();
 
-   static const char * GetBestFormat(Double_t v, Double_t e, const char *f);
-   static void       PaintSpecialObjects(const TObject *obj, Option_t *option);
+   static const char *GetBestFormat(Double_t v, Double_t e, const char *f);
+   static void        PaintSpecialObjects(const TObject *obj, Option_t *option);
 
    ClassDef(THistPainter,0)  //Helper class to draw histograms
 };

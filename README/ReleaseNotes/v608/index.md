@@ -178,6 +178,9 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 * In TLatex, with the Cocoa backend on Mac the Angstroem characters did not render correctly.
   This problem was mentioned [here](https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=21321)
 * New version of libpng (1.2.55) as requested [here](https://sft.its.cern.ch/jira/browse/ROOT-8045).
+* Enhancement of the CANDLE drawing option (implemented by Georg Troska georg.troska@tu-dortmund.de).
+  This option has been completely rewritten and offers a wide range of possibilities.
+  See the THistPainter reference guide for all the details and examples.
 
 ## 3D Graphics Libraries
 
