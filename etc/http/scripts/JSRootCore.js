@@ -7,31 +7,22 @@
 (function( factory ) {
    if ( typeof define === "function" && define.amd ) {
 
-      var dir = "scripts", ext = "";
-      var scripts = document.getElementsByTagName('script');
-      for (var n = 0; n < scripts.length; ++n) {
-         if (scripts[n]['type'] != 'text/javascript') continue;
-         var src = scripts[n]['src'];
-         if ((src == null) || (src.length == 0)) continue;
-         var pos = src.indexOf("scripts/JSRootCore.");
-         if (pos>=0) {
-            dir = src.substr(0, pos+8);
-            if (src.indexOf("scripts/JSRootCore.min.js")==pos) ext = ".min";
-            break;
-         }
-      }
+      var jsroot = factory({});
+
+      var dir = jsroot.source_dir + "scripts/", ext = jsroot.source_min ? ".min" : "";
 
       var paths = {
             'd3'                   : dir+'d3.v3.min',
             'jquery'               : dir+'jquery.min',
             'jquery-ui'            : dir+'jquery-ui.min',
-            'touch-punch'          : dir+'touch-punch.min',
+            'jqueryui-mousewheel'  : dir+'jquery.mousewheel'+ext,
+            'jqueryui-touch-punch' : dir+'touch-punch.min',
             'rawinflate'           : dir+'rawinflate'+ext,
             'MathJax'              : 'https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG&amp;delayStartupUntil=configured',
             'saveSvgAsPng'         : dir+'saveSvgAsPng'+ext,
-            'THREE'                : dir+'three'+ext,
-            'THREE_ALL'            : dir+'three.extra'+ext,
-            'JSRootCore'           : dir+'JSRootCore'+ext,
+            'threejs'              : dir+'three'+ext,
+            'threejs_all'          : dir+'three.extra'+ext,
+//            'JSRootCore'           : dir+'JSRootCore'+ext,
             'JSRootMath'           : dir+'JSRootMath'+ext,
             'JSRootInterface'      : dir+'JSRootInterface'+ext,
             'JSRootIOEvolution'    : dir+'JSRootIOEvolution'+ext,
@@ -39,20 +30,32 @@
             'JSRootPainter.more'   : dir+'JSRootPainter.more'+ext,
             'JSRootPainter.jquery' : dir+'JSRootPainter.jquery'+ext,
             'JSRoot3DPainter'      : dir+'JSRoot3DPainter'+ext,
+            'ThreeCSG'             : dir+'ThreeCSG'+ext,
             'JSRootGeoPainter'     : dir+'JSRootGeoPainter'+ext
          };
 
+      var cfg_paths;
+      if ((requirejs.s!==undefined) && (requirejs.s.contexts !== undefined) && ((requirejs.s.contexts._!==undefined) &&
+           requirejs.s.contexts._.config!==undefined)) cfg_paths = requirejs.s.contexts._.config.paths;
+                                                 else console.warn("Require.js paths changed - please contact JSROOT developers");
+
       // check if modules are already loaded
-      for (var module = 0; module < paths.length; ++module)
-        if (requirejs.defined(module))
-           delete paths[module];
+      for (var module in paths)
+         if (requirejs.defined(module) || (cfg_paths && (module in cfg_paths)))
+            delete paths[module];
+
+      // add mapping if script loaded as bower module 'jsroot'
+//      if (cfg_paths  && ('jsroot' in cfg_paths))
+//           requirejs.config({ map : { "*": { "JSRootCore": "jsroot" } } });
+
 
       // configure all dependencies
       requirejs.config({
-       paths: paths,
-       shim: {
-         'touch-punch': { deps: ['jquery'] },
-         'THREE_ALL': { deps: ['THREE'] },
+        paths: paths,
+        shim: {
+         'jqueryui-mousewheel': { deps: ['jquery-ui'] },
+         'jqueryui-touch-punch': { deps: ['jquery-ui'] },
+         'threejs_all': { deps: [ 'threejs'] },
          'MathJax': {
              exports: 'MathJax',
              init: function () {
@@ -69,10 +72,17 @@
              }
           }
        }
-    });
+      });
 
       // AMD. Register as an anonymous module.
-      define( factory );
+      define( jsroot );
+
+      if (!require.specified("JSRootCore"))
+          define('JSRootCore', [], jsroot);
+
+      if (!require.specified("jsroot"))
+         define('jsroot', [], jsroot);
+
    } else {
 
       if (typeof JSROOT != 'undefined')
@@ -80,22 +90,41 @@
 
       JSROOT = {};
 
-      // Browser globals
       factory(JSROOT);
    }
 } (function(JSROOT) {
 
-   JSROOT.version = "4.3 19/02/2016";
+   JSROOT.version = "4.4.1 31/03/2016";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
+   JSROOT.source_fullpath = ""; // full name of source script
+   JSROOT.bower_dir = ""; // when specified, use standard libs from bower location
 
    JSROOT.id_counter = 0;
 
    JSROOT.touches = false;
-   JSROOT.browser = { isOpera:false, isFirefox:true, isSafari: false, isChrome: false, isIE: false };
+   JSROOT.browser = { isOpera:false, isFirefox:true, isSafari:false, isChrome:false, isIE:false };
 
    if ((typeof document !== "undefined") && (typeof window !== "undefined")) {
+      var scripts = document.getElementsByTagName('script');
+      for (var n = 0; n < scripts.length; ++n) {
+         var src = scripts[n].src;
+         if ((src===undefined) || (typeof src !== 'string')) continue;
+
+         var pos = src.indexOf("scripts/JSRootCore.");
+         if (pos<0) continue;
+
+         JSROOT.source_dir = src.substr(0, pos);
+         JSROOT.source_min = src.indexOf("scripts/JSRootCore.min.js") >= 0;
+
+         JSROOT.source_fullpath = src;
+
+         if ((console!==undefined) && (typeof console.log == 'function'))
+            console.log("Set JSROOT.source_dir to " + JSROOT.source_dir + ", " + JSROOT.version);
+         break;
+      }
+
       JSROOT.touches = ('ontouchend' in document); // identify if touch events are supported
       JSROOT.browser.isOpera = !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0;
       JSROOT.browser.isFirefox = typeof InstallTrigger !== 'undefined';
@@ -108,14 +137,13 @@
 
    // default draw styles, can be changed after loading of JSRootCore.js
    JSROOT.gStyle = {
-         Tooltip : true, // tooltip on/off
+         Tooltip : 2, // 0 - off, 1-default, 2-advanced (experimental)
          ContextMenu : true,
          Zooming : true,
          MoveResize : true,   // enable move and resize of elements like statbox, title, pave, colz
          DragAndDrop : true,  // enables drag and drop functionality
          ToolBar : true,    // show additional tool buttons on the canvas
          OptimizeDraw : 1, // drawing optimization: 0 - disabled, 1 - only for large (>5000 1d bins, >50 2d bins) histograms, 2 - always
-         DefaultCol : 1,  // default col option 1-svg, 2-canvas
          AutoStat : true,
          OptStat  : 1111,
          OptFit   : 0,
@@ -128,7 +156,6 @@
          FitFormat : "5.4g",
          Palette : 57,
          MathJax : 0,  // 0 - never, 1 - only for complex cases, 2 - always
-         Interpolate : "basis", // d3.js interpolate methods, used in TGraph and TF1 painters
          ProgressBox : true,  // show progress box
          Embed3DinSVG : 2,  // 0 - no embed, 1 - overlay over SVG (IE), 2 - embed into SVG (works only with Firefox and Chrome)
          NoWebGL : false // if true, WebGL will be disabled
@@ -589,23 +616,27 @@
          urllist = "";
       }
 
-      var isrootjs = false;
-      if (filename.indexOf("$$$")==0) {
+      var isrootjs = false, isbower = false;
+      if (filename.indexOf("$$$")===0) {
          isrootjs = true;
          filename = filename.slice(3);
          if ((filename.indexOf("style/")==0) && JSROOT.source_min &&
              (filename.lastIndexOf('.css')==filename.length-3) &&
              (filename.indexOf('.min.css')<0))
             filename = filename.slice(0, filename.length-4) + '.min.css';
+      } else
+      if (filename.indexOf("###")===0) {
+         isbower = true;
+         filename = filename.slice(3);
       }
       var isstyle = filename.indexOf('.css') > 0;
 
       if (isstyle) {
          var styles = document.getElementsByTagName('link');
          for (var n = 0; n < styles.length; ++n) {
-            if ((styles[n]['type'] != 'text/css') || (styles[n]['rel'] != 'stylesheet')) continue;
+            if ((styles[n].type != 'text/css') || (styles[n].rel !== 'stylesheet')) continue;
 
-            var href = styles[n]['href'];
+            var href = styles[n].href;
             if ((href == null) || (href.length == 0)) continue;
 
             if (href.indexOf(filename)>=0) return completeLoad();
@@ -615,9 +646,9 @@
          var scripts = document.getElementsByTagName('script');
 
          for (var n = 0; n < scripts.length; ++n) {
-            if (scripts[n]['type'] != 'text/javascript') continue;
+            // if (scripts[n].type != 'text/javascript') continue;
 
-            var src = scripts[n]['src'];
+            var src = scripts[n].src;
             if ((src == null) || (src.length == 0)) continue;
 
             if ((src.indexOf(filename)>=0) && (src.indexOf("load=")<0)) {
@@ -627,7 +658,8 @@
          }
       }
 
-      if (isrootjs && (JSROOT.source_dir!=null)) filename = JSROOT.source_dir + filename;
+      if (isrootjs && (JSROOT.source_dir!=null)) filename = JSROOT.source_dir + filename; else
+      if (isbower && (JSROOT.bower_dir.length>0)) filename = JSROOT.bower_dir + filename;
 
       var element = null;
 
@@ -700,7 +732,7 @@
 
       var ext = jsroot.source_min ? ".min" : "";
 
-      var need_jquery = false;
+      var need_jquery = false, use_bower = (JSROOT.bower_dir.length>0);
 
       // file names should be separated with ';'
       var mainfiles = "", extrafiles = ""; // scripts for direct loadin
@@ -718,7 +750,7 @@
                jsroot.console('Reuse existing d3.js ' + d3.version + ", required 3.4.10", debugout);
                jsroot['_test_d3_'] = 1;
             } else {
-               mainfiles += '$$$scripts/d3.v3.min.js;';
+               mainfiles += use_bower ? '###d3/d3.min.js;' : '$$$scripts/d3.v3.min.js;';
                jsroot['_test_d3_'] = 2;
             }
          }
@@ -751,25 +783,34 @@
       }
 
       if ((kind.indexOf("3d;")>=0) || (kind.indexOf("geom;")>=0)) {
-         mainfiles += "$$$scripts/three" + ext + ".js;" +
-                      "$$$scripts/three.extra" + ext + ".js;";
-         modules.push("THREE_ALL");
+         if (use_bower)
+           mainfiles += "###threejs/build/three.min.js;" +
+                        "###threejs/examples/js/utils/FontUtils.js;" +
+                        "###threejs/examples/js/renderers/Projector.js;" +
+                        "###threejs/examples/js/renderers/CanvasRenderer.js;" +
+                        "###threejs/examples/js/geometries/TextGeometry.js;" +
+                        "###threejs/examples/js/controls/OrbitControls.js;" +
+                        "###threejs/examples/js/controls/TransformControls.js;" +
+                        "###threejs/examples/fonts/helvetiker_regular.typeface.js";
+         else
+            mainfiles += "$$$scripts/three" + ext + ".js;" +
+                         "$$$scripts/three.extra" + ext + ".js;";
+         modules.push("threejs_all");
          mainfiles += "$$$scripts/JSRoot3DPainter" + ext + ".js;";
          modules.push('JSRoot3DPainter');
       }
 
       if (kind.indexOf("geom;")>=0) {
-         //mainfiles += "$$$scripts/csg.js;" +
-         //             "$$$scripts/ThreeCSG.js;";
-         mainfiles += "$$$scripts/JSRootGeoPainter" + ext + ".js;";
+         mainfiles += "$$$scripts/ThreeCSG" + ext + ".js;" +
+                      "$$$scripts/JSRootGeoPainter" + ext + ".js;";
          extrafiles += "$$$style/JSRootGeoPainter" + ext + ".css;";
-         modules.push('JSRootGeoPainter');
+         modules.push('ThreeCSG', 'JSRootGeoPainter');
       }
 
       if (kind.indexOf("mathjax;")>=0) {
          if (typeof MathJax == 'undefined') {
-            mainfiles += "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG," +
-                          jsroot.source_dir + "scripts/mathjax_config.js;";
+            mainfiles += (use_bower ? "###MathJax/MathJax.js" : "https://cdn.mathjax.org/mathjax/latest/MathJax.js") +
+                         "?config=TeX-AMS-MML_SVG," + jsroot.source_dir + "scripts/mathjax_config.js;";
          }
          if (JSROOT.gStyle.MathJax == 0) JSROOT.gStyle.MathJax = 1;
          modules.push('MathJax');
@@ -788,20 +829,20 @@
          if (has_jq)
             jsroot.console('Reuse existing jQuery ' + jQuery.fn.jquery + ", required 2.1.4", debugout);
          else
-            lst_jq += "$$$scripts/jquery.min.js;";
+            lst_jq += (use_bower ? "###jquery/dist" : "$$$scripts") + "/jquery.min.js;";
          if (has_jq && typeof $.ui != 'undefined')
             jsroot.console('Reuse existing jQuery-ui ' + $.ui.version + ", required 1.11.4", debugout);
          else {
-            lst_jq += '$$$scripts/jquery-ui.min.js;';
+            lst_jq += (use_bower ? "###jquery-ui" : "$$$scripts") + '/jquery-ui.min.js;';
             extrafiles += '$$$style/jquery-ui' + ext + '.css;';
          }
 
          if (JSROOT.touches) {
-            lst_jq += '$$$scripts/touch-punch.min.js;';
-            modules.push('touch-punch');
+            lst_jq += use_bower ? '###jqueryui-touch-punch/jquery.ui.touch-punch.min.js;' : '$$$scripts/touch-punch.min.js;';
+            modules.push('jqueryui-touch-punch');
          }
 
-         modules.splice(0,0, 'jquery', 'jquery-ui');
+         modules.splice(0,0, 'jquery', 'jquery-ui', 'jqueryui-mousewheel');
          mainfiles = lst_jq + mainfiles;
 
          jsroot.load_jquery = true;
@@ -889,111 +930,137 @@
 
    JSROOT.Create = function(typename, target) {
       var obj = target;
-      if (obj == null)
-         obj = { _typename: typename };
+      if (obj == null) obj = { _typename: typename };
 
-      if (typename == 'TObject')
-         JSROOT.extend(obj, { fUniqueID: 0, fBits: 0x3000008 });
-      else
-      if (typename == 'TNamed')
-         JSROOT.extend(obj, { fUniqueID: 0, fBits: 0x3000008, fName: "", fTitle: "" });
-      else
-      if ((typename == 'TList') || (typename == 'THashList'))
-         JSROOT.extend(obj, { name: typename, arr : [], opt : [] });
-      else
-      if (typename == 'TAttAxis') {
-         JSROOT.extend(obj, { fNdivisions: 510, fAxisColor: 1,
-            fLabelColor: 1, fLabelFont: 42, fLabelOffset: 0.005, fLabelSize: 0.035, fTickLength: 0.03,
-            fTitleOffset: 1, fTitleSize: 0.035, fTitleColor: 1, fTitleFont : 42 });
-      } else
-      if (typename == 'TAxis') {
-         JSROOT.Create("TNamed", obj);
-         JSROOT.Create("TAttAxis", obj);
-         JSROOT.extend(obj, { fNbins: 0, fXmin: 0, fXmax: 0, fXbins : [], fFirst: 0, fLast: 0,
-                              fBits2: 0, fTimeDisplay: false, fTimeFormat: "", fLabels: null });
-      } else
-      if (typename == 'TAttLine') {
-         JSROOT.extend(obj, { fLineColor: 1, fLineStyle : 1, fLineWidth : 1 });
-      } else
-      if (typename == 'TAttFill') {
-         JSROOT.extend(obj, { fFillColor: 0, fFillStyle : 0 } );
-      } else
-      if (typename == 'TAttMarker') {
-         JSROOT.extend(obj, { fMarkerColor: 1, fMarkerStyle : 1, fMarkerSize : 1. });
-      } else
-      if (typename == 'TBox') {
-         JSROOT.Create("TObject", obj);
-         JSROOT.Create("TAttLine", obj);
-         JSROOT.Create("TAttFill", obj);
-         JSROOT.extend(obj, { fX1: 0, fY1: 0, fX2: 1, fY2: 1 });
-      } else
-      if (typename == 'TPave') {
-         JSROOT.Create("TBox", obj);
-         JSROOT.extend(obj, { fX1NDC : 0., fY1NDC: 0, fX2NDC: 1, fY2NDC: 1,
-                              fBorderSize: 0, fInit: 1, fShadowColor: 1,
-                              fCornerRadius: 0, fOption: "blNDC", fName: "title" });
-      } else
-      if (typename == 'TAttText') {
-         JSROOT.extend(obj, { fTextAngle: 0, fTextSize: 0, fTextAlign: 22, fTextColor: 1, fTextFont: 42});
-      } else
-      if (typename == 'TPaveText') {
-         JSROOT.Create("TPave", obj);
-         JSROOT.Create("TAttText", obj);
-         JSROOT.extend(obj, { fLabel: "", fLongest: 27, fMargin: 0.05, fLines: JSROOT.Create("TList") });
-      } else
-      if (typename == 'TPaveStats') {
-         JSROOT.Create("TPaveText", obj);
-         JSROOT.extend(obj, { fOptFit: 0, fOptStat: 0, fFitFormat: "", fStatFormat: "", fParent: null });
-      } else
-      if (typename == 'TObjString') {
-         JSROOT.Create("TObject", obj);
-         JSROOT.extend(obj, { fString: ""});
-      } else
-      if (typename == 'TH1') {
-         JSROOT.Create("TNamed", obj);
-         JSROOT.Create("TAttLine", obj);
-         JSROOT.Create("TAttFill", obj);
-         JSROOT.Create("TAttMarker", obj);
+      switch (typename) {
+         case 'TObject':
+             JSROOT.extend(obj, { fUniqueID: 0, fBits: 0x3000008 });
+             break;
+         case 'TNamed':
+            JSROOT.extend(obj, { fUniqueID: 0, fBits: 0x3000008, fName: "", fTitle: "" });
+            break;
+         case 'TList':
+         case 'THashList':
+            JSROOT.extend(obj, { name: typename, arr : [], opt : [] });
+            break;
+         case 'TAttAxis':
+            JSROOT.extend(obj, { fNdivisions: 510, fAxisColor: 1,
+                                 fLabelColor: 1, fLabelFont: 42, fLabelOffset: 0.005, fLabelSize: 0.035, fTickLength: 0.03,
+                                 fTitleOffset: 1, fTitleSize: 0.035, fTitleColor: 1, fTitleFont : 42 });
+            break;
+         case 'TAxis':
+            JSROOT.Create("TNamed", obj);
+            JSROOT.Create("TAttAxis", obj);
+            JSROOT.extend(obj, { fNbins: 0, fXmin: 0, fXmax: 0, fXbins : [], fFirst: 0, fLast: 0,
+                                 fBits2: 0, fTimeDisplay: false, fTimeFormat: "", fLabels: null });
+            break;
+         case 'TAttLine':
+            JSROOT.extend(obj, { fLineColor: 1, fLineStyle : 1, fLineWidth : 1 });
+            break;
+         case 'TAttFill':
+            JSROOT.extend(obj, { fFillColor: 0, fFillStyle : 0 } );
+            break;
+         case 'TAttMarker':
+            JSROOT.extend(obj, { fMarkerColor: 1, fMarkerStyle : 1, fMarkerSize : 1. });
+            break;
+         case 'TLine':
+            JSROOT.Create("TObject", obj);
+            JSROOT.Create("TAttLine", obj);
+            JSROOT.extend(obj, { fX1: 0, fX2: 1, fY1: 0, fY2: 1 });
+            break;
+         case 'TBox':
+            JSROOT.Create("TObject", obj);
+            JSROOT.Create("TAttLine", obj);
+            JSROOT.Create("TAttFill", obj);
+            JSROOT.extend(obj, { fX1: 0, fX2: 1, fY1: 0, fY2: 1 });
+            break;
+         case 'TPave':
+            JSROOT.Create("TBox", obj);
+            JSROOT.extend(obj, { fX1NDC : 0., fY1NDC: 0, fX2NDC: 1, fY2NDC: 1,
+                                 fBorderSize: 0, fInit: 1, fShadowColor: 1,
+                                 fCornerRadius: 0, fOption: "blNDC", fName: "title" });
+            break;
+         case 'TAttText':
+            JSROOT.extend(obj, { fTextAngle: 0, fTextSize: 0, fTextAlign: 22, fTextColor: 1, fTextFont: 42});
+            break;
+         case 'TPaveText':
+            JSROOT.Create("TPave", obj);
+            JSROOT.Create("TAttText", obj);
+            JSROOT.extend(obj, { fLabel: "", fLongest: 27, fMargin: 0.05, fLines: JSROOT.Create("TList") });
+            break;
+         case 'TPaveStats':
+            JSROOT.Create("TPaveText", obj);
+            JSROOT.extend(obj, { fOptFit: 0, fOptStat: 0, fFitFormat: "", fStatFormat: "", fParent: null });
+            break;
+         case 'TObjString':
+            JSROOT.Create("TObject", obj);
+            JSROOT.extend(obj, { fString: "" });
+            break;
+         case 'TH1':
+            JSROOT.Create("TNamed", obj);
+            JSROOT.Create("TAttLine", obj);
+            JSROOT.Create("TAttFill", obj);
+            JSROOT.Create("TAttMarker", obj);
 
-         JSROOT.extend(obj, {
-            fNcells : 0,
-            fXaxis: JSROOT.Create("TAxis"),
-            fYaxis: JSROOT.Create("TAxis"),
-            fZaxis: JSROOT.Create("TAxis"),
-            fBarOffset : 0, fBarWidth : 1000, fEntries : 0.,
-            fTsumw : 0., fTsumw2 : 0., fTsumwx : 0., fTsumwx2 : 0.,
-            fMaximum : -1111., fMinimum : -1111, fNormFactor : 0., fContour : [],
-            fSumw2 : [], fOption : "",
-            fFunctions : JSROOT.Create("TList"),
-            fBufferSize : 0, fBuffer : [], fBinStatErrOpt : 0 });
-      } else
-      if (typename == 'TH1I' || typename == 'TH1F' || typename == 'TH1D' || typename == 'TH1S' || typename == 'TH1C') {
-         JSROOT.Create("TH1", obj);
-         obj.fArray = [];
-      } else
-      if (typename == 'TH2') {
-         JSROOT.Create("TH1", obj);
-         JSROOT.extend(obj, { fScalefactor: 1., fTsumwy: 0.,  fTsumwy2: 0, fTsumwxy : 0});
-      } else
-      if (typename == 'TH2I' || typename == 'TH2F' || typename == 'TH2D' || typename == 'TH2S' || typename == 'TH2C') {
-         JSROOT.Create("TH2", obj);
-         obj.fArray = [];
-      } else
-      if (typename == 'TGraph') {
-         JSROOT.Create("TNamed", obj);
-         JSROOT.Create("TAttLine", obj);
-         JSROOT.Create("TAttFill", obj);
-         JSROOT.Create("TAttMarker", obj);
-         JSROOT.extend(obj, { fFunctions: JSROOT.Create("TList"), fHistogram: null,
-                              fMaxSize: 0, fMaximum:-1111, fMinimum:-1111, fNpoints: 0, fX: [], fY: [] });
-      } else
-      if (typename == 'TMultiGraph') {
-         JSROOT.Create("TNamed", obj);
-         JSROOT.extend(obj, { fFunctions: JSROOT.Create("TList"), fGraphs: JSROOT.Create("TList"),
-                              fHistogram: null, fMaximum: -1111, fMinimum: -1111 });
+            JSROOT.extend(obj, {
+               fNcells : 0,
+               fXaxis: JSROOT.Create("TAxis"),
+               fYaxis: JSROOT.Create("TAxis"),
+               fZaxis: JSROOT.Create("TAxis"),
+               fBarOffset: 0, fBarWidth: 1000, fEntries: 0.,
+               fTsumw: 0., fTsumw2: 0., fTsumwx: 0., fTsumwx2: 0.,
+               fMaximum: -1111., fMinimum: -1111, fNormFactor: 0., fContour: [],
+               fSumw2: [], fOption: "",
+               fFunctions: JSROOT.Create("TList"),
+               fBufferSize: 0, fBuffer: [], fBinStatErrOpt: 0 });
+            break;
+         case 'TH1I':
+         case 'TH1F':
+         case 'TH1D':
+         case 'TH1S':
+         case 'TH1C':
+            JSROOT.Create("TH1", obj);
+            obj.fArray = [];
+            break;
+         case 'TH2':
+            JSROOT.Create("TH1", obj);
+            JSROOT.extend(obj, { fScalefactor: 1., fTsumwy: 0.,  fTsumwy2: 0, fTsumwxy : 0});
+            break;
+         case 'TH2I':
+         case 'TH2F':
+         case 'TH2D':
+         case 'TH2S':
+         case 'TH2C':
+            JSROOT.Create("TH2", obj);
+            obj.fArray = [];
+            break;
+         case 'TGraph':
+            JSROOT.Create("TNamed", obj);
+            JSROOT.Create("TAttLine", obj);
+            JSROOT.Create("TAttFill", obj);
+            JSROOT.Create("TAttMarker", obj);
+            JSROOT.extend(obj, { fFunctions: JSROOT.Create("TList"), fHistogram: null,
+                                 fMaxSize: 0, fMaximum:-1111, fMinimum:-1111, fNpoints: 0, fX: [], fY: [] });
+            break;
+         case 'TMultiGraph':
+            JSROOT.Create("TNamed", obj);
+            JSROOT.extend(obj, { fFunctions: JSROOT.Create("TList"), fGraphs: JSROOT.Create("TList"),
+                                 fHistogram: null, fMaximum: -1111, fMinimum: -1111 });
+            break;
+         case 'TGaxis':
+            JSROOT.Create("TLine", obj);
+            JSROOT.Create("TAttText", obj);
+            JSROOT.extend(obj, { _fChopt: "", fFunctionName: "", fGridLength: 0,
+                                  fLabelColor: 1, fLabelFont: 42, fLabelOffset: 0.005, fLabelSize: 0.035,
+                                  fName: "", fNdiv: 12, fTickSize: 0.02, fTimeFormat: "",
+                                  fTitle: "", fTitleOffset: 1, fTitleSize: 0.035,
+                                  fWmax: 100, fWmin: 0 });
+            break;
+
       }
 
-      JSROOT.addMethods(obj, typename);
+      obj._typename = typename;
+      this.addMethods(obj);
       return obj;
    }
 
@@ -1002,43 +1069,45 @@
    JSROOT.CreateTAxis = function() { return JSROOT.Create("TAxis"); }
 
    JSROOT.CreateTH1 = function(nbinsx) {
-      var histo = JSROOT.Create("TH1I");
-      JSROOT.extend(histo, { fName: "dummy_histo_" + this.id_counter++, fTitle: "dummytitle" });
 
-      if (nbinsx!=null) {
-         histo['fNcells'] = nbinsx+2;
-         for (var i=0;i<histo['fNcells'];++i) histo['fArray'].push(0);
-         JSROOT.extend(histo['fXaxis'], { fNbins: nbinsx, fXmin: 0,  fXmax: nbinsx });
+      var histo = JSROOT.extend(JSROOT.Create("TH1I"),
+                   { fName: "dummy_histo_" + this.id_counter++, fTitle: "dummytitle" });
+
+      if (nbinsx!==undefined) {
+         histo.fNcells = nbinsx+2;
+         for (var i=0;i<histo.fNcells;++i) histo.fArray.push(0);
+         JSROOT.extend(histo.fXaxis, { fNbins: nbinsx, fXmin: 0,  fXmax: nbinsx });
       }
       return histo;
    }
 
    JSROOT.CreateTH2 = function(nbinsx, nbinsy) {
-      var histo = JSROOT.Create("TH2I");
-      JSROOT.extend(histo, { fName: "dummy_histo_" + this.id_counter++, fTitle: "dummytitle" });
 
-      if ((nbinsx!=null) && (nbinsy!=null)) {
-         histo['fNcells'] = (nbinsx+2) * (nbinsy+2);
-         for (var i=0;i<histo['fNcells'];++i) histo['fArray'].push(0);
-         JSROOT.extend(histo['fXaxis'], { fNbins: nbinsx, fXmin: 0, fXmax: nbinsx });
-         JSROOT.extend(histo['fYaxis'], { fNbins: nbinsy, fXmin: 0, fXmax: nbinsy });
+      var histo = JSROOT.extend(JSROOT.Create("TH2I"),
+                    { fName: "dummy_histo_" + this.id_counter++, fTitle: "dummytitle" });
+
+      if ((nbinsx!==undefined) && (nbinsy!==undefined)) {
+         histo.fNcells = (nbinsx+2) * (nbinsy+2);
+         for (var i=0;i<histo.fNcells;++i) histo.fArray.push(0);
+         JSROOT.extend(histo.fXaxis, { fNbins: nbinsx, fXmin: 0, fXmax: nbinsx });
+         JSROOT.extend(histo.fYaxis, { fNbins: nbinsy, fXmin: 0, fXmax: nbinsy });
       }
       return histo;
    }
 
    JSROOT.CreateTGraph = function(npoints, xpts, ypts) {
-      var graph = JSROOT.Create("TGraph");
-      JSROOT.extend(graph, { fBits: 0x3000408, fName: "dummy_graph_" + this.id_counter++, fTitle: "dummytitle" });
+      var graph = JSROOT.extend(JSROOT.Create("TGraph"),
+              { fBits: 0x3000408, fName: "dummy_graph_" + this.id_counter++, fTitle: "dummytitle" });
 
       if (npoints>0) {
-         graph['fMaxSize'] = graph['fNpoints'] = npoints;
+         graph.fMaxSize = graph.fNpoints = npoints;
 
          var usex = (typeof xpts == 'object') && (xpts.length === npoints);
          var usey = (typeof ypts == 'object') && (ypts.length === npoints);
 
          for (var i=0;i<npoints;++i) {
-            graph['fX'].push(usex ? xpts[i] : i/npoints);
-            graph['fY'].push(usey ? ypts[i] : i/npoints);
+            graph.fX.push(usex ? xpts[i] : i/npoints);
+            graph.fY.push(usey ? ypts[i] : i/npoints);
          }
       }
 
@@ -1050,78 +1119,71 @@
       for(var i=0; i<arguments.length; ++i)
           mgraph.fGraphs.Add(arguments[i], "");
       return mgraph;
-    }
+   }
 
-   JSROOT.addMethods = function(obj, obj_typename) {
-      // check object type and add methods if needed
-      if (('fBits' in obj) && !('TestBit' in obj)) {
-         obj['TestBit'] = function (f) { return (this['fBits'] & f) != 0; };
-         obj['InvertBit'] = function (f) { this['fBits'] = this['fBits'] ^ (f & 0xffffff); };
+   JSROOT.methodsCache = {}; // variable used to keep methods for known classes
+
+   JSROOT.getMethods = function(typename, obj) {
+      var m = JSROOT.methodsCache[typename];
+
+      if (m !== undefined) return m;
+
+      m = {};
+
+      if ((typename=="TObject") || (typename=="TNamed") || ((obj!==undefined) && ('fBits' in obj))) {
+         m.TestBit = function (f) { return (this.fBits & f) != 0; };
+         m.InvertBit = function (f) { this.fBits = this.fBits ^ (f & 0xffffff); };
       }
 
-      if (!obj_typename) {
-         if (!('_typename' in obj)) return;
-         obj_typename = obj['_typename'];
-      }
-
-      var EErrorType = {
-          kERRORMEAN : 0,
-          kERRORSPREAD : 1,
-          kERRORSPREADI : 2,
-          kERRORSPREADG : 3
-       };
-
-      if ((obj_typename == 'TList') || (obj_typename == 'THashList')) {
-         obj['Clear'] = function() {
-            this['arr'] = new Array;
-            this['opt'] = new Array;
+      if ((typename === 'TList') || (typename === 'THashList')) {
+         m.Clear = function() {
+            this.arr = [];
+            this.opt = [];
          }
-         obj['Add'] = function(obj,opt) {
-            this['arr'].push(obj);
-            this['opt'].push((opt && typeof opt=='string') ? opt : "");
+         m.Add = function(obj,opt) {
+            this.arr.push(obj);
+            this.opt.push((opt && typeof opt=='string') ? opt : "");
          }
-         obj['AddFirst'] = function(obj,opt) {
-            this['arr'].unshift(obj);
-            this['opt'].unshift((opt && typeof opt=='string') ? opt : "");
+         m.AddFirst = function(obj,opt) {
+            this.arr.unshift(obj);
+            this.opt.unshift((opt && typeof opt=='string') ? opt : "");
          }
-         obj['RemoveAt'] = function(indx) {
-            this['arr'].splice(indx, 1);
-            this['opt'].splice(indx, 1);
+         m.RemoveAt = function(indx) {
+            this.arr.splice(indx, 1);
+            this.opt.splice(indx, 1);
          }
       }
 
-      if ((obj_typename == "TPaveText") || (obj_typename == "TPaveStats")) {
-         obj['AddText'] = function(txt) {
-            this['fLines'].Add({'fTitle' : txt, "fTextColor" : 1 });
+      if ((typename === "TPaveText") || (typename === "TPaveStats")) {
+         m.AddText = function(txt) {
+            this.fLines.Add({ fTitle: txt, fTextColor: 1 });
          }
-         obj['Clear'] = function() {
-            this['fLines'].Clear();
+         m.Clear = function() {
+            this.fLines.Clear();
          }
       }
 
-      if ((obj_typename.indexOf("TFormula") != -1) || (obj_typename.indexOf("TF1") == 0)) {
-         obj['addFormula'] = function(obj) {
+      if (typename.indexOf("TF1") == 0) {
+         m.addFormula = function(obj) {
             if (obj==null) return;
-            if (!('formulas' in this)) this['formulas'] = [];
-            this['formulas'].push(obj);
+            if (!('formulas' in this)) this.formulas = [];
+            this.formulas.push(obj);
          }
 
-         obj['evalPar'] = function(x) {
-            if (! ('_func' in this) || (this['_title'] != this['fTitle'])) {
+         m.evalPar = function(x) {
+            if (! ('_func' in this) || (this._title !== this.fTitle)) {
 
-              var _func = this['fTitle'];
+              var _func = this.fTitle;
 
               if ('formulas' in this)
-                 for (var i=0;i<this.formulas.length;++i) {
-                    while (_func.indexOf(this.formulas[i].fName) >= 0) {
+                 for (var i=0;i<this.formulas.length;++i)
+                    while (_func.indexOf(this.formulas[i].fName) >= 0)
                        _func = _func.replace(this.formulas[i].fName, this.formulas[i].fTitle);
-                   }
-               }
               _func = _func.replace(/\b(abs)\b/g, 'TMath::Abs');
               _func = _func.replace('TMath::Exp(', 'Math.exp(');
               _func = _func.replace('TMath::Abs(', 'Math.abs(');
               if (typeof JSROOT.Math == 'object') {
-                 this['_math'] = JSROOT.Math;
+                 this._math = JSROOT.Math;
                  _func = _func.replace('TMath::Prob(', 'this._math.Prob(');
                  _func = _func.replace('gaus(', 'this._math.gaus(this, x, ');
                  _func = _func.replace('gausn(', 'this._math.gausn(this, x, ');
@@ -1130,43 +1192,39 @@
                  _func = _func.replace('landaun(', 'this._math.landaun(this, x, ');
               }
               _func = _func.replace('pi', 'Math.PI');
-              for (var i=0;i<this['fNpar'];++i) {
+              for (var i=0;i<this.fNpar;++i)
                  while(_func.indexOf('['+i+']') != -1)
-                    _func = _func.replace('['+i+']', this['fParams'][i]);
-              }
+                    _func = _func.replace('['+i+']', this.GetParValue(i));
               _func = _func.replace(/\b(sin)\b/gi, 'Math.sin');
               _func = _func.replace(/\b(cos)\b/gi, 'Math.cos');
               _func = _func.replace(/\b(tan)\b/gi, 'Math.tan');
               _func = _func.replace(/\b(exp)\b/gi, 'Math.exp');
 
-               this['_func'] = new Function("x", "return " + _func).bind(this);
-               this['_title'] = this['fTitle'];
+               this._func = new Function("x", "return " + _func).bind(this);
+               this._title = this.fTitle;
             }
 
-            return this['_func'](x);
-         };
-      }
-
-      if (obj_typename=='TF1') {
-         obj['GetParName'] = function(n) {
+            return this._func(x);
+         }
+         m.GetParName = function(n) {
             if (('fFormula' in this) && ('fParams' in this.fFormula)) return this.fFormula.fParams[n].first;
             if ('fNames' in this) return this.fNames[n];
             return "Par"+n;
          }
-         obj['GetParValue'] = function(n) {
+         m.GetParValue = function(n) {
             if (('fFormula' in this) && ('fClingParameters' in this.fFormula)) return this.fFormula.fClingParameters[n];
             if (('fParams' in this) && (this.fParams!=null))  return this.fParams[n];
             return null;
          }
       }
 
-      if ((obj_typename.indexOf("TGraph") == 0) || (obj_typename == "TCutG")) {
+      if ((typename.indexOf("TGraph") == 0) || (typename == "TCutG")) {
          // check if point inside figure specified by the TGrpah
-         obj['IsInside'] = function(xp,yp) {
-            var j = this['fNpoints'] - 1, x = this['fX'], y = this['fY'];
+         m.IsInside = function(xp,yp) {
+            var j = this.fNpoints - 1, x = this.fX, y = this.fY;
             var oddNodes = false;
 
-            for (var i=0; i<this['fNpoints']; ++i) {
+            for (var i=0; i<this.fNpoints; ++i) {
                if ((y[i]<yp && y[j]>=yp) || (y[j]<yp && y[i]>=yp)) {
                   if (x[i]+(yp-y[i])/(y[j]-y[i])*(x[j]-x[i])<xp) {
                      oddNodes = !oddNodes;
@@ -1178,10 +1236,11 @@
             return oddNodes;
          };
       }
-      if (obj_typename.indexOf("TH1") == 0 ||
-          obj_typename.indexOf("TH2") == 0 ||
-          obj_typename.indexOf("TH3") == 0) {
-         obj['getBinError'] = function(bin) {
+
+      if (typename.indexOf("TH1") == 0 ||
+          typename.indexOf("TH2") == 0 ||
+          typename.indexOf("TH3") == 0) {
+         m.getBinError = function(bin) {
             //   -*-*-*-*-*Return value of error associated to bin number bin*-*-*-*-*
             //    if the sum of squares of weights has been defined (via Sumw2),
             //    this function returns the sqrt(sum of w2).
@@ -1192,7 +1251,7 @@
                return Math.sqrt(this.fSumw2[bin]);
             return Math.sqrt(Math.abs(this.fArray[bin]));
          };
-         obj['setBinContent'] = function(bin, content) {
+         m.setBinContent = function(bin, content) {
             // Set bin content - only trival case, without expansion
             this.fEntries++;
             this.fTsumw = 0;
@@ -1200,66 +1259,77 @@
                this.fArray[bin] = content;
          };
       }
-      if (obj_typename.indexOf("TH1") == 0) {
-         obj['getBin'] = function(x) { return x; }
-         obj['getBinContent'] = function(bin) { return this.fArray[bin]; }
+
+      if (typename.indexOf("TH1") == 0) {
+         m.getBin = function(x) { return x; }
+         m.getBinContent = function(bin) { return this.fArray[bin]; }
       }
-      if (obj_typename.indexOf("TH2") == 0) {
-         obj['getBin'] = function(x, y) { return (x + (this.fXaxis.fNbins+2) * y); }
-         obj['getBinContent'] = function(x, y) { return this.fArray[this.getBin(x, y)]; }
+
+      if (typename.indexOf("TH2") == 0) {
+         m.getBin = function(x, y) { return (x + (this.fXaxis.fNbins+2) * y); }
+         m.getBinContent = function(x, y) { return this.fArray[this.getBin(x, y)]; }
       }
-      if (obj_typename.indexOf("TH3") == 0) {
-         obj['getBin'] = function(x, y, z) { return (x + (this.fXaxis.fNbins+2) * (y + (this.fYaxis.fNbins+2) * z)); }
-         obj['getBinContent'] = function(x, y, z) { return this.fArray[this.getBin(x, y, z)]; };
+
+      if (typename.indexOf("TH3") == 0) {
+         m.getBin = function(x, y, z) { return (x + (this.fXaxis.fNbins+2) * (y + (this.fYaxis.fNbins+2) * z)); }
+         m.getBinContent = function(x, y, z) { return this.fArray[this.getBin(x, y, z)]; };
       }
-      if (obj_typename.indexOf("TProfile") == 0) {
-         obj['getBin'] = function(x) { return x; }
-         obj['getBinContent'] = function(bin) {
-            if (bin < 0 || bin >= this['fNcells']) return 0;
-            if (this['fBinEntries'][bin] < 1e-300) return 0;
-            if (!this['fArray']) return 0;
-            return this['fArray'][bin]/this['fBinEntries'][bin];
+
+      if (typename.indexOf("TProfile") == 0) {
+         m.getBin = function(x) { return x; }
+         m.getBinContent = function(bin) {
+            if (bin < 0 || bin >= this.fNcells) return 0;
+            if (this.fBinEntries[bin] < 1e-300) return 0;
+            if (!this.fArray) return 0;
+            return this.fArray[bin]/this.fBinEntries[bin];
          };
-         obj['getBinEffectiveEntries'] = function(bin) {
-            if (bin < 0 || bin >= this['fNcells']) return 0;
-            var sumOfWeights = this['fBinEntries'][bin];
-            if ( this['fBinSumw2'] == null || this['fBinSumw2'].length != this['fNcells']) {
+         m.getBinEffectiveEntries = function(bin) {
+            if (bin < 0 || bin >= this.fNcells) return 0;
+            var sumOfWeights = this.fBinEntries[bin];
+            if ( this.fBinSumw2 == null || this.fBinSumw2.length != this.fNcells) {
                // this can happen  when reading an old file
                return sumOfWeights;
             }
-            var sumOfWeightsSquare = this['fSumw2'][bin];
+            var sumOfWeightsSquare = this.fSumw2[bin];
             return ( sumOfWeightsSquare > 0 ? sumOfWeights * sumOfWeights / sumOfWeightsSquare : 0 );
          };
-         obj['getBinError'] = function(bin) {
-            if (bin < 0 || bin >= this['fNcells']) return 0;
-            var cont = this['fArray'][bin];               // sum of bin w *y
-            var sum  = this['fBinEntries'][bin];          // sum of bin weights
-            var err2 = this['fSumw2'][bin];               // sum of bin w * y^2
-            var neff = this.getBinEffectiveEntries(bin);  // (sum of w)^2 / (sum of w^2)
+         m.getBinError = function(bin) {
+            if (bin < 0 || bin >= this.fNcells) return 0;
+            var cont = this.fArray[bin],               // sum of bin w *y
+                sum  = this.fBinEntries[bin],          // sum of bin weights
+                err2 = this.fSumw2[bin],               // sum of bin w * y^2
+                neff = this.getBinEffectiveEntries(bin);  // (sum of w)^2 / (sum of w^2)
             if (sum < 1e-300) return 0;                  // for empty bins
+            var EErrorType = { kERRORMEAN : 0, kERRORSPREAD : 1, kERRORSPREADI : 2, kERRORSPREADG : 3 };
             // case the values y are gaussian distributed y +/- sigma and w = 1/sigma^2
-            if (this['fErrorMode'] == EErrorType.kERRORSPREADG) {
-               return (1.0/Math.sqrt(sum));
-            }
+            if (this.fErrorMode === EErrorType.kERRORSPREADG)
+               return 1.0/Math.sqrt(sum);
             // compute variance in y (eprim2) and standard deviation in y (eprim)
             var contsum = cont/sum;
             var eprim2  = Math.abs(err2/sum - contsum*contsum);
             var eprim   = Math.sqrt(eprim2);
-            if (this['fErrorMode'] == EErrorType.kERRORSPREADI) {
+            if (this.fErrorMode === EErrorType.kERRORSPREADI) {
                if (eprim != 0) return eprim/Math.sqrt(neff);
                // in case content y is an integer (so each my has an error +/- 1/sqrt(12)
                // when the std(y) is zero
-               return (1.0/Math.sqrt(12*neff));
+               return 1.0/Math.sqrt(12*neff);
             }
             // if approximate compute the sums (of w, wy and wy2) using all the bins
             //  when the variance in y is zero
             // case option "S" return standard deviation in y
-            if (this['fErrorMode'] == EErrorType.kERRORSPREAD) return eprim;
+            if (this.fErrorMode === EErrorType.kERRORSPREAD) return eprim;
             // default case : fErrorMode = kERRORMEAN
             // return standard error on the mean of y
             return (eprim/Math.sqrt(neff));
          };
       }
+
+      JSROOT.methodsCache[typename] = m;
+      return m;
+   };
+
+   JSROOT.addMethods = function(obj) {
+      this.extend(obj, JSROOT.getMethods(obj._typename, obj));
    };
 
    JSROOT.lastFFormat = "";
@@ -1281,8 +1351,6 @@
       var prec = fmt.indexOf(".");
       if (prec<0) prec = 4; else prec = Number(fmt.slice(prec+1));
       if (isNaN(prec) || (prec<0) || (prec==null)) prec = 4;
-
-      if ((prec>20) || (prec<0)) console.log("1.prec = "  + prec +  "  fmt = " + fmt + last);
 
       var significance = false;
       if ((last=='e') || (last=='E')) { isexp = true; } else
@@ -1352,11 +1420,7 @@
 
    JSROOT.Initialize = function() {
 
-      if (typeof document === "undefined") {
-         JSROOT.source_dir = "";
-         JSROOT.source_min = false;
-         return this;
-      }
+      if (JSROOT.source_fullpath.length === 0) return this;
 
       function window_on_load(func) {
          if (func!=null) {
@@ -1368,60 +1432,51 @@
          return JSROOT;
       }
 
-      var scripts = document.getElementsByTagName('script');
+      var src = JSROOT.source_fullpath;
 
-      for (var n = 0; n < scripts.length; ++n) {
-         if (scripts[n]['type'] != 'text/javascript') continue;
+//      if (JSROOT.source_min) {
+//         if ( typeof define === "function" && define.amd ) {
+            // all references are done with 'JSRootCore' name,
+            // define it directly, otherwise it will be loaded once again
+//            define('JSRootCore', [], JSROOT);
+//         }
+//      }
 
-         var src = scripts[n]['src'];
-         if ((src == null) || (src.length == 0)) continue;
+      if (JSROOT.GetUrlOption('gui', src) !== null)
+         return window_on_load( function() { JSROOT.BuildSimpleGUI(); } );
 
-         var pos = src.indexOf("scripts/JSRootCore.");
-         if (pos<0) continue;
+      if ( typeof define === "function" && define.amd )
+         return window_on_load( function() { JSROOT.BuildSimpleGUI('check_existing_elements'); } );
 
-         JSROOT.source_dir = src.substr(0, pos);
-         JSROOT.source_min = src.indexOf("scripts/JSRootCore.min.js") >= 0;
-
-         JSROOT.console("Set JSROOT.source_dir to " + JSROOT.source_dir + ", " + JSROOT.version);
-
-         if (JSROOT.source_min) {
-            if ( typeof define === "function" && define.amd ) {
-               // all references are done with 'JSRootCore' name,
-               // define it directly, otherwise it will be loaded once again
-               define('JSRootCore', [], JSROOT);
-            }
-         }
-
-         if (JSROOT.GetUrlOption('gui', src) !== null)
-            return window_on_load( function() { JSROOT.BuildSimpleGUI(); } );
-
-         if ( typeof define === "function" && define.amd )
-            return window_on_load( function() { JSROOT.BuildSimpleGUI('check_existing_elements'); } );
-
-         var prereq = "";
-         if (JSROOT.GetUrlOption('io', src)!=null) prereq += "io;";
-         if (JSROOT.GetUrlOption('2d', src)!=null) prereq += "2d;";
-         if (JSROOT.GetUrlOption('jq2d', src)!=null) prereq += "jq2d;";
-         if (JSROOT.GetUrlOption('more2d', src)!=null) prereq += "more2d;";
-         if (JSROOT.GetUrlOption('geo', src)!=null) prereq += "geo;";
-         if (JSROOT.GetUrlOption('3d', src)!=null) prereq += "3d;";
-         if (JSROOT.GetUrlOption('math', src)!=null) prereq += "math;";
-         if (JSROOT.GetUrlOption('mathjax', src)!=null) prereq += "mathjax;";
-         var user = JSROOT.GetUrlOption('load', src);
-         if ((user!=null) && (user.length>0)) prereq += "load:" + user;
-         var onload = JSROOT.GetUrlOption('onload', src);
-
-         if ((prereq.length>0) || (onload!=null))
-            window_on_load(function() {
-              if (prereq.length>0) JSROOT.AssertPrerequisites(prereq, onload); else
-              if (onload!=null) {
-                 onload = JSROOT.findFunction(onload);
-                 if (typeof onload == 'function') onload();
-              }
-            });
-
-         return this;
+      var prereq = "";
+      if (JSROOT.GetUrlOption('io', src)!=null) prereq += "io;";
+      if (JSROOT.GetUrlOption('2d', src)!=null) prereq += "2d;";
+      if (JSROOT.GetUrlOption('jq2d', src)!=null) prereq += "jq2d;";
+      if (JSROOT.GetUrlOption('more2d', src)!=null) prereq += "more2d;";
+      if (JSROOT.GetUrlOption('geo', src)!=null) prereq += "geo;";
+      if (JSROOT.GetUrlOption('3d', src)!=null) prereq += "3d;";
+      if (JSROOT.GetUrlOption('math', src)!=null) prereq += "math;";
+      if (JSROOT.GetUrlOption('mathjax', src)!=null) prereq += "mathjax;";
+      var user = JSROOT.GetUrlOption('load', src);
+      if ((user!=null) && (user.length>0)) prereq += "load:" + user;
+      var onload = JSROOT.GetUrlOption('onload', src);
+      var bower = JSROOT.GetUrlOption('bower', src);
+      if (bower!==null) {
+         if (bower.length>0) JSROOT.bower_dir = bower; else
+            if (JSROOT.source_dir.indexOf("jsroot/") == JSROOT.source_dir.length - 7)
+               JSROOT.bower_dir = JSROOT.source_dir.substr(0, JSROOT.source_dir.length - 7);
+         if (JSROOT.bower_dir.length > 0) console.log("Set JSROOT.bower_dir to " + JSROOT.bower_dir);
       }
+
+      if ((prereq.length>0) || (onload!=null))
+         window_on_load(function() {
+            if (prereq.length>0) JSROOT.AssertPrerequisites(prereq, onload); else
+               if (onload!=null) {
+                  onload = JSROOT.findFunction(onload);
+                  if (typeof onload == 'function') onload();
+               }
+         });
+
       return this;
    }
 
