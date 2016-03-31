@@ -1,5 +1,40 @@
 # JSROOT changelog
 
+## Changes in 4.4.1
+1. Fix - colz palette resize when drawing histogram second time
+2. Fix - use embeded in TCanvas color for background color of canvas itself
+3. Fix - rotate too long X axis text labels 
+4. Fix - draw histogram bins on frame boundary
+5. Fix - use alternative color for shapes with default black color  
+6. Fix - correctly handle pcon/pgon shape with rmin==rmax on top or bottom side
+   
+
+## Changes in 4.4
+1. Fix faces orientation for all TGeo shapes. 
+2. Improve TGeoTorus creation - handle all parameters combinations
+3. Implement TGeoCompositeShape, using ThreeCSG.js
+4. Fix problem with color pallete when switch to 3D mode (#28)
+5. Use nested CSS classes to avoid conflicts with other libraries (#29)
+6. Let move and resize TFrame
+7. Improve TH1/TH2 drawings
+   - draw all histograms points in the range (no any skipped bins)
+   - minimize SVG code for drawing (up to factor 100)
+   - gives significant speedup in drawings
+8. SVG code improvement for TGraph, TF1, TAxis drawings
+9. Provide new tooltip kind
+   - created only when needed (minimizing SVG code)
+   - tooltip can be drawn for every object in the frame
+   - touch devices are supported 
+10. Fix - let draw same object on the canvas with different options
+11. Create cached list of known class methods. It can be extended by users. 
+12. Use of cached methods improves binary I/O perfromance by 20%
+13. Support TGaxis
+14. Project now can be obtained via 'bower install jsroot' 
+15. Support 'scat' and 'text' draw options for TH2 
+16. Support in binary I/O zipped buffer bigger than 16M
+17. Correctly handle in binary I/O pointer on TArray object (like in THnSparseArrayChunk)
+
+
 ## Changes in 4.3
 1. Implement TGeoCtub, TGeoParaboloid and TGeoHype shapes
 2. Support TGeoTube with Rmin==0 
@@ -8,7 +43,7 @@
 5. Introduce JSROOT.cleanup() function to safely clear all drawn objects 
 6. Fix wrong resize method in 'tabs' and 'collapsible' layouts
 7. Fix canvas resize problem (issue #27)
-8. Fix zero-height canvas when draw TGgeo in collapsible layout
+8. Fix zero-height canvas when draw TGeo in collapsible layout
 9. Fix problem of simultaneous move TGeo drawings and canvas in flexible layout
  
 
