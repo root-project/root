@@ -140,25 +140,25 @@ namespace Math {
          Return the a coefficient of the plane equation \f$ a*x + b*y + c*z + d = 0 \f$. It is also the
          x-component of the vector perpendicular to the plane.
       */
-      Scalar A() { return fA; }
+      Scalar A() const { return fA; }
 
       /**
          Return the b coefficient of the plane equation \f$ a*x + b*y + c*z + d = 0 \f$. It is also the
          y-component of the vector perpendicular to the plane
       */
-      Scalar B() { return fB; }
+      Scalar B() const { return fB; }
 
       /**
          Return the c coefficient of the plane equation \f$ a*x + b*y + c*z + d = 0 \f$. It is also the
          z-component of the vector perpendicular to the plane
       */
-      Scalar C() { return fC; }
+      Scalar C() const { return fC; }
 
       /**
          Return the d coefficient of the plane equation \f$ a*x + b*y + c*z + d = 0 \f$. It is also
          the distance from the origin (HesseDistance)
       */
-      Scalar D() { return fD; }
+      Scalar D() const { return fD; }
 
       /**
          Return normal vector to the plane as Cartesian DisplacementVector
