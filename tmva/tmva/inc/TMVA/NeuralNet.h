@@ -1226,8 +1226,8 @@ namespace TMVA
 
 
 
-    }; // namespace DNN
-}; // namespace TMVA
+    } // namespace DNN
+} // namespace TMVA
 
 
 // include the implementations (in header file, because they are templated)

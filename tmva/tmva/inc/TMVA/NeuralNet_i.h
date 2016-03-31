@@ -1696,7 +1696,7 @@ namespace TMVA
 
 
 
-    }; // namespace DNN
-}; // namespace TMVA
+    } // namespace DNN
+} // namespace TMVA
 
 #endif
