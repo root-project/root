@@ -444,14 +444,17 @@ class NotebookDrawer(object):
          else:
             self._pngDisplay()
 
-    def GetDrawableObject(self):
+    def GetDrawableObjects(self):
         if not self.isCanvas:
-           return self._getJsDiv()
+           return [self._getJsDiv()]
+
+        if _enableJSVisDebug:
+           return [self._getJsDiv(),self._getPngImage()]
 
         if self._canJsDisplay():
-           return self._getJsDiv()
+           return [self._getJsDiv()]
         else:
-           return self._getPngImage()
+           return [self._getPngImage()]
 
     def Draw(self):
         self._display()

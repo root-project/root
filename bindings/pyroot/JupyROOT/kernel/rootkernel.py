@@ -85,7 +85,8 @@ class ROOTKernel(MetaKernel):
 
             drawers = GetDrawers()
             for drawer in drawers:
-                self.Display(drawer.GetDrawableObject())
+                for dobj in drawer.GetDrawableObjects():
+                    self.Display(dobj)
 
         except KeyboardInterrupt:
             ROOT.gROOT.SetInterrupt()
