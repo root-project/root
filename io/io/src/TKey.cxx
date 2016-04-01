@@ -1237,7 +1237,7 @@ void TKey::ReadKeyBuffer(char *&buffer)
       fPidOffset = pdir >> kPidOffsetShift;
       fSeekPdir = pdir & kPidOffsetMask;
    } else {
-      Int_t seekkey,seekdir;
+      UInt_t seekkey,seekdir;
       frombuf(buffer, &seekkey); fSeekKey = (Long64_t)seekkey;
       frombuf(buffer, &seekdir); fSeekPdir= (Long64_t)seekdir;
    }
@@ -1368,7 +1368,7 @@ void TKey::Streamer(TBuffer &b)
          fPidOffset = pdir >> kPidOffsetShift;
          fSeekPdir = pdir & kPidOffsetMask;
       } else {
-         Int_t seekkey, seekdir;
+         UInt_t seekkey, seekdir;
          b >> seekkey; fSeekKey = (Long64_t)seekkey;
          b >> seekdir; fSeekPdir= (Long64_t)seekdir;
       }
