@@ -4,7 +4,7 @@
 #  Authors: Danilo Piparo <Danilo.Piparo@cern.ch> CERN
 #-----------------------------------------------------------------------------
 
-from JupyROOT.utils import enableJSVis, disableJSVis, enableJSVisDebug
+from JupyROOT.utils import enableJSVis, disableJSVis, enableJSVisDebug, TBufferJSONErrorMessage, TBufferJSONAvailable
 
 from metakernel import Magic, option
 
@@ -16,11 +16,17 @@ class JSRootMagics(Magic):
     def cell_jsroot(self, args):
         '''Change the visualisation of plots from images to interactive JavaScript objects.'''
         if args == 'on' or args == '':
+           self.printErrorIfNeeded()
            enableJSVis()
         elif args == 'off':
            disableJSVis()
         elif args == 'debug':
+           self.printErrorIfNeeded()
            enableJSVisDebug()
+
+    def printErrorIfNeeded(self):
+        if not TBufferJSONAvailable():
+            self.kernel.Error(TBufferJSONErrorMessage)
 
 def register_magics(kernel):
     kernel.register_magics(JSRootMagics)

@@ -73,10 +73,19 @@ _jsCode = """
 </script>
 """
 
+TBufferJSONErrorMessage="The TBufferJSON class is necessary for JS visualisation to work and cannot be found. Did you enable the http module (-D http=ON for CMake)?"
+
+def TBufferJSONAvailable():
+   if hasattr(ROOT,"TBufferJSON"):
+       return True
+   print(TBufferJSONErrorMessage, file=sys.stderr)
+   return False
 
 _enableJSVis = False
 _enableJSVisDebug = False
 def enableJSVis():
+    if not TBufferJSONAvailable():
+       return
     global _enableJSVis
     _enableJSVis = True
 
@@ -85,6 +94,8 @@ def disableJSVis():
     _enableJSVis = False
 
 def enableJSVisDebug():
+    if not TBufferJSONAvailable():
+       return
     global _enableJSVis
     global _enableJSVisDebug
     _enableJSVis = True
@@ -367,9 +378,8 @@ class NotebookDrawer(object):
         return NotebookDrawer.jsUID
 
     def _canJsDisplay(self):
-        if not hasattr(ROOT,"TBufferJSON"):
-            print("The TBufferJSON class is necessary for JS visualisation to work and cannot be found. Did you enable the http module (-D http=ON for CMake)?", file=sys.stderr)
-            return False
+        if not TBufferJSONAvailable():
+           return False
         if not self.isCanvas: return True
         # to be optimised
         if not _enableJSVis: return False
