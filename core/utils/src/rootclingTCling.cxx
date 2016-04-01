@@ -88,7 +88,7 @@ static bool IsUniquePtrOffsetZero()
    auto regularPtr = (long *)0x42;
    std::unique_ptr<long> uniquePtr(regularPtr);
    auto regularPtr_2 = reinterpret_cast<long **>(&uniquePtr);
-   static bool isZero = uniquePtr.get() == *regularPtr_2;
+   bool isZero = uniquePtr.get() == *regularPtr_2;
    uniquePtr.release();
    if (!isZero) {
       ROOT::TMetaUtils::Error("CloseStreamerInfoROOTFile",
@@ -101,9 +101,10 @@ static bool IsUnsupportedUniquePointer(const char *normName, TDataMember *dm)
 {
    using namespace ROOT::TMetaUtils;
    auto dmTypeName = dm->GetTypeName();
+   static bool isUniquePtrOffsetZero = IsUniquePtrOffsetZero(); // call this only once
    if (TClassEdit::IsUniquePtr(dmTypeName)) {
 
-      if (!IsUniquePtrOffsetZero()) return true;
+      if (!isUniquePtrOffsetZero) return true;
 
       auto clm = TClass::GetClass(dmTypeName);
       if (!clm) {
