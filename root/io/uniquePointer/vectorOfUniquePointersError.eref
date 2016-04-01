@@ -1,0 +1,1 @@
+Error in <CloseStreamerInfoROOTFile>: Collections of unique pointers such as the selected vector<unique_ptr<TH1F,default_delete<TH1F> > > are not yet supported.
