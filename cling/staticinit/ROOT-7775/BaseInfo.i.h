@@ -137,7 +137,7 @@ BaseInfoImpl<T>::BaseInfoImpl ()
  * @brief Return the non-templated @c BaseInfoBase object for this type.
  */
 template <class T>
-const BaseInfoBase& BaseInfo<T>::baseinfo()
+const BaseInfoBase* BaseInfo<T>::baseinfo()
 {
   return instance();
 }
@@ -148,12 +148,12 @@ const BaseInfoBase& BaseInfo<T>::baseinfo()
  *        for this class.
  */
 template <class T>
-const BaseInfoImpl<T>& BaseInfo<T>::instance()
+const BaseInfoImpl<T>* BaseInfo<T>::instance()
 {
   BaseInfoImpl<T>* inst = s_instance.instance;
   if (inst)
     inst->maybeInit();
-  return *inst;
+  return inst;
 }
 
 

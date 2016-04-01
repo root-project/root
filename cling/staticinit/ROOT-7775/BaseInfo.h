@@ -68,7 +68,7 @@ class BaseInfoBase
 public:
 
   /// Type for an initialization function.
-  typedef const BaseInfoBase& init_func_t();
+  typedef const BaseInfoBase* init_func_t();
 
 
   /**
@@ -126,13 +126,13 @@ public:
   /**
    * @brief Return the non-templated @c BaseInfoBase object for this type.
    */
-  static const BaseInfoBase& baseinfo ();
+  static const BaseInfoBase* baseinfo ();
 
 
 private:
   /// Return a reference to the (singleton) implementation object
   /// for this class.
-  static const BaseInfoImpl<T>& instance();
+  static const BaseInfoImpl<T>* instance();
 
   /// This holds the singleton implementation object instance.
   struct instance_holder
