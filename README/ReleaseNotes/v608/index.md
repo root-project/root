@@ -32,7 +32,7 @@ The following people have contributed to this new version:
  Paul Russo, Fermilab,\
  Enric Tejedor Saavedra, CERN/SFT,\
  Liza Sakellari, CERN/SFT,\
- Manuel Tobias Schiller,\
+ Manuel Tobias Schiller, CERN/LHCb,\
  David Smith, CERN/IT,\
  Matevz Tadel, UCSD/CMS, Eve,\
  Vassil Vassilev, Fermilab/CMS,\
