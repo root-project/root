@@ -72,7 +72,7 @@
 //    .                                                                 //
 // }                                                                    //
 //                                                                      //
-// Normaly there is one layout hint per widget. Therefore these         //
+// Normally there is one layout hint per widget. Therefore these        //
 // can be deleted like in the following example in the desctuctor       //
 // of the frame:                                                        //
 //                                                                      //
