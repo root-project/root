@@ -565,6 +565,7 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file, Bool_t ra
 
    rawCompressedBuffer = readBufferRef->Buffer();
 
+
    // Are we done?
    if (R__unlikely(readBufferRef == fBufferRef)) // We expect most basket to be compressed.
    {
@@ -605,7 +606,6 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file, Bool_t ra
       if (R__unlikely(gPerfStats)) {
          start = TTimeStamp();
       }
-
       memcpy(rawUncompressedBuffer, rawCompressedBuffer, fKeylen);
       char *rawUncompressedObjectBuffer = rawUncompressedBuffer+fKeylen;
       UChar_t *rawCompressedObjectBuffer;
@@ -1125,7 +1125,7 @@ Int_t TBasket::WriteBuffer()
          // test if buffer has really been compressed. In case of small buffers
          // when the buffer contains random data, it may happen that the compressed
          // buffer is larger than the input. In this case, we write the original uncompressed buffer
-         if (nout == 0 || nout >= fObjlen) {
+         if (nout == 0 || nout+compoffkey >= fObjlen) { // we need to compare the size of compressed objects + compressed entry offsets with fObjlen (Note: nout+compoffkey == fNbytes-fKeylen in ReadBasketBuffers())
             fCompressedEntryOffset = 0;
             nout = fObjlen;
             // We used to delete fBuffer here, we no longer want to since

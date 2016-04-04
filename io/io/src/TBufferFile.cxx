@@ -4024,7 +4024,6 @@ Int_t TBufferFile::ApplySequence(const TStreamerInfoActions::TActionSequence &se
       }
 
    } else {
-      void *arr0 = start_collection ? loopconfig->GetFirstAddress(start_collection,end_collection) : 0;//##
       //loop on all active members
       TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
       for(TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin();

@@ -47,6 +47,8 @@ ROOT_LINKER_LIBRARY(Localcompression Localcompression.cxx LocalcompressionDict.c
 
 ROOT_EXECUTABLE(localcompressionexe MainLocalcompression.cxx LIBRARIES Localcompression RIO Tree Hist Net)
 ROOT_ADD_TEST(test-localcompression COMMAND localcompressionexe)
+ROOT_EXECUTABLE(localcombineexe MainLocalcombine.cxx LIBRARIES Localcompression RIO Tree Hist Net)
+ROOT_ADD_TEST(test-localcombine COMMAND localcombineexe)
 
 #---hsimple------------------------------------------------------------------------------------
 #ROOT_EXECUTABLE(hsimple hsimple.cxx LIBRARIES RIO Tree Hist)

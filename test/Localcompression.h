@@ -67,7 +67,7 @@ private:
    Int_t        *fInt; //[fSize]
 
 public:
-   TInt(Int_t size = 6); 
+   TInt(Int_t size = 1); 
    TInt(const TInt& aint);
    virtual ~TInt();
    TInt &operator=(const TInt &aint);
