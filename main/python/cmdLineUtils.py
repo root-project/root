@@ -747,7 +747,7 @@ def rootCp(sourceList, destFileName, destPathSplit, \
 ##########
 # ROOTEVENTSELECTOR
 
-def _copyTreeSubset(sourceFile,sourcePathSplit,destFile,destPathSplit,firstEvent,lastEvent):
+def _copyTreeSubset(sourceFile,sourcePathSplit,destFile,destPathSplit,firstEvent,lastEvent,selectionString):
     """Copy a subset of the tree from (sourceFile,sourcePathSplit)
     to (destFile,destPathSplit) according to options in optDict"""
     retcode = changeDirectory(sourceFile,sourcePathSplit[:-1])
@@ -767,10 +767,14 @@ def _copyTreeSubset(sourceFile,sourcePathSplit,destFile,destPathSplit,firstEvent
             super(ROOT.TNtuple,smallTree).Fill()
         else:
             smallTree.Fill()
+    if isNtuple:
+        smallTree = super(ROOT.TNtuple,smallTree).CopyTree(selectionString)
+    else:
+        smallTree = smallTree.CopyTree(selectionString)
     smallTree.Write()
     return retcode
 
-def _copyTreeSubsets(fileName, pathSplitList, destFile, destPathSplit, first, last):
+def _copyTreeSubsets(fileName, pathSplitList, destFile, destPathSplit, first, last, selectionString):
     retcode = 0
     destFileName = destFile.GetName()
     rootFile = openROOTFile(fileName) \
@@ -780,12 +784,12 @@ def _copyTreeSubsets(fileName, pathSplitList, destFile, destPathSplit, first, la
     for pathSplit in pathSplitList:
         if isTree(rootFile,pathSplit):
             retcode += _copyTreeSubset(rootFile,pathSplit, \
-            destFile,destPathSplit,first,last)
+            destFile,destPathSplit,first,last,selectionString)
     if fileName != destFileName: rootFile.Close()
     return retcode
 
 def rootEventselector(sourceList, destFileName, destPathSplit, \
-                      compress=None, recreate=False, first=0, last=-1):
+                      compress=None, recreate=False, first=0, last=-1, selectionString="1"):
     # Check arguments
     if sourceList == [] or destFileName == "": return 1
     if recreate and destFileName in sourceList:
@@ -800,7 +804,7 @@ def rootEventselector(sourceList, destFileName, destPathSplit, \
     retcode = 0
     for fileName, pathSplitList in sourceList:
         retcode += _copyTreeSubsets(fileName, pathSplitList, destFile, destPathSplit, \
-                                    first, last)
+                                    first, last, selectionString)
     destFile.Close()
     return retcode
 
