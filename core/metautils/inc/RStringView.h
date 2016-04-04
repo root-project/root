@@ -43,6 +43,14 @@ namespace std {
 //      *lhs = basic_string_view<_CharT,_Traits>(rsh);
 //      return *lhs;
 //   }
+
+#ifndef R__HAS_STOD_STRING_VIEW
+   inline double stod(std::string_view str, size_t *pos)
+   {
+      return std::stod(str.to_string(),pos);
+   }
+#endif
+
 }
 
 #endif // ifdef else R__HAS_STD_STRING_VIEW

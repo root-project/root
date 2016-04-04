@@ -345,7 +345,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   add_custom_command(OUTPUT ${dictionary}.cxx ${pcm_name} ${rootmap_name}
                      COMMAND ${command} -f  ${dictionary}.cxx ${newargs} ${rootmapargs}
                                         ${ARG_OPTIONS} ${definitions} ${includedirs} ${rheaderfiles} ${_linkdef}
-                     IMPLICIT_DEPENDS CXX ${_linkdef}
+                     IMPLICIT_DEPENDS CXX ${_linkdef} ${headerfiles}
                      DEPENDS ${headerfiles} ${_linkdef} ${ROOTCINTDEP})
   get_filename_component(dictname ${dictionary} NAME)
 

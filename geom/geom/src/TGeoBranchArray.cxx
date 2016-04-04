@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/** \class TGeoBranchArray -
+/** \class TGeoBranchArray
 \ingroup Geometry_classes
 
 An array of daughter indices making a geometry path. Can be used to

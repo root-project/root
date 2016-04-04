@@ -56,6 +56,8 @@ namespace PoolUtils {
 namespace ROOT {
    namespace Internal {
       namespace PoolUtils {
+         // The caster casts a pointer to a TObject to a specialised type F and leaves
+         // unaltered the other cases.
          template <class O, class F>
          class ResultCaster {
          public:

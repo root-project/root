@@ -60,6 +60,9 @@
 #ifndef ROOT_TVirtualMutex
 #include "TVirtualMutex.h"
 #endif
+#ifndef ROOT_TPackMgr
+#include "TPackMgr.h"
+#endif
 
 #include <map>
 #include <mutex>
@@ -141,9 +144,10 @@ class TSelector;
 // 33 -> 34: Development cycle 5.33/02 (fix load issue, ...)
 // 34 -> 35: Development cycle 5.99/01 (PLite on workers, staging requests in separate dsmgr...)
 // 35 -> 36: SetParallel in dynamic mode (changes default in GoParallel), cancel staging requests
+// 36 -> 37: Support for remote (web) PAR packages
 
 // PROOF magic constants
-const Int_t       kPROOF_Protocol        = 36;            // protocol version number
+const Int_t       kPROOF_Protocol        = 37;            // protocol version number
 const Int_t       kPROOF_Port            = 1093;          // IANA registered PROOF port
 const char* const kPROOF_ConfFile        = "proof.conf";  // default config file
 const char* const kPROOF_ConfDir         = "/usr/local/root";  // default config dir
@@ -482,11 +486,6 @@ private:
       kBuildAll            = 0,
       kCollectBuildResults = 1
    };
-   enum EParCheckVersionOpt {
-      kDontCheck   = 0,
-      kCheckROOT    = 1,
-      kCheckSVN     = 2
-   };
    enum EProofShowQuotaOpt {
       kPerGroup = 0x1,
       kPerUser = 0x2
@@ -560,10 +559,7 @@ private:
 
    Bool_t          fEndMaster;       //true for a master in direct contact only with workers
 
-   TString         fPackageDir;      //package directory (used on client)
-   THashList      *fGlobalPackageDirList;//list of directories containing global packages libs
-   TProofLockPath *fPackageLock;     //package lock
-   TList          *fEnabledPackagesOnClient; //list of packages enabled on client
+   TPackMgr       *fPackMgr;          // Default package manager
    TList          *fEnabledPackagesOnCluster;  //list of enabled packages
 
    TList          *fInputData;       //Input data objects sent over via file
@@ -651,16 +647,12 @@ private:
    Int_t    SetParallelSilent(Int_t nodes, Bool_t random = kFALSE);
    void     RecvLogFile(TSocket *s, Int_t size);
    void     NotifyLogMsg(const char *msg, const char *sfx = "\n");
-   Int_t    BuildPackage(const char *package, EBuildPackageOpt opt = kBuildAll, Int_t chkveropt = kCheckROOT, TList *workers = 0);
-   Int_t    BuildPackageOnClient(const char *package, Int_t opt = 0, TString *path = 0, Int_t chkveropt = kCheckROOT);
+
+   Int_t    BuildPackage(const char *package, EBuildPackageOpt opt = kBuildAll, Int_t chkveropt = TPackMgr::kCheckROOT, TList *workers = 0);
    Int_t    LoadPackage(const char *package, Bool_t notOnClient = kFALSE, TList *loadopts = 0, TList *workers = 0);
-   Int_t    LoadPackageOnClient(const char *package, TList *loadopts = 0);
    Int_t    UnloadPackage(const char *package);
-   Int_t    UnloadPackageOnClient(const char *package);
    Int_t    UnloadPackages();
-   Int_t    UploadPackageOnClient(const char *package, EUploadPackageOpt opt, TMD5 *md5);
    Int_t    DisablePackage(const char *package);
-   Int_t    DisablePackageOnClient(const char *package);
    Int_t    DisablePackages();
 
    void     Activate(TList *slaves = 0);

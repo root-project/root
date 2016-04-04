@@ -48,53 +48,54 @@ namespace Internal {
 class TTreeReader: public TObject {
 public:
 
-   // Iterate through the entries of a TTree.
-   //
-   // This iterator drives the associated TTreeReader; its
-   // dereferencing (and actually even the iteration) will
-   // set the entry number represented by this iterator.
-   // It does not really represent a data element; it simply
-   // returns the entry number (or -1 once the end of the tree
-   // is reached).
+   ///\class TTreeReader::Iterator_t
+   /// Iterate through the entries of a TTree.
+   ///
+   /// This iterator drives the associated TTreeReader; its
+   /// dereferencing (and actually even the iteration) will
+   /// set the entry number represented by this iterator.
+   /// It does not really represent a data element; it simply
+   /// returns the entry number (or -1 once the end of the tree
+   /// is reached).
    class Iterator_t:
       public std::iterator<std::input_iterator_tag, const Long64_t, Long64_t> {
    private:
-      Long64_t fEntry; // Entry number of the tree referenced by this iterator; -1 is invalid.
-      TTreeReader* fReader; // The reader we select the entries on.
+      Long64_t fEntry; ///< Entry number of the tree referenced by this iterator; -1 is invalid.
+      TTreeReader* fReader; ///< The reader we select the entries on.
 
-      // Whether the iterator points to a valid entry.
+      /// Whether the iterator points to a valid entry.
       bool IsValid() const { return fEntry >= 0; }
 
    public:
-      // Default-initialize the iterator as "past the end".
+      /// Default-initialize the iterator as "past the end".
       Iterator_t(): fEntry(-1), fReader() {}
 
-      // Initialize the iterator with the reader it steers and a
-      // tree entry number; -1 is invalid.
+      /// Initialize the iterator with the reader it steers and a
+      /// tree entry number; -1 is invalid.
       Iterator_t(TTreeReader& reader, Long64_t entry):
          fEntry(entry), fReader(&reader) {}
 
+      /// Compare two iterators for equality.
       bool operator==(const Iterator_t& lhs) const {
-         // Compare two iterators for equality.
          // From C++14: value initialized (past-end) it compare equal.
          if (!IsValid() && !lhs.IsValid()) return true;
          return fEntry == lhs.fEntry && fReader == lhs.fReader;
       }
 
+      /// Compare two iterators for inequality.
       bool operator!=(const Iterator_t& lhs) const {
-         // Compare two iterators for inequality.
          return !(*this == lhs);
       }
 
+      /// Increment the iterator (postfix i++).
       Iterator_t operator++(int) {
-         // Increment the iterator (postfix i++).
          Iterator_t ret = *this;
          this->operator++();
          return ret;
       }
 
+      /// Increment the iterator (prefix ++i).
       Iterator_t& operator++() {
-         // Increment the iterator (prefix ++i).
          if (IsValid()) {
             ++fEntry;
             // Force validity check of new fEntry.
@@ -106,8 +107,8 @@ public:
          return *this;
       }
 
+      /// Set the entry number in the reader and return it.
       const Long64_t& operator*() {
-         // Set the entry number in the reader and return it.
          if (IsValid()) {
             // If we cannot access that entry, mark the iterator invalid.
             if (fReader->SetEntry(fEntry) != kEntryValid) {
@@ -126,21 +127,23 @@ public:
    typedef Iterator_t iterator;
 
    enum EEntryStatus {
-      kEntryValid = 0, // data read okay
-      kEntryNotLoaded, // no entry has been loaded yet
-      kEntryNoTree, // the tree does not exist
-      kEntryNotFound, // the tree entry number does not exist
-      kEntryChainSetupError, // problem in accessing a chain element, e.g. file without the tree
-      kEntryChainFileError, // problem in opening a chain's file
-      kEntryDictionaryError, // problem reading dictionary info from tree
-      kEntryLast, // last entry was reached
+      kEntryValid = 0, ///< data read okay
+      kEntryNotLoaded, ///< no entry has been loaded yet
+      kEntryNoTree, ///< the tree does not exist
+      kEntryNotFound, ///< the tree entry number does not exist
+      kEntryChainSetupError, ///< problem in accessing a chain element, e.g. file without the tree
+      kEntryChainFileError, ///< problem in opening a chain's file
+      kEntryDictionaryError, ///< problem reading dictionary info from tree
+      kEntryLast, ///< last entry was reached
    };
 
    TTreeReader():
+      fTree(0),
       fDirectory(0),
       fEntryStatus(kEntryNoTree),
       fDirector(0),
-      fLastEntry(-1)
+      fLastEntry(-1),
+      fProxiesSet(false)
    {}
 
    TTreeReader(TTree* tree);
@@ -167,8 +170,8 @@ public:
    Long64_t GetEntries(Bool_t force) const { return fTree ? (force ? fTree->GetEntries() : fTree->GetEntriesFast() ) : -1; }
    Long64_t GetCurrentEntry() const;
 
+   /// Return an iterator to the 0th TTree entry.
    Iterator_t begin() {
-      // Return an iterator to the 0th TTree entry.
       return Iterator_t(*this, 0);
    }
    Iterator_t end() const { return Iterator_t(); }
@@ -187,17 +190,21 @@ protected:
 private:
 
    enum EPropertyBits {
-      kBitIsChain = BIT(14) // our tree is a chain
+      kBitIsChain = BIT(14) ///< our tree is a chain
    };
 
-   TTree* fTree; // tree that's read
-   TDirectory* fDirectory; // directory (or current file for chains)
-   EEntryStatus fEntryStatus; // status of most recent read request
-   ROOT::Internal::TBranchProxyDirector* fDirector; // proxying director, owned
-   std::deque<ROOT::Internal::TTreeReaderValueBase*> fValues; // readers that use our director
-   THashTable   fProxies; //attached ROOT::TNamedBranchProxies; owned
-   Long64_t fLastEntry; //< The last entry to be processed. When set (i.e. >= 0), it provides a way to stop looping over the TTree when we reach a certain entry: Next() returns kEntryLast when GetCurrentEntry() reaches fLastEntry
-   Bool_t fProxiesSet; //< True if the proxies have been set, false otherwise
+   TTree* fTree; ///< tree that's read
+   TDirectory* fDirectory; ///< directory (or current file for chains)
+   EEntryStatus fEntryStatus; ///< status of most recent read request
+   ROOT::Internal::TBranchProxyDirector* fDirector; ///< proxying director, owned
+   std::deque<ROOT::Internal::TTreeReaderValueBase*> fValues; ///< readers that use our director
+   THashTable   fProxies; ///< attached ROOT::TNamedBranchProxies; owned
+
+   /// The last entry to be processed. When set (i.e. >= 0), it provides a way
+   /// to stop looping over the TTree when we reach a certain entry: Next()
+   /// returns kEntryLast when GetCurrentEntry() reaches fLastEntry
+   Long64_t fLastEntry;
+   Bool_t fProxiesSet; ///< True if the proxies have been set, false otherwise
 
    friend class ROOT::Internal::TTreeReaderValueBase;
    friend class ROOT::Internal::TTreeReaderArrayBase;

@@ -4,7 +4,8 @@
 
 set(headers TCondition.h TConditionImp.h TMutex.h TMutexImp.h
             TRWLock.h TSemaphore.h TThread.h TThreadFactory.h
-            TThreadImp.h TAtomicCount.h TThreadPool.h ThreadLocalStorage.h)
+            TThreadImp.h TAtomicCount.h ROOT/TThreadedObject.h
+            TThreadPool.h ThreadLocalStorage.h)
 if(NOT WIN32)
   set(headers ${headers} TPosixCondition.h TPosixMutex.h
                          TPosixThread.h TPosixThreadFactory.h PosixThreadInc.h)

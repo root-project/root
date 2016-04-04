@@ -287,10 +287,14 @@ TMVA::Reader::~Reader( void )
    delete fDataSetManager; // DSMTEST
 
    delete fLogger;
+   
+   for (auto it=fMethodMap.begin(); it!=fMethodMap.end(); it++){
+       MethodBase * kl = dynamic_cast<TMVA::MethodBase*>(it->second);
+       delete kl;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// default initialisation (no member variables)
 /// default initialisation (no member variables)
 
 void TMVA::Reader::Init( void )

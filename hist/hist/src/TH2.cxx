@@ -2593,7 +2593,11 @@ void TH2::PutStats(Double_t *stats)
 /// name is the name of the returned histogram
 /// prob is the probability content for the quantile (0.5 is the default for the median)
 /// An approximate error for the quantile is computed assuming that the distribution in
-/// the other variable is normal.
+/// the other variable is normal. According to this approximate formula the error on the quantile is
+/// estimated as sqrt( p (1-p) / ( n * f(q)^2) ), where p is the probability content of the quantile and
+/// n is the number of events used to compute the quantile and f(q) is the probability distribution for the
+/// other variable evaluated at the obtained quantile. In the error estimation the probability is then assumed to be
+///  a normal distribution.
 
 TH1D* TH2::QuantilesX( Double_t prob, const char * name) const
 {
@@ -2675,11 +2679,14 @@ TH1D* TH2::DoQuantiles(bool onX, const char * name, Double_t prob) const
     slice->GetQuantiles(1,qq,pp);
     h1->SetBinContent(ibin,qq[0]);
     // compute error using normal approximation
-    // quantile error  ~  sqrt (q*(1-q)/ *( n * f(xq) ) from Kendall
-    // where f(xq) is the p.d.f value at the quantile xqp
+    // quantile error  ~  sqrt (q*(1-q)/ *( n * f(xq)^2 ) from Kendall
+    // where f(xq) is the p.d.f value at the quantile xq
     Double_t n = slice->GetEffectiveEntries();
-    Double_t f = TMath::Gaus(qq[0], slice->GetStdDev(), kTRUE);
-    Double_t error = TMath::Sqrt( prob*(1.-prob)/ ( n * f) );
+    Double_t f = TMath::Gaus(qq[0], slice->GetMean(), slice->GetStdDev(), kTRUE);
+    Double_t error = 0;
+    // set the errors to zero in case of small statistics
+    if (f > 0 && n > 1) 
+       error = TMath::Sqrt( prob*(1.-prob)/ (n * f * f) );
     h1->SetBinError(ibin, error);
   }
   if (slice) delete slice;

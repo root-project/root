@@ -59,12 +59,19 @@
 using namespace RooFit;
 using namespace RooStats;
 
+struct HypoTestOptions { 
 
-bool noSystematics = false;              // force all systematics to be off (i.e. set all nuisance parameters as constat
-double nToysRatio = 4;                   // ratio Ntoys Null/ntoys ALT
-double poiValue = -1;                    // change poi snapshot value for S+B model (needed for expected p0 values)
+   bool noSystematics = false;              // force all systematics to be off (i.e. set all nuisance parameters as constat
+  double nToysRatio = 4;                   // ratio Ntoys Null/ntoys ALT
+  double poiValue = -1;                    // change poi snapshot value for S+B model (needed for expected p0 values)
 int  printLevel=0;
 bool generateBinned = false;             // for binned generation
+   bool useProof = false;                // use Proof 
+   bool enableDetailedOutput = false;    // for detailed output
+
+};
+
+HypoTestOptions optHT;
 
 void StandardHypoTestDemo(const char* infile = "",
                           const char* workspaceName = "combined",
@@ -78,6 +85,14 @@ void StandardHypoTestDemo(const char* infile = "",
                           const char * nuisPriorName = 0)
 {
 
+   bool noSystematics = optHT.noSystematics;
+   double nToysRatio = optHT.nToysRatio;                    // ratio Ntoys Null/ntoys ALT
+   double poiValue = optHT.poiValue;                    // change poi snapshot value for S+B model (needed for expected p0 values)
+   int  printLevel = optHT.printLevel;
+   bool generateBinned = optHT.generateBinned;             // for binned generation
+   bool useProof = optHT.useProof;                // use Proof 
+   bool enableDetOutput = optHT.enableDetailedOutput;
+   
 /*
 
   Other Parameter to pass in tutorial
@@ -246,7 +261,6 @@ void StandardHypoTestDemo(const char* infile = "",
    if (sbModel->GetNuisanceParameters()) altParams.add(*sbModel->GetNuisanceParameters());
    slrts->SetAltParameters(altParams);
 
-
    ProfileLikelihoodTestStat * profll = new ProfileLikelihoodTestStat(*bModel->GetPdf());
 
 
@@ -256,6 +270,13 @@ void StandardHypoTestDemo(const char* infile = "",
 
    if (testStatType == 3) profll->SetOneSidedDiscovery(1);
    profll->SetPrintLevel(printLevel);
+
+   if (enableDetOutput) {
+      slrts->EnableDetailedOutput();
+      profll->EnableDetailedOutput();
+      ropl->EnableDetailedOutput(); 
+   }
+
 
    // profll.SetReuseNLL(mOptimize);
    // slrts.SetReuseNLL(mOptimize);
@@ -269,10 +290,14 @@ void StandardHypoTestDemo(const char* infile = "",
    else if (calcType == 1) hypoCalc= new  HybridCalculator(*data, *sbModel, *bModel);
    else if (calcType == 2) hypoCalc= new  AsymptoticCalculator(*data, *sbModel, *bModel);
 
-   if (calcType == 0)
+   if (calcType == 0) { 
        ((FrequentistCalculator*)hypoCalc)->SetToys(ntoys, ntoys/nToysRatio);
-   if (calcType == 1)
+       if (enableDetOutput) ((FrequentistCalculator*) hypoCalc)->StoreFitInfo(true);
+   }
+   if (calcType == 1) {
        ((HybridCalculator*)hypoCalc)->SetToys(ntoys, ntoys/nToysRatio);
+       // n. a. yetif (enableDetOutput) ((HybridCalculator*) hypoCalc)->StoreFitInfo(true);
+   }
    if (calcType == 2 ) {
       if (testStatType == 3) ((AsymptoticCalculator*) hypoCalc)->SetOneSidedDiscovery(true);
       if (testStatType != 2 && testStatType != 3)
@@ -348,6 +373,13 @@ void StandardHypoTestDemo(const char* infile = "",
       }
       if (generateBinned)  sampler->SetGenerateBinned(generateBinned);
 
+      // use PROOF
+      if (useProof) {
+         ProofConfig pc(*w, 0, "", kFALSE);
+         sampler->SetProofConfig(&pc);    // enable proof
+   }
+
+
 
       // set the test statistic
       if (testStatType == 0) sampler->SetTestStatistic(slrts);
@@ -412,6 +444,38 @@ void StandardHypoTestDemo(const char* infile = "",
 
       }
    }
+
+
+   // write result in a file in case of toys
+   bool writeResult = (calcType != 2);
+
+   if (enableDetOutput) {
+      writeResult=true;
+      Info("StandardHypoTestDemo","Detailed output will be written in output result file");
+   }
+
+   
+   if (htr != NULL && writeResult) {
+
+      // write to a file the results
+      const char *  calcTypeName = (calcType == 0) ? "Freq" : (calcType == 1) ? "Hybr" : "Asym";
+      TString resultFileName = TString::Format("%s_HypoTest_ts%d_",calcTypeName,testStatType);
+      //strip the / from the filename
+
+      TString name = infile;
+      name.Replace(0, name.Last('/')+1, "");
+      resultFileName += name;
+      
+      TFile * fileOut = new TFile(resultFileName,"RECREATE");
+      htr->Write();
+      Info("StandardHypoTestDemo","HypoTestResult has been written in the file %s",resultFileName.Data());
+      
+      fileOut->Close();
+   }
+
+
+
+
 
 }
 

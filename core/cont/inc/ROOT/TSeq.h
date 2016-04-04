@@ -1,6 +1,14 @@
 /* @(#)root/core/cont:$Id$ */
 // Author: Danilo Piparo November 2015
 
+/*************************************************************************
+ * Copyright (C) 1995-2016, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #ifndef ROOT_TSeq
 #define ROOT_TSeq
 
@@ -67,11 +75,11 @@ namespace ROOT {
       using value_type = T;
       using difference_type = typename std::make_signed<T>::type;
 
-      TSeq(T end): fBegin(), fEnd(end), fStep(1) {
+      TSeq(T theEnd): fBegin(), fEnd(theEnd), fStep(1) {
          checkIntegralType();
       }
-      TSeq(T begin, T end, T step = 1):
-         fBegin(begin), fEnd(end), fStep(step) {
+      TSeq(T theBegin, T theEnd, T theStep = 1):
+        fBegin(theBegin), fEnd(theEnd), fStep(theStep) {
          checkIntegralType();
       }
 
@@ -93,22 +101,22 @@ namespace ROOT {
             operator++();
             return tmp;
          }
-         bool operator==(const iterator &other) {
+         bool operator==(const iterator &other) const {
             return fCounter == other.fCounter;
          }
-         bool operator!=(const iterator &other) {
+         bool operator!=(const iterator &other) const {
             return fCounter != other.fCounter;
          }
-         T operator+(int v) {
+         T operator+(int v) const {
             return fCounter + v;
          }
-         T operator-(int v) {
+         T operator-(int v) const {
             return fCounter - v;
          }
-         T operator+(const iterator &other) {
+         T operator+(const iterator &other) const {
             return fCounter + other.fCounter;
          }
-         T operator-(const iterator &other) {
+         T operator-(const iterator &other) const {
             return fCounter - other.fCounter;
          }
          iterator &operator--() {

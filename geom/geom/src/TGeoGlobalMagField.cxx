@@ -11,7 +11,7 @@
 #include "TROOT.h"
 #include "TGeoGlobalMagField.h"
 
-/** \class TGeoGlobalMagField -
+/** \class TGeoGlobalMagField
 \ingroup Geometry_classes
 
 Global magnetic field manager. Provides access to

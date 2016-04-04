@@ -9,20 +9,25 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//_____________________________________________________________________________
-// TGeoParaboloid - Paraboloid  class. A paraboloid is the solid bounded by
-//            the following surfaces:
-//            - 2 planes parallel with XY cutting the Z axis at Z=-dz and Z=+dz
-//            - the surface of revolution of a parabola described by:
-//                 z = a*(x*x + y*y) + b
-//       The parameters a and b are automatically computed from:
-//            - rlo - the radius of the circle of intersection between the
-//              parabolic surface and the plane z = -dz
-//            - rhi - the radius of the circle of intersection between the
-//              parabolic surface and the plane z = +dz
-//         | -dz = a*rlo*rlo + b
-//         |  dz = a*rhi*rhi + b      where: rlo != rhi, both >= 0
-//_____________________________________________________________________________
+/** \class TGeoParaboloid
+\ingroup Geometry_classes
+
+Paraboloid  class.
+
+A paraboloid is the solid bounded by the following surfaces:
+  - 2 planes parallel with XY cutting the Z axis at Z=-dz and Z=+dz
+  - the surface of revolution of a parabola described by:
+    `z = a*(x*x + y*y) + b`
+
+The parameters a and b are automatically computed from:
+  - rlo - the radius of the circle of intersection between the
+    parabolic surface and the plane z = -dz
+  - rhi - the radius of the circle of intersection between the
+    parabolic surface and the plane z = +dz
+
+          | -dz = a*rlo*rlo + b
+          |  dz = a*rhi*rhi + b      where: rlo != rhi, both >= 0
+*/
 
 #include "Riostream.h"
 #include "TGeoManager.h"
@@ -83,9 +88,9 @@ TGeoParaboloid::TGeoParaboloid(const char *name, Double_t rlo, Double_t rhi, Dou
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor specifying minimum and maximum radius
-/// param[0] =  rlo
-/// param[1] =  rhi
-/// param[2] = dz
+///  - param[0] =  rlo
+///  - param[1] =  rhi
+///  - param[2] = dz
 
 TGeoParaboloid::TGeoParaboloid(Double_t *param)
 {
@@ -178,7 +183,7 @@ Int_t TGeoParaboloid::DistancetoPrimitive(Int_t px, Int_t py)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute distance from a point to the parabola given by:
-///  z = a*rsq + b;   rsq = x*x+y*y
+///  `z = a*rsq + b;   rsq = x*x+y*y`
 
 Double_t TGeoParaboloid::DistToParaboloid(const Double_t *point, const Double_t *dir, Bool_t in) const
 {
@@ -284,7 +289,7 @@ TGeoVolume *TGeoParaboloid::Divide(TGeoVolume * /*voldiv*/, const char * /*divna
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///--- Fill vector param[4] with the bounding cylinder parameters. The order
+/// Fill vector param[4] with the bounding cylinder parameters. The order
 /// is the following : Rmin, Rmax, Phi1, Phi2
 
 void TGeoParaboloid::GetBoundingCylinder(Double_t *param) const
@@ -475,20 +480,22 @@ void TGeoParaboloid::SetDimensions(Double_t *param)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create paraboloid mesh points.
+/// ~~~ {.cpp}
 /// Npoints = n*(n+1) + 2
-///   ifirst = 0
-///   ipoint(i,j) = 1+i*n+j;                              i=[0,n]  j=[0,n-1]
-///   ilast = 1+n*(n+1)
+///     ifirst = 0
+///     ipoint(i,j) = 1+i*n+j;                              i=[0,n]  j=[0,n-1]
+///     ilast = 1+n*(n+1)
 /// Nsegments = n*(2*n+3)
-///   lower: (0, j+1);                                    j=[0,n-1]
-///   circle(i): (n*i+1+j, n*i+1+(j+1)%n);                i=[0,n]  j=[0,n-1]
-///   generator(i): (n*i+1+j, n*(i+1)+1+j);               i,j=[0,n-1]
-///   upper: (n*n+1+j, (n+1)*n+1)                           j=[0,n-1]
+///     lower: (0, j+1);                                    j=[0,n-1]
+///     circle(i): (n*i+1+j, n*i+1+(j+1)%n);                i=[0,n]  j=[0,n-1]
+///     generator(i): (n*i+1+j, n*(i+1)+1+j);               i,j=[0,n-1]
+///     upper: (n*n+1+j, (n+1)*n+1)                           j=[0,n-1]
 /// Npolygons = n*(n+2)
-///   lower: (n+j, (j+1)%n, j)                              j=[0,n-1]
-///   lateral(i): ((2*i+1)*n+j, 2*(i+1)*n+j, (2*i+3)*n+j, 2*(i+1)*n+(j+1)%n)
-///                                                      i,j = [0,n-1]
-///   upper: ((2n+1)*n+j, 2*n*(n+1)+(j+1)%n, 2*n*(n+1)+j)   j=[0,n-1]
+///     lower: (n+j, (j+1)%n, j)                              j=[0,n-1]
+///     lateral(i): ((2*i+1)*n+j, 2*(i+1)*n+j, (2*i+3)*n+j, 2*(i+1)*n+(j+1)%n)
+///                                                        i,j = [0,n-1]
+///     upper: ((2n+1)*n+j, 2*n*(n+1)+(j+1)%n, 2*n*(n+1)+j)   j=[0,n-1]
+/// ~~~
 
 void TGeoParaboloid::SetPoints(Double_t *points) const
 {
@@ -618,10 +625,6 @@ void TGeoParaboloid::SetPoints(Float_t *points) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-////   Int_t n = gGeoManager->GetNsegments();
-////   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-////   if (painter) painter->AddSize3D(n*(n+1)+2, n*(2*n+3), n*(n+2));
-
 void TGeoParaboloid::Sizeof3D() const
 {
 }
@@ -676,7 +679,7 @@ void TGeoParaboloid::ComputeNormal_v(const Double_t *points, const Double_t *dir
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+/// Compute distance from array of input points having directions specified by dirs. Store output in dists
 
 void TGeoParaboloid::DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {
@@ -684,7 +687,7 @@ void TGeoParaboloid::DistFromInside_v(const Double_t *points, const Double_t *di
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+/// Compute distance from array of input points having directions specified by dirs. Store output in dists
 
 void TGeoParaboloid::DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {

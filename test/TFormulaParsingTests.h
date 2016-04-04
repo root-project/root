@@ -546,6 +546,20 @@ bool test32() {
    return ok;
 }
 
+bool test33() {
+   // test new bigaus pre-defined funcition
+   bool ok = true;
+   TF2 f1("f1","bigaus",-10,10,-10,10);
+   ok &= (f1.GetNumber() == 112);
+   ok &= (std::string(f1.GetParName(5)) == "Rho");
+   f1.SetParameters(1,0,1,1,2,0.);
+   TF2 f2("f2","xygaus",-10,10,-10,10);
+   f2.SetParameters(1,0,1,1,2);
+   ok &= TMath::AreEqualAbs( f1.Eval(0), f2.Eval(0)/(f2.Integral(-10,10,-20,20) ), 1.E-4 );
+   if (!ok) std::cout << "Error in test33 - " << f1.Eval(0) << "  " << f2.Eval(0)/f2.Integral(-10,10,-10,10) << std::endl;
+   return ok;          
+}
+
    
 void PrintError(int itest)  { 
    Error("TFormula test","test%d FAILED ",itest);
@@ -596,6 +610,7 @@ int runTests(bool debug = false) {
    IncrTest(itest); if (!test30() ) { PrintError(itest); }
    IncrTest(itest); if (!test31() ) { PrintError(itest); }
    IncrTest(itest); if (!test32() ) { PrintError(itest); }
+   IncrTest(itest); if (!test33() ) { PrintError(itest); }
 
    std::cout << ".\n";
     

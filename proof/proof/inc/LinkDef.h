@@ -24,6 +24,8 @@
 
 #pragma link C++ class TDSet-;
 #pragma link C++ class TDSetElement-;
+#pragma link C++ class TLockPath+;
+#pragma link C++ class TPackMgr+;
 #pragma link C++ class TProofChain+;
 #pragma link C++ class TProofMgr;
 #pragma link C++ class TProofMgrLite;

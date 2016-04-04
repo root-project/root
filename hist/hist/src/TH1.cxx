@@ -8049,6 +8049,57 @@ Int_t TH1::GetMinimumBin(Int_t &locmix, Int_t &locmiy, Int_t &locmiz) const
    return locm;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+/// Retrieve the minimum and maximum values in the histogram
+///
+/// This will not return a cached value and will always search the
+/// histogram for the min and max values. The user can condition whether 
+/// or not to call this with the GetMinimumStored() and GetMaximumStored()
+/// methods. If the cache is empty, then the value will be -1111. Users
+/// can then use the SetMinimum() or SetMaximum() methods to cache the results.
+/// For example, the following recipe will make efficient use of this method
+/// and the cached minimum and maximum values.
+//
+/// \code{.cpp}
+/// Double_t currentMin = pHist->GetMinimumStored();
+/// Double_t currentMax = pHist->GetMaximumStored();
+/// if ((currentMin == -1111) || (currentMax == -1111)) {
+///    pHist->GetMinimumAndMaximum(currentMin, currentMax);
+///    pHist->SetMinimum(currentMin);
+///    pHist->SetMaximum(currentMax);
+/// }
+/// \endcode
+///
+/// \param min     reference to variable that will hold found minimum value
+/// \param max     reference to varaible that will hold found maximum value
+///
+void TH1::GetMinimumAndMaximum(Double_t& min, Double_t& max) const
+{
+   // empty the buffer
+   if (fBuffer) ((TH1*)this)->BufferEmpty();
+
+   Int_t bin, binx, biny, binz;
+   Int_t xfirst  = fXaxis.GetFirst();
+   Int_t xlast   = fXaxis.GetLast();
+   Int_t yfirst  = fYaxis.GetFirst();
+   Int_t ylast   = fYaxis.GetLast();
+   Int_t zfirst  = fZaxis.GetFirst();
+   Int_t zlast   = fZaxis.GetLast();
+   min=FLT_MAX;
+   max=FLT_MIN;
+   Double_t value;
+   for (binz=zfirst;binz<=zlast;binz++) {
+      for (biny=yfirst;biny<=ylast;biny++) {
+         for (binx=xfirst;binx<=xlast;binx++) {
+            bin = GetBin(binx,biny,binz);
+            value = RetrieveBinContent(bin);
+            if (value < min) min = value;
+            if (value > max) max = value;
+         }
+      }
+   }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Redefine  x axis parameters.
 ///

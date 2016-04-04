@@ -383,6 +383,8 @@ void TCling::UpdateEnumConstants(TEnum* enumObj, TClass* cl) const {
          if (const NamedDecl* END = llvm::dyn_cast<NamedDecl>(*EDI)) {
             PrintingPolicy Policy((*EDI)->getASTContext().getPrintingPolicy());
             llvm::raw_string_ostream stream(constbuf);
+            // Don't trigger fopen of the source file to count lines:
+            Policy.AnonymousTagLocations = false;
             (END)->getNameForDiagnostic(stream, Policy, /*Qualified=*/false);
          }
          const char* constantName = constbuf.c_str();
@@ -430,6 +432,8 @@ TEnum* TCling::CreateEnum(void *VD, TClass *cl) const
       // Get name of the enum type.
       PrintingPolicy Policy(ED->getASTContext().getPrintingPolicy());
       llvm::raw_string_ostream stream(buf);
+      // Don't trigger fopen of the source file to count lines:
+      Policy.AnonymousTagLocations = false;
       ED->getNameForDiagnostic(stream, Policy, /*Qualified=*/false);
       // If the enum is unnamed we do not add it to the list of enums i.e unusable.
    }
@@ -494,6 +498,8 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*
             std::string NCtxName;
             PrintingPolicy Policy(NCtx->getASTContext().getPrintingPolicy());
             llvm::raw_string_ostream stream(NCtxName);
+            // Don't trigger fopen of the source file to count lines:
+            Policy.AnonymousTagLocations = false;
             NCtx->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
 
             TClass* cl = (TClass*)gROOT->GetListOfClasses()->FindObject(NCtxName.c_str());
@@ -1848,6 +1854,16 @@ static int HandleInterpreterException(cling::MetaProcessor* metaProcessor,
    return 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+void TCling::DiagnoseIfInterpreterException(std::exception &e) const
+{
+   if (auto ie = dynamic_cast<cling::InterpreterException*>(&e))
+      ie->diagnose();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
 {
    // Copy the passed line, it comes from a static buffer in TApplication
@@ -2187,6 +2203,8 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
       if (memberQT.isNull()) {
          std::string memberName;
          llvm::raw_string_ostream stream(memberName);
+         // Don't trigger fopen of the source file to count lines:
+         printPol.AnonymousTagLocations = false;
          iField->getNameForDiagnostic(stream, printPol, true /*fqi*/);
          stream.flush();
          Error("InspectMembers",
@@ -2198,6 +2216,8 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
       if (!memType) {
          std::string memberName;
          llvm::raw_string_ostream stream(memberName);
+         // Don't trigger fopen of the source file to count lines:
+         printPol.AnonymousTagLocations = false;
          iField->getNameForDiagnostic(stream, printPol, true /*fqi*/);
          stream.flush();
          Error("InspectMembers",
@@ -2220,6 +2240,8 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
          if (ptrQT.isNull()) {
             std::string memberName;
             llvm::raw_string_ostream stream(memberName);
+            // Don't trigger fopen of the source file to count lines:
+            printPol.AnonymousTagLocations = false;
             iField->getNameForDiagnostic(stream, printPol, true /*fqi*/);
             stream.flush();
             Error("InspectMembers",
@@ -2248,6 +2270,8 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
          if (subArrQT.isNull()) {
             std::string memberName;
             llvm::raw_string_ostream stream(memberName);
+            // Don't trigger fopen of the source file to count lines:
+            printPol.AnonymousTagLocations = false;
             iField->getNameForDiagnostic(stream, printPol, true /*fqi*/);
             stream.flush();
             Error("InspectMembers",
@@ -3409,6 +3433,8 @@ void TCling::LoadEnums(TListOfEnums& enumList) const
                std::string buf;
                PrintingPolicy Policy(ED->getASTContext().getPrintingPolicy());
                llvm::raw_string_ostream stream(buf);
+               // Don't trigger fopen of the source file to count lines:
+               Policy.AnonymousTagLocations = false;
                ED->getNameForDiagnostic(stream, Policy, /*Qualified=*/false);
                stream.flush();
                // If the enum is unnamed we do not add it to the list of enums i.e unusable.
@@ -4432,8 +4458,8 @@ const char* TCling::TypeName(const char* typeDesc)
 
 int TCling::ReadRootmapFile(const char *rootmapfile, TUniqueString *uniqueString)
 {
-   // For "class ", "namespace ", "typedef ", "header ", "enum " respectively
-   const std::map<char, unsigned int> keyLenMap = {{'c',6},{'n',10},{'t',8},{'h',7},{'e',5}};
+   // For "class ", "namespace ", "typedef ", "header ", "enum ", "var " respectively
+   const std::map<char, unsigned int> keyLenMap = {{'c',6},{'n',10},{'t',8},{'h',7},{'e',5},{'v',4}};
 
    if (rootmapfile && *rootmapfile) {
 
@@ -5195,7 +5221,7 @@ UInt_t TCling::AutoParseImplRecurse(const char *cls, bool topLevel)
          auto tokens = templateName.Tokenize("::");
          clang::NamedDecl* previousScopeAsNamedDecl = nullptr;
          clang::DeclContext* previousScopeAsContext = nullptr;
-         for (auto const & scopeObj : *tokens){
+         for (auto const scopeObj : *tokens){
             auto scopeName = ((TObjString*) scopeObj)->String().Data();
             previousScopeAsNamedDecl = cling::utils::Lookup::Named(&fInterpreter->getSema(), scopeName, previousScopeAsContext);
             // Check if we have multiple nodes in the AST with this name
@@ -7317,7 +7343,10 @@ void TCling::GetFunctionName(const clang::FunctionDecl *decl, std::string &outpu
       output.insert(output.begin(), '~');
    } else {
       llvm::raw_string_ostream stream(output);
-      decl->getNameForDiagnostic(stream, decl->getASTContext().getPrintingPolicy(), /*Qualified=*/false);
+      auto printPolicy = decl->getASTContext().getPrintingPolicy();
+      // Don't trigger fopen of the source file to count lines:
+      printPolicy.AnonymousTagLocations = false;
+      decl->getNameForDiagnostic(stream, printPolicy, /*Qualified=*/false);
    }
 }
 

@@ -1,27 +1,29 @@
 // @(#)root/geom:$Id$
 // Author: Andrei Gheata   30/10/01
 
-//_____________________________________________________________________________
-// TGeoPatternFinder - base finder class for patterns.
-//==================
-//   A pattern is specifying a division type which applies only to a given
-// shape type. The implemented patterns are for the moment equidistant slices
-// on different axis. Implemented patterns are:
-//
-// TGeoPatternX - a X axis divison pattern
-// TGeoPatternY - a Y axis divison pattern
-// TGeoPatternZ - a Z axis divison pattern
-// TGeoPatternParaX - a X axis divison pattern for PARA shape
-// TGeoPatternParaY - a Y axis divison pattern for PARA shape
-// TGeoPatternParaZ - a Z axis divison pattern for PARA shape
-// TGeoPatternTrapZ - a Z axis divison pattern for TRAP or GTRA shapes
-// TGeoPatternCylR - a cylindrical R divison pattern
-// TGeoPatternCylPhi - a cylindrical phi divison pattern
-// TGeoPatternSphR - a spherical R divison pattern
-// TGeoPatternSphTheta - a spherical theta divison pattern
-// TGeoPatternSphPhi - a spherical phi divison pattern
-// TGeoPatternHoneycomb - a divison pattern specialized for honeycombs
-//_____________________________________________________________________________
+/** \class TGeoPatternFinder
+\ingroup Geometry_classes
+
+Base finder class for patterns.
+
+  A pattern is specifying a division type which applies only to a given
+shape type. The implemented patterns are for the moment equidistant slices
+on different axis. Implemented patterns are:
+
+  - TGeoPatternX - a X axis divison pattern
+  - TGeoPatternY - a Y axis divison pattern
+  - TGeoPatternZ - a Z axis divison pattern
+  - TGeoPatternParaX - a X axis divison pattern for PARA shape
+  - TGeoPatternParaY - a Y axis divison pattern for PARA shape
+  - TGeoPatternParaZ - a Z axis divison pattern for PARA shape
+  - TGeoPatternTrapZ - a Z axis divison pattern for TRAP or GTRA shapes
+  - TGeoPatternCylR - a cylindrical R divison pattern
+  - TGeoPatternCylPhi - a cylindrical phi divison pattern
+  - TGeoPatternSphR - a spherical R divison pattern
+  - TGeoPatternSphTheta - a spherical theta divison pattern
+  - TGeoPatternSphPhi - a spherical phi divison pattern
+  - TGeoPatternHoneycomb - a divison pattern specialized for honeycombs
+*/
 
 #include "TGeoPatternFinder.h"
 

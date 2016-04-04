@@ -59,7 +59,8 @@ The main changes are:
 
 ## Basic concepts of MINUIT
 
-The <A HREF="http://wwwinfo.cern.ch/asdoc/minuit/minmain.html"> MINUIT</A> package acts on a multiparameter Fortran function to which one
+The [MINUIT](https://root.cern.ch/sites/d35c7d8c.web.cern.ch/files/minuit.pdf)
+package acts on a multiparameter Fortran function to which one
 must give the generic name <TT>FCN</TT>. In the ROOT implementation,
 the function <TT>FCN</TT> is defined via the MINUIT SetFCN member function
 when an Histogram.Fit command is invoked.
@@ -604,8 +605,8 @@ TObject *TMinuit::Clone(const char *newname) const
 ///
 /// Equivalent to MNEXCM except that the command is given as a character string.
 /// See TMinuit::mnhelp for the full list of available commands
-/// See also http://wwwasdoc.web.cern.ch/wwwasdoc/minuit/node18.html for
-/// a complete documentation of all the available commands
+/// See also the
+/// [complete documentation of all the available commands](https://root.cern.ch/sites/d35c7d8c.web.cern.ch/files/minuit.pdf)
 ///
 /// Returns the status of the execution:
 ///   -  0: command executed normally
@@ -2675,8 +2676,8 @@ void TMinuit::mneval(Double_t anext, Double_t &fnext, Int_t &ierev)
 ///           -  11: EXIT or STOP command
 ///           -  12: RETURN command
 ///
-/// see also http://wwwasdoc.web.cern.ch/wwwasdoc/minuit/node18.html for the possible list
-/// of all Minuit commands
+/// see also
+/// [the possible list of all Minuit commands](https://root.cern.ch/sites/d35c7d8c.web.cern.ch/files/minuit.pdf).
 
 void TMinuit::mnexcm(const char *command, Double_t *plist, Int_t llist, Int_t &ierflg)
 {

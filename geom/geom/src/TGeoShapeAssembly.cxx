@@ -22,11 +22,12 @@
 #include "TBuffer3DTypes.h"
 #include "TMath.h"
 
-//_____________________________________________________________________________
-// TGeoShapeAssembly - The shape encapsulating an assembly (union) of volumes.
-//
-//_____________________________________________________________________________
+/** \class TGeoShapeAssembly
+\ingroup Geometry_classes
 
+The shape encapsulating an assembly (union) of volumes.
+Automatically created by TGeoVolumeAssembly class
+*/
 
 ClassImp(TGeoShapeAssembly)
 
@@ -542,7 +543,7 @@ void TGeoShapeAssembly::ComputeNormal_v(const Double_t *points, const Double_t *
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+/// Compute distance from array of input points having directions specified by dirs. Store output in dists
 
 void TGeoShapeAssembly::DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {
@@ -550,7 +551,7 @@ void TGeoShapeAssembly::DistFromInside_v(const Double_t *points, const Double_t 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+/// Compute distance from array of input points having directions specified by dirs. Store output in dists
 
 void TGeoShapeAssembly::DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {

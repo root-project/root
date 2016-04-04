@@ -36,6 +36,78 @@ namespace PyROOT {
 
 }
 
+//- custom helpers to check ranges --------------------------------------------
+
+////////////////////////////////////////////////////////////////////////////////
+/// range-checking python integer to C++ bool conversion
+static inline Bool_t PyROOT_PyLong_AsBool( PyObject* pyobject )
+{
+   Long_t l = PyLong_AsLong( pyobject );
+// fail to pass float -> bool; the problem is rounding (0.1 -> 0 -> False)
+   if ( ! ( l == 0 || l == 1 ) || PyFloat_Check( pyobject ) ) {
+      PyErr_SetString( PyExc_ValueError, "boolean value should be bool, or integer 1 or 0" );
+      return (Bool_t)-1;
+   }
+   return (Bool_t)l;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// python string to C++ char conversion
+static inline Char_t PyROOT_PyUnicode_AsChar( PyObject* pyobject ) {
+   return (Char_t)PyROOT_PyUnicode_AsString( pyobject )[0];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// range-checking python integer to C++ unsigend short int conversion
+static inline UShort_t PyROOT_PyLong_AsUShort( PyObject* pyobject )
+{
+// prevent p2.7 silent conversions and do a range check
+   if ( ! (PyLong_Check( pyobject ) || PyInt_Check( pyobject )) ) {
+      PyErr_SetString( PyExc_TypeError, "unsigned short converion expects an integer object" );
+      return (UShort_t)-1;
+   }
+   Long_t l = PyLong_AsLong( pyobject );
+   if ( l < 0 || USHRT_MAX < l ) {
+      PyErr_Format( PyExc_ValueError, "integer %ld out of range for unsigned short", l );
+      return (UShort_t)-1;
+
+   }
+   return (UShort_t)l;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// range-checking python integer to C++ short int conversion
+static inline Short_t PyROOT_PyLong_AsShort( PyObject* pyobject )
+{
+// prevent p2.7 silent conversions and do a range check
+   if ( ! (PyLong_Check( pyobject ) || PyInt_Check( pyobject )) ) {
+      PyErr_SetString( PyExc_TypeError, "short int converion expects an integer object" );
+      return (Short_t)-1;
+   }
+   Long_t l = PyLong_AsLong( pyobject );
+   if ( l < SHRT_MIN || SHRT_MAX < l ) {
+      PyErr_Format( PyExc_ValueError, "integer %ld out of range for short int", l );
+      return (Short_t)-1;
+
+   }
+   return (Short_t)l;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// strict python integer to C++ integer conversion
+static inline Long_t PyROOT_PyLong_AsStrictLong( PyObject* pyobject )
+{
+// p2.7 and later silently converts floats to long, therefore require this
+// check; earlier pythons may raise a SystemError which should be avoided as
+// it is confusing
+   if ( ! (PyLong_Check( pyobject ) || PyInt_Check( pyobject )) ) {
+      PyErr_SetString( PyExc_TypeError, "int/long converion expects an integer object" );
+      return (Long_t)-1;
+   }
+   return (Long_t)PyLong_AsLong( pyobject );
+}
+
 
 //- base converter implementation ---------------------------------------------
 PyObject* PyROOT::TConverter::FromMemory( void* )
@@ -56,7 +128,19 @@ Bool_t PyROOT::TConverter::ToMemory( PyObject*, void* )
 
 
 //- helper macro's ------------------------------------------------------------
-#define PYROOT_IMPLEMENT_BASIC_CONVERTER( name, type, stype, F1, F2 )         \
+#define PYROOT_IMPLEMENT_BASIC_CONVERTER( name, type, stype, F1, F2, tc )     \
+Bool_t PyROOT::T##name##Converter::SetArg(                                    \
+      PyObject* pyobject, TParameter& para, TCallContext* /* ctxt */ )        \
+{                                                                             \
+/* convert <pyobject> to C++ 'type', set arg for call */                      \
+   type val = (type)F2( pyobject );                                           \
+   if ( val == (type)-1 && PyErr_Occurred() )                                 \
+      return kFALSE;                                                          \
+   para.fValue.f##name = val;                                                 \
+   para.fTypeCode = tc;                                                       \
+   return kTRUE;                                                              \
+}                                                                             \
+                                                                              \
 PyObject* PyROOT::T##name##Converter::FromMemory( void* address )             \
 {                                                                             \
    return F1( (stype)*((type*)address) );                                     \
@@ -71,37 +155,6 @@ Bool_t PyROOT::T##name##Converter::ToMemory( PyObject* value, void* address ) \
    return kTRUE;                                                              \
 }
 
-
-static inline Bool_t VerifyPyBool( PyObject* pyobject )
-{
-   Long_t l = PyLong_AsLong( pyobject );
-// fail to pass float -> bool; the problem is rounding (0.1 -> 0 -> False)
-   if ( ! ( l == 0 || l == 1 ) || PyFloat_Check( pyobject ) ) {
-      PyErr_SetString( PyExc_ValueError, "boolean value should be bool, or integer 1 or 0" );
-      return kFALSE;
-   }
-   return kTRUE;
-}
-
-static inline char PyROOT_PyUnicode_AsChar( PyObject* pyobject ) {
-   return PyROOT_PyUnicode_AsString( pyobject )[0];
-}
-
-
-static inline Bool_t VerifyPyLong( PyObject* pyobject )
-{
-// p2.7 and later silently converts floats to long, therefore require this
-// check; earlier pythons may raise a SystemError which should be avoided as
-// it is confusing
-   if ( ! (PyLong_Check( pyobject ) || PyInt_Check( pyobject )) )
-      return kFALSE;
-   return kTRUE;
-}
-
-static inline Bool_t VerifyPyFloat( PyObject* )
-{
-   return kTRUE;
-}
 
 static inline Int_t ExtractChar( PyObject* pyobject, const char* tname, Int_t low, Int_t high )
 {
@@ -128,11 +181,10 @@ static inline Int_t ExtractChar( PyObject* pyobject, const char* tname, Int_t lo
 }
 
 
-#define PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( name, type, F1, verifier )\
+#define PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( name, type, F1           )\
 Bool_t PyROOT::TConst##name##RefConverter::SetArg(                            \
       PyObject* pyobject, TParameter& para, TCallContext* /* ctxt */ )        \
 {                                                                             \
-   if ( ! verifier( pyobject ) ) return kFALSE;                               \
    type val = (type)F1( pyobject );                                           \
    if ( val == (type)-1 && PyErr_Occurred() )                                 \
       return kFALSE;                                                          \
@@ -204,20 +256,7 @@ Bool_t PyROOT::T##name##Converter::ToMemory( PyObject* value, void* address ) \
 
 
 //- converters for built-ins --------------------------------------------------
-Bool_t PyROOT::TLongConverter::SetArg(
-      PyObject* pyobject, TParameter& para, TCallContext* /* ctxt */ )
-{
-// convert <pyobject> to C++ long, set arg for call
-   if ( ! VerifyPyLong( pyobject ) ) return kFALSE;
-   Long_t val = PyLong_AsLong( pyobject );
-   if ( val == -1 && PyErr_Occurred() )
-      return kFALSE;
-   para.fValue.fLong = val;
-   para.fTypeCode = 'l';
-   return kTRUE;
-}
-
-PYROOT_IMPLEMENT_BASIC_CONVERTER( Long, Long_t, Long_t, PyLong_FromLong, PyLong_AsLong )
+PYROOT_IMPLEMENT_BASIC_CONVERTER( Long, Long_t, Long_t, PyLong_FromLong, PyROOT_PyLong_AsStrictLong, 'l' )
 
 ////////////////////////////////////////////////////////////////////////////////
 /// convert <pyobject> to C++ long&, set arg for call
@@ -247,15 +286,15 @@ Bool_t PyROOT::TLongRefConverter::SetArg(
 PYROOT_IMPLEMENT_BASIC_CONST_CHAR_REF_CONVERTER( Char,  Char_t,  CHAR_MIN,  CHAR_MAX )
 PYROOT_IMPLEMENT_BASIC_CONST_CHAR_REF_CONVERTER( UChar, UChar_t,        0, UCHAR_MAX )
 
-PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Bool,      Bool_t,    PyInt_AsLong, VerifyPyBool )
-PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Short,     Short_t,   PyInt_AsLong, VerifyPyLong )
-PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( UShort,    UShort_t,  PyInt_AsLong, VerifyPyLong )
-PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Int,       Int_t,     PyInt_AsLong, VerifyPyLong )
-PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( UInt,      UInt_t,    PyLongOrInt_AsULong,   VerifyPyLong )
-PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Long,      Long_t,    PyLong_AsLong,         VerifyPyLong )
-PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( ULong,     ULong_t,   PyLongOrInt_AsULong,   VerifyPyLong )
-PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( LongLong,  Long64_t,  PyLong_AsLongLong,     VerifyPyLong )
-PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( ULongLong, ULong64_t, PyLongOrInt_AsULong64, VerifyPyLong )
+PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Bool,      Bool_t,    PyROOT_PyLong_AsBool )
+PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Short,     Short_t,   PyROOT_PyLong_AsShort )
+PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( UShort,    UShort_t,  PyROOT_PyLong_AsUShort )
+PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Int,       Int_t,     PyROOT_PyLong_AsStrictLong )
+PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( UInt,      UInt_t,    PyLongOrInt_AsULong )
+PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Long,      Long_t,    PyROOT_PyLong_AsStrictLong )
+PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( ULong,     ULong_t,   PyLongOrInt_AsULong )
+PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( LongLong,  Long64_t,  PyLong_AsLongLong )
+PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( ULongLong, ULong64_t, PyLongOrInt_AsULong64 )
 
 ////////////////////////////////////////////////////////////////////////////////
 /// convert <pyobject> to C++ (pseudo)int&, set arg for call
@@ -288,16 +327,7 @@ Bool_t PyROOT::TIntRefConverter::SetArg(
 ////////////////////////////////////////////////////////////////////////////////
 /// convert <pyobject> to C++ bool, allow int/long -> bool, set arg for call
 
-Bool_t PyROOT::TBoolConverter::SetArg(
-      PyObject* pyobject, TParameter& para, TCallContext* /* ctxt */ )
-{
-   if ( ! VerifyPyBool( pyobject ) ) return kFALSE;
-   para.fValue.fLong = PyLong_AsLong( pyobject );
-   para.fTypeCode = 'l';
-   return kTRUE;
-}
-
-PYROOT_IMPLEMENT_BASIC_CONVERTER( Bool, Bool_t, Long_t, PyInt_FromLong, PyInt_AsLong )
+PYROOT_IMPLEMENT_BASIC_CONVERTER( Bool, Bool_t, Long_t, PyInt_FromLong, PyROOT_PyLong_AsBool, 'l' )
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -306,9 +336,9 @@ PYROOT_IMPLEMENT_BASIC_CHAR_CONVERTER( UChar, UChar_t,        0, UCHAR_MAX )
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PYROOT_IMPLEMENT_BASIC_CONVERTER( Short,  Short_t,  Long_t, PyInt_FromLong,  PyInt_AsLong )
-PYROOT_IMPLEMENT_BASIC_CONVERTER( UShort, UShort_t, Long_t, PyInt_FromLong,  PyInt_AsLong )
-PYROOT_IMPLEMENT_BASIC_CONVERTER( Int,    Int_t,    Long_t, PyInt_FromLong,  PyInt_AsLong )
+PYROOT_IMPLEMENT_BASIC_CONVERTER( Short,  Short_t,  Long_t, PyInt_FromLong,  PyROOT_PyLong_AsShort, 'l' )
+PYROOT_IMPLEMENT_BASIC_CONVERTER( UShort, UShort_t, Long_t, PyInt_FromLong,  PyROOT_PyLong_AsUShort, 'l' )
+PYROOT_IMPLEMENT_BASIC_CONVERTER( Int,    Int_t,    Long_t, PyInt_FromLong,  PyROOT_PyLong_AsStrictLong, 'l' )
 
 ////////////////////////////////////////////////////////////////////////////////
 /// convert <pyobject> to C++ unsigned long, set arg for call
@@ -364,52 +394,12 @@ Bool_t PyROOT::TUIntConverter::ToMemory( PyObject* value, void* address )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// convert <pyobject> to C++ double, set arg for call
+/// floating point converters
 
-Bool_t PyROOT::TFloatConverter::SetArg(
-      PyObject* pyobject, TParameter& para, TCallContext* /* ctxt */ )
-{
-   Double_t val = PyFloat_AsDouble( pyobject );
-   if ( val == -1.0 && PyErr_Occurred() )
-      return kFALSE;
-   para.fValue.fFloat = val;
-   para.fTypeCode = 'f';
-   return kTRUE;
-}
+PYROOT_IMPLEMENT_BASIC_CONVERTER( Float,  Float_t,  Double_t, PyFloat_FromDouble, PyFloat_AsDouble, 'f' )
+PYROOT_IMPLEMENT_BASIC_CONVERTER( Double, Double_t, Double_t, PyFloat_FromDouble, PyFloat_AsDouble, 'd' )
 
-PYROOT_IMPLEMENT_BASIC_CONVERTER( Float,      Float_t,      Double_t,     PyFloat_FromDouble, PyFloat_AsDouble )
-
-////////////////////////////////////////////////////////////////////////////////
-/// convert <pyobject> to C++ double, set arg for call
-
-Bool_t PyROOT::TDoubleConverter::SetArg(
-      PyObject* pyobject, TParameter& para, TCallContext* /* ctxt */ )
-{
-   Double_t val = PyFloat_AsDouble( pyobject );
-   if ( val == -1.0 && PyErr_Occurred() )
-      return kFALSE;
-   para.fValue.fDouble = val;
-   para.fTypeCode = 'd';
-   return kTRUE;
-}
-
-PYROOT_IMPLEMENT_BASIC_CONVERTER( Double,     Double_t,     Double_t,     PyFloat_FromDouble, PyFloat_AsDouble )
-
-////////////////////////////////////////////////////////////////////////////////
-/// convert <pyobject> to C++ double, set arg for call
-
-Bool_t PyROOT::TLongDoubleConverter::SetArg(
-      PyObject* pyobject, TParameter& para, TCallContext* /* ctxt */ )
-{
-   Double_t val = PyFloat_AsDouble( pyobject );
-   if ( val == -1.0 && PyErr_Occurred() )
-      return kFALSE;
-   para.fValue.fLongDouble = val;
-   para.fTypeCode = 'D';
-   return kTRUE;
-}
-
-PYROOT_IMPLEMENT_BASIC_CONVERTER( LongDouble, LongDouble_t, LongDouble_t, PyFloat_FromDouble, PyFloat_AsDouble )
+PYROOT_IMPLEMENT_BASIC_CONVERTER( LongDouble, LongDouble_t, LongDouble_t, PyFloat_FromDouble, PyFloat_AsDouble, 'D' )
 
 ////////////////////////////////////////////////////////////////////////////////
 /// convert <pyobject> to C++ double&, set arg for call
@@ -436,9 +426,9 @@ Bool_t PyROOT::TDoubleRefConverter::SetArg(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Float,      Float_t,      PyFloat_AsDouble, VerifyPyFloat )
-PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Double,     Double_t,     PyFloat_AsDouble, VerifyPyFloat )
-PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( LongDouble, LongDouble_t, PyFloat_AsDouble, VerifyPyFloat )
+PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Float,      Float_t,      PyFloat_AsDouble )
+PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Double,     Double_t,     PyFloat_AsDouble )
+PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( LongDouble, LongDouble_t, PyFloat_AsDouble )
 
 ////////////////////////////////////////////////////////////////////////////////
 /// can't happen (unless a type is mapped wrongly), but implemented for completeness

@@ -9,19 +9,18 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
-// Full description with examples and pictures
-//
-//
-//
-//
-//Begin_Html
-/*
-<img src="gif/t_finder.jpg">
-<img src="gif/t_voxelfind.jpg">
-<img src="gif/t_voxtree.jpg">
+/** \class TGeoVoxelFinder
+\ingroup Geometry_classes
+
+Finder class handling voxels.
+
+Full description with examples and pictures
+
+\image html geom_t_finder.png
+\image html geom_t_voxelfind.png
+\image html geom_t_voxtree.png
 */
-//End_Html
+
 #include "TGeoVoxelFinder.h"
 
 #include "TBuffer.h"
@@ -33,11 +32,6 @@
 #include "TGeoNode.h"
 #include "TGeoManager.h"
 #include "TGeoStateInfo.h"
-
-/*************************************************************************
- * TGeoVoxelFinder - finder class handling voxels
- *
- *************************************************************************/
 
 ClassImp(TGeoVoxelFinder)
 
@@ -222,7 +216,6 @@ TGeoVoxelFinder& TGeoVoxelFinder::operator=(const TGeoVoxelFinder& vf)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
-///   printf("deleting finder of %s\n", fVolume->GetName());
 
 TGeoVoxelFinder::~TGeoVoxelFinder()
 {
@@ -344,7 +337,7 @@ Bool_t TGeoVoxelFinder::IsSafeVoxel(const Double_t *point, Int_t inode, Double_t
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///--- Compute voxelization efficiency.
+/// Compute voxelization efficiency.
 
 Double_t TGeoVoxelFinder::Efficiency()
 {
@@ -443,7 +436,7 @@ void TGeoVoxelFinder::FindOverlaps(Int_t inode) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Getindices for current slices on x, y, z
+/// Get indices for current slices on x, y, z
 
 Bool_t TGeoVoxelFinder::GetIndices(const Double_t *point, TGeoStateInfo &td)
 {
@@ -487,7 +480,7 @@ Bool_t TGeoVoxelFinder::GetIndices(const Double_t *point, TGeoStateInfo &td)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///--- Return the list of extra candidates in a given X slice compared to
+/// Return the list of extra candidates in a given X slice compared to
 /// another (left or right)
 
 Int_t *TGeoVoxelFinder::GetExtraX(Int_t islice, Bool_t left, Int_t &nextra) const
@@ -506,7 +499,7 @@ Int_t *TGeoVoxelFinder::GetExtraX(Int_t islice, Bool_t left, Int_t &nextra) cons
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///--- Return the list of extra candidates in a given Y slice compared to
+/// Return the list of extra candidates in a given Y slice compared to
 /// another (left or right)
 
 Int_t *TGeoVoxelFinder::GetExtraY(Int_t islice, Bool_t left, Int_t &nextra) const
@@ -525,7 +518,7 @@ Int_t *TGeoVoxelFinder::GetExtraY(Int_t islice, Bool_t left, Int_t &nextra) cons
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///--- Return the list of extra candidates in a given Z slice compared to
+/// Return the list of extra candidates in a given Z slice compared to
 /// another (left or right)
 
 Int_t *TGeoVoxelFinder::GetExtraZ(Int_t islice, Bool_t left, Int_t &nextra) const
@@ -545,7 +538,6 @@ Int_t *TGeoVoxelFinder::GetExtraZ(Int_t islice, Bool_t left, Int_t &nextra) cons
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get extra candidates that are not contained in current check list
-///   UChar_t *bits = gGeoManager->GetBits();
 
 Int_t *TGeoVoxelFinder::GetValidExtra(Int_t *list, Int_t &ncheck, TGeoStateInfo &td)
 {
@@ -566,7 +558,6 @@ Int_t *TGeoVoxelFinder::GetValidExtra(Int_t *list, Int_t &ncheck, TGeoStateInfo 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get extra candidates that are contained in array1 but not in current check list
-///   UChar_t *bits = gGeoManager->GetBits();
 
 Int_t *TGeoVoxelFinder::GetValidExtra(Int_t /*n1*/, UChar_t *array1, Int_t *list, Int_t &ncheck, TGeoStateInfo &td)
 {
@@ -587,7 +578,6 @@ Int_t *TGeoVoxelFinder::GetValidExtra(Int_t /*n1*/, UChar_t *array1, Int_t *list
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get extra candidates that are contained in array1 but not in current check list
-///   UChar_t *bits = gGeoManager->GetBits();
 
 Int_t *TGeoVoxelFinder::GetValidExtra(Int_t /*n1*/, UChar_t *array1, Int_t /*n2*/, UChar_t *array2, Int_t *list, Int_t &ncheck, TGeoStateInfo &td)
 {
@@ -2014,7 +2004,7 @@ void TGeoVoxelFinder::SortAll(Option_t *)
             loc = bitnumber/8;
             bit = bitnumber%8;
             bits[loc] |= 1<<bit;
-            //---> chech if it is extra to left/right
+            //---> check if it is extra to left/right
             //--- left
             ddx1 = xbmin-xxmin;
             ddx2 = xbmax-xxmax;
@@ -2134,7 +2124,7 @@ void TGeoVoxelFinder::SortAll(Option_t *)
             loc = bitnumber/8;
             bit = bitnumber%8;
             bits[loc] |= 1<<bit;
-            //---> chech if it is extra to left/right
+            //---> check if it is extra to left/right
             //--- left
             ddx1 = xbmin-xxmin;
             ddx2 = xbmax-xxmax;

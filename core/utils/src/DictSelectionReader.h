@@ -94,7 +94,7 @@ ROOT::Selection::NS::C.
  * @c classTemplateVanilla<char>.
  *
  * A brief description of the properties that can be assigned to classes
- * with the @c ROOT::Meta::Selectio::ClassAttributes class.
+ * with the @c ROOT::Meta::Selection::ClassAttributes class.
  *    1. @c kNonSplittable : Makes the class non splittable
  * The class properties can be assigned via a traits mechanism. For example:
  * @code

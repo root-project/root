@@ -144,10 +144,14 @@ endif()
 if(NOT builtin_lzma)
   message(STATUS "Looking for LZMA")
   find_package(LZMA)
-  if(LZMA_FOUND)
-  else()
-    message(STATUS "LZMA not found. Switching on builtin_lzma option")
-    set(builtin_lzma ON CACHE BOOL "" FORCE)
+  if(NOT LZMA_FOUND)
+    if(fail-on-missing)
+      message(FATAL_ERROR "LZMA not found and it is required ('fail-on-missing' enabled)."
+                          "Alternatively, you can enable the option 'builtin_lzma' to build the LZMA library internally.")
+    else()
+      message(STATUS "LZMA not found. Switching on builtin_lzma option")
+      set(builtin_lzma ON CACHE BOOL "" FORCE)
+    endif()
   endif()
 endif()
 if(builtin_lzma)
@@ -1005,14 +1009,15 @@ if(davix OR builtin_davix)
                  -DCMAKE_CXX_FLAGS=${__cxxflags}
                  -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
                  -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
+                 -DLIB_SUFFIX=""
       LOG_BUILD 1 LOG_CONFIGURE 1 LOG_DOWNLOAD 1 LOG_INSTALL 1
     )
     ExternalProject_Get_Property(DAVIX INSTALL_DIR)
     set(DAVIX_INCLUDE_DIR ${INSTALL_DIR}/include/davix)
-    set(DAVIX_LIBRARY ${INSTALL_DIR}/${_LIBDIR_DEFAULT}/${CMAKE_STATIC_LIBRARY_PREFIX}davix${CMAKE_STATIC_LIBRARY_SUFFIX})
+    set(DAVIX_LIBRARY ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}davix${CMAKE_STATIC_LIBRARY_SUFFIX})
     set(DAVIX_INCLUDE_DIRS ${DAVIX_INCLUDE_DIR})
     foreach(l davix neon boost_static_internal)
-      list(APPEND DAVIX_LIBRARIES ${INSTALL_DIR}/${_LIBDIR_DEFAULT}/${CMAKE_STATIC_LIBRARY_PREFIX}${l}${CMAKE_STATIC_LIBRARY_SUFFIX})
+      list(APPEND DAVIX_LIBRARIES ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${l}${CMAKE_STATIC_LIBRARY_SUFFIX})
     endforeach()
     if(builtin_openssl)
       add_dependencies(DAVIX OPENSSL)  # Build first OpenSSL
@@ -1110,6 +1115,34 @@ if(geocad)
       message(STATUS "For the time being switching OFF 'geocad' option")
       set(geocad OFF CACHE BOOL "" FORCE)
     endif()
+  endif()
+endif()
+
+#---Check for Vc---------------------------------------------------------------------
+if(vc OR builtin_vc)
+  if(NOT builtin_vc)
+    message(STATUS "Looking for Vc")
+    find_package(Vc 1.0 CONFIG QUIET)
+    if(NOT Vc_FOUND)
+      message(STATUS "Vc not found. Ensure that the installation of Vc is in the CMAKE_PREFIX_PATH")
+      message(STATUS "              Alternatively, you can also enable the option 'builtin_vc' to build the Vc libraries internally")
+      message(STATUS "              For the time being switching OFF 'vc' option")
+      set(vc OFF CACHE BOOL "" FORCE)
+    endif()
+    set(Vc_INCLUDE_DIRS ${Vc_INCLUDE_DIR})    # Missing from VcConfig.cmake
+  endif()
+  if(builtin_vc)
+    set(vc_version 1.1.0)
+    ExternalProject_Add(
+      VC
+      URL ${repository_tarfiles}/Vc-${vc_version}.tar.gz
+      INSTALL_DIR ${CMAKE_BINARY_DIR}
+      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
+    )
+    set(Vc_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include)
+    set(Vc_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}Vc${CMAKE_STATIC_LIBRARY_SUFFIX})
+    set(vc ON CACHE BOOL "" FORCE)
   endif()
 endif()
 

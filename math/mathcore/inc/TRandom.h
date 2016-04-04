@@ -54,7 +54,7 @@ public:
    virtual  void     Sphere(Double_t &x, Double_t &y, Double_t &z, Double_t r);
    virtual  Double_t Uniform(Double_t x1=1);
    virtual  Double_t Uniform(Double_t x1, Double_t x2);
-   virtual  void     WriteRandom(const char *filename);
+   virtual  void     WriteRandom(const char *filename) const;
 
    ClassDef(TRandom,1)  //Simple Random number generator (periodicity = 10**9)
 };

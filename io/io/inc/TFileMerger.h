@@ -41,10 +41,11 @@ protected:
    Bool_t         fNoTrees;          ///< True if Trees should not be merged (default is kFALSE)
    Bool_t         fExplicitCompLevel;///< True if the user explicitly requested a compressio level change (default kFALSE)
    Bool_t         fCompressionChange;///< True if the output and input have different compression level (default kFALSE)
-   Int_t          fPrintLevel;       ///< How much information to print out at run time.
+   Int_t          fPrintLevel;       ///< How much information to print out at run time
+   TString        fMergeOptions;     ///< Options (in string format) to be passed down to the Merge functions
    TString        fMsgPrefix;        ///< Prefix to be used when printing informational message (default TFileMerger)
 
-   Int_t          fMaxOpenedFiles;  ///< Maximum number of files opened at the same time by the TFileMerger.
+   Int_t          fMaxOpenedFiles;  ///< Maximum number of files opened at the same time by the TFileMerger
    Bool_t         fLocal;           ///< Makes local copies of merging files if True (default is kTRUE)
    Bool_t         fHistoOneGo;      ///< Merger histos in one go (default is kTRUE)
    TString        fObjectNames;     ///< List of object names to be either merged exclusively or skipped
@@ -83,6 +84,8 @@ public:
    void        SetMaxOpenedFiles(Int_t newmax);
    const char *GetMsgPrefix() const { return fMsgPrefix; }
    void        SetMsgPrefix(const char *prefix);
+   const char *GetMergeOptions() { return fMergeOptions; }
+   void        SetMergeOptions(const std::string_view &options) { fMergeOptions = options; }
    void        AddObjectNames(const char *name) {fObjectNames += name; fObjectNames += " ";}
    const char *GetObjectNames() const {return fObjectNames.Data();}
    void        ClearObjectNames() {fObjectNames.Clear();}

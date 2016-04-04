@@ -10,7 +10,7 @@
  *************************************************************************/
 
 
-/** \class TGeoHelix -
+/** \class TGeoHelix
 \ingroup Geometry_classes
 
 Class representing a helix curve

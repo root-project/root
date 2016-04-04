@@ -10,7 +10,7 @@
 
 //static TControlBar* CorrGuiMultiClass_Global__cbar = 0;
 
-void TMVA::CorrGuiMultiClass(  TString fin , TString dirName , TString title ,
+void TMVA::CorrGuiMultiClass(TString dataset,  TString fin , TString dirName , TString title ,
                Bool_t isRegression )
 {
    // Use this script in order to run the various individual macros
@@ -34,10 +34,9 @@ void TMVA::CorrGuiMultiClass(  TString fin , TString dirName , TString title ,
 
    // configure buttons      
    // checks if file with name "fin" is already open, and if not opens one
-   //TFile* file =
-   TMVAGlob::OpenFile( fin );  
+   TFile* file = TMVAGlob::OpenFile( fin );  
 
-   TDirectory* dir = (TDirectory*)gDirectory->Get( dirName );
+   TDirectory* dir = (TDirectory*)file->GetDirectory(dataset.Data())->Get( dirName );
    if (!dir) {
       cout << "Could not locate directory '" << dirName << "' in file: " << fin << endl;
       return;
@@ -51,8 +50,8 @@ void TMVA::CorrGuiMultiClass(  TString fin , TString dirName , TString title ,
    std::vector<TString>::const_iterator iter = names.begin();
    for (; iter != names.end(); ++iter) {    
       cbar->AddButton( Form( "      Variable: %s      ", (*iter).Data()),
-                       Form( "TMVA::correlationscattersMultiClass(\"%s\",\"%s\",\"%s\",\"%s\",%i)", 
-                             fin.Data(), (*iter).Data(), dirName.Data(), title.Data(), (Int_t)isRegression ),
+                       Form( "TMVA::correlationscattersMultiClass(\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",%i)",
+                             dataset.Data(), fin.Data(), (*iter).Data(), dirName.Data(), title.Data(), (Int_t)isRegression ),
                        buttonType );
    }
       

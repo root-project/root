@@ -26,7 +26,7 @@ BASEH3       := GuiTypes.h KeySymbols.h Buttons.h TTimeStamp.h TVirtualMutex.h \
                 TBase64.h
 BASEH3       := $(patsubst %,$(MODDIRI)/%,$(BASEH3))
 BASEH1       := $(filter-out $(BASEH3),$(BASEH1))
-BASEH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
+BASEH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h $(MODDIRI)/ROOT/*.h))
 BASEDICTH    := $(BASEH1) $(BASEH3)
 ROOTAS       := $(MODDIRS)/roota.cxx
 ROOTAO       := $(call stripsrc,$(ROOTAS:.cxx=.o))
@@ -47,6 +47,7 @@ INCLUDEFILES += $(BASEDEP)
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
 include/%.h:    $(BASEDIRI)/%.h
+		mkdir -p include/ROOT
 		cp $< $@
 
 # Explicitely state this dependency.

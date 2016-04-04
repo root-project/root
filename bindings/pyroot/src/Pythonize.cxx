@@ -954,9 +954,9 @@ namespace {
 
       if ( pyvalue_type && pyvalue_size ) {
          PyObject* pydata = CallPyObjMethod( v, "data" );
-         if ( Utility::GetBuffer( pydata, '*', 1, vi->vi_data, kFALSE ) == 0 )
+         if ( !pydata || Utility::GetBuffer( pydata, '*', 1, vi->vi_data, kFALSE ) == 0 )
             vi->vi_data = nullptr;
-         Py_DECREF( pydata );
+         Py_XDECREF( pydata );
 
          vi->vi_converter = PyROOT::CreateConverter( PyROOT_PyUnicode_AsString( pyvalue_type ) );
          vi->vi_stride    = PyLong_AsLong( pyvalue_size );
@@ -2210,8 +2210,12 @@ namespace {
                        PyROOT_PyUnicode_AsString( astr ) );
          Py_DECREF( astr );
          Py_DECREF( result );
-         return 0;
+         return nullptr;
       }
+
+   // caching behavior seems to be more clear to the user; can always override said
+   // behavior (i.e. re-read from file) with an explicit Get() call
+      PyObject_SetAttr( self, attr, result );
       return result;
    }
 
@@ -2469,7 +2473,7 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
    else if ( name.find( "iterator" ) != std::string::npos ) {
       ((PyTypeObject*)pyclass)->tp_iternext = (iternextfunc)StlIterNext;
-      Utility::AddToClass( pyclass, "next", (PyCFunction) StlIterNext, METH_NOARGS );
+      Utility::AddToClass( pyclass, PYROOT__next__, (PyCFunction) StlIterNext, METH_NOARGS );
 
    // special case, if operator== is a global overload and included in the dictionary
       if ( ! HasAttrDirect( pyclass, PyStrings::gCppEq, kTRUE ) )
@@ -2515,7 +2519,7 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       Utility::AddToClass( pyclass, "__iter__", (PyCFunction) PyObject_SelfIter, METH_NOARGS );
 
       ((PyTypeObject*)pyclass)->tp_iternext = (iternextfunc)TIterNext;
-      Utility::AddToClass( pyclass, "next", (PyCFunction) TIterNext, METH_NOARGS );
+      Utility::AddToClass( pyclass, PYROOT__next__, (PyCFunction) TIterNext, METH_NOARGS );
 
    }
 
@@ -2629,7 +2633,7 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
    }
 
-   else if ( name.substr(0,6) == "TArray" ) {    // allow proper iteration
+   else if ( name.substr(0,6) == "TArray" && name != "TArray" ) {    // allow proper iteration
       // __len__ is already set from GetSize()
       Utility::AddToClass( pyclass, "_getitem__unchecked", "__getitem__" );
       Utility::AddToClass( pyclass, "__getitem__", (PyCFunction) CheckedGetItem, METH_O );
@@ -2643,7 +2647,7 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       Utility::AddUsingToClass( pyclass, "plotOn" );
 
 
-// TODO: store these on the pythonizations module, nog on gRootModule
+// TODO: store these on the pythonizations module, not on gRootModule
 // TODO: externalize this code and use update handlers on the python side
    PyObject* userPythonizations = PyObject_GetAttrString( gRootModule, "UserPythonizations" );
    PyObject* pythonizationScope = PyObject_GetAttrString( gRootModule, "PythonizationScope" );

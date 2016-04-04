@@ -403,6 +403,10 @@ set(buildeditline ${value${editline}})
 set(cppunit)
 set(dicttype ${ROOT_DICTTYPE})
 
+
+find_program(PERL_EXECUTABLE perl)
+set(perl ${PERL_EXECUTABLE})
+
 #---RConfigure-------------------------------------------------------------------------------------------------
 set(setresuid undef)
 if(mathmore)
@@ -484,6 +488,22 @@ if(found_stdexpstringview)
   set(hasstdexpstringview define)
 else()
   set(hasstdexpstringview undef)
+endif()
+
+if(found_stdstringview)
+  CHECK_CXX_SOURCE_COMPILES("#include <string_view>
+     int main() { size_t pos; std::string_view str; std::stod(str,&pos); return 0;}" found_stod_stringview)
+elseif(found_stdexpstringview)
+  CHECK_CXX_SOURCE_COMPILES("#include <experimental/string_view>
+     int main() { size_t pos; std::experimental::string_view str; std::stod(str,&pos); return 0;}" found_stod_stringview)
+else()
+  set(found_stod_stringview false)
+endif()
+
+if(found_stod_stringview)
+  set(hasstodstringview define)
+else()
+  set(hasstodstringview undef)
 endif()
 
 #---root-config----------------------------------------------------------------------------------------------
@@ -620,12 +640,17 @@ if(WIN32)
   configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.bat ${thisrootbat} @ONLY)
 endif()
 
-install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/memprobe
-              ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.sh
+install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.sh
               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.csh
               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/setxrd.csh
               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/setxrd.sh
               ${thisrootbat}
+              PERMISSIONS OWNER_WRITE OWNER_READ
+                          GROUP_READ
+                          WORLD_READ
+              DESTINATION ${CMAKE_INSTALL_BINDIR})
+              
+install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/memprobe
               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/root-config
               ${CMAKE_SOURCE_DIR}/cmake/scripts/setenvwrap.csh
               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/roots

@@ -1,11 +1,8 @@
 // @(#)root/core:$Id$
 // author: Lukasz Janyst <ljanyst@cern.ch>
 
-#ifndef R__R_CONVERSION_RULE_PARSER_H
-#define R__R_CONVERSION_RULE_PARSER_H
-
-#if !defined(__CINT__)
-// Avoid clutering the dictionary (in particular with the STL declaration)
+#ifndef R__CONVERSION_RULE_PARSER_H
+#define R__CONVERSION_RULE_PARSER_H
 
 #include <list>
 #include <map>
@@ -89,7 +86,6 @@ namespace ROOT
    //---------------------------------------------------------------------------
    void ProcessReadRawPragma( const char* args );
 }
-#endif // !defined(__CINT__)
 
-#endif // R__R_CONVERSION_RULE_PARSER_H
+#endif // R__CONVERSION_RULE_PARSER_H
 

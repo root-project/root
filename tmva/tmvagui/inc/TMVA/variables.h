@@ -9,7 +9,6 @@ namespace TMVA{
    // input: - Input file (result from TMVA),
    //        - normal/decorrelated/PCA
    //        - use of TMVA plotting TStyle
-   void variables( TString fin = "TMVA.root", TString dirName = "InputVariables_Id", TString title = "TMVA Input Variables",
-                   Bool_t isRegression = kFALSE, Bool_t useTMVAStyle = kTRUE );
+   void variables(TString dataset, TString fin = "TMVA.root", TString dirName = "InputVariables_Id", TString title = "TMVA Input Variables",Bool_t isRegression = kFALSE, Bool_t useTMVAStyle = kTRUE );
 }
 #endif

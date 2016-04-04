@@ -109,8 +109,7 @@ namespace TMVA {
 
       virtual Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets );
 
-      void Train() { Train(NumCycles()); }
-
+      void Train(); 
       // for GA
       Double_t ComputeEstimator ( std::vector<Double_t>& parameters );
       Double_t EstimatorFunction( std::vector<Double_t>& parameters );

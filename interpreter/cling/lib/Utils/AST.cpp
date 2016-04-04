@@ -180,7 +180,8 @@ namespace utils {
 
   IntegerLiteral* Synthesize::IntegerLiteralExpr(ASTContext& C, uint64_t Ptr) {
     const llvm::APInt Addr(8 * sizeof(void *), Ptr);
-    return IntegerLiteral::Create(C, Addr, C.UnsignedLongTy, SourceLocation());
+    return IntegerLiteral::Create(C, Addr, C.getUIntPtrType(),
+                                  SourceLocation());
   }
 
   static bool

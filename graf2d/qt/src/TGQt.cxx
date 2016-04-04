@@ -87,6 +87,14 @@
 #include "TImage.h"
 #include "TError.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// PluginManager creation function
+TVirtualX* ROOT_Plugin_TGQt(const char* name, const char* title) {
+  return new TGQt(name, title);
+}
+
+
+
 TGQt *gQt=0;
 TVirtualX *TGQt::fgTQt = 0; // to remember the pointer foolishing ROOT PluginManager later.
 TQtTextProxy  *TGQt::fgTextProxy = 0; // The pointer to the custom text proxy;

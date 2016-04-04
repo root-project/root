@@ -13,6 +13,8 @@
 ///  - the env variable PYTHIA8 must point to the pythia8100 (or newer) directory
 ///  - the env variable PYTHIA8DATA must be defined and it must point to $PYTHIA8/xmldoc
 ///
+/// \macro_code
+///
 /// \author Andreas Morsch
 
 void pythia8(Int_t nev  = 100, Int_t ndeb = 1)

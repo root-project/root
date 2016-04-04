@@ -124,13 +124,15 @@ del isfunction, ismethod
 
 ### configuration ---------------------------------------------------------------
 class _Configuration( object ):
-   __slots__ = [ 'IgnoreCommandLineOptions', 'StartGuiThread', 'ExposeCppMacros', '_gts' ]
+   __slots__ = [ 'IgnoreCommandLineOptions', 'StartGuiThread', 'ExposeCppMacros', 
+                 '_gts', 'DisableRootLogon' ]
 
    def __init__( self ):
       self.IgnoreCommandLineOptions = 0
       self.StartGuiThread = True
       self.ExposeCppMacros = False
       self._gts = []
+      self.DisableRootLogon = False
 
    def __setGTS( self, value ):
       for c in value:
@@ -493,8 +495,16 @@ class ModuleFacade( types.ModuleType ):
          if hasattr( attr_1, 'cout' ):
             self.__dict__[ 'cout' ] = attr_1.cout
 
+    # python side pythonizations (should live in their own file, if we get many)
+      def set_size(self, buf):
+         buf.SetSize(self.GetN())
+         return buf
+
+      cppyy.add_pythonization(
+         cppyy.compose_method("^TGraph(2D)?$|^TGraph.*Errors$", "GetE?[XYZ]$", set_size))
+
     # custom logon file (must be after creation of ROOT globals)
-      if hasargv and not '-n' in sys.argv:
+      if hasargv and not '-n' in sys.argv and not PyConfig.DisableRootLogon:
          rootlogon = os.path.expanduser( '~/.rootlogon.py' )
          if os.path.exists( rootlogon ):
           # could also have used execfile, but import is likely to give fewer surprises

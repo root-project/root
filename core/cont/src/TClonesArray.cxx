@@ -133,6 +133,24 @@ When investigating misuse of TClonesArray, please make sure of the following:
 
 ClassImp(TClonesArray)
 
+/// Internal Utility routine to correctly release the memory for an object
+static inline void R__ReleaseMemory(TClass *cl, TObject *obj)
+{
+   if (obj && obj->TestBit(TObject::kNotDeleted)) {
+      // -- The TObject destructor has not been called.
+      cl->Destructor(obj);
+   } else {
+      // -- The TObject destructor was called, just free memory.
+      //
+      // remove any possible entries from the ObjectTable
+      if (TObject::GetObjectStat() && gObjectTable) {
+         gObjectTable->RemoveQuietly(obj);
+      }
+      ::operator delete(obj);
+   }
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Default Constructor.
 
@@ -144,17 +162,7 @@ TClonesArray::TClonesArray() : TObjArray()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create an array of clone objects of classname. The class must inherit from
-/// TObject. If the class defines its own operator delete(), make sure that
-/// it looks like this:
-/// ~~~ {.cpp}
-///    void MyClass::operator delete(void *vp)
-///    {
-///       if ((Long_t) vp != TObject::GetDtorOnly())
-///          ::operator delete(vp);       // delete space
-///       else
-///          TObject::SetDtorOnly(0);
-///    }
-/// ~~~
+/// TObject.
 /// The second argument s indicates an approximate number of objects
 /// that will be entered in the array. If more than s objects are entered,
 /// the array will be automatically expanded.
@@ -170,17 +178,7 @@ TClonesArray::TClonesArray(const char *classname, Int_t s, Bool_t) : TObjArray(s
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create an array of clone objects of class cl. The class must inherit from
-/// TObject. If the class defines an own operator delete(), make sure that
-/// it looks like this:
-/// ~~~ {.cpp}
-///    void MyClass::operator delete(void *vp)
-///    {
-///       if ((Long_t) vp != TObject::GetDtorOnly())
-///          ::operator delete(vp);       // delete space
-///       else
-///          TObject::SetDtorOnly(0);
-///    }
-/// ~~~
+/// TObject.
 /// The second argument, s, indicates an approximate number of objects
 /// that will be entered in the array. If more than s objects are entered,
 /// the array will be automatically expanded.
@@ -229,11 +227,9 @@ TClonesArray& TClonesArray::operator=(const TClonesArray& tc)
 
    for (i = 0; i < fSize; i++)
       if (fKeep->fCont[i]) {
-         if (TObject::GetObjectStat() && gObjectTable)
-            gObjectTable->RemoveQuietly(fKeep->fCont[i]);
-         ::operator delete(fKeep->fCont[i]);
-         fKeep->fCont[i] = 0;
-         fCont[i] = 0;
+         R__ReleaseMemory(fClass,fKeep->fCont[i]);
+         fKeep->fCont[i] = nullptr;
+         fCont[i] = nullptr;
       }
 
    BypassStreamer(kTRUE);
@@ -255,21 +251,8 @@ TClonesArray::~TClonesArray()
 {
    if (fKeep) {
       for (Int_t i = 0; i < fKeep->fSize; i++) {
-         TObject* p = fKeep->fCont[i];
-         if (p && p->TestBit(kNotDeleted)) {
-            // -- The TObject destructor has not been called.
-            fClass->Destructor(p);
-            fKeep->fCont[i] = 0;
-         } else {
-            // -- The TObject destructor was called, just free memory.
-            //
-            // remove any possible entries from the ObjectTable
-            if (TObject::GetObjectStat() && gObjectTable) {
-               gObjectTable->RemoveQuietly(p);
-            }
-            ::operator delete(p);
-            fKeep->fCont[i] = 0;
-         }
+         R__ReleaseMemory(fClass,fKeep->fCont[i]);
+         fKeep->fCont[i] = nullptr;
       }
    }
    SafeDelete(fKeep);
@@ -446,18 +429,11 @@ void TClonesArray::Delete(Option_t *)
          }
       }
    } else {
-      Long_t dtoronly = TObject::GetDtorOnly();
       for (Int_t i = 0; i < fSize; i++) {
          if (fCont[i] && fCont[i]->TestBit(kNotDeleted)) {
-            // Tell custom operator delete() not to delete space when
-            // object fCont[i] is deleted. Only destructors are called
-            // for this object.
-            TObject::SetDtorOnly(fCont[i]);
-            delete fCont[i];
+            fCont[i]->~TObject();
          }
       }
-      // Restore the state.
-      TObject::SetDtorOnly((void*)dtoronly);
    }
 
    // Protect against erroneously setting of owner bit.
@@ -482,10 +458,8 @@ void TClonesArray::Expand(Int_t newSize)
       // Expand() will shrink correctly
       for (int i = newSize; i < fSize; i++)
          if (fKeep->fCont[i]) {
-            if (TObject::GetObjectStat() && gObjectTable)
-               gObjectTable->RemoveQuietly(fKeep->fCont[i]);
-            ::operator delete(fKeep->fCont[i]);
-            fKeep->fCont[i] = 0;
+            R__ReleaseMemory(fClass,fKeep->fCont[i]);
+            fKeep->fCont[i] = nullptr;
          }
    }
 
@@ -523,11 +497,9 @@ void TClonesArray::ExpandCreate(Int_t n)
 
    for (i = n; i < fSize; i++)
       if (fKeep->fCont[i]) {
-         if (TObject::GetObjectStat() && gObjectTable)
-            gObjectTable->RemoveQuietly(fKeep->fCont[i]);
-         ::operator delete(fKeep->fCont[i]);
-         fKeep->fCont[i] = 0;
-         fCont[i] = 0;
+         R__ReleaseMemory(fClass,fKeep->fCont[i]);
+         fKeep->fCont[i] = nullptr;
+         fCont[i] = nullptr;
       }
 
    fLast = n - 1;
@@ -576,13 +548,7 @@ TObject *TClonesArray::RemoveAt(Int_t idx)
    int i = idx-fLowerBound;
 
    if (fCont[i] && fCont[i]->TestBit(kNotDeleted)) {
-      // Tell custom operator delete() not to delete space when
-      // object fCont[i] is deleted. Only destructors are called
-      // for this object.
-      Long_t dtoronly = TObject::GetDtorOnly();
-      TObject::SetDtorOnly(fCont[i]);
-      delete fCont[i];
-      TObject::SetDtorOnly((void*)dtoronly);
+      fCont[i]->~TObject();
    }
 
    if (fCont[i]) {
@@ -608,13 +574,7 @@ TObject *TClonesArray::Remove(TObject *obj)
    if (i == -1) return 0;
 
    if (fCont[i] && fCont[i]->TestBit(kNotDeleted)) {
-      // Tell custom operator delete() not to delete space when
-      // object fCont[i] is deleted. Only destructors are called
-      // for this object.
-      Long_t dtoronly = TObject::GetDtorOnly();
-      TObject::SetDtorOnly(fCont[i]);
-      delete fCont[i];
-      TObject::SetDtorOnly((void*)dtoronly);
+      fCont[i]->~TObject();
    }
 
    fCont[i] = 0;
@@ -633,8 +593,6 @@ void TClonesArray::RemoveRange(Int_t idx1, Int_t idx2)
    if (!BoundsOk("RemoveRange", idx1)) return;
    if (!BoundsOk("RemoveRange", idx2)) return;
 
-   Long_t dtoronly = TObject::GetDtorOnly();
-
    idx1 -= fLowerBound;
    idx2 -= fLowerBound;
 
@@ -642,17 +600,11 @@ void TClonesArray::RemoveRange(Int_t idx1, Int_t idx2)
    for (TObject **obj=fCont+idx1; obj<=fCont+idx2; obj++) {
       if (!*obj) continue;
       if ((*obj)->TestBit(kNotDeleted)) {
-         // Tell custom operator delete() not to delete space when
-         // object fCont[i] is deleted. Only destructors are called
-         // for this object.
-         TObject::SetDtorOnly(*obj);
-         delete *obj;
+         (*obj)->~TObject();
       }
       *obj = 0;
       change = kTRUE;
    }
-
-   TObject::SetDtorOnly((void*)dtoronly);
 
    // recalculate array size
    if (change) Changed();
@@ -662,17 +614,7 @@ void TClonesArray::RemoveRange(Int_t idx1, Int_t idx2)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create an array of clone objects of class cl. The class must inherit from
-/// TObject. If the class defines an own operator delete(), make sure that
-/// it looks like this:
-/// ~~~ {.cpp}
-///    void MyClass::operator delete(void *vp)
-///    {
-///       if ((Long_t) vp != TObject::GetDtorOnly())
-///          ::operator delete(vp);       // delete space
-///       else
-///          TObject::SetDtorOnly(0);
-///    }
-/// ~~~
+/// TObject.
 /// The second argument s indicates an approximate number of objects
 /// that will be entered in the array. If more than s objects are entered,
 /// the array will be automatically expanded.
@@ -988,34 +930,7 @@ void TClonesArray::AbsorbObjects(TClonesArray *tc)
 {
    // tests
    if (tc == 0 || tc == this || tc->GetEntriesFast() == 0) return;
-   if (fClass != tc->fClass) {
-      Error("AbsorbObjects", "cannot absorb objects when classes are different");
-      return;
-   }
-
-   // cache the sorted status
-   Bool_t wasSorted = IsSorted() && tc->IsSorted() &&
-                      (Last() == 0 || Last()->Compare(tc->First()) == -1);
-
-   // expand this
-   Int_t oldSize = GetEntriesFast();
-   Int_t newSize = oldSize + tc->GetEntriesFast();
-   if(newSize > fSize)
-      Expand(newSize);
-
-   // move
-   for (Int_t i = 0; i < tc->GetEntriesFast(); ++i) {
-      fCont[oldSize+i] = tc->fCont[i];
-      (*fKeep)[oldSize+i] = (*(tc->fKeep))[i];
-      tc->fCont[i] = 0;
-      (*(tc->fKeep))[i] = 0;
-   }
-
-   // cleanup
-   fLast = newSize-1;
-   tc->fLast = -1;
-   if (!wasSorted)
-      Changed();
+   AbsorbObjects(tc, 0, tc->GetEntriesFast() - 1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1037,6 +952,10 @@ void TClonesArray::AbsorbObjects(TClonesArray *tc, Int_t idx1, Int_t idx2)
       Error("AbsorbObjects", "range is not valid: idx1>idx2");
       return;
    }
+   if (idx2 >= tc->GetEntriesFast()) {
+      Error("AbsorbObjects", "range is not valid: idx2 out of bounds");
+      return;
+   }
 
    // cache the sorted status
    Bool_t wasSorted = IsSorted() && tc->IsSorted() &&
@@ -1052,7 +971,7 @@ void TClonesArray::AbsorbObjects(TClonesArray *tc, Int_t idx1, Int_t idx2)
    for (Int_t i = idx1; i <= idx2; i++) {
       Int_t newindex = oldSize+i -idx1;
       fCont[newindex] = tc->fCont[i];
-      ::operator delete(fKeep->fCont[newindex]);
+      R__ReleaseMemory(fClass,fKeep->fCont[newindex]);
       (*fKeep)[newindex] = (*(tc->fKeep))[i];
       tc->fCont[i] = 0;
       (*(tc->fKeep))[i] = 0;

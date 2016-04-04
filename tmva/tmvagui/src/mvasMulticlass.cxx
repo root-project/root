@@ -13,7 +13,7 @@
 
 // input: - Input file (result from TMVA)
 //        - use of TMVA plotting TStyle
-void TMVA::mvasMulticlass( TString fin , HistType htype , Bool_t useTMVAStyle  )
+void TMVA::mvasMulticlass(TString dataset, TString fin , HistType htype , Bool_t useTMVAStyle  )
 {
    // set style and remove existing canvas'
    TMVAGlob::Initialize( useTMVAStyle );
@@ -24,7 +24,7 @@ void TMVA::mvasMulticlass( TString fin , HistType htype , Bool_t useTMVAStyle  )
    // checks if file with name "fin" is already open, and if not opens one
    TFile* file = TMVAGlob::OpenFile( fin );  
 
-   TDirectory* tempdir = (TDirectory*)file->Get("InputVariables_Id" );
+   TDirectory* tempdir = (TDirectory*)file->GetDirectory(dataset.Data())->Get("InputVariables_Id" );
    std::vector<TString> classnames(TMVAGlob::GetClassNames(tempdir));
 
    // define Canvas layout here!
@@ -40,7 +40,7 @@ void TMVA::mvasMulticlass( TString fin , HistType htype , Bool_t useTMVAStyle  )
    Int_t countCanvas = 0;
 
    // search for the right histograms in full list of keys
-   TIter next(file->GetListOfKeys());
+   TIter next(file->GetDirectory(dataset.Data())->GetListOfKeys());
    TKey *key(0);   
    while ((key = (TKey*)next())) {
 
@@ -248,8 +248,8 @@ void TMVA::mvasMulticlass( TString fin , HistType htype , Bool_t useTMVAStyle  )
             
             TMVAGlob::plot_logo(1.058);
             if (Save_Images) {
-               if      (htype == kMVAType)     TMVAGlob::imgconv( c, Form("plots/mva_%s_%s",classnames.at(icls).Data(), methodTitle.Data()) );
-               else if      (htype == kCompareType)     TMVAGlob::imgconv( c, Form("plots/overtrain_%s_%s",classnames.at(icls).Data(), methodTitle.Data()) );
+               if      (htype == kMVAType)     TMVAGlob::imgconv( c, Form("%s/plots/mva_%s_%s",dataset.Data(),classnames.at(icls).Data(), methodTitle.Data()) );
+               else if      (htype == kCompareType)     TMVAGlob::imgconv( c, Form("%s/plots/overtrain_%s_%s",dataset.Data(),classnames.at(icls).Data(), methodTitle.Data()) );
                
             }
             countCanvas++;

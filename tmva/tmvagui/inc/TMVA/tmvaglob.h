@@ -41,16 +41,16 @@ namespace TMVA{
                         kGaussDecorr,
                         kNumOfMethods };
       
-      static Int_t c_Canvas         = TColor::GetColor( "#f0f0f0" );
-      static Int_t c_FrameFill      = TColor::GetColor( "#fffffd" );
-      static Int_t c_TitleBox       = TColor::GetColor( "#5D6B7D" );
-      static Int_t c_TitleBorder    = TColor::GetColor( "#7D8B9D" );
-      static Int_t c_TitleText      = TColor::GetColor( "#FFFFFF" );
-      static Int_t c_SignalLine     = TColor::GetColor( "#0000ee" );
-      static Int_t c_SignalFill     = TColor::GetColor( "#7d99d1" );
-      static Int_t c_BackgroundLine = TColor::GetColor( "#ff0000" );
-      static Int_t c_BackgroundFill = TColor::GetColor( "#ff0000" );
-      static Int_t c_NovelBlue      = TColor::GetColor( "#2244a5" );
+      inline Int_t getCanvas         () {return  TColor::GetColor( "#f0f0f0" );}
+      inline Int_t getFrameFill      () {return  TColor::GetColor( "#fffffd" );}
+      inline Int_t getTitleBox       () {return  TColor::GetColor( "#5D6B7D" );}
+      inline Int_t getTitleBorder    () {return  TColor::GetColor( "#7D8B9D" );}
+      inline Int_t getTitleText      () {return  TColor::GetColor( "#FFFFFF" );}
+      inline Int_t getSignalLine     () {return  TColor::GetColor( "#0000ee" );}
+      inline Int_t getSignalFill     () {return  TColor::GetColor( "#7d99d1" );}
+      inline Int_t getBackgroundLine () {return  TColor::GetColor( "#ff0000" );}
+      inline Int_t getBackgroundFill () {return  TColor::GetColor( "#ff0000" );}
+      inline Int_t getNovelBlue      () {return  TColor::GetColor( "#2244a5" );}
       
       
       // set the style

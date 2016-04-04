@@ -170,15 +170,18 @@ def compose_method(match_class, match_method, g):
          if not self.match_class.match(name):
             return
          g = self.g
-         for k in dir(obj): #.__dict__:
+         for k in obj.__dict__:
             if not self.match_method.match(k):
                continue
             try:
                f = getattr(obj, k)
             except:
                continue
-            def h(self, *args, **kwargs):
-               return g(self, f(self, *args, **kwargs))
+            def make_fun(f, g):
+               def h(self, *args, **kwargs):
+                  return g(self, f(self, *args, **kwargs))
+               return h
+            h = make_fun(f, g)
             setattr(obj, k, h)
    return composition_pythonizor(match_class, match_method, g)
 

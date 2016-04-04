@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/** \class TGeoMaterial -
+/** \class TGeoMaterial
 \ingroup Geometry_classes
 
 Base class describing materials.

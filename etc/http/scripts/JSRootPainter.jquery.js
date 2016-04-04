@@ -31,9 +31,9 @@
       JSROOT.loadScript('$$$style/jquery-ui.css');
 
    JSROOT.Painter.createMenu = function(maincallback, menuname) {
-      if (!menuname) menuname = "root_ctx_menu";
+      if (!menuname || (typeof menuname !== 'string')) menuname = 'root_ctx_menu';
 
-      var menu = { divid: menuname, code:"", cnt: 1, funcs : {}, separ : false };
+      var menu = { element:null, code:"", cnt: 1, funcs : {}, separ : false };
 
       menu.add = function(name, arg, func) {
          if (name == "separator") { this.code += "<li>-</li>"; this.separ = true; return; }
@@ -85,19 +85,23 @@
          this.add("endsub:");
       }
 
-      menu.remove = function() { $("#"+menuname).remove(); }
+      menu.remove = function() {
+         if (this.element!==null) this.element.remove();
+         this.element = null;
+      }
 
       menu.show = function(event) {
-         menu.remove();
+         this.remove();
 
          document.body.onclick = function(e) { menu.remove(); }
 
-         $(document.body).append('<ul id="' + menuname + '">' + this.code + '</ul>');
+         this.element = $(document.body).append('<ul class="jsroot_ctxmenu">' + this.code + '</ul>')
+                                        .find('.jsroot_ctxmenu');
 
-         $("#" + menuname)
+         this.element
+            .attr('id', menuname)
             .css('left', event.clientX + window.pageXOffset)
             .css('top', event.clientY + window.pageYOffset)
-            .attr('class', 'ctxmenu')
             .css('font-size', '80%')
             .css('position', 'absolute') // this overrides ui-menu-items class property
             .menu({
@@ -114,15 +118,15 @@
                         func(arg);
                   }
               }
-         });
+            });
 
          var newx = null, newy = null;
 
-         if (event.clientX + $("#" + menuname).width() > $(window).width()) newx = $(window).width() - $("#" + menuname).width() - 20;
-         if (event.clientY + $("#" + menuname).height() > $(window).height()) newy = $(window).height() - $("#" + menuname).height() - 20;
+         if (event.clientX + this.element.width() > $(window).width()) newx = $(window).width() - this.element.width() - 20;
+         if (event.clientY + this.element.height() > $(window).height()) newy = $(window).height() - this.element.height() - 20;
 
-         if (newx!=null) $("#" + menuname).css('left',(newx>0 ? newx : 0) + window.pageXOffset);
-         if (newy!=null) $("#" + menuname).css('top',(newy>0 ? newy : 0) + window.pageYOffset);
+         if (newx!==null) this.element.css('left', (newx>0 ? newx : 0) + window.pageXOffset);
+         if (newy!==null) this.element.css('top', (newy>0 ? newy : 0) + window.pageYOffset);
       }
 
       JSROOT.CallBack(maincallback, menu);
@@ -140,47 +144,59 @@
       return true;
    }
 
-   JSROOT.HierarchyPainter.prototype.addItemHtml = function(hitem, parent) {
-      var isroot = (parent == null);
+   JSROOT.HierarchyPainter.prototype.addItemHtml = function(hitem, d3prnt, doupdate) {
+      var isroot = !('_parent' in hitem);
       var has_childs = '_childs' in hitem;
-      if (!isroot) hitem._parent = parent;
 
       if ('_hidden' in hitem) return;
 
-      var handle = JSROOT.getDrawHandle(hitem._kind);
-      var img1 = "", img2 = "";
-      var can_click = false;
-      if (handle!=null) {
+      var handle = JSROOT.getDrawHandle(hitem._kind),
+         img1 = "", img2 = "", can_click = false;
+
+      if (handle !== null) {
          if ('icon' in handle) img1 = handle.icon;
          if ('icon2' in handle) img2 = handle.icon2;
          if (('func' in handle) || ('execute' in handle) || ('aslink' in handle) || ('expand' in handle)) can_click = true;
       }
-      if ('_icon' in hitem) img1 = hitem['_icon'];
-      if ('_icon2' in hitem) img2 = hitem['_icon2'];
-      if ((img1.length==0) && ('_online' in hitem))
-         hitem['_icon'] = img1 = "img_globe";
-      if ((img1.length==0) && isroot)
-         hitem['_icon'] = img1 = "img_base";
 
-      if (hitem['_more'] || ('_expand' in hitem) || ('_player' in hitem))
+
+      if ('_icon' in hitem) img1 = hitem._icon;
+      if ('_icon2' in hitem) img2 = hitem._icon2;
+      if ((img1.length==0) && ('_online' in hitem))
+         hitem._icon = img1 = "img_globe";
+      if ((img1.length==0) && isroot)
+         hitem._icon = img1 = "img_base";
+
+      if (hitem._more || ('_expand' in hitem) || ('_player' in hitem))
          can_click = true;
 
+      var can_menu = can_click;
+      if (!can_menu && (typeof hitem._kind == 'string') && (hitem._kind.indexOf("ROOT.")==0)) can_menu = true;
+
       if (img2.length==0) img2 = img1;
-      if (img1.length==0) img1 = (has_childs || hitem['_more']) ? "img_folder" : "img_page";
-      if (img2.length==0) img2 = (has_childs || hitem['_more']) ? "img_folderopen" : "img_page";
+      if (img1.length==0) img1 = (has_childs || hitem._more) ? "img_folder" : "img_page";
+      if (img2.length==0) img2 = (has_childs || hitem._more) ? "img_folderopen" : "img_page";
 
       var itemname = this.itemFullName(hitem);
 
-      this['html'] += '<div item="' + itemname + '">';
+      var d3cont;
+
+      if (doupdate) {
+         d3prnt.selectAll("*").remove();
+         d3cont = d3prnt;
+      } else {
+         d3cont = d3prnt.append("div");
+      }
+
+      d3cont.attr("item", itemname);
 
       // build indent
-      var sindent = "";
       var prnt = isroot ? null : hitem._parent;
       while ((prnt != null) && (prnt != this.h)) {
-         sindent = '<div class="' + (this.isLastSibling(prnt) ? "img_empty" : "img_line") + '"/>' + sindent;
+         d3cont.insert("div",":first-child")
+               .attr("class", this.isLastSibling(prnt) ? "img_empty" : "img_line");
          prnt = prnt._parent;
       }
-      this['html'] += sindent;
 
       var icon_class = "", plusminus = false;
 
@@ -191,35 +207,59 @@
          icon_class = hitem._isopen ? "img_minus" : "img_plus";
          plusminus = true;
       } else
-      /*if (hitem['_more']) {
+      /*if (hitem._more) {
          icon_class = "img_plus"; // should be special plus ???
          plusminus = true;
       } else */ {
          icon_class = "img_join";
       }
 
+      var h = this;
+
       if (icon_class.length > 0) {
-         this['html'] += '<div class="' + icon_class;
-         if (this.isLastSibling(hitem)) this['html'] += "bottom";
-         if (plusminus) this['html'] += ' plus_minus" style="cursor:pointer';
-         this['html'] += '"/>';
+         if (this.isLastSibling(hitem)) icon_class+="bottom";
+         var d3icon = d3cont.append("div").attr('class', icon_class);
+         if (plusminus) d3icon.style('cursor','pointer')
+                              .on("click", function() { h.tree_click(this, "plusminus"); });
       }
 
       // make node icons
 
       if (this.with_icons) {
          var icon_name = hitem._isopen ? img2 : img1;
+         var title = hitem._kind ? hitem._kind.replace(/</g,'&lt;').replace(/>/g,'&gt;') : "";
+
+         var d3img = null;
 
          if (icon_name.indexOf("img_")==0) {
-            if ('_icon_click' in hitem) icon_name+= " icon_click";
-            this['html'] += '<div class="' + icon_name + '" title="' + hitem._kind + '"/>';
+            d3img = d3cont.append("div")
+                          .attr("class", icon_name)
+                          .attr("title", title);
          } else {
-           this['html'] += '<img src="' + icon_name + '" alt="" style="vertical-align:top;width:18px;height:18px" title="' + hitem._kind +'"/>';
+            d3img = d3cont.append("img")
+                          .attr("src", icon_name)
+                          .attr("alt","")
+                          .attr("title",title)
+                          .style('vertical-align','top')
+                          .style('width','18px')
+                          .style('height','18px');
          }
+
+         if ('_icon_click' in hitem)
+            d3img.on("click", function() { h.tree_click(this, "icon"); });
       }
 
-      this['html'] += '<a';
-      if (can_click || has_childs) this['html'] +=' class="h_item"';
+      var d3a = d3cont.append("a");
+      if (can_click || has_childs)
+         d3a.attr("class","h_item")
+            .on("click", function() { h.tree_click(this); });
+
+      if ('disp_kind' in h) {
+         if (JSROOT.gStyle.DragAndDrop && can_click)
+           this.enable_dragging(d3a.node(), itemname);
+         if (JSROOT.gStyle.ContextMenu && can_menu)
+            d3a.on('contextmenu', function() { h.tree_contextmenu(this); });
+      }
 
       var element_name = hitem._name;
 
@@ -230,109 +270,86 @@
       if ('_title' in hitem) element_title = hitem._title;
 
       if ('_fullname' in hitem)
-         element_title += "  fullname: " + hitem['_fullname'];
+         element_title += "  fullname: " + hitem._fullname;
 
-      if (element_title.length == 0) element_title = element_name;
+      if (element_title.length === 0)
+         element_title = element_name;
 
-      this['html'] += ' title="' + element_title + '"';
-      this['html'] += '>' + element_name + ('_value' in hitem ? ":" : "") + '</a>';
+      d3a.attr('title', element_title)
+         .text(element_name + ('_value' in hitem ? ":" : ""));
+
       if ('_value' in hitem) {
-         this['html'] += "<p";
-         if ('_vclass' in hitem) this['html'] += " class='" + hitem._vclass + "'";
-         this['html'] += ">";
-         if (!hitem['_isopen']) this['html'] += hitem._value;
-         this['html'] += "</p>";
+         var d3p = d3cont.append("p");
+         if ('_vclass' in hitem) d3p.attr('class', hitem._vclass);
+         if (!hitem._isopen) d3p.html(hitem._value);
       }
 
       if (has_childs && (isroot || hitem._isopen)) {
-         this['html'] += '<div class="h_childs">';
-         for (var i in hitem._childs)
-            this.addItemHtml(hitem._childs[i], hitem);
-         this['html'] += '</div>';
+         var d3chlds = d3cont.append("div").attr("class", "h_childs");
+         for (var i=0; i< hitem._childs.length;++i) {
+            var chld = hitem._childs[i];
+            chld._parent = hitem;
+            this.addItemHtml(chld, d3chlds);
+         }
       }
-
-      this['html'] += '</div>';
    }
 
    JSROOT.HierarchyPainter.prototype.RefreshHtml = function(callback) {
 
       if (this.divid == null) return JSROOT.CallBack(callback);
       var d3elem = this.select_main();
-      if ((this.h == null) || d3elem.empty()) {
-         d3elem.html("");
+
+      d3elem.html(""); // clear html - most simple way
+
+      if ((this.h == null) || d3elem.empty())
          return JSROOT.CallBack(callback);
-      }
 
-      var elem = $(d3elem.node());
-
-      var factcmds = [], status_item = null;
+      var h = this, factcmds = [], status_item = null;
       this.ForEach(function(item) {
          if (('_fastcmd' in item) && (item._kind == 'Command')) factcmds.push(item);
          if (('_status' in item) && (status_item==null)) status_item = item;
       });
 
-      this['html'] = "<div style='overflow:auto; width:100%; height:100%;"
-      if (this.background) this['html']+="background-color:"+this.background + ";";
-      if (this.with_icons) this['html']+="font-size:12px;";
-                      else this['html']+="font-size:15px;";
-      this['html']+="'>";
-      if (factcmds.length>0) {
-         for (var n in factcmds)
-            this['html'] += "<button class='fast_command'> </button>";
-      }
-      this['html'] += "<p>";
-      this['html'] += "<a href='#open_all'>open all</a>";
-      this['html'] += "| <a href='#close_all'>close all</a>";
-      if ('_online' in this.h)
-         this['html'] += "| <a href='#reload'>reload</a>";
-      else
-         this['html'] += "<a/>";
+      var maindiv =
+         d3elem.append("div")
+               .attr("class", "jsroot")
+               .style("background-color", this.background ? this.background : "")
+               .style('overflow', 'auto')
+               .style('width', '100%')
+               .style('height', '100%')
+               .style('font-size', this.with_icons ? "12px" : "15px" );
 
-      if ('disp_kind' in this)
-         this['html'] += "| <a href='#clear'>clear</a>";
-      else
-         this['html'] += "<a/>";
+      for (var n=0;n<factcmds.length;++n) {
+         var btn =
+             maindiv.append("button")
+                    .text("")
+                    .attr("class",'fast_command')
+                    .attr("item", this.itemFullName(factcmds[n]))
+                    .attr("title", factcmds[n]._title)
+                    .on("click", function() { h.ExecuteCommand(d3.select(this).attr("item"), this); } );
 
-      this['html'] += "</p>";
 
-      this['html'] += '<div class="h_tree">';
-      this.addItemHtml(this.h, null);
-      this['html'] += '</div>';
-      this['html'] += '</div>';
-
-      var h = this;
-
-      var items = elem.html(this['html'])
-          .find(".h_item")
-          .click(function() { h.tree_click($(this)); });
-
-      if ('disp_kind' in h) {
-         if (JSROOT.gStyle.DragAndDrop)
-            items.draggable({ revert: "invalid", appendTo: "body", helper: "clone" });
-
-         if (JSROOT.gStyle.ContextMenu)
-            items.on('contextmenu', function(e) { h.tree_contextmenu($(this), e); });
+         if ('_icon' in factcmds[n])
+            btn.append('img').attr("src", factcmds[n]._icon);
       }
 
-      // d3elem.selectAll(".plus_minus").on("click", function(d) { h.tree_click($(d),true); });
-      elem.find(".plus_minus").click(function() { h.tree_click($(this), "plusminus"); });
+      d3p = maindiv.append("p");
 
-      elem.find(".icon_click").click(function() { h.tree_click($(this), "icon"); });
+      d3p.append("a").attr("href", '#').text("open all").on("click", function() { h.toggle(true); d3.event.preventDefault(); });
+      d3p.append("text").text(" | ");
+      d3p.append("a").attr("href", '#').text("close all").on("click", function() { h.toggle(false); d3.event.preventDefault(); });
 
-      elem.find("a").first().click(function() { h.toggle(true); return false; })
-                    .next().click(function() { h.toggle(false); return false; })
-                    .next().click(function() { h.reload(); return false; })
-                    .next().click(function() { h.clear(false); return false; });
+      if ('_online' in this.h) {
+         d3p.append("text").text(" | ");
+         d3p.append("a").attr("href", '#').text("reload").on("click", function() { h.reload(); d3.event.preventDefault(); });
+      }
 
-      if (factcmds.length>0)
-         elem.find('.fast_command').each(function(index) {
-            if ('_icon' in factcmds[index])
-               $(this).text("").append('<img src="' + factcmds[index]['_icon'] + '"/>');
-            $(this).button()
-                   .attr("item", h.itemFullName(factcmds[index]))
-                   .attr("title", factcmds[index]._title)
-                   .click(function() { h.ExecuteCommand($(this).attr("item"), $(this)); });
-         });
+      if ('disp_kind' in this) {
+         d3p.append("text").text(" | ");
+         d3p.append("a").attr("href", '#').text("clear").on("click", function() { h.clear(false); d3.event.preventDefault(); });
+      }
+
+      this.addItemHtml(this.h, maindiv.append("div").attr("class","h_tree"));
 
       if ((status_item!=null) && (JSROOT.GetUrlOption('nostatus')==null)) {
          var func = JSROOT.findFunction(status_item._status);
@@ -344,97 +361,23 @@
       JSROOT.CallBack(callback);
    }
 
-   JSROOT.HierarchyPainter.prototype.UpdateTreeNode = function(hitem, node, set_attr) {
-      if (node==null) {
+   JSROOT.HierarchyPainter.prototype.UpdateTreeNode = function(hitem, d3cont) {
+      if ((d3cont===undefined) || d3cont.empty())  {
          var name = this.itemFullName(hitem);
-         node = $(this.select_main().node()).find("[item='" + name + "']");
-         if ((node.length == 0) && ('_cycle' in hitem))
-            node = $(this.select_main().node()).find("[item='" + name + ";" + hitem._cycle + "']");
-         if (node.length == 0) return;
+         d3cont = this.select_main().select("[item='" + name + "']");
+         //node = $(this.select_main().node()).find("[item='" + name + "']");
+         if (d3cont.empty() && ('_cycle' in hitem))
+            d3cont = this.select_main().select("[item='" + name + ";" + hitem._cycle + "']");
+         if (d3cont.empty()) return;
       }
 
-      if (set_attr) {
-         node.attr('item', this.itemFullName(hitem));
-         node.find("a").text(hitem._name);
-      }
-
-      // better search for images again, but not store them extra
-      var img1 = "", img2 = "", has_childs = ('_childs' in hitem);
-      var handle = JSROOT.getDrawHandle(hitem._kind);
-      if (handle!=null) {
-         if ('icon' in handle) img1 = handle.icon;
-         if ('icon2' in handle) img2 = handle.icon2;
-      }
-      if ('_icon' in hitem) img1 = hitem['_icon'];
-      if ('_icon2' in hitem) img2 = hitem['_icon2'];
-      if (img2.length==0) img2 = img1;
-      if (img1.length==0) img1 = (has_childs || hitem['_more']) ? "img_folder" : "img_page";
-      if (img2.length==0) img2 = (has_childs || hitem['_more']) ? "img_folderopen" : "img_page";
-
-      var a_node = node.find("a").first();
-
-      if ('_value' in hitem) {
-         var p_node = a_node.next().html(hitem._isopen ? "" : hitem._value);
-      }
-
-      var img = a_node.prev();
-
-      if (this.with_icons) {
-         var newname = hitem._isopen ? img2 : img1;
-         if (newname.indexOf("img_")==0) {
-            if ('_icon_click' in hitem) newname += " icon_click";
-            img.attr("class", newname);
-         } else {
-            img.attr("src", newname);
-         }
-         img = img.prev();
-      }
-
-      var h = this;
-
-      var new_class = hitem._isopen ? "img_minus" : "img_plus";
-      if (this.isLastSibling(hitem)) new_class += "bottom";
-
-      if (img.hasClass("plus_minus")) {
-         img.attr('class', new_class + " plus_minus");
-      } else
-      if (has_childs) {
-         img.attr('class', new_class + " plus_minus");
-         img.css('cursor', 'pointer');
-         img.click(function() { h.tree_click($(this), "plusminus"); });
-      }
-
-      var childs = node.children().last();
-      if (childs.hasClass("h_childs")) childs.remove();
-
-      var display_childs = has_childs && hitem._isopen;
-      if (!display_childs) return;
-
-      this['html'] = '<div class="h_childs">';
-      for (var i in hitem._childs)
-         this.addItemHtml(hitem._childs[i], hitem);
-      this['html'] += '</div>';
-      node.append(this['html']);
-      childs = node.children().last();
-
-      var items = childs.find(".h_item")
-                   .click(function() { h.tree_click($(this)); });
-
-      if ('disp_kind' in h) {
-         if (JSROOT.gStyle.DragAndDrop)
-            items.draggable({ revert: "invalid", appendTo: "body", helper: "clone" });
-
-         if (JSROOT.gStyle.ContextMenu)
-            items.on('contextmenu', function(e) { h.tree_contextmenu($(this), e); })
-      }
-
-      childs.find(".plus_minus").click(function() { h.tree_click($(this), "plusminus"); });
-
-      childs.find(".icon_click").click(function() { h.tree_click($(this), "icon"); });
+      this.addItemHtml(hitem, d3cont, true);
    }
 
    JSROOT.HierarchyPainter.prototype.tree_click = function(node, place) {
-      var itemname = node.parent().attr('item');
+      if (node===null) return;
+      var d3cont = d3.select(node.parentNode);
+      var itemname = d3cont.attr('item');
 
       if (itemname == null) return;
 
@@ -444,9 +387,9 @@
       if (!place || (place=="")) place = "item";
 
       if (place == "icon") {
-         if (('_icon_click' in hitem) && (typeof hitem['_icon_click'] == 'function'))
-            if (hitem['_icon_click'](hitem))
-               this.UpdateTreeNode(hitem, node.parent());
+         if (('_icon_click' in hitem) && (typeof hitem._icon_click == 'function'))
+            if (hitem._icon_click(hitem))
+               this.UpdateTreeNode(hitem, d3cont);
          return;
       }
 
@@ -454,8 +397,8 @@
       if ((place=="item") && ('_expand' in hitem)) place = "plusminus";
 
       // special case - one should expand item
-      if ((place == "plusminus") && !('_childs' in hitem) && hitem['_more'])
-         return this.expand(itemname, null, node.parent());
+      if ((place == "plusminus") && !('_childs' in hitem) && hitem._more)
+         return this.expand(itemname, null, d3cont);
 
       if (place == "item") {
          if ('_player' in hitem)
@@ -470,14 +413,14 @@
                return this.display(itemname);
 
             if ('execute' in handle)
-               return this.ExecuteCommand(itemname, node);
+               return this.ExecuteCommand(itemname, node.parentNode);
 
-            if (('expand' in handle) && (hitem['_childs'] == null))
-               return this.expand(itemname, null, node.parent());
+            if (('expand' in handle) && (hitem._childs == null))
+               return this.expand(itemname, null, d3cont);
          }
 
          if ((hitem['_childs'] == null))
-            return this.expand(itemname, null, node.parent());
+            return this.expand(itemname, null, d3cont);
 
          if (!('_childs' in hitem) || (hitem === this.h)) return;
       }
@@ -487,13 +430,13 @@
       else
          hitem._isopen = true;
 
-      this.UpdateTreeNode(hitem, node.parent());
+      this.UpdateTreeNode(hitem, d3cont);
    }
 
-   JSROOT.HierarchyPainter.prototype.tree_contextmenu = function(node, event) {
-      event.preventDefault();
+   JSROOT.HierarchyPainter.prototype.tree_contextmenu = function(elem) {
+      d3.event.preventDefault();
 
-      var itemname = node.parent().attr('item');
+      var itemname = d3.select(elem.parentNode).attr('item');
 
       var hitem = this.Find(itemname);
       if (hitem==null) return;
@@ -536,7 +479,7 @@
                   addr += separ() + "files=" + JSON.stringify(files);
 
             if (painter['disp_kind'])
-               addr += separ() + "layout=" + painter['disp_kind'].replace(/ /g, "");
+               addr += separ() + "layout=" + painter.disp_kind.replace(/ /g, "");
 
             var items = [];
 
@@ -572,7 +515,7 @@
                });
             }
 
-            if (!('_childs' in hitem) && (hitem['_more'] || !('_more' in hitem)))
+            if (!('_childs' in hitem) && (hitem._more || !('_more' in hitem)))
                menu.add("Expand", function() { painter.expand(itemname); });
          }
 
@@ -580,10 +523,10 @@
             hitem['_menu'](menu, hitem, painter);
 
          if (menu.size() > 0) {
-            menu['tree_node'] = node;
+            menu.tree_node = elem.parentNode;
             if (menu.separ) menu.add("separator"); // add separator at the end
             menu.add("Close");
-            menu.show(event);
+            menu.show(d3.event);
          }
 
       }); // end menu creation
@@ -593,52 +536,55 @@
 
    JSROOT.HierarchyPainter.prototype.CreateDisplay = function(callback) {
       if ('disp' in this) {
-         if (this['disp'].NumDraw() > 0) return JSROOT.CallBack(callback, this['disp']);
-         this['disp'].Reset();
-         delete this['disp'];
+         if (this.disp.NumDraw() > 0) return JSROOT.CallBack(callback, this.disp);
+         this.disp.Reset();
+         delete this.disp;
       }
 
       // check that we can found frame where drawing should be done
-      if (document.getElementById(this['disp_frameid']) == null)
+      if (document.getElementById(this.disp_frameid) == null)
          return JSROOT.CallBack(callback, null);
 
-      if (this['disp_kind'] == "tabs")
-         this['disp'] = new JSROOT.TabsDisplay(this['disp_frameid']);
+      if (this.disp_kind == "tabs")
+         this.disp = new JSROOT.TabsDisplay(this.disp_frameid);
       else
-      if ((this['disp_kind'] == "flex") || (this['disp_kind'] == "flexible"))
-         this['disp'] = new JSROOT.FlexibleDisplay(this['disp_frameid']);
+      if ((this.disp_kind == "flex") || (this.disp_kind == "flexible"))
+         this.disp = new JSROOT.FlexibleDisplay(this.disp_frameid);
       else
-      if (this['disp_kind'].search("grid") == 0)
-         this['disp'] = new JSROOT.GridDisplay(this['disp_frameid'], this['disp_kind']);
+      if (this.disp_kind.search("grid") == 0)
+         this.disp = new JSROOT.GridDisplay(this.disp_frameid, this.disp_kind);
       else
-      if (this['disp_kind'] == "simple")
-         this['disp'] = new JSROOT.SimpleDisplay(this['disp_frameid']);
+      if (this.disp_kind == "simple")
+         this.disp = new JSROOT.SimpleDisplay(this.disp_frameid);
       else
-         this['disp'] = new JSROOT.CollapsibleDisplay(this['disp_frameid']);
+         this.disp = new JSROOT.CollapsibleDisplay(this.disp_frameid);
 
-      JSROOT.CallBack(callback, this['disp']);
+      JSROOT.CallBack(callback, this.disp);
+   }
+
+   JSROOT.HierarchyPainter.prototype.enable_dragging = function(element, itemname) {
+      $(element).draggable({ revert: "invalid", appendTo: "body", helper: "clone" });
    }
 
    JSROOT.HierarchyPainter.prototype.enable_dropping = function(frame, itemname) {
       var h = this;
-      if (JSROOT.gStyle.DragAndDrop)
-         $(frame).droppable({
-            hoverClass : "ui-state-active",
-            accept: function(ui) {
-               var dropname = ui.parent().attr('item');
-               if ((dropname == itemname) || (dropname==null)) return false;
+      $(frame).droppable({
+         hoverClass : "ui-state-active",
+         accept: function(ui) {
+            var dropname = ui.parent().attr('item');
+            if ((dropname == itemname) || (dropname==null)) return false;
 
-               var ditem = h.Find(dropname);
-               if ((ditem==null) || (!('_kind' in ditem))) return false;
+            var ditem = h.Find(dropname);
+            if ((ditem==null) || (!('_kind' in ditem))) return false;
 
-               return ditem._kind.indexOf("ROOT.")==0;
-            },
-            drop: function(event, ui) {
-               var dropname = ui.draggable.parent().attr('item');
-               if (dropname==null) return false;
-               return h.dropitem(dropname, $(this).attr("id"));
-            }
-         });
+            return ditem._kind.indexOf("ROOT.")==0;
+         },
+         drop: function(event, ui) {
+            var dropname = ui.draggable.parent().attr('item');
+            if (dropname==null) return false;
+            return h.dropitem(dropname, $(this).attr("id"));
+         }
+      });
    }
 
    // ==================================================
@@ -680,7 +626,7 @@
       var topid = this.frameid + '_collapsible';
 
       if (document.getElementById(topid) == null)
-         $("#"+this.frameid).append('<div id="'+ topid  + '" class="ui-accordion ui-accordion-icons ui-widget ui-helper-reset" style="overflow:auto; overflow-y:scroll; height:100%; padding-left: 2px; padding-right: 2px"></div>');
+         $("#"+this.frameid).append('<div id="'+ topid  + '" class="jsroot ui-accordion ui-accordion-icons ui-widget ui-helper-reset" style="overflow:auto; overflow-y:scroll; height:100%; padding-left: 2px; padding-right: 2px"></div>');
 
       var hid = topid + "_sub" + this.cnt++;
       var uid = hid + "h";
@@ -693,8 +639,6 @@
       entryInfo += "<div class='collapsible_draw' id='" + hid + "'></div>\n";
       $("#" + topid).append(entryInfo);
 
-      var pthis = this;
-
       $('#' + uid)
             .addClass("ui-accordion-header ui-helper-reset ui-state-default ui-corner-top ui-corner-bottom")
             .hover(function() { $(this).toggleClass("ui-state-hover"); })
@@ -702,7 +646,7 @@
                      $(this).toggleClass("ui-accordion-header-active ui-state-active ui-state-default ui-corner-bottom")
                            .find("> .ui-icon").toggleClass("ui-icon-triangle-1-e ui-icon-triangle-1-s")
                            .end().next().toggleClass("ui-accordion-content-active").slideToggle(0);
-                     pthis.CheckResize($(this).next().attr('id'));
+                     JSROOT.resize($(this).next().attr('id'));
                      return false;
                   })
             .next()
@@ -711,17 +655,17 @@
 
       $('#' + uid).find(" .jsroot_collaps_closebtn")
            .button({ icons: { primary: "ui-icon-close" }, text: false })
-           .click(function(){ $(this).parent().next().andSelf().remove(); });
-
+           .click(function(){
+              JSROOT.cleanup($(this).parent().next().attr('id'));
+              $(this).parent().next().andSelf().remove();
+           });
 
       $('#' + uid)
             .toggleClass("ui-accordion-header-active ui-state-active ui-state-default ui-corner-bottom")
             .find("> .ui-icon").toggleClass("ui-icon-triangle-1-e ui-icon-triangle-1-s").end().next()
             .toggleClass("ui-accordion-content-active").slideToggle(0);
 
-      $("#" + hid).prop('title', title);
-
-      return $("#" + hid).get(0);
+      return $("#" + hid).attr('frame_title', title).css('overflow','hidden').get(0);
    }
 
    // ================================================
@@ -768,10 +712,8 @@
             + '</a><span class="ui-icon ui-icon-close" style="float: left; margin: 0.4em 0.2em 0 0; cursor: pointer;" role="presentation">Remove Tab</span></li>';
       var cont = '<div class="tabs_draw" id="' + hid + '"></div>';
 
-      var pthis = this;
-
       if (document.getElementById(topid) == null) {
-         $("#" + this.frameid).append('<div id="' + topid + '">' + ' <ul>' + li + ' </ul>' + cont + '</div>');
+         $("#" + this.frameid).append('<div id="' + topid + '" class="jsroot">' + ' <ul>' + li + ' </ul>' + cont + '</div>');
 
          var tabs = $("#" + topid)
                        .css('overflow','hidden')
@@ -779,12 +721,13 @@
                           heightStyle : "fill",
                           activate : function (event,ui) {
                              $(ui.newPanel).css('overflow', 'hidden');
-                             pthis.CheckResize($(ui.newPanel).attr('id'));
+                             JSROOT.resize($(ui.newPanel).attr('id'));
                            }
                           });
 
          tabs.delegate("span.ui-icon-close", "click", function() {
             var panelId = $(this).closest("li").remove().attr("aria-controls");
+            JSROOT.cleanup(panelId);
             $("#" + panelId).remove();
             tabs.tabs("refresh");
             if ($('#' + topid + '> .tabs_draw').length == 0)
@@ -800,7 +743,7 @@
       $('#' + hid)
          .empty()
          .css('overflow', 'hidden')
-         .prop('title', title);
+         .attr('frame_title', title);
 
       return $('#' + hid).get(0);
    }
@@ -835,7 +778,7 @@
       var topid = this.frameid + '_flex';
 
       if (document.getElementById(topid) == null)
-         $("#" + this.frameid).append('<div id="'+ topid  + '" style="overflow:none; height:100%; width:100%"></div>');
+         $("#" + this.frameid).append('<div id="'+ topid  + '" class="jsroot" style="overflow:none; height:100%; width:100%"></div>');
 
       var top = $("#" + topid);
 
@@ -878,8 +821,7 @@
 
          switch (state) {
             case "minimal" :
-               main.height(main.find('.flex_header').height())
-                   .width("auto")
+               main.height(main.find('.flex_header').height()).width("auto");
                main.find(".flex_draw").css("display","none");
                main.find(".ui-resizable-handle").css("display","none");
                break;
@@ -898,8 +840,8 @@
                       .css('top', main.prop('original_top'));
          }
 
-         if (state!="minimal")
-            JSROOT.CheckElementResize(main.find(".flex_draw").get(0));
+         if (state !== "minimal")
+            JSROOT.resize(main.find(".flex_draw").get(0));
       }
 
       $("#" + subid)
@@ -908,14 +850,14 @@
          .width(Math.round(w * 0.58))
          .height(Math.round(h * 0.58))
          .resizable({
-            helper: "jsroot-resizable-helper",
+            helper: "flex-resizable-helper",
             start: function(event, ui) {
                // bring element to front when start resizing
                $(this).appendTo($(this).parent());
             },
             stop: function(event, ui) {
                var rect = { width : ui.size.width-1, height : ui.size.height - $(this).find(".flex_header").height()-1 };
-               JSROOT.CheckElementResize($(this).find(".flex_draw").get(0), rect);
+               JSROOT.resize($(this).find(".flex_draw").get(0), rect);
             }
           })
           .draggable({
@@ -923,6 +865,15 @@
             start: function(event, ui) {
                // bring element to front when start dragging
                $(this).appendTo($(this).parent());
+               var ddd = $(this).find(".flex_draw");
+
+               if (ddd.prop('flex_block_drag') === true) {
+                  // block dragging when mouse below header
+                  var elementMouseIsOver = document.elementFromPoint(event.clientX, event.clientY);
+                  var isparent = false;
+                  $(elementMouseIsOver).parents().map(function() { if ($(this).get(0) === ddd.get(0)) isparent = true; });
+                  if (isparent) return false;
+               }
             }
          })
        .find('.flex_header')
@@ -935,7 +886,11 @@
            .first()
            .attr('title','close canvas')
            .button({ icons: { primary: "ui-icon-close" }, text: false })
-           .click(function() { $(this).parent().parent().remove(); })
+           .click(function() {
+              var main = $(this).parent().parent();
+              JSROOT.cleanup(main.find(".flex_draw").get(0));
+              main.remove();
+           })
            .next()
            .attr('title','maximize canvas')
            .addClass('jsroot_maxbutton')
@@ -963,7 +918,7 @@
       //$("#" + subid).find(".flex_draw").width(draw_w).height(draw_h);
       this.cnt++;
 
-      return $("#" + subid + "_cont").prop('title', title).get(0);
+      return $("#" + subid + "_cont").attr('frame_title', title).get(0);
    }
 
    // ========== performs tree drawing on server ==================
@@ -1123,7 +1078,7 @@
 
       if (left!=null) {
          var wdiff = $("#"+this.separ.left).outerWidth() - $("#"+this.separ.left).width();
-         var w = JSROOT.touches ? 10 : 4;
+         var w = 5;
          $("#"+this.separ.vertical).css('left', left + "px").width(w).css('top','1px');
          $("#"+this.separ.left).width(left-wdiff-1).css('top','1px');
          $("#"+this.separ.right).css('left',left+w+"px").css('top','1px');
@@ -1140,7 +1095,7 @@
          if (height<5) height = 5;
          var bot = height + diff;
          $('#'+this.separ.bottom).height(height);
-         var h = JSROOT.touches ? 10 : 4;
+         var h = 5;
          $("#"+this.separ.horizontal).css('bottom', bot + 'px').height(h);
          bot += h;
          $("#"+this.separ.left).css('bottom', bot + 'px');

@@ -16,7 +16,6 @@ using namespace std;
 #pragma create TClass vector<double>;
 #pragma create TClass vector<char*>;
 #pragma create TClass vector<const char*>;
-#pragma create TClass vector<string>;
 #pragma create TClass vector<Long64_t>;
 #pragma create TClass vector<ULong64_t>;
 

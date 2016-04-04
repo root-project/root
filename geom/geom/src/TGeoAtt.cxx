@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/** \class TGeoAtt -
+/** \class TGeoAtt
 \ingroup Geometry_classes
 
 Visualization and tracking attributes for volumes and nodes.

@@ -826,7 +826,7 @@ void StructurizeCFG::createFlow() {
 /// no longer dominate all their uses. Not sure if this is really nessasary
 void StructurizeCFG::rebuildSSA() {
   SSAUpdater Updater;
-  for (const auto &BB : ParentRegion->blocks())
+  for (const auto BB : ParentRegion->blocks())
     for (BasicBlock::iterator II = BB->begin(), IE = BB->end();
          II != IE; ++II) {
 

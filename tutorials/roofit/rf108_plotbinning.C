@@ -6,7 +6,7 @@
 ///
 ///
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke 
+/// \author 07/2008 - Wouter Verkerke
 
 
 #ifndef __CINT__
@@ -29,7 +29,7 @@ using namespace RooFit ;
 void rf108_plotbinning()
 {
 
-  // S e t u p   m o d e l 
+  // S e t u p   m o d e l
   // ---------------------
 
   // Build a B decay p.d.f with mixing
@@ -47,9 +47,8 @@ void rf108_plotbinning()
   tagFlav.defineType("B0bar",-1) ;
 
   // Build a gaussian resolution model
-  RooRealVar dterr("dterr","dterr",0.1,1.0) ;
   RooRealVar bias1("bias1","bias1",0) ;
-  RooRealVar sigma1("sigma1","sigma1",0.1) ;  
+  RooRealVar sigma1("sigma1","sigma1",0.1) ;
   RooGaussModel gm1("gm1","gauss model 1",dt,bias1,sigma1) ;
 
   // Construct Bdecay (x) gauss
@@ -77,7 +76,7 @@ void rf108_plotbinning()
 
   // Add 15 bins with uniform spacing in range (0,15)
   tbins.addUniform(15,0,15) ;
-  
+
   // Make plot with specified binning
   RooPlot* dtframe = dt.frame(Range(-15,15),Title("dt distribution with custom binning")) ;
   data->plotOn(dtframe,Binning(tbins)) ;
@@ -85,12 +84,12 @@ void rf108_plotbinning()
 
   // NB: Note that bin density for each bin is adjusted to that of default frame binning as shown
   // in Y axis label (100 bins --> Events/0.4*Xaxis-dim) so that all bins represent a consistent density distribution
-  
-  
+
+
   // S h o w   m i x s t a t e   a s y m m e t r y  w i t h   c u s t o m   b i n n i n g
   // ------------------------------------------------------------------------------------
 
-  // Make plot of dt distribution of data asymmetry in 'mixState' with variable binning 
+  // Make plot of dt distribution of data asymmetry in 'mixState' with variable binning
 
   // Create binning object with range (-10,10)
   RooBinning abins(-10,10) ;
@@ -102,7 +101,7 @@ void rf108_plotbinning()
   abins.addBoundaryPair(3) ;
   abins.addBoundaryPair(4) ;
   abins.addBoundaryPair(6) ;
-  
+
   // Create plot frame in dt
   RooPlot* aframe = dt.frame(Range(-10,10),Title("mixState asymmetry distribution with custom binning")) ;
 
@@ -124,5 +123,5 @@ void rf108_plotbinning()
   c->Divide(2) ;
   c->cd(1) ; gPad->SetLeftMargin(0.15) ; dtframe->GetYaxis()->SetTitleOffset(1.6) ; dtframe->Draw() ;
   c->cd(2) ; gPad->SetLeftMargin(0.15) ; aframe->GetYaxis()->SetTitleOffset(1.6) ; aframe->Draw() ;
-  
+
 }

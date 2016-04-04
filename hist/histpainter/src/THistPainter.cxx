@@ -1,5 +1,5 @@
 // @(#)root/histpainter:$Id$
-// Author: Rene Brun   26/08/99
+// Author: Rene Brun, Olivier Couet
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -62,7 +62,7 @@
 #include "TVirtualPadEditor.h"
 #include "TEnv.h"
 #include "TPoint.h"
-
+#include "TImage.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /*! \class THistPainter
@@ -266,6 +266,8 @@ using `TH1::GetOption`:
 | "BOX1"    | A button is drawn for each cell with surface proportional to content's absolute value. A sunken button is drawn for negative values a raised one for positive.|
 | "COL"     | A box is drawn for each cell with a color scale varying with contents. All the none empty bins are painted. Empty bins are not painted unless some bins have a negative content because in that case the null bins might be not empty.  `TProfile2D` histograms are handled differently because, for this type of 2D histograms, it is possible to know if an empty bin has been filled or not. So even if all the bins' contents are positive some empty bins might be painted. And vice versa, if some bins have a negative content some empty bins might be not painted.|
 | "COLZ"    | Same as "COL". In addition the color palette is also drawn.|
+| "COL2"    | Alternative rendering algorithm to "COL". Can significantly improve rendering performance for large, non-sparse 2-D histograms.|
+| "COLZ2"   | Same as "COL2". In addition the color palette is also drawn.|
 | "CANDLE"  | Draw a candle plot along X axis.|
 | "CANDLEX" | Same as "CANDLE".|
 | "CANDLEY" | Draw a candle plot along Y axis.|
@@ -680,7 +682,7 @@ End_Macro
 
 The option "B" allows to draw simple vertical bar charts.
 The bar width is controlled with `TH1::SetBarWidth()`,
-and the bar offset wihtin the bin, with `TH1::SetBarOffset()`.
+and the bar offset within the bin, with `TH1::SetBarOffset()`.
 These two settings are useful to draw several histograms on the
 same plot as shown in the following example:
 
@@ -914,7 +916,7 @@ is the color change between cells.
 
 The color palette in TStyle can be modified via `gStyle->SetPalette()`.
 
-All the none empty bins are painted. Empty bins are not painted unless
+All the non-empty bins are painted. Empty bins are not painted unless
 some bins have a negative content because in that case the null bins
 might be not empty.
 
@@ -1020,48 +1022,310 @@ Begin_Macro(source)
 }
 End_Macro
 
+\since **ROOT version 6.07/03:**
+A second rendering technique is also available with the COL2 and COLZ2 options.
+
+These options provide potential performance improvements compared to the standard
+COL option. The performance comparison of the COL2 to the COL option depends on
+the histogram and the size of the rendering region in the current pad. In general,
+a small (approx. less than 100 bins per axis), sparsely populated TH2 will render
+faster with the COL option.
+
+However, for larger histograms (approx. more than 100 bins per axis)
+that are not sparse, the COL2 option will provide up to 20 times performance improvements.
+For example, a 1000x1000 bin TH2 that is not sparse will render an order of magnitude
+faster with the COL2 option.
+
+The COL2 option will also scale its performance based on the size of the
+pixmap the histogram image is being rendered into. It also is much better optimized for
+sessions where the user is forwarding X11 windows through an `ssh` connection.
+
+For the most part, the COL2 and COLZ2 options are a drop in replacement to the COL
+and COLZ options. There is one major difference and that concerns the treatment of
+bins with zero content. The COL2 and COLZ2 options color these bins the color of zero.
+
+
 ### <a name="HP140"></a> The CANDLE option
 
 
 <a href="http://en.wikipedia.org/wiki/Box_plot">A Candle plot</a> (also known as
-a "box-and whisker plot" or simply "box plot") is a convenient way to describe
-graphically a data distribution (D) with only five numbers. It was invented
-in 1977 by John Tukey.
+a "box plot" or "whisker plot") was invented in 1977 by John Tukey. It is a convenient
+way to describe graphically a data distribution (D) with only five numbers:
 
-With the option CANDLEX five numbers are:
-
-1. The minimum value of the distribution D (bottom dashed line).
-2. The lower quartile (Q1): 25% of the data points in D are less than Q1 (bottom of the box).
-3. The median (M): 50% of the data points in D are less than M (thick line segment inside the box).
-4. The upper quartile (Q3): 75% of the data points in D are less than Q3 (top of the box).
-5. The maximum value of the distribution D (top dashed line).
-
-
-The mean value of the distribution D is also represented as a circle.
+  1. The minimum value of the distribution D (bottom or left whisker).
+  2. The lower quartile (Q1): 25% of the data points in D are less than Q1 (bottom of the box).
+  3. The median (M): 50% of the data points in D are less than M.
+  4. The upper quartile (Q3): 75% of the data points in D are less than Q3 (top of the box).
+  5. The maximum value of the distribution D (top or right whisker).
 
 In this implementation a TH2 is considered as a collection of TH1 along
 X (option `CANDLE` or `CANDLEX`) or Y (option `CANDLEY`).
 Each TH1 is represented as a candle plot.
 
-Begin_Macro(source)
+Begin_Macro
+../../../tutorials/hist/candleplotwhiskers.C
+End_Macro
+
+The candle reduces the information coming from a whole distribution into few values.
+Independently from the number of entries or the significance of the underlying distribution
+a candle will always look like a candle. So candle plots should be used carefully in
+particular with unknown distributions. The definition of a candle is based on
+__unbinned data__. Here, candles are created from binned data. Because of this, the
+deviation is connected to the bin width used. The calculation of the quantiles
+normally done on unbinned data also. Because data are binned, this will
+only work the best possible way within the resolution of one bin
+
+Because of all these facts one should take care that:
+
+  - there are enough points per candle
+  - the bin width is small enough (more bins will increase the maximum
+    available resolution of the quantiles although there will be some
+    bins with no entries)
+  - never make a candle-plot if the underlying distribution is double-distributed
+  - only create candles of distributions that are more-or-less gaussian (the
+    MPV should be not too far away from the mean).
+
+#### What a candle is made of
+
+\since **ROOT version 6.07/05**
+
+##### The box
+The box displays the position of the inter-quantile-range of the underlying
+distribution. The box contains 25% of the distribution below the median
+and 25% of the distribution above the median. If the underlying distribution is large
+enough and gaussian shaped the end-points of the box represent \f$ 0.6745\times\sigma \f$
+(Where \f$ \sigma \f$ is the standard deviation of the gaussian). The width and
+the position of the box can be modified by SetBarWidth() and SetBarOffset().
+The +-25% quantiles are calculated by the GetQuantiles() methods.
+
+##### The Median
+For a sorted list of numbers, the median is the value in the middle of the list.
+E.g. if a sorted list is made of five numbers "1,2,3,6,7" 3 will be the median
+because it is in the middle of the list. If the number of entries is even the
+average of the two values in the middle will be used. As histograms are binned
+data, the situation is a bit more complex. The following example shows this:
+
+~~~ {.cpp}
+void quantiles() {
+   TH1I *h = new TH1I("h","h",10,0,10);
+   //h->Fill(3);
+   //h->Fill(3);
+   h->Fill(4);
+   h->Draw();
+   Double_t *p = new Double_t[1];
+   p[0] = 0.5;
+   Double_t *q = new Double_t[1];
+   q[0] = 0;
+   h->GetQuantiles(1,q,p);
+
+   cout << "Median is: " << q[0] << std::endl;
+}
+~~~
+
+Here the bin-width is 1.0. If the two Fill(3) are commented out, as there are currently,
+the example will return a calculated median of 4.5, because that's the bin center
+of the bin in which the value 4.0 has been dropped. If the two Fill(3) are not
+commented out, it will return 3.75, because the algorithm tries to evenly distribute
+the individual values of a bin with bin content > 0. It means the sorted list
+would be "3.25, 3.75, 4.5".
+
+The consequence is a median of 3.75. This shows how important it is to use a
+small enough bin-width when using candle-plots on binned data.
+If the distribution is large enough and gaussian shaped the median will be exactly
+equal to the mean.
+The median can be shown as a line or as a circle or not shown at all.
+
+In order to show the significance of the median notched candle plots apply a "notch" or
+narrowing of the box around the median. The significance is defined by
+\f$ 1.57\times\frac{iqr}{N} \f$ and will be represented as the size of the notch
+(where iqr is the size of the box and N is the number of entries of the whole
+distribution). Candle plots like these are usually called "notched candle plots".
+
+In case the significance of the median is greater that the size of the box, the
+box will have an unnatural shape. Usually it means the chart has not enough data,
+or that representing this uncertainty is not useful
+
+##### The Mean
+The mean can be drawn as a dashed line or as a circle or not drawn at all.
+The mean is the arithmetic average of the values in the distribution.
+It is calculated using GetMean(). Because histograms are
+binned data, the mean value can differ from a calculation on the raw-data.
+If the distribution is large enough and gaussian shaped the mean will be
+exactly the median.
+
+##### The Whiskers
+The whiskers represent the part of the distribution not covered by the box.
+The upper 25% and the lower 25% of the distribution are located within the whiskers.
+Two representations are available.
+
+  - A simple one (using w=1) defining the lower whisker from the lowest data value
+    to the bottom of the box, and the upper whisker from the top of the box to the
+    highest data value. In this representation the whisker-lines are dashed.
+  - A more complex one having a further restriction. The whiskers are still connected
+    to the box but their length cannot exceed \f$ 1.5\times iqr \f$. So it might
+    be that the outermost part of the underlying distribution will not be covered
+    by the whiskers. Usually these missing parts will be represented by the outliers
+    (see points). Of course the upper and the lower whisker may differ in length.
+    In this representation the whiskers are drawn as solid lines.
+
+If the distribution is large enough and gaussian shaped, the maximum length of the
+whisker will be located at \f$ \pm 2.698 \sigma \f$ (where \f$ \sigma \f$ is the
+standard deviation. In that case 99.3% of the total distribution will be covered
+by the box and the whiskers, whereas 0.7% are represented by the outliers.
+
+##### The Anchors
+The anchors have no special meaning in terms of statistical calculation. They mark
+the end of the whiskers and they have the width of the box. Both representation
+with and without anchors are common.
+
+##### The Points
+Depending on the configuration the points can have different meanings:
+  - If p=1 the points represent the outliers. If they are shown, it means
+    some parts of the underlying distribution are not covered by the whiskers.
+    This can only occur when the whiskers are set to option w=2. Here the whiskers
+    can have a maximum length of \f$ 1.5 \times iqr \f$. So any points outside the
+    whiskers will be drawn as outliers. The outliers will be represented by crosses.
+  - If p=2 all points in the distribution will be painted as crosses. This is
+    useful for small datasets only (up to 10 or 20 points per candle).
+    The outliers are shown along the candle. Because the underlying distribution
+    is binned, is frequently occurs that a bin contains more than one value.
+    Because of this the points will be randomly scattered within their bin along
+    the candle axis. If the bin content for a bin is exactly 1 (usually
+    this happens for the outliers) if will be drawn in the middle of the bin along
+    the candle axis. As the maximum number of points per candle is limited by kNMax/2
+    on very large datasets scaling will be performed automatically. In that case one
+    would loose all outliers because they have usually a bin content of 1 (and a
+    bin content between 0 and 1 after the scaling). Because of this all bin contents
+    between 0 and 1 - after the scaling - will be forced to be 1.
+  - As the drawing of all values on large datasets can lead to big amounts of crosses,
+    one can show all values as a scatter plot instead by choosing p=3. The points will be
+    drawn as dots and will be scattered within the width of the candle. The color
+    of the points will be the color of the candle-chart.
+
+
+#### How to use the candle-plots drawing option
+
+There are six predefined candle-plot representations:
+
+  - "CANDLEX1": Standard candle (whiskers cover the whole distribution)
+  - "CANDLEX2": Standard candle with better whisker definition + outliers.
+                It is a good compromise
+  - "CANDLEX3": Like candle2 but with a mean as a circle.
+                It is easier to distinguish mean and median
+  - "CANDLEX4": Like candle3 but showing the uncertainty of the median as well
+                (notched candle plots).
+                For bigger datasets per candle
+  - "CANDLEX5": Like candle2 but showing all data points.
+                For very small datasets
+  - "CANDLEX6": Like candle2 but showing all datapoints scattered.
+                For huge datasets
+
+Of course "CANDLEY" works as well. X shows vertical candles, Y shows
+horizontal candles
+
+The option "CANDLE" is equivalent to "CANDLE1X" or "CANDLEX".
+
+The option "CANDLEY" is equivalent to "CANDLEY1"
+
+There is no difference between options "CANDLE1X" and "CANDLEX1".
+
+Instead of "X" or "Y" one can use "V" or "H"
+
+The following picture shows how the six predefined representations look.
+
+Begin_Macro
 {
-   TCanvas *c1 = new TCanvas("c1","c1",600,400);
-   TH2F *hcandle = new TH2F("hcandle","Option CANDLE example ",40,-4,4,40,-20,20);
+   TCanvas *c1 = new TCanvas("c1","c1",700,800);
+   c1->Divide(2,3);
+   gStyle->SetOptStat(kFALSE);
+
+   TH2F *hcandle = new TH2F("hcandle"," ",10,-4,4,40,-20,20);
    Float_t px, py;
-   for (Int_t i = 0; i < 25000; i++) {
+   for (Int_t i = 0; i < 15000; i++) {
       gRandom->Rannor(px,py);
       hcandle->Fill(px,5*py);
    }
    hcandle->SetMarkerSize(0.5);
-   hcandle->Draw("CANDLE");
-   return c1;
+
+   TH2F *h2;
+   for (Int_t i=1; i<7; i++) {
+      c1->cd(i);
+      h2 = (TH2F*)hcandle->DrawClone(Form("CANDLE%d",i));
+      h2->SetTitle(Form("CANDLE%d",i));
+   }
 }
+End_Macro
+
+Instead of using the predefined representations, the candle parameters can be
+changed individually. In that case the option has the following form:
+
+    CANDLEX(<option-string>)
+
+or
+
+    CANDLEY(<option-string>).
+
+All zeros at the beginning of `option-string` can be omitted.
+
+`option-string` consists six values, defined as follow:
+
+    "CANDLEX(pawMmb)"
+
+Where:
+
+  -  `b = 0`;  no box drawn
+  -  `b = 1`;  the box is drawn. As the candle-plot is also called a box-plot it
+               makes sense in the very most cases to always draw the box.
+     `b = 2`; draw a filled box with border.
+
+  -  `m = 0`;  no median drawn
+  -  `m = 1`;  median is drawn as a line
+  -  `m = 2`;  median is drawn with errors (notches)
+  -  `m = 3`;  median is drawn as a circle
+
+  -  `M = 0`;  no mean drawn
+  -  `M = 1`;  mean is drawn as a dashed line
+  -  `M = 3`;  mean is drawn as a circle
+
+  -  `w = 0`;  no whisker drawn
+  -  `w = 1`;  whisker is drawn to end of distribution.
+  -  `w = 2`;  whisker is drawn to max 1.5*iqr
+
+  -  `a = 0`;  no anchor drawn
+  -  `a = 1`;  the anchors are drawn
+
+  -  `p = 0`;  no points drawn
+  -  `p = 1`;  only outliers are drawn
+  -  `p = 2`;  all datapoints are drawn
+  -  `p = 3`:  all datapoints are drawn scattered
+
+The values on the left of `option-string` are in the middle of the candle,
+the values on the right of `option-string` are in the outer part of the candle.
+
+#### Example 1
+Box and improved whisker, no mean, no median, no anchor no outliers
+
+    h1->Draw("CANDLEX(2001)");
+
+#### Example 2
+A Candle-definition like "CANDLEX2" (New standard candle with better whisker definition + outliers)
+
+    h1->Draw("CANDLEX(112111)");
+
+#### Example 3
+The following example shows how several candle plots can be super-imposed using
+the option SAME. Note that the bar-width and bar-offset are active on candle plots.
+Also the color, the line width, the size of the points and so on can be changed by the
+standard attribute setting methods such as SetLineColor() SetLineWidth().
+
+Begin_Macro(source)
+../../../tutorials/hist/candleplot.C
 End_Macro
 
 ### <a name="HP141"></a> The VIOLIN option
 
 
-<a href="http://en.wikipedia.org/wiki/Violin_plot">A violin plot</a> is a box plot
+<a href="http://en.wikipedia.org/wiki/Violin_plot">A violin plot</a> is a candle plot
 that also encodes the pdf information at each point.
 
 
@@ -1311,7 +1575,7 @@ When option `LIST` is specified together with option
     gPad->Update();
 
 The contour are saved in `TGraph` objects once the pad is painted.
-Therefore to use this functionnality in a macro, `gPad->Update()`
+Therefore to use this functionality in a macro, `gPad->Update()`
 should be performed after the histogram drawing. Once the list is
 built, the contours are accessible in the following way:
 
@@ -1471,11 +1735,11 @@ The height of the mesh is proportional to the cell content.
 | "SURF"   | Draw a surface plot using the hidden line removal technique.|
 | "SURF1"  | Draw a surface plot using the hidden surface removal technique.|
 | "SURF2"  | Draw a surface plot using colors to show the cell contents.|
-| "SURF3"  | Same as `SURF` with an additionial filled contour plot on top.|
+| "SURF3"  | Same as `SURF` with an additional filled contour plot on top.|
 | "SURF4"  | Draw a surface using the Gouraud shading technique.|
 | "SURF5"  | Used with one of the options CYL, PSR and CYL this option allows to draw a a filled contour plot.|
 | "SURF6"  | This option should not be used directly. It is used internally when the CONT is used with option the option SAME on a 3D plot.|
-| "SURF7"  | Same as `SURF2` with an additionial line contour plot on top.|
+| "SURF7"  | Same as `SURF2` with an additional line contour plot on top.|
 
 
 
@@ -1819,9 +2083,9 @@ The following options are supported:
 | "TEXT"   | Draw bin contents as text (format set via `gStyle->SetPaintTextFormat`).|
 | "TEXTN"  | Draw bin names as text.|
 | "TEXTnn" | Draw bin contents as text at angle nn (0 < nn < 90).|
-| "L"      | Draw the bins boundaries as lines.  The lines attibutes are the TGraphs ones.|
-| "P"      | Draw the bins boundaries as markers.  The markers attibutes are the TGraphs ones.|
-| "F"      | Draw the bins boundaries as filled polygons.  The filled polygons attibutes are the TGraphs ones.|
+| "L"      | Draw the bins boundaries as lines. The lines attributes are the TGraphs ones.|
+| "P"      | Draw the bins boundaries as markers. The markers attributes are the TGraphs ones.|
+| "F"      | Draw the bins boundaries as filled polygons.  The filled polygons attributes are the TGraphs ones.|
 
 
 
@@ -1974,7 +2238,7 @@ defined. This palette is recommended for pads, labels ...
 Spectrum Violet->Red is created with 50 colors. That's the default rain bow
 palette.
 
-Other prefined palettes with 255 colors are available when `colors == 0`.
+Other pre-defined palettes with 255 colors are available when `colors == 0`.
 The following value of `ncolors` give access to:
 
 
@@ -2452,7 +2716,6 @@ static TString gStringKurtosisZ;
 
 ClassImp(THistPainter)
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
 
@@ -2501,14 +2764,12 @@ THistPainter::THistPainter()
    gStringKurtosisZ        = gEnv->GetValue("Hist.Stats.KurtosisZ",        "Kurtosis z");
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Default destructor.
 
 THistPainter::~THistPainter()
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute the distance from the point px,py to a line.
@@ -2698,7 +2959,6 @@ FUNCTIONS:
    return curdist;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Display a panel with all histogram drawing options.
 
@@ -2715,7 +2975,6 @@ void THistPainter::DrawPanel()
    gROOT->ProcessLine(Form("((TCanvas*)0x%lx)->Selected((TVirtualPad*)0x%lx,(TObject*)0x%lx,1)",
                            (ULong_t)gPad->GetCanvas(), (ULong_t)gPad, (ULong_t)fH));
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute the actions corresponding to `event`.
@@ -2946,7 +3205,6 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Get a contour (as a list of TGraphs) using the Delaunay triangulation.
 
@@ -2973,7 +3231,6 @@ TList *THistPainter::GetContourList(Double_t contour) const
 
    return fGraph2DPainter->GetContourList(contour);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Display the histogram info (bin number, contents, integral up to bin
@@ -3103,7 +3360,6 @@ char *THistPainter::GetObjectInfo(Int_t px, Int_t py) const
    return info;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return `kTRUE` if the cell `ix`, `iy` is inside one of the graphical cuts.
 
@@ -3122,7 +3378,6 @@ Bool_t THistPainter::IsInside(Int_t ix, Int_t iy)
    return kTRUE;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return `kTRUE` if the point `x`, `y` is inside one of the graphical cuts.
 
@@ -3138,7 +3393,6 @@ Bool_t THistPainter::IsInside(Double_t x, Double_t y)
    }
    return kTRUE;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Decode string `choptin` and fill Hoption structure.
@@ -3235,13 +3489,105 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       strncpy(l,"   ",3);
    }
 
+   // The bits for Hoption.Candle
+   //
+   // 0: always on
+   // 1: 0 - X, 1 - Y
+   // 2-3: 0: no whisker, 1: standard whisker, 2: 1.5*iqr, 3:free
+   // 4-5: 0: no median, 1: median as line, 2: median with errors, 3: median as circle
+   // 6-7: 0: no mean, 1: mean as dashed line, 2: free, 3: mean as circle
+   // 8: 0: no outliers, 1: outliers
+   // 9: 0: do not show values within iqr, 1: show all values within iqr + outliers
+   // 10: 0: show outliers and all values in the candle line, 1: show them randomly
+   // 11-12: 0: no anchor, 1: standard anchor, 2: free, 3: free
+   // 13-14: 0: no box, 1: draw a box (notches are set by the median), 2: draw a filled box, 3: free
+
    l = strstr(chopt,"CANDLE");
    if (l) {
       Hoption.Scat = 0;
-      Hoption.Candle = 1;
-      strncpy(l,"   ",6);
-      if (l[6] == 'X') { Hoption.Candle = 1; l[6] = ' '; }
-      if (l[6] == 'Y') { Hoption.Candle = 2; l[6] = ' '; }
+      Hoption.Candle = 1; // bit 0 is always on!
+
+      const uint32_t fallbackCandle = (1 << 2) |(1 << 4) | (3 << 6) | (1 << 11) | (1 << 13);
+
+      char direction = ' ';
+      char preset = ' ';
+
+      if (l[6] >= 'A' && l[6] <= 'Z') direction = l[6];
+      if (l[6] >= '1' && l[6] <= '9') preset = l[6];
+      if (l[7] >= 'A' && l[7] <= 'Z' && preset != ' ') direction = l[7];
+      if (l[7] >= '1' && l[7] <= '9' && direction != ' ') preset = l[7];
+
+      if (direction == 'X' || direction == 'V') { Hoption.Candle &= ~(1 << 1); } // Set bit 1 to 0
+      if (direction == 'Y' || direction == 'H') { Hoption.Candle |= (1 << 1); } // Set bit 1 to 1
+      if (preset == '1') //Standard candle using old candle-definition
+         Hoption.Candle |= fallbackCandle;
+      if (preset == '2') //New standard candle with better whisker definition + outlier
+         Hoption.Candle |= (2 << 2) | (1 << 4) | (1 << 6) | (1 << 8) | (1 << 11) | (1 << 13);
+      if (preset == '3')  //Like candle2 but with a mean as a circle
+         Hoption.Candle |= (2 << 2) | (1 << 4) | (3 << 6) | (1 << 8) | (1 << 11) | (1 << 13);
+      if (preset == '4')  //Like candle3 but showing the uncertainty of the median as well
+         Hoption.Candle |= (2 << 2) | (2 << 4) | (3 << 6) | (1 << 8) | (1 << 11) | (1 << 13);
+      if (preset == '5')  //Like candle2 but showing all datapoints
+         Hoption.Candle |= (2 << 2) | (1 << 4) | (3 << 6) | (1 << 8) | (1 << 9) | (1 << 11) | (1 << 13);
+      if (preset == '6')  //Like candle2 but showing all datapoints scattered
+         Hoption.Candle |= (2 << 2) | (1 << 4) | (3 << 6) | (1 << 8) | (1 << 9) | (1 << 10)| (1 << 11) | (1 << 13);
+
+      if (preset != ' ' && direction != ' ')
+         strncpy(l,"        ",8);
+      else if (preset != ' ' || direction != ' ')
+         strncpy(l,"        ",7);
+      else
+         strncpy(l,"        ",6);
+
+      Bool_t useIndivOption = false;
+
+      if (preset == ' ') { // Check if the user wants to set the properties individually
+         Int_t n = 0;
+         char *brOpen = strstr(chopt,"(");
+         char *brClose = strstr(chopt,")");
+         if (brOpen && brClose) {
+            useIndivOption = true;
+            char * value = brClose;
+            while (value > brOpen) {
+
+               value--; //Start from the back
+               switch (n) {
+                  case 0: // options for the box
+                     if (*value == '1') Hoption.Candle |= (1 << 13); //show the box
+                     if (*value == '2') Hoption.Candle |= (2 << 13); //paint a filled box
+                     break;
+                  case 1: // the median
+                     if (*value == '1') Hoption.Candle |= (1 << 4); //median as line
+                     if (*value == '2') Hoption.Candle |= (2 << 4); //median as line with errors (notched candle-plot)
+                     if (*value == '3') Hoption.Candle |= (3 << 4); //median as circle
+                     break;
+                  case 2: // the mean
+                     if (*value == '1') Hoption.Candle |= (1 << 6); //mean as dashed line
+                     if (*value == '3') Hoption.Candle |= (3 << 6); //mean as circle
+                     break;
+                  case 3: // the whisker
+                     if (*value == '1') Hoption.Candle |= (1 << 2); //old whisker definition (painted dashed)
+                     if (*value == '2') Hoption.Candle |= (2 << 2); //new whisker definition (max 1.5*iqr)
+                     break;
+                  case 4: // the anchor
+                     if (*value == '1') Hoption.Candle |= (1 << 11); //paint the anchor
+                     break;
+                  case 5: // outliers and datapoints
+                     if (*value == '1') Hoption.Candle |= (1 << 8); //show outliers only
+                     if (*value == '2') Hoption.Candle |= (1 << 8) | (1 << 9); //all datapoints in the candle-line
+                     if (*value == '3') Hoption.Candle |= (1 << 8) | (1 << 9) | (1 << 10); //all datapoints scattered
+                     break;
+                  }
+                  *value = ' '; //Deleting number per number from chopt including '('
+               n++;
+            }
+            *brClose = ' '; //Deleting the ')' char from chopt
+         }
+      }
+      //Handle option "CANDLE" ,"CANDLEX" or "CANDLEY" to behave like "CANDLEX1" or "CANDLEY1"
+      if (!useIndivOption && (Hoption.Candle == 1 || Hoption.Candle == 3) ) {
+        Hoption.Candle |= fallbackCandle;
+     }
    }
 
    l = strstr(chopt,"VIOLIN");
@@ -3357,6 +3703,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
          Hoption.Color  = 1;
          Hoption.Scat   = 0;
          Hoption.Zscale = 1;
+         if (l[4] == '2') { Hoption.Color = 3; l[4] = ' '; }
          l = strstr(chopt,"0");  if (l) { Hoption.Zero  = 1;  strncpy(l," ",1); }
          l = strstr(chopt,"1");  if (l) { Hoption.Color = 2;  strncpy(l," ",1); }
       } else {
@@ -3369,6 +3716,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       if (hdim>1) {
          Hoption.Color = 1;
          Hoption.Scat  = 0;
+         if (l[3] == '2') { Hoption.Color = 3; l[3] = ' '; }
          l = strstr(chopt,"0");  if (l) { Hoption.Zero  = 1;  strncpy(l," ",1); }
          l = strstr(chopt,"1");  if (l) { Hoption.Color = 2;  strncpy(l," ",1); }
       } else {
@@ -3496,7 +3844,6 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    return 1;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Decode string `choptin` and fill Graphical cuts structure.
 
@@ -3543,7 +3890,6 @@ Int_t THistPainter::MakeCuts(char *choptin)
    for (i=0;i<=nch;i++) left[i] = ' ';
    return fNcuts;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// [Control routine to paint any kind of histograms](#HP00)
@@ -3624,7 +3970,6 @@ void THistPainter::Paint(Option_t *option)
          }
       }
       PaintTable(option);
-      fH->SetMinimum(minsav);
       if (Hoption.Func) {
          Hoption_t hoptsave = Hoption;
          Hparam_t  hparsave = Hparam;
@@ -3633,6 +3978,7 @@ void THistPainter::Paint(Option_t *option)
          Hoption = hoptsave;
          Hparam  = hparsave;
       }
+      fH->SetMinimum(minsav);
       gCurrentHist = oldhist;
       delete [] fXbuf; delete [] fYbuf;
       if (fH->GetDimension() == 1) {
@@ -3733,7 +4079,6 @@ paintstat:
 
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// [Control function to draw a table as an arrow plot](#HP12)
 
@@ -3823,7 +4168,6 @@ void THistPainter::PaintArrows(Option_t *)
    fH->TAttLine::Modify();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw axis (2D case) of an histogram.
 ///
@@ -3835,7 +4179,7 @@ void THistPainter::PaintArrows(Option_t *)
 void THistPainter::PaintAxis(Bool_t drawGridOnly)
 {
 
-   //On iOS, grid should not be picable and can not be highlighted.
+   //On iOS, grid should not be pickable and can not be highlighted.
    //Condition is never true on a platform different from iOS.
    if (drawGridOnly && (gPad->PadInHighlightMode() || gPad->PadInSelectionMode()))
       return;
@@ -3844,7 +4188,7 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
    if (Hoption.Same && Hoption.Axis <= 0) return;
 
    // Repainting alphanumeric labels axis on a plot done with
-   // the option HBAR (horizontal) needs some adjustements.
+   // the option HBAR (horizontal) needs some adjustments.
    TAxis *xaxis = 0;
    TAxis *yaxis = 0;
    if (Hoption.Same && Hoption.Axis) { // Axis repainted (TPad::RedrawAxis)
@@ -4083,7 +4427,7 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
 
       // Paint the additional Y axis (if needed)
       // Additional checks for pad mode are required on iOS: this "second" axis is
-      // neither pickable, nor highlihted. Additional checks have no effect on non-iOS platform.
+      // neither pickable, nor highlighted. Additional checks have no effect on non-iOS platform.
       if (gPad->GetTicky() && !gPad->PadInSelectionMode() && !gPad->PadInHighlightMode()) {
          if (gPad->GetTicky() < 2) {
             strlcat(chopt, "U",10);
@@ -4105,7 +4449,6 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
       fYaxis = yaxis;
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// [Draw a bar-chart in a normal pad.](#HP10)
@@ -4152,7 +4495,6 @@ void THistPainter::PaintBar(Option_t *)
       }
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// [Draw a bar char in a rotated pad (X vertical, Y horizontal)](#HP10)
@@ -4226,7 +4568,6 @@ void THistPainter::PaintBarH(Option_t *)
    fXaxis = xaxis;
    fYaxis = yaxis;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// [Control function to draw a 2D histogram as a box plot](#HP13)
@@ -4405,164 +4746,344 @@ void THistPainter::PaintBoxes(Option_t *)
    fH->TAttFill::Modify();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Paint one line used by PaintOneCandle.
+///
+/// Implemented by:
+/// G. Troska, georg.troska@tu-dortmund.de
+/// T. Neddermann, till.neddermann@tu-dortmund.de
+
+void THistPainter::PaintOneCandleLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Bool_t swapXY)
+{
+   Bool_t doLogY = (!(swapXY) && Hoption.Logy) || (swapXY && Hoption.Logx);
+   Bool_t doLogX = (!(swapXY) && Hoption.Logx) || (swapXY && Hoption.Logy);
+   if (doLogY) {
+      if (y1 > 0) y1 = TMath::Log10(y1); else return;
+      if (y2 > 0) y2 = TMath::Log10(y2); else return;
+   }
+   if (doLogX) {
+      if (x1 > 0) x1 = TMath::Log10(x1); else return;
+      if (x2 > 0) x2 = TMath::Log10(x2); else return;
+   }
+   if (!swapXY) {
+      gPad->PaintLine(x1, y1, x2, y2);
+   } else {
+      gPad->PaintLine(y1, x1, y2, x2);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Paint one box used by PaintOneCandle.
+
+void THistPainter::PaintOneCandleLBox(Int_t nPoints, Double_t *x, Double_t *y, Bool_t swapXY, Bool_t fill)
+{
+   Bool_t doLogY = (!(swapXY) && Hoption.Logy) || (swapXY && Hoption.Logx);
+   Bool_t doLogX = (!(swapXY) && Hoption.Logx) || (swapXY && Hoption.Logy);
+   if (doLogY) {
+      for (int i=0; i<nPoints; i++) {
+         if (y[i] > 0) y[i] = TMath::Log10(y[i]);
+         else return;
+      }
+   }
+   if (doLogX) {
+      for (int i=0; i<nPoints; i++) {
+         if (x[i] > 0) x[i] = TMath::Log10(x[i]);
+         else return;
+      }
+   }
+
+   if (!swapXY) {
+      if (fill) gPad->PaintFillArea(nPoints, x, y);
+      gPad->PaintPolyLine(nPoints, x, y);
+   } else {
+      if (fill) gPad->PaintFillArea(nPoints, y, x);
+      gPad->PaintPolyLine(nPoints, y, x);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Paint one candle used by PaintCandle.
+///
+/// Implemented by:
+/// G. Troska, georg.troska@tu-dortmund.de
+/// T. Neddermann, till.neddermann@tu-dortmund.de
+
+void THistPainter::PaintOneCandle(Double_t candlePosition, Double_t candleWidth,
+                                  TH1 *proj)
+{
+   // Save the attributes of the original histo
+   Style_t saveFill   = fH->GetFillStyle();
+   Style_t saveColor  = fH->GetFillColor();
+   Style_t saveLine   = fH->GetLineStyle();
+   Style_t saveWidth  = fH->GetLineWidth();
+   Style_t saveMarker = fH->GetMarkerStyle();
+
+   // Determining the quantiles
+   Double_t *prob = new Double_t[5];
+   prob[0]=1E-15; prob[1]=0.25; prob[2]=0.5; prob[3]=0.75; prob[4]=1-1E-15;
+   Double_t *quantiles = new Double_t[5];
+   quantiles[0]=0.; quantiles[1]=0.; quantiles[2] = 0.; quantiles[3] = 0.; quantiles[4] = 0.;
+
+   proj->GetQuantiles(5, quantiles, prob);
+   Double_t iqr = quantiles[3]-quantiles[1];
+
+   // Check if the quantiles are valid, seems the under- and overflow is taken
+   // into account as well, we need to ignore this!
+   if (quantiles[0] >= quantiles[4]) return;
+   if (quantiles[1] >= quantiles[3]) return;
+
+   // Definition of the candle in the standard case
+   Double_t boxHigh = quantiles[3];
+   Double_t boxLow = quantiles[1];
+   Double_t whiskerUpper = quantiles[4]; //Standard case
+   Double_t whiskerLower = quantiles[0]; //Standard case
+   Double_t dimLeft = candlePosition-0.5*candleWidth;
+   Double_t dimRight = candlePosition+0.5*candleWidth;
+   Double_t median = quantiles[2];
+   Double_t mean = proj->GetMean();
+   Double_t medianErr = 1.57*iqr/sqrt(proj->GetEntries());
+
+   fH->SetMarkerColor(fH->GetLineColor());
+   fH->TAttLine::Modify();
+   fH->TAttFill::Modify();
+   fH->TAttMarker::Modify();
+
+   Bool_t swapXY = ((Hoption.Candle >> 1) & 0x01);
+   Bool_t doLogY = (!(swapXY) && Hoption.Logy) || (swapXY && Hoption.Logx);
+   Bool_t doLogX = (!(swapXY) && Hoption.Logx) || (swapXY && Hoption.Logy);
+
+   if (((Hoption.Candle >> 2) & 0x03) == 0x02) { // Improved whisker definition, with 1.5*iqr
+      int bin = proj->FindBin(boxLow-1.5*iqr);
+      // extending only to the lowest data value within this range
+      while (proj->GetBinContent(bin) == 0 && bin <= proj->GetNbinsX()) bin++;
+      whiskerLower = proj->GetBinCenter(bin);
+
+      bin = proj->FindBin(boxHigh+1.5*iqr);
+      while (proj->GetBinContent(bin) == 0 && bin >= 1) bin--;
+      whiskerUpper = proj->GetBinCenter(bin);
+   }
+
+   if (((Hoption.Candle >> 13) & 0x03) == 0x01) { // Draw a simple box
+      if (((Hoption.Candle >> 4) & 0x03) == 0x02) { // Check if we have to draw a box with notches
+         Double_t x[] = {dimLeft,  dimLeft, dimLeft+candleWidth/3., dimLeft, dimLeft, dimRight,
+                         dimRight, dimRight-candleWidth/3., dimRight, dimRight, dimLeft};
+         Double_t y[] = {boxLow, median-medianErr, median, median+medianErr, boxHigh, boxHigh,
+                         median+medianErr, median, median-medianErr, boxLow, boxLow};
+         PaintOneCandleLBox(11, x, y, swapXY, kFALSE);
+      } else { // draw a simple box
+         Double_t x[] = {dimLeft, dimLeft, dimRight, dimRight, dimLeft};
+         Double_t y[] = {boxLow,  boxHigh, boxHigh,  boxLow,   boxLow};
+         PaintOneCandleLBox(5, x, y, swapXY, kFALSE);
+      }
+   } else if (((Hoption.Candle >> 13) & 0x03) == 0x02) { // Draw a filled box
+      if (((Hoption.Candle >> 4) & 0x03) == 0x02) { // Check if we have to draw a box with notches
+         Double_t x[] = {dimLeft,  dimLeft, dimLeft+candleWidth/3., dimLeft, dimLeft, dimRight,
+                         dimRight, dimRight-candleWidth/3., dimRight, dimRight, dimLeft};
+         Double_t y[] = {boxLow, median-medianErr, median, median+medianErr, boxHigh, boxHigh,
+                         median+medianErr, median, median-medianErr, boxLow, boxLow};
+         PaintOneCandleLBox(11, x, y, swapXY, kTRUE);
+      } else { // draw a simple box
+         Double_t x[] = {dimLeft, dimLeft, dimRight, dimRight, dimLeft};
+         Double_t y[] = {boxLow,  boxHigh, boxHigh,  boxLow,   boxLow};
+         PaintOneCandleLBox(5, x, y, swapXY, kTRUE);
+      }
+   }
+
+   if (((Hoption.Candle >> 11) & 0x03) == 0x01) { // Draw the anchor line
+      PaintOneCandleLine(dimLeft, whiskerUpper, dimRight, whiskerUpper, swapXY);
+      PaintOneCandleLine(dimLeft, whiskerLower, dimRight, whiskerLower, swapXY);
+   }
+
+   if (((Hoption.Candle >> 2) & 0x03) == 0x01) { // Whiskers are dashed
+      fH->SetLineStyle(2);
+      fH->TAttLine::Modify();
+      PaintOneCandleLine(candlePosition, whiskerUpper, candlePosition, boxHigh, swapXY);
+      PaintOneCandleLine(candlePosition, boxLow, candlePosition, whiskerLower, swapXY);
+      fH->SetLineStyle(saveLine);
+      fH->TAttLine::Modify();
+   } else if (((Hoption.Candle >> 2) & 0x03) == 0x02) { // Whiskers without dashing, better whisker definition (done above)
+      PaintOneCandleLine(candlePosition, whiskerUpper, candlePosition, boxHigh, swapXY);
+      PaintOneCandleLine(candlePosition, boxLow, candlePosition, whiskerLower, swapXY);
+   }
+
+   if ((( Hoption.Candle >> 4) & 0x03) == 0x01 ) { // Paint median as a line
+      PaintOneCandleLine(dimLeft, median, dimRight, median, swapXY);
+   } else if ((( Hoption.Candle >> 4) & 0x03) == 0x02 ) { // Paint median as a line (using notches, median line is shorter)
+      PaintOneCandleLine(dimLeft+candleWidth/3, median, dimRight-candleWidth/3., median, swapXY);
+   } else if ((( Hoption.Candle >> 4) & 0x03) == 0x03 ) { // Paint median circle
+      Double_t myMedianX[1], myMedianY[1];
+      if (!swapXY) {
+         myMedianX[0] = candlePosition;
+         myMedianY[0] = median;
+      } else {
+         myMedianX[0] = median;
+         myMedianY[0] = candlePosition;
+      }
+
+      Bool_t isValid = true;
+      if (doLogX) {
+         if (myMedianX[0] > 0) myMedianX[0] = TMath::Log10(myMedianX[0]); else isValid = false;
+      }
+      if (doLogY) {
+         if (myMedianY[0] > 0) myMedianY[0] = TMath::Log10(myMedianY[0]); else isValid = false;
+      }
+
+      fH->SetMarkerStyle(24);
+      fH->SetMarkerColor(fH->GetLineColor());
+      fH->TAttMarker::Modify();
+      if (isValid) gPad->PaintPolyMarker(1,myMedianX,myMedianY); // A circle for the median
+      fH->SetMarkerStyle(saveMarker);
+      fH->TAttMarker::Modify();
+   }
+
+   if ((( Hoption.Candle >> 6) & 0x03) == 0x03 ) { // Paint mean as a circle
+      Double_t myMeanX[1], myMeanY[1];
+      if (!swapXY) {
+         myMeanX[0] = candlePosition;
+         myMeanY[0] = mean;
+      } else {
+         myMeanX[0] = mean;
+         myMeanY[0] = candlePosition;
+      }
+
+      Bool_t isValid = true;
+      if (doLogX) {
+         if (myMeanX[0] > 0) myMeanX[0] = TMath::Log10(myMeanX[0]); else isValid = false;
+      }
+      if (doLogY) {
+         if (myMeanY[0] > 0) myMeanY[0] = TMath::Log10(myMeanY[0]); else isValid = false;
+      }
+
+      fH->SetMarkerStyle(24);
+      fH->SetMarkerColor(fH->GetLineColor());
+      fH->TAttMarker::Modify();
+      if (isValid) gPad->PaintPolyMarker(1,myMeanX,myMeanY); // A circle for the mean
+      fH->SetMarkerStyle(saveMarker);
+      fH->TAttMarker::Modify();
+   } else if ((( Hoption.Candle >> 6) & 0x03) == 0x01 ) { // Paint mean as a dashed line
+      fH->SetLineStyle(2);
+      fH->TAttLine::Modify();
+      PaintOneCandleLine(dimLeft, mean, dimRight, mean, swapXY);
+      fH->SetLineStyle(saveLine);
+      fH->TAttLine::Modify();
+
+   }
+
+   if (((Hoption.Candle >> 11) & 0x03) == 0x01) { //Draw standard anchor
+      PaintOneCandleLine(dimLeft, whiskerLower, dimRight, whiskerLower, swapXY); // the lower anchor line
+      PaintOneCandleLine(dimLeft, whiskerUpper, dimRight, whiskerUpper, swapXY); // the upper anchor line
+   }
+
+
+   // This is a bit complex. All values here are handled as outliers. Usually
+   // only the datapoints outside the whiskers are shown.
+   // One can show them in one row as crosses, or scattered randomly. If activated
+   // all datapoint are shown in the same way
+   TRandom2 random;
+   if ((Hoption.Candle >> 8) & 0x01) { //Draw outliers
+      const int maxOutliers = kNMAX; // Max outliers per candle
+      Double_t outliersX[maxOutliers];
+      Double_t outliersY[maxOutliers];
+      Double_t myScale = 1.;
+      if (proj->GetEntries() > maxOutliers/2) myScale = proj->GetEntries()/(maxOutliers/2.);
+      int nOutliers = 0;
+      for (int bin = 0; bin < proj->GetNbinsX(); bin++) {
+         // Either show them only outside the whiskers, or all of them
+         if (proj->GetBinContent(bin) > 0 && (proj->GetBinCenter(bin) < whiskerLower || proj->GetBinCenter(bin) > whiskerUpper || ((Hoption.Candle >> 9) & 0x01)) ) {
+         Double_t scaledBinContent = proj->GetBinContent(bin)/myScale;
+         if (scaledBinContent >0 && scaledBinContent < 1) scaledBinContent = 1; //Outliers have a typical bincontent between 0 and 1, when scaling they would disappear
+            for (int j=0; j < (int)scaledBinContent; j++) {
+               if (nOutliers > maxOutliers) break;
+               if ((Hoption.Candle >> 10) & 0x01) { //Draw outliers and "all" values scattered
+                  outliersX[nOutliers] = candlePosition - candleWidth/2. + candleWidth*random.Rndm();
+                  outliersY[nOutliers] = proj->GetBinLowEdge(bin) + proj->GetBinWidth(bin)*random.Rndm();
+               } else { //Draw them in the "candle line"
+                  outliersX[nOutliers] = candlePosition;
+                  if ((int)scaledBinContent == 1) //If there is only one datapoint available put it in the middle of the bin
+                     outliersY[nOutliers] = proj->GetBinCenter(bin);
+                  else //If there is more than one datapoint scatter it along the bin, otherwise all marker would be (invisibly) stacked on top of each other
+                     outliersY[nOutliers] = proj->GetBinLowEdge(bin) + proj->GetBinWidth(bin)*random.Rndm();
+               }
+               if (swapXY) {
+                  //Swap X and Y
+                  Double_t keepCurrently;
+                  keepCurrently = outliersX[nOutliers];
+                  outliersX[nOutliers] = outliersY[nOutliers];
+                  outliersY[nOutliers] = keepCurrently;
+               }
+               // Continue means, that nOutliers is not increased, so that value will not be shown
+               if (doLogX) {
+                  if (outliersX[nOutliers] > 0) outliersX[nOutliers] = TMath::Log10(outliersX[nOutliers]); else continue;
+               }
+               if (doLogY) {
+                  if (outliersY[nOutliers] > 0) outliersY[nOutliers] = TMath::Log10(outliersY[nOutliers]); else continue;
+               }
+               nOutliers++;
+            }
+         }
+         if (nOutliers > maxOutliers) { //Should never happen, due to myScale!!!
+            Error ("PaintCandlePlot","Not possible to draw all outliers.");
+            break;
+         }
+      }
+      fH->SetMarkerColor(fH->GetLineColor());
+      fH->TAttMarker::Modify();
+      if ((Hoption.Candle >> 10) & 0x01) { //Draw outliers and "all" values scattered
+         fH->SetMarkerStyle(0);
+      } else {
+         fH->SetMarkerStyle(5);
+      }
+      fH->TAttMarker::Modify();
+      gPad->PaintPolyMarker(nOutliers,outliersX, outliersY);
+   }
+
+   // Set everything back to original
+   fH->SetFillStyle(saveFill);
+   fH->SetFillColor(saveColor);
+   fH->SetLineStyle(saveLine);
+   fH->SetMarkerStyle(saveMarker);
+   fH->SetLineWidth(saveWidth);
+   fH->TAttFill::Modify();
+   fH->TAttLine::Modify();
+   fH->TAttMarker::Modify();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// [Control function to draw a 2D histogram as a candle (box) plot.](#HP14)
 
 void THistPainter::PaintCandlePlot(Option_t *)
 {
-   Double_t x,y,w;
-   Double_t m1 = 0.055, m2 = 0.25;
-   Double_t xpm[1], ypm[1];
-
-   TH1D *hp;
+   TH1D *hproj;
    TH2D *h2 = (TH2D*)fH;
 
-   Double_t *quantiles = new Double_t[5];
-   quantiles[0]=0.; quantiles[1]=0.; quantiles[2] = 0.; quantiles[3] = 0.; quantiles[4] = 0.;
-   Double_t *prob = new Double_t[5];
-   prob[0]=1E-15; prob[1]=0.25; prob[2]=0.5; prob[3]=0.75; prob[4]=1-1E-15;
+   Bool_t swapXY = ((Hoption.Candle >> 1) & 0x01);
+   const Double_t standardCandleWidth = 0.66;
 
-   Style_t fillsav   = h2->GetFillStyle();
-   Style_t colsav    = h2->GetFillColor();
-   Style_t linesav   = h2->GetLineStyle();
-   Style_t widthsav  = h2->GetLineWidth();
-   Style_t pmssav    = h2->GetMarkerStyle();
-
-   if (h2->GetFillColor() == 0)  h2->SetFillStyle(0);
-
-   h2->SetMarkerStyle(24);
-   h2->TAttLine::Modify();
-   h2->TAttFill::Modify();
-   h2->TAttMarker::Modify();
-
-   // Candle plot along X
-   Double_t xb1,xb2,yb1,yb2,xl1,xl2,yl1,yl2,xl3,yl3,xp1,yp1;
-   if (Hoption.Candle == 1) {
+   if (!swapXY) { // Vertical candle
       for (Int_t i=Hparam.xfirst; i<=Hparam.xlast; i++) {
-         x = fXaxis->GetBinLowEdge(i);
-         w = fXaxis->GetBinWidth(i);
-         hp = h2->ProjectionY("_px", i, i);
-         if (hp->GetEntries() !=0) {
-            hp->GetQuantiles(5, quantiles, prob);
-            yp1 = hp->GetMean();
-            xb1 = x+m1*w;
-            xb2 = x+(1-m1)*w;
-            yb1 = quantiles[1];
-            yb2 = quantiles[3];
-            xl1 = x+m2*w;
-            xl2 = x+(1-m2)*w;
-            yl1 = quantiles[0];
-            yl2 = quantiles[4];
-            yl3 = quantiles[2];
-            xp1 = x+w/2.;
-            if (Hoption.Logy) {
-               if (yb1 > 0)  yb1  = TMath::Log10(yb1); else continue;
-               if (yb2 > 0)  yb2  = TMath::Log10(yb2); else continue;
-               if (yl1 > 0)  yl1  = TMath::Log10(yl1); else continue;
-               if (yl2 > 0)  yl2  = TMath::Log10(yl2); else continue;
-               if (yl3 > 0)  yl3  = TMath::Log10(yl3); else continue;
-               if (yp1 > 0)  yp1  = TMath::Log10(yp1); else continue;
-            }
-            if (Hoption.Logx) {
-               if (xb1 > 0)  xb1  = TMath::Log10(xb1); else continue;
-               if (xb2 > 0)  xb2  = TMath::Log10(xb2); else continue;
-               if (xl1 > 0)  xl1  = TMath::Log10(xl1); else continue;
-               if (xl2 > 0)  xl2  = TMath::Log10(xl2); else continue;
-               if (xp1 > 0)  xp1  = TMath::Log10(xp1); else continue;
-            }
-            ypm[0] = yp1;
-            h2->SetLineStyle(1);
-            h2->TAttLine::Modify();
-            gPad->PaintBox (xb1, yb1, xb2, yb2);
-            gPad->PaintLine(xl1, yl1, xl2, yl1);
-            gPad->PaintLine(xl1, yl2, xl2, yl2);
-            h2->SetLineWidth(3*widthsav);
-            h2->TAttLine::Modify();
-            gPad->PaintLine(xb1, yl3, xb2, yl3);
-            h2->SetLineWidth(widthsav);
-            h2->TAttLine::Modify();
-
-            h2->SetLineStyle(2);
-            h2->TAttLine::Modify();
-            gPad->PaintLine(xp1, yb2, xp1, yl2);
-            gPad->PaintLine(xp1, yl1, xp1, yb1);
-
-            xpm[0] = xp1;
-            gPad->PaintPolyMarker(1,xpm,ypm);
+         Double_t binPosX = fXaxis->GetBinLowEdge(i);
+         Double_t binWidth = fXaxis->GetBinWidth(i);
+         hproj = h2->ProjectionY("_px", i, i);
+         if (hproj->GetEntries() !=0) {
+            Double_t width = fH->GetBarWidth();
+            Double_t offset = fH->GetBarOffset()*binWidth;
+            if (width > 0.999) width = standardCandleWidth;
+            PaintOneCandle(binPosX+binWidth/2. + offset ,width*binWidth,hproj);
          }
       }
-   // Candle plot along Y
-   } else {
+   } else { // Horizontal candle
       for (Int_t i=Hparam.yfirst; i<=Hparam.ylast; i++) {
-         y = fYaxis->GetBinLowEdge(i);
-         w = fYaxis->GetBinWidth(i);
-         hp = h2->ProjectionX("_py", i, i);
-         if (hp->GetEntries() !=0) {
-            hp->GetQuantiles(5, quantiles, prob);
-            xp1 = hp->GetMean();
-            yb1 = y+m1*w;
-            yb2 = y+(1-m1)*w;
-            xb1 = quantiles[1];
-            xb2 = quantiles[3];
-            yl1 = y+m2*w;
-            yl2 = y+(1-m2)*w;
-            xl1 = quantiles[0];
-            xl2 = quantiles[4];
-            xl3 = quantiles[2];
-            yp1 = y+w/2.;
-            if (Hoption.Logx) {
-               if (xb1 > 0)  xb1  = TMath::Log10(xb1); else continue;
-               if (xb2 > 0)  xb2  = TMath::Log10(xb2); else continue;
-               if (xl1 > 0)  xl1  = TMath::Log10(xl1); else continue;
-               if (xl2 > 0)  xl2  = TMath::Log10(xl2); else continue;
-               if (xl3 > 0)  xl3  = TMath::Log10(xl3); else continue;
-               if (xp1 > 0)  xp1  = TMath::Log10(xp1); else continue;
-            }
-            if (Hoption.Logy) {
-               if (yb1 > 0)  yb1  = TMath::Log10(yb1); else continue;
-               if (yb2 > 0)  yb2  = TMath::Log10(yb2); else continue;
-               if (yl1 > 0)  yl1  = TMath::Log10(yl1); else continue;
-               if (yl2 > 0)  yl2  = TMath::Log10(yl2); else continue;
-               if (yp1 > 0)  yp1  = TMath::Log10(yp1); else continue;
-            }
-            xpm[0] = xp1;
-            h2->SetLineStyle(1);
-            h2->TAttLine::Modify();
-
-            gPad->PaintBox (xb1, yb1, xb2, yb2);
-            gPad->PaintLine(xl1, yl1, xl1, yl2);
-            gPad->PaintLine(xl2, yl1, xl2, yl2);
-
-            h2->SetLineWidth(3*widthsav);
-            h2->TAttLine::Modify();
-            gPad->PaintLine(xl3, yb1, xl3, yb2);
-
-            h2->SetLineWidth(widthsav);
-            h2->TAttLine::Modify();
-
-            h2->SetLineStyle(2);
-            h2->TAttLine::Modify();
-            gPad->PaintLine(xb2, yp1, xl2, yp1);
-            gPad->PaintLine(xl1, yp1, xb1, yp1);
-
-            ypm[0] = yp1;
-            gPad->PaintPolyMarker(1,xpm,ypm);
+         Double_t binPosY = fYaxis->GetBinLowEdge(i);
+         Double_t binWidth = fYaxis->GetBinWidth(i);
+         hproj = h2->ProjectionX("_py", i, i);
+         if (hproj->GetEntries() !=0) {
+            Double_t width = fH->GetBarWidth();
+            Double_t offset = fH->GetBarOffset()*binWidth;
+            if (width > 0.999) width = standardCandleWidth;
+            PaintOneCandle(binPosY+binWidth/2. + offset ,width*binWidth,hproj);
          }
       }
    }
-
-   h2->SetFillStyle(fillsav);
-   h2->SetFillColor(colsav);
-   h2->SetLineStyle(linesav);
-   h2->SetMarkerStyle(pmssav);
-   h2->SetLineWidth(widthsav);
-   h2->TAttFill::Modify();
-   h2->TAttLine::Modify();
-   h2->TAttMarker::Modify();
-
-   delete [] prob;
-   delete [] quantiles;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4678,9 +5199,290 @@ void THistPainter::PaintViolinPlot(Option_t *)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// [Control function to draw a 2D histogram as a color plot.](#HP14)
+/// Returns the rendering regions for an axis to use in the COL2 option
+///
+/// The algorithm analyses the size of the axis compared to the size of
+/// the rendering region. It figures out the boundaries to use for each color
+/// of the rendering region. Only one axis is computed here.
+///
+/// This allows for a single computation of the boundaries before iterating
+/// through all of the bins.
+///
+/// \param pAxis     the axis to consider
+/// \param nPixels   the number of pixels to render axis into
+/// \param isLog     whether the axis is log scale
 
-void THistPainter::PaintColorLevels(Option_t *)
+std::vector<THistRenderingRegion>
+THistPainter::ComputeRenderingRegions(TAxis* pAxis, Int_t nPixels, Bool_t isLog)
+{
+   std::vector<THistRenderingRegion> regions;
+
+   enum STRATEGY { Bins, Pixels } strategy;
+
+   Int_t nBins = (pAxis->GetLast() - pAxis->GetFirst() + 1);
+
+   if (nBins >= nPixels) {
+      // more bins than pixels... we should loop over pixels and sample
+      strategy = Pixels;
+   } else {
+      // fewer bins than pixels... we should loop over bins
+      strategy = Bins;
+   }
+
+   if (isLog) {
+
+      Double_t xMin = pAxis->GetBinLowEdge(pAxis->GetFirst());
+      Int_t binOffset=0;
+      while (xMin <= 0 && ((pAxis->GetFirst()+binOffset) != pAxis->GetLast()) ) {
+         binOffset++;
+         xMin = pAxis->GetBinLowEdge(pAxis->GetFirst()+binOffset);
+      }
+      if (xMin <= 0) {
+         // this should cause an error if we have
+         return regions;
+      }
+      Double_t xMax = pAxis->GetBinUpEdge(pAxis->GetLast());
+
+      if (strategy == Bins) {
+         // logarithmic plot. we find the pixel for the bin
+         // pixel = eta * log10(V) - alpha
+         //  where eta = nPixels/(log10(Vmax)-log10(Vmin))
+         //  and alpha = nPixels*log10(Vmin)/(log10(Vmax)-log10(Vmin))
+         // and V is axis value
+         Double_t eta = (nPixels-1.0)/(TMath::Log10(xMax) - TMath::Log10(xMin));
+         Double_t offset = -1.0 * eta * TMath::Log10(xMin);
+
+         for (Int_t bin=pAxis->GetFirst()+binOffset; bin<=pAxis->GetLast(); bin++) {
+
+            // linear plot. we simply need to find the appropriate bin
+            // for the
+            Double_t xLowValue  = pAxis->GetBinLowEdge(bin);
+            Double_t xUpValue   = pAxis->GetBinUpEdge(bin);
+            Int_t xPx0          = eta*TMath::Log10(xLowValue)+ offset;
+            Int_t xPx1          = eta*TMath::Log10(xUpValue) + offset;
+            THistRenderingRegion region = {std::make_pair(xPx0, xPx1),
+                                           std::make_pair(bin, bin+1)};
+            regions.push_back(region);
+         }
+
+      } else {
+
+         // loop over pixels
+
+         Double_t beta = (TMath::Log10(xMax) - TMath::Log10(xMin))/(nPixels-1.0);
+
+         for (Int_t pixelIndex=0; pixelIndex<(nPixels-1); pixelIndex++) {
+            // linear plot
+            Int_t binLow  = pAxis->FindBin(xMin*TMath::Power(10.0, beta*pixelIndex));
+            Int_t binHigh = pAxis->FindBin(xMin*TMath::Power(10.0, beta*(pixelIndex+1)));
+            THistRenderingRegion region = { std::make_pair(pixelIndex, pixelIndex+1),
+               std::make_pair(binLow, binHigh)};
+            regions.push_back(region);
+         }
+      }
+   } else {
+      // standard linear plot
+
+      if (strategy == Bins) {
+         // loop over bins
+         for (Int_t bin=pAxis->GetFirst(); bin<=pAxis->GetLast(); bin++) {
+
+            // linear plot. we simply need to find the appropriate bin
+            // for the
+            Int_t xPx0     = ((bin - pAxis->GetFirst()) * nPixels)/nBins;
+            Int_t xPx1     = xPx0 + nPixels/nBins;
+
+            // make sure we don't compute beyond our bounds
+            if (xPx1>= nPixels) xPx1 = nPixels-1;
+
+            THistRenderingRegion region = {std::make_pair(xPx0, xPx1),
+               std::make_pair(bin, bin+1)};
+            regions.push_back(region);
+         }
+      } else {
+         // loop over pixels
+         for (Int_t pixelIndex=0; pixelIndex<nPixels-1; pixelIndex++) {
+            // linear plot
+            Int_t binLow  = (nBins*pixelIndex)/nPixels + pAxis->GetFirst();
+            Int_t binHigh = binLow + nBins/nPixels;
+            THistRenderingRegion region = { std::make_pair(pixelIndex, pixelIndex+1),
+                                            std::make_pair(binLow, binHigh)};
+            regions.push_back(region);
+         }
+      }
+   }
+
+   return regions;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// [Rendering scheme for the COL2 and COLZ2 options] (#HP14)
+
+void THistPainter::PaintColorLevelsFast(Option_t*)
+{
+
+   if (Hoption.System != kCARTESIAN) {
+     Error("THistPainter::PaintColorLevelsFast(Option_t*)",
+           "Only cartesian coordinates supported by 'COL2' option. Using 'COL' option instead.");
+     PaintColorLevels(nullptr);
+     return;
+   }
+
+   Double_t z;
+
+   Double_t zmin = fH->GetMinimum();
+   Double_t zmax = fH->GetMaximum();
+
+   Double_t dz = zmax - zmin;
+   if (dz <= 0) { // Histogram filled with a constant value
+      zmax += 0.1*TMath::Abs(zmax);
+      zmin -= 0.1*TMath::Abs(zmin);
+      dz = zmax - zmin;
+   }
+
+   if (Hoption.Logz) {
+      if (zmin > 0) {
+         zmin = TMath::Log10(zmin);
+         zmax = TMath::Log10(zmax);
+         dz = zmax - zmin;
+      } else {
+         Error("THistPainter::PaintColorLevelsFast(Option_t*)",
+               "Cannot plot logz because bin content is less than 0.");
+         return;
+      }
+   }
+
+   // Initialize the levels on the Z axis
+   Int_t ndiv   = fH->GetContour();
+   if (ndiv == 0 ) {
+      ndiv = gStyle->GetNumberContours();
+      fH->SetContour(ndiv);
+   }
+   std::vector<Double_t> colorBounds(ndiv);
+   std::vector<Double_t> contours(ndiv, 0);
+   if (fH->TestBit(TH1::kUserContour) == 0) {
+      fH->SetContour(ndiv);
+   } else {
+      fH->GetContour(contours.data());
+   }
+
+   Double_t step = 1.0/ndiv;
+   for (Int_t i=0; i<ndiv; ++i) {
+      colorBounds[i] = step*i;
+   }
+
+   auto pFrame = gPad->GetFrame();
+   Int_t px0 = gPad->XtoPixel(pFrame->GetX1());
+   Int_t px1 = gPad->XtoPixel(pFrame->GetX2());
+   Int_t py0 = gPad->YtoPixel(pFrame->GetY1());
+   Int_t py1 = gPad->YtoPixel(pFrame->GetY2());
+   Int_t nXPixels = px1-px0;
+   Int_t nYPixels = py0-py1; // y=0 is at the top of the screen
+
+   std::vector<Double_t> buffer(nXPixels*nYPixels, 0);
+
+   auto xRegions = ComputeRenderingRegions(fXaxis, nXPixels, Hoption.Logx);
+   auto yRegions = ComputeRenderingRegions(fYaxis, nYPixels, Hoption.Logy);
+   if (xRegions.size() == 0 || yRegions.size() == 0) {
+      Error("THistPainter::PaintColorLevelFast(Option_t*)",
+            "Encountered error while computing rendering regions.");
+      return;
+   }
+
+   Bool_t minExists = kFALSE;
+   Bool_t maxExists = kFALSE;
+   Double_t minValue = 1.;
+   Double_t maxValue = 0.;
+   for (auto& yRegion : yRegions) {
+     for (auto& xRegion : xRegions ) {
+
+       const auto& xBinRange = xRegion.fBinRange;
+       const auto& yBinRange = yRegion.fBinRange;
+
+       // sample the range
+       z = fH->GetBinContent(xBinRange.second-1, yBinRange.second-1);
+
+       if (Hoption.Logz) {
+         if (z > 0) z = TMath::Log10(z);
+         else       z = zmin;
+       }
+
+       if (fH->TestBit(TH1::kUserContour) == 1) {
+          // contours are absolute values
+          auto index  = TMath::BinarySearch(contours.size(), contours.data(), z);
+          z = colorBounds[index];
+       } else {
+          Int_t index = 0;
+          if (dz != 0) {
+             index = 0.001 + ((z - zmin)/dz)*ndiv;
+          }
+
+          if (index == static_cast<Int_t>(colorBounds.size())) {
+             index--;
+          }
+
+          // Do a little bookkeeping to use later for getting libAfterImage to produce
+          // the correct colors
+          if (index == 0) {
+             minExists = kTRUE;
+          } else if (index == static_cast<Int_t>(colorBounds.size()-1)) {
+             maxExists = kTRUE;
+          }
+
+          z = colorBounds[index];
+
+          if (z < minValue) {
+             minValue = z;
+          }
+          if (z > maxValue) {
+             maxValue = z;
+          }
+       }
+
+       // fill in the actual pixels
+       const auto& xPixelRange = xRegion.fPixelRange;
+       const auto& yPixelRange = yRegion.fPixelRange;
+       for (Int_t xPx = xPixelRange.first; xPx <= xPixelRange.second; ++xPx) {
+         for (Int_t yPx = yPixelRange.first; yPx <= yPixelRange.second; ++yPx) {
+           Int_t pixel = yPx*nXPixels + xPx;
+           buffer[pixel] = z;
+         }
+       }
+     } // end px loop
+   } // end py loop
+
+   // This is a bit of a hack to ensure that we span the entire color range and
+   // don't screw up the colors for a sparse histogram. No one will notice that I set a
+   // single pixel on the edge of the image to a different color. This is even more
+   // true because the chosen pixels will be covered by the axis.
+   if (minValue != maxValue) {
+      if ( !minExists) {
+         buffer.front() = 0;
+      }
+
+      if ( !maxExists) {
+         buffer[buffer.size()-nXPixels] = 0.95;
+      }
+   }
+
+   // Generate the TImage
+   TImagePalette* pPalette = TImagePalette::CreateCOLPalette(ndiv);
+   TImage* pImage = TImage::Create();
+   pImage->SetImageQuality(TAttImage::kImgBest);
+   pImage->SetImage(buffer.data(), nXPixels, nYPixels, pPalette);
+   delete pPalette;
+
+   Window_t wid = static_cast<Window_t>(gVirtualX->GetWindowID(gPad->GetPixmapID()));
+   pImage->PaintImage(wid, px0, py1, 0, 0, nXPixels, nYPixels);
+   delete pImage;
+
+   if (Hoption.Zscale) PaintPalette();
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// [Control function to draw a 2D histogram as a color plot.](#HP14)
+void THistPainter::PaintColorLevels(Option_t*)
 {
    Double_t z, zc, xk, xstep, yk, ystep, xlow, xup, ylow, yup;
 
@@ -4816,7 +5618,6 @@ void THistPainter::PaintColorLevels(Option_t *)
 
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// [Control function to draw a 2D histogram as a contour plot.](#HP16)
 
@@ -4897,8 +5698,6 @@ void THistPainter::PaintContour(Option_t *option)
    if (fH->TestBit(TH1::kUserContour) == 0) fH->SetContour(ncontour);
 
    for (i=0;i<ncontour;i++) levels[i] = fH->GetContourLevelPad(i);
-   //for (i=0;i<ncontour;i++)
-   //   levels[i] = Hparam.zmin+(Hparam.zmax-Hparam.zmin)/ncontour*i;
    Int_t linesav   = fH->GetLineStyle();
    Int_t colorsav  = fH->GetLineColor();
    Int_t fillsav  = fH->GetFillColor();
@@ -5160,7 +5959,6 @@ theEND:
    delete [] levels;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill the matrix `xarr` and `yarr` for Contour Plot.
 
@@ -5217,7 +6015,6 @@ Int_t THistPainter::PaintContourLine(Double_t elev1, Int_t icont1, Double_t x1, 
    }
    return icount;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// [Draw 1D histograms error bars.](#HP09)
@@ -5495,7 +6292,6 @@ L30:
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw 2D histograms errors.
 
@@ -5657,7 +6453,6 @@ void THistPainter::Paint2DErrors(Option_t *)
    delete fLego; fLego = 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate range and clear pad (canvas).
 
@@ -5680,7 +6475,6 @@ void THistPainter::PaintFrame()
    if (!gPad->PadInSelectionMode() && !gPad->PadInHighlightMode())
       gPad->PaintPadFrame(Hparam.xmin,Hparam.ymin,Hparam.xmax,Hparam.ymax);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ///  [Paint functions associated to an histogram.](#HP28")
@@ -5721,7 +6515,6 @@ void THistPainter::PaintFunction(Option_t *)
       padsave->cd();
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// [Control routine to draw 1D histograms](#HP01b)
@@ -5865,7 +6658,6 @@ void THistPainter::PaintHist(Option_t *)
    htype=oldhtype;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// [Control function to draw a 3D histograms.](#HP01d)
 
@@ -5944,7 +6736,6 @@ void THistPainter::PaintH3(Option_t *option)
    }
 
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute histogram parameters used by the drawing routines.
@@ -6182,7 +6973,6 @@ Int_t THistPainter::PaintInit()
    return 1;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute histogram parameters used by the drawing routines for a rotated pad.
 
@@ -6348,7 +7138,6 @@ Int_t THistPainter::PaintInitH()
    return 1;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// [Control function to draw a 3D histogram with Iso Surfaces.](#HP25)
 
@@ -6466,7 +7255,6 @@ void THistPainter::PaintH3Iso()
    delete [] y;
    delete [] z;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// [Control function to draw a 2D histogram as a lego plot.](#HP17)
@@ -6677,7 +7465,6 @@ void THistPainter::PaintLego(Option_t *)
    delete fLego; fLego = 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw the axis for legos and surface plots.
 
@@ -6860,7 +7647,6 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
    //fH->SetLineStyle(1);  /// otherwise fEdgeStyle[i] gets overwritten!
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// [Paint the color palette on the right side of the pad.](#HP22)
 
@@ -6881,6 +7667,8 @@ void THistPainter::PaintPalette()
             delete palette; palette = 0;
          }
       }
+      // make sure the histogram member of the palette is setup correctly. It may not be after a Clone()
+      if (palette && !palette->GetHistogram()) palette->SetHistogram(fH);
    }
 
    if (!palette) {
@@ -6897,7 +7685,6 @@ void THistPainter::PaintPalette()
       palette->Paint();
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// [Control function to draw a 2D histogram as a scatter plot.](#HP11)
@@ -7012,7 +7799,6 @@ void THistPainter::PaintScatterPlot(Option_t *option)
    if (Hoption.Zscale) PaintPalette();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function to paint special objects like vectors and matrices.
 /// This function is called via `gROOT->ProcessLine` to paint these objects
@@ -7053,7 +7839,6 @@ void THistPainter::PaintSpecialObjects(const TObject *obj, Option_t *option)
 
    TH1::AddDirectory(status);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// [Draw the statistics box for 1D and profile histograms.](#HP07)
@@ -7278,7 +8063,6 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
    stats->Paint();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// [Draw the statistics box for 2D histograms.](#HP07)
 
@@ -7498,7 +8282,6 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
    stats->Paint();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// [Draw the statistics box for 3D histograms.](#HP07)
 
@@ -7696,28 +8479,6 @@ void THistPainter::PaintStat3(Int_t dostat, TF1 *fit)
    if (print_under || print_over) {
       // no underflow - overflow printing for a 3D histogram
       // one would need a 3D table
-//       //get 3*3 under/overflows for 2d hist
-//       Double_t unov[9];
-
-//       unov[0] = h3->Integral(0,h3->GetXaxis()->GetFirst()-1,h3->GetYaxis()->GetLast()+1,h3->GetYaxis()->GetNbins()+1);
-//       unov[1] = h3->Integral(h3->GetXaxis()->GetFirst(),h3->GetXaxis()->GetLast(),h3->GetYaxis()->GetLast()+1,h3->GetYaxis()->GetNbins()+1);
-//       unov[2] = h3->Integral(h3->GetXaxis()->GetLast()+1,h3->GetXaxis()->GetNbins()+1,h3->GetYaxis()->GetLast()+1,h3->GetYaxis()->GetNbins()+1);
-//       unov[3] = h3->Integral(0,h3->GetXaxis()->GetFirst()-1,h3->GetYaxis()->GetFirst(),h3->GetYaxis()->GetLast());
-//       unov[4] = h3->Integral(h3->GetXaxis()->GetFirst(),h3->GetXaxis()->GetLast(),h3->GetYaxis()->GetFirst(),h3->GetYaxis()->GetLast());
-//       unov[5] = h3->Integral(h3->GetXaxis()->GetLast()+1,h3->GetXaxis()->GetNbins()+1,h3->GetYaxis()->GetFirst(),h3->GetYaxis()->GetLast());
-//       unov[6] = h3->Integral(0,h3->GetXaxis()->GetFirst()-1,0,h3->GetYaxis()->GetFirst()-1);
-//       unov[7] = h3->Integral(h3->GetXaxis()->GetFirst(),h3->GetXaxis()->GetLast(),0,h3->GetYaxis()->GetFirst()-1);
-//       unov[8] = h3->Integral(h3->GetXaxis()->GetLast()+1,h3->GetXaxis()->GetNbins()+1,0,h3->GetYaxis()->GetFirst()-1);
-
-//       sprintf(t, " %7d|%7d|%7d\n", (Int_t)unov[0], (Int_t)unov[1], (Int_t)unov[2]);
-//       stats->AddText(t);
-//       if (h3->GetEntries() < 1e7)
-//          sprintf(t, " %7d|%7d|%7d\n", (Int_t)unov[3], (Int_t)unov[4], (Int_t)unov[5]);
-//       else
-//          sprintf(t, " %7d|%14.7g|%7d\n", (Int_t)unov[3], (Float_t)unov[4], (Int_t)unov[5]);
-//       stats->AddText(t);
-//       sprintf(t, " %7d|%7d|%7d\n", (Int_t)unov[6], (Int_t)unov[7], (Int_t)unov[8]);
-//       stats->AddText(t);
    }
 
    // Draw Fit parameters
@@ -7737,7 +8498,6 @@ void THistPainter::PaintStat3(Int_t dostat, TF1 *fit)
    if (!done) fFunctions->Add(stats);
    stats->Paint();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// [Control function to draw a 2D histogram as a surface plot.](#HP18)
@@ -7988,7 +8748,6 @@ void THistPainter::PaintSurface(Option_t *)
    delete fLego; fLego = 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Control function to draw a table using Delaunay triangles.
 
@@ -8089,7 +8848,6 @@ void THistPainter::PaintTriangles(Option_t *option)
    delete fLego; fLego = 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Define the color levels used to paint legos, surfaces etc..
 
@@ -8117,7 +8875,6 @@ void THistPainter::DefineColorLevels(Int_t ndivz)
    delete [] colorlevel;
    delete [] funlevel;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// [Control function to draw 2D/3D histograms (tables).](#HP01c)
@@ -8161,7 +8918,10 @@ void THistPainter::PaintTable(Option_t *option)
          if (Hoption.Scat)         PaintScatterPlot(option);
          if (Hoption.Arrow)        PaintArrows(option);
          if (Hoption.Box)          PaintBoxes(option);
-         if (Hoption.Color)        PaintColorLevels(option);
+         if (Hoption.Color) {
+            if (Hoption.Color == 3) PaintColorLevelsFast(option);
+            else                    PaintColorLevels(option);
+         }
          if (Hoption.Contour)      PaintContour(option);
          if (Hoption.Text)         PaintText(option);
          if (Hoption.Error >= 100) Paint2DErrors(option);
@@ -8199,7 +8959,6 @@ void THistPainter::PaintTable(Option_t *option)
       }
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Control function to draw a TH2Poly bins' contours.
@@ -8261,7 +9020,6 @@ void THistPainter::PaintTH2PolyBins(Option_t *option)
       }
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// [Control function to draw a TH2Poly as a color plot.](#HP20a)
@@ -8358,7 +9116,6 @@ void THistPainter::PaintTH2PolyColorLevels(Option_t *)
    }
    if (Hoption.Zscale) PaintPalette();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// [Control function to draw a TH2Poly as a scatter plot.](#HP20a)
@@ -8473,7 +9230,6 @@ void THistPainter::PaintTH2PolyScatterPlot(Option_t *)
    PaintTH2PolyBins("l");
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// [Control function to draw a TH2Poly as a text plot.](#HP20a)
 
@@ -8532,7 +9288,6 @@ void THistPainter::PaintTH2PolyText(Option_t *)
 
    PaintTH2PolyBins("l");
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// [Control function to draw a 1D/2D histograms with the bin values.](#HP15)
@@ -8630,7 +9385,6 @@ void THistPainter::PaintText(Option_t *)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// [Control function to draw a 3D implicit functions.](#HP27)
 
@@ -8689,7 +9443,6 @@ void THistPainter::PaintTF3()
    delete axis;
    delete fLego; fLego = 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw the histogram title
@@ -8778,7 +9531,6 @@ void THistPainter::PaintTitle()
    if(!gPad->IsEditable()) delete ptitle;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Process message `mess`.
 
@@ -8797,7 +9549,6 @@ void THistPainter::ProcessMessage(const char *mess, const TObject *obj)
       TPainter3dAlgorithms::SetF3ClippingBoxOn(xclip,yclip,zclip);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function.
@@ -8834,7 +9585,6 @@ Int_t THistPainter::ProjectAitoff2xy(Double_t l, Double_t b, Double_t &Al, Doubl
    return 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function
 ///
@@ -8857,7 +9607,6 @@ Int_t THistPainter::ProjectMercator2xy(Double_t l, Double_t b, Double_t &Al, Dou
    return 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function code from  Ernst-Jan Buis
 
@@ -8869,7 +9618,6 @@ Int_t THistPainter::ProjectSinusoidal2xy(Double_t l, Double_t b, Double_t &Al, D
    return 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function code from  Ernst-Jan Buis
 
@@ -8880,7 +9628,6 @@ Int_t THistPainter::ProjectParabolic2xy(Double_t l, Double_t b, Double_t &Al, Do
    Ab = 180*TMath::Sin(b*TMath::DegToRad()/3);
    return 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Recompute the histogram range following graphics operations.
@@ -8993,7 +9740,6 @@ void THistPainter::RecalculateRange()
    gPad->RangeAxis(xmin, ymin, xmax, ymax);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set current histogram to `h`
 
@@ -9007,7 +9753,6 @@ void THistPainter::SetHistogram(TH1 *h)
    fZaxis = h->GetZaxis();
    fFunctions = fH->GetListOfFunctions();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize various options to draw 2D histograms.
@@ -9186,7 +9931,6 @@ LZMIN:
    return 1;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// This function returns the best format to print the error value (e)
 /// knowing the parameter value (v) and the format (f) used to print it.
@@ -9241,7 +9985,6 @@ const char * THistPainter::GetBestFormat(Double_t v, Double_t e, const char *f)
    return ef;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set projection.
 
@@ -9268,7 +10011,6 @@ void THistPainter::SetShowProjection(const char *option,Int_t nbins)
    gPad->SetName(Form("c_%lx_projection_%d", (ULong_t)fH, fShowProjection));
    gPad->SetGrid();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Show projection onto X.
@@ -9320,7 +10062,8 @@ void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py)
    TH1D *hp = ((TH2*)fH)->ProjectionX(prjName, biny1, biny2);
    if (hp) {
       hp->SetFillColor(38);
-      // apply a patch from Oliver Freyermuth to set the title in the projection using the range of the projected Y values
+      // apply a patch from Oliver Freyermuth to set the title in the projection
+      // using the range of the projected Y values
       if (biny1 == biny2) {
          Double_t valueFrom   = fH->GetYaxis()->GetBinLowEdge(biny1);
          Double_t valueTo     = fH->GetYaxis()->GetBinUpEdge(biny1);
@@ -9351,7 +10094,6 @@ void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py)
       padsav->cd();
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Show projection onto Y.
@@ -9403,7 +10145,8 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
    TH1D *hp = ((TH2*)fH)->ProjectionY(prjName, binx1, binx2);
    if (hp) {
       hp->SetFillColor(38);
-      // apply a patch from Oliver Freyermuth to set the title in the projection using the range of the projected X values
+      // apply a patch from Oliver Freyermuth to set the title in the projection
+      // using the range of the projected X values
       if (binx1 == binx2) {
          Double_t valueFrom   = fH->GetXaxis()->GetBinLowEdge(binx1);
          Double_t valueTo     = fH->GetXaxis()->GetBinUpEdge(binx1);
@@ -9434,7 +10177,6 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
       padsav->cd();
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Show projection (specified by `fShowProjection`) of a `TH3`.
@@ -10264,3 +11006,4 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
    c->Update();
    padsav->cd();
 }
+

@@ -31,7 +31,7 @@
 #include <cstdio>
 
 // Fragment copied from LLVM's raw_ostream.cpp
-#if defined(_MSC_VER)
+#if defined(LLVM_ON_WIN32)
 #ifndef STDIN_FILENO
 # define STDIN_FILENO 0
 #endif
@@ -204,7 +204,7 @@ static std::string executePrintValue(const Value &V, const T &val) {
     assert(!canParseTypeName(*Interp, getTypeString(V))
            && "printValue failed on a valid type name.");
 
-    return "Error in ValuePrinter: missing value string.";
+    return "ERROR in cling::executePrintValue(): missing value string.";
   }
 
   return *(std::string *) printValueV.getPtr();

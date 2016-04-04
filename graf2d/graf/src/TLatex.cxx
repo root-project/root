@@ -1312,8 +1312,13 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, 
       char letter = '\243' + opSpec;
       if(opSpec == 75 || opSpec == 76) {
          newSpec.fFont = GetTextFont();
-         if (opSpec == 75) letter = '\305'; // AA Angstroem
-         if (opSpec == 76) letter = '\345'; // aa Angstroem
+         if (gVirtualX->InheritsFrom("TGCocoa")) {
+            if (opSpec == 75) letter = '\201'; // AA Angstroem
+            if (opSpec == 76) letter = '\214'; // aa Angstroem
+         } else {
+            if (opSpec == 75) letter = '\305'; // AA Angstroem
+            if (opSpec == 76) letter = '\345'; // aa Angstroem
+         }
       }
       if(opSpec == 80 || opSpec == 81) {
          if (opSpec == 80) letter = '\042'; // #forall
@@ -2132,13 +2137,25 @@ Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size,
       return 1;
    }
 
+   Bool_t saveb = gPad->IsBatch();
    // Paint the text using TMathText if contains a "\"
    if (strstr(text1,"\\")) {
       TMathText tm;
       tm.SetTextAlign(GetTextAlign());
       tm.SetTextFont(GetTextFont());
       tm.PaintMathText(x, y, angle, size, text1);
-      return 1;
+      // If PDF, paint using TLatex
+      if (gVirtualPS) {
+         if (gVirtualPS->InheritsFrom("TPDF") ||
+             gVirtualPS->InheritsFrom("TSVG")) {
+            newText.ReplaceAll("\\","#");
+            gPad->SetBatch(kTRUE);
+         } else {
+            return 1;
+         }
+      } else {
+         return 1;
+      };
    }
 
    Double_t saveSize = size;
@@ -2200,6 +2217,7 @@ Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size,
       Analyse(x,y,newSpec,text,length);
    }
 
+   gPad->SetBatch(saveb);
    SetTextSize(saveSize);
    SetTextAngle(angle);
    SetTextFont(saveFont);

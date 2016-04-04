@@ -20,7 +20,7 @@
 
 ClassImp(TGeoArb8)
 
-/** \class TGeoArb8 -
+/** \class TGeoArb8
 \ingroup Geometry_classes
 
 An arbitrary trapezoid with less than 8 vertices standing on.

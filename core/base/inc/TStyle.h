@@ -155,6 +155,7 @@ private:
    TString       fFitFormat;         //Printing format for fit parameters
    TString       fPaintTextFormat;   //Printing format for TH2::PaintText
    Float_t       fLineScalePS;       //Line scale factor when drawing lines on Postscript
+   Int_t         fJoinLinePS;        //determines the appearance of joining lines on PostScript
    Double_t      fTimeOffset;        //Time offset to the beginning of an axis
    Bool_t        fIsReading;         //!Set to FALSE when userclass::UseCurrentStyle is called by the style manager
 public:
@@ -292,7 +293,9 @@ public:
    const char      *GetHeaderPS() const {return fHeaderPS.Data();}
    const char      *GetTitlePS()  const {return fTitlePS.Data();}
    const char      *GetLineStyleString(Int_t i=1) const;
+   Int_t            GetJoinLinePS() const {return fJoinLinePS;}
    Float_t          GetLineScalePS() const {return fLineScalePS;}
+
    Bool_t           IsReading() const {return fIsReading;}
    virtual void     Paint(Option_t *option="");
    virtual void     Reset(Option_t *option="");
@@ -303,6 +306,7 @@ public:
    void             SetHatchesLineWidth(Int_t l) {fHatchesLineWidth = l;}
    void             SetHatchesSpacing(Double_t h) {fHatchesSpacing = TMath::Max(0.1,h);}
    void             SetTitlePS(const char *pstitle);
+   void             SetJoinLinePS(Int_t joinline=0) {fJoinLinePS=joinline;}
    void             SetLineScalePS(Float_t scale=3) {fLineScalePS=scale;}
    void             SetLineStyleString(Int_t i, const char *text);
    void             SetNdivisions(Int_t n=510, Option_t *axis="X");
@@ -416,7 +420,7 @@ public:
    void             SavePrimitive(std::ostream &out, Option_t * = "");
    void             SaveSource(const char *filename, Option_t *option=0);
 
-   ClassDef(TStyle, 16);  //A collection of all graphics attributes
+   ClassDef(TStyle, 17);  //A collection of all graphics attributes
 };
 
 

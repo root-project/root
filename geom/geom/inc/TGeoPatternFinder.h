@@ -23,12 +23,12 @@
 
 class TGeoMatrix;
 
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-// TGeoPatternFinder - base finder class for patterns. A pattern is specifying
-//   a division type                                                          //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
+//                                                                             //
+// TGeoPatternFinder - base finder class for patterns. A pattern is specifying //
+// a division type                                                             //
+//                                                                             //
+/////////////////////////////////////////////////////////////////////////////////
 
 class TGeoPatternFinder : public TObject
 {

@@ -14,7 +14,13 @@
 #include "TGeoPolygon.h"
 #include "TGeoManager.h"
 
+/** \class TGeoStateInfo
+\ingroup Geometry_classes
+Statefull info for the current geometry level.
+*/
+
 ClassImp(TGeoStateInfo)
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 

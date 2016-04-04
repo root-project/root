@@ -35,6 +35,7 @@ namespace std {
 
 class TBranch;
 class TTree;
+class TFileCacheRead;
 
 class TTreeCloner {
    TString    fWarningMsg;       //Text of the error message lead to an 'invalid' state
@@ -61,6 +62,10 @@ class TTreeCloner {
    UInt_t     fCloneMethod;      //Indicates which cloning method was selected.
    Long64_t   fToStartEntries;   //Number of entries in the target tree before any addition.
 
+   Int_t           fCacheSize;   //Requested size of the file cache
+   TFileCacheRead *fFileCache;   //File Cache used to reduce the number of individual reads
+   TFileCacheRead *fPrevCache;   //Cache that set before the TTreeCloner ctor for the 'from' TTree if any.
+
    enum ECloneMethod {
       kDefault             = 0,
       kSortBasketsByBranch = 1,
@@ -86,16 +91,20 @@ class TTreeCloner {
    friend class CompareEntry;
 
    void ImportClusterRanges();
+   void CreateCache();
+   UInt_t FillCache(UInt_t from);
+   void RestoreCache();
 
 private:
-   TTreeCloner(const TTreeCloner&);            // Not implemented.
-   TTreeCloner &operator=(const TTreeCloner&); // Not implemented.
+   TTreeCloner(const TTreeCloner&) = delete;
+   TTreeCloner &operator=(const TTreeCloner&) = delete;
 
 public:
    enum EClonerOptions {
       kNone       = 0,
       kNoWarnings = BIT(1),
-      kIgnoreMissingTopLevel = BIT(2)
+      kIgnoreMissingTopLevel = BIT(2),
+      kNoFileCache = BIT(3)
    };
 
    TTreeCloner(TTree *from, TTree *to, Option_t *method, UInt_t options = kNone);
@@ -113,6 +122,7 @@ public:
    Bool_t Exec();
    Bool_t IsValid() { return fIsValid; }
    Bool_t NeedConversion() { return fNeedConversion; }
+   void   SetCacheSize(Int_t size);
    void   SortBaskets();
    void   WriteBaskets();
 

@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/** \class TGeoHalfSpace -
+/** \class TGeoHalfSpace
 \ingroup Geometry_classes
 
 A half-space defined by:

@@ -1,8 +1,8 @@
 
 /* png.c - location for general purpose libpng functions
  *
- * Last changed in libpng 1.2.46 [February 25, 2011]
- * Copyright (c) 1998-2011 Glenn Randers-Pehrson
+ * Last changed in libpng 1.2.54 [November 12, 2015]
+ * Copyright (c) 1998-2015 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -17,7 +17,7 @@
 #include "png.h"
 
 /* Generate a compiler error if there is an old png.h in the search path. */
-typedef version_1_2_50 Your_png_h_is_not_version_1_2_50;
+typedef version_1_2_55 Your_png_h_is_not_version_1_2_55;
 
 /* Version information for C files.  This had better match the version
  * string defined in png.h.
@@ -158,12 +158,16 @@ voidpf /* PRIVATE */
 png_zalloc(voidpf png_ptr, uInt items, uInt size)
 {
    png_voidp ptr;
-   png_structp p=(png_structp)png_ptr;
-   png_uint_32 save_flags=p->flags;
+   png_structp p;
+   png_uint_32 save_flags;
    png_uint_32 num_bytes;
 
    if (png_ptr == NULL)
       return (NULL);
+
+   p=(png_structp)png_ptr;
+   save_flags=p->flags;
+
    if (items > PNG_UINT_32_MAX/size)
    {
      png_warning (p, "Potential overflow in png_zalloc()");
@@ -328,6 +332,8 @@ png_info_init_3(png_infopp ptr_ptr, png_size_t png_info_struct_size)
       png_destroy_struct(info_ptr);
       info_ptr = (png_infop)png_create_struct(PNG_STRUCT_INFO);
       *ptr_ptr = info_ptr;
+      if (info_ptr == NULL)
+         return;
    }
 
    /* Set everything to 0 */
@@ -675,6 +681,7 @@ png_convert_to_rfc1123(png_structp png_ptr, png_timep ptime)
 
    if (png_ptr == NULL)
       return (NULL);
+
    if (png_ptr->time_buffer == NULL)
    {
       png_ptr->time_buffer = (png_charp)png_malloc(png_ptr, (png_uint_32)(29*
@@ -685,7 +692,7 @@ png_convert_to_rfc1123(png_structp png_ptr, png_timep ptime)
    {
       wchar_t time_buf[29];
       wsprintf(time_buf, TEXT("%d %S %d %02d:%02d:%02d +0000"),
-          ptime->day % 32, short_months[(ptime->month - 1) % 12],
+          ptime->day % 32, short_months[(ptime->month - 1U) % 12],
         ptime->year, ptime->hour % 24, ptime->minute % 60,
           ptime->second % 61);
       WideCharToMultiByte(CP_ACP, 0, time_buf, -1, png_ptr->time_buffer,
@@ -696,7 +703,7 @@ png_convert_to_rfc1123(png_structp png_ptr, png_timep ptime)
    {
       char near_time_buf[29];
       png_snprintf6(near_time_buf, 29, "%d %s %d %02d:%02d:%02d +0000",
-          ptime->day % 32, short_months[(ptime->month - 1) % 12],
+          ptime->day % 32, short_months[(ptime->month - 1U) % 12],
           ptime->year, ptime->hour % 24, ptime->minute % 60,
           ptime->second % 61);
       png_memcpy(png_ptr->time_buffer, near_time_buf,
@@ -704,7 +711,7 @@ png_convert_to_rfc1123(png_structp png_ptr, png_timep ptime)
    }
 #else
    png_snprintf6(png_ptr->time_buffer, 29, "%d %s %d %02d:%02d:%02d +0000",
-       ptime->day % 32, short_months[(ptime->month - 1) % 12],
+       ptime->day % 32, short_months[(ptime->month - 1U) % 12],
        ptime->year, ptime->hour % 24, ptime->minute % 60,
        ptime->second % 61);
 #endif
@@ -718,20 +725,20 @@ png_convert_to_rfc1123(png_structp png_ptr, png_timep ptime)
 png_charp PNGAPI
 png_get_copyright(png_structp png_ptr)
 {
-   png_ptr = png_ptr;  /* Silence compiler warning about unused png_ptr */
+   PNG_UNUSED(png_ptr)  /* Silence compiler warning about unused png_ptr */
 #ifdef PNG_STRING_COPYRIGHT
       return PNG_STRING_COPYRIGHT
 #else
 #ifdef __STDC__
    return ((png_charp) PNG_STRING_NEWLINE \
-     "libpng version 1.2.50 - July 10, 2012" PNG_STRING_NEWLINE \
-     "Copyright (c) 1998-2011 Glenn Randers-Pehrson" PNG_STRING_NEWLINE \
+     "libpng version 1.2.55 - December 3, 2015" PNG_STRING_NEWLINE \
+     "Copyright (c) 1998-2015 Glenn Randers-Pehrson" PNG_STRING_NEWLINE \
      "Copyright (c) 1996-1997 Andreas Dilger" PNG_STRING_NEWLINE \
      "Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc." \
      PNG_STRING_NEWLINE);
 #else
-      return ((png_charp) "libpng version 1.2.50 - July 10, 2012\
-      Copyright (c) 1998-2011 Glenn Randers-Pehrson\
+      return ((png_charp) "libpng version 1.2.55 - December 3, 2015\
+      Copyright (c) 1998-2015 Glenn Randers-Pehrson\
       Copyright (c) 1996-1997 Andreas Dilger\
       Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc.");
 #endif
@@ -750,7 +757,7 @@ png_charp PNGAPI
 png_get_libpng_ver(png_structp png_ptr)
 {
    /* Version of *.c files used when building libpng */
-   png_ptr = png_ptr;  /* Silence compiler warning about unused png_ptr */
+   PNG_UNUSED(png_ptr)  /* Silence compiler warning about unused png_ptr */
    return ((png_charp) PNG_LIBPNG_VER_STRING);
 }
 
@@ -758,7 +765,7 @@ png_charp PNGAPI
 png_get_header_ver(png_structp png_ptr)
 {
    /* Version of *.h files used when building libpng */
-   png_ptr = png_ptr;  /* Silence compiler warning about unused png_ptr */
+   PNG_UNUSED(png_ptr)  /* Silence compiler warning about unused png_ptr */
    return ((png_charp) PNG_LIBPNG_VER_STRING);
 }
 
@@ -766,7 +773,7 @@ png_charp PNGAPI
 png_get_header_version(png_structp png_ptr)
 {
    /* Returns longer string containing both version and date */
-   png_ptr = png_ptr;  /* Silence compiler warning about unused png_ptr */
+   PNG_UNUSED(png_ptr) /* Silence compiler warning about unused png_ptr */
 #ifdef __STDC__
    return ((png_charp) PNG_HEADER_VERSION_STRING
 #ifndef PNG_READ_SUPPORTED
@@ -1008,14 +1015,6 @@ png_check_IHDR(png_structp png_ptr,
       png_warning(png_ptr, "Invalid image height in IHDR");
       error = 1;
    }
-
-   if ( width > (PNG_UINT_32_MAX
-                 >> 3)      /* 8-byte RGBA pixels */
-                 - 64       /* bigrowbuf hack */
-                 - 1        /* filter byte */
-                 - 7*8      /* rounding of width to multiple of 8 pixels */
-                 - 8)       /* extra max_pixel_depth pad */
-      png_warning(png_ptr, "Width is too large for libpng to process pixels");
 
    /* Check other values */
    if (bit_depth != 1 && bit_depth != 2 && bit_depth != 4 &&

@@ -16,13 +16,6 @@
 #include "TGeoBBox.h"
 #endif
 
-////////////////////////////////////////////////////////////////////////////
-//                                                                        //
-// TGeoShapeAssembly - The shape encapsulating an assembly (union) of     //
-//         volumes. Automatically created by TGeoVolumeAssembly class     //
-//                                                                        //
-////////////////////////////////////////////////////////////////////////////
-
 class TGeoVolumeAssembly;
 
 class TGeoShapeAssembly : public TGeoBBox

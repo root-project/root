@@ -9,21 +9,35 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//_____________________________________________________________________________
-// TGeoTorus - Torus segment class. A torus has 5 parameters :
-//            R    - axial radius
-//            Rmin - inner radius
-//            Rmax - outer radius
-//            Phi1 - starting phi
-//            Dphi - phi extent
-//
-//_____________________________________________________________________________
+/** \class TGeoTorus
+\ingroup Geometry_classes
 
-//Begin_Html
-/*
-<img src="gif/t_ctorus.gif">
+Torus segment class. A torus has 5 parameters :
+  - R    - axial radius
+  - Rmin - inner radius
+  - Rmax - outer radius
+  - Phi1 - starting phi
+  - Dphi - phi extent
+
+
+Begin_Macro(source)
+{
+   TCanvas *c = new TCanvas("c", "c",0,0,600,600);
+   new TGeoManager("torus", "poza2");
+   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
+   TGeoMedium *med = new TGeoMedium("MED",1,mat);
+   TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
+   gGeoManager->SetTopVolume(top);
+   TGeoVolume *vol = gGeoManager->MakeTorus("TORUS",med, 40,20,25,0,270);
+   top->AddNode(vol,1);
+   gGeoManager->CloseGeometry();
+   gGeoManager->SetNsegments(30);
+   top->Draw();
+   TView *view = gPad->GetView();
+   view->ShowAxis();
+}
+End_Macro
 */
-//End_Html
 
 #include "Riostream.h"
 
@@ -80,11 +94,11 @@ TGeoTorus::TGeoTorus(const char *name, Double_t r, Double_t rmin, Double_t rmax,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor based on an array of parameters.
-/// param[0] = R
-/// param[1] = Rmin
-/// param[2] = Rmax
-/// param[3] = Phi1
-/// param[4] = Dphi
+///  - param[0] = R
+///  - param[1] = Rmin
+///  - param[2] = Rmax
+///  - param[3] = Phi1
+///  - param[4] = Dphi
 
 TGeoTorus::TGeoTorus(Double_t *param)
           :TGeoBBox(0, 0, 0)
@@ -389,7 +403,7 @@ Double_t TGeoTorus::DistFromOutside(const Double_t *point, const Double_t *dir, 
          snext += 0.1*eps;
          for (i=0; i<3; i++) pt[i] += 0.1*eps*dir[i];
       }
-      // We are in the hole from the begining.
+      // We are in the hole from the beginning.
       // find first crossing with inner torus
       dd = ToBoundary(pt,dir, fRmin,kFALSE);
       // find exit distance from inner bounding ring
@@ -425,7 +439,7 @@ Double_t TGeoTorus::DistFromOutside(const Double_t *point, const Double_t *dir, 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///--- Divide this torus shape belonging to volume "voldiv" into ndiv volumes
+/// Divide this torus shape belonging to volume "voldiv" into ndiv volumes
 /// called divname, from start position with the given step.
 
 TGeoVolume *TGeoTorus::Divide(TGeoVolume * /*voldiv*/, const char * /*divname*/, Int_t /*iaxis*/, Int_t /*ndiv*/,
@@ -478,7 +492,7 @@ Double_t TGeoTorus::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) cons
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///--- Fill vector param[4] with the bounding cylinder parameters. The order
+/// Fill vector param[4] with the bounding cylinder parameters. The order
 /// is the following : Rmin, Rmax, Phi1, Phi2, dZ
 
 void TGeoTorus::GetBoundingCylinder(Double_t *param) const
@@ -904,28 +918,7 @@ Int_t TGeoTorus::GetNmeshVertices() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-////// fill size of this 3-D object
-////   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-////   if (!painter) return;
-////   Int_t n = gGeoManager->GetNsegments()+1;
-////   Int_t numPoints = n*(n-1);
-////   Int_t numSegs   = (2*n-1)*(n-1);
-////   Int_t numPolys  = (n-1)*(n-1);
-////
-////   Bool_t hasrmin = (fRmin>0)?kTRUE:kFALSE;
-////   Bool_t hasphi  = (fDphi<360)?kTRUE:kFALSE;
-////   if (hasrmin) numPoints *= 2;
-////   else if (hasphi) numPoints += 2;
-////   if (hasrmin) {
-////      numSegs   += (2*n-1)*(n-1);
-////      numPolys  += (n-1)*(n-1);
-////   }
-////   if (hasphi) {
-////      numSegs   += 2*(n-1);
-////      numPolys  += 2*(n-1);
-////   }
-////
-////   painter->AddSize3D(numPoints, numSegs, numPolys);
+/// fill size of this 3-D object
 
 void TGeoTorus::Sizeof3D() const
 {
@@ -1069,7 +1062,7 @@ Int_t TGeoTorus::SolveQuartic(Double_t a, Double_t b, Double_t c, Double_t d, Do
 
 Double_t TGeoTorus::ToBoundary(const Double_t *pt, const Double_t *dir, Double_t r, Bool_t in) const
 {
-   // Compute coeficients of the quartic
+   // Compute coefficients of the quartic
    Double_t s = TGeoShape::Big();
    Double_t tol = TGeoShape::Tolerance();
    Double_t r0sq  = pt[0]*pt[0]+pt[1]*pt[1]+pt[2]*pt[2];
@@ -1205,7 +1198,7 @@ const TBuffer3D & TGeoTorus::GetBuffer3D(Int_t reqSections, Bool_t localFrame) c
       }
    }
    // TODO: Push down to TGeoShape?? But would have to do raw sizes set first..
-   // can rest of TGeoShape be defered until after
+   // can rest of TGeoShape be deferred until after
    if ((reqSections & TBuffer3D::kRaw) && buffer.SectionsValid(TBuffer3D::kRawSizes)) {
       SetPoints(buffer.fPnts);
       if (!buffer.fLocalFrame) {
@@ -1240,7 +1233,7 @@ void TGeoTorus::ComputeNormal_v(const Double_t *points, const Double_t *dirs, Do
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+/// Compute distance from array of input points having directions specified by dirs. Store output in dists
 
 void TGeoTorus::DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {
@@ -1248,7 +1241,7 @@ void TGeoTorus::DistFromInside_v(const Double_t *points, const Double_t *dirs, D
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+/// Compute distance from array of input points having directions specified by dirs. Store output in dists
 
 void TGeoTorus::DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {

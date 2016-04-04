@@ -18,7 +18,7 @@ Describes a persistent version of a class.
 A ROOT file contains the list of TStreamerInfo objects for all the
 class versions written to this file.
 When reading a file, all the TStreamerInfo objects are read back in
-memory and registered to the TClass list of TStreamerInfo.                                                             
+memory and registered to the TClass list of TStreamerInfo.
 One can see the list and contents of the TStreamerInfo on a file
 with, e.g.,
 ~~~{.cpp}
@@ -127,6 +127,13 @@ static void R__TObjArray_InsertBefore(TObjArray *arr, TObject *newobj, TObject *
    }
    R__TObjArray_InsertAt(arr, newobj, at);
 }
+
+enum class EUniquePtrOffset : char
+   {
+      kNA = 0,
+      kZero = 1,
+      kNonZero = 2
+   };
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
@@ -366,6 +373,8 @@ void TStreamerInfo::Build()
 
    Int_t dsize;
    TDataMember* dm = 0;
+   std::string uniquePtrTypeNameBuf;
+   std::string uniquePtrTrueTypeNameBuf;
    TIter nextd(fClass->GetListOfDataMembers());
    while ((dm = (TDataMember*) nextd())) {
       if (fClass->GetClassVersion() == 0) {
@@ -381,11 +390,26 @@ void TStreamerInfo::Build()
       }
       TStreamerElement* element = 0;
       dsize = 0;
-      const char* dmName = dm->GetName();
+
+      // Let's treat the unique_ptr case
+      const char* dmName  = dm->GetName();
       const char* dmTitle = dm->GetTitle();
-      const char* dmType = dm->GetTypeName();
-      const char* dmFull = dm->GetTrueTypeName(); // Used to be GetFullTypeName ...
+      const char* dmType  = dm->GetTypeName();
+      const char* dmFull  = dm->GetTrueTypeName(); // Used to be GetFullTypeName ...
       Bool_t dmIsPtr = dm->IsaPointer();
+
+      bool isUniquePtr = TClassEdit::IsUniquePtr(dmType);
+      if (isUniquePtr) {
+         // Now check if the implementation of the unique_ptr allows to stream it
+         // as a normal pointer
+         uniquePtrTypeNameBuf = TClassEdit::GetUniquePtrType(dmType);
+         dmType = uniquePtrTypeNameBuf.c_str();
+         uniquePtrTrueTypeNameBuf = uniquePtrTypeNameBuf + "*";
+         dmFull = uniquePtrTrueTypeNameBuf.c_str();
+         dmIsPtr = true;
+         dmTitle = "->";
+      }
+
       TDataMember* dmCounter = 0;
       if (dmIsPtr) {
          //
@@ -1990,9 +2014,26 @@ void TStreamerInfo::BuildOld()
       Int_t newType = -1;
       TClassRef newClass;
 
+      // at this point, we still may not have a dm
+      std::string uniquePtrTypeNameBuf;
+      const char* dmType = nullptr;
+      Bool_t dmIsPtr = false;
+      if (dm) {
+         dmType = dm->GetTypeName();
+         dmIsPtr = dm->IsaPointer();
+      }
+
+
+      bool isUniquePtr = (nullptr != dm) && TClassEdit::IsUniquePtr(dmType);
+      if (isUniquePtr) {
+         dmIsPtr = true;
+         uniquePtrTypeNameBuf = TClassEdit::GetUniquePtrType(dmType);
+         dmType = uniquePtrTypeNameBuf.c_str();
+      }
+
+
       if (dm && dm->IsPersistent()) {
          if (dm->GetDataType()) {
-            Bool_t isPointer = dm->IsaPointer();
             Bool_t isArray = element->GetArrayLength() >= 1;
             Bool_t hasCount = element->HasCounter();
             // data member is a basic type
@@ -2003,16 +2044,16 @@ void TStreamerInfo::BuildOld()
                // All the values of EDataType have the same semantic in EReadWrite
                newType = (EReadWrite)dm->GetDataType()->GetType();
             }
-            if ((newType == ::kChar_t) && isPointer && !isArray && !hasCount) {
+            if ((newType == ::kChar_t) && dmIsPtr && !isArray && !hasCount) {
                newType = ::kCharStar;
-            } else if (isPointer) {
+            } else if (dmIsPtr) {
                newType += kOffsetP;
             } else if (isArray) {
                newType += kOffsetL;
             }
          }
          if (newType == -1) {
-            newClass = TClass::GetClass(dm->GetTypeName());
+            newClass = TClass::GetClass(dmType);
          }
       } else {
          // Either the class is not loaded or the data member is gone
@@ -2060,7 +2101,7 @@ void TStreamerInfo::BuildOld()
          newClass.Reset();
          TClass* oldClass = TClass::GetClass(TClassEdit::ShortType(element->GetTypeName(), TClassEdit::kDropTrailStar).c_str());
          if (oldClass == newClass.GetClass()) {
-            // Nothing to do :)
+            // Nothing to do, also in the unique_ptr case :)
          } else if (ClassWasMovedToNamespace(oldClass, newClass.GetClass())) {
             Int_t oldv;
             if (0 != (oldv = ImportStreamerInfo(oldClass, newClass.GetClass()))) {
@@ -2178,8 +2219,8 @@ void TStreamerInfo::BuildOld()
          Bool_t cannotConvert = kFALSE;
          if (element->GetNewType() != -2) {
             if (dm) {
-               if (dm->IsaPointer()) {
-                  if (strncmp(dm->GetTitle(),"->",2)==0) {
+               if (dmIsPtr) {
+                  if (isUniquePtr || strncmp(dm->GetTitle(),"->",2)==0) {
                      // We are fine, nothing to do.
                      if (newClass->IsTObject()) {
                         newType = kObjectp;
@@ -2212,7 +2253,7 @@ void TStreamerInfo::BuildOld()
                      newType = kAny;
                   }
                }
-               if ((!dm->IsaPointer() || newType==kSTLp) && dm->GetArrayDim() > 0) {
+               if ((!dmIsPtr || newType==kSTLp) && dm->GetArrayDim() > 0) {
                   newType += kOffsetL;
                }
             } else if (!fClass->IsLoaded()) {
@@ -2263,6 +2304,7 @@ void TStreamerInfo::BuildOld()
                   }
                } else {
                   // We have no clue
+                  printf("%s We have no clue\n", dm->GetName());
                   cannotConvert = kTRUE;
                }
             } else if (element->GetType() == kObjectP || element->GetType() == kAnyP) {
@@ -3923,7 +3965,7 @@ Int_t TStreamerInfo::GetSizeElements() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the StreamerElement of "datamember" inside our
 /// class or any of its base classes.
-/// 
+///
 /// The offset information
 /// contained in the StreamerElement is related to its immediately
 /// containing class, so we return in 'offset' the offset inside

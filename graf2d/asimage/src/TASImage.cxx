@@ -5658,9 +5658,20 @@ void TASImage::DrawWideLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
    brush.height = thick;
    brush.center_y = brush.center_x = thick/2;
 
+   // When the first or last point of a wide line is exactly on the
+   // window limit the line is drawn vertically or horizontally.
+   // see https://sft.its.cern.ch/jira/browse/ROOT-8021
+   UInt_t xx1 = x1;
+   UInt_t yy1 = y1;
+   UInt_t xx2 = x2;
+   UInt_t yy2 = y2;
+   if (xx1 == fImage->width)  --xx1;
+   if (yy1 == fImage->height) --yy1;
+   if (xx2 == fImage->width)  --xx2;
+   if (yy2 == fImage->height) --yy2;
    ASDrawContext *ctx = create_draw_context_argb32(fImage, &brush);
-   asim_move_to(ctx, x1, y1);
-   asim_line_to(ctx, x2, y2);
+   asim_move_to(ctx, xx1, yy1);
+   asim_line_to(ctx, xx2, yy2);
 
    if (!use_cache) {
       delete [] matrix;

@@ -14,6 +14,8 @@ import pty
 import itertools
 import re
 import fnmatch
+import handlers
+import time
 from hashlib import sha1
 from contextlib import contextmanager
 from subprocess import check_output
@@ -44,10 +46,10 @@ cells[cells.length-1].cm_config.mode = '{mimeType}';
 _jsMagicHighlight = "IPython.CodeCell.config_defaults.highlight_modes['magic_{cppMIME}'] = {{'reg':[/^%%cpp/]}};"
 
 
-_jsNotDrawableClassesPatterns = ["TGraph[23]D","TH3*","TGraphPolar","TProf*","TEve*","TF[23]","TGeo*","TPolyLine3D"]
+_jsNotDrawableClassesPatterns = ["TGraph[23]D","TH3*","TGraphPolar","TProf*","TEve*","TF[23]","TGeo*","TPolyLine3D", "TH2Poly"]
 
 
-_jsROOTSourceDir = "https://root.cern.ch/js/dev/"
+_jsROOTSourceDir = "https://root.cern.ch/js/notebook/"
 _jsCanvasWidth = 800
 _jsCanvasHeight = 600
 
@@ -57,27 +59,33 @@ _jsCode = """
 </div>
 
 <script>
-requirejs.config(
-{{
-  paths: {{
-    'JSRootCore'       : '{jsROOTSourceDir}/scripts/JSRootCore',
-    'JSRootPainter'    : '{jsROOTSourceDir}/scripts/JSRootPainter',
-    'JSRootGeoPainter' : '{jsROOTSourceDir}/scripts/JSRootGeoPainter',
-  }}
-}}
-);
-require(['JSRootCore', 'JSRootPainter', 'JSRootGeoPainter'],
-        function(Core, Painter) {{
-          var obj = Core.parse('{jsonContent}');
-          Painter.draw("{jsDivId}", obj, "{jsDrawOptions}");
-        }}
-);
+ requirejs.config({{
+     paths: {{
+       'JSRootCore' : '{jsROOTSourceDir}/scripts/JSRootCore',
+     }}
+   }});
+ require(['JSRootCore'],
+     function(Core) {{
+       var obj = Core.parse('{jsonContent}');
+       Core.draw("{jsDivId}", obj, "{jsDrawOptions}");
+     }}
+ );
 </script>
 """
+
+TBufferJSONErrorMessage="The TBufferJSON class is necessary for JS visualisation to work and cannot be found. Did you enable the http module (-D http=ON for CMake)?"
+
+def TBufferJSONAvailable():
+   if hasattr(ROOT,"TBufferJSON"):
+       return True
+   print(TBufferJSONErrorMessage, file=sys.stderr)
+   return False
 
 _enableJSVis = False
 _enableJSVisDebug = False
 def enableJSVis():
+    if not TBufferJSONAvailable():
+       return
     global _enableJSVis
     _enableJSVis = True
 
@@ -86,6 +94,8 @@ def disableJSVis():
     _enableJSVis = False
 
 def enableJSVisDebug():
+    if not TBufferJSONAvailable():
+       return
     global _enableJSVis
     global _enableJSVisDebug
     _enableJSVis = True
@@ -220,37 +230,73 @@ def invokeAclic(cell):
         processCppCode(".L %s+" %fileName)
 
 class StreamCapture(object):
-    def __init__(self, stream, ip=get_ipython()):
-        nbStreamsPyStreamsMap={sys.stderr:sys.__stderr__,sys.stdout:sys.__stdout__}
+    def __init__(self, ip=get_ipython()):
+        # For the registration
         self.shell = ip
-        self.nbStream = stream
-        self.pyStream = nbStreamsPyStreamsMap[stream]
-        self.pipe_out, self.pipe_in = pty.openpty()
-        os.dup2(self.pipe_in, self.pyStream.fileno())
-        # Platform independent flush
-        # With ctypes, the name of the libc library is not known a priori
-        # We use jitted function
-        flushFunctionName='_JupyROOT_Flush'
-        if (not hasattr(ROOT,flushFunctionName)):
-           declareCppCode("void %s(){fflush(nullptr);};" %flushFunctionName)
-        self.flush = getattr(ROOT,flushFunctionName)
 
-    def more_data(self):
-        r, _, _ = select.select([self.pipe_out], [], [], 0)
-        return bool(r)
+        self.nbOutStream = sys.stdout
+        self.nbErrStream = sys.stderr
+
+        self.pyOutStream = sys.__stdout__
+        self.pyErrStream = sys.__stderr__
+
+        self.outStreamPipe_in = pty.openpty()[1]
+        self.errStreamPipe_in = pty.openpty()[1]
+
+        os.dup2(self.outStreamPipe_in, self.pyOutStream.fileno())
+        os.dup2(self.errStreamPipe_in, self.pyErrStream.fileno())
+
+        self.ioHandler = handlers.IOHandler()
+        self.flag = True
+        self.outString = ""
+        self.errString = ""
+
+        self.asyncCapturer = handlers.Runner(self.syncCapture)
+
+    def syncCapture(self, defout = ''):
+        self.outString = defout
+        self.errString = defout
+        waitTimes = [.01, .01, .02, .04, .06, .08, .1]
+        lenWaitTimes = 7
+
+        iterIndex = 0
+        while self.flag:
+            self.ioHandler.Poll()
+            if not self.flag: return
+            waitTime = .1 if iterIndex >= lenWaitTimes else waitTimes[iterIndex]
+            time.sleep(waitTime)
+
+    def pre_execute(self):
+        # Unify C++ and Python outputs
+        self.nbOutStream = sys.stdout
+        sys.stdout = sys.__stdout__
+        self.nbErrStream = sys.stderr
+        sys.stderr = sys.__stderr__
+
+        self.flag = True
+        self.ioHandler.Clear()
+        self.ioHandler.InitCapture()
+        self.asyncCapturer.AsyncRun('')
 
     def post_execute(self):
-        out = ''
-        if self.pipe_out:
-            while self.more_data():
-                out += os.read(self.pipe_out, 8192)
+        self.flag = False
+        self.asyncCapturer.Wait()
+        self.ioHandler.Poll()
+        self.ioHandler.EndCapture()
 
-        self.flush()
-        self.nbStream.write(out) # important to print the value printing output
+        # Restore the stream
+        sys.stdout = self.nbOutStream
+        sys.stderr = self.nbErrStream
+
+        # Print for the notebook
+        self.nbOutStream.write(self.ioHandler.GetStdout())
+        self.nbErrStream.write(self.ioHandler.GetStderr())
         return 0
 
     def register(self):
+        self.shell.events.register('pre_execute', self.pre_execute)
         self.shell.events.register('post_execute', self.post_execute)
+
 
 def GetCanvasDrawers():
     lOfC = ROOT.gROOT.GetListOfCanvases()
@@ -332,9 +378,8 @@ class NotebookDrawer(object):
         return NotebookDrawer.jsUID
 
     def _canJsDisplay(self):
-        if not hasattr(ROOT,"TBufferJSON"):
-            print("The TBufferJSON class is necessary for JS visualisation to work and cannot be found. Did you enable the http module (-D http=ON for CMake)?", file=sys.stderr)
-            return False
+        if not TBufferJSONAvailable():
+           return False
         if not self.isCanvas: return True
         # to be optimised
         if not _enableJSVis: return False
@@ -399,14 +444,17 @@ class NotebookDrawer(object):
          else:
             self._pngDisplay()
 
-    def GetDrawableObject(self):
+    def GetDrawableObjects(self):
         if not self.isCanvas:
-           return self._getJsDiv()
+           return [self._getJsDiv()]
+
+        if _enableJSVisDebug:
+           return [self._getJsDiv(),self._getPngImage()]
 
         if self._canJsDisplay():
-           return self._getJsDiv()
+           return [self._getJsDiv()]
         else:
-           return self._getPngImage()
+           return [self._getPngImage()]
 
     def Draw(self):
         self._display()
@@ -425,14 +473,13 @@ captures = []
 
 def loadExtensionsAndCapturers():
     global captures
-    extNames = ["JupyROOT.magics." + name for name in ["cppmagic"]]
+    extNames = ["JupyROOT.magics." + name for name in ["cppmagic","jsrootmagic"]]
     ip = get_ipython()
     extMgr = ExtensionManager(ip)
     for extName in extNames:
         extMgr.load_extension(extName)
     cppcompleter.load_ipython_extension(ip)
-    captures.append(StreamCapture(sys.stderr))
-    captures.append(StreamCapture(sys.stdout))
+    captures.append(StreamCapture())
     captures.append(CaptureDrawnPrimitives())
 
     for capture in captures: capture.register()

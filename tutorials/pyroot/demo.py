@@ -16,7 +16,7 @@ workdir = os.path.dirname( sys.argv[0] )
 if workdir:
    os.chdir( workdir )
 
-# This macro generates a Controlbar menu: To see the output, click begin_html <a href="gif/demos.gif" >here</a> end_html
+# This macro generates a Controlbar menu.
 # To execute an item, click with the left mouse button.
 # To see the HELP of a button, click on the right mouse button.
 

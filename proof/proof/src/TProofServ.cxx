@@ -109,6 +109,7 @@ using namespace std;
 #include "TMethodCall.h"
 #include "TProofOutputFile.h"
 #include "TSelector.h"
+#include "TPackMgr.h"
 
 // global proofserv handle
 TProofServ *gProofServ = 0;
@@ -144,6 +145,11 @@ Long_t TProofServ::fgVirtMemMax = -1;
 Long_t TProofServ::fgResMemMax = -1;
 Float_t TProofServ::fgMemHWM = 0.80;
 Float_t TProofServ::fgMemStop = 0.95;
+
+// Async Logger
+static void SendAsynMsg(const char *msg) {
+  if (gProofServ) gProofServ->SendAsynMessage(msg, kTRUE);
+}
 
 //----- Termination signal handler ---------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
@@ -650,21 +656,17 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
    fProof           = 0;
    fPlayer          = 0;
    fSocket          = 0;
-   fEnabledPackages = new TList;
-   fEnabledPackages->SetOwner();
 
    fTotSessions     = -1;
    fActSessions     = -1;
    fEffSessions     = -1.;
-
-   fGlobalPackageDirList = 0;
+   fPackMgr         = 0;
 
    fLogFile         = flog;
    fLogFileDes      = -1;
 
    fArchivePath     = "";
    // Init lockers
-   fPackageLock     = 0;
    fCacheLock       = 0;
    fQueryLock       = 0;
 
@@ -1003,12 +1005,10 @@ Int_t TProofServ::CreateServer()
 TProofServ::~TProofServ()
 {
    SafeDelete(fWaitingQueries);
-   SafeDelete(fEnabledPackages);
    SafeDelete(fSocket);
-   SafeDelete(fPackageLock);
+   SafeDelete(fPackMgr);
    SafeDelete(fCacheLock);
    SafeDelete(fQueryLock);
-   SafeDelete(fGlobalPackageDirList);
    SafeDelete(fDataSetManager);
    SafeDelete(fDataSetStgRepo);
    close(fLogFileDes);
@@ -1770,6 +1770,7 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
          } else {
             // Handle file checking request
             HandleCheckFile(mess, pslb);
+            FlushLogFile(); // Avoid sending (error) messages at next action
          }
          break;
 
@@ -1805,10 +1806,8 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
             }
             if (rfrc == 0) {
                // copy file to cache if not a PAR file
-               if (copytocache && size > 0 &&
-                  strncmp(fPackageDir, name, fPackageDir.Length()))
+               if (copytocache && size > 0 && !fPackMgr->IsInDir(name))
                   gSystem->Exec(TString::Format("%s %s %s", kCP, fnam.Data(), fCacheDir.Data()));
-
                if (IsMaster() && fw == 1) {
                   Int_t opt = TProof::kForward | TProof::kCp;
                   if (bin)
@@ -2802,63 +2801,6 @@ void TProofServ::SendParallel(Bool_t async)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Removes link to package in working directory,
-/// removes entry from include path,
-/// removes entry from enabled package list,
-/// does not currently remove entry from interpreter include path.
-/// Returns -1 in case of error, 0 otherwise.
-
-Int_t TProofServ::UnloadPackage(const char *package)
-{
-   TPair *pack = (TPair *) fEnabledPackages->FindObject(package);
-   if (pack) {
-
-      // Remove entry from include path
-      TString aclicincpath = gSystem->GetIncludePath();
-      TString cintincpath = gInterpreter->GetIncludePath();
-      // remove interpreter part of gSystem->GetIncludePath()
-      aclicincpath.Remove(aclicincpath.Length() - cintincpath.Length() - 1);
-      // remove package's include path
-      aclicincpath.ReplaceAll(TString(" -I") + package, "");
-      gSystem->SetIncludePath(aclicincpath);
-
-      //TODO reset interpreter include path
-
-      // remove entry from enabled packages list
-      delete fEnabledPackages->Remove(pack);
-      PDB(kPackage, 1)
-         Info("UnloadPackage",
-              "package %s successfully unloaded", package);
-   }
-
-   // Cleanup the link, if there
-   if (!gSystem->AccessPathName(package))
-      if (gSystem->Unlink(package) != 0)
-         Warning("UnloadPackage", "unable to remove symlink to %s", package);
-
-   // We are done
-   return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Unloads all enabled packages. Returns -1 in case of error, 0 otherwise.
-
-Int_t TProofServ::UnloadPackages()
-{
-   // Iterate over packages and remove each package
-   TIter nextpackage(fEnabledPackages);
-   while (TPair *pck = dynamic_cast<TPair *>(nextpackage()))
-      if (UnloadPackage(pck->GetName()) != 0)
-         return -1;
-
-   PDB(kPackage, 1)
-      Info("UnloadPackages",
-           "packages successfully unloaded");
-
-   return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Print the ProofServ logo on standard output.
 /// Return 0 on success, -1 on failure
 
@@ -3104,17 +3046,20 @@ Int_t TProofServ::SetupCommon()
                          TString(fCacheDir).ReplaceAll("/","%").Data()));
 
    // Check and make sure "packages" directory exists
-   fPackageDir = gEnv->GetValue("ProofServ.PackageDir",
-                                 TString::Format("%s/%s", fWorkDir.Data(), kPROOF_PackDir));
-   ResolveKeywords(fPackageDir);
-   if (gSystem->AccessPathName(fPackageDir))
-      gSystem->mkdir(fPackageDir, kTRUE);
+   TString packdir = gEnv->GetValue("ProofServ.PackageDir",
+                                    TString::Format("%s/%s", fWorkDir.Data(), kPROOF_PackDir));
+   ResolveKeywords(packdir);
+   if (gSystem->AccessPathName(packdir))
+      gSystem->mkdir(packdir, kTRUE);
+   fPackMgr = new TPackMgr(packdir);
+   fPackMgr->SetLogger(SendAsynMsg);
+   // Notification message
+   TString noth;
+   const char *k = (IsMaster()) ? "Mst" : "Wrk";
+   noth.Form("%s-%s", k, fOrdinal.Data());
+   fPackMgr->SetPrefix(noth.Data());
    if (gProofDebugLevel > 0)
-      Info("SetupCommon", "package directory set to %s", fPackageDir.Data());
-   fPackageLock =
-      new TProofLockPath(TString::Format("%s/%s%s",
-                         gSystem->TempDirectory(), kPROOF_PackageLockFile,
-                         TString(fPackageDir).ReplaceAll("/","%").Data()));
+      Info("SetupCommon", "package directory set to %s", packdir.Data());
 
    // Check and make sure "data" directory exists
    fDataDir = gEnv->GetValue("ProofServ.DataDir","");
@@ -3178,30 +3123,11 @@ Int_t TProofServ::SetupCommon()
 
    // List of directories where to look for global packages
    TString globpack = gEnv->GetValue("Proof.GlobalPackageDirs","");
-   if (globpack.Length() > 0) {
-      Int_t ng = 0;
-      Int_t from = 0;
-      TString ldir;
-      while (globpack.Tokenize(ldir, from, ":")) {
-         if (gSystem->AccessPathName(ldir, kReadPermission)) {
-            Warning("SetupCommon", "directory for global packages %s does not"
-                             " exist or is not readable", ldir.Data());
-         } else {
-            // Add to the list, key will be "G<ng>", i.e. "G0", "G1", ...
-            TString key;
-            key.Form("G%d", ng++);
-            if (!fGlobalPackageDirList) {
-               fGlobalPackageDirList = new THashList();
-               fGlobalPackageDirList->SetOwner();
-            }
-            ResolveKeywords(ldir);
-            fGlobalPackageDirList->Add(new TNamed(key,ldir));
-            Info("SetupCommon", "directory for global packages %s added to the list",
-                          ldir.Data());
-            FlushLogFile();
-         }
-      }
-   }
+
+   ResolveKeywords(globpack);
+   Int_t nglb = TPackMgr::RegisterGlobalPath(globpack);
+   Info("SetupCommon", " %d global package directories registered", nglb);
+   FlushLogFile();
 
    // Check the session dir
    if (fSessionDir != gSystem->WorkingDirectory()) {
@@ -3368,12 +3294,12 @@ Int_t TProofServ::SetupCommon()
                   // Parse (k, m, g)
                   tok.ToLower();
                   const char *s[3] = {"k", "m", "g"};
-                  Int_t i = 0, k = 1024;
+                  Int_t i = 0, ki = 1024;
                   while (fact < 0) {
-                     if (tok.EndsWith(s[i]))
-                        fact = k;
+                     if (tok.EndsWith(s[i++]))
+                        fact = ki;
                      else
-                        k *= 1024;
+                        ki *= 1024;
                   }
                   tok.Remove(tok.Length()-1);
                }
@@ -3652,14 +3578,7 @@ void TProofServ::SetQueryRunning(TProofQueryResult *pq)
 
    // Build the list of loaded PAR packages
    TString parlist = "";
-   TIter nxp(fEnabledPackages);
-   TPair *pck= 0;
-   while ((pck = (TPair *)nxp())) {
-      if (parlist.Length() <= 0)
-         parlist = pck->GetName();
-      else
-         parlist += TString::Format(";%s", pck->GetName());
-   }
+   fPackMgr->GetEnabledPackages(parlist);
 
    if (fProof) {
       // Set in running state
@@ -5233,56 +5152,38 @@ void TProofServ::HandleCheckFile(TMessage *mess, TString *slb)
       TString packnam = filenam;
       packnam.Remove(packnam.Length() - 4);  // strip off ".par"
       // compare md5's to check if transmission was ok
-      fPackageLock->Lock();
-      TMD5 *md5local = TMD5::FileChecksum(fPackageDir + "/" + filenam);
+      TMD5 *md5local = fPackMgr->GetMD5(packnam);
       if (md5local && md5 == (*md5local)) {
          if ((opt & TProof::kRemoveOld)) {
-            // remove any previous package directory with same name
-            st = gSystem->Exec(TString::Format("%s %s/%s", kRM, fPackageDir.Data(),
-                               packnam.Data()));
-            if (st)
-               Error("HandleCheckFile", "failure executing: %s %s/%s",
-                     kRM, fPackageDir.Data(), packnam.Data());
+            if ((st = fPackMgr->Clean(packnam)))
+               Error("HandleCheckFile", "failure cleaning %s", packnam.Data());
          }
-         // find gunzip...
-         char *gunzip = gSystem->Which(gSystem->Getenv("PATH"), kGUNZIP,
-                                       kExecutePermission);
-         if (gunzip) {
-            // untar package
-            st = gSystem->Exec(TString::Format(kUNTAR, gunzip, fPackageDir.Data(),
-                               filenam.Data(), fPackageDir.Data()));
-            if (st)
-               Error("HandleCheckFile", "failure executing: %s",
-                     TString::Format(kUNTAR, gunzip, fPackageDir.Data(),
-                          filenam.Data(), fPackageDir.Data()).Data());
-            delete [] gunzip;
-         } else
-            Error("HandleCheckFile", "%s not found", kGUNZIP);
-         // check that fPackageDir/packnam now exists
-         if (gSystem->AccessPathName(fPackageDir + "/" + packnam, kWritePermission)) {
-            // par file did not unpack itself in the expected directory, failure
-            reply << (Int_t)0;
-            if (fProtocol <= 19) reply.Reset(kPROOF_FATAL);
-            err = kTRUE;
-            Error("HandleCheckFile", "package %s did not unpack into %s",
-                                     filenam.Data(), packnam.Data());
-         } else {
-            // store md5 in package/PROOF-INF/md5.txt
-            TString md5f = fPackageDir + "/" + packnam + "/PROOF-INF/md5.txt";
-            TMD5::WriteChecksum(md5f, md5local);
+         // Unpack
+         st = fPackMgr->Unpack(packnam, md5local);
+         if (st == 0) {
             // Notify the client
             reply << (Int_t)1;
             PDB(kPackage, 1)
                Info("HandleCheckFile",
                     "package %s installed on node", filenam.Data());
+         } else {
+            if (st == -2) {
+               Error("HandleCheckFile", "gunzip not found");
+            } else {
+               Error("HandleCheckFile", "package %s did not unpack into %s",
+                                        filenam.Data(), packnam.Data());
+            }
+            reply << (Int_t)0;
+            if (fProtocol <= 19) reply.Reset(kPROOF_FATAL);
+            err = kTRUE;
          }
       } else {
          reply << (Int_t)0;
          if (fProtocol <= 19) reply.Reset(kPROOF_FATAL);
          err = kTRUE;
          PDB(kPackage, 1)
-            Info("HandleCheckFile",
-                 "package %s not yet on node", filenam.Data());
+            Error("HandleCheckFile",
+                  "package %s not yet on node", filenam.Data());
       }
 
       // Note: Originally an fPackageLock->Unlock() call was made
@@ -5293,72 +5194,56 @@ void TProofServ::HandleCheckFile(TMessage *mess, TString *slb)
       // be released below before the call to fProof->UploadPackage().
       if (err) {
          // delete par file in case of error
-         gSystem->Exec(TString::Format("%s %s/%s", kRM, fPackageDir.Data(),
-                       filenam.Data()));
-         fPackageLock->Unlock();
+         fPackMgr->Remove(filenam);
       } else if (IsMaster()) {
          // forward to workers
-         fPackageLock->Unlock();
-         if (fProof->UploadPackage(fPackageDir + "/" + filenam,
+         TString parpath;
+         fPackMgr->GetParPath(filenam, parpath);
+         if (fProof->UploadPackage(parpath,
                                   (TProof::EUploadPackageOpt)opt) != 0)
             Info("HandleCheckFile",
-                  "problems uploading package %s", filenam.Data());
-      } else {
-         // Unlock in all cases
-         fPackageLock->Unlock();
+                  "problems uploading package %s", parpath.Data());
       }
       delete md5local;
       fSocket->Send(reply);
 
-   } else if (filenam.BeginsWith("+")) {
+   } else if (filenam.BeginsWith("+") || filenam.BeginsWith("=")) {
+      filenam.Remove(0,1);
+
+      TString parname = filenam;
+      // If remote install it from there
+      TFile::EFileType ft = TFile::GetType(filenam);
+      if (ft == TFile::kWeb || ft == TFile::kNet) {
+         parname = gSystem->BaseName(filenam);
+         if (fPackMgr->Install(filenam) < 0) {
+            Warning("HandleCheckFile",
+                     "problems installing package %s", filenam.Data());
+
+         }
+      }
+
       // check file in package directory
-      filenam = filenam.Strip(TString::kLeading, '+');
-      TString packnam = filenam;
-      packnam.Remove(packnam.Length() - 4);  // strip off ".par"
-      TString md5f = fPackageDir + "/" + packnam + "/PROOF-INF/md5.txt";
-      fPackageLock->Lock();
-      TMD5 *md5local = TMD5::ReadChecksum(md5f);
-      fPackageLock->Unlock();
+      TMD5 *md5local = fPackMgr->ReadMD5(parname);
+
       if (md5local && md5 == (*md5local)) {
          // package already on server, unlock directory
          reply << (Int_t)1;
          PDB(kPackage, 1)
             Info("HandleCheckFile",
-                 "package %s already on node", filenam.Data());
-         if (IsMaster())
-            if (fProof->UploadPackage(fPackageDir + "/" + filenam) != 0)
-               Info("HandleCheckFile",
-                    "problems uploading package %s", filenam.Data());
+                 "package %s already on node", parname.Data());
+         if (IsMaster()) {
+            Int_t xrc = 0;
+            TString par = filenam;
+            if (ft != TFile::kWeb && ft != TFile::kNet) {
+               xrc = fPackMgr->GetParPath(filenam, par);
+            }
+            if (xrc == 0) {
+               if (fProof->UploadPackage(par) != 0)
+                  Warning("HandleCheckFile",
+                          "problems uploading package %s", par.Data());
+            }
+         }
 
-      } else {
-         reply << (Int_t)0;
-         if (fProtocol <= 19) reply.Reset(kPROOF_FATAL);
-         PDB(kPackage, 1)
-            Info("HandleCheckFile",
-                 "package %s not yet on node", filenam.Data());
-      }
-      delete md5local;
-      fSocket->Send(reply);
-
-   } else if (filenam.BeginsWith("=")) {
-      // check file in package directory, do not lock if it is the wrong file
-      filenam = filenam.Strip(TString::kLeading, '=');
-      TString packnam = filenam;
-      packnam.Remove(packnam.Length() - 4);  // strip off ".par"
-      TString md5f = fPackageDir + "/" + packnam + "/PROOF-INF/md5.txt";
-      fPackageLock->Lock();
-      TMD5 *md5local = TMD5::ReadChecksum(md5f);
-      fPackageLock->Unlock();
-      if (md5local && md5 == (*md5local)) {
-         // package already on server, unlock directory
-         reply << (Int_t)1;
-         PDB(kPackage, 1)
-            Info("HandleCheckFile",
-                 "package %s already on node", filenam.Data());
-         if (IsMaster())
-            if (fProof->UploadPackage(fPackageDir + "/" + filenam) != 0)
-               Info("HandleCheckFile",
-                    "problems with uploading package %s", filenam.Data());
       } else {
          reply << (Int_t)0;
          if (fProtocol <= 19) reply.Reset(kPROOF_FATAL);
@@ -5404,7 +5289,8 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
    Bool_t all = kFALSE;
    TMessage msg;
    Bool_t fromglobal = kFALSE;
-   Int_t chkveropt = TProof::kCheckROOT;  // Default: check ROOT version
+   Int_t chkveropt = TPackMgr::kCheckROOT;  // Default: check ROOT version
+   TPackMgr *packmgr = 0;
 
    // Notification message
    TString noth;
@@ -5412,7 +5298,7 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
    noth.Form("%s-%s", k, fOrdinal.Data());
 
    TList *optls = 0;
-   TString packagedir(fPackageDir), package, pdir, ocwd, file;
+   TString packagedir, package, pdir, ocwd, file;
    (*mess) >> type;
    switch (type) {
       case TProof::kShowCache:
@@ -5446,34 +5332,15 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
          break;
       case TProof::kShowPackages:
          (*mess) >> all;
-         if (fGlobalPackageDirList && fGlobalPackageDirList->GetSize() > 0) {
-            // Scan the list of global packages dirs
-            TIter nxd(fGlobalPackageDirList);
-            TNamed *nm = 0;
-            while ((nm = (TNamed *)nxd())) {
-               printf("*** Global Package cache %s %s:%s ***\n",
-                      nm->GetName(), gSystem->HostName(), nm->GetTitle());
-               fflush(stdout);
-               gSystem->Exec(TString::Format("%s %s", kLS, nm->GetTitle()));
-               printf("\n");
-               fflush(stdout);
-            }
-         }
-         printf("*** Package cache %s:%s ***\n", gSystem->HostName(),
-                fPackageDir.Data());
-         fflush(stdout);
-         gSystem->Exec(TString::Format("%s %s", kLS, fPackageDir.Data()));
+         fPackMgr->Show();
          if (IsMaster() && all)
             fProof->ShowPackages(all);
          LogToMaster();
          if (slb) slb->Form("%d %d", type, all);
          break;
       case TProof::kClearPackages:
-         status = UnloadPackages();
-         if (status == 0) {
-            fPackageLock->Lock();
-            gSystem->Exec(TString::Format("%s %s/*", kRM, fPackageDir.Data()));
-            fPackageLock->Unlock();
+         if ((status = fPackMgr->Unload(0)) == 0) {
+            fPackMgr->Remove();
             if (IsMaster())
                status = fProof->ClearPackages();
          }
@@ -5481,16 +5348,8 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
          break;
       case TProof::kClearPackage:
          (*mess) >> package;
-         status = UnloadPackage(package);
-         if (status == 0) {
-            fPackageLock->Lock();
-            // remove package directory and par file
-            gSystem->Exec(TString::Format("%s %s/%s", kRM, fPackageDir.Data(),
-                          package.Data()));
-            if (IsMaster())
-               gSystem->Exec(TString::Format("%s %s/%s.par", kRM, fPackageDir.Data(),
-                             package.Data()));
-            fPackageLock->Unlock();
+         if ((status = fPackMgr->Unload(package)) == 0) {
+            fPackMgr->Remove(package);
             if (IsMaster())
                status = fProof->ClearPackage(package);
          }
@@ -5500,48 +5359,27 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
          (*mess) >> package;
          if ((mess->BufferSize() > mess->Length())) (*mess) >> chkveropt;
 
-         // always follows BuildPackage so no need to check for PROOF-INF
-         pdir = fPackageDir + "/" + package;
-
-         fromglobal = kFALSE;
-         if (gSystem->AccessPathName(pdir, kReadPermission) ||
-             gSystem->AccessPathName(pdir + "/PROOF-INF", kReadPermission)) {
-            // Is there a global package with this name?
-            if (fGlobalPackageDirList && fGlobalPackageDirList->GetSize() > 0) {
-               // Scan the list of global packages dirs
-               TIter nxd(fGlobalPackageDirList);
-               TNamed *nm = 0;
-               while ((nm = (TNamed *)nxd())) {
-                  pdir.Form("%s/%s", nm->GetTitle(), package.Data());
-                  if (!gSystem->AccessPathName(pdir, kReadPermission) &&
-                      !gSystem->AccessPathName(pdir + "/PROOF-INF", kReadPermission)) {
-                     // Package found, stop searching
-                     fromglobal = kTRUE;
-                     packagedir = nm->GetTitle();
-                     break;
-                  }
-                  pdir = "";
-               }
-               if (pdir.Length() <= 0) {
-                  // Package not found
-                  SendAsynMessage(TString::Format("%s: kBuildPackage: failure locating %s ...",
-                                       noth.Data(), package.Data()));
-                  status = -1;
-                  break;
-               }
-            }
+         if (!(packmgr = TPackMgr::GetPackMgr(package.Data(), fPackMgr))) {
+            // Package not found
+            SendAsynMessage(TString::Format("%s: kBuildPackage: failure locating %s ...",
+                            noth.Data(), package.Data()));
+            status = -1;
+            break;
          }
+         fromglobal = (packmgr == fPackMgr) ? kFALSE : kTRUE;
+         packagedir = packmgr->GetTitle();
 
          if (IsMaster() && !fromglobal) {
             // Make sure package is available on all slaves, even new ones
-            if (fProof->UploadPackage(pdir + ".par") != 0) {
+            TString par;
+            Int_t xrc = packmgr->GetParPath(package, par);
+            if (xrc != 0 || fProof->UploadPackage(par) != 0) {
                Warning("HandleCache",
                        "kBuildPackage: problems forwarding package %s to workers", package.Data());
                SendAsynMessage(TString::Format("%s: kBuildPackage: problems forwarding package %s to workers ...",
                                        noth.Data(), package.Data()));
             }
          }
-         fPackageLock->Lock();
 
          if (!status) {
 
@@ -5549,118 +5387,13 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
                Info("HandleCache",
                     "kBuildPackage: package %s exists and has PROOF-INF directory", package.Data());
 
-            ocwd = gSystem->WorkingDirectory();
-            gSystem->ChangeDirectory(pdir);
-
-            // forward build command to slaves, but don't wait for results
+            // Forward build command to slaves, but don't wait for results
             if (IsMaster())
                fProof->BuildPackage(package, TProof::kBuildOnSlavesNoWait);
 
-            // check for BUILD.sh and execute
-            if (!gSystem->AccessPathName("PROOF-INF/BUILD.sh")) {
-               // Notify the upper level
-               SendAsynMessage(TString::Format("%s: building %s ...", noth.Data(), package.Data()));
-
-               // read version from file proofvers.txt, and if current version is
-               // not the same do a "BUILD.sh clean"
-               Bool_t goodver = kTRUE;
-               Bool_t savever = kFALSE;
-               TString v, r;
-               FILE *f = fopen("PROOF-INF/proofvers.txt", "r");
-               if (f) {
-                  v.Gets(f);
-                  r.Gets(f);
-                  fclose(f);
-                  if (chkveropt == TProof::kCheckROOT || chkveropt == TProof::kCheckSVN) {
-                     if (v != gROOT->GetVersion()) goodver = kFALSE;
-                     if (goodver && chkveropt == TProof::kCheckSVN)
-                        if (r != gROOT->GetGitCommit()) goodver = kFALSE;
-                  }
-               }
-               if (!f || !goodver) {
-                  if (!fromglobal || !gSystem->AccessPathName(pdir, kWritePermission)) {
-                     savever = kTRUE;
-                     SendAsynMessage(TString::Format("%s: %s: version change (current: %s:%s,"
-                                          " build: %s:%s): cleaning ... ",
-                                          noth.Data(), package.Data(), gROOT->GetVersion(),
-                                          gROOT->GetGitCommit(), v.Data(), r.Data()));
-                     // Hard cleanup: go up the dir tree
-                     gSystem->ChangeDirectory(packagedir);
-                     // remove package directory
-                     gSystem->Exec(TString::Format("%s %s", kRM, pdir.Data()));
-                     // find gunzip...
-                     char *gunzip = gSystem->Which(gSystem->Getenv("PATH"), kGUNZIP,
-                                                   kExecutePermission);
-                     if (gunzip) {
-                        TString par;
-                        par.Form("%s.par", pdir.Data());
-                        // untar package
-                        TString cmd;
-                        cmd.Form(kUNTAR3, gunzip, par.Data());
-                        status = gSystem->Exec(cmd);
-                        if (status) {
-                           Error("HandleCache", "kBuildPackage: failure executing: %s", cmd.Data());
-                        } else {
-                           // Store md5 in package/PROOF-INF/md5.txt
-                           TMD5 *md5local = TMD5::FileChecksum(par);
-                           if (md5local) {
-                              TString md5f = packagedir + "/" + package + "/PROOF-INF/md5.txt";
-                              TMD5::WriteChecksum(md5f, md5local);
-                              // Go down to the package directory
-                              gSystem->ChangeDirectory(pdir);
-                              // Cleanup
-                              SafeDelete(md5local);
-                           } else {
-                              Warning("HandleCache", "kBuildPackage: failure calculating/saving MD5sum for '%s'", par.Data());
-                           }
-                        }
-                        delete [] gunzip;
-                     } else {
-                        Error("HandleCache", "kBuildPackage: %s not found", kGUNZIP);
-                        status = -1;
-                     }
-                  } else {
-                     SendAsynMessage(TString::Format("%s: %s: ROOT version inconsistency (current: %s, build: %s):"
-                                          " global package: cannot re-build!!! ",
-                                          noth.Data(), package.Data(), gROOT->GetVersion(), v.Data()));
-                     status = -1;
-                  }
-               }
-
-               if (!status) {
-                  // To build the package we execute PROOF-INF/BUILD.sh via a pipe
-                  // so that we can send back the log in (almost) real-time to the
-                  // (impatient) client. Note that this operation will block, so
-                  // the messages from builds on the workers will reach the client
-                  // shortly after the master ones.
-                  TString ipath(gSystem->GetIncludePath());
-                  ipath.ReplaceAll("\"","");
-                  TString cmd;
-                  cmd.Form("export ROOTINCLUDEPATH=\"%s\" ; PROOF-INF/BUILD.sh", ipath.Data());
-                  {
-                     TProofServLogHandlerGuard hg(cmd, fSocket);
-                  }
-                  if (!(status = TProofServLogHandler::GetCmdRtn())) {
-                     // Success: write version file
-                     if (savever) {
-                        f = fopen("PROOF-INF/proofvers.txt", "w");
-                        if (f) {
-                           fputs(gROOT->GetVersion(), f);
-                           fputs(TString::Format("\n%s", gROOT->GetGitCommit()), f);
-                           fclose(f);
-                        }
-                     }
-                  }
-               }
-            } else {
-               // Notify the user
-               PDB(kPackage, 1)
-                  Info("HandleCache", "no PROOF-INF/BUILD.sh found for package %s", package.Data());
-            }
-            gSystem->ChangeDirectory(ocwd);
+            // Build here
+            status = packmgr->Build(package.Data(), chkveropt);
          }
-
-         fPackageLock->Unlock();
 
          if (status) {
             // Notify the upper level
@@ -5674,172 +5407,22 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
          }
          if (slb) slb->Form("%d %s %d %d", type, package.Data(), status, chkveropt);
          break;
+
       case TProof::kLoadPackage:
          (*mess) >> package;
 
-         // If already loaded don't do it again
-         if (fEnabledPackages->FindObject(package)) {
-            Info("HandleCache",
-                 "package %s already loaded", package.Data());
-            break;
-         }
-
-         // always follows BuildPackage so no need to check for PROOF-INF
-         pdir = fPackageDir + "/" + package;
-
-         if (gSystem->AccessPathName(pdir, kReadPermission)) {
-            // Is there a global package with this name?
-            if (fGlobalPackageDirList && fGlobalPackageDirList->GetSize() > 0) {
-               // Scan the list of global packages dirs
-               TIter nxd(fGlobalPackageDirList);
-               TNamed *nm = 0;
-               while ((nm = (TNamed *)nxd())) {
-                  pdir.Form("%s/%s", nm->GetTitle(), package.Data());
-                  if (!gSystem->AccessPathName(pdir, kReadPermission)) {
-                     // Package found, stop searching
-                     break;
-                  }
-                  pdir = "";
-               }
-               if (pdir.Length() <= 0) {
-                  // Package not found
-                  SendAsynMessage(TString::Format("%s: kLoadPackage: failure locating %s ...",
-                                       noth.Data(), package.Data()));
-                  status = -1;
-                  break;
-               }
-            }
-         }
-
-         ocwd = gSystem->WorkingDirectory();
-         gSystem->ChangeDirectory(pdir);
-
-         // We have to be atomic here
-         fPackageLock->Lock();
-
-         // Check for SETUP.C and execute
-         if (!gSystem->AccessPathName("PROOF-INF/SETUP.C")) {
-            // We need to change the name of the function to avoid problems when we load more packages
-            TString setup;
-            setup.Form("SETUP_ganis_%d_%x", gSystem->GetPid(), package.Hash());
-            // Remove special characters
-            TMacro setupmc("PROOF-INF/SETUP.C");
-            TObjString *setupline = setupmc.GetLineWith("SETUP(");
-            if (setupline) {
-               TString setupstring(setupline->GetString());
-               setupstring.ReplaceAll("SETUP(", TString::Format("%s(", setup.Data()));
-               setupline->SetString(setupstring);
-            } else {
-               // Macro does not contain SETUP()
-               SendAsynMessage(TString::Format("%s: warning: macro '%s/PROOF-INF/SETUP.C' does not contain a SETUP()"
-                                               " function", noth.Data(), package.Data()));
-            }
-
-            // Load the macro
-            if (!setupmc.Load()) {
-               // Macro could not be loaded
-               SendAsynMessage(TString::Format("%s: error: macro '%s/PROOF-INF/SETUP.C' could not be loaded:"
-                                                " cannot continue",
-                                                noth.Data(), package.Data()));
-               status = -1;
-            } else {
-               // Check the signature
-               TFunction *fun = (TFunction *) gROOT->GetListOfGlobalFunctions()->FindObject(setup);
-               if (!fun) {
-                  // Notify the upper level
-                  SendAsynMessage(TString::Format("%s: error: function SETUP() not found in macro '%s/PROOF-INF/SETUP.C':"
-                                                   " cannot continue",
-                                                   noth.Data(), package.Data()));
-                  status = -1;
-               } else {
-                  TMethodCall callEnv;
-                  // Check the number of arguments
-                  if (fun->GetNargs() == 0) {
-                     // No arguments (basic signature)
-                     callEnv.Init(fun);
-                     if ((mess->BufferSize() > mess->Length())) {
-                        (*mess) >> optls;
-                        SendAsynMessage(TString::Format("%s: warning: loaded SETUP() does not take any argument:"
-                                                        " the specified argument will be ignored", noth.Data()));
-                     }
-                  } else if (fun->GetNargs() == 1) {
-                     TMethodArg *arg = (TMethodArg *) fun->GetListOfMethodArgs()->First();
-                     if (arg) {
-                        callEnv.Init(fun);
-                        // Get argument
-                        if ((mess->BufferSize() > mess->Length())) (*mess) >> optls;
-                        // Check argument type
-                        TString argsig(arg->GetTitle());
-                        if (argsig.BeginsWith("TList")) {
-                           callEnv.ResetParam();
-                           callEnv.SetParam((Long_t) optls);
-                        } else if (argsig.BeginsWith("const char")) {
-                           callEnv.ResetParam();
-                           TObjString *os = optls ? dynamic_cast<TObjString *>(optls->First()) : 0;
-                           if (os) {
-                              callEnv.SetParam((Long_t) os->GetName());
-                           } else {
-                              if (optls && optls->First()) {
-                                 SendAsynMessage(TString::Format("%s: warning: found object argument of type %s:"
-                                                                 " SETUP expects 'const char *': ignoring",
-                                                                 noth.Data(), optls->First()->ClassName()));
-                              }
-                              callEnv.SetParam((Long_t) 0);
-                           }
-                        } else {
-                           // Notify the upper level
-                           SendAsynMessage(TString::Format("%s: error: unsupported SETUP signature: SETUP(%s)"
-                                                            " cannot continue", noth.Data(), arg->GetTitle()));
-                           status = -1;
-                        }
-                     } else {
-                        // Notify the upper level
-                        SendAsynMessage(TString::Format("%s: error: cannot get information about the SETUP() argument:"
-                                                         " cannot continue", noth.Data()));
-                        status = -1;
-                     }
-                  } else if (fun->GetNargs() > 1) {
-                     // Notify the upper level
-                     SendAsynMessage(TString::Format("%s: error: function SETUP() can have at most a 'TList *' argument:"
-                                                      " cannot continue", noth.Data()));
-                     status = -1;
-                  }
-                  // Execute
-                  Long_t setuprc = (status == 0) ? 0 : -1;
-                  if (status == 0) {
-                     callEnv.Execute(setuprc);
-                     if (setuprc < 0) status = -1;
-                  }
-               }
-            }
-         }
-
-         // End of atomicity
-         fPackageLock->Unlock();
-
-         gSystem->ChangeDirectory(ocwd);
-
-         if (status < 0) {
+         // Get argument, if any
+         if ((mess->BufferSize() > mess->Length())) (*mess) >> optls;
+         // Load the package
+         if ((status = fPackMgr->Load(package.Data(), optls)) < 0) {
 
             // Notify the upper level
-            SendAsynMessage(TString::Format("%s: failure loading %s ...", noth.Data(), package.Data()));
+            SendAsynMessage(TString::Format("%s: failure loading %s, args: %p (%d) ...",
+                                                 noth.Data(), package.Data(), optls,
+                                                 (optls && optls->GetSize() > 0) ? optls->GetSize() : 0));
 
          } else {
 
-            // create link to package in working directory
-            gSystem->Symlink(pdir, package);
-
-            // add package to list of include directories to be searched
-            // by ACliC
-            gSystem->AddIncludePath(TString("-I") + package);
-
-            // add package to list of include directories to be searched by CINT
-            gROOT->ProcessLine(TString(".I ") + package);
-
-            // if successful add to list and propagate to slaves
-            TPair *pck = (optls && optls->GetSize() > 0) ? new TPair(new TObjString(package), optls->Clone())
-                                                         : new TPair(new TObjString(package), 0);
-            fEnabledPackages->Add(pck);
             if (IsMaster()) {
                if (optls && optls->GetSize() > 0) {
                   // List argument
@@ -5853,24 +5436,19 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
             PDB(kPackage, 1)
                Info("HandleCache", "package %s successfully loaded", package.Data());
          }
+
          if (slb) slb->Form("%d %s %d", type, package.Data(), status);
          break;
+
       case TProof::kShowEnabledPackages:
          (*mess) >> all;
-         if (IsMaster()) {
-            if (all)
-               printf("*** Enabled packages on master %s on %s\n",
-                      fOrdinal.Data(), gSystem->HostName());
-            else
-               printf("*** Enabled packages ***\n");
-         } else {
-            printf("*** Enabled packages on slave %s on %s\n",
-                   fOrdinal.Data(), gSystem->HostName());
-         }
-         {
-            TIter next(fEnabledPackages);
-            while (TPair *pck = (TPair *) next())
-               printf("%s\n", pck->GetName());
+         {  TString title("*** Enabled packages ***");
+            if (!IsMaster() || all) {
+               title.Form("*** Enabled packages on %s %s on %s",
+                          (IsMaster()) ? "master" : "worker",
+                          fOrdinal.Data(), gSystem->HostName());
+            }
+            fPackMgr->ShowEnabled(title);
          }
          if (IsMaster() && all)
             fProof->ShowEnabledPackages(all);
@@ -5918,46 +5496,33 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
          break;
       case TProof::kUnloadPackage:
          (*mess) >> package;
-         status = UnloadPackage(package);
+         status = fPackMgr->Unload(package);
          if (IsMaster() && status == 0)
             status = fProof->UnloadPackage(package);
          if (slb) slb->Form("%d %s %d", type, package.Data(), status);
          break;
       case TProof::kDisablePackage:
          (*mess) >> package;
-         fPackageLock->Lock();
-         // remove package directory and par file
-         gSystem->Exec(TString::Format("%s %s/%s", kRM, fPackageDir.Data(),
-                       package.Data()));
-         gSystem->Exec(TString::Format("%s %s/%s.par", kRM, fPackageDir.Data(),
-                       package.Data()));
-         fPackageLock->Unlock();
+         fPackMgr->Remove(package);
          if (IsMaster())
             fProof->DisablePackage(package);
          if (slb) slb->Form("%d %s", type, package.Data());
          break;
       case TProof::kUnloadPackages:
-         status = UnloadPackages();
+         status = fPackMgr->Unload(0);
          if (IsMaster() && status == 0)
             status = fProof->UnloadPackages();
          if (slb) slb->Form("%d %s %d", type, package.Data(), status);
          break;
       case TProof::kDisablePackages:
-         fPackageLock->Lock();
-         gSystem->Exec(TString::Format("%s %s/*", kRM, fPackageDir.Data()));
-         fPackageLock->Unlock();
+         fPackMgr->Remove();
          if (IsMaster())
             fProof->DisablePackages();
          if (slb) slb->Form("%d %s", type, package.Data());
          break;
       case TProof::kListEnabledPackages:
          msg.Reset(kPROOF_PACKAGE_LIST);
-         { TList *epl = new TList;
-           if (fEnabledPackages->GetSize() > 0) {
-              TIter nxp(fEnabledPackages);
-              TObject *o = 0;
-              while ((o = nxp())) { epl->Add(new TObjString(o->GetName()));}
-           }
+         { TList *epl = fPackMgr->GetListOfEnabled();
            msg << type << epl;
            fSocket->Send(msg);
            epl->SetOwner();
@@ -5967,22 +5532,12 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
          break;
       case TProof::kListPackages:
          {
-            TList *pack = new TList;
-            void *dir = gSystem->OpenDirectory(fPackageDir);
-            if (dir) {
-               TString pac(gSystem->GetDirEntry(dir));
-               while (pac.Length() > 0) {
-                  if (pac.EndsWith(".par")) {
-                     pac.ReplaceAll(".par","");
-                     pack->Add(new TObjString(pac.Data()));
-                  }
-                  pac = gSystem->GetDirEntry(dir);
-               }
-            }
-            gSystem->FreeDirectory(dir);
+            TList *pack = fPackMgr->GetList();
             msg.Reset(kPROOF_PACKAGE_LIST);
             msg << type << pack;
             fSocket->Send(msg);
+            pack->SetOwner(kTRUE);
+            delete pack;
          }
          if (slb) slb->Form("%d", type);
          break;
@@ -6433,7 +5988,7 @@ Int_t TProofServ::GetPriority()
 /// 'lf' being kTRUE (default) or kFALSE.
 /// Returns the return value from TSocket::Send(TMessage &) .
 
-Int_t TProofServ::SendAsynMessage(const char *msg, Bool_t lf)
+void TProofServ::SendAsynMessage(const char *msg, Bool_t lf)
 {
    static TMessage m(kPROOF_MESSAGE);
 
@@ -6445,11 +6000,12 @@ Int_t TProofServ::SendAsynMessage(const char *msg, Bool_t lf)
    if (fSocket && msg) {
       m.Reset(kPROOF_MESSAGE);
       m << TString(msg) << lf;
-      return fSocket->Send(m);
+      if (fSocket->Send(m) <= 0)
+         Warning("SendAsynMessage",
+                 "could not send message '%s'", (msg ? msg : "(null)"));
    }
 
-   // No message
-   return -1;
+   return;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

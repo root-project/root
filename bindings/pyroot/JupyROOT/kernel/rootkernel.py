@@ -77,7 +77,7 @@ class ROOTKernel(MetaKernel):
         status = 'ok'
         try:
             RunAsyncAndPrint(self.Executor,
-                             str(code),
+                             code.encode('utf8'),
                              self.ioHandler,
                              self.print_output,
                              silent,
@@ -85,7 +85,8 @@ class ROOTKernel(MetaKernel):
 
             drawers = GetDrawers()
             for drawer in drawers:
-                self.Display(drawer.GetDrawableObject())
+                for dobj in drawer.GetDrawableObjects():
+                    self.Display(dobj)
 
         except KeyboardInterrupt:
             ROOT.gROOT.SetInterrupt()

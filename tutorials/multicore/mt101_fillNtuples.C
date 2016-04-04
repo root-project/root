@@ -12,49 +12,38 @@
 ///
 /// \author Danilo Piparo
 
-// Measure time in a scope
-class TimerRAII {
-   TStopwatch fTimer;
-   std::string fMeta;
-public:
-   TimerRAII(const char *meta): fMeta(meta) {
-      fTimer.Start();
-   }
-   ~TimerRAII() {
-      fTimer.Stop();
-      std::cout << fMeta << " - real time elapsed " << fTimer.RealTime() << "s" << std::endl;
-   }
-};
+// Some useful constants and functions
 
-Int_t mt101_fillNtuples(UInt_t nWorkers = 4)
+// Total amount of numbers
+const UInt_t nNumbers = 20000000U;
+
+// The number of workers
+const UInt_t nWorkers = 4U;
+
+// We split the work in equal parts
+const auto workSize = nNumbers / nWorkers;
+
+// A simple function to fill ntuples randomly
+void fillRandom (TNtuple & ntuple, TRandom3 & rndm, UInt_t n)
+{
+   for (auto i : ROOT::TSeqI(n)) ntuple.Fill(rndm.Gaus());
+}
+
+Int_t mt101_fillNtuples()
 {
 
    // No nuisance for batch execution
    gROOT->SetBatch();
 
-   // Total amount of numbers
-   const UInt_t nNumbers = 20000000U;
-
-   // A simple function to fill ntuples randomly
-
-   auto fillRandom = [](TNtuple & ntuple, TRandom3 & rndm, UInt_t n) {
-      for (UInt_t i = 0; i < n; ++i) ntuple.Fill(rndm.Gaus());
-   };
-
    // Perform the operation sequentially ---------------------------------------
 
    // Create a random generator and and Ntuple to hold the numbers
    TRandom3 rndm(1);
-   TFile ofile("mt101_singleCore.root", "RECREATE");
+   TFile ofile("mp101_singleCore.root", "RECREATE");
    TNtuple randomNumbers("singleCore", "Random Numbers", "r");
-
-   // Now let's measure how much time we need to fill it up
-   {
-      TimerRAII t("Sequential execution");
-      fillRandom(randomNumbers, rndm, nNumbers);
-      randomNumbers.Write();
-   }
-
+   fillRandom(randomNumbers, rndm, nNumbers);
+   randomNumbers.Write();
+   ofile.Close();
 
    // We now go MT! ------------------------------------------------------------
 
@@ -63,33 +52,26 @@ Int_t mt101_fillNtuples(UInt_t nWorkers = 4)
    ROOT::EnableThreadSafety();
 
    // We define our work item
-   auto workItem = [&fillRandom](UInt_t workerID, UInt_t workSize) {
+   auto workItem = [](UInt_t workerID) {
       // One generator, file and ntuple per worker
       TRandom3 workerRndm(workerID); // Change the seed
       TFile ofile(Form("mt101_multiCore_%u.root", workerID), "RECREATE");
       TNtuple workerRandomNumbers("multiCore", "Random Numbers", "r");
       fillRandom(workerRandomNumbers, workerRndm, workSize);
       workerRandomNumbers.Write();
+      return 0;
    };
 
    // Create the collection which will hold the threads, our "pool"
    std::vector<std::thread> workers;
 
-   // We measure time here as well
-   {
-      TimerRAII t("Parallel execution");
-
-      // We split the work in equal parts
-      const auto workSize = nNumbers / nWorkers;
-
-      // Fill the "pool" with workers
-      for (UInt_t workerID = 0; workerID < nWorkers; ++workerID) {
-         workers.emplace_back(workItem, workerID, workSize);
-      }
-
-      // Now join them
-      for (auto && worker : workers) worker.join();
+   // Fill the "pool" with workers
+   for (auto workerID : ROOT::TSeqI(nWorkers)) {
+      workers.emplace_back(workItem, workerID);
    }
+
+   // Now join them
+   for (auto && worker : workers) worker.join();
 
    return 0;
 

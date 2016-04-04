@@ -21,7 +21,7 @@
 #include "TBuffer3DTypes.h"
 #include "TMath.h"
 
-/** \class TGeoHype -
+/** \class TGeoHype
 \ingroup Geometry_classes
 
 Hyperboloid class defined by 5 parameters. Bounded by:

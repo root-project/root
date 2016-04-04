@@ -18,7 +18,7 @@
 
 ClassImp(TGeoNodeCache)
 
-/** \class TGeoNodeCache -
+/** \class TGeoNodeCache
 \ingroup Geometry_classes
 
 Special pool of reusable nodes

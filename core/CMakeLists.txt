@@ -90,6 +90,11 @@ if(WIN32)
 elseif(cocoa)
    set(corelinklibs "-framework Cocoa")
 endif()
+
+if(APPLE)
+  set(corelinklibs "${corelinklibs} -F /System/Library/PrivateFrameworks -framework CoreSymbolication")
+endif(APPLE)
+
 add_subdirectory(utils)
 
 #-------------------------------------------------------------------------------

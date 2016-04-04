@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/** \class TGeoBuilder -
+/** \class TGeoBuilder
 \ingroup Geometry_classes
 
 Utility class for creating geometry objects.These will be associated

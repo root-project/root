@@ -614,17 +614,8 @@ inline Int_t TMath::IsNaN(Double_t x)
 #if defined(R__FAST_MATH)
    {return detailsForFastMath::IsNaN(x);}
 #else
-#  if (defined(R__ANSISTREAM) || (defined(R__MACOSX) && defined(__arm__))) && !defined(_AIX) && !defined(__CUDACC__)
-#  if defined(isnan) || defined(R__SOLARIS_CC50) || defined(__INTEL_COMPILER)
-      // from math.h
-   { return ::isnan(x); }
-#  else
       // from cmath
    { return std::isnan(x); }
-#  endif
-#  else
-   { return isnan(x); }
-#  endif
 #endif
 //--------wrapper to numeric_limits
 //____________________________________________________________________________

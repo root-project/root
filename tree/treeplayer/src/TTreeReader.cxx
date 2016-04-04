@@ -203,7 +203,11 @@ TTreeReader::TTreeReader(TTree* tree):
    fLastEntry(-1),
    fProxiesSet(kFALSE)
 {
-   Initialize();
+   if (!fTree) {
+      Error("TTreeReader", "TTree is NULL!");
+   } else {
+      Initialize();
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

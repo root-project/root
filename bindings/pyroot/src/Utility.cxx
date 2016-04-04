@@ -481,24 +481,21 @@ PyObject* PyROOT::Utility::BuildTemplateName( PyObject* pyname, PyObject* args, 
          }
 
          PyROOT_PyUnicode_AppendAndDel( &pyname, tpName );
-      } else {
-      // last ditch attempt, works for things like int values; since this is a
-      // source of errors otherwise, it is limited to specific types and not
-      // generally used (str(obj) can print anything ...)
-         PyObject* pystr = 0;
-         if ( PyInt_Check( tn ) || PyLong_Check( tn ) || PyFloat_Check( tn ) )
-            pystr = PyObject_Str( tn );
-
-         if ( ! pystr ) {
-            Py_DECREF( pyname );
-            return 0;
-         }
+      } else if ( PyInt_Check( tn ) || PyLong_Check( tn ) || PyFloat_Check( tn ) ) {
+         // last ditch attempt, works for things like int values; since this is a
+         // source of errors otherwise, it is limited to specific types and not
+         // generally used (str(obj) can print anything ...)
+         PyObject* pystr = PyObject_Str( tn );
          PyROOT_PyUnicode_AppendAndDel( &pyname, pystr );
+      } else {
+         Py_DECREF( pyname );
+         PyErr_SetString( PyExc_SyntaxError, "could not get __name__ from provided template argument. Is it a str, class, type or int?" );
+         return 0;
       }
 
    // add a comma, as needed
       if ( i != nArgs - 1 )
-         PyROOT_PyUnicode_AppendAndDel( &pyname, PyROOT_PyUnicode_FromString( "," ) );
+         PyROOT_PyUnicode_AppendAndDel( &pyname, PyROOT_PyUnicode_FromString( ", " ) );
    }
 
 // close template name; prevent '>>', which should be '> >'
@@ -804,6 +801,8 @@ void PyROOT::Utility::ErrMsgHandler( int level, Bool_t abort, const char* locati
    if (level >= kError)
       ::DefaultErrorHandler( level, abort, location, msg );
    else if ( level >= kWarning ) {
+      static const char* emptyString = "";
+      if (!location) location = emptyString;
    // either printout or raise exception, depending on user settings
       PyErr_WarnExplicit( NULL, (char*)msg, (char*)location, 0, (char*)"ROOT", NULL );
    }

@@ -3016,7 +3016,7 @@ static void LookupVisibleDecls(DeclContext *Ctx, LookupResult &Result,
     Result.getSema().ForceDeclarationOfImplicitMembers(Class);
 
   // Enumerate all of the results in this context.
-  for (const auto &R : Ctx->lookups()) {
+  for (const auto R : Ctx->lookups()) {
     for (auto *I : R) {
       if (NamedDecl *ND = dyn_cast<NamedDecl>(I)) {
         if ((ND = Result.getAcceptableDecl(ND))) {

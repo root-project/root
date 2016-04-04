@@ -366,6 +366,7 @@ void TPostScript::Open(const char *fname, Int_t wtype)
    fZone          = kFALSE;
    fSave          = 0;
    fFontEmbed     = kFALSE;
+   SetLineJoin(gStyle->GetJoinLinePS());
    SetLineScale(gStyle->GetLineScalePS());
    gStyle->GetPaperSize(fXsize, fYsize);
    fMode          = fType%10;
@@ -2413,12 +2414,14 @@ void TPostScript::SetLineColor( Color_t cindex )
 ///
 /// To change the line join behaviour just do:
 /// ~~~ {.cpp}
-/// TPostScript::SetLineJoin(2); // Set the PS line join to bevel.
+/// gStyle->SetLineJoinPS(2); // Set the PS line join to bevel.
 /// ~~~
 
 void TPostScript::SetLineJoin( Int_t linejoin )
 {
    fgLineJoin = linejoin;
+   if (fgLineJoin<0) fgLineJoin=0;
+   if (fgLineJoin>2) fgLineJoin=2;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

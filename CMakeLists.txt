@@ -236,12 +236,16 @@ add_custom_target(hsimple ALL DEPENDS tutorials/hsimple.root)
 add_dependencies(hsimple onepcm)
 if(WIN32)
   add_custom_command(OUTPUT tutorials/hsimple.root
-                     COMMAND set PATH=${CMAKE_RUNTIME_OUTPUT_DIRECTORY} && set ROOTIGNOREPREFIX=1 && $<TARGET_FILE:root.exe> -l -q -b -n -x hsimple.C -e return
+                     COMMAND set PATH=${CMAKE_RUNTIME_OUTPUT_DIRECTORY} &&
+                             set ROOTIGNOREPREFIX=1 &&
+                             $<TARGET_FILE:root.exe> -l -q -b -n -x hsimple.C -e return
                      WORKING_DIRECTORY tutorials
                      DEPENDS root.exe Cling Hist Tree Gpad Graf HistPainter move_artifacts)
 else()
   add_custom_command(OUTPUT tutorials/hsimple.root
-                     COMMAND ROOTIGNOREPREFIX=1 $<TARGET_FILE:root.exe> -l -q -b -n -x hsimple.C -e return
+                     COMMAND ${ld_library_path}=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{${ld_library_path}}
+                             ROOTIGNOREPREFIX=1
+                             $<TARGET_FILE:root.exe> -l -q -b -n -x hsimple.C -e return
                      WORKING_DIRECTORY tutorials
                      DEPENDS root.exe Cling Hist Tree Gpad Graf HistPainter move_artifacts)
 endif()

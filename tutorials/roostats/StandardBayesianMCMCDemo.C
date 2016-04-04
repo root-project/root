@@ -47,9 +47,17 @@
 using namespace RooFit;
 using namespace RooStats;
 
-int intervalType = 2;          // type of interval (0 is shortest, 1 central, 2 upper limit)
-double   maxPOI = -999;        // force a different value of POI for doing the scan (default is given value)
+struct BayesianMCMCOptions {
+   
+   double confLevel = 0.95;
+   int intervalType = 2;          // type of interval (0 is shortest, 1 central, 2 upper limit)
+   double   maxPOI = -999;        // force different values of POI for doing the scan (default is given value)
+   double   minPOI = -999;
+   int numIters = 100000;         // number of iterations
+   int numBurnInSteps = 100;      // number of burn in steps to be ignored
+};
 
+BayesianMCMCOptions optMCMC; 
 
 void StandardBayesianMCMCDemo(const char* infile = "",
                               const char* workspaceName = "combined",
@@ -143,26 +151,28 @@ void StandardBayesianMCMCDemo(const char* infile = "",
   // on the parameter of interest as specified
   // in the model config
   MCMCCalculator mcmc(*data,*mc);
-  mcmc.SetConfidenceLevel(0.95); // 95% interval
+  mcmc.SetConfidenceLevel(optMCMC.confLevel); // 95% interval
   //  mcmc.SetProposalFunction(*pf);
   mcmc.SetProposalFunction(sp);
-  mcmc.SetNumIters(1000000);         // Metropolis-Hastings algorithm iterations
-  mcmc.SetNumBurnInSteps(50);       // first N steps to be ignored as burn-in
+  mcmc.SetNumIters(optMCMC.numIters);         // Metropolis-Hastings algorithm iterations
+  mcmc.SetNumBurnInSteps(optMCMC.numBurnInSteps);       // first N steps to be ignored as burn-in
 
   // default is the shortest interval.
-  if (intervalType == 0)  mcmc.SetIntervalType(MCMCInterval::kShortest); // for shortest interval (not really needed)
-  if (intervalType == 1)  mcmc.SetLeftSideTailFraction(0.5); // for central interval
-  if (intervalType == 2)  mcmc.SetLeftSideTailFraction(0.); // for upper limit
+  if (optMCMC.intervalType == 0)  mcmc.SetIntervalType(MCMCInterval::kShortest); // for shortest interval (not really needed)
+  if (optMCMC.intervalType == 1)  mcmc.SetLeftSideTailFraction(0.5); // for central interval
+  if (optMCMC.intervalType == 2)  mcmc.SetLeftSideTailFraction(0.); // for upper limit
 
   RooRealVar* firstPOI = (RooRealVar*) mc->GetParametersOfInterest()->first();
-  if (maxPOI != -999)
-     firstPOI->setMax(maxPOI);
+  if (optMCMC.minPOI != -999)
+     firstPOI->setMin(optMCMC.minPOI);
+  if (optMCMC.maxPOI != -999)
+     firstPOI->setMax(optMCMC.maxPOI);
 
   MCMCInterval* interval = mcmc.GetInterval();
 
   // make a plot
   //TCanvas* c1 =
-  new TCanvas("IntervalPlot");
+  auto c1 = new TCanvas("IntervalPlot");
   MCMCIntervalPlot plot(*interval);
   plot.Draw();
 
@@ -185,8 +195,10 @@ void StandardBayesianMCMCDemo(const char* infile = "",
   }
 
   // print out the iterval on the first Parameter of Interest
-  cout << "\n95% interval on " <<firstPOI->GetName()<<" is : ["<<
+   cout << "\n>>>> RESULT : " << optMCMC.confLevel*100 <<  "% interval on " <<firstPOI->GetName()<<" is : ["<<
     interval->LowerLimit(*firstPOI) << ", "<<
     interval->UpperLimit(*firstPOI) <<"] "<<endl;
 
+
+   gPad = c1; 
 }

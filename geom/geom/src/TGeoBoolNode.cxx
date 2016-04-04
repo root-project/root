@@ -24,7 +24,7 @@
 #include "TGeoMatrix.h"
 #include "TGeoManager.h"
 
-/** \class TGeoBoolNode -
+/** \class TGeoBoolNode
 \ingroup Geometry_classes
 
 Base class for Boolean operations between two shapes.

@@ -8,23 +8,9 @@
 /// \macro_code
 /// \author Danilo Piparo
 
-// Measure time in a scope
-class TimerRAII {
-   TStopwatch fTimer;
-   std::string fMeta;
-public:
-   TimerRAII(const char *meta): fMeta(meta)
-   {
-      fTimer.Start();
-   }
-   ~TimerRAII()
-   {
-      fTimer.Stop();
-      std::cout << fMeta << " - real time elapsed " << fTimer.RealTime() << "s" << std::endl;
-   }
-};
+const UInt_t poolSize = 4U;
 
-Int_t mp201_parallelHistoFill(UInt_t poolSize = 4)
+Int_t mp201_parallelHistoFill()
 {
    TH1::AddDirectory(false);
    TProcPool pool(poolSize);
@@ -37,7 +23,6 @@ Int_t mp201_parallelHistoFill(UInt_t poolSize = 4)
       return h;
    };
 
-   TimerRAII timer("Filling Histogram in parallel and drawing it.");
    auto seeds = ROOT::TSeqI(23);
    auto sumRandomHisto = pool.MapReduce(fillRandomHisto, seeds, PoolUtils::ReduceObjects);
 

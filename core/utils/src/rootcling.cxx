@@ -196,7 +196,9 @@ const char *rootClingHelp =
    " -inlineInputHeader\tAdd the argument header to the code of the dictionary  \n"
    "  This allows the header to be inlined within the dictionary.               \n"
    "                                                                            \n"
-   " -interpreteronly\tNo IO information in the dictionary                      \n";
+   " -interpreteronly\tNo IO information in the dictionary                      \n"
+   " -noIncludePaths\tDon't keep track of the include paths passed to rootcling \n";
+
 
 
 #include "RConfigure.h"
@@ -239,6 +241,7 @@ const char *rootClingHelp =
 #include "cling/Interpreter/LookupHelper.h"
 #include "cling/Interpreter/Value.h"
 #include "clang/AST/CXXInheritance.h"
+#include "clang/AST/Mangle.h"
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendActions.h"
@@ -657,6 +660,8 @@ bool IsSelectionXml(const char *filename)
 
 bool IsLinkdefFile(const char *filename)
 {
+   // Note, should change this into take llvm::StringRef.
+
    if ((strstr(filename, "LinkDef") || strstr(filename, "Linkdef") ||
          strstr(filename, "linkdef")) && strstr(filename, ".h")) {
       return true;
@@ -674,6 +679,13 @@ bool IsLinkdefFile(const char *filename)
    } else {
       return false;
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool IsLinkdefFile(const clang::PresumedLoc& PLoc)
+{
+   return IsLinkdefFile(PLoc.getFilename());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2601,38 +2613,19 @@ void GetMostExternalEnclosingClassNameFromDecl(const clang::Decl &theDecl,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-void ExtractTypedefAutoloadKeys(std::list<std::string> &tdNames,
-                                const std::vector<clang::TypedefNameDecl *> &typedefDecls,
-                                const cling::Interpreter &interp)
+template<class COLL>
+int ExtractAutoloadKeys(std::list<std::string> &names,
+                        const COLL &decls,
+                        const cling::Interpreter &interp)
 {
-   if (!typedefDecls.empty()) {
+   if (!decls.empty()) {
       std::string autoLoadKey;
-      for (auto & tDef : typedefDecls) {
+      for (auto & d : decls) {
          autoLoadKey = "";
-         GetMostExternalEnclosingClassNameFromDecl(*tDef, autoLoadKey, interp);
+         GetMostExternalEnclosingClassNameFromDecl(*d, autoLoadKey, interp);
          // If there is an outer class, it is already considered
          if (autoLoadKey.empty()) {
-            tdNames.push_back(tDef->getQualifiedNameAsString());
-         }
-      }
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-int ExtractEnumAutoloadKeys(std::list<std::string> &enumNames,
-                            const std::vector<clang::EnumDecl *> &enumDecls,
-                            const cling::Interpreter &interp)
-{
-   if (!enumDecls.empty()) {
-      std::string autoLoadKey;
-      for (auto & en : enumDecls) {
-         autoLoadKey = "";
-         GetMostExternalEnclosingClassNameFromDecl(*en, autoLoadKey, interp);
-         // If there is an outer class, it is already considered
-         if (autoLoadKey.empty()) {
-            enumNames.push_back(en->getQualifiedNameAsString());
+            names.push_back(d->getQualifiedNameAsString());
          }
       }
    }
@@ -2656,6 +2649,7 @@ int CreateNewRootMapFile(const std::string &rootmapFileName,
                          const std::list<std::string> &nsNames,
                          const std::list<std::string> &tdNames,
                          const std::list<std::string> &enNames,
+                         const std::list<std::string> &varNames,
                          const HeadersDeclsMap_t &headersClassesMap,
                          const std::unordered_set<std::string> headersToIgnore)
 {
@@ -2672,7 +2666,8 @@ int CreateNewRootMapFile(const std::string &rootmapFileName,
 
 
    // Add the "section"
-   if (!classesNames.empty() || !nsNames.empty() || !tdNames.empty() || !enNames.empty()) {
+   if (!classesNames.empty() || !nsNames.empty() || !tdNames.empty() ||
+      !enNames.empty() || !varNames.empty()) {
 
       // Add the template definitions
       if (!classesDefsList.empty()) {
@@ -2733,6 +2728,14 @@ int CreateNewRootMapFile(const std::string &rootmapFileName,
          for (const auto & autoloadKey : enNames)
             if (classesKeys.insert(autoloadKey).second)
                rootmapFile << "enum " << autoloadKey << std::endl;
+      }
+
+      // And variables.
+      if (!varNames.empty()){
+         rootmapFile << "# List of selected vars\n";
+         for (const auto & autoloadKey : varNames)
+            if (classesKeys.insert(autoloadKey).second)
+               rootmapFile << "var " << autoloadKey << std::endl;
       }
 
    }
@@ -2822,7 +2825,7 @@ bool ProcessAndAppendIfNotThere(const std::string &el,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-int  ExtractSelectedClassesAndTemplateDefs(RScanner &scan,
+int  ExtractClassesListAndDeclLines(RScanner &scan,
       std::list<std::string> &classesList,
       std::list<std::string> &classesListForRootmap,
       std::list<std::string> &fwdDeclarationsList,
@@ -2840,6 +2843,19 @@ int  ExtractSelectedClassesAndTemplateDefs(RScanner &scan,
    std::string attrName, attrValue;
    bool isClassSelected;
    std::unordered_set<std::string> availableFwdDecls;
+   std::string fwdDeclaration;
+   for (auto const & selVar : scan.fSelectedVariables) {
+      fwdDeclaration = "";
+      int retCode = ROOT::TMetaUtils::AST2SourceTools::EncloseInNamespaces(*selVar, fwdDeclaration);
+      if (retCode == 0) ProcessAndAppendIfNotThere(fwdDeclaration, fwdDeclarationsList, availableFwdDecls);
+   }
+
+   for (auto const & selEnum : scan.fSelectedEnums) {
+      fwdDeclaration = "";
+      int retCode = ROOT::TMetaUtils::AST2SourceTools::EncloseInNamespaces(*selEnum, fwdDeclaration);
+      if (retCode == 0) ProcessAndAppendIfNotThere(fwdDeclaration, fwdDeclarationsList, availableFwdDecls);
+   }
+
    // Loop on selected classes and put them in a list
    for (auto const & selClass : scan.fSelectedClasses) {
       isClassSelected = true;
@@ -2862,7 +2878,7 @@ int  ExtractSelectedClassesAndTemplateDefs(RScanner &scan,
       const char *reqName(selClass.GetRequestedName());
 
       // Get always the containing namespace, put it in the list if not there
-      std::string fwdDeclaration;
+      fwdDeclaration = "";
       int retCode = ROOT::TMetaUtils::AST2SourceTools::EncloseInNamespaces(*rDecl, fwdDeclaration);
       if (retCode == 0) ProcessAndAppendIfNotThere(fwdDeclaration, fwdDeclarationsList, availableFwdDecls);
 
@@ -2912,6 +2928,41 @@ int  ExtractSelectedClassesAndTemplateDefs(RScanner &scan,
             if (reqName != nullptr && 0 != strcmp(reqName, "") && reqName != normalizedName) {
                classesListForRootmap.push_back(reqName);
             }
+
+            // Also register typeinfo::name(), unless we have pseudo-strong typedefs:
+            if (normalizedName.find("Double32_t") == std::string::npos
+                && normalizedName.find("Float16_t") == std::string::npos) {
+               std::unique_ptr<clang::MangleContext> mangleCtx(rDecl->getASTContext().createMangleContext());
+               std::string mangledName;
+               {
+                  llvm::raw_string_ostream sstr(mangledName);
+                  if (const clang::TypeDecl* TD = llvm::dyn_cast<clang::TypeDecl>(rDecl)) {
+                     mangleCtx->mangleTypeName(clang::QualType(TD->getTypeForDecl(), 0), sstr);
+                  }
+               }
+               if (!mangledName.empty()) {
+                  int errDemangle = 0;
+                  char* demangledTIName = TClassEdit::DemangleName(mangledName.c_str(), errDemangle);
+                  if (!errDemangle && demangledTIName) {
+                     static const char typeinfoNameFor[] = "typeinfo name for ";
+                     if (!strncmp(demangledTIName, typeinfoNameFor, strlen(typeinfoNameFor))) {
+                        std::string demangledName = demangledTIName + strlen(typeinfoNameFor);
+                        // See the operations in TCling::AutoLoad(type_info)
+                        TClassEdit::TSplitType splitname( demangledName.c_str(), (TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd) );
+                        splitname.ShortType(demangledName, TClassEdit::kDropStlDefault | TClassEdit::kDropStd);
+
+                        if (demangledName != normalizedName && (!reqName || demangledName != reqName)) {
+                           classesListForRootmap.push_back(demangledName);
+                        } // if demangledName != other name
+                     } else {
+                        ROOT::TMetaUtils::Error("ExtractClassesListAndDeclLines",
+                                                "Demangled typeinfo name '%s' does not start with 'typeinfo name for'\n",
+                                                demangledTIName);
+                     } // if demangled type_info starts with "typeinfo name for "
+                  } // if demangling worked
+                  free(demangledTIName);
+               } // if mangling worked
+            } // if no pseudo-strong typedef involved
          }
       }
    }
@@ -3650,10 +3701,13 @@ std::string GenerateFwdDeclString(const RScanner &scan,
    for (auto* TD: scan.fSelectedTypedefs)
       selectedDecls.push_back(TD);
 
+//    for (auto* VAR: scan.fSelectedVariables)
+//       selectedDecls.push_back(VAR);
+
    // The "R\"DICTFWDDCLS(\n" ")DICTFWDDCLS\"" pieces have been moved to
    // TModuleGenerator to be able to make the diagnostics more telling in presence
    // of an issue ROOT-6752.
-   fwdDeclString += Decls2FwdDecls(selectedDecls,interp);
+   fwdDeclString += Decls2FwdDecls(selectedDecls,IsLinkdefFile,interp);
 
    // Functions
 //    for (auto const& fcnDeclPtr : scan.fSelectedFunctions){
@@ -3813,22 +3867,22 @@ int RootCling(int argc,
    }
 #endif
    if (!strcmp(argv[ic], "-v")) {
-      ROOT::TMetaUtils::gErrorIgnoreLevel = ROOT::TMetaUtils::kError; // The default is kError
+      ROOT::TMetaUtils::GetErrorIgnoreLevel() = ROOT::TMetaUtils::kError; // The default is kError
       ic++;
    } else if (!strcmp(argv[ic], "-v0")) {
-      ROOT::TMetaUtils::gErrorIgnoreLevel = ROOT::TMetaUtils::kFatal; // Explicitly remove all messages
+      ROOT::TMetaUtils::GetErrorIgnoreLevel() = ROOT::TMetaUtils::kFatal; // Explicitly remove all messages
       ic++;
    } else if (!strcmp(argv[ic], "-v1")) {
-      ROOT::TMetaUtils::gErrorIgnoreLevel = ROOT::TMetaUtils::kError; // Only error message (default)
+      ROOT::TMetaUtils::GetErrorIgnoreLevel() = ROOT::TMetaUtils::kError; // Only error message (default)
       ic++;
    } else if (!strcmp(argv[ic], "-v2")) {
-      ROOT::TMetaUtils::gErrorIgnoreLevel = ROOT::TMetaUtils::kWarning; // error and warning message
+      ROOT::TMetaUtils::GetErrorIgnoreLevel() = ROOT::TMetaUtils::kWarning; // error and warning message
       ic++;
    } else if (!strcmp(argv[ic], "-v3")) {
-      ROOT::TMetaUtils::gErrorIgnoreLevel = ROOT::TMetaUtils::kNote; // error, warning and note
+      ROOT::TMetaUtils::GetErrorIgnoreLevel() = ROOT::TMetaUtils::kNote; // error, warning and note
       ic++;
    } else if (!strcmp(argv[ic], "-v4")) {
-      ROOT::TMetaUtils::gErrorIgnoreLevel = ROOT::TMetaUtils::kInfo; // Display all information (same as -v)
+      ROOT::TMetaUtils::GetErrorIgnoreLevel() = ROOT::TMetaUtils::kInfo; // Display all information (same as -v)
       genreflex::verbose = true;
       ic++;
    }
@@ -3980,6 +4034,7 @@ int RootCling(int argc,
    bool multiDict = false;
    bool writeEmptyRootPCM = false;
    bool selSyntaxOnly = false;
+   bool noIncludePaths = false;
 
    // Collect the diagnostic pragmas linked to the usage of -W
    // Workaround for ROOT-5656
@@ -4083,7 +4138,13 @@ int RootCling(int argc,
 
          if (strcmp("-failOnWarnings", argv[ic]) == 0) {
             // Fail on Warnings and Errors
-            ROOT::TMetaUtils::gErrorIgnoreLevel = ROOT::TMetaUtils::kThrowOnWarning;
+            ROOT::TMetaUtils::GetErrorIgnoreLevel() = ROOT::TMetaUtils::kThrowOnWarning;
+            ic += 1;
+            continue;
+         }
+
+         if (strcmp("-noIncludePaths", argv[ic]) == 0) {
+            noIncludePaths = true;
             ic += 1;
             continue;
          }
@@ -4119,8 +4180,10 @@ int RootCling(int argc,
 
    std::vector<std::string> pcmArgs;
    for (size_t parg = 0, n = clingArgs.size(); parg < n; ++parg) {
-      if (clingArgs[parg] != "-c")
-         pcmArgs.push_back(clingArgs[parg]);
+      auto thisArg = clingArgs[parg];
+      if (thisArg == "-c" ||
+          (noIncludePaths && ROOT::TMetaUtils::BeginsWith(thisArg,"-I"))) continue;
+      pcmArgs.push_back(thisArg);
    }
 
    // cling-only arguments
@@ -4570,9 +4633,9 @@ int RootCling(int argc,
    int scannerVerbLevel = 0;
    {
       using namespace ROOT::TMetaUtils;
-      scannerVerbLevel = gErrorIgnoreLevel == kInfo; // 1 if true, 0 if false
+      scannerVerbLevel = GetErrorIgnoreLevel() == kInfo; // 1 if true, 0 if false
       if (isGenreflex){
-         scannerVerbLevel = gErrorIgnoreLevel < kWarning;
+         scannerVerbLevel = GetErrorIgnoreLevel() < kWarning;
       }
    }
 
@@ -4606,7 +4669,7 @@ int RootCling(int argc,
    if (genreflex::verbose)
       selectionRules.PrintSelectionRules();
 
-   if (ROOT::TMetaUtils::gErrorIgnoreLevel != ROOT::TMetaUtils::kFatal &&
+   if (ROOT::TMetaUtils::GetErrorIgnoreLevel() != ROOT::TMetaUtils::kFatal &&
          !onepcm &&
          !dictSelRulesPresent &&
          !selectionRules.AreAllSelectionRulesUsed()) {
@@ -4780,15 +4843,21 @@ int RootCling(int argc,
    std::list<std::string> classesNamesForRootmap;
    std::list<std::string> classesDefsList;
 
-   rootclingRetCode = ExtractSelectedClassesAndTemplateDefs(scan,
-                                                   classesNames,
-                                                   classesNamesForRootmap,
-                                                   classesDefsList,
-                                                   interp);
+   rootclingRetCode = ExtractClassesListAndDeclLines(scan,
+                                                     classesNames,
+                                                     classesNamesForRootmap,
+                                                     classesDefsList,
+                                                     interp);
+
    std::list<std::string> enumNames;
-   rootclingRetCode += ExtractEnumAutoloadKeys(enumNames,
-                                      scan.fSelectedEnums,
-                                      interp);
+   rootclingRetCode += ExtractAutoloadKeys(enumNames,
+                                           scan.fSelectedEnums,
+                                           interp);
+
+   std::list<std::string> varNames;
+   rootclingRetCode += ExtractAutoloadKeys(varNames,
+                                           scan.fSelectedVariables,
+                                           interp);
 
    if (0 != rootclingRetCode) return rootclingRetCode;
 
@@ -4817,9 +4886,9 @@ int RootCling(int argc,
       }
 
       std::list<std::string> typedefsRootmapLines;
-      ExtractTypedefAutoloadKeys(typedefsRootmapLines,
-                                 scan.fSelectedTypedefs,
-                                 interp);
+      rootclingRetCode += ExtractAutoloadKeys(typedefsRootmapLines,
+                                              scan.fSelectedTypedefs,
+                                              interp);
 
       rootclingRetCode = CreateNewRootMapFile(rootmapFileName,
                                           rootmapLibName,
@@ -4828,6 +4897,7 @@ int RootCling(int argc,
                                           nsNames,
                                           typedefsRootmapLines,
                                           enumNames,
+                                          varNames,
                                           headersClassesMap,
                                           headersToIgnore);
 
@@ -5005,6 +5075,7 @@ namespace genreflex {
                        bool isDeep,
                        bool writeEmptyRootPCM,
                        bool selSyntaxOnly,
+                       bool noIncludePaths,
                        const std::vector<std::string> &headersNames,
                        bool failOnWarnings,
                        const std::string &ofilename)
@@ -5099,6 +5170,10 @@ namespace genreflex {
       if (selSyntaxOnly)
          argvVector.push_back(string2charptr("-selSyntaxOnly"));
 
+      // No include paths
+      if (noIncludePaths)
+         argvVector.push_back(string2charptr("-noIncludePaths"));
+
       // Fail on warnings
       if (failOnWarnings)
          argvVector.push_back(string2charptr("-failOnWarnings"));
@@ -5158,6 +5233,7 @@ namespace genreflex {
                            bool isDeep,
                            bool writeEmptyRootPCM,
                            bool selSyntaxOnly,
+                           bool noIncludePaths,
                            const std::vector<std::string> &headersNames,
                            bool failOnWarnings,
                            const std::string &outputDirName_const = "")
@@ -5194,6 +5270,7 @@ namespace genreflex {
                                           isDeep,
                                           writeEmptyRootPCM,
                                           selSyntaxOnly,
+                                          noIncludePaths,
                                           namesSingleton,
                                           failOnWarnings,
                                           ofilenameFullPath);
@@ -5321,6 +5398,7 @@ int GenReflex(int argc, char **argv)
                        SPLIT,
                        NOMEMBERTYPEDEFS,
                        NOTEMPLATETYPEDEFS,
+                       NOINCLUDEPATHS,
                        // Don't show up in the help
                        PREPROCDEFINE,
                        PREPROCUNDEFINE,
@@ -5589,6 +5667,14 @@ int GenReflex(int argc, char **argv)
          "--selSyntaxOnly\tValidate selection file w/o generating the dictionary.\n"
       },
 
+      {
+         NOINCLUDEPATHS,
+         NOTYPE ,
+         "" , "noIncludePaths",
+         ROOT::option::Arg::None,
+         "--noIncludePaths\tDo not store the include paths. Rely at runtime on the ROOT_INCLUDE_PATH.\n"
+      },
+
       // Left intentionally empty not to be shown in the help, like in the first genreflex
       {
          INCLUDE,
@@ -5676,7 +5762,7 @@ int GenReflex(int argc, char **argv)
       return 1;
    }
 
-   ROOT::TMetaUtils::gErrorIgnoreLevel = ROOT::TMetaUtils::kNote;
+   ROOT::TMetaUtils::GetErrorIgnoreLevel() = ROOT::TMetaUtils::kNote;
 
    // The verbosity: debug wins over quiet
    //std::string verbosityOption("-v4"); // To be uncommented for the testing phase. It should be -v
@@ -5754,6 +5840,11 @@ int GenReflex(int argc, char **argv)
       selSyntaxOnly = true;
    }
 
+   bool noIncludePaths = false;
+   if (options[NOINCLUDEPATHS]) {
+      noIncludePaths = true;
+   }
+
    bool failOnWarnings = false;
    if (options[FAILONWARNINGS]) {
       failOnWarnings = true;
@@ -5821,6 +5912,7 @@ int GenReflex(int argc, char **argv)
                                     isDeep,
                                     writeEmptyRootPCM,
                                     selSyntaxOnly,
+                                    noIncludePaths,
                                     headersNames,
                                     failOnWarnings,
                                     ofileName);
@@ -5843,6 +5935,7 @@ int GenReflex(int argc, char **argv)
                                         isDeep,
                                         writeEmptyRootPCM,
                                         selSyntaxOnly,
+                                        noIncludePaths,
                                         headersNames,
                                         failOnWarnings,
                                         ofileName);

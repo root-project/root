@@ -10,36 +10,36 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//_____________________________________________________________________________
-// TGeoPara - parallelipeped class. It has 6 parameters :
-//         dx, dy, dz - half lengths in X, Y, Z
-//         alpha - angle w.r.t the Y axis from center of low Y edge to
-//                 center of high Y edge [deg]
-//         theta, phi - polar and azimuthal angles of the segment between
-//                 low and high Z surfaces [deg]
-//
-//_____________________________________________________________________________
-//
-//Begin_Html
-/*
-<img src="gif/t_para.gif">
+/** \class TGeoPara
+\ingroup Geometry_classes
+
+Parallelepiped class. It has 6 parameters :
+
+  - dx, dy, dz - half lengths in X, Y, Z
+  - alpha - angle w.r.t the Y axis from center of low Y edge to
+    center of high Y edge [deg]
+  - theta, phi - polar and azimuthal angles of the segment between
+    low and high Z surfaces [deg]
+
+Begin_Macro(source)
+{
+   TCanvas *c = new TCanvas("c", "c",0,0,600,600);
+   new TGeoManager("para", "poza1");
+   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
+   TGeoMedium *med = new TGeoMedium("MED",1,mat);
+   TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
+   gGeoManager->SetTopVolume(top);
+   TGeoVolume *vol = gGeoManager->MakePara("PARA",med, 20,30,40,30,15,30);
+   vol->SetLineWidth(2);
+   top->AddNode(vol,1);
+   gGeoManager->CloseGeometry();
+   gGeoManager->SetNsegments(80);
+   top->Draw();
+   TView *view = gPad->GetView();
+   view->ShowAxis();
+}
+End_Macro
 */
-//End_Html
-//Begin_Html
-/*
-<img src="gif/t_paradivX.gif">
-*/
-//End_Html
-//Begin_Html
-/*
-<img src="gif/t_paradivY.gif">
-*/
-//End_Html
-//Begin_Html
-/*
-<img src="gif/t_paradivZ.gif">
-*/
-//End_Html
 
 #include "Riostream.h"
 
@@ -120,12 +120,12 @@ TGeoPara::TGeoPara(const char *name, Double_t dx, Double_t dy, Double_t dz, Doub
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
-/// param[0] = dx
-/// param[1] = dy
-/// param[2] = dz
-/// param[3] = alpha
-/// param[4] = theta
-/// param[5] = phi
+///  - param[0] = dx
+///  - param[1] = dy
+///  - param[2] = dz
+///  - param[3] = alpha
+///  - param[4] = theta
+///  - param[5] = phi
 
 TGeoPara::TGeoPara(Double_t *param)
            :TGeoBBox(0, 0, 0)
@@ -349,7 +349,7 @@ Double_t TGeoPara::DistFromOutside(const Double_t *point, const Double_t *dir, I
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///--- Divide this paralelipiped shape belonging to volume "voldiv" into ndiv equal volumes
+/// Divide this parallelepiped shape belonging to volume "voldiv" into ndiv equal volumes
 /// called divname, from start position with the given step. Returns pointer
 /// to created division cell volume. In case a wrong division axis is supplied,
 /// returns pointer to volume to be divided.
@@ -424,7 +424,7 @@ Double_t TGeoPara::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///--- Fill vector param[4] with the bounding cylinder parameters. The order
+/// Fill vector param[4] with the bounding cylinder parameters. The order
 /// is the following : Rmin, Rmax, Phi1, Phi2
 
 void TGeoPara::GetBoundingCylinder(Double_t *param) const
@@ -433,7 +433,7 @@ void TGeoPara::GetBoundingCylinder(Double_t *param) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Fills real parameters of a positioned box inside this. Returns 0 if successfull.
+/// Fills real parameters of a positioned box inside this. Returns 0 if successful.
 
 Int_t TGeoPara::GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_t &dx, Double_t &dy, Double_t &dz) const
 {
@@ -671,7 +671,7 @@ void TGeoPara::ComputeNormal_v(const Double_t *points, const Double_t *dirs, Dou
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+/// Compute distance from array of input points having directions specified by dirs. Store output in dists
 
 void TGeoPara::DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {
@@ -679,7 +679,7 @@ void TGeoPara::DistFromInside_v(const Double_t *points, const Double_t *dirs, Do
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+/// Compute distance from array of input points having directions specified by dirs. Store output in dists
 
 void TGeoPara::DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {

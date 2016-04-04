@@ -31,6 +31,7 @@ Class implementing or helping  the various TTree cloning method
 #include "TLeafS.h"
 #include "TLeafO.h"
 #include "TLeafC.h"
+#include "TFileCacheRead.h"
 
 #include <algorithm>
 
@@ -115,7 +116,10 @@ TTreeCloner::TTreeCloner(TTree *from, TTree *to, Option_t *method, UInt_t option
    fBasketIndex(new UInt_t[fMaxBaskets]),
    fPidOffset(0),
    fCloneMethod(TTreeCloner::kDefault),
-   fToStartEntries(0)
+   fToStartEntries(0),
+   fCacheSize(0LL),
+   fFileCache(nullptr),
+   fPrevCache(nullptr)
 {
    TString opt(method);
    opt.ToLower();
@@ -131,21 +135,32 @@ TTreeCloner::TTreeCloner(TTree *from, TTree *to, Option_t *method, UInt_t option
    }
    if (fToTree) fToStartEntries = fToTree->GetEntries();
 
-   if (fToTree == 0) {
-      fWarningMsg.Form("An output TTree is required (cloning %s).",
-                       from->GetName());
+   if (fFromTree == nullptr) {
+      if (to)
+         fWarningMsg.Form("An input TTree is required (cloning to %s).",
+                          to->GetName());
+      else
+         fWarningMsg.Form("An input and output TTree are required.");
       if (!(fOptions & kNoWarnings)) {
          Warning("TTreeCloner::TTreeCloner", "%s", fWarningMsg.Data());
       }
       fIsValid = kFALSE;
-   } else if (fToTree->GetDirectory() == 0) {
+   }
+   if (fToTree == nullptr) {
+      fWarningMsg.Form("An output TTree is required (cloning %s).",
+                       from ? from->GetName() : "no tree");
+      if (!(fOptions & kNoWarnings)) {
+         Warning("TTreeCloner::TTreeCloner", "%s", fWarningMsg.Data());
+      }
+      fIsValid = kFALSE;
+   } else if (fToTree->GetDirectory() == nullptr) {
       fWarningMsg.Form("The output TTree (%s) must be associated with a directory.",
                        fToTree->GetName());
       if (!(fOptions & kNoWarnings)) {
          Warning("TTreeCloner::TTreeCloner", "%s", fWarningMsg.Data());
       }
       fIsValid = kFALSE;
-   } else if (fToTree->GetCurrentFile() == 0) {
+   } else if (fToTree->GetCurrentFile() == nullptr) {
       fWarningMsg.Form("The output TTree (%s) must be associated with a directory (%s) that is in a file.",
                        fToTree->GetName(),fToTree->GetDirectory()->GetName());
       if (!(fOptions & kNoWarnings)) {
@@ -165,6 +180,10 @@ TTreeCloner::TTreeCloner(TTree *from, TTree *to, Option_t *method, UInt_t option
       }
       fIsValid = kFALSE;
    }
+
+   if (fIsValid && (!(fOptions & kNoFileCache))) {
+      fCacheSize = fFromTree->GetCacheAutoSize();
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -175,6 +194,7 @@ Bool_t TTreeCloner::Exec()
    if (!IsValid()) {
       return kFALSE;
    }
+   CreateCache();
    ImportClusterRanges();
    CopyStreamerInfos();
    CopyProcessIds();
@@ -183,6 +203,7 @@ Bool_t TTreeCloner::Exec()
    SortBaskets();
    WriteBaskets();
    CopyMemoryBaskets();
+   RestoreCache();
 
    return kTRUE;
 }
@@ -192,6 +213,9 @@ Bool_t TTreeCloner::Exec()
 
 TTreeCloner::~TTreeCloner()
 {
+   // The file cache was restored to its previous value at the end of Exec,
+   // we can safely delete our cache.
+   delete fFileCache;
    delete [] fBasketBranchNum;
    delete [] fBasketNum;
    delete [] fBasketSeek;
@@ -468,8 +492,7 @@ void TTreeCloner::CopyStreamerInfos()
       TStreamerInfo *curInfo = 0;
       TClass *cl = TClass::GetClass(oldInfo->GetName());
 
-      if ((cl->IsLoaded() && (cl->GetNew()!=0 || cl->HasDefaultConstructor()))
-          || !cl->IsLoaded())  {
+      if (!cl->IsLoaded() || cl->GetNew()) {
          // Insure that the TStreamerInfo is loaded
          curInfo = (TStreamerInfo*)cl->GetStreamerInfo(oldInfo->GetClassVersion());
          if (oldInfo->GetClassVersion()==1) {
@@ -574,6 +597,36 @@ void TTreeCloner::CopyProcessIds()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Create a TFileCacheRead if it was requested.
+
+void TTreeCloner::CreateCache()
+{
+   if (fCacheSize && fFromTree->GetCurrentFile()) {
+      TFile *f = fFromTree->GetCurrentFile();
+      auto prev = f->GetCacheRead(fFromTree);
+      if (fFileCache && prev == fFileCache) {
+         return;
+      }
+      fPrevCache = prev;
+      // Remove the previous cache if any.
+      if (prev) f->SetCacheRead(nullptr, fFromTree);
+      // The constructor attach the new cache.
+      fFileCache = new TFileCacheRead(f, fCacheSize, fFromTree);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Restore the TFileCacheRead to its previous value.
+
+void TTreeCloner::RestoreCache() {
+   if (IsValid() && fFileCache && fFromTree->GetCurrentFile()) {
+      TFile *f = fFromTree->GetCurrentFile();
+      f->SetCacheRead(nullptr,fFromTree); // Remove our file cache.
+      f->SetCacheRead(fPrevCache, fFromTree);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set the entries and import the cluster range of the
 
 void TTreeCloner::ImportClusterRanges()
@@ -586,6 +639,27 @@ void TTreeCloner::ImportClusterRanges()
    fToTree->ImportClusterRanges( fFromTree->GetTree() );
 
    fToTree->SetEntries(fToTree->GetEntries() + fFromTree->GetTree()->GetEntries());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the TFile cache size to be used.
+/// Note that the default is to use the same size as the default TTreeCache for
+/// the input tree.
+/// \param size Size of the cache. Zero disable the use of the cache.
+
+void TTreeCloner::SetCacheSize(Int_t size)
+{
+   fCacheSize = size;
+   if (IsValid() && fFileCache) {
+      if (fCacheSize == 0 || fCacheSize != fFileCache->GetBufferSize()) {
+         TFile *f = fFromTree->GetCurrentFile();
+         f->SetCacheRead(nullptr,fFromTree);
+         delete fFileCache;
+         fFileCache = nullptr;
+      }
+   }
+   // Note if the TFile cache is needed, it will be created at the
+   // beginning of Exec.
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -615,12 +689,41 @@ void TTreeCloner::SortBaskets()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Fill the file cache with the next set of basket.
+///
+/// \param from index of the first lement of fFromBranches to start caching
+/// \return The index of first element of fFromBranches that is not in the cache
+UInt_t TTreeCloner::FillCache(UInt_t from)
+{
+   if (!fFileCache) return 0;
+   // Reset the cache
+   fFileCache->Prefetch(0, 0);
+   Long64_t size = 0;
+   for (UInt_t j = from; j < fMaxBaskets; ++j) {
+      TBranch *frombr = (TBranch *) fFromBranches.UncheckedAt(fBasketBranchNum[fBasketIndex[j]]);
+
+
+      Int_t index = fBasketNum[ fBasketIndex[j] ];
+      Long64_t pos = frombr->GetBasketSeek(index);
+      Int_t len = frombr->GetBasketBytes()[index];
+      if (pos && len) {
+         size += len;
+         if (size > fFileCache->GetBufferSize()) {
+            return j;
+         }
+         fFileCache->Prefetch(pos,len);
+      }
+   }
+   return fMaxBaskets;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Transfer the basket from the input file to the output file
 
 void TTreeCloner::WriteBaskets()
 {
    TBasket *basket = new TBasket();
-   for(UInt_t j=0; j<fMaxBaskets; ++j) {
+   for(UInt_t j = 0, notCached = 0; j<fMaxBaskets; ++j) {
       TBranch *from = (TBranch*)fFromBranches.UncheckedAt( fBasketBranchNum[ fBasketIndex[j] ] );
       TBranch *to   = (TBranch*)fToBranches.UncheckedAt( fBasketBranchNum[ fBasketIndex[j] ] );
 
@@ -631,6 +734,9 @@ void TTreeCloner::WriteBaskets()
 
       Long64_t pos = from->GetBasketSeek(index);
       if (pos!=0) {
+         if (fFileCache && j >= notCached) {
+            notCached = FillCache(notCached);
+         }
          if (from->GetBasketBytes()[index] == 0) {
             from->GetBasketBytes()[index] = basket->ReadBasketBytes(pos, fromfile);
          }

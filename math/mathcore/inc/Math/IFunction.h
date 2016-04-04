@@ -417,4 +417,4 @@ namespace Math {
 } // namespace Math
 } // namespace ROOT
 
-#endif /* ROOT_Math_IGenFunction */
+#endif /* ROOT_Math_IFunction */

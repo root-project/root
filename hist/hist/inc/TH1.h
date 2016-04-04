@@ -291,6 +291,7 @@ public:
    virtual Int_t    GetMinimumBin() const;
    virtual Int_t    GetMinimumBin(Int_t &locmix, Int_t &locmiy, Int_t &locmiz) const;
    virtual Double_t GetMinimumStored() const {return fMinimum;}
+   virtual void     GetMinimumAndMaximum(Double_t& min, Double_t& max) const;
    virtual Double_t GetMean(Int_t axis=1) const;
    virtual Double_t GetMeanError(Int_t axis=1) const;
    virtual Int_t    GetNbinsX() const {return fXaxis.GetNbins();}

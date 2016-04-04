@@ -9,137 +9,139 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//____________________________________________________________________________
-// TGeoShape - Base abstract class for all shapes.
-//____________________________________________________________________________
-//
-//
-//   Shapes are geometrical objects that provide the basic modelling
-// functionality. They provide the definition of the LOCAL frame of coordinates,
-// with respect to which they are defined. Any implementation of a shape deriving
-// from the base TGeoShape class has to provide methods for :
-//  - finding out if a point defined in their local frame is or not contained
-// inside;
-//  - computing the distance from a local point to getting outside/entering the
-// shape, given a known direction;
-//  - computing the maximum distance in any direction from a local point that
-// does NOT result in a boundary crossing of the shape (safe distance);
-//  - computing the cosines of the normal vector to the crossed shape surface,
-// given a starting local point and an ongoing direction.
-//   All the features above are globally managed by the modeller in order to
-// provide navigation functionality. In addition to those, shapes have also to
-// implement additional specific abstract methods :
-//  - computation of the minimal box bounding the shape, given that this box have
-// to be aligned with the local coordinates;
-//  - algorithms for dividing the shape along a given axis and producing resulting
-// divisions volumes.
-//
-//   The modeler currently provides a set of 16 basic shapes, which we will call
-// primitives. It also provides a special class allowing the creation of shapes
-// made as a result of boolean operations between primitives. These are called
-// composite shapes and the composition operation can be recursive (composition
-// of composites). This allows the creation of a quite large number of different
-// shape topologies and combinations.
-//
-//   Shapes are named objects and register themselves to the manager class at
-// creation time. This is responsible for their final deletion. Shapes
-// can be created without name if their retreival by name is no needed. Generally
-// shapes are objects that are usefull only at geometry creation stage. The pointer
-// to a shape is in fact needed only when referring to a given volume and it is
-// always accessible at that level. A shape may be referenced by several volumes,
-// therefore its deletion is not possible once volumes were defined based on it.
-//
-//
-//
-// Creating shapes
-//================
-//   Shape objects embeed only the minimum set of parameters that are fully
-// describing a valid physical shape. For instance, a tube is represented by
-// its half length, the minimum radius and the maximum radius. Shapes are used
-// togeather with media in order to create volumes, which in their turn
-// are the main components of the geometrical tree. A specific shape can be created
-// stand-alone :
-//
-//   TGeoBBox *box = new TGeoBBox("s_box", halfX, halfY, halfZ); // named
-//   TGeoTube *tub = new TGeoTube(rmin, rmax, halfZ);            // no name
-//   ...  (see each specific shape constructors)
-//
-//   Sometimes it is much easier to create a volume having a given shape in one
-// step, since shapes are not direcly linked in the geometrical tree but volumes
-// are :
-//
-//   TGeoVolume *vol_box = gGeoManager->MakeBox("BOX_VOL", "mat1", halfX, halfY, halfZ);
-//   TGeoVolume *vol_tub = gGeoManager->MakeTube("TUB_VOL", "mat2", rmin, rmax, halfZ);
-//   ...  (see MakeXXX() utilities in TGeoManager class)
-//
-//
-// Shape queries
-//===============
-// Note that global queries related to a geometry are handled by the manager class.
-// However, shape-related queries might be sometimes usefull.
-//
-// A) Bool_t TGeoShape::Contains(const Double_t *point[3])
-//   - this method returns true if POINT is actually inside the shape. The point
-// has to be defined in the local shape reference. For instance, for a box having
-// DX, DY and DZ half-lengths a point will be considered inside if :
-//   | -DX <= point[0] <= DX
-//   | -DY <= point[1] <= DY
-//   | -DZ <= point[2] <= DZ
-//
-// B) Double_t TGeoShape::DistFromInside(Double_t *point[3], Double_t *dir[3],
-//                                  Int_t iact, Double_t step, Double_t *safe)
-//   - computes the distance to exiting a shape from a given point INSIDE, along
-// a given direction. The direction is given by its director cosines with respect
-// to the local shape coordinate system. This method provides additional
-// information according the value of IACT input parameter :
-//   IACT = 0     => compute only safe distance and fill it at the location
-//                   given by SAFE
-//   IACT = 1     => a proposed STEP is supplied. The safe distance is computed
-//                   first. If this is bigger than STEP than the proposed step
-//                   is approved and returned by the method since it does not
-//                   cross the shape boundaries. Otherwise, the distance to
-//                   exiting the shape is computed and returned.
-//   IACT = 2     => compute both safe distance and distance to exiting, ignoring
-//                   the proposed step.
-//   IACT > 2     => compute only the distance to exiting, ignoring anything else.
-//
-// C) Double_t TGeoShape::DistFromOutside(Double_t *point[3], Double_t *dir[3],
-//                                  Int_t iact, Double_t step, Double_t *safe)
-//   - computes the distance to entering a shape from a given point OUTSIDE. Acts
-// in the same way as B).
-//
-// D) Double_t Safety(const Double_t *point[3], Bool_t inside)
-//
-//   - compute maximum shift of a point in any direction that does not change its
-// INSIDE/OUTSIDE state (does not cross shape boundaries). The state of the point
-// have to be properly supplied.
-//
-// E) Double_t *Normal(Double_t *point[3], Double_t *dir[3], Bool_t inside)
-//
-//   - returns director cosines of normal to the crossed shape surface from a
-// given point towards a direction. One has to specify if the point is inside
-// or outside shape. According to this, the normal will be outwards or inwards
-// shape respectively. Normal components are statically stored by shape class,
-// so it has to be copied after retreival in a different array.
-//
-// Dividing shapes
-//=================
-//   Shapes can generally be divided along a given axis. Supported axis are
-// X, Y, Z, Rxy, Phi, Rxyz. A given shape cannot be divided however on any axis.
-// The general rule is that that divisions are possible on whatever axis that
-// produces still known shapes as slices. The division of shapes should not be
-// performed by TGeoShape::Divide() calls, but rather by TGeoVolume::Divide().
-// The algorithm for dividing a specific shape is known by the shape object, but
-// is always invoked in a generic way from the volume level. Details on how to
-// do that can be found in TGeoVolume class. One can see how all division options
-// are interpreted and which is their result inside specific shape classes.
-//_____________________________________________________________________________
-//
-//Begin_Html
-/*
-<img src="gif/t_shape.jpg">
+/** \class TGeoShape
+\ingroup Geometry_classes
+Base abstract class for all shapes.
+
+  Shapes are geometrical objects that provide the basic modelling
+functionality. They provide the definition of the LOCAL frame of coordinates,
+with respect to which they are defined. Any implementation of a shape deriving
+from the base TGeoShape class has to provide methods for :
+
+  - finding out if a point defined in their local frame is or not contained
+    inside;
+  - computing the distance from a local point to getting outside/entering the
+    shape, given a known direction;
+  - computing the maximum distance in any direction from a local point that
+    does NOT result in a boundary crossing of the shape (safe distance);
+  - computing the cosines of the normal vector to the crossed shape surface,
+    given a starting local point and an ongoing direction.
+    All the features above are globally managed by the modeller in order to
+    provide navigation functionality. In addition to those, shapes have also to
+    implement additional specific abstract methods :
+  - computation of the minimal box bounding the shape, given that this box have
+    to be aligned with the local coordinates;
+  - algorithms for dividing the shape along a given axis and producing resulting
+    divisions volumes.
+
+  The modeler currently provides a set of 16 basic shapes, which we will call
+primitives. It also provides a special class allowing the creation of shapes
+made as a result of boolean operations between primitives. These are called
+composite shapes and the composition operation can be recursive (composition
+of composites). This allows the creation of a quite large number of different
+shape topologies and combinations.
+
+  Shapes are named objects and register themselves to the manager class at
+creation time. This is responsible for their final deletion. Shapes
+can be created without name if their retrieval by name is no needed. Generally
+shapes are objects that are useful only at geometry creation stage. The pointer
+to a shape is in fact needed only when referring to a given volume and it is
+always accessible at that level. A shape may be referenced by several volumes,
+therefore its deletion is not possible once volumes were defined based on it.
+
+### Creating shapes
+
+  Shape objects embed only the minimum set of parameters that are fully
+describing a valid physical shape. For instance, a tube is represented by
+its half length, the minimum radius and the maximum radius. Shapes are used
+together with media in order to create volumes, which in their turn
+are the main components of the geometrical tree. A specific shape can be created
+stand-alone :
+
+~~~ {.cpp}
+  TGeoBBox *box = new TGeoBBox("s_box", halfX, halfY, halfZ); // named
+  TGeoTube *tub = new TGeoTube(rmin, rmax, halfZ);            // no name
+  ...  (see each specific shape constructors)
+~~~
+
+  Sometimes it is much easier to create a volume having a given shape in one
+step, since shapes are not directly linked in the geometrical tree but volumes
+are :
+
+~~~ {.cpp}
+  TGeoVolume *vol_box = gGeoManager->MakeBox("BOX_VOL", "mat1", halfX, halfY, halfZ);
+  TGeoVolume *vol_tub = gGeoManager->MakeTube("TUB_VOL", "mat2", rmin, rmax, halfZ);
+  ...  (see MakeXXX() utilities in TGeoManager class)
+~~~
+
+### Shape queries
+
+Note that global queries related to a geometry are handled by the manager class.
+However, shape-related queries might be sometimes useful.
+
+#### `Bool_t TGeoShape::Contains(const Double_t *point[3])`
+
+this method returns true if POINT is actually inside the shape. The point
+has to be defined in the local shape reference. For instance, for a box having
+DX, DY and DZ half-lengths a point will be considered inside if :
+
+~~~ {.cpp}
+  | -DX <= point[0] <= DX
+  | -DY <= point[1] <= DY
+  | -DZ <= point[2] <= DZ
+~~~
+
+#### `Double_t TGeoShape::DistFromInside(Double_t *point[3], Double_t *dir[3], Int_t iact, Double_t step, Double_t *safe)`
+
+computes the distance to exiting a shape from a given point INSIDE, along
+a given direction. The direction is given by its director cosines with respect
+to the local shape coordinate system. This method provides additional
+information according the value of IACT input parameter :
+
+  - IACT = 0     => compute only safe distance and fill it at the location
+                    given by SAFE
+  - IACT = 1     => a proposed STEP is supplied. The safe distance is computed
+                    first. If this is bigger than STEP than the proposed step
+                    is approved and returned by the method since it does not
+                    cross the shape boundaries. Otherwise, the distance to
+                    exiting the shape is computed and returned.
+  - IACT = 2     => compute both safe distance and distance to exiting, ignoring
+                    the proposed step.
+  - IACT > 2     => compute only the distance to exiting, ignoring anything else.
+
+#### `Double_t TGeoShape::DistFromOutside(Double_t *point[3], Double_t *dir[3], Int_t iact, Double_t step, Double_t *safe)`
+
+computes the distance to entering a shape from a given point OUTSIDE. Acts
+in the same way as B).
+
+#### `Double_t Safety(const Double_t *point[3], Bool_t inside)`
+
+compute maximum shift of a point in any direction that does not change its
+INSIDE/OUTSIDE state (does not cross shape boundaries). The state of the point
+have to be properly supplied.
+
+#### `Double_t *Normal(Double_t *point[3], Double_t *dir[3], Bool_t inside)`
+
+returns director cosines of normal to the crossed shape surface from a
+given point towards a direction. One has to specify if the point is inside
+or outside shape. According to this, the normal will be outwards or inwards
+shape respectively. Normal components are statically stored by shape class,
+so it has to be copied after retrieval in a different array.
+
+### Dividing shapes
+
+Shapes can generally be divided along a given axis. Supported axis are
+X, Y, Z, Rxy, Phi, Rxyz. A given shape cannot be divided however on any axis.
+The general rule is that that divisions are possible on whatever axis that
+produces still known shapes as slices. The division of shapes should not be
+performed by TGeoShape::Divide() calls, but rather by TGeoVolume::Divide().
+The algorithm for dividing a specific shape is known by the shape object, but
+is always invoked in a generic way from the volume level. Details on how to
+do that can be found in TGeoVolume class. One can see how all division options
+are interpreted and which is their result inside specific shape classes.
+
+\image html geom_t_shape.png
 */
-//End_Html
 
 #include "TObjArray.h"
 #include "TEnv.h"
@@ -158,6 +160,7 @@ ClassImp(TGeoShape)
 
 TGeoMatrix *TGeoShape::fgTransform = NULL;
 Double_t    TGeoShape::fgEpsMch = 2.220446049250313e-16;
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
@@ -199,11 +202,11 @@ TGeoShape::~TGeoShape()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Test for shape navigation methods. Summary for test numbers:
+///
 ///  1: DistFromInside/Outside. Sample points inside the shape. Generate
 ///    directions randomly in cos(theta). Compute DistFromInside and move the
 ///    point with bigger distance. Compute DistFromOutside back from new point.
 ///    Plot d-(d1+d2)
-///
 
 void TGeoShape::CheckShape(Int_t testNo, Int_t nsamples, Option_t *option)
 {

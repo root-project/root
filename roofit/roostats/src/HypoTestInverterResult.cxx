@@ -40,7 +40,7 @@ using namespace std;
 
 // initialize static value 
 double HypoTestInverterResult::fgAsymptoticMaxSigma      = 5; 
-
+int    HypoTestInverterResult::fgAsymptoticNumPoints      = 11;
 
 HypoTestInverterResult::HypoTestInverterResult(const char * name ) :
    SimpleInterval(name),
@@ -58,6 +58,9 @@ HypoTestInverterResult::HypoTestInverterResult(const char * name ) :
   // default constructor
    fLowerLimit = TMath::QuietNaN();
    fUpperLimit = TMath::QuietNaN();
+
+   fYObjects.SetOwner();
+   fExpPValues.SetOwner();
 }
 
 
@@ -84,6 +87,9 @@ HypoTestInverterResult::HypoTestInverterResult( const HypoTestInverterResult& ot
      fYObjects.Add( other.fYObjects.At(i)->Clone() );
    for (int i = 0; i <  fExpPValues.GetSize() ; ++i)
      fExpPValues.Add( other.fExpPValues.At(i)->Clone() );   
+
+   fYObjects.SetOwner();
+   fExpPValues.SetOwner();
 }
 
 
@@ -119,7 +125,10 @@ HypoTestInverterResult::operator=(const HypoTestInverterResult& other)
   for (int i=0; i <  fExpPValues.GetSize() ; ++i) {
     fExpPValues.Add( other.fExpPValues.At(i)->Clone() );   
   }
-  
+
+  fYObjects.SetOwner();
+  fExpPValues.SetOwner();
+
   return *this;
 }
 
@@ -141,6 +150,8 @@ HypoTestInverterResult::HypoTestInverterResult( const char* name,
 {
    // constructor 
    fYObjects.SetOwner();
+   fExpPValues.SetOwner();
+
    // put a cloned copy of scanned variable to set in the interval
    // to avoid I/O problem of the Result class - 
    // make the set owning the cloned copy (use clone istead of Clone to not copying all links)
@@ -149,9 +160,18 @@ HypoTestInverterResult::HypoTestInverterResult( const char* name,
    fParameters.addOwned(*((RooRealVar *) scannedVariable.clone(scannedVariable.GetName()) ));
 }
 
+HypoTestInverterResult::~HypoTestInverterResult()
+{
+   // destructor
+   // explicitly empty the TLists - these contain pointers, not objects
+   fYObjects.RemoveAll();
+   fExpPValues.RemoveAll();
 
-int
-HypoTestInverterResult::ExclusionCleanup()
+   fYObjects.Delete();
+   fExpPValues.Delete();
+}
+
+int HypoTestInverterResult::ExclusionCleanup()
 {
   const int nEntries  = ArraySize();
 
@@ -195,11 +215,16 @@ HypoTestInverterResult::ExclusionCleanup()
     /////////////////////////////////////////////////////////////////////////////////////////
 
     const std::vector<double> & values = s->GetSamplingDistribution();
+    if ((int) values.size() != fgAsymptoticNumPoints) {
+       oocoutE(this,Eval) << "HypoTestInverterResult::ExclusionCleanup - invalid size of sampling distribution" << std::endl;
+       delete s;
+       break;
+    }
     
     /// expected p-values
     // special case for asymptotic results (cannot use TMath::quantile in that case)
-    if (resultIsAsymptotic) { 
-      double maxSigma = 5; // == HypoTestInverterResult::fgAsymptoticMaxSigma; // MB: HACK
+    if (resultIsAsymptotic) {
+      double maxSigma = fgAsymptoticMaxSigma;
       double dsig = 2.*maxSigma / (values.size() -1) ;         
       int  i0 = (int) TMath::Floor ( ( -nsig2 + maxSigma )/dsig + 0.5 );
       int  i1 = (int) TMath::Floor ( ( -nsig1 + maxSigma )/dsig + 0.5 );
@@ -268,14 +293,6 @@ HypoTestInverterResult::ExclusionCleanup()
 
   return nPointsRemoved;
 }
-
-
-HypoTestInverterResult::~HypoTestInverterResult()
-{
-   // destructor
-   // no need to delete explictly the objects in the TList since the TList owns the objects
-}
-
 
 bool HypoTestInverterResult::Add( const HypoTestInverterResult& otherResult   )
 {
@@ -409,90 +426,92 @@ double HypoTestInverterResult::GetXValue( int index ) const
 
 double HypoTestInverterResult::GetYValue( int index ) const
 {
-// function to return the value of the confidence level for the i^th entry in the results
-  if ( index >= ArraySize() || index<0 ) {
-    oocoutE(this,InputArguments) << "Problem: You are asking for an impossible array index value\n";
-    return -999;
-  }
+    // function to return the value of the confidence level for the i^th entry in the results
+    auto result = GetResult(index);
+    if ( !result ) { 
+      return -999;
+    }
 
-  if (fUseCLs) 
-    return ((HypoTestResult*)fYObjects.At(index))->CLs();
-  else 
-     return ((HypoTestResult*)fYObjects.At(index))->CLsplusb();  // CLs+b
+    if (fUseCLs) { 
+      return result->CLs();
+    } else { 
+      return result->CLsplusb();  // CLs+b
+    }
 }
 
 double HypoTestInverterResult::GetYError( int index ) const
 {
-// function to return the estimated error on the value of the confidence level for the i^th entry in the results
-  if ( index >= ArraySize() || index<0 ) {
-    oocoutE(this,InputArguments) << "Problem: You are asking for an impossible array index value\n";
-    return -999;
-  }
+    // function to return the estimated error on the value of the confidence level for the i^th entry in the results
+    auto result = GetResult(index);
+    if ( !result ) {
+        return -999;
+    }
 
-  if (fUseCLs) 
-    return ((HypoTestResult*)fYObjects.At(index))->CLsError();
-  else 
-    return ((HypoTestResult*)fYObjects.At(index))->CLsplusbError();
+    if (fUseCLs) { 
+        return result->CLsError();
+    } else {
+        return result->CLsplusbError();
+    }
 }
 
 double HypoTestInverterResult::CLb( int index ) const
 {
-  // function to return the observed CLb value  for the i-th entry
-  if ( index >= ArraySize() || index<0 ) {
-    oocoutE(this,InputArguments) << "Problem: You are asking for an impossible array index value\n";
-    return -999;
-  }
-  return ((HypoTestResult*)fYObjects.At(index))->CLb();  
+    // function to return the observed CLb value  for the i-th entry
+    auto result = GetResult(index);
+    if ( !result ) {
+        return -999;
+    }
+    return result->CLb();  
 }
 
 double HypoTestInverterResult::CLsplusb( int index ) const
 {
-  // function to return the observed CLs+b value  for the i-th entry
-  if ( index >= ArraySize() || index<0 ) {
-    oocoutE(this,InputArguments) << "Problem: You are asking for an impossible array index value\n";
-    return -999;
-  }
-  return ((HypoTestResult*)fYObjects.At(index))->CLsplusb();  
+    // function to return the observed CLs+b value  for the i-th entry
+    auto result = GetResult(index);
+    if ( !result) { 
+        return -999;
+    }
+    return result->CLsplusb();  
 }
 double HypoTestInverterResult::CLs( int index ) const
 {
-  // function to return the observed CLs value  for the i-th entry
-  if ( index >= ArraySize() || index<0 ) {
-    oocoutE(this,InputArguments) << "Problem: You are asking for an impossible array index value\n";
-    return -999;
-  }
-  return ((HypoTestResult*)fYObjects.At(index))->CLs();  
+    // function to return the observed CLs value  for the i-th entry
+    auto result = GetResult(index);
+    if ( !result ) { 
+        return -999;
+    }
+    return result->CLs();  
 }
 
 double HypoTestInverterResult::CLbError( int index ) const
 {
-  // function to return the error on the observed CLb value  for the i-th entry
-  if ( index >= ArraySize() || index<0 ) {
-    oocoutE(this,InputArguments) << "Problem: You are asking for an impossible array index value\n";
-    return -999;
-  }
-  return ((HypoTestResult*)fYObjects.At(index))->CLbError();  
+    // function to return the error on the observed CLb value  for the i-th entry
+    auto result = GetResult(index);
+    if ( !result ) { 
+        return -999;
+    }
+    return result->CLbError();  
 }
 
 double HypoTestInverterResult::CLsplusbError( int index ) const
 {
-  // function to return the error on the observed CLs+b value  for the i-th entry
-  if ( index >= ArraySize() || index<0 ) {
-    oocoutE(this,InputArguments) << "Problem: You are asking for an impossible array index value\n";
-    return -999;
-  }
-  return ((HypoTestResult*)fYObjects.At(index))->CLsplusbError();  
-}
-double HypoTestInverterResult::CLsError( int index ) const
-{
-   // function to return the error on the observed CLs value  for the i-th entry
-   if ( index >= ArraySize() || index<0 ) {
-      oocoutE(this,InputArguments) << "Problem: You are asking for an impossible array index value\n";
-      return -999;
-   }
-   return ((HypoTestResult*)fYObjects.At(index))->CLsError();  
+    // function to return the error on the observed CLs+b value  for the i-th entry
+    auto result = GetResult(index);
+    if ( ! result ) {
+        return -999;
+    }
+    return result->CLsplusbError();  
 }
 
+double HypoTestInverterResult::CLsError( int index ) const
+{
+    // function to return the error on the observed CLs value  for the i-th entry
+    auto result = GetResult(index);
+    if ( ! result ){ 
+        return -999;
+    }
+    return result->CLsError();  
+}
 
 HypoTestResult* HypoTestInverterResult::GetResult( int index ) const
 {
@@ -1086,8 +1105,9 @@ SamplingDistribution *  HypoTestInverterResult::GetExpectedPValueDist(int index)
    // in case b abs sbDistribution are null assume is coming from the asymptotic calculator 
    // hard -coded this value (no really needed to be used by user)
    fgAsymptoticMaxSigma = 5; 
-   const int npoints = 11;
+   fgAsymptoticNumPoints = 2*fgAsymptoticMaxSigma+1;
    const double smax = fgAsymptoticMaxSigma;
+   const int npoints = fgAsymptoticNumPoints;
    const double dsig = 2* smax/ (npoints-1) ;
    std::vector<double> values(npoints);
    for (int i = 0; i < npoints; ++i) { 

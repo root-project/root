@@ -193,12 +193,8 @@ extern "C" {
 #   define HAVE_DLADDR
 #endif
 #if defined(R__MACOSX)
-#   if defined(MAC_OS_X_VERSION_10_5)
 #      define HAVE_BACKTRACE_SYMBOLS_FD
 #      define HAVE_DLADDR
-#   else
-#      define USE_GDB_STACK_TRACE
-#   endif
 #endif
 
 #ifdef HAVE_BACKTRACE_SYMBOLS_FD
@@ -2143,6 +2139,64 @@ void TUnixSystem::Abort(int)
    ::abort();
 }
 
+
+#ifdef R__MACOSX
+/// Use CoreSymbolication to retrieve the stacktrace.
+#include <mach/mach.h>
+extern "C" {
+  // Adapted from https://github.com/mountainstorm/CoreSymbolication
+  // Under the hood the framework basically just calls through to a set of C++ libraries
+  typedef struct {
+    void* csCppData;
+    void* csCppObj;
+  } CSTypeRef;
+  typedef CSTypeRef CSSymbolicatorRef;
+  typedef CSTypeRef CSSourceInfoRef;
+  typedef CSTypeRef CSSymbolOwnerRef;
+  typedef CSTypeRef CSSymbolRef;
+
+  CSSymbolicatorRef CSSymbolicatorCreateWithPid(pid_t pid);
+  CSSourceInfoRef CSSymbolicatorGetSourceInfoWithAddressAtTime(CSSymbolicatorRef cs, vm_address_t addr, uint64_t time);
+  CSSymbolRef CSSourceInfoGetSymbol(CSSourceInfoRef info);
+  const char* CSSymbolGetName(CSSymbolRef sym);
+  CSSymbolOwnerRef CSSourceInfoGetSymbolOwner(CSSourceInfoRef info);
+  const char* CSSymbolOwnerGetPath(CSSymbolOwnerRef symbol);
+  const char* CSSourceInfoGetPath(CSSourceInfoRef info);
+  int CSSourceInfoGetLineNumber(CSSourceInfoRef info);
+}
+
+void macosx_backtrace() {
+  void* addrlist[kMAX_BACKTRACE_DEPTH];
+  // retrieve current stack addresses
+  int numstacks = backtrace( addrlist, sizeof( addrlist ) / sizeof( void* ));
+
+  CSSymbolicatorRef symbolicator = CSSymbolicatorCreateWithPid(getpid());
+
+  // skip TUnixSystem::Backtrace(), macosx_backtrace()
+  static const int skipFrames = 2;
+  for (int i = skipFrames; i < numstacks; ++i) {
+    CSSourceInfoRef sourceInfo
+    = CSSymbolicatorGetSourceInfoWithAddressAtTime(symbolicator,
+                                                   (vm_address_t)addrlist[i],
+                                                   0x80000000u /*"now"*/);
+
+    CSSymbolOwnerRef symOwner = CSSourceInfoGetSymbolOwner(sourceInfo);
+    if (const char* libPath = CSSymbolOwnerGetPath(symOwner)) {
+      printf("[%s]", libPath);
+    } else {
+      printf("[<unknown binary>]");
+    }
+
+    CSSymbolRef sym = CSSourceInfoGetSymbol(sourceInfo);
+    if (const char* symname = CSSymbolGetName(sym)) {
+      printf(" %s %s:%d", symname, CSSourceInfoGetPath(sourceInfo),
+             (int)CSSourceInfoGetLineNumber(sourceInfo));
+    }
+    printf("\n");
+  }
+}
+#endif // R__MACOSX
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Print a stack trace.
 
@@ -2151,6 +2205,7 @@ void TUnixSystem::StackTrace()
    if (!gEnv->GetValue("Root.Stacktrace", 1))
       return;
 
+#ifndef R__MACOSX
    TString gdbscript = gEnv->GetValue("Root.StacktraceScript", "");
    gdbscript = gdbscript.Strip();
    if (gdbscript != "") {
@@ -2469,6 +2524,9 @@ void TUnixSystem::StackTrace()
       rc = exc_virtual_unwind(0, &context);
    }
 #endif
+#else //R__MACOSX
+  macosx_backtrace();
+#endif //R__MACOSX
 }
 
 //---- System Logging ----------------------------------------------------------
@@ -2784,7 +2842,7 @@ const char *TUnixSystem::GetLinkedLibraries()
    TRegexp sovers = "\\.so\\.[0-9]+";
 #endif
 #endif
-   FILE *p = OpenPipe(TString::Format("%s %s", cLDD, exe), "r");
+   FILE *p = OpenPipe(TString::Format("%s '%s'", cLDD, exe), "r");
    if (p) {
       TString ldd;
       while (ldd.Gets(p)) {

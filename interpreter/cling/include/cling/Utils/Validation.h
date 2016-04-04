@@ -10,9 +10,17 @@
 #ifndef CLING_UTILS_VALIDATION_H
 #define CLING_UTILS_VALIDATION_H
 
+#include "llvm/Config/config.h" // for LLVM_ON_WIN32
+
 #include <assert.h>
 #include <errno.h>
-#include <unistd.h>
+#ifdef LLVM_ON_WIN32
+# define WIN32_LEAN_AND_MEAN
+# define NOGDI
+# include <Windows.h>
+#else
+# include <unistd.h>
+#endif
 
 namespace cling {
   namespace utils{

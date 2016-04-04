@@ -47,7 +47,7 @@ void TMVA::MultiClassActionButton( TControlBar* cbar,
 }
 
 // main GUI
-void TMVA::TMVAMultiClassGui( const char* fName ) 
+void TMVA::TMVAMultiClassGui(const char* fName ,TString dataset) 
 {   
    // Use this script in order to run the various individual macros
    // that plot the output of TMVA (e.g. running TMVAClassification.cxx),
@@ -79,8 +79,42 @@ void TMVA::TMVAMultiClassGui( const char* fName )
       std::cout << "==> Abort TMVAMultiClassGui, please verify filename" << std::endl;
       return;
    }
+   
+   if(file->GetListOfKeys()->GetEntries()<=0)
+   {
+      cout << "==> Abort TMVAGui, please verify if dataset exist" << endl;
+      return;
+   }
+   if( (dataset==""||dataset.IsWhitespace()) && (file->GetListOfKeys()->GetEntries()==1))
+   {
+       TKey *key=(TKey*)file->GetListOfKeys()->At(0);
+       dataset=key->GetName();
+   }else if((dataset==""||dataset.IsWhitespace()) && (file->GetListOfKeys()->GetEntries()>=1))
+   {
+       gROOT->Reset();
+       gStyle->SetScreenFactor(2); // if you have a large screen, select 1,2 or 1.4
+       
+       TControlBar *bar=new TControlBar("vertical","Select dataset", 0, 0);
+       bar->SetButtonWidth(300);
+       for(int i=0;i<file->GetListOfKeys()->GetEntries();i++)
+       {
+           TKey *key=(TKey*)file->GetListOfKeys()->At(i);
+           dataset=key->GetName();
+           bar->AddButton(dataset.Data(),Form("TMVA::TMVAMultiClassGui(\"%s\",\"%s\")",fName,dataset.Data()),dataset.Data());
+       }
+       
+       bar->AddSeparator();
+       bar->AddButton( "Quit",   ".q", "Quit", "button");
+
+       // set the style 
+       bar->SetTextColor("black");
+       bar->Show();
+       gROOT->SaveContext();
+       return ;
+   }
+   
    // find all references   
-   TMVAMultiClassGui_keyContent = (TList*)file->GetListOfKeys()->Clone();
+   TMVAMultiClassGui_keyContent = (TList*)file->GetDirectory(dataset.Data())->GetListOfKeys()->Clone();
 
    //close file
    file->Close();
@@ -110,7 +144,7 @@ void TMVA::TMVAMultiClassGui( const char* fName )
       if (tmp.Contains( "Id" )) title = "Input variables (training sample)";
       MultiClassActionButton( cbar, 
                     Form( "(%i%c) %s", ic, ch++, title.Data() ),
-                    Form( "TMVA::variablesMultiClass(\"%s\",\"%s\",\"%s\")", fName, str->GetString().Data(), title.Data() ),
+                    Form( "TMVA::variablesMultiClass(\"%s\",\"%s\",\"%s\",\"%s\")",dataset.Data(), fName, str->GetString().Data(), title.Data() ),
                     Form( "Plots all '%s'-transformed input variables (macro variablesMultiClass(...))", str->GetString().Data() ),
                     buttonType, str->GetString() );
    }      
@@ -125,7 +159,7 @@ void TMVA::TMVAMultiClassGui( const char* fName )
       if (tmp.Contains( "Id" )) title = "Input variable correlations (scatter profiles)";
       MultiClassActionButton( cbar, 
                     Form( "(%i%c) %s", ic, ch++, title.Data() ),
-                    Form( "TMVA::CorrGuiMultiClass(\"%s\",\"%s\",\"%s\")", fName, str->GetString().Data(), title.Data() ),
+                    Form( "TMVA::CorrGuiMultiClass(\"%s\",\"%s\",\"%s\",\"%s\")",dataset.Data() , fName, str->GetString().Data(), title.Data() ),
                     Form( "Plots all correlation profiles between '%s'-transformed input variables (macro CorrGuiMultiClass(...))", 
                           str->GetString().Data() ),
                     buttonType, str->GetString() );
@@ -136,21 +170,21 @@ void TMVA::TMVAMultiClassGui( const char* fName )
    title =Form( "(%i) Input Variable Linear Correlation Coefficients", ++ic );
    MultiClassActionButton( cbar,  
                  title,
-                 Form( "TMVA::correlationsMultiClass(\"%s\")", fName ),
+                 Form( "TMVA::correlationsMultiClass(\"%s\",\"%s\")",dataset.Data(), fName ),
                  "Plots signal and background correlation summaries for all input variables (macro correlationsMultiClass.cxx)", 
                  buttonType );
 
    title =Form( "(%ia) Classifier Output Distributions (test sample)", ++ic );
    MultiClassActionButton( cbar,  
                  title,
-                 Form( "TMVA::mvasMulticlass(\"%s\",TMVA::kMVAType)", fName ),
+                 Form( "TMVA::mvasMulticlass(\"%s\",\"%s\",TMVA::kMVAType)",dataset.Data() , fName ),
                  "Plots the output of each classifier for the test data (macro mvas(...,0))",
                  buttonType, defaultRequiredClassifier );
 
    title =Form( "(%ib) Classifier Output Distributions (test and training samples superimposed)", ic );
    MultiClassActionButton( cbar,  
                  title,
-                 Form( "TMVA::mvasMulticlass(\"%s\",TMVA::kCompareType)", fName ),
+                 Form( "TMVA::mvasMulticlass(\"%s\",\"%s\",TMVA::kCompareType)",dataset.Data(), fName ),
                  "Plots the output of each classifier for the test (histograms) and training (dots) data (macro mvas(...,3))",
                  buttonType, defaultRequiredClassifier );
    /*
@@ -213,7 +247,7 @@ void TMVA::TMVAMultiClassGui( const char* fName )
    */
    
    title = Form( "(%ia) Network Architecture (MLP)", ++ic );
-   TString call = Form( "TMVA::network(\"%s\")", fName );
+   TString call = Form( "TMVA::network(\"%s\",\"%s\")",dataset.Data() , fName );
    MultiClassActionButton( cbar,  
                  title,
                  call, 
@@ -223,14 +257,14 @@ void TMVA::TMVAMultiClassGui( const char* fName )
    title = Form( "(%ib) Network Convergence Test (MLP)", ic );
    MultiClassActionButton( cbar,  
                  title,
-                 Form( "TMVA::annconvergencetest(\"%s\")", fName ), 
+                 Form( "TMVA::annconvergencetest(\"%s\",\"%s\")",dataset.Data() , fName ), 
                  "Plots error estimator versus training epoch for training and test samples (macro annconvergencetest.cxx)",
                  buttonType, "MLP" );
 
    title = Form( "(%i) Decision Trees (BDT)", ++ic );
    MultiClassActionButton( cbar,  
                  title,
-                 Form( "TMVA::BDT(\"%s\")", fName ),
+                 Form( "TMVA::BDT(\"%s\",\"%s\")",dataset.Data() , fName ),
                  "Plots the Decision Trees trained by BDT algorithms (macro BDT(itree,...))",
                  buttonType, "BDT" );
 
@@ -246,7 +280,7 @@ void TMVA::TMVAMultiClassGui( const char* fName )
    title = Form( "(%i) Plot Foams (PDEFoam)", ++ic );
    MultiClassActionButton( cbar,  
                  title,
-                 "TMVA::PlotFoams(\"weights/TMVAMulticlass_PDEFoam.weights_foams.root\")",
+                 Form("TMVA::PlotFoams(\"%s/weights/TMVAMulticlass_PDEFoam.weights_foams.root\")",dataset.Data()),
                  "Plot Foams (macro PlotFoams.cxx)",
                  buttonType, "PDEFoam" );
    /*
