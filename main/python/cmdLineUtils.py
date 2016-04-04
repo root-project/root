@@ -767,11 +767,14 @@ def _copyTreeSubset(sourceFile,sourcePathSplit,destFile,destPathSplit,firstEvent
             super(ROOT.TNtuple,smallTree).Fill()
         else:
             smallTree.Fill()
-    if isNtuple:
-        smallTree = super(ROOT.TNtuple,smallTree).CopyTree(selectionString)
+    if selectionString:
+        if isNtuple:
+            smallSkimmedTree = super(ROOT.TNtuple,smallTree).CopyTree(selectionString)
+        else:
+            smallSkimmedTree = smallTree.CopyTree(selectionString)
+        smallSkimmedTree.Write()
     else:
-        smallTree = smallTree.CopyTree(selectionString)
-    smallTree.Write()
+        smallTree.Write()
     return retcode
 
 def _copyTreeSubsets(fileName, pathSplitList, destFile, destPathSplit, first, last, selectionString):
@@ -789,7 +792,7 @@ def _copyTreeSubsets(fileName, pathSplitList, destFile, destPathSplit, first, la
     return retcode
 
 def rootEventselector(sourceList, destFileName, destPathSplit, \
-                      compress=None, recreate=False, first=0, last=-1, selectionString="1"):
+                      compress=None, recreate=False, first=0, last=-1, selectionString=""):
     # Check arguments
     if sourceList == [] or destFileName == "": return 1
     if recreate and destFileName in sourceList:
