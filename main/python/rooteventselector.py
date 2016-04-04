@@ -43,7 +43,7 @@ def execute():
     parser.add_argument("--recreate", help=cmdLineUtils.RECREATE_HELP, action="store_true")
     parser.add_argument("-f","--first", type=int, default=0, help=FIRST_EVENT_HELP)
     parser.add_argument("-l","--last", type=int, default=-1, help=LAST_EVENT_HELP)
-    parser.add_argument("-s","--selection", default="1")
+    parser.add_argument("-s","--selection", default="")
 
     # Put arguments in shape
     sourceList, destFileName, destPathSplit, optDict = cmdLineUtils.getSourceDestListOptDict(parser)
