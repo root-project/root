@@ -811,7 +811,7 @@ def _copyTreeSubset(sourceFile,sourcePathSplit,destFile,destPathSplit,firstEvent
     if branchinclude:
         _setBranchStatus(outputTree,branchinclude,1)
     if branchexclude or branchinclude:
-        outputTree = outputTree.CloneTree(0)
+        outputTree = outputTree.CloneTree()
 
     outputTree.Write()
     return retcode
