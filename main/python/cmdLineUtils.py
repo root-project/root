@@ -769,7 +769,15 @@ def rootCp(sourceList, destFileName, destPathSplit, \
 ##########
 # ROOTEVENTSELECTOR
 
-def _copyTreeSubset(sourceFile,sourcePathSplit,destFile,destPathSplit,firstEvent,lastEvent,selectionString):
+def _setBranchStatus(tree,branchSelectionString,status=0):
+    """This is used by _copyTreeSubset() to turn on/off branches"""
+    for branchToModify in branchSelectionString.split(","):
+        logging.info("Setting branch status to %d for %s"%(status,branchToModify)  )
+        tree.SetBranchStatus(branchToModify,status)
+    return tree
+
+def _copyTreeSubset(sourceFile,sourcePathSplit,destFile,destPathSplit,firstEvent,lastEvent,selectionString,
+    branchinclude, branchexclude):
     """Copy a subset of the tree from (sourceFile,sourcePathSplit)
     to (destFile,destPathSplit) according to options in optDict"""
     retcode = changeDirectory(sourceFile,sourcePathSplit[:-1])
@@ -779,6 +787,7 @@ def _copyTreeSubset(sourceFile,sourcePathSplit,destFile,destPathSplit,firstEvent
     # changeDirectory for the small tree not to be memory-resident
     retcode = changeDirectory(destFile,destPathSplit)
     if retcode != 0: return retcode
+
     smallTree = bigTree.CloneTree(0)
     if lastEvent == -1:
         lastEvent = nbrEntries-1
@@ -789,17 +798,26 @@ def _copyTreeSubset(sourceFile,sourcePathSplit,destFile,destPathSplit,firstEvent
             super(ROOT.TNtuple,smallTree).Fill()
         else:
             smallTree.Fill()
+
+    # "Skim" events based on branch values
     if selectionString:
-        if isNtuple:
-            smallSkimmedTree = super(ROOT.TNtuple,smallTree).CopyTree(selectionString)
-        else:
-            smallSkimmedTree = smallTree.CopyTree(selectionString)
-        smallSkimmedTree.Write()
+        outputTree = smallTree.CopyTree(selectionString)
     else:
-        smallTree.Write()
+        outputTree = smallTree
+
+    # "Slim" tree by removing branches
+    if branchexclude:
+        _setBranchStatus(outputTree,branchexclude,0)
+    if branchinclude:
+        _setBranchStatus(outputTree,branchinclude,1)
+    if branchexclude or branchinclude:
+        outputTree = outputTree.CloneTree(0)
+
+    outputTree.Write()
     return retcode
 
-def _copyTreeSubsets(fileName, pathSplitList, destFile, destPathSplit, first, last, selectionString):
+def _copyTreeSubsets(fileName, pathSplitList, destFile, destPathSplit, first, last, selectionString,
+    branchinclude, branchexclude):
     retcode = 0
     destFileName = destFile.GetName()
     rootFile = openROOTFile(fileName) \
@@ -809,12 +827,13 @@ def _copyTreeSubsets(fileName, pathSplitList, destFile, destPathSplit, first, la
     for pathSplit in pathSplitList:
         if isTree(rootFile,pathSplit):
             retcode += _copyTreeSubset(rootFile,pathSplit, \
-            destFile,destPathSplit,first,last,selectionString)
+            destFile,destPathSplit,first,last,selectionString,branchinclude, branchexclude)
     if fileName != destFileName: rootFile.Close()
     return retcode
 
 def rootEventselector(sourceList, destFileName, destPathSplit, \
-                      compress=None, recreate=False, first=0, last=-1, selectionString=""):
+                      compress=None, recreate=False, first=0, last=-1, selectionString="",
+                      branchinclude="", branchexclude=""):
     # Check arguments
     if sourceList == [] or destFileName == "": return 1
     if recreate and destFileName in sourceList:
@@ -829,7 +848,7 @@ def rootEventselector(sourceList, destFileName, destPathSplit, \
     retcode = 0
     for fileName, pathSplitList in sourceList:
         retcode += _copyTreeSubsets(fileName, pathSplitList, destFile, destPathSplit, \
-                                    first, last, selectionString)
+                                    first, last, selectionString, branchinclude, branchexclude)
     destFile.Close()
     return retcode
 
