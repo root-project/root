@@ -176,6 +176,8 @@ namespace std {
 
 //#include <experimental/__config>
 
+#include "RWrap_libcpp_string_view.h"
+
 #include <string>
 #include <algorithm>
 #include <iterator>
