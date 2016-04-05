@@ -28,10 +28,17 @@
 
  These NIM papers are also available as doc or ps files from:
 
- - [Spectrum.doc](ftp://root.cern.ch/root/Spectrum.doc)
- - [SpectrumDec.ps.gz](ftp://root.cern.ch/root/SpectrumDec.ps.gz)
- - [SpectrumSrc.ps.gz](ftp://root.cern.ch/root/SpectrumSrc.ps.gz)
- - [SpectrumBck.ps.gz](ftp://root.cern.ch/root/SpectrumBck.ps.gz)
+ - [SpectrumDec.ps.gz](ftp://root.cern.ch/download/SpectrumDec.ps.gz)
+ - [SpectrumSrc.ps.gz](ftp://root.cern.ch/download/SpectrumSrc.ps.gz)
+ - [SpectrumBck.ps.gz](ftp://root.cern.ch/download/SpectrumBck.ps.gz)
+
+  Manual:
+
+ - [Spectrum.doc](ftp://root.cern.ch/download/Spectrum.doc)
+ - [Spectrum.html](ftp://root.cern.ch/download/doc/spectrum/Spectrum.html)
+ - [Spectrum.pdf](ftp://root.cern.ch/download/doc/spectrum/Spectrum.pdf)
+ - [SpectrumLetter.pdf](ftp://root.cern.ch/download/doc/spectrum/SpectrumLetter.pdf)
+ - [Spectrum.epub](ftp://root.cern.ch/download/doc/spectrum/Spectrum.epub)
 */
 
 Int_t TSpectrum::fgIterations    = 3;
