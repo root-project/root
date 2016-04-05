@@ -38,8 +38,9 @@ int main(int argc, char **argv)
 
    Int_t branchStyle = 1; //new style by default
 
-   TFile *hfile;
-   TTree *tree;
+   TFile *hfile       = 0;
+   TTree *tree        = 0;
+   TBranch *branch    = 0;
    TLarge *eventlarge = 0;
    TSmall *eventsmall = 0;
    TInt   *eventint   = 0;
@@ -55,7 +56,6 @@ int main(int argc, char **argv)
    Double_t tnew = 0;
    Int_t printev = 100;
 
-   TBranch *branch;
 //         Read case
    if (read) {
       if (object == 1) {
@@ -98,18 +98,8 @@ int main(int argc, char **argv)
             nb += tree->GetEntry(ev);        //read complete event in memory
          }
       } else {    //read random
-         Int_t evrandom;
-/*
-         for (ev = 0; ev < nevent; ev++) {
-            if (ev%printev == 0) std::cout<<"event="<<ev<<std::endl;
-            evrandom = Int_t(nevent*gRandom->Rndm(1));
-            nb += tree->GetEntry(evrandom);  //read complete event in memory
-         }
-*/
-//         tree->SetCacheSize(0);
-//         tree->SetCacheLearnEntries(0);
-//         tree->SetCacheEntryRange(0,nevent);
-         nb += tree->GetEntry(1);
+         Int_t evrandom = Int_t(nevent*gRandom->Rndm(1));
+         nb += tree->GetEntry(evrandom);
       }
    } else {
 //         Write case
