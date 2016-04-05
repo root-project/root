@@ -50,20 +50,14 @@ TSpectrum::TSpectrum() :TNamed("Spectrum", "Miroslav Morhac peak finder")
    fPosition   = new Double_t[n];
    fPositionX  = new Double_t[n];
    fPositionY  = new Double_t[n];
-   fResolution = 1;
    fHistogram  = 0;
    fNPeaks     = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///   - maxpositions: maximum number of peaks
-///   - resolution: determines resolution of the neighbouring peaks
-///                   default value is 1 correspond to 3 sigma distance
-///                   between peaks. Higher values allow higher resolution
-///                   (smaller distance between peaks.
-///                   May be set later through SetResolution.
 
-TSpectrum::TSpectrum(Int_t maxpositions, Double_t resolution)
+TSpectrum::TSpectrum(Int_t maxpositions)
           :TNamed("Spectrum", "Miroslav Morhac peak finder")
 {
    Int_t n = maxpositions;
@@ -74,7 +68,6 @@ TSpectrum::TSpectrum(Int_t maxpositions, Double_t resolution)
    fPositionY = new Double_t[n];
    fHistogram = 0;
    fNPeaks    = 0;
-   SetResolution(resolution);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -334,21 +327,6 @@ Int_t TSpectrum::Search(const TH1 * hin, Double_t sigma, Option_t * option,
       return npeaks;
    }
    return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///  resolution: determines resolution of the neighbouring peaks
-///              default value is 1 correspond to 3 sigma distance
-///              between peaks. Higher values allow higher resolution
-///              (smaller distance between peaks.
-///              May be set later through SetResolution.
-
-void TSpectrum::SetResolution(Double_t resolution)
-{
-   if (resolution > 1)
-      fResolution = resolution;
-   else
-      fResolution = 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

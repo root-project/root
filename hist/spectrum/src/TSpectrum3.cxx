@@ -59,7 +59,6 @@ TSpectrum3::TSpectrum3() :TNamed("Spectrum", "Miroslav Morhac peak finder")
    fPositionX  = new Double_t[n];
    fPositionY  = new Double_t[n];
    fPositionZ  = new Double_t[n];
-   fResolution = 1;
    fHistogram  = 0;
    fNPeaks     = 0;
 }
@@ -67,13 +66,8 @@ TSpectrum3::TSpectrum3() :TNamed("Spectrum", "Miroslav Morhac peak finder")
 
 ////////////////////////////////////////////////////////////////////////////////
 ///  - maxpositions:  maximum number of peaks
-///  - resolution:    determines resolution of the neighbouring peaks
-///                 default value is 1 correspond to 3 sigma distance
-///                 between peaks. Higher values allow higher resolution
-///                 (smaller distance between peaks.
-///                 May be set later through SetResolution.
 
-TSpectrum3::TSpectrum3(Int_t maxpositions, Double_t resolution) :TNamed("Spectrum", "Miroslav Morhac peak finder")
+TSpectrum3::TSpectrum3(Int_t maxpositions) :TNamed("Spectrum", "Miroslav Morhac peak finder")
 {
    Int_t n = TMath::Max(maxpositions, 100);
    fMaxPeaks  = n;
@@ -83,7 +77,6 @@ TSpectrum3::TSpectrum3(Int_t maxpositions, Double_t resolution) :TNamed("Spectru
    fPositionZ = new Double_t[n];
    fHistogram = 0;
    fNPeaks    = 0;
-   SetResolution(resolution);
 }
 
 
@@ -211,21 +204,6 @@ Int_t TSpectrum3::Search(const TH1 * hin, Double_t sigma,
    return npeaks;
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
-///  resolution: determines resolution of the neighbouring peaks
-///              default value is 1 correspond to 3 sigma distance
-///              between peaks. Higher values allow higher resolution
-///              (smaller distance between peaks.
-///              May be set later through SetResolution.
-
-void TSpectrum3::SetResolution(Double_t resolution)
-{
-   if (resolution > 1)
-      fResolution = resolution;
-   else
-      fResolution = 1;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This function calculates background spectrum from source spectrum.
