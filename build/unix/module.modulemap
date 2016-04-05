@@ -401,7 +401,11 @@ module "RRemoteProtocol.h" { header "RRemoteProtocol.h" export * }
 module "RStipples.h" { header "RStipples.h" export * }
 module "RStringView.h" { header "RStringView.h" export * }
 module "RVersion.h" { header "RVersion.h" export * }
-module "RWrap_libcpp_string_view.h" { header "RWrap_libcpp_string_view.h" export * }
+module "RWrap_libcpp_string_view.h" {
+  header "RWrap_libcpp_string_view.h"
+  header "libcpp_string_view.h"
+  export *
+}
 module "RZip.h" { header "RZip.h" export * }
 module "Riosfwd.h" { header "Riosfwd.h" export * }
 module "Riostream.h" { header "Riostream.h" export * }
@@ -2196,7 +2200,7 @@ module "XLFDParser.h" { header "XLFDParser.h" export * }
 module "ZipLZMA.h" { header "ZipLZMA.h" export * }
 module "cfortran.h" [extern_c] { header "cfortran.h" export * }
 module "config.h" { header "config.h" export * }
-module "libcpp_string_view.h" { header "libcpp_string_view.h" export * }
+//module "libcpp_string_view.h" { header "libcpp_string_view.h" export * } // see RWrap_libcpp_string_view
 module "mmalloc.h" { header "mmalloc.h" export * }
 module "mmconfig.h" { header "mmconfig.h" export * }
 module "mmprivate.h" { header "mmprivate.h" export * }
