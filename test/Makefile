@@ -45,17 +45,6 @@ else
 EVENTLIB      = $(shell pwd)/$(EVENTSO)
 endif
 
-LOCALCOMPRESSIONO        = Localcompression.$(ObjSuf) LocalcompressionDict.$(ObjSuf)
-LOCALCOMPRESSIONS        = Localcompression.$(SrcSuf) LocalcompressionDict.$(SrcSuf)
-LOCALCOMPRESSIONSO       = libLocalcompression.$(DllSuf)
-LOCALCOMPRESSION         = Localcompression$(ExeSuf)
-ifeq ($(PLATFORM),win32)
-LOCALCOMPRESSIONLIB      = libLocalcompression.lib
-else
-LOCALCOMPRESSIONLIB      = $(shell pwd)/$(LOCALCOMPRESSIONSO)
-endif
-
-
 EVENTMTO      = EventMT.$(ObjSuf) EventMTDict.$(ObjSuf)
 EVENTMTS      = EventMT.$(SrcSuf) EventMTDict.$(SrcSuf)
 EVENTMTSO     = libEventMT.$(DllSuf)
@@ -67,9 +56,6 @@ endif
 
 MAINEVENTO    = MainEvent.$(ObjSuf)
 MAINEVENTS    = MainEvent.$(SrcSuf)
-
-MAINLOCALCOMPRESSIONO    = MainLocalcompression.$(ObjSuf)
-MAINLOCALCOMPRESSIONS    = MainLocalcompression.$(SrcSuf)
 
 HWORLDO       = hworld.$(ObjSuf)
 HWORLDS       = hworld.$(SrcSuf)
