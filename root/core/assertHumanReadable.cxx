@@ -1,6 +1,7 @@
 #include "ROOT/StringConv.h"
 #include "TError.h"
 #include "TString.h"
+#include <limits>
 
 int checkFail(std::string_view input)
 {
@@ -29,7 +30,14 @@ int checkParsing(std::string_view input, Long64_t expected)
             input.to_string().c_str());
       return 1;
    }
-   if (res != expected) {
+   bool match = ( res == expected );
+   if (!match && (abs(expected) >= std::numeric_limits<decltype(expected)>::max()/1000) ) {
+      // We are close to the numeric limits, scale down the number to eliminate numerical imprecision.
+      Long64_t resScaled = res / 1000;
+      Long64_t expectedScaled = expected / 1000;
+      match = (resScaled == expectedScaled);
+   }
+   if (!match) {
       Error("FromHumanReadableSize","Incorrectly parsed %s and got the value %lld instead of %lld",
             input.to_string().c_str(),res,expected);
       return 1;
@@ -54,13 +62,19 @@ int checkParsingSet(const char *unit, Long64_t exp)
    num_failed += checkParsing(value,exp);
 
    for(auto &&val : values) {
-      value.Form("%f%s %lld",val,unit,(long long)(exp*val));
+     value.Form("%f%s %lld",val,unit,(long long)(val*exp));
       num_failed += checkParsing(value,val*exp);
    }
    value.Form("2%s",unit);
    num_failed += checkParsing(value,2*exp);
    value.Form("2.3%s",unit);
-   num_failed += checkParsing(value,2.3*exp);
+   // Avoid floating point imprecision on 32bit platform.
+   Long64_t expectedValue;
+   if (exp < std::numeric_limits<Long64_t>::max()/100)
+     expectedValue = 23*exp/10;
+   else
+     expectedValue = 2.3*exp;
+   num_failed += checkParsing(value,expectedValue);
    return num_failed;
 }
 
@@ -193,7 +207,7 @@ int assertToHumanReadable()
 
    for(unsigned int i = 1; i < size-2; ++i) {
 
-      // printf("Checking %lld vs %g%s an %g%s\n",value,expectedSiCoeff,suffix[i][1],expectedCoeff,suffix[i][0]);
+      printf("Checking %lld vs %g%s an %g%s\n",value,expectedSiCoeff,suffix[i][1],expectedCoeff,suffix[i][0]);
       num_failed += checkToHumanReadable(value,false,expectedCoeff,suffix[i][1]);
       num_failed += checkToHumanReadable(value,true,expectedSiCoeff,suffix[i][0]);
 
@@ -213,7 +227,7 @@ int assertToHumanReadable()
    expectedSiCoeff = 16;
    for(unsigned int i = 0; i < size; ++i) {
 
-      // printf("Checking %g vs %g%s and %g%s\n",dvalue,expectedSiCoeff,suffix[i][1],expectedCoeff,suffix[i][0]);
+      printf("Checking %g vs %g%s and %g%s\n",dvalue,expectedSiCoeff,suffix[i][1],expectedCoeff,suffix[i][0]);
       num_failed += checkToHumanReadable(dvalue,false,expectedCoeff,suffix[i][1]);
       num_failed += checkToHumanReadable(dvalue,true,expectedSiCoeff,suffix[i][0]);
 
