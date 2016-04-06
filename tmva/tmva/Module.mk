@@ -50,6 +50,7 @@ TMVAH3       := $(patsubst %,$(MODDIRI)/TMVA/%,$(TMVAH3))
 TMVAH4       := $(patsubst %,$(MODDIRI)/TMVA/%,$(TMVAH4))
 TMVAH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/TMVA/*.h))
 TMVAINCH     := $(patsubst $(MODDIRI)/TMVA/%.h,include/TMVA/%.h,$(TMVAH))
+TMVAINCI     := $(patsubst $(MODDIRI)/TMVA/%.icc,include/TMVA/%.icc,$(MODDIRI)/TMVA/NeuralNet.icc)
 TMVAS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 TMVAO        := $(call stripsrc,$(TMVAS:.cxx=.o))
 
@@ -59,7 +60,7 @@ TMVALIB      := $(LPATH)/libTMVA.$(SOEXT)
 TMVAMAP      := $(TMVALIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS      += $(TMVAINCH)
+ALLHDRS      += $(TMVAINCH) $(TMVAINCI)
 ALLLIBS      += $(TMVALIB)
 ALLMAPS      += $(TMVAMAP)
 
@@ -70,6 +71,12 @@ INCLUDEFILES += $(TMVADEP)
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
 include/TMVA/%.h: $(TMVADIRI)/TMVA/%.h
+		@(if [ ! -d "include/TMVA" ]; then     \
+		   mkdir -p include/TMVA;              \
+		fi)
+		cp $< $@
+
+include/TMVA/%.icc: $(TMVADIRI)/TMVA/%.icc
 		@(if [ ! -d "include/TMVA" ]; then     \
 		   mkdir -p include/TMVA;              \
 		fi)
