@@ -260,8 +260,10 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
    // transient
    {
       auto temp = new TListOfEnums();
-      for (TObject* enumAsTObj : *fEnums){
-         temp->Add((TEnum*) enumAsTObj);
+      if (fEnums) {
+         for (TObject* enumAsTObj : *fEnums){
+            temp->Add((TEnum*) enumAsTObj);
+         }
       }
       cl->fEnums = temp;
    }
