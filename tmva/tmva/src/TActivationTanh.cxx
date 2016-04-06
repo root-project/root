@@ -61,10 +61,12 @@ TMVA::TActivationTanh::~TActivationTanh()
 /// a fast tanh approximation
 
 Double_t TMVA::TActivationTanh::fast_tanh(Double_t arg){
+   if (arg > 4.97) return 1;
+   if (arg < -4.97) return -1;
    float arg2 = arg * arg;
    float a = arg * (135135.0f + arg2 * (17325.0f + arg2 * (378.0f + arg2)));
    float b = 135135.0f + arg2 * (62370.0f + arg2 * (3150.0f + arg2 * 28.0f));
-   return a / b;
+   return a/b;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
