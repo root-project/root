@@ -5566,6 +5566,7 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
    Bool_t movedX, movedY;   // make sure the current object is moved just once
    movedX = movedY = false;
    Bool_t resize = false;   // indicates resize mode
+   Bool_t log = gPad->GetLogx() || gPad->GetLogy();
    if (mode != 'i') resize = true;
 
    TPad *is_pad = dynamic_cast<TPad *>( object );
@@ -5605,7 +5606,7 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
          tmpGuideLinePad->cd();
          gPad->GetRange(x1, y1, x2, y2);
       }
-      if (cling) threshold = 7;
+      if (cling && !log) threshold = 7;
       else threshold = 1;
 
       Rectangle_t BBox = cur->GetBBox();
