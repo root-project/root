@@ -410,6 +410,52 @@ void TStreamerInfo::Build()
          dmTitle = "->";
       }
 
+      // Let's check if we have a collection of unique pointers of T.
+      // In this case, we'll transform it in a collection of T*.
+      // e.g. list<unique_ptr<T>> --> list<T*>
+      bool isUniquePtrColl = false;
+      auto stlContType = dm->IsSTLContainer();
+      if (stlContType) {
+         // Simple case: something like stlcoll<T>, e.g. list or vector.
+         std::vector<std::string> v;
+         int i;
+         TClassEdit::GetSplit(dmType, v, i);
+         bool isArg1UniquePtr = TClassEdit::IsUniquePtr(v[1]);
+         bool isMapColl = stlContType == ROOT::kSTLmap ||
+                          stlContType == ROOT::kSTLunorderedmap ||
+                          stlContType == ROOT::kSTLmultimap ||
+                          stlContType == ROOT::kSTLunorderedmultimap;
+         bool isArg2UniquePtr = TClassEdit::IsUniquePtr(v[2]);
+         isUniquePtrColl = isArg1UniquePtr || isArg2UniquePtr;
+
+         // We could have a container with one or two template arguments, e.g.
+         // a forward_list or a map.
+         if (isUniquePtrColl) {
+            uniquePtrTypeNameBuf = v[0] + "<";
+
+            if (isArg1UniquePtr) {
+               uniquePtrTypeNameBuf += TClassEdit::GetUniquePtrType(v[1]);
+               uniquePtrTypeNameBuf += "*";
+            } else {
+               uniquePtrTypeNameBuf += v[1];
+            }
+
+            if (isMapColl){
+               uniquePtrTypeNameBuf += ",";
+               if (isArg2UniquePtr) {
+                  uniquePtrTypeNameBuf += TClassEdit::GetUniquePtrType(v[2]);
+                  uniquePtrTypeNameBuf += "*";
+               } else {
+                  uniquePtrTypeNameBuf += v[2];
+               }
+            }
+            uniquePtrTypeNameBuf += ">";
+            dmType = uniquePtrTypeNameBuf.c_str();
+            dmFull = uniquePtrTypeNameBuf.c_str();
+         }
+      }
+
+
       TDataMember* dmCounter = 0;
       if (dmIsPtr) {
          //
@@ -482,19 +528,29 @@ void TStreamerInfo::Build()
          if (!strcmp(dmType, "string") || !strcmp(dmType, "std::string") || !strcmp(dmType, full_string_name)) {
             element = new TStreamerSTLstring(dmName, dmTitle, offset, dmFull, dmIsPtr);
          } else if (dm->IsSTLContainer()) {
-            TVirtualCollectionProxy *proxy = TClass::GetClass(dm->GetTypeName() /* the underlying type */)->GetCollectionProxy();
+            TVirtualCollectionProxy *proxy = TClass::GetClass(dmType /* the underlying type */)->GetCollectionProxy();
             if (proxy) element = new TStreamerSTL(dmName, dmTitle, offset, dmFull, *proxy, dmIsPtr);
-            else element = new TStreamerSTL(dmName, dmTitle, offset, dmFull, dm->GetTrueTypeName(), dmIsPtr);
+            else element = new TStreamerSTL(dmName, dmTitle, offset, dmFull, dmFull, dmIsPtr);
             if (((TStreamerSTL*)element)->GetSTLtype() != ROOT::kSTLvector) {
+               auto printErrorMsg = [&](const char* category) 
+                  {
+                     std::string uptr_msg;
+                     if (isUniquePtrColl) {
+                        uptr_msg = ": the collection \"";
+                        uptr_msg += element->GetClassPointer()->GetName();
+                        uptr_msg += "\" should be selected to allow ROOT to perform I/O operations";
+                     }
+                     Error("Build","The class \"%s\" is %s and for its data member \"%s\" we do not have a dictionary for the collection \"%s\"%s. Because of this, we will not be able to read or write this data member.",GetName(), category, dmName, dm->GetTypeName(), uptr_msg.c_str());
+                  };
                if (fClass->IsLoaded()) {
                   if (!element->GetClassPointer()->IsLoaded()) {
-                     Error("Build","The class \"%s\" is compiled and for its the data member \"%s\", we do not have a dictionary for the collection \"%s\", we will not be able to read or write this data member.",GetName(),dmName,element->GetClassPointer()->GetName());
+                     printErrorMsg("compiled");
                      delete element;
                      continue;
                   }
                } else if (fClass->GetState() == TClass::kInterpreted) {
                   if (element->GetClassPointer()->GetCollectionProxy()->GetProperties() & TVirtualCollectionProxy::kIsEmulated) {
-                     Error("Build","The class \"%s\" is interpreted and for its the data member \"%s\", we do not have a dictionary for the collection \"%s\", we will not be able to read or write this data member.",GetName(),dmName,element->GetClassPointer()->GetName());
+                     printErrorMsg("interpreted");
                      delete element;
                      continue;
                   }
