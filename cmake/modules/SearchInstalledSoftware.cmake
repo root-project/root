@@ -981,7 +981,7 @@ if(davix OR builtin_davix)
     if(NOT davix)
       set(davix ON CACHE BOOL "" FORCE)
     endif()
-    set(DAVIX_VERSION 0.3.6)
+    set(DAVIX_VERSION 0.6.2)
     message(STATUS "Downloading and building Davix version ${DAVIX_VERSION}")
     string(REPLACE "-Wall " "" __cxxflags "${CMAKE_CXX_FLAGS}")                      # Otherwise it produces tones of warnings
     string(REPLACE "-W " "" __cxxflags "${__cxxflags}")
@@ -995,7 +995,7 @@ if(davix OR builtin_davix)
       # http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix/davix-embedded-${DAVIX_VERSION}.tar.gz
       URL ${repository_tarfiles}/davix-embedded-${DAVIX_VERSION}.tar.gz
       # Patch need. see https://github.com/cern-it-sdc-id/davix/issues/6
-      PATCH_COMMAND patch -p1 -i ${CMAKE_SOURCE_DIR}/cmake/patches/davix-${DAVIX_VERSION}.patch 
+      # PATCH_COMMAND patch -p1 -i ${CMAKE_SOURCE_DIR}/cmake/patches/davix-${DAVIX_VERSION}.patch 
       CMAKE_CACHE_ARGS -DCMAKE_PREFIX_PATH:STRING=${OPENSSL_PREFIX}
       CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
                  -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
@@ -1009,7 +1009,7 @@ if(davix OR builtin_davix)
                  -DCMAKE_CXX_FLAGS=${__cxxflags}
                  -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
                  -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
-                 -DLIB_SUFFIX=""
+                 -DLIB_SUFFIX=
       LOG_BUILD 1 LOG_CONFIGURE 1 LOG_DOWNLOAD 1 LOG_INSTALL 1
     )
     ExternalProject_Get_Property(DAVIX INSTALL_DIR)
