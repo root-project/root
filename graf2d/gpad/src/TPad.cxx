@@ -5733,6 +5733,7 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
    Bool_t movedX, movedY;   // make sure the current object is moved just once
    movedX = movedY = false;
    Bool_t resize = false;   // indicates resize mode
+   Bool_t log = gPad->GetLogx() || gPad->GetLogy();
    if (mode != 'i') resize = true;
 
    TPad *is_pad = dynamic_cast<TPad *>( object );
@@ -5791,7 +5792,7 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
          pMY = gPad->YtoPixel(MY);
          // Middlelines
          if (TMath::Abs(pMX-center.GetX())<threshold) {
-            if (cling && (!resize)) {
+            if (cling && (!resize) && (!log)) {
                cur->SetBBoxCenterX(pMX);
                center = cur->GetBBoxCenter();
                BBox = cur->GetBBox();
@@ -5803,7 +5804,7 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
             L->Draw();
          }
          if (TMath::Abs(pMY-center.GetY())<threshold) {
-            if (cling && (!resize)) {
+            if (cling && (!resize) && (!log)) {
                cur->SetBBoxCenterY(pMY);
                center = cur->GetBBoxCenter();
                BBox = cur->GetBBox();
@@ -5821,7 +5822,7 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
                if (other != cur) {
                   TPoint centerOther = other->GetBBoxCenter();
                   if (TMath::Abs(center.GetX()-centerOther.GetX())<threshold) {
-                     if (cling && (!resize)) {
+                     if (cling && (!resize) && (!log)) {
                         cur->SetBBoxCenterX(centerOther.GetX());
                         BBox   = cur->GetBBox();
                         center = cur->GetBBoxCenter();
@@ -5833,7 +5834,7 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
                      L->SetBit(kCanDelete);
                   }
                   if (TMath::Abs(center.GetY()-centerOther.GetY())<threshold) {
-                     if (cling && (!resize)) {
+                     if (cling && (!resize) && (!log)) {
                         cur->SetBBoxCenterY(centerOther.GetY());
                         BBox   = cur->GetBBox();
                         center = cur->GetBBoxCenter();
@@ -5883,7 +5884,7 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
          for (UInt_t i = 0; i<curDist.size(); i++) {
             for (UInt_t j = 0; j<otherDist.size(); j++) {
                if ((curDist[i].fdir == otherDist[j].fdir)&&(otherDist[j].fdir=='x')&&(TMath::Abs(curDist[i].fdist-otherDist[j].fdist)<threshold)) {
-                  if (cling && (!movedX) && (!resize)) {
+                  if (cling && (!movedX) && (!resize) && (!log)) {
                      if ((cur->GetBBoxCenter().fX < curDist[i].fb->GetBBoxCenter().fX)||(cur->GetBBoxCenter().fX < curDist[i].fa->GetBBoxCenter().fX))
                            cur->SetBBoxCenterX(cur->GetBBoxCenter().fX - otherDist[j].fdist + curDist[i].fdist);
                      else  cur->SetBBoxCenterX(cur->GetBBoxCenter().fX + otherDist[j].fdist - curDist[i].fdist);
@@ -5893,7 +5894,7 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
                   DrawDist(otherDist[j].fa->GetBBox(), otherDist[j].fb->GetBBox(), 'x');
                }
                if ((curDist[i].fdir == otherDist[j].fdir)&&(otherDist[j].fdir=='y')&&(TMath::Abs(curDist[i].fdist-otherDist[j].fdist)<threshold)) {
-                  if (cling && (!movedY) && (!resize)) {
+                  if (cling && (!movedY) && (!resize) && (!log)) {
                      if ((cur->GetBBoxCenter().fY < curDist[i].fb->GetBBoxCenter().fY)||(cur->GetBBoxCenter().fY < curDist[i].fa->GetBBoxCenter().fY))
                            cur->SetBBoxCenterY(cur->GetBBoxCenter().fY - otherDist[j].fdist + curDist[i].fdist);
                      else  cur->SetBBoxCenterY(cur->GetBBoxCenter().fY + otherDist[j].fdist - curDist[i].fdist);
@@ -5906,7 +5907,7 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
             for (UInt_t j = i; j<curDist.size(); j++) {
                if (i!=j) {
                   if ((curDist[i].fdir == curDist[j].fdir)&&(curDist[j].fdir=='x')&&(TMath::Abs(curDist[i].fdist-curDist[j].fdist)<threshold)) {
-                     if (cling && (!movedX) && (!resize)) {
+                     if (cling && (!movedX) && (!resize) && (!log)) {
                         if ((cur->GetBBoxCenter().fX < curDist[i].fb->GetBBoxCenter().fX)||(cur->GetBBoxCenter().fX < curDist[i].fa->GetBBoxCenter().fX))
                               cur->SetBBoxCenterX(cur->GetBBoxCenter().fX - floor(0.5*(curDist[j].fdist - curDist[i].fdist)));
                         else  cur->SetBBoxCenterX(cur->GetBBoxCenter().fX + floor(0.5*(curDist[j].fdist - curDist[i].fdist)));
@@ -5916,7 +5917,7 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
                   }
 
                   if ((curDist[i].fdir == curDist[j].fdir)&&(curDist[j].fdir=='y')&&(TMath::Abs(curDist[i].fdist-curDist[j].fdist)<threshold)) {
-                     if (cling && (!movedY) && (!resize)) {
+                     if (cling && (!movedY) && (!resize) && (!log)) {
                         if ((cur->GetBBoxCenter().fY < curDist[i].fb->GetBBoxCenter().fY)||(cur->GetBBoxCenter().fY < curDist[i].fa->GetBBoxCenter().fY))
                               cur->SetBBoxCenterY(cur->GetBBoxCenter().fY - floor(0.5*(curDist[j].fdist - curDist[i].fdist)));
                         else  cur->SetBBoxCenterY(cur->GetBBoxCenter().fY + floor(0.5*(curDist[j].fdist - curDist[i].fdist)));
@@ -5935,7 +5936,7 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
                   aBBox = a->GetBBox();
 
                   if ((TMath::Abs(aBBox.fWidth - BBox.fWidth)<threshold) && (mode != 't') && (mode != 'b')) {
-                     if (cling) {
+                     if (cling && (!log)) {
                         if (mode == 'l') cur->SetBBoxX1(BBox.fX + BBox.fWidth - aBBox.fWidth);
                         if (mode == 'r') cur->SetBBoxX2(BBox.fX + aBBox.fWidth);
                         if ((mode == '1')||(mode == '4')) cur->SetBBoxX1(BBox.fX + BBox.fWidth - aBBox.fWidth);
@@ -5958,7 +5959,7 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
                      A->Draw();
                   }
                   if ((TMath::Abs(aBBox.fHeight - BBox.fHeight)<threshold) && (mode != 'r') && (mode != 'l')) {
-                     if (cling) {
+                     if (cling && (!log)) {
                         if (mode == 't') cur->SetBBoxY1(BBox.fY + BBox.fHeight - aBBox.fHeight);
                         if (mode == 'b') cur->SetBBoxY2(BBox.fY + aBBox.fHeight);
                         if ((mode == '1')||(mode == '2')) cur->SetBBoxY1(BBox.fY + BBox.fHeight - aBBox.fHeight);
