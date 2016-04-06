@@ -1231,7 +1231,7 @@ namespace TMVA
 
 
 // include the implementations (in header file, because they are templated)
-#include "NeuralNet_i.h"
+#include "NeuralNet.icc"
 
 #endif
 
