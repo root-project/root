@@ -1,1 +1,1 @@
-Error in <CloseStreamerInfoROOTFile>: Collections of unique pointers such as the selected vector<unique_ptr<TH1F,default_delete<TH1F> > > are not yet supported.
+Error in <CloseStreamerInfoROOTFile>: A collection of unique pointers was selected: vector<unique_ptr<TH1F,default_delete<TH1F> > >. These are not supported. If you whish to perform I/O operations with vector<unique_ptr<TH1F,default_delete<TH1F> > >, just select the same collection of raw C pointers.

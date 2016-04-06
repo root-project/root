@@ -1,0 +1,7 @@
+
+Processing /home/dpiparo/RootDevel/Root6/head/roottest/root/io/uniquePointer/streamerInfoError.C...
+Error in <TStreamerInfo::Build>: The class "B" is compiled and for its data member "l" we do not have a dictionary for the collection "list<unique_ptr<TGraph,default_delete<TGraph> > >": the collection "list<TGraph*>" should be selected to allow ROOT to perform I/O operations. Because of this, we will not be able to read or write this data member.
+Error in <TStreamerInfo::Build>: The class "B" is compiled and for its data member "fl" we do not have a dictionary for the collection "forward_list<unique_ptr<TGraph,default_delete<TGraph> > >": the collection "forward_list<TGraph*>" should be selected to allow ROOT to perform I/O operations. Because of this, we will not be able to read or write this data member.
+Error in <TStreamerInfo::Build>: The class "B" is compiled and for its data member "s" we do not have a dictionary for the collection "set<unique_ptr<TGraph,default_delete<TGraph> > >": the collection "set<TGraph*>" should be selected to allow ROOT to perform I/O operations. Because of this, we will not be able to read or write this data member.
+Error in <TStreamerInfo::Build>: The class "B" is compiled and for its data member "m" we do not have a dictionary for the collection "map<int,unique_ptr<TGraph,default_delete<TGraph> > >": the collection "map<int,TGraph*>" should be selected to allow ROOT to perform I/O operations. Because of this, we will not be able to read or write this data member.
+(int) 0

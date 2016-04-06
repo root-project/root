@@ -1,5 +1,12 @@
 ROOTTEST_ADD_TESTDIRS()
 
+ROOTTEST_GENERATE_REFLEX_DICTIONARY(classes2 classes2.h  SELECTION sel2.xml)
+
+ROOTTEST_ADD_TEST(streamerInfoError
+                  MACRO  streamerInfoError.C
+                  OUTREF streamerInfoError.eref
+                  DEPENDS ${GENERATE_REFLEX_TEST})
+
 ROOTTEST_ADD_TEST(customDeleteError
                   COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/classesError1.h
                           --select=${CMAKE_CURRENT_SOURCE_DIR}/selError1.xml -I ${CMAKE_CURRENT_SOURCE_DIR}
