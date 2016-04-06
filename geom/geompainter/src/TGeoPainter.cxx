@@ -13,6 +13,7 @@
 // using TBuffer3D mechanism.
 //______________________________________________________________________________
 
+#include <map>
 #include "TROOT.h"
 #include "TClass.h"
 #include "TColor.h"
@@ -272,24 +273,11 @@ void TGeoPainter::ClearVisibleVolumes()
 
 void TGeoPainter::DefineColors() const
 {
-   TColor::InitializeColors();
-   TColor *color = gROOT->GetColor(1000);
-   if (color) return;
-   Int_t i,j;
-   Float_t r,g,b,h,l,s;
-
-   for (i=1; i<8; i++) {
-      color = (TColor*)gROOT->GetListOfColors()->At(i);
-      if (!color) {
-         Warning("DefineColors", "No colors defined");
-         return;
-      }
-      color->GetHLS(h,l,s);
-      for (j=0; j<100; j++) {
-         l = 0.25+0.5*j/99.;
-         TColor::HLS2RGB(h,l,s,r,g,b);
-         new TColor(1000+(i-1)*100+j, r,g,b);
-      }
+   static Int_t color = 0;
+   if (!color) {
+      TColor::InitializeColors();
+      for (auto icol=1; icol<10; ++icol) 
+         color = GetColor(icol, 0.5);
    }
 }
 
@@ -298,25 +286,42 @@ void TGeoPainter::DefineColors() const
 
 Int_t TGeoPainter::GetColor(Int_t base, Float_t light) const
 {
-   const Int_t kBCols[8] = {1,2,3,5,4,6,7,1};
-   TColor *tcolor = gROOT->GetColor(base);
-   if (!tcolor) tcolor = new TColor(base, 0.5,0.5,0.5);
-   Float_t r,g,b;
-   tcolor->GetRGB(r,g,b);
-   Int_t code = 0;
-   if (r>0.5) code += 1;
-   if (g>0.5) code += 2;
-   if (b>0.5) code += 4;
-   Int_t color, j;
-
-   if (light<0.25) {
-      j=0;
-   } else {
-      if (light>0.8) j=99;
-      else j = Int_t(99*(light-0.25)/0.5);
+   using IntMap_t = std::map<Int_t, Int_t>;
+   constexpr Int_t ncolors = 100;
+   constexpr Float_t lmin = 0.25;
+   constexpr Float_t lmax = 0.75;
+   static IntMap_t colmap;
+   Int_t color = base;
+   // Search color in the map
+   auto it = colmap.find(base);
+   if (it != colmap.end()) return (it->second + light*(ncolors-1));
+   // Get color pointer if stored
+   TColor* col_base = gROOT->GetColor(base);
+   if (!col_base) {
+      // If color not defined, use gray palette
+      it = colmap.find(kBlack);
+      if (it != colmap.end()) return (it->second + light*(ncolors-1));
+      col_base = gROOT->GetColor(kBlack);
+      color = 1;
    }
-   color = 1000 + (kBCols[code]-1)*100+j;
-   return color;
+   // Create a color palette for col_base   
+   Float_t r,g,b,h,l,s;
+   Double_t red[2], green[2], blue[2];
+   Double_t stop[] = {0., 1.0};
+     
+   col_base->GetRGB(r,g,b);
+   TColor::RGB2HLS(r,g,b,h,l,s);
+   TColor::HLS2RGB(h,lmin,s,r,g,b);
+   red[0] = r;
+   green[0] = g;
+   blue[0] = b;
+   TColor::HLS2RGB(h,lmax,s,r,g,b);
+   red[1] = r;
+   green[1] = g;
+   blue[1] = b;
+   Int_t color_map_idx = TColor::CreateGradientColorTable(2, stop, red, green, blue, ncolors);
+   colmap[color] = color_map_idx;
+   return (color_map_idx + light*(ncolors-1));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1663,7 +1668,7 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
    Double_t *ppoint = (Double_t*)point;
    Double_t tosource[3];
    Double_t calf;
-   Double_t phi = 0*krad;
+   Double_t phi = 45.*krad;
    tosource[0] = -dir[0]*TMath::Cos(phi)+dir[1]*TMath::Sin(phi);
    tosource[1] = -dir[0]*TMath::Sin(phi)-dir[1]*TMath::Cos(phi);
    tosource[2] = -dir[2];
@@ -1784,7 +1789,7 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
          if (!norm) norm = fGeoManager->FindNormalFast();
          if (!norm) continue;
          calf = norm[0]*tosource[0]+norm[1]*tosource[1]+norm[2]*tosource[2];
-         light = 0.25+0.5*TMath::Abs(calf);
+         light = TMath::Abs(calf);
          color = GetColor(base_color, light);
          // Now we know the color of the pixel, just draw it
          gVirtualX->SetMarkerColor(color);
