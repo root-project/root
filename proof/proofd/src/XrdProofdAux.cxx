@@ -32,6 +32,8 @@
 // Tracing
 #include "XrdProofdTrace.h"
 
+#include <grp.h>
+
 // Local definitions
 #ifdef XPD_MAXLEN
 #undefine XPD_MAXLEN
