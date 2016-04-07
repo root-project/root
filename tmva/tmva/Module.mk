@@ -85,7 +85,7 @@ include/TMVA/%.icc: $(TMVADIRI)/TMVA/%.icc
 $(TMVALIB):     $(TMVAO) $(TMVADO) $(ORDER_) $(MAINLIBS) $(TMVALIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libTMVA.$(SOEXT) $@ "$(TMVAO) $(TMVADO)" \
-		   "$(TMVALIBEXTRA)"
+		   "$(OSTHREADLIBDIR) $(OSTHREADLIB) $(TMVALIBEXTRA)"
 
 $(call pcmrule,TMVA)
 	$(noop)
