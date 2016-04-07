@@ -148,11 +148,3 @@ distclean::     distclean-$(MODNAME)
 
 # Optimize dictionary with stl containers.
 $(ROOFITCOREDO): NOOPT = $(OPT)
-
-#FIXME: Disable modules build for roofitcore until the compiler issue gets fixed.
-ifeq ($(CXXMODULES),yes)
-ifeq ($(PLATFORM),macosx)
-$(ROOFITCOREO): CXXFLAGS := $(filter-out $(ROOT_CXXMODULES_FLAGS),$(CXXFLAGS))
-         CFLAGS   := $(filter-out $(ROOT_CXXMODULES_FLAGS),$(CFLAGS))
-endif
-endif

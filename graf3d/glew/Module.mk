@@ -63,11 +63,3 @@ distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(GLEWO): CFLAGS += $(OPENGLINCDIR:%=-I%)
-
-#FIXME: Disable modules build for graf3d until the glew.h issue gets fixed.
-ifeq ($(CXXMODULES),yes)
-ifeq ($(PLATFORM),macosx)
-$(GLEWO): CXXFLAGS := $(filter-out $(ROOT_CXXMODULES_FLAGS),$(CXXFLAGS))
-          CFLAGS   := $(filter-out $(ROOT_CXXMODULES_FLAGS),$(CFLAGS))
-endif
-endif

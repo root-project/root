@@ -143,11 +143,3 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		   $(HF_PREPAREHISTFACTORY)
 
 distclean::     distclean-$(MODNAME)
-
-#FIXME: Disable modules build for roofitcore until the compiler issue gets fixed.
-ifeq ($(CXXMODULES),yes)
-ifeq ($(PLATFORM),macosx)
-$(HISTFACTORYO): CXXFLAGS := $(filter-out $(ROOT_CXXMODULES_FLAGS),$(CXXFLAGS))
-         CFLAGS   := $(filter-out $(ROOT_CXXMODULES_FLAGS),$(CFLAGS))
-endif
-endif
