@@ -32,22 +32,9 @@ module "Fit/SparseData.h" { header "Fit/SparseData.h" export * }
 module "Fit/UnBinData.h" { header "Fit/UnBinData.h" export * }
 module "FontCache.h" { header "FontCache.h" export * }
 module "Foption.h" { header "Foption.h" export * }
-module "GL/glew.h" {
-  // FIXME this would have worked if glu.h didn't include OpenGLAvailability.h (on MACOS),
-  // which in turn attaches the whole OpenGL top module, introducing definition conflicts.
-  // This has a feature request pending on clang's mailing list:
-  // http://permalink.gmane.org/gmane.comp.compilers.clang.devel/45326
-  // When the issue is addressed/resolved as permitting these example this should be
-  // fixable.
-  // A solution to this issue is to build this module explicitly with disabled system module
-  // maps. This would disable OpenGL system modules and switch to textual inclusion.
-  header "GL/glew.h"
-  config_macros __gl_h_, __GL_H__, __glext_h_, __GLEXT_H_, __gl_ATI_h_
-  conflict OpenGL.GL, "gl.h must not be included, glew needs only glu.h"
-  export *
-}
-module "GL/glxew.h" { header "GL/glxew.h" export * }
-module "GL/wglew.h" { header "GL/wglew.h" export * }
+//module "GL/glew.h" { header "GL/glew.h" export * } -- see TGLIncludes.h
+//module "GL/glxew.h" { header "GL/glxew.h" export * }  -- see TGLIncludes.h
+//module "GL/wglew.h" { header "GL/wglew.h" export * }  -- see TGLIncludes.h
 module "GLConstants.h" { header "GLConstants.h" export * }
 module "Getline.h" { header "Getline.h" export * }
 module "Gtypes.h" { header "Gtypes.h" export * }
@@ -1181,7 +1168,14 @@ module "TGLFontManager.h" { header "TGLFontManager.h" export * }
 module "TGLFormat.h" { header "TGLFormat.h" export * }
 module "TGLH2PolyPainter.h" { header "TGLH2PolyPainter.h" export * }
 module "TGLHistPainter.h" { header "TGLHistPainter.h" export * }
-module "TGLIncludes.h" { header "TGLIncludes.h" export * }
+module "TGLIncludes.h" {
+  header "TGLIncludes.h"
+  module GL {
+    umbrella "GL"
+    module * { export * }
+  }
+  export *
+}
 module "TGLIsoMesh.h" { header "TGLIsoMesh.h" export * }
 module "TGLLegoPainter.h" { header "TGLLegoPainter.h" export * }
 module "TGLLightSet.h" { header "TGLLightSet.h" export * }
