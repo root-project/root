@@ -50,7 +50,7 @@ void ToHumanReadableSize(value_type bytes,
      { "EB", "EiB" },
      { "ZB", "ZiB" },
      { "YB", "YiB" } };
-   unsigned int unit = si ? 1000 : 1024;
+   value_type unit = si ? 1000 : 1024;
    int exp = 0;
    if (bytes == unit) {
       // On some 32bit platforms, the result of
