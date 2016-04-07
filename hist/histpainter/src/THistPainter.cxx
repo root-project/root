@@ -5330,8 +5330,21 @@ void THistPainter::PaintColorLevelsFast(Option_t*)
 
    Double_t z;
 
-   Double_t zmin = fH->GetMinimum();
-   Double_t zmax = fH->GetMaximum();
+   // Use existing max or min values. If either is already set
+   // the appropriate value to use.
+   Double_t zmin = fH->GetMinimumStored();
+   Double_t zmax = fH->GetMaximumStored();
+   if ((zmin == -1111) && (zmax == -1111)) {
+      fH->GetMinimumAndMaximum(zmin, zmax);
+      fH->SetMinimum(zmin);
+      fH->SetMaximum(zmax);
+   } else if (zmin == -1111) {
+      zmin = fH->GetMinimum();
+      fH->SetMinimum(zmin);
+   } else if (zmax == -1111) {
+      zmax = fH->GetMaximum();
+      fH->SetMaximum(zmax);
+   }
 
    Double_t dz = zmax - zmin;
    if (dz <= 0) { // Histogram filled with a constant value
@@ -5406,6 +5419,10 @@ void THistPainter::PaintColorLevelsFast(Option_t*)
          if (z > 0) z = TMath::Log10(z);
          else       z = zmin;
        }
+
+       // obey the user's max and min values if they were set
+       if (z > zmax) z = zmax;
+       if (z < zmin) z = zmin;
 
        if (fH->TestBit(TH1::kUserContour) == 1) {
           // contours are absolute values
