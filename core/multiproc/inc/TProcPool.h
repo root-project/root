@@ -34,6 +34,10 @@
 #include <iostream>
 #include "TPool.h"
 
+template< class F, class... T>
+ using noReferenceCond = typename std::enable_if<"Function can't return a reference" && !(std::is_reference<typename std::result_of<F(T...)>::type>::value)>::type;
+
+
 class TProcPool : public TPool<TProcPool>, private TMPClient {
 public:
    explicit TProcPool(unsigned nWorkers = 0); //default number of workers is the number of processors
@@ -43,10 +47,13 @@ public:
    TProcPool &operator=(const TProcPool &) = delete;
 
    // Map
-   template<class F> auto Map(F func, unsigned nTimes) -> std::vector<decltype(func())>;
+   template<class F, class Cond = noReferenceCond<F>>
+    auto Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>;
    /// \cond
-   template<class F, class INTEGER> auto Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<decltype(func(args.front()))>;
-   template<class F, class T> auto Map(F func, std::vector<T> &args) -> std::vector<decltype(func(args.front()))>;
+   template<class F, class INTEGER, class Cond = noReferenceCond<F, INTEGER>>
+    auto Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>;
+   template<class F, class T, class Cond = noReferenceCond<F, T>>
+    auto Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>;
    /// \endcond
    using TPool<TProcPool>::Map;
 
@@ -61,7 +68,7 @@ public:
    void SetNWorkers(unsigned n) { TMPClient::SetNWorkers(n); }
    unsigned GetNWorkers() const { return TMPClient::GetNWorkers(); }
 
-   template<class T, class R> auto Reduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs.front(), objs.front())) = delete;
+   template<class T, class BINARYOP> auto Reduce(const std::vector<T> &objs, BINARYOP redfunc) -> typename std::result_of<BINARYOP(T, T)>::type = delete;
    using TPool<TProcPool>::Reduce;
 
 private:
@@ -84,7 +91,9 @@ private:
       kMapWithArg,   ///< a Map method with arguments is being executed
       kProcByRange,   ///< a ProcTree method is being executed and each worker will process a certain range of each file
       kProcByFile,    ///< a ProcTree method is being executed and each worker will process a different file
-   } fTask; ///< the kind of task that is being executed, if any
+   };
+
+   ETask fTask = ETask::kNoTask; ///< the kind of task that is being executed, if any
 };
 
 
@@ -95,8 +104,8 @@ private:
 /// A vector containg executions' results is returned.
 /// Functions that take more than zero arguments can be executed (with
 /// fixed arguments) by wrapping them in a lambda or with std::bind.
-template<class F>
-auto TProcPool::Map(F func, unsigned nTimes) -> std::vector<decltype(func())>
+template<class F, class Cond>
+auto TProcPool::Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>
 {
    using retType = decltype(func());
    //prepare environment
@@ -136,8 +145,8 @@ auto TProcPool::Map(F func, unsigned nTimes) -> std::vector<decltype(func())>
 
 // actual implementation of the Map method. all other calls with arguments eventually
 // call this one
-template<class F, class T>
-auto TProcPool::Map(F func, std::vector<T> &args) -> std::vector<decltype(func(args.front()))>
+template<class F, class T, class Cond>
+auto TProcPool::Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>
 {
    //check whether func is callable
    using retType = decltype(func(args.front()));
@@ -176,8 +185,8 @@ auto TProcPool::Map(F func, std::vector<T> &args) -> std::vector<decltype(func(a
    return reslist;
 }
 
-template<class F, class INTEGER>
-auto TProcPool::Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<decltype(func(args.front()))>
+template<class F, class INTEGER, class Cond>
+auto TProcPool::Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>
 {
    std::vector<INTEGER> vargs(args.size());
    std::copy(args.begin(), args.end(), vargs.begin());
