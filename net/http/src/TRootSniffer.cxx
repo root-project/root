@@ -1273,6 +1273,7 @@ TString TRootSniffer::DecodeUrlOptionValue(const char *value, Bool_t remove_quot
    res.ReplaceAll("%20", " ");
    res.ReplaceAll("%5B", "[");
    res.ReplaceAll("%5D", "]");
+   res.ReplaceAll("%3D", "=");
 
    if (remove_quotes && (res.Length() > 1) &&
          ((res[0] == '\'') || (res[0] == '\"')) && (res[0] == res[res.Length() - 1])) {
