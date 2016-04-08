@@ -85,6 +85,7 @@ Add a new mode for `TClass::SetCanSplit` (2) which indicates that this class and
 
 * Exceptions are now caught in the interactive ROOT session, instead of terminating ROOT.
 * A ValuePrinter for tuple and pair has been added to visualise the content of these entities at the prompt.
+* When interpreting dereferences of invalid pointers, cling will now complain (throw, actually) instead of crash.
 
 ## Parallelisation
 
