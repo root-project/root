@@ -232,7 +232,7 @@ public:
    // core/meta helper functions.
    virtual EReturnType MethodCallReturnType(TFunction *func) const = 0;
    virtual ULong64_t GetInterpreterStateMarker() const = 0;
-   virtual void DiagnoseIfInterpreterException(std::exception &e) const = 0;
+   virtual bool DiagnoseIfInterpreterException(std::exception &e) const = 0;
 
    typedef TDictionary::DeclId_t DeclId_t;
    virtual DeclId_t GetDeclId(CallFunc_t *info) const = 0;
