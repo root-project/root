@@ -473,7 +473,7 @@ void TRint::PrintLogo(Bool_t lite)
       // Here, %%s results in %s after TString::Format():
       lines.emplace_back(TString::Format("Welcome to ROOT %s%%shttp://root.cern.ch",
                                          gROOT->GetVersion()));
-      lines.emplace_back(TString::Format("%%s(c) 1995-2014, The ROOT Team"));
+      lines.emplace_back(TString::Format("%%s(c) 1995-2016, The ROOT Team"));
       lines.emplace_back(TString::Format("Built for %s%%s", gSystem->GetBuildArch()));
       if (!strcmp(gROOT->GetGitBranch(), gROOT->GetGitCommit())) {
          static const char *months[] = {"January","February","March","April","May",
