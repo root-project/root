@@ -190,7 +190,7 @@ D: contribution in RooStats
 
 N: Bianca-Cristina Cristescu
 E: bianca-cristina.cristescu@cern.ch
-D: contributions to ROOT6 / meta
+D: contributions to ROOT6 / meta and cling.
 
 N: David Dagenhart
 E: wdd@fnal.gov
@@ -218,6 +218,10 @@ D: TTree support for csv files
 N: Adrien Devresse
 E: adrien.devresse@cern.ch
 D: libRDAVIX, the davix client code
+
+N: Baozeng Ding
+E: sploving1@gmail.com
+D: Contribution to cling's pointer validity checker
 
 N: Mat Dobbs
 E: Matthew.Adam.Dobbs@cern.ch
