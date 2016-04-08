@@ -12,11 +12,11 @@ To start the http server, at any time, create an instance of the [THttpServer](h
 
     serv = new THttpServer("http:8080");
 
-This will start a [civetweb](https://github.com/bel2125/civetweb)-based http server on the port 8080. Then one should be able to open the address "http://localhost:8080" in any modern browser (IE9, Firefox, Chrome, Opera) and browse objects created in application. By default, the server can access files, canvases, and histograms via the gROOT pointer. All those objects can be displayed with JSROOT graphics.
+This will start a [civetweb](https://github.com/bel2125/civetweb)-based http server on the port 8080. Then one should be able to open the address "http://localhost:8080" in any modern browser (Firefox, Chrome, Opera, Safari, IE11) and browse objects created in application. By default, the server can access files, canvases, and histograms via the gROOT pointer. All those objects can be displayed with JSROOT graphics.
 
-There is a [snapshot (frozen copy)](https://root.cern.ch/js/3.6/httpserver.C/) of such server, running in [tutorials/http/httpserver.C](https://root.cern.ch/gitweb?p=root.git;a=blob_plain;f=tutorials/http/httpserver.C;hb=HEAD) macro from ROOT tutorial.
+There is a [snapshot (frozen copy)](https://root.cern.ch/js/latest/httpserver.C/) of such server, running in [tutorials/http/httpserver.C](https://github.com/root-mirror/root/blob/master/tutorials/http/httpserver.C) macro from ROOT tutorial.
 
-<iframe width="800" height="500" src="https://root.cern.ch/js/3.6/httpserver.C/?layout=simple&item=Canvases/c1">
+<iframe width="800" height="500" src="https://root.cern.ch/js/latest/httpserver.C/?layout=simple&item=Canvases/c1">
 </iframe>
 
 One could specify several options when creating http server. They could be add as additional URL parameters to the constructor arguments like:
@@ -65,17 +65,28 @@ One just register command like:
     serv->RegisterCommand("/DoSomething","SomeFunction()");
 
 Element with name `DoSomething` will appear in the web browser and can be clicked.
-It will result in `gROOT->ProcessLineSync("SomeFunction()")` call. When registering command,
-one could specify icon name which will be displayed with the command.
+It will result in `gROOT->ProcessLineSync("SomeFunction()")` call. 
 
-    serv->RegisterCommand("/DoSomething","SomeFunction()", "/rootsys/icons/ed_execute.png");
+One could configure argument(s) for the command. 
+For that one should use `%arg1`, `%arg2` and so on identifiers. Like:   
+
+    serv->RegisterCommand("/DoSomething","SomeFunction(%arg1%,%arg2%)");
+
+User will be requested to enter arguments values, when command element clicked in the browser. 
+Example of the command which executes arbitrary string in appliction via ProcessLine looks like:
+  
+    serv->RegisterCommand("/Process","%arg1%");
+
+When registering command, one could specify icon name which will be displayed with the command.
+
+    serv->RegisterCommand("/DoSomething","SomeFunction()", "rootsys/icons/ed_execute.png");
 
 In example usage of images from `$ROOTSYS/icons` directory is shown. One could prepend `button;`
 string to the icon name to let browser show command as extra button. In last case one could hide command element from elements list:
 
     serv->Hide("/DoSomething");
 
-One can find example of command interface usage in [tutorials/http/httpcontrol.C](https://root.cern.ch/gitweb?p=root.git;a=blob_plain;f=tutorials/http/httpcontrol.C;hb=HEAD) macro.
+One can find example of command interface usage in [tutorials/http/httpcontrol.C](https://github.com/root-mirror/root/blob/master/tutorials/http/httpcontrol.C) macro.
 
 
 
@@ -132,7 +143,7 @@ One could specify a debug parameter to be able to adjust the FastCGI configurati
 
     serv->CreateEngine("fastcgi:9000?debug=1");
 
-All user access will be ruled by the main web server - for the moment one cannot restrict access with fastcgi engine.
+All user access will be ruled by the main web server. Authorized account names could be used to configure access restriction in THttpServer.
 
 ### Configure fastcgi with Apcahe2
 
@@ -148,6 +159,18 @@ Here is supposed that directory "/srv/www/htdocs" is root directory for web serv
 Than one should be able to open address:
 
      http://apache_host_name/root.app/
+
+There are many ways to configure user authentication in Apache. Example of digest for FastCGI server:
+
+    <Location "/root.app/">
+       AuthType Digest
+       AuthName "root"
+       AuthDigestDomain "/root.app/" "root"
+       AuthDigestProvider file
+       AuthUserFile "/srv/auth/auth.txt"
+       Require valid-user
+    </Location>
+
 
 
 ### Configure fastcgi with lighttpd
@@ -168,7 +191,14 @@ Be aware, that with *lighttpd* one should specify IP address of the host, where 
 
     http://lighttpd_host_name/root.app/
 
+Example of authorization configuration for FastCGI connection:
 
+    auth.require = ( "/root.app" => (
+                       "method" => "digest",
+                       "realm" => "root",
+                       "require" => "valid-user"
+                    ) )
+ 
 
 ## Integration with existing applications
 
@@ -279,7 +309,7 @@ one could produce images with requests: `root.png`, `root.gif`, `root.jpeg`. For
 
     wget "http://localhost:8080/Files/hsimple.root/hpx/root.png?w=500&h=500&opt=lego1" -O lego1.png
 
-For all such requests one could specify following parameters:
+For all such requests following parameters could be specified:
 
    - `h` - image height
    - `w` - image width
@@ -298,11 +328,12 @@ Or one could disable read-only mode with the call:
 
 Or one could allow access to the folder, object or specific object methods with:
 
-    serv->Restrict("/Histograms", "allow=admin"); // allow full access for user with 'admin' accout 
+    serv->Restrict("/Histograms", "allow=admin"); // allow full access for user with 'admin' account 
     serv->Restrict("/Histograms/hist1", "allow=all"); // allow full access for all users 
     serv->Restrict("/Histograms/hist1", "allow_method=Rebin"); // allow only Rebin method 
     
 'exe.json' accepts following parameters:
+
    - `method` - name of method to execute
    - `prototype` - method prototype (see [TClass::GetMethodWithPrototype](https://root.cern.ch/root/html/TClass.html#TClass:GetMethodWithPrototype) for details)
    - `compact` - compact parameter, used to compress return value
@@ -316,8 +347,7 @@ Example of TTree::Draw method execution:
 
     [shell] wget 'http://localhost:8080/Files/job1.root/ntuple/exe.json?method=Draw&prototype="Option_t*"&opt="px:py>>h1"&_ret_object_=h1' -O exe.json
 
-One also used `exe.bin` method - in this case results of method execution will be returned in binary format. 
-In case when method returns temporary object, which should be delete at the end of command execution, one should specify `_destroy_result_` parameter in the URL string:
+One also used `exe.bin` method - in this case results of method execution will be returned in binary format. In case when method returns temporary object, which should be delete at the end of command execution, one should specify `_destroy_result_` parameter in the URL string:
 
     [shell] wget 'http://localhost:8080/Objects/subfolder/obj/exe.json?method=Clone&_destroy_result_' -O clone.json
 
@@ -343,6 +373,15 @@ It can be invoked with `cmd.json` request like:
     [shell] wget http://localhost:8080/Folder/Start/cmd.json -O result.txt
 
 If command fails, `false` will be returned, otherwise result of gROOT->ProcessLineSync() execution.
+
+If command definition include arguments: 
+
+    serv->RegisterCommand("/ResetCounter", "DoReset(%arg1%,%arg2%)");
+    
+One could specify them in the URL string:
+    
+    [shell] wget http://localhost:8080/ResetCounter/cmd.json?arg1=7&arg2=12 -O result.txt
+
 
 
 ### Performing multiple requests at once
