@@ -16,6 +16,7 @@
 #include "TException.h"       // for TRY ... CATCH
 #include "TVirtualMutex.h"    // for R__LOCKGUARD2
 #include "TClassEdit.h"       // demangler
+#include "TInterpreter.h"     // for Interpreter exceptions
 
 // Standard
 #include <assert.h>
@@ -69,6 +70,9 @@ inline PyObject* PyROOT::TMethodHolder::CallFast( void* self, ptrdiff_t offset, 
    } catch ( TPyException& ) {
       result = nullptr;           // error already set
    } catch ( std::exception& e ) {
+      if (gInterpreter->DiagnoseIfInterpreterException(e)) {
+         return result;
+      }
    // map user exceptions .. this needs to move to Cppyy.cxx
       TClass* cl = TClass::GetClass( typeid(e) );
 

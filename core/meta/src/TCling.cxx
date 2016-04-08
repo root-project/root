@@ -1863,10 +1863,17 @@ static int HandleInterpreterException(cling::MetaProcessor* metaProcessor,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TCling::DiagnoseIfInterpreterException(std::exception &e) const
+bool TCling::DiagnoseIfInterpreterException(std::exception &e) const
 {
-   if (auto ie = dynamic_cast<cling::InterpreterException*>(&e))
+   cling::InterpreterException* ie;
+   try {
+      auto ie = dynamic_cast<cling::InterpreterException*>(&e);
+   } catch(const std::bad_cast &e)   {
+      return false;
+   }
+   if (ie)
       ie->diagnose();
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
