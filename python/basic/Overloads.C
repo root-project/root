@@ -33,8 +33,8 @@ int OverloadD::get_int(OverloadA* a)                 { return a->i1; }
 
 
 //===========================================================================
-OlBB* get_OlBB() { return (OlBB*)0; }
-OlDD* get_OlDD() { return (OlDD*)0; }
+OlBB* get_OlBB() { static long buf; return (OlBB*)&buf; }
+OlDD* get_OlDD() { static long buf; return (OlDD*)&buf; }
 
 
 //===========================================================================
