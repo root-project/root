@@ -12,10 +12,10 @@
 //  The code is released under
 //  GNU Lesser General Public License v3
 //
-//	Generator described in 
-//	N.Z.Akopov, G.K.Savvidy and N.G.Ter-Arutyunian, Matrix Generator of Pseudorandom Numbers, 
-//	J.Comput.Phys. 97, 573 (1991); 
-//	Preprint EPI-867(18)-86, Yerevan Jun.1986;
+//      Generator described in
+//      N.Z.Akopov, G.K.Savvidy and N.G.Ter-Arutyunian, Matrix Generator of Pseudorandom Numbers,
+//      J.Comput.Phys. 97, 573 (1991);
+//      Preprint EPI-867(18)-86, Yerevan Jun.1986;
 //
 //  and
 //
@@ -38,7 +38,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-	
+
 #ifndef _N
 #define N 256 
 /* The currently recommended N are 3150, 1260, 508, 256, 240, 88
@@ -92,7 +92,7 @@ void seed_uniquestream(rng_state_t* X, myID_t clusterID, myID_t machineID, myID_
  best choice: will make a state vector from which you can get at least 10^100 numbers 
  guaranteed mathematically to be non-colliding with any other stream prepared from another set of 32bit IDs,
  so long as it is different by at least one bit in at least one of the four IDs
-			-- useful if you are running a parallel simulation with many clusters, many CPUs each
+                        -- useful if you are running a parallel simulation with many clusters, many CPUs each
  */
 
 void seed_spbox(rng_state_t* X, myuint seed);    // non-linear method, makes certified unique vectors,  probability for streams to collide is < 1/10^4600
@@ -104,8 +104,8 @@ void seed_vielbein(rng_state_t* X, unsigned int i); // seeds with the i-th unit 
 //   FUNCTIONS FOR GETTING RANDOM NUMBERS
 
 #ifdef __MIXMAX_C
-	myuint get_next(rng_state_t* X);         // returns 64-bit int, which is between 1 and 2^61-1 inclusive
-	double get_next_float(rng_state_t* X);   // returns double precision floating point number in (0,1]
+        myuint get_next(rng_state_t* X);         // returns 64-bit int, which is between 1 and 2^61-1 inclusive
+        double get_next_float(rng_state_t* X);   // returns double precision floating point number in (0,1]
 #endif  //__MIXMAX_C
 
 void fill_array(rng_state_t* X, unsigned int n, double *array); // fastest method: set n to a multiple of N (e.g. n=256)
@@ -172,10 +172,10 @@ void branch_inplace( rng_state_t* Xin, myID_t* ID ); // almost the same as apply
 
 
 #ifndef __MIXMAX_C // c++ can put code into header files, why cant we? (with the inline declaration, should be safe from duplicate-symbol error)
-	
+
 #define get_next(X) GET_BY_MACRO(X)
 
-inline 	myuint GET_BY_MACRO(rng_state_t* X) {
+inline  myuint GET_BY_MACRO(rng_state_t* X) {
     int i;
     i=X->counter;
     
@@ -192,10 +192,10 @@ inline 	myuint GET_BY_MACRO(rng_state_t* X) {
        return X->V[element];
     }
 }
-    
+
 #define get_next_float(X) get_next_float_BY_MACRO(X)
 
-	
+
 inline double get_next_float_BY_MACRO(rng_state_t* X){
         int64_t Z=(int64_t)get_next(X);
 #if defined(__SSE__) && defined(USE_INLINE_ASM)
@@ -213,7 +213,7 @@ inline double get_next_float_BY_MACRO(rng_state_t* X){
     }
 
 #endif // __MIXMAX_C
-	
+
 
 // ERROR CODES - exit() is called with these
 #define ARRAY_INDEX_OUT_OF_BOUNDS   0xFF01
