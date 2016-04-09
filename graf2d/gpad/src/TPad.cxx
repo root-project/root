@@ -1151,8 +1151,8 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
             pad->SetBorderMode(0);
             if (i == 0)    pad->SetLeftMargin(xl*nx);
             else           pad->SetLeftMargin(0);
-                           pad->SetRightMargin(0);
-                           pad->SetTopMargin(0);
+            pad->SetRightMargin(0);
+            pad->SetTopMargin(0);
             if (j == ny-1) pad->SetBottomMargin(yb*ny);
             else           pad->SetBottomMargin(0);
             pad->Draw();

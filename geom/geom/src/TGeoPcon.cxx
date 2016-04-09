@@ -684,14 +684,14 @@ TGeoVolume *TGeoPcon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
          shape = new TGeoPcon(-step/2, step, fNz);
          for (is=0; is<fNz; is++)
             ((TGeoPcon*)shape)->DefineSection(is, fZ[is], fRmin[is], fRmax[is]);
-            vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
-            vmulti->AddVolume(vol);
-            opt = "Phi";
-            for (id=0; id<ndiv; id++) {
-               voldiv->AddNodeOffset(vol, id, start+id*step+step/2, opt.Data());
-               ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);
-            }
-            return vmulti;
+         vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
+         vmulti->AddVolume(vol);
+         opt = "Phi";
+         for (id=0; id<ndiv; id++) {
+            voldiv->AddNodeOffset(vol, id, start+id*step+step/2, opt.Data());
+            ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);
+         }
+         return vmulti;
       case 3: //---                Z division
          // find start plane
          for (ipl=0; ipl<fNz-1; ipl++) {
