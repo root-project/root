@@ -749,9 +749,9 @@ void TTeXDump::Text(Double_t x, Double_t y, const char *chars)
    t.ReplaceAll("%","\\%");
 
    Int_t txalh = fTextAlign/10;
-   if (txalh <1) txalh = 1; if (txalh > 3) txalh = 3;
+   if (txalh <1) txalh = 1; else if (txalh > 3) txalh = 3;
    Int_t txalv = fTextAlign%10;
-   if (txalv <1) txalv = 1; if (txalv > 3) txalv = 3;
+   if (txalv <1) txalv = 1; else if (txalv > 3) txalv = 3;
    SetColor(fTextColor);
    PrintStr("@");
    PrintStr("\\draw");
