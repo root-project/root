@@ -198,8 +198,8 @@ TMVA::PDEFoam::~PDEFoam()
    delete fTimer;
    if (fDistr)  delete fDistr;
    if (fPseRan) delete fPseRan;
-   if (fXmin) delete [] fXmin;  fXmin=0;
-   if (fXmax) delete [] fXmax;  fXmax=0;
+   if (fXmin) { delete [] fXmin;  fXmin=0; }
+   if (fXmax) { delete [] fXmax;  fXmax=0; }
 
    ResetCellElements();
    if(fCells!= 0) {

@@ -464,7 +464,7 @@ TLinearFitter& TLinearFitter::operator=(const TLinearFitter& tlf)
       fY2Temp = tlf.fY2Temp;
       for(Int_t i = 0; i < 1000; i++) fVal[i] = tlf.fVal[i];
 
-      if(fInputFunction) delete fInputFunction; fInputFunction = 0;
+      if(fInputFunction) { delete fInputFunction; fInputFunction = 0; }
       if(tlf.fInputFunction) fInputFunction = new TFormula(*tlf.fInputFunction);
 
       fNpoints=tlf.fNpoints;
@@ -474,7 +474,7 @@ TLinearFitter& TLinearFitter::operator=(const TLinearFitter& tlf)
       fNfixed=tlf.fNfixed;
       fSpecial=tlf.fSpecial;
 
-      if(fFormula) delete [] fFormula; fFormula = 0;
+      if(fFormula) { delete [] fFormula; fFormula = 0; }
       if (tlf.fFormula) {
          fFormula = new char[fFormulaSize+1];
          strlcpy(fFormula,tlf.fFormula,fFormulaSize+1);
@@ -488,7 +488,7 @@ TLinearFitter& TLinearFitter::operator=(const TLinearFitter& tlf)
       fRobust=tlf.fRobust;
       fFitsample=tlf.fFitsample;
 
-      if(fFixedParams) delete [] fFixedParams; fFixedParams = 0;
+      if(fFixedParams) { delete [] fFixedParams; fFixedParams = 0; }
       if ( tlf.fFixedParams && fNfixed > 0 ) {
          fFixedParams=new Bool_t[fNfixed];
          for(Int_t i=0; i< fNfixed; ++i)
