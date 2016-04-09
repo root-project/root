@@ -1194,7 +1194,8 @@ static const TGPicture *MakeLinkPic(const TGPicture *pic)
       lnk_name.Prepend("lnk_");
       merged = gClient->GetPicturePool()->GetPicture(lnk_name.Data(),
                                           img1->GetPixmap(), img1->GetMask());
-      if (img2) delete img2; delete img1;
+      if (img2) delete img2;
+      delete img1;
       return merged;
    }
    return pic;

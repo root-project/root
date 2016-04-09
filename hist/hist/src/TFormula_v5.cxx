@@ -2731,14 +2731,15 @@ Double_t TFormula::EvalParOld(const Double_t *x, const Double_t *uparams)
          case kcosh : tab[pos-1] = TMath::CosH(tab[pos-1]); continue;
          case ksinh : tab[pos-1] = TMath::SinH(tab[pos-1]); continue;
          case ktanh : if (TMath::CosH(tab[pos-1]) == 0) {tab[pos-1] = 0;} // { tangente indeterminee }
-                        else tab[pos-1] = TMath::TanH(tab[pos-1]);
-                        continue;
+                      else tab[pos-1] = TMath::TanH(tab[pos-1]);
+                      continue;
          case kacosh: if (tab[pos-1] < 1) {tab[pos-1] = 0;} //  indetermination
-                        else tab[pos-1] = TMath::ACosH(tab[pos-1]);
-                        continue;
+                      else tab[pos-1] = TMath::ACosH(tab[pos-1]);
+                      continue;
          case kasinh: tab[pos-1] = TMath::ASinH(tab[pos-1]); continue;
          case katanh: if (TMath::Abs(tab[pos-1]) > 1) {tab[pos-1] = 0;} // indetermination
-                        else tab[pos-1] = TMath::ATanH(tab[pos-1]); continue;
+                      else tab[pos-1] = TMath::ATanH(tab[pos-1]);
+                      continue;
          case katan2: pos--; tab[pos-1] = TMath::ATan2(tab[pos-1],tab[pos]); continue;
 
          case kfmod : pos--; tab[pos-1] = fmod(tab[pos-1],tab[pos]); continue;
@@ -2748,21 +2749,22 @@ Double_t TFormula::EvalParOld(const Double_t *x, const Double_t *uparams)
 
          case kstrstr : strpos -= 2; pos-=2; pos++;
                         if (strstr(stringStack[strpos],stringStack[strpos+1])) tab[pos-1]=1;
-                        else tab[pos-1]=0; continue;
+                        else tab[pos-1]=0;
+                        continue;
 
          case kmin : pos--; tab[pos-1] = TMath::Min(tab[pos-1],tab[pos]); continue;
          case kmax : pos--; tab[pos-1] = TMath::Max(tab[pos-1],tab[pos]); continue;
 
          case klog  : if (tab[pos-1] > 0) tab[pos-1] = TMath::Log(tab[pos-1]);
-                        else {tab[pos-1] = 0;} //{indetermination }
-                        continue;
+                      else {tab[pos-1] = 0;} //{indetermination }
+                      continue;
          case kexp  : { Double_t dexp = tab[pos-1];
                         if (dexp < -700) {tab[pos-1] = 0; continue;}
                         if (dexp >  700) {tab[pos-1] = TMath::Exp(700); continue;}
                         tab[pos-1] = TMath::Exp(dexp); continue;  }
          case klog10: if (tab[pos-1] > 0) tab[pos-1] = TMath::Log10(tab[pos-1]);
-                        else {tab[pos-1] = 0;} //{indetermination }
-                        continue;
+                      else {tab[pos-1] = 0;} //{indetermination }
+                      continue;
 
          case kpi   : pos++; tab[pos-1] = TMath::ACos(-1); continue;
 
@@ -2775,30 +2777,41 @@ Double_t TFormula::EvalParOld(const Double_t *x, const Double_t *uparams)
          case krndm : pos++; tab[pos-1] = gRandom->Rndm(1); continue;
 
          case kAnd  : pos--; if (tab[pos-1]!=0 && tab[pos]!=0) tab[pos-1]=1;
-                        else tab[pos-1]=0; continue;
+                             else tab[pos-1]=0;
+                      continue;
          case kOr   : pos--; if (tab[pos-1]!=0 || tab[pos]!=0) tab[pos-1]=1;
-                        else tab[pos-1]=0; continue;
+                             else tab[pos-1]=0;
+                      continue;
          case kEqual: pos--; if (tab[pos-1] == tab[pos]) tab[pos-1]=1;
-                        else tab[pos-1]=0; continue;
+                             else tab[pos-1]=0;
+                      continue;
          case kNotEqual : pos--; if (tab[pos-1] != tab[pos]) tab[pos-1]=1;
-                        else tab[pos-1]=0; continue;
+                                 else tab[pos-1]=0;
+                          continue;
          case kLess     : pos--; if (tab[pos-1] < tab[pos]) tab[pos-1]=1;
-                        else tab[pos-1]=0; continue;
+                          else tab[pos-1]=0;
+                          continue;
          case kGreater  : pos--; if (tab[pos-1] > tab[pos]) tab[pos-1]=1;
-                        else tab[pos-1]=0; continue;
+                          else tab[pos-1]=0;
+                          continue;
 
          case kLessThan: pos--; if (tab[pos-1]<=tab[pos]) tab[pos-1]=1;
-                        else tab[pos-1]=0; continue;
+                         else tab[pos-1]=0;
+                         continue;
          case kGreaterThan: pos--; if (tab[pos-1]>=tab[pos]) tab[pos-1]=1;
-                        else tab[pos-1]=0; continue;
-         case kNot : if (tab[pos-1]!=0) tab[pos-1] = 0; else tab[pos-1] = 1; continue;
+                            else tab[pos-1]=0;
+                            continue;
+         case kNot : if (tab[pos-1]!=0) tab[pos-1] = 0; else tab[pos-1] = 1;
+                     continue;
 
          case kStringEqual : strpos -= 2; pos -=2 ; pos++;
                         if (!strcmp(stringStack[strpos+1],stringStack[strpos])) tab[pos-1]=1;
-                        else tab[pos-1]=0; continue;
+                        else tab[pos-1]=0;
+                        continue;
          case kStringNotEqual: strpos -= 2; pos -= 2; pos++;
                         if (strcmp(stringStack[strpos+1],stringStack[strpos])) tab[pos-1]=1;
-                        else tab[pos-1]=0; continue;
+                        else tab[pos-1]=0;
+                        continue;
 
          case kBitAnd : pos--; tab[pos-1]= ((Int_t) tab[pos-1]) & ((Int_t) tab[pos]); continue;
          case kBitOr  : pos--; tab[pos-1]= ((Int_t) tab[pos-1]) | ((Int_t) tab[pos]); continue;
@@ -4247,10 +4260,12 @@ Double_t TFormula::EvalParFast(const Double_t *x, const Double_t *uparams)
       //
       switch(opcode) {
          case kBoolOptimizeAnd: {
-            if (!tab[pos-1]) i=fOperOffset[i].fToJump; continue;
+            if (!tab[pos-1]) i=fOperOffset[i].fToJump;
+            continue;
          }
          case kBoolOptimizeOr: {
-            if (tab[pos-1])  i=fOperOffset[i].fToJump; continue;
+            if (tab[pos-1])  i=fOperOffset[i].fToJump;
+            continue;
          }
          case kAnd  : pos--; tab[pos-1] = (bool)tab[pos];  continue;  // use the fact that other were check before - see bool optimize
          case kOr   : pos--; tab[pos-1] = (bool)tab[pos];  continue;
@@ -4274,7 +4289,8 @@ Double_t TFormula::EvalParFast(const Double_t *x, const Double_t *uparams)
 
          case kstrstr : strpos -= 2; pos-=2; pos++;
             if (strstr(stringStack[strpos],stringStack[strpos+1])) tab[pos-1]=1;
-            else tab[pos-1]=0; continue;
+            else tab[pos-1]=0;
+            continue;
          case kpi   : pos++; tab[pos-1] = TMath::ACos(-1); continue;
 
 
@@ -4284,17 +4300,22 @@ Double_t TFormula::EvalParFast(const Double_t *x, const Double_t *uparams)
 
 
          case kEqual: pos--; if (tab[pos-1] == tab[pos]) tab[pos-1]=1;
-                        else tab[pos-1]=0; continue;
+                      else tab[pos-1]=0;
+                      continue;
          case kNotEqual : pos--; if (tab[pos-1] != tab[pos]) tab[pos-1]=1;
-                        else tab[pos-1]=0; continue;
-         case kNot : if (tab[pos-1]!=0) tab[pos-1] = 0; else tab[pos-1] = 1; continue;
+                          else tab[pos-1]=0;
+                          continue;
+         case kNot : if (tab[pos-1]!=0) tab[pos-1] = 0; else tab[pos-1] = 1;
+                     continue;
 
          case kStringEqual : strpos -= 2; pos -=2 ; pos++;
             if (!strcmp(stringStack[strpos+1],stringStack[strpos])) tab[pos-1]=1;
-            else tab[pos-1]=0; continue;
+            else tab[pos-1]=0;
+            continue;
          case kStringNotEqual: strpos -= 2; pos -= 2; pos++;
             if (strcmp(stringStack[strpos+1],stringStack[strpos])) tab[pos-1]=1;
-            else tab[pos-1]=0; continue;
+            else tab[pos-1]=0;
+            continue;
 
          case kBitAnd : pos--; tab[pos-1]= ((Int_t) tab[pos-1]) & ((Int_t) tab[pos]); continue;
          case kBitOr  : pos--; tab[pos-1]= ((Int_t) tab[pos-1]) | ((Int_t) tab[pos]); continue;

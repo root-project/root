@@ -273,7 +273,8 @@ void TMLPAnalyzer::GatherInformations()
    delete[] outVal;
    delete[] trueVal;
    delete[] index;
-   for(i=0; i<GetNeurons(1); i++) delete formulas[i]; delete [] formulas;
+   for(i=0; i<GetNeurons(1); i++) delete formulas[i];
+   delete [] formulas;
    fAnalysisTree->ResetBranchAddresses();
    fIOTree->ResetBranchAddresses();
 }
