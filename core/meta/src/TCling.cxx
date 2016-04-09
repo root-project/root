@@ -1867,7 +1867,7 @@ bool TCling::DiagnoseIfInterpreterException(std::exception &e) const
 {
    cling::InterpreterException* ie;
    try {
-      auto ie = dynamic_cast<cling::InterpreterException*>(&e);
+      ie = dynamic_cast<cling::InterpreterException*>(&e);
    } catch(const std::bad_cast &e)   {
       return false;
    }
