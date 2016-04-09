@@ -1102,9 +1102,9 @@ void TColor::InitializeColors()
          s0 = gROOT->GetColor(i);
          if (s0) s0->GetRGB(r,g,b);
          if (i == 1) { r = 0.6; g = 0.6; b = 0.6; }
-         if (r == 1) r = 0.9; if (r == 0) r = 0.1;
-         if (g == 1) g = 0.9; if (g == 0) g = 0.1;
-         if (b == 1) b = 0.9; if (b == 0) b = 0.1;
+         if (r == 1) r = 0.9; else if (r == 0) r = 0.1;
+         if (g == 1) g = 0.9; else if (g == 0) g = 0.1;
+         if (b == 1) b = 0.9; else if (b == 0) b = 0.1;
          TColor::RGBtoHLS(r,g,b,h,l,s);
          TColor::HLStoRGB(h,0.6*l,s,r,g,b);
          new TColor(200+4*i-3,r,g,b);
@@ -1356,9 +1356,9 @@ void TColor::HLS2RGB(Float_t hue, Float_t light, Float_t satur,
 
    Float_t rh, rl, rs, rm1, rm2;
    rh = rl = rs = 0;
-   if (hue   > 0) rh = hue;   if (rh > 360) rh = 360;
-   if (light > 0) rl = light; if (rl > 1)   rl = 1;
-   if (satur > 0) rs = satur; if (rs > 1)   rs = 1;
+   if (hue   > 0) { rh = hue;   if (rh > 360) rh = 360; }
+   if (light > 0) { rl = light; if (rl > 1)   rl = 1; }
+   if (satur > 0) { rs = satur; if (rs > 1)   rs = 1; }
 
    if (rl <= 0.5)
       rm2 = rl*(1.0 + rs);
@@ -1496,9 +1496,9 @@ void TColor::RGB2HLS(Float_t rr, Float_t gg, Float_t bb,
    Float_t rnorm, gnorm, bnorm, minval, maxval, msum, mdiff, r, g, b;
    minval = maxval =0 ;
    r = g = b = 0;
-   if (rr > 0) r = rr; if (r > 1) r = 1;
-   if (gg > 0) g = gg; if (g > 1) g = 1;
-   if (bb > 0) b = bb; if (b > 1) b = 1;
+   if (rr > 0) { r = rr; if (r > 1) r = 1; }
+   if (gg > 0) { g = gg; if (g > 1) g = 1; }
+   if (bb > 0) { b = bb; if (b > 1) b = 1; }
 
    minval = r;
    if (g < minval) minval = g;

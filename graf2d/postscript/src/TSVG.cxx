@@ -1396,9 +1396,9 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
    Double_t ix    = XtoSVG(xx);
    Double_t iy    = YtoSVG(yy);
    Double_t txalh = fTextAlign/10;
-   if (txalh <1) txalh = 1; if (txalh > 3) txalh = 3;
+   if (txalh <1) txalh = 1; else if (txalh > 3) txalh = 3;
    Double_t txalv = fTextAlign%10;
-   if (txalv <1) txalv = 1; if (txalv > 3) txalv = 3;
+   if (txalv <1) txalv = 1; else if (txalv > 3) txalv = 3;
 
    Double_t     wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
    Double_t     hh = (Double_t)gPad->YtoPixel(gPad->GetY1());

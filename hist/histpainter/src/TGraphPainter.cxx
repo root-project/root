@@ -3019,9 +3019,9 @@ void TGraphPainter::PaintGraphPolar(TGraph *theGraph, Option_t* options)
    }
 
    Int_t talh = gStyle->GetTitleAlign()/10;
-   if (talh < 1) talh = 1; if (talh > 3) talh = 3;
+   if (talh < 1) talh = 1; else if (talh > 3) talh = 3;
    Int_t talv = gStyle->GetTitleAlign()%10;
-   if (talv < 1) talv = 1; if (talv > 3) talv = 3;
+   if (talv < 1) talv = 1; else if (talv > 3) talv = 3;
 
    Double_t xpos, ypos;
    xpos = gStyle->GetTitleX();
