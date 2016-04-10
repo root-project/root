@@ -230,8 +230,8 @@ Double_t HypoTestResult::NullPValueError() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// compute CLb error
-/// Clb =  1 - NullPValue() 
+/// compute \f$CL_{b}\f$ error
+/// \f$CL_{b}\f$ = 1 - NullPValue()
 /// must use opposite condition that routine above
 
 Double_t HypoTestResult::CLbError() const {
@@ -252,12 +252,12 @@ Double_t HypoTestResult::SignificanceError() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns an estimate of the error on CLs through combination of the
-/// errors on CLb and CLsplusb:
-/// BEGIN_LATEX
-/// #sigma_{CL_s} = CL_s
-/// #sqrt{#left( #frac{#sigma_{CL_{s+b}}}{CL_{s+b}} #right)^2 + #left( #frac{#sigma_{CL_{b}}}{CL_{b}} #right)^2}
-/// END_LATEX
+/// Returns an estimate of the error on \f$CL_{s}\f$ through combination of the
+/// errors on \f$CL_{b}\f$ and \f$CL_{s+b}\f$:
+/// \f[
+/// \sigma_{CL_s} = CL_s
+/// \sqrt{\left( \frac{\sigma_{CL_{s+b}}}{CL_{s+b}} \right)^2 + \left( \frac{\sigma_{CL_{b}}}{CL_{b}} \right)^2}
+/// \f]
 
 Double_t HypoTestResult::CLsError() const {
    if(!fAltDistr || !fNullDistr) return 0.0;

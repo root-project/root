@@ -185,14 +185,19 @@ End_Macro
 ## <a name="L8"></a> Accents
 Several kind of accents are available:
 
-   #hat    = Begin_Latex #hat{a} End_Latex
-   #check  = Begin_Latex #check{a} End_Latex
-   #acute  = Begin_Latex #acute{a} End_Latex
-   #grave  = Begin_Latex #grave{a} End_Latex
-   #dot    = Begin_Latex #dot{a} End_Latex
-   #ddot   = Begin_Latex #ddot{a} End_Latex
-   #tilde  = Begin_Latex #tilde{a} End_Latex
-
+Begin_Macro(source)
+{
+   TCanvas *cl = new TCanvas("cl","cl",10,10,700,350);
+   TLatex Tl; Tl.SetTextFont(43); Tl.SetTextSize(20);
+   Tl.DrawText(.1, .8, "#hat{a} :");   Tl.DrawLatex(.5, .8, "#hat{a}");
+   Tl.DrawText(.1, .7, "#check{a} :"); Tl.DrawLatex(.5, .7, "#check{a}");
+   Tl.DrawText(.1, .6, "#acure{a} :"); Tl.DrawLatex(.5, .6, "#acute{a}");
+   Tl.DrawText(.1, .5, "#grave{a} :"); Tl.DrawLatex(.5, .5, "#grave{a}");
+   Tl.DrawText(.1, .4, "#dot{a} :");   Tl.DrawLatex(.5, .4, "#dot{a}");
+   Tl.DrawText(.1, .3, "#ddot{a} :");  Tl.DrawLatex(.5, .3, "#ddot{a}");
+   Tl.DrawText(.1, .2, "#tilde{a} :"); Tl.DrawLatex(.5, .2, "#tilde{a}");
+}
+End_Macro
 
 The special sign: `#slash` draws a slash on top of the text between brackets:
 
