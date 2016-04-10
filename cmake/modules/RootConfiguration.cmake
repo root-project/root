@@ -142,6 +142,11 @@ set(zliblibdir ${ZLIB_LIBRARY_DIR})
 set(zliblib ${ZLIB_LIBRARY})
 set(zlibincdir ${ZLIB_INCLUDE_DIR})
 
+set(builtinunuran ${value${builtin_unuran}})
+set(unuranlibdir ${UNURAN_LIBRARY_DIR})
+set(unuranlib ${UNURAN_LIBRARY})
+set(unuranincdir ${UNURAN_INCLUDE_DIR})
+
 set(buildgl ${value${opengl}})
 set(opengllibdir ${OPENGL_LIBRARY_DIR})
 set(openglulib ${OPENGL_glu_LIBRARY})

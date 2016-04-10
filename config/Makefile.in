@@ -122,6 +122,11 @@ BUILTINFREETYPE:= @builtinfreetype@
 
 BUILTINPCRE    := @builtinpcre@
 
+BUILTINUNURAN  := @builtinunuran@
+UNURANLIBDIR   := @unuranlibdir@
+UNURANLIB      := @unuranlib@
+UNURANINCDIR   := $(filter-out /usr/include, @unuranincdir@)
+
 BUILTINZLIB    := @builtinzlib@
 ZLIBLIBDIR     := @zliblibdir@
 ZLIBCLILIB     := @zliblib@

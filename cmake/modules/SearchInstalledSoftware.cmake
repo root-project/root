@@ -38,6 +38,16 @@ if(builtin_zlib)
   set(ZLIB_LIBRARY "" CACHE PATH "" FORCE)
 endif()
 
+#---Check for Unuran ------------------------------------------------------------------
+if(NOT builtin_unuran)
+  message(STATUS "Looking for Unuran")
+  find_Package(Unuran)
+  if(NOT UNURAN_FOUND)
+    message(STATUS "Unuran not found. Switching on builtin_unuran option")
+    set(builtin_unuran ON CACHE BOOL "" FORCE)
+  endif()
+endif()
+
 #---Check for Freetype---------------------------------------------------------------
 if(NOT builtin_freetype)
   message(STATUS "Looking for Freetype")

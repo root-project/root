@@ -3,6 +3,9 @@
 ############################################################################
 
 #---Define package related variables-----------------------------------------------------------------
+
+if(builtin_unuran)
+
 set(UNR_SRCDIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(UNR_VERSION "1.8.0-root")
 set(UNR_TARNAME "unuran-${UNR_VERSION}")
@@ -62,8 +65,17 @@ set(unrsources ${UNR_UNTARDIR}/src/utils/*.c
                ${UNR_UNTARDIR}/src/tests/*.c
                ${UNR_UNTARDIR}/src/uniform/*.c
                ${UNR_UNTARDIR}/src/urng/*.c )
+set(unrconfig ${UNR_UNTARDIR}/config.h)
+
+else()
+
+include_directories(${UNURAN_INCLUDE_DIRS})
+set(unrsources)
+set(unrconfig)
+
+endif()
 
 ROOT_GENERATE_DICTIONARY(G__Unuran *.h MODULE Unuran LINKDEF LinkDef.h)
 
-ROOT_LINKER_LIBRARY(Unuran *.cxx ${unrsources} G__Unuran.cxx ${UNR_UNTARDIR}/config.h  LIBRARIES Core DEPENDENCIES Hist MathCore)
+ROOT_LINKER_LIBRARY(Unuran *.cxx ${unrsources} G__Unuran.cxx ${unrconfig} LIBRARIES Core ${UNURAN_LIBRARIES} DEPENDENCIES Hist MathCore)
 ROOT_INSTALL_HEADERS()
