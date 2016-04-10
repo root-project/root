@@ -273,8 +273,8 @@ void portfolio()
 
   const char *fname = "stock.root";
   TFile *f = 0;
-  if (!gSystem->AccessPathName(fname)) {
-     f = TFile::Open(fname);
+  if (!gSystem->AccessPathName(Form("%s/%s", gSystem->DirName(__FILE__), fname))) {
+     f = TFile::Open(Form("%s/%s", gSystem->DirName(__FILE__), fname));
   } else {
      printf("accessing %s file from http://root.cern.ch/files\n",fname);
      f = TFile::Open(Form("http://root.cern.ch/files/%s",fname));
