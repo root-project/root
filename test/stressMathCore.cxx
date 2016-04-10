@@ -1121,7 +1121,7 @@ int testVector(int ngen, bool testio=false) {
    if (Dim==4 && VecType<V2>::name() == "PtEtaPhiMVector") scale *= 10;
 #if defined (R__LINUX) && !defined(R__B64)
    // problem of precision on linux 32
-   if (Dim ==4) scale = 1000000000;
+   if (Dim ==4) scale = 5000000000;
 #endif
    // for problem with PtEtaPhiE
    if (Dim==4 && VecType<V2>::name() == "PtEtaPhiEVector") scale = 0.01/(std::numeric_limits<double>::epsilon());

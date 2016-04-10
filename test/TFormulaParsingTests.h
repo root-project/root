@@ -312,7 +312,7 @@ bool test18() {
    ok &= (f1->Eval(1.5,2.5) == f0->Eval(1.5,2.5) );
    double par[2] = {3,4};
    double xx[2] = {0.8,1.6};
-   ok &= (f1->EvalPar(xx,par) == f0->EvalPar(xx,par) );
+   ok &= TMath::AreEqualAbs(f1->EvalPar(xx,par), f0->EvalPar(xx,par), 2e-16);
    return ok; 
 }
 
@@ -326,7 +326,7 @@ bool test19() {
    ok &= (f1->Eval(1.5,2.5,3.5) == f0->Eval(1.5,2.5,3.5) );
    double par[2] = {3,4};
    double xx[3] = {0.8,1.6,2.2};
-   ok &= (f1->EvalPar(xx,par) == f0->EvalPar(xx,par) );
+   ok &= TMath::AreEqualAbs(f1->EvalPar(xx,par), f0->EvalPar(xx,par), 2e-16);
    return ok; 
 }
 
@@ -369,12 +369,12 @@ bool test23() {
    TF1 f0("f0",[](double *x, double *p){ return p[0]+p[1]*TMath::Gaus(x[0],p[2],p[3]); },-3,3,4 );
    f2.SetParameters(10,1,0,1);
    f0.SetParameters(f2.GetParameters() );
-   ok &= (f2.Eval(1) == f0.Eval(1) );
+   ok &= TMath::AreEqualAbs(f2.Eval(1), f0.Eval(1), 7e-16);
 
    TF1 f3("f3","f1+[0]");
    // param order should be the same
    f3.SetParameters( f2.GetParameters() );
-   ok &= (f2.Eval(1) == f0.Eval(1) );
+   ok &= TMath::AreEqualAbs(f3.Eval(1), f0.Eval(1), 7e-16);
    return ok;
 }
 
@@ -465,7 +465,7 @@ bool test27() {
    auto func = [](double *x, double *p){ return TMath::Sqrt(((TMath::Sign(1,p[0])*TMath::Sq(p[0]/x[0]))+(TMath::Sq(p[1])*(TMath::Power(x[0],(p[3]-1)))))+TMath::Sq(p[2])); };
    TF1 f6("f6",func,-10,10,4);
    f5.SetParameters(-1,2,3,4); f6.SetParameters(f5.GetParameters());
-   ok &= (f5.Eval(2) == f6.Eval(2) );
+   ok &= TMath::AreEqualAbs(f5.Eval(2), f6.Eval(2), 4.e-16);
    return ok;
 }
 
@@ -485,7 +485,7 @@ bool test28() {
    // keep same order in evaluation
    TF1 f0("f0",[](double *x, double *p){ return p[1]*sin(x[0]) + p[0]*cos(x[0]);},0.,10.,2);
    f0.SetParameters(1.1,2.1);
-   ok &= (fsincos.Eval(2) == f0.Eval(2) );
+   ok &= TMath::AreEqualAbs(fsincos.Eval(2), f0.Eval(2), 3e-16);
    return ok;
 
 }
