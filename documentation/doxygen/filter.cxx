@@ -161,13 +161,15 @@ void FilterClass()
 
    // Source file.
    if (gSource) {
+      size_t spos = 0;
       while (fgets(gLine,255,f)) {
          gLineString = gLine;
 
-         if (gLineString.find("End_Macro") != string::npos) {
+         if (gInMacro && gLineString.find("End_Macro") != string::npos) {
             ReplaceAll(gLineString,"End_Macro","");
             gImageSource = false;
             gInMacro = 0;
+            spos = 0;
             if (m) {
                fclose(m);
                m = 0;
@@ -180,6 +182,7 @@ void FilterClass()
          }
 
          if (gInMacro) {
+            if (spos) gLineString = gLineString.substr(spos);
             if (gInMacro == 1) {
                if (EndsWith(gLineString,".C\n") || (gLineString.find(".C(") != string::npos)) {
                   ExecuteMacro();
@@ -211,14 +214,27 @@ void FilterClass()
             }
          }
 
-         if (gLineString.find("Begin_Macro") != string::npos) {
+         if (gLineString.find("Begin_Macro") != string::npos &&
+             gLineString.find("End_Macro") == string::npos) {
+            if (BeginsWith(gLineString, "///")) {
+               spos = gLineString.find_first_not_of(' ', 3);
+            }
             if (gLineString.find("source") != string::npos) gImageSource = true;
             gImageID++;
             gInMacro++;
             gLineString = "\n";
          }
 
-         printf("%s",gLineString.c_str());
+         size_t l = gLineString.length();
+         size_t b = 0;
+         do {
+            size_t e = gLineString.find('\n', b);
+            if (e != string::npos) e++;
+            if (spos) printf("%-*s%s", spos, "///",
+                              gLineString.substr(b, e - b).c_str());
+            else printf("%s", gLineString.substr(b, e - b).c_str());
+            b = e;
+         } while (b < l);
       }
       fclose(f);
       return;
@@ -337,7 +353,8 @@ void GetClassName()
    if (gSource) {
       while (fgets(gLine,255,f)) {
          gLineString = gLine;
-         if (gLineString.find("ClassImp") != string::npos) {
+         if (gLineString.find("ClassImp") != string::npos ||
+             gLineString.find("NamespaceImp") != string::npos) {
             i1         = gLineString.find("(")+1;
             i2         = gLineString.find(")")-1;
             gClassName = gLineString.substr(i1,i2-i1+1);
@@ -369,12 +386,8 @@ void ExecuteMacro()
    gMacroName = gLineString.substr(i1,i2-i1+1);
 
    // Build the ROOT command to be executed.
-   bool ts = false;
-   if (BeginsWith(gLineString,"///")) ts = true;
-   if (ts) ReplaceAll(gLineString,"///", "");
-   if (ts) ReplaceAll(gLineString," ", "");
    gLineString.insert(0, StringFormat("root -l -b -q \"makeimage.C(\\\""));
-   int l = gLineString.length();
+   size_t l = gLineString.length();
    gLineString.replace(l-1,1,StringFormat("\\\",\\\"%s\\\",\\\"%s\\\",true,false)\"", gImageName.c_str(), gOutDir.c_str()));
 
    // Execute the macro
@@ -382,11 +395,9 @@ void ExecuteMacro()
 
    // Inline the directives to show the picture and/or the code
    if (gImageSource) {
-      if (ts) gLineString = StringFormat("/// \\include %s\n/// \\image html pict1_%s\n", gMacroName.c_str(), gImageName.c_str());
-      else    gLineString = StringFormat("\\include %s\n\\image html pict1_%s\n", gMacroName.c_str(), gImageName.c_str());
+      gLineString = StringFormat("\\include %s\n\\image html pict1_%s\n", gMacroName.c_str(), gImageName.c_str());
    } else {
-      if (ts) gLineString = StringFormat("\n/// \\image html pict1_%s\n", gImageName.c_str());
-      else    gLineString = StringFormat("\n\\image html pict1_%s\n", gImageName.c_str());
+      gLineString = StringFormat("\n\\image html pict1_%s\n", gImageName.c_str());
    }
 }
 
