@@ -36,7 +36,9 @@ ROOT_EXECUTABLE(rootcling src/LinkdefReader.cxx src/DictSelectionReader.cxx
                                     ${CLING_LIBRARIES} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT}
                                     ${corelinklibs})
 
-add_dependencies(rootcling CLING LLVMRES)
+# The dependency on Cling was added to prevent Cling (libCling) and
+# rootcling from being linked in parallel.
+add_dependencies(rootcling CLING LLVMRES Cling)
 
 ROOT_EXECUTABLE(rlibmap src/rlibmap.cxx)
 
