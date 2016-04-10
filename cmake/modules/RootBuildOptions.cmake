@@ -73,6 +73,7 @@ ROOT_BUILD_OPTION(builtin_freetype OFF "Build included libfreetype, or use syste
 ROOT_BUILD_OPTION(builtin_glew ON "Build included libGLEW, or use system libGLEW")
 ROOT_BUILD_OPTION(builtin_openssl OFF "Build OpenSSL internally, or use system OpenSSL")
 ROOT_BUILD_OPTION(builtin_pcre OFF "Build included libpcre, or use system libpcre")
+ROOT_BUILD_OPTION(builtin_unuran OFF "Build included libunuran, or use system libunuran")
 ROOT_BUILD_OPTION(builtin_zlib OFF "Build included libz, or use system libz")
 ROOT_BUILD_OPTION(builtin_lzma OFF "Build included liblzma, or use system liblzma")
 ROOT_BUILD_OPTION(builtin_davix OFF "Build the Davix library internally (downloading tarfile from the Web)")

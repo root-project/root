@@ -55,6 +55,7 @@ options="                    \
    enable_builtin_freetype   \
    enable_builtin_glew       \
    enable_builtin_pcre       \
+   enable_builtin_unuran     \
    enable_builtin_zlib       \
    enable_builtin_lzma       \
    enable_builtin_llvm       \
@@ -187,6 +188,7 @@ enable_builtin_freetype=no
 enable_builtin_ftgl=no
 enable_builtin_glew=no
 enable_builtin_pcre=no
+enable_builtin_unuran=no
 enable_builtin_zlib=no
 enable_builtin_lzma=no
 enable_builtin_llvm=yes
@@ -1709,6 +1711,7 @@ enable/disable options, prefix with either --enable- or --disable-
   builtin-freetype   Build included libfreetype, or use system libfreetype
   builtin-glew       Build included libGLEW, or use system libGLEW
   builtin-pcre       Build included libpcre, or use system libpcre
+  builtin-unuran     Build included libunuran, or use system libunuran
   builtin-zlib       Build included libz, or use system libz
   builtin-lzma       Build included liblzma, or use system liblzma
   libcxx             Build using libc++, required by clang option (MacOS X only, for the time being)
@@ -2057,6 +2060,7 @@ win32)
    enable_builtin_ftgl="yes"
    enable_builtin_glew="yes"
    enable_builtin_pcre="yes"
+   enable_builtin_unuran="yes"
    enable_builtin_zlib="yes"
    enable_builtin_lzma="yes"
    top_builddir=`cygpath -u $top_builddir`
@@ -3283,6 +3287,38 @@ if test "x$enable_builtin_pcre" = "x" || \
 fi
 message "Checking whether to build included libpcre"
 result "$enable_builtin_pcre"
+
+######################################################################
+#
+### echo %%% libunuran (builtin or system)
+#
+if test "x$enable_builtin_unuran" = "xno" ; then
+    check_header "unuran.h" "" \
+        $UNURAN ${UNURAN:+$UNURAN/include} /usr/include
+    if test "x$found_dir" = "x" ; then
+        enable_builtin_unuran=yes
+    else
+        unuraninc=$found_hdr
+        unuranincdir=$found_dir
+    fi
+
+    check_library "libunuran" "$enable_shared" "" \
+        $UNURAN ${UNURAN:+$UNURAN/lib} /usr/lib
+    if test "x$found_lib" = "x" ; then
+        unuranlib=""
+        unuranlibdir=""
+        enable_builtin_unuran="yes"
+    else
+        unuranlib="$found_lib"
+        unuranlibdir="$found_dir"
+    fi
+
+    if test "x$unuranincdir" = "x" || test "x$unuranlib" = "x"; then
+        enable_builtin_unuran="yes"
+    fi
+fi
+message "Checking whether to build included unuran"
+result "$enable_builtin_unuran"
 
 ######################################################################
 #
@@ -7872,6 +7908,10 @@ sed -e "s|@srcdir@|$ac_srcdir|"                 \
     -e "s|@top_srcdir@|$top_srcdir|"            \
     -e "s|@ttffontdir@|$fontdir|"               \
     -e "s|@tutdir@|$tutdir|"                    \
+    -e "s|@builtinunuran@|$enable_builtin_unuran|" \
+    -e "s|@unuranincdir@|$unuranincdir|"        \
+    -e "s|@unuranlib@|$unuranlib|"              \
+    -e "s|@unuranlibdir@|$unuranlibdir|"        \
     -e "s|@winrtdebug@|$enable_winrtdebug|"     \
     -e "s|@xmlincdir@|$xmlincdir|"              \
     -e "s|@xmllib@|$xmllib|"                    \
