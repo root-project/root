@@ -103,7 +103,7 @@ the former is adopted by
      http://planetmath.org/encyclopedia/EllipticIntegralsAndJacobiEllipticFunctions.html
 
 - CERNLIB
-     http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/c346/top.html
+     https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/c346/top.html
 
    while the latter is used by
 
@@ -239,7 +239,7 @@ the former is adopted by
      http://planetmath.org/encyclopedia/EllipticIntegralsAndJacobiEllipticFunctions.html
 
 - CERNLIB
-     http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/c346/top.html
+     https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/c346/top.html
 
    while the latter is used by
 

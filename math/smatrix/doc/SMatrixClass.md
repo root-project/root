@@ -132,7 +132,7 @@ SVector6 vlb = m.**LowerBlock**();       _//  vlb = [ 1, 4, 5, 7, 8, 9 ]_
 
 ### Linear Algebra Functions
 
-Only limited linear algebra functionality is available for SMatrix. It is possible for squared matrices NxN, to find the inverse or to calculate the determinant. Different inversion algorithms are used if the matrix is smaller than 6x6 or if it is symmetric. In the case of a small matrix, a faster direct inversion is used. For a large (N > 6) symmetric matrix the Bunch-Kaufman diagonal pivoting method is used while for a large (N > 6) general matrix an LU factorization is performed using the same algorithm as in the CERNLIB routine [dinv](http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f010/top.html).
+Only limited linear algebra functionality is available for SMatrix. It is possible for squared matrices NxN, to find the inverse or to calculate the determinant. Different inversion algorithms are used if the matrix is smaller than 6x6 or if it is symmetric. In the case of a small matrix, a faster direct inversion is used. For a large (N > 6) symmetric matrix the Bunch-Kaufman diagonal pivoting method is used while for a large (N > 6) general matrix an LU factorization is performed using the same algorithm as in the CERNLIB routine [dinv](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f010/top.html).
 
 <pre>_//  Invert a NxN matrix. The inverted matrix replace the existing one and returns if the result is successful_
 bool ret = m.**Invert**()  

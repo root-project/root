@@ -331,7 +331,7 @@ void TVirtualFitter::SetFCN(void *fcn)
 ////////////////////////////////////////////////////////////////////////////////
 /// static: Set the maximum number of function calls for the minimization algorithm
 /// For example for MIGRAD this is the maxcalls value passed as first argument
-/// (see http://wwwasdoc.web.cern.ch/wwwasdoc/minuit/node18.html )
+/// (see https://cern-tex.web.cern.ch/cern-tex/minuit/node18.html )
 
 void TVirtualFitter::SetMaxIterations(Int_t niter)
 {
@@ -341,7 +341,7 @@ void TVirtualFitter::SetMaxIterations(Int_t niter)
 ////////////////////////////////////////////////////////////////////////////////
 /// static: Set the Error Definition (default=1)
 /// For Minuit this is the value passed with the "SET ERR" command
-/// (see http://wwwasdoc.web.cern.ch/wwwasdoc/minuit/node18.html)
+/// (see https://cern-tex.web.cern.ch/cern-tex/minuit/node18.html)
 
 void TVirtualFitter::SetErrorDef(Double_t errdef)
 {
@@ -356,7 +356,7 @@ void TVirtualFitter::SetErrorDef(Double_t errdef)
 ////////////////////////////////////////////////////////////////////////////////
 /// static: Set the tolerance used in the minimization algorithm
 /// For example for MIGRAD this is tolerance value passed as second argument
-/// (see http://wwwasdoc.web.cern.ch/wwwasdoc/minuit/node18.html )
+/// (see https://cern-tex.web.cern.ch/cern-tex/minuit/node18.html )
 
 void TVirtualFitter::SetPrecision(Double_t prec)
 {

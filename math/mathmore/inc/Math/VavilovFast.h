@@ -90,7 +90,7 @@ namespace Math {
    A. Rotondi and P. Montagna, Fast calculation of Vavilov distribution,
    <A HREF="http://dx.doi.org/10.1016/0168-583X(90)90749-K">Nucl. Instr. and Meth. B47 (1990) 215-224</A>,
    which has been implemented in
-   <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/g115/top.html">
+   <A HREF="https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/g115/top.html">
    CERNLIB (G115)</A>.
 
    The class stores coefficients needed to calculate \f$p(\lambda; \kappa, \beta^2)\f$

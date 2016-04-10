@@ -193,7 +193,7 @@ namespace Math {
   (<A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC95">
   GSL</A>, <A HREF="http://planetmath.org/encyclopedia/EllipticIntegralsAndJacobiEllipticFunctions.html">
   Planetmath</A> and
-  <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/c346/top.html">
+  <A HREF="https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/c346/top.html">
   CERNLIB</A>) use the + sign in front of n in the denominator. In
   order to be C++ compliant, the present library uses the former
   convention. The implementation used is that of
@@ -408,7 +408,7 @@ namespace Math {
   (<A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC95">
   GSL</A>, <A HREF="http://planetmath.org/encyclopedia/EllipticIntegralsAndJacobiEllipticFunctions.html">
   Planetmath</A> and
-  <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/c346/top.html">
+  <A HREF="https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/c346/top.html">
   CERNLIB</A>) use the + sign in front of n in the denominator. In
   order to be C++ compliant, the present library uses the former
   convention. The implementation used is that of

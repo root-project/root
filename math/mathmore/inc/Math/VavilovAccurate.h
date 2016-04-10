@@ -81,7 +81,7 @@ namespace Math {
    B. Schorr, Programs for the Landau and the Vavilov distributions and the corresponding random numbers,
    <A HREF="http://dx.doi.org/10.1016/0010-4655(74)90091-5">Computer Phys. Comm. 7 (1974) 215-224</A>,
    which has been implemented in
-   <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/g116/top.html">
+   <A HREF="https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/g116/top.html">
    CERNLIB (G116)</A>.
 
    The class stores coefficients needed to calculate \f$p(\lambda; \kappa, \beta^2)\f$
