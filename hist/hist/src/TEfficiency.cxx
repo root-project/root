@@ -329,7 +329,7 @@ parameters. The resulting priors for different combinations of these shape
 parameters are shown in the plot below.
 
 Begin_Macro(source)
-   {
+{
       //canvas only needed for the documentation
       TCanvas* c1 = new TCanvas("c1","",600,400);
       c1->SetFillStyle(1001);
@@ -363,7 +363,7 @@ Begin_Macro(source)
 
       //only for this documentation
       return c1;
-   }
+}
 End_Macro
 
 
