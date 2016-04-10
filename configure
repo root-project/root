@@ -206,7 +206,7 @@ if test "x$ENABLEALL" = "xyes"; then
     enable_unuran=yes
     enable_vc=yes
     enable_vdt=yes
-    #enable_r=yes
+    enable_r=yes
 fi
 
 # Remove old log file
@@ -2303,7 +2303,7 @@ if test $# -gt 0 ; then
         f=`echo $1 | sed -e 's/--//' -e 's/-/_/g' -e 's/++11/xx11/'`
         eval prev='$'`echo ${f}`
         eval prev_expl='$'`echo ${f}_explicit`
-        if test ! "x`echo ${deprecated_options} | grep ${f}`" = "x"; then
+        if test ! "x`echo ${deprecated_options}' ' | grep ${f}' '`" = "x"; then
             echo "WARNING: option $1 is deprecated and ignored"'!'
         else
             if test "${prev}:${prev_expl}" = "yes:"; then
@@ -2333,7 +2333,7 @@ if test $# -gt 0 ; then
         f=`echo $1 | sed -e 's/--disable/enable/' -e 's/-/_/g' -e 's/++11/xx11/'`
         eval prev='$'`echo ${f}`
         eval prev_expl='$'`echo ${f}_explicit`
-        if test ! "x`echo ${deprecated_options} | grep ${f}`" = "x"; then
+        if test ! "x`echo ${deprecated_options}' ' | grep ${f}' '`" = "x"; then
             echo "WARNING: option $1 is deprecated and ignored"'!'
         else
             if test "${prev}:${prev_expl}" = "xno:"; then
