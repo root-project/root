@@ -50,7 +50,7 @@ After configuring the calculator, one only needs to ask GetInterval, which will 
 
 The concrete implementations of this interface should deal with the details of how the nuisance parameters are dealt with (eg. integration vs. profiling) and which test-statistic is used (perhaps this should be added to the interface).
 
-The motivation for this interface is that we hope to be able to specify the problem in a common way for several concrete calculators.END_HTML
+The motivation for this interface is that we hope to be able to specify the problem in a common way for several concrete calculators.
 
 */
 

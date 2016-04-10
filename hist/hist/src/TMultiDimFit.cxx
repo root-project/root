@@ -603,7 +603,7 @@ TMultiDimFit::~TMultiDimFit()
 /// Please note, that if no error is given Poisson statistics is
 /// assumed and the square error is set to the value of dependent
 /// quantity.  See also the
-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+/// <a href="#TMultiDimFit:description">class description</a>
 
 void TMultiDimFit::AddRow(const Double_t *x, Double_t D, Double_t E)
 {
@@ -682,7 +682,7 @@ void TMultiDimFit::AddRow(const Double_t *x, Double_t D, Double_t E)
 /// Please note, that if no error is given Poisson statistics is
 /// assumed and the square error is set to the value of dependent
 /// quantity.  See also the
-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+/// <a href="#TMultiDimFit:description">class description</a>
 
 void TMultiDimFit::AddTestRow(const Double_t *x, Double_t D, Double_t E)
 {
@@ -986,7 +986,7 @@ Double_t TMultiDimFit::EvalFactor(Int_t p, Double_t x) const
 ///     None so far
 ///
 /// For detailed description of what this entails, please refer to the
-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+/// <a href="#TMultiDimFit:description">class description</a>
 
 void TMultiDimFit::FindParameterization(Option_t *)
 {
@@ -1005,7 +1005,7 @@ void TMultiDimFit::FindParameterization(Option_t *)
 ///     M     use Minuit to improve coefficients
 ///
 /// Also, refer to
-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+/// <a href="#TMultiDimFit:description">class description</a>
 
 void TMultiDimFit::Fit(Option_t *option)
 {
@@ -1097,7 +1097,7 @@ TMultiDimFit* TMultiDimFit::Instance()
 /// PRIVATE METHOD:
 /// Create list of candidate functions for the parameterisation. See
 /// also
-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+/// <a href="#TMultiDimFit:description">class description</a>
 
 void TMultiDimFit::MakeCandidates()
 {
@@ -1354,7 +1354,7 @@ void TMultiDimFit::MakeCoefficientErrors()
 /// PRIVATE METHOD:
 /// Invert the model matrix B, and compute final coefficients. For a
 /// more thorough discussion of what this means, please refer to the
-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+/// <a href="#TMultiDimFit:description">class description</a>
 ///
 /// First we invert the lower triangle matrix fOrthCurvatureMatrix
 /// and store the inverted matrix in the upper triangle.
@@ -1496,7 +1496,7 @@ void TMultiDimFit::MakeCorrelation()
 /// Make Gram-Schmidt orthogonalisation. The class description gives
 /// a thorough account of this algorithm, as well as
 /// references. Please refer to the
-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+/// <a href="#TMultiDimFit:description">class description</a>
 
 Double_t TMultiDimFit::MakeGramSchmidt(Int_t function)
 {
@@ -1589,7 +1589,7 @@ Double_t TMultiDimFit::MakeGramSchmidt(Int_t function)
 ///     R4        Residuals computed on test sample
 ///
 /// For a description of these quantities, refer to
-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+/// <a href="#TMultiDimFit:description">class description</a>
 
 void TMultiDimFit::MakeHistograms(Option_t *option)
 {
@@ -1800,7 +1800,7 @@ void TMultiDimFit::MakeNormalized()
 /// PRIVATE METHOD:
 /// Find the parameterization over the training sample. A full account
 /// of the algorithm is given in the
-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+/// <a href="#TMultiDimFit:description">class description</a>
 
 void TMultiDimFit::MakeParameterization()
 {
@@ -2365,7 +2365,7 @@ Bool_t TMultiDimFit::Select(const Int_t *)
 /// be fitted, and the new candidate function to be included in the
 /// fit.  By default it is 0, which automatically chooses another
 /// selection criteria. See also
-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+/// <a href="#TMultiDimFit:description">class description</a>
 
 void TMultiDimFit::SetMaxAngle(Double_t ang)
 {
@@ -2381,7 +2381,7 @@ void TMultiDimFit::SetMaxAngle(Double_t ang)
 /// Set the min angle (in degrees) between a new candidate function
 /// and the subspace spanned by the previously accepted
 /// functions. See also
-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+/// <a href="#TMultiDimFit:description">class description</a>
 
 void TMultiDimFit::SetMinAngle(Double_t ang)
 {
@@ -2401,7 +2401,7 @@ void TMultiDimFit::SetMinAngle(Double_t ang)
 /// Where N is the dimension of the data sample, L is the number of
 /// terms (given in terms) and the first number, labels the term, the
 /// second the variable.  More information is given in the
-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+/// <a href="#TMultiDimFit:description">class description</a>
 
 void TMultiDimFit::SetPowers(const Int_t* powers, Int_t terms)
 {
@@ -2421,7 +2421,7 @@ void TMultiDimFit::SetPowers(const Int_t* powers, Int_t terms)
 /// Set the user parameter for the function selection. The bigger the
 /// limit, the more functions are used. The meaning of this variable
 /// is defined in the
-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+/// <a href="#TMultiDimFit:description">class description</a>
 
 void TMultiDimFit::SetPowerLimit(Double_t limit)
 {
@@ -2431,7 +2431,7 @@ void TMultiDimFit::SetPowerLimit(Double_t limit)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the maximum power to be considered in the fit for each
 /// variable. See also
-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+/// <a href="#TMultiDimFit:description">class description</a>
 
 void TMultiDimFit::SetMaxPowers(const Int_t* powers)
 {
@@ -2446,7 +2446,7 @@ void TMultiDimFit::SetMaxPowers(const Int_t* powers)
 /// Set the acceptable relative error for when sum of square
 /// residuals is considered minimized. For a full account, refer to
 /// the
-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+/// <a href="#TMultiDimFit:description">class description</a>
 
 void TMultiDimFit::SetMinRelativeError(Double_t error)
 {
@@ -2458,7 +2458,7 @@ void TMultiDimFit::SetMinRelativeError(Double_t error)
 /// PRIVATE METHOD:
 /// Test whether the currently considered function contributes to the
 /// fit. See also
-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+/// <a href="#TMultiDimFit:description">class description</a>
 
 Bool_t TMultiDimFit::TestFunction(Double_t squareResidual,
                                   Double_t dResidur)
