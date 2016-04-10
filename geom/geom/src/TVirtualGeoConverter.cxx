@@ -28,7 +28,8 @@ ClassImp(TVirtualGeoConverter)
 ////////////////////////////////////////////////////////////////////////////////
 /// Geometry converter default constructor
 
-TVirtualGeoConverter::TVirtualGeoConverter(TGeoManager *)
+TVirtualGeoConverter::TVirtualGeoConverter(TGeoManager *geom)
+    :TObject(), fGeom(geom)
 {
 }
 
@@ -46,17 +47,20 @@ TVirtualGeoConverter::~TVirtualGeoConverter()
 /// The converter implements the ConvertGeometry function.
 /// If the geometry converter does not exist a default converter is created.
 
-TVirtualGeoConverter *TVirtualGeoConverter::Instance()
+TVirtualGeoConverter *TVirtualGeoConverter::Instance(TGeoManager *geom)
 {
    // if no converter set yet, create a default converter via the PluginManager
+   TGeoManager *mgr = geom;
+   if (!mgr) mgr = gGeoManager;
    if (!fgGeoConverter) {
       TPluginHandler *h;
       if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualGeoConverter"))) {
          if (h->LoadPlugin() == -1)
             return 0;
-         fgGeoConverter = (TVirtualGeoConverter*)h->ExecPlugin(1,gGeoManager);
+         fgGeoConverter = (TVirtualGeoConverter*)h->ExecPlugin(1,mgr);
       }
    }
+   fgGeoConverter->SetGeometry(mgr);
    return fgGeoConverter;
 }
 

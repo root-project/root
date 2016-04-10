@@ -24,11 +24,6 @@ ClassImp(TGeoVGConverter)
 TGeoVGConverter::TGeoVGConverter(TGeoManager *manager) : TVirtualGeoConverter(manager)
 {
    TVirtualGeoConverter::SetConverter(this);
-   if (manager) fGeoManager = manager;
-   else {
-      Error("ctor", "No geometry loaded");
-      return;
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -46,7 +41,7 @@ void TGeoVGConverter::ConvertGeometry()
 {
 // Convert all geometry shapes connected to volumes to VecGeom shapes
    // First convert the top volume
-   TGeoVolume *top = fGeoManager->GetTopVolume();
+   TGeoVolume *top = fGeom->GetTopVolume();
    TGeoVGShape *vgshape = TGeoVGShape::Create(top->GetShape());
    Int_t nconverted=0;
    // If shape of top volume not known by VecGeom, keep old one
@@ -55,7 +50,7 @@ void TGeoVGConverter::ConvertGeometry()
       top->SetShape(vgshape);
    }
    // Now iterate the active geometry tree
-   TGeoIterator next(fGeoManager->GetTopVolume());
+   TGeoIterator next(fGeom->GetTopVolume());
    TGeoNode *node;
    while ((node = next.Next())) {
       TGeoVolume *vol = node->GetVolume();

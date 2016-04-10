@@ -29,9 +29,6 @@
 #endif
 
 class TGeoVGConverter : public TVirtualGeoConverter {
-private:
-   TGeoManager       *fGeoManager;       // geometry to which applies
-
 public:
    TGeoVGConverter(TGeoManager *manager);
    virtual ~TGeoVGConverter();

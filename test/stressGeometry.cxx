@@ -51,16 +51,32 @@
 #include "TApplication.h"
 #include "TMath.h"
 #include "TSystem.h"
+#include "TVirtualGeoConverter.h"
 
+// Total and reference times
+Double_t tpstot = 0;
+Double_t tpsref = 112.1; //time including the generation of the ref files
+Bool_t testfailed = kFALSE;
 #ifndef __CINT__
-void stressGeometry(const char*, Bool_t);
+void stressGeometry(const char*, Bool_t, Bool_t);
 
 int main(int argc, char **argv)
 {
    gROOT->SetBatch();
    TApplication theApp("App", &argc, argv);
-   if (argc > 1) stressGeometry(argv[1],kFALSE);
-   else          stressGeometry("*",kFALSE);
+   Bool_t vecgeom = kFALSE;
+   TString geom = "*";
+   if (argc > 1) geom = argv[1];
+   geom.ToLower();
+   if (geom == "all") geom = "*";
+   printf("geom: %s\n", geom.Data());
+
+   if (argc > 1) {
+       for (Int_t iarg=1; iarg<argc; ++iarg) {
+          if (!strcmp(argv[iarg], "vecgeom")) vecgeom = kTRUE;
+       }
+   }
+   stressGeometry(geom,kFALSE,vecgeom);
    return 0;
 }
 
@@ -213,10 +229,6 @@ Double_t boxes[NG][3] = {{600,600,500},     // aleph
                          {440,440,538},     // belle
                          {1000,1000,1500}   // atlas
 };
-// Total and reference times
-Double_t tpstot = 0;
-Double_t tpsref = 112.1; //time including the generation of the ref files
-Bool_t testfailed = kFALSE;
 
 Int_t iexp[NG];
 Bool_t gen_ref=kFALSE;
@@ -225,7 +237,7 @@ void ReadRef(Int_t kexp);
 void WriteRef(Int_t kexp);
 void InspectRef(const char *exp="alice", Int_t vers=3);
 
-void stressGeometry(const char *exp="*", Bool_t generate_ref=kFALSE) {
+void stressGeometry(const char *exp="*", Bool_t generate_ref=kFALSE, Bool_t vecgeom=kFALSE) {
    TGeoManager::SetVerboseLevel(0);
    gen_ref = generate_ref;
    gErrorIgnoreLevel = 10;
@@ -257,7 +269,8 @@ void stressGeometry(const char *exp="*", Bool_t generate_ref=kFALSE) {
       }
       TGeoManager::Import(Form("http://root.cern.ch/files/%s",fname.Data()));
       if (!gGeoManager) return;
-
+      if (vecgeom) TVirtualGeoConverter::Instance()->ConvertGeometry();
+      
       fname = TString::Format("files/%s_ref_%d.root", exps[i],versions[i]);
 
       if (gen_ref || !TFile::Open(Form("http://root.cern.ch/files/%s_ref_%d.root",exps[i],versions[i]),"CACHEREAD")) {
@@ -300,7 +313,6 @@ void stressGeometry(const char *exp="*", Bool_t generate_ref=kFALSE) {
 }
 
 void ReadRef(Int_t kexp) {
-   TStopwatch sw;
    TString fname;
    TFile *f = 0;
    //use ref_[version[i]] files
@@ -335,6 +347,7 @@ void ReadRef(Int_t kexp) {
    Float_t diffmax = 0.01;  // percent of rad!
    Int_t nbad = 0;
    vect(0) = 0;//gGeoManager->Weight(0.01, "va");
+   TStopwatch sw;
    for (Long64_t i=0;i<nentries;i++) {
       T->GetEntry(i);
       nbound = 0;
