@@ -83,9 +83,6 @@ namespace Math {
 
     It implements also the interface ROOT::Math::VirtualIntegratorMultiDim so it can be
     instantiate using the plugin manager (plugin name is "GSLMCIntegrator")
-
-    @ingroup MCIntegration
-
    */
 
 

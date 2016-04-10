@@ -813,7 +813,7 @@ class BidirMMapPipe {
 
 	/** @brief I/O manipulator support
 	 *
-	 * @param f manipulator
+	 * @param manip manipulator
 	 * @returns pipe with manipulator applied
 	 *
 	 * example:
@@ -826,7 +826,7 @@ class BidirMMapPipe {
 
 	/** @brief I/O manipulator support
 	 *
-	 * @param f manipulator
+	 * @param manip manipulator
 	 * @returns pipe with manipulator applied
 	 *
 	 * example:

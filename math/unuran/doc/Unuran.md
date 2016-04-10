@@ -38,7 +38,7 @@ It can then be used in two distinct ways:
     - The user can optionally provide the
 	  - cdf (cumulative distribution function) via the **TUnuranContDist::SetCdf** function,
 	  - the mode via **TUnuranContDist::SetMode**,
-      - the domain via **TUnuranContDist::SetDomain** for generating numbers in a restricted region,
+	  - the domain via **TUnuranContDist::SetDomain** for generating numbers in a restricted region,
 	  - the area below the pdf via **TUnuranContDist::SetPdfArea**.
 
 Some of this information is required depending on the chosen UNURAN generation method.

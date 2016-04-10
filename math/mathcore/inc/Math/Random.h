@@ -18,9 +18,7 @@
 #define ROOT_Math_Random
 
 /**
-@defgroup Random 
-
- Interface class for Random number generation
+@defgroup Random Interface class for Random number generation
 */
 
 #include "Math/RandomFunctions.h"

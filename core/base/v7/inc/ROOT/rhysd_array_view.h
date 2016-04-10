@@ -1,4 +1,4 @@
-/// \file rhysd_array_view.h
+/// \file ROOT/rhysd_array_view.h
 /// \ingroup Base StdExt ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-09-06

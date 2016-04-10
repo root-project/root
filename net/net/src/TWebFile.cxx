@@ -1195,7 +1195,7 @@ Int_t TWebFile::GetHunk(TSocket *s, char *hunk, Int_t maxsize)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Determine whether [START, PEEKED + PEEKLEN) contains an HTTP new
-/// line [\r]\n. If so, return the pointer to the position after the line,
+/// line [\\r]\\n. If so, return the pointer to the position after the line,
 /// otherwise return 0. This is used as callback to GetHunk(). The data
 /// between START and PEEKED has been read and cannot be "unread"; the
 /// data after PEEKED has only been peeked.

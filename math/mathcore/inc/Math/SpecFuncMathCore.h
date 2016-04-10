@@ -209,7 +209,7 @@ namespace Math {
 
   /**
 
-  Calculates the real part of the cosine integral \Re(Ci).
+  Calculates the real part of the cosine integral Re(Ci).
 
   For x<0, the imaginary part is \pi i and has to be added by the user,
   for x>0 the imaginary part of Ci(x) is 0.
