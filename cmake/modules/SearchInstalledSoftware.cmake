@@ -1118,11 +1118,23 @@ if(geocad)
   endif()
 endif()
 
+#---Check for VecGeom--------------------------------------------------------------------
+if (vecgeom)
+  message(STATUS "Looking for VecGeom")
+  find_package(VecGeom ${VecGeom_FIND_VERSION} CONFIG QUIET)
+  if(NOT VecGeom_FOUND )
+      message(STATUS "VecGeom not found. Ensure that the installation of VecGeom is in the CMAKE_PREFIX_PATH")
+      message(STATUS "              example: CMAKE_PREFIX_PATH=<VecGeom_install_path>/lib/CMake/VecGeom")
+      message(STATUS "              For the time being switching OFF 'vecgeom' option")
+      set(vecgeom OFF CACHE BOOL "" FORCE)
+  endif()
+endif()
+
 #---Check for Vc---------------------------------------------------------------------
 if(vc OR builtin_vc)
   if(NOT builtin_vc)
     message(STATUS "Looking for Vc")
-    find_package(Vc ${Vc_FIND_VERSION} CONFIG QUIET)
+    find_package(Vc 1.0 CONFIG QUIET)
     if(NOT Vc_FOUND)
       message(STATUS "Vc not found. Ensure that the installation of Vc is in the CMAKE_PREFIX_PATH")
       message(STATUS "              Alternatively, you can also enable the option 'builtin_vc' to build the Vc libraries internally")
@@ -1144,17 +1156,6 @@ if(vc OR builtin_vc)
     set(Vc_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}Vc${CMAKE_STATIC_LIBRARY_SUFFIX})
     set(vc ON CACHE BOOL "" FORCE)
   endif()
-endif()
-
-#---Check for VecGeom--------------------------------------------------------------------
-if (vecgeom)
-  message(STATUS "Looking for VecGeom")
-  find_package(VecGeom ${VecGeom_FIND_VERSION} CONFIG)
-#  if( VECGEOM_FOUND )
-#    message(STATUS "VecGeom version " ${VECGEOM_VERSION} " found in " ${VECGEOM_INSTALL_DIR})
-#    message(STATUS "Looking for Vc")
-#    find_package(Vc ${Vc_FIND_VERSION} CONFIG REQUIRED)   
-#  endif()
 endif()
 
 #---Report non implemented options---------------------------------------------------
