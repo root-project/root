@@ -41,7 +41,7 @@ void TGeoVGConverter::ConvertGeometry()
 {
 // Convert all geometry shapes connected to volumes to VecGeom shapes
    // First convert the top volume
-   TGeoVolume *top = fGeom->GetTopVolume();
+   TGeoVolume *top = fGeom->GetMasterVolume();
    TGeoVGShape *vgshape = TGeoVGShape::Create(top->GetShape());
    Int_t nconverted=0;
    // If shape of top volume not known by VecGeom, keep old one
@@ -55,13 +55,12 @@ void TGeoVGConverter::ConvertGeometry()
    while ((node = next.Next())) {
       TGeoVolume *vol = node->GetVolume();
       // If shape not already converted, convert it
-      if ( vol->GetShape()->IsA() != TGeoVGShape::Class() ) {
-         // printf("Converting %s\n", vol->GetName());
-         vgshape = TGeoVGShape::Create(vol->GetShape());
-         if (vgshape) {
-            nconverted++;
-            vol->SetShape(vgshape);
-         }
+      if ( vol->GetShape()->IsVecGeom() ) continue;
+      // printf("Converting %s\n", vol->GetName());
+      vgshape = TGeoVGShape::Create(vol->GetShape());
+      if (vgshape) {
+         nconverted++;
+         vol->SetShape(vgshape);
       }
    }
    printf("# Converted %d shapes to VecGeom ones\n", nconverted);
