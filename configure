@@ -53,6 +53,7 @@ options="                    \
    enable_builtin_afterimage \
    enable_builtin_ftgl       \
    enable_builtin_freetype   \
+   enable_builtin_gl2ps      \
    enable_builtin_glew       \
    enable_builtin_pcre       \
    enable_builtin_unuran     \
@@ -186,6 +187,7 @@ enable_werror=no
 enable_winrtdebug=
 enable_builtin_freetype=no
 enable_builtin_ftgl=no
+enable_builtin_gl2ps=no
 enable_builtin_glew=no
 enable_builtin_pcre=no
 enable_builtin_unuran=no
@@ -1709,6 +1711,7 @@ enable/disable options, prefix with either --enable- or --disable-
   builtin-afterimage Build included libAfterImage, or use system libAfterImage
   builtin-ftgl       Build included libFTGL, or use system libftgl
   builtin-freetype   Build included libfreetype, or use system libfreetype
+  builtin-gl2ps      Build included libgl2ps, or use system libgl2ps
   builtin-glew       Build included libGLEW, or use system libGLEW
   builtin-pcre       Build included libpcre, or use system libpcre
   builtin-unuran     Build included libunuran, or use system libunuran
@@ -2058,6 +2061,7 @@ win32)
    logmsg "Will use by default builtin versions of libraries on Win32"
    enable_builtin_freetype="yes"
    enable_builtin_ftgl="yes"
+   enable_builtin_gl2ps="yes"
    enable_builtin_glew="yes"
    enable_builtin_pcre="yes"
    enable_builtin_unuran="yes"
@@ -3253,6 +3257,38 @@ if test "x$enable_builtin_freetype" = "x" || \
 fi
 message "Checking whether to build included libfreetype6"
 result "$enable_builtin_freetype"
+
+######################################################################
+#
+### echo %%% libgl2ps (builtin or system)
+#
+if test "x$enable_builtin_gl2ps" = "xno" ; then
+    check_header "gl2ps.h" "" \
+        $GL2PS ${GL2PS:+$GL2PS/include} /usr/include
+    if test "x$found_dir" = "x" ; then
+        enable_builtin_gl2ps=yes
+    else
+        gl2psinc=$found_hdr
+        gl2psincdir=$found_dir
+    fi
+
+    check_library "libgl2ps" "$enable_shared" "" \
+        $GL2PS ${GL2PS:+$GL2PS/lib} /usr/lib
+    if test "x$found_lib" = "x" ; then
+        gl2pslib=""
+        gl2pslibdir=""
+        enable_builtin_gl2ps="yes"
+    else
+        gl2pslib="$found_lib"
+        gl2pslibdir="$found_dir"
+    fi
+
+    if test "x$gl2psincdir" = "x" || test "x$gl2pslib" = "x"; then
+        enable_builtin_gl2ps="yes"
+    fi
+fi
+message "Checking whether to build included gl2ps"
+result "$enable_builtin_gl2ps"
 
 ######################################################################
 #
@@ -7738,6 +7774,10 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@ftglincdir@|$ftglincdir|"            \
     -e "s|@ftgllibdir@|$ftgllibdir|"            \
     -e "s|@ftgllibs@|$ftgllibs|"                \
+    -e "s|@builtingl2ps@|$enable_builtin_gl2ps|" \
+    -e "s|@gl2psincdir@|$gl2psincdir|"          \
+    -e "s|@gl2pslib@|$gl2pslib|"                \
+    -e "s|@gl2pslibdir@|$gl2pslibdir|"          \
     -e "s|@glewincdir@|$glewincdir|"            \
     -e "s|@glewlibdir@|$glewlibdir|"            \
     -e "s|@glewlibs@|$glewlibs|"                \
