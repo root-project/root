@@ -19,6 +19,7 @@ GLDO         := $(GLDS:.cxx=.o)
 GLDH         := $(GLDS:.cxx=.h)
 
 GLH          := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
+GLH          := $(filter-out $(MODDIRI)/gl2ps.h, $(GLH))
 GLS          := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 
 # Excluded from win32 builds
@@ -41,6 +42,13 @@ GLH1         := $(MODDIRI)/CsgOps.h \
 
 # Used by rootcint
 GLH2         := $(filter-out $(GLH1), $(GLH))
+
+ifeq ($(BUILTINGL2PS),yes)
+GL2PSFLAGS   := -I$(MODDIRI)
+else()
+GLS          := $(filter-out $(MODDIRS)/gl2ps.cxx, $(GLS))
+GL2PSFLAGS   := $(GL2PSINCDIR:%=-I%)
+endif()
 
 ifneq ($(OPENGLLIB),)
 GLLIBS       := $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
@@ -78,6 +86,7 @@ $(GLLIB):       $(GLO) $(GLDO) $(ORDER_) $(MAINLIBS) $(GLLIBDEP) $(FTGLLIB) \
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libRGL.$(SOEXT) $@ "$(GLO) $(GLO1) $(GLDO)" \
 		   "$(GLLIBEXTRA) $(FTGLLIBDIR) $(FTGLLIBS) \
+		    $(GL2PSLIBDIR) $(GL2PSLIBS) \
 		    $(GLEWLIBDIR) $(GLEWLIBS) $(GLLIBS)"
 
 $(call pcmrule,GL)
@@ -107,12 +116,12 @@ distclean::     distclean-$(MODNAME)
 ##### extra rules ######
 ifeq ($(ARCH),win32)
 $(GLO) $(GLDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%) -I$(WIN32GDKDIR)/gdk/src \
-                            $(GDKDIRI:%=-I%) $(GLIBDIRI:%=-I%)
+                            $(GDKDIRI:%=-I%) $(GLIBDIRI:%=-I%) $(GL2PSFLAGS)
 $(GLDS):        CINTFLAGS += $(OPENGLINCDIR:%=-I%) -I$(WIN32GDKDIR)/gdk/src \
-                             $(GDKDIRI:%=-I%) $(GLIBDIRI:%=-I%)
+                             $(GDKDIRI:%=-I%) $(GLIBDIRI:%=-I%) $(GL2PSFLAGS)
 else
-$(GLO) $(GLDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%)
-$(GLDS):        CINTFLAGS += $(OPENGLINCDIR:%=-I%)
+$(GLO) $(GLDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%) $(GL2PSFLAGS)
+$(GLDS):        CINTFLAGS += $(OPENGLINCDIR:%=-I%) $(GL2PSFLAGS)
 endif
 
 $(call stripsrc,$(GLDIRS)/TGLText.o): $(FREETYPEDEP)

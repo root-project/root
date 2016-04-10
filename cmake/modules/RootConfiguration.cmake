@@ -153,6 +153,11 @@ set(openglulib ${OPENGL_glu_LIBRARY})
 set(opengllib ${OPENGL_gl_LIBRARY})
 set(openglincdir ${OPENGL_INCLUDE_DIR})
 
+set(builtingl2ps ${value${builtin_gl2ps}})
+set(gl2pslibdir ${GL2PS_LIBRARY_DIR})
+set(gl2pslib ${GL2PS_LIBRARY})
+set(gl2psincdir ${GL2PS_INCLUDE_DIR})
+
 set(buildldap ${value${ldap}})
 set(ldaplibdir ${LDAP_LIBRARY_DIR})
 set(ldaplib ${LDAP_LIBRARY})

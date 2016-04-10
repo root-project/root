@@ -450,6 +450,16 @@ if(opengl)
   endif()
 endif()
 
+#---Check for gl2ps ------------------------------------------------------------------
+if(NOT builtin_gl2ps)
+  message(STATUS "Looking for gl2ps")
+  find_Package(gl2ps)
+  if(NOT GL2PS_FOUND)
+    message(STATUS "gl2ps not found. Switching on builtin_gl2ps option")
+    set(builtin_gl2ps ON CACHE BOOL "" FORCE)
+  endif()
+endif()
+
 #---Check for Graphviz installation-------------------------------------------------------
 if(gviz)
   message(STATUS "Looking for Graphviz")
