@@ -408,7 +408,13 @@ find_program(PERL_EXECUTABLE perl)
 set(perl ${PERL_EXECUTABLE})
 
 #---RConfigure-------------------------------------------------------------------------------------------------
-set(setresuid undef)
+CHECK_CXX_SOURCE_COMPILES("#include <unistd.h>
+  int main() { int i = setresuid(0, 0, 0); return 0;}" found_setresuid)
+if(found_setresuid)
+  set(setresuid define)
+else()
+  set(setresuid undef)
+endif()
 if(mathmore)
   set(hasmathmore define)
 else()
@@ -527,7 +533,16 @@ install(FILES ${CMAKE_BINARY_DIR}/include/RConfigure.h DESTINATION ${CMAKE_INSTA
 execute_Process(COMMAND hostname OUTPUT_VARIABLE BuildNodeInfo OUTPUT_STRIP_TRAILING_WHITESPACE )
 
 configure_file(${CMAKE_SOURCE_DIR}/config/rootrc.in ${CMAKE_BINARY_DIR}/etc/system.rootrc @ONLY NEWLINE_STYLE UNIX)
+configure_file(${CMAKE_SOURCE_DIR}/config/rootauthrc.in ${CMAKE_BINARY_DIR}/etc/system.rootauthrc @ONLY NEWLINE_STYLE UNIX)
+configure_file(${CMAKE_SOURCE_DIR}/config/rootdaemonrc.in ${CMAKE_BINARY_DIR}/etc/system.rootdaemonrc @ONLY NEWLINE_STYLE UNIX)
+
+configure_file(${CMAKE_SOURCE_DIR}/config/rootd.in ${CMAKE_BINARY_DIR}/etc/daemons/rootd.rc.d @ONLY NEWLINE_STYLE UNIX)
+configure_file(${CMAKE_SOURCE_DIR}/config/rootd.xinetd.in ${CMAKE_BINARY_DIR}/etc/daemons/rootd.xinetd @ONLY NEWLINE_STYLE UNIX)
+configure_file(${CMAKE_SOURCE_DIR}/config/proofd.in ${CMAKE_BINARY_DIR}/etc/daemons/proofd.rc.d @ONLY NEWLINE_STYLE UNIX)
+configure_file(${CMAKE_SOURCE_DIR}/config/proofd.xinetd.in ${CMAKE_BINARY_DIR}/etc/daemons/proofd.xinetd @ONLY NEWLINE_STYLE UNIX)
+
 configure_file(${CMAKE_SOURCE_DIR}/config/RConfigOptions.in include/RConfigOptions.h NEWLINE_STYLE UNIX)
+
 if(ruby)
   file(APPEND ${CMAKE_BINARY_DIR}/include/RConfigOptions.h "\#define R__RUBY_MAJOR ${RUBY_MAJOR_VERSION}\n\#define R__RUBY_MINOR ${RUBY_MINOR_VERSION}\n")
 endif()
@@ -674,7 +689,20 @@ install(FILES ${CMAKE_BINARY_DIR}/include/RConfigOptions.h
 
 install(FILES ${CMAKE_BINARY_DIR}/etc/root.mimes
               ${CMAKE_BINARY_DIR}/etc/system.rootrc
+              ${CMAKE_BINARY_DIR}/etc/system.rootauthrc
+              ${CMAKE_BINARY_DIR}/etc/system.rootdaemonrc
               DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
+
+install(FILES ${CMAKE_BINARY_DIR}/etc/daemons/rootd.rc.d
+              ${CMAKE_BINARY_DIR}/etc/daemons/proofd.rc.d
+              PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
+                          GROUP_EXECUTE GROUP_READ
+                          WORLD_EXECUTE WORLD_READ
+              DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/daemons)
+
+install(FILES ${CMAKE_BINARY_DIR}/etc/daemons/rootd.xinetd
+              ${CMAKE_BINARY_DIR}/etc/daemons/proofd.xinetd
+              DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/daemons)
 
 install(FILES ${CMAKE_BINARY_DIR}/root-help.el DESTINATION ${CMAKE_INSTALL_ELISPDIR})
 
