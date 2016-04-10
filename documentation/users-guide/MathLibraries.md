@@ -189,7 +189,7 @@ Although there are some functions that are not in the standard C math library (l
  int i;
  i = TMath::LocMin(10, &v[0]);
  std::cout << v[i] << std::endl;
- ```
+```
  
 Another example of these functions can be found in $ROOTSYS/tutorials/permute.C.
 
@@ -233,7 +233,7 @@ and a modern C++-like  interface that receives two iterators to it.
 
  // old-style
  mean = TMath::Mean(n, &v[0], &w[0]);
- ```
+```
  
 ### Special and Statistical Functions.
 
