@@ -70,6 +70,7 @@ else()
   endif()
 endif()
 set(CMAKE_BUILD_TYPE ${LLVM_BUILD_TYPE})
+set(BUILD_SHARED_LIBS "NO")
 #--- Do not build cling as part of llvm.
 set(LLVM_NOCLING "YES")
 
