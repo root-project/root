@@ -47,15 +47,12 @@ void TGeoVGConverter::ConvertGeometry()
 // Convert all geometry shapes connected to volumes to VecGeom shapes
    // First convert the top volume
    TGeoVolume *top = fGeoManager->GetTopVolume();
-   TGeoVGShape *placed = new TGeoVGShape(top->GetShape());
+   TGeoVGShape *vgshape = TGeoVGShape::Create(top->GetShape());
    Int_t nconverted=0;
-   // If shape of top volue not known by VecGeom, keep old one
-   if (!placed->GetVGShape()) {
-      delete placed;
-      gGeoManager->GetListOfShapes()->RemoveLast();
-   } else {
+   // If shape of top volume not known by VecGeom, keep old one
+   if (vgshape) {
       nconverted++;
-      top->SetShape(placed);
+      top->SetShape(vgshape);
    }
    // Now iterate the active geometry tree
    TGeoIterator next(fGeoManager->GetTopVolume());
@@ -63,17 +60,13 @@ void TGeoVGConverter::ConvertGeometry()
    while ((node = next.Next())) {
       TGeoVolume *vol = node->GetVolume();
       // If shape not already converted, convert it
-      if ( !dynamic_cast<TGeoVGShape*>(vol->GetShape()) ) {
+      if ( vol->GetShape()->IsA() != TGeoVGShape::Class() ) {
          // printf("Converting %s\n", vol->GetName());
-         placed = new TGeoVGShape(vol->GetShape());
-         if (!placed->GetVGShape()) {
-            delete placed;
-            gGeoManager->GetListOfShapes()->RemoveLast();
-         }   
-         else {
+         vgshape = TGeoVGShape::Create(vol->GetShape());
+         if (vgshape) {
             nconverted++;
-            vol->SetShape(placed);
-         }   
+            vol->SetShape(vgshape);
+         }
       }
    }
    printf("# Converted %d shapes to VecGeom ones\n", nconverted);

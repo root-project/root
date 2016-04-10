@@ -21,12 +21,12 @@ private:
    VPlacedVolume        *fVGShape;      // VecGeom placed solid
    TGeoShape            *fShape;        // ROOT shape
 
-   VPlacedVolume        *CreateVecGeomSolid(TGeoShape *shape) const;
+   static VPlacedVolume *CreateVecGeomSolid(TGeoShape *shape);
+   TGeoVGShape(TGeoShape *shape, VPlacedVolume *vgshape);
 public:
    TGeoVGShape() : TGeoBBox(), fVGShape(nullptr), fShape(nullptr) {}
-   TGeoVGShape(TGeoShape *shape);
    virtual ~TGeoVGShape();
-   
+   static TGeoVGShape   *Create(TGeoShape *shape);
    virtual Double_t      Capacity() const;
    virtual void          ComputeBBox();
    virtual void          ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm);

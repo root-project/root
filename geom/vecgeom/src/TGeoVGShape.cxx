@@ -10,20 +10,17 @@
 #include "volumes/PlacedVolume.h"
 #include "volumes/UnplacedRootVolume.h"
 #include "management/RootGeoManager.h"
+#include "TError.h"
 #include "TGeoManager.h"
 #include "TGeoMaterial.h"
 #include "TGeoMedium.h"
 #include "TGeoVolume.h"
 
-//ClassImp(TGeoVGShape)
-
 //_____________________________________________________________________________
-TGeoVGShape::TGeoVGShape(TGeoShape *shape)
-           :TGeoBBox(shape->GetName(), 0, 0, 0), fVGShape(nullptr), fShape(shape)
+TGeoVGShape::TGeoVGShape(TGeoShape *shape,  VPlacedVolume *vgshape)
+           :TGeoBBox(shape->GetName(), 0, 0, 0), fVGShape(vgshape), fShape(shape)
 {
 // Default constructor
-   // Convert TGeoShape to PlacedVolume (navigation interface is there)
-   fVGShape = CreateVecGeomSolid(shape);
    // Copy box parameters from the original ROOT shape
    const TGeoBBox *box = (const TGeoBBox*)shape;
    TGeoBBox::SetBoxDimensions(box->GetDX(), box->GetDY(), box->GetDZ());   
@@ -39,21 +36,25 @@ TGeoVGShape::~TGeoVGShape()
 }   
 
 //_____________________________________________________________________________
-VPlacedVolume *TGeoVGShape::CreateVecGeomSolid(TGeoShape *shape) const
+TGeoVGShape *TGeoVGShape::Create(TGeoShape *shape)
+{
+// Factory creating TGeoVGShape from a Root shape. Returns nullptr if the 
+// shape cannot be converted
+   VPlacedVolume *vgshape = TGeoVGShape::CreateVecGeomSolid(shape);
+   if (!vgshape) return nullptr;
+   return ( new TGeoVGShape(shape, vgshape) );
+}
+
+//_____________________________________________________________________________
+VPlacedVolume *TGeoVGShape::CreateVecGeomSolid(TGeoShape *shape)
 {
 // Conversion method to create VecGeom solid corresponding to TGeoShape
-   // Initialize verbosity to catch possible error messages from VecGeom converter
-   RootGeoManager::Instance().set_verbose(1);
    // Call VecGeom TGeoShape->UnplacedSolid converter
    VUnplacedVolume *unplaced = RootGeoManager::Instance().Convert(shape);
-   // If ROOT shape is not supported, VecGeom will return a UnplacedRootVolume object
-   // which is the inverse bridge UnplacedVolume->TGeoShape
-   if (dynamic_cast<vecgeom::UnplacedRootVolume*>(unplaced)) {
-      // We prefer a null pointer in order to use the original ROOT shape
-      // so we have to cleanup what VecGeom just created
-      delete unplaced;
+   if (!unplaced) {
+      ::Warning("CreateVecGeomSolid", "Cannot convert shape type %s", shape->ClassName());
       return nullptr;
-   }
+   }   
    // We have to create a placed volume from the unplaced one to have access
    // to the navigation interface
    LogicalVolume *lvol = new LogicalVolume("", unplaced);
@@ -94,23 +95,25 @@ Bool_t TGeoVGShape::Contains(const Double_t *point) const
 Double_t TGeoVGShape::DistFromInside(const Double_t *point, const Double_t *dir, Int_t /*iact*/, 
                                    Double_t step, Double_t * /*safe*/) const
 {
-   return ( fVGShape->DistanceToOut(Vector3D<Double_t>(point[0], point[1], point[2]),
-                                    Vector3D<Double_t>(dir[0], dir[1], dir[2]),
-                                    step) );
+   Double_t dist = fVGShape->DistanceToOut(Vector3D<Double_t>(point[0], point[1], point[2]),
+                                    Vector3D<Double_t>(dir[0], dir[1], dir[2]), step);
+   return ( (dist < 0.)? 0. : dist );
 }
 
 //_____________________________________________________________________________
 Double_t TGeoVGShape::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t /*iact*/, 
                                    Double_t step, Double_t * /*safe*/) const
 {
-   return ( fVGShape->DistanceToIn(Vector3D<Double_t>(point[0], point[1], point[2]),
-                                    Vector3D<Double_t>(dir[0], dir[1], dir[2]),
-                                    step) );
+   Double_t dist = fVGShape->DistanceToIn(Vector3D<Double_t>(point[0], point[1], point[2]),
+                                    Vector3D<Double_t>(dir[0], dir[1], dir[2]), step);
+   return ( (dist < 0.)? 0. : dist );
 }
 
 //_____________________________________________________________________________
 Double_t TGeoVGShape::Safety(const Double_t *point, Bool_t in) const
 {
-   return ( (in) ? fVGShape->SafetyToOut(Vector3D<Double_t>(point[0], point[1], point[2])) 
-                 : fVGShape->SafetyToIn(Vector3D<Double_t>(point[0], point[1], point[2])));
+   Double_t safety =  (in) ? fVGShape->SafetyToOut(Vector3D<Double_t>(point[0], point[1], point[2])) 
+                           : fVGShape->SafetyToIn(Vector3D<Double_t>(point[0], point[1], point[2]));
+   return ( (safety < 0.)? 0. : safety );
+   
 }
