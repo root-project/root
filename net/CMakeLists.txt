@@ -1,6 +1,7 @@
 
 add_subdirectory(net)
 add_subdirectory(auth)  # special CMakeListst.txt
+add_subdirectory(rootd)
 
 if(bonjour)
   add_subdirectory(bonjour)
