@@ -57,7 +57,7 @@ namespace Detail {
       // Same value as TVirtualCollectionProxy.
       static const UInt_t fgIteratorArenaSize = 16; // greater than sizeof(void*) + sizeof(UInt_t)
 
-   /** @class template TCollectionProxyInfo::IteratorValue
+   /** @class ROOT::Detail::TCollectionProxyInfo::IteratorValue
     *
     * Small helper to encapsulate whether to return the value
     * pointed to by the iterator or its address.
@@ -76,7 +76,7 @@ namespace Detail {
          }
       };
 
-   /** @class template TCollectionProxyInfo::Iterators
+   /** @class ROOT::Detail::TCollectionProxyInfo::Iterators
     *
     * Small helper to implement the function to create,access and destroy
     * iterators.
@@ -204,7 +204,7 @@ namespace Detail {
          }
       };
 
-  /** @class TCollectionProxyInfo::Environ TCollectionProxyInfo.h TCollectionProxyInfo.h
+  /** @class ROOT::Detail::TCollectionProxyInfo::Environ
     *
     * Small helper to save proxy environment in the event of
     * recursive calls.
@@ -276,7 +276,7 @@ namespace Detail {
       static size_t GetContainerSize(const std::forward_list<T,ALLOCATOR>& c) {return std::distance(c.begin(),c.end());}
    };
 
-   /** @class TCollectionProxyInfo::Type TCollectionProxyInfo.h TCollectionProxyInfo.h
+   /** @class ROOT::Detail::TCollectionProxyInfo::Type
     *
     * Small helper to encapsulate basic data accesses for
     * all STL continers.
@@ -356,7 +356,7 @@ namespace Detail {
 
    };
 
-   /** @class TCollectionProxyInfo::Map TCollectionProxyInfo.h TCollectionProxyInfo.h
+   /** @class ROOT::Detail::TCollectionProxyInfo::Pushback
     *
     * Small helper to encapsulate all necessary data accesses for
     * containers like vector, list, deque
@@ -389,7 +389,7 @@ namespace Detail {
       }
    };
 
-   /** @class TCollectionProxyInfo::Pushfront TCollectionProxyInfo.h TCollectionProxyInfo.h
+   /** @class ROOT::Detail::TCollectionProxyInfo::Pushfront
     *
     * Small helper to encapsulate all necessary data accesses for
     * containers like forward_list
@@ -425,7 +425,7 @@ namespace Detail {
       }
    };
 
-   /** @class TCollectionProxyInfo::Map TCollectionProxyInfo.h TCollectionProxyInfo.h
+   /** @class ROOT::Detail::TCollectionProxyInfo::Insert
     *
     * Small helper to encapsulate all necessary data accesses for
     * containers like set, multiset etc.
@@ -457,7 +457,7 @@ namespace Detail {
       }
    };
 
-   /** @class TCollectionProxyInfo::Map TCollectionProxyInfo.h TCollectionProxyInfo.h
+   /** @class ROOT::Detail::TCollectionProxyInfo::MapInsert
     *
     * Small helper to encapsulate all necessary data accesses for
     * containers like set, multiset etc.

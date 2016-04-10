@@ -1,4 +1,4 @@
-/// \file TDirectoryEntry.h
+/// \file ROOT/TDirectoryEntry.h
 /// \ingroup Base ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-07-31

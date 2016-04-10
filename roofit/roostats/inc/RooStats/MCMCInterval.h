@@ -55,7 +55,7 @@ namespace RooStats {
    confidence level is reached within an acceptable neighborhood as defined by
    SetEpsilon(). More specifically: we calculate the following for different
    cutoff values C until we reach the target confidence level: \f$\int_{ F >= C } F
-   d{normset} \$.
+   d{normset} \f$.
    Important note: this is not the default method because of a bug in constructing
    the RooNDKeysPdf from a weighted data set.  Configure to use this method by
    calling SetUseKeys(true), and the data set will be interpreted without weights.

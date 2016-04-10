@@ -3743,7 +3743,7 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add to the header file, the #include need for this class.
+/// Add to the header file, the \#include need for this class.
 
 UInt_t TStreamerInfo::GenerateIncludes(FILE *fp, char *inclist, const TList *extrainfos)
 {
