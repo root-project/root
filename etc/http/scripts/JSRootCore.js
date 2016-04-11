@@ -94,7 +94,7 @@
    }
 } (function(JSROOT) {
 
-   JSROOT.version = "4.4.1 31/03/2016";
+   JSROOT.version = "4.4.2 11/04/2016";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -445,6 +445,7 @@
    }
 
    JSROOT.findFunction = function(name) {
+      if (typeof name === 'function') return name;
       var func = window[name];
       if (typeof func == 'function') return func;
       var separ = name.lastIndexOf(".");

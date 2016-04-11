@@ -2904,7 +2904,7 @@
 
          for (yi = 0; yi <= this.nbinsy + 1; ++yi) {
             yside = (yi <= yleft) ? 0 : (yi > yright ? 2 : 1);
-            yy = this.ymin + this.GetBinY(yi - 0.5);
+            yy = this.GetBinY(yi - 0.5);
 
             zz = histo.getBinContent(xi, yi);
 

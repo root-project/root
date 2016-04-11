@@ -1,5 +1,11 @@
 # JSROOT changelog
 
+## Changes in 4.4.2
+1. Fix - statistic collection for TH2
+2. Fix - correct handling of empty TList in browser/inspector
+3. Fix - support TFolder in browser/inspector (#40)
+
+
 ## Changes in 4.4.1
 1. Fix - colz palette resize when drawing histogram second time
 2. Fix - use embeded in TCanvas color for background color of canvas itself

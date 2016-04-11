@@ -4510,7 +4510,7 @@
          this.GetBinY = function(bin) {
             var indx = Math.round(bin);
             if (indx <= 0) return this.ymin;
-            if (indx > this.nbinsx) this.ymax;
+            if (indx > this.nbinsy) this.ymax;
             if (indx==bin) return this.histo.fYaxis.fXbins[indx];
             var indx2 = (bin < indx) ? indx - 1 : indx + 1;
             return this.histo.fYaxis.fXbins[indx] * Math.abs(bin-indx2) + this.histo.fYaxis.fXbins[indx2] * Math.abs(bin-indx);
@@ -4524,7 +4524,7 @@
          this.regulary = true;
          this.binwidthy = (this.ymax - this.ymin);
          if (this.nbinsy > 0)
-            this.binwidthy = this.binwidthy / this.nbinsy
+            this.binwidthy = this.binwidthy / this.nbinsy;
 
          this.GetBinY = function(bin) { return this.ymin+bin*this.binwidthy; };
          this.GetIndexY = function(y,add) { return Math.floor((y - this.ymin) / this.binwidthy + add); };
@@ -6561,8 +6561,48 @@
       this.clear(true);
    }
 
+   JSROOT.Painter.FolderHierarchy = function(item, obj) {
+
+      if ((obj==null) || !('fFolders' in obj) || (obj.fFolders==null)) return false;
+
+      if (obj.fFolders.arr.length===0) { item._more = false; return true; }
+
+      item._childs = [];
+
+      for ( var i = 0; i < obj.fFolders.arr.length; ++i) {
+         var chld = obj.fFolders.arr[i];
+         item._childs.push( {
+            _name : chld.fName,
+            _kind : "ROOT." + chld._typename,
+            _readobj : chld
+         });
+      }
+      return true;
+   }
+
    JSROOT.Painter.ListHierarchy = function(folder, lst) {
       if (lst._typename != 'TList' && lst._typename != 'TObjArray' && lst._typename != 'TClonesArray') return false;
+
+      folder._childs = [];
+      for ( var i = 0; i < lst.arr.length; ++i) {
+         var obj = lst.arr[i];
+         var item = {
+            _name : obj.fName,
+            _kind : "ROOT." + obj._typename,
+            _readobj : obj
+         };
+         folder._childs.push(item);
+      }
+      return true;
+   }
+
+   JSROOT.Painter.ListHierarchy = function(folder, lst) {
+      if (lst._typename != 'TList' && lst._typename != 'TObjArray' && lst._typename != 'TClonesArray') return false;
+
+      if (lst.arr.length === 0) {
+         folder._more = false;
+         return true;
+      }
 
       folder._childs = [];
       for ( var i = 0; i < lst.arr.length; ++i) {
@@ -6619,19 +6659,25 @@
             continue;
          }
 
-         if ((typeof fld == 'object') && ('_typename' in fld)
-             && ((fld._typename=='TList') || (fld._typename=='TObjArray')) ) {
+         if ((typeof fld == 'object') && ('_typename' in fld)) {
+             if ((fld._typename=='TList') || (fld._typename=='TObjArray')) {
                item._kind = item._title = "ROOT." + fld._typename;
                fld = fld.arr;
+             } else if (fld._typename=='TFolder') {
+                item._kind = item._title = "ROOT." + fld._typename;
+                fld = fld.fFolders.arr;
+             }
          }
 
          var proto = Object.prototype.toString.apply(fld);
          var simple  = false;
 
          if ((proto.lastIndexOf('Array]') == proto.length-6) && (proto.indexOf('[object')==0)) {
+            item._title = item._kind + " len=" + fld.length;
             simple = (proto != '[object Array]');
             if (fld.length == 0) {
                item._value = "[ ]";
+               item._more = false;
             } else {
                item._value = "[...]";
                item._more = true;
@@ -6784,10 +6830,6 @@
             item._kind = "ROOT.TStreamerInfoList";
             item._title = "List of streamer infos for binary I/O";
             item._readobj = file.fStreamerInfos;
-         } else
-         if (key.fClassName == 'TList' || key.fClassName == 'TObjArray' || key.fClassName == 'TClonesArray') {
-            item._more = true;
-            item._expand = JSROOT.Painter.ListHierarchy;
          }
 
          folder._childs.push(item);
@@ -8432,13 +8474,14 @@
    JSROOT.addDrawFunc({ name: /^TGeo/, icon: 'img_histo3d', prereq: "geom", func: "JSROOT.Painter.drawGeoObject", opt: "all" });
    // these are not draw functions, but provide extra info about correspondent classes
    JSROOT.addDrawFunc({ name: "kind:Command", icon: "img_execute", execute: true });
-   JSROOT.addDrawFunc({ name: "TFolder", icon: "img_folder", icon2: "img_folderopen", noinspect: true });
+   JSROOT.addDrawFunc({ name: "TFolder", icon: "img_folder", icon2: "img_folderopen", noinspect: true, expand: JSROOT.Painter.FolderHierarchy });
    JSROOT.addDrawFunc({ name: "TTree", icon: "img_tree", noinspect:true });
    JSROOT.addDrawFunc({ name: "TNtuple", icon: "img_tree", noinspect:true });
    JSROOT.addDrawFunc({ name: "TBranch", icon: "img_branch", noinspect:true });
    JSROOT.addDrawFunc({ name: /^TLeaf/, icon: "img_leaf" });
-   JSROOT.addDrawFunc({ name: "TList", icon: "img_list" });
-   JSROOT.addDrawFunc({ name: "TObjArray", icon: "img_list" });
+   JSROOT.addDrawFunc({ name: "TList", icon: "img_list", noinspect:true, expand: JSROOT.Painter.ListHierarchy });
+   JSROOT.addDrawFunc({ name: "TObjArray", icon: "img_list", noinspect:true, expand: JSROOT.Painter.ListHierarchy });
+   JSROOT.addDrawFunc({ name: "TClonesArray", icon: "img_list", noinspect:true, expand: JSROOT.Painter.ListHierarchy });
    JSROOT.addDrawFunc({ name: "TColor", icon: "img_color" });
    JSROOT.addDrawFunc({ name: "TFile", icon: "img_file", noinspect:true });
    JSROOT.addDrawFunc({ name: "TMemFile", icon: "img_file", noinspect:true });
