@@ -58,6 +58,7 @@ extern "C" {
                                   llvm::StringRef canonicalName);
    void TCling__LibraryUnloadedRTTI(const void* dyLibHandle,
                                     llvm::StringRef canonicalName);
+   void TCling__PrintStackTrace();
 }
 
 TClingCallbacks::TClingCallbacks(cling::Interpreter* interp)
@@ -718,3 +719,6 @@ void TClingCallbacks::LibraryUnloaded(const void* dyLibHandle,
    TCling__LibraryUnloadedRTTI(dyLibHandle, canonicalName);
 }
 
+void TClingCallbacks::PrintStackTrace() {
+   TCling__PrintStackTrace();
+}

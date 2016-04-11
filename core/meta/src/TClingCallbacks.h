@@ -98,6 +98,8 @@ public:
    virtual void LibraryUnloaded(const void* dyLibHandle,
                                 llvm::StringRef canonicalName);
 
+   virtual void PrintStackTrace();
+
 private:
    bool tryAutoParseInternal(llvm::StringRef Name, clang::LookupResult &R,
                             clang::Scope *S, const clang::FileEntry* FE = 0);

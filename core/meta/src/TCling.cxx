@@ -338,6 +338,14 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Print a StackTrace!
+
+extern "C"
+void TCling__PrintStackTrace() {
+   gSystem->StackTrace();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Update TClingClassInfo for a class (e.g. upon seeing a definition).
 
 static void TCling__UpdateClassInfo(const NamedDecl* TD)
