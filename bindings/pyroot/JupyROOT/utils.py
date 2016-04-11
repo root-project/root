@@ -32,8 +32,14 @@ ROOT.gROOT.SetBatch()
 
 cppMIME = 'text/x-c++src'
 
-_jsMagicHighlight = "IPython.CodeCell.config_defaults.highlight_modes['magic_{cppMIME}'] = {{'reg':[/^%%cpp/]}};"
-
+_jsMagicHighlight = """
+require(['notebook'],
+  function() {{
+    IPython.CodeCell.config_defaults.highlight_modes['magic_{cppMIME}'] = {{'reg':[/^%%cpp/]}};
+    console.log("JupyROOT - %%cpp magic configured");
+  }}
+);
+"""
 
 _jsNotDrawableClassesPatterns = ["TGraph[23]D","TH3*","TGraphPolar","TProf*","TEve*","TF[23]","TGeo*","TPolyLine3D", "TH2Poly"]
 
