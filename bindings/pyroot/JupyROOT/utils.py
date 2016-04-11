@@ -31,17 +31,6 @@ ROOT.gROOT.SetBatch()
 
 
 cppMIME = 'text/x-c++src'
-ipyMIME = 'text/x-ipython'
-
-_jsDefaultHighlight = """
-// Set default mode for code cells
-IPython.CodeCell.options_default.cm_config.mode = '{mimeType}';
-// Set CodeMirror's current mode
-var cells = IPython.notebook.get_cells();
-cells[cells.length-1].code_mirror.setOption('mode', '{mimeType}');
-// Set current mode for newly created cell
-cells[cells.length-1].cm_config.mode = '{mimeType}';
-"""
 
 _jsMagicHighlight = "IPython.CodeCell.config_defaults.highlight_modes['magic_{cppMIME}'] = {{'reg':[/^%%cpp/]}};"
 
