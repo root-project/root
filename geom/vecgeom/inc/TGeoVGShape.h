@@ -70,7 +70,7 @@ public:
    virtual Bool_t        IsReflected() const { return ( fShape->IsReflected() ); }
    virtual Bool_t        IsValidBox() const  { return ( fShape->IsValidBox() ); }
    virtual Bool_t        IsVecGeom() const {return kTRUE;}
-   virtual void          InspectShape() const { return ( fVGShape->GetUnplacedVolume()->Print() ); }
+   virtual void          InspectShape() const { fVGShape->GetUnplacedVolume()->Print(); printf("\n"); }
    virtual TBuffer3D    *MakeBuffer3D() const { return ( fShape->MakeBuffer3D() );}
    virtual void          Paint(Option_t *option="") { fShape->Paint(option); }
    virtual void          SetDimensions(Double_t *param) { fShape->SetDimensions(param); }
