@@ -1118,6 +1118,18 @@ if(geocad)
   endif()
 endif()
 
+#---Check for VecGeom--------------------------------------------------------------------
+if (vecgeom)
+  message(STATUS "Looking for VecGeom")
+  find_package(VecGeom ${VecGeom_FIND_VERSION} CONFIG QUIET)
+  if(NOT VecGeom_FOUND )
+      message(STATUS "VecGeom not found. Ensure that the installation of VecGeom is in the CMAKE_PREFIX_PATH")
+      message(STATUS "              example: CMAKE_PREFIX_PATH=<VecGeom_install_path>/lib/CMake/VecGeom")
+      message(STATUS "              For the time being switching OFF 'vecgeom' option")
+      set(vecgeom OFF CACHE BOOL "" FORCE)
+  endif()
+endif()
+
 #---Check for Vc---------------------------------------------------------------------
 if(vc OR builtin_vc)
   if(NOT builtin_vc)
