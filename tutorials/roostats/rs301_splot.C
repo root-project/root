@@ -213,10 +213,15 @@ void DoSPlot(RooWorkspace* ws){
 
   // The sPlot technique requires that we fix the parameters
   // of the model that are not yields after doing the fit.
-  RooRealVar* sigmaZ = ws->var("sigmaZ");
-  RooRealVar* qcdMassDecayConst = ws->var("qcdMassDecayConst");
-  sigmaZ->setConstant();
-  qcdMassDecayConst->setConstant();
+  //
+  // This *could* be done with the lines below, however this is taken care of
+  // by the RooStats::SPlot constructor (or more precisely the AddSWeight
+  // method).
+  //
+  //RooRealVar* sigmaZ = ws->var("sigmaZ");
+  //RooRealVar* qcdMassDecayConst = ws->var("qcdMassDecayConst");
+  //sigmaZ->setConstant();
+  //qcdMassDecayConst->setConstant();
 
 
   RooMsgService::instance().setSilentMode(true);
