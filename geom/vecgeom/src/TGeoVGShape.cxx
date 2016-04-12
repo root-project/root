@@ -8,6 +8,7 @@
 #include "TGeoVGShape.h"
 
 #include "volumes/PlacedVolume.h"
+#include "volumes/UnplacedVolume.h"
 #include "volumes/UnplacedBox.h"
 #include "volumes/UnplacedTube.h"
 #include "volumes/UnplacedCone.h"
@@ -45,7 +46,7 @@
 #include "TGeoEltu.h"
 
 //_____________________________________________________________________________
-TGeoVGShape::TGeoVGShape(TGeoShape *shape,  VPlacedVolume *vgshape)
+TGeoVGShape::TGeoVGShape(TGeoShape *shape,  vecgeom::cxx::VPlacedVolume *vgshape)
            :TGeoBBox(shape->GetName(), 0, 0, 0), fVGShape(vgshape), fShape(shape)
 {
 // Default constructor
@@ -68,39 +69,40 @@ TGeoVGShape *TGeoVGShape::Create(TGeoShape *shape)
 {
 // Factory creating TGeoVGShape from a Root shape. Returns nullptr if the 
 // shape cannot be converted
-   VPlacedVolume *vgshape = TGeoVGShape::CreateVecGeomSolid(shape);
+   vecgeom::cxx::VPlacedVolume *vgshape = TGeoVGShape::CreateVecGeomSolid(shape);
    if (!vgshape) return nullptr;
    return ( new TGeoVGShape(shape, vgshape) );
 }
 
 //_____________________________________________________________________________
-VPlacedVolume *TGeoVGShape::CreateVecGeomSolid(TGeoShape *shape)
+vecgeom::cxx::VPlacedVolume *TGeoVGShape::CreateVecGeomSolid(TGeoShape *shape)
 {
 // Conversion method to create VecGeom solid corresponding to TGeoShape
    // Call VecGeom TGeoShape->UnplacedSolid converter   
 //   VUnplacedVolume *unplaced = RootGeoManager::Instance().Convert(shape);
-   VUnplacedVolume *unplaced = Convert(shape);
+   vecgeom::cxx::VUnplacedVolume *unplaced = Convert(shape);
    if (!unplaced) return nullptr;
    // We have to create a placed volume from the unplaced one to have access
    // to the navigation interface
-   LogicalVolume *lvol = new LogicalVolume("", unplaced);
+   vecgeom::cxx::LogicalVolume *lvol = new vecgeom::cxx::LogicalVolume("", unplaced);
    return ( lvol->Place() );
 }
 
 //_____________________________________________________________________________
-Transformation3D *TGeoVGShape::Convert(TGeoMatrix const *const geomatrix) {
+vecgeom::cxx::Transformation3D *TGeoVGShape::Convert(TGeoMatrix const *const geomatrix) {
 // Convert a TGeoMatrix to a TRansformation3D
    Double_t const *const t = geomatrix->GetTranslation();
    Double_t const *const r = geomatrix->GetRotationMatrix();
-   Transformation3D *const transformation =
-        new Transformation3D(t[0], t[1], t[2], r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]);
+   vecgeom::cxx::Transformation3D *const transformation =
+        new vecgeom::cxx::Transformation3D(t[0], t[1], t[2], r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]);
    return transformation;
 }
 
 //_____________________________________________________________________________
-VUnplacedVolume* TGeoVGShape::Convert(TGeoShape const *const shape)
+vecgeom::cxx::VUnplacedVolume* TGeoVGShape::Convert(TGeoShape const *const shape)
 {
 // Convert a TGeo shape to VUnplacedVolume, then creates a VPlacedVolume
+   using namespace vecgeom::cxx;
    VUnplacedVolume *unplaced_volume = nullptr;
 
    // THE BOX
@@ -310,8 +312,8 @@ Double_t TGeoVGShape::Capacity() const
 void TGeoVGShape::ComputeNormal(const Double_t *point, const Double_t */*dir*/, Double_t *norm)
 {
 // Normal computation.
-   Vector3D<Double_t> vnorm;
-   fVGShape->Normal(Vector3D<Double_t>(point[0], point[1], point[2]), vnorm);
+   vecgeom::cxx::Vector3D<Double_t> vnorm;
+   fVGShape->Normal(vecgeom::cxx::Vector3D<Double_t>(point[0], point[1], point[2]), vnorm);
    norm[0] = vnorm.x(); norm[1] = vnorm.y(), norm[2] = vnorm.z();
 }
    
@@ -319,15 +321,15 @@ void TGeoVGShape::ComputeNormal(const Double_t *point, const Double_t */*dir*/, 
 Bool_t TGeoVGShape::Contains(const Double_t *point) const
 {
 // Test if point is inside this shape.
-   return ( fVGShape->Contains(Vector3D<Double_t>(point[0], point[1], point[2])) );
+   return ( fVGShape->Contains(vecgeom::cxx::Vector3D<Double_t>(point[0], point[1], point[2])) );
 }
 
 //_____________________________________________________________________________
 Double_t TGeoVGShape::DistFromInside(const Double_t *point, const Double_t *dir, Int_t /*iact*/, 
                                    Double_t step, Double_t * /*safe*/) const
 {
-   Double_t dist = fVGShape->DistanceToOut(Vector3D<Double_t>(point[0], point[1], point[2]),
-                                    Vector3D<Double_t>(dir[0], dir[1], dir[2]), step);
+   Double_t dist = fVGShape->DistanceToOut(vecgeom::cxx::Vector3D<Double_t>(point[0], point[1], point[2]),
+                                    vecgeom::cxx::Vector3D<Double_t>(dir[0], dir[1], dir[2]), step);
    return ( (dist < 0.)? 0. : dist );
 }
 
@@ -335,16 +337,24 @@ Double_t TGeoVGShape::DistFromInside(const Double_t *point, const Double_t *dir,
 Double_t TGeoVGShape::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t /*iact*/, 
                                    Double_t step, Double_t * /*safe*/) const
 {
-   Double_t dist = fVGShape->DistanceToIn(Vector3D<Double_t>(point[0], point[1], point[2]),
-                                    Vector3D<Double_t>(dir[0], dir[1], dir[2]), step);
+   Double_t dist = fVGShape->DistanceToIn(vecgeom::cxx::Vector3D<Double_t>(point[0], point[1], point[2]),
+                                    vecgeom::cxx::Vector3D<Double_t>(dir[0], dir[1], dir[2]), step);
    return ( (dist < 0.)? 0. : dist );
 }
 
 //_____________________________________________________________________________
 Double_t TGeoVGShape::Safety(const Double_t *point, Bool_t in) const
 {
-   Double_t safety =  (in) ? fVGShape->SafetyToOut(Vector3D<Double_t>(point[0], point[1], point[2])) 
-                           : fVGShape->SafetyToIn(Vector3D<Double_t>(point[0], point[1], point[2]));
+   Double_t safety =  (in) ? fVGShape->SafetyToOut(vecgeom::cxx::Vector3D<Double_t>(point[0], point[1], point[2]))
+                           : fVGShape->SafetyToIn(vecgeom::cxx::Vector3D<Double_t>(point[0], point[1], point[2]));
    return ( (safety < 0.)? 0. : safety );
    
+}
+
+//_____________________________________________________________________________
+void TGeoVGShape::InspectShape() const
+{
+// Print info about the VecGeom solid
+   fVGShape->GetUnplacedVolume()->Print();
+   printf("\n");
 }

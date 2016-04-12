@@ -5,32 +5,35 @@
 #include "TGeoBBox.h"
 #endif
 
-#include "volumes/PlacedVolume.h"
-#include "volumes/UnplacedVolume.h"
-
 ////////////////////////////////////////////////////////////////////////////
 //                                                                        //
 // TGeoVGShape - bridge class for using a VecGeom solid as TGeoShape.             //
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
-using namespace vecgeom::VECGEOM_IMPL_NAMESPACE;
+namespace vecgeom {
+  namespace cxx {
+    class Transformation3D;
+    class VPlacedVolume;
+    class VUnplacedVolume;
+  }
+}
 
 class TGeoVGShape : public TGeoBBox
 {
 private:
-   VPlacedVolume        *fVGShape;      // VecGeom placed solid
+   vecgeom::cxx::VPlacedVolume *fVGShape;      // VecGeom placed solid
    TGeoShape            *fShape;        // ROOT shape
 
-   static VPlacedVolume *CreateVecGeomSolid(TGeoShape *shape);
-   TGeoVGShape(TGeoShape *shape, VPlacedVolume *vgshape);
+   static vecgeom::cxx::VPlacedVolume *CreateVecGeomSolid(TGeoShape *shape);
+   TGeoVGShape(TGeoShape *shape, vecgeom::cxx::VPlacedVolume *vgshape);
    
 public:
    TGeoVGShape() : TGeoBBox(), fVGShape(nullptr), fShape(nullptr) {}
    virtual ~TGeoVGShape();
-   static Transformation3D*     
+   static vecgeom::cxx::Transformation3D *
                          Convert(TGeoMatrix const *const geomatrix);
-   static VUnplacedVolume*
+   static vecgeom::cxx::VUnplacedVolume *
                          Convert(TGeoShape const *const shape);
    static TGeoVGShape   *Create(TGeoShape *shape);
    virtual Double_t      Capacity() const;
@@ -76,7 +79,7 @@ public:
    virtual Bool_t        IsReflected() const { return ( fShape->IsReflected() ); }
    virtual Bool_t        IsValidBox() const  { return ( fShape->IsValidBox() ); }
    virtual Bool_t        IsVecGeom() const {return kTRUE;}
-   virtual void          InspectShape() const { fVGShape->GetUnplacedVolume()->Print(); printf("\n"); }
+   virtual void          InspectShape() const;
    virtual TBuffer3D    *MakeBuffer3D() const { return ( fShape->MakeBuffer3D() );}
    virtual void          Paint(Option_t *option="") { fShape->Paint(option); }
    virtual void          SetDimensions(Double_t *param) { fShape->SetDimensions(param); }
@@ -86,7 +89,7 @@ public:
    virtual void          Sizeof3D() const { fShape->Sizeof3D(); }
    
    TGeoShape            *GetShape() const { return fShape; }
-   VPlacedVolume        *GetVGShape() const { return fVGShape; }
+   vecgeom::cxx::VPlacedVolume *GetVGShape() const { return fVGShape; }
 //   ClassDef(TGeoVGShape, 1)         // Bridge class for VecGeom-based shapes
 };
 #endif
