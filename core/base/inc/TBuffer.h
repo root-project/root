@@ -85,9 +85,9 @@ public:
    Bool_t   IsWriting() const { return (fMode & kWrite) != 0; }
    void     SetReadMode();
    void     SetWriteMode();
-   Bool_t   IsBigEndian() const { return fBufBigEndian; }
-   void     SetBigEndian() { fBufBigEndian = 1; }
-   void     SetLittleEndian() { fBufBigEndian = 0; }
+   Bool_t   IsBufBigEndian() const { return fBufBigEndian; }
+   void     SetBufBigEndian() { fBufBigEndian = 1; }
+   void     SetBufLittleEndian() { fBufBigEndian = 0; }
    void     SetBuffer(void *buf, UInt_t bufsiz = 0, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = 0);
    ReAllocCharFun_t GetReAllocFunc() const;
    void     SetReAllocFunc(ReAllocCharFun_t reallocfunc = 0);
