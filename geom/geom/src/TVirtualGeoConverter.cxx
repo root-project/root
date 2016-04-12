@@ -59,7 +59,7 @@ TVirtualGeoConverter *TVirtualGeoConverter::Instance(TGeoManager *geom)
          if (h->LoadPlugin() == -1) {
             ::Error("TVirtualGeoConverter::Instance()", 
             "\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n"
-            "It appears that you are missing or having outdated support fir VecGeom package. "
+            "It appears that you are missing or having outdated support for VecGeom package. "
             "To enable it, configure ROOT with:\n"
             "   -Dvecgeom -DCMAKE_PREFIX_PATH=<vecgeom_prefix_path>/lib/CMake/VecGeom"
             "\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
