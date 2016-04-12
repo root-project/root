@@ -28,6 +28,9 @@ find_path(POSTGRESQL_INCLUDE_DIR libpq-fe.h
    "/usr/include/pgsql/server"
    "/usr/include/postgresql/server"
    "/usr/include/postgresql/*/server"
+  PATH_SUFFIXES
+    postgresql
+    include
 )
 
 find_library(POSTGRESQL_LIBRARY NAMES pq
