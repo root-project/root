@@ -498,20 +498,22 @@ Bool_t TWebFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
    }
    TString msg = fMsgReadBuffer;
 
-   Int_t k = 0, n = 0;
+   Int_t k = 0, n = 0, cnt = 0;
    for (Int_t i = 0; i < nbuf; i++) {
       if (n) msg += ",";
       msg += pos[i] + fArchiveOffset;
       msg += ":";
       msg += len[i];
       n   += len[i];
-      if (msg.Length() > 8000) {
+      cnt++;
+      if ((msg.Length() > 8000) || (cnt >= 200)) {
          msg += "\r\n";
          if (GetFromWeb(&buf[k], n, msg) == -1)
             return kTRUE;
          msg = fMsgReadBuffer;
          k += n;
          n = 0;
+         cnt = 0;
       }
    }
 
@@ -537,14 +539,15 @@ Bool_t TWebFile::ReadBuffers10(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf
 
    TString msg = fMsgReadBuffer10;
 
-   Int_t k = 0, n = 0, r;
+   Int_t k = 0, n = 0, r, cnt = 0;
    for (Int_t i = 0; i < nbuf; i++) {
       if (n) msg += ",";
       msg += pos[i] + fArchiveOffset;
       msg += "-";
       msg += pos[i] + fArchiveOffset + len[i] - 1;
       n   += len[i];
-      if (msg.Length() > 8000) {
+      cnt++;
+      if ((msg.Length() > 8000) || (cnt >= 200)) {
          msg += "\r\n\r\n";
          r = GetFromWeb10(&buf[k], n, msg);
          if (r == -1)
@@ -552,6 +555,7 @@ Bool_t TWebFile::ReadBuffers10(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf
          msg = fMsgReadBuffer10;
          k += n;
          n = 0;
+         cnt = 0;
       }
    }
 
