@@ -6,6 +6,7 @@
 #endif
 
 #include "volumes/PlacedVolume.h"
+#include "volumes/UnplacedVolume.h"
 
 ////////////////////////////////////////////////////////////////////////////
 //                                                                        //
@@ -13,7 +14,7 @@
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
-using namespace vecgeom::cxx;
+using namespace vecgeom::VECGEOM_IMPL_NAMESPACE;
 
 class TGeoVGShape : public TGeoBBox
 {
@@ -23,9 +24,14 @@ private:
 
    static VPlacedVolume *CreateVecGeomSolid(TGeoShape *shape);
    TGeoVGShape(TGeoShape *shape, VPlacedVolume *vgshape);
+   
 public:
    TGeoVGShape() : TGeoBBox(), fVGShape(nullptr), fShape(nullptr) {}
    virtual ~TGeoVGShape();
+   static Transformation3D*     
+                         Convert(TGeoMatrix const *const geomatrix);
+   static VUnplacedVolume*
+                         Convert(TGeoShape const *const shape);
    static TGeoVGShape   *Create(TGeoShape *shape);
    virtual Double_t      Capacity() const;
    virtual void          ComputeBBox();
