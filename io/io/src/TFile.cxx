@@ -1332,6 +1332,13 @@ TList *TFile::GetStreamerInfoList()
                  GetName());
          return 0;
       }
+      //###
+      int cnt = 0;
+      for(cnt=0;cnt<fNbytesInfo+1;++cnt){
+         if(cnt%6==0) printf("\n");
+         printf("buf[%d]=%c(0x%x), ",cnt,buf[cnt],buf[cnt]);
+      }
+      //###
       key->ReadKeyBuffer(buf);
       list = dynamic_cast<TList*>(key->ReadObjWithBuffer(buffer));
       if (list) list->SetOwner();
