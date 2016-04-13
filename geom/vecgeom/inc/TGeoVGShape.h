@@ -12,7 +12,7 @@
 ////////////////////////////////////////////////////////////////////////////
 
 namespace vecgeom {
-  namespace cxx {
+  inline namespace cxx {
     class Transformation3D;
     class VPlacedVolume;
     class VUnplacedVolume;
