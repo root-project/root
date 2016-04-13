@@ -562,12 +562,6 @@ Bool_t TWebFile::ReadBuffers10(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf
       }
    }
 
-   //msg += "\r\n\r\n";
-
-   //r = GetFromWeb10(&buf[k], n, msg);
-   //if (r == -1)
-   //   return kTRUE;
-
    return kFALSE;
 }
 
@@ -836,7 +830,9 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg, Int_t nse
                Error("GetFromWeb10", "%s: %s (%d)", fBasicUrl.Data(), mess.Data(), code);
             }
          } else if (code == 200) {
-              fullsize = -200; // make indication of code 200
+            fullsize = -200; // make indication of code 200
+            Error("GetFromWeb10", "Server %s response with complete file, but only part of it was requested. Check MaxRanges configuration parameter (if Apache is used)", fUrl.GetHost());
+
          }
       } else if (res.BeginsWith("Content-Type: multipart")) {
          boundary = res(res.Index("boundary=")+9, 1000);
