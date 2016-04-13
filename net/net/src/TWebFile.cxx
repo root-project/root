@@ -459,7 +459,7 @@ Bool_t TWebFile::ReadBuffer10(char *buf, Int_t len)
    msg += "\r\n\r\n";
 
    Long64_t apos = fOffset - fArchiveOffset;
-   
+
    // in case when server does not support segments, let chance to recover
    Int_t n = GetFromWeb10(buf, len, msg, 1, &apos, &len);
    if (n == -1)
@@ -710,19 +710,19 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg, Int_t nse
             if (boundary == "")
                break;  // not a multipart response
          }
-         
+
          if (fullsize > 0) {
-            
+
             if (nseg <= 0) {
                Error("GetFromWeb10","Need segments data to extract parts from full size %lld", fullsize);
                return -1;
             }
-            
+
             if (len > fullsize) {
                Error("GetFromWeb10","Requested part %d longer than full size %lld", len, fullsize);
                return -1;
             }
-            
+
             // check all segemnts are inside range and in sorted order
             for (Int_t cnt=0;cnt<nseg;cnt++) {
                if (fArchiveOffset + seg_pos[cnt] + seg_len[cnt] > fullsize) {
@@ -734,7 +734,7 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg, Int_t nse
                   return -1;
                }
             }
-            
+
             Long64_t pos = 0;
             char* curr = buf;
             char dbuf[2048]; // dummy buffer for skip data
@@ -772,9 +772,9 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg, Int_t nse
                }
                pos += ll;
             }
-            
+
             if (gDebug>0) Info("GetFromWeb10","Complete reading %d bytes in %d segments out of full size %lld", len, nseg, fullsize);
-            
+
             break;
          }
 
