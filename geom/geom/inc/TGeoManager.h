@@ -127,6 +127,7 @@ private :
    Int_t                *fValuePNEId;       //[fSizePNEId] array of pointers to PN entries with ID's
    Int_t                 fMaxThreads;       //! Max number of threads
    Bool_t                fMultiThread;      //! Flag for multi-threading
+   Int_t                 fRaytraceMode;     //! Raytrace mode: 0=normal, 1=pass through, 2=transparent
    Bool_t                fUsePWNav;         // Activate usage of parallel world in navigation
    TGeoParallelWorld    *fParallelWorld;    // Parallel world
 //--- private methods
@@ -431,6 +432,8 @@ public:
    Int_t                  GetMaxThreads() const {return fMaxThreads-1;}
    void                   SetMaxThreads(Int_t nthreads);
    void                   SetMultiThread(Bool_t flag=kTRUE) {fMultiThread = flag;}
+   Int_t                  GetRTmode() const {return fRaytraceMode;}
+   void                   SetRTmode(Int_t mode);
    Bool_t                 IsMultiThread() const {return fMultiThread;}
    static void            SetNavigatorsLock(Bool_t flag);
    static Int_t           ThreadId();
