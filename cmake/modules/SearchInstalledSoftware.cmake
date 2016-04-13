@@ -1085,7 +1085,7 @@ if(imt)
     endif()
   endif()
   if(builtin_tbb)
-    set(tbb_version 42_20140122)
+    set(tbb_version 44_20160128)
     ExternalProject_Add(
       TBB
       URL ${repository_tarfiles}/tbb${tbb_version}oss_src.tgz
