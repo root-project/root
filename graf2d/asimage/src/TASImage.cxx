@@ -313,8 +313,6 @@ TASImage::TASImage(const TASImage &img) : TImage(img)
 
 TASImage &TASImage::operator=(const TASImage &img)
 {
-   SetDefaults();
-
    if (this != &img && img.IsValid()) {
       TImage::operator=(img);
 
