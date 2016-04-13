@@ -216,6 +216,20 @@ void TButton::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
 void TButton::Paint(Option_t *option)
 {
+   if (!fCanvas) return;
+   if (!fPrimitives) fPrimitives = new TList();
+   TObject *obj = GetListOfPrimitives()->First();
+   if (obj && obj->InheritsFrom(TText::Class())) {
+      TLatex *text = (TLatex*)obj;
+      text->SetTitle(GetTitle());
+      text->SetTextSize(GetTextSize());
+      text->SetTextFont(GetTextFont());
+      text->SetTextAlign(GetTextAlign());
+      text->SetTextColor(GetTextColor());
+      text->SetTextAngle(GetTextAngle());
+   }
+   SetLogx(0);
+   SetLogy(0);
    TPad::Paint(option);  //only called for Postscript print
 }
 
