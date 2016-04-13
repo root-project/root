@@ -4,7 +4,7 @@ import shutil
 import os
 
 nbExtension=".ipynb"
-convCmdTmpl = "ipython nbconvert  --to notebook --ExecutePreprocessor.enabled=True --ExecutePreprocessor.timeout=3600 %s --output %s"
+convCmdTmpl = "%s nbconvert  --to notebook --ExecutePreprocessor.enabled=True --ExecutePreprocessor.timeout=3600 %s --output %s"
 
 # Replace the criterion according to which a line shall be skipped
 def customLineJunkFilter(line):
@@ -41,10 +41,20 @@ def addEtcToEnvironment(inNBDirName):
     os.environ["JUPYTER_PATH"] =  os.path.join(inNBDirName, "ipythondir/kernels")
     os.environ["IPYTHONDIR"] = os.path.join(inNBDirName, "ipythondir")
 
+def getInterpreterName():
+    """Find if the 'jupyter' executable is available on the platform. If
+    yes, return its name else return 'ipython'
+    """
+    ret = subprocess.call("type jupyter",
+                          shell=True,
+                          stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    return "jupyter" if ret == 0 else "ipython"
+
 def canReproduceNotebook(inNBName):
     addEtcToEnvironment(os.path.dirname(inNBName))
     outNBName = inNBName.replace(nbExtension,"_out"+nbExtension)
-    convCmd = convCmdTmpl %(inNBName,outNBName)
+    interpName = getInterpreterName()
+    convCmd = convCmdTmpl %(interpName, inNBName, outNBName)
     subprocess.check_output(convCmd.split(), env = os.environ)
     return compareNotebooks(inNBName,outNBName)
 
