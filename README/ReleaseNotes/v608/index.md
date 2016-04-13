@@ -190,7 +190,8 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 
 ## New histogram drawing options
 
-* COL2 is a new rendering technique providing potential performance improvements
+### COL2
+  COL2 is a new rendering technique providing potential performance improvements
   compared to the standard COL option. The performance comparison of the COL2 to
   the COL option depends on the histogram and the size of the rendering region in
   the current pad. In general, a small (approx. less than 100 bins per axis),
@@ -220,6 +221,11 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 
 ## Networking Libraries
 
+* When seeing too many requested ranges, Apache 2.4 now simply sends the whole file
+  (MaxRanges configuration parameter). TWebFile can handle this case now, but this can
+  trigger multiple transmissions of the full file. TWebFile warns when Apache reacts by
+   sending the full file.
+
 
 ## GUI Libraries
 
@@ -233,6 +239,7 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 ## Language Bindings
 
 ### PyROOT
+
   * Added a new configuration option to disable processing of the rootlogon[.py|C] macro in addition
     ro the -n option in the command arguments. To disable processing the rootlogon do the following
     before any other command that will trigger initialization:
