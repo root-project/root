@@ -831,7 +831,10 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg, Int_t nse
             }
          } else if (code == 200) {
             fullsize = -200; // make indication of code 200
-            Error("GetFromWeb10", "Server %s response with complete file, but only part of it was requested. Check MaxRanges configuration parameter (if Apache is used)", fUrl.GetHost());
+            Warning("GetFromWeb10",
+                    "Server %s response with complete file, but only part of it was requested.\n"
+                    "Check MaxRanges configuration parameter (if Apache is used)",
+                    fUrl.GetHost());
 
          }
       } else if (res.BeginsWith("Content-Type: multipart")) {
