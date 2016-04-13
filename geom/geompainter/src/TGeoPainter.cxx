@@ -1791,7 +1791,7 @@ void TGeoPainter::Raytrace(Option_t *)
             for (Int_t i=0; i<3; ++i) local[i] += 1.E-8*dir[i];
             step = nextvol->GetShape()->DistFromInside(local,dir,3);
             for (Int_t i=0; i<3; ++i) local[i] += step*dir[i];
-            nextvol->GetShape()->ComputeNormal(local, dir, normal);
+            nextnode->GetVolume()->GetShape()->ComputeNormal(local, dir, normal);
             norm = normal;
          } else {
             if (!norm) norm = fGeoManager->FindNormalFast();
