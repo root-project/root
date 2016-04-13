@@ -9,6 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 #include <stdlib.h>
+#include <limits.h>
 
 #include "Riostream.h"
 #include "Strlen.h"
@@ -1130,7 +1131,7 @@ void TDirectory::DecodeNameCycle(const char *buffer, char *name, Short_t &cycle,
       cycle = 10000;
    else if (isdigit(*ni)) {
       long parsed = strtol(ni,nullptr,10);
-      if (parsed >= (long) std::numeric_limits<Short_t>::max())
+      if (parsed >= (long) SHRT_MAX)
          cycle = 0;
       else
          cycle = (Short_t)parsed;
