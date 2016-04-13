@@ -1661,7 +1661,8 @@ void TGeoPainter::Raytrace(Option_t *)
    pxmax = gPad->UtoAbsPixel(1);
    pymin = gPad->VtoAbsPixel(1);
    pymax = gPad->VtoAbsPixel(0);
-   TGeoNode *next, *nextnode;
+   TGeoNode *next = nullptr;
+   TGeoNode *nextnode = nullptr;
    Double_t step,steptot;
    Double_t *norm;
    const Double_t *point = fGeoManager->GetCurrentPoint();
@@ -1789,9 +1790,9 @@ void TGeoPainter::Raytrace(Option_t *)
             fGeoManager->MasterToLocal(gGeoManager->GetCurrentPoint(), local);
             fGeoManager->MasterToLocalVect(gGeoManager->GetCurrentDirection(), dir);
             for (Int_t i=0; i<3; ++i) local[i] += 1.E-8*dir[i];
-            step = nextnode->GetVolume()->GetShape()->DistFromInside(local,dir,3);
+            step = next->GetVolume()->GetShape()->DistFromInside(local,dir,3);
             for (Int_t i=0; i<3; ++i) local[i] += step*dir[i];
-            nextnode->GetVolume()->GetShape()->ComputeNormal(local, dir, normal);
+            next->GetVolume()->GetShape()->ComputeNormal(local, dir, normal);
             norm = normal;
          } else {
             if (!norm) norm = fGeoManager->FindNormalFast();
