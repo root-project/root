@@ -1,8 +1,12 @@
-//Author: Timur Pocheptsov, 25/03/2014.
-//This tutorial demonstrates how to use radial gradients,
-//custom colors, transparency.
-//Requires ROOT built for OS X with --enable-cocoa.
-
+/// \file
+/// \ingroup tutorial_cocoa
+/// This tutorial demonstrates how to use radial gradients,
+/// custom colors, transparency.
+/// Requires ROOT built for OS X with --enable-cocoa.
+///
+/// \macro_code
+///
+/// \author Timur Pocheptsov
 
 //Includes for ACLiC:
 #include <cassert>

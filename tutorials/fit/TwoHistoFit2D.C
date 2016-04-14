@@ -1,5 +1,12 @@
-//+ Example to fit two histograms at the same time
-//Author: Rene Brun
+/// \file
+/// \ingroup tutorial_fit
+/// Example to fit two histograms at the same time.
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Rene Brun
 
 #include "TH2D.h"
 #include "TF2.h"

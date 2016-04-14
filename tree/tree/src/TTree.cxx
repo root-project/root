@@ -7915,7 +7915,19 @@ void TTree::SetBranchStatus(const char* bname, Bool_t status, UInt_t* found)
       }
    }
    if (!nb && !foundInFriend) {
-      if (found==0) Error("SetBranchStatus", "unknown branch -> %s", bname);
+      if (found==0) {
+         if (status) {
+            if (strchr(bname,'*') != 0)
+               Error("SetBranchStatus", "No branch name is matching wildcard -> %s", bname);
+            else
+               Error("SetBranchStatus", "unknown branch -> %s", bname);
+         } else {
+            if (strchr(bname,'*') != 0)
+               Warning("SetBranchStatus", "No branch name is matching wildcard -> %s", bname);
+            else
+               Warning("SetBranchStatus", "unknown branch -> %s", bname);
+         }
+      }
       return;
    }
    if (found) *found = nb + foundInFriend;

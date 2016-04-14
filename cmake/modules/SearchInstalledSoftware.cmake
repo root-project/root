@@ -1085,7 +1085,7 @@ if(imt)
     endif()
   endif()
   if(builtin_tbb)
-    set(tbb_version 42_20140122)
+    set(tbb_version 44_20160128)
     ExternalProject_Add(
       TBB
       URL ${repository_tarfiles}/tbb${tbb_version}oss_src.tgz
@@ -1115,6 +1115,18 @@ if(geocad)
       message(STATUS "For the time being switching OFF 'geocad' option")
       set(geocad OFF CACHE BOOL "" FORCE)
     endif()
+  endif()
+endif()
+
+#---Check for VecGeom--------------------------------------------------------------------
+if (vecgeom)
+  message(STATUS "Looking for VecGeom")
+  find_package(VecGeom ${VecGeom_FIND_VERSION} CONFIG QUIET)
+  if(NOT VecGeom_FOUND )
+      message(STATUS "VecGeom not found. Ensure that the installation of VecGeom is in the CMAKE_PREFIX_PATH")
+      message(STATUS "              example: CMAKE_PREFIX_PATH=<VecGeom_install_path>/lib/CMake/VecGeom")
+      message(STATUS "              For the time being switching OFF 'vecgeom' option")
+      set(vecgeom OFF CACHE BOOL "" FORCE)
   endif()
 endif()
 

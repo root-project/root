@@ -458,7 +458,10 @@ Bool_t TWebFile::ReadBuffer10(char *buf, Int_t len)
    msg += fOffset+len-1;
    msg += "\r\n\r\n";
 
-   Int_t n = GetFromWeb10(buf, len, msg);
+   Long64_t apos = fOffset - fArchiveOffset;
+
+   // in case when server does not support segments, let chance to recover
+   Int_t n = GetFromWeb10(buf, len, msg, 1, &apos, &len);
    if (n == -1)
       return kTRUE;
    // The -2 error condition typically only happens when
@@ -498,20 +501,22 @@ Bool_t TWebFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
    }
    TString msg = fMsgReadBuffer;
 
-   Int_t k = 0, n = 0;
+   Int_t k = 0, n = 0, cnt = 0;
    for (Int_t i = 0; i < nbuf; i++) {
       if (n) msg += ",";
       msg += pos[i] + fArchiveOffset;
       msg += ":";
       msg += len[i];
       n   += len[i];
-      if (msg.Length() > 8000) {
+      cnt++;
+      if ((msg.Length() > 8000) || (cnt >= 200)) {
          msg += "\r\n";
          if (GetFromWeb(&buf[k], n, msg) == -1)
             return kTRUE;
          msg = fMsgReadBuffer;
          k += n;
          n = 0;
+         cnt = 0;
       }
    }
 
@@ -537,29 +542,25 @@ Bool_t TWebFile::ReadBuffers10(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf
 
    TString msg = fMsgReadBuffer10;
 
-   Int_t k = 0, n = 0, r;
+   Int_t k = 0, n = 0, r, cnt = 0;
    for (Int_t i = 0; i < nbuf; i++) {
       if (n) msg += ",";
       msg += pos[i] + fArchiveOffset;
       msg += "-";
       msg += pos[i] + fArchiveOffset + len[i] - 1;
       n   += len[i];
-      if (msg.Length() > 8000) {
+      cnt++;
+      if ((msg.Length() > 8000) || (cnt >= 200) || (i+1 == nbuf)) {
          msg += "\r\n\r\n";
-         r = GetFromWeb10(&buf[k], n, msg);
+         r = GetFromWeb10(&buf[k], n, msg, cnt, pos + (i+1-cnt), len + (i+1-cnt));
          if (r == -1)
             return kTRUE;
          msg = fMsgReadBuffer10;
          k += n;
          n = 0;
+         cnt = 0;
       }
    }
-
-   msg += "\r\n\r\n";
-
-   r = GetFromWeb10(&buf[k], n, msg);
-   if (r == -1)
-      return kTRUE;
 
    return kFALSE;
 }
@@ -635,7 +636,7 @@ Int_t TWebFile::GetFromWeb(char *buf, Int_t len, const TString &msg)
 /// Returns -2 in case file does not exist, -1 in case
 /// of error and 0 in case of success.
 
-Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg)
+Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg, Int_t nseg, Long64_t *seg_pos, Int_t *seg_len)
 {
    if (!len) return 0;
 
@@ -661,7 +662,7 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg)
    char line[8192];
    Int_t n, ret = 0, nranges = 0, ltot = 0, redirect = 0;
    TString boundary, boundaryEnd;
-   Long64_t first = -1, last = -1, tot;
+   Long64_t first = -1, last = -1, tot, fullsize = 0;
    TString redir;
 
    while ((n = GetLine(fSocket, line, sizeof(line))) >= 0) {
@@ -702,6 +703,73 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg)
 
             if (boundary == "")
                break;  // not a multipart response
+         }
+
+         if (fullsize > 0) {
+
+            if (nseg <= 0) {
+               Error("GetFromWeb10","Need segments data to extract parts from full size %lld", fullsize);
+               return -1;
+            }
+
+            if (len > fullsize) {
+               Error("GetFromWeb10","Requested part %d longer than full size %lld", len, fullsize);
+               return -1;
+            }
+
+            // check all segemnts are inside range and in sorted order
+            for (Int_t cnt=0;cnt<nseg;cnt++) {
+               if (fArchiveOffset + seg_pos[cnt] + seg_len[cnt] > fullsize) {
+                  Error("GetFromWeb10","Requested segment %lld len %d is outside of full range %lld",  seg_pos[cnt], seg_len[cnt], fullsize);
+                  return -1;
+               }
+               if ((cnt>0) &&  (seg_pos[cnt-1] + seg_len[cnt-1] > seg_pos[cnt])) {
+                  Error("GetFromWeb10","Requested segments are not in sorted order");
+                  return -1;
+               }
+            }
+
+            Long64_t pos = 0;
+            char* curr = buf;
+            char dbuf[2048]; // dummy buffer for skip data
+
+            // now read complete file and take only requested segments into the buffer
+            for (Int_t cnt=0; cnt<nseg; cnt++) {
+               // first skip data before segment
+               while (pos < fArchiveOffset + seg_pos[cnt]) {
+                  Long64_t ll = fArchiveOffset + seg_pos[cnt] - pos;
+                  if (ll > Int_t(sizeof(dbuf))) ll = sizeof(dbuf);
+                  if (fSocket->RecvRaw(dbuf, ll) != ll) {
+                     Error("GetFromWeb10", "error receiving data from host %s", fUrl.GetHost());
+                     return -1;
+                  }
+                  pos += ll;
+               }
+
+               // reading segment itself
+               if (fSocket->RecvRaw(curr, seg_len[cnt]) != seg_len[cnt]) {
+                  Error("GetFromWeb10", "error receiving data from host %s", fUrl.GetHost());
+                  return -1;
+               }
+               curr += seg_len[cnt];
+               pos += seg_len[cnt];
+               ltot += seg_len[cnt];
+            }
+
+            // now read file to the end
+            while (pos < fullsize) {
+               Long64_t ll = fullsize - pos;
+               if (ll > Int_t(sizeof(dbuf))) ll = sizeof(dbuf);
+               if (fSocket->RecvRaw(dbuf, ll) != ll) {
+                  Error("GetFromWeb10", "error receiving data from host %s", fUrl.GetHost());
+                  return -1;
+               }
+               pos += ll;
+            }
+
+            if (gDebug>0) Info("GetFromWeb10","Complete reading %d bytes in %d segments out of full size %lld", len, nseg, fullsize);
+
+            break;
          }
 
          continue;
@@ -761,6 +829,13 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg)
                TString mess = res(13, 1000);
                Error("GetFromWeb10", "%s: %s (%d)", fBasicUrl.Data(), mess.Data(), code);
             }
+         } else if (code == 200) {
+            fullsize = -200; // make indication of code 200
+            Warning("GetFromWeb10",
+                    "Server %s response with complete file, but only part of it was requested.\n"
+                    "Check MaxRanges configuration parameter (if Apache is used)",
+                    fUrl.GetHost());
+
          }
       } else if (res.BeginsWith("Content-Type: multipart")) {
          boundary = res(res.Index("boundary=")+9, 1000);
@@ -783,6 +858,12 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg)
          sscanf(res.Data(), "Content-Range: bytes %lld-%lld/%lld", &first, &last, &tot);
 #endif
          if (fSize == -1) fSize = tot;
+      } else if (res.BeginsWith("Content-Length:") && (fullsize == -200)) {
+#ifdef R__WIN32
+         sscanf(res.Data(), "Content-Length: %I64d", &fullsize);
+#else
+         sscanf(res.Data(), "Content-Length: %lld", &fullsize);
+#endif
       } else if (res.BeginsWith("Location:") && redirect) {
          redir = res(10, 1000);
          if (redirect == 2)   // temp redirect

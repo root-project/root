@@ -1,10 +1,12 @@
-//
-//  Convolution.c
-//  
-//
-//  Created by Aurélie Flandi on 09.09.14.
-//
-//
+/// \file
+/// \ingroup tutorial_fit
+/// Tutorial for convolution of two functions
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Aurélie Flandi
 
 #include <stdio.h>
 #include <TMath.h>
@@ -22,16 +24,10 @@
 #include <TGraph.h>
 #include <TStopwatch.h>
 
-
 using namespace std;
-
 
 void fitConvolution()
 {
-
-   //tutorial for convolution of two functions
-   
-   
    //construction of histogram to fit
    TH1F *h_ExpGauss = new TH1F("h_ExpGauss","Exponential convoluted by gaussian",100,0.,5.);
    for (int i=0;i<1e6;i++)
@@ -46,10 +42,10 @@ void fitConvolution()
    f_conv->SetNofPointsFFT(1000);
    TF1   *f = new TF1("f",*f_conv, 0., 5., f_conv->GetNpar());
    f->SetParameters(1.,-0.3,0.,1.);
-   
+
    //fit
    new TCanvas("c","c",800,1000);
    h_ExpGauss -> Fit("f");
    h_ExpGauss->Draw();
-  
+
 }

@@ -248,7 +248,12 @@
 
    JSROOT.Painter.MakeColorRGB = function(col) {
       if ((col==null) || (col._typename != 'TColor')) return null;
-      var rgb = "rgb(" + (col.fRed*255).toFixed(0) + "," + (col.fGreen*255).toFixed(0) + "," + (col.fBlue*255).toFixed(0) + ")";
+      var rgb = Math.round(col.fRed*255) + "," + Math.round(col.fGreen*255) + "," + Math.round(col.fBlue*255);
+      if ((col.fAlpha === undefined) || (col.fAlpha == 1.))
+         rgb = "rgb(" + rgb + ")";
+      else
+         rgb = "rgba(" + rgb + "," + col.fAlpha.toFixed(3) + ")";
+
       switch (rgb) {
          case 'rgb(255,255,255)' : rgb = 'white'; break;
          case 'rgb(0,0,0)' : rgb = 'black'; break;
@@ -3847,7 +3852,11 @@
 
       // if (hdim > 1) option.Scat = 1;  // default was scatter plot
 
-      if ((hdim===1) && (this.histo.fSumw2.length > 0)) option.Error = 2;
+      // use error plot only when any sumw2 bigger than 0
+      if ((hdim===1) && (this.histo.fSumw2.length > 0))
+         for (var n=0;n<this.histo.fSumw2.length;++n)
+            if (this.histo.fSumw2[n] > 0) { option.Error = 2; break; }
+
       if (this.histo.fFunctions !== null) option.Func = 1;
 
       var i = chopt.indexOf('PAL');
@@ -4510,7 +4519,7 @@
          this.GetBinY = function(bin) {
             var indx = Math.round(bin);
             if (indx <= 0) return this.ymin;
-            if (indx > this.nbinsx) this.ymax;
+            if (indx > this.nbinsy) this.ymax;
             if (indx==bin) return this.histo.fYaxis.fXbins[indx];
             var indx2 = (bin < indx) ? indx - 1 : indx + 1;
             return this.histo.fYaxis.fXbins[indx] * Math.abs(bin-indx2) + this.histo.fYaxis.fXbins[indx2] * Math.abs(bin-indx);
@@ -4524,7 +4533,7 @@
          this.regulary = true;
          this.binwidthy = (this.ymax - this.ymin);
          if (this.nbinsy > 0)
-            this.binwidthy = this.binwidthy / this.nbinsy
+            this.binwidthy = this.binwidthy / this.nbinsy;
 
          this.GetBinY = function(bin) { return this.ymin+bin*this.binwidthy; };
          this.GetIndexY = function(y,add) { return Math.floor((y - this.ymin) / this.binwidthy + add); };
@@ -5586,14 +5595,17 @@
       this.nbinsy = 0;
 
       for (var i = 0; i < this.nbinsx; ++i) {
-         var value = this.histo.getBinContent(i + 1);
+         var value = this.histo.getBinContent(i + 1), err = 0;
          hsum += profile ? this.histo.fBinEntries[i + 1] : value;
          if (value > 0)
             if ((hmin_nz == 0) || (value<hmin_nz)) hmin_nz = value;
-         if (this.options.Error > 0) value += this.histo.getBinError(i + 1);
-         if (i == 0) hmin = hmax = value;
-         if (value < hmin) hmin = value; else
-         if (value > hmax) hmax = value;
+         if (this.options.Error > 0) err = this.histo.getBinError(i + 1);
+         if (i == 0) {
+            hmin = value - err; hmax = value + err;
+         } else {
+            hmin = Math.min(hmin, value - err);
+            hmax = Math.max(hmax, value + err);
+         }
       }
 
       // account overflow/underflow bins
@@ -5646,6 +5658,14 @@
       if (set_zoom) {
          this.zoom_ymin = (hmin == null) ? this.ymin : hmin;
          this.zoom_ymax = (hmax == null) ? this.ymax : hmax;
+      }
+
+      // apply selected user range if no other range selection was done
+      if (this.is_main_painter() && (this.zoom_xmin === this.zoom_xmax) &&
+          (this.histo.fXaxis.fFirst !== this.histo.fXaxis.fLast) &&
+          ((this.histo.fXaxis.fFirst>1) || (this.histo.fXaxis.fLast <= this.nbinsx))) {
+         this.zoom_xmin = this.histo.fXaxis.fFirst > 1 ? this.GetBinX(this.histo.fXaxis.fFirst-1) : this.xmin;
+         this.zoom_xmax = this.histo.fXaxis.fLast <= this.nbinsx ? this.GetBinX(this.histo.fXaxis.fLast) : this.xmax;
       }
 
       // If no any draw options specified, do not try draw histogram
@@ -5979,8 +5999,9 @@
 
          grx = Math.round(pmain.grx(x));
 
-         if (i === right) {
-            lastbin = true;
+         lastbin = (i === right);
+
+         if (lastbin && (left < right)) {
             gry = curry;
          } else {
             y = this.histo.getBinContent(i+1);
@@ -6074,7 +6095,7 @@
          }
       }
 
-      if (this.fillatt.color !== 'none') {
+      if ((this.fillatt.color !== 'none') && (res.length > 0)) {
          res+="L"+currx+","+(height+3);
          res+="L"+startx+","+(height+3);
          res+="Z";
@@ -6106,11 +6127,12 @@
          return;
       }
 
-      this.draw_g.append("svg:path")
-                 .attr("d", res)
-                 .style("stroke-linejoin","miter")
-                 .call(this.lineatt.func)
-                 .call(this.fillatt.func);
+      if (res.length > 0)
+         this.draw_g.append("svg:path")
+                    .attr("d", res)
+                    .style("stroke-linejoin","miter")
+                    .call(this.lineatt.func)
+                    .call(this.fillatt.func);
 
       if ((JSROOT.gStyle.Tooltip === 1) && (bins!==null))
          this.draw_g.selectAll("rect")
@@ -6561,8 +6583,48 @@
       this.clear(true);
    }
 
+   JSROOT.Painter.FolderHierarchy = function(item, obj) {
+
+      if ((obj==null) || !('fFolders' in obj) || (obj.fFolders==null)) return false;
+
+      if (obj.fFolders.arr.length===0) { item._more = false; return true; }
+
+      item._childs = [];
+
+      for ( var i = 0; i < obj.fFolders.arr.length; ++i) {
+         var chld = obj.fFolders.arr[i];
+         item._childs.push( {
+            _name : chld.fName,
+            _kind : "ROOT." + chld._typename,
+            _readobj : chld
+         });
+      }
+      return true;
+   }
+
    JSROOT.Painter.ListHierarchy = function(folder, lst) {
       if (lst._typename != 'TList' && lst._typename != 'TObjArray' && lst._typename != 'TClonesArray') return false;
+
+      folder._childs = [];
+      for ( var i = 0; i < lst.arr.length; ++i) {
+         var obj = lst.arr[i];
+         var item = {
+            _name : obj.fName,
+            _kind : "ROOT." + obj._typename,
+            _readobj : obj
+         };
+         folder._childs.push(item);
+      }
+      return true;
+   }
+
+   JSROOT.Painter.ListHierarchy = function(folder, lst) {
+      if (lst._typename != 'TList' && lst._typename != 'TObjArray' && lst._typename != 'TClonesArray') return false;
+
+      if (lst.arr.length === 0) {
+         folder._more = false;
+         return true;
+      }
 
       folder._childs = [];
       for ( var i = 0; i < lst.arr.length; ++i) {
@@ -6619,19 +6681,25 @@
             continue;
          }
 
-         if ((typeof fld == 'object') && ('_typename' in fld)
-             && ((fld._typename=='TList') || (fld._typename=='TObjArray')) ) {
+         if ((typeof fld == 'object') && ('_typename' in fld)) {
+             if ((fld._typename=='TList') || (fld._typename=='TObjArray')) {
                item._kind = item._title = "ROOT." + fld._typename;
                fld = fld.arr;
+             } else if (fld._typename=='TFolder') {
+                item._kind = item._title = "ROOT." + fld._typename;
+                fld = fld.fFolders.arr;
+             }
          }
 
          var proto = Object.prototype.toString.apply(fld);
          var simple  = false;
 
          if ((proto.lastIndexOf('Array]') == proto.length-6) && (proto.indexOf('[object')==0)) {
+            item._title = item._kind + " len=" + fld.length;
             simple = (proto != '[object Array]');
             if (fld.length == 0) {
                item._value = "[ ]";
+               item._more = false;
             } else {
                item._value = "[...]";
                item._more = true;
@@ -6784,10 +6852,6 @@
             item._kind = "ROOT.TStreamerInfoList";
             item._title = "List of streamer infos for binary I/O";
             item._readobj = file.fStreamerInfos;
-         } else
-         if (key.fClassName == 'TList' || key.fClassName == 'TObjArray' || key.fClassName == 'TClonesArray') {
-            item._more = true;
-            item._expand = JSROOT.Painter.ListHierarchy;
          }
 
          folder._childs.push(item);
@@ -8405,7 +8469,7 @@
    JSROOT.addDrawFunc({ name: "TLatex", icon:"img_text", func: JSROOT.Painter.drawText });
    JSROOT.addDrawFunc({ name: "TMathText", icon:"img_text", func: JSROOT.Painter.drawText });
    JSROOT.addDrawFunc({ name: "TText", icon:"img_text", func: JSROOT.Painter.drawText });
-   JSROOT.addDrawFunc({ name: /^TH1/, icon: "img_histo1d", func: JSROOT.Painter.drawHistogram1D, opt:";P;P0;E;E1;E2;same"});
+   JSROOT.addDrawFunc({ name: /^TH1/, icon: "img_histo1d", func: JSROOT.Painter.drawHistogram1D, opt:";HIST;P;P0;E;E1;E2;same"});
    JSROOT.addDrawFunc({ name: "TProfile", icon: "img_profile", func: JSROOT.Painter.drawHistogram1D, opt:";E0;E1;E2;p;hist"});
    JSROOT.addDrawFunc({ name: /^TH2/, icon: "img_histo2d", prereq: "more2d", func: "JSROOT.Painter.drawHistogram2D", opt:";COL;COLZ;COL0Z;BOX;SCAT;TEXT;LEGO;same" });
    JSROOT.addDrawFunc({ name: /^TH3/, icon: 'img_histo3d', prereq: "3d", func: "JSROOT.Painter.drawHistogram3D" });
@@ -8432,13 +8496,14 @@
    JSROOT.addDrawFunc({ name: /^TGeo/, icon: 'img_histo3d', prereq: "geom", func: "JSROOT.Painter.drawGeoObject", opt: "all" });
    // these are not draw functions, but provide extra info about correspondent classes
    JSROOT.addDrawFunc({ name: "kind:Command", icon: "img_execute", execute: true });
-   JSROOT.addDrawFunc({ name: "TFolder", icon: "img_folder", icon2: "img_folderopen", noinspect: true });
+   JSROOT.addDrawFunc({ name: "TFolder", icon: "img_folder", icon2: "img_folderopen", noinspect: true, expand: JSROOT.Painter.FolderHierarchy });
    JSROOT.addDrawFunc({ name: "TTree", icon: "img_tree", noinspect:true });
    JSROOT.addDrawFunc({ name: "TNtuple", icon: "img_tree", noinspect:true });
    JSROOT.addDrawFunc({ name: "TBranch", icon: "img_branch", noinspect:true });
    JSROOT.addDrawFunc({ name: /^TLeaf/, icon: "img_leaf" });
-   JSROOT.addDrawFunc({ name: "TList", icon: "img_list" });
-   JSROOT.addDrawFunc({ name: "TObjArray", icon: "img_list" });
+   JSROOT.addDrawFunc({ name: "TList", icon: "img_list", noinspect:true, expand: JSROOT.Painter.ListHierarchy });
+   JSROOT.addDrawFunc({ name: "TObjArray", icon: "img_list", noinspect:true, expand: JSROOT.Painter.ListHierarchy });
+   JSROOT.addDrawFunc({ name: "TClonesArray", icon: "img_list", noinspect:true, expand: JSROOT.Painter.ListHierarchy });
    JSROOT.addDrawFunc({ name: "TColor", icon: "img_color" });
    JSROOT.addDrawFunc({ name: "TFile", icon: "img_file", noinspect:true });
    JSROOT.addDrawFunc({ name: "TMemFile", icon: "img_file", noinspect:true });

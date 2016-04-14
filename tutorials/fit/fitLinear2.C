@@ -1,16 +1,22 @@
+/// \file
+/// \ingroup tutorial_fit
+/// Fit a 5d hyperplane by n points, using the linear fitter directly
+///
+/// This macro shows some features of the TLinearFitter class
+/// A 5-d hyperplane is fit, a constant term is assumed in the hyperplane
+/// equation `(y = a0 + a1*x0 + a2*x1 + a3*x2 + a4*x3 + a5*x4)`
+///
+/// \macro_output
+/// \macro_code
+///
+/// \author Anna Kreshuk
+
 #include "TLinearFitter.h"
 #include "TF1.h"
 #include "TRandom.h"
 
 void fitLinear2()
 {
-   //Fit a 5d hyperplane by n points, using the linear fitter directly
-
-   //This macro shows some features of the TLinearFitter class
-   //A 5-d hyperplane is fit, a constant term is assumed in the hyperplane
-   //equation (y = a0 + a1*x0 + a2*x1 + a3*x2 + a4*x3 + a5*x4)
-   //Author: Anna Kreshuk
-
    Int_t n=100;
    Int_t i;
    TRandom rand;

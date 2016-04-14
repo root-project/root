@@ -1,3 +1,13 @@
+/// \file
+/// \ingroup tutorial_fit
+/// Simple fitting example (1-d histogram with an interpreted function)
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Rene Brun
+
 #include "TCanvas.h"
 #include "TFrame.h"
 #include "TBenchmark.h"
@@ -12,9 +22,6 @@
 #include "TPaveText.h"
 
 void fit1() {
-   //Simple fitting example (1-d histogram with an interpreted function)
-   //Author: Rene Brun
-
    TCanvas *c1 = new TCanvas("c1_fit1","The Fit Canvas",200,10,700,500);
    c1->SetGridx();
    c1->SetGridy();

@@ -338,6 +338,14 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Print a StackTrace!
+
+extern "C"
+void TCling__PrintStackTrace() {
+   gSystem->StackTrace();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Update TClingClassInfo for a class (e.g. upon seeing a definition).
 
 static void TCling__UpdateClassInfo(const NamedDecl* TD)
@@ -1863,9 +1871,9 @@ static int HandleInterpreterException(cling::MetaProcessor* metaProcessor,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool TCling::DiagnoseIfInterpreterException(std::exception &e) const
+bool TCling::DiagnoseIfInterpreterException(const std::exception &e) const
 {
-   if (auto ie = dynamic_cast<cling::InterpreterException*>(&e)) {
+   if (auto ie = dynamic_cast<const cling::InterpreterException*>(&e)) {
       ie->diagnose();
       return true;
    }

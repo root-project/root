@@ -76,6 +76,7 @@
 #pragma link C++ class TGeoManager-;
 #pragma link C++ class TVirtualGeoPainter+;
 #pragma link C++ class TVirtualGeoTrack+;
+#pragma link C++ class TVirtualGeoConverter+;
 #pragma link C++ class TGeoIterator;
 #pragma link C++ class TGeoIteratorPlugin;
 #pragma link C++ class TGeoBuilder;

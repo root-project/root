@@ -174,7 +174,7 @@ void PyMethodBase::PySetProgramName(TString name)
 //_______________________________________________________________________
 TString PyMethodBase::Py_GetProgramName()
 {
-   return Py_GetProgramName();
+   return ::Py_GetProgramName();
 }
 //_______________________________________________________________________
 int  PyMethodBase::PyIsInitialized()
@@ -213,5 +213,3 @@ void PyMethodBase::UnSerialize(TString path,PyObject **obj)
  Py_DECREF(file);
  Py_DECREF(model_arg);
 }
-
-      

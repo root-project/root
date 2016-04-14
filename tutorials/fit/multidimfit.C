@@ -1,5 +1,11 @@
-//Multi-Dimensional Parametrisation and Fitting
-//Authors: Rene Brun, Christian Holm Christensen
+/// \file
+/// \ingroup tutorial_fit
+/// Multi-Dimensional Parametrisation and Fitting
+///
+/// \macro_output
+/// \macro_code
+///
+/// \authors Rene Brun, Christian Holm Christensen
 
 #include "Riostream.h"
 #include "TROOT.h"
