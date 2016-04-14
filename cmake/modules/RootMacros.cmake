@@ -35,7 +35,12 @@ function(ROOTTEST_ADD_TESTDIRS )
   list(SORT dirs)
 
   foreach(d ${dirs})
+    string(REPLACE "${curdir}/" "" d ${d})
     add_subdirectory(${d})
+    # create .rootrc in binary directory to avoid filling $HOME/.root_hist
+    file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/${d}/.rootrc "
+Rint.History:  .root_hist
+") 
   endforeach()
 
 endfunction()
