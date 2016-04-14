@@ -1,14 +1,19 @@
-void fitslicesy() {
-//
-// Illustrates how to use the TH1::FitSlicesY function
-// To see the output of this macro, click begin_html <a href="gif/fitslicesy.gif" >here</a> end_html
-//    It uses the TH2F histogram generated in macro hsimple.C
-//    It invokes FitSlicesY and draw the fitted "mean" and "sigma"
-//    in 2 sepate pads.
-//    This macro shows also how to annotate a picture, change
-//    some pad parameters.
-//Author: Rene Brun
+/// \file
+/// \ingroup tutorial_fit
+/// Illustrates how to use the TH1::FitSlicesY function
+/// It uses the TH2F histogram generated in macro hsimple.C
+/// It invokes FitSlicesY and draw the fitted "mean" and "sigma"
+/// in 2 sepate pads.
+/// This macro shows also how to annotate a picture, change
+/// some pad parameters.
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Rene Brun
 
+void fitslicesy() {
 // Change some default parameters in the current style
    gStyle->SetLabelSize(0.06,"x");
    gStyle->SetLabelSize(0.06,"y");

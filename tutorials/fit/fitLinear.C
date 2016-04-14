@@ -1,3 +1,15 @@
+/// \file
+/// \ingroup tutorial_fit
+/// Example of fitting with a linear function, using TLinearFitter
+/// This example is for a TGraphErrors, but it can also be used
+/// when fitting a histogram, a TGraph2D or a TMultiGraph
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Anna Kreshuk
+
 #include "TGraphErrors.h"
 #include "TF1.h"
 #include "TRandom.h"
@@ -10,11 +22,6 @@ void makePoints(Int_t n, Double_t *x, Double_t *y, Double_t *e, Int_t p);
 
 void fitLinear()
 {
-   //Example of fitting with a linear function, using TLinearFitter
-   //This example is for a TGraphErrors, but it can also be used
-   //when fitting a histogram, a TGraph2D or a TMultiGraph
-   //Author: Anna Kreshuk
-
    Int_t n = 40;
    Double_t *x = new Double_t[n];
    Double_t *y = new Double_t[n];

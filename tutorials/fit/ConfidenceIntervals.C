@@ -1,3 +1,13 @@
+/// \file
+/// \ingroup tutorial_fit
+/// Illustrates TVirtualFitter::GetConfidenceIntervals
+/// This method computes confidence intervals for the fitted function
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Rene Brun
 
 #include "TGraphErrors.h"
 #include "TGraph2DErrors.h"
@@ -9,10 +19,6 @@
 
 void ConfidenceIntervals()
 {
-//Illustrates TVirtualFitter::GetConfidenceIntervals
-//This method computes confidence intervals for the fitted function
-//Author: Anna Kreshuk
-
    TCanvas *myc = new TCanvas("myc",
       "Confidence intervals on the fitted function",1200, 500);
    myc->Divide(3,1);
