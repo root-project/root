@@ -248,7 +248,12 @@
 
    JSROOT.Painter.MakeColorRGB = function(col) {
       if ((col==null) || (col._typename != 'TColor')) return null;
-      var rgb = "rgb(" + (col.fRed*255).toFixed(0) + "," + (col.fGreen*255).toFixed(0) + "," + (col.fBlue*255).toFixed(0) + ")";
+      var rgb = Math.round(col.fRed*255) + "," + Math.round(col.fGreen*255) + "," + Math.round(col.fBlue*255);
+      if ((col.fAlpha === undefined) || (col.fAlpha == 1.))
+         rgb = "rgb(" + rgb + ")";
+      else
+         rgb = "rgba(" + rgb + "," + col.fAlpha.toFixed(3) + ")";
+
       switch (rgb) {
          case 'rgb(255,255,255)' : rgb = 'white'; break;
          case 'rgb(0,0,0)' : rgb = 'black'; break;
@@ -3847,7 +3852,11 @@
 
       // if (hdim > 1) option.Scat = 1;  // default was scatter plot
 
-      if ((hdim===1) && (this.histo.fSumw2.length > 0)) option.Error = 2;
+      // use error plot only when any sumw2 bigger than 0
+      if ((hdim===1) && (this.histo.fSumw2.length > 0))
+         for (var n=0;n<this.histo.fSumw2.length;++n)
+            if (this.histo.fSumw2[n] > 0) { option.Error = 2; break; }
+
       if (this.histo.fFunctions !== null) option.Func = 1;
 
       var i = chopt.indexOf('PAL');
@@ -5586,14 +5595,17 @@
       this.nbinsy = 0;
 
       for (var i = 0; i < this.nbinsx; ++i) {
-         var value = this.histo.getBinContent(i + 1);
+         var value = this.histo.getBinContent(i + 1), err = 0;
          hsum += profile ? this.histo.fBinEntries[i + 1] : value;
          if (value > 0)
             if ((hmin_nz == 0) || (value<hmin_nz)) hmin_nz = value;
-         if (this.options.Error > 0) value += this.histo.getBinError(i + 1);
-         if (i == 0) hmin = hmax = value;
-         if (value < hmin) hmin = value; else
-         if (value > hmax) hmax = value;
+         if (this.options.Error > 0) err = this.histo.getBinError(i + 1);
+         if (i == 0) {
+            hmin = value - err; hmax = value + err;
+         } else {
+            hmin = Math.min(hmin, value - err);
+            hmax = Math.max(hmax, value + err);
+         }
       }
 
       // account overflow/underflow bins
@@ -5646,6 +5658,14 @@
       if (set_zoom) {
          this.zoom_ymin = (hmin == null) ? this.ymin : hmin;
          this.zoom_ymax = (hmax == null) ? this.ymax : hmax;
+      }
+
+      // apply selected user range if no other range selection was done
+      if (this.is_main_painter() && (this.zoom_xmin === this.zoom_xmax) &&
+          (this.histo.fXaxis.fFirst !== this.histo.fXaxis.fLast) &&
+          ((this.histo.fXaxis.fFirst>1) || (this.histo.fXaxis.fLast <= this.nbinsx))) {
+         this.zoom_xmin = this.histo.fXaxis.fFirst > 1 ? this.GetBinX(this.histo.fXaxis.fFirst-1) : this.xmin;
+         this.zoom_xmax = this.histo.fXaxis.fLast <= this.nbinsx ? this.GetBinX(this.histo.fXaxis.fLast) : this.xmax;
       }
 
       // If no any draw options specified, do not try draw histogram
@@ -5979,8 +5999,9 @@
 
          grx = Math.round(pmain.grx(x));
 
-         if (i === right) {
-            lastbin = true;
+         lastbin = (i === right);
+
+         if (lastbin && (left < right)) {
             gry = curry;
          } else {
             y = this.histo.getBinContent(i+1);
@@ -6074,7 +6095,7 @@
          }
       }
 
-      if (this.fillatt.color !== 'none') {
+      if ((this.fillatt.color !== 'none') && (res.length > 0)) {
          res+="L"+currx+","+(height+3);
          res+="L"+startx+","+(height+3);
          res+="Z";
@@ -6106,11 +6127,12 @@
          return;
       }
 
-      this.draw_g.append("svg:path")
-                 .attr("d", res)
-                 .style("stroke-linejoin","miter")
-                 .call(this.lineatt.func)
-                 .call(this.fillatt.func);
+      if (res.length > 0)
+         this.draw_g.append("svg:path")
+                    .attr("d", res)
+                    .style("stroke-linejoin","miter")
+                    .call(this.lineatt.func)
+                    .call(this.fillatt.func);
 
       if ((JSROOT.gStyle.Tooltip === 1) && (bins!==null))
          this.draw_g.selectAll("rect")
@@ -8447,7 +8469,7 @@
    JSROOT.addDrawFunc({ name: "TLatex", icon:"img_text", func: JSROOT.Painter.drawText });
    JSROOT.addDrawFunc({ name: "TMathText", icon:"img_text", func: JSROOT.Painter.drawText });
    JSROOT.addDrawFunc({ name: "TText", icon:"img_text", func: JSROOT.Painter.drawText });
-   JSROOT.addDrawFunc({ name: /^TH1/, icon: "img_histo1d", func: JSROOT.Painter.drawHistogram1D, opt:";P;P0;E;E1;E2;same"});
+   JSROOT.addDrawFunc({ name: /^TH1/, icon: "img_histo1d", func: JSROOT.Painter.drawHistogram1D, opt:";HIST;P;P0;E;E1;E2;same"});
    JSROOT.addDrawFunc({ name: "TProfile", icon: "img_profile", func: JSROOT.Painter.drawHistogram1D, opt:";E0;E1;E2;p;hist"});
    JSROOT.addDrawFunc({ name: /^TH2/, icon: "img_histo2d", prereq: "more2d", func: "JSROOT.Painter.drawHistogram2D", opt:";COL;COLZ;COL0Z;BOX;SCAT;TEXT;LEGO;same" });
    JSROOT.addDrawFunc({ name: /^TH3/, icon: 'img_histo3d', prereq: "3d", func: "JSROOT.Painter.drawHistogram3D" });
