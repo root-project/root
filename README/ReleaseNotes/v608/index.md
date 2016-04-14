@@ -182,6 +182,8 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 * Enhancement of the CANDLE drawing option (implemented by Georg Troska georg.troska@tu-dortmund.de).
   This option has been completely rewritten and offers a wide range of possibilities.
   See the THistPainter reference guide for all the details and examples.
+* Fix `TText` copy constructor as requested [here](https://sft.its.cern.ch/jira/browse/ROOT-8116).
+  New example to check this fix.
 
 ## 3D Graphics Libraries
 
