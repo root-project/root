@@ -1,3 +1,11 @@
+/// \file
+/// \ingroup tutorial_geom
+/// GUI to draw the geometry shapes.
+///
+/// \macro_code
+///
+/// \author Andrei Gheata
+
 #include "TMath.h"
 #include "TControlBar.h"
 #include "TRandom3.h"
@@ -28,9 +36,6 @@
 #include "TGeoCompositeShape.h"
 #include "TGeoPhysicalNode.h"
 
-
-// GUI to draw the geometry shapes
-// Author: M.Gheata  06/16/03
 Bool_t comments = kTRUE;
 Bool_t raytracing = kFALSE;
 Bool_t grotate = kFALSE;

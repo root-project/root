@@ -1,3 +1,10 @@
+/// \file
+/// \ingroup tutorial_geom
+///
+/// \macro_code
+///
+/// \author Andrei Gheata
+
 #include "TMaterial.h"
 #include "TMixture.h"
 #include "TNode.h"
