@@ -34,10 +34,6 @@
 #include <iostream>
 #include "TPool.h"
 
-template< class F, class... T>
- using noReferenceCond = typename std::enable_if<"Function can't return a reference" && !(std::is_reference<typename std::result_of<F(T...)>::type>::value)>::type;
-
-
 class TProcPool : public TPool<TProcPool>, private TMPClient {
 public:
    explicit TProcPool(unsigned nWorkers = 0); //default number of workers is the number of processors
@@ -48,12 +44,12 @@ public:
 
    // Map
    template<class F, class Cond = noReferenceCond<F>>
-    auto Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>;
+   auto Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>;
    /// \cond
    template<class F, class INTEGER, class Cond = noReferenceCond<F, INTEGER>>
-    auto Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>;
+   auto Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>;
    template<class F, class T, class Cond = noReferenceCond<F, T>>
-    auto Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>;
+   auto Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>;
    /// \endcond
    using TPool<TProcPool>::Map;
 
@@ -68,7 +64,7 @@ public:
    void SetNWorkers(unsigned n) { TMPClient::SetNWorkers(n); }
    unsigned GetNWorkers() const { return TMPClient::GetNWorkers(); }
 
-   template<class T, class BINARYOP> auto Reduce(const std::vector<T> &objs, BINARYOP redfunc) -> typename std::result_of<BINARYOP(T, T)>::type = delete;
+   template<class T, class BINARYOP> auto Reduce(const std::vector<T> &objs, BINARYOP redfunc)-> decltype(redfunc(objs.front(), objs.front())) = delete;
    using TPool<TProcPool>::Reduce;
 
 private:
@@ -85,15 +81,15 @@ private:
    /// A collection of the types of tasks that TProcPool can execute.
    /// It is used to interpret in the right way and properly reply to the
    /// messages received (see, for example, TProcPool::HandleInput)
-   enum class ETask : unsigned {
-      kNoTask = 0,   ///< no task is being executed
+   enum class ETask : unsigned char {
+      kNoTask,   ///< no task is being executed
       kMap,          ///< a Map method with no arguments is being executed
       kMapWithArg,   ///< a Map method with arguments is being executed
       kProcByRange,   ///< a ProcTree method is being executed and each worker will process a certain range of each file
       kProcByFile,    ///< a ProcTree method is being executed and each worker will process a different file
    };
 
-   ETask fTask = ETask::kNoTask; ///< the kind of task that is being executed, if any
+   ETask fTaskType = ETask::kNoTask; ///< the kind of task that is being executed, if any
 };
 
 
@@ -110,7 +106,7 @@ auto TProcPool::Map(F func, unsigned nTimes) -> std::vector<typename std::result
    using retType = decltype(func());
    //prepare environment
    Reset();
-   fTask = ETask::kMap;
+   fTaskType = ETask::kMap;
 
    //fork max(nTimes, fNWorkers) times
    unsigned oldNWorkers = GetNWorkers();
@@ -136,7 +132,7 @@ auto TProcPool::Map(F func, unsigned nTimes) -> std::vector<typename std::result
 
    //clean-up and return
    ReapWorkers();
-   fTask = ETask::kNoTask;
+   fTaskType = ETask::kNoTask;
    return reslist;
 }
 
@@ -152,7 +148,7 @@ auto TProcPool::Map(F func, std::vector<T> &args) -> std::vector<typename std::r
    using retType = decltype(func(args.front()));
    //prepare environment
    Reset();
-   fTask = ETask::kMapWithArg;
+   fTaskType = ETask::kMapWithArg;
 
    //fork max(args.size(), fNWorkers) times
    //N.B. from this point onwards, args is filled with undefined (but valid) values, since TPoolWorker moved its content away
@@ -181,7 +177,7 @@ auto TProcPool::Map(F func, std::vector<T> &args) -> std::vector<typename std::r
 
    //clean-up and return
    ReapWorkers();
-   fTask = ETask::kNoTask;
+   fTaskType = ETask::kNoTask;
    return reslist;
 }
 
@@ -217,7 +213,7 @@ auto TProcPool::ProcTree(const std::vector<std::string>& fileNames, F procFunc, 
 
    if(fileNames.size() < nWorkers) {
       //TTree entry granularity. For each file, we divide entries equally between workers
-      fTask = ETask::kProcByRange;
+      fTaskType = ETask::kProcByRange;
       //Tell workers to start processing entries
       fNToProcess = nWorkers*fileNames.size(); //this is the total number of ranges that will be processed by all workers cumulatively
       std::vector<unsigned> args(nWorkers);
@@ -227,7 +223,7 @@ auto TProcPool::ProcTree(const std::vector<std::string>& fileNames, F procFunc, 
          std::cerr << "[E][C] There was an error while sending tasks to workers. Some entries might not be processed.\n";
    } else {
       //file granularity. each worker processes one whole file as a single task
-      fTask = ETask::kProcByFile;
+      fTaskType = ETask::kProcByFile;
       fNToProcess = fileNames.size();
       std::vector<unsigned> args(nWorkers);
       std::iota(args.begin(), args.end(), 0);
@@ -241,11 +237,12 @@ auto TProcPool::ProcTree(const std::vector<std::string>& fileNames, F procFunc, 
    Collect(reslist);
 
    //merge
-   TObject* res = PoolUtils::ReduceObjects(reslist);
+   PoolUtils::ReduceObjects<TObject *> redfunc;
+   auto res = redfunc(reslist);
 
    //clean-up and return
    ReapWorkers();
-   fTask = ETask::kNoTask;
+   fTaskType = ETask::kNoTask;
    return static_cast<retType>(res);
 }
 
@@ -302,7 +299,7 @@ auto TProcPool::ProcTree(TTree& tree, F procFunc, ULong64_t nToProcess) -> typen
    }
 
    //divide entries equally between workers
-   fTask = ETask::kProcByRange;
+   fTaskType = ETask::kProcByRange;
 
    //tell workers to start processing entries
    fNToProcess = nWorkers; //this is the total number of ranges that will be processed by all workers cumulatively
@@ -317,11 +314,12 @@ auto TProcPool::ProcTree(TTree& tree, F procFunc, ULong64_t nToProcess) -> typen
    Collect(reslist);
 
    //merge
-   TObject* res = PoolUtils::ReduceObjects(reslist);
+   PoolUtils::ReduceObjects<TObject *> redfunc;
+   auto res = redfunc(reslist);
 
    //clean-up and return
    ReapWorkers();
-   fTask = ETask::kNoTask;
+   fTaskType = ETask::kNoTask;
    return static_cast<retType>(res);
 }
 

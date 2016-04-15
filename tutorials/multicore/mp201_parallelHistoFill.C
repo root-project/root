@@ -24,7 +24,8 @@ Int_t mp201_parallelHistoFill()
    };
 
    auto seeds = ROOT::TSeqI(23);
-   auto sumRandomHisto = pool.MapReduce(fillRandomHisto, seeds, PoolUtils::ReduceObjects);
+   PoolUtils::ReduceObjects<TH1F *> redfunc;
+   auto sumRandomHisto = pool.MapReduce(fillRandomHisto, seeds, redfunc);
 
    auto c = new TCanvas();
    sumRandomHisto->Draw();

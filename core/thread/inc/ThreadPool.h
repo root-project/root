@@ -14,9 +14,7 @@
 
 #include "tbb/tbb.h"
 #include "TPool.h"
-
-template< class F, class... T>
- using noReferenceCond = typename std::enable_if<"Function can't return a reference" && !(std::is_reference<typename std::result_of<F(T...)>::type>::value)>::type;
+#include <numeric>
 
 class ThreadPool: public TPool<ThreadPool> {
 public:
@@ -33,15 +31,17 @@ public:
    }
 
 
-   template<class F, class Cond = noReferenceCond<F>> auto Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>;
+   template<class F, class Cond = noReferenceCond<F>>
+   auto Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>;
    /// \cond
-   template<class F, class INTEGER, class Cond = noReferenceCond<F, INTEGER>> auto Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>;
+   template<class F, class INTEGER, class Cond = noReferenceCond<F, INTEGER>>
+   auto Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>;
    template<class F, class T, class Cond = noReferenceCond<F, T>>
-    auto Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>;
+   auto Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>;
    // / \endcond
    using TPool<ThreadPool>::Map;
 
-   template<class T, class BINARYOP> auto Reduce(const std::vector<T> &objs, BINARYOP redfunc) -> typename std::result_of<BINARYOP(T, T)>::type;
+   template<class T, class BINARYOP> auto Reduce(const std::vector<T> &objs, BINARYOP redfunc) -> decltype(redfunc(objs.front(), objs.front()));
    using TPool<ThreadPool>::Reduce;
 
 private:
@@ -108,7 +108,7 @@ auto ThreadPool::Map(F func, std::vector<T> &args) -> std::vector<typename std::
 // /// \endcond
 
 template<class T, class BINARYOP>
-auto ThreadPool::Reduce(const std::vector<T> &objs, BINARYOP redfunc) -> typename std::result_of<BINARYOP(T, T)>::type
+auto ThreadPool::Reduce(const std::vector<T> &objs, BINARYOP redfunc) -> decltype(redfunc(objs.front(), objs.front()))
 {
    // check we can apply reduce to objs
    static_assert(std::is_same<decltype(redfunc(objs.front(), objs.front())), T>::value, "redfunc does not have the correct signature");
