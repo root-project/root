@@ -43,6 +43,7 @@
 #include "XrdProofSched.h"
 #include "XrdROOT.h"
 
+#include <unistd.h>
 #include <map>
 
 // Aux structures for scan through operations
@@ -4266,14 +4267,21 @@ int XrdProofdProofServMgr::CleanupProofServ(bool all, const char *usr)
    // Build command
    XrdOucString cmd = "ps ";
    bool busr = 0;
+#if 0
+   // Left over of some previous implementation; but here fSuperUser is not defined: to be checked
    const char *cusr = (usr && strlen(usr) && fSuperUser) ? usr : fPClient->ID();
+#else
+   const char *cusr = (usr && strlen(usr)) ? usr : 0;
+#endif
    if (all) {
       cmd += "ax";
    } else {
-      cmd += "-U ";
-      cmd += cusr;
-      cmd += " -u ";
-      cmd += cusr;
+      if (cusr) {
+         cmd += "-U ";
+         cmd += cusr;
+         cmd += " -u ";
+         cmd += cusr;
+      }
       cmd += " -f";
       busr = 1;
    }
