@@ -352,7 +352,7 @@ TMVA::MethodBase* TMVA::Factory::BookMethod( TMVA::DataLoader *loader, TString t
    }
    
 //    method->SetWeightFileDir(Form("%s/%s",loader->GetName(),method->GetWeightFileDir().Data()));//setting up weight file dir
-//    method->fDataLoader=loader;
+   method->fDataLoader=loader;
    method->SetAnalysisType( fAnalysisType );
    method->SetupMethod();
    method->ParseOptions();
@@ -711,7 +711,7 @@ void TMVA::Factory::TrainAllMethods()
 	    // replace trained method by newly created one (from weight file) in methods vector
 	    (*methods)[i] = m;
 	  }
-      }
+       }
    }
 }
 
@@ -1853,4 +1853,61 @@ TH1F* TMVA::Factory::GetImportance(const int nbits,std::vector<Double_t> importa
   
 //   vih1->Draw("B");
   return vih1;
+}
+
+void TMVA::Factory::CrossValidateMethod(DataLoader * loader, Types::EMVA theMethod, TString methodTitle, const char *theOption)
+{
+
+  UInt_t NumFolds=5;
+
+  loader->MakeKFoldDataSet(NumFolds);
+
+  const int nbits = loader->DefaultDataSetInfo().GetNVariables();
+  std::vector<TString> varNames = loader->DefaultDataSetInfo().GetListOfVariables();
+
+  std::vector<float> ROCs;
+
+  for(UInt_t i=0; i<NumFolds; ++i){
+    TString foldTitle = methodTitle;
+    foldTitle += "_fold";
+    foldTitle += i;
+
+    loader->PrepareTrainingAndTestTree(i, TMVA::Types::kTraining);
+
+    TMVA::DataLoader * seedloader = new TMVA::DataLoader(foldTitle);
+
+    for(int index = 0; index<nbits; index++){
+      seedloader->AddVariable(varNames.at(index), 'F');
+    }
+
+    VIDataLoaderCopy(seedloader,loader);
+
+    BookMethod(seedloader, theMethod, methodTitle, theOption);
+
+    TrainAllMethods();
+    TestAllMethods();
+    EvaluateAllMethods();
+
+    ROCs.push_back(GetROCIntegral(seedloader->GetName(), methodTitle));
+
+    TMVA::MethodBase * smethod = dynamic_cast<TMVA::MethodBase*>(fMethodsMap[seedloader->GetName()][0][0]);
+    TMVA::ResultsClassification * sresults = (TMVA::ResultsClassification*)smethod->Data()->GetResults(smethod->GetMethodName(), Types::kTesting, Types::kClassification);
+    sresults->Clear();
+    sresults->Delete();
+    delete sresults;
+    fgTargetFile->cd();
+    fgTargetFile->Delete(seedloader->GetName());
+    fgTargetFile->Delete(Form("%s;1",seedloader->GetName()));
+    fgTargetFile->Flush();
+    gSystem->Exec(Form("rm -rf %s", seedloader->GetName()));
+
+    this->DeleteAllMethods();
+
+    fMethodsMap.clear();
+  }
+  
+  for(UInt_t j=0; j<ROCs.size(); ++j){
+    std::cout << "Fold " << j+1 << " ROCIntegral: " << ROCs.at(j) << std::endl;
+  }
+
 }

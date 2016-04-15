@@ -556,37 +556,60 @@ void TMVA::DataLoader::PrepareTrainingAndTestTree( TCut sigcut, TCut bkgcut, con
 void TMVA::DataLoader::PrepareTrainingAndTestTree(int foldNumber, Types::ETreeType tt)
 {
   std::cout << "TOM: Clear tree lists" << std::endl;
-  
   DataInput().ClearSignalTreeList();
   DataInput().ClearBackgroundTreeList();
 
   std::cout << "TOM: Preparing test and training trees" << std::endl;
-  
+  TString CrossValidate = "ParameterOpt";
+
   int numFolds = fTrainSigTree.size();
 
+  std::cout << "TOM: " << numFolds << std::endl;
+
   for(int i=0; i<numFolds; ++i){
-    if(tt == Types::kTraining){
+    if(CrossValidate == "PerformanceEst"){
       if(i!=foldNumber){
 	AddTree( fTrainSigTree.at(i),     "Signal",     1.0,     TCut(""), Types::kTraining );
 	AddTree( fTrainBkgTree.at(i),     "Background", 1.0,     TCut(""), Types::kTraining );
+	AddTree( fTestSigTree.at(i),      "Signal",     1.0,     TCut(""), Types::kTraining );
+	AddTree( fTestBkgTree.at(i),      "Background", 1.0,     TCut(""), Types::kTraining );
       }
       else{
 	AddTree( fTrainSigTree.at(i),     "Signal",     1.0,     TCut(""), Types::kTesting );
-        AddTree( fTrainBkgTree.at(i),     "Background", 1.0,     TCut(""), Types::kTesting );
+	AddTree( fTrainBkgTree.at(i),     "Background", 1.0,     TCut(""), Types::kTesting );
+	AddTree( fTestSigTree.at(i),      "Signal",     1.0,     TCut(""), Types::kTesting );
+	AddTree( fTestBkgTree.at(i),      "Background", 1.0,     TCut(""), Types::kTesting );
       }
     }
-    else if(tt == Types::kTesting){
-      if(i!=foldNumber){
-        AddTree( fTestSigTree.at(i),     "Signal",     1.0,     TCut(""), Types::kTraining );
-        AddTree( fTestBkgTree.at(i),     "Background", 1.0,     TCut(""), Types::kTraining );
+    else if(CrossValidate == "ParameterOpt"){
+      if(tt == Types::kTraining){
+	if(i!=foldNumber){
+	  std::cout << "Adding " << i << " as training" << std::endl;
+	  AddTree( fTrainSigTree.at(i),     "Signal",     1.0,     TCut(""), Types::kTraining );
+	  AddTree( fTrainBkgTree.at(i),     "Background", 1.0,     TCut(""), Types::kTraining );
+	}
+	else{
+	  std::cout << "Adding " << i << " as testing"<< std::endl;
+	  AddTree( fTrainSigTree.at(i),     "Signal",     1.0,     TCut(""), Types::kTesting );
+	  AddTree( fTrainBkgTree.at(i),     "Background", 1.0,     TCut(""), Types::kTesting );
+	}
       }
-      else{
-        AddTree( fTestSigTree.at(i),     "Signal",     1.0,     TCut(""), Types::kTesting );
-	AddTree( fTestBkgTree.at(i),     "Background", 1.0,     TCut(""), Types::kTesting );
+      else if(tt == Types::kTesting){
+	if(i!=foldNumber){
+	  AddTree( fTestSigTree.at(i),     "Signal",     1.0,     TCut(""), Types::kTraining );
+	  AddTree( fTestBkgTree.at(i),     "Background", 1.0,     TCut(""), Types::kTraining );
+	}
+	else{
+	  AddTree( fTestSigTree.at(i),     "Signal",     1.0,     TCut(""), Types::kTesting );
+	  AddTree( fTestBkgTree.at(i),     "Background", 1.0,     TCut(""), Types::kTesting );
+	}
       }
     }
   }
-  std::cout << "Trees allocated" << std::endl;
+
+  //DefaultDataSetInfo().SetSplitOptions("nTrain_Signal=0:nTrain_Background=0:nTest_Signal=0:nTest_Background=0:SplitMode=Random");
+
+  std::cout << "TOM: Trees allocated" << std::endl;
 
 }
 

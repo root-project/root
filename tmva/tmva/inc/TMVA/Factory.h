@@ -125,6 +125,8 @@ namespace TMVA {
   
       TH1F* EvaluateImportance( DataLoader *loader,VIType vitype, Types::EMVA theMethod,  TString methodTitle, const char *theOption = "" );
 
+      void CrossValidateMethod(DataLoader *loader, Types::EMVA theMethod,  TString methodTitle, const char *theOption = "");
+
       // delete all methods and reset the method vector
       void DeleteAllMethods( void );
 
