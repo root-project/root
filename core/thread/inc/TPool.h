@@ -15,8 +15,6 @@
 #include "TCollection.h"
 #include "ROOT/TSeq.h"
 
-template< class F, class... T>
- using noReferenceCond = typename std::enable_if<"Function can't return a reference" && !(std::is_reference<typename std::result_of<F(T...)>::type>::value)>::type;
 
 template<class subc>
 class TPool {
@@ -24,40 +22,45 @@ public:
    explicit TPool() = default;
    explicit TPool(size_t nThreads){};
 
+   template< class F, class... T>
+   using noReferenceCond = typename std::enable_if<"Function can't return a reference" && !(std::is_reference<typename std::result_of<F(T...)>::type>::value)>::type;
+
    // // Map
    // //these late return types allow for a compile-time check of compatibility between function signatures and args,
    // //and a compile-time check that the argument list implements a front() method (all STL sequence containers have it)
    template<class F, class Cond = noReferenceCond<F>>
-    auto Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>;
+   auto Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>;
    template<class F, class T, class Cond = noReferenceCond<F, typename T::value_type>>
-    auto Map(F func, T &args) -> std::vector < decltype(++(args.begin()), args.end(), func(args.front()))>;
+   auto Map(F func, T &args) -> std::vector < decltype(++(args.begin()), args.end(), func(args.front()))>;
    // /// \cond doxygen should ignore these methods
    template<class F, class INTEGER, class Cond = noReferenceCond<F, INTEGER>>
-    auto Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>;
+   auto Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>;
    template<class F, class Cond = noReferenceCond<F, TObject*>>
-    auto Map(F func, TCollection &args) -> std::vector<typename std::result_of<F(TObject*)>::type>;
+   auto Map(F func, TCollection &args) -> std::vector<typename std::result_of<F(TObject*)>::type>;
    template<class F, class T, class Cond = noReferenceCond<F, T>>
-    auto Map(F func, std::initializer_list<T> args) -> std::vector<typename std::result_of<F(T)>::type>;
+   auto Map(F func, std::initializer_list<T> args) -> std::vector<typename std::result_of<F(T)>::type>;
    template<class F, class T, class Cond = noReferenceCond<F, T>>
-    auto Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>;
+   auto Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>;
    // // // / \endcond
 
    // // MapReduce
    // // the late return types also check at compile-time whether redfunc is compatible with func,
    // // other than checking that func is compatible with the type of arguments.
    // // a static_assert check in TPool<subc>::Reduce is used to check that redfunc is compatible with the type returned by func
-   template<class F, class R, class Cond = noReferenceCond<F>> auto MapReduce(F func, unsigned nTimes, R redfunc) -> typename std::result_of<F()>::type;
-   template<class F, class INTEGER, class R, class Cond = noReferenceCond<F, INTEGER>> auto MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc) -> typename std::result_of<F(INTEGER)>::type;
-   template<class F, class T, class R, class Cond= noReferenceCond<F, typename T::value_type>> auto MapReduce(F func, T &args, R redfunc) -> decltype(++(args.begin()), args.end(), func(args.front()));
+   template<class F, class R, class Cond = noReferenceCond<F>>
+   auto MapReduce(F func, unsigned nTimes, R redfunc) -> typename std::result_of<F()>::type;
+   template<class F, class INTEGER, class R, class Cond = noReferenceCond<F, INTEGER>>
+   auto MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc) -> typename std::result_of<F(INTEGER)>::type;
    // /// \cond doxygen should ignore these methods
-   template<class F, class R> auto MapReduce(F func, TCollection &args, R redfunc) -> typename std::result_of<F(TObject*)>::type;
-   template<class F, class T, class R, class Cond = noReferenceCond<F, T>> auto MapReduce(F func, std::initializer_list<T> args, R redfunc) -> typename std::result_of<F(T)>::type;
-   template<class F, class T, class R, class Cond = noReferenceCond<F, T>> auto MapReduce(F func, std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type;
+   template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
+   auto MapReduce(F func, std::initializer_list<T> args, R redfunc) -> typename std::result_of<F(T)>::type;
+   template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
+   auto MapReduce(F func, std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type;
    // /// \endcond
 
 protected:
-   template<class T, class R> auto Reduce(const std::vector<T> &objs, R redfunc)  -> typename std::result_of<R(std::vector<T>)>::type;
-   template<class T, class BINARYOP> auto Reduce(const std::vector<T> &objs, BINARYOP redfunc) -> typename std::result_of<BINARYOP(T, T)>::type;
+   template<class T, class R> auto Reduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs));
+   template<class T, class BINARYOP> auto Reduce(const std::vector<T> &objs, BINARYOP redfunc) -> decltype(redfunc(objs.front(), objs.front()));
 
 private:
   inline subc & Derived() {
@@ -83,17 +86,6 @@ auto TPool<subc>::Map(F func, unsigned nTimes) -> std::vector<typename std::resu
 // /// objects that might be created upon the execution of func, returned objects included.
 // /// **Note:** the collection of arguments is modified by Map and should be considered empty or otherwise
 // /// invalidated after Map's execution (std::move might be applied to it).
-template<class subc> template<class F, class T, class Cond>
-auto TPool<subc>::Map(F func, T &args) -> std::vector < decltype(++(args.begin()), args.end(), func(args.front())) >
-{
-   std::vector<typename T::value_type> vargs(
-      std::make_move_iterator(args.begin()),
-      std::make_move_iterator(args.end())
-   );
-   const auto &reslist = Derived().Map(func, vargs);
-   return reslist;
-}
-
 
 // tell doxygen to ignore this (\endcond closes the statement)
 /// \cond
@@ -101,22 +93,6 @@ template<class subc> template<class F, class INTEGER, class Cond>
 auto TPool<subc>::Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>
 {
   return Derived().Map(func, args);
-}
-
-template<class subc> template<class F, class Cond>
-auto TPool<subc>::Map(F func, TCollection &args) -> std::vector<typename std::result_of<F(TObject*)>::type>
-{
-   //build vector with same elements as args
-   std::vector<TObject *> vargs(args.GetSize());
-   auto it = vargs.begin();
-   for (auto o : args) {
-      *it = o;
-      ++it;
-   }
-
-   //call Map
-   const auto &reslist = Derived().Map(func, vargs);
-   return reslist;
 }
 
 template<class subc> template<class F, class T, class Cond>
@@ -154,34 +130,12 @@ auto TPool<subc>::MapReduce(F func, unsigned nTimes, R redfunc) -> typename std:
 /// must return the same type as func. In practice, redfunc can be used to
 /// "squash" the vector returned by Map into a single object by merging,
 /// adding, mixing the elements of the vector.
-template<class subc> template<class F, class T, class R, class Cond>
-auto TPool<subc>::MapReduce(F func, T &args, R redfunc) -> decltype(++(args.begin()), args.end(), func(args.front()))
-{
-   return Reduce(Derived().Map(func, args), redfunc);
-}
 
 /// \cond doxygen should ignore these methods
-
 template<class subc> template<class F, class INTEGER, class R, class Cond>
 auto TPool<subc>::MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc) -> typename std::result_of<F(INTEGER)>::type
 {
   return Reduce(Map(func, args), redfunc);
-}
-
-template<class subc> template<class F, class R>
-auto TPool<subc>::MapReduce(F func, TCollection &args, R redfunc) -> typename std::result_of<F(TObject*)>::type
-{
-   //build vector with same elements as args
-   std::vector<TObject *> vargs(args.GetSize());
-   auto it = vargs.begin();
-   for (auto o : args) {
-      *it = o;
-      ++it;
-   }
-
-   //call MapReduce
-   auto res = MapReduce(func, vargs, redfunc); //TODO useless copying by value here, but it looks like the return type of this MapReduce is a reference otherwise
-   return res;
 }
 
 template<class subc> template<class F, class T, class R, class Cond>
@@ -200,7 +154,7 @@ auto TPool<subc>::MapReduce(F func, std::vector<T> &args, R redfunc) -> typename
 
 /// Check that redfunc has the right signature and call it on objs
 template<class subc> template<class T, class BINARYOP>
-auto TPool<subc>::Reduce(const std::vector<T> &objs, BINARYOP redfunc) -> typename std::result_of<BINARYOP(T, T)>::type
+auto TPool<subc>::Reduce(const std::vector<T> &objs, BINARYOP redfunc) -> decltype(redfunc(objs.front(), objs.front()))
 {
    // check we can apply reduce to objs
    static_assert(std::is_same<decltype(redfunc(objs.front(), objs.front())), T>::value, "redfunc does not have the correct signature");
@@ -208,7 +162,7 @@ auto TPool<subc>::Reduce(const std::vector<T> &objs, BINARYOP redfunc) -> typena
 }
 
 template<class subc> template<class T, class R>
-auto TPool<subc>::Reduce(const std::vector<T> &objs, R redfunc) -> typename std::result_of<R(std::vector<T>)>::type
+auto TPool<subc>::Reduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs))
 {
    // check we can apply reduce to objs
    static_assert(std::is_same<decltype(redfunc(objs)), T>::value, "redfunc does not have the correct signature");
