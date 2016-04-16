@@ -36,13 +36,20 @@ static char *R__NoReAllocChar(char *, size_t, size_t)
 /// TBuffer::kWrite. By default the I/O buffer has a size of
 /// TBuffer::kInitialSize (1024) bytes.
 
-TBuffer::TBuffer(EMode mode)
+TBuffer::TBuffer(EMode mode, Bool_t def, Bool_t buffBigEndian)
 {
    fBufSize      = kInitialSize;
    fMode         = mode;
    fVersion      = 0;
    fParent       = 0;
-   fBufBigEndian = gROOT->IsBufBigEndian();
+   if (def) {
+      fBufBigEndian = gROOT->IsBufBigEndian();
+   } else {
+      if (buffBigEndian)
+         fBufBigEndian = kTRUE;
+      else
+         fBufBigEndian = kFALSE;
+   }
 
    SetBit(kIsOwner);
 
@@ -58,14 +65,21 @@ TBuffer::TBuffer(EMode mode)
 /// Create an I/O buffer object. Mode should be either TBuffer::kRead or
 /// TBuffer::kWrite.
 
-TBuffer::TBuffer(EMode mode, Int_t bufsiz)
+TBuffer::TBuffer(EMode mode, Int_t bufsiz, Bool_t def, Bool_t buffBigEndian)
 {
    if (bufsiz < kMinimalSize) bufsiz = kMinimalSize;
    fBufSize      = bufsiz;
    fMode         = mode;
    fVersion      = 0;
    fParent       = 0;
-   fBufBigEndian = gROOT->IsBufBigEndian();
+   if (def) {
+      fBufBigEndian = gROOT->IsBufBigEndian();
+   } else {
+      if (buffBigEndian) 
+         fBufBigEndian = kTRUE;
+      else
+         fBufBigEndian = kFALSE;
+   }
 
    SetBit(kIsOwner);
 
@@ -88,13 +102,20 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz)
 /// is provided, a Fatal error will be issued if the Buffer attempts to
 /// expand.
 
-TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt, ReAllocCharFun_t reallocfunc)
+TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt, ReAllocCharFun_t reallocfunc, Bool_t def, Bool_t buffBigEndian)
 {
    fBufSize      = bufsiz;
    fMode         = mode;
    fVersion      = 0;
    fParent       = 0;
-   fBufBigEndian = gROOT->IsBufBigEndian();
+   if (def) {
+      fBufBigEndian = gROOT->IsBufBigEndian();
+   } else {
+      if (buffBigEndian) 
+         fBufBigEndian = kTRUE;
+      else
+         fBufBigEndian = kFALSE;
+   }
 
    SetBit(kIsOwner);
 

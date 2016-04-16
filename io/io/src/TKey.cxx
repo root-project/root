@@ -113,7 +113,7 @@ TKey::TKey(TDirectory* motherDir) : TNamed(), fDatime((UInt_t)0)
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy a TKey from its original directory to the new 'motherDir'
 
-TKey::TKey(TDirectory* motherDir, const TKey &orig, UShort_t pidOffset) : TNamed(), fDatime((UInt_t)0)
+TKey::TKey(TDirectory* motherDir, const TKey &orig, UShort_t pidOffset, Bool_t def, Bool_t buffBigEndian) : TNamed(), fDatime((UInt_t)0)
 {
    fMotherDir  = motherDir;
 
@@ -147,7 +147,7 @@ TKey::TKey(TDirectory* motherDir, const TKey &orig, UShort_t pidOffset) : TNamed
       fNbytes += bufferIncOffset;
    }
 
-   fBufferRef  = new TBufferFile(TBuffer::kWrite, alloc);
+   fBufferRef  = new TBufferFile(TBuffer::kWrite, alloc, def, buffBigEndian);
    fBuffer     = fBufferRef->Buffer();
 
    // Steal the data from the old key.
@@ -225,7 +225,7 @@ TKey::TKey(const TString &name, const TString &title, const TClass *cl, Int_t nb
 ///  WARNING: in name avoid special characters like '^','$','.' that are used
 ///  by the regular expression parser (see TRegexp).
 
-TKey::TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* motherDir)
+TKey::TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* motherDir, Bool_t def, Bool_t buffBigEndian)
      : TNamed(name, obj->GetTitle())
 {
    R__ASSERT(obj);
@@ -241,7 +241,7 @@ TKey::TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* moth
    Build(motherDir, obj->ClassName(), -1);
 
    Int_t lbuf, nout, noutot, bufmax, nzip;
-   fBufferRef = new TBufferFile(TBuffer::kWrite, bufsize);
+   fBufferRef = new TBufferFile(TBuffer::kWrite, bufsize, def, buffBigEndian);
    fBufferRef->SetParent(GetFile());
    fCycle     = fMotherDir->AppendKey(this);
 
@@ -298,7 +298,7 @@ TKey::TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* moth
 ///  WARNING: in name avoid special characters like '^','$','.' that are used
 ///  by the regular expression parser (see TRegexp).
 
-TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, TDirectory* motherDir)
+TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, TDirectory* motherDir, Bool_t def, Bool_t buffBigEndian)
      : TNamed(name, "object title")
 {
    R__ASSERT(obj && cl);
@@ -329,7 +329,7 @@ TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, T
 
    Build(motherDir, clActual->GetName(), -1);
 
-   fBufferRef = new TBufferFile(TBuffer::kWrite, bufsize);
+   fBufferRef = new TBufferFile(TBuffer::kWrite, bufsize, def, buffBigEndian);
    fBufferRef->SetParent(GetFile());
    fCycle     = fMotherDir->AppendKey(this);
 

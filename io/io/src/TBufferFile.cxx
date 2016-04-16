@@ -88,8 +88,8 @@ static inline bool Class_Has_StreamerInfo(const TClass* cl)
 /// TBuffer::kWrite. By default the I/O buffer has a size of
 /// TBuffer::kInitialSize (1024) bytes.
 
-TBufferFile::TBufferFile(TBuffer::EMode mode)
-            :TBuffer(mode),
+TBufferFile::TBufferFile(TBuffer::EMode mode, Bool_t def, Bool_t buffBigEndian)
+            :TBuffer(mode,def,buffBigEndian),
              fDisplacement(0),fPidOffset(0), fMap(0), fClassMap(0),
              fInfo(0), fInfoStack()
 {
@@ -105,8 +105,8 @@ TBufferFile::TBufferFile(TBuffer::EMode mode)
 /// Create an I/O buffer object. Mode should be either TBuffer::kRead or
 /// TBuffer::kWrite.
 
-TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsiz)
-            :TBuffer(mode,bufsiz),
+TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsiz, Bool_t def, Bool_t buffBigEndian)
+            :TBuffer(mode,bufsiz,def,buffBigEndian),
              fDisplacement(0),fPidOffset(0), fMap(0), fClassMap(0),
              fInfo(0), fInfoStack()
 {
@@ -128,8 +128,8 @@ TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsiz)
 /// is provided, a Fatal error will be issued if the Buffer attempts to
 /// expand.
 
-TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsiz, void *buf, Bool_t adopt, ReAllocCharFun_t reallocfunc) :
-   TBuffer(mode,bufsiz,buf,adopt,reallocfunc),
+TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsiz, void *buf, Bool_t adopt, ReAllocCharFun_t reallocfunc, Bool_t def, Bool_t buffBigEndian) :
+   TBuffer(mode,bufsiz,buf,adopt,reallocfunc,def,buffBigEndian),
    fDisplacement(0),fPidOffset(0), fMap(0), fClassMap(0),
    fInfo(0), fInfoStack()
 {
@@ -375,30 +375,23 @@ void TBufferFile::SetByteCount(UInt_t cntpos, Bool_t packInVersion)
    // if true, pack byte count in two consecutive shorts, so it can
    // be read by ReadVersion()
    if (packInVersion) {
+      printf("in packInVersion\n");//##
       union {
          UInt_t    cnt;
          Version_t vers[2];
       } v;
       v.cnt = cnt;
 #ifdef R__BYTESWAP
-      if(IsBufBigEndian()) {
          tobuf(buf, Version_t(v.vers[1] | kByteCountVMask));
          tobuf(buf, v.vers[0]);
-      } else {
-         tobuf(buf, v.vers[0], 0);
-         tobuf(buf, Version_t(v.vers[1] | kByteCountVMask), 0);
-      }
 #else
-      if(IsBufBigEndian()) {
          tobuf(buf, Version_t(v.vers[0] | kByteCountVMask));
          tobuf(buf, v.vers[1]);
-      } else {
-         tobuf(buf, v.vers[1], 0);
-         tobuf(buf, Version_t(v.vers[0] | kByteCountVMask), 0);
-      }
 #endif
-   } else
-      tobuf(buf, cnt | kByteCountMask, IsBufBigEndian());
+   } else {//##
+      printf("else packInVersion\n");//##
+      tobuf(buf, cnt | kByteCountMask);
+   }
 
    if (cnt >= kMaxMapCount) {
       Error("WriteByteCount", "bytecount too large (more than %d)", kMaxMapCount);
@@ -3019,14 +3012,16 @@ TClass *TBufferFile::ReadClass(const TClass *clReq, UInt_t *objTag)
    UInt_t bcnt, tag, startpos = 0;
    *this >> bcnt;
    if (!(bcnt & kByteCountMask) || bcnt == kNewClassTag) {
+      printf("in if, bcnt=%u(0x%x), kByteCountMask=%u(0x%x), kNewClassTag=%u(0x%x)\n",bcnt,bcnt,kByteCountMask,kByteCountMask,kNewClassTag,kNewClassTag);
       tag  = bcnt;
       bcnt = 0;
    } else {
+      printf("in else, bcnt=%u(0x%x), kByteCountMask=%u(0x%x), kNewClassTag=%u(0x%x)\n",bcnt,bcnt,kByteCountMask,kByteCountMask,kNewClassTag,kNewClassTag);
       fVersion = 1;
       startpos = UInt_t(fBufCur-fBuffer);
       *this >> tag;
    }
-
+   printf("bcnt=%u(0x%x),tag=%u(0x%x),startpos=%u(0x%x),kNewClassTag=%u(0x%x)\n",bcnt,bcnt,tag,tag,startpos,startpos,kNewClassTag,kNewClassTag);//##
    // in case tag is object tag return tag
    if (!(tag & kClassMask)) {
       if (objTag) *objTag = tag;
@@ -3053,7 +3048,7 @@ TClass *TBufferFile::ReadClass(const TClass *clReq, UInt_t *objTag)
 
       // got a tag to an already seen class
       UInt_t clTag = (tag & ~kClassMask);
-
+      printf("clTag=%u(0x%x)\n",clTag,clTag);//##
       if (fVersion > 0) {
          clTag += fDisplacement;
          clTag = CheckObject(clTag, clReq, kTRUE);
@@ -4062,6 +4057,7 @@ Int_t TBufferFile::ReadClassEmulated(const TClass *cl, void *object, const TClas
 
 Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t version, UInt_t start, UInt_t count, const TClass *onFileClass)
 {
+   printf("!!!ReadBuffer, class: %s, attempting to access a wrong version: %d, object skipped at offset %d",cl->GetName(), version, Length() ); //##
 
    //---------------------------------------------------------------------------
    // The ondisk class has been specified so get foreign streamer info
@@ -4323,7 +4319,7 @@ Int_t TBufferFile::WriteClassBuffer(const TClass *cl, void *pointer)
 
    //write the byte count at the start of the buffer
    SetByteCount(R__c, kTRUE);
-
+   printf(" WriteBuffer for class: %s version %d has written %d bytes\n",cl->GetName(),cl->GetClassVersion(),UInt_t(fBufCur - fBuffer) - R__c - (UInt_t)sizeof(UInt_t)); //##
    if (gDebug > 2) printf(" WriteBuffer for class: %s version %d has written %d bytes\n",cl->GetName(),cl->GetClassVersion(),UInt_t(fBufCur - fBuffer) - R__c - (UInt_t)sizeof(UInt_t));
    return 0;
 }

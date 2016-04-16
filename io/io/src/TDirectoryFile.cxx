@@ -715,11 +715,11 @@ void TDirectoryFile::FillBuffer(char *&buffer)
       // some object are 'removed' from the file and the holes are reused.
       version += 1000;
    }
-   tobuf(buffer, version, buffBigEndian);
-   fDatimeC.FillBuffer(buffer, buffBigEndian);
-   fDatimeM.FillBuffer(buffer, buffBigEndian);
-   tobuf(buffer, fNbytesKeys, buffBigEndian);
-   tobuf(buffer, fNbytesName, buffBigEndian);
+   tobuf(buffer, version);
+   fDatimeC.FillBuffer(buffer);
+   fDatimeM.FillBuffer(buffer);
+   tobuf(buffer, fNbytesKeys);
+   tobuf(buffer, fNbytesName);
    if (version > 1000) {
       tobuf(buffer, fSeekDir);
       tobuf(buffer, fSeekParent);

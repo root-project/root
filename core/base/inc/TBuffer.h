@@ -75,9 +75,9 @@ public:
    enum { kCannotHandleMemberWiseStreaming = BIT(17)}; //if set TClonesArray should not use member wise streaming
    enum { kInitialSize = 1024, kMinimalSize = 128 };
 
-   TBuffer(EMode mode);
-   TBuffer(EMode mode, Int_t bufsiz);
-   TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = 0);
+   TBuffer(EMode mode, Bool_t def = kTRUE, Bool_t buffBigEndian = kTRUE);
+   TBuffer(EMode mode, Int_t bufsiz, Bool_t def = kTRUE, Bool_t buffBigEndian = kTRUE);
+   TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = 0, Bool_t def = kTRUE, Bool_t buffBigEndian = kTRUE);
    virtual ~TBuffer();
 
    Int_t    GetBufferVersion() const { return fVersion; }

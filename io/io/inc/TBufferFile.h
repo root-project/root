@@ -86,9 +86,9 @@ public:
    enum { kTextBasedStreaming = BIT(18) }; //indicates if buffer used for XML/SQL object streaming
    enum { kUser1 = BIT(21), kUser2 = BIT(22), kUser3 = BIT(23)}; //free for user
 
-   TBufferFile(TBuffer::EMode mode);
-   TBufferFile(TBuffer::EMode mode, Int_t bufsiz);
-   TBufferFile(TBuffer::EMode mode, Int_t bufsiz, void *buf, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = 0);
+   TBufferFile(TBuffer::EMode mode, Bool_t def = kTRUE, Bool_t buffBigEndian = kTRUE);
+   TBufferFile(TBuffer::EMode mode, Int_t bufsiz, Bool_t def = kTRUE, Bool_t buffBigEndian = kTRUE);
+   TBufferFile(TBuffer::EMode mode, Int_t bufsiz, void *buf, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = 0, Bool_t def = kTRUE, Bool_t buffBigEndian = kTRUE);
    virtual ~TBufferFile();
 
    Int_t    GetMapCount() const { return fMapCount; }

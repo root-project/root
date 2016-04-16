@@ -3627,7 +3627,7 @@ void TFile::WriteStreamerInfo()
    //free previous StreamerInfo record
    if (fSeekInfo) MakeFree(fSeekInfo,fSeekInfo+fNbytesInfo-1);
    //Create new key
-   TKey key(&list,"StreamerInfo",GetBestBuffer(), this);
+   TKey key(&list,"StreamerInfo",GetBestBuffer(), this, 0, 1);
    fKeys->Remove(&key);
    fSeekInfo   = key.GetSeekKey();
    fNbytesInfo = key.GetNbytes();

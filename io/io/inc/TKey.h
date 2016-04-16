@@ -62,11 +62,11 @@ protected:
  public:
    TKey();
    TKey(TDirectory* motherDir);
-   TKey(TDirectory* motherDir, const TKey &orig, UShort_t pidOffset);
+   TKey(TDirectory* motherDir, const TKey &orig, UShort_t pidOffset, Bool_t def = kTRUE, Bool_t buffBigEndian = kTRUE);
    TKey(const char *name, const char *title, const TClass *cl, Int_t nbytes, TDirectory* motherDir);
    TKey(const TString &name, const TString &title, const TClass *cl, Int_t nbytes, TDirectory* motherDir);
-   TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* motherDir);
-   TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, TDirectory* motherDir);
+   TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* motherDir, Bool_t def = kTRUE, Bool_t buffBigEndian = kTRUE);
+   TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, TDirectory* motherDir, Bool_t def = kTRUE, Bool_t buffBigEndian = kTRUE);
    TKey(Long64_t pointer, Int_t nbytes, TDirectory* motherDir = 0);
    virtual ~TKey();
 
