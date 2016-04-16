@@ -1,5 +1,11 @@
-//Geometry detector assembly example
-//Author: Andrei Gheata
+/// \file
+/// \ingroup tutorial_geom
+/// Geometry detector assembly example
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Andrei Gheata
 
 void assembly()
 {

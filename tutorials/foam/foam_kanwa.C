@@ -1,7 +1,14 @@
-// This program can be execute from the command line as folows:
-//
-//      root -l foam_kanwa.C
-//_____________________________________________________________________________
+/// \file
+/// \ingroup tutorial_FOAM
+/// This program can be execute from the command line as folows:
+///
+/// ~~~ {.cpp}
+///      root -l foam_kanwa.C
+/// ~~~
+///
+/// \macro_code
+///
+/// \author Stascek Jadach
 
 #include "Riostream.h"
 #include "TFoam.h"

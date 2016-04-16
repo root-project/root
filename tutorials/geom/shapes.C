@@ -1,10 +1,16 @@
+/// \file
+/// \ingroup tutorial_geom
+/// The old geometry shapes (see script geodemo.C)
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
+
 #include "TGeometry.h"
 #include "TGeoManager.h"
 
 void shapes() {
-//The old geometry shapes (see script geodemo.C)
-//Author: Rene Brun
-
    TCanvas *c1 = new TCanvas("glc1","Geometry Shapes",200,10,700,500);
 
    gSystem->Load("libGeom");
