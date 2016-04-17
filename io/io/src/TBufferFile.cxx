@@ -3012,14 +3012,14 @@ TClass *TBufferFile::ReadClass(const TClass *clReq, UInt_t *objTag)
    UInt_t bcnt, tag, startpos = 0;
    *this >> bcnt;
    if (!(bcnt & kByteCountMask) || bcnt == kNewClassTag) {
-      printf("in if, bcnt=%u(0x%x), kByteCountMask=%u(0x%x), kNewClassTag=%u(0x%x)\n",bcnt,bcnt,kByteCountMask,kByteCountMask,kNewClassTag,kNewClassTag);
+      printf("in if, fVersion=%d,bcnt=%u(0x%x), kByteCountMask=%u(0x%x), kNewClassTag=%u(0x%x)\n",fVersion,bcnt,bcnt,kByteCountMask,kByteCountMask,kNewClassTag,kNewClassTag);
       tag  = bcnt;
       bcnt = 0;
    } else {
-      printf("in else, bcnt=%u(0x%x), kByteCountMask=%u(0x%x), kNewClassTag=%u(0x%x)\n",bcnt,bcnt,kByteCountMask,kByteCountMask,kNewClassTag,kNewClassTag);
       fVersion = 1;
       startpos = UInt_t(fBufCur-fBuffer);
       *this >> tag;
+      printf("in else, fVersion=%d,bcnt=%u(0x%x), kByteCountMask=%u(0x%x), kNewClassTag=%u(0x%x)\n",fVersion,bcnt,bcnt,kByteCountMask,kByteCountMask,kNewClassTag,kNewClassTag);
    }
    printf("bcnt=%u(0x%x),tag=%u(0x%x),startpos=%u(0x%x),kNewClassTag=%u(0x%x)\n",bcnt,bcnt,tag,tag,startpos,startpos,kNewClassTag,kNewClassTag);//##
    // in case tag is object tag return tag
@@ -3048,7 +3048,7 @@ TClass *TBufferFile::ReadClass(const TClass *clReq, UInt_t *objTag)
 
       // got a tag to an already seen class
       UInt_t clTag = (tag & ~kClassMask);
-      printf("clTag=%u(0x%x)\n",clTag,clTag);//##
+      printf("clTag=%u(0x%x),fVersion=%d\n",clTag,clTag,fVersion);//##
       if (fVersion > 0) {
          clTag += fDisplacement;
          clTag = CheckObject(clTag, clReq, kTRUE);
