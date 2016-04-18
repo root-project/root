@@ -85,6 +85,27 @@
 }
 
 {
+   TMethod title
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:_ZN7TMethodC1EP12MethodInfo_tP6TClass
+}
+
+{
+   TDataMember title
+   Memcheck:Leak
+   match-leak-kinds: possible
+   ...
+   fun:_ZNK4llvm9StringRefcvSsEv
+   fun:_ZN4ROOT10TMetaUtils17extractAttrStringEPN5clang4AttrERSs
+   fun:_ZN20TClingDataMemberInfo5TitleEv
+   fun:_ZNK6TCling20DataMemberInfo_TitleEP16DataMemberInfo_t
+   fun:_ZNK11TDataMember8PropertyEv
+}
+
+{
    Anything allocated by TClass::Init: new[]()
    Memcheck:Leak
    fun:_Zna?
