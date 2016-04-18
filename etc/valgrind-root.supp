@@ -336,6 +336,93 @@
    fun:_ZN5TROOT14GetListOfTypesEb
 }
 
+{
+   Names in TClassTable
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:allocate
+   ...
+   fun:_ZN11TClassTable3AddEPKcsRKSt9type_infoPFP6TClassvEi
+   fun:_ZN4ROOT8AddClassEPKcsRKSt9type_infoPFP6TClassvEi
+   fun:_ZNK4ROOT8Internal20TDefaultInitBehavior8RegisterEPKcsRKSt9type_infoPFP6TClassvEi
+   fun:_ZN4ROOT17TGenericClassInfo4InitEi
+}
+
+{
+   Name in TClassRef in TRefProxy
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:allocate
+   ...
+   fun:_ZNSsC1EPKcRKSaIcE
+   fun:_ZN9TClassRefC1EPKc
+   fun:_ZN9TRefProxyC1Ev
+}
+
+{
+   Name in TClassRef
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:_ZN9TClassRefC1EP6TClass
+}
+
+{
+   Name in TClassRef
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:_ZN9TClassRef6AssignEP6TClass
+   fun:_ZN9TClassRefaSEP6TClass
+}
+
+{
+   Name in TClassRef in TRefProxy
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:_ZN9TClassRef6AssignEP6TClass
+   fun:_ZN9TClassRefaSEP6TClass
+   fun:_ZN9TRefProxy8SetClassEP6TClass
+}
+
+{
+   Name in TClassRef in TBaseClass
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:allocate
+   ...
+   fun:_ZN9TClassRef6AssignEP6TClass
+   fun:_ZN9TClassRefaSEP6TClass
+   fun:_ZN10TBaseClass15GetClassPointerEb
+}
+
+{
+   Name in TClassRef in TClassStreamer
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:allocate
+   ...
+   fun:_ZN9TClassRef6AssignEP6TClass
+   fun:_ZN9TClassRefaSEP6TClass
+   fun:_ZN14TClassStreamer14SetOnFileClassEPK6TClass
+}
+
+{
+   Name in TGenCollectionProxy
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:_ZN19TGenCollectionProxyC1ERKN4ROOT6Detail20TCollectionProxyInfoEP6TClass
+}
 
 {
    Globals leak (collection part)
@@ -374,6 +461,14 @@
    fun:_ZN6TCling13HandleNewDeclEPKvbRSt3setIP6TClassSt4lessIS4_ESaIS4_EE
 }
 
+{
+   Name in TEnum
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:_ZN5TEnumC1EPKcPvP6TClass
+}
 
 ######### ROOT I/O
 
