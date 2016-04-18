@@ -35,7 +35,7 @@ Int_t runPrefetchReading(bool caching = false)
    TString filename("atlasFlushed.root");
    if (gSystem->AccessPathName(filename,kReadPermission) && filename.Index(":") == kNPOS) {
       // otherwise open the http file
-      filename.Prepend("https://root.cern.ch/files/");
+      filename.Prepend("http://root.cern.ch/files/");
       //filename.Prepend("root://cache01.usatlas.bnl.gov//data/test1/");
       //filename.Prepend( "root://pcitdss1401//tmp/" );
       //filename.Prepend("http://www-root.fnal.gov/files/");
