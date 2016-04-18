@@ -509,6 +509,15 @@
    fun:deflate
 }
 
+{
+   std::string streaming
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:_ZN11TBufferFile13ReadStdStringERSs
+}
+
 ######## ROOT TObject on heap
 
 {
