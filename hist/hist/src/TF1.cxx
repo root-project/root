@@ -1164,9 +1164,8 @@ Double_t TF1::Eval(Double_t x, Double_t y, Double_t z, Double_t t) const
    if (fType == 0) return fFormula->Eval(x,y,z,t);
 
    Double_t xx[4] = {x, y, z, t};
-   Double_t *pp = GetParameters();
-   ((TF1*)this)->InitArgs(xx,pp);
-   
+   Double_t *pp = (Double_t*)fParams->GetParameters();
+   if (fType==2) ((TF1*)this)->InitArgs(xx,pp);
    return ((TF1*)this)->EvalPar(xx,pp);
 }
 
