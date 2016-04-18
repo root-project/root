@@ -119,7 +119,7 @@ void TSelectorDraw::Begin(TTree *tree)
 
    TString  opt, abrt;
    char *hdefault = (char *)"htemp";
-   char *varexp;
+   char *varexp = nullptr;
    Int_t i, j, hkeep;
    opt = option;
    opt.ToLower();
@@ -884,7 +884,7 @@ void TSelectorDraw::Begin(TTree *tree)
       else if (opt5d) fAction = 8;
       else            fAction = 6;
    }
-   if (hkeep) delete [] varexp;
+   if (varexp) delete [] varexp;
    if (hnamealloc) delete [] hnamealloc;
    for (i = 0; i < fValSize; ++i)
       fVarMultiple[i] = kFALSE;
