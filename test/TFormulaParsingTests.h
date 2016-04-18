@@ -560,6 +560,50 @@ bool test33() {
    return ok;          
 }
 
+bool test34() {
+   // test for bug 8105
+   bool ok  = true;
+   TF1 f1("f1","(1.- gaus)*[3]",-10,10);
+   f1.SetParameters(1,0,1,3); 
+   ok &=  TMath::AreEqualAbs( f1.Eval(1), (1.- TMath::Gaus(1,0,1) )*3., 1.E-10);
+   return ok; 
+   
+}
+bool test35() { 
+   // test for similar pre-defined functions
+   bool ok = true;
+   TF1 f1("f1","cheb1(0)+cheb10(2)",-1,1);
+   std::vector<double> p(12);
+   p.assign(12,1.); p[1] = 2; p[2] = 3;
+   TF1 g1("g1",[](double *x, double *p){ return ROOT::Math::ChebyshevN(1, x[0], p ) + ROOT::Math::ChebyshevN(10,x[0],p+2 ); }, -1, 1, 12);
+   f1.SetParameters(p.data()); 
+   g1.SetParameters(p.data()); 
+   ok &=  TMath::AreEqualAbs( f1.Eval(2), g1.Eval(2), 1.E-10);
+
+   TF1 f2("f2","cheb10(0)+cheb1(11)",-1,1);
+   TF1 g2("g2",[](double *x, double *p){ return ROOT::Math::ChebyshevN(10, x[0], p ) + ROOT::Math::ChebyshevN(1,x[0],p+11 ); }, -1, 1, 12);
+   f2.SetParameters(p.data()); 
+   g2.SetParameters(p.data()); 
+   
+   
+   return ok; 
+}
+bool test36() { 
+   // test for mixed dim functions
+   bool ok = true;
+   TF2 f1("f1","xygaus(0) + gaus(5)");
+   f1.SetParameters(1,0,1,1,2,2,-1,1);
+   auto g1 = [](double x, double y){ return TMath::Gaus(x,0,1)*TMath::Gaus(y,1,2)+2.*TMath::Gaus(x,-1,1); };
+   ok &=  TMath::AreEqualAbs( f1.Eval(1,1), g1(1,1), 1.E-10);
+
+   TF2 f2("f2","xygaus(0) + gaus[y](5)");
+   f2.SetParameters(1,0,1,1,2,2,-1,1);
+   auto g2 = [](double x, double y){ return TMath::Gaus(x,0,1)*TMath::Gaus(y,1,2)+2.*TMath::Gaus(y,-1,1); };
+   ok &=  TMath::AreEqualAbs( f2.Eval(1,1), g2(1,1), 1.E-10);
+
+   
+   return ok; 
+} 
    
 void PrintError(int itest)  { 
    Error("TFormula test","test%d FAILED ",itest);
@@ -611,6 +655,9 @@ int runTests(bool debug = false) {
    IncrTest(itest); if (!test31() ) { PrintError(itest); }
    IncrTest(itest); if (!test32() ) { PrintError(itest); }
    IncrTest(itest); if (!test33() ) { PrintError(itest); }
+   IncrTest(itest); if (!test34() ) { PrintError(itest); }
+   IncrTest(itest); if (!test35() ) { PrintError(itest); }
+   IncrTest(itest); if (!test36() ) { PrintError(itest); }
 
    std::cout << ".\n";
     
