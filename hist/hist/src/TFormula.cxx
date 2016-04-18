@@ -1027,6 +1027,7 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
             pair<TString,Int_t> key = make_pair(funName,dim);
             if(functions.find(key) == functions.end())
             {
+               Int_t funDim = it->first.second;
                Error("PreProcessFormula","Dimension of function %s is detected to be of dimension %d and is not compatible with existing pre-defined function which has dim %d",
                      funName.Data(),dim,funDim);
                return;
