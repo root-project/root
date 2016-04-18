@@ -1269,6 +1269,21 @@ static const char *FindLibraryName(void (*func)())
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Helper to initialize TVirtualStreamerInfo's factor early.
+/// Use static initialization to insure only one TStreamerInfo is created.
+static bool R__InitStreamerInfoFactory()
+{
+   // Use lambda since SetFactory return void.
+   auto setFactory = []() {
+      TVirtualStreamerInfo::SetFactory(new TStreamerInfo());
+      return kTRUE;
+   };
+   static bool doneFactory = setFactory();
+   return doneFactory; // avoid unused variable warning.
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Tries to load a PCM; returns true on success.
 
 bool TCling::LoadPCM(TString pcmFileName,
@@ -1299,7 +1314,7 @@ bool TCling::LoadPCM(TString pcmFileName,
    // Prevent the ROOT-PCMs hitting this during auto-load during
    // JITting - which will cause recursive compilation.
    // Avoid to call the plugin manager at all.
-   TVirtualStreamerInfo::SetFactory(new TStreamerInfo());
+   R__InitStreamerInfoFactory();
 
    if (gROOT->IsRootFile(pcmFileName)) {
       Int_t oldDebug = gDebug;
