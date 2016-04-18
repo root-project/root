@@ -63,8 +63,9 @@ public:
    Double_t operator()(Double_t x) const
    {
       // use EvalPar that is faster
-      Double_t xx[2]; xx[0] = x; xx[1] = fT0-x;
-      Double_t x2 = fT0-x; 
+      Double_t xx[2];
+      xx[0] = x;
+      xx[1] = fT0-x;
       return fFunction1->EvalPar(xx,nullptr) * fFunction2->EvalPar(xx+1,nullptr);
    }
 };
