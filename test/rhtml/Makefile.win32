@@ -1,27 +1,14 @@
-!if "$(CFG)" == ""
-!if ([findstr /c:"--build=debug" $(ROOTSYS)\bin\root-config > nul ] == 0)
-CFG = Win32 Debug
-!if ([findstr /c:"--disable-winrtdebug" $(ROOTSYS)\bin\root-config > nul ] == 0)
+!if ([findstr /c:"WINRTDEBUG     := no" $(ROOTSYS)\config\Makefile.config > nul ] == 0)
 RUNTIME = Release
 !else
 RUNTIME = Debug
 !endif
+
+!if "$(CFG)" == ""
+CFG = Win32 Debug
 !message No configuration specified: Defaulting to Win32 Debug 
 !message With $(RUNTIME) Runtime DLL (Taken from ROOT config).
 !message .
-!else
-CFG = Win32 Release
-RUNTIME = Release
-!message No configuration specified: Defaulting to Win32 Release
-!message With $(RUNTIME) Runtime DLL (Taken from ROOT config).
-!message .
-!endif
-!else
-!if "$(CFG)" == "Win32 Release"
-RUNTIME = Release
-!elseif "$(CFG)" == "Win32 Debug"
-RUNTIME = Debug
-!endif 
 !endif 
 
 !if "$(CFG)" != "Win32 Release" && "$(CFG)" != "Win32 Debug"
@@ -39,6 +26,12 @@ RUNTIME = Debug
 !error An invalid configuration is specified.
 !endif 
 
+!if "$(OS)" == "Windows_NT"
+NULL=
+!else
+NULL=nul
+!endif
+
 
 ObjSuf        = obj
 SrcSuf        = cxx
@@ -47,7 +40,10 @@ DllSuf        = dll
 OutPutOpt     = -out:
 
 # Win32 system with Microsoft Visual C/C++
-!include <win32.mak>
+#!include <win32.mak>
+cc            = cl
+link          = link
+
 CC            = $(cc)
 CXX           = $(cc)
 CXXFLAGS      = -nologo -EHsc -GR -DWIN32 -W3 -D_WINDOWS \
@@ -73,7 +69,11 @@ LDOPT         = -debug
 MT_EXE        = mt -nologo -manifest $@.manifest -outputresource:$@;1
 MT_DLL        = mt -nologo -manifest $@.manifest -outputresource:$@;2
 EXTRAFLAGS    = -D_CRT_SECURE_NO_DEPRECATE
-!else if ([nmake /? 2>&1 | findstr /c:"Version 10\." > nul ] == 0)
+!else if ([nmake /? 2>&1 | findstr /c:"Version 10\." > nul ] == 0) || \
+         ([nmake /? 2>&1 | findstr /c:"Version 11\." > nul ] == 0) || \
+         ([nmake /? 2>&1 | findstr /c:"Version 12\." > nul ] == 0) || \
+         ([nmake /? 2>&1 | findstr /c:"Version 13\." > nul ] == 0) || \
+         ([nmake /? 2>&1 | findstr /c:"Version 14\." > nul ] == 0)
 EXTRAFLAGS    = -D_CRT_SECURE_NO_DEPRECATE
 !else
 MT_EXE        = 
