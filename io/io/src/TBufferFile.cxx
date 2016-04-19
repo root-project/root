@@ -2737,7 +2737,9 @@ void *TBufferFile::ReadObjectAny(const TClass *clCast)
 
    // attempt to load next object as TClass clCast
    UInt_t tag;       // either tag or byte count
+   printf("In TBufferFile::ReadObjectAny, before ReadClass()\n");//##
    TClass *clRef = ReadClass(clCast, &tag);
+   printf("In TBufferFile::ReadObjectAny, after ReadClass()\n");//##
    TClass *clOnfile = 0;
    Int_t baseOffset = 0;
    if (clRef && (clRef!=(TClass*)(-1)) && clCast) {
@@ -3012,14 +3014,14 @@ TClass *TBufferFile::ReadClass(const TClass *clReq, UInt_t *objTag)
    UInt_t bcnt, tag, startpos = 0;
    *this >> bcnt;
    if (!(bcnt & kByteCountMask) || bcnt == kNewClassTag) {
-      printf("in if, fVersion=%d,bcnt=%u(0x%x), kByteCountMask=%u(0x%x), kNewClassTag=%u(0x%x)\n",fVersion,bcnt,bcnt,kByteCountMask,kByteCountMask,kNewClassTag,kNewClassTag);
+      printf("in if, requested class:%s,fVersion=%d,bcnt=%u(0x%x), kByteCountMask=%u(0x%x), kNewClassTag=%u(0x%x)\n",clReq->GetName(),fVersion,bcnt,bcnt,kByteCountMask,kByteCountMask,kNewClassTag,kNewClassTag);
       tag  = bcnt;
       bcnt = 0;
    } else {
       fVersion = 1;
       startpos = UInt_t(fBufCur-fBuffer);
       *this >> tag;
-      printf("in else, fVersion=%d,bcnt=%u(0x%x), kByteCountMask=%u(0x%x), kNewClassTag=%u(0x%x)\n",fVersion,bcnt,bcnt,kByteCountMask,kByteCountMask,kNewClassTag,kNewClassTag);
+      printf("in else, requested class:%s,fVersion=%d,bcnt=%u(0x%x), kByteCountMask=%u(0x%x), kNewClassTag=%u(0x%x)\n",clReq->GetName(),fVersion,bcnt,bcnt,kByteCountMask,kByteCountMask,kNewClassTag,kNewClassTag);
    }
    printf("bcnt=%u(0x%x),tag=%u(0x%x),startpos=%u(0x%x),kNewClassTag=%u(0x%x)\n",bcnt,bcnt,tag,tag,startpos,startpos,kNewClassTag,kNewClassTag);//##
    // in case tag is object tag return tag
@@ -3321,21 +3323,11 @@ Version_t TBufferFile::ReadVersionNoCheckSum(UInt_t *startpos, UInt_t *bcnt)
       Version_t  vers[2];
    } v;
 #ifdef R__BYTESWAP
-   if (IsBufBigEndian()) {
       frombuf(this->fBufCur,&v.vers[1]);
       frombuf(this->fBufCur,&v.vers[0]);
-   } else {
-      frombuf(this->fBufCur,&v.vers[0], 0);
-      frombuf(this->fBufCur,&v.vers[1], 0);
-   }
 #else
-   if (IsBufBigEndian()) {
       frombuf(this->fBufCur,&v.vers[0]);
       frombuf(this->fBufCur,&v.vers[1]);
-   } else {
-      frombuf(this->fBufCur,&v.vers[1], 0);
-      frombuf(this->fBufCur,&v.vers[0], 0);
-   }
 #endif
 
    // no bytecount, backup and read version

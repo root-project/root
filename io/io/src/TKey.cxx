@@ -727,6 +727,7 @@ void TKey::Print(Option_t *) const
 
 TObject *TKey::ReadObj()
 {
+   printf("In TKey::ReadObj()\n");//##
    TClass *cl = TClass::GetClass(fClassName.Data());
    if (!cl) {
       Error("ReadObj", "Unknown class %s", fClassName.Data());
