@@ -143,7 +143,8 @@ void TLinearMinimizer::SetFunction(const  ROOT::Math::IMultiGradFunction & objfu
    fDim = chi2func->NDim(); // number of parameters
    fNFree = fDim;
    // get the basis functions (derivatives of the modelfunc)
-   TObjArray flist;
+   TObjArray flist(fDim);
+   flist.SetOwner(kTRUE);
    for (unsigned int i = 0; i < fDim; ++i) {
       // t.b.f: should not create TF1 classes
       // when creating TF1 (if onother function with same name exists it is
