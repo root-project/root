@@ -25,8 +25,7 @@ MULTIPROCH      := $(MODDIRI)/TMPClient.h $(MODDIRI)/TProcPool.h \
 
 MULTIPROCS      := $(MODDIRS)/TMPClient.cxx $(MODDIRS)/TProcPool.cxx \
                 $(MODDIRS)/TMPWorker.cxx $(MODDIRS)/MPSendRecv.cxx \
-                $(MODDIRS)/TPoolWorker.cxx $(MODDIRS)/TPoolProcessor.cxx \
-                $(MODDIRS)/PoolUtils.cxx
+                $(MODDIRS)/TPoolWorker.cxx $(MODDIRS)/TPoolProcessor.cxx
 
 MULTIPROCO      := $(call stripsrc,$(MULTIPROCS:.cxx=.o))
 
@@ -83,4 +82,3 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(MULTIPROCDEP) $(MULTIPROCDS) $(MULTIPROCDH) $(MULTIPROCLIB) $(MULTIPROCMAP)
 
 distclean::     distclean-$(MODNAME)
-
