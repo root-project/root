@@ -20,6 +20,17 @@
 }
 
 {
+   TQClass
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:_ZN8TStorage11ObjectAllocEm
+   fun:_ZN7TObjectnwEm
+   fun:_ZNK4ROOT8Internal20TQObjectInitBehavior11CreateClassEPKcsRKSt9type_infoP16TVirtualIsAProxyS3_S3_ii
+   fun:_ZN4ROOT17TGenericClassInfo8GetClassEv
+}
+
+{
    TCling::CreateListOfBaseClasses(TClass*)
    Memcheck:Leak
    fun:_Znw?
@@ -446,6 +457,16 @@
 }
 
 {
+   TClassClassInfo content
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:_ZN4llvm12DenseMapBaseINS_8DenseMapIPKN5clang4DeclESt4pairIlPFlPvbEENS_12DenseMapInfoIS5_EENS_6detail12DenseMapPairIS5_SA_EEEES5_SA_SC_SF_EixERKS5_
+   fun:_ZN15TClingClassInfo18AddBaseOffsetValueEPKN5clang4DeclEl
+}
+
+{
    Globals leak (collection part)
    Memcheck:Leak
    fun:_Znwm
@@ -489,6 +510,168 @@
    fun:_Znwm
    ...
    fun:_ZN5TEnumC1EPKcPvP6TClass
+}
+
+{
+   Content of the list of base classes
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:_ZN5TList7NewLinkEP7TObjectP8TObjLink
+   fun:_ZN5TList7AddLastEP7TObject
+   fun:_ZN5TList3AddEP7TObject
+   fun:_ZNK6TCling23CreateListOfBaseClassesEP6TClass
+}
+
+{
+   Content of of list of base class
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:_ZNK6TCling23CreateListOfBaseClassesEP6TClass
+}
+
+{
+   Content of TBaseClass
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:_ZN19TClingBaseClassInfoC1ERKS_
+   fun:_ZNK6TCling23CreateListOfBaseClassesEP6TClass
+}
+
+{
+   List of base classes
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:_ZN8TStorage11ObjectAllocEm
+   fun:_ZN7TObjectnwEm
+   fun:_ZNK6TCling23CreateListOfBaseClassesEP6TClass
+}
+
+{
+   TFunction's mangled name
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znam
+   fun:_ZN7TString7ReplaceEiiPKci
+   fun:_ZN7TStringaSEPKc
+   fun:_ZN9TFunctionC1EP12MethodInfo_t
+}
+
+{
+   TListOfFunctions's internal container
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:_ZN8TStorage11ObjectAllocEm
+   fun:_ZN7TObjectnwEm
+   fun:_ZN16TListOfFunctionsC1EP6TClass
+}
+
+{
+   TListOfFunctions' content
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:_ZN5TList7NewLinkEP7TObjectP8TObjLink
+   fun:_ZN5TList7AddLastEP7TObject
+   fun:_ZN9THashList7AddLastEP7TObject
+   fun:_ZN16TListOfFunctions3GetEPKv
+}
+
+{
+   TListOfFunctions' content
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znam
+   fun:_ZN6TExMapC1Ei
+   fun:_ZN16TListOfFunctionsC1EP6TClass
+}
+
+{
+   TListOfFunctions' content
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:_ZN5TList7NewLinkEP7TObjectP8TObjLink
+   fun:_ZN5TList7AddLastEP7TObject
+   fun:_ZN5TList3AddEP7TObject
+   fun:_ZN10THashTable3AddEP7TObject
+   fun:_ZN9THashList7AddLastEP7TObject
+   fun:_ZN16TListOfFunctions3GetEPKv
+}
+
+{
+   TListOfFunctions's content
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:_ZN8TStorage11ObjectAllocEm
+   fun:_ZN7TObjectnwEm
+   fun:_ZN9THashListC1Eii
+   fun:_ZN16TListOfFunctionsC1EP6TClass
+}
+
+{
+   TListOfFunctions's content
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:_ZN8TStorage11ObjectAllocEm
+   fun:_ZN7TObjectnwEm
+   fun:_ZN10THashTable3AddEP7TObject
+   fun:_ZN9THashList7AddLastEP7TObject
+   fun:_ZN16TListOfFunctions3GetEPKv
+}
+
+{
+   TListOfFunction's content
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:_ZNK6TCling18MethodInfo_FactoryEPKv
+   fun:_ZN16TListOfFunctions3GetEPKv
+}
+
+{
+   TListOfFunction's content
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znam
+   fun:_ZN10THashTableC1Eii
+   fun:_ZN9THashListC1Eii
+   fun:_ZN16TListOfFunctionsC1EP6TClass
+}
+
+{
+   TListOfFunction's content
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znam
+   fun:_ZN10THashTableC1Eii
+   fun:_ZN16TListOfFunctionsC1EP6TClass
+}
+
+{
+   TListOfFunction's content
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:_ZN8TStorage11ObjectAllocEm
+   fun:_ZN7TObjectnwEm
+   fun:_ZN16TListOfFunctions3GetEPKv
+}
+
+{
+   TClass list of methods
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:_ZN8TStorage11ObjectAllocEm
+   fun:_ZN7TObjectnwEm
+   fun:_ZN6TClass13GetMethodListEv
 }
 
 ######### ROOT I/O
@@ -973,4 +1156,13 @@
    fun:_ZNSt17_Function_handlerIFN4llvm6object12OwningBinaryINS1_10ObjectFileEEERNS0_6ModuleEENS0_14SimpleCompilerEE9_M_invokeERKSt9_Any_dataS6_
    fun:_ZNKSt8functionIFN4llvm6object12OwningBinaryINS1_10ObjectFileEEERNS0_6ModuleEEEclES6_
    fun:_ZN4llvm14IRCompileLayerINS_18ObjectLinkingLayerIN5cling14IncrementalJIT19NotifyObjectLoadedTEEEE12addModuleSetISt6vectorIPNS_6ModuleESaISA_EEEESt14_List_iteratorINS_22ObjectLinkingLayerBase15LinkedObjectSetEET_St10unique_ptrINS_19RTDyldMemoryManagerESt14default_deleteISJ_EE
+}
+
+{
+   InputValidator string
+   Memcheck:Leak
+   match-leak-kinds: possible
+   ...
+   fun:_ZNSs15_M_replace_safeEmmPKcm
+   fun:_ZN5cling14InputValidator5resetEv
 }
