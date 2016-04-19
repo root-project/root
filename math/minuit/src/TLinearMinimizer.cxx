@@ -146,7 +146,7 @@ void TLinearMinimizer::SetFunction(const  ROOT::Math::IMultiGradFunction & objfu
    fNFree = fDim;
    // get the basis functions (derivatives of the modelfunc)
    TObjArray flist(fDim);
-   flist.SetOwner(kTRUE);
+   flist.SetOwner(kFALSE);  // we do not want to own the list - it will be owned by the TLinearFitter class
    for (unsigned int i = 0; i < fDim; ++i) {
       // t.b.f: should not create TF1 classes
       // when creating TF1 (if onother function with same name exists it is
