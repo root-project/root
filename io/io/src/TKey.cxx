@@ -242,6 +242,7 @@ TKey::TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* moth
 
    Int_t lbuf, nout, noutot, bufmax, nzip;
    fBufferRef = new TBufferFile(TBuffer::kWrite, bufsize, def, buffBigEndian);
+   printf("In TKey::TKey and fBufferRef->IsBufBigEndian()=%d\n",fBufferRef->IsBufBigEndian());//##
    fBufferRef->SetParent(GetFile());
    fCycle     = fMotherDir->AppendKey(this);
 
@@ -866,7 +867,7 @@ CLEAR:
 /// If used, you must make sure that the bufferRead is large enough to
 /// accomodate the object being read.
 
-TObject *TKey::ReadObjWithBuffer(char *bufferRead)
+TObject *TKey::ReadObjWithBuffer(char *bufferRead, Bool_t def, Bool_t buffBigEndian)
 {
 
    TClass *cl = TClass::GetClass(fClassName.Data());
@@ -879,7 +880,7 @@ TObject *TKey::ReadObjWithBuffer(char *bufferRead)
       return (TObject*)ReadObjectAny(0);
    }
 
-   fBufferRef = new TBufferFile(TBuffer::kRead, fObjlen+fKeylen);
+   fBufferRef = new TBufferFile(TBuffer::kRead, fObjlen+fKeylen, def, buffBigEndian);
    if (!fBufferRef) {
       Error("ReadObjWithBuffer", "Cannot allocate buffer: fObjlen = %d", fObjlen);
       return 0;
@@ -899,7 +900,7 @@ TObject *TKey::ReadObjWithBuffer(char *bufferRead)
    // get version of key
    fBufferRef->SetBufferOffset(sizeof(fNbytes));
    Version_t kvers = fBufferRef->ReadVersion();
-
+   printf("version of key: %d\n",kvers); //##
    fBufferRef->SetBufferOffset(fKeylen);
    TObject *tobj = 0;
    // Create an instance of this class
@@ -923,6 +924,7 @@ TObject *TKey::ReadObjWithBuffer(char *bufferRead)
       fBufferRef->MapObject(pobj,cl);  //register obj in map to handle self reference
 
    if (fObjlen > fNbytes-fKeylen) {
+      printf("if and Before everything\n");//##
       char *objbuf = fBufferRef->Buffer() + fKeylen;
       UChar_t *bufcur = (UChar_t *)&fBuffer[fKeylen];
       Int_t nin, nout = 0, nbuf;
@@ -938,7 +940,9 @@ TObject *TKey::ReadObjWithBuffer(char *bufferRead)
          objbuf += nout;
       }
       if (nout) {
+         printf("nout!=0, and before Streamer, fVersion=%d\n",fVersion);//##
          tobj->Streamer(*fBufferRef); //does not work with example 2 above
+         printf("nout!=0, and after Streamer, fVersion=%d\n",fVersion);//##
       } else {
          // Even-though we have a TObject, if the class is emulated the virtual
          // table may not be 'right', so let's go via the TClass.
@@ -948,9 +952,10 @@ TObject *TKey::ReadObjWithBuffer(char *bufferRead)
          goto CLEAR;
       }
    } else {
+      printf("else and Before tobj->Streamer\n");//##
       tobj->Streamer(*fBufferRef);
    }
-
+   printf("After Comparing\n");//##
    if (gROOT->GetForceStyle()) tobj->UseCurrentStyle();
 
    if (cl->InheritsFrom(TDirectoryFile::Class())) {

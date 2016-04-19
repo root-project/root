@@ -3202,6 +3202,7 @@ Version_t TBufferFile::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass 
       // before reading object save start position
       *startpos = UInt_t(fBufCur-fBuffer);
    }
+   printf("In TBufferFile::ReadVersion, start pos=%u\n",UInt_t(fBufCur-fBuffer));//##
 
    // read byte count (older files don't have byte count)
    // byte count is packed in two individual shorts, this to be
@@ -3212,31 +3213,22 @@ Version_t TBufferFile::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass 
       Version_t  vers[2];
    } v;
 #ifdef R__BYTESWAP
-   if (IsBufBigEndian()) {
       frombuf(this->fBufCur,&v.vers[1]);
       frombuf(this->fBufCur,&v.vers[0]);
-   } else {
-      frombuf(this->fBufCur,&v.vers[0], 0);
-      frombuf(this->fBufCur,&v.vers[1], 0);
-   }
 #else
-   if (IsBufBigEndian()) {
       frombuf(this->fBufCur,&v.vers[0]);
       frombuf(this->fBufCur,&v.vers[1]);
-   } else {
-      frombuf(this->fBufCur,&v.vers[1], 0);
-      frombuf(this->fBufCur,&v.vers[0], 0);
-   }
 #endif
-
+   printf("vers[0]=%hi(0x%hx),vers[1]=%hi(0x%hx)\n",v.vers[0],v.vers[0],v.vers[1],v.vers[1]);//##
    // no bytecount, backup and read version
    if (!(v.cnt & kByteCountMask)) {
+      printf("In TBufferFile::ReadVersion, v.cnt=%u, and no bytecount found!!!\n",v.cnt);//##
       fBufCur -= sizeof(UInt_t);
       v.cnt = 0;
    }
    if (bcnt) *bcnt = (v.cnt & ~kByteCountMask);
    frombuf(this->fBufCur,&version, IsBufBigEndian());
-
+   printf("version=%hi(0x%hx)\n",version,version);//##
    if (version<=1) {
       if (version <= 0)  {
          if (cl) {
@@ -3303,6 +3295,7 @@ Version_t TBufferFile::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass 
          }
       }
    }
+   printf("before return, version=%hi(0x%hx)\n",version,version);//##
    return version;
 }
 
@@ -3436,11 +3429,14 @@ UInt_t TBufferFile::WriteVersion(const TClass *cl, Bool_t useBcnt)
    UInt_t cntpos = 0;
    if (useBcnt) {
       // reserve space for leading byte count
+      printf("In TBufferFile::WriteVersion, we need to reserve space for bount count\n");//##
       cntpos   = UInt_t(fBufCur-fBuffer);
       fBufCur += sizeof(UInt_t);
+      printf("In TBufferFile::WriteVersion, class:%s and start offset=%u\n",cl->GetName(),UInt_t(fBufCur-fBuffer));//##
    }
 
    Version_t version = cl->GetClassVersion();
+   printf("In TBufferFile::WriteVersion, version=%hi(0x%hx)\n",version,version);//##
    if (version<=1 && cl->IsForeign()) {
       *this << Version_t(0);
       *this << cl->GetCheckSum();
@@ -4310,11 +4306,14 @@ Int_t TBufferFile::WriteClassBuffer(const TClass *cl, void *pointer)
    }
 
    //write the class version number and reserve space for the byte count
+   printf("TBufferFile::WriteClassBuffer, before WriteVersion,class:%s\n",cl->GetName());//##
    UInt_t R__c = WriteVersion(cl, kTRUE);
+   printf("TBufferFile::WriteClassBuffer, after WriteVersion,class:%s\n",cl->GetName());//##
 
    //NOTE: In the future Philippe wants this to happen via a custom action
    TagStreamerInfo(sinfo);
    ApplySequence(*(sinfo->GetWriteObjectWiseActions()), (char*)pointer);
+   printf("TBufferFile::WriteClassBuffer, after TagStreamerInfo and ApplySequence,class:%s\n",cl->GetName());//##
 
 
    //write the byte count at the start of the buffer
