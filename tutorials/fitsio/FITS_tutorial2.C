@@ -5,7 +5,7 @@
 ///
 /// \macro_code
 ///
-/// \authors Claudi Martinez
+/// \author Claudi Martinez
 
 
 void FITS_tutorial2()
