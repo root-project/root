@@ -55,11 +55,12 @@ namespace PoolUtils {
   /// This functor looks for an implementation of the Merge method
   /// (e.g. TH1F::Merge) and calls it on the objects contained in objs.
   /// If Merge is not found, a null pointer is returned.
-   template <class T>//, class TObjectCond = typename std::enable_if<"The argument should be a vector of pointers to TObject or derived classes"
-                      //                      && std::is_constructible<TObject *, T>::value>::type>
+   template <class T>
    class ReduceObjects{
      public:
      T operator()(const std::vector<T> &objs){
+      static_assert(std::is_constructible<TObject *, T>::value,
+                    "The argument should be a vector of pointers to TObject or derived classes");
       if(objs.size() == 0)
          return nullptr;
 
