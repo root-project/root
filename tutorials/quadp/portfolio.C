@@ -1,3 +1,123 @@
+/// \file
+/// \ingroup tutorial_quadp
+/// This macro shows in detail the use of the quadratic programming package quadp .
+/// Running this macro :
+///
+/// ~~~ {.cpp}
+///     .x portfolio.C+
+/// ~~~
+///
+/// or
+///
+/// ~~~ {.cpp}
+/// gSystem->Load("libQuadp");
+/// .L portFolio.C+; portfolio()
+/// ~~~
+///
+/// Let's first review what we exactly mean by "quadratic programming" :
+///
+/// We want to minimize the following objective function :
+///
+///   \f$ c^T x + ( 1/2 ) x^T Q x \f$  wrt. the vector \f$ x \f$
+///
+///  \f$ c \f$ is a vector and \f$ Q \f$ a symmetric positive definite matrix
+///
+/// You might wonder what is so special about this objective which is quadratic in
+/// the unknowns, that can not be done by Minuit/Fumili . Well, we have in addition
+/// the following boundary conditions on \f$ x \f$:
+///
+/// \f[
+///          A x =  b \\
+///  clo \le  C x \le cup \\
+///  xlo \le    x \le xup
+/// \f]  where A and C are arbitrary matrices and the rest are vectors
+///
+/// Not all these constraints have to be defined . Our example will only use \f$ xlo \f$,
+/// \f$ A \f$ and \f$ b \f$
+/// Still, this could be handled by a general non-linear minimizer like Minuit by introducing
+/// so-called "slack" variables . However, quadp is tailored to objective functions not more
+/// complex than being quadratic . This allows usage of solving techniques which are even
+/// stable for problems involving for instance 500 variables, 100 inequality conditions
+/// and 50 equality conditions .
+///
+/// Enough said about quadratic programming, let's return to our example .
+/// Suppose, after a long day of doing physics, you have a look at your investments and
+/// realize that an early retirement is not possible, given the returns of your stocks .
+/// So what now ? ROOT to the rescue ...
+///
+/// In 1990 Harry Markowitz was awarded the Nobel prize for economics: " his work provided new tools
+/// for weighing the risks and rewards of different investments and for valuing corporate stocks and bonds" .
+/// In plain English, he developed the tools to balance greed and fear, we want the maximum return
+/// with the minimum amount of risk. Our stock portfolio should be at the
+/// ["Efficient Frontier"](see http://www.riskglossary.com/articles/efficient_frontier.htm).
+/// To quantify better the risk we are willing to take, we define a utility function \f$ U(x) \f$. It describes
+/// as a function of our total assets \f$ x \f$, our "satisfaction" . A common choice is \f$ 1-exp(-k*x) \f$ (the reason for
+/// the exponent will be clear later)  . The parameter \f$ k \f$ is the risk-aversion factor . For small values of \f$ k \f$
+/// the satisfaction is small for small values of \f$ x \f$; by increasing \f$ x \f$ the satisfaction can still be increased
+/// significantly . For large values of \f$ k \f$, \f$ U(x) \f$ increases rapidly to 1, there is no increase in satisfaction
+/// for additional dollars earned .
+///
+/// In summary :
+///  - small \f$ k \f$ ==> risk-loving investor
+///  - large \f$ k \f$ ==> risk-averse investor
+///
+/// Suppose we have for nrStocks the historical daily returns \f$ r = closing_price(n) - closing_price(n-1) \f$.
+/// Define a vector \f$ x \f$ of length of \f$ nrStocks \f$, which contains the fraction of our money invested in
+/// each stock . We can calculate the average daily return \f$ z \f$ of our portfolio and its variance using
+/// the portfolio covariance Covar :
+///
+///  \f$ z = r^T x \f$  and \f$ var = x^T Covar x \f$
+///
+/// Assuming that the daily returns have a Normal distribution, \f$ N(x) \f$, so will \f$ z \f$ with mean \f$ r^T x \f$
+/// and variance \f$ x^T Covar x \f$
+///
+/// The expected value of the utility function is :
+///
+/// \f[
+/// E(u(x)) = Int (1-exp(-k*x) N(x) dx \\
+///         = 1-exp(-k (r^T x - 0.5 k x^T Covar x) ) \\
+/// \f]
+///
+/// Its value is maximised by maximising \f$ r^T x -0.5 k x^T Covar x \f$
+/// under the condition \f$ sum (x_i) = 1 \f$, meaning we want all our money invested and
+/// \f$ x_i \ge 0 \f$, we can not "short" a stock
+///
+/// For 10 stocks we got the historical daily data for Sep-2000 to Jun-2004:
+///
+///  - GE   : General Electric Co
+///  - SUNW : Sun Microsystems Inc
+///  - QCOM : Qualcomm Inc
+///  - BRCM : Broadcom Corp
+///  - TYC  : Tyco International Ltd
+///  - IBM  : International Business Machines Corp
+///  - AMAT : Applied Materials Inc
+///  - C    : Citigroup Inc
+///  - PFE  : Pfizer Inc
+///  - HD   : Home Depot Inc
+///
+/// We calculate the optimal portfolio for 2.0 and 10.0 .
+///
+/// Food for thought :
+/// - We assumed that the stock returns have a Normal distribution . Check this assumption by
+///   histogramming the stock returns !
+/// - We used for the expected return in the objective function, the flat average over a time
+///   period . Investment firms will put significant resources in improving the return prediction .
+/// - If you want to trade significant number of shares, several other considerations have
+///   to be taken into account :
+///    +  If you are going to buy, you will drive the price up (so-called "slippage") .
+///       This can be taken into account by adding terms to the objective
+///       (Google for "slippage optimization")
+///    +  FTC regulations might have to be added to the inequality constraints
+/// - Investment firms do not want to be exposed to the "market" as defined by a broad
+///   index like the S&P and "hedge" this exposure away . A perfect hedge this can be added
+///    as an equality constrain, otherwise add an inequality constrain .
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Eddy Offermann
+
 #include "Riostream.h"
 #include "TCanvas.h"
 #include "TFile.h"
@@ -14,103 +134,6 @@
 #include "TVectorD.h"
 #include "TQpProbDens.h"
 #include "TGondzioSolver.h"
-
-//+ This macro shows in detail the use of the quadratic programming package quadp .
-// Running this macro :
-//     .x portfolio.C+
-// or  gSystem->Load("libQuadp"); .L portFolio.C+; portfolio()
-//
-// Let's first review what we exactly mean by "quadratic programming" :
-//
-// We want to minimize the following objective function :
-//
-//   c^T x + ( 1/2 ) x^T Q x    wrt. the vector x
-//
-//   c is a vector and Q a symmetric positive definite matrix
-//
-// You might wonder what is so special about this objective which is quadratic in
-// the unknowns, that can not be done by Minuit/Fumili . Well, we have in addition
-// the following boundary conditions on x:
-//
-//          A x =  b
-//  clo <=  C x <= cup
-//  xlo <=    x <= xup  ,  where A and C are arbitray matrices and the rest are vectors
-//
-// Not all these constraints have to be defined . Our example will only use xlo, A and b
-// Still, this could be handled by a general non-linear minimizer like Minuit by introducing
-// so-called "slack" variables . However, quadp is tailored to objective functions not more
-// complex than being quadratic . This allows usage of solving techniques which are even
-// stable for problems involving for instance 500 variables, 100 inequality conditions
-// and 50 equality conditions .
-//
-// Enough said about quadratic programming, let's return to our example .
-// Suppose, after a long day of doing physics, you have a look at your investments and
-// realize that an early retirement is not possible, given the returns of your stocks .
-// So what now ? ROOT to the rescue ......
-//
-// In 1990 Harry Markowitz was awarded the Nobel prize for economics : " his work provided new tools
-// for weighing the risks and rewards of different investments and for valuing corporate stocks and bonds" .
-// In plain English, he developed the tools to balance greed and fear, we want the maximum return
-// with the minimum amount of risk. Our stock portfolio should be at the "Efficient Frontier",
-// see http://www.riskglossary.com/articles/efficient_frontier.htm .
-// To quantify better the risk we are willing to take, we define a utility function U(x) . It describes
-// as a function of our total assets x, our "satisfaction" . A common choice is 1-exp(-k*x) (the reason for
-// the exponent will be clear later)  . The parameter k is the risk-aversion factor . For small values of k
-// the satisfaction is small for small values of x; by increasing x the satisfaction can still be increased
-// significantly . For large values of k, U(x) increases rapidly to 1, there is no increase in satisfaction
-// for additional dollars earned .
-//
-// In summary : small k ==> risk-loving investor
-//              large k ==> risk-averse investor
-//
-// Suppose we have for nrStocks the historical daily returns r = closing_price(n) - closing_price(n-1) .
-// Define a vector x of length of nrStocks, which contains the fraction of our money invested in
-// each stock . We can calculate the average daily return z of our portfolio and its variance using
-// the portfolio covariance Covar :
-//
-//  z = r^T x   and var = x^T Covar x
-//
-// Assuming that the daily returns have a Normal distribution, N(x), so will z with mean r^T x
-// and variance x^T Covar x
-//
-// The expected value of the utility function is : E(u(x)) = Int (1-exp(-k*x) N(x) dx
-//                                                         = 1-exp(-k (r^T x - 0.5 k x^T Covar x) )
-//
-// Its value is maximized by maximizing  r^T x -0.5 k x^T Covar x
-// under the condition sum (x_i) = 1, meaning we want all our money invested and
-// x_i >= 0 , we can not "short" a stock
-//
-// For 10 stocks we got the historical daily data for Sep-2000 to Jun-2004:
-//
-// GE   : General Electric Co
-// SUNW : Sun Microsystems Inc
-// QCOM : Qualcomm Inc
-// BRCM : Broadcom Corp
-// TYC  : Tyco International Ltd
-// IBM  : International Business Machines Corp
-// AMAT : Applied Materials Inc
-// C    : Citigroup Inc
-// PFE  : Pfizer Inc
-// HD   : Home Depot Inc
-//
-// We calculate the optimal portfolio for 2.0 and 10.0 .
-//
-// Food for thought :
-// - We assumed that the stock returns have a Normal distribution . Check this assumption by
-//   histogramming the stock returns !
-// - We used for the expected return in the objective function, the flat average over a time
-//   period . Investment firms will put significant resources in improving the return predicton .
-// - If you want to trade significant number of shares, several other considerations have
-//   to be taken into account :
-//    +  If you are going to buy, you will drive the price up (so-called "slippage") .
-//       This can be taken into account by adding terms to the objective
-//       (Google for "slippage optimization")
-//    +  FTC regulations might have to be added to the inequality constraints
-// - Investment firms do not want to be exposed to the "market" as defined by a broad
-//   index like the S&P and "hedge" this exposure away . A perfect hedge this can be added
-//    as an equality constrain, otherwise add an inequality constrain .
-//
-//Author: Eddy Offermann
 
 const Int_t nrStocks = 10;
 static const Char_t *stocks[] =
@@ -209,7 +232,7 @@ TVectorD OptimalInvest(Double_t riskFactor,TVectorD r,TMatrixDSym Covar)
 
   // inequality equation
   //
-  // - although not applicable in the current situatio since nrInEqual = 0, one
+  // - although not applicable in the current situation since nrInEqual = 0, one
   //   has to specify not only clo and cup but also an index vector iclo and icup,
   //   whose values are either 0 or 1 . If iclo[j] = 1, the lower boundary condition
   //   is active on x[j], etc. ...
