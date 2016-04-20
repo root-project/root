@@ -1,5 +1,12 @@
 # JSROOT changelog
 
+## Changes in 4.4.4
+1. Fix - toggling of statbox was not working in all situations 
+2. Fix - for mouse rect zooming use only left mouse button
+3. Fix - correctly draw TH2 with lego option, when histogram has negative bin content
+4. Fix - log axis drawing with no visible ticks 
+
+
 ## Changes in 4.4.3
 1. Fix - wrong selection of TH1 Y axis range when errors are displayed (#44) 
 2. Fix - apply user range for TH1 X-axis zooming (#44)   
