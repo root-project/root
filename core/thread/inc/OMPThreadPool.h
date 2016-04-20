@@ -17,11 +17,14 @@
 
 class OMPThreadPool: public TPool<OMPThreadPool> {
 public:
-   explicit OMPThreadPool() = default;
+   explicit OMPThreadPool(){
+     omp_set_dynamic(0);     // Explicitly disable dynamic teams
+     omp_set_num_threads(omp_get_max_threads());
+   }
 
    explicit OMPThreadPool(size_t nThreads){
-     omp_set_dynamic(0);     // Explicitly disable dynamic teams
-     omp_set_num_threads(4);
+     omp_set_dynamic(0);
+     omp_set_num_threads(nThreads);
    }
 
    ~OMPThreadPool() {
