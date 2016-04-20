@@ -3588,7 +3588,8 @@
          lasth = h2;
       }
 
-      axis_g.append("svg:path").attr("d", res).style("stroke", AxisColor);
+      if (res.length > 0)
+         axis_g.append("svg:path").attr("d", res).style("stroke", AxisColor);
 
       var last = vertical ? h : 0,
           labelfont = JSROOT.Painter.getFontDetails(axis.fLabelFont, Math.round(axis.fLabelSize * (is_gaxis ? this.pad_height() : h))),
@@ -4827,31 +4828,31 @@
 
    JSROOT.THistPainter.prototype.ToggleStat = function(arg) {
 
-      var stat = this.FindStat();
+      var stat = this.FindStat(), statpainter = null;
 
       if (stat == null) {
          if (arg=='only-check') return false;
          // when statbox created first time, one need to draw it
          stat = this.CreateStat();
-
-         this.svg_canvas().property('current_pad', this.pad_name);
-         JSROOT.draw(this.divid, stat);
-         this.svg_canvas().property('current_pad', '');
-
-         return true;
+      } else {
+         statpainter = this.FindPainterFor(stat);
       }
 
-      var statpainter = this.FindPainterFor(stat);
-      if (statpainter == null) return false;
+      if (arg=='only-check') return statpainter ? statpainter.Enabled : false;
 
-      if (arg=='only-check') return statpainter.Enabled;
+      if (statpainter) {
+         statpainter.Enabled = !statpainter.Enabled;
+         // when stat box is drawed, it always can be draw individualy while it
+         // should be last for colz RedrawPad is used
+         statpainter.Redraw();
+         return statpainter.Enabled;
+      }
 
-      statpainter.Enabled = !statpainter.Enabled;
-      // when stat box is drawed, it always can be draw individualy while it
-      // should be last for colz RedrawPad is used
-      statpainter.Redraw();
+      this.svg_canvas().property('current_pad', this.pad_name);
+      JSROOT.draw(this.divid, stat);
+      this.svg_canvas().property('current_pad', '');
 
-      return statpainter.Enabled;
+      return true;
    }
 
    JSROOT.THistPainter.prototype.IsAxisZoomed = function(axis) {
@@ -5070,6 +5071,9 @@
       // ignore when touch selection is actiavated
 
       if (this.zoom_kind > 100) return;
+
+      // ignore all events from non-left button
+      if ((d3.event.which || d3.event.button) !== 1) return;
 
       d3.event.preventDefault();
 
