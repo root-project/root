@@ -266,6 +266,10 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
          }
       }
       cl->fEnums = temp;
+      // We did not transfer the container itself, let remove it from memory without deleting its content.
+      fEnums->Clear();
+      delete fEnums;
+      fEnums = nullptr;
    }
 
    cl->fSizeof = fSizeof;
