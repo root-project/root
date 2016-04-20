@@ -3667,7 +3667,7 @@ void TClass::GetMenuItems(TList *list)
 /// This is equivalent to ask if a class is coming from a bootstrapping
 /// procedure initiated during the loading of a library.
 
-Bool_t TClass::HasDictionary()
+Bool_t TClass::HasDictionary() const
 {
    return IsLoaded();
 }
