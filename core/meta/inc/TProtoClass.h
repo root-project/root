@@ -43,28 +43,28 @@ public:
       Int_t fClassIndex; // index of class belonging to in list of dep classes
       char  fStatusFlag;  // status of the real data member (if bit 0 set is an object, if bit 1 set is transient if bit 2 set is a pointer)
 
-      enum  { 
+      enum  {
          kIsObject    = BIT(0),   // member is object
-         kIsTransient = BIT(1), // data member is transient 
-         kIsPointer   = BIT(2),    // data member is a pointer 
+         kIsTransient = BIT(1), // data member is transient
+         kIsPointer   = BIT(2),    // data member is a pointer
          kBitMask     = 0x000000ff
       };
 
    public:
       bool IsAClass() const { return fClassIndex >= 0; }
-      TProtoRealData() : fOffset(0), fDMIndex(-1), fLevel(0), fClassIndex(-1), fStatusFlag(0) {} 
+      TProtoRealData() : fOffset(0), fDMIndex(-1), fLevel(0), fClassIndex(-1), fStatusFlag(0) {}
       TProtoRealData(const TRealData *rd);
       virtual ~TProtoRealData();
       TRealData *CreateRealData(TClass *currentClass, TClass *parent, TRealData * parentData, int prevLevel) const;
 
-      Bool_t TestFlag(UInt_t f) const { return (Bool_t) ((fStatusFlag & f) != 0); } 
-      void SetFlag(UInt_t f, Bool_t on = kTRUE) { 
-         if (on) 
-            fStatusFlag |= f & kBitMask; 
+      Bool_t TestFlag(UInt_t f) const { return (Bool_t) ((fStatusFlag & f) != 0); }
+      void SetFlag(UInt_t f, Bool_t on = kTRUE) {
+         if (on)
+            fStatusFlag |= f & kBitMask;
          else
-            fStatusFlag &= ~(f & kBitMask);  
-      } 
-     
+            fStatusFlag &= ~(f & kBitMask);
+      }
+
       ClassDef(TProtoRealData, 3);//Persistent version of TRealData
    };
 
@@ -74,7 +74,7 @@ private:
    TList   *fEnums;    // List of enums in this scope
    std::vector<TProtoRealData>   fPRealData;// List of TProtoRealData
    std::vector<TDataMember *>       fData;   // collection of data members
-   std::vector<TString>    fDepClasses;  // list of dependent classes 
+   std::vector<TString>    fDepClasses;  // list of dependent classes
    Int_t    fSizeof;   // Size of the class
    UInt_t   fCheckSum; //checksum of data members and base classes
    Int_t    fCanSplit; // Whether this class can be split
@@ -89,9 +89,9 @@ private:
    const char * GetClassName(Int_t index) const { return (index >= 0) ? fDepClasses[index].Data() : 0; }
 
    // compute index of data member in the list
-   static Int_t DataMemberIndex(TClass * cl, const char * name);  
+   static Int_t DataMemberIndex(TClass * cl, const char * name);
    // find data member  given an index
-   static TDataMember * FindDataMember(TClass * cl,  Int_t index);  
+   static TDataMember * FindDataMember(TClass * cl,  Int_t index);
 
 public:
    TProtoClass():
