@@ -188,6 +188,10 @@ void TProtoClass::Delete(Option_t* opt /*= ""*/) {
    if (fBase) fBase->Delete(opt);
    delete fBase; fBase = 0;
 
+   for (auto dm: fData) {
+      delete dm;
+   }
+
    if (fEnums) fEnums->Delete(opt);
    delete fEnums; fEnums = 0;
 
@@ -255,6 +259,9 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
    // cl->fData->SetIsLoaded();*
 
    //cl->fData = (TListOfDataMembers*)fData;
+
+   // The TDataMember were passed along.
+   fData.clear();
 
    // We need to fill enums one by one to initialise the internal map which is
    // transient
