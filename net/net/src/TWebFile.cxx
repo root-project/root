@@ -47,6 +47,8 @@ static const char *gUserAgent = "User-Agent: ROOT-TWebFile/1.1";
 
 TUrl TWebFile::fgProxy;
 
+Long64_t TWebFile::fgMaxFullCacheSize = 500000000;
+
 
 // Internal class used to manage the socket that may stay open between
 // calls when HTTP/1.1 protocol is used
@@ -754,7 +756,7 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg, Int_t nse
                return -1;
             }
 
-            if ((fFullCache == 0) && (fullsize < 2000000000)) {
+            if ((fFullCache == 0) && (fullsize <= GetMaxFullCacheSize())) {
               // try to read file content into cache and than reuse it, limit cache by 2 GB
                fFullCache = malloc(fullsize);
                if (fFullCache != 0) {
@@ -1416,6 +1418,25 @@ const char *TWebFile::GetProxy()
 void TWebFile::ProcessHttpHeader(const TString&)
 {
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Static method returning maxmimal size of full cache,
+/// which can be preserved by file instance
+
+Long64_t TWebFile::GetMaxFullCacheSize()
+{
+   return fgMaxFullCacheSize;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Static method, set maxmimal size of full cache,
+// which can be preserved by file instance
+
+void TWebFile::SetMaxFullCacheSize(Long64_t sz)
+{
+   fgMaxFullCacheSize = sz;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create helper class that allows directory access via httpd.

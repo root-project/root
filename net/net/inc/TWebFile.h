@@ -61,6 +61,7 @@ protected:
    Long64_t          fFullCacheSize;    //! size of the cached content
 
    static TUrl       fgProxy;           // globally set proxy URL
+   static Long64_t   fgMaxFullCacheSize; // maximal size of full-cached content, 500 MB by default
 
    virtual void        Init(Bool_t readHeadOnly);
    virtual void        CheckProxy();
@@ -92,6 +93,9 @@ public:
 
    static void        SetProxy(const char *url);
    static const char *GetProxy();
+
+   static Long64_t    GetMaxFullCacheSize();
+   static void        SetMaxFullCacheSize(Long64_t sz);
 
    ClassDef(TWebFile,2)  //A ROOT file that reads via a http server
 };
