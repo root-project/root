@@ -674,6 +674,38 @@
    fun:_ZN6TClass13GetMethodListEv
 }
 
+{
+   TListOfDataMembers' content
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:_ZN9THashList7AddLastEP7TObject
+   fun:_ZN5TList3AddEP7TObject
+   fun:_ZN18TListOfDataMembers6UnloadEv
+}
+
+{
+   TListOfDataMembers' content
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:_ZN8TStorage11ObjectAllocEm
+   fun:_ZN7TObjectnwEm
+   fun:_ZN9THashListC1Eii
+   fun:_ZN18TListOfDataMembers6UnloadEv
+}
+
+{
+   TListOfDataMembers' content
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:_ZN8TStorage11ObjectAllocEm
+   fun:_ZN7TObjectnwEm
+   fun:_ZN18TListOfDataMembers6UnloadEv
+}
+
 ######### ROOT I/O
 
 {
