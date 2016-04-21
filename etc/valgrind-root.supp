@@ -944,13 +944,9 @@
    fun:_Znwm
    fun:allocate
    ...
-   fun:_ZN4llvm11NamedMDNodeC1ERKNS_5TwineE
-   fun:_ZN4llvm6Module24getOrInsertNamedMetadataENS_9StringRefE
-   fun:_ZN5clang7CodeGen13CodeGenModule24EmitVersionIdentMetadataEv
    fun:_ZN5clang7CodeGen13CodeGenModule7ReleaseEv
    fun:_ZN5cling17IncrementalParser18codeGenTransactionEPNS_11TransactionE
    fun:_ZN5cling17IncrementalParser17commitTransactionEN4llvm14PointerIntPairIPNS_11TransactionELj2ENS0_12EParseResultENS1_21PointerLikeTypeTraitsIS4_EEEE
-   fun:_ZN5cling11InterpreterC1EiPKPKcS2_bb
 }
 
 {
@@ -1032,6 +1028,14 @@
    fun:_Znwm
    ...
    fun:_ZNK5clang11DeclContext16using_directivesEv
+}
+
+{
+   clang 'make decl visible'
+   Memcheck:Leak
+   match-leak-kinds: possible
+   ...
+   fun:_ZN5clang11DeclContext28makeDeclVisibleInContextImplEPNS_9NamedDeclEb
 }
 
 {
@@ -1159,6 +1163,15 @@
    ...
    fun:_ZN12_GLOBAL__N_117ScalarExprEmitter20EmitScalarConversionEPN4llvm5ValueEN5clang8QualTypeES5_
 }
+
+{
+   llvm pass manager
+   Memcheck:Leak
+   match-leak-kinds: possible
+   ...
+   fun:_ZN4llvm13FPPassManager13runOnFunctionERNS_8FunctionE
+}
+
 
 {
    llvm PassManager initialization
