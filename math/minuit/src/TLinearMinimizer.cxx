@@ -145,6 +145,7 @@ void TLinearMinimizer::SetFunction(const  ROOT::Math::IMultiGradFunction & objfu
    // get the basis functions (derivatives of the modelfunc)
    TObjArray flist(fDim);
    flist.SetOwner(kFALSE);  // we do not want to own the list - it will be owned by the TLinearFitter class
+   bool prev = TF1::DefaultAddToGlobalList(kFALSE); 
    for (unsigned int i = 0; i < fDim; ++i) {
       // t.b.f: should not create TF1 classes
       // when creating TF1 (if onother function with same name exists it is
@@ -156,11 +157,9 @@ void TLinearMinimizer::SetFunction(const  ROOT::Math::IMultiGradFunction & objfu
          std::string(u.AsString() );
       TF1 * f = new TF1(fname.c_str(),ROOT::Math::ParamFunctor(bf));
       flist.Add(f);
-      // remove this functions from gROOT
-      R__LOCKGUARD2(gROOTMutex);
-      gROOT->GetListOfFunctions()->Remove(f);
-
    }
+   // restore previous status
+   if (prev)  TF1::DefaultAddToGlobalList(kTRUE); 
 
    // create TLinearFitter (do it now because olny now now the coordinate dimensions)
    if (fFitter) delete fFitter; // reset by deleting previous copy

@@ -142,13 +142,10 @@ protected:
 
    Double_t       DoEval(const Double_t * x, const Double_t * p = nullptr) const;
 
-   enum {
-      kNotGlobal     = BIT(10)  // don't store in gROOT->GetListOfFunction (it should be protected)
-   };
-
 public:
 
    enum {
+      kNotGlobal     = BIT(10),    // don't store in gROOT->GetListOfFunction (it should be protected)
       kNormalized    = BIT(14),    // set to true if the TFormula (ex gausn) is normalized
       kLinear        = BIT(16),    //set to true if the TFormula is for linear fitting
       kLambda        = BIT(17)     // set to true if TFormula has been build with a lambda  
