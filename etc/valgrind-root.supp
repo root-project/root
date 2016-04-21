@@ -916,6 +916,16 @@
    fun:XQueryExtension
 }
 
+####### System
+
+{
+   Ignore deficient in dlopen and/or pthread and/or valgrind. See for example https://bugs.kde.org/show_bug.cgi?id=358980.
+   Memcheck:Leak
+   match-leak-kinds: definite
+   ...
+   fun:_dl_open
+}
+
 ####### Non-leak coming from clang/llvm
 
 {
