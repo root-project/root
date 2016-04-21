@@ -37,15 +37,15 @@ class TRealData;
 class TProtoClass: public TNamed {
 public:
    struct TProtoRealData  {
-      Long_t fOffset; // data member offset
-      Int_t fDMIndex;  // index of data member in vector of data members
-      Int_t fLevel;  // member level (0 : belong to this class, 1 is a data member of a data member object, etc...)
-      Int_t fClassIndex; // index of class belonging to in list of dep classes
-      char  fStatusFlag;  // status of the real data member (if bit 0 set is an object, if bit 1 set is transient if bit 2 set is a pointer)
+      Long_t fOffset;     // data member offset
+      Int_t  fDMIndex;    // index of data member in vector of data members
+      Int_t  fLevel;      // member level (0 : belong to this class, 1 is a data member of a data member object, etc...)
+      Int_t  fClassIndex; // index of class belonging to in list of dep classes
+      char   fStatusFlag; // status of the real data member (if bit 0 set is an object, if bit 1 set is transient if bit 2 set is a pointer)
 
       enum  {
-         kIsObject    = BIT(0),   // member is object
-         kIsTransient = BIT(1), // data member is transient
+         kIsObject    = BIT(0),    // member is object
+         kIsTransient = BIT(1),    // data member is transient
          kIsPointer   = BIT(2),    // data member is a pointer
          kBitMask     = 0x000000ff
       };
@@ -70,17 +70,16 @@ public:
 
 private:
    TList   *fBase;     // List of base classes
-   //TList   *fData;     //! List of data members
    TList   *fEnums;    // List of enums in this scope
-   std::vector<TProtoRealData>   fPRealData;// List of TProtoRealData
-   std::vector<TDataMember *>       fData;   // collection of data members
-   std::vector<TString>    fDepClasses;  // list of dependent classes
-   Int_t    fSizeof;   // Size of the class
-   UInt_t   fCheckSum; //checksum of data members and base classes
-   Int_t    fCanSplit; // Whether this class can be split
-   Int_t    fStreamerType; // Which streaming method to use
-   Long_t   fProperty; // Class properties, see EProperties
-   Long_t   fClassProperty; // Class C++ properties, see EClassProperties
+   std::vector<TProtoRealData> fPRealData;  // List of TProtoRealData
+   std::vector<TDataMember *>  fData;       // collection of data members
+   std::vector<TString>        fDepClasses; // list of dependent classes
+   Int_t    fSizeof;         // Size of the class
+   UInt_t   fCheckSum;       //checksum of data members and base classes
+   Int_t    fCanSplit;       // Whether this class can be split
+   Int_t    fStreamerType;   // Which streaming method to use
+   Long_t   fProperty;       // Class properties, see EProperties
+   Long_t   fClassProperty;  // Class C++ properties, see EClassProperties
    Long_t   fOffsetStreamer; // Offset to streamer function
 
    TProtoClass(const TProtoClass &) = delete;
