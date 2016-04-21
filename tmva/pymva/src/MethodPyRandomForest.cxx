@@ -313,7 +313,7 @@ void  MethodPyRandomForest::Init()
       TrainDataWeights[i] = e->GetWeight();
    }
 
-   delete dims;
+   delete[] dims;
       
 }
 
@@ -402,7 +402,7 @@ Double_t MethodPyRandomForest::GetMvaValue(Double_t *errLower, Double_t *errUppe
    mvaValue = proba[0]; //getting signal prob
    Py_DECREF(result);
    Py_DECREF(pEvent);
-   delete dims;
+   delete[] dims;
    return mvaValue;
 }
 

@@ -278,7 +278,7 @@ Double_t MethodPyAdaBoost::GetMvaValue(Double_t *errLower, Double_t *errUpper)
    mvaValue = proba[0]; //getting signal prob
    Py_DECREF(result);
    Py_DECREF(pEvent);
-   delete dims;
+   delete[] dims;
    return mvaValue;
 }
 
