@@ -61,7 +61,7 @@ _jsCode = """
    }});
  require(['JSRootCore'],
      function(Core) {{
-       var obj = Core.parse('{jsonContent}');
+       var obj = Core.JSONR_unref({jsonContent});
        Core.draw("{jsDivId}", obj, "{jsDrawOptions}");
      }}
  );
