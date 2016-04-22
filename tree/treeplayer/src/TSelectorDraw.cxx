@@ -975,14 +975,17 @@ Bool_t TSelectorDraw::CompileVariables(const char *varexp, const char *selection
    nch = strlen(varexp);
    if (nch == 0) {
       fDimension = 0;
-      fManager = new TTreeFormulaManager();
-      if (fSelect) fManager->Add(fSelect);
+      if (fSelect) {
+         fManager = fSelect->GetManager();
+      }
       fTree->ResetBit(TTree::kForceRead);
 
-      fManager->Sync();
+      if (fManager) {
+         fManager->Sync();
 
-      if (fManager->GetMultiplicity() == -1) fTree->SetBit(TTree::kForceRead);
-      if (fManager->GetMultiplicity() >= 1) fMultiplicity = fManager->GetMultiplicity();
+         if (fManager->GetMultiplicity() == -1) fTree->SetBit(TTree::kForceRead);
+         if (fManager->GetMultiplicity() >= 1) fMultiplicity = fManager->GetMultiplicity();
+      }
 
       return kTRUE;
    }
