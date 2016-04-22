@@ -4235,6 +4235,28 @@ int RootCling(int argc,
    cling::Interpreter interp(clingArgsC.size(), &clingArgsC[0],
                              resourceDir.c_str());
 #endif // ROOT_STAGE1_BUILD
+   if (ROOT::TMetaUtils::GetErrorIgnoreLevel() == ROOT::TMetaUtils::kInfo) {
+      ROOT::TMetaUtils::Info(0, "\n");
+      ROOT::TMetaUtils::Info(0, "==== INTERPRETER CONFIGURATION ====\n");
+      ROOT::TMetaUtils::Info(0, "== Include paths\n");
+      interp.DumpIncludePath();
+      printf("\n\n");
+      fflush(stdout);
+
+      ROOT::TMetaUtils::Info(0, "== Included files\n");
+      interp.printIncludedFiles(llvm::outs());
+      llvm::outs() << "\n\n";
+      llvm::outs().flush();
+
+      ROOT::TMetaUtils::Info(0, "== Language Options\n");
+      const clang::LangOptions& LangOpts
+         = interp.getCI()->getASTContext().getLangOpts();
+#define LANGOPT(Name, Bits, Default, Description) \
+      ROOT::TMetaUtils::Info(0, "%s = %d // %s\n", #Name, (int)LangOpts.Name, Description);
+#define ENUM_LANGOPT(Name, Type, Bits, Default, Description)
+#include "clang/Basic/LangOptions.def"
+      ROOT::TMetaUtils::Info(0, "==== END interpreter configuration ====\n\n");
+   }
 
    interp.getOptions().ErrorOut = true;
    interp.enableRawInput(true);
