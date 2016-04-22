@@ -756,6 +756,58 @@
    ...
 }
 
+######## Minimizer
+
+{
+   Global configuration string for Minimizer
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:_Z41__static_initialization_and_destruction_0ii
+   fun:_GLOBAL__sub_I_MinimizerOptions.cxx
+}
+
+{
+   Global configuration string for Minimizer
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:_ZNSs15_M_replace_safe*
+   fun:_ZN4ROOT4Math16MinimizerOptions20DefaultMinimizerTypeEv
+}
+
+{
+   Configuration string for global minimizer
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:_ZNSs6appendERKSs
+   fun:_ZN4ROOT3Fit9FitResult10FillResultERKSt10shared_ptrINS_4Math9MinimizerEERKNS0_9FitConfigERKS2_INS3_27IParametricFunctionMultiDimEEbjbPKNS3_21IBaseFunctionMultiDimEj
+}
+
+{
+   Configuration string for global minimizer
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:_ZNSsC1EPKcRKSaIcE
+   fun:_ZNK4ROOT4Math15WrappedMultiTF113ParameterNameEj
+}
+
+{
+   Configuration for global minimizer
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znam
+   fun:_ZN7TMinuit11BuildArraysEi
+   fun:_ZN7TMinuitC1Ei
+   fun:_ZN16TMinuitMinimizer11InitTMinuitEi
+}
+
 ######### Misc
 
 {
