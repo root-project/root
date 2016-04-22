@@ -43,8 +43,9 @@
 #include "XrdProofSched.h"
 #include "XrdROOT.h"
 
-#include <unistd.h>
+#include <grp.h>
 #include <map>
+#include <unistd.h>
 
 // Aux structures for scan through operations
 typedef struct {

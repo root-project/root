@@ -51,12 +51,8 @@
 // Tracing utilities
 #include "XrdProofdTrace.h"
 
-#if defined(linux) || defined(__sun) || defined(__sgi) || \
-    defined(_AIX) || defined(__FreeBSD__) || defined(__OpenBSD__) || \
-    defined(__APPLE__) || defined(__MACH__) || defined(cygwingcc)
 #include <grp.h>
 #include <unistd.h>
-#endif
 
 // Auxilliary sructure used internally to extract list of allowed/denied user names
 // when running in access control mode
