@@ -149,8 +149,7 @@ namespace TMVA {
          else return links->GetEntriesFast();
       }
       void NullifyLinks(TObjArray*& links) { 
-         if (links != nullptr) delete links;
-         else links = nullptr;
+         if (links != nullptr) { delete links; links = nullptr; }
       }
 
       // private member variables
