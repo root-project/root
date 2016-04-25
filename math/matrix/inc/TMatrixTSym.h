@@ -94,7 +94,8 @@ public:
    virtual       TMatrixTBase<Element> &SetColIndexArray(Int_t * /*data*/) { MayNotUse("SetColIndexArray(Int_t *)"); return *this; }
 
    virtual void   Clear      (Option_t * /*option*/ ="") { if (this->fIsOwner) Delete_m(this->fNelems,fElements);
-                                                           else fElements = 0; this->fNelems = 0; }
+                                                           else fElements = 0;
+                                                           this->fNelems = 0; }
    virtual Bool_t IsSymmetric() const { return kTRUE; }
 
            TMatrixTSym <Element> &Use           (Int_t row_lwb,Int_t row_upb,Element *data);
