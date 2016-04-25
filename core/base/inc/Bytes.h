@@ -385,9 +385,9 @@ if(buffBigEndian) {
    buf[2] = u.c[1];
    buf[3] = u.c[0];
 # endif
-   printf("tobuf:BigEndian:float=%f\n", x);
+//   printf("tobuf:BigEndian:float=%f\n", x);//##
 } else {
-   printf("tobuf:LittleEndian:float=%f\n", x);
+//   printf("tobuf:LittleEndian:float=%f\n", x);//##
    memcpy(buf, &x, sizeof(Float_t));
 }
 #else
@@ -674,9 +674,9 @@ if(buffBigEndian) {
    u.c[3] = buf[0];
    *x = u.f;
 # endif
-   printf("BigEndian:float=%f\n", *x);
+//   printf("BigEndian:float=%f\n", *x);//##
 } else {
-   printf("LittleEndian:float=%f\n", *x);
+//   printf("LittleEndian:float=%f\n", *x);//##
    memcpy(x, buf, sizeof(Float_t));
 }
 #else
