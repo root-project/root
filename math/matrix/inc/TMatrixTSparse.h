@@ -120,7 +120,7 @@ public:
    virtual void Clear(Option_t * /*option*/ ="") { if (this->fIsOwner) {
                                                       if (fElements) { delete [] fElements; fElements = 0; }
                                                       if (fRowIndex) { delete [] fRowIndex; fRowIndex = 0; }
-                                                      if (fColIndex) { delete [] fColIndex; fColIndex = 0; {
+                                                      if (fColIndex) { delete [] fColIndex; fColIndex = 0; }
                                                    }
                                                    this->fNelems    = 0;
                                                    this->fNrowIndex = 0;
