@@ -101,10 +101,11 @@ namespace TMVA {
       
       // setters for subclasses
       void SetActivation(TActivation* activation) {
-         if (fActivation != NULL) delete fActivation; fActivation = activation;
+         if (fActivation != nullptr) delete fActivation;
+         fActivation = activation;
       }
       void SetNeuronInputCalculator(TNeuronInput* inputCalculator) {
-         if (fInputCalculator != NULL) delete fInputCalculator;
+         if (fInputCalculator != nullptr) delete fInputCalculator;
          fInputCalculator = inputCalculator;
       }
       
