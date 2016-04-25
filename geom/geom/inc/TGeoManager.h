@@ -433,7 +433,7 @@ public:
    void                   SetMaxThreads(Int_t nthreads);
    void                   SetMultiThread(Bool_t flag=kTRUE) {fMultiThread = flag;}
    Int_t                  GetRTmode() const {return fRaytraceMode;}
-   void                   SetRTmode(Int_t mode);
+   void                   SetRTmode(Int_t mode); // *MENU*
    Bool_t                 IsMultiThread() const {return fMultiThread;}
    static void            SetNavigatorsLock(Bool_t flag);
    static Int_t           ThreadId();

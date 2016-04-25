@@ -43,7 +43,7 @@ void TGeoVGConverter::ConvertGeometry()
    // First convert the top volume
    TGeoVolume *top = fGeom->GetMasterVolume();
    TGeoVGShape *vgshape = nullptr;
-   if ( top->GetShape()->IsVecGeom() )
+   if ( !top->GetShape()->IsVecGeom() )
       vgshape = TGeoVGShape::Create(top->GetShape());
    Int_t nconverted=0;
    // If shape of top volume not known by VecGeom, keep old one
