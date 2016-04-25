@@ -1014,7 +1014,8 @@ TObject *TROOT::FindObject(const char *name) const
    while ((obj=next())) {
       temp = obj->FindObject(name);         if (temp) return temp;
    }
-   if (gDirectory) temp = gDirectory->Get(name); if (temp) return temp;
+   if (gDirectory) temp = gDirectory->Get(name);
+   if (temp) return temp;
    if (gPad) {
       TVirtualPad *canvas = gPad->GetVirtCanvas();
       if (fCanvases->FindObject(canvas)) {  //this check in case call from TCanvas ctor
