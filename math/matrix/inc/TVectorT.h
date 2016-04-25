@@ -178,7 +178,8 @@ public:
    void Add(const TVectorT<Element> &v);
    void Add(const TVectorT<Element> &v1, const TVectorT<Element> &v2);
    void Clear(Option_t * /*option*/ ="") { if (fIsOwner) Delete_m(fNrows,fElements);
-                                           else fElements = 0; fNrows = 0; }
+                                           else fElements = 0;
+                                           fNrows = 0; }
    void Draw (Option_t *option=""); // *MENU*
    void Print(Option_t *option="") const;  // *MENU*
 

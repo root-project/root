@@ -136,7 +136,8 @@ public:
    template<class V> bool Solve(V& rhs) const
    {
       using CholeskyDecompHelpers::_solver;
-      if (fOk) _solver<F,N,V>()(rhs, fL); return fOk;
+      if (fOk) _solver<F,N,V>()(rhs, fL);
+      return fOk;
    }
 
    /** @brief place the inverse into m
@@ -148,7 +149,8 @@ public:
    template<class M> bool Invert(M& m) const
    {
       using CholeskyDecompHelpers::_inverter;
-      if (fOk) _inverter<F,N,M>()(m, fL); return fOk;
+      if (fOk) _inverter<F,N,M>()(m, fL);
+      return fOk;
    }
 
    /** @brief place the inverse into m
@@ -374,7 +376,8 @@ public:
    template<class V> bool Solve(V& rhs) const
    {
       using CholeskyDecompHelpers::_solverGenDim;
-      if (fOk) _solverGenDim<F,V>()(rhs, fL, fN); return fOk;
+      if (fOk) _solverGenDim<F,V>()(rhs, fL, fN);
+      return fOk;
    }
 
    /** @brief place the inverse into m
@@ -386,7 +389,8 @@ public:
    template<class M> bool Invert(M& m) const
    {
       using CholeskyDecompHelpers::_inverterGenDim;
-      if (fOk) _inverterGenDim<F,M>()(m, fL, fN); return fOk;
+      if (fOk) _inverterGenDim<F,M>()(m, fL, fN);
+      return fOk;
    }
 
    /** @brief place the inverse into m
