@@ -559,6 +559,11 @@ int PyROOT::Utility::GetBuffer( PyObject* pyobject, char tc, int size, void*& bu
       (*(bufprocs->bf_getbuffer))( pyobject, &bufinfo, PyBUF_WRITABLE );
       buf = (char*)bufinfo.buf;
       Py_ssize_t buflen = bufinfo.len;
+#if PY_VERSION_HEX < 0x03010000
+      PyBuffer_Release( pyobject, &bufinfo );
+#else
+      PyBuffer_Release( &bufinfo );
+#endif
 #endif
 
       if ( buf && check == kTRUE ) {
