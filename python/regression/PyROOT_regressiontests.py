@@ -1,7 +1,7 @@
 # File: roottest/python/regression/PyROOT_regressiontests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 01/02/07
-# Last: 05/18/15
+# Last: 04/26/16
 
 """Regression tests, lacking a better place, for PyROOT package."""
 
@@ -10,8 +10,10 @@ sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
 
 try:
    import commands
+   WEXITSTATUS = os.WEXITSTATUS
 except ImportError:
    import subprocess as commands
+   def WEXITSTATUS(arg): return arg
 import ROOT
 from ROOT import gROOT, TClass, TObject, TH1I, TVector3, TGraph, PyROOT, Long, TFile, TMatrixD
 from common import *
@@ -136,20 +138,20 @@ class Regression04Threading( MyTestCase ):
          cmd += " - -b"
 
       stat, out = commands.getstatusoutput( cmd % "" )
-      self.assertEqual( os.WEXITSTATUS(stat), self.noThread )
+      self.assertEqual( WEXITSTATUS(stat), self.noThread )
 
       stat, out = commands.getstatusoutput( cmd % "ROOT.gROOT.SetBatch( 1 );" )
-      self.assertEqual( os.WEXITSTATUS(stat), self.noThread )
+      self.assertEqual( WEXITSTATUS(stat), self.noThread )
 
       stat, out = commands.getstatusoutput( cmd % "ROOT.gROOT.SetBatch( 0 );" )
-      self.assertEqual( os.WEXITSTATUS(stat), self.noThread )
+      self.assertEqual( WEXITSTATUS(stat), self.noThread )
 
       stat, out = commands.getstatusoutput(
          cmd % "ROOT.gROOT.ProcessLine( \"cout << 42 << endl;\" ); " )
-      self.assertEqual( os.WEXITSTATUS(stat), self.hasThread )
+      self.assertEqual( WEXITSTATUS(stat), self.hasThread )
 
       stat, out = commands.getstatusoutput( cmd % "ROOT.gDebug;" )
-      self.assertEqual( os.WEXITSTATUS(stat), self.hasThread )
+      self.assertEqual( WEXITSTATUS(stat), self.hasThread )
 
    def test2ImportStyles( self ):
       """Test different import styles vis-a-vis threading"""
@@ -160,13 +162,13 @@ class Regression04Threading( MyTestCase ):
          cmd += " - -b"
 
       stat, out = commands.getstatusoutput( cmd % "from ROOT import *" )
-      self.assertEqual( os.WEXITSTATUS(stat), self.hasThread )
+      self.assertEqual( WEXITSTATUS(stat), self.hasThread )
 
       stat, out = commands.getstatusoutput( cmd % "from ROOT import gROOT" )
-      self.assertEqual( os.WEXITSTATUS(stat), self.noThread )
+      self.assertEqual( WEXITSTATUS(stat), self.noThread )
 
       stat, out = commands.getstatusoutput( cmd % "from ROOT import gDebug" )
-      self.assertEqual( os.WEXITSTATUS(stat), self.hasThread )
+      self.assertEqual( WEXITSTATUS(stat), self.hasThread )
 
    def test3SettingOfBatchMode( self ):
       """Test various ways of preventing GUI thread startup"""
@@ -176,28 +178,28 @@ class Regression04Threading( MyTestCase ):
          cmd += " - -b"
 
       stat, out = commands.getstatusoutput( (cmd % 'from ROOT import *;') + ' - -b' )
-      self.assertEqual( os.WEXITSTATUS(stat), self.noThread )
+      self.assertEqual( WEXITSTATUS(stat), self.noThread )
 
       stat, out = commands.getstatusoutput(
          cmd % 'import ROOT; ROOT.PyConfig.StartGuiThread = 0;' )
-      self.assertEqual( os.WEXITSTATUS(stat), self.noThread )
+      self.assertEqual( WEXITSTATUS(stat), self.noThread )
 
       stat, out = commands.getstatusoutput(
          cmd % 'from ROOT import PyConfig; PyConfig.StartGuiThread = 0; from ROOT import gDebug;' )
-      self.assertEqual( os.WEXITSTATUS(stat), self.noThread )
+      self.assertEqual( WEXITSTATUS(stat), self.noThread )
 
       stat, out = commands.getstatusoutput(
          cmd % 'from ROOT import PyConfig; PyConfig.StartGuiThread = 1; from ROOT import gDebug;' )
-      self.assertEqual( os.WEXITSTATUS(stat), self.hasThread )
+      self.assertEqual( WEXITSTATUS(stat), self.hasThread )
 
       stat, out = commands.getstatusoutput(
          cmd % 'from ROOT import gROOT; gROOT.SetBatch( 1 ); from ROOT import *;' )
-      self.assertEqual( os.WEXITSTATUS(stat), self.noThread )
+      self.assertEqual( WEXITSTATUS(stat), self.noThread )
 
       if not gROOT.IsBatch():               # can't test if no display ...
          stat, out = commands.getstatusoutput(
             cmd % 'from ROOT import gROOT; gROOT.SetBatch( 0 ); from ROOT import *;' )
-         self.assertEqual( os.WEXITSTATUS(stat), self.hasThread )
+         self.assertEqual( WEXITSTATUS(stat), self.hasThread )
 
 
 ### Test the proper resolution of a template with namespaced parameter =======
