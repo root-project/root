@@ -43,11 +43,11 @@ class TestClassPYTHONIZATIONS:
 
         x = m.GetX()
         assert len(x) == bsize
-        assert list(x) == map(lambda x: x*xval, range(bsize))
+        assert list(x) == list(map(lambda x: x*xval, range(bsize)))
 
         y = m.GetY()
         assert len(y) == bsize
-        assert list(y) == map(lambda x: x*yval, range(bsize))
+        assert list(y) == list(map(lambda x: x*yval, range(bsize)))
 
     def test02_type_pinning(self):
         """Verify pinnability of returns"""
@@ -77,8 +77,8 @@ class TestClassROOT_PYTHONIZATIONS:
         import ROOT, array
 
         N = 5; xval, yval = 3, 7
-        ax = array.array('d', map(lambda x: x*xval, xrange(N)))
-        ay = array.array('d', map(lambda x: x*yval, xrange(N)))
+        ax = array.array('d', map(lambda x: x*xval, range(N)))
+        ay = array.array('d', map(lambda x: x*yval, range(N)))
 
         g = ROOT.TGraph(N, ax, ay)
 

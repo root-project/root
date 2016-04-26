@@ -12,4 +12,6 @@ void PyClassTest1() {
    printf( "long     (123): %ld\n",       (long) m.gime( 123 )    );
    printf( "float  (0.456): %.3f\n",     (float) m.gime( 0.456 )  );
    printf( "double (0.789): %.3f\n",    (double) m.gime( 0.789 )  );
+
+   fflush( stdout );
 }

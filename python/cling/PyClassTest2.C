@@ -7,16 +7,18 @@ void PyClassTest2() {
 // did generation of the second class interfere with the old class?
    MyPyClass m;
    printf( "string (jet) : %s\n",       (char*)              m.gime( "zus" )   );
+   fflush( stdout );
 
    MyOtherPyClass o;
    o.hop();
    o.duck();
 
 // finally, ref counting test
-   TPython::Exec( "print \'instance count:\', MyOtherPyClass.count" );
+   TPython::Exec( "import sys" );
+   TPython::Exec( "sys.stdout.write( \'instance count: %d\\n\' % (MyOtherPyClass.count,) )" );
    TPython::Exec( "op = MyOtherPyClass()" );
-   TPython::Exec( "print \'instance count:\', MyOtherPyClass.count" );
+   TPython::Exec( "sys.stdout.write( \'instance count: %d\\n\' % (MyOtherPyClass.count,) )" );
    TPython::Eval( "op" );
    TPython::Exec( "del op" );
-   TPython::Exec( "print \'instance count:\', MyOtherPyClass.count" );
+   TPython::Exec( "sys.stdout.write( \'instance count: %d\\n\' % (MyOtherPyClass.count,) )" );
 }
