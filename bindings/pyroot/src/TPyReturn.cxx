@@ -106,7 +106,7 @@ TPyReturn::operator const char*() const
    if ( fPyObject == Py_None )     // for void returns
       return 0;
 
-   const char* s = PyBytes_AsString( fPyObject );
+   const char* s = PyROOT_PyUnicode_AsString( fPyObject );
    if ( PyErr_Occurred() ) {
       PyErr_Print();
       return 0;

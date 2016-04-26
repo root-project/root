@@ -5,9 +5,6 @@
 #include "PyROOT.h"
 #include "TPyArg.h"
 
-// ROOT
-#include "TObject.h"
-
 
 //______________________________________________________________________________
 //                        Generic wrapper for arguments
@@ -34,12 +31,11 @@ void TPyArg::CallConstructor( PyObject*& pyself, PyObject* pyclass, const std::v
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
 void CallConstructor( PyObject*& pyself, PyObject* pyclass )
 {
    PyObject* pyargs = PyTuple_New( 0 );
    pyself = PyObject_Call( pyclass, pyargs, NULL );
-   Py_DECREF( pyargs );
+    Py_DECREF( pyargs );
 }
 
 //- generic dispatcher -------------------------------------------------------
@@ -52,6 +48,18 @@ PyObject* TPyArg::CallMethod( PyObject* pymeth, const std::vector<TPyArg>& args 
    PyObject* result = PyObject_Call( pymeth, pyargs, NULL );
    Py_DECREF( pyargs );
    return result;
+}
+
+//- denstructor dispatcher ----------------------------------------------------
+void TPyArg::CallDestructor( PyObject*& pyself, PyObject*, const std::vector<TPyArg>& )
+{
+   Py_XDECREF( pyself );      // calls actual dtor if ref-count down to 0
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void TPyArg::CallDestructor( PyObject*& pyself )
+{
+   Py_XDECREF( pyself );
 }
 
 //- constructors/destructor --------------------------------------------------
