@@ -11,10 +11,6 @@
 #ifndef ROOT_TMemStatBacktrace
 #define ROOT_TMemStatBacktrace
 
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic ignored "-Wframe-address"
-#endif
-
 #define _INIT_TOP_STACK extern void *g_global_stack_end;
 #define _GET_CALLER_FRAME_ADDR g_global_stack_end = __builtin_frame_address(1);
 
