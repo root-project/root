@@ -12,6 +12,9 @@
 #ifndef ROOT_THREADPOOL
 #define ROOT_THREADPOOL
 
+// exclude in case ROOT does not have IMT support 
+#ifdef R__USE_IMT
+
 #include "tbb/tbb.h"
 #include "TPool.h"
 #include <numeric>
@@ -118,4 +121,5 @@ auto ThreadPool::Reduce(const std::vector<T> &objs, BINARYOP redfunc) -> decltyp
                               }, redfunc);
 }
 
+#endif   // R__USE_IMT
 #endif
