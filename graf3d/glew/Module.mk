@@ -62,4 +62,4 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-$(GLEWO): CFLAGS += $(OPENGLINCDIR:%=-I%)
+$(GLEWO): CFLAGS += $(OPENGLINCDIR:%=-I% -isystem=$(GLEWDIR)/isystem)
