@@ -14,9 +14,7 @@
 
 #include "TMPClient.h"
 #include "MPSendRecv.h"
-#include "TCollection.h"
 #include "TPoolWorker.h"
-#include "TObjArray.h"
 #include "PoolUtils.h"
 #include "MPCode.h"
 #include "TPoolProcessor.h"
@@ -26,7 +24,6 @@
 #include "TChainElement.h"
 #include "THashList.h"
 #include "TFileInfo.h"
-#include "ROOT/TSeq.h"
 #include <vector>
 #include <string>
 #include <initializer_list>
@@ -35,8 +32,9 @@
 #include <algorithm> //std::generate
 #include <functional> //std::reference_wrapper
 #include <iostream>
+#include "TPool.h"
 
-class TProcPool : private TMPClient {
+class TProcPool : public TPool<TProcPool>, private TMPClient {
 public:
    explicit TProcPool(unsigned nWorkers = 0); //default number of workers is the number of processors
    ~TProcPool() {}
@@ -45,28 +43,15 @@ public:
    TProcPool &operator=(const TProcPool &) = delete;
 
    // Map
-   //these late return types allow for a compile-time check of compatibility between function signatures and args,
-   //and a compile-time check that the argument list implements a front() method (all STL sequence containers have it)
-   template<class F> auto Map(F func, unsigned nTimes) -> std::vector<decltype(func())>;
-   template<class F, class T> auto Map(F func, T &args) -> std::vector < decltype(++(args.begin()), args.end(), func(args.front())) >;
-   /// \cond doxygen should ignore these methods
-   template<class F> TObjArray Map(F func, TCollection &args);
-   template<class F, class T> auto Map(F func, std::initializer_list<T> args) -> std::vector<decltype(func(*args.begin()))>;
-   template<class F, class T> auto Map(F func, std::vector<T> &args) -> std::vector<decltype(func(args.front()))>;
-   template<class F, class INTEGER> auto Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<decltype(func(*args.begin()))>;
+   template<class F, class Cond = noReferenceCond<F>>
+   auto Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>;
+   /// \cond
+   template<class F, class INTEGER, class Cond = noReferenceCond<F, INTEGER>>
+   auto Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>;
+   template<class F, class T, class Cond = noReferenceCond<F, T>>
+   auto Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>;
    /// \endcond
-
-   // MapReduce
-   // the late return types also check at compile-time whether redfunc is compatible with func,
-   // other than checking that func is compatible with the type of arguments.
-   // a static_assert check in TProcPool::Reduce is used to check that redfunc is compatible with the type returned by func
-   template<class F, class R> auto MapReduce(F func, unsigned nTimes, R redfunc) -> decltype(func());
-   template<class F, class T, class R> auto MapReduce(F func, T &args, R redfunc) -> decltype(++(args.begin()), args.end(), func(args.front()));
-   /// \cond doxygen should ignore these methods
-   template<class F, class R> auto MapReduce(F func, TCollection &args, R redfunc) -> decltype(func(nullptr));
-   template<class F, class T, class R> auto MapReduce(F func, std::initializer_list<T> args, R redfunc) -> decltype(func(*args.begin()));
-   template<class F, class T, class R> auto MapReduce(F func, std::vector<T> &args, R redfunc) -> decltype(func(args.front()));
-   /// \endcond
+   using TPool<TProcPool>::Map;
 
    // ProcTree
    // this version requires that procFunc returns a ptr to TObject or inheriting classes and takes a TTreeReader& (both enforced at compile-time)
@@ -79,12 +64,14 @@ public:
    void SetNWorkers(unsigned n) { TMPClient::SetNWorkers(n); }
    unsigned GetNWorkers() const { return TMPClient::GetNWorkers(); }
 
+   template<class T, class BINARYOP> auto Reduce(const std::vector<T> &objs, BINARYOP redfunc)-> decltype(redfunc(objs.front(), objs.front())) = delete;
+   using TPool<TProcPool>::Reduce;
+
 private:
    template<class T> void Collect(std::vector<T> &reslist);
    template<class T> void HandlePoolCode(MPCodeBufPair &msg, TSocket *sender, std::vector<T> &reslist);
 
    void Reset();
-   template<class T, class R> T Reduce(const std::vector<T> &objs, R redfunc);
    void ReplyToFuncResult(TSocket *s);
    void ReplyToIdle(TSocket *s);
 
@@ -94,15 +81,15 @@ private:
    /// A collection of the types of tasks that TProcPool can execute.
    /// It is used to interpret in the right way and properly reply to the
    /// messages received (see, for example, TProcPool::HandleInput)
-   enum class ETask : unsigned {
-      kNoTask = 0,   ///< no task is being executed
+   enum class ETask : unsigned char {
+      kNoTask,   ///< no task is being executed
       kMap,          ///< a Map method with no arguments is being executed
       kMapWithArg,   ///< a Map method with arguments is being executed
-      kMapRed,       ///< a MapReduce method with no arguments is being executed
-      kMapRedWithArg, ///< a MapReduce method with arguments is being executed
       kProcByRange,   ///< a ProcTree method is being executed and each worker will process a certain range of each file
       kProcByFile,    ///< a ProcTree method is being executed and each worker will process a different file
-   } fTask; ///< the kind of task that is being executed, if any
+   };
+
+   ETask fTaskType = ETask::kNoTask; ///< the kind of task that is being executed, if any
 };
 
 
@@ -113,13 +100,13 @@ private:
 /// A vector containg executions' results is returned.
 /// Functions that take more than zero arguments can be executed (with
 /// fixed arguments) by wrapping them in a lambda or with std::bind.
-template<class F>
-auto TProcPool::Map(F func, unsigned nTimes) -> std::vector<decltype(func())>
+template<class F, class Cond>
+auto TProcPool::Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>
 {
    using retType = decltype(func());
    //prepare environment
    Reset();
-   fTask = ETask::kMap;
+   fTaskType = ETask::kMap;
 
    //fork max(nTimes, fNWorkers) times
    unsigned oldNWorkers = GetNWorkers();
@@ -145,77 +132,23 @@ auto TProcPool::Map(F func, unsigned nTimes) -> std::vector<decltype(func())>
 
    //clean-up and return
    ReapWorkers();
-   fTask = ETask::kNoTask;
+   fTaskType = ETask::kNoTask;
    return reslist;
 }
-
-
-//////////////////////////////////////////////////////////////////////////
-/// Execute func in parallel distributing the elements of the args collection between the workers.
-/// See class description for the valid types of collections and containers that can be used.
-/// A vector containing each execution's result is returned. The user is responsible of deleting
-/// objects that might be created upon the execution of func, returned objects included.
-/// **Note:** the collection of arguments is modified by Map and should be considered empty or otherwise
-/// invalidated after Map's execution (std::move might be applied to it).
-template<class F, class T>
-auto TProcPool::Map(F func, T &args) -> std::vector < decltype(++(args.begin()), args.end(), func(args.front())) >
-{
-   std::vector<typename T::value_type> vargs(
-      std::make_move_iterator(std::begin(args)),
-      std::make_move_iterator(std::end(args))
-   );
-   const auto &reslist = Map(func, vargs);
-   return reslist;
-}
-
 
 // tell doxygen to ignore this (\endcond closes the statement)
 /// \cond
-template<class F>
-TObjArray TProcPool::Map(F func, TCollection &args)
-{
-   // check the function returns something from which we can build a TObject*
-   static_assert(std::is_constructible<TObject *, typename std::result_of<F(TObject *)>::type>::value,
-                 "func should return a pointer to TObject or derived classes");
-
-   //build vector with same elements as args
-   std::vector<TObject *> vargs(args.GetSize());
-   auto it = vargs.begin();
-   for (auto o : args) {
-      *it = o;
-      ++it;
-   }
-
-   //call Map
-   const auto &reslist = Map(func, vargs);
-
-   //build TObjArray with same elements as reslist
-   TObjArray resarray;
-   for (const auto &res : reslist)
-      resarray.Add(res);
-   return resarray;
-}
-
-
-template<class F, class T>
-auto TProcPool::Map(F func, std::initializer_list<T> args) -> std::vector<decltype(func(*args.begin()))>
-{
-   std::vector<T> vargs(std::move(args));
-   const auto &reslist = Map(func, vargs);
-   return reslist;
-}
-
 
 // actual implementation of the Map method. all other calls with arguments eventually
 // call this one
-template<class F, class T>
-auto TProcPool::Map(F func, std::vector<T> &args) -> std::vector<decltype(func(args.front()))>
+template<class F, class T, class Cond>
+auto TProcPool::Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>
 {
    //check whether func is callable
    using retType = decltype(func(args.front()));
    //prepare environment
    Reset();
-   fTask = ETask::kMapWithArg;
+   fTaskType = ETask::kMapWithArg;
 
    //fork max(args.size(), fNWorkers) times
    //N.B. from this point onwards, args is filled with undefined (but valid) values, since TPoolWorker moved its content away
@@ -244,144 +177,19 @@ auto TProcPool::Map(F func, std::vector<T> &args) -> std::vector<decltype(func(a
 
    //clean-up and return
    ReapWorkers();
-   fTask = ETask::kNoTask;
+   fTaskType = ETask::kNoTask;
    return reslist;
 }
 
-template<class F, class INTEGER>
-auto TProcPool::Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<decltype(func(*args.begin()))>
+template<class F, class INTEGER, class Cond>
+auto TProcPool::Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>
 {
    std::vector<INTEGER> vargs(args.size());
    std::copy(args.begin(), args.end(), vargs.begin());
    const auto &reslist = Map(func, vargs);
    return reslist;
 }
-
 // tell doxygen to stop ignoring code
-/// \endcond
-
-
-//////////////////////////////////////////////////////////////////////////
-/// This method behaves just like Map, but an additional redfunc function
-/// must be provided. redfunc is applied to the vector Map would return and
-/// must return the same type as func. In practice, redfunc can be used to
-/// "squash" the vector returned by Map into a single object by merging,
-/// adding, mixing the elements of the vector.
-template<class F, class R>
-auto TProcPool::MapReduce(F func, unsigned nTimes, R redfunc) -> decltype(func())
-{
-   using retType = decltype(func());
-   //prepare environment
-   Reset();
-   fTask = ETask::kMapRed;
-
-   //fork max(nTimes, fNWorkers) times
-   unsigned oldNWorkers = GetNWorkers();
-   if (nTimes < oldNWorkers)
-      SetNWorkers(nTimes);
-   TPoolWorker<F, void, R> worker(func, redfunc);
-   bool ok = Fork(worker);
-   SetNWorkers(oldNWorkers);
-   if (!ok) {
-      std::cerr << "[E][C] Could not fork. Aborting operation\n";
-      return retType();
-   }
-
-   //give workers their first task
-   fNToProcess = nTimes;
-   std::vector<retType> reslist;
-   reslist.reserve(fNToProcess);
-   fNProcessed = Broadcast(PoolCode::kExecFunc, fNToProcess);
-
-   //collect results/give workers their next task
-   Collect(reslist);
-
-   //clean-up and return
-   ReapWorkers();
-   fTask = ETask::kNoTask;
-   return redfunc(reslist);
-}
-
-//////////////////////////////////////////////////////////////////////////
-/// This method behaves just like Map, but an additional redfunc function
-/// must be provided. redfunc is applied to the vector Map would return and
-/// must return the same type as func. In practice, redfunc can be used to
-/// "squash" the vector returned by Map into a single object by merging,
-/// adding, mixing the elements of the vector.
-template<class F, class T, class R>
-auto TProcPool::MapReduce(F func, T &args, R redfunc) -> decltype(++(args.begin()), args.end(), func(args.front()))
-{
-   std::vector<typename T::value_type> vargs(
-      std::make_move_iterator(std::begin(args)),
-      std::make_move_iterator(std::end(args))
-   );
-   return MapReduce(func, vargs, redfunc);
-}
-
-/// \cond doxygen should ignore these methods
-template<class F, class R>
-auto TProcPool::MapReduce(F func, TCollection &args, R redfunc) -> decltype(func(nullptr))
-{
-   //build vector with same elements as args
-   std::vector<TObject *> vargs(args.GetSize());
-   auto it = vargs.begin();
-   for (auto o : args) {
-      *it = o;
-      ++it;
-   }
-
-   //call MapReduce
-   auto res = MapReduce(func, vargs, redfunc); //TODO useless copying by value here, but it looks like the return type of this MapReduce is a reference otherwise
-
-   return res;
-}
-
-
-template<class F, class T, class R>
-auto TProcPool::MapReduce(F func, std::initializer_list<T> args, R redfunc) -> decltype(func(*args.begin()))
-{
-   std::vector<T> vargs(std::move(args));
-   return MapReduce(func, vargs, redfunc);
-}
-
-template<class F, class T, class R>
-auto TProcPool::MapReduce(F func, std::vector<T> &args, R redfunc) -> decltype(func(args.front()))
-{
-   using retTypeCand = decltype(func(args.front()));
-   using retTypeCandNoPtr = typename std::remove_pointer<retTypeCand>::type;
-   using TObjType = typename std::conditional<std::is_pointer<retTypeCand>::value, TObject*, TObject>::type;
-   using retType = typename std::conditional<std::is_base_of<TObject, retTypeCandNoPtr>::value, TObjType, retTypeCand>::type;
-   //prepare environment
-   Reset();
-   fTask = ETask::kMapRedWithArg;
-
-   //fork max(args.size(), fNWorkers) times
-   unsigned oldNWorkers = GetNWorkers();
-   if (args.size() < oldNWorkers)
-      SetNWorkers(args.size());
-   TPoolWorker<F, T, R> worker(func, args, redfunc);
-   bool ok = Fork(worker);
-   SetNWorkers(oldNWorkers);
-   if (!ok) {
-      std::cerr << "[E][C] Could not fork. Aborting operation\n";
-      return retTypeCand();
-   }
-
-   //give workers their first task
-   fNToProcess = args.size();
-   std::vector<retType> reslist;
-   reslist.reserve(fNToProcess);
-   std::vector<unsigned> range(fNToProcess);
-   std::iota(range.begin(), range.end(), 0);
-   fNProcessed = Broadcast(PoolCode::kExecFuncWithArg, range);
-
-   //collect results/give workers their next task
-   Collect(reslist);
-
-   ReapWorkers();
-   fTask = ETask::kNoTask;
-   return ROOT::Internal::PoolUtils::ResultCaster<retType, retTypeCand>::CastIfNeeded(redfunc(reslist));
-}
 /// \endcond
 
 
@@ -405,7 +213,7 @@ auto TProcPool::ProcTree(const std::vector<std::string>& fileNames, F procFunc, 
 
    if(fileNames.size() < nWorkers) {
       //TTree entry granularity. For each file, we divide entries equally between workers
-      fTask = ETask::kProcByRange;
+      fTaskType = ETask::kProcByRange;
       //Tell workers to start processing entries
       fNToProcess = nWorkers*fileNames.size(); //this is the total number of ranges that will be processed by all workers cumulatively
       std::vector<unsigned> args(nWorkers);
@@ -415,7 +223,7 @@ auto TProcPool::ProcTree(const std::vector<std::string>& fileNames, F procFunc, 
          std::cerr << "[E][C] There was an error while sending tasks to workers. Some entries might not be processed.\n";
    } else {
       //file granularity. each worker processes one whole file as a single task
-      fTask = ETask::kProcByFile;
+      fTaskType = ETask::kProcByFile;
       fNToProcess = fileNames.size();
       std::vector<unsigned> args(nWorkers);
       std::iota(args.begin(), args.end(), 0);
@@ -429,11 +237,12 @@ auto TProcPool::ProcTree(const std::vector<std::string>& fileNames, F procFunc, 
    Collect(reslist);
 
    //merge
-   TObject* res = PoolUtils::ReduceObjects(reslist);
+   PoolUtils::ReduceObjects<TObject *> redfunc;
+   auto res = redfunc(reslist);
 
    //clean-up and return
    ReapWorkers();
-   fTask = ETask::kNoTask;
+   fTaskType = ETask::kNoTask;
    return static_cast<retType>(res);
 }
 
@@ -490,7 +299,7 @@ auto TProcPool::ProcTree(TTree& tree, F procFunc, ULong64_t nToProcess) -> typen
    }
 
    //divide entries equally between workers
-   fTask = ETask::kProcByRange;
+   fTaskType = ETask::kProcByRange;
 
    //tell workers to start processing entries
    fNToProcess = nWorkers; //this is the total number of ranges that will be processed by all workers cumulatively
@@ -505,11 +314,12 @@ auto TProcPool::ProcTree(TTree& tree, F procFunc, ULong64_t nToProcess) -> typen
    Collect(reslist);
 
    //merge
-   TObject* res = PoolUtils::ReduceObjects(reslist);
+   PoolUtils::ReduceObjects<TObject *> redfunc;
+   auto res = redfunc(reslist);
 
    //clean-up and return
    ReapWorkers();
-   fTask = ETask::kNoTask;
+   fTaskType = ETask::kNoTask;
    return static_cast<retType>(res);
 }
 
@@ -561,16 +371,6 @@ void TProcPool::HandlePoolCode(MPCodeBufPair &msg, TSocket *s, std::vector<T> &r
       // UNKNOWN CODE
       std::cerr << "[W][C] unknown code received from server. code=" << code << "\n";
    }
-}
-
-/// Check that redfunc has the right signature and call it on objs
-template<class T, class R>
-T TProcPool::Reduce(const std::vector<T> &objs, R redfunc)
-{
-   // check we can apply reduce to objs
-   static_assert(std::is_same<decltype(redfunc(objs)), T>::value, "redfunc does not have the correct signature");
-
-   return redfunc(objs);
 }
 
 #endif

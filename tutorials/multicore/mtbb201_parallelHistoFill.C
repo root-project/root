@@ -6,14 +6,15 @@
 ///
 /// \macro_image
 /// \macro_code
-/// \author Danilo Piparo
+/// \author Danilo Piparo.
 
 const UInt_t poolSize = 4U;
 
-Int_t mp201_parallelHistoFill()
+Int_t mtbb201_parallelHistoFill()
 {
+   ROOT::EnableThreadSafety();
    TH1::AddDirectory(false);
-   TProcPool pool(poolSize);
+   ThreadPool pool(poolSize);
    auto fillRandomHisto = [](int seed = 0) {
       TRandom3 rndm(seed);
       auto h = new TH1F("myHist", "Filled in parallel", 128, -8, 8);
