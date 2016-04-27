@@ -14,6 +14,8 @@
 
 #include "TObject.h"
 #include <vector>
+#include "TList.h"
+#include "TError.h"
 
 namespace PoolCode {
 
@@ -72,7 +74,7 @@ namespace PoolUtils {
       //get merge function
       ROOT::MergeFunc_t merge = obj->IsA()->GetMerge();
       if(!merge) {
-         std::cerr << "could not find merge method for the TObject\n. Aborting operation.";
+         Error("PoolUtils::ReduceObjects", "could not find merge method for the TObject\n. Aborting operation.");
          return nullptr;
       }
 
