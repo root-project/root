@@ -25,11 +25,13 @@ ROOTTEST_ADD_TEST(procPool
                   EXEC procPool
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
-ROOTTEST_GENERATE_EXECUTABLE(threadPool threadpool.cpp LIBRARIES MultiProc Core Net TreePlayer RIO Hist tbb)
+if(ROOT_imt_FOUND)
+  ROOTTEST_GENERATE_EXECUTABLE(threadPool threadpool.cpp LIBRARIES MultiProc Core Net TreePlayer RIO Hist tbb)
 
-ROOTTEST_ADD_TEST(threadPool
-                  EXEC threadPool
-                  DEPENDS ${GENERATE_EXECUTABLE_TEST})
+  ROOTTEST_ADD_TEST(threadPool
+                    EXEC threadPool
+                    DEPENDS ${GENERATE_EXECUTABLE_TEST})
+endif()
                   
 ROOTTEST_GENERATE_EXECUTABLE(current_dir current_dir.cpp LIBRARIES Core RIO Thread)
 
