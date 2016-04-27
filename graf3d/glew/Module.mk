@@ -62,4 +62,6 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-$(GLEWO): CFLAGS += $(OPENGLINCDIR:%=-I% -isystem=$(GLEWDIR)/isystem)
+# We need to disallow the direct use of gl.h. This way people will see the error
+# and the suggested fix. This happens by providing our own "fake" system gl.h
+$(GLEWO): CFLAGS += -isystem $(GLEWDIR)/isystem $(OPENGLINCDIR:%=-I%)
