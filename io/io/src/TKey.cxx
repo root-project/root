@@ -247,9 +247,11 @@ TKey::TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* moth
    fCycle     = fMotherDir->AppendKey(this);
 
    Streamer(*fBufferRef);         //write key itself
+   printf("In TKey::TKey and after Streamer\n");//##
    fKeylen    = fBufferRef->Length();
    fBufferRef->MapObject(obj);    //register obj in map in case of self reference
    ((TObject*)obj)->Streamer(*fBufferRef);    //write object
+   printf("In TKey::TKey and after obj Streamer\n");//##
    lbuf       = fBufferRef->Length();
    fObjlen    = lbuf - fKeylen;
 
@@ -1359,6 +1361,7 @@ void TKey::Streamer(TBuffer &b)
       fDatime.Streamer(b);
       b >> fKeylen;
       b >> fCycle;
+      printf("In TKey::Streamer, and fVersion=%d\n",fVersion);//##
       if (fVersion > 1000) {
          b >> fSeekKey;
 
@@ -1379,13 +1382,16 @@ void TKey::Streamer(TBuffer &b)
          b >> seekdir; fSeekPdir= (Long64_t)seekdir;
       }
       fClassName.Streamer(b);
+      printf("In TKey::Streamer, and fClassName=%s\n",fClassName.Data());//##
       //the following test required for forward and backward compatibility
       if (fClassName == "TDirectory") {
          fClassName = "TDirectoryFile";
          SetBit(kIsDirectoryFile);
       }
       fName.Streamer(b);
+      printf("In TKey::Streamer, and fName=%s\n",fName.Data());//##
       fTitle.Streamer(b);
+      printf("In TKey::Streamer, and fTitle=%s\n",fTitle.Data());//##
       if (fKeylen < 0) {
          Error("Streamer","The value of fKeylen is incorrect (%d) ; trying to recover by setting it to zero",fKeylen);
          MakeZombie();
@@ -1435,6 +1441,9 @@ void TKey::Streamer(TBuffer &b)
       }
       fName.Streamer(b);
       fTitle.Streamer(b);
+      printf("In TKey::Streamer, and fClassName=%s\n",fClassName.Data());//##
+      printf("In TKey::Streamer, and fName=%s\n",fName.Data());//##
+      printf("In TKey::Streamer, and fTitle=%s\n",fTitle.Data());//##
    }
 }
 

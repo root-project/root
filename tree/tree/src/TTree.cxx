@@ -8818,6 +8818,7 @@ void TTree::Streamer(TBuffer& b)
             fCacheSize = 0;
          }
          ResetBit(kMustCleanup);
+         printf("In TTree::Streamer(), before return\n");//##
          return;
       }
       //====process old versions before automatic schema evolution
@@ -8865,6 +8866,7 @@ void TTree::Streamer(TBuffer& b)
 
       if (table) TRefTable::SetRefTable(table);
    }
+   printf("End of TTree::Streamer()\n");//##
 }
 
 ////////////////////////////////////////////////////////////////////////////////

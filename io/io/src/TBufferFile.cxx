@@ -375,7 +375,7 @@ void TBufferFile::SetByteCount(UInt_t cntpos, Bool_t packInVersion)
    // if true, pack byte count in two consecutive shorts, so it can
    // be read by ReadVersion()
    if (packInVersion) {
-//      printf("in packInVersion,buffBigEndian=%d\n",IsBufBigEndian());//##
+      printf("in packInVersion,buffBigEndian=%d\n",IsBufBigEndian());//##
       union {
          UInt_t    cnt;
          Version_t vers[2];
@@ -400,7 +400,7 @@ void TBufferFile::SetByteCount(UInt_t cntpos, Bool_t packInVersion)
 #endif
    } else {//##
       tobuf(buf, cnt | kByteCountMask, IsBufBigEndian());
-//      printf("else packInVersion,buffBigEndian=%d, cnt|kByteCountMask and cnt=%u(0x%x)\n",IsBufBigEndian(),cnt|kByteCountMask,cnt|kByteCountMask);//##
+      printf("else packInVersion,buffBigEndian=%d, cnt|kByteCountMask and cnt=%u(0x%x)\n",IsBufBigEndian(),cnt|kByteCountMask,cnt|kByteCountMask);//##
    }
 
    if (cnt >= kMaxMapCount) {
@@ -424,11 +424,12 @@ Int_t TBufferFile::CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *cl
    Int_t  offset = 0;
 
    Long_t endpos = Long_t(fBuffer) + startpos + bcnt + sizeof(UInt_t);
+   printf("Outer: In TBufferFile::CheckByteCount(),fBuffer=%ld,startpos=%u,bcnt=%u,endpos=%ld,fBufCur=%ld,offset=%d\n",Long_t(fBuffer),startpos,bcnt,endpos,Long_t(fBufCur),offset);//##
 
    if (Long_t(fBufCur) != endpos) {
       offset = Int_t(Long_t(fBufCur) - endpos);
-
       const char *name = clss ? clss->GetName() : classname ? classname : 0;
+      printf("In TBufferFile::CheckByteCount(),name=%s,fBuffer=%ld,startpos=%u,bcnt=%u,endpos=%ld,fBufCur=%ld,offset=%d\n",name,Long_t(fBuffer),startpos,bcnt,endpos,Long_t(fBufCur),offset);//##
 
       if (name) {
          if (offset < 0) {
@@ -2747,9 +2748,9 @@ void *TBufferFile::ReadObjectAny(const TClass *clCast)
 
    // attempt to load next object as TClass clCast
    UInt_t tag;       // either tag or byte count
-//   printf("In TBufferFile::ReadObjectAny, before ReadClass()\n");//##
+   printf("In TBufferFile::ReadObjectAny, before ReadClass()\n");//##
    TClass *clRef = ReadClass(clCast, &tag);
-//   printf("In TBufferFile::ReadObjectAny, after ReadClass()\n");//##
+   printf("In TBufferFile::ReadObjectAny, after ReadClass()\n");//##
    TClass *clOnfile = 0;
    Int_t baseOffset = 0;
    if (clRef && (clRef!=(TClass*)(-1)) && clCast) {
@@ -2764,7 +2765,7 @@ void *TBufferFile::ReadObjectAny(const TClass *clCast)
             // There is no converter
             Error("ReadObject", "got object of wrong class! requested %s but got %s",
                   clCast->GetName(), clRef->GetName());
-
+            printf("In TBufferFile::ReadObjectAny(), CheckByteCount 1\n");//##
             CheckByteCount(startpos, tag, (TClass*)0); // avoid mis-leading byte count error message
             return 0; // We better return at this point
          }
@@ -2778,6 +2779,7 @@ void *TBufferFile::ReadObjectAny(const TClass *clCast)
          //we cannot mix a compiled class with an emulated class in the inheritance
          Error("ReadObject", "trying to read an emulated class (%s) to store in a compiled pointer (%s)",
                clRef->GetName(),clCast->GetName());
+         printf("In TBufferFile::ReadObjectAny(), CheckByteCount 2\n");//##
          CheckByteCount(startpos, tag, (TClass*)0); // avoid mis-leading byte count error message
          return 0;
       }
@@ -2790,6 +2792,7 @@ void *TBufferFile::ReadObjectAny(const TClass *clCast)
       obj = (char *) (Long_t)fMap->GetValue(startpos+kMapOffset);
       if (obj == (void*) -1) obj = 0;
       if (obj) {
+         printf("In TBufferFile::ReadObjectAny(), CheckByteCount 3\n");//##
          CheckByteCount(startpos, tag, (TClass*)0);
          return (obj+baseOffset);
       }
@@ -2802,6 +2805,7 @@ void *TBufferFile::ReadObjectAny(const TClass *clCast)
          MapObject((TObject*) -1, startpos+kMapOffset);
       else
          MapObject((void*)0, 0, fMapCount);
+      printf("In TBufferFile::ReadObjectAny(), CheckByteCount 4\n");//##
       CheckByteCount(startpos, tag, (TClass*)0);
       return 0;
    }
@@ -2859,8 +2863,11 @@ void *TBufferFile::ReadObjectAny(const TClass *clCast)
          MapObject(obj, clRef, fMapCount);
 
       // let the object read itself
+      printf("In ReadObjectAny(), before Streamer,name=%s,fBufCur=%ld\n",clRef->GetName(),Long_t(fBufCur));//##
       clRef->Streamer( obj, *this, clOnfile );
+      printf("In ReadObjectAny(), after Streamer,name=%s,fBufCur=%ld\n",clRef->GetName(),Long_t(fBufCur));//##
 
+      printf("In TBufferFile::ReadObjectAny(), CheckByteCount 5\n");//##
       CheckByteCount(startpos, tag, clRef);
    }
 
@@ -2942,7 +2949,7 @@ void TBufferFile::WriteObjectClass(const void *actualObjectStart, const TClass *
          fMapCount++;
 
          ((TClass*)actualClass)->Streamer((void*)actualObjectStart,*this);
-
+         printf("In TBufferFile::WriteObjectClass, between Class->Streamer and SetByteCount()\n");
          // write byte count
          SetByteCount(cntpos);
       }
@@ -3024,16 +3031,16 @@ TClass *TBufferFile::ReadClass(const TClass *clReq, UInt_t *objTag)
    UInt_t bcnt, tag, startpos = 0;
    *this >> bcnt;
    if (!(bcnt & kByteCountMask) || bcnt == kNewClassTag) {
-//      printf("in if, buffBigEndian=%d,requested class:%s,fVersion=%d,bcnt=%u(0x%x), kByteCountMask=%u(0x%x), kNewClassTag=%u(0x%x)\n",IsBufBigEndian(),clReq->GetName(),fVersion,bcnt,bcnt,kByteCountMask,kByteCountMask,kNewClassTag,kNewClassTag);
+      printf("in if, buffBigEndian=%d,requested class:%s,fVersion=%d,bcnt=%u(0x%x), kByteCountMask=%u(0x%x), kNewClassTag=%u(0x%x)\n",IsBufBigEndian(),clReq->GetName(),fVersion,bcnt,bcnt,kByteCountMask,kByteCountMask,kNewClassTag,kNewClassTag);//##
       tag  = bcnt;
       bcnt = 0;
    } else {
       fVersion = 1;
       startpos = UInt_t(fBufCur-fBuffer);
       *this >> tag;
-//      printf("in else, buffBigEndian=%d,requested class:%s,fVersion=%d,bcnt=%u(0x%x), kByteCountMask=%u(0x%x), kNewClassTag=%u(0x%x)\n",IsBufBigEndian(),clReq->GetName(),fVersion,bcnt,bcnt,kByteCountMask,kByteCountMask,kNewClassTag,kNewClassTag);
+      printf("in else, buffBigEndian=%d,requested class:%s,fVersion=%d,bcnt=%u(0x%x), kByteCountMask=%u(0x%x), kNewClassTag=%u(0x%x)\n",IsBufBigEndian(),clReq->GetName(),fVersion,bcnt,bcnt,kByteCountMask,kByteCountMask,kNewClassTag,kNewClassTag);//##
    }
-//   printf("bcnt=%u(0x%x),tag=%u(0x%x),startpos=%u(0x%x),kNewClassTag=%u(0x%x)\n",bcnt,bcnt,tag,tag,startpos,startpos,kNewClassTag,kNewClassTag);//##
+   printf("bcnt=%u(0x%x),tag=%u(0x%x),startpos=%u(0x%x),kNewClassTag=%u(0x%x)\n",bcnt,bcnt,tag,tag,startpos,startpos,kNewClassTag,kNewClassTag);//##
    // in case tag is object tag return tag
    if (!(tag & kClassMask)) {
       if (objTag) *objTag = tag;
@@ -3060,7 +3067,7 @@ TClass *TBufferFile::ReadClass(const TClass *clReq, UInt_t *objTag)
 
       // got a tag to an already seen class
       UInt_t clTag = (tag & ~kClassMask);
-//      printf("clTag=%u(0x%x),fVersion=%d\n",clTag,clTag,fVersion);//##
+      printf("clTag=%u(0x%x),fVersion=%d\n",clTag,clTag,fVersion);//##
       if (fVersion > 0) {
          clTag += fDisplacement;
          clTag = CheckObject(clTag, clReq, kTRUE);
@@ -3214,7 +3221,20 @@ Version_t TBufferFile::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass 
       // before reading object save start position
       *startpos = UInt_t(fBufCur-fBuffer);
    }
-//   printf("In TBufferFile::ReadVersion, buffBigEndian=%d, start pos=%u\n",IsBufBigEndian(),UInt_t(fBufCur-fBuffer));//##
+   printf("In TBufferFile::ReadVersion, buffBigEndian=%d, start pos=%u\n",IsBufBigEndian(),UInt_t(fBufCur-fBuffer));//##
+   UInt_t teststart = UInt_t(fBufCur-fBuffer);//##
+   printf("fBuffer[%u]=0x%x,fBuffer[%u]=0x%x,fBuffer[%u]=0x%x,fBuffer[%u]=0x%x\n",teststart-4,fBuffer[teststart-4],teststart-3,fBuffer[teststart-3],teststart-2,fBuffer[teststart-2],teststart-1,fBuffer[teststart-1]);//##
+   printf("fBuffer[%u]=0x%x,fBuffer[%u]=0x%x,fBuffer[%u]=0x%x,fBuffer[%u]=0x%x\n",teststart,fBuffer[teststart],teststart+1,fBuffer[teststart+1],teststart+2,fBuffer[teststart+2],teststart+3,fBuffer[teststart+3]);//##
+   teststart += 4;
+   printf("fBuffer[%u]=0x%x,fBuffer[%u]=0x%x,fBuffer[%u]=0x%x,fBuffer[%u]=0x%x\n",teststart,fBuffer[teststart],teststart+1,fBuffer[teststart+1],teststart+2,fBuffer[teststart+2],teststart+3,fBuffer[teststart+3]);//##
+   teststart += 4;
+   printf("fBuffer[%u]=0x%x,fBuffer[%u]=0x%x,fBuffer[%u]=0x%x,fBuffer[%u]=0x%x\n",teststart,fBuffer[teststart],teststart+1,fBuffer[teststart+1],teststart+2,fBuffer[teststart+2],teststart+3,fBuffer[teststart+3]);//##
+   teststart += 4;
+   printf("fBuffer[%u]=0x%x,fBuffer[%u]=0x%x,fBuffer[%u]=0x%x,fBuffer[%u]=0x%x\n",teststart,fBuffer[teststart],teststart+1,fBuffer[teststart+1],teststart+2,fBuffer[teststart+2],teststart+3,fBuffer[teststart+3]);//##
+   teststart += 4;
+   printf("fBuffer[%u]=0x%x,fBuffer[%u]=0x%x,fBuffer[%u]=0x%x,fBuffer[%u]=0x%x\n",teststart,fBuffer[teststart],teststart+1,fBuffer[teststart+1],teststart+2,fBuffer[teststart+2],teststart+3,fBuffer[teststart+3]);//##
+   teststart += 4;
+   printf("fBuffer[%u]=0x%x,fBuffer[%u]=0x%x,fBuffer[%u]=0x%x,fBuffer[%u]=0x%x\n",teststart,fBuffer[teststart],teststart+1,fBuffer[teststart+1],teststart+2,fBuffer[teststart+2],teststart+3,fBuffer[teststart+3]);//##
 
    // read byte count (older files don't have byte count)
    // byte count is packed in two individual shorts, this to be
@@ -3241,16 +3261,36 @@ Version_t TBufferFile::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass 
       frombuf(this->fBufCur,&v.vers[0],0);
    }
 #endif
-//   printf("vers[0]=%hi(0x%hx),vers[1]=%hi(0x%hx)\n",v.vers[0],v.vers[0],v.vers[1],v.vers[1]);//##
+   printf("vers[0]=%hi(0x%hx),vers[1]=%hi(0x%hx)\n",v.vers[0],v.vers[0],v.vers[1],v.vers[1]);//##
    // no bytecount, backup and read version
-   if (!(v.cnt & kByteCountMask)) {
-//      printf("In TBufferFile::ReadVersion, buffBigEndian=%d, v.cnt=%u, and no bytecount found!!!\n",IsBufBigEndian(),v.cnt);//##
-      fBufCur -= sizeof(UInt_t);
-      v.cnt = 0;
+   printf("v.cnt=0x%x,kByteCountMask=%x\n",v.cnt,kByteCountMask);//##
+   UShort_t possibleVersion; //##
+   if (IsBufBigEndian()) {
+      if (!(v.cnt & kByteCountMask)) {
+         printf("In TBufferFile::ReadVersion, buffBigEndian=%d, v.cnt=%u, and no bytecount found!!!\n",IsBufBigEndian(),v.cnt);//##
+         fBufCur -= sizeof(UInt_t);
+         v.cnt = 0;
+      }
+   } else {
+      if (!(v.cnt & kByteCountMask)) {
+         printf("In TBufferFile::ReadVersion, buffBigEndian=%d, v.cnt=%u, and no bytecount found!!!\n",IsBufBigEndian(),v.cnt);//##
+         fBufCur -= sizeof(UInt_t);
+         v.cnt = 0;
+      } else {
+         frombuf(this->fBufCur,&possibleVersion,0);
+         printf("My Added Code:possibleVersion=%hu,v.vers[1]=%hu\n",possibleVersion,v.vers[1]);//##
+         if (!possibleVersion) {
+            if ((v.vers[1] >> 8) != 0x40) {
+               fBufCur -= sizeof(UInt_t);
+               v.cnt = 0;
+            }
+         }
+         fBufCur -= sizeof(UShort_t);       
+      }
    }
    if (bcnt) *bcnt = (v.cnt & ~kByteCountMask);
    frombuf(this->fBufCur,&version, IsBufBigEndian());
-//   printf("version=%hi(0x%hx)\n",version,version);//##
+   printf("version=%hi(0x%hx)\n",version,version);//##
    if (version<=1) {
       if (version <= 0)  {
          if (cl) {
@@ -3317,7 +3357,7 @@ Version_t TBufferFile::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass 
          }
       }
    }
-//   printf("before return, version=%hi(0x%hx)\n",version,version);//##
+   printf("before return, version=%hi(0x%hx)\n",version,version);//##
    return version;
 }
 
@@ -3439,16 +3479,17 @@ Version_t TBufferFile::ReadVersionForMemberWise(const TClass *cl)
 UInt_t TBufferFile::WriteVersion(const TClass *cl, Bool_t useBcnt)
 {
    UInt_t cntpos = 0;
+   printf("In TBufferFile::WriteVersion, useBcnt=%d\n",useBcnt);//##
    if (useBcnt) {
       // reserve space for leading byte count
-//      printf("In TBufferFile::WriteVersion, we need to reserve space for bount count\n");//##
+      printf("In TBufferFile::WriteVersion, we need to reserve space for bount count\n");//##
       cntpos   = UInt_t(fBufCur-fBuffer);
       fBufCur += sizeof(UInt_t);
-//      printf("In TBufferFile::WriteVersion, class:%s and start offset=%u\n",cl->GetName(),UInt_t(fBufCur-fBuffer));//##
+      printf("In TBufferFile::WriteVersion, class:%s and start offset=%u\n",cl->GetName(),UInt_t(fBufCur-fBuffer));//##
    }
 
    Version_t version = cl->GetClassVersion();
-//   printf("In TBufferFile::WriteVersion, version=%hi(0x%hx)\n",version,version);//##
+   printf("In TBufferFile::WriteVersion, version=%hi(0x%hx)\n",version,version);//##
    if (version<=1 && cl->IsForeign()) {
       *this << Version_t(0);
       *this << cl->GetCheckSum();
@@ -4065,7 +4106,7 @@ Int_t TBufferFile::ReadClassEmulated(const TClass *cl, void *object, const TClas
 
 Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t version, UInt_t start, UInt_t count, const TClass *onFileClass)
 {
-//   printf("!!!ReadBuffer, class: %s, attempting to access a wrong version: %d, object skipped at offset %d",cl->GetName(), version, Length() ); //##
+   printf("!!!ReadBuffer, class: %s, attempting to access a wrong version: %d, object skipped at offset %d",cl->GetName(), version, Length() ); //##
 
    //---------------------------------------------------------------------------
    // The ondisk class has been specified so get foreign streamer info
@@ -4318,19 +4359,19 @@ Int_t TBufferFile::WriteClassBuffer(const TClass *cl, void *pointer)
    }
 
    //write the class version number and reserve space for the byte count
-//   printf("TBufferFile::WriteClassBuffer, before WriteVersion,class:%s\n",cl->GetName());//##
+   printf("TBufferFile::WriteClassBuffer, before WriteVersion,class:%s\n",cl->GetName());//##
    UInt_t R__c = WriteVersion(cl, kTRUE);
-//   printf("TBufferFile::WriteClassBuffer, after WriteVersion,class:%s\n",cl->GetName());//##
+   printf("TBufferFile::WriteClassBuffer, after WriteVersion,class:%s\n",cl->GetName());//##
 
    //NOTE: In the future Philippe wants this to happen via a custom action
    TagStreamerInfo(sinfo);
    ApplySequence(*(sinfo->GetWriteObjectWiseActions()), (char*)pointer);
-//   printf("TBufferFile::WriteClassBuffer, after TagStreamerInfo and ApplySequence,class:%s\n",cl->GetName());//##
+   printf("TBufferFile::WriteClassBuffer, after TagStreamerInfo and ApplySequence,class:%s\n",cl->GetName());//##
 
 
    //write the byte count at the start of the buffer
    SetByteCount(R__c, kTRUE);
-//   printf(" WriteBuffer for class: %s version %d has written %d bytes\n",cl->GetName(),cl->GetClassVersion(),UInt_t(fBufCur - fBuffer) - R__c - (UInt_t)sizeof(UInt_t)); //##
+   printf(" WriteBuffer for class: %s version %d has written %d bytes\n",cl->GetName(),cl->GetClassVersion(),UInt_t(fBufCur - fBuffer) - R__c - (UInt_t)sizeof(UInt_t)); //##
    if (gDebug > 2) printf(" WriteBuffer for class: %s version %d has written %d bytes\n",cl->GetName(),cl->GetClassVersion(),UInt_t(fBufCur - fBuffer) - R__c - (UInt_t)sizeof(UInt_t));
    return 0;
 }

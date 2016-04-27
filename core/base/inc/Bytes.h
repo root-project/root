@@ -80,8 +80,10 @@ if(buffBigEndian) {
    buf[0] = sw[1];
    buf[1] = sw[0];
 # endif
+   printf("to:BigEndian:ushort=%hu\n", x);//##
 } else {
    memcpy(buf, &x, sizeof(UShort_t));
+   printf("to:LittleEndian:ushort=%hu\n", x);//##
 }
 #else
 if(buffBigEndian) {
@@ -500,8 +502,10 @@ if(buffBigEndian) {
    sw[0] = buf[1];
    sw[1] = buf[0];
 # endif
+   printf("from:BigEndian:ushort=%hu\n", *x);//##
 } else {
    memcpy(x, buf, sizeof(UShort_t));
+   printf("from:LittleEndian:ushort=x[0]=%hu\n", *x);//##
 }
 #else
 if(buffBigEndian) {

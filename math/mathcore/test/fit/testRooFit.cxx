@@ -4,6 +4,7 @@
 #include <RooArgSet.h>
 #include <RooGaussian.h>
 
+#include "TROOT.h"
 #include "RooDataSet.h"
 #include "RooRealVar.h"
 #include "RooGaussian.h"
@@ -338,7 +339,7 @@ struct GausNorm<1> {
 
 
 int main() {
-
+   gROOT->SetBufLittleEndian();//##
    TTree tree("t","a large Tree with many gaussian variables");
    fillTree(tree);
 
