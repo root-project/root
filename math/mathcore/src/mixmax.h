@@ -134,8 +134,8 @@ void branch_inplace( rng_state_t* Xin, myID_t* ID ); // almost the same as apply
 #define MOD_REM(k) ((k) % MERSBASE )  // latest Intel CPU is supposed to do this in one CPU cycle, but on my machines it seems to be 20% slower than the best tricks
 #define MOD_MERSENNE(k) MOD_PAYNE(k)
 
-#define INV_MERSBASE (0x1p-61)
-
+/// #define INV_MERSBASE (0x1p-61)
+#define INV_MERSBASE (0.433680868994201773791060216479542685926876E-18L)  // that is 1/(2^61-1)
 
 // the charpoly is irreducible for the combinations of N and SPECIAL and has maximal period for N=508, 256, half period for 1260, and 1/12 period for 3150
 
