@@ -1213,7 +1213,7 @@ Double_t TF1::Eval(Double_t x, Double_t y, Double_t z, Double_t t) const
 
 Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
 {
-   fgCurrent = this;
+   //fgCurrent = this;
 
    if (fType == 0)
    {
@@ -1286,6 +1286,7 @@ void TF1::FixParameter(Int_t ipar, Double_t value)
 
 TF1 *TF1::GetCurrent()
 {
+   Warning("GetCurrent","This function is obsolete and is working only for the current painted functions");
    return fgCurrent;
 }
 
