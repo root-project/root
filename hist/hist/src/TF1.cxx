@@ -1286,7 +1286,7 @@ void TF1::FixParameter(Int_t ipar, Double_t value)
 
 TF1 *TF1::GetCurrent()
 {
-   Warning("GetCurrent","This function is obsolete and is working only for the current painted functions");
+   ::Warning("TF1::GetCurrent","This function is obsolete and is working only for the current painted functions");
    return fgCurrent;
 }
 
