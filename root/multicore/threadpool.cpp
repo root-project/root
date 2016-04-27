@@ -1,6 +1,5 @@
 #include "TH1F.h"
-#include "TProcPool.h"
-#include <functional>
+#include "ThreadPool.h"
 #include <vector>
 #include <numeric> //accumulate
 
@@ -19,13 +18,13 @@ class fClass {
 
 TObject *rootF(TObject *o)
 {
-   TH1F *h = (TH1F*)o;
+   TH1F *h = (TH1F*) o;
    h->FillRandom("gaus", 1);
    return h;
 }
 
 int PoolTest() {
-   TProcPool pool;
+   ThreadPool pool;
    fClass c;
    auto boundF = std::bind(f, 1);
 
@@ -85,8 +84,6 @@ int PoolTest() {
     for(auto c_str : extrares1)
        if(strcmp(c_str, "42") != 0)
           return 9;
-    for(auto c_str : extrares1)
-      delete [] c_str;
 
    //returning a string
    auto extrares2 = pool.Map([]() { return std::string("fortytwo"); }, 25);
@@ -95,7 +92,7 @@ int PoolTest() {
          return 10;
 
    return 0;
- }
+}
 
 int main() {
 	return PoolTest();
