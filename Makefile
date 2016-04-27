@@ -616,6 +616,8 @@ INCLUDEFILES :=
 .SUFFIXES: .cxx .mm .d
 .PRECIOUS: include/%.h
 
+print-%  : ; @echo $* = $($*)
+
 build/rmkdepend/%.o: $(ROOT_SRCDIR)/build/rmkdepend/%.cxx
 	$(MAKEDIR)
 	$(CXX) $(OPT) $(CXXFLAGS) $(CXXOUT)$@ -c $<

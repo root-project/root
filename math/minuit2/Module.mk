@@ -87,8 +87,6 @@ $(MINUIT2LIB):  $(MINUIT2O) $(MINUIT2DO) $(ORDER_) $(MAINLIBS) $(MINUIT2LIBDEP)
 $(call pcmrule,MINUIT2)
 	$(noop)
 
-print-%  : ; @echo $* = $($*)
-
 $(MINUIT2DS):   $(MINUIT2INCH) $(MINUIT2L) $(ROOTCLINGEXE) $(call pcmdep,MINUIT2)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
