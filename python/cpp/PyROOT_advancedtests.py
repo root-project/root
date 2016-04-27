@@ -1,7 +1,7 @@
 # File: roottest/python/cpp/PyROOT_advancedtests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 06/04/05
-# Last: 05/04/15
+# Last: 04/27/16
 
 """C++ advanced language interface unit tests for PyROOT package."""
 
@@ -317,18 +317,31 @@ class Cpp03PassByNonConstRef( MyTestCase ):
       SetLongThroughRef = ROOT.SetLongThroughRef
       SetDoubleThroughRef = ROOT.SetDoubleThroughRef
       SetIntThroughRef = ROOT.SetIntThroughRef
-      
-      l = Long( pylong(42) )
-      SetLongThroughRef( l, 41 )
-      self.assertEqual( l, 41 )
+
+      if sys.hexversion < 0x3000000:
+         l = Long( pylong(42) )
+         SetLongThroughRef( l, 41 )
+         self.assertEqual( l, 41 )
+
+      if sys.hexversion >= 0x2050000:
+         import ctypes
+         l = ctypes.c_long(42)
+         SetLongThroughRef( l, 41 )
+         self.assertEqual( l.value, 41 )
 
       d = Double( 3.14 )
       SetDoubleThroughRef( d, 3.1415 )
       self.assertEqual( d, 3.1415 )
 
-      i = Long( pylong(42) )
-      SetIntThroughRef( i, 13 )
-      self.assertEqual( i, 13 )
+      if sys.hexversion < 0x3000000:
+         i = Long( pylong(42) )
+         SetIntThroughRef( i, 13 )
+         self.assertEqual( i, 13 )
+
+      if sys.hexversion >= 0x2050000:
+         i = ctypes.c_int(42)
+         SetIntThroughRef( i, 13 )
+         self.assertEqual( i.value, 13 )
 
    def test3PassBuiltinsByNonConstRef( self ):
       """Test parameter passing of builtins through const reference"""

@@ -371,27 +371,30 @@ class TestClasSTLITERATORCOMPARISON:
         b1, e1 = container.begin(), container.end()
         b2, e2 = container.begin(), container.end()
 
+        if sys.hexversion >= 0x3000000:
+           def pr_cmp(a, b):
+              if a == b: return 0
+              return 1
+        else:
+           pr_cmp = cmp
+
         assert b1.__eq__(b2)
         assert not b1.__ne__(b2)
-        if sys.hexversion < 0x3000000:
-            assert cmp(b1, b2) == 0
+        assert pr_cmp(b1, b2) == 0
 
         assert e1.__eq__(e2)
         assert not e1.__ne__(e2)
-        if sys.hexversion < 0x3000000:
-            assert cmp(e1, e2) == 0
+        assert pr_cmp(e1, e2) == 0
 
         assert not b1.__eq__(e1)
         assert b1.__ne__(e1)
-        if sys.hexversion < 0x3000000:
-            assert cmp(b1, e1) != 0
+        assert pr_cmp(b1, e1) != 0
 
         b1.__preinc__()
         assert not b1.__eq__(b2)
         assert b1.__eq__(e2)
-        if sys.hexversion < 0x3000000:
-            assert cmp(b1, b2) != 0
-            assert cmp(b1, e1) == 0
+        assert pr_cmp(b1, b2) != 0
+        assert pr_cmp(b1, e1) == 0
         assert b1 != b2
         assert b1 == e2
 

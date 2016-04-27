@@ -1,7 +1,7 @@
 # File: roottest/python/function/PyROOT_functiontests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 11/24/04
-# Last: 02/15/11
+# Last: 04/27/16
 
 """Unit tests for PyROOT python/TF1 function interactions."""
 
@@ -210,7 +210,11 @@ class Func5MinuitTestCase( MyTestCase ):
       gMinuit.SetFCN( fcn )
 
       arglist = array( 'd', 10*[0.] )
-      ierflg = Long()
+      if sys.hexversion < 0x3000000:
+         ierflg = Long()
+      else:
+         import ctypes
+         ierflg = ctypes.c_int()
 
       arglist[0] = 1
       gMinuit.mnexcm( "SET ERR", arglist, 1, ierflg )
@@ -230,10 +234,15 @@ class Func5MinuitTestCase( MyTestCase ):
 
     # verify results
       amin, edm, errdef = Double(), Double(), Double()
-      nvpar, nparx, icstat = Long(), Long(), Long()
+      if sys.hexversion < 0x3000000:
+         nvpar, nparx, icstat = Long(), Long(), Long()
+      else:
+         nvpar, nparx, icstat = ctypes.c_int(), ctypes.c_int(), ctypes.c_int()
       gMinuit.mnstat( amin, edm, errdef, nvpar, nparx, icstat )
     # gMinuit.mnprin( 3, amin )
 
+      if sys.hexversion >= 0x3000000:
+         nvpar, nparx, icstat = map(lambda x: x.value, [nvpar, nparx, icstat])
       self.assertEqual( nvpar, 4 )
       self.assertEqual( nparx, 4 )
 
