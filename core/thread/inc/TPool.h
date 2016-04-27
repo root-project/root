@@ -20,7 +20,7 @@ template<class subc>
 class TPool {
 public:
    explicit TPool() = default;
-   explicit TPool(size_t nThreads){};
+   explicit TPool(size_t /* nThreads */ ){};
 
    template< class F, class... T>
    using noReferenceCond = typename std::enable_if<"Function can't return a reference" && !(std::is_reference<typename std::result_of<F(T...)>::type>::value)>::type;
