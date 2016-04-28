@@ -6,10 +6,10 @@
 #include_next <GL/gl.h>
 #else
 #if !defined(ROOT_TGLIncludes) && !defined(GLEW_BUILD)
-#ifndef __building_module
-# define __building_module(X) 0
+#ifndef __has_feature
+# define __has_feature(X) 0
 #endif
-#  if !__building_module(OpenGL)
+#  if !__has_feature(modules)
 #  error "You shouldn't #include gl.h directly. Please use TGLIncludes.h instead."
 #  endif
 #endif
