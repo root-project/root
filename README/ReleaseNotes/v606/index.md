@@ -620,8 +620,18 @@ Add a new mode for `TClass::SetCanSplit` (2) which indicates that this class and
 
 Changes will be part of the future 6.06/04
 
+## general
+
+* Significant update of the valgrind suppression file to hide intentional lack
+of delete of some entities at the end of the process.
+* Resolved several memory leaks.
+
 ### Dictionaries
 - Add the -noIncludePaths and --noIncludePaths to rootcling and genereflex respectively to avoid storing in the dictionaries the include paths passed with the "-I" switch. ROOT will rely on ROOT_INCLUDE_PATH only at runtime to find headers.
+
+### Interpreter Library
+
+* Resolve memory hoarding in some case of looking up functions [ROOT-8145]
 
 ### I/O
 
