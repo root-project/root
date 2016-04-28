@@ -25,7 +25,7 @@ endif()
 
 # We need to disallow the direct use of gl.h. This way people will see the error
 # and the suggested fix. This happens by providing our own "fake" system gl.h.
-set(CMAKE_CXX_FLAGS " -isystem ${CMAKE_CURRENT_SOURCE_DIR}/../glew/isystem ${GLEW_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS " -isystem ${CMAKE_CURRENT_SOURCE_DIR}/../glew/isystem ${CMAKE_CXX_FLAGS}")
 
 ROOT_GENERATE_DICTIONARY(G__Eve ${headers1} ${headers2} MODULE Eve LINKDEF LinkDef.h)
 
