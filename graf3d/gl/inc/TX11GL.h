@@ -26,7 +26,7 @@
 #endif
 
 #if !defined(__CLING__)
-#include "TGLIncludes.h"
+#include <GL/glx.h>
 #else
 typedef struct _XDisplay Display;
 struct XVisualInfo;
