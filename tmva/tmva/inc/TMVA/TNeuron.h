@@ -145,10 +145,11 @@ namespace TMVA {
 
       // inlined helper functions
       Int_t NumLinks(TObjArray* links) const { 
-         if (links == NULL) return 0; return links->GetEntriesFast(); 
+         if (links == nullptr) return 0;
+         else return links->GetEntriesFast();
       }
       void NullifyLinks(TObjArray*& links) { 
-         if (links != NULL) delete links; links = NULL; 
+         if (links != nullptr) { delete links; links = nullptr; }
       }
 
       // private member variables

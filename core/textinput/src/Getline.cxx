@@ -107,8 +107,8 @@ namespace {
          delete fDisplay;
       }
 
-      const char* TakeInput() {
-         fTextInput.TakeInput(fInputLine);
+      const char* TakeInput(bool force = false) {
+         fTextInput.TakeInput(fInputLine, force);
          fInputLine += "\n"; // ROOT wants a trailing newline.
          return fInputLine.c_str();
       }
@@ -183,10 +183,15 @@ Gl_histadd(const char* buf) {
 }
 
 /* Wrapper around textinput.
- * Modes: -1 = init, 0 = line mode, 1 = one char at a time mode, 2 = cleanup
+ * Modes: -1 = init, 0 = line mode, 1 = one char at a time mode, 2 = cleanup, 3 = clear input line
  */
 const char*
 Getlinem(EGetLineMode mode, const char* prompt) {
+
+   if (mode == kClear) {
+      TextInputHolder::getHolder().TakeInput(true);
+      return 0;
+   }
 
    if (mode == kCleanUp) {
       TextInputHolder::get().ReleaseInputOutput();

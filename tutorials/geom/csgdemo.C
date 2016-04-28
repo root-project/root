@@ -1,5 +1,10 @@
-//Conbinatorial Solid Geometry example
-//Author: Andrei Gheata
+/// \file
+/// \ingroup tutorial_geom
+/// Combinatorial Solid Geometry example.
+///
+/// \macro_code
+///
+/// \author Andrei Gheata
 
 Bool_t raytracing = kTRUE;
 

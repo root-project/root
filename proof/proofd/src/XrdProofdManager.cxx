@@ -51,6 +51,9 @@
 // Tracing utilities
 #include "XrdProofdTrace.h"
 
+#include <grp.h>
+#include <unistd.h>
+
 // Auxilliary sructure used internally to extract list of allowed/denied user names
 // when running in access control mode
 typedef struct {
@@ -105,9 +108,7 @@ __FBSDID("$FreeBSD: src/lib/libc/gen/getgrouplist.c,v 1.14 2005/05/03 16:20:03 d
  */
 #include <sys/types.h>
 
-#include <grp.h>
 #include <string.h>
-#include <unistd.h>
 
 int
 getgrouplist(const char *uname, gid_t agroup, gid_t *groups, int *grpcnt)

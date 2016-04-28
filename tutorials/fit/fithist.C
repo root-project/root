@@ -1,5 +1,12 @@
-//example of fit where the model is histogram + function
-//Author: Rene Brun
+/// \file
+/// \ingroup tutorial_fit
+/// Example of fit where the model is histogram + function
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Rene Brun
 
 TH1F *background;
 void histgen() {

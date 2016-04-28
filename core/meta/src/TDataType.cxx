@@ -257,7 +257,11 @@ const char *TDataType::AsString(void *buf) const
       line.Form( "%ld", *(Long_t *)buf);
    else if (!strcmp("unsigned long long", name))
       line.Form( "%llu", *(ULong64_t *)buf);
+   else if (!strcmp("ULong64_t", name))
+      line.Form( "%llu", *(ULong64_t *)buf);
    else if (!strcmp("long long", name))
+      line.Form( "%lld", *(Long64_t *)buf);
+   else if (!strcmp("Long64_t", name))
       line.Form( "%lld", *(Long64_t *)buf);
    else if (!strcmp("unsigned short", name))
       line.Form( "%hu", *(unsigned short *)buf);

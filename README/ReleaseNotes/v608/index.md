@@ -182,6 +182,11 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 * Enhancement of the CANDLE drawing option (implemented by Georg Troska georg.troska@tu-dortmund.de).
   This option has been completely rewritten and offers a wide range of possibilities.
   See the THistPainter reference guide for all the details and examples.
+* Fix `TText` copy constructor as requested [here](https://sft.its.cern.ch/jira/browse/ROOT-8116).
+  New example to check this fix.
+* SVG boxes were not correct when x2<1 (reported [here](https://sft.its.cern.ch/jira/browse/ROOT-8126)).
+* In TASImage there was no protection against graphics being drawn outside the assigned
+  memory. That may generate some crashes like described [here](https://sft.its.cern.ch/jira/browse/ROOT-8123).
 
 ## 3D Graphics Libraries
 
@@ -190,7 +195,8 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 
 ## New histogram drawing options
 
-* COL2 is a new rendering technique providing potential performance improvements
+### COL2
+  COL2 is a new rendering technique providing potential performance improvements
   compared to the standard COL option. The performance comparison of the COL2 to
   the COL option depends on the histogram and the size of the rendering region in
   the current pad. In general, a small (approx. less than 100 bins per axis),
@@ -220,6 +226,11 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 
 ## Networking Libraries
 
+* When seeing too many requested ranges, Apache 2.4 now simply sends the whole file
+  (MaxRanges configuration parameter). TWebFile can handle this case now, but this can
+  trigger multiple transmissions of the full file. TWebFile warns when Apache reacts by
+   sending the full file.
+
 
 ## GUI Libraries
 
@@ -233,6 +244,7 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 ## Language Bindings
 
 ### PyROOT
+
   * Added a new configuration option to disable processing of the rootlogon[.py|C] macro in addition
     ro the -n option in the command arguments. To disable processing the rootlogon do the following
     before any other command that will trigger initialization:

@@ -43,7 +43,7 @@ public:
    // we trust that decltype(redfunc(std::vector<decltype(func(args[0]))>)) == decltype(args[0])
    // TODO document somewhere that fReducedResult must have a default ctor
    TPoolWorker(F func, const std::vector<T> &args, R redfunc) :
-      TMPWorker(), fFunc(func), fArgs(std::move(args)), fRedFunc(redfunc),
+      TMPWorker(), fFunc(func), fArgs(args), fRedFunc(redfunc),
       fReducedResult(), fCanReduce(false)
    {}
    ~TPoolWorker() {}

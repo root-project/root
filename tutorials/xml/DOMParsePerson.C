@@ -1,17 +1,23 @@
-//////////////////////////////////////////////////////////////////////////////
-//
-// ROOT implementation of a XML DOM Parser
-//
-// This is an example of how Dom Parser works. It will parse the xml file
-// (person.xml) to the Person object.
-// A DTD validation will be run on this example.
-//
-// To run this program
-// .x DOMParsePerson.C+
-//
-// Requires: person.xml and person.dtd
-//
-//////////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_xml
+/// ROOT implementation of a XML DOM Parser
+///
+/// This is an example of how Dom Parser works. It will parse the xml file
+/// (person.xml) to the Person object.
+/// A DTD validation will be run on this example.
+///
+/// To run this program
+/// ~~~ {.cpp}
+/// .x DOMParsePerson.C+
+/// ~~~
+///
+/// Requires: person.xml and person.dtd
+///
+/// \macro_output
+/// \macro_code
+///
+/// \author Sergey Linev
+
 
 #include <Riostream.h>
 #include <TDOMParser.h>

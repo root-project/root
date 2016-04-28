@@ -1,3 +1,12 @@
+/// \file
+/// \ingroup tutorial_fit
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Rene Brun
+
 void qa2() {
    //Fill a 1-D histogram from a parametric function
    TCanvas *c1 = new TCanvas("c1","The FillRandom example",0,0,700,500);

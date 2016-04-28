@@ -177,6 +177,7 @@ void TVirtualStreamerInfo::Optimize(Bool_t opt)
 TVirtualStreamerInfo *TVirtualStreamerInfo::Factory()
 {
    if (!fgInfoFactory) {
+      R__LOCKGUARD(gInterpreterMutex);
       TPluginHandler *h;
       if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualStreamerInfo","TStreamerInfo"))) {
          if (h->LoadPlugin() == -1) {
@@ -226,7 +227,10 @@ void TVirtualStreamerInfo::SetCanDelete(Bool_t opt)
 
 void TVirtualStreamerInfo::SetFactory(TVirtualStreamerInfo *factory)
 {
+   R__LOCKGUARD(gInterpreterMutex);
+   auto old = fgInfoFactory;
    fgInfoFactory = factory;
+   if (old) delete old;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

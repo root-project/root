@@ -39,10 +39,10 @@ enum ESpiderWid {
    kPolyLines,
    kSegment,
    kGotoEntry,
-   kNext,
-   kPrevious,
-   kFollowing,
-   kPreceding,
+   kPicNext,
+   kPicPrevious,
+   kPicFollowing,
+   kPicPreceding,
    kAddVar,
    kDeleteVar,
    kAvLineStyle,
@@ -190,22 +190,22 @@ void TSpiderEditor::MakeBrowse()
    TGHorizontalFrame *f2 = new TGHorizontalFrame(fBrowse);
 
    fPicPrevious = gClient->GetPicture("first_t.xpm");
-   fGotoPrevious = new TGPictureButton(f2,fPicPrevious,kPrevious);
+   fGotoPrevious = new TGPictureButton(f2,fPicPrevious,kPicPrevious);
    fGotoPrevious->SetToolTipText("Jump to the last entries");
    f2->AddFrame(fGotoPrevious,new TGLayoutHints(kLHintsCenterX | kLHintsBottom, 1, 1, 1, 1));
 
    fPicPreceding = gClient->GetPicture("previous_t.xpm");
-   fGotoPreceding = new TGPictureButton(f2,fPicPreceding,kPreceding);
+   fGotoPreceding = new TGPictureButton(f2,fPicPreceding,kPicPreceding);
    fGotoPreceding->SetToolTipText("Jump to the last entries");
    f2->AddFrame(fGotoPreceding,new TGLayoutHints(kLHintsCenterX | kLHintsBottom, 1, 1, 1, 1));
 
    fPicFollowing = gClient->GetPicture("next_t.xpm");
-   fGotoFollowing = new TGPictureButton(f2,fPicFollowing,kFollowing);
+   fGotoFollowing = new TGPictureButton(f2,fPicFollowing,kPicFollowing);
    fGotoFollowing->SetToolTipText("Jump to the last entries");
    f2->AddFrame(fGotoFollowing,new TGLayoutHints(kLHintsCenterX | kLHintsBottom, 1, 1, 1, 1));
 
    fPicNext = gClient->GetPicture("last_t.xpm");
-   fGotoNext = new TGPictureButton(f2,fPicNext,kNext);
+   fGotoNext = new TGPictureButton(f2,fPicNext,kPicNext);
    fGotoNext->SetToolTipText("Jump to the next entries");
    f2->AddFrame(fGotoNext,new TGLayoutHints(kLHintsCenterX | kLHintsBottom, 1, 1, 1, 1));
 

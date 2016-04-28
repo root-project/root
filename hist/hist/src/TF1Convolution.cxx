@@ -62,7 +62,11 @@ public:
    }
    Double_t operator()(Double_t x) const
    {
-      return fFunction1->Eval(x) * fFunction2->Eval(fT0-x);
+      // use EvalPar that is faster
+      Double_t xx[2];
+      xx[0] = x;
+      xx[1] = fT0-x;
+      return fFunction1->EvalPar(xx,nullptr) * fFunction2->EvalPar(xx+1,nullptr);
    }
 };
 

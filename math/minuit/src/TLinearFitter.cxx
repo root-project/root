@@ -1471,6 +1471,7 @@ Int_t TLinearFitter::Merge(TCollection *list)
 void TLinearFitter::SetBasisFunctions(TObjArray * functions)
 {
    fFunctions = *(functions);
+   fFunctions.SetOwner(kTRUE); 
    int size = fFunctions.GetEntries();
 
    fNfunctions=size;
@@ -1565,6 +1566,9 @@ void TLinearFitter::SetFormula(const char *formula)
       if (!fFunctions.IsEmpty())
          fFunctions.Clear();
 
+      // do not own the functions in this case
+      fFunctions.SetOwner(kFALSE); 
+
       fNfunctions = oa->GetEntriesFast();
       fFunctions.Expand(fNfunctions);
 
@@ -1582,9 +1586,10 @@ void TLinearFitter::SetFormula(const char *formula)
       for (i=0; i<fNfunctions; i++) {
          replaceformula = ((TObjString *)oa->UncheckedAt(i))->GetString();
          // look first if exists in the map
-         TFormula * f = nullptr; 
-         if (fgFormulaMap.count(replaceformula ) > 0) 
-            f = fgFormulaMap.find(replaceformula )->second;
+         TFormula * f = nullptr;
+         auto elem = fgFormulaMap.find(replaceformula );
+         if (elem != fgFormulaMap.end() )
+            f = elem->second;
          else {
             // create a new formula and add in the static map
             f = new TFormula("f", replaceformula.Data());

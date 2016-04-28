@@ -1,16 +1,21 @@
-//////////////////////////////////////////////////////////////////////////////
-//
-// ROOT implementation of a XML DOM Parser
-//
-// This is an example of how Dom Parser walks the DOM tree recursively.
-// This example will parse any xml file.
-//
-// To run this program
-// .x DOMRecursive.C+
-//
-// Requires: person.xml
-//
-//////////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_xml
+/// ROOT implementation of a XML DOM Parser
+///
+/// This is an example of how Dom Parser walks the DOM tree recursively.
+/// This example will parse any xml file.
+///
+/// To run this program
+/// ~~~ {.cpp}
+/// .x DOMRecursive.C+
+/// ~~~
+///
+/// Requires: `person.xml`
+///
+/// \macro_output
+/// \macro_code
+///
+/// \author Sergey Linev
 
 #include <Riostream.h>
 #include <TDOMParser.h>

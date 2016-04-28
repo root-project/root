@@ -620,7 +620,7 @@
       this.SetDivId(divid);
 
       this.Redraw = function() {
-         var line = this.GetObbject(),
+         var line = this.GetObject(),
              lineatt = JSROOT.Painter.createAttLine(line);
 
          // create svg:g container for line drawing
@@ -1844,7 +1844,7 @@
                        .attr("d", path)
                        .style("fill", marker.fill)
                        .style("stroke", marker.stroke);
-            if (nodes===null)
+            if ((nodes===null) && (this.draw_kind=="none"))
                this.draw_kind = (this.optionMark==3) ? "path" : "mark";
          }
       }
@@ -2904,7 +2904,7 @@
 
          for (yi = 0; yi <= this.nbinsy + 1; ++yi) {
             yside = (yi <= yleft) ? 0 : (yi > yright ? 2 : 1);
-            yy = this.ymin + this.GetBinY(yi - 0.5);
+            yy = this.GetBinY(yi - 0.5);
 
             zz = histo.getBinContent(xi, yi);
 
@@ -3629,14 +3629,12 @@
             dgrx = zdiff * xfactor * ww;
             dgry = zdiff * yfactor * hh;
 
-            ww = Math.round(ww - 2*dgrx);
-            hh = Math.round(hh - 2*dgry);
+            ww = Math.max(Math.round(ww - 2*dgrx), 1);
+            hh = Math.max(Math.round(hh - 2*dgry), 1);
 
-            if ((ww > 0) && (hh > 0)) {
-               if (colPaths[i]===undefined) colPaths[i] = "";
-               colPaths[i] += "M" + Math.round(handle.grx[i] + dgrx) + "," + Math.round(handle.gry[j+1] + dgry) +
-                              "v" + hh + "h" + ww + "v-" + hh + "z";
-            }
+            if (colPaths[i]===undefined) colPaths[i] = "";
+            colPaths[i] += "M" + Math.round(handle.grx[i] + dgrx) + "," + Math.round(handle.gry[j+1] + dgry) +
+                           "v" + hh + "h" + ww + "v-" + hh + "z";
          }
       }
 
@@ -3971,8 +3969,6 @@
 
       this.DrawTitle();
 
-      this.AddInteractive();
-
       JSROOT.CallBack(call_back);
    }
 
@@ -4039,6 +4035,7 @@
       this[func_name](function() {
          this.DrawNextFunction(0, function() {
             if (this.options.Lego == 0) {
+               this.AddInteractive();
                if (this.options.AutoZoom) this.AutoZoom();
             }
             this.CreateToolbar();

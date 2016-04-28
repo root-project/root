@@ -1,4 +1,8 @@
-1) What is FOAM ?
+\defgroup tutorial_FOAM FOAM tutorials
+\ingroup Tutorials
+\brief Examples showing how to use FOAM.
+
+### What is FOAM ?
 
 FOAM is simplified version of multi-dimensional general
 purpose Monte Carlo event generator (integrator) with hyper-cubical
@@ -8,7 +12,7 @@ simulation/integration in few dimensions. It relies heavily on ROOT package,
 borrowing persistency of classes from ROOT. mFOAM can be easily used from
 the ROOT shell. For more difficult problems the full FOAM may be better.
 
-2) How to run application programs ?
+### How to run application programs ?
 
 The application program can be run in two modes: it can be simply
 intepreted by CINT or compiled. The first method is simpler but
@@ -18,19 +22,27 @@ process of compilation and linking.
 
 In $(ROOTSYS)/tutorials there are 3 demonstration programs:
 
-(a) foam_kanwa.C
+#### foam_kanwa.C
 is a simple example how to run FOAM in interactive
 mode. To run this macro issue the  following simple command from the
 Linux shell:
+
+~~~ {.cpp}
   root foam_kanwa.C
+~~~
+
 or from CINT:
+
+~~~ {.cpp}
   root [0] .x foam_kanwa.C
+~~~
+
 Simulation will start and graphical canvas with plot
 of the distribution function appear. In this example
 we defined the distribution function simply as a global
 function function Camel2.
 
-(b) foam_demo.C
+#### foam_demo.C
 shows usage of FOAM in compiled mode, which is
 the preferred method.  The integrand function is defined
 now as a Density method from class TFDISTR inheriting from
@@ -39,17 +51,25 @@ integrand function according to their needs but they should
 always remember to define Density  method which provides the
 density distribution.
 Enter CINT interpreter and type:
+
+~~~ {.cpp}
   root [0] gSystem->Load("libFoam.so")
   root [1] .x foam_demo.C+
+~~~
+
 to load FOAM library, compile and execute macro foam_demo.C.
 A shared object foam_demo_C.so is created in the current
 directory. At the end of exploration phase FOAM object
 including distribution function will be written to disk.
 
-(c) foam_demopers.C
+#### foam_demopers.C
 demonstrates persistency of FOAM classes.
 To run this macro type:
+
+~~~ {.cpp}
   root [0] .x foam_demopers.C
+~~~
+
 Program reads the FOAM object from disk, checks its
 consistency and prints geometry of cells. Next starts the
 the generation. It can be interpreted directly by CINT

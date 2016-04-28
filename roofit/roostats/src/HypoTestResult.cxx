@@ -117,12 +117,12 @@ HypoTestResult & HypoTestResult::operator=(const HypoTestResult& other) {
 
    if( fAllTestStatisticsData ) delete fAllTestStatisticsData;
    fAllTestStatisticsData = NULL;
-   if( fNullDistr ) delete fNullDistr; fNullDistr = NULL;
-   if( fAltDistr ) delete fAltDistr; fAltDistr = NULL;   
-   if( fNullDetailedOutput ) delete fNullDetailedOutput; fNullDetailedOutput = NULL;
-   if( fAltDetailedOutput ) delete fAltDetailedOutput;  fAltDetailedOutput = NULL;
-   if (fFitInfo) delete fFitInfo; fFitInfo = NULL;
-   
+   if( fNullDistr ) { delete fNullDistr; fNullDistr = NULL; }
+   if( fAltDistr ) { delete fAltDistr; fAltDistr = NULL; }
+   if( fNullDetailedOutput ) { delete fNullDetailedOutput; fNullDetailedOutput = NULL; }
+   if( fAltDetailedOutput ) { delete fAltDetailedOutput;  fAltDetailedOutput = NULL; }
+   if (fFitInfo) { delete fFitInfo; fFitInfo = NULL; }
+
    fPValueIsRightTail =  other.GetPValueIsRightTail();
    fBackgroundIsAlt = other.GetBackGroundIsAlt();
 

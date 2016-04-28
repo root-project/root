@@ -64,9 +64,9 @@ TGraphEdge::~TGraphEdge()
 {
    if (fNode1) delete fNode1;
    if (fNode2) delete fNode2;
-   if (fX) delete [] fX; fX = 0;
-   if (fY) delete [] fY; fY = 0;
-   if (fN) delete [] fN; fN = 0;
+   if (fX) { delete [] fX; fX = 0; }
+   if (fY) { delete [] fY; fY = 0; }
+   if (fN) { delete [] fN; fN = 0; }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -134,9 +134,9 @@ void TGraphEdge::Layout()
    bezier bz;
    Int_t i,j;
 
-   if (fX) delete [] fX; fX = 0;
-   if (fY) delete [] fY; fY = 0;
-   if (fN) delete [] fN; fN = 0;
+   if (fX) { delete [] fX; fX = 0; }
+   if (fY) { delete [] fY; fY = 0; }
+   if (fN) { delete [] fN; fN = 0; }
 
    Int_t np = ED_spl((Agedge_t*)fGVEdge)->size;
    fN       = new Int_t[np+1];

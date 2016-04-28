@@ -1,12 +1,17 @@
-//script drawing a detector geometry (here D0)
-//by default the geometry is drawn using the GL viewer
-//Using the TBrowser, you can select other components
-//if the file containing the geometry is not found in the local
-//directory, it is automatically read from the ROOT web site.
-// run with .x geomD0.C    top level detectors are transparent
-// or       .x geomD0.C(1) top level detectors are visible
-//
-// Authors: Bertrand Bellenot, Rene Brun
+/// \file
+/// \ingroup tutorial_geom
+/// Script drawing a detector geometry (here D0).
+///
+/// by default the geometry is drawn using the GL viewer
+/// Using the TBrowser, you can select other components
+/// if the file containing the geometry is not found in the local
+/// directory, it is automatically read from the ROOT web site.
+///   - run with `.x geomD0.C`    top level detectors are transparent
+///   - or       `.x geomD0.C(1)` top level detectors are visible
+///
+/// \macro_code
+///
+/// \authors Bertrand Bellenot, Rene Brun
 
 void RecursiveInvisible(TGeoVolume *vol);
 void RecursiveTransparency(TGeoVolume *vol, Int_t transp);

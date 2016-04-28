@@ -8,26 +8,54 @@
 //------------------------------------------------------------------------------
 
 #include "cling/Utils/Validation.h"
+#include "llvm/Support/ThreadLocal.h"
 
 #include <assert.h>
 #include <errno.h>
 #ifdef LLVM_ON_WIN32
 # include <Windows.h>
 #else
+#include <array>
+#include <algorithm>
 #include <fcntl.h>
 # include <unistd.h>
 #endif
-
-
 
 namespace cling {
   namespace utils {
 
 #ifndef LLVM_ON_WIN32
+    // A simple round-robin cache: what enters first, leaves first.
+    // MRU cache wasn't worth the extra CPU cycles.
+    struct Cache {
+    private:
+      std::array<const void*, 8> lines;
+      unsigned mostRecent = 0;
+    public:
+      bool contains(const void* P) {
+        return std::find(lines.begin(), lines.end(), P) != lines.end();
+      }
+      void push(const void* P) {
+        mostRecent = (mostRecent + 1) % lines.size();
+        lines[mostRecent] = P;
+      }
+    };
+
+    // Trying to be thread-safe.
+    // Each thread creates a new cache when needed.
+    static Cache& getCache() {
+      static llvm::sys::ThreadLocal<Cache> threadCache;
+      if (!threadCache.get()) {
+        // Leak, 1 Cache/thread.
+        threadCache.set(new Cache());
+      }
+      return *threadCache.get();
+    }
+
     static int getNullDevFileDescriptor() {
       struct FileDescriptor {
         int FD;
-        const char* file = "/dev/null";
+        const char* file = "/dev/random";
         FileDescriptor() { FD = open(file, O_WRONLY); }
         ~FileDescriptor() {
           close(FD);
@@ -51,12 +79,17 @@ namespace cling {
         return false;
       return true;
 #else
+      // Look-up the address in the cache.
+      Cache& currentCache = getCache();
+      if (currentCache.contains(P))
+        return true;
       // There is a POSIX way of finding whether an address
       // can be accessed for reading.
       if (write(getNullDevFileDescriptor(), P, 1/*byte*/) != 1) {
         assert(errno == EFAULT && "unexpected write error at address");
         return false;
       }
+      currentCache.push(P);
       return true;
 #endif
     }
