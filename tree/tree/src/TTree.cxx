@@ -8770,7 +8770,6 @@ void TTree::Streamer(TBuffer& b)
       fCacheDoAutoInit = kTRUE;
       fCacheUserSet = kFALSE;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
-      printf("In TTree::Streamer,R__v = %d, b.IsBufBigEndian() = %d\n",R__v,b.IsBufBigEndian());//##
       if (R__v > 4) {
          b.ReadClassBuffer(TTree::Class(), this, R__v, R__s, R__c);
 
@@ -8818,7 +8817,6 @@ void TTree::Streamer(TBuffer& b)
             fCacheSize = 0;
          }
          ResetBit(kMustCleanup);
-         printf("In TTree::Streamer(), before return\n");//##
          return;
       }
       //====process old versions before automatic schema evolution
@@ -8861,12 +8859,10 @@ void TTree::Streamer(TBuffer& b)
       TRefTable *table  = TRefTable::GetRefTable();
       if (table) TRefTable::SetRefTable(0);
 
-      printf("In TTree::Streamer,Write Tree,b.IsBufBigEndian() = %d\n",b.IsBufBigEndian());//##
       b.WriteClassBuffer(TTree::Class(), this);
 
       if (table) TRefTable::SetRefTable(table);
    }
-   printf("End of TTree::Streamer()\n");//##
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -155,11 +155,8 @@ int main(int argc, char **argv)
          hfile = new TNetFile("root://localhost/root/test/EventNet.root");
       } else
          hfile = new TFile("Event.root");
-      printf("In MainEvent.cxx, before getting tree\n");//##
       tree = (TTree*)hfile->Get("T");
-      printf("In MainEvent.cxx, before getting branch\n");//##
       TBranch *branch = tree->GetBranch("event");
-      printf("In MainEvent.cxx, before setting address\n");//##
       branch->SetAddress(&event);
       Int_t nentries = (Int_t)tree->GetEntries();
       nevent = TMath::Min(nevent,nentries);

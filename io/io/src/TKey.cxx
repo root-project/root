@@ -242,16 +242,13 @@ TKey::TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* moth
 
    Int_t lbuf, nout, noutot, bufmax, nzip;
    fBufferRef = new TBufferFile(TBuffer::kWrite, bufsize, def, buffBigEndian);
-   printf("In TKey::TKey and fBufferRef->IsBufBigEndian()=%d\n",fBufferRef->IsBufBigEndian());//##
    fBufferRef->SetParent(GetFile());
    fCycle     = fMotherDir->AppendKey(this);
 
    Streamer(*fBufferRef);         //write key itself
-   printf("In TKey::TKey and after Streamer\n");//##
    fKeylen    = fBufferRef->Length();
    fBufferRef->MapObject(obj);    //register obj in map in case of self reference
    ((TObject*)obj)->Streamer(*fBufferRef);    //write object
-   printf("In TKey::TKey and after obj Streamer\n");//##
    lbuf       = fBufferRef->Length();
    fObjlen    = lbuf - fKeylen;
 
@@ -729,7 +726,6 @@ void TKey::Print(Option_t *) const
 
 TObject *TKey::ReadObj()
 {
-   printf("In TKey::ReadObj()\n");//##
    TClass *cl = TClass::GetClass(fClassName.Data());
    if (!cl) {
       Error("ReadObj", "Unknown class %s", fClassName.Data());
@@ -903,7 +899,6 @@ TObject *TKey::ReadObjWithBuffer(char *bufferRead, Bool_t def, Bool_t buffBigEnd
    // get version of key
    fBufferRef->SetBufferOffset(sizeof(fNbytes));
    Version_t kvers = fBufferRef->ReadVersion();
-   printf("version of key: %d\n",kvers); //##
    fBufferRef->SetBufferOffset(fKeylen);
    TObject *tobj = 0;
    // Create an instance of this class
@@ -927,7 +922,6 @@ TObject *TKey::ReadObjWithBuffer(char *bufferRead, Bool_t def, Bool_t buffBigEnd
       fBufferRef->MapObject(pobj,cl);  //register obj in map to handle self reference
 
    if (fObjlen > fNbytes-fKeylen) {
-      printf("if and Before everything\n");//##
       char *objbuf = fBufferRef->Buffer() + fKeylen;
       UChar_t *bufcur = (UChar_t *)&fBuffer[fKeylen];
       Int_t nin, nout = 0, nbuf;
@@ -943,9 +937,7 @@ TObject *TKey::ReadObjWithBuffer(char *bufferRead, Bool_t def, Bool_t buffBigEnd
          objbuf += nout;
       }
       if (nout) {
-         printf("nout!=0, and before Streamer, fVersion=%d\n",fVersion);//##
          tobj->Streamer(*fBufferRef); //does not work with example 2 above
-         printf("nout!=0, and after Streamer, fVersion=%d\n",fVersion);//##
       } else {
          // Even-though we have a TObject, if the class is emulated the virtual
          // table may not be 'right', so let's go via the TClass.
@@ -955,10 +947,8 @@ TObject *TKey::ReadObjWithBuffer(char *bufferRead, Bool_t def, Bool_t buffBigEnd
          goto CLEAR;
       }
    } else {
-      printf("else and Before tobj->Streamer\n");//##
       tobj->Streamer(*fBufferRef);
    }
-   printf("After Comparing\n");//##
    if (gROOT->GetForceStyle()) tobj->UseCurrentStyle();
 
    if (cl->InheritsFrom(TDirectoryFile::Class())) {
@@ -1361,7 +1351,6 @@ void TKey::Streamer(TBuffer &b)
       fDatime.Streamer(b);
       b >> fKeylen;
       b >> fCycle;
-      printf("In TKey::Streamer, and fVersion=%d\n",fVersion);//##
       if (fVersion > 1000) {
          b >> fSeekKey;
 
@@ -1382,16 +1371,13 @@ void TKey::Streamer(TBuffer &b)
          b >> seekdir; fSeekPdir= (Long64_t)seekdir;
       }
       fClassName.Streamer(b);
-      printf("In TKey::Streamer, and fClassName=%s\n",fClassName.Data());//##
       //the following test required for forward and backward compatibility
       if (fClassName == "TDirectory") {
          fClassName = "TDirectoryFile";
          SetBit(kIsDirectoryFile);
       }
       fName.Streamer(b);
-      printf("In TKey::Streamer, and fName=%s\n",fName.Data());//##
       fTitle.Streamer(b);
-      printf("In TKey::Streamer, and fTitle=%s\n",fTitle.Data());//##
       if (fKeylen < 0) {
          Error("Streamer","The value of fKeylen is incorrect (%d) ; trying to recover by setting it to zero",fKeylen);
          MakeZombie();
@@ -1441,9 +1427,6 @@ void TKey::Streamer(TBuffer &b)
       }
       fName.Streamer(b);
       fTitle.Streamer(b);
-      printf("In TKey::Streamer, and fClassName=%s\n",fClassName.Data());//##
-      printf("In TKey::Streamer, and fName=%s\n",fName.Data());//##
-      printf("In TKey::Streamer, and fTitle=%s\n",fTitle.Data());//##
    }
 }
 

@@ -1317,7 +1317,6 @@ const TList *TFile::GetStreamerInfoCache()
 
 TList *TFile::GetStreamerInfoList()
 {
-   printf("In TFile::GetStreamerInfoList\n");//##
    if (fIsPcmFile) return 0; // No schema evolution for ROOT PCM files.
 
    TList *list = 0;
@@ -1327,25 +1326,14 @@ TList *TFile::GetStreamerInfoList()
       char *buffer = new char[fNbytesInfo+1];
       char *buf    = buffer;
       Seek(fSeekInfo);
-      printf("In TFile::GetStreamerInfo, After Seek()\n"); //##
       if (ReadBuffer(buf,fNbytesInfo)) {
          // ReadBuffer returns kTRUE in case of failure.
          Warning("GetRecordHeader","%s: failed to read the StreamerInfo data from disk.",
                  GetName());
          return 0;
       }
-      printf("In TFile::GetStreamerInfo, After ReadBuffer()\n"); //##
-      /*
-      int cnt = 0;
-      for(cnt=0;cnt<fNbytesInfo+1;++cnt){
-         if(cnt%6==0) printf("\n");
-         printf("buf[%d]=%c(0x%x), ",cnt,buf[cnt],buf[cnt]);
-      }
-      */
       key->ReadKeyBuffer(buf);
-      printf("In TFile::GetStreamerInfo, After ReadKeyBuffer()\n"); //##
       list = dynamic_cast<TList*>(key->ReadObjWithBuffer(buffer,0,1));
-      printf("In TFile::GetStreamerInfo, After ReadObjWithBuffer()\n"); //##
       if (list) list->SetOwner();
       delete [] buffer;
       delete key;

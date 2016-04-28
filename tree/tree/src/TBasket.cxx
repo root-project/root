@@ -781,7 +781,6 @@ void TBasket::Streamer(TBuffer &b)
 {
    char flag;
    if (b.IsReading()) {
-      printf("Begining of TBasket::Streamer()\n");//##
       TKey::Streamer(b); //this must be first
       Version_t v = b.ReadVersion();
       b >> fBufferSize;
@@ -794,10 +793,8 @@ void TBasket::Streamer(TBuffer &b)
       b >> fNevBuf;
       b >> fLast;
       b >> flag;
-      printf("v=%hu,fBufferSize=%d,fNevBufSize=%d,fNevBuf=%d,fLast=%d,flag=%d\n",v,fBufferSize,fNevBufSize,fNevBuf,fLast,flag);//##
       if (fLast > fBufferSize) fBufferSize = fLast;
       if (!flag) {
-         printf("In TBasket::Streamer() and before return\n");//##
          return;
       }
       if (flag%10 != 2) {
@@ -825,7 +822,6 @@ void TBasket::Streamer(TBuffer &b)
          // yet be set correctly.
          //   fBranch->GetTree()->IncrementTotalBuffers(fBufferSize);
       }
-      printf("End of TBasket::Streamer()\n");//##
    } else {
       TKey::Streamer(b);   //this must be first
       b.WriteVersion(TBasket::IsA());
@@ -889,7 +885,6 @@ void TBasket::Streamer(TBuffer &b)
             b.WriteFastArray(buf, fLast);
          }
       }
-      printf("TBasket::IsA()=%s,fBufferSize=%d,fNevBufSize=%d,fNevBuf=%d,fLast=%d,flag=%d\n",TBasket::IsA()->GetName(),fBufferSize,fNevBufSize,fNevBuf,fLast,flag);//##
    }
 }
 
