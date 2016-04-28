@@ -35,5 +35,6 @@ ROOTTEST_ADD_TEST(stltest2
                   DEPENDS stltest)
 
 ROOTTEST_ADD_TEST(foreign
+                  COPY_TO_BUILDDIR foreign.root
                   MACRO runforeign.C)
 
