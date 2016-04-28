@@ -34,3 +34,6 @@ ROOTTEST_ADD_TEST(stltest2
                   MACRO runstltest2.C
                   DEPENDS stltest)
 
+ROOTTEST_ADD_TEST(foreign
+                  MACRO runforeign.C)
+

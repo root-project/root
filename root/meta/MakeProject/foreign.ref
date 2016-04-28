@@ -1,0 +1,7 @@
+
+Processing runforeign.C...
+Warning in <TClass::Init>: no dictionary for class ndtf::FinalStateParticle is available
+MakeProject has generated 1 classes in foreign
+MAKEP file has been generated
+foreign.so has been generated
+foreign.so has been dynamically linked
