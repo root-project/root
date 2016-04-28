@@ -3747,6 +3747,10 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
 
 UInt_t TStreamerInfo::GenerateIncludes(FILE *fp, char *inclist, const TList *extrainfos)
 {
+   if (inclist[0]==0) {
+      // Always have this include for ClassDef.
+      TMakeProject::AddInclude( fp, "Rtypes.h", kFALSE, inclist);
+   }
    UInt_t ninc = 0;
 
    const char *clname = GetName();
@@ -3810,9 +3814,6 @@ UInt_t TStreamerInfo::GenerateIncludes(FILE *fp, char *inclist, const TList *ext
          // This is a template, we need to check the template parameter.
          ninc += TMakeProject::GenerateIncludeForTemplate(fp, element->GetTypeName(), inclist, kFALSE, extrainfos);
       }
-   }
-   if (inclist[0]==0) {
-      TMakeProject::AddInclude( fp, "TNamed.h", kFALSE, inclist);
    }
    return ninc;
 }
