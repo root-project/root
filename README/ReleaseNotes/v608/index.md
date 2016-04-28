@@ -40,6 +40,13 @@ The following people have contributed to this new version:
 
 <a name="core-libs"></a>
 
+## general
+
+* Remove many instance of new warnings issued by gcc 6.1
+* Significant update of the valgrind suppression file to hide intentional lack
+of delete of some entities at the end of the process.
+* Resolved several memory leaks.
+
 ## Core Libraries
 
 ROOT prepares for [cxx modules](http://clang.llvm.org/docs/Modules.html). One of
@@ -86,6 +93,7 @@ Add a new mode for `TClass::SetCanSplit` (2) which indicates that this class and
 * Exceptions are now caught in the interactive ROOT session, instead of terminating ROOT.
 * A ValuePrinter for tuple and pair has been added to visualise the content of these entities at the prompt.
 * When interpreting dereferences of invalid pointers, cling will now complain (throw, actually) instead of crash.
+* Resolve memory hoarding in some case of looking up functions [ROOT-8145]
 
 ## Parallelisation
 
