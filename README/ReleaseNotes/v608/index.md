@@ -187,6 +187,7 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 * SVG boxes were not correct when x2<1 (reported [here](https://sft.its.cern.ch/jira/browse/ROOT-8126)).
 * In TASImage there was no protection against graphics being drawn outside the assigned
   memory. That may generate some crashes like described [here](https://sft.its.cern.ch/jira/browse/ROOT-8123).
+* In TASImage: transparent rectangles did not work when png files whre created in batch mode.
 
 ## 3D Graphics Libraries
 

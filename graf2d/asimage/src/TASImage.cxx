@@ -3728,6 +3728,26 @@ UInt_t *TASImage::GetScanline(UInt_t y)
 
 void TASImage::FillRectangleInternal(UInt_t col, Int_t x, Int_t y, UInt_t width, UInt_t height)
 {
+
+   if (!InitVisual()) {
+      Warning("FillRectangle", "Visual not initiated");
+      return;
+   }
+
+   if (!fImage) {
+      Warning("FillRectangle", "no image");
+      return;
+   }
+
+   if (!fImage->alt.argb32) {
+      BeginPaint();
+   }
+
+   if (!fImage->alt.argb32) {
+      Warning("FillRectangle", "Failed to get pixel array");
+      return;
+   }
+
    ARGB32 color = (ARGB32)col;
 
    if (width  == 0) width = 1;
@@ -3768,8 +3788,8 @@ void TASImage::FillRectangleInternal(UInt_t col, Int_t x, Int_t y, UInt_t width,
                j--;
                _alphaBlend(&fImage->alt.argb32[Idx(yyy + j)], &color);
             }
+            yyy += fImage->width;
          }
-         yyy += fImage->width;
       }
    }
 }
