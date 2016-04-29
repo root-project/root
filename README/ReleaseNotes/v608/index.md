@@ -196,6 +196,7 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 * In TASImage there was no protection against graphics being drawn outside the assigned
   memory. That may generate some crashes like described [here](https://sft.its.cern.ch/jira/browse/ROOT-8123).
 * In TASImage: transparent rectangles did not work when png files were created in batch mode.
+* In TASImage: implement transparent text for png files created in batch mode.
 
 ## 3D Graphics Libraries
 
