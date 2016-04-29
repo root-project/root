@@ -1273,3 +1273,12 @@
    fun:_ZNSs15_M_replace_safeEmmPKcm
    fun:_ZN5cling14InputValidator5resetEv
 }
+
+{
+   cling pointer checker on uninitialized memory (ROOT-8144)
+   Memcheck:Param
+   write(buf)
+   ...
+   fun:_ZN5cling5utils14isAddressValidEPKv
+   fun:cling_runtime_internal_throwIfInvalidPointer
+}
