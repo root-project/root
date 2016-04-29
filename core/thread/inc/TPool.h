@@ -63,7 +63,8 @@ protected:
    template<class T, class BINARYOP> auto Reduce(const std::vector<T> &objs, BINARYOP redfunc) -> decltype(redfunc(objs.front(), objs.front()));
 
 private:
-  inline subc & Derived() {
+  inline subc & Derived()
+  {
     return *static_cast<subc*>(this);
   }
 };

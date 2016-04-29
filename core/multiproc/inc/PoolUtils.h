@@ -12,10 +12,10 @@
 #ifndef ROOT_PoolUtils
 #define ROOT_PoolUtils
 
+#include "TError.h"
+#include "TList.h"
 #include "TObject.h"
 #include <vector>
-#include "TList.h"
-#include "TError.h"
 
 namespace PoolCode {
 
@@ -118,6 +118,5 @@ namespace ROOT {
       }
    }
 }
-
 
 #endif
