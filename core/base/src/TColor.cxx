@@ -910,7 +910,13 @@ itself remains fully opaque.
 The transparency is available on all platforms when the flag `OpenGL.CanvasPreferGL` is set to `1`
 in `$ROOTSYS/etc/system.rootrc`, or on Mac with the Cocoa backend. On the file output
 it is visible with PDF, PNG, Gif, JPEG, SVG ... but not PostScript.
- */
+The following macro gives an example of transparency usage:
+
+Begin_Macro(source)
+../../../tutorials/graphics/transparency.C
+End_Macro
+
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
