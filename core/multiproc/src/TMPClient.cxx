@@ -1,18 +1,28 @@
+/* @(#)root/multiproc:$Id$ */
+// Author: Enrico Guiraud July 2015
+
+/*************************************************************************
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+#include "MPCode.h"
+#include "TGuiFactory.h" //gGuiFactory
+#include "TError.h" //gErrorIgnoreLevel
 #include "TMPClient.h"
 #include "TMPWorker.h"
-#include "MPCode.h"
-#include "TSocket.h"
-#include "TGuiFactory.h" //gGuiFactory
-#include "TVirtualX.h" //gVirtualX
-#include "TSystem.h" //gSystem
 #include "TROOT.h" //gROOT
-#include "TError.h" //gErrorIgnoreLevel
-#include <unistd.h> // close, fork
-#include <sys/wait.h> // waitpid
+#include "TSocket.h"
+#include "TSystem.h" //gSystem
+#include "TVirtualX.h" //gVirtualX
 #include <errno.h> //errno, used by socketpair
-#include <sys/socket.h> //socketpair
 #include <memory> //unique_ptr
-#include <iostream>
+#include <sys/socket.h> //socketpair
+#include <sys/wait.h> // waitpid
+#include <unistd.h> // close, fork
 
 //////////////////////////////////////////////////////////////////////////
 ///
@@ -98,7 +108,7 @@ bool TMPClient::Fork(TMPWorker &server)
       //create socket pair
       int ret = socketpair(AF_UNIX, SOCK_STREAM, 0, sockets);
       if (ret != 0) {
-         std::cerr << "[E][C] Could not create socketpair. Error n. " << errno << ". Now retrying.\n";
+         Error("TMPClient::Fork", "[E][C] Could not create socketpair. Error n. . Now retrying.\n%d", errno);
          --nWorker;
          continue;
       }
@@ -117,7 +127,7 @@ bool TMPClient::Fork(TMPWorker &server)
             fMon.Add(s);
             fWorkerPids.push_back(pid);
          } else {
-            std::cerr << "[E][C] Could not connect to worker with pid " << pid << ". Giving up.\n";
+            Error("TMPClient::Fork","[E][C] Could not connect to worker with pid %d. Giving up.\n", pid);
             delete s;
          }
       }
@@ -205,7 +215,7 @@ unsigned TMPClient::Broadcast(unsigned code, unsigned nMessages)
          fMon.DeActivate((TSocket *)s);
          ++count;
       } else {
-         std::cerr << "[E] Could not send message to server\n";
+         Error("TMPClient:Broadcast", "[E] Could not send message to server\n");
       }
    }
 
@@ -277,15 +287,14 @@ void TMPClient::HandleMPCode(MPCodeBufPair &msg, TSocket *s)
    const char *str = ReadBuffer<const char*>(msg.second.get());
 
    if (code == MPCode::kMessage) {
-      std::cerr << "[I][C] message received: " << str << "\n";
+      Error("TMPClient::HandleMPCode", "[I][C] message received: %s\n", str);
    } else if (code == MPCode::kError) {
-      std::cerr << "[E][C] error message received:\n" << str << "\n";
+      Error("TMPClient::HandleMPCode", "[E][C] error message received: %s\n", str);   
    } else if (code == MPCode::kShutdownNotice || code == MPCode::kFatalError) {
       if (gDebug > 0) //generally users don't want to know this
-         std::cerr << "[I][C] shutdown notice received from " << str << "\n";
+         Error("TMPClient::HandleMPCode", "[I][C] shutdown notice received from %s\n", str);
       Remove(s);
    } else
-      std::cerr << "[W][C] unknown code received. code=" << code << "\n";
-
+       Error("TMPClient::HandleMPCode", "[W][C] unknown code received. code=%d\n", code);
    delete [] str;
 }
