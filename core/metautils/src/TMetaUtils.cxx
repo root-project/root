@@ -972,6 +972,10 @@ ROOT::TMetaUtils::EIOCtorCategory ROOT::TMetaUtils::CheckConstructor(const clang
    if (ioctortype.GetType() ==0 && (arg == 0 || arg[0] == '\0')) {
       // We are looking for a constructor with zero non-default arguments.
       clang::CXXRecordDecl* ncCl = const_cast<clang::CXXRecordDecl*>(cl);
+
+      // We may induce template instantiation
+      cling::Interpreter::PushTransactionRAII clingRAII(const_cast<cling::Interpreter*>(&interpreter));
+      
       if (auto* Ctor = interpreter.getCI()->getSema().LookupDefaultConstructor(ncCl)) {
          if (Ctor->getAccess() == clang::AS_public) {
             return EIOCtorCategory::kDefault;
