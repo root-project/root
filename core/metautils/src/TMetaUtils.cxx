@@ -975,9 +975,6 @@ ROOT::TMetaUtils::EIOCtorCategory ROOT::TMetaUtils::CheckConstructor(const clang
                                                                      const cling::Interpreter& interpreter)
 {
    const char *arg = ioctortype.GetName();
-   if ( (arg == 0 || arg[0] == '\0') && !cl->hasUserDeclaredConstructor() ) {
-      return EIOCtorCategory::kDefault;
-   }
 
    if (ioctortype.GetType() ==0 && (arg == 0 || arg[0] == '\0')) {
       // We are looking for a constructor with zero non-default arguments.
