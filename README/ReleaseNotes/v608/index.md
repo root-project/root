@@ -243,6 +243,8 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 
 ## GUI Libraries
 
+* A new `Browser.ExpandDirectories` option (the default is `yes`) has been added, allowing to prevent expanding the parent directory tree in the ROOT Browser (for example on nfs).
+
 
 ## Montecarlo Libraries
 
