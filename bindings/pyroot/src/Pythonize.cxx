@@ -2443,6 +2443,7 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
          PyObject_SetAttrString( pyclass, "value_type", pyvalue_type );
          Py_DECREF( pyvalue_type );
       }
+      gInterpreter->TypedefInfo_Delete( ti );
 
    // provide a slice-able __getitem__, if possible
       if ( HasAttrDirect( pyclass, PyStrings::gVectorAt ) )
