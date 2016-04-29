@@ -1951,6 +1951,7 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
       }
       ~InterpreterFlagsRAII_t() {
          fInterpreter->enableDynamicLookup(fWasDynamicLookupEnabled);
+         gROOT->SetLineHasBeenProcessed();
       }
    } interpreterFlagsRAII(fInterpreter);
 
