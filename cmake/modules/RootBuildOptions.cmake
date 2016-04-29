@@ -194,6 +194,11 @@ if (CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL
    set(vc_defvalue OFF)
 endif()
 
+#---Options depending of CMake Generator-------------------------------------------------------
+if( CMAKE_GENERATOR STREQUAL Ninja)
+   set(fortran_defvalue OFF)
+endif()
+
 #---Apply minimal or gminimal------------------------------------------------------------------
 foreach(opt ${root_build_options})
   if(NOT opt MATCHES "thread|cxx11|cling|builtin_llvm|builtin_ftgl|explicitlink")
