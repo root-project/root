@@ -964,7 +964,8 @@ int ROOT::TMetaUtils::ElementStreamer(std::ostream& finalString,
 ////////////////////////////////////////////////////////////////////////////////
 
 ROOT::TMetaUtils::EIOCtorCategory ROOT::TMetaUtils::CheckConstructor(const clang::CXXRecordDecl *cl,
-                                                                     const RConstructorType &ioctortype)
+                                                                     const RConstructorType &ioctortype,
+                                                                     const cling::Interpreter& interpreter)
 {
    const char *arg = ioctortype.GetName();
    if ( (arg == 0 || arg[0] == '\0') && !cl->hasUserDeclaredConstructor() ) {
@@ -973,25 +974,16 @@ ROOT::TMetaUtils::EIOCtorCategory ROOT::TMetaUtils::CheckConstructor(const clang
 
    if (ioctortype.GetType() ==0 && (arg == 0 || arg[0] == '\0')) {
       // We are looking for a constructor with zero non-default arguments.
-
-      for(clang::CXXRecordDecl::ctor_iterator iter = cl->ctor_begin(), end = cl->ctor_end();
-          iter != end;
-          ++iter)
-      {
-         if (iter->getAccess() != clang::AS_public)
-            continue;
-         // We can reach this constructor.
-
-         if (iter->getNumParams() == 0) {
+      clang::CXXRecordDecl* ncCl = const_cast<clang::CXXRecordDecl*>(cl);
+      if (auto* Ctor = interpreter.getCI()->getSema().LookupDefaultConstructor(ncCl)) {
+         if (Ctor->getAccess() == clang::AS_public) {
             return EIOCtorCategory::kDefault;
          }
-         if ( (*iter->param_begin())->hasDefaultArg()) {
-            return EIOCtorCategory::kDefault;
-         }
-      } // For each constructor.
+      }
+      return EIOCtorCategory::kAbsent;
    }
-   else {
-      for(clang::CXXRecordDecl::ctor_iterator iter = cl->ctor_begin(), end = cl->ctor_end();
+
+   for (clang::CXXRecordDecl::ctor_iterator iter = cl->ctor_begin(), end = cl->ctor_end();
           iter != end;
           ++iter)
       {
@@ -1030,7 +1022,6 @@ ROOT::TMetaUtils::EIOCtorCategory ROOT::TMetaUtils::CheckConstructor(const clang
             }
          } // has one argument.
       } // for each constructor
-   }
 
    return EIOCtorCategory::kAbsent;
 }
@@ -1086,7 +1077,7 @@ bool ROOT::TMetaUtils::HasIOConstructor(const clang::CXXRecordDecl *cl,
    for (RConstructorTypes::const_iterator ctorTypeIt = ctorTypes.begin();
         ctorTypeIt!=ctorTypes.end(); ++ctorTypeIt) {
 
-      auto ioCtorCat = ROOT::TMetaUtils::CheckConstructor(cl, *ctorTypeIt);
+      auto ioCtorCat = ROOT::TMetaUtils::CheckConstructor(cl, *ctorTypeIt, interp);
 
       if (EIOCtorCategory::kAbsent == ioCtorCat)
          continue;
