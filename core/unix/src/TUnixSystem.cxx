@@ -621,7 +621,6 @@ Bool_t TUnixSystem::Init()
 
    // This is a fallback in case TROOT::GetRootSys() can't determine ROOTSYS
    gRootDir = "/usr/local/root";
-   gRootDir = TROOT::GetRootSys().Data();
 
    return kFALSE;
 }

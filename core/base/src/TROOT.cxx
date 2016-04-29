@@ -543,6 +543,22 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    // Initialize Operating System interface
    InitSystem();
 
+   // Initialize static directory functions
+   GetRootSys();
+   GetBinDir();
+   GetLibDir();
+   GetIncludeDir();
+   GetEtcDir();
+   GetDataDir();
+   GetDocDir();
+   GetMacroDir();
+   GetTutorialsDir();
+   GetSourceDir();
+   GetIconPath();
+   GetTTFFontDir();
+
+   gRootDir = GetRootSys().Data();
+
    TDirectory::Build();
 
    // Initialize interface to CINT C++ interpreter
@@ -2542,13 +2558,7 @@ const char**& TROOT::GetExtraInterpreterArgs() {
 
 #ifdef ROOTPREFIX
 static Bool_t IgnorePrefix() {
-   static Bool_t ignorePrefix = kFALSE;
-   static Bool_t init = kFALSE;
-   if (!init) {
-      if (gSystem->Getenv("ROOTIGNOREPREFIX"))
-         ignorePrefix = kTRUE;
-      init = kTRUE;
-   }
+   static Bool_t ignorePrefix = gSystem->Getenv("ROOTIGNOREPREFIX");
    return ignorePrefix;
 }
 #endif

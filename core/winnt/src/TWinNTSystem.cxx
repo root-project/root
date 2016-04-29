@@ -1111,8 +1111,6 @@ Bool_t TWinNTSystem::Init()
       gRootDir = 0;
    }
 
-   gRootDir = TROOT::GetRootSys().Data();
-
    // Increase the accuracy of Sleep() without needing to link to winmm.lib
    typedef UINT (WINAPI* LPTIMEBEGINPERIOD)( UINT uPeriod );
    HINSTANCE hInstWinMM = LoadLibrary( "winmm.dll" );
