@@ -346,7 +346,7 @@ std::string GetROOTIncludeDir(bool rootbuild);
 enum class EIOCtorCategory : short {kAbsent, kDefault, kIOPtrType, kIORefType};
 
 //______________________________________________________________________________
-EIOCtorCategory CheckConstructor(const clang::CXXRecordDecl*, const RConstructorType&);
+EIOCtorCategory CheckConstructor(const clang::CXXRecordDecl*, const RConstructorType&, const cling::Interpreter& interp);
 
 //______________________________________________________________________________
 const clang::FunctionDecl* ClassInfo__HasMethod(const clang::DeclContext *cl, char const*, const cling::Interpreter& interp);
