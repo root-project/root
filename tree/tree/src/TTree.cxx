@@ -3978,6 +3978,8 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// -  `LocalEntry$` : return the current entry number in the current tree of a
 ///     chain (`== GetTree()->GetReadEntry()`)
 /// -  `Entries$`    : return the total number of entries (== TTree::GetEntries())
+/// -  `LocalEntries$` : return the total number of entries in the current tree
+///     of a chain (== GetTree()->TTree::GetEntries())
 /// -  `Length$`     : return the total number of element of this formula for this
 ///     entry (`==TTreeFormula::GetNdata()`)
 /// -  `Iteration$`  : return the current iteration over this formula for this

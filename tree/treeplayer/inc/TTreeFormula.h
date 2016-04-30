@@ -77,7 +77,8 @@ protected:
       kIndexOfEntry, kEntries, kLength, kIteration, kLengthFunc, kSum, kEntryList,
       kTreeMember,
       kIndexOfLocalEntry,
-      kMin, kMax
+      kMin, kMax,
+      kLocalEntries
 
    };
    enum {
