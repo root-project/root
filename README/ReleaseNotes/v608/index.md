@@ -197,6 +197,8 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
   memory. That may generate some crashes like described [here](https://sft.its.cern.ch/jira/browse/ROOT-8123).
 * In TASImage: transparent rectangles did not work when png files were created in batch mode.
 * In TASImage: implement transparent text for png files created in batch mode.
+* TCanvas title was not set correctly when a TCanvas was read from a TFile.
+  (reported [here](https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=21540&p=94053#p93981)).
 
 ## 3D Graphics Libraries
 
