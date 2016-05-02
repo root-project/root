@@ -1293,13 +1293,13 @@ void TBufferXML::PerformPostProcessing()
          if (nodeuchar==0) return;
          if (nodecharstar!=0)
             str = fXML->GetAttr(nodecharstar, xmlio::v);
-	 fXML->UnlinkFreeNode(nodeuchar);
+         fXML->UnlinkFreeNode(nodeuchar);
          fXML->UnlinkFreeNode(nodeint);
          fXML->UnlinkFreeNode(nodecharstar);
       } else {
          if (nodestring!=0)
             str = fXML->GetAttr(nodestring, xmlio::v);
-	 fXML->UnlinkFreeNode(nodestring);
+         fXML->UnlinkFreeNode(nodestring);
       }
 
       fXML->NewAttr(elemnode, 0, "str", str);
@@ -1377,7 +1377,7 @@ void TBufferXML::PerformPreProcessing(const TStreamerElement* elem, XMLNodePoint
          snprintf(sbuf, sizeof(sbuf), "%d", len);
          if (len<255) {
             fXML->NewAttr(ucharnode,0,xmlio::v,sbuf);
-	 } else {
+         } else {
             fXML->NewAttr(ucharnode,0,xmlio::v,"255");
             XMLNodePointer_t intnode = fXML->NewChild(elemnode, 0, xmlio::Int, 0);
             fXML->NewAttr(intnode, 0, xmlio::v, sbuf);

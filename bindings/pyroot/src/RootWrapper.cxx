@@ -194,7 +194,7 @@ namespace {
       } else if ( gSTLExceptions.find( sub ) != gSTLExceptions.end() ) {
       // removal is required or the dictionary can't be updated properly
          // TODO: WORK HERE if ( klass != 0 )
-	 //            TClass::RemoveClass( (TClass*)klass );
+         //            TClass::RemoveClass( (TClass*)klass );
 
       // load stdexcept, which contains all std exceptions
          gROOT->ProcessLine( "#include <stdexcept>" );

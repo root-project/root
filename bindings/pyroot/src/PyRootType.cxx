@@ -99,7 +99,7 @@ namespace {
             if ( ! attr && ! PyRootType_CheckExact( pyclass ) && PyType_Check( pyclass ) ) {
                PyErr_Clear();
 
-	       Cppyy::TCppScope_t scope = Cppyy::GetScope( ((PyTypeObject*)pyclass)->tp_name );
+               Cppyy::TCppScope_t scope = Cppyy::GetScope( ((PyTypeObject*)pyclass)->tp_name );
                TClass* klass = TClass::GetClass( ((PyTypeObject*)pyclass)->tp_name );
                if ( Cppyy::IsNamespace( scope ) ) {
 
@@ -110,7 +110,7 @@ namespace {
                         std::vector< PyCallable* > overloads;
                         const size_t nmeth = Cppyy::GetNumMethods( scope );
                         for ( size_t imeth = 0; imeth < nmeth; ++imeth ) {
-			   Cppyy::TCppMethod_t method = Cppyy::GetMethod( scope, imeth );
+                           Cppyy::TCppMethod_t method = Cppyy::GetMethod( scope, imeth );
                            if ( Cppyy::GetMethodName( method ) == name )
                               overloads.push_back( new TFunctionHolder( scope, method ) );
                         }

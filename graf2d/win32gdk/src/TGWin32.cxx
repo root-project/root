@@ -70,45 +70,45 @@ by Olivier Couet (package X11INT).
 
 extern "C" {
 void gdk_win32_draw_rectangle (GdkDrawable    *drawable,
-				      GdkGC          *gc,
-				      gint            filled,
-				      gint            x,
-				      gint            y,
-				      gint            width,
-				      gint            height);
+                  GdkGC          *gc,
+                  gint            filled,
+                  gint            x,
+                  gint            y,
+                  gint            width,
+                  gint            height);
 void gdk_win32_draw_arc       (GdkDrawable    *drawable,
-				      GdkGC          *gc,
-				      gint            filled,
-				      gint            x,
-				      gint            y,
-				      gint            width,
-				      gint            height,
-				      gint            angle1,
-				      gint            angle2);
+                  GdkGC          *gc,
+                  gint            filled,
+                  gint            x,
+                  gint            y,
+                  gint            width,
+                  gint            height,
+                  gint            angle1,
+                  gint            angle2);
 void gdk_win32_draw_polygon   (GdkDrawable    *drawable,
-				      GdkGC          *gc,
-				      gint            filled,
-				      GdkPoint       *points,
-				      gint            npoints);
+                  GdkGC          *gc,
+                  gint            filled,
+                  GdkPoint       *points,
+                  gint            npoints);
 void gdk_win32_draw_text      (GdkDrawable    *drawable,
-				      GdkFont        *font,
-				      GdkGC          *gc,
-				      gint            x,
-				      gint            y,
-				      const gchar    *text,
-				      gint            text_length);
+                  GdkFont        *font,
+                  GdkGC          *gc,
+                  gint            x,
+                  gint            y,
+                  const gchar    *text,
+                  gint            text_length);
 void gdk_win32_draw_points    (GdkDrawable    *drawable,
-				      GdkGC          *gc,
-				      GdkPoint       *points,
-				      gint            npoints);
+                  GdkGC          *gc,
+                  GdkPoint       *points,
+                  gint            npoints);
 void gdk_win32_draw_segments  (GdkDrawable    *drawable,
-				      GdkGC          *gc,
-				      GdkSegment     *segs,
-				      gint            nsegs);
+                  GdkGC          *gc,
+                  GdkSegment     *segs,
+                  gint            nsegs);
 void gdk_win32_draw_lines     (GdkDrawable    *drawable,
-				      GdkGC          *gc,
-				      GdkPoint       *points,
-				      gint            npoints);
+                  GdkGC          *gc,
+                  GdkPoint       *points,
+                  gint            npoints);
 
 };
 
@@ -1030,8 +1030,8 @@ Int_t TGWin32::OpenDisplay(const char *dpyName)
 
    // Create input echo graphic context
    GdkGCValues echov;
-   gdk_color_black(fColormap, &echov.foreground);	// = BlackPixel(fDisplay, fScreenNumber);
-   gdk_color_white(fColormap, &echov.background);	// = WhitePixel(fDisplay, fScreenNumber);
+   gdk_color_black(fColormap, &echov.foreground); // = BlackPixel(fDisplay, fScreenNumber);
+   gdk_color_white(fColormap, &echov.background); // = WhitePixel(fDisplay, fScreenNumber);
    echov.function = GDK_INVERT;
    echov.subwindow_mode = GDK_CLIP_BY_CHILDREN;
    gGCecho =
@@ -2553,35 +2553,35 @@ Int_t TGWin32::RequestString(int x, int y, char *text)
             keysym = event->key.keyval;
             switch (keysym) {   // map cursor keys
             case GDK_BackSpace:
-               keybuf[0] = 0x08;	// backspace
+               keybuf[0] = 0x08; // backspace
                nbytes = 1;
                break;
             case GDK_Return:
-               keybuf[0] = 0x0d;	// return
+               keybuf[0] = 0x0d; // return
                nbytes = 1;
                break;
             case GDK_Delete:
-               keybuf[0] = 0x7f;	// del
+               keybuf[0] = 0x7f; // del
                nbytes = 1;
                break;
             case GDK_Escape:
-               keybuf[0] = 0x1b;	// esc
+               keybuf[0] = 0x1b; // esc
                nbytes = 1;
                break;
             case GDK_Home:
-               keybuf[0] = 0x01;	// home
+               keybuf[0] = 0x01; // home
                nbytes = 1;
                break;
             case GDK_Left:
-               keybuf[0] = 0x02;	// backward
+               keybuf[0] = 0x02; // backward
                nbytes = 1;
                break;
             case GDK_Right:
-               keybuf[0] = 0x06;	// forward
+               keybuf[0] = 0x06; // forward
                nbytes = 1;
                break;
             case GDK_End:
-               keybuf[0] = 0x05;	// end
+               keybuf[0] = 0x05; // end
                nbytes = 1;
                break;
             }
@@ -2719,7 +2719,7 @@ void TGWin32::RescaleWindow(int wid, unsigned int w, unsigned int h)
       // don't free and recreate pixmap when new pixmap is smaller
       if (gTws->width < w || gTws->height < h) {
          gdk_pixmap_unref(gTws->buffer);
-         gTws->buffer = gdk_pixmap_new(GDK_ROOT_PARENT(),	// NULL,
+         gTws->buffer = gdk_pixmap_new(GDK_ROOT_PARENT(), // NULL,
                                        w, h, gdk_visual_get_best_depth());
       }
       for (i = 0; i < kMAXGC; i++) {
@@ -3079,7 +3079,7 @@ void TGWin32::SetDoubleBufferON()
    if (!fWindows || gTws->double_buffer || gTws->ispixmap) return;
 
    if (!gTws->buffer) {
-      gTws->buffer = gdk_pixmap_new(GDK_ROOT_PARENT(),	//NULL,
+      gTws->buffer = gdk_pixmap_new(GDK_ROOT_PARENT(), //NULL,
                                     gTws->width, gTws->height,
                                     gdk_visual_get_best_depth());
       SetColor(gGCpxmp, 0);
@@ -4910,7 +4910,7 @@ void TGWin32::MapGCValues(GCValues_t & gval,
 
       if ((xmask & GDK_GC_FUNCTION)) {
          mask |= kGCFunction;
-         gval.fFunction = (EGraphicsFunction) xgval.function;	// ident mapping
+         gval.fFunction = (EGraphicsFunction) xgval.function; // ident mapping
          switch (xgval.function) {
          case GDK_CLEAR:
             gval.fFunction = kGXclear;
@@ -4980,19 +4980,19 @@ void TGWin32::MapGCValues(GCValues_t & gval,
       }
       if ((xmask & GDK_GC_LINE_STYLE)) {
          mask |= kGCLineStyle;
-         gval.fLineStyle = xgval.line_style;	// ident mapping
+         gval.fLineStyle = xgval.line_style; // ident mapping
       }
       if ((xmask & GDK_GC_CAP_STYLE)) {
          mask |= kGCCapStyle;
-         gval.fCapStyle = xgval.cap_style;	// ident mapping
+         gval.fCapStyle = xgval.cap_style;   // ident mapping
       }
       if ((xmask & GDK_GC_JOIN_STYLE)) {
          mask |= kGCJoinStyle;
-         gval.fJoinStyle = xgval.join_style;	// ident mapping
+         gval.fJoinStyle = xgval.join_style; // ident mapping
       }
       if ((xmask & GDK_GC_FILL)) {
          mask |= kGCFillStyle;
-         gval.fFillStyle = xgval.fill;	// ident mapping
+         gval.fFillStyle = xgval.fill;       // ident mapping
       }
       if ((xmask & GDK_GC_TILE)) {
          mask |= kGCTile;
@@ -5181,7 +5181,7 @@ GContext_t TGWin32::CreateGC(Drawable_t id, GCValues_t *gval)
 
    if (gval) MapGCValues(*gval, xmask, xgval, kTRUE);
 
-   xgval.subwindow_mode = GDK_CLIP_BY_CHILDREN;	// GDK_INCLUDE_INFERIORS;
+   xgval.subwindow_mode = GDK_CLIP_BY_CHILDREN; // GDK_INCLUDE_INFERIORS;
 
    GdkGC *gc = gdk_gc_new_with_values((GdkDrawable *) id,
                                       &xgval, (GdkGCValuesMask)xmask);
@@ -6627,9 +6627,9 @@ void TGWin32::MapKeySym(UInt_t & keysym, UInt_t & xkeysym, Bool_t tox)
       if (keysym < 127) {
          xkeysym = keysym;
       } else if (keysym >= kKey_F1 && keysym <= kKey_F35) {
-         xkeysym = GDK_F1 + (keysym - (UInt_t) kKey_F1);	// function keys
+         xkeysym = GDK_F1 + (keysym - (UInt_t) kKey_F1); // function keys
       } else {
-         for (int i = 0; gKeyMap[i].fKeySym; i++) {	// any other keys
+         for (int i = 0; gKeyMap[i].fKeySym; i++) {      // any other keys
             if (keysym == (UInt_t) gKeyMap[i].fKeySym) {
                xkeysym = (UInt_t) gKeyMap[i].fXKeySym;
                break;
@@ -6642,11 +6642,11 @@ void TGWin32::MapKeySym(UInt_t & keysym, UInt_t & xkeysym, Bool_t tox)
       if (xkeysym < 127) {
          keysym = xkeysym;
       } else if (xkeysym >= GDK_F1 && xkeysym <= GDK_F35) {
-         keysym = kKey_F1 + (xkeysym - GDK_F1);	// function keys
+         keysym = kKey_F1 + (xkeysym - GDK_F1);    // function keys
       } else if (xkeysym >= GDK_KP_0 && xkeysym <= GDK_KP_9) {
-         keysym = kKey_0 + (xkeysym - GDK_KP_0);	// numeric keypad keys
+         keysym = kKey_0 + (xkeysym - GDK_KP_0);   // numeric keypad keys
       } else {
-         for (int i = 0; gKeyMap[i].fXKeySym; i++) {	// any other keys
+         for (int i = 0; gKeyMap[i].fXKeySym; i++) { // any other keys
             if (xkeysym == gKeyMap[i].fXKeySym) {
                keysym = (UInt_t) gKeyMap[i].fKeySym;
                break;
@@ -7334,7 +7334,7 @@ void TGWin32::DeleteProperty(Window_t win, Atom_t& prop)
    HWND hWnd = (HWND)GDK_DRAWABLE_XID((GdkWindow *)win);
    Atom_t atom = (Atom_t)GetProp(hWnd,(LPCTSTR)MAKELONG(prop,0));
    if (atom != 0) {
-	   GlobalDeleteAtom(atom);
+      GlobalDeleteAtom(atom);
    }
    RemoveProp(hWnd,(LPCTSTR)MAKELONG(prop,0));
 }

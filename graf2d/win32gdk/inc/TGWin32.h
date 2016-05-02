@@ -176,7 +176,7 @@ public:
    void      SetTextSize(Float_t textsize);
 
    Bool_t    Init(void *display=0);
-   //UInt_t	 ExecCommand(TGWin32Command *);
+   //UInt_t  ExecCommand(TGWin32Command *);
    void      ClearWindow();
    void      ClosePixmap();
    void      CloseWindow();
