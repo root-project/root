@@ -1912,12 +1912,12 @@ Int_t TTabCom::Hook(char *buf, int *pLoc, std::ostream& out)
                if (comment && comment[0] != '\0') {
                   out << " \t// " << comment;
                }
+               out << std::endl;
             }
          }
 
          // done
          if (foundOne) {
-            out << std::endl;
             pos = -2;
          } else {
             gSystem->Beep();
@@ -2012,12 +2012,12 @@ Int_t TTabCom::Hook(char *buf, int *pLoc, std::ostream& out)
                if (comment && comment[0] != '\0') {
                   out << " \t// " << comment;
                }
+               out << std::endl;
             }
          }
 
          // done
          if (foundOne) {
-            out << std::endl;
             pos = -2;
          } else {
             gSystem->Beep();
