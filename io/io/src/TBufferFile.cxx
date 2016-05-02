@@ -118,7 +118,7 @@ TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsiz)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create an I/O buffer object. 
+/// Create an I/O buffer object.
 /// Mode should be either TBuffer::kRead or
 /// TBuffer::kWrite. By default the I/O buffer has a size of
 /// TBuffer::kInitialSize (1024) bytes. An external buffer can be passed
@@ -563,11 +563,11 @@ void TBufferFile::ReadWithNbits(Double_t *ptr, Int_t nbits)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write a Float16_t to the buffer.
-/// 
+///
 /// The following cases are supported for streaming a Float16_t type
 /// depending on the range declaration in the comment field of the data member:
 /// Case | Example |
-/// -----|---------| 
+/// -----|---------|
 ///  A   | Float16_t     fNormal; |
 ///  B   | Float16_t     fTemperature; //[0,100]|
 ///  C   | Float16_t     fCharge;      //[-1,1,2]|
@@ -590,7 +590,7 @@ void TBufferFile::ReadWithNbits(Double_t *ptr, Int_t nbits)
 ///   - [-pi,pi], [-pi/2,pi/4],[-2pi,2*pi]
 ///   - [-10,100,16]
 ///   - [0,0,8]
-/// if nbits is not specified, or nbits <2 or nbits>16 it is set to 16. If 
+/// if nbits is not specified, or nbits <2 or nbits>16 it is set to 16. If
 /// (xmin==0 and xmax==0 and nbits <=14) the float word will have
 /// its mantissa truncated to nbits significative bits.
 ///
@@ -657,7 +657,7 @@ void TBufferFile::WriteFloat16(Float_t *f, TStreamerElement *ele)
 /// The following cases are supported for streaming a Double32_t type
 /// depending on the range declaration in the comment field of the data member:
 /// Case | Example |
-/// -----|---------| 
+/// -----|---------|
 ///  A   | Double32_t     fNormal; |
 ///  B   | Double32_t     fTemperature; //[0,100]|
 ///  C   | Double32_t     fCharge;      //[-1,1,2]|
@@ -2641,9 +2641,9 @@ Int_t TBufferFile::WriteObjectAny(const void *obj, const TClass *ptrClass)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Read class definition from I/O buffer. 
+/// Read class definition from I/O buffer.
 ///
-/// \param[in] clReq Can be used to cross check if the actually read object is of the requested class. 
+/// \param[in] clReq Can be used to cross check if the actually read object is of the requested class.
 /// \param[in] objTag Set in case the object is a reference to an already read object.
 
 TClass *TBufferFile::ReadClass(const TClass *clReq, UInt_t *objTag)
@@ -2985,8 +2985,8 @@ Version_t TBufferFile::ReadVersionNoCheckSum(UInt_t *startpos, UInt_t *bcnt)
 ////////////////////////////////////////////////////////////////////////////////
 /// Read class version from I/O buffer
 ///
-/// To be used when streaming out emberwise streamed collection where we do not 
-/// care (not save) about the byte count and can safely ignore missing streamerInfo 
+/// To be used when streaming out emberwise streamed collection where we do not
+/// care (not save) about the byte count and can safely ignore missing streamerInfo
 /// (since they usually indicate empty collections).
 
 Version_t TBufferFile::ReadVersionForMemberWise(const TClass *cl)
@@ -3671,9 +3671,9 @@ Int_t TBufferFile::ReadClassEmulated(const TClass *cl, void *object, const TClas
 ////////////////////////////////////////////////////////////////////////////////
 /// Deserialize information from a buffer into an object.
 ///
-/// Note: This function is called by the xxx::Streamer() functions in 
+/// Note: This function is called by the xxx::Streamer() functions in
 /// rootcint-generated dictionaries.
-/// This function assumes that the class version and the byte count 
+/// This function assumes that the class version and the byte count
 /// information have been read.
 ///
 /// \param[in] version The version number of the class
@@ -4045,7 +4045,7 @@ Int_t TBufferFile::ApplySequence(const TStreamerInfoActions::TActionSequence &se
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the initial size of the map used to store object and class
-/// references during reading. 
+/// references during reading.
 ///
 /// The default size is kMapSize.
 /// Increasing the default has the benefit that when reading many
@@ -4061,7 +4061,7 @@ void TBufferFile::SetGlobalReadParam(Int_t mapsize)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the initial size of the map used to store object and class
-/// references during reading. 
+/// references during reading.
 ///
 /// The default size is kMapSize.
 /// Increasing the default has the benefit that when reading many

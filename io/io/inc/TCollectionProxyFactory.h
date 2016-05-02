@@ -207,7 +207,7 @@ public:
 
 };
 
-/** 
+/**
  \class TCollectionMemberStreamer TCollectionProxyFactory.h
  \ingroup IO
 

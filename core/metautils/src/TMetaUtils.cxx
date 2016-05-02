@@ -975,7 +975,7 @@ ROOT::TMetaUtils::EIOCtorCategory ROOT::TMetaUtils::CheckConstructor(const clang
 
       // We may induce template instantiation
       cling::Interpreter::PushTransactionRAII clingRAII(const_cast<cling::Interpreter*>(&interpreter));
-      
+
       if (auto* Ctor = interpreter.getCI()->getSema().LookupDefaultConstructor(ncCl)) {
          if (Ctor->getAccess() == clang::AS_public) {
             return EIOCtorCategory::kDefault;

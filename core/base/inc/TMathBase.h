@@ -61,7 +61,7 @@ namespace TMath {
    inline Float_t  Sign(Float_t a, Float_t b);
    inline Double_t Sign(Double_t a, Double_t b);
    inline LongDouble_t Sign(LongDouble_t a, LongDouble_t b);
-   
+
    // Min, Max of two scalars
    inline Short_t   Min(Short_t a, Short_t b);
    inline UShort_t  Min(UShort_t a, UShort_t b);
@@ -153,7 +153,7 @@ inline Bool_t TMath::SignBit(LongDouble_t a)
 
 template<typename T1, typename T2>
 inline T1 TMath::Sign( T1 a, T2 b)
-   { return (SignBit(b)) ? - Abs(a) : Abs(a); } 
+   { return (SignBit(b)) ? - Abs(a) : Abs(a); }
 
 inline Float_t TMath::Sign(Float_t a, Float_t b)
    { return std::copysign(a,b);  }

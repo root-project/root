@@ -532,7 +532,7 @@ void TStreamerInfo::Build()
             if (proxy) element = new TStreamerSTL(dmName, dmTitle, offset, dmFull, *proxy, dmIsPtr);
             else element = new TStreamerSTL(dmName, dmTitle, offset, dmFull, dmFull, dmIsPtr);
             if (((TStreamerSTL*)element)->GetSTLtype() != ROOT::kSTLvector) {
-               auto printErrorMsg = [&](const char* category) 
+               auto printErrorMsg = [&](const char* category)
                   {
                      std::string uptr_msg;
                      if (isUniquePtrColl) {

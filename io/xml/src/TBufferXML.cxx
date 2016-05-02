@@ -1103,9 +1103,9 @@ void TBufferXML::ClassEnd(const TClass*)
 /// which should be now streamed in custom streamer
 ///
 /// Following combinations are supported:
-///   -# name = "ClassName", typeName = 0 or typename==ClassName. 
-/// This is a case, when data of parent class "ClassName" should be streamed. 
-/// For instance, if class directly inherited from TObject, custom streamer 
+///   -# name = "ClassName", typeName = 0 or typename==ClassName.
+/// This is a case, when data of parent class "ClassName" should be streamed.
+/// For instance, if class directly inherited from TObject, custom streamer
 /// should include following code:
 /// ~~~{.cpp}
 /// b.ClassMember("TObject");

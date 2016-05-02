@@ -311,7 +311,7 @@ public:
 R__EXTERN TFile   *gFile;
 #endif
 
-/** 
+/**
 \class TFileOpenHandle
 \ingroup IO
 Class holding info about the file being opened
