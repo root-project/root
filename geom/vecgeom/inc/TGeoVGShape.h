@@ -27,7 +27,7 @@ private:
 
    static vecgeom::cxx::VPlacedVolume *CreateVecGeomSolid(TGeoShape *shape);
    TGeoVGShape(TGeoShape *shape, vecgeom::cxx::VPlacedVolume *vgshape);
-   
+
 public:
    TGeoVGShape() : TGeoBBox(), fVGShape(nullptr), fShape(nullptr) {}
    virtual ~TGeoVGShape();
@@ -40,18 +40,18 @@ public:
    virtual void          ComputeBBox();
    virtual void          ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm);
    virtual Bool_t        Contains(const Double_t *point) const;
-   virtual Bool_t        CouldBeCrossed(const Double_t *point, const Double_t *dir) const 
+   virtual Bool_t        CouldBeCrossed(const Double_t *point, const Double_t *dir) const
                             { return fShape->CouldBeCrossed(point,dir); }
-   virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py) 
+   virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py)
                             { return fShape->DistancetoPrimitive(px, py); }
-   virtual Double_t      DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact=1, 
+   virtual Double_t      DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact=1,
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
-   virtual Double_t      DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact=1, 
+   virtual Double_t      DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact=1,
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
-   virtual TGeoVolume   *Divide(TGeoVolume *, const char *, Int_t, Int_t, Double_t, Double_t) 
+   virtual TGeoVolume   *Divide(TGeoVolume *, const char *, Int_t, Int_t, Double_t, Double_t)
                             { return nullptr; }
    virtual void          Draw(Option_t *option="") { fShape->Draw(option); } // *MENU*
-   virtual const char   *GetAxisName(Int_t iaxis) const 
+   virtual const char   *GetAxisName(Int_t iaxis) const
                             { return ( fShape->GetAxisName(iaxis) ); }
    virtual Double_t      GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const
                             { return ( fShape->GetAxisRange(iaxis, xlo, xhi) ); }
@@ -71,7 +71,7 @@ public:
                             { fShape->GetMeshNumbers(nvert, nsegs, npols); }
    virtual const char   *GetName() const
                             { return ( fShape->GetName() ); }
-   virtual Int_t         GetNmeshVertices() const 
+   virtual Int_t         GetNmeshVertices() const
                             {return ( fShape->GetNmeshVertices() );}
    virtual Bool_t        IsAssembly() const { return ( fShape->IsAssembly() ); }
    virtual Bool_t        IsComposite() const { return ( fShape->IsComposite() ); }
@@ -87,7 +87,7 @@ public:
    virtual void          SetPoints(Float_t *points) const { fShape->SetPoints(points); }
    virtual void          SetSegsAndPols(TBuffer3D &buff) const { fShape->SetSegsAndPols(buff); }
    virtual void          Sizeof3D() const { fShape->Sizeof3D(); }
-   
+
    TGeoShape            *GetShape() const { return fShape; }
    vecgeom::cxx::VPlacedVolume *GetVGShape() const { return fVGShape; }
 //   ClassDef(TGeoVGShape, 1)         // Bridge class for VecGeom-based shapes

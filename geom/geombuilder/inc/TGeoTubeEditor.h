@@ -1,5 +1,5 @@
 // @(#):$Id$
-// Author: M.Gheata 
+// Author: M.Gheata
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -59,7 +59,7 @@ protected:
    TGCompositeFrame *fDFrame;          // Frame containing Delayed draw
 
    virtual void ConnectSignals2Slots();   // Connect the signals to the slots
-   Bool_t       IsDelayed() const;   
+   Bool_t       IsDelayed() const;
 
 public:
    TGeoTubeEditor(const TGWindow *p = 0,
@@ -76,9 +76,9 @@ public:
    void           DoName();
    virtual void   DoApply();
    virtual void   DoUndo();
-   
+
    ClassDef(TGeoTubeEditor,0)   // TGeoTube editor
-};   
+};
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -99,8 +99,8 @@ protected:
    Double_t         fPmaxi;             // Initial phi max
    TGDoubleVSlider *fSPhi;              // Phi slider
    TGNumberEntry   *fEPhi1;             // Number entry for phi1
-   TGNumberEntry   *fEPhi2;             // Number entry for phi2  
-   
+   TGNumberEntry   *fEPhi2;             // Number entry for phi2
+
    virtual void ConnectSignals2Slots();   // Connect the signals to the slots
 
 public:
@@ -116,9 +116,9 @@ public:
    void           DoPhi2();
    virtual void   DoApply();
    virtual void   DoUndo();
-   
+
    ClassDef(TGeoTubeSegEditor,0)   // TGeoTubeSeg editor
-};   
+};
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -154,8 +154,8 @@ public:
    void           DoPhhi();
    virtual void   DoApply();
    virtual void   DoUndo();
-   
+
    ClassDef(TGeoCtubEditor,0)   // TGeoCtub editor
 };
-  
-#endif                    
+
+#endif

@@ -52,7 +52,7 @@ TGeoVGShape::TGeoVGShape(TGeoShape *shape,  vecgeom::cxx::VPlacedVolume *vgshape
 // Default constructor
    // Copy box parameters from the original ROOT shape
    const TGeoBBox *box = (const TGeoBBox*)shape;
-   TGeoBBox::SetBoxDimensions(box->GetDX(), box->GetDY(), box->GetDZ());   
+   TGeoBBox::SetBoxDimensions(box->GetDX(), box->GetDY(), box->GetDZ());
    memcpy(fOrigin, box->GetOrigin(), 3*sizeof(Double_t));
 }
 
@@ -60,14 +60,14 @@ TGeoVGShape::TGeoVGShape(TGeoShape *shape,  vecgeom::cxx::VPlacedVolume *vgshape
 TGeoVGShape::~TGeoVGShape()
 {
 // Destructor
-   // Cleanup only the VecGeom solid, the ROOT shape is cleaned by TGeoManager 
+   // Cleanup only the VecGeom solid, the ROOT shape is cleaned by TGeoManager
    delete fVGShape;
-}   
+}
 
 //_____________________________________________________________________________
 TGeoVGShape *TGeoVGShape::Create(TGeoShape *shape)
 {
-// Factory creating TGeoVGShape from a Root shape. Returns nullptr if the 
+// Factory creating TGeoVGShape from a Root shape. Returns nullptr if the
 // shape cannot be converted
    vecgeom::cxx::VPlacedVolume *vgshape = TGeoVGShape::CreateVecGeomSolid(shape);
    if (!vgshape) return nullptr;
@@ -78,7 +78,7 @@ TGeoVGShape *TGeoVGShape::Create(TGeoShape *shape)
 vecgeom::cxx::VPlacedVolume *TGeoVGShape::CreateVecGeomSolid(TGeoShape *shape)
 {
 // Conversion method to create VecGeom solid corresponding to TGeoShape
-   // Call VecGeom TGeoShape->UnplacedSolid converter   
+   // Call VecGeom TGeoShape->UnplacedSolid converter
 //   VUnplacedVolume *unplaced = RootGeoManager::Instance().Convert(shape);
    vecgeom::cxx::VUnplacedVolume *unplaced = Convert(shape);
    if (!unplaced) return nullptr;
@@ -299,7 +299,7 @@ void TGeoVGShape::ComputeBBox()
 {
 // Compute bounding box.
   fShape->ComputeBBox();
-}   
+}
 
 //_____________________________________________________________________________
 Double_t TGeoVGShape::Capacity() const
@@ -316,7 +316,7 @@ void TGeoVGShape::ComputeNormal(const Double_t *point, const Double_t */*dir*/, 
    fVGShape->Normal(vecgeom::cxx::Vector3D<Double_t>(point[0], point[1], point[2]), vnorm);
    norm[0] = vnorm.x(); norm[1] = vnorm.y(), norm[2] = vnorm.z();
 }
-   
+
 //_____________________________________________________________________________
 Bool_t TGeoVGShape::Contains(const Double_t *point) const
 {
@@ -325,7 +325,7 @@ Bool_t TGeoVGShape::Contains(const Double_t *point) const
 }
 
 //_____________________________________________________________________________
-Double_t TGeoVGShape::DistFromInside(const Double_t *point, const Double_t *dir, Int_t /*iact*/, 
+Double_t TGeoVGShape::DistFromInside(const Double_t *point, const Double_t *dir, Int_t /*iact*/,
                                    Double_t step, Double_t * /*safe*/) const
 {
    Double_t dist = fVGShape->DistanceToOut(vecgeom::cxx::Vector3D<Double_t>(point[0], point[1], point[2]),
@@ -334,7 +334,7 @@ Double_t TGeoVGShape::DistFromInside(const Double_t *point, const Double_t *dir,
 }
 
 //_____________________________________________________________________________
-Double_t TGeoVGShape::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t /*iact*/, 
+Double_t TGeoVGShape::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t /*iact*/,
                                    Double_t step, Double_t * /*safe*/) const
 {
    Double_t dist = fVGShape->DistanceToIn(vecgeom::cxx::Vector3D<Double_t>(point[0], point[1], point[2]),
@@ -348,7 +348,7 @@ Double_t TGeoVGShape::Safety(const Double_t *point, Bool_t in) const
    Double_t safety =  (in) ? fVGShape->SafetyToOut(vecgeom::cxx::Vector3D<Double_t>(point[0], point[1], point[2]))
                            : fVGShape->SafetyToIn(vecgeom::cxx::Vector3D<Double_t>(point[0], point[1], point[2]));
    return ( (safety < 0.)? 0. : safety );
-   
+
 }
 
 //_____________________________________________________________________________

@@ -276,7 +276,7 @@ void TGeoPainter::DefineColors() const
    static Int_t color = 0;
    if (!color) {
       TColor::InitializeColors();
-      for (auto icol=1; icol<10; ++icol) 
+      for (auto icol=1; icol<10; ++icol)
          color = GetColor(icol, 0.5);
    }
 }
@@ -304,11 +304,11 @@ Int_t TGeoPainter::GetColor(Int_t base, Float_t light) const
       col_base = gROOT->GetColor(kBlack);
       color = 1;
    }
-   // Create a color palette for col_base   
+   // Create a color palette for col_base
    Float_t r,g,b,h,l,s;
    Double_t red[2], green[2], blue[2];
    Double_t stop[] = {0., 1.0};
-     
+
    col_base->GetRGB(r,g,b);
    TColor::RGB2HLS(r,g,b,h,l,s);
    TColor::HLS2RGB(h,lmin,s,r,g,b);
@@ -1796,7 +1796,7 @@ void TGeoPainter::Raytrace(Option_t *)
             norm = normal;
          } else {
             if (!norm) norm = fGeoManager->FindNormalFast();
-            if (!norm) continue;         
+            if (!norm) continue;
          }
          calf = norm[0]*tosource[0]+norm[1]*tosource[1]+norm[2]*tosource[2];
          light = TMath::Abs(calf);

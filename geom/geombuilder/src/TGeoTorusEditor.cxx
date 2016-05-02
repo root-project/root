@@ -1,5 +1,5 @@
 // @(#):$Id$
-// Author: M.Gheata 
+// Author: M.Gheata
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -80,7 +80,7 @@ TGeoTorusEditor::TGeoTorusEditor(const TGWindow *p, Int_t width,
    fER->Associate(this);
    f1->AddFrame(fER, new TGLayoutHints(kLHintsRight, 2, 2, 4, 4));
    AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
-   
+
    // Number entry for rmin.
    f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth);
    f1->AddFrame(new TGLabel(f1, "Rmin"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
@@ -92,7 +92,7 @@ TGeoTorusEditor::TGeoTorusEditor(const TGWindow *p, Int_t width,
    fERmin->Associate(this);
    f1->AddFrame(fERmin, new TGLayoutHints(kLHintsRight, 2, 2, 4, 4));
    AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
-   
+
    // Number entry for rmax
    f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth);
    f1->AddFrame(new TGLabel(f1, "Rmax"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
@@ -116,7 +116,7 @@ TGeoTorusEditor::TGeoTorusEditor(const TGWindow *p, Int_t width,
    fEPhi1->Associate(this);
    f1->AddFrame(fEPhi1, new TGLayoutHints(kLHintsRight, 2, 2, 4, 4));
    AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
-     
+
    // Number entry for Dphi
    f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth);
    f1->AddFrame(new TGLabel(f1, "Dphi"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
@@ -128,13 +128,13 @@ TGeoTorusEditor::TGeoTorusEditor(const TGWindow *p, Int_t width,
    fEDphi->Associate(this);
    f1->AddFrame(fEDphi, new TGLayoutHints(kLHintsRight, 2, 2, 4, 4));
    AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
- 
+
    // Delayed draw
    f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth | kSunkenFrame);
    fDelayed = new TGCheckButton(f1, "Delayed draw");
    f1->AddFrame(fDelayed, new TGLayoutHints(kLHintsLeft , 2, 2, 4, 4));
-   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
- 
+   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
+
    // Buttons
    f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth);
    fApply = new TGTextButton(f1, "Apply");
@@ -143,7 +143,7 @@ TGeoTorusEditor::TGeoTorusEditor(const TGWindow *p, Int_t width,
    fUndo = new TGTextButton(f1, "Undo");
    f1->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
    fUndo->Associate(this);
-   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
+   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
    fUndo->SetSize(fApply->GetSize());
 }
 
@@ -155,10 +155,10 @@ TGeoTorusEditor::~TGeoTorusEditor()
    TGFrameElement *el;
    TIter next(GetList());
    while ((el = (TGFrameElement *)next())) {
-      if (el->fFrame->IsComposite()) 
+      if (el->fFrame->IsComposite())
          TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
-   Cleanup();   
+   Cleanup();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -190,8 +190,8 @@ void TGeoTorusEditor::SetModel(TObject* obj)
 {
    if (obj == 0 || (obj->IsA()!=TGeoTorus::Class())) {
       SetActive(kFALSE);
-      return;                 
-   } 
+      return;
+   }
    fShape = (TGeoTorus*)obj;
    fRi = fShape->GetR();
    fRmini = fShape->GetRmin();
@@ -203,7 +203,7 @@ void TGeoTorusEditor::SetModel(TObject* obj)
    else {
       fShapeName->SetText(sname);
       fNamei = sname;
-   }   
+   }
    fER->SetNumber(fRi);
    fERmin->SetNumber(fRmini);
    fERmax->SetNumber(fRmaxi);
@@ -211,7 +211,7 @@ void TGeoTorusEditor::SetModel(TObject* obj)
    fEDphi->SetNumber(fDphii);
    fApply->SetEnabled(kFALSE);
    fUndo->SetEnabled(kFALSE);
-   
+
    if (fInit) ConnectSignals2Slots();
    SetActive();
 }
@@ -240,8 +240,8 @@ void TGeoTorusEditor::DoApply()
    const char *name = fShapeName->GetText();
    if (strcmp(name,fShape->GetName())) fShape->SetName(name);
    Double_t r = fER->GetNumber();
-   Double_t rmax = fERmax->GetNumber();  
-   Double_t rmin = fERmin->GetNumber(); 
+   Double_t rmax = fERmax->GetNumber();
+   Double_t rmin = fERmin->GetNumber();
    Double_t phi = fEPhi1->GetNumber();
    Double_t dphi = fEDphi->GetNumber();
    Double_t param[5];
@@ -264,9 +264,9 @@ void TGeoTorusEditor::DoApply()
             view->SetRange(-fShape->GetDX(), -fShape->GetDY(), -fShape->GetDZ(),
                            fShape->GetDX(), fShape->GetDY(), fShape->GetDZ());
             Update();
-         }                  
+         }
       } else Update();
-   }   
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -291,7 +291,7 @@ void TGeoTorusEditor::DoUndo()
    fUndo->SetEnabled(kFALSE);
    fApply->SetEnabled(kFALSE);
 }
-   
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot for R.
 
@@ -302,7 +302,7 @@ void TGeoTorusEditor::DoR()
    if (r<rmax) {
       r = rmax;
       fER->SetNumber(r);
-   }   
+   }
    DoModified();
    if (!IsDelayed()) DoApply();
 }
@@ -317,7 +317,7 @@ void TGeoTorusEditor::DoRmin()
    if (rmin>rmax) {
       rmin = rmax-0.1;
       fERmin->SetNumber(rmin);
-   }   
+   }
    DoModified();
    if (!IsDelayed()) DoApply();
 }
@@ -333,11 +333,11 @@ void TGeoTorusEditor::DoRmax()
    if (rmax<=rmin) {
       rmax = rmin+0.1;
       fERmax->SetNumber(rmax);
-   }   
+   }
    if (rmax>r) {
       rmax = r;
       fERmax->SetNumber(rmax);
-   }   
+   }
    DoModified();
    if (!IsDelayed()) DoApply();
 }
@@ -351,7 +351,7 @@ void TGeoTorusEditor::DoPhi1()
    if (phi<0 || phi>360) {
       phi = 0;
       fEPhi1->SetNumber(phi);
-   }   
+   }
    DoModified();
    if (!IsDelayed()) DoApply();
 }
@@ -365,7 +365,7 @@ void TGeoTorusEditor::DoDphi()
    if (dphi<=0 || dphi>360) {
       dphi = 1;
       fEDphi->SetNumber(dphi);
-   }   
+   }
    DoModified();
    if (!IsDelayed()) DoApply();
 }

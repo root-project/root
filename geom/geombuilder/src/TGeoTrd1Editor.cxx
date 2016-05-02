@@ -1,5 +1,5 @@
 // @(#):$Id$
-// Author: M.Gheata 
+// Author: M.Gheata
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -70,7 +70,7 @@ TGeoTrd1Editor::TGeoTrd1Editor(const TGWindow *p, Int_t width,
    TGTextEntry *nef;
    MakeTitle("Trd1 dimensions");
    TGCompositeFrame *compxyz = new TGCompositeFrame(this, 118, 30, kVerticalFrame | kRaisedFrame | kDoubleBorder);
-  
+
    // Number entry for dx1
    TGCompositeFrame *f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
                                  kLHintsExpandX | kFixedWidth | kOwnBackground);
@@ -82,7 +82,7 @@ TGeoTrd1Editor::TGeoTrd1Editor(const TGWindow *p, Int_t width,
    fEDx1->Associate(this);
    f1->AddFrame(fEDx1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
    compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
-   
+
    // Number entry for dx2
    f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
                                  kLHintsExpandX | kFixedWidth | kOwnBackground);
@@ -106,7 +106,7 @@ TGeoTrd1Editor::TGeoTrd1Editor(const TGWindow *p, Int_t width,
    fEDy->Associate(this);
    f2->AddFrame(fEDy, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
    compxyz->AddFrame(f2, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
-   
+
    // Number entry for dz
    TGCompositeFrame *f3 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
                                  kLHintsExpandX | kFixedWidth | kOwnBackground);
@@ -118,15 +118,15 @@ TGeoTrd1Editor::TGeoTrd1Editor(const TGWindow *p, Int_t width,
    fEDz->Associate(this);
    f3->AddFrame(fEDz, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
    compxyz->AddFrame(f3, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
-   
+
    compxyz->Resize(150,30);
    AddFrame(compxyz, new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
-      
+
    // Delayed draw
    f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth | kSunkenFrame);
    fDelayed = new TGCheckButton(f1, "Delayed draw");
    f1->AddFrame(fDelayed, new TGLayoutHints(kLHintsLeft , 2, 2, 4, 4));
-   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
+   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
 
    // Buttons
    f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth);
@@ -136,7 +136,7 @@ TGeoTrd1Editor::TGeoTrd1Editor(const TGWindow *p, Int_t width,
    fUndo = new TGTextButton(f1, "Undo");
    f1->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
    fUndo->Associate(this);
-   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
+   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
    fUndo->SetSize(fApply->GetSize());
 }
 
@@ -148,10 +148,10 @@ TGeoTrd1Editor::~TGeoTrd1Editor()
    TGFrameElement *el;
    TIter next(GetList());
    while ((el = (TGFrameElement *)next())) {
-      if (el->fFrame->IsComposite()) 
+      if (el->fFrame->IsComposite())
          TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
-   Cleanup();   
+   Cleanup();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -181,8 +181,8 @@ void TGeoTrd1Editor::SetModel(TObject* obj)
 {
    if (obj == 0 || (obj->IsA()!=TGeoTrd1::Class())) {
       SetActive(kFALSE);
-      return;                 
-   } 
+      return;
+   }
    fShape = (TGeoTrd1*)obj;
    fDxi1 = fShape->GetDx1();
    fDxi2 = fShape->GetDx2();
@@ -193,7 +193,7 @@ void TGeoTrd1Editor::SetModel(TObject* obj)
    else {
       fShapeName->SetText(sname);
       fNamei = sname;
-   }   
+   }
    fEDx1->SetNumber(fDxi1);
    fEDx2->SetNumber(fDxi2);
    fEDy->SetNumber(fDyi);
@@ -201,7 +201,7 @@ void TGeoTrd1Editor::SetModel(TObject* obj)
    fApply->SetEnabled(kFALSE);
    fUndo->SetEnabled(kFALSE);
 
-   
+
    if (fInit) ConnectSignals2Slots();
    SetActive();
 }
@@ -231,7 +231,7 @@ void TGeoTrd1Editor::DoApply()
    if (strcmp(name,fShape->GetName())) fShape->SetName(name);
    Double_t dx1 = fEDx1->GetNumber();
    Double_t dx2 = fEDx2->GetNumber();
-   Double_t dy = fEDy->GetNumber(); 
+   Double_t dy = fEDy->GetNumber();
    Double_t dz = fEDz->GetNumber();
    Double_t param[4];
    param[0] = dx1;
@@ -247,7 +247,7 @@ void TGeoTrd1Editor::DoApply()
          fShape->Draw();
          fPad->GetView()->ShowAxis();
       } else Update();
-   }   
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -271,7 +271,7 @@ void TGeoTrd1Editor::DoUndo()
    fUndo->SetEnabled(kFALSE);
    fApply->SetEnabled(kFALSE);
 }
-   
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot for dx1.
 
@@ -286,7 +286,7 @@ void TGeoTrd1Editor::DoDx1()
    if (dx1<1.e-6 && dx2<1.e-6) {
       dx1 = 0.1;
       fEDx1->SetNumber(dx1);
-   }      
+   }
    DoModified();
    if (!IsDelayed()) DoApply();
 }
@@ -305,7 +305,7 @@ void TGeoTrd1Editor::DoDx2()
    if (dx1<1.e-6 && dx2<1.e-6) {
       dx2 = 0.1;
       fEDx2->SetNumber(dx2);
-   }      
+   }
    DoModified();
    if (!IsDelayed()) DoApply();
 }

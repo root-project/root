@@ -197,7 +197,7 @@ std::string PyROOT::TMethodHolder::GetSignatureString()
          sig << " " << parname;
 
       const std::string& defvalue = Cppyy::GetMethodArgDefault( fMethod, iarg );
-      if ( ! defvalue.empty() ) 
+      if ( ! defvalue.empty() )
          sig << " = " << defvalue;
       ifirst++;
    }
