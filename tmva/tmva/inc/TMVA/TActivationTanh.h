@@ -76,8 +76,8 @@ namespace TMVA {
       Double_t fast_tanh(Double_t arg);
       Bool_t   fFAST;
 
-      ClassDef(TActivationTanh,0) // Tanh sigmoid activation function for TNeuron
-         };
+      ClassDef(TActivationTanh,0); // Tanh sigmoid activation function for TNeuron
+   };
 
 } // namespace TMVA
 

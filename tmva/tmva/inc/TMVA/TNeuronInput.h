@@ -56,8 +56,8 @@ namespace TMVA {
       // name of class
       virtual TString GetName() = 0;
 
-      ClassDef(TNeuronInput,0) // Interface for TNeuron input calculation classes
-         };
+      ClassDef(TNeuronInput,0); // Interface for TNeuron input calculation classes
+   };
 
 } // namespace TMVA
 

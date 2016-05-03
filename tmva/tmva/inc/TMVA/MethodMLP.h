@@ -242,8 +242,8 @@ namespace TMVA {
       static const Bool_t fgPRINT_SEQ           = kFALSE; // debug flags
       static const Bool_t fgPRINT_BATCH         = kFALSE; // debug flags
 
-      ClassDef(MethodMLP,0) // Multi-layer perceptron implemented specifically for TMVA
-         };
+      ClassDef(MethodMLP,0); // Multi-layer perceptron implemented specifically for TMVA
+   };
 
 } // namespace TMVA
 

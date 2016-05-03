@@ -250,8 +250,8 @@ namespace TMVA {
       DataSetInfo*  fDataSetInfo;
 
 
-      ClassDef(DecisionTree,0)               // implementation of a Decision Tree
-         };
+      ClassDef(DecisionTree,0);               // implementation of a Decision Tree
+   };
   
 } // namespace TMVA
 

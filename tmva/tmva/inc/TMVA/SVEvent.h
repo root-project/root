@@ -98,8 +98,8 @@ namespace TMVA
       Float_t*             fLine;        // pointer to column of kerenl matrix 
       const Float_t        fTarget;      // regression target
       
-      ClassDef(SVEvent,0) // Event for SVM
-         };
+      ClassDef(SVEvent,0); // Event for SVM
+   };
 }
 
 #endif //ROOT_TMVA_SVEvent

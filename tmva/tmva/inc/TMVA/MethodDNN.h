@@ -150,8 +150,8 @@ namespace TMVA {
       TString  fFileName;
       double fScaleToNumEvents;
 
-      ClassDef(MethodDNN,0) // neural network 
-         };
+      ClassDef(MethodDNN,0); // neural network 
+   };
 
 } // namespace TMVA
 

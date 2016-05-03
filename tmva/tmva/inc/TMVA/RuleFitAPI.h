@@ -191,9 +191,9 @@ namespace TMVA {
 
       mutable MsgLogger    fLogger;      // message logger
 
-      ClassDef(RuleFitAPI,0)        // Friedman's RuleFit method
+      ClassDef(RuleFitAPI,0);        // Friedman's RuleFit method
 
-         };
+   };
 
 } // namespace TMVA
 

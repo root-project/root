@@ -76,8 +76,8 @@ namespace TMVA {
 
    protected:
       
-      ClassDef(GiniIndexWithLaplace,0) // Implementation of the GiniIndexWithLaplace as separation criterion
-         };  
+      ClassDef(GiniIndexWithLaplace,0); // Implementation of the GiniIndexWithLaplace as separation criterion
+   };  
 
 } // namespace TMVA
 

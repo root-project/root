@@ -80,8 +80,8 @@ namespace TMVA {
 
    protected:
       
-      ClassDef(GiniIndex,0) // Implementation of the GiniIndex as separation criterion
-         };  
+      ClassDef(GiniIndex,0); // Implementation of the GiniIndex as separation criterion
+   };  
 
 } // namespace TMVA
 

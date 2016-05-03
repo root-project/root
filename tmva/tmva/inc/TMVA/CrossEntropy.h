@@ -60,8 +60,8 @@ namespace TMVA {
     
    protected:
     
-      ClassDef(CrossEntropy,0) // Implementation of the CrossEntropy as separation criterion
-         };
+      ClassDef(CrossEntropy,0); // Implementation of the CrossEntropy as separation criterion
+   };
 
 } // namespace TMVA
 

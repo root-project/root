@@ -72,8 +72,8 @@ namespace TMVA {
       mutable MsgLogger* fLogger;   //! message logger
       MsgLogger& Log() const { return *fLogger; }                       
 
-      ClassDef(RootFinder,0) // Root finding using Brents algorithm
-         };
+      ClassDef(RootFinder,0); // Root finding using Brents algorithm
+   };
 
 } // namespace TMVA
 

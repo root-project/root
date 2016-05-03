@@ -62,8 +62,8 @@ namespace TMVA {
       virtual Double_t  GetSeparationIndex( const Double_t &s, const Double_t &b );
    protected:
 
-      ClassDef(MisClassificationError,0) // Implementation of the MisClassificationError as separation criterion
-         };
+      ClassDef(MisClassificationError,0); // Implementation of the MisClassificationError as separation criterion
+   };
  
 } // namespace TMVA
 

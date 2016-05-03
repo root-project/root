@@ -71,8 +71,8 @@ namespace TMVA {
 
    private:
 
-      ClassDef(VariableRearrangeTransform,0) // Variable transformation: normalization
-         };
+      ClassDef(VariableRearrangeTransform,0); // Variable transformation: normalization
+   };
 
 } // namespace TMVA
 

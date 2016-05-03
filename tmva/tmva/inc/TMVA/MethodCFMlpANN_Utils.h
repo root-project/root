@@ -203,8 +203,8 @@ namespace TMVA {
 
    public:
 
-      ClassDef(MethodCFMlpANN_Utils,0)  // Implementation of Clermond-Ferrand artificial neural network
-         };
+      ClassDef(MethodCFMlpANN_Utils,0);  // Implementation of Clermond-Ferrand artificial neural network
+   };
 
 } // namespace TMVA
 

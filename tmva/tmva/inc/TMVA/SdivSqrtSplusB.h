@@ -65,8 +65,8 @@ namespace TMVA {
 
    protected:
 
-      ClassDef(SdivSqrtSplusB,0) // Implementation of the SdivSqrtSplusB as separation criterion
-         };
+      ClassDef(SdivSqrtSplusB,0); // Implementation of the SdivSqrtSplusB as separation criterion
+   };
 
 } // namespace TMVA
 

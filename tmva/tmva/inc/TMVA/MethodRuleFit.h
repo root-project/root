@@ -218,8 +218,8 @@ namespace TMVA {
       Double_t                     fRuleMinDist;    // rule min distance - see RuleEnsemble
       Double_t                     fLinQuantile;    // quantile cut to remove outliers - see RuleEnsemble
 
-      ClassDef(MethodRuleFit,0)  // Friedman's RuleFit method
-         };
+      ClassDef(MethodRuleFit,0);  // Friedman's RuleFit method
+   };
 
 } // namespace TMVA
 

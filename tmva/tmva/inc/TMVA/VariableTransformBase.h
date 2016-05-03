@@ -186,8 +186,8 @@ namespace TMVA {
 
       mutable MsgLogger* fLogger;                     //! message logger
 
-      ClassDef(VariableTransformBase,0)   //  Base class for variable transformations
-         };
+      ClassDef(VariableTransformBase,0);;   //  Base class for variable transformations
+   };
 
 } // namespace TMVA
 

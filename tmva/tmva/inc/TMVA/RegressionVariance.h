@@ -95,8 +95,8 @@ namespace TMVA {
 
       TString fName;  // name of the concrete Separation Index impementation
  
-      ClassDef(RegressionVariance,0) // Interface to different separation critiera used in training algorithms
-         };
+      ClassDef(RegressionVariance,0); // Interface to different separation critiera used in training algorithms
+   };
 
 
 } // namespace TMVA

@@ -38,10 +38,10 @@ namespace TMVA {
       mutable MsgLogger*    fLogger;
       MsgLogger& Log() const { return *fLogger; }
     
-      ClassDef(QuickMVAProbEstimator,0) // Interface to different separation critiera used in training algorithms
+      ClassDef(QuickMVAProbEstimator,0); // Interface to different separation critiera used in training algorithms
       
       
-         };
+   };
 }
 
 

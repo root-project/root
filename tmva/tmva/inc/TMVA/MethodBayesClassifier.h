@@ -97,8 +97,8 @@ namespace TMVA {
       void DeclareOptions();
       void ProcessOptions();
 
-      ClassDef(MethodBayesClassifier,0)  // Friedman's BayesClassifier method 
-         };
+      ClassDef(MethodBayesClassifier,0);  // Friedman's BayesClassifier method 
+   };
 
 } // namespace TMVA
 

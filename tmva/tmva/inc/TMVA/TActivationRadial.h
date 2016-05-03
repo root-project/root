@@ -75,8 +75,8 @@ namespace TMVA {
       TFormula* fEqn;                // equation of radial basis function
       TFormula* fEqnDerivative;      // equation of derivative
 
-      ClassDef(TActivationRadial,0)  // Radial basis activation function for TNeuron
-         };
+      ClassDef(TActivationRadial,0);  // Radial basis activation function for TNeuron
+   };
 
 } // namespace TMVA
 

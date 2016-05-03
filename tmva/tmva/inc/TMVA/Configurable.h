@@ -144,9 +144,9 @@ namespace TMVA {
       
    public:
 
-      ClassDef(Configurable,0)  // Virtual base class for all TMVA method
+      ClassDef(Configurable,0);  // Virtual base class for all TMVA method
 
-         };
+   };
 } // namespace TMVA
 
 // Template Declarations go here

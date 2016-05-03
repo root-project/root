@@ -60,8 +60,8 @@ namespace TMVA {
       std::vector<Double_t> fFactors; // stores the factors (coefficients) of one individual
       Double_t fFitness;
       
-      ClassDef(GeneticGenes,0) // Genes definition for genetic algorithm
-         };
+      ClassDef(GeneticGenes,0); // Genes definition for genetic algorithm
+   };
 
    Bool_t operator <(const GeneticGenes&, const GeneticGenes&);
 

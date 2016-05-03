@@ -117,8 +117,8 @@ namespace TMVA {
 
       Short_t     fSelector;       // index of variable used in node selection (decision tree) 
 
-      ClassDef(BinarySearchTreeNode,0) // Node for the BinarySearchTree
-         };
+      ClassDef(BinarySearchTreeNode,0); // Node for the BinarySearchTree
+   };
 
 } // namespace TMVA
 

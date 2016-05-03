@@ -125,8 +125,8 @@ namespace TMVA {
 
       MsgLogger& Log() const;
 
-      ClassDef(BinaryTree,0) // Base class for BinarySearch and Decision Trees
-         };  
+      ClassDef(BinaryTree,0); // Base class for BinarySearch and Decision Trees
+   };  
 
 } // namespace TMVA
 

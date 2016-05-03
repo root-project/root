@@ -243,8 +243,8 @@ namespace TMVA {
       // some static flags
       static const Bool_t fgDEBUG      = kTRUE;  // debug flag
     
-      ClassDef(MethodANNBase,0) // Base class for TMVA ANNs
-         };
+      ClassDef(MethodANNBase,0); // Base class for TMVA ANNs
+   };
 
 
 

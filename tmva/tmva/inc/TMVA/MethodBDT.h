@@ -296,8 +296,8 @@ namespace TMVA {
 
       // for backward compatibility
 
-      ClassDef(MethodBDT,0)  // Analysis of Boosted Decision Trees
-         };
+      ClassDef(MethodBDT,0);  // Analysis of Boosted Decision Trees
+   };
 
 } // namespace TMVA
 

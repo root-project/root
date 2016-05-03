@@ -107,8 +107,8 @@ namespace TMVA {
 
       MsgLogger& Log() const;
 
-      ClassDef(Interval,0)    // Interval definition, continous and discrete
-         };
+      ClassDef(Interval,0);    // Interval definition, continous and discrete
+   };
 
 } // namespace TMVA
 

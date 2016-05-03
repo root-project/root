@@ -208,8 +208,8 @@ namespace TMVA {
 
    protected:
 
-      ClassDef(DataLoader,0)
-         };
+      ClassDef(DataLoader,0);
+   };
 
 } // namespace TMVA
 

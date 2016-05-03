@@ -166,8 +166,8 @@ namespace TMVA {
 
       MsgLogger& Log() const;
 
-      ClassDef(TNeuron,0) // Neuron class used by MethodANNBase derivative ANNs
-         };
+      ClassDef(TNeuron,0); // Neuron class used by MethodANNBase derivative ANNs
+   };
 
 } // namespace TMVA
 

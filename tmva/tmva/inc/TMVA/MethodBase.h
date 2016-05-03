@@ -644,9 +644,9 @@ namespace TMVA {
 
    protected:
       Results *fResults;
-      ClassDef(MethodBase,0)  // Virtual base class for all TMVA method
+      ClassDef(MethodBase,0);  // Virtual base class for all TMVA method
 
-         };
+   };
 } // namespace TMVA
 
 

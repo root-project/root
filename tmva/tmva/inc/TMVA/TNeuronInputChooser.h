@@ -114,8 +114,8 @@ namespace TMVA {
       TString fSQSUM;  // neuron input type name 
       TString fABSSUM; // neuron input type name 
  
-      ClassDef(TNeuronInputChooser,0) // Class for choosing neuron input functions 
-         }; 
+      ClassDef(TNeuronInputChooser,0); // Class for choosing neuron input functions 
+   }; 
  
 } // namespace TMVA 
  

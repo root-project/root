@@ -251,8 +251,8 @@ namespace TMVA {
       // default initialisation method called by all constructors
       void     Init( void );
 
-      ClassDef(MethodCuts,0)  // Multivariate optimisation of signal efficiency
-         };
+      ClassDef(MethodCuts,0);  // Multivariate optimisation of signal efficiency
+   };
 
 } // namespace TMVA
 

@@ -115,8 +115,8 @@ namespace TMVA {
 
       Double_t fPrecisionCut;
 
-      ClassDef(SeparationBase,0) // Interface to different separation critiera used in training algorithms
-         };
+      ClassDef(SeparationBase,0); // Interface to different separation critiera used in training algorithms
+   };
 
 
 } // namespace TMVA

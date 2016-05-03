@@ -378,8 +378,8 @@ namespace TMVA {
       virtual Bool_t ReadDataRecord( std::istream& is, UInt_t tmva_Version_Code = TMVA_VERSION_CODE );
       virtual void ReadContent(std::stringstream& s);
 
-      ClassDef(DecisionTreeNode,0) // Node for the Decision Tree 
-         };
+      ClassDef(DecisionTreeNode,0); // Node for the Decision Tree 
+   };
 } // namespace TMVA
 
 #endif

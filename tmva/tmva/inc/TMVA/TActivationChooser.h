@@ -71,8 +71,8 @@ namespace TMVA {
       mutable MsgLogger* fLogger;                     //! message logger
       MsgLogger& Log() const { return *fLogger; }                       
 
-      ClassDef(TActivationChooser,0) // Class for choosing activation functions
-         };
+      ClassDef(TActivationChooser,0); // Class for choosing activation functions
+   };
 
 } // namespace TMVA
 

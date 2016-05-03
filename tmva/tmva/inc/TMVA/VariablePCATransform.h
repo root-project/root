@@ -79,8 +79,8 @@ namespace TMVA {
       std::vector<TVectorD*> fMeanValues;   // mean values
       std::vector<TMatrixD*> fEigenVectors; // eigenvectors
 
-      ClassDef(VariablePCATransform,0) // Variable transformation: Principal Value Composition
-         };
+      ClassDef(VariablePCATransform,0); // Variable transformation: Principal Value Composition
+   };
 
 } // namespace TMVA
 

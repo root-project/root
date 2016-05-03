@@ -168,8 +168,8 @@ namespace TMVA
       Int_t                 fDataSize;
       TString fLoss;
       
-      ClassDef(MethodSVM,0)  // Support Vector Machine
-         };
+      ClassDef(MethodSVM,0);  // Support Vector Machine
+   };
 
 } // namespace TMVA
 

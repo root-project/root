@@ -178,8 +178,8 @@ namespace TMVA {
 
       static const Int_t randSEED = 0; // set to 1 for debugging purposes or to zero for random seeds
 
-      ClassDef(RuleFit,0)  // Calculations for Friedman's RuleFit method
-         };
+      ClassDef(RuleFit,0);  // Calculations for Friedman's RuleFit method
+   };
 }
 
 #endif

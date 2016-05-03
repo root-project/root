@@ -174,8 +174,8 @@ namespace TMVA {
       mutable MsgLogger* fLogger;   // message logger
       MsgLogger& Log() const { return *fLogger; }
 
-      ClassDef(Reader,0) // Interpret the trained MVAs in an analysis context
-         };
+      ClassDef(Reader,0); // Interpret the trained MVAs in an analysis context
+   };
 
 }
 

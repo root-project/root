@@ -203,8 +203,8 @@ namespace TMVA {
       // get help message text
       void GetHelpMessage() const;
 
-      ClassDef(MethodBoost,0)
-         };
+      ClassDef(MethodBoost,0);
+   };
 }
 
 #endif

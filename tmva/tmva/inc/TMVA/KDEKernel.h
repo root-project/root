@@ -90,8 +90,8 @@ namespace TMVA {
       mutable MsgLogger* fLogger;   // message logger
       MsgLogger& Log() const { return *fLogger; }    
       
-      ClassDef(KDEKernel,0) // Kernel density estimator for PDF smoothing
+      ClassDef(KDEKernel,0); // Kernel density estimator for PDF smoothing
       
-         };// namespace TMVA
+   };// namespace TMVA
 }
 #endif // KDEKernel_H
