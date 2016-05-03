@@ -1,4 +1,4 @@
-CLEAN_TARGETS += *.so Class*.root typedef*.root $(ALL_LIBRARIES) *.clog *.log *.tmp skiptestfile.xml arr.root FixedArray*.root boolUpdate.root  data.root  skiptestfile.root $(FILES) $(FILESFAIL) *.success $(STL_FILES) atlas32
+CLEAN_TARGETS += *.so Class*.root typedef*.root $(ALL_LIBRARIES) *.clog *.log *.tmp skiptestfile.xml arr.root FixedArray*.root boolUpdate.root  data.root  skiptestfile.root $(FILES) $(FILESFAIL) *.success $(STL_FILES) atlas32 inheritstl.root
 TEST_TARGETS += foreign310 boolUpdate skip ClassConv ConvArray typedef Missing FixedArrayLengthChange ClonesArrayEvo NumericalTypeEvolution execioReadRuleEquivalentCode
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -206,5 +206,5 @@ execioReadRuleEquivalentCode: execioReadRuleEquivalentCode.log
 
 execioReadRuleEquivalentCode.log: libioReadRuleEquivalentCode_dictrflx.$(DllSuf)
 
-
+execStlInheritNew.clog: execStlInheritOld.success
 
