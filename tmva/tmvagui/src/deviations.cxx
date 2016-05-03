@@ -14,7 +14,7 @@
 // input: - Input file (result from TMVA)
 //        - use of TMVA plotting TStyle
 void TMVA::deviations(TString dataset, TString fin, 
-                 HistType htype , Bool_t showTarget, Bool_t useTMVAStyle  )
+                      HistType htype , Bool_t showTarget, Bool_t useTMVAStyle  )
 {
    // set style and remove existing canvas'
    TMVAGlob::Initialize( useTMVAStyle );
@@ -61,7 +61,7 @@ void TMVA::deviations(TString dataset, TString fin,
          TObjString *jN = new TObjString( titDir->GetName() );
          if (!jobNames->Contains( jN )) jobNames->Add( jN );
          else delete jN;
-	    
+            
          TString methodTitle;
          TMVAGlob::GetMethodTitle(methodTitle,titDir);
 

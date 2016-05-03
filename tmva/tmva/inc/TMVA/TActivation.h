@@ -70,7 +70,7 @@ namespace TMVA {
 
       ClassDef(TActivation,0) // Interface for TNeuron activation function classes
 
-   };
+         };
 
 } // namespace TMVA
 

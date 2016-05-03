@@ -73,7 +73,7 @@ namespace TMVA {
       MsgLogger& Log() const { return *fLogger; }                       
 
       ClassDef(RootFinder,0) // Root finding using Brents algorithm
-   };
+         };
 
 } // namespace TMVA
 

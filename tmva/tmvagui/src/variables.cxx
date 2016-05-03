@@ -8,7 +8,7 @@
 //        - normal/decorrelated/PCA
 //        - use of TMVA plotting TStyle
 void TMVA::variables(TString dataset, TString fin, TString dirName , TString title ,
-                Bool_t isRegression, Bool_t useTMVAStyle )
+                     Bool_t isRegression, Bool_t useTMVAStyle )
 {
    TString outfname = dirName;
    outfname.ToLower(); outfname.ReplaceAll( "input", ""  );

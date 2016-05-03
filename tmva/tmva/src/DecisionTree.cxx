@@ -99,20 +99,20 @@ bool almost_equal_float(float x, float y, int ulp=4){
    // the machine epsilon has to be scaled to the magnitude of the values used
    // and multiplied by the desired precision in ULPs (units in the last place)
    return std::abs(x-y) < std::numeric_limits<float>::epsilon() * std::abs(x+y) * ulp
-                          // unless the result is subnormal
-                          || std::abs(x-y) < std::numeric_limits<float>::min();
+      // unless the result is subnormal
+      || std::abs(x-y) < std::numeric_limits<float>::min();
 }
 
 bool almost_equal_double(double x, double y, int ulp=4){
    // the machine epsilon has to be scaled to the magnitude of the values used
    // and multiplied by the desired precision in ULPs (units in the last place)
    return std::abs(x-y) < std::numeric_limits<double>::epsilon() * std::abs(x+y) * ulp
-                          // unless the result is subnormal
-                          || std::abs(x-y) < std::numeric_limits<double>::min();
+      // unless the result is subnormal
+      || std::abs(x-y) < std::numeric_limits<double>::min();
 }
    
 TMVA::DecisionTree::DecisionTree():
-BinaryTree(),
+   BinaryTree(),
    fNvars          (0),
    fNCuts          (-1),
    fUseFisherCuts  (kFALSE),
@@ -629,9 +629,9 @@ Double_t TMVA::DecisionTree::PruneTree( const EventConstList* validationSample )
       //      tool = new ExpectedErrorPruneTool(logfile);
       tool = new ExpectedErrorPruneTool();
    else if (fPruneMethod == kCostComplexityPruning) 
-   {
-      tool = new CostComplexityPruneTool();
-   }
+      {
+         tool = new CostComplexityPruneTool();
+      }
    else {
       Log() << kFATAL << "Selected pruning method not yet implemented "
             << Endl;

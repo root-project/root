@@ -11,8 +11,8 @@ namespace TMVA{
    //        - normal/decorrelated/PCA
    //        - use of TMVA plotting TStyle
    void correlationscattersMultiClass(TString dataset, TString fin = "TMVA.root", TString var= "var3", 
-                                       TString dirName_ = "InputVariables_Id", TString title = "TMVA Input Variable",
-                                       Bool_t isRegression = kFALSE,
-                                       Bool_t useTMVAStyle = kTRUE );
+                                      TString dirName_ = "InputVariables_Id", TString title = "TMVA Input Variable",
+                                      Bool_t isRegression = kFALSE,
+                                      Bool_t useTMVAStyle = kTRUE );
 }
 #endif

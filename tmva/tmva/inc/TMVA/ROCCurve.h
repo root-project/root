@@ -37,26 +37,26 @@ class TSpline1;
 
 namespace TMVA {
 
-  class MsgLogger;
+   class MsgLogger;
 
 
-  class ROCCurve {
+   class ROCCurve {
     
-  public:
-    ROCCurve( const std::vector<Float_t> & mvaS, const std::vector<Bool_t> & mvat);
+   public:
+      ROCCurve( const std::vector<Float_t> & mvaS, const std::vector<Bool_t> & mvat);
     
-    ~ROCCurve();
+      ~ROCCurve();
     
 
-    Double_t GetROCIntegral();
+      Double_t GetROCIntegral();
     
-  private:
-    std::vector<Float_t> fMvaS;
-    std::vector<Float_t> fMvaB;
+   private:
+      std::vector<Float_t> fMvaS;
+      std::vector<Float_t> fMvaB;
 
-    mutable MsgLogger* fLogger;   //! message logger
-    MsgLogger& Log() const { return *fLogger; }                       
+      mutable MsgLogger* fLogger;   //! message logger
+      MsgLogger& Log() const { return *fLogger; }                       
 
-  };
+   };
 }
 #endif

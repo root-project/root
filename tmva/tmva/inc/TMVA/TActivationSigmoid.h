@@ -76,7 +76,7 @@ namespace TMVA {
       TFormula* fEqnDerivative;      // equation of sigmoid derivative
 
       ClassDef(TActivationSigmoid,0) // Sigmoid activation function for TNeuron
-   };
+         };
 
 } // namespace TMVA
 

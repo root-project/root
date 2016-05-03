@@ -132,7 +132,7 @@ namespace TMVA {
       MsgLogger& Log() const { return *fLogger; }
          
       ClassDef(Config,0) // Singleton class for global configuration settings
-   };
+         };
 
    // global accessor
    Config& gConfig();

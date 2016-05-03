@@ -199,7 +199,7 @@ TMVA::MethodBase::MethodBase( const TString& jobName,
    fFileDir=fDataSetInfo.GetName();
    fFileDir+="/"+gConfig().GetIONames().fWeightFileDir;
    SetWeightFileDir(fFileDir);
-//    SetWeightFileDir( gConfig().GetIONames().fWeightFileDir );
+   //    SetWeightFileDir( gConfig().GetIONames().fWeightFileDir );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -676,7 +676,7 @@ void TMVA::MethodBase::TrainMethod()
 
    // train the MVA method
    if (Help()) PrintHelpMessage();
-	  
+          
    // all histograms should be created in the method's subdirectory
    BaseDir()->cd();
 
@@ -1072,7 +1072,7 @@ void TMVA::MethodBase::TestClassification()
    // sanity checks: tree must exist, and theVar must be in tree
    if (0==mvaRes && !(GetMethodTypeName().Contains("Cuts"))) {
       Log()<<Form("Dataset[%s] : ",DataInfo().GetName()) << "mvaRes " << mvaRes << " GetMethodTypeName " << GetMethodTypeName()
-            << " contains " << !(GetMethodTypeName().Contains("Cuts")) << Endl;
+           << " contains " << !(GetMethodTypeName().Contains("Cuts")) << Endl;
       Log() << kFATAL<<Form("Dataset[%s] : ",DataInfo().GetName()) << "<TestInit> Test variable " << GetTestvarName()
             << " not found in tree" << Endl;
    }
@@ -1098,12 +1098,12 @@ void TMVA::MethodBase::TestClassification()
    // MVA plots used for graphics representation (signal)
    TString TestvarName;
    if(TMVA::Factory::IsSilentFile())
-   {
-     TestvarName=Form("[%s]%s",DataInfo().GetName(),GetTestvarName().Data());
-   }else
-   {
-     TestvarName=GetTestvarName();
-   }
+      {
+         TestvarName=Form("[%s]%s",DataInfo().GetName(),GetTestvarName().Data());
+      }else
+      {
+         TestvarName=GetTestvarName();
+      }
    TH1* mva_s = new TH1D( TestvarName + "_S",TestvarName + "_S", fNbinsMVAoutput, fXmin, sxmax );
    TH1* mva_b = new TH1D( TestvarName + "_B",TestvarName + "_B", fNbinsMVAoutput, fXmin, sxmax );
    mvaRes->Store(mva_s, "MVA_S");
@@ -1928,16 +1928,16 @@ TDirectory* TMVA::MethodBase::BaseDir() const
    TString defaultDir = GetMethodName();
    TDirectory *sdir = methodDir->GetDirectory(defaultDir.Data());
    if(!sdir)
-   {
-        Log()<<kDEBUG<<Form("Dataset[%s] : ",DataInfo().GetName())<<" Base Directory for " << GetMethodTypeName() << " does not exist yet--> created it" <<Endl;
-        sdir = methodDir->mkdir(defaultDir);
-        sdir->cd();
+      {
+         Log()<<kDEBUG<<Form("Dataset[%s] : ",DataInfo().GetName())<<" Base Directory for " << GetMethodTypeName() << " does not exist yet--> created it" <<Endl;
+         sdir = methodDir->mkdir(defaultDir);
+         sdir->cd();
          // write weight file name into target file
-        TObjString wfilePath( gSystem->WorkingDirectory() );
-        TObjString wfileName( GetWeightFileName() );
-        wfilePath.Write( "TrainingPath" );
-        wfileName.Write( "WeightFileName" );
-   }
+         TObjString wfilePath( gSystem->WorkingDirectory() );
+         TObjString wfileName( GetWeightFileName() );
+         wfilePath.Write( "TrainingPath" );
+         wfileName.Write( "WeightFileName" );
+      }
 
    Log()<<kDEBUG<<Form("Dataset[%s] : ",DataInfo().GetName())<<" Base Directory for " << GetMethodTypeName() << " existed, return it.." <<Endl;
    return sdir;
@@ -1958,16 +1958,16 @@ TDirectory* TMVA::MethodBase::MethodBaseDir() const
    
    fMethodBaseDir = fFactoryBaseDir->GetDirectory(DataInfo().GetName());
    if(!fMethodBaseDir) //creating dataset directory
-   {
-       fMethodBaseDir = fFactoryBaseDir->mkdir(DataInfo().GetName(),Form("Base directory for dataset %s",DataInfo().GetName()));
-       if(!fMethodBaseDir)Log()<<kFATAL<<"Can not create dir "<<DataInfo().GetName();
-   }
+      {
+         fMethodBaseDir = fFactoryBaseDir->mkdir(DataInfo().GetName(),Form("Base directory for dataset %s",DataInfo().GetName()));
+         if(!fMethodBaseDir)Log()<<kFATAL<<"Can not create dir "<<DataInfo().GetName();
+      }
    TString _methodDir = Form("Method_%s",GetMethodName().Data());
    fMethodBaseDir = fMethodBaseDir->GetDirectory(_methodDir.Data());
    
    if(!fMethodBaseDir){
-       fMethodBaseDir = fFactoryBaseDir->GetDirectory(DataInfo().GetName())->mkdir(_methodDir.Data(),Form("Directory for all %s methods", GetMethodTypeName().Data()));
-       Log()<<kDEBUG<<Form("Dataset[%s] : ",DataInfo().GetName())<<" Base Directory for " << GetMethodName() << " does not exist yet--> created it" <<Endl;
+      fMethodBaseDir = fFactoryBaseDir->GetDirectory(DataInfo().GetName())->mkdir(_methodDir.Data(),Form("Directory for all %s methods", GetMethodTypeName().Data()));
+      Log()<<kDEBUG<<Form("Dataset[%s] : ",DataInfo().GetName())<<" Base Directory for " << GetMethodName() << " does not exist yet--> created it" <<Endl;
    }
 
    Log()<<kDEBUG<<Form("Dataset[%s] : ",DataInfo().GetName())<<"Return from MethodBaseDir() after creating base directory "<<Endl;
@@ -3263,17 +3263,17 @@ Double_t TMVA::MethodBase::GetKSTrainingVsTest(Char_t SorB, TString opt){
       ( Data()->GetResults(GetMethodName(),Types::kTesting, Types::kClassification) );
 
    if (mvaRes != NULL) {
-     TH1D *mva_s = dynamic_cast<TH1D*> (mvaRes->GetHist("MVA_S"));
-     TH1D *mva_b = dynamic_cast<TH1D*> (mvaRes->GetHist("MVA_B"));
-     TH1D *mva_s_tr = dynamic_cast<TH1D*> (mvaRes->GetHist("MVA_TRAIN_S"));
-     TH1D *mva_b_tr = dynamic_cast<TH1D*> (mvaRes->GetHist("MVA_TRAIN_B"));
+      TH1D *mva_s = dynamic_cast<TH1D*> (mvaRes->GetHist("MVA_S"));
+      TH1D *mva_b = dynamic_cast<TH1D*> (mvaRes->GetHist("MVA_B"));
+      TH1D *mva_s_tr = dynamic_cast<TH1D*> (mvaRes->GetHist("MVA_TRAIN_S"));
+      TH1D *mva_b_tr = dynamic_cast<TH1D*> (mvaRes->GetHist("MVA_TRAIN_B"));
 
-     if ( !mva_s || !mva_b || !mva_s_tr || !mva_b_tr) return -1;
+      if ( !mva_s || !mva_b || !mva_s_tr || !mva_b_tr) return -1;
 
-     if (SorB == 's' || SorB == 'S')
-       return mva_s->KolmogorovTest( mva_s_tr, opt.Data() );
-     else
-       return mva_b->KolmogorovTest( mva_b_tr, opt.Data() );
+      if (SorB == 's' || SorB == 'S')
+         return mva_s->KolmogorovTest( mva_s_tr, opt.Data() );
+      else
+         return mva_b->KolmogorovTest( mva_b_tr, opt.Data() );
    }
    return -1;
 }

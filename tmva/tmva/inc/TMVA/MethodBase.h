@@ -347,9 +347,9 @@ namespace TMVA {
       TString          GetTrainingROOTVersionString() const;
 
       TransformationHandler&        GetTransformationHandler(Bool_t takeReroutedIfAvailable=true)
-      {
-         if(fTransformationPointer && takeReroutedIfAvailable) return *fTransformationPointer; else return fTransformation;
-      }
+         {
+            if(fTransformationPointer && takeReroutedIfAvailable) return *fTransformationPointer; else return fTransformation;
+         }
       const TransformationHandler&  GetTransformationHandler(Bool_t takeReroutedIfAvailable=true) const
       {
          if(fTransformationPointer && takeReroutedIfAvailable) return *fTransformationPointer; else return fTransformation;
@@ -643,10 +643,10 @@ namespace TMVA {
       Int_t            fNsmoothMVAPdf;               // number of times a histogram is smoothed before creating the PDF
 
    protected:
-        Results *fResults;
+      Results *fResults;
       ClassDef(MethodBase,0)  // Virtual base class for all TMVA method
 
-   };
+         };
 } // namespace TMVA
 
 

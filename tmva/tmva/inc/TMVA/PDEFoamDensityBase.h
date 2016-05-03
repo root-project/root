@@ -51,42 +51,42 @@ namespace TMVA
 
    // class definition of underlying density
    class PDEFoamDensityBase : public ::TObject
-   {
-   private:
-      std::vector<Double_t> fBox; // range-searching box
-      Double_t fBoxVolume;        // volume of range searching box
-      Bool_t fBoxHasChanged;      // range searching box has changed
+      {
+      private:
+         std::vector<Double_t> fBox; // range-searching box
+         Double_t fBoxVolume;        // volume of range searching box
+         Bool_t fBoxHasChanged;      // range searching box has changed
 
-   protected:
-      BinarySearchTree *fBst;     // Binary tree to find events within a volume
-      mutable MsgLogger *fLogger; //! message logger
+      protected:
+         BinarySearchTree *fBst;     // Binary tree to find events within a volume
+         mutable MsgLogger *fLogger; //! message logger
 
-      MsgLogger& Log() const { return *fLogger; }
+         MsgLogger& Log() const { return *fLogger; }
 
-      // calculate volume of fBox
-      Double_t GetBoxVolume();
+         // calculate volume of fBox
+         Double_t GetBoxVolume();
 
-   public:
-      PDEFoamDensityBase();
-      PDEFoamDensityBase(std::vector<Double_t> box);
-      PDEFoamDensityBase(const PDEFoamDensityBase&);
-      virtual ~PDEFoamDensityBase();
+      public:
+         PDEFoamDensityBase();
+         PDEFoamDensityBase(std::vector<Double_t> box);
+         PDEFoamDensityBase(const PDEFoamDensityBase&);
+         virtual ~PDEFoamDensityBase();
 
-      // fill event into binary search tree
-      void FillBinarySearchTree(const Event* ev);
+         // fill event into binary search tree
+         void FillBinarySearchTree(const Event* ev);
 
-      // set the range-searching box
-      void SetBox(std::vector<Double_t> box) { fBox = box; fBoxHasChanged = kTRUE; }
+         // set the range-searching box
+         void SetBox(std::vector<Double_t> box) { fBox = box; fBoxHasChanged = kTRUE; }
 
-      // get the range-searching box
-      const std::vector<Double_t>& GetBox() const { return fBox; }
+         // get the range-searching box
+         const std::vector<Double_t>& GetBox() const { return fBox; }
 
-      // main function used by PDEFoam
-      // returns density at a given point by range searching in BST
-      virtual Double_t Density(std::vector<Double_t> &Xarg, Double_t &event_density) = 0;
+         // main function used by PDEFoam
+         // returns density at a given point by range searching in BST
+         virtual Double_t Density(std::vector<Double_t> &Xarg, Double_t &event_density) = 0;
 
-      ClassDef(PDEFoamDensityBase, 1) // PDEFoam event density interface
-   };  //end of PDEFoamDensityBase
+         ClassDef(PDEFoamDensityBase, 1) // PDEFoam event density interface
+            };  //end of PDEFoamDensityBase
 
 }  // namespace TMVA
 

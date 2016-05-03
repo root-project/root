@@ -65,7 +65,7 @@ namespace TMVA {
       virtual void MakeFunction(std::ostream& fout, const TString& fncName, Int_t part, UInt_t trCounter, Int_t cls );
 
       ClassDef(VariableIdentityTransform,0) // Variable transformation: identity
-   };
+         };
 
 } // namespace TMVA
 

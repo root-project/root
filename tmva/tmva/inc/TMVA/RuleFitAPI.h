@@ -193,7 +193,7 @@ namespace TMVA {
 
       ClassDef(RuleFitAPI,0)        // Friedman's RuleFit method
 
-   };
+         };
 
 } // namespace TMVA
 

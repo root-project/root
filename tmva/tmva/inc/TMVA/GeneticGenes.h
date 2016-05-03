@@ -44,7 +44,7 @@ namespace TMVA {
       
    public:
       
-      GeneticGenes():fFitness(0) {}  
+   GeneticGenes():fFitness(0) {}  
       GeneticGenes( std::vector<Double_t> & f );
       virtual ~GeneticGenes() {}  
       
@@ -61,7 +61,7 @@ namespace TMVA {
       Double_t fFitness;
       
       ClassDef(GeneticGenes,0) // Genes definition for genetic algorithm
-   };
+         };
 
    Bool_t operator <(const GeneticGenes&, const GeneticGenes&);
 

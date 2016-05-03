@@ -157,7 +157,7 @@ namespace TMVA {
       TString*             fInterpolateString;         // which interpolation method used for reference histograms (individual for each variable)
 
       ClassDef(MethodLikelihood,0) // Likelihood analysis ("non-parametric approach") 
-   };
+         };
 
 } // namespace TMVA
 

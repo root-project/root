@@ -117,7 +117,7 @@ namespace TMVA {
 
       ClassDef(MethodCompositeBase,0)
 
-   };
+         };
 }
 
 #endif

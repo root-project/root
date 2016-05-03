@@ -157,7 +157,7 @@ namespace TMVA {
       Int_t                  fOutputDimensions;   // number of output values
 
       ClassDef(MethodFDA,0)  // Function Discriminant Analysis
-   };
+         };
 
 } // namespace TMVA
 

@@ -150,7 +150,7 @@ namespace TMVA
       Int_t fTreeOptDepth;    // number of binary tree levels used for optimization
 
       ClassDef(MethodKNN,0) // k Nearest Neighbour classifier
-   };
+         };
 
 } // namespace TMVA
 

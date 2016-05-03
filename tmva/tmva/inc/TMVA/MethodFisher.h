@@ -158,7 +158,7 @@ namespace TMVA {
       void Init( void );
 
       ClassDef(MethodFisher,0) // Analysis of Fisher discriminant (Fisher or Mahalanobis approach) 
-   };
+         };
 
 } // namespace TMVA
 

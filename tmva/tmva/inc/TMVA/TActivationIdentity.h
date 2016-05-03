@@ -75,7 +75,7 @@ namespace TMVA {
    private:
 
       ClassDef(TActivationIdentity,0) // Identity activation function for TNeuron
-   };
+         };
 
 } // namespace TMVA
 

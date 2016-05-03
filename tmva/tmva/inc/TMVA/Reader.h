@@ -175,7 +175,7 @@ namespace TMVA {
       MsgLogger& Log() const { return *fLogger; }
 
       ClassDef(Reader,0) // Interpret the trained MVAs in an analysis context
-   };
+         };
 
 }
 

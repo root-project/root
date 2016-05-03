@@ -85,7 +85,7 @@ namespace TMVA {
       Bool_t             fUseDefaultTemperature;   // if TRUE, SA calculates its own InitialTemperature (MinTemperautre)
 
       ClassDef(SimulatedAnnealingFitter,0) // Fitter using a Simulated Annealing Algorithm
-   };
+         };
 
 } // namespace TMVA
 

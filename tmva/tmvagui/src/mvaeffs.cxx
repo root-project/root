@@ -511,7 +511,7 @@ void TMVA::StatDialogMVAEffs::PrintResults( const MethodInfo* info )
 }
 
 void TMVA::mvaeffs(TString dataset, TString fin , 
-              Bool_t useTMVAStyle, TString formula )
+                   Bool_t useTMVAStyle, TString formula )
 {
    TMVAGlob::Initialize( useTMVAStyle );
 

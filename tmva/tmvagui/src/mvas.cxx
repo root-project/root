@@ -56,7 +56,7 @@ void TMVA::mvas(TString dataset, TString fin, HistType htype, Bool_t useTMVAStyl
          TString methodTitle;
          TMVAGlob::GetMethodTitle(methodTitle,titDir);
 
-	 std::cout << "--- Found directory for method: " << methodName << "::" << methodTitle << std::flush;
+         std::cout << "--- Found directory for method: " << methodName << "::" << methodTitle << std::flush;
          TString hname = "MVA_" + methodTitle;
          if      (htype == kProbaType  ) hname += "_Proba";
          else if (htype == kRarityType ) hname += "_Rarity";

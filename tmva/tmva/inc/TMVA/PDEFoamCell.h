@@ -113,7 +113,7 @@ namespace TMVA {
       TObject* GetElement() const { return fElement; }       // Get pointer to user varibale
       ////////////////////////////////////////////////////////////////////////////
       ClassDef(PDEFoamCell,2)  //Single cell of FOAM
-   }; // end of PDEFoamCell
+         }; // end of PDEFoamCell
 } // namespace TMVA
 
 #endif

@@ -27,7 +27,7 @@ static Int_t c_DarkBackground = TColor::GetColor( "#6e7a85" );
 Bool_t MovieMode = kFALSE;
 
 void TMVA::draw_network(TString dataset, TFile* f, TDirectory* d, const TString& hName, 
-                   Bool_t movieMode , const TString& epoch  )
+                        Bool_t movieMode , const TString& epoch  )
 {
    Bool_t __PRINT_LOGO__ = kTRUE;
    Network_GFile = f;
@@ -69,12 +69,12 @@ void TMVA::draw_network(TString dataset, TFile* f, TDirectory* d, const TString&
 
       TClass *cl = gROOT->GetClass(key->GetClassName());
       if (!cl->InheritsFrom("TH2F")) 
-      {
-       continue;          
-      }else
-      {
-       std::cout<<key->GetClassName()<<"----"<<cl->InheritsFrom("TH2F")<<"----"<<hName<<std::endl;          
-      }
+         {
+            continue;          
+         }else
+         {
+            std::cout<<key->GetClassName()<<"----"<<cl->InheritsFrom("TH2F")<<"----"<<hName<<std::endl;          
+         }
   
       TH2F* h = (TH2F*)key->ReadObj();    
       if (!h) {
@@ -196,7 +196,7 @@ void TMVA::draw_layer_labels(Int_t nLayers)
 }
 
 void TMVA::draw_input_labels(TString dataset,Int_t nInputs, Double_t* cy, 
-                       Double_t rad, Double_t layerWidth)
+                             Double_t rad, Double_t layerWidth)
 {
    const Double_t LABEL_HEIGHT = 0.04;
    const Double_t LABEL_WIDTH  = 0.20;
@@ -283,7 +283,7 @@ TString* TMVA::get_var_names(TString dataset, Int_t nVars )
 }
 
 void TMVA::draw_activation(TCanvas* c, Double_t cx, Double_t cy, 
-                     Double_t radx, Double_t rady, Int_t whichActivation)
+                           Double_t radx, Double_t rady, Int_t whichActivation)
 {
    TImage *activation = NULL;
 
@@ -320,7 +320,7 @@ void TMVA::draw_activation(TCanvas* c, Double_t cx, Double_t cy,
 }
 
 void TMVA::draw_layer(TString dataset,TCanvas* c, TH2F* h, Int_t iHist, 
-                Int_t nLayers, Double_t maxWeight)
+                      Int_t nLayers, Double_t maxWeight)
 {
    const Double_t MAX_NEURONS_NICE = 12;
    const Double_t LABEL_HEIGHT = 0.03;
@@ -401,7 +401,7 @@ void TMVA::draw_layer(TString dataset,TCanvas* c, TH2F* h, Int_t iHist,
 }
 
 void TMVA::draw_synapse(Double_t cx1, Double_t cy1, Double_t cx2, Double_t cy2,
-                  Double_t  rad1, Double_t rad2, Double_t weightNormed)
+                        Double_t  rad1, Double_t rad2, Double_t weightNormed)
 {
    const Double_t TIP_SIZE   = 0.01;
    const Double_t MAX_WEIGHT = 8;
@@ -442,17 +442,17 @@ void TMVA::network(TString dataset, TString fin , Bool_t useTMVAStyle )
       TIter keyIt(mDir->GetListOfKeys());
       TKey *titkey;
       while((titkey = (TKey*)keyIt())) {
-        if( ! gROOT->GetClass(titkey->GetClassName())->InheritsFrom("TDirectory") ) continue;
+         if( ! gROOT->GetClass(titkey->GetClassName())->InheritsFrom("TDirectory") ) continue;
 
-        TDirectory* dir = (TDirectory *)titkey->ReadObj();
-        dir->cd();  
-        TList titles;
-        UInt_t ni = TMVAGlob::GetListOfTitles( dir, titles );
-        if (ni==0) {
-           cout << "No titles found for Method_MLP" << endl;
-           return;
-        }
-        draw_network(dataset, file, dir );
+         TDirectory* dir = (TDirectory *)titkey->ReadObj();
+         dir->cd();  
+         TList titles;
+         UInt_t ni = TMVAGlob::GetListOfTitles( dir, titles );
+         if (ni==0) {
+            cout << "No titles found for Method_MLP" << endl;
+            return;
+         }
+         draw_network(dataset, file, dir );
       }
    }
 

@@ -169,7 +169,7 @@ namespace TMVA
       TString fLoss;
       
       ClassDef(MethodSVM,0)  // Support Vector Machine
-   };
+         };
 
 } // namespace TMVA
 

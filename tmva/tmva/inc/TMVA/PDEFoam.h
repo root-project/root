@@ -68,7 +68,7 @@ namespace TMVA {
 
    // separation types
    enum EDTSeparation { kFoam, kGiniIndex, kMisClassificationError,
-			kCrossEntropy, kGiniIndexWithLaplace, kSdivSqrtSplusB };
+                        kCrossEntropy, kGiniIndexWithLaplace, kSdivSqrtSplusB };
 
    // foam types
    enum EFoamType { kSeparate, kDiscr, kMonoTarget, kMultiTarget, kMultiClass };
@@ -83,7 +83,7 @@ namespace TMVA {
    //                  fDriver and fIntegral)
    // kCellVolume    : volume of cell
    enum ECellValue { kValue, kValueError, kValueDensity, kMeanValue,
-		     kRms, kRmsOvMean, kCellVolume };
+                     kRms, kRmsOvMean, kCellVolume };
 }
 
 #ifndef ROOT_TMVA_PDEFoamDensityBase
@@ -265,7 +265,7 @@ namespace TMVA {
 
       // project foam to two-dimensional histogram
       virtual TH2D* Project2(Int_t idim1, Int_t idim2, ECellValue cell_value=kValue,
-			     PDEFoamKernelBase *kernel=NULL, UInt_t nbin=50);
+                             PDEFoamKernelBase *kernel=NULL, UInt_t nbin=50);
 
       // Project one-dimensional foam to a 1-dim histogram
       TH1D* Draw1Dim(ECellValue cell_value, Int_t nbin, PDEFoamKernelBase *kernel=NULL);
@@ -293,7 +293,7 @@ namespace TMVA {
 
       // ---------- ROOT class definition
       ClassDef(PDEFoam,7) // Tree of PDEFoamCells
-   }; // end of PDEFoam
+         }; // end of PDEFoam
 
 }  // namespace TMVA
 

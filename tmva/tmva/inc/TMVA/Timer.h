@@ -96,7 +96,7 @@ namespace TMVA {
       MsgLogger& Log() const { return *fLogger; }                       
 
       ClassDef(Timer,0) // Timing information for training and evaluation of MVA methods
-   };
+         };
 
 } // namespace
 

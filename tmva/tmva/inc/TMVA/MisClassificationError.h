@@ -53,7 +53,7 @@ namespace TMVA {
       MisClassificationError() { fName = "MisCl"; }
 
       // copy constructor
-      MisClassificationError( const MisClassificationError& g): SeparationBase(g) {}
+   MisClassificationError( const MisClassificationError& g): SeparationBase(g) {}
 
       // destructor
       virtual ~MisClassificationError() {}
@@ -63,7 +63,7 @@ namespace TMVA {
    protected:
 
       ClassDef(MisClassificationError,0) // Implementation of the MisClassificationError as separation criterion
-   };
+         };
  
 } // namespace TMVA
 

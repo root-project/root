@@ -111,7 +111,7 @@ namespace TMVA {
       MsgLogger& Log() const { return *fLogger; }
 
       ClassDef(OptimizeConfigParameters,0) // Interface to different separation critiera used in training algorithms
-   };
+         };
 } // namespace TMVA
 
 #endif

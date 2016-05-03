@@ -185,7 +185,7 @@ namespace TMVA {
       void Init( void );
 
       ClassDef(MethodCFMlpANN,0) // Interface for Clermond-Ferrand artificial neural network
-   };
+         };
 
 } // namespace TMVA
 

@@ -151,7 +151,7 @@ namespace TMVA {
 
    public:
       ClassDef(Node,0) // Node for the BinarySearch or Decision Trees
-   };
+         };
 
 } // namespace TMVA
 

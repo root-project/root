@@ -107,8 +107,8 @@ namespace TMVA {
 
       // building of a tree by recursivly splitting the nodes
 
-//      UInt_t BuildTree( const EventList & eventSample,
-//                        DecisionTreeNode *node = NULL);
+      //      UInt_t BuildTree( const EventList & eventSample,
+      //                        DecisionTreeNode *node = NULL);
       UInt_t BuildTree( const EventConstList & eventSample,
                         DecisionTreeNode *node = NULL);
       // determine the way how a node is split (which variable, which cut value)
@@ -251,7 +251,7 @@ namespace TMVA {
 
 
       ClassDef(DecisionTree,0)               // implementation of a Decision Tree
-   };
+         };
   
 } // namespace TMVA
 

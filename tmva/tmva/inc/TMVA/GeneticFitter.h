@@ -80,7 +80,7 @@ namespace TMVA {
       UInt_t fSeed;                     // Seed for the random generator (0 takes random seeds)
       
       ClassDef(GeneticFitter,0) // Fitter using a Genetic Algorithm
-   };
+         };
 
 } // namespace TMVA
 

@@ -187,9 +187,9 @@ namespace TMVA {
       TString                                   fOptions;         //! option string given by construction (presently only "V")
       TString                                   fTransformations; //! List of transformations to test
       Bool_t                                    fVerbose;         //! verbose mode
-      Bool_t					fCorrelations;    //! enable to calculate corelations
-      Bool_t					fROC;             //! enable to calculate ROC values
-      static Bool_t				fSilentFile;      //! enable to reduce the output file
+      Bool_t                                    fCorrelations;    //! enable to calculate corelations
+      Bool_t                                    fROC;             //! enable to calculate ROC values
+      static Bool_t                             fSilentFile;      //! enable to reduce the output file
 
       TString                                   fJobName;         //! jobname, used as extension in weight file names
 
@@ -210,7 +210,7 @@ namespace TMVA {
    protected:
 
       ClassDef(Factory,0)  // The factory creates all MVA methods, and performs their training and testing
-   };
+         };
 
 } // namespace TMVA
 

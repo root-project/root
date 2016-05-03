@@ -137,7 +137,7 @@ namespace TMVA {
       friend class MethodBoost;  // DSMTEST
 
       ClassDef(MethodCategory,0)
-   };
+         };
 }
 
 #endif

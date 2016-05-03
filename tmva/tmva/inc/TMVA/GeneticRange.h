@@ -73,7 +73,7 @@ namespace TMVA {
       TRandom3* fRandomGenerator;  // the randomGenerator for calculating the new values
 
       ClassDef(GeneticRange,0) // Range definition for genetic algorithm
-   };
+         };
 
 } // namespace TMVA
 

@@ -110,7 +110,7 @@ namespace TMVA {
 
       ClassDef(IMethod,0) // Method Interface
 
-   };
+         };
 } // namespace TMVA
 
 #endif

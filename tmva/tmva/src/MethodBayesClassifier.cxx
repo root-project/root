@@ -45,11 +45,11 @@ ClassImp(TMVA::MethodBayesClassifier)
 ////////////////////////////////////////////////////////////////////////////////
 /// standard constructor
 
-TMVA::MethodBayesClassifier::MethodBayesClassifier( const TString& jobName,
-                                                    const TString& methodTitle,
-                                                    DataSetInfo& theData, 
-                                                    const TString& theOption,
-                                                    TDirectory* theTargetDir ) :
+   TMVA::MethodBayesClassifier::MethodBayesClassifier( const TString& jobName,
+                                                       const TString& methodTitle,
+                                                       DataSetInfo& theData, 
+                                                       const TString& theOption,
+                                                       TDirectory* theTargetDir ) :
    TMVA::MethodBase( jobName, Types::kBayesClassifier, methodTitle, theData, theOption, theTargetDir )
 {
 }

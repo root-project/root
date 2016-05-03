@@ -177,7 +177,7 @@ namespace TMVA {
       std::vector< std::pair<Double_t,const TMVA::Event*> > fNormalizeTreeTable;
       
       ClassDef(BinarySearchTree,0) // Binary search tree including volume search method  
-   };
+         };
   
 } // namespace TMVA
 

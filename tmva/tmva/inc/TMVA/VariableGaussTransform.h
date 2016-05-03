@@ -69,7 +69,7 @@ namespace TMVA {
 
    public:
 
-      TMVAGaussPair( Float_t f, Float_t w ): fF(f), fW(w) {}
+   TMVAGaussPair( Float_t f, Float_t w ): fF(f), fW(w) {}
       Bool_t  operator >  ( const TMVAGaussPair &p ) const { return fF >  p.fF; }
       Bool_t  operator <  ( const TMVAGaussPair &p ) const { return fF <  p.fF; }
       Bool_t  operator == ( const TMVAGaussPair &p ) const { return fF == p.fF; }
@@ -127,7 +127,7 @@ namespace TMVA {
       Double_t OldCumulant(Float_t x, TH1* h ) const;
 
       ClassDef(VariableGaussTransform,0) // Variable transformation: Gauss transformation
-   };
+         };
 
 } // namespace TMVA
 

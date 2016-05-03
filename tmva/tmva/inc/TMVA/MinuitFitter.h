@@ -81,7 +81,7 @@ namespace TMVA {
       Double_t   fTolerance;               // tolerance to the function value at the minimum
       
       ClassDef(MinuitFitter,0) // Fitter using a Genetic Algorithm
-   };
+         };
 
 } // namespace TMVA
 

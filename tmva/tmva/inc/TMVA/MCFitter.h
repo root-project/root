@@ -64,7 +64,7 @@ namespace TMVA {
       UInt_t   fSeed;        // Seed for the random generator (0 takes random seeds)
 
       ClassDef(MCFitter,0) //  Fitter using Monte Carlo sampling of parameters 
-   };
+         };
 
 } // namespace TMVA
 

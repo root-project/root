@@ -227,7 +227,7 @@ namespace TMVA {
       void Init( void );
 
       ClassDef(MethodPDERS,0) // Multi-dimensional probability density estimator range search (PDERS) method
-   };
+         };
 
 } // namespace TMVA
 

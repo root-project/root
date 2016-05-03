@@ -252,7 +252,7 @@ namespace TMVA {
       void     Init( void );
 
       ClassDef(MethodCuts,0)  // Multivariate optimisation of signal efficiency
-   };
+         };
 
 } // namespace TMVA
 

@@ -72,7 +72,7 @@ namespace TMVA {
       MsgLogger& Log() const { return *fLogger; }                       
 
       ClassDef(TActivationChooser,0) // Class for choosing activation functions
-   };
+         };
 
 } // namespace TMVA
 

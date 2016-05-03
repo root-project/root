@@ -71,7 +71,7 @@ namespace TMVA {
       MsgLogger& Log() const { return *fLogger; }                       
 
       ClassDef(Ranking,0) // Method-specific ranking for input variables 
-   };
+         };
 
    // --------------------------------------------------------------------------
 

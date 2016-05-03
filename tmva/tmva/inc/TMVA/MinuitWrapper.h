@@ -70,7 +70,7 @@ namespace TMVA {
       Int_t                 fNumPar;       // number of parameters
       
       ClassDef(MinuitWrapper,0) // Wrapper around TMinuit
-   };
+         };
 
 } // namespace TMVA
 

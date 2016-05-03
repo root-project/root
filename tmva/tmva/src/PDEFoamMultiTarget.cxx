@@ -68,7 +68,7 @@ ClassImp(TMVA::PDEFoamMultiTarget)
 /// Default constructor for streamer, user should not use it.
 
 TMVA::PDEFoamMultiTarget::PDEFoamMultiTarget()
-   : PDEFoamEvent()
+: PDEFoamEvent()
    , fTargetSelection(kMean)
 {
 }

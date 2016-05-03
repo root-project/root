@@ -87,7 +87,7 @@ namespace TMVA {
       std::vector<TMatrixDSym*>* CalcCovarianceMatrices( const std::vector<const Event*>& events, Int_t maxCls );
 
       ClassDef(VariableDecorrTransform,0) // Variable transformation: decorrelation
-   };
+         };
 
 } // namespace TMVA
 

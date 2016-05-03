@@ -60,7 +60,7 @@ namespace TMVA {
    class VariableTransformBase;
 
    class DataLoader : public Configurable {
-     friend class Factory;
+      friend class Factory;
    public:
 
       // no default  constructor
@@ -141,7 +141,7 @@ namespace TMVA {
          AddTarget( expression, title, unit, min, max );
       }
       void AddSpectator         ( const TString& expression, const TString& title = "", const TString& unit = "",
-                                Double_t min = 0, Double_t max = 0 );
+                                  Double_t min = 0, Double_t max = 0 );
 
       // set weight for class
       void SetWeightExpression( const TString& variable, const TString& className = "" );
@@ -209,7 +209,7 @@ namespace TMVA {
    protected:
 
       ClassDef(DataLoader,0)
-   };
+         };
 
 } // namespace TMVA
 

@@ -99,7 +99,7 @@ namespace TMVA
       const Float_t        fTarget;      // regression target
       
       ClassDef(SVEvent,0) // Event for SVM
-   };
+         };
 }
 
 #endif //ROOT_TMVA_SVEvent

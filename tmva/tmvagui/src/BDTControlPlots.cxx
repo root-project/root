@@ -99,7 +99,7 @@ void TMVA::bdtcontrolplots(TString dataset, TDirectory *bdtdir ) {
    if (BoostMonitorIsDone){
       sprintf( cn2, "cv2_%s", titName.Data() );
       c2 = new TCanvas( cn2,  Form( "%s BoostWeights", titName.Data() ),
-                                 1200, 1200 ); 
+                        1200, 1200 ); 
       c2->Divide(5,5);
       Int_t ipad=1;
       

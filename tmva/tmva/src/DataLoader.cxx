@@ -87,7 +87,7 @@ TMVA::DataLoader::DataLoader( TString thedlName)
    fDataSetManager = new DataSetManager( *fDataInputHandler ); // DSMTEST
 
    // render silent
-//    if (gTools().CheckForSilentOption( GetOptions() )) Log().InhibitOutput(); // make sure is silent if wanted to
+   //    if (gTools().CheckForSilentOption( GetOptions() )) Log().InhibitOutput(); // make sure is silent if wanted to
 }
 
 
@@ -209,7 +209,7 @@ void TMVA::DataLoader::AddTestEvent( const TString& className, const std::vector
 
 //_______________________________________________________________________
 void TMVA::DataLoader::AddEvent( const TString& className, Types::ETreeType tt,
-                              const std::vector<Double_t>& event, Double_t weight ) 
+                                 const std::vector<Double_t>& event, Double_t weight ) 
 {
    // add event
    // vector event : the order of values is: variables + targets + spectators
@@ -264,7 +264,7 @@ void TMVA::DataLoader::SetInputTreesFromEventAssignTrees()
 
 //_______________________________________________________________________
 void TMVA::DataLoader::AddTree( TTree* tree, const TString& className, Double_t weight, 
-                             const TCut& cut, const TString& treetype )
+                                const TCut& cut, const TString& treetype )
 {
    // number of signal events (used to compute significance)
    Types::ETreeType tt = Types::kMaxTreeType;
@@ -281,7 +281,7 @@ void TMVA::DataLoader::AddTree( TTree* tree, const TString& className, Double_t 
 
 //_______________________________________________________________________
 void TMVA::DataLoader::AddTree( TTree* tree, const TString& className, Double_t weight, 
-                             const TCut& cut, Types::ETreeType tt )
+                                const TCut& cut, Types::ETreeType tt )
 {
    if(!tree)
       Log() << kFATAL << "Tree does not exist (empty pointer)." << Endl;
@@ -375,7 +375,7 @@ void TMVA::DataLoader::SetTree( TTree* tree, const TString& className, Double_t 
 
 //_______________________________________________________________________
 void  TMVA::DataLoader::SetInputTrees( TTree* signal, TTree* background, 
-                                    Double_t signalWeight, Double_t backgroundWeight )
+                                       Double_t signalWeight, Double_t backgroundWeight )
 {
    // define the input trees for signal and background; no cuts are applied
    AddTree( signal,     "Signal",     signalWeight,     TCut(""), Types::kMaxTreeType );
@@ -384,7 +384,7 @@ void  TMVA::DataLoader::SetInputTrees( TTree* signal, TTree* background,
 
 //_______________________________________________________________________
 void TMVA::DataLoader::SetInputTrees( const TString& datFileS, const TString& datFileB, 
-                                   Double_t signalWeight, Double_t backgroundWeight )
+                                      Double_t signalWeight, Double_t backgroundWeight )
 {
    DataInput().AddTree( datFileS, "Signal", signalWeight );
    DataInput().AddTree( datFileB, "Background", backgroundWeight );
@@ -402,7 +402,7 @@ void TMVA::DataLoader::SetInputTrees( TTree* inputTree, const TCut& SigCut, cons
 
 //_______________________________________________________________________
 void TMVA::DataLoader::AddVariable( const TString& expression, const TString& title, const TString& unit, 
-                                 char type, Double_t min, Double_t max )
+                                    char type, Double_t min, Double_t max )
 {
    // user inserts discriminating variable in data set info
    DefaultDataSetInfo().AddVariable( expression, title, unit, min, max, type ); 
@@ -410,7 +410,7 @@ void TMVA::DataLoader::AddVariable( const TString& expression, const TString& ti
 
 //_______________________________________________________________________
 void TMVA::DataLoader::AddVariable( const TString& expression, char type,
-                                 Double_t min, Double_t max )
+                                    Double_t min, Double_t max )
 {
    // user inserts discriminating variable in data set info
    DefaultDataSetInfo().AddVariable( expression, "", "", min, max, type ); 
@@ -418,7 +418,7 @@ void TMVA::DataLoader::AddVariable( const TString& expression, char type,
 
 //_______________________________________________________________________
 void TMVA::DataLoader::AddTarget( const TString& expression, const TString& title, const TString& unit, 
-                               Double_t min, Double_t max )
+                                  Double_t min, Double_t max )
 {
    // user inserts target in data set info
 
@@ -430,7 +430,7 @@ void TMVA::DataLoader::AddTarget( const TString& expression, const TString& titl
 
 //_______________________________________________________________________
 void TMVA::DataLoader::AddSpectator( const TString& expression, const TString& title, const TString& unit, 
-                                  Double_t min, Double_t max )
+                                     Double_t min, Double_t max )
 {
    // user inserts target in data set info
    DefaultDataSetInfo().AddSpectator( expression, title, unit, min, max ); 
@@ -499,8 +499,8 @@ void TMVA::DataLoader::AddCut( const TCut& cut, const TString& className )
 
 //_______________________________________________________________________
 void TMVA::DataLoader::PrepareTrainingAndTestTree( const TCut& cut, 
-                                                Int_t NsigTrain, Int_t NbkgTrain, Int_t NsigTest, Int_t NbkgTest,
-                                                const TString& otherOpt )
+                                                   Int_t NsigTrain, Int_t NbkgTrain, Int_t NsigTest, Int_t NbkgTest,
+                                                   const TString& otherOpt )
 {
    // prepare the training and test trees
    SetInputTreesFromEventAssignTrees();

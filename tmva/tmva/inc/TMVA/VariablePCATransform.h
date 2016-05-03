@@ -80,7 +80,7 @@ namespace TMVA {
       std::vector<TMatrixD*> fEigenVectors; // eigenvectors
 
       ClassDef(VariablePCATransform,0) // Variable transformation: Principal Value Composition
-   };
+         };
 
 } // namespace TMVA
 
