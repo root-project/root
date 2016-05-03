@@ -1851,7 +1851,10 @@ void TStreamerInfo::BuildOld()
                }
 
                if (!bc) {
-                  Error("BuildOld", "Could not find STL base class: %s for %s\n", element->GetName(), GetName());
+                  // Error("BuildOld", "Could not find STL base class: %s for %s\n", element->GetName(), GetName());
+                  offset = kMissing;
+                  element->SetOffset(kMissing);
+                  element->SetNewType(-1);
                   continue;
                } else if (bc->GetClassPointer()->GetCollectionProxy()
                           && !bc->GetClassPointer()->IsLoaded()
