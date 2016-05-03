@@ -44,6 +44,7 @@
 
 #include <memory>
 
+#include <stdexcept>
 // ROOT include(s):
 #include "Rtypes.h"
 #include "TObject.h"
@@ -234,8 +235,10 @@ void TMVA::MsgLogger::WriteMsg( EMsgType type, const std::string& line ) const
    // take decision to stop if fatal error
    if (type == kFATAL) {
       std::cout << "***> abort program execution" << std::endl;
-      std::exit(1);
-      assert(false);
+      throw std::runtime_error("FATAL error");
+      
+      //std::exit(1);
+      //assert(false);
    }
 }
 

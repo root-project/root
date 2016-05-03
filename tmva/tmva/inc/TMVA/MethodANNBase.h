@@ -156,6 +156,7 @@ namespace TMVA {
 
       enum EEstimator      { kMSE=0,kCE};
 
+      TObjArray*    fNetwork;         // TObjArray of TObjArrays representing network
 
    protected:
 
@@ -178,7 +179,6 @@ namespace TMVA {
       TNeuron* GetOutputNeuron(Int_t index = 0)   { return fOutputNeurons.at(index); }
       
       // protected variables
-      TObjArray*    fNetwork;         // TObjArray of TObjArrays representing network
       TObjArray*    fSynapses;        // array of pointers to synapses, no structural data
       TActivation*  fActivation;      // activation function to be used for hidden layers
       TActivation*  fOutput;          // activation function to be used for output layers, depending on estimator
