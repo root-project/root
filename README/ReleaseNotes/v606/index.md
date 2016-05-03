@@ -616,11 +616,10 @@ Add a new mode for `TClass::SetCanSplit` (2) which indicates that this class and
 *   [[ROOT-8031](https://sft.its.cern.ch/jira/browse/ROOT-8031)] - TTree auto (read) cache setup during Fill
 *   [[ROOT-7776](https://sft.its.cern.ch/jira/browse/ROOT-7776)] - Integrate GSL 2.0 in ROOT
 
-## HEAD of the v6-06-00-patches branch
+## Release 6.06/04
+Released on May 4, 2016
 
-Changes will be part of the future 6.06/04
-
-## general
+## General
 
 * Significant update of the valgrind suppression file to hide intentional lack
 of delete of some entities at the end of the process.
@@ -652,3 +651,27 @@ of delete of some entities at the end of the process.
 ### Minuit
 
 - Improve thread safety of TMinuit constructor and destructor [ROOT-7992]
+
+### Bug fixes
+
+- [ROOT-6923] - Memory leak with circular TTree
+- [ROOT-7593] -  Memory leak TROOT::RegisterModule
+- [ROOT-7867] - memprobe script is broken when using CMake
+- [ROOT-7992] - Destructor of TMinuit is not thread safe
+- [ROOT-8048] - ShortTypes doesn't always strip default stdlib template args
+- [ROOT-8055] - File corruption after TTree deletion
+- [ROOT-8066] - problems creating dictionaries in pyROOT
+- [ROOT-8067] - Source code tree left "polluted" with "interpreter/llvm/src/utils/llvm-build/llvmbuild/*.pyc
+- [ROOT-8068] - Fix file flags for bin/setxrd.* bin/thisroot.*
+- [ROOT-8097] - null pointer dereference in TProtoClass::FillTClass with gcc6 build
+- [ROOT-8117] - Particle in TPDGCode.h but not in TDatabasePDG
+- [ROOT-8145] - TMethodCall::InitWithPrototype keeps accumulating memory on successive calls
+- [ROOT-8149] - Memory leak in TList I/O
+
+
+## HEAD of the v6-06-00-patches branch
+
+Changes will be part of the future 6.06/06
+
+None so far.
+
