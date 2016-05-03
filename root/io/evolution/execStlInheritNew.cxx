@@ -24,7 +24,10 @@ void execStlInheritNew(const char *filename = "inheritstl.root")
    if (!ptr) {
       Error("readfile","Could not read the container");
    } else {
-      Info("readfile","The vector has the size %ld and content %d",ptr->size(),ptr->back().fValue);
+      if (ptr->size())
+         Info("readfile","The vector has the size %ld and content %d",ptr->size(),ptr->back().fValue);
+      else
+         Info("readfile","The vector has the size %ld and no content",ptr->size());
    }
 
    std::vector<int> *ptrint = nullptr;
@@ -32,7 +35,10 @@ void execStlInheritNew(const char *filename = "inheritstl.root")
    if (!ptrint) {
       Error("readfile","Could not read the container of int");
    } else {
-      Info("readfile","The vector of int has the size %ld and content %d",ptrint->size(),ptrint->back());
+      if (ptrint->size())
+         Info("readfile","The vector of int has the size %ld and content %d",ptrint->size(),ptrint->back());
+      else
+         Info("readfile","The vector of int has the size %ld and no content",ptrint->size());
    }
 
 }
