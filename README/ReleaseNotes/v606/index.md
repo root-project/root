@@ -636,12 +636,14 @@ of delete of some entities at the end of the process.
 ### I/O
 
 - Resolve an issue when space is freed in a large `ROOT` file and a TDirectory is updated and stored the lower (less than 2GB) freed portion of the file [ROOT-8055].
+- Repaired the automatic conversion on read back into an STL collection of a on file object of a class that was inheriting from the STL collection.
 
 ### Meta
 
 - Reduce autoparse occasions by autoloading libraries also based on their type_info-derived name, instead of only their normalized name [ROOT-7972].
 - Improve TClassEdit's handling of STL's default allocator, in particular for std::map [ROOT-8048]
 - Fix a problem reading ROOT pcm files using gcc 6 optimized build [ROOT-8097]
+- Fix the detection of inheritance from an STL collection of an emulated class.
 
 ### Core
 
