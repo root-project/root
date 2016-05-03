@@ -647,3 +647,6 @@ of delete of some entities at the end of the process.
 
 - Reduce memory consumption (autoparsing) of plugins TXNetSystem/TNetXNGSystem and TGQt.
 
+### Minuit
+
+- Improve thread safety of TMinuit constructor and destructor [ROOT-7992]
