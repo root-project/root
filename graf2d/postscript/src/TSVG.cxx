@@ -1432,7 +1432,7 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
    }
 
    PrintStr("@");
-   PrintFast(9,"<text x=\"");
+   PrintFast(30,"<text xml:space=\"preserve\" x=\"");
    WriteReal(ix, kFALSE);
    PrintFast(5,"\" y=\"");
    WriteReal(iy, kFALSE);
