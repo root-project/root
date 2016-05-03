@@ -263,7 +263,7 @@ public:
     long*           m_long_array2;
     unsigned long   m_ulong_array[N];
     unsigned long*  m_ulong_array2;
- 
+
     float   m_float_array[N];
     float*  m_float_array2;
     double  m_double_array[N];

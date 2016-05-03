@@ -23,10 +23,10 @@
 void write(const char *filename = "HistArray.root")
 {
    TFile* f = TFile::Open(filename, "RECREATE");
-   
+
    // Since the goal is to the test the backward compatibility of TArray, we are calling every
    // TArray function in the test and building all possible TArray derived types. Moreover,
-   // we are creating and checking histograms, which are derived from TArray classes.  
+   // we are creating and checking histograms, which are derived from TArray classes.
 
 
    // 1. DIRECT TESTING OF TArray CLASSES
@@ -103,7 +103,7 @@ void read(const char *filename = "HistArray.root")
 
    // Checking correct construction and content
    TArrayC* tc; f->GetObject("tc", tc);
-   assert(tc != NULL); assert(std::strcmp(tc->IsA()->GetName(), "TArrayC") == 0); 
+   assert(tc != NULL); assert(std::strcmp(tc->IsA()->GetName(), "TArrayC") == 0);
    assert(tc->GetSize() == 20);
    for(Int_t i = 0; i < tc->GetSize(); ++i) {
       assert(tc->GetAt(i) == i);
@@ -128,11 +128,11 @@ void read(const char *filename = "HistArray.root")
    TArrayL* tl; f->GetObject("tl", tl);
    assert(tl != NULL); assert(std::strcmp(tl->IsA()->GetName(), "TArrayL") == 0);
    assert(tl->GetSize() == 5);
-   assert((*tl)[0] == 1000L);  
-   assert((*tl)[1] == 10000L);  
-   assert((*tl)[2] == 100000L);  
-   assert((*tl)[3] == 1000000L);  
-   assert((*tl)[4] == 2000000L);  
+   assert((*tl)[0] == 1000L);
+   assert((*tl)[1] == 10000L);
+   assert((*tl)[2] == 100000L);
+   assert((*tl)[3] == 1000000L);
+   assert((*tl)[4] == 2000000L);
 
    // Checking raw array constructor (and associated Set function)
    TArrayL64* tl64; f->GetObject("tl64", tl64);
@@ -156,7 +156,7 @@ void read(const char *filename = "HistArray.root")
    TArrayD* td; f->GetObject("td", td);
    assert(td != NULL); assert(std::strcmp(td->IsA()->GetName(), "TArrayD") == 0);
    assert(td->GetSize() == 1);
-   assert(std::abs(td->At(0) - 123.562798) < std::numeric_limits<Double_t>::epsilon()); 
+   assert(std::abs(td->At(0) - 123.562798) < std::numeric_limits<Double_t>::epsilon());
 
 
 

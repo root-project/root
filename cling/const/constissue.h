@@ -13,7 +13,7 @@ class TriggerCharacterizer {
   TriggerCharacterizer() {}
   typedef std::map<char const*, unsigned long> trigger_counting_map;
  private:
-  trigger_counting_map m_map; 
+  trigger_counting_map m_map;
 };
 
 #ifdef __CINT__

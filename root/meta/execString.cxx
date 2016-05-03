@@ -32,7 +32,7 @@ int execString()
    const char *longname = " map<basic_string<char,char_traits<char> >,map<basic_string<char,char_traits<char>,std::allocator<char> >,  basic_string<char,std::char_traits<char>,allocator<char> > >";
    output = TClassEdit::ShortType(longname,false);
    badresult += !checkResult("ShortType",output,"map<string,map<string,string> >");
-   
+
    cl = TClass::GetClass("basic_string<char,char_traits<char> >");
    if (cl) {
      output = cl->GetName();

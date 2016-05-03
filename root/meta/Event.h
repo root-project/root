@@ -93,7 +93,7 @@ public:
    Int_t  GetRun() const { return fRun; }
    Int_t  GetDate() const { return fDate; }
 
-   
+
 };
 
 
@@ -159,7 +159,7 @@ public:
    Double32_t    GetMatrix(UChar_t x, UChar_t y) { return (x<4&&y<4)?fMatrix[x][y]:0; }
    TBits&        GetTriggerBits() { return fTriggerBits; }
 
-   
+
 };
 
 

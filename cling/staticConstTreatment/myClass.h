@@ -1,5 +1,5 @@
 #include "IInterface.h"
-            
+
 static const InterfaceID IID_IRndmGauss(154, 1, 0);
 
 class Param {

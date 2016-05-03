@@ -1,6 +1,6 @@
 #include "TChain.h"
 
-TChain* make_long_chain() 
+TChain* make_long_chain()
 {
    TChain *lchain = new TChain("longtree");
    lchain->Add("longtree1.root");
@@ -8,7 +8,7 @@ TChain* make_long_chain()
    return lchain;
 }
 
-TChain* make_float_chain() 
+TChain* make_float_chain()
 {
    TChain *fchain = new TChain("floattree");
    fchain->Add("floattree1.root");

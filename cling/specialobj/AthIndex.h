@@ -8,10 +8,10 @@ using namespace std;
 class AthIndex : public TObject {
 public:
   enum indexType { noInit         = 0,
-		   indexWire      = 1,
-		   indexLayer     = 2,
-		   indexMezzanine = 3,
-		   indexStation   = 4 };
+         indexWire      = 1,
+         indexLayer     = 2,
+         indexMezzanine = 3,
+         indexStation   = 4 };
 
   indexType type;
   int stationName;
@@ -23,7 +23,7 @@ public:
   int mezzanine;
 
   AthIndex() {};
-  virtual ~AthIndex() {}; 
+  virtual ~AthIndex() {};
 
   ClassDef(AthIndex,1) // Holder class for the Athena indices
 };

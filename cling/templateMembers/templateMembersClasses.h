@@ -42,7 +42,7 @@ template <class T>
 class my_shared_ptr {
  public:
   my_shared_ptr() { SHOWMEM; }
-  my_shared_ptr(const my_shared_ptr&) { SHOWMEM; } 
+  my_shared_ptr(const my_shared_ptr&) { SHOWMEM; }
 
   template <class U>
     void f1(U) { SHOW; }
@@ -74,7 +74,7 @@ class my_shared_ptr {
   template <class U>
     my_shared_ptr<T>& n1(const my_shared_ptr<U>&)  { SHOW; return *this; }
 
-  // doesn't work. 
+  // doesn't work.
   template <class U>
     my_shared_ptr<T>* n2(const my_shared_ptr<U>&)  { SHOW; return this; }
 
@@ -86,11 +86,11 @@ class my_shared_ptr {
 
   // this works
   //  template <class U>
-  //    reference operator=(const my_shared_ptr<U>&) { SHOW; return *this; } 
+  //    reference operator=(const my_shared_ptr<U>&) { SHOW; return *this; }
 
   // only works as above, with return value typedeffed
   template <class U>
-      my_shared_ptr<T>& operator=(const my_shared_ptr<U>&) { SHOW; return *this; } 
+      my_shared_ptr<T>& operator=(const my_shared_ptr<U>&) { SHOW; return *this; }
 
   template <class U>
     my_shared_ptr<T>(const my_shared_ptr<U>&) { SHOW; } //rootcint can't find this

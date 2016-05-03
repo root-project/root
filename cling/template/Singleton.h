@@ -17,7 +17,7 @@ class Singleton
   void DoIt(bool output) { if (output) cout<<__PRETTY_FUNCTION__<<endl;}
 #endif
   static Singleton& Instance()
-  {  
+  {
     if(!instance)
       instance = new Singleton<T>();
     return *instance;

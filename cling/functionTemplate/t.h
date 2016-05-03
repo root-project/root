@@ -26,7 +26,7 @@ private:
 template <> int t::get<int>() const {
    std::cout << "called get<int>()" << std::endl;
    return 1; }
-template <> float t::get<float>() const { 
+template <> float t::get<float>() const {
    std::cout << "called get<float>()" << std::endl;
    return 2.;}
 template <> double t::get<double>() const {

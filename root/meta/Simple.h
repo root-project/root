@@ -9,7 +9,7 @@ link.exe Simple_dict.obj /libpath:"%ROOTSYS%\lib" libCint.lib libCore.lib /DLL -
 
 
 */
-namespace AddSpace { 
+namespace AddSpace {
 #endif
 class Simple {
   public:

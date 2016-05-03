@@ -2,7 +2,7 @@
 
 namespace edm {
 struct refhelper {
-template <typename what> 
+template <typename what>
 struct ValueTrait {
   typedef typename what::value_type value;
 };
@@ -27,4 +27,4 @@ int execdefaultTemplateParam()
    if (c) return 0;
    else return 1;
 }
- 
+

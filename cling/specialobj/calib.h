@@ -24,4 +24,4 @@ private:
 #pragma link C++ class pair<string,T0Result*>+;
 #pragma link C++ class map<string,T0Result*>+;
 #endif
-#endif 
+#endif

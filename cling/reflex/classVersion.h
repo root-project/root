@@ -17,7 +17,7 @@ class NoIO {
 };
 
 class ReallyNoDict {
-   
+
 };
 
 class FromTObject: public TObject {

@@ -21,11 +21,11 @@ class testing {
 };
 
 template <class T>
-class shared_ptr 
+class shared_ptr
 {
 
   T *theobject;
-  // this shared_ptr class is of course missing any 
+  // this shared_ptr class is of course missing any
   // reference counting mechanism
    void PF(const char* func) {
       std::string clname;
@@ -45,15 +45,15 @@ public:
 
   const char *GetName() { return typeid(T).name(); }
 
-  shared_ptr(T* someobject) 
-  { 
+  shared_ptr(T* someobject)
+  {
      PF("c'tor(T)");
-    theobject = someobject; 
+    theobject = someobject;
   }
 
   template <class Y>
-  shared_ptr(shared_ptr<Y> const &rhs) 
-    : theobject(dynamic_cast<T*>(rhs.theobject)) 
+  shared_ptr(shared_ptr<Y> const &rhs)
+    : theobject(dynamic_cast<T*>(rhs.theobject))
   {
      PF("c'tor(Y)");
   };
@@ -66,11 +66,11 @@ public:
 int templatefriend()
 {
   // create shared pointer to child
-  shared_ptr<Child> child_p(new Child); 
+  shared_ptr<Child> child_p(new Child);
 
-  // create shared pointer to parent from 
+  // create shared pointer to parent from
   // shared pointer to child, calls dynamic_cast<> in template constructor.
-  shared_ptr<Parent> parent_p(child_p); 
+  shared_ptr<Parent> parent_p(child_p);
   return 0;
 }
 

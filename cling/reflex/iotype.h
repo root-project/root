@@ -43,7 +43,7 @@ public:
    Template<double> Td;
    Template<Double32_t> Td32;
    Template<double> Tdd32;
-   Template<Float_t> Tf;   
+   Template<Float_t> Tf;
 };
 
 template <typename T>
@@ -116,7 +116,7 @@ inline void CIoType::Set(double x) {
    SetT(Td, v = x);
    SetT(Td32, v = x);
    SetT(Tdd32, v = x);
-   SetT(Tf, v = x);   
+   SetT(Tf, v = x);
 }
 
 template class Template<double>;

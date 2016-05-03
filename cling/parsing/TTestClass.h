@@ -3,11 +3,11 @@
 
 class TTestClass {
 
-   protected:  
+   protected:
       unsigned   fInt;
 
-   public: 
-   
+   public:
+
    unsigned   GetI() { return fInt; }
    unsigned int GetII(void* ) { return fInt; }
    unsigned  GetIII(void* ) { return fInt; }
@@ -17,11 +17,11 @@ class TTestClass {
    unsigned int* GetPII(void* ) { return &fInt; }
    unsigned * GetPIII(void* ) { return &fInt; }
 
-   
+
    TTestClass() {}
    virtual ~TTestClass() {}
-     
-   
+
+
 };
 
 #endif
