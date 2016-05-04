@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TNamed
+\ingroup Base
+
 The TNamed class is the base class for all named ROOT classes.
 
 A TNamed contains the essential elements (name, title)

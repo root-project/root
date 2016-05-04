@@ -23,6 +23,9 @@
 ClassImp(TAttText)
 
 /** \class TAttText
+\ingroup Base
+\ingroup BasicGraphics
+
 Text Attributes class.
 
 This class is used (in general by secondary inheritance)

@@ -20,6 +20,9 @@
 ClassImp(TAttFill)
 
 /** \class TAttFill
+\ingroup Base
+\ingroup BasicGraphics
+
 Fill Area Attributes class.
 
 This class is used (in general by secondary inheritance)

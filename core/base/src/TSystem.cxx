@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TSystem
+\ingroup Base
 
 Abstract base class defining a generic interface to the underlying
 Operating System.

@@ -16,6 +16,8 @@
 #include "TThreadSlots.h"
 
 /** \class TVirtualPad
+\ingroup Base
+
 TVirtualPad is an abstract base class for the Pad and Canvas classes.
 */
 

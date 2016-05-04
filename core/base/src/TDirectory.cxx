@@ -31,6 +31,8 @@ Bool_t TDirectory::fgAddDirectory = kTRUE;
 const Int_t  kMaxLen = 2048;
 
 /** \class TDirectory
+\ingroup Base
+
 Describe directory structure in memory.
 */
 

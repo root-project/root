@@ -22,6 +22,9 @@
 ClassImp(TAttAxis)
 
 /** \class TAttAxis
+\ingroup Base
+\ingroup BasicGraphics
+
 Manages histogram axis attributes
 */
 

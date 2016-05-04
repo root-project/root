@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TObject
+\ingroup Base
 
 Mother of all ROOT objects.
 

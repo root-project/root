@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TRegexp
+\ingroup Base
 
 Regular expression class.
 

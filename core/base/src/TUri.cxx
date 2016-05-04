@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TUri
+\ingroup Base
 
 This class represents a RFC 3986 compatible URI.
 See http://rfc.net/rfc3986.html.

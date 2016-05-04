@@ -48,6 +48,9 @@ static Int_t gHighestColorIndex = 0;
 using std::floor;
 
 /** \class TColor
+\ingroup Base
+\ingroup BasicGraphics
+
 The color creation and management class.
 
   - [Introduction](#C00)

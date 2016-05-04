@@ -11,6 +11,8 @@
 
 
 /** \class TFolder
+\ingroup Base
+
 A TFolder object is a collection of objects and folders.
 Folders have a name and a title and are identified in the folder hierarchy
 by a "Unix-like" naming mechanism. The root of all folders is //root.

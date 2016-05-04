@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TParameter
+\ingroup Base
+
 Named parameter, streamable and storable.
 */
 

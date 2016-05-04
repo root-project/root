@@ -15,6 +15,8 @@
 ClassImp(TVirtualPadPainter)
 
 /** \class TVirtualPadPainter
+\ingroup Base
+
 To make it possible to use GL for 2D graphic in a TPad/TCanvas.
 TVirtualPadPainter interface must be used instead of TVirtualX.
 Internally, non-GL implementation _should_ delegate all calls

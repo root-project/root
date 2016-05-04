@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TInspectorImp
+\ingroup Base
+
 ABC describing GUI independent object inspector (abstraction mainly needed
 for Win32. On X11 systems it currently uses a standard TCanvas).
 */

@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TVirtualFFT
+\ingroup Base
+
 TVirtualFFT is an interface class for Fast Fourier Transforms.
 
 The default FFT library is FFTW. To use it, FFTW3 library should already
