@@ -595,8 +595,11 @@ void TDSetElement::SetEntryList(TObject *aList, Long64_t first, Long64_t num)
 {
    // Set entry (or event) list for this element
 
-   if (!aList)
+   if (!aList) {
+      // Nothing to do, except making sure to disable any previous setting
+      fEntryList = 0;
       return;
+   }
 
    // Link the proper object
    TEventList *evl = 0;
@@ -1857,8 +1860,11 @@ void TDSet::SetEntryList(TObject *aList)
 {
    // Set entry (or event) list for this data set
 
-   if (!aList)
+   if (!aList) {
+      // Nothing to do, except making sure to disable any previous setting
+      fEntryList = 0;
       return;
+   }
 
    if (TestBit(TDSet::kMultiDSet)) {
 

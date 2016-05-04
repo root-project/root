@@ -152,6 +152,9 @@ Long64_t TProofChain::Draw(const char *varexp, const TCut &selection,
       fSet->SetEntryList(fEntryList);
    } else if (fEventList) {
       fSet->SetEntryList(fEventList);
+   } else {
+      // Disable previous settings, if any
+      fSet->SetEntryList(0);
    }
 
    // Fill drawing attributes
