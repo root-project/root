@@ -27,8 +27,8 @@
 #ifndef ROOT_TLockPath
 #include "TLockPath.h"
 #endif
-#ifndef ROOT_TObject
-#include "TObject.h"
+#ifndef ROOT_TNamed
+#include "TNamed.h"
 #endif
 #ifndef ROOT_TMD5
 #include "TMD5.h"
