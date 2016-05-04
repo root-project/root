@@ -579,8 +579,11 @@ Int_t TDSetElement::Lookup(Bool_t force)
 
 void TDSetElement::SetEntryList(TObject *aList, Long64_t first, Long64_t num)
 {
-   if (!aList)
+   if (!aList) {
+      // Nothing to do, except making sure to disable any previous setting
+      fEntryList = 0;
       return;
+   }
 
    // Link the proper object
    TEventList *evl = 0;
@@ -1871,8 +1874,11 @@ void TDSet::SetWriteV3(Bool_t on)
 
 void TDSet::SetEntryList(TObject *aList)
 {
-   if (!aList)
+   if (!aList) {
+      // Nothing to do, except making sure to disable any previous setting
+      fEntryList = 0;
       return;
+   }
 
    if (TestBit(TDSet::kMultiDSet)) {
 
