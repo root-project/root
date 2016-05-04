@@ -843,13 +843,13 @@ Bool_t TFileMerger::PartialMerge(Int_t in_type)
          }
       }
       fFileList->Clear();
-      if (fExcessFiles->GetEntries() > 0) {
+      if (result && fExcessFiles->GetEntries() > 0) {
          // We merge the first set of files in the output,
          // we now need to open the next set and make
          // sure we accumulate into the output, so we 
          // switch to incremental merging (if not already set)
          type = type | kIncremental;
-         OpenExcessFiles();         
+         result = OpenExcessFiles();
       }
    }
    if (!result) {
