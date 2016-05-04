@@ -197,7 +197,9 @@ const char *rootClingHelp =
    "  This allows the header to be inlined within the dictionary.               \n"
    "                                                                            \n"
    " -interpreteronly\tNo IO information in the dictionary                      \n"
-   " -noIncludePaths\tDon't keep track of the include paths passed to rootcling \n";
+   "                                                                            \n"
+   " -noIncludePaths\tDo not store the headers' directories in the dictionary.  \n"
+   "  Instead, rely on the environment variable $ROOT_INCLUDE_PATH at runtime.  \n";
 
 
 
@@ -5705,7 +5707,7 @@ int GenReflex(int argc, char **argv)
          NOTYPE ,
          "" , "noIncludePaths",
          ROOT::option::Arg::None,
-         "--noIncludePaths\tDo not store the include paths. Rely at runtime on the ROOT_INCLUDE_PATH.\n"
+         "--noIncludePaths\tDo not store the headers' directories in the dictionary. Instead, rely on the environment variable $ROOT_INCLUDE_PATH at runtime.\n"
       },
 
       // Left intentionally empty not to be shown in the help, like in the first genreflex
