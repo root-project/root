@@ -61,6 +61,12 @@
 
 R__EXTERN XrdOucTrace *XrdProofdTrace;
 
+// silence warning from gcc6
+//    include/XrdProofdTrace.h:106:10: warning: nonnull argument "this" compared to NULL [-Wnonnull-compare]
+#if defined(__GNUC__) && (__GNUC__ >= 5) && !defined(__INTEL_COMPILER)
+#pragma GCC diagnostic ignored "-Wnonnull-compare"
+#endif
+
 //
 // Auxilliary macros
 //
