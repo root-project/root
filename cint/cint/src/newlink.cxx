@@ -13068,7 +13068,7 @@ void G__incsetup_memvar(int tagnum)
     G__ifile.pos = 0;
     G__ifile.vindex = 0;
 
-    if (fileno != -1) {
+    if (fileno != -1 && G__srcfile[fileno].filename) {
       G__ifile.fp = G__srcfile[fileno].fp;
       G__strlcpy(G__ifile.name,G__srcfile[fileno].filename,G__MAXFILENAME);
     }
