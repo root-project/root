@@ -54,7 +54,7 @@ public:
    virtual ~TVirtualMC();
 
    // Static access method
-   static TVirtualMC* GetMC();
+   static TVirtualMC* GetMC() { return fgMC; }
 
    //
    // ------------------------------------------------
@@ -845,16 +845,16 @@ public:
     //
 
     // Return the particle stack
-    virtual TVirtualMCStack*   GetStack() const   { return fStack; }
+    TVirtualMCStack*   GetStack() const   { return fStack; }
 
     // Return the external decayer
-    virtual TVirtualMCDecayer* GetDecayer() const { return fDecayer; }
+    TVirtualMCDecayer* GetDecayer() const { return fDecayer; }
 
     // Return the random number generator
-    virtual TRandom*           GetRandom() const  { return fRandom; }
+    TRandom*           GetRandom() const  { return fRandom; }
 
     // Return the magnetic field
-    virtual TVirtualMagField*  GetMagField() const  { return fMagField; }
+    TVirtualMagField*  GetMagField() const  { return fMagField; }
 
 protected:
    TVirtualMCApplication* fApplication; //! User MC application

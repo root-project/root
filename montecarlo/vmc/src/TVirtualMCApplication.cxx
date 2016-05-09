@@ -58,14 +58,3 @@ TVirtualMCApplication::~TVirtualMCApplication()
 
    fgInstance = 0;
 }
-
-//_____________________________________________________________________________
-TVirtualMCApplication* TVirtualMCApplication::Instance()
-{
-   //
-   // Static access method
-   //
-
-   return fgInstance;
-}
-

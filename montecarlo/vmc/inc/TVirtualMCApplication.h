@@ -40,7 +40,7 @@ public:
    virtual ~TVirtualMCApplication();
 
    // Static access method
-   static TVirtualMCApplication* Instance();
+   static TVirtualMCApplication* Instance() { return fgInstance; }
 
    //
    // methods
