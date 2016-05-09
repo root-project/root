@@ -8,11 +8,14 @@
 
 # Specify tests that will be ignored.
 
-set(CTEST_CUSTOM_TESTS_IGNORE
-    ${CTEST_CUSTOM_TESTS_IGNORE}
-    roottest-cling-parsing-semicolon
-    roottest-root-meta-loadAllLibs-LoadAllLibs
-    roottest-root-meta-loadAllLibs-LoadAllLibsAZ
-    roottest-root-meta-loadAllLibs-LoadAllLibsZA
-    roottest-root-html-runMakeIndex
+list(APPEND CTEST_CUSTOM_TESTS_IGNORE
+            roottest-cling-parsing-semicolon)
 )
+
+if(CTEST_BUILD_NAME MATCHES slc6|centos7)
+  list(APPEND CTEST_CUSTOM_TESTS_IGNORE
+              roottest-root-meta-loadAllLibs-LoadAllLibs
+              roottest-root-meta-loadAllLibs-LoadAllLibsAZ
+              roottest-root-meta-loadAllLibs-LoadAllLibsZA
+              roottest-root-html-runMakeIndex)
+endif()
