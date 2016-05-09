@@ -387,12 +387,10 @@ Int_t TBufferFile::CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *cl
    Int_t  offset = 0;
 
    Long_t endpos = Long_t(fBuffer) + startpos + bcnt + sizeof(UInt_t);
-
    if (Long_t(fBufCur) != endpos) {
       offset = Int_t(Long_t(fBufCur) - endpos);
 
       const char *name = clss ? clss->GetName() : classname ? classname : 0;
-
       if (name) {
          if (offset < 0) {
             Error("CheckByteCount", "object of class %s read too few bytes: %d instead of %d",
@@ -2496,7 +2494,6 @@ void *TBufferFile::ReadObjectAny(const TClass *clCast)
 
       // let the object read itself
       clRef->Streamer( obj, *this, clOnfile );
-
       CheckByteCount(startpos, tag, clRef);
    }
 
@@ -3748,11 +3745,9 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
          sinfo->BuildOld();
       }
    }
-
    // Deserialize the object.
    ApplySequence(*(sinfo->GetReadObjectWiseActions()), (char*)pointer);
    if (sinfo->IsRecovered()) count=0;
-
    // Check that the buffer position corresponds to the byte count.
    CheckByteCount(start, count, cl);
    return 0;

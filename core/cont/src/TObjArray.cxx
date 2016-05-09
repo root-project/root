@@ -450,6 +450,7 @@ void TObjArray::Streamer(TBuffer &b)
       }
       Changed();
       b.CheckByteCount(R__s, R__c,TObjArray::IsA());
+
    } else {
       R__c = b.WriteVersion(TObjArray::IsA(), kTRUE);
       TObject::Streamer(b);

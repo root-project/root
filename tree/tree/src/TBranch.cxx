@@ -749,7 +749,6 @@ Int_t TBranch::Fill()
    if (TestBit(kDoNotProcess)) {
       return 0;
    }
-
    TBasket* basket = GetBasket(fWriteBasket);
    if (!basket) {
       basket = fTree->CreateBasket(this); //  create a new basket
@@ -760,9 +759,7 @@ Int_t TBranch::Fill()
    TBuffer* buf = basket->GetBufferRef();
 
    // Fill basket buffer.
-
    Int_t nsize  = 0;
-
    if (buf->IsReading()) {
       basket->SetWriteMode();
    }
@@ -771,7 +768,6 @@ Int_t TBranch::Fill()
 
    Int_t lnew = 0;
    Int_t nbytes = 0;
-
    if (fEntryBuffer) {
       nbytes = FillEntryBuffer(basket,buf,lnew);
    } else {
@@ -1102,7 +1098,7 @@ Int_t TBranch::FlushOneBasket(UInt_t ibasket)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return pointer to basket basketnumber in this Branch
 
-TBasket* TBranch::GetBasket(Int_t basketnumber)
+TBasket* TBranch::GetBasket(Int_t basketnumber, Bool_t random, Long64_t relativeentry)
 {
    // This counter in the sequential case collects errors coming also from
    // different files (suppose to have a program reading f1.root, f2.root ...)
@@ -1115,7 +1111,6 @@ TBasket* TBranch::GetBasket(Int_t basketnumber)
    TBasket *basket = (TBasket*)fBaskets.UncheckedAt(basketnumber);
    if (basket) return basket;
    if (basketnumber == fWriteBasket) return 0;
-
    // create/decode basket parameters from buffer
    TFile *file = GetFile(0);
    if (file == 0) {
@@ -1139,7 +1134,7 @@ TBasket* TBranch::GetBasket(Int_t basketnumber)
    }
 
    //now read basket
-   Int_t badread = basket->ReadBasketBuffers(fBasketSeek[basketnumber],fBasketBytes[basketnumber],file);
+   Int_t badread = basket->ReadBasketBuffers(fBasketSeek[basketnumber],fBasketBytes[basketnumber],file, random, relativeentry);
    if (badread || basket->GetSeekKey() != fBasketSeek[basketnumber]) {
       nerrors++;
       if (nerrors > 10) return 0;
@@ -1230,11 +1225,14 @@ Int_t TBranch::GetEntry(Long64_t entry, Int_t getall)
    Bool_t enabled = !TestBit(kDoNotProcess) || getall;
    TBasket *basket; // will be initialized in the if/then clauses.
    Long64_t first;
+   Long64_t relativeentry;
+   Bool_t   random = gROOT->IsRandomAccessCompression();
    if (R__likely(enabled && fFirstBasketEntry <= entry && entry < fNextBasketEntry)) {
       // We have found the basket containing this entry.
       // make sure basket buffers are in memory.
       basket = fCurrentBasket;
       first = fFirstBasketEntry;
+      relativeentry = entry - first;
    } else {
       if (!enabled) {
          return 0;
@@ -1261,9 +1259,10 @@ Int_t TBranch::GetEntry(Long64_t entry, Int_t getall)
       }
       // We have found the basket containing this entry.
       // make sure basket buffers are in memory.
+      relativeentry = entry - first;
       basket = (TBasket*) fBaskets.UncheckedAt(fReadBasket);
       if (!basket) {
-         basket = GetBasket(fReadBasket);
+         basket = GetBasket(fReadBasket, random, relativeentry);
          if (!basket) {
             fCurrentBasket = 0;
             fFirstBasketEntry = -1;
@@ -1280,7 +1279,7 @@ Int_t TBranch::GetEntry(Long64_t entry, Int_t getall)
    if (R__unlikely(!buf)) {
       TFile* file = GetFile(0);
       if (!file) return -1;
-      basket->ReadBasketBuffers(fBasketSeek[fReadBasket], fBasketBytes[fReadBasket], file);
+      basket->ReadBasketBuffers(fBasketSeek[fReadBasket], fBasketBytes[fReadBasket], file, random, relativeentry);
       buf = basket->GetBufferRef();
    }
    // Set entry offset in buffer.
@@ -1290,18 +1289,25 @@ Int_t TBranch::GetEntry(Long64_t entry, Int_t getall)
    if (R__unlikely(!buf->IsReading())) {
       basket->SetReadMode();
    }
-   Int_t* entryOffset = basket->GetEntryOffset();
    Int_t bufbegin = 0;
-   if (entryOffset) {
-      bufbegin = entryOffset[entry-first];
+
+   random &= basket->IsRandomAccessCompression();
+   if (random) {
+      bufbegin = basket->GetKeylen();
       buf->SetBufferOffset(bufbegin);
-      Int_t* displacement = basket->GetDisplacement();
-      if (R__unlikely(displacement)) {
-         buf->SetBufferDisplacement(displacement[entry-first]);
-      }
    } else {
-      bufbegin = basket->GetKeylen() + ((entry-first) * basket->GetNevBufSize());
-      buf->SetBufferOffset(bufbegin);
+      Int_t* entryOffset = basket->GetEntryOffset();
+      if (entryOffset) {
+         bufbegin = entryOffset[entry-first];
+         buf->SetBufferOffset(bufbegin);
+         Int_t* displacement = basket->GetDisplacement();
+         if (R__unlikely(displacement)) {
+            buf->SetBufferDisplacement(displacement[entry-first]);
+         }
+      } else {
+         bufbegin = basket->GetKeylen() + ((entry-first) * basket->GetNevBufSize());
+         buf->SetBufferOffset(bufbegin);
+      }
    }
 
    // Int_t bufbegin = buf->Length();
@@ -2363,7 +2369,6 @@ void TBranch::Streamer(TBuffer& b)
       Version_t v = b.ReadVersion(&R__s, &R__c);
       if (v > 9) {
          b.ReadClassBuffer(TBranch::Class(), this, v, R__s, R__c);
-
          if (fWriteBasket>=fBaskets.GetSize()) {
             fBaskets.Expand(fWriteBasket+1);
          }
@@ -2373,7 +2378,6 @@ void TBranch::Streamer(TBuffer& b)
             TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(i);
             leaf->SetBranch(this);
          }
-
          fNBaskets = fBaskets.GetEntries();
          for (Int_t j=fWriteBasket,n=0;j>=0 && n<fNBaskets;--j) {
             TBasket *bk = (TBasket*)fBaskets.UncheckedAt(j);
@@ -2591,7 +2595,6 @@ Int_t TBranch::WriteBasket(TBasket* basket, Int_t where)
       // Increase the array ...
       fEntryOffsetLen = 2*nevbuf; // assume some fluctuations.
    }
-
    Int_t nout  = basket->WriteBuffer();    //  Write buffer
    fBasketBytes[where]  = basket->GetNbytes();
    fBasketSeek[where]   = basket->GetSeekKey();
@@ -2635,7 +2638,6 @@ Int_t TBranch::WriteBasket(TBasket* basket, Int_t where)
       }
       delete basket;
    }
-
    return nout;
 }
 

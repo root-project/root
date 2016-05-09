@@ -240,7 +240,6 @@ namespace TStreamerInfoActions
    {
       // Stream a Float16 or Double32 where a factor has been specified.
       //a range was specified. We read an integer and convert it back to a double.
-
       TConfWithFactor *conf = (TConfWithFactor *)config;
       buf.ReadWithFactor((T*)( ((char*)addr) + config->fOffset ), conf->fFactor, conf->fXmin);
       return 0;
@@ -261,7 +260,6 @@ namespace TStreamerInfoActions
 
       TConfNoFactor *conf = (TConfNoFactor *)config;
       Int_t nbits = conf->fNbits;
-
       buf.ReadWithNbits( (T*)( ((char*)addr) + config->fOffset ), nbits );
       return 0;
    }
@@ -463,7 +461,6 @@ namespace TStreamerInfoActions
    INLINE_TEMPLATE_ARGS void ReadSTLMemberWiseSameClass(TBuffer &buf, void *addr, const TConfiguration *conf, Version_t vers)
    {
       // Collection was saved member-wise
-
       TConfigSTL *config = (TConfigSTL*)conf;
       vers &= ~( TBufferFile::kStreamedMemberWise );
 
@@ -713,7 +710,6 @@ namespace TStreamerInfoActions
    INLINE_TEMPLATE_ARGS void ReadSTLObjectWiseFastArrayV2(TBuffer &buf, void *addr, const TConfiguration *conf, Version_t vers, UInt_t start)
    {
       // case of old TStreamerInfo
-
       TConfigSTL *config = (TConfigSTL*)conf;
       //  Backward compatibility. Some TStreamerElement's where without
       //  Streamer but were not removed from element list

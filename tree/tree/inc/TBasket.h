@@ -56,9 +56,11 @@ protected:
    Bool_t      fHeaderOnly;      //True when only the basket header must be read/written
    Int_t      *fDisplacement;    //![fNevBuf] Displacement of entries in fBuffer(TKey)
    Int_t      *fEntryOffset;     //[fNevBuf] Offset of entries in fBuffer(TKey)
+   Int_t      *fCompressedEntryOffset;  //[fNevBuf] Offset of compressed entries in fBuffer(TKey)
    TBranch    *fBranch;          //Pointer to the basket support branch
    TBuffer    *fCompressedBufferRef; //! Compressed buffer.
    Bool_t      fOwnsCompressedBuffer; //! Whether or not we own the compressed buffer.
+   Bool_t      fRandomAccessCompression; // Compression with Random Access Capability
    Int_t       fLastWriteBufferSize; //! Size of the buffer last time we wrote it to disk
 
 public:
@@ -75,13 +77,16 @@ public:
            Int_t   GetBufferSize() const {return fBufferSize;}
            Int_t  *GetDisplacement() const {return fDisplacement;}
            Int_t  *GetEntryOffset() const {return fEntryOffset;}
+           Int_t  *GetCompressedEntryOffset() const {return fCompressedEntryOffset;}
            Int_t   GetEntryPointer(Int_t Entry);
+           Int_t   GetCompressedEntryPointer(Int_t Entry);
            Int_t   GetNevBuf() const {return fNevBuf;}
            Int_t   GetNevBufSize() const {return fNevBufSize;}
+           Bool_t  IsRandomAccessCompression() const {return fRandomAccessCompression;}
            Int_t   GetLast() const {return fLast;}
    virtual void    MoveEntries(Int_t dentries);
    virtual void    PrepareBasket(Long64_t /* entry */) {};
-           Int_t   ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file);
+           Int_t   ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file, Bool_t random = kTRUE, Long64_t relativeentry = 0);
            Int_t   ReadBasketBytes(Long64_t pos, TFile *file);
    virtual void    Reset();
 
@@ -90,6 +95,7 @@ public:
 
            void    SetBranch(TBranch *branch) { fBranch = branch; }
            void    SetNevBufSize(Int_t n) { fNevBufSize=n; }
+           void    SetRandomAccessCompression( Bool_t random = kTRUE ) { fRandomAccessCompression = random; }
    virtual void    SetReadMode();
    virtual void    SetWriteMode();
    inline  void    Update(Int_t newlast) { Update(newlast,newlast); };

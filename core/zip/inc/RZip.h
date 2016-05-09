@@ -17,10 +17,12 @@ extern "C" unsigned long R__crc32(unsigned long crc, const unsigned char* buf, u
 extern "C" unsigned long R__memcompress(char *tgt, unsigned long tgtsize, char *src, unsigned long srcsize);
 
 extern "C" void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep, int compressionAlgorithm);
+extern "C" void R__zipMultipleAlgorithm_RAC(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep, int compressionAlgorithm, int entries, bool haveoffset, int lastbyte, int *entryoffset, int *compressedentryoffset);
 
 extern "C" void R__zip(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep);
 
 extern "C" void R__unzip(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep);
+extern "C" void R__unzip_RAC(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep, int offset, int length);
 
 extern "C" int R__unzip_header(int *srcsize, unsigned char *src, int *tgtsize);
 
