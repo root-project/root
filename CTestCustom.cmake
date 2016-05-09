@@ -10,7 +10,6 @@
 
 list(APPEND CTEST_CUSTOM_TESTS_IGNORE
             roottest-cling-parsing-semicolon)
-)
 
 if(CTEST_BUILD_NAME MATCHES slc6|centos7)
   list(APPEND CTEST_CUSTOM_TESTS_IGNORE
