@@ -5145,6 +5145,7 @@ Long64_t TTree::GetEntriesFriend() const
 /// When reading the Tree, one can choose one of these 3 options:
 ///
 /// ## OPTION 1
+///
 /// ~~~ {.cpp}
 ///     for (Long64_t i=0;i<nentries;i++) {
 ///        T.GetEntry(i);
