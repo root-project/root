@@ -185,7 +185,9 @@ if(all)
  set(root7_defvalue ON)
  set(table_defvalue ON)
  set(unuran_defvalue ON)
- set(vc_defvalue ON)
+ if(NOT APPLE)
+   set(vc_defvalue ON)
+ endif()
 endif()
 
 #---VC does not support yet Arm and PPC processors----------------------------------------------
