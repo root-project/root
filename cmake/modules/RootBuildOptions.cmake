@@ -97,6 +97,9 @@ if (CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64" OR
    set(vc_defvalue OFF)
 endif()
 
+if(APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL Clang)
+   set(vc_defvalue OFF)   # XCode 7.x fails compiling current vc
+endif()
 
 ROOT_BUILD_OPTION(afdsmgrd OFF "Dataset manager for PROOF-based analysis facilities")
 ROOT_BUILD_OPTION(afs OFF "AFS support, requires AFS libs and objects")
