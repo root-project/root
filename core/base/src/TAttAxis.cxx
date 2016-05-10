@@ -23,9 +23,23 @@ ClassImp(TAttAxis)
 
 /** \class TAttAxis
 \ingroup Base
-\ingroup BasicGraphics
+\ingroup GraphicsAtt
 
-Manages histogram axis attributes
+Manages histogram axis attributes.
+
+They are:
+
+  - The number of divisions
+  - The line axis' color
+  - The labels' color
+  - The labels' font
+  - The labels' offset
+  - The labels' size
+  - The tick marks'
+  - The axis title's offset
+  - The axis title's size
+  - The axis title's color
+  - The axis title's font
 */
 
 TAttAxis::TAttAxis()

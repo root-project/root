@@ -24,7 +24,7 @@ ClassImp(TAttText)
 
 /** \class TAttText
 \ingroup Base
-\ingroup BasicGraphics
+\ingroup GraphicsAtt
 
 Text Attributes class.
 

@@ -22,7 +22,7 @@ ClassImp(TAttMarker)
 
 /** \class TAttMarker
 \ingroup Base
-\ingroup BasicGraphics
+\ingroup GraphicsAtt
 
 Marker Attributes class.
 

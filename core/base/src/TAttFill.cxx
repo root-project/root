@@ -21,7 +21,7 @@ ClassImp(TAttFill)
 
 /** \class TAttFill
 \ingroup Base
-\ingroup BasicGraphics
+\ingroup GraphicsAtt
 
 Fill Area Attributes class.
 

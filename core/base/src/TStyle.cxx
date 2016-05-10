@@ -31,7 +31,7 @@ ClassImp(TStyle)
 
 /** \class TStyle
 \ingroup Base
- \ingroup BasicGraphics
+ \ingroup GraphicsAtt
 
 TStyle objects may be created to define special styles.
 By default ROOT creates a default style that can be accessed via

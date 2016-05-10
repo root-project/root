@@ -11,7 +11,7 @@
 
 /** \class TColorGradient
 \ingroup Base
-\ingroup BasicGraphics
+\ingroup GraphicsAtt
 
 TColorGradient extends basic TColor.
 Actually, this is not a simple color, but linear gradient + shadow

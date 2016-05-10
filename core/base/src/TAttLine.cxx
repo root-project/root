@@ -23,7 +23,7 @@ using std::sqrt;
 
 /** \class TAttLine
 \ingroup Base
-\ingroup BasicGraphics
+\ingroup GraphicsAtt
 
 Line Attributes class.
 

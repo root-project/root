@@ -14,7 +14,7 @@
 
 /** \class TAttBBox
 \ingroup Base
-\ingroup BasicGraphics
+\ingroup GraphicsAtt
 
 Helper for management of bounding-box information.
 Optionally used by classes that use direct OpenGL rendering

@@ -15,7 +15,7 @@ ClassImp(TAttBBox2D)
 
 /** \class TAttBBox2D
 \ingroup Base
-\ingroup BasicGraphics
+\ingroup GraphicsAtt
 
 Abstract base class for elements drawn in the editor.
 Classes inheriting from TAttBBox2D implementing the TAttBBox2D

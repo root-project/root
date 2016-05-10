@@ -49,7 +49,7 @@ using std::floor;
 
 /** \class TColor
 \ingroup Base
-\ingroup BasicGraphics
+\ingroup GraphicsAtt
 
 The color creation and management class.
 

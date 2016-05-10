@@ -11,7 +11,7 @@
 
 /** \class TAtt3D
 \ingroup Base
-\ingroup BasicGraphics
+\ingroup GraphicsAtt
 
 Use this attribute class when an object should have 3D capabilities.
 */
