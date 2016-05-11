@@ -1,4 +1,8 @@
-{
+#include "TTree.h"
+#include "TTreeFormula.h"
+#include <vector>
+
+int execMinMaxIf() {
   TTree t("tree","tree");
   std::vector<int>* b = new std::vector<int>;
   t.Branch("b",&b);
@@ -16,5 +20,6 @@
 
   assert(fMin.EvalInstance()==4);
   assert(fMax.EvalInstance()==4);
+  return 0;
 }
 
