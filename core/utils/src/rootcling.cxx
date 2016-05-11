@@ -3204,7 +3204,6 @@ void CreateDictHeader(std::ostream &dictStream, const std::string &main_dictname
                << "#include <stddef.h>\n"
                << "#include <stdio.h>\n"
                << "#include <stdlib.h>\n"
-               << "#include <math.h>\n"
                << "#include <string.h>\n"
                << "#include <assert.h>\n"
                << "#define G__DICTIONARY\n"
@@ -4280,7 +4279,6 @@ int RootCling(int argc,
             || interp.declare("#include <assert.h>\n"
                               "#include <stdlib.h>\n"
                               "#include <stddef.h>\n"
-                              "#include <math.h>\n"
                               "#include <string.h>\n"
                              ) != cling::Interpreter::kSuccess
             || (!useROOTINCDIR
