@@ -66,8 +66,8 @@ int testSimpleFile(const char *filename, Long64_t entries, Int_t compSetting, Lo
 int execTestMultiMerge()
 {
    Int_t result = 0;
-   if (!result) result = testMergedFile("mfile1-4.root",1,4917);
-   if (!result) result = testMergedFile("mzfile1-4.root",206,4972);
+   if (!result) result = testMergedFile("mfile1-4.root",1,4915);
+   if (!result) result = testMergedFile("mzfile1-4.root",206,4970);
 
    if (!result) result = testSimpleFile("hsimple.root",25000,1,414406,1);
    if (!result) result = testSimpleFile("hsimple9.root",25000,9,432010,3);
