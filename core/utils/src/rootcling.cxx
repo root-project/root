@@ -2278,7 +2278,8 @@ int GenerateModule(TModuleGenerator &modGen,
    // From PCHGenerator and friends:
    llvm::SmallVector<char, 128> Buffer;
    llvm::BitstreamWriter Stream(Buffer);
-   clang::ASTWriter Writer(Stream);
+   llvm::ArrayRef<llvm::IntrusiveRefCntPtr<clang::ModuleFileExtension>> Extensions;
+   clang::ASTWriter Writer(Stream, Extensions);
    llvm::raw_ostream *OS
       = CI->createOutputFile(modGen.GetModuleFileName().c_str(),
                              /*Binary=*/true,
