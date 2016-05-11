@@ -32,9 +32,9 @@
 class TAttMarker {
 
 protected:
-   Color_t    fMarkerColor;       //Marker color index
-   Style_t    fMarkerStyle;       //Marker style
-   Size_t     fMarkerSize;        //Marker size
+   Color_t    fMarkerColor;       ///< Marker color index
+   Style_t    fMarkerStyle;       ///< Marker style
+   Size_t     fMarkerSize;        ///< Marker size
 
 public:
    TAttMarker();

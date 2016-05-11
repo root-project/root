@@ -32,8 +32,8 @@
 class TAttFill {
 
 protected:
-   Color_t    fFillColor;           //fill area color
-   Style_t    fFillStyle;           //fill area style
+   Color_t    fFillColor;           ///< Fill area color
+   Style_t    fFillStyle;           ///< Fill area style
 
 public:
    TAttFill();

@@ -22,15 +22,15 @@
 
 class TColor : public TNamed {
 protected:
-   Int_t          fNumber;        //Color number identifier
+   Int_t          fNumber;        ///< Color number identifier
 private:
-   Float_t        fRed;           //Fraction of Red
-   Float_t        fGreen;         //Fraction of Green
-   Float_t        fBlue;          //Fraction of Blue
-   Float_t        fHue;           //Hue
-   Float_t        fLight;         //Light
-   Float_t        fSaturation;    //Saturation
-   Float_t        fAlpha;         //Alpha (transparency)
+   Float_t        fRed;           ///< Fraction of Red
+   Float_t        fGreen;         ///< Fraction of Green
+   Float_t        fBlue;          ///< Fraction of Blue
+   Float_t        fHue;           ///< Hue
+   Float_t        fLight;         ///< Light
+   Float_t        fSaturation;    ///< Saturation
+   Float_t        fAlpha;         ///< Alpha (transparency)
 
    void           Allocate();
    static Float_t HLStoRGB1(Float_t rn1, Float_t rn2, Float_t huei);

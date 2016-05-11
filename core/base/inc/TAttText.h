@@ -32,11 +32,11 @@
 class TAttText {
 
 protected:
-   Float_t    fTextAngle;           //Text angle
-   Float_t    fTextSize;            //Text size
-   Short_t    fTextAlign;           //Text alignment
-   Color_t    fTextColor;           //Text color index
-   Font_t     fTextFont;            //Text font number
+   Float_t    fTextAngle;           ///< Text angle
+   Float_t    fTextSize;            ///< Text size
+   Short_t    fTextAlign;           ///< Text alignment
+   Color_t    fTextColor;           ///< Text color index
+   Font_t     fTextFont;            ///< Text font number
 
 public:
    TAttText();

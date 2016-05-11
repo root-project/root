@@ -32,9 +32,9 @@
 class TAttLine {
 
 protected:
-   Color_t    fLineColor;           //line color
-   Style_t    fLineStyle;           //line style
-   Width_t    fLineWidth;           //line width
+   Color_t    fLineColor;           ///< Line color
+   Style_t    fLineStyle;           ///< Line style
+   Width_t    fLineWidth;           ///< Line width
 
 public:
 
