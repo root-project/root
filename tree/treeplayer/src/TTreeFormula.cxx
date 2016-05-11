@@ -3820,7 +3820,7 @@ template<typename T> T FindMin(TTreeFormula *arr, TTreeFormula *condition) {
          condval = condition->EvalInstance<T>(i);
          ++i;
       } while (!condval && i<len);
-      if (i==len) {
+      if (!condval && i==len) {
          return 0;
       }
       if (i!=1) {
@@ -3852,7 +3852,7 @@ template<typename T> T FindMax(TTreeFormula *arr, TTreeFormula *condition) {
          condval = condition->EvalInstance<T>(i);
          ++i;
       } while (!condval && i<len);
-      if (i==len) {
+      if (!condval && i==len) {
          return 0;
       }
       if (i!=1) {
