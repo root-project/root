@@ -673,5 +673,7 @@ of delete of some entities at the end of the process.
 
 Changes will be part of the future 6.06/06
 
-None so far.
+### TTree
+
+- Properly handle the last element of arrays in the TTreeFormula functions MinIf and MaxIf [ROOT-7258]
 
