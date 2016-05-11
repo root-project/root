@@ -241,7 +241,7 @@ namespace {
          }
          return (returnType)(long) val.getPtr();
       }
-      Error("TClingCallFunc::sv_to", "Invalid Type!");
+      ::Error("TClingCallFunc::sv_to", "Invalid Type!");
       QT->dump();
       return 0;
    }
@@ -674,7 +674,7 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
                // Note: This might be ok, the body might be defined
                //       in a library, and all we have seen is the
                //       header file.
-               //Error("TClingCallFunc::make_wrapper",
+               //::Error("TClingCallFunc::make_wrapper",
                //      "Cannot make wrapper for a function which is "
                //      "declared but not defined!");
                //return 0;
@@ -683,7 +683,7 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
          case FunctionDecl::TK_FunctionTemplate: {
                // This decl is actually a function template,
                // not a function at all.
-               Error("TClingCallFunc::make_wrapper",
+               ::Error("TClingCallFunc::make_wrapper",
                      "Cannot make wrapper for a function template!");
                return 0;
             }
@@ -701,7 +701,7 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
                   // Note: This might be ok, the body might be defined
                   //       in a library, and all we have seen is the
                   //       header file.
-                  //Error("TClingCallFunc::make_wrapper",
+                  //::Error("TClingCallFunc::make_wrapper",
                   //      "Cannot make wrapper for a function template "
                   //      "explicit specialization which is declared "
                   //      "but not defined!");
@@ -711,7 +711,7 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
                const FunctionDecl *Pattern =
                   FD->getTemplateInstantiationPattern();
                if (!Pattern) {
-                  Error("TClingCallFunc::make_wrapper",
+                  ::Error("TClingCallFunc::make_wrapper",
                         "Cannot make wrapper for a member function "
                         "instantiation with no pattern!");
                   return 0;
@@ -733,7 +733,7 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
                   //       header file.
                   break;
                } else if (!Pattern->hasBody()) {
-                  Error("TClingCallFunc::make_wrapper",
+                  ::Error("TClingCallFunc::make_wrapper",
                         "Cannot make wrapper for a member function "
                         "instantiation with no body!");
                   return 0;
@@ -754,7 +754,7 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
                   // Note: This might be ok, the body might be defined
                   //       in a library, and all we have seen is the
                   //       header file.
-                  //Error("TClingCallFunc::make_wrapper",
+                  //::Error("TClingCallFunc::make_wrapper",
                   //      "Cannot make wrapper for a function template "
                   //      "explicit specialization which is declared "
                   //      "but not defined!");
@@ -764,7 +764,7 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
                const FunctionDecl *Pattern =
                   FD->getTemplateInstantiationPattern();
                if (!Pattern) {
-                  Error("TClingCallFunc::make_wrapper",
+                  ::Error("TClingCallFunc::make_wrapper",
                         "Cannot make wrapper for a function template"
                         "instantiation with no pattern!");
                   return 0;
@@ -787,7 +787,7 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
                   break;
                }
                if (!Pattern->hasBody()) {
-                  Error("TClingCallFunc::make_wrapper",
+                  ::Error("TClingCallFunc::make_wrapper",
                         "Cannot make wrapper for a function template"
                         "instantiation with no body!");
                   return 0;
@@ -811,7 +811,7 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
                   // Note: This might be ok, the body might be defined
                   //       in a library, and all we have seen is the
                   //       header file.
-                  //Error("TClingCallFunc::make_wrapper",
+                  //::Error("TClingCallFunc::make_wrapper",
                   //      "Cannot make wrapper for a dependent function "
                   //      "template explicit specialization which is declared "
                   //      "but not defined!");
@@ -821,7 +821,7 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
                const FunctionDecl *Pattern =
                   FD->getTemplateInstantiationPattern();
                if (!Pattern) {
-                  Error("TClingCallFunc::make_wrapper",
+                  ::Error("TClingCallFunc::make_wrapper",
                         "Cannot make wrapper for a dependent function template"
                         "instantiation with no pattern!");
                   return 0;
@@ -844,7 +844,7 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
                   break;
                }
                if (!Pattern->hasBody()) {
-                  Error("TClingCallFunc::make_wrapper",
+                  ::Error("TClingCallFunc::make_wrapper",
                         "Cannot make wrapper for a dependent function template"
                         "instantiation with no body!");
                   return 0;
@@ -857,7 +857,7 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
          default: {
                // Will only happen if clang implementation changes.
                // Protect ourselves in case that happens.
-               Error("TClingCallFunc::make_wrapper",
+               ::Error("TClingCallFunc::make_wrapper",
                      "Unhandled template kind!");
                return 0;
             }
@@ -890,7 +890,7 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
                                       /*Recursive=*/ true,
                                       /*DefinitionRequired=*/ true);
       if (!FD->isDefined(Definition)) {
-         Error("TClingCallFunc::make_wrapper",
+         ::Error("TClingCallFunc::make_wrapper",
                "Failed to force template instantiation!");
          return 0;
       }
@@ -901,11 +901,11 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
          case FunctionDecl::TK_NonTemplate: {
                // Ordinary function, not a template specialization.
                if (Definition->isDeleted()) {
-                  Error("TClingCallFunc::make_wrapper",
+                  ::Error("TClingCallFunc::make_wrapper",
                         "Cannot make wrapper for a deleted function!");
                   return 0;
                } else if (Definition->isLateTemplateParsed()) {
-                  Error("TClingCallFunc::make_wrapper",
+                  ::Error("TClingCallFunc::make_wrapper",
                         "Cannot make wrapper for a late template parsed "
                         "function!");
                   return 0;
@@ -921,7 +921,7 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
          case FunctionDecl::TK_FunctionTemplate: {
                // This decl is actually a function template,
                // not a function at all.
-               Error("TClingCallFunc::make_wrapper",
+               ::Error("TClingCallFunc::make_wrapper",
                      "Cannot make wrapper for a function template!");
                return 0;
             }
@@ -931,12 +931,12 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
                // member function of a class template or of a member class
                // of a class template.
                if (Definition->isDeleted()) {
-                  Error("TClingCallFunc::make_wrapper",
+                  ::Error("TClingCallFunc::make_wrapper",
                         "Cannot make wrapper for a deleted member function "
                         "of a specialization!");
                   return 0;
                } else if (Definition->isLateTemplateParsed()) {
-                  Error("TClingCallFunc::make_wrapper",
+                  ::Error("TClingCallFunc::make_wrapper",
                         "Cannot make wrapper for a late template parsed "
                         "member function of a specialization!");
                   return 0;
@@ -955,12 +955,12 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
                // function template.  Could be a namespace scope function or a
                // member function.
                if (Definition->isDeleted()) {
-                  Error("TClingCallFunc::make_wrapper",
+                  ::Error("TClingCallFunc::make_wrapper",
                         "Cannot make wrapper for a deleted function "
                         "template specialization!");
                   return 0;
                } else if (Definition->isLateTemplateParsed()) {
-                  Error("TClingCallFunc::make_wrapper",
+                  ::Error("TClingCallFunc::make_wrapper",
                         "Cannot make wrapper for a late template parsed "
                         "function template specialization!");
                   return 0;
@@ -982,12 +982,12 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
                // template where at least some part of the function is
                // dependent on a template argument.
                if (Definition->isDeleted()) {
-                  Error("TClingCallFunc::make_wrapper",
+                  ::Error("TClingCallFunc::make_wrapper",
                         "Cannot make wrapper for a deleted dependent function "
                         "template specialization!");
                   return 0;
                } else if (Definition->isLateTemplateParsed()) {
-                  Error("TClingCallFunc::make_wrapper",
+                  ::Error("TClingCallFunc::make_wrapper",
                         "Cannot make wrapper for a late template parsed "
                         "dependent function template specialization!");
                   return 0;
@@ -1003,7 +1003,7 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
          default: {
                // Will only happen if clang implementation changes.
                // Protect ourselves in case that happens.
-               Error("TClingCallFunc::make_wrapper",
+               ::Error("TClingCallFunc::make_wrapper",
                      "Unhandled template kind!");
                return 0;
             }
@@ -1072,7 +1072,7 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
    if (F) {
       gWrapperStore.insert(make_pair(FD, F));
    } else {
-      Error("TClingCallFunc::make_wrapper",
+      ::Error("TClingCallFunc::make_wrapper",
             "Failed to compile\n  ==== SOURCE BEGIN ====\n%s\n  ==== SOURCE END ====",
             wrapper.c_str());
    }
@@ -1237,7 +1237,7 @@ tcling_callfunc_ctor_Wrapper_t TClingCallFunc::make_ctor_wrapper(const TClingCla
    if (F) {
       gCtorWrapperStore.insert(make_pair(info->GetDecl(), F));
    } else {
-      Error("TClingCallFunc::make_ctor_wrapper",
+      ::Error("TClingCallFunc::make_ctor_wrapper",
             "Failed to compile\n  ==== SOURCE BEGIN ====\n%s\n  ==== SOURCE END ====",
             wrapper.c_str());
    }
@@ -1401,7 +1401,7 @@ TClingCallFunc::make_dtor_wrapper(const TClingClassInfo *info)
    if (F) {
       gDtorWrapperStore.insert(make_pair(info->GetDecl(), F));
    } else {
-      Error("TClingCallFunc::make_dtor_wrapper",
+      ::Error("TClingCallFunc::make_dtor_wrapper",
             "Failed to compile\n  ==== SOURCE BEGIN ====\n%s\n  ==== SOURCE END ====",
             wrapper.c_str());
    }
@@ -1456,7 +1456,7 @@ void TClingCallFunc::exec(void *address, void *ret) const
       unsigned num_params = FD->getNumParams();
 
       if (num_args < FD->getMinRequiredArguments()) {
-         Error("TClingCallFunc::exec",
+         ::Error("TClingCallFunc::exec",
                "Not enough arguments provided for %s (%d instead of the minimum %d)",
                fMethod->Name(ROOT::TMetaUtils::TNormalizedCtxt(fInterp->getLookupHelper())),
                num_args, FD->getMinRequiredArguments());
@@ -1465,7 +1465,7 @@ void TClingCallFunc::exec(void *address, void *ret) const
       if (address == 0 && dyn_cast<CXXMethodDecl>(FD)
           && !(dyn_cast<CXXMethodDecl>(FD))->isStatic()
           && !dyn_cast<CXXConstructorDecl>(FD)) {
-         Error("TClingCallFunc::exec",
+         ::Error("TClingCallFunc::exec",
                "The method %s is called without an object.",
                fMethod->Name(ROOT::TMetaUtils::TNormalizedCtxt(fInterp->getLookupHelper())));
          return;
@@ -1496,7 +1496,7 @@ void TClingCallFunc::exec(void *address, void *ret) const
                   //
                case BuiltinType::Void: {
                      // void
-                     Error("TClingCallFunc::exec(void*)",
+                     ::Error("TClingCallFunc::exec(void*)",
                            "Invalid type 'Void'!");
                      return;
                   }
@@ -1656,14 +1656,14 @@ void TClingCallFunc::exec(void *address, void *ret) const
                   break;
                case BuiltinType::Int128: {
                      // __int128_t
-                     Error("TClingCallFunc::exec(void*)",
+                     ::Error("TClingCallFunc::exec(void*)",
                            "Invalid type 'Int128'!");
                      return;
                   }
                   break;
                case BuiltinType::Half: {
                      // half in OpenCL, __fp16 in ARM NEON
-                     Error("TClingCallFunc::exec(void*)",
+                     ::Error("TClingCallFunc::exec(void*)",
                            "Invalid type 'Half'!");
                      return;
                   }
@@ -1705,77 +1705,77 @@ void TClingCallFunc::exec(void *address, void *ret) const
                   break;
                case BuiltinType::ObjCId: {
                      // Objective C 'id' type
-                     Error("TClingCallFunc::exec(void*)",
+                     ::Error("TClingCallFunc::exec(void*)",
                            "Invalid type 'ObjCId'!");
                      return;
                   }
                   break;
                case BuiltinType::ObjCClass: {
                      // Objective C 'Class' type
-                     Error("TClingCallFunc::exec(void*)",
+                     ::Error("TClingCallFunc::exec(void*)",
                            "Invalid type 'ObjCClass'!");
                      return;
                   }
                   break;
                case BuiltinType::ObjCSel: {
                      // Objective C 'SEL' type
-                     Error("TClingCallFunc::exec(void*)",
+                     ::Error("TClingCallFunc::exec(void*)",
                            "Invalid type 'ObjCSel'!");
                      return;
                   }
                   break;
                case BuiltinType::OCLImage1d: {
                      // OpenCL image type
-                     Error("TClingCallFunc::exec(void*)",
+                     ::Error("TClingCallFunc::exec(void*)",
                            "Invalid type 'OCLImage1d'!");
                      return;
                   }
                   break;
                case BuiltinType::OCLImage1dArray: {
                      // OpenCL image type
-                     Error("TClingCallFunc::exec(void*)",
+                     ::Error("TClingCallFunc::exec(void*)",
                            "Invalid type 'OCLImage1dArray'!");
                      return;
                   }
                   break;
                case BuiltinType::OCLImage1dBuffer: {
                      // OpenCL image type
-                     Error("TClingCallFunc::exec(void*)",
+                     ::Error("TClingCallFunc::exec(void*)",
                            "Invalid type 'OCLImage1dBuffer'!");
                      return;
                   }
                   break;
                case BuiltinType::OCLImage2d: {
                      // OpenCL image type
-                     Error("TClingCallFunc::exec(void*)",
+                     ::Error("TClingCallFunc::exec(void*)",
                            "Invalid type 'OCLImage2d'!");
                      return;
                   }
                   break;
                case BuiltinType::OCLImage2dArray: {
                      // OpenCL image type
-                     Error("TClingCallFunc::exec(void*)",
+                     ::Error("TClingCallFunc::exec(void*)",
                            "Invalid type 'OCLImage2dArray'!");
                      return;
                   }
                   break;
                case BuiltinType::OCLImage3d: {
                      // OpenCL image type
-                     Error("TClingCallFunc::exec(void*)",
+                     ::Error("TClingCallFunc::exec(void*)",
                            "Invalid type 'OCLImage3d'!");
                      return;
                   }
                   break;
                case BuiltinType::OCLSampler: {
                      // OpenCL sampler_t
-                     Error("TClingCallFunc::exec(void*)",
+                     ::Error("TClingCallFunc::exec(void*)",
                            "Invalid type 'OCLSampler'!");
                      return;
                   }
                   break;
                case BuiltinType::OCLEvent: {
                      // OpenCL event_t
-                     Error("TClingCallFunc::exec(void*)",
+                     ::Error("TClingCallFunc::exec(void*)",
                            "Invalid type 'OCLEvent'!");
                      return;
                   }
@@ -1789,42 +1789,42 @@ void TClingCallFunc::exec(void *address, void *ret) const
                   //
                case BuiltinType::Dependent: {
                      // dependent on a template argument
-                     Error("TClingCallFunc::exec(void*)",
+                     ::Error("TClingCallFunc::exec(void*)",
                            "Invalid type 'Dependent'!");
                      return;
                   }
                   break;
                case BuiltinType::Overload: {
                      // an unresolved function overload set
-                     Error("TClingCallFunc::exec(void*)",
+                     ::Error("TClingCallFunc::exec(void*)",
                            "Invalid type 'Overload'!");
                      return;
                   }
                   break;
                case BuiltinType::BoundMember: {
                      // a bound C++ non-static member function
-                     Error("TClingCallFunc::exec(void*)",
+                     ::Error("TClingCallFunc::exec(void*)",
                            "Invalid type 'BoundMember'!");
                      return;
                   }
                   break;
                case BuiltinType::PseudoObject: {
                      // Object C @property or VS.NET __property
-                     Error("TClingCallFunc::exec(void*)",
+                     ::Error("TClingCallFunc::exec(void*)",
                            "Invalid type 'PseudoObject'!");
                      return;
                   }
                   break;
                case BuiltinType::UnknownAny: {
                      // represents an unknown type
-                     Error("TClingCallFunc::exec(void*)",
+                     ::Error("TClingCallFunc::exec(void*)",
                            "Invalid type 'UnknownAny'!");
                      return;
                   }
                   break;
                case BuiltinType::BuiltinFn: {
                      // a compiler builtin function
-                     Error("TClingCallFunc::exec(void*)",
+                     ::Error("TClingCallFunc::exec(void*)",
                            "Invalid type 'BuiltinFn'!");
                      return;
                   }
@@ -1833,7 +1833,7 @@ void TClingCallFunc::exec(void *address, void *ret) const
                      // Objective C Automatic Reference Counting cast
                      // which would normally require __bridge, but which
                      // may be ok because of the context.
-                     Error("TClingCallFunc::exec(void*)",
+                     ::Error("TClingCallFunc::exec(void*)",
                            "Invalid type 'ARCUnbridgedCast'!");
                      return;
                   }
@@ -1841,7 +1841,7 @@ void TClingCallFunc::exec(void *address, void *ret) const
                default: {
                      // There should be no others.  This is here in case
                      // this changes in the future.
-                     Error("TClingCallFunc::exec(void*)",
+                     ::Error("TClingCallFunc::exec(void*)",
                            "Invalid builtin type (unrecognized)!");
                      QT->dump();
                      return;
@@ -1876,7 +1876,7 @@ void TClingCallFunc::exec(void *address, void *ret) const
             vh_ary.push_back(vh);
             vp_ary.push_back(&vh_ary.back());
          } else {
-            Error("TClingCallFunc::exec(void*)",
+            ::Error("TClingCallFunc::exec(void*)",
                   "Invalid type (unrecognized)!");
             QT->dump();
             return;
@@ -2001,12 +2001,12 @@ void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret) c
             return;
             break;
          case BuiltinType::Char16:
-            Error("TClingCallFunc::exec_with_valref_return",
+            ::Error("TClingCallFunc::exec_with_valref_return",
                   "Invalid type 'char16_t'!");
             return;
             break;
          case BuiltinType::Char32:
-            Error("TClingCallFunc::exec_with_valref_return",
+            ::Error("TClingCallFunc::exec_with_valref_return",
                   "Invalid type 'char32_t'!");
             return;
             break;
@@ -2031,7 +2031,7 @@ void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret) c
             return;
             break;
          case BuiltinType::UInt128: {
-               Error("TClingCallFunc::exec_with_valref_return",
+               ::Error("TClingCallFunc::exec_with_valref_return",
                      "Invalid type '__uint128_t'!");
                return;
             }
@@ -2075,13 +2075,13 @@ void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret) c
             return;
             break;
          case BuiltinType::Int128:
-            Error("TClingCallFunc::exec_with_valref_return",
+            ::Error("TClingCallFunc::exec_with_valref_return",
                   "Invalid type '__int128_t'!");
             return;
             break;
          case BuiltinType::Half:
             // half in OpenCL, __fp16 in ARM NEON
-            Error("TClingCallFunc::exec_with_valref_return",
+            ::Error("TClingCallFunc::exec_with_valref_return",
                   "Invalid type 'Half'!");
             return;
             break;
@@ -2105,7 +2105,7 @@ void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret) c
             //
          case BuiltinType::NullPtr:
             // C++11 nullptr
-            Error("TClingCallFunc::exec_with_valref_return",
+            ::Error("TClingCallFunc::exec_with_valref_return",
                   "Invalid type 'nullptr'!");
             return;
             break;
@@ -2113,7 +2113,7 @@ void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret) c
             break;
       }
    }
-   Error("TClingCallFunc::exec_with_valref_return",
+   ::Error("TClingCallFunc::exec_with_valref_return",
          "Unrecognized return type!");
    QT->dump();
    return;
@@ -2131,7 +2131,7 @@ void TClingCallFunc::EvaluateArgList(const string &ArgList)
       EvaluateExpr(*fInterp, *I, val);
       if (!val.isValid()) {
          // Bad expression, all done.
-         Error("TClingCallFunc::EvaluateArgList",
+         ::Error("TClingCallFunc::EvaluateArgList",
                "Bad expression in parameter %d of '%s'!",
                (int)(I - exprs.begin()),
                ArgList.c_str());
@@ -2145,7 +2145,7 @@ void TClingCallFunc::Exec(void *address, TInterpreterValue *interpVal/*=0*/)
 {
    IFacePtr();
    if (!fWrapper) {
-      Error("TClingCallFunc::Exec(address, interpVal)",
+      ::Error("TClingCallFunc::Exec(address, interpVal)",
             "Called with no wrapper, not implemented!");
       return;
    }
@@ -2162,7 +2162,7 @@ T TClingCallFunc::ExecT(void *address)
 {
    IFacePtr();
    if (!fWrapper) {
-      Error("TClingCallFunc::ExecT",
+      ::Error("TClingCallFunc::ExecT",
             "Called with no wrapper, not implemented!");
       return 0;
    }
@@ -2198,7 +2198,7 @@ void TClingCallFunc::ExecWithArgsAndReturn(void *address, const void *args[] /*=
 {
    IFacePtr();
    if (!fWrapper) {
-      Error("TClingCallFunc::ExecWithArgsAndReturn(address, args, ret)",
+      ::Error("TClingCallFunc::ExecWithArgsAndReturn(address, args, ret)",
             "Called with no wrapper, not implemented!");
       return;
    }
@@ -2209,7 +2209,7 @@ void TClingCallFunc::ExecWithReturn(void *address, void *ret/*= 0*/)
 {
    IFacePtr();
    if (!fWrapper) {
-      Error("TClingCallFunc::ExecWithReturn(address, ret)",
+      ::Error("TClingCallFunc::ExecWithReturn(address, ret)",
             "Called with no wrapper, not implemented!");
       return;
    }
@@ -2220,7 +2220,7 @@ void *TClingCallFunc::ExecDefaultConstructor(const TClingClassInfo *info, void *
       unsigned long nary /*= 0UL*/)
 {
    if (!info->IsValid()) {
-      Error("TClingCallFunc::ExecDefaultConstructor", "Invalid class info!");
+      ::Error("TClingCallFunc::ExecDefaultConstructor", "Invalid class info!");
       return 0;
    }
    tcling_callfunc_ctor_Wrapper_t wrapper = 0;
@@ -2230,7 +2230,7 @@ void *TClingCallFunc::ExecDefaultConstructor(const TClingClassInfo *info, void *
       //if (!info->HasDefaultConstructor()) {
       //   // FIXME: We might have a ROOT ioctor, we might
       //   //        have to check for that here.
-      //   Error("TClingCallFunc::ExecDefaultConstructor",
+      //   ::Error("TClingCallFunc::ExecDefaultConstructor",
       //         "Class has no default constructor: %s",
       //         info->Name());
       //   return 0;
@@ -2243,7 +2243,7 @@ void *TClingCallFunc::ExecDefaultConstructor(const TClingClassInfo *info, void *
       }
    }
    if (!wrapper) {
-      Error("TClingCallFunc::ExecDefaultConstructor",
+      ::Error("TClingCallFunc::ExecDefaultConstructor",
             "Called with no wrapper, not implemented!");
       return 0;
    }
@@ -2256,7 +2256,7 @@ void TClingCallFunc::ExecDestructor(const TClingClassInfo *info, void *address /
                                     unsigned long nary /*= 0UL*/, bool withFree /*= true*/)
 {
    if (!info->IsValid()) {
-      Error("TClingCallFunc::ExecDestructor", "Invalid class info!");
+      ::Error("TClingCallFunc::ExecDestructor", "Invalid class info!");
       return;
    }
 
@@ -2272,7 +2272,7 @@ void TClingCallFunc::ExecDestructor(const TClingClassInfo *info, void *address /
       }
    }
    if (!wrapper) {
-      Error("TClingCallFunc::ExecDestructor",
+      ::Error("TClingCallFunc::ExecDestructor",
             "Called with no wrapper, not implemented!");
       return;
    }
@@ -2331,7 +2331,7 @@ bool TClingCallFunc::IsValid() const
 TInterpreter::CallFuncIFacePtr_t TClingCallFunc::IFacePtr()
 {
    if (!IsValid()) {
-      Error("TClingCallFunc::IFacePtr(kind)",
+      ::Error("TClingCallFunc::IFacePtr(kind)",
             "Attempt to get interface while invalid.");
       return TInterpreter::CallFuncIFacePtr_t();
    }
@@ -2430,7 +2430,7 @@ void TClingCallFunc::SetFunc(const TClingClassInfo *info, const char *method, co
    }
    ResetArg();
    if (!info->IsValid()) {
-      Error("TClingCallFunc::SetFunc", "Class info is invalid!");
+      ::Error("TClingCallFunc::SetFunc", "Class info is invalid!");
       return;
    }
    if (!strcmp(arglist, ")")) {
@@ -2439,7 +2439,7 @@ void TClingCallFunc::SetFunc(const TClingClassInfo *info, const char *method, co
    }
    *fMethod = info->GetMethodWithArgs(method, arglist, objectIsConst, poffset);
    if (!fMethod->IsValid()) {
-      //Error("TClingCallFunc::SetFunc", "Could not find method %s(%s)", method,
+      //::Error("TClingCallFunc::SetFunc", "Could not find method %s(%s)", method,
       //      arglist);
       return;
    }
@@ -2479,12 +2479,12 @@ void TClingCallFunc::SetFuncProto(const TClingClassInfo *info, const char *metho
    }
    ResetArg();
    if (!info->IsValid()) {
-      Error("TClingCallFunc::SetFuncProto", "Class info is invalid!");
+      ::Error("TClingCallFunc::SetFuncProto", "Class info is invalid!");
       return;
    }
    *fMethod = info->GetMethod(method, proto, objectIsConst, poffset, mode);
    if (!fMethod->IsValid()) {
-      //Error("TClingCallFunc::SetFuncProto", "Could not find method %s(%s)",
+      //::Error("TClingCallFunc::SetFuncProto", "Could not find method %s(%s)",
       //      method, proto);
       return;
    }
@@ -2509,12 +2509,12 @@ void TClingCallFunc::SetFuncProto(const TClingClassInfo *info, const char *metho
    }
    ResetArg();
    if (!info->IsValid()) {
-      Error("TClingCallFunc::SetFuncProto", "Class info is invalid!");
+      ::Error("TClingCallFunc::SetFuncProto", "Class info is invalid!");
       return;
    }
    *fMethod = info->GetMethod(method, proto, objectIsConst, poffset, mode);
    if (!fMethod->IsValid()) {
-      //Error("TClingCallFunc::SetFuncProto", "Could not find method %s(%s)",
+      //::Error("TClingCallFunc::SetFuncProto", "Could not find method %s(%s)",
       //      method, proto);
       return;
    }
