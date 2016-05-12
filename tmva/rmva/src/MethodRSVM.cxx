@@ -150,7 +150,6 @@ void MethodRSVM::Train()
          << " Type is "  << fType
          << Endl;
 
-//                    ROOT::R::Label["probability"] = fProbability,     \ \\\\\\
 
    SEXP Model = svm(ROOT::R::Label["x"] = fDfTrain, \
                     ROOT::R::Label["y"] = asfactor(fFactorTrain), \
@@ -168,7 +167,7 @@ void MethodRSVM::Train()
                     ROOT::R::Label["epsilon"] = fEpsilon, \
                     ROOT::R::Label["shrinking"] = fShrinking, \
                     ROOT::R::Label["cross"] = fCross, \
-                    ROOT::R::Label["probability"] = true, \
+                    ROOT::R::Label["probability"] = fProbability, \
                     ROOT::R::Label["fitted"] = fFitted);
    fModel = new ROOT::R::TRObject(Model);
    TString path = GetWeightFileDir() + "/RSVMModel.RData";
