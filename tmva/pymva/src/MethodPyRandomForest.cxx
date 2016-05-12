@@ -382,7 +382,7 @@ Double_t MethodPyRandomForest::GetMvaValue(Double_t *errLower, Double_t *errUppe
    // cannot determine error
    NoErrorCalc(errLower, errUpper);
 
-   if (!fClassifier) ReadStateFromFile();
+   if (!fClassifier) ReadModelFromFile();
 
    Double_t mvaValue;
    const TMVA::Event *e = Data()->GetEvent();
@@ -404,7 +404,7 @@ Double_t MethodPyRandomForest::GetMvaValue(Double_t *errLower, Double_t *errUppe
 }
 
 //_______________________________________________________________________
-void MethodPyRandomForest::ReadStateFromFile()
+void MethodPyRandomForest::ReadModelFromFile()
 {
    if (!PyIsInitialized()) {
       PyInitialize();
@@ -418,7 +418,7 @@ void MethodPyRandomForest::ReadStateFromFile()
    if(!fClassifier)
    {
      Log() << kFATAL << "Can't load RandomForestClassifier from Serialized data." << Endl;
-     Log() << Endl;     
+     Log() << Endl;
    }
 }
 

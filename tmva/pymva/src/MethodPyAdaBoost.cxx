@@ -260,7 +260,7 @@ Double_t MethodPyAdaBoost::GetMvaValue(Double_t *errLower, Double_t *errUpper)
    // cannot determine error
    NoErrorCalc(errLower, errUpper);
 
-   if (!fClassifier) ReadStateFromFile();
+   if (!fClassifier) ReadModelFromFile();
 
    Double_t mvaValue;
    const TMVA::Event *e = Data()->GetEvent();
@@ -282,7 +282,7 @@ Double_t MethodPyAdaBoost::GetMvaValue(Double_t *errLower, Double_t *errUpper)
 }
 
 //_______________________________________________________________________
-void MethodPyAdaBoost::ReadStateFromFile()
+void MethodPyAdaBoost::ReadModelFromFile()
 {
    if (!PyIsInitialized()) {
       PyInitialize();
@@ -314,4 +314,3 @@ void MethodPyAdaBoost::GetHelpMessage() const
    Log() << Endl;
    Log() << "<None>" << Endl;
 }
-

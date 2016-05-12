@@ -875,32 +875,62 @@ void TMVA::MethodBase::AddClassifierOutput( Types::ETreeType type )
    ResultsClassification* clRes =
       (ResultsClassification*)Data()->GetResults(GetMethodName(), type, Types::kClassification );
 
-   Long64_t nEvents = Data()->GetNEvents();
+
+   Long64_t nEvents =  Data()->GetNEvents();
+   std::vector<Double_t> mvaValues = GetMvaValues(0, nEvents, true); 
+
+   
+   clRes->Resize( nEvents );
 
    // use timer
    Timer timer( nEvents, GetName(), kTRUE );
 
-   Log() << kINFO<<Form("Dataset[%s] : ",DataInfo().GetName())<< "Evaluation of " << GetMethodName() << " on "
-         << (type==Types::kTraining?"training":"testing") << " sample (" << nEvents << " events)" << Endl;
-
-   clRes->Resize( nEvents );
    for (Int_t ievt=0; ievt<nEvents; ievt++) {
-      Data()->SetCurrentEvent(ievt);
-      clRes->SetValue( GetMvaValue(), ievt );
-
-      // print progress
-      Int_t modulo = Int_t(nEvents/100);
-      if (modulo <= 0 ) modulo = 1;
-      if (ievt%modulo == 0) timer.DrawProgressBar( ievt );
+      clRes->SetValue( mvaValues[ievt], ievt );
    }
-
-   Log() << kINFO <<Form("Dataset[%s] : ",DataInfo().GetName())<< "Elapsed time for evaluation of " << nEvents <<  " events: "
-         << timer.GetElapsedTime() << "       " << Endl;
 
    // store time used for testing
    if (type==Types::kTesting)
       SetTestTime(timer.ElapsedSeconds());
 
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// get all the MVA values for the events of the current Data type
+std::vector<Double_t> TMVA::MethodBase::GetMvaValues(Long64_t firstEvt, Long64_t lastEvt, Bool_t logProgress)
+{
+
+   Long64_t nEvents = Data()->GetNEvents();
+   if (firstEvt > lastEvt || lastEvt > nEvents) lastEvt = nEvents;
+   if (firstEvt < 0) firstEvt = 0;
+   std::vector<Double_t> values(lastEvt-firstEvt);
+   // log in case of looping on all the events 
+   nEvents = values.size();
+
+   // use timer
+   Timer timer( nEvents, GetName(), kTRUE );
+   if (logProgress) 
+      Log() << kINFO<<Form("Dataset[%s] : ",DataInfo().GetName())<< "Evaluation of " << GetMethodName() << " on "
+            << (Data()->GetCurrentType()==Types::kTraining?"training":"testing") << " sample (" << nEvents << " events)" << Endl;
+
+
+   for (Int_t ievt=firstEvt; ievt<lastEvt; ievt++) {
+      Data()->SetCurrentEvent(ievt);
+      values[ievt] = GetMvaValue();
+
+      // print progress
+      if (logProgress) {
+         Int_t modulo = Int_t(nEvents/100);
+         if (modulo <= 0 ) modulo = 1;
+         if (ievt%modulo == 0) timer.DrawProgressBar( ievt );
+      }
+   }
+   if (logProgress) {
+       Log() << kINFO <<Form("Dataset[%s] : ",DataInfo().GetName())<< "Elapsed time for evaluation of " << nEvents <<  " events: "
+         << timer.GetElapsedTime() << "       " << Endl;
+   }
+   
+   return values;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2502,13 +2532,16 @@ Double_t TMVA::MethodBase::GetTrainingEfficiency(const TString& theString)
       // sign if cut
       Int_t sign = (fCutOrientation == kPositive) ? +1 : -1;
 
+      std::vector<Double_t> mvaValues = GetMvaValues(0,Data()->GetNEvents());
+      assert(mvaValues.size() == Data()->GetNEvents()); 
+
       // this method is unbinned
       for (Int_t ievt=0; ievt<Data()->GetNEvents(); ievt++) {
 
          Data()->SetCurrentEvent(ievt);
          const Event* ev = GetEvent();
 
-         Double_t theVal    = GetMvaValue();
+         Double_t theVal    = mvaValues[ievt]; 
          Double_t theWeight = ev->GetWeight();
 
          TH1* theEffHist = DataInfo().IsSignal(ev) ? mva_eff_tr_s : mva_eff_tr_b;
