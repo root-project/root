@@ -166,6 +166,7 @@ namespace TMVA {
       void PrepareTrainingAndTestTree( int foldNumber, Types::ETreeType tt );
 
       void MakeKFoldDataSet(int numberFolds);
+      void ValidationKFoldSet();
       std::vector<TTree*> SplitSets(TTree * oldTree, int seedNum, int numFolds);
 
  

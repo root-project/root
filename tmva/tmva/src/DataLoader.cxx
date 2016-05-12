@@ -555,16 +555,12 @@ void TMVA::DataLoader::PrepareTrainingAndTestTree( TCut sigcut, TCut bkgcut, con
 //______________________________________________________________________
 void TMVA::DataLoader::PrepareTrainingAndTestTree(int foldNumber, Types::ETreeType tt)
 {
-  std::cout << "TOM: Clear tree lists" << std::endl;
   DataInput().ClearSignalTreeList();
   DataInput().ClearBackgroundTreeList();
 
-  std::cout << "TOM: Preparing test and training trees" << std::endl;
   TString CrossValidate = "ParameterOpt";
 
   int numFolds = fTrainSigTree.size();
-
-  std::cout << "TOM: " << numFolds << std::endl;
 
   for(int i=0; i<numFolds; ++i){
     if(CrossValidate == "PerformanceEst"){
@@ -584,12 +580,10 @@ void TMVA::DataLoader::PrepareTrainingAndTestTree(int foldNumber, Types::ETreeTy
     else if(CrossValidate == "ParameterOpt"){
       if(tt == Types::kTraining){
 	if(i!=foldNumber){
-	  std::cout << "Adding " << i << " as training" << std::endl;
 	  AddTree( fTrainSigTree.at(i),     "Signal",     1.0,     TCut(""), Types::kTraining );
 	  AddTree( fTrainBkgTree.at(i),     "Background", 1.0,     TCut(""), Types::kTraining );
 	}
 	else{
-	  std::cout << "Adding " << i << " as testing"<< std::endl;
 	  AddTree( fTrainSigTree.at(i),     "Signal",     1.0,     TCut(""), Types::kTesting );
 	  AddTree( fTrainBkgTree.at(i),     "Background", 1.0,     TCut(""), Types::kTesting );
 	}
@@ -607,10 +601,6 @@ void TMVA::DataLoader::PrepareTrainingAndTestTree(int foldNumber, Types::ETreeTy
     }
   }
 
-  //DefaultDataSetInfo().SetSplitOptions("nTrain_Signal=0:nTrain_Background=0:nTest_Signal=0:nTest_Background=0:SplitMode=Random");
-
-  std::cout << "TOM: Trees allocated" << std::endl;
-
 }
 
 void TMVA::DataLoader::MakeKFoldDataSet(int numberFolds)
@@ -619,7 +609,16 @@ void TMVA::DataLoader::MakeKFoldDataSet(int numberFolds)
   UInt_t nSigTrees = DataInput().GetNSignalTrees();
   UInt_t nBkgTrees = DataInput().GetNBackgroundTrees();
 
-  std::cout << "TOM: " << nSigTrees << ":" << nBkgTrees << std::endl;
+  if(nSigTrees == 1){
+    std::vector<TTree*> tempSigTrees = SplitSets(DataInput().SignalTreeInfo(0).GetTree(), 1, 2);
+    fTrainSigTree = SplitSets(tempSigTrees.at(0), 0, numberFolds);
+    fTestSigTree = SplitSets(tempSigTrees.at(1), 1, numberFolds);
+  }
+  if(nBkgTrees == 1){
+    std::vector<TTree*> tempBkgTrees = SplitSets(DataInput().BackgroundTreeInfo(0).GetTree(), 1, 2);
+    fTrainBkgTree = SplitSets(tempBkgTrees.at(0), 0, numberFolds);
+    fTestBkgTree = SplitSets(tempBkgTrees.at(1), 1, numberFolds);
+  }
 
   for(UInt_t i=0; i<nSigTrees; ++i){
     if(DataInput().SignalTreeInfo(i).GetTreeType() == Types::kTraining){
@@ -644,8 +643,11 @@ void TMVA::DataLoader::MakeKFoldDataSet(int numberFolds)
   nSigTrees = DataInput().GetNSignalTrees();
   nBkgTrees = DataInput().GetNBackgroundTrees();
 
-  std::cout << "TOM: " << nSigTrees << ":" << nBkgTrees << std::endl;
+}
 
+void TMVA::DataLoader::ValidationKFoldSet(){
+  DefaultDataSetInfo().GetDataSet()->DivideTrainingSet(2);
+  DefaultDataSetInfo().GetDataSet()->MoveTrainingBlock(1, Types::kValidation, kTRUE);
 }
 
 std::vector<TTree*> TMVA::DataLoader::SplitSets(TTree * oldTree, int seedNum, int numFolds)
@@ -663,12 +665,12 @@ std::vector<TTree*> TMVA::DataLoader::SplitSets(TTree * oldTree, int seedNum, in
 
   std::vector<TBranch*> branches;
 
-  TBranch * typeBranch = oldTree->GetBranch("type");
-  branches.push_back(typeBranch);
-  oldTree->SetBranchAddress( "type",   &fATreeType);
-  TBranch * weightBranch = oldTree->GetBranch("weight");
-  branches.push_back(weightBranch);
-  oldTree->SetBranchAddress( "weight", &fATreeWeight);
+  //TBranch * typeBranch = oldTree->GetBranch("type");
+  //branches.push_back(typeBranch);
+  //oldTree->SetBranchAddress( "type",   &fATreeType);
+  //TBranch * weightBranch = oldTree->GetBranch("weight");
+  //branches.push_back(weightBranch);
+  //oldTree->SetBranchAddress( "weight", &fATreeWeight);
 
   std::vector<VariableInfo>& vars = DefaultDataSetInfo().GetVariableInfos();
   std::vector<VariableInfo>& tgts = DefaultDataSetInfo().GetTargetInfos();
@@ -718,12 +720,6 @@ std::vector<TTree*> TMVA::DataLoader::SplitSets(TTree * oldTree, int seedNum, in
       }
     }
   }
-
-  std::cout << "Entries: " << nEntries << std::endl;
-  for(int t=0; t<numFolds; ++t){
-    std::cout << tempTrees.at(t)->GetEntries() << ":";
-  }
-  std::cout << std::endl;
 
   return tempTrees;
 }

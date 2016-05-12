@@ -352,7 +352,7 @@ TMVA::MethodBase* TMVA::Factory::BookMethod( TMVA::DataLoader *loader, TString t
    }
    
 //    method->SetWeightFileDir(Form("%s/%s",loader->GetName(),method->GetWeightFileDir().Data()));//setting up weight file dir
-   method->fDataLoader=loader;
+   //method->fDataLoader=loader;
    method->SetAnalysisType( fAnalysisType );
    method->SetupMethod();
    method->ParseOptions();
@@ -1855,59 +1855,130 @@ TH1F* TMVA::Factory::GetImportance(const int nbits,std::vector<Double_t> importa
   return vih1;
 }
 
-void TMVA::Factory::CrossValidateMethod(DataLoader * loader, Types::EMVA theMethod, TString methodTitle, const char *theOption)
+float TMVA::Factory::CrossValidateMethod(DataLoader * loader, Types::EMVA theMethod, TString methodTitle, const char *theOption, bool optParams, int NumFolds, bool remakeDataSet)
 {
 
-  UInt_t NumFolds=5;
+  //bool optParams = true;
 
-  loader->MakeKFoldDataSet(NumFolds);
+  if(remakeDataSet){
+    //loader->ValidationKFoldSet();
+    loader->MakeKFoldDataSet(NumFolds);
+  }
+
+  std::vector<float> parameterPerformance;
 
   const int nbits = loader->DefaultDataSetInfo().GetNVariables();
   std::vector<TString> varNames = loader->DefaultDataSetInfo().GetListOfVariables();
 
+  if(optParams){
+
+    std::vector<std::map<TString,Double_t> > foldParameters;
+  
+    //loader->ValidationKFoldSet();
+
+    for(Int_t i=0; i<NumFolds; ++i){
+      Event::SetIsTraining(kTRUE);
+      TString optTitle = methodTitle;
+      optTitle += "_opt";
+      optTitle += i;
+      
+      loader->PrepareTrainingAndTestTree(i, TMVA::Types::kTraining);
+      
+      TMVA::DataLoader * seedloader = new TMVA::DataLoader(optTitle);
+      
+      for(int index = 0; index<nbits; index++){
+	seedloader->AddVariable(varNames.at(index), 'F');
+      }
+      
+      VIDataLoaderCopy(seedloader,loader);
+      
+      MethodBase* mva = BookMethod(seedloader, theMethod, methodTitle, theOption);
+      
+      foldParameters.push_back(mva->OptimizeTuningParameters("ROCIntegral","Minuit"));
+      
+      this->DeleteAllMethods();
+      
+      fMethodsMap.clear();
+    }
+    
+    TString optionsString;
+    
+    for(UInt_t t=0; t<foldParameters.size(); t++){
+      optionsString = theOption;
+      optionsString += ":";
+      std::map<TString,Double_t>::iterator it;
+      for(it=foldParameters.at(t).begin(); it!=foldParameters.at(t).end(); it++){
+	optionsString += it->first;
+	optionsString += "=";
+	optionsString += it->second;
+	if(it!=--foldParameters.at(t).end()){ optionsString += ":"; }
+      }
+      parameterPerformance.push_back(CrossValidateMethod(loader, theMethod, methodTitle, optionsString, false, false));
+    }
+  }
+
   std::vector<float> ROCs;
 
-  for(UInt_t i=0; i<NumFolds; ++i){
-    TString foldTitle = methodTitle;
-    foldTitle += "_fold";
-    foldTitle += i;
-
-    loader->PrepareTrainingAndTestTree(i, TMVA::Types::kTraining);
-
-    TMVA::DataLoader * seedloader = new TMVA::DataLoader(foldTitle);
-
-    for(int index = 0; index<nbits; index++){
-      seedloader->AddVariable(varNames.at(index), 'F');
+  if(!optParams){
+    
+    for(Int_t j=0; j<NumFolds; ++j){
+      TString foldTitle = methodTitle;
+      foldTitle += "_fold";
+      foldTitle += j+1;
+      
+      loader->PrepareTrainingAndTestTree(j, TMVA::Types::kTesting);
+      
+      TMVA::DataLoader * seedloader = new TMVA::DataLoader(foldTitle);
+      
+      for(int index = 0; index<nbits; index++){
+	seedloader->AddVariable(varNames.at(index), 'F');
+      }
+      
+      VIDataLoaderCopy(seedloader,loader);
+      
+      BookMethod(seedloader, theMethod, methodTitle, theOption);
+      
+      TrainAllMethods();
+      TestAllMethods();
+      EvaluateAllMethods();
+      
+      ROCs.push_back(GetROCIntegral(seedloader->GetName(), methodTitle));
+      
+      TMVA::MethodBase * smethod = dynamic_cast<TMVA::MethodBase*>(fMethodsMap[seedloader->GetName()][0][0]);
+      TMVA::ResultsClassification * sresults = (TMVA::ResultsClassification*)smethod->Data()->GetResults(smethod->GetMethodName(), Types::kTesting, Types::kClassification);
+      sresults->Clear();
+      sresults->Delete();
+      delete sresults;
+      fgTargetFile->cd();
+      fgTargetFile->Delete(seedloader->GetName());
+      fgTargetFile->Delete(Form("%s;1",seedloader->GetName()));
+      fgTargetFile->Flush();
+      gSystem->Exec(Form("rm -rf %s", seedloader->GetName()));
+      
+      this->DeleteAllMethods();
+      
+      fMethodsMap.clear();
     }
-
-    VIDataLoaderCopy(seedloader,loader);
-
-    BookMethod(seedloader, theMethod, methodTitle, theOption);
-
-    TrainAllMethods();
-    TestAllMethods();
-    EvaluateAllMethods();
-
-    ROCs.push_back(GetROCIntegral(seedloader->GetName(), methodTitle));
-
-    TMVA::MethodBase * smethod = dynamic_cast<TMVA::MethodBase*>(fMethodsMap[seedloader->GetName()][0][0]);
-    TMVA::ResultsClassification * sresults = (TMVA::ResultsClassification*)smethod->Data()->GetResults(smethod->GetMethodName(), Types::kTesting, Types::kClassification);
-    sresults->Clear();
-    sresults->Delete();
-    delete sresults;
-    fgTargetFile->cd();
-    fgTargetFile->Delete(seedloader->GetName());
-    fgTargetFile->Delete(Form("%s;1",seedloader->GetName()));
-    fgTargetFile->Flush();
-    gSystem->Exec(Form("rm -rf %s", seedloader->GetName()));
-
-    this->DeleteAllMethods();
-
-    fMethodsMap.clear();
   }
   
-  for(UInt_t j=0; j<ROCs.size(); ++j){
-    std::cout << "Fold " << j+1 << " ROCIntegral: " << ROCs.at(j) << std::endl;
+  float sumFOM = 0.0;
+
+  for(UInt_t k=0; k<ROCs.size(); ++k){
+    sumFOM += ROCs.at(k);
   }
 
+  if(optParams){
+    for(UInt_t t=0; t<parameterPerformance.size(); ++t){
+      std::cout << "Parameters " << t+1 << " performance: " << parameterPerformance.at(t) << std::endl;
+    }
+  }
+  else{
+    for(UInt_t l=0; l<ROCs.size(); ++l){
+      std::cout << "Fold " << l+1 << " ROCIntegral: " << ROCs.at(l) << std::endl;
+    }
+    std::cout << "Average ROCIntegral: " << sumFOM/(double)NumFolds << std::endl;
+  }
+
+  return sumFOM/(double)NumFolds;
+  
 }
