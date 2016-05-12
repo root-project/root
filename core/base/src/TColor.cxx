@@ -39,7 +39,7 @@ namespace {
    }
 }
 
-static Int_t gHighestColorIndex = 0;
+static Int_t gHighestColorIndex = 0; ///< Highest color index defined
 
 #define fgGrayscaleMode TColor__GrayScaleMode()
 #define fgPalette TColor__Palette()

@@ -13,14 +13,6 @@
 #define ROOT_TLegend
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TLegend        (a second attempt- the first was TPadLegend           //
-// Matthew.Adam.Dobbs@Cern.CH, September 1999                           //
-// Legend of markers/lines/boxes for histos & graphs                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #ifndef ROOT_TPave
 #include "TPave.h"
 #endif
@@ -81,14 +73,14 @@ public:
    void            SetNColumns( Int_t nColumns ); // *MENU*
 
 protected:
-   TList     *fPrimitives;       // list of TLegendEntries
-   Float_t    fEntrySeparation;  // separation between entries, as a fraction of
-                                 // the space allocated to one entry.
-                                 // Typical value is 0.1.
-   Float_t    fMargin;           // fraction of total width used for symbol
-   Int_t      fNColumns;         // number of columns in the legend
-   Float_t    fColumnSeparation; // separation between columns, as a fraction of
-                                 // the space allowed to one column
+   TList     *fPrimitives;       ///< list of TLegendEntries
+   Float_t    fEntrySeparation;  ///< separation between entries, as a fraction of
+                                 ///< the space allocated to one entry.
+                                 ///< Typical value is 0.1.
+   Float_t    fMargin;           ///< fraction of total width used for symbol
+   Int_t      fNColumns;         ///< number of columns in the legend
+   Float_t    fColumnSeparation; ///< separation between columns, as a fraction of
+                                 ///< the space allowed to one column
 
    ClassDef(TLegend,2) // Legend of markers/lines/boxes to represent obj's
 };

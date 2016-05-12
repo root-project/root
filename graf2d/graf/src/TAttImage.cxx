@@ -11,6 +11,7 @@
 
 /** \class TAttImage
 \ingroup BasicGraphics
+\ingroup GraphicsAtt
 
 TImage attributes.
 

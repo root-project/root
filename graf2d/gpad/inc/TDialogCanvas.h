@@ -13,14 +13,6 @@
 #define ROOT_TDialogCanvas
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TDialogCanvas                                                        //
-//                                                                      //
-// A specialized canvas to set attributes.                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #ifndef ROOT_TCanvas
 #include "TCanvas.h"
 #endif
@@ -35,8 +27,8 @@ private:
    TDialogCanvas& operator=(const TDialogCanvas&);
 
 protected:
-   TObject     *fRefObject;   //Pointer to object to set attributes
-   TPad        *fRefPad;      //Pad containing object
+   TObject     *fRefObject;   ///< Pointer to object to set attributes
+   TPad        *fRefPad;      ///< Pad containing object
 
 public:
    TDialogCanvas();

@@ -56,23 +56,23 @@ private:
    const char *TypeFromMagicNumber(const char *file);
 
 protected:
-   ASImage  *fImage;        //! pointer to image structure of original image
-   TASImage *fScaledImage;  //! temporary scaled and zoomed image produced from original image
-   Double_t  fMaxValue;     //! max value in image
-   Double_t  fMinValue;     //! min value in image
-   UInt_t    fZoomOffX;     //! X - offset for zooming in image pixels
-   UInt_t    fZoomOffY;     //! Y - offset for zooming im image pixels
-   UInt_t    fZoomWidth;    //! width of zoomed image in image pixels
-   UInt_t    fZoomHeight;   //! hight of zoomed image in image pixels
-   Int_t     fZoomUpdate;   //! kZoom - new zooming required, kZoomOps - other ops in action, kNoZoom - no zooming or ops
-   Bool_t    fEditable;     //! kTRUE image can be resized, moved by resizing/moving gPad
-   Int_t     fPaintMode;    //! 1 - fast mode, 0 - low memory slow mode
-   ASImage  *fGrayImage;    //! gray image
-   Bool_t    fIsGray;       //! kTRUE if image is gray
-   static THashTable *fgPlugList;   //! hash table containing loaded plugins
+   ASImage  *fImage;                ///<! pointer to image structure of original image
+   TASImage *fScaledImage;          ///<! temporary scaled and zoomed image produced from original image
+   Double_t  fMaxValue;             ///<! max value in image
+   Double_t  fMinValue;             ///<! min value in image
+   UInt_t    fZoomOffX;             ///<! X - offset for zooming in image pixels
+   UInt_t    fZoomOffY;             ///<! Y - offset for zooming im image pixels
+   UInt_t    fZoomWidth;            ///<! width of zoomed image in image pixels
+   UInt_t    fZoomHeight;           ///<! hight of zoomed image in image pixels
+   Int_t     fZoomUpdate;           ///<! kZoom - new zooming required, kZoomOps - other ops in action, kNoZoom - no zooming or ops
+   Bool_t    fEditable;             ///<! kTRUE image can be resized, moved by resizing/moving gPad
+   Int_t     fPaintMode;            ///<! 1 - fast mode, 0 - low memory slow mode
+   ASImage  *fGrayImage;            ///<! gray image
+   Bool_t    fIsGray;               ///<! kTRUE if image is gray
+   static THashTable *fgPlugList;   ///<! hash table containing loaded plugins
 
-   static ASVisual *fgVisual;  // pointer to visual structure
-   static Bool_t    fgInit;    // global flag to init afterimage only once
+   static ASVisual *fgVisual;      ///< pointer to visual structure
+   static Bool_t    fgInit;        ///< global flag to init afterimage only once
 
    EImageFileTypes GetFileType(const char *ext);
    void MapFileTypes(EImageFileTypes &type, UInt_t &astype, Bool_t toas = kTRUE);

@@ -34,13 +34,13 @@
 
 class TArrow : public TLine, public TAttFill {
 protected:
-   Float_t      fAngle;        //Arrow opening angle (degrees)
-   Float_t      fArrowSize;    //Arrow Size
-   TString      fOption;       //Arrow shapes
+   Float_t      fAngle;        ///< Arrow opening angle (degrees)
+   Float_t      fArrowSize;    ///< Arrow Size
+   TString      fOption;       ///< Arrow shapes
 
-   static Float_t      fgDefaultAngle;        //default Arrow opening angle (degrees)
-   static Float_t      fgDefaultArrowSize;    //default Arrow Size
-   static TString      fgDefaultOption;       //default Arrow shapes
+   static Float_t      fgDefaultAngle;        ///< Default Arrow opening angle (degrees)
+   static Float_t      fgDefaultArrowSize;    ///< Default Arrow Size
+   static TString      fgDefaultOption;       ///< Default Arrow shapes
 
 public:
    TArrow();
