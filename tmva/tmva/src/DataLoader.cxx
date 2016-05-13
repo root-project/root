@@ -676,10 +676,16 @@ std::vector<TTree*> TMVA::DataLoader::SplitSets(TTree * oldTree, int seedNum, in
   std::vector<VariableInfo>& tgts = DefaultDataSetInfo().GetTargetInfos();
   std::vector<VariableInfo>& spec = DefaultDataSetInfo().GetSpectatorInfos();
 
+  UInt_t varsSize = vars.size();
+
   if (!fATreeEvent) fATreeEvent = new Float_t[vars.size()+tgts.size()+spec.size()];
   // add variables
   for (UInt_t ivar=0; ivar<vars.size(); ivar++) {
     TString vname = vars[ivar].GetExpression();
+    if(vname.Contains("+") || vname.Contains("-") || vname.Contains("*") || vname.Contains("/")){
+      varsSize--;
+      continue; 
+    }
     TBranch * branch = oldTree->GetBranch(vname);
     branches.push_back(branch);
     oldTree->SetBranchAddress(vname, &(fATreeEvent[ivar]));
@@ -687,6 +693,7 @@ std::vector<TTree*> TMVA::DataLoader::SplitSets(TTree * oldTree, int seedNum, in
   // add targets
   for (UInt_t itgt=0; itgt<tgts.size(); itgt++) {
     TString vname = tgts[itgt].GetExpression();
+    if(vname.Contains("+") || vname.Contains("-") || vname.Contains("*") || vname.Contains("/")){ continue; }
     TBranch * branch = oldTree->GetBranch(vname);
     branches.push_back(branch);
     oldTree->SetBranchAddress( vname, &(fATreeEvent[vars.size()+itgt]));
@@ -694,6 +701,7 @@ std::vector<TTree*> TMVA::DataLoader::SplitSets(TTree * oldTree, int seedNum, in
   // add spectators
   for (UInt_t ispc=0; ispc<spec.size(); ispc++) {
     TString vname = spec[ispc].GetExpression();
+    if(vname.Contains("+") || vname.Contains("-") || vname.Contains("*") || vname.Contains("/")){ continue; }
     TBranch * branch = oldTree->GetBranch(vname);
     branches.push_back(branch);
     oldTree->SetBranchAddress( vname, &(fATreeEvent[vars.size()+tgts.size()+ispc]));
