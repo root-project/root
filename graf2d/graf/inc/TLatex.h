@@ -107,7 +107,9 @@ protected:
 
 public:
       // TLatex status bits
-      enum { kTextNDC = BIT(14) };
+      enum {
+         kTextNDC = BIT(14) ///< The text postion is in NDC coordinates
+      };
 
       TLatex();
       TLatex(Double_t x, Double_t y, const char *text);
