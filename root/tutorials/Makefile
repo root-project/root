@@ -46,6 +46,7 @@ TUTORIALSTESTS_VETO := htmlex  rootalias \
   html/% \
   math/Bessel math/LegendreAssoc math/Legendre math/mathmoreIntegration \
   math/normalDist math/tStudent math/testUnfold2 math/pca \
+  multicore/% \
   net/% \
   proof/% \
   pythia/% \
