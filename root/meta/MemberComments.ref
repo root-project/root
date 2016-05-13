@@ -197,17 +197,17 @@ OBJ: TList	TList	Doubly linked list : 0
       Option_t* TObject::GetDrawOption() const
  OBJ: TMethod	GetDtorOnly	 : 0
       Long_t TObject::GetDtorOnly()
- OBJ: TMethod	GetFillColor	 : 0
+ OBJ: TMethod	GetFillColor	Return the fill area color : 0
       Color_t TAttFill::GetFillColor() const
- OBJ: TMethod	GetFillStyle	 : 0
+ OBJ: TMethod	GetFillStyle	Return the fill area style : 0
       Style_t TAttFill::GetFillStyle() const
  OBJ: TMethod	GetIconName	 : 0
       const char* TObject::GetIconName() const
- OBJ: TMethod	GetLineColor	 : 0
+ OBJ: TMethod	GetLineColor	Return the line color : 0
       Color_t TAttLine::GetLineColor() const
- OBJ: TMethod	GetLineStyle	 : 0
+ OBJ: TMethod	GetLineStyle	Return the line style : 0
       Style_t TAttLine::GetLineStyle() const
- OBJ: TMethod	GetLineWidth	 : 0
+ OBJ: TMethod	GetLineWidth	Return the line width : 0
       Width_t TAttLine::GetLineWidth() const
  OBJ: TMethod	GetName	 : 0
       const char* TObject::GetName() const
@@ -395,23 +395,23 @@ OBJ: TList	TList	Doubly linked list : 0
       void TObject::SetDtorOnly(void* obj)
  OBJ: TMethod	SetFillAttributes	*MENU* : 0
       void TAttFill::SetFillAttributes()
- OBJ: TMethod	SetFillColor	 : 0
+ OBJ: TMethod	SetFillColor	Set the fill area color : 0
       void TAttFill::SetFillColor(Color_t fcolor)
  OBJ: TMethod	SetFillColorAlpha	 : 0
       void TAttFill::SetFillColorAlpha(Color_t fcolor, Float_t falpha)
- OBJ: TMethod	SetFillStyle	 : 0
+ OBJ: TMethod	SetFillStyle	Set the fill area style : 0
       void TAttFill::SetFillStyle(Style_t fstyle)
  OBJ: TMethod	SetHorizontal	*TOGGLE* *GETTER=IsHorizontal : 0
       void TLine::SetHorizontal(Bool_t set = kTRUE)
  OBJ: TMethod	SetLineAttributes	*MENU* : 0
       void TAttLine::SetLineAttributes()
- OBJ: TMethod	SetLineColor	 : 0
+ OBJ: TMethod	SetLineColor	Set the line color : 0
       void TAttLine::SetLineColor(Color_t lcolor)
  OBJ: TMethod	SetLineColorAlpha	 : 0
       void TAttLine::SetLineColorAlpha(Color_t lcolor, Float_t lalpha)
- OBJ: TMethod	SetLineStyle	 : 0
+ OBJ: TMethod	SetLineStyle	Set the line style : 0
       void TAttLine::SetLineStyle(Style_t lstyle)
- OBJ: TMethod	SetLineWidth	 : 0
+ OBJ: TMethod	SetLineWidth	Set the line width : 0
       void TAttLine::SetLineWidth(Width_t lwidth)
  OBJ: TMethod	SetNDC	 : 0
       void TLine::SetNDC(Bool_t isNDC = kTRUE)
