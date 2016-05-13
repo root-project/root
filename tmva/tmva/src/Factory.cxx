@@ -50,6 +50,8 @@
 #include "TEventList.h"
 #include "TH2.h"
 #include "TText.h"
+#include "TLegend.h"
+#include "TGraph.h"
 #include "TStyle.h"
 #include "TMatrixF.h"
 #include "TMatrixDSym.h"
@@ -585,6 +587,139 @@ Double_t TMVA::Factory::GetROCIntegral(TString datasetname,TString theMethodName
 
    return fROCalcValue;
 }
+
+//_______________________________________________________________________
+TGraph* TMVA::Factory::GetROCCurve(DataLoader *loader,TString theMethodName,Bool_t fLegend)
+{
+  return GetROCCurve((TString)loader->GetName(),theMethodName,fLegend);
+}
+
+//_______________________________________________________________________
+TGraph* TMVA::Factory::GetROCCurve(TString  datasetname,TString theMethodName,Bool_t fLegend)
+{
+   if (fMethodsMap.find(datasetname) == fMethodsMap.end()) {
+      Log() << kERROR << Form("DataSet = %s not found in methods map.", datasetname.Data()) << Endl;
+      return 0;
+   }
+   MVector *methods = fMethodsMap[datasetname.Data()];
+   MVector::iterator itrMethod = methods->begin();
+   TMVA::MethodBase *method = 0;
+   while (itrMethod != methods->end()) {
+      TMVA::MethodBase *cmethod = dynamic_cast<TMVA::MethodBase *>(*itrMethod);
+      if (!cmethod) {
+         //msg of error here
+         itrMethod++;
+         continue;
+      }
+      if (cmethod->GetMethodName() == theMethodName) {
+         method = cmethod;
+         break;
+      }
+      itrMethod++;
+   }
+
+   if (!method) {
+      Log() << kERROR << Form("Method = %s not found with Dataset = %s ", theMethodName.Data(), datasetname.Data()) << Endl;
+      return 0;
+   }
+
+   TMVA::Results *results = method->Data()->GetResults(method->GetMethodName(), Types::kTesting, Types::kClassification);
+
+   std::vector<Float_t> *mvaRes = dynamic_cast<ResultsClassification *>(results)->GetValueVector();
+   std::vector<Bool_t>  *mvaResType = dynamic_cast<ResultsClassification *>(results)->GetValueVectorTypes();
+
+   TMVA::ROCCurve *fROCCurve = new TMVA::ROCCurve(*mvaRes, *mvaResType);
+   if (!fROCCurve) Log() << kFATAL << Form("ROCCurve object was not created in Method = %s not found with Dataset = %s ", theMethodName.Data(), datasetname.Data()) << Endl;
+
+   TGraph  *fGraph = (TGraph  *)fROCCurve->GetROCCurve()->Clone();
+   if(fLegend)
+   {
+        fGraph->GetYaxis()->SetTitle("Background Rejection");
+        fGraph->GetXaxis()->SetTitle("Signal Efficiency");
+        fGraph->SetTitle(Form("Background Rejection vs. Signal Efficiency (%s)",method->GetMethodName().Data()));
+   }
+   delete fROCCurve;   
+   return fGraph;  
+}
+
+
+//_______________________________________________________________________
+TCanvas * TMVA::Factory::GetROCCurve(TMVA::DataLoader *loader)
+{
+  return GetROCCurve((TString)loader->GetName());
+}
+
+//_______________________________________________________________________
+TCanvas * TMVA::Factory::GetROCCurve(TString datasetname)
+{
+    // Lookup dataset.
+    if (fMethodsMap.find(datasetname) == fMethodsMap.end()) {
+        Log() << kERROR << Form("DataSet = %s not found in methods map.", datasetname.Data()) << Endl;
+        return 0;
+    }
+
+    // Create canvas.
+    TString name("ROCCurve ");
+    name += datasetname;
+    TCanvas *fCanvas = new TCanvas(name,"ROC Curve",200,10,700,500);
+    fCanvas->SetGrid();
+    UInt_t line_color = 0;         //Count line colors in canvas.
+
+    TLegend *fLegend = new TLegend(0.15, 0.15, 0.35, 0.3, "MVA Method");
+    TGraph *fGraph   = nullptr;
+
+    // Loop over dataset.
+    MVector *methods = fMethodsMap[datasetname.Data()];
+    MVector::iterator itr = methods->begin();
+
+    while (itr != methods->end()) {
+
+        TMVA::MethodBase *method = dynamic_cast<TMVA::MethodBase *>(*itr);
+        itr++;
+        if (!method) {
+            continue;
+        }
+        // Get results.
+        TMVA::Results *results = method->Data()->GetResults(method->GetMethodName(),
+                                                            Types::kTesting,
+                                                            Types::kClassification);
+
+        std::vector<Float_t> *mvaRes =
+            dynamic_cast<ResultsClassification *>(results)->GetValueVector();
+        std::vector<Bool_t>  *mvaResType =
+            dynamic_cast<ResultsClassification *>(results)->GetValueVectorTypes();
+
+        // Generate ROCCurve.
+        TMVA::ROCCurve *fROCCurve = new TMVA::ROCCurve(*mvaRes, *mvaResType);
+        if (!fROCCurve)
+            Log() << kFATAL << Form("ROCCurve object was not created in Method = %s not found with Dataset = %s ", method->GetMethodName().Data(), datasetname.Data()) << Endl;
+        fGraph=(TGraph*)fROCCurve->GetROCCurve()->Clone();
+	delete fROCCurve;
+        // Draw axes.
+        if (line_color == 0)
+        {
+            fGraph->GetYaxis()->SetTitle("Background Rejection");
+            fGraph->GetXaxis()->SetTitle("Signal Efficiency");
+            fGraph->SetTitle("Background Rejection vs. Signal Efficiency");
+            fGraph->Draw("AC");
+        }
+        else
+            fGraph->Draw("C");
+
+        fGraph->SetLineWidth(2);
+        fGraph->SetLineColor(++line_color);
+
+        fLegend->AddEntry(fGraph, method->GetMethodName(), "l");
+    }
+
+    // Draw legend.
+    fLegend->Draw();
+
+   return fCanvas;
+}
+
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// iterates through all booked methods and calls training

@@ -34,29 +34,34 @@ class TH2;
 class TH2F;
 class TSpline;
 class TSpline1;
+class TGraph;
 
 namespace TMVA {
 
-   class MsgLogger;
+  class MsgLogger;
 
 
-   class ROCCurve {
+  class ROCCurve {
     
-   public:
-      ROCCurve( const std::vector<Float_t> & mvaS, const std::vector<Bool_t> & mvat);
+  public:
+    ROCCurve( const std::vector<Float_t> & mvaS, const std::vector<Bool_t> & mvat);
     
-      ~ROCCurve();
+    ~ROCCurve();
     
 
-      Double_t GetROCIntegral();
+    Double_t GetROCIntegral();
+    TGraph* GetROCCurve(const UInt_t points=100);//nvidisions = #points -1
     
-   private:
-      std::vector<Float_t> fMvaS;
-      std::vector<Float_t> fMvaB;
+  private:
+    void EpsilonCount();
+    mutable MsgLogger* fLogger;   //! message logger
+    MsgLogger& Log() const { return *fLogger; }                       
+    TGraph *fGraph;
+    std::vector<Float_t> fMvaS;
+    std::vector<Float_t> fMvaB;
+    std::vector<Float_t> fEpsilonSig;
+    std::vector<Float_t> fEpsilonBgk;
 
-      mutable MsgLogger* fLogger;   //! message logger
-      MsgLogger& Log() const { return *fLogger; }                       
-
-   };
+  };
 }
 #endif

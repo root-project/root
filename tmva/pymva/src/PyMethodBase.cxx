@@ -178,7 +178,12 @@ void PyMethodBase::PySetProgramName(TString name)
 //_______________________________________________________________________
 TString PyMethodBase::Py_GetProgramName()
 {
+   #if PY_MAJOR_VERSION < 3 
    return ::Py_GetProgramName();
+   #else
+   return (char*)::Py_GetProgramName();
+   #endif
+  
 }
 //_______________________________________________________________________
 int  PyMethodBase::PyIsInitialized()
@@ -241,9 +246,9 @@ std::vector<Double_t> PyMethodBase::GetMvaValues(Long64_t firstEvt, Long64_t las
    PyArrayObject *pEvent= (PyArrayObject *)PyArray_FromDims(2, dims, NPY_FLOAT);
    float *pValue = (float *)(PyArray_DATA(pEvent));
 
-   int dims2[2];
-   dims2[0] = 1;
-   dims2[1] = nvars;
+//    int dims2[2];
+//    dims2[0] = 1;
+//    dims2[1] = nvars;
 
    // use timer
    Timer timer( nEvents, GetName(), kTRUE );
