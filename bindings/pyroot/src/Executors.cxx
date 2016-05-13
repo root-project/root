@@ -389,7 +389,7 @@ PyObject* PyROOT::TSTLStringExecutor::Execute(
 
    PyObject* pyresult =
       PyROOT_PyUnicode_FromStringAndSize( result->c_str(), result->size() );
-   delete result;
+   free(result); // GILCallO calls Cppyy::CallO which calls malloc.
 
    return pyresult;
 }
