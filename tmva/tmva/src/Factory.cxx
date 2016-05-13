@@ -1855,7 +1855,7 @@ TH1F* TMVA::Factory::GetImportance(const int nbits,std::vector<Double_t> importa
   return vih1;
 }
 
-float TMVA::Factory::CrossValidateMethod(DataLoader * loader, Types::EMVA theMethod, TString methodTitle, const char *theOption, bool optParams, int NumFolds, bool remakeDataSet)
+float TMVA::Factory::CrossValidate(DataLoader * loader, Types::EMVA theMethod, TString methodTitle, const char *theOption, bool optParams, int NumFolds, bool remakeDataSet)
 {
 
   //bool optParams = true;
