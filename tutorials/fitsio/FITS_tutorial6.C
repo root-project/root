@@ -1,5 +1,12 @@
-// Open a FITS file whose primary array represents
-// a spectrum table (flux vs wavelength) and dump its columns
+/// \file
+/// \ingroup tutorial_FITS
+/// Open a FITS file whose primary array represents
+/// a spectrum table (flux vs wavelength) and dump its columns
+///
+/// \macro_code
+///
+/// \author Claudi Martinez
+
 void FITS_tutorial6()
 {
    TVectorD *v;
@@ -28,5 +35,3 @@ void FITS_tutorial6()
 
    delete hdu;
 }
-
-

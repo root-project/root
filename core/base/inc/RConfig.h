@@ -37,6 +37,13 @@
 #define R__NULLPTR
 #endif
 
+#if defined(__cplusplus) && (__cplusplus < 201103L)
+# error "ROOT requires support for C++11 or higher."
+# if defined(__GNUC__) || defined(__clang__)
+#  error "Pass `-std=c++11` as compiler argument."
+# endif
+#endif
+
 /*---- machines --------------------------------------------------------------*/
 
 #ifdef __hpux

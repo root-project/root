@@ -118,9 +118,9 @@ public:
                                                                                                 m.GetColUpb(),m.GetNoElements()); }
 
    virtual void Clear(Option_t * /*option*/ ="") { if (this->fIsOwner) {
-                                                     if (fElements) delete [] fElements; fElements = 0;
-                                                     if (fRowIndex) delete [] fRowIndex; fRowIndex = 0;
-                                                     if (fColIndex) delete [] fColIndex; fColIndex = 0;
+                                                      if (fElements) { delete [] fElements; fElements = 0; }
+                                                      if (fRowIndex) { delete [] fRowIndex; fRowIndex = 0; }
+                                                      if (fColIndex) { delete [] fColIndex; fColIndex = 0; }
                                                    }
                                                    this->fNelems    = 0;
                                                    this->fNrowIndex = 0;
@@ -181,19 +181,23 @@ public:
 
    TMatrixTSparse<Element> &operator+=(const TMatrixTSparse<Element> &source) { TMatrixTSparse<Element> tmp(*this); Clear();
                                                                                 if (this == &source) APlusB (tmp,tmp,1);
-                                                                                else                 APlusB (tmp,source,1); return *this; }
+                                                                                else                 APlusB (tmp,source,1);
+                                                                                return *this; }
    TMatrixTSparse<Element> &operator+=(const TMatrixT<Element>       &source) { TMatrixTSparse<Element> tmp(*this); Clear();
                                                                                 APlusB(tmp,source,1); return *this; }
    TMatrixTSparse<Element> &operator-=(const TMatrixTSparse<Element> &source) { TMatrixTSparse<Element> tmp(*this); Clear();
                                                                                 if (this == &source) AMinusB (tmp,tmp,1);
-                                                                                else                 AMinusB(tmp,source,1); return *this; }
+                                                                                else                 AMinusB(tmp,source,1);
+                                                                                return *this; }
    TMatrixTSparse<Element> &operator-=(const TMatrixT<Element>       &source) { TMatrixTSparse<Element> tmp(*this); Clear();
                                                                                 AMinusB(tmp,source,1); return *this; }
    TMatrixTSparse<Element> &operator*=(const TMatrixTSparse<Element> &source) { TMatrixTSparse<Element> tmp(*this); Clear();
                                                                                 if (this == &source) AMultB (tmp,tmp,1);
-                                                                                else                 AMultB (tmp,source,1); return *this; }
+                                                                                else                 AMultB (tmp,source,1);
+                                                                                return *this; }
    TMatrixTSparse<Element> &operator*=(const TMatrixT<Element>       &source) { TMatrixTSparse<Element> tmp(*this); Clear();
-                                                                                AMultB(tmp,source,1); return *this; }
+                                                                                AMultB(tmp,source,1);
+                                                                                return *this; }
 
    virtual TMatrixTBase  <Element> &Randomize  (Element alpha,Element beta,Double_t &seed);
    virtual TMatrixTSparse<Element> &RandomizePD(Element alpha,Element beta,Double_t &seed);

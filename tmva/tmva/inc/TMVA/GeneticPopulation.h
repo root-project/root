@@ -111,7 +111,7 @@ namespace TMVA {
 
       Int_t fPopulationSizeLimit;
 
-      ClassDef(GeneticPopulation,0) //Population definition for genetic algorithm
+      ClassDef(GeneticPopulation,0); //Population definition for genetic algorithm
    };
 
 } // namespace TMVA

@@ -200,9 +200,9 @@ Bool_t RooAbsString::traceEvalHook(const char* /*value*/) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate current value of object, with error tracing wrapper
 
-const char* RooAbsString::traceEval() const
+TString RooAbsString::traceEval() const
 {
-  const char* value = evaluate() ;
+  TString value = evaluate() ;
   
   //Standard tracing code goes here
   if (!isValidString(value)) {

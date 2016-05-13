@@ -1,5 +1,5 @@
 // @(#):$Id$
-// Author: M.Gheata 
+// Author: M.Gheata
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -68,10 +68,10 @@ TGeoPgonEditor::~TGeoPgonEditor()
    TGFrameElement *el;
    TIter next(GetList());
    while ((el = (TGFrameElement *)next())) {
-      if (el->fFrame->IsComposite()) 
+      if (el->fFrame->IsComposite())
          TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
-   Cleanup();   
+   Cleanup();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -81,8 +81,8 @@ void TGeoPgonEditor::SetModel(TObject* obj)
 {
    if (obj == 0 || (obj->IsA()!=TGeoPgon::Class())) {
       SetActive(kFALSE);
-      return;                 
-   } 
+      return;
+   }
    fShape = (TGeoPcon*)obj;
    const char *sname = fShape->GetName();
    if (!strcmp(sname, fShape->ClassName())) fShapeName->SetText("-no_name");
@@ -99,10 +99,10 @@ void TGeoPgonEditor::SetModel(TObject* obj)
    fDPhii = fShape->GetDphi();
    CreateSections(nsections);
    UpdateSections();
-   
+
    fApply->SetEnabled(kFALSE);
    fUndo->SetEnabled(kFALSE);
-   
+
    if (fInit) ConnectSignals2Slots();
    SetActive();
 }
@@ -140,7 +140,7 @@ void TGeoPgonEditor::DoApply()
          array[6+3*isect] = sect->GetRmax();
       }
       shape->SetDimensions(array);
-      delete [] array;   
+      delete [] array;
       if (fPad) {
          if (gGeoManager && gGeoManager->GetPainter() && gGeoManager->GetPainter()->IsPaintingShape()) {
             TView *view = fPad->GetView();
@@ -152,12 +152,12 @@ void TGeoPgonEditor::DoApply()
                view->SetRange(orig[0]-fShape->GetDX(), orig[1]-fShape->GetDY(), orig[2]-fShape->GetDZ(),
                               orig[0]+fShape->GetDX(), orig[1]+fShape->GetDY(), orig[2]+fShape->GetDZ());
                Update();
-            }                  
+            }
          } else Update();
       }
       return;
-   }           
-   // No need to call SetDimensions   
+   }
+   // No need to call SetDimensions
    if (TMath::Abs(phi1-fShape->GetPhi1())>1.e-6) fShape->Phi1() = phi1;
    if (TMath::Abs(dphi-fShape->GetDphi())>1.e-6) fShape->Dphi() = dphi;
    if (nedges != shape->GetNedges())             shape->SetNedges(nedges);
@@ -166,7 +166,7 @@ void TGeoPgonEditor::DoApply()
       fShape->Z(isect) = sect->GetZ();
       fShape->Rmin(isect) = sect->GetRmin();
       fShape->Rmax(isect) = sect->GetRmax();
-   }   
+   }
    shape->ComputeBBox();
    if (fPad) {
       if (gGeoManager && gGeoManager->GetPainter() && gGeoManager->GetPainter()->IsPaintingShape()) {
@@ -179,9 +179,9 @@ void TGeoPgonEditor::DoApply()
             view->SetRange(orig[0]-fShape->GetDX(), orig[1]-fShape->GetDY(), orig[2]-fShape->GetDZ(),
                            orig[0]+fShape->GetDX(), orig[1]+fShape->GetDY(), orig[2]+fShape->GetDZ());
             Update();
-         }                  
+         }
       } else Update();
-   }   
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -191,7 +191,7 @@ void TGeoPgonEditor::DoUndo()
 {
    fENedges->SetNumber(fNedgesi);
    TGeoPconEditor::DoUndo();
-}   
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create number entry for Nedges.
@@ -221,8 +221,8 @@ void TGeoPgonEditor::DoNedges()
    if (nedges < 3) {
       nedges = 3;
       fENedges->SetNumber(nedges);
-   }   
+   }
    DoModified();
    if (!IsDelayed()) DoApply();
-}   
+}
 

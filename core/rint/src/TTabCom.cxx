@@ -1314,7 +1314,6 @@ Int_t TTabCom::Complete(const TRegexp & re,
             // (except for those excluded by "FileIgnore")
          {
             IfDebug(std::cerr << "printing ambiguous matches" << std::endl);
-            out << std::endl;
             std::set<std::string> alreadyPrinted;
             while ((pObj = next_match())) {
                s = pObj->GetName();
@@ -1906,19 +1905,19 @@ Int_t TTabCom::Hook(char *buf, int *pLoc, std::ostream& out)
          while ((pMethod = (TMethod *) nextMethod())) {
             if (methodName == pMethod->GetName()) {
                foundOne = kTRUE;
-               out << std::endl << pMethod->GetReturnTypeName()
+               out << pMethod->GetReturnTypeName()
                    << " " << pMethod->GetName()
                    << pMethod->GetSignature();
                const char *comment = pMethod->GetCommentString();
                if (comment && comment[0] != '\0') {
                   out << " \t// " << comment;
                }
+               out << std::endl;
             }
          }
 
          // done
          if (foundOne) {
-            out << std::endl;
             pos = -2;
          } else {
             gSystem->Beep();
@@ -2006,19 +2005,19 @@ Int_t TTabCom::Hook(char *buf, int *pLoc, std::ostream& out)
          while ((pMethod = (TMethod *) nextMethod())) {
             if (methodName == pMethod->GetName()) {
                foundOne = kTRUE;
-               out << std::endl << pMethod->GetReturnTypeName()
+               out << pMethod->GetReturnTypeName()
                    << " " << pMethod->GetName()
                    << pMethod->GetSignature();
                const char *comment = pMethod->GetCommentString();
                if (comment && comment[0] != '\0') {
                   out << " \t// " << comment;
                }
+               out << std::endl;
             }
          }
 
          // done
          if (foundOne) {
-            out << std::endl;
             pos = -2;
          } else {
             gSystem->Beep();
@@ -2088,7 +2087,6 @@ Int_t TTabCom::Hook(char *buf, int *pLoc, std::ostream& out)
             std::cerr << std::endl << "no such function: " << dblquote(functionName)
                 << std::endl;
          } else {
-            out << std::endl;
             TIter next(&listOfMatchingGlobalFuncs);
             TFunction *pFunction;
             while ((pFunction = (TFunction *) next())) {

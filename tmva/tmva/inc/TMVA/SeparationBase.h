@@ -101,7 +101,7 @@ namespace TMVA {
       // Return the gain in separation of the original sample is splitted in two sub-samples
       // (N * Index_parent) - (N_left * Index_left) - (N_right * Index_right)
       virtual Double_t GetSeparationGain( const Double_t& nSelS, const Double_t& nSelB,
-                                  const Double_t& nTotS, const Double_t& nTotB );
+                                          const Double_t& nTotS, const Double_t& nTotB );
 
       // Return the separation index (a measure for "purity" of the sample")
       virtual Double_t GetSeparationIndex( const Double_t &s, const Double_t &b ) = 0;
@@ -115,7 +115,7 @@ namespace TMVA {
 
       Double_t fPrecisionCut;
 
-      ClassDef(SeparationBase,0) // Interface to different separation critiera used in training algorithms
+      ClassDef(SeparationBase,0); // Interface to different separation critiera used in training algorithms
    };
 
 

@@ -1,5 +1,5 @@
 // @(#):$Id$
-// Author: M.Gheata 
+// Author: M.Gheata
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -10,7 +10,7 @@
  *************************************************************************/
 
 //______________________________________________________________________________
-//                                                                      
+//
 //  TGeoTranslationEditor, TGeoRotationEditor, TGeoCombiTransEditor
 //     Editors for different types of TGeo matrices.
 //______________________________________________________________________________
@@ -47,7 +47,7 @@ TGeoTranslationEditor::TGeoTranslationEditor(const TGWindow *p, Int_t width,
    fNamei = "";
    fIsModified = kFALSE;
    fIsEditable = kFALSE;
-      
+
    // TextEntry for name
    MakeTitle("Name");
    fTransName = new TGTextEntry(this, new TGTextBuffer(50), kMATRIX_NAME);
@@ -69,7 +69,7 @@ TGeoTranslationEditor::TGeoTranslationEditor(const TGWindow *p, Int_t width,
    fTransDx->Associate(this);
    f1->AddFrame(fTransDx, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 2, 2));
    compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 2, 2));
-   
+
    // Number entry for dy
    TGCompositeFrame *f2 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
                                  kLHintsExpandX | kFixedWidth | kOwnBackground);
@@ -80,7 +80,7 @@ TGeoTranslationEditor::TGeoTranslationEditor(const TGWindow *p, Int_t width,
    fTransDy->Associate(this);
    f2->AddFrame(fTransDy, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 2, 2));
    compxyz->AddFrame(f2, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 2, 2));
-   
+
    // Number entry for dx
    TGCompositeFrame *f3 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
                                  kLHintsExpandX | kFixedWidth | kOwnBackground);
@@ -91,10 +91,10 @@ TGeoTranslationEditor::TGeoTranslationEditor(const TGWindow *p, Int_t width,
    fTransDz->Associate(this);
    f3->AddFrame(fTransDz, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 2, 2));
    compxyz->AddFrame(f3, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 2, 2));
-   
+
    compxyz->Resize(150,30);
    AddFrame(compxyz, new TGLayoutHints(kLHintsLeft, 6, 6, 2, 2));
-      
+
    // Buttons
    TGCompositeFrame *f23 = new TGCompositeFrame(this, 118, 20, kHorizontalFrame | kSunkenFrame | kDoubleBorder);
    fApply = new TGTextButton(f23, "&Apply");
@@ -106,7 +106,7 @@ TGeoTranslationEditor::TGeoTranslationEditor(const TGWindow *p, Int_t width,
    fUndo = new TGTextButton(f23, " &Undo ");
    f23->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
    fUndo->Associate(this);
-   AddFrame(f23,  new TGLayoutHints(kLHintsLeft, 6, 6, 2, 2));  
+   AddFrame(f23,  new TGLayoutHints(kLHintsLeft, 6, 6, 2, 2));
    fUndo->SetSize(fCancel->GetSize());
    fApply->SetSize(fCancel->GetSize());
 }
@@ -119,10 +119,10 @@ TGeoTranslationEditor::~TGeoTranslationEditor()
    TGFrameElement *el;
    TIter next(GetList());
    while ((el = (TGFrameElement *)next())) {
-      if (el->fFrame->IsComposite()) 
+      if (el->fFrame->IsComposite())
          TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
-   Cleanup();   
+   Cleanup();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -151,8 +151,8 @@ void TGeoTranslationEditor::SetModel(TObject* obj)
 {
    if (obj == 0 || (obj->IsA()!=TGeoTranslation::Class())) {
       SetActive(kFALSE);
-      return;                 
-   } 
+      return;
+   }
    fTranslation = (TGeoTranslation*)obj;
    fDxi = fTranslation->GetTranslation()[0];
    fDyi = fTranslation->GetTranslation()[1];
@@ -162,14 +162,14 @@ void TGeoTranslationEditor::SetModel(TObject* obj)
    else {
       fTransName->SetText(sname);
       fNamei = sname;
-   }   
+   }
    fTransDx->SetNumber(fDxi);
    fTransDy->SetNumber(fDyi);
    fTransDz->SetNumber(fDzi);
    fApply->SetEnabled(kFALSE);
    fUndo->SetEnabled(kFALSE);
    fCancel->SetEnabled(kFALSE);
-   
+
    if (fInit) ConnectSignals2Slots();
    SetActive();
 }
@@ -193,8 +193,8 @@ Bool_t TGeoTranslationEditor::DoParameters()
    Double_t dy = fTransDy->GetNumber();
    Double_t dz = fTransDz->GetNumber();
    Bool_t changed = kFALSE;
-   if (dx != fTranslation->GetTranslation()[0] || 
-       dy != fTranslation->GetTranslation()[1] || 
+   if (dx != fTranslation->GetTranslation()[0] ||
+       dy != fTranslation->GetTranslation()[1] ||
        dz != fTranslation->GetTranslation()[2]) changed = kTRUE;
    if (!changed) return kFALSE;
    fUndo->SetEnabled();
@@ -202,7 +202,7 @@ Bool_t TGeoTranslationEditor::DoParameters()
    if (fPad) {
       fPad->Modified();
       fPad->Update();
-   }   
+   }
    return kTRUE;
 }
 
@@ -216,7 +216,7 @@ void TGeoTranslationEditor::DoApply()
       fUndo->SetEnabled();
       fCancel->SetEnabled(kFALSE);
       fApply->SetEnabled(kFALSE);
-   }   
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -254,7 +254,7 @@ void TGeoTranslationEditor::DoUndo()
    fUndo->SetEnabled(kFALSE);
    fApply->SetEnabled(kFALSE);
 }
-   
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot for dx.
 
@@ -302,7 +302,7 @@ TGeoRotationEditor::TGeoRotationEditor(const TGWindow *p, Int_t width,
    fNamei = "";
    fIsModified = kFALSE;
    fIsEditable = kFALSE;
-      
+
    // TextEntry for name
    MakeTitle("Name");
    fRotName = new TGTextEntry(this, new TGTextBuffer(50), kMATRIX_NAME);
@@ -325,7 +325,7 @@ TGeoRotationEditor::TGeoRotationEditor(const TGWindow *p, Int_t width,
    fRotPhi->Resize(90, fRotPhi->GetDefaultHeight());
    f1->AddFrame(fRotPhi, new TGLayoutHints(kLHintsRight , 2, 2, 2, 2));
    compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 2, 2));
-   
+
    // Number entry for theta angle
    TGCompositeFrame *f2 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
                                  kLHintsExpandX | kFixedWidth | kOwnBackground);
@@ -337,7 +337,7 @@ TGeoRotationEditor::TGeoRotationEditor(const TGWindow *p, Int_t width,
    fRotTheta->Resize(90, fRotTheta->GetDefaultHeight());
    f2->AddFrame(fRotTheta, new TGLayoutHints(kLHintsRight , 2, 2, 2, 2));
    compxyz->AddFrame(f2, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 2, 2));
-   
+
    // Number entry for psi angle
    TGCompositeFrame *f3 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
                                  kLHintsExpandX | kFixedWidth | kOwnBackground);
@@ -352,7 +352,7 @@ TGeoRotationEditor::TGeoRotationEditor(const TGWindow *p, Int_t width,
 
    compxyz->Resize(150,compxyz->GetDefaultHeight());
    AddFrame(compxyz, new TGLayoutHints(kLHintsLeft, 6, 6, 2, 2));
-   
+
    MakeTitle("Rotate about axis");
    compxyz = new TGCompositeFrame(this, 140, 30, kVerticalFrame | kRaisedFrame | kDoubleBorder);
    // Number entry for rotation angle about one axis
@@ -366,7 +366,7 @@ TGeoRotationEditor::TGeoRotationEditor(const TGWindow *p, Int_t width,
    fRotAxis->Resize(90, fRotAxis->GetDefaultHeight());
    f1->AddFrame(fRotAxis, new TGLayoutHints(kLHintsRight , 2, 2, 2, 2));
    compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 2, 2));
-   
+
    // Radio buttons group for axis selection
    TGHButtonGroup *bg1 = new TGHButtonGroup(compxyz, " Axis ");
    fRotX = new TGRadioButton(bg1, " &X ", kMATRIX_DX);
@@ -379,7 +379,7 @@ TGeoRotationEditor::TGeoRotationEditor(const TGWindow *p, Int_t width,
    compxyz->Resize(150,compxyz->GetDefaultHeight());
    AddFrame(compxyz, new TGLayoutHints(kLHintsLeft, 6, 6, 2, 2));
 
-      
+
    // Buttons
    TGCompositeFrame *f23 = new TGCompositeFrame(this, 118, 20, kHorizontalFrame | kSunkenFrame | kDoubleBorder);
    fApply = new TGTextButton(f23, "Apply");
@@ -391,7 +391,7 @@ TGeoRotationEditor::TGeoRotationEditor(const TGWindow *p, Int_t width,
    fUndo = new TGTextButton(f23, " Undo ");
    f23->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
    fUndo->Associate(this);
-   AddFrame(f23,  new TGLayoutHints(kLHintsLeft, 6, 6, 2, 2));  
+   AddFrame(f23,  new TGLayoutHints(kLHintsLeft, 6, 6, 2, 2));
    fUndo->SetSize(fCancel->GetSize());
    fApply->SetSize(fCancel->GetSize());
 }
@@ -404,10 +404,10 @@ TGeoRotationEditor::~TGeoRotationEditor()
    TGFrameElement *el;
    TIter next(GetList());
    while ((el = (TGFrameElement *)next())) {
-      if (el->fFrame->IsComposite()) 
+      if (el->fFrame->IsComposite())
          TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
-   Cleanup();   
+   Cleanup();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -434,8 +434,8 @@ void TGeoRotationEditor::SetModel(TObject* obj)
 {
    if (obj == 0 || (obj->IsA()!=TGeoRotation::Class())) {
       SetActive(kFALSE);
-      return;                 
-   } 
+      return;
+   }
    fRotation = (TGeoRotation*)obj;
    fRotation->GetAngles(fPhii, fThetai, fPsii);
    const char *sname = fRotation->GetName();
@@ -443,7 +443,7 @@ void TGeoRotationEditor::SetModel(TObject* obj)
    else {
       fRotName->SetText(sname);
       fNamei = sname;
-   }   
+   }
    fRotPhi->SetNumber(fPhii);
    fRotTheta->SetNumber(fThetai);
    fRotPsi->SetNumber(fPsii);
@@ -452,7 +452,7 @@ void TGeoRotationEditor::SetModel(TObject* obj)
    fApply->SetEnabled(kFALSE);
    fUndo->SetEnabled(kFALSE);
    fCancel->SetEnabled(kFALSE);
-   
+
    if (fInit) ConnectSignals2Slots();
    SetActive();
 }
@@ -526,14 +526,14 @@ Bool_t TGeoRotationEditor::DoParameters()
       if (fRotX->IsOn()) {fRotation->RotateX(angle); changed = kTRUE;}
       if (fRotY->IsOn()) {fRotation->RotateY(angle); changed = kTRUE;}
       if (fRotZ->IsOn()) {fRotation->RotateZ(angle); changed = kTRUE;}
-   }   
-   if (!changed) return kFALSE;   
+   }
+   if (!changed) return kFALSE;
    fRotAxis->SetNumber(0.0);
    fUndo->SetEnabled();
    if (fPad) {
       fPad->Modified();
       fPad->Update();
-   }   
+   }
    return kTRUE;
 }
 
@@ -547,7 +547,7 @@ void TGeoRotationEditor::DoApply()
       fUndo->SetEnabled();
       fCancel->SetEnabled(kFALSE);
       fApply->SetEnabled(kFALSE);
-   }   
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -587,7 +587,7 @@ void TGeoRotationEditor::DoUndo()
    fApply->SetEnabled(kFALSE);
 }
 
-   
+
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 //  TGeoCombiTransEditor                                                //
@@ -612,7 +612,7 @@ TGeoCombiTransEditor::TGeoCombiTransEditor(const TGWindow *p, Int_t width,
    fNamei = "";
    fIsModified = kFALSE;
    fIsEditable = kFALSE;
-      
+
    // TextEntry for name
    MakeTitle("Name");
    fRotName = new TGTextEntry(this, new TGTextBuffer(50), kMATRIX_NAME);
@@ -634,7 +634,7 @@ TGeoCombiTransEditor::TGeoCombiTransEditor(const TGWindow *p, Int_t width,
    fTransDx->Associate(this);
    f1->AddFrame(fTransDx, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 2, 2));
    compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 2, 2));
-   
+
    // Number entry for dy
    TGCompositeFrame *f2 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
                                  kLHintsExpandX | kFixedWidth | kOwnBackground);
@@ -645,7 +645,7 @@ TGeoCombiTransEditor::TGeoCombiTransEditor(const TGWindow *p, Int_t width,
    fTransDy->Associate(this);
    f2->AddFrame(fTransDy, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 2, 2));
    compxyz->AddFrame(f2, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 2, 2));
-   
+
    // Number entry for dx
    TGCompositeFrame *f3 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
                                  kLHintsExpandX | kFixedWidth | kOwnBackground);
@@ -656,7 +656,7 @@ TGeoCombiTransEditor::TGeoCombiTransEditor(const TGWindow *p, Int_t width,
    fTransDz->Associate(this);
    f3->AddFrame(fTransDz, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 2, 2));
    compxyz->AddFrame(f3, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 2, 2));
-   
+
    compxyz->Resize(150,30);
    AddFrame(compxyz, new TGLayoutHints(kLHintsLeft, 6, 6, 2, 2));
 
@@ -674,7 +674,7 @@ TGeoCombiTransEditor::TGeoCombiTransEditor(const TGWindow *p, Int_t width,
    fRotPhi->Resize(90, fRotPhi->GetDefaultHeight());
    f1->AddFrame(fRotPhi, new TGLayoutHints(kLHintsRight , 2, 2, 2, 2));
    compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 2, 2));
-   
+
    // Number entry for theta angle
    f2 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
                                  kLHintsExpandX | kFixedWidth | kOwnBackground);
@@ -686,7 +686,7 @@ TGeoCombiTransEditor::TGeoCombiTransEditor(const TGWindow *p, Int_t width,
    fRotTheta->Resize(90, fRotTheta->GetDefaultHeight());
    f2->AddFrame(fRotTheta, new TGLayoutHints(kLHintsRight , 2, 2, 2, 2));
    compxyz->AddFrame(f2, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 2, 2));
-   
+
    // Number entry for psi angle
    f3 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
                                  kLHintsExpandX | kFixedWidth | kOwnBackground);
@@ -701,7 +701,7 @@ TGeoCombiTransEditor::TGeoCombiTransEditor(const TGWindow *p, Int_t width,
 
    compxyz->Resize(150,compxyz->GetDefaultHeight());
    AddFrame(compxyz, new TGLayoutHints(kLHintsLeft, 6, 6, 2, 2));
-   
+
    MakeTitle("Rotate about axis");
    compxyz = new TGCompositeFrame(this, 140, 30, kVerticalFrame | kRaisedFrame | kDoubleBorder);
    // Number entry for rotation angle about one axis
@@ -715,7 +715,7 @@ TGeoCombiTransEditor::TGeoCombiTransEditor(const TGWindow *p, Int_t width,
    fRotAxis->Resize(90, fRotAxis->GetDefaultHeight());
    f1->AddFrame(fRotAxis, new TGLayoutHints(kLHintsRight , 2, 2, 2, 2));
    compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 2, 2));
-   
+
    // Radio buttons group for axis selection
    TGHButtonGroup *bg1 = new TGHButtonGroup(compxyz, " Axis ");
    fRotX = new TGRadioButton(bg1, " &X ", kMATRIX_DX);
@@ -728,7 +728,7 @@ TGeoCombiTransEditor::TGeoCombiTransEditor(const TGWindow *p, Int_t width,
    compxyz->Resize(150,compxyz->GetDefaultHeight());
    AddFrame(compxyz, new TGLayoutHints(kLHintsLeft, 6, 6, 2, 2));
 
-      
+
    // Buttons
    TGCompositeFrame *f23 = new TGCompositeFrame(this, 118, 20, kHorizontalFrame | kSunkenFrame | kDoubleBorder);
    fApply = new TGTextButton(f23, "&Apply");
@@ -740,7 +740,7 @@ TGeoCombiTransEditor::TGeoCombiTransEditor(const TGWindow *p, Int_t width,
    fUndo = new TGTextButton(f23, " &Undo ");
    f23->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
    fUndo->Associate(this);
-   AddFrame(f23,  new TGLayoutHints(kLHintsLeft, 6, 6, 2, 2));  
+   AddFrame(f23,  new TGLayoutHints(kLHintsLeft, 6, 6, 2, 2));
    fUndo->SetSize(fCancel->GetSize());
    fApply->SetSize(fCancel->GetSize());
 }
@@ -753,10 +753,10 @@ TGeoCombiTransEditor::~TGeoCombiTransEditor()
    TGFrameElement *el;
    TIter next(GetList());
    while ((el = (TGFrameElement *)next())) {
-      if (el->fFrame->IsComposite()) 
+      if (el->fFrame->IsComposite())
          TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
-   Cleanup();   
+   Cleanup();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -789,8 +789,8 @@ void TGeoCombiTransEditor::SetModel(TObject* obj)
 {
    if (obj == 0 || (obj->IsA()!=TGeoCombiTrans::Class())) {
       SetActive(kFALSE);
-      return;                 
-   } 
+      return;
+   }
    fCombi = (TGeoCombiTrans*)obj;
    TGeoRotation *rot = fCombi->GetRotation();
    if (rot) rot->GetAngles(fPhii, fThetai, fPsii);
@@ -799,8 +799,8 @@ void TGeoCombiTransEditor::SetModel(TObject* obj)
    else {
       fRotName->SetText(sname);
       fNamei = sname;
-   }   
-   
+   }
+
    fDxi = fCombi->GetTranslation()[0];
    fDyi = fCombi->GetTranslation()[1];
    fDzi = fCombi->GetTranslation()[2];
@@ -816,7 +816,7 @@ void TGeoCombiTransEditor::SetModel(TObject* obj)
    fApply->SetEnabled(kFALSE);
    fUndo->SetEnabled(kFALSE);
    fCancel->SetEnabled(kFALSE);
-   
+
    if (fInit) ConnectSignals2Slots();
    SetActive();
 }
@@ -880,8 +880,8 @@ Bool_t TGeoCombiTransEditor::DoParameters()
    Double_t dy = fTransDy->GetNumber();
    Double_t dz = fTransDz->GetNumber();
    Bool_t changedtr = kFALSE;
-   if (dx != fCombi->GetTranslation()[0] || 
-       dy != fCombi->GetTranslation()[1] || 
+   if (dx != fCombi->GetTranslation()[0] ||
+       dy != fCombi->GetTranslation()[1] ||
        dz != fCombi->GetTranslation()[2]) changedtr = kTRUE;
    if (changedtr) fCombi->SetTranslation(dx, dy, dz);
    Double_t phi = fRotPhi->GetNumber();
@@ -898,7 +898,7 @@ Bool_t TGeoCombiTransEditor::DoParameters()
          rot = fCombi->GetRotation();
          rot->SetAngles(0.,0.,0.);
       }
-   }      
+   }
    Bool_t changed = kFALSE;
    if (phi != psi0 || theta != theta0 || psi != psi0) changed = kTRUE;
    if (changed && rot) rot->SetAngles(phi, theta, psi);
@@ -908,14 +908,14 @@ Bool_t TGeoCombiTransEditor::DoParameters()
       if (fRotY->IsOn()) {fCombi->RotateY(angle); changed = kTRUE;}
       if (fRotZ->IsOn()) {fCombi->RotateZ(angle); changed = kTRUE;}
    }
-   if (changedtr) changed = kTRUE;   
-   if (!changed) return kFALSE;   
+   if (changedtr) changed = kTRUE;
+   if (!changed) return kFALSE;
    fRotAxis->SetNumber(0.0);
    fUndo->SetEnabled();
    if (fPad) {
       fPad->Modified();
       fPad->Update();
-   }   
+   }
    return kTRUE;
 }
 
@@ -929,7 +929,7 @@ void TGeoCombiTransEditor::DoApply()
       fUndo->SetEnabled();
       fCancel->SetEnabled(kFALSE);
       fApply->SetEnabled(kFALSE);
-   }   
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -971,7 +971,7 @@ void TGeoCombiTransEditor::DoUndo()
    fUndo->SetEnabled(kFALSE);
    fApply->SetEnabled(kFALSE);
 }
-   
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot for X.
 

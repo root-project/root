@@ -27,7 +27,7 @@
  \class TEmulatedMapProxy
  \ingroup IO
 
-Streamer around a map container. For optimization reasons this functionality 
+Streamer around a map container. For optimization reasons this functionality
 is separated from the TEmulatedProxy.
 */
 

@@ -10,10 +10,10 @@
 #include "tmvaglob.h"
 namespace TMVA{
 
-//   static TControlBar* CorrGuiMultiClass_Global__cbar = 0;
+   //   static TControlBar* CorrGuiMultiClass_Global__cbar = 0;
 
    void CorrGuiMultiClass(TString dataset,  TString fin = "TMVA.root", TString dirName = "InputVariables_Id", TString title = "TMVA Input Variable",
-                            Bool_t isRegression = kFALSE );
+                          Bool_t isRegression = kFALSE );
    void CorrGuiMultiClass_DeleteTBar();
 
 }

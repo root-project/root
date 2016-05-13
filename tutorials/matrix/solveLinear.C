@@ -1,64 +1,73 @@
-//Author: Eddy Offermann
-// This macro shows several ways to perform a linear least-squares
-// analysis . To keep things simple we fit a straight line to 4
-// data points
-// The first 4 methods use the linear algebra package to find
-//  x  such that min (A x - b)^T (A x - b) where A and b
-//  are calculated with the data points  and the functional expression :
-//
-//  1. Normal equations:
-//   Expanding the expression (A x - b)^T (A x - b) and taking the
-//   derivative wrt x leads to the "Normal Equations":
-//   A^T A x = A^T b  where A^T A is a positive definite matrix. Therefore,
-//   a Cholesky decomposition scheme can be used to calculate its inverse .
-//   This leads to the solution x = (A^T A)^-1 A^T b . All this is done in
-//   routine NormalEqn . We made it a bit more complicated by giving the
-//   data weights .
-//   Numerically this is not the best way to proceed because effctively the
-//   condition number of A^T A is twice as large as that of A, making inversion
-//   more difficult
-//
-//  2. SVD
-//   One can show that solving A x = b for x with A of size (m x n) and m > n
-//   through a Singular Value Decomposition is equivalent to miminizing
-//   (A x - b)^T (A x - b)
-//   Numerically , this is the most stable method of all 5
-//
-//  3. Pseudo Inverse
-//   Here we calulate the generalized matrix inverse ("pseudo inverse") by
-//   solving A X = Unit for matrix X through an SVD . The formal expression for
-//   is X = (A^T A)^-1 A^T . Then we multiply it by b .
-//   Numerically, not as good as 2 and not as fast . In general it is not a
-//   good idea to solve a set of linear equations with a matrix inversion .
-//
-//  4. Pseudo Inverse , brute force
-//   The pseudo inverse is calculated brute force through a series of matrix
-//   manipulations . It shows nicely some operations in the matrix package,
-//   but is otherwise a big "no no" .
-//
-//  5. Least-squares analysis with Minuit
-//   An objective function L is minimized by Minuit, where
-//    L = sum_i { (y - c_0 -c_1 * x / e)^2 }
-//   Minuit will calculate numerically the derivative of L wrt c_0 and c_1 .
-//   It has not been told that these derivatives are linear in the parameters
-//   c_0 and c_1 .
-//   For ill-conditioned linear problems it is better to use the fact it is
-//   a linear fit as in 2 .
-//
-// Another interesting thing is the way we assign data to the vectors and
-// matrices through adoption .
-// This allows data assignment without physically moving bytes around .
-//
-//   USAGE
-//   -----
-// This macro can be execued via CINT or via ACLIC
-// - via CINT, do
-//    root > .x solveLinear.C
-// - via ACLIC
-//    root > gSystem->Load("libMatrix");
-//    root > gSystem->Load("libGpad");
-//    root > .x solveLinear.C+
-//
+/// \file
+/// \ingroup tutorial_matrix
+/// This macro shows several ways to perform a linear least-squares
+/// analysis . To keep things simple we fit a straight line to 4
+/// data points
+/// The first 4 methods use the linear algebra package to find
+///  x  such that min \f$ (A x - b)^T (A x - b) \f$ where A and b
+///  are calculated with the data points  and the functional expression :
+///
+///  1. Normal equations:
+///   Expanding the expression \f$ (A x - b)^T (A x - b) \f$ and taking the
+///   derivative wrt x leads to the "Normal Equations":
+///   \f$ A^T A x = A^T b \f$ where \f$ A^T A \f$ is a positive definite matrix. Therefore,
+///   a Cholesky decomposition scheme can be used to calculate its inverse .
+///   This leads to the solution \f$ x = (A^T A)^-1 A^T b \f$ . All this is done in
+///   routine NormalEqn . We made it a bit more complicated by giving the
+///   data weights .
+///   Numerically this is not the best way to proceed because effectively the
+///   condition number of \f$ A^T A \f$ is twice as large as that of A, making inversion
+///   more difficult
+///
+///  2. SVD
+///   One can show that solving \f$ A x = b \f$ for x with A of size \f$ (m x n) \f$
+///   and \f$ m > n \f$  through a Singular Value Decomposition is equivalent to minimizing
+///   \f$ (A x - b)^T (A x - b) \f$ Numerically , this is the most stable method of all 5
+///
+///  3. Pseudo Inverse
+///   Here we calculate the generalized matrix inverse ("pseudo inverse") by
+///   solving \f$ A X = Unit \f$ for matrix \f$ X \f$ through an SVD . The formal expression for
+///   is \f$ X = (A^T A)^-1 A^T \f$ . Then we multiply it by \f$ b \f$ .
+///   Numerically, not as good as 2 and not as fast . In general it is not a
+///   good idea to solve a set of linear equations with a matrix inversion .
+///
+///  4. Pseudo Inverse , brute force
+///   The pseudo inverse is calculated brute force through a series of matrix
+///   manipulations . It shows nicely some operations in the matrix package,
+///   but is otherwise a big "no no" .
+///
+///  5. Least-squares analysis with Minuit
+///   An objective function L is minimized by Minuit, where
+///    \f$ L = sum_i { (y - c_0 -c_1 * x / e)^2 } \f$
+///   Minuit will calculate numerically the derivative of L wrt c_0 and c_1 .
+///   It has not been told that these derivatives are linear in the parameters
+///   c_0 and c_1 .
+///   For ill-conditioned linear problems it is better to use the fact it is
+///   a linear fit as in 2 .
+///
+/// Another interesting thing is the way we assign data to the vectors and
+/// matrices through adoption .
+/// This allows data assignment without physically moving bytes around .
+///
+///  #### USAGE
+///
+/// This macro can be executed via CINT or via ACLIC
+/// - via the interpretor, do
+/// ~~~ {.cpp}
+///    root > .x solveLinear.C
+/// ~~~
+/// - via ACLIC
+/// ~~~ {.cpp}
+///    root > gSystem->Load("libMatrix");
+///    root > gSystem->Load("libGpad");
+///    root > .x solveLinear.C+
+/// ~~~
+///
+/// \macro_output
+/// \macro_code
+///
+/// \author Eddy Offermann
+
 #ifndef __CINT__
 #include "Riostream.h"
 #include "TMatrixD.h"

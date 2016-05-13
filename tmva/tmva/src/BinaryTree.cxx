@@ -52,9 +52,9 @@ ClassImp(TMVA::BinaryTree)
 /// constructor for a yet "empty" tree. Needs to be filled afterwards
 
 TMVA::BinaryTree::BinaryTree( void )
-   : fRoot  ( NULL ),
-     fNNodes( 0 ),
-     fDepth ( 0 )
+: fRoot  ( NULL ),
+   fNNodes( 0 ),
+   fDepth ( 0 )
 {
 }
 
@@ -232,6 +232,6 @@ void TMVA::BinaryTree::SetTotalTreeDepth( Node *n)
 ////////////////////////////////////////////////////////////////////////////////
 
 TMVA::MsgLogger& TMVA::BinaryTree::Log() const {
-  TTHREAD_TLS_DECL_ARG(MsgLogger,logger,"BinaryTree");
-  return logger;
+   TTHREAD_TLS_DECL_ARG(MsgLogger,logger,"BinaryTree");
+   return logger;
 }

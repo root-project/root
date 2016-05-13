@@ -619,12 +619,13 @@
       for (var i = 0; i < local_bins.length; ++i) {
          var hh = local_bins[i];
          var wei = this.tz(hh.z);
+         if (wei===0) continue;
 
          // create a new mesh with cube geometry
          var bin = new THREE.Mesh(geom, material.clone());
 
          bin.position.set(this.tx(hh.x), this.ty(hh.y), wei / 2);
-         bin.scale.set(1,1,wei);
+         bin.scale.set(1,1,Math.abs(wei));
 
          if ((JSROOT.gStyle.Tooltip > 0) && ('tip' in hh))
             bin.name = hh.tip.replace(/(?:\r\n|\r|\n)/g, '<br/>');

@@ -86,7 +86,7 @@ namespace TMVA {
       VectorOfFloatVectors                   fMin;       //! Min of source range
       VectorOfFloatVectors                   fMax;       //! Max of source range
 
-      ClassDef(VariableNormalizeTransform,0) // Variable transformation: normalization
+      ClassDef(VariableNormalizeTransform,0); // Variable transformation: normalization
    };
 
 } // namespace TMVA

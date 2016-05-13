@@ -54,12 +54,12 @@ ClassImp(TMVA::BinarySearchTreeNode)
 /// constructor of a node for the search tree
 
 TMVA::BinarySearchTreeNode::BinarySearchTreeNode( const Event* e, UInt_t /* signalClass */ ) 
-   : TMVA::Node(),
-     fEventV  ( std::vector<Float_t>() ),
-     fTargets ( std::vector<Float_t>() ),
-     fWeight  ( e==0?0:e->GetWeight()  ),
-     fClass   ( e==0?0:e->GetClass() ), // see BinarySearchTree.h, line Mean() RMS() Min() and Max()
-     fSelector( -1 )
+: TMVA::Node(),
+   fEventV  ( std::vector<Float_t>() ),
+   fTargets ( std::vector<Float_t>() ),
+   fWeight  ( e==0?0:e->GetWeight()  ),
+   fClass   ( e==0?0:e->GetClass() ), // see BinarySearchTree.h, line Mean() RMS() Min() and Max()
+   fSelector( -1 )
 {
    if (e!=0) {
       for (UInt_t ivar=0; ivar<e->GetNVariables(); ivar++) fEventV.push_back(e->GetValue(ivar));
@@ -229,7 +229,7 @@ void TMVA::BinarySearchTreeNode::ReadAttributes(void* node, UInt_t /* tmva_Versi
       fClass=0;
    if (sb=="1")
       fClass=1;
-//   fClass = (sb=="Signal")?0:1;
+   //   fClass = (sb=="Signal")?0:1;
    Int_t nvars;
    gTools().ReadAttr(node, "NVars",nvars);
    fEventV.resize(nvars);
@@ -242,7 +242,7 @@ void TMVA::BinarySearchTreeNode::ReadAttributes(void* node, UInt_t /* tmva_Versi
 void TMVA::BinarySearchTreeNode::AddAttributesToNode(void* node) const {
    gTools().AddAttr(node, "selector", fSelector );
    gTools().AddAttr(node, "weight", fWeight );
-//   gTools().AddAttr(node, "type", (IsSignal()?"Signal":"Background"));
+   //   gTools().AddAttr(node, "type", (IsSignal()?"Signal":"Background"));
    gTools().AddAttr(node, "type", GetClass());
    gTools().AddAttr(node, "NVars", fEventV.size());
 }

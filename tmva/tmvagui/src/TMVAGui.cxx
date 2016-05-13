@@ -31,8 +31,8 @@ TList* TMVA::GetKeyList( const TString& pattern )
 
 // utility function
 void TMVA::ActionButton( TControlBar* cbar, 
-                   const TString& title, const TString& macro, const TString& comment, 
-                   const TString& buttonType, TString requiredKey ) 
+                         const TString& title, const TString& macro, const TString& comment, 
+                         const TString& buttonType, TString requiredKey ) 
 {
    cbar->AddButton( title, macro, comment, buttonType );
 
@@ -81,37 +81,37 @@ void TMVA::TMVAGui( const char* fName  , TString dataset)
    }
    
    if(file->GetListOfKeys()->GetEntries()<=0)
-   {
-      cout << "==> Abort TMVAGui, please verify if dataset exist" << endl;
-      return;
-   }
+      {
+         cout << "==> Abort TMVAGui, please verify if dataset exist" << endl;
+         return;
+      }
    if( (dataset==""||dataset.IsWhitespace()) && (file->GetListOfKeys()->GetEntries()==1))
-   {
-       TKey *key=(TKey*)file->GetListOfKeys()->At(0);
-       dataset=key->GetName();
-   }else if((dataset==""||dataset.IsWhitespace()) && (file->GetListOfKeys()->GetEntries()>=1))
-   {
-       gROOT->Reset();
-       gStyle->SetScreenFactor(2); // if you have a large screen, select 1,2 or 1.4
+      {
+         TKey *key=(TKey*)file->GetListOfKeys()->At(0);
+         dataset=key->GetName();
+      }else if((dataset==""||dataset.IsWhitespace()) && (file->GetListOfKeys()->GetEntries()>=1))
+      {
+         gROOT->Reset();
+         gStyle->SetScreenFactor(2); // if you have a large screen, select 1,2 or 1.4
        
-       TControlBar *bar=new TControlBar("vertical","Select dataset", 0, 0);
-       bar->SetButtonWidth(300);
-       for(int i=0;i<file->GetListOfKeys()->GetEntries();i++)
-       {
-           TKey *key=(TKey*)file->GetListOfKeys()->At(i);
-           dataset=key->GetName();
-           bar->AddButton(dataset.Data(),Form("TMVA::TMVAGui(\"%s\",\"%s\")",fName,dataset.Data()),dataset.Data());
-       }
+         TControlBar *bar=new TControlBar("vertical","Select dataset", 0, 0);
+         bar->SetButtonWidth(300);
+         for(int i=0;i<file->GetListOfKeys()->GetEntries();i++)
+            {
+               TKey *key=(TKey*)file->GetListOfKeys()->At(i);
+               dataset=key->GetName();
+               bar->AddButton(dataset.Data(),Form("TMVA::TMVAGui(\"%s\",\"%s\")",fName,dataset.Data()),dataset.Data());
+            }
        
-       bar->AddSeparator();
-       bar->AddButton( "Quit",   ".q", "Quit", "button");
+         bar->AddSeparator();
+         bar->AddButton( "Quit",   ".q", "Quit", "button");
 
-       // set the style 
-       bar->SetTextColor("black");
-       bar->Show();
-       gROOT->SaveContext();
-       return ;
-   }
+         // set the style 
+         bar->SetTextColor("black");
+         bar->Show();
+         gROOT->SaveContext();
+         return ;
+      }
    
    // find all references   
    TMVAGui_keyContent = (TList*)file->GetDirectory(dataset.Data())->GetListOfKeys()->Clone();
@@ -231,9 +231,9 @@ void TMVA::TMVAGui( const char* fName  , TString dataset)
                  buttonType, defaultRequiredClassifier );
 
    // parallel coordinates only exist since ROOT 5.17
-   #if ROOT_VERSION_CODE < ROOT_VERSION(5,17,0)
+#if ROOT_VERSION_CODE < ROOT_VERSION(5,17,0)
    TMVAGui_inactiveButtons.push_back( title );
-   #endif
+#endif
 
    title =Form( "(%i) PDFs of Classifiers (requires \"CreateMVAPdfs\" option set)", ++ic );
    ActionButton( cbar,  

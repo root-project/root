@@ -341,6 +341,7 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
    Ssiz_t dot_pos = possibleFilename.Last('.');
    if ( dot_pos != kNPOS
        && possibleFilename.Index("Alt$")<0 && possibleFilename.Index("Entries$")<0
+       && possibleFilename.Index("LocalEntries$")<0
        && possibleFilename.Index("Length$")<0  && possibleFilename.Index("Entry$")<0
        && possibleFilename.Index("LocalEntry$")<0
        && possibleFilename.Index("Min$")<0 && possibleFilename.Index("Max$")<0
@@ -360,6 +361,7 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
    } else {
       possibleFilename = selection;
       if (possibleFilename.Index("Alt$")<0 && possibleFilename.Index("Entries$")<0
+          && possibleFilename.Index("LocalEntries$")<0
           && possibleFilename.Index("Length$")<0  && possibleFilename.Index("Entry$")<0
           && possibleFilename.Index("LocalEntry$")<0
           && possibleFilename.Index("Min$")<0 && possibleFilename.Index("Max$")<0

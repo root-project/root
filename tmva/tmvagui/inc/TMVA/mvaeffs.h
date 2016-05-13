@@ -35,7 +35,7 @@ using std::endl;
 namespace TMVA{
 
    void mvaeffs(TString dataset, TString fin = "TMVA.root", 
-                 Bool_t useTMVAStyle = kTRUE, TString formula="S/sqrt(S+B)" );
+                Bool_t useTMVAStyle = kTRUE, TString formula="S/sqrt(S+B)" );
 
    // this macro plots the signal and background efficiencies
    // as a function of the MVA cut.
@@ -61,7 +61,7 @@ namespace TMVA{
          rightAxis(0),
          maxSignificance(0),
          maxSignificanceErr(0)
-         {}
+            {}
       virtual ~MethodInfo();
 
       TString  methodName;
@@ -87,11 +87,11 @@ namespace TMVA{
       ClassDef(MethodInfo,0);
    };
 
-  class StatDialogMVAEffs {  
+   class StatDialogMVAEffs {  
 
       RQ_OBJECT("StatDialogMVAEffs")
       
-   public:
+         public:
 
       StatDialogMVAEffs(TString ds,const TGWindow* p, Float_t ns, Float_t nb);
       virtual ~StatDialogMVAEffs();

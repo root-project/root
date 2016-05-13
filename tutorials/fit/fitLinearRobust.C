@@ -1,3 +1,19 @@
+/// \file
+/// \ingroup tutorial_fit
+/// This tutorial shows how the least trimmed squares regression,
+/// included in the TLinearFitter class, can be used for fitting
+/// in cases when the data contains outliers.
+/// Here the fitting is done via the TGraph::Fit function with option "rob":
+/// If you want to use the linear fitter directly for computing
+/// the robust fitting coefficients, just use the TLinearFitter::EvalRobust
+/// function instead of TLinearFitter::Eval
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Anna Kreshuk
+
 #include "TRandom.h"
 #include "TGraphErrors.h"
 #include "TF1.h"
@@ -6,15 +22,6 @@
 
 void fitLinearRobust()
 {
-//This tutorial shows how the least trimmed squares regression,
-//included in the TLinearFitter class, can be used for fitting
-//in cases when the data contains outliers.
-//Here the fitting is done via the TGraph::Fit function with option "rob":
-//If you want to use the linear fitter directly for computing
-//the robust fitting coefficients, just use the TLinearFitter::EvalRobust
-//function instead of TLinearFitter::Eval
-//Author: Anna Kreshuk
-
    //First generate a dataset, where 20% of points are spoiled by large
    //errors
    Int_t npoints = 250;

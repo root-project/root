@@ -86,7 +86,7 @@ namespace TMVA {
       // name of the class
       TString GetName() { return "Sum of weighted activations (absolute value)"; }
 
-      ClassDef(TNeuronInputAbs,0) // Calculates the sum of the absolute values of the weighted inputs
+      ClassDef(TNeuronInputAbs,0); // Calculates the sum of the absolute values of the weighted inputs
    };
 
 } // namespace TMVA

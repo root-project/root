@@ -1,6 +1,11 @@
-//Author: Timur Pocheptsov, 17/03/2014.
-//This macro demonstrates semi-transparent pads.
-//Requires OS X and ROOT configured with --enable-cocoa.
+/// \file
+/// \ingroup tutorial_cocoa
+/// This macro demonstrates semi-transparent pads.
+/// Requires OS X and ROOT configured with --enable-cocoa.
+///
+/// \macro_code
+///
+/// \author Timur Pocheptsov
 
 //Includes for ACLiC (cling does not need them).
 #include "TVirtualX.h"

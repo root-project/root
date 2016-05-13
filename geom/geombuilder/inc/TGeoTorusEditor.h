@@ -1,5 +1,5 @@
 // @(#):$Id$
-// Author: M.Gheata 
+// Author: M.Gheata
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -55,13 +55,13 @@ protected:
    TGNumberEntry       *fERmin;             // Number entry for  Rmin
    TGNumberEntry       *fERmax;             // Number entry for  Rmax
    TGNumberEntry       *fEPhi1;             // Number entry for  phi1
-   TGNumberEntry       *fEDphi;             // Number entry for  Dphi 
+   TGNumberEntry       *fEDphi;             // Number entry for  Dphi
    TGTextButton        *fApply;             // Apply-Button to accept changes
    TGTextButton        *fUndo;              // Undo-Button
    TGCheckButton       *fDelayed;           // Check button for delayed draw
 
    virtual void ConnectSignals2Slots();   // Connect the signals to the slots
-   Bool_t       IsDelayed() const;   
+   Bool_t       IsDelayed() const;
 
 public:
    TGeoTorusEditor(const TGWindow *p = 0,
@@ -80,8 +80,8 @@ public:
    void           DoName();
    void           DoApply();
    void           DoUndo();
-   
+
    ClassDef(TGeoTorusEditor,0)   // TGeoTorus editor
-};   
-  
-#endif                    
+};
+
+#endif

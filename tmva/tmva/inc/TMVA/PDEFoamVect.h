@@ -66,7 +66,7 @@ namespace TMVA {
       Double_t   GetCoord(Int_t i) const { return fCoords[i]; }   // Returns coordinate
 
       ClassDef(PDEFoamVect,2) //n-dimensional vector with dynamical allocation
-   }; // end of PDEFoamVect
+         }; // end of PDEFoamVect
 }  // namespace TMVA
 
 #endif

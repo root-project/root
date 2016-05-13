@@ -31,6 +31,8 @@ Bool_t TDirectory::fgAddDirectory = kTRUE;
 const Int_t  kMaxLen = 2048;
 
 /** \class TDirectory
+\ingroup Base
+
 Describe directory structure in memory.
 */
 
@@ -1177,9 +1179,13 @@ void TDirectory::DecodeNameCycle(const char *buffer, char *name, Short_t &cycle,
 
    if (*ni == '*')
       cycle = 10000;
-   else if (isdigit(*ni))
-      cycle = atoi(ni);
-   else
+   else if (isdigit(*ni)) {
+      long parsed = strtol(ni,nullptr,10);
+      if (parsed >= (long) std::numeric_limits<Short_t>::max())
+         cycle = 0;
+      else
+         cycle = (Short_t)parsed;
+   } else
       cycle = 9999;
 }
 

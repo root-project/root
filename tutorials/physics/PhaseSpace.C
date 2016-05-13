@@ -1,6 +1,13 @@
+/// \file
+/// \ingroup tutorial_physics
+/// Example of use of TGenPhaseSpace
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Valerio Filippini
+
 void PhaseSpace() {
-// example of use of TGenPhaseSpace
-//Author: Valerio Filippini
 
    if (!gROOT->GetClass("TGenPhaseSpace")) gSystem->Load("libPhysics");
 

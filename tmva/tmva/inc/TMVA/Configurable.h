@@ -72,18 +72,18 @@ namespace TMVA {
 
       // Declare option and bind it to a variable
       template<class T> 
-      OptionBase* DeclareOptionRef( T& ref, const TString& name, const TString& desc = "" );
+         OptionBase* DeclareOptionRef( T& ref, const TString& name, const TString& desc = "" );
 
       template<class T> 
-      OptionBase* DeclareOptionRef( T*& ref, Int_t size, const TString& name, const TString& desc = "" );
+         OptionBase* DeclareOptionRef( T*& ref, Int_t size, const TString& name, const TString& desc = "" );
 
       // Add a predefined value to the last declared option
       template<class T>
-      void AddPreDefVal(const T&);
+         void AddPreDefVal(const T&);
 
       // Add a predefined value to the option named optname
       template<class T>
-      void AddPreDefVal(const TString&optname ,const T&);
+         void AddPreDefVal(const TString&optname ,const T&);
 
       
       void CheckForUnusedOptions() const;
@@ -140,11 +140,11 @@ namespace TMVA {
       mutable MsgLogger* fLogger;                     //! message logger
 
       template <class T>
-      void AssignOpt( const TString& name, T& valAssign ) const;
+         void AssignOpt( const TString& name, T& valAssign ) const;
       
    public:
 
-      ClassDef(Configurable,0)  // Virtual base class for all TMVA method
+      ClassDef(Configurable,0);  // Virtual base class for all TMVA method
 
    };
 } // namespace TMVA
@@ -187,24 +187,24 @@ void TMVA::Configurable::AddPreDefVal(const TString &optname, const T& val)
 {
    // add predefined option value to the option named optname
 
-  TListIter optIt( &fListOfOptions );   
-  while (OptionBase * op = (OptionBase *) optIt()) {
-    if (optname == TString(op->TheName())){
-      Option<T>* oc = dynamic_cast<Option<T>*>(op);
-      if(oc!=0){
-        oc->AddPreDefVal(val);
-        return;
-      }
-      else{
-        Log() << kFATAL << "Option \"" << optname 
-              << "\" was found, but somehow I could not convert the pointer propperly.. please check the syntax of your option declaration" << Endl;
-        return;
-      }
+   TListIter optIt( &fListOfOptions );   
+   while (OptionBase * op = (OptionBase *) optIt()) {
+      if (optname == TString(op->TheName())){
+         Option<T>* oc = dynamic_cast<Option<T>*>(op);
+         if(oc!=0){
+            oc->AddPreDefVal(val);
+            return;
+         }
+         else{
+            Log() << kFATAL << "Option \"" << optname 
+                  << "\" was found, but somehow I could not convert the pointer propperly.. please check the syntax of your option declaration" << Endl;
+            return;
+         }
       
-    }
-  }
-  Log() << kFATAL << "Option \"" << optname 
-        << "\" is not declared, hence cannot add predefined value, please check the syntax of your option declaration" << Endl;
+      }
+   }
+   Log() << kFATAL << "Option \"" << optname 
+         << "\" is not declared, hence cannot add predefined value, please check the syntax of your option declaration" << Endl;
   
 }
 

@@ -188,6 +188,10 @@ void TProtoClass::Delete(Option_t* opt /*= ""*/) {
    if (fBase) fBase->Delete(opt);
    delete fBase; fBase = 0;
 
+   for (auto dm: fData) {
+      delete dm;
+   }
+
    if (fEnums) fEnums->Delete(opt);
    delete fEnums; fEnums = 0;
 
@@ -256,6 +260,9 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
 
    //cl->fData = (TListOfDataMembers*)fData;
 
+   // The TDataMember were passed along.
+   fData.clear();
+
    // We need to fill enums one by one to initialise the internal map which is
    // transient
    {
@@ -264,6 +271,10 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
          for (TObject* enumAsTObj : *fEnums){
             temp->Add((TEnum*) enumAsTObj);
          }
+         // We did not transfer the container itself, let remove it from memory without deleting its content.
+         fEnums->Clear();
+         delete fEnums;
+         fEnums = nullptr;
       }
       cl->fEnums = temp;
    }

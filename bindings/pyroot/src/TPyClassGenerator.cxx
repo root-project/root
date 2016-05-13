@@ -164,7 +164,7 @@ TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load, Bool_t silen
    proxyCode << "class " << clName << " {\nprivate:\n PyObject* fPyObject;\npublic:\n";
 
 // loop over and add member functions
-   Bool_t hasConstructor = kFALSE;
+   Bool_t hasConstructor = kFALSE, hasDestructor = kFALSE;
    for ( int i = 0; i < PyList_GET_SIZE( attrs ); ++i ) {
       PyObject* label = PyList_GET_ITEM( attrs, i );
       Py_INCREF( label );
@@ -174,28 +174,41 @@ TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load, Bool_t silen
       if ( PyCallable_Check( attr ) ) {
          std::string mtName = PyROOT_PyUnicode_AsString( label );
 
+         if ( mtName == "__del__" ) {
+            hasDestructor = kTRUE;
+            proxyCode << " ~" << clName << "() { TPyArg::CallDestructor(fPyObject); }\n";
+            continue;
+         }
+
+         Bool_t isConstructor = mtName == "__init__";
+         if ( !isConstructor && mtName.find("__", 0, 2) == 0 )
+            continue;    // skip all other python special funcs
+
       // figure out number of variables required
+#if PY_VERSION_HEX < 0x03000000
          PyObject* im_func = PyObject_GetAttrString( attr, (char*)"im_func" );
          PyObject* func_code =
             im_func ? PyObject_GetAttrString( im_func, (char*)"func_code" ) : NULL;
+#else
+         PyObject* func_code = PyObject_GetAttrString( attr, "__code__" );
+#endif
          PyObject* var_names =
             func_code ? PyObject_GetAttrString( func_code, (char*)"co_varnames" ) : NULL;
+         if (PyErr_Occurred()) PyErr_Clear(); // happens for slots; default to 0 arguments
+
          int nVars = var_names ? PyTuple_GET_SIZE( var_names ) - 1 /* self */ : 0 /* TODO: probably large number, all default? */;
          if ( nVars < 0 ) nVars = 0;
          Py_XDECREF( var_names );
          Py_XDECREF( func_code );
+#if PY_VERSION_HEX < 0x03000000
          Py_XDECREF( im_func );
-
-         Bool_t isConstructor = mtName == "__init__";
-         Bool_t isDestructor  = mtName == "__del__";
+#endif
 
       // method declaration as appropriate
          if ( isConstructor ) {
             hasConstructor = kTRUE;
             proxyCode << " " << clName << "(";
-         } else if ( isDestructor )
-            proxyCode << " ~" << clName << "(";
-         else // normal method
+         } else // normal method
             proxyCode << " TPyReturn " << mtName << "(";
          for ( int ivar = 0; ivar < nVars; ++ivar ) {
              proxyCode << "const TPyArg& a" << ivar;
@@ -224,9 +237,16 @@ TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load, Bool_t silen
       Py_DECREF( label );
    }
 
-// special case if no constructor
+// special case if no constructor or destructor
    if ( ! hasConstructor )
       proxyCode << " " << clName << "() {\n TPyArg::CallConstructor(fPyObject, (PyObject*)" << (void*)pyclass << "); }\n";
+
+   if ( ! hasDestructor )
+      proxyCode << " ~" << clName << "() { TPyArg::CallDestructor(fPyObject); }\n";
+
+// for now, don't allow copying (ref-counting wouldn't work as expected anyway)
+   proxyCode << " " << clName << "(const " << clName << "&) = delete;\n";
+   proxyCode << " " << clName << "& operator=(const " << clName << "&) = delete;\n";
 
 // closing and building of Cling proxy class
    proxyCode << "};";

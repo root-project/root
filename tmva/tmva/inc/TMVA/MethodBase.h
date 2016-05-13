@@ -182,6 +182,10 @@ namespace TMVA {
       // helper function to set errors to -1
       void NoErrorCalc(Double_t* const err, Double_t* const errUpper);
 
+      // signal/background classification response for all current set of data 
+      virtual std::vector<Double_t> GetMvaValues(Long64_t firstEvt = 0, Long64_t lastEvt = -1, Bool_t logProgress = false);
+
+
    public:
       // regression response
       const std::vector<Float_t>& GetRegressionValues(const TMVA::Event* const ev){
@@ -347,9 +351,9 @@ namespace TMVA {
       TString          GetTrainingROOTVersionString() const;
 
       TransformationHandler&        GetTransformationHandler(Bool_t takeReroutedIfAvailable=true)
-      {
-         if(fTransformationPointer && takeReroutedIfAvailable) return *fTransformationPointer; else return fTransformation;
-      }
+         {
+            if(fTransformationPointer && takeReroutedIfAvailable) return *fTransformationPointer; else return fTransformation;
+         }
       const TransformationHandler&  GetTransformationHandler(Bool_t takeReroutedIfAvailable=true) const
       {
          if(fTransformationPointer && takeReroutedIfAvailable) return *fTransformationPointer; else return fTransformation;
@@ -643,8 +647,8 @@ namespace TMVA {
       Int_t            fNsmoothMVAPdf;               // number of times a histogram is smoothed before creating the PDF
 
    protected:
-        Results *fResults;
-      ClassDef(MethodBase,0)  // Virtual base class for all TMVA method
+      Results *fResults;
+      ClassDef(MethodBase,0);  // Virtual base class for all TMVA method
 
    };
 } // namespace TMVA

@@ -37,6 +37,7 @@ file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/rootalias.C "")
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/rootlogoff.C "{}")
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/.rootrc "
 Proof.Sandbox: /tmp/proof
+Rint.History:  .root_hist
 ")
 
 #---Definition of the helper function--------------------------------
@@ -116,6 +117,10 @@ if(NOT GRAPHVIZ_FOUND)
   set(gviz_veto graphs/graphstruct.C)
 endif()
 
+if(NOT TBB_FOUND)
+  set(tbb_veto  multicore/mtbb*.C)
+endif()
+
 #---These ones requires a display to run-----------------------------
 set(gui_veto fit/fitpanel_playback.C
              cocoa/*.C
@@ -177,7 +182,8 @@ set(all_veto hsimple.C
              ${opengl_veto}
              ${gviz_veto}
              ${r_veto}
-             ${histfactory_veto})
+             ${histfactory_veto}
+             ${tbb_veto})
 
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
 file(GLOB tutorials_veto RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${all_veto})
@@ -344,12 +350,3 @@ if(ROOT_python_FOUND)
                 ENVIRONMENT ${ROOT_environ})
   endforeach()
 endif()
-
-
-
-
-
-
-
-
-

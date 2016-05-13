@@ -13,15 +13,6 @@
 #define ROOT_TWbox
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TWbox                                                                //
-//                                                                      //
-// A window box (box with 3-D effects).                                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-
 #ifndef ROOT_TBox
 #include "TBox.h"
 #endif
@@ -33,8 +24,8 @@
 class TWbox : public TBox {
 
 protected:
-   Short_t      fBorderSize;    //window box bordersize in pixels
-   Short_t      fBorderMode;    //Bordermode (-1=down, 0 = no border, 1=up)
+   Short_t      fBorderSize;    ///< window box bordersize in pixels
+   Short_t      fBorderMode;    ///< Bordermode (-1=down, 0 = no border, 1=up)
 
 public:
    TWbox();

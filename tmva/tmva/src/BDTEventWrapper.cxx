@@ -31,8 +31,8 @@ using namespace TMVA;
 BDTEventWrapper::BDTEventWrapper(const Event* e) : fEvent(e) {
    // constuctor
 
-  fBkgWeight = 0.0;
-  fSigWeight = 0.0;
+   fBkgWeight = 0.0;
+   fSigWeight = 0.0;
 }
 
 BDTEventWrapper::~BDTEventWrapper() {

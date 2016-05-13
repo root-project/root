@@ -131,7 +131,7 @@ namespace TMVA {
       mutable MsgLogger* fLogger;   // message logger
       MsgLogger& Log() const { return *fLogger; }
          
-      ClassDef(Config,0) // Singleton class for global configuration settings
+      ClassDef(Config,0); // Singleton class for global configuration settings
    };
 
    // global accessor

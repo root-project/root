@@ -70,7 +70,7 @@ namespace TMVA {
       GiniIndex() { fName="Gini"; }
 
       // copy constructor
-      GiniIndex( const GiniIndex& g): SeparationBase(g) {}
+   GiniIndex( const GiniIndex& g): SeparationBase(g) {}
 
       //destructor
       virtual ~GiniIndex(){}
@@ -80,7 +80,7 @@ namespace TMVA {
 
    protected:
       
-      ClassDef(GiniIndex,0) // Implementation of the GiniIndex as separation criterion
+      ClassDef(GiniIndex,0); // Implementation of the GiniIndex as separation criterion
    };  
 
 } // namespace TMVA

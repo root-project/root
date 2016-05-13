@@ -1,9 +1,14 @@
-//
-// This simple macro demonstrates persistency of FOAM object.
-// First run macro foam_demo.C to create file foam_demo.root with FOAM object.
-//
-// Next type root -l foam_demopers.C from shell command line
-//
+/// \file
+/// \ingroup tutorial_FOAM
+/// This simple macro demonstrates persistency of FOAM object.
+/// First run macro foam_demo.C to create file foam_demo.root with FOAM object.
+///
+/// Next type `root -l foam_demopers.C` from shell command line
+///
+/// \macro_code
+///
+/// \author Stascek Jadach
+
 #include "Riostream.h"
 #include "TFile.h"
 #include "TFoam.h"

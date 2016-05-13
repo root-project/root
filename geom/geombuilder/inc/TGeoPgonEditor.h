@@ -1,5 +1,5 @@
 // @(#):$Id$
-// Author: M.Gheata 
+// Author: M.Gheata
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -44,11 +44,11 @@ public:
                    Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGeoPgonEditor();
    virtual void   SetModel(TObject *obj);
-   
+
    void           DoNedges();
    virtual void   DoApply();
    virtual void   DoUndo();
-   
+
    ClassDef(TGeoPgonEditor,0)   // TGeoPgon editor
-};    
-#endif                    
+};
+#endif

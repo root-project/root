@@ -1,24 +1,42 @@
-//
-//+   Example to fit two histograms at the same time via TVirtualFitter
-//
-// To execute this tutorial, you can do:
-//
-// root > .x fit2dHist.C  (executing via CINT, slow)
-//   or
-// root > .x fit2dHist.C+     (executing via ACLIC , fast, with Minuit)
-// root > .x fit2dHist.C+(2)  (executing via ACLIC , fast, with Minuit2)
-//   or using the option to fit independently the 2 histos
-// root > .x fit2dHist.C+(10) (via ACLIC, fast, independent fits with Minuit)
-// root > .x fit2dHist.C+(12) (via ACLIC, fast, independent fits with Minuit2)
-//
-// Note that you can also execute this script in batch with eg,
-//  root -b -q "fit2dHist.C+(12)"
-//
-// or execute interactively from the shell
-//  root fit2dHist.C+
-//  root "fit2dHist.C+(12)"
-//
-// Authors: Lorenzo Moneta, Rene Brun 18/01/2006
+/// \file
+/// \ingroup tutorial_fit
+///
+/// Example to fit two histograms at the same time via TVirtualFitter
+///
+/// To execute this tutorial, you can do:
+///
+/// ~~~ {.cpp}
+/// root > .x fit2dHist.C  (executing via CINT, slow)
+/// ~~~
+///
+///   or
+/// ~~~ {.cpp}
+/// root > .x fit2dHist.C+     (executing via ACLIC , fast, with Minuit)
+/// root > .x fit2dHist.C+(2)  (executing via ACLIC , fast, with Minuit2)
+/// ~~~
+///
+///   or using the option to fit independently the 2 histos
+/// ~~~ {.cpp}
+/// root > .x fit2dHist.C+(10) (via ACLIC, fast, independent fits with Minuit)
+/// root > .x fit2dHist.C+(12) (via ACLIC, fast, independent fits with Minuit2)
+/// ~~~
+///
+/// Note that you can also execute this script in batch with eg,
+/// ~~~ {.cpp}
+///  root -b -q "fit2dHist.C+(12)"
+/// ~~~
+///
+/// or execute interactively from the shell
+/// ~~~ {.cpp}
+///  root fit2dHist.C+
+///  root "fit2dHist.C+(12)"
+/// ~~~
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \authors: Lorenzo Moneta, Rene Brun 18/01/2006
 
 #include "TH2D.h"
 #include "TF2.h"

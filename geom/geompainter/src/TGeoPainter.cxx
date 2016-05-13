@@ -276,7 +276,7 @@ void TGeoPainter::DefineColors() const
    static Int_t color = 0;
    if (!color) {
       TColor::InitializeColors();
-      for (auto icol=1; icol<10; ++icol) 
+      for (auto icol=1; icol<10; ++icol)
          color = GetColor(icol, 0.5);
    }
 }
@@ -304,11 +304,11 @@ Int_t TGeoPainter::GetColor(Int_t base, Float_t light) const
       col_base = gROOT->GetColor(kBlack);
       color = 1;
    }
-   // Create a color palette for col_base   
+   // Create a color palette for col_base
    Float_t r,g,b,h,l,s;
    Double_t red[2], green[2], blue[2];
    Double_t stop[] = {0., 1.0};
-     
+
    col_base->GetRGB(r,g,b);
    TColor::RGB2HLS(r,g,b,h,l,s);
    TColor::HLS2RGB(h,lmin,s,r,g,b);
@@ -1604,17 +1604,17 @@ void TGeoPainter::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
 ////////////////////////////////////////////////////////////////////////////////
 /// Raytrace current drawn geometry
 
-void TGeoPainter::Raytrace(Option_t * /*option*/)
+void TGeoPainter::Raytrace(Option_t *)
 {
    if (!gPad || gPad->IsBatch()) return;
    TView *view = gPad->GetView();
    if (!view) return;
+   Int_t rtMode = fGeoManager->GetRTmode();
    TGeoVolume *top = fGeoManager->GetTopVolume();
    if (top != fTopVolume) fGeoManager->SetTopVolume(fTopVolume);
    if (!view->IsPerspective()) view->SetPerspective();
    gVirtualX->SetMarkerSize(1);
    gVirtualX->SetMarkerStyle(1);
-   Int_t i;
    Bool_t inclipst=kFALSE, inclip=kFALSE;
    Double_t krad = TMath::DegToRad();
    Double_t lat = view->GetLatitude();
@@ -1647,9 +1647,9 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
    Double_t min[3], max[3];
    view->GetRange(min, max);
    Double_t cov[3];
-   for (i=0; i<3; i++) cov[i] = 0.5*(min[i]+max[i]);
+   for (Int_t i=0; i<3; i++) cov[i] = 0.5*(min[i]+max[i]);
    Double_t cop[3];
-   for (i=0; i<3; i++) cop[i] = cov[i] - dir[i]*dview;
+   for (Int_t i=0; i<3; i++) cop[i] = cov[i] - dir[i]*dview;
    fGeoManager->InitTrack(cop, dir);
    Bool_t outside = fGeoManager->IsOutside();
    fGeoManager->DoBackupState();
@@ -1661,7 +1661,8 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
    pxmax = gPad->UtoAbsPixel(1);
    pymin = gPad->VtoAbsPixel(1);
    pymax = gPad->VtoAbsPixel(0);
-   TGeoNode *next, *nextnode;
+   TGeoNode *next = nullptr;
+   TGeoNode *nextnode = nullptr;
    Double_t step,steptot;
    Double_t *norm;
    const Double_t *point = fGeoManager->GetCurrentPoint();
@@ -1785,9 +1786,18 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
          }
          if (!done) continue;
          // current ray intersect a visible volume having color=base_color
-//         if (!norm) norm = fGeoManager->FindNormal(kFALSE);
-         if (!norm) norm = fGeoManager->FindNormalFast();
-         if (!norm) continue;
+         if (rtMode > 0) {
+            fGeoManager->MasterToLocal(gGeoManager->GetCurrentPoint(), local);
+            fGeoManager->MasterToLocalVect(gGeoManager->GetCurrentDirection(), dir);
+            for (Int_t i=0; i<3; ++i) local[i] += 1.E-8*dir[i];
+            step = next->GetVolume()->GetShape()->DistFromInside(local,dir,3);
+            for (Int_t i=0; i<3; ++i) local[i] += step*dir[i];
+            next->GetVolume()->GetShape()->ComputeNormal(local, dir, normal);
+            norm = normal;
+         } else {
+            if (!norm) norm = fGeoManager->FindNormalFast();
+            if (!norm) continue;
+         }
          calf = norm[0]*tosource[0]+norm[1]*tosource[1]+norm[2]*tosource[2];
          light = TMath::Abs(calf);
          color = GetColor(base_color, light);

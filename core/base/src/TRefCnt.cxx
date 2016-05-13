@@ -10,12 +10,12 @@
  *************************************************************************/
 
 /** \class TRefCnt
+\ingroup Base
+
 Definitions for TRefCnt, base class for reference counted objects.
 */
 
-
 #include "TRefCnt.h"
-
 
 // This definition is compiled in case nothing else is,
 // in order to quiet down some fussy librarians

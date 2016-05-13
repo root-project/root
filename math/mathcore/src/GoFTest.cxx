@@ -496,147 +496,147 @@ namespace Math {
 // code from kSamples (R) F. Scholz
 
 /* computes the k-sample Anderson-Darling test statistics in both original 
-	and alternative versions for the nonparametric (rank) test described in 
-	Scholz F.W. and Stephens M.A. (1987), K-sample Anderson-Darling Tests,
-	Journal of the American Statistical Association, Vol 82, No. 399, 
-	pp. 918-924
-	
-	Arguments:
-	adk: double array with length 2, stores AkN2 and AakN2
-	k: integer, number of samples being compared
-	x: double array storing the concatenated samples in the same order as ns
-	ns: integer array storing the k sample sizes, corresponding to x
-	zstar: double array storing the l distinct ordered observations in the
-		pooled sample
-	l: integer, length of zstar
-	
-	Outputs:
-	when the computation ends, AkN2 and AakN2 are stored in the given memory
-	pointed by adk
+   and alternative versions for the nonparametric (rank) test described in
+   Scholz F.W. and Stephens M.A. (1987), K-sample Anderson-Darling Tests,
+   Journal of the American Statistical Association, Vol 82, No. 399,
+   pp. 918-924
+
+   Arguments:
+   adk: double array with length 2, stores AkN2 and AakN2
+   k: integer, number of samples being compared
+   x: double array storing the concatenated samples in the same order as ns
+   ns: integer array storing the k sample sizes, corresponding to x
+   zstar: double array storing the l distinct ordered observations in the
+      pooled sample
+   l: integer, length of zstar
+
+   Outputs:
+   when the computation ends, AkN2 and AakN2 are stored in the given memory
+   pointed by adk
 */
 
 /* counts and returns the number of occurrence of a given number 
-	in a double array */
+   in a double array */
 int getCount(double z, const double *dat, int n) {
-	int i;
-	int count = 0;
-	
-	for (i = 0; i < n; i++) {
-		if (dat[i] == z) {
-			count++;
-		}
-	}
-	
-	return(count);
+   int i;
+   int count = 0;
+
+   for (i = 0; i < n; i++) {
+      if (dat[i] == z) {
+         count++;
+      }
+   }
+
+   return(count);
 }
 
 /* computes and returns the sum of elements in a given integer array */ 
 int getSum(const int *x, int n) {
-	int i; 
-	int sum = 0; 
-	
-	for (i = 0; i < n; i++) { 
-		sum += x[i]; 
-	} 
-	
-	return(sum);
+   int i;
+   int sum = 0;
+
+   for (i = 0; i < n; i++) {
+      sum += x[i];
+   }
+
+   return(sum);
 }
 
 
-   void adkTestStat(double *adk, const std::vector<std::vector<double> > & samples, const std::vector<double> & zstar) {
+void adkTestStat(double *adk, const std::vector<std::vector<double> > & samples, const std::vector<double> & zstar) {
 
-	int i;
-	int j;
-	
-	int nsum; /* total sample size = n_1 + ... + n_k */
-        int k = samples.size();
-        int l = zstar.size(); 
-	
-	/* fij records the number of observations in the ith sample coinciding
-		with zstar[j], where i = 1, ..., k, and j = 1, ..., l */
-        std::vector<int> fij (k*l);
-	/* lvec is an integer vector with length l, 
-		whose jth entry = \sum_{i=1}^{k} f_{ij}, i.e., the multiplicity 
-		of zstar[j] */
-        std::vector<int> lvec(l);
-	
-	/* for computation */
-	double mij;
-	double maij;
-	double innerSum;
-	double aInnerSum;
-	double bj;
-	double baj;
-	double tmp;
-	
-	/* samples is a two-dimensional double array with length k;
-		it stores an array of k pointers to double arrays which are 
-		the k samples beeing compared */
-//	double **samples;
-	
-	/* dynamically allocate memory */
+   int i;
+   int j;
+
+   int nsum; /* total sample size = n_1 + ... + n_k */
+   int k = samples.size();
+   int l = zstar.size();
+
+   /* fij records the number of observations in the ith sample coinciding
+      with zstar[j], where i = 1, ..., k, and j = 1, ..., l */
+   std::vector<int> fij (k*l);
+   /* lvec is an integer vector with length l,
+      whose jth entry = \sum_{i=1}^{k} f_{ij}, i.e., the multiplicity
+      of zstar[j] */
+   std::vector<int> lvec(l);
+
+   /* for computation */
+   double mij;
+   double maij;
+   double innerSum;
+   double aInnerSum;
+   double bj;
+   double baj;
+   double tmp;
+
+   /* samples is a two-dimensional double array with length k;
+      it stores an array of k pointers to double arrays which are
+      the k samples beeing compared */
+// double **samples;
+
+   /* dynamically allocate memory */
         //std::vector< std::vector<double> > samples(k);
-        std::vector<int> ns(k);
-	nsum = 0;
-	for (i = 0; i < k; i++) {
-           ns[i] = samples[i].size(); 
-           nsum += ns[i];
-	}
-	
-	/* fij: k*l integer matrix, where l is the length of zstar and
-	 	k is the number of samples being compared 
-		lvec: integer vector of length l, records the multiplicity of 
-		each element of zstar */	
-	for (j = 0; j < l; j++) {
-		lvec[j] = 0;
-		for (i = 0; i < k; i++) {
-			fij[i + j*k] = getCount(zstar[j], &samples[i][0], ns[i]);
-			lvec[j] += fij[i + j*k];
-		}
-	}
+   std::vector<int> ns(k);
+   nsum = 0;
+   for (i = 0; i < k; i++) {
+      ns[i] = samples[i].size();
+      nsum += ns[i];
+   }
 
-        // loop on samples to compute the adk's 
-        // Formula (6) and (7) of the paper 
-	adk[0] = adk[1] = 0;
-	for (i = 0; i < k; i++) {
-		mij = 0;
-		maij = 0;
-		innerSum = 0;
-		aInnerSum = 0;
-		
-		for (j = 0; j < l; j++) {
-			mij += fij[i + j*k];
-			maij = mij - (double) fij[i + j*k] / 2.0;
-			bj = getSum(&lvec[0], j + 1);
-			baj = bj - (double) lvec[j] / 2.0;
-			
-			if (j < l - 1) {
-				tmp = (double) nsum * mij - (double) ns[i] * bj;
-				innerSum = innerSum + (double) lvec[j] * tmp * tmp / 
-									(bj * ((double) nsum - bj));
-			}
-			
-			tmp = (double) nsum * maij - (double) ns[i] * baj;
-			aInnerSum = aInnerSum + (double) lvec[j] * tmp * tmp / 
-								(baj * (nsum - baj) - nsum * (double) lvec[j] / 4.0);
-		}
-		
-		adk[0] = adk[0] + innerSum / ns[i]; /* AkN2*/
-		adk[1] = adk[1] + aInnerSum / ns[i]; /* AakN2 */
-	}
-	
-	/* k-sample Anderson-Darling test statistics in both original and 
-		alternative versions, AkN2 and AakN2, are stored in the given
-		double array adk */
-	adk[0] = adk[0] / (double) nsum; /* AkN2*/
-	adk[1] = (nsum - 1) * adk[1] / ((double) nsum * (double) nsum); /* AakN2 */
-	
-	// /* free pointers */
-	// for (i = 0; i < k; i++) {
-	// 	free(samples[i]);
-	// }
-	// free(samples);
-	
+   /* fij: k*l integer matrix, where l is the length of zstar and
+      k is the number of samples being compared
+      lvec: integer vector of length l, records the multiplicity of
+      each element of zstar */
+   for (j = 0; j < l; j++) {
+      lvec[j] = 0;
+      for (i = 0; i < k; i++) {
+         fij[i + j*k] = getCount(zstar[j], &samples[i][0], ns[i]);
+         lvec[j] += fij[i + j*k];
+      }
+   }
+
+   // loop on samples to compute the adk's
+   // Formula (6) and (7) of the paper
+   adk[0] = adk[1] = 0;
+   for (i = 0; i < k; i++) {
+      mij = 0;
+      maij = 0;
+      innerSum = 0;
+      aInnerSum = 0;
+
+      for (j = 0; j < l; j++) {
+         mij += fij[i + j*k];
+         maij = mij - (double) fij[i + j*k] / 2.0;
+         bj = getSum(&lvec[0], j + 1);
+         baj = bj - (double) lvec[j] / 2.0;
+
+         if (j < l - 1) {
+            tmp = (double) nsum * mij - (double) ns[i] * bj;
+            innerSum = innerSum + (double) lvec[j] * tmp * tmp /
+                       (bj * ((double) nsum - bj));
+         }
+
+         tmp = (double) nsum * maij - (double) ns[i] * baj;
+         aInnerSum = aInnerSum + (double) lvec[j] * tmp * tmp /
+                     (baj * (nsum - baj) - nsum * (double) lvec[j] / 4.0);
+      }
+
+      adk[0] = adk[0] + innerSum / ns[i]; /* AkN2*/
+      adk[1] = adk[1] + aInnerSum / ns[i]; /* AakN2 */
+   }
+
+   /* k-sample Anderson-Darling test statistics in both original and
+      alternative versions, AkN2 and AakN2, are stored in the given
+      double array adk */
+   adk[0] = adk[0] / (double) nsum; /* AkN2*/
+   adk[1] = (nsum - 1) * adk[1] / ((double) nsum * (double) nsum); /* AakN2 */
+
+   // /* free pointers */
+   // for (i = 0; i < k; i++) {
+   //    free(samples[i]);
+   // }
+   // free(samples);
+
 }
 
 

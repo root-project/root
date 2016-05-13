@@ -21,6 +21,9 @@
 ClassImp(TAttMarker)
 
 /** \class TAttMarker
+\ingroup Base
+\ingroup GraphicsAtt
+
 Marker Attributes class.
 
 This class is used (in general by secondary inheritance)

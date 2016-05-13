@@ -31,7 +31,7 @@ namespace TMVA{
    using std::endl;
 
    namespace TMVAGlob {
-         // --------- S t y l e ---------------------------
+      // --------- S t y l e ---------------------------
       // -----------------------------------------------
       
       enum TypeOfPlot { kId = 0,

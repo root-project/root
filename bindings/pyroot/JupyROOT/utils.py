@@ -31,20 +31,15 @@ ROOT.gROOT.SetBatch()
 
 
 cppMIME = 'text/x-c++src'
-ipyMIME = 'text/x-ipython'
 
-_jsDefaultHighlight = """
-// Set default mode for code cells
-IPython.CodeCell.options_default.cm_config.mode = '{mimeType}';
-// Set CodeMirror's current mode
-var cells = IPython.notebook.get_cells();
-cells[cells.length-1].code_mirror.setOption('mode', '{mimeType}');
-// Set current mode for newly created cell
-cells[cells.length-1].cm_config.mode = '{mimeType}';
+_jsMagicHighlight = """
+require(['notebook'],
+  function() {{
+    IPython.CodeCell.config_defaults.highlight_modes['magic_{cppMIME}'] = {{'reg':[/^%%cpp/]}};
+    console.log("JupyROOT - %%cpp magic configured");
+  }}
+);
 """
-
-_jsMagicHighlight = "IPython.CodeCell.config_defaults.highlight_modes['magic_{cppMIME}'] = {{'reg':[/^%%cpp/]}};"
-
 
 _jsNotDrawableClassesPatterns = ["TGraph[23]D","TH3*","TGraphPolar","TProf*","TEve*","TF[23]","TGeo*","TPolyLine3D", "TH2Poly"]
 
@@ -66,7 +61,7 @@ _jsCode = """
    }});
  require(['JSRootCore'],
      function(Core) {{
-       var obj = Core.parse('{jsonContent}');
+       var obj = Core.JSONR_unref({jsonContent});
        Core.draw("{jsDivId}", obj, "{jsDrawOptions}");
      }}
  );

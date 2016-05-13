@@ -119,7 +119,7 @@ void TSelectorDraw::Begin(TTree *tree)
 
    TString  opt, abrt;
    char *hdefault = (char *)"htemp";
-   char *varexp;
+   char *varexp = nullptr;
    Int_t i, j, hkeep;
    opt = option;
    opt.ToLower();
@@ -884,7 +884,7 @@ void TSelectorDraw::Begin(TTree *tree)
       else if (opt5d) fAction = 8;
       else            fAction = 6;
    }
-   if (hkeep) delete [] varexp;
+   if (varexp) delete [] varexp;
    if (hnamealloc) delete [] hnamealloc;
    for (i = 0; i < fValSize; ++i)
       fVarMultiple[i] = kFALSE;
@@ -975,14 +975,17 @@ Bool_t TSelectorDraw::CompileVariables(const char *varexp, const char *selection
    nch = strlen(varexp);
    if (nch == 0) {
       fDimension = 0;
-      fManager = new TTreeFormulaManager();
-      if (fSelect) fManager->Add(fSelect);
+      if (fSelect) {
+         fManager = fSelect->GetManager();
+      }
       fTree->ResetBit(TTree::kForceRead);
 
-      fManager->Sync();
+      if (fManager) {
+         fManager->Sync();
 
-      if (fManager->GetMultiplicity() == -1) fTree->SetBit(TTree::kForceRead);
-      if (fManager->GetMultiplicity() >= 1) fMultiplicity = fManager->GetMultiplicity();
+         if (fManager->GetMultiplicity() == -1) fTree->SetBit(TTree::kForceRead);
+         if (fManager->GetMultiplicity() >= 1) fMultiplicity = fManager->GetMultiplicity();
+      }
 
       return kTRUE;
    }

@@ -51,7 +51,7 @@ TMVA::SimulatedAnnealingFitter::SimulatedAnnealingFitter( IFitterTarget& target,
                                                           const TString& name, 
                                                           const std::vector<Interval*>& ranges, 
                                                           const TString& theOption ) 
-   : TMVA::FitterBase( target, name, ranges, theOption )
+: TMVA::FitterBase( target, name, ranges, theOption )
 {
    // default parameters settings for Simulated Annealing algorithm
    DeclareOptions();

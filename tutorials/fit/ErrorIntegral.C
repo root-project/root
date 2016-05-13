@@ -1,11 +1,21 @@
-// Estimate the error in the integral of a fitted function
-// taking into account the errors in the parameters resulting from the fit.
-// The error is estimated also using the correlations values obtained from
-// the fit
-//
-// run the macro doing:
-//  .x ErrorIntegral.C
-// Author: Lorenzo Moneta
+/// \file
+/// \ingroup tutorial_fit
+/// Estimate the error in the integral of a fitted function
+/// taking into account the errors in the parameters resulting from the fit.
+/// The error is estimated also using the correlations values obtained from
+/// the fit
+///
+/// run the macro doing:
+///
+/// ~~~ {.cpp}
+///  .x ErrorIntegral.C
+/// ~~~
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Lorenzo Moneta
 
 #include "TF1.h"
 #include "TH1D.h"

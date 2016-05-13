@@ -68,11 +68,11 @@ namespace TMVA {
    public: 
  
       TNeuronInputChooser() 
-      { 
-         fSUM    = "sum"; 
-         fSQSUM  = "sqsum"; 
-         fABSSUM = "abssum"; 
-      } 
+         { 
+            fSUM    = "sum"; 
+            fSQSUM  = "sqsum"; 
+            fABSSUM = "abssum"; 
+         } 
       virtual ~TNeuronInputChooser() {} 
  
       enum ENeuronInputType { kSum = 0, 
@@ -100,13 +100,13 @@ namespace TMVA {
       } 
       
       std::vector<TString>* GetAllNeuronInputNames() const 
-      { 
-         std::vector<TString>* names = new std::vector<TString>(); 
-         names->push_back(fSUM); 
-         names->push_back(fSQSUM); 
-         names->push_back(fABSSUM); 
-         return names; 
-      } 
+         { 
+            std::vector<TString>* names = new std::vector<TString>(); 
+            names->push_back(fSUM); 
+            names->push_back(fSQSUM); 
+            names->push_back(fABSSUM); 
+            return names; 
+         } 
        
    private: 
       
@@ -114,7 +114,7 @@ namespace TMVA {
       TString fSQSUM;  // neuron input type name 
       TString fABSSUM; // neuron input type name 
  
-      ClassDef(TNeuronInputChooser,0) // Class for choosing neuron input functions 
+      ClassDef(TNeuronInputChooser,0); // Class for choosing neuron input functions 
    }; 
  
 } // namespace TMVA 

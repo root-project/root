@@ -607,14 +607,19 @@ void TF1::DoInitialize() {
 
    fMinimum = -1111;
    fMaximum = -1111;
-
-   if (fgAddToGlobList && gROOT) {
+   
+   // add to global list of functions if default adding is on OR if bit is set
+   if (fgAddToGlobList  && gROOT) {
+      SetBit(kNotGlobal,kFALSE);
       R__LOCKGUARD2(gROOTMutex);
       // Store formula in linked list of formula in ROOT
       TF1 *f1old = (TF1*)gROOT->GetListOfFunctions()->FindObject(fName);
       gROOT->GetListOfFunctions()->Remove(f1old);
       gROOT->GetListOfFunctions()->Add(this);
    }
+   else
+      SetBit(kNotGlobal,kTRUE);
+   
    if (gStyle) {
       SetLineColor(gStyle->GetFuncColor());
       SetLineWidth(gStyle->GetFuncWidth());
@@ -624,27 +629,45 @@ void TF1::DoInitialize() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Static method to add/avoid to add automatically functions to the global list  (gROOT->GetListOfFunctions() )
+/// After having called this static method, all the functions created afterwards will follow the
+/// desired behaviour.
+/// By defult the functions are added automatically
+/// It returns the previous status (true if the functions are added automatically) 
+
+Bool_t TF1::DefaultAddToGlobalList(Bool_t on)
+{
+   R__LOCKGUARD2(gROOTMutex);
+   bool previous = fgAddToGlobList;
+   fgAddToGlobList = on;
+   return previous; 
+}
+////////////////////////////////////////////////////////////////////////////////
 /// Add to global list of functions (gROOT->GetListOfFunctions() )
-/// return previous status (true of functions was already in the list false if not)
+/// return previous status (true if the function was already in the list false if not)
 
 Bool_t TF1::AddToGlobalList(Bool_t on)
 {
    if (!gROOT) return false;
 
-   bool prevStatus = TestBit(kNotGlobal);
-   if (prevStatus != on) SetBit(kNotGlobal,on);
+   bool prevStatus = !TestBit(kNotGlobal);
    if (on )  {
       if (prevStatus) {
+         R__LOCKGUARD2(gROOTMutex);
          assert (gROOT->GetListOfFunctions()->FindObject(this) != nullptr);
          return on; // do nothing
       }
       // do I need to delete previous one with the same name ???
       //TF1 * old = dynamic_cast<TF1*>( gROOT->GetListOfFunctions()->FindObject(GetName()) );
       //if (old) gROOT->GetListOfFunctions()->Remove(old);
+      R__LOCKGUARD2(gROOTMutex);
       gROOT->GetListOfFunctions()->Add(this);
+      SetBit(kNotGlobal,kFALSE);
    }
    else if (prevStatus) {
-      // if previous status was on and now is off
+      // if previous status was on and now is off we need to remove the function
+      SetBit(kNotGlobal,kTRUE);
+      R__LOCKGUARD2(gROOTMutex);
       TF1 * old = dynamic_cast<TF1*>( gROOT->GetListOfFunctions()->FindObject(GetName()) );
       if (!old) {
          Warning("AddToGlobalList","Function is supposed to be in the global list but it is not present");
@@ -1164,9 +1187,8 @@ Double_t TF1::Eval(Double_t x, Double_t y, Double_t z, Double_t t) const
    if (fType == 0) return fFormula->Eval(x,y,z,t);
 
    Double_t xx[4] = {x, y, z, t};
-   Double_t *pp = GetParameters();
-   ((TF1*)this)->InitArgs(xx,pp);
-   
+   Double_t *pp = (Double_t*)fParams->GetParameters();
+   if (fType==2) ((TF1*)this)->InitArgs(xx,pp);
    return ((TF1*)this)->EvalPar(xx,pp);
 }
 
@@ -1191,7 +1213,7 @@ Double_t TF1::Eval(Double_t x, Double_t y, Double_t z, Double_t t) const
 
 Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
 {
-   fgCurrent = this;
+   //fgCurrent = this;
 
    if (fType == 0)
    {
@@ -1264,6 +1286,7 @@ void TF1::FixParameter(Int_t ipar, Double_t value)
 
 TF1 *TF1::GetCurrent()
 {
+   ::Warning("TF1::GetCurrent","This function is obsolete and is working only for the current painted functions");
    return fgCurrent;
 }
 

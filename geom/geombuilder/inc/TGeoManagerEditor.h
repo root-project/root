@@ -1,5 +1,5 @@
 // @(#):$Id$
-// Author: M.Gheata 
+// Author: M.Gheata
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -179,8 +179,8 @@ public:
    void           DoSelectTopVolume();
    void           DoExportGeometry();
    void           DoCloseGeometry();
-   
+
    ClassDef(TGeoManagerEditor,0)   // TGeoManager editor
-};   
-  
-#endif                    
+};
+
+#endif

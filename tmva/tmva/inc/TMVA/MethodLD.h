@@ -124,8 +124,8 @@ namespace TMVA {
       // nice output
       void PrintCoefficients( void );
 
-      ClassDef(MethodLD,0) //Linear discriminant analysis
-         };
+      ClassDef(MethodLD,0); //Linear discriminant analysis
+   };
 } // namespace TMVA
 
 #endif // MethodLD_H

@@ -1,5 +1,12 @@
-//Fitting a TGraph2D
-//Author: Olivier Couet
+/// \file
+/// \ingroup tutorial_fit
+/// Fitting a TGraph2D
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Olivier Couet
 
 #include <TMath.h>
 #include <TGraph2D.h>

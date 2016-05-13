@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TRef
+\ingroup Base
 
 Persistent Reference link to a TObject
 A TRef is a lightweight object pointing to any TObject.

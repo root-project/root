@@ -338,6 +338,14 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Print a StackTrace!
+
+extern "C"
+void TCling__PrintStackTrace() {
+   gSystem->StackTrace();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Update TClingClassInfo for a class (e.g. upon seeing a definition).
 
 static void TCling__UpdateClassInfo(const NamedDecl* TD)
@@ -1261,6 +1269,21 @@ static const char *FindLibraryName(void (*func)())
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Helper to initialize TVirtualStreamerInfo's factor early.
+/// Use static initialization to insure only one TStreamerInfo is created.
+static bool R__InitStreamerInfoFactory()
+{
+   // Use lambda since SetFactory return void.
+   auto setFactory = []() {
+      TVirtualStreamerInfo::SetFactory(new TStreamerInfo());
+      return kTRUE;
+   };
+   static bool doneFactory = setFactory();
+   return doneFactory; // avoid unused variable warning.
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Tries to load a PCM; returns true on success.
 
 bool TCling::LoadPCM(TString pcmFileName,
@@ -1291,7 +1314,7 @@ bool TCling::LoadPCM(TString pcmFileName,
    // Prevent the ROOT-PCMs hitting this during auto-load during
    // JITting - which will cause recursive compilation.
    // Avoid to call the plugin manager at all.
-   TVirtualStreamerInfo::SetFactory(new TStreamerInfo());
+   R__InitStreamerInfoFactory();
 
    if (gROOT->IsRootFile(pcmFileName)) {
       Int_t oldDebug = gDebug;
@@ -1863,9 +1886,9 @@ static int HandleInterpreterException(cling::MetaProcessor* metaProcessor,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool TCling::DiagnoseIfInterpreterException(std::exception &e) const
+bool TCling::DiagnoseIfInterpreterException(const std::exception &e) const
 {
-   if (auto ie = dynamic_cast<cling::InterpreterException*>(&e)) {
+   if (auto ie = dynamic_cast<const cling::InterpreterException*>(&e)) {
       ie->diagnose();
       return true;
    }
@@ -1928,6 +1951,7 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
       }
       ~InterpreterFlagsRAII_t() {
          fInterpreter->enableDynamicLookup(fWasDynamicLookupEnabled);
+         gROOT->SetLineHasBeenProcessed();
       }
    } interpreterFlagsRAII(fInterpreter);
 

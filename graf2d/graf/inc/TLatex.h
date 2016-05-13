@@ -21,14 +21,6 @@
 #include "TAttLine.h"
 #endif
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TLatex                                                               //
-//                                                                      //
-// The Latex-style text processor class                                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 
 class TLatex : public TText, public TAttLine {
 protected:
@@ -83,16 +75,16 @@ protected:
       inline Double_t Height() const { return fOver+fUnder; }
    };
 
-      Double_t      fFactorSize;      //!Relative size of subscripts and superscripts
-      Double_t      fFactorPos;       //!Relative position of subscripts and superscripts
-      Int_t         fLimitFactorSize; // lower bound for subscripts/superscripts size
-      const Char_t *fError;           //!error code
-      Bool_t        fShow;            //!is true during the second pass (Painting)
-      FormSize_t   *fTabSize;         //!array of values for the different zones
-      Double_t      fOriginSize;      // Font size of the starting font
-      Int_t         fTabMax;          //!Maximum allocation for array fTabSize;
-      Int_t         fPos;             //!Current position in array fTabSize;
-      Bool_t        fItalic;          //!Currently inside italic operator
+      Double_t      fFactorSize;      ///<! Relative size of subscripts and superscripts
+      Double_t      fFactorPos;       ///<! Relative position of subscripts and superscripts
+      Int_t         fLimitFactorSize; ///< lower bound for subscripts/superscripts size
+      const Char_t *fError;           ///<! error code
+      Bool_t        fShow;            ///<! is true during the second pass (Painting)
+      FormSize_t   *fTabSize;         ///<! array of values for the different zones
+      Double_t      fOriginSize;      ///< Font size of the starting font
+      Int_t         fTabMax;          ///<! Maximum allocation for array fTabSize;
+      Int_t         fPos;             ///<! Current position in array fTabSize;
+      Bool_t        fItalic;          ///<! Currently inside italic operator
 
       TLatex& operator=(const TLatex&);
 
@@ -115,7 +107,9 @@ protected:
 
 public:
       // TLatex status bits
-      enum { kTextNDC = BIT(14) };
+      enum {
+         kTextNDC = BIT(14) ///< The text postion is in NDC coordinates
+      };
 
       TLatex();
       TLatex(Double_t x, Double_t y, const char *text);

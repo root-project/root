@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TObjString
+\ingroup Base
+
 Collectable string class. This is a TObject containing a TString.
 */
 

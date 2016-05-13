@@ -49,14 +49,14 @@ ClassImp(TMVA::KDEKernel)
 
 TMVA::KDEKernel::KDEKernel( EKernelIter kiter, const TH1 *hist, Float_t lower_edge, Float_t upper_edge,
                             EKernelBorder kborder, Float_t FineFactor )
-   : fSigma( 1. ),
-     fIter ( kiter ),
-     fLowerEdge (lower_edge ),
-     fUpperEdge (upper_edge),
-     fFineFactor ( FineFactor ),
-     fKernel_integ ( 0 ),
-     fKDEborder ( kborder ),
-     fLogger( new MsgLogger("KDEKernel") )
+: fSigma( 1. ),
+   fIter ( kiter ),
+   fLowerEdge (lower_edge ),
+   fUpperEdge (upper_edge),
+   fFineFactor ( FineFactor ),
+   fKernel_integ ( 0 ),
+   fKDEborder ( kborder ),
+   fLogger( new MsgLogger("KDEKernel") )
 {
    if (hist == NULL) {
       Log() << kFATAL << "Called without valid histogram pointer (hist)!" << Endl;
@@ -148,36 +148,36 @@ void TMVA::KDEKernel::SetKernelType( EKernelType ktype )
          for (Int_t j=1;j<fFirstIterHist->GetNbinsX();j++) {
             // loop over the bins of the PDF histo and fill it
             fFirstIterHist->AddBinContent(j,fHist->GetBinContent(i)*
-                                    this->GetBinKernelIntegral(fFirstIterHist->GetBinLowEdge(j),
-                                                               fFirstIterHist->GetBinLowEdge(j+1),
-                                                               fHist->GetBinCenter(i),
-                                                               i)
-                                    );
+                                          this->GetBinKernelIntegral(fFirstIterHist->GetBinLowEdge(j),
+                                                                     fFirstIterHist->GetBinLowEdge(j+1),
+                                                                     fHist->GetBinCenter(i),
+                                                                     i)
+                                          );
          }
          if (fKDEborder == 3) { // mirror the saples and fill them again
-         // in order to save time do the mirroring only for the first (the lowwer) 1/5 of the histo to the left; 
-         // and the last (the higher) 1/5 of the histo to the right.
-         // the middle part of the histo, which is not mirrored, has no influence on the border effects anyway ...
+            // in order to save time do the mirroring only for the first (the lowwer) 1/5 of the histo to the left; 
+            // and the last (the higher) 1/5 of the histo to the right.
+            // the middle part of the histo, which is not mirrored, has no influence on the border effects anyway ...
             if (i < fHist->GetNbinsX()/5  ) {  // the first (the lowwer) 1/5 of the histo
                for (Int_t j=1;j<fFirstIterHist->GetNbinsX();j++) {
-               // loop over the bins of the PDF histo and fill it
-               fFirstIterHist->AddBinContent(j,fHist->GetBinContent(i)*
-                                       this->GetBinKernelIntegral(fFirstIterHist->GetBinLowEdge(j),
-                                                               fFirstIterHist->GetBinLowEdge(j+1),
-                                                               2*histoLowEdge-fHist->GetBinCenter(i), // mirroring to the left
-                                                               i)
-                                      );
+                  // loop over the bins of the PDF histo and fill it
+                  fFirstIterHist->AddBinContent(j,fHist->GetBinContent(i)*
+                                                this->GetBinKernelIntegral(fFirstIterHist->GetBinLowEdge(j),
+                                                                           fFirstIterHist->GetBinLowEdge(j+1),
+                                                                           2*histoLowEdge-fHist->GetBinCenter(i), // mirroring to the left
+                                                                           i)
+                                                );
                }
             }
             if (i > 4*fHist->GetNbinsX()/5) { // the last (the higher) 1/5 of the histo
                for (Int_t j=1;j<fFirstIterHist->GetNbinsX();j++) {
-               // loop over the bins of the PDF histo and fill it
-               fFirstIterHist->AddBinContent(j,fHist->GetBinContent(i)*
-                                       this->GetBinKernelIntegral(fFirstIterHist->GetBinLowEdge(j),
-                                                               fFirstIterHist->GetBinLowEdge(j+1),
-                                                               2*histoUpperEdge-fHist->GetBinCenter(i), // mirroring to the right
-                                                               i)
-                                      );
+                  // loop over the bins of the PDF histo and fill it
+                  fFirstIterHist->AddBinContent(j,fHist->GetBinContent(i)*
+                                                this->GetBinKernelIntegral(fFirstIterHist->GetBinLowEdge(j),
+                                                                           fFirstIterHist->GetBinLowEdge(j+1),
+                                                                           2*histoUpperEdge-fHist->GetBinCenter(i), // mirroring to the right
+                                                                           i)
+                                                );
                }            
             }
          }

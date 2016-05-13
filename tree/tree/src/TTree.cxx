@@ -3978,6 +3978,8 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// -  `LocalEntry$` : return the current entry number in the current tree of a
 ///     chain (`== GetTree()->GetReadEntry()`)
 /// -  `Entries$`    : return the total number of entries (== TTree::GetEntries())
+/// -  `LocalEntries$` : return the total number of entries in the current tree
+///     of a chain (== GetTree()->TTree::GetEntries())
 /// -  `Length$`     : return the total number of element of this formula for this
 ///     entry (`==TTreeFormula::GetNdata()`)
 /// -  `Iteration$`  : return the current iteration over this formula for this
@@ -5143,6 +5145,7 @@ Long64_t TTree::GetEntriesFriend() const
 /// When reading the Tree, one can choose one of these 3 options:
 ///
 /// ## OPTION 1
+///
 /// ~~~ {.cpp}
 ///     for (Long64_t i=0;i<nentries;i++) {
 ///        T.GetEntry(i);
@@ -7915,7 +7918,19 @@ void TTree::SetBranchStatus(const char* bname, Bool_t status, UInt_t* found)
       }
    }
    if (!nb && !foundInFriend) {
-      if (found==0) Error("SetBranchStatus", "unknown branch -> %s", bname);
+      if (found==0) {
+         if (status) {
+            if (strchr(bname,'*') != 0)
+               Error("SetBranchStatus", "No branch name is matching wildcard -> %s", bname);
+            else
+               Error("SetBranchStatus", "unknown branch -> %s", bname);
+         } else {
+            if (strchr(bname,'*') != 0)
+               Warning("SetBranchStatus", "No branch name is matching wildcard -> %s", bname);
+            else
+               Warning("SetBranchStatus", "unknown branch -> %s", bname);
+         }
+      }
       return;
    }
    if (found) *found = nb + foundInFriend;

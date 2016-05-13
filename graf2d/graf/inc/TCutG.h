@@ -12,13 +12,6 @@
 #ifndef ROOT_TCutG
 #define ROOT_TCutG
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TCutG                                                                //
-//                                                                      //
-// A Graphical cut.                                                     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_TGraph
 #include "TGraph.h"
@@ -29,10 +22,10 @@ class TH2;
 class TCutG : public TGraph {
 
 protected:
-   TString      fVarX;         //X variable
-   TString      fVarY;         //Y variable
-   TObject     *fObjectX;      //!pointer to an object corresponding to X
-   TObject     *fObjectY;      //!pointer to an object corresponding to Y
+   TString      fVarX;         ///< X variable
+   TString      fVarY;         ///< Y variable
+   TObject     *fObjectX;      ///<! pointer to an object corresponding to X
+   TObject     *fObjectY;      ///<! pointer to an object corresponding to Y
 
 public:
    TCutG();

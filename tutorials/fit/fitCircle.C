@@ -1,11 +1,20 @@
-//Generate points distributed with some errors around a circle
-//Fit a circle through the points and draw
-//To run the script, do, eg
-//   root > .x fitCircle.C   (10000 points by default)
-//   root > .x fitCircle.C(100);  (with only 100 points
-//   root > .x fitCircle.C(100000);  with ACLIC
-//
-//Author: Rene Brun
+/// \file
+/// \ingroup tutorial_fit
+/// Generate points distributed with some errors around a circle
+/// Fit a circle through the points and draw
+/// To run the script, do, eg
+///
+/// ~~~{.cpp}
+///   root > .x fitCircle.C   (10000 points by default)
+///   root > .x fitCircle.C(100);  (with only 100 points
+///   root > .x fitCircle.C(100000);  with ACLIC
+/// ~~~
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Rene Brun
 
 #include "TCanvas.h"
 #include "TRandom3.h"

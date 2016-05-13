@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TUUID
+\ingroup Base
 
 This class defines a UUID (Universally Unique IDentifier), also
 known as GUIDs (Globally Unique IDentifier). A UUID is 128 bits

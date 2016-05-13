@@ -30,12 +30,12 @@
 class TPieSlice : public TNamed, public TAttFill, public TAttLine {
 
 private:
-   Bool_t   fIsActive;        //! True if is the slice under the mouse pointer
+   Bool_t   fIsActive;     ///<! True if is the slice under the mouse pointer
 
 protected:
-   TPie *fPie;             // The TPie object that contain this slice
-   Double_t fValue;        //value value of this slice
-   Double_t fRadiusOffset; //roffset offset from the center of the pie
+   TPie *fPie;             ///< The TPie object that contain this slice
+   Double_t fValue;        ///< value value of this slice
+   Double_t fRadiusOffset; ///< offset from the center of the pie
 
 public:
    TPieSlice();

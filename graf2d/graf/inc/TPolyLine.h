@@ -13,15 +13,6 @@
 #define ROOT_TPolyLine
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TPolyLine                                                            //
-//                                                                      //
-// A PolyLine.                                                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-
 #ifndef ROOT_TString
 #include "TString.h"
 #endif
@@ -40,17 +31,19 @@ class TCollection;
 class TPolyLine : public TObject, public TAttLine, public TAttFill {
 
 protected:
-   Int_t        fN;            //Number of points
-   Int_t        fLastPoint;    //The index of the last filled point
-   Double_t    *fX;            //[fN] Array of X coordinates
-   Double_t    *fY;            //[fN] Array of Y coordinates
-   TString      fOption;       //options
+   Int_t        fN;            ///<Number of points
+   Int_t        fLastPoint;    ///<The index of the last filled point
+   Double_t    *fX;            ///<[fN] Array of X coordinates
+   Double_t    *fY;            ///<[fN] Array of Y coordinates
+   TString      fOption;       ///<options
 
    TPolyLine& operator=(const TPolyLine&);
 
 public:
    // TPolyLine status bits
-   enum { kPolyLineNDC = BIT(14) };
+   enum {
+      kPolyLineNDC = BIT(14) ///< Polyline coordinates are in NDC space.
+   };
 
    TPolyLine();
    TPolyLine(Int_t n, Option_t *option="");

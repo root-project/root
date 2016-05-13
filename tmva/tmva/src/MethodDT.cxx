@@ -504,11 +504,11 @@ Double_t TMVA::MethodDT::TestTreeQuality( DecisionTree *dt )
    // test the tree quality.. in terms of Miscalssification
    Double_t SumCorrect=0,SumWrong=0;
    for (Long64_t ievt=0; ievt<Data()->GetNEvents(); ievt++)
-   {
-      const Event * ev = Data()->GetEvent(ievt);
-      if ((dt->CheckEvent(ev) > dt->GetNodePurityLimit() ) == DataInfo().IsSignal(ev)) SumCorrect+=ev->GetWeight();
-      else SumWrong+=ev->GetWeight();
-   }
+      {
+         const Event * ev = Data()->GetEvent(ievt);
+         if ((dt->CheckEvent(ev) > dt->GetNodePurityLimit() ) == DataInfo().IsSignal(ev)) SumCorrect+=ev->GetWeight();
+         else SumWrong+=ev->GetWeight();
+      }
    Data()->SetCurrentType(Types::kTraining);
    return  SumCorrect / (SumCorrect + SumWrong);
 }

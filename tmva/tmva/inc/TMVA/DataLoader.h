@@ -60,7 +60,7 @@ namespace TMVA {
    class VariableTransformBase;
 
    class DataLoader : public Configurable {
-     friend class Factory;
+      friend class Factory;
    public:
 
       // no default  constructor
@@ -141,7 +141,7 @@ namespace TMVA {
          AddTarget( expression, title, unit, min, max );
       }
       void AddSpectator         ( const TString& expression, const TString& title = "", const TString& unit = "",
-                                Double_t min = 0, Double_t max = 0 );
+                                  Double_t min = 0, Double_t max = 0 );
 
       // set weight for class
       void SetWeightExpression( const TString& variable, const TString& className = "" );
@@ -162,6 +162,12 @@ namespace TMVA {
 
       void PrepareTrainingAndTestTree( const TCut& cut, Int_t NsigTrain, Int_t NbkgTrain, Int_t NsigTest, Int_t NbkgTest, 
                                        const TString& otherOpt="SplitMode=Random:!V" );
+
+      void PrepareTrainingAndTestTree( int foldNumber, Types::ETreeType tt );
+
+      void MakeKFoldDataSet(int numberFolds);
+      void ValidationKFoldSet();
+      std::vector<TTree*> SplitSets(TTree * oldTree, int seedNum, int numFolds);
 
  
  
@@ -200,6 +206,11 @@ namespace TMVA {
       std::vector<TTree*>                       fTrainAssignTree; //! for each class: tmp tree if user wants to assign the events directly
       std::vector<TTree*>                       fTestAssignTree;  //! for each class: tmp tree if user wants to assign the events directly
 
+      std::vector<TTree*>                       fTrainSigTree;
+      std::vector<TTree*>                       fTrainBkgTree;
+      std::vector<TTree*>                       fTestSigTree;
+      std::vector<TTree*>                       fTestBkgTree;
+
       Int_t                                     fATreeType;          // type of event (=classIndex)
       Float_t                                   fATreeWeight;        // weight of the event
       Float_t*                                  fATreeEvent;         // event variables
@@ -208,7 +219,7 @@ namespace TMVA {
 
    protected:
 
-      ClassDef(DataLoader,0)
+      ClassDef(DataLoader,0);
    };
 
 } // namespace TMVA

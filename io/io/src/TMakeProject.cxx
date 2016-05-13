@@ -306,7 +306,7 @@ UInt_t TMakeProject::GenerateClassPrefix(FILE *fp, const char *clname, Bool_t to
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Generate an empty StreamerInfo for the given type (no recursion) if it is not
-/// not known in the list of class. 
+/// not known in the list of class.
 ///
 /// If the type itself is a template,
 /// we mark it with version 1 (a class) otherwise we mark it as version -3 (an enum).

@@ -22,6 +22,9 @@ ClassImp(TAttLine)
 using std::sqrt;
 
 /** \class TAttLine
+\ingroup Base
+\ingroup GraphicsAtt
+
 Line Attributes class.
 
 This class is used (in general by secondary inheritance)

@@ -830,6 +830,7 @@ void TCanvas::Draw(Option_t *)
    }
    Build();
    ResizePad();
+   fCanvasImp->SetWindowTitle(fTitle);
    fCanvasImp->Show();
    Modified();
 }

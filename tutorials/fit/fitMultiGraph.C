@@ -1,3 +1,14 @@
+/// \file
+/// \ingroup tutorial_fit
+/// fitting a parabola to a multigraph of 3 partly overlapping graphs
+/// with different errors
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Anna Kreshuk
+
 #include "TMultiGraph.h"
 #include "TRandom.h"
 #include "TF1.h"
@@ -7,10 +18,6 @@
 
 void fitMultiGraph()
 {
-   //fitting a parabola to a multigraph of 3 partly overlapping graphs
-   //with different errors
-   //Author: Anna Kreshuk
-
    Int_t n = 30;
    Double_t *x1 = new Double_t[n];
    Double_t *x2 = new Double_t[n];

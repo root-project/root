@@ -492,6 +492,9 @@ static void *get_stack_pointer(int level)
 {
    void *p = 0;
 #if defined(R__GNU) && (defined(R__LINUX) || defined(R__HURD))
+#if __GNUC__ > 5
+#pragma GCC diagnostic ignored "-Wframe-address"
+#endif
    switch (level) {
    case 0:
       if (__builtin_frame_address(1))

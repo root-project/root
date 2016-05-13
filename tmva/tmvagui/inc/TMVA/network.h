@@ -26,7 +26,7 @@ namespace TMVA{
    TString* get_var_names    (TString dataset, Int_t nVars );
 
    void draw_network(TString dataset, TFile* f, TDirectory* d, const TString& hName = "weights_hist", 
-                      Bool_t movieMode = kFALSE, const TString& epoch = "" );
+                     Bool_t movieMode = kFALSE, const TString& epoch = "" );
 
    void draw_activation(TCanvas* c, Double_t cx, Double_t cy, 
                         Double_t radx, Double_t rady, Int_t whichActivation);

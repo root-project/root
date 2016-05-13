@@ -2639,14 +2639,27 @@ Int_t TClass::GetBaseClassOffsetRecurse(const TClass *cl)
          Int_t size = elems.GetLast()+1;
          for(Int_t i=0; i<size; i++) {
             element = (TStreamerElement*)elems[i];
-            if (element->IsA() == TStreamerBase::Class()) {
-               TStreamerBase *base = (TStreamerBase*)element;
-               TClass *baseclass = base->GetClassPointer();
-               if (!baseclass) return -1;
-               Int_t subOffset = baseclass->GetBaseClassOffsetRecurse(cl);
-               if (subOffset == -2) return -2;
-               if (subOffset != -1) return offset+subOffset;
-               offset += baseclass->Size();
+            if (element->IsBase()) {
+               if (element->IsA() == TStreamerBase::Class()) {
+                  TStreamerBase *base = (TStreamerBase*)element;
+                  TClass *baseclass = base->GetClassPointer();
+                  if (!baseclass) return -1;
+                  Int_t subOffset = baseclass->GetBaseClassOffsetRecurse(cl);
+                  if (subOffset == -2) return -2;
+                  if (subOffset != -1) return offset+subOffset;
+                  offset += baseclass->Size();
+               } else if (element->IsA() == TStreamerSTL::Class()) {
+                  TStreamerSTL *base = (TStreamerSTL*)element;
+                  TClass *baseclass = base->GetClassPointer();
+                  if (!baseclass) return -1;
+                  Int_t subOffset = baseclass->GetBaseClassOffsetRecurse(cl);
+                  if (subOffset == -2) return -2;
+                  if (subOffset != -1) return offset+subOffset;
+                  offset += baseclass->Size();
+
+               } else {
+                  Error("GetBaseClassOffsetRecurse","Unexpected element type for base class: %s\n",element->IsA()->GetName());
+               }
             }
          }
          return -1;
@@ -3667,7 +3680,7 @@ void TClass::GetMenuItems(TList *list)
 /// This is equivalent to ask if a class is coming from a bootstrapping
 /// procedure initiated during the loading of a library.
 
-Bool_t TClass::HasDictionary()
+Bool_t TClass::HasDictionary() const
 {
    return IsLoaded();
 }

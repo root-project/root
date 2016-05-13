@@ -72,11 +72,11 @@ ClassImp(TMVA::Timer)
 /// constructor
 
 TMVA::Timer::Timer( const char* prefix, Bool_t colourfulOutput )
-   : fNcounts        ( 0 ),
-     fPrefix         ( strcmp(prefix,"")==0?Timer::fgClassName:TString(prefix) ),
-     fColourfulOutput( colourfulOutput ),
-     fProgressBarStringLength (0), 
-     fLogger         ( new MsgLogger( fPrefix.Data() ) )
+: fNcounts        ( 0 ),
+   fPrefix         ( strcmp(prefix,"")==0?Timer::fgClassName:TString(prefix) ),
+   fColourfulOutput( colourfulOutput ),
+   fProgressBarStringLength (0), 
+   fLogger         ( new MsgLogger( fPrefix.Data() ) )
 {
    Reset();
 }
@@ -178,7 +178,7 @@ void TMVA::Timer::DrawProgressBar( TString theString )
    std::clog << gTools().Color("white_on_green") << gTools().Color("dyellow") << "]" << gTools().Color("reset");
 
    for (int i = fProgressBarStringLength; i < theString.Length (); ++i)
-       std::cout << " ";
+      std::cout << " ";
    std::clog << "\r" << std::flush;
    fProgressBarStringLength = theString.Length ();
 }
@@ -214,14 +214,14 @@ void TMVA::Timer::DrawProgressBar( Int_t icounts, const TString& comment  )
    if (fColourfulOutput) {
       std::clog << gTools().Color("reset") << " " ;
       std::clog << "(" << gTools().Color("red") << Int_t((100*(icounts+1))/Float_t(fNcounts)) << "%" << gTools().Color("reset")
-               << ", " 
-               << "time left: "
-               << this->GetLeftTime( icounts ) << gTools().Color("reset") << ") ";
+                << ", " 
+                << "time left: "
+                << this->GetLeftTime( icounts ) << gTools().Color("reset") << ") ";
    }
    else {
       std::clog << "] " ;
       std::clog << "(" << Int_t((100*(icounts+1))/Float_t(fNcounts)) << "%" 
-               << ", " << "time left: " << this->GetLeftTime( icounts ) << ") ";
+                << ", " << "time left: " << this->GetLeftTime( icounts ) << ") ";
    }
    if (comment != "") {
       std::clog << "[" << comment << "]  ";

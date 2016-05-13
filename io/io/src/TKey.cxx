@@ -15,7 +15,7 @@
 
  Book space in a file, create I/O buffers, to fill them, (un)compress them.
 
- The TKey class includes functions to book space in a file, to create I/O 
+ The TKey class includes functions to book space in a file, to create I/O
  buffers, to fill these buffers, to compress/uncompress data buffers.
  Before saving (making persistent) an object in a file, a key must
  be created. The key structure contains all the information to
@@ -29,21 +29,21 @@
  |  fCycle     | Cycle number of the object. |
  |  fSeekKey   | Address of the object on file (points to fNbytes). This is a redundant information used to cross-check the data base integrity. |
  |  fSeekPdir  | Pointer to the directory supporting this object.|
- |  fClassName | Object class name. |  
- |  fName      | Name of the object. |                               
- |  fTitle     | Title of the object. |                              
-                                                                   
- In the 16 highest bits of fSeekPdir is encoded a pid offset.  This 
- offset is to be added to the pid index stored in the TRef object   
- and the referenced TObject.                                        
-                                                                   
- The TKey class is used by ROOT to:                                 
-   - Write an object in the current directory                    
-   - Write a new ntuple buffer                                   
-                                                                   
- The structure of a file is shown in TFile::TFile.                  
- The structure of a directory is shown in TDirectoryFile::TDirectoryFile.      
- The TKey class is used by the TBasket class.                       
+ |  fClassName | Object class name. |
+ |  fName      | Name of the object. |
+ |  fTitle     | Title of the object. |
+
+ In the 16 highest bits of fSeekPdir is encoded a pid offset.  This
+ offset is to be added to the pid index stored in the TRef object
+ and the referenced TObject.
+
+ The TKey class is used by ROOT to:
+   - Write an object in the current directory
+   - Write a new ntuple buffer
+
+ The structure of a file is shown in TFile::TFile.
+ The structure of a directory is shown in TDirectoryFile::TDirectoryFile.
+ The TKey class is used by the TBasket class.
  See also TTree.
 */
 
@@ -452,7 +452,7 @@ void TKey::Browse(TBrowser *b)
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a TKey object of specified size.
 ///
-/// If externFile!=0, key will be allocated in specified file, otherwise file 
+/// If externFile!=0, key will be allocated in specified file, otherwise file
 /// of mother directory will be used.
 
 void TKey::Create(Int_t nbytes, TFile* externFile)
@@ -851,7 +851,7 @@ CLEAR:
 ////////////////////////////////////////////////////////////////////////////////
 /// To read a TObject* from bufferRead.
 ///
-/// This function is identical to TKey::ReadObj, but it reads directly from 
+/// This function is identical to TKey::ReadObj, but it reads directly from
 /// bufferRead instead of reading from a file.
 /// The object associated to this key is read from the buffer into memory
 /// Using the class identifier we find the TClass object for this class.
@@ -980,8 +980,8 @@ CLEAR:
 ////////////////////////////////////////////////////////////////////////////////
 /// To read an object (non deriving from TObject) from the file.
 ///
-/// If expectedClass is not null, we checked that that actual class of the 
-/// object stored is suitable to be stored in a pointer pointing to an object 
+/// If expectedClass is not null, we checked that that actual class of the
+/// object stored is suitable to be stored in a pointer pointing to an object
 /// of class 'expectedClass'.  We also adjust the value of the returned address
 /// so that it is suitable to be cast (C-Style)
 /// a pointer pointing to an object of class 'expectedClass'.
@@ -1312,8 +1312,8 @@ void TKey::Reset()
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the size in bytes of the key header structure.
 ///
-/// An explaination about the nbytes (Int_t nbytes) variable used in the 
-/// function. The size of fSeekKey and fSeekPdir is 8 instead of 4 if version is 
+/// An explaination about the nbytes (Int_t nbytes) variable used in the
+/// function. The size of fSeekKey and fSeekPdir is 8 instead of 4 if version is
 /// greater than 1000.
 /// | Component         | Sizeof |
 /// |-------------------|--------|

@@ -19,7 +19,7 @@ THREADDO     := $(THREADDS:.cxx=.o)
 THREADDH     := $(THREADDS:.cxx=.h)
 
 THREADH      := $(MODDIRI)/TCondition.h $(MODDIRI)/TConditionImp.h \
-                $(MODDIRI)/TMutex.h $(MODDIRI)/TMutexImp.h \
+                $(MODDIRI)/TMutex.h $(MODDIRI)/TMutexImp.h $(MODDIRI)/TPool.h \
                 $(MODDIRI)/TRWLock.h $(MODDIRI)/TSemaphore.h \
                 $(MODDIRI)/TThread.h $(MODDIRI)/TThreadFactory.h \
                 $(MODDIRI)/TThreadImp.h $(MODDIRI)/TAtomicCount.h \

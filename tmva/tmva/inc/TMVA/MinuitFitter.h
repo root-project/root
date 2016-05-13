@@ -80,7 +80,7 @@ namespace TMVA {
       Int_t      fMaxCalls;                // (approximate) maximum number of function calls
       Double_t   fTolerance;               // tolerance to the function value at the minimum
       
-      ClassDef(MinuitFitter,0) // Fitter using a Genetic Algorithm
+      ClassDef(MinuitFitter,0); // Fitter using a Genetic Algorithm
    };
 
 } // namespace TMVA

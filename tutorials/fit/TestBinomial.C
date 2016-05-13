@@ -1,26 +1,39 @@
-// Perform a fit to a set of data with binomial errors
-// like those derived from the division of two histograms.
-// Three different fits are performed and compared:
-//
-//   -  simple least square fit to the divided histogram obtained
-//      from TH1::Divide with option b
-//   -  least square fit to the TGraphAsymmErrors obtained from
-//      TGraphAsymmErrors::BayesDivide
-//   -  likelihood fit performed on the dividing histograms using
-//      binomial statistics with the TBinomialEfficiency class
-//
-// The first two methods are biased while the last one  is statistical correct.
-// Running the script passing an integer value n larger than 1, n fits are
-// performed and the bias are also shown.
-// To run the script :
-//
-//  to show the bias performing 100 fits for 1000 events per "experiment"
-//  root[0]: .x TestBinomial.C+
-//
-//  to show the bias performing 100 fits for 1000 events per "experiment"
-//           .x TestBinomial.C+(100, 1000)
-//
-//
+/// \file
+/// \ingroup tutorial_fit
+/// Perform a fit to a set of data with binomial errors
+/// like those derived from the division of two histograms.
+/// Three different fits are performed and compared:
+///
+///   -  simple least square fit to the divided histogram obtained
+///      from TH1::Divide with option b
+///   -  least square fit to the TGraphAsymmErrors obtained from
+///      TGraphAsymmErrors::BayesDivide
+///   -  likelihood fit performed on the dividing histograms using
+///      binomial statistics with the TBinomialEfficiency class
+///
+/// The first two methods are biased while the last one  is statistical correct.
+/// Running the script passing an integer value n larger than 1, n fits are
+/// performed and the bias are also shown.
+/// To run the script :
+///
+///  to show the bias performing 100 fits for 1000 events per "experiment"
+///
+/// ~~~ {.cpp}
+///  root[0]: .x TestBinomial.C+
+/// ~~~
+///
+///  to show the bias performing 100 fits for 1000 events per "experiment"
+///
+/// ~~~ {.cpp}
+///           .x TestBinomial.C+(100, 1000)
+/// ~~~
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Rene Brun
+
 #include "TBinomialEfficiencyFitter.h"
 #include "TVirtualFitter.h"
 #include "TH1.h"
@@ -139,7 +152,7 @@ void TestBinomial(int nloop = 100, int nevts = 100, bool plot=false, bool debug 
      // for (int i = 1; i <= hf->GetNbinsX(); ++i)
      //    std::cout << hf->GetBinContent(i) << "  ";
      // std::cout << std::endl;
-     
+
      TCanvas* cEvt;
      if (plot) {
        cEvt = new TCanvas(Form("cEnv%d",iloop),
@@ -169,7 +182,7 @@ void TestBinomial(int nloop = 100, int nevts = 100, bool plot=false, bool debug 
              fM2Fit->DrawCopy("SAME");
           }
           if (debug) res->Print();
-          status = res; 
+          status = res;
           break;
        }
        case 1:
@@ -180,11 +193,11 @@ void TestBinomial(int nloop = 100, int nevts = 100, bool plot=false, bool debug 
           if (fM2Fit2->GetParameter(0) >= 1.0)
           fM2Fit2->SetParameter(0, 0.95);
           fM2Fit2->SetParLimits(0, 0.0, 1.0);
-          
+
           // TVirtualPad * pad = gPad;
           // new TCanvas();
           // fM2Fit2->Draw();
-          // gPad = pad; 
+          // gPad = pad;
 
           TBinomialEfficiencyFitter bef(hM2N, hM2D);
           TString optFit = "RI";
@@ -286,5 +299,5 @@ void TestBinomial(int nloop = 100, int nevts = 100, bool plot=false, bool debug 
 }
 
 int main() {
-   TestBinomial(); 
+   TestBinomial();
 }

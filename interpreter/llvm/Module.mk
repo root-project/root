@@ -126,25 +126,25 @@ $(LLVMDEPO): $(LLVMDEPS)
 			LLVM_CFLAGS="-DBOOL=int"; \
 		fi; \
 		if [ $(ARCH) = "linux" ]; then \
-			LLVM_CFLAGS="-m32"; \
+			LLVM_CFLAGS="-m32 -fvisibility=hidden"; \
 		fi; \
 		if [ $(ARCH) = "linuxx8664gcc" ]; then \
-			LLVM_CFLAGS="-m64"; \
+			LLVM_CFLAGS="-m64 -fvisibility=hidden"; \
 		fi; \
 		if [ $(ARCH) = "linuxicc" ]; then \
-			LLVM_CFLAGS="-m32"; \
+			LLVM_CFLAGS="-m32 -fvisibility=hidden"; \
 		fi; \
 		if [ $(ARCH) = "linuxx8664icc" ]; then \
-			LLVM_CFLAGS="-m64"; \
+			LLVM_CFLAGS="-m64 -fvisibility=hidden"; \
 		fi; \
 		if [ $(ARCH) = "macosx" ]; then \
-			LLVM_CFLAGS="-m32 -Wno-unused-private-field"; \
+			LLVM_CFLAGS="-m32 -Wno-unused-private-field -fvisibility=hidden"; \
 		fi; \
 		if [ $(ARCH) = "macosx64" ]; then \
-			LLVM_CFLAGS="-m64 -Wno-unused-private-field"; \
+			LLVM_CFLAGS="-m64 -Wno-unused-private-field -fvisibility=hidden"; \
 		fi; \
 		if [ $(ARCH) = "macosx64" -a x$(GCC_MAJOR) != "x" ]; then \
-			LLVM_CFLAGS="$$LLVM_CFLAGS -fno-omit-frame-pointer"; \
+			LLVM_CFLAGS="$$LLVM_CFLAGS -fno-omit-frame-pointer -fvisibility=hidden"; \
 		fi; \
 		if [ $(ARCH) = "iossim" ]; then \
 			LLVM_CFLAGS="-arch i386 -isysroot $(IOSSDK) -miphoneos-version-min=$(IOSVERS)"; \
