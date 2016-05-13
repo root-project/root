@@ -123,6 +123,7 @@ namespace TMVA {
 
       static   void SetIsTraining(Bool_t);
       static   void SetIgnoreNegWeightsInTraining(Bool_t);
+
    private:
 
       static   Bool_t          fgIsTraining;    // mark if we are in an actual training or "evaluation/testing" phase --> ignoreNegWeights only in actual training !

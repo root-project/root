@@ -107,7 +107,7 @@ namespace TMVA {
                               TString /*compositeOption = ""*/ ) { return 0; } 
 
       // optimize all booked methods (well, if desired by the method)
-      void OptimizeAllMethods                 (TString fomType="ROCIntegral", TString fitType="FitGA");
+      std::map<TString,Double_t> OptimizeAllMethods                 (TString fomType="ROCIntegral", TString fitType="FitGA");
       void OptimizeAllMethodsForClassification(TString fomType="ROCIntegral", TString fitType="FitGA") { OptimizeAllMethods(fomType,fitType); }
       void OptimizeAllMethodsForRegression    (TString fomType="ROCIntegral", TString fitType="FitGA") { OptimizeAllMethods(fomType,fitType); }
 
@@ -124,6 +124,8 @@ namespace TMVA {
       void EvaluateAllVariables(DataLoader *loader, TString options = "" ); 
   
       TH1F* EvaluateImportance( DataLoader *loader,VIType vitype, Types::EMVA theMethod,  TString methodTitle, const char *theOption = "" );
+
+      float CrossValidateMethod(DataLoader *loader, Types::EMVA theMethod,  TString methodTitle, const char *theOption = "", bool optParams = false, int NumFolds = 5, bool remakeDataSet = true);
 
       // delete all methods and reset the method vector
       void DeleteAllMethods( void );

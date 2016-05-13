@@ -288,7 +288,7 @@ namespace TMVA {
       void      InitOptions      ( DataSetInfo& dsi,
                                    EvtStatsPerClass& eventsmap,
                                    TString& normMode, UInt_t& splitSeed,
-                                   TString& splitMode, TString& mixMode );
+                                   TString& splitMode, TString& mixMode);
 
 
       // ------------------------
