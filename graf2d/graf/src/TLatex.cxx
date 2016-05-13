@@ -1438,7 +1438,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, 
                TVirtualPS *saveps = gVirtualPS;
                if (gVirtualPS) gVirtualPS = 0;
                Double_t y22 = y2;
-               if (gVirtualX->InheritsFrom("TGCocoa")) y2 -= 3*sub;
+               if (gVirtualX->InheritsFrom("TGCocoa")) y2 -= 4.7*sub;
                Double_t sinang  = TMath::Sin(spec.fAngle/180*kPI);
                Double_t cosang  = TMath::Cos(spec.fAngle/180*kPI);
                Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
