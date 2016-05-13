@@ -125,7 +125,8 @@ namespace TMVA {
   
       TH1F* EvaluateImportance( DataLoader *loader,VIType vitype, Types::EMVA theMethod,  TString methodTitle, const char *theOption = "" );
 
-      float CrossValidate(DataLoader *loader, Types::EMVA theMethod,  TString methodTitle, const char *theOption = "", bool optParams = false, int NumFolds = 5, bool remakeDataSet = true);
+      float CrossValidate(DataLoader *loader, Types::EMVA theMethod,  TString methodTitle, const char *theOption = "", bool optParams = false, int NumFolds = 5, bool remakeDataSet = true, float *
+      rocIntegrals = nullptr);
 
       // delete all methods and reset the method vector
       void DeleteAllMethods( void );
