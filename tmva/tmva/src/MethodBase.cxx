@@ -2533,7 +2533,7 @@ Double_t TMVA::MethodBase::GetTrainingEfficiency(const TString& theString)
       Int_t sign = (fCutOrientation == kPositive) ? +1 : -1;
 
       std::vector<Double_t> mvaValues = GetMvaValues(0,Data()->GetNEvents());
-      assert(mvaValues.size() == Data()->GetNEvents()); 
+      assert( (Long64_t) mvaValues.size() == Data()->GetNEvents()); 
 
       // this method is unbinned
       for (Int_t ievt=0; ievt<Data()->GetNEvents(); ievt++) {
