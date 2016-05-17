@@ -87,6 +87,7 @@ Add a new mode for `TClass::SetCanSplit` (2) which indicates that this class and
 * Fix ROOT-7760: Fully allow the usage of the dylib extension on OSx.
 * Fix ROOT-7879: Prevent LinkDef files to be listed in a rootmap file and use (as the user actually expects) the header files #included in the linkdef file, if any, as the top level headers.
 * Add the *noIncludePaths* switch both for rootcling and genreflex to allow to loose track of the include paths in input to the dictionary generator.
+* Fix handling of template parameter pack in the forward declaration printer. [ROOT-8096]
 
 ### Interpreter Library
 
