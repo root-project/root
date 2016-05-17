@@ -78,7 +78,7 @@ public:
    Float_t XtoTeX(Double_t x);
    Float_t YtoTeX(Double_t y);
 
-   ClassDef(TTeXDump,2)  //Tex driver
+   ClassDef(TTeXDump, 0);  //Tex driver
 };
 
 #endif

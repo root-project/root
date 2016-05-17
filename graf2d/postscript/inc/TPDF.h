@@ -110,7 +110,7 @@ public:
    Double_t XtoPDF(Double_t x);
    Double_t YtoPDF(Double_t y);
 
-   ClassDef(TPDF,1)  //PDF driver
+   ClassDef(TPDF, 0);  //PDF driver
 };
 
 #endif
