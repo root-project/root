@@ -128,7 +128,7 @@ public:
    virtual   void     ReadFastArray(void  *, const TClass *, Int_t n=1, TMemberStreamer *s=0, const TClass *onFileClass=0);
    virtual   void     ReadFastArray(void **, const TClass *, Int_t n=1, Bool_t isPreAlloc=kFALSE, TMemberStreamer *s=0, const TClass *onFileClass=0);
 
-   ClassDef(TBufferSQL, 1); // Implementation of TBuffer to load and write to a SQL database
+   ClassDef(TBufferSQL, 0); // Implementation of TBuffer to load and write to a SQL database
 
 };
 
