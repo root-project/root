@@ -1,6 +1,5 @@
 
 
-
 TObjArray
 TObjArrayIter
 TObjLink
@@ -10,7 +9,6 @@ TObject
 TObjectRefSpy
 TObjectSpy
 TObjectTable
-
 
 kBitMask
 kCanDelete
@@ -28,16 +26,13 @@ kSingleKey
 kWriteDelete
 kZombie
 
-
 GetListOfTasks
 GetListOfTypes
-
 
 void SetTitle(const char* title = "") 	// *MENU*
 (const char *) "OtherTitle"
 (int) 42
 
-
 SetTickLength
 SetTickSize
 SetTicks
@@ -49,7 +44,6 @@ SetTitleColor
 SetTitleFont
 SetTitleOffset
 SetTitleSize
-
 
 SetTickLength
 SetTickSize
