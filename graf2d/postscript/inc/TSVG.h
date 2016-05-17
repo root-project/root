@@ -73,7 +73,7 @@ public:
    Double_t XtoSVG(Double_t x);
    Double_t YtoSVG(Double_t y);
 
-   ClassDef(TSVG,1)  //SVG driver
+   ClassDef(TSVG, 0);  //SVG driver
 };
 
 #endif
