@@ -676,6 +676,7 @@ Changes will be part of the future 6.06/06
 ### Cling
 
 - Properly handle try-catch functions. [ROOT-8034]
+- Fix handling of template parameter pack in the forward declaration printer. [ROOT-8096]
 
 ### TTree
 
