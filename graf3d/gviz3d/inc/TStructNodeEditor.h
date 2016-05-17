@@ -58,7 +58,7 @@ public:
    void  Update(Bool_t resetCamera);
    void  Update();
 
-   ClassDef(TStructNodeEditor,1) // GUI fo editing TStructNode
+   ClassDef(TStructNodeEditor, 0); // GUI fo editing TStructNode
 };
 #endif // ROOT_TStructNodeEditor
 
