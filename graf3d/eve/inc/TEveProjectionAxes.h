@@ -70,7 +70,7 @@ public:
 
    virtual const   TGPicture* GetListTreeIcon(Bool_t open=kFALSE);
 
-   ClassDef(TEveProjectionAxes, 1); // Class to draw scales in non-linear projections.
+   ClassDef(TEveProjectionAxes, 0); // Class to draw scales in non-linear projections.
 };
 
 #endif
