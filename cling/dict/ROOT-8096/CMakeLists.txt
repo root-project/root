@@ -18,7 +18,7 @@ add_test(NAME ROOT-8096-build
 
 ROOTTEST_ADD_TEST(load
                   MACRO load.C
-                  DEPENDS libROOT-8096-build
+                  DEPENDS ROOT-8096-build
                   OUTREF load.ref)
 
 ROOTTEST_ADD_TESTDIRS()
