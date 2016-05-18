@@ -1,10 +1,21 @@
-#include "TMPWorker.h"
+/* @(#)root/multiproc:$Id$ */
+// Author: Enrico Guiraud July 2015
+
+/*************************************************************************
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #include "MPCode.h"
 #include "MPSendRecv.h"
+#include "TError.h"
+#include "TMPWorker.h"
 #include "TSystem.h"
-#include <string>
 #include <memory> //unique_ptr
-#include <iostream>
+#include <string>
 
 //////////////////////////////////////////////////////////////////////////
 ///
@@ -65,7 +76,7 @@ void TMPWorker::Run()
    while(true) {
       MPCodeBufPair msg = MPRecv(fS.get());
       if (msg.first == MPCode::kRecvError) {
-         std::cerr << "Lost connection to client\n";
+         Error("TMPWorker::Run", "Lost connection to client\n");
          gSystem->Exit(0);
       }
 

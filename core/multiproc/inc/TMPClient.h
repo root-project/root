@@ -12,13 +12,13 @@
 #ifndef ROOT_TMPClient
 #define ROOT_TMPClient
 
+#include "MPSendRecv.h"
 #include "TMonitor.h"
 #include "TMPWorker.h"
-#include "MPSendRecv.h"
-#include <vector>
-#include <unistd.h> //pid_t
 #include <memory> //unique_ptr
 #include <iostream>
+#include <unistd.h> //pid_t
+#include <vector>
 
 class TMPClient {
 public:
@@ -84,7 +84,7 @@ unsigned TMPClient::Broadcast(unsigned code, const std::vector<T> &args)
          fMon.DeActivate((TSocket *)s);
          ++count;
       } else {
-         std::cerr << "[E] Could not send message to server\n";
+         Error("TMPClient::Broadcast", "[E] Could not send message to server\n");
       }
    }
 
@@ -133,7 +133,7 @@ unsigned TMPClient::Broadcast(unsigned code, T obj, unsigned nMessages)
          fMon.DeActivate((TSocket *)s);
          ++count;
       } else {
-         std::cerr << "[E] Could not send message to server\n";
+         Error("TMPClient::Broadcast", "[E] Could not send message to server\n");
       }
    }
 
