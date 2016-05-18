@@ -109,7 +109,7 @@ protected:
 
    Int_t     fNpar;               // number of fit parameters
 
-   ClassDef(TFractionFitter, 1)   // Fits MC fractions to data histogram
+   ClassDef(TFractionFitter, 0);   // Fits MC fractions to data histogram
 };
 
 //
