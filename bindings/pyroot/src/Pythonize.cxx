@@ -1081,6 +1081,9 @@ namespace {
          if ( end )
             PyObject_SetAttr( iter, PyStrings::gEnd, end );
          Py_XDECREF( end );
+
+         // add iterated collection as attribute so its refcount stays >= 1 while it's being iterated over
+         PyObject_SetAttr( iter, PyUnicode_FromString("_collection"), self );
       }
       return iter;
    }
