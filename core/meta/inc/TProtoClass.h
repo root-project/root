@@ -94,7 +94,7 @@ private:
 
 public:
    TProtoClass():
-      fBase(0), fEnums(0), fSizeof(0), fCanSplit(0),
+      fBase(0), fEnums(0), fSizeof(0), fCheckSum(0), fCanSplit(0),
       fStreamerType(0), fProperty(0), fClassProperty(0),
       fOffsetStreamer(0) {
    }
