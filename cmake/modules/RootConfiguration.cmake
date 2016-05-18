@@ -418,13 +418,15 @@ find_program(PERL_EXECUTABLE perl)
 set(perl ${PERL_EXECUTABLE})
 
 #---RConfigure-------------------------------------------------------------------------------------------------
+# set(setresuid undef)
 CHECK_CXX_SOURCE_COMPILES("#include <unistd.h>
-  int main() { int i = setresuid(0, 0, 0); return 0;}" found_setresuid)
+  int main() { uid_t r = 0, e = 0, s = 0; if (setresuid(r, e, s) != 0) { }; return 0;}" found_setresuid)
 if(found_setresuid)
   set(setresuid define)
 else()
   set(setresuid undef)
 endif()
+
 if(mathmore)
   set(hasmathmore define)
 else()
