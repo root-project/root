@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TTreeCacheUnzip
+\ingroup tree
 
 Specialization of TTreeCache for parallel Unzipping.
 

@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TLeafI
+\ingroup tree
+
 A TLeaf for an Integer data type.
 */
 

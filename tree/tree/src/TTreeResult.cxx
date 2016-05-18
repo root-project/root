@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TTreeResult
+\ingroup tree
+
 Class defining interface to a TTree query result with the same
 interface as for SQL databases. A TTreeResult is returned by
 TTree::Query() (actually TTreePlayer::Query()).

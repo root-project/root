@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TTreeRow
+\ingroup tree
+
 Class defining interface to a row of a TTree query result.
 Objects of this class are created by TTreeResult methods.
 

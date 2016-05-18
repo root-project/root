@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TQueryResult
+\ingroup tree
+
 A container class for query results.
 */
 

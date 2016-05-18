@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TLeafElement
+\ingroup tree
+
 A TLeaf for the general case when using the branches created via
 a TStreamerInfo (i.e. using TBranchElement).
 */
