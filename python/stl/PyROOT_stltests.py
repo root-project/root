@@ -447,7 +447,27 @@ class TestClasSTLSTREAM:
         o.fillStream(s)
 
         assert "StringStreamUser Says Hello!" == s.str()
+        
+### Iteration with SET========================================================
+class TestClasSTLSET:
 
+    def setup_class(cls):
+        import cppyy
+        cls.test_dct = "StlTypes_C"
+        cls.datatypes = cppyy.load_reflection_info(cls.test_dct)
+
+    def getset(self):
+        from cppyy.gbl import std
+        s = std.set("int")()
+        s.insert(1)
+        s.insert(2)
+        s.insert(3)
+        return s
+
+    def test01_iterate_set(self):
+        """Test ref counter while looking over std::set (ROOT-8038)"""
+        result = [elem for elem in self.getset()]
+        assert result == [1, 2, 3]
 
 ## actual test run
 if __name__ == '__main__':

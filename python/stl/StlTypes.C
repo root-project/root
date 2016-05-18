@@ -7,6 +7,7 @@
 
 #include <list>
 #include <map>
+#include <set>
 #include <ostream>
 #include <sstream>
 #include <string>
