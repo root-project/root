@@ -2,6 +2,8 @@
    gROOT->ProcessLine(".L macos.C");
 #ifdef ClingWorkAroundMissingDynamicScope
    gROOT->ProcessLine("macos(\"macos\");");
+#else
+   macos("macos");
 #endif
    new TFile("macos.root");
 #ifdef ClingWorkAroundMissingDynamicScope
