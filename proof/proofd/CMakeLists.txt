@@ -6,7 +6,10 @@
 include_directories(${XROOTD_INCLUDE_DIRS})
 include_directories(AFTER ${CMAKE_CURRENT_SOURCE_DIR}/inc)
 add_definitions(${XROOTD_CFLAGS})
-ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-undefined-bool-conversion)
+#
+# This should not be needed any longer after fix 039136791216af4620b9041e89d60c3ac0bab2f7
+# Uncomment if not the case (G Ganis, 18/5/2016)
+# ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-undefined-bool-conversion)
 
 if(WIN32)
   ROOT_LINKER_LIBRARY(XrdProofd XProofProtUtils.cxx LIBRARIES ${XROOTD_LIBRARIES})
