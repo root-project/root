@@ -337,11 +337,15 @@ Int_t TNetXNGFile::ReOpen(Option_t *modestr)
       return 1;
    }
 
-   fFile->Close();
+   XRootDStatus st = fFile->Close();
+   if (!st.IsOK()) {
+      Error("ReOpen", "%s", st.ToStr().c_str());
+      return 1;
+   }
    fOption = newOpt;
    fMode = mode;
 
-   XRootDStatus st = fFile->Open(fUrl->GetURL(), fMode);
+   st = fFile->Open(fUrl->GetURL(), fMode);
    if (!st.IsOK()) {
       Error("ReOpen", "%s", st.ToStr().c_str());
       return 1;
