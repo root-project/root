@@ -6,7 +6,9 @@ void macos(const char* name)
 {
    //Char_t cHead1[9]= {61,62,63,64,65,66,67,68,69}; 
    static Char_t cHead1[10] = "123456789";
-   static Short_t nCh1=35000;
+   //This reproduce the actual user code, the test makes sure that, the
+   //ntuple actual properly record the overflowed value (see the ref file).
+   static Short_t nCh1=(Short_t)35000;
    static UShort_t nCh2=33000;
    
    //open root file for output
