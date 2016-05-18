@@ -13,7 +13,7 @@ set_property(TARGET ROOT-8096 APPEND PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURREN
 
 set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES dict.cxx dict_rdict.pcm libROOT-8096.rootmap)
 
-add_test(NAME ROOT-8096-build
+add_test(NAME roottest-cling-dict-ROOT-8096-build
          COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
                                   --target  ROOT-8096${fast} )
 #                                  --target  ${targetname_libgen}${fast})
@@ -21,7 +21,7 @@ add_test(NAME ROOT-8096-build
 
 ROOTTEST_ADD_TEST(load
                   MACRO load.C
-                  DEPENDS ROOT-8096-build
+                  DEPENDS roottest-cling-dict-ROOT-8096-build
                   OUTREF load.ref)
 
 ROOTTEST_ADD_TESTDIRS()
