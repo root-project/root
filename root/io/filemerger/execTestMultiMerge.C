@@ -69,12 +69,12 @@ int execTestMultiMerge()
    if (!result) result = testMergedFile("mfile1-4.root",1,4907);
    if (!result) result = testMergedFile("mzfile1-4.root",206,4962);
 
-   if (!result) result = testSimpleFile("hsimple.root",25000,1,414374,1);
-   if (!result) result = testSimpleFile("hsimple9.root",25000,9,431991,3);
-   if (!result) result = testSimpleFile("hsimple9x2.root",2*25000,9,851090,9);
-   if (!result) result = testSimpleFile("hsimple209.root",25000,209,393955,8);
-   if (!result) result = testSimpleFile("hsimpleK.root",5*25000,209,1917229,8);
-   if (!result) result = testSimpleFile("hsimpleK202.root",5*25000,202,1938623,16);
-   if (!result) result = testSimpleFile("hsimpleF.root",5*25000,9,2108404,3);
+   if (!result) result = testSimpleFile("hsimple.root",25000,1,414377,1);
+   if (!result) result = testSimpleFile("hsimple9.root",25000,9,431992,3);
+   if (!result) result = testSimpleFile("hsimple9x2.root",2*25000,9,851088,9);
+   if (!result) result = testSimpleFile("hsimple209.root",25000,209,393956,8);
+   if (!result) result = testSimpleFile("hsimpleK.root",5*25000,209,1917230,8);
+   if (!result) result = testSimpleFile("hsimpleK202.root",5*25000,202,1938624,16);
+   if (!result) result = testSimpleFile("hsimpleF.root",5*25000,9,2108405,3);
    return result;
 }
