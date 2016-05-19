@@ -69,10 +69,6 @@ typedef DataVectorTmplt<Content> DataVector;
 #include "TClass.h"
 #include "TTree.h"
 
-   // This breaks the test on windows.
-#ifndef protected
-#define protected public
-#endif
 #include "TVirtualCollectionProxy.h"
 
 #ifdef __CLING__
@@ -91,8 +87,14 @@ void MakeCollection(const char *classname, const char *equiv)
    }
    c->CopyCollectionProxy( * TClass::GetClass(equiv)->GetCollectionProxy() );
 
-   // This breaks the test on windows.
-   c->GetCollectionProxy()->fClass = c;
+   // We want to test quickly and dirty the TVirtualCollectionProxy. This is why
+   // we trick TClass's collection proxy by acessing it's protected members.
+   struct CollectionProxySetter : public TVirtualCollectionProxy {
+     static void SetFClassMember(TVirtualCollectionProxy* proxy, TClass* value) {
+       ((CollectionProxySetter*)proxy)->fClass = value;
+     }
+   };
+   CollectionProxySetter::SetFClassMember(c->GetCollectionProxy(), c);
 }
 
 int execWriteCustomCollection() {
