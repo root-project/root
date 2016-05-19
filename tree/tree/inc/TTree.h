@@ -102,7 +102,7 @@ protected:
    Long64_t       fTotBytes;              ///<  Total number of bytes in all branches before compression
    Long64_t       fZipBytes;              ///<  Total number of bytes in all branches after compression
    Long64_t       fSavedBytes;            ///<  Number of autosaved bytes
-   Long64_t       fFlushedBytes;          ///<  Number of autoflushed bytes
+   Long64_t       fFlushedBytes;          ///<  Number of auto-flushed bytes
    Double_t       fWeight;                ///<  Tree weight (see TTree::SetWeight)
    Int_t          fTimerInterval;         ///<  Timer interval in milliseconds
    Int_t          fScanField;             ///<  Number of runs before prompting in Scan
@@ -114,7 +114,7 @@ protected:
    Long64_t       fMaxEntryLoop;          ///<  Maximum number of entries to process
    Long64_t       fMaxVirtualSize;        ///<  Maximum total size of buffers kept in memory
    Long64_t       fAutoSave;              ///<  Autosave tree when fAutoSave entries written or -fAutoSave (compressed) bytes produced
-   Long64_t       fAutoFlush;             ///<  Autoflush tree when fAutoFlush entries written or -fAutoFlush (compressed) bytes produced
+   Long64_t       fAutoFlush;             ///<  Auto-flush tree when fAutoFlush entries written or -fAutoFlush (compressed) bytes produced
    Long64_t       fEstimate;              ///<  Number of entries to estimate histogram limits
    Long64_t      *fClusterRangeEnd;       ///<[fNClusterRange] Last entry of a cluster range.
    Long64_t      *fClusterSize;           ///<[fNClusterRange] Number of entries in each cluster for a given range.
@@ -153,8 +153,8 @@ protected:
    UInt_t         fNEntriesSinceSorting;  ///<! Number of entries processed since the last re-sorting of branches
    std::vector<std::pair<Long64_t,TBranch*>> fSortedBranches; ///<! Branches sorted by average task time
 
-   static Int_t     fgBranchStyle;        //  Old/New branch style
-   static Long64_t  fgMaxTreeSize;        //  Maximum size of a file containg a Tree
+   static Int_t     fgBranchStyle;        ///<  Old/New branch style
+   static Long64_t  fgMaxTreeSize;        ///<  Maximum size of a file containing a Tree
 
 private:
    TTree(const TTree& tt);              // not implemented
@@ -522,7 +522,7 @@ public:
       return SetBranchAddress(bname,add,ptr,cl,type,true);
    }
 #ifndef R__NO_CLASS_TEMPLATE_SPECIALIZATION
-   // This can only be used when the template overload resolution can distringuish between
+   // This can only be used when the template overload resolution can distinguish between
    // T* and T**
    template <class T> Int_t SetBranchAddress(const char *bname, T *add, TBranch **ptr = 0) {
       TClass *cl = TClass::GetClass(typeid(T));
