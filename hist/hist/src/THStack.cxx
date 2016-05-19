@@ -86,6 +86,13 @@ Begin_Macro(source)
 End_Macro
 
 Note that picking is supported for all drawing modes.
+
+Stacks of 2D histogram can also be painted as candle plots:
+
+Begin_Macro(source)
+../../../tutorials/hist/candleplotstack.C
+End_Macro
+
 */
 
 
@@ -739,11 +746,13 @@ void THStack::Paint(Option_t *option)
    snprintf(loption,31,"%s",opt.Data());
    char *nostack  = strstr(loption,"nostack");
    char *nostackb = strstr(loption,"nostackb");
+   char *candle = strstr(loption,"candle");
+
    // do not delete the stack. Another pad may contain the same object
    // drawn in stack mode!
    //if (nostack && fStack) {fStack->Delete(); delete fStack; fStack = 0;}
 
-   if (!opt.Contains("nostack")) BuildStack();
+   if (!opt.Contains("nostack") || (!opt.Contains("candle"))) BuildStack();
 
    Double_t themax,themin;
    if (fMaximum == -1111) themax = GetMaximum(option);
@@ -839,7 +848,7 @@ void THStack::Paint(Option_t *option)
    char noption[32];
    strlcpy(noption,loption,32);
    Int_t nhists = fHists->GetSize();
-   if (nostack) {
+   if (nostack || candle) {
       lnk = (TObjOptLink*)fHists->FirstLink();
       TH1* hAti;
       Double_t bo=0.03;
@@ -849,7 +858,10 @@ void THStack::Paint(Option_t *option)
             if (nostackb) snprintf(loption,31,"%s%s b",noption,lnk->GetOption());
             else          snprintf(loption,31,"%s%s",noption,lnk->GetOption());
          } else {
+            TString indivOpt = lnk->GetOption();
+            indivOpt.ToLower();
             if (nostackb) snprintf(loption,31,"%ssame%s b",noption,lnk->GetOption());
+            else if (candle && indivOpt.Contains("candle")) snprintf(loption,31,"%ssame",lnk->GetOption());
             else          snprintf(loption,31,"%ssame%s",noption,lnk->GetOption());
          }
          hAti = (TH1F*)(fHists->At(i));
@@ -857,6 +869,13 @@ void THStack::Paint(Option_t *option)
             hAti->SetBarWidth(bw);
             hAti->SetBarOffset(bo);
             bo += bw;
+         }
+         if (candle) {
+            float candleSpace = 1./(nhists*2);
+            float candleOffset = - 1./2 + candleSpace + 2*candleSpace*i;
+            candleSpace *= 1.66; //width of the candle per bin: 1.0 means space is as great as the candle, 2.0 means there is no space
+            hAti->SetBarWidth(candleSpace);
+            hAti->SetBarOffset(candleOffset);
          }
          hAti->Paint(loption);
          lnk = (TObjOptLink*)lnk->Next();
