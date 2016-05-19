@@ -30,8 +30,8 @@ class TBranchObject : public TBranch {
 protected:
    enum { kWarn = BIT(12) };
 
-   TString     fClassName;        //Class name of referenced object
-   TObject     *fOldObject;       //!Pointer to old object
+   TString     fClassName;        ///< Class name of referenced object
+   TObject     *fOldObject;       ///< !Pointer to old object
 
    void Init(TTree *tree, TBranch *parent, const char *name, const char *classname, void *addobj, Int_t basketsize, Int_t splitlevel, Int_t compress, Bool_t isptrptr);
 
