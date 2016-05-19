@@ -204,6 +204,7 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
   to be editable later on using external softwares like "inkscape". This improvement
   was suggested [here](https://sft.its.cern.ch/jira/browse/ROOT-8161).
 * In TLatex with the Cocoa backend on Mac the `#tilde` position was too low.
+* New optional parameter "option" in TPad::BuildLegend to set the TLegend option (Georg Troska).
 
 ## 3D Graphics Libraries
 
