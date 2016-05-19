@@ -88,7 +88,7 @@ void MakeCollection(const char *classname, const char *equiv)
    c->CopyCollectionProxy( * TClass::GetClass(equiv)->GetCollectionProxy() );
 
    // We want to test quickly and dirty the TVirtualCollectionProxy. This is why
-   // we trick TClass's collection proxy by acessing it's protected members.
+   // we trick TClass's collection proxy by accessing its protected members.
    struct CollectionProxySetter : public TVirtualCollectionProxy {
      static void SetFClassMember(TVirtualCollectionProxy* proxy, TClass* value) {
        ((CollectionProxySetter*)proxy)->fClass = value;
