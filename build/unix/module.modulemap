@@ -844,7 +844,12 @@ module "TBranchProxy.h" { header "TBranchProxy.h" export * }
 module "TBranchProxyClassDescriptor.h" { header "TBranchProxyClassDescriptor.h" export * }
 module "TBranchProxyDescriptor.h" { header "TBranchProxyDescriptor.h" export * }
 module "TBranchProxyDirector.h" { header "TBranchProxyDirector.h" export * }
-module "TBranchProxyTemplate.h" { header "TBranchProxyTemplate.h" export * }
+// TBranchProxyTemplate.h checks for R__BRANCHPROXY_GENERATOR_VERSION thus it
+// cannot be modularized.
+module "TBranchProxyTemplate.h" {
+  textual header "TBranchProxyTemplate.h"
+  export *
+}
 module "TBranchRef.h" { header "TBranchRef.h" export * }
 module "TBranchSTL.h" { header "TBranchSTL.h" export * }
 module "TBrowser.h" { header "TBrowser.h" export * }
