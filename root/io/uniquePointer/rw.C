@@ -106,7 +106,7 @@ int rw(bool write = true){
    auto si = c->GetStreamerInfo();
    // Here the output
 
-   auto filenames {"out.root"};//, "out.xml"};
+   std::vector<const char*> filenames {"out.root"};//, "out.xml"};
    for (auto filename : filenames){
       if (write) w(filename);
       r(filename);

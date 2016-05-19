@@ -29,7 +29,7 @@ void check(const char* testName){
    std::string binFilename(testName); binFilename+=".root";
    std::string xmlFilename(testName); xmlFilename+=".xml";
 
-   auto filenames  {binFilename.c_str()/*, xmlFilename.c_str()*/}; // NEED XML HERE
+   std::vector<const char*> filenames  {binFilename.c_str()/*, xmlFilename.c_str()*/}; // NEED XML HERE
 
    for (auto&& filename : filenames){
       createFile(filename);
