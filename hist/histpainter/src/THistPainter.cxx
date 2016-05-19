@@ -63,6 +63,7 @@
 #include "TEnv.h"
 #include "TPoint.h"
 #include "TImage.h"
+#include "TCandle.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /*! \class THistPainter
@@ -3489,105 +3490,12 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       strncpy(l,"   ",3);
    }
 
-   // The bits for Hoption.Candle
-   //
-   // 0: always on
-   // 1: 0 - X, 1 - Y
-   // 2-3: 0: no whisker, 1: standard whisker, 2: 1.5*iqr, 3:free
-   // 4-5: 0: no median, 1: median as line, 2: median with errors, 3: median as circle
-   // 6-7: 0: no mean, 1: mean as dashed line, 2: free, 3: mean as circle
-   // 8: 0: no outliers, 1: outliers
-   // 9: 0: do not show values within iqr, 1: show all values within iqr + outliers
-   // 10: 0: show outliers and all values in the candle line, 1: show them randomly
-   // 11-12: 0: no anchor, 1: standard anchor, 2: free, 3: free
-   // 13-14: 0: no box, 1: draw a box (notches are set by the median), 2: draw a filled box, 3: free
-
+   
    l = strstr(chopt,"CANDLE");
    if (l) {
-      Hoption.Scat = 0;
-      Hoption.Candle = 1; // bit 0 is always on!
-
-      const uint32_t fallbackCandle = (1 << 2) |(1 << 4) | (3 << 6) | (1 << 11) | (1 << 13);
-
-      char direction = ' ';
-      char preset = ' ';
-
-      if (l[6] >= 'A' && l[6] <= 'Z') direction = l[6];
-      if (l[6] >= '1' && l[6] <= '9') preset = l[6];
-      if (l[7] >= 'A' && l[7] <= 'Z' && preset != ' ') direction = l[7];
-      if (l[7] >= '1' && l[7] <= '9' && direction != ' ') preset = l[7];
-
-      if (direction == 'X' || direction == 'V') { Hoption.Candle &= ~(1 << 1); } // Set bit 1 to 0
-      if (direction == 'Y' || direction == 'H') { Hoption.Candle |= (1 << 1); } // Set bit 1 to 1
-      if (preset == '1') //Standard candle using old candle-definition
-         Hoption.Candle |= fallbackCandle;
-      if (preset == '2') //New standard candle with better whisker definition + outlier
-         Hoption.Candle |= (2 << 2) | (1 << 4) | (1 << 6) | (1 << 8) | (1 << 11) | (1 << 13);
-      if (preset == '3')  //Like candle2 but with a mean as a circle
-         Hoption.Candle |= (2 << 2) | (1 << 4) | (3 << 6) | (1 << 8) | (1 << 11) | (1 << 13);
-      if (preset == '4')  //Like candle3 but showing the uncertainty of the median as well
-         Hoption.Candle |= (2 << 2) | (2 << 4) | (3 << 6) | (1 << 8) | (1 << 11) | (1 << 13);
-      if (preset == '5')  //Like candle2 but showing all datapoints
-         Hoption.Candle |= (2 << 2) | (1 << 4) | (3 << 6) | (1 << 8) | (1 << 9) | (1 << 11) | (1 << 13);
-      if (preset == '6')  //Like candle2 but showing all datapoints scattered
-         Hoption.Candle |= (2 << 2) | (1 << 4) | (3 << 6) | (1 << 8) | (1 << 9) | (1 << 10)| (1 << 11) | (1 << 13);
-
-      if (preset != ' ' && direction != ' ')
-         strncpy(l,"        ",8);
-      else if (preset != ' ' || direction != ' ')
-         strncpy(l,"        ",7);
-      else
-         strncpy(l,"        ",6);
-
-      Bool_t useIndivOption = false;
-
-      if (preset == ' ') { // Check if the user wants to set the properties individually
-         Int_t n = 0;
-         char *brOpen = strstr(chopt,"(");
-         char *brClose = strstr(chopt,")");
-         if (brOpen && brClose) {
-            useIndivOption = true;
-            char * value = brClose;
-            while (value > brOpen) {
-
-               value--; //Start from the back
-               switch (n) {
-                  case 0: // options for the box
-                     if (*value == '1') Hoption.Candle |= (1 << 13); //show the box
-                     if (*value == '2') Hoption.Candle |= (2 << 13); //paint a filled box
-                     break;
-                  case 1: // the median
-                     if (*value == '1') Hoption.Candle |= (1 << 4); //median as line
-                     if (*value == '2') Hoption.Candle |= (2 << 4); //median as line with errors (notched candle-plot)
-                     if (*value == '3') Hoption.Candle |= (3 << 4); //median as circle
-                     break;
-                  case 2: // the mean
-                     if (*value == '1') Hoption.Candle |= (1 << 6); //mean as dashed line
-                     if (*value == '3') Hoption.Candle |= (3 << 6); //mean as circle
-                     break;
-                  case 3: // the whisker
-                     if (*value == '1') Hoption.Candle |= (1 << 2); //old whisker definition (painted dashed)
-                     if (*value == '2') Hoption.Candle |= (2 << 2); //new whisker definition (max 1.5*iqr)
-                     break;
-                  case 4: // the anchor
-                     if (*value == '1') Hoption.Candle |= (1 << 11); //paint the anchor
-                     break;
-                  case 5: // outliers and datapoints
-                     if (*value == '1') Hoption.Candle |= (1 << 8); //show outliers only
-                     if (*value == '2') Hoption.Candle |= (1 << 8) | (1 << 9); //all datapoints in the candle-line
-                     if (*value == '3') Hoption.Candle |= (1 << 8) | (1 << 9) | (1 << 10); //all datapoints scattered
-                     break;
-                  }
-                  *value = ' '; //Deleting number per number from chopt including '('
-               n++;
-            }
-            *brClose = ' '; //Deleting the ')' char from chopt
-         }
-      }
-      //Handle option "CANDLE" ,"CANDLEX" or "CANDLEY" to behave like "CANDLEX1" or "CANDLEY1"
-      if (!useIndivOption && (Hoption.Candle == 1 || Hoption.Candle == 3) ) {
-        Hoption.Candle |= fallbackCandle;
-     }
+	   TCandle candle;
+	   Hoption.Candle = candle.ParseOption(l);
+	   Hoption.Scat = 0;
    }
 
    l = strstr(chopt,"VIOLIN");
@@ -4746,307 +4654,7 @@ void THistPainter::PaintBoxes(Option_t *)
    fH->TAttFill::Modify();
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Paint one line used by PaintOneCandle.
-///
-/// Implemented by:
-/// G. Troska, georg.troska@tu-dortmund.de
-/// T. Neddermann, till.neddermann@tu-dortmund.de
 
-void THistPainter::PaintOneCandleLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Bool_t swapXY)
-{
-   Bool_t doLogY = (!(swapXY) && Hoption.Logy) || (swapXY && Hoption.Logx);
-   Bool_t doLogX = (!(swapXY) && Hoption.Logx) || (swapXY && Hoption.Logy);
-   if (doLogY) {
-      if (y1 > 0) y1 = TMath::Log10(y1); else return;
-      if (y2 > 0) y2 = TMath::Log10(y2); else return;
-   }
-   if (doLogX) {
-      if (x1 > 0) x1 = TMath::Log10(x1); else return;
-      if (x2 > 0) x2 = TMath::Log10(x2); else return;
-   }
-   if (!swapXY) {
-      gPad->PaintLine(x1, y1, x2, y2);
-   } else {
-      gPad->PaintLine(y1, x1, y2, x2);
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Paint one box used by PaintOneCandle.
-
-void THistPainter::PaintOneCandleLBox(Int_t nPoints, Double_t *x, Double_t *y, Bool_t swapXY, Bool_t fill)
-{
-   Bool_t doLogY = (!(swapXY) && Hoption.Logy) || (swapXY && Hoption.Logx);
-   Bool_t doLogX = (!(swapXY) && Hoption.Logx) || (swapXY && Hoption.Logy);
-   if (doLogY) {
-      for (int i=0; i<nPoints; i++) {
-         if (y[i] > 0) y[i] = TMath::Log10(y[i]);
-         else return;
-      }
-   }
-   if (doLogX) {
-      for (int i=0; i<nPoints; i++) {
-         if (x[i] > 0) x[i] = TMath::Log10(x[i]);
-         else return;
-      }
-   }
-
-   if (!swapXY) {
-      if (fill) gPad->PaintFillArea(nPoints, x, y);
-      gPad->PaintPolyLine(nPoints, x, y);
-   } else {
-      if (fill) gPad->PaintFillArea(nPoints, y, x);
-      gPad->PaintPolyLine(nPoints, y, x);
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Paint one candle used by PaintCandle.
-///
-/// Implemented by:
-/// G. Troska, georg.troska@tu-dortmund.de
-/// T. Neddermann, till.neddermann@tu-dortmund.de
-
-void THistPainter::PaintOneCandle(Double_t candlePosition, Double_t candleWidth,
-                                  TH1 *proj)
-{
-   // Save the attributes of the original histo
-   Style_t saveFill   = fH->GetFillStyle();
-   Style_t saveColor  = fH->GetFillColor();
-   Style_t saveLine   = fH->GetLineStyle();
-   Style_t saveWidth  = fH->GetLineWidth();
-   Style_t saveMarker = fH->GetMarkerStyle();
-
-   // Determining the quantiles
-   Double_t *prob = new Double_t[5];
-   prob[0]=1E-15; prob[1]=0.25; prob[2]=0.5; prob[3]=0.75; prob[4]=1-1E-15;
-   Double_t *quantiles = new Double_t[5];
-   quantiles[0]=0.; quantiles[1]=0.; quantiles[2] = 0.; quantiles[3] = 0.; quantiles[4] = 0.;
-
-   proj->GetQuantiles(5, quantiles, prob);
-   Double_t iqr = quantiles[3]-quantiles[1];
-
-   // Check if the quantiles are valid, seems the under- and overflow is taken
-   // into account as well, we need to ignore this!
-   if (quantiles[0] >= quantiles[4]) return;
-   if (quantiles[1] >= quantiles[3]) return;
-
-   // Definition of the candle in the standard case
-   Double_t boxHigh = quantiles[3];
-   Double_t boxLow = quantiles[1];
-   Double_t whiskerUpper = quantiles[4]; //Standard case
-   Double_t whiskerLower = quantiles[0]; //Standard case
-   Double_t dimLeft = candlePosition-0.5*candleWidth;
-   Double_t dimRight = candlePosition+0.5*candleWidth;
-   Double_t median = quantiles[2];
-   Double_t mean = proj->GetMean();
-   Double_t medianErr = 1.57*iqr/sqrt(proj->GetEntries());
-
-   fH->SetMarkerColor(fH->GetLineColor());
-   fH->TAttLine::Modify();
-   fH->TAttFill::Modify();
-   fH->TAttMarker::Modify();
-
-   Bool_t swapXY = ((Hoption.Candle >> 1) & 0x01);
-   Bool_t doLogY = (!(swapXY) && Hoption.Logy) || (swapXY && Hoption.Logx);
-   Bool_t doLogX = (!(swapXY) && Hoption.Logx) || (swapXY && Hoption.Logy);
-
-   if (((Hoption.Candle >> 2) & 0x03) == 0x02) { // Improved whisker definition, with 1.5*iqr
-      int bin = proj->FindBin(boxLow-1.5*iqr);
-      // extending only to the lowest data value within this range
-      while (proj->GetBinContent(bin) == 0 && bin <= proj->GetNbinsX()) bin++;
-      whiskerLower = proj->GetBinCenter(bin);
-
-      bin = proj->FindBin(boxHigh+1.5*iqr);
-      while (proj->GetBinContent(bin) == 0 && bin >= 1) bin--;
-      whiskerUpper = proj->GetBinCenter(bin);
-   }
-
-   if (((Hoption.Candle >> 13) & 0x03) == 0x01) { // Draw a simple box
-      if (((Hoption.Candle >> 4) & 0x03) == 0x02) { // Check if we have to draw a box with notches
-         Double_t x[] = {dimLeft,  dimLeft, dimLeft+candleWidth/3., dimLeft, dimLeft, dimRight,
-                         dimRight, dimRight-candleWidth/3., dimRight, dimRight, dimLeft};
-         Double_t y[] = {boxLow, median-medianErr, median, median+medianErr, boxHigh, boxHigh,
-                         median+medianErr, median, median-medianErr, boxLow, boxLow};
-         PaintOneCandleLBox(11, x, y, swapXY, kFALSE);
-      } else { // draw a simple box
-         Double_t x[] = {dimLeft, dimLeft, dimRight, dimRight, dimLeft};
-         Double_t y[] = {boxLow,  boxHigh, boxHigh,  boxLow,   boxLow};
-         PaintOneCandleLBox(5, x, y, swapXY, kFALSE);
-      }
-   } else if (((Hoption.Candle >> 13) & 0x03) == 0x02) { // Draw a filled box
-      if (((Hoption.Candle >> 4) & 0x03) == 0x02) { // Check if we have to draw a box with notches
-         Double_t x[] = {dimLeft,  dimLeft, dimLeft+candleWidth/3., dimLeft, dimLeft, dimRight,
-                         dimRight, dimRight-candleWidth/3., dimRight, dimRight, dimLeft};
-         Double_t y[] = {boxLow, median-medianErr, median, median+medianErr, boxHigh, boxHigh,
-                         median+medianErr, median, median-medianErr, boxLow, boxLow};
-         PaintOneCandleLBox(11, x, y, swapXY, kTRUE);
-      } else { // draw a simple box
-         Double_t x[] = {dimLeft, dimLeft, dimRight, dimRight, dimLeft};
-         Double_t y[] = {boxLow,  boxHigh, boxHigh,  boxLow,   boxLow};
-         PaintOneCandleLBox(5, x, y, swapXY, kTRUE);
-      }
-   }
-
-   if (((Hoption.Candle >> 11) & 0x03) == 0x01) { // Draw the anchor line
-      PaintOneCandleLine(dimLeft, whiskerUpper, dimRight, whiskerUpper, swapXY);
-      PaintOneCandleLine(dimLeft, whiskerLower, dimRight, whiskerLower, swapXY);
-   }
-
-   if (((Hoption.Candle >> 2) & 0x03) == 0x01) { // Whiskers are dashed
-      fH->SetLineStyle(2);
-      fH->TAttLine::Modify();
-      PaintOneCandleLine(candlePosition, whiskerUpper, candlePosition, boxHigh, swapXY);
-      PaintOneCandleLine(candlePosition, boxLow, candlePosition, whiskerLower, swapXY);
-      fH->SetLineStyle(saveLine);
-      fH->TAttLine::Modify();
-   } else if (((Hoption.Candle >> 2) & 0x03) == 0x02) { // Whiskers without dashing, better whisker definition (done above)
-      PaintOneCandleLine(candlePosition, whiskerUpper, candlePosition, boxHigh, swapXY);
-      PaintOneCandleLine(candlePosition, boxLow, candlePosition, whiskerLower, swapXY);
-   }
-
-   if ((( Hoption.Candle >> 4) & 0x03) == 0x01 ) { // Paint median as a line
-      PaintOneCandleLine(dimLeft, median, dimRight, median, swapXY);
-   } else if ((( Hoption.Candle >> 4) & 0x03) == 0x02 ) { // Paint median as a line (using notches, median line is shorter)
-      PaintOneCandleLine(dimLeft+candleWidth/3, median, dimRight-candleWidth/3., median, swapXY);
-   } else if ((( Hoption.Candle >> 4) & 0x03) == 0x03 ) { // Paint median circle
-      Double_t myMedianX[1], myMedianY[1];
-      if (!swapXY) {
-         myMedianX[0] = candlePosition;
-         myMedianY[0] = median;
-      } else {
-         myMedianX[0] = median;
-         myMedianY[0] = candlePosition;
-      }
-
-      Bool_t isValid = true;
-      if (doLogX) {
-         if (myMedianX[0] > 0) myMedianX[0] = TMath::Log10(myMedianX[0]); else isValid = false;
-      }
-      if (doLogY) {
-         if (myMedianY[0] > 0) myMedianY[0] = TMath::Log10(myMedianY[0]); else isValid = false;
-      }
-
-      fH->SetMarkerStyle(24);
-      fH->SetMarkerColor(fH->GetLineColor());
-      fH->TAttMarker::Modify();
-      if (isValid) gPad->PaintPolyMarker(1,myMedianX,myMedianY); // A circle for the median
-      fH->SetMarkerStyle(saveMarker);
-      fH->TAttMarker::Modify();
-   }
-
-   if ((( Hoption.Candle >> 6) & 0x03) == 0x03 ) { // Paint mean as a circle
-      Double_t myMeanX[1], myMeanY[1];
-      if (!swapXY) {
-         myMeanX[0] = candlePosition;
-         myMeanY[0] = mean;
-      } else {
-         myMeanX[0] = mean;
-         myMeanY[0] = candlePosition;
-      }
-
-      Bool_t isValid = true;
-      if (doLogX) {
-         if (myMeanX[0] > 0) myMeanX[0] = TMath::Log10(myMeanX[0]); else isValid = false;
-      }
-      if (doLogY) {
-         if (myMeanY[0] > 0) myMeanY[0] = TMath::Log10(myMeanY[0]); else isValid = false;
-      }
-
-      fH->SetMarkerStyle(24);
-      fH->SetMarkerColor(fH->GetLineColor());
-      fH->TAttMarker::Modify();
-      if (isValid) gPad->PaintPolyMarker(1,myMeanX,myMeanY); // A circle for the mean
-      fH->SetMarkerStyle(saveMarker);
-      fH->TAttMarker::Modify();
-   } else if ((( Hoption.Candle >> 6) & 0x03) == 0x01 ) { // Paint mean as a dashed line
-      fH->SetLineStyle(2);
-      fH->TAttLine::Modify();
-      PaintOneCandleLine(dimLeft, mean, dimRight, mean, swapXY);
-      fH->SetLineStyle(saveLine);
-      fH->TAttLine::Modify();
-
-   }
-
-   if (((Hoption.Candle >> 11) & 0x03) == 0x01) { //Draw standard anchor
-      PaintOneCandleLine(dimLeft, whiskerLower, dimRight, whiskerLower, swapXY); // the lower anchor line
-      PaintOneCandleLine(dimLeft, whiskerUpper, dimRight, whiskerUpper, swapXY); // the upper anchor line
-   }
-
-
-   // This is a bit complex. All values here are handled as outliers. Usually
-   // only the datapoints outside the whiskers are shown.
-   // One can show them in one row as crosses, or scattered randomly. If activated
-   // all datapoint are shown in the same way
-   TRandom2 random;
-   if ((Hoption.Candle >> 8) & 0x01) { //Draw outliers
-      const int maxOutliers = kNMAX; // Max outliers per candle
-      Double_t outliersX[maxOutliers];
-      Double_t outliersY[maxOutliers];
-      Double_t myScale = 1.;
-      if (proj->GetEntries() > maxOutliers/2) myScale = proj->GetEntries()/(maxOutliers/2.);
-      int nOutliers = 0;
-      for (int bin = 0; bin < proj->GetNbinsX(); bin++) {
-         // Either show them only outside the whiskers, or all of them
-         if (proj->GetBinContent(bin) > 0 && (proj->GetBinCenter(bin) < whiskerLower || proj->GetBinCenter(bin) > whiskerUpper || ((Hoption.Candle >> 9) & 0x01)) ) {
-         Double_t scaledBinContent = proj->GetBinContent(bin)/myScale;
-         if (scaledBinContent >0 && scaledBinContent < 1) scaledBinContent = 1; //Outliers have a typical bincontent between 0 and 1, when scaling they would disappear
-            for (int j=0; j < (int)scaledBinContent; j++) {
-               if (nOutliers > maxOutliers) break;
-               if ((Hoption.Candle >> 10) & 0x01) { //Draw outliers and "all" values scattered
-                  outliersX[nOutliers] = candlePosition - candleWidth/2. + candleWidth*random.Rndm();
-                  outliersY[nOutliers] = proj->GetBinLowEdge(bin) + proj->GetBinWidth(bin)*random.Rndm();
-               } else { //Draw them in the "candle line"
-                  outliersX[nOutliers] = candlePosition;
-                  if ((int)scaledBinContent == 1) //If there is only one datapoint available put it in the middle of the bin
-                     outliersY[nOutliers] = proj->GetBinCenter(bin);
-                  else //If there is more than one datapoint scatter it along the bin, otherwise all marker would be (invisibly) stacked on top of each other
-                     outliersY[nOutliers] = proj->GetBinLowEdge(bin) + proj->GetBinWidth(bin)*random.Rndm();
-               }
-               if (swapXY) {
-                  //Swap X and Y
-                  Double_t keepCurrently;
-                  keepCurrently = outliersX[nOutliers];
-                  outliersX[nOutliers] = outliersY[nOutliers];
-                  outliersY[nOutliers] = keepCurrently;
-               }
-               // Continue means, that nOutliers is not increased, so that value will not be shown
-               if (doLogX) {
-                  if (outliersX[nOutliers] > 0) outliersX[nOutliers] = TMath::Log10(outliersX[nOutliers]); else continue;
-               }
-               if (doLogY) {
-                  if (outliersY[nOutliers] > 0) outliersY[nOutliers] = TMath::Log10(outliersY[nOutliers]); else continue;
-               }
-               nOutliers++;
-            }
-         }
-         if (nOutliers > maxOutliers) { //Should never happen, due to myScale!!!
-            Error ("PaintCandlePlot","Not possible to draw all outliers.");
-            break;
-         }
-      }
-      fH->SetMarkerColor(fH->GetLineColor());
-      fH->TAttMarker::Modify();
-      if ((Hoption.Candle >> 10) & 0x01) { //Draw outliers and "all" values scattered
-         fH->SetMarkerStyle(0);
-      } else {
-         fH->SetMarkerStyle(5);
-      }
-      fH->TAttMarker::Modify();
-      gPad->PaintPolyMarker(nOutliers,outliersX, outliersY);
-   }
-
-   // Set everything back to original
-   fH->SetFillStyle(saveFill);
-   fH->SetFillColor(saveColor);
-   fH->SetLineStyle(saveLine);
-   fH->SetMarkerStyle(saveMarker);
-   fH->SetLineWidth(saveWidth);
-   fH->TAttFill::Modify();
-   fH->TAttLine::Modify();
-   fH->TAttMarker::Modify();
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// [Control function to draw a 2D histogram as a candle (box) plot.](#HP14)
@@ -5056,7 +4664,18 @@ void THistPainter::PaintCandlePlot(Option_t *)
    TH1D *hproj;
    TH2D *h2 = (TH2D*)fH;
 
-   Bool_t swapXY = ((Hoption.Candle >> 1) & 0x01);
+
+	TCandle myCandle;
+	myCandle.SetOption((TCandle::CandleOption)Hoption.Candle);
+	myCandle.SetMarkerColor(fH->GetLineColor());
+	myCandle.SetLineColor(fH->GetLineColor());
+	myCandle.SetFillColor(fH->GetFillColor());
+	myCandle.SetFillStyle(fH->GetFillStyle());
+	myCandle.SetMarkerSize(fH->GetMarkerSize());
+	myCandle.SetMarkerStyle(fH->GetMarkerStyle());
+	myCandle.SetLog(Hoption.Logx,Hoption.Logy);
+	
+   Bool_t swapXY = myCandle.IsHorizontal();
    const Double_t standardCandleWidth = 0.66;
 
    if (!swapXY) { // Vertical candle
@@ -5068,7 +4687,10 @@ void THistPainter::PaintCandlePlot(Option_t *)
             Double_t width = fH->GetBarWidth();
             Double_t offset = fH->GetBarOffset()*binWidth;
             if (width > 0.999) width = standardCandleWidth;
-            PaintOneCandle(binPosX+binWidth/2. + offset ,width*binWidth,hproj);
+            myCandle.SetAxisPosition(binPosX+binWidth/2. + offset);
+            myCandle.SetWidth(width*binWidth);
+            myCandle.SetHistogram(hproj);
+            myCandle.Paint();
          }
       }
    } else { // Horizontal candle
@@ -5080,7 +4702,10 @@ void THistPainter::PaintCandlePlot(Option_t *)
             Double_t width = fH->GetBarWidth();
             Double_t offset = fH->GetBarOffset()*binWidth;
             if (width > 0.999) width = standardCandleWidth;
-            PaintOneCandle(binPosY+binWidth/2. + offset ,width*binWidth,hproj);
+            myCandle.SetAxisPosition(binPosY+binWidth/2. + offset);
+            myCandle.SetWidth(width*binWidth);
+            myCandle.SetHistogram(hproj);
+            myCandle.Paint();
          }
       }
    }
