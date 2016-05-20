@@ -32,7 +32,8 @@ ROOT_EXECUTABLE(rootcling src/LinkdefReader.cxx src/DictSelectionReader.cxx
                           ${macosx_objects}
                           ${unix_objects}
                           ${winnt_objects}
-                          LIBRARIES ${PCRE_LIBRARIES} ${LZMA_LIBRARIES} ${ZLIB_LIBRARY}
+                          ${lzo_objects}
+                          LIBRARIES ${PCRE_LIBRARIES} ${lzo_library} ${LZMA_LIBRARIES} ${ZLIB_LIBRARY}
                                     ${CLING_LIBRARIES} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT}
                                     ${corelinklibs})
 

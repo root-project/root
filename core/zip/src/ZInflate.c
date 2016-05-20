@@ -20,6 +20,18 @@ static const int qflag = 0;
 #include "zlib.h"
 #include "RConfigure.h"
 #include "ZipLZMA.h"
+#ifdef LZO
+#include "ZipLZO.h"
+#else
+void R__unzipLZO(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep) {
+  fprintf(stderr,
+      "R__unzipLZO: ROOT built without LZO\n");
+  return;
+}
+#endif
+#include "ZipLZ4.h"
+#include "ZipZOPFLI.h"
+#include "ZipBROTLI.h"
 
 
 /* inflate.c -- put in the public domain by Mark Adler
@@ -1130,10 +1142,33 @@ int R__unzip_header(int *srcsize, uch *src, int *tgtsize)
   /*   C H E C K   H E A D E R   */
   if (!(src[0] == 'Z' && src[1] == 'L' && src[2] == Z_DEFLATED) &&
       !(src[0] == 'C' && src[1] == 'S' && src[2] == Z_DEFLATED) &&
-      !(src[0] == 'X' && src[1] == 'Z' && src[2] == 0)) {
+      !(src[0] == 'X' && src[1] == 'Z' && src[2] == 0) &&
+      !(src[0] == 'L' && src[1] == 'Z') &&
+      !(src[0] == 'L' && src[1] == '4') &&
+      !(src[0] == 'B' && src[1] == 'R') &&
+      !(src[0] == 'Z' && src[1] == 'P')) {
     fprintf(stderr, "Error R__unzip_header: error in header\n");
     return 1;
   }
+#ifndef LZO
+  if (src[0] == 'L' && src[1] == 'Z') {
+    fprintf(stderr, "Error R__unzip_header: ROOT built without LZO\n");
+    return 2;
+  }
+#endif
+#ifndef LZ4
+  if (src[0] == 'L' && src[1] == '4') {
+    fprintf(stderr, "Error R__unzip_header: ROOT built without LZ4\n");
+    return 2;
+  }
+#endif
+/// ZOPFLI is decompressed with zlib, no check needed
+#ifndef BROTLI
+  if (src[0] == 'B' && src[1] == 'R') {
+    fprintf(stderr, "Error R__unzip_header: ROOT built without BROTLI\n");
+    return 2;
+  }
+#endif
 
   *srcsize = HDRSIZE + ((long)src[3] | ((long)src[4] << 8) | ((long)src[5] << 16));
   *tgtsize = (long)src[6] | ((long)src[7] << 8) | ((long)src[8] << 16);
@@ -1159,10 +1194,33 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
   /*   C H E C K   H E A D E R   */
   if (!(src[0] == 'Z' && src[1] == 'L' && src[2] == Z_DEFLATED) &&
       !(src[0] == 'C' && src[1] == 'S' && src[2] == Z_DEFLATED) &&
-      !(src[0] == 'X' && src[1] == 'Z' && src[2] == 0)) {
-    fprintf(stderr,"Error R__unzip: error in header\n");
-    return;
+      !(src[0] == 'X' && src[1] == 'Z' && src[2] == 0) &&
+      !(src[0] == 'L' && src[1] == 'Z') &&
+      !(src[0] == 'L' && src[1] == '4') &&
+      !(src[0] == 'B' && src[1] == 'R') &&
+      !(src[0] == 'Z' && src[1] == 'P')) {
+    fprintf(stderr, "Error R__unzip: error in header\n");
+    return 1;
   }
+#ifndef LZO
+  if (src[0] == 'L' && src[1] == 'Z') {
+    fprintf(stderr, "Error R__unzip: ROOT built without LZO\n");
+    return 2;
+  }
+#endif
+#ifndef LZ4
+  if (src[0] == 'L' && src[1] == '4') {
+    fprintf(stderr, "Error R__unzip: ROOT built without LZ4\n");
+    return 2;
+  }
+#endif
+/// ZOPFLI is decompressed with zlib, no check needed
+#ifndef BROTLI
+  if (src[0] == 'B' && src[1] == 'R') {
+    fprintf(stderr, "Error R__unzip: ROOT built without BROTLI\n");
+    return 2;
+  }
+#endif
 
   ibufptr = src + HDRSIZE;
   ibufcnt = (long)src[3] | ((long)src[4] << 8) | ((long)src[5] << 16);

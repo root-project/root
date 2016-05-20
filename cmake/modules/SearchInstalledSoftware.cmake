@@ -523,6 +523,20 @@ if(xml)
   endif()
 endif()
 
+#---Check for LZO------------------------------------------------------------------
+if(lzo)
+  message(STATUS "Looking for LZO")
+  find_package(LZO)
+  if(NOT LZO_FOUND)
+    if(fail-on-missing)
+      message(FATAL_ERROR "lzo not found but required (lzo option enabled)")
+    else()
+      message(STATUS "lzo not found. Switching off lzo option")
+      set(lzo OFF CACHE BOOL "" FORCE)
+    endif()
+  endif()
+endif()
+
 #---Check for OpenSSL------------------------------------------------------------------
 if(ssl OR builtin_openssl)
   if(builtin_openssl)

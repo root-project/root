@@ -15,6 +15,14 @@
 #include "zlib.h"
 #include "RConfigure.h"
 #include "ZipLZMA.h"
+#ifdef LZO
+#include "ZipLZO.h"
+#else
+void R__zipLZO(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep) {
+  R__error("ROOT built without LZO support");
+  return ;
+}
+#endif
 
 #include <stdio.h>
 #include <assert.h>
@@ -287,11 +295,17 @@ struct bits_internal_state {
    and when R__zipMultipleAlgorithm is called with its last argument set to 0.
    R__ZipMode = 1 : ZLIB compression algorithm is used (default)
    R__ZipMode = 2 : LZMA compression algorithm is used
+   R__ZipMode = 4 : LZO compression algorithm is used
+   R__ZipMode = 5 : LZ4 compression algorithm is used
+   R__ZipMode = 6 : ZOPFLI compression algorithm is used
+   R__ZipMode = 7 : BROTLI compression algorithm is used
    R__ZipMode = 0 or 3 : a very old compression algorithm is used
    (the very old algorithm is supported for backward compatibility)
    The LZMA algorithm requires the external XZ package be installed when linking
    is done. LZMA typically has significantly higher compression factors, but takes
    more CPU time and memory resources while compressing.
+
+TODO: add comments for lzo,lz4,zopfli,brotli
 */
 int R__ZipMode = 1;
 
@@ -582,6 +596,22 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
   // The LZMA compression algorithm from the XZ package
   if (compressionAlgorithm == 2) {
     R__zipLZMA(cxlevel, srcsize, src, tgtsize, tgt, irep);
+    return;
+  } else if (compressionAlgorithm == 4) {
+    // The LZO compression algorithm
+    R__zipLZO(cxlevel, srcsize, src, tgtsize, tgt, irep);
+    return;
+  } else if (compressionAlgorithm == 5) {
+    // The LZ4 compression algorithm
+    R__zipLZ4(cxlevel, srcsize, src, tgtsize, tgt, irep);
+    return;
+  } else if (compressionAlgorithm == 5) {
+    // The ZOPFLI compression algorithm
+    R__zipZOPFLI(cxlevel, srcsize, src, tgtsize, tgt, irep);
+    return;
+  } else if (compressionAlgorithm == 6) {
+    // The BROTLI compression algorithm
+    R__zipBROTLI(cxlevel, srcsize, src, tgtsize, tgt, irep);
     return;
   }
 

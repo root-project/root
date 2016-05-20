@@ -31,6 +31,13 @@ if(cocoa)
 endif()
 add_subdirectory(zip)
 add_subdirectory(lzma)
+if(lzo)
+  add_subdirectory(lzo)
+  set(lzo_objects $<TARGET_OBJECTS:Lzo>)
+  set(lzo_library ${LZO_LIBRARY})
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DLZO")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLZO")
+endif
 add_subdirectory(base)
 
 set(objectlibs $<TARGET_OBJECTS:Base>
@@ -43,6 +50,7 @@ set(objectlibs $<TARGET_OBJECTS:Base>
                $<TARGET_OBJECTS:TextInput>
                ${macosx_objects}
                ${unix_objects}
+               ${lzo_objects}
                ${winnt_objects})
 
 #---Generation of RGitCommit.h-----------------------------------------------------------
@@ -101,7 +109,7 @@ add_subdirectory(utils)
 ROOT_LINKER_LIBRARY(Core
                     $<TARGET_OBJECTS:BaseTROOT>
                     ${objectlibs}
-                    LIBRARIES ${PCRE_LIBRARIES} ${LZMA_LIBRARIES} ${ZLIB_LIBRARY}
+                    LIBRARIES ${PCRE_LIBRARIES} ${lzo_library} ${LZMA_LIBRARIES} ${ZLIB_LIBRARY}
                               ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${corelinklibs} )
 
 if(cling)

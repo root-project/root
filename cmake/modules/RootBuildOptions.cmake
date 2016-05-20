@@ -75,6 +75,7 @@ ROOT_BUILD_OPTION(builtin_openssl OFF "Build OpenSSL internally, or use system O
 ROOT_BUILD_OPTION(builtin_pcre OFF "Build included libpcre, or use system libpcre")
 ROOT_BUILD_OPTION(builtin_zlib OFF "Build included libz, or use system libz")
 ROOT_BUILD_OPTION(builtin_lzma OFF "Build included liblzma, or use system liblzma")
+ROOT_BUILD_OPTION(lzo OFF "LZO support, requires liblzo2")
 ROOT_BUILD_OPTION(builtin_davix OFF "Build the Davix library internally (downloading tarfile from the Web)")
 ROOT_BUILD_OPTION(builtin_gsl OFF "Build the GSL library internally (downloading tarfile from the Web)")
 ROOT_BUILD_OPTION(builtin_cfitsio OFF "Build the FITSIO library internally (downloading tarfile from the Web)")
