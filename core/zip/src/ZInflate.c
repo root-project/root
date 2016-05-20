@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+
 #ifdef WIN32
 #define __STDC__ 1
 #endif
@@ -21,7 +22,7 @@ static const int qflag = 0;
 #include "RConfigure.h"
 #include "ZipLZMA.h"
 #ifdef LZO
-#include "ZipLZO.h"
+extern "C" int R__unzipLZO(uch* ibufptr, long ibufsz, uch* obufptr, long* obufsz, uch method);
 #else
 void R__unzipLZO(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep) {
   fprintf(stderr,
@@ -30,7 +31,7 @@ void R__unzipLZO(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *
 }
 #endif
 #ifdef LZ4
-#include "ZipLZ4.h"
+extern int R__unzipLZ4(uch* ibufptr, long ibufsz, uch* obufptr, long* obufsz, uch method);
 #else
 void R__unzipLZ4(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep) {
   fprintf(stderr,
@@ -39,7 +40,7 @@ void R__unzipLZ4(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *
 }
 #endif
 #ifdef BROTLI
-#include "ZipBROTLI.h"
+extern int R__unzipBROTLI(uch* ibufptr, long ibufsz, uch* obufptr, size_t* obufsz);
 #else
 void R__unzipBROTLI(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep) {
   fprintf(stderr,
