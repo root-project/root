@@ -1,4 +1,4 @@
-auto keys {"TH1F",
+std::vector<const char*> keys {"TH1F",
 "TXMLFile",
 "TGraph",
 #if __has_include("RooRealVar.h")
