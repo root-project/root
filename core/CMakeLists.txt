@@ -37,7 +37,7 @@ if(lzo)
   set(lzo_library ${LZO_LIBRARY})
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DLZO")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLZO")
-endif
+endif()
 add_subdirectory(base)
 
 set(objectlibs $<TARGET_OBJECTS:Base>
