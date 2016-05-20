@@ -139,7 +139,7 @@ TBranch::TBranch()
 ///         variable. If the first variable does not have a type, it is
 ///         assumed of type F by default. The list of currently supported
 ///         types is given below:
-///            - `C : a character string terminated by the 0 character
+///            - `C` : a character string terminated by the 0 character
 ///            - `B` : an 8 bit signed integer (`Char_t`)
 ///            - `b` : an 8 bit unsigned integer (`UChar_t`)
 ///            - `S` : a 16 bit signed integer (`Short_t`)
