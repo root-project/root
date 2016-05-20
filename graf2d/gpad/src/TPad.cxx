@@ -414,11 +414,9 @@ void TPad::Browse(TBrowser *b)
 /// Only those deriving from TAttLine, TAttMarker and TAttFill are added, excluding
 /// TPave and TFrame derived classes.
 ///
-/// x1, y1, x2, y2 are the TLegend coordinates.
-///
-/// title is the legend title. By default it is " ".
-///
-/// option is the TLegend option.
+/// \param[in] x1, y1, x2, y2       The TLegend coordinates
+/// \param[in] title                The legend title. By default it is " "
+/// \param[in] option               The TLegend option
 ///
 /// The caller program owns the returned TLegend.
 ///
