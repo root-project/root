@@ -20,6 +20,10 @@
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
 
+#if PY_VERSION_HEX >= 0x03000000
+#define PyString_FromString PyBytes_FromString
+#endif
+
 
 using namespace TMVA;
 
@@ -133,7 +137,15 @@ void PyMethodBase::PyFinalize()
 }
 void PyMethodBase::PySetProgramName(TString name)
 {
+   #if PY_VERSION_HEX >= 0x03000000
+   const char* char_name = const_cast<char *>(name.Data());
+   const size_t size = strlen(char_name)+1;
+   wchar_t wchar_name[size];
+   mbstowcs(wchar_name, char_name, size);
+   Py_SetProgramName(wchar_name);
+   #else
    Py_SetProgramName(const_cast<char *>(name.Data()));
+   #endif
 }
 //_______________________________________________________________________
 TString PyMethodBase::Py_GetProgramName()

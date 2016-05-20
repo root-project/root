@@ -25,6 +25,11 @@
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
 
+#if PY_VERSION_HEX >= 0x03000000
+#define PyString_FromString PyBytes_FromString
+#define PyString_AsString PyBytes_AsString
+#endif
+
 #include "TMath.h"
 #include "Riostream.h"
 #include "TMatrix.h"
