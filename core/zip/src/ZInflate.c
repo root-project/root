@@ -291,16 +291,16 @@ int R__Inflate_free OF((void));
 #ifdef LZO
 extern int R__unzipLZO(uch* ibufptr, long ibufsz, uch* obufptr, long* obufsz, uch method);
 #else
-void R__unzipLZO(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep) {
+int R__unzipLZO(uch* ibufptr, long ibufsz, uch* obufptr, long* obufsz, uch method) {
   fprintf(stderr,
       "R__unzipLZO: ROOT built without LZO\n");
-  return;
+  return -1;
 }
 #endif
 #ifdef LZ4
 extern int R__unzipLZ4(uch* ibufptr, long ibufsz, uch* obufptr, long* obufsz, uch method);
 #else
-void R__unzipLZ4(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep) {
+int R__unzipLZ4(uch* ibufptr, long ibufsz, uch* obufptr, long* obufsz, uch method){
   fprintf(stderr,
       "R__unzipLZ4: ROOT built without LZ4\n");
   return;
@@ -309,7 +309,7 @@ void R__unzipLZ4(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *
 #ifdef BROTLI
 extern int R__unzipBROTLI(uch* ibufptr, long ibufsz, uch* obufptr, size_t* obufsz);
 #else
-void R__unzipBROTLI(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep) {
+int R__unzipBROTLI(uch* ibufptr, long ibufsz, uch* obufptr, size_t* obufsz) {
   fprintf(stderr,
       "R__unzipBROTLI: ROOT built without BROTLI\n");
   return;
@@ -1261,8 +1261,8 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
       (src[0] == 'Z' && src[1] == 'P' && src[2] == 0) || /*hack if Zpf did not compress*/
       (src[0] == 'B' && src[1] == 'R' && src[2] == 0)) {
     /*fprintf(stdout,"LZO decompression");*/ /*TODO: use some output level magic here*/
-    if (R__lzo_decompress(
-          ibufptr, ibufcnt, obufptr, &obufcnt, src[2])) {
+    if (R__unzipLZO(ibufptr, ibufcnt, obufptr, &obufcnt, src[2])) 
+    {
       fprintf(stderr, "R__unzip: failure to decompress with liblzo\n");
       return;
     }
@@ -1271,7 +1271,7 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
   }
   if (src[0] == 'B' && src[1] == 'R') {
     size_t obufcnt_sizet = obufcnt;
-    if (R__Bro_decompress(ibufptr, ibufcnt, obufptr, &obufcnt_sizet)) {
+    if (R__unzipBROTLI(ibufptr, ibufcnt, obufptr, &obufcnt_sizet)) {
       fprintf(stderr, "R__unzip: failure to decompress with brotli\n");
       return;
     }
@@ -1281,7 +1281,7 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
   }
   if (src[0] == 'L' && src[1] == '4') {
     /*fprintf(stdout,"LZ4 decompression");*/
-    if (R__lz4_decompress(
+    if (R__unzipLZ4(
           ibufptr, ibufcnt, obufptr, &obufcnt, src[2])) {
       fprintf(stderr, "R__unzip: failure to decompress with liblz4\n");
       return;
