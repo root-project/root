@@ -22,7 +22,7 @@ static const int qflag = 0;
 #include "RConfigure.h"
 #include "ZipLZMA.h"
 #ifdef LZO
-extern "C" int R__unzipLZO(uch* ibufptr, long ibufsz, uch* obufptr, long* obufsz, uch method);
+extern int R__unzipLZO(uch* ibufptr, long ibufsz, uch* obufptr, long* obufsz, uch method);
 #else
 void R__unzipLZO(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep) {
   fprintf(stderr,

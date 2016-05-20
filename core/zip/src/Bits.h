@@ -16,7 +16,7 @@
 #include "RConfigure.h"
 #include "ZipLZMA.h"
 #ifdef LZO
-extern "C" void R__zipLZO(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep) ;
+extern void R__zipLZO(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep) ;
 #else
 void R__zipLZO(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep) {
   R__error("ROOT built without LZO support");
@@ -24,7 +24,7 @@ void R__zipLZO(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, in
 }
 #endif
 #ifdef LZ4
-extern "C" void R__zipLZ4(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep) ;
+extern void R__zipLZ4(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep) ;
 #else
 void R__zipLZ4(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep) {
   R__error("ROOT built without LZ4 support");
