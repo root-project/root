@@ -16,5 +16,6 @@ if(CTEST_BUILD_NAME MATCHES slc6|centos7)
               roottest-root-meta-loadAllLibs-LoadAllLibs
               roottest-root-meta-loadAllLibs-LoadAllLibsAZ
               roottest-root-meta-loadAllLibs-LoadAllLibsZA
-              roottest-root-html-runMakeIndex)
+              roottest-root-html-runMakeIndex
+              roottest-root-multicore-fork)
 endif()

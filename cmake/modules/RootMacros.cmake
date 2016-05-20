@@ -404,8 +404,7 @@ endmacro()
 #-------------------------------------------------------------------------------
 function(ROOTTEST_ADD_OLDTEST)
   ROOTTEST_ADD_TEST( make
-                     PRECMD  make clean
-                     COMMAND make
+                     COMMAND make cleantest
                      WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
                      DEPENDS roottest-root-io-event)
 endfunction()

@@ -5,6 +5,6 @@
 #
 #-------------------------------------------------------------------------------
 ROOTTEST_ADD_TEST(roottest-root-io-event
-                  COMMAND make
+                  COMMAND make cleantest
                   WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
                   DEPENDS roottest-scripts-utils)
