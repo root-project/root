@@ -87,6 +87,7 @@ End_Macro
 
 Note that picking is supported for all drawing modes.
 
+\since **ROOT version 6.07/07:**
 Stacks of 2D histogram can also be painted as candle plots:
 
 Begin_Macro(source)
