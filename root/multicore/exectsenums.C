@@ -15,7 +15,7 @@ private:
 void exectsenums (){
    ROOT::EnableThreadSafety();
    vector<thread> threads;
-   auto enumNames {"enum1",
+   std::vector<const char*> enumNames {"enum1",
                    "enum2",
                    "enum3",
                    "enum4",
