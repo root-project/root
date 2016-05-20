@@ -31,7 +31,7 @@
 class TCandle : public TAttLine, public TAttFill, public TAttMarker {
 public:
    //Candle Option
-   enum CandleOption{
+   enum CandleOption : int {
       kNoOption = 0,
       kBox = 1,
       kBoxFilled = 2,
