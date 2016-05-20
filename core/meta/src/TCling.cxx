@@ -2628,6 +2628,7 @@ Bool_t TCling::IsLoaded(const char* filename) const
                                                                         const clang::DirectoryEntry *>>(),
                                               /*SearchPath*/ 0,
                                               /*RelativePath*/ 0,
+                                              /*RequestingModule*/ 0,
                                               /*SuggestedModule*/ 0,
                                               /*SkipCache*/ false,
                                               /*OpenFile*/ false,
@@ -5659,7 +5660,7 @@ void TCling::UpdateListsOnCommitted(const cling::Transaction &T) {
          // The is the first transaction, we have to expose to meta
          // what's already in the AST.
          isTUTransaction = true;
-
+#if 0
          // FIXME: don't load the world. Really, don't. Maybe
          // instead smarten TROOT::GetListOfWhateveros() which
          // currently is a THashList but could be a
@@ -5670,6 +5671,7 @@ void TCling::UpdateListsOnCommitted(const cling::Transaction &T) {
          for (clang::DeclContext::decl_iterator TUI = TU->decls_begin(),
                  TUE = TU->decls_end(); TUI != TUE; ++TUI)
             ((TCling*)gCling)->HandleNewDecl(*TUI, (*TUI)->isFromASTFile(),modifiedTClasses);
+#endif
       }
    }
 
