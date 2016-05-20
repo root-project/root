@@ -23,6 +23,30 @@ void R__zipLZO(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, in
   return ;
 }
 #endif
+#ifdef LZ4
+#include "ZipLZ4.h"
+#else
+void R__zipLZ4(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep) {
+  R__error("ROOT built without LZ4 support");
+  return ;
+}
+#endif
+#ifdef ZOPFLI
+#include "ZipZOPFLI.h"
+#else
+void R__zipZOPFLI(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep) {
+  R__error("ROOT built without ZOPFLI support");
+  return ;
+}
+#endif
+#ifdef BROTLI
+#include "ZipBROTLI.h"
+#else
+void R__zipBROTLI(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep) {
+  R__error("ROOT built without BROTLI support");
+  return ;
+}
+#endif
 
 #include <stdio.h>
 #include <assert.h>

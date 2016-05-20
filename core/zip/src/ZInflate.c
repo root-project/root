@@ -29,9 +29,24 @@ void R__unzipLZO(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *
   return;
 }
 #endif
+#ifdef LZ4
 #include "ZipLZ4.h"
-#include "ZipZOPFLI.h"
+#else
+void R__unzipLZ4(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep) {
+  fprintf(stderr,
+      "R__unzipLZ4: ROOT built without LZ4\n");
+  return;
+}
+#endif
+#ifdef BROTLI
 #include "ZipBROTLI.h"
+#else
+void R__unzipBROTLI(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep) {
+  fprintf(stderr,
+      "R__unzipBROTLI: ROOT built without BROTLI\n");
+  return;
+}
+#endif
 
 
 /* inflate.c -- put in the public domain by Mark Adler
