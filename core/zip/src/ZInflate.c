@@ -1256,8 +1256,42 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
 
   /*   D E C O M P R E S S   D A T A  */
 
+  /// TODO improve for no lzo but with zp/br (check lz4)
+  if ((src[0] == 'L' && src[1] == 'Z') ||
+      (src[0] == 'Z' && src[1] == 'P' && src[2] == 0) || /*hack if Zpf did not compress*/
+      (src[0] == 'B' && src[1] == 'R' && src[2] == 0)) {
+    /*fprintf(stdout,"LZO decompression");*/ /*TODO: use some output level magic here*/
+    if (R__lzo_decompress(
+          ibufptr, ibufcnt, obufptr, &obufcnt, src[2])) {
+      fprintf(stderr, "R__unzip: failure to decompress with liblzo\n");
+      return;
+    }
+    if (isize == obufcnt) *irep = obufcnt;
+    return;
+  }
+  if (src[0] == 'B' && src[1] == 'R') {
+    size_t obufcnt_sizet = obufcnt;
+    if (R__Bro_decompress(ibufptr, ibufcnt, obufptr, &obufcnt_sizet)) {
+      fprintf(stderr, "R__unzip: failure to decompress with brotli\n");
+      return;
+    }
+    obufcnt = obufcnt_sizet;
+    if (isize == obufcnt) *irep = obufcnt;
+    return;
+  }
+  if (src[0] == 'L' && src[1] == '4') {
+    /*fprintf(stdout,"LZ4 decompression");*/
+    if (R__lz4_decompress(
+          ibufptr, ibufcnt, obufptr, &obufcnt, src[2])) {
+      fprintf(stderr, "R__unzip: failure to decompress with liblz4\n");
+      return;
+    }
+    if (isize == obufcnt) *irep = obufcnt;
+    return;
+  }
   /* New zlib format */
-  if (src[0] == 'Z' && src[1] == 'L') {
+  if ((src[0] == 'Z' && src[1] == 'L') ||
+      (src[0] == 'Z' && src[1] == 'P')) {
     z_stream stream; /* decompression stream */
     int err = 0;
 

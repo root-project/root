@@ -604,6 +604,10 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
      /*                      1 = zlib */
      /*                      2 = lzma */
      /*                      3 = old */
+     /*                      4 = lzo */
+     /*                      5 = lz4 */
+     /*                      6 = zopfli (zlib) */
+     /*                      7 = brotli */
 {
   int err;
   int method   = Z_DEFLATED;

@@ -280,17 +280,19 @@ static struct R__lzo_tbl_t R__lzo_compr_tbl[9][11] = {
   },
 };
 
-int R__zipLZO(int cxlevel, uch* ibufptr, lzo_uint ibufsz,
-    uch* obufptr, lzo_uintp obufsz)
+void R__zipLZO(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep)
 {
-  lzo_uint osz = *obufsz, minosz;
+  lzo_uint ibufsz = *srcsize;
+  lzo_uint osz = *irep, minosz;
   unsigned long adler32 = 0;
   int level = cxlevel & 0xf;
   int alg = (cxlevel >> 4) & 0xf;
   int opt = cxlevel & 0x100;
-  *obufsz = 0;
-  if (level > 0xb || alg > 0x8 || cxlevel > 0x1ff)
-    return -1;
+  *irep = 0;
+  if (level > 0xb || alg > 0x8 || cxlevel > 0x1ff) {
+    *irep = 0;
+    return;
+  }
   if (0 == level) alg = opt = 0;
   /* calculate the buffer size needed for safe in place compression */
   minosz = ibufsz + (ibufsz / 16) + 64 + 3;
@@ -300,23 +302,28 @@ int R__zipLZO(int cxlevel, uch* ibufptr, lzo_uint ibufsz,
   /* check buffer sizes */
   if (osz <= HDRSIZE + 4) {
     R__error("target buffer too small");
-    return -1;
+    *irep = 0;
+    return;
   }
   if (ibufsz > 0xffffff) {
     R__error("source buffer too large");
-    return -1;
+    *irep = 0;
+    return;
   }
   /* init header */
-  obufptr[0] = 'L';
-  obufptr[1] = 'Z';
+  tgt[0] = 'L';
+  tgt[1] = 'Z';
   /* compress with specified level and algorithm */
   if (level > 0) {
     struct R__lzo_tbl_t *algp = &R__lzo_compr_tbl[alg][level - 1];
-    uch* obuf = obufptr + HDRSIZE;
+    uch* obuf = tgt + HDRSIZE;
     uch* wksp = NULL;
     lzo_uint csz = 0;
     /* initialise liblzo */
-    if (!R__lzo_init()) return -1;
+    if (!R__lzo_init()) {
+      *irep = 0;
+      return;
+    }
     /* allocate workspace and safe temp buffer (if needed) */
     if (minosz > osz) {
       wksp = (uch*) lzo_malloc(algp->wkspsz + minosz - HDRSIZE - 4);
@@ -326,10 +333,11 @@ int R__zipLZO(int cxlevel, uch* ibufptr, lzo_uint ibufsz,
     }
     if (NULL == wksp) {
       R__error("out of memory");
-      return -1;
+      *irep = 0;
+      return;
     }
     /* compress */
-    if (LZO_E_OK != algp->compress(ibufptr, ibufsz, obuf, &csz, wksp)) {
+    if (LZO_E_OK != algp->compress(src, ibufsz, obuf, &csz, wksp)) {
       /* something is wrong, try to store uncompressed below */
       alg = level = opt = 0;
       R__error("liblzo: unable to compress, trying to store as is");
@@ -337,7 +345,7 @@ int R__zipLZO(int cxlevel, uch* ibufptr, lzo_uint ibufsz,
       /* compression ok, check if we need to optimize */
       if (opt && algp->optimize) {
         lzo_uint ucsz = ibufsz;
-        if (LZO_E_OK != algp->optimize(obuf, csz, ibufptr, &ucsz, NULL) ||
+        if (LZO_E_OK != algp->optimize(obuf, csz, src, &ucsz, NULL) ||
             ibufsz != ucsz) {
           /* something is wrong, try to store uncompressed below */
           alg = level = opt = 0;
@@ -348,20 +356,20 @@ int R__zipLZO(int cxlevel, uch* ibufptr, lzo_uint ibufsz,
       /* check compression ratio */
       if (csz < ibufsz && 0 != level) {
         /* check if we need to copy from temp to final buffer */
-        if (obuf != obufptr + HDRSIZE) {
+        if (obuf != tgt + HDRSIZE) {
           /* check for sufficient space and copy */
           minosz = csz + HDRSIZE + 4;
           if (osz < minosz) {
             /* not enough space - try to store */
             alg = level = opt = 0;
           } else {
-            lzo_memcpy(obufptr + HDRSIZE, obuf, csz);
-            obufptr[2] = algp->method;
-            *obufsz = csz + HDRSIZE + 4;
+            lzo_memcpy(tgt + HDRSIZE, obuf, csz);
+            tgt[2] = algp->method;
+            *irep = csz + HDRSIZE + 4;
           }
         } else {
-          obufptr[2] = algp->method;
-          *obufsz = csz + HDRSIZE + 4;
+          tgt[2] = algp->method;
+          *irep = csz + HDRSIZE + 4;
         }
       } else {
         /* uncompressible, try to store uncompressed below */
@@ -376,30 +384,31 @@ int R__zipLZO(int cxlevel, uch* ibufptr, lzo_uint ibufsz,
     minosz = ibufsz + HDRSIZE + 4;
     if (osz < minosz) {
       R__error("target buffer too small");
-      return -1;
+      *irep = 0;
+      return;
     }
-    *obufsz = minosz;
+    *irep = minosz;
     /* copy to output buffer (move, buffers might overlap) */
-    lzo_memmove(obufptr + HDRSIZE, ibufptr, ibufsz);
-    obufptr[2] = 0; /* store uncompressed */
+    lzo_memmove(tgt + HDRSIZE, src, ibufsz);
+    tgt[2] = 0; /* store uncompressed */
   };
   /* fill in sizes */
-  osz = *obufsz - HDRSIZE;
-  obufptr[3] = (char)(osz & 0xff);        /* compressed size */
-  obufptr[4] = (char)((osz >> 8) & 0xff);
-  obufptr[5] = (char)((osz >> 16) & 0xff);
+  osz = *irep - HDRSIZE;
+  tgt[3] = (char)(osz & 0xff);        /* compressed size */
+  tgt[4] = (char)((osz >> 8) & 0xff);
+  tgt[5] = (char)((osz >> 16) & 0xff);
 
-  obufptr[6] = (char)(ibufsz & 0xff);        /* decompressed size */
-  obufptr[7] = (char)((ibufsz >> 8) & 0xff);
-  obufptr[8] = (char)((ibufsz >> 16) & 0xff);
+  tgt[6] = (char)(ibufsz & 0xff);        /* decompressed size */
+  tgt[7] = (char)((ibufsz >> 8) & 0xff);
+  tgt[8] = (char)((ibufsz >> 16) & 0xff);
   /* calculate checksum */
   adler32 = lzo_adler32(
-          lzo_adler32(0, NULL,0), obufptr + HDRSIZE, osz - 4);
-  obufptr += *obufsz - 4;
-  obufptr[0] = (char) (adler32 & 0xff);
-  obufptr[1] = (char) ((adler32 >> 8) & 0xff);
-  obufptr[2] = (char) ((adler32 >> 16) & 0xff);
-  obufptr[3] = (char) ((adler32 >> 24) & 0xff);
+          lzo_adler32(0, NULL,0), tgt + HDRSIZE, osz - 4);
+  tgt += *irep - 4;
+  tgt[0] = (char) (adler32 & 0xff);
+  tgt[1] = (char) ((adler32 >> 8) & 0xff);
+  tgt[2] = (char) ((adler32 >> 16) & 0xff);
+  tgt[3] = (char) ((adler32 >> 24) & 0xff);
 
-  return 0;
+  return;
 }
