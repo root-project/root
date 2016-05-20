@@ -280,7 +280,7 @@ static struct R__lzo_tbl_t R__lzo_compr_tbl[9][11] = {
   },
 };
 
-int R__ZipLZO(int cxlevel, uch* ibufptr, lzo_uint ibufsz,
+int R__zipLZO(int cxlevel, uch* ibufptr, lzo_uint ibufsz,
     uch* obufptr, lzo_uintp obufsz)
 {
   lzo_uint osz = *obufsz, minosz;
