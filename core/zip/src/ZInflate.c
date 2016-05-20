@@ -21,33 +21,6 @@ static const int qflag = 0;
 #include "zlib.h"
 #include "RConfigure.h"
 #include "ZipLZMA.h"
-#ifdef LZO
-extern int R__unzipLZO(uch* ibufptr, long ibufsz, uch* obufptr, long* obufsz, uch method);
-#else
-void R__unzipLZO(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep) {
-  fprintf(stderr,
-      "R__unzipLZO: ROOT built without LZO\n");
-  return;
-}
-#endif
-#ifdef LZ4
-extern int R__unzipLZ4(uch* ibufptr, long ibufsz, uch* obufptr, long* obufsz, uch method);
-#else
-void R__unzipLZ4(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep) {
-  fprintf(stderr,
-      "R__unzipLZ4: ROOT built without LZ4\n");
-  return;
-}
-#endif
-#ifdef BROTLI
-extern int R__unzipBROTLI(uch* ibufptr, long ibufsz, uch* obufptr, size_t* obufsz);
-#else
-void R__unzipBROTLI(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep) {
-  fprintf(stderr,
-      "R__unzipBROTLI: ROOT built without BROTLI\n");
-  return;
-}
-#endif
 
 
 /* inflate.c -- put in the public domain by Mark Adler
@@ -315,6 +288,33 @@ int R__Inflate_dynamic OF((uch**, long*, uch**, long*, ulg*, unsigned*, uch* , u
 int R__Inflate_block OF((int *, uch**, long*, uch**, long*, ulg*, unsigned*, uch* , unsigned*, unsigned*));
 int R__Inflate OF((uch**, long*, uch**, long*));
 int R__Inflate_free OF((void));
+#ifdef LZO
+extern int R__unzipLZO(uch* ibufptr, long ibufsz, uch* obufptr, long* obufsz, uch method);
+#else
+void R__unzipLZO(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep) {
+  fprintf(stderr,
+      "R__unzipLZO: ROOT built without LZO\n");
+  return;
+}
+#endif
+#ifdef LZ4
+extern int R__unzipLZ4(uch* ibufptr, long ibufsz, uch* obufptr, long* obufsz, uch method);
+#else
+void R__unzipLZ4(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep) {
+  fprintf(stderr,
+      "R__unzipLZ4: ROOT built without LZ4\n");
+  return;
+}
+#endif
+#ifdef BROTLI
+extern int R__unzipBROTLI(uch* ibufptr, long ibufsz, uch* obufptr, size_t* obufsz);
+#else
+void R__unzipBROTLI(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep) {
+  fprintf(stderr,
+      "R__unzipBROTLI: ROOT built without BROTLI\n");
+  return;
+}
+#endif
 
 /* Tables for deflate from PKZIP's appnote.txt. */
 static const unsigned border[] = {    /* Order of the bit length code lengths */
