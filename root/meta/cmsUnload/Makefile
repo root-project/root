@@ -56,10 +56,10 @@ $(addsuffix .success,$(ALL_CASES) $(ALL_ROOTMAP_CASES)) : %.success: %.log %.ref
 
 
 $(ALL_CASES_LOG): %.log: scripts/%.script lib/libEdm.so lib/libStrip.so lib/libCluster.so $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) LD_LIBRARY_PATH=${PWD}/lib:${LD_LIBRARY_PATH} $(CALLROOTEXE) -l -b < $< > $@ 2>&1 || handleError.sh --cmd='Execution of $<' --result=$$? --log=$@ --test=$*
+	$(CMDECHO) LD_LIBRARY_PATH=${CURDIR}/lib:${LD_LIBRARY_PATH} $(CALLROOTEXE) -l -b < $< > $@ 2>&1 || handleError.sh --cmd='Execution of $<' --result=$$? --log=$@ --test=$*
 
 $(ALL_ROOTMAP_CASES_LOG): rmap-%.log: scripts/%.script lib/libEdm.so lib/libStrip.so lib/libCluster.so  $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) LD_LIBRARY_PATH=${PWD}/lib:${LD_LIBRARY_PATH} $(CALLROOTEXE) -l -b scripts/loadrootmap.C < $< > $@ 2>&1 || handleError.sh --cmd='Execution of $<' --result=$$? --log=$@ --test=$*
+	$(CMDECHO) LD_LIBRARY_PATH=${CURDIR}/lib:${LD_LIBRARY_PATH} $(CALLROOTEXE) -l -b scripts/loadrootmap.C < $< > $@ 2>&1 || handleError.sh --cmd='Execution of $<' --result=$$? --log=$@ --test=$*
 
 
 
