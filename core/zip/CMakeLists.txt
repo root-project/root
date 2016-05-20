@@ -47,8 +47,7 @@ else()
   set(ZLIB_SRCS ${ZipOldSource} ${CMAKE_CURRENT_SOURCE_DIR}/src/Compression.cxx ${CMAKE_CURRENT_SOURCE_DIR}/src/RZip.cxx)
 endif()
 if(lzo)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DLZO")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLZO") # not needed?
+  ROOT_ADD_CXX_FLAG(CMAKE_C_FLAGS -DLZO)
 endif()
 
 # Define all the header files which should be installed when
