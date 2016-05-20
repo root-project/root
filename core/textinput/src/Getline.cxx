@@ -34,12 +34,12 @@ using namespace textinput;
 namespace {
    // TTabCom adapter.
    class ROOTTabCompletion: public TabCompletion {
-   private:
-      ROOTTabCompletion(const ROOTTabCompletion&); // not implemented
-      ROOTTabCompletion& operator=(const ROOTTabCompletion&); // not implemented
    public:
       ROOTTabCompletion(): fLineBuf(new char[fgLineBufSize]) {}
       virtual ~ROOTTabCompletion() { delete []fLineBuf; }
+
+      ROOTTabCompletion(const ROOTTabCompletion&) = delete;
+      ROOTTabCompletion& operator=(const ROOTTabCompletion&) = delete;
 
       // Returns false on error
       bool Complete(Text& line /*in+out*/, size_t& cursor /*in+out*/,
