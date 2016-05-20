@@ -1187,16 +1187,20 @@ TCling::TCling(const char *name, const char *title)
    //optind = 1;  // make sure getopt() works in the main program
 #endif // R__WIN32
 
-   // Attach cling callbacks
+   // Enable dynamic lookup
+   if (!fromRootCling) {
+      fInterpreter->enableDynamicLookup();
+   }
+
+   // Attach cling callbacks last; they might need TROOT::fInterpreter
+   // and should thus not be triggered during the equivalent of
+   // TROOT::fInterpreter = new TCling;
    std::unique_ptr<TClingCallbacks>
       clingCallbacks(new TClingCallbacks(fInterpreter));
    fClingCallbacks = clingCallbacks.get();
    fClingCallbacks->SetAutoParsingSuspended(fIsAutoParsingSuspended);
    fInterpreter->setCallbacks(std::move(clingCallbacks));
 
-   if (!fromRootCling) {
-      fInterpreter->enableDynamicLookup();
-   }
 }
 
 
