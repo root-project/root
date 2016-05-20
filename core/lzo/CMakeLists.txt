@@ -8,4 +8,3 @@ set(sources ${CMAKE_CURRENT_SOURCE_DIR}/src/ZipLZO.c)
 
 ROOT_OBJECT_LIBRARY(Lzo ${sources})
 
-ROOT_INSTALL_HEADERS()
