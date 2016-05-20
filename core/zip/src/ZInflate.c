@@ -1216,25 +1216,25 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
       !(src[0] == 'B' && src[1] == 'R') &&
       !(src[0] == 'Z' && src[1] == 'P')) {
     fprintf(stderr, "Error R__unzip: error in header\n");
-    return 1;
+    return;
   }
 #ifndef LZO
   if (src[0] == 'L' && src[1] == 'Z') {
     fprintf(stderr, "Error R__unzip: ROOT built without LZO\n");
-    return 2;
+    return;
   }
 #endif
 #ifndef LZ4
   if (src[0] == 'L' && src[1] == '4') {
     fprintf(stderr, "Error R__unzip: ROOT built without LZ4\n");
-    return 2;
+    return;
   }
 #endif
 /// ZOPFLI is decompressed with zlib, no check needed
 #ifndef BROTLI
   if (src[0] == 'B' && src[1] == 'R') {
     fprintf(stderr, "Error R__unzip: ROOT built without BROTLI\n");
-    return 2;
+    return;
   }
 #endif
 
