@@ -39,7 +39,7 @@ endif()
 if(lz4)
   add_subdirectory(lz4)
   set(lz4_objects $<TARGET_OBJECTS:Lz4>)
-  if (not builtin_lz4)
+  if (NOT builtin_lz4)
     # builtin lz4 is statically linked
     set(lz4_library ${LZ4_LIBRARY})
   endif()

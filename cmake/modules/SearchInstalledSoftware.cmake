@@ -525,7 +525,7 @@ endif()
 
 #---Check for LZ4------------------------------------------------------------------
 if(lz4)
-  if(not builtin_lz4)
+  if(NOT builtin_lz4)
     message(STATUS "Looking for LZ4")
     find_package(LZ4)
     if(NOT LZ4_FOUND)
