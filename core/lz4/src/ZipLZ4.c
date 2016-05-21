@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "lz4/lz4.h"
+#include "lz4.h"
 
 #ifndef NULL
 #define NULL 0L
