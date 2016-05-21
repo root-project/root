@@ -541,6 +541,10 @@ if(lz4)
     set(lz4_version 0.0) #FIXME look up which version this is
     message(STATUS "Building LZ4 version ${lz4_version} included in ROOT itself")
   endif()
+else()
+  if(builtin_lz4)
+    message(FATAL_ERROR "'builtin_lz4' is enabled, but 'lz4' is disabled'.")
+  endif()
 endif()
 
 #---Check for LZO------------------------------------------------------------------
