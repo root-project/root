@@ -117,7 +117,7 @@ stl_example.root: stl_example.log
 stltest.log: runstltest.C stl_example.root
 	$(CMDECHO) ulimit -n 1024 ; $(CALLROOTEXE) -q -b -l $< 2>&1 | $(RemoveLeadingDirs) | grep -v 'WARNING: IO rule for class' | grep -v -e 'unused class rule' -e 'no dictionary for class pair' > $@
 
-stltest2.log: runstltest2.C | stl_example.root
+stltest2.log: runstltest2.C stltest.log | stl_example.root 
 	$(CMDECHO) ulimit -n 1024 ; $(CALLROOTEXE) -q -b -l $< 2>&1 | $(RemoveLeadingDirs) | grep -v 'WARNING: IO rule for class' | grep -v -e 'unused class rule' -e 'no dictionary for class pair' > $@
 
 foreign.log: runforeign.C
