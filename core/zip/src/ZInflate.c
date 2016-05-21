@@ -1321,9 +1321,17 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
   }
   if (src[0] == 'L' && src[1] == '4') {
     /*fprintf(stdout,"LZ4 decompression");*/
-    if (R__unzipLZ4(
-          ibufptr, ibufcnt, obufptr, &obufcnt, src[2])) {
+    int unzip_status;
+    unzip_status = R__unzipLZ4(
+          ibufptr, ibufcnt, obufptr, &obufcnt, src[2]);
+    if (unzip_status) {
       fprintf(stderr, "R__unzip: failure to decompress with liblz4\n");
+      if (-1 == unzip_status) fprintf(stderr, "R__unzipLZ4: no input data\n");
+      if (-2 == unzip_status) fprintf(stderr, "R__unzipLZ4: failed checksum\n");
+      if (-3 == unzip_status) fprintf(stderr, "R__unzipLZ4: data wasn't compressed but has wrong size\n");
+      if (-4 == unzip_status) fprintf(stderr, "R__unzipLZ4: decompressed less than expected (internal lz4)\n");
+      if (-5 == unzip_status) fprintf(stderr, "R__unzipLZ4: decompressed less than expected (external lz4)\n");
+      if (-6 == unzip_status) fprintf(stderr, "R__unzipLZ4: unknown compression method\n");
       return;
     }
     if (isize == obufcnt) *irep = obufcnt;

@@ -123,36 +123,37 @@ int R__unzipLZ4(uch* ibufptr, long ibufsz,
   if (ibufsz < 4) {
     return -1;
   }
-  {
+  /* TODO reenable checksum check */
+  if (0) {
     /* check adler32 checksum */
     uch *p = ibufptr + (ibufsz - 4);
     unsigned long adler = ((unsigned long) p[0]) | ((unsigned long) p[1] << 8) |
       ((unsigned long) p[2] << 16) | ((unsigned long) p[3] << 24);
     if (adler != lzo_adler32(lzo_adler32(0, NULL, 0), ibufptr, ibufsz - 4)) {
       /* corrupt compressed data */
-      return -1;
+      return -2;
     }
   }
   int osz;
   switch (method) {
     case 0: /* just store the uncompressed data */
-      if (*obufsz != ibufsz - 4) return -1;
+      if (*obufsz != ibufsz - 4) return -3;
       if (ibufptr != obufptr)
         memmove(obufptr, ibufptr, ibufsz - 4);
       break;
     case 1: /* LZ4 */
 #ifdef BUILTIN_LZ4
       osz = LZ4_uncompress_unknownOutputSize((const char*) ibufptr, (char*)obufptr, ibufsz - 4, *obufsz);
-      if (osz != *obufsz) return -1;
+      if (osz != *obufsz) return -4;
       /* TODO: use target size from header */
 #else
       osz = LZ4_decompress_fast((const char*) ibufptr, (char*)obufptr, *obufsz);
-      if (osz != *obufsz) return -1;
+      if (osz != *obufsz) return -5;
 #endif
       break;
     default:
       /* unknown method */
-      return -1;
+      return -6;
   }
   return 0;
 }
