@@ -291,29 +291,38 @@ int R__Inflate_free OF((void));
 #ifdef LZO
 extern int R__unzipLZO(uch* ibufptr, long ibufsz, uch* obufptr, long* obufsz, uch method);
 #else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 int R__unzipLZO(uch* ibufptr, long ibufsz, uch* obufptr, long* obufsz, uch method) {
   fprintf(stderr,
       "R__unzipLZO: ROOT built without LZO\n");
   return -1;
 }
+#pragma GCC diagnostic pop
 #endif
 #ifdef LZ4
 extern int R__unzipLZ4(uch* ibufptr, long ibufsz, uch* obufptr, long* obufsz, uch method);
 #else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 int R__unzipLZ4(uch* ibufptr, long ibufsz, uch* obufptr, long* obufsz, uch method){
   fprintf(stderr,
       "R__unzipLZ4: ROOT built without LZ4\n");
-  return;
+  return -1;
 }
+#pragma GCC diagnostic pop
 #endif
 #ifdef BROTLI
 extern int R__unzipBROTLI(uch* ibufptr, long ibufsz, uch* obufptr, size_t* obufsz);
 #else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 int R__unzipBROTLI(uch* ibufptr, long ibufsz, uch* obufptr, size_t* obufsz) {
   fprintf(stderr,
       "R__unzipBROTLI: ROOT built without BROTLI\n");
-  return;
+  return -1;
 }
+#pragma GCC diagnostic pop
 #endif
 
 /* Tables for deflate from PKZIP's appnote.txt. */
@@ -1256,10 +1265,41 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
 
   /*   D E C O M P R E S S   D A T A  */
 
-  /// TODO improve for no lzo but with zp/br (check lz4)
-  if ((src[0] == 'L' && src[1] == 'Z') ||
-      (src[0] == 'Z' && src[1] == 'P' && src[2] == 0) || /*hack if Zpf did not compress*/
+  /// uncompressed data
+  if ((src[0] == 'L' && src[1] == 'Z' && src[2] == 0) ||
+      (src[0] == 'Z' && src[1] == 'P' && src[2] == 0) ||
       (src[0] == 'B' && src[1] == 'R' && src[2] == 0)) {
+    if (ibufcnt < 4) {
+      fprintf(stderr, "R__unzip: failure with uncompressed data\n");
+      return;
+    }
+    ///* initialise liblzo */
+    //if (!R__lzo_init()) {
+    //  fprintf(stderr, "R__unzip: failure with uncompressed data\n");
+    //  return;
+    //}
+    //{
+    //  /* check adler32 checksum */
+    //  uch *p = ibufptr + (ibufcnt - 4);
+    //  unsigned long adler = ((unsigned long) p[0]) | ((unsigned long) p[1] << 8) |
+    //    ((unsigned long) p[2] << 16) | ((unsigned long) p[3] << 24);
+    //  if (adler != lzo_adler32(lzo_adler32(0, NULL, 0), ibufptr, ibufcnt - 4)) {
+    //    /* corrupt compressed data */
+    //    fprintf(stderr, "R__unzip: failure with uncompressed data\n");
+    //    return;
+    //  }
+    //}
+    if (obufcnt != ibufcnt - 4) {
+      fprintf(stderr, "R__unzip: failure with uncompressed data\n");
+      return;
+    }
+    if (ibufptr != obufptr)
+      memmove(obufptr, ibufptr, ibufcnt - 4);
+    if (isize == obufcnt) *irep = obufcnt;
+    return;
+  }
+
+  if (src[0] == 'L' && src[1] == 'Z') {
     /*fprintf(stdout,"LZO decompression");*/ /*TODO: use some output level magic here*/
     if (R__unzipLZO(ibufptr, ibufcnt, obufptr, &obufcnt, src[2])) 
     {
