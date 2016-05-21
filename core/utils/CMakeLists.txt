@@ -33,9 +33,10 @@ ROOT_EXECUTABLE(rootcling src/LinkdefReader.cxx src/DictSelectionReader.cxx
                           ${unix_objects}
                           ${winnt_objects}
                           ${lzo_objects}
-                          LIBRARIES ${PCRE_LIBRARIES} ${lzo_library} ${LZMA_LIBRARIES} ${ZLIB_LIBRARY}
-                                    ${CLING_LIBRARIES} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT}
-                                    ${corelinklibs})
+                          ${lz4_objects}
+                          LIBRARIES ${PCRE_LIBRARIES} ${lzo_library} ${lz4_library}
+                                    ${LZMA_LIBRARIES} ${ZLIB_LIBRARY} ${CLING_LIBRARIES}
+                                    ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${corelinklibs})
 
 add_dependencies(rootcling CLING LLVMRES)
 

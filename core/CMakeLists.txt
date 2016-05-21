@@ -36,6 +36,14 @@ if(lzo)
   set(lzo_objects $<TARGET_OBJECTS:Lzo>)
   set(lzo_library ${LZO_LIBRARY})
 endif()
+if(lz4)
+  add_subdirectory(lz4)
+  set(lz4_objects $<TARGET_OBJECTS:Lz4>)
+  if (not builtin_lz4)
+    # builtin lz4 is statically linked
+    set(lz4_library ${LZ4_LIBRARY})
+  endif()
+endif()
 add_subdirectory(base)
 
 set(objectlibs $<TARGET_OBJECTS:Base>
@@ -49,6 +57,7 @@ set(objectlibs $<TARGET_OBJECTS:Base>
                ${macosx_objects}
                ${unix_objects}
                ${lzo_objects}
+               ${lz4_objects}
                ${winnt_objects})
 
 #---Generation of RGitCommit.h-----------------------------------------------------------
@@ -107,7 +116,7 @@ add_subdirectory(utils)
 ROOT_LINKER_LIBRARY(Core
                     $<TARGET_OBJECTS:BaseTROOT>
                     ${objectlibs}
-                    LIBRARIES ${PCRE_LIBRARIES} ${lzo_library} ${LZMA_LIBRARIES} ${ZLIB_LIBRARY}
+                    LIBRARIES ${PCRE_LIBRARIES} ${lzo_library} ${lz4_library} ${LZMA_LIBRARIES} ${ZLIB_LIBRARY}
                               ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${corelinklibs} )
 
 if(cling)

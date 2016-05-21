@@ -523,6 +523,26 @@ if(xml)
   endif()
 endif()
 
+#---Check for LZ4------------------------------------------------------------------
+if(lz4)
+  if(not builtin_lz4)
+    message(STATUS "Looking for LZ4")
+    find_package(LZ4)
+    if(NOT LZ4_FOUND)
+      if(fail-on-missing)
+        message(FATAL_ERROR "LZ4 not found and is required ('fail-on-missing' enabled)."
+          "Alternatively, you can enable the option 'builtin_lz4' to build the internal LZ4.")
+      else()
+        message(STATUS "LZ4 not found. Switching on builtin_lz4 option")
+        set(builtin_lz4 ON CACHE BOOL "" FORCE)
+      endif()
+    endif()
+  else()
+    set(lz4_version 0.0) #FIXME look up which version this is
+    message(STATUS "Building LZ4 version ${lz4_version} included in ROOT itself")
+  endif()
+endif()
+
 #---Check for LZO------------------------------------------------------------------
 if(lzo)
   message(STATUS "Looking for LZO")
