@@ -133,6 +133,7 @@ int R__unzipLZ4(uch* ibufptr, long ibufsz,
       return -1;
     }
   }
+  int osz;
   switch (method) {
     case 0: /* just store the uncompressed data */
       if (*obufsz != ibufsz - 4) return -1;
@@ -141,11 +142,11 @@ int R__unzipLZ4(uch* ibufptr, long ibufsz,
       break;
     case 1: /* LZ4 */
 #ifdef BUILTIN_LZ4
-      int osz = LZ4_uncompress_unknownOutputSize((const char*) ibufptr, (char*)obufptr, ibufsz - 4, *obufsz);
+      osz = LZ4_uncompress_unknownOutputSize((const char*) ibufptr, (char*)obufptr, ibufsz - 4, *obufsz);
       if (osz != *obufsz) return -1;
       /* TODO: use target size from header */
 #else
-      int osz = LZ4_decompress_fast((const char*) ibufptr, (char*)obufptr, *obufsz);
+      osz = LZ4_decompress_fast((const char*) ibufptr, (char*)obufptr, *obufsz);
       if (osz != *obufsz) return -1;
 #endif
       break;
