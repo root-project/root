@@ -2,7 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef BUILTIN_LZ4
+#include "builtin/lz4.h"
+#else
 #include "lz4.h"
+#endif
 
 #ifndef NULL
 #define NULL 0L
