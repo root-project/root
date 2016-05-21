@@ -20,4 +20,5 @@
 . PyROOT_stltests.py::TestClasSTLITERATORCOMPARISON::()::test02_builtin_list_iterators
 . PyROOT_stltests.py::TestClasSTLITERATORCOMPARISON::()::test03_builtin_map_iterators
 . PyROOT_stltests.py::TestClasSTLSTREAM::()::test01_pass_stringstream
+. PyROOT_stltests.py::TestClasSTLSET::()::test01_iterate_set
 
