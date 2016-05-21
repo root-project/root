@@ -42,8 +42,8 @@ extern void R__error(const char *msg);
 
 void R__zipLZ4(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep)
 {
-  lzo_uint osz = *tgtsize, minosz;
-  lzo_unit ibufsz = *srcsize;
+  int osz = *tgtsize, minosz;
+  int ibufsz = *srcsize;
   unsigned level = (cxlevel ? 1: 0);
   unsigned long adler32 = 0;
   /* check source buffer size */
@@ -69,9 +69,9 @@ void R__zipLZ4(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, in
   if (level > 0) {
     uch* obuf = tgt + HDRSIZE;
 #ifdef BUILTIN_LZ4
-    lzo_uint csz = LZ4_compress((const char*) src, (char*) obuf, ibufsz);
+    int csz = LZ4_compress((const char*) src, (char*) obuf, ibufsz);
 #else
-    lzo_uint csz = LZ4_compress_default((const char*) src, (char*) obuf, ibufsz, osz);
+    int csz = LZ4_compress_default((const char*) src, (char*) obuf, ibufsz, osz);
 #endif
     /* check compression ratio */
     if (csz < ibufsz && 0 != level) {
@@ -141,7 +141,7 @@ int R__unzipLZ4(uch* ibufptr, long ibufsz,
       break;
     case 1: /* LZ4 */
 #ifdef BUILTIN_LZ4
-      lzo_uint osz = LZ4_uncompress_unknownOutputSize((const char*) ibufptr, (char*)obufptr, ibufsz - 4, *obufsz);
+      int osz = LZ4_uncompress_unknownOutputSize((const char*) ibufptr, (char*)obufptr, ibufsz - 4, *obufsz);
       if (osz != *obufsz) return -1;
       /* TODO: use target size from header */
 #else
