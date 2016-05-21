@@ -283,7 +283,7 @@ static struct R__lzo_tbl_t R__lzo_compr_tbl[9][11] = {
 void R__zipLZO(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep)
 {
   lzo_uint ibufsz = *srcsize;
-  lzo_uint osz = *irep, minosz;
+  lzo_uint osz = *tgtsize, minosz;
   unsigned long adler32 = 0;
   int level = cxlevel & 0xf;
   int alg = (cxlevel >> 4) & 0xf;
