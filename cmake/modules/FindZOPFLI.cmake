@@ -14,7 +14,7 @@ if(NOT ZOPFLI_DIR)
   set(ZOPFLI_DIR $ENV{ZOPFLI_DIR})
 endif()
 
-find_path(ZOPFLI_INCLUDE_DIR zopfli.h PATHS
+find_path(ZOPFLI_INCLUDE_DIR zopfli/zopfli.h PATHS
   ${ZOPFLI_DIR}/include
   /usr/include
   /usr/local/include

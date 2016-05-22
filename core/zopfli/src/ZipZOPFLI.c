@@ -24,10 +24,10 @@ int R__ZopfliCompress(ZopfliOptions* zpfopts, ZopfliFormat zpftype,
   uch* compression_target = 0;
   size_t compression_size = 0;
   unsigned long adler32;
-  lzo_uint obufs;
-  lzo_uint osz;
-  lzo_uintp obufsz;
-  uch* obufptr;
+  unsigned int obufs;
+  unsigned int osz;
+  unsigned int* obufsz;
+  char* obufptr;
 
   obufs = *dstsz;
   obufsz = &obufs;

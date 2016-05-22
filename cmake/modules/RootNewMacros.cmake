@@ -331,8 +331,12 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   endif()
 
   #---call rootcint------------------------------------------
+  if(zopfli)
+    set(zopfli_library ${ZOPFLI_LIBRARIES})
+  endif()
   add_custom_command(OUTPUT ${dictionary}.cxx ${pcm_name} ${rootmap_name}
-                     COMMAND ${command} -f  ${dictionary}.cxx ${newargs} ${rootmapargs}
+    #COMMAND ${ld_library_path}=$ENV{${ld_library_path}}:${zopfli_library} ${command} -f  ${dictionary}.cxx ${newargs} ${rootmapargs}
+    COMMAND ${command} -f  ${dictionary}.cxx ${newargs} ${rootmapargs}
                                         ${ARG_OPTIONS} ${definitions} ${includedirs} ${rheaderfiles} ${_linkdef}
                      IMPLICIT_DEPENDS CXX ${_linkdef} ${headerfiles}
                      DEPENDS ${headerfiles} ${_linkdef} ${ROOTCINTDEP})
