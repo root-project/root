@@ -3229,10 +3229,19 @@ Version_t TBufferFile::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass 
       frombuf(this->fBufCur,&v.vers[0],0);
    }
 #endif
-   // no bytecount, backup and read version.
-   // read in next UShort_t and determine if it is zero or not. 
-   // If it's not zero, it is 'highly possible' storing version
-   // and consequently the first four byte should be byte count.
+   // If IsBufBigEndian() indicates the buffer is big endian, we need to further verify if v.cnt contain byte count.
+   // If there is no bytecount, backup and read version, fBufCur will go back the fix size of sizeof(UInt_t) and start reading data.
+   // However, if the buffer is little endian, the next UShort_t should be read and verify if it is zero or not. If it's not zero, 
+   // it is 'highly possible' storing version and consequently the first four byte should be byte count.
+   // For example, if there is no byte count and the first two bytes stores version and the next four bytes store fBufferSize like following:
+   //     UShort_t + UInt_t ( Version_t + fBufferSize)
+   // But in TBufferFile.cxx, it takes a look at (v.cnt & kByteCountMask)(v.cnt is the first four bytes). If it is 0, 
+   // ROOT determine there is no byte count. Otherwise, the next four bytes should be byte count. If TBufferFile is BigEndian:
+   //     00 02 00 00 7d 00
+   // and in this example, version = 2 and fBufferSize = 32000. So v.cnt is 00 00 02 00. 
+   // However, if we change TBufferFile to LittleEndian, the memory layout becomes:
+   //      02 00 00 7d 00 00
+   // and in this case, v.cnt is 7d 00 00 02 and (v.cnt & kByteCountMask != 0) so ROOT thinks the next four bytes are byte count.
    UShort_t possibleVersion;
    if (IsBufBigEndian()) {
       if (!(v.cnt & kByteCountMask)) {
