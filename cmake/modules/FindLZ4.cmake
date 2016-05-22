@@ -10,32 +10,50 @@ if(LZ4_CONFIG_EXECUTABLE)
 endif()
 set(LZ4_FOUND 0)
 
-find_path(LZ4_INCLUDE_DIR lz4.h
-  $ENV{LZ4_DIR}/include
+if(NOT LZ4_DIR)
+  set(LZ4_DIR $ENV{LZ4_DIR})
+endif()
+
+find_path(LZ4_INCLUDE_DIR lz4.h PATHS
+  ${LZ4_DIR}/include
   /usr/include
   /usr/local/include
   /opt/lz4/include
+  NO_DEFAULT_PATH
+  NO_SYSTEM_ENVIRONMENT_PATH
   DOC "Specify the directory containing lz4.h"
 )
 
 find_library(LZ4_LIBRARY NAMES lz4 PATHS
-  $ENV{LZ4_DIR}/lib
-  /usr/local/lzo/lib
+  ${LZ4_DIR}/lib
+  /usr/local/lz4/lib
   /usr/local/lib
-  /usr/lib/lzo
-  /usr/local/lib/lzo
-  /usr/lzo/lib /usr/lib
-  /usr/lzo /usr/local/lzo
-  /opt/lzo /opt/lzo/lib
+  /usr/lib/lz4
+  /usr/local/lib/lz4
+  /usr/lz4/lib /usr/lib
+  /usr/lz4 /usr/local/lz4
+  /opt/lz4 /opt/lz4/lib
+  NO_DEFAULT_PATH
+  NO_SYSTEM_ENVIRONMENT_PATH
   DOC "Specify the lz4 library here."
 )
 
+if(LZ4_INCLUDE_DIR)
+  message(STATUS "Found LZ4 includes at ${LZ4_INCLUDE_DIR}")
+else()
+  message(STATUS "LZ4 includes not found")
+  message(STATUS "not even in $ENV{LZ4_DIR}")
+endif()
+
+if(LZ4_LIBRARY)
+  message(STATUS "Found LZ4 library at ${LZ4_LIBRARY}")
+else()
+  message(STATUS "LZ4 library not found")
+endif()
+
+
 if(LZ4_INCLUDE_DIR AND LZ4_LIBRARY)
   set(LZ4_FOUND 1)
-  if(NOT LZ4_FIND_QUIETLY)
-     message(STATUS "Found LZ4 includes at ${LZ4_INCLUDE_DIR}")
-     message(STATUS "Found LZ4 library at ${LZ4_LIBRARY}")
-  endif()
 endif()
 
 set(LZ4_LIBRARIES ${LZ4_LIBRARY})
