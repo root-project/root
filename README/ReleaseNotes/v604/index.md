@@ -1079,6 +1079,10 @@ Published on 2016-03-17.
 
 Changes will be part of the future 6.04/18
 
+### Core
+
+- Fix the validity of TRef after the first ProcessID is full.
+
 ### TTree
 
 - Properly handle the last element of arrays in the TTreeFormula functions MinIf and MaxIf [ROOT-7258]
