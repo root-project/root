@@ -1333,7 +1333,7 @@ TList *TFile::GetStreamerInfoList()
          return 0;
       }
       key->ReadKeyBuffer(buf);
-      list = dynamic_cast<TList*>(key->ReadObjWithBuffer(buffer,0,1));
+      list = dynamic_cast<TList*>(key->ReadObjWithBuffer(buffer, kFALSE, kTRUE));
       if (list) list->SetOwner();
       delete [] buffer;
       delete key;
@@ -3620,7 +3620,7 @@ void TFile::WriteStreamerInfo()
    //free previous StreamerInfo record
    if (fSeekInfo) MakeFree(fSeekInfo,fSeekInfo+fNbytesInfo-1);
    //Create new key
-   TKey key(&list,"StreamerInfo",GetBestBuffer(), this, 0, 1);
+   TKey key(&list,"StreamerInfo",GetBestBuffer(), this, kFALSE, kTRUE);
    fKeys->Remove(&key);
    fSeekInfo   = key.GetSeekKey();
    fNbytesInfo = key.GetNbytes();
