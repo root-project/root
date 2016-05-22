@@ -35,6 +35,17 @@ static char *R__NoReAllocChar(char *, size_t, size_t)
 /// Create an I/O buffer object. Mode should be either TBuffer::kRead or
 /// TBuffer::kWrite. By default the I/O buffer has a size of
 /// TBuffer::kInitialSize (1024) bytes.
+///
+/// \param[in] mode Read mode or write mode of this TBuffer
+/// \param[in] def  Determining whether this TKey is created with endianness defined by global gROOT or defined by buffBigEndian
+/// \param[in] buffBigEndian Determining the endianness of this TKey's buffer only if def is kFALSE
+///
+/// TBuffer might store StreamerInfo which is always stored as big endian on TFile. Therefore, we should get rid of the effect
+/// of gROOT->IsBufBigEndian() and always define its buffer as big endian. For more explanation, take a look at the function:
+///
+///     TKey::TKey(TDirectory* motherDir, const TKey &orig, UShort_t pidOffset, Bool_t def, Bool_t buffBigEndian);
+///
+/// It provides details of why we need 'def' and 'buffBigEndian' and how to define them.
 
 TBuffer::TBuffer(EMode mode, Bool_t def, Bool_t buffBigEndian)
 {
