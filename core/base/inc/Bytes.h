@@ -70,7 +70,7 @@ inline void tobuf(char *&buf, UChar_t x)
 inline void tobuf(char *&buf, UShort_t x, Bool_t buffBigEndian = kTRUE)
 {
 #ifdef R__BYTESWAP
-if(buffBigEndian) {
+if (buffBigEndian) {
 # if defined(R__USEASMSWAP)
    *((UShort_t *)buf) = Rbswap_16(x);
 # else
@@ -84,7 +84,7 @@ if(buffBigEndian) {
    memcpy(buf, &x, sizeof(UShort_t));
 }
 #else
-if(buffBigEndian) {
+if (buffBigEndian) {
    memcpy(buf, &x, sizeof(UShort_t));
 } else {
 # if defined(R__USEASMSWAP)
@@ -104,7 +104,7 @@ if(buffBigEndian) {
 inline void tobuf(char *&buf, UInt_t x, Bool_t buffBigEndian = kTRUE)
 {
 #ifdef R__BYTESWAP
-if(buffBigEndian) {
+if (buffBigEndian) {
 # if defined(R__USEASMSWAP)
    *((UInt_t *)buf) = Rbswap_32(x);
 # else
@@ -120,7 +120,7 @@ if(buffBigEndian) {
    memcpy(buf, &x, sizeof(UInt_t));
 }
 #else
-if(buffBigEndian) {
+if (buffBigEndian) {
    memcpy(buf, &x, sizeof(UInt_t));
 } else {
 # if defined(R__USEASMSWAP)
@@ -142,7 +142,7 @@ if(buffBigEndian) {
 inline void tobuf(char *&buf, ULong_t x, Bool_t buffBigEndian = kTRUE)
 {
 #ifdef R__BYTESWAP
-if(buffBigEndian) {
+if (buffBigEndian) {
    // To work around a stupid optimization bug in MSVC++ 6.0
    const ULong_t *intermediary = &x;
    char *sw = (char *)intermediary;
@@ -177,7 +177,7 @@ if(buffBigEndian) {
    }
 }
 #else
-if(buffBigEndian) {
+if (buffBigEndian) {
    if (sizeof(ULong_t) == 8) {
       memcpy(buf, &x, 8);
    } else {
@@ -217,7 +217,7 @@ if(buffBigEndian) {
 inline void tobuf(char *&buf, Long_t x, Bool_t buffBigEndian = kTRUE)
 {
 #ifdef R__BYTESWAP
-if(buffBigEndian) {
+if (buffBigEndian) {
    // To work around a stupid optimization bug in MSVC++ 6.0
    const Long_t *intermediary = &x;
    char *sw = (char *)intermediary;
@@ -266,7 +266,7 @@ if(buffBigEndian) {
    }
 }
 #else
-if(buffBigEndian) {
+if (buffBigEndian) {
    if (sizeof(Long_t) == 8) {
       memcpy(buf, &x, 8);
    } else {
@@ -320,7 +320,7 @@ if(buffBigEndian) {
 inline void tobuf(char *&buf, ULong64_t x, Bool_t buffBigEndian = kTRUE)
 {
 #ifdef R__BYTESWAP
-if(buffBigEndian) {
+if (buffBigEndian) {
 # if defined(R__USEASMSWAP)
    *((ULong64_t *)buf) = Rbswap_64(x);
 # else
@@ -340,7 +340,7 @@ if(buffBigEndian) {
    memcpy(buf, &x, sizeof(ULong64_t));
 }
 #else
-if(buffBigEndian) {
+if (buffBigEndian) {
    memcpy(buf, &x, sizeof(ULong64_t));
 } else {
 # if defined(R__USEASMSWAP)
@@ -366,7 +366,7 @@ if(buffBigEndian) {
 inline void tobuf(char *&buf, Float_t x, Bool_t buffBigEndian = kTRUE)
 {
 #ifdef R__BYTESWAP
-if(buffBigEndian) {
+if (buffBigEndian) {
 # if defined(R__USEASMSWAP)
    union {
       volatile UInt_t  i;
@@ -389,7 +389,7 @@ if(buffBigEndian) {
    memcpy(buf, &x, sizeof(Float_t));
 }
 #else
-if(buffBigEndian) {
+if (buffBigEndian) {
    memcpy(buf, &x, sizeof(Float_t));
 } else {
 # if defined(R__USEASMSWAP)
@@ -418,7 +418,7 @@ if(buffBigEndian) {
 inline void tobuf(char *&buf, Double_t x, Bool_t buffBigEndian = kTRUE)
 {
 #ifdef R__BYTESWAP
-if(buffBigEndian) {
+if (buffBigEndian) {
 # if defined(R__USEASMSWAP)
    union {
       volatile ULong64_t l;
@@ -445,7 +445,7 @@ if(buffBigEndian) {
    memcpy(buf, &x, sizeof(Double_t));
 }
 #else
-if(buffBigEndian) {
+if (buffBigEndian) {
    memcpy(buf, &x, sizeof(Double_t));
 } else {
 # if defined(R__USEASMSWAP)
@@ -490,7 +490,7 @@ inline void frombuf(char *&buf, UChar_t *x)
 inline void frombuf(char *&buf, UShort_t *x, Bool_t buffBigEndian = kTRUE)
 {
 #ifdef R__BYTESWAP
-if(buffBigEndian) {
+if (buffBigEndian) {
 # if defined(R__USEASMSWAP)
    *x = Rbswap_16(*((UShort_t *)buf));
 # else
@@ -502,7 +502,7 @@ if(buffBigEndian) {
    memcpy(x, buf, sizeof(UShort_t));
 }
 #else
-if(buffBigEndian) {
+if (buffBigEndian) {
    memcpy(x, buf, sizeof(UShort_t));
 } else {
 # if defined(R__USEASMSWAP)
@@ -520,7 +520,7 @@ if(buffBigEndian) {
 inline void frombuf(char *&buf, UInt_t *x, Bool_t buffBigEndian = kTRUE)
 {
 #ifdef R__BYTESWAP
-if(buffBigEndian) {
+if (buffBigEndian) {
 # if defined(R__USEASMSWAP)
    *x = Rbswap_32(*((UInt_t *)buf));
 # else
@@ -534,7 +534,7 @@ if(buffBigEndian) {
    memcpy(x, buf, sizeof(UInt_t));
 }
 #else
-if(buffBigEndian) {
+if (buffBigEndian) {
    memcpy(x, buf, sizeof(UInt_t));
 } else {
 # if defined(R__USEASMSWAP)
@@ -554,7 +554,7 @@ if(buffBigEndian) {
 inline void frombuf(char *&buf, ULong_t *x, Bool_t buffBigEndian = kTRUE)
 {
 #ifdef R__BYTESWAP
-if(buffBigEndian) {
+if (buffBigEndian) {
    char *sw = (char *)x;
    if (sizeof(ULong_t) == 8) {
       sw[0] = buf[7];
@@ -579,7 +579,7 @@ if(buffBigEndian) {
    }
 }
 #else
-if(buffBigEndian) {
+if (buffBigEndian) {
    if (sizeof(ULong_t) == 8) {
       memcpy(x, buf, 8);
    } else {
@@ -610,7 +610,7 @@ if(buffBigEndian) {
 inline void frombuf(char *&buf, ULong64_t *x, Bool_t buffBigEndian = kTRUE)
 {
 #ifdef R__BYTESWAP
-if(buffBigEndian) {
+if (buffBigEndian) {
 # if defined(R__USEASMSWAP)
    *x = Rbswap_64(*((ULong64_t *)buf));
 # else
@@ -628,7 +628,7 @@ if(buffBigEndian) {
    memcpy(x, buf, sizeof(ULong64_t));
 }
 #else
-if(buffBigEndian) {
+if (buffBigEndian) {
    memcpy(x, buf, sizeof(ULong64_t));
 } else {
 # if defined(R__USEASMSWAP)
@@ -652,7 +652,7 @@ if(buffBigEndian) {
 inline void frombuf(char *&buf, Float_t *x, Bool_t buffBigEndian = kTRUE)
 {
 #ifdef R__BYTESWAP
-if(buffBigEndian) {
+if (buffBigEndian) {
 # if defined(R__USEASMSWAP)
    // Use a union to allow strict-aliasing
    union {
@@ -676,7 +676,7 @@ if(buffBigEndian) {
    memcpy(x, buf, sizeof(Float_t));
 }
 #else
-if(buffBigEndian) {
+if (buffBigEndian) {
    memcpy(x, buf, sizeof(Float_t));
 } else {
 # if defined(R__USEASMSWAP)
@@ -705,7 +705,7 @@ if(buffBigEndian) {
 inline void frombuf(char *&buf, Double_t *x, Bool_t buffBigEndian = kTRUE)
 {
 #ifdef R__BYTESWAP
-if(buffBigEndian) {
+if (buffBigEndian) {
 # if defined(R__USEASMSWAP)
    // Use a union to allow strict-aliasing
    union {
@@ -733,7 +733,7 @@ if(buffBigEndian) {
    memcpy(x, buf, sizeof(Double_t));
 }
 #else
-if(buffBigEndian) {
+if (buffBigEndian) {
    memcpy(x, buf, sizeof(Double_t));
 } else {
 # if defined(R__USEASMSWAP)

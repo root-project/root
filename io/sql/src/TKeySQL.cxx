@@ -232,7 +232,7 @@ TObject* TKeySQL::ReadObj()
 /// Read object derived from TObject class
 /// If it is not TObject or in case of error, return 0
 
-TObject* TKeySQL::ReadObjWithBuffer(char * /*bufferRead*/)
+TObject* TKeySQL::ReadObjWithBuffer(char * /*bufferRead*/, Bool_t /*default*/, Bool_t /*whether buffer is big endian*/)
 {
    TObject* tobj = (TObject*) ReadKeyObject(0, TObject::Class());
 
