@@ -491,6 +491,14 @@ void TMatrixT<Element>::Allocate(Int_t no_rows,Int_t no_cols,Int_t row_lwb,Int_t
    this->fColLwb  = col_lwb;
    this->fNelems  = this->fNrows*this->fNcols;
 
+   // Check if fNelems does not have an overflow.
+   if( ((Long64_t)this->fNrows)*this->fNcols != this->fNelems )
+   {
+      Error("Allocate","too large: no_rows=%d no_cols=%d",no_rows,no_cols);
+      this->Invalidate();
+      return;
+   }
+
    if (this->fNelems > 0) {
       fElements = New_m(this->fNelems);
       if (init)
