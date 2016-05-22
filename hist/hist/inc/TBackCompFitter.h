@@ -157,7 +157,7 @@ private:
 
 
 
-   ClassDef(TBackCompFitter, 0);  // Class providing backward compatibility for fitting by implementing the TVirtualFitter interface
+   ClassDef(TBackCompFitter,1)  // Class providing backward compatibility for fitting by implementing the TVirtualFitter interface
 
 };
 
