@@ -561,6 +561,20 @@ if(lzo)
   endif()
 endif()
 
+#---Check for ZOPFLI------------------------------------------------------------------
+if(zopfli)
+  message(STATUS "Looking for ZOPFLI")
+  find_package(ZOPFLI)
+  if(NOT ZOPFLI_FOUND)
+    if(fail-on-missing)
+      message(FATAL_ERROR "zopfli not found but required (zopfli option enabled)")
+    else()
+      message(STATUS "zopfli not found. Switching off zopfli option")
+      set(zopfli OFF CACHE BOOL "" FORCE)
+    endif()
+  endif()
+endif()
+
 #---Check for OpenSSL------------------------------------------------------------------
 if(ssl OR builtin_openssl)
   if(builtin_openssl)

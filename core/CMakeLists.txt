@@ -36,6 +36,11 @@ if(lzo)
   set(lzo_objects $<TARGET_OBJECTS:Lzo>)
   set(lzo_library ${LZO_LIBRARIES})
 endif()
+if(zopfli)
+  add_subdirectory(zopfli)
+  set(zopfli_objects $<TARGET_OBJECTS:Zopfli>)
+  set(zopfli_library ${ZOPFLI_LIBRARIES})
+endif()
 if(lz4)
   add_subdirectory(lz4)
   set(lz4_objects $<TARGET_OBJECTS:Lz4>)
@@ -57,6 +62,7 @@ set(objectlibs $<TARGET_OBJECTS:Base>
                ${macosx_objects}
                ${unix_objects}
                ${lzo_objects}
+               ${zopfli_objects}
                ${lz4_objects}
                ${winnt_objects})
 
@@ -116,7 +122,7 @@ add_subdirectory(utils)
 ROOT_LINKER_LIBRARY(Core
                     $<TARGET_OBJECTS:BaseTROOT>
                     ${objectlibs}
-                    LIBRARIES ${PCRE_LIBRARIES} ${lzo_library} ${lz4_library} ${LZMA_LIBRARIES} ${ZLIB_LIBRARY}
+                    LIBRARIES ${PCRE_LIBRARIES} ${lzo_library} ${zopfli_library} ${lz4_library} ${LZMA_LIBRARIES} ${ZLIB_LIBRARY}
                               ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${corelinklibs} )
 
 if(cling)

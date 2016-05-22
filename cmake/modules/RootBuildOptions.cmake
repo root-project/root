@@ -76,6 +76,7 @@ ROOT_BUILD_OPTION(builtin_pcre OFF "Build included libpcre, or use system libpcr
 ROOT_BUILD_OPTION(builtin_zlib OFF "Build included libz, or use system libz")
 ROOT_BUILD_OPTION(builtin_lzma OFF "Build included liblzma, or use system liblzma")
 ROOT_BUILD_OPTION(lzo OFF "LZO support, requires liblzo2")
+ROOT_BUILD_OPTION(zopfli OFF "ZOPFLI support, requires libzopfli")
 ROOT_BUILD_OPTION(lz4 OFF "LZ4 support, (either included lz4 or system lz4)")
 ROOT_BUILD_OPTION(builtin_lz4 OFF "Build included lz4, or use system liblz4")
 ROOT_BUILD_OPTION(builtin_davix OFF "Build the Davix library internally (downloading tarfile from the Web)")

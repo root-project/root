@@ -32,7 +32,7 @@ void R__zipLZ4(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, in
 }
 #endif
 #ifdef ZOPFLI
-#include "ZipZOPFLI.h"
+extern void R__zipZOPFLI(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep) ;
 #else
 void R__zipZOPFLI(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep) {
   R__error("ROOT built without ZOPFLI support");
