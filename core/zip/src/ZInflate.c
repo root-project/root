@@ -1203,6 +1203,18 @@ int R__unzip_header(int *srcsize, uch *src, int *tgtsize)
 
 void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
 {
+  {
+    static int invocations = 0;
+    invocations = invocations + 1;
+    if (invocations < 5) {
+      fprintf(stderr,"foobar\n");
+      fprintf(stderr,"invocation count = %d\n",invocations);
+      fprintf(stderr,"first input: %d\n",src[0]);
+      fprintf(stderr,"size of inp: %d\n",*srcsize);
+      fprintf(stderr,"size of tgt: %d\n",*tgtsize);
+      fprintf(stderr,"first  oput: %d\n",tgt[0]);
+    }
+  }
   long isize;
   uch  *ibufptr,*obufptr;
   long  ibufcnt, obufcnt;
