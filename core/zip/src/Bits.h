@@ -59,7 +59,7 @@ void pauls_diagnose(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tg
   return;
 }
 #ifdef BROTLI
-#include "ZipBROTLI.h"
+extern void R__zipBROTLI(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep) ;
 #else
 void R__zipBROTLI(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep) {
   R__error("ROOT built without BROTLI support");

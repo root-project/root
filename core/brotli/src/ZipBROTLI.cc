@@ -3,8 +3,8 @@
 #include <stddef.h>
 #include <string.h>
 
-#include "./brotli/enc/encode.h"
-#include "./brotli/dec/decode.h"
+#include "enc/encode.h"
+#include "dec/decode.h"
 
 typedef char              boolean;
 typedef unsigned char     uch;  /* code assumes unsigned bytes; these type-  */
