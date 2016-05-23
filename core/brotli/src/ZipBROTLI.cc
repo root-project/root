@@ -3,6 +3,19 @@
 #include <stddef.h>
 #include <string.h>
 
+/* todo: cleanup */
+#include "lzo/lzoutil.h"
+#include "lzo/lzo1.h"
+#include "lzo/lzo1a.h"
+#include "lzo/lzo1b.h"
+#include "lzo/lzo1c.h"
+#include "lzo/lzo1f.h"
+#include "lzo/lzo1x.h"
+#include "lzo/lzo1y.h"
+#include "lzo/lzo1z.h"
+#include "lzo/lzo2a.h"
+
+
 #include "enc/encode.h"
 #include "dec/decode.h"
 
@@ -32,15 +45,11 @@ int R__BrotliCompress(int cxlevel , uch* src, size_t srcsize, uch* target, size_
   brotli::BrotliParams params;
   size_t compression_size = *dstsz;
   unsigned long adler32;
-  lzo_uint obufs;
-  lzo_uint osz;
-  lzo_uintp obufsz;
+  unsigned int osz;
   uch* obufptr;
   int status;
 
   params.quality = cxlevel;
-  obufs = *dstsz;
-  obufsz = &obufs;
   (target)[0] = 'B';
   (target)[1] = 'R';
   (target)[2] = 'O';
@@ -64,8 +73,7 @@ int R__BrotliCompress(int cxlevel , uch* src, size_t srcsize, uch* target, size_
 
   /* does all this make sense? */
   *dstsz = compression_size + HDRSIZE + 4;
-  *obufsz = compression_size + HDRSIZE + 4;
-  osz = *obufsz - HDRSIZE;
+  osz = *dstsz - HDRSIZE;
   (target)[3] = (char)(((osz) >> 0) & 0xff);
   (target)[4] = (char)(((osz) >> 8) & 0xff);
   (target)[5] = (char)(((osz) >>16) & 0xff);
@@ -76,7 +84,7 @@ int R__BrotliCompress(int cxlevel , uch* src, size_t srcsize, uch* target, size_
   adler32 = lzo_adler32(
       lzo_adler32(0, NULL,0), (target) + HDRSIZE, osz - 4);
   obufptr = target;
-  obufptr += *obufsz - 4;
+  obufptr += *dstsz - 4;
   obufptr[0] = (char) (adler32 & 0xff);
   obufptr[1] = (char) ((adler32 >> 8) & 0xff);
   obufptr[2] = (char) ((adler32 >> 16) & 0xff);
