@@ -753,7 +753,7 @@ void THStack::Paint(Option_t *option)
    // drawn in stack mode!
    //if (nostack && fStack) {fStack->Delete(); delete fStack; fStack = 0;}
 
-   if (!opt.Contains("nostack") || (!opt.Contains("candle"))) BuildStack();
+   if (!opt.Contains("nostack") && (!opt.Contains("candle"))) BuildStack();
 
    Double_t themax,themin;
    if (fMaximum == -1111) themax = GetMaximum(option);
