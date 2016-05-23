@@ -36,6 +36,10 @@ if(lzo)
   set(lzo_objects $<TARGET_OBJECTS:Lzo>)
   set(lzo_library ${LZO_LIBRARIES})
 endif()
+if(brotli)
+  add_subdirectory(brotli)
+  set(brotli_objects $<TARGET_OBJECTS:Brotli>)
+endif()
 if(zopfli)
   add_subdirectory(zopfli)
   set(zopfli_objects $<TARGET_OBJECTS:Zopfli>)
@@ -63,6 +67,7 @@ set(objectlibs $<TARGET_OBJECTS:Base>
                ${unix_objects}
                ${lzo_objects}
                ${zopfli_objects}
+               ${brotli_objects}
                ${lz4_objects}
                ${winnt_objects})
 
