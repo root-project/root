@@ -99,7 +99,7 @@ TSelectorDraw::~TSelectorDraw()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Called everytime a loop on the tree(s) starts.
+/// Called every time a loop on the tree(s) starts.
 
 void TSelectorDraw::Begin(TTree *tree)
 {
@@ -239,7 +239,7 @@ void TSelectorDraw::Begin(TTree *tree)
 
          // parse things that follow the name of the histo between '(' and ')'.
          // At this point hname contains the name of the specified histogram.
-         //   Now the syntax is exended to handle an hname of the following format
+         //   Now the syntax is extended to handle an hname of the following format
          //   hname(nBIN [[,[xlow]][,xhigh]],...)
          //   so enclosed in brackets is the binning information, xlow, xhigh, and
          //   the same for the other dimensions
@@ -482,6 +482,11 @@ void TSelectorDraw::Begin(TTree *tree)
    }
    if (fDimension > 4 && !(optpara || optcandle || opt5d)) {
       Abort("Too many variables. Use the option \"para\", \"gl5d\" or \"candle\" to display more than 4 variables.");
+      delete [] varexp;
+      return;
+   }
+   if (fDimension < 2 && (optpara || optcandle)) {
+      Abort("The options \"para\" and \"candle\" require at least 2 variables.");
       delete [] varexp;
       return;
    }
@@ -939,7 +944,7 @@ void TSelectorDraw::ClearFormula()
 ///     varexp = x  simplest case: draw a 1-Dim distribution of column named x
 ///            = sqrt(x)         : draw distribution of sqrt(x)
 ///            = x*y/z
-///            = y:sqrt(x) 2-Dim dsitribution of y versus sqrt(x)
+///            = y:sqrt(x) 2-Dim distribution of y versus sqrt(x)
 ///
 /// selection is an expression with a combination of the columns
 ///
@@ -1035,7 +1040,7 @@ Bool_t TSelectorDraw::CompileVariables(const char *varexp, const char *selection
 /// By default TTree::Draw creates the arrays obtained
 /// with all GetVal and GetW with a length corresponding to the
 /// parameter fEstimate. By default fEstimate=10000 and can be modified
-/// via TTree::SetEstimate. A possible recipee is to do
+/// via TTree::SetEstimate. A possible recipe is to do
 ///
 ///     tree->SetEstimate(tree->GetEntries());
 ///
@@ -1436,7 +1441,7 @@ void TSelectorDraw::TakeAction()
       h2->SetEntries(fNfill);
       h2->SetMinimum(fVmin[2]);
       h2->SetMaximum(fVmax[2]);
-      // Fill the graphs acording to the color
+      // Fill the graphs according to the color
       for (i = 0; i < fNfill; i++) {
          col = Int_t(ncolors * ((fVal[2][i] - fVmin[2]) / (fVmax[2] - fVmin[2])));
          if (col < 0) col = 0;
