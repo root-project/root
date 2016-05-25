@@ -176,8 +176,8 @@ public:
   const_iterator end() const { return const_iterator(*fImpl, fImpl->GetNBins()); }
 
 private:
-  std::unique_ptr<ImplBase_t> fImpl; ///< The actual histogram implementation
-  FillFunc_t fFillFunc = nullptr; ///< Pinter to THistImpl::Fill() member function
+  std::unique_ptr<ImplBase_t> fImpl; ///<  The actual histogram implementation
+  FillFunc_t fFillFunc = nullptr;    ///<! Pinter to THistImpl::Fill() member function
 
   friend THist HistFromImpl<>(std::unique_ptr<ImplBase_t>);
   friend void swap<>(THist<DATA> &a, THist<DATA> &b) noexcept;
