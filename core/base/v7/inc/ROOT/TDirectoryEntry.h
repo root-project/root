@@ -15,6 +15,8 @@
 #ifndef ROOT7_TDirectoryEntry
 #define ROOT7_TDirectoryEntry
 
+#include "TClass.h"
+
 #include <chrono>
 #include <memory>
 #include <typeinfo>
@@ -33,8 +35,22 @@ public:
   using clock_t = std::chrono::system_clock;
   using time_point_t = std::chrono::time_point<clock_t>;
 
+private:
+  time_point_t fDate = clock_t::now(); ///< Time of last change
+  TClass* fType = 0; ///< The type of the object
+
+protected:
+  TDirectoryEntryPtrBase() = default;
+
+public:
+  /// Constructor setting the type.
+  TDirectoryEntryPtrBase(TClass* cl): fType(cl) {}
+
   /// Get the last change date of the entry.
   const time_point_t& GetDate() const { return fDate; }
+
+  /// Get the object's type.
+  TClass* GetType() const { return fType; }
 
   /// Inform the entry that it has been modified, and needs to update its
   /// last-changed time stamp.
@@ -47,9 +63,6 @@ public:
   /// Abstract interface to retrieve the type of the object represented by this
   /// entry.
   virtual const std::type_info& GetTypeInfo() const = 0;
-
-private:
-  time_point_t fDate = clock_t::now(); ///< Time of last change
 };
 
 
@@ -62,7 +75,8 @@ template <class T>
 class TDirectoryEntryPtr: public TDirectoryEntryPtrBase {
 public:
   /// Initialize a TDirectoryEntryPtr from an existing object ("write").
-  TDirectoryEntryPtr(T&& obj): fObj(obj) {}
+  TDirectoryEntryPtr(T&& obj):
+    TDirectoryEntryPtrBase(TClass::GetClass(typeid(T))),  fObj(obj) {}
 
   /// Initialize a TDirectoryEntryPtr from an existing object ("write").
   TDirectoryEntryPtr(const std::shared_ptr<T>& ptr): fObj(ptr) {}
