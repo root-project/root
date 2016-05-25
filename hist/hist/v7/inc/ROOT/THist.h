@@ -63,6 +63,8 @@ public:
   using Weight_t = typename Stat_t::Weight_t;
   /// Pointer type to `HistImpl_t::Fill`, for faster access.
   using FillFunc_t = typename ImplBase_t::FillFunc_t;
+  /// Range.
+  using AxisRange_t = typename ImplBase_t::AxisIterRange_t;
 
   using const_iterator = Detail::THistBinIter<ImplBase_t>;
 
