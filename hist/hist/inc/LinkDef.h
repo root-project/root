@@ -339,4 +339,11 @@
   code="{ fBinSumw2.Reset(); }"
 
 
+#ifdef ROOT7_THist
+#pragma link C++ class ROOT::Experimental::TH1F+;
+#pragma link C++ class ROOT::Experimental::TH1D+;
+#pragma link C++ class ROOT::Experimental::TH2F+;
+#pragma link C++ class ROOT::Experimental::TH2D+;
+#endif
+
 #endif
