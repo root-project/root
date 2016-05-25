@@ -59,7 +59,8 @@ public:
      fHist(hist), fNBins(nbins), fRange(range) {}
 
   bool IsBinOutOfRange(int idx) const noexcept {
-    // TODO: implement IsBinOutOfRange()!
+    // TODO: use fRange!
+    return idx < 0 || idx > fNBins;
   }
 
   void SetRange(int axis, double from, double to) {
