@@ -33,7 +33,7 @@ template<class PRECISION> using THistDataDefaultStorage
  number of calls to Fill().
  */
 template<int DIMENSIONS, class PRECISION,
-  template <class PRECISION_> class STORAGE = THistDataDefaultStorage>
+  template <class PRECISION_> class STORAGE = ROOT::Experimental::THistDataDefaultStorage>
 class THistDataContent {
 public:
   /// The type of a (possibly multi-dimensional) coordinate.
@@ -123,7 +123,7 @@ public:
  uncertainty per bin, and the total number of calls to Fill().
  */
 template<int DIMENSIONS, class PRECISION,
-  template <class PRECISION_> class STORAGE = THistDataDefaultStorage>
+  template <class PRECISION_> class STORAGE = ROOT::Experimental::THistDataDefaultStorage>
 class THistDataUncertainty: public THistDataContent<DIMENSIONS, PRECISION, STORAGE> {
 
 public:
@@ -188,7 +188,7 @@ public:
 };
 
 template<int DIMENSIONS, class PRECISION,
-  template <class PRECISION_> class STORAGE = THistDataDefaultStorage>
+  template <class PRECISION_> class STORAGE = ROOT::Experimental::THistDataDefaultStorage>
 class THistDataMomentUncert:
   public THistDataUncertainty<DIMENSIONS, PRECISION, STORAGE> {
 public:
@@ -210,7 +210,7 @@ public:
 };
 
 template<int DIMENSIONS, class PRECISION,
-  template <class PRECISION_> class STORAGE = THistDataDefaultStorage>
+  template <class PRECISION_> class STORAGE = ROOT::Experimental::THistDataDefaultStorage>
 class THistDataRuntime:
   public THistDataContent<DIMENSIONS, PRECISION, STORAGE> {
 public:
