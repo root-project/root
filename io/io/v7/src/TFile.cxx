@@ -66,6 +66,10 @@ public:
   ~TFileSystemFile() {
     delete fOldFile;
   }
+
+  void WriteMemoryWithType(std::string_view name, const void* address, TClass* cl) final {
+    fOldFile->WriteObjectAny(address, cl, name.to_string().c_str());
+  }
 };
 }
 

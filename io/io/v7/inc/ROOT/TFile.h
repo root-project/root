@@ -17,8 +17,11 @@
 
 #include "ROOT/TDirectory.h"
 
+#include "TClass.h"
+
 #include <memory>
 #include <experimental/string_view>
+#include <typeinfo>
 
 namespace ROOT {
 namespace Experimental {
@@ -33,6 +36,12 @@ namespace Internal {
 
  */
 class TFileImplBase: public TDirectory {
+protected:
+  /// Serialize the object at address, using the object's TClass.
+  //FIXME: what about `cl` "pointing" to a base class?
+  virtual void WriteMemoryWithType(std::string_view name, const void* address,
+    TClass* cl) = 0;
+
 public:
   /// Must not call Write() of all attached objects:
   /// some might not be needed to be written or writing might be aborted due to
@@ -54,9 +63,9 @@ public:
   /// \throws TDirectoryTypeMismatch if the object stored under this name is of
   ///   a type different from `T`.
   template <class T>
-  std::unique_ptr<T> Read(const std::string& name) {
+  std::unique_ptr<T> Read(std::string_view name) {
     // FIXME: need separate collections for a TDirectory's key/value and registered objects. Here, we want to emit a read and must look through the key/values without attaching an object to the TDirectory.
-    if (const Internal::TDirectoryEntryPtrBase* dep = Find(name)) {
+    if (const Internal::TDirectoryEntryPtrBase* dep = Find(name.to_string())) {
       // FIXME: implement upcast!
       // FIXME: do not register read object in TDirectory
       // FIXME: implement actual read
@@ -65,20 +74,33 @@ public:
         return std::make_unique<T>(*depT->GetPointer());
       }
       // FIXME: add expected versus actual type name as c'tor args
-      throw TDirectoryTypeMismatch(name);
+      throw TDirectoryTypeMismatch(name.to_string());
     }
-    throw TDirectoryUnknownKey(name);
-    return std::shared_ptr<T>(); // never happens
+    throw TDirectoryUnknownKey(name.to_string());
+    return std::unique_ptr<T>(); // never happens
   }
 
 
   /// Write an object that is not lifetime managed by this TFileImplBase.
   template <class T>
-  void Write(const std::string& /*name*/, const T& /*obj*/) {}
+  void Write(std::string_view name, const T& obj) {
+    WriteMemoryWithType(name, &obj, TClass::GetClass(typeid(T)));
+  }
 
-  /// Write an object that is lifetime managed by this TFileImplBase.
-  void Write(const std::string& /*name*/) {}
+  /// Write an object that is already lifetime managed by this TFileImplBase.
+  void Write(std::string_view name) {
+    const Internal::TDirectoryEntryPtrBase* dep = Find(name.to_string());
+    WriteMemoryWithType(name, dep->GetObjectAddr(), dep->GetType());
+  }
 
+  /// Hand over lifetime management of an object to this TFileImplBase, and
+  /// write it.
+  template <class T>
+  void Write(std::string_view name, std::shared_ptr<T>&& obj) {
+    Add(name, obj);
+    // FIXME: use an iterator from the insertion to write instead of a second name lookup.
+    Write(name);
+  }
 };
 }
 
