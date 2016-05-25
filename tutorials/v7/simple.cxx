@@ -43,5 +43,5 @@ void simple() {
   Experimental::TFitResult fitResult = Experimental::FitTo(hist, func, {{0., 1.}});
 
   Experimental::TFilePtr file = Experimental::TFilePtr::Recreate("hist.root");
-  file->Write("TheHist", &hist);
+  file->Write("TheHist", hist);
 }
