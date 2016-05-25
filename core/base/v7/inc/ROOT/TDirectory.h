@@ -77,14 +77,14 @@ class TDirectory {
 
   template <class T>
   struct ToContentType {
-    using decaytype = std::decay_t<T>;
-    using type = std::enable_if_t<
+    using decaytype = typename std::decay<T>::type;
+    using type = typename std::enable_if<
       !std::is_function<decaytype>::value
     && !std::is_pointer<decaytype>::value
     && !std::is_member_object_pointer<decaytype>::value
     && !std::is_member_function_pointer<decaytype>::value
     && !std::is_void<decaytype>::value,
-    decaytype>;
+    decaytype>::type;
   };
   template <class T>
   using ToContentType_t = typename ToContentType<T>::type;
