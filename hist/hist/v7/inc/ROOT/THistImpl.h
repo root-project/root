@@ -60,6 +60,8 @@ class THistImplPrecisionAgnosticBase {
 public:
   /// Type of the coordinate: a DIMENSIONS-dimensional array of doubles.
   using Coord_t = std::array<double, DIMENSIONS>;
+  /// Range type.
+  using AxisIterRange_t = Hist::AxisIterRange_t<DIMENSIONS>;
 
   THistImplPrecisionAgnosticBase() = default;
   THistImplPrecisionAgnosticBase(const THistImplPrecisionAgnosticBase&) = default;
@@ -101,12 +103,12 @@ public:
   /// \param iAxis - index of the axis, must be 0 <= iAxis < DIMENSION
   virtual TAxisView GetAxis(int iAxis) const = 0;
 
-  /// Get a Hist::AxisIterRange_t for the whole histogram, possibly
-  /// restricting the range to non-overflow bins.
+  /// Get a AxisIterRange_t for the whole histogram, possibly restricting the
+  /// range to non-overflow bins.
   ///
   /// \param withOverUnder - specifies for each dimension whether under and
   /// overflow should be included in the returned range.
-  virtual Hist::AxisIterRange_t<DIMENSIONS>
+  virtual AxisIterRange_t
     GetRange(const std::array<Hist::EOverflow, DIMENSIONS>& withOverUnder) const = 0;
 
 private:
