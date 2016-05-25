@@ -6,7 +6,7 @@ Error in <TChainIndex::TChainIndex>: The indices in files of this chain aren't s
 Error in <TChainIndex::TChainIndex>: The indices in files of this chain aren't sorted.
 Error in <TChainIndex::TChainIndex>: The indices in files of this chain aren't sorted.
 Error in <TChainIndex::TChainIndex>: The indices in files of this chain aren't sorted.
-Error in <TTreePlayer::BuildIndex>: Creating a TChainIndex unsuccessfull - switching to TTreeIndex
+Error in <TTreePlayer::BuildIndex>: Creating a TChainIndex unsuccessful - switching to TTreeIndex
 Scanning using the original friend
 ************************************
 *    Row   *    evtnum * treefrien *
