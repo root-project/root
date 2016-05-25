@@ -457,7 +457,8 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
    }
 
    //*-*- 1-D distribution
-   if (fDimension == 1 && !(optpara||optcandle)) {
+///   if (fDimension == 1 && !(optpara||optcandle)) {
+   if (fDimension == 1) {
       if (fSelector->GetVar1()->IsInteger()) fHistogram->LabelsDeflate("X");
       if (draw) fHistogram->Draw(opt.Data());
 
@@ -515,7 +516,9 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
          if (draw) pm3d->Draw();
       }
    //*-*- Parallel Coordinates or Candle chart.
-   } else if (fDimension > 1 && (optpara || optcandle)) {
+///   } else if (fDimension > 1 && (optpara || optcandle)) {
+   } else if (optpara || optcandle) {
+
       if (draw) {
          TObject* para = fSelector->GetObject();
          fTree->Draw(">>enlist",selection,"entrylist",nentries,firstentry);
@@ -524,7 +527,8 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
                                      (ULong_t)para, (ULong_t)enlist));
       }
    //*-*- 5d with gl
-   } else if (fDimension == 5 && optgl5d) {
+///   } else if (fDimension == 5 && optgl5d) {
+   } else if (optgl5d) {
       gROOT->ProcessLineFast(Form("(new TGL5DDataSet((TTree *)0x%lx))->Draw(\"%s\");", (ULong_t)fTree, opt.Data()));
       gStyle->SetCanvasPreferGL(pgl);
    }
