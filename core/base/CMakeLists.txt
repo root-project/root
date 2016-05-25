@@ -6,6 +6,7 @@ ROOT_GLOB_HEADERS(Base_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/T*.h)
 
 if(root7)
     set(root7src v7/src/*.cxx)
+    ROOT_GLOB_HEADERS(Base_v7_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/ROOT/T*.h)
 endif()
 ROOT_GLOB_SOURCES(sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/src src/*.cxx ${root7src})
 
@@ -17,6 +18,7 @@ include_directories(${CMAKE_SOURCE_DIR})
 
 ROOT_GENERATE_DICTIONARY(G__Core
                          ${Base_dict_headers}
+                         ${Base_v7_dict_headers}
                          ${Clib_dict_headers}
                          ${Cont_dict_headers}
                          ${Macosx_dict_headers}
