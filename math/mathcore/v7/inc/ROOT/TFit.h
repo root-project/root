@@ -20,14 +20,14 @@
 
 #include "ROOT/RArrayView.h"
 
+#include "ROOT/THist.h"
+
 namespace ROOT {
 namespace Experimental {
 
 class TFitResult {
 
 };
-
-template <int DIMENSION, class PRECISION> class THist;
 
 template <int DIMENSION>
 class TFunction {
@@ -36,9 +36,9 @@ public:
                                   const std::array_view<double>& par)> func) {}
 };
 
-template <int DIMENSION, class PRECISION>
-TFitResult FitTo(const THist<DIMENSION, PRECISION>& hist,
-               const TFunction<DIMENSION>& func,
+template <class DATA>
+TFitResult FitTo(const THist<DATA>& hist,
+               const TFunction<THist<DATA>::GetNDim()>& func,
                std::array_view<double> paramInit){
   return TFitResult();
 }
