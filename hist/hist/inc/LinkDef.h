@@ -344,6 +344,10 @@
 #pragma link C++ class ROOT::Experimental::TH1D+;
 #pragma link C++ class ROOT::Experimental::TH2F+;
 #pragma link C++ class ROOT::Experimental::TH2D+;
+#pragma link C++ class ROOT::Experimental::Detail::THistImplBase<ROOT::Experimental::THistDataUncertainty<2,double,ROOT::Experimental::THistDataDefaultStorage> >+;
+#pragma link C++ class ROOT::Experimental::Detail::THistImplPrecisionAgnosticBase<2>+;
+#pragma link C++ class ROOT::Experimental::THistDataUncertainty<2,double,ROOT::Experimental::THistDataDefaultStorage>+;
+#pragma link C++ class ROOT::Experimental::THistDataContent<2,double,ROOT::Experimental::THistDataDefaultStorage>+;
 #endif
 
 #endif
