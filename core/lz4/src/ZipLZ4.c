@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "zlib.h"
 
 #ifdef BUILTIN_LZ4
 #include "builtin/lz4.h"
@@ -37,7 +38,7 @@ void R__zipLZ4(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, in
    int osz = *tgtsize, minosz;
    int ibufsz = *srcsize;
    unsigned level = (cxlevel ? 1 : 0);
-   unsigned long adler32 = 0;
+   unsigned long adler = 0;
    /* check source buffer size */
    if (ibufsz > 0xffffff) {
       R__error("source buffer too large");
@@ -59,7 +60,7 @@ void R__zipLZ4(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, in
    tgt[1] = '4';
    /* compress with specified level and algorithm */
    if (level > 0) {
-      uch *obuf = tgt + HDRSIZE;
+      uch *obuf = (uch*)tgt + HDRSIZE;
 #ifdef BUILTIN_LZ4
       int csz = LZ4_compress((const char *) src, (char *) obuf, ibufsz);
 #else
@@ -98,13 +99,13 @@ void R__zipLZ4(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, in
    tgt[7] = (char)((ibufsz >> 8) & 0xff);
    tgt[8] = (char)((ibufsz >> 16) & 0xff);
    /* calculate checksum */
-   adler32 = lzo_adler32(
-                lzo_adler32(0, NULL, 0), tgt + HDRSIZE, osz - 4);
+   adler = adler32(
+                adler32(0, NULL, 0), (uch*)tgt + HDRSIZE, osz - 4);
    tgt += *irep - 4;
-   tgt[0] = (char)(adler32 & 0xff);
-   tgt[1] = (char)((adler32 >> 8) & 0xff);
-   tgt[2] = (char)((adler32 >> 16) & 0xff);
-   tgt[3] = (char)((adler32 >> 24) & 0xff);
+   tgt[0] = (char)(adler & 0xff);
+   tgt[1] = (char)((adler >> 8) & 0xff);
+   tgt[2] = (char)((adler >> 16) & 0xff);
+   tgt[3] = (char)((adler >> 24) & 0xff);
 
    return;
 }
@@ -121,7 +122,7 @@ int R__unzipLZ4(uch *ibufptr, long ibufsz,
       uch *p = ibufptr + (ibufsz - 4);
       unsigned long adler = ((unsigned long) p[0]) | ((unsigned long) p[1] << 8) |
                             ((unsigned long) p[2] << 16) | ((unsigned long) p[3] << 24);
-      if (adler != lzo_adler32(lzo_adler32(0, NULL, 0), ibufptr, ibufsz - 4)) {
+      if (adler != adler32(adler32(0, NULL, 0), ibufptr, ibufsz - 4)) {
          /* corrupt compressed data */
          return -2;
       }
