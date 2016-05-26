@@ -1,3 +1,14 @@
+// @(#)root/core:$Id$
+// Author: Manuel Schiller, Paul Seyfert 26/05/16
+
+/*************************************************************************
+ * Copyright (C) 1995-2016, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,29 +24,6 @@
 #endif
 
 
-
-#if 0
-#define PKZIP_BUG_WORKAROUND    /* PKZIP 1.93a problem--live with it */
-#endif
-
-/*
-    inflate.h must supply the uch slide[WSIZE] array and the NEXTBYTE,
-    FLUSH() and memzero macros.  If the window size is not 32K, it
-    should also define WSIZE.  If INFMOD is defined, it can include
-    compiled functions to support the NEXTBYTE and/or FLUSH() macros.
-    There are defaults for NEXTBYTE and FLUSH() below for use as
-    examples of what those functions need to do.  Normally, you would
-    also want FLUSH() to compute a crc on the data.  inflate.h also
-    needs to provide these typedefs:
-
-        typedef unsigned char uch;
-        typedef unsigned short ush;
-        typedef unsigned long ulg;
-
-    This module uses the external functions malloc() and free() (and
-    probably memset() or bzero() in the memzero() macro).  Their
-    prototypes are normally found in <string.h> and <stdlib.h>.
- */
 typedef char              boolean;
 typedef unsigned char     uch;  /* code assumes unsigned bytes; these type-  */
 typedef unsigned short    ush;  /*  defs replace byte/UWORD/ULONG (which are */
