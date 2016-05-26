@@ -359,7 +359,7 @@ namespace TMVA
                 if (maxGrad > 1)
                 {
                     m_alpha /= 2;
-                    std::cout << "learning rate reduced to " << m_alpha << std::endl;
+                    std::cout << "\nlearning rate reduced to " << m_alpha << std::endl;
                     std::for_each (weights.begin (), weights.end (), [maxGrad](double& w)
                                    {
                                        w /= maxGrad;
@@ -916,21 +916,23 @@ namespace TMVA
 
                 if (hasConverged)
                     break;
+                
+                if ((int)cycleCount % 10 == 0) { 
 
-
-                TString convText = Form( "<D^2> (train/test/epoch/conv/maxConv): %.4g/%.4g/%d/%d/%d",
-                                         trainError,
-                                         testError,
-                                         (int)cycleCount,
-                                         (int)settings.convergenceCount (),
-                                         (int)settings.maxConvergenceCount ());
-                double progress = 100*(double)settings.maxConvergenceCount () /(double)settings.convergenceSteps ();
-                settings.cycle (progress, convText);
+                   TString convText = Form( "(train/test/epo/conv/maxco): %.3g/%.3g/%d/%d/%d",
+                                            trainError,
+                                            testError,
+                                            (int)cycleCount,
+                                            (int)settings.convergenceCount (),
+                                            (int)settings.maxConvergenceCount ());
+                   double progress = 100*(double)settings.maxConvergenceCount () /(double)settings.convergenceSteps ();
+                   settings.cycle (progress, convText);
+                }
             }
             while (true);
             settings.endTrainCycle (trainError);
         
-            TString convText = Form( "<D^2> (train/test/epoch): %.4g/%.4g/%d", trainError, testError, (int)cycleCount);
+            TString convText = Form( "(train/test/epoch): %.4g/%.4g/%d", trainError, testError, (int)cycleCount);
             double progress = 100*(double)settings.maxConvergenceCount() /(double)settings.convergenceSteps ();
             settings.cycle (progress, convText);
 
