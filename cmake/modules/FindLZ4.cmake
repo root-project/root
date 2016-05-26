@@ -4,6 +4,8 @@
 # LZ4_INCLUDE_DIR, where to locate LZ4 header files
 # LZ4_LIBRARIES, the libraries to link against to use LZ4
 # LZ4_FOUND.  If false, you cannot build anything that requires LZ4.
+#
+# inspired by @zzxuanyuan's pull request https://github.com/root-mirror/root/pull/81
 
 if(LZ4_CONFIG_EXECUTABLE)
   set(LZ4_FIND_QUIETLY 1)

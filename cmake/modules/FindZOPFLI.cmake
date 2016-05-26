@@ -4,6 +4,8 @@
 # ZOPFLI_INCLUDE_DIR, where to locate ZOPFLI header files
 # ZOPFLI_LIBRARIES, the libraries to link against to use ZOPFLI
 # ZOPFLI_FOUND.  If false, you cannot build anything that requires ZOPFLI.
+#
+# inspired by @zzxuanyuan's pull request https://github.com/root-mirror/root/pull/81
 
 if(ZOPFLI_CONFIG_EXECUTABLE)
   set(ZOPFLI_FIND_QUIETLY 1)

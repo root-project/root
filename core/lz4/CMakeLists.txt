@@ -1,6 +1,8 @@
 ############################################################################
 # CMakeLists.txt file for building ROOT core/lz4 package
 ############################################################################
+#
+# inspired by @zzxuanyuan's pull request https://github.com/root-mirror/root/pull/81
 
 #---Declare ZipLZ4 sources as part of libCore-------------------------------
 if(builtin_lz4)

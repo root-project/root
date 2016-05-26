@@ -4,6 +4,8 @@
 # LZO_INCLUDE_DIR, where to locate LZO header files
 # LZO_LIBRARIES, the libraries to link against to use LZO
 # LZO_FOUND.  If false, you cannot build anything that requires LZO.
+#
+# inspired by @zzxuanyuan's pull request https://github.com/root-mirror/root/pull/81
 
 if(LZO_CONFIG_EXECUTABLE)
   set(LZO_FIND_QUIETLY 1)

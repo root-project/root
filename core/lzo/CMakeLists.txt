@@ -1,6 +1,8 @@
 ############################################################################
 # CMakeLists.txt file for building ROOT core/lzo package
 ############################################################################
+#
+# inspired by @zzxuanyuan's pull request https://github.com/root-mirror/root/pull/81
 
 #---Declare ZipLZO sources as part of libCore-------------------------------
 set(sources ${CMAKE_CURRENT_SOURCE_DIR}/src/ZipLZO.c)
