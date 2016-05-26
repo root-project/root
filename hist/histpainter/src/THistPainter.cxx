@@ -1169,9 +1169,10 @@ Two representations are available.
     (see points). Of course the upper and the lower whisker may differ in length.
     In this representation the whiskers are drawn as solid lines.
 
-If the distribution is large enough and gaussian shaped, the maximum length of the
-whisker will be located at \f$ \pm 2.698 \sigma \f$ (where \f$ \sigma \f$ is the
-standard deviation. In that case 99.3% of the total distribution will be covered
+If the distribution is large enough and gaussian shaped, the maximum length of
+the whisker will be located at \f$ \pm 2.698 \sigma \f$ (when using the
+1.5*iqr-definition (w=2), where \f$ \sigma \f$ is the standard deviation
+(see picture above). In that case 99.3% of the total distribution will be covered
 by the box and the whiskers, whereas 0.7% are represented by the outliers.
 
 ##### The Anchors
