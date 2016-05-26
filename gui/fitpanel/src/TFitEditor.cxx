@@ -529,8 +529,8 @@ TFitEditor::~TFitEditor()
    delete fLayoutAdd;
    delete fLayoutConv;
 
-   if (fConvFunc) delete fConvFunc; 
-   if (fSumFunc) delete fSumFunc; 
+   if (fConvFunc) delete fConvFunc;
+   if (fSumFunc) delete fSumFunc;
 
    // Set the singleton reference to null
    fgFitDialog = 0;
@@ -572,13 +572,13 @@ void TFitEditor::CreateFunctionGroup()
 
    TGCompositeFrame *tf1 = new TGCompositeFrame(gf1, 350, 26,  kHorizontalFrame);
    TGHButtonGroup *bgr   = new TGHButtonGroup(tf1, "Operation");
-   
+
    bgr      -> SetRadioButtonExclusive();
    fNone    = new TGRadioButton(bgr, "Nop", kFP_NONE);
    fAdd     = new TGRadioButton(bgr, "Add", kFP_ADD);
    fNormAdd = new TGRadioButton(bgr, "NormAdd", kFP_NORMADD);
    fConv    = new TGRadioButton(bgr, "Conv", kFP_CONV);
-   
+
    fNone    -> SetToolTipText("No operation defined");
    fNone    -> SetState(kButtonDown, kFALSE);
    fAdd     -> SetToolTipText("Addition");
@@ -587,19 +587,19 @@ void TFitEditor::CreateFunctionGroup()
    //fNormAdd -> SetState(kButtonDown, kFALSE);
    fConv    -> SetToolTipText("Convolution");
    //fConv    -> SetState(kButtonDown, kTRUE);
-   
+
    fLayoutNone    = new TGLayoutHints(kLHintsLeft,0 ,5,3,-10);
    fLayoutAdd     = new TGLayoutHints(kLHintsLeft,10,5,3,-10);
    fLayoutNormAdd = new TGLayoutHints(kLHintsLeft,10,5,3,-10);
    fLayoutConv    = new TGLayoutHints(kLHintsLeft,10,5,3,-10);
-   
+
    bgr -> SetLayoutHints(fLayoutNone,   fNone);
    bgr -> SetLayoutHints(fLayoutAdd,    fAdd);
    bgr -> SetLayoutHints(fLayoutNormAdd,fNormAdd);
    bgr -> SetLayoutHints(fLayoutConv,   fConv);
    bgr -> Show();
    bgr -> ChangeOptions(kFitWidth | kHorizontalFrame);
-   
+
    tf1 -> AddFrame(bgr, new TGLayoutHints(kLHintsExpandX, 0, 0, 3, 0));
    gf1 -> AddFrame(tf1, new TGLayoutHints(kLHintsExpandX));
 
@@ -1130,7 +1130,7 @@ void TFitEditor::DisconnectSlots()
    fAdd         -> Disconnect("Toggled(Bool_t)");
    // fNormAdd     -> Disconnect("Toggled(Bool_t)");
    // fConv        -> Disconnect("Toggled(Bool_t)");
-   
+
    // fit options
    fAllWeights1      -> Disconnect("Toggled(Bool_t)");
    fEmptyBinsWghts1  -> Disconnect("Toggled(Bool_t)");
@@ -2098,7 +2098,7 @@ void TFitEditor::DoFit()
          // These method calls are just to set up everything for the
          // fitting. It's taken from another script.
          gROOT->ls();
-         tree->Draw(variables,cuts,"goff candle");
+         tree->Draw(variables,cuts,"goff");
 
          TTreePlayer * player = (TTreePlayer*) tree->GetPlayer();
          if ( !player ) {
@@ -2415,7 +2415,7 @@ void TFitEditor::DoFunction(Int_t selected)
    // check that selected passesd value is the correct one in the TextEntry
    R__ASSERT( selected == te->EntryId());
    //std::cout << "calling do function " << selected << "  " << te->GetTitle() << " function " << te->EntryId() << std::endl;
-   //selected = te->EntryId(); 
+   //selected = te->EntryId();
 
    bool editable = false;
    if (fNone -> GetState() == kButtonDown || fNone->GetState() == kButtonDisabled)
@@ -3614,20 +3614,20 @@ TF1* TFitEditor::GetFitFunction()
       {
          fitFunc = new TF1("PrevFitTMP",fEnteredFunc->GetText(), xmin, xmax );
          if (fNormAdd->IsOn())
-         {            
-            if (fSumFunc) delete fSumFunc; 
+         {
+            if (fSumFunc) delete fSumFunc;
             fSumFunc = new TF1NormSum(fEnteredFunc->GetText(), xmin, xmax);
             fitFunc  = new TF1("PrevFitTMP", *fSumFunc, xmin, xmax, fSumFunc->GetNpar());
-            for (int i = 0; i < fitFunc->GetNpar(); ++i) fitFunc->SetParName(i, fSumFunc->GetParName(i) ); 
+            for (int i = 0; i < fitFunc->GetNpar(); ++i) fitFunc->SetParName(i, fSumFunc->GetParName(i) );
             //std::cout << "create fit normalized function " << fSumFunc << " fitfunc " << fitFunc << std::endl;
          }
-      
+
          if (fConv -> IsOn())
          {
             if (fConvFunc) delete fConvFunc;
             fConvFunc = new TF1Convolution(fEnteredFunc->GetText());
             fitFunc  = new TF1("PrevFitTMP", *fConvFunc, xmin, xmax, fConvFunc->GetNpar());
-            for (int i = 0; i < fitFunc->GetNpar(); ++i) fitFunc->SetParName(i, fConvFunc->GetParName(i) ); 
+            for (int i = 0; i < fitFunc->GetNpar(); ++i) fitFunc->SetParName(i, fConvFunc->GetParName(i) );
             //std::cout << "create fit convolution function " << fSumFunc << " fitfunc " << fitFunc << std::endl;
          }
       }
