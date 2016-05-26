@@ -18,26 +18,35 @@
 #ifdef LZO
 extern void R__zipLZO(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep) ;
 #else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 void R__zipLZO(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep) {
   R__error("ROOT built without LZO support");
   return ;
 }
+#pragma GCC diagnostic pop
 #endif
 #ifdef LZ4
 extern void R__zipLZ4(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep) ;
 #else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 void R__zipLZ4(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep) {
   R__error("ROOT built without LZ4 support");
   return ;
 }
+#pragma GCC diagnostic pop
 #endif
 #ifdef ZOPFLI
 extern void R__zipZOPFLI(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep) ;
 #else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 void R__zipZOPFLI(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep) {
   R__error("ROOT built without ZOPFLI support");
   return ;
 }
+#pragma GCC diagnostic pop
 #endif
 void pauls_diagnose(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep) {
   static int invocations = 0;
@@ -61,10 +70,13 @@ void pauls_diagnose(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tg
 #ifdef BROTLI
 extern void R__zipBROTLI(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep) ;
 #else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 void R__zipBROTLI(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep) {
   R__error("ROOT built without BROTLI support");
   return ;
 }
+#pragma GCC diagnostic pop
 #endif
 
 #include <stdio.h>
