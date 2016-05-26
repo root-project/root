@@ -14,17 +14,7 @@
 #include <stddef.h>
 #include <string.h>
 
-/* todo: cleanup */
-#include "lzo/lzoutil.h"
-#include "lzo/lzo1.h"
-#include "lzo/lzo1a.h"
-#include "lzo/lzo1b.h"
-#include "lzo/lzo1c.h"
-#include "lzo/lzo1f.h"
-#include "lzo/lzo1x.h"
-#include "lzo/lzo1y.h"
-#include "lzo/lzo1z.h"
-#include "lzo/lzo2a.h"
+#include "zlib.h"
 
 
 #include "enc/encode.h"
@@ -56,7 +46,7 @@ int R__BrotliCompress(int cxlevel , uch *src, size_t srcsize, uch *target, size_
 {
    brotli::BrotliParams params;
    size_t compression_size = *dstsz;
-   unsigned long adler32;
+   unsigned long adler;
    unsigned int osz;
    uch *obufptr;
    int status;
@@ -93,14 +83,14 @@ int R__BrotliCompress(int cxlevel , uch *src, size_t srcsize, uch *target, size_
    (target)[7] = (char)(((srcsize) >> 8) & 0xff);
    (target)[8] = (char)(((srcsize) >> 16) & 0xff);
    /* calculate checksum */
-   adler32 = lzo_adler32(
-                lzo_adler32(0, NULL, 0), (target) + HDRSIZE, osz - 4);
+   adler = adler32(
+                adler32(0, NULL, 0), (target) + HDRSIZE, osz - 4);
    obufptr = target;
    obufptr += *dstsz - 4;
-   obufptr[0] = (char)(adler32 & 0xff);
-   obufptr[1] = (char)((adler32 >> 8) & 0xff);
-   obufptr[2] = (char)((adler32 >> 16) & 0xff);
-   obufptr[3] = (char)((adler32 >> 24) & 0xff);
+   obufptr[0] = (char)(adler & 0xff);
+   obufptr[1] = (char)((adler >> 8) & 0xff);
+   obufptr[2] = (char)((adler >> 16) & 0xff);
+   obufptr[3] = (char)((adler >> 24) & 0xff);
 
    /*printf("header write %d\t%d\n",srcsize,osz);*/
    return 0;
@@ -118,7 +108,7 @@ int R__unzipBROTLI(uch *ibufptr, long ibufsz, uch *obufptr, size_t *obufsz)
       uch *p = ibufptr + (ibufsz - 4);
       unsigned long adler = ((unsigned long) p[0]) | ((unsigned long) p[1] << 8) |
                             ((unsigned long) p[2] << 16) | ((unsigned long) p[3] << 24);
-      if (adler != lzo_adler32(lzo_adler32(0, NULL, 0), ibufptr, ibufsz - 4)) {
+      if (adler != adler32(adler32(0, NULL, 0), ibufptr, ibufsz - 4)) {
          /* corrupt compressed data */
          return -1;
       }
