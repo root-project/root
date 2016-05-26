@@ -480,16 +480,16 @@ void TSelectorDraw::Begin(TTree *tree)
       delete [] varexp;
       return;
    }
-   if (fDimension > 4 && !(optpara || optcandle || opt5d)) {
+   if (fDimension > 4 && !(optpara || optcandle || opt5d || opt.Contains("goff"))) {
       Abort("Too many variables. Use the option \"para\", \"gl5d\" or \"candle\" to display more than 4 variables.");
       delete [] varexp;
       return;
    }
-//    if (fDimension < 2 && (optpara || optcandle)) {
-//       Abort("The options \"para\" and \"candle\" require at least 2 variables.");
-//       delete [] varexp;
-//       return;
-//    }
+   if (fDimension < 2 && (optpara || optcandle)) {
+      Abort("The options \"para\" and \"candle\" require at least 2 variables.");
+      delete [] varexp;
+      return;
+   }
 
    // In case fOldHistogram exists, check dimensionality
    Int_t nsel = strlen(selection);

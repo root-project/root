@@ -457,8 +457,7 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
    }
 
    //*-*- 1-D distribution
-///   if (fDimension == 1 && !(optpara||optcandle)) {
-   if (fDimension == 1) {
+   if (fDimension == 1 && !(optpara||optcandle)) {
       if (fSelector->GetVar1()->IsInteger()) fHistogram->LabelsDeflate("X");
       if (draw) fHistogram->Draw(opt.Data());
 
@@ -516,9 +515,7 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
          if (draw) pm3d->Draw();
       }
    //*-*- Parallel Coordinates or Candle chart.
-///   } else if (fDimension > 1 && (optpara || optcandle)) {
-   } else if (optpara || optcandle) {
-
+   } else if (fDimension > 1 && (optpara || optcandle)) {
       if (draw) {
          TObject* para = fSelector->GetObject();
          fTree->Draw(">>enlist",selection,"entrylist",nentries,firstentry);
@@ -527,8 +524,7 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
                                      (ULong_t)para, (ULong_t)enlist));
       }
    //*-*- 5d with gl
-///   } else if (fDimension == 5 && optgl5d) {
-   } else if (optgl5d) {
+   } else if (fDimension == 5 && optgl5d) {
       gROOT->ProcessLineFast(Form("(new TGL5DDataSet((TTree *)0x%lx))->Draw(\"%s\");", (ULong_t)fTree, opt.Data()));
       gStyle->SetCanvasPreferGL(pgl);
    }
@@ -3049,13 +3045,13 @@ Int_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const c
    if (!opt.Contains("D")) fitOption.Nograph    = 1;  // what about 0
    // could add range and automatic normalization of functions and gradient
 
-   TString drawOpt = "goff para";
+   TString drawOpt = "goff";
    if (!fitOption.Nograph) drawOpt = "";
    Long64_t nsel = DrawSelect(varexp, selection,drawOpt, nentries, firstentry);
 
    if (!fitOption.Nograph  && GetSelectedRows() <= 0 && GetDimension() > 4) {
       Info("UnbinnedFit","Ignore option D with more than 4 variables");
-      nsel = DrawSelect(varexp, selection,"goff para", nentries, firstentry);
+      nsel = DrawSelect(varexp, selection,"goff", nentries, firstentry);
    }
 
    //if no selected entries return
