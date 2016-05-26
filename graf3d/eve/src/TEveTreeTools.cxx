@@ -106,9 +106,8 @@ Long64_t TEvePointSelector::Select(const char* selection)
    if (fConsumer)
       fConsumer->InitFill(fSubIdNum);
 
-   // 'para' option -> hack allowing arbitrary dimensions.
-   if(fTree)
-      fTree->Process(this, "goff para");
+   if (fTree)
+      fTree->Process(this, "goff");
 
    return fSelectedRows;
 }

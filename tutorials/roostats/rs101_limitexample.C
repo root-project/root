@@ -214,7 +214,7 @@ void rs101_limitexample()
   // getting the tree and drawing it -crashes (very strange....);
   // TTree* parameterScan =  RooStats::GetAsTTree("parScanTreeData","parScanTreeData",*parScanData);
   // assert(parameterScan);
-  // parameterScan->Draw("s:ratioSigEff:ratioBkgEff","","candle goff");
+  // parameterScan->Draw("s:ratioSigEff:ratioBkgEff","","goff");
   TGraph2D *gr = new TGraph2D(parScanData->numEntries());
   for (int ievt = 0; ievt < parScanData->numEntries(); ++ievt) {
      const RooArgSet * evt = parScanData->get(ievt);

@@ -116,6 +116,8 @@ Add a new mode for `TClass::SetCanSplit` (2) which indicates that this class and
 
 * Do not automatically setup read cache during TTree::Fill(). This fixes [ROOT-8031].
 * Make sure the option "PARA" in TTRe::Draw is used with at least tow variables [ROOT-8196].
+* The with `goff` option one can use as many variables as needed. There no more
+  limitation, like with the options `para`and `candle`.
 
 ### Fast Cloning
 
@@ -291,6 +293,7 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 
 
 ## Tutorials
+* New tutorial `treegetval.C` illustrating how to retrieve  `TTree` variables in arrays.
 
 
 ## Class Reference Guide
