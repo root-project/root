@@ -762,21 +762,29 @@ TH1F* TMVA::DataLoader::GetInputVariableHist(const TString& className, const TSt
   }
 
   const std::vector<Event*>& inputEvents = dsinfo.GetDataSet()->GetEventCollection();
-
+  const std::vector<Event*>* transformed = nullptr, *tmp = nullptr;
   //FIXME CalcTransformations calls PlotVariables: in my opinion here we shouldn't call that method
   std::vector<TMVA::TransformationHandler*>::iterator trfIt;
   for(trfIt=trfs.begin(); trfIt != trfs.end(); trfIt++){
-     inputEvents = (*trfIt)->CalcTransformations(inputEvents);
+    if (transformed==nullptr){
+      transformed = (*trfIt)->CalcTransformations(inputEvents);
+    } else {
+      tmp = (*trfIt)->CalcTransformations(*transformed);
+      delete transformed;
+      transformed = tmp;
+    }
   }
   for(trfIt = trfs.begin(); trfIt != trfs.end(); trfIt++) delete *trfIt;
 
 
   const Event* event;
   for(Int_t i=0;i<ds->GetNEvents();i++){
-      event = inputEvents[i];
+      event = (*transformed)[i];
       if (event->GetClass() != clsn) continue;
       h->Fill(event->GetValue(ivar));
   }
+  for(auto it = transformed->begin();it!=transformed->end();++it) delete *it;
+  delete transformed;
   return h;
 }
 
