@@ -767,24 +767,33 @@ TH1F* TMVA::DataLoader::GetInputVariableHist(const TString& className, const TSt
   std::vector<TMVA::TransformationHandler*>::iterator trfIt;
   for(trfIt=trfs.begin(); trfIt != trfs.end(); trfIt++){
     if (transformed==nullptr){
-      transformed = (*trfIt)->CalcTransformations(inputEvents);
+      transformed = (*trfIt)->CalcTransformations(inputEvents, true);
     } else {
-      tmp = (*trfIt)->CalcTransformations(*transformed);
+      tmp = (*trfIt)->CalcTransformations(*transformed, true);
+      for (auto it = transformed->begin(); it!=transformed->end(); it++) delete *it;
       delete transformed;
       transformed = tmp;
     }
   }
   for(trfIt = trfs.begin(); trfIt != trfs.end(); trfIt++) delete *trfIt;
 
-
   const Event* event;
-  for(Int_t i=0;i<ds->GetNEvents();i++){
-      event = (*transformed)[i];
-      if (event->GetClass() != clsn) continue;
-      h->Fill(event->GetValue(ivar));
+
+  if (transformed!=nullptr){
+    for(UInt_t i=0;i<transformed->size();i++){
+        event = (*transformed)[i];
+        if (event->GetClass() != clsn) continue;
+        h->Fill(event->GetValue(ivar));
+    }
+    for (auto it = transformed->begin(); it!=transformed->end(); it++) delete *it;
+    delete transformed;
+  } else {
+    for(UInt_t i=0;i<ds->GetNEvents();i++){
+        event = inputEvents[i];
+        if (event->GetClass() != clsn) continue;
+        h->Fill(event->GetValue(ivar));
+    }
   }
-  for(auto it = transformed->begin();it!=transformed->end();++it) delete *it;
-  delete transformed;
   return h;
 }
 
