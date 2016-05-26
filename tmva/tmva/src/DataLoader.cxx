@@ -733,7 +733,8 @@ std::vector<TTree*> TMVA::DataLoader::SplitSets(TTree * oldTree, int seedNum, in
 }
 
 //_______________________________________________________________________
-TH1F* TMVA::DataLoader::GetInputVariableHist(const TString& className, const TString& variableName, UInt_t numBin)
+TH1F* TMVA::DataLoader::GetInputVariableHist(const TString& className, const TString& variableName,
+  UInt_t numBin, const TString& processTrfs="")
 {
   DataSetInfo& dsinfo = DefaultDataSetInfo();
   VariableInfo* vi = nullptr;
@@ -747,14 +748,32 @@ TH1F* TMVA::DataLoader::GetInputVariableHist(const TString& className, const TSt
   }
   if (vi==nullptr) return nullptr;
 
-  TH1F* h = new TH1F("h1", vi->GetExpression() + " ("+className+")", numBin, vi->GetMin(), vi->GetMax());
+  TH1F* h = new TH1F(className, vi->GetExpression() + " ("+className+")", numBin, vi->GetMin(), vi->GetMax());
 
   UInt_t clsn  = DefaultDataSetInfo().GetClassInfo(className)->GetNumber();
   DataSet *ds  = DefaultDataSetInfo().GetDataSet();
 
+
+  std::vector<TString> trfsDef = gTools().SplitString(processTrfs,';');
+  std::vector<TMVA::TransformationHandler*> trfs;
+  for (std::vector<TString>::iterator trfsDefIt = trfsDef.begin(); trfsDefIt!=trfsDef.end(); trfsDefIt++){
+     trfs.push_back(new TMVA::TransformationHandler(dsinfo, "DataLoader"));
+     TMVA::MethodBase::CreateVariableTransforms( (*trfsDefIt), dsinfo, *(trfs.back()), Log());
+  }
+
+  const std::vector<Event*>& inputEvents = dsinfo.GetDataSet()->GetEventCollection();
+
+  //FIXME CalcTransformations calls PlotVariables: in my opinion here we shouldn't call that method
+  std::vector<TMVA::TransformationHandler*>::iterator trfIt;
+  for(trfIt=trfs.begin(); trfIt != trfs.end(); trfIt++){
+     inputEvents = (*trfIt)->CalcTransformations(inputEvents);
+  }
+  for(trfIt = trfs.begin(); trfIt != trfs.end(); trfIt++) delete *trfIt;
+
+
   const Event* event;
   for(Int_t i=0;i<ds->GetNEvents();i++){
-      event = ds->GetEvent(i);
+      event = inputEvents[i];
       if (event->GetClass() != clsn) continue;
       h->Fill(event->GetValue(ivar));
   }

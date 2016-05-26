@@ -172,7 +172,7 @@ namespace TMVA {
       void ValidationKFoldSet();
       std::vector<TTree*> SplitSets(TTree * oldTree, int seedNum, int numFolds);
 
-      TH1F* GetInputVariableHist( const TString& className, const TString& variableName, UInt_t numBin );
+      TH1F* GetInputVariableHist( const TString& className, const TString& variableName, UInt_t numBin, const TString& processTrfs);
       TH2*  GetCorrelationMatrix( const TString& className );
 
    private:

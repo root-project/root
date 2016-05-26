@@ -88,10 +88,12 @@ namespace TMVA {
    class MethodCuts;
    class MethodBoost;
    class DataSetInfo;
+   class DataLoader;
 
    class MethodBase : virtual public IMethod, public Configurable {
 
       friend class Factory;
+      friend class DataLoader;
 
    public:
 
@@ -182,7 +184,7 @@ namespace TMVA {
       // helper function to set errors to -1
       void NoErrorCalc(Double_t* const err, Double_t* const errUpper);
 
-      // signal/background classification response for all current set of data 
+      // signal/background classification response for all current set of data
       virtual std::vector<Double_t> GetMvaValues(Long64_t firstEvt = 0, Long64_t lastEvt = -1, Bool_t logProgress = false);
 
 
