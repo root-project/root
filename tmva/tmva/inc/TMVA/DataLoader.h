@@ -46,6 +46,7 @@
 #include "TMVA/DataSet.h"
 #endif
 
+#include "TH1F.h"
 #include "TH2.h"
 
 class TFile;
@@ -171,7 +172,8 @@ namespace TMVA {
       void ValidationKFoldSet();
       std::vector<TTree*> SplitSets(TTree * oldTree, int seedNum, int numFolds);
 
-      TH2* GetCorrelationMatrix(const TString& className);
+      TH1F* GetInputVariableHist( const TString& className, const TString& variableName, UInt_t numBin );
+      TH2*  GetCorrelationMatrix( const TString& className );
 
    private:
 

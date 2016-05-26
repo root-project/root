@@ -733,6 +733,35 @@ std::vector<TTree*> TMVA::DataLoader::SplitSets(TTree * oldTree, int seedNum, in
 }
 
 //_______________________________________________________________________
+TH1F* TMVA::DataLoader::GetInputVariableHist(const TString& className, const TString& variableName, UInt_t numBin)
+{
+  DataSetInfo& dsinfo = DefaultDataSetInfo();
+  VariableInfo* vi = nullptr;
+  UInt_t ivar = 0;
+  for(UInt_t i=0;i<dsinfo.GetNVariables();i++){
+    if (dsinfo.GetVariableInfo(i).GetLabel()==variableName){
+      vi   = &dsinfo.GetVariableInfo(i);
+      ivar = i;
+      break;
+    }
+  }
+  if (vi==nullptr) return nullptr;
+
+  TH1F* h = new TH1F("h1", vi->GetExpression() + " ("+className+")", numBin, vi->GetMin(), vi->GetMax());
+
+  UInt_t clsn  = DefaultDataSetInfo().GetClassInfo(className)->GetNumber();
+  DataSet *ds  = DefaultDataSetInfo().GetDataSet();
+
+  const Event* event;
+  for(Int_t i=0;i<ds->GetNEvents();i++){
+      event = ds->GetEvent(i);
+      if (event->GetClass() != clsn) continue;
+      h->Fill(event->GetValue(ivar));
+  }
+  return h;
+}
+
+//_______________________________________________________________________
 TH2* TMVA::DataLoader::GetCorrelationMatrix(const TString& className)
 {
   //returns the correlation matrix of datasets
