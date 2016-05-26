@@ -87,6 +87,12 @@ public:
     WriteMemoryWithType(name, &obj, TClass::GetClass(typeid(T)));
   }
 
+  /// Write an object that is not lifetime managed by this TFileImplBase.
+  template <class T>
+  void Write(std::string_view name, const T* obj) {
+    WriteMemoryWithType(name, obj, TClass::GetClass(typeid(T)));
+  }
+
   /// Write an object that is already lifetime managed by this TFileImplBase.
   void Write(std::string_view name) {
     const Internal::TDirectoryEntryPtrBase* dep = Find(name.to_string());
