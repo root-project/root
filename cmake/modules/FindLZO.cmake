@@ -10,8 +10,12 @@ if(LZO_CONFIG_EXECUTABLE)
 endif()
 set(LZO_FOUND 0)
 
+if(NOT LZO_DIR)
+  set(LZO_DIR $ENV{LZO_DIR})
+endif()
+
 find_path(LZO_INCLUDE_DIR lzo/lzoutil.h
-  $ENV{LZO_DIR}/include
+  ${LZO_DIR}/include
   /usr/include
   /usr/local/include
   /opt/lzo/include
@@ -19,7 +23,7 @@ find_path(LZO_INCLUDE_DIR lzo/lzoutil.h
 )
 
 find_library(LZO_LIBRARY NAMES lzo2 PATHS
-  $ENV{LZO_DIR}/lib
+  ${LZO_DIR}/lib
   /usr/local/lzo/lib
   /usr/local/lib
   /usr/lib/lzo
