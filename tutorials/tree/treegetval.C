@@ -14,6 +14,16 @@
 /// (except `para` and `candle`) are limited to four variables only. And `para`
 /// and `candle` need at least two variables.
 ///
+/// Note that by default TTree::Draw creates the arrays obtained
+/// with GetVal with a length corresponding to the parameter `fEstimate`.
+/// By default fEstimate=1000000 and can be modified
+/// via TTree::SetEstimate. To keep in memory all the results use:
+/// ~~~ {.cpp}
+///   tree->SetEstimate(-1);
+/// ~~~
+/// SetEstimate should be called if the expected number of selected rows
+/// is greater than 1000000.
+///
 /// \macro_image
 /// \macro_output
 /// \macro_code
