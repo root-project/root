@@ -39,25 +39,6 @@ void R__zipZOPFLI(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt,
   return ;
 }
 #endif
-void pauls_diagnose(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep) {
-  static int invocations = 0;
-  invocations = invocations + 1;
-  if (invocations < 5) {
-    R__error("foobar");
-    char buffer[50];
-    sprintf(buffer,"invocation count = %d",invocations);
-    R__error(buffer);
-    sprintf(buffer,"first input: %d",src[0]);
-    R__error(buffer);
-    sprintf(buffer,"size of inp: %d",*srcsize);
-    R__error(buffer);
-    sprintf(buffer,"size of tgt: %d",*tgtsize);
-    R__error(buffer);
-    sprintf(buffer,"first  oput: %d",tgt[0]);
-    R__error(buffer);
-  }
-  return;
-}
 #ifdef BROTLI
 extern void R__zipBROTLI(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep) ;
 #else
@@ -628,7 +609,6 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
      /*                      6 = zopfli (zlib) */
      /*                      7 = brotli */
 {
-  pauls_diagnose(cxlevel, srcsize, src, tgtsize, tgt, irep);
   int err;
   int method   = Z_DEFLATED;
 
@@ -658,7 +638,6 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
     // The ZOPFLI compression algorithm
     R__error("calling zopfli");
     R__zipZOPFLI(cxlevel, srcsize, src, tgtsize, tgt, irep);
-    pauls_diagnose(cxlevel, srcsize, src, tgtsize, tgt, irep);
     return;
   } else if (compressionAlgorithm == 6) {
     // The BROTLI compression algorithm
@@ -795,7 +774,6 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
 
 void R__zip(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep)
 {
-  pauls_diagnose(cxlevel, srcsize, src, tgtsize, tgt, irep);
   R__zipMultipleAlgorithm(cxlevel, srcsize, src, tgtsize, tgt, irep, 0);
 }
 
