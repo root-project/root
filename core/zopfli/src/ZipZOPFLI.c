@@ -30,66 +30,66 @@ extern void R__error(const char *msg);
 
 void R__zipZOPFLI(int cxlevel, int *srcsize, const char *src, int *tgtsize, char *tgt, int *irep)
 {
-  static ZopfliFormat zpftype;
-  static ZopfliOptions zpfopts;
-  ZopfliInitOptions(&zpfopts);
-  zpfopts.numiterations = cxlevel;
-  zpftype = ZOPFLI_FORMAT_ZLIB; /* also possible GZIP or DEFLATE */
-  uch* compression_target = 0;
-  size_t compression_size = 0;
-  unsigned long adler;
-  unsigned int osz;
-  char* obufptr;
+   static ZopfliFormat zpftype;
+   static ZopfliOptions zpfopts;
+   ZopfliInitOptions(&zpfopts);
+   zpfopts.numiterations = cxlevel;
+   zpftype = ZOPFLI_FORMAT_ZLIB; /* also possible GZIP or DEFLATE */
+   uch *compression_target = 0;
+   size_t compression_size = 0;
+   unsigned long adler;
+   unsigned int osz;
+   char *obufptr;
 
-  (tgt)[0] = 'Z';
-  (tgt)[1] = 'P';
-  if (ZOPFLI_FORMAT_ZLIB == zpftype) (tgt)[2] = 'Z';
-  if (ZOPFLI_FORMAT_GZIP == zpftype) (tgt)[2] = 'G';
-  if (ZOPFLI_FORMAT_DEFLATE == zpftype) (tgt)[2] = 'D';
-  ZopfliCompress(&zpfopts, zpftype, src, *srcsize, &compression_target, &compression_size);
-  if (compression_size > *srcsize) {
-    free(compression_target);
-    if (*tgtsize < *srcsize + HDRSIZE + 4) {
-      R__error("could not leave uncompressed");
-      *irep = 0;
-      return;
-    }
-    memmove(tgt + HDRSIZE,src,*srcsize);
-    tgt[2]=0;
-    compression_size = *srcsize;
-  } else {
-    if (*tgtsize < compression_size + HDRSIZE + 4) {
-      /* this is actually caught */
-      R__error("could not compress");
+   (tgt)[0] = 'Z';
+   (tgt)[1] = 'P';
+   if (ZOPFLI_FORMAT_ZLIB == zpftype)(tgt)[2] = 'Z';
+   if (ZOPFLI_FORMAT_GZIP == zpftype)(tgt)[2] = 'G';
+   if (ZOPFLI_FORMAT_DEFLATE == zpftype)(tgt)[2] = 'D';
+   ZopfliCompress(&zpfopts, zpftype, src, *srcsize, &compression_target, &compression_size);
+   if (compression_size > *srcsize) {
       free(compression_target);
-      *irep = 0;
-      return;
-    }
-    memmove(tgt + HDRSIZE,compression_target,compression_size);
-    free(compression_target);
-  }
+      if (*tgtsize < *srcsize + HDRSIZE + 4) {
+         R__error("could not leave uncompressed");
+         *irep = 0;
+         return;
+      }
+      memmove(tgt + HDRSIZE, src, *srcsize);
+      tgt[2] = 0;
+      compression_size = *srcsize;
+   } else {
+      if (*tgtsize < compression_size + HDRSIZE + 4) {
+         /* this is actually caught */
+         R__error("could not compress");
+         free(compression_target);
+         *irep = 0;
+         return;
+      }
+      memmove(tgt + HDRSIZE, compression_target, compression_size);
+      free(compression_target);
+   }
 
-  /* does all this make sense? */
-  *irep = compression_size + HDRSIZE + 4;
-  osz = *irep - HDRSIZE;
-  (tgt)[3] = (char)(((osz) >> 0) & 0xff);
-  (tgt)[4] = (char)(((osz) >> 8) & 0xff);
-  (tgt)[5] = (char)(((osz) >>16) & 0xff);
-  (tgt)[6] = (char)(((*srcsize) >> 0) & 0xff);
-  (tgt)[7] = (char)(((*srcsize) >> 8) & 0xff);
-  (tgt)[8] = (char)(((*srcsize) >>16) & 0xff);
-  /* calculate checksum */
-  adler = adler32(
-      adler32(0, NULL,0), (tgt) + HDRSIZE, osz - 4);
-  obufptr = tgt;
-  obufptr += *irep - 4;
-  obufptr[0] = (char) (adler & 0xff);
-  obufptr[1] = (char) ((adler >> 8) & 0xff);
-  obufptr[2] = (char) ((adler >> 16) & 0xff);
-  obufptr[3] = (char) ((adler >> 24) & 0xff);
+   /* does all this make sense? */
+   *irep = compression_size + HDRSIZE + 4;
+   osz = *irep - HDRSIZE;
+   (tgt)[3] = (char)(((osz) >> 0) & 0xff);
+   (tgt)[4] = (char)(((osz) >> 8) & 0xff);
+   (tgt)[5] = (char)(((osz) >> 16) & 0xff);
+   (tgt)[6] = (char)(((*srcsize) >> 0) & 0xff);
+   (tgt)[7] = (char)(((*srcsize) >> 8) & 0xff);
+   (tgt)[8] = (char)(((*srcsize) >> 16) & 0xff);
+   /* calculate checksum */
+   adler = adler32(
+              adler32(0, NULL, 0), (tgt) + HDRSIZE, osz - 4);
+   obufptr = tgt;
+   obufptr += *irep - 4;
+   obufptr[0] = (char)(adler & 0xff);
+   obufptr[1] = (char)((adler >> 8) & 0xff);
+   obufptr[2] = (char)((adler >> 16) & 0xff);
+   obufptr[3] = (char)((adler >> 24) & 0xff);
 
-  *irep = compression_size + HDRSIZE + 4;
-  return;
+   *irep = compression_size + HDRSIZE + 4;
+   return;
 
 }
 
