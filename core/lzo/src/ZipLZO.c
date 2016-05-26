@@ -290,7 +290,8 @@ void R__zipLZO(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, in
    /* compress with specified level and algorithm */
    if (level > 0) {
       struct R__lzo_tbl_t *algp = &R__lzo_compr_tbl[alg][level - 1];
-      uch *obuf = tgt + HDRSIZE;
+      /* http://stackoverflow.com/questions/5040920/converting-from-signed-char-to-unsigned-char-and-back-again */
+      uch *obuf = (uch*)(tgt) + HDRSIZE;
       uch *wksp = NULL;
       lzo_uint csz = 0;
       /* initialise liblzo */
@@ -311,7 +312,7 @@ void R__zipLZO(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, in
          return;
       }
       /* compress */
-      if (LZO_E_OK != algp->compress(src, ibufsz, obuf, &csz, wksp)) {
+      if (LZO_E_OK != algp->compress((uch*)src, ibufsz, obuf, &csz, wksp)) {
          /* something is wrong, try to store uncompressed below */
          alg = level = opt = 0;
          R__error("liblzo: unable to compress, trying to store as is");
@@ -319,7 +320,7 @@ void R__zipLZO(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, in
          /* compression ok, check if we need to optimize */
          if (opt && algp->optimize) {
             lzo_uint ucsz = ibufsz;
-            if (LZO_E_OK != algp->optimize(obuf, csz, src, &ucsz, NULL) ||
+            if (LZO_E_OK != algp->optimize(obuf, csz, (uch*)src, &ucsz, NULL) ||
                   ibufsz != ucsz) {
                /* something is wrong, try to store uncompressed below */
                alg = level = opt = 0;
@@ -330,7 +331,7 @@ void R__zipLZO(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, in
          /* check compression ratio */
          if (csz < ibufsz && 0 != level) {
             /* check if we need to copy from temp to final buffer */
-            if (obuf != tgt + HDRSIZE) {
+            if (obuf != (uch*)tgt + HDRSIZE) {
                /* check for sufficient space and copy */
                minosz = csz + HDRSIZE + 4;
                if (osz < minosz) {
@@ -377,7 +378,7 @@ void R__zipLZO(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, in
    tgt[8] = (char)((ibufsz >> 16) & 0xff);
    /* calculate checksum */
    adler32 = lzo_adler32(
-                lzo_adler32(0, NULL, 0), tgt + HDRSIZE, osz - 4);
+                lzo_adler32(0, NULL, 0), (uch*)tgt + HDRSIZE, osz - 4);
    tgt += *irep - 4;
    tgt[0] = (char)(adler32 & 0xff);
    tgt[1] = (char)((adler32 >> 8) & 0xff);
