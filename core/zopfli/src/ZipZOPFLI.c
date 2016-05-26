@@ -88,7 +88,6 @@ void R__zipZOPFLI(int cxlevel, int *srcsize, const char *src, int *tgtsize, char
    obufptr[2] = (char)((adler >> 16) & 0xff);
    obufptr[3] = (char)((adler >> 24) & 0xff);
 
-   *irep = compression_size + HDRSIZE + 4;
    return;
 
 }
