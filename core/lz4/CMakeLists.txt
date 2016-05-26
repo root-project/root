@@ -8,11 +8,10 @@ if(builtin_lz4)
   ROOT_ADD_C_FLAG(CMAKE_C_FLAGS -DBUILTIN_LZ4)
 else()
   set(sources ${CMAKE_CURRENT_SOURCE_DIR}/src/ZipLZ4.c)
+  include_directories(${LZ4_INCLUDE_DIR})
 endif()
 
 ROOT_ADD_C_FLAG(CMAKE_C_FLAGS -std=c11)
-
-include_directories(${LZ4_INCLUDE_DIR})
 
 ROOT_OBJECT_LIBRARY(Lz4 ${sources})
 
