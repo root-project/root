@@ -4245,6 +4245,10 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 ///                                   ntuple->GetV2(), ntuple->GetV1());
 ///     Root > gr->Draw("ap"); //draw graph in current pad
 /// ~~~
+///
+/// A more complete complete tutorial (treegetval.C) shows how to use the
+/// GetVal() method.
+///
 /// creates a TGraph object with a number of points corresponding to the
 /// number of entries selected by the expression "pz>4", the x points of the graph
 /// being the px values of the Tree and the y points the py values.
