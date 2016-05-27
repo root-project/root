@@ -167,14 +167,17 @@ public:
   /// The TDirectory will have shared ownership.
   template <class T>
   void Add(const std::string& name, const std::shared_ptr<T>& ptr) {
+    auto uptr = std::make_unique<Internal::TDirectoryEntryPtr<ToContentType_t<T>>>(ptr);
+    std::unique_ptr<Internal::TDirectoryEntryPtrBase> baseUPtr{std::move(uptr)};
+
     ContentMap_t::iterator idx = fContent.find(name);
     if (idx != fContent.end()) {
       R__LOG_HERE(ELogLevel::kWarning, "CORE")
         << "Replacing object with name " << name;
-        auto uptr = std::make_unique<Internal::TDirectoryEntryPtr<ToContentType_t<T>>>(ptr);
-      idx->second.swap(uptr);
+      idx->second.swap(baseUPtr);
+    } else {
+      fContent[name].swap(baseUPtr);
     }
-    fContent.insert({name, ptr});
   }
 
   /// Dedicated, process-wide TDirectory.
