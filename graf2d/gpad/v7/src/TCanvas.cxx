@@ -25,6 +25,17 @@ void ROOT::Experimental::TCanvas::Paint() {
   }
 }
 
+namespace ROOT {
+namespace Experimental {
+namespace Internal {
+class TCanvasSharedPtrMaker: public ROOT::Experimental::TCanvas {
+public:
+  TCanvasSharedPtrMaker() {}
+};
+}
+}
+}
+
 namespace {
 static
 std::vector<std::weak_ptr<ROOT::Experimental::TCanvas>>& GetHeldCanvases() {
@@ -38,10 +49,10 @@ ROOT::Experimental::TCanvas::GetCanvases() {
   return GetHeldCanvases();
 }
 
-std::weak_ptr<ROOT::Experimental::TCanvas> ROOT::Experimental::TCanvas::Create(
+ROOT::Experimental::TCanvasPtr ROOT::Experimental::TCanvas::Create(
    std::experimental::string_view /*name*/) {
   // TODO: name registration (TDirectory?)
-  auto pCanvas = std::shared_ptr<TCanvas>(new TCanvas());
+  auto pCanvas = std::make_shared<Internal::TCanvasSharedPtrMaker>();
   GetHeldCanvases().emplace_back(pCanvas);
-  return pCanvas;
+  return ROOT::Experimental::TCanvasPtr(pCanvas);
 }
