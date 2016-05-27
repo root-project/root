@@ -1,5 +1,3 @@
-#include "VectorProxyTest.h"
-
 //================================================================================
 void ProxyTest_Begin(TTree*)
 {
