@@ -38,7 +38,11 @@ void example() {
 void draw() {
   example();
 
-  // And the event loop (?) will call
-  for (auto&& canv: Experimental::TCanvas::GetCanvases())
-    canv->Paint();
+  // And the event loop (?) will call (yes, copying the weak_ptr)
+  for (std::weak_ptr<ROOT::Experimental::TCanvas> wcanv:
+         ROOT::Experimental::TCanvas::GetCanvases()) {
+    if (auto canv = wcanv.lock()) {
+      canv->Paint();
+    }
+  }
 }
