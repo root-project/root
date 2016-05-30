@@ -202,7 +202,7 @@ public:
 };
 
 /** \class THistDataMomentUncert
-  For now do as TH1: calculate first (xw) and second (xw^2) moment.
+  For now do as TH1: calculate first (xw) and second (x^2w) moment.
 */
 template<int DIMENSIONS, class PRECISION,
   template <class PRECISION_> class STORAGE = ROOT::Experimental::THistDataDefaultStorage>
@@ -215,7 +215,7 @@ public:
 
 private:
   std::array<Weight_t, DIMENSIONS> fMomentXW;
-  std::array<Weight_t, DIMENSIONS> fMomentXW2;
+  std::array<Weight_t, DIMENSIONS> fMomentX2W;
 
 public:
   /// Add weight to the bin at binidx; the coordinate was x.
@@ -224,7 +224,7 @@ public:
     for (int idim = 0; idim < DIMENSIONS; ++idim) {
       const PRECISION xw = x[idim] * weight;
       fMomentXW[idim] += xw ;
-      fMomentXW2[idim] += xw * weight;
+      fMomentX2W[idim] += x[idim] * xw;
     }
   }
 };
