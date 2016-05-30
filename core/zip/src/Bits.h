@@ -646,12 +646,11 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
     // The LZ4 compression algorithm
     R__zipLZ4(cxlevel, srcsize, src, tgtsize, tgt, irep);
     return;
-  } else if (compressionAlgorithm == 5) {
+  } else if (compressionAlgorithm == 6) {
     // The ZOPFLI compression algorithm
-    R__error("calling zopfli");
     R__zipZOPFLI(cxlevel, srcsize, src, tgtsize, tgt, irep);
     return;
-  } else if (compressionAlgorithm == 6) {
+  } else if (compressionAlgorithm == 7) {
     // The BROTLI compression algorithm
     R__zipBROTLI(cxlevel, srcsize, src, tgtsize, tgt, irep);
     return;
