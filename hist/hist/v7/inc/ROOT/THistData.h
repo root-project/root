@@ -73,7 +73,7 @@ private:
   Content_t fBinContent;
 
 public:
-  THistDataContent(size_t size): fBinContent(size) {}
+  THistDataContent(size_t in_size): fBinContent(in_size) {}
 
   /// Add weight to the bin content at binidx.
   void Fill(const Coord_t& /*x*/, int binidx, Weight_t weight = 1.) {
