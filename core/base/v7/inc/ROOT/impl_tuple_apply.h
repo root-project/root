@@ -22,6 +22,8 @@
 namespace std {
 // from http://en.cppreference.com/w/cpp/utility/functional/invoke
 
+inline namespace __ROOT {
+
 namespace detail {
 template <class F, class... Args>
 inline auto INVOKE(F&& f, Args&&... args) ->
@@ -76,6 +78,7 @@ constexpr decltype(auto) apply(F &&f, Tuple &&t) {
                             std::make_index_sequence < std::tuple_size <
                             std::decay_t < Tuple >> {} > {});
 }
-}
+} // namespace __ROOT
+} // namespace std
 
 #endif //ROOT7_TUPLE_APPLY_H
