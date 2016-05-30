@@ -24,12 +24,12 @@ namespace Internal {
 template<class DERIVED, class HIST, int SIZE>
 class THistBufferedFillBase {
 public:
-  using Coord_t = typename HIST::Coord_t;
+  using CoordArray_t = typename HIST::CoordArray_t;
   using Weight_t = typename HIST::Weight_t;
 
 private:
   size_t fCursor = 0;
-  std::array<Coord_t, SIZE> fXBuf;
+  std::array<CoordArray_t, SIZE> fXBuf;
   std::array<Weight_t, SIZE> fWBuf;
 
 public:
@@ -39,14 +39,14 @@ public:
   DERIVED& toDerived() { return *static_cast<DERIVED*>(this); }
   const DERIVED& toDerived() const { return *static_cast<const DERIVED*>(this); }
 
-  std::array_view<Coord_t> GetCoords() const {
-    return std::array_view<Coord_t>(fXBuf.begin(), fXBuf.begin() + fCursor);
+  std::array_view<CoordArray_t> GetCoords() const {
+    return std::array_view<CoordArray_t>(fXBuf.begin(), fXBuf.begin() + fCursor);
   }
   std::array_view<Weight_t> GetWeights() const {
     return std::array_view<Weight_t>(fWBuf.begin(), fWBuf.begin() + fCursor);
   }
 
-  void Fill(const Coord_t& x, Weight_t weight = 1.) {
+  void Fill(const CoordArray_t& x, Weight_t weight = 1.) {
     fXBuf[fCursor] = x;
     fWBuf[fCursor++] = weight;
     if (fCursor == SIZE) {
@@ -76,24 +76,24 @@ public:
      public Internal::THistBufferedFillBase<THistBufferedFill<HIST, SIZE>, HIST, SIZE> {
   public:
     using Hist_t = HIST;
-    using Coord_t = typename HIST::Coord_t;
+    using CoordArray_t = typename HIST::CoordArray_t;
     using Weight_t = typename HIST::Weight_t;
 
   private:
     HIST& fHist;
     size_t fCursor = 0;
-    std::array<Coord_t, SIZE> fXBuf;
+    std::array<CoordArray_t, SIZE> fXBuf;
     std::array<Weight_t, SIZE> fWBuf;
 
   public:
     THistBufferedFill(Hist_t& hist): fHist{hist} {}
 
-    void FillN(const std::array_view<Coord_t> xN,
+    void FillN(const std::array_view<CoordArray_t> xN,
                const std::array_view<Weight_t> weightN) {
       fHist.FillN(xN, weightN);
     }
 
-    void FillN(const std::array_view<Coord_t> xN) {
+    void FillN(const std::array_view<CoordArray_t> xN) {
       fHist.FillN(xN);
     }
 

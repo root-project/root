@@ -46,10 +46,11 @@ struct THistViewOutOfRange {
  \class THistView
  A view on a histogram, selecting a range on a subset of dimensions.
  */
-template <class DATA>
+template<int DIMENSIONS, class PRECISION,
+  template <int D_, class P_, template <class P__> class S_> class... STAT>
 class THistView {
 public:
-  using Hist_t = THist<DATA>;
+  using Hist_t = THist<DIMENSIONS, PRECISION, STAT...>;
   using AxisRange_t = typename Hist_t::AxisIterRange_t;
   using HistViewOutOfRange_t = THistViewOutOfRange<THistView>;
 

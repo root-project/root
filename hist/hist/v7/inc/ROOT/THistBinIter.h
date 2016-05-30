@@ -33,7 +33,7 @@ template <class HISTIMPL>
 class THistBinRef {
 public:
   using HistImpl_t = HISTIMPL;
-  using Coord_t = typename HISTIMPL::Coord_t;
+  using CoordArray_t = typename HISTIMPL::CoordArray_t;
   using Weight_t = typename HISTIMPL::Weight_t;
 
 private:
@@ -60,13 +60,13 @@ public:
   /// \{
   /// \name Bin operations
   /// Get the bin center as an array over all dimensions.
-  Coord_t GetBinCenter() const { return fHist->GetBinCenter(fIndex); }
+  CoordArray_t GetBinCenter() const { return fHist->GetBinCenter(fIndex); }
 
   /// Get the bin lower edge as an array over all dimensions.
-  Coord_t  GetBinFrom() const { return fHist->GetBinFrom(fIndex); }
+  CoordArray_t  GetBinFrom() const { return fHist->GetBinFrom(fIndex); }
 
   /// Get the bin upper edge as an array over all dimensions.
-  Coord_t  GetBinTo() const { return fHist->GetBinTo(fIndex); }
+  CoordArray_t  GetBinTo() const { return fHist->GetBinTo(fIndex); }
   /// \}
 };
 

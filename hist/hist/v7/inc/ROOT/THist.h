@@ -28,19 +28,24 @@ namespace ROOT {
 namespace Experimental {
 
 // fwd declare for fwd declare for friend declaration in THist...
-template<class DATA> class THist;
+template<int DIMENSIONS, class PRECISION,
+  template <int D_, class P_, template <class P__> class S_> class... STAT>
+class THist;
 
 // fwd declare for friend declaration in THist.
-template<class DATA>
-class THist<DATA>
-  HistFromImpl(std::unique_ptr<typename THist<DATA>::ImplBase_t> pHistImpl);
+template<int DIMENSIONS, class PRECISION,
+  template <int D_, class P_, template <class P__> class S_> class... STAT>
+class THist<DIMENSIONS, PRECISION, STAT...>
+  HistFromImpl(std::unique_ptr<typename THist<DIMENSIONS, PRECISION, STAT...>::ImplBase_t> pHistImpl);
 
-template<class DATA>
-void swap(THist<DATA> &a, THist<DATA> &b) noexcept;
+template<int DIMENSIONS, class PRECISION,
+  template <int D_, class P_, template <class P__> class S_> class... STAT>
+void swap(THist<DIMENSIONS, PRECISION, STAT...> &a,
+          THist<DIMENSIONS, PRECISION, STAT...> &b) noexcept;
 
 /**
  \class THist
- Histogram class for histograms with `DATA::GetNDim()` dimensions, where each
+ Histogram class for histograms with `DIMENSIONS` dimensions, where each
  bin count is stored by a value of type `DATA::Weight_t`. DATA stores statistical
  data of the entries filled into the histogram (bin content, uncertainties etc).
 
@@ -50,17 +55,17 @@ void swap(THist<DATA> &a, THist<DATA> &b) noexcept;
  http://www.wikiwand.com/en/Histogram
  */
 
-template<class DATA>
+template<int DIMENSIONS, class PRECISION,
+  template <int D_, class P_, template <class P__> class S_> class... STAT>
 class THist {
 public:
   /// The type of the `Detail::THistImplBase` of this histogram.
-  using ImplBase_t = Detail::THistImplBase<DATA>;
-  /// The coordinates type: a `GetNDim()`-dimensional `std::array` of `double`.
-  using Coord_t = typename ImplBase_t::Coord_t;
-  /// Statistics type
-  using Stat_t = DATA;
+  using ImplBase_t = Detail::THistImplBase<Detail::THistData<DIMENSIONS, PRECISION,
+    Detail::THistDataDefaultStorage, STAT...>>;
+  /// The coordinates type: a `DIMENSIONS`-dimensional `std::array` of `double`.
+  using CoordArray_t = typename ImplBase_t::CoordArray_t;
   /// The type of weights
-  using Weight_t = typename Stat_t::Weight_t;
+  using Weight_t = typename ImplBase_t::Weight_t;
   /// Pointer type to `HistImpl_t::Fill`, for faster access.
   using FillFunc_t = typename ImplBase_t::FillFunc_t;
   /// Range.
@@ -69,7 +74,7 @@ public:
   using const_iterator = Detail::THistBinIter<ImplBase_t>;
 
   /// Number of dimensions of the coordinates
-  static constexpr int GetNDim() noexcept { return DATA::GetNDim(); }
+  static constexpr int GetNDim() noexcept { return DIMENSIONS; }
 
   THist() = default;
   THist(THist&&) = default;
@@ -95,33 +100,33 @@ public:
   THist(std::string_view histTitle, std::array<TAxisConfig, THist::GetNDim()> axes);
 
   /// Constructor overload that's only available for a 1-dimensional histogram.
-  template<int ENABLEIF_NDIM = DATA::GetNDim(),
+  template<int ENABLEIF_NDIM = DIMENSIONS,
     class = typename std::enable_if<ENABLEIF_NDIM == 1>::type>
   THist(const TAxisConfig &xaxis):
     THist(std::array<TAxisConfig, 1>{{xaxis}}) { }
 
   /// Constructor overload that's only available for a 1-dimensional histogram,
   /// also passing the histogram title.
-  template<int ENABLEIF_NDIM = DATA::GetNDim(),
+  template<int ENABLEIF_NDIM = DIMENSIONS,
     class = typename std::enable_if<ENABLEIF_NDIM == 1>::type>
   THist(std::string_view histTitle, const TAxisConfig &xaxis):
     THist(histTitle, std::array<TAxisConfig, 1>{{xaxis}}) { }
 
   /// Constructor overload that's only available for a 2-dimensional histogram.
-  template<int ENABLEIF_NDIM = DATA::GetNDim(),
+  template<int ENABLEIF_NDIM = DIMENSIONS,
     class = typename std::enable_if<ENABLEIF_NDIM == 2>::type>
   THist(const TAxisConfig &xaxis, const TAxisConfig &yaxis):
     THist(std::array<TAxisConfig, 2>{{xaxis, yaxis}}) { }
 
   /// Constructor overload that's only available for a 2-dimensional histogram,
   /// also passing the histogram title.
-  template<int ENABLEIF_NDIM = DATA::GetNDim(),
+  template<int ENABLEIF_NDIM = DIMENSIONS,
     class = typename std::enable_if<ENABLEIF_NDIM == 2>::type>
   THist(std::string_view histTitle, const TAxisConfig &xaxis, const TAxisConfig &yaxis):
     THist(histTitle, std::array<TAxisConfig, 2>{{xaxis, yaxis}}) { }
 
   /// Constructor overload that's only available for a 3-dimensional histogram.
-  template<int ENABLEIF_NDIM = DATA::GetNDim(),
+  template<int ENABLEIF_NDIM = DIMENSIONS,
     class = typename std::enable_if<ENABLEIF_NDIM == 3>::type>
   THist(const TAxisConfig &xaxis, const TAxisConfig &yaxis,
         const TAxisConfig &zaxis):
@@ -129,7 +134,7 @@ public:
 
   /// Constructor overload that's only available for a 3-dimensional histogram,
   /// also passing the histogram title.
-  template<int ENABLEIF_NDIM = DATA::GetNDim(),
+  template<int ENABLEIF_NDIM = DIMENSIONS,
     class = typename std::enable_if<ENABLEIF_NDIM == 3>::type>
   THist(std::string_view histTitle,
         const TAxisConfig &xaxis, const TAxisConfig &yaxis,
@@ -141,20 +146,20 @@ public:
   ImplBase_t *GetImpl() const noexcept { return fImpl.get(); }
 
   /// Add `weight` to the bin containing coordinate `x`.
-  void Fill(const Coord_t &x, Weight_t weight = (Weight_t) 1) noexcept {
+  void Fill(const CoordArray_t &x, Weight_t weight = (Weight_t) 1) noexcept {
     (fImpl.get()->*fFillFunc)(x, weight);
   }
 
   /// For each coordinate in `xN`, add `weightN[i]` to the bin at coordinate
   /// `xN[i]`. The sizes of `xN` and `weightN` must be the same. This is more
   /// efficient than many separate calls to `Fill()`.
-  void FillN(const std::array_view <Coord_t> xN,
+  void FillN(const std::array_view <CoordArray_t> xN,
              const std::array_view <Weight_t> weightN) noexcept {
     fImpl->FillN(xN, weightN);
   }
 
   /// Convenience overload: `FillN()` with weight 1.
-  void FillN(const std::array_view <Coord_t> xN) noexcept {
+  void FillN(const std::array_view <CoordArray_t> xN) noexcept {
     fImpl->FillN(xN);
   }
 
@@ -162,12 +167,12 @@ public:
   int64_t GetEntries() const noexcept { return fImpl->GetStat().GetEntries(); }
 
   /// Get the content of the bin at `x`.
-  Weight_t GetBinContent(const Coord_t &x) const {
+  Weight_t GetBinContent(const CoordArray_t &x) const {
     return fImpl->GetBinContent(x);
   }
 
   /// Get the uncertainty on the content of the bin at `x`.
-  Weight_t GetBinUncertainty(const Coord_t &x) const {
+  Weight_t GetBinUncertainty(const CoordArray_t &x) const {
     return fImpl->GetBinUncertainty(x);
   }
 
@@ -180,24 +185,29 @@ private:
   FillFunc_t fFillFunc = nullptr;    ///<! Pinter to THistImpl::Fill() member function
 
   friend THist HistFromImpl<>(std::unique_ptr<ImplBase_t>);
-  friend void swap<>(THist<DATA> &a, THist<DATA> &b) noexcept;
+  friend void swap<>(THist<DIMENSIONS, PRECISION, STAT...> &a,
+                     THist<DIMENSIONS, PRECISION, STAT...> &b) noexcept;
 
 };
 
 /// Swap two histograms.
 ///
 /// Very efficient; swaps the `fImpl` pointers.
-template<class DATA>
-void swap(THist<DATA> &a, THist<DATA> &b) noexcept {
+template<int DIMENSIONS, class PRECISION,
+  template <int D_, class P_, template <class P__> class S_> class... STAT>
+void swap(THist<DIMENSIONS, PRECISION, STAT...> &a,
+          THist<DIMENSIONS, PRECISION, STAT...> &b) noexcept {
   std::swap(a.fImpl, b.fImpl);
   std::swap(a.fFillFunc, b.fFillFunc);
 };
 
 
 /// Adopt an external, stand-alone THistImpl. The THist will take ownership.
-template<class DATA>
-THist<DATA> HistFromImpl(std::unique_ptr<typename THist<DATA>::ImplBase_t> pHistImpl) {
-  THist<DATA> ret;
+template<int DIMENSIONS, class PRECISION,
+  template <int D_, class P_, template <class P__> class S_> class... STAT>
+THist<DIMENSIONS, PRECISION, STAT...>
+HistFromImpl(std::unique_ptr<typename THist<DIMENSIONS, PRECISION, STAT...>::ImplBase_t> pHistImpl) {
+  THist<DIMENSIONS, PRECISION, STAT...> ret;
   ret.fFillFunc = pHistImpl->GetFillFunc();
   std::swap(ret.fImpl, pHistImpl);
   return ret;
@@ -274,17 +284,21 @@ struct HistImplGen_t<NDIM, NDIM, DATA, PROCESSEDAXISCONFIG...> {
 } // namespace Internal
 
 
-template<class DATA>
-THist<DATA>::THist(std::array<TAxisConfig, THist::GetNDim()> axes):
-  fImpl{std::move(Internal::HistImplGen_t<THist::GetNDim(), 0, DATA>()("", axes))},
+template<int DIMENSIONS, class PRECISION,
+  template <int D_, class P_, template <class P__> class S_> class... STAT>
+THist<DIMENSIONS, PRECISION, STAT...>::THist(std::array<TAxisConfig, THist::GetNDim()> axes):
+  fImpl{std::move(Internal::HistImplGen_t<THist::GetNDim(), 0,
+    Detail::THistData<DIMENSIONS, PRECISION, Detail::THistDataDefaultStorage, STAT...>>()("", axes))},
   fFillFunc{} {
   fFillFunc = fImpl->GetFillFunc();
 }
 
-template<class DATA>
-THist<DATA>::THist(std::string_view title,
+template<int DIMENSIONS, class PRECISION,
+  template <int D_, class P_, template <class P__> class S_> class... STAT>
+THist<DIMENSIONS, PRECISION, STAT...>::THist(std::string_view title,
                    std::array<TAxisConfig, THist::GetNDim()> axes):
-  fImpl{std::move(Internal::HistImplGen_t<THist::GetNDim(), 0, DATA>()(title, axes))},
+  fImpl{std::move(Internal::HistImplGen_t<THist::GetNDim(), 0,
+    Detail::THistData<DIMENSIONS, PRECISION, Detail::THistDataDefaultStorage, STAT...>>()(title, axes))},
   fFillFunc{} {
   fFillFunc = fImpl->GetFillFunc();
 }
@@ -294,36 +308,39 @@ THist<DATA>::THist(std::string_view title,
 
 // Keep them as typedefs, to make sure old-style documentation tools can
 // understand them.
-typedef THist<THistDataUncertainty<1, double>> TH1D;
-typedef THist<THistDataUncertainty<1, float>> TH1F;
-typedef THist<THistDataContent<1, char>> TH1C;
-typedef THist<THistDataContent<1, int>> TH1I;
-typedef THist<THistDataContent<1, int64_t>> TH1LL;
+typedef THist<1, double, THistStatContent, THistStatUncertainty> TH1D;
+typedef THist<1, float, THistStatContent, THistStatUncertainty> TH1F;
+typedef THist<1, char, THistStatContent> TH1C;
+typedef THist<1, int, THistStatContent> TH1I;
+typedef THist<1, int64_t, THistStatContent> TH1LL;
 
-typedef THist<THistDataUncertainty<2, double>> TH2D;
-typedef THist<THistDataUncertainty<2, float>> TH2F;
-typedef THist<THistDataContent<2, char>> TH2C;
-typedef THist<THistDataContent<2, int>> TH2I;
-typedef THist<THistDataContent<2, int64_t>> TH2LL;
+typedef THist<2, double, THistStatContent, THistStatUncertainty> TH2D;
+typedef THist<2, float, THistStatContent, THistStatUncertainty> TH2F;
+typedef THist<2, char, THistStatContent> TH2C;
+typedef THist<2, int, THistStatContent> TH2I;
+typedef THist<2, int64_t, THistStatContent> TH2LL;
 
-typedef THist<THistDataUncertainty<3, double>> TH3D;
-typedef THist<THistDataUncertainty<3, float>> TH3F;
-typedef THist<THistDataContent<3, char>> TH3C;
-typedef THist<THistDataContent<3, int>> TH3I;
-typedef THist<THistDataContent<3, int64_t>> TH3LL;
+typedef THist<3, double, THistStatContent, THistStatUncertainty> TH3D;
+typedef THist<3, float, THistStatContent, THistStatUncertainty> TH3F;
+typedef THist<3, char, THistStatContent> TH3C;
+typedef THist<3, int, THistStatContent> TH3I;
+typedef THist<3, int64_t, THistStatContent> TH3LL;
 ///\}
 
 
 /// Add two histograms. This is the generic, inefficient version for now; it
 /// assumes no matching axes.
-template<class DATAA, class DATAB,
-  class = typename std::enable_if<"Cannot add histograms with different number of dimensions!"
-                                  && DATAA::GetNDim() == DATAB::GetNDim()>::type>
-void Add(THist<DATAA> &to,THist<DATAB> &from) {
+template<int DIMENSIONS,
+  class PRECISION_TO, class PRECISION_FROM,
+  template <int D_, class P_, template <class P__> class S_> class... STAT_TO,
+  template <int D_, class P_, template <class P__> class S_> class... STAT_FROM>
+void Add(THist<DIMENSIONS, PRECISION_TO, STAT_TO...> &to,
+         THist<DIMENSIONS, PRECISION_FROM, STAT_FROM...> &from) {
   auto toImpl = to.GetImpl();
   auto fillFuncTo = toImpl->GetFillFunc();
-  using FromCoord_t = typename THist<DATAB>::Coord_t;
-  using FromWeight_t = typename THist<DATAB>::Weight_t;
+  using HistFrom_t = THist<DIMENSIONS, PRECISION_FROM, STAT_FROM...>;
+  using FromCoord_t = typename HistFrom_t::CoordArray_t;
+  using FromWeight_t = typename HistFrom_t::Weight_t;
   auto add = [fillFuncTo, toImpl](const FromCoord_t& x, FromWeight_t c) {
     (toImpl->*fillFuncTo)(x, c);
     // TODO: something nice with the uncertainty - depending on whether `to` cares
@@ -333,19 +350,21 @@ void Add(THist<DATAA> &to,THist<DATAB> &from) {
 
 
 /// Interface to graphics taking a unique_ptr<THist>.
-template<class DATA>
+template<int DIMENSIONS, class PRECISION,
+  template <int D_, class P_, template <class P__> class S_> class... STAT>
 std::unique_ptr <Internal::TDrawable>
-GetDrawable(std::shared_ptr<THist<DATA>> hist,
-            THistDrawOptions<DATA::GetNDim()> opts = {}) {
-  return std::make_unique<Internal::THistDrawable<DATA>>(hist, opts);
+GetDrawable(std::shared_ptr<THist<DIMENSIONS, PRECISION, STAT...>> hist,
+            THistDrawOptions<DIMENSIONS> opts = {}) {
+  return std::make_unique<Internal::THistDrawable<DIMENSIONS, PRECISION, STAT...>>(hist, opts);
 }
 
 /// Interface to graphics taking a shared_ptr<THist>.
-template<class DATA>
+template<int DIMENSIONS, class PRECISION,
+  template <int D_, class P_, template <class P__> class S_> class... STAT>
 std::unique_ptr <Internal::TDrawable>
-GetDrawable(std::unique_ptr<THist<DATA>> hist,
-            THistDrawOptions<DATA::GetNDim()> opts = {}) {
-  return std::make_unique<Internal::THistDrawable<DATA>>(hist, opts);
+GetDrawable(std::unique_ptr<THist<DIMENSIONS, PRECISION, STAT...>> hist,
+            THistDrawOptions<DIMENSIONS> opts = {}) {
+  return std::make_unique<Internal::THistDrawable<DIMENSIONS, PRECISION, STAT...>>(hist, opts);
 }
 
 } // namespace Experimental
