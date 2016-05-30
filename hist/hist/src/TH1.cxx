@@ -2303,6 +2303,7 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
 /// The chisquare is computed by weighting each histogram point by the bin error
 /// By default the full range of the histogram is used.
 /// Use option "R" for restricting the chisquare calculation to the given range of the function
+/// Use option "L" for using the chisquare based on the poisson likelihood (Baker-Cousins Chisquare)
 
 Double_t TH1::Chisquare(TF1 * func, Option_t *option) const
 {
@@ -2313,8 +2314,9 @@ Double_t TH1::Chisquare(TF1 * func, Option_t *option) const
 
    TString opt(option); opt.ToUpper();
    bool useRange = opt.Contains("R");
+   bool usePL = opt.Contains("L"); 
 
-   return ROOT::Fit::Chisquare(*this, *func, useRange);
+   return ROOT::Fit::Chisquare(*this, *func, useRange, usePL);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
