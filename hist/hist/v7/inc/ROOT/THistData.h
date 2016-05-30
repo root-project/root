@@ -63,6 +63,12 @@ private:
   /// Number of calls to Fill().
   int64_t fEntries = 0;
 
+  /// Sum of weights.
+  PRECISION fSumWeights = 0;
+
+  /// Sum of (weights^2).
+  PRECISION fSumWeights2 = 0;
+
   /// Bin content.
   Content_t fBinContent;
 
@@ -72,6 +78,8 @@ public:
   /// Add weight to the bin content at binidx.
   void Fill(const Coord_t& /*x*/, int binidx, Weight_t weight = 1.) {
     fBinContent[binidx] += weight;
+    fSumWeights += weight;
+    fSumWeights2 += weight * weight;
     ++fEntries;
   }
 
@@ -81,6 +89,12 @@ public:
   /// Get the number of entries filled into the histogram - i.e. the number of
   /// calls to Fill().
   int64_t GetEntries() const { return fEntries; }
+
+  /// Get the sum of weights.
+  Weight_t GetSumOfWeights() const { return fSumWeights; }
+
+  /// Get the sum of the squares of weights.
+  Weight_t GetSumOfWeights2() const { return fSumWeights2; }
 
   /// Get the number of bins.
   size_t size() const noexcept { return fBinContent.size(); }
