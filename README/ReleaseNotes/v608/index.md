@@ -210,6 +210,9 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 * New optional parameter "option" in TPad::BuildLegend to set the TLegend option (Georg Troska).
 * TCandle: a new candle plot painter class. It is now used in THistPainter and THStack
   to paint candle plots (Georg Troska).
+* Fix two issues with the fill patterns in `TTextDump` (reported [here](https://sft.its.cern.ch/jira/browse/ROOT-8206)):
+    - The pattern number 3 was not implemented.
+    - Filled area drawn with pattern where surrounded by a solid line.
 
 ## 3D Graphics Libraries
 
