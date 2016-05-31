@@ -85,6 +85,8 @@ namespace TMVA {
       DataSetInfo& AddDataSet( DataSetInfo& );
       DataSetInfo& AddDataSet( const TString&  );
 
+      DataLoader* VarTransform(TString trafoDefinition);
+
       // special case: signal/background
 
       // Data input related
@@ -177,6 +179,7 @@ namespace TMVA {
       DataInputHandler&        DataInput() { return *fDataInputHandler; }
       DataSetInfo&             DefaultDataSetInfo();
       void                     SetInputTreesFromEventAssignTrees();
+      void                     CopyDataLoader(DataLoader* des, DataLoader* src);
 
 
    private:
