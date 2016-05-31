@@ -213,6 +213,8 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 * Fix two issues with the fill patterns in `TTextDump` (reported [here](https://sft.its.cern.ch/jira/browse/ROOT-8206)):
     - The pattern number 3 was not implemented.
     - Filled area drawn with pattern where surrounded by a solid line.
+* `TColor::GetFreeColorIndex()` allows to make sure the new color is created with an
+  unused color index:
 
 ## 3D Graphics Libraries
 
