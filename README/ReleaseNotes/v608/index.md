@@ -214,7 +214,7 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
     - The pattern number 3 was not implemented.
     - Filled area drawn with pattern where surrounded by a solid line.
 * `TColor::GetFreeColorIndex()` allows to make sure the new color is created with an
-  unused color index:
+  unused color index.
 
 ## 3D Graphics Libraries
 
