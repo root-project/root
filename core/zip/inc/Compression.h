@@ -12,7 +12,9 @@
 #ifndef ROOT_Compression
 #define ROOT_Compression
 
+#if defined(__cplusplus)
 namespace ROOT {
+#endif
 
    // The global settings depend on a global variable named
    // R__ZipMode which can be modified by a global function
@@ -39,8 +41,10 @@ namespace ROOT {
                                 kUndefinedCompressionAlgorithm
    };
 
+#if defined(__cplusplus)
    int CompressionSettings(ECompressionAlgorithm algorithm,
                            int compressionLevel);
 }
+#endif
 
 #endif
