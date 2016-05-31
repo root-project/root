@@ -1181,6 +1181,7 @@ namespace TMVA
 
             // --------------------- prepare layer data for input layer ----------------------------
             layerPatternData.push_back (std::vector<LayerData>());
+            layerPatternData.back () . reserve(batch.size());
             for (const Pattern& _pattern : batch)
             {
                 std::vector<LayerData>& layerData = layerPatternData.back ();
@@ -1205,6 +1206,7 @@ namespace TMVA
             for (auto& layer: _layers)
             {
                 layerPatternData.push_back (std::vector<LayerData>());
+                layerPatternData.back () . reserve(batch.size());
                 // for each pattern, prepare a layerData
                 for (const Pattern& _pattern : batch)
                 {
