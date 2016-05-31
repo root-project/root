@@ -13,6 +13,7 @@
  */
 
 #include "zlib.h"
+#include "Compression.h"
 #include "RConfigure.h"
 #include "ZipLZMA.h"
 
@@ -575,12 +576,12 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
     return;
   }
 
-  if (compressionAlgorithm == 0) {
+  if (compressionAlgorithm == ROOT::kUseGlobalSetting) {
     compressionAlgorithm = R__ZipMode;
   }
 
   // The LZMA compression algorithm from the XZ package
-  if (compressionAlgorithm == 2) {
+  if (compressionAlgorithm == ROOT::kLZMA) {
     R__zipLZMA(cxlevel, srcsize, src, tgtsize, tgt, irep);
     return;
   }
@@ -588,7 +589,7 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
   // The very old algorithm for backward compatibility
   // 0 for selecting with R__ZipMode in a backward compatible way
   // 3 for selecting in other cases
-  if (compressionAlgorithm == 3 || compressionAlgorithm == 0) {
+  if (compressionAlgorithm == ROOT::kOldCompressionAlgo || compressionAlgorithm == ROOT::kUseGlobalSetting) {
     bits_internal_state state;
     ush att      = (ush)UNKNOWN;
     ush flags    = 0;
