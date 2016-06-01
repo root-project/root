@@ -344,10 +344,13 @@
 #pragma link C++ class ROOT::Experimental::TH1D+;
 #pragma link C++ class ROOT::Experimental::TH2F+;
 #pragma link C++ class ROOT::Experimental::TH2D+;
-#pragma link C++ class ROOT::Experimental::Detail::THistImplBase<ROOT::Experimental::THistDataUncertainty<2,double,ROOT::Experimental::THistDataDefaultStorage> >+;
 #pragma link C++ class ROOT::Experimental::Detail::THistImplPrecisionAgnosticBase<2>+;
-#pragma link C++ class ROOT::Experimental::THistDataUncertainty<2,double,ROOT::Experimental::THistDataDefaultStorage>+;
-#pragma link C++ class ROOT::Experimental::THistDataContent<2,double,ROOT::Experimental::THistDataDefaultStorage>+;
+#pragma link C++ class ROOT::Experimental::THistStatContent<2,double,ROOT::Experimental::Detail::THistDataDefaultStorage>+;
+#pragma link C++ class ROOT::Experimental::THistStatUncertainty<2,double,ROOT::Experimental::Detail::THistDataDefaultStorage>+;
+#pragma link C++ class ROOT::Experimental::Detail::THistImplBase<ROOT::Experimental::Detail::THistData<2,double,ROOT::Experimental::Detail::THistDataDefaultStorage,ROOT::Experimental::THistStatContent,ROOT::Experimental::THistStatUncertainty> >+;
+#pragma link C++ class ROOT::Experimental::Detail::THistData<2,double,ROOT::Experimental::Detail::THistDataDefaultStorage,ROOT::Experimental::THistStatContent,ROOT::Experimental::THistStatUncertainty>+;
+// Needed for simple.cxx but rootcling swallows last template param, triggering an assert!
+// #pragma link C++ class ROOT::Experimental::Detail::THistImpl<ROOT::Experimental::Detail::THistData<2, double, ROOT::Experimental::Detail::THistDataDefaultStorage, ROOT::Experimental::THistStatContent, ROOT::Experimental::THistStatUncertainty>, ROOT::Experimental::TAxisEquidistant, ROOT::Experimental::TAxisIrregular>+;
 #endif
 
 #endif
