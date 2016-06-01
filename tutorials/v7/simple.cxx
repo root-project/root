@@ -16,8 +16,6 @@
 #include "ROOT/TFit.h"
 #include "ROOT/TFile.h"
 
-R__LOAD_LIBRARY(libRIO)
-
 void simple() {
   using namespace ROOT;
 
