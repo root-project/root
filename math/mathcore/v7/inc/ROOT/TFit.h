@@ -36,9 +36,10 @@ public:
                                   const std::array_view<double>& par)> func) {}
 };
 
-template <class DATA>
-TFitResult FitTo(const THist<DATA>& hist,
-               const TFunction<THist<DATA>::GetNDim()>& func,
+template<int DIMENSIONS, class PRECISION,
+  template <int D_, class P_, template <class P__> class S_> class... STAT>
+TFitResult FitTo(const THist<DIMENSIONS, PRECISION, STAT...>& hist,
+               const TFunction<DIMENSIONS>& func,
                std::array_view<double> paramInit){
   return TFitResult();
 }
