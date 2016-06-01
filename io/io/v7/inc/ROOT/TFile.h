@@ -45,8 +45,7 @@ class TFile: public TDirectory {
 private:
   std::unique_ptr<Internal::TFileStorageInterface> fStorage; ///< Storage backend.
 
-  TFile(std::unique_ptr<Internal::TFileStorageInterface>&& storage):
-    fStorage(std::move(storage)) {}
+  TFile(std::unique_ptr<Internal::TFileStorageInterface>&& storage);
 
   /// Serialize the object at address, using the object's TClass.
   //FIXME: what about `cl` "pointing" to a base class?
@@ -121,7 +120,7 @@ public:
   /// Must not call Write() of all attached objects:
   /// some might not be needed to be written or writing might be aborted due to
   /// an exception; require explicit Write().
-  ~TFile() = default;
+  ~TFile();
 
   /// Save all objects associated with this directory (including file header) to
   /// the storage medium.

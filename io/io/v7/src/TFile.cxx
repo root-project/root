@@ -198,6 +198,15 @@ std::string ROOT::Experimental::TFile::GetCacheDir() {
   return ::TFile::GetCacheFileDir();
 }
 
+// Implement outlined, to hide implementation of TFileStorageInterface from
+// header.
+ROOT::Experimental::TFile::TFile(std::unique_ptr<ROOT::Experimental::Internal::TFileStorageInterface>&& storage):
+fStorage(std::move(storage)) {}
+
+// Implement outlined, to hide implementation of TFileStorageInterface from
+// header.
+ROOT::Experimental::TFile::~TFile() = default;
+
 void ROOT::Experimental::TFile::Flush() { fStorage->Flush(); }
 void ROOT::Experimental::TFile::Close() { fStorage->Close(); }
 void ROOT::Experimental::TFile::WriteMemoryWithType(std::string_view name,
