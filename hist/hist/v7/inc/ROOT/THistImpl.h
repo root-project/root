@@ -148,6 +148,7 @@ private:
   Stat_t fStatistics;
 
 public:
+  THistImplBase() = default;
   THistImplBase(size_t numBins): fStatistics(numBins) {}
   THistImplBase(std::string_view title, size_t numBins):
     THistImplPrecisionAgnosticBase<DATA::GetNDim()>(title), fStatistics(numBins) {}

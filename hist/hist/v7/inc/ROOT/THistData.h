@@ -82,6 +82,7 @@ private:
   Content_t fBinContent;
 
 public:
+  THistStatContent() = default;
   THistStatContent(size_t in_size): fBinContent(in_size) {}
 
   /// Add weight to the bin content at binidx.
@@ -143,6 +144,7 @@ private:
   PRECISION fSumWeights = 0;
 
 public:
+  THistStatTotalSumOfWeights() = default;
   THistStatTotalSumOfWeights(size_t) {}
 
   /// Add weight to the bin content at binidx.
@@ -185,6 +187,7 @@ private:
   PRECISION fSumWeights2 = 0;
 
 public:
+  THistStatTotalSumOfSquaredWeights() = default;
   THistStatTotalSumOfSquaredWeights(size_t) {}
 
   /// Add weight to the bin content at binidx.
@@ -253,6 +256,7 @@ private:
   Content_t fSumWeightsSquared; ///< Sum of squared weights
 
 public:
+  THistStatUncertainty() = default;
   THistStatUncertainty(size_t size): fSumWeightsSquared(size) {}
 
   /// Add weight to the bin at binidx; the coordinate was x.
@@ -312,6 +316,7 @@ private:
   std::array<Weight_t, DIMENSIONS> fMomentX2W;
 
 public:
+  THistDataMomentUncert() = default;
   THistDataMomentUncert(size_t) {}
 
   /// Add weight to the bin at binidx; the coordinate was x.
@@ -349,6 +354,7 @@ public:
   using ConstBinStat_t = TBinStat;
   using BinStat_t =  TBinStat;
 
+  THistStatRuntime() = default;
   THistStatRuntime(size_t) {}
   virtual ~THistStatRuntime() = default;
 
@@ -430,6 +436,8 @@ public:
   /// The type of a modifying view on a bin.
   using HistBinStat_t
     = THistBinStat<DIMENSIONS, PRECISION, STORAGE, STAT...>;
+
+  THistData() = default;
 
 
   /// Constructor providing the number of bins (incl under, overflow) to the
