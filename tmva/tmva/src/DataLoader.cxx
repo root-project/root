@@ -230,7 +230,7 @@ TMVA::DataLoader* TMVA::DataLoader::VarTransform(TString trafoDefinition)
       for (UInt_t ivar=0; ivar<nvars; ivar++) {
          Double_t variance = x0(ivar)/sumOfWeights;
          Log() << kINFO << "Variable " << vars[ivar].GetExpression() <<" variance = " << variance << Endl;      
-         if (variance >= threshold)
+         if (variance > threshold)
             transformedloader->AddVariable(vars[ivar].GetExpression(), vars[ivar].GetVarType());
       }   
       CopyDataLoader(transformedloader,this);
