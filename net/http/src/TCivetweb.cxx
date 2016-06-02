@@ -159,6 +159,28 @@ static int begin_request_handler(struct mg_connection *conn, void*)
    return 1;
 }
 
+int websocket_connect_handler(const struct mg_connection *conn, void*)
+{
+   printf("Request websocket\n");
+   return 0;
+}
+
+void websocket_ready_handler(struct mg_connection *conn, void*)
+{
+   printf("Websocket connection established\n");
+}
+
+int websocket_data_handler(struct mg_connection *conn, int bits, char *data, size_t len, void*)
+{
+   printf("Get data from web socket len bits %d %d\n", bits, (int)len);
+   return 1;
+}
+
+void websocket_close_handler(const struct mg_connection *conn, void*)
+{
+   printf("Close websocket connection\n");
+}
+
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -317,6 +339,14 @@ Bool_t TCivetweb::Create(const char *args)
    if (fCtx == 0) return kFALSE;
 
    mg_set_request_handler((struct mg_context *) fCtx, "/", begin_request_handler, 0);
+
+   mg_set_websocket_handler((struct mg_context *) fCtx,
+                            "**root.websocket$",
+                             websocket_connect_handler,
+                             websocket_ready_handler,
+                             websocket_data_handler,
+                             websocket_close_handler,
+                             0);
 
    return kTRUE;
 }
