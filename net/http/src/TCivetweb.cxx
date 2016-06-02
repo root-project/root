@@ -11,6 +11,8 @@
 #include "THttpServer.h"
 #include "TUrl.h"
 
+#include <string>
+
 static int log_message_handler(const struct mg_connection *conn, const char *message)
 {
    const struct mg_context *ctx = mg_get_context(conn);
@@ -172,7 +174,15 @@ void websocket_ready_handler(struct mg_connection *conn, void*)
 
 int websocket_data_handler(struct mg_connection *conn, int bits, char *data, size_t len, void*)
 {
-   printf("Get data from web socket len bits %d %d\n", bits, (int)len);
+   if ((bits & 0xF) == 1)
+      printf("Get string len %d %s\n", (int) len, std::string(data, len).c_str());
+   else
+      printf("Get data from web socket len bits %d %d\n", bits, (int) len);
+
+   const char* reply = "Send reply from server";
+
+   mg_websocket_write(conn, WEBSOCKET_OPCODE_TEXT, reply, strlen(reply));
+
    return 1;
 }
 
