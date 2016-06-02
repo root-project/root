@@ -33,7 +33,7 @@ class TFileStorageInterface;
 class TFileSharedPtrCtor;
 }
 
-/** \class TFile
+/** \class ROOT::Experimental::TFile
  A ROOT file.
 
  A ROOT file is an object store: it can serialize any

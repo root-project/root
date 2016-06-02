@@ -1,4 +1,4 @@
-/// \file TCanvas.h
+/// \file ROOT/TCanvas.h
 /// \ingroup Gpad ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-07-08
@@ -30,7 +30,7 @@ class TCanvasSharedPtrMaker;
 
 class TCanvasPtr;
 
-/** \class TCanvas
+/** \class ROOT::Experimental::TCanvas
   Graphic container for `TDrawable`-s.
   Access is through TCanvasPtr.
   */
