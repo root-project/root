@@ -80,3 +80,5 @@ distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(HTTPO) $(HTTPDO) : CXXFLAGS += $(HTTPCXXFLAGS)
+
+$(CIVETWEBO) : CFLAGS += -DUSE_WEBSOCKET
