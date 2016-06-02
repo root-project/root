@@ -663,6 +663,28 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
       arg->SetJson();
    } else
 
+   if (filename == "root.websocket") {
+      // handling of web socket
+
+      if (strcmp(arg->GetMethod(),"WS_CONNECT")==0) {
+         // just check if connection allowed
+      } else
+      if (strcmp(arg->GetMethod(),"WS_READY")==0) {
+         // connection is established
+      } else
+      if (strcmp(arg->GetMethod(),"WS_DATA")==0) {
+         // process received data
+      } else
+      if (strcmp(arg->GetMethod(),"WS_CLOSE")==0) {
+         // connection is closed, one can remove handle
+      } else {
+         arg->Set404();
+      }
+
+      return;
+
+   } else
+
    if (fSniffer->Produce(arg->fPathName.Data(), filename.Data(), arg->fQuery.Data(), bindata, bindatalen, arg->fContent)) {
       if (bindata != 0) arg->SetBinData(bindata, bindatalen);
 
