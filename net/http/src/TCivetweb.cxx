@@ -27,14 +27,14 @@ static int log_message_handler(const struct mg_connection *conn, const char *mes
 }
 
 
-static int begin_request_handler(struct mg_connection *conn)
+static int begin_request_handler(struct mg_connection *conn, void*)
 {
-   TCivetweb *engine = (TCivetweb *) mg_get_request_info(conn)->user_data;
+   const struct mg_request_info *request_info = mg_get_request_info(conn);
+
+   TCivetweb *engine = (TCivetweb *) request_info->user_data;
    if (engine == 0) return 0;
    THttpServer *serv = engine->GetServer();
    if (serv == 0) return 0;
-
-   const struct mg_request_info *request_info = mg_get_request_info(conn);
 
    THttpCallArg arg;
 
@@ -241,7 +241,7 @@ Bool_t TCivetweb::Create(const char *args)
 
    fCallbacks = malloc(sizeof(struct mg_callbacks));
    memset(fCallbacks, 0, sizeof(struct mg_callbacks));
-   ((struct mg_callbacks *) fCallbacks)->begin_request = begin_request_handler;
+   //((struct mg_callbacks *) fCallbacks)->begin_request = begin_request_handler;
    ((struct mg_callbacks *) fCallbacks)->log_message = log_message_handler;
    TString sport = "8080";
    TString num_threads = "5";
@@ -314,6 +314,10 @@ Bool_t TCivetweb::Create(const char *args)
    // Start the web server.
    fCtx = mg_start((struct mg_callbacks *) fCallbacks, this, options);
 
-   return fCtx != 0;
+   if (fCtx == 0) return kFALSE;
+
+   mg_set_request_handler((struct mg_context *) fCtx, "/", begin_request_handler, 0);
+
+   return kTRUE;
 }
 
