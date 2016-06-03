@@ -386,9 +386,24 @@ template <int DIMENSIONS, class PRECISION,
   template <class P_> class STORAGE,
   template <int D_, class P_, template <class P__> class S_> class... STAT>
 class TConstHistBinStat: public STAT<DIMENSIONS, PRECISION, STORAGE>::ConstBinStat_t... {
+private:
+  template <class T>
+  static auto HaveGetUncertainty(T* This) -> decltype(This->GetUncertainty()) { return 0; }
+  template <class T>
+  static int HaveGetUncertainty(...) { return 0; }
+  static constexpr const bool fgHaveGetUncertainty = sizeof(HaveGetUncertainty<TConstHistBinStat>(nullptr)) == sizeof(char);
+
 public:
   TConstHistBinStat(const THistData<DIMENSIONS, PRECISION, STORAGE, STAT...>& data, int index):
     STAT<DIMENSIONS, PRECISION, STORAGE>::ConstBinStat_t(data, index)... {}
+
+  /// Calculate the bin content's uncertainty for the given bin, using Poisson
+  /// statistics on the absolute bin content. Only available if no base provides
+  /// this functionality. Requires GetContent().
+  template <class T = typename std::enable_if<!fgHaveGetUncertainty>::type>
+  PRECISION GetUncertainty() const {
+    return std::sqrt(std::fabs(this->GetContent()));
+  }
 };
 
 /** \class THistBinStat
@@ -398,9 +413,24 @@ template <int DIMENSIONS, class PRECISION,
   template <class PRECISION_> class STORAGE,
   template <int D_, class P_, template <class P__> class S_> class... STAT>
 class THistBinStat: public STAT<DIMENSIONS, PRECISION, STORAGE>::BinStat_t... {
+private:
+  template <class T>
+  static auto HaveGetUncertainty(T* This) -> decltype(This->GetUncertainty()) { return 0; }
+  template <class T>
+  static int HaveGetUncertainty(...) { return 0; }
+  static constexpr const bool fgHaveGetUncertainty = sizeof(HaveGetUncertainty<THistBinStat>(nullptr)) == sizeof(char);
+
 public:
   THistBinStat(THistData<DIMENSIONS, PRECISION, STORAGE, STAT...>& data, int index):
     STAT<DIMENSIONS, PRECISION, STORAGE>::BinStat_t(data, index)... {}
+
+  /// Calculate the bin content's uncertainty for the given bin, using Poisson
+  /// statistics on the absolute bin content. Only available if no base provides
+  /// this functionality. Requires GetContent().
+  template <class T = typename std::enable_if<!fgHaveGetUncertainty>::type>
+  PRECISION GetUncertainty() const {
+    return std::sqrt(std::fabs(this->GetContent()));
+  }
 };
 
 
