@@ -295,23 +295,23 @@ HistFromImpl(std::unique_ptr<typename THist<DIMENSIONS, PRECISION, STAT...>::Imp
 ///\{ Convenience typedefs (ROOT6-compatible type names)
 
 // Keep them as typedefs, to make sure old-style documentation tools can understand them.
-typedef THist<1, double, THistStatContent, THistStatUncertainty> TH1D;
-typedef THist<1, float, THistStatContent, THistStatUncertainty> TH1F;
-typedef THist<1, char, THistStatContent> TH1C;
-typedef THist<1, int, THistStatContent> TH1I;
-typedef THist<1, int64_t, THistStatContent> TH1LL;
+using TH1D  = THist<1, double, THistStatContent, THistStatUncertainty>;
+using TH1F  = THist<1, float, THistStatContent, THistStatUncertainty>;
+using TH1C  = THist<1, char, THistStatContent>;
+using TH1I  = THist<1, int, THistStatContent>;
+using TH1LL = THist<1, int64_t, THistStatContent>;
 
-typedef THist<2, double, THistStatContent, THistStatUncertainty> TH2D;
-typedef THist<2, float, THistStatContent, THistStatUncertainty> TH2F;
-typedef THist<2, char, THistStatContent> TH2C;
-typedef THist<2, int, THistStatContent> TH2I;
-typedef THist<2, int64_t, THistStatContent> TH2LL;
+using TH2D  = THist<2, double, THistStatContent, THistStatUncertainty>;
+using TH2F  = THist<2, float, THistStatContent, THistStatUncertainty>;
+using TH2C  = THist<2, char, THistStatContent>;
+using TH2I  = THist<2, int, THistStatContent>;
+using TH2LL = THist<2, int64_t, THistStatContent>;
 
-typedef THist<3, double, THistStatContent, THistStatUncertainty> TH3D;
-typedef THist<3, float, THistStatContent, THistStatUncertainty> TH3F;
-typedef THist<3, char, THistStatContent> TH3C;
-typedef THist<3, int, THistStatContent> TH3I;
-typedef THist<3, int64_t, THistStatContent> TH3LL;
+using TH3D  = THist<3, double, THistStatContent, THistStatUncertainty>;
+using TH3F  = THist<3, float, THistStatContent, THistStatUncertainty>;
+using TH3C  = THist<3, char, THistStatContent>;
+using TH3I  = THist<3, int, THistStatContent>;
+using TH3LL = THist<3, int64_t, THistStatContent>;
 ///\}
 
 
