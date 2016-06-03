@@ -38,12 +38,6 @@ template<int DIMENSIONS, class PRECISION,
 class THist<DIMENSIONS, PRECISION, STAT...>
   HistFromImpl(std::unique_ptr<typename THist<DIMENSIONS, PRECISION, STAT...>::ImplBase_t> pHistImpl);
 
-// fwd declare for friend declaration in THist.
-template<int DIMENSIONS, class PRECISION,
-         template <int D_, class P_, template <class P__> class S_> class... STAT>
-void swap(THist<DIMENSIONS, PRECISION, STAT...> &a,
-          THist<DIMENSIONS, PRECISION, STAT...> &b) noexcept;
-
 /**
  \class THist
  Histogram class for histograms with `DIMENSIONS` dimensions, where each
@@ -176,14 +170,19 @@ public:
 
   const_iterator end() const { return const_iterator(*fImpl, fImpl->GetNBins()); }
 
+  /// Swap *this and other.
+  ///
+  /// Very efficient; swaps the `fImpl` pointers.
+  void swap(THist<DIMENSIONS, PRECISION, STAT...> &other) noexcept {
+    std::swap(fImpl, other.fImpl);
+    std::swap(fFillFunc, other.fFillFunc);
+  }
+
 private:
   std::unique_ptr<ImplBase_t> fImpl; ///<  The actual histogram implementation
   FillFunc_t fFillFunc = nullptr;    ///<! Pinter to THistImpl::Fill() member function
 
   friend THist HistFromImpl<>(std::unique_ptr<ImplBase_t>);
-  friend void swap<>(THist<DIMENSIONS, PRECISION, STAT...> &a,
-                     THist<DIMENSIONS, PRECISION, STAT...> &b) noexcept;
-
 };
 
 /// Swap two histograms.
@@ -194,8 +193,7 @@ template<int DIMENSIONS, class PRECISION,
 void swap(THist<DIMENSIONS, PRECISION, STAT...> &a,
           THist<DIMENSIONS, PRECISION, STAT...> &b) noexcept
 {
-  std::swap(a.fImpl, b.fImpl);
-  std::swap(a.fFillFunc, b.fFillFunc);
+  a.swap(b);
 };
 
 
