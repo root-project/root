@@ -38,6 +38,7 @@ template<int DIMENSIONS, class PRECISION,
 class THist<DIMENSIONS, PRECISION, STAT...>
   HistFromImpl(std::unique_ptr<typename THist<DIMENSIONS, PRECISION, STAT...>::ImplBase_t> pHistImpl);
 
+// fwd declare for friend declaration in THist.
 template<int DIMENSIONS, class PRECISION,
          template <int D_, class P_, template <class P__> class S_> class... STAT>
 void swap(THist<DIMENSIONS, PRECISION, STAT...> &a,
@@ -191,7 +192,8 @@ private:
 template<int DIMENSIONS, class PRECISION,
          template <int D_, class P_, template <class P__> class S_> class... STAT>
 void swap(THist<DIMENSIONS, PRECISION, STAT...> &a,
-          THist<DIMENSIONS, PRECISION, STAT...> &b) noexcept {
+          THist<DIMENSIONS, PRECISION, STAT...> &b) noexcept
+{
   std::swap(a.fImpl, b.fImpl);
   std::swap(a.fFillFunc, b.fFillFunc);
 };
@@ -208,7 +210,8 @@ struct THistImplGen {
   template<TAxisConfig::EKind KIND>
   std::unique_ptr<Detail::THistImplBase<DATA>>
   MakeNextAxis(std::string_view title, const std::array<TAxisConfig, NDIM> &axes,
-               PROCESSEDAXISCONFIG... processedAxisArgs) {
+               PROCESSEDAXISCONFIG... processedAxisArgs)
+  {
     using NextAxis_t = typename AxisConfigToType<KIND>::Axis_t;
     NextAxis_t nextAxis = AxisConfigToType<KIND>()(axes[IDIM]);
     using HistImpl_t = THistImplGen<NDIM, IDIM + 1, DATA, PROCESSEDAXISCONFIG..., NextAxis_t>;
@@ -228,19 +231,16 @@ struct THistImplGen {
   /// `processedAxisArgs` and the THistImpl constructor can be invoked, passing
   /// the `processedAxisArgs`.
   std::unique_ptr<Detail::THistImplBase<DATA>>
-  operator()(std::string_view title,
-             const std::array <TAxisConfig, NDIM> &axes,
-             PROCESSEDAXISCONFIG... processedAxisArgs) {
+  operator()(std::string_view title, const std::array <TAxisConfig, NDIM> &axes,
+             PROCESSEDAXISCONFIG... processedAxisArgs)
+  {
     switch (axes[IDIM].GetKind()) {
       case TAxisConfig::kEquidistant:
-        return MakeNextAxis<TAxisConfig::kEquidistant>(title, axes,
-                                                       processedAxisArgs...);
+        return MakeNextAxis<TAxisConfig::kEquidistant>(title, axes, processedAxisArgs...);
       case TAxisConfig::kGrow:
-        return MakeNextAxis<TAxisConfig::kGrow>(title, axes,
-                                                processedAxisArgs...);
+        return MakeNextAxis<TAxisConfig::kGrow>(title, axes, processedAxisArgs...);
       case TAxisConfig::kIrregular:
-        return MakeNextAxis<TAxisConfig::kIrregular>(title, axes,
-                                                     processedAxisArgs...);
+        return MakeNextAxis<TAxisConfig::kIrregular>(title, axes, processedAxisArgs...);
       default:
         R__ERROR_HERE("HIST") << "Unhandled axis kind";
     }
@@ -255,10 +255,9 @@ template<int NDIM, class DATA, class... PROCESSEDAXISCONFIG>
 struct THistImplGen<NDIM, NDIM, DATA, PROCESSEDAXISCONFIG...> {
   using HistImplBase_t = ROOT::Experimental::Detail::THistImplBase<DATA>;
   std::unique_ptr<HistImplBase_t>
-  operator()(std::string_view title, const std::array<TAxisConfig, DATA::GetNDim()> &,
-             PROCESSEDAXISCONFIG... axisArgs) {
-    using HistImplt_t
-    = Detail::THistImpl<DATA, PROCESSEDAXISCONFIG...>;
+  operator()(std::string_view title, const std::array<TAxisConfig, DATA::GetNDim()> &, PROCESSEDAXISCONFIG... axisArgs)
+  {
+    using HistImplt_t = Detail::THistImpl<DATA, PROCESSEDAXISCONFIG...>;
     return std::make_unique<HistImplt_t>(title, axisArgs...);
   }
 };
@@ -266,27 +265,27 @@ struct THistImplGen<NDIM, NDIM, DATA, PROCESSEDAXISCONFIG...> {
 
 
 template<int DIMENSIONS, class PRECISION,
-  template <int D_, class P_, template <class P__> class S_> class... STAT>
-THist<DIMENSIONS, PRECISION, STAT...>::THist(std::string_view title,
-                   std::array<TAxisConfig, THist::GetNDim()> axes):
+         template <int D_, class P_, template <class P__> class S_> class... STAT>
+THist<DIMENSIONS, PRECISION, STAT...>::THist(std::string_view title, std::array<TAxisConfig, THist::GetNDim()> axes):
   fImpl{std::move(Internal::THistImplGen<THist::GetNDim(), 0,
-    Detail::THistData<DIMENSIONS, PRECISION, Detail::THistDataDefaultStorage, STAT...>>()(title, axes))},
-  fFillFunc{} {
+        Detail::THistData<DIMENSIONS, PRECISION, Detail::THistDataDefaultStorage, STAT...>>()(title, axes))}
+{
   fFillFunc = fImpl->GetFillFunc();
 }
 
 
 template<int DIMENSIONS, class PRECISION,
-  template <int D_, class P_, template <class P__> class S_> class... STAT>
+         template <int D_, class P_, template <class P__> class S_> class... STAT>
 THist<DIMENSIONS, PRECISION, STAT...>::THist(std::array<TAxisConfig, THist::GetNDim()> axes):
   THist("", axes) {}
 
 
 /// Adopt an external, stand-alone THistImpl. The THist will take ownership.
 template<int DIMENSIONS, class PRECISION,
-  template <int D_, class P_, template <class P__> class S_> class... STAT>
+         template <int D_, class P_, template <class P__> class S_> class... STAT>
 THist<DIMENSIONS, PRECISION, STAT...>
-HistFromImpl(std::unique_ptr<typename THist<DIMENSIONS, PRECISION, STAT...>::ImplBase_t> pHistImpl) {
+HistFromImpl(std::unique_ptr<typename THist<DIMENSIONS, PRECISION, STAT...>::ImplBase_t> pHistImpl)
+{
   THist<DIMENSIONS, PRECISION, STAT...> ret;
   ret.fFillFunc = pHistImpl->GetFillFunc();
   std::swap(ret.fImpl, pHistImpl);
@@ -297,8 +296,7 @@ HistFromImpl(std::unique_ptr<typename THist<DIMENSIONS, PRECISION, STAT...>::Imp
 /// \name THist Typedefs
 ///\{ Convenience typedefs (ROOT6-compatible type names)
 
-// Keep them as typedefs, to make sure old-style documentation tools can
-// understand them.
+// Keep them as typedefs, to make sure old-style documentation tools can understand them.
 typedef THist<1, double, THistStatContent, THistStatUncertainty> TH1D;
 typedef THist<1, float, THistStatContent, THistStatUncertainty> TH1F;
 typedef THist<1, char, THistStatContent> TH1C;
@@ -322,17 +320,19 @@ typedef THist<3, int64_t, THistStatContent> TH3LL;
 /// Add two histograms. This is the generic, inefficient version for now; it
 /// assumes no matching axes.
 template<int DIMENSIONS,
-  class PRECISION_TO, class PRECISION_FROM,
-  template <int D_, class P_, template <class P__> class S_> class... STAT_TO,
-  template <int D_, class P_, template <class P__> class S_> class... STAT_FROM>
+         class PRECISION_TO, class PRECISION_FROM,
+         template <int D_, class P_, template <class P__> class S_> class... STAT_TO,
+         template <int D_, class P_, template <class P__> class S_> class... STAT_FROM>
 void Add(THist<DIMENSIONS, PRECISION_TO, STAT_TO...> &to,
-         THist<DIMENSIONS, PRECISION_FROM, STAT_FROM...> &from) {
+         THist<DIMENSIONS, PRECISION_FROM, STAT_FROM...> &from)
+{
   auto toImpl = to.GetImpl();
   auto fillFuncTo = toImpl->GetFillFunc();
   using HistFrom_t = THist<DIMENSIONS, PRECISION_FROM, STAT_FROM...>;
   using FromCoord_t = typename HistFrom_t::CoordArray_t;
   using FromWeight_t = typename HistFrom_t::Weight_t;
-  auto add = [fillFuncTo, toImpl](const FromCoord_t& x, FromWeight_t c) {
+  auto add = [fillFuncTo, toImpl](const FromCoord_t& x, FromWeight_t c)
+  {
     (toImpl->*fillFuncTo)(x, c);
     // TODO: something nice with the uncertainty - depending on whether `to` cares
   };
@@ -342,19 +342,21 @@ void Add(THist<DIMENSIONS, PRECISION_TO, STAT_TO...> &to,
 
 /// Interface to graphics taking a unique_ptr<THist>.
 template<int DIMENSIONS, class PRECISION,
-  template <int D_, class P_, template <class P__> class S_> class... STAT>
+         template <int D_, class P_, template <class P__> class S_> class... STAT>
 std::unique_ptr <Internal::TDrawable>
 GetDrawable(std::shared_ptr<THist<DIMENSIONS, PRECISION, STAT...>> hist,
-            THistDrawOptions<DIMENSIONS> opts = {}) {
+            THistDrawOptions<DIMENSIONS> opts = {})
+{
   return std::make_unique<Internal::THistDrawable<DIMENSIONS, PRECISION, STAT...>>(hist, opts);
 }
 
 /// Interface to graphics taking a shared_ptr<THist>.
 template<int DIMENSIONS, class PRECISION,
-  template <int D_, class P_, template <class P__> class S_> class... STAT>
+         template <int D_, class P_, template <class P__> class S_> class... STAT>
 std::unique_ptr <Internal::TDrawable>
 GetDrawable(std::unique_ptr<THist<DIMENSIONS, PRECISION, STAT...>> hist,
-            THistDrawOptions<DIMENSIONS> opts = {}) {
+            THistDrawOptions<DIMENSIONS> opts = {})
+{
   return std::make_unique<Internal::THistDrawable<DIMENSIONS, PRECISION, STAT...>>(hist, opts);
 }
 
