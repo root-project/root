@@ -1,4 +1,4 @@
-/// \file TCanvas.cxx
+/// \file Canvas.cxx
 /// \ingroup Gpad ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-07-10
@@ -13,7 +13,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/TCanvas.h"
+#include "ROOT/Canvas.h"
 
 #include "ROOT/TDrawable.h"
 

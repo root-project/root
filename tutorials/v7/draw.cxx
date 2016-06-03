@@ -17,7 +17,7 @@
 R__LOAD_LIBRARY(libGpad)
 
 #include "ROOT/THist.h"
-#include "ROOT/TCanvas.h"
+#include "ROOT/Canvas.h"
 #include "ROOT/TDirectory.h"
 #include <iostream>
 
