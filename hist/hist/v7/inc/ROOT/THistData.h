@@ -413,7 +413,7 @@ template<int DIMENSIONS, class PRECISION,
 class THistData: public STAT<DIMENSIONS, PRECISION, STORAGE>... {
 private:
   template <class T>
-  static auto HaveGetBinUncertainty(THistData* This) -> decltype(This->GetBinUncertainty(12))
+  static auto HaveGetBinUncertainty(T* This) -> decltype(This->GetBinUncertainty(12))
   { return 0; }
   template <class T> static int HaveGetBinUncertainty(...) { return 0; }
   static constexpr const bool fgHaveGetBinUncertainty
