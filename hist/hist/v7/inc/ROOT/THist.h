@@ -90,10 +90,10 @@ public:
   /// double curlies.
   ///
   ///     THist<2,int> h2i({{ {10, 0., 1.}, {{-1., 0., 1., 10., 100.}} }});
-  explicit THist(std::array<TAxisConfig, THist::GetNDim()> axes);
+  explicit THist(std::array<TAxisConfig, DIMENSIONS> axes);
 
   /// Constructor overload taking the histogram title
-  THist(std::string_view histTitle, std::array<TAxisConfig, THist::GetNDim()> axes);
+  THist(std::string_view histTitle, std::array<TAxisConfig, DIMENSIONS> axes);
 
   /// Constructor overload that's only available for a 1-dimensional histogram.
   template <int ENABLEIF_NDIM = DIMENSIONS,
@@ -264,7 +264,7 @@ struct THistImplGen<NDIM, NDIM, DATA, PROCESSEDAXISCONFIG...> {
 
 template<int DIMENSIONS, class PRECISION,
          template <int D_, class P_, template <class P__> class S_> class... STAT>
-THist<DIMENSIONS, PRECISION, STAT...>::THist(std::string_view title, std::array<TAxisConfig, THist::GetNDim()> axes):
+THist<DIMENSIONS, PRECISION, STAT...>::THist(std::string_view title, std::array<TAxisConfig, DIMENSIONS> axes):
   fImpl{std::move(Internal::THistImplGen<THist::GetNDim(), 0,
         Detail::THistData<DIMENSIONS, PRECISION, Detail::THistDataDefaultStorage, STAT...>>()(title, axes))}
 {
@@ -274,7 +274,7 @@ THist<DIMENSIONS, PRECISION, STAT...>::THist(std::string_view title, std::array<
 
 template<int DIMENSIONS, class PRECISION,
          template <int D_, class P_, template <class P__> class S_> class... STAT>
-THist<DIMENSIONS, PRECISION, STAT...>::THist(std::array<TAxisConfig, THist::GetNDim()> axes):
+THist<DIMENSIONS, PRECISION, STAT...>::THist(std::array<TAxisConfig, DIMENSIONS> axes):
   THist("", axes) {}
 
 
@@ -335,7 +335,7 @@ void Add(THist<DIMENSIONS, PRECISION_TO, STAT_TO...> &to,
     // TODO: something nice with the uncertainty - depending on whether `to` cares
   };
   from.GetImpl()->ApplyXC(add);
-};
+}
 
 
 /// Interface to graphics taking a unique_ptr<THist>.
