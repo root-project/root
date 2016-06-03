@@ -447,8 +447,21 @@ public:
   /// Fill weight at x to the bin content at binidx.
   void Fill(const CoordArray_t& x, int binidx, Weight_t weight = 1.) {
     // Call Fill() on all base classes.
-    using expand_type = int[];
-    (void)expand_type{ (STAT<DIMENSIONS, PRECISION, STORAGE>::Fill(x, binidx, weight), 0)... };
+    // This combines a couple of C++ spells:
+    // - "STAT": is a template parameter pack of template template arguments. It
+    //           has multiple (or one or no) elements; each is a template name
+    //           that needs to be instantiated before it can be used.
+    // - "...":  template parameter pack expansion; the expression is evaluated
+    //           for each STAT. The expression is
+    //           (STAT<DIMENSIONS, PRECISION, STORAGE>::Fill(x, binidx, weight), 0)
+    // - "trigger_base_fill{}":
+    //           initialization, provides a context in which template parameter
+    //           pack expansion happens.
+    // - ", 0":  because Fill() returns void it cannot be used as initializer
+    //           expression. The trailing ", 0" gives it the type of the trailing
+    //           comma-separated expression - int.
+    using trigger_base_fill = int[];
+    (void)trigger_base_fill{ (STAT<DIMENSIONS, PRECISION, STORAGE>::Fill(x, binidx, weight), 0)... };
   }
 
   /// Get a view on the statistics values of a bin.
