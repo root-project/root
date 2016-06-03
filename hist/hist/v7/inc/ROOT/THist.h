@@ -202,17 +202,17 @@ namespace Internal {
  Generate THist::fImpl from THist constructor arguments.
  */
 template<int NDIM, int IDIM, class DATA, class... PROCESSEDAXISCONFIG>
-struct HistImplGen_t {
+struct THistImplGen {
   /// Select the template argument for the next axis type, and "recurse" into
-  /// HistImplGen_t for the next axis.
+  /// THistImplGen for the next axis.
   template<TAxisConfig::EKind KIND>
   std::unique_ptr<Detail::THistImplBase<DATA>>
   MakeNextAxis(std::string_view title, const std::array<TAxisConfig, NDIM> &axes,
                PROCESSEDAXISCONFIG... processedAxisArgs) {
     using NextAxis_t = typename AxisConfigToType<KIND>::Axis_t;
     NextAxis_t nextAxis = AxisConfigToType<KIND>()(axes[IDIM]);
-    using HistImpl_t_t = HistImplGen_t<NDIM, IDIM + 1, DATA, PROCESSEDAXISCONFIG..., NextAxis_t>;
-    return HistImpl_t_t()(title, axes, processedAxisArgs..., nextAxis);
+    using HistImpl_t = THistImplGen<NDIM, IDIM + 1, DATA, PROCESSEDAXISCONFIG..., NextAxis_t>;
+    return HistImpl_t()(title, axes, processedAxisArgs..., nextAxis);
   }
 
   /// Make a THistImpl-derived object reflecting the TAxisConfig array.
@@ -252,7 +252,7 @@ struct HistImplGen_t {
 template<int NDIM, class DATA, class... PROCESSEDAXISCONFIG>
 /// Create the histogram, now that all axis types and initializer objects are
 /// determined.
-struct HistImplGen_t<NDIM, NDIM, DATA, PROCESSEDAXISCONFIG...> {
+struct THistImplGen<NDIM, NDIM, DATA, PROCESSEDAXISCONFIG...> {
   using HistImplBase_t = ROOT::Experimental::Detail::THistImplBase<DATA>;
   std::unique_ptr<HistImplBase_t>
   operator()(std::string_view title, const std::array<TAxisConfig, DATA::GetNDim()> &,
@@ -269,7 +269,7 @@ template<int DIMENSIONS, class PRECISION,
   template <int D_, class P_, template <class P__> class S_> class... STAT>
 THist<DIMENSIONS, PRECISION, STAT...>::THist(std::string_view title,
                    std::array<TAxisConfig, THist::GetNDim()> axes):
-  fImpl{std::move(Internal::HistImplGen_t<THist::GetNDim(), 0,
+  fImpl{std::move(Internal::THistImplGen<THist::GetNDim(), 0,
     Detail::THistData<DIMENSIONS, PRECISION, Detail::THistDataDefaultStorage, STAT...>>()(title, axes))},
   fFillFunc{} {
   fFillFunc = fImpl->GetFillFunc();
