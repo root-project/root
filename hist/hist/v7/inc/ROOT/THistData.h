@@ -133,11 +133,13 @@ public:
    \class TBinStat
    No-op; this class does not provide per-bin statistics.
   */
-  template <bool>
   class TBinStat {
   public:
     TBinStat(const THistStatTotalSumOfWeights&, int) {}
   };
+
+  using ConstBinStat_t = TBinStat;
+  using BinStat_t =  TBinStat;
 
 private:
   /// Sum of weights.
@@ -351,6 +353,7 @@ public:
   public:
     TBinStat(const THistStatRuntime&, int) {}
   };
+
   using ConstBinStat_t = TBinStat;
   using BinStat_t =  TBinStat;
 
