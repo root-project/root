@@ -443,11 +443,10 @@ template<int DIMENSIONS, class PRECISION,
 class THistData: public STAT<DIMENSIONS, PRECISION, STORAGE>... {
 private:
   template <class T>
-  static auto HaveGetBinUncertainty(T* This) -> decltype(This->GetBinUncertainty(12))
-  { return 0; }
-  template <class T> static int HaveGetBinUncertainty(...) { return 0; }
-  static constexpr const bool fgHaveGetBinUncertainty
-    = sizeof(HaveGetBinUncertainty<THistData>(nullptr)) == sizeof(char);
+  static auto HaveGetBinUncertainty(T* This) -> decltype(This->GetBinUncertainty(12)) { return 0; }
+  template <class T>
+  static int HaveGetBinUncertainty(...) { return 0; }
+  static constexpr const bool fgHaveGetBinUncertainty = sizeof(HaveGetBinUncertainty<THistData>(nullptr)) == sizeof(char);
 
 public:
   /// Matching THist
