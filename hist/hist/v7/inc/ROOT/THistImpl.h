@@ -278,10 +278,10 @@ struct TGetBinIndex {
 };
 
 
-template<int I, class AXES> struct FillIterRange_t;
+template<int I, class AXES> struct TFillIterRange;
 
 // Break recursion.
-template<class AXES> struct FillIterRange_t<-1, AXES> {
+template<class AXES> struct TFillIterRange<-1, AXES> {
   void operator()(Hist::AxisIterRange_t<std::tuple_size<AXES>::value>& /*range*/,
                   const AXES& /*axes*/,
                   const std::array<Hist::EOverflow, std::tuple_size<AXES>::value>& /*over*/) const {}
@@ -291,7 +291,7 @@ template<class AXES> struct FillIterRange_t<-1, AXES> {
   as specified by `over`.
 */
 template<int I, class AXES>
-struct FillIterRange_t {
+struct TFillIterRange {
   void operator()(Hist::AxisIterRange_t<std::tuple_size<AXES>::value> &range,
                   const AXES &axes,
                   const std::array<Hist::EOverflow, std::tuple_size<AXES>::value> &over) const {
@@ -303,7 +303,7 @@ struct FillIterRange_t {
       range[1][I] = std::get<I>(axes).end_with_overflow();
     else
       range[1][I] = std::get<I>(axes).end();
-    FillIterRange_t<I - 1, AXES>()(range, axes, over);
+    TFillIterRange<I - 1, AXES>()(range, axes, over);
   }
 };
 
@@ -315,17 +315,17 @@ enum class EBinCoord {
   kBinTo ///< Get the bin high edge
 };
 
-template<int I, class COORD, class AXES> struct FillBinCoord_t;
+template<int I, class COORD, class AXES> struct TFillBinCoord;
 
 // Break recursion.
-template<class COORD, class AXES> struct FillBinCoord_t<-1, COORD, AXES> {
+template<class COORD, class AXES> struct TFillBinCoord<-1, COORD, AXES> {
   void operator()(COORD& /*coord*/, const AXES& /*axes*/, EBinCoord /*kind*/, int /*binidx*/) const {}
 };
 
 /** Fill `coord` with low bin edge or center or high bin edge of all axes.
 */
 template<int I, class COORD, class AXES>
-struct FillBinCoord_t {
+struct TFillBinCoord {
   void operator()(COORD& coord, const AXES& axes, EBinCoord kind, int binidx) const {
     int axisbin = binidx % std::get<I>(axes).GetNBins();
     size_t coordidx = std::tuple_size<AXES>::value - I - 1;
@@ -340,7 +340,7 @@ struct FillBinCoord_t {
         coord[coordidx] = std::get<I>(axes).GetBinTo(axisbin);
         break;
     }
-    FillBinCoord_t<I - 1, COORD, AXES>()(coord, axes, kind,
+    TFillBinCoord<I - 1, COORD, AXES>()(coord, axes, kind,
                                          binidx / std::get<I>(axes).GetNBins());
   }
 };
@@ -445,26 +445,26 @@ public:
 
   /// Get the center coordinate of the bin.
   CoordArray_t GetBinCenter(int binidx) const final {
-    using FillBinCoord_t
-      = Internal::FillBinCoord_t<DATA::GetNDim() - 1, CoordArray_t, decltype(fAxes)>;
+    using TFillBinCoord
+      = Internal::TFillBinCoord<DATA::GetNDim() - 1, CoordArray_t, decltype(fAxes)>;
     CoordArray_t coord;
-    FillBinCoord_t()(coord, fAxes, Internal::EBinCoord::kBinCenter, binidx);
+    TFillBinCoord()(coord, fAxes, Internal::EBinCoord::kBinCenter, binidx);
     return coord;
   }
 
   /// Get the coordinate of the low limit of the bin.
   CoordArray_t GetBinFrom(int binidx) const final {
-    using FillBinCoord_t = Internal::FillBinCoord_t<DATA::GetNDim() - 1, CoordArray_t, decltype(fAxes)>;
+    using TFillBinCoord = Internal::TFillBinCoord<DATA::GetNDim() - 1, CoordArray_t, decltype(fAxes)>;
     CoordArray_t coord;
-    FillBinCoord_t()(coord, fAxes, Internal::EBinCoord::kBinFrom, binidx);
+    TFillBinCoord()(coord, fAxes, Internal::EBinCoord::kBinFrom, binidx);
     return coord;
   }
 
   /// Get the coordinate of the high limit of the bin.
   CoordArray_t GetBinTo(int binidx) const final {
-    using FillBinCoord_t =  Internal::FillBinCoord_t<DATA::GetNDim() - 1, CoordArray_t, decltype(fAxes)>;
+    using TFillBinCoord =  Internal::TFillBinCoord<DATA::GetNDim() - 1, CoordArray_t, decltype(fAxes)>;
     CoordArray_t coord;
-    FillBinCoord_t()(coord, fAxes, Internal::EBinCoord::kBinTo, binidx);
+    TFillBinCoord()(coord, fAxes, Internal::EBinCoord::kBinTo, binidx);
     return coord;
   }
 
@@ -530,7 +530,7 @@ public:
   AxisIterRange_t<DATA::GetNDim()>
      GetRange(const std::array<Hist::EOverflow, DATA::GetNDim()>& withOverUnder) const final {
     std::array<std::array<TAxisBase::const_iterator, DATA::GetNDim()>, 2> ret;
-    Internal::FillIterRange_t<DATA::GetNDim() - 1, decltype(fAxes)>()(ret, fAxes, withOverUnder);
+    Internal::TFillIterRange<DATA::GetNDim() - 1, decltype(fAxes)>()(ret, fAxes, withOverUnder);
     return ret;
   }
 
