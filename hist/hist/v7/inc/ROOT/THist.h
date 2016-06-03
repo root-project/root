@@ -202,18 +202,6 @@ void swap(THist<DIMENSIONS, PRECISION, STAT...> &a,
 };
 
 
-/// Adopt an external, stand-alone THistImpl. The THist will take ownership.
-template<int DIMENSIONS, class PRECISION,
-  template <int D_, class P_, template <class P__> class S_> class... STAT>
-THist<DIMENSIONS, PRECISION, STAT...>
-HistFromImpl(std::unique_ptr<typename THist<DIMENSIONS, PRECISION, STAT...>::ImplBase_t> pHistImpl) {
-  THist<DIMENSIONS, PRECISION, STAT...> ret;
-  ret.fFillFunc = pHistImpl->GetFillFunc();
-  std::swap(ret.fImpl, pHistImpl);
-  return ret;
-};
-
-
 namespace Internal {
 /**
  Generate THist::fImpl from THist constructor arguments.
@@ -286,15 +274,6 @@ struct HistImplGen_t<NDIM, NDIM, DATA, PROCESSEDAXISCONFIG...> {
 
 template<int DIMENSIONS, class PRECISION,
   template <int D_, class P_, template <class P__> class S_> class... STAT>
-THist<DIMENSIONS, PRECISION, STAT...>::THist(std::array<TAxisConfig, THist::GetNDim()> axes):
-  fImpl{std::move(Internal::HistImplGen_t<THist::GetNDim(), 0,
-    Detail::THistData<DIMENSIONS, PRECISION, Detail::THistDataDefaultStorage, STAT...>>()("", axes))},
-  fFillFunc{} {
-  fFillFunc = fImpl->GetFillFunc();
-}
-
-template<int DIMENSIONS, class PRECISION,
-  template <int D_, class P_, template <class P__> class S_> class... STAT>
 THist<DIMENSIONS, PRECISION, STAT...>::THist(std::string_view title,
                    std::array<TAxisConfig, THist::GetNDim()> axes):
   fImpl{std::move(Internal::HistImplGen_t<THist::GetNDim(), 0,
@@ -302,6 +281,25 @@ THist<DIMENSIONS, PRECISION, STAT...>::THist(std::string_view title,
   fFillFunc{} {
   fFillFunc = fImpl->GetFillFunc();
 }
+
+
+template<int DIMENSIONS, class PRECISION,
+  template <int D_, class P_, template <class P__> class S_> class... STAT>
+THist<DIMENSIONS, PRECISION, STAT...>::THist(std::array<TAxisConfig, THist::GetNDim()> axes):
+  THist("", axes) {}
+
+
+/// Adopt an external, stand-alone THistImpl. The THist will take ownership.
+template<int DIMENSIONS, class PRECISION,
+  template <int D_, class P_, template <class P__> class S_> class... STAT>
+THist<DIMENSIONS, PRECISION, STAT...>
+HistFromImpl(std::unique_ptr<typename THist<DIMENSIONS, PRECISION, STAT...>::ImplBase_t> pHistImpl) {
+  THist<DIMENSIONS, PRECISION, STAT...> ret;
+  ret.fFillFunc = pHistImpl->GetFillFunc();
+  std::swap(ret.fImpl, pHistImpl);
+  return ret;
+};
+
 
 /// \name THist Typedefs
 ///\{ Convenience typedefs (ROOT6-compatible type names)
