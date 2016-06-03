@@ -9,6 +9,8 @@
 #endif
 
 class THttpServer;
+class THttpCallArg;
+class TCanvas;
 
 class THttpEngine : public TNamed {
 protected:
@@ -52,10 +54,26 @@ protected:
 
    THttpWSEngine(const char* name, const char* title);
 
+   Bool_t   fReady;     //! indicate if websocket get ready flag to send bigger amount of data
+   Bool_t   fModified;  //! true when canvas was modified
+   TCanvas*  fCanv ;    //! canvas associated with websocket
+
+   void  CheckModifiedFlag();
+
 public:
    virtual ~THttpWSEngine();
 
-   virtual void ClearHandle() {}
+   virtual void ClearHandle() = 0;
+
+   virtual void Send(const void* buf, int len) = 0;
+
+   virtual void ProcessData(THttpCallArg* arg);
+
+   // --------- method to work with
+
+   virtual void AssignCanvas(TCanvas* canv);
+
+   virtual void CanvasModified();
 
    ClassDef(THttpWSEngine, 0) // abstract class for working with WebSockets-like protocol
 };

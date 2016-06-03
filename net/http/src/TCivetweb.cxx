@@ -185,6 +185,12 @@ class TCivetwebWSEngine : public THttpWSEngine {
          fWSconn = 0;
       }
 
+      virtual void Send(const void* buf, int len)
+      {
+         if (fWSconn)
+            mg_websocket_write(fWSconn, WEBSOCKET_OPCODE_TEXT, (const char*) buf, len);
+      }
+
 };
 
 
@@ -265,7 +271,7 @@ int websocket_data_handler(struct mg_connection *conn, int bits, char *data, siz
 
    int code = WEBSOCKET_OPCODE_TEXT;
 
-   if (++cnt >= 5) code = WEBSOCKET_OPCODE_CONNECTION_CLOSE;
+   if (++cnt >= 50) code = WEBSOCKET_OPCODE_CONNECTION_CLOSE;
 
    mg_websocket_write(conn, code, reply, strlen(reply));
 

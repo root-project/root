@@ -681,19 +681,20 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
          }
       } else
       if (strcmp(arg->GetMethod(),"WS_READY")==0) {
-         TNamed* handle = arg->TakeWSHandle();
+         THttpWSEngine* wshandle = dynamic_cast<THttpWSEngine*> (arg->TakeWSHandle());
 
-         Info("ProcessRequest","Set WebSocket handle %p", handle);
+         Info("ProcessRequest","Set WebSocket handle %p", wshandle);
 
-         if (handle) {
-            handle->SetName("websocket");
-            canv->GetListOfPrimitives()->Add(handle);
-         }
+         if (wshandle) wshandle->AssignCanvas(canv);
 
          // connection is established
       } else
       if (strcmp(arg->GetMethod(),"WS_DATA")==0) {
          // process received data
+
+         THttpWSEngine* wshandle = dynamic_cast<THttpWSEngine*> (canv->GetPrimitive("websocket"));
+         if (wshandle) wshandle->ProcessData(arg);
+
       } else
       if (strcmp(arg->GetMethod(),"WS_CLOSE")==0) {
          // connection is closed, one can remove handle
@@ -703,7 +704,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
          if (wshandle) {
             Info("ProcessRequest","Clear WebSocket handle");
             wshandle->ClearHandle();
-            canv->GetListOfPrimitives()->Remove(wshandle);
+            wshandle->AssignCanvas(0);
             delete wshandle;
          }
       } else {
