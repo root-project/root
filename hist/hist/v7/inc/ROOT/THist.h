@@ -102,7 +102,7 @@ public:
   /// Constructor overload that's only available for a 1-dimensional histogram.
   template<int ENABLEIF_NDIM = DIMENSIONS,
     class = typename std::enable_if<ENABLEIF_NDIM == 1>::type>
-  THist(const TAxisConfig &xaxis):
+  explicit THist(const TAxisConfig &xaxis):
     THist(std::array<TAxisConfig, 1>{{xaxis}}) { }
 
   /// Constructor overload that's only available for a 1-dimensional histogram,
