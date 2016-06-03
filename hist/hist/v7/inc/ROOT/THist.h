@@ -29,17 +29,17 @@ namespace Experimental {
 
 // fwd declare for fwd declare for friend declaration in THist...
 template<int DIMENSIONS, class PRECISION,
-  template <int D_, class P_, template <class P__> class S_> class... STAT>
+         template <int D_, class P_, template <class P__> class S_> class... STAT>
 class THist;
 
 // fwd declare for friend declaration in THist.
 template<int DIMENSIONS, class PRECISION,
-  template <int D_, class P_, template <class P__> class S_> class... STAT>
+         template <int D_, class P_, template <class P__> class S_> class... STAT>
 class THist<DIMENSIONS, PRECISION, STAT...>
   HistFromImpl(std::unique_ptr<typename THist<DIMENSIONS, PRECISION, STAT...>::ImplBase_t> pHistImpl);
 
 template<int DIMENSIONS, class PRECISION,
-  template <int D_, class P_, template <class P__> class S_> class... STAT>
+         template <int D_, class P_, template <class P__> class S_> class... STAT>
 void swap(THist<DIMENSIONS, PRECISION, STAT...> &a,
           THist<DIMENSIONS, PRECISION, STAT...> &b) noexcept;
 
@@ -56,12 +56,13 @@ void swap(THist<DIMENSIONS, PRECISION, STAT...> &a,
  */
 
 template<int DIMENSIONS, class PRECISION,
-  template <int D_, class P_, template <class P__> class S_> class... STAT>
+         template <int D_, class P_, template <class P__> class S_> class... STAT>
 class THist {
 public:
   /// The type of the `Detail::THistImplBase` of this histogram.
-  using ImplBase_t = Detail::THistImplBase<Detail::THistData<DIMENSIONS, PRECISION,
-    Detail::THistDataDefaultStorage, STAT...>>;
+  using ImplBase_t
+    = Detail::THistImplBase<Detail::THistData<DIMENSIONS, PRECISION,
+                                              Detail::THistDataDefaultStorage, STAT...>>;
   /// The coordinates type: a `DIMENSIONS`-dimensional `std::array` of `double`.
   using CoordArray_t = typename ImplBase_t::CoordArray_t;
   /// The type of weights
@@ -100,81 +101,75 @@ public:
   THist(std::string_view histTitle, std::array<TAxisConfig, THist::GetNDim()> axes);
 
   /// Constructor overload that's only available for a 1-dimensional histogram.
-  template<int ENABLEIF_NDIM = DIMENSIONS,
-    class = typename std::enable_if<ENABLEIF_NDIM == 1>::type>
+  template <int ENABLEIF_NDIM = DIMENSIONS,
+            class = typename std::enable_if<ENABLEIF_NDIM == 1>::type>
   explicit THist(const TAxisConfig &xaxis):
-    THist(std::array<TAxisConfig, 1>{{xaxis}}) { }
+    THist(std::array<TAxisConfig, 1>{{xaxis}})
+  { }
 
   /// Constructor overload that's only available for a 1-dimensional histogram,
   /// also passing the histogram title.
-  template<int ENABLEIF_NDIM = DIMENSIONS,
-    class = typename std::enable_if<ENABLEIF_NDIM == 1>::type>
+  template <int ENABLEIF_NDIM = DIMENSIONS,
+            class = typename std::enable_if<ENABLEIF_NDIM == 1>::type>
   THist(std::string_view histTitle, const TAxisConfig &xaxis):
-    THist(histTitle, std::array<TAxisConfig, 1>{{xaxis}}) { }
+    THist(histTitle, std::array<TAxisConfig, 1>{{xaxis}})
+  { }
 
   /// Constructor overload that's only available for a 2-dimensional histogram.
   template<int ENABLEIF_NDIM = DIMENSIONS,
-    class = typename std::enable_if<ENABLEIF_NDIM == 2>::type>
+           class = typename std::enable_if<ENABLEIF_NDIM == 2>::type>
   THist(const TAxisConfig &xaxis, const TAxisConfig &yaxis):
-    THist(std::array<TAxisConfig, 2>{{xaxis, yaxis}}) { }
+    THist(std::array<TAxisConfig, 2>{{xaxis, yaxis}})
+  { }
 
   /// Constructor overload that's only available for a 2-dimensional histogram,
   /// also passing the histogram title.
   template<int ENABLEIF_NDIM = DIMENSIONS,
-    class = typename std::enable_if<ENABLEIF_NDIM == 2>::type>
+           class = typename std::enable_if<ENABLEIF_NDIM == 2>::type>
   THist(std::string_view histTitle, const TAxisConfig &xaxis, const TAxisConfig &yaxis):
-    THist(histTitle, std::array<TAxisConfig, 2>{{xaxis, yaxis}}) { }
+    THist(histTitle, std::array<TAxisConfig, 2>{{xaxis, yaxis}})
+  { }
 
   /// Constructor overload that's only available for a 3-dimensional histogram.
   template<int ENABLEIF_NDIM = DIMENSIONS,
-    class = typename std::enable_if<ENABLEIF_NDIM == 3>::type>
-  THist(const TAxisConfig &xaxis, const TAxisConfig &yaxis,
-        const TAxisConfig &zaxis):
-    THist(std::array<TAxisConfig, 3>{{xaxis, yaxis, zaxis}}) { }
+           class = typename std::enable_if<ENABLEIF_NDIM == 3>::type>
+  THist(const TAxisConfig &xaxis, const TAxisConfig &yaxis, const TAxisConfig &zaxis):
+    THist(std::array<TAxisConfig, 3>{{xaxis, yaxis, zaxis}})
+  { }
 
   /// Constructor overload that's only available for a 3-dimensional histogram,
   /// also passing the histogram title.
   template<int ENABLEIF_NDIM = DIMENSIONS,
-    class = typename std::enable_if<ENABLEIF_NDIM == 3>::type>
+           class = typename std::enable_if<ENABLEIF_NDIM == 3>::type>
   THist(std::string_view histTitle,
-        const TAxisConfig &xaxis, const TAxisConfig &yaxis,
-        const TAxisConfig &zaxis):
-    THist(histTitle, std::array<TAxisConfig, 3>{{xaxis, yaxis, zaxis}}) { }
+        const TAxisConfig &xaxis, const TAxisConfig &yaxis, const TAxisConfig &zaxis):
+    THist(histTitle, std::array<TAxisConfig, 3>{{xaxis, yaxis, zaxis}})
+  { }
 
 
   /// Access the ImplBase_t this THist points to.
   ImplBase_t *GetImpl() const noexcept { return fImpl.get(); }
 
   /// Add `weight` to the bin containing coordinate `x`.
-  void Fill(const CoordArray_t &x, Weight_t weight = (Weight_t) 1) noexcept {
-    (fImpl.get()->*fFillFunc)(x, weight);
-  }
+  void Fill(const CoordArray_t &x, Weight_t weight = (Weight_t) 1) noexcept { (fImpl.get()->*fFillFunc)(x, weight); }
 
   /// For each coordinate in `xN`, add `weightN[i]` to the bin at coordinate
   /// `xN[i]`. The sizes of `xN` and `weightN` must be the same. This is more
   /// efficient than many separate calls to `Fill()`.
   void FillN(const std::array_view <CoordArray_t> xN,
-             const std::array_view <Weight_t> weightN) noexcept {
-    fImpl->FillN(xN, weightN);
-  }
+             const std::array_view <Weight_t> weightN) noexcept { fImpl->FillN(xN, weightN); }
 
   /// Convenience overload: `FillN()` with weight 1.
-  void FillN(const std::array_view <CoordArray_t> xN) noexcept {
-    fImpl->FillN(xN);
-  }
+  void FillN(const std::array_view <CoordArray_t> xN) noexcept { fImpl->FillN(xN); }
 
   /// Get the number of entries this histogram was filled with.
   int64_t GetEntries() const noexcept { return fImpl->GetStat().GetEntries(); }
 
   /// Get the content of the bin at `x`.
-  Weight_t GetBinContent(const CoordArray_t &x) const {
-    return fImpl->GetBinContent(x);
-  }
+  Weight_t GetBinContent(const CoordArray_t &x) const { return fImpl->GetBinContent(x); }
 
   /// Get the uncertainty on the content of the bin at `x`.
-  Weight_t GetBinUncertainty(const CoordArray_t &x) const {
-    return fImpl->GetBinUncertainty(x);
-  }
+  Weight_t GetBinUncertainty(const CoordArray_t &x) const { return fImpl->GetBinUncertainty(x); }
 
   const_iterator begin() const { return const_iterator(*fImpl); }
 
@@ -194,7 +189,7 @@ private:
 ///
 /// Very efficient; swaps the `fImpl` pointers.
 template<int DIMENSIONS, class PRECISION,
-  template <int D_, class P_, template <class P__> class S_> class... STAT>
+         template <int D_, class P_, template <class P__> class S_> class... STAT>
 void swap(THist<DIMENSIONS, PRECISION, STAT...> &a,
           THist<DIMENSIONS, PRECISION, STAT...> &b) noexcept {
   std::swap(a.fImpl, b.fImpl);
@@ -212,14 +207,12 @@ struct HistImplGen_t {
   /// HistImplGen_t for the next axis.
   template<TAxisConfig::EKind KIND>
   std::unique_ptr<Detail::THistImplBase<DATA>>
-  MakeNextAxis(std::string_view title,
-               const std::array<TAxisConfig, NDIM> &axes,
+  MakeNextAxis(std::string_view title, const std::array<TAxisConfig, NDIM> &axes,
                PROCESSEDAXISCONFIG... processedAxisArgs) {
-    typename AxisConfigToType<KIND>::Axis_t nextAxis
-      = AxisConfigToType<KIND>()(axes[IDIM]);
-    return HistImplGen_t<NDIM, IDIM + 1, DATA,
-      PROCESSEDAXISCONFIG..., typename AxisConfigToType<KIND>::Axis_t>()
-      (title, axes, processedAxisArgs..., nextAxis);
+    using NextAxis_t = typename AxisConfigToType<KIND>::Axis_t;
+    NextAxis_t nextAxis = AxisConfigToType<KIND>()(axes[IDIM]);
+    using HistImpl_t_t = HistImplGen_t<NDIM, IDIM + 1, DATA, PROCESSEDAXISCONFIG..., NextAxis_t>;
+    return HistImpl_t_t()(title, axes, processedAxisArgs..., nextAxis);
   }
 
   /// Make a THistImpl-derived object reflecting the TAxisConfig array.
