@@ -754,9 +754,6 @@ WARN_LOGFILE           =
 # Note: If this tag is empty the current directory is searched.
 
 INPUT                  = . \
-                         ../../bindings/pyroot/ \
-                         ../../bindings/r/ \
-                         ../../bindings/ruby/ \
                          ../../core/base/ \
                          ../../core/cont/ \
                          ../../core/macosx/ \
@@ -830,6 +827,9 @@ INPUT                  = . \
                          ../../tree/ \
                          ../../sql/ \
                          ../../tutorials/
+#                         ../../bindings/pyroot/ \
+#                         ../../bindings/r/ \
+#                         ../../bindings/ruby/ \
 #                         ../../core/clib/
 #                         ../../core/lzma/
 #                         ../../core/newdelete/
