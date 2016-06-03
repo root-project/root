@@ -239,6 +239,8 @@ void websocket_ready_handler(struct mg_connection *conn, void*)
    serv->ExecuteHttp(&arg);
 }
 
+static int wscnt = 0;
+
 int websocket_data_handler(struct mg_connection *conn, int bits, char *data, size_t len, void*)
 {
    const struct mg_request_info *request_info = mg_get_request_info(conn);
@@ -267,11 +269,9 @@ int websocket_data_handler(struct mg_connection *conn, int bits, char *data, siz
 
    const char* reply = "Send reply from server";
 
-   static int cnt = 0;
-
    int code = WEBSOCKET_OPCODE_TEXT;
 
-   if (++cnt >= 50) code = WEBSOCKET_OPCODE_CONNECTION_CLOSE;
+   if (++wscnt >= 20000) code = WEBSOCKET_OPCODE_CONNECTION_CLOSE;
 
    mg_websocket_write(conn, code, reply, strlen(reply));
 
@@ -283,6 +283,8 @@ void websocket_close_handler(const struct mg_connection *conn, void*)
    const struct mg_request_info *request_info = mg_get_request_info(conn);
 
    printf("Websocket connection closed url:%s\n", request_info->uri);
+
+   wscnt = 0;
 
    TCivetweb *engine = (TCivetweb *) request_info->user_data;
    if (engine == 0) return;
