@@ -161,6 +161,33 @@ static int begin_request_handler(struct mg_connection *conn, void*)
    return 1;
 }
 
+//_____________________________________________________________________
+
+class TCivetwebWSEngine : public THttpWSEngine {
+   protected:
+
+      struct mg_connection *fWSconn;
+
+   public:
+
+      TCivetwebWSEngine(const char* name, const char* title, struct mg_connection *conn) :
+         THttpWSEngine(name, title),
+         fWSconn(conn)
+      {
+      }
+
+      virtual ~TCivetwebWSEngine()
+      {
+      }
+
+      virtual void ClearHandle()
+      {
+         fWSconn = 0;
+      }
+
+};
+
+
 int websocket_connect_handler(const struct mg_connection *conn, void*)
 {
    const struct mg_request_info *request_info = mg_get_request_info(conn);
@@ -200,6 +227,8 @@ void websocket_ready_handler(struct mg_connection *conn, void*)
    arg.SetPathAndFileName(request_info->uri); // path and file name
    arg.SetQuery(request_info->query_string);  // query arguments
    arg.SetMethod("WS_READY");
+
+   arg.SetWSHandle(new TCivetwebWSEngine("websocket", "title", conn));
 
    serv->ExecuteHttp(&arg);
 }

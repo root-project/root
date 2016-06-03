@@ -43,4 +43,21 @@ public:
    ClassDef(THttpEngine, 0) // abstract class which should provide http-based protocol for server
 };
 
+// ====================================================================
+
+
+class THttpWSEngine : public TNamed {
+
+protected:
+
+   THttpWSEngine(const char* name, const char* title);
+
+public:
+   virtual ~THttpWSEngine();
+
+   virtual void ClearHandle() {}
+
+   ClassDef(THttpWSEngine, 0) // abstract class for working with WebSockets-like protocol
+};
+
 #endif

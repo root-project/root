@@ -28,3 +28,15 @@ THttpEngine::~THttpEngine()
 
    fServer = 0;
 }
+
+
+//______________________________________________________________________________
+THttpWSEngine::THttpWSEngine(const char* name, const char* title) :
+   TNamed(name, title)
+{
+}
+
+//______________________________________________________________________________
+THttpWSEngine::~THttpWSEngine()
+{
+}

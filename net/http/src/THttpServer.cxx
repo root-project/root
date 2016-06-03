@@ -8,6 +8,7 @@
 #include "TImage.h"
 #include "TROOT.h"
 #include "TClass.h"
+#include "TCanvas.h"
 #include "TFolder.h"
 #include "RVersion.h"
 #include "RConfigure.h"
@@ -666,10 +667,29 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
    if (filename == "root.websocket") {
       // handling of web socket
 
+      TCanvas* canv = dynamic_cast<TCanvas*> (fSniffer->FindTObjectInHierarchy(arg->fPathName.Data()));
+
+      if (canv == 0) {
+         // for the moment only TCanvas is used for web sockets
+         arg->Set404();
+      } else
       if (strcmp(arg->GetMethod(),"WS_CONNECT")==0) {
-         // just check if connection allowed
+
+         if (canv->GetPrimitive("websocket")) {
+            // websocket already exists, ignore all other requests
+            arg->Set404();
+         }
       } else
       if (strcmp(arg->GetMethod(),"WS_READY")==0) {
+         TNamed* handle = arg->TakeWSHandle();
+
+         Info("ProcessRequest","Set WebSocket handle %p", handle);
+
+         if (handle) {
+            handle->SetName("websocket");
+            canv->GetListOfPrimitives()->Add(handle);
+         }
+
          // connection is established
       } else
       if (strcmp(arg->GetMethod(),"WS_DATA")==0) {
@@ -677,6 +697,15 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
       } else
       if (strcmp(arg->GetMethod(),"WS_CLOSE")==0) {
          // connection is closed, one can remove handle
+
+         THttpWSEngine* wshandle = dynamic_cast<THttpWSEngine*> (canv->GetPrimitive("websocket"));
+
+         if (wshandle) {
+            Info("ProcessRequest","Clear WebSocket handle");
+            wshandle->ClearHandle();
+            canv->GetListOfPrimitives()->Remove(wshandle);
+            delete wshandle;
+         }
       } else {
          arg->Set404();
       }

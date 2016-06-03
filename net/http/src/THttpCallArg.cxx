@@ -5,6 +5,7 @@
 
 #include <string.h>
 #include "RZip.h"
+#include "TNamed.h"
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -28,6 +29,7 @@ THttpCallArg::THttpCallArg() :
    fQuery(),
    fPostData(0),
    fPostDataLength(0),
+   fWSHandle(0),
    fCond(),
    fContentType(),
    fRequestHeader(),
@@ -48,6 +50,11 @@ THttpCallArg::~THttpCallArg()
    if (fPostData) {
       free(fPostData);
       fPostData = 0;
+   }
+
+   if (fWSHandle) {
+      delete fWSHandle;
+      fWSHandle = 0;
    }
 
    if (fBinData) {
@@ -143,6 +150,22 @@ void THttpCallArg::SetPostData(void *data, Long_t length)
    fPostData = data;
    fPostDataLength = length;
 }
+
+//______________________________________________________________________________
+void THttpCallArg::SetWSHandle(TNamed* handle)
+{
+   if (fWSHandle) delete fWSHandle;
+   fWSHandle = handle;
+}
+
+//______________________________________________________________________________
+TNamed* THttpCallArg::TakeWSHandle()
+{
+   TNamed* res = fWSHandle;
+   fWSHandle = 0;
+   return res;
+}
+
 
 //______________________________________________________________________________
 void THttpCallArg::SetBinData(void *data, Long_t length)
