@@ -146,7 +146,22 @@ void TMVA::DataLoader::CopyDataLoader(TMVA::DataLoader* des, TMVA::DataLoader* s
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Computes variance of all the variables and 
+/// returns a new DataLoader with the selected variables whose variance is above a specific threshold. 
+/// Threshold can be provided by user otherwise default value is 0 i.e. remove the variables which have same value in all 
+/// the events. 
+/// 
+/// \param[in] trafoDefinition Tranformation Definition String
+///
+/// Transformation Definition String Format: "VT(optional float value)"
+/// 
+/// Usage examples: 
+/// 
+/// String    | Description
+/// -------   |----------------------------------------
+/// "VT"      | Select variables whose variance is above threshold value = 0 (Default)
+/// "VT(1.5)" | Select variables whose variance is above threshold value = 1.5
 TMVA::DataLoader* TMVA::DataLoader::VarTransform(TString trafoDefinition)
 {
 
