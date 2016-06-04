@@ -2919,6 +2919,10 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
                   fVarIndexes[code][dim] = new TTreeFormula("index_var",
                                                             varindex,
                                                             fTree);
+                  if (fVarIndexes[code][dim]->GetNdim() == 0) {
+                     // Parsing failed for the index, let's stop here ....
+                     return -1;
+                  }
                   current += strlen(varindex)+1; // move to the end of the index array
                }
             }
