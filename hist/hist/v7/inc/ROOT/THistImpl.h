@@ -99,7 +99,7 @@ public:
 
   /// The bin's uncertainty. size() of the vector is a multiple of 2:
   /// several kinds of uncertainty, same number of entries for lower and upper.
-  virtual double GetBinUncertaintyAsDouble(int binidx) const = 0;
+  virtual double GetBinUncertainty(int binidx) const = 0;
 
   /// The bin content, cast to double.
   virtual double GetBinContentAsDouble(int binidx) const = 0;
@@ -177,13 +177,15 @@ public:
 
   /// Apply a function (lambda) to all bins of the histogram. The function takes
   /// the bin coordinate, content and uncertainty ("error") of the content.
-  virtual void ApplyXCE(std::function<void(const CoordArray_t&, Weight_t, Weight_t)>) const = 0;
+  virtual void ApplyXCE(std::function<void(const CoordArray_t&, Weight_t, double)>) const = 0;
 
   /// Get the bin content (sum of weights) for the bin at coordinate x.
   virtual Weight_t GetBinContent(const CoordArray_t& x) const = 0;
 
+  using THistImplPrecisionAgnosticBase<DATA::GetNDim()>::GetBinUncertainty;
+
   /// Get the bin uncertainty for the bin at coordinate x.
-  virtual Weight_t GetBinUncertainty(const CoordArray_t& x) const = 0;
+  virtual double GetBinUncertainty(const CoordArray_t& x) const = 0;
 
   /// Get the number of bins in this histogram, including possible under- and
   /// overflow bins.
@@ -404,7 +406,7 @@ public:
 
   /// Apply a function (lambda) to all bins of the histogram. The function takes
   /// the bin coordinate, content and uncertainty ("error") of the content.
-  virtual void ApplyXCE(std::function<void(const CoordArray_t&, Weight_t, Weight_t)> op) const final {
+  virtual void ApplyXCE(std::function<void(const CoordArray_t&, Weight_t, double)> op) const final {
     for (auto&& binref: *this)
       op(binref.GetBinCenter(), binref.GetContent(), binref.GetUncertainty());
   }
@@ -510,16 +512,14 @@ public:
   }
 
   /// Return the uncertainties for the given bin.
-  double GetBinUncertaintyAsDouble(int binidx) const final {
+  double GetBinUncertainty(int binidx) const final {
     return this->GetStat().GetBinUncertainty(binidx);
   }
 
   /// Get the bin uncertainty for the bin at coordinate x.
-  Weight_t GetBinUncertainty(const CoordArray_t& x) const final {
-    int bin = GetBinIndex(x);
-    if (bin >= 0)
-      return this->GetStat().GetBinUncertainty(bin);
-    return 0.;
+  double GetBinUncertainty(const CoordArray_t& x) const final {
+    const int bin = GetBinIndex(x);
+    return this->GetBinUncertainty(bin);
   }
 
 

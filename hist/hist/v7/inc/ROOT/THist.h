@@ -164,7 +164,7 @@ public:
   Weight_t GetBinContent(const CoordArray_t &x) const { return fImpl->GetBinContent(x); }
 
   /// Get the uncertainty on the content of the bin at `x`.
-  Weight_t GetBinUncertainty(const CoordArray_t &x) const { return fImpl->GetBinUncertainty(x); }
+  double GetBinUncertainty(const CoordArray_t &x) const { return fImpl->GetBinUncertainty(x); }
 
   const_iterator begin() const { return const_iterator(*fImpl); }
 
