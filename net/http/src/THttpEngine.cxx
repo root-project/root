@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include "TCanvas.h"
+#include "TClass.h"
 #include "TList.h"
 #include "THttpCallArg.h"
 #include "TBufferJSON.h"
@@ -42,6 +43,7 @@ THttpWSEngine::THttpWSEngine(const char* name, const char* title) :
    TNamed(name, title),
    fReady(kFALSE),
    fModified(kFALSE),
+   fGetMenu(kFALSE),
    fCanv(0)
 {
 }
@@ -63,15 +65,31 @@ void THttpWSEngine::CanvasModified()
 //______________________________________________________________________________
 void THttpWSEngine::CheckModifiedFlag()
 {
-   if (!fModified || !fReady || !fCanv) return;
+   if (!fReady || !fCanv) return;
 
-   TString buf = "JSON";
-   buf  += TBufferJSON::ConvertToJSON(fCanv, 3);
+   TString buf;
 
-   fModified = kFALSE;
-   fReady = kFALSE;
+   if (fGetMenu) {
+      buf = "MENU";
+      TClass* cl = fCanv->IsA();
 
-   Send(buf.Data(), buf.Length());
+      TList* lst = new TList;
+      cl->GetMenuItems(lst);
+      buf  += TBufferJSON::ConvertToJSON(lst, 3);
+      delete lst;
+
+      fGetMenu = kFALSE;
+   } else
+   if (fModified) {
+      buf = "JSON";
+      buf  += TBufferJSON::ConvertToJSON(fCanv, 3);
+      fModified = kFALSE;
+   }
+
+   if (buf.Length() > 0) {
+      fReady = kFALSE;
+      Send(buf.Data(), buf.Length());
+   }
 }
 
 
@@ -84,7 +102,12 @@ void THttpWSEngine::ProcessData(THttpCallArg* arg)
 
    if (strncmp(cdata,"READY",5)==0) {
       fReady = kTRUE;
-      printf("GET READY FLAG\n");
+      CheckModifiedFlag();
+      return;
+   }
+
+   if (strncmp(cdata,"GETMENU",7)==0) {
+      fGetMenu = kTRUE;
       CheckModifiedFlag();
       return;
    }

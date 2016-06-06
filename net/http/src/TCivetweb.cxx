@@ -271,7 +271,7 @@ int websocket_data_handler(struct mg_connection *conn, int bits, char *data, siz
 
    int code = WEBSOCKET_OPCODE_TEXT;
 
-   if (++wscnt >= 20000) code = WEBSOCKET_OPCODE_CONNECTION_CLOSE;
+   if (++wscnt >= 20) code = WEBSOCKET_OPCODE_CONNECTION_CLOSE;
 
    mg_websocket_write(conn, code, reply, strlen(reply));
 

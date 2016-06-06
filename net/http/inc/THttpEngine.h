@@ -54,9 +54,10 @@ protected:
 
    THttpWSEngine(const char* name, const char* title);
 
-   Bool_t   fReady;     //! indicate if websocket get ready flag to send bigger amount of data
-   Bool_t   fModified;  //! true when canvas was modified
-   TCanvas*  fCanv ;    //! canvas associated with websocket
+   Bool_t    fReady;     //! indicate if websocket get ready flag to send bigger amount of data
+   Bool_t    fModified;  //! true when canvas was modified
+   Bool_t    fGetMenu;   //! true when menu was requested
+   TCanvas*  fCanv ;     //! canvas associated with websocket
 
    void  CheckModifiedFlag();
 
