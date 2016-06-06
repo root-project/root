@@ -118,6 +118,7 @@ Add a new mode for `TClass::SetCanSplit` (2) which indicates that this class and
 * Make sure the option "PARA" in TTRe::Draw is used with at least tow variables [ROOT-8196].
 * The with `goff` option one can use as many variables as needed. There no more
   limitation, like with the options `para`and `candle`.
+* Fix detection of errors that appears in nested TTreeFormula [ROOT-8218]
 
 ### Fast Cloning
 
