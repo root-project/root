@@ -14,7 +14,7 @@ Print banner message when RooFit library is loaded
 
 using namespace std;
 
-const char* VTAG="3.60" ;
+const char* VTAG="3.61" ;
 
 Int_t doBanner();
 
