@@ -373,72 +373,12 @@ namespace Detail {
 template<class PRECISION>
 using THistDataDefaultStorage = std::vector<PRECISION>;
 
-} // namespace Detail
-
-namespace Detail {
-
-template<int DIMENSIONS, class PRECISION,
-  template<class P_> class STORAGE,
-  template<int D_, class P_, template<class P__> class S_> class... STAT>
-class THistData;
-
-
-/** \class TConstHistBinStat
-  Const view on a bin's statistical data. Combines all STATs' ConstBinStat_t
-  views.
-  */
-template <int DIMENSIONS, class PRECISION,
-  template <class P_> class STORAGE,
-  template <int D_, class P_, template <class P__> class S_> class... STAT>
-class TConstHistBinStat:
-  public STAT<DIMENSIONS, PRECISION, STORAGE>::ConstBinStat_t... {
-private:
-  /// Check whether `double T::GetBinUncertaintyImpl(int)` can be called.
-  template <class T>
-  static auto HaveUncertainty(const T* This) -> decltype(This->GetUncertaintyImpl(12));
-  /// Fall-back case for check whether `double T::GetBinUncertaintyImpl(int)` can be called.
-  template <class T>
-  static char HaveUncertainty(...);
-  /// Store whether `double T::GetBinUncertaintyImpl(int)` can be called.
-  template <class T>
-  static constexpr const bool fgHaveUncertaintyT
-    = sizeof(HaveUncertainty<T>(nullptr)) == sizeof(double);
-  /// Store whether `double T::GetBinUncertaintyImpl(int)` can be called for any base.
-  template <class...T>
-  static constexpr const bool fgHaveUncertainty
-    = {(... || (fgHaveUncertaintyT<T>))};
-
-public:
-  TConstHistBinStat(const THistData<DIMENSIONS, PRECISION, STORAGE, STAT...>& data, int index):
-    STAT<DIMENSIONS, PRECISION, STORAGE>::ConstBinStat_t(data, index)... {}
-
-  /// Calculate the bin content's uncertainty for the given bin, using base class information,
-  /// i.e. forwarding to a base's `GetUncertaintyImpl()`.
-  template <bool B = true,
-            class = typename std::enable_if<B && fgHaveUncertainty<typename STAT<DIMENSIONS, PRECISION, STORAGE>::ConstBinStat_t...>>::type>
-  double GetUncertainty() const {
-    return this->GetUncertaintyImpl();
-  }
-  /// Calculate the bin content's uncertainty for the given bin, using Poisson
-  /// statistics on the absolute bin content. Only available if no base provides
-  /// this functionality. Requires GetContent().
-  template <bool B = true,
-            class = typename std::enable_if<B && !fgHaveUncertainty<typename STAT<DIMENSIONS, PRECISION, STORAGE>::ConstBinStat_t...>>::type>
-  double GetUncertainty(...) const {
-    auto content = this->GetContent();
-    return std::sqrt(std::fabs(content));
-  }
-
-};
 
 /** \class THistBinStat
   Const view on a bin's statistical data. Combines all STATs' BinStat_t views.
   */
-template <int DIMENSIONS, class PRECISION,
-  template <class PRECISION_> class STORAGE,
-  template <int D_, class P_, template <class P__> class S_> class... STAT>
-class THistBinStat:
-  public STAT<DIMENSIONS, PRECISION, STORAGE>::BinStat_t... {
+template <class DATA, class...BASES>
+class THistBinStat: public BASES... {
 private:
   /// Check whether `double T::GetBinUncertaintyImpl(int)` can be called.
   template <class T>
@@ -455,10 +395,14 @@ private:
   static constexpr const bool fgHaveUncertainty
     = {(... || (fgHaveUncertaintyT<T>))};
 
+public:
+  THistBinStat(DATA& data, int index):
+    BASES(data, index)... {}
+
   /// Calculate the bin content's uncertainty for the given bin, using base class information,
   /// i.e. forwarding to a base's `GetUncertaintyImpl()`.
   template <bool B = true,
-    class = typename std::enable_if<B && fgHaveUncertainty<typename STAT<DIMENSIONS, PRECISION, STORAGE>::ConstBinStat_t...>>::type>
+    class = typename std::enable_if<B && fgHaveUncertainty<BASES...>>::type>
   double GetUncertainty() const {
     return this->GetUncertaintyImpl();
   }
@@ -466,16 +410,11 @@ private:
   /// statistics on the absolute bin content. Only available if no base provides
   /// this functionality. Requires GetContent().
   template <bool B = true,
-    class = typename std::enable_if<B && !fgHaveUncertainty<typename STAT<DIMENSIONS, PRECISION, STORAGE>::ConstBinStat_t...>>::type>
+    class = typename std::enable_if<B && !fgHaveUncertainty<BASES...>>::type>
   double GetUncertainty(...) const {
     auto content = this->GetContent();
     return std::sqrt(std::fabs(content));
   }
-
-
-public:
-  THistBinStat(THistData<DIMENSIONS, PRECISION, STORAGE, STAT...>& data, int index):
-    STAT<DIMENSIONS, PRECISION, STORAGE>::BinStat_t(data, index)... {}
 };
 
 
@@ -514,11 +453,11 @@ public:
 
   /// The type of a non-modifying view on a bin.
   using ConstHistBinStat_t
-    = TConstHistBinStat<DIMENSIONS, PRECISION, STORAGE, STAT...>;
+    = THistBinStat<const THistData, typename STAT<DIMENSIONS, PRECISION, STORAGE>::ConstBinStat_t...>;
 
   /// The type of a modifying view on a bin.
   using HistBinStat_t
-    = THistBinStat<DIMENSIONS, PRECISION, STORAGE, STAT...>;
+    = THistBinStat<THistData, typename STAT<DIMENSIONS, PRECISION, STORAGE>::BinStat_t...>;
 
   /// Number of dimensions of the coordinates
   static constexpr int GetNDim() noexcept { return DIMENSIONS; }
