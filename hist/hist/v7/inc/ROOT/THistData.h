@@ -91,9 +91,6 @@ public:
     ++fEntries;
   }
 
-  /// Number of dimensions of the coordinates
-  static constexpr int GetNDim() noexcept { return DIMENSIONS; }
-
   /// Get the number of entries filled into the histogram - i.e. the number of
   /// calls to Fill().
   int64_t GetEntries() const { return fEntries; }
@@ -228,7 +225,7 @@ public:
       fSumW2(stat.GetSumOfSquaredWeights(index)) {}
     PRECISION GetSumW2() const { return fSumW2; }
     // Can never modify this. Set GetSumW2() instead.
-    double GetUncertainty() const { return std::sqrt(std::abs(fSumW2)); }
+    double GetUncertaintyImpl() const { return std::sqrt(std::abs(fSumW2)); }
 
   private:
     PRECISION fSumW2; ///< The bin's sum of square of weights.
@@ -244,7 +241,7 @@ public:
       fSumW2(stat.GetSumOfSquaredWeights(index)) {}
     PRECISION& GetSumW2() const { return fSumW2; }
     // Can never modify this. Set GetSumW2() instead.
-    double GetUncertainty() const { return std::sqrt(std::abs(fSumW2)); }
+    double GetUncertaintyImpl() const { return std::sqrt(std::abs(fSumW2)); }
 
   private:
     PRECISION& fSumW2; ///< The bin's sum of square of weights.
@@ -268,7 +265,7 @@ public:
 
   /// Calculate a bin's (Poisson) uncertainty of the bin content as the
   /// square-root of the bin's sum of squared weights.
-  double GetBinUncertainty(int binidx) const {
+  double GetBinUncertaintyImpl(int binidx) const {
     return std::sqrt(fSumWeightsSquared[binidx]);
   }
 
@@ -385,139 +382,102 @@ template<int DIMENSIONS, class PRECISION,
   template<int D_, class P_, template<class P__> class S_> class... STAT>
 class THistData;
 
-} // namespace Detail
-
-namespace Internal {
-
-/** \class TConstHistBinStatBase
- Allows TConstHistBinStat to probe whether any of the ConstBinStat_t types it is
- inheriting from is implementing GetUncertainty().
- */
-template <int DIMENSIONS, class PRECISION,
-  template <class P_> class STORAGE,
-  template <int D_, class P_, template <class P__> class S_> class... STAT>
-class TConstHistBinStatBase: public STAT<DIMENSIONS, PRECISION, STORAGE>::ConstBinStat_t... {
-public:
-  TConstHistBinStatBase(const Detail::THistData<DIMENSIONS, PRECISION, STORAGE, STAT...> &data,
-         int index):
-    STAT<DIMENSIONS, PRECISION, STORAGE>::ConstBinStat_t(data, index)... { }
-};
-
-} // namespace Internal
-
-namespace Detail {
 
 /** \class TConstHistBinStat
-  Const view on a bin's statistical data.
+  Const view on a bin's statistical data. Combines all STATs' ConstBinStat_t
+  views.
   */
 template <int DIMENSIONS, class PRECISION,
   template <class P_> class STORAGE,
   template <int D_, class P_, template <class P__> class S_> class... STAT>
-class TConstHistBinStat: public Internal::TConstHistBinStatBase<DIMENSIONS, PRECISION, STORAGE, STAT...> {
+class TConstHistBinStat:
+  public STAT<DIMENSIONS, PRECISION, STORAGE>::ConstBinStat_t... {
 private:
+  /// Check whether `double T::GetBinUncertaintyImpl(int)` can be called.
   template <class T>
-  static auto HaveGetUncertainty(T* This) -> decltype(This->GetUncertainty()) { return 0; }
+  static auto HaveUncertainty(const T* This) -> decltype(This->GetUncertaintyImpl(12));
+  /// Fall-back case for check whether `double T::GetBinUncertaintyImpl(int)` can be called.
   template <class T>
-  static char HaveGetUncertainty(...) { return 0; }
+  static char HaveUncertainty(...);
+  /// Store whether `double T::GetBinUncertaintyImpl(int)` can be called.
   template <class T>
-  static constexpr const bool fgHaveGetUncertainty = sizeof(HaveGetUncertainty<T>(nullptr)) == sizeof(double);
+  static constexpr const bool fgHaveUncertaintyT
+    = sizeof(HaveUncertainty<T>(nullptr)) == sizeof(double);
+  /// Store whether `double T::GetBinUncertaintyImpl(int)` can be called for any base.
+  template <class...T>
+  static constexpr const bool fgHaveUncertainty
+    = {(... || (fgHaveUncertaintyT<T>))};
 
 public:
-  using Base_t = Internal::TConstHistBinStatBase<DIMENSIONS, PRECISION, STORAGE, STAT...>;
-
   TConstHistBinStat(const THistData<DIMENSIONS, PRECISION, STORAGE, STAT...>& data, int index):
-    Base_t(data, index) {}
+    STAT<DIMENSIONS, PRECISION, STORAGE>::ConstBinStat_t(data, index)... {}
 
-  /// Make the base class's GetUncertainty() available. It will all of those
-  /// implemented by the ConstBinStat_t bases.
-  using Base_t::GetUncertainty;
-
+  /// Calculate the bin content's uncertainty for the given bin, using base class information,
+  /// i.e. forwarding to a base's `GetUncertaintyImpl()`.
+  template <bool B = true,
+            class = typename std::enable_if<B && fgHaveUncertainty<typename STAT<DIMENSIONS, PRECISION, STORAGE>::ConstBinStat_t...>>::type>
+  double GetUncertainty() const {
+    return this->GetUncertaintyImpl();
+  }
   /// Calculate the bin content's uncertainty for the given bin, using Poisson
   /// statistics on the absolute bin content. Only available if no base provides
   /// this functionality. Requires GetContent().
-  template <class T = Base_t, class = typename std::enable_if<!fgHaveGetUncertainty<T>>::type>
-  double GetUncertainty() const {
-    return std::sqrt(std::fabs(this->GetContent()));
+  template <bool B = true,
+            class = typename std::enable_if<B && !fgHaveUncertainty<typename STAT<DIMENSIONS, PRECISION, STORAGE>::ConstBinStat_t...>>::type>
+  double GetUncertainty(...) const {
+    auto content = this->GetContent();
+    return std::sqrt(std::fabs(content));
   }
+
 };
-
-} // namespace Detail
-
-namespace Internal {
-/** \class THistBinStatBase
- Allows THistBinStat to probe whether any of the BinStat_t types it is
- inheriting from is implementing GetUncertainty().
- */
-template <int DIMENSIONS, class PRECISION,
-  template <class P_> class STORAGE,
-  template <int D_, class P_, template <class P__> class S_> class... STAT>
-class THistBinStatBase: public STAT<DIMENSIONS, PRECISION, STORAGE>::ConstBinStat_t... {
-public:
-  THistBinStatBase(Detail::THistData<DIMENSIONS, PRECISION, STORAGE, STAT...> &data,
-                   int index):
-    STAT<DIMENSIONS, PRECISION, STORAGE>::BinStat_t(data, index)... { }
-};
-
-} // namespace Internal
-
-namespace Detail {
 
 /** \class THistBinStat
-  Modifying view on a bin's statistical data.
+  Const view on a bin's statistical data. Combines all STATs' BinStat_t views.
   */
 template <int DIMENSIONS, class PRECISION,
   template <class PRECISION_> class STORAGE,
   template <int D_, class P_, template <class P__> class S_> class... STAT>
-class THistBinStat: public Internal::THistBinStatBase<DIMENSIONS, PRECISION, STORAGE, STAT...> {
+class THistBinStat:
+  public STAT<DIMENSIONS, PRECISION, STORAGE>::BinStat_t... {
 private:
+  /// Check whether `double T::GetBinUncertaintyImpl(int)` can be called.
   template <class T>
-  static auto HaveGetUncertainty(T* This) -> decltype(This->GetUncertainty()) { return 0; }
+  static auto HaveUncertainty(const T* This) -> decltype(This->GetUncertaintyImpl(12));
+  /// Fall-back case for check whether `double T::GetBinUncertaintyImpl(int)` can be called.
   template <class T>
-  static char HaveGetUncertainty(...) { return 0; }
+  static char HaveUncertainty(...);
+  /// Store whether `double T::GetBinUncertaintyImpl(int)` can be called.
   template <class T>
-  static constexpr const bool fgHaveGetUncertainty = sizeof(HaveGetUncertainty<T>(nullptr)) == sizeof(double);
+  static constexpr const bool fgHaveUncertaintyT
+    = sizeof(HaveUncertainty<T>(nullptr)) == sizeof(double);
+  /// Store whether `double T::GetBinUncertaintyImpl(int)` can be called for any base.
+  template <class...T>
+  static constexpr const bool fgHaveUncertainty
+    = {(... || (fgHaveUncertaintyT<T>))};
 
-public:
-  using Base_t = Internal::THistBinStatBase<DIMENSIONS, PRECISION, STORAGE, STAT...>;
-
-  THistBinStat(THistData<DIMENSIONS, PRECISION, STORAGE, STAT...>& data, int index):
-    Base_t(data, index) {}
-
-  /// Make the base class's GetUncertainty() available. It will all of those
-  /// implemented by the BinStat_t bases.
-  using Base_t::GetUncertainty;
-
+  /// Calculate the bin content's uncertainty for the given bin, using base class information,
+  /// i.e. forwarding to a base's `GetUncertaintyImpl()`.
+  template <bool B = true,
+    class = typename std::enable_if<B && fgHaveUncertainty<typename STAT<DIMENSIONS, PRECISION, STORAGE>::ConstBinStat_t...>>::type>
+  double GetUncertainty() const {
+    return this->GetUncertaintyImpl();
+  }
   /// Calculate the bin content's uncertainty for the given bin, using Poisson
   /// statistics on the absolute bin content. Only available if no base provides
   /// this functionality. Requires GetContent().
-  template <class T = Base_t, class = typename std::enable_if<!fgHaveGetUncertainty<T>>::type>
-  double GetUncertainty() const {
-    return std::sqrt(std::fabs(this->GetContent()));
+  template <bool B = true,
+    class = typename std::enable_if<B && !fgHaveUncertainty<typename STAT<DIMENSIONS, PRECISION, STORAGE>::ConstBinStat_t...>>::type>
+  double GetUncertainty(...) const {
+    auto content = this->GetContent();
+    return std::sqrt(std::fabs(content));
   }
-};
 
-} // namespace Detail
 
-namespace Internal {
-/** \class THistDataBase
- Allows THistData to probe whether any of the STAT types it is
- inheriting from is implementing GetUncertainty(int).
- */
-template <int DIMENSIONS, class PRECISION,
-  template <class P_> class STORAGE,
-  template <int D_, class P_, template <class P__> class S_> class... STAT>
-class THistDataBase: public STAT<DIMENSIONS, PRECISION, STORAGE>... {
 public:
-  THistDataBase() = default;
-
-  /// Constructor providing the number of bins (incl under, overflow) to the
-  /// base classes.
-  THistDataBase(size_t size): STAT<DIMENSIONS, PRECISION, STORAGE>(size)... {}
+  THistBinStat(THistData<DIMENSIONS, PRECISION, STORAGE, STAT...>& data, int index):
+    STAT<DIMENSIONS, PRECISION, STORAGE>::BinStat_t(data, index)... {}
 };
 
-} // namespace Internal
-
-namespace Detail {
 
 /** \class THistData
   A THistImplBase's data, provides accessors to all its statistics.
@@ -525,14 +485,22 @@ namespace Detail {
 template<int DIMENSIONS, class PRECISION,
   template <class P_> class STORAGE,
   template <int D_, class P_, template <class P__> class S_> class... STAT>
-class THistData: public Internal::THistDataBase<DIMENSIONS, PRECISION, STORAGE, STAT...> {
+class THistData: public STAT<DIMENSIONS, PRECISION, STORAGE>... {
 private:
+  /// Check whether `double T::GetBinUncertaintyImpl(int)` can be called.
   template <class T>
-  static auto HaveGetBinUncertainty(T* This) -> decltype(This->GetBinUncertainty(12)) { return 0; }
+  static auto HaveUncertainty(const T* This) -> decltype(This->GetBinUncertaintyImpl(12));
+  /// Fall-back case for check whether `double T::GetBinUncertaintyImpl(int)` can be called.
   template <class T>
-  static char HaveGetBinUncertainty(...) { return 0; }
+  static char HaveUncertainty(...);
+  /// Store whether `double T::GetBinUncertaintyImpl(int)` can be called.
   template <class T>
-  static constexpr const bool fgHaveGetBinUncertainty = sizeof(HaveGetBinUncertainty<T>(nullptr)) == sizeof(double);
+  static constexpr const bool fgHaveUncertaintyT
+    = sizeof(HaveUncertainty<T>(nullptr)) == sizeof(double);
+  /// Store whether `double T::GetBinUncertaintyImpl(int)` can be called for any base.
+  template <class...T>
+  static constexpr const bool fgHaveUncertainty
+    = {(... || (fgHaveUncertaintyT<T>))};
 
 public:
   /// Matching THist
@@ -552,14 +520,15 @@ public:
   using HistBinStat_t
     = THistBinStat<DIMENSIONS, PRECISION, STORAGE, STAT...>;
 
-  using Base_t = Internal::THistDataBase<DIMENSIONS, PRECISION, STORAGE, STAT...>;
+  /// Number of dimensions of the coordinates
+  static constexpr int GetNDim() noexcept { return DIMENSIONS; }
 
   THistData() = default;
 
 
   /// Constructor providing the number of bins (incl under, overflow) to the
   /// base classes.
-  THistData(size_t size): Base_t(size) {}
+  THistData(size_t size): STAT<DIMENSIONS, PRECISION, STORAGE>(size)... {}
 
   /// Fill weight at x to the bin content at binidx.
   void Fill(const CoordArray_t& x, int binidx, Weight_t weight = 1.) {
@@ -581,6 +550,21 @@ public:
     (void)trigger_base_fill{ (STAT<DIMENSIONS, PRECISION, STORAGE>::Fill(x, binidx, weight), 0)... };
   }
 
+  /// Calculate the bin content's uncertainty for the given bin, using base class information,
+  /// i.e. forwarding to a base's `GetBinUncertaintyImpl(binidx)`.
+  template <bool B = true, class = typename std::enable_if<B && fgHaveUncertainty<STAT<DIMENSIONS, PRECISION, STORAGE>...>>::type>
+  double GetBinUncertainty(int binidx) const {
+    return this->GetBinUncertaintyImpl(binidx);
+  }
+  /// Calculate the bin content's uncertainty for the given bin, using Poisson
+  /// statistics on the absolute bin content. Only available if no base provides
+  /// this functionality. Requires GetContent().
+  template <bool B = true, class = typename std::enable_if<B && !fgHaveUncertainty<STAT<DIMENSIONS, PRECISION, STORAGE>...>>::type>
+  double GetBinUncertainty(int binidx, ...) const {
+    auto content = this->GetBinContent(binidx);
+    return std::sqrt(std::fabs(content));
+  }
+
   /// Get a view on the statistics values of a bin.
   ConstHistBinStat_t GetView(int idx) const {
     return ConstHistBinStat_t(*this, idx);
@@ -589,19 +573,6 @@ public:
   HistBinStat_t GetView(int idx) {
     return HistBinStat_t(*this, idx);
   }
-
-  /// Make the base class's GetBinUncertainty() available. It will all of those
-  /// implemented by the STAT bases.
-  using Base_t::GetBinUncertainty;
-
-  /// Calculate the bin content's uncertainty for the given bin, using Poisson
-  /// statistics on the absolute bin content. Only available if no base provides
-  /// this functionality. Requires GetBinContent(int binIndex).
-  template <class T = Base_t, class = typename std::enable_if<!fgHaveGetBinUncertainty<T>>::type>
-  double GetBinUncertainty(int binidx) const {
-    return std::sqrt(std::fabs(this->GetBinContent(binidx)));
-  }
-
 };
 } // namespace Detail
 
