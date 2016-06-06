@@ -685,4 +685,5 @@ Changes will be part of the future 6.06/06
 ### TTree
 
 - Properly handle the last element of arrays in the TTreeFormula functions MinIf and MaxIf [ROOT-7258]
+- Fix detection of errors that appears in nested TTreeFormula [ROOT-8218]
 
