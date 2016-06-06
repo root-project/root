@@ -7,6 +7,8 @@
 
 #include "TCanvas.h"
 #include "TClass.h"
+#include "TMethod.h"
+#include "TMethodCall.h"
 #include "TList.h"
 #include "THttpCallArg.h"
 #include "TBufferJSON.h"
@@ -70,12 +72,55 @@ void THttpWSEngine::CheckModifiedFlag()
    TString buf;
 
    if (fGetMenu) {
-      buf = "MENU";
       TClass* cl = fCanv->IsA();
 
       TList* lst = new TList;
       cl->GetMenuItems(lst);
-      buf  += TBufferJSON::ConvertToJSON(lst, 3);
+      // while there is no streamer for TMethod class, one needs own implementation
+
+      // TBufferJSON::ConvertToJSON(lst, 3);
+
+      TIter iter(lst);
+      TMethod* m = 0;
+      Int_t cnt = 0;
+
+      buf = "MENU[";
+      while ((m = (TMethod*) iter()) != 0) {
+         if (cnt++ > 0) buf.Append(",");
+         buf.Append("{");
+         buf.Append(TString::Format("\"name\":\"%s\",\"title\":\"%s\"", m->GetName(), m->GetTitle()));
+
+         if (m->IsMenuItem() == kMenuToggle) {
+            TString getter;
+            if (m->Getter() && strlen(m->Getter()) > 0) {
+               getter = m->Getter();
+            } else
+            if (strncmp(m->GetName(),"Set",3)==0) {
+               getter = TString(m->GetName())(3, strlen(m->GetName())-3);
+               if (cl->GetMethodAllAny(TString("Has") + getter)) getter = TString("Has") + getter;
+               else if (cl->GetMethodAllAny(TString("Get") + getter)) getter = TString("Get") + getter;
+               else if (cl->GetMethodAllAny(TString("Is") + getter)) getter = TString("Is") + getter;
+               else getter = "";
+            }
+
+            if ((getter.Length()>0) && cl->GetMethodAllAny(getter)) {
+
+               TMethodCall* call = new TMethodCall(cl, getter, "");
+
+               if (call->ReturnType() == TMethodCall::kLong) {
+                 Long_t l(0);
+                 call->Execute(fCanv, l);
+                 buf.Append(TString::Format(",\"chk\":%s", (l!=0) ? "true" : "false"));
+                 printf("Toggle %s getter %s chk: %s \n", m->GetName(), getter.Data(), (l!=0) ? "true" : "false");
+               } else {
+                  printf("Cannot get toggle value with getter %s \n", getter.Data());
+               }
+            }
+         }
+
+         buf.Append("}");
+      }
+      buf  += "]";
       delete lst;
 
       fGetMenu = kFALSE;

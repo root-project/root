@@ -259,21 +259,19 @@ int websocket_data_handler(struct mg_connection *conn, int bits, char *data, siz
    memcpy(buf, data, len);
    arg.SetPostData(buf, len);
 
-   if ((bits & 0xF) == 1)
-      printf("Get string len %d %s\n", (int) len, (char*) arg.GetPostData());
-   else
-      printf("Get data from web socket len bits %d %d\n", bits, (int) len);
+   //if ((bits & 0xF) == 1)
+   //   printf("Get string len %d %s\n", (int) len, (char*) arg.GetPostData());
+   //else
+   //   printf("Get data from web socket len bits %d %d\n", bits, (int) len);
 
    serv->ExecuteHttp(&arg);
 
+   if (++wscnt >= 20000) {
 
-   const char* reply = "Send reply from server";
-
-   int code = WEBSOCKET_OPCODE_TEXT;
-
-   if (++wscnt >= 20) code = WEBSOCKET_OPCODE_CONNECTION_CLOSE;
-
-   mg_websocket_write(conn, code, reply, strlen(reply));
+      const char* reply = "Send close message";
+   // int code = WEBSOCKET_OPCODE_TEXT;
+      mg_websocket_write(conn, WEBSOCKET_OPCODE_CONNECTION_CLOSE, reply, strlen(reply));
+   }
 
    return 1;
 }
