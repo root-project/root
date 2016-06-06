@@ -10,6 +10,7 @@
 #include "TMethod.h"
 #include "TMethodCall.h"
 #include "TList.h"
+#include "TROOT.h"
 #include "THttpCallArg.h"
 #include "TBufferJSON.h"
 
@@ -111,11 +112,14 @@ void THttpWSEngine::CheckModifiedFlag()
                  Long_t l(0);
                  call->Execute(fCanv, l);
                  buf.Append(TString::Format(",\"chk\":%s", (l!=0) ? "true" : "false"));
+                 buf.Append(TString::Format(",\"exec\":\"%s(%s)\"", m->GetName(), (l!=0) ? "0" : "1"));
                  printf("Toggle %s getter %s chk: %s \n", m->GetName(), getter.Data(), (l!=0) ? "true" : "false");
                } else {
                   printf("Cannot get toggle value with getter %s \n", getter.Data());
                }
             }
+         } else {
+            buf.Append(TString::Format(",\"exec\":\"%s()\"", m->GetName()));
          }
 
          buf.Append("}");
@@ -154,6 +158,20 @@ void THttpWSEngine::ProcessData(THttpCallArg* arg)
    if (strncmp(cdata,"GETMENU",7)==0) {
       fGetMenu = kTRUE;
       CheckModifiedFlag();
+      return;
+   }
+
+   if (strncmp(cdata,"EXEC",4)==0) {
+
+      if (fCanv!=0) {
+
+         TString exec;
+         exec.Form("((%s*) %p)->%s;", fCanv->ClassName(), fCanv, cdata+4);
+         printf("Execute %s\n", exec.Data());
+
+         gROOT->ProcessLine(exec);
+      }
+
       return;
    }
 
