@@ -15,6 +15,8 @@
 #ifndef ROOT7_Impl_Tuple_Apply
 #define ROOT7_Impl_Tuple_Apply
 
+#include "RConfigure.h"
+
 #include <functional>
 
 // std::experimental::apply, invoke until it's there...
@@ -24,6 +26,7 @@ namespace std {
 
 inline namespace __ROOT {
 
+#ifndef R__HAS_STD_INVOKE
 namespace detail {
 template <class F, class... Args>
 inline auto INVOKE(F&& f, Args&&... args) ->
@@ -60,6 +63,7 @@ template< class F, class... ArgTypes>
 decltype(auto) invoke(F&& f, ArgTypes&&... args) {
   return detail::INVOKE(std::forward<F>(f), std::forward<ArgTypes>(args)...);
 }
+#endif // ndef R__HAS_STD_INVOKE
 
 // From http://en.cppreference.com/w/cpp/experimental/apply
 namespace detail {
