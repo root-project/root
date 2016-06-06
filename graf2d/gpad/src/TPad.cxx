@@ -2848,7 +2848,7 @@ void TPad::HighLight(Color_t color, Bool_t set)
 
    // We do not want to have active(executable) buttons, etc highlighted
    // in this manner, unless we want to edit'em
-   if (GetMother() && GetMother()->IsEditable() && !InheritsFrom(TButton::Class())) {
+   if (GetBorderMode()>0 && GetMother() && GetMother()->IsEditable() && !InheritsFrom(TButton::Class())) {
       //When doing a DrawClone from the GUI you would do
       //  - select an empty pad -
       //  - right click on object -
