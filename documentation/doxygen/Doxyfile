@@ -754,6 +754,7 @@ WARN_LOGFILE           =
 # Note: If this tag is empty the current directory is searched.
 
 INPUT                  = . \
+                         ../../bindings/pyroot/ \
                          ../../core/base/ \
                          ../../core/cont/ \
                          ../../core/macosx/ \
@@ -827,7 +828,6 @@ INPUT                  = . \
                          ../../tree/ \
                          ../../sql/ \
                          ../../tutorials/
-#                         ../../bindings/pyroot/ \
 #                         ../../bindings/r/ \
 #                         ../../bindings/ruby/ \
 #                         ../../core/clib/
@@ -936,6 +936,7 @@ EXCLUDE_PATTERNS       =  */G__* \
                           */libAfterImage/* \
                           */doc/v6* */doc/v5* \
                           */win32gdk/gdk/* \
+                          */bindings/pyroot/*.py \
                           makeimage.C filter.cxx
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
