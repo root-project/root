@@ -4,7 +4,7 @@
 
 echo '<html>'
 echo '</body>'
-echo '<div id="footer" style="background-color:#DDDDDD;">'
+echo '<div id="footer" style="background-color:#E5EBF3;">'
 echo '<small>'
 echo '<img class="footer" src="rootlogo_s.gif" alt="root"/></a>'
 # Doxygen unconditionally adds a space in front of $DOXYGEN_ROOT_VERSION
