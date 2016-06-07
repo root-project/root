@@ -3733,11 +3733,14 @@ static void KeepNParams(clang::QualType& normalizedType,
             // This is the last template parameter in the template declaration
             // but it is signaling that there can be an arbitrary number of arguments
             // in the template instance.  So to avoid inadvertenly dropping those
-            // arguments we stall the loop over index here by decreasing index.
-            // and the actually loop exist because the
-            //     if (index == nNormArgs) break;
-            // statenent
-            --formal;
+            // arguments we just process all remaining argument and exit the main loop.
+            for( ; inst != nNormArgs; ++inst) {
+               normTArg = normalizedTst->getArgs()[inst];
+               mightHaveChanged |= RecurseKeepNParams(normTArg, tArg, interp, normCtxt);
+               argsToKeep.push_back(normTArg);
+            }
+            // Done.
+            break;
          }
          mightHaveChanged |= RecurseKeepNParams(normTArg, tArg, interp, normCtxt);
          argsToKeep.push_back(normTArg);
