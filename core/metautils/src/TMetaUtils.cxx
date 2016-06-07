@@ -3684,7 +3684,7 @@ static void KeepNParams(clang::QualType& normalizedType,
       if (formal == nNormArgs || inst == nNormArgs) break;
 
       const TemplateArgument& tArg = tArgs.get(formal);
-      TemplateArgument NormTArg(normalizedTst->getArgs()[inst]);
+      TemplateArgument normTArg(normalizedTst->getArgs()[inst]);
 
       bool shouldKeepArg = nArgsToKeep < 0 || inst < nArgsToKeep;
       if (isStdDropDefault) shouldKeepArg = false;
@@ -3708,17 +3708,17 @@ static void KeepNParams(clang::QualType& normalizedType,
          }
          // If this is a type,
          // we need first of all to recurse: this argument may need to be manipulated
-         if (tArg.getKind() == clang::TemplateArgument::Type){
-            QualType thisNormQualType = NormTArg.getAsType();
+         if (tArg.getKind() == clang::TemplateArgument::Type) {
+            QualType thisNormQualType = normTArg.getAsType();
             QualType thisArgQualType = tArg.getAsType();
             KeepNParams(thisNormQualType,
                         thisArgQualType,
                         interp,
                         normCtxt);
             mightHaveChanged |= (thisNormQualType != thisArgQualType);
-            NormTArg = TemplateArgument(thisNormQualType);
+            normTArg = TemplateArgument(thisNormQualType);
          }
-         argsToKeep.push_back(NormTArg);
+         argsToKeep.push_back(normTArg);
          continue;
       } else {
          if (!isStdDropDefault) {
@@ -3741,7 +3741,7 @@ static void KeepNParams(clang::QualType& normalizedType,
          equal = areEqualValues(tArg, *tParPtr);
       }
       if (!equal) {
-         argsToKeep.push_back(NormTArg);
+         argsToKeep.push_back(normTArg);
       } else {
          mightHaveChanged = true;
       }
