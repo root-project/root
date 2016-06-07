@@ -506,7 +506,9 @@ public:
     // if x is < bBegin then iNotLess == bBegin thus rawbin == 0:
     // we don't want not-less but just-below, thus:
     rawbin -= 1;
-    return AdjustOverflowBinNumber(rawbin);
+    // No need for AdjustOverflowBinNumber(rawbin) here; lower_bound() - 1 is
+    // the answer.
+    return rawbin;
   }
 
   /// Get the bin center of the bin with the given index.
