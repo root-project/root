@@ -1055,13 +1055,45 @@ const char *TSystem::PrependPathName(const char *, TString&)
 
 const char *TSystem::ExpandFileName(const char *fname)
 {
-   const int   kBufSize = kMAXPATHLEN;
+   const int kBufSize = kMAXPATHLEN;
+   TTHREAD_TLS_ARRAY(char, kBufSize, xname);
+
+   Bool_t res = ExpandFileName(fname, xname, kBufSize);
+   if (res) 
+      return nullptr;
+   else
+      return xname;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+/// Expand a pathname getting rid of special shell characters like ~.$, etc.
+/// This function is analogous to ExpandFileName(const char *), except that
+/// it receives a TString reference of the pathname to be expanded.
+/// Returns kTRUE in case of error and kFALSE otherwise.
+
+Bool_t TSystem::ExpandFileName(TString &fname)
+{
+   const int kBufSize = kMAXPATHLEN;
+   char xname[kBufSize];
+
+   Bool_t res = ExpandFileName(fname.Data(), xname, kBufSize);
+   if (!res)
+      fname = xname;
+
+   return res;
+}
+
+////////////////////////////////////////////////////////////////////////////
+/// Private method for pathname expansion.
+/// Returns kTRUE in case of error and kFALSE otherwise.
+
+Bool_t TSystem::ExpandFileName(const char *fname, char *xname, const int kBufSize)
+{
    int         n, ier, iter, lx, ncopy;
    char       *inp, *out, *x, *t, buff[kBufSize*4];
    const char *b, *c, *e;
    const char *p;
-   static char xname[kBufSize];
-
+   
    R__LOCKGUARD2(gSystemMutex);
 
    iter = 0; xname[0] = 0; inp = buff + kBufSize; out = inp + kBufSize;
@@ -1177,11 +1209,12 @@ again:
 
    if (ier || ncopy != lx) {
       ::Error("TSystem::ExpandFileName", "input: %s, output: %s", fname, xname);
-      return 0;
+      return kTRUE;
    }
 
-   return xname;
+   return kFALSE;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Expand a pathname getting rid of special shell characters like ~.$, etc.
