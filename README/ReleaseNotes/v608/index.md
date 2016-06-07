@@ -139,6 +139,7 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 
 ## Math Libraries
 
+* Improve thread safety of TMinuit constructor [ROOT-8217]
 
 ## RooFit Libraries
 
