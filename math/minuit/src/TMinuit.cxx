@@ -962,9 +962,6 @@ void TMinuit::SetFCN(void *fcn)
       fMethodCall->InitWithPrototype(funcname,"Int_t&,Double_t*,Double_t&,Double_t*,Int_t");
    }
    fFCN = InteractiveFCNm;
-   {
-      R__LOCKGUARD2(gROOTMutex);
-   }
    gMinuit = this; //required by InteractiveFCNm
 }
 
