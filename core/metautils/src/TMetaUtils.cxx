@@ -3555,6 +3555,39 @@ static bool isTypeWithDefault(const clang::NamedDecl* nDecl)
 
 }
 
+static void KeepNParams(clang::QualType& normalizedType,
+                        const clang::QualType& vanillaType,
+                        const cling::Interpreter& interp,
+                        const ROOT::TMetaUtils::TNormalizedCtxt& normCtxt);
+
+// Returns true if normTArg might have changed.
+static bool RecurseKeepNParams(clang::TemplateArgument &normTArg,
+                               const clang::TemplateArgument &tArg,
+                               const cling::Interpreter& interp,
+                               const ROOT::TMetaUtils::TNormalizedCtxt& normCtxt)
+{
+   using namespace ROOT::TMetaUtils;
+   using namespace clang;
+
+   // Once we know there is no more default parameter, we can run through to the end
+   // and/or recurse in the template parameter packs.
+
+   // If this is a type,
+   // we need first of all to recurse: this argument may need to be manipulated
+   if (tArg.getKind() == clang::TemplateArgument::Type) {
+      QualType thisNormQualType = normTArg.getAsType();
+      QualType thisArgQualType = tArg.getAsType();
+      KeepNParams(thisNormQualType,
+                  thisArgQualType,
+                  interp,
+                  normCtxt);
+      normTArg = TemplateArgument(thisNormQualType);
+      return (thisNormQualType != thisArgQualType);
+   }
+   return false;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// This function allows to manipulate the number of arguments in the type
 /// of a template specialisation.
@@ -3706,18 +3739,7 @@ static void KeepNParams(clang::QualType& normalizedType,
             // statenent
             --formal;
          }
-         // If this is a type,
-         // we need first of all to recurse: this argument may need to be manipulated
-         if (tArg.getKind() == clang::TemplateArgument::Type) {
-            QualType thisNormQualType = normTArg.getAsType();
-            QualType thisArgQualType = tArg.getAsType();
-            KeepNParams(thisNormQualType,
-                        thisArgQualType,
-                        interp,
-                        normCtxt);
-            mightHaveChanged |= (thisNormQualType != thisArgQualType);
-            normTArg = TemplateArgument(thisNormQualType);
-         }
+         mightHaveChanged |= RecurseKeepNParams(normTArg, tArg, interp, normCtxt);
          argsToKeep.push_back(normTArg);
          continue;
       } else {
