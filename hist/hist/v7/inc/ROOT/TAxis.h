@@ -707,8 +707,8 @@ private:
   /// Represents a `TAxisEquidistant` with `nbins` from `from` to `to`, and
   /// axis title.
   explicit TAxisConfig(std::string_view title, int nbins, double from, double to,
-                       bool canGrow):
-    TAxisBase(title, nbins, canGrow), fKind(canGrow ? kEquidistant : kGrow), fBinBorders(2)
+                       EKind kind):
+    TAxisBase(title, nbins, kind == kGrow), fKind(kind), fBinBorders(2)
   {
     if (from > to)
       std::swap(to, from);
@@ -730,19 +730,19 @@ public:
   /// Represents a `TAxisEquidistant` with `nbins` from `from` to `to`, and
   /// axis title.
   TAxisConfig(std::string_view title, int nbins, double from, double to):
-    TAxisConfig(title, nbins, from, to, false /*canGrow*/) {}
+    TAxisConfig(title, nbins, from, to, kEquidistant) {}
 
   /// Represents a `TAxisEquidistant` with `nbins` from `from` to `to`.
   TAxisConfig(int nbins, double from, double to):
-    TAxisConfig("", nbins, from, to, false /*canGrow*/) {}
+    TAxisConfig("", nbins, from, to, kEquidistant) {}
 
   /// Represents a `TAxisGrow` with `nbins` from `from` to `to`, and axis title.
   TAxisConfig(std::string_view title, Grow_t, int nbins, double from, double to):
-    TAxisConfig(title, nbins, from, to, true /*canGrow*/) {}
+    TAxisConfig(title, nbins, from, to, kGrow) {}
 
   /// Represents a `TAxisGrow` with `nbins` from `from` to `to`.
   TAxisConfig(Grow_t, int nbins, double from, double to):
-    TAxisConfig("", nbins, from, to, false /*canGrow*/) {}
+    TAxisConfig("", nbins, from, to, kGrow) {}
 
 
   /// Represents a `TAxisIrregular` with `binborders`.
