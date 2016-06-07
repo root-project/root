@@ -1678,11 +1678,7 @@ expand:
    path.ReplaceAll("$(","$");
    path.ReplaceAll(")","");
 
-   if ((p = ExpandFileName(path))) {
-      path = p;
-      return kFALSE;
-   }
-   return kTRUE;
+   return ExpandFileName(path);
 }
 #endif
 

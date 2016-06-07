@@ -2933,7 +2933,7 @@ needshell:
 
    // escape shell quote characters
    // EscChar(patbuf, stuffedPat, sizeof(stuffedPat), shellStuff, shellEscape);
-   patbuf0 = ExpandFileName(patbuf0.Data());
+   ExpandFileName(patbuf0);
    Int_t lbuf = ::ExpandEnvironmentStrings(
                                  patbuf0.Data(), // pointer to string with environment variables
                                  cmd,            // pointer to string with expanded environment variables
