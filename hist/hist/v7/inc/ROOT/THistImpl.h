@@ -401,14 +401,14 @@ public:
   /// the bin coordinate and content.
   void ApplyXC(std::function<void(const CoordArray_t&, Weight_t)> op) const final {
     for (auto&& binref: *this)
-      op(binref.GetBinCenter(), binref.GetContent());
+      op(binref.GetCenter(), binref.GetContent());
   }
 
   /// Apply a function (lambda) to all bins of the histogram. The function takes
   /// the bin coordinate, content and uncertainty ("error") of the content.
   virtual void ApplyXCE(std::function<void(const CoordArray_t&, Weight_t, double)> op) const final {
     for (auto&& binref: *this)
-      op(binref.GetBinCenter(), binref.GetContent(), binref.GetUncertainty());
+      op(binref.GetCenter(), binref.GetContent(), binref.GetUncertainty());
   }
 
 

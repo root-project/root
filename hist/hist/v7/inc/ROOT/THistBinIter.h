@@ -35,38 +35,41 @@ public:
   using HistImpl_t = HISTIMPL;
   using CoordArray_t = typename HISTIMPL::CoordArray_t;
   using Weight_t = typename HISTIMPL::Weight_t;
+  using HistBinStat_t = decltype(((HISTIMPL*)0x123)->GetStat().GetView(1));
 
 private:
   size_t fIndex = 0; ///< Bin index
   HistImpl_t* fHist; ///< The bin's histogram.
+  HistBinStat_t fStatView;
 
 public:
   /// Construct from a histogram.
-  THistBinRef(HistImpl_t& hist, size_t idx): fIndex(idx), fHist(&hist) {}
+  THistBinRef(HistImpl_t& hist, size_t idx):
+    fIndex(idx), fHist(&hist), fStatView(hist.GetStat().GetView(idx)) {}
 
   /// \{
   /// \name Statistics operations
   /// Get the bin content (or reference to it, for non-const HistImpl_t).
-  auto GetContent() { return fHist->GetBinContent(fIndex); }
+  auto GetContent() { return fStatView.GetContent(); }
 
   /// Get the bin uncertainty.
-  auto GetUncertainty() const { return GetStat().GetUncertainty(); }
+  double GetUncertainty() const { return fStatView.GetUncertainty(); }
 
   /// Get a (const, for const HistImpl_t) reference to the bin-view of the
   /// histogram statistics (uncertainty etc).
-  auto GetStat() const { return fHist->GetStat().GetView(fIndex); }
+  HistBinStat_t GetStat() const { return fStatView; }
   /// \}
 
   /// \{
   /// \name Bin operations
   /// Get the bin center as an array over all dimensions.
-  CoordArray_t GetBinCenter() const { return fHist->GetBinCenter(fIndex); }
+  CoordArray_t GetCenter() const { return fHist->GetBinCenter(fIndex); }
 
   /// Get the bin lower edge as an array over all dimensions.
-  CoordArray_t  GetBinFrom() const { return fHist->GetBinFrom(fIndex); }
+  CoordArray_t  GetFrom() const { return fHist->GetBinFrom(fIndex); }
 
   /// Get the bin upper edge as an array over all dimensions.
-  CoordArray_t  GetBinTo() const { return fHist->GetBinTo(fIndex); }
+  CoordArray_t  GetTo() const { return fHist->GetBinTo(fIndex); }
   /// \}
 };
 
