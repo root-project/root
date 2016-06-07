@@ -2314,7 +2314,7 @@ Double_t TH1::Chisquare(TF1 * func, Option_t *option) const
 
    TString opt(option); opt.ToUpper();
    bool useRange = opt.Contains("R");
-   bool usePL = opt.Contains("L"); 
+   bool usePL = opt.Contains("L");
 
    return ROOT::Fit::Chisquare(*this, *func, useRange, usePL);
 }
@@ -4747,7 +4747,7 @@ Bool_t TH1::IsBinOverflow(Int_t bin) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return true if the bin is overflow.
+/// Return true if the bin is underflow.
 
 Bool_t TH1::IsBinUnderflow(Int_t bin) const
 {
@@ -8055,7 +8055,7 @@ Int_t TH1::GetMinimumBin(Int_t &locmix, Int_t &locmiy, Int_t &locmiz) const
 /// Retrieve the minimum and maximum values in the histogram
 ///
 /// This will not return a cached value and will always search the
-/// histogram for the min and max values. The user can condition whether 
+/// histogram for the min and max values. The user can condition whether
 /// or not to call this with the GetMinimumStored() and GetMaximumStored()
 /// methods. If the cache is empty, then the value will be -1111. Users
 /// can then use the SetMinimum() or SetMaximum() methods to cache the results.
