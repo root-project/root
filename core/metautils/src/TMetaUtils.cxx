@@ -3672,21 +3672,21 @@ static void KeepNParams(clang::QualType& normalizedType,
    bool mightHaveChanged = false;
 
    // becomes true when a parameter has a value equal to its default
-   for (int index = 0; index != nArgs; ++index) {
-      const NamedDecl* tParPtr = tPars.getParam(index);
+   for (int formal = 0, inst = 0; formal != nArgs; ++formal, ++inst) {
+      const NamedDecl* tParPtr = tPars.getParam(formal);
       if (!tParPtr) Error("KeepNParams",
                           "The parameter number %s is null.\n",
-                          index);
+                          formal);
 
-      const TemplateArgument& tArg = tArgs.get(index);
       // Stop if the normalized TemplateSpecializationType has less arguments than
       // the one index is pointing at.
       // We piggy back on the AddDefaultParameters routine basically.
-      if (index == nNormArgs) break;
+      if (formal == nNormArgs || inst == nNormArgs) break;
 
-      TemplateArgument NormTArg(normalizedTst->getArgs()[index]);
+      const TemplateArgument& tArg = tArgs.get(formal);
+      TemplateArgument NormTArg(normalizedTst->getArgs()[inst]);
 
-      bool shouldKeepArg = nArgsToKeep < 0 || index < nArgsToKeep;
+      bool shouldKeepArg = nArgsToKeep < 0 || inst < nArgsToKeep;
       if (isStdDropDefault) shouldKeepArg = false;
 
       // Nothing to do here: either this parameter has no default, or we have to keep it.
@@ -3695,7 +3695,17 @@ static void KeepNParams(clang::QualType& normalizedType,
       // they are non default. This makes this feature UNUSABLE for cases like std::vector,
       // where 2 different entities would have the same name if an allocator different from
       // the default one is by chance used.
-      if (!isTypeWithDefault(tParPtr) || shouldKeepArg){
+      if (!isTypeWithDefault(tParPtr) || shouldKeepArg) {
+         if ( tParPtr->isTemplateParameterPack() ) {
+            // This is the last template parameter in the template declaration
+            // but it is signaling that there can be an arbitrary number of arguments
+            // in the template instance.  So to avoid inadvertenly dropping those
+            // arguments we stall the loop over index here by decreasing index.
+            // and the actually loop exist because the
+            //     if (index == nNormArgs) break;
+            // statenent
+            --formal;
+         }
          // If this is a type,
          // we need first of all to recurse: this argument may need to be manipulated
          if (tArg.getKind() == clang::TemplateArgument::Type){
