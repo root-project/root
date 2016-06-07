@@ -3629,7 +3629,7 @@ static void KeepNParams(clang::QualType& normalizedType,
    }
 
    // The canonical decl does not necessarily have the template default arguments.
-   // Need to walk through the redecl chain to find it (we know tehre will be no
+   // Need to walk through the redecl chain to find it (we know there will be no
    // inconsistencies, at least)
    const clang::ClassTemplateDecl* ctdWithDefaultArgs = ctd;
    for (const RedeclarableTemplateDecl* rd: ctdWithDefaultArgs->redecls()) {
