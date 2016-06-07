@@ -3763,6 +3763,7 @@ static void KeepNParams(clang::QualType& normalizedType,
          equal = areEqualValues(tArg, *tParPtr);
       }
       if (!equal) {
+         mightHaveChanged |= RecurseKeepNParams(normTArg, tArg, interp, normCtxt);
          argsToKeep.push_back(normTArg);
       } else {
          mightHaveChanged = true;
