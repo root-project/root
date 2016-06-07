@@ -363,7 +363,7 @@ public:
     TAxisEquidistant(title, nbinsNoOver, low, high, false /*canGrow*/) { }
 
   /// Find the bin index for the given coordinate.
-  /// \note Passing a bin border coordinates can either return the bin above or
+  /// \note Passing a bin border coordinate can either return the bin above or
   /// below the bin border. I.e. don't do that for reliable results!
   int FindBin(double x) const noexcept {
     int rawbin = (x - fLow) * fInvBinWidth;
@@ -388,16 +388,22 @@ public:
   double GetInverseBinWidth() const noexcept { return fInvBinWidth; }
 
   /// Get the bin center for the given bin index.
+  /// For the bin == 1 (the first bin) of 2 bins for an axis (0., 1.), this
+  /// returns 0.25.
   double GetBinCenter(int bin) const noexcept {
-    return fLow + (bin + 0.5) / fInvBinWidth;
+    return fLow + (bin - 0.5) / fInvBinWidth;
   }
 
   /// Get the low bin border for the given bin index.
+  /// For the bin == 1 (the first bin) of 2 bins for an axis (0., 1.), this
+  /// returns 0.
   double GetBinFrom(int bin) const noexcept {
-    return fLow + bin / fInvBinWidth;
+    return fLow + (bin - 1) / fInvBinWidth;
   }
 
   /// Get the high bin border for the given bin index.
+  /// For the bin == 1 (the first bin) of 2 bins for an axis (0., 1.), this
+  /// returns 0.5.
   double GetBinTo(int bin) const noexcept {
     return GetBinFrom(bin + 1);
   }
