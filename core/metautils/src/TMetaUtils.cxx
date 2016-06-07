@@ -3564,7 +3564,8 @@ static void KeepNParams(clang::QualType& normalizedType,
 static bool RecurseKeepNParams(clang::TemplateArgument &normTArg,
                                const clang::TemplateArgument &tArg,
                                const cling::Interpreter& interp,
-                               const ROOT::TMetaUtils::TNormalizedCtxt& normCtxt)
+                               const ROOT::TMetaUtils::TNormalizedCtxt& normCtxt,
+                               const clang::ASTContext& astCtxt)
 {
    using namespace ROOT::TMetaUtils;
    using namespace clang;
@@ -3583,6 +3584,26 @@ static bool RecurseKeepNParams(clang::TemplateArgument &normTArg,
                   normCtxt);
       normTArg = TemplateArgument(thisNormQualType);
       return (thisNormQualType != thisArgQualType);
+   } else if (normTArg.getKind() == clang::TemplateArgument::Pack) {
+      assert( tArg.getKind() == clang::TemplateArgument::Pack );
+
+      SmallVector<TemplateArgument, 2> desArgs;
+      bool mightHaveChanged = true;
+      for (auto I = normTArg.pack_begin(), E = normTArg.pack_end(),
+           FI = tArg.pack_begin(), FE = tArg.pack_end();
+           I != E && FI != FE; ++I, ++FI)
+      {
+         TemplateArgument pack_arg(*I);
+         mightHaveChanged |= RecurseKeepNParams(pack_arg, *FI, interp, normCtxt, astCtxt);
+         desArgs.push_back(pack_arg);
+      }
+      if (mightHaveChanged) {
+         ASTContext &mutableCtx( const_cast<ASTContext&>(astCtxt) );
+         normTArg = TemplateArgument::CreatePackCopy(mutableCtx,
+                                                     desArgs.data(),
+                                                     desArgs.size());
+      }
+      return mightHaveChanged;
    }
    return false;
 }
@@ -3736,13 +3757,13 @@ static void KeepNParams(clang::QualType& normalizedType,
             // arguments we just process all remaining argument and exit the main loop.
             for( ; inst != nNormArgs; ++inst) {
                normTArg = normalizedTst->getArgs()[inst];
-               mightHaveChanged |= RecurseKeepNParams(normTArg, tArg, interp, normCtxt);
+               mightHaveChanged |= RecurseKeepNParams(normTArg, tArg, interp, normCtxt, astCtxt);
                argsToKeep.push_back(normTArg);
             }
             // Done.
             break;
          }
-         mightHaveChanged |= RecurseKeepNParams(normTArg, tArg, interp, normCtxt);
+         mightHaveChanged |= RecurseKeepNParams(normTArg, tArg, interp, normCtxt, astCtxt);
          argsToKeep.push_back(normTArg);
          continue;
       } else {
@@ -3766,7 +3787,7 @@ static void KeepNParams(clang::QualType& normalizedType,
          equal = areEqualValues(tArg, *tParPtr);
       }
       if (!equal) {
-         mightHaveChanged |= RecurseKeepNParams(normTArg, tArg, interp, normCtxt);
+         mightHaveChanged |= RecurseKeepNParams(normTArg, tArg, interp, normCtxt, astCtxt);
          argsToKeep.push_back(normTArg);
       } else {
          mightHaveChanged = true;
