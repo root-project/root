@@ -77,7 +77,11 @@ TClingBaseClassInfo::TClingBaseClassInfo(cling::Interpreter* interp,
       return;
    }
    fDecl = CRD;
-   fIter = CRD->bases_begin();
+   {
+      // In particular if the base are templated, this might deserialize.
+      cling::Interpreter::PushTransactionRAII RAII(fInterp);
+      fIter = CRD->bases_begin();
+   }
 }
 
 TClingBaseClassInfo::TClingBaseClassInfo(cling::Interpreter* interp,
