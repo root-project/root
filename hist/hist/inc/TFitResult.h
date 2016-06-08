@@ -70,7 +70,7 @@ public:
    }
 
 private:
-   ClassDef(TFitResult,1)  // Class holding the result of the fit
+   ClassDef(TFitResult, 0);  // Class holding the result of the fit
 };
 
 #endif

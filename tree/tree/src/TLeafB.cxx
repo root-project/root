@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TLeafB
+\ingroup tree
+
 A TLeaf for an 8 bit Integer data type.
 */
 

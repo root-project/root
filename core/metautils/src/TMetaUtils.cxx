@@ -3555,6 +3555,60 @@ static bool isTypeWithDefault(const clang::NamedDecl* nDecl)
 
 }
 
+static void KeepNParams(clang::QualType& normalizedType,
+                        const clang::QualType& vanillaType,
+                        const cling::Interpreter& interp,
+                        const ROOT::TMetaUtils::TNormalizedCtxt& normCtxt);
+
+// Returns true if normTArg might have changed.
+static bool RecurseKeepNParams(clang::TemplateArgument &normTArg,
+                               const clang::TemplateArgument &tArg,
+                               const cling::Interpreter& interp,
+                               const ROOT::TMetaUtils::TNormalizedCtxt& normCtxt,
+                               const clang::ASTContext& astCtxt)
+{
+   using namespace ROOT::TMetaUtils;
+   using namespace clang;
+
+   // Once we know there is no more default parameter, we can run through to the end
+   // and/or recurse in the template parameter packs.
+
+   // If this is a type,
+   // we need first of all to recurse: this argument may need to be manipulated
+   if (tArg.getKind() == clang::TemplateArgument::Type) {
+      QualType thisNormQualType = normTArg.getAsType();
+      QualType thisArgQualType = tArg.getAsType();
+      KeepNParams(thisNormQualType,
+                  thisArgQualType,
+                  interp,
+                  normCtxt);
+      normTArg = TemplateArgument(thisNormQualType);
+      return (thisNormQualType != thisArgQualType);
+   } else if (normTArg.getKind() == clang::TemplateArgument::Pack) {
+      assert( tArg.getKind() == clang::TemplateArgument::Pack );
+
+      SmallVector<TemplateArgument, 2> desArgs;
+      bool mightHaveChanged = true;
+      for (auto I = normTArg.pack_begin(), E = normTArg.pack_end(),
+           FI = tArg.pack_begin(), FE = tArg.pack_end();
+           I != E && FI != FE; ++I, ++FI)
+      {
+         TemplateArgument pack_arg(*I);
+         mightHaveChanged |= RecurseKeepNParams(pack_arg, *FI, interp, normCtxt, astCtxt);
+         desArgs.push_back(pack_arg);
+      }
+      if (mightHaveChanged) {
+         ASTContext &mutableCtx( const_cast<ASTContext&>(astCtxt) );
+         normTArg = TemplateArgument::CreatePackCopy(mutableCtx,
+                                                     desArgs.data(),
+                                                     desArgs.size());
+      }
+      return mightHaveChanged;
+   }
+   return false;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// This function allows to manipulate the number of arguments in the type
 /// of a template specialisation.
@@ -3629,7 +3683,7 @@ static void KeepNParams(clang::QualType& normalizedType,
    }
 
    // The canonical decl does not necessarily have the template default arguments.
-   // Need to walk through the redecl chain to find it (we know tehre will be no
+   // Need to walk through the redecl chain to find it (we know there will be no
    // inconsistencies, at least)
    const clang::ClassTemplateDecl* ctdWithDefaultArgs = ctd;
    for (const RedeclarableTemplateDecl* rd: ctdWithDefaultArgs->redecls()) {
@@ -3672,21 +3726,21 @@ static void KeepNParams(clang::QualType& normalizedType,
    bool mightHaveChanged = false;
 
    // becomes true when a parameter has a value equal to its default
-   for (int index = 0; index != nArgs; ++index) {
-      const NamedDecl* tParPtr = tPars.getParam(index);
+   for (int formal = 0, inst = 0; formal != nArgs; ++formal, ++inst) {
+      const NamedDecl* tParPtr = tPars.getParam(formal);
       if (!tParPtr) Error("KeepNParams",
                           "The parameter number %s is null.\n",
-                          index);
+                          formal);
 
-      const TemplateArgument& tArg = tArgs.get(index);
       // Stop if the normalized TemplateSpecializationType has less arguments than
       // the one index is pointing at.
       // We piggy back on the AddDefaultParameters routine basically.
-      if (index == nNormArgs) break;
+      if (formal == nNormArgs || inst == nNormArgs) break;
 
-      TemplateArgument NormTArg(normalizedTst->getArgs()[index]);
+      const TemplateArgument& tArg = tArgs.get(formal);
+      TemplateArgument normTArg(normalizedTst->getArgs()[inst]);
 
-      bool shouldKeepArg = nArgsToKeep < 0 || index < nArgsToKeep;
+      bool shouldKeepArg = nArgsToKeep < 0 || inst < nArgsToKeep;
       if (isStdDropDefault) shouldKeepArg = false;
 
       // Nothing to do here: either this parameter has no default, or we have to keep it.
@@ -3695,20 +3749,22 @@ static void KeepNParams(clang::QualType& normalizedType,
       // they are non default. This makes this feature UNUSABLE for cases like std::vector,
       // where 2 different entities would have the same name if an allocator different from
       // the default one is by chance used.
-      if (!isTypeWithDefault(tParPtr) || shouldKeepArg){
-         // If this is a type,
-         // we need first of all to recurse: this argument may need to be manipulated
-         if (tArg.getKind() == clang::TemplateArgument::Type){
-            QualType thisNormQualType = NormTArg.getAsType();
-            QualType thisArgQualType = tArg.getAsType();
-            KeepNParams(thisNormQualType,
-                        thisArgQualType,
-                        interp,
-                        normCtxt);
-            mightHaveChanged |= (thisNormQualType != thisArgQualType);
-            NormTArg = TemplateArgument(thisNormQualType);
+      if (!isTypeWithDefault(tParPtr) || shouldKeepArg) {
+         if ( tParPtr->isTemplateParameterPack() ) {
+            // This is the last template parameter in the template declaration
+            // but it is signaling that there can be an arbitrary number of arguments
+            // in the template instance.  So to avoid inadvertenly dropping those
+            // arguments we just process all remaining argument and exit the main loop.
+            for( ; inst != nNormArgs; ++inst) {
+               normTArg = normalizedTst->getArgs()[inst];
+               mightHaveChanged |= RecurseKeepNParams(normTArg, tArg, interp, normCtxt, astCtxt);
+               argsToKeep.push_back(normTArg);
+            }
+            // Done.
+            break;
          }
-         argsToKeep.push_back(NormTArg);
+         mightHaveChanged |= RecurseKeepNParams(normTArg, tArg, interp, normCtxt, astCtxt);
+         argsToKeep.push_back(normTArg);
          continue;
       } else {
          if (!isStdDropDefault) {
@@ -3731,7 +3787,8 @@ static void KeepNParams(clang::QualType& normalizedType,
          equal = areEqualValues(tArg, *tParPtr);
       }
       if (!equal) {
-         argsToKeep.push_back(NormTArg);
+         mightHaveChanged |= RecurseKeepNParams(normTArg, tArg, interp, normCtxt, astCtxt);
+         argsToKeep.push_back(normTArg);
       } else {
          mightHaveChanged = true;
       }

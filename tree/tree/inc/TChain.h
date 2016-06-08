@@ -35,16 +35,16 @@ class TCollection;
 class TChain : public TTree {
 
 protected:
-   Int_t        fTreeOffsetLen;    //  Current size of fTreeOffset array
-   Int_t        fNtrees;           //  Number of trees
-   Int_t        fTreeNumber;       //! Current Tree number in fTreeOffset table
-   Long64_t    *fTreeOffset;       //[fTreeOffsetLen] Array of variables
-   Bool_t       fCanDeleteRefs;    //! If true, TProcessIDs are deleted when closing a file
-   TTree       *fTree;             //! Pointer to current tree (Note: We do *not* own this tree.)
-   TFile       *fFile;             //! Pointer to current file (We own the file).
-   TObjArray   *fFiles;            //-> List of file names containing the trees (TChainElement, owned)
-   TList       *fStatus;           //-> List of active/inactive branches (TChainElement, owned)
-   TChain      *fProofChain;       //! chain proxy when going to be processed by PROOF
+   Int_t        fTreeOffsetLen;    ///<  Current size of fTreeOffset array
+   Int_t        fNtrees;           ///<  Number of trees
+   Int_t        fTreeNumber;       ///<! Current Tree number in fTreeOffset table
+   Long64_t    *fTreeOffset;       ///<[fTreeOffsetLen] Array of variables
+   Bool_t       fCanDeleteRefs;    ///<! If true, TProcessIDs are deleted when closing a file
+   TTree       *fTree;             ///<! Pointer to current tree (Note: We do *not* own this tree.)
+   TFile       *fFile;             ///<! Pointer to current file (We own the file).
+   TObjArray   *fFiles;            ///< -> List of file names containing the trees (TChainElement, owned)
+   TList       *fStatus;           ///< -> List of active/inactive branches (TChainElement, owned)
+   TChain      *fProofChain;       ///<! chain proxy when going to be processed by PROOF
 
 private:
    TChain(const TChain&);            // not implemented

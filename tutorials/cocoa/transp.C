@@ -38,7 +38,7 @@ void transp()
    new TColor(greeIndex, 0., 1., 0., "green", 0.5);
 
    //3. Test that back-end is TGCocoa.
-   TCanvas * const cnv = new TCanvas("trasnparency", "transparency demo", 600, 400);
+   TCanvas * const cnv = new TCanvas("transparency", "transparency demo", 600, 400);
    //After we created a canvas, gVirtualX in principle should be initialized
    //and we can check its type:
    if (gVirtualX && !gVirtualX->InheritsFrom("TGCocoa")) {

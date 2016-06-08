@@ -35,16 +35,16 @@ class TChainElement : public TNamed {
    };
 
 protected:
-   Long64_t      fEntries;          //Number of entries in the tree of this chain element
-   Int_t         fNPackets;         //Number of packets
-   Int_t         fPacketSize;       //Number of events in one packet for parallel root
-   Int_t         fStatus;           //branch status when used as a branch
-   void         *fBaddress;         //!branch address when used as a branch
-   TString       fBaddressClassName;//!Name of the class pointed to by fBaddress
-   UInt_t        fBaddressType;     //!Type of the value pointed to by fBaddress
-   Bool_t        fBaddressIsPtr;    //!True if the address is a pointer to an address
-   char         *fPackets;          //!Packet descriptor string
-   TBranch     **fBranchPtr;        //!Address of user branch pointer (to updated upon loading a file)
+   Long64_t      fEntries;           ///<  Number of entries in the tree of this chain element
+   Int_t         fNPackets;          ///<  Number of packets
+   Int_t         fPacketSize;        ///<  Number of events in one packet for parallel root
+   Int_t         fStatus;            ///<  branch status when used as a branch
+   void         *fBaddress;          ///<! branch address when used as a branch
+   TString       fBaddressClassName; ///<! Name of the class pointed to by fBaddress
+   UInt_t        fBaddressType;      ///<! Type of the value pointed to by fBaddress
+   Bool_t        fBaddressIsPtr;     ///<! True if the address is a pointer to an address
+   char         *fPackets;           ///<! Packet descriptor string
+   TBranch     **fBranchPtr;         ///<! Address of user branch pointer (to updated upon loading a file)
 
 public:
    TChainElement();

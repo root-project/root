@@ -89,6 +89,15 @@ A new color can be created the following way:
    TColor *color = new TColor(ci, 0.1, 0.2, 0.3);
 ~~~
 
+\since **6.07/07:**
+TColor::GetFreeColorIndex() allows to make sure the new color is created with an
+unused color index:
+
+~~~ {.cpp}
+   Int_t ci = TColor::GetFreeColorIndex();
+   TColor *color = new TColor(ci, 0.1, 0.2, 0.3);
+~~~
+
 Two sets of colors are initialized;
 
   -  The basic colors: colors with index from 0 to 50.
@@ -1861,6 +1870,20 @@ Int_t TColor::GetColorTransparent(Int_t n, Float_t a)
       ::Error("TColor::GetColorTransparent", "color with index %d not defined", n);
       return -1;
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Static function: Returns a free color index which can be used to define
+/// a user custom color.
+///
+/// ~~~ {.cpp}
+///   Int_t ci = TColor::GetFreeColorIndex();
+///   TColor *color = new TColor(ci, 0.1, 0.2, 0.3);
+/// ~~~
+
+Int_t TColor::GetFreeColorIndex()
+{
+   return gHighestColorIndex+1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

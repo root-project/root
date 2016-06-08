@@ -1,4 +1,4 @@
-/// \file TCanvas.cxx
+/// \file Canvas.cxx
 /// \ingroup Gpad ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-07-10
@@ -13,7 +13,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/TCanvas.h"
+#include "ROOT/Canvas.h"
 
 #include "ROOT/TDrawable.h"
 
@@ -23,6 +23,17 @@ void ROOT::Experimental::TCanvas::Paint() {
   for (auto&& drw: fPrimitives) {
     drw->Paint();
   }
+}
+
+namespace ROOT {
+namespace Experimental {
+namespace Internal {
+class TCanvasSharedPtrMaker: public ROOT::Experimental::TCanvas {
+public:
+  TCanvasSharedPtrMaker() {}
+};
+}
+}
 }
 
 namespace {
@@ -38,10 +49,10 @@ ROOT::Experimental::TCanvas::GetCanvases() {
   return GetHeldCanvases();
 }
 
-std::weak_ptr<ROOT::Experimental::TCanvas> ROOT::Experimental::TCanvas::Create(
+ROOT::Experimental::TCanvasPtr ROOT::Experimental::TCanvas::Create(
    std::experimental::string_view /*name*/) {
   // TODO: name registration (TDirectory?)
-  auto pCanvas = std::shared_ptr<TCanvas>(new TCanvas());
+  auto pCanvas = std::make_shared<Internal::TCanvasSharedPtrMaker>();
   GetHeldCanvases().emplace_back(pCanvas);
-  return pCanvas;
+  return ROOT::Experimental::TCanvasPtr(pCanvas);
 }

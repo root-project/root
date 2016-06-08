@@ -32,10 +32,10 @@ class TTree;
 
 class TBranchRef : public TBranch {
 private:
-   Long64_t   fRequestedEntry;  //! Cursor indicating which entry is being requested.
+   Long64_t   fRequestedEntry;  ///<! Cursor indicating which entry is being requested.
 
 protected:
-   TRefTable *fRefTable;        // pointer to the TRefTable
+   TRefTable *fRefTable;        ///< pointer to the TRefTable
 
    void    ReadLeavesImpl(TBuffer &b);
    void    FillLeavesImpl(TBuffer &b);

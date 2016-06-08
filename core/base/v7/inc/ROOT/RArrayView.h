@@ -15,6 +15,8 @@
 #ifndef ROOT7_RArrayView
 #define ROOT7_RArrayView
 
+#include "RConfigure.h"
+
 #ifdef R__HAS_STD_ARRAY_VIEW
 
 #include <array_view>

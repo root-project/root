@@ -57,34 +57,34 @@ public:
    };
 
 protected:
-   Int_t           fSeqNum;       //query unique sequential number
-   Bool_t          fDraw;         //true if draw action query
-   EQueryStatus    fStatus;       //query status
-   TDatime         fStart;        //time when processing started
-   TDatime         fEnd;          //time when processing ended
-   Float_t         fUsedCPU;      //real CPU time used (seconds)
-   TString         fOptions;      //processing options + aclic mode (< opt >#< aclic_mode >)
-   TList          *fInputList;    //input list; contains also data sets, entry list, ...
-   Long64_t        fEntries;      //number of entries processed
-   Long64_t        fFirst;        //first entry processed
-   Long64_t        fBytes;        //number of bytes processed
-   TMacro         *fLogFile;      //file with log messages from the query
-   TMacro         *fSelecHdr;     //selector header file
-   TMacro         *fSelecImp;     //selector implementation file
-   TString         fLibList;      //blank-separated list of libs loaded at fStart
-   TString         fParList;      //colon-separated list of PAR loaded at fStart
-   TList          *fOutputList;   //output list
-   Bool_t          fFinalized;    //whether Terminate has been run
-   Bool_t          fArchived;     //whether the query has been archived
-   TString         fResultFile;   //URL of the file where results have been archived
-   Float_t         fPrepTime;     //Prepare time (seconds) (millisec precision)
-   Float_t         fInitTime;     //Initialization time (seconds) (millisec precision)
-   Float_t         fProcTime;     //Processing time (seconds) (millisec precision)
-   Float_t         fMergeTime;    //Merging time (seconds) (millisec precision)
-   Float_t         fRecvTime;     //Transfer-to-client time (seconds) (millisec precision)
-   Float_t         fTermTime;     //Terminate time (seconds) (millisec precision)
-   Int_t           fNumWrks;      //Number of workers at start
-   Int_t           fNumMergers;   //Number of submergers
+   Int_t           fSeqNum;       ///< query unique sequential number
+   Bool_t          fDraw;         ///< true if draw action query
+   EQueryStatus    fStatus;       ///< query status
+   TDatime         fStart;        ///< time when processing started
+   TDatime         fEnd;          ///< time when processing ended
+   Float_t         fUsedCPU;      ///< real CPU time used (seconds)
+   TString         fOptions;      ///< processing options + aclic mode (< opt >#< aclic_mode >)
+   TList          *fInputList;    ///< input list; contains also data sets, entry list, ...
+   Long64_t        fEntries;      ///< number of entries processed
+   Long64_t        fFirst;        ///< first entry processed
+   Long64_t        fBytes;        ///< number of bytes processed
+   TMacro         *fLogFile;      ///< file with log messages from the query
+   TMacro         *fSelecHdr;     ///< selector header file
+   TMacro         *fSelecImp;     ///< selector implementation file
+   TString         fLibList;      ///< blank-separated list of libs loaded at fStart
+   TString         fParList;      ///< colon-separated list of PAR loaded at fStart
+   TList          *fOutputList;   ///< output list
+   Bool_t          fFinalized;    ///< whether Terminate has been run
+   Bool_t          fArchived;     ///< whether the query has been archived
+   TString         fResultFile;   ///< URL of the file where results have been archived
+   Float_t         fPrepTime;     ///< Prepare time (seconds) (millisec precision)
+   Float_t         fInitTime;     ///< Initialization time (seconds) (millisec precision)
+   Float_t         fProcTime;     ///< Processing time (seconds) (millisec precision)
+   Float_t         fMergeTime;    ///< Merging time (seconds) (millisec precision)
+   Float_t         fRecvTime;     ///< Transfer-to-client time (seconds) (millisec precision)
+   Float_t         fTermTime;     ///< Terminate time (seconds) (millisec precision)
+   Int_t           fNumWrks;      ///< Number of workers at start
+   Int_t           fNumMergers;   ///< Number of submergers
 
    TQueryResult(Int_t seqnum, const char *opt, TList *inlist,
                 Long64_t entries, Long64_t first,

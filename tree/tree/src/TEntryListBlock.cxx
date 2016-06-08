@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TEntryListBlock
+\ingroup tree
+
 Used by TEntryList to store the entry numbers.
 
 There are 2 ways to represent entry numbers in a TEntryListBlock:

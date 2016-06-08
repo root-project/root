@@ -41,8 +41,5 @@ void candleplot() {
    h1->Draw("candle2");
    h2->Draw("candle3 same");
 
-   TLegend *leg = new TLegend(0.6,0.7,0.7,0.8);
-   leg->AddEntry(h1,"Machine A","f");
-   leg->AddEntry(h2,"Machine B","f");
-   leg->Draw();
+   gPad->BuildLegend(0.6,0.7,0.7,0.8,"","f");
 }

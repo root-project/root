@@ -457,11 +457,11 @@ TMinuit::TMinuit(): TNamed("MINUIT","The Minimization package")
    }
 
    fFCN = 0;
-   gMinuit = this;
    {
       R__LOCKGUARD2(gROOTMutex);
-      gROOT->GetListOfSpecials()->Add(gMinuit);
+      gROOT->GetListOfSpecials()->Add(this);
    }
+   gMinuit = this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -484,11 +484,11 @@ TMinuit::TMinuit(Int_t maxpar): TNamed("MINUIT","The Minimization package")
    SetMaxIterations();
 
    mninit(5,6,7);
-   gMinuit = this;
    {
       R__LOCKGUARD2(gROOTMutex);
-      gROOT->GetListOfSpecials()->Add(gMinuit);
+      gROOT->GetListOfSpecials()->Add(this);
    }
+   gMinuit = this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -511,7 +511,7 @@ TMinuit::~TMinuit()
       R__LOCKGUARD2(gROOTMutex);
       if (gROOT != 0 && gROOT->GetListOfSpecials() != 0) gROOT->GetListOfSpecials()->Remove(this);
    }
-   if (gMinuit == this) gMinuit = 0;
+   if (gMinuit == this) gMinuit = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -964,9 +964,6 @@ void TMinuit::SetFCN(void *fcn)
       fMethodCall->InitWithPrototype(funcname,"Int_t&,Double_t*,Double_t&,Double_t*,Int_t");
    }
    fFCN = InteractiveFCNm;
-   {
-      R__LOCKGUARD2(gROOTMutex);
-   }
    gMinuit = this; //required by InteractiveFCNm
 }
 

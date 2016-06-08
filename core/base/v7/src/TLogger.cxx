@@ -48,6 +48,6 @@ bool TLogHandlerDefault::Emit(const ROOT::Experimental::TLogEntry &entry) {
 } // unnamed namespace
 
 ROOT::Experimental::TLogManager& ROOT::Experimental::TLogManager::Get() {
-  static TLogManager instance(std::move(std::make_unique<TLogHandlerDefault>()));
+  static TLogManager instance(std::make_unique<TLogHandlerDefault>());
   return instance;
 }

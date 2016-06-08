@@ -929,7 +929,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
             // This is inside a TClonesArray.
 
             if (!element) {
-               Warning("DefineVariable",
+               Warning("DefinedVariable",
                        "Missing TStreamerElement in object in TClonesArray section");
                return -2;
             }
@@ -968,7 +968,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
             // This is inside a Collection
 
             if (!element) {
-               Warning("DefineVariable","Missing TStreamerElement in object in Collection section");
+               Warning("DefinedVariable","Missing TStreamerElement in object in Collection section");
                return -2;
             }
             // First we need to recover the collection.
@@ -2937,6 +2937,10 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
                   fVarIndexes[code][dim] = new TTreeFormula("index_var",
                                                             varindex,
                                                             fTree);
+                  if (fVarIndexes[code][dim]->GetNdim() == 0) {
+                     // Parsing failed for the index, let's stop here ....
+                     return -1;
+                  }
                   current += strlen(varindex)+1; // move to the end of the index array
                }
             }

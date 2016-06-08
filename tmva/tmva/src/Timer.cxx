@@ -64,7 +64,7 @@
 #endif
 
 const TString TMVA::Timer::fgClassName = "Timer";
-const Int_t   TMVA::Timer::fgNbins     = 24;  
+const Int_t   TMVA::Timer::fgNbins     = 16;  
 
 ClassImp(TMVA::Timer)
 

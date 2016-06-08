@@ -105,8 +105,14 @@ namespace Math {
          return fFunctions.Gaus(mean,sigma); 
       }
 
+      /// Gamma distribution
       double Gamma(double a, double b) {
          return fFunctions.Gamma(a,b); 
+      }
+
+      /// Beta distribution
+      double Beta(double a, double b) {
+         return fFunctions.Beta(a,b); 
       }
 
       ///Log-normal distribution
@@ -117,6 +123,21 @@ namespace Math {
       /// chi-square
       double  ChiSquare(double nu) {
          return fFunctions.ChiSquare(nu); 
+      }
+
+      /// Rayleigh distribution
+      double  Rayleigh(double sigma) {
+         return fFunctions.Rayleigh(sigma); 
+      }
+
+      /// Logistic distribution
+      double  Logistic(double a) {
+         return fFunctions.Logistic(a); 
+      }
+
+      /// Pareto distribution
+      double  Pareto(double a, double b) {
+         return fFunctions.Pareto(a, b); 
       }
 
       ///F-distribution

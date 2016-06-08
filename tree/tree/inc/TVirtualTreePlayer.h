@@ -40,8 +40,8 @@ class TVirtualIndex;
 class TVirtualTreePlayer : public TObject {
 
 private:
-   static TClass              *fgPlayer;  //Pointer to class of Tree player
-   static TVirtualTreePlayer  *fgCurrent; //Pointer to current Tree player
+   static TClass              *fgPlayer;  ///< Pointer to class of Tree player
+   static TVirtualTreePlayer  *fgCurrent; ///< Pointer to current Tree player
 
 public:
    static constexpr Long64_t kMaxEntries = std::numeric_limits<Long64_t>::max();

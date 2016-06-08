@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TSelector
+\ingroup tree
+
 A TSelector object is used by the TTree::Draw, TTree::Scan,
 TTree::Process to navigate in a TTree and make selections.
 It contains the following main methods:

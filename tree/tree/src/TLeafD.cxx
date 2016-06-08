@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TLeafD
+\ingroup tree
+
 A TLeaf for a 64 bit floating point data type.
 */
 

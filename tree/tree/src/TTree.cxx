@@ -67,18 +67,18 @@ Various kinds of branches can be added to a tree:
   variable. If the first variable does not have a type, it is
   assumed of type F by default. The list of currently supported
   types is given below:
-   - C : a character string terminated by the 0 character
-   - B : an 8 bit signed integer (Char_t)
-   - b : an 8 bit unsigned integer (UChar_t)
-   - S : a 16 bit signed integer (Short_t)
-   - s : a 16 bit unsigned integer (UShort_t)
-   - I : a 32 bit signed integer (Int_t)
-   - i : a 32 bit unsigned integer (UInt_t)
-   - F : a 32 bit floating point (Float_t)
-   - D : a 64 bit floating point (Double_t)
-   - L : a 64 bit signed integer (Long64_t)
-   - l : a 64 bit unsigned integer (ULong64_t)
-   - O : [the letter 'o', not a zero] a boolean (Bool_t)
+   - `C` : a character string terminated by the 0 character
+   - `B` : an 8 bit signed integer (`Char_t`)
+   - `b` : an 8 bit unsigned integer (`UChar_t`)
+   - `S` : a 16 bit signed integer (`Short_t`)
+   - `s` : a 16 bit unsigned integer (`UShort_t`)
+   - `I` : a 32 bit signed integer (`Int_t`)
+   - `i` : a 32 bit unsigned integer (`UInt_t`)
+   - `F` : a 32 bit floating point (`Float_t`)
+   - `D` : a 64 bit floating point (`Double_t`)
+   - `L` : a 64 bit signed integer (`Long64_t`)
+   - `l` : a 64 bit unsigned integer (`ULong64_t`)
+   - `O` : [the letter `o`, not a zero] a boolean (`Bool_t`)
 - If the address points to a single numerical variable, the leaflist is optional:
   int value;
   `tree->Branch(branchname, &value);`
@@ -127,7 +127,7 @@ Note: The pointer p_object must be initialized before calling TTree::Branch
     tree->Branch(branchname, &p_object);
 ~~~
 Whether the pointer is set to zero or not, the ownership of the object
-is not taken over by the TTree.  I.e. eventhough an object will be allocated
+is not taken over by the TTree.  I.e. even though an object will be allocated
 by TTree::Branch if the pointer p_object is zero, the object will <b>not</b>
 be deleted when the TTree is deleted.
 
@@ -1755,18 +1755,18 @@ Int_t TTree::Branch(const char* foldername, Int_t bufsize /* = 32000 */, Int_t s
 ///      the type of the variable is assumed to be the same as the previous
 ///      variable. If the first variable does not have a type, it is assumed
 ///      of type F by default. The list of currently supported types is given below:
-///         - C : a character string terminated by the 0 character
-///         - B : an 8 bit signed integer (Char_t)
-///         - b : an 8 bit unsigned integer (UChar_t)
-///         - S : a 16 bit signed integer (Short_t)
-///         - s : a 16 bit unsigned integer (UShort_t)
-///         - I : a 32 bit signed integer (Int_t)
-///         - i : a 32 bit unsigned integer (UInt_t)
-///         - F : a 32 bit floating point (Float_t)
-///         - D : a 64 bit floating point (Double_t)
-///         - L : a 64 bit signed integer (Long64_t)
-///         - l : a 64 bit unsigned integer (ULong64_t)
-///         - O : [the letter 'o', not a zero] a boolean (Bool_t)
+///         - `C` : a character string terminated by the 0 character
+///         - `B` : an 8 bit signed integer (`Char_t`)
+///         - `b` : an 8 bit unsigned integer (`UChar_t`)
+///         - `S` : a 16 bit signed integer (`Short_t`)
+///         - `s` : a 16 bit unsigned integer (`UShort_t`)
+///         - `I` : a 32 bit signed integer (`Int_t`)
+///         - `i` : a 32 bit unsigned integer (`UInt_t`)
+///         - `F` : a 32 bit floating point (`Float_t`)
+///         - `D` : a 64 bit floating point (`Double_t`)
+///         - `L` : a 64 bit signed integer (`Long64_t`)
+///         - `l` : a 64 bit unsigned integer (`ULong64_t`)
+///         - `O` : [the letter `o`, not a zero] a boolean (`Bool_t`)
 ///
 ///      Arrays of values are supported with the following syntax:
 ///         - If leaf name has the form var[nelem], where nelem is alphanumeric, then
@@ -4245,6 +4245,10 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 ///                                   ntuple->GetV2(), ntuple->GetV1());
 ///     Root > gr->Draw("ap"); //draw graph in current pad
 /// ~~~
+///
+/// A more complete complete tutorial (treegetval.C) shows how to use the
+/// GetVal() method.
+///
 /// creates a TGraph object with a number of points corresponding to the
 /// number of entries selected by the expression "pz>4", the x points of the graph
 /// being the px values of the Tree and the y points the py values.

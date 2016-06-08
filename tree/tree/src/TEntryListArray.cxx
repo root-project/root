@@ -10,6 +10,8 @@
 *************************************************************************/
 
 /** \class TEntryListArray
+\ingroup tree
+
 A list of entries and subentries in a TTree or TChain.
 
 TEntryListArray is an extension of TEntryList, used to hold selected entries and

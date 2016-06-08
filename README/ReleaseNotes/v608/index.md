@@ -87,6 +87,7 @@ Add a new mode for `TClass::SetCanSplit` (2) which indicates that this class and
 * Fix ROOT-7760: Fully allow the usage of the dylib extension on OSx.
 * Fix ROOT-7879: Prevent LinkDef files to be listed in a rootmap file and use (as the user actually expects) the header files #included in the linkdef file, if any, as the top level headers.
 * Add the *noIncludePaths* switch both for rootcling and genreflex to allow to loose track of the include paths in input to the dictionary generator.
+* Fix handling of template parameter pack in the forward declaration printer. [ROOT-8096]
 
 ### Interpreter Library
 
@@ -114,6 +115,10 @@ Add a new mode for `TClass::SetCanSplit` (2) which indicates that this class and
 ## TTree Libraries
 
 * Do not automatically setup read cache during TTree::Fill(). This fixes [ROOT-8031].
+* Make sure the option "PARA" in TTRe::Draw is used with at least tow variables [ROOT-8196].
+* The with `goff` option one can use as many variables as needed. There no more
+  limitation, like with the options `para`and `candle`.
+* Fix detection of errors that appears in nested TTreeFormula [ROOT-8218]
 
 ### Fast Cloning
 
@@ -134,6 +139,7 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 
 ## Math Libraries
 
+* Improve thread safety of TMinuit constructor [ROOT-8217]
 
 ## RooFit Libraries
 
@@ -203,6 +209,14 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
   to be editable later on using external softwares like "inkscape". This improvement
   was suggested [here](https://sft.its.cern.ch/jira/browse/ROOT-8161).
 * In TLatex with the Cocoa backend on Mac the `#tilde` position was too low.
+* New optional parameter "option" in TPad::BuildLegend to set the TLegend option (Georg Troska).
+* TCandle: a new candle plot painter class. It is now used in THistPainter and THStack
+  to paint candle plots (Georg Troska).
+* Fix two issues with the fill patterns in `TTextDump` (reported [here](https://sft.its.cern.ch/jira/browse/ROOT-8206)):
+    - The pattern number 3 was not implemented.
+    - Filled area drawn with pattern where surrounded by a solid line.
+* `TColor::GetFreeColorIndex()` allows to make sure the new color is created with an
+  unused color index.
 
 ## 3D Graphics Libraries
 
@@ -286,6 +300,7 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 
 
 ## Tutorials
+* New tutorial `treegetval.C` illustrating how to retrieve  `TTree` variables in arrays.
 
 
 ## Class Reference Guide

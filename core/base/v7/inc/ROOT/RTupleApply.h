@@ -15,6 +15,8 @@
 #ifndef ROOT7_RTupleApply
 #define ROOT7_RTupleApply
 
+#include "RConfigure.h"
+
 #ifdef R__HAS_STD_TUPLE_APPLY
 
 #include <tuple>

@@ -65,48 +65,48 @@ protected:
       kDoNotUseBufferMap = BIT(22) // If set, at least one of the entry in the branch will use the buffer's map of classname and objects.
    };
 
-   static Int_t fgCount;          //! branch counter
-   Int_t       fCompress;        //  Compression level and algorithm
-   Int_t       fBasketSize;      //  Initial Size of  Basket Buffer
-   Int_t       fEntryOffsetLen;  //  Initial Length of fEntryOffset table in the basket buffers
-   Int_t       fWriteBasket;     //  Last basket number written
-   Long64_t    fEntryNumber;     //  Current entry number (last one filled in this branch)
-   Int_t       fOffset;          //  Offset of this branch
-   Int_t       fMaxBaskets;      //  Maximum number of Baskets so far
-   Int_t       fNBaskets;        //! Number of baskets in memory
-   Int_t       fSplitLevel;      //  Branch split level
-   Int_t       fNleaves;         //! Number of leaves
-   Int_t       fReadBasket;      //! Current basket number when reading
-   Long64_t    fReadEntry;       //! Current entry number when reading
-   Long64_t    fFirstBasketEntry;//! First entry in the current basket.
-   Long64_t    fNextBasketEntry; //! Next entry that will requires us to go to the next basket
-   TBasket    *fCurrentBasket;   //! Pointer to the current basket.
-   Long64_t    fEntries;         //  Number of entries
-   Long64_t    fFirstEntry;      //  Number of the first entry in this branch
-   Long64_t    fTotBytes;        //  Total number of bytes in all leaves before compression
-   Long64_t    fZipBytes;        //  Total number of bytes in all leaves after compression
-   TObjArray   fBranches;        //-> List of Branches of this branch
-   TObjArray   fLeaves;          //-> List of leaves of this branch
-   TObjArray   fBaskets;         //-> List of baskets of this branch
-   Int_t      *fBasketBytes;     //[fMaxBaskets] Length of baskets on file
-   Long64_t   *fBasketEntry;     //[fMaxBaskets] Table of first entry in each basket
-   Long64_t   *fBasketSeek;      //[fMaxBaskets] Addresses of baskets on file
-   TTree      *fTree;            //! Pointer to Tree header
-   TBranch    *fMother;          //! Pointer to top-level parent branch in the tree.
-   TBranch    *fParent;          //! Pointer to parent branch.
-   char       *fAddress;         //! Address of 1st leaf (variable or object)
-   TDirectory *fDirectory;       //! Pointer to directory where this branch buffers are stored
-   TString     fFileName;        //  Name of file where buffers are stored ("" if in same file as Tree header)
-   TBuffer    *fEntryBuffer;     //! Buffer used to directly pass the content without streaming
-   TBuffer    *fTransientBuffer; //! Pointer to the current transient buffer.
-   TList      *fBrowsables;      //! List of TVirtualBranchBrowsables used for Browse()
+   static Int_t fgCount;          ///<! branch counter
+   Int_t       fCompress;         ///<  Compression level and algorithm
+   Int_t       fBasketSize;       ///<  Initial Size of  Basket Buffer
+   Int_t       fEntryOffsetLen;   ///<  Initial Length of fEntryOffset table in the basket buffers
+   Int_t       fWriteBasket;      ///<  Last basket number written
+   Long64_t    fEntryNumber;      ///<  Current entry number (last one filled in this branch)
+   Int_t       fOffset;           ///<  Offset of this branch
+   Int_t       fMaxBaskets;       ///<  Maximum number of Baskets so far
+   Int_t       fNBaskets;         ///<! Number of baskets in memory
+   Int_t       fSplitLevel;       ///<  Branch split level
+   Int_t       fNleaves;          ///<! Number of leaves
+   Int_t       fReadBasket;       ///<! Current basket number when reading
+   Long64_t    fReadEntry;        ///<! Current entry number when reading
+   Long64_t    fFirstBasketEntry; ///<! First entry in the current basket.
+   Long64_t    fNextBasketEntry;  ///<! Next entry that will requires us to go to the next basket
+   TBasket    *fCurrentBasket;    ///<! Pointer to the current basket.
+   Long64_t    fEntries;          ///<  Number of entries
+   Long64_t    fFirstEntry;       ///<  Number of the first entry in this branch
+   Long64_t    fTotBytes;         ///<  Total number of bytes in all leaves before compression
+   Long64_t    fZipBytes;         ///<  Total number of bytes in all leaves after compression
+   TObjArray   fBranches;         ///< -> List of Branches of this branch
+   TObjArray   fLeaves;           ///< -> List of leaves of this branch
+   TObjArray   fBaskets;          ///< -> List of baskets of this branch
+   Int_t      *fBasketBytes;      ///<[fMaxBaskets] Length of baskets on file
+   Long64_t   *fBasketEntry;      ///<[fMaxBaskets] Table of first entry in each basket
+   Long64_t   *fBasketSeek;       ///<[fMaxBaskets] Addresses of baskets on file
+   TTree      *fTree;             ///<! Pointer to Tree header
+   TBranch    *fMother;           ///<! Pointer to top-level parent branch in the tree.
+   TBranch    *fParent;           ///<! Pointer to parent branch.
+   char       *fAddress;          ///<! Address of 1st leaf (variable or object)
+   TDirectory *fDirectory;        ///<! Pointer to directory where this branch buffers are stored
+   TString     fFileName;         ///<  Name of file where buffers are stored ("" if in same file as Tree header)
+   TBuffer    *fEntryBuffer;      ///<! Buffer used to directly pass the content without streaming
+   TBuffer    *fTransientBuffer;  ///<! Pointer to the current transient buffer.
+   TList      *fBrowsables;       ///<! List of TVirtualBranchBrowsables used for Browse()
 
-   Bool_t      fSkipZip;         //! After being read, the buffer will not be unzipped.
+   Bool_t      fSkipZip;          ///<! After being read, the buffer will not be unzipped.
 
    typedef void (TBranch::*ReadLeaves_t)(TBuffer &b);
-   ReadLeaves_t fReadLeaves;     //! Pointer to the ReadLeaves implementation to use.
+   ReadLeaves_t fReadLeaves;      ///<! Pointer to the ReadLeaves implementation to use.
    typedef void (TBranch::*FillLeaves_t)(TBuffer &b);
-   FillLeaves_t fFillLeaves;     //! Pointer to the FillLeaves implementation to use.
+   FillLeaves_t fFillLeaves;      ///<! Pointer to the FillLeaves implementation to use.
    void     ReadLeavesImpl(TBuffer &b);
    void     ReadLeaves0Impl(TBuffer &b);
    void     ReadLeaves1Impl(TBuffer &b);

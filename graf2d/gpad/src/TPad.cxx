@@ -407,20 +407,24 @@ void TPad::Browse(TBrowser *b)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Build a legend from the graphical objects in the pad
+/// Build a legend from the graphical objects in the pad.
 ///
-/// A simple method to build automatically a TLegend from the
-/// primitives in a TPad. Only those deriving from TAttLine,
-/// TAttMarker and TAttFill are added, excluding TPave and TFrame
-/// derived classes. x1, y1, x2, y2 are the TLegend coordinates.
-/// title is the legend title. By default it is " ". The caller
-/// program owns the returned TLegend.
+/// A simple method to build automatically a TLegend from the primitives in a TPad.
+///
+/// Only those deriving from TAttLine, TAttMarker and TAttFill are added, excluding
+/// TPave and TFrame derived classes.
+///
+/// \param[in] x1, y1, x2, y2       The TLegend coordinates
+/// \param[in] title                The legend title. By default it is " "
+/// \param[in] option               The TLegend option
+///
+/// The caller program owns the returned TLegend.
 ///
 /// If the pad contains some TMultiGraph or THStack the individual
 /// graphs or histograms in them are added to the TLegend.
 
 TLegend *TPad::BuildLegend(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
-                           const char* title)
+                           const char* title, Option_t *option)
 {
    TList *lop=GetListOfPrimitives();
    if (!lop) return 0;
@@ -428,6 +432,7 @@ TLegend *TPad::BuildLegend(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
    TIter next(lop);
    TString mes;
    TObject *o=0;
+   TString opt("");
    while( (o=next()) ) {
       if((o->InheritsFrom(TAttLine::Class()) || o->InheritsFrom(TAttMarker::Class()) ||
           o->InheritsFrom(TAttFill::Class())) &&
@@ -439,10 +444,13 @@ TLegend *TPad::BuildLegend(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
                mes = o->GetName();
             else
                mes = o->ClassName();
-            TString opt("");
-            if (o->InheritsFrom(TAttLine::Class()))   opt += "l";
-            if (o->InheritsFrom(TAttMarker::Class())) opt += "p";
-            if (o->InheritsFrom(TAttFill::Class()))   opt += "f";
+            if (strlen(option)) {
+               opt = option;
+            } else {
+               if (o->InheritsFrom(TAttLine::Class()))   opt += "l";
+               if (o->InheritsFrom(TAttMarker::Class())) opt += "p";
+               if (o->InheritsFrom(TAttFill::Class()))   opt += "f";
+            }
             leg->AddEntry(o,mes.Data(),opt.Data());
       } else if ( o->InheritsFrom(TMultiGraph::Class() ) ) {
          if (!leg) leg = new TLegend(x1, y1, x2, y2, title);
@@ -455,7 +463,9 @@ TLegend *TPad::BuildLegend(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
             if      (strlen(gr->GetTitle())) mes = gr->GetTitle();
             else if (strlen(gr->GetName()))  mes = gr->GetName();
             else                             mes = gr->ClassName();
-            leg->AddEntry( obj, mes.Data(), "lpf" );
+            if (strlen(option))              opt = option;
+            else                             opt = "lpf";
+            leg->AddEntry( obj, mes.Data(), opt );
          }
       } else if ( o->InheritsFrom(THStack::Class() ) ) {
          if (!leg) leg = new TLegend(x1, y1, x2, y2, title);
@@ -468,7 +478,9 @@ TLegend *TPad::BuildLegend(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
             if      (strlen(hist->GetTitle())) mes = hist->GetTitle();
             else if (strlen(hist->GetName()))  mes = hist->GetName();
             else                               mes = hist->ClassName();
-            leg->AddEntry( obj, mes.Data(), "lpf" );
+            if (strlen(option))                opt = option;
+            else                               opt = "lpf";
+            leg->AddEntry( obj, mes.Data(), opt );
          }
       }
    }
@@ -2836,7 +2848,7 @@ void TPad::HighLight(Color_t color, Bool_t set)
 
    // We do not want to have active(executable) buttons, etc highlighted
    // in this manner, unless we want to edit'em
-   if (GetMother() && GetMother()->IsEditable() && !InheritsFrom(TButton::Class())) {
+   if (GetBorderMode()>0 && GetMother() && GetMother()->IsEditable() && !InheritsFrom(TButton::Class())) {
       //When doing a DrawClone from the GUI you would do
       //  - select an empty pad -
       //  - right click on object -

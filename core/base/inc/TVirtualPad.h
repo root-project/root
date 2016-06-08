@@ -74,7 +74,7 @@ public:
    virtual Double_t AbsPixeltoX(Int_t px) = 0;
    virtual Double_t AbsPixeltoY(Int_t py) = 0;
    virtual void     AddExec(const char *name, const char *command) = 0;
-   virtual TLegend *BuildLegend(Double_t x1=0.5, Double_t y1=0.67, Double_t x2=0.88, Double_t y2=0.88, const char *title="") = 0;
+   virtual TLegend *BuildLegend(Double_t x1=0.5, Double_t y1=0.67, Double_t x2=0.88, Double_t y2=0.88, const char *title="", Option_t * option ="") = 0;
    virtual TVirtualPad* cd(Int_t subpadnumber=0) = 0;
    virtual void     Clear(Option_t *option="") = 0;
    virtual void     Close(Option_t *option="") = 0;
