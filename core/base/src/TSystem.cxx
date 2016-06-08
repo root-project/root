@@ -868,12 +868,28 @@ const char *TSystem::WorkingDirectory()
    return 0;
 }
 
+//////////////////////////////////////////////////////////////////////////////
+/// Return working directory.
+
+std::string TSystem::GetWorkingDirectory() const
+{
+   return std::string();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the user's home directory.
 
 const char *TSystem::HomeDirectory(const char*)
 {
    return 0;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+/// Return the user's home directory.
+
+std::string TSystem::GetHomeDirectory(const char*) const
+{
+   return std::string();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1094,8 +1110,6 @@ Bool_t TSystem::ExpandFileName(const char *fname, char *xname, const int kBufSiz
    const char *b, *c, *e;
    const char *p;
    
-   R__LOCKGUARD2(gSystemMutex);
-
    iter = 0; xname[0] = 0; inp = buff + kBufSize; out = inp + kBufSize;
    inp[-1] = ' '; inp[0] = 0; out[-1] = ' ';
    c = fname + strspn(fname, " \t\f\r");
@@ -1109,7 +1123,8 @@ again:
 
    p = 0; e = 0;
    if (c[0] == '~' && c[1] == '/') { // ~/ case
-      p = HomeDirectory();
+      std::string hd = GetHomeDirectory();
+      p = hd.c_str();
       e = c + 1;
       if (p) {                         // we have smth to copy
          strlcpy(x, p, kBufSize);
@@ -1123,7 +1138,8 @@ again:
       n = strcspn(c+1, "/ ");
       buff[0] = 0;
       strncat(buff, c+1, n);
-      p = HomeDirectory(buff);
+      std::string hd = GetHomeDirectory(buff);
+      p = hd.c_str();
       e = c+1+n;
       if (p) {                          // we have smth to copy
          strlcpy(x, p, kBufSize);
@@ -1140,7 +1156,8 @@ again:
       p = 0; e = 0;
 
       if (c[0] == '.' && c[1] == '/' && c[-1] == ' ') { // $cwd
-         strlcpy(buff, WorkingDirectory(), kBufSize);
+         std::string wd = GetWorkingDirectory();
+         strlcpy(buff, wd.c_str(), kBufSize);
          p = buff;
          e = c + 1;
       }
@@ -1169,7 +1186,8 @@ again:
             p = Getenv(buff);
          }
          if (!p && !strcmp(buff, "cwd")) { // it is $cwd
-            strlcpy(buff, WorkingDirectory(), kBufSize);
+            std::string wd = GetWorkingDirectory();
+            strlcpy(buff, wd.c_str(), kBufSize);
             p = buff;
          }
          if (!p && !strcmp(buff, "$")) { // it is $$ (replace by GetPid())

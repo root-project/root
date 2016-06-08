@@ -1411,12 +1411,30 @@ const char *TUnixSystem::WorkingDirectory()
    R__LOCKGUARD2(gSystemMutex);
 
    static char cwd[kMAXPATHLEN];
+   FillWithCwd(cwd);
+   fWdpath = cwd;
+
+   return fWdpath.Data();
+}
+
+//////////////////////////////////////////////////////////////////////////////
+/// Return working directory.
+
+std::string TUnixSystem::GetWorkingDirectory() const
+{
+   char cwd[kMAXPATHLEN];
+   FillWithCwd(cwd);
+   return std::string(cwd);
+}
+
+//////////////////////////////////////////////////////////////////////////////
+/// Fill buffer with current working directory.
+
+void TUnixSystem::FillWithCwd(char *cwd) const
+{
    if (::getcwd(cwd, kMAXPATHLEN) == 0) {
-      fWdpath = "/";
       Error("WorkingDirectory", "getcwd() failed");
    }
-   fWdpath = cwd;
-   return fWdpath.Data();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1425,6 +1443,15 @@ const char *TUnixSystem::WorkingDirectory()
 const char *TUnixSystem::HomeDirectory(const char *userName)
 {
    return UnixHomedirectory(userName);
+}
+
+//////////////////////////////////////////////////////////////////////////////
+/// Return the user's home directory.
+
+std::string TUnixSystem::GetHomeDirectory(const char *userName) const
+{
+   char path[kMAXPATHLEN], mydir[kMAXPATHLEN] = { '\0' };
+   return std::string(UnixHomedirectory(userName, path, mydir));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3872,8 +3899,15 @@ int TUnixSystem::UnixSelect(Int_t nfds, TFdSet *readready, TFdSet *writeready,
 const char *TUnixSystem::UnixHomedirectory(const char *name)
 {
    static char path[kMAXPATHLEN], mydir[kMAXPATHLEN] = { '\0' };
-   struct passwd *pw;
+   return UnixHomedirectory(name, path, mydir);
+}
 
+////////////////////////////////////////////////////////////////////////////
+/// Returns the user's home directory.
+
+const char *TUnixSystem::UnixHomedirectory(const char *name, char *path, char *mydir)
+{
+   struct passwd *pw;
    if (name) {
       pw = getpwnam(name);
       if (pw) {

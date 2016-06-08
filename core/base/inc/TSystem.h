@@ -407,7 +407,9 @@ public:
    virtual void           *GetDirPtr() const { return 0; }
    virtual Bool_t          ChangeDirectory(const char *path);
    virtual const char     *WorkingDirectory();
+   virtual std::string     GetWorkingDirectory() const;
    virtual const char     *HomeDirectory(const char *userName = 0);
+   virtual std::string     GetHomeDirectory(const char *userName = 0) const;
    virtual int             mkdir(const char *name, Bool_t recursive = kFALSE);
    Bool_t                  cd(const char *path) { return ChangeDirectory(path); }
    const char             *pwd() { return WorkingDirectory(); }
