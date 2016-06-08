@@ -265,17 +265,18 @@ template <int I, class HISTIMPL, class AXES, bool GROW>
 struct TGetBinIndex {
   int operator()(HISTIMPL* hist, const AXES& axes,
                  const typename HISTIMPL::CoordArray_t& x, TAxisBase::EFindStatus& status) const {
-    int bin = std::get<I>(axes).FindBin(x[I]);
-    if (GROW && std::get<I>(axes).CanGrow()
-        && (bin < 0 || bin > std::get<I>(axes).GetNBinsNoOver())) {
-      hist->GrowAxis(I, x[I]);
+    constexpr const int thisAxis = HISTIMPL::GetNDim() - I - 1;
+    int bin = std::get<thisAxis>(axes).FindBin(x[thisAxis]);
+    if (GROW && std::get<thisAxis>(axes).CanGrow()
+        && (bin < 0 || bin > std::get<thisAxis>(axes).GetNBinsNoOver())) {
+      hist->GrowAxis(I, x[thisAxis]);
       status = TAxisBase::EFindStatus::kCanGrow;
 
       // Abort bin calculation; we don't care. Let THist::GetBinIndex() retry!
       return bin;
     }
     return bin + TGetBinIndex<I - 1, HISTIMPL, AXES, GROW>()(hist, axes, x, status)
-                 * std::get<I>(axes).GetNBins();
+                 * std::get<thisAxis>(axes).GetNBins();
   }
 };
 
