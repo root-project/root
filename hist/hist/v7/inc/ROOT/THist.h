@@ -41,7 +41,7 @@ class THist<DIMENSIONS, PRECISION, STAT...>
 /**
  \class THist
  Histogram class for histograms with `DIMENSIONS` dimensions, where each
- bin count is stored by a value of type `DATA::Weight_t`. DATA stores statistical
+ bin count is stored by a value of type `PRECISION`. STAT stores statistical
  data of the entries filled into the histogram (bin content, uncertainties etc).
 
  A histogram counts occurrences of values or n-dimensional combinations thereof.
@@ -61,7 +61,7 @@ public:
   /// The coordinates type: a `DIMENSIONS`-dimensional `std::array` of `double`.
   using CoordArray_t = typename ImplBase_t::CoordArray_t;
   /// The type of weights
-  using Weight_t = typename ImplBase_t::Weight_t;
+  using Weight_t = PRECISION;
   /// Pointer type to `HistImpl_t::Fill`, for faster access.
   using FillFunc_t = typename ImplBase_t::FillFunc_t;
   /// Range.
