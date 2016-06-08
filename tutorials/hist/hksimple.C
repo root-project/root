@@ -22,7 +22,7 @@ void hksimple()
   }
 
 // Fill histograms randomly
-  gRandom->SetSeed();
+  gRandom->SetSeed(12345);
   Float_t px, py, pz;
   const Int_t kUPDATE = 10;
   for (Int_t i = 0; i <= 300; i++) {
