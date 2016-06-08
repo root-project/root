@@ -224,7 +224,7 @@ public:
     TConstBinStat(const THistStatUncertainty& stat, int index):
       fSumW2(stat.GetSumOfSquaredWeights(index)) {}
     PRECISION GetSumW2() const { return fSumW2; }
-    // Can never modify this. Set GetSumW2() instead.
+
     double GetUncertaintyImpl() const { return std::sqrt(std::abs(fSumW2)); }
 
   private:
@@ -382,7 +382,7 @@ class THistBinStat: public BASES... {
 private:
   /// Check whether `double T::GetBinUncertaintyImpl(int)` can be called.
   template <class T>
-  static auto HaveUncertainty(const T* This) -> decltype(This->GetUncertaintyImpl(12));
+  static auto HaveUncertainty(const T* This) -> decltype(This->GetUncertaintyImpl());
   /// Fall-back case for check whether `double T::GetBinUncertaintyImpl(int)` can be called.
   template <class T>
   static char HaveUncertainty(...);
