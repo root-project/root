@@ -7,8 +7,20 @@ using namespace ROOT::Experimental;
 
 // Tests the number of bins
 TEST(BinIterNBins, NumBins) {
+  TH2F h({2, -10., 0.}, {3, -1., 10.});
+  EXPECT_EQ(4*5, h.GetImpl()->GetNBins());
+
+  int nBins = 0;
+  for (auto &&bin: h) {
+    (void)bin;
+    ++nBins;
+  }
+  EXPECT_EQ(h.GetImpl()->GetNBins(), nBins);
+}
+
+// Tests the bin ref: fill, retrieve.
+TEST(BinIterNBins, BinRef) {
   TH2F h({10, -1., 1.}, {10, -1., 1.});
-  EXPECT_EQ(12*12, h.GetImpl()->GetNBins());
 
   double x = 0.11;
   double y = 0.33;
@@ -44,7 +56,6 @@ TEST(BinIterNBins, NumBins) {
     }
     ++nBins;
   }
-  EXPECT_EQ(h.GetImpl()->GetNBins(), nBins);
 
   EXPECT_FLOAT_EQ(0.1, foundcoord[0]);
   EXPECT_FLOAT_EQ(0.3, foundcoord[1]);
