@@ -63,6 +63,7 @@ TEST(AxisTest, NumBins) {
   // Through concrete axis incarnations (and to TAxisConfig)
   {
     TAxisEquidistant ax("TITLE", 10, -1., 1.);
+
     EXPECT_EQ(10 + nOverflow, ax.GetNBins());
     EXPECT_EQ(10, ax.GetNBinsNoOver());
     EXPECT_EQ(0, ax.GetUnderflowBin());
@@ -71,6 +72,34 @@ TEST(AxisTest, NumBins) {
     EXPECT_EQ(true, ax.IsUnderflowBin(-10000));
     EXPECT_EQ(true, ax.IsOverflowBin(11));
     EXPECT_EQ(true, ax.IsOverflowBin(16));
+
+    EXPECT_FLOAT_EQ(0.2, ax.GetBinWidth());
+    EXPECT_EQ(7, ax.FindBin(0.22));
+    EXPECT_EQ(0, ax.FindBin(-2.));
+    EXPECT_EQ(10, ax.FindBin(0.99));
+    EXPECT_EQ(11, ax.FindBin(1.01));
+    EXPECT_EQ(11, ax.FindBin(101.));
+
+    EXPECT_FLOAT_EQ(0.7, ax.GetBinCenter(9));
+    EXPECT_FLOAT_EQ(0.6, ax.GetBinFrom(9));
+    EXPECT_FLOAT_EQ(0.8, ax.GetBinTo(9));
+
+    EXPECT_LT(ax.GetBinCenter(0), -1.);
+    EXPECT_LT(ax.GetBinFrom(0), -1.);
+    EXPECT_FLOAT_EQ(-1., ax.GetBinTo(0));
+
+    EXPECT_LT(ax.GetBinCenter(-1), -1.);
+    EXPECT_LT(ax.GetBinFrom(-2), -1.);
+    EXPECT_LE(ax.GetBinTo(-3), -1.);
+
+    EXPECT_LT(1., ax.GetBinCenter(11));
+    EXPECT_FLOAT_EQ(1., ax.GetBinFrom(11));
+    EXPECT_LT(1., ax.GetBinTo(11));
+
+    EXPECT_LT(1., ax.GetBinCenter(111));
+    EXPECT_LE(1., ax.GetBinFrom(111));
+    EXPECT_LT(1., ax.GetBinTo(111));
+    
 
     TAxisConfig axcfg(ax);
     EXPECT_EQ(ax.GetNBins(), axcfg.GetNBins());
