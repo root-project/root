@@ -43,6 +43,13 @@ typedef multi_index_container< ComplexElement*,
                                                          >
                               > > > ClassFail;
 
+/// Variadic template.
+template <class Index, class... Config>
+class TempVariadic {};
+
+template <class Index, int... Config>
+class TempValueVariadic {};
+
 #include "cmsExample01.h"
 
 class cl { public: template <class T> class inner; };
@@ -73,6 +80,10 @@ bool test(const std::string &input,const char *expected)
 }
 
 int execClassEditNormalize() {
+
+   if (!test("TempValueVariadic<indexed_by<int,float>,1,2,3>")) return 62;
+
+   if (!test("TempVariadic<indexed_by<int,float>,double,long,char>")) return 61;
 
    if (!test("std::pair<std::basic_string<char, std::char_traits<char>, std::allocator<char> > const, std::list<int, std::allocator<int> > >","pair<const string,list<int> >")) return 60;
    //if (!test("std::__1::pair<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> > const, std::__1::list<int, std::__1::allocator<int> > >","pair<const string,list<int> >")) return 59;
