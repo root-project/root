@@ -342,7 +342,7 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
             if (first) {
                //LM: need to do here because somehow fRealData is destroyed when calling TClass::GetListOfDataMembers()
                if (cl->fRealData) {
-                  Info("FillTClas","Real data for class %s is not empty - make a new one",cl->GetName() );
+                  Info("FillTClass","Real data for class %s is not empty - make a new one",cl->GetName() );
                   delete cl->fRealData;
                }
                cl->fRealData = new TList(); // FIXME: this should really become a THashList!
