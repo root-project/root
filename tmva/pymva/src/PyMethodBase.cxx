@@ -43,7 +43,12 @@ PyObject *PyMethodBase::fMain = NULL;
 PyObject *PyMethodBase::fGlobalNS = NULL;
 PyObject *PyMethodBase::fLocalNS = NULL;
 
-
+class PyGILRAII {
+   PyGILState_STATE m_GILState;
+public:
+   PyGILRAII():m_GILState(PyGILState_Ensure()){}
+   ~PyGILRAII(){PyGILState_Release(m_GILState);}
+};
 
 //_______________________________________________________________________
 PyMethodBase::PyMethodBase(const TString &jobName,
@@ -90,8 +95,15 @@ PyObject *PyMethodBase::Eval(TString code)
 void PyMethodBase::PyInitialize()
 {
    TMVA::MsgLogger Log;
-   if (!PyIsInitialized()) {
+
+   bool pyIsInitialized = PyIsInitialized();
+   if (!pyIsInitialized) {
       Py_Initialize();
+   }
+
+    PyGILRAII thePyGILRAII;
+
+   if (!pyIsInitialized) {
       _import_array();
    }
    
