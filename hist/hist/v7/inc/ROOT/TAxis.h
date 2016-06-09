@@ -16,6 +16,7 @@
 #define ROOT7_TAxis
 
 #include <algorithm>
+#include <cmath>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -309,7 +310,7 @@ protected:
   /// \param lowOrHigh - first axis boundary
   /// \param lighOrLow - second axis boundary
   static double GetInvBinWidth(int nbinsNoOver, double lowOrHigh, double highOrLow) {
-    return nbinsNoOver / std::fabs(highOrLow - lowOrHigh);
+    return nbinsNoOver / std::abs(highOrLow - lowOrHigh);
   }
 
   /// Initialize a TAxisEquidistant.
