@@ -19,8 +19,6 @@
 #include "ROOT/THistDrawOptions.h"
 #include "ROOT/TLogger.h"
 
-#include "TSystem.h"
-
 #include <memory>
 
 namespace ROOT {
@@ -31,6 +29,8 @@ template<int DIMENSIONS, class PRECISION,
 class THist;
 
 namespace Internal {
+
+void LoadHistPainterLibrary();
 
 template <int DIMENSION>
 class THistPainterBase {
@@ -43,7 +43,7 @@ protected:
 public:
   static THistPainterBase<DIMENSION>* GetPainter() {
     if (!fgPainter)
-      gSystem->Load("libHistPainter");
+      LoadHistPainterLibrary();
     return fgPainter;
   }
 
