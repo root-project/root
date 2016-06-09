@@ -470,6 +470,9 @@ TRealData* TProtoClass::TProtoRealData::CreateRealData(TClass* dmClass,
    //printf("adding new realdata for class %s : %s - %s   %d    %d   \n",dmClass->GetName(), realMemberName.Data(), dm->GetName(),fLevel, fDMIndex  );
 
    TRealData* rd = new TRealData(realMemberName, fOffset, dm);
+   if (TestFlag(kIsTransient)) {
+      rd->SetBit(TRealData::kTransient);
+   }
    rd->SetIsObject(TestFlag(kIsObject) );
    return rd;
 }
