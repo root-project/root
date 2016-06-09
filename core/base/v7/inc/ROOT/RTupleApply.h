@@ -17,17 +17,8 @@
 
 #include "RConfigure.h"
 
-#ifdef R__HAS_STD_TUPLE_APPLY
-
-#include <tuple>
-
-#elif defined(R__HAS_STD_EXPERIMENTAL_TUPLE_APPLY)
-
-#include <experimental/tuple>
-namespace std {
-  using template <class F, class Tuple> constexpr decltype(auto) apply(F&& f, Tuple&& t);
-}
-
+#ifdef R__HAS_STD_APPLY
+# include <tuple>
 #else
 # include "ROOT/impl_tuple_apply.h"
 #endif

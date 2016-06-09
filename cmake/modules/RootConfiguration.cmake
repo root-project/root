@@ -506,6 +506,22 @@ else()
   set(hasstodstringview undef)
 endif()
 
+CHECK_CXX_SOURCE_COMPILES("#include <tuple>
+int main() { std::tuple<int> tup;std::apply(tup, [](int){}); return 0;}" found_stdapply)
+if(found_stdapply)
+  set(hasstdapply define)
+else()
+  set(hasstdapply undef)
+endif()
+
+CHECK_CXX_SOURCE_COMPILES("#include <functional>
+int main() { return std::invoke([](int i){return i;}, 0); }" found_stdinvoke)
+if(found_stdinvoke)
+  set(hasstdinvoke define)
+else()
+  set(hasstdinvoke undef)
+endif()
+
 #---root-config----------------------------------------------------------------------------------------------
 ROOT_SHOW_OPTIONS(features)
 string(REPLACE "c++11" "cxx11" features ${features}) # change the name of the c++11 feature needed for root-config.in
