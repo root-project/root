@@ -5800,13 +5800,13 @@ void TCling::UpdateListsOnUnloaded(const cling::Transaction &T)
    TListOfFunctionTemplates* functiontemplates = (TListOfFunctionTemplates*)gROOT->GetListOfFunctionTemplates();
    TListOfEnums* enums = (TListOfEnums*)gROOT->GetListOfEnums();
    TListOfDataMembers* globals = (TListOfDataMembers*)gROOT->GetListOfGlobals();
-  cling::Transaction::const_nested_iterator iNested = T.nested_begin();
+   cling::Transaction::const_nested_iterator iNested = T.nested_begin();
    for(cling::Transaction::const_iterator I = T.decls_begin(), E = T.decls_end();
        I != E; ++I) {
       if (I->m_Call == cling::Transaction::kCCIHandleVTable)
          continue;
 
-     if (I->m_Call == cling::Transaction::kCCINone) {
+      if (I->m_Call == cling::Transaction::kCCINone) {
          UpdateListsOnUnloaded(**iNested);
          ++iNested;
          continue;
