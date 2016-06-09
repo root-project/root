@@ -145,19 +145,18 @@ typedef struct {
 
 //______________________________________________________________________________
 #define _alphaBlend(bot, top) {\
-   __argb32__ *t = (__argb32__*)(top);\
-   __argb32__ *b = (__argb32__*)(bot);\
-   int aa = 255-t->a;\
+   __argb32__ *T = (__argb32__*)(top);\
+   __argb32__ *B = (__argb32__*)(bot);\
+   int aa = 255-T->a;\
    if (!aa) {\
       *bot = *top;\
    } else { \
-      b->a = ((b->a*aa)>>8) + t->a;\
-      b->r = (b->r*aa + t->r*t->a)>>8;\
-      b->g = (b->g*aa + t->g*t->a)>>8;\
-      b->b = (b->b*aa + t->b*t->a)>>8;\
+      B->a = ((B->a*aa)>>8) + T->a;\
+      B->r = (B->r*aa + T->r*T->a)>>8;\
+      B->g = (B->g*aa + T->g*T->a)>>8;\
+      B->b = (B->b*aa + T->b*T->a)>>8;\
    }\
 }\
-
 
 ClassImp(TASImage)
 ClassImp(TASImagePlugin)
@@ -5749,6 +5748,7 @@ void TASImage::DrawGlyph(void *bitmap, UInt_t color, Int_t bx, Int_t by)
 
    static UInt_t col[5];
    Int_t x, y, yy, y0, xx;
+   Bool_t has_alpha = (color & 0xff000000) != 0xff000000;
 
    ULong_t r, g, b;
    int idx = 0;
@@ -5797,6 +5797,7 @@ void TASImage::DrawGlyph(void *bitmap, UInt_t color, Int_t bx, Int_t by)
    }
 
    yy = y0;
+   ARGB32 acolor;
    for (y = 0; y < (int) source->rows; y++) {
       byy = by + y;
       if ((byy >= (int)fImage->height) || (byy <0)) continue;
@@ -5811,7 +5812,12 @@ void TASImage::DrawGlyph(void *bitmap, UInt_t color, Int_t bx, Int_t by)
 
          if (d && (x < (int) source->width) && (bxx < (int)fImage->width) && (bxx >= 0)) {
             idx = bxx + yy;
-            fImage->alt.argb32[idx] = (ARGB32)col[d];
+            acolor = (ARGB32)col[d];
+            if (has_alpha) {
+               _alphaBlend(&fImage->alt.argb32[idx], &acolor);
+            } else {
+               fImage->alt.argb32[idx] = acolor;
+            }
          }
       }
       yy += fImage->width;
