@@ -681,6 +681,7 @@ Changes will be part of the future 6.06/06
 ### Core
 
 - Fix the validity of TRef after the first ProcessID is full.
+- Fix thread safety of TSystem::ExpandPathName [ROOT-8205].
 
 ### TTree
 
