@@ -140,7 +140,7 @@ canvas has to be redrawn, the `Paint` function of each objects in the
 pad is called. In case of histograms, `TH1::Paint` invokes directly
 `THistPainter::Paint`.
 
-To draw a histogram `h` is enough to do:
+To draw a histogram `h` it is enough to do:
 
     h->Draw();
 
@@ -157,12 +157,12 @@ When the `Draw()` method of a histogram is called for the first time
 pointer to this "painter" as a data member of the histogram. The
 `THistPainter` class specializes in the drawing of histograms. It is
 separated from the histogram so that one can have histograms without the
-graphics overhead, for example in a batch program. Each histogram have its own
-painter rather than a central singleton painter painting all histograms, allows
+graphics overhead, for example in a batch program. Each histogram having its own
+painter (rather than a central singleton painter painting all histograms), allows
 two histograms to be drawn in two threads without overwriting the painter's
 values.
 
-When a displayed histogram is filled again, there is not need to call the
+When a displayed histogram is filled again, there is no need to call the
 `Draw()` method again; the image will be refreshed the next time the
 pad will be updated.
 
@@ -3491,7 +3491,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       strncpy(l,"   ",3);
    }
 
-   
+
    l = strstr(chopt,"CANDLE");
    if (l) {
 	   TCandle candle;
@@ -4675,7 +4675,7 @@ void THistPainter::PaintCandlePlot(Option_t *)
 	myCandle.SetMarkerSize(fH->GetMarkerSize());
 	myCandle.SetMarkerStyle(fH->GetMarkerStyle());
 	myCandle.SetLog(Hoption.Logx,Hoption.Logy);
-	
+
    Bool_t swapXY = myCandle.IsHorizontal();
    const Double_t standardCandleWidth = 0.66;
 
