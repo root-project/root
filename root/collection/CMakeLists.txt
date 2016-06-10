@@ -8,7 +8,14 @@ ROOTTEST_ADD_TEST(execMissing
                   OUTREF execMissing.oref
                   ERRREF execMissing.eref )
 
+if (32BIT)
+ROOTTEST_ADD_TEST(runTExMap
+                  MACRO runTExMap.C
+                  OUTREF runTExMap32.oref
+                  ERRREF runTExMap32.eref )
+else()
 ROOTTEST_ADD_TEST(runTExMap
                   MACRO runTExMap.C
                   OUTREF runTExMap.oref
                   ERRREF runTExMap.eref )
+endif()
