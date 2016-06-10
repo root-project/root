@@ -435,6 +435,17 @@
 #   define _R__UNIQUE_(X) X
 #endif
 
+/*---- deprecation -----------------------------------------------------------*/
+
+#if defined(__GNUC__) || defined(__clang__)
+#   define R__DEPRECATED(REASON) __attribute__((deprecated(REASON)))
+#elif defined(_MSC_VER)
+#   define R__DEPRECATED(REASON) __declspec(deprecated(REASON))
+#else
+#   pragma message("Deprecation not supported for this compiler.")
+#   define R__DEPRECATED(REASON)
+#endif
+
 /*---- misc ------------------------------------------------------------------*/
 
 #ifdef R__GNU
