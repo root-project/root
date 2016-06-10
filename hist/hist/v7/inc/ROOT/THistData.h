@@ -388,12 +388,9 @@ private:
   static char HaveUncertainty(...);
   /// Store whether `double T::GetBinUncertaintyImpl(int)` can be called.
   template <class T>
-  static constexpr const bool fgHaveUncertaintyT
-    = sizeof(HaveUncertainty<T>(nullptr)) == sizeof(double);
-  /// Store whether `double T::GetBinUncertaintyImpl(int)` can be called for any base.
-  template <class...T>
   static constexpr const bool fgHaveUncertainty
-    = {(... || (fgHaveUncertaintyT<T>))};
+    = sizeof(HaveUncertainty<T>(nullptr)) == sizeof(double);
+  struct AllYourBaseAreBelongToUs: public BASES... {};
 
 public:
   THistBinStat(DATA& data, int index):
@@ -402,7 +399,7 @@ public:
   /// Calculate the bin content's uncertainty for the given bin, using base class information,
   /// i.e. forwarding to a base's `GetUncertaintyImpl()`.
   template <bool B = true,
-    class = typename std::enable_if<B && fgHaveUncertainty<BASES...>>::type>
+    class = typename std::enable_if<B && fgHaveUncertainty<AllYourBaseAreBelongToUs>>::type>
   double GetUncertainty() const {
     return this->GetUncertaintyImpl();
   }
@@ -410,7 +407,7 @@ public:
   /// statistics on the absolute bin content. Only available if no base provides
   /// this functionality. Requires GetContent().
   template <bool B = true,
-    class = typename std::enable_if<B && !fgHaveUncertainty<BASES...>>::type>
+    class = typename std::enable_if<B && !fgHaveUncertainty<AllYourBaseAreBelongToUs>>::type>
   double GetUncertainty(...) const {
     auto content = this->GetContent();
     return std::sqrt(std::fabs(content));
@@ -434,12 +431,9 @@ private:
   static char HaveUncertainty(...);
   /// Store whether `double T::GetBinUncertaintyImpl(int)` can be called.
   template <class T>
-  static constexpr const bool fgHaveUncertaintyT
-    = sizeof(HaveUncertainty<T>(nullptr)) == sizeof(double);
-  /// Store whether `double T::GetBinUncertaintyImpl(int)` can be called for any base.
-  template <class...T>
   static constexpr const bool fgHaveUncertainty
-    = {(... || (fgHaveUncertaintyT<T>))};
+    = sizeof(HaveUncertainty<T>(nullptr)) == sizeof(double);
+  struct AllYourBaseAreBelongToUs: public STAT<DIMENSIONS, PRECISION, STORAGE>... {};
 
 public:
   /// Matching THist
@@ -491,14 +485,14 @@ public:
 
   /// Calculate the bin content's uncertainty for the given bin, using base class information,
   /// i.e. forwarding to a base's `GetBinUncertaintyImpl(binidx)`.
-  template <bool B = true, class = typename std::enable_if<B && fgHaveUncertainty<STAT<DIMENSIONS, PRECISION, STORAGE>...>>::type>
+  template <bool B = true, class = typename std::enable_if<B && fgHaveUncertainty<AllYourBaseAreBelongToUs>>::type>
   double GetBinUncertainty(int binidx) const {
     return this->GetBinUncertaintyImpl(binidx);
   }
   /// Calculate the bin content's uncertainty for the given bin, using Poisson
   /// statistics on the absolute bin content. Only available if no base provides
   /// this functionality. Requires GetContent().
-  template <bool B = true, class = typename std::enable_if<B && !fgHaveUncertainty<STAT<DIMENSIONS, PRECISION, STORAGE>...>>::type>
+  template <bool B = true, class = typename std::enable_if<B && !fgHaveUncertainty<AllYourBaseAreBelongToUs>>::type>
   double GetBinUncertainty(int binidx, ...) const {
     auto content = this->GetBinContent(binidx);
     return std::sqrt(std::fabs(content));
