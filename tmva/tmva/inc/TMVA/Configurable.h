@@ -124,12 +124,10 @@ namespace TMVA {
       TString     fConfigDescription;   // description of this configurable
       TString     fReferenceFile;       // reference file for options writing
 
-   protected:
-
-      // the mutable declaration is needed to use the logger in const methods
-      MsgLogger& Log() const { return *fLogger; }                       
-
    public:
+     
+      // the mutable declaration is needed to use the logger in const methods
+      MsgLogger& Log() const { return *fLogger; }  
 
       // set message type
       void SetMsgType( EMsgType t ) { fLogger->SetMinType(t); }

@@ -169,7 +169,7 @@ namespace TMVA {
       void ValidationKFoldSet();
       std::vector<TTree*> SplitSets(TTree * oldTree, int seedNum, int numFolds);
 
- 
+      const DataSetInfo& GetDefaultDataSetInfo(){ return DefaultDataSetInfo(); }
  
    private:
 
