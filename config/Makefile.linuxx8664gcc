@@ -71,7 +71,6 @@ F77LIBS      := $(shell $(F77) -m64 -print-file-name=libgfortran.$(SOEXT))
 else
 F77LIBS      := $(shell $(F77) -m64 -print-file-name=libgfortran.a)
 endif
-F77LIBS      += $(shell $(F77) -m64 -print-file-name=libgfortranbegin.a)
 endif
 
 ifneq ($(findstring g77, $(F77)),)
