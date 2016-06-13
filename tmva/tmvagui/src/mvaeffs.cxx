@@ -201,8 +201,8 @@ TMVA::StatDialogMVAEffs::StatDialogMVAEffs(const TGWindow* p, Float_t ns, Float_
    fSigInput->Connect("ValueSet(Long_t)","TMVA::StatDialogMVAEffs",this, "SetNSignal()");
    fBkgInput->Connect("ValueSet(Long_t)","TMVA::StatDialogMVAEffs",this, "SetNBackground()");
 
-   fDrawButton->Connect("Clicked()","TGNumberEntry",fSigInput, "ValueSet(Long_t)");
-   fDrawButton->Connect("Clicked()","TGNumberEntry",fBkgInput, "ValueSet(Long_t)");
+//   fDrawButton->Connect("Clicked()","TGNumberEntry",fSigInput, "ValueSet(Long_t)");
+//   fDrawButton->Connect("Clicked()","TGNumberEntry",fBkgInput, "ValueSet(Long_t)");
    fDrawButton->Connect("Clicked()", "TMVA::StatDialogMVAEffs", this, "Redraw()");   
 
    fCloseButton->Connect("Clicked()", "TMVA::StatDialogMVAEffs", this, "Close()");
