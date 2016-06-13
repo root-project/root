@@ -165,6 +165,10 @@ ifeq ($(GCC_MAJOR),5)
 CINTS2       := $(filter-out $(MODDIRSD)/libstrm.%,$(CINTS2))
 CINTS2       += $(MODDIRSD)/gcc4strm.cxx
 endif
+ifeq ($(GCC_MAJOR),6)
+CINTS2       := $(filter-out $(MODDIRSD)/libstrm.%,$(CINTS2))
+CINTS2       += $(MODDIRSD)/gcc4strm.cxx
+endif
 ifneq ($(CLANG_MAJOR),)
 CINTS2       := $(filter-out $(MODDIRSD)/libstrm.%,$(CINTS2))
 CINTS2       += $(MODDIRSD)/gcc4strm.cxx
@@ -207,6 +211,9 @@ IOSENUMC     := $(CINTDIRIOSEN)/iosenum.cxx
 ifneq ($(CLANG_MAJOR),)
 IOSENUMA     := $(CINTDIRIOSEN)/iosenum.$(ARCH)3
 else
+ifeq ($(GCC_MAJOR),6)
+IOSENUMA     := $(CINTDIRIOSEN)/iosenum.$(ARCH)3
+else
 ifeq ($(GCC_MAJOR),5)
 IOSENUMA     := $(CINTDIRIOSEN)/iosenum.$(ARCH)3
 else
@@ -217,6 +224,7 @@ ifeq ($(GCC_MAJOR),3)
 IOSENUMA     := $(CINTDIRIOSEN)/iosenum.$(ARCH)3
 else
 IOSENUMA     := $(CINTDIRIOSEN)/iosenum.$(ARCH)
+endif
 endif
 endif
 endif
@@ -355,6 +363,9 @@ endif
 ifeq ($(GCC_MAJOR),5)
 $(call stripsrc,$(CINTDIRSD)/gcc4strm.o): CINTCXXFLAGS += -Wno-strict-aliasing
 endif
+ifeq ($(GCC_MAJOR),6)
+$(call stripsrc,$(CINTDIRSD)/gcc4strm.o): CINTCXXFLAGS += -Wno-strict-aliasing
+endif
 
 
 $(MAKECINTO) $(CINTO): $(CINTCONF) $(ORDER_) $(CINTINCLUDES)
@@ -389,7 +400,11 @@ endif
 ##### configcint.h
 ifeq ($(CPPPREP),)
 # cannot use "CPPPREP?=", as someone might set "CPPPREP="
+ifeq ($(GCC_MAJOR),6)
+  CPPPREP = $(CXX) -std=c++98 -E -C
+else
   CPPPREP = $(CXX) -E -C
+endif
 endif
 
 include $(CINTCONFMK)
