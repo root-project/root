@@ -499,6 +499,8 @@ namespace TMVA {
       void             AddInfoItem( void* gi, const TString& name,
                                     const TString& value) const;
 
+   public:
+     
       static void      CreateVariableTransforms(const TString& trafoDefinition,
                                                 TMVA::DataSetInfo& dataInfo,
                                                 TMVA::TransformationHandler& transformationHandler,
