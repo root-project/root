@@ -5655,7 +5655,7 @@ void TCling::UpdateListsOnCommitted(const cling::Transaction &T) {
    bool isTUTransaction = false;
    if (!T.empty() && T.decls_begin() + 1 == T.decls_end() && !T.hasNestedTransactions()) {
       clang::Decl* FirstDecl = *(T.decls_begin()->m_DGR.begin());
-      if (llvm::is_a<clang::TranslationUnitDecl>(FirstDecl)) {
+      if (llvm::isa<clang::TranslationUnitDecl>(FirstDecl)) {
          // The is the first transaction, we have to expose to meta
          // what's already in the AST.
          isTUTransaction = true;
