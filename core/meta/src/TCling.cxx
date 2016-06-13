@@ -5653,25 +5653,12 @@ void TCling::UpdateListsOnCommitted(const cling::Transaction &T) {
    if (!HandleNewTransaction(T)) return;
 
    bool isTUTransaction = false;
-   if (T.decls_end()-T.decls_begin() == 1 && !T.hasNestedTransactions()) {
+   if (!T.empty() && T.decls_begin() + 1 == T.decls_end() && !T.hasNestedTransactions()) {
       clang::Decl* FirstDecl = *(T.decls_begin()->m_DGR.begin());
-      if (clang::TranslationUnitDecl* TU
-          = dyn_cast<clang::TranslationUnitDecl>(FirstDecl)) {
+      if (llvm::is_a<clang::TranslationUnitDecl>(FirstDecl)) {
          // The is the first transaction, we have to expose to meta
          // what's already in the AST.
          isTUTransaction = true;
-#if 0
-         // FIXME: don't load the world. Really, don't. Maybe
-         // instead smarten TROOT::GetListOfWhateveros() which
-         // currently is a THashList but could be a
-         // TInterpreterLookupCollection, one that reimplements
-         // TCollection::FindObject(name) and performs a lookup
-         // if not found in its T(Hash)List.
-         cling::Interpreter::PushTransactionRAII RAII(fInterpreter);
-         for (clang::DeclContext::decl_iterator TUI = TU->decls_begin(),
-                 TUE = TU->decls_end(); TUI != TUE; ++TUI)
-            ((TCling*)gCling)->HandleNewDecl(*TUI, (*TUI)->isFromASTFile(),modifiedTClasses);
-#endif
       }
    }
 
