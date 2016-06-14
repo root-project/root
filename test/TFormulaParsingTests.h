@@ -18,9 +18,10 @@ bool verbose;
 std::vector<int> failedTests; 
 
 // We need a softer way to reason about equality in 32 bits
-bool fpEqual(double x, double y)
+// Being this a quick test, doing the check at runtime is really no problem.
+bool fpEqual(double x, double y, bool epsilon = false)
 {
-   bool isEqual(x == y);
+   bool isEqual = epsilon ? std::abs(x-y) <= std::numeric_limits<double>::epsilon() : x == y;
    if (!isEqual) {
        // std::hexfloat not there for older gcc versions
        printf("\nThe numbers differ: %A and %A\n", x, y);
@@ -500,7 +501,12 @@ bool test28() {
    // keep same order in evaluation
    TF1 f0("f0",[](double *x, double *p){ return p[1]*sin(x[0]) + p[0]*cos(x[0]);},0.,10.,2);
    f0.SetParameters(1.1,2.1);
-   ok &= fpEqual(fsincos.Eval(2) , f0.Eval(2) );
+#ifdef R__B64
+   bool epsilon = false;
+#else
+   bool epsilon = true;
+#endif
+   ok &= fpEqual(fsincos.Eval(2) , f0.Eval(2), epsilon);
    return ok;
 
 }
