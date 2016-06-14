@@ -783,8 +783,8 @@ if(xrootd)
   endif()
 endif()
 if(builtin_xrootd)
-  set(xrootd_version 4.2.2)
-  set(xrootd_versionnum 400020002)
+  set(xrootd_version 4.3.0)
+  set(xrootd_versionnum 400030000)
   message(STATUS "Downloading and building XROOTD version ${xrootd_version}")
   string(REPLACE "-Wall " "" __cxxflags "${CMAKE_CXX_FLAGS}")  # Otherwise it produces many warnings
   string(REPLACE "-W " "" __cxxflags "${__cxxflags}")          # Otherwise it produces many warnings
