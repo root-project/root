@@ -52,6 +52,7 @@ public:
   // Function evaluation
   virtual Double_t evaluate() const ;
   friend class RooAbsTestStatistic ;
+  friend class RooTestStatMPDriver ;
   virtual void constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTracking=kTRUE) ;
   virtual Double_t getCarry() const;
 

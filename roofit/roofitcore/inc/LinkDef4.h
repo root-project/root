@@ -54,6 +54,7 @@
 #pragma link C++ class RooVectorDataStore::CatVector- ;
 #pragma link C++ class std::pair<std::string,RooAbsData*>+ ;
 #pragma link C++ class std::pair<int,RooLinkedListElem*>+ ;
+#pragma link C++ class RooTestStatMPDriver+ ;
 #pragma link C++ class RooUnitTest+ ;
 //#pragma link C++ class RooHistFunc2- ;
 #ifndef __ROOFIT_NOROOMINIMIZER

@@ -36,6 +36,7 @@ typedef RooRealMPFE* pRooRealMPFE ;
 
 class RooAbsTestStatistic : public RooAbsReal {
     friend class RooRealMPFE;
+    friend class RooTestStatMPDriver ;
 public:
 
   // Constructors, assignment etc
