@@ -41,13 +41,14 @@
 #include "llvm/ADT/PointerIntPair.h"
 #include "llvm/IR/CFG.h"
 #include "llvm/IR/Dominators.h"
+#include "llvm/IR/PassManager.h"
 #include <map>
 #include <memory>
 #include <set>
 
 namespace llvm {
 
-// RegionTraits - Class to be specialized for different users of RegionInfo
+// Class to be specialized for different users of RegionInfo
 // (i.e. BasicBlocks or MachineBasicBlocks). This is only to avoid needing to
 // pass around an unreasonable number of template parameters.
 template <class FuncT_>
@@ -115,8 +116,8 @@ public:
   typedef typename Tr::RegionT RegionT;
 
 private:
-  RegionNodeBase(const RegionNodeBase &) LLVM_DELETED_FUNCTION;
-  const RegionNodeBase &operator=(const RegionNodeBase &) LLVM_DELETED_FUNCTION;
+  RegionNodeBase(const RegionNodeBase &) = delete;
+  const RegionNodeBase &operator=(const RegionNodeBase &) = delete;
 
   /// This is the entry basic block that starts this region node.  If this is a
   /// BasicBlock RegionNode, then entry is just the basic block, that this
@@ -261,8 +262,8 @@ class RegionBase : public RegionNodeBase<Tr> {
   typedef typename InvBlockTraits::ChildIteratorType PredIterTy;
 
   friend class RegionInfoBase<Tr>;
-  RegionBase(const RegionBase &) LLVM_DELETED_FUNCTION;
-  const RegionBase &operator=(const RegionBase &) LLVM_DELETED_FUNCTION;
+  RegionBase(const RegionBase &) = delete;
+  const RegionBase &operator=(const RegionBase &) = delete;
 
   // Information necessary to manage this Region.
   RegionInfoT *RI;
@@ -282,17 +283,16 @@ class RegionBase : public RegionNodeBase<Tr> {
   // Save the BasicBlock RegionNodes that are element of this Region.
   mutable BBNodeMapT BBNodeMap;
 
-  /// verifyBBInRegion - Check if a BB is in this Region. This check also works
+  /// Check if a BB is in this Region. This check also works
   /// if the region is incorrectly built. (EXPENSIVE!)
   void verifyBBInRegion(BlockT *BB) const;
 
-  /// verifyWalk - Walk over all the BBs of the region starting from BB and
+  /// Walk over all the BBs of the region starting from BB and
   /// verify that all reachable basic blocks are elements of the region.
   /// (EXPENSIVE!)
   void verifyWalk(BlockT *BB, std::set<BlockT *> *visitedBB) const;
 
-  /// verifyRegionNest - Verify if the region and its children are valid
-  /// regions (EXPENSIVE!)
+  /// Verify if the region and its children are valid regions (EXPENSIVE!)
   void verifyRegionNest() const;
 
 public:
@@ -674,8 +674,24 @@ class RegionInfoBase {
   RegionInfoBase();
   virtual ~RegionInfoBase();
 
-  RegionInfoBase(const RegionInfoBase &) LLVM_DELETED_FUNCTION;
-  const RegionInfoBase &operator=(const RegionInfoBase &) LLVM_DELETED_FUNCTION;
+  RegionInfoBase(const RegionInfoBase &) = delete;
+  const RegionInfoBase &operator=(const RegionInfoBase &) = delete;
+
+  RegionInfoBase(RegionInfoBase &&Arg)
+    : DT(std::move(Arg.DT)), PDT(std::move(Arg.PDT)), DF(std::move(Arg.DF)),
+      TopLevelRegion(std::move(Arg.TopLevelRegion)),
+      BBtoRegion(std::move(Arg.BBtoRegion)) {
+    Arg.wipe();
+  }
+  RegionInfoBase &operator=(RegionInfoBase &&RHS) {
+    DT = std::move(RHS.DT);
+    PDT = std::move(RHS.PDT);
+    DF = std::move(RHS.DF);
+    TopLevelRegion = std::move(RHS.TopLevelRegion);
+    BBtoRegion = std::move(RHS.BBtoRegion);
+    RHS.wipe();
+    return *this;
+  }
 
   DomTreeT *DT;
   PostDomTreeT *PDT;
@@ -688,45 +704,62 @@ private:
   /// Map every BB to the smallest region, that contains BB.
   BBtoRegionMap BBtoRegion;
 
-  // isCommonDomFrontier - Returns true if BB is in the dominance frontier of
+  /// \brief Wipe this region tree's state without releasing any resources.
+  ///
+  /// This is essentially a post-move helper only. It leaves the object in an
+  /// assignable and destroyable state, but otherwise invalid.
+  void wipe() {
+    DT = nullptr;
+    PDT = nullptr;
+    DF = nullptr;
+    TopLevelRegion = nullptr;
+    BBtoRegion.clear();
+  }
+
+  // Check whether the entries of BBtoRegion for the BBs of region
+  // SR are correct. Triggers an assertion if not. Calls itself recursively for
+  // subregions.
+  void verifyBBMap(const RegionT *SR) const;
+
+  // Returns true if BB is in the dominance frontier of
   // entry, because it was inherited from exit. In the other case there is an
   // edge going from entry to BB without passing exit.
   bool isCommonDomFrontier(BlockT *BB, BlockT *entry, BlockT *exit) const;
 
-  // isRegion - Check if entry and exit surround a valid region, based on
+  // Check if entry and exit surround a valid region, based on
   // dominance tree and dominance frontier.
   bool isRegion(BlockT *entry, BlockT *exit) const;
 
-  // insertShortCut - Saves a shortcut pointing from entry to exit.
+  // Saves a shortcut pointing from entry to exit.
   // This function may extend this shortcut if possible.
   void insertShortCut(BlockT *entry, BlockT *exit, BBtoBBMap *ShortCut) const;
 
-  // getNextPostDom - Returns the next BB that postdominates N, while skipping
+  // Returns the next BB that postdominates N, while skipping
   // all post dominators that cannot finish a canonical region.
   DomTreeNodeT *getNextPostDom(DomTreeNodeT *N, BBtoBBMap *ShortCut) const;
 
-  // isTrivialRegion - A region is trivial, if it contains only one BB.
+  // A region is trivial, if it contains only one BB.
   bool isTrivialRegion(BlockT *entry, BlockT *exit) const;
 
-  // createRegion - Creates a single entry single exit region.
+  // Creates a single entry single exit region.
   RegionT *createRegion(BlockT *entry, BlockT *exit);
 
-  // findRegionsWithEntry - Detect all regions starting with bb 'entry'.
+  // Detect all regions starting with bb 'entry'.
   void findRegionsWithEntry(BlockT *entry, BBtoBBMap *ShortCut);
 
-  // scanForRegions - Detects regions in F.
+  // Detects regions in F.
   void scanForRegions(FuncT &F, BBtoBBMap *ShortCut);
 
-  // getTopMostParent - Get the top most parent with the same entry block.
+  // Get the top most parent with the same entry block.
   RegionT *getTopMostParent(RegionT *region);
 
-  // buildRegionsTree - build the region hierarchy after all region detected.
+  // Build the region hierarchy after all region detected.
   void buildRegionsTree(DomTreeNodeT *N, RegionT *region);
 
-  // updateStatistics - Update statistic about created regions.
+  // Update statistic about created regions.
   virtual void updateStatistics(RegionT *R) = 0;
 
-  // calculate - detect all regions in function and build the region tree.
+  // Detect all regions in function and build the region tree.
   void calculate(FuncT &F);
 
 public:
@@ -796,12 +829,6 @@ public:
 
   RegionT *getTopLevelRegion() const { return TopLevelRegion; }
 
-  /// @brief Update RegionInfo after a basic block was split.
-  ///
-  /// @param NewBB The basic block that was created before OldBB.
-  /// @param OldBB The old basic block.
-  void splitBlock(BlockT *NewBB, BlockT *OldBB);
-
   /// @brief Clear the Node Cache for all Regions.
   ///
   /// @see Region::clearNodeCache()
@@ -819,8 +846,6 @@ class RegionNode : public RegionNodeBase<RegionTraits<Function>> {
 public:
   inline RegionNode(Region *Parent, BasicBlock *Entry, bool isSubRegion = false)
       : RegionNodeBase<RegionTraits<Function>>(Parent, Entry, isSubRegion) {}
-
-  ~RegionNode() {}
 
   bool operator==(const Region &RN) const {
     return this == reinterpret_cast<const RegionNode *>(&RN);
@@ -840,15 +865,37 @@ public:
 
 class RegionInfo : public RegionInfoBase<RegionTraits<Function>> {
 public:
+  typedef RegionInfoBase<RegionTraits<Function>> Base;
+
   explicit RegionInfo();
 
-  virtual ~RegionInfo();
+  ~RegionInfo() override;
+
+  RegionInfo(RegionInfo &&Arg)
+    : Base(std::move(static_cast<Base &>(Arg))) {}
+  RegionInfo &operator=(RegionInfo &&RHS) {
+    Base::operator=(std::move(static_cast<Base &>(RHS)));
+    return *this;
+  }
 
   // updateStatistics - Update statistic about created regions.
   void updateStatistics(Region *R) final;
 
   void recalculate(Function &F, DominatorTree *DT, PostDominatorTree *PDT,
                    DominanceFrontier *DF);
+
+#ifndef NDEBUG
+  /// @brief Opens a viewer to show the GraphViz visualization of the regions.
+  ///
+  /// Useful during debugging as an alternative to dump().
+  void view();
+
+  /// @brief Opens a viewer to show the GraphViz visualization of this region
+  /// without instructions in the BasicBlocks.
+  ///
+  /// Useful during debugging as an alternative to dump().
+  void viewOnly();
+#endif
 };
 
 class RegionInfoPass : public FunctionPass {
@@ -858,7 +905,7 @@ public:
   static char ID;
   explicit RegionInfoPass();
 
-  ~RegionInfoPass();
+  ~RegionInfoPass() override;
 
   RegionInfo &getRegionInfo() { return RI; }
 
@@ -873,6 +920,31 @@ public:
   void print(raw_ostream &OS, const Module *) const override;
   void dump() const;
   //@}
+};
+
+/// \brief Analysis pass that exposes the \c RegionInfo for a function.
+class RegionInfoAnalysis : public AnalysisInfoMixin<RegionInfoAnalysis> {
+  friend AnalysisInfoMixin<RegionInfoAnalysis>;
+  static char PassID;
+
+public:
+  typedef RegionInfo Result;
+
+  RegionInfo run(Function &F, AnalysisManager<Function> &AM);
+};
+
+/// \brief Printer pass for the \c RegionInfo.
+class RegionInfoPrinterPass : public PassInfoMixin<RegionInfoPrinterPass> {
+  raw_ostream &OS;
+
+public:
+  explicit RegionInfoPrinterPass(raw_ostream &OS);
+  PreservedAnalyses run(Function &F, AnalysisManager<Function> &AM);
+};
+
+/// \brief Verifier pass for the \c RegionInfo.
+struct RegionInfoVerifierPass : PassInfoMixin<RegionInfoVerifierPass> {
+  PreservedAnalyses run(Function &F, AnalysisManager<Function> &AM);
 };
 
 template <>
@@ -904,9 +976,9 @@ inline raw_ostream &operator<<(raw_ostream &OS,
     return OS << Node.template getNodeAs<BlockT>()->getName();
 }
 
-EXTERN_TEMPLATE_INSTANTIATION(class RegionBase<RegionTraits<Function>>);
-EXTERN_TEMPLATE_INSTANTIATION(class RegionNodeBase<RegionTraits<Function>>);
-EXTERN_TEMPLATE_INSTANTIATION(class RegionInfoBase<RegionTraits<Function>>);
+extern template class RegionBase<RegionTraits<Function>>;
+extern template class RegionNodeBase<RegionTraits<Function>>;
+extern template class RegionInfoBase<RegionTraits<Function>>;
 
 } // End llvm namespace
 #endif

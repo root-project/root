@@ -1,4 +1,4 @@
-//===-- ObjDumper.h -------------------------------------------------------===//
+//===-- ObjDumper.h ---------------------------------------------*- C++ -*-===//
 //
 //                     The LLVM Compiler Infrastructure
 //
@@ -15,14 +15,18 @@
 
 namespace llvm {
 namespace object {
-  class ObjectFile;
+class COFFImportFile;
+class ObjectFile;
+}
+namespace codeview {
+class MemoryTypeTableBuilder;
 }
 
-class StreamWriter;
+class ScopedPrinter;
 
 class ObjDumper {
 public:
-  ObjDumper(StreamWriter& Writer);
+  ObjDumper(ScopedPrinter &Writer);
   virtual ~ObjDumper();
 
   virtual void printFileHeaders() = 0;
@@ -33,37 +37,66 @@ public:
   virtual void printUnwindInfo() = 0;
 
   // Only implemented for ELF at this time.
+  virtual void printDynamicRelocations() { }
   virtual void printDynamicTable() { }
   virtual void printNeededLibraries() { }
   virtual void printProgramHeaders() { }
+  virtual void printHashTable() { }
+  virtual void printGnuHashTable() { }
+  virtual void printLoadName() {}
+  virtual void printVersionInfo() {}
+  virtual void printGroupSections() {}
+  virtual void printHashHistogram() {}
 
   // Only implemented for ARM ELF at this time.
   virtual void printAttributes() { }
 
   // Only implemented for MIPS ELF at this time.
   virtual void printMipsPLTGOT() { }
+  virtual void printMipsABIFlags() { }
+  virtual void printMipsReginfo() { }
+  virtual void printMipsOptions() { }
 
   // Only implemented for PE/COFF.
   virtual void printCOFFImports() { }
   virtual void printCOFFExports() { }
   virtual void printCOFFDirectives() { }
   virtual void printCOFFBaseReloc() { }
+  virtual void printCOFFDebugDirectory() { }
+  virtual void printCodeViewDebugInfo() { }
+  virtual void
+  mergeCodeViewTypes(llvm::codeview::MemoryTypeTableBuilder &CVTypes) {}
+
+  // Only implemented for MachO.
+  virtual void printMachODataInCode() { }
+  virtual void printMachOVersionMin() { }
+  virtual void printMachODysymtab() { }
+  virtual void printMachOSegment() { }
+  virtual void printMachOIndirectSymbols() { }
+  virtual void printMachOLinkerOptions() { }
+
+  virtual void printStackMap() const = 0;
 
 protected:
-  StreamWriter& W;
+  ScopedPrinter &W;
 };
 
 std::error_code createCOFFDumper(const object::ObjectFile *Obj,
-                                 StreamWriter &Writer,
+                                 ScopedPrinter &Writer,
                                  std::unique_ptr<ObjDumper> &Result);
 
 std::error_code createELFDumper(const object::ObjectFile *Obj,
-                                StreamWriter &Writer,
+                                ScopedPrinter &Writer,
                                 std::unique_ptr<ObjDumper> &Result);
 
 std::error_code createMachODumper(const object::ObjectFile *Obj,
-                                  StreamWriter &Writer,
+                                  ScopedPrinter &Writer,
                                   std::unique_ptr<ObjDumper> &Result);
+
+void dumpCOFFImportFile(const object::COFFImportFile *File);
+
+void dumpCodeViewMergedTypes(ScopedPrinter &Writer,
+                             llvm::codeview::MemoryTypeTableBuilder &CVTypes);
 
 } // namespace llvm
 

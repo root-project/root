@@ -38,7 +38,9 @@ class RefactoringTool : public ClangTool {
 public:
   /// \see ClangTool::ClangTool.
   RefactoringTool(const CompilationDatabase &Compilations,
-                  ArrayRef<std::string> SourcePaths);
+                  ArrayRef<std::string> SourcePaths,
+                  std::shared_ptr<PCHContainerOperations> PCHContainerOps =
+                      std::make_shared<PCHContainerOperations>());
 
   /// \brief Returns the set of replacements to which replacements should
   /// be added during the run of the tool.
@@ -65,6 +67,24 @@ private:
 private:
   Replacements Replace;
 };
+
+/// \brief Groups \p Replaces by the file path and applies each group of
+/// Replacements on the related file in \p Rewriter. In addition to applying
+/// given Replacements, this function also formats the changed code.
+///
+/// \pre Replacements must be conflict-free.
+///
+/// Replacement applications happen independently of the success of other
+/// applications.
+///
+/// \param[in] Replaces Replacements to apply.
+/// \param[in] Rewrite The `Rewritter` to apply replacements on.
+/// \param[in] Style The style name used for reformatting. See ```getStyle``` in
+/// "include/clang/Format/Format.h" for all possible style forms.
+///
+/// \returns true if all replacements applied and formatted. false otherwise.
+bool formatAndApplyAllReplacements(const Replacements &Replaces,
+                                   Rewriter &Rewrite, StringRef Style = "file");
 
 } // end namespace tooling
 } // end namespace clang

@@ -14,8 +14,8 @@
 #ifndef LLVM_OBJECT_MACHOUNIVERSAL_H
 #define LLVM_OBJECT_MACHOUNIVERSAL_H
 
-#include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/Triple.h"
+#include "llvm/ADT/iterator_range.h"
 #include "llvm/Object/Archive.h"
 #include "llvm/Object/Binary.h"
 #include "llvm/Object/MachO.h"
@@ -23,6 +23,8 @@
 #include "llvm/Support/MachO.h"
 
 namespace llvm {
+class StringRef;
+
 namespace object {
 
 class MachOUniversalBinary : public Binary {
@@ -56,11 +58,12 @@ public:
     uint32_t getSize() const { return Header.size; }
     uint32_t getAlign() const { return Header.align; }
     std::string getArchTypeName() const {
-      Triple T = MachOObjectFile::getArch(Header.cputype, Header.cpusubtype);
+      Triple T =
+          MachOObjectFile::getArchTriple(Header.cputype, Header.cpusubtype);
       return T.getArchName();
     }
 
-    ErrorOr<std::unique_ptr<MachOObjectFile>> getAsObjectFile() const;
+    Expected<std::unique_ptr<MachOObjectFile>> getAsObjectFile() const;
 
     ErrorOr<std::unique_ptr<Archive>> getAsArchive() const;
   };
@@ -69,9 +72,8 @@ public:
     ObjectForArch Obj;
   public:
     object_iterator(const ObjectForArch &Obj) : Obj(Obj) {}
-    const ObjectForArch* operator->() const {
-      return &Obj;
-    }
+    const ObjectForArch *operator->() const { return &Obj; }
+    const ObjectForArch &operator*() const { return Obj; }
 
     bool operator==(const object_iterator &Other) const {
       return Obj == Other.Obj;
@@ -97,6 +99,10 @@ public:
     return ObjectForArch(nullptr, 0);
   }
 
+  iterator_range<object_iterator> objects() const {
+    return make_range(begin_objects(), end_objects());
+  }
+
   uint32_t getNumberOfObjects() const { return NumberOfObjects; }
 
   // Cast methods.
@@ -104,8 +110,8 @@ public:
     return V->isMachOUniversalBinary();
   }
 
-  ErrorOr<std::unique_ptr<MachOObjectFile>>
-  getObjectForArch(Triple::ArchType Arch) const;
+  Expected<std::unique_ptr<MachOObjectFile>>
+  getObjectForArch(StringRef ArchName) const;
 };
 
 }

@@ -60,12 +60,21 @@ public:
   /// \brief Return metadata containing a number of branch weights.
   MDNode *createBranchWeights(ArrayRef<uint32_t> Weights);
 
+  /// Return metadata specifying that a branch or switch is unpredictable.
+  MDNode *createUnpredictable();
+
+  /// Return metadata containing the entry count for a function.
+  MDNode *createFunctionEntryCount(uint64_t Count);
+
   //===------------------------------------------------------------------===//
   // Range metadata.
   //===------------------------------------------------------------------===//
 
   /// \brief Return metadata describing the range [Lo, Hi).
   MDNode *createRange(const APInt &Lo, const APInt &Hi);
+
+  /// \brief Return metadata describing the range [Lo, Hi).
+  MDNode *createRange(Constant *Lo, Constant *Hi);
 
   //===------------------------------------------------------------------===//
   // AA metadata.
@@ -147,7 +156,7 @@ public:
   /// \brief Return metadata for a TBAA tag node with the given
   /// base type, access type and offset relative to the base type.
   MDNode *createTBAAStructTagNode(MDNode *BaseType, MDNode *AccessType,
-                                  uint64_t Offset);
+                                  uint64_t Offset, bool IsConstant = false);
 };
 
 } // end namespace llvm

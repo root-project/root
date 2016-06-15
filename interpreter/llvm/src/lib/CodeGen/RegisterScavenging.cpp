@@ -31,9 +31,12 @@ using namespace llvm;
 #define DEBUG_TYPE "reg-scavenging"
 
 /// setUsed - Set the register units of this register as used.
-void RegScavenger::setRegUsed(unsigned Reg) {
-  for (MCRegUnitIterator RUI(Reg, TRI); RUI.isValid(); ++RUI)
-    RegUnitsAvailable.reset(*RUI);
+void RegScavenger::setRegUsed(unsigned Reg, LaneBitmask LaneMask) {
+  for (MCRegUnitMaskIterator RUI(Reg, TRI); RUI.isValid(); ++RUI) {
+    LaneBitmask UnitMask = (*RUI).second;
+    if (UnitMask == 0 || (LaneMask & UnitMask) != 0)
+      RegUnitsAvailable.reset((*RUI).first);
+  }
 }
 
 void RegScavenger::initRegState() {
@@ -46,22 +49,19 @@ void RegScavenger::initRegState() {
   // All register units start out unused.
   RegUnitsAvailable.set();
 
-  if (!MBB)
-    return;
-
   // Live-in registers are in use.
-  for (MachineBasicBlock::livein_iterator I = MBB->livein_begin(),
-         E = MBB->livein_end(); I != E; ++I)
-    setRegUsed(*I);
+  for (const auto &LI : MBB->liveins())
+    setRegUsed(LI.PhysReg, LI.LaneMask);
 
   // Pristine CSRs are also unavailable.
-  BitVector PR = MBB->getParent()->getFrameInfo()->getPristineRegs(MBB);
+  const MachineFunction &MF = *MBB->getParent();
+  BitVector PR = MF.getFrameInfo()->getPristineRegs(MF);
   for (int I = PR.find_first(); I>0; I = PR.find_next(I))
     setRegUsed(I);
 }
 
-void RegScavenger::enterBasicBlock(MachineBasicBlock *mbb) {
-  MachineFunction &MF = *mbb->getParent();
+void RegScavenger::enterBasicBlock(MachineBasicBlock &MBB) {
+  MachineFunction &MF = *MBB.getParent();
   TII = MF.getSubtarget().getInstrInfo();
   TRI = MF.getSubtarget().getRegisterInfo();
   MRI = &MF.getRegInfo();
@@ -75,15 +75,15 @@ void RegScavenger::enterBasicBlock(MachineBasicBlock *mbb) {
          "Cannot use register scavenger with inaccurate liveness");
 
   // Self-initialize.
-  if (!MBB) {
+  if (!this->MBB) {
     NumRegUnits = TRI->getNumRegUnits();
     RegUnitsAvailable.resize(NumRegUnits);
     KillRegUnits.resize(NumRegUnits);
     DefRegUnits.resize(NumRegUnits);
     TmpRegUnits.resize(NumRegUnits);
   }
+  this->MBB = &MBB;
 
-  MBB = mbb;
   initRegState();
 
   Tracking = false;
@@ -102,10 +102,6 @@ void RegScavenger::determineKillsAndDefs() {
 
   // Find out which registers are early clobbered, killed, defined, and marked
   // def-dead in this instruction.
-  // FIXME: The scavenger is not predication aware. If the instruction is
-  // predicated, conservatively assume "kill" markers do not actually kill the
-  // register. Similarly ignores "dead" markers.
-  bool isPred = TII->isPredicated(MI);
   KillRegUnits.reset();
   DefRegUnits.reset();
   for (unsigned i = 0, e = MI->getNumOperands(); i != e; ++i) {
@@ -123,7 +119,7 @@ void RegScavenger::determineKillsAndDefs() {
       }
       
       // Apply the mask.
-      (isPred ? DefRegUnits : KillRegUnits) |= TmpRegUnits;
+      KillRegUnits |= TmpRegUnits;
     }
     if (!MO.isReg())
       continue;
@@ -135,11 +131,11 @@ void RegScavenger::determineKillsAndDefs() {
       // Ignore undef uses.
       if (MO.isUndef())
         continue;
-      if (!isPred && MO.isKill())
+      if (MO.isKill())
         addRegUnits(KillRegUnits, Reg);
     } else {
       assert(MO.isDef());
-      if (!isPred && MO.isDead())
+      if (MO.isDead())
         addRegUnits(KillRegUnits, Reg);
       else
         addRegUnits(DefRegUnits, Reg);
@@ -396,16 +392,43 @@ unsigned RegScavenger::scavengeRegister(const TargetRegisterClass *RC,
     return SReg;
   }
 
-  // Find an available scavenging slot.
-  unsigned SI;
-  for (SI = 0; SI < Scavenged.size(); ++SI)
-    if (Scavenged[SI].Reg == 0)
-      break;
+  // Find an available scavenging slot with size and alignment matching
+  // the requirements of the class RC.
+  MachineFunction &MF = *I->getParent()->getParent();
+  MachineFrameInfo &MFI = *MF.getFrameInfo();
+  unsigned NeedSize = RC->getSize();
+  unsigned NeedAlign = RC->getAlignment();
+
+  unsigned SI = Scavenged.size(), Diff = UINT_MAX;
+  int FIB = MFI.getObjectIndexBegin(), FIE = MFI.getObjectIndexEnd();
+  for (unsigned I = 0; I < Scavenged.size(); ++I) {
+    if (Scavenged[I].Reg != 0)
+      continue;
+    // Verify that this slot is valid for this register.
+    int FI = Scavenged[I].FrameIndex;
+    if (FI < FIB || FI >= FIE)
+      continue;
+    unsigned S = MFI.getObjectSize(FI);
+    unsigned A = MFI.getObjectAlignment(FI);
+    if (NeedSize > S || NeedAlign > A)
+      continue;
+    // Avoid wasting slots with large size and/or large alignment. Pick one
+    // that is the best fit for this register class (in street metric).
+    // Picking a larger slot than necessary could happen if a slot for a
+    // larger register is reserved before a slot for a smaller one. When
+    // trying to spill a smaller register, the large slot would be found
+    // first, thus making it impossible to spill the larger register later.
+    unsigned D = (S-NeedSize) + (A-NeedAlign);
+    if (D < Diff) {
+      SI = I;
+      Diff = D;
+    }
+  }
 
   if (SI == Scavenged.size()) {
     // We need to scavenge a register but have no spill slot, the target
     // must know how to do it (if not, we'll assert below).
-    Scavenged.push_back(ScavengedInfo());
+    Scavenged.push_back(ScavengedInfo(FIE));
   }
 
   // Avoid infinite regress
@@ -415,8 +438,13 @@ unsigned RegScavenger::scavengeRegister(const TargetRegisterClass *RC,
   // otherwise, use the emergency stack spill slot.
   if (!TRI->saveScavengerRegister(*MBB, I, UseMI, RC, SReg)) {
     // Spill the scavenged register before I.
-    assert(Scavenged[SI].FrameIndex >= 0 &&
-           "Cannot scavenge register without an emergency spill slot!");
+    int FI = Scavenged[SI].FrameIndex;
+    if (FI < FIB || FI >= FIE) {
+      std::string Msg = std::string("Error while trying to spill ") +
+          TRI->getName(SReg) + " from class " + TRI->getRegClassName(RC) +
+          ": Cannot scavenge register without an emergency spill slot!";
+      report_fatal_error(Msg.c_str());
+    }
     TII->storeRegToStackSlot(*MBB, I, SReg, true, Scavenged[SI].FrameIndex,
                              RC, TRI);
     MachineBasicBlock::iterator II = std::prev(I);

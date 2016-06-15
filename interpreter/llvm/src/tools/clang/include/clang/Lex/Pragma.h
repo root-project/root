@@ -76,7 +76,7 @@ public:
 /// used to ignore particular pragmas.
 class EmptyPragmaHandler : public PragmaHandler {
 public:
-  EmptyPragmaHandler();
+  explicit EmptyPragmaHandler(StringRef Name = StringRef());
 
   void HandlePragma(Preprocessor &PP, PragmaIntroducerKind Introducer,
                     Token &FirstToken) override;
@@ -93,7 +93,7 @@ class PragmaNamespace : public PragmaHandler {
   llvm::StringMap<PragmaHandler*> Handlers;
 public:
   explicit PragmaNamespace(StringRef Name) : PragmaHandler(Name) {}
-  virtual ~PragmaNamespace();
+  ~PragmaNamespace() override;
 
   /// FindHandler - Check to see if there is already a handler for the
   /// specified name.  If not, return the handler for the null name if it

@@ -73,6 +73,11 @@ namespace {
 
     bool runOnMachineFunction(MachineFunction &F) override;
 
+    MachineFunctionProperties getRequiredProperties() const override {
+      return MachineFunctionProperties().set(
+          MachineFunctionProperties::Property::AllVRegsAllocated);
+    }
+
   private:
     void splitMBB(MachineBasicBlock *MBB);
     void initMBBInfo();
@@ -148,7 +153,7 @@ void MipsLongBranch::splitMBB(MachineBasicBlock *MBB) {
   // Insert NewMBB and fix control flow.
   MachineBasicBlock *Tgt = getTargetMBB(*FirstBr);
   NewMBB->transferSuccessors(MBB);
-  NewMBB->removeSuccessor(Tgt);
+  NewMBB->removeSuccessor(Tgt, true);
   MBB->addSuccessor(NewMBB);
   MBB->addSuccessor(Tgt);
   MF->insert(std::next(MachineFunction::iterator(MBB)), NewMBB);
@@ -160,8 +165,8 @@ void MipsLongBranch::splitMBB(MachineBasicBlock *MBB) {
 void MipsLongBranch::initMBBInfo() {
   // Split the MBBs if they have two branches. Each basic block should have at
   // most one branch after this loop is executed.
-  for (MachineFunction::iterator I = MF->begin(), E = MF->end(); I != E;)
-    splitMBB(I++);
+  for (auto &MBB : *MF)
+    splitMBB(&MBB);
 
   MF->RenumberBlocks();
   MBBInfos.clear();
@@ -262,8 +267,7 @@ void MipsLongBranch::expandToLongBranch(MBBInfo &I) {
       static_cast<const MipsInstrInfo *>(Subtarget.getInstrInfo());
 
   MF->insert(FallThroughMBB, LongBrMBB);
-  MBB->removeSuccessor(TgtMBB);
-  MBB->addSuccessor(LongBrMBB);
+  MBB->replaceSuccessor(TgtMBB, LongBrMBB);
 
   if (IsPIC) {
     MachineBasicBlock *BalTgtMBB = MF->CreateMachineBasicBlock(BB);
@@ -434,7 +438,7 @@ void MipsLongBranch::expandToLongBranch(MBBInfo &I) {
     I.Br->addOperand(MachineOperand::CreateMBB(LongBrMBB));
   } else
     // Change branch destination and reverse condition.
-    replaceBranch(*MBB, I.Br, DL, FallThroughMBB);
+    replaceBranch(*MBB, I.Br, DL, &*FallThroughMBB);
 }
 
 static void emitGPDisp(MachineFunction &F, const MipsInstrInfo *TII) {

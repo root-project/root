@@ -42,7 +42,8 @@ static cl::opt<std::string>
 // library.
 enum YAMLObjectFormat {
   YOF_COFF,
-  YOF_ELF
+  YOF_ELF,
+  YOF_MACHO
 };
 
 cl::opt<YAMLObjectFormat> Format(
@@ -51,6 +52,7 @@ cl::opt<YAMLObjectFormat> Format(
   cl::values(
     clEnumValN(YOF_COFF, "coff", "COFF object file format"),
     clEnumValN(YOF_ELF, "elf", "ELF object file format"),
+    clEnumValN(YOF_MACHO, "macho", "Mach-O object file format"),
   clEnumValEnd));
 
 cl::opt<unsigned>
@@ -62,7 +64,8 @@ static cl::opt<std::string> OutputFilename("o", cl::desc("Output filename"),
 
 typedef int (*ConvertFuncPtr)(yaml::Input & YIn, raw_ostream &Out);
 
-int convertYAML(yaml::Input & YIn, raw_ostream &Out, ConvertFuncPtr Convert) {
+static int convertYAML(yaml::Input &YIn, raw_ostream &Out,
+                       ConvertFuncPtr Convert) {
   unsigned CurDocNum = 0;
   do {
     if (++CurDocNum == DocNum)
@@ -76,7 +79,7 @@ int convertYAML(yaml::Input & YIn, raw_ostream &Out, ConvertFuncPtr Convert) {
 
 int main(int argc, char **argv) {
   cl::ParseCommandLineOptions(argc, argv);
-  sys::PrintStackTraceOnErrorSignal();
+  sys::PrintStackTraceOnErrorSignal(argv[0]);
   PrettyStackTraceProgram X(argc, argv);
   llvm_shutdown_obj Y;  // Call llvm_shutdown() on exit.
 
@@ -101,6 +104,8 @@ int main(int argc, char **argv) {
     Convert = yaml2coff;
   else if (Format == YOF_ELF)
     Convert = yaml2elf;
+  else if (Format == YOF_MACHO)
+    Convert = yaml2macho;
   else {
     errs() << "Not yet implemented\n";
     return 1;

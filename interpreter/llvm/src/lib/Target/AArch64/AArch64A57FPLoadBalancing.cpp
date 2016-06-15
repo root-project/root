@@ -43,7 +43,6 @@
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
-#include <list>
 using namespace llvm;
 
 #define DEBUG_TYPE "aarch64-a57-fp-load-balancing"
@@ -125,6 +124,11 @@ public:
 
   bool runOnMachineFunction(MachineFunction &F) override;
 
+  MachineFunctionProperties getRequiredProperties() const override {
+    return MachineFunctionProperties().set(
+        MachineFunctionProperties::Property::AllVRegsAllocated);
+  }
+
   const char *getPassName() const override {
     return "A57 FP Anti-dependency breaker";
   }
@@ -142,7 +146,7 @@ private:
   int scavengeRegister(Chain *G, Color C, MachineBasicBlock &MBB);
   void scanInstruction(MachineInstr *MI, unsigned Idx,
                        std::map<unsigned, Chain*> &Active,
-                       std::set<std::unique_ptr<Chain>> &AllChains);
+                       std::vector<std::unique_ptr<Chain>> &AllChains);
   void maybeKillChain(MachineOperand &MO, unsigned Idx,
                       std::map<unsigned, Chain*> &RegChains);
   Color getColor(unsigned Register);
@@ -158,7 +162,7 @@ INITIALIZE_PASS_END(AArch64A57FPLoadBalancing, DEBUG_TYPE,
                     "AArch64 A57 FP Load-Balancing", false, false)
 
 namespace {
-/// A Chain is a sequence of instructions that are linked together by 
+/// A Chain is a sequence of instructions that are linked together by
 /// an accumulation operand. For example:
 ///
 ///   fmul d0<def>, ?
@@ -285,14 +289,14 @@ public:
   std::string str() const {
     std::string S;
     raw_string_ostream OS(S);
-    
+
     OS << "{";
-    StartInst->print(OS, NULL, true);
+    StartInst->print(OS, /* SkipOpers= */true);
     OS << " -> ";
-    LastInst->print(OS, NULL, true);
+    LastInst->print(OS, /* SkipOpers= */true);
     if (KillInst) {
       OS << " (kill @ ";
-      KillInst->print(OS, NULL, true);
+      KillInst->print(OS, /* SkipOpers= */true);
       OS << ")";
     }
     OS << "}";
@@ -307,6 +311,12 @@ public:
 //===----------------------------------------------------------------------===//
 
 bool AArch64A57FPLoadBalancing::runOnMachineFunction(MachineFunction &F) {
+  if (skipFunction(*F.getFunction()))
+    return false;
+
+  if (!F.getSubtarget<AArch64Subtarget>().balanceFPOps())
+    return false;
+
   bool Changed = false;
   DEBUG(dbgs() << "***** AArch64A57FPLoadBalancing *****\n");
 
@@ -331,7 +341,7 @@ bool AArch64A57FPLoadBalancing::runOnBasicBlock(MachineBasicBlock &MBB) {
   // been killed yet. This is keyed by register - all chains can only have one
   // "link" register between each inst in the chain.
   std::map<unsigned, Chain*> ActiveChains;
-  std::set<std::unique_ptr<Chain>> AllChains;
+  std::vector<std::unique_ptr<Chain>> AllChains;
   unsigned Idx = 0;
   for (auto &MI : MBB)
     scanInstruction(&MI, Idx++, ActiveChains, AllChains);
@@ -422,7 +432,7 @@ Chain *AArch64A57FPLoadBalancing::getAndEraseNext(Color PreferredColor,
       return Ch;
     }
   }
-  
+
   // Bailout case - just return the first item.
   Chain *Ch = L.front();
   L.erase(L.begin());
@@ -487,10 +497,10 @@ bool AArch64A57FPLoadBalancing::colorChainSet(std::vector<Chain*> GV,
 int AArch64A57FPLoadBalancing::scavengeRegister(Chain *G, Color C,
                                                 MachineBasicBlock &MBB) {
   RegScavenger RS;
-  RS.enterBasicBlock(&MBB);
+  RS.enterBasicBlock(MBB);
   RS.forward(MachineBasicBlock::iterator(G->getStart()));
 
-  // Can we find an appropriate register that is available throughout the life 
+  // Can we find an appropriate register that is available throughout the life
   // of the chain?
   unsigned RegClassID = G->getStart()->getDesc().OpInfo[0].RegClass;
   BitVector AvailableRegs = RS.getRegsAvailable(TRI->getRegClass(RegClassID));
@@ -505,9 +515,17 @@ int AArch64A57FPLoadBalancing::scavengeRegister(Chain *G, Color C,
       if (J.isRegMask())
         AvailableRegs.clearBitsNotInMask(J.getRegMask());
 
-      if (J.isReg() && J.isDef() && AvailableRegs[J.getReg()]) {
-        assert(J.isDead() && "Non-dead def should have been removed by now!");
-        AvailableRegs.reset(J.getReg());
+      if (J.isReg() && J.isDef()) {
+        MCRegAliasIterator AI(J.getReg(), TRI, /*IncludeSelf=*/true);
+        if (J.isDead())
+          for (; AI.isValid(); ++AI)
+            AvailableRegs.reset(*AI);
+#ifndef NDEBUG
+        else
+          for (; AI.isValid(); ++AI)
+            assert(!AvailableRegs[*AI] &&
+                   "Non-dead def should have been removed by now!");
+#endif
       }
     }
   }
@@ -517,8 +535,7 @@ int AArch64A57FPLoadBalancing::scavengeRegister(Chain *G, Color C,
   for (auto Reg : Ord) {
     if (!AvailableRegs[Reg])
       continue;
-    if ((C == Color::Even && (Reg % 2) == 0) ||
-        (C == Color::Odd && (Reg % 2) == 1))
+    if (C == getColor(Reg))
       return Reg;
   }
 
@@ -580,7 +597,6 @@ bool AArch64A57FPLoadBalancing::colorChain(Chain *G, Color C,
       if (Change) {
         Substs[MO.getReg()] = Reg;
         MO.setReg(Reg);
-        MRI->setPhysRegUsed(Reg);
 
         Changed = true;
       }
@@ -598,10 +614,9 @@ bool AArch64A57FPLoadBalancing::colorChain(Chain *G, Color C,
   return Changed;
 }
 
-void AArch64A57FPLoadBalancing::
-scanInstruction(MachineInstr *MI, unsigned Idx, 
-                std::map<unsigned, Chain*> &ActiveChains,
-                std::set<std::unique_ptr<Chain>> &AllChains) {
+void AArch64A57FPLoadBalancing::scanInstruction(
+    MachineInstr *MI, unsigned Idx, std::map<unsigned, Chain *> &ActiveChains,
+    std::vector<std::unique_ptr<Chain>> &AllChains) {
   // Inspect "MI", updating ActiveChains and AllChains.
 
   if (isMul(MI)) {
@@ -620,7 +635,7 @@ scanInstruction(MachineInstr *MI, unsigned Idx,
 
     auto G = llvm::make_unique<Chain>(MI, Idx, getColor(DestReg));
     ActiveChains[DestReg] = G.get();
-    AllChains.insert(std::move(G));
+    AllChains.push_back(std::move(G));
 
   } else if (isMla(MI)) {
 
@@ -664,7 +679,7 @@ scanInstruction(MachineInstr *MI, unsigned Idx,
           << TRI->getName(DestReg) << "\n");
     auto G = llvm::make_unique<Chain>(MI, Idx, getColor(DestReg));
     ActiveChains[DestReg] = G.get();
-    AllChains.insert(std::move(G));
+    AllChains.push_back(std::move(G));
 
   } else {
 

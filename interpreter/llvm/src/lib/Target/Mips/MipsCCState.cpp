@@ -26,25 +26,19 @@ static bool isF128SoftLibCall(const char *CallSym) {
       "ceill",         "copysignl",    "cosl",          "exp2l",
       "expl",          "floorl",       "fmal",          "fmodl",
       "log10l",        "log2l",        "logl",          "nearbyintl",
-      "powl",          "rintl",        "sinl",          "sqrtl",
-      "truncl"};
-
-  const char *const *End = LibCalls + array_lengthof(LibCalls);
+      "powl",          "rintl",        "roundl",        "sinl",
+      "sqrtl",         "truncl"};
 
   // Check that LibCalls is sorted alphabetically.
-  MipsTargetLowering::LTStr Comp;
-
-#ifndef NDEBUG
-  for (const char *const *I = LibCalls; I < End - 1; ++I)
-    assert(Comp(*I, *(I + 1)));
-#endif
-
-  return std::binary_search(LibCalls, End, CallSym, Comp);
+  auto Comp = [](const char *S1, const char *S2) { return strcmp(S1, S2) < 0; };
+  assert(std::is_sorted(std::begin(LibCalls), std::end(LibCalls), Comp));
+  return std::binary_search(std::begin(LibCalls), std::end(LibCalls),
+                            CallSym, Comp);
 }
 
 /// This function returns true if Ty is fp128, {f128} or i128 which was
 /// originally a fp128.
-static bool originalTypeIsF128(const Type *Ty, const SDNode *CallNode) {
+static bool originalTypeIsF128(Type *Ty, const SDNode *CallNode) {
   if (Ty->isFP128Ty())
     return true;
 
@@ -132,8 +126,8 @@ void MipsCCState::PreAnalyzeFormalArgumentsForF128(
       continue;
     }
 
-    assert(Ins[i].OrigArgIndex < MF.getFunction()->arg_size());
-    std::advance(FuncArg, Ins[i].OrigArgIndex);
+    assert(Ins[i].getOrigArgIndex() < MF.getFunction()->arg_size());
+    std::advance(FuncArg, Ins[i].getOrigArgIndex());
 
     OriginalArgWasF128.push_back(
         originalTypeIsF128(FuncArg->getType(), nullptr));

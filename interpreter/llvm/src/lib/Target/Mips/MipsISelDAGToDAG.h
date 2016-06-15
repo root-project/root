@@ -73,6 +73,9 @@ private:
   virtual bool selectIntAddrMM(SDValue Addr, SDValue &Base,
                                SDValue &Offset) const;
 
+  virtual bool selectIntAddrLSL2MM(SDValue Addr, SDValue &Base,
+                                   SDValue &Offset) const;
+
   /// Match addr+simm10 and addr
   virtual bool selectIntAddrMSA(SDValue Addr, SDValue &Base,
                                 SDValue &Offset) const;
@@ -81,7 +84,8 @@ private:
                             SDValue &Offset, SDValue &Alias);
 
   /// \brief Select constant vector splats.
-  virtual bool selectVSplat(SDNode *N, APInt &Imm) const;
+  virtual bool selectVSplat(SDNode *N, APInt &Imm,
+                            unsigned MinSizeInBits) const;
   /// \brief Select constant vector splats whose value fits in a uimm1.
   virtual bool selectVSplatUimm1(SDValue N, SDValue &Imm) const;
   /// \brief Select constant vector splats whose value fits in a uimm2.
@@ -110,19 +114,19 @@ private:
   /// starting at bit zero.
   virtual bool selectVSplatMaskR(SDValue N, SDValue &Imm) const;
 
-  SDNode *Select(SDNode *N) override;
+  void Select(SDNode *N) override;
 
-  virtual std::pair<bool, SDNode*> selectNode(SDNode *Node) = 0;
+  virtual bool trySelect(SDNode *Node) = 0;
 
   // getImm - Return a target constant with the specified value.
   inline SDValue getImm(const SDNode *Node, uint64_t Imm) {
-    return CurDAG->getTargetConstant(Imm, Node->getValueType(0));
+    return CurDAG->getTargetConstant(Imm, SDLoc(Node), Node->getValueType(0));
   }
 
   virtual void processFunctionAfterISel(MachineFunction &MF) = 0;
 
   bool SelectInlineAsmMemoryOperand(const SDValue &Op,
-                                    char ConstraintCode,
+                                    unsigned ConstraintID,
                                     std::vector<SDValue> &OutOps) override;
 };
 }

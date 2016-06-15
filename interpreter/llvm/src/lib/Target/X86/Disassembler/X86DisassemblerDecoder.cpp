@@ -53,7 +53,6 @@ struct ContextDecision {
 #define debug(s) do { } while (0)
 #endif
 
-
 /*
  * contextForAttrs - Client for the instruction context table.  Takes a set of
  *   attributes and returns the appropriate decode context.
@@ -276,8 +275,6 @@ static void dbgprintf(struct InternalInstruction* insn,
   va_end(ap);
 
   insn->dlog(insn->dlogArg, buffer);
-
-  return;
 }
 
 /*
@@ -310,11 +307,8 @@ static bool isPrefixAtLocation(struct InternalInstruction* insn,
                                uint8_t prefix,
                                uint64_t location)
 {
-  if (insn->prefixPresent[prefix] == 1 &&
-     insn->prefixLocations[prefix] == location)
-    return true;
-  else
-    return false;
+  return insn->prefixPresent[prefix] == 1 &&
+     insn->prefixLocations[prefix] == location;
 }
 
 /*
@@ -364,7 +358,7 @@ static int readPrefixes(struct InternalInstruction* insn) {
        * then it should be disassembled as a xacquire/xrelease not repne/rep.
        */
       if ((byte == 0xf2 || byte == 0xf3) &&
-          ((nextByte == 0xf0) |
+          ((nextByte == 0xf0) ||
           ((nextByte & 0xfe) == 0x86 || (nextByte & 0xf8) == 0x90)))
         insn->xAcquireRelease = true;
       /*
@@ -983,6 +977,47 @@ static int getID(struct InternalInstruction* insn, const void *miiArg) {
       insn->opcode == 0xE3)
     attrMask ^= ATTR_ADSIZE;
 
+  /*
+   * In 64-bit mode all f64 superscripted opcodes ignore opcode size prefix
+   * CALL/JMP/JCC instructions need to ignore 0x66 and consume 4 bytes
+   */
+
+  if (insn->mode == MODE_64BIT &&
+      isPrefixAtLocation(insn, 0x66, insn->necessaryPrefixLocation)) {
+    switch (insn->opcode) {
+    case 0xE8:
+    case 0xE9:
+      // Take care of psubsb and other mmx instructions.
+      if (insn->opcodeType == ONEBYTE) {
+        attrMask ^= ATTR_OPSIZE;
+        insn->immediateSize = 4;
+        insn->displacementSize = 4;
+      }
+      break;
+    case 0x82:
+    case 0x83:
+    case 0x84:
+    case 0x85:
+    case 0x86:
+    case 0x87:
+    case 0x88:
+    case 0x89:
+    case 0x8A:
+    case 0x8B:
+    case 0x8C:
+    case 0x8D:
+    case 0x8E:
+    case 0x8F:
+      // Take care of lea and three byte ops.
+      if (insn->opcodeType == TWOBYTE) {
+        attrMask ^= ATTR_OPSIZE;
+        insn->immediateSize = 4;
+        insn->displacementSize = 4;
+      }
+      break;
+    }
+  }
+
   if (getIDWithAttrMask(&instructionID, insn, attrMask))
     return -1;
 
@@ -1168,35 +1203,30 @@ static int readSIB(struct InternalInstruction* insn) {
     return -1;
 
   index = indexFromSIB(insn->sib) | (xFromREX(insn->rexPrefix) << 3);
+
+  // FIXME: The fifth bit (bit index 4) is only to be used for instructions
+  // that understand VSIB indexing. ORing the bit in here is mildy dangerous
+  // because performing math on an 'enum SIBIndex' can produce garbage.
+  // Excluding the "none" value, it should cover 6 spaces of register names:
+  //   - 16 possibilities for 16-bit GPR starting at SIB_INDEX_BX_SI
+  //   - 16 possibilities for 32-bit GPR starting at SIB_INDEX_EAX
+  //   - 16 possibilities for 64-bit GPR starting at SIB_INDEX_RAX
+  //   - 32 possibilities for each of XMM, YMM, ZMM registers
+  // When sibIndexBase gets assigned SIB_INDEX_RAX as it does in 64-bit mode,
+  // summing in a fully decoded index between 0 and 31 can end up with a value
+  // that looks like something in the low half of the XMM range.
+  // translateRMMemory() tries to reverse the damage, with only partial success,
+  // as evidenced by known bugs in "test/MC/Disassembler/X86/x86-64.txt"
   if (insn->vectorExtensionType == TYPE_EVEX)
     index |= v2FromEVEX4of4(insn->vectorExtensionPrefix[3]) << 4;
 
-  switch (index) {
-  case 0x4:
+  if (index == 0x4) {
     insn->sibIndex = SIB_INDEX_NONE;
-    break;
-  default:
+  } else {
     insn->sibIndex = (SIBIndex)(sibIndexBase + index);
-    if (insn->sibIndex == SIB_INDEX_sib ||
-        insn->sibIndex == SIB_INDEX_sib64)
-      insn->sibIndex = SIB_INDEX_NONE;
-    break;
   }
 
-  switch (scaleFromSIB(insn->sib)) {
-  case 0:
-    insn->sibScale = 1;
-    break;
-  case 1:
-    insn->sibScale = 2;
-    break;
-  case 2:
-    insn->sibScale = 4;
-    break;
-  case 3:
-    insn->sibScale = 8;
-    break;
-  }
+  insn->sibScale = 1 << scaleFromSIB(insn->sib);
 
   base = baseFromSIB(insn->sib) | (bFromREX(insn->rexPrefix) << 3);
 
@@ -1369,16 +1399,17 @@ static int readModRM(struct InternalInstruction* insn) {
     switch (mod) {
     case 0x0:
       insn->eaDisplacement = EA_DISP_NONE; /* readSIB may override this */
-      switch (rm) {
-      case 0x14:
-      case 0x4:
-      case 0xc:   /* in case REXW.b is set */
+      // In determining whether RIP-relative mode is used (rm=5),
+      // or whether a SIB byte is present (rm=4),
+      // the extension bits (REX.b and EVEX.x) are ignored.
+      switch (rm & 7) {
+      case 0x4: // SIB byte is present
         insn->eaBase = (insn->addressSize == 4 ?
                         EA_BASE_sib : EA_BASE_sib64);
         if (readSIB(insn) || readDisplacement(insn))
           return -1;
         break;
-      case 0x5:
+      case 0x5: // RIP-relative
         insn->eaBase = EA_BASE_NONE;
         insn->eaDisplacement = EA_DISP_32;
         if (readDisplacement(insn))
@@ -1394,10 +1425,8 @@ static int readModRM(struct InternalInstruction* insn) {
       /* FALLTHROUGH */
     case 0x2:
       insn->eaDisplacement = (mod == 0x1 ? EA_DISP_8 : EA_DISP_32);
-      switch (rm) {
-      case 0x14:
-      case 0x4:
-      case 0xc:   /* in case REXW.b is set */
+      switch (rm & 7) {
+      case 0x4: // SIB byte is present
         insn->eaBase = EA_BASE_sib;
         if (readSIB(insn) || readDisplacement(insn))
           return -1;
@@ -1453,11 +1482,16 @@ static int readModRM(struct InternalInstruction* insn) {
     case TYPE_XMM128:                                     \
     case TYPE_XMM64:                                      \
     case TYPE_XMM32:                                      \
-    case TYPE_XMM:                                        \
       return prefix##_XMM0 + index;                       \
     case TYPE_VK1:                                        \
+    case TYPE_VK2:                                        \
+    case TYPE_VK4:                                        \
     case TYPE_VK8:                                        \
     case TYPE_VK16:                                       \
+    case TYPE_VK32:                                       \
+    case TYPE_VK64:                                       \
+      if (index > 7)                                      \
+        *valid = 0;                                       \
       return prefix##_K0 + index;                         \
     case TYPE_MM64:                                       \
       return prefix##_MM0 + (index & 0x7);                \
@@ -1725,14 +1759,6 @@ static int readOperands(struct InternalInstruction* insn) {
       if (Op.encoding != ENCODING_REG && insn->eaDisplacement == EA_DISP_8)
         insn->displacement *= 1 << (Op.encoding - ENCODING_RM);
       break;
-    case ENCODING_CB:
-    case ENCODING_CW:
-    case ENCODING_CD:
-    case ENCODING_CP:
-    case ENCODING_CO:
-    case ENCODING_CT:
-      dbgprintf(insn, "We currently don't hande code-offset encodings");
-      return -1;
     case ENCODING_IB:
       if (sawRegImm) {
         /* Saw a register immediate so don't read again and instead split the

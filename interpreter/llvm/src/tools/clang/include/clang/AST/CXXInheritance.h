@@ -155,17 +155,16 @@ class CXXBasePaths {
   /// \brief Array of the declarations that have been found. This
   /// array is constructed only if needed, e.g., to iterate over the
   /// results within LookupResult.
-  NamedDecl **DeclsFound;
+  std::unique_ptr<NamedDecl *[]> DeclsFound;
   unsigned NumDeclsFound;
   
   friend class CXXRecordDecl;
   
   void ComputeDeclsFound();
 
-  bool lookupInBases(ASTContext &Context, 
-                     const CXXRecordDecl *Record,
-                     CXXRecordDecl::BaseMatchesCallback *BaseMatches, 
-                     void *UserData);
+  bool lookupInBases(ASTContext &Context, const CXXRecordDecl *Record,
+                     CXXRecordDecl::BaseMatchesCallback BaseMatches);
+
 public:
   typedef std::list<CXXBasePath>::iterator paths_iterator;
   typedef std::list<CXXBasePath>::const_iterator const_paths_iterator;
@@ -173,15 +172,12 @@ public:
   
   /// BasePaths - Construct a new BasePaths structure to record the
   /// paths for a derived-to-base search.
-  explicit CXXBasePaths(bool FindAmbiguities = true,
-                        bool RecordPaths = true,
+  explicit CXXBasePaths(bool FindAmbiguities = true, bool RecordPaths = true,
                         bool DetectVirtual = true)
-    : FindAmbiguities(FindAmbiguities), RecordPaths(RecordPaths),
-      DetectVirtual(DetectVirtual), DetectedVirtual(nullptr),
-      DeclsFound(nullptr), NumDeclsFound(0) { }
-  
-  ~CXXBasePaths() { delete [] DeclsFound; }
-  
+      : FindAmbiguities(FindAmbiguities), RecordPaths(RecordPaths),
+        DetectVirtual(DetectVirtual), DetectedVirtual(nullptr),
+        NumDeclsFound(0) {}
+
   paths_iterator begin() { return Paths.begin(); }
   paths_iterator end()   { return Paths.end(); }
   const_paths_iterator begin() const { return Paths.begin(); }
@@ -333,12 +329,12 @@ public:
 ///   struct D : B, C { };
 /// \endcode
 ///
-/// This data structure contaings a mapping from every virtual
+/// This data structure contains a mapping from every virtual
 /// function *that does not override an existing virtual function* and
 /// in every subobject where that virtual function occurs to the set
 /// of virtual functions that override it. Thus, the same virtual
 /// function \c A::f can actually occur in multiple subobjects of type
-/// \c A due to multiple inheritance, and may be overriden by
+/// \c A due to multiple inheritance, and may be overridden by
 /// different virtual functions in each, as in the following example:
 ///
 /// \code
@@ -354,7 +350,7 @@ public:
 /// \c A::f but in *different* subobjects of type A. This is
 /// represented by numbering the subobjects in which the overridden
 /// and the overriding virtual member functions are located. Subobject
-/// 0 represents the virtua base class subobject of that type, while
+/// 0 represents the virtual base class subobject of that type, while
 /// subobject numbers greater than 0 refer to non-virtual base class
 /// subobjects of that type.
 class CXXFinalOverriderMap

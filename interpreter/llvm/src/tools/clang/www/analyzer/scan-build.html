@@ -136,8 +136,7 @@ with MinGW/MSYS the following information may be helpful:</p>
 
 <ul>
  <li> If getting unexpected <tt>"fatal error: no input files"</tt> while 
-building with MSYS make from the Windows cmd, try one of the these 
-solutions:</li>
+building with MSYS make from the Windows cmd, try one of these solutions:</li>
  <ul>
  <li> Use MinGW <tt>mingw32-make</tt> instead of MSYS <tt>make</tt> and
 exclude the path to MSYS from PATH to prevent <tt>mingw32-make</tt> from using
@@ -227,6 +226,9 @@ Assertions are picked up by the static analyzer to prune infeasible paths, which
 in some cases can greatly reduce the number of false positives (bogus error
 reports) emitted by the tool.</p>
 
+<p>Another option is to use <tt>--force-analyze-debug-code</tt> flag of
+<b>scan-build</b> tool which would enable assertions automatically.</p>
+
 <h3 id="recommend_verbose">Use verbose output when debugging scan-build</h3>
 
 <p><tt>scan-build</tt> takes a <b>-v</b> option to emit verbose output about
@@ -310,11 +312,11 @@ steps they need to take (e.g., setup code signing).</p>
 
 <h3>Recommendation: use &quot;Build and Analyze&quot;</h3>
 
-<p>The absolute easiest way to analyze iPhone projects is to use the <a
-href="http://developer.apple.com/mac/library/featuredarticles/StaticAnalysis/index.html"><i>Build
-and Analyze</i> feature in Xcode 3.2</a> (which is based on the Clang Static
-Analyzer). There a user can analyze their project with the click of a button
-without most of the setup described later.</p>
+<p>The absolute easiest way to analyze iPhone projects is to use the
+<a href="https://developer.apple.com/library/ios/recipes/xcode_help-source_editor/chapters/Analyze.html#//apple_ref/doc/uid/TP40009975-CH4-SW1"><i>Analyze</i>
+feature in Xcode</a> (which is based on the Clang Static Analyzer). There a
+user can analyze their project right from a menu without most of the setup
+described later.</p>
 
 <p><a href="/xcode.html">Instructions are available</a> on this
 website on how to use open source builds of the analyzer as a replacement for

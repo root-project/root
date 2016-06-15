@@ -76,11 +76,10 @@ FunctionPass *llvm::createBreakCriticalEdgesPass() {
 //    Implementation of the external critical edge manipulation functions
 //===----------------------------------------------------------------------===//
 
-/// createPHIsForSplitLoopExit - When a loop exit edge is split, LCSSA form
-/// may require new PHIs in the new exit block. This function inserts the
-/// new PHIs, as needed. Preds is a list of preds inside the loop, SplitBB
-/// is the new loop exit block, and DestBB is the old loop exit, now the
-/// successor of SplitBB.
+/// When a loop exit edge is split, LCSSA form may require new PHIs in the new
+/// exit block. This function inserts the new PHIs, as needed. Preds is a list
+/// of preds inside the loop, SplitBB is the new loop exit block, and DestBB is
+/// the old loop exit, now the successor of SplitBB.
 static void createPHIsForSplitLoopExit(ArrayRef<BasicBlock *> Preds,
                                        BasicBlock *SplitBB,
                                        BasicBlock *DestBB) {
@@ -101,10 +100,9 @@ static void createPHIsForSplitLoopExit(ArrayRef<BasicBlock *> Preds,
         continue;
 
     // Otherwise a new PHI is needed. Create one and populate it.
-    PHINode *NewPN =
-      PHINode::Create(PN->getType(), Preds.size(), "split",
-                      SplitBB->isLandingPad() ?
-                      SplitBB->begin() : SplitBB->getTerminator());
+    PHINode *NewPN = PHINode::Create(
+        PN->getType(), Preds.size(), "split",
+        SplitBB->isLandingPad() ? &SplitBB->front() : SplitBB->getTerminator());
     for (unsigned i = 0, e = Preds.size(); i != e; ++i)
       NewPN->addIncoming(V, Preds[i]);
 
@@ -113,25 +111,9 @@ static void createPHIsForSplitLoopExit(ArrayRef<BasicBlock *> Preds,
   }
 }
 
-/// SplitCriticalEdge - If this edge is a critical edge, insert a new node to
-/// split the critical edge.  This will update DominatorTree information if it
-/// is available, thus calling this pass will not invalidate either of them.
-/// This returns the new block if the edge was split, null otherwise.
-///
-/// If MergeIdenticalEdges is true (not the default), *all* edges from TI to the
-/// specified successor will be merged into the same critical edge block.
-/// This is most commonly interesting with switch instructions, which may
-/// have many edges to any one destination.  This ensures that all edges to that
-/// dest go to one block instead of each going to a different block, but isn't
-/// the standard definition of a "critical edge".
-///
-/// It is invalid to call this function on a critical edge that starts at an
-/// IndirectBrInst.  Splitting these edges will almost always create an invalid
-/// program because the address of the new block won't be the one that is jumped
-/// to.
-///
-BasicBlock *llvm::SplitCriticalEdge(TerminatorInst *TI, unsigned SuccNum,
-                                    const CriticalEdgeSplittingOptions &Options) {
+BasicBlock *
+llvm::SplitCriticalEdge(TerminatorInst *TI, unsigned SuccNum,
+                        const CriticalEdgeSplittingOptions &Options) {
   if (!isCriticalEdge(TI, SuccNum, Options.MergeIdenticalEdges))
     return nullptr;
 
@@ -141,9 +123,9 @@ BasicBlock *llvm::SplitCriticalEdge(TerminatorInst *TI, unsigned SuccNum,
   BasicBlock *TIBB = TI->getParent();
   BasicBlock *DestBB = TI->getSuccessor(SuccNum);
 
-  // Splitting the critical edge to a landing pad block is non-trivial. Don't do
+  // Splitting the critical edge to a pad block is non-trivial. Don't do
   // it in this generic function.
-  if (DestBB->isLandingPad()) return nullptr;
+  if (DestBB->isEHPad()) return nullptr;
 
   // Create a new basic block, linking it into the CFG.
   BasicBlock *NewBB = BasicBlock::Create(TI->getContext(),
@@ -157,7 +139,7 @@ BasicBlock *llvm::SplitCriticalEdge(TerminatorInst *TI, unsigned SuccNum,
 
   // Insert the block into the function... right after the block TI lives in.
   Function &F = *TIBB->getParent();
-  Function::iterator FBBI = TIBB;
+  Function::iterator FBBI = TIBB->getIterator();
   F.getBasicBlockList().insert(++FBBI, NewBB);
 
   // If there are any PHI nodes in DestBB, we need to update them so that they
@@ -197,7 +179,6 @@ BasicBlock *llvm::SplitCriticalEdge(TerminatorInst *TI, unsigned SuccNum,
   }
 
   // If we have nothing to update, just return.
-  auto *AA = Options.AA;
   auto *DT = Options.DT;
   auto *LI = Options.LI;
   if (!DT && !LI)
@@ -319,10 +300,9 @@ BasicBlock *llvm::SplitCriticalEdge(TerminatorInst *TI, unsigned SuccNum,
           LoopPreds.push_back(P);
         }
         if (!LoopPreds.empty()) {
-          assert(!DestBB->isLandingPad() &&
-                 "We don't split edges to landing pads!");
+          assert(!DestBB->isEHPad() && "We don't split edges to EH pads!");
           BasicBlock *NewExitBB = SplitBlockPredecessors(
-              DestBB, LoopPreds, "split", AA, DT, LI, Options.PreserveLCSSA);
+              DestBB, LoopPreds, "split", DT, LI, Options.PreserveLCSSA);
           if (Options.PreserveLCSSA)
             createPHIsForSplitLoopExit(LoopPreds, NewExitBB, DestBB);
         }

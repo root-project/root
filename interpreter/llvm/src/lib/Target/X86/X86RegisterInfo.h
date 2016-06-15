@@ -20,14 +20,9 @@
 #include "X86GenRegisterInfo.inc"
 
 namespace llvm {
-  class Type;
-  class TargetInstrInfo;
-  class X86Subtarget;
+  class Triple;
 
 class X86RegisterInfo final : public X86GenRegisterInfo {
-public:
-  const X86Subtarget &Subtarget;
-
 private:
   /// Is64Bit - Is the target 64-bits.
   ///
@@ -55,7 +50,7 @@ private:
   unsigned BasePtr;
 
 public:
-  X86RegisterInfo(const X86Subtarget &STI);
+  X86RegisterInfo(const Triple &TT);
 
   // FIXME: This should be tablegen'd like getDwarfRegNum is
   int getSEHRegNum(unsigned i) const;
@@ -76,8 +71,9 @@ public:
   getSubClassWithSubReg(const TargetRegisterClass *RC,
                         unsigned Idx) const override;
 
-  const TargetRegisterClass*
-  getLargestLegalSuperClass(const TargetRegisterClass *RC) const override;
+  const TargetRegisterClass *
+  getLargestLegalSuperClass(const TargetRegisterClass *RC,
+                            const MachineFunction &MF) const override;
 
   /// getPointerRegClass - Returns a TargetRegisterClass used for pointer
   /// values.
@@ -91,6 +87,11 @@ public:
   const TargetRegisterClass *
   getCrossCopyRegClass(const TargetRegisterClass *RC) const override;
 
+  /// getGPRsForTailCall - Returns a register class with registers that can be
+  /// used in forming tail calls.
+  const TargetRegisterClass *
+  getGPRsForTailCall(const MachineFunction &MF) const;
+
   unsigned getRegPressureLimit(const TargetRegisterClass *RC,
                                MachineFunction &MF) const override;
 
@@ -98,8 +99,15 @@ public:
   /// callee-save registers on this target.
   const MCPhysReg *
   getCalleeSavedRegs(const MachineFunction* MF) const override;
-  const uint32_t *getCallPreservedMask(CallingConv::ID) const override;
-  const uint32_t *getNoPreservedMask() const;
+  const MCPhysReg *
+  getCalleeSavedRegsViaCopy(const MachineFunction *MF) const override;
+  const uint32_t *getCallPreservedMask(const MachineFunction &MF,
+                                       CallingConv::ID) const override;
+  const uint32_t *getNoPreservedMask() const override;
+
+  // Calls involved in thread-local variable lookup save more registers than
+  // normal calls, so they need a different mask to represent this.
+  const uint32_t *getDarwinTLSCallPreservedMask() const;
 
   /// getReservedRegs - Returns a bitset indexed by physical register number
   /// indicating if a register is a special register that has particular uses and
@@ -107,11 +115,11 @@ public:
   /// register scavenger to determine what registers are free.
   BitVector getReservedRegs(const MachineFunction &MF) const override;
 
+  void adjustStackMapLiveOutMask(uint32_t *Mask) const override;
+
   bool hasBasePointer(const MachineFunction &MF) const;
 
-  bool canRealignStack(const MachineFunction &MF) const;
-
-  bool needsStackRealignment(const MachineFunction &MF) const override;
+  bool canRealignStack(const MachineFunction &MF) const override;
 
   bool hasReservedSpillSlot(const MachineFunction &MF, unsigned Reg,
                             int &FrameIdx) const override;
@@ -128,11 +136,6 @@ public:
   // FIXME: Move to FrameInfok
   unsigned getSlotSize() const { return SlotSize; }
 };
-
-// getX86SubSuperRegister - X86 utility function. It returns the sub or super
-// register of a specific X86 register.
-// e.g. getX86SubSuperRegister(X86::EAX, MVT::i16) return X86:AX
-unsigned getX86SubSuperRegister(unsigned, MVT::SimpleValueType, bool High=false);
 
 //get512BitRegister - X86 utility - returns 512-bit super register
 unsigned get512BitSuperRegister(unsigned Reg);

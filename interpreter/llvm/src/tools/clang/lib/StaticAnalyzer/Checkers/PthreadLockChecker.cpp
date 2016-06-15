@@ -32,9 +32,9 @@ private:
   LockState(Kind K) : K(K) {}
 
 public:
-  static LockState getLocked(void) { return LockState(Locked); }
-  static LockState getUnlocked(void) { return LockState(Unlocked); }
-  static LockState getDestroyed(void) { return LockState(Destroyed); }
+  static LockState getLocked() { return LockState(Locked); }
+  static LockState getUnlocked() { return LockState(Unlocked); }
+  static LockState getDestroyed() { return LockState(Destroyed); }
 
   bool operator==(const LockState &X) const {
     return K == X.K;
@@ -62,10 +62,10 @@ class PthreadLockChecker : public Checker< check::PostStmt<CallExpr> > {
   };
 public:
   void checkPostStmt(const CallExpr *CE, CheckerContext &C) const;
-    
+
   void AcquireLock(CheckerContext &C, const CallExpr *CE, SVal lock,
                    bool isTryLock, enum LockingSemantics semantics) const;
-    
+
   void ReleaseLock(CheckerContext &C, const CallExpr *CE, SVal lock) const;
   void DestroyLock(CheckerContext &C, const CallExpr *CE, SVal Lock) const;
   void InitLock(CheckerContext &C, const CallExpr *CE, SVal Lock) const;
@@ -96,7 +96,7 @@ void PthreadLockChecker::checkPostStmt(const CallExpr *CE,
                 false, PthreadSemantics);
   else if (FName == "lck_mtx_lock" ||
            FName == "lck_rw_lock_exclusive" ||
-           FName == "lck_rw_lock_shared") 
+           FName == "lck_rw_lock_shared")
     AcquireLock(C, CE, state->getSVal(CE->getArg(0), LCtx),
                 false, XNUSemantics);
   else if (FName == "pthread_mutex_trylock" ||
@@ -124,17 +124,17 @@ void PthreadLockChecker::checkPostStmt(const CallExpr *CE,
 void PthreadLockChecker::AcquireLock(CheckerContext &C, const CallExpr *CE,
                                      SVal lock, bool isTryLock,
                                      enum LockingSemantics semantics) const {
-  
+
   const MemRegion *lockR = lock.getAsRegion();
   if (!lockR)
     return;
-  
+
   ProgramStateRef state = C.getState();
-  
+
   SVal X = state->getSVal(CE, C.getLocationContext());
   if (X.isUnknownOrUndef())
     return;
-  
+
   DefinedSVal retVal = X.castAs<DefinedSVal>();
 
   if (const LockState *LState = state->get<LockMap>(lockR)) {
@@ -142,14 +142,13 @@ void PthreadLockChecker::AcquireLock(CheckerContext &C, const CallExpr *CE,
       if (!BT_doublelock)
         BT_doublelock.reset(new BugType(this, "Double locking",
                                         "Lock checker"));
-      ExplodedNode *N = C.generateSink();
+      ExplodedNode *N = C.generateErrorNode();
       if (!N)
         return;
-      BugReport *report = new BugReport(*BT_doublelock,
-                                        "This lock has already been acquired",
-                                        N);
+      auto report = llvm::make_unique<BugReport>(
+          *BT_doublelock, "This lock has already been acquired", N);
       report->addRange(CE->getArg(0)->getSourceRange());
-      C.emitReport(report);
+      C.emitReport(std::move(report));
       return;
     } else if (LState->isDestroyed()) {
       reportUseDestroyedBug(C, CE);
@@ -184,8 +183,8 @@ void PthreadLockChecker::AcquireLock(CheckerContext &C, const CallExpr *CE,
     assert((semantics == XNUSemantics) && "Unknown locking semantics");
     lockSucc = state;
   }
-  
-  // Record that the lock was acquired.  
+
+  // Record that the lock was acquired.
   lockSucc = lockSucc->add<LockSet>(lockR);
   lockSucc = lockSucc->set<LockMap>(lockR, LockState::getLocked());
   C.addTransition(lockSucc);
@@ -197,7 +196,7 @@ void PthreadLockChecker::ReleaseLock(CheckerContext &C, const CallExpr *CE,
   const MemRegion *lockR = lock.getAsRegion();
   if (!lockR)
     return;
-  
+
   ProgramStateRef state = C.getState();
 
   if (const LockState *LState = state->get<LockMap>(lockR)) {
@@ -205,14 +204,13 @@ void PthreadLockChecker::ReleaseLock(CheckerContext &C, const CallExpr *CE,
       if (!BT_doubleunlock)
         BT_doubleunlock.reset(new BugType(this, "Double unlocking",
                                           "Lock checker"));
-      ExplodedNode *N = C.generateSink();
+      ExplodedNode *N = C.generateErrorNode();
       if (!N)
         return;
-      BugReport *Report = new BugReport(*BT_doubleunlock,
-                                        "This lock has already been unlocked",
-                                        N);
+      auto Report = llvm::make_unique<BugReport>(
+          *BT_doubleunlock, "This lock has already been unlocked", N);
       Report->addRange(CE->getArg(0)->getSourceRange());
-      C.emitReport(Report);
+      C.emitReport(std::move(Report));
       return;
     } else if (LState->isDestroyed()) {
       reportUseDestroyedBug(C, CE);
@@ -229,16 +227,14 @@ void PthreadLockChecker::ReleaseLock(CheckerContext &C, const CallExpr *CE,
     if (firstLockR != lockR) {
       if (!BT_lor)
         BT_lor.reset(new BugType(this, "Lock order reversal", "Lock checker"));
-      ExplodedNode *N = C.generateSink();
+      ExplodedNode *N = C.generateErrorNode();
       if (!N)
         return;
-      BugReport *report = new BugReport(*BT_lor,
-                                        "This was not the most recently "
-                                        "acquired lock. Possible lock order "
-                                        "reversal",
-                                        N);
+      auto report = llvm::make_unique<BugReport>(
+          *BT_lor, "This was not the most recently acquired lock. Possible "
+                   "lock order reversal", N);
       report->addRange(CE->getArg(0)->getSourceRange());
-      C.emitReport(report);
+      C.emitReport(std::move(report));
       return;
     }
     // Record that the lock was released.
@@ -276,12 +272,12 @@ void PthreadLockChecker::DestroyLock(CheckerContext &C, const CallExpr *CE,
   if (!BT_destroylock)
     BT_destroylock.reset(new BugType(this, "Destroy invalid lock",
                                      "Lock checker"));
-  ExplodedNode *N = C.generateSink();
+  ExplodedNode *N = C.generateErrorNode();
   if (!N)
     return;
-  BugReport *Report = new BugReport(*BT_destroylock, Message, N);
+  auto Report = llvm::make_unique<BugReport>(*BT_destroylock, Message, N);
   Report->addRange(CE->getArg(0)->getSourceRange());
-  C.emitReport(Report);
+  C.emitReport(std::move(Report));
 }
 
 void PthreadLockChecker::InitLock(CheckerContext &C, const CallExpr *CE,
@@ -311,12 +307,12 @@ void PthreadLockChecker::InitLock(CheckerContext &C, const CallExpr *CE,
   if (!BT_initlock)
     BT_initlock.reset(new BugType(this, "Init invalid lock",
                                   "Lock checker"));
-  ExplodedNode *N = C.generateSink();
+  ExplodedNode *N = C.generateErrorNode();
   if (!N)
     return;
-  BugReport *Report = new BugReport(*BT_initlock, Message, N);
+  auto Report = llvm::make_unique<BugReport>(*BT_initlock, Message, N);
   Report->addRange(CE->getArg(0)->getSourceRange());
-  C.emitReport(Report);
+  C.emitReport(std::move(Report));
 }
 
 void PthreadLockChecker::reportUseDestroyedBug(CheckerContext &C,
@@ -324,14 +320,13 @@ void PthreadLockChecker::reportUseDestroyedBug(CheckerContext &C,
   if (!BT_destroylock)
     BT_destroylock.reset(new BugType(this, "Use destroyed lock",
                                      "Lock checker"));
-  ExplodedNode *N = C.generateSink();
+  ExplodedNode *N = C.generateErrorNode();
   if (!N)
     return;
-  BugReport *Report = new BugReport(*BT_destroylock,
-                                    "This lock has already been destroyed",
-                                    N);
+  auto Report = llvm::make_unique<BugReport>(
+      *BT_destroylock, "This lock has already been destroyed", N);
   Report->addRange(CE->getArg(0)->getSourceRange());
-  C.emitReport(Report);
+  C.emitReport(std::move(Report));
 }
 
 void ento::registerPthreadLockChecker(CheckerManager &mgr) {

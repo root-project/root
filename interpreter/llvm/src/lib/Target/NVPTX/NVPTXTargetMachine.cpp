@@ -23,14 +23,15 @@
 #include "llvm/CodeGen/MachineFunctionAnalysis.h"
 #include "llvm/CodeGen/MachineModuleInfo.h"
 #include "llvm/CodeGen/Passes.h"
+#include "llvm/CodeGen/TargetPassConfig.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/IRPrintingPasses.h"
+#include "llvm/IR/LegacyPassManager.h"
 #include "llvm/IR/Verifier.h"
 #include "llvm/MC/MCAsmInfo.h"
 #include "llvm/MC/MCInstrInfo.h"
 #include "llvm/MC/MCStreamer.h"
 #include "llvm/MC/MCSubtargetInfo.h"
-#include "llvm/PassManager.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/FormattedStream.h"
@@ -44,15 +45,26 @@
 #include "llvm/Target/TargetRegisterInfo.h"
 #include "llvm/Target/TargetSubtargetInfo.h"
 #include "llvm/Transforms/Scalar.h"
+#include "llvm/Transforms/Scalar/GVN.h"
 
 using namespace llvm;
 
+static cl::opt<bool> UseInferAddressSpaces(
+    "nvptx-use-infer-addrspace", cl::init(false), cl::Hidden,
+    cl::desc("Optimize address spaces using NVPTXInferAddressSpaces instead of "
+             "NVPTXFavorNonGenericAddrSpaces"));
+
 namespace llvm {
+void initializeNVVMIntrRangePass(PassRegistry&);
 void initializeNVVMReflectPass(PassRegistry&);
 void initializeGenericToNVVMPass(PassRegistry&);
+void initializeNVPTXAllocaHoistingPass(PassRegistry &);
 void initializeNVPTXAssignValidGlobalNamesPass(PassRegistry&);
 void initializeNVPTXFavorNonGenericAddrSpacesPass(PassRegistry &);
-void initializeNVPTXLowerStructArgsPass(PassRegistry &);
+void initializeNVPTXInferAddressSpacesPass(PassRegistry &);
+void initializeNVPTXLowerAggrCopiesPass(PassRegistry &);
+void initializeNVPTXLowerKernelArgsPass(PassRegistry &);
+void initializeNVPTXLowerAllocaPass(PassRegistry &);
 }
 
 extern "C" void LLVMInitializeNVPTXTarget() {
@@ -62,12 +74,17 @@ extern "C" void LLVMInitializeNVPTXTarget() {
 
   // FIXME: This pass is really intended to be invoked during IR optimization,
   // but it's very NVPTX-specific.
-  initializeNVVMReflectPass(*PassRegistry::getPassRegistry());
-  initializeGenericToNVVMPass(*PassRegistry::getPassRegistry());
-  initializeNVPTXAssignValidGlobalNamesPass(*PassRegistry::getPassRegistry());
-  initializeNVPTXFavorNonGenericAddrSpacesPass(
-    *PassRegistry::getPassRegistry());
-  initializeNVPTXLowerStructArgsPass(*PassRegistry::getPassRegistry());
+  PassRegistry &PR = *PassRegistry::getPassRegistry();
+  initializeNVVMReflectPass(PR);
+  initializeNVVMIntrRangePass(PR);
+  initializeGenericToNVVMPass(PR);
+  initializeNVPTXAllocaHoistingPass(PR);
+  initializeNVPTXAssignValidGlobalNamesPass(PR);
+  initializeNVPTXFavorNonGenericAddrSpacesPass(PR);
+  initializeNVPTXInferAddressSpacesPass(PR);
+  initializeNVPTXLowerKernelArgsPass(PR);
+  initializeNVPTXLowerAllocaPass(PR);
+  initializeNVPTXLowerAggrCopiesPass(PR);
 }
 
 static std::string computeDataLayout(bool is64Bit) {
@@ -81,15 +98,23 @@ static std::string computeDataLayout(bool is64Bit) {
   return Ret;
 }
 
-NVPTXTargetMachine::NVPTXTargetMachine(const Target &T, StringRef TT,
+NVPTXTargetMachine::NVPTXTargetMachine(const Target &T, const Triple &TT,
                                        StringRef CPU, StringRef FS,
                                        const TargetOptions &Options,
-                                       Reloc::Model RM, CodeModel::Model CM,
+                                       Optional<Reloc::Model> RM,
+                                       CodeModel::Model CM,
                                        CodeGenOpt::Level OL, bool is64bit)
-    : LLVMTargetMachine(T, TT, CPU, FS, Options, RM, CM, OL),
+    // The pic relocation model is used regardless of what the client has
+    // specified, as it is the only relocation model currently supported.
+    : LLVMTargetMachine(T, computeDataLayout(is64bit), TT, CPU, FS, Options,
+                        Reloc::PIC_, CM, OL),
+      is64bit(is64bit),
       TLOF(make_unique<NVPTXTargetObjectFile>()),
-      DL(computeDataLayout(is64bit)),
-      Subtarget(TT, CPU, FS, *this, is64bit) {
+      Subtarget(TT, CPU, FS, *this) {
+  if (TT.getOS() == Triple::NVCL)
+    drvInterface = NVPTX::NVCL;
+  else
+    drvInterface = NVPTX::CUDA;
   initAsmInfo();
 }
 
@@ -97,18 +122,22 @@ NVPTXTargetMachine::~NVPTXTargetMachine() {}
 
 void NVPTXTargetMachine32::anchor() {}
 
-NVPTXTargetMachine32::NVPTXTargetMachine32(
-    const Target &T, StringRef TT, StringRef CPU, StringRef FS,
-    const TargetOptions &Options, Reloc::Model RM, CodeModel::Model CM,
-    CodeGenOpt::Level OL)
+NVPTXTargetMachine32::NVPTXTargetMachine32(const Target &T, const Triple &TT,
+                                           StringRef CPU, StringRef FS,
+                                           const TargetOptions &Options,
+                                           Optional<Reloc::Model> RM,
+                                           CodeModel::Model CM,
+                                           CodeGenOpt::Level OL)
     : NVPTXTargetMachine(T, TT, CPU, FS, Options, RM, CM, OL, false) {}
 
 void NVPTXTargetMachine64::anchor() {}
 
-NVPTXTargetMachine64::NVPTXTargetMachine64(
-    const Target &T, StringRef TT, StringRef CPU, StringRef FS,
-    const TargetOptions &Options, Reloc::Model RM, CodeModel::Model CM,
-    CodeGenOpt::Level OL)
+NVPTXTargetMachine64::NVPTXTargetMachine64(const Target &T, const Triple &TT,
+                                           StringRef CPU, StringRef FS,
+                                           const TargetOptions &Options,
+                                           Optional<Reloc::Model> RM,
+                                           CodeModel::Model CM,
+                                           CodeGenOpt::Level OL)
     : NVPTXTargetMachine(T, TT, CPU, FS, Options, RM, CM, OL, true) {}
 
 namespace {
@@ -129,17 +158,73 @@ public:
   FunctionPass *createTargetRegisterAllocator(bool) override;
   void addFastRegAlloc(FunctionPass *RegAllocPass) override;
   void addOptimizedRegAlloc(FunctionPass *RegAllocPass) override;
+
+private:
+  // If the opt level is aggressive, add GVN; otherwise, add EarlyCSE. This
+  // function is only called in opt mode.
+  void addEarlyCSEOrGVNPass();
+
+  // Add passes that propagate special memory spaces.
+  void addAddressSpaceInferencePasses();
+
+  // Add passes that perform straight-line scalar optimizations.
+  void addStraightLineScalarOptimizationPasses();
 };
 } // end anonymous namespace
 
 TargetPassConfig *NVPTXTargetMachine::createPassConfig(PassManagerBase &PM) {
-  NVPTXPassConfig *PassConfig = new NVPTXPassConfig(this, PM);
-  return PassConfig;
+  return new NVPTXPassConfig(this, PM);
+}
+
+void NVPTXTargetMachine::addEarlyAsPossiblePasses(PassManagerBase &PM) {
+  PM.add(createNVVMReflectPass());
+  PM.add(createNVVMIntrRangePass(Subtarget.getSmVersion()));
 }
 
 TargetIRAnalysis NVPTXTargetMachine::getTargetIRAnalysis() {
-  return TargetIRAnalysis(
-      [this](Function &) { return TargetTransformInfo(NVPTXTTIImpl(this)); });
+  return TargetIRAnalysis([this](const Function &F) {
+    return TargetTransformInfo(NVPTXTTIImpl(this, F));
+  });
+}
+
+void NVPTXPassConfig::addEarlyCSEOrGVNPass() {
+  if (getOptLevel() == CodeGenOpt::Aggressive)
+    addPass(createGVNPass());
+  else
+    addPass(createEarlyCSEPass());
+}
+
+void NVPTXPassConfig::addAddressSpaceInferencePasses() {
+  // NVPTXLowerKernelArgs emits alloca for byval parameters which can often
+  // be eliminated by SROA.
+  addPass(createSROAPass());
+  addPass(createNVPTXLowerAllocaPass());
+  if (UseInferAddressSpaces) {
+    addPass(createNVPTXInferAddressSpacesPass());
+  } else {
+    addPass(createNVPTXFavorNonGenericAddrSpacesPass());
+    // FavorNonGenericAddrSpaces shortcuts unnecessary addrspacecasts, and leave
+    // them unused. We could remove dead code in an ad-hoc manner, but that
+    // requires manual work and might be error-prone.
+    addPass(createDeadCodeEliminationPass());
+  }
+}
+
+void NVPTXPassConfig::addStraightLineScalarOptimizationPasses() {
+  addPass(createSeparateConstOffsetFromGEPPass());
+  addPass(createSpeculativeExecutionPass());
+  // ReassociateGEPs exposes more opportunites for SLSR. See
+  // the example in reassociate-geps-and-slsr.ll.
+  addPass(createStraightLineStrengthReducePass());
+  // SeparateConstOffsetFromGEP and SLSR creates common expressions which GVN or
+  // EarlyCSE can reuse. GVN generates significantly better code than EarlyCSE
+  // for some of our benchmarks.
+  addEarlyCSEOrGVNPass();
+  // Run NaryReassociate after EarlyCSE/GVN to be more effective.
+  addPass(createNaryReassociatePass());
+  // NaryReassociate on GEPs creates redundant common expressions, so run
+  // EarlyCSE after it.
+  addPass(createEarlyCSEPass());
 }
 
 void NVPTXPassConfig::addIRPasses() {
@@ -150,37 +235,52 @@ void NVPTXPassConfig::addIRPasses() {
   // NVPTXPrologEpilog pass (see NVPTXPrologEpilogPass.cpp).
   disablePass(&PrologEpilogCodeInserterID);
   disablePass(&MachineCopyPropagationID);
-  disablePass(&BranchFolderPassID);
   disablePass(&TailDuplicateID);
+  disablePass(&StackMapLivenessID);
+  disablePass(&LiveDebugValuesID);
+  disablePass(&PostRASchedulerID);
+  disablePass(&FuncletLayoutID);
+  disablePass(&PatchableFunctionID);
 
-  addPass(createNVPTXImageOptimizerPass());
-  TargetPassConfig::addIRPasses();
+  // NVVMReflectPass is added in addEarlyAsPossiblePasses, so hopefully running
+  // it here does nothing.  But since we need it for correctness when lowering
+  // to NVPTX, run it here too, in case whoever built our pass pipeline didn't
+  // call addEarlyAsPossiblePasses.
+  addPass(createNVVMReflectPass());
+
+  if (getOptLevel() != CodeGenOpt::None)
+    addPass(createNVPTXImageOptimizerPass());
   addPass(createNVPTXAssignValidGlobalNamesPass());
   addPass(createGenericToNVVMPass());
-  addPass(createNVPTXFavorNonGenericAddrSpacesPass());
-  addPass(createSeparateConstOffsetFromGEPPass());
-  // The SeparateConstOffsetFromGEP pass creates variadic bases that can be used
-  // by multiple GEPs. Run GVN or EarlyCSE to really reuse them. GVN generates
-  // significantly better code than EarlyCSE for some of our benchmarks.
-  if (getOptLevel() == CodeGenOpt::Aggressive)
-    addPass(createGVNPass());
-  else
-    addPass(createEarlyCSEPass());
-  // Both FavorNonGenericAddrSpaces and SeparateConstOffsetFromGEP may leave
-  // some dead code.  We could remove dead code in an ad-hoc manner, but that
-  // requires manual work and might be error-prone.
+
+  // NVPTXLowerKernelArgs is required for correctness and should be run right
+  // before the address space inference passes.
+  addPass(createNVPTXLowerKernelArgsPass(&getNVPTXTargetMachine()));
+  if (getOptLevel() != CodeGenOpt::None) {
+    addAddressSpaceInferencePasses();
+    addStraightLineScalarOptimizationPasses();
+  }
+
+  // === LSR and other generic IR passes ===
+  TargetPassConfig::addIRPasses();
+  // EarlyCSE is not always strong enough to clean up what LSR produces. For
+  // example, GVN can combine
   //
-  // The FavorNonGenericAddrSpaces pass shortcuts unnecessary addrspacecasts,
-  // and leave them unused.
+  //   %0 = add %a, %b
+  //   %1 = add %b, %a
   //
-  // SeparateConstOffsetFromGEP rebuilds a new index from the old index, and the
-  // old index and some of its intermediate results may become unused.
-  addPass(createDeadCodeEliminationPass());
+  // and
+  //
+  //   %0 = shl nsw %a, 2
+  //   %1 = shl %a, 2
+  //
+  // but EarlyCSE can do neither of them.
+  if (getOptLevel() != CodeGenOpt::None)
+    addEarlyCSEOrGVNPass();
 }
 
 bool NVPTXPassConfig::addInstSelector() {
-  const NVPTXSubtarget &ST =
-    getTM<NVPTXTargetMachine>().getSubtarget<NVPTXSubtarget>();
+  const NVPTXSubtarget &ST = *getTM<NVPTXTargetMachine>().getSubtargetImpl();
 
   addPass(createLowerAggrCopies());
   addPass(createAllocaHoisting());
@@ -194,6 +294,12 @@ bool NVPTXPassConfig::addInstSelector() {
 
 void NVPTXPassConfig::addPostRegAlloc() {
   addPass(createNVPTXPrologEpilogPass(), false);
+  if (getOptLevel() != CodeGenOpt::None) {
+    // NVPTXPrologEpilogPass calculates frame object offset and replace frame
+    // index with VRFrame register. NVPTXPeephole need to be run after that and
+    // will replace VRFrame with VRFrameLocal when possible.
+    addPass(createNVPTXPeephole());
+  }
 }
 
 FunctionPass *NVPTXPassConfig::createTargetRegisterAllocator(bool) {

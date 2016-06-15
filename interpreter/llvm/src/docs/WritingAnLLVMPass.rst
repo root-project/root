@@ -47,14 +47,11 @@ source tree in the ``lib/Transforms/Hello`` directory.
 Setting up the build environment
 --------------------------------
 
-.. FIXME: Why does this recommend to build in-tree?
-
-First, configure and build LLVM.  This needs to be done directly inside the
-LLVM source tree rather than in a separate objects directory.  Next, you need
-to create a new directory somewhere in the LLVM source base.  For this example,
-we'll assume that you made ``lib/Transforms/Hello``.  Finally, you must set up
-a build script (``Makefile``) that will compile the source code for the new
-pass.  To do this, copy the following into ``Makefile``:
+First, configure and build LLVM.  Next, you need to create a new directory
+somewhere in the LLVM source base.  For this example, we'll assume that you
+made ``lib/Transforms/Hello``.  Finally, you must set up a build script
+(``Makefile``) that will compile the source code for the new pass.  To do this,
+copy the following into ``Makefile``:
 
 .. code-block:: make
 
@@ -206,9 +203,8 @@ As a whole, the ``.cpp`` file looks like:
     static RegisterPass<Hello> X("hello", "Hello World Pass", false, false);
 
 Now that it's all together, compile the file with a simple "``gmake``" command
-in the local directory and you should get a new file
-"``Debug+Asserts/lib/Hello.so``" under the top level directory of the LLVM
-source tree (not in the local directory).  Note that everything in this file is
+from the top level of your build directory and you should get a new file
+"``Debug+Asserts/lib/Hello.so``".  Note that everything in this file is
 contained in an anonymous namespace --- this reflects the fact that passes
 are self contained units that do not need external interfaces (although they
 can have them) to be useful.
@@ -228,7 +224,7 @@ will work):
 
 .. code-block:: console
 
-  $ opt -load ../../../Debug+Asserts/lib/Hello.so -hello < hello.bc > /dev/null
+  $ opt -load ../../Debug+Asserts/lib/Hello.so -hello < hello.bc > /dev/null
   Hello: __main
   Hello: puts
   Hello: main
@@ -245,7 +241,7 @@ To see what happened to the other string you registered, try running
 
 .. code-block:: console
 
-  $ opt -load ../../../Debug+Asserts/lib/Hello.so -help
+  $ opt -load ../../Debug+Asserts/lib/Hello.so -help
   OVERVIEW: llvm .bc -> .bc modular optimizer
 
   USAGE: opt [options] <input bitcode>
@@ -272,7 +268,7 @@ you queue up.  For example:
 
 .. code-block:: console
 
-  $ opt -load ../../../Debug+Asserts/lib/Hello.so -hello -time-passes < hello.bc > /dev/null
+  $ opt -load ../../Debug+Asserts/lib/Hello.so -hello -time-passes < hello.bc > /dev/null
   Hello: __main
   Hello: puts
   Hello: main
@@ -528,6 +524,14 @@ interface.  Implementing a loop pass is usually straightforward.
 ``LoopPass``\ es may overload three virtual methods to do their work.  All
 these methods should return ``true`` if they modified the program, or ``false``
 if they didn't.
+
+A ``LoopPass`` subclass which is intended to run as part of the main loop pass
+pipeline needs to preserve all of the same *function* analyses that the other
+loop passes in its pipeline require. To make that easier,
+a ``getLoopAnalysisUsage`` function is provided by ``LoopUtils.h``. It can be
+called within the subclass's ``getAnalysisUsage`` override to get consistent
+and correct behavior. Analogously, ``INITIALIZE_PASS_DEPENDENCY(LoopPass)``
+will initialize this set of function analyses.
 
 The ``doInitialization(Loop *, LPPassManager &)`` method
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1092,7 +1096,7 @@ passes.  Lets try it out with the gcse and licm passes:
 
 .. code-block:: console
 
-  $ opt -load ../../../Debug+Asserts/lib/Hello.so -gcse -licm --debug-pass=Structure < hello.bc > /dev/null
+  $ opt -load ../../Debug+Asserts/lib/Hello.so -gcse -licm --debug-pass=Structure < hello.bc > /dev/null
   Module Pass Manager
     Function Pass Manager
       Dominator Set Construction
@@ -1129,7 +1133,7 @@ Lets see how this changes when we run the :ref:`Hello World
 
 .. code-block:: console
 
-  $ opt -load ../../../Debug+Asserts/lib/Hello.so -gcse -hello -licm --debug-pass=Structure < hello.bc > /dev/null
+  $ opt -load ../../Debug+Asserts/lib/Hello.so -gcse -hello -licm --debug-pass=Structure < hello.bc > /dev/null
   Module Pass Manager
     Function Pass Manager
       Dominator Set Construction
@@ -1170,7 +1174,7 @@ Now when we run our pass, we get this output:
 
 .. code-block:: console
 
-  $ opt -load ../../../Debug+Asserts/lib/Hello.so -gcse -hello -licm --debug-pass=Structure < hello.bc > /dev/null
+  $ opt -load ../../Debug+Asserts/lib/Hello.so -gcse -hello -licm --debug-pass=Structure < hello.bc > /dev/null
   Pass Arguments:  -gcse -hello -licm
   Module Pass Manager
     Function Pass Manager
@@ -1396,7 +1400,7 @@ some with solutions, some without.
 
 * Restarting the program breaks breakpoints.  After following the information
   above, you have succeeded in getting some breakpoints planted in your pass.
-  Nex thing you know, you restart the program (i.e., you type "``run``" again),
+  Next thing you know, you restart the program (i.e., you type "``run``" again),
   and you start getting errors about breakpoints being unsettable.  The only
   way I have found to "fix" this problem is to delete the breakpoints that are
   already set in your pass, run the program, and re-set the breakpoints once

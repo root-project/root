@@ -24,10 +24,9 @@
 #define LLVM_SUPPORT_GRAPHWRITER_H
 
 #include "llvm/ADT/GraphTraits.h"
+#include "llvm/ADT/Twine.h"
 #include "llvm/Support/DOTGraphTraits.h"
-#include "llvm/Support/Path.h"
 #include "llvm/Support/raw_ostream.h"
-#include <cassert>
 #include <vector>
 
 namespace llvm {
@@ -176,8 +175,9 @@ public:
       O << DOT::EscapeString(DTraits.getNodeLabel(Node, G));
 
       // If we should include the address of the node in the label, do so now.
-      if (DTraits.hasNodeAddressLabel(Node, G))
-        O << "|" << static_cast<const void*>(Node);
+      std::string Id = DTraits.getNodeIdentifierLabel(Node, G);
+      if (!Id.empty())
+        O << "|" << DOT::EscapeString(Id);
 
       std::string NodeDesc = DTraits.getNodeDescription(Node, G);
       if (!NodeDesc.empty())
@@ -200,8 +200,9 @@ public:
       O << DOT::EscapeString(DTraits.getNodeLabel(Node, G));
 
       // If we should include the address of the node in the label, do so now.
-      if (DTraits.hasNodeAddressLabel(Node, G))
-        O << "|" << static_cast<const void*>(Node);
+      std::string Id = DTraits.getNodeIdentifierLabel(Node, G);
+      if (!Id.empty())
+        O << "|" << DOT::EscapeString(Id);
 
       std::string NodeDesc = DTraits.getNodeDescription(Node, G);
       if (!NodeDesc.empty())
@@ -354,7 +355,7 @@ void ViewGraph(const GraphType &G, const Twine &Name,
   if (Filename.empty())
     return;
 
-  DisplayGraph(Filename, true, Program);
+  DisplayGraph(Filename, false, Program);
 }
 
 } // End llvm namespace

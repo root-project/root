@@ -27,6 +27,8 @@ class HexagonMachineFunctionInfo : public MachineFunctionInfo {
   // returning the value of the returned struct in a register. This field
   // holds the virtual register into which the sret argument is passed.
   unsigned SRetReturnReg;
+  unsigned StackAlignBaseVReg;    // Aligned-stack base register (virtual)
+  unsigned StackAlignBasePhysReg; //                             (physical)
   std::vector<MachineInstr*> AllocaAdjustInsts;
   int VarArgsFrameIndex;
   bool HasClobberLR;
@@ -35,12 +37,12 @@ class HexagonMachineFunctionInfo : public MachineFunctionInfo {
   virtual void anchor();
 
 public:
-  HexagonMachineFunctionInfo() : SRetReturnReg(0), HasClobberLR(0),
-    HasEHReturn(false) {}
+  HexagonMachineFunctionInfo() : SRetReturnReg(0), StackAlignBaseVReg(0),
+      StackAlignBasePhysReg(0), HasClobberLR(0), HasEHReturn(false) {}
 
   HexagonMachineFunctionInfo(MachineFunction &MF) : SRetReturnReg(0),
-                                                    HasClobberLR(0),
-                                                    HasEHReturn(false) {}
+      StackAlignBaseVReg(0), StackAlignBasePhysReg(0), HasClobberLR(0),
+      HasEHReturn(false) {}
 
   unsigned getSRetReturnReg() const { return SRetReturnReg; }
   void setSRetReturnReg(unsigned Reg) { SRetReturnReg = Reg; }
@@ -74,6 +76,12 @@ public:
 
   bool hasEHReturn() const { return HasEHReturn; };
   void setHasEHReturn(bool H = true) { HasEHReturn = H; };
+
+  void setStackAlignBaseVReg(unsigned R) { StackAlignBaseVReg = R; }
+  unsigned getStackAlignBaseVReg() const { return StackAlignBaseVReg; }
+
+  void setStackAlignBasePhysReg(unsigned R) { StackAlignBasePhysReg = R; }
+  unsigned getStackAlignBasePhysReg() const { return StackAlignBasePhysReg; }
 };
 } // End llvm namespace
 

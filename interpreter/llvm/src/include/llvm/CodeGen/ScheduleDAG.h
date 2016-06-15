@@ -20,11 +20,11 @@
 #include "llvm/ADT/GraphTraits.h"
 #include "llvm/ADT/PointerIntPair.h"
 #include "llvm/ADT/SmallVector.h"
+#include "llvm/Analysis/AliasAnalysis.h"
 #include "llvm/CodeGen/MachineInstr.h"
 #include "llvm/Target/TargetLowering.h"
 
 namespace llvm {
-  class AliasAnalysis;
   class SUnit;
   class MachineConstantPool;
   class MachineFunction;
@@ -122,18 +122,7 @@ namespace llvm {
     }
 
     /// Return true if the specified SDep is equivalent except for latency.
-    bool overlaps(const SDep &Other) const {
-      if (Dep != Other.Dep) return false;
-      switch (Dep.getInt()) {
-      case Data:
-      case Anti:
-      case Output:
-        return Contents.Reg == Other.Contents.Reg;
-      case Order:
-        return Contents.OrdKind == Other.Contents.OrdKind;
-      }
-      llvm_unreachable("Invalid dependency kind!");
-    }
+    bool overlaps(const SDep &Other) const;
 
     bool operator==(const SDep &Other) const {
       return overlaps(Other) && Latency == Other.Latency;
@@ -157,19 +146,13 @@ namespace llvm {
     }
 
     //// getSUnit - Return the SUnit to which this edge points.
-    SUnit *getSUnit() const {
-      return Dep.getPointer();
-    }
+    SUnit *getSUnit() const;
 
     //// setSUnit - Assign the SUnit to which this edge points.
-    void setSUnit(SUnit *SU) {
-      Dep.setPointer(SU);
-    }
+    void setSUnit(SUnit *SU);
 
     /// getKind - Return an enum value representing the kind of the dependence.
-    Kind getKind() const {
-      return Dep.getInt();
-    }
+    Kind getKind() const;
 
     /// isCtrl - Shorthand for getKind() != SDep::Data.
     bool isCtrl() const {
@@ -374,7 +357,7 @@ namespace llvm {
     /// correspond to schedulable entities (e.g. instructions) and do not have a
     /// valid ID. Consequently, always check for boundary nodes before accessing
     /// an assoicative data structure keyed on node ID.
-    bool isBoundaryNode() const { return NodeNum == BoundaryID; };
+    bool isBoundaryNode() const { return NodeNum == BoundaryID; }
 
     /// setNode - Assign the representative SDNode for this SUnit.
     /// This may be used during pre-regalloc scheduling.
@@ -412,6 +395,17 @@ namespace llvm {
     /// not already.  It also adds the current node as a successor of the
     /// specified node.
     bool addPred(const SDep &D, bool Required = true);
+
+    /// addPredBarrier - This adds a barrier edge to SU by calling
+    /// addPred(), with latency 0 generally or latency 1 for a store
+    /// followed by a load.
+    bool addPredBarrier(SUnit *SU) {
+      SDep Dep(SU, SDep::Barrier);
+      unsigned TrueMemOrderLatency =
+        ((SU->getInstr()->mayStore() && this->getInstr()->mayLoad()) ? 1 : 0);
+      Dep.setLatency(TrueMemOrderLatency);
+      return addPred(Dep);
+    }
 
     /// removePred - This removes the specified edge as a pred of the current
     /// node if it exists.  It also removes the current node as a successor of
@@ -489,6 +483,30 @@ namespace llvm {
     void ComputeDepth();
     void ComputeHeight();
   };
+
+  /// Return true if the specified SDep is equivalent except for latency.
+  inline bool SDep::overlaps(const SDep &Other) const {
+    if (Dep != Other.Dep)
+      return false;
+    switch (Dep.getInt()) {
+    case Data:
+    case Anti:
+    case Output:
+      return Contents.Reg == Other.Contents.Reg;
+    case Order:
+      return Contents.OrdKind == Other.Contents.OrdKind;
+    }
+    llvm_unreachable("Invalid dependency kind!");
+  }
+
+  //// getSUnit - Return the SUnit to which this edge points.
+  inline SUnit *SDep::getSUnit() const { return Dep.getPointer(); }
+
+  //// setSUnit - Assign the SUnit to which this edge points.
+  inline void SDep::setSUnit(SUnit *SU) { Dep.setPointer(SU); }
+
+  /// getKind - Return an enum value representing the kind of the dependence.
+  inline SDep::Kind SDep::getKind() const { return Dep.getInt(); }
 
   //===--------------------------------------------------------------------===//
   /// SchedulingPriorityQueue - This interface is used to plug different
@@ -627,12 +645,6 @@ namespace llvm {
       return Operand == x.Operand;
     }
     bool operator!=(const SUnitIterator& x) const { return !operator==(x); }
-
-    const SUnitIterator &operator=(const SUnitIterator &I) {
-      assert(I.Node==Node && "Cannot assign iterators to two different nodes!");
-      Operand = I.Operand;
-      return *this;
-    }
 
     pointer operator*() const {
       return Node->Preds[Operand].getSUnit();

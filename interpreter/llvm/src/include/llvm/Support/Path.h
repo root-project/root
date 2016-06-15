@@ -16,7 +16,6 @@
 #ifndef LLVM_SUPPORT_PATH_H
 #define LLVM_SUPPORT_PATH_H
 
-#include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/Twine.h"
 #include "llvm/Support/DataTypes.h"
 #include <iterator>
@@ -61,7 +60,6 @@ public:
   reference operator*() const { return Component; }
   pointer   operator->() const { return &Component; }
   const_iterator &operator++();    // preincrement
-  const_iterator &operator++(int); // postincrement
   bool operator==(const const_iterator &RHS) const;
   bool operator!=(const const_iterator &RHS) const { return !(*this == RHS); }
 
@@ -87,9 +85,11 @@ public:
   reference operator*() const { return Component; }
   pointer   operator->() const { return &Component; }
   reverse_iterator &operator++();    // preincrement
-  reverse_iterator &operator++(int); // postincrement
   bool operator==(const reverse_iterator &RHS) const;
   bool operator!=(const reverse_iterator &RHS) const { return !(*this == RHS); }
+
+  /// @brief Difference in bytes between this and RHS.
+  ptrdiff_t operator-(const reverse_iterator &RHS) const;
 };
 
 /// @brief Get begin iterator over \a path.
@@ -141,6 +141,23 @@ void remove_filename(SmallVectorImpl<char> &path);
 ///                  optionally start with a '.', if it does not, one will be
 ///                  prepended.
 void replace_extension(SmallVectorImpl<char> &path, const Twine &extension);
+
+/// @brief Replace matching path prefix with another path.
+///
+/// @code
+///   /foo, /old, /new => /foo
+///   /old/foo, /old, /new => /new/foo
+///   /foo, <empty>, /new => /new/foo
+///   /old/foo, /old, <empty> => /foo
+/// @endcode
+///
+/// @param Path If \a Path starts with \a OldPrefix modify to instead
+///        start with \a NewPrefix.
+/// @param OldPrefix The path prefix to strip from \a Path.
+/// @param NewPrefix The path prefix to replace \a NewPrefix with.
+void replace_path_prefix(SmallVectorImpl<char> &Path,
+                         const StringRef &OldPrefix,
+                         const StringRef &NewPrefix);
 
 /// @brief Append to path.
 ///
@@ -218,7 +235,7 @@ StringRef root_name(StringRef path);
 /// @result The root directory of \a path if it has one, otherwise
 ///               "".
 StringRef root_directory(StringRef path);
-  
+
 /// @brief Get root path.
 ///
 /// Equivalent to root_name + root_directory.
@@ -310,7 +327,7 @@ bool is_separator(char value);
 /// @result StringRef of the preferred separator, null-terminated.
 StringRef get_separator();
 
-/// @brief Get the typical temporary directory for the system, e.g., 
+/// @brief Get the typical temporary directory for the system, e.g.,
 /// "/var/tmp" or "C:/TEMP"
 ///
 /// @param erasedOnReboot Whether to favor a path that is erased on reboot
@@ -326,6 +343,22 @@ void system_temp_directory(bool erasedOnReboot, SmallVectorImpl<char> &result);
 /// @param result Holds the resulting path name.
 /// @result True if a home directory is set, false otherwise.
 bool home_directory(SmallVectorImpl<char> &result);
+
+/// @brief Get the user's cache directory.
+///
+/// Expect the resulting path to be a directory shared with other
+/// applications/services used by the user. Params \p Path1 to \p Path3 can be
+/// used to append additional directory names to the resulting path. Recommended
+/// pattern is <user_cache_directory>/<vendor>/<application>.
+///
+/// @param Result Holds the resulting path.
+/// @param Path1 Additional path to be appended to the user's cache directory
+/// path. "" can be used to append nothing.
+/// @param Path2 Second additional path to be appended.
+/// @param Path3 Third additional path to be appended.
+/// @result True if a cache directory path is set, false otherwise.
+bool user_cache_directory(SmallVectorImpl<char> &Result, const Twine &Path1,
+                          const Twine &Path2 = "", const Twine &Path3 = "");
 
 /// @brief Has root name?
 ///
@@ -402,6 +435,19 @@ bool is_absolute(const Twine &path);
 /// @param path Input path.
 /// @result True if the path is relative, false if it is not.
 bool is_relative(const Twine &path);
+
+/// @brief Remove redundant leading "./" pieces and consecutive separators.
+///
+/// @param path Input path.
+/// @result The cleaned-up \a path.
+StringRef remove_leading_dotslash(StringRef path);
+
+/// @brief In-place remove any './' and optionally '../' components from a path.
+///
+/// @param path processed path
+/// @param remove_dot_dot specify if '../' should be removed
+/// @result True if path was changed
+bool remove_dots(SmallVectorImpl<char> &path, bool remove_dot_dot = false);
 
 } // end namespace path
 } // end namespace sys
