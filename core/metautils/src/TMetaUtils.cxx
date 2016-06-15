@@ -43,6 +43,7 @@
 #include "clang/Lex/Preprocessor.h"
 
 #include "clang/Sema/Sema.h"
+#include "clang/Sema/SemaDiagnostic.h"
 
 #include "cling/Interpreter/LookupHelper.h"
 #include "cling/Interpreter/Transaction.h"
@@ -200,8 +201,7 @@ static const clang::FieldDecl *GetDataMemberFromAll(const clang::CXXRecordDecl &
 
 static bool CXXRecordDecl__FindOrdinaryMember(const clang::CXXBaseSpecifier *Specifier,
                                               clang::CXXBasePath &Path,
-                                              void *Name
-)
+                                              const char *Name)
 {
    clang::RecordDecl *BaseRecord = Specifier->getType()->getAs<clang::RecordType>()->getDecl();
 
@@ -215,7 +215,7 @@ static bool CXXRecordDecl__FindOrdinaryMember(const clang::CXXBaseSpecifier *Spe
       clang::NamedDecl* NonConstFD = const_cast<clang::FieldDecl*>(found);
       clang::NamedDecl** BaseSpecFirstHack
       = reinterpret_cast<clang::NamedDecl**>(NonConstFD);
-      Path.Decls = clang::DeclContextLookupResult(BaseSpecFirstHack, 1);
+      Path.Decls = clang::DeclContextLookupResult(llvm::ArrayRef<clang::NamedDecl*>(BaseSpecFirstHack, 1));
       return true;
    }
    //
@@ -244,9 +244,8 @@ static const clang::FieldDecl *GetDataMemberFromAllParents(const clang::CXXRecor
 {
    clang::CXXBasePaths Paths;
    Paths.setOrigin(const_cast<clang::CXXRecordDecl*>(&cl));
-   if (cl.lookupInBases(&CXXRecordDecl__FindOrdinaryMember,
-      (void*) const_cast<char*>(what),
-                        Paths) )
+   if (cl.lookupInBases([=](const clang::CXXBaseSpecifier *Specifier, clang::CXXBasePath &Path) {
+            return CXXRecordDecl__FindOrdinaryMember(Specifier, Path, what);}, Paths))
    {
       clang::CXXBasePaths::paths_iterator iter = Paths.begin();
       if (iter != Paths.end()) {
@@ -737,7 +736,7 @@ bool ROOT::TMetaUtils::RequireCompleteType(const cling::Interpreter &interp, cla
    // Here we might not have an active transaction to handle
    // the caused instantiation decl.
    cling::Interpreter::PushTransactionRAII RAII(const_cast<cling::Interpreter*>(&interp));
-   return S.RequireCompleteType( Loc, Type , 0);
+   return S.RequireCompleteType(Loc, Type, clang::diag::err_incomplete_type);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3197,7 +3196,8 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
                                 true /*isAngled*/, 0/*FromDir*/, foundDir,
                                 ArrayRef<std::pair<const FileEntry *, const DirectoryEntry *>>(),
                                 0/*Searchpath*/, 0/*RelPath*/,
-                                0/*SuggModule*/, false /*SkipCache*/,
+                                0/*RequestingModule*/, 0/*SuggestedModule*/,
+                                false /*SkipCache*/,
                                 false /*OpenFile*/, true /*CacheFailures*/);
       if (FEhdr) break;
       headerFID = sourceManager.getFileID(includeLoc);
@@ -3240,7 +3240,7 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
                                     true /*isAngled*/, 0/*FromDir*/, FoundDir,
                                     ArrayRef<std::pair<const FileEntry *, const DirectoryEntry *>>(),
                                     0/*Searchpath*/, 0/*RelPath*/,
-                                    0/*SuggModule*/);
+                                    0/*RequestingModule*/, 0/*SuggestedModule*/);
    }
 
    if (!FELong) {
@@ -3265,7 +3265,8 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
                                true /*isAngled*/, 0/*FromDir*/, FoundDir,
                                ArrayRef<std::pair<const FileEntry *, const DirectoryEntry *>>(),
                                0/*Searchpath*/,
-                               0/*RelPath*/, 0/*SuggModule*/) == FELong) {
+                               0/*RelPath*/,
+                               0/*RequestingModule*/, 0 /*SuggestedModule*/) == FELong) {
          return trailingPart;
       }
    }
@@ -3599,9 +3600,7 @@ static bool RecurseKeepNParams(clang::TemplateArgument &normTArg,
       }
       if (mightHaveChanged) {
          ASTContext &mutableCtx( const_cast<ASTContext&>(astCtxt) );
-         normTArg = TemplateArgument::CreatePackCopy(mutableCtx,
-                                                     desArgs.data(),
-                                                     desArgs.size());
+         normTArg = TemplateArgument::CreatePackCopy(mutableCtx, desArgs);
       }
       return mightHaveChanged;
    }
@@ -3976,7 +3975,8 @@ clang::Module* ROOT::TMetaUtils::declareModuleMap(clang::CompilerInstance* CI,
                                  llvm::ArrayRef<std::pair<const clang::FileEntry *,
                                     const clang::DirectoryEntry *>>(),
                                  0 /*SearchPath*/, 0 /*RelativePath*/,
-                                 0/*SuggModule*/, false /*SkipCache*/,
+                                 0 /*RequestingModule*/, 0 /*SuggestedModule*/,
+                                 false /*SkipCache*/,
                                  false /*OpenFile*/, true /*CacheFailures*/);
       if (!hdrFileEntry) {
          std::cerr << "TMetaUtils::declareModuleMap: "

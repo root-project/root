@@ -23,17 +23,18 @@ using namespace llvm;
 
 bool BPFFrameLowering::hasFP(const MachineFunction &MF) const { return true; }
 
-void BPFFrameLowering::emitPrologue(MachineFunction &MF) const {}
+void BPFFrameLowering::emitPrologue(MachineFunction &MF,
+                                    MachineBasicBlock &MBB) const {}
 
 void BPFFrameLowering::emitEpilogue(MachineFunction &MF,
                                     MachineBasicBlock &MBB) const {}
 
-void BPFFrameLowering::processFunctionBeforeCalleeSavedScan(
-    MachineFunction &MF, RegScavenger *RS) const {
-  MachineRegisterInfo &MRI = MF.getRegInfo();
-
-  MRI.setPhysRegUnused(BPF::R6);
-  MRI.setPhysRegUnused(BPF::R7);
-  MRI.setPhysRegUnused(BPF::R8);
-  MRI.setPhysRegUnused(BPF::R9);
+void BPFFrameLowering::determineCalleeSaves(MachineFunction &MF,
+                                            BitVector &SavedRegs,
+                                            RegScavenger *RS) const {
+  TargetFrameLowering::determineCalleeSaves(MF, SavedRegs, RS);
+  SavedRegs.reset(BPF::R6);
+  SavedRegs.reset(BPF::R7);
+  SavedRegs.reset(BPF::R8);
+  SavedRegs.reset(BPF::R9);
 }

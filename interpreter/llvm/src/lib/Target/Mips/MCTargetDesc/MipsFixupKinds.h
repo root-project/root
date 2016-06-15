@@ -18,13 +18,16 @@ namespace Mips {
   // one can have multiple fixup types for a given relocation and thus need
   // to be uniquely named.
   //
-  // This table *must* be in the save order of
+  // This table *must* be in the same order of
   // MCFixupKindInfo Infos[Mips::NumTargetFixupKinds]
   // in MipsAsmBackend.cpp.
   //
   enum Fixups {
+    // Branch fixups resulting in R_MIPS_NONE.
+    fixup_Mips_NONE = FirstTargetFixupKind,
+
     // Branch fixups resulting in R_MIPS_16.
-    fixup_Mips_16 = FirstTargetFixupKind,
+    fixup_Mips_16,
 
     // Pure 32 bit data fixup resulting in - R_MIPS_32.
     fixup_Mips_32,
@@ -47,11 +50,8 @@ namespace Mips {
     // 16 bit literal fixup resulting in - R_MIPS_LITERAL.
     fixup_Mips_LITERAL,
 
-    // Global symbol fixup resulting in - R_MIPS_GOT16.
-    fixup_Mips_GOT_Global,
-
-    // Local symbol fixup resulting in - R_MIPS_GOT16.
-    fixup_Mips_GOT_Local,
+    // Symbol fixup resulting in - R_MIPS_GOT16.
+    fixup_Mips_GOT,
 
     // PC relative branch fixup resulting in - R_MIPS_PC16.
     fixup_Mips_PC16,
@@ -166,6 +166,18 @@ namespace Mips {
 
     // resulting in - R_MICROMIPS_PC16_S1
     fixup_MICROMIPS_PC16_S1,
+
+    // resulting in - R_MICROMIPS_PC26_S1
+    fixup_MICROMIPS_PC26_S1,
+
+    // resulting in - R_MICROMIPS_PC19_S2
+    fixup_MICROMIPS_PC19_S2,
+
+    // resulting in - R_MICROMIPS_PC18_S3
+    fixup_MICROMIPS_PC18_S3,
+
+    // resulting in - R_MICROMIPS_PC21_S1
+    fixup_MICROMIPS_PC21_S1,
 
     // resulting in - R_MICROMIPS_CALL16
     fixup_MICROMIPS_CALL16,

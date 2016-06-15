@@ -24,17 +24,16 @@ static std::error_code dumpObject(const ObjectFile &Obj) {
     return coff2yaml(outs(), cast<COFFObjectFile>(Obj));
   if (Obj.isELF())
     return elf2yaml(outs(), Obj);
+  if (Obj.isMachO() || Obj.isMachOUniversalBinary())
+    return macho2yaml(outs(), Obj);
 
   return obj2yaml_error::unsupported_obj_file_format;
 }
 
 static std::error_code dumpInput(StringRef File) {
-  if (File != "-" && !sys::fs::exists(File))
-    return obj2yaml_error::file_not_found;
-
-  ErrorOr<OwningBinary<Binary>> BinaryOrErr = createBinary(File);
-  if (std::error_code EC = BinaryOrErr.getError())
-    return EC;
+  Expected<OwningBinary<Binary>> BinaryOrErr = createBinary(File);
+  if (!BinaryOrErr)
+    return errorToErrorCode(BinaryOrErr.takeError());
 
   Binary &Binary = *BinaryOrErr.get().getBinary();
   // TODO: If this is an archive, then burst it and dump each entry
@@ -49,7 +48,7 @@ cl::opt<std::string> InputFilename(cl::Positional, cl::desc("<input file>"),
 
 int main(int argc, char *argv[]) {
   cl::ParseCommandLineOptions(argc, argv);
-  sys::PrintStackTraceOnErrorSignal();
+  sys::PrintStackTraceOnErrorSignal(argv[0]);
   PrettyStackTraceProgram X(argc, argv);
   llvm_shutdown_obj Y; // Call llvm_shutdown() on exit.
 

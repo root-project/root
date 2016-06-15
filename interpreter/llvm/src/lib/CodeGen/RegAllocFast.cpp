@@ -12,7 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "llvm/CodeGen/Passes.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/IndexedMap.h"
 #include "llvm/ADT/STLExtras.h"
@@ -25,13 +24,12 @@
 #include "llvm/CodeGen/MachineInstr.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
+#include "llvm/CodeGen/Passes.h"
 #include "llvm/CodeGen/RegAllocRegistry.h"
 #include "llvm/CodeGen/RegisterClassInfo.h"
-#include "llvm/IR/BasicBlock.h"
-#include "llvm/Support/CommandLine.h"
+#include "llvm/IR/DebugInfo.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/ErrorHandling.h"
-#include "llvm/Support/raw_ostream.h"
 #include "llvm/Target/TargetInstrInfo.h"
 #include "llvm/Target/TargetSubtargetInfo.h"
 #include <algorithm>
@@ -52,6 +50,7 @@ namespace {
     static char ID;
     RAFast() : MachineFunctionPass(ID), StackSlotForVirtReg(-1),
                isBulkSpilling(false) {}
+
   private:
     MachineFunction *MF;
     MachineRegisterInfo *MRI;
@@ -157,6 +156,11 @@ namespace {
     void getAnalysisUsage(AnalysisUsage &AU) const override {
       AU.setPreservesCFG();
       MachineFunctionPass::getAnalysisUsage(AU);
+    }
+
+    MachineFunctionProperties getSetProperties() const override {
+      return MachineFunctionProperties().set(
+          MachineFunctionProperties::Property::AllVRegsAllocated);
     }
 
   private:
@@ -301,13 +305,9 @@ void RAFast::spillVirtReg(MachineBasicBlock::iterator MI,
       const MDNode *Expr = DBG->getDebugExpression();
       bool IsIndirect = DBG->isIndirectDebugValue();
       uint64_t Offset = IsIndirect ? DBG->getOperand(1).getImm() : 0;
-      DebugLoc DL;
-      if (MI == MBB->end()) {
-        // If MI is at basic block end then use last instruction's location.
-        MachineBasicBlock::iterator EI = MI;
-        DL = (--EI)->getDebugLoc();
-      } else
-        DL = MI->getDebugLoc();
+      DebugLoc DL = DBG->getDebugLoc();
+      assert(cast<DILocalVariable>(Var)->isValidLocationForIntrinsic(DL) &&
+             "Expected inlined-at fields to agree");
       MachineInstr *NewDV =
           BuildMI(*MBB, MI, DL, TII->get(TargetOpcode::DBG_VALUE))
               .addFrameIndex(FI)
@@ -349,6 +349,11 @@ void RAFast::usePhysReg(MachineOperand &MO) {
   unsigned PhysReg = MO.getReg();
   assert(TargetRegisterInfo::isPhysicalRegister(PhysReg) &&
          "Bad usePhysReg operand");
+
+  // Ignore undef uses.
+  if (MO.isUndef())
+    return;
+
   markRegUsedInInstr(PhysReg);
   switch (PhysRegState[PhysReg]) {
   case regDisabled:
@@ -803,10 +808,9 @@ void RAFast::AllocateBasicBlock() {
   MachineBasicBlock::iterator MII = MBB->begin();
 
   // Add live-in registers as live.
-  for (MachineBasicBlock::livein_iterator I = MBB->livein_begin(),
-         E = MBB->livein_end(); I != E; ++I)
-    if (MRI->isAllocatable(*I))
-      definePhysReg(MII, *I, regReserved);
+  for (const auto &LI : MBB->liveins())
+    if (MRI->isAllocatable(LI.PhysReg))
+      definePhysReg(MII, LI.PhysReg, regReserved);
 
   SmallVector<unsigned, 8> VirtDead;
   SmallVector<MachineInstr*, 32> Coalesced;
@@ -877,6 +881,9 @@ void RAFast::AllocateBasicBlock() {
               const MDNode *Expr = MI->getDebugExpression();
               DebugLoc DL = MI->getDebugLoc();
               MachineBasicBlock *MBB = MI->getParent();
+              assert(
+                  cast<DILocalVariable>(Var)->isValidLocationForIntrinsic(DL) &&
+                  "Expected inlined-at fields to agree");
               MachineInstr *NewDV = BuildMI(*MBB, MBB->erase(MI), DL,
                                             TII->get(TargetOpcode::DBG_VALUE))
                                         .addFrameIndex(SS)
@@ -987,10 +994,6 @@ void RAFast::AllocateBasicBlock() {
       }
     }
 
-    for (UsedInInstrSet::iterator
-         I = UsedInInstr.begin(), E = UsedInInstr.end(); I != E; ++I)
-      MRI->setRegUnitUsed(*I);
-
     // Track registers defined by instruction - early clobbers and tied uses at
     // this point.
     UsedInInstr.clear();
@@ -1008,11 +1011,13 @@ void RAFast::AllocateBasicBlock() {
 
     unsigned DefOpEnd = MI->getNumOperands();
     if (MI->isCall()) {
-      // Spill all virtregs before a call. This serves two purposes: 1. If an
+      // Spill all virtregs before a call. This serves one purpose: If an
       // exception is thrown, the landing pad is going to expect to find
-      // registers in their spill slots, and 2. we don't have to wade through
-      // all the <imp-def> operands on the call instruction.
-      DefOpEnd = VirtOpEnd;
+      // registers in their spill slots.
+      // Note: although this is appealing to just consider all definitions
+      // as call-clobbered, this is not correct because some of those
+      // definitions may be used later on and we do not want to reuse
+      // those for virtual registers in between.
       DEBUG(dbgs() << "  Spilling remaining registers before call.\n");
       spillAll(MI);
 
@@ -1050,10 +1055,6 @@ void RAFast::AllocateBasicBlock() {
     for (unsigned i = 0, e = VirtDead.size(); i != e; ++i)
       killVirtReg(VirtDead[i]);
     VirtDead.clear();
-
-    for (UsedInInstrSet::iterator
-         I = UsedInInstr.begin(), E = UsedInInstr.end(); I != E; ++I)
-      MRI->setRegUnitUsed(*I);
 
     if (CopyDst && CopyDst == CopySrc && CopyDstSub == CopySrcSub) {
       DEBUG(dbgs() << "-- coalescing: " << *MI);
@@ -1103,12 +1104,6 @@ bool RAFast::runOnMachineFunction(MachineFunction &Fn) {
     MBB = &*MBBi;
     AllocateBasicBlock();
   }
-
-  // Add the clobber lists for all the instructions we skipped earlier.
-  for (const MCInstrDesc *Desc : SkippedInstrs)
-    if (const uint16_t *Defs = Desc->getImplicitDefs())
-      while (*Defs)
-        MRI->setPhysRegUsed(*Defs++);
 
   // All machine operands and other references to virtual registers have been
   // replaced. Remove the virtual registers.

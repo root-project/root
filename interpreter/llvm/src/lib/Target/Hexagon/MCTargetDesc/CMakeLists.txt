@@ -3,9 +3,16 @@ add_llvm_library(LLVMHexagonDesc
   HexagonELFObjectWriter.cpp
   HexagonInstPrinter.cpp
   HexagonMCAsmInfo.cpp
+  HexagonMCChecker.cpp
   HexagonMCCodeEmitter.cpp
-  HexagonMCInst.cpp
+  HexagonMCCompound.cpp
+  HexagonMCDuplexInfo.cpp
+  HexagonMCELFStreamer.cpp
+  HexagonMCExpr.cpp
+  HexagonMCInstrInfo.cpp
+  HexagonMCShuffler.cpp
   HexagonMCTargetDesc.cpp
+  HexagonShuffler.cpp
   )
 
 add_dependencies(LLVMHexagonDesc HexagonCommonTableGen)

@@ -16,11 +16,18 @@
 #ifndef LLVM_CODEGEN_COMMANDFLAGS_H
 #define LLVM_CODEGEN_COMMANDFLAGS_H
 
+#include "llvm/ADT/StringExtras.h"
+#include "llvm/IR/Instructions.h"
+#include "llvm/IR/Intrinsics.h"
+#include "llvm/IR/Module.h"
 #include "llvm/MC/MCTargetOptionsCommandFlags.h"
+#include "llvm/MC/SubtargetFeature.h"
 #include "llvm/Support/CodeGen.h"
 #include "llvm/Support/CommandLine.h"
+#include "llvm/Support/Host.h"
 #include "llvm/Target/TargetMachine.h"
 #include "llvm/Target/TargetOptions.h"
+#include "llvm/Target/TargetRecip.h"
 #include <string>
 using namespace llvm;
 
@@ -39,20 +46,23 @@ MAttrs("mattr",
        cl::desc("Target specific attributes (-mattr=help for details)"),
        cl::value_desc("a1,+a2,-a3,..."));
 
-cl::opt<Reloc::Model>
-RelocModel("relocation-model",
-           cl::desc("Choose relocation model"),
-           cl::init(Reloc::Default),
-           cl::values(
-              clEnumValN(Reloc::Default, "default",
-                      "Target default relocation model"),
-              clEnumValN(Reloc::Static, "static",
-                      "Non-relocatable code"),
-              clEnumValN(Reloc::PIC_, "pic",
-                      "Fully relocatable, position independent code"),
-              clEnumValN(Reloc::DynamicNoPIC, "dynamic-no-pic",
-                      "Relocatable external references, non-relocatable code"),
-              clEnumValEnd));
+cl::opt<Reloc::Model> RelocModel(
+    "relocation-model", cl::desc("Choose relocation model"),
+    cl::values(
+        clEnumValN(Reloc::Static, "static", "Non-relocatable code"),
+        clEnumValN(Reloc::PIC_, "pic",
+                   "Fully relocatable, position independent code"),
+        clEnumValN(Reloc::DynamicNoPIC, "dynamic-no-pic",
+                   "Relocatable external references, non-relocatable code"),
+        clEnumValEnd));
+
+static inline Optional<Reloc::Model> getRelocModel() {
+  if (RelocModel.getNumOccurrences()) {
+    Reloc::Model R = RelocModel;
+    return R;
+  }
+  return None;
+}
 
 cl::opt<ThreadModel::Model>
 TMModel("thread-model",
@@ -79,6 +89,22 @@ CMModel("code-model",
                    clEnumValN(CodeModel::Large, "large",
                               "Large code model"),
                    clEnumValEnd));
+
+cl::opt<llvm::ExceptionHandling>
+ExceptionModel("exception-model",
+               cl::desc("exception model"),
+               cl::init(ExceptionHandling::None),
+               cl::values(clEnumValN(ExceptionHandling::None, "default",
+                                     "default exception handling model"),
+                          clEnumValN(ExceptionHandling::DwarfCFI, "dwarf",
+                                     "DWARF-like CFI based exception handling"),
+                          clEnumValN(ExceptionHandling::SjLj, "sjlj",
+                                     "SjLj exception handling"),
+                          clEnumValN(ExceptionHandling::ARM, "arm",
+                                     "ARM EHABI exceptions"),
+                          clEnumValN(ExceptionHandling::WinEH, "wineh",
+                                     "Windows exception model"),
+                          clEnumValEnd));
 
 cl::opt<TargetMachine::CodeGenFileType>
 FileType("filetype", cl::init(TargetMachine::CGFT_AssemblyFile),
@@ -123,11 +149,6 @@ EnableHonorSignDependentRoundingFPMath("enable-sign-dependent-rounding-fp-math",
       cl::desc("Force codegen to assume rounding mode can change dynamically"),
       cl::init(false));
 
-cl::opt<bool>
-GenerateSoftFloatCalls("soft-float",
-                    cl::desc("Generate software floating point library calls"),
-                    cl::init(false));
-
 cl::opt<llvm::FloatABI::ABIType>
 FloatABIForCalls("float-abi",
                  cl::desc("Choose float ABI type"),
@@ -151,8 +172,14 @@ FuseFPOps("fp-contract",
               clEnumValN(FPOpFusion::Standard, "on",
                          "Only fuse 'blessed' FP ops."),
               clEnumValN(FPOpFusion::Strict, "off",
-                         "Only fuse FP ops when the result won't be effected."),
+                         "Only fuse FP ops when the result won't be affected."),
               clEnumValEnd));
+
+cl::list<std::string>
+ReciprocalOps("recip",
+  cl::CommaSeparated,
+  cl::desc("Choose reciprocal operation types and parameters."),
+  cl::value_desc("all,none,default,divf,!vec-sqrtd,vec-divd:0,sqrt:9..."));
 
 cl::opt<bool>
 DontPlaceZerosInBSS("nozero-initialized-in-bss",
@@ -169,20 +196,25 @@ DisableTailCalls("disable-tail-calls",
                  cl::desc("Never emit tail calls"),
                  cl::init(false));
 
+cl::opt<bool>
+StackSymbolOrdering("stack-symbol-ordering",
+                    cl::desc("Order local stack symbols."),
+                    cl::init(true));
+
 cl::opt<unsigned>
 OverrideStackAlignment("stack-alignment",
                        cl::desc("Override default stack alignment"),
                        cl::init(0));
 
+cl::opt<bool>
+StackRealign("stackrealign",
+             cl::desc("Force align the stack to the minimum alignment"),
+             cl::init(false));
+
 cl::opt<std::string>
 TrapFuncName("trap-func", cl::Hidden,
         cl::desc("Emit a call to trap function rather than a trap instruction"),
         cl::init(""));
-
-cl::opt<bool>
-EnablePIE("enable-pie",
-          cl::desc("Assume the creation of a position independent executable."),
-          cl::init(false));
 
 cl::opt<bool>
 UseCtors("use-ctors",
@@ -207,6 +239,14 @@ FunctionSections("function-sections",
                  cl::desc("Emit functions into separate sections"),
                  cl::init(false));
 
+cl::opt<bool> EmulatedTLS("emulated-tls",
+                          cl::desc("Use emulated TLS model"),
+                          cl::init(false));
+
+cl::opt<bool> UniqueSectionNames("unique-section-names",
+                                 cl::desc("Give unique names to every section"),
+                                 cl::init(true));
+
 cl::opt<llvm::JumpTable::JumpTableType>
 JTableType("jump-table-type",
           cl::desc("Choose the type of Jump-Instruction Table for jumptable."),
@@ -222,79 +262,135 @@ JTableType("jump-table-type",
                          "Create one table per unique function type."),
               clEnumValEnd));
 
-cl::opt<bool>
-FCFI("fcfi",
-     cl::desc("Apply forward-edge control-flow integrity"),
-     cl::init(false));
+cl::opt<llvm::EABI> EABIVersion(
+    "meabi", cl::desc("Set EABI type (default depends on triple):"),
+    cl::init(EABI::Default),
+    cl::values(clEnumValN(EABI::Default, "default",
+                          "Triple default EABI version"),
+               clEnumValN(EABI::EABI4, "4", "EABI version 4"),
+               clEnumValN(EABI::EABI5, "5", "EABI version 5"),
+               clEnumValN(EABI::GNU, "gnu", "EABI GNU"), clEnumValEnd));
 
-cl::opt<llvm::CFIntegrity>
-CFIType("cfi-type",
-        cl::desc("Choose the type of Control-Flow Integrity check to add"),
-        cl::init(CFIntegrity::Sub),
-        cl::values(
-            clEnumValN(CFIntegrity::Sub, "sub",
-                       "Subtract the pointer from the table base, then mask."),
-            clEnumValN(CFIntegrity::Ror, "ror",
-                       "Use rotate to check the offset from a table base."),
-            clEnumValN(CFIntegrity::Add, "add",
-                       "Mask out the high bits and add to an aligned base."),
-            clEnumValEnd));
-
-cl::opt<bool>
-CFIEnforcing("cfi-enforcing",
-             cl::desc("Enforce CFI or pass the violation to a function."),
-             cl::init(false));
-
-// Note that this option is linked to the cfi-enforcing option above: if
-// cfi-enforcing is set, then the cfi-func-name option is entirely ignored. If
-// cfi-enforcing is false and no cfi-func-name is set, then a default function
-// will be generated that ignores all CFI violations. The expected signature for
-// functions called with CFI violations is
-//
-// void (i8*, i8*)
-//
-// The first pointer is a C string containing the name of the function in which
-// the violation occurs, and the second pointer is the pointer that violated
-// CFI.
-cl::opt<std::string>
-CFIFuncName("cfi-func-name", cl::desc("The name of the CFI function to call"),
-            cl::init(""));
+cl::opt<DebuggerKind>
+DebuggerTuningOpt("debugger-tune",
+                  cl::desc("Tune debug info for a particular debugger"),
+                  cl::init(DebuggerKind::Default),
+                  cl::values(
+                      clEnumValN(DebuggerKind::GDB, "gdb", "gdb"),
+                      clEnumValN(DebuggerKind::LLDB, "lldb", "lldb"),
+                      clEnumValN(DebuggerKind::SCE, "sce",
+                                 "SCE targets (e.g. PS4)"),
+                      clEnumValEnd));
 
 // Common utility function tightly tied to the options listed here. Initializes
 // a TargetOptions object with CodeGen flags and returns it.
 static inline TargetOptions InitTargetOptionsFromCodeGenFlags() {
   TargetOptions Options;
   Options.LessPreciseFPMADOption = EnableFPMAD;
-  Options.NoFramePointerElim = DisableFPElim;
   Options.AllowFPOpFusion = FuseFPOps;
+  Options.Reciprocals = TargetRecip(ReciprocalOps);
   Options.UnsafeFPMath = EnableUnsafeFPMath;
   Options.NoInfsFPMath = EnableNoInfsFPMath;
   Options.NoNaNsFPMath = EnableNoNaNsFPMath;
   Options.HonorSignDependentRoundingFPMathOption =
       EnableHonorSignDependentRoundingFPMath;
-  Options.UseSoftFloat = GenerateSoftFloatCalls;
   if (FloatABIForCalls != FloatABI::Default)
     Options.FloatABIType = FloatABIForCalls;
   Options.NoZerosInBSS = DontPlaceZerosInBSS;
   Options.GuaranteedTailCallOpt = EnableGuaranteedTailCallOpt;
-  Options.DisableTailCalls = DisableTailCalls;
   Options.StackAlignmentOverride = OverrideStackAlignment;
-  Options.TrapFuncName = TrapFuncName;
-  Options.PositionIndependentExecutable = EnablePIE;
+  Options.StackSymbolOrdering = StackSymbolOrdering;
   Options.UseInitArray = !UseCtors;
   Options.DataSections = DataSections;
   Options.FunctionSections = FunctionSections;
+  Options.UniqueSectionNames = UniqueSectionNames;
+  Options.EmulatedTLS = EmulatedTLS;
+  Options.ExceptionModel = ExceptionModel;
 
   Options.MCOptions = InitMCTargetOptionsFromFlags();
   Options.JTType = JTableType;
-  Options.FCFI = FCFI;
-  Options.CFIType = CFIType;
-  Options.CFIEnforcing = CFIEnforcing;
-  Options.CFIFuncName = CFIFuncName;
 
   Options.ThreadModel = TMModel;
+  Options.EABIVersion = EABIVersion;
+  Options.DebuggerTuning = DebuggerTuningOpt;
 
   return Options;
+}
+
+static inline std::string getCPUStr() {
+  // If user asked for the 'native' CPU, autodetect here. If autodection fails,
+  // this will set the CPU to an empty string which tells the target to
+  // pick a basic default.
+  if (MCPU == "native")
+    return sys::getHostCPUName();
+
+  return MCPU;
+}
+
+static inline std::string getFeaturesStr() {
+  SubtargetFeatures Features;
+
+  // If user asked for the 'native' CPU, we need to autodetect features.
+  // This is necessary for x86 where the CPU might not support all the
+  // features the autodetected CPU name lists in the target. For example,
+  // not all Sandybridge processors support AVX.
+  if (MCPU == "native") {
+    StringMap<bool> HostFeatures;
+    if (sys::getHostCPUFeatures(HostFeatures))
+      for (auto &F : HostFeatures)
+        Features.AddFeature(F.first(), F.second);
+  }
+
+  for (unsigned i = 0; i != MAttrs.size(); ++i)
+    Features.AddFeature(MAttrs[i]);
+
+  return Features.getString();
+}
+
+/// \brief Set function attributes of functions in Module M based on CPU,
+/// Features, and command line flags.
+static inline void setFunctionAttributes(StringRef CPU, StringRef Features,
+                                         Module &M) {
+  for (auto &F : M) {
+    auto &Ctx = F.getContext();
+    AttributeSet Attrs = F.getAttributes(), NewAttrs;
+
+    if (!CPU.empty())
+      NewAttrs = NewAttrs.addAttribute(Ctx, AttributeSet::FunctionIndex,
+                                       "target-cpu", CPU);
+
+    if (!Features.empty())
+      NewAttrs = NewAttrs.addAttribute(Ctx, AttributeSet::FunctionIndex,
+                                       "target-features", Features);
+
+    if (DisableFPElim.getNumOccurrences() > 0)
+      NewAttrs = NewAttrs.addAttribute(Ctx, AttributeSet::FunctionIndex,
+                                       "no-frame-pointer-elim",
+                                       DisableFPElim ? "true" : "false");
+
+    if (DisableTailCalls.getNumOccurrences() > 0)
+      NewAttrs = NewAttrs.addAttribute(Ctx, AttributeSet::FunctionIndex,
+                                       "disable-tail-calls",
+                                       toStringRef(DisableTailCalls));
+
+    if (StackRealign)
+      NewAttrs = NewAttrs.addAttribute(Ctx, AttributeSet::FunctionIndex,
+                                       "stackrealign");
+
+    if (TrapFuncName.getNumOccurrences() > 0)
+      for (auto &B : F)
+        for (auto &I : B)
+          if (auto *Call = dyn_cast<CallInst>(&I))
+            if (const auto *F = Call->getCalledFunction())
+              if (F->getIntrinsicID() == Intrinsic::debugtrap ||
+                  F->getIntrinsicID() == Intrinsic::trap)
+                Call->addAttribute(llvm::AttributeSet::FunctionIndex,
+                                   "trap-func-name", TrapFuncName);
+
+    // Let NewAttrs override Attrs.
+    NewAttrs = Attrs.addAttributes(Ctx, AttributeSet::FunctionIndex, NewAttrs);
+    F.setAttributes(NewAttrs);
+  }
 }
 
 #endif

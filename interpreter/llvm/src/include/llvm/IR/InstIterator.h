@@ -27,15 +27,14 @@ namespace llvm {
 // This class implements inst_begin() & inst_end() for
 // inst_iterator and const_inst_iterator's.
 //
-template <class _BB_t, class _BB_i_t, class _BI_t, class _II_t>
-class InstIterator {
-  typedef _BB_t   BBty;
-  typedef _BB_i_t BBIty;
-  typedef _BI_t   BIty;
-  typedef _II_t   IIty;
-  _BB_t  *BBs;      // BasicBlocksType
-  _BB_i_t BB;       // BasicBlocksType::iterator
-  _BI_t   BI;       // BasicBlock::iterator
+template <class BB_t, class BB_i_t, class BI_t, class II_t> class InstIterator {
+  typedef BB_t BBty;
+  typedef BB_i_t BBIty;
+  typedef BI_t BIty;
+  typedef II_t IIty;
+  BB_t *BBs; // BasicBlocksType
+  BB_i_t BB; // BasicBlocksType::iterator
+  BI_t BI;   // BasicBlock::iterator
 public:
   typedef std::bidirectional_iterator_tag iterator_category;
   typedef IIty                            value_type;
@@ -116,30 +115,41 @@ private:
   }
 };
 
-
-typedef InstIterator<iplist<BasicBlock>,
-                     Function::iterator, BasicBlock::iterator,
-                     Instruction> inst_iterator;
-typedef InstIterator<const iplist<BasicBlock>,
-                     Function::const_iterator,
-                     BasicBlock::const_iterator,
+typedef InstIterator<SymbolTableList<BasicBlock>, Function::iterator,
+                     BasicBlock::iterator, Instruction> inst_iterator;
+typedef InstIterator<const SymbolTableList<BasicBlock>,
+                     Function::const_iterator, BasicBlock::const_iterator,
                      const Instruction> const_inst_iterator;
+typedef iterator_range<inst_iterator> inst_range;
+typedef iterator_range<const_inst_iterator> const_inst_range;
 
 inline inst_iterator inst_begin(Function *F) { return inst_iterator(*F); }
 inline inst_iterator inst_end(Function *F)   { return inst_iterator(*F, true); }
+inline inst_range instructions(Function *F) {
+  return inst_range(inst_begin(F), inst_end(F));
+}
 inline const_inst_iterator inst_begin(const Function *F) {
   return const_inst_iterator(*F);
 }
 inline const_inst_iterator inst_end(const Function *F) {
   return const_inst_iterator(*F, true);
 }
+inline const_inst_range instructions(const Function *F) {
+  return const_inst_range(inst_begin(F), inst_end(F));
+}
 inline inst_iterator inst_begin(Function &F) { return inst_iterator(F); }
 inline inst_iterator inst_end(Function &F)   { return inst_iterator(F, true); }
+inline inst_range instructions(Function &F) {
+  return inst_range(inst_begin(F), inst_end(F));
+}
 inline const_inst_iterator inst_begin(const Function &F) {
   return const_inst_iterator(F);
 }
 inline const_inst_iterator inst_end(const Function &F) {
   return const_inst_iterator(F, true);
+}
+inline const_inst_range instructions(const Function &F) {
+  return const_inst_range(inst_begin(F), inst_end(F));
 }
 
 } // End llvm namespace

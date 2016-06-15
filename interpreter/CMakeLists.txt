@@ -100,11 +100,18 @@ mark_as_advanced(FORCE BUG_REPORT_URL BUILD_CLANG_FORMAT_VS_PLUGIN BUILD_SHARED_
                        GCC_INSTALL_PREFIX LIBCLANG_BUILD_STATIC TOOL_INFO_PLIST)
 mark_as_advanced(CLEAR LLVM_ENABLE_ASSERTIONS LLVM_BUILD_TYPE)
 #---Set into parent scope LLVM_VERSION --------------------------------------------------------------
-file(READ ${CMAKE_CURRENT_SOURCE_DIR}/llvm/src/configure _filestr)
-string(REGEX REPLACE ".*PACKAGE_VERSION='([0-9]+[.][0-9]+[.][0-9]+).*" "\\1" _llvm_version ${_filestr})
-set(LLVM_VERSION ${_llvm_version} PARENT_SCOPE)
+set(llvmconfigfile "${CMAKE_CURRENT_SOURCE_DIR}/llvm/src/CMakeLists.txt")
+file(READ ${llvmconfigfile} _filestr)
+foreach(versionpart LLVM_VERSION_MAJOR LLVM_VERSION_MINOR LLVM_VERSION_PATCH)
+  if(${_filestr} MATCHES "set[(](${versionpart}[^)]+)")
+    string(REGEX REPLACE " *${versionpart} ([^)]+).*" "\\1" ${versionpart} "${CMAKE_MATCH_1}")
+  else()
+    MESSAGE(FATAL_ERROR "Cannot extract LLVM version number (${versionpart}) from ${llvmconfigfile}")
+  endif()
+endforeach()
+set(LLVM_VERSION "${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}.${LLVM_VERSION_PATCH}" PARENT_SCOPE)
 
 #---Added some missing dependencies------------------------------------------------------------------
-add_dependencies(clingUtils clangCodeGen)
+add_dependencies(clingUtils clangCodeGen clangAST)
 add_dependencies(clingInterpreter clangBasic clangAST ClangDriverOptions)
 add_dependencies(clingMetaProcessor clangAST ClangDriverOptions)

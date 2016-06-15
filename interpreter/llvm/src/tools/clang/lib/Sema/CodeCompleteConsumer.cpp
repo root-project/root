@@ -251,19 +251,16 @@ const char *CodeCompletionString::getTypedText() const {
   return nullptr;
 }
 
-const char *CodeCompletionAllocator::CopyString(StringRef String) {
-  char *Mem = (char *)Allocate(String.size() + 1, 1);
-  std::copy(String.begin(), String.end(), Mem);
-  Mem[String.size()] = 0;
-  return Mem;
-}
-
-const char *CodeCompletionAllocator::CopyString(Twine String) {
+const char *CodeCompletionAllocator::CopyString(const Twine &String) {
+  SmallString<128> Data;
+  StringRef Ref = String.toStringRef(Data);
   // FIXME: It would be more efficient to teach Twine to tell us its size and
   // then add a routine there to fill in an allocated char* with the contents
   // of the string.
-  SmallString<128> Data;
-  return CopyString(String.toStringRef(Data));
+  char *Mem = (char *)Allocate(Ref.size() + 1, 1);
+  std::copy(Ref.begin(), Ref.end(), Mem);
+  Mem[Ref.size()] = 0;
+  return Mem;
 }
 
 StringRef CodeCompletionTUInfo::getParentName(const DeclContext *DC) {
@@ -312,7 +309,7 @@ StringRef CodeCompletionTUInfo::getParentName(const DeclContext *DC) {
         if (!Interface) {
           // Assign an empty StringRef but with non-null data to distinguish
           // between empty because we didn't process the DeclContext yet.
-          CachedParentName = StringRef((const char *)~0U, 0);
+          CachedParentName = StringRef((const char *)(uintptr_t)~0U, 0);
           return StringRef();
         }
         
@@ -447,7 +444,8 @@ PrintingCodeCompleteConsumer::ProcessCodeCompleteResults(Sema &SemaRef,
       if (Results[I].Hidden)
         OS << " (Hidden)";
       if (CodeCompletionString *CCS 
-            = Results[I].CreateCodeCompletionString(SemaRef, getAllocator(),
+            = Results[I].CreateCodeCompletionString(SemaRef, Context,
+                                                    getAllocator(),
                                                     CCTUInfo,
                                                     includeBriefComments())) {
         OS << " : " << CCS->getAsString();
@@ -465,7 +463,8 @@ PrintingCodeCompleteConsumer::ProcessCodeCompleteResults(Sema &SemaRef,
     case CodeCompletionResult::RK_Macro: {
       OS << Results[I].Macro->getName();
       if (CodeCompletionString *CCS 
-            = Results[I].CreateCodeCompletionString(SemaRef, getAllocator(),
+            = Results[I].CreateCodeCompletionString(SemaRef, Context,
+                                                    getAllocator(),
                                                     CCTUInfo,
                                                     includeBriefComments())) {
         OS << " : " << CCS->getAsString();

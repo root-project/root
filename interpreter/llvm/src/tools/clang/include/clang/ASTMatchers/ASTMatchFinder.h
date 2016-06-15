@@ -42,6 +42,7 @@
 #define LLVM_CLANG_ASTMATCHERS_ASTMATCHFINDER_H
 
 #include "clang/ASTMatchers/ASTMatchers.h"
+#include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/StringMap.h"
 #include "llvm/Support/Timer.h"
 
@@ -208,7 +209,7 @@ public:
         NestedNameSpecifierLoc;
     std::vector<std::pair<TypeLocMatcher, MatchCallback *>> TypeLoc;
     /// \brief All the callbacks in one container to simplify iteration.
-    std::vector<MatchCallback *> AllCallbacks;
+    llvm::SmallPtrSet<MatchCallback *, 16> AllCallbacks;
   };
 
 private:
@@ -239,6 +240,11 @@ SmallVector<BoundNodes, 1>
 match(MatcherT Matcher, const ast_type_traits::DynTypedNode &Node,
       ASTContext &Context);
 /// @}
+
+/// \brief Returns the results of matching \p Matcher on the translation unit of
+/// \p Context and collects the \c BoundNodes of all callback invocations.
+template <typename MatcherT>
+SmallVector<BoundNodes, 1> match(MatcherT Matcher, ASTContext &Context);
 
 /// \brief Returns the first result of type \c NodeT bound to \p BoundTo.
 ///
@@ -285,6 +291,16 @@ template <typename MatcherT, typename NodeT>
 SmallVector<BoundNodes, 1>
 match(MatcherT Matcher, const NodeT &Node, ASTContext &Context) {
   return match(Matcher, ast_type_traits::DynTypedNode::create(Node), Context);
+}
+
+template <typename MatcherT>
+SmallVector<BoundNodes, 1>
+match(MatcherT Matcher, ASTContext &Context) {
+  internal::CollectMatchesCallback Callback;
+  MatchFinder Finder;
+  Finder.addMatcher(Matcher, &Callback);
+  Finder.matchAST(Context);
+  return std::move(Callback.Nodes);
 }
 
 } // end namespace ast_matchers

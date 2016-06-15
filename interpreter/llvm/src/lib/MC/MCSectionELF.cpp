@@ -24,12 +24,10 @@ MCSectionELF::~MCSectionELF() {} // anchor.
 bool MCSectionELF::ShouldOmitSectionDirective(StringRef Name,
                                               const MCAsmInfo &MAI) const {
 
-  // FIXME: Does .section .bss/.data/.text work everywhere??
-  if (Name == ".text" || Name == ".data" ||
-      (Name == ".bss" && !MAI.usesELFSectionDirectiveForBSS()))
-    return true;
+  if (isUnique())
+    return false;
 
-  return false;
+  return MAI.shouldOmitSectionDirective(Name);
 }
 
 static void printName(raw_ostream &OS, StringRef Name) {
@@ -61,8 +59,10 @@ void MCSectionELF::PrintSwitchToSection(const MCAsmInfo &MAI,
 
   if (ShouldOmitSectionDirective(SectionName, MAI)) {
     OS << '\t' << getSectionName();
-    if (Subsection)
-      OS << '\t' << *Subsection;
+    if (Subsection) {
+      OS << '\t';
+      Subsection->print(OS, &MAI);
+    }
     OS << '\n';
     return;
   }
@@ -133,6 +133,8 @@ void MCSectionELF::PrintSwitchToSection(const MCAsmInfo &MAI,
     OS << "note";
   else if (Type == ELF::SHT_PROGBITS)
     OS << "progbits";
+  else if (Type == ELF::SHT_X86_64_UNWIND)
+    OS << "unwind";
 
   if (EntrySize) {
     assert(Flags & ELF::SHF_MERGE);
@@ -144,10 +146,17 @@ void MCSectionELF::PrintSwitchToSection(const MCAsmInfo &MAI,
     printName(OS, Group->getName());
     OS << ",comdat";
   }
+
+  if (isUnique())
+    OS << ",unique," << UniqueID;
+
   OS << '\n';
 
-  if (Subsection)
-    OS << "\t.subsection\t" << *Subsection << '\n';
+  if (Subsection) {
+    OS << "\t.subsection\t";
+    Subsection->print(OS, &MAI);
+    OS << '\n';
+  }
 }
 
 bool MCSectionELF::UseCodeAlign() const {

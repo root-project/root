@@ -28,54 +28,65 @@ using namespace llvm;
   MAP(C2, 34)           \
   MAP(C3, 35)           \
   MAP(C4, 36)           \
-  MAP(C8, 37)           \
-  MAP(C9, 38)           \
-  MAP(CA, 39)           \
-  MAP(CB, 40)           \
-  MAP(CF, 41)           \
-  MAP(D0, 42)           \
-  MAP(D1, 43)           \
-  MAP(D4, 44)           \
-  MAP(D5, 45)           \
-  MAP(D6, 46)           \
-  MAP(D7, 47)           \
-  MAP(D8, 48)           \
-  MAP(D9, 49)           \
-  MAP(DA, 50)           \
-  MAP(DB, 51)           \
-  MAP(DC, 52)           \
-  MAP(DD, 53)           \
-  MAP(DE, 54)           \
-  MAP(DF, 55)           \
-  MAP(E0, 56)           \
-  MAP(E1, 57)           \
-  MAP(E2, 58)           \
-  MAP(E3, 59)           \
-  MAP(E4, 60)           \
-  MAP(E5, 61)           \
-  MAP(E8, 62)           \
-  MAP(E9, 63)           \
-  MAP(EA, 64)           \
-  MAP(EB, 65)           \
-  MAP(EC, 66)           \
-  MAP(ED, 67)           \
-  MAP(EE, 68)           \
-  MAP(F0, 69)           \
-  MAP(F1, 70)           \
-  MAP(F2, 71)           \
-  MAP(F3, 72)           \
-  MAP(F4, 73)           \
-  MAP(F5, 74)           \
-  MAP(F6, 75)           \
-  MAP(F7, 76)           \
-  MAP(F8, 77)           \
-  MAP(F9, 78)           \
-  MAP(FA, 79)           \
-  MAP(FB, 80)           \
-  MAP(FC, 81)           \
-  MAP(FD, 82)           \
-  MAP(FE, 83)           \
-  MAP(FF, 84)
+  MAP(C5, 37)           \
+  MAP(C6, 38)           \
+  MAP(C7, 39)           \
+  MAP(C8, 40)           \
+  MAP(C9, 41)           \
+  MAP(CA, 42)           \
+  MAP(CB, 43)           \
+  MAP(CC, 44)           \
+  MAP(CD, 45)           \
+  MAP(CE, 46)           \
+  MAP(CF, 47)           \
+  MAP(D0, 48)           \
+  MAP(D1, 49)           \
+  MAP(D2, 50)           \
+  MAP(D3, 51)           \
+  MAP(D4, 52)           \
+  MAP(D5, 53)           \
+  MAP(D6, 54)           \
+  MAP(D7, 55)           \
+  MAP(D8, 56)           \
+  MAP(D9, 57)           \
+  MAP(DA, 58)           \
+  MAP(DB, 59)           \
+  MAP(DC, 60)           \
+  MAP(DD, 61)           \
+  MAP(DE, 62)           \
+  MAP(DF, 63)           \
+  MAP(E0, 64)           \
+  MAP(E1, 65)           \
+  MAP(E2, 66)           \
+  MAP(E3, 67)           \
+  MAP(E4, 68)           \
+  MAP(E5, 69)           \
+  MAP(E6, 70)           \
+  MAP(E7, 71)           \
+  MAP(E8, 72)           \
+  MAP(E9, 73)           \
+  MAP(EA, 74)           \
+  MAP(EB, 75)           \
+  MAP(EC, 76)           \
+  MAP(ED, 77)           \
+  MAP(EE, 78)           \
+  MAP(EF, 79)           \
+  MAP(F0, 80)           \
+  MAP(F1, 81)           \
+  MAP(F2, 82)           \
+  MAP(F3, 83)           \
+  MAP(F4, 84)           \
+  MAP(F5, 85)           \
+  MAP(F6, 86)           \
+  MAP(F7, 87)           \
+  MAP(F8, 88)           \
+  MAP(F9, 89)           \
+  MAP(FA, 90)           \
+  MAP(FB, 91)           \
+  MAP(FC, 92)           \
+  MAP(FD, 93)           \
+  MAP(FE, 94)           \
+  MAP(FF, 95)
 
 // A clone of X86 since we can't depend on something that is generated.
 namespace X86Local {
@@ -214,7 +225,6 @@ RecognizableInstr::RecognizableInstr(DisassemblerTables &tables,
   CD8_Scale        = byteFromRec(Rec, "CD8_Scale");
 
   Name      = Rec->getName();
-  AsmString = Rec->getValueAsString("AsmString");
 
   Operands = &insn.Operands.OperandList;
 
@@ -466,7 +476,7 @@ void RecognizableInstr::adjustOperandEncoding(OperandEncoding &encoding) {
 
 void RecognizableInstr::handleOperand(bool optional, unsigned &operandIndex,
                                       unsigned &physicalOperandIndex,
-                                      unsigned &numPhysicalOperands,
+                                      unsigned numPhysicalOperands,
                                       const unsigned *operandMapping,
                                       OperandEncoding (*encodingFromString)
                                         (const std::string&,
@@ -551,6 +561,7 @@ void RecognizableInstr::emitInstructionSpecifier() {
   // physicalOperandIndex should always be < numPhysicalOperands
   unsigned physicalOperandIndex = 0;
 
+#ifndef NDEBUG
   // Given the set of prefix bits, how many additional operands does the
   // instruction have?
   unsigned additionalOperands = 0;
@@ -558,6 +569,7 @@ void RecognizableInstr::emitInstructionSpecifier() {
     ++additionalOperands;
   if (HasEVEX_K)
     ++additionalOperands;
+#endif
 
   switch (Form) {
   default: llvm_unreachable("Unhandled form");
@@ -573,11 +585,9 @@ void RecognizableInstr::emitInstructionSpecifier() {
     return;
   case X86Local::RawFrm:
     // Operand 1 (optional) is an address or immediate.
-    // Operand 2 (optional) is an immediate.
-    assert(numPhysicalOperands <= 2 &&
+    assert(numPhysicalOperands <= 1 &&
            "Unexpected number of operands for RawFrm");
     HANDLE_OPTIONAL(relocation)
-    HANDLE_OPTIONAL(immediate)
     break;
   case X86Local::RawFrmMemOffs:
     // Operand 1 is an address.
@@ -785,12 +795,12 @@ void RecognizableInstr::emitInstructionSpecifier() {
   case X86Local::MRM_E3: case X86Local::MRM_E4: case X86Local::MRM_E5:
   case X86Local::MRM_E8: case X86Local::MRM_E9: case X86Local::MRM_EA:
   case X86Local::MRM_EB: case X86Local::MRM_EC: case X86Local::MRM_ED:
-  case X86Local::MRM_EE: case X86Local::MRM_F0: case X86Local::MRM_F1:
-  case X86Local::MRM_F2: case X86Local::MRM_F3: case X86Local::MRM_F4:
-  case X86Local::MRM_F5: case X86Local::MRM_F6: case X86Local::MRM_F7:
-  case X86Local::MRM_F9: case X86Local::MRM_FA: case X86Local::MRM_FB:
-  case X86Local::MRM_FC: case X86Local::MRM_FD: case X86Local::MRM_FE:
-  case X86Local::MRM_FF:
+  case X86Local::MRM_EE: case X86Local::MRM_EF: case X86Local::MRM_F0:
+  case X86Local::MRM_F1: case X86Local::MRM_F2: case X86Local::MRM_F3:
+  case X86Local::MRM_F4: case X86Local::MRM_F5: case X86Local::MRM_F6:
+  case X86Local::MRM_F7: case X86Local::MRM_F9: case X86Local::MRM_FA:
+  case X86Local::MRM_FB: case X86Local::MRM_FC: case X86Local::MRM_FD:
+  case X86Local::MRM_FE: case X86Local::MRM_FF:
     // Ignored.
     break;
   }
@@ -803,9 +813,7 @@ void RecognizableInstr::emitDecodePath(DisassemblerTables &tables) const {
   // Special cases where the LLVM tables are not complete
 
 #define MAP(from, to)                     \
-  case X86Local::MRM_##from:              \
-    filter = new ExactFilter(0x##from);   \
-    break;
+  case X86Local::MRM_##from:
 
   OpcodeType    opcodeType  = (OpcodeType)-1;
 
@@ -854,6 +862,8 @@ void RecognizableInstr::emitDecodePath(DisassemblerTables &tables) const {
       filter = new ExtendedFilter(false, Form - X86Local::MRM0m);
       break;
     MRM_MAPPING
+      filter = new ExactFilter(0xC0 + Form - X86Local::MRM_C0);   \
+      break;
     } // switch (Form)
 
     opcodeToSet = Opcode;
@@ -940,6 +950,7 @@ OperandType RecognizableInstr::typeFromString(const std::string &s,
   TYPE("f128mem",             TYPE_M128)
   TYPE("f256mem",             TYPE_M256)
   TYPE("f512mem",             TYPE_M512)
+  TYPE("FR128",               TYPE_XMM128)
   TYPE("FR64",                TYPE_XMM64)
   TYPE("FR64X",               TYPE_XMM64)
   TYPE("f64mem",              TYPE_M64FP)
@@ -956,6 +967,7 @@ OperandType RecognizableInstr::typeFromString(const std::string &s,
   TYPE("i16imm_pcrel",        TYPE_REL16)
   TYPE("i32imm_pcrel",        TYPE_REL32)
   TYPE("SSECC",               TYPE_IMM3)
+  TYPE("XOPCC",               TYPE_IMM3)
   TYPE("AVXCC",               TYPE_IMM5)
   TYPE("AVX512ICC",           TYPE_AVX512ICC)
   TYPE("AVX512RC",            TYPE_IMM32)
@@ -1011,16 +1023,20 @@ OperandType RecognizableInstr::typeFromString(const std::string &s,
   TYPE("VK32WM",              TYPE_VK32)
   TYPE("VK64",                TYPE_VK64)
   TYPE("VK64WM",              TYPE_VK64)
-  TYPE("GR16_NOAX",           TYPE_Rv)
   TYPE("GR32_NOAX",           TYPE_Rv)
-  TYPE("GR64_NOAX",           TYPE_R64)
-  TYPE("vx32mem",             TYPE_M32)
-  TYPE("vy32mem",             TYPE_M32)
-  TYPE("vz32mem",             TYPE_M32)
   TYPE("vx64mem",             TYPE_M64)
-  TYPE("vy64mem",             TYPE_M64)
-  TYPE("vy64xmem",            TYPE_M64)
-  TYPE("vz64mem",             TYPE_M64)
+  TYPE("vx128mem",            TYPE_M128)
+  TYPE("vx256mem",            TYPE_M256)
+  TYPE("vy128mem",            TYPE_M128)
+  TYPE("vy256mem",            TYPE_M256)
+  TYPE("vx64xmem",            TYPE_M64)
+  TYPE("vx128xmem",           TYPE_M128)
+  TYPE("vx256xmem",           TYPE_M256)
+  TYPE("vy128xmem",           TYPE_M128)
+  TYPE("vy256xmem",           TYPE_M256)
+  TYPE("vy512mem",            TYPE_M512)
+  TYPE("vz512mem",            TYPE_M512)
+  TYPE("BNDR",                TYPE_BNDR)
   errs() << "Unhandled type string " << s << "\n";
   llvm_unreachable("Unhandled type string");
 }
@@ -1037,6 +1053,7 @@ RecognizableInstr::immediateEncodingFromString(const std::string &s,
   }
   ENCODING("i32i8imm",        ENCODING_IB)
   ENCODING("SSECC",           ENCODING_IB)
+  ENCODING("XOPCC",           ENCODING_IB)
   ENCODING("AVXCC",           ENCODING_IB)
   ENCODING("AVX512ICC",       ENCODING_IB)
   ENCODING("AVX512RC",        ENCODING_IB)
@@ -1052,6 +1069,7 @@ RecognizableInstr::immediateEncodingFromString(const std::string &s,
   // register IDs in 8-bit immediates nowadays.
   ENCODING("FR32",            ENCODING_IB)
   ENCODING("FR64",            ENCODING_IB)
+  ENCODING("FR128",           ENCODING_IB)
   ENCODING("VR128",           ENCODING_IB)
   ENCODING("VR256",           ENCODING_IB)
   ENCODING("FR32X",           ENCODING_IB)
@@ -1074,6 +1092,7 @@ RecognizableInstr::rmRegisterEncodingFromString(const std::string &s,
   ENCODING("GR8",             ENCODING_RM)
   ENCODING("VR128",           ENCODING_RM)
   ENCODING("VR128X",          ENCODING_RM)
+  ENCODING("FR128",           ENCODING_RM)
   ENCODING("FR64",            ENCODING_RM)
   ENCODING("FR32",            ENCODING_RM)
   ENCODING("FR64X",           ENCODING_RM)
@@ -1083,10 +1102,13 @@ RecognizableInstr::rmRegisterEncodingFromString(const std::string &s,
   ENCODING("VR256X",          ENCODING_RM)
   ENCODING("VR512",           ENCODING_RM)
   ENCODING("VK1",             ENCODING_RM)
+  ENCODING("VK2",             ENCODING_RM)
+  ENCODING("VK4",             ENCODING_RM)
   ENCODING("VK8",             ENCODING_RM)
   ENCODING("VK16",            ENCODING_RM)
   ENCODING("VK32",            ENCODING_RM)
   ENCODING("VK64",            ENCODING_RM)
+  ENCODING("BNDR",            ENCODING_RM)
   errs() << "Unhandled R/M register encoding " << s << "\n";
   llvm_unreachable("Unhandled R/M register encoding");
 }
@@ -1100,6 +1122,7 @@ RecognizableInstr::roRegisterEncodingFromString(const std::string &s,
   ENCODING("GR64",            ENCODING_REG)
   ENCODING("GR8",             ENCODING_REG)
   ENCODING("VR128",           ENCODING_REG)
+  ENCODING("FR128",           ENCODING_REG)
   ENCODING("FR64",            ENCODING_REG)
   ENCODING("FR32",            ENCODING_REG)
   ENCODING("VR64",            ENCODING_REG)
@@ -1120,8 +1143,13 @@ RecognizableInstr::roRegisterEncodingFromString(const std::string &s,
   ENCODING("VK32",            ENCODING_REG)
   ENCODING("VK64",            ENCODING_REG)
   ENCODING("VK1WM",           ENCODING_REG)
+  ENCODING("VK2WM",           ENCODING_REG)
+  ENCODING("VK4WM",           ENCODING_REG)
   ENCODING("VK8WM",           ENCODING_REG)
   ENCODING("VK16WM",          ENCODING_REG)
+  ENCODING("VK32WM",          ENCODING_REG)
+  ENCODING("VK64WM",          ENCODING_REG)
+  ENCODING("BNDR",            ENCODING_REG)
   errs() << "Unhandled reg/opcode register encoding " << s << "\n";
   llvm_unreachable("Unhandled reg/opcode register encoding");
 }
@@ -1132,6 +1160,7 @@ RecognizableInstr::vvvvRegisterEncodingFromString(const std::string &s,
   ENCODING("GR32",            ENCODING_VVVV)
   ENCODING("GR64",            ENCODING_VVVV)
   ENCODING("FR32",            ENCODING_VVVV)
+  ENCODING("FR128",           ENCODING_VVVV)
   ENCODING("FR64",            ENCODING_VVVV)
   ENCODING("VR128",           ENCODING_VVVV)
   ENCODING("VR256",           ENCODING_VVVV)
@@ -1190,13 +1219,18 @@ RecognizableInstr::memoryEncodingFromString(const std::string &s,
   ENCODING("opaque48mem",     ENCODING_RM)
   ENCODING("opaque80mem",     ENCODING_RM)
   ENCODING("opaque512mem",    ENCODING_RM)
-  ENCODING("vx32mem",         ENCODING_RM)
-  ENCODING("vy32mem",         ENCODING_RM)
-  ENCODING("vz32mem",         ENCODING_RM)
   ENCODING("vx64mem",         ENCODING_RM)
-  ENCODING("vy64mem",         ENCODING_RM)
-  ENCODING("vy64xmem",        ENCODING_RM)
-  ENCODING("vz64mem",         ENCODING_RM)
+  ENCODING("vx128mem",        ENCODING_RM)
+  ENCODING("vx256mem",        ENCODING_RM)
+  ENCODING("vy128mem",        ENCODING_RM)
+  ENCODING("vy256mem",        ENCODING_RM)
+  ENCODING("vx64xmem",        ENCODING_RM)
+  ENCODING("vx128xmem",       ENCODING_RM)
+  ENCODING("vx256xmem",       ENCODING_RM)
+  ENCODING("vy128xmem",       ENCODING_RM)
+  ENCODING("vy256xmem",       ENCODING_RM)
+  ENCODING("vy512mem",        ENCODING_RM)
+  ENCODING("vz512mem",        ENCODING_RM)
   errs() << "Unhandled memory encoding " << s << "\n";
   llvm_unreachable("Unhandled memory encoding");
 }
@@ -1255,9 +1289,7 @@ RecognizableInstr::opcodeModifierEncodingFromString(const std::string &s,
   ENCODING("GR64",            ENCODING_RO)
   ENCODING("GR16",            ENCODING_Rv)
   ENCODING("GR8",             ENCODING_RB)
-  ENCODING("GR16_NOAX",       ENCODING_Rv)
   ENCODING("GR32_NOAX",       ENCODING_Rv)
-  ENCODING("GR64_NOAX",       ENCODING_RO)
   errs() << "Unhandled opcode modifier encoding " << s << "\n";
   llvm_unreachable("Unhandled opcode modifier encoding");
 }

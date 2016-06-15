@@ -17,15 +17,10 @@
 #define LLVM_ADT_FOLDINGSET_H
 
 #include "llvm/ADT/SmallVector.h"
-#include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/iterator.h"
 #include "llvm/Support/Allocator.h"
-#include "llvm/Support/DataTypes.h"
 
 namespace llvm {
-  class APFloat;
-  class APInt;
-
 /// This folding set used for two purposes:
 ///   1. Given information about a node we want to create, look up the unique
 ///      instance of the node in the set.  If the node already exists, return
@@ -101,6 +96,7 @@ namespace llvm {
 /// The result indicates whether the node existed in the folding set.
 
 class FoldingSetNodeID;
+class StringRef;
 
 //===----------------------------------------------------------------------===//
 /// FoldingSetImpl - Implements the folding set functionality.  The main
@@ -110,6 +106,8 @@ class FoldingSetNodeID;
 /// back to the bucket to facilitate node removal.
 ///
 class FoldingSetImpl {
+  virtual void anchor(); // Out of line virtual method.
+
 protected:
   /// Buckets - Array of bucket chains.
   ///
@@ -123,10 +121,12 @@ protected:
   /// is greater than twice the number of buckets.
   unsigned NumNodes;
 
-public:
   explicit FoldingSetImpl(unsigned Log2InitSize = 6);
-  virtual ~FoldingSetImpl();
+  FoldingSetImpl(FoldingSetImpl &&Arg);
+  FoldingSetImpl &operator=(FoldingSetImpl &&RHS);
+  ~FoldingSetImpl();
 
+public:
   //===--------------------------------------------------------------------===//
   /// Node - This class is used to maintain the singly linked bucket list in
   /// a folding set.
@@ -137,7 +137,6 @@ public:
     void *NextInFoldingSetBucket;
 
   public:
-
     Node() : NextInFoldingSetBucket(nullptr) {}
 
     // Accessors
@@ -181,14 +180,27 @@ public:
   /// empty - Returns true if there are no nodes in the folding set.
   bool empty() const { return NumNodes == 0; }
 
-private:
+  /// reserve - Increase the number of buckets such that adding the
+  /// EltCount-th node won't cause a rebucket operation. reserve is permitted
+  /// to allocate more space than requested by EltCount.
+  void reserve(unsigned EltCount);
+  /// capacity - Returns the number of nodes permitted in the folding set
+  /// before a rebucket operation is performed.
+  unsigned capacity() {
+    // We allow a load factor of up to 2.0,
+    // so that means our capacity is NumBuckets * 2
+    return NumBuckets * 2;
+  }
 
+private:
   /// GrowHashTable - Double the size of the hash table and rehash everything.
-  ///
   void GrowHashTable();
 
+  /// GrowBucketCount - resize the hash table and rehash everything.
+  /// NewBucketCount must be a power of two, and must be greater than the old
+  /// bucket count.
+  void GrowBucketCount(unsigned NewBucketCount);
 protected:
-
   /// GetNodeProfile - Instantiations of the FoldingSet template implement
   /// this function to gather data bits for the given node.
   virtual void GetNodeProfile(Node *N, FoldingSetNodeID &ID) const = 0;
@@ -269,6 +281,7 @@ template<typename T, typename Ctx> struct ContextualFoldingSetTrait
 class FoldingSetNodeIDRef {
   const unsigned *Data;
   size_t Size;
+
 public:
   FoldingSetNodeIDRef() : Data(nullptr), Size(0) {}
   FoldingSetNodeIDRef(const unsigned *D, size_t S) : Data(D), Size(S) {}
@@ -393,7 +406,11 @@ DefaultContextualFoldingSetTrait<T, Ctx>::ComputeHash(T &X,
 /// implementation of the folding set to the node class T.  T must be a
 /// subclass of FoldingSetNode and implement a Profile function.
 ///
-template<class T> class FoldingSet : public FoldingSetImpl {
+/// Note that this set type is movable and move-assignable. However, its
+/// moved-from state is not a valid state for anything other than
+/// move-assigning and destroying. This is primarily to enable movable APIs
+/// that incorporate these objects.
+template <class T> class FoldingSet final : public FoldingSetImpl {
 private:
   /// GetNodeProfile - Each instantiatation of the FoldingSet needs to provide a
   /// way to convert nodes into a unique specifier.
@@ -417,8 +434,13 @@ private:
 
 public:
   explicit FoldingSet(unsigned Log2InitSize = 6)
-  : FoldingSetImpl(Log2InitSize)
-  {}
+      : FoldingSetImpl(Log2InitSize) {}
+
+  FoldingSet(FoldingSet &&Arg) : FoldingSetImpl(std::move(Arg)) {}
+  FoldingSet &operator=(FoldingSet &&RHS) {
+    (void)FoldingSetImpl::operator=(std::move(RHS));
+    return *this;
+  }
 
   typedef FoldingSetIterator<T> iterator;
   iterator begin() { return iterator(Buckets); }
@@ -463,7 +485,7 @@ public:
 /// function with signature
 ///   void Profile(llvm::FoldingSetNodeID &, Ctx);
 template <class T, class Ctx>
-class ContextualFoldingSet : public FoldingSetImpl {
+class ContextualFoldingSet final : public FoldingSetImpl {
   // Unfortunately, this can't derive from FoldingSet<T> because the
   // construction vtable for FoldingSet<T> requires
   // FoldingSet<T>::GetNodeProfile to be instantiated, which in turn
@@ -497,7 +519,6 @@ public:
   {}
 
   Ctx getContext() const { return Context; }
-
 
   typedef FoldingSetIterator<T> iterator;
   iterator begin() { return iterator(Buckets); }
@@ -614,9 +635,7 @@ public:
   }
 };
 
-
-template<class T>
-class FoldingSetIterator : public FoldingSetIteratorImpl {
+template <class T> class FoldingSetIterator : public FoldingSetIteratorImpl {
 public:
   explicit FoldingSetIterator(void **Bucket) : FoldingSetIteratorImpl(Bucket) {}
 
@@ -666,8 +685,7 @@ public:
   }
 };
 
-
-template<class T>
+template <class T>
 class FoldingSetBucketIterator : public FoldingSetBucketIteratorImpl {
 public:
   explicit FoldingSetBucketIterator(void **Bucket) :
@@ -694,32 +712,11 @@ public:
 template <typename T>
 class FoldingSetNodeWrapper : public FoldingSetNode {
   T data;
+
 public:
-  explicit FoldingSetNodeWrapper(const T &x) : data(x) {}
-  virtual ~FoldingSetNodeWrapper() {}
-
-  template<typename A1>
-  explicit FoldingSetNodeWrapper(const A1 &a1)
-    : data(a1) {}
-
-  template <typename A1, typename A2>
-  explicit FoldingSetNodeWrapper(const A1 &a1, const A2 &a2)
-    : data(a1,a2) {}
-
-  template <typename A1, typename A2, typename A3>
-  explicit FoldingSetNodeWrapper(const A1 &a1, const A2 &a2, const A3 &a3)
-    : data(a1,a2,a3) {}
-
-  template <typename A1, typename A2, typename A3, typename A4>
-  explicit FoldingSetNodeWrapper(const A1 &a1, const A2 &a2, const A3 &a3,
-                                 const A4 &a4)
-    : data(a1,a2,a3,a4) {}
-
-  template <typename A1, typename A2, typename A3, typename A4, typename A5>
-  explicit FoldingSetNodeWrapper(const A1 &a1, const A2 &a2, const A3 &a3,
-                                 const A4 &a4, const A5 &a5)
-  : data(a1,a2,a3,a4,a5) {}
-
+  template <typename... Ts>
+  explicit FoldingSetNodeWrapper(Ts &&... Args)
+      : data(std::forward<Ts>(Args)...) {}
 
   void Profile(FoldingSetNodeID &ID) { FoldingSetTrait<T>::Profile(data, ID); }
 
@@ -738,12 +735,12 @@ public:
 /// information that would otherwise only be required for recomputing an ID.
 class FastFoldingSetNode : public FoldingSetNode {
   FoldingSetNodeID FastID;
+
 protected:
   explicit FastFoldingSetNode(const FoldingSetNodeID &ID) : FastID(ID) {}
+
 public:
-  void Profile(FoldingSetNodeID &ID) const { 
-    ID.AddNodeID(FastID); 
-  }
+  void Profile(FoldingSetNodeID &ID) const { ID.AddNodeID(FastID); }
 };
 
 //===----------------------------------------------------------------------===//

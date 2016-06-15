@@ -92,6 +92,7 @@
 //   GTEST_OS_LINUX    - Linux
 //     GTEST_OS_LINUX_ANDROID - Google Android
 //   GTEST_OS_MAC      - Mac OS X
+//   GTEST_OS_MINIX    - Minix
 //   GTEST_OS_NACL     - Google Native Client (NaCl)
 //   GTEST_OS_SOLARIS  - Sun Solaris
 //   GTEST_OS_SYMBIAN  - Symbian
@@ -248,6 +249,8 @@
 # define GTEST_OS_NACL 1
 #elif defined(__HAIKU__)
 # define GTEST_OS_HAIKU 1
+#elif defined(_MINIX)
+# define GTEST_OS_MINIX 1
 #endif  // __CYGWIN__
 
 // Brings in definitions for functions used in the testing::internal::posix
@@ -359,7 +362,7 @@
 // no support for it at least as recent as Froyo (2.2).
 // Minix currently doesn't support it either.
 # define GTEST_HAS_STD_WSTRING \
-    (!(GTEST_OS_LINUX_ANDROID || GTEST_OS_CYGWIN || GTEST_OS_SOLARIS || GTEST_OS_HAIKU || defined(_MINIX)))
+    (!(GTEST_OS_LINUX_ANDROID || GTEST_OS_CYGWIN || GTEST_OS_SOLARIS || GTEST_OS_HAIKU || GTEST_OS_MINIX))
 
 #endif  // GTEST_HAS_STD_WSTRING
 
@@ -503,7 +506,7 @@
 #   define _TR1_FUNCTIONAL 1
 #   include <tr1/tuple>
 #   undef _TR1_FUNCTIONAL  // Allows the user to #include
-                        // <tr1/functional> if he chooses to.
+                        // <tr1/functional> if they choose to.
 #  else
 #   include <tr1/tuple>  // NOLINT
 #  endif  // !GTEST_HAS_RTTI && GTEST_GCC_VER_ < 40302
@@ -1165,7 +1168,7 @@ class ThreadWithParam : public ThreadWithParamBase {
     GTEST_CHECK_POSIX_SUCCESS_(
         pthread_create(&thread_, 0, &ThreadFuncWithCLinkage, base));
   }
-  ~ThreadWithParam() { Join(); }
+  ~ThreadWithParam() override { Join(); }
 
   void Join() {
     if (!finished_) {
@@ -1174,7 +1177,7 @@ class ThreadWithParam : public ThreadWithParamBase {
     }
   }
 
-  virtual void Run() {
+  void Run() override {
     if (thread_can_start_ != NULL)
       thread_can_start_->WaitForNotification();
     func_(param_);

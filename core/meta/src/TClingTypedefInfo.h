@@ -59,6 +59,7 @@ public:
    {
       const clang::TranslationUnitDecl *TU = fInterp->getCI()->getASTContext().getTranslationUnitDecl();
       const clang::DeclContext *DC = llvm::cast<clang::DeclContext>(TU);
+      cling::Interpreter::PushTransactionRAII RAII(fInterp);
       fIter = DC->decls_begin();
    }
 

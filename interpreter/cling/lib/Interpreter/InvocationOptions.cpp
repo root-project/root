@@ -49,8 +49,7 @@ namespace {
   class ClingOptTable : public OptTable {
   public:
     ClingOptTable()
-      : OptTable(ClingInfoTable,
-                 sizeof(ClingInfoTable) / sizeof(ClingInfoTable[0])) {}
+      : OptTable(ClingInfoTable) {}
   };
 
   static OptTable* CreateClingOptTable() {
@@ -91,11 +90,12 @@ namespace {
     // see Driver::getIncludeExcludeOptionFlagMasks()
     unsigned ExcludeOptionFlagMasks
       = clang::driver::options::NoDriverOption | clang::driver::options::CLOption;
-    std::unique_ptr<InputArgList> Args(
-        OptsC1->ParseArgs(argv+1, argv + argc, MissingArgIndex, MissingArgCount,
-                          0, ExcludeOptionFlagMasks));
-    for (ArgList::const_iterator it = Args->begin(),
-           ie = Args->end(); it != ie; ++it) {
+    ArrayRef<const char *> ArgStrings(argv+1, argv + argc);
+    InputArgList Args(
+      OptsC1->ParseArgs(ArgStrings, MissingArgIndex, MissingArgCount,
+                        0, ExcludeOptionFlagMasks));
+    for (ArgList::const_iterator it = Args.begin(),
+           ie = Args.end(); it != ie; ++it) {
       if ( (*it)->getOption().getKind() == Option::InputClass ) {
           Opts.Inputs.push_back(std::string( (*it)->getValue() ) );
       }
@@ -113,8 +113,9 @@ cling::InvocationOptions::CreateFromArgs(int argc, const char* const argv[],
   // see Driver::getIncludeExcludeOptionFlagMasks()
   unsigned ExcludeOptionFlagMasks
     = clang::driver::options::NoDriverOption | clang::driver::options::CLOption;
-  std::unique_ptr<InputArgList> Args(
-    Opts->ParseArgs(argv, argv + argc, MissingArgIndex, MissingArgCount,
+    ArrayRef<const char *> ArgStrings(argv, argv + argc);
+  InputArgList Args(
+    Opts->ParseArgs(ArgStrings, MissingArgIndex, MissingArgCount,
                     0, ExcludeOptionFlagMasks));
 
   //if (MissingArgCount)
@@ -122,15 +123,15 @@ cling::InvocationOptions::CreateFromArgs(int argc, const char* const argv[],
   //    << Args->getArgString(MissingArgIndex) << MissingArgCount;
 
   // Forward unknown arguments.
-  for (ArgList::const_iterator it = Args->begin(),
-         ie = Args->end(); it != ie; ++it) {
+  for (ArgList::const_iterator it = Args.begin(),
+         ie = Args.end(); it != ie; ++it) {
     if ((*it)->getOption().getKind() == Option::UnknownClass
         ||(*it)->getOption().getKind() == Option::InputClass) {
       leftoverArgs.push_back((*it)->getIndex());
     }
   }
-  ParseStartupOpts(ClingOpts, *Args /* , Diags */);
-  ParseLinkerOpts(ClingOpts, *Args /* , Diags */);
+  ParseStartupOpts(ClingOpts, Args /* , Diags */);
+  ParseLinkerOpts(ClingOpts, Args /* , Diags */);
   ParseInputs(ClingOpts, argc, argv);
   return ClingOpts;
 }

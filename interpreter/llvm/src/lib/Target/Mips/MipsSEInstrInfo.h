@@ -68,7 +68,7 @@ public:
 
   /// Adjust SP by Amount bytes.
   void adjustStackPtr(unsigned SP, int64_t Amount, MachineBasicBlock &MBB,
-                      MachineBasicBlock::iterator I) const;
+                      MachineBasicBlock::iterator I) const override;
 
   /// Emit a series of instructions to load an immediate. If NewImm is a
   /// non-NULL parameter, the last instruction is not emitted, but instead
@@ -81,6 +81,8 @@ private:
   unsigned getAnalyzableBrOpc(unsigned Opc) const override;
 
   void expandRetRA(MachineBasicBlock &MBB, MachineBasicBlock::iterator I) const;
+
+  void expandERet(MachineBasicBlock &MBB, MachineBasicBlock::iterator I) const;
 
   std::pair<bool, bool> compareOpndSize(unsigned Opc,
                                         const MachineFunction &MF) const;

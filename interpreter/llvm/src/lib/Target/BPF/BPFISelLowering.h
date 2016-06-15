@@ -20,8 +20,9 @@
 #include "llvm/Target/TargetLowering.h"
 
 namespace llvm {
+class BPFSubtarget;
 namespace BPFISD {
-enum {
+enum NodeType : unsigned {
   FIRST_NUMBER = ISD::BUILTIN_OP_END,
   RET_FLAG,
   CALL,
@@ -33,7 +34,7 @@ enum {
 
 class BPFTargetLowering : public TargetLowering {
 public:
-  explicit BPFTargetLowering(const TargetMachine &TM);
+  explicit BPFTargetLowering(const TargetMachine &TM, const BPFSubtarget &STI);
 
   // Provide custom lowering hooks for some operations.
   SDValue LowerOperation(SDValue Op, SelectionDAG &DAG) const override;
@@ -56,6 +57,9 @@ private:
                           const SmallVectorImpl<ISD::InputArg> &Ins, SDLoc DL,
                           SelectionDAG &DAG,
                           SmallVectorImpl<SDValue> &InVals) const;
+
+  // Maximum number of arguments to a call
+  static const unsigned MaxArgs;
 
   // Lower a call into CALLSEQ_START - BPFISD:CALL - CALLSEQ_END chain
   SDValue LowerCall(TargetLowering::CallLoweringInfo &CLI,

@@ -22,21 +22,21 @@
 let isTerminator = 1, isReturn = 1, isBarrier = 1,
     hasCtrlDep = 1, FPForm = SpecialFP, SchedRW = [WriteJumpLd] in {
   def RETL   : I   <0xC3, RawFrm, (outs), (ins variable_ops),
-                    "ret{l}", [(X86retflag 0)], IIC_RET>, OpSize32,
+                    "ret{l}", [], IIC_RET>, OpSize32,
                     Requires<[Not64BitMode]>;
   def RETQ   : I   <0xC3, RawFrm, (outs), (ins variable_ops),
-                    "ret{q}", [(X86retflag 0)], IIC_RET>, OpSize32,
+                    "ret{q}", [], IIC_RET>, OpSize32,
                     Requires<[In64BitMode]>;
   def RETW   : I   <0xC3, RawFrm, (outs), (ins),
                     "ret{w}",
                     [], IIC_RET>, OpSize16;
   def RETIL  : Ii16<0xC2, RawFrm, (outs), (ins i16imm:$amt, variable_ops),
                     "ret{l}\t$amt",
-                    [(X86retflag timm:$amt)], IIC_RET_IMM>, OpSize32,
+                    [], IIC_RET_IMM>, OpSize32,
                Requires<[Not64BitMode]>;
   def RETIQ  : Ii16<0xC2, RawFrm, (outs), (ins i16imm:$amt, variable_ops),
                     "ret{q}\t$amt",
-                    [(X86retflag timm:$amt)], IIC_RET_IMM>, OpSize32,
+                    [], IIC_RET_IMM>, OpSize32,
                Requires<[In64BitMode]>;
   def RETIW  : Ii16<0xC2, RawFrm, (outs), (ins i16imm:$amt),
                     "ret{w}\t$amt",
@@ -53,6 +53,19 @@ let isTerminator = 1, isReturn = 1, isBarrier = 1,
                     "{l}ret{|f}q\t$amt", [], IIC_RET>, Requires<[In64BitMode]>;
   def LRETIW : Ii16<0xCA, RawFrm, (outs), (ins i16imm:$amt),
                     "{l}ret{w|f}\t$amt", [], IIC_RET>, OpSize16;
+
+  // The machine return from interrupt instruction, but sometimes we need to
+  // perform a post-epilogue stack adjustment. Codegen emits the pseudo form
+  // which expands to include an SP adjustment if necessary.
+  def IRET16 : I   <0xcf, RawFrm, (outs), (ins), "iret{w}", [], IIC_IRET>,
+               OpSize16;
+  def IRET32 : I   <0xcf, RawFrm, (outs), (ins), "iret{l|d}", [],
+                    IIC_IRET>, OpSize32;
+  def IRET64 : RI  <0xcf, RawFrm, (outs), (ins), "iretq", [],
+                    IIC_IRET>, Requires<[In64BitMode]>;
+  let isCodeGenOnly = 1 in
+  def IRET : PseudoI<(outs), (ins i32imm:$adj), [(X86iret timm:$adj)]>;
+  def RET  : PseudoI<(outs), (ins i32imm:$adj, variable_ops), [(X86retflag timm:$adj)]>;
 }
 
 // Unconditional branches.
@@ -105,14 +118,16 @@ let isBranch = 1, isTerminator = 1, hasSideEffects = 0, SchedRW = [WriteJump] in
   // jecxz.
   let Uses = [CX] in
     def JCXZ : Ii8PCRel<0xE3, RawFrm, (outs), (ins brtarget8:$dst),
-                        "jcxz\t$dst", [], IIC_JCXZ>, AdSize16;
+                        "jcxz\t$dst", [], IIC_JCXZ>, AdSize16,
+                        Requires<[Not64BitMode]>;
   let Uses = [ECX] in
     def JECXZ : Ii8PCRel<0xE3, RawFrm, (outs), (ins brtarget8:$dst),
                         "jecxz\t$dst", [], IIC_JCXZ>, AdSize32;
 
   let Uses = [RCX] in
     def JRCXZ : Ii8PCRel<0xE3, RawFrm, (outs), (ins brtarget8:$dst),
-                           "jrcxz\t$dst", [], IIC_JCXZ>, AdSize64;
+                         "jrcxz\t$dst", [], IIC_JCXZ>, AdSize64,
+                         Requires<[In64BitMode]>;
 }
 
 // Indirect branches

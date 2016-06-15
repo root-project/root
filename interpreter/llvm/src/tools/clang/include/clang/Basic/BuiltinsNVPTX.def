@@ -50,7 +50,7 @@ BUILTIN(__builtin_ptx_read_lanemask_ge, "i", "nc")
 BUILTIN(__builtin_ptx_read_lanemask_gt, "i", "nc")
 
 BUILTIN(__builtin_ptx_read_clock, "i", "n")
-BUILTIN(__builtin_ptx_read_clock64, "Li", "n")
+BUILTIN(__builtin_ptx_read_clock64, "LLi", "n")
 
 BUILTIN(__builtin_ptx_read_pm0, "i", "n")
 BUILTIN(__builtin_ptx_read_pm1, "i", "n")
@@ -402,6 +402,17 @@ BUILTIN(__nvvm_bar0_popc, "ii", "")
 BUILTIN(__nvvm_bar0_and, "ii", "")
 BUILTIN(__nvvm_bar0_or, "ii", "")
 
+// Shuffle
+
+BUILTIN(__builtin_ptx_shfl_down_i32, "iiii", "")
+BUILTIN(__builtin_ptx_shfl_down_f32, "ffii", "")
+BUILTIN(__builtin_ptx_shfl_up_i32, "iiii", "")
+BUILTIN(__builtin_ptx_shfl_up_f32, "ffii", "")
+BUILTIN(__builtin_ptx_shfl_bfly_i32, "iiii", "")
+BUILTIN(__builtin_ptx_shfl_bfly_f32, "ffii", "")
+BUILTIN(__builtin_ptx_shfl_idx_i32, "iiii", "")
+BUILTIN(__builtin_ptx_shfl_idx_f32, "ffii", "")
+
 // Membar
 
 BUILTIN(__nvvm_membar_cta, "v", "")
@@ -453,6 +464,9 @@ BUILTIN(__nvvm_atom_add_gen_ll, "LLiLLiD*LLi", "n")
 BUILTIN(__nvvm_atom_add_g_f, "ffD*1f", "n")
 BUILTIN(__nvvm_atom_add_s_f, "ffD*3f", "n")
 BUILTIN(__nvvm_atom_add_gen_f, "ffD*f", "n")
+BUILTIN(__nvvm_atom_add_g_d, "ddD*1d", "n")
+BUILTIN(__nvvm_atom_add_s_d, "ddD*3d", "n")
+BUILTIN(__nvvm_atom_add_gen_d, "ddD*d", "n")
 
 BUILTIN(__nvvm_atom_sub_g_i, "iiD*1i", "n")
 BUILTIN(__nvvm_atom_sub_s_i, "iiD*3i", "n")
@@ -501,7 +515,7 @@ BUILTIN(__nvvm_atom_min_s_ui, "UiUiD*3Ui", "n")
 BUILTIN(__nvvm_atom_min_gen_ui, "UiUiD*Ui", "n")
 BUILTIN(__nvvm_atom_min_g_l, "LiLiD*1Li", "n")
 BUILTIN(__nvvm_atom_min_s_l, "LiLiD*3Li", "n")
-BUILTIN(__nvvm_atom_min_gen_l, "LiLi10D*Li", "n")
+BUILTIN(__nvvm_atom_min_gen_l, "LiLiD*Li", "n")
 BUILTIN(__nvvm_atom_min_g_ul, "ULiULiD*1ULi", "n")
 BUILTIN(__nvvm_atom_min_s_ul, "ULiULiD*3ULi", "n")
 BUILTIN(__nvvm_atom_min_gen_ul, "ULiULiD*ULi", "n")
@@ -562,5 +576,41 @@ BUILTIN(__nvvm_atom_cas_gen_ll, "LLiLLiD*LLiLLi", "n")
 // Compiler Error Warn
 BUILTIN(__nvvm_compiler_error, "vcC*4", "n")
 BUILTIN(__nvvm_compiler_warn, "vcC*4", "n")
+
+// __ldg.  This is not implemented as a builtin by nvcc.
+BUILTIN(__nvvm_ldg_c, "ccC*", "")
+BUILTIN(__nvvm_ldg_s, "ssC*", "")
+BUILTIN(__nvvm_ldg_i, "iiC*", "")
+BUILTIN(__nvvm_ldg_l, "LiLiC*", "")
+BUILTIN(__nvvm_ldg_ll, "LLiLLiC*", "")
+
+BUILTIN(__nvvm_ldg_uc, "UcUcC*", "")
+BUILTIN(__nvvm_ldg_us, "UsUsC*", "")
+BUILTIN(__nvvm_ldg_ui, "UiUiC*", "")
+BUILTIN(__nvvm_ldg_ul, "ULiULiC*", "")
+BUILTIN(__nvvm_ldg_ull, "ULLiULLiC*", "")
+
+BUILTIN(__nvvm_ldg_f, "ffC*", "")
+BUILTIN(__nvvm_ldg_d, "ddC*", "")
+
+BUILTIN(__nvvm_ldg_c2, "E2cE2cC*", "")
+BUILTIN(__nvvm_ldg_c4, "E4cE4cC*", "")
+BUILTIN(__nvvm_ldg_s2, "E2sE2sC*", "")
+BUILTIN(__nvvm_ldg_s4, "E4sE4sC*", "")
+BUILTIN(__nvvm_ldg_i2, "E2iE2iC*", "")
+BUILTIN(__nvvm_ldg_i4, "E4iE4iC*", "")
+BUILTIN(__nvvm_ldg_ll2, "E2LLiE2LLiC*", "")
+
+BUILTIN(__nvvm_ldg_uc2, "E2UcE2UcC*", "")
+BUILTIN(__nvvm_ldg_uc4, "E4UcE4UcC*", "")
+BUILTIN(__nvvm_ldg_us2, "E2UsE2UsC*", "")
+BUILTIN(__nvvm_ldg_us4, "E4UsE4UsC*", "")
+BUILTIN(__nvvm_ldg_ui2, "E2UiE2UiC*", "")
+BUILTIN(__nvvm_ldg_ui4, "E4UiE4UiC*", "")
+BUILTIN(__nvvm_ldg_ull2, "E2ULLiE2ULLiC*", "")
+
+BUILTIN(__nvvm_ldg_f2, "E2fE2fC*", "")
+BUILTIN(__nvvm_ldg_f4, "E4fE4fC*", "")
+BUILTIN(__nvvm_ldg_d2, "E2dE2dC*", "")
 
 #undef BUILTIN

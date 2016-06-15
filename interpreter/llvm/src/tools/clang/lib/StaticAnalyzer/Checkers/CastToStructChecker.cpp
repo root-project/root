@@ -56,16 +56,16 @@ void CastToStructChecker::checkPreStmt(const CastExpr *CE,
 
   // Now the cast-to-type is struct pointer, the original type is not void*.
   if (!OrigPointeeTy->isRecordType()) {
-    if (ExplodedNode *N = C.addTransition()) {
+    if (ExplodedNode *N = C.generateNonFatalErrorNode()) {
       if (!BT)
         BT.reset(
             new BuiltinBug(this, "Cast from non-struct type to struct type",
                            "Casting a non-structure type to a structure type "
                            "and accessing a field can lead to memory access "
                            "errors or data corruption."));
-      BugReport *R = new BugReport(*BT,BT->getDescription(), N);
+      auto R = llvm::make_unique<BugReport>(*BT, BT->getDescription(), N);
       R->addRange(CE->getSourceRange());
-      C.emitReport(R);
+      C.emitReport(std::move(R));
     }
   }
 }
