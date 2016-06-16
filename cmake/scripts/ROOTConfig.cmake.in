@@ -103,7 +103,6 @@ foreach(_cpt ${ROOT_ALL_TOOLS})
 endforeach()
 
 #----------------------------------------------------------------------------
-set(ROOT_DEFINITIONS @cflags@)
 set(ROOT_EXECUTABLE ${ROOT_root_CMD})
 
 #----------------------------------------------------------------------------
