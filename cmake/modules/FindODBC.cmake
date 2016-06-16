@@ -14,29 +14,27 @@
 # also defined, but not for general use is
 # ODBC_LIBRARY, where to find the ODBC driver manager library.
 
-SET( ODBC_FOUND 0 )
-
 #---For the windows platform ODBC is located automatically
 if(WIN32)
   set(ODBC_INCLUDE_DIR "")
-  set(ODBC_LIBRARY odbc32.lib) 
-  set(ODBC_FOUND 1)
+  set(ODBC_LIBRARY odbc32.lib)
 else()
-  find_path(ODBC_INCLUDE_DIR NAMES sqlext.h
-    HINTS ${ODBC_DIR}/include/iodbc  $ENV{ODBC_DIR}/include/iodbc
+  find_path(ODBC_INCLUDE_DIR sqlext.h
+    PATH_SUFFIXES odbc iodbc 
+    HINTS $ENV{ODBC_DIR}/include ${ODBC_DIR}/include 
     DOC "Specify the directory containing sql.h."
   )
 
   find_library( ODBC_LIBRARY NAMES iodbc odbc odbc32
-    HINTS ${ODBC_DIR}/lib  $ENV{ODBC_DIR}/lib
+    PATHS_SUFFIXES odbc
+    HINTS  $ENV{ODBC_DIR}/lib ${ODBC_DIR}/lib 
     DOC "Specify the ODBC driver manager library here."
   )
-  if(ODBC_LIBRARY AND ODBC_INCLUDE_DIR)
-    set( ODBC_FOUND 1 )
-  endif()
 endif()
-
 
 set(ODBC_LIBRARIES ${ODBC_LIBRARY})
 
-MARK_AS_ADVANCED( ODBC_FOUND ODBC_LIBRARY ODBC_EXTRA_LIBRARIES ODBC_INCLUDE_DIR )
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(ODBC DEFAULT_MSG ODBC_INCLUDE_DIR ODBC_LIBRARY)
+mark_as_advanced(ODBC_INCLUDE_DIR OBC_LIBRARY)
+
