@@ -3513,7 +3513,8 @@ if test ! "x$enable_odbc" = "xno"; then
         check_header "sqlext.h" "$odbcincdir" \
             $ODBC ${ODBC:+$ODBC/include} $ODBCINCDIR \
             ${finkdir:+$finkdir/include} \
-            /usr/local/include /usr/include
+            /usr/local/include /usr/include \
+            /usr/include/iodbc
         odbcinc=$found_hdr
         odbcincdir=$found_dir
 
@@ -4179,7 +4180,9 @@ if test ! "x$enable_pythia8" = "xno" ; then
     # Check for PYTHIA8 include and library
     check_header "Pythia8/Pythia.h" "$pythia8incdir" \
         $PYTHIA8 ${PYTHIA8:+$PYTHIA8/include} \
-        /opt/pythia8/include /usr/local/include /usr/include /usr/include/pythia
+        /opt/pythia8/include /usr/local/include \
+        /usr/include /usr/include/pythia \
+        /usr/include/pythia8 /usr/include/Pythia8
     pythia8incdir=$found_dir
 
     check_library "libpythia8" "$enable_shared" "$pythia8libdir" \
@@ -4754,12 +4757,16 @@ if test ! "x$enable_ruby" = "xno" ; then
     myruby=`$cwhich ruby 2> /dev/null`
     if test ! "x$myruby" = "x" && test -x "$myruby" ; then
        rubysysincdir=`ruby -rrbconfig -e 'puts RbConfig::CONFIG["rubyhdrdir"]'`
+       rubyarchincdir=`ruby -rrbconfig -e 'puts RbConfig::CONFIG["rubyarchhdrdir"]'`
        rubysysarchdir=`ruby -rrbconfig -e 'puts RbConfig::CONFIG["archdir"]'`
        rubysyslibdir=`ruby -rrbconfig -e 'puts RbConfig::CONFIG["libdir"]'`
        rubysysarch=`ruby -rrbconfig -e 'puts RbConfig::CONFIG["arch"]'`
 
        if test "x$rubysysincdir" = "xnil" ; then
           rubysysincdir=`ruby -rrbconfig -e 'puts RbConfig::CONFIG["includedir"]'`
+       fi
+       if test "x$rubyarchincdir" = "x" || test "x$rubyarchincdir" = "xnil" ; then
+          rubyarchincdir=$rubysysincdir/$rubysysarch
        fi
     fi
     rubysysarchdir2=
@@ -4772,7 +4779,7 @@ if test ! "x$enable_ruby" = "xno" ; then
         /usr/local/include/ruby /usr/include/ruby
     rubyinc=$found_hdr
     rubyincdir=$found_dir
-    check_header "ruby/config.h" "" $rubysysincdir/$rubysysarch
+    check_header "ruby/config.h" "" $rubyarchincdir
     if test "x$found_hdr" != "x" ; then
         rubyincdir="$rubyincdir $found_dir"
     fi
