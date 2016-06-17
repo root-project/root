@@ -5,19 +5,18 @@
 include_directories(${OPENGL_INCLUDE_DIR} ${FTGL_INCLUDE_DIR} ${FREETYPE_INCLUDE_DIRS})
 
 ROOT_GLOB_HEADERS(headers RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/inc ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.h)
-list(REMOVE_ITEM headers gl2ps.h CsgOps.h TGLIncludes.h TGLWSIncludes.h
+list(REMOVE_ITEM headers  CsgOps.h TGLIncludes.h TGLWSIncludes.h
                      TGLMarchingCubes.h TKDEAdapter.h TGL5DPainter.h TKDEFGT.h TGLIsoMesh.h)
-set (installoptions OPTIONS REGEX gl2ps.h EXCLUDE)
 ROOT_GLOB_SOURCES(sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx)
 
 if(WIN32 OR cocoa)
   list(REMOVE_ITEM headers TX11GL.h)
   list(REMOVE_ITEM sources TX11GL.cxx)
-  set(installoptions ${installoptions} REGEX TX11GL.h EXCLUDE)
+  set(installoptions OPTIONS REGEX "TX11GL" EXCLUDE)
 endif()
 
 if(builtin_gl2ps)
-  include_directories(AFTER ${CMAKE_CURRENT_SOURCE_DIR}/inc)
+  include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/gl2ps)
 else()
   list(REMOVE_ITEM sources gl2ps.cxx)
   include_directories(${GL2PS_INCLUDE_DIRS})

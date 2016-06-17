@@ -19,7 +19,6 @@ GLDO         := $(GLDS:.cxx=.o)
 GLDH         := $(GLDS:.cxx=.h)
 
 GLH          := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
-GLH          := $(filter-out $(MODDIRI)/gl2ps.h, $(GLH))
 GLS          := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 
 # Excluded from win32 builds
@@ -44,7 +43,7 @@ GLH1         := $(MODDIRI)/CsgOps.h \
 GLH2         := $(filter-out $(GLH1), $(GLH))
 
 ifeq ($(BUILTINGL2PS),yes)
-GL2PSFLAGS   := -I$(MODDIRI)
+GL2PSFLAGS   := -I$(MODDIRS)/gl2ps
 else()
 GLS          := $(filter-out $(MODDIRS)/gl2ps.cxx, $(GLS))
 GL2PSFLAGS   := $(GL2PSINCDIR:%=-I%)
