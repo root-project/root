@@ -35,7 +35,7 @@
 
 namespace TMVA {
 
-//    class MsgLogger;
+   //    class MsgLogger;
   
    ////////////////////////////////////////////////////////////
    // Basic struct for saving relevant pruning information   //
@@ -44,7 +44,7 @@ namespace TMVA {
     
    public:
     
-      PruningInfo( ) : QualityIndex(0), PruneStrength(0), PruneSequence(0) {}
+   PruningInfo( ) : QualityIndex(0), PruneStrength(0), PruneSequence(0) {}
       PruningInfo( Double_t q, Double_t alpha, std::vector<DecisionTreeNode*> sequence );
       Double_t QualityIndex; //! quality measure for a pruned subtree T of T_max
       Double_t PruneStrength; //! the regularization parameter for pruning
@@ -98,8 +98,8 @@ namespace TMVA {
     
    protected:
     
-//       mutable MsgLogger* fLogger; //! output stream to save logging information
-//       MsgLogger& Log() const { return *fLogger; }
+      //       mutable MsgLogger* fLogger; //! output stream to save logging information
+      //       MsgLogger& Log() const { return *fLogger; }
       Double_t fPruneStrength; //! regularization parameter in pruning
     
     
@@ -110,7 +110,7 @@ namespace TMVA {
       fPruneStrength(0.0),
       S(0),
       B(0)
-   {}
+         {}
    inline IPruneTool::~IPruneTool( ) {}
   
 }

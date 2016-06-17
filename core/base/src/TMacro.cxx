@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TMacro
+\ingroup Base
 
 Class supporting a collection of lines with C++ code.
 A TMacro can be executed, saved to a ROOT file, edited, etc.

@@ -37,9 +37,9 @@ ClassImp(TMVA::MinuitWrapper)
 /// constructor
 
 TMVA::MinuitWrapper::MinuitWrapper( IFitterTarget& target, Int_t maxpar )
-   : TMinuit( maxpar ),
-     fFitterTarget( target ),
-     fNumPar( maxpar )
+: TMinuit( maxpar ),
+   fFitterTarget( target ),
+   fNumPar( maxpar )
 {
    for ( Int_t i=0; i< maxpar; i++ ) {
       fParameters.push_back(0.0);

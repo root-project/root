@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TBrowser
+\ingroup Base
+
 Using a TBrowser one can browse all ROOT objects. It shows in a list
 on the left side of the window all browsable ROOT classes. Selecting
 one of the classes displays, in the icon-box on the right side, all

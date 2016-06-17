@@ -44,8 +44,12 @@ llvm::MDNode *CodeGenTBAA::getRoot() {
   // if our LLVM IR is linked with LLVM IR from a different front-end
   // (or a different version of this front-end), their TBAA trees will
   // remain distinct, and the optimizer will treat them conservatively.
-  if (!Root)
-    Root = MDHelper.createTBAARoot("Simple C/C++ TBAA");
+  if (!Root) {
+    if (Features.CPlusPlus)
+      Root = MDHelper.createTBAARoot("Simple C++ TBAA");
+    else
+      Root = MDHelper.createTBAARoot("Simple C/C++ TBAA");
+  }
 
   return Root;
 }
@@ -155,7 +159,6 @@ CodeGenTBAA::getTBAAInfo(QualType QTy) {
     SmallString<256> OutName;
     llvm::raw_svector_ostream Out(OutName);
     MContext.mangleTypeName(QualType(ETy, 0), Out);
-    Out.flush();
     return MetadataCache[Ty] = createTBAAScalarType(OutName, getChar());
   }
 
@@ -271,7 +274,6 @@ CodeGenTBAA::getTBAAStructTypeInfo(QualType QTy) {
       // Don't use the mangler for C code.
       llvm::raw_svector_ostream Out(OutName);
       MContext.mangleTypeName(QualType(Ty, 0), Out);
-      Out.flush();
     } else {
       OutName = RD->getName();
     }

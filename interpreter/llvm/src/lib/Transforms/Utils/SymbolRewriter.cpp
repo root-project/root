@@ -58,9 +58,9 @@
 //===----------------------------------------------------------------------===//
 
 #define DEBUG_TYPE "symbol-rewriter"
-#include "llvm/CodeGen/Passes.h"
 #include "llvm/Pass.h"
-#include "llvm/PassManager.h"
+#include "llvm/ADT/SmallString.h"
+#include "llvm/IR/LegacyPassManager.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/MemoryBuffer.h"
@@ -68,19 +68,18 @@
 #include "llvm/Support/SourceMgr.h"
 #include "llvm/Support/YAMLParser.h"
 #include "llvm/Support/raw_ostream.h"
-#include "llvm/Transforms/IPO/PassManagerBuilder.h"
 #include "llvm/Transforms/Utils/SymbolRewriter.h"
 
 using namespace llvm;
+using namespace SymbolRewriter;
 
 static cl::list<std::string> RewriteMapFiles("rewrite-map-file",
                                              cl::desc("Symbol Rewrite Map"),
                                              cl::value_desc("filename"));
 
-namespace llvm {
-namespace SymbolRewriter {
-void rewriteComdat(Module &M, GlobalObject *GO, const std::string &Source,
-                   const std::string &Target) {
+static void rewriteComdat(Module &M, GlobalObject *GO,
+                          const std::string &Source,
+                          const std::string &Target) {
   if (Comdat *CD = GO->getComdat()) {
     auto &Comdats = M.getComdatSymbolTable();
 
@@ -92,6 +91,7 @@ void rewriteComdat(Module &M, GlobalObject *GO, const std::string &Source,
   }
 }
 
+namespace {
 template <RewriteDescriptor::Type DT, typename ValueType,
           ValueType *(llvm::Module::*Get)(StringRef) const>
 class ExplicitRewriteDescriptor : public RewriteDescriptor {
@@ -226,6 +226,7 @@ typedef PatternRewriteDescriptor<RewriteDescriptor::Type::NamedAlias,
                                  &llvm::Module::getNamedAlias,
                                  &llvm::Module::aliases>
     PatternRewriteNamedAliasDescriptor;
+} // namespace
 
 bool RewriteMapParser::parse(const std::string &MapFile,
                              RewriteDescriptorList *DL) {
@@ -488,8 +489,6 @@ parseRewriteGlobalAliasDescriptor(yaml::Stream &YS, yaml::ScalarNode *K,
     DL->push_back(new PatternRewriteNamedAliasDescriptor(Source, Transform));
 
   return true;
-}
-}
 }
 
 namespace {

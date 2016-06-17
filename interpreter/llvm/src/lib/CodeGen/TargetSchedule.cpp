@@ -211,11 +211,9 @@ unsigned TargetSchedModel::computeOperandLatency(
   if (SCDesc->isValid() && !DefMI->getOperand(DefOperIdx).isImplicit()
       && !DefMI->getDesc().OpInfo[DefOperIdx].isOptionalDef()
       && SchedModel.isComplete()) {
-    std::string Err;
-    raw_string_ostream ss(Err);
-    ss << "DefIdx " << DefIdx << " exceeds machine model writes for "
-       << *DefMI;
-    report_fatal_error(ss.str());
+    errs() << "DefIdx " << DefIdx << " exceeds machine model writes for "
+           << *DefMI << " (Try with MCSchedModel.CompleteModel set to false)";
+    llvm_unreachable("incomplete machine model");
   }
 #endif
   // FIXME: Automatically giving all implicit defs defaultDefLatency is
@@ -224,26 +222,29 @@ unsigned TargetSchedModel::computeOperandLatency(
   return DefMI->isTransient() ? 0 : TII->defaultDefLatency(SchedModel, DefMI);
 }
 
+unsigned
+TargetSchedModel::computeInstrLatency(const MCSchedClassDesc &SCDesc) const {
+  unsigned Latency = 0;
+  for (unsigned DefIdx = 0, DefEnd = SCDesc.NumWriteLatencyEntries;
+       DefIdx != DefEnd; ++DefIdx) {
+    // Lookup the definition's write latency in SubtargetInfo.
+    const MCWriteLatencyEntry *WLEntry =
+      STI->getWriteLatencyEntry(&SCDesc, DefIdx);
+    Latency = std::max(Latency, capLatency(WLEntry->Cycles));
+  }
+  return Latency;
+}
+
 unsigned TargetSchedModel::computeInstrLatency(unsigned Opcode) const {
   assert(hasInstrSchedModel() && "Only call this function with a SchedModel");
 
   unsigned SCIdx = TII->get(Opcode).getSchedClass();
   const MCSchedClassDesc *SCDesc = SchedModel.getSchedClassDesc(SCIdx);
-  unsigned Latency = 0;
 
-  if (SCDesc->isValid() && !SCDesc->isVariant()) {
-    for (unsigned DefIdx = 0, DefEnd = SCDesc->NumWriteLatencyEntries;
-         DefIdx != DefEnd; ++DefIdx) {
-      // Lookup the definition's write latency in SubtargetInfo.
-      const MCWriteLatencyEntry *WLEntry =
-          STI->getWriteLatencyEntry(SCDesc, DefIdx);
-      Latency = std::max(Latency, capLatency(WLEntry->Cycles));
-    }
-    return Latency;
-  }
+  if (SCDesc->isValid() && !SCDesc->isVariant())
+    return computeInstrLatency(*SCDesc);
 
-  assert(Latency && "No MI sched latency");
-  return 0;
+  llvm_unreachable("No MI sched latency");
 }
 
 unsigned
@@ -257,17 +258,8 @@ TargetSchedModel::computeInstrLatency(const MachineInstr *MI,
 
   if (hasInstrSchedModel()) {
     const MCSchedClassDesc *SCDesc = resolveSchedClass(MI);
-    if (SCDesc->isValid()) {
-      unsigned Latency = 0;
-      for (unsigned DefIdx = 0, DefEnd = SCDesc->NumWriteLatencyEntries;
-           DefIdx != DefEnd; ++DefIdx) {
-        // Lookup the definition's write latency in SubtargetInfo.
-        const MCWriteLatencyEntry *WLEntry =
-          STI->getWriteLatencyEntry(SCDesc, DefIdx);
-        Latency = std::max(Latency, capLatency(WLEntry->Cycles));
-      }
-      return Latency;
-    }
+    if (SCDesc->isValid())
+      return computeInstrLatency(*SCDesc);
   }
   return TII->defaultDefLatency(SchedModel, MI);
 }
@@ -290,7 +282,7 @@ computeOutputLatency(const MachineInstr *DefMI, unsigned DefOperIdx,
   unsigned Reg = DefMI->getOperand(DefOperIdx).getReg();
   const MachineFunction &MF = *DefMI->getParent()->getParent();
   const TargetRegisterInfo *TRI = MF.getSubtarget().getRegisterInfo();
-  if (!DepMI->readsRegister(Reg, TRI) && TII->isPredicated(DepMI))
+  if (!DepMI->readsRegister(Reg, TRI) && TII->isPredicated(*DepMI))
     return computeInstrLatency(DefMI);
 
   // If we have a per operand scheduling model, check if this def is writing

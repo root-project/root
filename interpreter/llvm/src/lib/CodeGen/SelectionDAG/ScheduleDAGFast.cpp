@@ -227,8 +227,7 @@ SUnit *ScheduleDAGFast::CopyAndMoveSuccessors(SUnit *SU) {
     else if (VT == MVT::Other)
       TryUnfold = true;
   }
-  for (unsigned i = 0, e = N->getNumOperands(); i != e; ++i) {
-    const SDValue &Op = N->getOperand(i);
+  for (const SDValue &Op : N->op_values()) {
     MVT VT = Op.getNode()->getSimpleValueType(Op.getResNo());
     if (VT == MVT::Glue)
       return nullptr;
@@ -441,7 +440,7 @@ static MVT getPhysicalRegisterVT(SDNode *N, unsigned Reg,
     const MCInstrDesc &MCID = TII->get(N->getMachineOpcode());
     assert(MCID.ImplicitDefs && "Physical reg def must be in implicit def list!");
     NumRes = MCID.getNumDefs();
-    for (const uint16_t *ImpDef = MCID.getImplicitDefs(); *ImpDef; ++ImpDef) {
+    for (const MCPhysReg *ImpDef = MCID.getImplicitDefs(); *ImpDef; ++ImpDef) {
       if (Reg == *ImpDef)
         break;
       ++NumRes;
@@ -520,7 +519,7 @@ bool ScheduleDAGFast::DelayForLiveRegsBottomUp(SUnit *SU,
     const MCInstrDesc &MCID = TII->get(Node->getMachineOpcode());
     if (!MCID.ImplicitDefs)
       continue;
-    for (const uint16_t *Reg = MCID.getImplicitDefs(); *Reg; ++Reg) {
+    for (const MCPhysReg *Reg = MCID.getImplicitDefs(); *Reg; ++Reg) {
       CheckForLiveRegDef(SU, *Reg, LiveRegDefs, RegAdded, LRegs, TRI);
     }
   }
@@ -726,9 +725,8 @@ void ScheduleDAGLinearize::Schedule() {
 
   SmallVector<SDNode*, 8> Glues;
   unsigned DAGSize = 0;
-  for (SelectionDAG::allnodes_iterator I = DAG->allnodes_begin(),
-         E = DAG->allnodes_end(); I != E; ++I) {
-    SDNode *N = I;
+  for (SDNode &Node : DAG->allnodes()) {
+    SDNode *N = &Node;
 
     // Use node id to record degree.
     unsigned Degree = N->use_size();

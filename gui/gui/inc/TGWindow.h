@@ -131,7 +131,7 @@ public:
 
    static Int_t        GetCounter();
 
-   ClassDef(TGWindow,1)  // GUI Window base class
+   ClassDef(TGWindow, 0);  // GUI Window base class
 };
 
 

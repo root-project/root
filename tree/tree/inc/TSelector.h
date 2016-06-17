@@ -42,12 +42,12 @@ public:
    enum EAbort { kContinue, kAbortProcess, kAbortFile };
 
 protected:
-   Long64_t       fStatus;  // Selector status
-   EAbort         fAbort;   // Abort status
-   TString        fOption;  // Option given to TTree::Process
-   TObject       *fObject;  //!Current object if processing object (vs. TTree)
-   TList         *fInput;   // List of objects available during processing
-   TSelectorList *fOutput;  //!List of objects created during processing
+   Long64_t       fStatus;  ///<  Selector status
+   EAbort         fAbort;   ///<  Abort status
+   TString        fOption;  ///<  Option given to TTree::Process
+   TObject       *fObject;  ///<! Current object if processing object (vs. TTree)
+   TList         *fInput;   ///<  List of objects available during processing
+   TSelectorList *fOutput;  ///<! List of objects created during processing
 
 private:
    TSelector(const TSelector&);            // not implemented

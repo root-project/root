@@ -17,6 +17,10 @@
 
 #include "llvm/Config/llvm-config.h"
 
+#if defined(_MSC_VER)
+#include <sal.h>
+#endif
+
 #ifndef __has_feature
 # define __has_feature(x) 0
 #endif
@@ -52,14 +56,14 @@
 /// \macro LLVM_MSC_PREREQ
 /// \brief Is the compiler MSVC of at least the specified version?
 /// The common \param version values to check for are:
-///  * 1700: Microsoft Visual Studio 2012 / 11.0
 ///  * 1800: Microsoft Visual Studio 2013 / 12.0
+///  * 1900: Microsoft Visual Studio 2015 / 14.0
 #ifdef _MSC_VER
 #define LLVM_MSC_PREREQ(version) (_MSC_VER >= (version))
 
-// We require at least MSVC 2012.
-#if !LLVM_MSC_PREREQ(1700)
-#error LLVM requires at least MSVC 2012.
+// We require at least MSVC 2013.
+#if !LLVM_MSC_PREREQ(1800)
+#error LLVM requires at least MSVC 2013.
 #endif
 
 #else
@@ -69,58 +73,30 @@
 #if !defined(_MSC_VER) || defined(__clang__) || LLVM_MSC_PREREQ(1900)
 #define LLVM_NOEXCEPT noexcept
 #else
-#define LLVM_NOEXCEPT
+#define LLVM_NOEXCEPT throw()
 #endif
 
-/// \brief Does the compiler support r-value reference *this?
+/// \brief Does the compiler support ref-qualifiers for *this?
 ///
-/// Sadly, this is separate from just r-value reference support because GCC
-/// implemented this later than everything else.
+/// Sadly, this is separate from just rvalue reference support because GCC
+/// and MSVC implemented this later than everything else.
 #if __has_feature(cxx_rvalue_references) || LLVM_GNUC_PREREQ(4, 8, 1)
 #define LLVM_HAS_RVALUE_REFERENCE_THIS 1
 #else
 #define LLVM_HAS_RVALUE_REFERENCE_THIS 0
 #endif
 
-/// \macro LLVM_HAS_VARIADIC_TEMPLATES
-/// \brief Does this compiler support variadic templates.
+/// Expands to '&' if ref-qualifiers for *this are supported.
 ///
-/// Implies LLVM_HAS_RVALUE_REFERENCES and the existence of std::forward.
-#if __has_feature(cxx_variadic_templates) || LLVM_MSC_PREREQ(1800)
-# define LLVM_HAS_VARIADIC_TEMPLATES 1
-#else
-# define LLVM_HAS_VARIADIC_TEMPLATES 0
-#endif
-
-/// Expands to '&' if r-value references are supported.
-///
-/// This can be used to provide l-value/r-value overrides of member functions.
-/// The r-value override should be guarded by LLVM_HAS_RVALUE_REFERENCE_THIS
+/// This can be used to provide lvalue/rvalue overrides of member functions.
+/// The rvalue override should be guarded by LLVM_HAS_RVALUE_REFERENCE_THIS
 #if LLVM_HAS_RVALUE_REFERENCE_THIS
 #define LLVM_LVALUE_FUNCTION &
 #else
 #define LLVM_LVALUE_FUNCTION
 #endif
 
-/// LLVM_DELETED_FUNCTION - Expands to = delete if the compiler supports it.
-/// Use to mark functions as uncallable. Member functions with this should
-/// be declared private so that some behavior is kept in C++03 mode.
-///
-/// class DontCopy {
-/// private:
-///   DontCopy(const DontCopy&) LLVM_DELETED_FUNCTION;
-///   DontCopy &operator =(const DontCopy&) LLVM_DELETED_FUNCTION;
-/// public:
-///   ...
-/// };
-#if __has_feature(cxx_deleted_functions) || \
-    defined(__GXX_EXPERIMENTAL_CXX0X__) || LLVM_MSC_PREREQ(1800)
-#define LLVM_DELETED_FUNCTION = delete
-#else
-#define LLVM_DELETED_FUNCTION
-#endif
-
-#if __has_feature(cxx_constexpr) || defined(__GXX_EXPERIMENTAL_CXX0X__)
+#if __has_feature(cxx_constexpr) || defined(__GXX_EXPERIMENTAL_CXX0X__) || LLVM_MSC_PREREQ(1900)
 # define LLVM_CONSTEXPR constexpr
 #else
 # define LLVM_CONSTEXPR
@@ -152,6 +128,8 @@
 
 #if __has_attribute(warn_unused_result) || LLVM_GNUC_PREREQ(3, 4, 0)
 #define LLVM_ATTRIBUTE_UNUSED_RESULT __attribute__((__warn_unused_result__))
+#elif defined(_MSC_VER)
+#define LLVM_ATTRIBUTE_UNUSED_RESULT _Check_return_
 #else
 #define LLVM_ATTRIBUTE_UNUSED_RESULT
 #endif
@@ -202,19 +180,6 @@
 #define LLVM_UNLIKELY(EXPR) (EXPR)
 #endif
 
-// C++ doesn't support 'extern template' of template specializations.  GCC does,
-// but requires __extension__ before it.  In the header, use this:
-//   EXTERN_TEMPLATE_INSTANTIATION(class foo<bar>);
-// in the .cpp file, use this:
-//   TEMPLATE_INSTANTIATION(class foo<bar>);
-#ifdef __GNUC__
-#define EXTERN_TEMPLATE_INSTANTIATION(X) __extension__ extern template X
-#define TEMPLATE_INSTANTIATION(X) template X
-#else
-#define EXTERN_TEMPLATE_INSTANTIATION(X)
-#define TEMPLATE_INSTANTIATION(X)
-#endif
-
 /// LLVM_ATTRIBUTE_NOINLINE - On compilers where we have a directive to do so,
 /// mark a method "not for inlining".
 #if __has_attribute(noinline) || LLVM_GNUC_PREREQ(3, 4, 0)
@@ -230,7 +195,7 @@
 /// 3.4 supported this but is buggy in various cases and produces unimplemented
 /// errors, just use it in GCC 4.0 and later.
 #if __has_attribute(always_inline) || LLVM_GNUC_PREREQ(4, 0, 0)
-#define LLVM_ATTRIBUTE_ALWAYS_INLINE inline __attribute__((always_inline))
+#define LLVM_ATTRIBUTE_ALWAYS_INLINE __attribute__((always_inline))
 #elif defined(_MSC_VER)
 #define LLVM_ATTRIBUTE_ALWAYS_INLINE __forceinline
 #else
@@ -247,8 +212,20 @@
 
 #if __has_attribute(returns_nonnull) || LLVM_GNUC_PREREQ(4, 9, 0)
 #define LLVM_ATTRIBUTE_RETURNS_NONNULL __attribute__((returns_nonnull))
+#elif defined(_MSC_VER)
+#define LLVM_ATTRIBUTE_RETURNS_NONNULL _Ret_notnull_
 #else
 #define LLVM_ATTRIBUTE_RETURNS_NONNULL
+#endif
+
+/// \macro LLVM_ATTRIBUTE_RETURNS_NOALIAS Used to mark a function as returning a
+/// pointer that does not alias any other valid pointer.
+#ifdef __GNUC__
+#define LLVM_ATTRIBUTE_RETURNS_NOALIAS __attribute__((__malloc__))
+#elif defined(_MSC_VER)
+#define LLVM_ATTRIBUTE_RETURNS_NOALIAS __declspec(restrict)
+#else
+#define LLVM_ATTRIBUTE_RETURNS_NOALIAS
 #endif
 
 /// LLVM_EXTENSION - Support compilers where we have a keyword to suppress
@@ -287,8 +264,31 @@
 /// which causes the program to exit abnormally.
 #if __has_builtin(__builtin_trap) || LLVM_GNUC_PREREQ(4, 3, 0)
 # define LLVM_BUILTIN_TRAP __builtin_trap()
+#elif defined(_MSC_VER)
+// The __debugbreak intrinsic is supported by MSVC, does not require forward
+// declarations involving platform-specific typedefs (unlike RaiseException),
+// results in a call to vectored exception handlers, and encodes to a short
+// instruction that still causes the trapping behavior we want.
+# define LLVM_BUILTIN_TRAP __debugbreak()
 #else
 # define LLVM_BUILTIN_TRAP *(volatile int*)0x11 = 0
+#endif
+
+/// LLVM_BUILTIN_DEBUGTRAP - On compilers which support it, expands to
+/// an expression which causes the program to break while running
+/// under a debugger.
+#if __has_builtin(__builtin_debugtrap)
+# define LLVM_BUILTIN_DEBUGTRAP __builtin_debugtrap()
+#elif defined(_MSC_VER)
+// The __debugbreak intrinsic is supported by MSVC and breaks while
+// running under the debugger, and also supports invoking a debugger
+// when the OS is configured appropriately.
+# define LLVM_BUILTIN_DEBUGTRAP __debugbreak()
+#else
+// Just continue execution when built with compilers that have no
+// support. This is a debugging aid and not intended to force the
+// program to abort if encountered.
+# define LLVM_BUILTIN_DEBUGTRAP
 #endif
 
 /// \macro LLVM_ASSUME_ALIGNED
@@ -301,6 +301,65 @@
            (((uintptr_t(p) % (a)) == 0) ? (p) : (LLVM_BUILTIN_UNREACHABLE, (p)))
 #else
 # define LLVM_ASSUME_ALIGNED(p, a) (p)
+#endif
+
+/// \macro LLVM_ALIGNAS
+/// \brief Used to specify a minimum alignment for a structure or variable. The
+/// alignment must be a constant integer. Use LLVM_PTR_SIZE to compute
+/// alignments in terms of the size of a pointer.
+///
+/// Note that __declspec(align) has special quirks, it's not legal to pass a
+/// structure with __declspec(align) as a formal parameter.
+#ifdef _MSC_VER
+# define LLVM_ALIGNAS(x) __declspec(align(x))
+#elif __GNUC__ && !__has_feature(cxx_alignas) && !LLVM_GNUC_PREREQ(4, 8, 0)
+# define LLVM_ALIGNAS(x) __attribute__((aligned(x)))
+#else
+# define LLVM_ALIGNAS(x) alignas(x)
+#endif
+
+/// \macro LLVM_PACKED
+/// \brief Used to specify a packed structure.
+/// LLVM_PACKED(
+///    struct A {
+///      int i;
+///      int j;
+///      int k;
+///      long long l;
+///   });
+///
+/// LLVM_PACKED_START
+/// struct B {
+///   int i;
+///   int j;
+///   int k;
+///   long long l;
+/// };
+/// LLVM_PACKED_END 
+#ifdef _MSC_VER
+# define LLVM_PACKED(d) __pragma(pack(push, 1)) d __pragma(pack(pop))
+# define LLVM_PACKED_START __pragma(pack(push, 1))
+# define LLVM_PACKED_END   __pragma(pack(pop))
+#else
+# define LLVM_PACKED(d) d __attribute__((packed))
+# define LLVM_PACKED_START _Pragma("pack(push, 1)")
+# define LLVM_PACKED_END   _Pragma("pack(pop)")
+#endif
+
+/// \macro LLVM_PTR_SIZE
+/// \brief A constant integer equivalent to the value of sizeof(void*).
+/// Generally used in combination with LLVM_ALIGNAS or when doing computation in
+/// the preprocessor.
+#ifdef __SIZEOF_POINTER__
+# define LLVM_PTR_SIZE __SIZEOF_POINTER__
+#elif defined(_WIN64)
+# define LLVM_PTR_SIZE 8
+#elif defined(_WIN32)
+# define LLVM_PTR_SIZE 4
+#elif defined(_MSC_VER)
+# error "could not determine LLVM_PTR_SIZE as a constant int for MSVC"
+#else
+# define LLVM_PTR_SIZE sizeof(void *)
 #endif
 
 /// \macro LLVM_FUNCTION_NAME
@@ -327,41 +386,58 @@
 /// \brief Whether LLVM itself is built with AddressSanitizer instrumentation.
 #if __has_feature(address_sanitizer) || defined(__SANITIZE_ADDRESS__)
 # define LLVM_ADDRESS_SANITIZER_BUILD 1
+# include <sanitizer/asan_interface.h>
 #else
 # define LLVM_ADDRESS_SANITIZER_BUILD 0
+# define __asan_poison_memory_region(p, size)
+# define __asan_unpoison_memory_region(p, size)
 #endif
 
-/// \macro LLVM_IS_UNALIGNED_ACCESS_FAST
-/// \brief Is unaligned memory access fast on the host machine.
-///
-/// Don't specialize on alignment for platforms where unaligned memory accesses
-/// generates the same code as aligned memory accesses for common types.
-#if defined(_M_AMD64) || defined(_M_IX86) || defined(__amd64) || \
-    defined(__amd64__) || defined(__x86_64) || defined(__x86_64__) || \
-    defined(_X86_) || defined(__i386) || defined(__i386__)
-# define LLVM_IS_UNALIGNED_ACCESS_FAST 1
+/// \macro LLVM_THREAD_SANITIZER_BUILD
+/// \brief Whether LLVM itself is built with ThreadSanitizer instrumentation.
+#if __has_feature(thread_sanitizer) || defined(__SANITIZE_THREAD__)
+# define LLVM_THREAD_SANITIZER_BUILD 1
 #else
-# define LLVM_IS_UNALIGNED_ACCESS_FAST 0
+# define LLVM_THREAD_SANITIZER_BUILD 0
 #endif
 
-/// \macro LLVM_EXPLICIT
-/// \brief Expands to explicit on compilers which support explicit conversion
-/// operators. Otherwise expands to nothing.
-#if __has_feature(cxx_explicit_conversions) || \
-    defined(__GXX_EXPERIMENTAL_CXX0X__) || LLVM_MSC_PREREQ(1800)
-#define LLVM_EXPLICIT explicit
+#if LLVM_THREAD_SANITIZER_BUILD
+// Thread Sanitizer is a tool that finds races in code.
+// See http://code.google.com/p/data-race-test/wiki/DynamicAnnotations .
+// tsan detects these exact functions by name.
+extern "C" {
+void AnnotateHappensAfter(const char *file, int line, const volatile void *cv);
+void AnnotateHappensBefore(const char *file, int line, const volatile void *cv);
+void AnnotateIgnoreWritesBegin(const char *file, int line);
+void AnnotateIgnoreWritesEnd(const char *file, int line);
+}
+
+// This marker is used to define a happens-before arc. The race detector will
+// infer an arc from the begin to the end when they share the same pointer
+// argument.
+# define TsanHappensBefore(cv) AnnotateHappensBefore(__FILE__, __LINE__, cv)
+
+// This marker defines the destination of a happens-before arc.
+# define TsanHappensAfter(cv) AnnotateHappensAfter(__FILE__, __LINE__, cv)
+
+// Ignore any races on writes between here and the next TsanIgnoreWritesEnd.
+# define TsanIgnoreWritesBegin() AnnotateIgnoreWritesBegin(__FILE__, __LINE__)
+
+// Resume checking for racy writes.
+# define TsanIgnoreWritesEnd() AnnotateIgnoreWritesEnd(__FILE__, __LINE__)
 #else
-#define LLVM_EXPLICIT
+# define TsanHappensBefore(cv)
+# define TsanHappensAfter(cv)
+# define TsanIgnoreWritesBegin()
+# define TsanIgnoreWritesEnd()
 #endif
 
-/// \brief Does the compiler support generalized initializers (using braced
-/// lists and std::initializer_list).  While clang may claim it supports general
-/// initializers, if we're using MSVC's headers, we might not have a usable
-/// std::initializer list type from the STL.  Disable this for now.
-#if __has_feature(cxx_generalized_initializers) && !defined(_MSC_VER)
-#define LLVM_HAS_INITIALIZER_LISTS 1
+/// \macro LLVM_NO_SANITIZE
+/// \brief Disable a particular sanitizer for a function.
+#if __has_attribute(no_sanitize)
+#define LLVM_NO_SANITIZE(KIND) __attribute__((no_sanitize(KIND)))
 #else
-#define LLVM_HAS_INITIALIZER_LISTS 0
+#define LLVM_NO_SANITIZE(KIND)
 #endif
 
 /// \brief Mark debug helper function definitions like dump() that should not be

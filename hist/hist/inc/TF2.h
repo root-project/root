@@ -56,7 +56,7 @@ public:
    template <class PtrObj, typename MemFn>
    TF2(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, Int_t ndim = 2) :
       TF1(name,p,memFn,xmin,xmax,npar,ndim),
-	fYmin(ymin), fYmax(ymax), fNpy(30), fContour(0)
+   fYmin(ymin), fYmax(ymax), fNpy(30), fContour(0)
    {
       fNpx = 30; 
    }
@@ -64,7 +64,7 @@ public:
    template <class PtrObj, typename MemFn>
    TF2(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, const char * , const char *) :
       TF1(name,p,memFn,xmin,xmax,npar,2),
-	fYmin(ymin), fYmax(ymax), fNpy(30), fContour(0)
+   fYmin(ymin), fYmax(ymax), fNpy(30), fContour(0)
    {
       fNpx = 30; 
    }
@@ -74,7 +74,7 @@ public:
    template <typename Func> 
    TF2(const char *name, Func f, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar,Int_t ndim = 2) : 
       TF1(name,f,xmin,xmax,npar,ndim),
-	fYmin(ymin), fYmax(ymax), fNpy(30), fContour(0)
+   fYmin(ymin), fYmax(ymax), fNpy(30), fContour(0)
    {
       fNpx = 30; 
    }
@@ -82,7 +82,7 @@ public:
    template <typename Func> 
    TF2(const char *name, Func f, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar,const char *) : 
       TF1(name,f,xmin,xmax,npar,2),
-	fYmin(ymin), fYmax(ymax), fNpy(30), fContour(0)
+   fYmin(ymin), fYmax(ymax), fNpy(30), fContour(0)
    {
       fNpx = 30; 
    }

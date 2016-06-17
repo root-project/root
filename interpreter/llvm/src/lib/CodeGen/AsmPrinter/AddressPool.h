@@ -11,10 +11,10 @@
 #define LLVM_LIB_CODEGEN_ASMPRINTER_ADDRESSPOOL_H
 
 #include "llvm/ADT/DenseMap.h"
+#include "llvm/MC/MCSymbol.h"
 
 namespace llvm {
 class MCSection;
-class MCSymbol;
 class AsmPrinter;
 // Collection of addresses for this unit and assorted labels.
 // A Symbol->unsigned mapping of addresses used by indirect
@@ -40,7 +40,7 @@ public:
   /// label/symbol.
   unsigned getIndex(const MCSymbol *Sym, bool TLS = false);
 
-  void emit(AsmPrinter &Asm, const MCSection *AddrSection);
+  void emit(AsmPrinter &Asm, MCSection *AddrSection);
 
   bool isEmpty() { return Pool.empty(); }
 

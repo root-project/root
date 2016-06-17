@@ -136,7 +136,7 @@ namespace TMVA {
       // dynamic data table
       class VARn2 {
       public:
-         VARn2() : fNevt(0), fNvar(0) { 
+      VARn2() : fNevt(0), fNvar(0) { 
             fxx = 0;
          }
          ~VARn2() {
@@ -203,7 +203,7 @@ namespace TMVA {
 
    public:
 
-      ClassDef(MethodCFMlpANN_Utils,0)  // Implementation of Clermond-Ferrand artificial neural network
+      ClassDef(MethodCFMlpANN_Utils,0);  // Implementation of Clermond-Ferrand artificial neural network
    };
 
 } // namespace TMVA

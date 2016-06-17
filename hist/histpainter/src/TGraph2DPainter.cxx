@@ -1270,27 +1270,27 @@ void TGraph2DPainter::PaintTriangles_new(Option_t *option)
    if ((cp >= 0) && (sp >= 0.)) {
       fDist = [&](Double_t xd, Double_t yd) -> Double_t { return -(fXNmax-xd+fYNmax-yd);};
    } else if ((cp <= 0) && (sp >= 0.)) {
-	   fDist = [&](Double_t xd, Double_t yd) -> Double_t { return -(fXNmax-xd+yd-fYNmin);};
-	   reverse = kTRUE;
+      fDist = [&](Double_t xd, Double_t yd) -> Double_t { return -(fXNmax-xd+yd-fYNmin);};
+      reverse = kTRUE;
    } else if ((cp <= 0) && (sp <= 0.)) {
-	   fDist = [&](Double_t xd, Double_t yd) -> Double_t { return -(xd-fXNmin+yd-fYNmin);};
+      fDist = [&](Double_t xd, Double_t yd) -> Double_t { return -(xd-fXNmin+yd-fYNmin);};
    } else {
-	   fDist = [&](Double_t xd, Double_t yd) -> Double_t { return -(xd-fXNmin+fYNmax-yd);};
-	   reverse = kTRUE;
+      fDist = [&](Double_t xd, Double_t yd) -> Double_t { return -(xd-fXNmin+fYNmax-yd);};
+      reverse = kTRUE;
    }
 
    typedef std::pair<Double_t, TGraphDelaunay2D::Triangles::const_iterator> DistEntry;
    std::vector<DistEntry> dist;
    for(auto it = fDelaunay2D->begin(); it != fDelaunay2D->end(); ++it){
-	   auto face = *it;
-	   Double_t xd = (face.x[0] + face.x[1] + face.x[2]) / 3;
-	   Double_t yd = (face.y[0] + face.y[1] + face.y[2]) / 3;
+      auto face = *it;
+      Double_t xd = (face.x[0] + face.x[1] + face.x[2]) / 3;
+      Double_t yd = (face.y[0] + face.y[1] + face.y[2]) / 3;
 
-	   dist.emplace_back(fDist(xd, yd), it);
+      dist.emplace_back(fDist(xd, yd), it);
    }
 
    std::sort(dist.begin(), dist.end(),
-		   [&](const DistEntry & a, const DistEntry & b){ return !reverse ? (a.first < b.first) : (b.first < a .first); });
+             [&](const DistEntry & a, const DistEntry & b){ return !reverse ? (a.first < b.first) : (b.first < a .first); });
 
    // Draw the triangles and markers if requested
    fGraph2D->SetFillColor(fGraph2D->GetFillColor());
@@ -1301,9 +1301,9 @@ void TGraph2DPainter::PaintTriangles_new(Option_t *option)
    fGraph2D->TAttLine::Modify();
    int lst = fGraph2D->GetLineStyle();
    for (const auto & it : dist) {
-	  p[0] = it.second->idx[0];
-	  p[1] = it.second->idx[1];
-	  p[2] = it.second->idx[2];
+      p[0] = it.second->idx[0];
+      p[1] = it.second->idx[1];
+      p[2] = it.second->idx[2];
       for (Int_t k=0; k<3; k++) {
          if(fX[p[k]] < fXmin || fX[p[k]] > fXmax) goto endloop;
          if(fY[p[k]] < fYmin || fY[p[k]] > fYmax) goto endloop;

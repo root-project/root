@@ -44,10 +44,10 @@ public:
    virtual Double_t   Chisquare(Int_t npar, Double_t *params) const ;
    virtual void       Clear(Option_t *option="");
    virtual Int_t      ExecuteCommand(const char *command, Double_t *args, Int_t nargs);
-   virtual void       FitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
-   virtual void       FitChisquareI(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
-   virtual void       FitLikelihood(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
-   virtual void       FitLikelihoodI(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
+   // virtual void       FitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
+   // virtual void       FitChisquareI(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
+   // virtual void       FitLikelihood(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
+   // virtual void       FitLikelihoodI(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
    virtual void       FixParameter(Int_t ipar);
    virtual void       GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t *x, Double_t *ci, Double_t cl=0.95);
    virtual void       GetConfidenceIntervals(TObject *obj, Double_t cl=0.95);

@@ -51,7 +51,7 @@ AggregateArgsOpt("aggregate-extracted-args", cl::Hidden,
 /// \brief Test whether a block is valid for extraction.
 static bool isBlockValidForExtraction(const BasicBlock &BB) {
   // Landing pads must be in the function where they were inserted for cleanup.
-  if (BB.isLandingPad())
+  if (BB.isEHPad())
     return false;
 
   // Don't hoist code containing allocas, invokes, or vastarts.
@@ -77,15 +77,15 @@ static SetVector<BasicBlock *> buildExtractionBlockSet(IteratorT BBBegin,
 
   // Loop over the blocks, adding them to our set-vector, and aborting with an
   // empty set if we encounter invalid blocks.
-  for (IteratorT I = BBBegin, E = BBEnd; I != E; ++I) {
-    if (!Result.insert(*I))
+  do {
+    if (!Result.insert(*BBBegin))
       llvm_unreachable("Repeated basic blocks in extraction input");
 
-    if (!isBlockValidForExtraction(**I)) {
+    if (!isBlockValidForExtraction(**BBBegin)) {
       Result.clear();
       return Result;
     }
-  }
+  } while (++BBBegin != BBEnd);
 
 #ifndef NDEBUG
   for (SetVector<BasicBlock *>::iterator I = std::next(Result.begin()),
@@ -175,7 +175,7 @@ void CodeExtractor::findInputsOutputs(ValueSet &Inputs,
 
       for (User *U : II->users())
         if (!definedInRegion(Blocks, U)) {
-          Outputs.insert(II);
+          Outputs.insert(&*II);
           break;
         }
     }
@@ -211,7 +211,7 @@ void CodeExtractor::severSplitPHINodes(BasicBlock *&Header) {
   // containing PHI nodes merging values from outside of the region, and a
   // second that contains all of the code for the block and merges back any
   // incoming values from inside of the region.
-  BasicBlock::iterator AfterPHIs = Header->getFirstNonPHI();
+  BasicBlock::iterator AfterPHIs = Header->getFirstNonPHI()->getIterator();
   BasicBlock *NewBB = Header->splitBasicBlock(AfterPHIs,
                                               Header->getName()+".ce");
 
@@ -246,7 +246,7 @@ void CodeExtractor::severSplitPHINodes(BasicBlock *&Header) {
       // Create a new PHI node in the new region, which has an incoming value
       // from OldPred of PN.
       PHINode *NewPN = PHINode::Create(PN->getType(), 1 + NumPredsFromRegion,
-                                       PN->getName()+".ce", NewBB->begin());
+                                       PN->getName() + ".ce", &NewBB->front());
       NewPN->addIncoming(PN, OldPred);
 
       // Loop over all of the incoming value in PN, moving them to NewPN if they
@@ -266,7 +266,8 @@ void CodeExtractor::splitReturnBlocks() {
   for (SetVector<BasicBlock *>::iterator I = Blocks.begin(), E = Blocks.end();
        I != E; ++I)
     if (ReturnInst *RI = dyn_cast<ReturnInst>((*I)->getTerminator())) {
-      BasicBlock *New = (*I)->splitBasicBlock(RI, (*I)->getName()+".ret");
+      BasicBlock *New =
+          (*I)->splitBasicBlock(RI->getIterator(), (*I)->getName() + ".ret");
       if (DT) {
         // Old dominates New. New node dominates all other nodes dominated
         // by Old.
@@ -332,11 +333,11 @@ Function *CodeExtractor::constructFunction(const ValueSet &inputs,
     DEBUG(dbgs() << **i << ", ");
   DEBUG(dbgs() << ")\n");
 
+  StructType *StructTy;
   if (AggregateArgs && (inputs.size() + outputs.size() > 0)) {
-    PointerType *StructPtr =
-           PointerType::getUnqual(StructType::get(M->getContext(), paramTy));
+    StructTy = StructType::get(M->getContext(), paramTy);
     paramTy.clear();
-    paramTy.push_back(StructPtr);
+    paramTy.push_back(PointerType::getUnqual(StructTy));
   }
   FunctionType *funcType =
                   FunctionType::get(RetTy, paramTy, false);
@@ -364,11 +365,11 @@ Function *CodeExtractor::constructFunction(const ValueSet &inputs,
       Idx[0] = Constant::getNullValue(Type::getInt32Ty(header->getContext()));
       Idx[1] = ConstantInt::get(Type::getInt32Ty(header->getContext()), i);
       TerminatorInst *TI = newFunction->begin()->getTerminator();
-      GetElementPtrInst *GEP = 
-        GetElementPtrInst::Create(AI, Idx, "gep_" + inputs[i]->getName(), TI);
+      GetElementPtrInst *GEP = GetElementPtrInst::Create(
+          StructTy, &*AI, Idx, "gep_" + inputs[i]->getName(), TI);
       RewriteVal = new LoadInst(GEP, "loadgep_" + inputs[i]->getName(), TI);
     } else
-      RewriteVal = AI++;
+      RewriteVal = &*AI++;
 
     std::vector<User*> Users(inputs[i]->user_begin(), inputs[i]->user_end());
     for (std::vector<User*>::iterator use = Users.begin(), useE = Users.end();
@@ -440,13 +441,14 @@ emitCallAndSwitchStatement(Function *newFunction, BasicBlock *codeReplacer,
       StructValues.push_back(*i);
     } else {
       AllocaInst *alloca =
-        new AllocaInst((*i)->getType(), nullptr, (*i)->getName()+".loc",
-                       codeReplacer->getParent()->begin()->begin());
+          new AllocaInst((*i)->getType(), nullptr, (*i)->getName() + ".loc",
+                         &codeReplacer->getParent()->front().front());
       ReloadOutputs.push_back(alloca);
       params.push_back(alloca);
     }
   }
 
+  StructType *StructArgTy = nullptr;
   AllocaInst *Struct = nullptr;
   if (AggregateArgs && (inputs.size() + outputs.size() > 0)) {
     std::vector<Type*> ArgTypes;
@@ -455,19 +457,17 @@ emitCallAndSwitchStatement(Function *newFunction, BasicBlock *codeReplacer,
       ArgTypes.push_back((*v)->getType());
 
     // Allocate a struct at the beginning of this function
-    Type *StructArgTy = StructType::get(newFunction->getContext(), ArgTypes);
-    Struct =
-      new AllocaInst(StructArgTy, nullptr, "structArg",
-                     codeReplacer->getParent()->begin()->begin());
+    StructArgTy = StructType::get(newFunction->getContext(), ArgTypes);
+    Struct = new AllocaInst(StructArgTy, nullptr, "structArg",
+                            &codeReplacer->getParent()->front().front());
     params.push_back(Struct);
 
     for (unsigned i = 0, e = inputs.size(); i != e; ++i) {
       Value *Idx[2];
       Idx[0] = Constant::getNullValue(Type::getInt32Ty(Context));
       Idx[1] = ConstantInt::get(Type::getInt32Ty(Context), i);
-      GetElementPtrInst *GEP =
-        GetElementPtrInst::Create(Struct, Idx,
-                                  "gep_" + StructValues[i]->getName());
+      GetElementPtrInst *GEP = GetElementPtrInst::Create(
+          StructArgTy, Struct, Idx, "gep_" + StructValues[i]->getName());
       codeReplacer->getInstList().push_back(GEP);
       StoreInst *SI = new StoreInst(StructValues[i], GEP);
       codeReplacer->getInstList().push_back(SI);
@@ -491,9 +491,8 @@ emitCallAndSwitchStatement(Function *newFunction, BasicBlock *codeReplacer,
       Value *Idx[2];
       Idx[0] = Constant::getNullValue(Type::getInt32Ty(Context));
       Idx[1] = ConstantInt::get(Type::getInt32Ty(Context), FirstOut + i);
-      GetElementPtrInst *GEP
-        = GetElementPtrInst::Create(Struct, Idx,
-                                    "gep_reload_" + outputs[i]->getName());
+      GetElementPtrInst *GEP = GetElementPtrInst::Create(
+          StructArgTy, Struct, Idx, "gep_reload_" + outputs[i]->getName());
       codeReplacer->getInstList().push_back(GEP);
       Output = GEP;
     } else {
@@ -567,8 +566,12 @@ emitCallAndSwitchStatement(Function *newFunction, BasicBlock *codeReplacer,
 
             bool DominatesDef = true;
 
-            if (InvokeInst *Invoke = dyn_cast<InvokeInst>(outputs[out])) {
-              DefBlock = Invoke->getNormalDest();
+            BasicBlock *NormalDest = nullptr;
+            if (auto *Invoke = dyn_cast<InvokeInst>(outputs[out]))
+              NormalDest = Invoke->getNormalDest();
+
+            if (NormalDest) {
+              DefBlock = NormalDest;
 
               // Make sure we are looking at the original successor block, not
               // at a newly inserted exit block, which won't be in the dominator
@@ -606,13 +609,12 @@ emitCallAndSwitchStatement(Function *newFunction, BasicBlock *codeReplacer,
                 Idx[0] = Constant::getNullValue(Type::getInt32Ty(Context));
                 Idx[1] = ConstantInt::get(Type::getInt32Ty(Context),
                                           FirstOut+out);
-                GetElementPtrInst *GEP =
-                  GetElementPtrInst::Create(OAI, Idx,
-                                            "gep_" + outputs[out]->getName(),
-                                            NTRet);
+                GetElementPtrInst *GEP = GetElementPtrInst::Create(
+                    StructArgTy, &*OAI, Idx, "gep_" + outputs[out]->getName(),
+                    NTRet);
                 new StoreInst(outputs[out], GEP, NTRet);
               } else {
-                new StoreInst(outputs[out], OAI, NTRet);
+                new StoreInst(outputs[out], &*OAI, NTRet);
               }
             }
             // Advance output iterator even if we don't emit a store

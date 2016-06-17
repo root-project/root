@@ -23,6 +23,55 @@ class PPCSubtarget;
 
 class PPCFrameLowering: public TargetFrameLowering {
   const PPCSubtarget &Subtarget;
+  const unsigned ReturnSaveOffset;
+  const unsigned TOCSaveOffset;
+  const unsigned FramePointerSaveOffset;
+  const unsigned LinkageSize;
+  const unsigned BasePointerSaveOffset;
+
+  /**
+   * \brief Find register[s] that can be used in function prologue and epilogue
+   *
+   * Find register[s] that can be use as scratch register[s] in function
+   * prologue and epilogue to save various registers (Link Register, Base
+   * Pointer, etc.). Prefer R0/R12, if available. Otherwise choose whatever
+   * register[s] are available.
+   *
+   * This method will return true if it is able to find enough unique scratch
+   * registers (1 or 2 depending on the requirement). If it is unable to find
+   * enough available registers in the block, it will return false and set
+   * any passed output parameter that corresponds to a required unique register
+   * to PPC::NoRegister.
+   *
+   * \param[in] MBB The machine basic block to find an available register for
+   * \param[in] UseAtEnd Specify whether the scratch register will be used at
+   *                     the end of the basic block (i.e., will the scratch
+   *                     register kill a register defined in the basic block)
+   * \param[in] TwoUniqueRegsRequired Specify whether this basic block will
+   *                                  require two unique scratch registers.
+   * \param[out] SR1 The scratch register to use
+   * \param[out] SR2 The second scratch register. If this pointer is not null
+   *                 the function will attempt to set it to an available
+   *                 register regardless of whether there is a hard requirement
+   *                 for two unique scratch registers.
+   * \return true if the required number of registers was found.
+   *         false if the required number of scratch register weren't available.
+   *         If either output parameter refers to a required scratch register
+   *         that isn't available, it will be set to an invalid value.
+   */
+  bool findScratchRegister(MachineBasicBlock *MBB,
+                           bool UseAtEnd,
+                           bool TwoUniqueRegsRequired = false,
+                           unsigned *SR1 = nullptr,
+                           unsigned *SR2 = nullptr) const;
+  bool twoUniqueScratchRegsRequired(MachineBasicBlock *MBB) const;
+
+  /**
+   * \brief Create branch instruction for PPC::TCRETURN* (tail call return)
+   *
+   * \param[in] MBB that is terminated by PPC::TCRETURN*
+   */
+  void createTailCallBranchInstr(MachineBasicBlock &MBB) const;
 
 public:
   PPCFrameLowering(const PPCSubtarget &STI);
@@ -33,15 +82,15 @@ public:
 
   /// emitProlog/emitEpilog - These methods insert prolog and epilog code into
   /// the function.
-  void emitPrologue(MachineFunction &MF) const override;
+  void emitPrologue(MachineFunction &MF, MachineBasicBlock &MBB) const override;
   void emitEpilogue(MachineFunction &MF, MachineBasicBlock &MBB) const override;
 
   bool hasFP(const MachineFunction &MF) const override;
   bool needsFP(const MachineFunction &MF) const;
   void replaceFPWithRealFP(MachineFunction &MF) const;
 
-  void processFunctionBeforeCalleeSavedScan(MachineFunction &MF,
-                                     RegScavenger *RS = nullptr) const override;
+  void determineCalleeSaves(MachineFunction &MF, BitVector &SavedRegs,
+                            RegScavenger *RS = nullptr) const override;
   void processFunctionBeforeFrameFinalized(MachineFunction &MF,
                                      RegScavenger *RS = nullptr) const override;
   void addScavengingSpillSlot(MachineFunction &MF, RegScavenger *RS) const;
@@ -51,9 +100,9 @@ public:
                                  const std::vector<CalleeSavedInfo> &CSI,
                                  const TargetRegisterInfo *TRI) const override;
 
-  void eliminateCallFramePseudoInstr(MachineFunction &MF,
-                                  MachineBasicBlock &MBB,
-                                  MachineBasicBlock::iterator I) const override;
+  MachineBasicBlock::iterator
+  eliminateCallFramePseudoInstr(MachineFunction &MF, MachineBasicBlock &MBB,
+                                MachineBasicBlock::iterator I) const override;
 
   bool restoreCalleeSavedRegisters(MachineBasicBlock &MBB,
                                   MachineBasicBlock::iterator MI,
@@ -67,59 +116,33 @@ public:
 
   /// getReturnSaveOffset - Return the previous frame offset to save the
   /// return address.
-  static unsigned getReturnSaveOffset(bool isPPC64, bool isDarwinABI) {
-    if (isDarwinABI)
-      return isPPC64 ? 16 : 8;
-    // SVR4 ABI:
-    return isPPC64 ? 16 : 4;
-  }
+  unsigned getReturnSaveOffset() const { return ReturnSaveOffset; }
 
   /// getTOCSaveOffset - Return the previous frame offset to save the
   /// TOC register -- 64-bit SVR4 ABI only.
-  static unsigned getTOCSaveOffset(bool isELFv2ABI) {
-    return isELFv2ABI ? 24 : 40;
-  }
+  unsigned getTOCSaveOffset() const { return TOCSaveOffset; }
 
   /// getFramePointerSaveOffset - Return the previous frame offset to save the
   /// frame pointer.
-  static unsigned getFramePointerSaveOffset(bool isPPC64, bool isDarwinABI) {
-    // For the Darwin ABI:
-    // We cannot use the TOC save slot (offset +20) in the PowerPC linkage area
-    // for saving the frame pointer (if needed.)  While the published ABI has
-    // not used this slot since at least MacOSX 10.2, there is older code
-    // around that does use it, and that needs to continue to work.
-    if (isDarwinABI)
-      return isPPC64 ? -8U : -4U;
-
-    // SVR4 ABI: First slot in the general register save area.
-    return isPPC64 ? -8U : -4U;
-  }
+  unsigned getFramePointerSaveOffset() const { return FramePointerSaveOffset; }
 
   /// getBasePointerSaveOffset - Return the previous frame offset to save the
   /// base pointer.
-  static unsigned getBasePointerSaveOffset(bool isPPC64,
-                                           bool isDarwinABI,
-                                           bool isPIC) {
-    if (isDarwinABI)
-      return isPPC64 ? -16U : -8U;
-
-    // SVR4 ABI: First slot in the general register save area.
-    return isPPC64 ? -16U : isPIC ? -12U : -8U;
-  }
+  unsigned getBasePointerSaveOffset() const { return BasePointerSaveOffset; }
 
   /// getLinkageSize - Return the size of the PowerPC ABI linkage area.
   ///
-  static unsigned getLinkageSize(bool isPPC64, bool isDarwinABI,
-                                 bool isELFv2ABI) {
-    if (isDarwinABI || isPPC64)
-      return (isELFv2ABI ? 4 : 6) * (isPPC64 ? 8 : 4);
-
-    // SVR4 ABI:
-    return 8;
-  }
+  unsigned getLinkageSize() const { return LinkageSize; }
 
   const SpillSlot *
   getCalleeSavedSpillSlots(unsigned &NumEntries) const override;
+
+  bool enableShrinkWrapping(const MachineFunction &MF) const override;
+
+  /// Methods used by shrink wrapping to determine if MBB can be used for the
+  /// function prologue/epilogue.
+  bool canUseAsPrologue(const MachineBasicBlock &MBB) const override;
+  bool canUseAsEpilogue(const MachineBasicBlock &MBB) const override;
 };
 } // End llvm namespace
 

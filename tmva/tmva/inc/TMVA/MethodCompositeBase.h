@@ -115,7 +115,7 @@ namespace TMVA {
       //the weight of every classifier used in the GetMVA method
       std::vector<Double_t>      fMethodWeight;
 
-      ClassDef(MethodCompositeBase,0)
+      ClassDef(MethodCompositeBase,0);
 
    };
 }

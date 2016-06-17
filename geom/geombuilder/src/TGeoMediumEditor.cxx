@@ -1,5 +1,5 @@
 // @(#):$Id: c816a00a89512fcc6cd4a75fb1343c76ebaa3c24 $
-// Author: M.Gheata 
+// Author: M.Gheata
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -10,9 +10,9 @@
  *************************************************************************/
 
 //______________________________________________________________________________
-//                                                                      
+//
 //  TGeoMediumEditor - Editor class for TGeo tracking media
-//                                                                      
+//
 //______________________________________________________________________________
 
 #include "TGeoMediumEditor.h"
@@ -40,7 +40,7 @@ enum ETGeoMediumWid {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor for medium editor   
+/// Constructor for medium editor
 
 TGeoMediumEditor::TGeoMediumEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
@@ -51,7 +51,7 @@ TGeoMediumEditor::TGeoMediumEditor(const TGWindow *p, Int_t width,
    fIsModified = kFALSE;
    Pixel_t color;
    TGLabel *label;
-      
+
    // TextEntry for medium name
    MakeTitle("Name");
    fMedName = new TGTextEntry(this, "", kMED_NAME);
@@ -96,9 +96,9 @@ TGeoMediumEditor::TGeoMediumEditor(const TGWindow *p, Int_t width,
    fEditMaterial = new TGTextButton(f1, "Edit");
    f1->AddFrame(fEditMaterial, new TGLayoutHints(kLHintsLeft, 1, 1, 2, 2));
    fEditMaterial->SetToolTipText("Edit selected material");
-   fEditMaterial->Associate(this);   
+   fEditMaterial->Associate(this);
    AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 2, 2, 0, 0));
-   
+
 // Combo box for magnetic field option
    f1 = new TGCompositeFrame(this, 145, 10, kHorizontalFrame | kLHintsExpandX | kFixedWidth | kOwnBackground);
    f1->AddFrame(label = new TGLabel(f1, "Mag. field option"), new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
@@ -143,7 +143,7 @@ TGeoMediumEditor::TGeoMediumEditor(const TGWindow *p, Int_t width,
    fMedTmaxfd->Resize(90, fMedTmaxfd->GetDefaultHeight());
    f2->AddFrame(fMedTmaxfd, new TGLayoutHints(kLHintsRight | kFixedWidth , 2, 2, 2, 2));
    compxyz->AddFrame(f2, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 1, 1));
-   
+
    // Number entry for stemax
    TGCompositeFrame *f3 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
                                  kLHintsExpandX | kFixedWidth | kOwnBackground);
@@ -191,7 +191,7 @@ TGeoMediumEditor::TGeoMediumEditor(const TGWindow *p, Int_t width,
    fMedStmin->Resize(90, fMedStmin->GetDefaultHeight());
    f6->AddFrame(fMedStmin, new TGLayoutHints(kLHintsRight | kFixedWidth , 2, 2, 2, 2));
    compxyz->AddFrame(f6, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 1, 1));
-   
+
    compxyz->Resize(160,50);
    AddFrame(compxyz, new TGLayoutHints(kLHintsLeft, 2, 2, 2, 2));
 
@@ -203,7 +203,7 @@ TGeoMediumEditor::TGeoMediumEditor(const TGWindow *p, Int_t width,
    fUndo = new TGTextButton(f23, " &Undo ");
    f23->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
    fUndo->Associate(this);
-   AddFrame(f23,  new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));  
+   AddFrame(f23,  new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -216,10 +216,10 @@ TGeoMediumEditor::~TGeoMediumEditor()
    while ((el = (TGFrameElement *)next())) {
       if (el->fFrame->IsA() == TGCompositeFrame::Class()  ||
           el->fFrame->IsA() == TGHorizontalFrame::Class() ||
-          el->fFrame->IsA() == TGVerticalFrame::Class()) 
+          el->fFrame->IsA() == TGVerticalFrame::Class())
          TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
-   Cleanup();   
+   Cleanup();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -251,8 +251,8 @@ void TGeoMediumEditor::SetModel(TObject* obj)
 {
    if (obj == 0 || !(obj->IsA()==TGeoMedium::Class())) {
       SetActive(kFALSE);
-      return;                 
-   } 
+      return;
+   }
    fMedium = (TGeoMedium*)obj;
    const char *sname = fMedium->GetName();
    if (!strcmp(sname, fMedium->ClassName())) fMedName->SetText("");
@@ -270,8 +270,8 @@ void TGeoMediumEditor::SetModel(TObject* obj)
       fMagfldOption->AddEntry("User decision", 1);
       fMagfldOption->AddEntry("Runge-Kutta", 2);
       fMagfldOption->AddEntry("Helix", 3);
-      fMagfldOption->AddEntry("Helix3", 4);      
-      fMagfldOption->AddEntry("Unknown option", 5);      
+      fMagfldOption->AddEntry("Helix3", 4);
+      fMagfldOption->AddEntry("Unknown option", 5);
    }
    Int_t ifld = (Int_t)fMedium->GetParam(1);
    switch (ifld) {
@@ -281,7 +281,7 @@ void TGeoMediumEditor::SetModel(TObject* obj)
       case -1:
          fMagfldOption->Select(1);
          break;
-      case 1:      
+      case 1:
          fMagfldOption->Select(2);
          break;
       case 2:
@@ -293,7 +293,7 @@ void TGeoMediumEditor::SetModel(TObject* obj)
       default:
          fMagfldOption->Select(5);
          break;
-   }         
+   }
 
    fMedFieldm->SetNumber(fMedium->GetParam(2));
    fMedTmaxfd->SetNumber(fMedium->GetParam(3));
@@ -301,11 +301,11 @@ void TGeoMediumEditor::SetModel(TObject* obj)
    fMedDeemax->SetNumber(fMedium->GetParam(5));
    fMedEpsil->SetNumber(fMedium->GetParam(6));
    fMedStmin->SetNumber(fMedium->GetParam(7));
-   
+
    fUndo->SetEnabled(kFALSE);
    fIsModified = kFALSE;
-   
-   
+
+
    if (fInit) ConnectSignals2Slots();
    SetActive();
 }
@@ -341,7 +341,7 @@ void TGeoMediumEditor::DoMedId()
 void TGeoMediumEditor::DoSelectMaterial()
 {
    TGeoMaterial *material = fSelectedMaterial;
-   new TGeoMaterialDialog(fBSelMaterial, gClient->GetRoot(), 200,300);  
+   new TGeoMaterialDialog(fBSelMaterial, gClient->GetRoot(), 200,300);
    fSelectedMaterial = (TGeoMaterial*)TGeoMaterialDialog::GetSelected();
    if (fSelectedMaterial) fLSelMaterial->SetText(fSelectedMaterial->GetName());
    else fSelectedMaterial = material;
@@ -422,22 +422,22 @@ void TGeoMediumEditor::DoApply()
    if (ifield>0) {
       ifield -= 1.;
       if (ifield < 1.) ifield -= 1.;
-   }   
+   }
    Double_t fieldm = fMedFieldm->GetNumber();
    Double_t tmaxfd = fMedTmaxfd->GetNumber();
    Double_t stemax = fMedStemax->GetNumber();
    Double_t deemax = fMedDeemax->GetNumber();
    Double_t epsil = fMedEpsil->GetNumber();
    Double_t stmin = fMedStmin->GetNumber();
-   
-   fMedium->SetParam(0,isvol); 
-   fMedium->SetParam(1,ifield); 
-   fMedium->SetParam(2,fieldm); 
-   fMedium->SetParam(3,tmaxfd); 
-   fMedium->SetParam(4,stemax); 
-   fMedium->SetParam(5,deemax); 
-   fMedium->SetParam(6,epsil); 
-   fMedium->SetParam(7,stmin); 
+
+   fMedium->SetParam(0,isvol);
+   fMedium->SetParam(1,ifield);
+   fMedium->SetParam(2,fieldm);
+   fMedium->SetParam(3,tmaxfd);
+   fMedium->SetParam(4,stemax);
+   fMedium->SetParam(5,deemax);
+   fMedium->SetParam(6,epsil);
+   fMedium->SetParam(7,stmin);
    if (strcmp(fMedium->GetName(), fMedName->GetText())) fMedium->SetName(fMedName->GetText());
    if (fMedium->GetId() != fMedId->GetIntNumber()) fMedium->SetId(fMedId->GetIntNumber());
 }
@@ -448,4 +448,4 @@ void TGeoMediumEditor::DoApply()
 void TGeoMediumEditor::DoUndo()
 {
 }
-   
+

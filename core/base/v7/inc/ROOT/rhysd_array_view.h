@@ -29,6 +29,8 @@
 
 namespace std {
 
+inline namespace __ROOT {
+
 using std::size_t;
 
 namespace detail {
@@ -539,6 +541,7 @@ array_view<T> make_view(std::initializer_list<T> const& l)
 }
 // }}}
 
+} // inline namespace __ROOT
 } // namespace std
 
 

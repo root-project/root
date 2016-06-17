@@ -27,7 +27,7 @@
 
 namespace llvm {
   namespace MipsISD {
-    enum NodeType {
+    enum NodeType : unsigned {
       // Start the numbering from where ISD NodeType finishes.
       FIRST_NUMBER = ISD::BUILTIN_OP_END,
 
@@ -67,6 +67,10 @@ namespace llvm {
       // Return
       Ret,
 
+      // Interrupt, exception, error trap Return
+      ERet,
+
+      // Software Exception Return.
       EH_RETURN,
 
       // Node used to extract integer from accumulator.
@@ -227,7 +231,16 @@ namespace llvm {
     FastISel *createFastISel(FunctionLoweringInfo &funcInfo,
                              const TargetLibraryInfo *libInfo) const override;
 
-    MVT getScalarShiftAmountTy(EVT LHSTy) const override { return MVT::i32; }
+    MVT getScalarShiftAmountTy(const DataLayout &, EVT) const override {
+      return MVT::i32;
+    }
+
+    bool isCheapToSpeculateCttz() const override;
+    bool isCheapToSpeculateCtlz() const override;
+
+    ISD::NodeType getExtendForAtomicOps() const override {
+      return ISD::SIGN_EXTEND;
+    }
 
     void LowerOperationWrapper(SDNode *N,
                                SmallVectorImpl<SDValue> &Results,
@@ -247,7 +260,8 @@ namespace llvm {
     const char *getTargetNodeName(unsigned Opcode) const override;
 
     /// getSetCCResultType - get the ISD::SETCC result ValueType
-    EVT getSetCCResultType(LLVMContext &Context, EVT VT) const override;
+    EVT getSetCCResultType(const DataLayout &DL, LLVMContext &Context,
+                           EVT VT) const override;
 
     SDValue PerformDAGCombine(SDNode *N, DAGCombinerInfo &DCI) const override;
 
@@ -255,15 +269,32 @@ namespace llvm {
     EmitInstrWithCustomInserter(MachineInstr *MI,
                                 MachineBasicBlock *MBB) const override;
 
-    struct LTStr {
-      bool operator()(const char *S1, const char *S2) const {
-        return strcmp(S1, S2) < 0;
-      }
-    };
-
     void HandleByVal(CCState *, unsigned &, unsigned) const override;
 
-    unsigned getRegisterByName(const char* RegName, EVT VT) const override;
+    unsigned getRegisterByName(const char* RegName, EVT VT,
+                               SelectionDAG &DAG) const override;
+
+    /// If a physical register, this returns the register that receives the
+    /// exception address on entry to an EH pad.
+    unsigned
+    getExceptionPointerRegister(const Constant *PersonalityFn) const override {
+      return ABI.IsN64() ? Mips::A0_64 : Mips::A0;
+    }
+
+    /// If a physical register, this returns the register that receives the
+    /// exception typeid on entry to a landing pad.
+    unsigned
+    getExceptionSelectorRegister(const Constant *PersonalityFn) const override {
+      return ABI.IsN64() ? Mips::A1_64 : Mips::A1;
+    }
+
+    /// Returns true if a cast between SrcAS and DestAS is a noop.
+    bool isNoopAddrSpaceCast(unsigned SrcAS, unsigned DestAS) const override {
+      // Mips doesn't have any special address spaces so we just reserve
+      // the first 256 for software use (e.g. OpenCL) and treat casts
+      // between them as noops.
+      return SrcAS < 256 && DestAS < 256;
+    }
 
   protected:
     SDValue getGlobalReg(SelectionDAG &DAG, EVT Ty) const;
@@ -278,9 +309,10 @@ namespace llvm {
       unsigned GOTFlag = IsN32OrN64 ? MipsII::MO_GOT_PAGE : MipsII::MO_GOT;
       SDValue GOT = DAG.getNode(MipsISD::Wrapper, DL, Ty, getGlobalReg(DAG, Ty),
                                 getTargetNode(N, Ty, DAG, GOTFlag));
-      SDValue Load = DAG.getLoad(Ty, DL, DAG.getEntryNode(), GOT,
-                                 MachinePointerInfo::getGOT(), false, false,
-                                 false, 0);
+      SDValue Load =
+          DAG.getLoad(Ty, DL, DAG.getEntryNode(), GOT,
+                      MachinePointerInfo::getGOT(DAG.getMachineFunction()),
+                      false, false, false, 0);
       unsigned LoFlag = IsN32OrN64 ? MipsII::MO_GOT_OFST : MipsII::MO_ABS_LO;
       SDValue Lo = DAG.getNode(MipsISD::Lo, DL, Ty,
                                getTargetNode(N, Ty, DAG, LoFlag));
@@ -402,7 +434,6 @@ namespace llvm {
     SDValue lowerGlobalTLSAddress(SDValue Op, SelectionDAG &DAG) const;
     SDValue lowerJumpTable(SDValue Op, SelectionDAG &DAG) const;
     SDValue lowerSELECT(SDValue Op, SelectionDAG &DAG) const;
-    SDValue lowerSELECT_CC(SDValue Op, SelectionDAG &DAG) const;
     SDValue lowerSETCC(SDValue Op, SelectionDAG &DAG) const;
     SDValue lowerVASTART(SDValue Op, SelectionDAG &DAG) const;
     SDValue lowerVAARG(SDValue Op, SelectionDAG &DAG) const;
@@ -475,9 +506,13 @@ namespace llvm {
                         const SmallVectorImpl<SDValue> &OutVals,
                         SDLoc dl, SelectionDAG &DAG) const override;
 
+    SDValue LowerInterruptReturn(SmallVectorImpl<SDValue> &RetOps, SDLoc DL,
+                                 SelectionDAG &DAG) const;
+
+    bool shouldSignExtendTypeInLibCall(EVT Type, bool IsSigned) const override;
+
     // Inline asm support
-    ConstraintType
-      getConstraintType(const std::string &Constraint) const override;
+    ConstraintType getConstraintType(StringRef Constraint) const override;
 
     /// Examine constraint string and operand type and determine a weight value.
     /// The operand object must already have been set up with the operand type.
@@ -489,9 +524,9 @@ namespace llvm {
     std::pair<unsigned, const TargetRegisterClass *>
     parseRegForInlineAsmConstraint(StringRef C, MVT VT) const;
 
-    std::pair<unsigned, const TargetRegisterClass*>
-              getRegForInlineAsmConstraint(const std::string &Constraint,
-                                           MVT VT) const override;
+    std::pair<unsigned, const TargetRegisterClass *>
+    getRegForInlineAsmConstraint(const TargetRegisterInfo *TRI,
+                                 StringRef Constraint, MVT VT) const override;
 
     /// LowerAsmOperandForConstraint - Lower the specified operand into the Ops
     /// vector.  If it is invalid, don't add anything to Ops. If hasMemory is
@@ -502,7 +537,17 @@ namespace llvm {
                                       std::vector<SDValue> &Ops,
                                       SelectionDAG &DAG) const override;
 
-    bool isLegalAddressingMode(const AddrMode &AM, Type *Ty) const override;
+    unsigned
+    getInlineAsmMemConstraint(StringRef ConstraintCode) const override {
+      if (ConstraintCode == "R")
+        return InlineAsm::Constraint_R;
+      else if (ConstraintCode == "ZC")
+        return InlineAsm::Constraint_ZC;
+      return TargetLowering::getInlineAsmMemConstraint(ConstraintCode);
+    }
+
+    bool isLegalAddressingMode(const DataLayout &DL, const AddrMode &AM,
+                               Type *Ty, unsigned AS) const override;
 
     bool isOffsetFoldingLegal(const GlobalAddressSDNode *GA) const override;
 
@@ -518,6 +563,11 @@ namespace llvm {
     bool isFPImmLegal(const APFloat &Imm, EVT VT) const override;
 
     unsigned getJumpTableEncoding() const override;
+    bool useSoftFloat() const override;
+
+    bool shouldInsertFencesForAtomic(const Instruction *I) const override {
+      return true;
+    }
 
     /// Emit a sign-extension using sll/sra, seb, or seh appropriately.
     MachineBasicBlock *emitSignExtendToI32InReg(MachineInstr *MI,

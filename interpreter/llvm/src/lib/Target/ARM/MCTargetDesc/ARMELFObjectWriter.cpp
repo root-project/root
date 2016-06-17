@@ -32,12 +32,12 @@ namespace {
   public:
     ARMELFObjectWriter(uint8_t OSABI);
 
-    virtual ~ARMELFObjectWriter();
+    ~ARMELFObjectWriter() override;
 
-    unsigned GetRelocType(const MCValue &Target, const MCFixup &Fixup,
-                          bool IsPCRel) const override;
+    unsigned getRelocType(MCContext &Ctx, const MCValue &Target,
+                          const MCFixup &Fixup, bool IsPCRel) const override;
 
-    bool needsRelocateWithSymbol(const MCSymbolData &SD,
+    bool needsRelocateWithSymbol(const MCSymbol &Sym,
                                  unsigned Type) const override;
   };
 }
@@ -49,7 +49,7 @@ ARMELFObjectWriter::ARMELFObjectWriter(uint8_t OSABI)
 
 ARMELFObjectWriter::~ARMELFObjectWriter() {}
 
-bool ARMELFObjectWriter::needsRelocateWithSymbol(const MCSymbolData &SD,
+bool ARMELFObjectWriter::needsRelocateWithSymbol(const MCSymbol &Sym,
                                                  unsigned Type) const {
   // FIXME: This is extremely conservative. This really needs to use a
   // whitelist with a clear explanation for why each realocation needs to
@@ -67,7 +67,7 @@ bool ARMELFObjectWriter::needsRelocateWithSymbol(const MCSymbolData &SD,
 // Need to examine the Fixup when determining whether to 
 // emit the relocation as an explicit symbol or as a section relative
 // offset
-unsigned ARMELFObjectWriter::GetRelocType(const MCValue &Target,
+unsigned ARMELFObjectWriter::getRelocType(MCContext &Ctx, const MCValue &Target,
                                           const MCFixup &Fixup,
                                           bool IsPCRel) const {
   return GetRelocTypeInner(Target, Fixup, IsPCRel);
@@ -81,7 +81,9 @@ unsigned ARMELFObjectWriter::GetRelocTypeInner(const MCValue &Target,
   unsigned Type = 0;
   if (IsPCRel) {
     switch ((unsigned)Fixup.getKind()) {
-    default: llvm_unreachable("Unimplemented");
+    default:
+      report_fatal_error("unsupported relocation on symbol");
+      return ELF::R_ARM_NONE;
     case FK_Data_4:
       switch (Modifier) {
       default: llvm_unreachable("Unsupported Modifier");
@@ -93,8 +95,11 @@ unsigned ARMELFObjectWriter::GetRelocTypeInner(const MCValue &Target,
       case MCSymbolRefExpr::VK_GOTTPOFF:
         Type = ELF::R_ARM_TLS_IE32;
         break;
-      case MCSymbolRefExpr::VK_GOTPCREL:
+      case MCSymbolRefExpr::VK_ARM_GOT_PREL:
         Type = ELF::R_ARM_GOT_PREL;
+        break;
+      case MCSymbolRefExpr::VK_ARM_PREL31:
+        Type = ELF::R_ARM_PREL31;
         break;
       }
       break;
@@ -104,7 +109,7 @@ unsigned ARMELFObjectWriter::GetRelocTypeInner(const MCValue &Target,
       case MCSymbolRefExpr::VK_PLT:
         Type = ELF::R_ARM_CALL;
         break;
-      case MCSymbolRefExpr::VK_ARM_TLSCALL:
+      case MCSymbolRefExpr::VK_TLSCALL:
         Type = ELF::R_ARM_TLS_CALL;
         break;
       default:
@@ -118,6 +123,8 @@ unsigned ARMELFObjectWriter::GetRelocTypeInner(const MCValue &Target,
       Type = ELF::R_ARM_JUMP24;
       break;
     case ARM::fixup_t2_condbranch:
+      Type = ELF::R_ARM_THM_JUMP19;
+      break;
     case ARM::fixup_t2_uncondbranch:
       Type = ELF::R_ARM_THM_JUMP24;
       break;
@@ -136,7 +143,7 @@ unsigned ARMELFObjectWriter::GetRelocTypeInner(const MCValue &Target,
     case ARM::fixup_arm_thumb_bl:
     case ARM::fixup_arm_thumb_blx:
       switch (Modifier) {
-      case MCSymbolRefExpr::VK_ARM_TLSCALL:
+      case MCSymbolRefExpr::VK_TLSCALL:
         Type = ELF::R_ARM_THM_TLS_CALL;
         break;
       default:
@@ -147,7 +154,9 @@ unsigned ARMELFObjectWriter::GetRelocTypeInner(const MCValue &Target,
     }
   } else {
     switch ((unsigned)Fixup.getKind()) {
-    default: llvm_unreachable("invalid fixup kind!");
+    default:
+      report_fatal_error("unsupported relocation on symbol");
+      return ELF::R_ARM_NONE;
     case FK_Data_1:
       switch (Modifier) {
       default: llvm_unreachable("unsupported Modifier");
@@ -188,7 +197,7 @@ unsigned ARMELFObjectWriter::GetRelocTypeInner(const MCValue &Target,
       case MCSymbolRefExpr::VK_GOTOFF:
         Type = ELF::R_ARM_GOTOFF32;
         break;
-      case MCSymbolRefExpr::VK_GOTPCREL:
+      case MCSymbolRefExpr::VK_ARM_GOT_PREL:
         Type = ELF::R_ARM_GOT_PREL;
         break;
       case MCSymbolRefExpr::VK_ARM_TARGET1:
@@ -206,10 +215,10 @@ unsigned ARMELFObjectWriter::GetRelocTypeInner(const MCValue &Target,
       case MCSymbolRefExpr::VK_ARM_TLSLDO:
         Type = ELF::R_ARM_TLS_LDO32;
         break;
-      case MCSymbolRefExpr::VK_ARM_TLSCALL:
+      case MCSymbolRefExpr::VK_TLSCALL:
         Type = ELF::R_ARM_TLS_CALL;
         break;
-      case MCSymbolRefExpr::VK_ARM_TLSDESC:
+      case MCSymbolRefExpr::VK_TLSDESC:
         Type = ELF::R_ARM_TLS_GOTDESC;
         break;
       case MCSymbolRefExpr::VK_ARM_TLSDESCSEQ:
@@ -247,7 +256,7 @@ unsigned ARMELFObjectWriter::GetRelocTypeInner(const MCValue &Target,
   return Type;
 }
 
-MCObjectWriter *llvm::createARMELFObjectWriter(raw_ostream &OS,
+MCObjectWriter *llvm::createARMELFObjectWriter(raw_pwrite_stream &OS,
                                                uint8_t OSABI,
                                                bool IsLittleEndian) {
   MCELFObjectTargetWriter *MOTW = new ARMELFObjectWriter(OSABI);

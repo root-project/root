@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TCut
+\ingroup tree
+
 A specialized string object used for TTree selections.
 A TCut object has a name and a title. It does not add any data
 members compared to a TNamed. It only add a set of operators to

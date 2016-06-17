@@ -43,9 +43,9 @@ ClassImp(TMVA::PDEFoamVect)
 /// Default constructor for streamer
 
 TMVA::PDEFoamVect::PDEFoamVect()
-   : TObject(),
-     fDim(0),
-     fCoords(0)
+: TObject(),
+   fDim(0),
+   fCoords(0)
 {
 }
 

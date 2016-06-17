@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TVirtualMutex
+\ingroup Base
 
 This class implements a mutex interface. The actual work is done via
 TMutex which is available as soon as the thread library is loaded.

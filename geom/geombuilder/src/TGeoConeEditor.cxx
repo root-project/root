@@ -1,5 +1,5 @@
 // @(#):$Id$
-// Author: M.Gheata 
+// Author: M.Gheata
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -71,7 +71,7 @@ TGeoConeEditor::TGeoConeEditor(const TGWindow *p, Int_t width,
    TGTextEntry *nef;
    MakeTitle("Cone dimensions");
    TGCompositeFrame *compxyz = new TGCompositeFrame(this, 118, 30, kVerticalFrame | kRaisedFrame);
-   
+
    // Number entry for Rmin1
    TGCompositeFrame *f1 = new TGCompositeFrame(compxyz, 155, 30, kHorizontalFrame | kFixedWidth);
    f1->AddFrame(new TGLabel(f1, "Rmin1"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
@@ -83,7 +83,7 @@ TGeoConeEditor::TGeoConeEditor(const TGWindow *p, Int_t width,
    fERmin1->Resize(100, fERmin1->GetDefaultHeight());
    f1->AddFrame(fERmin1, new TGLayoutHints(kLHintsRight, 2, 2, 2, 2));
    compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 0, 0));
-   
+
   // Number entry for Rmax1
    f1 = new TGCompositeFrame(compxyz, 155, 30, kHorizontalFrame | kFixedWidth);
    f1->AddFrame(new TGLabel(f1, "Rmax1"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
@@ -95,7 +95,7 @@ TGeoConeEditor::TGeoConeEditor(const TGWindow *p, Int_t width,
    fERmax1->Resize(100, fERmax1->GetDefaultHeight());
    f1->AddFrame(fERmax1, new TGLayoutHints(kLHintsRight, 2, 2, 2, 2));
    compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 0, 0));
-    
+
    // Number entry for Rmin2
    f1 = new TGCompositeFrame(compxyz, 155, 30, kHorizontalFrame | kFixedWidth);
    f1->AddFrame(new TGLabel(f1, "Rmin2"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
@@ -107,7 +107,7 @@ TGeoConeEditor::TGeoConeEditor(const TGWindow *p, Int_t width,
    fERmin2->Resize(100, fERmin2->GetDefaultHeight());
    f1->AddFrame(fERmin2, new TGLayoutHints(kLHintsRight, 2, 2, 2, 2));
    compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 0, 0));
-    
+
    // Number entry for Rmax2
    f1 = new TGCompositeFrame(compxyz, 155, 30, kHorizontalFrame | kFixedWidth);
    f1->AddFrame(new TGLabel(f1, "Rmax2"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
@@ -119,7 +119,7 @@ TGeoConeEditor::TGeoConeEditor(const TGWindow *p, Int_t width,
    fERmax2->Resize(100, fERmax2->GetDefaultHeight());
    f1->AddFrame(fERmax2, new TGLayoutHints(kLHintsRight, 2, 2, 2, 2));
    compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 0, 0));
-   
+
    // Number entry for dz
    f1 = new TGCompositeFrame(compxyz, 155, 30, kHorizontalFrame | kFixedWidth);
    f1->AddFrame(new TGLabel(f1, "DZ"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
@@ -131,15 +131,15 @@ TGeoConeEditor::TGeoConeEditor(const TGWindow *p, Int_t width,
    fEDz->Resize(100, fEDz->GetDefaultHeight());
    f1->AddFrame(fEDz, new TGLayoutHints(kLHintsRight, 2, 2, 2, 2));
    compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 0, 0));
-   
+
    compxyz->Resize(150,30);
    AddFrame(compxyz, new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
-      
+
    // Delayed draw
    fDFrame = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth | kSunkenFrame);
    fDelayed = new TGCheckButton(fDFrame, "Delayed draw");
    fDFrame->AddFrame(fDelayed, new TGLayoutHints(kLHintsLeft , 2, 2, 2, 2));
-   AddFrame(fDFrame,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
+   AddFrame(fDFrame,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
 
    // Buttons
    fBFrame = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth);
@@ -149,7 +149,7 @@ TGeoConeEditor::TGeoConeEditor(const TGWindow *p, Int_t width,
    fUndo = new TGTextButton(fBFrame, "Undo");
    fBFrame->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
    fUndo->Associate(this);
-   AddFrame(fBFrame,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
+   AddFrame(fBFrame,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
    fUndo->SetSize(fApply->GetSize());
 }
 
@@ -161,10 +161,10 @@ TGeoConeEditor::~TGeoConeEditor()
    TGFrameElement *el;
    TIter next(GetList());
    while ((el = (TGFrameElement *)next())) {
-      if (el->fFrame->IsComposite()) 
+      if (el->fFrame->IsComposite())
          TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
-   Cleanup();   
+   Cleanup();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -196,8 +196,8 @@ void TGeoConeEditor::SetModel(TObject* obj)
 {
    if (obj == 0 || (obj->IsA()!=TGeoCone::Class())) {
       SetActive(kFALSE);
-      return;                 
-   } 
+      return;
+   }
    fShape = (TGeoCone*)obj;
    fRmini1 = fShape->GetRmin1();
    fRmini2 = fShape->GetRmin2();
@@ -213,7 +213,7 @@ void TGeoConeEditor::SetModel(TObject* obj)
    fEDz->SetNumber(fDzi);
    fApply->SetEnabled(kFALSE);
    fUndo->SetEnabled(kFALSE);
-   
+
    if (fInit) ConnectSignals2Slots();
    SetActive();
 }
@@ -247,10 +247,10 @@ void TGeoConeEditor::DoApply()
    Double_t rmax1 = fERmax1->GetNumber();
    Double_t rmax2 = fERmax2->GetNumber();
    Double_t dz = fEDz->GetNumber();
-   if (rmin1<0 || rmin1>rmax1) return; 
+   if (rmin1<0 || rmin1>rmax1) return;
    if (rmin2<0 || rmin2>rmax2) return;
    if (dz<=0) return;
-   if (rmin1==rmax1 && rmin2==rmax2) return; 
+   if (rmin1==rmax1 && rmin2==rmax2) return;
    fShape->SetConeDimensions(dz, rmin1, rmax1, rmin2, rmax2);
    fShape->ComputeBBox();
    fUndo->SetEnabled();
@@ -259,7 +259,7 @@ void TGeoConeEditor::DoApply()
          fShape->Draw();
          fPad->GetView()->ShowAxis();
       } else Update();
-   }   
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -284,7 +284,7 @@ void TGeoConeEditor::DoUndo()
    fUndo->SetEnabled(kFALSE);
    fApply->SetEnabled(kFALSE);
 }
-   
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot for Rmin1
 
@@ -295,11 +295,11 @@ void TGeoConeEditor::DoRmin1()
    if (rmin1<0) {
       rmin1 = 0;
       fERmin1->SetNumber(rmin1);
-   }   
+   }
    if (rmin1>rmax1) {
       rmin1 = rmax1;
       fERmin1->SetNumber(rmin1);
-   }   
+   }
    DoModified();
    if (!IsDelayed()) DoApply();
 }
@@ -314,7 +314,7 @@ void TGeoConeEditor::DoRmax1()
    if (rmax1<rmin1) {
       rmax1 = rmin1;
       fERmax1->SetNumber(rmax1);
-   }   
+   }
    DoModified();
    if (!IsDelayed()) DoApply();
 }
@@ -329,11 +329,11 @@ void TGeoConeEditor::DoRmin2()
    if (rmin2<0) {
       rmin2 = 0;
       fERmin2->SetNumber(rmin2);
-   }   
+   }
    if (rmin2>rmax2) {
       rmin2 = rmax2;
       fERmin2->SetNumber(rmin2);
-   }   
+   }
    DoModified();
    if (!IsDelayed()) DoApply();
 }
@@ -348,7 +348,7 @@ void TGeoConeEditor::DoRmax2()
    if (rmax2<rmin2) {
       rmax2 = rmin2;
       fERmax2->SetNumber(rmax2);
-   }   
+   }
    DoModified();
    if (!IsDelayed()) DoApply();
 }
@@ -362,7 +362,7 @@ void TGeoConeEditor::DoDz()
    if (dz<=0) {
       dz = 0.1;
       fEDz->SetNumber(dz);
-   }   
+   }
    DoModified();
    if (!IsDelayed()) DoApply();
 }
@@ -404,7 +404,7 @@ TGeoConeSegEditor::TGeoConeSegEditor(const TGWindow *p, Int_t width,
    fSPhi = new TGDoubleVSlider(compxyz,100);
    fSPhi->SetRange(0.,720.);
    fSPhi->Resize(fSPhi->GetDefaultWidth(), 100);
-   compxyz->AddFrame(fSPhi, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4)); 
+   compxyz->AddFrame(fSPhi, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
    TGCompositeFrame *f1 = new TGCompositeFrame(compxyz, 135, 100, kVerticalFrame | kFixedHeight);
    f1->AddFrame(new TGLabel(f1, "Phi min."), new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 0, 6, 0));
    fEPhi1 = new TGNumberEntry(f1, 0., 5, kCONESEG_PHI1);
@@ -424,7 +424,7 @@ TGeoConeSegEditor::TGeoConeSegEditor(const TGWindow *p, Int_t width,
    f1->AddFrame(fEPhi2, new TGLayoutHints(kLHintsBottom | kLHintsRight, 2, 2, 2, 2));
    f1->AddFrame(new TGLabel(f1, "Phi max."), new TGLayoutHints(kLHintsBottom, 0, 0, 6, 2));
    compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
-   
+
 //   compxyz->Resize(150,150);
    AddFrame(compxyz, new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
    TGeoTabManager::MoveFrame(fDFrame, this);
@@ -439,10 +439,10 @@ TGeoConeSegEditor::~TGeoConeSegEditor()
    TGFrameElement *el;
    TIter next(GetList());
    while ((el = (TGFrameElement *)next())) {
-      if (el->fFrame->IsComposite()) 
+      if (el->fFrame->IsComposite())
          TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
-   Cleanup();   
+   Cleanup();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -469,8 +469,8 @@ void TGeoConeSegEditor::SetModel(TObject* obj)
 {
    if (obj == 0 || (obj->IsA()!=TGeoConeSeg::Class())) {
       SetActive(kFALSE);
-      return;                 
-   } 
+      return;
+   }
    fShape = (TGeoCone*)obj;
    fRmini1 = fShape->GetRmin1();
    fRmaxi1 = fShape->GetRmax1();
@@ -491,7 +491,7 @@ void TGeoConeSegEditor::SetModel(TObject* obj)
    fEDz->SetNumber(fDzi);
    fApply->SetEnabled(kFALSE);
    fUndo->SetEnabled(kFALSE);
-   
+
    if (fInit) ConnectSignals2Slots();
    SetActive();
 }
@@ -506,11 +506,11 @@ void TGeoConeSegEditor::DoPhi1()
    if (phi1 > 360-1.e-10) {
       phi1 = 0.;
       fEPhi1->SetNumber(phi1);
-   }   
+   }
    if (phi2<phi1+1.e-10) {
       phi1 = phi2 - 0.1;
       fEPhi1->SetNumber(phi1);
-   }   
+   }
    if (!fLock) {
       DoModified();
       fLock = kTRUE;
@@ -529,11 +529,11 @@ void TGeoConeSegEditor::DoPhi2()
    if (phi2-phi1 > 360.) {
       phi2 -= 360.;
       fEPhi2->SetNumber(phi2);
-   }   
+   }
    if (phi2<phi1+1.e-10) {
       phi2 = phi1 + 0.1;
       fEPhi2->SetNumber(phi2);
-   }   
+   }
    if (!fLock) {
       DoModified();
       fLock = kTRUE;
@@ -553,7 +553,7 @@ void TGeoConeSegEditor::DoPhi()
       fEPhi1->SetNumber(fSPhi->GetMinPosition());
       fLock = kTRUE;
       fEPhi2->SetNumber(fSPhi->GetMaxPosition());
-   } else fLock = kFALSE;   
+   } else fLock = kFALSE;
    if (!IsDelayed()) DoApply();
 }
 
@@ -582,7 +582,7 @@ void TGeoConeSegEditor::DoApply()
       fLock = kTRUE;
       fSPhi->SetPosition(phi1,phi2);
       fLock = kFALSE;
-   }   
+   }
    ((TGeoConeSeg*)fShape)->SetConsDimensions(dz, rmin1, rmax1, rmin2,rmax2, phi1, phi2);
    fShape->ComputeBBox();
    fUndo->SetEnabled();
@@ -591,7 +591,7 @@ void TGeoConeSegEditor::DoApply()
          fShape->Draw();
          fPad->GetView()->ShowAxis();
       } else Update();
-   }   
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -614,4 +614,4 @@ void TGeoConeSegEditor::DoUndo()
 
 
 
-   
+

@@ -150,7 +150,7 @@ namespace TMVA {
       static Int_t fgCount;         // counter of all nodes present.. for debug.. to spot memory leaks...
 
    public:
-      ClassDef(Node,0) // Node for the BinarySearch or Decision Trees
+      ClassDef(Node,0); // Node for the BinarySearch or Decision Trees
    };
 
 } // namespace TMVA

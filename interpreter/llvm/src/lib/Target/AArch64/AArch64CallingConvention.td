@@ -16,7 +16,7 @@ class CCIfAlign<string Align, CCAction A> :
   CCIf<!strconcat("ArgFlags.getOrigAlign() == ", Align), A>;
 /// CCIfBigEndian - Match only if we're in big endian mode.
 class CCIfBigEndian<CCAction A> :
-  CCIf<"State.getMachineFunction().getTarget().getDataLayout()->isBigEndian()", A>;
+  CCIf<"State.getMachineFunction().getDataLayout().isBigEndian()", A>;
 
 //===----------------------------------------------------------------------===//
 // ARM AAPCS64 Calling Convention
@@ -39,6 +39,14 @@ def CC_AArch64_AAPCS : CallingConv<[
   // Put ByVal arguments directly on the stack. Minimum size and alignment of a
   // slot is 64-bit.
   CCIfByVal<CCPassByVal<8, 8>>,
+
+  // The 'nest' parameter, if any, is passed in X18.
+  // Darwin uses X18 as the platform register and hence 'nest' isn't currently
+  // supported there.
+  CCIfNest<CCAssignToReg<[X18]>>,
+
+  // Pass SwiftSelf in a callee saved register.
+  CCIfSwiftSelf<CCIfType<[i64], CCAssignToRegWithShadow<[X20], [W20]>>>,
 
   CCIfConsecutiveRegs<CCCustom<"CC_AArch64_Custom_Block">>,
 
@@ -81,6 +89,8 @@ def RetCC_AArch64_AAPCS : CallingConv<[
   CCIfType<[v2f32], CCBitConvertToType<v2i32>>,
   CCIfType<[v2f64, v4f32], CCBitConvertToType<v2i64>>,
 
+  CCIfSwiftError<CCIfType<[i64], CCAssignToRegWithShadow<[X19], [W19]>>>,
+
   // Big endian vectors must be passed as if they were 1-element vectors so that
   // their lanes are in a consistent order.
   CCIfBigEndian<CCIfType<[v2i32, v2f32, v4i16, v4f16, v8i8],
@@ -120,6 +130,12 @@ def CC_AArch64_DarwinPCS : CallingConv<[
   // Put ByVal arguments directly on the stack. Minimum size and alignment of a
   // slot is 64-bit.
   CCIfByVal<CCPassByVal<8, 8>>,
+
+  // Pass SwiftSelf in a callee saved register.
+  CCIfSwiftSelf<CCIfType<[i64], CCAssignToRegWithShadow<[X20], [W20]>>>,
+
+  // A SwiftError is passed in X19.
+  CCIfSwiftError<CCIfType<[i64], CCAssignToRegWithShadow<[X19], [W19]>>>,
 
   CCIfConsecutiveRegs<CCCustom<"CC_AArch64_Custom_Block">>,
 
@@ -265,6 +281,9 @@ def CSR_AArch64_AAPCS : CalleeSavedRegs<(add LR, FP, X19, X20, X21, X22,
 // case)
 def CSR_AArch64_AAPCS_ThisReturn : CalleeSavedRegs<(add CSR_AArch64_AAPCS, X0)>;
 
+def CSR_AArch64_AAPCS_SwiftError
+    : CalleeSavedRegs<(sub CSR_AArch64_AAPCS, X19)>;
+
 // The function used by Darwin to obtain the address of a thread-local variable
 // guarantees more than a normal AAPCS function. x16 and x17 are used on the
 // fast path for calculation, but other registers except X0 (argument/return)
@@ -273,6 +292,23 @@ def CSR_AArch64_TLS_Darwin
     : CalleeSavedRegs<(add (sub (sequence "X%u", 1, 28), X16, X17),
                            FP,
                            (sequence "Q%u", 0, 31))>;
+
+// We can only handle a register pair with adjacent registers, the register pair
+// should belong to the same class as well. Since the access function on the
+// fast path calls a function that follows CSR_AArch64_TLS_Darwin,
+// CSR_AArch64_CXX_TLS_Darwin should be a subset of CSR_AArch64_TLS_Darwin.
+def CSR_AArch64_CXX_TLS_Darwin
+    : CalleeSavedRegs<(add CSR_AArch64_AAPCS,
+                           (sub (sequence "X%u", 1, 28), X15, X16, X17, X18),
+                           (sequence "D%u", 0, 31))>;
+
+// CSRs that are handled by prologue, epilogue.
+def CSR_AArch64_CXX_TLS_Darwin_PE
+    : CalleeSavedRegs<(add LR, FP)>;
+
+// CSRs that are handled explicitly via copies.
+def CSR_AArch64_CXX_TLS_Darwin_ViaCopy
+    : CalleeSavedRegs<(sub CSR_AArch64_CXX_TLS_Darwin, LR, FP)>;
 
 // The ELF stub used for TLS-descriptor access saves every feasible
 // register. Only X0 and LR are clobbered.
@@ -288,3 +324,7 @@ def CSR_AArch64_AllRegs
                            (sequence "Q%u", 0, 31))>;
 
 def CSR_AArch64_NoRegs : CalleeSavedRegs<(add)>;
+
+def CSR_AArch64_RT_MostRegs :  CalleeSavedRegs<(add CSR_AArch64_AAPCS,
+                                                (sequence "X%u", 9, 15))>;
+

@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** TMath Base functions
+\ingroup Base
 
 Define the functions Min, Max, Abs, Sign, Range for all types.
 NB: These functions are unfortunately not available in a portable

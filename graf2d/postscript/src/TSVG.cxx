@@ -205,10 +205,10 @@ void TSVG::Off()
 void TSVG::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
 {
    static Double_t x[4], y[4];
-   Double_t ix1 = XtoSVG(x1);
-   Double_t ix2 = XtoSVG(x2);
-   Double_t iy1 = YtoSVG(y1);
-   Double_t iy2 = YtoSVG(y2);
+   Double_t ix1 = XtoSVG(TMath::Min(x1,x2));
+   Double_t ix2 = XtoSVG(TMath::Max(x1,x2));
+   Double_t iy1 = YtoSVG(TMath::Min(y1,y2));
+   Double_t iy2 = YtoSVG(TMath::Max(y1,y2));
    Int_t fillis = fFillStyle/1000;
    Int_t fillsi = fFillStyle%1000;
 
@@ -1432,7 +1432,7 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
    }
 
    PrintStr("@");
-   PrintFast(9,"<text x=\"");
+   PrintFast(30,"<text xml:space=\"preserve\" x=\"");
    WriteReal(ix, kFALSE);
    PrintFast(5,"\" y=\"");
    WriteReal(iy, kFALSE);

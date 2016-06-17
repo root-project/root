@@ -1,8 +1,14 @@
+/// \file
+/// \ingroup tutorial_geom
+/// Definition of a simple geometry (the 4 ROOT characters)
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Andrei Gheata
+
 void rootgeom()
 {
-//Definition of a simple geometry (the 4 ROOT characters)
-//Author: Andrei Gheata
-
    // gStyle->SetCanvasPreferGL(true);
    gSystem->Load("libGeom");
    TGeoManager *geom = new TGeoManager("simple1", "Simple geometry");

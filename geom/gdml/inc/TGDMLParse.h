@@ -102,7 +102,7 @@ public:
 class TGDMLParse : public TObject {
 public:
 
-   TString fWorldName; 
+   TString fWorldName;
    TGeoVolume* fWorld; //top volume of geometry
    int fVolID;   //volume ID, incremented as assigned.
    int fFILENO; //Holds which level of file the parser is at

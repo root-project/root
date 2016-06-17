@@ -152,7 +152,7 @@ namespace TMVA {
       Bool_t   UseHistogram() const { return fUseHistogram; }
 
       void FindBinInverse( const TH1* histogram, Int_t& lowerBin, Int_t& higherBin, Double_t& lowerBinValue, Double_t& higherBinValue, 
-			   Double_t y, Bool_t isMonotonouslyIncreasingFunction=kFALSE ) const;
+                           Double_t y, Bool_t isMonotonouslyIncreasingFunction=kFALSE ) const;
 
 
       void     BuildSplinePDF();
@@ -217,7 +217,7 @@ namespace TMVA {
       static Double_t          IGetVal( Double_t*, Double_t* );
 
       ClassDef(PDF,1)  // PDF wrapper for histograms
-   };
+         };
 
 } // namespace TMVA
 

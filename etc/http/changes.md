@@ -1,5 +1,29 @@
 # JSROOT changelog
 
+## Changes in 4.4.4
+1. Fix - toggling of statbox was not working in all situations 
+2. Fix - for mouse rect zooming use only left mouse button
+3. Fix - correctly draw TH2 with lego option, when histogram has negative bin content
+4. Fix - log axis drawing with no visible ticks 
+
+
+## Changes in 4.4.3
+1. Fix - wrong selection of TH1 Y axis range when errors are displayed (#44) 
+2. Fix - apply user range for TH1 X-axis zooming (#44)   
+3. Fix - protect against pathological case of 1-bin histogram
+4. Fix - use error plot by default in TH1 only when positive sumw2 entry exists
+5. Fix - for TH2 box draw option draw at least 1px rect for non-empty bin
+6. Fix - support transparency (alpha) in TColor (#45)
+7. Fix - correct tooltip handling for graphs with lines and markers
+8. Fix - interactive zooming in TH2 when doing histogram update  
+
+
+## Changes in 4.4.2
+1. Fix - statistic collection for TH2
+2. Fix - correct handling of empty TList in browser/inspector
+3. Fix - support TFolder in browser/inspector (#40)
+
+
 ## Changes in 4.4.1
 1. Fix - colz palette resize when drawing histogram second time
 2. Fix - use embeded in TCanvas color for background color of canvas itself

@@ -3,15 +3,15 @@ set(LLVM_LINK_COMPONENTS
   Core
   ExecutionEngine
   InstCombine
-  MCJIT
+  Object
+  RuntimeDyld
   ScalarOpts
   Support
-  TransformUtils
   native
   )
-
-set(LLVM_REQUIRES_RTTI 1)
 
 add_kaleidoscope_chapter(Kaleidoscope-Ch7
   toy.cpp
   )
+
+export_executable_symbols(Kaleidoscope-Ch7)

@@ -267,6 +267,10 @@ namespace cling {
     for (size_t i = 0, e = m_StoredStates.size(); i != e; ++i)
       delete m_StoredStates[i];
     getCI()->getDiagnostics().getClient()->EndSourceFile();
+    // LookupHelper's ~Parser needs the PP from IncrParser's CI, so do this
+    // first:
+    m_LookupHelper.reset();
+
     // We want to keep the callback alive during the shutdown of Sema, CodeGen
     // and the ASTContext. For that to happen we shut down the IncrementalParser
     // explicitly, before the implicit destruction (through the unique_ptr) of
@@ -527,8 +531,16 @@ namespace cling {
   Interpreter::CompilationResult
   Interpreter::process(const std::string& input, Value* V /* = 0 */,
                        Transaction** T /* = 0 */) {
-    if (isRawInputEnabled() || !ShouldWrapInput(input))
-      return declare(input, T);
+    if (isRawInputEnabled() || !ShouldWrapInput(input)) {
+      CompilationOptions CO;
+      CO.DeclarationExtraction = 0;
+      CO.ValuePrinting = 0;
+      CO.ResultEvaluation = 0;
+      CO.DynamicScoping = isDynamicLookupEnabled();
+      CO.Debug = isPrintingDebug();
+      CO.CheckPointerValidity = 1;
+      return DeclareInternal(input, CO, T);
+    }
 
     CompilationOptions CO;
     CO.DeclarationExtraction = 1;
@@ -536,6 +548,7 @@ namespace cling {
     CO.ResultEvaluation = (bool)V;
     CO.DynamicScoping = isDynamicLookupEnabled();
     CO.Debug = isPrintingDebug();
+    CO.CheckPointerValidity = 1;
     if (EvaluateInternal(input, CO, V, T) == Interpreter::kFailure) {
       return Interpreter::kFailure;
     }
@@ -633,6 +646,7 @@ namespace cling {
     CO.ResultEvaluation = 0;
     CO.DynamicScoping = isDynamicLookupEnabled();
     CO.Debug = isPrintingDebug();
+    CO.CheckPointerValidity = 0;
 
     return DeclareInternal(input, CO, T);
   }
@@ -997,6 +1011,11 @@ namespace cling {
   Interpreter::DeclareInternal(const std::string& input,
                                const CompilationOptions& CO,
                                Transaction** T /* = 0 */) const {
+    assert(CO.DeclarationExtraction == 0
+           && CO.ValuePrinting == 0
+           && CO.ResultEvaluation == 0
+           && "Compilation Options not compatible with \"declare\" mode.");
+
     StateDebuggerRAII stateDebugger(this);
 
     IncrementalParser::ParseResultTransaction PRT
@@ -1118,7 +1137,15 @@ namespace cling {
 
     std::string code;
     code += "#include \"" + filename + "\"";
-    CompilationResult res = declare(code, T);
+
+    CompilationOptions CO;
+    CO.DeclarationExtraction = 0;
+    CO.ValuePrinting = 0;
+    CO.ResultEvaluation = 0;
+    CO.DynamicScoping = isDynamicLookupEnabled();
+    CO.Debug = isPrintingDebug();
+    CO.CheckPointerValidity = 1;
+    CompilationResult res = DeclareInternal(code, CO, T);
     return res;
   }
 

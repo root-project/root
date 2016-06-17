@@ -20,7 +20,7 @@
  *      CERN, Switzerland                                                         *
  *      U. of Victoria, Canada                                                    *
  *      MPI-K Heidelberg, Germany                                                 *
-*       U. of Bonn, Germany                                                       *
+ *       U. of Bonn, Germany                                                       *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -54,22 +54,22 @@ namespace TMVA {
    class DTNodeTrainingInfo
    {
    public:
-      DTNodeTrainingInfo():fSampleMin(), 
-                           fSampleMax(), 
-                           fNodeR(0),fSubTreeR(0),fAlpha(0),fG(0),fNTerminal(0),
-                           fNB(0),fNS(0),fSumTarget(0),fSumTarget2(0),fCC(0), 
-                           fNSigEvents ( 0 ), fNBkgEvents ( 0 ),
-                           fNEvents ( -1 ),
-                           fNSigEvents_unweighted ( 0 ),
-                           fNBkgEvents_unweighted ( 0 ),
-                           fNEvents_unweighted ( 0 ),
-                           fNSigEvents_unboosted ( 0 ),
-                           fNBkgEvents_unboosted ( 0 ),
-                           fNEvents_unboosted ( 0 ),
-                           fSeparationIndex (-1 ),
-                           fSeparationGain ( -1 )
-      {
-      }
+   DTNodeTrainingInfo():fSampleMin(), 
+         fSampleMax(), 
+         fNodeR(0),fSubTreeR(0),fAlpha(0),fG(0),fNTerminal(0),
+         fNB(0),fNS(0),fSumTarget(0),fSumTarget2(0),fCC(0), 
+         fNSigEvents ( 0 ), fNBkgEvents ( 0 ),
+         fNEvents ( -1 ),
+         fNSigEvents_unweighted ( 0 ),
+         fNBkgEvents_unweighted ( 0 ),
+         fNEvents_unweighted ( 0 ),
+         fNSigEvents_unboosted ( 0 ),
+         fNBkgEvents_unboosted ( 0 ),
+         fNEvents_unboosted ( 0 ),
+         fSeparationIndex (-1 ),
+         fSeparationGain ( -1 )
+            {
+            }
       std::vector< Float_t >  fSampleMin; // the minima for each ivar of the sample on the node during training
       std::vector< Float_t >  fSampleMax; // the maxima for each ivar of the sample on the node during training
       Double_t fNodeR;           // node resubstitution estimate, R(t)
@@ -96,8 +96,8 @@ namespace TMVA {
       Float_t  fSeparationGain;  // measure of "purity", separation, or information gained BY this nodes selection
 
       // copy constructor
-      DTNodeTrainingInfo(const DTNodeTrainingInfo& n) :
-         fSampleMin(),fSampleMax(), // Samplemin and max are reset in copy constructor
+   DTNodeTrainingInfo(const DTNodeTrainingInfo& n) :
+      fSampleMin(),fSampleMax(), // Samplemin and max are reset in copy constructor
          fNodeR(n.fNodeR), fSubTreeR(n.fSubTreeR),
          fAlpha(n.fAlpha), fG(n.fG),
          fNTerminal(n.fNTerminal),
@@ -111,7 +111,7 @@ namespace TMVA {
          fNEvents_unweighted ( n.fNEvents_unweighted ),
          fSeparationIndex( n.fSeparationIndex ),
          fSeparationGain ( n.fSeparationGain )
-      { }
+            { }
    };
 
    class Event;
@@ -378,7 +378,7 @@ namespace TMVA {
       virtual Bool_t ReadDataRecord( std::istream& is, UInt_t tmva_Version_Code = TMVA_VERSION_CODE );
       virtual void ReadContent(std::stringstream& s);
 
-      ClassDef(DecisionTreeNode,0) // Node for the Decision Tree 
+      ClassDef(DecisionTreeNode,0); // Node for the Decision Tree 
    };
 } // namespace TMVA
 

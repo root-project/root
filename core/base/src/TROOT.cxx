@@ -10,15 +10,17 @@
  *************************************************************************/
 
 /** \class TROOT
+\ingroup Base
+
 ROOT top level object description.
 
-   The TROOT object is the entry point to the ROOT system.
-   The single instance of TROOT is accessible via the global gROOT.
-   Using the gROOT pointer one has access to basically every object
-   created in a ROOT based program. The TROOT object is essentially a
-   container of several lists pointing to the main ROOT objects.
+The TROOT object is the entry point to the ROOT system.
+The single instance of TROOT is accessible via the global gROOT.
+Using the gROOT pointer one has access to basically every object
+created in a ROOT based program. The TROOT object is essentially a
+container of several lists pointing to the main ROOT objects.
 
-   The following lists are accessible from gROOT object:
+The following lists are accessible from gROOT object:
 
 ~~~ {.cpp}
       gROOT->GetListOfClasses
@@ -40,12 +42,12 @@ ROOT top level object description.
       gROOT->GetListOfMessageHandlers
 ~~~
 
-  The TROOT class provides also many useful services:
-    - Get pointer to an object in any of the lists above
-    - Time utilities TROOT::Time
+The TROOT class provides also many useful services:
+  - Get pointer to an object in any of the lists above
+  - Time utilities TROOT::Time
 
-  The ROOT object must be created as a static object. An example
-  of a main program creating an interactive version is shown below:
+The ROOT object must be created as a static object. An example
+of a main program creating an interactive version is shown below:
 
 ### Example of a main program
 
@@ -1067,7 +1069,8 @@ TObject *TROOT::FindObject(const char *name) const
    while ((obj=next())) {
       temp = obj->FindObject(name);         if (temp) return temp;
    }
-   if (gDirectory) temp = gDirectory->Get(name); if (temp) return temp;
+   if (gDirectory) temp = gDirectory->Get(name);
+   if (temp) return temp;
    if (gPad) {
       TVirtualPad *canvas = gPad->GetVirtCanvas();
       if (fCanvases->FindObject(canvas)) {  //this check in case call from TCanvas ctor

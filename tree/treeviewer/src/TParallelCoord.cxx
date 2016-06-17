@@ -274,7 +274,7 @@ void  TParallelCoord::ApplySelectionToTree()
    while ((var = (TParallelCoordVar*)next())) varexp.Append(Form(":%s",var->GetTitle()));
    varexp.Remove(TString::kLeading,':');
    TSelectorDraw* selector = (TSelectorDraw*)((TTreePlayer*)fTree->GetPlayer())->GetSelector();
-   fTree->Draw(varexp.Data(),"","goff para");
+   fTree->Draw(varexp.Data(),"","goff");
    next.Reset();
    Int_t i = 0;
    while ((var = (TParallelCoordVar*)next())) {
@@ -553,7 +553,7 @@ TTree* TParallelCoord::GetTree()
          TParallelCoordVar* var;
          while ((var = (TParallelCoordVar*)next())) varexp.Append(Form(":%s",var->GetTitle()));
          varexp.Remove(TString::kLeading,':');
-         fTree->Draw(varexp.Data(),"","goff para");
+         fTree->Draw(varexp.Data(),"","goff");
          TSelectorDraw* selector = (TSelectorDraw*)((TTreePlayer*)fTree->GetPlayer())->GetSelector();
          next.Reset();
          Int_t i = 0;
@@ -769,7 +769,7 @@ void TParallelCoord::ResetTree()
    TParallelCoordVar* var;
    while ((var = (TParallelCoordVar*)next())) varexp.Append(Form(":%s",var->GetTitle()));
    varexp.Remove(TString::kLeading,':');
-   fTree->Draw(varexp.Data(),"","goff para");
+   fTree->Draw(varexp.Data(),"","goff");
    next.Reset();
    TSelectorDraw* selector = (TSelectorDraw*)((TTreePlayer*)fTree->GetPlayer())->GetSelector();
    Int_t i = 0;
@@ -845,7 +845,7 @@ void TParallelCoord::SavePrimitive(std::ostream & out, Option_t* options)
    TString varexp = "";
    while ((var = (TParallelCoordVar*)nextbis())) varexp.Append(Form(":%s",var->GetTitle()));
    varexp.Remove(TString::kLeading,':');
-   out<<"   tree->Draw(\""<<varexp.Data()<<"\",\"\",\"goff para\");"<<std::endl;
+   out<<"   tree->Draw(\""<<varexp.Data()<<"\",\"\",\"goff\");"<<std::endl;
    out<<"   TSelectorDraw* selector = (TSelectorDraw*)((TTreePlayer*)tree->GetPlayer())->GetSelector();"<<std::endl;
    nextbis.Reset();
    Int_t i=0;

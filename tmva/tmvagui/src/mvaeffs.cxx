@@ -202,8 +202,8 @@ TMVA::StatDialogMVAEffs::StatDialogMVAEffs(TString ds,const TGWindow* p, Float_t
    fSigInput->Connect("ValueSet(Long_t)","TMVA::StatDialogMVAEffs",this, "SetNSignal()");
    fBkgInput->Connect("ValueSet(Long_t)","TMVA::StatDialogMVAEffs",this, "SetNBackground()");
 
-   fDrawButton->Connect("Clicked()","TGNumberEntry",fSigInput, "ValueSet(Long_t)");
-   fDrawButton->Connect("Clicked()","TGNumberEntry",fBkgInput, "ValueSet(Long_t)");
+//   fDrawButton->Connect("Clicked()","TGNumberEntry",fSigInput, "ValueSet(Long_t)");
+//   fDrawButton->Connect("Clicked()","TGNumberEntry",fBkgInput, "ValueSet(Long_t)");
    fDrawButton->Connect("Clicked()", "TMVA::StatDialogMVAEffs", this, "Redraw()");   
 
    fCloseButton->Connect("Clicked()", "TMVA::StatDialogMVAEffs", this, "Close()");
@@ -511,7 +511,7 @@ void TMVA::StatDialogMVAEffs::PrintResults( const MethodInfo* info )
 }
 
 void TMVA::mvaeffs(TString dataset, TString fin , 
-              Bool_t useTMVAStyle, TString formula )
+                   Bool_t useTMVAStyle, TString formula )
 {
    TMVAGlob::Initialize( useTMVAStyle );
 

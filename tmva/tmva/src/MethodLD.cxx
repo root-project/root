@@ -56,11 +56,11 @@ ClassImp(TMVA::MethodLD)
 ////////////////////////////////////////////////////////////////////////////////
 /// standard constructor for the LD
 
-TMVA::MethodLD::MethodLD( const TString& jobName,
-                          const TString& methodTitle,
-                          DataSetInfo& dsi,
-                          const TString& theOption,
-                          TDirectory* theTargetDir ) :
+   TMVA::MethodLD::MethodLD( const TString& jobName,
+                             const TString& methodTitle,
+                             DataSetInfo& dsi,
+                             const TString& theOption,
+                             TDirectory* theTargetDir ) :
    MethodBase( jobName, Types::kLD, methodTitle, dsi, theOption, theTargetDir ),
    fNRegOut   ( 0 ),
    fSumMatx   ( 0 ),
@@ -123,8 +123,8 @@ Bool_t TMVA::MethodLD::HasAnalysisType( Types::EAnalysisType type, UInt_t number
 {
    if      (type == Types::kClassification && numberClasses == 2) return kTRUE;
    else if (type == Types::kRegression     && numberTargets == 1) {
-     Log() << "regression with " << numberTargets << " targets.";
-     return kTRUE;
+      Log() << "regression with " << numberTargets << " targets.";
+      return kTRUE;
    }
    else return kFALSE;
 }
@@ -303,15 +303,15 @@ void TMVA::MethodLD::GetLDCoeff( void )
       TMatrixD invSum( *fSumMatx );
       if ( TMath::Abs(invSum.Determinant()) < 10E-24 ) {
          Log() << kWARNING << "<GetCoeff> matrix is almost singular with determinant="
-                 << TMath::Abs(invSum.Determinant()) 
-                 << " did you use the variables that are linear combinations or highly correlated?" 
-                 << Endl;
+               << TMath::Abs(invSum.Determinant()) 
+               << " did you use the variables that are linear combinations or highly correlated?" 
+               << Endl;
       }
       if ( TMath::Abs(invSum.Determinant()) < 10E-120 ) {
          Log() << kFATAL << "<GetCoeff> matrix is singular with determinant="
-                 << TMath::Abs(invSum.Determinant())  
-                 << " did you use the variables that are linear combinations?" 
-                 << Endl;
+               << TMath::Abs(invSum.Determinant())  
+               << " did you use the variables that are linear combinations?" 
+               << Endl;
       }
       invSum.Invert();
 
@@ -372,7 +372,7 @@ void TMVA::MethodLD::ReadWeightsFromXML( void* wghtnode )
    
    // sanity checks
    if (ncoeff != GetNvar()+1) Log() << kFATAL << "Mismatch in number of output variables/coefficients: " 
-                                      << ncoeff << " != " << GetNvar()+1 << Endl;
+                                    << ncoeff << " != " << GetNvar()+1 << Endl;
 
    // create vector with coefficients (double vector due to arbitrary output dimension)
    if (fLDCoeff) { 
@@ -504,13 +504,13 @@ void TMVA::MethodLD::PrintCoefficients( void )
       // Print normalisation expression (see Tools.cxx): "2*(x - xmin)/(xmax - xmin) - 1.0"
       for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
          Log() << kINFO 
-                 << std::setw(maxL+9) << TString("[") + GetInputLabel(ivar) + "]' = 2*(" 
-                 << std::setw(maxL+2) << TString("[") + GetInputLabel(ivar) + "]"
-                 << std::setw(3) << (GetXmin(ivar) > 0 ? " - " : " + ")
-                 << std::setw(6) << TMath::Abs(GetXmin(ivar)) << std::setw(3) << ")/"
-                 << std::setw(6) << (GetXmax(ivar) -  GetXmin(ivar) )
-                 << std::setw(3) << " - 1"
-                 << Endl;
+               << std::setw(maxL+9) << TString("[") + GetInputLabel(ivar) + "]' = 2*(" 
+               << std::setw(maxL+2) << TString("[") + GetInputLabel(ivar) + "]"
+               << std::setw(3) << (GetXmin(ivar) > 0 ? " - " : " + ")
+               << std::setw(6) << TMath::Abs(GetXmin(ivar)) << std::setw(3) << ")/"
+               << std::setw(6) << (GetXmax(ivar) -  GetXmin(ivar) )
+               << std::setw(3) << " - 1"
+               << Endl;
       }
       Log() << kINFO << "The TMVA Reader will properly account for this normalisation, but if the" << Endl;
       Log() << kINFO << "LD classifier is applied outside the Reader, the transformation must be" << Endl;

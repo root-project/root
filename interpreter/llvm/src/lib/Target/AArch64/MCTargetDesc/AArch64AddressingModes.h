@@ -237,15 +237,15 @@ static inline bool processLogicalImmediate(uint64_t Imm, unsigned RegSize,
   if (isShiftedMask_64(Imm)) {
     I = countTrailingZeros(Imm);
     assert(I < 64 && "undefined behavior");
-    CTO = CountTrailingOnes_64(Imm >> I);
+    CTO = countTrailingOnes(Imm >> I);
   } else {
     Imm |= ~Mask;
     if (!isShiftedMask_64(~Imm))
       return false;
 
-    unsigned CLO = CountLeadingOnes_64(Imm);
+    unsigned CLO = countLeadingOnes(Imm);
     I = 64 - CLO;
-    CTO = CLO + CountTrailingOnes_64(Imm) - (64 - Size);
+    CTO = CLO + countTrailingOnes(Imm) - (64 - Size);
   }
 
   // Encode in Immr the number of RORs it would take to get *from* 0^m 1^n
@@ -362,6 +362,32 @@ static inline float getFPImmFloat(unsigned Imm) {
   FPUnion.I |= (Exp & 0x3) << 23;
   FPUnion.I |= Mantissa << 19;
   return FPUnion.F;
+}
+
+/// getFP16Imm - Return an 8-bit floating-point version of the 16-bit
+/// floating-point value. If the value cannot be represented as an 8-bit
+/// floating-point value, then return -1.
+static inline int getFP16Imm(const APInt &Imm) {
+  uint32_t Sign = Imm.lshr(15).getZExtValue() & 1;
+  int32_t Exp = (Imm.lshr(10).getSExtValue() & 0x1f) - 15;  // -14 to 15
+  int32_t Mantissa = Imm.getZExtValue() & 0x3ff;  // 10 bits
+
+  // We can handle 4 bits of mantissa.
+  // mantissa = (16+UInt(e:f:g:h))/16.
+  if (Mantissa & 0x3f)
+    return -1;
+  Mantissa >>= 6;
+
+  // We can handle 3 bits of exponent: exp == UInt(NOT(b):c:d)-3
+  if (Exp < -3 || Exp > 4)
+    return -1;
+  Exp = ((Exp+3) & 0x7) ^ 4;
+
+  return ((int)Sign << 7) | (Exp << 4) | Mantissa;
+}
+
+static inline int getFP16Imm(const APFloat &FPImm) {
+  return getFP16Imm(FPImm.bitcastToAPInt());
 }
 
 /// getFP32Imm - Return an 8-bit floating-point version of the 32-bit

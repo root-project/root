@@ -13,26 +13,26 @@
 #include "llvm/Option/ArgList.h"
 #include "llvm/Option/Option.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/Support/Debug.h"
 
 using namespace llvm;
 using namespace llvm::opt;
 
-Arg::Arg(const Option _Opt, StringRef S, unsigned _Index, const Arg *_BaseArg)
-  : Opt(_Opt), BaseArg(_BaseArg), Spelling(S), Index(_Index),
-    Claimed(false), OwnsValues(false) {
-}
+Arg::Arg(const Option Opt, StringRef S, unsigned Index, const Arg *BaseArg)
+    : Opt(Opt), BaseArg(BaseArg), Spelling(S), Index(Index), Claimed(false),
+      OwnsValues(false) {}
 
-Arg::Arg(const Option _Opt, StringRef S, unsigned _Index,
-         const char *Value0, const Arg *_BaseArg)
-  : Opt(_Opt), BaseArg(_BaseArg), Spelling(S), Index(_Index),
-    Claimed(false), OwnsValues(false) {
+Arg::Arg(const Option Opt, StringRef S, unsigned Index, const char *Value0,
+         const Arg *BaseArg)
+    : Opt(Opt), BaseArg(BaseArg), Spelling(S), Index(Index), Claimed(false),
+      OwnsValues(false) {
   Values.push_back(Value0);
 }
 
-Arg::Arg(const Option _Opt, StringRef S, unsigned _Index,
-         const char *Value0, const char *Value1, const Arg *_BaseArg)
-  : Opt(_Opt), BaseArg(_BaseArg), Spelling(S), Index(_Index),
-    Claimed(false), OwnsValues(false) {
+Arg::Arg(const Option Opt, StringRef S, unsigned Index, const char *Value0,
+         const char *Value1, const Arg *BaseArg)
+    : Opt(Opt), BaseArg(BaseArg), Spelling(S), Index(Index), Claimed(false),
+      OwnsValues(false) {
   Values.push_back(Value0);
   Values.push_back(Value1);
 }
@@ -44,22 +44,24 @@ Arg::~Arg() {
   }
 }
 
-void Arg::dump() const {
-  llvm::errs() << "<";
+void Arg::print(raw_ostream& O) const {
+  O << "<";
 
-  llvm::errs() << " Opt:";
-  Opt.dump();
+  O << " Opt:";
+  Opt.print(O);
 
-  llvm::errs() << " Index:" << Index;
+  O << " Index:" << Index;
 
-  llvm::errs() << " Values: [";
+  O << " Values: [";
   for (unsigned i = 0, e = Values.size(); i != e; ++i) {
-    if (i) llvm::errs() << ", ";
-    llvm::errs() << "'" << Values[i] << "'";
+    if (i) O << ", ";
+    O << "'" << Values[i] << "'";
   }
 
-  llvm::errs() << "]>\n";
+  O << "]>\n";
 }
+
+LLVM_DUMP_METHOD void Arg::dump() const { print(dbgs()); }
 
 std::string Arg::getAsString(const ArgList &Args) const {
   SmallString<256> Res;
@@ -83,15 +85,13 @@ void Arg::renderAsInput(const ArgList &Args, ArgStringList &Output) const {
     return;
   }
 
-  for (unsigned i = 0, e = getNumValues(); i != e; ++i)
-    Output.push_back(getValue(i));
+  Output.append(Values.begin(), Values.end());
 }
 
 void Arg::render(const ArgList &Args, ArgStringList &Output) const {
   switch (getOption().getRenderStyle()) {
   case Option::RenderValuesStyle:
-    for (unsigned i = 0, e = getNumValues(); i != e; ++i)
-      Output.push_back(getValue(i));
+    Output.append(Values.begin(), Values.end());
     break;
 
   case Option::RenderCommaJoinedStyle: {
@@ -109,14 +109,12 @@ void Arg::render(const ArgList &Args, ArgStringList &Output) const {
  case Option::RenderJoinedStyle:
     Output.push_back(Args.GetOrMakeJoinedArgString(
                        getIndex(), getSpelling(), getValue(0)));
-    for (unsigned i = 1, e = getNumValues(); i != e; ++i)
-      Output.push_back(getValue(i));
+    Output.append(Values.begin() + 1, Values.end());
     break;
 
   case Option::RenderSeparateStyle:
     Output.push_back(Args.MakeArgString(getSpelling()));
-    for (unsigned i = 0, e = getNumValues(); i != e; ++i)
-      Output.push_back(getValue(i));
+    Output.append(Values.begin(), Values.end());
     break;
   }
 }

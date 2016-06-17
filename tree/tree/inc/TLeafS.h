@@ -28,10 +28,10 @@
 class TLeafS : public TLeaf {
 
 protected:
-   Short_t       fMinimum;         //Minimum value if leaf range is specified
-   Short_t       fMaximum;         //Maximum value if leaf range is specified
-   Short_t       *fValue;          //!Pointer to data buffer
-   Short_t       **fPointer;       //!Address of pointer to data buffer
+   Short_t       fMinimum;         ///<  Minimum value if leaf range is specified
+   Short_t       fMaximum;         ///<  Maximum value if leaf range is specified
+   Short_t       *fValue;          ///<! Pointer to data buffer
+   Short_t       **fPointer;       ///<! Address of pointer to data buffer
 
 public:
    TLeafS();

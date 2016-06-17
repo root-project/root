@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /**
-\class TGFALFile                                                   
+\class TGFALFile
 \ingroup IO
 
 Read and write data via the underlying Grid access mechanism.
@@ -23,13 +23,13 @@ SURL or a TURL, like:
 Grid storage interactions today require using several existing
 software components:
   - The replica catalog services to locate valid replicas of files.
-  - The SRM software to ensure:                                     
-    - Files  exist on disk (they are recalled from mass storage if necessary) or                                     
+  - The SRM software to ensure:
+    - Files  exist on disk (they are recalled from mass storage if necessary) or
     - Space is allocated on disk for new files (they are possibly migrated to mass storage later).
   - A file access mechanism to access files from the storage system on the worker node.
-The GFAL library hides these interactions and presents a Posix     
+The GFAL library hides these interactions and presents a Posix
 interface for the I/O operations. The currently supported protocols
-are: file for local access, dcap, gsidcap and kdcap (dCache access 
+are: file for local access, dcap, gsidcap and kdcap (dCache access
 protocol) and rfio (CASTOR access protocol).
 
 ### File naming convention
@@ -39,9 +39,9 @@ name (TURL):
   - an LFN starts with lfn. Example: \a lfn:baud/testgfal15
   - a GUID starts with guid. Example: \a guid:2cd59291-7ae7-4778-af6d-b1f423719441
   - an SURL starts with srm://. Example: \a srm://wacdr002d.cern.ch:8443/castor/cern.ch/user/b/baud/testgfal15
-  - a TURL starts with a protocol name. Example: \a rfio:///castor/cern.ch/user/b/baud/testgfal15 
-Note that for the TGFALFile plugin to work, all these pathnames    
-should be prepended by gfal:.                                      
+  - a TURL starts with a protocol name. Example: \a rfio:///castor/cern.ch/user/b/baud/testgfal15
+Note that for the TGFALFile plugin to work, all these pathnames
+should be prepended by gfal:.
 */
 
 #include "TROOT.h"

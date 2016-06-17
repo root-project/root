@@ -30,6 +30,7 @@
 ClassImp(TVirtualBranchBrowsable);
 
 /** \class TVirtualBranchBrowsable
+\ingroup tree
 
 TVirtualBranchBrowsable is a base class (not really abstract, but useless
 by itself) for helper objects that extend TBranch's browsing support.
@@ -377,6 +378,7 @@ ClassImp(TMethodBrowsable);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// \class TMethodBrowsable
+/// \ingroup tree
 ///
 /// This helper object allows the browsing of methods of objects stored in
 /// branches. They will be depicted by a leaf (or a branch, in case the method
@@ -597,6 +599,7 @@ ClassImp(TNonSplitBrowsable);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// \class TNonSplitBrowsable
+/// \ingroup tree
 ///
 /// Allows a TBrowser to browse non-split branches as if they were split. The
 /// generator extracts the necessary information from the streamer info in
@@ -735,6 +738,7 @@ ClassImp(TCollectionPropertyBrowsable);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// \class TCollectionPropertyBrowsable
+/// \ingroup tree
 ///
 /// A tiny browser helper object (and its generator) for adding a virtual
 /// (as in "not actually part of the class", not in C++ virtual) "@size()"
@@ -882,6 +886,7 @@ ClassImp(TCollectionMethodBrowsable);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// \class TCollectionMethodBrowsable
+/// \ingroup tree
 ///
 /// TCollectionMethodBrowsable extends TCollectionPropertyBrowsable by showing
 /// all methods of the collection itself. If none are available - e.g. for STL

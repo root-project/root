@@ -157,7 +157,7 @@ namespace TMVA {
       // default initialisation called by all constructors
       void Init( void );
 
-      ClassDef(MethodFisher,0) // Analysis of Fisher discriminant (Fisher or Mahalanobis approach) 
+      ClassDef(MethodFisher,0); // Analysis of Fisher discriminant (Fisher or Mahalanobis approach) 
    };
 
 } // namespace TMVA

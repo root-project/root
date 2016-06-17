@@ -60,8 +60,8 @@ namespace TMVA {
 
    public:
 
-      TreeInfo( TTree* tr, const TString& className, Double_t weight=1.0, Types::ETreeType tt = Types::kMaxTreeType, Bool_t own=kFALSE ) 
-         : fTree(tr), fClassName(className), fWeight(weight), fTreeType(tt), fOwner(own) {}
+   TreeInfo( TTree* tr, const TString& className, Double_t weight=1.0, Types::ETreeType tt = Types::kMaxTreeType, Bool_t own=kFALSE ) 
+      : fTree(tr), fClassName(className), fWeight(weight), fTreeType(tt), fOwner(own) {}
       ~TreeInfo() { if (fOwner) delete fTree; }
 
       TTree*           GetTree()      const { return fTree; }

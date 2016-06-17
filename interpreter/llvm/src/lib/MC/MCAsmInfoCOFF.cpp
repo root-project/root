@@ -36,6 +36,9 @@ MCAsmInfoCOFF::MCAsmInfoCOFF() {
   NeedsDwarfSectionOffsetDirective = true;
 
   UseIntegratedAssembler = true;
+
+  // At least MSVC inline-asm does AShr.
+  UseLogicalShr = false;
 }
 
 void MCAsmInfoMicrosoft::anchor() { }

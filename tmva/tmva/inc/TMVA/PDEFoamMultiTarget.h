@@ -64,7 +64,7 @@ namespace TMVA
 
       // ---------- ROOT class definition
       ClassDef(PDEFoamMultiTarget, 1) // Tree of PDEFoamCells
-   }; // end of PDEFoamMultiTarget
+         }; // end of PDEFoamMultiTarget
 
 }  // namespace TMVA
 

@@ -33,6 +33,6 @@ public:
 
    Double_t GetScale() const;
 
-   ClassDef(TEveScalableStraightLineSet, 1); // Straight-line-set with extra scaling.
+   ClassDef(TEveScalableStraightLineSet, 0); // Straight-line-set with extra scaling.
 };
 #endif

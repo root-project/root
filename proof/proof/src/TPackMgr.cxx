@@ -9,15 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TPackMgr                                                             //
-//                                                                      //
-// The PROOF package manager contains tools to  manage packages.        //
-// This class has been created to eliminate duplications, waiting for   //
-// a proper package manager for ROOT.                                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TPackMgr
+\ingroup proofkernel
+
+The PROOF package manager contains tools to  manage packages.
+This class has been created to eliminate duplications, and to allow for
+standalone usage.
+
+*/
 
 #include "TError.h"
 #include "TFile.h"
@@ -64,6 +63,9 @@ THashList *TPackMgr::fgGlobalPackMgrList = 0; // list of package managers for gl
 TPackMgr::TPackMgr(const char *dir, const char *key)
          : fLogger(DefaultLogger), fName(key), fDir(dir), fLock(dir), fEnabledPackages(0)
 {
+   // Work with full names
+   if (gSystem->ExpandPathName(fDir))
+      Warning("TPackMgr", "problems expanding path '%s'", fDir.Data());
    // The lock file in temp
    TString lockname = TString::Format("%s/packdir-lock-%s",
                       gSystem->TempDirectory(), TString(fDir).ReplaceAll("/","%").Data());
@@ -602,10 +604,10 @@ Int_t TPackMgr::Clean(const char *pack)
 /// If 'pack' is null or empty all packages are cleared
 ///
 
-Int_t TPackMgr::Remove(const char *pack)
+Int_t TPackMgr::Remove(const char *pack, Bool_t dolock)
 {
    // Shared lock from here
-   TLockPathGuard lp(&fLock);
+   if (dolock) fLock.Lock();
    Int_t rc1 = 0, rc2 = 0, rc3 = 0;
    if (pack && strlen(pack)) {
       // remove package directory and par file
@@ -622,6 +624,7 @@ Int_t TPackMgr::Remove(const char *pack)
       // Clear all packages
       rc1 = gSystem->Exec(TString::Format("%s %s/*", kRM, fDir.Data()));
    }
+   if (dolock) fLock.Unlock();
    return (rc1 + rc2 + rc3);
 }
 
@@ -796,7 +799,7 @@ Int_t TPackMgr::Install(const char *par, Bool_t rmold)
    // Dowload checksum file, if available
    TString dldir;
    if (GetDownloadDir(dldir) != 0) {
-      Error("Install", "could not create/get di download directory");
+      Error("Install", "could not create/get download directory");
       return -1;
    }
 
@@ -822,7 +825,7 @@ Int_t TPackMgr::Install(const char *par, Bool_t rmold)
       install = kFALSE;
       if (rmold) {
          // Asked to remove: do it
-         if (Remove(pack) < 0) {
+         if (Remove(pack, kFALSE) < 0) {
             Error("Install", "could not remove existing version of '%s'", pack.Data());
             return -1;
          }

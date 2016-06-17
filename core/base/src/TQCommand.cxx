@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TQCommand
+\ingroup Base
+
 The Command design pattern is based on the idea, that all editing
 in an application is done by creating instances of command objects.
 Command objects apply changes to the edited object and then are

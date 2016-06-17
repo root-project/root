@@ -15,7 +15,7 @@
 namespace PyROOT {
 
    struct TParameter;
-   struct TCallContext;  
+   struct TCallContext;
 
    class TConverter {
    public:

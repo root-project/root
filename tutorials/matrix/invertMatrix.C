@@ -1,20 +1,29 @@
-//Author: Eddy Offermann
-
-// This macro shows several ways to invert a matrix . Each  method
-// is a trade-off between accuracy of the inversion and speed.
-// Which method to chose depends on "how well-behaved" the matrix is.
-// This is best checked through a call to Condition(), available in each
-// decomposition class. A second possibilty (less preferred) would be to
-// check the determinant
-//
-//   USAGE
-//   -----
-// This macro can be execued via CINT or via ACLIC
-// - via CINT, do
-//    root > .x invertMatrix.C
-// - via ACLIC
-//    root > gSystem->Load("libMatrix");
-//    root > .x invertMatrix.C+
+/// \file
+/// \ingroup tutorial_matrix
+/// This macro shows several ways to invert a matrix . Each  method
+/// is a trade-off between accuracy of the inversion and speed.
+/// Which method to chose depends on "how well-behaved" the matrix is.
+/// This is best checked through a call to Condition(), available in each
+/// decomposition class. A second possibility (less preferred) would be to
+/// check the determinant
+///
+///  #### USAGE
+///
+/// This macro can be executed via CINT or via ACLIC
+///  - via the interpretor, do
+/// ~~~ {.cpp}
+///    root > .x invertMatrix.C
+/// ~~~
+///  - via ACLIC
+/// ~~~ {.cpp}
+///    root > gSystem->Load("libMatrix");
+///    root > .x invertMatrix.C+
+/// ~~~
+///
+/// \macro_output
+/// \macro_code
+///
+/// \author Eddy Offermann
 
 #ifndef __CINT__
 #include "Riostream.h"
@@ -37,7 +46,7 @@ void invertMatrix(Int_t msize=6)
   }
   cout << "--------------------------------------------------------" <<endl;
   cout << "Inversion results for a ("<<msize<<","<<msize<<") matrix" <<endl;
-  cout << "For each inversion procedure we check the maxmimum size " <<endl;
+  cout << "For each inversion procedure we check the maximum size " <<endl;
   cout << "of the off-diagonal elements of Inv(A) * A              " <<endl;
   cout << "--------------------------------------------------------" <<endl;
 
@@ -54,7 +63,7 @@ void invertMatrix(Int_t msize=6)
 //
 //    The only "quality" control in this process is to check whether the 6 x 6
 //    determinant is unequal 0 . But speed gains are significant compared to Invert() ,
-//    upto an order of magnitude for sizes <= 4 x 4
+//    up to an order of magnitude for sizes <= 4 x 4
 //
 //    The inversion is done "in place", so the original matrix will be overwritten
 //    If a pointer to a Double_t is supplied the determinant is calculated
@@ -88,7 +97,7 @@ void invertMatrix(Int_t msize=6)
 //      With each decomposition, a tolerance has to be specified . If this tolerance
 //      requirement is not met, the matrix is regarded as being singular. The value
 //      passed to this decomposition, is the data member fTol of the matrix . Its
-//      default value is DBL_EPSILON, which is defined as the smallest nuber so that
+//      default value is DBL_EPSILON, which is defined as the smallest number so that
 //      1+DBL_EPSILON > 1
 //    - The last step is a standard forward/backward substitution .
 //
@@ -115,7 +124,7 @@ void invertMatrix(Int_t msize=6)
 
 // 3. Inversion through LU decomposition
 //   The (default) algorithms used are similar to 2. (Not identical because in 2, the whole
-//   calculation is done "in-place". Here the orginal matrix is copied (so more memory
+//   calculation is done "in-place". Here the original matrix is copied (so more memory
 //   management => slower) and several operations can be performed without having to repeat
 //   the decomposition step .
 //   Inverting a matrix is nothing else than solving a set of equations where the rhs is given

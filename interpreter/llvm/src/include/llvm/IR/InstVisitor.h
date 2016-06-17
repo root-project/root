@@ -169,6 +169,9 @@ public:
   RetTy visitIndirectBrInst(IndirectBrInst &I)    { DELEGATE(TerminatorInst);}
   RetTy visitResumeInst(ResumeInst &I)            { DELEGATE(TerminatorInst);}
   RetTy visitUnreachableInst(UnreachableInst &I)  { DELEGATE(TerminatorInst);}
+  RetTy visitCleanupReturnInst(CleanupReturnInst &I) { DELEGATE(TerminatorInst);}
+  RetTy visitCatchReturnInst(CatchReturnInst &I)  { DELEGATE(TerminatorInst); }
+  RetTy visitCatchSwitchInst(CatchSwitchInst &I)  { DELEGATE(TerminatorInst);}
   RetTy visitICmpInst(ICmpInst &I)                { DELEGATE(CmpInst);}
   RetTy visitFCmpInst(FCmpInst &I)                { DELEGATE(CmpInst);}
   RetTy visitAllocaInst(AllocaInst &I)            { DELEGATE(UnaryInstruction);}
@@ -200,6 +203,9 @@ public:
   RetTy visitExtractValueInst(ExtractValueInst &I){ DELEGATE(UnaryInstruction);}
   RetTy visitInsertValueInst(InsertValueInst &I)  { DELEGATE(Instruction); }
   RetTy visitLandingPadInst(LandingPadInst &I)    { DELEGATE(Instruction); }
+  RetTy visitFuncletPadInst(FuncletPadInst &I) { DELEGATE(Instruction); }
+  RetTy visitCleanupPadInst(CleanupPadInst &I) { DELEGATE(FuncletPadInst); }
+  RetTy visitCatchPadInst(CatchPadInst &I)     { DELEGATE(FuncletPadInst); }
 
   // Handle the special instrinsic instruction classes.
   RetTy visitDbgDeclareInst(DbgDeclareInst &I)    { DELEGATE(DbgInfoIntrinsic);}
@@ -259,7 +265,7 @@ private:
   // Special helper function to delegate to CallInst subclass visitors.
   RetTy delegateCallInst(CallInst &I) {
     if (const Function *F = I.getCalledFunction()) {
-      switch ((Intrinsic::ID)F->getIntrinsicID()) {
+      switch (F->getIntrinsicID()) {
       default:                     DELEGATE(IntrinsicInst);
       case Intrinsic::dbg_declare: DELEGATE(DbgDeclareInst);
       case Intrinsic::dbg_value:   DELEGATE(DbgValueInst);

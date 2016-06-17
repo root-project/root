@@ -41,10 +41,10 @@ namespace TMVA{
 
       RQ_OBJECT("StatDialogBDTReg")
 
-   public:
+         public:
 
       StatDialogBDTReg(TString dataset, const TGWindow* p, TString wfile, 
-                     TString methName = "BDT", Int_t itree = 0 );
+                       TString methName = "BDT", Int_t itree = 0 );
       virtual ~StatDialogBDTReg() {
          TMVA::DecisionTreeNode::fgIsTraining=false;
          fThis = 0;

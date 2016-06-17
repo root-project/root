@@ -107,7 +107,7 @@ namespace TMVA {
       mutable MsgLogger* fLogger;         // message logger
       MsgLogger& Log() const { return *fLogger; }          
 
-      ClassDef(GeneticAlgorithm, 0)  // Genetic algorithm controller
+      ClassDef(GeneticAlgorithm, 0);  // Genetic algorithm controller
    };
    
 } // namespace TMVA

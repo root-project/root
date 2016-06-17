@@ -328,7 +328,7 @@ Bool_t TMVA::kNN::ModulekNN::Fill(const UShort_t odepth, const UInt_t ifrac, con
 
    for (std::map<Short_t, UInt_t>::const_iterator it = fCount.begin(); it != fCount.end(); ++it) {
       Log() << kINFO << "<Fill> Class " << it->first << " has " << std::setw(8)
-              << it->second << " events" << Endl;
+            << it->second << " events" << Endl;
    }
 
    return kTRUE;
@@ -366,18 +366,18 @@ Bool_t TMVA::kNN::ModulekNN::Find(Event event, const UInt_t nfind, const std::st
    fkNNList.clear();
 
    if(option.find("weight") != std::string::npos)
-   {
-      // recursive kd-tree search for nfind-nearest neighbors
-      // use event weight to find all nearest events
-      // that have sum of weights >= nfind
-      kNN::Find<kNN::Event>(fkNNList, fTree, event, Double_t(nfind), 0.0);
-   }
+      {
+         // recursive kd-tree search for nfind-nearest neighbors
+         // use event weight to find all nearest events
+         // that have sum of weights >= nfind
+         kNN::Find<kNN::Event>(fkNNList, fTree, event, Double_t(nfind), 0.0);
+      }
    else
-   {
-      // recursive kd-tree search for nfind-nearest neighbors
-      // count nodes and do not use event weight
-      kNN::Find<kNN::Event>(fkNNList, fTree, event, nfind);
-   }
+      {
+         // recursive kd-tree search for nfind-nearest neighbors
+         // count nodes and do not use event weight
+         kNN::Find<kNN::Event>(fkNNList, fTree, event, nfind);
+      }
 
    return kTRUE;
 }
@@ -556,7 +556,7 @@ void TMVA::kNN::ModulekNN::ComputeMetric(const UInt_t ifrac)
    const UInt_t rfrac = 100 - (100 - ifrac)/2;
 
    Log() << kINFO << "Computing scale factor for 1d distributions: "
-           << "(ifrac, bottom, top) = (" << ifrac << "%, " << lfrac << "%, " << rfrac << "%)" << Endl;
+         << "(ifrac, bottom, top) = (" << ifrac << "%, " << lfrac << "%, " << rfrac << "%)" << Endl;
 
    fVarScale.clear();
 

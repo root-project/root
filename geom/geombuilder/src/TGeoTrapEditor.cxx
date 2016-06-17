@@ -1,5 +1,5 @@
 // @(#):$Id$
-// Author: M.Gheata 
+// Author: M.Gheata
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -80,7 +80,7 @@ TGeoTrapEditor::TGeoTrapEditor(const TGWindow *p, Int_t width,
    fEH1->Associate(this);
    f1->AddFrame(fEH1, new TGLayoutHints(kLHintsRight, 2, 2, 4, 4));
    AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
-   
+
    // Number entry for Bl1
    f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth);
    f1->AddFrame(new TGLabel(f1, "DX1"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
@@ -92,7 +92,7 @@ TGeoTrapEditor::TGeoTrapEditor(const TGWindow *p, Int_t width,
    fEBl1->Associate(this);
    f1->AddFrame(fEBl1, new TGLayoutHints(kLHintsRight, 2, 2, 4, 4));
    AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
-   
+
    // Number entry for Tl1
    f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth);
    f1->AddFrame(new TGLabel(f1, "DX2"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
@@ -116,7 +116,7 @@ TGeoTrapEditor::TGeoTrapEditor(const TGWindow *p, Int_t width,
    fESc1->Associate(this);
    f1->AddFrame(fESc1, new TGLayoutHints(kLHintsRight, 2, 2, 4, 4));
    AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
-   
+
     // Number entry for scale factor
    f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth);
    f1->AddFrame(new TGLabel(f1, "SC2"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
@@ -140,7 +140,7 @@ TGeoTrapEditor::TGeoTrapEditor(const TGWindow *p, Int_t width,
    fEDz->Associate(this);
    f1->AddFrame(fEDz, new TGLayoutHints(kLHintsRight, 2, 2, 4, 4));
    AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
- 
+
    // Number entry for Alpha1
    f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth);
    f1->AddFrame(new TGLabel(f1, "ALPHA"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
@@ -175,12 +175,12 @@ TGeoTrapEditor::TGeoTrapEditor(const TGWindow *p, Int_t width,
    fEPhi->Associate(this);
    f1->AddFrame(fEPhi, new TGLayoutHints(kLHintsRight, 2, 2, 4, 4));
    AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
-     
+
    // Delayed draw
    fDFrame = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth | kSunkenFrame);
    fDelayed = new TGCheckButton(fDFrame, "Delayed draw");
    fDFrame->AddFrame(fDelayed, new TGLayoutHints(kLHintsLeft , 2, 2, 4, 4));
-   AddFrame(fDFrame,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
+   AddFrame(fDFrame,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
 
    // Buttons
    fBFrame = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth);
@@ -190,7 +190,7 @@ TGeoTrapEditor::TGeoTrapEditor(const TGWindow *p, Int_t width,
    fUndo = new TGTextButton(fBFrame, "Undo");
    fBFrame->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
    fUndo->Associate(this);
-   AddFrame(fBFrame,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
+   AddFrame(fBFrame,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
    fUndo->SetSize(fApply->GetSize());
 }
 
@@ -202,10 +202,10 @@ TGeoTrapEditor::~TGeoTrapEditor()
    TGFrameElement *el;
    TIter next(GetList());
    while ((el = (TGFrameElement *)next())) {
-      if (el->fFrame->IsComposite()) 
+      if (el->fFrame->IsComposite())
          TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
-   Cleanup();   
+   Cleanup();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -244,8 +244,8 @@ void TGeoTrapEditor::SetModel(TObject* obj)
 {
    if (obj == 0 || (obj->IsA()!=TGeoTrap::Class())) {
       SetActive(kFALSE);
-      return;                 
-   } 
+      return;
+   }
    fShape = (TGeoTrap*)obj;
    fH1i = fShape->GetH1();
    fBl1i = fShape->GetBl1();
@@ -263,7 +263,7 @@ void TGeoTrapEditor::SetModel(TObject* obj)
    else {
       fShapeName->SetText(sname);
       fNamei = sname;
-   }   
+   }
    fEH1->SetNumber(fH1i);
    fEBl1->SetNumber(fBl1i);
    fETl1->SetNumber(fTl1i);
@@ -275,7 +275,7 @@ void TGeoTrapEditor::SetModel(TObject* obj)
    fEPhi->SetNumber(fPhii);
    fApply->SetEnabled(kFALSE);
    fUndo->SetEnabled(kFALSE);
-   
+
    if (fInit) ConnectSignals2Slots();
    SetActive();
 }
@@ -306,15 +306,15 @@ void TGeoTrapEditor::DoApply()
    Double_t sc1 = fESc1->GetNumber();
    Double_t sc2 = fESc2->GetNumber();
    Double_t h1 = sc1*fEH1->GetNumber();
-   Double_t bl1 = sc1*fEBl1->GetNumber(); 
-   Double_t tl1 = sc1*fETl1->GetNumber(); 
+   Double_t bl1 = sc1*fEBl1->GetNumber();
+   Double_t tl1 = sc1*fETl1->GetNumber();
    Double_t h2 = sc2*fEH1->GetNumber();
-   Double_t bl2 = sc2*fEBl1->GetNumber(); 
-   Double_t tl2 = sc2*fETl1->GetNumber(); 
+   Double_t bl2 = sc2*fEBl1->GetNumber();
+   Double_t tl2 = sc2*fETl1->GetNumber();
    Double_t dz = fEDz->GetNumber();
    Double_t alpha1 = fEAlpha1->GetNumber();
-   Double_t theta = fETheta->GetNumber(); 
-   Double_t phi = fEPhi->GetNumber();      
+   Double_t theta = fETheta->GetNumber();
+   Double_t phi = fEPhi->GetNumber();
    Double_t param[11];
    param[0] = dz;
    param[1] = theta;
@@ -341,9 +341,9 @@ void TGeoTrapEditor::DoApply()
             view->SetRange(-fShape->GetDX(), -fShape->GetDY(), -fShape->GetDZ(),
                            fShape->GetDX(), fShape->GetDY(), fShape->GetDZ());
             Update();
-         }                  
+         }
       } else Update();
-   }   
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -372,7 +372,7 @@ void TGeoTrapEditor::DoUndo()
    fUndo->SetEnabled(kFALSE);
    fApply->SetEnabled(kFALSE);
 }
-   
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot for H1.
 
@@ -382,7 +382,7 @@ void TGeoTrapEditor::DoH1()
    if (h1<=0) {
       h1 = 0.1;
       fEH1->SetNumber(h1);
-   }   
+   }
    DoModified();
    if (!IsDelayed()) DoApply();
 }
@@ -396,7 +396,7 @@ void TGeoTrapEditor::DoBl1()
    if (bl1<=0) {
       bl1 = 0.1;
       fEBl1->SetNumber(bl1);
-   }   
+   }
    DoModified();
    if (!IsDelayed()) DoApply();
 }
@@ -410,7 +410,7 @@ void TGeoTrapEditor::DoTl1()
    if (tl1<=0) {
       tl1 = 0.1;
       fETl1->SetNumber(tl1);
-   }   
+   }
    DoModified();
    if (!IsDelayed()) DoApply();
 }
@@ -424,7 +424,7 @@ void TGeoTrapEditor::DoDz()
    if (dz<=0) {
       dz = 0.1;
       fEDz->SetNumber(dz);
-   }   
+   }
    DoModified();
    if (!IsDelayed()) DoApply();
 }
@@ -438,7 +438,7 @@ void TGeoTrapEditor::DoSc1()
    if (sc1<=0) {
       sc1 = 0.1;
       fESc1->SetNumber(sc1);
-   }   
+   }
    DoModified();
    if (!IsDelayed()) DoApply();
 }
@@ -452,7 +452,7 @@ void TGeoTrapEditor::DoSc2()
    if (sc2<=0) {
       sc2 = 0.1;
       fESc2->SetNumber(sc2);
-   }   
+   }
    DoModified();
    if (!IsDelayed()) DoApply();
 }
@@ -466,7 +466,7 @@ void TGeoTrapEditor::DoAlpha1()
    if (TMath::Abs(alpha1)>=90) {
       alpha1 = 89.9*TMath::Sign(1.,alpha1);
       fEAlpha1->SetNumber(alpha1);
-   }   
+   }
    DoModified();
    if (!IsDelayed()) DoApply();
 }
@@ -476,15 +476,15 @@ void TGeoTrapEditor::DoAlpha1()
 
 void TGeoTrapEditor::DoTheta()
 {
-   Double_t theta = fETheta->GetNumber(); 
+   Double_t theta = fETheta->GetNumber();
    if (theta<0) {
       theta = 0;
       fETheta->SetNumber(theta);
-   }   
+   }
    if (theta>180) {
       theta = 180;
       fETheta->SetNumber(theta);
-   }   
+   }
    DoModified();
    if (!IsDelayed()) DoApply();
 }
@@ -498,7 +498,7 @@ void TGeoTrapEditor::DoPhi()
    if (phi<0 || phi>360) {
       phi = 0;
       fEPhi->SetNumber(phi);
-   }   
+   }
    DoModified();
    if (!IsDelayed()) DoApply();
 }
@@ -557,10 +557,10 @@ TGeoGtraEditor::~TGeoGtraEditor()
    TGFrameElement *el;
    TIter next(GetList());
    while ((el = (TGFrameElement *)next())) {
-      if (el->fFrame->IsComposite()) 
+      if (el->fFrame->IsComposite())
          TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
-   Cleanup();   
+   Cleanup();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -570,8 +570,8 @@ void TGeoGtraEditor::SetModel(TObject* obj)
 {
    if (obj == 0 || (obj->IsA()!=TGeoGtra::Class())) {
       SetActive(kFALSE);
-      return;                 
-   } 
+      return;
+   }
    fShape = (TGeoTrap*)obj;
    fH1i = fShape->GetH1();
    fBl1i = fShape->GetBl1();
@@ -590,7 +590,7 @@ void TGeoGtraEditor::SetModel(TObject* obj)
    else {
       fShapeName->SetText(sname);
       fNamei = sname;
-   }   
+   }
    fEH1->SetNumber(fH1i);
    fEBl1->SetNumber(fBl1i);
    fETl1->SetNumber(fTl1i);
@@ -603,11 +603,11 @@ void TGeoGtraEditor::SetModel(TObject* obj)
    fETwist->SetNumber(fTwisti);
    fApply->SetEnabled(kFALSE);
    fUndo->SetEnabled(kFALSE);
-   
+
    if (fInit) ConnectSignals2Slots();
    SetActive();
-}   
-   
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot for applying current settings.
 
@@ -618,16 +618,16 @@ void TGeoGtraEditor::DoApply()
    Double_t sc1 = fESc1->GetNumber();
    Double_t sc2 = fESc2->GetNumber();
    Double_t h1 = sc1*fEH1->GetNumber();
-   Double_t bl1 = sc1*fEBl1->GetNumber(); 
-   Double_t tl1 = sc1*fETl1->GetNumber(); 
+   Double_t bl1 = sc1*fEBl1->GetNumber();
+   Double_t tl1 = sc1*fETl1->GetNumber();
    Double_t h2 = sc2*fEH1->GetNumber();
-   Double_t bl2 = sc2*fEBl1->GetNumber(); 
-   Double_t tl2 = sc2*fETl1->GetNumber(); 
+   Double_t bl2 = sc2*fEBl1->GetNumber();
+   Double_t tl2 = sc2*fETl1->GetNumber();
    Double_t dz = fEDz->GetNumber();
    Double_t alpha1 = fEAlpha1->GetNumber();
-   Double_t theta = fETheta->GetNumber(); 
+   Double_t theta = fETheta->GetNumber();
    Double_t phi = fEPhi->GetNumber();
-   Double_t twist = fETwist->GetNumber();      
+   Double_t twist = fETwist->GetNumber();
    Double_t param[12];
    param[0] = dz;
    param[1] = theta;
@@ -656,9 +656,9 @@ void TGeoGtraEditor::DoApply()
             view->SetRange(-fShape->GetDX(), -fShape->GetDY(), -fShape->GetDZ(),
                            fShape->GetDX(), fShape->GetDY(), fShape->GetDZ());
             Update();
-         }                  
+         }
       } else Update();
-   }   
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -690,7 +690,7 @@ void TGeoGtraEditor::DoTwist()
    if (twist<=-180 || twist>=180) {
       twist = 0.;
       fETwist->SetNumber(twist);
-   }   
+   }
    DoModified();
    if (!IsDelayed()) DoApply();
-}   
+}

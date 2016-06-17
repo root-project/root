@@ -21,9 +21,15 @@
 
 #include "ROOT/TAxis.h"
 #include "ROOT/THistBinIter.h"
+#include "ROOT/THistUtils.h"
 
 namespace ROOT {
 namespace Experimental {
+
+template<int DIMENSIONS, class PRECISION,
+  template <int D_, class P_, template <class P__> class STORAGE> class... STAT>
+class THist;
+
 
 namespace Hist {
 /// Iterator over n dimensional axes - an array of n axis iterators.
@@ -59,7 +65,9 @@ template <int DIMENSIONS>
 class THistImplPrecisionAgnosticBase {
 public:
   /// Type of the coordinate: a DIMENSIONS-dimensional array of doubles.
-  using Coord_t = std::array<double, DIMENSIONS>;
+  using CoordArray_t = Hist::CoordArray_t<DIMENSIONS>;
+  /// Range type.
+  using AxisIterRange_t = Hist::AxisIterRange_t<DIMENSIONS>;
 
   THistImplPrecisionAgnosticBase() = default;
   THistImplPrecisionAgnosticBase(const THistImplPrecisionAgnosticBase&) = default;
@@ -77,21 +85,21 @@ public:
   std::string_view GetTitle() const { return fTitle; }
 
   /// Given the coordinate `x`, determine the index of the bin.
-  virtual int GetBinIndex(const Coord_t& x) const = 0;
+  virtual int GetBinIndex(const CoordArray_t& x) const = 0;
   /// Given the coordinate `x`, determine the index of the bin, possibly growing
   /// axes for which `x` is out of range.
-  virtual int GetBinIndexAndGrow(const Coord_t& x) = 0;
+  virtual int GetBinIndexAndGrow(const CoordArray_t& x) = 0;
 
   /// Get the center in all dimensions of the bin with index `binidx`.
-  virtual Coord_t GetBinCenter(int binidx) const = 0;
+  virtual CoordArray_t GetBinCenter(int binidx) const = 0;
   /// Get the lower edge in all dimensions of the bin with index `binidx`.
-  virtual Coord_t GetBinFrom(int binidx) const = 0;
+  virtual CoordArray_t GetBinFrom(int binidx) const = 0;
   /// Get the upper edge in all dimensions of the bin with index `binidx`.
-  virtual Coord_t GetBinTo(int binidx) const = 0;
+  virtual CoordArray_t GetBinTo(int binidx) const = 0;
 
   /// The bin's uncertainty. size() of the vector is a multiple of 2:
   /// several kinds of uncertainty, same number of entries for lower and upper.
-  virtual double GetBinUncertaintyAsDouble(int binidx) const = 0;
+  virtual double GetBinUncertainty(int binidx) const = 0;
 
   /// The bin content, cast to double.
   virtual double GetBinContentAsDouble(int binidx) const = 0;
@@ -101,12 +109,12 @@ public:
   /// \param iAxis - index of the axis, must be 0 <= iAxis < DIMENSION
   virtual TAxisView GetAxis(int iAxis) const = 0;
 
-  /// Get a Hist::AxisIterRange_t for the whole histogram, possibly
-  /// restricting the range to non-overflow bins.
+  /// Get a AxisIterRange_t for the whole histogram, possibly restricting the
+  /// range to non-overflow bins.
   ///
   /// \param withOverUnder - specifies for each dimension whether under and
   /// overflow should be included in the returned range.
-  virtual Hist::AxisIterRange_t<DIMENSIONS>
+  virtual AxisIterRange_t
     GetRange(const std::array<Hist::EOverflow, DIMENSIONS>& withOverUnder) const = 0;
 
 private:
@@ -125,24 +133,22 @@ private:
 template<class DATA>
 class THistImplBase: public THistImplPrecisionAgnosticBase<DATA::GetNDim()> {
 public:
-  /// Type of a coordinate: an array of `GetNDim()` doubles.
-  using Coord_t = typename THistImplPrecisionAgnosticBase<DATA::GetNDim()>::Coord_t;
-  static_assert(std::is_same<Coord_t, typename DATA::Coord_t>::value,
-                "THistImplPrecisionAgnosticBase and DATA disagree on Coord_t");
-
   /// Type of the statistics (bin content, uncertainties etc).
   using Stat_t = DATA;
+  /// Type of the coordinate: a DIMENSIONS-dimensional array of doubles.
+  using CoordArray_t = Hist::CoordArray_t<DATA::GetNDim()>;
   /// Type of the bin content (and thus weights).
   using Weight_t = typename DATA::Weight_t;
 
   /// Type of the Fill(x, w) function
-  using FillFunc_t = void (THistImplBase::*)(const Coord_t& x, Weight_t w);
+  using FillFunc_t = void (THistImplBase::*)(const CoordArray_t& x, Weight_t w);
 
 private:
   /// The histogram's bin content, uncertainties etc.
   Stat_t fStatistics;
 
 public:
+  THistImplBase() = default;
   THistImplBase(size_t numBins): fStatistics(numBins) {}
   THistImplBase(std::string_view title, size_t numBins):
     THistImplPrecisionAgnosticBase<DATA::GetNDim()>(title), fStatistics(numBins) {}
@@ -152,11 +158,11 @@ public:
   /// Interface function to fill a vector or array of coordinates with
   /// corresponding weights.
   /// \note the size of `xN` and `weightN` must be the same!
-  virtual void FillN(const std::array_view<Coord_t> xN,
+  virtual void FillN(const std::array_view<CoordArray_t> xN,
                      const std::array_view<Weight_t> weightN) = 0;
 
   /// Interface function to fill a vector or array of coordinates.
-  virtual void FillN(const std::array_view<Coord_t> xN) = 0;
+  virtual void FillN(const std::array_view<CoordArray_t> xN) = 0;
 
   /// Retrieve the pointer to the overridden Fill(x, w) function.
   virtual FillFunc_t GetFillFunc() const = 0;
@@ -167,17 +173,19 @@ public:
 
   /// Apply a function (lambda) to all bins of the histogram. The function takes
   /// the bin coordinate and content.
-  virtual void ApplyXC(std::function<void(const Coord_t&, Weight_t)>) const = 0;
+  virtual void ApplyXC(std::function<void(const CoordArray_t&, Weight_t)>) const = 0;
 
   /// Apply a function (lambda) to all bins of the histogram. The function takes
   /// the bin coordinate, content and uncertainty ("error") of the content.
-  virtual void ApplyXCE(std::function<void(const Coord_t&, Weight_t, Weight_t)>) const = 0;
+  virtual void ApplyXCE(std::function<void(const CoordArray_t&, Weight_t, double)>) const = 0;
 
   /// Get the bin content (sum of weights) for the bin at coordinate x.
-  virtual Weight_t GetBinContent(const Coord_t& x) const = 0;
+  virtual Weight_t GetBinContent(const CoordArray_t& x) const = 0;
+
+  using THistImplPrecisionAgnosticBase<DATA::GetNDim()>::GetBinUncertainty;
 
   /// Get the bin uncertainty for the bin at coordinate x.
-  virtual Weight_t GetBinUncertainty(const Coord_t& x) const = 0;
+  virtual double GetBinUncertainty(const CoordArray_t& x) const = 0;
 
   /// Get the number of bins in this histogram, including possible under- and
   /// overflow bins.
@@ -246,7 +254,7 @@ struct TGetBinIndex;
 // Break recursion
 template <class HISTIMPL, class AXES, bool GROW>
 struct TGetBinIndex< -1, HISTIMPL, AXES, GROW> {
-  int operator()(HISTIMPL*, const AXES&, const typename HISTIMPL::Coord_t&,
+  int operator()(HISTIMPL*, const AXES&, const typename HISTIMPL::CoordArray_t&,
                  TAxisBase::EFindStatus& status) const {
     status = TAxisBase::EFindStatus::kValid;
     return 0;
@@ -256,26 +264,27 @@ struct TGetBinIndex< -1, HISTIMPL, AXES, GROW> {
 template <int I, class HISTIMPL, class AXES, bool GROW>
 struct TGetBinIndex {
   int operator()(HISTIMPL* hist, const AXES& axes,
-                 const typename HISTIMPL::Coord_t& x, TAxisBase::EFindStatus& status) const {
-    int bin = std::get<I>(axes).FindBin(x[I]);
-    if (GROW && std::get<I>(axes).CanGrow()
-        && (bin < 0 || bin > std::get<I>(axes).GetNBinsNoOver())) {
-      hist->GrowAxis(I, x[I]);
+                 const typename HISTIMPL::CoordArray_t& x, TAxisBase::EFindStatus& status) const {
+    constexpr const int thisAxis = HISTIMPL::GetNDim() - I - 1;
+    int bin = std::get<thisAxis>(axes).FindBin(x[thisAxis]);
+    if (GROW && std::get<thisAxis>(axes).CanGrow()
+        && (bin < 0 || bin > std::get<thisAxis>(axes).GetNBinsNoOver())) {
+      hist->GrowAxis(I, x[thisAxis]);
       status = TAxisBase::EFindStatus::kCanGrow;
 
       // Abort bin calculation; we don't care. Let THist::GetBinIndex() retry!
       return bin;
     }
     return bin + TGetBinIndex<I - 1, HISTIMPL, AXES, GROW>()(hist, axes, x, status)
-                 * std::get<I>(axes).GetNBins();
+                 * std::get<thisAxis>(axes).GetNBins();
   }
 };
 
 
-template<int I, class AXES> struct FillIterRange_t;
+template<int I, class AXES> struct TFillIterRange;
 
 // Break recursion.
-template<class AXES> struct FillIterRange_t<-1, AXES> {
+template<class AXES> struct TFillIterRange<-1, AXES> {
   void operator()(Hist::AxisIterRange_t<std::tuple_size<AXES>::value>& /*range*/,
                   const AXES& /*axes*/,
                   const std::array<Hist::EOverflow, std::tuple_size<AXES>::value>& /*over*/) const {}
@@ -285,7 +294,7 @@ template<class AXES> struct FillIterRange_t<-1, AXES> {
   as specified by `over`.
 */
 template<int I, class AXES>
-struct FillIterRange_t {
+struct TFillIterRange {
   void operator()(Hist::AxisIterRange_t<std::tuple_size<AXES>::value> &range,
                   const AXES &axes,
                   const std::array<Hist::EOverflow, std::tuple_size<AXES>::value> &over) const {
@@ -297,7 +306,7 @@ struct FillIterRange_t {
       range[1][I] = std::get<I>(axes).end_with_overflow();
     else
       range[1][I] = std::get<I>(axes).end();
-    FillIterRange_t<I - 1, AXES>()(range, axes, over);
+    TFillIterRange<I - 1, AXES>()(range, axes, over);
   }
 };
 
@@ -309,20 +318,20 @@ enum class EBinCoord {
   kBinTo ///< Get the bin high edge
 };
 
-template<int I, class COORD, class AXES> struct FillBinCoord_t;
+template<int I, class COORD, class AXES> struct TFillBinCoord;
 
 // Break recursion.
-template<class COORD, class AXES> struct FillBinCoord_t<-1, COORD, AXES> {
+template<class COORD, class AXES> struct TFillBinCoord<-1, COORD, AXES> {
   void operator()(COORD& /*coord*/, const AXES& /*axes*/, EBinCoord /*kind*/, int /*binidx*/) const {}
 };
 
 /** Fill `coord` with low bin edge or center or high bin edge of all axes.
 */
 template<int I, class COORD, class AXES>
-struct FillBinCoord_t {
+struct TFillBinCoord {
   void operator()(COORD& coord, const AXES& axes, EBinCoord kind, int binidx) const {
     int axisbin = binidx % std::get<I>(axes).GetNBins();
-    size_t coordidx = std::tuple_size<AXES>::value - I;
+    size_t coordidx = std::tuple_size<AXES>::value - I - 1;
     switch (kind) {
       case EBinCoord::kBinFrom:
         coord[coordidx] = std::get<I>(axes).GetBinFrom(axisbin);
@@ -334,7 +343,7 @@ struct FillBinCoord_t {
         coord[coordidx] = std::get<I>(axes).GetBinTo(axisbin);
         break;
     }
-    FillBinCoord_t<I - 1, COORD, AXES>()(coord, axes, kind,
+    TFillBinCoord<I - 1, COORD, AXES>()(coord, axes, kind,
                                          binidx / std::get<I>(axes).GetNBins());
   }
 };
@@ -354,19 +363,18 @@ GetAxisView(const AXISCONFIG&...axes) noexcept {
 } // namespace Internal
 
 
-template <class DATA> class THist;
-
 namespace Detail {
 
 template <class DATA, class... AXISCONFIG>
 class THistImpl final: public THistImplBase<DATA> {
   static_assert(sizeof...(AXISCONFIG) == DATA::GetNDim(),
                 "Number of axes must equal histogram dimension");
-  friend class THist<DATA>;
+
+  friend typename DATA::Hist_t;
 
 public:
   using ImplBase_t = THistImplBase<DATA>;
-  using Coord_t = typename ImplBase_t::Coord_t;
+  using CoordArray_t = typename ImplBase_t::CoordArray_t;
   using Weight_t = typename ImplBase_t::Weight_t;
   using typename ImplBase_t::FillFunc_t;
   template <int NDIM = DATA::GetNDim()> using AxisIterRange_t
@@ -392,16 +400,16 @@ public:
 
   /// Apply a function (lambda) to all bins of the histogram. The function takes
   /// the bin coordinate and content.
-  void ApplyXC(std::function<void(const Coord_t&, Weight_t)> op) const final {
+  void ApplyXC(std::function<void(const CoordArray_t&, Weight_t)> op) const final {
     for (auto&& binref: *this)
-      op(binref.GetBinCenter(), binref.GetContent());
+      op(binref.GetCenter(), binref.GetContent());
   }
 
   /// Apply a function (lambda) to all bins of the histogram. The function takes
   /// the bin coordinate, content and uncertainty ("error") of the content.
-  virtual void ApplyXCE(std::function<void(const Coord_t&, Weight_t, Weight_t)> op) const final {
+  virtual void ApplyXCE(std::function<void(const CoordArray_t&, Weight_t, double)> op) const final {
     for (auto&& binref: *this)
-      op(binref.GetBinCenter(), binref.GetContent(), binref.GetUncertainty());
+      op(binref.GetCenter(), binref.GetContent(), binref.GetUncertainty());
   }
 
 
@@ -416,7 +424,7 @@ public:
 
   /// Gets the bin index for coordinate `x`; returns -1 if there is no such bin,
   /// e.g. for axes without over / underflow but coordinate out of range.
-  int GetBinIndex(const Coord_t& x) const final {
+  int GetBinIndex(const CoordArray_t& x) const final {
     TAxisBase::EFindStatus status = TAxisBase::EFindStatus::kValid;
     int ret = Internal::TGetBinIndex<DATA::GetNDim() - 1, THistImpl,
        decltype(fAxes), false>()(nullptr, fAxes, x, status);
@@ -428,7 +436,7 @@ public:
   /// Gets the bin index for coordinate `x`, growing the axes as needed and
   /// possible. Returns -1 if there is no such bin,
   /// e.g. for axes without over / underflow but coordinate out of range.
-  int GetBinIndexAndGrow(const Coord_t& x) final {
+  int GetBinIndexAndGrow(const CoordArray_t& x) final {
     TAxisBase::EFindStatus status = TAxisBase::EFindStatus::kCanGrow;
     int ret = - 1;
     while (status == TAxisBase::EFindStatus::kCanGrow) {
@@ -439,27 +447,27 @@ public:
   }
 
   /// Get the center coordinate of the bin.
-  Coord_t GetBinCenter(int binidx) const final {
-    using FillBinCoord_t
-      = Internal::FillBinCoord_t<DATA::GetNDim() - 1, Coord_t, decltype(fAxes)>;
-    Coord_t coord;
-    FillBinCoord_t()(coord, fAxes, Internal::EBinCoord::kBinCenter, binidx);
+  CoordArray_t GetBinCenter(int binidx) const final {
+    using TFillBinCoord
+      = Internal::TFillBinCoord<DATA::GetNDim() - 1, CoordArray_t, decltype(fAxes)>;
+    CoordArray_t coord;
+    TFillBinCoord()(coord, fAxes, Internal::EBinCoord::kBinCenter, binidx);
     return coord;
   }
 
   /// Get the coordinate of the low limit of the bin.
-  Coord_t GetBinFrom(int binidx) const final {
-    using FillBinCoord_t = Internal::FillBinCoord_t<DATA::GetNDim() - 1, Coord_t, decltype(fAxes)>;
-    Coord_t coord;
-    FillBinCoord_t()(coord, fAxes, Internal::EBinCoord::kBinFrom, binidx);
+  CoordArray_t GetBinFrom(int binidx) const final {
+    using TFillBinCoord = Internal::TFillBinCoord<DATA::GetNDim() - 1, CoordArray_t, decltype(fAxes)>;
+    CoordArray_t coord;
+    TFillBinCoord()(coord, fAxes, Internal::EBinCoord::kBinFrom, binidx);
     return coord;
   }
 
   /// Get the coordinate of the high limit of the bin.
-  Coord_t GetBinTo(int binidx) const final {
-    using FillBinCoord_t =  Internal::FillBinCoord_t<DATA::GetNDim() - 1, Coord_t, decltype(fAxes)>;
-    Coord_t coord;
-    FillBinCoord_t()(coord, fAxes, Internal::EBinCoord::kBinTo, binidx);
+  CoordArray_t GetBinTo(int binidx) const final {
+    using TFillBinCoord =  Internal::TFillBinCoord<DATA::GetNDim() - 1, CoordArray_t, decltype(fAxes)>;
+    CoordArray_t coord;
+    TFillBinCoord()(coord, fAxes, Internal::EBinCoord::kBinTo, binidx);
     return coord;
   }
 
@@ -467,7 +475,7 @@ public:
   /// For each element `i`, the weight `weightN[i]` will be added to the bin
   /// at the coordinate `xN[i]`
   /// \note `xN` and `weightN` must have the same size!
-  void FillN(const std::array_view<Coord_t> xN,
+  void FillN(const std::array_view<CoordArray_t> xN,
              const std::array_view<Weight_t> weightN) final {
 #ifndef NDEBUG
     if (xN.size() != weightN.size()) {
@@ -484,20 +492,20 @@ public:
   /// Fill an array of `weightN` to the bins specified by coordinates `xN`.
   /// For each element `i`, the weight `weightN[i]` will be added to the bin
   /// at the coordinate `xN[i]`
-  void FillN(const std::array_view<Coord_t> xN) final {
+  void FillN(const std::array_view<CoordArray_t> xN) final {
     for (auto&& x: xN) {
       Fill(x);
     }
   }
 
   /// Add a single weight `w` to the bin at coordinate `x`.
-  void Fill(const Coord_t& x, Weight_t w = 1.) {
+  void Fill(const CoordArray_t& x, Weight_t w = 1.) {
     int bin = GetBinIndexAndGrow(x);
     this->GetStat().Fill(x, bin, w);
   }
 
   /// Get the content of the bin at position `x`.
-  Weight_t GetBinContent(const Coord_t& x) const final {
+  Weight_t GetBinContent(const CoordArray_t& x) const final {
     int bin = GetBinIndex(x);
     if (bin >= 0)
       return ImplBase_t::GetBinContent(bin);
@@ -505,16 +513,14 @@ public:
   }
 
   /// Return the uncertainties for the given bin.
-  double GetBinUncertaintyAsDouble(int binidx) const final {
+  double GetBinUncertainty(int binidx) const final {
     return this->GetStat().GetBinUncertainty(binidx);
   }
 
   /// Get the bin uncertainty for the bin at coordinate x.
-  Weight_t GetBinUncertainty(const Coord_t& x) const final {
-    int bin = GetBinIndex(x);
-    if (bin >= 0)
-      return this->GetStat().GetBinUncertainty(bin);
-    return 0.;
+  double GetBinUncertainty(const CoordArray_t& x) const final {
+    const int bin = GetBinIndex(x);
+    return this->GetBinUncertainty(bin);
   }
 
 
@@ -525,7 +531,7 @@ public:
   AxisIterRange_t<DATA::GetNDim()>
      GetRange(const std::array<Hist::EOverflow, DATA::GetNDim()>& withOverUnder) const final {
     std::array<std::array<TAxisBase::const_iterator, DATA::GetNDim()>, 2> ret;
-    Internal::FillIterRange_t<DATA::GetNDim() - 1, decltype(fAxes)>()(ret, fAxes, withOverUnder);
+    Internal::TFillIterRange<DATA::GetNDim() - 1, decltype(fAxes)>()(ret, fAxes, withOverUnder);
     return ret;
   }
 

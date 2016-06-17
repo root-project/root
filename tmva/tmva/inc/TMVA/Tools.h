@@ -259,10 +259,10 @@ namespace TMVA {
 
       Bool_t      HasAttr     ( void* node, const char* attrname );
       template<typename T>
-      inline void ReadAttr    ( void* node, const char* , T& value );
+         inline void ReadAttr    ( void* node, const char* , T& value );
       void        ReadAttr    ( void* node, const char* attrname, TString& value );
       template<typename T>
-      void        AddAttr     ( void* node, const char* , const T& value, Int_t precision = 16 );
+         void        AddAttr     ( void* node, const char* , const T& value, Int_t precision = 16 );
       void        AddAttr     ( void* node, const char* attrname, const char* value );
       void*       AddChild    ( void* parent, const char* childname, const char* content = 0, bool isRootNode = false );
       Bool_t      AddRawLine  ( void* node, const char * raw );

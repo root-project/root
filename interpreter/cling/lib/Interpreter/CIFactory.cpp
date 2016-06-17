@@ -239,6 +239,7 @@ static bool getVisualStudioDir(std::string &path) {
   }
 
   // Try the environment.
+  const char *vs140comntools = getenv("VS140COMNTOOLS");
   const char *vs120comntools = getenv("VS120COMNTOOLS");
   const char *vs110comntools = getenv("VS110COMNTOOLS");
   const char *vs100comntools = getenv("VS100COMNTOOLS");
@@ -248,7 +249,11 @@ static bool getVisualStudioDir(std::string &path) {
 
   // Try to find the version that we were compiled with
   if(false) {}
-  #if (_MSC_VER >= 1800)  // VC120
+  #if (_MSC_VER >= 1900)  // VC140
+  else if (vs140comntools) {
+	  vscomntools = vs140comntools;
+  }
+  #elif (_MSC_VER >= 1800)  // VC120
   else if(vs120comntools) {
     vscomntools = vs120comntools;
   }
@@ -270,6 +275,8 @@ static bool getVisualStudioDir(std::string &path) {
   }
   #endif
   // Otherwise find any version we can
+  else if (vs140comntools)
+	  vscomntools = vs140comntools;
   else if (vs120comntools)
     vscomntools = vs120comntools;
   else if (vs110comntools)
@@ -349,7 +356,9 @@ namespace {
                                      const TargetInfo& Target) {
     if (Target.getTriple().getOS() == llvm::Triple::Win32) {
       Opts.MicrosoftExt = 1;
-      Opts.MSCompatibilityVersion = 1300;
+#ifdef _MSC_VER
+      Opts.MSCompatibilityVersion = (_MSC_VER * 100000);
+#endif
       // Should fix http://llvm.org/bugs/show_bug.cgi?id=10528
       Opts.DelayedTemplateParsing = 1;
     } else {
@@ -553,6 +562,11 @@ namespace {
     }
   }
 
+  template <class CONTAINER>
+  static void insertBehind(CONTAINER& To, const CONTAINER& From) {
+    To.insert(To.end(), From.begin(), From.end());
+  }
+
   static CompilerInstance* createCIImpl(
                                      std::unique_ptr<llvm::MemoryBuffer> buffer,
                                         int argc,
@@ -684,6 +698,7 @@ namespace {
           return true;
         }
         bool ReadTargetOptions(const TargetOptions &TargetOpts,
+                               bool /*Complain*/,
                                bool /*AllowCompatibleDifferences*/) override {
           m_Invocation.getTargetOpts() = TargetOpts;
           return true;
@@ -691,14 +706,19 @@ namespace {
         bool ReadPreprocessorOptions(const PreprocessorOptions &PPOpts,
                                      bool /*Complain*/,
                                 std::string &/*SuggestedPredefines*/) override {
-          m_Invocation.getPreprocessorOpts() = PPOpts;
+          // Import selected options, e.g. don't overwrite ImplicitPCHInclude.
+          PreprocessorOptions& myPP = m_Invocation.getPreprocessorOpts();
+          insertBehind(myPP.Macros, PPOpts.Macros);
+          insertBehind(myPP.Includes, PPOpts.Includes);
+          insertBehind(myPP.MacroIncludes, PPOpts.MacroIncludes);
           return true;
         }
       };
       PCHListener listener(*Invocation);
       ASTReader::readASTFileControlBlock(PCHFileName,
                                          CI->getFileManager(),
-                                         /* FUTURE: *CI->getPCHContainerOperations(),*/
+                                         CI->getPCHContainerReader(),
+                                         false /*FindModuleFileExtensions*/,
                                          listener);
     }
 
@@ -800,6 +820,8 @@ namespace {
       Filename = CGOptsMainFileName.c_str();
     const FileEntry* FE
       = FM.getVirtualFile(Filename, 1U << 15U, time(0));
+    // Tell ASTReader to create a FileID even if this file does not exist:
+    SM->setFileIsTransient(FE);
     FileID MainFileID = SM->createFileID(FE, SourceLocation(), SrcMgr::C_User);
     SM->setMainFileID(MainFileID);
     const SrcMgr::SLocEntry& MainFileSLocE = SM->getSLocEntry(MainFileID);
@@ -812,7 +834,7 @@ namespace {
     // Set up the preprocessor
     CI->createPreprocessor(TU_Complete);
     Preprocessor& PP = CI->getPreprocessor();
-    PP.getBuiltinInfo().InitializeBuiltins(PP.getIdentifierTable(),
+    PP.getBuiltinInfo().initializeBuiltins(PP.getIdentifierTable(),
                                            PP.getLangOpts());
 
     // Set up the ASTContext

@@ -13,14 +13,6 @@
 #define ROOT_TImage
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TImage                                                               //
-//                                                                      //
-// Abstract interface to image processing library.                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #ifndef ROOT_TNamed
 #include "TNamed.h"
 #endif

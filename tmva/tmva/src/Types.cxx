@@ -64,15 +64,15 @@ TMVA::Types::~Types()
 TMVA::Types& TMVA::Types::Instance()
 {
 #if __cplusplus > 199711L
-  if(!fgTypesPtr) {
-    Types* tmp = new Types();
-    Types* expected = 0;
-    if(!fgTypesPtr.compare_exchange_strong(expected,tmp)) {
-      //Another thread already did it
-      delete tmp;
-    }
-  }
-  return *fgTypesPtr;
+   if(!fgTypesPtr) {
+      Types* tmp = new Types();
+      Types* expected = 0;
+      if(!fgTypesPtr.compare_exchange_strong(expected,tmp)) {
+         //Another thread already did it
+         delete tmp;
+      }
+   }
+   return *fgTypesPtr;
 #else
    return fgTypesPtr ? *fgTypesPtr : *(fgTypesPtr = new Types());
 #endif

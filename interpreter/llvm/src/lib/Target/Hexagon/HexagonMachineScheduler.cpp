@@ -48,7 +48,7 @@ bool VLIWResourceModel::isResourceAvailable(SUnit *SU) {
   // in the current cycle.
   switch (SU->getInstr()->getOpcode()) {
   default:
-    if (!ResourcesModel->canReserveResources(SU->getInstr()))
+    if (!ResourcesModel->canReserveResources(*SU->getInstr()))
       return false;
   case TargetOpcode::EXTRACT_SUBREG:
   case TargetOpcode::INSERT_SUBREG:
@@ -100,7 +100,7 @@ bool VLIWResourceModel::reserveResources(SUnit *SU) {
 
   switch (SU->getInstr()->getOpcode()) {
   default:
-    ResourcesModel->reserveResources(SU->getInstr());
+    ResourcesModel->reserveResources(*SU->getInstr());
     break;
   case TargetOpcode::EXTRACT_SUBREG:
   case TargetOpcode::INSERT_SUBREG:
@@ -179,7 +179,11 @@ void VLIWMachineScheduler::schedule() {
   initQueues(TopRoots, BotRoots);
 
   bool IsTopNode = false;
-  while (SUnit *SU = SchedImpl->pickNode(IsTopNode)) {
+  while (true) {
+    DEBUG(dbgs() << "** VLIWMachineScheduler::schedule picking next node\n");
+    SUnit *SU = SchedImpl->pickNode(IsTopNode);
+    if (!SU) break;
+
     if (!checkSchedLimit())
       break;
 
@@ -205,20 +209,17 @@ void ConvergingVLIWScheduler::initialize(ScheduleDAGMI *dag) {
   // Initialize the HazardRecognizers. If itineraries don't exist, are empty, or
   // are disabled, then these HazardRecs will be disabled.
   const InstrItineraryData *Itin = DAG->getSchedModel()->getInstrItineraries();
-  const TargetMachine &TM = DAG->MF.getTarget();
+  const TargetSubtargetInfo &STI = DAG->MF.getSubtarget();
+  const TargetInstrInfo *TII = STI.getInstrInfo();
   delete Top.HazardRec;
   delete Bot.HazardRec;
-  Top.HazardRec =
-      TM.getSubtargetImpl()->getInstrInfo()->CreateTargetMIHazardRecognizer(
-          Itin, DAG);
-  Bot.HazardRec =
-      TM.getSubtargetImpl()->getInstrInfo()->CreateTargetMIHazardRecognizer(
-          Itin, DAG);
+  Top.HazardRec = TII->CreateTargetMIHazardRecognizer(Itin, DAG);
+  Bot.HazardRec = TII->CreateTargetMIHazardRecognizer(Itin, DAG);
 
   delete Top.ResourceModel;
   delete Bot.ResourceModel;
-  Top.ResourceModel = new VLIWResourceModel(TM, DAG->getSchedModel());
-  Bot.ResourceModel = new VLIWResourceModel(TM, DAG->getSchedModel());
+  Top.ResourceModel = new VLIWResourceModel(STI, DAG->getSchedModel());
+  Bot.ResourceModel = new VLIWResourceModel(STI, DAG->getSchedModel());
 
   assert((!llvm::ForceTopDown || !llvm::ForceBottomUp) &&
          "-misched-topdown incompatible with -misched-bottomup");

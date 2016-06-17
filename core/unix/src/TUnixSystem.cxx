@@ -262,12 +262,12 @@ namespace {
    struct ut_name {
       template<typename U = T, typename std::enable_if<std::is_member_pointer<decltype(&U::ut_name)>::value, int>::type = 0>
       static char getValue(U* ue, int) {
-	 return ue->ut_name[0];
+         return ue->ut_name[0];
       }
 
       template<typename U = T, typename std::enable_if<std::is_member_pointer<decltype(&U::ut_user)>::value, int>::type = 0>
       static char getValue(U* ue, long) {
-	 return ue->ut_user[0];
+         return ue->ut_user[0];
       }
    };
 
@@ -1411,12 +1411,30 @@ const char *TUnixSystem::WorkingDirectory()
    R__LOCKGUARD2(gSystemMutex);
 
    static char cwd[kMAXPATHLEN];
+   FillWithCwd(cwd);
+   fWdpath = cwd;
+
+   return fWdpath.Data();
+}
+
+//////////////////////////////////////////////////////////////////////////////
+/// Return working directory.
+
+std::string TUnixSystem::GetWorkingDirectory() const
+{
+   char cwd[kMAXPATHLEN];
+   FillWithCwd(cwd);
+   return std::string(cwd);
+}
+
+//////////////////////////////////////////////////////////////////////////////
+/// Fill buffer with current working directory.
+
+void TUnixSystem::FillWithCwd(char *cwd) const
+{
    if (::getcwd(cwd, kMAXPATHLEN) == 0) {
-      fWdpath = "/";
       Error("WorkingDirectory", "getcwd() failed");
    }
-   fWdpath = cwd;
-   return fWdpath.Data();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1425,6 +1443,15 @@ const char *TUnixSystem::WorkingDirectory()
 const char *TUnixSystem::HomeDirectory(const char *userName)
 {
    return UnixHomedirectory(userName);
+}
+
+//////////////////////////////////////////////////////////////////////////////
+/// Return the user's home directory.
+
+std::string TUnixSystem::GetHomeDirectory(const char *userName) const
+{
+   char path[kMAXPATHLEN], mydir[kMAXPATHLEN] = { '\0' };
+   return std::string(UnixHomedirectory(userName, path, mydir));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1691,11 +1718,7 @@ expand:
    path.ReplaceAll("$(","$");
    path.ReplaceAll(")","");
 
-   if ((p = ExpandFileName(path))) {
-      path = p;
-      return kFALSE;
-   }
-   return kTRUE;
+   return ExpandFileName(path);
 }
 #endif
 
@@ -3876,8 +3899,15 @@ int TUnixSystem::UnixSelect(Int_t nfds, TFdSet *readready, TFdSet *writeready,
 const char *TUnixSystem::UnixHomedirectory(const char *name)
 {
    static char path[kMAXPATHLEN], mydir[kMAXPATHLEN] = { '\0' };
-   struct passwd *pw;
+   return UnixHomedirectory(name, path, mydir);
+}
 
+////////////////////////////////////////////////////////////////////////////
+/// Returns the user's home directory.
+
+const char *TUnixSystem::UnixHomedirectory(const char *name, char *path, char *mydir)
+{
+   struct passwd *pw;
    if (name) {
       pw = getpwnam(name);
       if (pw) {

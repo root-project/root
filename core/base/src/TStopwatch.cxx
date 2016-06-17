@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TStopwatch
+\ingroup Base
+
 Stopwatch class. This class returns the real and cpu time between
 the start and stop events.
 */

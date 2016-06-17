@@ -1,8 +1,3 @@
-clang_tablegen(Checkers.inc -gen-clang-sa-checkers
-  -I ${CMAKE_CURRENT_SOURCE_DIR}/../../../include
-  SOURCE Checkers.td
-  TARGET ClangSACheckers)
-
 set(LLVM_LINK_COMPONENTS
   Support
   )
@@ -33,12 +28,14 @@ add_clang_library(clangStaticAnalyzerCheckers
   DirectIvarAssignment.cpp
   DivZeroChecker.cpp
   DynamicTypePropagation.cpp
+  DynamicTypeChecker.cpp
   ExprInspectionChecker.cpp
   FixedAddressChecker.cpp
   GenericTaintChecker.cpp
   IdenticalExprChecker.cpp
   IvarInvalidationChecker.cpp
   LLVMConventionsChecker.cpp
+  LocalizationChecker.cpp
   MacOSKeychainAPIChecker.cpp
   MacOSXAPIChecker.cpp
   MallocChecker.cpp
@@ -48,12 +45,15 @@ add_clang_library(clangStaticAnalyzerCheckers
   NSErrorChecker.cpp
   NoReturnFunctionChecker.cpp
   NonNullParamChecker.cpp
+  NullabilityChecker.cpp
   ObjCAtSyncChecker.cpp
   ObjCContainersASTChecker.cpp
   ObjCContainersChecker.cpp
   ObjCMissingSuperCallChecker.cpp
   ObjCSelfInitChecker.cpp
+  ObjCSuperDeallocChecker.cpp
   ObjCUnusedIVarsChecker.cpp
+  PaddingChecker.cpp
   PointerArithChecker.cpp
   PointerSubChecker.cpp
   PthreadLockChecker.cpp
@@ -73,6 +73,7 @@ add_clang_library(clangStaticAnalyzerCheckers
   UndefinedAssignmentChecker.cpp
   UnixAPIChecker.cpp
   UnreachableCodeChecker.cpp
+  VforkChecker.cpp
   VLASizeChecker.cpp
   VirtualCallChecker.cpp
 
@@ -83,5 +84,6 @@ add_clang_library(clangStaticAnalyzerCheckers
   clangAST
   clangAnalysis
   clangBasic
+  clangLex
   clangStaticAnalyzerCore
   )

@@ -1,9 +1,14 @@
-// Macro to compare masses in ROOT data base to the values from pdg
-// http://pdg.lbl.gov/2009/mcdata/mass_width_2008.mc
-//
-// The ROOT values are read in by TDatabasePDG from $ROOTSYS/etc/pdg_table.txt
-//
-// Author: Christian.Klein-Boesing@cern.ch
+/// \file
+/// \ingroup tutorial_mc
+/// Macro to compare masses in ROOT data base to the values from pdg
+/// [pdg](http://pdg.lbl.gov/2009/mcdata/mass_width_2008.mc).
+///
+/// The ROOT values are read in by TDatabasePDG from `$ROOTSYS/etc/pdg_table.txt`
+///
+/// \macro_output
+/// \macro_code
+///
+/// \author Christian.Klein-Boesing
 
 #include "TDatabasePDG.h"
 #include "TParticlePDG.h"
@@ -32,7 +37,7 @@ void CompareMasses()
          //printf("%s",c);
          sscanf(&c[1], "%8d", &pdg[0]);
 
-         // check emptyness
+         // check emptiness
          pdg[1] = 0;
          for(int i = 0;i<8;i++){
             sscanf(&c[9+i],"%c",&cempty);

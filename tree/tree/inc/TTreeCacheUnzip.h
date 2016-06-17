@@ -48,38 +48,38 @@ protected:
 
    // Members for paral. managing
    TThread    *fUnzipThread[10];
-   Bool_t      fActiveThread;          // Used to terminate gracefully the unzippers
-   TCondition *fUnzipStartCondition;   // Used to signal the threads to start.
-   TCondition *fUnzipDoneCondition;    // Used to wait for an unzip tour to finish. Gives the Async feel.
-   Bool_t      fParallel;              // Indicate if we want to activate the parallelism (for this instance)
+   Bool_t      fActiveThread;          ///< Used to terminate gracefully the unzippers
+   TCondition *fUnzipStartCondition;   ///< Used to signal the threads to start.
+   TCondition *fUnzipDoneCondition;    ///< Used to wait for an unzip tour to finish. Gives the Async feel.
+   Bool_t      fParallel;              ///< Indicate if we want to activate the parallelism (for this instance)
    Bool_t      fAsyncReading;
-   TMutex     *fMutexList;             // Mutex to protect the various lists. Used by the condvars.
+   TMutex     *fMutexList;             ///< Mutex to protect the various lists. Used by the condvars.
    TMutex     *fIOMutex;
 
    Int_t       fCycle;
-   static TTreeCacheUnzip::EParUnzipMode fgParallel;  // Indicate if we want to activate the parallelism
+   static TTreeCacheUnzip::EParUnzipMode fgParallel;  ///< Indicate if we want to activate the parallelism
 
    Int_t       fLastReadPos;
    Int_t       fBlocksToGo;
 
    // Unzipping related members
-   Int_t      *fUnzipLen;         //! [fNseek] Length of the unzipped buffers
-   char      **fUnzipChunks;      //! [fNseek] Individual unzipped chunks. Their summed size is kept under control.
-   Byte_t     *fUnzipStatus;      //! [fNSeek] For each blk, tells us if it's unzipped or pending
-   Long64_t    fTotalUnzipBytes;  //! The total sum of the currently unzipped blks
+   Int_t      *fUnzipLen;         ///<! [fNseek] Length of the unzipped buffers
+   char      **fUnzipChunks;      ///<! [fNseek] Individual unzipped chunks. Their summed size is kept under control.
+   Byte_t     *fUnzipStatus;      ///<! [fNSeek] For each blk, tells us if it's unzipped or pending
+   Long64_t    fTotalUnzipBytes;  ///<! The total sum of the currently unzipped blks
 
-   Int_t       fNseekMax;         //!  fNseek can change so we need to know its max size
-   Long64_t    fUnzipBufferSize;  //!  Max Size for the ready unzipped blocks (default is 2*fBufferSize)
+   Int_t       fNseekMax;         ///<!  fNseek can change so we need to know its max size
+   Long64_t    fUnzipBufferSize;  ///<!  Max Size for the ready unzipped blocks (default is 2*fBufferSize)
 
-   static Double_t fgRelBuffSize; // This is the percentage of the TTreeCacheUnzip that will be used
+   static Double_t fgRelBuffSize; ///< This is the percentage of the TTreeCacheUnzip that will be used
 
    // Members use to keep statistics
-   Int_t       fNUnzip;           //! number of blocks that were unzipped
-   Int_t       fNFound;           //! number of blocks that were found in the cache
-   Int_t       fNStalls;          //! number of hits which caused a stall
-   Int_t       fNMissed;          //! number of blocks that were not found in the cache and were unzipped
+   Int_t       fNUnzip;           ///<! number of blocks that were unzipped
+   Int_t       fNFound;           ///<! number of blocks that were found in the cache
+   Int_t       fNStalls;          ///<! number of hits which caused a stall
+   Int_t       fNMissed;          ///<! number of blocks that were not found in the cache and were unzipped
 
-   std::queue<Int_t>       fActiveBlks; // The blocks which are active now
+   std::queue<Int_t>       fActiveBlks; ///< The blocks which are active now
 
 private:
    TTreeCacheUnzip(const TTreeCacheUnzip &);            //this class cannot be copied

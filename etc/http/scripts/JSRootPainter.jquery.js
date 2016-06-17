@@ -156,9 +156,9 @@
       if (handle !== null) {
          if ('icon' in handle) img1 = handle.icon;
          if ('icon2' in handle) img2 = handle.icon2;
-         if (('func' in handle) || ('execute' in handle) || ('aslink' in handle) || ('expand' in handle)) can_click = true;
+         if (('func' in handle) || ('execute' in handle) || ('aslink' in handle) ||
+             (('expand' in handle) && (hitem._more !== false))) can_click = true;
       }
-
 
       if ('_icon' in hitem) img1 = hitem._icon;
       if ('_icon2' in hitem) img2 = hitem._icon2;

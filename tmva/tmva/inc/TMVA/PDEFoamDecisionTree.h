@@ -59,7 +59,7 @@ namespace TMVA
 
       // ---------- ROOT class definition
       ClassDef(PDEFoamDecisionTree, 1) // Decision tree like PDEFoam
-   }; // end of PDEFoamDecisionTree
+         }; // end of PDEFoamDecisionTree
 
 }  // namespace TMVA
 

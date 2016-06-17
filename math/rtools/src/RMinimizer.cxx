@@ -17,9 +17,9 @@ namespace ROOT {
 
       ///function to return the function values at point x
       double minfunction(const std::vector<double> &  x){
-        gNCalls++; 
-	//return (*gFunction)(x.GetMatrixArray());
-	return (*gFunction)(x.data());
+         gNCalls++;
+         //return (*gFunction)(x.GetMatrixArray());
+         return (*gFunction)(x.data());
       }
       ///function to return the gradient values at point y
       TVectorD mingradfunction(TVectorD y){
@@ -34,7 +34,7 @@ namespace ROOT {
       /*Default constructor with option for the method of minimization, can be any of the following:
       *
       *"Nelder-Mead", "BFGS", "CG", "L-BFGS-B", "SANN", "Brent" (Brent only for 1D minimization)
-      */	
+      */
       RMinimizer::RMinimizer(Option_t *method){
          fMethod=method;
          if (fMethod.empty() || fMethod=="Migrad") fMethod="BFGS";        
@@ -51,10 +51,10 @@ namespace ROOT {
          (gGradFunction) = GradObjFunction();
          
          gNCalls = 0; 
-	
+
          //pass functions and variables to R
          ROOT::R::TRInterface &r=ROOT::R::TRInterface::Instance();
-	
+
          r["minfunction"] = ROOT::R::TRFunctionExport(minfunction);
          r["mingradfunction"] = ROOT::R::TRFunctionExport(mingradfunction);
          r["method"] = fMethod.c_str();

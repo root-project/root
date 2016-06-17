@@ -125,7 +125,7 @@ Cppyy::TCppIndex_t Cppyy::GetNumScopes( TCppScope_t scope )
    return gClassTable->Classes();
 }
 
-std::string Cppyy::GetScopeName( TCppScope_t parent, TCppIndex_t iscope ) 
+std::string Cppyy::GetScopeName( TCppScope_t parent, TCppIndex_t iscope )
 {
 // Retrieve the scope name of the scope indexed with iscope in parent.
    TClassRef& cr = type_from_handle( parent );
@@ -204,10 +204,10 @@ Bool_t Cppyy::IsBuiltin( const std::string& type_name )
 }
 
 Bool_t Cppyy::IsComplete( const std::string& type_name )
-{  
+{
 // verify whether the dictionary of this class is fully available
    Bool_t b = kFALSE;
-   
+
    Int_t oldEIL = gErrorIgnoreLevel;
    gErrorIgnoreLevel = 3000;
    TClass* klass = TClass::GetClass( TClassEdit::ShortType( type_name.c_str(), 1 ).c_str() );
@@ -221,8 +221,8 @@ Bool_t Cppyy::IsComplete( const std::string& type_name )
       }
    }
    gErrorIgnoreLevel = oldEIL;
-   return b;    
-}  
+   return b;
+}
 
 // memory management ---------------------------------------------------------
 Cppyy::TCppObject_t Cppyy::Allocate( TCppType_t type )
@@ -276,7 +276,7 @@ static CallFunc_t* GetCallFunc( Cppyy::TCppMethod_t method )
 
       TCollection* method_args = func->GetListOfMethodArgs();
       TIter iarg( method_args );
-   
+
       TMethodArg* method_arg = 0;
       while ((method_arg = (TMethodArg*)iarg.Next())) {
          std::string fullType = method_arg->GetTypeNormalizedName();
@@ -528,8 +528,8 @@ Bool_t Cppyy::IsAbstract( TCppType_t klass ) {
 Bool_t Cppyy::IsEnum( const std::string& type_name ) {
    return gInterpreter->ClassInfo_IsEnum( type_name.c_str() );
 }
-    
-    
+
+
 // class reflection information ----------------------------------------------
 std::string Cppyy::GetFinalName( TCppType_t klass )
 {
@@ -545,7 +545,7 @@ std::string Cppyy::GetScopedFinalName( TCppType_t klass )
    // TODO: either this or GetFinalName is wrong
    TClassRef& cr = type_from_handle( klass );
    return cr->GetName();
-}   
+}
 
 Bool_t Cppyy::HasComplexHierarchy( TCppType_t /* handle */ )
 {
@@ -853,7 +853,7 @@ Cppyy::TCppIndex_t Cppyy::GetNumDatamembers( TCppScope_t scope )
       return cr->GetListOfDataMembers()->GetSize();
    else if ( scope == (TCppScope_t)GLOBAL_HANDLE ) {
       std::cerr << " global data should be retrieved lazily " << std::endl;
-      TCollection* vars = gROOT->GetListOfGlobals( kTRUE ); 
+      TCollection* vars = gROOT->GetListOfGlobals( kTRUE );
       if ( g_globalvars.size() != (GlobalVars_t::size_type)vars->GetSize() ) {
          g_globalvars.clear();
          g_globalvars.reserve(vars->GetSize());

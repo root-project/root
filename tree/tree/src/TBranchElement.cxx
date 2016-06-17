@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TBranchElement
+\ingroup tree
+
 A Branch for the case of an object.
 */
 

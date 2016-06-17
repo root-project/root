@@ -13,6 +13,8 @@
 #include "TBuffer3DTypes.h"
 
 /** \class TBuffer3D
+\ingroup Base
+
 Generic 3D primitive description class.
 See TBuffer3DTypes for producer classes.
 

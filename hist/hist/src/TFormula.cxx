@@ -960,8 +960,9 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
          if (iposBefore >= 0) {
             assert( iposBefore < formula.Length() );
             if (isalpha(formula[iposBefore] ) ) {
-               //std::cout << "previous character for function " << funName << " is -" << formula[iposBefore] << "- skip " << std::endl;
-               break;
+               //std::cout << "previous character for function " << funName << " is " << formula[iposBefore] << "- skip " << std::endl;
+               funPos = formula.Index(funName,lastFunPos);
+               continue;
             }
          }
 
@@ -971,9 +972,11 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
             isNormalized = (formula[lastFunPos] == 'n');
             if (isNormalized) lastFunPos += 1;
             if (lastFunPos < formula.Length() ) {
-               // check if also last character is not alphanumeric or a digit
-               if (isalnum(formula[lastFunPos] ) ) break;
-               if (formula[lastFunPos] != '[' && formula[lastFunPos] != '(' && ! IsOperator(formula[lastFunPos] ) ) {
+               char c = formula[lastFunPos];
+               // check if also last character is not alphanumeric or is not an operator and not a parenthesis ( or [.
+               // Parenthesis [] are used to express the variables 
+               if ( isalnum(c ) || ( ! IsOperator(c ) && c != '(' && c != ')' && c != '[' && c != ']' ) ) { 
+                  //std::cout << "last character for function " << funName << " is " << c << " skip .." <<  std::endl;
                   funPos = formula.Index(funName,lastFunPos);
                   continue;
                }
@@ -1027,17 +1030,20 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
                variables[Nvar] = varName;
             }
          }
-         // chech if dimension obtained from [...] is compatible with existing pre-defined functions
+         // chech if dimension obtained from [...] is compatible with what is defined in existing pre-defined functions
+         //std::cout << " Found dim = " << dim  << " and function dimension is " << funDim << std::endl;
          if(dim != funDim)
          {
             pair<TString,Int_t> key = make_pair(funName,dim);
             if(functions.find(key) == functions.end())
             {
-               Error("PreProcessFormula","Dimension of function %s is dedected to be of dimension %d and is not compatible with existing pre-dedined function which has dim %d",
+               Error("PreProcessFormula","Dimension of function %s is detected to be of dimension %d and is not compatible with existing pre-defined function which has dim %d",
                      funName.Data(),dim,funDim);
                return;
             }
-            break;
+            // skip the particular function found - we might find later on the corresponding pre-defined function
+            funPos = formula.Index(funName,lastFunPos);
+            continue;
          }
          // look now for the (..) brackets to get the parameter counter (e.g. gaus(0) + gaus(3) )
          // need to start for a position
@@ -1134,7 +1140,7 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
 
          funPos = formula.Index(funName);
       }
-      //std::cout << " formula is now " << formula << std::endl;
+      //std::cout << " End loop of " << funName << " formula is now " << formula << std::endl;
    }
 
 }

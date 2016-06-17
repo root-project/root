@@ -60,7 +60,7 @@ ROOT_ADD_TEST(test-tcollex COMMAND tcollex)
 
 #--tcollbm------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(tcollbm tcollbm.cxx LIBRARIES Core MathCore)
-ROOT_ADD_TEST(test-tcollbm COMMAND tcollbm 1000 100000)
+ROOT_ADD_TEST(test-tcollbm COMMAND tcollbm 1000 1000000)
 
 #--vvector------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(vvector vvector.cxx LIBRARIES Core Matrix RIO)

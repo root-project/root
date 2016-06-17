@@ -68,75 +68,75 @@ namespace TMVA
    namespace kNN
    {
       template <class T>
-      class Node
-      {
+         class Node
+         {
 
-      public:
+         public:
       
-         Node(const Node *parent, const T &event, Int_t mod);
-         ~Node();
+            Node(const Node *parent, const T &event, Int_t mod);
+            ~Node();
 
-         const Node* Add(const T &event, UInt_t depth);
+            const Node* Add(const T &event, UInt_t depth);
       
-         void SetNodeL(Node *node);
-         void SetNodeR(Node *node);
+            void SetNodeL(Node *node);
+            void SetNodeR(Node *node);
       
-         const T& GetEvent() const;
+            const T& GetEvent() const;
 
-         const Node* GetNodeL() const;
-         const Node* GetNodeR() const;
-         const Node* GetNodeP() const;
+            const Node* GetNodeL() const;
+            const Node* GetNodeR() const;
+            const Node* GetNodeP() const;
       
-         Double_t GetWeight() const;
+            Double_t GetWeight() const;
 
-         Float_t GetVarDis() const;
-         Float_t GetVarMin() const;
-         Float_t GetVarMax() const;
+            Float_t GetVarDis() const;
+            Float_t GetVarMin() const;
+            Float_t GetVarMax() const;
 
-         UInt_t GetMod() const;
+            UInt_t GetMod() const;
 
-         void Print() const;
-         void Print(std::ostream& os, const std::string &offset = "") const;
+            void Print() const;
+            void Print(std::ostream& os, const std::string &offset = "") const;
 
-      private: 
+         private: 
 
-         // these methods are private and not implemented by design
-         // use provided public constructor for all uses of this template class
-         Node();
-         Node(const Node &);
-         const Node& operator=(const Node &);
+            // these methods are private and not implemented by design
+            // use provided public constructor for all uses of this template class
+            Node();
+            Node(const Node &);
+            const Node& operator=(const Node &);
 
-      private:
+         private:
 
-         const Node* fNodeP;
+            const Node* fNodeP;
       
-         Node* fNodeL;
-         Node* fNodeR;      
+            Node* fNodeL;
+            Node* fNodeR;      
       
-         const T fEvent;
+            const T fEvent;
       
-         const Float_t fVarDis;
+            const Float_t fVarDis;
 
-         Float_t fVarMin;
-         Float_t fVarMax;
+            Float_t fVarMin;
+            Float_t fVarMax;
 
-         const UInt_t fMod;
-      };
+            const UInt_t fMod;
+         };
 
       // recursive search for k-nearest neighbor: k = nfind 
       template<class T>
-      UInt_t Find(std::list<std::pair<const Node<T> *, Float_t> > &nlist,
-                        const Node<T> *node, const T &event, UInt_t nfind);
+         UInt_t Find(std::list<std::pair<const Node<T> *, Float_t> > &nlist,
+                     const Node<T> *node, const T &event, UInt_t nfind);
 
       // recursive search for k-nearest neighbor
       // find k events with sum of event weights >= nfind
       template<class T>
-      UInt_t Find(std::list<std::pair<const Node<T> *, Float_t> > &nlist,
-                  const Node<T> *node, const T &event, Double_t nfind, Double_t ncurr);
+         UInt_t Find(std::list<std::pair<const Node<T> *, Float_t> > &nlist,
+                     const Node<T> *node, const T &event, Double_t nfind, Double_t ncurr);
 
       // recursively travel upward until root node is reached
       template <class T>
-      UInt_t Depth(const Node<T> *node);
+         UInt_t Depth(const Node<T> *node);
 
       // prInt_t node content and content of its children
       //template <class T>
@@ -146,80 +146,80 @@ namespace TMVA
       // Inlined functions for Node template
       //
       template <class T>
-      inline void Node<T>::SetNodeL(Node<T> *node)
-      {
-         fNodeL = node;
-      }
+         inline void Node<T>::SetNodeL(Node<T> *node)
+         {
+            fNodeL = node;
+         }
 
       template <class T>
-      inline void Node<T>::SetNodeR(Node<T> *node)
-      {
-         fNodeR = node;
-      }
+         inline void Node<T>::SetNodeR(Node<T> *node)
+         {
+            fNodeR = node;
+         }
 
       template <class T>
-      inline const T& Node<T>::GetEvent() const
-      {
-         return fEvent;
-      }
+         inline const T& Node<T>::GetEvent() const
+         {
+            return fEvent;
+         }
 
       template <class T>
-      inline const Node<T>* Node<T>::GetNodeL() const
-      {
-         return fNodeL;
-      }
+         inline const Node<T>* Node<T>::GetNodeL() const
+         {
+            return fNodeL;
+         }
 
       template <class T>
-      inline const Node<T>* Node<T>::GetNodeR() const
-      {
-         return fNodeR;
-      }
+         inline const Node<T>* Node<T>::GetNodeR() const
+         {
+            return fNodeR;
+         }
 
       template <class T>
-      inline const Node<T>* Node<T>::GetNodeP() const
-      {
-         return fNodeP;
-      }
+         inline const Node<T>* Node<T>::GetNodeP() const
+         {
+            return fNodeP;
+         }
 
       template <class T>
-      inline Double_t Node<T>::GetWeight() const
-      {
-         return fEvent.GetWeight();
-      }
+         inline Double_t Node<T>::GetWeight() const
+         {
+            return fEvent.GetWeight();
+         }
 
       template <class T>
-      inline Float_t Node<T>::GetVarDis() const
-      {
-         return fVarDis;
-      }
+         inline Float_t Node<T>::GetVarDis() const
+         {
+            return fVarDis;
+         }
 
       template <class T>
-      inline Float_t Node<T>::GetVarMin() const
-      {
-         return fVarMin;
-      }
+         inline Float_t Node<T>::GetVarMin() const
+         {
+            return fVarMin;
+         }
 
       template <class T>
-      inline Float_t Node<T>::GetVarMax() const
-      {
-         return fVarMax;
-      }
+         inline Float_t Node<T>::GetVarMax() const
+         {
+            return fVarMax;
+         }
 
       template <class T>
-      inline UInt_t Node<T>::GetMod() const
-      {
-         return fMod;
-      }
+         inline UInt_t Node<T>::GetMod() const
+         {
+            return fMod;
+         }
 
       // 
       // Inlined global function(s)
       //
       template <class T>
-      inline UInt_t Depth(const Node<T> *node)
-      {
-         if (!node) return 0;
-         else return Depth(node->GetNodeP()) + 1;
-      }
+         inline UInt_t Depth(const Node<T> *node)
+         {
+            if (!node) return 0;
+            else return Depth(node->GetNodeP()) + 1;
+         }
 
    } // end of kNN namespace
 } // end of TMVA namespace
@@ -227,14 +227,14 @@ namespace TMVA
 //-------------------------------------------------------------------------------------------
 template<class T>
 TMVA::kNN::Node<T>::Node(const Node<T> *parent, const T &event, const Int_t mod) 
-   :fNodeP(parent),
-    fNodeL(0),
-    fNodeR(0),
-    fEvent(event),
-    fVarDis(event.GetVar(mod)),
-    fVarMin(fVarDis),
-    fVarMax(fVarDis),
-    fMod(mod)
+:fNodeP(parent),
+   fNodeL(0),
+   fNodeR(0),
+   fEvent(event),
+   fVarDis(event.GetVar(mod)),
+   fVarMin(fVarDis),
+   fVarMax(fVarDis),
+   fMod(mod)
 {}
 
 //-------------------------------------------------------------------------------------------

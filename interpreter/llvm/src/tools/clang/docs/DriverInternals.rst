@@ -138,12 +138,12 @@ The driver functionality is conceptually divided into five stages:
    this vector instead of storing its values directly.
 
    The clang driver can dump the results of this stage using the
-   ``-ccc-print-options`` flag (which must precede any actual command
+   ``-###`` flag (which must precede any actual command
    line arguments). For example:
 
    .. code-block:: console
 
-      $ clang -ccc-print-options -Xarch_i386 -fomit-frame-pointer -Wa,-fast -Ifoo -I foo t.c
+      $ clang -### -Xarch_i386 -fomit-frame-pointer -Wa,-fast -Ifoo -I foo t.c
       Option 0 - Name: "-Xarch_", Values: {"i386", "-fomit-frame-pointer"}
       Option 1 - Name: "-Wa,", Values: {"-fast"}
       Option 2 - Name: "-I", Values: {"foo"}
@@ -155,7 +155,7 @@ The driver functionality is conceptually divided into five stages:
    Subsequent stages should rarely, if ever, need to do any string
    processing.
 
-#. **Pipeline: Compilation Job Construction**
+#. **Pipeline: Compilation Action Construction**
 
    Once the arguments are parsed, the tree of subprocess jobs needed for
    the desired compilation sequence are constructed. This involves
@@ -266,7 +266,7 @@ The driver functionality is conceptually divided into five stages:
 #. **Translate: Tool Specific Argument Translation**
 
    Once a Tool has been selected to perform a particular Action, the
-   Tool must construct concrete Jobs which will be executed during
+   Tool must construct concrete Commands which will be executed during
    compilation. The main work is in translating from the gcc style
    command line options to whatever options the subprocess expects.
 
@@ -280,7 +280,7 @@ The driver functionality is conceptually divided into five stages:
    last of arguments corresponding to some option, or all arguments for
    an option.
 
-   The result of this stage is a list of Jobs (executable paths and
+   The result of this stage is a list of Commands (executable paths and
    argument strings) to execute.
 
 #. **Execute**

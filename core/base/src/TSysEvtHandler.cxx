@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TSysEvtHandler
+\ingroup Base
+
 Abstract base class for handling system events.
 */
 

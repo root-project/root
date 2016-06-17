@@ -15,14 +15,14 @@
 #define LLVM_LIB_TARGET_ARM_THUMB2INSTRINFO_H
 
 #include "ARMBaseInstrInfo.h"
-#include "Thumb2RegisterInfo.h"
+#include "ThumbRegisterInfo.h"
 
 namespace llvm {
 class ARMSubtarget;
 class ScheduleHazardRecognizer;
 
 class Thumb2InstrInfo : public ARMBaseInstrInfo {
-  Thumb2RegisterInfo RI;
+  ThumbRegisterInfo RI;
 public:
   explicit Thumb2InstrInfo(const ARMSubtarget &STI);
 
@@ -60,7 +60,7 @@ public:
   /// such, whenever a client has an instance of instruction info, it should
   /// always be able to get register info as well (through this method).
   ///
-  const Thumb2RegisterInfo &getRegisterInfo() const override { return RI; }
+  const ThumbRegisterInfo &getRegisterInfo() const override { return RI; }
 
 private:
   void expandLoadStackGuard(MachineBasicBlock::iterator MI,
@@ -70,9 +70,7 @@ private:
 /// getITInstrPredicate - Valid only in Thumb2 mode. This function is identical
 /// to llvm::getInstrPredicate except it returns AL for conditional branch
 /// instructions which are "predicated", but are not in IT blocks.
-ARMCC::CondCodes getITInstrPredicate(const MachineInstr *MI, unsigned &PredReg);
-
-
+ARMCC::CondCodes getITInstrPredicate(const MachineInstr &MI, unsigned &PredReg);
 }
 
 #endif

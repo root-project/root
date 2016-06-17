@@ -13,14 +13,6 @@
 #define ROOT_TPavesText
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TPavesText                                                           //
-//                                                                      //
-// PavesText   A PaveText with a number of stacked paves.               //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #ifndef ROOT_TPaveText
 #include "TPaveText.h"
 #endif
@@ -28,7 +20,7 @@
 class TPavesText : public TPaveText {
 
 protected:
-   Int_t      fNpaves;        //Number of stacked paves
+   Int_t      fNpaves;        ///< Number of stacked paves
 
 public:
    TPavesText();

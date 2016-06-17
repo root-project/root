@@ -28,6 +28,12 @@
 #define SUPPORTS_MEMSTAT
 #endif
 
+#if defined(__GNUC__) && !defined(__clang__)
+#if __GNUC__ > 5
+#pragma GCC diagnostic ignored "-Wframe-address"
+#endif
+#endif
+
 // This is a global variable set at MSManager init time.
 // It marks the highest used stack address.
 void *g_global_stack_end = NULL;

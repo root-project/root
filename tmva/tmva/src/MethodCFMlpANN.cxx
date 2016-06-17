@@ -494,7 +494,7 @@ void TMVA::MethodCFMlpANN::ReadWeightsFromStream( std::istream & istr )
    // sanity check
    if ((Int_t)GetNvar() != fNeur_1.neuron[0]) {
       Log() << kFATAL << "<ReadWeightsFromFile> mismatch in zeroth layer:"
-              << GetNvar() << " " << fNeur_1.neuron[0] << Endl;
+            << GetNvar() << " " << fNeur_1.neuron[0] << Endl;
    }
 
    fNlayers = fParam_1.layerm;
@@ -521,7 +521,7 @@ Int_t TMVA::MethodCFMlpANN::DataInterface( Double_t* /*tout2*/, Double_t*  /*tin
    }
    if (*nvar != (Int_t)opt->GetNvar()) {
       Log() << kFATAL << "ERROR in MethodCFMlpANN_DataInterface mismatch in num of variables: "
-              << *nvar << " " << opt->GetNvar() << Endl;
+            << *nvar << " " << opt->GetNvar() << Endl;
    }
 
    // fill variables
@@ -574,7 +574,7 @@ void TMVA::MethodCFMlpANN::AddWeightsXMLTo( void* parent ) const
    stringstream temp;
    temp.precision( 16 );
    for (Int_t layer=0; layer<fParam_1.layerm; layer++) {         
-       temp << std::scientific << fDel_1.temp[layer] << " ";
+      temp << std::scientific << fDel_1.temp[layer] << " ";
    }   
    gTools().AddRawLine(tempnode, temp.str().c_str() );
 }

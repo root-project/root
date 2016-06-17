@@ -13,15 +13,6 @@
 #define ROOT_TLink
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TLink                                                                //
-//                                                                      //
-// Hypertext link to an object.                                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-
 #ifndef ROOT_TText
 #include "TText.h"
 #endif
@@ -30,7 +21,7 @@ class TLink : public TText {
 
 protected:
 
-   void   *fLink;           //pointer to object
+   void   *fLink;           ///< pointer to object
 
 public:
    enum { kObjIsParent = BIT(1) , kIsStarStar = BIT(2)};

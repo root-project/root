@@ -52,7 +52,7 @@ ClassImp(TMVA::VariableNormalizeTransform)
 /// constructor
 
 TMVA::VariableNormalizeTransform::VariableNormalizeTransform( DataSetInfo& dsi )
-   : VariableTransformBase( dsi, Types::kNormalized, "Norm" )
+: VariableTransformBase( dsi, Types::kNormalized, "Norm" )
 { 
 }
 
@@ -130,10 +130,10 @@ const TMVA::Event* TMVA::VariableNormalizeTransform::Transform( const TMVA::Even
    std::vector<Char_t>::iterator itMask = mask.begin();
    for ( std::vector<Float_t>::iterator itInp = input.begin(), itInpEnd = input.end(); itInp != itInpEnd; ++itInp) { // loop over input variables
       if( (*itMask) ){
-	 ++iidx;
-	 ++itMask;
-	 // don't put any value into output if the value is masked
-	 continue;
+         ++iidx;
+         ++itMask;
+         // don't put any value into output if the value is masked
+         continue;
       }
 
       Float_t val = (*itInp);
@@ -244,17 +244,17 @@ void TMVA::VariableNormalizeTransform::CalcNormalizationParams( const std::vecto
       for ( std::vector<Float_t>::iterator itInp = input.begin(), itInpEnd = input.end(); itInp != itInpEnd; ++itInp) { // loop over input variables
          Float_t val = (*itInp);
 
-	 if( minVector.at(iidx) > val ) minVector.at(iidx) = val;
-	 if( maxVector.at(iidx) < val ) maxVector.at(iidx) = val;
+         if( minVector.at(iidx) > val ) minVector.at(iidx) = val;
+         if( maxVector.at(iidx) < val ) maxVector.at(iidx) = val;
 
-	 if (nCls != 1) { // in case more than one class exists, compute min and max as well for all classes together
+         if (nCls != 1) { // in case more than one class exists, compute min and max as well for all classes together
             if (minVectorAll.at(iidx) > val) minVectorAll.at(iidx) = val;
             if (maxVectorAll.at(iidx) < val) maxVectorAll.at(iidx) = val;
          }
 
-	 ++iidx;
-         }
+         ++iidx;
       }
+   }
 
    return;
 }
@@ -370,31 +370,31 @@ void TMVA::VariableNormalizeTransform::ReadFromXML( void* trfnode )
 
       void* ch = gTools().GetChild( trfnode, "Class" );
       while(ch) {
-	 Int_t ci = 0;
-	 gTools().ReadAttr(ch, "ClassIndex", ci);
-	 classindex = UInt_t(ci);
+         Int_t ci = 0;
+         gTools().ReadAttr(ch, "ClassIndex", ci);
+         classindex = UInt_t(ci);
 
-	 fMin.resize(classindex+1);
-	 fMax.resize(classindex+1);
-	 
-	 fMin[classindex].resize(size,Float_t(0));
-	 fMax[classindex].resize(size,Float_t(0));
+         fMin.resize(classindex+1);
+         fMax.resize(classindex+1);
+         
+         fMin[classindex].resize(size,Float_t(0));
+         fMax[classindex].resize(size,Float_t(0));
 
-	 void* clch = gTools().GetChild( ch );
-	 while(clch) {
-	    TString nodeName(gTools().GetName(clch));
-	    if(nodeName=="Ranges") {
-	       void* varch = gTools().GetChild( clch );
-	       while(varch) {
-		  gTools().ReadAttr(varch, "Index", idx);
-		  gTools().ReadAttr(varch, "Min",      fMin[classindex][idx]);
-		  gTools().ReadAttr(varch, "Max",      fMax[classindex][idx]);
-		  varch = gTools().GetNextChild( varch );
-	       }
-	    }
-	    clch = gTools().GetNextChild( clch );
-	 }
-	 ch = gTools().GetNextChild( ch );
+         void* clch = gTools().GetChild( ch );
+         while(clch) {
+            TString nodeName(gTools().GetName(clch));
+            if(nodeName=="Ranges") {
+               void* varch = gTools().GetChild( clch );
+               while(varch) {
+                  gTools().ReadAttr(varch, "Index", idx);
+                  gTools().ReadAttr(varch, "Min",      fMin[classindex][idx]);
+                  gTools().ReadAttr(varch, "Max",      fMax[classindex][idx]);
+                  varch = gTools().GetNextChild( varch );
+               }
+            }
+            clch = gTools().GetNextChild( clch );
+         }
+         ch = gTools().GetNextChild( ch );
       }
       SetCreated();
       return;
@@ -476,7 +476,7 @@ void TMVA::VariableNormalizeTransform::BuildTransformationFromVarInfo( const std
          fMin[cls][vidx] = v->GetMin();
          fMax[cls][vidx] = v->GetMax();
          fGet.push_back(std::pair<Char_t,UInt_t>('v',vidx));
-     }
+      }
    }
    SetCreated();
 }

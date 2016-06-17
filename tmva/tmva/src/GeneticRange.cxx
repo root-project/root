@@ -77,7 +77,7 @@ Double_t TMVA::GeneticRange::RandomDiscrete()
 Double_t TMVA::GeneticRange::Random( Bool_t near, Double_t value, Double_t spread, Bool_t mirror )
 {
    if (fInterval->GetNbins() > 0) {   // discrete interval
-       return RandomDiscrete();
+      return RandomDiscrete();
    }
    else if (fFrom == fTo) {
       return fFrom;

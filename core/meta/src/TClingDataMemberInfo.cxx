@@ -282,6 +282,7 @@ int TClingDataMemberInfo::InternalNext()
          // We have an enum, recurse into these.
          // Note: For C++11 we will have to check for a transparent context.
          fIterStack.push_back(fIter);
+         cling::Interpreter::PushTransactionRAII RAII(fInterp);
          fIter = llvm::dyn_cast<clang::DeclContext>(*fIter)->decls_begin();
          increment = false; // avoid the next incrementation
          continue;

@@ -1,11 +1,17 @@
-// Demonstrate the TFoam class.
-//
-//  To run this macro type from CINT command line
-//
-//  root [0] gSystem->Load("libFoam.so")
-//  root [1] .x foam_demo.C+
-//Author: Stascek Jadach
-//____________________________________________________________________________
+/// \file
+/// \ingroup tutorial_FOAM
+/// Demonstrate the TFoam class.
+///
+///  To run this macro type from CINT command line
+///
+/// ~~~ {.cpp}
+///  root [0] gSystem->Load("libFoam.so")
+///  root [1] .x foam_demo.C+
+/// ~~~
+///
+/// \macro_code
+///
+/// \author Stascek Jadach
 
 #if defined(__CINT__) && !defined(__MAKECINT__)
 {

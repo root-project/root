@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TStorage
+\ingroup Base
 
 Storage manager. The storage manager works best in conjunction with
 the custom ROOT new and delete operators defined in the file

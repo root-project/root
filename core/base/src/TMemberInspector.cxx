@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TMemberInspector
+\ingroup Base
 
 Abstract base class for accessing the data-members of a class.
 Classes derived from this class can be given as argument to the

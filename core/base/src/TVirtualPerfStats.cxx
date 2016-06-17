@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TVirtualPerfStats
+\ingroup Base
+
 Provides the interface for the PROOF internal performance measurement
 and event tracing.
 */

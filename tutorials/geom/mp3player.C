@@ -1,3 +1,22 @@
+/// \file
+/// \ingroup tutorial_geom
+/// Drawing a mp3 type music player, using ROOT geometry class.
+///
+/// Name: mp3player.C
+/// Author: Eun Young Kim, Dept. of Physics, Univ. of Seoul
+/// Reviewed by Sunman Kim (sunman98@hanmail.net)
+/// Supervisor: Prof. Inkyu Park (icpark@physics.uos.ac.kr)
+///
+/// How to run: .x mp3player.C in ROOT terminal, then use OpenGL
+///
+/// This macro was created for the evaluation of Computational Physics course in 2006.
+/// We thank to Prof. Inkyu Park for his special lecture on ROOT and to all of ROOT team
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Eun Young Kim
+
 #include "TCanvas.h"
 #include "TPaveText.h"
 #include "TImage.h"
@@ -8,17 +27,6 @@
 
 void mp3player()
 {
-  // Drawing a mp3 type music player, using ROOT geometry class.
-  // Name: mp3player.C
-  // Author: Eun Young Kim, Dept. of Physics, Univ. of Seoul
-  // Reviewed by Sunman Kim (sunman98@hanmail.net)
-  // Supervisor: Prof. Inkyu Park (icpark@physics.uos.ac.kr)
-  //
-  // How to run: .x mp3player.C in ROOT terminal, then use OpenGL
-  //
-  // This macro was created for the evaluation of Computational Physics course in 2006.
-  // We thank to Prof. Inkyu Park for his special lecture on ROOT and to all of ROOT team
-  //
 
   TGeoManager *geom=new TGeoManager("geom","My first 3D geometry");
 

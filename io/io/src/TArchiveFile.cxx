@@ -14,7 +14,7 @@
 \class TArchiveFile
 \ingroup IO
 
-Class describing an archive file containing multiple sub-files, like a ZIP 
+Class describing an archive file containing multiple sub-files, like a ZIP
 or TAR archive.
 */
 

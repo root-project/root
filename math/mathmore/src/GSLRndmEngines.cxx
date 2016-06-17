@@ -226,6 +226,12 @@ namespace Math {
       return gsl_ran_landau(  fRng->Rng());
    }
 
+   double GSLRandomEngine::Beta(double a, double b) const
+   {
+      // Beta distribution
+      return gsl_ran_beta(  fRng->Rng(), a, b);
+   }
+
    double GSLRandomEngine::Gamma(double a, double b) const
    {
       // Gamma distribution
@@ -255,6 +261,24 @@ namespace Math {
    {
       // t distribution
       return gsl_ran_tdist(  fRng->Rng(), nu);
+   }
+
+   double GSLRandomEngine::Rayleigh(double sigma)  const
+   {
+      // Rayleigh distribution
+      return gsl_ran_rayleigh(  fRng->Rng(), sigma);
+   }
+
+   double GSLRandomEngine::Logistic(double a)  const
+   {
+      // Logistic distribution
+      return gsl_ran_logistic(  fRng->Rng(), a);
+   }
+
+   double GSLRandomEngine::Pareto(double a, double b)  const
+   {
+      // Pareto distribution
+      return gsl_ran_pareto(  fRng->Rng(), a, b);
    }
 
    void GSLRandomEngine::Dir2D(double &x, double &y) const

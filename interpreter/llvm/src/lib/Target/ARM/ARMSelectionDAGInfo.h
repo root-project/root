@@ -7,7 +7,7 @@
 //
 //===----------------------------------------------------------------------===//
 //
-// This file defines the ARM subclass for TargetSelectionDAGInfo.
+// This file defines the ARM subclass for SelectionDAGTargetInfo.
 //
 //===----------------------------------------------------------------------===//
 
@@ -15,7 +15,8 @@
 #define LLVM_LIB_TARGET_ARM_ARMSELECTIONDAGINFO_H
 
 #include "MCTargetDesc/ARMAddressingModes.h"
-#include "llvm/Target/TargetSelectionDAGInfo.h"
+#include "llvm/CodeGen/RuntimeLibcalls.h"
+#include "llvm/CodeGen/SelectionDAGTargetInfo.h"
 
 namespace llvm {
 
@@ -35,10 +36,8 @@ namespace ARM_AM {
   }
 }  // end namespace ARM_AM
 
-class ARMSelectionDAGInfo : public TargetSelectionDAGInfo {
+class ARMSelectionDAGInfo : public SelectionDAGTargetInfo {
 public:
-  explicit ARMSelectionDAGInfo(const DataLayout &DL);
-  ~ARMSelectionDAGInfo();
 
   SDValue EmitTargetCodeForMemcpy(SelectionDAG &DAG, SDLoc dl,
                                   SDValue Chain,
@@ -48,6 +47,13 @@ public:
                                   MachinePointerInfo DstPtrInfo,
                                   MachinePointerInfo SrcPtrInfo) const override;
 
+  SDValue EmitTargetCodeForMemmove(SelectionDAG &DAG, SDLoc dl,
+                                   SDValue Chain,
+                                   SDValue Dst, SDValue Src,
+                                   SDValue Size, unsigned Align, bool isVolatile,
+                                   MachinePointerInfo DstPtrInfo,
+                                   MachinePointerInfo SrcPtrInfo) const override;
+
   // Adjust parameters for memset, see RTABI section 4.3.4
   SDValue EmitTargetCodeForMemset(SelectionDAG &DAG, SDLoc dl,
                                   SDValue Chain,
@@ -55,6 +61,12 @@ public:
                                   SDValue Op3, unsigned Align,
                                   bool isVolatile,
                                   MachinePointerInfo DstPtrInfo) const override;
+
+  SDValue EmitSpecializedLibcall(SelectionDAG &DAG, SDLoc dl,
+                                 SDValue Chain,
+                                 SDValue Dst, SDValue Src,
+                                 SDValue Size, unsigned Align,
+                                 RTLIB::Libcall LC) const;
 };
 
 }

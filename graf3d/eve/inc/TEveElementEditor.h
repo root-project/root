@@ -52,7 +52,7 @@ public:
    void DoMainColor(Pixel_t color);
    void DoTransparency();
 
-   ClassDef(TEveElementEditor, 1); // Editor for TEveElement class.
+   ClassDef(TEveElementEditor, 0); // Editor for TEveElement class.
 };
 
 #endif

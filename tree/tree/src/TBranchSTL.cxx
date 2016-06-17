@@ -2,6 +2,8 @@
 // Author Lukasz Janyst <ljanyst@cern.ch>  23/01/2008
 
 /** \class TBranchSTL
+\ingroup tree
+
 A Branch handling STL collection of pointers (vectors, lists, queues,
 sets and multisets) while storing them in split mode.
 */

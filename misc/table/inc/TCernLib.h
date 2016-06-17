@@ -352,14 +352,18 @@ inline double *TCL::mxmltr(const double *a, const double *b, double *c, int ni, 
 inline int  *TCL::ucopy(const int  *b, int  *a, int n)
 {
    //to be documented
-   if (n <= 0) return 0; memcpy(a,b,n*sizeof(int)); return a;
+   if (n <= 0) return 0;
+   memcpy(a,b,n*sizeof(int));
+   return a;
 }
 
 //________________________________________________________
 inline float *TCL::ucopy(const float *b, float *a, int n)
 {
    //to be documented
-   if (n <= 0) return 0; memcpy(a,b,n*sizeof(float)); return a;
+   if (n <= 0) return 0;
+   memcpy(a,b,n*sizeof(float));
+   return a;
 }
 
 //________________________________________________________
@@ -384,14 +388,18 @@ inline double *TCL::ucopy(const float *b, double *a, int n)
 inline double *TCL::ucopy(const double *b, double *a, int n)
 {
    //to be documented
-   if (n <= 0) return 0; memcpy(a,b,n*sizeof(double)); return a;
+   if (n <= 0) return 0;
+   memcpy(a,b,n*sizeof(double));
+   return a;
 }
 
 //________________________________________________________
 inline void **TCL::ucopy(const void **b, void  **a, int n)
 {
    //to be documented
-   if (n <= 0) return 0; memcpy(a,b,n*sizeof(void *)); return a;
+   if (n <= 0) return 0;
+   memcpy(a,b,n*sizeof(void *));
+   return a;
 }
 
 

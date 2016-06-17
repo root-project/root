@@ -35,10 +35,10 @@
 
 namespace TMVA {
 
-  const int  max_Events_  = 200000;
-  const int  max_nLayers_ = 6;
-  const int  max_nNodes_  = 200;
-  const int  max_nVar_    = 200;
+   const int  max_Events_  = 200000;
+   const int  max_nLayers_ = 6;
+   const int  max_nNodes_  = 200;
+   const int  max_nVar_    = 200;
 
 } 
 

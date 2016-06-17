@@ -150,8 +150,8 @@ namespace TMVA {
 
       private:
 
-        // This is a workaround for OSx where static thread_local data members are
-        // not supported. The C++ solution would indeed be the following:
+         // This is a workaround for OSx where static thread_local data members are
+         // not supported. The C++ solution would indeed be the following:
          static TRandom3& GetRndmThreadLocal() {TTHREAD_TLS_DECL_ARG(TRandom3,fgRndm,1); return fgRndm;};
 
          UInt_t fDimn;
@@ -176,35 +176,35 @@ namespace TMVA {
       // inlined functions for Event class
       //
       inline VarType Event::GetDist(const VarType var1, const UInt_t ivar) const
-      {
-         const VarType var2 = GetVar(ivar);
-         return (var1 - var2) * (var1 - var2);
-      }
+         {
+            const VarType var2 = GetVar(ivar);
+            return (var1 - var2) * (var1 - var2);
+         }
       inline Double_t Event::GetWeight() const
-      {
-         return fWeight;
-      }
+         {
+            return fWeight;
+         }
       inline VarType Event::GetVar(const UInt_t i) const
-      {
-         return fVar[i];
-      }
+         {
+            return fVar[i];
+         }
       inline VarType Event::GetTgt(const UInt_t i) const
-      {
-         return fTgt[i];
-      }
+         {
+            return fTgt[i];
+         }
 
       inline UInt_t Event::GetNVar() const
-      {
-         return fVar.size();
-      }
+         {
+            return fVar.size();
+         }
       inline UInt_t Event::GetNTgt() const
-      {
-         return fTgt.size();
-      }
+         {
+            return fTgt.size();
+         }
       inline Short_t Event::GetType() const
-      {
-         return fType;
-      }
+         {
+            return fType;
+         }
 
       //
       // inline functions for ModulekNN class
@@ -226,9 +226,9 @@ namespace TMVA {
          return fVar;
       }
       inline const std::map<Int_t, Double_t>& ModulekNN::GetMetric() const
-      {
-         return fVarScale;
-      }
+         {
+            return fVarScale;
+         }
 
    } // end of kNN namespace
 } // end of TMVA namespace

@@ -17,6 +17,8 @@ TBenchmark *gBenchmark = 0;
 ClassImp(TBenchmark)
 
 /** \class TBenchmark
+\ingroup Base
+
 This class is a ROOT utility to help benchmarking applications
 */
 

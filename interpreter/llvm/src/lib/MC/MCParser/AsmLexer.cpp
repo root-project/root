@@ -21,7 +21,7 @@
 #include <cstdlib>
 using namespace llvm;
 
-AsmLexer::AsmLexer(const MCAsmInfo &_MAI) : MAI(_MAI)  {
+AsmLexer::AsmLexer(const MCAsmInfo &MAI) : MAI(MAI) {
   CurPtr = nullptr;
   isAtStartOfLine = true;
   AllowAtInIdentifier = !StringRef(MAI.getCommentString()).startswith("@");
@@ -46,7 +46,7 @@ void AsmLexer::setBuffer(StringRef Buf, const char *ptr) {
 AsmToken AsmLexer::ReturnError(const char *Loc, const std::string &Msg) {
   SetError(SMLoc::getFromPointer(Loc), Msg);
 
-  return AsmToken(AsmToken::Error, StringRef(Loc, 0));
+  return AsmToken(AsmToken::Error, StringRef(Loc, CurPtr - Loc));
 }
 
 int AsmLexer::getNextChar() {
@@ -168,9 +168,13 @@ AsmToken AsmLexer::LexIdentifier() {
 ///           C-Style Comment: /* ... */
 AsmToken AsmLexer::LexSlash() {
   switch (*CurPtr) {
-  case '*': break; // C style comment.
-  case '/': return ++CurPtr, LexLineComment();
-  default:  return AsmToken(AsmToken::Slash, StringRef(CurPtr-1, 1));
+  case '*':
+    break; // C style comment.
+  case '/':
+    ++CurPtr;
+    return LexLineComment();
+  default:
+    return AsmToken(AsmToken::Slash, StringRef(CurPtr - 1, 1));
   }
 
   // C Style comment.
@@ -280,7 +284,7 @@ AsmToken AsmLexer::LexDigit() {
     return intToken(Result, Value);
   }
 
-  if (*CurPtr == 'b') {
+  if ((*CurPtr == 'b') || (*CurPtr == 'B')) {
     ++CurPtr;
     // See if we actually have "0b" as part of something like "jmp 0b\n"
     if (!isdigit(CurPtr[0])) {
@@ -309,7 +313,7 @@ AsmToken AsmLexer::LexDigit() {
     return intToken(Result, Value);
   }
 
-  if (*CurPtr == 'x') {
+  if ((*CurPtr == 'x') || (*CurPtr == 'X')) {
     ++CurPtr;
     const char *NumStart = CurPtr;
     while (isxdigit(CurPtr[0]))
@@ -436,7 +440,8 @@ StringRef AsmLexer::LexUntilEndOfLine() {
   return StringRef(TokStart, CurPtr-TokStart);
 }
 
-const AsmToken AsmLexer::peekTok(bool ShouldSkipSpace) {
+size_t AsmLexer::peekTokens(MutableArrayRef<AsmToken> Buf,
+                            bool ShouldSkipSpace) {
   const char *SavedTokStart = TokStart;
   const char *SavedCurPtr = CurPtr;
   bool SavedAtStartOfLine = isAtStartOfLine;
@@ -446,7 +451,16 @@ const AsmToken AsmLexer::peekTok(bool ShouldSkipSpace) {
   SMLoc SavedErrLoc = getErrLoc();
 
   SkipSpace = ShouldSkipSpace;
-  AsmToken Token = LexToken();
+
+  size_t ReadCount;
+  for (ReadCount = 0; ReadCount < Buf.size(); ++ReadCount) {
+    AsmToken Token = LexToken();
+
+    Buf[ReadCount] = Token;
+
+    if (Token.is(AsmToken::Eof))
+      break;
+  }
 
   SetError(SavedErrLoc, SavedErr);
 
@@ -455,7 +469,7 @@ const AsmToken AsmLexer::peekTok(bool ShouldSkipSpace) {
   CurPtr = SavedCurPtr;
   TokStart = SavedTokStart;
 
-  return Token;
+  return ReadCount;
 }
 
 bool AsmLexer::isAtStartOfComment(const char *Ptr) {
@@ -547,21 +561,29 @@ AsmToken AsmLexer::LexToken() {
   case '@': return AsmToken(AsmToken::At, StringRef(TokStart, 1));
   case '\\': return AsmToken(AsmToken::BackSlash, StringRef(TokStart, 1));
   case '=':
-    if (*CurPtr == '=')
-      return ++CurPtr, AsmToken(AsmToken::EqualEqual, StringRef(TokStart, 2));
+    if (*CurPtr == '=') {
+      ++CurPtr;
+      return AsmToken(AsmToken::EqualEqual, StringRef(TokStart, 2));
+    }
     return AsmToken(AsmToken::Equal, StringRef(TokStart, 1));
   case '|':
-    if (*CurPtr == '|')
-      return ++CurPtr, AsmToken(AsmToken::PipePipe, StringRef(TokStart, 2));
+    if (*CurPtr == '|') {
+      ++CurPtr;
+      return AsmToken(AsmToken::PipePipe, StringRef(TokStart, 2));
+    }
     return AsmToken(AsmToken::Pipe, StringRef(TokStart, 1));
   case '^': return AsmToken(AsmToken::Caret, StringRef(TokStart, 1));
   case '&':
-    if (*CurPtr == '&')
-      return ++CurPtr, AsmToken(AsmToken::AmpAmp, StringRef(TokStart, 2));
+    if (*CurPtr == '&') {
+      ++CurPtr;
+      return AsmToken(AsmToken::AmpAmp, StringRef(TokStart, 2));
+    }
     return AsmToken(AsmToken::Amp, StringRef(TokStart, 1));
   case '!':
-    if (*CurPtr == '=')
-      return ++CurPtr, AsmToken(AsmToken::ExclaimEqual, StringRef(TokStart, 2));
+    if (*CurPtr == '=') {
+      ++CurPtr;
+      return AsmToken(AsmToken::ExclaimEqual, StringRef(TokStart, 2));
+    }
     return AsmToken(AsmToken::Exclaim, StringRef(TokStart, 1));
   case '%': return AsmToken(AsmToken::Percent, StringRef(TokStart, 1));
   case '/': return LexSlash();
@@ -573,21 +595,28 @@ AsmToken AsmLexer::LexToken() {
     return LexDigit();
   case '<':
     switch (*CurPtr) {
-    case '<': return ++CurPtr, AsmToken(AsmToken::LessLess,
-                                        StringRef(TokStart, 2));
-    case '=': return ++CurPtr, AsmToken(AsmToken::LessEqual,
-                                        StringRef(TokStart, 2));
-    case '>': return ++CurPtr, AsmToken(AsmToken::LessGreater,
-                                        StringRef(TokStart, 2));
-    default: return AsmToken(AsmToken::Less, StringRef(TokStart, 1));
+    case '<':
+      ++CurPtr;
+      return AsmToken(AsmToken::LessLess, StringRef(TokStart, 2));
+    case '=':
+      ++CurPtr;
+      return AsmToken(AsmToken::LessEqual, StringRef(TokStart, 2));
+    case '>':
+      ++CurPtr;
+      return AsmToken(AsmToken::LessGreater, StringRef(TokStart, 2));
+    default:
+      return AsmToken(AsmToken::Less, StringRef(TokStart, 1));
     }
   case '>':
     switch (*CurPtr) {
-    case '>': return ++CurPtr, AsmToken(AsmToken::GreaterGreater,
-                                        StringRef(TokStart, 2));
-    case '=': return ++CurPtr, AsmToken(AsmToken::GreaterEqual,
-                                        StringRef(TokStart, 2));
-    default: return AsmToken(AsmToken::Greater, StringRef(TokStart, 1));
+    case '>':
+      ++CurPtr;
+      return AsmToken(AsmToken::GreaterGreater, StringRef(TokStart, 2));
+    case '=':
+      ++CurPtr;
+      return AsmToken(AsmToken::GreaterEqual, StringRef(TokStart, 2));
+    default:
+      return AsmToken(AsmToken::Greater, StringRef(TokStart, 1));
     }
 
   // TODO: Quoted identifiers (objc methods etc)

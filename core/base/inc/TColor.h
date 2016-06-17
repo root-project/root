@@ -22,15 +22,15 @@
 
 class TColor : public TNamed {
 protected:
-   Int_t          fNumber;        //Color number identifier
+   Int_t          fNumber;        ///< Color number identifier
 private:
-   Float_t        fRed;           //Fraction of Red
-   Float_t        fGreen;         //Fraction of Green
-   Float_t        fBlue;          //Fraction of Blue
-   Float_t        fHue;           //Hue
-   Float_t        fLight;         //Light
-   Float_t        fSaturation;    //Saturation
-   Float_t        fAlpha;         //Alpha (transparency)
+   Float_t        fRed;           ///< Fraction of Red
+   Float_t        fGreen;         ///< Fraction of Green
+   Float_t        fBlue;          ///< Fraction of Blue
+   Float_t        fHue;           ///< Hue
+   Float_t        fLight;         ///< Light
+   Float_t        fSaturation;    ///< Saturation
+   Float_t        fAlpha;         ///< Alpha (transparency)
 
    void           Allocate();
    static Float_t HLStoRGB1(Float_t rn1, Float_t rn2, Float_t huei);
@@ -88,6 +88,7 @@ public:
    static Int_t   GetColorBright(Int_t color);
    static Int_t   GetColorDark(Int_t color);
    static Int_t   GetColorTransparent(Int_t color, Float_t a);
+   static Int_t   GetFreeColorIndex();
    static ULong_t Number2Pixel(Int_t ci);
    static ULong_t RGB2Pixel(Int_t r, Int_t g, Int_t b);
    static ULong_t RGB2Pixel(Float_t r, Float_t g, Float_t b);

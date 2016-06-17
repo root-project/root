@@ -39,7 +39,7 @@ static bool &GetIMTFlag()
 extern "C" void ROOT_TImplicitMT_EnableImplicitMT(UInt_t numthreads)
 {
    if (!GetIMTFlag()) {
-      if (!GetScheduler().is_active()) { 
+      if (!GetScheduler().is_active()) {
          TThread::Initialize();
 
          if (numthreads == 0)

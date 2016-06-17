@@ -306,7 +306,7 @@ public:
 
    // end of redefined virtual functions
 
-ClassDef(TBufferSQL2,1);    //a specialized TBuffer to convert data to SQL statements or read data from SQL tables
+   ClassDef(TBufferSQL2, 0);    //a specialized TBuffer to convert data to SQL statements or read data from SQL tables
 };
 
 #endif

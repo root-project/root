@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TEntryListFromFile
+\ingroup tree
+
 Manages entry lists from different files, when they are not loaded
 in memory at the same time.
 

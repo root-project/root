@@ -108,7 +108,7 @@ namespace TMVA {
       // get specific help message from classifer
       virtual void GetHelpMessage() const = 0;
 
-      ClassDef(IMethod,0) // Method Interface
+      ClassDef(IMethod,0); // Method Interface
 
    };
 } // namespace TMVA

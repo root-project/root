@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TCanvasImp
+\ingroup Base
+
 ABC describing GUI independent main window (with menubar, scrollbars
 and a drawing area).
 */
