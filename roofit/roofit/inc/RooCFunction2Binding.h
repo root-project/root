@@ -155,6 +155,9 @@ class RooCFunction2Ref : public TObject {
   ClassDef(RooCFunction2Ref,1) // Persistable reference to C function pointer
 } ;
 
+// Define static member
+template<class VO, class VI1, class VI2>
+RooCFunction2Map<VO,VI1,VI2>* RooCFunction2Ref<VO,VI1,VI2>::_fmap = 0;
 
 
 template<class VO, class VI1, class VI2>

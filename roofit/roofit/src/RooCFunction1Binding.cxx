@@ -37,9 +37,6 @@ templateClassImp(RooCFunction1Ref)
 #endif 
 
 
-template<> RooCFunction1Map<double,double>* RooCFunction1Ref<double,double>::_fmap = 0 ;
-template<> RooCFunction1Map<double,int>* RooCFunction1Ref<double,int>::_fmap = 0 ;
-
 template<>
 RooCFunction1Map<double,double>& RooCFunction1Ref<double,double>::fmap()
  {
