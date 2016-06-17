@@ -443,8 +443,8 @@ namespace TMVA {
       // header and auxiliary classes
       virtual void     MakeClassSpecificHeader( std::ostream&, const TString& = "" ) const {}
 
-      // static pointer to this object - required for ROOT finder (to be solved differently)
-      static MethodBase* GetThisBase();
+      // static pointer to this object - required for ROOT finder (to be solved differently)(solved by Omar)
+      //static MethodBase* GetThisBase();
 
       // some basic statistical analysis
       void Statistics( Types::ETreeType treeType, const TString& theVarName,
@@ -637,7 +637,7 @@ namespace TMVA {
 
       // This is a workaround for OSx where static thread_local data members are
       // not supported. The C++ solution would indeed be the following:
-      static MethodBase*& GetThisBaseThreadLocal() {TTHREAD_TLS(MethodBase*) fgThisBase(nullptr); return fgThisBase; };
+//       static MethodBase*& GetThisBaseThreadLocal() {TTHREAD_TLS(MethodBase*) fgThisBase(nullptr); return fgThisBase; };
 
       // ===== depreciated options, kept for backward compatibility  =====
    private:

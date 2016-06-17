@@ -383,7 +383,7 @@ void TMVA::MethodBase::InitBase()
    fEventCollections.at(1) = 0;
 
    // define "this" pointer
-   ResetThisBase();
+//    ResetThisBase();
 
    // retrieve signal and background class index
    if (DataInfo().GetClassInfo("Signal") != 0) {
@@ -3194,14 +3194,6 @@ void TMVA::MethodBase::PrintHelpMessage() const
 // ----------------------- r o o t   f i n d i n g ----------------------------
 
 ////////////////////////////////////////////////////////////////////////////////
-/// interface for RootFinder
-
-// Double_t TMVA::MethodBase::IGetEffForRoot( Double_t theCut )
-// {
-//    return MethodBase::GetThisBase()->GetEffForRoot( theCut );
-// }
-
-////////////////////////////////////////////////////////////////////////////////
 /// returns efficiency as function of cut
 
 Double_t TMVA::MethodBase::GetValueForRoot( Double_t theCut )
@@ -3274,21 +3266,6 @@ TString TMVA::MethodBase::GetTrainingROOTVersionString() const
    return TString(Form("%i.%02i/%02i",a,b,c));
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// return a pointer the base class of this method
-
-TMVA::MethodBase* TMVA::MethodBase::GetThisBase()
-{
-   return GetThisBaseThreadLocal();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// reset required for RootFinder
-
-void TMVA::MethodBase::ResetThisBase()
-{
-   GetThisBaseThreadLocal() = this;
-}
 ////////////////////////////////////////////////////////////////////////////////
 
 Double_t TMVA::MethodBase::GetKSTrainingVsTest(Char_t SorB, TString opt){
