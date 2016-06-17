@@ -80,12 +80,8 @@
 #include "TMVA/ROCCurve.h"
 #include "TMVA/MsgLogger.h"
 
-#include "TMVA/VariableIdentityTransform.h"
-#include "TMVA/VariableDecorrTransform.h"
-#include "TMVA/VariableInfo.h"
-#include "TMVA/VariablePCATransform.h"
-#include "TMVA/VariableGaussTransform.h"
-#include "TMVA/VariableNormalizeTransform.h"
+
+#include "TMVA/VariableTransform.h"
 
 #include "TMVA/Results.h"
 #include "TMVA/ResultsClassification.h"
@@ -469,7 +465,7 @@ void TMVA::Factory::WriteDataInformation(DataSetInfo&     fDataSetInfo)
 
       Log() << kINFO << Endl;
       Log() << kINFO << "current transformation string: '" << trfS.Data() << "'" << Endl;
-      TMVA::MethodBase::CreateVariableTransforms( trfS, 
+      TMVA::CreateVariableTransforms( trfS, 
                                                   fDataSetInfo,
                                                   *(trfs.back()),
                                                   Log() );
