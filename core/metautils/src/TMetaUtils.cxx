@@ -2647,7 +2647,7 @@ clang::RecordDecl *ROOT::TMetaUtils::GetUnderlyingRecordDecl(clang::QualType typ
    const clang::Type *rawtype = ROOT::TMetaUtils::GetUnderlyingType(type);
 
    if (rawtype->isFundamentalType() || rawtype->isEnumeralType()) {
-      // not an ojbect.
+      // not an object.
       return 0;
    }
    return rawtype->getAsCXXRecordDecl();
