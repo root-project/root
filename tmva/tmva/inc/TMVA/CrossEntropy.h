@@ -46,11 +46,11 @@ namespace TMVA {
 
    public:
     
-     // default constructor
-      CrossEntropy(): SeparationBase()  { fName = "CE"; }
+      // default constructor
+   CrossEntropy(): SeparationBase()  { fName = "CE"; }
 
       // copy constructor
-      CrossEntropy( const CrossEntropy& g): SeparationBase(g) {}
+   CrossEntropy( const CrossEntropy& g): SeparationBase(g) {}
 
       // destructor
       virtual ~CrossEntropy(){}
@@ -60,7 +60,7 @@ namespace TMVA {
     
    protected:
     
-      ClassDef(CrossEntropy,0) // Implementation of the CrossEntropy as separation criterion
+      ClassDef(CrossEntropy,0); // Implementation of the CrossEntropy as separation criterion
    };
 
 } // namespace TMVA

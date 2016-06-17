@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TVirtualViewer3D
+\ingroup Base
+
 Abstract 3D shapes viewer.
 
 The concrete implementations are:

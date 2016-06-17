@@ -58,7 +58,7 @@ from the code or command line, do:
 When the TCutG is not created via TTree::Draw, one must set the variable names
 corresponding to x,y if one wants to use the cut as input to TTree::Draw,eg
 ~~~ {.cpp}
-    TCutG *cutg = new TCutG("mycut",5);
+    TCutG *cutg = new TCutG("mycut",6);
     cutg->SetVarX("y");
     cutg->SetVarY("x");
     cutg->SetPoint(0,-0.3586207,1.509534);

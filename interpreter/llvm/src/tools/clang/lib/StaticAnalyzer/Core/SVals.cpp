@@ -51,7 +51,7 @@ bool SVal::hasConjuredSymbol() const {
 const FunctionDecl *SVal::getAsFunctionDecl() const {
   if (Optional<loc::MemRegionVal> X = getAs<loc::MemRegionVal>()) {
     const MemRegion* R = X->getRegion();
-    if (const FunctionTextRegion *CTR = R->getAs<FunctionTextRegion>())
+    if (const FunctionCodeRegion *CTR = R->getAs<FunctionCodeRegion>())
       if (const FunctionDecl *FD = dyn_cast<FunctionDecl>(CTR->getDecl()))
         return FD;
   }
@@ -236,11 +236,11 @@ SVal loc::ConcreteInt::evalBinOp(BasicValueFactory& BasicVals,
 // Pretty-Printing.
 //===----------------------------------------------------------------------===//
 
-void SVal::dump() const { dumpToStream(llvm::errs()); }
+LLVM_DUMP_METHOD void SVal::dump() const { dumpToStream(llvm::errs()); }
 
 void SVal::dumpToStream(raw_ostream &os) const {
   switch (getBaseKind()) {
-    case UnknownKind:
+    case UnknownValKind:
       os << "Unknown";
       break;
     case NonLocKind:
@@ -249,7 +249,7 @@ void SVal::dumpToStream(raw_ostream &os) const {
     case LocKind:
       castAs<Loc>().dumpToStream(os);
       break;
-    case UndefinedKind:
+    case UndefinedValKind:
       os << "Undefined";
       break;
   }
@@ -313,7 +313,7 @@ void Loc::dumpToStream(raw_ostream &os) const {
     case loc::GotoLabelKind:
       os << "&&" << castAs<loc::GotoLabel>().getLabel()->getName();
       break;
-    case loc::MemRegionKind:
+    case loc::MemRegionValKind:
       os << '&' << castAs<loc::MemRegionVal>().getRegion()->getString();
       break;
     default:

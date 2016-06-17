@@ -16,6 +16,8 @@
 ClassImp(TExec)
 
 /** \class TExec
+\ingroup Base
+
 TExec is a utility class that can be used to execute a C++ command
 when some event happens in a pad.
 The command in turn can invoke a C++ macro to paint graphics objects

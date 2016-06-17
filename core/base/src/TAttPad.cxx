@@ -18,6 +18,9 @@
 ClassImp(TAttPad)
 
 /** \class TAttPad
+\ingroup Base
+\ingroup GraphicsAtt
+
 Manages default Pad attributes. Referenced by TStyle.
 */
 

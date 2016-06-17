@@ -18,8 +18,7 @@ using namespace llvm;
 
 void MipsMCAsmInfo::anchor() { }
 
-MipsMCAsmInfo::MipsMCAsmInfo(StringRef TT) {
-  Triple TheTriple(TT);
+MipsMCAsmInfo::MipsMCAsmInfo(const Triple &TheTriple) {
   if ((TheTriple.getArch() == Triple::mips) ||
       (TheTriple.getArch() == Triple::mips64))
     IsLittleEndian = false;
@@ -43,4 +42,9 @@ MipsMCAsmInfo::MipsMCAsmInfo(StringRef TT) {
   SupportsDebugInformation = true;
   ExceptionsType = ExceptionHandling::DwarfCFI;
   DwarfRegNumForCFI = true;
+
+  // Enable IAS by default for O32.
+  if (TheTriple.getArch() == Triple::mips ||
+      TheTriple.getArch() == Triple::mipsel)
+    UseIntegratedAssembler = true;
 }

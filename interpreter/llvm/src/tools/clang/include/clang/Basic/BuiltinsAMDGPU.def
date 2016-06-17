@@ -1,0 +1,72 @@
+//==- BuiltinsAMDGPU.def - AMDGPU Builtin function database ------*- C++ -*-==//
+//
+//                     The LLVM Compiler Infrastructure
+//
+// This file is distributed under the University of Illinois Open Source
+// License. See LICENSE.TXT for details.
+//
+//===----------------------------------------------------------------------===//
+//
+// This file defines the AMDGPU-specific builtin function database. Users of
+// this file must define the BUILTIN macro to make use of this information.
+//
+//===----------------------------------------------------------------------===//
+
+// The format of this database matches clang/Basic/Builtins.def.
+
+#if defined(BUILTIN) && !defined(TARGET_BUILTIN)
+#   define TARGET_BUILTIN(ID, TYPE, ATTRS, FEATURE) BUILTIN(ID, TYPE, ATTRS)
+#endif
+
+BUILTIN(__builtin_amdgcn_s_barrier, "v", "n")
+BUILTIN(__builtin_amdgcn_div_scale, "dddbb*", "n")
+BUILTIN(__builtin_amdgcn_div_scalef, "fffbb*", "n")
+BUILTIN(__builtin_amdgcn_div_fmas, "ddddb", "nc")
+BUILTIN(__builtin_amdgcn_div_fmasf, "ffffb", "nc")
+BUILTIN(__builtin_amdgcn_div_fixup, "dddd", "nc")
+BUILTIN(__builtin_amdgcn_div_fixupf, "ffff", "nc")
+BUILTIN(__builtin_amdgcn_trig_preop, "ddi", "nc")
+BUILTIN(__builtin_amdgcn_trig_preopf, "ffi", "nc")
+BUILTIN(__builtin_amdgcn_rcp, "dd", "nc")
+BUILTIN(__builtin_amdgcn_rcpf, "ff", "nc")
+BUILTIN(__builtin_amdgcn_rsq, "dd", "nc")
+BUILTIN(__builtin_amdgcn_rsqf, "ff", "nc")
+BUILTIN(__builtin_amdgcn_rsq_clamp, "dd", "nc")
+BUILTIN(__builtin_amdgcn_rsq_clampf, "ff", "nc")
+BUILTIN(__builtin_amdgcn_sinf, "ff", "nc")
+BUILTIN(__builtin_amdgcn_cosf, "ff", "nc")
+BUILTIN(__builtin_amdgcn_log_clampf, "ff", "nc")
+BUILTIN(__builtin_amdgcn_ldexp, "ddi", "nc")
+BUILTIN(__builtin_amdgcn_ldexpf, "ffi", "nc")
+BUILTIN(__builtin_amdgcn_frexp_mant, "dd", "nc")
+BUILTIN(__builtin_amdgcn_frexp_mantf, "ff", "nc")
+BUILTIN(__builtin_amdgcn_frexp_exp, "id", "nc")
+BUILTIN(__builtin_amdgcn_frexp_expf, "if", "nc")
+BUILTIN(__builtin_amdgcn_fract, "dd", "nc")
+BUILTIN(__builtin_amdgcn_fractf, "ff", "nc")
+BUILTIN(__builtin_amdgcn_class, "bdi", "nc")
+BUILTIN(__builtin_amdgcn_classf, "bfi", "nc")
+BUILTIN(__builtin_amdgcn_cubeid, "ffff", "nc")
+BUILTIN(__builtin_amdgcn_cubesc, "ffff", "nc")
+BUILTIN(__builtin_amdgcn_cubetc, "ffff", "nc")
+BUILTIN(__builtin_amdgcn_cubema, "ffff", "nc")
+BUILTIN(__builtin_amdgcn_s_memtime, "LUi", "n")
+BUILTIN(__builtin_amdgcn_s_sleep, "vIi", "n")
+
+//===----------------------------------------------------------------------===//
+// VI+ only builtins.
+//===----------------------------------------------------------------------===//
+
+TARGET_BUILTIN(__builtin_amdgcn_s_memrealtime, "LUi", "n", "s-memrealtime")
+
+//===----------------------------------------------------------------------===//
+// Legacy names with amdgpu prefix
+//===----------------------------------------------------------------------===//
+
+BUILTIN(__builtin_amdgpu_rsq, "dd", "nc")
+BUILTIN(__builtin_amdgpu_rsqf, "ff", "nc")
+BUILTIN(__builtin_amdgpu_ldexp, "ddi", "nc")
+BUILTIN(__builtin_amdgpu_ldexpf, "ffi", "nc")
+
+#undef BUILTIN
+#undef TARGET_BUILTIN

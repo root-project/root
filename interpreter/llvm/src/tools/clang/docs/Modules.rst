@@ -159,7 +159,7 @@ Module maps are specified as separate files (each named ``module.modulemap``) al
 
   To actually see any benefits from modules, one first has to introduce module maps for the underlying C standard library and the libraries and headers on which it depends. The section `Modularizing a Platform`_ describes the steps one must take to write these module maps.
   
-One can use module maps without modules to check the integrity of the use of header files. To do this, use the ``-fmodule-maps`` option instead of the ``-fmodules`` option.
+One can use module maps without modules to check the integrity of the use of header files. To do this, use the ``-fimplicit-module-maps`` option instead of the ``-fmodules`` option, or use ``-fmodule-map-file=`` option to explicitly specify the module map files to load.
 
 Compilation model
 -----------------
@@ -174,8 +174,8 @@ Command-line parameters
 ``-fmodules``
   Enable the modules feature.
 
-``-fmodule-maps``
-  Enable interpretation of module maps. This option is implied by ``-fmodules``.
+``-fimplicit-module-maps``
+  Enable implicit search for module map files named ``module.modulemap`` and similar. This option is implied by ``-fmodules``. If this is disabled with ``-fno-implicit-module-maps``, module map files will only be loaded if they are explicitly specified via ``-fmodule-map-file`` or transitively used by another module map file.
 
 ``-fmodules-cache-path=<directory>``
   Specify the path to the modules cache. If not provided, Clang will select a system-appropriate default.
@@ -207,8 +207,11 @@ Command-line parameters
 ``-fmodules-search-all``
   If a symbol is not found, search modules referenced in the current module maps but not imported for symbols, so the error message can reference the module by name.  Note that if the global module index has not been built before, this might take some time as it needs to build all the modules.  Note that this option doesn't apply in module builds, to avoid the recursion.
 
-``-fno-modules-implicit-maps``
-  Suppresses the implicit search for files called ``module.modulemap`` and similar. Instead, module files need to be explicitly specified via ``-fmodule-map-file`` or transitively used.
+``-fno-implicit-modules``
+  All modules used by the build must be specified with ``-fmodule-file``.
+
+``-fmodule-file=<file>``
+  Load the given precompiled module file.
 
 Module Semantics
 ================
@@ -219,7 +222,7 @@ Modules are modeled as if each submodule were a separate translation unit, and a
 
   This behavior is currently only approximated when building a module with submodules. Entities within a submodule that has already been built are visible when building later submodules in that module. This can lead to fragile modules that depend on the build order used for the submodules of the module, and should not be relied upon. This behavior is subject to change.
 
-As an example, in C, this implies that if two structs are defined in different submodules with the same name, those two types are distinct types (but may be *compatible* types if their definitions match. In C++, two structs defined with the same name in different submodules are the *same* type, and must be equivalent under C++'s One Definition Rule.
+As an example, in C, this implies that if two structs are defined in different submodules with the same name, those two types are distinct types (but may be *compatible* types if their definitions match). In C++, two structs defined with the same name in different submodules are the *same* type, and must be equivalent under C++'s One Definition Rule.
 
 .. note::
 
@@ -423,7 +426,7 @@ tls
   A specific target feature (e.g., ``sse4``, ``avx``, ``neon``) is available.
 
 
-**Example**: The ``std`` module can be extended to also include C++ and C++11 headers using a *requires-declaration*:
+**Example:** The ``std`` module can be extended to also include C++ and C++11 headers using a *requires-declaration*:
 
 .. parsed-literal::
 
@@ -464,11 +467,16 @@ A header with the ``umbrella`` specifier is called an umbrella header. An umbrel
 
 A header with the ``private`` specifier may not be included from outside the module itself.
 
-A header with the ``textual`` specifier will not be included when the module is built, and will be textually included if it is named by a ``#include`` directive. However, it is considered to be part of the module for the purpose of checking *use-declaration*\s.
+A header with the ``textual`` specifier will not be compiled when the module is
+built, and will be textually included if it is named by a ``#include``
+directive. However, it is considered to be part of the module for the purpose
+of checking *use-declaration*\s, and must still be a lexically-valid header
+file. In the future, we intend to pre-tokenize such headers and include the
+token sequence within the prebuilt module representation.
 
 A header with the ``exclude`` specifier is excluded from the module. It will not be included when the module is built, nor will it be considered to be part of the module, even if an ``umbrella`` header or directory would otherwise make it part of the module.
 
-**Example**: The C header ``assert.h`` is an excellent candidate for a textual header, because it is meant to be included multiple times (possibly with different ``NDEBUG`` settings). However, declarations within it should typically be split into a separate modular header.
+**Example:** The C header ``assert.h`` is an excellent candidate for a textual header, because it is meant to be included multiple times (possibly with different ``NDEBUG`` settings). However, declarations within it should typically be split into a separate modular header.
 
 .. parsed-literal::
 
@@ -530,7 +538,7 @@ For each header included by the umbrella header or in the umbrella directory tha
 * Contain a single *header-declaration* naming that header
 * Contain a single *export-declaration* ``export *``, if the \ *inferred-submodule-declaration* contains the \ *inferred-submodule-member* ``export *``
 
-**Example**: If the subdirectory "MyLib" contains the headers ``A.h`` and ``B.h``, then the following module map:
+**Example:** If the subdirectory "MyLib" contains the headers ``A.h`` and ``B.h``, then the following module map:
 
 .. parsed-literal::
 
@@ -573,7 +581,7 @@ An *export-declaration* specifies which imported modules will automatically be r
 
 The *export-declaration* names a module or a set of modules that will be re-exported to any translation unit that imports the enclosing module. Each imported module that matches the *wildcard-module-id* up to, but not including, the first ``*`` will be re-exported.
 
-**Example**:: In the following example, importing ``MyLib.Derived`` also provides the API for ``MyLib.Base``:
+**Example:** In the following example, importing ``MyLib.Derived`` also provides the API for ``MyLib.Base``:
 
 .. parsed-literal::
 
@@ -617,14 +625,16 @@ Note that, if ``Derived.h`` includes ``Base.h``, one can simply use a wildcard e
 
 Use declaration
 ~~~~~~~~~~~~~~~
-A *use-declaration* specifies one of the other modules that the module is allowed to use. An import or include not matching one of these is rejected when the option *-fmodules-decluse*.
+A *use-declaration* specifies another module that the current top-level module
+intends to use. When the option *-fmodules-decluse* is specified, a module can
+only use other modules that are explicitly specified in this way.
 
 .. parsed-literal::
 
   *use-declaration*:
     ``use`` *module-id*
 
-**Example**:: In the following example, use of A from C is not declared, so will trigger a warning.
+**Example:** In the following example, use of A from C is not declared, so will trigger a warning.
 
 .. parsed-literal::
 
@@ -641,7 +651,9 @@ A *use-declaration* specifies one of the other modules that the module is allowe
     use B
   }
 
-When compiling a source file that implements a module, use the option ``-fmodule-name=module-id`` to indicate that the source file is logically part of that module.
+When compiling a source file that implements a module, use the option
+``-fmodule-name=module-id`` to indicate that the source file is logically part
+of that module.
 
 The compiler at present only applies restrictions to the module directly being built.
 
@@ -667,7 +679,7 @@ A *link-declaration* with the ``framework`` specifies that the linker should lin
 
 Configuration macros declaration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-The *config-macros-declaration* specifies the set of configuration macros that have an effect on the the API of the enclosing module.
+The *config-macros-declaration* specifies the set of configuration macros that have an effect on the API of the enclosing module.
 
 .. parsed-literal::
 

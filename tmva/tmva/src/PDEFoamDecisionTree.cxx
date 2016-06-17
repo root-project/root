@@ -73,7 +73,7 @@ ClassImp(TMVA::PDEFoamDecisionTree)
 /// Default constructor for streamer, user should not use it.
 
 TMVA::PDEFoamDecisionTree::PDEFoamDecisionTree()
-   : PDEFoamDiscriminant()
+: PDEFoamDiscriminant()
    , fSepType(NULL)
 {
 }

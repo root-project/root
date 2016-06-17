@@ -842,6 +842,9 @@ void TGraph::DrawPanel()
 ///  -if spline==0 and option="" a linear interpolation between the two points
 ///   close to x is computed. If x is outside the graph range, a linear
 ///   extrapolation is computed.
+///   If the points are sorted in X a binary search is used (significatly faster)
+///   One needs to set the bit  TGraph::SetBit(TGraph::kIsSortedX) before calling
+///   TGraph::Eval to indicate that the graph is sorted in X. 
 ///  -if spline==0 and option="S" a TSpline3 object is created using this graph
 ///   and the interpolated value from the spline is returned.
 ///   the internally created spline is deleted on return.
@@ -850,14 +853,18 @@ void TGraph::DrawPanel()
 Double_t TGraph::Eval(Double_t x, TSpline *spline, Option_t *option) const
 {
 
-   if (!spline) {
+   if (spline) {
+      //spline interpolation using the input spline
+      return spline->Eval(x);
+   }
 
-      if (fNpoints == 0) return 0;
-      if (fNpoints == 1) return fY[0];
+   if (fNpoints == 0) return 0;
+   if (fNpoints == 1) return fY[0];
 
-
+   if (option) { 
       TString opt = option;
       opt.ToLower();
+      // create a TSpline every time when using option "s" and no spline pointer is given
       if (opt.Contains("s")) {
 
          // points must be sorted before using a TSpline
@@ -869,24 +876,36 @@ Double_t TGraph::Eval(Double_t x, TSpline *spline, Option_t *option) const
             xsort[i] = fX[ indxsort[i] ];
             ysort[i] = fY[ indxsort[i] ];
          }
-
+            
          // spline interpolation creating a new spline
-         TSpline3 *s = new TSpline3("", &xsort[0], &ysort[0], fNpoints);
-         Double_t result = s->Eval(x);
-         delete s;
+         TSpline3 s("", &xsort[0], &ysort[0], fNpoints);
+         Double_t result = s.Eval(x);
          return result;
       }
-      //linear interpolation
-      //In case x is < fX[0] or > fX[fNpoints-1] return the extrapolated point
+   }
+   //linear interpolation
+   //In case x is < fX[0] or > fX[fNpoints-1] return the extrapolated point
 
-      //find points in graph around x assuming points are not sorted
-      // (if point are sorted could use binary search)
-
-      // find neighbours simply looping  all points
-      // and find also the 2 adjacent points: (low2 < low < x < up < up2 )
-      // needed in case x is outside the graph ascissa interval
-      Int_t low  = -1;
-      Int_t up  = -1;
+   //find points in graph around x assuming points are not sorted
+   // (if point are sorted use a binary search)
+   Int_t low  = -1;
+   Int_t up  = -1;
+   if (TestBit(TGraph::kIsSortedX) ) {
+      low = TMath::BinarySearch(fNpoints, fX, x);      
+      if (low == -1)  {
+         // use first two points for doing an extrapolation
+         low = 0;
+      }
+      if (fX[low] == x) return fY[low];
+      if (low == fNpoints-1) low--; // for extrapolating 
+      up = low+1;               
+   }
+   else {
+      // case TGraph is not sorted
+   
+   // find neighbours simply looping  all points
+   // and find also the 2 adjacent points: (low2 < low < x < up < up2 )
+   // needed in case x is outside the graph ascissa interval
       Int_t low2 = -1;
       Int_t up2 = -1;
 
@@ -908,22 +927,19 @@ Double_t TGraph::Eval(Double_t x, TSpline *spline, Option_t *option) const
       // treat cases when x is outside graph min max abscissa
       if (up == -1)  {
          up  = low;
-         low = low2;
+         low = low2;         
       }
       if (low == -1) {
          low = up;
          up  = up2;
       }
-
-      assert(low != -1 && up != -1);
-
-      if (fX[low] == fX[up]) return fY[low];
-      Double_t yn = fY[up] + (x - fX[up]) * (fY[low] - fY[up]) / (fX[low] - fX[up]);
-      return yn;
-   } else {
-      //spline interpolation using the input spline
-      return spline->Eval(x);
    }
+   // do now the linear interpolation
+   assert(low != -1 && up != -1);
+   
+   if (fX[low] == fX[up]) return fY[low];
+   Double_t yn = fY[up] + (x - fX[up]) * (fY[low] - fY[up]) / (fX[low] - fX[up]);
+   return yn;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2198,6 +2214,11 @@ Double_t **TGraph::ShrinkAndCopy(Int_t size, Int_t oend)
 void TGraph::Sort(Bool_t (*greaterfunc)(const TGraph*, Int_t, Int_t) /*=TGraph::CompareX()*/,
                   Bool_t ascending /*=kTRUE*/, Int_t low /* =0 */, Int_t high /* =-1111 */)
 {
+
+   // set the bit in case of an ascending =sort in X
+   if (greaterfunc == TGraph::CompareX && ascending  && low == 0 && high == -1111)
+      SetBit(TGraph::kIsSortedX);
+   
    if (high == -1111) high = GetN() - 1;
    //  Termination condition
    if (high <= low) return;

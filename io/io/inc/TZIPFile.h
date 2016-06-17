@@ -189,7 +189,7 @@ public:
 
    void      Print(Option_t *option = "") const;
 
-   ClassDef(TZIPMember,2)  //A ZIP archive member file
+   ClassDef(TZIPMember, 0);  //A ZIP archive member file
 };
 
 #endif

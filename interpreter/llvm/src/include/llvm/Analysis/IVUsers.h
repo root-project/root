@@ -21,6 +21,7 @@
 
 namespace llvm {
 
+class AssumptionCache;
 class DominatorTree;
 class Instruction;
 class Value;
@@ -33,7 +34,7 @@ class DataLayout;
 /// The Expr member keeps track of the expression, User is the actual user
 /// instruction of the operand, and 'OperandValToReplace' is the operand of
 /// the User that is the use.
-class IVStrideUse : public CallbackVH, public ilist_node<IVStrideUse> {
+class IVStrideUse final : public CallbackVH, public ilist_node<IVStrideUse> {
   friend class IVUsers;
 public:
   IVStrideUse(IVUsers *P, Instruction* U, Value *O)
@@ -119,15 +120,18 @@ private:
 class IVUsers : public LoopPass {
   friend class IVStrideUse;
   Loop *L;
+  AssumptionCache *AC;
   LoopInfo *LI;
   DominatorTree *DT;
   ScalarEvolution *SE;
-  const DataLayout *DL;
-  SmallPtrSet<Instruction*,16> Processed;
+  SmallPtrSet<Instruction*, 16> Processed;
 
   /// IVUses - A list of all tracked IV uses of induction variable expressions
   /// we are interested in.
   ilist<IVStrideUse> IVUses;
+
+  // Ephemeral values used by @llvm.assume in this function.
+  SmallPtrSet<const Value *, 32> EphValues;
 
   void getAnalysisUsage(AnalysisUsage &AU) const override;
 

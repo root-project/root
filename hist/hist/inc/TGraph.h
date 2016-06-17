@@ -80,7 +80,8 @@ public:
    // TGraph status bits
    enum {
       kClipFrame     = BIT(10),  // clip to the frame boundary
-      kNotEditable   = BIT(18)   // bit set if graph is non editable
+      kNotEditable   = BIT(18),  // bit set if graph is non editable
+      kIsSortedX     = BIT(19)   // graph is sorted in X points
    };
 
    TGraph();

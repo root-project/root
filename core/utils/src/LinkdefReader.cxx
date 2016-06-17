@@ -884,7 +884,14 @@ public:
          Error("Error no arguments after #pragma link C++/off: ", tok);
          return;
       }
-      llvm::StringRef type = tok.getIdentifierInfo()->getName();
+      auto identifier = tok.getIdentifierInfo();
+      if (identifier == nullptr) {
+        if (linkOn) Error("Error #pragma link C++ should be followed by identifier", tok);
+        else Error("Error #pragma link off should be followed by identifier", tok);
+        return;
+      }
+
+      llvm::StringRef type = identifier->getName();
 
       LinkdefReader::Options *options = 0;
       if (type == "options" || type == "option") {

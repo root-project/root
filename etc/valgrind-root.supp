@@ -113,8 +113,29 @@
    fun:_ZN4ROOT10TMetaUtils17extractAttrStringEPN5clang4AttrERSs
    fun:_ZN20TClingDataMemberInfo5TitleEv
    fun:_ZNK6TCling20DataMemberInfo_TitleEP16DataMemberInfo_t
-   fun:_ZNK11TDataMember8PropertyEv
 }
+
+{
+   TDataMember strings
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znam
+   ...
+   fun:_ZN11TDataMember4InitEb
+   fun:_ZN11TDataMemberC1EP16DataMemberInfo_tP6TClass
+   fun:_ZN18TListOfDataMembers3GetEP16DataMemberInfo_tb
+}
+
+{
+   TDataMember list of options
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:_ZN5TList7NewLinkEP7TObjectP8TObjLink
+   fun:_ZN5TList7AddLastEP7TObject
+   fun:_ZN5TList3AddEP7TObject
+   fun:_ZN11TDataMember4InitEb
+ }
 
 {
    Anything allocated by TClass::Init: new[]()
@@ -180,7 +201,7 @@
    Unloaded TClass and its fClassInfo
    Memcheck:Leak
    fun:_Znw?
-   fun:_ZN5TCling12SetClassInfoEP6TClassb
+   fun:_ZN*TCling12SetClassInfoEP6TClassb
    fun:_ZN6TClass11SetUnloadedEv
 }
 
@@ -358,6 +379,121 @@
    fun:_ZN5TROOT14GetListOfEnumsEv
 }
 
+{
+   List of enums
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znam
+   fun:_ZN10THashTableC1Eii
+   fun:_ZN9THashListC1Eii
+   fun:_ZN12TListOfEnumsC1EP6TClass
+   fun:_ZN6TClass14GetListOfEnumsEb
+}
+
+{
+   List of enums
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:_ZN8TStorage11ObjectAllocEm
+   fun:_ZN7TObjectnwEm
+   fun:_ZN12TListOfEnumsC1EP6TClass
+}
+
+{
+   List of enums
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:_ZN5TList7NewLinkEP7TObjectP8TObjLink
+   fun:_ZN5TList7AddLastEP7TObject
+   fun:_ZN9THashList7AddLastEP7TObject
+   fun:_ZN12TListOfEnums3GetEPKvPKc
+}
+
+{
+   List of enums content
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znam
+   ...
+   fun:_ZN6TExMap3AddExx
+   fun:_ZN12TListOfEnums3GetEPKvPKc
+
+}
+
+{
+   List of enums
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znam
+   ...
+   fun:_ZN6TExMapC1Ei
+   fun:_ZN12TListOfEnumsC1EP6TClass
+}
+
+{
+   List of enums' strings
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znam
+   fun:_ZN7TString7ReplaceEiiPKci
+   fun:_ZN7TStringaSEPKc
+   fun:_ZN6TNamed7SetNameEPKc
+   fun:_ZN5TEnumC1EPKcPvP6TClass
+   fun:_ZN12TListOfEnums3GetEPKvPKc
+}
+
+{
+   List of enums' strings
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znam
+   fun:_ZN7TString7ReplaceEiiPKci
+   fun:_ZN7TStringaSEPKc
+   fun:_ZN6TNamed7SetNameEPKc
+   fun:_ZN5TEnumC1EPKcPvP6TClass
+   fun:_ZNK6TCling10CreateEnumEPvP6TClass
+}
+
+{
+   TEnum
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znam
+   fun:_ZN10THashTableC1Eii
+   fun:_ZN9THashListC1Eii
+   fun:_ZN5TEnumC1EPKcPvP6TClass
+   fun:_ZNK6TCling10CreateEnumEPvP6TClass
+}
+
+{
+   Enum constant
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:_ZN5TList7NewLinkEP7TObjectP8TObjLink
+   fun:_ZN5TList7AddLastEP7TObject
+   fun:_ZN5TList3AddEP7TObject
+   fun:_ZN10THashTable3AddEP7TObject
+   fun:_ZN9THashList7AddLastEP7TObject
+   fun:_ZN5TList3AddEP7TObject
+   fun:_ZN5TEnum11AddConstantEP13TEnumConstant
+}
+
+{
+   Enum constant's string.
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znam
+   ...
+   fun:_ZN6TNamed7SetNameEPKc
+   fun:_ZN7TGlobalC1EP16DataMemberInfo_t
+   fun:_ZN13TEnumConstantC1EP16DataMemberInfo_tPKcxP5TEnum
+   fun:_ZNK6TCling19UpdateEnumConstantsEP5TEnumP6TClass
+   fun:_ZNK6TCling10CreateEnumEPvP6TClass
+   fun:_ZN12TListOfEnums3GetEPKvPKc
+}
 
 {
    TDataTypes leak
@@ -476,8 +612,36 @@
    fun:_ZN10THashTable3AddEP7TObject
    fun:_ZN9THashList7AddLastEP7TObject
    fun:_ZN18TListOfDataMembers3GetEPKv
-   fun:_ZNK18TListOfDataMembers10FindObjectEPKc
-   fun:_ZN6TCling13HandleNewDeclEPKvbRSt3setIP6TClassSt4lessIS4_ESaIS4_EE
+}
+
+{
+   TListOfDataMember collection links
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:_ZN5TList7NewLinkEP7TObjectP8TObjLink
+   fun:_ZN5TList7AddLastEP7TObject
+   fun:_ZN9THashList7AddLastEP7TObject
+   fun:_ZN18TListOfDataMembers3GetEP16DataMemberInfo_tb
+}
+
+{
+   TListOfDataMember content
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:_ZN8TStorage11ObjectAllocEm
+   fun:_ZN7TObjectnwEm
+   fun:_ZN18TListOfDataMembers3GetEP16DataMemberInfo_tb
+}
+
+{
+   TListOfDataMember container.
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znam
+   fun:_ZN6TExMapC1Ei
+   fun:_ZN18TListOfDataMembers3GetEP16DataMemberInfo_tb
 }
 
 {
@@ -561,6 +725,17 @@
 }
 
 {
+   TFunction's name
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znam
+   fun:_ZN7TString7ReplaceEiiPKci
+   fun:_ZN7TStringaSEPKc
+   fun:_ZN6TNamed7SetNameEPKc
+   fun:_ZN9TFunctionC1EP12MethodInfo_t
+}
+
+{
    TListOfFunctions's internal container
    Memcheck:Leak
    match-leak-kinds: possible
@@ -602,6 +777,27 @@
    fun:_ZN9THashList7AddLastEP7TObject
    fun:_ZN16TListOfFunctions3GetEPKv
 }
+
+{
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znam
+   fun:_ZN6TExMap6ExpandEi
+   fun:_ZN6TExMap3AddEyxx
+   fun:_ZN6TExMap3AddExx
+   fun:_ZN18TListOfDataMembers3GetEP16DataMemberInfo_tb
+}
+
+{
+   TListOfFunctions' content
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znam
+   fun:_ZN6TExMap6ExpandEi
+   fun:_ZN6TExMap3AddEyxx
+   fun:_ZN6TExMap3AddExx
+   fun:_ZN16TListOfFunctions3GetEPKv
+ }
 
 {
    TListOfFunctions's content
@@ -665,6 +861,58 @@
 }
 
 {
+   TString in list of functions.
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znam
+   fun:_ZN7TString7ReplaceEiiPKci
+   fun:_ZN7TStringaSEPKc
+   fun:_ZN6TNamed8SetTitleEPKc
+   fun:_ZN9TFunctionC1EP12MethodInfo_t
+   fun:_ZN7TMethodC1EP12MethodInfo_tP6TClass
+   fun:_ZN16TListOfFunctions3GetEPKv
+}
+
+{
+   TListOfFunctions unload cache
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:_ZN5TList7NewLinkEP7TObjectP8TObjLink
+   fun:_ZN5TList7AddLastEP7TObject
+   fun:_ZN9THashList7AddLastEP7TObject
+   fun:_ZN5TList3AddEP7TObject
+   fun:_ZN16TListOfFunctions6UnloadEv
+}
+
+{
+   TListOfFunctions unload cache
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:_ZN5TList7NewLinkEP7TObjectP8TObjLink
+   fun:_ZN5TList7AddLastEP7TObject
+   fun:_ZN5TList3AddEP7TObject
+   fun:_ZN10THashTable3AddEP7TObject
+   fun:_ZN9THashList7AddLastEP7TObject
+   fun:_ZN5TList3AddEP7TObject
+   fun:_ZN16TListOfFunctions6UnloadEv
+}
+
+{
+   TListOfFunctions unload cache
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:_ZN8TStorage11ObjectAllocEm
+   fun:_ZN7TObjectnwEm
+   fun:_ZN10THashTable3AddEP7TObject
+   fun:_ZN9THashList7AddLastEP7TObject
+   fun:_ZN5TList3AddEP7TObject
+   fun:_ZN16TListOfFunctions6UnloadEv
+}
+
+{
    TClass list of methods
    Memcheck:Leak
    match-leak-kinds: possible
@@ -672,6 +920,17 @@
    fun:_ZN8TStorage11ObjectAllocEm
    fun:_ZN7TObjectnwEm
    fun:_ZN6TClass13GetMethodListEv
+}
+
+{
+   ListOfDataMembers' collection
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znam
+   fun:_ZN10THashTableC1Eii
+   fun:_ZN9THashListC1Eii
+   fun:_ZN18TListOfDataMembersC1EP6TClass
+   fun:_ZN6TClass20GetListOfDataMembersEb
 }
 
 {
@@ -684,6 +943,27 @@
    fun:_ZN5TList3AddEP7TObject
    fun:_ZN18TListOfDataMembers6UnloadEv
 }
+
+{
+   TListOfDataMembers' content
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znam
+   fun:_ZN6TExMap6ExpandEi
+   fun:_ZN6TExMap3AddEyxx
+   fun:_ZN6TExMap3AddExx
+   fun:_ZN18TListOfDataMembers3GetEP16DataMemberInfo_tb
+}
+
+{
+   TListOfDataMembers' content
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znam
+   fun:_ZN10THashTableC1Eii
+   fun:_ZN9THashListC1Eii
+   fun:_ZN18TListOfDataMembers6UnloadEv
+ }
 
 {
    TListOfDataMembers' content
@@ -1023,7 +1303,7 @@
    CodeGen Globals
    Memcheck:Leak
    match-leak-kinds: possible
-   fun:_Znwm
+   fun:_Zn*
    ...
    fun:_ZN5clang7CodeGen13CodeGenModule20EmitGlobalDefinitionENS_10GlobalDeclEPN4llvm11GlobalValueE
 }
@@ -1166,7 +1446,7 @@
    clang CodeGenFunction Emit*
    Memcheck:Leak
    match-leak-kinds: possible
-   fun:_Znwm
+   fun:_Zn*
    ...
    fun:_ZN5clang7CodeGen15CodeGenFunction*Emit*
 }
@@ -1175,9 +1455,18 @@
    clang CodeGenModule Emit*
    Memcheck:Leak
    match-leak-kinds: possible
-   fun:_Znwm
+   fun:_Zn*
    ...
    fun:_ZN5clang7CodeGen13CodeGenModule*Emit*
+}
+
+{
+   clang CodeGenModule Emit*
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Zn*
+   ...
+   fun:_ZN5clang7CodeGen13CodeGenModule*emit*
 }
 
 {
@@ -1272,4 +1561,13 @@
    ...
    fun:_ZNSs15_M_replace_safeEmmPKcm
    fun:_ZN5cling14InputValidator5resetEv
+}
+
+{
+   cling pointer checker on uninitialized memory (ROOT-8144)
+   Memcheck:Param
+   write(buf)
+   ...
+   fun:_ZN5cling5utils14isAddressValidEPKv
+   fun:cling_runtime_internal_throwIfInvalidPointer
 }

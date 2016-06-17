@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TLeafC
+\ingroup tree
+
 A TLeaf for a variable length string.
 */
 

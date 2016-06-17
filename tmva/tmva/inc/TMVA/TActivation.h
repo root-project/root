@@ -68,7 +68,7 @@ namespace TMVA {
       // writer of function code
       virtual void MakeFunction(std::ostream& fout, const TString& fncName) = 0;
 
-      ClassDef(TActivation,0) // Interface for TNeuron activation function classes
+      ClassDef(TActivation,0); // Interface for TNeuron activation function classes
 
    };
 

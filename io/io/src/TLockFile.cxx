@@ -15,7 +15,7 @@
 
 A scoped lock based on files.
 
-The RAAI idiom is used: the constructor blocks until lock is obtained. 
+The RAAI idiom is used: the constructor blocks until lock is obtained.
 Lock is released in the destructor.
 Use it in scope-blocks like:
 ~~~{.cpp}

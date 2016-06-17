@@ -25,30 +25,22 @@ struct GVizAgedge_t;
 
 class  TGraphNode;
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGraphEdge                                                           //
-//                                                                      //
-// Interface to the graphviz package.                                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 
 class TGraphEdge: public TObject, public TAttLine {
 
 protected:
 
 
-   TGraphNode *fNode1;     // First node
-   TGraphNode *fNode2;     // Second node
-   GVizAgedge_t  *fGVEdge; // Graphviz edge
-   Double_t   *fX;         // X edge points (GV)
-   Double_t   *fY;         // X edge points (GV)
-   Int_t      *fN;         // number of edge points (GV)
-                           // fN[0] = number of splines
-                           // fN[1...n] = number of points in each spline
-   Double_t    fArrX;      // Arrow X position
-   Double_t    fArrY;      // Arrow Y position
+   TGraphNode *fNode1;     ///< First node
+   TGraphNode *fNode2;     ///< Second node
+   GVizAgedge_t  *fGVEdge; ///< Graphviz edge
+   Double_t   *fX;         ///< X edge points (GV)
+   Double_t   *fY;         ///< X edge points (GV)
+   Int_t      *fN;         ///< number of edge points (GV)
+                           ///< fN[0] = number of splines
+                           ///< fN[1...n] = number of points in each spline
+   Double_t    fArrX;      ///< Arrow X position
+   Double_t    fArrY;      ///< Arrow Y position
 
 public:
    TGraphEdge();

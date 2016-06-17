@@ -14,13 +14,6 @@
 #define ROOT_TView
 
 
-/////////////////////////////////////////////////////////////////////////
-//                                                                     //
-// TView  abstract interface for 3-D views                             //
-//                                                                     //
-/////////////////////////////////////////////////////////////////////////
-
-
 #ifndef ROOT_TObject
 #include "TObject.h"
 #endif

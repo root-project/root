@@ -1917,7 +1917,7 @@ void TGeoChecker::ShapeNormal(TGeoShape *shape, Int_t nsamples, Option_t *)
       sdir[3*itot] = TMath::Sin(theta)*TMath::Cos(phi);
       sdir[3*itot+1] = TMath::Sin(theta)*TMath::Sin(phi);
       sdir[3*itot+2] = TMath::Cos(theta);
-      itot++;   
+      itot++;
    }
    Double_t point[3],newpoint[3], oldpoint[3];
    Double_t dir[3], olddir[3];
@@ -1939,9 +1939,9 @@ void TGeoChecker::ShapeNormal(TGeoShape *shape, Int_t nsamples, Option_t *)
       oldnorm[0] = oldnorm[1] = oldnorm[2] = 0.;
       olddist = 0.;
       for (Int_t j=0; j<3; j++) {
-         oldpoint[j] = point[j] = spoint[3*itot+j];     
-         olddir[j] = dir[j] = sdir[3*itot+j]; 
-      }       
+         oldpoint[j] = point[j] = spoint[3*itot+j];
+         olddir[j] = dir[j] = sdir[3*itot+j];
+      }
       for (i=0; i<kNtracks; i++) {
          if (errcnt>0) break;
          dist = shape->DistFromInside(point,dir,3);

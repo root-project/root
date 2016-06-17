@@ -13,14 +13,6 @@
 #define ROOT_TAtt3D
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TAtt3D                                                               //
-//                                                                      //
-// Use this attribute class when an object should have 3D capabilities. //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #ifndef ROOT_Rtypes
 #include "Rtypes.h"
 #endif

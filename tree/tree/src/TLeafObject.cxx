@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TLeafObject
+\ingroup tree
+
 A TLeaf for a general object derived from TObject.
 */
 

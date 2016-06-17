@@ -260,12 +260,12 @@ Double_t MethodPyAdaBoost::GetMvaValue(Double_t *errLower, Double_t *errUpper)
    // cannot determine error
    NoErrorCalc(errLower, errUpper);
 
-   if (!fClassifier) ReadStateFromFile();
+   if (!fClassifier) ReadModelFromFile();
 
    Double_t mvaValue;
    const TMVA::Event *e = Data()->GetEvent();
    UInt_t nvars = e->GetNVariables();
-   int *dims = new int[2];
+   int dims[2];
    dims[0] = 1;
    dims[1] = nvars;
    PyArrayObject *pEvent= (PyArrayObject *)PyArray_FromDims(2, dims, NPY_FLOAT);
@@ -278,12 +278,11 @@ Double_t MethodPyAdaBoost::GetMvaValue(Double_t *errLower, Double_t *errUpper)
    mvaValue = proba[0]; //getting signal prob
    Py_DECREF(result);
    Py_DECREF(pEvent);
-   delete dims;
    return mvaValue;
 }
 
 //_______________________________________________________________________
-void MethodPyAdaBoost::ReadStateFromFile()
+void MethodPyAdaBoost::ReadModelFromFile()
 {
    if (!PyIsInitialized()) {
       PyInitialize();
@@ -315,4 +314,3 @@ void MethodPyAdaBoost::GetHelpMessage() const
    Log() << Endl;
    Log() << "<None>" << Endl;
 }
-

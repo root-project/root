@@ -18,15 +18,6 @@
 #include "Windows4Root.h"
 #endif
 
-#ifndef G__DICTIONARY
-
 #include <GL/glew.h>
-
-#else
-
-#include <GL/gl.h>
-#include <GL/glu.h>
-
-#endif
 
 #endif

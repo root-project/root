@@ -14,14 +14,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "llvm/Transforms/Scalar.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
 #include "llvm/Pass.h"
-#include "llvm/Support/CommandLine.h"
+#include "llvm/Transforms/Scalar.h"
 using namespace llvm;
 
 #define DEBUG_TYPE "lowerinvoke"
@@ -69,7 +68,7 @@ bool LowerInvoke::runOnFunction(Function &F) {
       BranchInst::Create(II->getNormalDest(), II);
 
       // Remove any PHI node entries from the exception destination.
-      II->getUnwindDest()->removePredecessor(BB);
+      II->getUnwindDest()->removePredecessor(&*BB);
 
       // Remove the invoke instruction now.
       BB->getInstList().erase(II);

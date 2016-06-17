@@ -14,9 +14,10 @@
 //===----------------------------------------------------------------------===//
 
 #include "NewPMDriver.h"
-#include "Passes.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/Analysis/AliasAnalysis.h"
 #include "llvm/Analysis/CGSCCPassManager.h"
+#include "llvm/Analysis/LoopPassManager.h"
 #include "llvm/Bitcode/BitcodeWriterPass.h"
 #include "llvm/IR/Dominators.h"
 #include "llvm/IR/IRPrintingPasses.h"
@@ -24,6 +25,7 @@
 #include "llvm/IR/Module.h"
 #include "llvm/IR/PassManager.h"
 #include "llvm/IR/Verifier.h"
+#include "llvm/Passes/PassBuilder.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/ToolOutputFile.h"
@@ -36,35 +38,52 @@ static cl::opt<bool>
     DebugPM("debug-pass-manager", cl::Hidden,
             cl::desc("Print pass management debugging information"));
 
+// This flag specifies a textual description of the alias analysis pipeline to
+// use when querying for aliasing information. It only works in concert with
+// the "passes" flag above.
+static cl::opt<std::string>
+    AAPipeline("aa-pipeline",
+               cl::desc("A textual description of the alias analysis "
+                        "pipeline for handling managed aliasing queries"),
+               cl::Hidden);
+
 bool llvm::runPassPipeline(StringRef Arg0, LLVMContext &Context, Module &M,
                            TargetMachine *TM, tool_output_file *Out,
                            StringRef PassPipeline, OutputKind OK,
-                           VerifierKind VK) {
-  Passes P(TM);
+                           VerifierKind VK,
+                           bool ShouldPreserveAssemblyUseListOrder,
+                           bool ShouldPreserveBitcodeUseListOrder) {
+  PassBuilder PB(TM);
 
+  // Specially handle the alias analysis manager so that we can register
+  // a custom pipeline of AA passes with it.
+  AAManager AA;
+  if (!PB.parseAAPipeline(AA, AAPipeline)) {
+    errs() << Arg0 << ": unable to parse AA pipeline description.\n";
+    return false;
+  }
+
+  LoopAnalysisManager LAM(DebugPM);
   FunctionAnalysisManager FAM(DebugPM);
   CGSCCAnalysisManager CGAM(DebugPM);
   ModuleAnalysisManager MAM(DebugPM);
 
-  // Register all the basic analyses with the managers.
-  P.registerModuleAnalyses(MAM);
-  P.registerCGSCCAnalyses(CGAM);
-  P.registerFunctionAnalyses(FAM);
+  // Register the AA manager first so that our version is the one used.
+  FAM.registerPass([&] { return std::move(AA); });
 
-  // Cross register the analysis managers through their proxies.
-  MAM.registerPass(FunctionAnalysisManagerModuleProxy(FAM));
-  MAM.registerPass(CGSCCAnalysisManagerModuleProxy(CGAM));
-  CGAM.registerPass(FunctionAnalysisManagerCGSCCProxy(FAM));
-  CGAM.registerPass(ModuleAnalysisManagerCGSCCProxy(MAM));
-  FAM.registerPass(CGSCCAnalysisManagerFunctionProxy(CGAM));
-  FAM.registerPass(ModuleAnalysisManagerFunctionProxy(MAM));
+  // Register all the basic analyses with the managers.
+  PB.registerModuleAnalyses(MAM);
+  PB.registerCGSCCAnalyses(CGAM);
+  PB.registerFunctionAnalyses(FAM);
+  PB.registerLoopAnalyses(LAM);
+  PB.crossRegisterProxies(LAM, FAM, CGAM, MAM);
 
   ModulePassManager MPM(DebugPM);
   if (VK > VK_NoVerifier)
     MPM.addPass(VerifierPass());
 
-  if (!P.parsePassPipeline(MPM, PassPipeline, VK == VK_VerifyEachPass,
-                           DebugPM)) {
+  if (!PB.parsePassPipeline(MPM, PassPipeline, VK == VK_VerifyEachPass,
+                            DebugPM)) {
     errs() << Arg0 << ": unable to parse pass pipeline description.\n";
     return false;
   }
@@ -77,10 +96,12 @@ bool llvm::runPassPipeline(StringRef Arg0, LLVMContext &Context, Module &M,
   case OK_NoOutput:
     break; // No output pass needed.
   case OK_OutputAssembly:
-    MPM.addPass(PrintModulePass(Out->os()));
+    MPM.addPass(
+        PrintModulePass(Out->os(), "", ShouldPreserveAssemblyUseListOrder));
     break;
   case OK_OutputBitcode:
-    MPM.addPass(BitcodeWriterPass(Out->os()));
+    MPM.addPass(
+        BitcodeWriterPass(Out->os(), ShouldPreserveBitcodeUseListOrder));
     break;
   }
 
@@ -88,7 +109,7 @@ bool llvm::runPassPipeline(StringRef Arg0, LLVMContext &Context, Module &M,
   cl::PrintOptionValues();
 
   // Now that we have all of the passes ready, run them.
-  MPM.run(M, &MAM);
+  MPM.run(M, MAM);
 
   // Declare success.
   if (OK != OK_NoOutput)

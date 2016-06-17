@@ -22,6 +22,9 @@
 ///  root > CompareTrees();
 ///  root > DrawFriend();
 /// ~~~
+///
+/// \macro_output
+/// \macro_image
 /// \macro_code
 ///
 /// \author Rene Brun

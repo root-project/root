@@ -532,7 +532,7 @@ void TStreamerInfo::Build()
             if (proxy) element = new TStreamerSTL(dmName, dmTitle, offset, dmFull, *proxy, dmIsPtr);
             else element = new TStreamerSTL(dmName, dmTitle, offset, dmFull, dmFull, dmIsPtr);
             if (((TStreamerSTL*)element)->GetSTLtype() != ROOT::kSTLvector) {
-               auto printErrorMsg = [&](const char* category) 
+               auto printErrorMsg = [&](const char* category)
                   {
                      std::string uptr_msg;
                      if (isUniquePtrColl) {
@@ -1931,7 +1931,10 @@ void TStreamerInfo::BuildOld()
                }
 
                if (!bc) {
-                  Error("BuildOld", "Could not find STL base class: %s for %s\n", element->GetName(), GetName());
+                  // Error("BuildOld", "Could not find STL base class: %s for %s\n", element->GetName(), GetName());
+                  offset = kMissing;
+                  element->SetOffset(kMissing);
+                  element->SetNewType(-1);
                   continue;
                } else if (bc->GetClassPointer()->GetCollectionProxy()
                           && !bc->GetClassPointer()->IsLoaded()
@@ -3747,6 +3750,10 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
 
 UInt_t TStreamerInfo::GenerateIncludes(FILE *fp, char *inclist, const TList *extrainfos)
 {
+   if (inclist[0]==0) {
+      // Always have this include for ClassDef.
+      TMakeProject::AddInclude( fp, "Rtypes.h", kFALSE, inclist);
+   }
    UInt_t ninc = 0;
 
    const char *clname = GetName();
@@ -3810,9 +3817,6 @@ UInt_t TStreamerInfo::GenerateIncludes(FILE *fp, char *inclist, const TList *ext
          // This is a template, we need to check the template parameter.
          ninc += TMakeProject::GenerateIncludeForTemplate(fp, element->GetTypeName(), inclist, kFALSE, extrainfos);
       }
-   }
-   if (inclist[0]==0) {
-      TMakeProject::AddInclude( fp, "TNamed.h", kFALSE, inclist);
    }
    return ninc;
 }

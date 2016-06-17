@@ -9,17 +9,19 @@
 
 #include "cling/Utils/Validation.h"
 #include "llvm/Support/ThreadLocal.h"
+#include "llvm/Config/llvm-config.h"
 
 #include <assert.h>
 #include <errno.h>
 #ifdef LLVM_ON_WIN32
 # include <Windows.h>
 #else
+# include <unistd.h>
+#endif
 #include <array>
 #include <algorithm>
 #include <fcntl.h>
-# include <unistd.h>
-#endif
+#include <atomic>
 
 namespace cling {
   namespace utils {
@@ -30,26 +32,30 @@ namespace cling {
     struct Cache {
     private:
       std::array<const void*, 8> lines;
-      unsigned mostRecent = 0;
+      std::atomic<unsigned> mostRecent = {0};
     public:
       bool contains(const void* P) {
         return std::find(lines.begin(), lines.end(), P) != lines.end();
       }
+
+      // Concurrent writes to the same cache element can result in invalid cache
+      // elements, causing pointer address not being available in the cache even
+      // though they should be, i.e. false cache misses. While can cause a
+      // slow-down, the cost for keeping the cache thread-local or atomic is
+      // much higher (yes, this was measured).
       void push(const void* P) {
-        mostRecent = (mostRecent + 1) % lines.size();
-        lines[mostRecent] = P;
+        unsigned acquiredVal = mostRecent;
+        while(!mostRecent.compare_exchange_weak(acquiredVal, (acquiredVal+1)%lines.size())) {
+          acquiredVal = mostRecent;
+        }
+        lines[acquiredVal] = P;
       }
     };
 
-    // Trying to be thread-safe.
-    // Each thread creates a new cache when needed.
+    // Note: not thread safe, see comment above push().
     static Cache& getCache() {
-      static llvm::sys::ThreadLocal<Cache> threadCache;
-      if (!threadCache.get()) {
-        // Leak, 1 Cache/thread.
-        threadCache.set(new Cache());
-      }
-      return *threadCache.get();
+      static Cache threadCache;
+      return threadCache;
     }
 
     static int getNullDevFileDescriptor() {

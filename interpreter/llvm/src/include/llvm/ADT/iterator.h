@@ -46,6 +46,22 @@ protected:
         std::is_base_of<std::bidirectional_iterator_tag, IteratorCategoryT>::value,
   };
 
+  /// A proxy object for computing a reference via indirecting a copy of an
+  /// iterator. This is used in APIs which need to produce a reference via
+  /// indirection but for which the iterator object might be a temporary. The
+  /// proxy preserves the iterator internally and exposes the indirected
+  /// reference via a conversion operator.
+  class ReferenceProxy {
+    friend iterator_facade_base;
+
+    DerivedT I;
+
+    ReferenceProxy(DerivedT I) : I(std::move(I)) {}
+
+  public:
+    operator ReferenceT() const { return *I; }
+  };
+
 public:
   DerivedT operator+(DifferenceTypeT n) const {
     static_assert(
@@ -120,10 +136,10 @@ public:
   PointerT operator->() const {
     return &static_cast<const DerivedT *>(this)->operator*();
   }
-  ReferenceT operator[](DifferenceTypeT n) const {
+  ReferenceProxy operator[](DifferenceTypeT n) const {
     static_assert(IsRandomAccess,
                   "Subscripting is only defined for random access iterators.");
-    return *static_cast<const DerivedT *>(this)->operator+(n);
+    return ReferenceProxy(static_cast<const DerivedT *>(this)->operator+(n));
   }
 };
 
@@ -150,7 +166,7 @@ class iterator_adaptor_base
 protected:
   WrappedIteratorT I;
 
-  iterator_adaptor_base() {}
+  iterator_adaptor_base() = default;
 
   template <typename U>
   explicit iterator_adaptor_base(
@@ -161,6 +177,8 @@ protected:
                            DerivedT>::value,
           int>::type = 0)
       : I(std::forward<U &&>(u)) {}
+
+  const WrappedIteratorT &wrapped() const { return I; }
 
 public:
   typedef DifferenceTypeT difference_type;
@@ -231,7 +249,7 @@ struct pointee_iterator
           pointee_iterator<WrappedIteratorT>, WrappedIteratorT,
           typename std::iterator_traits<WrappedIteratorT>::iterator_category,
           T> {
-  pointee_iterator() {}
+  pointee_iterator() = default;
   template <typename U>
   pointee_iterator(U &&u)
       : pointee_iterator::iterator_adaptor_base(std::forward<U &&>(u)) {}

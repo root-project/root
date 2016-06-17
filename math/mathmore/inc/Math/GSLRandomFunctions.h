@@ -60,148 +60,175 @@ namespace Math {
       //    return r.GaussianRatio(sigma) + mean; 
       // }
       
-          /**
-       Gaussian distribution. Default method (use Ziggurat)
-     */
-    double Gaus(double mean = 0, double sigma = 1) {
-      return mean + Engine().GaussianZig(sigma);
-    }
+      /**
+         Gaussian distribution. Default method (use Ziggurat)
+      */
+      double Gaus(double mean = 0, double sigma = 1) {
+         return mean + Engine().GaussianZig(sigma);
+      }
 
-    /**
-       Gaussian distribution (Box-Muller method)
-     */
-    double GausBM(double mean = 0, double sigma = 1) {
-      return mean + Engine().Gaussian(sigma);
-    }
+      /**
+         Gaussian distribution (Box-Muller method)
+      */
+      double GausBM(double mean = 0, double sigma = 1) {
+         return mean + Engine().Gaussian(sigma);
+      }
+      
+      /**
+         Gaussian distribution (Ratio Method)
+      */
+      double GausR(double mean = 0, double sigma = 1) {
+         return mean + Engine().GaussianRatio(sigma);
+      }
+      
+      /**
+         Gaussian Tail distribution
+      */
+      double GaussianTail(double a, double sigma = 1) {
+         return Engine().GaussianTail(a,sigma);
+      }
+      
+      /**
+         Bivariate Gaussian distribution with correlation
+      */
+      void Gaussian2D(double sigmaX, double sigmaY, double rho, double &x, double &y) {
+         Engine().Gaussian2D(sigmaX, sigmaY, rho, x, y);
+      }
 
-    /**
-       Gaussian distribution (Ratio Method)
-     */
-    double GausR(double mean = 0, double sigma = 1) {
-      return mean + Engine().GaussianRatio(sigma);
-    }
+      /**
+         Exponential distribution
+      */
+      double Exp(double tau) {
+         return Engine().Exponential(tau);
+      }
+      /**
+         Breit Wigner distribution
+      */
+      double BreitWigner(double mean = 0., double gamma = 1) {
+         return mean + Engine().Cauchy( gamma/2.0 );
+      }
+      
+      /**
+         Landau distribution
+      */
+      double Landau(double mean = 0, double sigma = 1) {
+         return mean + sigma*Engine().Landau();
+      }
 
-    /**
-       Gaussian Tail distribution
-     */
-    double GaussianTail(double a, double sigma = 1) {
-      return Engine().GaussianTail(a,sigma);
-    }
+      /**
+         Gamma distribution
+      */
+      double Gamma(double a, double b) {
+         return Engine().Gamma(a,b);
+      }
 
-    /**
-       Bivariate Gaussian distribution with correlation
-     */
-    void Gaussian2D(double sigmaX, double sigmaY, double rho, double &x, double &y) {
-      Engine().Gaussian2D(sigmaX, sigmaY, rho, x, y);
-    }
+      /**
+         Beta distribution
+      */
+      double Beta(double a, double b) {
+         return Engine().Beta(a,b);
+      }
 
-    /**
-       Exponential distribution
-     */
-    double Exp(double tau) {
-      return Engine().Exponential(tau);
-    }
-    /**
-       Breit Wigner distribution
-    */
-    double BreitWigner(double mean = 0., double gamma = 1) {
-      return mean + Engine().Cauchy( gamma/2.0 );
-    }
+      /**
+         Log Normal distribution
+      */
+      double LogNormal(double zeta, double sigma) {
+         return Engine().LogNormal(zeta,sigma);
+      }
 
-    /**
-       Landau distribution
-     */
-    double Landau(double mean = 0, double sigma = 1) {
-      return mean + sigma*Engine().Landau();
-    }
+      /**
+         Chi square distribution
+      */
+      double ChiSquare(double nu) {
+         return Engine().ChiSquare(nu);
+      }
 
-    /**
-       Gamma distribution
-     */
-    double Gamma(double a, double b) {
-      return Engine().Gamma(a,b);
-    }
+      /**
+         F distrbution
+      */
+      double FDist(double nu1, double nu2) {
+         return Engine().FDist(nu1,nu2);
+      }
 
-    /**
-       Log Normal distribution
-     */
-    double LogNormal(double zeta, double sigma) {
-      return Engine().LogNormal(zeta,sigma);
-    }
+      /**
+         t student distribution
+      */
+      double tDist(double nu) {
+         return Engine().tDist(nu);
+      }
+      /**
+         Rayleigh distribution
+      */
+      double Rayleigh(double sigma)  {
+         return Engine().Rayleigh(sigma);
+      }
 
-    /**
-       Chi square distribution
-     */
-    double ChiSquare(double nu) {
-      return Engine().ChiSquare(nu);
-    }
+      /**
+         Logistic distribution
+      */
+      double Logistic(double a) {
+         return Engine().Logistic(a);
+      }
 
-    /**
-       F distrbution
-     */
-    double FDist(double nu1, double nu2) {
-      return Engine().FDist(nu1,nu2);
-    }
+      /**
+         Pareto distribution
+      */
+      double Pareto(double a, double b)  {
+         return Engine().Pareto(a,b);
+      }
 
-    /**
-       t student distribution
-     */
-    double tDist(double nu) {
-      return Engine().tDist(nu);
-    }
+      /**
+         generate random numbers in a 2D circle of radious 1
+      */
+      void Circle(double &x, double &y, double r = 1) {
+         Engine().Dir2D(x,y);
+         x *= r;
+         y *= r;
+      }
 
-    /**
-       generate random numbers in a 2D circle of radious 1
-     */
-    void Circle(double &x, double &y, double r = 1) {
-      Engine().Dir2D(x,y);
-      x *= r;
-      y *= r;
-    }
+      /**
+         generate random numbers in a 3D sphere of radious 1
+      */
+      void Sphere(double &x, double &y, double &z,double r = 1) {
+         Engine().Dir3D(x,y,z);
+         x *= r;
+         y *= r;
+         z *= r;
+      }
 
-    /**
-       generate random numbers in a 3D sphere of radious 1
-     */
-    void Sphere(double &x, double &y, double &z,double r = 1) {
-      Engine().Dir3D(x,y,z);
-      x *= r;
-      y *= r;
-      z *= r;
-    }
+      /**
+         Poisson distribution
+      */
+      unsigned int Poisson(double mu) {
+         return Engine().Poisson(mu);
+      }
 
-    /**
-       Poisson distribution
-     */
-    unsigned int Poisson(double mu) {
-      return Engine().Poisson(mu);
-    }
+      /**
+         Binomial distribution
+      */
+      unsigned int Binomial(unsigned int ntot, double prob) {
+         return Engine().Binomial(prob,ntot);
+      }
 
-    /**
-       Binomial distribution
-     */
-    unsigned int Binomial(unsigned int ntot, double prob) {
-      return Engine().Binomial(prob,ntot);
-    }
+      /**
+         Negative Binomial distribution
+         First parameter is n, second is probability
+         To be consistent with Random::Binomial
+      */
+      unsigned int NegativeBinomial(double n, double prob) {
+         return Engine().NegativeBinomial(prob,n);
+      }
 
-    /**
-       Negative Binomial distribution
-       First parameter is n, second is probability
-       To be consistent with Random::Binomial
-     */
-     unsigned int NegativeBinomial(double n, double prob) {
-      return Engine().NegativeBinomial(prob,n);
-    }
-
-    /**
-       Multinomial distribution
-     */
-    std::vector<unsigned int> Multinomial( unsigned int ntot, const std::vector<double> & p ) {
-      return Engine().Multinomial(ntot,p);
-    }
+      /**
+         Multinomial distribution
+      */
+      std::vector<unsigned int> Multinomial( unsigned int ntot, const std::vector<double> & p ) {
+         return Engine().Multinomial(ntot,p);
+      }
 
 
 
-  };
+   };
 
 
 

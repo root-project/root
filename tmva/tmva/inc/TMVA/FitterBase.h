@@ -89,7 +89,7 @@ namespace TMVA {
 
       TString                             fClassName;    // remove TMVA:: from TObject name
 
-      ClassDef(FitterBase,0) // Baseclass for fitters
+      ClassDef(FitterBase,0); // Baseclass for fitters
    };
 
 } // namespace TMVA

@@ -20,17 +20,24 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TNamed
-#include "TNamed.h"
+#ifndef ROOT_TObject
+#include "TObject.h"
+#endif
+#ifndef ROOT_TString
+#include "TString.h"
 #endif
 
-class TLockPath : public TNamed {
+class TLockPath : public TObject {
 private:
+   TString       fName;          // path to lock
    Int_t         fLockId;        // file id of dir lock
 
 public:
-   TLockPath(const char *path = "") : TNamed(path,path), fLockId(-1) { }
+   TLockPath(const char *path = "");
    ~TLockPath() { if (IsLocked()) Unlock(); }
+
+   const char   *GetName() const { return fName; }
+   void          SetName(const char *path) { fName = path; }
 
    Int_t         Lock(Bool_t shared = kFALSE);
    Int_t         Unlock();

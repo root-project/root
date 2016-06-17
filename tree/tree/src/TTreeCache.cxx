@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TTreeCache
+\ingroup tree
+
 A specialized TFileCacheRead object for a TTree.
 
 This class acts as a file cache, registering automatically the baskets from

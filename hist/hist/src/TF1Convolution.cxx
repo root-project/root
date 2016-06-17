@@ -266,6 +266,7 @@ void TF1Convolution::MakeFFTConv()
       // need to normalize by dividing by the number of points and multiply by the bin width = Range/Number of points
       fGraphConv->SetPoint(i, x[i], fftinverse->GetPointReal(j)*(fXmax-fXmin)/(fNofPoints*fNofPoints) );  
    }
+   fGraphConv->SetBit(TGraph::kIsSortedX); // indicate that points are sorted in X to speed up TGraph::Eval
    fFlagGraph = true; // we can use the graph
 }
 

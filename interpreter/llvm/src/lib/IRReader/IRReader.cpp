@@ -31,17 +31,17 @@ static const char *const TimeIRParsingName = "Parse IR";
 
 static std::unique_ptr<Module>
 getLazyIRModule(std::unique_ptr<MemoryBuffer> Buffer, SMDiagnostic &Err,
-                LLVMContext &Context) {
+                LLVMContext &Context, bool ShouldLazyLoadMetadata) {
   if (isBitcode((const unsigned char *)Buffer->getBufferStart(),
                 (const unsigned char *)Buffer->getBufferEnd())) {
-    ErrorOr<Module *> ModuleOrErr =
-        getLazyBitcodeModule(std::move(Buffer), Context);
+    ErrorOr<std::unique_ptr<Module>> ModuleOrErr = getLazyBitcodeModule(
+        std::move(Buffer), Context, ShouldLazyLoadMetadata);
     if (std::error_code EC = ModuleOrErr.getError()) {
       Err = SMDiagnostic(Buffer->getBufferIdentifier(), SourceMgr::DK_Error,
                          EC.message());
       return nullptr;
     }
-    return std::unique_ptr<Module>(ModuleOrErr.get());
+    return std::move(ModuleOrErr.get());
   }
 
   return parseAssembly(Buffer->getMemBufferRef(), Err, Context);
@@ -49,7 +49,8 @@ getLazyIRModule(std::unique_ptr<MemoryBuffer> Buffer, SMDiagnostic &Err,
 
 std::unique_ptr<Module> llvm::getLazyIRFileModule(StringRef Filename,
                                                   SMDiagnostic &Err,
-                                                  LLVMContext &Context) {
+                                                  LLVMContext &Context,
+                                                  bool ShouldLazyLoadMetadata) {
   ErrorOr<std::unique_ptr<MemoryBuffer>> FileOrErr =
       MemoryBuffer::getFileOrSTDIN(Filename);
   if (std::error_code EC = FileOrErr.getError()) {
@@ -58,7 +59,8 @@ std::unique_ptr<Module> llvm::getLazyIRFileModule(StringRef Filename,
     return nullptr;
   }
 
-  return getLazyIRModule(std::move(FileOrErr.get()), Err, Context);
+  return getLazyIRModule(std::move(FileOrErr.get()), Err, Context,
+                         ShouldLazyLoadMetadata);
 }
 
 std::unique_ptr<Module> llvm::parseIR(MemoryBufferRef Buffer, SMDiagnostic &Err,
@@ -67,13 +69,14 @@ std::unique_ptr<Module> llvm::parseIR(MemoryBufferRef Buffer, SMDiagnostic &Err,
                      TimePassesIsEnabled);
   if (isBitcode((const unsigned char *)Buffer.getBufferStart(),
                 (const unsigned char *)Buffer.getBufferEnd())) {
-    ErrorOr<Module *> ModuleOrErr = parseBitcodeFile(Buffer, Context);
+    ErrorOr<std::unique_ptr<Module>> ModuleOrErr =
+        parseBitcodeFile(Buffer, Context);
     if (std::error_code EC = ModuleOrErr.getError()) {
       Err = SMDiagnostic(Buffer.getBufferIdentifier(), SourceMgr::DK_Error,
                          EC.message());
       return nullptr;
     }
-    return std::unique_ptr<Module>(ModuleOrErr.get());
+    return std::move(ModuleOrErr.get());
   }
 
   return parseAssembly(Buffer, Err, Context);

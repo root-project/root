@@ -57,9 +57,9 @@ namespace TMVA {
 
 
       // singleton class
-//      static DataSetManager& Instance();
-//      static void            CreateInstance( DataInputHandler& dataInput );
-//      static void            DestroyInstance();
+      //      static DataSetManager& Instance();
+      //      static void            CreateInstance( DataInputHandler& dataInput );
+      //      static void            DestroyInstance();
 
       // private default constructor
       DataSetManager(); // DSMTEST
@@ -76,13 +76,13 @@ namespace TMVA {
 
    private:
 
-//      ~DataSetManager(); // DSMTEST moved to public
+      //      ~DataSetManager(); // DSMTEST moved to public
 
-//      static DataSetManager* fgDSManager; // removed DSMTEST
+      //      static DataSetManager* fgDSManager; // removed DSMTEST
 
       // private default constructor
-/*       DataSetManager(); */ // DSMTEST
-/*       DataSetManager( DataInputHandler& dataInput ); */ // DSMTEST
+      /*       DataSetManager(); */ // DSMTEST
+      /*       DataSetManager( DataInputHandler& dataInput ); */ // DSMTEST
 
       TMVA::DataSetFactory* fDatasetFactory;
 

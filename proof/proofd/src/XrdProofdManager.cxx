@@ -64,7 +64,7 @@ typedef struct {
 #ifdef __sun
 /*-
  * Copyright (c) 1991, 1993
- *	The Regents of the University of California.  All rights reserved.
+ * The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -76,8 +76,8 @@ typedef struct {
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ * This product includes software developed by the University of
+ * California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -97,7 +97,7 @@ typedef struct {
 
 #if 0
 #if defined(LIBC_SCCS) && !defined(lint)
-static char sccsid[] = "@(#)getgrouplist.c	8.2 (Berkeley) 12/8/94";
+static char sccsid[] = "@(#)getgrouplist.c   8.2 (Berkeley) 12/8/94";
 #endif /* LIBC_SCCS and not lint */
 #include <sys/cdefs.h>
 __FBSDID("$FreeBSD: src/lib/libc/gen/getgrouplist.c,v 1.14 2005/05/03 16:20:03 delphij Exp $");
@@ -113,47 +113,47 @@ __FBSDID("$FreeBSD: src/lib/libc/gen/getgrouplist.c,v 1.14 2005/05/03 16:20:03 d
 int
 getgrouplist(const char *uname, gid_t agroup, gid_t *groups, int *grpcnt)
 {
-	const struct group *grp;
-	int i, maxgroups, ngroups, ret;
+   const struct group *grp;
+   int i, maxgroups, ngroups, ret;
 
-	ret = 0;
-	ngroups = 0;
-	maxgroups = *grpcnt;
-	/*
-	 * When installing primary group, duplicate it;
-	 * the first element of groups is the effective gid
-	 * and will be overwritten when a setgid file is executed.
-	 */
-	groups ? groups[ngroups++] = agroup : ngroups++;
-	if (maxgroups > 1)
-		groups ? groups[ngroups++] = agroup : ngroups++;
-	/*
-	 * Scan the group file to find additional groups.
-	 */
-	setgrent();
-	while ((grp = getgrent()) != NULL) {
-		if (groups) {
-			for (i = 0; i < ngroups; i++) {
-				if (grp->gr_gid == groups[i])
-					goto skip;
-			}
-		}
-		for (i = 0; grp->gr_mem[i]; i++) {
-			if (!strcmp(grp->gr_mem[i], uname)) {
-				if (ngroups >= maxgroups) {
-					ret = -1;
-					break;
-				}
-				groups ? groups[ngroups++] = grp->gr_gid : ngroups++;
-				break;
-			}
-		}
+   ret = 0;
+   ngroups = 0;
+   maxgroups = *grpcnt;
+   /*
+    * When installing primary group, duplicate it;
+    * the first element of groups is the effective gid
+    * and will be overwritten when a setgid file is executed.
+    */
+   groups ? groups[ngroups++] = agroup : ngroups++;
+   if (maxgroups > 1)
+      groups ? groups[ngroups++] = agroup : ngroups++;
+   /*
+    * Scan the group file to find additional groups.
+    */
+   setgrent();
+   while ((grp = getgrent()) != NULL) {
+      if (groups) {
+         for (i = 0; i < ngroups; i++) {
+            if (grp->gr_gid == groups[i])
+               goto skip;
+         }
+      }
+      for (i = 0; grp->gr_mem[i]; i++) {
+         if (!strcmp(grp->gr_mem[i], uname)) {
+            if (ngroups >= maxgroups) {
+               ret = -1;
+               break;
+            }
+            groups ? groups[ngroups++] = grp->gr_gid : ngroups++;
+            break;
+         }
+      }
 skip:
-		;
-	}
-	endgrent();
-	*grpcnt = ngroups;
-	return (ret);
+      ;
+   }
+   endgrent();
+   *grpcnt = ngroups;
+   return (ret);
 }
 #endif
 

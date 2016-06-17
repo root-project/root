@@ -260,6 +260,10 @@ int TClingTypedefInfo::Size() const
          return 0;
       }
    }
+
+   // Deserialization might happen during the size calculation.
+   cling::Interpreter::PushTransactionRAII pushedT(fInterp);
+
    // Note: This is an int64_t.
    clang::CharUnits::QuantityType quantity =
       context.getTypeSizeInChars(qt).getQuantity();

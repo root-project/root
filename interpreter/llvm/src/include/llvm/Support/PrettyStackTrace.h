@@ -29,9 +29,11 @@ namespace llvm {
   /// constructed and destructed, they will add their symbolic frames to a
   /// virtual stack trace.  This gets dumped out if the program crashes.
   class PrettyStackTraceEntry {
-    const PrettyStackTraceEntry *NextEntry;
-    PrettyStackTraceEntry(const PrettyStackTraceEntry &) LLVM_DELETED_FUNCTION;
-    void operator=(const PrettyStackTraceEntry&) LLVM_DELETED_FUNCTION;
+    friend PrettyStackTraceEntry *ReverseStackTrace(PrettyStackTraceEntry *);
+
+    PrettyStackTraceEntry *NextEntry;
+    PrettyStackTraceEntry(const PrettyStackTraceEntry &) = delete;
+    void operator=(const PrettyStackTraceEntry &) = delete;
   public:
     PrettyStackTraceEntry();
     virtual ~PrettyStackTraceEntry();
@@ -65,6 +67,18 @@ namespace llvm {
     }
     void print(raw_ostream &OS) const override;
   };
+
+  /// Returns the topmost element of the "pretty" stack state.
+  const void *SavePrettyStackState();
+
+  /// Restores the topmost element of the "pretty" stack state to State, which
+  /// should come from a previous call to SavePrettyStackState().  This is
+  /// useful when using a CrashRecoveryContext in code that also uses
+  /// PrettyStackTraceEntries, to make sure the stack that's printed if a crash
+  /// happens after a crash that's been recovered by CrashRecoveryContext
+  /// doesn't have frames on it that were added in code unwound by the
+  /// CrashRecoveryContext.
+  void RestorePrettyStackState(const void *State);
 
 } // end namespace llvm
 

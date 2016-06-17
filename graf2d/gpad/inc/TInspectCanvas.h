@@ -13,14 +13,6 @@
 #define ROOT_TInspectCanvas
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TInspectCanvas                                                       //
-//                                                                      //
-// This class is a specialized canvas to inspect Root objects.          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #ifndef ROOT_TCanvas
 #include "TCanvas.h"
 #endif
@@ -34,10 +26,10 @@ class TInspectCanvas : public TCanvas, public TAttText {
 
 protected:
 
-   TButton     *fBackward;      //Pointer to the Backward button
-   TButton     *fForward;       //Pointer to the Forward button
-   TList       *fObjects;       //List of objects inspected
-   TObject     *fCurObject;     //Pointer to object being inspected
+   TButton     *fBackward;      ///< Pointer to the Backward button
+   TButton     *fForward;       ///< Pointer to the Forward button
+   TList       *fObjects;       ///< List of objects inspected
+   TObject     *fCurObject;     ///< Pointer to object being inspected
 
 public:
    TInspectCanvas();

@@ -69,17 +69,20 @@ namespace TMVA {
 
       Double_t GetMvaValue(Double_t *errLower = 0, Double_t *errUpper = 0);
 
+      virtual void ReadModelFromFile();
+
       using MethodBase::ReadWeightsFromStream;
       // the actual "weights"
       virtual void AddWeightsXMLTo(void * /*parent */ ) const {}        // = 0;
       virtual void ReadWeightsFromXML(void * /*wghtnode*/ ) {}    // = 0;
       virtual void ReadWeightsFromStream(std::istream &) {} //= 0;       // backward compatibility
-      void ReadStateFromFile();
    private :
       DataSetManager    *fDataSetManager;     // DSMTEST
       friend class Factory;                   // DSMTEST
       friend class Reader;                    // DSMTEST
    protected:
+
+
       //AdaBoost options
       TString base_estimator;//object, optional (default=DecisionTreeClassifier)
       //The base estimator from which the boosted ensemble is built.

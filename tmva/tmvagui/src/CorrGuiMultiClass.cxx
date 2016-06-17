@@ -11,7 +11,7 @@
 //static TControlBar* CorrGuiMultiClass_Global__cbar = 0;
 
 void TMVA::CorrGuiMultiClass(TString dataset,  TString fin , TString dirName , TString title ,
-               Bool_t isRegression )
+                             Bool_t isRegression )
 {
    // Use this script in order to run the various individual macros
    // that plot the output of TMVA (e.g. running TMVAnalysis.C),

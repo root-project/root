@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TGuiFactory
+\ingroup Base
 
 This ABC is a factory for GUI components. Depending on which
 factory is active one gets either ROOT native (X11 based with Win95

@@ -153,6 +153,12 @@ def warn_integer_constant_overflow : Warning<
   "overflow in expression; result is %0 with type %1">,
   InGroup<DiagGroup<"integer-overflow">>;
 
+// This is a temporary diagnostic, and shall be removed once our 
+// implementation is complete, and like the preceding constexpr notes belongs
+// in Sema.
+def note_unimplemented_constexpr_lambda_feature_ast : Note<
+    "unimplemented constexpr lambda feature: %0 (coming soon!)">;
+
 // inline asm related.
 let CategoryName = "Inline Assembly Issue" in {
   def err_asm_invalid_escape : Error<
@@ -168,6 +174,14 @@ let CategoryName = "Inline Assembly Issue" in {
     "invalid operand number in inline asm string">;
 }
 
+// vtable related.
+let CategoryName = "VTable ABI Issue" in {
+  def err_vftable_ambiguous_component : Error<
+    "ambiguous vftable component for %0 introduced via covariant thunks; "
+    "this is an inherent limitation of the ABI">;
+  def note_covariant_thunk : Note<
+    "covariant thunk required by %0">;
+}
 
 // Importing ASTs
 def err_odr_variable_type_inconsistent : Error<

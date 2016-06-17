@@ -111,7 +111,7 @@ namespace TMVA {
 }
 
 inline void TMVA::CCPruner::SetPruneStrength( Float_t alpha ) {
-  fAlpha = (alpha > 0 ? alpha : 0.0);
+   fAlpha = (alpha > 0 ? alpha : 0.0);
 }
     
 

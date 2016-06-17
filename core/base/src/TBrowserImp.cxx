@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TBrowserImp
+\ingroup Base
+
 ABC describing GUI independent browser implementation protocol.
 */
 

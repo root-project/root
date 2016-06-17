@@ -2817,6 +2817,38 @@ fi
 
 ######################################################################
 #
+### echo %%% invoke, apply - determine which invoke / apply implementation to use
+#
+
+hasstdapply="undef"
+if test "x$usecxx14" = "xdefine" ; then
+    message "Checking for apply implementation"
+    check_code '#include <tuple>
+int main() { std::tuple<int> tup;std::apply(tup, [](int){}); return 0;}' '$(CXX11FLAGS)'
+    if test $include_result -eq 1 ; then
+        hasstdapply="define"
+        result 'std::apply'
+    else
+        result "using builtin apply"
+    fi
+fi
+
+hasstdinvoke="undef"
+if test "x$usecxx14" = "xdefine" ; then
+    message "Checking for invoke implementation"
+    check_code '#include <functional>
+int main() { return std::invoke([](int i){return i;}, 0); }' '$(CXX11FLAGS)'
+    if test $include_result -eq 1 ; then
+        hasstdinvoke="define"
+        result 'std::invoke'
+    else
+        result "using builtin invoke"
+    fi
+fi
+
+
+######################################################################
+#
 ### echo %%% Check for linker's support of --no-ctors-in-init-array
 #
 ### This changes the sequence for static initialization to be right
@@ -8046,6 +8078,8 @@ sed \
     -e "s|@hasstdstringview@|$hasstdstringview|"       \
     -e "s|@hasstdexpstringview@|$hasstdexpstringview|" \
     -e "s|@hasstodstringview@|$hasstodstringview|" \
+    -e "s|@hasstdapply@|$hasstdapply|" \
+    -e "s|@hasstdinvoke@|$hasstdinvoke|" \
     -e "s|@hasllvm@|$hasllvm|"             \
     -e "s|@llvmdir@|$llvmdir|"             \
     -e "s|@useimt@|$useimt|"               \

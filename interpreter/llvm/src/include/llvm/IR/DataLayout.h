@@ -20,7 +20,6 @@
 #ifndef LLVM_IR_DATALAYOUT_H
 #define LLVM_IR_DATALAYOUT_H
 
-#include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Type.h"
@@ -34,8 +33,6 @@ typedef struct LLVMOpaqueTargetData *LLVMTargetDataRef;
 namespace llvm {
 
 class Value;
-class Type;
-class IntegerType;
 class StructType;
 class StructLayout;
 class Triple;
@@ -108,13 +105,23 @@ private:
 
   unsigned StackNaturalAlign;
 
-  enum ManglingModeT { MM_None, MM_ELF, MM_MachO, MM_WINCOFF, MM_Mips };
+  enum ManglingModeT {
+    MM_None,
+    MM_ELF,
+    MM_MachO,
+    MM_WinCOFF,
+    MM_WinCOFFX86,
+    MM_Mips
+  };
   ManglingModeT ManglingMode;
 
   SmallVector<unsigned char, 8> LegalIntWidths;
 
   /// \brief Primitive type alignment data.
   SmallVector<LayoutAlignElem, 16> Alignments;
+
+  /// \brief The string representation used to create this DataLayout
+  std::string StringRepresentation;
 
   typedef SmallVector<PointerAlignElem, 8> PointersTy;
   PointersTy Pointers;
@@ -185,6 +192,7 @@ public:
 
   DataLayout &operator=(const DataLayout &DL) {
     clear();
+    StringRepresentation = DL.StringRepresentation;
     BigEndian = DL.isBigEndian();
     StackNaturalAlign = DL.StackNaturalAlign;
     ManglingMode = DL.ManglingMode;
@@ -209,8 +217,14 @@ public:
   /// \brief Returns the string representation of the DataLayout.
   ///
   /// This representation is in the same format accepted by the string
-  /// constructor above.
-  std::string getStringRepresentation() const;
+  /// constructor above. This should not be used to compare two DataLayout as
+  /// different string can represent the same layout.
+  const std::string &getStringRepresentation() const {
+    return StringRepresentation;
+  }
+
+  /// \brief Test if the DataLayout was constructed from an empty string.
+  bool isDefault() const { return StringRepresentation.empty(); }
 
   /// \brief Returns true if the specified type is known to be a native integer
   /// type supported by the CPU.
@@ -219,14 +233,14 @@ public:
   /// on any known one. This returns false if the integer width is not legal.
   ///
   /// The width is specified in bits.
-  bool isLegalInteger(unsigned Width) const {
+  bool isLegalInteger(uint64_t Width) const {
     for (unsigned LegalIntWidth : LegalIntWidths)
       if (LegalIntWidth == Width)
         return true;
     return false;
   }
 
-  bool isIllegalInteger(unsigned Width) const { return !isLegalInteger(Width); }
+  bool isIllegalInteger(uint64_t Width) const { return !isLegalInteger(Width); }
 
   /// Returns true if the given alignment exceeds the natural stack alignment.
   bool exceedsNaturalStackAlignment(unsigned Align) const {
@@ -236,7 +250,7 @@ public:
   unsigned getStackAlignment() const { return StackNaturalAlign; }
 
   bool hasMicrosoftFastStdCallMangling() const {
-    return ManglingMode == MM_WINCOFF;
+    return ManglingMode == MM_WinCOFFX86;
   }
 
   bool hasLinkerPrivateGlobalPrefix() const { return ManglingMode == MM_MachO; }
@@ -244,7 +258,7 @@ public:
   const char *getLinkerPrivateGlobalPrefix() const {
     if (ManglingMode == MM_MachO)
       return "l";
-    return getPrivateGlobalPrefix();
+    return "";
   }
 
   char getGlobalPrefix() const {
@@ -252,9 +266,10 @@ public:
     case MM_None:
     case MM_ELF:
     case MM_Mips:
+    case MM_WinCOFF:
       return '\0';
     case MM_MachO:
-    case MM_WINCOFF:
+    case MM_WinCOFFX86:
       return '_';
     }
     llvm_unreachable("invalid mangling mode");
@@ -269,7 +284,8 @@ public:
     case MM_Mips:
       return "$";
     case MM_MachO:
-    case MM_WINCOFF:
+    case MM_WinCOFF:
+    case MM_WinCOFFX86:
       return "L";
     }
     llvm_unreachable("invalid mangling mode");
@@ -368,7 +384,7 @@ public:
   /// returns 12 or 16 for x86_fp80, depending on alignment.
   uint64_t getTypeAllocSize(Type *Ty) const {
     // Round up to the next alignment boundary.
-    return RoundUpToAlignment(getTypeStoreSize(Ty), getABITypeAlignment(Ty));
+    return alignTo(getTypeStoreSize(Ty), getABITypeAlignment(Ty));
   }
 
   /// \brief Returns the offset in bits between successive objects of the
@@ -411,19 +427,20 @@ public:
 
   /// \brief Returns the largest legal integer type, or null if none are set.
   Type *getLargestLegalIntType(LLVMContext &C) const {
-    unsigned LargestSize = getLargestLegalIntTypeSize();
+    unsigned LargestSize = getLargestLegalIntTypeSizeInBits();
     return (LargestSize == 0) ? nullptr : Type::getIntNTy(C, LargestSize);
   }
 
   /// \brief Returns the size of largest legal integer type size, or 0 if none
   /// are set.
-  unsigned getLargestLegalIntTypeSize() const;
+  unsigned getLargestLegalIntTypeSizeInBits() const;
 
   /// \brief Returns the offset from the beginning of the type for the specified
   /// indices.
   ///
+  /// Note that this takes the element type, not the pointer type.
   /// This is used to implement getelementptr.
-  uint64_t getIndexedOffset(Type *Ty, ArrayRef<Value *> Indices) const;
+  uint64_t getIndexedOffsetInType(Type *ElemTy, ArrayRef<Value *> Indices) const;
 
   /// \brief Returns a StructLayout object, indicating the alignment of the
   /// struct, its size, and the offsets of its fields.
@@ -451,28 +468,13 @@ inline LLVMTargetDataRef wrap(const DataLayout *P) {
   return reinterpret_cast<LLVMTargetDataRef>(const_cast<DataLayout *>(P));
 }
 
-class DataLayoutPass : public ImmutablePass {
-  DataLayout DL;
-
-public:
-  /// This has to exist, because this is a pass, but it should never be used.
-  DataLayoutPass();
-  ~DataLayoutPass();
-
-  const DataLayout &getDataLayout() const { return DL; }
-
-  static char ID; // Pass identification, replacement for typeid
-
-  bool doFinalization(Module &M) override;
-  bool doInitialization(Module &M) override;
-};
-
 /// Used to lazily calculate structure layout information for a target machine,
 /// based on the DataLayout structure.
 class StructLayout {
   uint64_t StructSize;
   unsigned StructAlignment;
-  unsigned NumElements;
+  unsigned IsPadded : 1;
+  unsigned NumElements : 31;
   uint64_t MemberOffsets[1]; // variable sized array!
 public:
   uint64_t getSizeInBytes() const { return StructSize; }
@@ -480,6 +482,10 @@ public:
   uint64_t getSizeInBits() const { return 8 * StructSize; }
 
   unsigned getAlignment() const { return StructAlignment; }
+
+  /// Returns whether the struct has padding or not between its fields.
+  /// NB: Padding in nested element is not taken into account.
+  bool hasPadding() const { return IsPadded; }
 
   /// \brief Given a valid byte offset into the structure, returns the structure
   /// index that contains it.

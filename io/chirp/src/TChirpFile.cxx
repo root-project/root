@@ -27,7 +27,7 @@ of the Chirp "bulk I/O" feature which does multiple remote ops
 in a single call.
 Most users of Chirp will access a named remote server url:
     chirp://host.somewhere.edu/path
-The special host CONDOR is used to indicate a connection to the     
+The special host CONDOR is used to indicate a connection to the
 Chirp I/O proxy service when running inside of Condor:
     chirp://CONDOR/path
 

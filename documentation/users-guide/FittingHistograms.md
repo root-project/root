@@ -1266,18 +1266,10 @@ conversion of the original FORTRAN version. The main changes are:
 The `Minuit` package acts on a multi parameter FORTRAN function to
 which one must give the generic name `FCN`. In the ROOT
 implementation, the function `FCN` is defined via the `Minuit`
-`SetFCN` member function when a `HistogramFit` command is invoked. The
+`SetFCN` member function when an histogram fitting is invoked. The
 value of `FCN` will in general depend on one or more variable
 parameters.
 
-To take a simple example, in case of ROOT histograms (classes
-**`TH1C`**, **`TH1S`**, **`TH1F`**, **`TH1D`**) the `Fit` function
-defines the `Minuit` fitting function as being `H1FitChisquare` or
-`H1FitLikelihood` depending on the options selected. `H1FitChisquare`
-calculates the chi-square between the user fitting function (Gaussian,
-polynomial, user defined, etc) and the data for given values of the
-parameters. It is the task of `Minuit` to find those values of the
-parameters which give the lowest value of chi-square.
 
 ### The Transformation of Limited Parameters
 

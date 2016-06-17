@@ -11,9 +11,9 @@
 //        - normal/decorrelated/PCA
 //        - use of TMVA plotting TStyle
 void TMVA::correlationscattersMultiClass(TString dataset, TString fin , TString var, 
-                                          TString dirName_ , TString /*title*/,
-                                          Bool_t /*isRegression */,
-                                          Bool_t useTMVAStyle )
+                                         TString dirName_ , TString /*title*/,
+                                         Bool_t /*isRegression */,
+                                         Bool_t useTMVAStyle )
 {
    // set style and remove existing canvas'
    TMVAGlob::Initialize( useTMVAStyle );

@@ -77,7 +77,8 @@ protected:
       kIndexOfEntry, kEntries, kLength, kIteration, kLengthFunc, kSum, kEntryList,
       kTreeMember,
       kIndexOfLocalEntry,
-      kMin, kMax
+      kMin, kMax,
+      kLocalEntries
 
    };
    enum {
@@ -124,7 +125,7 @@ protected:
    TList                    *fDimensionSetup; //! list of dimension setups, for delayed creation of the dimension information.
    std::vector<std::string>  fAliasesUsed;    //! List of aliases used during the parsing of the expression.
 
-   LongDouble_t*        fConstLD;   // local version of fConsts able to store bigger numbers
+   LongDouble_t*        fConstLD;   //! local version of fConsts able to store bigger numbers
 
    TTreeFormula(const char *name, const char *formula, TTree *tree, const std::vector<std::string>& aliases);
    void Init(const char *name, const char *formula);
@@ -205,7 +206,7 @@ public:
    virtual TTree*      GetTree() const {return fTree;}
    virtual void        UpdateFormulaLeaves();
 
-   ClassDef(TTreeFormula,9)  //The Tree formula
+   ClassDef(TTreeFormula, 10);  //The Tree formula
 };
 
 #endif

@@ -197,7 +197,9 @@ const char *rootClingHelp =
    "  This allows the header to be inlined within the dictionary.               \n"
    "                                                                            \n"
    " -interpreteronly\tNo IO information in the dictionary                      \n"
-   " -noIncludePaths\tDon't keep track of the include paths passed to rootcling \n";
+   "                                                                            \n"
+   " -noIncludePaths\tDo not store the headers' directories in the dictionary.  \n"
+   "  Instead, rely on the environment variable $ROOT_INCLUDE_PATH at runtime.  \n";
 
 
 
@@ -2276,7 +2278,8 @@ int GenerateModule(TModuleGenerator &modGen,
    // From PCHGenerator and friends:
    llvm::SmallVector<char, 128> Buffer;
    llvm::BitstreamWriter Stream(Buffer);
-   clang::ASTWriter Writer(Stream);
+   llvm::ArrayRef<llvm::IntrusiveRefCntPtr<clang::ModuleFileExtension>> Extensions;
+   clang::ASTWriter Writer(Stream, Extensions);
    llvm::raw_ostream *OS
       = CI->createOutputFile(modGen.GetModuleFileName().c_str(),
                              /*Binary=*/true,
@@ -3202,7 +3205,6 @@ void CreateDictHeader(std::ostream &dictStream, const std::string &main_dictname
                << "#include <stddef.h>\n"
                << "#include <stdio.h>\n"
                << "#include <stdlib.h>\n"
-               << "#include <math.h>\n"
                << "#include <string.h>\n"
                << "#include <assert.h>\n"
                << "#define G__DICTIONARY\n"
@@ -4278,7 +4280,6 @@ int RootCling(int argc,
             || interp.declare("#include <assert.h>\n"
                               "#include <stdlib.h>\n"
                               "#include <stddef.h>\n"
-                              "#include <math.h>\n"
                               "#include <string.h>\n"
                              ) != cling::Interpreter::kSuccess
             || (!useROOTINCDIR
@@ -5705,7 +5706,7 @@ int GenReflex(int argc, char **argv)
          NOTYPE ,
          "" , "noIncludePaths",
          ROOT::option::Arg::None,
-         "--noIncludePaths\tDo not store the include paths. Rely at runtime on the ROOT_INCLUDE_PATH.\n"
+         "--noIncludePaths\tDo not store the headers' directories in the dictionary. Instead, rely on the environment variable $ROOT_INCLUDE_PATH at runtime.\n"
       },
 
       // Left intentionally empty not to be shown in the help, like in the first genreflex

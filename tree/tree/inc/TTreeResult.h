@@ -38,10 +38,10 @@ class TTreeResult : public TSQLResult {
 friend class TTreePlayer;
 
 private:
-   Int_t       fColumnCount;   // number of columns in result
-   TString    *fFields;        //[fColumnCount] array containing field strings
-   TObjArray  *fResult;        // query result (TTreeRow objects)
-   Int_t       fNextRow;       // row iterator
+   Int_t       fColumnCount;   ///< number of columns in result
+   TString    *fFields;        ///<[fColumnCount] array containing field strings
+   TObjArray  *fResult;        ///< query result (TTreeRow objects)
+   Int_t       fNextRow;       ///< row iterator
 
    Bool_t  IsValid(Int_t field);
    void    AddField(Int_t field, const char *fieldname);

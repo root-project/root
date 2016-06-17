@@ -74,7 +74,7 @@ void TMVA::mvasMulticlass(TString dataset, TString fin , HistType htype , Bool_t
                TH1 *hist = (TH1*)titDir->Get(name);
                if (hist==0){
                   cout << ":\t mva distribution not available (this is normal for Cut classifier)" << endl;
-               continue;
+                  continue;
                }
                hists.Add(hist);
             }

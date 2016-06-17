@@ -43,14 +43,14 @@ void ObjCAtSyncChecker::checkPreStmt(const ObjCAtSynchronizedStmt *S,
 
   // Uninitialized value used for the mutex?
   if (V.getAs<UndefinedVal>()) {
-    if (ExplodedNode *N = C.generateSink()) {
+    if (ExplodedNode *N = C.generateErrorNode()) {
       if (!BT_undef)
         BT_undef.reset(new BuiltinBug(this, "Uninitialized value used as mutex "
                                             "for @synchronized"));
-      BugReport *report =
-        new BugReport(*BT_undef, BT_undef->getDescription(), N);
+      auto report =
+          llvm::make_unique<BugReport>(*BT_undef, BT_undef->getDescription(), N);
       bugreporter::trackNullOrUndefValue(N, Ex, *report);
-      C.emitReport(report);
+      C.emitReport(std::move(report));
     }
     return;
   }
@@ -66,16 +66,16 @@ void ObjCAtSyncChecker::checkPreStmt(const ObjCAtSynchronizedStmt *S,
     if (!notNullState) {
       // Generate an error node.  This isn't a sink since
       // a null mutex just means no synchronization occurs.
-      if (ExplodedNode *N = C.addTransition(nullState)) {
+      if (ExplodedNode *N = C.generateNonFatalErrorNode(nullState)) {
         if (!BT_null)
           BT_null.reset(new BuiltinBug(
               this, "Nil value used as mutex for @synchronized() "
                     "(no synchronization will occur)"));
-        BugReport *report =
-          new BugReport(*BT_null, BT_null->getDescription(), N);
+        auto report =
+            llvm::make_unique<BugReport>(*BT_null, BT_null->getDescription(), N);
         bugreporter::trackNullOrUndefValue(N, Ex, *report);
 
-        C.emitReport(report);
+        C.emitReport(std::move(report));
         return;
       }
     }

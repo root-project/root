@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /* \class TPRegexp
+\ingroup Base
 
 C++ Wrapper for the "Perl Compatible Regular Expressions" library
  The PCRE lib can be found at: http://www.pcre.org/

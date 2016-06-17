@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TEntryList
+\ingroup tree
+
 A List of entry numbers in a TTree or TChain.
 
 There are two types of entry lists:

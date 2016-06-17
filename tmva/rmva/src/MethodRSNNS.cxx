@@ -36,6 +36,7 @@
 #include "TMVA/ClassifierFactory.h"
 
 #include "TMVA/Results.h"
+#include "TMVA/Timer.h"
 
 using namespace TMVA;
 
@@ -261,15 +262,77 @@ Double_t MethodRSNNS::GetMvaValue(Double_t *errLower, Double_t *errUpper)
    }
    //if using persistence model
    if (!fModel) {
-      ReadStateFromFile();
+      ReadModelFromFile();
    }
    TVectorD result = predict(*fModel, fDfEvent, ROOT::R::Label["type"] = "prob");
    mvaValue = result[0]; //returning signal prob
    return mvaValue;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// get all the MVA values for the events of the current Data type
+std::vector<Double_t> MethodRSNNS::GetMvaValues(Long64_t firstEvt, Long64_t lastEvt, Bool_t logProgress)
+{
+   Long64_t nEvents = Data()->GetNEvents();
+   if (firstEvt > lastEvt || lastEvt > nEvents) lastEvt = nEvents;
+   if (firstEvt < 0) firstEvt = 0;
+
+   nEvents = lastEvt-firstEvt; 
+
+   UInt_t nvars = Data()->GetNVariables();
+
+   // use timer
+   Timer timer( nEvents, GetName(), kTRUE );
+   if (logProgress) 
+      Log() << kINFO<<Form("Dataset[%s] : ",DataInfo().GetName())<< "Evaluation of " << GetMethodName() << " on "
+            << (Data()->GetCurrentType()==Types::kTraining?"training":"testing") << " sample (" << nEvents << " events)" << Endl;
+ 
+
+   // fill R DATA FRAME with events data
+   std::vector<std::vector<Float_t> > inputData(nvars);
+   for (UInt_t i = 0; i < nvars; i++) {
+      inputData[i] =  std::vector<Float_t>(nEvents); 
+   }
+   
+   for (Int_t ievt=firstEvt; ievt<lastEvt; ievt++) {
+     Data()->SetCurrentEvent(ievt);
+      const TMVA::Event *e = Data()->GetEvent();
+      assert(nvars == e->GetNVariables());
+      for (UInt_t i = 0; i < nvars; i++) {
+         inputData[i][ievt] = e->GetValue(i);
+      }
+      // if (ievt%100 == 0)
+      //    std::cout << "Event " << ievt << "  type" << DataInfo().IsSignal(e) << " : " << pValue[ievt*nvars] << "  " << pValue[ievt*nvars+1] << "  " << pValue[ievt*nvars+2] << std::endl;
+   }
+
+   ROOT::R::TRDataFrame evtData;
+   for (UInt_t i = 0; i < nvars; i++) {
+      evtData[DataInfo().GetListOfVariables()[i].Data()] = inputData[i];
+   }
+   //if using persistence model
+   if (!fModel) {
+      ReadModelFromFile();
+   }
+
+   std::vector<Double_t> mvaValues(nEvents);
+   ROOT::R::TRObject result = predict(*fModel, evtData, ROOT::R::Label["type"] = "prob");
+   //std::vector<Double_t> probValues(2*nEvents);
+   mvaValues = result.As<std::vector<Double_t>>(); 
+   // assert(probValues.size() == 2*mvaValues.size());
+   // std::copy(probValues.begin()+nEvents, probValues.end(), mvaValues.begin() ); 
+
+   if (logProgress) {
+      Log() << kINFO <<Form("Dataset[%s] : ",DataInfo().GetName())<< "Elapsed time for evaluation of " << nEvents <<  " events: "
+            << timer.GetElapsedTime() << "       " << Endl;
+   }
+
+   return mvaValues;
+
+}
+
+
 //_______________________________________________________________________
-void TMVA::MethodRSNNS::ReadStateFromFile()
+void TMVA::MethodRSNNS::ReadModelFromFile()
 {
    ROOT::R::TRInterface::Instance().Require("RSNNS");
    TString path = GetWeightFileDir() + "/RMLPModel.RData";

@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TSystem
+\ingroup Base
 
 Abstract base class defining a generic interface to the underlying
 Operating System.
@@ -867,12 +868,28 @@ const char *TSystem::WorkingDirectory()
    return 0;
 }
 
+//////////////////////////////////////////////////////////////////////////////
+/// Return working directory.
+
+std::string TSystem::GetWorkingDirectory() const
+{
+   return std::string();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the user's home directory.
 
 const char *TSystem::HomeDirectory(const char*)
 {
    return 0;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+/// Return the user's home directory.
+
+std::string TSystem::GetHomeDirectory(const char*) const
+{
+   return std::string();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1054,15 +1071,45 @@ const char *TSystem::PrependPathName(const char *, TString&)
 
 const char *TSystem::ExpandFileName(const char *fname)
 {
-   const int   kBufSize = kMAXPATHLEN;
+   const int kBufSize = kMAXPATHLEN;
+   TTHREAD_TLS_ARRAY(char, kBufSize, xname);
+
+   Bool_t res = ExpandFileName(fname, xname, kBufSize);
+   if (res) 
+      return nullptr;
+   else
+      return xname;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+/// Expand a pathname getting rid of special shell characters like ~.$, etc.
+/// This function is analogous to ExpandFileName(const char *), except that
+/// it receives a TString reference of the pathname to be expanded.
+/// Returns kTRUE in case of error and kFALSE otherwise.
+
+Bool_t TSystem::ExpandFileName(TString &fname)
+{
+   const int kBufSize = kMAXPATHLEN;
+   char xname[kBufSize];
+
+   Bool_t res = ExpandFileName(fname.Data(), xname, kBufSize);
+   if (!res)
+      fname = xname;
+
+   return res;
+}
+
+////////////////////////////////////////////////////////////////////////////
+/// Private method for pathname expansion.
+/// Returns kTRUE in case of error and kFALSE otherwise.
+
+Bool_t TSystem::ExpandFileName(const char *fname, char *xname, const int kBufSize)
+{
    int         n, ier, iter, lx, ncopy;
    char       *inp, *out, *x, *t, buff[kBufSize*4];
    const char *b, *c, *e;
    const char *p;
-   static char xname[kBufSize];
-
-   R__LOCKGUARD2(gSystemMutex);
-
+   
    iter = 0; xname[0] = 0; inp = buff + kBufSize; out = inp + kBufSize;
    inp[-1] = ' '; inp[0] = 0; out[-1] = ' ';
    c = fname + strspn(fname, " \t\f\r");
@@ -1076,7 +1123,8 @@ again:
 
    p = 0; e = 0;
    if (c[0] == '~' && c[1] == '/') { // ~/ case
-      p = HomeDirectory();
+      std::string hd = GetHomeDirectory();
+      p = hd.c_str();
       e = c + 1;
       if (p) {                         // we have smth to copy
          strlcpy(x, p, kBufSize);
@@ -1090,7 +1138,8 @@ again:
       n = strcspn(c+1, "/ ");
       buff[0] = 0;
       strncat(buff, c+1, n);
-      p = HomeDirectory(buff);
+      std::string hd = GetHomeDirectory(buff);
+      p = hd.c_str();
       e = c+1+n;
       if (p) {                          // we have smth to copy
          strlcpy(x, p, kBufSize);
@@ -1107,7 +1156,8 @@ again:
       p = 0; e = 0;
 
       if (c[0] == '.' && c[1] == '/' && c[-1] == ' ') { // $cwd
-         strlcpy(buff, WorkingDirectory(), kBufSize);
+         std::string wd = GetWorkingDirectory();
+         strlcpy(buff, wd.c_str(), kBufSize);
          p = buff;
          e = c + 1;
       }
@@ -1136,7 +1186,8 @@ again:
             p = Getenv(buff);
          }
          if (!p && !strcmp(buff, "cwd")) { // it is $cwd
-            strlcpy(buff, WorkingDirectory(), kBufSize);
+            std::string wd = GetWorkingDirectory();
+            strlcpy(buff, wd.c_str(), kBufSize);
             p = buff;
          }
          if (!p && !strcmp(buff, "$")) { // it is $$ (replace by GetPid())
@@ -1176,11 +1227,12 @@ again:
 
    if (ier || ncopy != lx) {
       ::Error("TSystem::ExpandFileName", "input: %s, output: %s", fname, xname);
-      return 0;
+      return kTRUE;
    }
 
-   return xname;
+   return kFALSE;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Expand a pathname getting rid of special shell characters like ~.$, etc.

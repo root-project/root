@@ -81,7 +81,7 @@ TMVA::Config::~Config()
 void TMVA::Config::DestroyInstance()
 {
 #if __cplusplus > 199711L
-  delete fgConfigPtr.exchange(0);
+   delete fgConfigPtr.exchange(0);
 #else
    if (fgConfigPtr != 0) { delete fgConfigPtr; fgConfigPtr = 0;}
 #endif
@@ -93,15 +93,15 @@ void TMVA::Config::DestroyInstance()
 TMVA::Config& TMVA::Config::Instance()
 {
 #if __cplusplus > 199711L
-  if(!fgConfigPtr) {
-    TMVA::Config* tmp = new Config();
-    TMVA::Config* expected = 0;
-    if(! fgConfigPtr.compare_exchange_strong(expected,tmp) ) {
-      //another thread beat us to the switch
-      delete tmp;
-    }
-  }
-  return *fgConfigPtr;
+   if(!fgConfigPtr) {
+      TMVA::Config* tmp = new Config();
+      TMVA::Config* expected = 0;
+      if(! fgConfigPtr.compare_exchange_strong(expected,tmp) ) {
+         //another thread beat us to the switch
+         delete tmp;
+      }
+   }
+   return *fgConfigPtr;
 #else
    return fgConfigPtr ? *fgConfigPtr :*(fgConfigPtr = new Config());
 #endif

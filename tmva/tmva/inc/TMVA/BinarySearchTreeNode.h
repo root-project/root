@@ -90,7 +90,7 @@ namespace TMVA {
       const std::vector<Float_t> & GetEventV() const { return fEventV; }
       Float_t                      GetWeight() const { return fWeight; }
       UInt_t                       GetClass()  const { return fClass; }
-//      Bool_t                       IsSignal()  const { return (fClass == fSignalClass); }
+      //      Bool_t                       IsSignal()  const { return (fClass == fSignalClass); }
 
       const std::vector<Float_t> & GetTargets() const { return fTargets; }
 
@@ -117,7 +117,7 @@ namespace TMVA {
 
       Short_t     fSelector;       // index of variable used in node selection (decision tree) 
 
-      ClassDef(BinarySearchTreeNode,0) // Node for the BinarySearchTree
+      ClassDef(BinarySearchTreeNode,0); // Node for the BinarySearchTree
    };
 
 } // namespace TMVA

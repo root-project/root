@@ -609,6 +609,10 @@ def copyRootObjectRecursive(sourceFile,sourcePathSplit,destFile,destPathSplit,re
                     obj.SetName(setName)
                     changeDirectory(destFile,destPathSplit)
                     obj.Write()
+            elif issubclass(obj.__class__, ROOT.TCollection):
+                # probably the object was written with kSingleKey
+                changeDirectory(destFile,destPathSplit)
+                obj.Write(setName, ROOT.TObject.kSingleKey)
             else:
                 if setName != "":
                     obj.SetName(setName)

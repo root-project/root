@@ -5,6 +5,9 @@
 #include "TGraph.h"
 #include "Math/ChebyshevPol.h"
 
+#include <limits>
+#include <cstdlib>
+#include <stdio.h>
 // test of tformula neeeded to be run
 
 
@@ -13,6 +16,19 @@ class TFormulaParsingTests {
    
 bool verbose; 
 std::vector<int> failedTests; 
+
+// We need a softer way to reason about equality in 32 bits
+// Being this a quick test, doing the check at runtime is really no problem.
+bool fpEqual(double x, double y, bool epsilon = false)
+{
+   bool isEqual = epsilon ? std::abs(x-y) <= std::numeric_limits<double>::epsilon() : x == y;
+   if (!isEqual) {
+       // std::hexfloat not there for older gcc versions
+       printf("\nThe numbers differ: %A and %A\n", x, y);
+   }
+   return isEqual;
+}
+
 public:
 
 TFormulaParsingTests(bool _verbose = false) : verbose(_verbose) {}
@@ -296,9 +312,9 @@ bool test17() {
    TF1 * f0 = new TF1("f0",[](double *x, double *p){ return p[0]*sin(p[1]*x[0]); },0,10,2);
    f0->SetParameters(2,3);
    bool ok = true; 
-   ok &= (f1->Eval(1.5) == f0->Eval(1.5) );
+   ok &= fpEqual(f1->Eval(1.5) , f0->Eval(1.5) );
    double xx[1] = {2.5};
-   ok &= (f1->EvalPar(xx) == f0->Eval(2.5) );
+   ok &= fpEqual(f1->EvalPar(xx) , f0->Eval(2.5) );
    return ok;
 }
 
@@ -309,10 +325,10 @@ bool test18() {
    TF2 * f0 = new TF2("f0",[](double *x, double *p){ return p[0]*sin(p[1]*x[0]*x[1]); },0,10,0,10,2);
    f0->SetParameters(2,3);
    bool ok = true; 
-   ok &= (f1->Eval(1.5,2.5) == f0->Eval(1.5,2.5) );
+   ok &= fpEqual(f1->Eval(1.5,2.5) , f0->Eval(1.5,2.5) );
    double par[2] = {3,4};
    double xx[2] = {0.8,1.6};
-   ok &= (f1->EvalPar(xx,par) == f0->EvalPar(xx,par) );
+   ok &= fpEqual(f1->EvalPar(xx,par) , f0->EvalPar(xx,par) );
    return ok; 
 }
 
@@ -323,10 +339,10 @@ bool test19() {
    TF3 * f0 = new TF3("f0",[](double *x, double *p){ return p[0]*sin(p[1]*x[0]*x[1]*x[2]); },0,10,0,10,0,10,2);
    f0->SetParameters(2,3);
    bool ok = true; 
-   ok &= (f1->Eval(1.5,2.5,3.5) == f0->Eval(1.5,2.5,3.5) );
+   ok &= fpEqual(f1->Eval(1.5,2.5,3.5) , f0->Eval(1.5,2.5,3.5) );
    double par[2] = {3,4};
    double xx[3] = {0.8,1.6,2.2};
-   ok &= (f1->EvalPar(xx,par) == f0->EvalPar(xx,par) );
+   ok &= fpEqual(f1->EvalPar(xx,par) , f0->EvalPar(xx,par) );
    return ok; 
 }
 
@@ -341,7 +357,7 @@ bool test20() {
       -10,10,-10,10,16);
    double xx[2]={1,2};
    //printf(" difference = %f , value %f \n", f2.Eval(1,2) - f0.EvalPar(xx,params), f2.Eval(1,2) );
-   return ( f2.Eval(1,2) == f0.EvalPar(xx,params) );
+   return fpEqual( f2.Eval(1,2) , f0.EvalPar(xx,params) );
 }
 
 bool test21() {
@@ -350,7 +366,7 @@ bool test21() {
    f.SetParameters(1,2,3,1,0,1);
    TF1 f0("f0",[](double *x, double *p){ return p[0]+x[0]*p[1]+x[0]*x[0]*p[2]+p[3]*TMath::Gaus(x[0],p[4],p[5]); },0,1,6);
    f0.SetParameters(f.GetParameters() );
-   return (f.Eval(2) == f0.Eval(2) );
+   return fpEqual(f.Eval(2) , f0.Eval(2) );
 }
 
 bool test22() {
@@ -369,12 +385,12 @@ bool test23() {
    TF1 f0("f0",[](double *x, double *p){ return p[0]+p[1]*TMath::Gaus(x[0],p[2],p[3]); },-3,3,4 );
    f2.SetParameters(10,1,0,1);
    f0.SetParameters(f2.GetParameters() );
-   ok &= (f2.Eval(1) == f0.Eval(1) );
+   ok &= fpEqual(f2.Eval(1) , f0.Eval(1) );
 
    TF1 f3("f3","f1+[0]");
    // param order should be the same
    f3.SetParameters( f2.GetParameters() );
-   ok &= (f2.Eval(1) == f0.Eval(1) );
+   ok &= fpEqual(f2.Eval(1) , f0.Eval(1) );
    return ok;
 }
 
@@ -454,18 +470,18 @@ bool test27() {
    TF1 f1("f1","x+sq(x+2)+sq(x+[0])");
    TF1 f2("f2","x+(x+2)^2+(x+[0])^2");
    f1.SetParameter(0,3); f2.SetParameter(0,3);
-   ok &= (f1.Eval(2) == f2.Eval(2));
-   ok &= (f1.Eval(-4) == f2.Eval(-4));
+   ok &= fpEqual(f1.Eval(2) , f2.Eval(2));
+   ok &= fpEqual(f1.Eval(-4) , f2.Eval(-4));
    // test nested expressions and conflict with sqrt
    TF1 f3("f3","sqrt(1.+sq(x))");
-   ok &= (f3.Eval(2) == sqrt(5) );
+   ok &= fpEqual(f3.Eval(2) , sqrt(5) );
    TF1 f4("f4","sq(1.+std::sqrt(x))");
-   ok &= (f4.Eval(2) == TMath::Sq(1.+sqrt(2)) );
+   ok &= fpEqual(f4.Eval(2) , TMath::Sq(1.+sqrt(2)) );
    TF1 f5("f5","sqrt(((TMath::Sign(1,[0])*sq([0]/x))+(sq([1])*(x^([3]-1))))+sq([2]))");
    auto func = [](double *x, double *p){ return TMath::Sqrt(((TMath::Sign(1,p[0])*TMath::Sq(p[0]/x[0]))+(TMath::Sq(p[1])*(TMath::Power(x[0],(p[3]-1)))))+TMath::Sq(p[2])); };
    TF1 f6("f6",func,-10,10,4);
    f5.SetParameters(-1,2,3,4); f6.SetParameters(f5.GetParameters());
-   ok &= (f5.Eval(2) == f6.Eval(2) );
+   ok &= fpEqual(f5.Eval(2) , f6.Eval(2) );
    return ok;
 }
 
@@ -485,7 +501,12 @@ bool test28() {
    // keep same order in evaluation
    TF1 f0("f0",[](double *x, double *p){ return p[1]*sin(x[0]) + p[0]*cos(x[0]);},0.,10.,2);
    f0.SetParameters(1.1,2.1);
-   ok &= (fsincos.Eval(2) == f0.Eval(2) );
+#ifdef R__B64
+   bool epsilon = false;
+#else
+   bool epsilon = true;
+#endif
+   ok &= fpEqual(fsincos.Eval(2) , f0.Eval(2), epsilon);
    return ok;
 
 }

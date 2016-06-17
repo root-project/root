@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TRef
+\ingroup Base
 
 Persistent Reference link to a TObject
 A TRef is a lightweight object pointing to any TObject.
@@ -289,11 +290,10 @@ void TRef::operator=(TObject *obj)
          SetBit(kHasUUID);
          uid = obj->GetUniqueID();
       } else {
-         if (obj->TestBit(kIsReferenced)) {
-            uid = obj->GetUniqueID();
-         } else {
-            uid = TProcessID::AssignID(obj);
+         if (!obj->TestBit(kIsReferenced)) {
+            TProcessID::AssignID(obj);
          }
+         uid = obj->GetUniqueID();
          fPID = TProcessID::GetProcessWithUID(uid,obj);
          ResetBit(kHasUUID);
       }

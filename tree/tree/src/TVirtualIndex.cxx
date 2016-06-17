@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TVirtualIndex
+\ingroup tree
+
 Abstract interface for Tree Index
 */
 

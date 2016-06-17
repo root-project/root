@@ -289,7 +289,7 @@ void  MethodPyRandomForest::Init()
    //Training data
    UInt_t fNvars = Data()->GetNVariables();
    int fNrowsTraining = Data()->GetNTrainingEvents(); //every row is an event, a class type and a weight
-   int *dims = new int[2];
+   int dims[2];
    dims[0] = fNrowsTraining;
    dims[1] = fNvars;
    fTrainData = (PyArrayObject *)PyArray_FromDims(2, dims, NPY_FLOAT);
@@ -313,8 +313,6 @@ void  MethodPyRandomForest::Init()
       TrainDataWeights[i] = e->GetWeight();
    }
 
-   delete dims;
-      
 }
 
 //_______________________________________________________________________
@@ -384,12 +382,12 @@ Double_t MethodPyRandomForest::GetMvaValue(Double_t *errLower, Double_t *errUppe
    // cannot determine error
    NoErrorCalc(errLower, errUpper);
 
-   if (!fClassifier) ReadStateFromFile();
+   if (!fClassifier) ReadModelFromFile();
 
    Double_t mvaValue;
    const TMVA::Event *e = Data()->GetEvent();
    UInt_t nvars = e->GetNVariables();
-   int *dims = new int[2];
+   int dims[2];
    dims[0] = 1;
    dims[1] = nvars;
    PyArrayObject *pEvent= (PyArrayObject *)PyArray_FromDims(2, dims, NPY_FLOAT);
@@ -402,12 +400,11 @@ Double_t MethodPyRandomForest::GetMvaValue(Double_t *errLower, Double_t *errUppe
    mvaValue = proba[0]; //getting signal prob
    Py_DECREF(result);
    Py_DECREF(pEvent);
-   delete dims;
    return mvaValue;
 }
 
 //_______________________________________________________________________
-void MethodPyRandomForest::ReadStateFromFile()
+void MethodPyRandomForest::ReadModelFromFile()
 {
    if (!PyIsInitialized()) {
       PyInitialize();
@@ -421,7 +418,7 @@ void MethodPyRandomForest::ReadStateFromFile()
    if(!fClassifier)
    {
      Log() << kFATAL << "Can't load RandomForestClassifier from Serialized data." << Endl;
-     Log() << Endl;     
+     Log() << Endl;
    }
 }
 

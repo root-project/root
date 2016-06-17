@@ -44,6 +44,7 @@
 
 #include <memory>
 
+#include <stdexcept>
 // ROOT include(s):
 #include "Rtypes.h"
 #include "TObject.h"
@@ -221,7 +222,7 @@ void TMVA::MsgLogger::WriteMsg( EMsgType type, const std::string& line ) const
             if (type == kINFO || type == kVERBOSE)
                std::cout << fgPrefix << line << std::endl; // no color for info
             else
- 	       std::cout << fgColorMap.load()->find( type )->second << fgPrefix << "<"
+               std::cout << fgColorMap.load()->find( type )->second << fgPrefix << "<"
                          << stype->second << "> " << line  << "\033[0m" << std::endl;
          }
          else {
@@ -234,8 +235,10 @@ void TMVA::MsgLogger::WriteMsg( EMsgType type, const std::string& line ) const
    // take decision to stop if fatal error
    if (type == kFATAL) {
       std::cout << "***> abort program execution" << std::endl;
-      std::exit(1);
-      assert(false);
+      throw std::runtime_error("FATAL error");
+      
+      //std::exit(1);
+      //assert(false);
    }
 }
 
@@ -254,43 +257,43 @@ TMVA::MsgLogger& TMVA::MsgLogger::Endmsg( MsgLogger& logger )
 void TMVA::MsgLogger::InitMaps()
 {
    if(!fgTypeMap) {
-     std::map<TMVA::EMsgType, std::string>*tmp  = new std::map<TMVA::EMsgType, std::string>();
+      std::map<TMVA::EMsgType, std::string>*tmp  = new std::map<TMVA::EMsgType, std::string>();
    
-     (*tmp)[kVERBOSE]  = std::string("VERBOSE");
-     (*tmp)[kDEBUG]    = std::string("DEBUG");
-     (*tmp)[kINFO]     = std::string("INFO");
-     (*tmp)[kWARNING]  = std::string("WARNING");
-     (*tmp)[kERROR]    = std::string("ERROR");
-     (*tmp)[kFATAL]    = std::string("FATAL");
-     (*tmp)[kSILENT]   = std::string("SILENT");
-     const std::map<TMVA::EMsgType, std::string>* expected=0;
-     if(fgTypeMap.compare_exchange_strong(expected,tmp)) {
-       //Have the global own this
-       gOwnTypeMap.reset(tmp);
-     } else {
-       //Another thread beat us in creating the instance
-       delete tmp;
-     }
+      (*tmp)[kVERBOSE]  = std::string("VERBOSE");
+      (*tmp)[kDEBUG]    = std::string("DEBUG");
+      (*tmp)[kINFO]     = std::string("INFO");
+      (*tmp)[kWARNING]  = std::string("WARNING");
+      (*tmp)[kERROR]    = std::string("ERROR");
+      (*tmp)[kFATAL]    = std::string("FATAL");
+      (*tmp)[kSILENT]   = std::string("SILENT");
+      const std::map<TMVA::EMsgType, std::string>* expected=0;
+      if(fgTypeMap.compare_exchange_strong(expected,tmp)) {
+         //Have the global own this
+         gOwnTypeMap.reset(tmp);
+      } else {
+         //Another thread beat us in creating the instance
+         delete tmp;
+      }
    }
 
    if(!fgColorMap) {
-     std::map<TMVA::EMsgType, std::string>*tmp  = new std::map<TMVA::EMsgType, std::string>();
+      std::map<TMVA::EMsgType, std::string>*tmp  = new std::map<TMVA::EMsgType, std::string>();
 
-     (*tmp)[kVERBOSE] = std::string("");
-     (*tmp)[kDEBUG]   = std::string("\033[34m");
-     (*tmp)[kINFO]    = std::string("");
-     (*tmp)[kWARNING] = std::string("\033[1;31m");
-     (*tmp)[kERROR]   = std::string("\033[31m");
-     (*tmp)[kFATAL]   = std::string("\033[37;41;1m");
-     (*tmp)[kSILENT]  = std::string("\033[30m");
+      (*tmp)[kVERBOSE] = std::string("");
+      (*tmp)[kDEBUG]   = std::string("\033[34m");
+      (*tmp)[kINFO]    = std::string("");
+      (*tmp)[kWARNING] = std::string("\033[1;31m");
+      (*tmp)[kERROR]   = std::string("\033[31m");
+      (*tmp)[kFATAL]   = std::string("\033[37;41;1m");
+      (*tmp)[kSILENT]  = std::string("\033[30m");
 
-     const std::map<TMVA::EMsgType, std::string>* expected=0;
-     if(fgColorMap.compare_exchange_strong(expected,tmp)) {
-       //Have the global own this
-       gOwnColorMap.reset(tmp);
-     } else {
-       //Another thread beat us in creating the instance
-       delete tmp;
-     }
+      const std::map<TMVA::EMsgType, std::string>* expected=0;
+      if(fgColorMap.compare_exchange_strong(expected,tmp)) {
+         //Have the global own this
+         gOwnColorMap.reset(tmp);
+      } else {
+         //Another thread beat us in creating the instance
+         delete tmp;
+      }
    }
 }

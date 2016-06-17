@@ -79,26 +79,26 @@ TMVA::Tools* TMVA::Tools::fgTools = 0;
 TMVA::Tools& TMVA::gTools()                 { return TMVA::Tools::Instance(); }
 TMVA::Tools& TMVA::Tools::Instance()        {
 #if __cplusplus > 199711L
-  if(!fgTools) {
-    Tools* tmp = new Tools();
-    Tools* expected = 0;
-    if(! fgTools.compare_exchange_strong(expected,tmp)) {
-      //another thread beat us
-      delete tmp;
-    }
-  }
-  return *fgTools;
+   if(!fgTools) {
+      Tools* tmp = new Tools();
+      Tools* expected = 0;
+      if(! fgTools.compare_exchange_strong(expected,tmp)) {
+         //another thread beat us
+         delete tmp;
+      }
+   }
+   return *fgTools;
 #else
-  return fgTools?*(fgTools): *(fgTools = new Tools());
+   return fgTools?*(fgTools): *(fgTools = new Tools());
 #endif
 }
 void         TMVA::Tools::DestroyInstance() {
-  //NOTE: there is no thread safe way to do this so
-  // one must only call this method ones in an executable
+   //NOTE: there is no thread safe way to do this so
+   // one must only call this method ones in an executable
 #if __cplusplus > 199711L
-  if (fgTools != 0) { delete fgTools.load(); fgTools=0; }
+   if (fgTools != 0) { delete fgTools.load(); fgTools=0; }
 #else
-  if (fgTools != 0) { delete fgTools; fgTools=0; }
+   if (fgTools != 0) { delete fgTools; fgTools=0; }
 #endif
 }
 
@@ -1333,8 +1333,8 @@ void TMVA::Tools::TMVAVersionMessage( MsgLogger& logger )
 void TMVA::Tools::ROOTVersionMessage( MsgLogger& logger )
 {
    static const char * const months[] = { "Jan","Feb","Mar","Apr","May",
-                                   "Jun","Jul","Aug","Sep","Oct",
-                                   "Nov","Dec" };
+                                          "Jun","Jul","Aug","Sep","Oct",
+                                          "Nov","Dec" };
    Int_t   idatqq = gROOT->GetVersionDate();
    Int_t   iday   = idatqq%100;
    Int_t   imonth = (idatqq/100)%100;
@@ -1503,14 +1503,14 @@ TMVA::Tools::CalcCovarianceMatrices( const std::vector<const Event*>& events, In
 {
    std::vector<Event*> eventVector;
    for (std::vector<const Event*>::const_iterator it = events.begin(), itEnd = events.end(); it != itEnd; ++it)
-   {
-      eventVector.push_back (new Event(*(*it)));
-   }
+      {
+         eventVector.push_back (new Event(*(*it)));
+      }
    std::vector<TMatrixDSym*>* returnValue = CalcCovarianceMatrices (eventVector, maxCls, transformBase);
    for (std::vector<Event*>::const_iterator it = eventVector.begin(), itEnd = eventVector.end(); it != itEnd; ++it)
-   {
-      delete (*it);
-   }
+      {
+         delete (*it);
+      }
    return returnValue;
 }
 
@@ -1651,42 +1651,42 @@ Double_t TMVA::Tools::Mean ( Iterator first,  Iterator last,  WeightIterator w)
    Double_t sumw = 0;
    int i = 0;
    if (w==NULL)
-   {
-      while ( first != last )
       {
-         // if ( *w < 0) {
-         //    ::Error("TMVA::Tools::Mean","w[%d] = %.4e < 0 ?!",i,*w);
-         //    return 0;
-         // } // SURE, why wouldn't you allow for negative event weights here ?? :)
-         sum  += (*first);
-         sumw += 1.0 ;
-         ++first;
-         ++i;
+         while ( first != last )
+            {
+               // if ( *w < 0) {
+               //    ::Error("TMVA::Tools::Mean","w[%d] = %.4e < 0 ?!",i,*w);
+               //    return 0;
+               // } // SURE, why wouldn't you allow for negative event weights here ?? :)
+               sum  += (*first);
+               sumw += 1.0 ;
+               ++first;
+               ++i;
+            }
+         if (sumw <= 0) {
+            ::Error("TMVA::Tools::Mean","sum of weights <= 0 ?! that's a bit too much of negative event weights :) ");
+            return 0;
+         }
       }
-      if (sumw <= 0) {
-         ::Error("TMVA::Tools::Mean","sum of weights <= 0 ?! that's a bit too much of negative event weights :) ");
-         return 0;
-      }
-   }
    else
-   {
-      while ( first != last )
       {
-         // if ( *w < 0) {
-         //    ::Error("TMVA::Tools::Mean","w[%d] = %.4e < 0 ?!",i,*w);
-         //    return 0;
-         // } // SURE, why wouldn't you allow for negative event weights here ?? :)
-         sum  += (*w) * (*first);
-         sumw += (*w) ;
-         ++w;
-         ++first;
-         ++i;
+         while ( first != last )
+            {
+               // if ( *w < 0) {
+               //    ::Error("TMVA::Tools::Mean","w[%d] = %.4e < 0 ?!",i,*w);
+               //    return 0;
+               // } // SURE, why wouldn't you allow for negative event weights here ?? :)
+               sum  += (*w) * (*first);
+               sumw += (*w) ;
+               ++w;
+               ++first;
+               ++i;
+            }
+         if (sumw <= 0) {
+            ::Error("TMVA::Tools::Mean","sum of weights <= 0 ?! that's a bit too much of negative event weights :) ");
+            return 0;
+         }
       }
-      if (sumw <= 0) {
-         ::Error("TMVA::Tools::Mean","sum of weights <= 0 ?! that's a bit too much of negative event weights :) ");
-         return 0;
-      }
-   }
    return sum/sumw;
 }
 
@@ -1715,26 +1715,26 @@ Double_t TMVA::Tools::RMS(Iterator first, Iterator last, WeightIterator w)
 
    Double_t adouble;
    if (w==NULL)
-   {
-      while ( first != last ) {
-         adouble=Double_t(*first);
-         sum  += adouble;
-         sum2 += adouble*adouble;
-         sumw += 1.0;
-         ++first;
+      {
+         while ( first != last ) {
+            adouble=Double_t(*first);
+            sum  += adouble;
+            sum2 += adouble*adouble;
+            sumw += 1.0;
+            ++first;
+         }
       }
-   }
    else
-   {
-      while ( first != last ) {
-         adouble=Double_t(*first);
-         sum  += adouble * (*w);
-         sum2 += adouble*adouble * (*w);
-         sumw += (*w);
-         ++first;
-         ++w;
+      {
+         while ( first != last ) {
+            adouble=Double_t(*first);
+            sum  += adouble * (*w);
+            sum2 += adouble*adouble * (*w);
+            sumw += (*w);
+            ++first;
+            ++w;
+         }
       }
-   }
    Double_t norm = 1./sumw;
    Double_t mean = sum*norm;
    Double_t rms = TMath::Sqrt(TMath::Abs(sum2*norm -mean*mean));

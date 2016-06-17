@@ -2386,9 +2386,13 @@ Double_t TF1::IntegralOneDim(Double_t a, Double_t b,  Double_t epsrel, Double_t 
    if (status != 0) {
       std::string igName = ROOT::Math::IntegratorOneDim::GetName(ROOT::Math::IntegratorOneDimOptions::DefaultIntegratorType());
       Warning("IntegralOneDim","Error found in integrating function %s in [%f,%f] using %s. Result = %f +/- %f  - status = %d",GetName(),a,b,igName.c_str(),result,error,status);
-      std::cout << "Function Parameters = { ";
-      for (int ipar = 0; ipar < GetNpar(); ++ipar) std::cout << GetParName(ipar) << "=" << GetParameter(ipar) << " ";
-      std::cout << "}\n";
+      TString msg("\t\tFunction Parameters = {");
+      for (int ipar = 0; ipar < GetNpar(); ++ipar) {
+         msg += TString::Format(" %s =  %f ",GetParName(ipar), GetParameter(ipar));
+         if (ipar < GetNpar()-1) msg += TString(",");
+         else msg += TString("}");
+      }
+      Info("IntegralOneDim","%s",msg.Data());
    }
    return result;
 }

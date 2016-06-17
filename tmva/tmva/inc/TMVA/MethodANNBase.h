@@ -124,7 +124,7 @@ namespace TMVA {
       // ... do now something with the layerValues
       // 
       template <typename WriteIterator>
-      void GetLayerActivation (size_t layer, WriteIterator writeIterator);
+         void GetLayerActivation (size_t layer, WriteIterator writeIterator);
 
       using MethodBase::ReadWeightsFromStream;
 
@@ -156,6 +156,7 @@ namespace TMVA {
 
       enum EEstimator      { kMSE=0,kCE};
 
+      TObjArray*    fNetwork;         // TObjArray of TObjArrays representing network
 
    protected:
 
@@ -178,7 +179,6 @@ namespace TMVA {
       TNeuron* GetOutputNeuron(Int_t index = 0)   { return fOutputNeurons.at(index); }
       
       // protected variables
-      TObjArray*    fNetwork;         // TObjArray of TObjArrays representing network
       TObjArray*    fSynapses;        // array of pointers to synapses, no structural data
       TActivation*  fActivation;      // activation function to be used for hidden layers
       TActivation*  fOutput;          // activation function to be used for output layers, depending on estimator
@@ -243,30 +243,30 @@ namespace TMVA {
       // some static flags
       static const Bool_t fgDEBUG      = kTRUE;  // debug flag
     
-      ClassDef(MethodANNBase,0) // Base class for TMVA ANNs
+      ClassDef(MethodANNBase,0); // Base class for TMVA ANNs
    };
 
 
 
-    template <typename WriteIterator>
-    inline void MethodANNBase::GetLayerActivation (size_t layerNumber, WriteIterator writeIterator)
-    {
-	// get the activation values of the nodes in layer "layer"
-	// write the node activation values into the writeIterator
-        // assumes, that the network has been computed already (by calling
-	// "GetRegressionValues")
+   template <typename WriteIterator>
+      inline void MethodANNBase::GetLayerActivation (size_t layerNumber, WriteIterator writeIterator)
+      {
+         // get the activation values of the nodes in layer "layer"
+         // write the node activation values into the writeIterator
+         // assumes, that the network has been computed already (by calling
+         // "GetRegressionValues")
 
-	if (layerNumber >= (size_t)fNetwork->GetEntriesFast())
-	    return;
+         if (layerNumber >= (size_t)fNetwork->GetEntriesFast())
+            return;
 
-	TObjArray* layer = (TObjArray*)fNetwork->At(layerNumber);
-	UInt_t nNodes    = layer->GetEntriesFast();
-	for (UInt_t iNode = 0; iNode < nNodes; iNode++) 
-	{
-	    (*writeIterator) = ((TNeuron*)layer->At(iNode))->GetActivationValue();
-	    ++writeIterator;
-	}
-    }
+         TObjArray* layer = (TObjArray*)fNetwork->At(layerNumber);
+         UInt_t nNodes    = layer->GetEntriesFast();
+         for (UInt_t iNode = 0; iNode < nNodes; iNode++) 
+            {
+               (*writeIterator) = ((TNeuron*)layer->At(iNode))->GetActivationValue();
+               ++writeIterator;
+            }
+      }
 
    
 } // namespace TMVA

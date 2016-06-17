@@ -68,6 +68,9 @@ namespace {
       : ModulePass(ID), Named(GVs.begin(), GVs.end()), deleteStuff(deleteS) {}
 
     bool runOnModule(Module &M) override {
+      if (skipModule(M))
+        return false;
+
       // Visit the global inline asm.
       if (!deleteStuff)
         M.setModuleInlineAsm("");
@@ -83,7 +86,7 @@ namespace {
       for (Module::global_iterator I = M.global_begin(), E = M.global_end();
            I != E; ++I) {
         bool Delete =
-          deleteStuff == (bool)Named.count(I) && !I->isDeclaration();
+            deleteStuff == (bool)Named.count(&*I) && !I->isDeclaration();
         if (!Delete) {
           if (I->hasAvailableExternallyLinkage())
             continue;
@@ -93,14 +96,17 @@ namespace {
 
         makeVisible(*I, Delete);
 
-        if (Delete)
+        if (Delete) {
+          // Make this a declaration and drop it's comdat.
           I->setInitializer(nullptr);
+          I->setComdat(nullptr);
+        }
       }
 
       // Visit the Functions.
       for (Module::iterator I = M.begin(), E = M.end(); I != E; ++I) {
         bool Delete =
-          deleteStuff == (bool)Named.count(I) && !I->isDeclaration();
+            deleteStuff == (bool)Named.count(&*I) && !I->isDeclaration();
         if (!Delete) {
           if (I->hasAvailableExternallyLinkage())
             continue;
@@ -108,8 +114,11 @@ namespace {
 
         makeVisible(*I, Delete);
 
-        if (Delete)
+        if (Delete) {
+          // Make this a declaration and drop it's comdat.
           I->deleteBody();
+          I->setComdat(nullptr);
+        }
       }
 
       // Visit the Aliases.
@@ -118,11 +127,11 @@ namespace {
         Module::alias_iterator CurI = I;
         ++I;
 
-        bool Delete = deleteStuff == (bool)Named.count(CurI);
+        bool Delete = deleteStuff == (bool)Named.count(&*CurI);
         makeVisible(*CurI, Delete);
 
         if (Delete) {
-          Type *Ty =  CurI->getType()->getElementType();
+          Type *Ty =  CurI->getValueType();
 
           CurI->removeFromParent();
           llvm::Value *Declaration;
@@ -137,7 +146,7 @@ namespace {
 
           }
           CurI->replaceAllUsesWith(Declaration);
-          delete CurI;
+          delete &*CurI;
         }
       }
 

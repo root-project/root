@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TQObject
+\ingroup Base
+
 This is the ROOT implementation of the Qt object communication
 mechanism (see also http://www.troll.no/qt/metaobjects.html)
 

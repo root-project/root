@@ -16,11 +16,32 @@
 #include "clang/AST/ExternalASTSource.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/DeclarationName.h"
+#include "clang/Basic/Module.h"
 #include "llvm/Support/ErrorHandling.h"
 
 using namespace clang;
 
 ExternalASTSource::~ExternalASTSource() { }
+
+llvm::Optional<ExternalASTSource::ASTSourceDescriptor>
+ExternalASTSource::getSourceDescriptor(unsigned ID) {
+  return None;
+}
+
+ExternalASTSource::ASTSourceDescriptor::ASTSourceDescriptor(const Module &M)
+  : Signature(M.Signature), ClangModule(&M) {
+  if (M.Directory)
+    Path = M.Directory->getName();
+  if (auto *File = M.getASTFile())
+    ASTFile = File->getName();
+}
+
+std::string ExternalASTSource::ASTSourceDescriptor::getModuleName() const {
+  if (ClangModule)
+    return ClangModule->Name;
+  else
+    return PCHModuleName;
+}
 
 void ExternalASTSource::FindFileRegionDecls(FileID File, unsigned Offset,
                                             unsigned Length,
@@ -66,6 +87,11 @@ Stmt *ExternalASTSource::GetExternalDeclStmt(uint64_t Offset) {
   return nullptr;
 }
 
+CXXCtorInitializer **
+ExternalASTSource::GetExternalCXXCtorInitializers(uint64_t Offset) {
+  return nullptr;
+}
+
 CXXBaseSpecifier *
 ExternalASTSource::GetExternalCXXBaseSpecifiers(uint64_t Offset) {
   return nullptr;
@@ -77,17 +103,13 @@ ExternalASTSource::FindExternalVisibleDeclsByName(const DeclContext *DC,
   return false;
 }
 
-void ExternalASTSource::completeVisibleDeclsMap(const DeclContext *DC) {
-}
+void ExternalASTSource::completeVisibleDeclsMap(const DeclContext *DC) {}
 
-ExternalLoadResult
-ExternalASTSource::FindExternalLexicalDecls(const DeclContext *DC,
-                                            bool (*isKindWeWant)(Decl::Kind),
-                                         SmallVectorImpl<Decl*> &Result) {
-  return ELR_AlreadyLoaded;
-}
+void ExternalASTSource::FindExternalLexicalDecls(
+    const DeclContext *DC, llvm::function_ref<bool(Decl::Kind)> IsKindWeWant,
+    SmallVectorImpl<Decl *> &Result) {}
 
-void ExternalASTSource::getMemoryBufferSizes(MemoryBufferSizes &sizes) const { }
+void ExternalASTSource::getMemoryBufferSizes(MemoryBufferSizes &sizes) const {}
 
 uint32_t ExternalASTSource::incrementGeneration(ASTContext &C) {
   uint32_t OldGeneration = CurrentGeneration;

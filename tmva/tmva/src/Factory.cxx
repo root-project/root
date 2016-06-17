@@ -50,6 +50,8 @@
 #include "TEventList.h"
 #include "TH2.h"
 #include "TText.h"
+#include "TLegend.h"
+#include "TGraph.h"
 #include "TStyle.h"
 #include "TMatrixF.h"
 #include "TMatrixDSym.h"
@@ -352,7 +354,7 @@ TMVA::MethodBase* TMVA::Factory::BookMethod( TMVA::DataLoader *loader, TString t
    }
    
 //    method->SetWeightFileDir(Form("%s/%s",loader->GetName(),method->GetWeightFileDir().Data()));//setting up weight file dir
-//    method->fDataLoader=loader;
+   //method->fDataLoader=loader;
    method->SetAnalysisType( fAnalysisType );
    method->SetupMethod();
    method->ParseOptions();
@@ -497,11 +499,11 @@ void TMVA::Factory::WriteDataInformation(DataSetInfo&     fDataSetInfo)
 /// keeps in mind the "optimal one"... and that's the one that will later on be used
 /// in the main training loop.
 
-void TMVA::Factory::OptimizeAllMethods(TString fomType, TString fitType) 
+std::map<TString,Double_t> TMVA::Factory::OptimizeAllMethods(TString fomType, TString fitType) 
 {
 
    std::map<TString,MVector*>::iterator itrMap;
-   
+   std::map<TString,Double_t> TunedParameters;
    for(itrMap = fMethodsMap.begin();itrMap != fMethodsMap.end();itrMap++)
    {
       MVector *methods=itrMap->second;
@@ -514,7 +516,7 @@ void TMVA::Factory::OptimizeAllMethods(TString fomType, TString fitType)
 	  MethodBase* mva = dynamic_cast<MethodBase*>(*itrMethod);
 	  if (!mva) {
 	    Log() << kFATAL << "Dynamic cast to MethodBase failed" <<Endl;
-	    return;
+	    return TunedParameters;
 	  }
 
 	  if (mva->Data()->GetNTrainingEvents() < MinNoTrainingEvents) {
@@ -529,10 +531,13 @@ void TMVA::Factory::OptimizeAllMethods(TString fomType, TString fitType)
 		<< (fAnalysisType == Types::kRegression ? "Regression" : 
 		    (fAnalysisType == Types::kMulticlass ? "Multiclass classification" : "Classification")) << Endl;
 	  
-	  mva->OptimizeTuningParameters(fomType,fitType);
+	  TunedParameters = mva->OptimizeTuningParameters(fomType,fitType);
 	  Log() << kINFO << "Optimization of tuning paremters finished for Method:"<<mva->GetName() << Endl;
       }
    }
+
+   return TunedParameters;
+
 }
 
 //_______________________________________________________________________
@@ -582,6 +587,139 @@ Double_t TMVA::Factory::GetROCIntegral(TString datasetname,TString theMethodName
 
    return fROCalcValue;
 }
+
+//_______________________________________________________________________
+TGraph* TMVA::Factory::GetROCCurve(DataLoader *loader,TString theMethodName,Bool_t fLegend)
+{
+  return GetROCCurve((TString)loader->GetName(),theMethodName,fLegend);
+}
+
+//_______________________________________________________________________
+TGraph* TMVA::Factory::GetROCCurve(TString  datasetname,TString theMethodName,Bool_t fLegend)
+{
+   if (fMethodsMap.find(datasetname) == fMethodsMap.end()) {
+      Log() << kERROR << Form("DataSet = %s not found in methods map.", datasetname.Data()) << Endl;
+      return 0;
+   }
+   MVector *methods = fMethodsMap[datasetname.Data()];
+   MVector::iterator itrMethod = methods->begin();
+   TMVA::MethodBase *method = 0;
+   while (itrMethod != methods->end()) {
+      TMVA::MethodBase *cmethod = dynamic_cast<TMVA::MethodBase *>(*itrMethod);
+      if (!cmethod) {
+         //msg of error here
+         itrMethod++;
+         continue;
+      }
+      if (cmethod->GetMethodName() == theMethodName) {
+         method = cmethod;
+         break;
+      }
+      itrMethod++;
+   }
+
+   if (!method) {
+      Log() << kERROR << Form("Method = %s not found with Dataset = %s ", theMethodName.Data(), datasetname.Data()) << Endl;
+      return 0;
+   }
+
+   TMVA::Results *results = method->Data()->GetResults(method->GetMethodName(), Types::kTesting, Types::kClassification);
+
+   std::vector<Float_t> *mvaRes = dynamic_cast<ResultsClassification *>(results)->GetValueVector();
+   std::vector<Bool_t>  *mvaResType = dynamic_cast<ResultsClassification *>(results)->GetValueVectorTypes();
+
+   TMVA::ROCCurve *fROCCurve = new TMVA::ROCCurve(*mvaRes, *mvaResType);
+   if (!fROCCurve) Log() << kFATAL << Form("ROCCurve object was not created in Method = %s not found with Dataset = %s ", theMethodName.Data(), datasetname.Data()) << Endl;
+
+   TGraph  *fGraph = (TGraph  *)fROCCurve->GetROCCurve()->Clone();
+   if(fLegend)
+   {
+        fGraph->GetYaxis()->SetTitle("Background Rejection");
+        fGraph->GetXaxis()->SetTitle("Signal Efficiency");
+        fGraph->SetTitle(Form("Background Rejection vs. Signal Efficiency (%s)",method->GetMethodName().Data()));
+   }
+   delete fROCCurve;   
+   return fGraph;  
+}
+
+
+//_______________________________________________________________________
+TCanvas * TMVA::Factory::GetROCCurve(TMVA::DataLoader *loader)
+{
+  return GetROCCurve((TString)loader->GetName());
+}
+
+//_______________________________________________________________________
+TCanvas * TMVA::Factory::GetROCCurve(TString datasetname)
+{
+    // Lookup dataset.
+    if (fMethodsMap.find(datasetname) == fMethodsMap.end()) {
+        Log() << kERROR << Form("DataSet = %s not found in methods map.", datasetname.Data()) << Endl;
+        return 0;
+    }
+
+    // Create canvas.
+    TString name("ROCCurve ");
+    name += datasetname;
+    TCanvas *fCanvas = new TCanvas(name,"ROC Curve",200,10,700,500);
+    fCanvas->SetGrid();
+    UInt_t line_color = 0;         //Count line colors in canvas.
+
+    TLegend *fLegend = new TLegend(0.15, 0.15, 0.35, 0.3, "MVA Method");
+    TGraph *fGraph   = nullptr;
+
+    // Loop over dataset.
+    MVector *methods = fMethodsMap[datasetname.Data()];
+    MVector::iterator itr = methods->begin();
+
+    while (itr != methods->end()) {
+
+        TMVA::MethodBase *method = dynamic_cast<TMVA::MethodBase *>(*itr);
+        itr++;
+        if (!method) {
+            continue;
+        }
+        // Get results.
+        TMVA::Results *results = method->Data()->GetResults(method->GetMethodName(),
+                                                            Types::kTesting,
+                                                            Types::kClassification);
+
+        std::vector<Float_t> *mvaRes =
+            dynamic_cast<ResultsClassification *>(results)->GetValueVector();
+        std::vector<Bool_t>  *mvaResType =
+            dynamic_cast<ResultsClassification *>(results)->GetValueVectorTypes();
+
+        // Generate ROCCurve.
+        TMVA::ROCCurve *fROCCurve = new TMVA::ROCCurve(*mvaRes, *mvaResType);
+        if (!fROCCurve)
+            Log() << kFATAL << Form("ROCCurve object was not created in Method = %s not found with Dataset = %s ", method->GetMethodName().Data(), datasetname.Data()) << Endl;
+        fGraph=(TGraph*)fROCCurve->GetROCCurve()->Clone();
+	delete fROCCurve;
+        // Draw axes.
+        if (line_color == 0)
+        {
+            fGraph->GetYaxis()->SetTitle("Background Rejection");
+            fGraph->GetXaxis()->SetTitle("Signal Efficiency");
+            fGraph->SetTitle("Background Rejection vs. Signal Efficiency");
+            fGraph->Draw("AC");
+        }
+        else
+            fGraph->Draw("C");
+
+        fGraph->SetLineWidth(2);
+        fGraph->SetLineColor(++line_color);
+
+        fLegend->AddEntry(fGraph, method->GetMethodName(), "l");
+    }
+
+    // Draw legend.
+    fLegend->Draw();
+
+   return fCanvas;
+}
+
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// iterates through all booked methods and calls training
@@ -708,7 +846,7 @@ void TMVA::Factory::TrainAllMethods()
 	    // replace trained method by newly created one (from weight file) in methods vector
 	    (*methods)[i] = m;
 	  }
-      }
+       }
    }
 }
 
@@ -1850,4 +1988,133 @@ TH1F* TMVA::Factory::GetImportance(const int nbits,std::vector<Double_t> importa
   
 //   vih1->Draw("B");
   return vih1;
+}
+
+float TMVA::Factory::CrossValidate(DataLoader * loader, Types::EMVA theMethod, TString methodTitle, const char *theOption, bool optParams, int NumFolds, bool remakeDataSet, float * rocIntegrals)
+{
+
+   //bool optParams = true;
+
+   if(remakeDataSet){
+      //loader->ValidationKFoldSet();
+      loader->MakeKFoldDataSet(NumFolds);
+   }
+
+   std::vector<float> parameterPerformance;
+
+   const int nbits = loader->DefaultDataSetInfo().GetNVariables();
+   std::vector<TString> varNames = loader->DefaultDataSetInfo().GetListOfVariables();
+
+   if(optParams){
+
+      std::vector<std::map<TString,Double_t> > foldParameters;
+  
+      //loader->ValidationKFoldSet();
+
+      for(Int_t i=0; i<NumFolds; ++i){
+         Event::SetIsTraining(kTRUE);
+         TString optTitle = methodTitle;
+         optTitle += "_opt";
+         optTitle += i;
+      
+         loader->PrepareTrainingAndTestTree(i, TMVA::Types::kTraining);
+      
+         TMVA::DataLoader * seedloader = new TMVA::DataLoader(optTitle);
+      
+         for(int index = 0; index<nbits; index++){
+            seedloader->AddVariable(varNames.at(index), 'F');
+         }
+      
+         VIDataLoaderCopy(seedloader,loader);
+      
+         MethodBase* mva = BookMethod(seedloader, theMethod, methodTitle, theOption);
+      
+         foldParameters.push_back(mva->OptimizeTuningParameters("ROCIntegral","Minuit"));
+      
+         this->DeleteAllMethods();
+      
+         fMethodsMap.clear();
+      }
+    
+      TString optionsString;
+    
+      for(UInt_t t=0; t<foldParameters.size(); t++){
+         optionsString = theOption;
+         optionsString += ":";
+         std::map<TString,Double_t>::iterator it;
+         for(it=foldParameters.at(t).begin(); it!=foldParameters.at(t).end(); it++){
+            optionsString += it->first;
+            optionsString += "=";
+            optionsString += it->second;
+            if(it!=--foldParameters.at(t).end()){ optionsString += ":"; }
+         }
+         parameterPerformance.push_back(CrossValidate(loader, theMethod, methodTitle, optionsString, false, false));
+      }
+   }
+
+   std::vector<float> ROCs;
+
+   if(!optParams){
+    
+      for(Int_t j=0; j<NumFolds; ++j){
+         TString foldTitle = methodTitle;
+         foldTitle += "_fold";
+         foldTitle += j+1;
+      
+         loader->PrepareTrainingAndTestTree(j, TMVA::Types::kTesting);
+      
+         TMVA::DataLoader * seedloader = new TMVA::DataLoader(foldTitle);
+      
+         for(int index = 0; index<nbits; index++){
+            seedloader->AddVariable(varNames.at(index), 'F');
+         }
+      
+         VIDataLoaderCopy(seedloader,loader);
+      
+         BookMethod(seedloader, theMethod, methodTitle, theOption);
+      
+         TrainAllMethods();
+         TestAllMethods();
+         EvaluateAllMethods();
+      
+         ROCs.push_back(GetROCIntegral(seedloader->GetName(), methodTitle));
+      
+         TMVA::MethodBase * smethod = dynamic_cast<TMVA::MethodBase*>(fMethodsMap[seedloader->GetName()][0][0]);
+         TMVA::ResultsClassification * sresults = (TMVA::ResultsClassification*)smethod->Data()->GetResults(smethod->GetMethodName(), Types::kTesting, Types::kClassification);
+         sresults->Clear();
+         sresults->Delete();
+         delete sresults;
+         fgTargetFile->cd();
+         fgTargetFile->Delete(seedloader->GetName());
+         fgTargetFile->Delete(Form("%s;1",seedloader->GetName()));
+         fgTargetFile->Flush();
+         gSystem->Exec(Form("rm -rf %s", seedloader->GetName()));
+      
+         this->DeleteAllMethods();
+      
+         fMethodsMap.clear();
+      }
+   }
+  
+   float sumFOM = 0.0;
+
+   for(UInt_t k=0; k<ROCs.size(); ++k){
+      sumFOM += ROCs.at(k);
+   }
+
+   if(optParams){
+      for(UInt_t t=0; t<parameterPerformance.size(); ++t){
+         std::cout << "Parameters " << t+1 << " performance: " << parameterPerformance.at(t) << std::endl;
+      }
+   }
+   else{
+      for(UInt_t l=0; l<ROCs.size(); ++l){
+         if (rocIntegrals) rocIntegrals[l] = ROCs.at(l);
+         std::cout << "Fold " << l+1 << " ROCIntegral: " << ROCs.at(l) << std::endl;
+      }
+      std::cout << "Average ROCIntegral: " << sumFOM/(double)NumFolds << std::endl;
+   }
+
+   return sumFOM/(double)NumFolds;
+  
 }

@@ -59,7 +59,7 @@ subscripts and superscripts.
 
 Examples:
 
-Begin_Macro(source)
+Begin_Macro
 {
    TCanvas *cl = new TCanvas("cl","cl",10,10,700,500);
    TLatex Tl; Tl.SetTextFont(43); Tl.SetTextSize(20);
@@ -76,7 +76,7 @@ End_Macro
 The best way to put the subscripts and superscripts before the character and not
 after, is to use an empty character:
 
-Begin_Macro(source)
+Begin_Macro
 {
    TCanvas *cl = new TCanvas("cl","cl",10,10,700,100);
    TLatex Tl; Tl.SetTextFont(43); Tl.SetTextSize(20);
@@ -90,7 +90,7 @@ on all the "normal text" preceding them. In the following example the second
 applied on `/f` which has a descending part, and not only on `f`
 which as no descending part.
 
-Begin_Macro(source)
+Begin_Macro
 {
    TCanvas *cl = new TCanvas("cl","cl",10,10,700,100);
    TLatex Tl; Tl.SetTextFont(43); Tl.SetTextSize(20);
@@ -101,7 +101,7 @@ End_Macro
 To make sure the second operator `_` applies only on `f` a dummy operator `^{}`
 should be introduced to separate the `f` from the `/`.
 
-Begin_Macro(source)
+Begin_Macro
 {
    TCanvas *cl = new TCanvas("cl","cl",10,10,700,100);
    TLatex Tl; Tl.SetTextFont(43); Tl.SetTextSize(20);
@@ -116,7 +116,7 @@ it has two arguments: the numerator and the denominator.
 
 Examples:
 
-Begin_Macro(source)
+Begin_Macro
 {
    TCanvas *cl = new TCanvas("cl","cl",10,10,700,100);
    TLatex Tl; Tl.SetTextFont(43); Tl.SetTextSize(20);
@@ -129,7 +129,7 @@ Text can be split in two lines via the command `#splitline`.
 
 Examples:
 
-Begin_Macro(source)
+Begin_Macro
 {
    TCanvas *cl = new TCanvas("cl","cl",10,10,700,100);
    TLatex Tl; Tl.SetTextFont(43); Tl.SetTextSize(20);
@@ -143,7 +143,7 @@ an optional first argument for other roots.
 
 Examples:
 
-Begin_Macro(source)
+Begin_Macro
 {
    TCanvas *cl = new TCanvas("cl","cl",10,10,700,100);
    TLatex Tl; Tl.SetTextFont(43); Tl.SetTextSize(20);
@@ -185,18 +185,24 @@ End_Macro
 ## <a name="L8"></a> Accents
 Several kind of accents are available:
 
-   #hat    = Begin_Latex #hat{a} End_Latex
-   #check  = Begin_Latex #check{a} End_Latex
-   #acute  = Begin_Latex #acute{a} End_Latex
-   #grave  = Begin_Latex #grave{a} End_Latex
-   #dot    = Begin_Latex #dot{a} End_Latex
-   #ddot   = Begin_Latex #ddot{a} End_Latex
-   #tilde  = Begin_Latex #tilde{a} End_Latex
+Begin_Macro
+{
+   TCanvas *cl = new TCanvas("cl","cl",10,10,700,300);
+   TLatex Tl; Tl.SetTextFont(43); Tl.SetTextSize(20);
+   Tl.DrawText(.1, .10,   "#hat : ");   Tl.DrawLatex(.3, .10, " #hat{a} ");
+   Tl.DrawText(.1, .23,   "#check : "); Tl.DrawLatex(.3, .23, " #check{a} ");
+   Tl.DrawText(.1, .36,   "#acute : "); Tl.DrawLatex(.3, .36, " #acute{a} ");
+   Tl.DrawText(.1, .50,   "#grave : "); Tl.DrawLatex(.3, .50, " #grave{a} ");
+   Tl.DrawText(.1, .63,   "#dot : ");   Tl.DrawLatex(.3, .63, " #dot{a} ");
+   Tl.DrawText(.1, .76,   "#ddot : ");  Tl.DrawLatex(.3, .76, " #ddot{a} ");
+   Tl.DrawText(.1, .90,   "#tilde : "); Tl.DrawLatex(.3, .90, " #tilde{a} ");
+}
+End_Macro
 
 
 The special sign: `#slash` draws a slash on top of the text between brackets:
 
-Begin_Macro(source)
+Begin_Macro
 {
    TCanvas *cl = new TCanvas("cl","cl",10,10,700,100);
    TLatex Tl; Tl.SetTextFont(43); Tl.SetTextSize(20);
@@ -206,7 +212,7 @@ End_Macro
 
 Bar and vectors sign are done the following way:
 
-Begin_Macro(source)
+Begin_Macro
 {
    TCanvas *cl = new TCanvas("cl","cl",10,10,700,100);
    TLatex Tl; Tl.SetTextFont(43); Tl.SetTextSize(20);
@@ -221,7 +227,7 @@ and `#scale[scale-factor]{...}`
 
 Examples:
 
-Begin_Macro(source)
+Begin_Macro
 {
    TCanvas *cl = new TCanvas("cl","cl",10,10,900,300);
    TLatex Tl; Tl.SetTextFont(43); Tl.SetTextSize(20);
@@ -292,11 +298,11 @@ the fraction `dy` of its height.
 
 Examples:
 
-Begin_Macro(source)
+Begin_Macro
 {
    TCanvas *cl = new TCanvas("cl","cl",10,10,900,300);
    TLatex Tl; Tl.SetTextFont(43); Tl.SetTextSize(20);
-   TLatex Tt; Tt.SetTextFont(43); Tt.SetTextSize(12);
+   TLatex Tt; Tt.SetTextFont(43); Tt.SetTextSize(16);
    Double_t dy = 1./7.;
    Tl.DrawLatex(.5,   dy, "Positive k#kern[0.3]{e}#kern[0.3]{r}#kern[0.3]{n}#kern[0.3]{i}#kern[0.3]{n}#kern[0.3]{g}");
    Tt.DrawText(.01, 2*dy, "Positive k#kern[0.3]{e}#kern[0.3]{r}#kern[0.3]{n}#kern[0.3]{i}#kern[0.3]{n}#kern[0.3]{g} :");
@@ -314,7 +320,7 @@ Text can be turned italic or boldface using the commands
 
 Examples:
 
-Begin_Macro(source)
+Begin_Macro
 {
    TCanvas *cl = new TCanvas("cl","cl",10,10,900,300);
    TLatex Tl; Tl.SetTextFont(43); Tl.SetTextSize(20);
@@ -499,17 +505,19 @@ TLatex::TLatexFormSize TLatex::Anal1(TextSpec_t spec, const Char_t* t, Int_t len
 ///  Analyse(arg1) return the size of arg1 (width, up, down)
 ///  Analyse(arg2) return the size of arg2
 ///  now, we know the size of #frac{arg1}{arg2}:
+///
 /// ~~~ {.cpp}
 ///  width = max(width_arg1, width_arg2)
-///  up = up_arg1 + down_arg1
-///  down = up_arg2 + down_arg2
+///  up    = up_arg1 + down_arg1
+///  down  = up_arg2 + down_arg2
 /// ~~~
+///
 ///  so, when the user wants to paint a fraction at position (x,y),
 ///  the rect used for the formula is : (x,y-up,x+width,y+down)
 ///
 /// return size of zone occupied by the text/formula
-///  - t : chain to be analyzed
-///  - length : number of chars in t.
+///  - `t` : chain to be analyzed
+///  - `length` : number of chars in t.
 
 TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Char_t* t, Int_t length)
 {
@@ -1430,7 +1438,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, 
                TVirtualPS *saveps = gVirtualPS;
                if (gVirtualPS) gVirtualPS = 0;
                Double_t y22 = y2;
-               if (gVirtualX->InheritsFrom("TGCocoa")) y2 -= 3*sub;
+               if (gVirtualX->InheritsFrom("TGCocoa")) y2 -= 4.7*sub;
                Double_t sinang  = TMath::Sin(spec.fAngle/180*kPI);
                Double_t cosang  = TMath::Cos(spec.fAngle/180*kPI);
                Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);

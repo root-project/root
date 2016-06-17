@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TVirtualMonitoring
+\ingroup Base
+
 Provides the interface for externel Monitoring
 */
 

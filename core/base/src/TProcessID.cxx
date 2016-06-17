@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TProcessID
+\ingroup Base
+
 A TProcessID identifies a ROOT job in a unique way in time and space.
 The TProcessID title consists of a TUUID object which provides a globally
 unique identifier (for more see TUUID.h).

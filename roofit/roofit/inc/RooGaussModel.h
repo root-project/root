@@ -16,12 +16,12 @@
 #ifndef ROO_GAUSS_MODEL
 #define ROO_GAUSS_MODEL
 
-#include <cmath>
-#include <complex>
-
 #include "RooResolutionModel.h"
 #include "RooRealProxy.h"
 #include "RooMath.h"
+
+#include <cmath>
+#include <complex>
 
 class RooGaussModel : public RooResolutionModel {
 public:

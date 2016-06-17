@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TQConnection
+\ingroup Base
+
 TQConnection class is an internal class, used in the object
 communication mechanism.
 

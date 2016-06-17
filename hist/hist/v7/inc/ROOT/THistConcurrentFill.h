@@ -39,7 +39,7 @@ class THistConcurrentFiller:
   THistConcurrentFillManager<HIST, SIZE>& fManager;
 
 public:
-  using Coord_t = typename HIST::Coord_t;
+  using CoordArray_t = typename HIST::CoordArray_t;
   using Weight_t = typename HIST::Weight_t;
 
   THistConcurrentFiller(THistConcurrentFillManager<HIST, SIZE>& manager):
@@ -49,13 +49,13 @@ public:
   using Internal::THistBufferedFillBase<THistConcurrentFiller<HIST, SIZE>, HIST, SIZE>::Fill;
 
   /// Thread-specific HIST::FillN().
-  void FillN(const std::array_view<Coord_t> xN,
+  void FillN(const std::array_view<CoordArray_t> xN,
              const std::array_view<Weight_t> weightN) {
     fManager.FillN(xN, weightN);
   }
 
   /// Thread-specific HIST::FillN().
-  void FillN(const std::array_view<Coord_t> xN) {
+  void FillN(const std::array_view<CoordArray_t> xN) {
     fManager.FillN(xN);
   }
 
@@ -86,7 +86,7 @@ class THistConcurrentFillManager {
   friend class THistConcurrentFiller<HIST, SIZE>;
 public:
   using Hist_t = HIST;
-  using Coord_t = typename HIST::Coord_t;
+  using CoordArray_t = typename HIST::CoordArray_t;
   using Weight_t = typename HIST::Weight_t;
 
 private:
@@ -102,14 +102,14 @@ public:
   }
 
   /// Thread-specific HIST::FillN().
-  void FillN(const std::array_view<Coord_t> xN,
+  void FillN(const std::array_view<CoordArray_t> xN,
              const std::array_view<Weight_t> weightN) {
     std::lock_guard<std::mutex> lockGuard(fFillMutex);
     fHist.FillN(xN, weightN);
   }
 
   /// Thread-specific HIST::FillN().
-  void FillN(const std::array_view<Coord_t> xN) {
+  void FillN(const std::array_view<CoordArray_t> xN) {
     std::lock_guard<std::mutex> lockGuard(fFillMutex);
     fHist.FillN(xN);
   }

@@ -67,7 +67,7 @@ public:
 
    virtual void SetModel(TObject* obj);
 
-   ClassDef(TGLLightSetEditor, 1) // Editor for TGLLightSet.
+   ClassDef(TGLLightSetEditor, 0); // Editor for TGLLightSet.
 }; // endclass TGLLightSetEditor
 
 #endif

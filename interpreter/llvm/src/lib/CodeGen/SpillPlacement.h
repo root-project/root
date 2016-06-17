@@ -29,6 +29,7 @@
 
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/SparseSet.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
 #include "llvm/Support/BlockFrequency.h"
 
@@ -66,11 +67,14 @@ class SpillPlacement : public MachineFunctionPass {
   /// its inputs falls in the open interval (-Threshold;Threshold).
   BlockFrequency Threshold;
 
+  /// List of nodes that need to be updated in ::iterate.
+  SparseSet<unsigned> TodoList;
+
 public:
   static char ID; // Pass identification, replacement for typeid.
 
   SpillPlacement() : MachineFunctionPass(ID), nodes(nullptr) {}
-  ~SpillPlacement() { releaseMemory(); }
+  ~SpillPlacement() override { releaseMemory(); }
 
   /// BorderConstraint - A basic block has separate constraints for entry and
   /// exit.
@@ -157,6 +161,8 @@ private:
 
   void activate(unsigned);
   void setThreshold(const BlockFrequency &Entry);
+
+  bool update(unsigned);
 };
 
 } // end namespace llvm

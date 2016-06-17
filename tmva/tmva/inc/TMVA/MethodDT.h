@@ -150,9 +150,9 @@ namespace TMVA {
 
       Bool_t fPruneBeforeBoost; //aincient variable, only needed for "CompatibilityOptions" 
 
-      ClassDef(MethodDT,0)  // Analysis of Decision Trees 
+      ClassDef(MethodDT,0);  // Analysis of Decision Trees 
 
-         };
+   };
 }
 
 #endif

@@ -428,7 +428,7 @@ namespace clang {
            iter = iter->getPreviousDecl()) {
         auto declcxx = dyn_cast<CXXRecordDecl>(iter);
         assert(declcxx && "Only CXXRecordDecl have DefinitionData");
-        declcxx->DefinitionData = canon;
+        declcxx->DefinitionData = nullptr;
       }
     }
 
@@ -521,27 +521,32 @@ namespace clang {
 
       if (StoredDeclsMap* Map = DC->getPrimaryContext()->getLookupPtr()) {
         // Make sure we update the lookup maps, because the removed decl might
-        // be registered in the lookup and again findable.
+        // be registered in the lookup and still findable.
         NamedDecl* ND = (T*)R;
         DeclarationName Name = ND->getDeclName();
         if (!Name.isEmpty()) {
           StoredDeclsMap::iterator Pos = Map->find(Name);
           if (Pos != Map->end() && !Pos->second.isNull()) {
             DeclContext::lookup_result decls = Pos->second.getLookupResult();
-
-            for (DeclContext::lookup_result::iterator I = decls.begin(),
-                    E = decls.end(); I != E; ++I) {
-              // FIXME: A decl meant to be added in the lookup already exists
-              // in the lookup table. My assumption is that the DeclUnloader
-              // adds it here. This needs to be investigated mode. For now
-              // std::find gets promoted from assert to condition :)
-              if (*I == ND && std::find(decls.begin(), decls.end(),
-                                        MostRecentNotThis)
-                  == decls.end()) {
-                // The decl was registered in the lookup, update it.
-                *I = MostRecentNotThis;
-                break;
+            // FIXME: A decl meant to be added in the lookup already exists
+            // in the lookup table. My assumption is that the DeclUnloader
+            // adds it here. This needs to be investigated mode. For now
+            // std::find gets promoted from assert to condition :)
+            // DeclContext::lookup_result::iterator is not an InputIterator
+            // (const member, thus no op=(const iterator&)), thus we cannot use
+            // std::find. MSVC actually cares!
+            auto hasDecl = [](const DeclContext::lookup_result& Result,
+                              const NamedDecl* Needle) -> bool {
+              for (auto IDecl: Result) {
+                if (IDecl == Needle)
+                  return true;
               }
+              return false;
+            };
+            if (!hasDecl(decls, MostRecentNotThis) && hasDecl(decls, ND)) {
+              // The decl was registered in the lookup, update it.
+              Pos->second.HandleRedeclaration(MostRecentNotThis,
+                                              /*IsKnownNewer*/ true);
             }
           }
         }

@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TRegexp
+\ingroup Base
 
 Regular expression class.
 
@@ -313,7 +314,7 @@ Bool_t TString::Tokenize(TString &tok, Ssiz_t &from, const char *delim) const
 
    // Ensure backward compatibility to allow one or more times the delimiting character
    TString rdelim(delim);
-   if(rdelim.Length() == 1) {    
+   if(rdelim.Length() == 1) {
       rdelim = "[" + rdelim + "]+";
    }
    TRegexp rg(rdelim);

@@ -64,19 +64,19 @@ ClassImp(TMVA::GeneticAlgorithm)
 
 TMVA::GeneticAlgorithm::GeneticAlgorithm( IFitterTarget& target, Int_t populationSize, 
                                           const std::vector<Interval*>& ranges, UInt_t seed )
-   : fConvCounter(-1),
-     fFitterTarget( target ),
-     fConvValue(0.),
-     fLastResult(DBL_MAX),
-     fSpread(0.1),
-     fMirror(kTRUE),
-     fFirstTime(kTRUE),
-     fMakeCopies(kFALSE),
-     fPopulationSize(populationSize),
-     fRanges( ranges ),
-     fPopulation(ranges, populationSize, seed),
-     fBestFitness(DBL_MAX),
-     fLogger( new MsgLogger("GeneticAlgorithm") )
+: fConvCounter(-1),
+   fFitterTarget( target ),
+   fConvValue(0.),
+   fLastResult(DBL_MAX),
+   fSpread(0.1),
+   fMirror(kTRUE),
+   fFirstTime(kTRUE),
+   fMakeCopies(kFALSE),
+   fPopulationSize(populationSize),
+   fRanges( ranges ),
+   fPopulation(ranges, populationSize, seed),
+   fBestFitness(DBL_MAX),
+   fLogger( new MsgLogger("GeneticAlgorithm") )
 {
    fPopulation.SetRandomSeed( seed );
 }
@@ -143,15 +143,15 @@ Double_t TMVA::GeneticAlgorithm::CalculateFitness()
       int thread_number = omp_get_thread_num();
 #pragma omp for
       for ( int index = 0; index < fPopulation.GetPopulationSize(); ++index )
-      {
-         GeneticGenes* genes = fPopulation.GetGenes(index);
-         Double_t fitness = NewFitness( genes->GetFitness(), 
-                                        fFitterTarget.EstimatorFunction(genes->GetFactors()) );
-         genes->SetFitness( fitness );
+         {
+            GeneticGenes* genes = fPopulation.GetGenes(index);
+            Double_t fitness = NewFitness( genes->GetFitness(), 
+                                           fFitterTarget.EstimatorFunction(genes->GetFactors()) );
+            genes->SetFitness( fitness );
          
-         if ( bests[thread_number] > fitness )
-            bests[thread_number] = fitness;
-      }
+            if ( bests[thread_number] > fitness )
+               bests[thread_number] = fitness;
+         }
    }
    
    fBestFitness = *std::min_element(bests, bests+nt);

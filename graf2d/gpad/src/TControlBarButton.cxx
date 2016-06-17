@@ -11,6 +11,7 @@
 
 /** \class TControlBarButton
 \ingroup gpad
+This class defines the control bar buttons
 
 Created by the TControlBar. Not for general consumption.
 */

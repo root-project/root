@@ -39,7 +39,7 @@ namespace {
    }
 }
 
-static Int_t gHighestColorIndex = 0;
+static Int_t gHighestColorIndex = 0; ///< Highest color index defined
 
 #define fgGrayscaleMode TColor__GrayScaleMode()
 #define fgPalette TColor__Palette()
@@ -48,6 +48,9 @@ static Int_t gHighestColorIndex = 0;
 using std::floor;
 
 /** \class TColor
+\ingroup Base
+\ingroup GraphicsAtt
+
 The color creation and management class.
 
   - [Introduction](#C00)
@@ -83,6 +86,15 @@ A new color can be created the following way:
 
 ~~~ {.cpp}
    Int_t ci = 1756; // color index
+   TColor *color = new TColor(ci, 0.1, 0.2, 0.3);
+~~~
+
+\since **6.07/07:**
+TColor::GetFreeColorIndex() allows to make sure the new color is created with an
+unused color index:
+
+~~~ {.cpp}
+   Int_t ci = TColor::GetFreeColorIndex();
    TColor *color = new TColor(ci, 0.1, 0.2, 0.3);
 ~~~
 
@@ -910,7 +922,13 @@ itself remains fully opaque.
 The transparency is available on all platforms when the flag `OpenGL.CanvasPreferGL` is set to `1`
 in `$ROOTSYS/etc/system.rootrc`, or on Mac with the Cocoa backend. On the file output
 it is visible with PDF, PNG, Gif, JPEG, SVG ... but not PostScript.
- */
+The following macro gives an example of transparency usage:
+
+Begin_Macro(source)
+../../../tutorials/graphics/transparency.C
+End_Macro
+
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
@@ -1852,6 +1870,20 @@ Int_t TColor::GetColorTransparent(Int_t n, Float_t a)
       ::Error("TColor::GetColorTransparent", "color with index %d not defined", n);
       return -1;
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Static function: Returns a free color index which can be used to define
+/// a user custom color.
+///
+/// ~~~ {.cpp}
+///   Int_t ci = TColor::GetFreeColorIndex();
+///   TColor *color = new TColor(ci, 0.1, 0.2, 0.3);
+/// ~~~
+
+Int_t TColor::GetFreeColorIndex()
+{
+   return gHighestColorIndex+1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

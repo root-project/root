@@ -8,7 +8,7 @@
 //        - normal/decorrelated/PCA
 //        - use of TMVA plotting TStyle
 void TMVA::variablesMultiClass(TString dataset, TString fin , TString dirName , TString title,
-                                Bool_t /* isRegression */, Bool_t useTMVAStyle )
+                               Bool_t /* isRegression */, Bool_t useTMVAStyle )
 {
    TString outfname = dirName;
    TString tmp = dirName;
@@ -75,19 +75,19 @@ void TMVA::variablesMultiClass(TString dataset, TString fin , TString dirName , 
    std::vector<TString>::iterator classiter = classnames.begin();
 
    /*
-   std::vector<TString>::const_iterator variter = varnames.begin();
-   std::cout << "Available variables:" << std::endl;
-   while(variter != varnames.end()){
-      std::cout << *variter << std::endl;
-      variter++;
-   }
+     std::vector<TString>::const_iterator variter = varnames.begin();
+     std::cout << "Available variables:" << std::endl;
+     while(variter != varnames.end()){
+     std::cout << *variter << std::endl;
+     variter++;
+     }
    
-   std::vector<TString>::const_iterator classiter = classnames.begin();
-   std::cout << "Available classes:" << std::endl;
-   while(classiter != classnames.end()){
-      std::cout << *classiter << std::endl;
-      classiter++;
-   }
+     std::vector<TString>::const_iterator classiter = classnames.begin();
+     std::cout << "Available classes:" << std::endl;
+     while(classiter != classnames.end()){
+     std::cout << *classiter << std::endl;
+     classiter++;
+     }
    */
    
    variter = varnames.begin();

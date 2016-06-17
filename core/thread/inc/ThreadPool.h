@@ -12,7 +12,7 @@
 #ifndef ROOT_THREADPOOL
 #define ROOT_THREADPOOL
 
-// exclude in case ROOT does not have IMT support 
+// exclude in case ROOT does not have IMT support
 #ifdef R__USE_IMT
 
 #include "tbb/tbb.h"

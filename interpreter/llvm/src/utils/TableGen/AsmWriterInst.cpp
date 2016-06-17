@@ -26,11 +26,11 @@ static bool isIdentChar(char C) {
   C == '_';
 }
 
-std::string AsmWriterOperand::getCode() const {
+std::string AsmWriterOperand::getCode(bool PassSubtarget) const {
   if (OperandType == isLiteralTextOperand) {
     if (Str.size() == 1)
-      return "O << '" + Str + "'; ";
-    return "O << \"" + Str + "\"; ";
+      return "O << '" + Str + "';";
+    return "O << \"" + Str + "\";";
   }
 
   if (OperandType == isLiteralStatementOperand)
@@ -39,17 +39,20 @@ std::string AsmWriterOperand::getCode() const {
   std::string Result = Str + "(MI";
   if (MIOpNo != ~0U)
     Result += ", " + utostr(MIOpNo);
+  if (PassSubtarget)
+    Result += ", STI";
   Result += ", O";
   if (!MiModifier.empty())
     Result += ", \"" + MiModifier + '"';
-  return Result + "); ";
+  return Result + ");";
 }
 
 /// ParseAsmString - Parse the specified Instruction's AsmString into this
 /// AsmWriterInst.
 ///
-AsmWriterInst::AsmWriterInst(const CodeGenInstruction &CGI, unsigned Variant) {
-  this->CGI = &CGI;
+AsmWriterInst::AsmWriterInst(const CodeGenInstruction &CGI, unsigned CGIIndex,
+                             unsigned Variant)
+    : CGI(&CGI), CGIIndex(CGIIndex) {
 
   // NOTE: Any extensions to this code need to be mirrored in the
   // AsmPrinter::printInlineAsm code that executes as compile time (assuming
@@ -117,8 +120,7 @@ AsmWriterInst::AsmWriterInst(const CodeGenInstruction &CGI, unsigned Variant) {
 
       while (VarEnd < AsmString.size() && isIdentChar(AsmString[VarEnd]))
         ++VarEnd;
-      std::string VarName(AsmString.begin()+DollarPos+1,
-                          AsmString.begin()+VarEnd);
+      StringRef VarName(AsmString.data()+DollarPos+1, VarEnd-DollarPos-1);
 
       // Modifier - Support ${foo:modifier} syntax, where "modifier" is passed
       // into printOperand.  Also support ${:feature}, which is passed into
@@ -140,7 +142,7 @@ AsmWriterInst::AsmWriterInst(const CodeGenInstruction &CGI, unsigned Variant) {
             PrintFatalError("Reached end of string before terminating curly brace in '"
               + CGI.TheDef->getName() + "'");
 
-          unsigned ModifierStart = VarEnd;
+          std::string::size_type ModifierStart = VarEnd;
           while (VarEnd < AsmString.size() && isIdentChar(AsmString[VarEnd]))
             ++VarEnd;
           Modifier = std::string(AsmString.begin()+ModifierStart,
@@ -160,25 +162,20 @@ AsmWriterInst::AsmWriterInst(const CodeGenInstruction &CGI, unsigned Variant) {
 
       if (VarName.empty()) {
         // Just a modifier, pass this into PrintSpecial.
-        Operands.push_back(AsmWriterOperand("PrintSpecial",
-                                            ~0U,
-                                            ~0U,
-                                            Modifier));
+        Operands.emplace_back("PrintSpecial", ~0U, Modifier);
       } else {
         // Otherwise, normal operand.
         unsigned OpNo = CGI.Operands.getOperandNamed(VarName);
         CGIOperandList::OperandInfo OpInfo = CGI.Operands[OpNo];
 
         unsigned MIOp = OpInfo.MIOperandNo;
-        Operands.push_back(AsmWriterOperand(OpInfo.PrinterMethodName,
-                                            OpNo, MIOp, Modifier));
+        Operands.emplace_back(OpInfo.PrinterMethodName, MIOp, Modifier);
       }
       LastEmitted = VarEnd;
     }
   }
 
-  Operands.push_back(AsmWriterOperand("return;",
-    AsmWriterOperand::isLiteralStatementOperand));
+  Operands.emplace_back("return;", AsmWriterOperand::isLiteralStatementOperand);
 }
 
 /// MatchesAllButOneOp - If this instruction is exactly identical to the

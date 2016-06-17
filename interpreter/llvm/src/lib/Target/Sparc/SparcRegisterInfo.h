@@ -20,20 +20,13 @@
 #include "SparcGenRegisterInfo.inc"
 
 namespace llvm {
-
-class SparcSubtarget;
-class TargetInstrInfo;
-class Type;
-
 struct SparcRegisterInfo : public SparcGenRegisterInfo {
-  SparcSubtarget &Subtarget;
-
-  SparcRegisterInfo(SparcSubtarget &st);
+  SparcRegisterInfo();
 
   /// Code Generation virtual methods...
-  const MCPhysReg *
-  getCalleeSavedRegs(const MachineFunction *MF =nullptr) const override;
-  const uint32_t* getCallPreservedMask(CallingConv::ID CC) const override;
+  const MCPhysReg *getCalleeSavedRegs(const MachineFunction *MF) const override;
+  const uint32_t *getCallPreservedMask(const MachineFunction &MF,
+                                       CallingConv::ID CC) const override;
 
   const uint32_t* getRTCallPreservedMask(CallingConv::ID CC) const;
 
@@ -46,11 +39,10 @@ struct SparcRegisterInfo : public SparcGenRegisterInfo {
                            int SPAdj, unsigned FIOperandNum,
                            RegScavenger *RS = nullptr) const override;
 
-  void processFunctionBeforeFrameFinalized(MachineFunction &MF,
-                                       RegScavenger *RS = nullptr) const;
-
-  // Debug information queries.
   unsigned getFrameRegister(const MachineFunction &MF) const override;
+
+  bool canRealignStack(const MachineFunction &MF) const override;
+
 };
 
 } // end namespace llvm

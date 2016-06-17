@@ -15,7 +15,7 @@
 #include "TMVA/PDEFoam.h"
 
 void TMVA::PlotFoams( TString fileName,
-                bool useTMVAStyle )
+                      bool useTMVAStyle )
 {
    cout << "read file: " << fileName << endl;
    cout << "kValue = " << kValue << endl;
@@ -84,15 +84,15 @@ void TMVA::Plot(TString fileName, TMVA::ECellValue cv, TString cv_long, bool use
       UInt_t cls = 0;
       TMVA::PDEFoam *fm = NULL;
       while ((fm = (TMVA::PDEFoam*) gDirectory->Get(Form("MultiClassFoam%u", cls)))) {
-	 foam_list.Add(new TPair(fm, new TObjString(Form("Discriminator Foam %u",cls))));
-	 cls++;
+         foam_list.Add(new TPair(fm, new TObjString(Form("Discriminator Foam %u",cls))));
+         cls++;
       }
    } else if (MonoTargetRegressionFoam) {
       foam_list.Add(new TPair(MonoTargetRegressionFoam,
-			      new TObjString("MonoTargetRegression Foam")));
+                              new TObjString("MonoTargetRegression Foam")));
    } else if (MultiTargetRegressionFoam) {
       foam_list.Add(new TPair(MultiTargetRegressionFoam,
-			      new TObjString("MultiTargetRegression Foam")));
+                              new TObjString("MultiTargetRegression Foam")));
    } else {
       cout << "ERROR: no Foams found in file: " << fileName << endl;
       return;
@@ -105,7 +105,7 @@ void TMVA::Plot(TString fileName, TMVA::ECellValue cv, TString cv_long, bool use
    while ((fm_pair = (TPair*) foamIter())) {
       kDim = ((TMVA::PDEFoam*) fm_pair->Key())->GetTotDim();
       cout << "Foam loaded: " << ((TObjString*) fm_pair->Value())->String()
-	   << " (dimension = " << kDim << ")" << endl;
+           << " (dimension = " << kDim << ")" << endl;
    }
 
    // kernel to use for the projection
@@ -216,7 +216,7 @@ void TMVA::PlotCellTree(TString fileName, TString cv_long, bool useTMVAStyle )
       TString name(foam_key->GetName());
       TString class_name(foam_key->GetClassName());
       if (!class_name.Contains("PDEFoam"))
-	 continue;
+         continue;
       cout << "PDEFoam found: " << class_name << " " << name << endl;
 
       // read the foam
@@ -234,8 +234,8 @@ void TMVA::PlotCellTree(TString fileName, TString cv_long, bool useTMVAStyle )
 }
 
 void TMVA::DrawCell( TMVA::PDEFoamCell *cell, TMVA::PDEFoam *foam,
-	       Double_t x, Double_t y,
-	       Double_t xscale,  Double_t yscale )
+                     Double_t x, Double_t y,
+                     Double_t xscale,  Double_t yscale )
 {
    // recursively draw cell and it's daughters
 
@@ -266,7 +266,7 @@ void TMVA::DrawCell( TMVA::PDEFoamCell *cell, TMVA::PDEFoam *foam,
    TVectorD *vec = (TVectorD*) cell->GetElement();
    if (vec) {
       for (Int_t i = 0; i < vec->GetNrows(); ++i)
-	 t->AddText( Form("E[%i]=%.5f", i, (*vec)[i]) );
+         t->AddText( Form("E[%i]=%.5f", i, (*vec)[i]) );
    }
 
    if (cell->GetStat() != 1) {

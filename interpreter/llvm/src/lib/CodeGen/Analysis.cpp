@@ -14,7 +14,7 @@
 #include "llvm/CodeGen/Analysis.h"
 #include "llvm/Analysis/ValueTracking.h"
 #include "llvm/CodeGen/MachineFunction.h"
-#include "llvm/CodeGen/SelectionDAG.h"
+#include "llvm/CodeGen/MachineModuleInfo.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Function.h"
@@ -25,6 +25,7 @@
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/MathExtras.h"
 #include "llvm/Target/TargetLowering.h"
+#include "llvm/Target/TargetInstrInfo.h"
 #include "llvm/Target/TargetSubtargetInfo.h"
 #include "llvm/Transforms/Utils/GlobalStatus.h"
 
@@ -81,27 +82,27 @@ unsigned llvm::ComputeLinearIndex(Type *Ty,
 /// If Offsets is non-null, it points to a vector to be filled in
 /// with the in-memory offsets of each of the individual values.
 ///
-void llvm::ComputeValueVTs(const TargetLowering &TLI, Type *Ty,
-                           SmallVectorImpl<EVT> &ValueVTs,
+void llvm::ComputeValueVTs(const TargetLowering &TLI, const DataLayout &DL,
+                           Type *Ty, SmallVectorImpl<EVT> &ValueVTs,
                            SmallVectorImpl<uint64_t> *Offsets,
                            uint64_t StartingOffset) {
   // Given a struct type, recursively traverse the elements.
   if (StructType *STy = dyn_cast<StructType>(Ty)) {
-    const StructLayout *SL = TLI.getDataLayout()->getStructLayout(STy);
+    const StructLayout *SL = DL.getStructLayout(STy);
     for (StructType::element_iterator EB = STy->element_begin(),
                                       EI = EB,
                                       EE = STy->element_end();
          EI != EE; ++EI)
-      ComputeValueVTs(TLI, *EI, ValueVTs, Offsets,
+      ComputeValueVTs(TLI, DL, *EI, ValueVTs, Offsets,
                       StartingOffset + SL->getElementOffset(EI - EB));
     return;
   }
   // Given an array type, recursively traverse the elements.
   if (ArrayType *ATy = dyn_cast<ArrayType>(Ty)) {
     Type *EltTy = ATy->getElementType();
-    uint64_t EltSize = TLI.getDataLayout()->getTypeAllocSize(EltTy);
+    uint64_t EltSize = DL.getTypeAllocSize(EltTy);
     for (unsigned i = 0, e = ATy->getNumElements(); i != e; ++i)
-      ComputeValueVTs(TLI, EltTy, ValueVTs, Offsets,
+      ComputeValueVTs(TLI, DL, EltTy, ValueVTs, Offsets,
                       StartingOffset + i * EltSize);
     return;
   }
@@ -109,7 +110,7 @@ void llvm::ComputeValueVTs(const TargetLowering &TLI, Type *Ty,
   if (Ty->isVoidTy())
     return;
   // Base case: we can get an EVT for this LLVM IR type.
-  ValueVTs.push_back(TLI.getValueType(Ty));
+  ValueVTs.push_back(TLI.getValueType(DL, Ty));
   if (Offsets)
     Offsets->push_back(StartingOffset);
 }
@@ -233,7 +234,8 @@ static bool isNoopBitcast(Type *T1, Type *T2,
 static const Value *getNoopInput(const Value *V,
                                  SmallVectorImpl<unsigned> &ValLoc,
                                  unsigned &DataBits,
-                                 const TargetLoweringBase &TLI) {
+                                 const TargetLoweringBase &TLI,
+                                 const DataLayout &DL) {
   while (true) {
     // Try to look through V1; if V1 is not an instruction, it can't be looked
     // through.
@@ -255,16 +257,16 @@ static const Value *getNoopInput(const Value *V,
       // Make sure this isn't a truncating or extending cast.  We could
       // support this eventually, but don't bother for now.
       if (!isa<VectorType>(I->getType()) &&
-          TLI.getPointerTy().getSizeInBits() ==
-          cast<IntegerType>(Op->getType())->getBitWidth())
+          DL.getPointerSizeInBits() ==
+              cast<IntegerType>(Op->getType())->getBitWidth())
         NoopInput = Op;
     } else if (isa<PtrToIntInst>(I)) {
       // Look through ptrtoint.
       // Make sure this isn't a truncating or extending cast.  We could
       // support this eventually, but don't bother for now.
       if (!isa<VectorType>(I->getType()) &&
-          TLI.getPointerTy().getSizeInBits() ==
-          cast<IntegerType>(I->getType())->getBitWidth())
+          DL.getPointerSizeInBits() ==
+              cast<IntegerType>(I->getType())->getBitWidth())
         NoopInput = Op;
     } else if (isa<TruncInst>(I) &&
                TLI.allowTruncateForTailCall(Op->getType(), I->getType())) {
@@ -295,8 +297,8 @@ static const Value *getNoopInput(const Value *V,
     } else if (const InsertValueInst *IVI = dyn_cast<InsertValueInst>(V)) {
       // Value may come from either the aggregate or the scalar
       ArrayRef<unsigned> InsertLoc = IVI->getIndices();
-      if (std::equal(InsertLoc.rbegin(), InsertLoc.rend(),
-                     ValLoc.rbegin())) {
+      if (ValLoc.size() >= InsertLoc.size() &&
+          std::equal(InsertLoc.begin(), InsertLoc.end(), ValLoc.rbegin())) {
         // The type being inserted is a nested sub-type of the aggregate; we
         // have to remove those initial indices to get the location we're
         // interested in for the operand.
@@ -312,8 +314,7 @@ static const Value *getNoopInput(const Value *V,
       // previous aggregate. Combine the two paths to obtain the true address of
       // our element.
       ArrayRef<unsigned> ExtractLoc = EVI->getIndices();
-      std::copy(ExtractLoc.rbegin(), ExtractLoc.rend(),
-                std::back_inserter(ValLoc));
+      ValLoc.append(ExtractLoc.rbegin(), ExtractLoc.rend());
       NoopInput = Op;
     }
     // Terminate if we couldn't find anything to look through.
@@ -332,14 +333,15 @@ static bool slotOnlyDiscardsData(const Value *RetVal, const Value *CallVal,
                                  SmallVectorImpl<unsigned> &RetIndices,
                                  SmallVectorImpl<unsigned> &CallIndices,
                                  bool AllowDifferingSizes,
-                                 const TargetLoweringBase &TLI) {
+                                 const TargetLoweringBase &TLI,
+                                 const DataLayout &DL) {
 
   // Trace the sub-value needed by the return value as far back up the graph as
   // possible, in the hope that it will intersect with the value produced by the
   // call. In the simple case with no "returned" attribute, the hope is actually
   // that we end up back at the tail call instruction itself.
   unsigned BitsRequired = UINT_MAX;
-  RetVal = getNoopInput(RetVal, RetIndices, BitsRequired, TLI);
+  RetVal = getNoopInput(RetVal, RetIndices, BitsRequired, TLI, DL);
 
   // If this slot in the value returned is undef, it doesn't matter what the
   // call puts there, it'll be fine.
@@ -351,7 +353,7 @@ static bool slotOnlyDiscardsData(const Value *RetVal, const Value *CallVal,
   // a "returned" attribute, the search will be blocked immediately and the loop
   // a Noop.
   unsigned BitsProvided = UINT_MAX;
-  CallVal = getNoopInput(CallVal, CallIndices, BitsProvided, TLI);
+  CallVal = getNoopInput(CallVal, CallIndices, BitsProvided, TLI, DL);
 
   // There's no hope if we can't actually trace them to (the same part of!) the
   // same value.
@@ -514,12 +516,13 @@ bool llvm::isInTailCallPosition(ImmutableCallSite CS, const TargetMachine &TM) {
       if (isa<DbgInfoIntrinsic>(BBI))
         continue;
       if (BBI->mayHaveSideEffects() || BBI->mayReadFromMemory() ||
-          !isSafeToSpeculativelyExecute(BBI))
+          !isSafeToSpeculativelyExecute(&*BBI))
         return false;
     }
 
+  const Function *F = ExitBB->getParent();
   return returnTypeIsEligibleForTailCall(
-      ExitBB->getParent(), I, Ret, *TM.getSubtargetImpl()->getTargetLowering());
+      F, I, Ret, *TM.getSubtargetImpl(*F)->getTargetLowering());
 }
 
 bool llvm::returnTypeIsEligibleForTailCall(const Function *F,
@@ -600,15 +603,14 @@ bool llvm::returnTypeIsEligibleForTailCall(const Function *F,
     // The manipulations performed when we're looking through an insertvalue or
     // an extractvalue would happen at the front of the RetPath list, so since
     // we have to copy it anyway it's more efficient to create a reversed copy.
-    using std::copy;
-    SmallVector<unsigned, 4> TmpRetPath, TmpCallPath;
-    copy(RetPath.rbegin(), RetPath.rend(), std::back_inserter(TmpRetPath));
-    copy(CallPath.rbegin(), CallPath.rend(), std::back_inserter(TmpCallPath));
+    SmallVector<unsigned, 4> TmpRetPath(RetPath.rbegin(), RetPath.rend());
+    SmallVector<unsigned, 4> TmpCallPath(CallPath.rbegin(), CallPath.rend());
 
     // Finally, we can check whether the value produced by the tail call at this
     // index is compatible with the value we return.
     if (!slotOnlyDiscardsData(RetVal, CallVal, TmpRetPath, TmpCallPath,
-                              AllowDifferingSizes, TLI))
+                              AllowDifferingSizes, TLI,
+                              F->getParent()->getDataLayout()))
       return false;
 
     CallEmpty  = !nextRealType(CallSubTypes, CallPath);
@@ -636,9 +638,149 @@ bool llvm::canBeOmittedFromSymbolTable(const GlobalValue *GV) {
   if (isa<GlobalAlias>(GV))
     return false;
 
+  // If we don't see every use, we have to be conservative and assume the value
+  // address is significant.
+  if (GV->getParent()->getMaterializer())
+    return false;
+
   GlobalStatus GS;
   if (GlobalStatus::analyzeGlobal(GV, GS))
     return false;
 
   return !GS.IsCompared;
+}
+
+// FIXME: make this a proper option
+static bool CanUseCopyRelocWithPIE = false;
+
+bool llvm::shouldAssumeDSOLocal(Reloc::Model RM, const Triple &TT,
+                                const Module &M, const GlobalValue *GV) {
+  // DLLImport explicitly marks the GV as external.
+  if (GV && GV->hasDLLImportStorageClass())
+    return false;
+
+  // Every other GV is local on COFF
+  if (TT.isOSBinFormatCOFF())
+    return true;
+
+  if (RM == Reloc::Static)
+    return true;
+
+  if (GV && (GV->hasLocalLinkage() || !GV->hasDefaultVisibility()))
+    return true;
+
+  if (TT.isOSBinFormatELF()) {
+    assert(RM != Reloc::DynamicNoPIC);
+    // Some linkers can use copy relocations with pie executables.
+    if (M.getPIELevel() != PIELevel::Default) {
+      if (CanUseCopyRelocWithPIE)
+        return true;
+
+      // If the symbol is defined, it cannot be preempted.
+      if (GV && !GV->isDeclarationForLinker())
+        return true;
+      return false;
+    }
+
+    // ELF supports preemption of other symbols.
+    return false;
+  }
+
+  assert(TT.isOSBinFormatMachO());
+  if (GV && GV->isStrongDefinitionForLinker())
+    return true;
+
+  return false;
+}
+
+static void collectFuncletMembers(
+    DenseMap<const MachineBasicBlock *, int> &FuncletMembership, int Funclet,
+    const MachineBasicBlock *MBB) {
+  SmallVector<const MachineBasicBlock *, 16> Worklist = {MBB};
+  while (!Worklist.empty()) {
+    const MachineBasicBlock *Visiting = Worklist.pop_back_val();
+    // Don't follow blocks which start new funclets.
+    if (Visiting->isEHPad() && Visiting != MBB)
+      continue;
+
+    // Add this MBB to our funclet.
+    auto P = FuncletMembership.insert(std::make_pair(Visiting, Funclet));
+
+    // Don't revisit blocks.
+    if (!P.second) {
+      assert(P.first->second == Funclet && "MBB is part of two funclets!");
+      continue;
+    }
+
+    // Returns are boundaries where funclet transfer can occur, don't follow
+    // successors.
+    if (Visiting->isReturnBlock())
+      continue;
+
+    for (const MachineBasicBlock *Succ : Visiting->successors())
+      Worklist.push_back(Succ);
+  }
+}
+
+DenseMap<const MachineBasicBlock *, int>
+llvm::getFuncletMembership(const MachineFunction &MF) {
+  DenseMap<const MachineBasicBlock *, int> FuncletMembership;
+
+  // We don't have anything to do if there aren't any EH pads.
+  if (!MF.getMMI().hasEHFunclets())
+    return FuncletMembership;
+
+  int EntryBBNumber = MF.front().getNumber();
+  bool IsSEH = isAsynchronousEHPersonality(
+      classifyEHPersonality(MF.getFunction()->getPersonalityFn()));
+
+  const TargetInstrInfo *TII = MF.getSubtarget().getInstrInfo();
+  SmallVector<const MachineBasicBlock *, 16> FuncletBlocks;
+  SmallVector<const MachineBasicBlock *, 16> UnreachableBlocks;
+  SmallVector<const MachineBasicBlock *, 16> SEHCatchPads;
+  SmallVector<std::pair<const MachineBasicBlock *, int>, 16> CatchRetSuccessors;
+  for (const MachineBasicBlock &MBB : MF) {
+    if (MBB.isEHFuncletEntry()) {
+      FuncletBlocks.push_back(&MBB);
+    } else if (IsSEH && MBB.isEHPad()) {
+      SEHCatchPads.push_back(&MBB);
+    } else if (MBB.pred_empty()) {
+      UnreachableBlocks.push_back(&MBB);
+    }
+
+    MachineBasicBlock::const_iterator MBBI = MBB.getFirstTerminator();
+    // CatchPads are not funclets for SEH so do not consider CatchRet to
+    // transfer control to another funclet.
+    if (MBBI->getOpcode() != TII->getCatchReturnOpcode())
+      continue;
+
+    // FIXME: SEH CatchPads are not necessarily in the parent function:
+    // they could be inside a finally block.
+    const MachineBasicBlock *Successor = MBBI->getOperand(0).getMBB();
+    const MachineBasicBlock *SuccessorColor = MBBI->getOperand(1).getMBB();
+    CatchRetSuccessors.push_back(
+        {Successor, IsSEH ? EntryBBNumber : SuccessorColor->getNumber()});
+  }
+
+  // We don't have anything to do if there aren't any EH pads.
+  if (FuncletBlocks.empty())
+    return FuncletMembership;
+
+  // Identify all the basic blocks reachable from the function entry.
+  collectFuncletMembers(FuncletMembership, EntryBBNumber, &MF.front());
+  // All blocks not part of a funclet are in the parent function.
+  for (const MachineBasicBlock *MBB : UnreachableBlocks)
+    collectFuncletMembers(FuncletMembership, EntryBBNumber, MBB);
+  // Next, identify all the blocks inside the funclets.
+  for (const MachineBasicBlock *MBB : FuncletBlocks)
+    collectFuncletMembers(FuncletMembership, MBB->getNumber(), MBB);
+  // SEH CatchPads aren't really funclets, handle them separately.
+  for (const MachineBasicBlock *MBB : SEHCatchPads)
+    collectFuncletMembers(FuncletMembership, EntryBBNumber, MBB);
+  // Finally, identify all the targets of a catchret.
+  for (std::pair<const MachineBasicBlock *, int> CatchRetPair :
+       CatchRetSuccessors)
+    collectFuncletMembers(FuncletMembership, CatchRetPair.second,
+                          CatchRetPair.first);
+  return FuncletMembership;
 }

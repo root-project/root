@@ -123,7 +123,7 @@ namespace TMVA {
       // default initialisation method called by all constructors
       void Init(); 
 
-      ClassDef(MethodHMatrix,0) // H-Matrix method, a simple comparison of chi-squared estimators for signal and background
+      ClassDef(MethodHMatrix,0); // H-Matrix method, a simple comparison of chi-squared estimators for signal and background
    }; 
 
 } // namespace TMVA

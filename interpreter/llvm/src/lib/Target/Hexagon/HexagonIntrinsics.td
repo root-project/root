@@ -23,27 +23,29 @@ class T_R_pat <InstHexagon MI, Intrinsic IntID>
 
 class T_P_pat <InstHexagon MI, Intrinsic IntID>
   : Pat <(IntID I64:$Rs),
-         (MI DoubleRegs:$Rs)>;
+         (MI I64:$Rs)>;
 
 class T_II_pat <InstHexagon MI, Intrinsic IntID, PatFrag Imm1, PatFrag Imm2>
   : Pat<(IntID Imm1:$Is, Imm2:$It),
         (MI Imm1:$Is, Imm2:$It)>;
 
-class T_RI_pat <InstHexagon MI, Intrinsic IntID, PatLeaf ImmPred = PatLeaf<(i32 imm)>>
+class T_RI_pat <InstHexagon MI, Intrinsic IntID,
+                PatLeaf ImmPred = PatLeaf<(i32 imm)>>
   : Pat<(IntID I32:$Rs, ImmPred:$It),
         (MI I32:$Rs, ImmPred:$It)>;
 
-class T_IR_pat <InstHexagon MI, Intrinsic IntID, PatFrag ImmPred = PatLeaf<(i32 imm)>>
+class T_IR_pat <InstHexagon MI, Intrinsic IntID,
+                PatFrag ImmPred = PatLeaf<(i32 imm)>>
   : Pat<(IntID ImmPred:$Is, I32:$Rt),
         (MI ImmPred:$Is, I32:$Rt)>;
 
 class T_PI_pat <InstHexagon MI, Intrinsic IntID>
   : Pat<(IntID I64:$Rs, imm:$It),
-        (MI DoubleRegs:$Rs, imm:$It)>;
+        (MI I64:$Rs, imm:$It)>;
 
 class T_RP_pat <InstHexagon MI, Intrinsic IntID>
   : Pat<(IntID I32:$Rs, I64:$Rt),
-        (MI I32:$Rs, DoubleRegs:$Rt)>;
+        (MI I32:$Rs, I64:$Rt)>;
 
 class T_RR_pat <InstHexagon MI, Intrinsic IntID>
   : Pat <(IntID I32:$Rs, I32:$Rt),
@@ -51,19 +53,31 @@ class T_RR_pat <InstHexagon MI, Intrinsic IntID>
 
 class T_PP_pat <InstHexagon MI, Intrinsic IntID>
   : Pat <(IntID I64:$Rs, I64:$Rt),
-         (MI DoubleRegs:$Rs, DoubleRegs:$Rt)>;
+         (MI I64:$Rs, I64:$Rt)>;
+
+class T_QQ_pat <InstHexagon MI, Intrinsic IntID>
+  : Pat <(IntID I32:$Rs, I32:$Rt),
+         (MI (C2_tfrrp I32:$Rs), (C2_tfrrp I32:$Rt))>;
 
 class T_QII_pat <InstHexagon MI, Intrinsic IntID, PatFrag Imm1, PatFrag Imm2>
-  : Pat <(IntID (i32 PredRegs:$Ps), Imm1:$Is, Imm2:$It),
-         (MI PredRegs:$Ps, Imm1:$Is, Imm2:$It)>;
+  : Pat <(IntID I32:$Rp, Imm1:$Is, Imm2:$It),
+         (MI (C2_tfrrp I32:$Rp), Imm1:$Is, Imm2:$It)>;
+
+class T_QRR_pat <InstHexagon MI, Intrinsic IntID>
+  : Pat <(IntID I32:$Rp, I32:$Rs, I32:$Rt),
+         (MI (C2_tfrrp I32:$Rp), I32:$Rs, I32:$Rt)>;
 
 class T_QRI_pat <InstHexagon MI, Intrinsic IntID, PatFrag ImmPred>
-  : Pat <(IntID (i32 PredRegs:$Ps), I32:$Rs, ImmPred:$Is),
-         (MI PredRegs:$Ps, I32:$Rs, ImmPred:$Is)>;
+  : Pat <(IntID I32:$Rp, I32:$Rs, ImmPred:$Is),
+         (MI (C2_tfrrp I32:$Rp), I32:$Rs, ImmPred:$Is)>;
 
 class T_QIR_pat <InstHexagon MI, Intrinsic IntID, PatFrag ImmPred>
-  : Pat <(IntID (i32 PredRegs:$Ps), ImmPred:$Is, I32:$Rs),
-         (MI PredRegs:$Ps, ImmPred:$Is, I32:$Rs)>;
+  : Pat <(IntID I32:$Rp, ImmPred:$Is, I32:$Rs),
+         (MI (C2_tfrrp I32:$Rp), ImmPred:$Is, I32:$Rs)>;
+
+class T_QPP_pat <InstHexagon MI, Intrinsic IntID>
+  : Pat <(IntID I32:$Rp, I64:$Rs, I64:$Rt),
+         (MI (C2_tfrrp I32:$Rp), I64:$Rs, I64:$Rt)>;
 
 class T_RRI_pat <InstHexagon MI, Intrinsic IntID>
   : Pat <(IntID I32:$Rs, I32:$Rt, imm:$Iu),
@@ -91,27 +105,31 @@ class T_RRR_pat <InstHexagon MI, Intrinsic IntID>
 
 class T_PPI_pat <InstHexagon MI, Intrinsic IntID>
   : Pat <(IntID I64:$Rs, I64:$Rt, imm:$Iu),
-         (MI DoubleRegs:$Rs, DoubleRegs:$Rt, imm:$Iu)>;
+         (MI I64:$Rs, I64:$Rt, imm:$Iu)>;
 
 class T_PII_pat <InstHexagon MI, Intrinsic IntID>
   : Pat <(IntID I64:$Rs, imm:$It, imm:$Iu),
-         (MI DoubleRegs:$Rs, imm:$It, imm:$Iu)>;
+         (MI I64:$Rs, imm:$It, imm:$Iu)>;
 
 class T_PPP_pat <InstHexagon MI, Intrinsic IntID>
   : Pat <(IntID I64:$Rs, I64:$Rt, I64:$Ru),
-         (MI DoubleRegs:$Rs, DoubleRegs:$Rt, DoubleRegs:$Ru)>;
+         (MI I64:$Rs, I64:$Rt, I64:$Ru)>;
 
 class T_PPR_pat <InstHexagon MI, Intrinsic IntID>
   : Pat <(IntID I64:$Rs, I64:$Rt, I32:$Ru),
-         (MI DoubleRegs:$Rs, DoubleRegs:$Rt, I32:$Ru)>;
+         (MI I64:$Rs, I64:$Rt, I32:$Ru)>;
 
 class T_PRR_pat <InstHexagon MI, Intrinsic IntID>
   : Pat <(IntID I64:$Rs, I32:$Rt, I32:$Ru),
-         (MI DoubleRegs:$Rs, I32:$Rt, I32:$Ru)>;
+         (MI I64:$Rs, I32:$Rt, I32:$Ru)>;
+
+class T_PPQ_pat <InstHexagon MI, Intrinsic IntID>
+  : Pat <(IntID I64:$Rs, I64:$Rt, I32:$Rp),
+         (MI I64:$Rs, I64:$Rt, (C2_tfrrp I32:$Rp))>;
 
 class T_PR_pat <InstHexagon MI, Intrinsic IntID>
   : Pat <(IntID I64:$Rs, I32:$Rt),
-         (MI DoubleRegs:$Rs, I32:$Rt)>;
+         (MI I64:$Rs, I32:$Rt)>;
 
 class T_D_pat <InstHexagon MI, Intrinsic IntID>
   : Pat<(IntID (F64:$Rs)),
@@ -127,7 +145,7 @@ class T_F_pat <InstHexagon MI, Intrinsic IntID>
         (MI F32:$Rs)>;
 
 class T_FI_pat <InstHexagon MI, Intrinsic IntID,
-                 PatLeaf ImmPred = PatLeaf<(i32 imm)>>
+                PatLeaf ImmPred = PatLeaf<(i32 imm)>>
   : Pat<(IntID F32:$Rs, ImmPred:$It),
         (MI F32:$Rs, ImmPred:$It)>;
 
@@ -144,8 +162,62 @@ class T_FFF_pat <InstHexagon MI, Intrinsic IntID>
         (MI F32:$Rs, F32:$Rt, F32:$Ru)>;
 
 class T_FFFQ_pat <InstHexagon MI, Intrinsic IntID>
-  : Pat <(IntID F32:$Rs, F32:$Rt, F32:$Ru, (i32 PredRegs:$Rx)),
-         (MI F32:$Rs, F32:$Rt, F32:$Ru, PredRegs:$Rx)>;
+  : Pat <(IntID F32:$Rs, F32:$Rt, F32:$Ru, I32:$Rp),
+         (MI F32:$Rs, F32:$Rt, F32:$Ru, (C2_tfrrp I32:$Rp))>;
+
+class T_Q_RI_pat <InstHexagon MI, Intrinsic IntID,
+                  PatLeaf ImmPred = PatLeaf<(i32 imm)>>
+  : Pat<(IntID I32:$Rs, ImmPred:$It),
+        (C2_tfrpr (MI I32:$Rs, ImmPred:$It))>;
+
+class T_Q_RR_pat <InstHexagon MI, Intrinsic IntID>
+  : Pat <(IntID I32:$Rs, I32:$Rt),
+         (C2_tfrpr (MI I32:$Rs, I32:$Rt))>;
+
+class T_Q_RP_pat <InstHexagon MI, Intrinsic IntID>
+  : Pat <(IntID I32:$Rs, I64:$Rt),
+         (C2_tfrpr (MI I32:$Rs, I64:$Rt))>;
+
+class T_Q_PR_pat <InstHexagon MI, Intrinsic IntID>
+  : Pat <(IntID I64:$Rs, I32:$Rt),
+         (C2_tfrpr (MI I64:$Rs, I32:$Rt))>;
+
+class T_Q_PI_pat <InstHexagon MI, Intrinsic IntID>
+  : Pat<(IntID I64:$Rs, imm:$It),
+        (C2_tfrpr (MI I64:$Rs, imm:$It))>;
+
+class T_Q_PP_pat <InstHexagon MI, Intrinsic IntID>
+  : Pat <(IntID I64:$Rs, I64:$Rt),
+         (C2_tfrpr (MI I64:$Rs, I64:$Rt))>;
+
+class T_Q_Q_pat <InstHexagon MI, Intrinsic IntID>
+  : Pat <(IntID I32:$Rp),
+         (C2_tfrpr (MI (C2_tfrrp I32:$Rp)))>;
+
+class T_Q_QQ_pat <InstHexagon MI, Intrinsic IntID>
+  : Pat <(IntID I32:$Rp, I32:$Rq),
+         (C2_tfrpr (MI (C2_tfrrp I32:$Rp), (C2_tfrrp I32:$Rq)))>;
+
+class T_Q_FF_pat <InstHexagon MI, Intrinsic IntID>
+  : Pat<(IntID F32:$Rs, F32:$Rt),
+        (C2_tfrpr (MI F32:$Rs, F32:$Rt))>;
+
+class T_Q_DD_pat <InstHexagon MI, Intrinsic IntID>
+  : Pat<(IntID F64:$Rs, F64:$Rt),
+        (C2_tfrpr (MI F64:$Rs, F64:$Rt))>;
+
+class T_Q_FI_pat <InstHexagon MI, Intrinsic IntID>
+  : Pat<(IntID F32:$Rs, imm:$It),
+        (C2_tfrpr (MI F32:$Rs, imm:$It))>;
+
+class T_Q_DI_pat <InstHexagon MI, Intrinsic IntID>
+  : Pat<(IntID F64:$Rs, imm:$It),
+        (C2_tfrpr (MI F64:$Rs, imm:$It))>;
+
+class T_Q_QQQ_pat <InstHexagon MI, Intrinsic IntID>
+  : Pat <(IntID I32:$Rp, I32:$Rq, I32:$Rs),
+         (C2_tfrpr (MI (C2_tfrrp I32:$Rp), (C2_tfrrp I32:$Rq),
+                       (C2_tfrrp I32:$Rs)))>;
 
 //===----------------------------------------------------------------------===//
 // MPYS / Multipy signed/unsigned halfwords
@@ -337,6 +409,118 @@ def : T_PRR_pat <M2_mpyud_nac_hl_s1, int_hexagon_M2_mpyud_nac_hl_s1>;
 def : T_PRR_pat <M2_mpyud_nac_lh_s1, int_hexagon_M2_mpyud_nac_lh_s1>;
 def : T_PRR_pat <M2_mpyud_nac_ll_s1, int_hexagon_M2_mpyud_nac_ll_s1>;
 
+// Vector complex multiply imaginary: Rdd=vcmpyi(Rss,Rtt)[:<<1]:sat
+def : T_PP_pat <M2_vcmpy_s1_sat_i, int_hexagon_M2_vcmpy_s1_sat_i>;
+def : T_PP_pat <M2_vcmpy_s0_sat_i, int_hexagon_M2_vcmpy_s0_sat_i>;
+
+// Vector complex multiply real: Rdd=vcmpyr(Rss,Rtt)[:<<1]:sat
+def : T_PP_pat <M2_vcmpy_s1_sat_r, int_hexagon_M2_vcmpy_s1_sat_r>;
+def : T_PP_pat <M2_vcmpy_s0_sat_r, int_hexagon_M2_vcmpy_s0_sat_r>;
+
+// Vector dual multiply: Rdd=vdmpy(Rss,Rtt)[:<<1]:sat
+def : T_PP_pat <M2_vdmpys_s1, int_hexagon_M2_vdmpys_s1>;
+def : T_PP_pat <M2_vdmpys_s0, int_hexagon_M2_vdmpys_s0>;
+
+// Vector multiply even halfwords: Rdd=vmpyeh(Rss,Rtt)[:<<1]:sat
+def : T_PP_pat <M2_vmpy2es_s1, int_hexagon_M2_vmpy2es_s1>;
+def : T_PP_pat <M2_vmpy2es_s0, int_hexagon_M2_vmpy2es_s0>;
+
+//Rdd=vmpywoh(Rss,Rtt)[:<<1][:rnd]:sat
+def : T_PP_pat <M2_mmpyh_s0,  int_hexagon_M2_mmpyh_s0>;
+def : T_PP_pat <M2_mmpyh_s1,  int_hexagon_M2_mmpyh_s1>;
+def : T_PP_pat <M2_mmpyh_rs0, int_hexagon_M2_mmpyh_rs0>;
+def : T_PP_pat <M2_mmpyh_rs1, int_hexagon_M2_mmpyh_rs1>;
+
+//Rdd=vmpyweh(Rss,Rtt)[:<<1][:rnd]:sat
+def : T_PP_pat <M2_mmpyl_s0,  int_hexagon_M2_mmpyl_s0>;
+def : T_PP_pat <M2_mmpyl_s1,  int_hexagon_M2_mmpyl_s1>;
+def : T_PP_pat <M2_mmpyl_rs0, int_hexagon_M2_mmpyl_rs0>;
+def : T_PP_pat <M2_mmpyl_rs1, int_hexagon_M2_mmpyl_rs1>;
+
+//Rdd=vmpywouh(Rss,Rtt)[:<<1][:rnd]:sat
+def : T_PP_pat <M2_mmpyuh_s0,  int_hexagon_M2_mmpyuh_s0>;
+def : T_PP_pat <M2_mmpyuh_s1,  int_hexagon_M2_mmpyuh_s1>;
+def : T_PP_pat <M2_mmpyuh_rs0, int_hexagon_M2_mmpyuh_rs0>;
+def : T_PP_pat <M2_mmpyuh_rs1, int_hexagon_M2_mmpyuh_rs1>;
+
+//Rdd=vmpyweuh(Rss,Rtt)[:<<1][:rnd]:sat
+def : T_PP_pat <M2_mmpyul_s0,  int_hexagon_M2_mmpyul_s0>;
+def : T_PP_pat <M2_mmpyul_s1,  int_hexagon_M2_mmpyul_s1>;
+def : T_PP_pat <M2_mmpyul_rs0, int_hexagon_M2_mmpyul_rs0>;
+def : T_PP_pat <M2_mmpyul_rs1, int_hexagon_M2_mmpyul_rs1>;
+
+// Vector reduce add unsigned bytes: Rdd32[+]=vrmpybu(Rss32,Rtt32)
+def : T_PP_pat  <A2_vraddub,     int_hexagon_A2_vraddub>;
+def : T_PPP_pat <A2_vraddub_acc, int_hexagon_A2_vraddub_acc>;
+
+// Vector sum of absolute differences unsigned bytes: Rdd=vrsadub(Rss,Rtt)
+def : T_PP_pat  <A2_vrsadub,     int_hexagon_A2_vrsadub>;
+def : T_PPP_pat <A2_vrsadub_acc, int_hexagon_A2_vrsadub_acc>;
+
+// Vector absolute difference: Rdd=vabsdiffh(Rtt,Rss)
+def : T_PP_pat <M2_vabsdiffh, int_hexagon_M2_vabsdiffh>;
+
+// Vector absolute difference words: Rdd=vabsdiffw(Rtt,Rss)
+def : T_PP_pat <M2_vabsdiffw, int_hexagon_M2_vabsdiffw>;
+
+// Vector reduce complex multiply real or imaginary:
+// Rdd[+]=vrcmpy[ir](Rss,Rtt[*])
+def : T_PP_pat  <M2_vrcmpyi_s0,  int_hexagon_M2_vrcmpyi_s0>;
+def : T_PP_pat  <M2_vrcmpyi_s0c, int_hexagon_M2_vrcmpyi_s0c>;
+def : T_PPP_pat <M2_vrcmaci_s0,  int_hexagon_M2_vrcmaci_s0>;
+def : T_PPP_pat <M2_vrcmaci_s0c, int_hexagon_M2_vrcmaci_s0c>;
+
+def : T_PP_pat  <M2_vrcmpyr_s0,  int_hexagon_M2_vrcmpyr_s0>;
+def : T_PP_pat  <M2_vrcmpyr_s0c, int_hexagon_M2_vrcmpyr_s0c>;
+def : T_PPP_pat <M2_vrcmacr_s0,  int_hexagon_M2_vrcmacr_s0>;
+def : T_PPP_pat <M2_vrcmacr_s0c, int_hexagon_M2_vrcmacr_s0c>;
+
+// Vector reduce halfwords
+// Rdd[+]=vrmpyh(Rss,Rtt)
+def : T_PP_pat  <M2_vrmpy_s0, int_hexagon_M2_vrmpy_s0>;
+def : T_PPP_pat <M2_vrmac_s0, int_hexagon_M2_vrmac_s0>;
+
+//===----------------------------------------------------------------------===//
+// Vector Multipy with accumulation
+//===----------------------------------------------------------------------===//
+
+// Vector multiply word by signed half with accumulation
+// Rxx+=vmpyw[eo]h(Rss,Rtt)[:<<1][:rnd]:sat
+def : T_PPP_pat <M2_mmacls_s1, int_hexagon_M2_mmacls_s1>;
+def : T_PPP_pat <M2_mmacls_s0, int_hexagon_M2_mmacls_s0>;
+def : T_PPP_pat <M2_mmacls_rs1, int_hexagon_M2_mmacls_rs1>;
+def : T_PPP_pat <M2_mmacls_rs0, int_hexagon_M2_mmacls_rs0>;
+def : T_PPP_pat <M2_mmachs_s1, int_hexagon_M2_mmachs_s1>;
+def : T_PPP_pat <M2_mmachs_s0, int_hexagon_M2_mmachs_s0>;
+def : T_PPP_pat <M2_mmachs_rs1, int_hexagon_M2_mmachs_rs1>;
+def : T_PPP_pat <M2_mmachs_rs0, int_hexagon_M2_mmachs_rs0>;
+
+// Vector multiply word by unsigned half with accumulation
+// Rxx+=vmpyw[eo]uh(Rss,Rtt)[:<<1][:rnd]:sat
+def : T_PPP_pat <M2_mmaculs_s1, int_hexagon_M2_mmaculs_s1>;
+def : T_PPP_pat <M2_mmaculs_s0, int_hexagon_M2_mmaculs_s0>;
+def : T_PPP_pat <M2_mmaculs_rs1, int_hexagon_M2_mmaculs_rs1>;
+def : T_PPP_pat <M2_mmaculs_rs0, int_hexagon_M2_mmaculs_rs0>;
+def : T_PPP_pat <M2_mmacuhs_s1, int_hexagon_M2_mmacuhs_s1>;
+def : T_PPP_pat <M2_mmacuhs_s0, int_hexagon_M2_mmacuhs_s0>;
+def : T_PPP_pat <M2_mmacuhs_rs1, int_hexagon_M2_mmacuhs_rs1>;
+def : T_PPP_pat <M2_mmacuhs_rs0, int_hexagon_M2_mmacuhs_rs0>;
+
+// Vector multiply even halfwords with accumulation
+// Rxx+=vmpyeh(Rss,Rtt)[:<<1][:sat]
+def : T_PPP_pat <M2_vmac2es, int_hexagon_M2_vmac2es>;
+def : T_PPP_pat <M2_vmac2es_s1, int_hexagon_M2_vmac2es_s1>;
+def : T_PPP_pat <M2_vmac2es_s0, int_hexagon_M2_vmac2es_s0>;
+
+// Vector dual multiply with accumulation
+// Rxx+=vdmpy(Rss,Rtt)[:sat]
+def : T_PPP_pat <M2_vdmacs_s1, int_hexagon_M2_vdmacs_s1>;
+def : T_PPP_pat <M2_vdmacs_s0, int_hexagon_M2_vdmacs_s0>;
+
+// Vector complex multiply real or imaginary with accumulation
+// Rxx+=vcmpy[ir](Rss,Rtt):sat
+def : T_PPP_pat <M2_vcmac_s0_sat_r, int_hexagon_M2_vcmac_s0_sat_r>;
+def : T_PPP_pat <M2_vcmac_s0_sat_i, int_hexagon_M2_vcmac_s0_sat_i>;
 
 //===----------------------------------------------------------------------===//
 // Add/Subtract halfword
@@ -529,61 +713,74 @@ def : T_PPR_pat <S2_lsr_r_p_or,   int_hexagon_S2_lsr_r_p_or>;
 def : T_PPR_pat <S2_asl_r_p_or,   int_hexagon_S2_asl_r_p_or>;
 def : T_PPR_pat <S2_lsl_r_p_or,   int_hexagon_S2_lsl_r_p_or>;
 
-/********************************************************************
-*            ALU32/ALU                                              *
-*********************************************************************/
+//*******************************************************************
+//           ALU32/ALU
+//*******************************************************************
 def : T_RR_pat<A2_add,      int_hexagon_A2_add>;
-def : T_RI_pat<ADD_ri,      int_hexagon_A2_addi>;
+def : T_RI_pat<A2_addi,     int_hexagon_A2_addi>;
 def : T_RR_pat<A2_sub,      int_hexagon_A2_sub>;
-def : T_IR_pat<SUB_ri,      int_hexagon_A2_subri>;
+def : T_IR_pat<A2_subri,    int_hexagon_A2_subri>;
 def : T_RR_pat<A2_and,      int_hexagon_A2_and>;
-def : T_RI_pat<AND_ri,      int_hexagon_A2_andir>;
+def : T_RI_pat<A2_andir,    int_hexagon_A2_andir>;
 def : T_RR_pat<A2_or,       int_hexagon_A2_or>;
-def : T_RI_pat<OR_ri,       int_hexagon_A2_orir>;
+def : T_RI_pat<A2_orir,     int_hexagon_A2_orir>;
 def : T_RR_pat<A2_xor,      int_hexagon_A2_xor>;
 def : T_RR_pat<A2_combinew, int_hexagon_A2_combinew>;
 
 // Assembler mapped from Rd32=not(Rs32) to Rd32=sub(#-1,Rs32)
-def : Pat <(int_hexagon_A2_not (I32:$Rs)),
-           (SUB_ri -1, IntRegs:$Rs)>;
+def : Pat <(int_hexagon_A2_not I32:$Rs),
+           (A2_subri -1, I32:$Rs)>;
 
 // Assembler mapped from Rd32=neg(Rs32) to Rd32=sub(#0,Rs32)
-def : Pat <(int_hexagon_A2_neg IntRegs:$Rs),
-           (SUB_ri 0, IntRegs:$Rs)>;
+def : Pat <(int_hexagon_A2_neg I32:$Rs),
+           (A2_subri 0, I32:$Rs)>;
 
 // Transfer immediate
-def  : Pat <(int_hexagon_A2_tfril (I32:$Rs), u16_0ImmPred:$Is),
-            (A2_tfril IntRegs:$Rs, u16_0ImmPred:$Is)>;
-def  : Pat <(int_hexagon_A2_tfrih (I32:$Rs), u16_0ImmPred:$Is),
-            (A2_tfrih IntRegs:$Rs, u16_0ImmPred:$Is)>;
+def  : Pat <(int_hexagon_A2_tfril I32:$Rs, u16_0ImmPred:$Is),
+            (A2_tfril I32:$Rs, u16_0ImmPred:$Is)>;
+def  : Pat <(int_hexagon_A2_tfrih I32:$Rs, u16_0ImmPred:$Is),
+            (A2_tfrih I32:$Rs, u16_0ImmPred:$Is)>;
 
 //  Transfer Register/immediate.
 def : T_R_pat <A2_tfr, int_hexagon_A2_tfr>;
 def : T_I_pat <A2_tfrsi, int_hexagon_A2_tfrsi>;
 
-// Assembler mapped from Rdd32=Rss32 to Rdd32=combine(Rss.H32,Rss.L32)
-def : Pat<(int_hexagon_A2_tfrp DoubleRegs:$src),
-          (A2_combinew (HiReg DoubleRegs:$src), (LoReg DoubleRegs:$src))>;
+def ImmExt64: SDNodeXForm<imm, [{
+  int64_t V = N->getSExtValue();
+  return CurDAG->getTargetConstant(V, SDLoc(N), MVT::i64);
+}]>;
 
-/********************************************************************
-*            ALU32/PERM                                             *
-*********************************************************************/
+// A2_tfrpi has an operand of type i64. This is necessary, since it is
+// generated from "(set I64:$Rd, imm)". That pattern would not appear
+// in the DAG, if the immediate was not a 64-bit value.
+// The builtin for A2_tfrpi, on the other hand, takes a 32-bit value,
+// which makes it impossible to simply replace it with the instruction.
+// To connect the builtin with the instruction, the builtin's operand
+// needs to be extended to the right type.
+
+def : Pat<(int_hexagon_A2_tfrpi imm:$Is),
+          (A2_tfrpi (ImmExt64 $Is))>;
+
+// Assembler mapped from Rdd32=Rss32 to Rdd32=combine(Rss.H32,Rss.L32)
+def : Pat<(int_hexagon_A2_tfrp I64:$src),
+          (A2_combinew (HiReg I64:$src), (LoReg I64:$src))>;
+
+//*******************************************************************
+//           ALU32/PERM
+//*******************************************************************
 // Combine
 def: T_RR_pat<A2_combine_hh, int_hexagon_A2_combine_hh>;
 def: T_RR_pat<A2_combine_hl, int_hexagon_A2_combine_hl>;
 def: T_RR_pat<A2_combine_lh, int_hexagon_A2_combine_lh>;
 def: T_RR_pat<A2_combine_ll, int_hexagon_A2_combine_ll>;
 
-def: T_II_pat<A2_combineii, int_hexagon_A2_combineii, s8ExtPred, s8ImmPred>;
-
-def: Pat<(i32 (int_hexagon_C2_mux (I32:$Rp), (I32:$Rs),
-                                                     (I32:$Rt))),
-         (i32 (C2_mux (C2_tfrrp IntRegs:$Rp), IntRegs:$Rs, IntRegs:$Rt))>;
+def: T_II_pat<A2_combineii, int_hexagon_A2_combineii, s32ImmPred, s8ImmPred>;
 
 // Mux
-def : T_QRI_pat<C2_muxir, int_hexagon_C2_muxir, s8ExtPred>;
-def : T_QIR_pat<C2_muxri, int_hexagon_C2_muxri, s8ExtPred>;
-def : T_QII_pat<C2_muxii, int_hexagon_C2_muxii, s8ExtPred, s8ImmPred>;
+def : T_QRR_pat<C2_mux,   int_hexagon_C2_mux>;
+def : T_QRI_pat<C2_muxir, int_hexagon_C2_muxir, s32ImmPred>;
+def : T_QIR_pat<C2_muxri, int_hexagon_C2_muxri, s32ImmPred>;
+def : T_QII_pat<C2_muxii, int_hexagon_C2_muxii, s32ImmPred, s8ImmPred>;
 
 // Shift halfword
 def : T_R_pat<A2_aslh, int_hexagon_A2_aslh>;
@@ -596,61 +793,163 @@ def : T_R_pat<A2_sxtb, int_hexagon_A2_sxtb>;
 def : T_R_pat<A2_zxth, int_hexagon_A2_zxth>;
 def : T_R_pat<A2_zxtb, int_hexagon_A2_zxtb>;
 
-/********************************************************************
-*            ALU32/PRED                                             *
-*********************************************************************/
+//*******************************************************************
+//           ALU32/PRED
+//*******************************************************************
 // Compare
-def : T_RR_pat<C2_cmpeq,  int_hexagon_C2_cmpeq>;
-def : T_RR_pat<C2_cmpgt,  int_hexagon_C2_cmpgt>;
-def : T_RR_pat<C2_cmpgtu, int_hexagon_C2_cmpgtu>;
+def : T_Q_RR_pat<C2_cmpeq,  int_hexagon_C2_cmpeq>;
+def : T_Q_RR_pat<C2_cmpgt,  int_hexagon_C2_cmpgt>;
+def : T_Q_RR_pat<C2_cmpgtu, int_hexagon_C2_cmpgtu>;
 
-def : T_RI_pat<C2_cmpeqi, int_hexagon_C2_cmpeqi, s10ExtPred>;
-def : T_RI_pat<C2_cmpgti, int_hexagon_C2_cmpgti, s10ExtPred>;
-def : T_RI_pat<C2_cmpgtui, int_hexagon_C2_cmpgtui, u9ExtPred>;
+def : T_Q_RI_pat<C2_cmpeqi,  int_hexagon_C2_cmpeqi, s32ImmPred>;
+def : T_Q_RI_pat<C2_cmpgti,  int_hexagon_C2_cmpgti, s32ImmPred>;
+def : T_Q_RI_pat<C2_cmpgtui, int_hexagon_C2_cmpgtui, u32ImmPred>;
 
-def : Pat <(i32 (int_hexagon_C2_cmpgei (I32:$src1), s8ExtPred:$src2)),
-      (i32 (C2_cmpgti (I32:$src1),
-                      (DEC_CONST_SIGNED s8ExtPred:$src2)))>;
+def : Pat <(int_hexagon_C2_cmpgei I32:$src1, s32ImmPred:$src2),
+           (C2_tfrpr (C2_cmpgti I32:$src1,
+                                (DEC_CONST_SIGNED s32ImmPred:$src2)))>;
 
-def : Pat <(i32 (int_hexagon_C2_cmpgeui (I32:$src1), u8ExtPred:$src2)),
-      (i32 (C2_cmpgtui (I32:$src1),
-                       (DEC_CONST_UNSIGNED u8ExtPred:$src2)))>;
+def : Pat <(int_hexagon_C2_cmpgeui I32:$src1, u32ImmPred:$src2),
+           (C2_tfrpr (C2_cmpgtui I32:$src1,
+                                 (DEC_CONST_UNSIGNED u32ImmPred:$src2)))>;
 
-// The instruction, Pd=cmp.geu(Rs, #u8) -> Pd=cmp.eq(Rs,Rs) when #u8 == 0.
-def : Pat <(i32 (int_hexagon_C2_cmpgeui (I32:$src1), 0)),
-      (i32 (C2_cmpeq (I32:$src1), (I32:$src1)))>;
+def : Pat <(int_hexagon_C2_cmpgeui I32:$src, 0),
+           (C2_tfrpr (C2_cmpeq I32:$src, I32:$src))>;
+def : Pat <(int_hexagon_C2_cmplt I32:$src1, I32:$src2),
+           (C2_tfrpr (C2_cmpgt I32:$src2, I32:$src1))>;
+def : Pat <(int_hexagon_C2_cmpltu I32:$src1, I32:$src2),
+           (C2_tfrpr (C2_cmpgtu I32:$src2, I32:$src1))>;
 
-def : Pat <(i32 (int_hexagon_C2_cmplt (I32:$src1),
-                                      (I32:$src2))),
-      (i32 (C2_cmpgt (I32:$src2), (I32:$src1)))>;
+//*******************************************************************
+//           ALU32/VH
+//*******************************************************************
+// Vector add, subtract, average halfwords
+def: T_RR_pat<A2_svaddh,   int_hexagon_A2_svaddh>;
+def: T_RR_pat<A2_svaddhs,  int_hexagon_A2_svaddhs>;
+def: T_RR_pat<A2_svadduhs, int_hexagon_A2_svadduhs>;
 
-def : Pat <(i32 (int_hexagon_C2_cmpltu (I32:$src1),
-                                       (I32:$src2))),
-      (i32 (C2_cmpgtu (I32:$src2), (I32:$src1)))>;
+def: T_RR_pat<A2_svsubh,   int_hexagon_A2_svsubh>;
+def: T_RR_pat<A2_svsubhs,  int_hexagon_A2_svsubhs>;
+def: T_RR_pat<A2_svsubuhs, int_hexagon_A2_svsubuhs>;
 
-/********************************************************************
-*            ALU64/ALU                                              *
-*********************************************************************/
-def: T_RR_pat<A2_addsat,   int_hexagon_A2_addsat>;
-def: T_RR_pat<A2_subsat,   int_hexagon_A2_subsat>;
-def: T_PP_pat<A2_addp,     int_hexagon_A2_addp>;
-def: T_PP_pat<A2_subp,     int_hexagon_A2_subp>;
+def: T_RR_pat<A2_svavgh,   int_hexagon_A2_svavgh>;
+def: T_RR_pat<A2_svavghs,  int_hexagon_A2_svavghs>;
+def: T_RR_pat<A2_svnavgh,  int_hexagon_A2_svnavgh>;
 
-def: T_PP_pat<A2_andp,     int_hexagon_A2_andp>;
-def: T_PP_pat<A2_orp,      int_hexagon_A2_orp>;
-def: T_PP_pat<A2_xorp,     int_hexagon_A2_xorp>;
+//*******************************************************************
+//           ALU64/ALU
+//*******************************************************************
+def: T_RR_pat<A2_addsat,     int_hexagon_A2_addsat>;
+def: T_RR_pat<A2_subsat,     int_hexagon_A2_subsat>;
+def: T_PP_pat<A2_addp,       int_hexagon_A2_addp>;
+def: T_PP_pat<A2_subp,       int_hexagon_A2_subp>;
 
-def: T_PP_pat<C2_cmpeqp,   int_hexagon_C2_cmpeqp>;
-def: T_PP_pat<C2_cmpgtp,   int_hexagon_C2_cmpgtp>;
-def: T_PP_pat<C2_cmpgtup,  int_hexagon_C2_cmpgtup>;
+def: T_PP_pat<A2_andp,       int_hexagon_A2_andp>;
+def: T_PP_pat<A2_orp,        int_hexagon_A2_orp>;
+def: T_PP_pat<A2_xorp,       int_hexagon_A2_xorp>;
 
-def: T_PP_pat<S2_parityp,  int_hexagon_S2_parityp>;
-def: T_RR_pat<S2_packhl,   int_hexagon_S2_packhl>;
+def: T_Q_PP_pat<C2_cmpeqp,   int_hexagon_C2_cmpeqp>;
+def: T_Q_PP_pat<C2_cmpgtp,   int_hexagon_C2_cmpgtp>;
+def: T_Q_PP_pat<C2_cmpgtup,  int_hexagon_C2_cmpgtup>;
+
+def: T_PP_pat<S2_parityp,    int_hexagon_S2_parityp>;
+def: T_RR_pat<S2_packhl,     int_hexagon_S2_packhl>;
+
+//*******************************************************************
+//           ALU64/VB
+//*******************************************************************
+// ALU64 - Vector add
+def : T_PP_pat <A2_vaddub,   int_hexagon_A2_vaddub>;
+def : T_PP_pat <A2_vaddubs,  int_hexagon_A2_vaddubs>;
+def : T_PP_pat <A2_vaddh,    int_hexagon_A2_vaddh>;
+def : T_PP_pat <A2_vaddhs,   int_hexagon_A2_vaddhs>;
+def : T_PP_pat <A2_vadduhs,  int_hexagon_A2_vadduhs>;
+def : T_PP_pat <A2_vaddw,    int_hexagon_A2_vaddw>;
+def : T_PP_pat <A2_vaddws,   int_hexagon_A2_vaddws>;
+
+// ALU64 - Vector average
+def : T_PP_pat <A2_vavgub,   int_hexagon_A2_vavgub>;
+def : T_PP_pat <A2_vavgubr,  int_hexagon_A2_vavgubr>;
+def : T_PP_pat <A2_vavgh,    int_hexagon_A2_vavgh>;
+def : T_PP_pat <A2_vavghr,   int_hexagon_A2_vavghr>;
+def : T_PP_pat <A2_vavghcr,  int_hexagon_A2_vavghcr>;
+def : T_PP_pat <A2_vavguh,   int_hexagon_A2_vavguh>;
+def : T_PP_pat <A2_vavguhr,  int_hexagon_A2_vavguhr>;
+
+def : T_PP_pat <A2_vavgw,    int_hexagon_A2_vavgw>;
+def : T_PP_pat <A2_vavgwr,   int_hexagon_A2_vavgwr>;
+def : T_PP_pat <A2_vavgwcr,  int_hexagon_A2_vavgwcr>;
+def : T_PP_pat <A2_vavguw,   int_hexagon_A2_vavguw>;
+def : T_PP_pat <A2_vavguwr,  int_hexagon_A2_vavguwr>;
+
+// ALU64 - Vector negative average
+def : T_PP_pat <A2_vnavgh,   int_hexagon_A2_vnavgh>;
+def : T_PP_pat <A2_vnavghr,  int_hexagon_A2_vnavghr>;
+def : T_PP_pat <A2_vnavghcr, int_hexagon_A2_vnavghcr>;
+def : T_PP_pat <A2_vnavgw,   int_hexagon_A2_vnavgw>;
+def : T_PP_pat <A2_vnavgwr,  int_hexagon_A2_vnavgwr>;
+def : T_PP_pat <A2_vnavgwcr, int_hexagon_A2_vnavgwcr>;
+
+// ALU64 - Vector max
+def : T_PP_pat <A2_vmaxh,    int_hexagon_A2_vmaxh>;
+def : T_PP_pat <A2_vmaxw,    int_hexagon_A2_vmaxw>;
+def : T_PP_pat <A2_vmaxub,   int_hexagon_A2_vmaxub>;
+def : T_PP_pat <A2_vmaxuh,   int_hexagon_A2_vmaxuh>;
+def : T_PP_pat <A2_vmaxuw,   int_hexagon_A2_vmaxuw>;
+
+// ALU64 - Vector min
+def : T_PP_pat <A2_vminh,    int_hexagon_A2_vminh>;
+def : T_PP_pat <A2_vminw,    int_hexagon_A2_vminw>;
+def : T_PP_pat <A2_vminub,   int_hexagon_A2_vminub>;
+def : T_PP_pat <A2_vminuh,   int_hexagon_A2_vminuh>;
+def : T_PP_pat <A2_vminuw,   int_hexagon_A2_vminuw>;
+
+// ALU64 - Vector sub
+def : T_PP_pat <A2_vsubub,   int_hexagon_A2_vsubub>;
+def : T_PP_pat <A2_vsububs,  int_hexagon_A2_vsububs>;
+def : T_PP_pat <A2_vsubh,    int_hexagon_A2_vsubh>;
+def : T_PP_pat <A2_vsubhs,   int_hexagon_A2_vsubhs>;
+def : T_PP_pat <A2_vsubuhs,  int_hexagon_A2_vsubuhs>;
+def : T_PP_pat <A2_vsubw,    int_hexagon_A2_vsubw>;
+def : T_PP_pat <A2_vsubws,   int_hexagon_A2_vsubws>;
+
+// ALU64 - Vector compare bytes
+def : T_Q_PP_pat <A2_vcmpbeq,  int_hexagon_A2_vcmpbeq>;
+def : T_Q_PP_pat <A4_vcmpbgt,  int_hexagon_A4_vcmpbgt>;
+def : T_Q_PP_pat <A2_vcmpbgtu, int_hexagon_A2_vcmpbgtu>;
+
+// ALU64 - Vector compare halfwords
+def : T_Q_PP_pat <A2_vcmpheq,  int_hexagon_A2_vcmpheq>;
+def : T_Q_PP_pat <A2_vcmphgt,  int_hexagon_A2_vcmphgt>;
+def : T_Q_PP_pat <A2_vcmphgtu, int_hexagon_A2_vcmphgtu>;
+
+// ALU64 - Vector compare words
+def : T_Q_PP_pat <A2_vcmpweq,  int_hexagon_A2_vcmpweq>;
+def : T_Q_PP_pat <A2_vcmpwgt,  int_hexagon_A2_vcmpwgt>;
+def : T_Q_PP_pat <A2_vcmpwgtu, int_hexagon_A2_vcmpwgtu>;
+
+// ALU64 / VB / Vector mux.
+def : T_QPP_pat <C2_vmux,      int_hexagon_C2_vmux>;
 
 // MPY - Multiply and use full result
 // Rdd = mpy[u](Rs, Rt)
 def : T_RR_pat <M2_dpmpyss_s0, int_hexagon_M2_dpmpyss_s0>;
 def : T_RR_pat <M2_dpmpyuu_s0, int_hexagon_M2_dpmpyuu_s0>;
+
+// Complex multiply real or imaginary
+def : T_RR_pat <M2_cmpyi_s0,   int_hexagon_M2_cmpyi_s0>;
+def : T_RR_pat <M2_cmpyr_s0,   int_hexagon_M2_cmpyr_s0>;
+
+// Complex multiply
+def : T_RR_pat <M2_cmpys_s0,   int_hexagon_M2_cmpys_s0>;
+def : T_RR_pat <M2_cmpysc_s0,  int_hexagon_M2_cmpysc_s0>;
+def : T_RR_pat <M2_cmpys_s1,   int_hexagon_M2_cmpys_s1>;
+def : T_RR_pat <M2_cmpysc_s1,  int_hexagon_M2_cmpysc_s1>;
+
+// Vector multiply halfwords
+// Rdd=vmpyh(Rs,Rt)[:<<1]:sat
+def : T_RR_pat <M2_vmpy2s_s0,  int_hexagon_M2_vmpy2s_s0>;
+def : T_RR_pat <M2_vmpy2s_s1,  int_hexagon_M2_vmpy2s_s1>;
 
 // Rxx[+-]= mpy[u](Rs,Rt)
 def : T_PRR_pat <M2_dpmpyss_acc_s0, int_hexagon_M2_dpmpyss_acc_s0>;
@@ -658,31 +957,45 @@ def : T_PRR_pat <M2_dpmpyss_nac_s0, int_hexagon_M2_dpmpyss_nac_s0>;
 def : T_PRR_pat <M2_dpmpyuu_acc_s0, int_hexagon_M2_dpmpyuu_acc_s0>;
 def : T_PRR_pat <M2_dpmpyuu_nac_s0, int_hexagon_M2_dpmpyuu_nac_s0>;
 
-/********************************************************************
-*            CR                                                     *
-*********************************************************************/
-class qi_CRInst_qi_pat<InstHexagon Inst, Intrinsic IntID> :
-  Pat<(i32 (IntID IntRegs:$Rs)),
-      (i32 (C2_tfrpr (Inst (C2_tfrrp IntRegs:$Rs))))>;
+// Rxx[-+]=cmpy(Rs,Rt)[:<<1]:sat
+def : T_PRR_pat <M2_cmacs_s0, int_hexagon_M2_cmacs_s0>;
+def : T_PRR_pat <M2_cnacs_s0, int_hexagon_M2_cnacs_s0>;
+def : T_PRR_pat <M2_cmacs_s1, int_hexagon_M2_cmacs_s1>;
+def : T_PRR_pat <M2_cnacs_s1, int_hexagon_M2_cnacs_s1>;
 
-class qi_CRInst_qiqi_pat<InstHexagon Inst, Intrinsic IntID> :
-  Pat<(i32 (IntID IntRegs:$Rs, IntRegs:$Rt)),
-      (i32 (C2_tfrpr (Inst (C2_tfrrp IntRegs:$Rs), (C2_tfrrp IntRegs:$Rt))))>;
+// Rxx[-+]=cmpy(Rs,Rt*)[:<<1]:sat
+def : T_PRR_pat <M2_cmacsc_s0, int_hexagon_M2_cmacsc_s0>;
+def : T_PRR_pat <M2_cnacsc_s0, int_hexagon_M2_cnacsc_s0>;
+def : T_PRR_pat <M2_cmacsc_s1, int_hexagon_M2_cmacsc_s1>;
+def : T_PRR_pat <M2_cnacsc_s1, int_hexagon_M2_cnacsc_s1>;
 
-def: qi_CRInst_qi_pat<C2_not,     int_hexagon_C2_not>;
-def: qi_CRInst_qi_pat<C2_all8,    int_hexagon_C2_all8>;
-def: qi_CRInst_qi_pat<C2_any8,    int_hexagon_C2_any8>;
+// Rxx+=cmpy[ir](Rs,Rt)
+def : T_PRR_pat <M2_cmaci_s0, int_hexagon_M2_cmaci_s0>;
+def : T_PRR_pat <M2_cmacr_s0, int_hexagon_M2_cmacr_s0>;
 
-def: qi_CRInst_qiqi_pat<C2_and,   int_hexagon_C2_and>;
-def: qi_CRInst_qiqi_pat<C2_andn,  int_hexagon_C2_andn>;
-def: qi_CRInst_qiqi_pat<C2_or,    int_hexagon_C2_or>;
-def: qi_CRInst_qiqi_pat<C2_orn,   int_hexagon_C2_orn>;
-def: qi_CRInst_qiqi_pat<C2_xor,   int_hexagon_C2_xor>;
+// Rxx+=vmpyh(Rs,Rt)[:<<1][:sat]
+def : T_PRR_pat <M2_vmac2, int_hexagon_M2_vmac2>;
+def : T_PRR_pat <M2_vmac2s_s0, int_hexagon_M2_vmac2s_s0>;
+def : T_PRR_pat <M2_vmac2s_s1, int_hexagon_M2_vmac2s_s1>;
+
+//*******************************************************************
+//           CR
+//*******************************************************************
+def: T_Q_Q_pat<C2_not,       int_hexagon_C2_not>;
+def: T_Q_Q_pat<C2_all8,      int_hexagon_C2_all8>;
+def: T_Q_Q_pat<C2_any8,      int_hexagon_C2_any8>;
+def: T_Q_Q_pat<C2_pxfer_map, int_hexagon_C2_pxfer_map>;
+
+def: T_Q_QQ_pat<C2_and,      int_hexagon_C2_and>;
+def: T_Q_QQ_pat<C2_andn,     int_hexagon_C2_andn>;
+def: T_Q_QQ_pat<C2_or,       int_hexagon_C2_or>;
+def: T_Q_QQ_pat<C2_orn,      int_hexagon_C2_orn>;
+def: T_Q_QQ_pat<C2_xor,      int_hexagon_C2_xor>;
 
 // Multiply 32x32 and use lower result
 def : T_RRI_pat <M2_macsip, int_hexagon_M2_macsip>;
 def : T_RRI_pat <M2_macsin, int_hexagon_M2_macsin>;
-def : T_RRR_pat <M2_maci, int_hexagon_M2_maci>;
+def : T_RRR_pat <M2_maci,   int_hexagon_M2_maci>;
 
 // Subtract and accumulate
 def : T_RRR_pat <M2_subacc, int_hexagon_M2_subacc>;
@@ -696,34 +1009,45 @@ def : T_RRI_pat <M2_naccii, int_hexagon_M2_naccii>;
 // XOR and XOR with destination
 def : T_RRR_pat <M2_xor_xacc, int_hexagon_M2_xor_xacc>;
 
-class MType_R32_pat <Intrinsic IntID, InstHexagon OutputInst> :
-      Pat <(IntID IntRegs:$src1, IntRegs:$src2),
-           (OutputInst IntRegs:$src1, IntRegs:$src2)>;
+// Vector dual multiply with round and pack
+def : T_PP_pat <M2_vdmpyrs_s0, int_hexagon_M2_vdmpyrs_s0>;
+def : T_PP_pat <M2_vdmpyrs_s1, int_hexagon_M2_vdmpyrs_s1>;
+
+// Vector multiply halfwords with round and pack
+def : T_RR_pat <M2_vmpy2s_s0pack, int_hexagon_M2_vmpy2s_s0pack>;
+def : T_RR_pat <M2_vmpy2s_s1pack, int_hexagon_M2_vmpy2s_s1pack>;
 
 // Multiply and use lower result
-def : MType_R32_pat <int_hexagon_M2_mpyi, M2_mpyi>;
-def : T_RI_pat<M2_mpysmi, int_hexagon_M2_mpysmi>;
+def : T_RR_pat <M2_mpyi, int_hexagon_M2_mpyi>;
+def : T_RI_pat <M2_mpysmi, int_hexagon_M2_mpysmi>;
 
 // Assembler mapped from Rd32=mpyui(Rs32,Rt32) to Rd32=mpyi(Rs32,Rt32)
-def : MType_R32_pat <int_hexagon_M2_mpyui, M2_mpyi>;
+def : T_RR_pat <M2_mpyi, int_hexagon_M2_mpyui>;
 
 // Multiply and use upper result
-def : MType_R32_pat <int_hexagon_M2_mpy_up, M2_mpy_up>;
-def : MType_R32_pat <int_hexagon_M2_mpyu_up, M2_mpyu_up>;
-def : MType_R32_pat <int_hexagon_M2_hmmpyh_rs1, M2_hmmpyh_rs1>;
-def : MType_R32_pat <int_hexagon_M2_hmmpyl_rs1, M2_hmmpyl_rs1>;
-def : MType_R32_pat <int_hexagon_M2_dpmpyss_rnd_s0, M2_dpmpyss_rnd_s0>;
+def : T_RR_pat <M2_mpy_up, int_hexagon_M2_mpy_up>;
+def : T_RR_pat <M2_mpyu_up, int_hexagon_M2_mpyu_up>;
+def : T_RR_pat <M2_hmmpyh_rs1, int_hexagon_M2_hmmpyh_rs1>;
+def : T_RR_pat <M2_hmmpyl_rs1, int_hexagon_M2_hmmpyl_rs1>;
+def : T_RR_pat <M2_dpmpyss_rnd_s0, int_hexagon_M2_dpmpyss_rnd_s0>;
 
-/********************************************************************
-*            STYPE/ALU                                              *
-*********************************************************************/
+// Complex multiply with round and pack
+// Rxx32+=cmpy(Rs32,[*]Rt32:<<1]:rnd:sat
+def : T_RR_pat <M2_cmpyrs_s0, int_hexagon_M2_cmpyrs_s0>;
+def : T_RR_pat <M2_cmpyrs_s1, int_hexagon_M2_cmpyrs_s1>;
+def : T_RR_pat <M2_cmpyrsc_s0, int_hexagon_M2_cmpyrsc_s0>;
+def : T_RR_pat <M2_cmpyrsc_s1, int_hexagon_M2_cmpyrsc_s1>;
+
+//*******************************************************************
+//           STYPE/ALU
+//*******************************************************************
 def : T_P_pat <A2_absp, int_hexagon_A2_absp>;
 def : T_P_pat <A2_negp, int_hexagon_A2_negp>;
 def : T_P_pat <A2_notp, int_hexagon_A2_notp>;
 
-/********************************************************************
-*            STYPE/BIT                                              *
-*********************************************************************/
+//*******************************************************************
+//           STYPE/BIT
+//*******************************************************************
 
 // Count leading/trailing
 def: T_R_pat<S2_cl0,     int_hexagon_S2_cl0>;
@@ -741,8 +1065,27 @@ def: T_RR_pat<C2_bitsclr,  int_hexagon_C2_bitsclr>;
 def: T_RI_pat<C2_bitsclri, int_hexagon_C2_bitsclri>;
 def: T_RR_pat<C2_bitsset,  int_hexagon_C2_bitsset>;
 
+// Vector shuffle
+def : T_PP_pat <S2_shuffeb, int_hexagon_S2_shuffeb>;
+def : T_PP_pat <S2_shuffob, int_hexagon_S2_shuffob>;
+def : T_PP_pat <S2_shuffeh, int_hexagon_S2_shuffeh>;
+def : T_PP_pat <S2_shuffoh, int_hexagon_S2_shuffoh>;
+
+// Vector truncate
+def : T_PP_pat <S2_vtrunewh, int_hexagon_S2_vtrunewh>;
+def : T_PP_pat <S2_vtrunowh, int_hexagon_S2_vtrunowh>;
+
 // Linear feedback-shift Iteration.
 def : T_PP_pat <S2_lfsp, int_hexagon_S2_lfsp>;
+
+// Vector align
+// Need custom lowering
+def : T_PPQ_pat <S2_valignrb, int_hexagon_S2_valignrb>;
+def : T_PPI_pat <S2_valignib, int_hexagon_S2_valignib>;
+
+// Vector splice
+def : T_PPQ_pat <S2_vsplicerb, int_hexagon_S2_vsplicerb>;
+def : T_PPI_pat <S2_vspliceib, int_hexagon_S2_vspliceib>;
 
 // Shift by immediate and add
 def : T_RRI_pat<S2_addasl_rrri, int_hexagon_S2_addasl_rrri>;
@@ -754,25 +1097,21 @@ def : T_RP_pat <S2_extractu_rp,  int_hexagon_S2_extractu_rp>;
 def : T_PP_pat <S2_extractup_rp, int_hexagon_S2_extractup_rp>;
 
 // Insert bitfield
-def : Pat <(int_hexagon_S2_insert_rp IntRegs:$src1, IntRegs:$src2,
-                                     DoubleRegs:$src3),
-           (S2_insert_rp IntRegs:$src1, IntRegs:$src2, DoubleRegs:$src3)>;
+def : Pat <(int_hexagon_S2_insert_rp I32:$src1, I32:$src2, I64:$src3),
+           (S2_insert_rp I32:$src1, I32:$src2, I64:$src3)>;
 
-def : Pat<(i64 (int_hexagon_S2_insertp_rp (I64:$src1),
-                 (I64:$src2), (I64:$src3))),
-          (i64 (S2_insertp_rp (I64:$src1), (I64:$src2),
-                              (I64:$src3)))>;
+def : Pat<(i64 (int_hexagon_S2_insertp_rp I64:$src1, I64:$src2, I64:$src3)),
+          (i64 (S2_insertp_rp I64:$src1, I64:$src2, I64:$src3))>;
 
-def : Pat<(int_hexagon_S2_insert IntRegs:$src1, IntRegs:$src2,
+def : Pat<(int_hexagon_S2_insert I32:$src1, I32:$src2,
                                  u5ImmPred:$src3, u5ImmPred:$src4),
-          (S2_insert IntRegs:$src1, IntRegs:$src2,
+          (S2_insert I32:$src1, I32:$src2,
                      u5ImmPred:$src3, u5ImmPred:$src4)>;
 
-def : Pat<(i64 (int_hexagon_S2_insertp (I64:$src1),
-                 (I64:$src2), u6ImmPred:$src3, u6ImmPred:$src4)),
-          (i64 (S2_insertp (I64:$src1), (I64:$src2),
+def : Pat<(i64 (int_hexagon_S2_insertp I64:$src1, I64:$src2,
+                                       u6ImmPred:$src3, u6ImmPred:$src4)),
+          (i64 (S2_insertp I64:$src1, I64:$src2,
                            u6ImmPred:$src3, u6ImmPred:$src4))>;
-
 
 // Innterleave/deinterleave
 def : T_P_pat <S2_interleave, int_hexagon_S2_interleave>;
@@ -788,12 +1127,48 @@ def: T_RR_pat<S2_clrbit_r,    int_hexagon_S2_clrbit_r>;
 def: T_RR_pat<S2_togglebit_r, int_hexagon_S2_togglebit_r>;
 
 // Test Bit
-def: T_RI_pat<S2_tstbit_i,    int_hexagon_S2_tstbit_i>;
-def: T_RR_pat<S2_tstbit_r,    int_hexagon_S2_tstbit_r>;
+def: T_Q_RI_pat<S2_tstbit_i,  int_hexagon_S2_tstbit_i>;
+def: T_Q_RR_pat<S2_tstbit_r,  int_hexagon_S2_tstbit_r>;
 
-/********************************************************************
-*            STYPE/SHIFT                                            *
-*********************************************************************/
+//*******************************************************************
+//           STYPE/COMPLEX
+//*******************************************************************
+// Vector Complex conjugate
+def : T_P_pat <A2_vconj, int_hexagon_A2_vconj>;
+
+// Vector Complex rotate
+def : T_PR_pat <S2_vcrotate, int_hexagon_S2_vcrotate>;
+
+//*******************************************************************
+//           STYPE/PERM
+//*******************************************************************
+
+// Vector saturate without pack
+def : T_P_pat <S2_vsathb_nopack, int_hexagon_S2_vsathb_nopack>;
+def : T_P_pat <S2_vsathub_nopack, int_hexagon_S2_vsathub_nopack>;
+def : T_P_pat <S2_vsatwh_nopack, int_hexagon_S2_vsatwh_nopack>;
+def : T_P_pat <S2_vsatwuh_nopack, int_hexagon_S2_vsatwuh_nopack>;
+
+//*******************************************************************
+//           STYPE/PRED
+//*******************************************************************
+
+// Predicate transfer
+def: Pat<(i32 (int_hexagon_C2_tfrpr I32:$Rs)),
+         (i32 (C2_tfrpr (C2_tfrrp I32:$Rs)))>;
+def: Pat<(i32 (int_hexagon_C2_tfrrp I32:$Rs)),
+         (i32 (C2_tfrpr (C2_tfrrp I32:$Rs)))>;
+
+// Mask generate from predicate
+def: Pat<(i64 (int_hexagon_C2_mask I32:$Rs)),
+         (i64 (C2_mask (C2_tfrrp I32:$Rs)))>;
+
+// Viterbi pack even and odd predicate bits
+def: T_QQ_pat<C2_vitpack, int_hexagon_C2_vitpack>;
+
+//*******************************************************************
+//           STYPE/SHIFT
+//*******************************************************************
 
 def : T_PI_pat <S2_asr_i_p, int_hexagon_S2_asr_i_p>;
 def : T_PI_pat <S2_lsr_i_p, int_hexagon_S2_lsr_i_p>;
@@ -812,9 +1187,27 @@ def : T_RR_pat <S2_lsl_r_r, int_hexagon_S2_lsl_r_r>;
 def : T_RR_pat <S2_asr_r_r_sat, int_hexagon_S2_asr_r_r_sat>;
 def : T_RR_pat <S2_asl_r_r_sat, int_hexagon_S2_asl_r_r_sat>;
 
+def : T_R_pat <S2_vsxtbh,   int_hexagon_S2_vsxtbh>;
+def : T_R_pat <S2_vzxtbh,   int_hexagon_S2_vzxtbh>;
+def : T_R_pat <S2_vsxthw,   int_hexagon_S2_vsxthw>;
+def : T_R_pat <S2_vzxthw,   int_hexagon_S2_vzxthw>;
+def : T_R_pat <S2_vsplatrh, int_hexagon_S2_vsplatrh>;
 def : T_R_pat <A2_sxtw,     int_hexagon_A2_sxtw>;
 
+// Vector saturate and pack
+def : T_R_pat <S2_svsathb,  int_hexagon_S2_svsathb>;
+def : T_R_pat <S2_svsathub, int_hexagon_S2_svsathub>;
+def : T_P_pat <S2_vsathub,  int_hexagon_S2_vsathub>;
+def : T_P_pat <S2_vsatwh,   int_hexagon_S2_vsatwh>;
+def : T_P_pat <S2_vsatwuh,  int_hexagon_S2_vsatwuh>;
+def : T_P_pat <S2_vsathb,   int_hexagon_S2_vsathb>;
+
+def : T_P_pat <S2_vtrunohb,    int_hexagon_S2_vtrunohb>;
+def : T_P_pat <S2_vtrunehb,    int_hexagon_S2_vtrunehb>;
+def : T_P_pat <S2_vrndpackwh,  int_hexagon_S2_vrndpackwh>;
+def : T_P_pat <S2_vrndpackwhs, int_hexagon_S2_vrndpackwhs>;
 def : T_R_pat <S2_brev,        int_hexagon_S2_brev>;
+def : T_R_pat <S2_vsplatrb,    int_hexagon_S2_vsplatrb>;
 
 def : T_R_pat <A2_abs,    int_hexagon_A2_abs>;
 def : T_R_pat <A2_abssat, int_hexagon_A2_abssat>;
@@ -827,6 +1220,9 @@ def : T_R_pat <A2_sath,   int_hexagon_A2_sath>;
 def : T_R_pat <A2_satuh,  int_hexagon_A2_satuh>;
 def : T_R_pat <A2_satub,  int_hexagon_A2_satub>;
 def : T_R_pat <A2_satb,   int_hexagon_A2_satb>;
+
+// Vector arithmetic shift right by immediate with truncate and pack.
+def : T_PI_pat<S2_asr_i_svw_trun, int_hexagon_S2_asr_i_svw_trun>;
 
 def : T_RI_pat <S2_asr_i_r,     int_hexagon_S2_asr_i_r>;
 def : T_RI_pat <S2_lsr_i_r,     int_hexagon_S2_lsr_i_r>;
@@ -843,8 +1239,8 @@ def : T_RI_pat <S2_asl_i_r_sat, int_hexagon_S2_asl_i_r_sat>;
 //===----------------------------------------------------------------------===//
 class S2op_tableidx_pat <Intrinsic IntID, InstHexagon OutputInst,
                          SDNodeXForm XformImm>
-  : Pat <(IntID IntRegs:$src1, IntRegs:$src2, u4ImmPred:$src3, u5ImmPred:$src4),
-         (OutputInst IntRegs:$src1, IntRegs:$src2, u4ImmPred:$src3,
+  : Pat <(IntID I32:$src1, I32:$src2, u4ImmPred:$src3, u5ImmPred:$src4),
+         (OutputInst I32:$src1, I32:$src2, u4ImmPred:$src3,
                      (XformImm u5ImmPred:$src4))>;
 
 
@@ -853,9 +1249,9 @@ class S2op_tableidx_pat <Intrinsic IntID, InstHexagon OutputInst,
 // values from the 4th input operand. Please note that subtraction is not
 // needed for int_hexagon_S2_tableidxb_goodsyntax.
 
-def : Pat <(int_hexagon_S2_tableidxb_goodsyntax IntRegs:$src1, IntRegs:$src2,
+def : Pat <(int_hexagon_S2_tableidxb_goodsyntax I32:$src1, I32:$src2,
                                               u4ImmPred:$src3, u5ImmPred:$src4),
-           (S2_tableidxb IntRegs:$src1, IntRegs:$src2,
+           (S2_tableidxb I32:$src1, I32:$src2,
                          u4ImmPred:$src3, u5ImmPred:$src4)>;
 
 def : S2op_tableidx_pat <int_hexagon_S2_tableidxh_goodsyntax, S2_tableidxh,
@@ -865,1162 +1261,86 @@ def : S2op_tableidx_pat <int_hexagon_S2_tableidxw_goodsyntax, S2_tableidxw,
 def : S2op_tableidx_pat <int_hexagon_S2_tableidxd_goodsyntax, S2_tableidxd,
                          DEC3_CONST_SIGNED>;
 
-//
-// ALU 32 types.
-//
-
-class qi_ALU32_sisi<string opc, Intrinsic IntID>
-  : ALU32_rr<(outs PredRegs:$dst), (ins IntRegs:$src1, IntRegs:$src2),
-             !strconcat("$dst = ", !strconcat(opc , "($src1, $src2)")),
-             [(set PredRegs:$dst, (IntID IntRegs:$src1, IntRegs:$src2))]>;
-
-class qi_ALU32_sis10<string opc, Intrinsic IntID>
-  : ALU32_rr<(outs PredRegs:$dst), (ins IntRegs:$src1, s10Imm:$src2),
-             !strconcat("$dst = ", !strconcat(opc , "($src1, #$src2)")),
-             [(set PredRegs:$dst, (IntID IntRegs:$src1, imm:$src2))]>;
-
-class qi_ALU32_sis8<string opc, Intrinsic IntID>
-  : ALU32_rr<(outs PredRegs:$dst), (ins IntRegs:$src1, s8Imm:$src2),
-             !strconcat("$dst = ", !strconcat(opc , "($src1, #$src2)")),
-             [(set PredRegs:$dst, (IntID IntRegs:$src1, imm:$src2))]>;
-
-class qi_ALU32_siu8<string opc, Intrinsic IntID>
-  : ALU32_rr<(outs PredRegs:$dst), (ins IntRegs:$src1, u8Imm:$src2),
-             !strconcat("$dst = ", !strconcat(opc , "($src1, #$src2)")),
-             [(set PredRegs:$dst, (IntID IntRegs:$src1, imm:$src2))]>;
-
-class qi_ALU32_siu9<string opc, Intrinsic IntID>
-  : ALU32_rr<(outs PredRegs:$dst), (ins IntRegs:$src1, u9Imm:$src2),
-             !strconcat("$dst = ", !strconcat(opc , "($src1, #$src2)")),
-             [(set PredRegs:$dst, (IntID IntRegs:$src1, imm:$src2))]>;
-
-class si_ALU32_qisisi<string opc, Intrinsic IntID>
-  : ALU32_rr<(outs IntRegs:$dst), (ins IntRegs:$src1, IntRegs:$src2,
-                                      IntRegs:$src3),
-             !strconcat("$dst = ", !strconcat(opc , "($src1, $src2, $src3)")),
-             [(set IntRegs:$dst, (IntID IntRegs:$src1, IntRegs:$src2,
-                                        IntRegs:$src3))]>;
-
-class si_ALU32_sisi<string opc, Intrinsic IntID>
-  : ALU32_rr<(outs IntRegs:$dst), (ins IntRegs:$src1, IntRegs:$src2),
-             !strconcat("$dst = ", !strconcat(opc , "($src1, $src2)")),
-             [(set IntRegs:$dst, (IntID IntRegs:$src1, IntRegs:$src2))]>;
-
-class si_ALU32_sisi_sat<string opc, Intrinsic IntID>
-  : ALU32_rr<(outs IntRegs:$dst), (ins IntRegs:$src1, IntRegs:$src2),
-             !strconcat("$dst = ", !strconcat(opc , "($src1, $src2):sat")),
-             [(set IntRegs:$dst, (IntID IntRegs:$src1, IntRegs:$src2))]>;
-
-class si_ALU32_sisi_rnd<string opc, Intrinsic IntID>
-  : ALU32_rr<(outs IntRegs:$dst), (ins IntRegs:$src1, IntRegs:$src2),
-             !strconcat("$dst = ", !strconcat(opc , "($src1, $src2):rnd")),
-             [(set IntRegs:$dst, (IntID IntRegs:$src1, IntRegs:$src2))]>;
-
-class di_ALU64_di<string opc, Intrinsic IntID>
-  : ALU64_rr<(outs DoubleRegs:$dst), (ins DoubleRegs:$src),
-             !strconcat("$dst = ", !strconcat(opc , "$src")),
-             [(set DoubleRegs:$dst, (IntID DoubleRegs:$src))]>;
-
-//
-// ALU 64 types.
-//
-
-class di_ALU64_didi<string opc, Intrinsic IntID>
-  : ALU64_rr<(outs DoubleRegs:$dst), (ins DoubleRegs:$src1, DoubleRegs:$src2),
-             !strconcat("$dst = ", !strconcat(opc , "($src1, $src2)")),
-             [(set DoubleRegs:$dst, (IntID DoubleRegs:$src1,
-                                           DoubleRegs:$src2))]>;
-
-class di_ALU64_qididi<string opc, Intrinsic IntID>
-  : ALU64_rr<(outs DoubleRegs:$dst), (ins IntRegs:$src1, DoubleRegs:$src2,
-                                          DoubleRegs:$src3),
-             !strconcat("$dst = ", !strconcat(opc , "($src1, $src2, $src3)")),
-             [(set DoubleRegs:$dst, (IntID IntRegs:$src1, DoubleRegs:$src2,
-                                           DoubleRegs:$src3))]>;
-
-class di_ALU64_didi_sat<string opc, Intrinsic IntID>
-  : ALU64_rr<(outs DoubleRegs:$dst), (ins DoubleRegs:$src1, DoubleRegs:$src2),
-             !strconcat("$dst = ", !strconcat(opc , "($src1, $src2):sat")),
-             [(set DoubleRegs:$dst, (IntID DoubleRegs:$src1,
-                                           DoubleRegs:$src2))]>;
-
-class di_ALU64_didi_rnd<string opc, Intrinsic IntID>
-  : ALU64_rr<(outs DoubleRegs:$dst), (ins DoubleRegs:$src1, DoubleRegs:$src2),
-             !strconcat("$dst = ", !strconcat(opc , "($src1, $src2):rnd")),
-             [(set DoubleRegs:$dst, (IntID DoubleRegs:$src1,
-                                           DoubleRegs:$src2))]>;
-
-class di_ALU64_didi_crnd<string opc, Intrinsic IntID>
-  : ALU64_rr<(outs DoubleRegs:$dst), (ins DoubleRegs:$src1, DoubleRegs:$src2),
-             !strconcat("$dst = ", !strconcat(opc , "($src1, $src2):crnd")),
-             [(set DoubleRegs:$dst, (IntID DoubleRegs:$src1,
-                                           DoubleRegs:$src2))]>;
-
-class di_ALU64_didi_rnd_sat<string opc, Intrinsic IntID>
-  : ALU64_rr<(outs DoubleRegs:$dst), (ins DoubleRegs:$src1, DoubleRegs:$src2),
-             !strconcat("$dst = ", !strconcat(opc , "($src1, $src2):rnd:sat")),
-             [(set DoubleRegs:$dst, (IntID DoubleRegs:$src1,
-                                           DoubleRegs:$src2))]>;
-
-class di_ALU64_didi_crnd_sat<string opc, Intrinsic IntID>
-  : ALU64_rr<(outs DoubleRegs:$dst), (ins DoubleRegs:$src1, DoubleRegs:$src2),
-             !strconcat("$dst = ", !strconcat(opc , "($src1, $src2):crnd:sat")),
-             [(set DoubleRegs:$dst, (IntID DoubleRegs:$src1,
-                                           DoubleRegs:$src2))]>;
-
-class qi_ALU64_didi<string opc, Intrinsic IntID>
-  : ALU64_rr<(outs PredRegs:$dst), (ins DoubleRegs:$src1, DoubleRegs:$src2),
-             !strconcat("$dst = ", !strconcat(opc , "($src1, $src2)")),
-             [(set PredRegs:$dst, (IntID DoubleRegs:$src1, DoubleRegs:$src2))]>;
-
-//
-// SInst classes.
-//
-
-class qi_SInst_qi<string opc, Intrinsic IntID>
-  : SInst<(outs PredRegs:$dst), (ins IntRegs:$src),
-             !strconcat("$dst = ", !strconcat(opc , "($src)")),
-             [(set PredRegs:$dst, (IntID IntRegs:$src))]>;
-
-class qi_SInst_qi_pxfer<string opc, Intrinsic IntID>
-  : SInst<(outs PredRegs:$dst), (ins IntRegs:$src),
-             !strconcat("$dst = ", !strconcat(opc , "$src")),
-             [(set PredRegs:$dst, (IntID IntRegs:$src))]>;
-
-class qi_SInst_qiqi<string opc, Intrinsic IntID>
-  : SInst<(outs PredRegs:$dst), (ins IntRegs:$src1, IntRegs:$src2),
-             !strconcat("$dst = ", !strconcat(opc , "($src1, $src2)")),
-             [(set PredRegs:$dst, (IntID IntRegs:$src1, IntRegs:$src2))]>;
-
-class qi_SInst_qiqi_neg<string opc, Intrinsic IntID>
-  : SInst<(outs PredRegs:$dst), (ins IntRegs:$src1, IntRegs:$src2),
-             !strconcat("$dst = ", !strconcat(opc , "($src1, !$src2)")),
-             [(set PredRegs:$dst, (IntID IntRegs:$src1, IntRegs:$src2))]>;
-
-class di_SInst_di<string opc, Intrinsic IntID>
-  : SInst<(outs DoubleRegs:$dst), (ins DoubleRegs:$src),
-             !strconcat("$dst = ", !strconcat(opc , "($src)")),
-             [(set DoubleRegs:$dst, (IntID DoubleRegs:$src))]>;
-
-class di_SInst_di_sat<string opc, Intrinsic IntID>
-  : SInst<(outs DoubleRegs:$dst), (ins DoubleRegs:$src),
-             !strconcat("$dst = ", !strconcat(opc , "($src):sat")),
-             [(set DoubleRegs:$dst, (IntID DoubleRegs:$src))]>;
-
-class si_SInst_di<string opc, Intrinsic IntID>
-  : SInst<(outs IntRegs:$dst), (ins DoubleRegs:$src),
-          !strconcat("$dst = ", !strconcat(opc , "($src)")),
-          [(set IntRegs:$dst, (IntID DoubleRegs:$src))]>;
-
-class si_SInst_di_sat<string opc, Intrinsic IntID>
-  : SInst<(outs IntRegs:$dst), (ins DoubleRegs:$src),
-          !strconcat("$dst = ", !strconcat(opc , "($src):sat")),
-          [(set IntRegs:$dst, (IntID DoubleRegs:$src))]>;
-
-class di_SInst_disi<string opc, Intrinsic IntID>
-  : SInst<(outs DoubleRegs:$dst), (ins DoubleRegs:$src1, IntRegs:$src2),
-          !strconcat("$dst = ", !strconcat(opc , "($src1, $src2)")),
-          [(set DoubleRegs:$dst, (IntID DoubleRegs:$src1, IntRegs:$src2))]>;
-
-class di_SInst_didi<string opc, Intrinsic IntID>
-  : SInst<(outs DoubleRegs:$dst), (ins DoubleRegs:$src1, DoubleRegs:$src2),
-          !strconcat("$dst = ", !strconcat(opc , "($src1, $src2)")),
-          [(set DoubleRegs:$dst, (IntID DoubleRegs:$src1, DoubleRegs:$src2))]>;
-
-class di_SInst_si<string opc, Intrinsic IntID>
-  : SInst<(outs DoubleRegs:$dst), (ins IntRegs:$src1),
-          !strconcat("$dst = ", !strconcat(opc , "($src1)")),
-          [(set DoubleRegs:$dst, (IntID IntRegs:$src1))]>;
-
-class si_SInst_diu5<string opc, Intrinsic IntID>
-  : SInst<(outs IntRegs:$dst), (ins DoubleRegs:$src1, u5Imm:$src2),
-          !strconcat("$dst = ", !strconcat(opc , "($src1, #$src2)")),
-          [(set IntRegs:$dst, (IntID DoubleRegs:$src1, imm:$src2))]>;
-
-class si_SInst_disi<string opc, Intrinsic IntID>
-  : SInst<(outs IntRegs:$dst), (ins DoubleRegs:$src1, IntRegs:$src2),
-          !strconcat("$dst = ", !strconcat(opc , "($src1, $src2)")),
-          [(set IntRegs:$dst, (IntID DoubleRegs:$src1, IntRegs:$src2))]>;
-
-class si_SInst_si<string opc, Intrinsic IntID>
-  : SInst<(outs IntRegs:$dst), (ins IntRegs:$src),
-          !strconcat("$dst = ", !strconcat(opc , "($src)")),
-          [(set IntRegs:$dst, (IntID IntRegs:$src))]>;
-
-class di_SInst_qi<string opc, Intrinsic IntID>
-  : SInst<(outs DoubleRegs:$dst), (ins IntRegs:$src),
-          !strconcat("$dst = ", !strconcat(opc , "($src)")),
-          [(set DoubleRegs:$dst, (IntID IntRegs:$src))]>;
-
-class si_SInst_qi<string opc, Intrinsic IntID>
-  : SInst<(outs IntRegs:$dst), (ins IntRegs:$src),
-          !strconcat("$dst = ", !strconcat(opc , "$src")),
-          [(set IntRegs:$dst, (IntID IntRegs:$src))]>;
-
-class si_SInst_qiqi<string opc, Intrinsic IntID>
-  : SInst<(outs IntRegs:$dst), (ins IntRegs:$src1, IntRegs:$src2),
-          !strconcat("$dst = ", !strconcat(opc , "($src1, $src2)")),
-          [(set IntRegs:$dst, (IntID IntRegs:$src1, IntRegs:$src2))]>;
-
-class qi_SInst_si<string opc, Intrinsic IntID>
-  : SInst<(outs PredRegs:$dst), (ins IntRegs:$src),
-          !strconcat("$dst = ", !strconcat(opc , "$src")),
-          [(set PredRegs:$dst, (IntID IntRegs:$src))]>;
-
-class di_SInst_didiqi<string opc, Intrinsic IntID>
-  : SInst<(outs DoubleRegs:$dst), (ins DoubleRegs:$src1, DoubleRegs:$src2,
-                                       IntRegs:$src3),
-          !strconcat("$dst = ", !strconcat(opc , "($src1, $src2, $src3)")),
-          [(set DoubleRegs:$dst, (IntID DoubleRegs:$src1, DoubleRegs:$src2,
-                                        IntRegs:$src3))]>;
-
-class di_SInst_didiu3<string opc, Intrinsic IntID>
-  : SInst<(outs DoubleRegs:$dst), (ins DoubleRegs:$src1, DoubleRegs:$src2,
-                                       u3Imm:$src3),
-          !strconcat("$dst = ", !strconcat(opc , "($src1, $src2, #$src3)")),
-          [(set DoubleRegs:$dst, (IntID DoubleRegs:$src1, DoubleRegs:$src2,
-                                        imm:$src3))]>;
-
-
-//
-// MInst classes.
-//
-
-class di_MInst_disisi_acc<string opc, Intrinsic IntID>
-  : MInst_acc<(outs DoubleRegs:$dst), (ins DoubleRegs:$dst2, IntRegs:$src1,
-                                           IntRegs:$src2),
-             !strconcat("$dst += ", !strconcat(opc , "($src1, $src2)")),
-             [(set DoubleRegs:$dst, (IntID DoubleRegs:$dst2, IntRegs:$src1,
-                                           IntRegs:$src2))],
-             "$dst2 = $dst">;
-
-class di_MInst_disisi_nac<string opc, Intrinsic IntID>
-  : MInst_acc<(outs DoubleRegs:$dst), (ins DoubleRegs:$dst2, IntRegs:$src1,
-                                           IntRegs:$src2),
-             !strconcat("$dst -= ", !strconcat(opc , "($src1, $src2)")),
-             [(set DoubleRegs:$dst, (IntID DoubleRegs:$dst2, IntRegs:$src1,
-                                           IntRegs:$src2))],
-             "$dst2 = $dst">;
-
-class di_MInst_disisi_acc_sat<string opc, Intrinsic IntID>
-  : MInst_acc<(outs DoubleRegs:$dst), (ins DoubleRegs:$dst2, IntRegs:$src1,
-                                           IntRegs:$src2),
-             !strconcat("$dst += ", !strconcat(opc , "($src1, $src2):sat")),
-             [(set DoubleRegs:$dst, (IntID DoubleRegs:$dst2, IntRegs:$src1,
-                                           IntRegs:$src2))],
-             "$dst2 = $dst">;
-
-class di_MInst_disisi_nac_sat<string opc, Intrinsic IntID>
-  : MInst_acc<(outs DoubleRegs:$dst), (ins DoubleRegs:$dst2, IntRegs:$src1,
-                                           IntRegs:$src2),
-             !strconcat("$dst -= ", !strconcat(opc , "($src1, $src2):sat")),
-             [(set DoubleRegs:$dst, (IntID DoubleRegs:$dst2, IntRegs:$src1,
-                                           IntRegs:$src2))],
-             "$dst2 = $dst">;
-
-class di_MInst_disisi_acc_sat_conj<string opc, Intrinsic IntID>
-  : MInst_acc<(outs DoubleRegs:$dst), (ins DoubleRegs:$dst2, IntRegs:$src1,
-                                           IntRegs:$src2),
-             !strconcat("$dst += ", !strconcat(opc , "($src1, $src2*):sat")),
-             [(set DoubleRegs:$dst, (IntID DoubleRegs:$dst2, IntRegs:$src1,
-                                           IntRegs:$src2))],
-             "$dst2 = $dst">;
-
-class di_MInst_disisi_nac_sat_conj<string opc, Intrinsic IntID>
-  : MInst_acc<(outs DoubleRegs:$dst), (ins DoubleRegs:$dst2, IntRegs:$src1,
-                                           IntRegs:$src2),
-             !strconcat("$dst -= ", !strconcat(opc , "($src1, $src2*):sat")),
-             [(set DoubleRegs:$dst, (IntID DoubleRegs:$dst2, IntRegs:$src1,
-                                           IntRegs:$src2))],
-             "$dst2 = $dst">;
-
-class di_MInst_disisi_nac_s1_sat<string opc, Intrinsic IntID>
-  : MInst_acc<(outs DoubleRegs:$dst), (ins DoubleRegs:$dst2, IntRegs:$src1,
-                                           IntRegs:$src2),
-             !strconcat("$dst -= ", !strconcat(opc ,
-                                               "($src1, $src2):<<1:sat")),
-             [(set DoubleRegs:$dst, (IntID DoubleRegs:$dst2, IntRegs:$src1,
-                                           IntRegs:$src2))],
-             "$dst2 = $dst">;
-
-class di_MInst_disisi_acc_s1_sat_conj<string opc, Intrinsic IntID>
-  : MInst_acc<(outs DoubleRegs:$dst), (ins DoubleRegs:$dst2, IntRegs:$src1,
-                                           IntRegs:$src2),
-             !strconcat("$dst += ", !strconcat(opc ,
-                                               "($src1, $src2*):<<1:sat")),
-             [(set DoubleRegs:$dst, (IntID DoubleRegs:$dst2, IntRegs:$src1,
-                                           IntRegs:$src2))],
-             "$dst2 = $dst">;
-
-class di_MInst_disisi_nac_s1_sat_conj<string opc, Intrinsic IntID>
-  : MInst_acc<(outs DoubleRegs:$dst), (ins DoubleRegs:$dst2, IntRegs:$src1,
-                                           IntRegs:$src2),
-             !strconcat("$dst -= ", !strconcat(opc ,
-                                               "($src1, $src2*):<<1:sat")),
-             [(set DoubleRegs:$dst, (IntID DoubleRegs:$dst2, IntRegs:$src1,
-                                           IntRegs:$src2))],
-             "$dst2 = $dst">;
-
-class di_MInst_didi<string opc, Intrinsic IntID>
-  : MInst<(outs DoubleRegs:$dst), (ins DoubleRegs:$src1, DoubleRegs:$src2),
-             !strconcat("$dst = ", !strconcat(opc , "($src1, $src2)")),
-             [(set DoubleRegs:$dst, (IntID DoubleRegs:$src1,
-                                           DoubleRegs:$src2))]>;
-
-class di_MInst_didi_conj<string opc, Intrinsic IntID>
-  : MInst<(outs DoubleRegs:$dst), (ins DoubleRegs:$src1, DoubleRegs:$src2),
-             !strconcat("$dst = ", !strconcat(opc , "($src1, $src2*)")),
-             [(set DoubleRegs:$dst, (IntID DoubleRegs:$src1,
-                                           DoubleRegs:$src2))]>;
-
-class di_MInst_sisi_s1_sat_conj<string opc, Intrinsic IntID>
-  : MInst<(outs DoubleRegs:$dst), (ins IntRegs:$src1, IntRegs:$src2),
-             !strconcat("$dst = ", !strconcat(opc ,
-                                              "($src1, $src2*):<<1:sat")),
-             [(set DoubleRegs:$dst, (IntID IntRegs:$src1, IntRegs:$src2))]>;
-
-class di_MInst_didi_s1_rnd_sat<string opc, Intrinsic IntID>
-  : MInst<(outs DoubleRegs:$dst), (ins DoubleRegs:$src1, DoubleRegs:$src2),
-             !strconcat("$dst = ", !strconcat(opc ,
-                                              "($src1, $src2):<<1:rnd:sat")),
-             [(set DoubleRegs:$dst, (IntID DoubleRegs:$src1,
-                                           DoubleRegs:$src2))]>;
-
-class di_MInst_didi_sat<string opc, Intrinsic IntID>
-  : MInst<(outs DoubleRegs:$dst), (ins DoubleRegs:$src1, DoubleRegs:$src2),
-             !strconcat("$dst = ", !strconcat(opc , "($src1, $src2):sat")),
-             [(set DoubleRegs:$dst, (IntID DoubleRegs:$src1,
-                                           DoubleRegs:$src2))]>;
-
-class di_MInst_didi_rnd_sat<string opc, Intrinsic IntID>
-  : MInst<(outs DoubleRegs:$dst), (ins DoubleRegs:$src1, DoubleRegs:$src2),
-             !strconcat("$dst = ", !strconcat(opc ,
-                                              "($src1, $src2):rnd:sat")),
-             [(set DoubleRegs:$dst, (IntID DoubleRegs:$src1,
-                                           DoubleRegs:$src2))]>;
-
-class si_SInst_didi_sat<string opc, Intrinsic IntID>
-  : SInst<(outs IntRegs:$dst), (ins DoubleRegs:$src1, DoubleRegs:$src2),
-          !strconcat("$dst = ", !strconcat(opc , "($src1, $src2):sat")),
-          [(set IntRegs:$dst, (IntID DoubleRegs:$src1, DoubleRegs:$src2))]>;
-
-class si_SInst_disi_s1_rnd_sat<string opc, Intrinsic IntID>
-  : MInst<(outs IntRegs:$dst), (ins DoubleRegs:$src1, IntRegs:$src2),
-             !strconcat("$dst = ", !strconcat(opc ,
-                                              "($src1, $src2):<<1:rnd:sat")),
-             [(set IntRegs:$dst, (IntID DoubleRegs:$src1, IntRegs:$src2))]>;
-
-class si_MInst_sisi_s1_rnd_sat<string opc, Intrinsic IntID>
-  : MInst<(outs IntRegs:$dst), (ins IntRegs:$src1, IntRegs:$src2),
-             !strconcat("$dst = ", !strconcat(opc ,
-                                              "($src1, $src2):<<1:rnd:sat")),
-             [(set IntRegs:$dst, (IntID IntRegs:$src1, IntRegs:$src2))]>;
-
-class si_MInst_sisi_rnd_sat_conj<string opc, Intrinsic IntID>
-  : MInst<(outs IntRegs:$dst), (ins IntRegs:$src1, IntRegs:$src2),
-             !strconcat("$dst = ", !strconcat(opc ,
-                                              "($src1, $src2*):rnd:sat")),
-             [(set IntRegs:$dst, (IntID IntRegs:$src1, IntRegs:$src2))]>;
-
-class si_MInst_sisi_s1_rnd_sat_conj<string opc, Intrinsic IntID>
-  : MInst<(outs IntRegs:$dst), (ins IntRegs:$src1, IntRegs:$src2),
-             !strconcat("$dst = ", !strconcat(opc ,
-                                              "($src1, $src2*):<<1:rnd:sat")),
-             [(set IntRegs:$dst, (IntID IntRegs:$src1, IntRegs:$src2))]>;
-
-class si_MInst_sisi_rnd_sat<string opc, Intrinsic IntID>
-  : MInst<(outs IntRegs:$dst), (ins IntRegs:$src1, IntRegs:$src2),
-             !strconcat("$dst = ", !strconcat(opc ,
-                                              "($src1, $src2):rnd:sat")),
-             [(set IntRegs:$dst, (IntID IntRegs:$src1, IntRegs:$src2))]>;
-
-class di_MInst_sisi<string opc, Intrinsic IntID>
-  : MInst<(outs DoubleRegs:$dst), (ins IntRegs:$src1, IntRegs:$src2),
-             !strconcat("$dst = ", !strconcat(opc , "($src1, $src2)")),
-             [(set DoubleRegs:$dst, (IntID IntRegs:$src1, IntRegs:$src2))]>;
-
-class di_MInst_sisi_sat<string opc, Intrinsic IntID>
-  : MInst<(outs DoubleRegs:$dst), (ins IntRegs:$src1, IntRegs:$src2),
-             !strconcat("$dst = ", !strconcat(opc , "($src1, $src2):sat")),
-             [(set DoubleRegs:$dst, (IntID IntRegs:$src1, IntRegs:$src2))]>;
-
-class di_MInst_sisi_sat_conj<string opc, Intrinsic IntID>
-  : MInst<(outs DoubleRegs:$dst), (ins IntRegs:$src1, IntRegs:$src2),
-             !strconcat("$dst = ", !strconcat(opc , "($src1, $src2*):sat")),
-             [(set DoubleRegs:$dst, (IntID IntRegs:$src1, IntRegs:$src2))]>;
-
-class di_MInst_sisi_s1_sat<string opc, Intrinsic IntID>
-  : MInst<(outs DoubleRegs:$dst), (ins IntRegs:$src1, IntRegs:$src2),
-             !strconcat("$dst = ", !strconcat(opc , "($src1, $src2):<<1:sat")),
-             [(set DoubleRegs:$dst, (IntID IntRegs:$src1, IntRegs:$src2))]>;
-
-class di_MInst_didi_s1_sat<string opc, Intrinsic IntID>
-  : MInst<(outs DoubleRegs:$dst), (ins DoubleRegs:$src1, DoubleRegs:$src2),
-             !strconcat("$dst = ", !strconcat(opc , "($src1, $src2):<<1:sat")),
-             [(set DoubleRegs:$dst, (IntID DoubleRegs:$src1,
-                                           DoubleRegs:$src2))]>;
-
-class si_MInst_didi_s1_rnd_sat<string opc, Intrinsic IntID>
-  : MInst<(outs IntRegs:$dst), (ins DoubleRegs:$src1, DoubleRegs:$src2),
-             !strconcat("$dst = ", !strconcat(opc ,
-                                              "($src1, $src2):<<1:rnd:sat")),
-             [(set IntRegs:$dst, (IntID DoubleRegs:$src1, DoubleRegs:$src2))]>;
-
-class si_MInst_didi_rnd_sat<string opc, Intrinsic IntID>
-  : MInst<(outs IntRegs:$dst), (ins DoubleRegs:$src1, DoubleRegs:$src2),
-             !strconcat("$dst = ", !strconcat(opc , "($src1, $src2):rnd:sat")),
-             [(set IntRegs:$dst, (IntID DoubleRegs:$src1, DoubleRegs:$src2))]>;
-
-class di_MInst_dididi_acc_sat<string opc, Intrinsic IntID>
-  : MInst_acc<(outs DoubleRegs:$dst), (ins DoubleRegs:$dst2,
-                                           DoubleRegs:$src1, DoubleRegs:$src2),
-               !strconcat("$dst += ", !strconcat(opc , "($src1, $src2):sat")),
-               [(set DoubleRegs:$dst, (IntID DoubleRegs:$dst2,
-                                             DoubleRegs:$src1,
-                                             DoubleRegs:$src2))],
-               "$dst2 = $dst">;
-
-class di_MInst_dididi_acc_rnd_sat<string opc, Intrinsic IntID>
-  : MInst_acc<(outs DoubleRegs:$dst), (ins DoubleRegs:$dst2, DoubleRegs:$src1,
-                                           DoubleRegs:$src2),
-               !strconcat("$dst += ",
-                          !strconcat(opc , "($src1, $src2):rnd:sat")),
-               [(set DoubleRegs:$dst, (IntID DoubleRegs:$dst2,
-                                             DoubleRegs:$src1,
-                                             DoubleRegs:$src2))],
-               "$dst2 = $dst">;
-
-class di_MInst_dididi_acc_s1<string opc, Intrinsic IntID>
-  : MInst_acc<(outs DoubleRegs:$dst), (ins DoubleRegs:$dst2,
-                                           DoubleRegs:$src1,
-                                           DoubleRegs:$src2),
-               !strconcat("$dst += ",
-                          !strconcat(opc , "($src1, $src2):<<1")),
-               [(set DoubleRegs:$dst, (IntID DoubleRegs:$dst2,
-                                             DoubleRegs:$src1,
-                                             DoubleRegs:$src2))],
-               "$dst2 = $dst">;
-
-
-class di_MInst_dididi_acc_s1_sat<string opc, Intrinsic IntID>
-  : MInst_acc<(outs DoubleRegs:$dst), (ins DoubleRegs:$dst2,
-                                           DoubleRegs:$src1,
-                                           DoubleRegs:$src2),
-               !strconcat("$dst += ",
-                          !strconcat(opc , "($src1, $src2):<<1:sat")),
-               [(set DoubleRegs:$dst, (IntID DoubleRegs:$dst2,
-                                             DoubleRegs:$src1,
-                                             DoubleRegs:$src2))],
-               "$dst2 = $dst">;
-
-class di_MInst_dididi_acc_s1_rnd_sat<string opc, Intrinsic IntID>
-  : MInst_acc<(outs DoubleRegs:$dst), (ins DoubleRegs:$dst2, DoubleRegs:$src1,
-                                           DoubleRegs:$src2),
-               !strconcat("$dst += ",
-                          !strconcat(opc , "($src1, $src2):<<1:rnd:sat")),
-               [(set DoubleRegs:$dst, (IntID DoubleRegs:$dst2,
-                                             DoubleRegs:$src1,
-                                             DoubleRegs:$src2))],
-               "$dst2 = $dst">;
-
-class di_MInst_dididi_acc<string opc, Intrinsic IntID>
-  : MInst_acc<(outs DoubleRegs:$dst), (ins DoubleRegs:$dst2, DoubleRegs:$src1,
-                                           DoubleRegs:$src2),
-               !strconcat("$dst += ", !strconcat(opc , "($src1, $src2)")),
-               [(set DoubleRegs:$dst, (IntID DoubleRegs:$dst2,
-                                             DoubleRegs:$src1,
-                                             DoubleRegs:$src2))],
-               "$dst2 = $dst">;
-
-class di_MInst_dididi_acc_conj<string opc, Intrinsic IntID>
-  : MInst_acc<(outs DoubleRegs:$dst), (ins DoubleRegs:$dst2, DoubleRegs:$src1,
-                                           DoubleRegs:$src2),
-               !strconcat("$dst += ", !strconcat(opc , "($src1, $src2*)")),
-               [(set DoubleRegs:$dst, (IntID DoubleRegs:$dst2,
-                                             DoubleRegs:$src1,
-                                             DoubleRegs:$src2))],
-               "$dst2 = $dst">;
-
-class di_MInst_disisi_acc_s1_sat<string opc, Intrinsic IntID>
-  : MInst_acc<(outs DoubleRegs:$dst), (ins DoubleRegs:$dst2, IntRegs:$src1,
-                                           IntRegs:$src2),
-               !strconcat("$dst += ",
-                          !strconcat(opc , "($src1, $src2):<<1:sat")),
-               [(set DoubleRegs:$dst, (IntID DoubleRegs:$dst2, IntRegs:$src1,
-                                             IntRegs:$src2))],
-               "$dst2 = $dst">;
-
-class di_MInst_disi_s1_sat<string opc, Intrinsic IntID>
-  : MInst<(outs DoubleRegs:$dst), (ins DoubleRegs:$src1, IntRegs:$src2),
-             !strconcat("$dst = ", !strconcat(opc , "($src1, $src2):<<1:sat")),
-             [(set DoubleRegs:$dst, (IntID DoubleRegs:$src1, IntRegs:$src2))]>;
-
-class di_MInst_didisi_acc_s1_sat<string opc, Intrinsic IntID>
-  : MInst_acc<(outs DoubleRegs:$dst), (ins DoubleRegs:$dst2, DoubleRegs:$src1,
-                                           IntRegs:$src2),
-               !strconcat("$dst += ",
-                          !strconcat(opc , "($src1, $src2):<<1:sat")),
-               [(set DoubleRegs:$dst, (IntID DoubleRegs:$dst2,
-                                             DoubleRegs:$src1,
-                                             IntRegs:$src2))],
-               "$dst2 = $dst">;
-
-class si_MInst_disi_s1_rnd_sat<string opc, Intrinsic IntID>
-  : MInst<(outs IntRegs:$dst), (ins DoubleRegs:$src1, IntRegs:$src2),
-             !strconcat("$dst = ",
-                        !strconcat(opc , "($src1, $src2):<<1:rnd:sat")),
-             [(set IntRegs:$dst, (IntID DoubleRegs:$src1, IntRegs:$src2))]>;
-
-class si_MInst_didi<string opc, Intrinsic IntID>
-  : MInst<(outs IntRegs:$dst), (ins DoubleRegs:$src1, DoubleRegs:$src2),
-             !strconcat("$dst = ", !strconcat(opc , "($src1, $src2)")),
-             [(set IntRegs:$dst, (IntID DoubleRegs:$src1, DoubleRegs:$src2))]>;
-
-//
-// LDInst classes.
-//
-let mayLoad = 1, hasSideEffects = 0 in
-class di_LDInstPI_diu4<string opc, Intrinsic IntID>
-  : LDInstPI<(outs IntRegs:$dst, DoubleRegs:$dst2),
-           (ins IntRegs:$src1, IntRegs:$src2, CtrRegs:$src3, s4Imm:$offset),
-           "$dst2 = memd($src1++#$offset:circ($src3))",
-           [],
-           "$src1 = $dst">;
-
-/********************************************************************
-*            ALU32/VH                                               *
-*********************************************************************/
-
-// ALU32 / VH / Vector add halfwords.
-// Rd32=vadd[u]h(Rs32,Rt32:sat]
-def HEXAGON_A2_svaddh:
-  si_ALU32_sisi                   <"vaddh",    int_hexagon_A2_svaddh>;
-def HEXAGON_A2_svaddhs:
-  si_ALU32_sisi_sat               <"vaddh",    int_hexagon_A2_svaddhs>;
-def HEXAGON_A2_svadduhs:
-  si_ALU32_sisi_sat               <"vadduh",   int_hexagon_A2_svadduhs>;
-
-// ALU32 / VH / Vector average halfwords.
-def HEXAGON_A2_svavgh:
-  si_ALU32_sisi                   <"vavgh",    int_hexagon_A2_svavgh>;
-def HEXAGON_A2_svavghs:
-  si_ALU32_sisi_rnd               <"vavgh",    int_hexagon_A2_svavghs>;
-def HEXAGON_A2_svnavgh:
-  si_ALU32_sisi                   <"vnavgh",   int_hexagon_A2_svnavgh>;
-
-// ALU32 / VH / Vector subtract halfwords.
-def HEXAGON_A2_svsubh:
-  si_ALU32_sisi                   <"vsubh",    int_hexagon_A2_svsubh>;
-def HEXAGON_A2_svsubhs:
-  si_ALU32_sisi_sat               <"vsubh",    int_hexagon_A2_svsubhs>;
-def HEXAGON_A2_svsubuhs:
-  si_ALU32_sisi_sat               <"vsubuh",   int_hexagon_A2_svsubuhs>;
-
-// ALU64 / ALU / Transfer register.
-def HEXAGON_A2_tfrp:
-  di_ALU64_di                     <"",         int_hexagon_A2_tfrp>;
-
-/********************************************************************
-*            ALU64/VB                                               *
-*********************************************************************/
-
-// ALU64 / VB / Vector add unsigned bytes.
-def HEXAGON_A2_vaddub:
-  di_ALU64_didi                   <"vaddub",   int_hexagon_A2_vaddub>;
-def HEXAGON_A2_vaddubs:
-  di_ALU64_didi_sat               <"vaddub",   int_hexagon_A2_vaddubs>;
-
-// ALU64 / VB / Vector average unsigned bytes.
-def HEXAGON_A2_vavgub:
-  di_ALU64_didi                   <"vavgub",   int_hexagon_A2_vavgub>;
-def HEXAGON_A2_vavgubr:
-  di_ALU64_didi_rnd               <"vavgub",   int_hexagon_A2_vavgubr>;
-
-// ALU64 / VB / Vector compare unsigned bytes.
-def HEXAGON_A2_vcmpbeq:
-  qi_ALU64_didi                   <"vcmpb.eq", int_hexagon_A2_vcmpbeq>;
-def HEXAGON_A2_vcmpbgtu:
-  qi_ALU64_didi                   <"vcmpb.gtu",int_hexagon_A2_vcmpbgtu>;
-
-// ALU64 / VB / Vector maximum/minimum unsigned bytes.
-def HEXAGON_A2_vmaxub:
-  di_ALU64_didi                   <"vmaxub",   int_hexagon_A2_vmaxub>;
-def HEXAGON_A2_vminub:
-  di_ALU64_didi                   <"vminub",   int_hexagon_A2_vminub>;
-
-// ALU64 / VB / Vector subtract unsigned bytes.
-def HEXAGON_A2_vsubub:
-  di_ALU64_didi                   <"vsubub",   int_hexagon_A2_vsubub>;
-def HEXAGON_A2_vsububs:
-  di_ALU64_didi_sat               <"vsubub",   int_hexagon_A2_vsububs>;
-
-// ALU64 / VB / Vector mux.
-def HEXAGON_C2_vmux:
-  di_ALU64_qididi                 <"vmux",     int_hexagon_C2_vmux>;
-
-
-/********************************************************************
-*            ALU64/VH                                               *
-*********************************************************************/
-
-// ALU64 / VH / Vector add halfwords.
-// Rdd64=vadd[u]h(Rss64,Rtt64:sat]
-def HEXAGON_A2_vaddh:
-  di_ALU64_didi                   <"vaddh",    int_hexagon_A2_vaddh>;
-def HEXAGON_A2_vaddhs:
-  di_ALU64_didi_sat               <"vaddh",    int_hexagon_A2_vaddhs>;
-def HEXAGON_A2_vadduhs:
-  di_ALU64_didi_sat               <"vadduh",   int_hexagon_A2_vadduhs>;
-
-// ALU64 / VH / Vector average halfwords.
-// Rdd64=v[n]avg[u]h(Rss64,Rtt64:rnd/:crnd][:sat]
-def HEXAGON_A2_vavgh:
-  di_ALU64_didi                   <"vavgh",    int_hexagon_A2_vavgh>;
-def HEXAGON_A2_vavghcr:
-  di_ALU64_didi_crnd              <"vavgh",    int_hexagon_A2_vavghcr>;
-def HEXAGON_A2_vavghr:
-  di_ALU64_didi_rnd               <"vavgh",    int_hexagon_A2_vavghr>;
-def HEXAGON_A2_vavguh:
-  di_ALU64_didi                   <"vavguh",   int_hexagon_A2_vavguh>;
-def HEXAGON_A2_vavguhr:
-  di_ALU64_didi_rnd               <"vavguh",   int_hexagon_A2_vavguhr>;
-def HEXAGON_A2_vnavgh:
-  di_ALU64_didi                   <"vnavgh",   int_hexagon_A2_vnavgh>;
-def HEXAGON_A2_vnavghcr:
-  di_ALU64_didi_crnd_sat          <"vnavgh",   int_hexagon_A2_vnavghcr>;
-def HEXAGON_A2_vnavghr:
-  di_ALU64_didi_rnd_sat           <"vnavgh",   int_hexagon_A2_vnavghr>;
-
-// ALU64 / VH / Vector compare halfwords.
-def HEXAGON_A2_vcmpheq:
-  qi_ALU64_didi                   <"vcmph.eq", int_hexagon_A2_vcmpheq>;
-def HEXAGON_A2_vcmphgt:
-  qi_ALU64_didi                   <"vcmph.gt", int_hexagon_A2_vcmphgt>;
-def HEXAGON_A2_vcmphgtu:
-  qi_ALU64_didi                   <"vcmph.gtu",int_hexagon_A2_vcmphgtu>;
-
-// ALU64 / VH / Vector maximum halfwords.
-def HEXAGON_A2_vmaxh:
-  di_ALU64_didi                   <"vmaxh",    int_hexagon_A2_vmaxh>;
-def HEXAGON_A2_vmaxuh:
-  di_ALU64_didi                   <"vmaxuh",   int_hexagon_A2_vmaxuh>;
-
-// ALU64 / VH / Vector minimum halfwords.
-def HEXAGON_A2_vminh:
-  di_ALU64_didi                   <"vminh",    int_hexagon_A2_vminh>;
-def HEXAGON_A2_vminuh:
-  di_ALU64_didi                   <"vminuh",   int_hexagon_A2_vminuh>;
-
-// ALU64 / VH / Vector subtract halfwords.
-def HEXAGON_A2_vsubh:
-  di_ALU64_didi                   <"vsubh",    int_hexagon_A2_vsubh>;
-def HEXAGON_A2_vsubhs:
-  di_ALU64_didi_sat               <"vsubh",    int_hexagon_A2_vsubhs>;
-def HEXAGON_A2_vsubuhs:
-  di_ALU64_didi_sat               <"vsubuh",   int_hexagon_A2_vsubuhs>;
-
-
-/********************************************************************
-*            ALU64/VW                                               *
-*********************************************************************/
-
-// ALU64 / VW / Vector add words.
-// Rdd32=vaddw(Rss32,Rtt32)[:sat]
-def HEXAGON_A2_vaddw:
-  di_ALU64_didi                   <"vaddw",    int_hexagon_A2_vaddw>;
-def HEXAGON_A2_vaddws:
-  di_ALU64_didi_sat               <"vaddw",   int_hexagon_A2_vaddws>;
-
-// ALU64 / VW / Vector average words.
-def HEXAGON_A2_vavguw:
-  di_ALU64_didi                   <"vavguw",   int_hexagon_A2_vavguw>;
-def HEXAGON_A2_vavguwr:
-  di_ALU64_didi_rnd               <"vavguw",   int_hexagon_A2_vavguwr>;
-def HEXAGON_A2_vavgw:
-  di_ALU64_didi                   <"vavgw",    int_hexagon_A2_vavgw>;
-def HEXAGON_A2_vavgwcr:
-  di_ALU64_didi_crnd              <"vavgw",    int_hexagon_A2_vavgwcr>;
-def HEXAGON_A2_vavgwr:
-  di_ALU64_didi_rnd               <"vavgw",    int_hexagon_A2_vavgwr>;
-def HEXAGON_A2_vnavgw:
-  di_ALU64_didi                   <"vnavgw",   int_hexagon_A2_vnavgw>;
-def HEXAGON_A2_vnavgwcr:
-  di_ALU64_didi_crnd_sat          <"vnavgw",   int_hexagon_A2_vnavgwcr>;
-def HEXAGON_A2_vnavgwr:
-  di_ALU64_didi_rnd_sat           <"vnavgw",   int_hexagon_A2_vnavgwr>;
-
-// ALU64 / VW / Vector compare words.
-def HEXAGON_A2_vcmpweq:
-  qi_ALU64_didi                   <"vcmpw.eq", int_hexagon_A2_vcmpweq>;
-def HEXAGON_A2_vcmpwgt:
-  qi_ALU64_didi                   <"vcmpw.gt", int_hexagon_A2_vcmpwgt>;
-def HEXAGON_A2_vcmpwgtu:
-  qi_ALU64_didi                   <"vcmpw.gtu",int_hexagon_A2_vcmpwgtu>;
-
-// ALU64 / VW / Vector maximum words.
-def HEXAGON_A2_vmaxw:
-  di_ALU64_didi                   <"vmaxw",    int_hexagon_A2_vmaxw>;
-def HEXAGON_A2_vmaxuw:
-  di_ALU64_didi                   <"vmaxuw",   int_hexagon_A2_vmaxuw>;
-
-// ALU64 / VW / Vector minimum words.
-def HEXAGON_A2_vminw:
-  di_ALU64_didi                   <"vminw",    int_hexagon_A2_vminw>;
-def HEXAGON_A2_vminuw:
-  di_ALU64_didi                   <"vminuw",   int_hexagon_A2_vminuw>;
-
-// ALU64 / VW / Vector subtract words.
-def HEXAGON_A2_vsubw:
-  di_ALU64_didi                   <"vsubw",    int_hexagon_A2_vsubw>;
-def HEXAGON_A2_vsubws:
-  di_ALU64_didi_sat               <"vsubw",    int_hexagon_A2_vsubws>;
-
-/********************************************************************
-*            MTYPE/ALU                                              *
-*********************************************************************/
-
-// MTYPE / ALU / Vector absolute difference.
-def HEXAGON_M2_vabsdiffh:
-  di_MInst_didi                   <"vabsdiffh",int_hexagon_M2_vabsdiffh>;
-def HEXAGON_M2_vabsdiffw:
-  di_MInst_didi                   <"vabsdiffw",int_hexagon_M2_vabsdiffw>;
-
-
-/********************************************************************
-*            MTYPE/COMPLEX                                          *
-*********************************************************************/
-
-// MTYPE / COMPLEX / Complex multiply.
-// Rdd[-+]=cmpy(Rs, Rt:<<1]:sat
-def HEXAGON_M2_cmpys_s1:
-  di_MInst_sisi_s1_sat            <"cmpy",     int_hexagon_M2_cmpys_s1>;
-def HEXAGON_M2_cmpys_s0:
-  di_MInst_sisi_sat               <"cmpy",     int_hexagon_M2_cmpys_s0>;
-def HEXAGON_M2_cmpysc_s1:
-  di_MInst_sisi_s1_sat_conj       <"cmpy",     int_hexagon_M2_cmpysc_s1>;
-def HEXAGON_M2_cmpysc_s0:
-  di_MInst_sisi_sat_conj          <"cmpy",     int_hexagon_M2_cmpysc_s0>;
-
-def HEXAGON_M2_cmacs_s1:
-  di_MInst_disisi_acc_s1_sat      <"cmpy",     int_hexagon_M2_cmacs_s1>;
-def HEXAGON_M2_cmacs_s0:
-  di_MInst_disisi_acc_sat         <"cmpy",     int_hexagon_M2_cmacs_s0>;
-def HEXAGON_M2_cmacsc_s1:
-  di_MInst_disisi_acc_s1_sat_conj <"cmpy",     int_hexagon_M2_cmacsc_s1>;
-def HEXAGON_M2_cmacsc_s0:
-  di_MInst_disisi_acc_sat_conj    <"cmpy",     int_hexagon_M2_cmacsc_s0>;
-
-def HEXAGON_M2_cnacs_s1:
-  di_MInst_disisi_nac_s1_sat      <"cmpy",     int_hexagon_M2_cnacs_s1>;
-def HEXAGON_M2_cnacs_s0:
-  di_MInst_disisi_nac_sat         <"cmpy",     int_hexagon_M2_cnacs_s0>;
-def HEXAGON_M2_cnacsc_s1:
-  di_MInst_disisi_nac_s1_sat_conj <"cmpy",     int_hexagon_M2_cnacsc_s1>;
-def HEXAGON_M2_cnacsc_s0:
-  di_MInst_disisi_nac_sat_conj    <"cmpy",     int_hexagon_M2_cnacsc_s0>;
-
-// MTYPE / COMPLEX / Complex multiply real or imaginary.
-def HEXAGON_M2_cmpyr_s0:
-  di_MInst_sisi                   <"cmpyr",    int_hexagon_M2_cmpyr_s0>;
-def HEXAGON_M2_cmacr_s0:
-  di_MInst_disisi_acc             <"cmpyr",    int_hexagon_M2_cmacr_s0>;
-
-def HEXAGON_M2_cmpyi_s0:
-  di_MInst_sisi                   <"cmpyi",    int_hexagon_M2_cmpyi_s0>;
-def HEXAGON_M2_cmaci_s0:
-  di_MInst_disisi_acc             <"cmpyi",    int_hexagon_M2_cmaci_s0>;
-
-// MTYPE / COMPLEX / Complex multiply with round and pack.
-// Rxx32+=cmpy(Rs32,[*]Rt32:<<1]:rnd:sat
-def HEXAGON_M2_cmpyrs_s0:
-  si_MInst_sisi_rnd_sat           <"cmpy",     int_hexagon_M2_cmpyrs_s0>;
-def HEXAGON_M2_cmpyrs_s1:
-  si_MInst_sisi_s1_rnd_sat        <"cmpy",     int_hexagon_M2_cmpyrs_s1>;
-
-def HEXAGON_M2_cmpyrsc_s0:
-  si_MInst_sisi_rnd_sat_conj      <"cmpy",     int_hexagon_M2_cmpyrsc_s0>;
-def HEXAGON_M2_cmpyrsc_s1:
-  si_MInst_sisi_s1_rnd_sat_conj   <"cmpy",     int_hexagon_M2_cmpyrsc_s1>;
-
-//MTYPE / COMPLEX / Vector complex multiply real or imaginary.
-def HEXAGON_M2_vcmpy_s0_sat_i:
-  di_MInst_didi_sat               <"vcmpyi",   int_hexagon_M2_vcmpy_s0_sat_i>;
-def HEXAGON_M2_vcmpy_s1_sat_i:
-  di_MInst_didi_s1_sat            <"vcmpyi",   int_hexagon_M2_vcmpy_s1_sat_i>;
-
-def HEXAGON_M2_vcmpy_s0_sat_r:
-  di_MInst_didi_sat               <"vcmpyr",   int_hexagon_M2_vcmpy_s0_sat_r>;
-def HEXAGON_M2_vcmpy_s1_sat_r:
-  di_MInst_didi_s1_sat            <"vcmpyr",   int_hexagon_M2_vcmpy_s1_sat_r>;
-
-def HEXAGON_M2_vcmac_s0_sat_i:
-  di_MInst_dididi_acc_sat         <"vcmpyi",   int_hexagon_M2_vcmac_s0_sat_i>;
-def HEXAGON_M2_vcmac_s0_sat_r:
-  di_MInst_dididi_acc_sat         <"vcmpyr",   int_hexagon_M2_vcmac_s0_sat_r>;
-
-//MTYPE / COMPLEX / Vector reduce complex multiply real or imaginary.
-def HEXAGON_M2_vrcmpyi_s0:
-  di_MInst_didi                   <"vrcmpyi",  int_hexagon_M2_vrcmpyi_s0>;
-def HEXAGON_M2_vrcmpyr_s0:
-  di_MInst_didi                   <"vrcmpyr",  int_hexagon_M2_vrcmpyr_s0>;
-
-def HEXAGON_M2_vrcmpyi_s0c:
-  di_MInst_didi_conj              <"vrcmpyi",  int_hexagon_M2_vrcmpyi_s0c>;
-def HEXAGON_M2_vrcmpyr_s0c:
-  di_MInst_didi_conj              <"vrcmpyr",  int_hexagon_M2_vrcmpyr_s0c>;
-
-def HEXAGON_M2_vrcmaci_s0:
-  di_MInst_dididi_acc             <"vrcmpyi",  int_hexagon_M2_vrcmaci_s0>;
-def HEXAGON_M2_vrcmacr_s0:
-  di_MInst_dididi_acc             <"vrcmpyr",  int_hexagon_M2_vrcmacr_s0>;
-
-def HEXAGON_M2_vrcmaci_s0c:
-  di_MInst_dididi_acc_conj        <"vrcmpyi",  int_hexagon_M2_vrcmaci_s0c>;
-def HEXAGON_M2_vrcmacr_s0c:
-  di_MInst_dididi_acc_conj        <"vrcmpyr",  int_hexagon_M2_vrcmacr_s0c>;
-
-
-/********************************************************************
-*            MTYPE/MPYH                                             *
-*********************************************************************/
-
-// MTYPE / MPYH / Multiply word by half (32x16).
-//Rdd[+]=vmpywoh(Rss,Rtt)[:<<1][:rnd][:sat]
-//Rdd[+]=vmpyweh(Rss,Rtt)[:<<1][:rnd][:sat]
-def HEXAGON_M2_mmpyl_rs1:
-  di_MInst_didi_s1_rnd_sat        <"vmpyweh",  int_hexagon_M2_mmpyl_rs1>;
-def HEXAGON_M2_mmpyl_s1:
-  di_MInst_didi_s1_sat            <"vmpyweh",  int_hexagon_M2_mmpyl_s1>;
-def HEXAGON_M2_mmpyl_rs0:
-  di_MInst_didi_rnd_sat           <"vmpyweh",  int_hexagon_M2_mmpyl_rs0>;
-def HEXAGON_M2_mmpyl_s0:
-  di_MInst_didi_sat               <"vmpyweh",  int_hexagon_M2_mmpyl_s0>;
-def HEXAGON_M2_mmpyh_rs1:
-  di_MInst_didi_s1_rnd_sat        <"vmpywoh",  int_hexagon_M2_mmpyh_rs1>;
-def HEXAGON_M2_mmpyh_s1:
-  di_MInst_didi_s1_sat            <"vmpywoh",  int_hexagon_M2_mmpyh_s1>;
-def HEXAGON_M2_mmpyh_rs0:
-  di_MInst_didi_rnd_sat           <"vmpywoh",  int_hexagon_M2_mmpyh_rs0>;
-def HEXAGON_M2_mmpyh_s0:
-  di_MInst_didi_sat               <"vmpywoh",  int_hexagon_M2_mmpyh_s0>;
-def HEXAGON_M2_mmacls_rs1:
-  di_MInst_dididi_acc_s1_rnd_sat  <"vmpyweh",  int_hexagon_M2_mmacls_rs1>;
-def HEXAGON_M2_mmacls_s1:
-  di_MInst_dididi_acc_s1_sat      <"vmpyweh",  int_hexagon_M2_mmacls_s1>;
-def HEXAGON_M2_mmacls_rs0:
-  di_MInst_dididi_acc_rnd_sat     <"vmpyweh",  int_hexagon_M2_mmacls_rs0>;
-def HEXAGON_M2_mmacls_s0:
-  di_MInst_dididi_acc_sat         <"vmpyweh",  int_hexagon_M2_mmacls_s0>;
-def HEXAGON_M2_mmachs_rs1:
-  di_MInst_dididi_acc_s1_rnd_sat  <"vmpywoh",  int_hexagon_M2_mmachs_rs1>;
-def HEXAGON_M2_mmachs_s1:
-  di_MInst_dididi_acc_s1_sat      <"vmpywoh",  int_hexagon_M2_mmachs_s1>;
-def HEXAGON_M2_mmachs_rs0:
-  di_MInst_dididi_acc_rnd_sat     <"vmpywoh",  int_hexagon_M2_mmachs_rs0>;
-def HEXAGON_M2_mmachs_s0:
-  di_MInst_dididi_acc_sat         <"vmpywoh",  int_hexagon_M2_mmachs_s0>;
-
-// MTYPE / MPYH / Multiply word by unsigned half (32x16).
-//Rdd[+]=vmpywouh(Rss,Rtt)[:<<1][:rnd][:sat]
-//Rdd[+]=vmpyweuh(Rss,Rtt)[:<<1][:rnd][:sat]
-def HEXAGON_M2_mmpyul_rs1:
-  di_MInst_didi_s1_rnd_sat        <"vmpyweuh", int_hexagon_M2_mmpyul_rs1>;
-def HEXAGON_M2_mmpyul_s1:
-  di_MInst_didi_s1_sat            <"vmpyweuh", int_hexagon_M2_mmpyul_s1>;
-def HEXAGON_M2_mmpyul_rs0:
-  di_MInst_didi_rnd_sat           <"vmpyweuh", int_hexagon_M2_mmpyul_rs0>;
-def HEXAGON_M2_mmpyul_s0:
-  di_MInst_didi_sat               <"vmpyweuh", int_hexagon_M2_mmpyul_s0>;
-def HEXAGON_M2_mmpyuh_rs1:
-  di_MInst_didi_s1_rnd_sat        <"vmpywouh", int_hexagon_M2_mmpyuh_rs1>;
-def HEXAGON_M2_mmpyuh_s1:
-  di_MInst_didi_s1_sat            <"vmpywouh", int_hexagon_M2_mmpyuh_s1>;
-def HEXAGON_M2_mmpyuh_rs0:
-  di_MInst_didi_rnd_sat           <"vmpywouh", int_hexagon_M2_mmpyuh_rs0>;
-def HEXAGON_M2_mmpyuh_s0:
-  di_MInst_didi_sat               <"vmpywouh", int_hexagon_M2_mmpyuh_s0>;
-def HEXAGON_M2_mmaculs_rs1:
-  di_MInst_dididi_acc_s1_rnd_sat  <"vmpyweuh", int_hexagon_M2_mmaculs_rs1>;
-def HEXAGON_M2_mmaculs_s1:
-  di_MInst_dididi_acc_s1_sat      <"vmpyweuh", int_hexagon_M2_mmaculs_s1>;
-def HEXAGON_M2_mmaculs_rs0:
-  di_MInst_dididi_acc_rnd_sat     <"vmpyweuh", int_hexagon_M2_mmaculs_rs0>;
-def HEXAGON_M2_mmaculs_s0:
-  di_MInst_dididi_acc_sat         <"vmpyweuh", int_hexagon_M2_mmaculs_s0>;
-def HEXAGON_M2_mmacuhs_rs1:
-  di_MInst_dididi_acc_s1_rnd_sat  <"vmpywouh", int_hexagon_M2_mmacuhs_rs1>;
-def HEXAGON_M2_mmacuhs_s1:
-  di_MInst_dididi_acc_s1_sat      <"vmpywouh", int_hexagon_M2_mmacuhs_s1>;
-def HEXAGON_M2_mmacuhs_rs0:
-  di_MInst_dididi_acc_rnd_sat     <"vmpywouh", int_hexagon_M2_mmacuhs_rs0>;
-def HEXAGON_M2_mmacuhs_s0:
-  di_MInst_dididi_acc_sat         <"vmpywouh", int_hexagon_M2_mmacuhs_s0>;
-
-/********************************************************************
-*            MTYPE/VB                                               *
-*********************************************************************/
-
-// MTYPE / VB / Vector reduce add unsigned bytes.
-def HEXAGON_A2_vraddub:
-  di_MInst_didi                   <"vraddub", int_hexagon_A2_vraddub>;
-def HEXAGON_A2_vraddub_acc:
-  di_MInst_dididi_acc             <"vraddub", int_hexagon_A2_vraddub_acc>;
-
-// MTYPE / VB / Vector sum of absolute differences unsigned bytes.
-def HEXAGON_A2_vrsadub:
-  di_MInst_didi                   <"vrsadub", int_hexagon_A2_vrsadub>;
-def HEXAGON_A2_vrsadub_acc:
-  di_MInst_dididi_acc             <"vrsadub", int_hexagon_A2_vrsadub_acc>;
-
-/********************************************************************
-*            MTYPE/VH                                               *
-*********************************************************************/
-
-// MTYPE / VH / Vector dual multiply.
-def HEXAGON_M2_vdmpys_s1:
-  di_MInst_didi_s1_sat            <"vdmpy",   int_hexagon_M2_vdmpys_s1>;
-def HEXAGON_M2_vdmpys_s0:
-  di_MInst_didi_sat               <"vdmpy",   int_hexagon_M2_vdmpys_s0>;
-def HEXAGON_M2_vdmacs_s1:
-  di_MInst_dididi_acc_s1_sat      <"vdmpy",   int_hexagon_M2_vdmacs_s1>;
-def HEXAGON_M2_vdmacs_s0:
-  di_MInst_dididi_acc_sat         <"vdmpy",   int_hexagon_M2_vdmacs_s0>;
-
-// MTYPE / VH / Vector dual multiply with round and pack.
-def HEXAGON_M2_vdmpyrs_s0:
-  si_MInst_didi_rnd_sat           <"vdmpy",   int_hexagon_M2_vdmpyrs_s0>;
-def HEXAGON_M2_vdmpyrs_s1:
-  si_MInst_didi_s1_rnd_sat        <"vdmpy",   int_hexagon_M2_vdmpyrs_s1>;
-
-// MTYPE / VH / Vector multiply even halfwords.
-def HEXAGON_M2_vmpy2es_s1:
-  di_MInst_didi_s1_sat            <"vmpyeh",  int_hexagon_M2_vmpy2es_s1>;
-def HEXAGON_M2_vmpy2es_s0:
-  di_MInst_didi_sat               <"vmpyeh",  int_hexagon_M2_vmpy2es_s0>;
-def HEXAGON_M2_vmac2es:
-  di_MInst_dididi_acc             <"vmpyeh",  int_hexagon_M2_vmac2es>;
-def HEXAGON_M2_vmac2es_s1:
-  di_MInst_dididi_acc_s1_sat      <"vmpyeh",  int_hexagon_M2_vmac2es_s1>;
-def HEXAGON_M2_vmac2es_s0:
-  di_MInst_dididi_acc_sat         <"vmpyeh",  int_hexagon_M2_vmac2es_s0>;
-
-// MTYPE / VH / Vector multiply halfwords.
-def HEXAGON_M2_vmpy2s_s0:
-  di_MInst_sisi_sat               <"vmpyh",   int_hexagon_M2_vmpy2s_s0>;
-def HEXAGON_M2_vmpy2s_s1:
-  di_MInst_sisi_s1_sat            <"vmpyh",   int_hexagon_M2_vmpy2s_s1>;
-def HEXAGON_M2_vmac2:
-  di_MInst_disisi_acc             <"vmpyh",   int_hexagon_M2_vmac2>;
-def HEXAGON_M2_vmac2s_s0:
-  di_MInst_disisi_acc_sat         <"vmpyh",   int_hexagon_M2_vmac2s_s0>;
-def HEXAGON_M2_vmac2s_s1:
-  di_MInst_disisi_acc_s1_sat      <"vmpyh",   int_hexagon_M2_vmac2s_s1>;
-
-// MTYPE / VH / Vector multiply halfwords with round and pack.
-def HEXAGON_M2_vmpy2s_s0pack:
-  si_MInst_sisi_rnd_sat           <"vmpyh",   int_hexagon_M2_vmpy2s_s0pack>;
-def HEXAGON_M2_vmpy2s_s1pack:
-  si_MInst_sisi_s1_rnd_sat        <"vmpyh",   int_hexagon_M2_vmpy2s_s1pack>;
-
-// MTYPE / VH / Vector reduce multiply halfwords.
-// Rxx32+=vrmpyh(Rss32,Rtt32)
-def HEXAGON_M2_vrmpy_s0:
-  di_MInst_didi                   <"vrmpyh",  int_hexagon_M2_vrmpy_s0>;
-def HEXAGON_M2_vrmac_s0:
-  di_MInst_dididi_acc             <"vrmpyh",  int_hexagon_M2_vrmac_s0>;
-
-/********************************************************************
-*            STYPE/COMPLEX                                          *
-*********************************************************************/
-
-// STYPE / COMPLEX / Vector Complex conjugate.
-def HEXAGON_A2_vconj:
-  di_SInst_di_sat                 <"vconj",   int_hexagon_A2_vconj>;
-
-// STYPE / COMPLEX / Vector Complex rotate.
-def HEXAGON_S2_vcrotate:
-  di_SInst_disi                   <"vcrotate",int_hexagon_S2_vcrotate>;
-
-
-/********************************************************************
-*            STYPE/PERM                                             *
-*********************************************************************/
-
-// STYPE / PERM / Vector align.
-// Need custom lowering
-def HEXAGON_S2_valignib:
-  di_SInst_didiu3                 <"valignb", int_hexagon_S2_valignib>;
-def HEXAGON_S2_valignrb:
-  di_SInst_didiqi                 <"valignb", int_hexagon_S2_valignrb>;
-
-// STYPE / PERM / Vector round and pack.
-def HEXAGON_S2_vrndpackwh:
-  si_SInst_di                     <"vrndwh",  int_hexagon_S2_vrndpackwh>;
-def HEXAGON_S2_vrndpackwhs:
-  si_SInst_di_sat                 <"vrndwh",  int_hexagon_S2_vrndpackwhs>;
-
-// STYPE / PERM / Vector saturate and pack.
-def HEXAGON_S2_svsathb:
-  si_SInst_si                     <"vsathb",  int_hexagon_S2_svsathb>;
-def HEXAGON_S2_vsathb:
-  si_SInst_di                     <"vsathb",  int_hexagon_S2_vsathb>;
-def HEXAGON_S2_svsathub:
-  si_SInst_si                     <"vsathub", int_hexagon_S2_svsathub>;
-def HEXAGON_S2_vsathub:
-  si_SInst_di                     <"vsathub", int_hexagon_S2_vsathub>;
-def HEXAGON_S2_vsatwh:
-  si_SInst_di                     <"vsatwh",  int_hexagon_S2_vsatwh>;
-def HEXAGON_S2_vsatwuh:
-  si_SInst_di                     <"vsatwuh", int_hexagon_S2_vsatwuh>;
-
-// STYPE / PERM / Vector saturate without pack.
-def HEXAGON_S2_vsathb_nopack:
-  di_SInst_di                     <"vsathb",  int_hexagon_S2_vsathb_nopack>;
-def HEXAGON_S2_vsathub_nopack:
-  di_SInst_di                     <"vsathub", int_hexagon_S2_vsathub_nopack>;
-def HEXAGON_S2_vsatwh_nopack:
-  di_SInst_di                     <"vsatwh",  int_hexagon_S2_vsatwh_nopack>;
-def HEXAGON_S2_vsatwuh_nopack:
-  di_SInst_di                     <"vsatwuh", int_hexagon_S2_vsatwuh_nopack>;
-
-// STYPE / PERM / Vector shuffle.
-def HEXAGON_S2_shuffeb:
-  di_SInst_didi                   <"shuffeb", int_hexagon_S2_shuffeb>;
-def HEXAGON_S2_shuffeh:
-  di_SInst_didi                   <"shuffeh", int_hexagon_S2_shuffeh>;
-def HEXAGON_S2_shuffob:
-  di_SInst_didi                   <"shuffob", int_hexagon_S2_shuffob>;
-def HEXAGON_S2_shuffoh:
-  di_SInst_didi                   <"shuffoh", int_hexagon_S2_shuffoh>;
-
-// STYPE / PERM / Vector splat bytes.
-def HEXAGON_S2_vsplatrb:
-  si_SInst_si                     <"vsplatb", int_hexagon_S2_vsplatrb>;
-
-// STYPE / PERM / Vector splat halfwords.
-def HEXAGON_S2_vsplatrh:
-  di_SInst_si                     <"vsplath", int_hexagon_S2_vsplatrh>;
-
-// STYPE / PERM / Vector splice.
-def Hexagon_S2_vsplicerb:
-  di_SInst_didiqi                 <"vspliceb",int_hexagon_S2_vsplicerb>;
-def Hexagon_S2_vspliceib:
-  di_SInst_didiu3                 <"vspliceb",int_hexagon_S2_vspliceib>;
-
-// STYPE / PERM / Sign extend.
-def HEXAGON_S2_vsxtbh:
-  di_SInst_si                     <"vsxtbh",  int_hexagon_S2_vsxtbh>;
-def HEXAGON_S2_vsxthw:
-  di_SInst_si                     <"vsxthw",  int_hexagon_S2_vsxthw>;
-
-// STYPE / PERM / Truncate.
-def HEXAGON_S2_vtrunehb:
-  si_SInst_di                     <"vtrunehb",int_hexagon_S2_vtrunehb>;
-def HEXAGON_S2_vtrunohb:
-  si_SInst_di                     <"vtrunohb",int_hexagon_S2_vtrunohb>;
-def HEXAGON_S2_vtrunewh:
-  di_SInst_didi                   <"vtrunewh",int_hexagon_S2_vtrunewh>;
-def HEXAGON_S2_vtrunowh:
-  di_SInst_didi                   <"vtrunowh",int_hexagon_S2_vtrunowh>;
-
-// STYPE / PERM / Zero extend.
-def HEXAGON_S2_vzxtbh:
-  di_SInst_si                     <"vzxtbh",  int_hexagon_S2_vzxtbh>;
-def HEXAGON_S2_vzxthw:
-  di_SInst_si                     <"vzxthw",  int_hexagon_S2_vzxthw>;
-
-
-/********************************************************************
-*            STYPE/PRED                                             *
-*********************************************************************/
-
-// STYPE / PRED / Mask generate from predicate.
-def HEXAGON_C2_mask:
-  di_SInst_qi                     <"mask",   int_hexagon_C2_mask>;
-
-// STYPE / PRED / Predicate transfer.
-def HEXAGON_C2_tfrpr:
-  si_SInst_qi                     <"",       int_hexagon_C2_tfrpr>;
-def HEXAGON_C2_tfrrp:
-  qi_SInst_si                     <"",       int_hexagon_C2_tfrrp>;
-
-// STYPE / PRED / Viterbi pack even and odd predicate bits.
-def HEXAGON_C2_vitpack:
-  si_SInst_qiqi                   <"vitpack",int_hexagon_C2_vitpack>;
-
-
-/********************************************************************
-*            STYPE/VH                                               *
-*********************************************************************/
-
-// STYPE / VH / Vector absolute value halfwords.
-// Rdd64=vabsh(Rss64)
-def HEXAGON_A2_vabsh:
-  di_SInst_di                     <"vabsh",   int_hexagon_A2_vabsh>;
-def HEXAGON_A2_vabshsat:
-  di_SInst_di_sat                 <"vabsh",   int_hexagon_A2_vabshsat>;
-
-// STYPE / VH / Vector shift halfwords by immediate.
-// Rdd64=v[asl/asr/lsr]h(Rss64,Rt32)
-def HEXAGON_S2_asl_i_vh:
-  di_SInst_disi                   <"vaslh",   int_hexagon_S2_asl_i_vh>;
-def HEXAGON_S2_asr_i_vh:
-  di_SInst_disi                   <"vasrh",   int_hexagon_S2_asr_i_vh>;
-def HEXAGON_S2_lsr_i_vh:
-  di_SInst_disi                   <"vlsrh",   int_hexagon_S2_lsr_i_vh>;
-
-// STYPE / VH / Vector shift halfwords by register.
-// Rdd64=v[asl/asr/lsl/lsr]w(Rss64,Rt32)
-def HEXAGON_S2_asl_r_vh:
-  di_SInst_disi                   <"vaslh",   int_hexagon_S2_asl_r_vh>;
-def HEXAGON_S2_asr_r_vh:
-  di_SInst_disi                   <"vasrh",   int_hexagon_S2_asr_r_vh>;
-def HEXAGON_S2_lsl_r_vh:
-  di_SInst_disi                   <"vlslh",   int_hexagon_S2_lsl_r_vh>;
-def HEXAGON_S2_lsr_r_vh:
-  di_SInst_disi                   <"vlsrh",   int_hexagon_S2_lsr_r_vh>;
-
-
-/********************************************************************
-*            STYPE/VW                                               *
-*********************************************************************/
-
-// STYPE / VW / Vector absolute value words.
-def HEXAGON_A2_vabsw:
-  di_SInst_di                     <"vabsw",   int_hexagon_A2_vabsw>;
-def HEXAGON_A2_vabswsat:
-  di_SInst_di_sat                 <"vabsw",   int_hexagon_A2_vabswsat>;
-
-// STYPE / VW / Vector shift words by immediate.
-// Rdd64=v[asl/vsl]w(Rss64,Rt32)
-def HEXAGON_S2_asl_i_vw:
-  di_SInst_disi                   <"vaslw",   int_hexagon_S2_asl_i_vw>;
-def HEXAGON_S2_asr_i_vw:
-  di_SInst_disi                   <"vasrw",   int_hexagon_S2_asr_i_vw>;
-def HEXAGON_S2_lsr_i_vw:
-  di_SInst_disi                   <"vlsrw",   int_hexagon_S2_lsr_i_vw>;
-
-// STYPE / VW / Vector shift words by register.
-// Rdd64=v[asl/vsl]w(Rss64,Rt32)
-def HEXAGON_S2_asl_r_vw:
-  di_SInst_disi                   <"vaslw",   int_hexagon_S2_asl_r_vw>;
-def HEXAGON_S2_asr_r_vw:
-  di_SInst_disi                   <"vasrw",   int_hexagon_S2_asr_r_vw>;
-def HEXAGON_S2_lsl_r_vw:
-  di_SInst_disi                   <"vlslw",   int_hexagon_S2_lsl_r_vw>;
-def HEXAGON_S2_lsr_r_vw:
-  di_SInst_disi                   <"vlsrw",   int_hexagon_S2_lsr_r_vw>;
-
-// STYPE / VW / Vector shift words with truncate and pack.
-def HEXAGON_S2_asr_r_svw_trun:
-  si_SInst_disi                   <"vasrw",   int_hexagon_S2_asr_r_svw_trun>;
-def HEXAGON_S2_asr_i_svw_trun:
-  si_SInst_diu5                   <"vasrw",   int_hexagon_S2_asr_i_svw_trun>;
-
-// LD / Circular loads.
-def HEXAGON_circ_ldd:
-  di_LDInstPI_diu4                <"circ_ldd", int_hexagon_circ_ldd>;
+//*******************************************************************
+//           STYPE/VH
+//*******************************************************************
+
+// Vector absolute value halfwords with and without saturation
+// Rdd64=vabsh(Rss64)[:sat]
+def : T_P_pat <A2_vabsh, int_hexagon_A2_vabsh>;
+def : T_P_pat <A2_vabshsat, int_hexagon_A2_vabshsat>;
+
+// Vector shift halfwords by immediate
+// Rdd64=[vaslh/vasrh/vlsrh](Rss64,u4)
+def : T_PI_pat <S2_asr_i_vh, int_hexagon_S2_asr_i_vh>;
+def : T_PI_pat <S2_lsr_i_vh, int_hexagon_S2_lsr_i_vh>;
+def : T_PI_pat <S2_asl_i_vh, int_hexagon_S2_asl_i_vh>;
+
+// Vector shift halfwords by register
+// Rdd64=[vaslw/vasrw/vlslw/vlsrw](Rss64,Rt32)
+def : T_PR_pat <S2_asr_r_vh, int_hexagon_S2_asr_r_vh>;
+def : T_PR_pat <S2_lsr_r_vh, int_hexagon_S2_lsr_r_vh>;
+def : T_PR_pat <S2_asl_r_vh, int_hexagon_S2_asl_r_vh>;
+def : T_PR_pat <S2_lsl_r_vh, int_hexagon_S2_lsl_r_vh>;
+
+//*******************************************************************
+//           STYPE/VW
+//*******************************************************************
+
+// Vector absolute value words with and without saturation
+def : T_P_pat <A2_vabsw, int_hexagon_A2_vabsw>;
+def : T_P_pat <A2_vabswsat, int_hexagon_A2_vabswsat>;
+
+// Vector shift words by immediate.
+// Rdd64=[vasrw/vlsrw|vaslw](Rss64,u5)
+def : T_PI_pat <S2_asr_i_vw, int_hexagon_S2_asr_i_vw>;
+def : T_PI_pat <S2_lsr_i_vw, int_hexagon_S2_lsr_i_vw>;
+def : T_PI_pat <S2_asl_i_vw, int_hexagon_S2_asl_i_vw>;
+
+// Vector shift words by register.
+// Rdd64=[vasrw/vlsrw|vaslw|vlslw](Rss64,Rt32)
+def : T_PR_pat <S2_asr_r_vw, int_hexagon_S2_asr_r_vw>;
+def : T_PR_pat <S2_lsr_r_vw, int_hexagon_S2_lsr_r_vw>;
+def : T_PR_pat <S2_asl_r_vw, int_hexagon_S2_asl_r_vw>;
+def : T_PR_pat <S2_lsl_r_vw, int_hexagon_S2_lsl_r_vw>;
+
+// Vector shift words with truncate and pack
+def : T_PR_pat <S2_asr_r_svw_trun, int_hexagon_S2_asr_r_svw_trun>;
+
+// Load/store locked.
+def : T_R_pat<L2_loadw_locked, int_hexagon_L2_loadw_locked>;
+def : T_R_pat<L4_loadd_locked, int_hexagon_L4_loadd_locked>;
+
+def : Pat<(int_hexagon_S2_storew_locked I32:$Rs, I32:$Rt),
+          (C2_tfrpr (S2_storew_locked I32:$Rs, I32:$Rt))>;
+def : Pat<(int_hexagon_S4_stored_locked I32:$Rs, I64:$Rt),
+          (C2_tfrpr (S4_stored_locked I32:$Rs, I64:$Rt))>;
+
+//*******************************************************************
+//           ST
+//*******************************************************************
+
+class T_stb_pat <InstHexagon MI, Intrinsic IntID, PatLeaf Val>
+  : Pat<(IntID I32:$Rs, Val:$Rt, I32:$Ru),
+        (MI I32:$Rs, I32:$Ru, Val:$Rt)>;
+
+def : T_stb_pat <S2_storerh_pbr, int_hexagon_brev_sth,   I32>;
+def : T_stb_pat <S2_storerb_pbr, int_hexagon_brev_stb,   I32>;
+def : T_stb_pat <S2_storeri_pbr, int_hexagon_brev_stw,   I32>;
+def : T_stb_pat <S2_storerf_pbr, int_hexagon_brev_sthhi, I32>;
+def : T_stb_pat <S2_storerd_pbr, int_hexagon_brev_std,   I64>;
+
+class T_stc_pat <InstHexagon MI, Intrinsic IntID, PatLeaf Imm, PatLeaf Val>
+  : Pat<(IntID I32:$Rs, Val:$Rt, I32:$Ru, Imm:$s),
+        (MI I32:$Rs, Imm:$s, I32:$Ru, Val:$Rt)>;
+
+def: T_stc_pat<S2_storerb_pci, int_hexagon_circ_stb,   s4_0ImmPred, I32>;
+def: T_stc_pat<S2_storerh_pci, int_hexagon_circ_sth,   s4_1ImmPred, I32>;
+def: T_stc_pat<S2_storeri_pci, int_hexagon_circ_stw,   s4_2ImmPred, I32>;
+def: T_stc_pat<S2_storerd_pci, int_hexagon_circ_std,   s4_3ImmPred, I64>;
+def: T_stc_pat<S2_storerf_pci, int_hexagon_circ_sthhi, s4_1ImmPred, I32>;
 
 include "HexagonIntrinsicsV3.td"
 include "HexagonIntrinsicsV4.td"
 include "HexagonIntrinsicsV5.td"
+include "HexagonIntrinsicsV60.td"

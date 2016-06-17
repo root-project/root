@@ -78,8 +78,8 @@ TProtoClass::TProtoClass(TClass* cl):
             clCurrent = clRD;
             protoRealData.fClassIndex = fDepClasses.size()-1;
             //protoRealData.fClass = clRD->GetName();
-//TObjString *clstr = new TObjString(clRD->GetName());
-            if (precRd->TestBit(TRealData::kTransient)) {
+            //TObjString *clstr = new TObjString(clRD->GetName());
+            if (rd->TestBit(TRealData::kTransient)) {
                //clstr->SetBit(TRealData::kTransient);
                protoRealData.SetFlag(TProtoRealData::kIsTransient,true);
             }
@@ -114,9 +114,6 @@ TProtoClass::TProtoClass(TClass* cl):
    cl->CalculateStreamerOffset();
    fOffsetStreamer = cl->fOffsetStreamer;
 }
-
-
-
 
 // // conversion of a new TProtoClass from an old TProtoClass
 // //______________________________________________________________________________
@@ -225,12 +222,12 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
          //if (element->IsA() == TObjString::Class()) {
          if (element.IsAClass() ) {
             if (gDebug > 1) Info("","Treating beforehand mother class %s",GetClassName(element.fClassIndex));
-//             int autoloadingOldval=gInterpreter->SetClassAutoloading(false);
+            //int autoloadingOldval=gInterpreter->SetClassAutoloading(false);
             TInterpreter::SuspendAutoParsing autoParseRaii(gInterpreter);
 
             TClass::GetClass(GetClassName(element.fClassIndex));
 
-//             gInterpreter->SetClassAutoloading(autoloadingOldval);
+            //gInterpreter->SetClassAutoloading(autoloadingOldval);
          }
       }
    }
@@ -342,7 +339,7 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
             if (first) {
                //LM: need to do here because somehow fRealData is destroyed when calling TClass::GetListOfDataMembers()
                if (cl->fRealData) {
-                  Info("FillTClas","Real data for class %s is not empty - make a new one",cl->GetName() );
+                  Info("FillTClass","Real data for class %s is not empty - make a new one",cl->GetName() );
                   delete cl->fRealData;
                }
                cl->fRealData = new TList(); // FIXME: this should really become a THashList!
@@ -354,7 +351,7 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
             prevLevel = element.fLevel;
 
          }
-            //}
+         //}
       }
    }
    else {
@@ -379,7 +376,6 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
    // delete fPRealData;
    // fPRealData = 0;
 
-
    return kTRUE;
 }
 
@@ -389,7 +385,7 @@ TProtoClass::TProtoRealData::TProtoRealData(const TRealData* rd):
    //TNamed(rd->GetDataMember()->GetName(), rd->GetName()),
    //TNamed(),
    //fName(rd->GetDataMember()->GetName()),
-//   fTitle(rd->GetName()),
+   //fTitle(rd->GetName()),
    fOffset(rd->GetThisOffset()),
    fDMIndex(-1),
    fLevel(0),
@@ -424,16 +420,16 @@ TProtoClass::TProtoRealData::~TProtoRealData()
 /// find data member from protoclass
 
 TRealData* TProtoClass::TProtoRealData::CreateRealData(TClass* dmClass,
-                                                         TClass* parent, TRealData *prevData, int prevLevel) const
+                                                       TClass* parent, TRealData *prevData, int prevLevel) const
 {
 
-      //TDataMember* dm = (TDataMember*)dmClass->GetListOfDataMembers()->FindObject(fName);
+   //TDataMember* dm = (TDataMember*)dmClass->GetListOfDataMembers()->FindObject(fName);
    TDataMember* dm = TProtoClass::FindDataMember(dmClass, fDMIndex);
 
    if (!dm && dmClass->GetState()!=TClass::kForwardDeclared) {
       ::Error("CreateRealData",
-             "Cannot find data member # %d of class %s for parent %s!", fDMIndex, dmClass->GetName(),
-             parent->GetName());
+              "Cannot find data member # %d of class %s for parent %s!", fDMIndex, dmClass->GetName(),
+              parent->GetName());
       return nullptr;
    }
 
@@ -446,8 +442,8 @@ TRealData* TProtoClass::TProtoRealData::CreateRealData(TClass* dmClass,
       realMemberName = TString("*")+realMemberName;
    else {
       if (dm && dm->GetArrayDim() > 0) {
-      // in case of array (like fMatrix[2][2] we need to add max index )
-      // this only in case of it os not a pointer
+         // in case of array (like fMatrix[2][2] we need to add max index )
+         // this only in case of it os not a pointer
          for (int idim = 0; idim < dm->GetArrayDim(); ++idim)
             realMemberName += TString::Format("[%d]",dm->GetMaxIndex(idim) );
       }
@@ -457,7 +453,7 @@ TRealData* TProtoClass::TProtoRealData::CreateRealData(TClass* dmClass,
       if (fLevel-prevLevel == 1) // I am going down 1 level
          realMemberName = TString::Format("%s.%s",prevData->GetName(), realMemberName.Data() );
       else if (fLevel <= prevLevel) { // I am at the same level
-         // need to strip out prev name
+                                      // need to strip out prev name
          std::string prevName = prevData->GetName();
          // we strip the prev data member name from the full name
          std::string parentName;
@@ -474,6 +470,9 @@ TRealData* TProtoClass::TProtoRealData::CreateRealData(TClass* dmClass,
    //printf("adding new realdata for class %s : %s - %s   %d    %d   \n",dmClass->GetName(), realMemberName.Data(), dm->GetName(),fLevel, fDMIndex  );
 
    TRealData* rd = new TRealData(realMemberName, fOffset, dm);
+   if (TestFlag(kIsTransient)) {
+      rd->SetBit(TRealData::kTransient);
+   }
    rd->SetIsObject(TestFlag(kIsObject) );
    return rd;
 }

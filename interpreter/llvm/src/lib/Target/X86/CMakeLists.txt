@@ -15,6 +15,7 @@ add_public_tablegen_target(X86CommonTableGen)
 set(sources
   X86AsmPrinter.cpp
   X86CallFrameOptimization.cpp
+  X86ExpandPseudo.cpp
   X86FastISel.cpp
   X86FloatingPoint.cpp
   X86FrameLowering.cpp
@@ -26,23 +27,18 @@ set(sources
   X86PadShortFunction.cpp
   X86RegisterInfo.cpp
   X86SelectionDAGInfo.cpp
+  X86ShuffleDecodeConstantPool.cpp
   X86Subtarget.cpp
   X86TargetMachine.cpp
   X86TargetObjectFile.cpp
   X86TargetTransformInfo.cpp
   X86VZeroUpper.cpp
   X86FixupLEAs.cpp
+  X86WinEHState.cpp
+  X86OptimizeLEAs.cpp
+  X86FixupBWInsts.cpp
+  X86WinAllocaExpander.cpp
   )
-
-if( CMAKE_CL_64 )
-  enable_language(ASM_MASM)
-  ADD_CUSTOM_COMMAND(
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/X86CompilationCallback_Win64.obj
-    MAIN_DEPENDENCY X86CompilationCallback_Win64.asm
-    COMMAND ${CMAKE_ASM_MASM_COMPILER} /Fo ${CMAKE_CURRENT_BINARY_DIR}/X86CompilationCallback_Win64.obj /c ${CMAKE_CURRENT_SOURCE_DIR}/X86CompilationCallback_Win64.asm
-   )
-   set(sources ${sources} ${CMAKE_CURRENT_BINARY_DIR}/X86CompilationCallback_Win64.obj)
-endif()
 
 add_llvm_target(X86CodeGen ${sources})
 

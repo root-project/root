@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TLeafL
+\ingroup tree
+
 A TLeaf for a 64 bit Integer data type.
 */
 

@@ -27,7 +27,7 @@
 class TASPluginGS : public TASImagePlugin {
 
 private:
-   char  *fInterpreter;   // path to GhostScript interpreter
+   char  *fInterpreter;   ///< path to GhostScript interpreter
 
 public:
    TASPluginGS(const char *ext);

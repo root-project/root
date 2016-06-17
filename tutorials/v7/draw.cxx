@@ -17,27 +17,32 @@
 R__LOAD_LIBRARY(libGpad)
 
 #include "ROOT/THist.h"
-#include "ROOT/TCanvas.h"
+#include "ROOT/Canvas.h"
 #include "ROOT/TDirectory.h"
 #include <iostream>
 
 void example() {
   using namespace ROOT;
 
-  auto pHist = MakeCoop<THist<2, double>>(TAxisConfig{100, 0., 1.},
-                                          TAxisConfig{{0., 1., 2., 3.,10.}});
+  Experimental::TAxisConfig xaxis("x", 100, 0., 1.);
+  Experimental::TAxisConfig yaxis("y", {0., 1., 2., 3.,10.});
+  auto pHist = std::make_shared<Experimental::TH2D>(xaxis, yaxis);
 
   pHist->Fill({0.01, 1.02});
-  experimental::TDirectory::Heap().Add("hist", pHist);
+  Experimental::TDirectory::Heap().Add("hist", pHist);
 
-  auto canvas = experimental::TCanvas::Create("MyCanvas");
+  auto canvas = Experimental::TCanvas::Create("MyCanvas");
   canvas->Draw(pHist);
 }
 
 void draw() {
   example();
 
-  // And the event loop (?) will call
-  for (auto&& canv: experimental::TCanvas::GetCanvases())
-    canv->Paint();
+  // And the event loop (?) will call (yes, copying the weak_ptr)
+  for (std::weak_ptr<ROOT::Experimental::TCanvas> wcanv:
+         ROOT::Experimental::TCanvas::GetCanvases()) {
+    if (auto canv = wcanv.lock()) {
+      canv->Paint();
+    }
+  }
 }

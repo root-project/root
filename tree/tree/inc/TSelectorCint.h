@@ -55,8 +55,8 @@ protected:
    CallFunc_t   *fFuncGetAbort;   //!
    CallFunc_t   *fFuncResetAbort; //!
    CallFunc_t   *fFuncGetStat;    //!
-   TSelector    *fIntSelector;    //Pointer to interpreted selector (if interpreted)
-   Bool_t        fIsOwner;        //True if fIntSelector shoudl be deleted when the this object is deleted.
+   TSelector    *fIntSelector;    ///< Pointer to interpreted selector (if interpreted)
+   Bool_t        fIsOwner;        ///< True if fIntSelector should be deleted when the this object is deleted.
 
 public:
    TSelectorCint();

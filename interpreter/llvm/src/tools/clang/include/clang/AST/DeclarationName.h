@@ -30,6 +30,7 @@ namespace clang {
   class IdentifierInfo;
   class MultiKeywordSelector;
   enum OverloadedOperatorKind : int;
+  struct PrintingPolicy;
   class QualType;
   class Type;
   class TypeSourceInfo;
@@ -184,7 +185,7 @@ public:
 
   // operator bool() - Evaluates true when this declaration name is
   // non-empty.
-  LLVM_EXPLICIT operator bool() const {
+  explicit operator bool() const {
     return ((Ptr & PtrMask) != 0) ||
            (reinterpret_cast<IdentifierInfo *>(Ptr & ~PtrMask));
   }
@@ -302,7 +303,9 @@ public:
   }
 
   static int compare(DeclarationName LHS, DeclarationName RHS);
-  
+
+  void print(raw_ostream &OS, const PrintingPolicy &Policy);
+
   void dump() const;
 };
 
@@ -344,8 +347,8 @@ class DeclarationNameTable {
   CXXOperatorIdName *CXXOperatorNames; // Operator names
   void *CXXLiteralOperatorNames; // Actually a CXXOperatorIdName*
 
-  DeclarationNameTable(const DeclarationNameTable&) LLVM_DELETED_FUNCTION;
-  void operator=(const DeclarationNameTable&) LLVM_DELETED_FUNCTION;
+  DeclarationNameTable(const DeclarationNameTable&) = delete;
+  void operator=(const DeclarationNameTable&) = delete;
 
 public:
   DeclarationNameTable(const ASTContext &C);
@@ -395,7 +398,7 @@ struct DeclarationNameLoc {
   // Locations (if any) for the tilde (destructor) or operator keyword
   // (conversion) are stored elsewhere.
   struct NT {
-    TypeSourceInfo* TInfo;
+    TypeSourceInfo *TInfo;
   };
 
   // The location (if any) of the operator keyword is stored elsewhere.

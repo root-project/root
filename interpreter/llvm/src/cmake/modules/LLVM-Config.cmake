@@ -31,7 +31,32 @@ endfunction(is_llvm_target_library)
 
 
 macro(llvm_config executable)
-  explicit_llvm_config(${executable} ${ARGN})
+  cmake_parse_arguments(ARG "USE_SHARED" "" "" ${ARGN})
+  set(link_components ${ARG_UNPARSED_ARGUMENTS})
+
+  if(USE_SHARED)
+    # If USE_SHARED is specified, then we link against libLLVM,
+    # but also against the component libraries below. This is
+    # done in case libLLVM does not contain all of the components
+    # the target requires.
+    #
+    # Strip LLVM_DYLIB_COMPONENTS out of link_components.
+    # To do this, we need special handling for "all", since that
+    # may imply linking to libraries that are not included in
+    # libLLVM.
+
+    if (DEFINED link_components AND DEFINED LLVM_DYLIB_COMPONENTS)
+      if("${LLVM_DYLIB_COMPONENTS}" STREQUAL "all")
+        set(link_components "")
+      else()
+        list(REMOVE_ITEM link_components ${LLVM_DYLIB_COMPONENTS})
+      endif()
+    endif()
+
+    target_link_libraries(${executable} LLVM)
+  endif()
+
+  explicit_llvm_config(${executable} ${link_components})
 endmacro(llvm_config)
 
 
@@ -41,9 +66,9 @@ function(explicit_llvm_config executable)
   llvm_map_components_to_libnames(LIBRARIES ${link_components})
   get_target_property(t ${executable} TYPE)
   if("x${t}" STREQUAL "xSTATIC_LIBRARY")
-    target_link_libraries(${executable} ${cmake_2_8_12_INTERFACE} ${LIBRARIES})
+    target_link_libraries(${executable} INTERFACE ${LIBRARIES})
   elseif("x${t}" STREQUAL "xSHARED_LIBRARY" OR "x${t}" STREQUAL "xMODULE_LIBRARY")
-    target_link_libraries(${executable} ${cmake_2_8_12_PRIVATE} ${LIBRARIES})
+    target_link_libraries(${executable} PRIVATE ${LIBRARIES})
   else()
     # Use plain form for legacy user.
     target_link_libraries(${executable} ${LIBRARIES})
@@ -132,6 +157,41 @@ function(llvm_map_components_to_libnames out_libs)
       # already processed
     elseif( c STREQUAL "all" )
       list(APPEND expanded_components ${LLVM_AVAILABLE_LIBS})
+    elseif( c STREQUAL "AllTargetsAsmPrinters" )
+      # Link all the asm printers from all the targets
+      foreach(t ${LLVM_TARGETS_TO_BUILD})
+        if( TARGET LLVM${t}AsmPrinter )
+          list(APPEND expanded_components "LLVM${t}AsmPrinter")
+        endif()
+      endforeach(t)
+    elseif( c STREQUAL "AllTargetsAsmParsers" )
+      # Link all the asm parsers from all the targets
+      foreach(t ${LLVM_TARGETS_TO_BUILD})
+        if( TARGET LLVM${t}AsmParser )
+          list(APPEND expanded_components "LLVM${t}AsmParser")
+        endif()
+      endforeach(t)
+    elseif( c STREQUAL "AllTargetsDescs" )
+      # Link all the descs from all the targets
+      foreach(t ${LLVM_TARGETS_TO_BUILD})
+        if( TARGET LLVM${t}Desc )
+          list(APPEND expanded_components "LLVM${t}Desc")
+        endif()
+      endforeach(t)
+    elseif( c STREQUAL "AllTargetsDisassemblers" )
+      # Link all the disassemblers from all the targets
+      foreach(t ${LLVM_TARGETS_TO_BUILD})
+        if( TARGET LLVM${t}Disassembler )
+          list(APPEND expanded_components "LLVM${t}Disassembler")
+        endif()
+      endforeach(t)
+    elseif( c STREQUAL "AllTargetsInfos" )
+      # Link all the infos from all the targets
+      foreach(t ${LLVM_TARGETS_TO_BUILD})
+        if( TARGET LLVM${t}Info )
+          list(APPEND expanded_components "LLVM${t}Info")
+        endif()
+      endforeach(t)
     else( NOT idx LESS 0 )
       # Canonize the component name:
       string(TOUPPER "${c}" capitalized)

@@ -110,7 +110,7 @@ TModuleGenerator::GetSourceFileKind(const char *filename) const
                                  clang::ArrayRef<std::pair<const clang::FileEntry*,
                                                            const clang::DirectoryEntry*>>(),
                                  0 /*SearchPath*/, 0 /*RelativePath*/,
-                                 0 /*SuggestedModule*/);
+                                 0 /*RequestingModule*/, 0/*SuggestedModule*/);
       if (hdrFileEntry) {
          return kSFKHeader;
       }

@@ -80,10 +80,10 @@ inline PyObject* PyROOT::TMethodHolder::CallFast( void* self, ptrdiff_t offset, 
       std::string exception_type;
       if (cl) exception_type = cl->GetName();
       else {
-	int errorCode;
-        std::unique_ptr<char[]> demangled(TClassEdit::DemangleTypeIdName(typeid(e),errorCode));
-        if (errorCode) exception_type = typeid(e).name();
-        else exception_type = demangled.get();
+         int errorCode;
+         std::unique_ptr<char[]> demangled(TClassEdit::DemangleTypeIdName(typeid(e),errorCode));
+         if (errorCode) exception_type = typeid(e).name();
+         else exception_type = demangled.get();
       }
       PyObject* pyexc = PyDict_GetItemString( pyUserExcepts, exception_type.c_str() );
       if ( !pyexc ) {
@@ -197,7 +197,7 @@ std::string PyROOT::TMethodHolder::GetSignatureString()
          sig << " " << parname;
 
       const std::string& defvalue = Cppyy::GetMethodArgDefault( fMethod, iarg );
-      if ( ! defvalue.empty() ) 
+      if ( ! defvalue.empty() )
          sig << " = " << defvalue;
       ifirst++;
    }

@@ -74,6 +74,7 @@ namespace clang {
     BTT_IsConvertibleTo,
     BTT_IsSame,
     BTT_TypeCompatible,
+    BTT_IsAssignable,
     BTT_IsNothrowAssignable,
     BTT_IsTriviallyAssignable,
     BTT_Last = BTT_IsTriviallyAssignable,
@@ -92,7 +93,8 @@ namespace clang {
   enum UnaryExprOrTypeTrait {
     UETT_SizeOf,
     UETT_AlignOf,
-    UETT_VecStep
+    UETT_VecStep,
+    UETT_OpenMPRequiredSimdAlign,
   };
 }
 

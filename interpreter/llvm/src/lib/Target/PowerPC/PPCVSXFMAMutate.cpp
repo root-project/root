@@ -38,8 +38,14 @@
 
 using namespace llvm;
 
-static cl::opt<bool> DisableVSXFMAMutate("disable-ppc-vsx-fma-mutation",
-cl::desc("Disable VSX FMA instruction mutation"), cl::Hidden);
+// Temporarily disable FMA mutation by default, since it doesn't handle
+// cross-basic-block intervals well.
+// See: http://lists.llvm.org/pipermail/llvm-dev/2016-February/095669.html
+//      http://reviews.llvm.org/D17087
+static cl::opt<bool> DisableVSXFMAMutate(
+    "disable-ppc-vsx-fma-mutation",
+    cl::desc("Disable VSX FMA instruction mutation"), cl::init(true),
+    cl::Hidden);
 
 #define DEBUG_TYPE "ppc-vsx-fma-mutate"
 
@@ -99,10 +105,15 @@ protected:
         //                         %RM<imp-use>; VSLRC:%vreg16,%vreg18,%vreg9
         // and we remove: %vreg5<def> = COPY %vreg9; VSLRC:%vreg5,%vreg9
 
-        SlotIndex FMAIdx = LIS->getInstructionIndex(MI);
+        SlotIndex FMAIdx = LIS->getInstructionIndex(*MI);
 
         VNInfo *AddendValNo =
           LIS->getInterval(MI->getOperand(1).getReg()).Query(FMAIdx).valueIn();
+
+        // This can be null if the register is undef.
+        if (!AddendValNo)
+          continue;
+
         MachineInstr *AddendMI = LIS->getInstructionFromIndex(AddendValNo->def);
 
         // The addend and this instruction must be in the same block.
@@ -136,6 +147,16 @@ protected:
         // source of the copy, it must still be live here.  We can't use
         // interval testing for a physical register, so as long as we're
         // walking the MIs we may as well test liveness here.
+        //
+        // FIXME: There is a case that occurs in practice, like this:
+        //   %vreg9<def> = COPY %F1; VSSRC:%vreg9
+        //   ...
+        //   %vreg6<def> = COPY %vreg9; VSSRC:%vreg6,%vreg9
+        //   %vreg7<def> = COPY %vreg9; VSSRC:%vreg7,%vreg9
+        //   %vreg9<def,tied1> = XSMADDASP %vreg9<tied0>, %vreg1, %vreg4; VSSRC:
+        //   %vreg6<def,tied1> = XSMADDASP %vreg6<tied0>, %vreg1, %vreg2; VSSRC:
+        //   %vreg7<def,tied1> = XSMADDASP %vreg7<tied0>, %vreg1, %vreg3; VSSRC:
+        // which prevents an otherwise-profitable transformation.
         bool OtherUsers = false, KillsAddendSrc = false;
         for (auto J = std::prev(I), JE = MachineBasicBlock::iterator(AddendMI);
              J != JE; --J) {
@@ -153,33 +174,46 @@ protected:
         if (OtherUsers || KillsAddendSrc)
           continue;
 
-        // Find one of the product operands that is killed by this instruction.
 
+        // The transformation doesn't work well with things like:
+        //    %vreg5 = A-form-op %vreg5, %vreg11, %vreg5;
+        // unless vreg11 is also a kill, so skip when it is not,
+        // and check operand 3 to see it is also a kill to handle the case:
+        //   %vreg5 = A-form-op %vreg5, %vreg5, %vreg11;
+        // where vreg5 and vreg11 are both kills. This case would be skipped
+        // otherwise.
+        unsigned OldFMAReg = MI->getOperand(0).getReg();
+
+        // Find one of the product operands that is killed by this instruction.
         unsigned KilledProdOp = 0, OtherProdOp = 0;
-        if (LIS->getInterval(MI->getOperand(2).getReg())
-                     .Query(FMAIdx).isKill()) {
+        unsigned Reg2 = MI->getOperand(2).getReg();
+        unsigned Reg3 = MI->getOperand(3).getReg();
+        if (LIS->getInterval(Reg2).Query(FMAIdx).isKill()
+            && Reg2 != OldFMAReg) {
           KilledProdOp = 2;
           OtherProdOp  = 3;
-        } else if (LIS->getInterval(MI->getOperand(3).getReg())
-                     .Query(FMAIdx).isKill()) {
+        } else if (LIS->getInterval(Reg3).Query(FMAIdx).isKill()
+            && Reg3 != OldFMAReg) {
           KilledProdOp = 3;
           OtherProdOp  = 2;
         }
 
-        // If there are no killed product operands, then this transformation is
-        // likely not profitable.
+        // If there are no usable killed product operands, then this
+        // transformation is likely not profitable.
         if (!KilledProdOp)
           continue;
 
-        // For virtual registers, verify that the addend source register
-        // is live here (as should have been assured above).
-        assert((!TargetRegisterInfo::isVirtualRegister(AddendSrcReg) ||
-                LIS->getInterval(AddendSrcReg).liveAt(FMAIdx)) &&
-               "Addend source register is not live!");
+        // If the addend copy is used only by this MI, then the addend source
+        // register is likely not live here. This could be fixed (based on the
+        // legality checks above, the live range for the addend source register
+        // could be extended), but it seems likely that such a trivial copy can
+        // be coalesced away later, and thus is not worth the effort.
+        if (TargetRegisterInfo::isVirtualRegister(AddendSrcReg) &&
+            !LIS->getInterval(AddendSrcReg).liveAt(FMAIdx))
+          continue;
 
         // Transform: (O2 * O3) + O1 -> (O2 * O1) + O3.
 
-        unsigned AddReg = AddendMI->getOperand(1).getReg();
         unsigned KilledProdReg = MI->getOperand(KilledProdOp).getReg();
         unsigned OtherProdReg  = MI->getOperand(OtherProdOp).getReg();
 
@@ -195,12 +229,12 @@ protected:
         bool KilledProdRegUndef = MI->getOperand(KilledProdOp).isUndef();
         bool OtherProdRegUndef  = MI->getOperand(OtherProdOp).isUndef();
 
-        unsigned OldFMAReg = MI->getOperand(0).getReg();
-
-        // The transformation doesn't work well with things like:
-        //    %vreg5 = A-form-op %vreg5, %vreg11, %vreg5;
-        // so leave such things alone.
-        if (OldFMAReg == KilledProdReg)
+        // If there isn't a class that fits, we can't perform the transform.
+        // This is needed for correctness with a mixture of VSX and Altivec
+        // instructions to make sure that a low VSX register is not assigned to
+        // the Altivec instruction.
+        if (!MRI.constrainRegClass(KilledProdReg,
+                                   MRI.getRegClass(OldFMAReg)))
           continue;
 
         assert(OldFMAReg == AddendMI->getOperand(0).getReg() &&
@@ -210,23 +244,33 @@ protected:
 
         MI->getOperand(0).setReg(KilledProdReg);
         MI->getOperand(1).setReg(KilledProdReg);
-        MI->getOperand(3).setReg(AddReg);
-        MI->getOperand(2).setReg(OtherProdReg);
+        MI->getOperand(3).setReg(AddendSrcReg);
 
         MI->getOperand(0).setSubReg(KilledProdSubReg);
         MI->getOperand(1).setSubReg(KilledProdSubReg);
         MI->getOperand(3).setSubReg(AddSubReg);
-        MI->getOperand(2).setSubReg(OtherProdSubReg);
 
         MI->getOperand(1).setIsKill(KilledProdRegKill);
         MI->getOperand(3).setIsKill(AddRegKill);
-        MI->getOperand(2).setIsKill(OtherProdRegKill);
 
         MI->getOperand(1).setIsUndef(KilledProdRegUndef);
         MI->getOperand(3).setIsUndef(AddRegUndef);
-        MI->getOperand(2).setIsUndef(OtherProdRegUndef);
 
         MI->setDesc(TII->get(AltOpc));
+
+        // If the addend is also a multiplicand, replace it with the addend
+        // source in both places.
+        if (OtherProdReg == AddendMI->getOperand(0).getReg()) {
+          MI->getOperand(2).setReg(AddendSrcReg);
+          MI->getOperand(2).setSubReg(AddSubReg);
+          MI->getOperand(2).setIsKill(AddRegKill);
+          MI->getOperand(2).setIsUndef(AddRegUndef);
+        } else {
+          MI->getOperand(2).setReg(OtherProdReg);
+          MI->getOperand(2).setSubReg(OtherProdSubReg);
+          MI->getOperand(2).setIsKill(OtherProdRegKill);
+          MI->getOperand(2).setIsUndef(OtherProdRegUndef);
+        }
 
         DEBUG(dbgs() << " -> " << *MI);
 
@@ -245,8 +289,7 @@ protected:
           if (UseMI == AddendMI)
             continue;
 
-          UseMO.setReg(KilledProdReg);
-          UseMO.setSubReg(KilledProdSubReg);
+          UseMO.substVirtReg(KilledProdReg, KilledProdSubReg, *TRI);
         }
 
         // Extend the live intervals of the killed product operand to hold the
@@ -268,13 +311,27 @@ protected:
         }
         DEBUG(dbgs() << "  extended: " << NewFMAInt << '\n');
 
+        // Extend the live interval of the addend source (it might end at the
+        // copy to be removed, or somewhere in between there and here). This
+        // is necessary only if it is a physical register.
+        if (!TargetRegisterInfo::isVirtualRegister(AddendSrcReg))
+          for (MCRegUnitIterator Units(AddendSrcReg, TRI); Units.isValid();
+               ++Units) {
+            unsigned Unit = *Units;
+
+            LiveRange &AddendSrcRange = LIS->getRegUnit(Unit);
+            AddendSrcRange.extendInBlock(LIS->getMBBStartIdx(&MBB),
+                                         FMAIdx.getRegSlot());
+            DEBUG(dbgs() << "  extended: " << AddendSrcRange << '\n');
+          }
+
         FMAInt.removeValNo(FMAValNo);
         DEBUG(dbgs() << "  trimmed:  " << FMAInt << '\n');
 
         // Remove the (now unused) copy.
 
         DEBUG(dbgs() << "  removing: " << *AddendMI << '\n');
-        LIS->RemoveMachineInstrFromMaps(AddendMI);
+        LIS->RemoveMachineInstrFromMaps(*AddendMI);
         AddendMI->eraseFromParent();
 
         Changed = true;
@@ -285,6 +342,9 @@ protected:
 
 public:
     bool runOnMachineFunction(MachineFunction &MF) override {
+      if (skipFunction(*MF.getFunction()))
+        return false;
+
       // If we don't have VSX then go ahead and return without doing
       // anything.
       const PPCSubtarget &STI = MF.getSubtarget<PPCSubtarget>();
@@ -329,7 +389,6 @@ INITIALIZE_PASS_END(PPCVSXFMAMutate, DEBUG_TYPE,
 char &llvm::PPCVSXFMAMutateID = PPCVSXFMAMutate::ID;
 
 char PPCVSXFMAMutate::ID = 0;
-FunctionPass*
-llvm::createPPCVSXFMAMutatePass() { return new PPCVSXFMAMutate(); }
-
-
+FunctionPass *llvm::createPPCVSXFMAMutatePass() {
+  return new PPCVSXFMAMutate();
+}

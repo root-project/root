@@ -152,8 +152,9 @@ E: foldr@codedgers.com
 D: Author of llvmc2
 
 N: Dan Gohman
-E: dan433584@gmail.com
+E: sunfish@mozilla.com
 D: Miscellaneous bug fixes
+D: WebAssembly Backend
 
 N: David Goodwin
 E: david@goodwinz.net
@@ -346,6 +347,10 @@ N: Richard Osborne
 E: richard@xmos.com
 D: XCore backend
 
+N: Piotr Padlewski
+E: piotr.padlewski@gmail.com
+D: !invariant.group metadata and other intrinsics for devirtualization in clang
+
 N: Devang Patel
 E: dpatel@apple.com
 D: LTO tool, PassManager rewrite, Loop Pass Manager, Loop Rotate
@@ -391,7 +396,7 @@ D: Fixes and improvements to the ARM fast-isel pass
 D: Fixes and improvements to the AArch64 backend
 
 N: Nadav Rotem
-E: nrotem@apple.com
+E: nadav.rotem@me.com
 D: X86 code generation improvements, Loop Vectorizer.
 
 N: Roman Samoilov

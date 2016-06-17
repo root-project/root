@@ -23,20 +23,17 @@ namespace llvm {
 class MCAsmInfo;
 class raw_ostream;
 
-/// MCValue - This represents an "assembler immediate".  In its most
-/// general form, this can hold ":Kind:(SymbolA - SymbolB + imm64)".
-/// Not all targets supports relocations of this general form, but we
-/// need to represent this anyway.
+/// \brief This represents an "assembler immediate".
+///
+///  In its most general form, this can hold ":Kind:(SymbolA - SymbolB +
+///  imm64)".  Not all targets supports relocations of this general form, but we
+///  need to represent this anyway.
 ///
 /// In general both SymbolA and SymbolB will also have a modifier
 /// analogous to the top-level Kind. Current targets are not expected
 /// to make use of both though. The choice comes down to whether
 /// relocation modifiers apply to the closest symbol or the whole
 /// expression.
-///
-/// In the general form, SymbolB can only be defined if SymbolA is, and both
-/// must be in the same (non-external) section. The latter constraint is not
-/// enforced, since a symbol's section may not be known at construction.
 ///
 /// Note that this class must remain a simple POD value class, because we need
 /// it to live in unions etc.
@@ -51,13 +48,13 @@ public:
   const MCSymbolRefExpr *getSymB() const { return SymB; }
   uint32_t getRefKind() const { return RefKind; }
 
-  /// isAbsolute - Is this an absolute (as opposed to relocatable) value.
+  /// \brief Is this an absolute (as opposed to relocatable) value.
   bool isAbsolute() const { return !SymA && !SymB; }
 
-  /// print - Print the value to the stream \p OS.
-  void print(raw_ostream &OS, const MCAsmInfo *MAI) const;
+  /// \brief Print the value to the stream \p OS.
+  void print(raw_ostream &OS) const;
 
-  /// dump - Print the value to stderr.
+  /// \brief Print the value to stderr.
   void dump() const;
 
   MCSymbolRefExpr::VariantKind getAccessVariant() const;
@@ -66,7 +63,6 @@ public:
                      const MCSymbolRefExpr *SymB = nullptr,
                      int64_t Val = 0, uint32_t RefKind = 0) {
     MCValue R;
-    assert((!SymB || SymA) && "Invalid relocatable MCValue!");
     R.Cst = Val;
     R.SymA = SymA;
     R.SymB = SymB;

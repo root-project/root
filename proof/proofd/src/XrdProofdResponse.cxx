@@ -36,13 +36,13 @@
 // Notification macro
 #define XPRNOTIFY(m,e) \
    if (rc != 0) { \
-      TRACER(this, XERR, m << ": " << e); \
+      TRACET(TraceID(), XERR, m << ": " << e); \
    } else { \
       if (TRACING(RSP)) { \
          if (e.length() > 0) { \
-            TRACER(this, RSP, m << " (" << e <<")"); \
+            TRACET(TraceID(), RSP, m << " (" << e <<")"); \
          } else { \
-            TRACER(this, RSP, m); \
+            TRACET(TraceID(), RSP, m); \
          } \
       } \
    }

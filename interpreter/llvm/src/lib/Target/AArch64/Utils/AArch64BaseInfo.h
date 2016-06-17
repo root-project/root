@@ -22,6 +22,7 @@
 #include "MCTargetDesc/AArch64MCTargetDesc.h" // For AArch64::X0 and friends.
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/StringSwitch.h"
+#include "llvm/MC/SubtargetFeature.h"
 #include "llvm/Support/ErrorHandling.h"
 
 namespace llvm {
@@ -280,22 +281,45 @@ struct AArch64NamedImmMapper {
   struct Mapping {
     const char *Name;
     uint32_t Value;
+    // Set of features this mapping is available for
+    // Zero value of FeatureBitSet means the mapping is always available
+    FeatureBitset FeatureBitSet;
+
+    bool isNameEqual(const std::string &Other,
+                     const FeatureBitset &FeatureBits) const {
+      if (FeatureBitSet.any() &&
+          (FeatureBitSet & FeatureBits).none())
+        return false;
+      return Name == Other;
+    }
+
+    bool isValueEqual(uint32_t Other,
+                      const FeatureBitset& FeatureBits) const {
+      if (FeatureBitSet.any() &&
+          (FeatureBitSet & FeatureBits).none())
+        return false;
+      return Value == Other;
+    }
   };
 
   template<int N>
-  AArch64NamedImmMapper(const Mapping (&Pairs)[N], uint32_t TooBigImm)
-    : Pairs(&Pairs[0]), NumPairs(N), TooBigImm(TooBigImm) {}
+  AArch64NamedImmMapper(const Mapping (&Mappings)[N], uint32_t TooBigImm)
+    : Mappings(&Mappings[0]), NumMappings(N), TooBigImm(TooBigImm) {}
 
-  StringRef toString(uint32_t Value, bool &Valid) const;
-  uint32_t fromString(StringRef Name, bool &Valid) const;
+  // Maps value to string, depending on availability for FeatureBits given
+  StringRef toString(uint32_t Value, const FeatureBitset& FeatureBits,
+                     bool &Valid) const;
+  // Maps string to value, depending on availability for FeatureBits given
+  uint32_t fromString(StringRef Name, const FeatureBitset& FeatureBits,
+                     bool &Valid) const;
 
   /// Many of the instructions allow an alternative assembly form consisting of
   /// a simple immediate. Currently the only valid forms are ranges [0, N) where
   /// N being 0 indicates no immediate syntax-form is allowed.
   bool validImm(uint32_t Value) const;
 protected:
-  const Mapping *Pairs;
-  size_t NumPairs;
+  const Mapping *Mappings;
+  size_t NumMappings;
   uint32_t TooBigImm;
 };
 
@@ -313,11 +337,13 @@ namespace AArch64AT {
     S12E1R = 0x63c4, // 01  100  0111  1000  100
     S12E1W = 0x63c5, // 01  100  0111  1000  101
     S12E0R = 0x63c6, // 01  100  0111  1000  110
-    S12E0W = 0x63c7  // 01  100  0111  1000  111
+    S12E0W = 0x63c7, // 01  100  0111  1000  111
+    S1E1RP = 0x43c8, // 01  000  0111  1001  000
+    S1E1WP = 0x43c9  // 01  000  0111  1001  001
   };
 
   struct ATMapper : AArch64NamedImmMapper {
-    const static Mapping ATPairs[];
+    const static Mapping ATMappings[];
 
     ATMapper();
   };
@@ -341,7 +367,7 @@ namespace AArch64DB {
   };
 
   struct DBarrierMapper : AArch64NamedImmMapper {
-    const static Mapping DBarrierPairs[];
+    const static Mapping DBarrierMappings[];
 
     DBarrierMapper();
   };
@@ -361,7 +387,7 @@ namespace  AArch64DC {
   };
 
   struct DCMapper : AArch64NamedImmMapper {
-    const static Mapping DCPairs[];
+    const static Mapping DCMappings[];
 
     DCMapper();
   };
@@ -378,7 +404,7 @@ namespace  AArch64IC {
 
 
   struct ICMapper : AArch64NamedImmMapper {
-    const static Mapping ICPairs[];
+    const static Mapping ICMappings[];
 
     ICMapper();
   };
@@ -394,7 +420,7 @@ namespace  AArch64ISB {
     SY = 0xf
   };
   struct ISBMapper : AArch64NamedImmMapper {
-    const static Mapping ISBPairs[];
+    const static Mapping ISBMappings[];
 
     ISBMapper();
   };
@@ -424,7 +450,7 @@ namespace AArch64PRFM {
   };
 
   struct PRFMMapper : AArch64NamedImmMapper {
-    const static Mapping PRFMPairs[];
+    const static Mapping PRFMMappings[];
 
     PRFMMapper();
   };
@@ -435,13 +461,34 @@ namespace AArch64PState {
     Invalid = -1,
     SPSel = 0x05,
     DAIFSet = 0x1e,
-    DAIFClr = 0x1f
+    DAIFClr = 0x1f,
+
+    // v8.1a "Privileged Access Never" extension-specific PStates
+    PAN = 0x04,
+
+    // v8.2a "User Access Override" extension-specific PStates
+    UAO = 0x03
   };
 
   struct PStateMapper : AArch64NamedImmMapper {
-    const static Mapping PStatePairs[];
+    const static Mapping PStateMappings[];
 
     PStateMapper();
+  };
+
+}
+
+namespace AArch64PSBHint {
+  enum PSBHintValues {
+    Invalid = -1,
+    // v8.2a "Statistical Profiling" extension-specific PSB operands
+    CSync = 0x11,  // psb csync = hint #0x11
+  };
+
+  struct PSBHintMapper : AArch64NamedImmMapper {
+    const static Mapping PSBHintMappings[];
+
+    PSBHintMapper();
   };
 
 }
@@ -567,6 +614,7 @@ namespace AArch64SysReg {
     ID_A64ISAR1_EL1   = 0xc031, // 11  000  0000  0110  001
     ID_A64MMFR0_EL1   = 0xc038, // 11  000  0000  0111  000
     ID_A64MMFR1_EL1   = 0xc039, // 11  000  0000  0111  001
+    ID_A64MMFR2_EL1   = 0xc03a, // 11  000  0000  0111  010
     MVFR0_EL1         = 0xc018, // 11  000  0000  0011  000
     MVFR1_EL1         = 0xc019, // 11  000  0000  0011  001
     MVFR2_EL1         = 0xc01a, // 11  000  0000  0011  010
@@ -576,6 +624,7 @@ namespace AArch64SysReg {
     ISR_EL1           = 0xc608, // 11  000  1100  0001  000
     CNTPCT_EL0        = 0xdf01, // 11  011  1110  0000  001
     CNTVCT_EL0        = 0xdf02,  // 11  011  1110  0000  010
+    ID_MMFR4_EL1      = 0xc016,  // 11  000  0000  0010  110
 
     // Trace registers
     TRCSTATR          = 0x8818, // 10  001  0000  0011  000
@@ -623,7 +672,11 @@ namespace AArch64SysReg {
     ICC_RPR_EL1       = 0xc65b, // 11  000  1100  1011  011
     ICH_VTR_EL2       = 0xe659, // 11  100  1100  1011  001
     ICH_EISR_EL2      = 0xe65b, // 11  100  1100  1011  011
-    ICH_ELSR_EL2      = 0xe65d  // 11  100  1100  1011  101
+    ICH_ELSR_EL2      = 0xe65d, // 11  100  1100  1011  101
+
+    // RAS extension registers
+    ERRIDR_EL1        = 0xc298, // 11  000  0101  0011  000
+    ERXFR_EL1         = 0xc2a0  // 11  000  0101  0100  000
   };
 
   enum SysRegWOValues {
@@ -1122,11 +1175,77 @@ namespace AArch64SysReg {
     ICH_LR13_EL2      = 0xe66d, // 11  100  1100  1101  101
     ICH_LR14_EL2      = 0xe66e, // 11  100  1100  1101  110
     ICH_LR15_EL2      = 0xe66f, // 11  100  1100  1101  111
-  };
 
-  // Cyclone specific system registers
-  enum CycloneSysRegValues {
-    CPM_IOACC_CTL_EL3 = 0xff90
+    // v8.1a "Privileged Access Never" extension-specific system registers
+    PAN               = 0xc213, // 11  000  0100  0010  011
+
+    // v8.1a "Limited Ordering Regions" extension-specific system registers
+    LORSA_EL1         = 0xc520, // 11  000  1010  0100  000
+    LOREA_EL1         = 0xc521, // 11  000  1010  0100  001
+    LORN_EL1          = 0xc522, // 11  000  1010  0100  010
+    LORC_EL1          = 0xc523, // 11  000  1010  0100  011
+    LORID_EL1         = 0xc527, // 11  000  1010  0100  111
+
+    // v8.1a "Virtualization host extensions" system registers
+    TTBR1_EL2         = 0xe101, // 11  100  0010  0000  001
+    CONTEXTIDR_EL2    = 0xe681, // 11  100  1101  0000  001
+    CNTHV_TVAL_EL2    = 0xe718, // 11  100  1110  0011  000
+    CNTHV_CVAL_EL2    = 0xe71a, // 11  100  1110  0011  010
+    CNTHV_CTL_EL2     = 0xe719, // 11  100  1110  0011  001
+    SCTLR_EL12        = 0xe880, // 11  101  0001  0000  000
+    CPACR_EL12        = 0xe882, // 11  101  0001  0000  010
+    TTBR0_EL12        = 0xe900, // 11  101  0010  0000  000
+    TTBR1_EL12        = 0xe901, // 11  101  0010  0000  001
+    TCR_EL12          = 0xe902, // 11  101  0010  0000  010
+    AFSR0_EL12        = 0xea88, // 11  101  0101  0001  000
+    AFSR1_EL12        = 0xea89, // 11  101  0101  0001  001
+    ESR_EL12          = 0xea90, // 11  101  0101  0010  000
+    FAR_EL12          = 0xeb00, // 11  101  0110  0000  000
+    MAIR_EL12         = 0xed10, // 11  101  1010  0010  000
+    AMAIR_EL12        = 0xed18, // 11  101  1010  0011  000
+    VBAR_EL12         = 0xee00, // 11  101  1100  0000  000
+    CONTEXTIDR_EL12   = 0xee81, // 11  101  1101  0000  001
+    CNTKCTL_EL12      = 0xef08, // 11  101  1110  0001  000
+    CNTP_TVAL_EL02    = 0xef10, // 11  101  1110  0010  000
+    CNTP_CTL_EL02     = 0xef11, // 11  101  1110  0010  001
+    CNTP_CVAL_EL02    = 0xef12, // 11  101  1110  0010  010
+    CNTV_TVAL_EL02    = 0xef18, // 11  101  1110  0011  000
+    CNTV_CTL_EL02     = 0xef19, // 11  101  1110  0011  001
+    CNTV_CVAL_EL02    = 0xef1a, // 11  101  1110  0011  010
+    SPSR_EL12         = 0xea00, // 11  101  0100  0000  000
+    ELR_EL12          = 0xea01, // 11  101  0100  0000  001
+
+    // RAS extension registers
+    ERRSELR_EL1       = 0xc299, // 11  000  0101  0011  001
+    ERXCTLR_EL1       = 0xc2a1, // 11  000  0101  0100  001
+    ERXSTATUS_EL1     = 0xc2a2, // 11  000  0101  0100  010
+    ERXADDR_EL1       = 0xc2a3, // 11  000  0101  0100  011
+    ERXMISC0_EL1      = 0xc2a8, // 11  000  0101  0101  000
+    ERXMISC1_EL1      = 0xc2a9, // 11  000  0101  0101  001
+    DISR_EL1          = 0xc609, // 11  000  1100  0001  001
+    VDISR_EL2         = 0xe609, // 11  100  1100  0001  001
+    VSESR_EL2         = 0xe293, // 11  100  0101  0010  011
+
+    // v8.2a registers
+    UAO               = 0xc214, // 11  000  0100  0010  100
+
+    // v8.2a "Statistical Profiling extension" registers
+    PMBLIMITR_EL1     = 0xc4d0, // 11  000  1001  1010  000
+    PMBPTR_EL1        = 0xc4d1, // 11  000  1001  1010  001
+    PMBSR_EL1         = 0xc4d3, // 11  000  1001  1010  011
+    PMBIDR_EL1        = 0xc4d7, // 11  000  1001  1010  111
+    PMSCR_EL2         = 0xe4c8, // 11  100  1001  1001  000
+    PMSCR_EL12        = 0xecc8, // 11  101  1001  1001  000
+    PMSCR_EL1         = 0xc4c8, // 11  000  1001  1001  000
+    PMSICR_EL1        = 0xc4ca, // 11  000  1001  1001  010
+    PMSIRR_EL1        = 0xc4cb, // 11  000  1001  1001  011
+    PMSFCR_EL1        = 0xc4cc, // 11  000  1001  1001  100
+    PMSEVFR_EL1       = 0xc4cd, // 11  000  1001  1001  101
+    PMSLATFR_EL1      = 0xc4ce, // 11  000  1001  1001  110
+    PMSIDR_EL1        = 0xc4cf, // 11  000  1001  1001  111
+
+    // Cyclone specific system registers
+    CPM_IOACC_CTL_EL3 = 0xff90,
   };
 
   // Note that these do not inherit from AArch64NamedImmMapper. This class is
@@ -1134,26 +1253,25 @@ namespace AArch64SysReg {
   // burdening the common AArch64NamedImmMapper with abstractions only needed in
   // this one case.
   struct SysRegMapper {
-    static const AArch64NamedImmMapper::Mapping SysRegPairs[];
-    static const AArch64NamedImmMapper::Mapping CycloneSysRegPairs[];
+    static const AArch64NamedImmMapper::Mapping SysRegMappings[];
 
-    const AArch64NamedImmMapper::Mapping *InstPairs;
-    size_t NumInstPairs;
-    uint64_t FeatureBits;
+    const AArch64NamedImmMapper::Mapping *InstMappings;
+    size_t NumInstMappings;
 
-    SysRegMapper(uint64_t FeatureBits) : FeatureBits(FeatureBits) { }
-    uint32_t fromString(StringRef Name, bool &Valid) const;
-    std::string toString(uint32_t Bits) const;
+    SysRegMapper() { }
+    uint32_t fromString(StringRef Name, const FeatureBitset& FeatureBits,
+                        bool &Valid) const;
+    std::string toString(uint32_t Bits, const FeatureBitset& FeatureBits) const;
   };
 
   struct MSRMapper : SysRegMapper {
-    static const AArch64NamedImmMapper::Mapping MSRPairs[];
-    MSRMapper(uint64_t FeatureBits);
+    static const AArch64NamedImmMapper::Mapping MSRMappings[];
+    MSRMapper();
   };
 
   struct MRSMapper : SysRegMapper {
-    static const AArch64NamedImmMapper::Mapping MRSPairs[];
-    MRSMapper(uint64_t FeatureBits);
+    static const AArch64NamedImmMapper::Mapping MRSMappings[];
+    MRSMapper();
   };
 
   uint32_t ParseGenericRegister(StringRef Name, bool &Valid);
@@ -1197,7 +1315,7 @@ namespace AArch64TLBI {
   };
 
   struct TLBIMapper : AArch64NamedImmMapper {
-    const static Mapping TLBIPairs[];
+    const static Mapping TLBIMappings[];
 
     TLBIMapper();
   };
@@ -1219,7 +1337,7 @@ namespace AArch64TLBI {
       return true;
     }
   }
-} 
+}
 
 namespace AArch64II {
   /// Target Operand Flag enum.
@@ -1229,7 +1347,7 @@ namespace AArch64II {
 
     MO_NO_FLAG,
 
-    MO_FRAGMENT = 0x7,
+    MO_FRAGMENT = 0xf,
 
     /// MO_PAGE - A symbol operand with this flag represents the pc-relative
     /// offset of the 4K page containing the symbol.  This is used with the
@@ -1257,26 +1375,26 @@ namespace AArch64II {
     /// 0-15 of a 64-bit address, used in a MOVZ or MOVK instruction
     MO_G0 = 6,
 
+    /// MO_HI12 - This flag indicates that a symbol operand represents the bits
+    /// 13-24 of a 64-bit address, used in a arithmetic immediate-shifted-left-
+    /// by-12-bits instruction.
+    MO_HI12 = 7,
+
     /// MO_GOT - This flag indicates that a symbol operand represents the
     /// address of the GOT entry for the symbol, rather than the address of
     /// the symbol itself.
-    MO_GOT = 8,
+    MO_GOT = 0x10,
 
     /// MO_NC - Indicates whether the linker is expected to check the symbol
     /// reference for overflow. For example in an ADRP/ADD pair of relocations
     /// the ADRP usually does check, but not the ADD.
-    MO_NC = 0x10,
+    MO_NC = 0x20,
 
     /// MO_TLS - Indicates that the operand being accessed is some kind of
     /// thread-local symbol. On Darwin, only one type of thread-local access
     /// exists (pre linker-relaxation), but on ELF the TLSModel used for the
     /// referee will affect interpretation.
-    MO_TLS = 0x20,
-
-    /// MO_CONSTPOOL - This flag indicates that a symbol operand represents
-    /// the address of a constant pool entry for the symbol, rather than the
-    /// address of the symbol itself.
-    MO_CONSTPOOL = 0x40
+    MO_TLS = 0x40
   };
 } // end namespace AArch64II
 

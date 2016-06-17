@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TTimeStamp
+\ingroup Base
+
 The TTimeStamp encapsulates seconds and ns since EPOCH
 
 This extends (and isolates) struct timespec
