@@ -2359,8 +2359,8 @@ Double_t TMVA::MethodBase::GetEfficiency( const TString& theString, Types::ETree
 
       // create root finder
       // reset static "this" pointer before calling external function
-      ResetThisBase();
-      RootFinder rootFinder( &IGetEffForRoot, fXmin, fXmax );
+//       ResetThisBase();
+      RootFinder rootFinder( this, fXmin, fXmax );
 
       Double_t effB = 0;
       fEffS = eff_s; // to be set for the root finder
@@ -2594,8 +2594,8 @@ Double_t TMVA::MethodBase::GetTrainingEfficiency(const TString& theString)
 
       // create root finder
       // reset static "this" pointer before calling external function
-      ResetThisBase();
-      RootFinder rootFinder(&IGetEffForRoot, fXmin, fXmax );
+//       ResetThisBase();
+      RootFinder rootFinder(this, fXmin, fXmax );
 
       Double_t effB = 0;
       fEffS = results->GetHist("MVA_TRAINEFF_S");
@@ -3196,15 +3196,15 @@ void TMVA::MethodBase::PrintHelpMessage() const
 ////////////////////////////////////////////////////////////////////////////////
 /// interface for RootFinder
 
-Double_t TMVA::MethodBase::IGetEffForRoot( Double_t theCut )
-{
-   return MethodBase::GetThisBase()->GetEffForRoot( theCut );
-}
+// Double_t TMVA::MethodBase::IGetEffForRoot( Double_t theCut )
+// {
+//    return MethodBase::GetThisBase()->GetEffForRoot( theCut );
+// }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// returns efficiency as function of cut
 
-Double_t TMVA::MethodBase::GetEffForRoot( Double_t theCut )
+Double_t TMVA::MethodBase::GetValueForRoot( Double_t theCut )
 {
    Double_t retval=0;
 

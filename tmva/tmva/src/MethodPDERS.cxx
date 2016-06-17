@@ -611,7 +611,7 @@ void TMVA::MethodPDERS::GetSample( const Event& e,
          fHelpVolume = volume;
 
          UpdateThis(); // necessary update of static pointer
-         RootFinder rootFinder( &IGetVolumeContentForRoot, 0.01, 50, 200, 10 );
+         RootFinder rootFinder( this, 0.01, 50, 200, 10 );
          Double_t scale = rootFinder.Root( (fNEventsMin + fNEventsMax)/2.0 );
 
          volume->ScaleInterval( scale );

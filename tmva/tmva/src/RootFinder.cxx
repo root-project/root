@@ -26,7 +26,7 @@
  **********************************************************************************/
 
 #include "TMVA/RootFinder.h"
-
+#include "TMVA/MethodBase.h"
 #include "TMVA/MsgLogger.h"
 #include "TMVA/Types.h"
 
@@ -37,7 +37,8 @@ ClassImp(TMVA::RootFinder)
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
-TMVA::RootFinder::RootFinder( Double_t (*rootVal)( Double_t ),
+
+TMVA::RootFinder::RootFinder(TMVA::MethodBase *method ,
                               Double_t rootMin, 
                               Double_t rootMax,
                               Int_t maxIterations, 
@@ -48,7 +49,7 @@ TMVA::RootFinder::RootFinder( Double_t (*rootVal)( Double_t ),
    fAbsTol ( absTolerance  ),
    fLogger ( new MsgLogger("RootFinder") )
 {
-   fGetRootVal = rootVal;
+  fMethod=method;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -65,13 +66,13 @@ TMVA::RootFinder::~RootFinder( void )
 Double_t TMVA::RootFinder::Root( Double_t refValue  )
 {
    Double_t a  = fRootMin, b = fRootMax;
-   Double_t fa = (*fGetRootVal)( a ) - refValue;
-   Double_t fb = (*fGetRootVal)( b ) - refValue;
+   Double_t fa = fMethod->GetValueForRoot( a ) - refValue;
+   Double_t fb = fMethod->GetValueForRoot( b ) - refValue;
    if (fb*fa > 0) {
       Log() << kWARNING << "<Root> initial interval w/o root: "
             << "(a=" << a << ", b=" << b << "),"
-            << " (Eff_a=" << (*fGetRootVal)( a ) 
-            << ", Eff_b=" << (*fGetRootVal)( b ) << "), "
+            << " (Eff_a=" << fMethod->GetValueForRoot( a ) 
+            << ", Eff_b=" << fMethod->GetValueForRoot( b ) << "), "
             << "(fa=" << fa << ", fb=" << fb << "), "
             << "refValue = " << refValue << Endl;
       return 1;
@@ -130,7 +131,7 @@ Double_t TMVA::RootFinder::Root( Double_t refValue  )
       if (TMath::Abs(d) > tol) b += d;
       else                     b += (m > 0 ? +tol : -tol);
 
-      fb = (*fGetRootVal)( b ) - refValue;
+      fb = fMethod->GetValueForRoot( b ) - refValue;
 
    }
 

@@ -92,6 +92,7 @@ namespace TMVA {
    class MethodBase : virtual public IMethod, public Configurable {
 
       friend class Factory;
+      friend class RootFinder;
 
    public:
 
@@ -482,9 +483,9 @@ namespace TMVA {
       void             CreateMVAPdfs();
 
       // for root finder
-      static Double_t  IGetEffForRoot( Double_t );  // interface
-      Double_t         GetEffForRoot ( Double_t );  // implementation
-
+      //virtual method to find ROOT 
+      virtual Double_t         GetValueForRoot ( Double_t );  // implementation
+      
       // used for file parsing
       Bool_t           GetLine( std::istream& fin, char * buf );
 
