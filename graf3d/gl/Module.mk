@@ -42,6 +42,13 @@ GLH1         := $(MODDIRI)/CsgOps.h \
 # Used by rootcint
 GLH2         := $(filter-out $(GLH1), $(GLH))
 
+ifeq ($(BUILTINGL2PS),yes)
+GL2PSFLAGS   := -I$(MODDIRS)/gl2ps
+else()
+GLS          := $(filter-out $(MODDIRS)/gl2ps.cxx, $(GLS))
+GL2PSFLAGS   := $(GL2PSINCDIR:%=-I%)
+endif()
+
 ifneq ($(OPENGLLIB),)
 GLLIBS       := $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
                 $(XLIBS) -lm
