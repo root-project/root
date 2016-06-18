@@ -834,6 +834,11 @@ SmallVector<Instruction *, 8> llvm::findDefsUsedOutsideOfLoop(Loop *L) {
   return UsedOutside;
 }
 
+namespace llvm {
+  extern char &LoopSimplifyID;
+  extern char &LCSSAID;
+}
+
 void llvm::getLoopAnalysisUsage(AnalysisUsage &AU) {
   // By definition, all loop passes need the LoopInfo analysis and the
   // Dominator tree it depends on. Because they all participate in the loop
@@ -845,8 +850,6 @@ void llvm::getLoopAnalysisUsage(AnalysisUsage &AU) {
 
   // We must also preserve LoopSimplify and LCSSA. We locally access their IDs
   // here because users shouldn't directly get them from this header.
-  extern char &LoopSimplifyID;
-  extern char &LCSSAID;
   AU.addRequiredID(LoopSimplifyID);
   AU.addPreservedID(LoopSimplifyID);
   AU.addRequiredID(LCSSAID);
