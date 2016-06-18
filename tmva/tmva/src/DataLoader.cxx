@@ -731,3 +731,30 @@ std::vector<TTree*> TMVA::DataLoader::SplitSets(TTree * oldTree, int seedNum, in
 
   return tempTrees;
 }
+
+//_______________________________________________________________________
+//Copy method use in VI and CV
+TMVA::DataLoader* TMVA::DataLoader::MakeCopy(TString name)
+{
+    TMVA::DataLoader* des=new TMVA::DataLoader(name);
+    DataLoaderCopy(des,this);
+    return des;
+}
+
+//_______________________________________________________________________
+void TMVA::DataLoaderCopy(TMVA::DataLoader* des, TMVA::DataLoader* src)
+{
+    //Loading Dataset from DataInputHandler for subseed
+    for( std::vector<TreeInfo>::const_iterator treeinfo=src->DataInput().Sbegin();treeinfo!=src->DataInput().Send();treeinfo++)
+    {
+      des->AddSignalTree( (*treeinfo).GetTree(), (*treeinfo).GetWeight(),(*treeinfo).GetTreeType());
+    }
+
+    for( std::vector<TreeInfo>::const_iterator treeinfo=src->DataInput().Bbegin();treeinfo!=src->DataInput().Bend();treeinfo++)
+    {
+      des->AddBackgroundTree( (*treeinfo).GetTree(), (*treeinfo).GetWeight(),(*treeinfo).GetTreeType());
+    }
+}
+
+
+

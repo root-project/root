@@ -1579,21 +1579,6 @@ TH1F* TMVA::Factory::EvaluateImportance(DataLoader *loader,VIType vitype, Types:
   }
 }
 
-void TMVA::Factory::VIDataLoaderCopy(TMVA::DataLoader* des, TMVA::DataLoader* src)
-{
-    //Loading Dataset from DataInputHandler for subseed
-    for( std::vector<TreeInfo>::const_iterator treeinfo=src->DataInput().Sbegin();treeinfo!=src->DataInput().Send();treeinfo++)
-    {
-      des->AddSignalTree( (*treeinfo).GetTree(), (*treeinfo).GetWeight(),(*treeinfo).GetTreeType());
-    }
-
-    for( std::vector<TreeInfo>::const_iterator treeinfo=src->DataInput().Bbegin();treeinfo!=src->DataInput().Bend();treeinfo++)
-    {
-      des->AddBackgroundTree( (*treeinfo).GetTree(), (*treeinfo).GetWeight(),(*treeinfo).GetTreeType());
-    }
-}
-
-
 TH1F* TMVA::Factory::EvaluateImportanceAll(DataLoader *loader, Types::EMVA theMethod,  TString methodTitle, const char *theOption)
 {
   
@@ -1627,7 +1612,7 @@ TH1F* TMVA::Factory::EvaluateImportanceAll(DataLoader *loader, Types::EMVA theMe
       if (xbitset[index]) seedloader->AddVariable(varNames[index], 'F');
     }
     
-    VIDataLoaderCopy(seedloader,loader);
+    DataLoaderCopy(seedloader,loader);
     seedloader->PrepareTrainingAndTestTree(loader->DefaultDataSetInfo().GetCut("Signal"), loader->DefaultDataSetInfo().GetCut("Background"), loader->DefaultDataSetInfo().GetSplitOptions());
     
     //Booking Seed
@@ -1729,7 +1714,7 @@ TH1F* TMVA::Factory::EvaluateImportanceShort(DataLoader *loader, Types::EMVA the
   }
   
   //Loading Dataset
-  VIDataLoaderCopy(seedloader,loader);
+  DataLoaderCopy(seedloader,loader);
   
   //Booking Seed
   BookMethod(seedloader, theMethod, methodTitle, theOption);
@@ -1780,7 +1765,7 @@ TH1F* TMVA::Factory::EvaluateImportanceShort(DataLoader *loader, Types::EMVA the
       }
       
       //Loading Dataset
-      VIDataLoaderCopy(subseedloader,loader);
+      DataLoaderCopy(subseedloader,loader);
       
       //Booking SubSeed
       BookMethod(subseedloader, theMethod, methodTitle, theOption);
@@ -1848,7 +1833,7 @@ TH1F* TMVA::Factory::EvaluateImportanceRandom(DataLoader *loader, UInt_t nseeds,
       }
 
       //Loading Dataset
-      VIDataLoaderCopy(seedloader,loader);
+      DataLoaderCopy(seedloader,loader);
 
       //Booking Seed
       BookMethod(seedloader, theMethod, methodTitle, theOption);
@@ -1903,7 +1888,7 @@ TH1F* TMVA::Factory::EvaluateImportanceRandom(DataLoader *loader, UInt_t nseeds,
             }
 
             //Loading Dataset
-            VIDataLoaderCopy(subseedloader,loader);
+            DataLoaderCopy(subseedloader,loader);
 
             //Booking SubSeed
             BookMethod(subseedloader, theMethod, methodTitle, theOption);
@@ -2021,7 +2006,7 @@ float TMVA::Factory::CrossValidate(DataLoader * loader, Types::EMVA theMethod, T
             seedloader->AddVariable(varNames.at(index), 'F');
          }
       
-         VIDataLoaderCopy(seedloader,loader);
+         DataLoaderCopy(seedloader,loader);
       
          MethodBase* mva = BookMethod(seedloader, theMethod, methodTitle, theOption);
       
@@ -2065,7 +2050,7 @@ float TMVA::Factory::CrossValidate(DataLoader * loader, Types::EMVA theMethod, T
             seedloader->AddVariable(varNames.at(index), 'F');
          }
       
-         VIDataLoaderCopy(seedloader,loader);
+         DataLoaderCopy(seedloader,loader);
       
          BookMethod(seedloader, theMethod, methodTitle, theOption);
       

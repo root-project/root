@@ -171,6 +171,10 @@ namespace TMVA {
 
       const DataSetInfo& GetDefaultDataSetInfo(){ return DefaultDataSetInfo(); }
  
+      //Copy method use in VI and CV
+      DataLoader* MakeCopy(TString name);
+      friend void DataLoaderCopy(TMVA::DataLoader* des, TMVA::DataLoader* src);      
+ 
    private:
 
  
@@ -221,7 +225,8 @@ namespace TMVA {
 
       ClassDef(DataLoader,0);
    };
-
+   //utility function to copy dataloaders
+   void DataLoaderCopy(TMVA::DataLoader* des, TMVA::DataLoader* src);
 } // namespace TMVA
 
 #endif
