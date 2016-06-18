@@ -1,6 +1,6 @@
 
 #---Define the way we want to build and what of llvm/clang/cling------------------------------------
-set(LLVM_ENABLE_WARNINGS OFF CACHE BOOL "")
+set(LLVM_ENABLE_WARNINGS ON CACHE BOOL "")
 set(LLVM_INCLUDE_TESTS OFF CACHE BOOL "")
 set(LLVM_INCLUDE_EXAMPLES OFF CACHE BOOL "")
 set(LLVM_BUILD_TOOLS OFF CACHE BOOL "")
