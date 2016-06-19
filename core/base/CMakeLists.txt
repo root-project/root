@@ -2,7 +2,10 @@
 # CMakeLists.txt file for building ROOT core/base package
 ############################################################################
 
-ROOT_GLOB_HEADERS(Base_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/T*.h)
+ROOT_GLOB_HEADERS(Base_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/T*.h
+                                    ${CMAKE_CURRENT_SOURCE_DIR}/inc/GuiTypes.h 
+                                    ${CMAKE_CURRENT_SOURCE_DIR}/inc/KeySymbols.h 
+                                    ${CMAKE_CURRENT_SOURCE_DIR}/inc/Buttons.h)
 ROOT_GLOB_SOURCES(sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/src src/*.cxx)
 
 include_directories(${CMAKE_SOURCE_DIR}/graf3d/g3d/inc)
