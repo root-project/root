@@ -418,7 +418,7 @@ void TMVA::MethodBoost::Train()
 
       // creating the directory of the classifier
       if (fMonitorBoostedMethod) {
-         methodDir=MethodBaseDir()->GetDirectory(dirName=Form("%s_B%04i",fBoostedMethodName.Data(),fCurrentMethodIdx));
+         methodDir=GetFile()->GetDirectory(dirName=Form("%s_B%04i",fBoostedMethodName.Data(),fCurrentMethodIdx));
          if (methodDir==0) {
             methodDir=BaseDir()->mkdir(dirName,dirTitle=Form("Directory Boosted %s #%04i", fBoostedMethodName.Data(),fCurrentMethodIdx));
          }

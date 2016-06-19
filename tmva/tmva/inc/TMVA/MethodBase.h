@@ -72,6 +72,9 @@
 #include<TMVA/Results.h>
 #endif
 
+#ifndef ROOT_TFile
+#include<TFile.h>
+#endif
 
 class TGraph;
 class TTree;
@@ -336,10 +339,13 @@ namespace TMVA {
       // pointers to ROOT directories
       TDirectory*      BaseDir()       const;
       TDirectory*      MethodBaseDir() const;
+      TFile*           GetFile() const {return fFile;}
+      
       void             SetMethodDir ( TDirectory* methodDir ) { fBaseDir = fMethodBaseDir  = methodDir; }
       void             SetBaseDir( TDirectory* methodDir ){ fBaseDir = methodDir; }
       void             SetMethodBaseDir( TDirectory* methodDir ){ fMethodBaseDir = methodDir; }
-
+      void             SetFile(TFile* file){fFile=file;}
+      
       // the TMVA version can be obtained and checked using
       //    if (GetTrainingTMVAVersionCode()>TMVA_VERSION(3,7,2)) {...}
       // or
@@ -539,11 +545,13 @@ namespace TMVA {
       UInt_t           fROOTTrainingVersion; // ROOT version used for training
       Bool_t           fConstructedFromWeightFile; // is it obtained from weight file?
 
-      // Directory structure: fMethodBaseDir/fBaseDir
+      // Directory structure: dataloader/fMethodBaseDir/fBaseDir
       // where the first directory name is defined by the method type
       // and the second is user supplied (the title given in Factory::BookMethod())
       TDirectory*      fBaseDir;             // base directory for the instance, needed to know where to jump back from localDir
       mutable TDirectory* fMethodBaseDir;    // base directory for the method
+      //this will be the next way to save results
+      TFile            *fFile;
 
       TString          fParentDir;           // method parent name, like booster name
 

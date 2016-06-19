@@ -150,7 +150,7 @@ namespace TMVA {
       // classifiers are printed
       void PrintHelpMessage(const TString& datasetname , const TString& methodTitle = "" ) const;
 
-      static TDirectory* RootBaseDir() { return (TDirectory*)fgTargetFile; }
+      TDirectory* RootBaseDir() { return (TDirectory*)fgTargetFile; }
 
       static Bool_t IsSilentFile();
       
@@ -191,7 +191,7 @@ namespace TMVA {
 
       // data members
 
-      static TFile*                             fgTargetFile;     //! ROOT output file
+      TFile*                             fgTargetFile;     //! ROOT output file
 
 
       std::vector<TMVA::VariableTransformBase*> fDefaultTrfs;     //! list of transformations on default DataSet

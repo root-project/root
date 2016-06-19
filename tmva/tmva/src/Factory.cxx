@@ -96,7 +96,6 @@
 
 const Int_t  MinNoTrainingEvents = 10;
 //const Int_t  MinNoTestEvents     = 1;
-TFile* TMVA::Factory::fgTargetFile = 0;
 
 ClassImp(TMVA::Factory)
 
@@ -319,6 +318,7 @@ TMVA::MethodBase* TMVA::Factory::BookMethod( TMVA::DataLoader *loader, TString t
          Log() << kFATAL << "Method with type kBoost cannot be casted to MethodCategory. /Factory" << Endl; // DSMTEST
       methBoost->SetBoostedMethodName( theMethodName ); // DSMTEST divided into two lines
       methBoost->fDataSetManager = loader->fDataSetManager; // DSMTEST
+      methBoost->SetFile(fgTargetFile);
    }
 
    MethodBase *method = dynamic_cast<MethodBase*>(im);
@@ -330,6 +330,7 @@ TMVA::MethodBase* TMVA::Factory::BookMethod( TMVA::DataLoader *loader, TString t
       if (!methCat) // DSMTEST
          Log() << kFATAL << "Method with type kCategory cannot be casted to MethodCategory. /Factory" << Endl; // DSMTEST
       methCat->fDataSetManager = loader->fDataSetManager; // DSMTEST
+      methCat->SetFile(fgTargetFile);
    } // DSMTEST
 
 
@@ -355,6 +356,7 @@ TMVA::MethodBase* TMVA::Factory::BookMethod( TMVA::DataLoader *loader, TString t
    method->SetupMethod();
    method->ParseOptions();
    method->ProcessSetup();
+   method->SetFile(fgTargetFile);
 
    // check-for-unused-options is performed; may be overridden by derived classes
    method->CheckSetup();
@@ -1017,6 +1019,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
 	  Event::SetIsTraining(kFALSE);
 	  MethodBase* theMethod = dynamic_cast<MethodBase*>(*itrMethod);
 	  if(theMethod==0) continue;
+	  theMethod->SetFile(fgTargetFile);
 	  if (theMethod->GetMethodType() != Types::kCuts) methodsNoCuts.push_back( *itrMethod );
 
 	  if (theMethod->DoRegression()) {

@@ -167,6 +167,7 @@ TMVA::MethodBase::MethodBase( const TString& jobName,
    fConstructedFromWeightFile ( kFALSE ),
    fBaseDir                   ( 0 ),
    fMethodBaseDir             ( 0 ),
+   fFile                      ( 0 ),
    fWeightFile                ( "" ),
    fEffS                      ( 0 ),
    fDefaultPDF                ( 0 ),
@@ -229,6 +230,7 @@ TMVA::MethodBase::MethodBase( Types::EMVA methodType,
    fConstructedFromWeightFile ( kTRUE ),
    fBaseDir                   ( 0 ),
    fMethodBaseDir             ( 0 ),
+   fFile                      ( 0 ),
    fWeightFile                ( weightFile ),
    fEffS                      ( 0 ),
    fDefaultPDF                ( 0 ),
@@ -1860,14 +1862,14 @@ TDirectory* TMVA::MethodBase::BaseDir() const
 /// returns the ROOT directory where all instances of the
 /// corresponding MVA method are stored
 
-TDirectory* TMVA::MethodBase::MethodBaseDir() const
-{
-   if (fMethodBaseDir != 0) return fMethodBaseDir;
-
-   Log()<<kDEBUG<<Form("Dataset[%s] : ",DataInfo().GetName())<<" Base Directory for " << GetMethodTypeName() << " not set yet --> check if already there.." <<Endl;
-   
-   
-   TDirectory *fFactoryBaseDir=Factory::RootBaseDir();
+ TDirectory* TMVA::MethodBase::MethodBaseDir() const
+ {
+    if (fMethodBaseDir != 0) return fMethodBaseDir;
+ 
+    Log()<<kDEBUG<<Form("Dataset[%s] : ",DataInfo().GetName())<<" Base Directory for " << GetMethodTypeName() << " not set yet --> check if already there.." <<Endl;
+    
+    
+    TDirectory *fFactoryBaseDir=GetFile();
    
    fMethodBaseDir = fFactoryBaseDir->GetDirectory(DataInfo().GetName());
    if(!fMethodBaseDir) //creating dataset directory
