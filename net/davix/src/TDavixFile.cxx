@@ -69,6 +69,8 @@ const char* grid_mode_opt = "grid_mode=yes";
 const char* ca_check_opt = "ca_check=no";
 const char* s3_seckey_opt = "s3seckey=";
 const char* s3_acckey_opt = "s3acckey=";
+const char* s3_region_opt = "s3region=";
+const char* s3_token_opt = "s3token=";
 const char* open_mode_read = "READ";
 const char* open_mode_create = "CREATE";
 const char* open_mode_new = "NEW";
@@ -284,12 +286,19 @@ void TDavixFileInternal::enableGridMode()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TDavixFileInternal::setS3Auth(const std::string &key, const std::string &token)
+void TDavixFileInternal::setS3Auth(const std::string &secret, const std::string &access,
+                                   const std::string &region, const std::string &token)
 {
-   if (gDebug > 1)
+   if (gDebug > 1) {
       Info("setS3Auth", " Aws S3 tokens configured");
-   davixParam->setAwsAuthorizationKeys(key, token);
+      if (!region.empty()) Info("setS3Auth", " Aws region configured - using v4 signatures");
+      if (!token.empty()) Info("setS3Auth", " Aws STS token was provided");
+   }
+   davixParam->setAwsAuthorizationKeys(secret, access);
    davixParam->setProtocol(RequestProtocol::AwsS3);
+
+   davixParam->setAwsRegion(region);
+   davixParam->setAwsToken(token);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -319,6 +328,17 @@ void TDavixFileInternal::parseConfig()
          && ((env_var2 = gEnv->GetValue("Davix.S3.AccessKey", getenv("S3_ACCESS_KEY"))) != NULL)) {
       Info("parseConfig", "Setting S3 SecretKey and AccessKey. Access Key : %s ", env_var2);
       davixParam->setAwsAuthorizationKeys(env_var, env_var2);
+
+      // need to set region?
+      if ( (env_var = gEnv->GetValue("Davix.S3.Region", getenv("S3_REGION"))) != NULL) {
+         Info("parseConfig", "Setting S3 Region to '%s' - v4 signature will be used", env_var);
+         davixParam->setAwsRegion(env_var);
+      }
+      // need to set STS token?
+      if( (env_var = gEnv->GetValue("Davix.S3.Token", getenv("S3_TOKEN"))) != NULL) {
+         Info("parseConfig", "Setting S3 STS temporary credentials");
+         davixParam->setAwsToken(env_var);
+      }
    }
 
    env_var = gEnv->GetValue("Davix.GSI.GridMode", (const char *)"y");
@@ -335,7 +355,7 @@ void TDavixFileInternal::parseParams(Option_t *option)
    std::string item;
    std::vector<std::string> parsed_options;
    // parameters
-   std::string s3seckey, s3acckey;
+   std::string s3seckey, s3acckey, s3region, s3token;
 
    while (std::getline(ss, item, ' ')) {
       parsed_options.push_back(item);
@@ -358,12 +378,20 @@ void TDavixFileInternal::parseParams(Option_t *option)
       if (strncasecmp(it->c_str(), s3_acckey_opt, strlen(s3_acckey_opt)) == 0) {
          s3acckey = std::string(it->c_str() + strlen(s3_acckey_opt));
       }
+      // s3 region
+      if (strncasecmp(it->c_str(), s3_region_opt, strlen(s3_region_opt)) == 0) {
+         s3region = std::string(it->c_str() + strlen(s3_region_opt));
+      }
+      // s3 sts token
+      if (strncasecmp(it->c_str(), s3_token_opt, strlen(s3_token_opt)) == 0) {
+         s3token = std::string(it->c_str() + strlen(s3_token_opt));
+      }
       // open mods
       oflags = configure_open_flag(*it, oflags);
    }
 
    if (s3seckey.size() > 0) {
-      setS3Auth(s3seckey, s3acckey);
+      setS3Auth(s3seckey, s3acckey, s3region, s3token);
    }
 
    if (oflags == 0) // default open mode
