@@ -79,9 +79,9 @@ Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t 
          return 1;
       }
       TFile::SetCacheFileDir(".");
-      fref = new TFile(refFile,"CACHEREAD") ;
+      fref = TFile::Open(refFile,"CACHEREAD") ;
     } else {
-      fref = new TFile(refFile,writeRef?"RECREATE":"") ;
+      fref = TFile::Open(refFile,writeRef?"RECREATE":"") ;
     }
     if (fref->IsZombie()) {
       cout << "stressRooFit ERROR: cannot open reference file " << refFile << endl ;
