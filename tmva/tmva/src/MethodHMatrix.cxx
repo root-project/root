@@ -77,9 +77,8 @@ ClassImp(TMVA::MethodHMatrix)
    TMVA::MethodHMatrix::MethodHMatrix( const TString& jobName,
                                        const TString& methodTitle,
                                        DataSetInfo& theData,
-                                       const TString& theOption,
-                                       TDirectory* theTargetDir )
-   : TMVA::MethodBase( jobName, Types::kHMatrix, methodTitle, theData, theOption, theTargetDir )
+                                       const TString& theOption )
+   : TMVA::MethodBase( jobName, Types::kHMatrix, methodTitle, theData, theOption)
    ,fInvHMatrixS(0) 
    ,fInvHMatrixB(0) 
    ,fVecMeanS(0)    
@@ -91,9 +90,8 @@ ClassImp(TMVA::MethodHMatrix)
 /// constructor from weight file
 
 TMVA::MethodHMatrix::MethodHMatrix( DataSetInfo& theData,
-                                    const TString& theWeightFile,
-                                    TDirectory* theTargetDir )
-   : TMVA::MethodBase( Types::kHMatrix, theData, theWeightFile, theTargetDir )
+                                    const TString& theWeightFile)
+   : TMVA::MethodBase( Types::kHMatrix, theData, theWeightFile)
    ,fInvHMatrixS(0) 
    ,fInvHMatrixB(0) 
    ,fVecMeanS(0)    

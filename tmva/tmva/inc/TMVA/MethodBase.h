@@ -103,15 +103,13 @@ namespace TMVA {
                   Types::EMVA methodType,
                   const TString& methodTitle,
                   DataSetInfo& dsi,
-                  const TString& theOption = "",
-                  TDirectory* theBaseDir = 0 );
+                  const TString& theOption = "" );
 
       // constructor used for Testing + Application of the MVA, only (no training),
       // using given weight file
       MethodBase( Types::EMVA methodType,
                   DataSetInfo& dsi,
-                  const TString& weightFile,
-                  TDirectory* theBaseDir = 0 );
+                  const TString& weightFile );
 
       // default destructur
       virtual ~MethodBase();

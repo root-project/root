@@ -51,9 +51,8 @@ Bool_t MethodRSNNS::IsModuleLoaded = ROOT::R::TRInterface::Instance().Require("R
 MethodRSNNS::MethodRSNNS(const TString &jobName,
                          const TString &methodTitle,
                          DataSetInfo &dsi,
-                         const TString &theOption,
-                         TDirectory *theTargetDir) :
-   RMethodBase(jobName, Types::kRSNNS, methodTitle, dsi, theOption, theTargetDir),
+                         const TString &theOption) :
+   RMethodBase(jobName, Types::kRSNNS, methodTitle, dsi, theOption),
    fMvaCounter(0),
    predict("predict"),
    mlp("mlp"),
@@ -91,8 +90,8 @@ MethodRSNNS::MethodRSNNS(const TString &jobName,
 }
 
 //_______________________________________________________________________
-MethodRSNNS::MethodRSNNS(DataSetInfo &theData, const TString &theWeightFile, TDirectory *theTargetDir)
-   : RMethodBase(Types::kRSNNS, theData, theWeightFile, theTargetDir),
+MethodRSNNS::MethodRSNNS(DataSetInfo &theData, const TString &theWeightFile)
+   : RMethodBase(Types::kRSNNS, theData, theWeightFile),
      fMvaCounter(0),
      predict("predict"),
      mlp("mlp"),

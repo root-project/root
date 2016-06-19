@@ -81,9 +81,8 @@ TMVA::MethodANNBase::MethodANNBase( const TString& jobName,
                                     Types::EMVA methodType,
                                     const TString& methodTitle,
                                     DataSetInfo& theData,
-                                    const TString& theOption,
-                                    TDirectory* theTargetDir )
-: TMVA::MethodBase( jobName, methodType, methodTitle, theData, theOption, theTargetDir )
+                                    const TString& theOption )
+: TMVA::MethodBase( jobName, methodType, methodTitle, theData, theOption)
    , fEstimator(kMSE)
    , fUseRegulator(kFALSE)
    , fRandomSeed(0)
@@ -98,9 +97,8 @@ TMVA::MethodANNBase::MethodANNBase( const TString& jobName,
 
 TMVA::MethodANNBase::MethodANNBase( Types::EMVA methodType,
                                     DataSetInfo& theData,
-                                    const TString& theWeightFile,
-                                    TDirectory* theTargetDir )
-   : TMVA::MethodBase( methodType, theData, theWeightFile, theTargetDir )
+                                    const TString& theWeightFile)
+   : TMVA::MethodBase( methodType, theData, theWeightFile)
    , fEstimator(kMSE)
    , fUseRegulator(kFALSE)
    , fRandomSeed(0)

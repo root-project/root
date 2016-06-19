@@ -58,15 +58,13 @@ namespace TMVA {
                   Types::EMVA methodType,
                   const TString &methodTitle,
                   DataSetInfo &dsi,
-                  const TString &theOption = "",
-                  TDirectory *theBaseDir = 0, ROOT::R::TRInterface &_r = ROOT::R::TRInterface::Instance());
+                  const TString &theOption = "", ROOT::R::TRInterface &_r = ROOT::R::TRInterface::Instance());
 
       // constructor used for Testing + Application of the MVA, only (no training),
       // using given weight file
       RMethodBase(Types::EMVA methodType,
                   DataSetInfo &dsi,
-                  const TString &weightFile,
-                  TDirectory *theBaseDir = 0, ROOT::R::TRInterface &_r = ROOT::R::TRInterface::Instance());
+                  const TString &weightFile, ROOT::R::TRInterface &_r = ROOT::R::TRInterface::Instance());
 
       // default destructur
       virtual ~RMethodBase() {};

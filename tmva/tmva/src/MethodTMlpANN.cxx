@@ -94,9 +94,8 @@ ClassImp(TMVA::MethodTMlpANN)
    TMVA::MethodTMlpANN::MethodTMlpANN( const TString& jobName,
                                        const TString& methodTitle,
                                        DataSetInfo& theData,
-                                       const TString& theOption,
-                                       TDirectory* theTargetDir) :
-   TMVA::MethodBase( jobName, Types::kTMlpANN, methodTitle, theData, theOption, theTargetDir ),
+                                       const TString& theOption) :
+   TMVA::MethodBase( jobName, Types::kTMlpANN, methodTitle, theData, theOption),
    fMLP(0),
    fLocalTrainingTree(0),
    fNcycles(100),
@@ -109,9 +108,8 @@ ClassImp(TMVA::MethodTMlpANN)
 /// constructor from weight file
 
 TMVA::MethodTMlpANN::MethodTMlpANN( DataSetInfo& theData,
-                                    const TString& theWeightFile,
-                                    TDirectory* theTargetDir ) :
-   TMVA::MethodBase( Types::kTMlpANN, theData, theWeightFile, theTargetDir ),
+                                    const TString& theWeightFile) :
+   TMVA::MethodBase( Types::kTMlpANN, theData, theWeightFile),
    fMLP(0),
    fLocalTrainingTree(0),
    fNcycles(100),

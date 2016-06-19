@@ -59,13 +59,11 @@ namespace TMVA {
       MethodLD( const TString& jobName, 
                 const TString& methodTitle, 
                 DataSetInfo& dsi,
-                const TString& theOption = "LD",
-                TDirectory* theTargetDir = 0 );
+                const TString& theOption = "LD");
       
       // constructor
       MethodLD( DataSetInfo& dsi, 
-                const TString& theWeightFile, 
-                TDirectory* theTargetDir = 0 );
+                const TString& theWeightFile);
 
       // destructor
       virtual ~MethodLD( void );

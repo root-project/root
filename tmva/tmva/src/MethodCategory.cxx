@@ -82,9 +82,8 @@ ClassImp(TMVA::MethodCategory)
    TMVA::MethodCategory::MethodCategory( const TString& jobName,
                                          const TString& methodTitle,
                                          DataSetInfo& theData,
-                                         const TString& theOption,
-                                         TDirectory* theTargetDir )
-   : TMVA::MethodCompositeBase( jobName, Types::kCategory, methodTitle, theData, theOption, theTargetDir ),
+                                         const TString& theOption )
+   : TMVA::MethodCompositeBase( jobName, Types::kCategory, methodTitle, theData, theOption),
    fCatTree(0),
    fDataSetManager(NULL)
 {
@@ -94,9 +93,8 @@ ClassImp(TMVA::MethodCategory)
 /// constructor from weight file
 
 TMVA::MethodCategory::MethodCategory( DataSetInfo& dsi,
-                                      const TString& theWeightFile,
-                                      TDirectory* theTargetDir )
-   : TMVA::MethodCompositeBase( Types::kCategory, dsi, theWeightFile, theTargetDir ),
+                                      const TString& theWeightFile)
+   : TMVA::MethodCompositeBase( Types::kCategory, dsi, theWeightFile),
      fCatTree(0),
      fDataSetManager(NULL)
 {

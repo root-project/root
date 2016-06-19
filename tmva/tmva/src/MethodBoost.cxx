@@ -86,9 +86,8 @@ ClassImp(TMVA::MethodBoost)
    TMVA::MethodBoost::MethodBoost( const TString& jobName,
                                    const TString& methodTitle,
                                    DataSetInfo& theData,
-                                   const TString& theOption,
-                                   TDirectory* theTargetDir ) :
-   TMVA::MethodCompositeBase( jobName, Types::kBoost, methodTitle, theData, theOption, theTargetDir )
+                                   const TString& theOption ) :
+   TMVA::MethodCompositeBase( jobName, Types::kBoost, methodTitle, theData, theOption)
    , fBoostNum(0)
    , fDetailedMonitoring(kFALSE)
    , fAdaBoostBeta(0)
@@ -110,9 +109,8 @@ ClassImp(TMVA::MethodBoost)
 ////////////////////////////////////////////////////////////////////////////////
 
 TMVA::MethodBoost::MethodBoost( DataSetInfo& dsi,
-                                const TString& theWeightFile,
-                                TDirectory* theTargetDir )
-   : TMVA::MethodCompositeBase( Types::kBoost, dsi, theWeightFile, theTargetDir )
+                                const TString& theWeightFile)
+   : TMVA::MethodCompositeBase( Types::kBoost, dsi, theWeightFile)
    , fBoostNum(0)
    , fDetailedMonitoring(kFALSE)
    , fAdaBoostBeta(0)

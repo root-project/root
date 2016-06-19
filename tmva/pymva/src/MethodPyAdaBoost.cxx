@@ -53,9 +53,8 @@ ClassImp(MethodPyAdaBoost)
 MethodPyAdaBoost::MethodPyAdaBoost(const TString &jobName,
                                    const TString &methodTitle,
                                    DataSetInfo &dsi,
-                                   const TString &theOption,
-                                   TDirectory *theTargetDir) :
-   PyMethodBase(jobName, Types::kPyAdaBoost, methodTitle, dsi, theOption, theTargetDir),
+                                   const TString &theOption) :
+   PyMethodBase(jobName, Types::kPyAdaBoost, methodTitle, dsi, theOption),
    base_estimator("None"),
    n_estimators(50),
    learning_rate(1.0),
@@ -65,8 +64,8 @@ MethodPyAdaBoost::MethodPyAdaBoost(const TString &jobName,
 }
 
 //_______________________________________________________________________
-MethodPyAdaBoost::MethodPyAdaBoost(DataSetInfo &theData, const TString &theWeightFile, TDirectory *theTargetDir)
-   : PyMethodBase(Types::kPyAdaBoost, theData, theWeightFile, theTargetDir),
+MethodPyAdaBoost::MethodPyAdaBoost(DataSetInfo &theData, const TString &theWeightFile)
+   : PyMethodBase(Types::kPyAdaBoost, theData, theWeightFile),
      base_estimator("None"),
      n_estimators(50),
      learning_rate(1.0),

@@ -50,8 +50,7 @@ Bool_t MethodC50::IsModuleLoaded = ROOT::R::TRInterface::Instance().Require("C50
 MethodC50::MethodC50(const TString &jobName,
                      const TString &methodTitle,
                      DataSetInfo &dsi,
-                     const TString &theOption,
-                     TDirectory *theTargetDir) : RMethodBase(jobName, Types::kC50, methodTitle, dsi, theOption, theTargetDir),
+                     const TString &theOption) : RMethodBase(jobName, Types::kC50, methodTitle, dsi, theOption),
    fNTrials(1),
    fRules(kFALSE),
    fMvaCounter(0),
@@ -82,8 +81,8 @@ MethodC50::MethodC50(const TString &jobName,
 }
 
 //_______________________________________________________________________
-MethodC50::MethodC50(DataSetInfo &theData, const TString &theWeightFile, TDirectory *theTargetDir)
-   : RMethodBase(Types::kC50, theData, theWeightFile, theTargetDir),
+MethodC50::MethodC50(DataSetInfo &theData, const TString &theWeightFile)
+   : RMethodBase(Types::kC50, theData, theWeightFile),
      fNTrials(1),
      fRules(kFALSE),
      fMvaCounter(0),

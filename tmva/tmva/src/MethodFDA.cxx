@@ -81,9 +81,8 @@ ClassImp(TMVA::MethodFDA)
    TMVA::MethodFDA::MethodFDA( const TString& jobName,
                                const TString& methodTitle,
                                DataSetInfo& theData,
-                               const TString& theOption,
-                               TDirectory* theTargetDir )
-   : MethodBase( jobName, Types::kFDA, methodTitle, theData, theOption, theTargetDir ),
+                               const TString& theOption)
+   : MethodBase( jobName, Types::kFDA, methodTitle, theData, theOption),
    IFitterTarget   (),
    fFormula        ( 0 ),
    fNPars          ( 0 ),
@@ -100,9 +99,8 @@ ClassImp(TMVA::MethodFDA)
 /// constructor from weight file
 
 TMVA::MethodFDA::MethodFDA( DataSetInfo& theData,
-                            const TString& theWeightFile,
-                            TDirectory* theTargetDir )
-   : MethodBase( Types::kFDA, theData, theWeightFile, theTargetDir ),
+                            const TString& theWeightFile)
+   : MethodBase( Types::kFDA, theData, theWeightFile),
      IFitterTarget   (),
      fFormula        ( 0 ),
      fNPars          ( 0 ),

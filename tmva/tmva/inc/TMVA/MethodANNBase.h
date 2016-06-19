@@ -86,13 +86,11 @@ namespace TMVA {
                      Types::EMVA methodType,
                      const TString& methodTitle,
                      DataSetInfo& theData, 
-                     const TString& theOption,
-                     TDirectory* theTargetDir );
+                     const TString& theOption );
       
       MethodANNBase( Types::EMVA methodType,
                      DataSetInfo& theData,
-                     const TString& theWeightFile, 
-                     TDirectory* theTargetDir );
+                     const TString& theWeightFile);
       
       virtual ~MethodANNBase();
       

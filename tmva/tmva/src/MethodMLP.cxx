@@ -85,9 +85,8 @@ ClassImp(TMVA::MethodMLP)
 TMVA::MethodMLP::MethodMLP( const TString& jobName,
                             const TString& methodTitle,
                             DataSetInfo& theData,
-                            const TString& theOption,
-                            TDirectory* theTargetDir )
-   : MethodANNBase( jobName, Types::kMLP, methodTitle, theData, theOption, theTargetDir ),
+                            const TString& theOption)
+   : MethodANNBase( jobName, Types::kMLP, methodTitle, theData, theOption),
      fUseRegulator(false), fCalculateErrors(false),
      fPrior(0.0), fPriorDev(0), fUpdateLimit(0),
      fTrainingMethod(kBFGS), fTrainMethodS("BFGS"),
@@ -109,9 +108,8 @@ TMVA::MethodMLP::MethodMLP( const TString& jobName,
 /// constructor from a weight file
 
 TMVA::MethodMLP::MethodMLP( DataSetInfo& theData,
-                            const TString& theWeightFile,
-                            TDirectory* theTargetDir )
-   : MethodANNBase( Types::kMLP, theData, theWeightFile, theTargetDir ),
+                            const TString& theWeightFile)
+   : MethodANNBase( Types::kMLP, theData, theWeightFile),
      fUseRegulator(false), fCalculateErrors(false),
      fPrior(0.0), fPriorDev(0), fUpdateLimit(0),
      fTrainingMethod(kBFGS), fTrainMethodS("BFGS"),

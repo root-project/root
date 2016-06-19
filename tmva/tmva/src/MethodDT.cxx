@@ -126,9 +126,8 @@ ClassImp(TMVA::MethodDT)
    TMVA::MethodDT::MethodDT( const TString& jobName,
                              const TString& methodTitle,
                              DataSetInfo& theData,
-                             const TString& theOption,
-                             TDirectory* theTargetDir ) :
-   TMVA::MethodBase( jobName, Types::kDT, methodTitle, theData, theOption, theTargetDir )
+                             const TString& theOption) :
+   TMVA::MethodBase( jobName, Types::kDT, methodTitle, theData, theOption)
    , fTree(0)
    , fSepType(0)
    , fMinNodeEvents(0)
@@ -152,9 +151,8 @@ ClassImp(TMVA::MethodDT)
 ///constructor from Reader
 
 TMVA::MethodDT::MethodDT( DataSetInfo& dsi,
-                          const TString& theWeightFile,
-                          TDirectory* theTargetDir ) :
-   TMVA::MethodBase( Types::kDT, dsi, theWeightFile, theTargetDir )
+                          const TString& theWeightFile) :
+   TMVA::MethodBase( Types::kDT, dsi, theWeightFile)
    , fTree(0)
    , fSepType(0)
    , fMinNodeEvents(0)

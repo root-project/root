@@ -50,8 +50,7 @@ Bool_t MethodRXGB::IsModuleLoaded = ROOT::R::TRInterface::Instance().Require("xg
 MethodRXGB::MethodRXGB(const TString &jobName,
                        const TString &methodTitle,
                        DataSetInfo &dsi,
-                       const TString &theOption,
-                       TDirectory *theTargetDir) : RMethodBase(jobName, Types::kRXGB, methodTitle, dsi, theOption, theTargetDir),
+                       const TString &theOption) : RMethodBase(jobName, Types::kRXGB, methodTitle, dsi, theOption),
    fNRounds(10),
    fEta(0.3),
    fMaxDepth(6),
@@ -71,8 +70,8 @@ MethodRXGB::MethodRXGB(const TString &jobName,
 }
 
 //_______________________________________________________________________
-MethodRXGB::MethodRXGB(DataSetInfo &theData, const TString &theWeightFile, TDirectory *theTargetDir)
-   : RMethodBase(Types::kRXGB, theData, theWeightFile, theTargetDir),
+MethodRXGB::MethodRXGB(DataSetInfo &theData, const TString &theWeightFile)
+   : RMethodBase(Types::kRXGB, theData, theWeightFile),
      fNRounds(10),
      fEta(0.3),
      fMaxDepth(6),

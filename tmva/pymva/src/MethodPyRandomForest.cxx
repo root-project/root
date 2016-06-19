@@ -53,9 +53,8 @@ ClassImp(MethodPyRandomForest)
 MethodPyRandomForest::MethodPyRandomForest(const TString &jobName,
       const TString &methodTitle,
       DataSetInfo &dsi,
-      const TString &theOption,
-      TDirectory *theTargetDir) :
-   PyMethodBase(jobName, Types::kPyRandomForest, methodTitle, dsi, theOption, theTargetDir),
+      const TString &theOption) :
+   PyMethodBase(jobName, Types::kPyRandomForest, methodTitle, dsi, theOption),
    n_estimators(10),
    criterion("gini"),
    max_depth("None"),
@@ -75,8 +74,8 @@ MethodPyRandomForest::MethodPyRandomForest(const TString &jobName,
 }
 
 //_______________________________________________________________________
-MethodPyRandomForest::MethodPyRandomForest(DataSetInfo &theData, const TString &theWeightFile, TDirectory *theTargetDir)
-   : PyMethodBase(Types::kPyRandomForest, theData, theWeightFile, theTargetDir),
+MethodPyRandomForest::MethodPyRandomForest(DataSetInfo &theData, const TString &theWeightFile)
+   : PyMethodBase(Types::kPyRandomForest, theData, theWeightFile),
      n_estimators(10),
      criterion("gini"),
      max_depth("None"),

@@ -104,12 +104,10 @@ namespace TMVA {
       MethodCFMlpANN( const TString& jobName,
                       const TString& methodTitle, 
                       DataSetInfo& theData,
-                      const TString& theOption = "3000:N-1:N-2",
-                      TDirectory* theTargetDir = 0 );
+                      const TString& theOption = "3000:N-1:N-2");
 
       MethodCFMlpANN( DataSetInfo& theData, 
-                      const TString& theWeightFile,  
-                      TDirectory* theTargetDir = NULL );
+                      const TString& theWeightFile);
 
       virtual ~MethodCFMlpANN( void );
     

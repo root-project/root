@@ -158,9 +158,8 @@ ClassImp(TMVA::MethodBDT)
 TMVA::MethodBDT::MethodBDT( const TString& jobName,
                             const TString& methodTitle,
                             DataSetInfo& theData,
-                            const TString& theOption,
-                            TDirectory* theTargetDir ) :
-   TMVA::MethodBase( jobName, Types::kBDT, methodTitle, theData, theOption, theTargetDir )
+                            const TString& theOption ) :
+   TMVA::MethodBase( jobName, Types::kBDT, methodTitle, theData, theOption)
    , fTrainSample(0)
    , fNTrees(0)
    , fSigToBkgFraction(0) 
@@ -212,9 +211,8 @@ TMVA::MethodBDT::MethodBDT( const TString& jobName,
 ////////////////////////////////////////////////////////////////////////////////
 
 TMVA::MethodBDT::MethodBDT( DataSetInfo& theData,
-                            const TString& theWeightFile,
-                            TDirectory* theTargetDir )
-   : TMVA::MethodBase( Types::kBDT, theData, theWeightFile, theTargetDir )
+                            const TString& theWeightFile)
+   : TMVA::MethodBase( Types::kBDT, theData, theWeightFile)
    , fTrainSample(0)
    , fNTrees(0)
    , fSigToBkgFraction(0) 

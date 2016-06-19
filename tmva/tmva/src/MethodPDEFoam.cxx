@@ -84,9 +84,8 @@ ClassImp(TMVA::MethodPDEFoam)
    TMVA::MethodPDEFoam::MethodPDEFoam( const TString& jobName,
                                        const TString& methodTitle,
                                        DataSetInfo& dsi,
-                                       const TString& theOption,
-                                       TDirectory* theTargetDir ) :
-   MethodBase( jobName, Types::kPDEFoam, methodTitle, dsi, theOption, theTargetDir )
+                                       const TString& theOption ) :
+   MethodBase( jobName, Types::kPDEFoam, methodTitle, dsi, theOption)
    , fSigBgSeparated(kFALSE)
    , fFrac(0.001)
    , fDiscrErrCut(-1.0)
@@ -121,9 +120,8 @@ ClassImp(TMVA::MethodPDEFoam)
 /// constructor from weight file
 
 TMVA::MethodPDEFoam::MethodPDEFoam( DataSetInfo& dsi,
-                                    const TString& theWeightFile,
-                                    TDirectory* theTargetDir ) :
-   MethodBase( Types::kPDEFoam, dsi, theWeightFile, theTargetDir )
+                                    const TString& theWeightFile) :
+   MethodBase( Types::kPDEFoam, dsi, theWeightFile)
    , fSigBgSeparated(kFALSE)
    , fFrac(0.001)
    , fDiscrErrCut(-1.0)

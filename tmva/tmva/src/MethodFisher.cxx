@@ -132,9 +132,8 @@ ClassImp(TMVA::MethodFisher);
 TMVA::MethodFisher::MethodFisher( const TString& jobName,
                                   const TString& methodTitle,
                                   DataSetInfo& dsi,
-                                  const TString& theOption,
-                                  TDirectory* theTargetDir ) :
-   MethodBase( jobName, Types::kFisher, methodTitle, dsi, theOption, theTargetDir ),
+                                  const TString& theOption ) :
+   MethodBase( jobName, Types::kFisher, methodTitle, dsi, theOption),
    fMeanMatx     ( 0 ),
    fTheMethod    ( "Fisher" ),
    fFisherMethod ( kFisher ),
@@ -153,9 +152,8 @@ TMVA::MethodFisher::MethodFisher( const TString& jobName,
 /// constructor from weight file
 
 TMVA::MethodFisher::MethodFisher( DataSetInfo& dsi,
-                                  const TString& theWeightFile,
-                                  TDirectory* theTargetDir ) :
-   MethodBase( Types::kFisher, dsi, theWeightFile, theTargetDir ),
+                                  const TString& theWeightFile) :
+   MethodBase( Types::kFisher, dsi, theWeightFile),
    fMeanMatx     ( 0 ),
    fTheMethod    ( "Fisher" ),
    fFisherMethod ( kFisher ),

@@ -67,13 +67,11 @@ namespace TMVA {
       MethodBDT( const TString& jobName,
                  const TString& methodTitle,
                  DataSetInfo& theData,
-                 const TString& theOption = "",
-                 TDirectory* theTargetDir = 0 );
+                 const TString& theOption = "");
 
       // constructor for calculating BDT-MVA using previously generatad decision trees
       MethodBDT( DataSetInfo& theData,
-                 const TString& theWeightFile,
-                 TDirectory* theTargetDir = NULL );
+                 const TString& theWeightFile);
 
       virtual ~MethodBDT( void );
 

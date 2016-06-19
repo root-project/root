@@ -128,9 +128,8 @@ namespace TMVA {
 TMVA::MethodCFMlpANN::MethodCFMlpANN( const TString& jobName,
                                       const TString& methodTitle,
                                       DataSetInfo& theData,
-                                      const TString& theOption,
-                                      TDirectory* theTargetDir  ) :
-   TMVA::MethodBase( jobName, Types::kCFMlpANN, methodTitle, theData, theOption, theTargetDir  ),
+                                      const TString& theOption  ) :
+   TMVA::MethodBase( jobName, Types::kCFMlpANN, methodTitle, theData, theOption),
    fData(0),
    fClass(0),
    fNlayers(0),
@@ -146,9 +145,8 @@ TMVA::MethodCFMlpANN::MethodCFMlpANN( const TString& jobName,
 /// constructor from weight file
 
 TMVA::MethodCFMlpANN::MethodCFMlpANN( DataSetInfo& theData,
-                                      const TString& theWeightFile,
-                                      TDirectory* theTargetDir ):
-   TMVA::MethodBase( Types::kCFMlpANN, theData, theWeightFile, theTargetDir ),
+                                      const TString& theWeightFile):
+   TMVA::MethodBase( Types::kCFMlpANN, theData, theWeightFile),
    fData(0),
    fClass(0),
    fNlayers(0),

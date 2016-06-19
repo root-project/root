@@ -95,8 +95,8 @@ ClassImp(TMVA::MethodSVM)
 /// standard constructor
 
    TMVA::MethodSVM::MethodSVM( const TString& jobName, const TString& methodTitle, DataSetInfo& theData,
-                               const TString& theOption, TDirectory* theTargetDir )
-   : MethodBase( jobName, Types::kSVM, methodTitle, theData, theOption, theTargetDir )
+                               const TString& theOption )
+   : MethodBase( jobName, Types::kSVM, methodTitle, theData, theOption)
    , fCost(0)
    , fTolerance(0)
    , fMaxIter(0)
@@ -130,8 +130,8 @@ ClassImp(TMVA::MethodSVM)
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor from weight file
 
-TMVA::MethodSVM::MethodSVM( DataSetInfo& theData, const TString& theWeightFile, TDirectory*  theTargetDir )
-   : MethodBase( Types::kSVM, theData, theWeightFile, theTargetDir )
+TMVA::MethodSVM::MethodSVM( DataSetInfo& theData, const TString& theWeightFile)
+   : MethodBase( Types::kSVM, theData, theWeightFile)
    , fCost(0)
    , fTolerance(0)
    , fMaxIter(0)

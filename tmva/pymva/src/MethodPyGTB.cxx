@@ -57,9 +57,8 @@ ClassImp(MethodPyGTB)
 MethodPyGTB::MethodPyGTB(const TString &jobName,
                          const TString &methodTitle,
                          DataSetInfo &dsi,
-                         const TString &theOption,
-                         TDirectory *theTargetDir) :
-   PyMethodBase(jobName, Types::kPyGTB, methodTitle, dsi, theOption, theTargetDir),
+                         const TString &theOption) :
+   PyMethodBase(jobName, Types::kPyGTB, methodTitle, dsi, theOption),
    loss("deviance"),
    learning_rate(0.1),
    n_estimators(100),
@@ -78,8 +77,8 @@ MethodPyGTB::MethodPyGTB(const TString &jobName,
 }
 
 //_______________________________________________________________________
-MethodPyGTB::MethodPyGTB(DataSetInfo &theData, const TString &theWeightFile, TDirectory *theTargetDir)
-   : PyMethodBase(Types::kPyGTB, theData, theWeightFile, theTargetDir),
+MethodPyGTB::MethodPyGTB(DataSetInfo &theData, const TString &theWeightFile)
+   : PyMethodBase(Types::kPyGTB, theData, theWeightFile),
      loss("deviance"),
      learning_rate(0.1),
      n_estimators(100),

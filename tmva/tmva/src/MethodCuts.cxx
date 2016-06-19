@@ -139,9 +139,8 @@ ClassImp(TMVA::MethodCuts)
 TMVA::MethodCuts::MethodCuts( const TString& jobName,
                               const TString& methodTitle,
                               DataSetInfo& theData,
-                              const TString& theOption,
-                              TDirectory* theTargetDir ) :
-   MethodBase( jobName, Types::kCuts, methodTitle, theData, theOption, theTargetDir ),
+                              const TString& theOption ) :
+   MethodBase( jobName, Types::kCuts, methodTitle, theData, theOption),
    fFitMethod  ( kUseGeneticAlgorithm ),
    fEffMethod  ( kUseEventSelection ),
    fFitParams (0),
@@ -180,9 +179,8 @@ TMVA::MethodCuts::MethodCuts( const TString& jobName,
 /// construction from weight file
 
 TMVA::MethodCuts::MethodCuts( DataSetInfo& theData, 
-                              const TString& theWeightFile,  
-                              TDirectory* theTargetDir ) :
-   MethodBase( Types::kCuts, theData, theWeightFile, theTargetDir ), 
+                              const TString& theWeightFile) :
+   MethodBase( Types::kCuts, theData, theWeightFile), 
    fFitMethod  ( kUseGeneticAlgorithm ),
    fEffMethod  ( kUseEventSelection ),
    fFitParams (0),

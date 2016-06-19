@@ -66,9 +66,8 @@ TMVA::MethodCompositeBase::MethodCompositeBase( const TString& jobName,
                                                 Types::EMVA methodType,
                                                 const TString& methodTitle,
                                                 DataSetInfo& theData,
-                                                const TString& theOption,
-                                                TDirectory* theTargetDir )
-: TMVA::MethodBase( jobName, methodType, methodTitle, theData, theOption, theTargetDir ),
+                                                const TString& theOption )
+: TMVA::MethodBase( jobName, methodType, methodTitle, theData, theOption),
    fCurrentMethodIdx(0), fCurrentMethod(0)
 {}
 
@@ -76,9 +75,8 @@ TMVA::MethodCompositeBase::MethodCompositeBase( const TString& jobName,
 
 TMVA::MethodCompositeBase::MethodCompositeBase( Types::EMVA methodType,
                                                 DataSetInfo& dsi,
-                                                const TString& weightFile,
-                                                TDirectory* theTargetDir )
-   : TMVA::MethodBase( methodType, dsi, weightFile, theTargetDir ),
+                                                const TString& weightFile)
+   : TMVA::MethodBase( methodType, dsi, weightFile),
      fCurrentMethodIdx(0), fCurrentMethod(0)     
 {}
 

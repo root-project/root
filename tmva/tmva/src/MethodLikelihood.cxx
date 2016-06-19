@@ -142,9 +142,8 @@ ClassImp(TMVA::MethodLikelihood)
    TMVA::MethodLikelihood::MethodLikelihood( const TString& jobName,
                                              const TString& methodTitle,
                                              DataSetInfo& theData,
-                                             const TString& theOption,
-                                             TDirectory* theTargetDir ) :
-   TMVA::MethodBase( jobName, Types::kLikelihood, methodTitle, theData, theOption, theTargetDir ),
+                                             const TString& theOption ) :
+   TMVA::MethodBase( jobName, Types::kLikelihood, methodTitle, theData, theOption),
    fEpsilon       ( 1.e3 * DBL_MIN ),
    fTransformLikelihoodOutput( kFALSE ),
    fDropVariable  ( 0 ),
@@ -170,9 +169,8 @@ ClassImp(TMVA::MethodLikelihood)
 /// construct likelihood references from file
 
 TMVA::MethodLikelihood::MethodLikelihood( DataSetInfo& theData,
-                                          const TString& theWeightFile,
-                                          TDirectory* theTargetDir ) :
-   TMVA::MethodBase( Types::kLikelihood, theData, theWeightFile, theTargetDir ),
+                                          const TString& theWeightFile) :
+   TMVA::MethodBase( Types::kLikelihood, theData, theWeightFile),
    fEpsilon       ( 1.e3 * DBL_MIN ),
    fTransformLikelihoodOutput( kFALSE ),
    fDropVariable  ( 0 ),

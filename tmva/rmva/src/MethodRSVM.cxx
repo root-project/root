@@ -50,9 +50,8 @@ Bool_t MethodRSVM::IsModuleLoaded = ROOT::R::TRInterface::Instance().Require("e1
 MethodRSVM::MethodRSVM(const TString &jobName,
                        const TString &methodTitle,
                        DataSetInfo &dsi,
-                       const TString &theOption,
-                       TDirectory *theTargetDir) :
-   RMethodBase(jobName, Types::kRSVM, methodTitle, dsi, theOption, theTargetDir),
+                       const TString &theOption) :
+   RMethodBase(jobName, Types::kRSVM, methodTitle, dsi, theOption),
    fMvaCounter(0),
    svm("svm"),
    predict("predict"),
@@ -81,8 +80,8 @@ MethodRSVM::MethodRSVM(const TString &jobName,
 }
 
 //_______________________________________________________________________
-MethodRSVM::MethodRSVM(DataSetInfo &theData, const TString &theWeightFile, TDirectory *theTargetDir)
-   : RMethodBase(Types::kRSVM, theData, theWeightFile, theTargetDir),
+MethodRSVM::MethodRSVM(DataSetInfo &theData, const TString &theWeightFile)
+   : RMethodBase(Types::kRSVM, theData, theWeightFile),
      fMvaCounter(0),
      svm("svm"),
      predict("predict"),

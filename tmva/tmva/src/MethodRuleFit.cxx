@@ -67,9 +67,8 @@ ClassImp(TMVA::MethodRuleFit)
    TMVA::MethodRuleFit::MethodRuleFit( const TString& jobName,
                                        const TString& methodTitle,
                                        DataSetInfo& theData, 
-                                       const TString& theOption,
-                                       TDirectory* theTargetDir ) :
-   MethodBase( jobName, Types::kRuleFit, methodTitle, theData, theOption, theTargetDir )
+                                       const TString& theOption) :
+   MethodBase( jobName, Types::kRuleFit, methodTitle, theData, theOption)
    , fSignalFraction(0)
    , fNTImportance(0)
    , fNTCoefficient(0)
@@ -115,9 +114,8 @@ ClassImp(TMVA::MethodRuleFit)
 /// constructor from weight file
 
 TMVA::MethodRuleFit::MethodRuleFit( DataSetInfo& theData,
-                                    const TString& theWeightFile,
-                                    TDirectory* theTargetDir ) :
-   MethodBase( Types::kRuleFit, theData, theWeightFile, theTargetDir )
+                                    const TString& theWeightFile) :
+   MethodBase( Types::kRuleFit, theData, theWeightFile)
    , fSignalFraction(0)
    , fNTImportance(0)
    , fNTCoefficient(0)
