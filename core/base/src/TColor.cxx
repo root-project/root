@@ -241,11 +241,11 @@ To store a palette in an array it is enough to do:
 
 ~~~ {.cpp}
    Int_t MyPalette[100];
-   Double_t r[]    = {0., 0.0, 1.0, 1.0, 1.0};
-   Double_t g[]    = {0., 0.0, 0.0, 1.0, 1.0};
-   Double_t b[]    = {0., 1.0, 0.0, 0.0, 1.0};
-   Double_t stop[] = {0., .25, .50, .75, 1.0};
-   Int_t FI = TColor::CreateGradientColorTable(5, stop, r, g, b, 100);
+   Double_t Red[]    = {0., 0.0, 1.0, 1.0, 1.0};
+   Double_t Green[]  = {0., 0.0, 0.0, 1.0, 1.0};
+   Double_t Blue[]   = {0., 1.0, 0.0, 0.0, 1.0};
+   Double_t Length[] = {0., .25, .50, .75, 1.0};
+   Int_t FI = TColor::CreateGradientColorTable(5, Length, Red, Green, Blue, 100);
    for (int i=0;i<100;i++) MyPalette[i] = FI+i;
 ~~~
 
