@@ -95,12 +95,6 @@
 #   include <dlfcn.h>
 #endif
 
-#ifdef HAVE_BACKTRACE_SYMBOLS_FD
-   // The maximum stack trace depth for systems where we request the
-   // stack depth separately (currently glibc-based systems).
-   static const int kMAX_BACKTRACE_DEPTH = 128;
-#endif
-
 class TFdSet;
  
 #if defined(HAVE_DLADDR) && !defined(R__MACOSX)
@@ -289,22 +283,6 @@ void TUnixSigHandling::Init()
    UnixSignal(kSigUrgent,                SigHandler);
    UnixSignal(kSigFloatingException,     SigHandler);
    UnixSignal(kSigWindowChanged,         SigHandler);
-
-#if defined(R__MACOSX)
-   // trap loading of all dylibs to register dylib name,
-   // sets also ROOTSYS if built without ROOTPREFIX
-   _dyld_register_func_for_add_image(DylibAdded);
-#elif defined(HAVE_DLADDR)
-   SetRootSys();
-#endif
-
-#ifndef ROOTPREFIX
-   gRootDir = gSystem->Getenv("ROOTSYS");
-   if (gRootDir == 0)
-      gRootDir= "/usr/local/root";
-#else
-   gRootDir = ROOTPREFIX;
-#endif
 
    if(snprintf(gStackTraceHelper.fShellExec, kStringLength-1, "/bin/sh") >= kStringLength) {
       SignalSafeErrWrite("Unable to pre-allocate shell command path");
@@ -743,11 +721,21 @@ void TUnixSigHandling::StackTraceHelperInit()
    close(gStackTraceHelper.fParentToChild[1]);
    gStackTraceHelper.fParentToChild[0] = -1; gStackTraceHelper.fParentToChild[1] = -1;
 
-   if (-1 == pipe2(gStackTraceHelper.fChildToParent, O_CLOEXEC)) {
+#ifdef R__MACOSX
+   if (-1 == pipe(gStackTraceHelper.fChildToParent))
+#else
+   if (-1 == pipe2(gStackTraceHelper.fChildToParent, O_CLOEXEC))
+#endif
+   {
       fprintf(stdout, "pipe gStackTraceHelper.fChildToParent failed\n");
       return;
    }
-   if (-1 == pipe2(gStackTraceHelper.fParentToChild, O_CLOEXEC)){
+#ifdef R__MACOSX
+   if (-1 == pipe(gStackTraceHelper.fParentToChild))
+#else
+   if (-1 == pipe2(gStackTraceHelper.fParentToChild, O_CLOEXEC))
+#endif
+   {
       close(gStackTraceHelper.fChildToParent[0]); close(gStackTraceHelper.fChildToParent[1]);
       gStackTraceHelper.fChildToParent[0] = -1; gStackTraceHelper.fChildToParent[1] = -1;
       fprintf(stdout, "pipe parentToChild failed\n");

@@ -571,8 +571,6 @@ Bool_t TUnixSystem::Init()
    fWriteready = new TFdSet;
 
    //--- install default handlers
-   gSigHandling->Init();
-
 #if defined(R__MACOSX)
    // trap loading of all dylibs to register dylib name,
    // sets also ROOTSYS if built without ROOTPREFIX
@@ -588,6 +586,8 @@ Bool_t TUnixSystem::Init()
 #else
    gRootDir = ROOTPREFIX;
 #endif
+
+   gSigHandling->Init();
 
    return kFALSE;
 }
