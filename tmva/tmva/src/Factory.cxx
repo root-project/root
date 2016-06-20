@@ -106,7 +106,6 @@ ClassImp(TMVA::Factory)
 #define VIBITS          32
 
 
-Bool_t TMVA::Factory::fSilentFile=kFALSE;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// standard constructor
@@ -121,6 +120,7 @@ TMVA::Factory::Factory( TString jobName, TFile* theTargetFile, TString theOption
    fVerbose              ( kFALSE ),
    fCorrelations         ( kFALSE ),
    fROC                  ( kTRUE ),
+   fSilentFile           ( kFALSE ),
    fJobName              ( jobName ),
    fDataAssignType       ( kAssignEvents ),
    fATreeEvent           ( NULL ),
@@ -319,6 +319,7 @@ TMVA::MethodBase* TMVA::Factory::BookMethod( TMVA::DataLoader *loader, TString t
       methBoost->SetBoostedMethodName( theMethodName ); // DSMTEST divided into two lines
       methBoost->fDataSetManager = loader->fDataSetManager; // DSMTEST
       methBoost->SetFile(fgTargetFile);
+      methBoost->SetSilentFile(IsSilentFile());
    }
 
    MethodBase *method = dynamic_cast<MethodBase*>(im);
@@ -331,6 +332,7 @@ TMVA::MethodBase* TMVA::Factory::BookMethod( TMVA::DataLoader *loader, TString t
          Log() << kFATAL << "Method with type kCategory cannot be casted to MethodCategory. /Factory" << Endl; // DSMTEST
       methCat->fDataSetManager = loader->fDataSetManager; // DSMTEST
       methCat->SetFile(fgTargetFile);
+      methCat->SetSilentFile(IsSilentFile());
    } // DSMTEST
 
 
@@ -357,6 +359,7 @@ TMVA::MethodBase* TMVA::Factory::BookMethod( TMVA::DataLoader *loader, TString t
    method->ParseOptions();
    method->ProcessSetup();
    method->SetFile(fgTargetFile);
+   method->SetSilentFile(IsSilentFile());
 
    // check-for-unused-options is performed; may be overridden by derived classes
    method->CheckSetup();
@@ -1020,6 +1023,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
 	  MethodBase* theMethod = dynamic_cast<MethodBase*>(*itrMethod);
 	  if(theMethod==0) continue;
 	  theMethod->SetFile(fgTargetFile);
+	  theMethod->SetSilentFile(IsSilentFile());
 	  if (theMethod->GetMethodType() != Types::kCuts) methodsNoCuts.push_back( *itrMethod );
 
 	  if (theMethod->DoRegression()) {

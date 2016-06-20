@@ -168,6 +168,7 @@ TMVA::MethodBase::MethodBase( const TString& jobName,
    fBaseDir                   ( 0 ),
    fMethodBaseDir             ( 0 ),
    fFile                      ( 0 ),
+   fSilentFile                (kFALSE),
    fWeightFile                ( "" ),
    fEffS                      ( 0 ),
    fDefaultPDF                ( 0 ),
@@ -231,6 +232,7 @@ TMVA::MethodBase::MethodBase( Types::EMVA methodType,
    fBaseDir                   ( 0 ),
    fMethodBaseDir             ( 0 ),
    fFile                      ( 0 ),
+   fSilentFile                (kFALSE),
    fWeightFile                ( weightFile ),
    fEffS                      ( 0 ),
    fDefaultPDF                ( 0 ),
@@ -1012,7 +1014,7 @@ void TMVA::MethodBase::TestClassification()
    // classifier response distributions for training sample
    // MVA plots used for graphics representation (signal)
    TString TestvarName;
-   if(TMVA::Factory::IsSilentFile())
+   if(IsSilentFile())
       {
          TestvarName=Form("[%s]%s",DataInfo().GetName(),GetTestvarName().Data());
       }else
@@ -2243,8 +2245,6 @@ Double_t TMVA::MethodBase::GetEfficiency( const TString& theString, Types::ETree
       // make the background-vs-signal efficiency plot
 
       // create root finder
-      // reset static "this" pointer before calling external function
-//       ResetThisBase();
       RootFinder rootFinder( this, fXmin, fXmax );
 
       Double_t effB = 0;
@@ -2478,8 +2478,6 @@ Double_t TMVA::MethodBase::GetTrainingEfficiency(const TString& theString)
       // make the background-vs-signal efficiency plot
 
       // create root finder
-      // reset static "this" pointer before calling external function
-//       ResetThisBase();
       RootFinder rootFinder(this, fXmin, fXmax );
 
       Double_t effB = 0;

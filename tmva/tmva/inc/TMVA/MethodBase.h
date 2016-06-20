@@ -346,6 +346,10 @@ namespace TMVA {
       void             SetMethodBaseDir( TDirectory* methodDir ){ fMethodBaseDir = methodDir; }
       void             SetFile(TFile* file){fFile=file;}
       
+      //Silent file
+      void SetSilentFile(Bool_t status){fSilentFile=status;}
+      Bool_t IsSilentFile(){return fSilentFile;}
+      
       // the TMVA version can be obtained and checked using
       //    if (GetTrainingTMVAVersionCode()>TMVA_VERSION(3,7,2)) {...}
       // or
@@ -553,6 +557,9 @@ namespace TMVA {
       //this will be the next way to save results
       TFile            *fFile;
 
+      //SilentFile
+      Bool_t fSilentFile;
+      
       TString          fParentDir;           // method parent name, like booster name
 
       TString          fFileDir;             // unix sub-directory for weight files (default: DataLoader's Name + "weights")
