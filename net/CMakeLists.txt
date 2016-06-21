@@ -1,7 +1,6 @@
 
 add_subdirectory(net)
 add_subdirectory(auth)  # special CMakeListst.txt
-add_subdirectory(rootd)
 
 if(bonjour)
   add_subdirectory(bonjour)
@@ -13,6 +12,7 @@ endif()
 
 if(NOT WIN32 AND ssl)
   add_subdirectory(rpdutils)
+  add_subdirectory(rootd)
 endif()
 
 if(xrootd)
