@@ -306,9 +306,26 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 ## Class Reference Guide
 
 ## Build, Configuration and Testing Infrastructure
-* Added new 'builtin_vc' option to bundle a version of Vc within ROOT.
+- Added new 'builtin_vc' option to bundle a version of Vc within ROOT.
   The default is OFF, however if the Vc package is not found in the system the option is switched to
   ON if the option 'vc' option is ON.
-
+- Many improvements (provided by Mattias Ellert):
+   - Build RFIO using dpm libraries if castor libraries are not available
+   - Add missing glib header path in GFAL module for version > 2
+   - Search also for globus libraries wouthout the flavour in the name
+   - Add missing io/hdfs/CMakeLists.txt
+   - net/globusauth has no installed headers - remove ROOT_INSTALL_HEADERS()
+   - Add missing pieces to the cmake config that are built by configure: bin/pq2, bin/rootd, bin/xpdtest, initd and xinitd start-up scripts
+   - Only link to libgfortranbegin.a when it is provided by the compiler
+   - Don't remove -Wall without also removing -Werror=*
+   - Don't overwrite the initial value of CMAKE_Fortran_FLAGS. Inconsistent case variant of CMAKE_Fortran_FLAGS
+   - Use the same sonames in cmake as in configure
+   - Allow building for ppc64 as well as ppc64le
+   - Add build instructions for 32 bit ARM
+   - Add build instructions for System Z (s390 and s390x)
+   - Make sure that the roots wrapper can be executed
+   - Move gl2ps.h to its own subdir
+- Added 'builtin-unuran' option (provided by Mattias Ellert)
+- Added 'builtin-gl2ps' option (provided by Mattias Ellert)
 
 
