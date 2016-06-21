@@ -3912,7 +3912,7 @@ const char *TUnixSystem::UnixHomedirectory(const char *name, char *path, char *m
       pw = getpwnam(name);
       if (pw) {
          strncpy(path, pw->pw_dir, kMAXPATHLEN-1);
-         path[sizeof(path)-1] = '\0';
+         path[kMAXPATHLEN-1] = '\0';
          return path;
       }
    } else {
@@ -3921,11 +3921,11 @@ const char *TUnixSystem::UnixHomedirectory(const char *name, char *path, char *m
       pw = getpwuid(getuid());
       if (pw && pw->pw_dir) {
          strncpy(mydir, pw->pw_dir, kMAXPATHLEN-1);
-         mydir[sizeof(mydir)-1] = '\0';
+         mydir[kMAXPATHLEN-1] = '\0';
          return mydir;
       } else if (gSystem->Getenv("HOME")) {
          strncpy(mydir, gSystem->Getenv("HOME"), kMAXPATHLEN-1);
-         mydir[sizeof(mydir)-1] = '\0';
+         mydir[kMAXPATHLEN-1] = '\0';
          return mydir;
       }
    }
