@@ -17,8 +17,12 @@ set(CMAKE_REQUIRED_QUIET 1)  # Make the configuration of LLVM quiet
 
 if(ROOT_ARCHITECTURE MATCHES linuxarm64)
   set(ROOT_CLING_TARGET "AArch64")
+elseif(ROOT_ARCHITECTURE MATCHES linuxarm)
+  set(ROOT_CLING_TARGET "ARM")
 elseif(ROOT_ARCHITECTURE MATCHES linuxppc64gcc)
   set(ROOT_CLING_TARGET "PowerPC")
+elseif(ROOT_ARCHITECTURE MATCHES linuxs390)
+  set(ROOT_CLING_TARGET "SystemZ")
 elseif(ROOT_ARCHITECTURE MATCHES linux)
   set(ROOT_CLING_TARGET "X86")
 elseif(ROOT_ARCHITECTURE MATCHES macosx)
@@ -40,8 +44,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${INTERP_ADDITIONAL_FLAGS}")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${INTERP_ADDITIONAL_FLAGS}")
 
 #---Do not transform warnings in errors-------------------------------------------------------------
-string(REPLACE "-Werror" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-string(REPLACE "-Wshadow" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+string(REPLACE "-Werror " "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+string(REPLACE "-Wshadow " "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 
 #---Build LLVM/Clang with symbol visibility=hidden--------------------------------------------------
 ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -fvisibility=hidden)
@@ -66,6 +70,7 @@ else()
   endif()
 endif()
 set(CMAKE_BUILD_TYPE ${LLVM_BUILD_TYPE})
+set(BUILD_SHARED_LIBS "NO")
 #--- Do not build cling as part of llvm.
 set(LLVM_NOCLING "YES")
 

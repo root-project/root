@@ -15,6 +15,13 @@ if(WIN32 OR cocoa)
   set(installoptions OPTIONS REGEX "TX11GL" EXCLUDE)
 endif()
 
+if(builtin_gl2ps)
+  include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/gl2ps)
+else()
+  list(REMOVE_ITEM sources gl2ps.cxx)
+  include_directories(${GL2PS_INCLUDE_DIRS})
+endif()
+
 if(WIN32)
   set(gllibs opengl32.lib glu32.lib)
 elseif(cocoa)
@@ -36,6 +43,6 @@ set_source_files_properties(src/TGLText.cxx PROPERTIES COMPILE_FLAGS "${FTGL_CFL
 
 ROOT_GENERATE_DICTIONARY(G__GL ${headers} MODULE RGL LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
 
-ROOT_LINKER_LIBRARY(RGL ${sources} G__GL.cxx  LIBRARIES ${gllibs} GLEW ${FTGL_LIBRARIES} DEPENDENCIES Hist Gui Ged)
+ROOT_LINKER_LIBRARY(RGL ${sources} G__GL.cxx  LIBRARIES ${gllibs} ${GL2PS_LIBRARIES} GLEW ${FTGL_LIBRARIES} DEPENDENCIES Hist Gui Ged)
 
 ROOT_INSTALL_HEADERS(${installoptions})

@@ -1,4 +1,3 @@
-
 ############################################################################
 # CMakeLists.txt file for building ROOT proof/proofx package
 # @author Pere Mato, CERN
@@ -14,6 +13,7 @@ else()
 endif()
 
 include_directories(${XROOTD_INCLUDE_DIRS})
+include_directories(AFTER ${CMAKE_CURRENT_SOURCE_DIR}/../proofd/inc)
 link_directories(${XROOTD_LIBRARY_DIR})
 add_definitions(${XROOTD_CFLAGS})
 
