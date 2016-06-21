@@ -140,6 +140,8 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 ## Math Libraries
 
 * Improve thread safety of TMinuit constructor [ROOT-8217]
+* Vc has ben removed from the ROOT sources. If the option 'vc' is enabled, the package will be searched (by default), 
+  alternatively the source tarfile can be downloded and build with the option 'builtin_vc'. 
 
 ## RooFit Libraries
 
