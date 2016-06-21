@@ -26,7 +26,7 @@
 
 #include <Vc/cpuid.h>
 
-#if defined(VC_GCC) && VC_GCC >= 0x40400
+#if defined(VC_GCC) && VC_GCC >= 0x40400 && (defined __x86__ || defined __x86_64__)
 #define VC_TARGET_NO_SIMD __attribute__((target("no-sse2,no-avx")))
 #else
 #define VC_TARGET_NO_SIMD

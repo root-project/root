@@ -25,7 +25,7 @@
 #include <intrin.h>
 #endif
 
-#if defined(VC_GCC) && VC_GCC >= 0x40400
+#if defined(VC_GCC) && VC_GCC >= 0x40400 && (defined __x86__ || defined __x86_64__)
 #define VC_TARGET_NO_SIMD __attribute__((target("no-sse2,no-avx")))
 #else
 #define VC_TARGET_NO_SIMD
@@ -54,11 +54,14 @@ static inline bool xgetbvCheck(unsigned int bits)
 VC_TARGET_NO_SIMD
 bool isImplementationSupported(Implementation impl)
 {
+#if defined __x86__ || defined __x86_64__
     CpuId::init();
+#endif
 
     switch (impl) {
     case ScalarImpl:
         return true;
+#if defined __x86__ || defined __x86_64__
     case SSE2Impl:
         return CpuId::hasSse2();
     case SSE3Impl:
@@ -73,6 +76,16 @@ bool isImplementationSupported(Implementation impl)
         return CpuId::hasOsxsave() && CpuId::hasAvx() && xgetbvCheck(0x6);
     case AVX2Impl:
         return false;
+#else
+    case SSE2Impl:
+    case SSE3Impl:
+    case SSSE3Impl:
+    case SSE41Impl:
+    case SSE42Impl:
+    case AVXImpl:
+    case AVX2Impl:
+        return false;
+#endif
     case ImplementationMask:
         return false;
     }
@@ -82,6 +95,7 @@ bool isImplementationSupported(Implementation impl)
 VC_TARGET_NO_SIMD
 Vc::Implementation bestImplementationSupported()
 {
+#if defined __x86__ || defined __x86_64__
     CpuId::init();
 
     if (!CpuId::hasSse2 ()) return Vc::ScalarImpl;
@@ -93,12 +107,16 @@ Vc::Implementation bestImplementationSupported()
         return Vc::AVXImpl;
     }
     return Vc::SSE42Impl;
+#else
+    return Vc::ScalarImpl;
+#endif
 }
 
 VC_TARGET_NO_SIMD
 unsigned int extraInstructionsSupported()
 {
     unsigned int flags = 0;
+#if defined __x86__ || defined __x86_64__
     if (CpuId::hasF16c()) flags |= Vc::Float16cInstructions;
     if (CpuId::hasFma4()) flags |= Vc::Fma4Instructions;
     if (CpuId::hasXop ()) flags |= Vc::XopInstructions;
@@ -108,6 +126,7 @@ unsigned int extraInstructionsSupported()
     //if (CpuId::hasPclmulqdq()) flags |= Vc::PclmulqdqInstructions;
     //if (CpuId::hasAes()) flags |= Vc::AesInstructions;
     //if (CpuId::hasRdrand()) flags |= Vc::RdrandInstructions;
+#endif
     return flags;
 }
 
