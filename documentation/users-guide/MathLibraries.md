@@ -180,7 +180,7 @@ Although there are some functions that are not in the standard C math library (l
  vector<double> v(10);
  std::generate(v.begin(), v.end(), rand);
 
- // Find the minumum value of the vector (iterator version)
+ // Find the minimum value of the vector (iterator version)
  vector<double>::iterator it;
  it = TMath::LocMin(v.begin(), v.end());
  std::cout << *it << std::endl;
@@ -239,7 +239,7 @@ and a modern C++-like  interface that receives two iterators to it.
 
 `TMath` also provides special functions like Bessel, Error functions, Gamma or similar plus statistical mathematical functions, including probability density functions, cumulative distribution and their inverse.
 
-The majority of the special functions and the statitical distributions are provided also as free functions in the `ROOT::Math` namespace.
+The majority of the special functions and the statistical distributions are provided also as free functions in the `ROOT::Math` namespace.
 See one of the next paragraph for the complete description of the functions provided in `ROOT::Math`.
 The user is encourage to use those versions of the algorithms rather than the ones in TMath.
 
@@ -306,14 +306,14 @@ For more information on the generator see the following article:
 ### TRandom2
 
 
-This generator is based on the maximally equidistributed combined
+This generator is based on the maximally equi-distributed combined
 Tausworthe generator by L'Ecuyer. It uses only 3 32-bits words for the
 state and it has a period of about 10^26^. It is fast and given its
 small states, it is recommended for applications, which require a very
 small random number size. For more information on the generator see the
 following article:
 
--   P. L'Ecuyer, "Maximally Equidistributed Combined Tausworthe
+-   P. L'Ecuyer, "Maximally Equi-distributed Combined Tausworthe
     Generators", Mathematics of Computation, 65, 213 (1996), 203-213.
 
 ### TRandom3
@@ -328,7 +328,7 @@ state of 624 words. For more information on the generator see the
 following article:
 
 -   M. M. Matsumoto and T. Nishimura, "Mersenne twister: A
-    623-dimensionally equidistributed uniform pseudorandom number
+    623-dimensionally equi-distributed uniform pseudorandom number
     generator", ACM Trans. on Modeling and Computer Simulations, 8, 1,
     (1998), 3-20.
 
