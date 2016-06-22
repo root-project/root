@@ -44,10 +44,10 @@ GLH2         := $(filter-out $(GLH1), $(GLH))
 
 ifeq ($(BUILTINGL2PS),yes)
 GL2PSFLAGS   := -I$(MODDIRS)/gl2ps
-else()
+else
 GLS          := $(filter-out $(MODDIRS)/gl2ps.cxx, $(GLS))
 GL2PSFLAGS   := $(GL2PSINCDIR:%=-I%)
-endif()
+endif
 
 ifneq ($(OPENGLLIB),)
 GLLIBS       := $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
