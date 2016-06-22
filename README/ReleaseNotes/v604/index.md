@@ -1074,10 +1074,9 @@ Published on 2016-03-17.
 
 
 ***
+## Release 6.04/18
 
-## HEAD of the v6-04-00-patches branch
-
-Changes will be part of the future 6.04/18
+Published on 2016-06-22.
 
 ### Core
 
@@ -1087,3 +1086,18 @@ Changes will be part of the future 6.04/18
 
 - Properly handle the last element of arrays in the TTreeFormula functions MinIf and MaxIf [ROOT-7258]
 
+### Bugs and issues fixed
+*   [[ROOT-6923](https://sft.its.cern.ch/jira/browse/ROOT-6923)] - Memory leak with circular TTree
+*   [[ROOT-7258](https://sft.its.cern.ch/jira/browse/ROOT-7258)] - MinIf and MaxIf TTreeFormula functions ignore last element
+*   [[ROOT-7867](https://sft.its.cern.ch/jira/browse/ROOT-7867)] - memprobe script is broken when using CMake
+*   [[ROOT-8066](https://sft.its.cern.ch/jira/browse/ROOT-8066)] - problems creating dictionaries in pyROOT
+*   [[ROOT-8068](https://sft.its.cern.ch/jira/browse/ROOT-8068)] - Fix file flags for bin/setxrd.* bin/thisroot.*
+*   [[ROOT-8096](https://sft.its.cern.ch/jira/browse/ROOT-8096)] - genreflex crash with gcc6 build
+*   [[ROOT-8148](https://sft.its.cern.ch/jira/browse/ROOT-8148)] - Memory leak in TStorage::ObjectAlloc
+*   [[ROOT-8221](https://sft.its.cern.ch/jira/browse/ROOT-8221)] - Enum value kKey_Shift not accessible from python with ROOT 6
+
+***
+
+## HEAD of the v6-04-00-patches branch
+
+Changes will be part of the future 6.04/20
