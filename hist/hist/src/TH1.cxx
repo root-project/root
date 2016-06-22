@@ -1781,9 +1781,9 @@ bool TH1::CheckConsistency(const TH1* h1, const TH1* h2)
 /// of comparison of the unweighted histogram with 217 events (minimal expected
 /// frequency equal to one) and the weighted histogram with 500 events (minimal
 /// expected frequency equal to 25)
-///Begin_Macro
+/// Begin_Macro
 /// ../../../tutorials/math/chi2test.C(17)
-///End_Macro
+/// End_Macro
 /// Fig 2. An example of comparison of the unweighted histogram with 217 events
 /// and the weighted histogram with 500 events:
 ///   1. unweighted histogram;
