@@ -46,10 +46,14 @@ foreach(_cpt ${rootlibs} ${ROOT_FIND_COMPONENTS})
   if(ROOT_${_cpt}_LIBRARY)
     mark_as_advanced(ROOT_${_cpt}_LIBRARY)
     list(APPEND ROOT_LIBRARIES ${ROOT_${_cpt}_LIBRARY})
-    list(REMOVE_ITEM ROOT_FIND_COMPONENTS ${_cpt})
+    if(ROOT_FIND_COMPONENTS)
+      list(REMOVE_ITEM ROOT_FIND_COMPONENTS ${_cpt})
+    endif()
   endif()
 endforeach()
-list(REMOVE_DUPLICATES ROOT_LIBRARIES)
+if(ROOT_LIBRARIES)
+  list(REMOVE_DUPLICATES ROOT_LIBRARIES)
+endif()
 
 execute_process(
     COMMAND ${ROOT_CONFIG_EXECUTABLE} --cflags
