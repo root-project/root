@@ -407,6 +407,11 @@ public:
     : Context(C), Out(Out_), Structor(getStructor(D)), StructorType(Type),
       SeqID(0), AbiTagsRoot(AbiTags) { }
 
+  CXXNameMangler(CXXNameMangler &Outer, raw_ostream &Out_)
+      : Context(Outer.Context), Out(Out_), NullOut(false),
+        Structor(Outer.Structor), StructorType(Outer.StructorType),
+        SeqID(Outer.SeqID), AbiTagsRoot(AbiTags) {}
+
   CXXNameMangler(CXXNameMangler &Outer, llvm::raw_null_ostream &Out_)
       : Context(Outer.Context), Out(Out_), NullOut(true),
         Structor(Outer.Structor), StructorType(Outer.StructorType),
@@ -433,10 +438,9 @@ public:
   void mangleNumber(const llvm::APSInt &I);
   void mangleNumber(int64_t Number);
   void mangleFloat(const llvm::APFloat &F);
-  void mangleFunctionEncoding(const FunctionDecl *FD,
-                              bool ExcludeUnqualifiedName = false);
+  void mangleFunctionEncoding(const FunctionDecl *FD);
   void mangleSeqID(unsigned SeqID);
-  void mangleName(const NamedDecl *ND, bool ExcludeUnqualifiedName = false);
+  void mangleName(const NamedDecl *ND);
   void mangleType(QualType T);
   void mangleNameOrStandardSubstitution(const NamedDecl *ND);
   
@@ -470,11 +474,8 @@ private:
   void mangleFunctionEncodingBareType(const FunctionDecl *FD);
 
   void mangleNameWithAbiTags(const NamedDecl *ND,
-                             const AbiTagList *AdditionalAbiTags,
-                             bool ExcludeUnqualifiedName);
+                             const AbiTagList *AdditionalAbiTags);
   void mangleTemplateName(const TemplateDecl *TD,
-                          const AbiTagList *AdditionalAbiTags,
-                          bool ExcludeUnqualifiedName,
                           const TemplateArgument *TemplateArgs,
                           unsigned NumTemplateArgs);
   void mangleUnqualifiedName(const NamedDecl *ND,
@@ -492,28 +493,23 @@ private:
   void mangleUnscopedTemplateName(TemplateName,
                                   const AbiTagList *AdditionalAbiTags);
   void mangleSourceName(const IdentifierInfo *II);
+  void mangleSourceNameWithAbiTags(
+      const NamedDecl *ND, const AbiTagList *AdditionalAbiTags = nullptr);
   void mangleLocalName(const Decl *D,
-                       const AbiTagList *AdditionalAbiTags,
-                       bool ExcludeUnqualifiedName);
+                       const AbiTagList *AdditionalAbiTags);
   void mangleBlockForPrefix(const BlockDecl *Block);
   void mangleUnqualifiedBlock(const BlockDecl *Block);
   void mangleLambda(const CXXRecordDecl *Lambda);
   void mangleNestedName(const NamedDecl *ND, const DeclContext *DC,
                         const AbiTagList *AdditionalAbiTags,
-                        bool NoFunction,
-                        bool ExcludeUnqualifiedName);
+                        bool NoFunction=false);
   void mangleNestedName(const TemplateDecl *TD,
-                        const AbiTagList *AdditionalAbiTags,
-                        bool ExcludeUnqualifiedName,
                         const TemplateArgument *TemplateArgs,
                         unsigned NumTemplateArgs);
   void manglePrefix(NestedNameSpecifier *qualifier);
   void manglePrefix(const DeclContext *DC, bool NoFunction=false);
   void manglePrefix(QualType type);
-  void mangleTemplatePrefix(const TemplateDecl *ND,
-                            const AbiTagList *AdditionalAbiTags,
-                            bool NoFunction = false,
-                            bool ExcludeUnqualifiedName = false);
+  void mangleTemplatePrefix(const TemplateDecl *ND, bool NoFunction=false);
   void mangleTemplatePrefix(TemplateName Template);
   bool mangleUnresolvedTypeOrSimpleId(QualType DestroyedType,
                                       StringRef Prefix = "");
@@ -566,11 +562,10 @@ private:
   void mangleFunctionParam(const ParmVarDecl *parm);
 
   void writeAbiTags(const NamedDecl *ND,
-                    const AbiTagList *AdditionalAbiTags = nullptr);
+                    const AbiTagList *AdditionalAbiTags);
 
-  AbiTagSet getTagsFromPrefixAndTemplateArguments(const NamedDecl *ND);
-  AbiTagList makeAdditionalTagsForFunction(const FunctionDecl *FD);
-  AbiTagList makeAdditionalTagsForVariable(const VarDecl *VD);
+  AbiTagSet makeFunctionReturnTypeTags(const FunctionDecl *FD);
+  AbiTagSet makeVariableTypeTags(const VarDecl *VD);
 };
 
 }
@@ -628,6 +623,12 @@ void CXXNameMangler::writeAbiTags(const NamedDecl *ND,
   AbiTags->write(Out, ND, DisableDerivedAbiTags ? nullptr : AdditionalAbiTags);
 }
 
+void CXXNameMangler::mangleSourceNameWithAbiTags(
+    const NamedDecl *ND, const AbiTagList *AdditionalAbiTags) {
+  mangleSourceName(ND->getIdentifier());
+  writeAbiTags(ND, AdditionalAbiTags);
+}
+
 void CXXNameMangler::mangle(const NamedDecl *D) {
   // <mangled-name> ::= _Z <encoding>
   //            ::= <data name>
@@ -643,28 +644,46 @@ void CXXNameMangler::mangle(const NamedDecl *D) {
     mangleName(cast<FieldDecl>(D));
 }
 
-void CXXNameMangler::mangleFunctionEncoding(const FunctionDecl *FD,
-                                            bool ExcludeUnqualifiedName) {
+void CXXNameMangler::mangleFunctionEncoding(const FunctionDecl *FD) {
+  // <encoding> ::= <function name> <bare-function-type>
+
   // Don't mangle in the type if this isn't a decl we should typically mangle.
   if (!Context.shouldMangleDeclName(FD)) {
-    mangleNameWithAbiTags(FD, /* AdditionalAbiTags */ nullptr,
-                          ExcludeUnqualifiedName);
+    mangleName(FD);
     return;
   }
 
-  // <encoding> ::= <function name> <bare-function-type>
-
-  if (ExcludeUnqualifiedName) {
-    // running makeAdditionalTagsForFunction would loop, don't need it here
-    // anyway
-    mangleNameWithAbiTags(FD, /* AdditionalAbiTags */ nullptr,
-                          ExcludeUnqualifiedName);
-  } else {
-    AbiTagList AdditionalAbiTags = makeAdditionalTagsForFunction(FD);
-    mangleNameWithAbiTags(FD, &AdditionalAbiTags, ExcludeUnqualifiedName);
+  AbiTagSet ReturnTypeAbiTags = makeFunctionReturnTypeTags(FD);
+  if (ReturnTypeAbiTags.empty()) {
+    // There are no tags for return type, the simplest case.
+    mangleName(FD);
+    mangleFunctionEncodingBareType(FD);
+    return;
   }
 
-  mangleFunctionEncodingBareType(FD);
+  // Mangle function encoding to temporary buffer.
+  SmallString<256> FunctionEncodingBuf;
+  llvm::raw_svector_ostream FunctionEncodingStream(FunctionEncodingBuf);
+  CXXNameMangler FunctionEncodingMangler(*this, FunctionEncodingStream);
+  FunctionEncodingMangler.mangleFunctionEncodingBareType(FD);
+
+  // Mangle function name to null stream to collect tags.
+  llvm::raw_null_ostream NullOutStream;
+  CXXNameMangler FunctionNameMangler(*this, NullOutStream);
+  FunctionNameMangler.disableDerivedAbiTags();
+  FunctionNameMangler.mangleNameWithAbiTags(FD, nullptr);
+
+  // Get tags from return type that are not present in function name or encoding
+  AbiTagList AdditionalAbiTags;
+  for (const auto &Tag : ReturnTypeAbiTags) {
+    if (!FunctionEncodingMangler.AbiTagsRoot.getUsedAbiTags().count(Tag) &&
+        !FunctionNameMangler.AbiTagsRoot.getUsedAbiTags().count(Tag))
+      AdditionalAbiTags.push_back(Tag);
+  }
+
+  // Output name with implicit tags and function encoding from temporary buffer.
+  mangleNameWithAbiTags(FD, &AdditionalAbiTags);
+  Out << FunctionEncodingStream.str();
 }
 
 void CXXNameMangler::mangleFunctionEncodingBareType(const FunctionDecl *FD) {
@@ -771,24 +790,38 @@ isTemplate(const NamedDecl *ND, const TemplateArgumentList *&TemplateArgs) {
   return nullptr;
 }
 
-// Must not be run from mangleLocalName for the <entity name> as it would loop
-// otherwise.
-void CXXNameMangler::mangleName(const NamedDecl *ND,
-                                bool ExcludeUnqualifiedName) {
-  if (!ExcludeUnqualifiedName) {
-    if (const auto *VD = dyn_cast<VarDecl>(ND)) {
-      AbiTagList VariableAdditionalAbiTags = makeAdditionalTagsForVariable(VD);
-      mangleNameWithAbiTags(VD, &VariableAdditionalAbiTags,
-                            ExcludeUnqualifiedName);
+void CXXNameMangler::mangleName(const NamedDecl *ND) {
+  if (const VarDecl *VD = dyn_cast<VarDecl>(ND)) {
+    // Variables should have implicit tags from its type.
+    AbiTagSet VariableTypeAbiTags = makeVariableTypeTags(VD);
+    if (VariableTypeAbiTags.empty()) {
+      // Simple case no variable type tags.
+      mangleNameWithAbiTags(VD, nullptr);
       return;
     }
+
+    // Mangle variable name to null stream to collect tags.
+    llvm::raw_null_ostream NullOutStream;
+    CXXNameMangler VariableNameMangler(*this, NullOutStream);
+    VariableNameMangler.disableDerivedAbiTags();
+    VariableNameMangler.mangleNameWithAbiTags(VD, nullptr);
+
+    // Get tags from variable type that are not present in its name.
+    AbiTagList AdditionalAbiTags;
+    for (const auto &Tag : VariableTypeAbiTags) {
+     if (!VariableNameMangler.AbiTagsRoot.getUsedAbiTags().count(Tag))
+        AdditionalAbiTags.push_back(Tag);
+    }
+
+    // Output name with implicit tags.
+    mangleNameWithAbiTags(VD, &AdditionalAbiTags);
+  } else {
+    mangleNameWithAbiTags(ND, nullptr);
   }
-  mangleNameWithAbiTags(ND, nullptr, ExcludeUnqualifiedName);
 }
 
 void CXXNameMangler::mangleNameWithAbiTags(const NamedDecl *ND,
-                                           const AbiTagList *AdditionalAbiTags,
-                                           bool ExcludeUnqualifiedName) {
+                                           const AbiTagList *AdditionalAbiTags) {
   //  <name> ::= <nested-name>
   //         ::= <unscoped-name>
   //         ::= <unscoped-template-name> <template-args>
@@ -804,7 +837,7 @@ void CXXNameMangler::mangleNameWithAbiTags(const NamedDecl *ND,
     while (!DC->isNamespace() && !DC->isTranslationUnit())
       DC = getEffectiveParentContext(DC);
   else if (GetLocalClassDecl(ND)) {
-    mangleLocalName(ND, AdditionalAbiTags, ExcludeUnqualifiedName);
+    mangleLocalName(ND, AdditionalAbiTags);
     return;
   }
 
@@ -814,40 +847,33 @@ void CXXNameMangler::mangleNameWithAbiTags(const NamedDecl *ND,
     // Check if we have a template.
     const TemplateArgumentList *TemplateArgs = nullptr;
     if (const TemplateDecl *TD = isTemplate(ND, TemplateArgs)) {
-      if (!ExcludeUnqualifiedName)
-        mangleUnscopedTemplateName(TD, AdditionalAbiTags);
+      mangleUnscopedTemplateName(TD, AdditionalAbiTags);
       mangleTemplateArgs(*TemplateArgs);
       return;
     }
 
-    if (!ExcludeUnqualifiedName)
-      mangleUnscopedName(ND, AdditionalAbiTags);
+    mangleUnscopedName(ND, AdditionalAbiTags);
     return;
   }
 
   if (isLocalContainerContext(DC)) {
-    mangleLocalName(ND, AdditionalAbiTags, ExcludeUnqualifiedName);
+    mangleLocalName(ND, AdditionalAbiTags);
     return;
   }
 
-  mangleNestedName(ND, DC, AdditionalAbiTags, /* NoFunction */ false,
-                   ExcludeUnqualifiedName);
+  mangleNestedName(ND, DC, AdditionalAbiTags);
 }
 
 void CXXNameMangler::mangleTemplateName(const TemplateDecl *TD,
-                                        const AbiTagList *AdditionalAbiTags,
-                                        bool ExcludeUnqualifiedName,
                                         const TemplateArgument *TemplateArgs,
                                         unsigned NumTemplateArgs) {
   const DeclContext *DC = IgnoreLinkageSpecDecls(getEffectiveDeclContext(TD));
 
   if (DC->isTranslationUnit() || isStdNamespace(DC)) {
-    if (!ExcludeUnqualifiedName)
-      mangleUnscopedTemplateName(TD, AdditionalAbiTags);
+    mangleUnscopedTemplateName(TD, nullptr);
     mangleTemplateArgs(TemplateArgs, NumTemplateArgs);
   } else {
-    mangleNestedName(TD, AdditionalAbiTags, ExcludeUnqualifiedName,
-                     TemplateArgs, NumTemplateArgs);
+    mangleNestedName(TD, TemplateArgs, NumTemplateArgs);
   }
 }
 
@@ -1058,8 +1084,7 @@ void CXXNameMangler::mangleUnresolvedPrefix(NestedNameSpecifier *qualifier,
                              /*recursive*/ true);
     else
       Out << "sr";
-    mangleSourceName(qualifier->getAsNamespace()->getIdentifier());
-    writeAbiTags(qualifier->getAsNamespace());
+    mangleSourceNameWithAbiTags(qualifier->getAsNamespace());
     break;
   case NestedNameSpecifier::NamespaceAlias:
     if (qualifier->getPrefix())
@@ -1067,8 +1092,7 @@ void CXXNameMangler::mangleUnresolvedPrefix(NestedNameSpecifier *qualifier,
                              /*recursive*/ true);
     else
       Out << "sr";
-    mangleSourceName(qualifier->getAsNamespaceAlias()->getIdentifier());
-    writeAbiTags(qualifier->getAsNamespaceAlias());
+    mangleSourceNameWithAbiTags(qualifier->getAsNamespaceAlias());
     break;
 
   case NestedNameSpecifier::TypeSpec:
@@ -1336,8 +1360,7 @@ void CXXNameMangler::mangleSourceName(const IdentifierInfo *II) {
 void CXXNameMangler::mangleNestedName(const NamedDecl *ND,
                                       const DeclContext *DC,
                                       const AbiTagList *AdditionalAbiTags,
-                                      bool NoFunction,
-                                      bool ExcludeUnqualifiedName) {
+                                      bool NoFunction) {
   // <nested-name> 
   //   ::= N [<CV-qualifiers>] [<ref-qualifier>] <prefix> <unqualified-name> E
   //   ::= N [<CV-qualifiers>] [<ref-qualifier>] <template-prefix> 
@@ -1357,36 +1380,31 @@ void CXXNameMangler::mangleNestedName(const NamedDecl *ND,
   // Check if we have a template.
   const TemplateArgumentList *TemplateArgs = nullptr;
   if (const TemplateDecl *TD = isTemplate(ND, TemplateArgs)) {
-    mangleTemplatePrefix(TD, AdditionalAbiTags, NoFunction,
-                         ExcludeUnqualifiedName);
+    mangleTemplatePrefix(TD, NoFunction);
     mangleTemplateArgs(*TemplateArgs);
   }
   else {
     manglePrefix(DC, NoFunction);
-    if (!ExcludeUnqualifiedName)
-      mangleUnqualifiedName(ND, AdditionalAbiTags);
+    mangleUnqualifiedName(ND, AdditionalAbiTags);
   }
 
   Out << 'E';
 }
 void CXXNameMangler::mangleNestedName(const TemplateDecl *TD,
-                                      const AbiTagList *AdditionalAbiTags,
-                                      bool ExcludeUnqualifiedName,
                                       const TemplateArgument *TemplateArgs,
                                       unsigned NumTemplateArgs) {
   // <nested-name> ::= N [<CV-qualifiers>] <template-prefix> <template-args> E
 
   Out << 'N';
 
-  mangleTemplatePrefix(TD, AdditionalAbiTags, ExcludeUnqualifiedName);
+  mangleTemplatePrefix(TD);
   mangleTemplateArgs(TemplateArgs, NumTemplateArgs);
 
   Out << 'E';
 }
 
 void CXXNameMangler::mangleLocalName(const Decl *D,
-                                     const AbiTagList *AdditionalAbiTags,
-                                     bool ExcludeUnqualifiedName) {
+                                     const AbiTagList *AdditionalAbiTags) {
   // <local-name> := Z <function encoding> E <entity name> [<discriminator>]
   //              := Z <function encoding> E s [<discriminator>]
   // <local-name> := Z <function encoding> E d [ <parameter number> ] 
@@ -1442,17 +1460,15 @@ void CXXNameMangler::mangleLocalName(const Decl *D,
     // Mangle the name relative to the closest enclosing function.
     // equality ok because RD derived from ND above
     if (D == RD)  {
-      if (!ExcludeUnqualifiedName)
-        mangleUnqualifiedName(RD, AdditionalAbiTags);
+      mangleUnqualifiedName(RD, AdditionalAbiTags);
     } else if (const BlockDecl *BD = dyn_cast<BlockDecl>(D)) {
       manglePrefix(getEffectiveDeclContext(BD), true /*NoFunction*/);
       assert(!AdditionalAbiTags && "Block cannot have additional abi tags");
-      if (!ExcludeUnqualifiedName)
-        mangleUnqualifiedBlock(BD);
+      mangleUnqualifiedBlock(BD);
     } else {
       const NamedDecl *ND = cast<NamedDecl>(D);
       mangleNestedName(ND, getEffectiveDeclContext(ND), AdditionalAbiTags,
-                       true /*NoFunction*/, ExcludeUnqualifiedName);
+                       true /*NoFunction*/);
     }
   } else if (const BlockDecl *BD = dyn_cast<BlockDecl>(D)) {
     // Mangle a block in a default parameter; see above explanation for
@@ -1470,36 +1486,30 @@ void CXXNameMangler::mangleLocalName(const Decl *D,
     }
 
     assert(!AdditionalAbiTags && "Block cannot have additional abi tags");
-    if (!ExcludeUnqualifiedName)
-      mangleUnqualifiedBlock(BD);
+    mangleUnqualifiedBlock(BD);
   } else {
-    if (!ExcludeUnqualifiedName)
-      mangleUnqualifiedName(cast<NamedDecl>(D), AdditionalAbiTags);
+    mangleUnqualifiedName(cast<NamedDecl>(D), AdditionalAbiTags);
   }
 
-  if (!ExcludeUnqualifiedName) {
-    if (const NamedDecl *ND = dyn_cast<NamedDecl>(RD ? RD : D)) {
-      unsigned disc;
-      if (Context.getNextDiscriminator(ND, disc)) {
-        if (disc < 10)
-          Out << '_' << disc;
-        else
-          Out << "__" << disc << '_';
-      }
+  if (const NamedDecl *ND = dyn_cast<NamedDecl>(RD ? RD : D)) {
+    unsigned disc;
+    if (Context.getNextDiscriminator(ND, disc)) {
+      if (disc < 10)
+        Out << '_' << disc;
+      else
+        Out << "__" << disc << '_';
     }
   }
 }
 
 void CXXNameMangler::mangleBlockForPrefix(const BlockDecl *Block) {
   if (GetLocalClassDecl(Block)) {
-    mangleLocalName(Block, /* AdditionalAbiTags */ nullptr,
-                    /* ExcludeUnqualifiedName */ false);
+    mangleLocalName(Block, /* AdditionalAbiTags */ nullptr);
     return;
   }
   const DeclContext *DC = getEffectiveDeclContext(Block);
   if (isLocalContainerContext(DC)) {
-    mangleLocalName(Block, /* AdditionalAbiTags */ nullptr,
-                    /* ExcludeUnqualifiedName */ false);
+    mangleLocalName(Block, /* AdditionalAbiTags */ nullptr);
     return;
   }
   manglePrefix(getEffectiveDeclContext(Block));
@@ -1511,9 +1521,8 @@ void CXXNameMangler::mangleUnqualifiedBlock(const BlockDecl *Block) {
     if ((isa<VarDecl>(Context) || isa<FieldDecl>(Context)) &&
         Context->getDeclContext()->isRecord()) {
       const auto *ND = cast<NamedDecl>(Context);
-      if (const IdentifierInfo *Name = ND->getIdentifier()) {
-        mangleSourceName(Name);
-        writeAbiTags(ND, /* AdditionalAbiTags */ nullptr);
+      if (ND->getIdentifier()) {
+        mangleSourceNameWithAbiTags(ND);
         Out << 'M';
       }
     }
@@ -1630,11 +1639,11 @@ void CXXNameMangler::manglePrefix(const DeclContext *DC, bool NoFunction) {
   // Check if we have a template.
   const TemplateArgumentList *TemplateArgs = nullptr;
   if (const TemplateDecl *TD = isTemplate(ND, TemplateArgs)) {
-    mangleTemplatePrefix(TD, /* AdditionalAbiTags */ nullptr);
+    mangleTemplatePrefix(TD);
     mangleTemplateArgs(*TemplateArgs);
   } else {
     manglePrefix(getEffectiveDeclContext(ND), NoFunction);
-    mangleUnqualifiedName(ND, /* AdditionalAbiTags */ nullptr);
+    mangleUnqualifiedName(ND, nullptr);
   }
 
   addSubstitution(ND);
@@ -1645,7 +1654,7 @@ void CXXNameMangler::mangleTemplatePrefix(TemplateName Template) {
   //                   ::= <template-param>
   //                   ::= <substitution>
   if (TemplateDecl *TD = Template.getAsTemplateDecl())
-    return mangleTemplatePrefix(TD, /* AdditionalAbiTags */ nullptr);
+    return mangleTemplatePrefix(TD);
 
   if (QualifiedTemplateName *Qualified = Template.getAsQualifiedTemplateName())
     manglePrefix(Qualified->getQualifier());
@@ -1653,8 +1662,7 @@ void CXXNameMangler::mangleTemplatePrefix(TemplateName Template) {
   if (OverloadedTemplateStorage *Overloaded
                                       = Template.getAsOverloadedTemplate()) {
     mangleUnqualifiedName(nullptr, (*Overloaded->begin())->getDeclName(),
-                          UnknownArity,
-                          /* AdditionalAbiTags */ nullptr);
+                          UnknownArity, nullptr);
     return;
   }
 
@@ -1666,9 +1674,7 @@ void CXXNameMangler::mangleTemplatePrefix(TemplateName Template) {
 }
 
 void CXXNameMangler::mangleTemplatePrefix(const TemplateDecl *ND,
-                                          const AbiTagList *AdditionalAbiTags,
-                                          bool NoFunction,
-                                          bool ExcludeUnqualifiedName) {
+                                          bool NoFunction) {
   // <template-prefix> ::= <prefix> <template unqualified-name>
   //                   ::= <template-param>
   //                   ::= <substitution>
@@ -1683,8 +1689,7 @@ void CXXNameMangler::mangleTemplatePrefix(const TemplateDecl *ND,
     mangleTemplateParameter(TTP->getIndex());
   } else {
     manglePrefix(getEffectiveDeclContext(ND), NoFunction);
-    if (!ExcludeUnqualifiedName)
-      mangleUnqualifiedName(ND->getTemplatedDecl(), AdditionalAbiTags);
+    mangleUnqualifiedName(ND->getTemplatedDecl(), nullptr);
   }
 
   addSubstitution(ND);
@@ -1728,7 +1733,6 @@ void CXXNameMangler::mangleType(TemplateName TN) {
     // <name> ::= <nested-name>
     mangleUnresolvedPrefix(Dependent->getQualifier());
     mangleSourceName(Dependent->getIdentifier());
-     // writeAbiTags(Dependent);
     break;
   }
 
@@ -1820,20 +1824,17 @@ bool CXXNameMangler::mangleUnresolvedTypeOrSimpleId(QualType Ty,
     return true;
 
   case Type::Typedef:
-    mangleSourceName(cast<TypedefType>(Ty)->getDecl()->getIdentifier());
-    writeAbiTags(cast<TypedefType>(Ty)->getDecl());
+    mangleSourceNameWithAbiTags(cast<TypedefType>(Ty)->getDecl());
     break;
 
   case Type::UnresolvedUsing:
-    mangleSourceName(
-        cast<UnresolvedUsingType>(Ty)->getDecl()->getIdentifier());
-    writeAbiTags(cast<UnresolvedUsingType>(Ty)->getDecl());
+    mangleSourceNameWithAbiTags(
+        cast<UnresolvedUsingType>(Ty)->getDecl());
     break;
 
   case Type::Enum:
   case Type::Record:
-    mangleSourceName(cast<TagType>(Ty)->getDecl()->getIdentifier());
-    writeAbiTags(cast<TagType>(Ty)->getDecl());
+    mangleSourceNameWithAbiTags(cast<TagType>(Ty)->getDecl());
     break;
 
   case Type::TemplateSpecialization: {
@@ -1851,8 +1852,7 @@ bool CXXNameMangler::mangleUnresolvedTypeOrSimpleId(QualType Ty,
       if (isa<TemplateTemplateParmDecl>(TD))
         goto unresolvedType;
 
-      mangleSourceName(TD->getIdentifier());
-      writeAbiTags(TD);
+      mangleSourceNameWithAbiTags(TD);
       break;
     }
 
@@ -1882,21 +1882,18 @@ bool CXXNameMangler::mangleUnresolvedTypeOrSimpleId(QualType Ty,
   }
 
   case Type::InjectedClassName:
-    mangleSourceName(
-        cast<InjectedClassNameType>(Ty)->getDecl()->getIdentifier());
-    writeAbiTags(cast<InjectedClassNameType>(Ty)->getDecl());
+    mangleSourceNameWithAbiTags(
+        cast<InjectedClassNameType>(Ty)->getDecl());
     break;
 
   case Type::DependentName:
     mangleSourceName(cast<DependentNameType>(Ty)->getIdentifier());
-    // writeAbiTags(cast<DependentNameType>(Ty));
     break;
 
   case Type::DependentTemplateSpecialization: {
     const DependentTemplateSpecializationType *DTST =
         cast<DependentTemplateSpecializationType>(Ty);
     mangleSourceName(DTST->getIdentifier());
-    // writeAbiTags(DTST);
     mangleTemplateArgs(DTST->getArgs(), DTST->getNumArgs());
     break;
   }
@@ -1936,8 +1933,6 @@ void CXXNameMangler::mangleOperatorName(DeclarationName Name, unsigned Arity) {
     break;
   }
 }
-
-
 
 void
 CXXNameMangler::mangleOperatorName(OverloadedOperatorKind OO, unsigned Arity) {
@@ -2900,11 +2895,7 @@ void CXXNameMangler::mangleType(const InjectedClassNameType *T) {
 
 void CXXNameMangler::mangleType(const TemplateSpecializationType *T) {
   if (TemplateDecl *TD = T->getTemplateName().getAsTemplateDecl()) {
-    // types only have explicit abi tags, no addition tags
-    mangleTemplateName(TD,
-                       /* AdditionalAbiTags */ nullptr,
-                       /* ExcludeUnqualifiedName */ false,
-                       T->getArgs(), T->getNumArgs());
+    mangleTemplateName(TD, T->getArgs(), T->getNumArgs());
   } else {
     if (mangleSubstitution(QualType(T, 0)))
       return;
@@ -4381,86 +4372,37 @@ void CXXNameMangler::addSubstitution(uintptr_t Ptr) {
 }
 
 CXXNameMangler::AbiTagSet
-CXXNameMangler::getTagsFromPrefixAndTemplateArguments(const NamedDecl *ND) {
+CXXNameMangler::makeFunctionReturnTypeTags(const FunctionDecl *FD) {
+  // When derived abi tags are disabled there is no need to make any list.
+  if (DisableDerivedAbiTags)
+    return AbiTagSet();
+
   llvm::raw_null_ostream NullOutStream;
-  CXXNameMangler TrackPrefixAndTemplateArguments(*this, NullOutStream);
+  CXXNameMangler TrackReturnTypeTags(*this, NullOutStream);
+  TrackReturnTypeTags.disableDerivedAbiTags();
 
-  if (const FunctionDecl *FD = dyn_cast<FunctionDecl>(ND)) {
-    TrackPrefixAndTemplateArguments.mangleFunctionEncoding(
-        FD, /* ExcludeUnqualifiedName */ true);
-  } else {
-    TrackPrefixAndTemplateArguments.mangleName(
-        ND, /* ExcludeUnqualifiedName */ true);
-  }
+  const FunctionProtoType *Proto =
+      cast<FunctionProtoType>(FD->getType()->getAs<FunctionType>());
+  TrackReturnTypeTags.FunctionTypeDepth.enterResultType();
+  TrackReturnTypeTags.mangleType(Proto->getReturnType());
+  TrackReturnTypeTags.FunctionTypeDepth.leaveResultType();
 
-  return std::move(
-      TrackPrefixAndTemplateArguments.AbiTagsRoot.getUsedAbiTags());
+  return TrackReturnTypeTags.AbiTagsRoot.getUsedAbiTags();
 }
 
-CXXNameMangler::AbiTagList
-CXXNameMangler::makeAdditionalTagsForFunction(const FunctionDecl *FD) {
-  // when derived abi tags are disabled there is no need to make any list
+CXXNameMangler::AbiTagSet
+CXXNameMangler::makeVariableTypeTags(const VarDecl *VD) {
+  // When derived abi tags are disabled there is no need to make any list.
   if (DisableDerivedAbiTags)
-    return AbiTagList();
+    return AbiTagSet();
 
-  AbiTagSet ImplicitlyAvailableTags =
-      getTagsFromPrefixAndTemplateArguments(FD);
-  AbiTagSet ReturnTypeTags;
+  llvm::raw_null_ostream NullOutStream;
+  CXXNameMangler TrackVariableType(*this, NullOutStream);
+  TrackVariableType.disableDerivedAbiTags();
 
-  {
-    llvm::raw_null_ostream NullOutStream;
-    CXXNameMangler TrackReturnTypeTags(*this, NullOutStream);
-    TrackReturnTypeTags.disableDerivedAbiTags();
+  TrackVariableType.mangleType(VD->getType());
 
-    const FunctionProtoType *Proto =
-        cast<FunctionProtoType>(FD->getType()->getAs<FunctionType>());
-    TrackReturnTypeTags.FunctionTypeDepth.enterResultType();
-    TrackReturnTypeTags.mangleType(Proto->getReturnType());
-    TrackReturnTypeTags.FunctionTypeDepth.leaveResultType();
-
-    ReturnTypeTags =
-        std::move(TrackReturnTypeTags.AbiTagsRoot.getUsedAbiTags());
-  }
-
-  AbiTagList AdditionalAbiTags;
-
-  for (const auto &Tag : ReturnTypeTags) {
-    if (ImplicitlyAvailableTags.count(Tag) == 0)
-      AdditionalAbiTags.push_back(Tag);
-  }
-
-  return AdditionalAbiTags;
-}
-
-CXXNameMangler::AbiTagList
-CXXNameMangler::makeAdditionalTagsForVariable(const VarDecl *VD) {
-  // when derived abi tags are disabled there is no need to make any list
-  if (DisableDerivedAbiTags)
-    return AbiTagList();
-
-  AbiTagSet ImplicitlyAvailableTags =
-      getTagsFromPrefixAndTemplateArguments(VD);
-  AbiTagSet VariableTypeTags;
-
-  {
-    llvm::raw_null_ostream NullOutStream;
-    CXXNameMangler TrackVariableType(*this, NullOutStream);
-    TrackVariableType.disableDerivedAbiTags();
-
-    TrackVariableType.mangleType(VD->getType());
-
-    VariableTypeTags =
-        std::move(TrackVariableType.AbiTagsRoot.getUsedAbiTags());
-  }
-
-  AbiTagList AdditionalAbiTags;
-
-  for (const auto &Tag : VariableTypeTags) {
-    if (ImplicitlyAvailableTags.count(Tag) == 0)
-      AdditionalAbiTags.push_back(Tag);
-  }
-
-  return AdditionalAbiTags;
+  return TrackVariableType.AbiTagsRoot.getUsedAbiTags();
 }
 
 bool CXXNameMangler::shouldHaveAbiTags(ItaniumMangleContextImpl &C,
