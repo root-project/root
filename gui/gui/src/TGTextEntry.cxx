@@ -42,7 +42,7 @@
 //
 // This enum type describes the ways in which TGTextEntry can display
 // its contents. The currently defined values are:
-//Begin_Html
+//
 /*
 <ul>
 <li>  kNormal - display characters as they are entered. This is the default.
@@ -50,14 +50,14 @@
 <li>  kPassword - display asterisks instead of the characters actually entered.
 </ul>
 */
-//End_Html
+//
 // See also SetEchoMode(), GetEchoMode().
 //
 // enum TGTextEntry::EInsertMode
 //
 // This enum type describes the way how typed characters are
 // inserted in the text entry. This mode is switched by "Insert" key.
-//Begin_Html
+//
 /*
 <ul>
 <li>  kInsert - typed character are inserted (cursor has shape of short line).
@@ -65,13 +65,13 @@
                  (cursor has the shape of filled rectangle).
 </ul>
 */
-//End_Html
+//
 //
 // enum TGWidget::ETextJustification
 //
 // This enum type (defined in TGWidget.h) describes the text alignment modes.
-// These modes are valid untill text fits the frame width
-//Begin_Html
+// These modes are valid until text fits the frame width
+//
 /*
 <ul>
 <li>  kTextLeft    - left-side text alignment
@@ -79,12 +79,12 @@
 <li>  kTextCenterX - center text alignment
 </ul>
 */
-//End_Html
+//
 //
 //
 // The key press event handler converts a key press to some line editor action.
 // Here are the default key bindings:
-//Begin_Html
+//
 /*
 <ul>
 <li><i> Left Arrow </i>
@@ -153,7 +153,7 @@
 </ul>
 All other keys with valid ASCII codes insert themselves into the line.
 */
-//End_Html
+//
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -658,13 +658,13 @@ void TGTextEntry::SetMaxLength(Int_t maxlen)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// The echo modes available are:
-///Begin_Html
+///
 /// <ul>
 /// <li> kNormal   - display characters as they are entered.  This is the default.
 /// <li> kNoEcho   - do not display anything.
 /// <li> kPassword - display asterisks instead of the characters actually entered.
 /// </ul>
-///End_Html
+///
 /// It is always possible to cut and paste any marked text;  only the widget's own
 /// display is affected.
 /// See also GetEchoMode(), GetDisplayText().
@@ -1154,7 +1154,7 @@ void TGTextEntry::DoRedraw()
 ////////////////////////////////////////////////////////////////////////////////
 /// The key press event handler converts a key press to some line editor
 /// action. Here are the default key bindings:
-///Begin_Html
+///
 ///  <ul>
 ///  <li><i> Left Arrow </i>
 ///          Move the cursor one character leftwards.
@@ -1220,7 +1220,7 @@ void TGTextEntry::DoRedraw()
 ///  <li><i> Control-Y </i>
 ///          Paste the clipboard text into line edit.
 ///  </ul>
-///End_Html
+///
 ///  All other keys with valid ASCII codes insert themselves into the line.
 
 Bool_t TGTextEntry::HandleKey(Event_t* event)
