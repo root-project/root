@@ -21,7 +21,8 @@ templateClassImp(TKDTree)
 
 /**
 
-\class TKDTree class implementing a kd-tree
+\class TKDTree
+\brief Class implementing a kd-tree
 
 
 

@@ -5,7 +5,7 @@ The physics vector classes describe vectors in three and four dimensions
 and their rotation algorithms. The classes were ported to root from
 CLHEP see:
 
-<http://wwwinfo.cern.ch/asd/lhc++/clhep/manual/UserGuide/Vector/vector.html>
+<http://www.cern.ch/clhep/manual/UserGuide/Vector/vector.html>
 
 ## The Physics Vector Classes
 

@@ -25,20 +25,15 @@
 // Monte Carlo event generator (integrator) FOAM.
 // It creates hyper-rectangular "foam of cells", which is more dense around its peaks.
 // See the following 2-dim. example of the map of 1000 cells for doubly peaked distribution:
-//BEGIN_HTML <!--
-/* -->
-<img src="gif/foam_MapCamel1000.gif">
-<!--*/
-// -->END_HTML
+//
+// <img src="gif/foam_MapCamel1000.gif">
+//
 // FOAM is now fully integrated with the ROOT package.
 // The important bonus of the ROOT use is persistency of the FOAM objects!
 //
 // For more sophisticated problems full version of FOAM may be more appropriate:
-//BEGIN_HTML <!--
-/* -->
-  See <A HREF="http://jadach.home.cern.ch/jadach/Foam/Index.html"> full version of FOAM</A>
-<!--*/
-// -->END_HTML
+// See [full version of FOAM](http://jadach.home.cern.ch/jadach/Foam/Index.html)
+//
 // Simple example of the use of FOAM:
 // ==================================
 // Int_t kanwa(){
@@ -81,11 +76,9 @@
 //   return 0.5*Dist;
 // }// Camel2
 // Two-dim. histogram of the MC points generated with the above program looks as follows:
-//BEGIN_HTML <!--
-/* -->
-<img src="gif/foam_cKanwa.gif">
-<!--*/
-// -->END_HTML
+//
+// <img src="gif/foam_cKanwa.gif">
+//
 // Canonical nine steering parameters of FOAM
 // ===========================================
 //------------------------------------------------------------------------------
@@ -266,10 +259,10 @@ TFoam::TFoam(const Char_t* Name) :
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default destructor
-///  std::cout<<" DESTRUCTOR entered "<<std::endl;
 
 TFoam::~TFoam()
 {
+   //std::cout<<" DESTRUCTOR entered "<<std::endl;
    Int_t i;
 
    if(fCells!= 0) {
@@ -321,42 +314,35 @@ TFoam::TFoam(const TFoam &From): TObject(From)
 /// This is done BEFORE generating first MC event and AFTER allocating FOAM object
 /// and reseting (optionally) its internal parameters/switches.
 /// The overall operational scheme of the FOAM is the following:
-///BEGIN_HTML <!--
+///
+//  <img src="gif/foam_schema2.gif">
+///
+/// This method invokes several other methods:
+/// ==========================================
+/// InitCells initializes memory storage for cells and begins exploration process
+/// from the root cell. The empty cells are allocated/filled using  CellFill.
+/// The procedure Grow which loops over cells, picks up the cell with the biggest
+/// ``driver integral'', see Comp. Phys. Commun. 152 152 (2003) 55 for explanations,
+/// with the help of PeekMax procedure. The chosen cell is split using Divide.
+/// Subsequently, the procedure Explore called by the Divide
+/// (and by InitCells for the root cell) does the most important
+/// job in the FOAM object build-up: it performs a small MC run for each
+/// newly allocated daughter cell.
+/// Explore calculates how profitable the future split of the cell will be
+/// and defines the optimal cell division geometry with the help of Carver or Varedu
+/// procedures, for maximum weight or variance optimization respectively.
+/// All essential results of the exploration are written into
+/// the explored cell object. At the very end of the foam build-up,
+/// Finally, MakeActiveList is invoked to create a list of pointers to
+/// all active cells, for the purpose of the quick access during the MC generation.
+/// The procedure Explore employs MakeAlpha to generate random coordinates
+/// inside a given cell with the uniform distribution.
+/// The above sequence of the procedure calls is depicted in the following figure:
+///
+//  <img src="gif/foam_Initialize_schema.gif">
 
 void TFoam::Initialize(TRandom *PseRan, TFoamIntegrand *fun )
 {
-/* -->
-<img src="gif/foam_schema2.gif">
-<!--*/
-// -->END_HTML
-//
-// This method invokes several other methods:
-// ==========================================
-// InitCells initializes memory storage for cells and begins exploration process
-// from the root cell. The empty cells are allocated/filled using  CellFill.
-// The procedure Grow which loops over cells, picks up the cell with the biggest
-// ``driver integral'', see Comp. Phys. Commun. 152 152 (2003) 55 for explanations,
-// with the help of PeekMax procedure. The chosen cell is split using Divide.
-// Subsequently, the procedure Explore called by the Divide
-// (and by InitCells for the root cell) does the most important
-// job in the FOAM object build-up: it performs a small MC run for each
-// newly allocated daughter cell.
-// Explore calculates how profitable the future split of the cell will be
-// and defines the optimal cell division geometry with the help of Carver or Varedu
-// procedures, for maximum weight or variance optimization respectively.
-// All essential results of the exploration are written into
-// the explored cell object. At the very end of the foam build-up,
-// Finally, MakeActiveList is invoked to create a list of pointers to
-// all active cells, for the purpose of the quick access during the MC generation.
-// The procedure Explore employs MakeAlpha to generate random coordinates
-// inside a given cell with the uniform distribution.
-// The above sequence of the procedure calls is depicted in the following figure:
-//BEGIN_HTML <!--
-/* -->
-<img src="gif/foam_Initialize_schema.gif">
-<!--*/
-// -->END_HTML
-
    SetPseRan(PseRan);
    SetRho(fun);
    Initialize();
@@ -1363,15 +1349,11 @@ void TFoam::Finalize(Double_t& IntNorm, Double_t& Errel)
 /// It defines which variables are excluded in the process of the cell division.
 /// For example 'FoamX->SetInhiDiv(1, 1);' inhibits division of y-variable.
 /// The resulting map of cells in 2-dim. case will look as follows:
-///BEGIN_HTML <!--
+///
+//  <img src="gif/foam_Map2.gif">
 
 void  TFoam::SetInhiDiv(Int_t iDim, Int_t InhiDiv)
 {
-/* -->
-<img src="gif/foam_Map2.gif">
-<!--*/
-// -->END_HTML
-
    if(fDim==0) Error("TFoam","SetInhiDiv: fDim=0 \n");
    if(fInhiDiv == 0) {
       fInhiDiv = new Int_t[ fDim ];
@@ -1391,15 +1373,11 @@ void  TFoam::SetInhiDiv(Int_t iDim, Int_t InhiDiv)
 ///     xDiv[0]=0.30; xDiv[1]=0.40; xDiv[2]=0.65;
 ///     FoamX->SetXdivPRD(0,3,xDiv);
 /// results in the following 2-dim. pattern of the cells:
-///BEGIN_HTML <!--
+///
+//  <img src="gif/foam_Map3.gif">
 
 void  TFoam::SetXdivPRD(Int_t iDim, Int_t len, Double_t xDiv[])
 {
-/* -->
-<img src="gif/foam_Map3.gif">
-<!--*/
-// -->END_HTML
-
    Int_t i;
 
    if(fDim<=0)  Error("SetXdivPRD", "fDim=0 \n");

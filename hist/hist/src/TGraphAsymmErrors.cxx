@@ -510,27 +510,33 @@ void TGraphAsymmErrors::BayesDivide(const TH1* pass, const TH1* total, Option_t 
 ///
 /// If the histograms are not filled with unit weights, the number of effective
 /// entries is used to normalise the bin contents which might lead to wrong results.
-/// Begin_Latex effective entries = #frac{(#sum w_{i})^{2}}{#sum w_{i}^{2}}End_Latex
-///
+/// \f[
+/// \text{effective entries} = \frac{(\sum w_{i})^{2}}{\sum w_{i}^{2}}
+/// \f]
 /// The points are assigned a x value at the center of each histogram bin.
-/// The y values are Begin_Latex eff = #frac{pass}{total} End_Latex for all options except for the
+/// The y values are \f$\text{eff} = \frac{\text{pass}}{\text{total}}\f$
+/// for all options except for the
 /// bayesian methods where the result depends on the chosen option.
 ///
-/// If the denominator becomes 0 or pass >  total, the corresponding bin is
+/// If the denominator becomes 0 or pass > total, the corresponding bin is
 /// skipped.
 ///
 /// 2) calculating ratios of two Poisson means (option 'pois'):
 /// --------------------------------------------------------------
 ///
 /// The two histograms are interpreted as independent Poisson processes and the ratio
-/// Begin_Latex #tau = #frac{n_{1}}{n_{2}} = #frac{#varepsilon}{1 - #varepsilon} with #varepsilon = #frac{n_{1}}{n_{1} + n_{2}} End_Latex
-/// The histogram 'pass' is interpreted as n_{1} and the total histogram
-/// is used for n_{2}
+/// \f[
+/// \tau = \frac{n_{1}}{n_{2}} = \frac{\varepsilon}{1 - \varepsilon}
+/// \f]
+/// with \f$\varepsilon = \frac{n_{1}}{n_{1} + n_{2}}\f$.
+/// The histogram 'pass' is interpreted as \f$n_{1}\f$ and the total histogram
+/// is used for \f$n_{2}\f$.
 ///
 /// The (asymmetric) uncertainties of the Poisson ratio are linked to the uncertainties
 /// of efficiency by a parameter transformation:
-/// Begin_Latex #Delta #tau_{low/up} = #frac{1}{(1 - #varepsilon)^{2}} #Delta #varepsilon_{low/up} End_Latex
-///
+/// \f[
+/// \Delta \tau_{low/up} = \frac{1}{(1 - \varepsilon)^{2}} \Delta \varepsilon_{low/up}
+/// \f]
 /// The x errors span each histogram bin (lowedge ... lowedge+width)
 /// The y errors depend on the chosen statistic methode which can be determined
 /// by the options given below. For a detailed description of the used statistic
@@ -563,8 +569,7 @@ void TGraphAsymmErrors::BayesDivide(const TH1* pass, const TH1* total, Option_t 
 /// oscillation on the actual coverage probability a couple of approximations and
 /// methodes has been developped. For a detailed discussion, please have a look at
 /// this statistical paper:
-/// <a href="http://www-stat.wharton.upenn.edu/~tcai/paper/Binomial-StatSci.pdf"
-/// > http://www-stat.wharton.upenn.edu/~tcai/paper/Binomial-StatSci.pdf</a>
+/// http://www-stat.wharton.upenn.edu/~tcai/paper/Binomial-StatSci.pdf
 
 void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
 {

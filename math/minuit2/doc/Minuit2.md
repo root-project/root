@@ -14,7 +14,7 @@ The [Minuit2 User Guide](https://root.cern.ch/root/htmldoc/guides/minuit2/Minuit
 
 ## References
 
-1.  F. James, _Fortran MINUIT Reference Manual_ ([html](http://wwwasdoc.web.cern.ch/wwwasdoc/minuit/minmain.html));
+1.  F. James, _Fortran MINUIT Reference Manual_ ([html](https://cern-tex.web.cern.ch/cern-tex/minuit/minmain.html));
 2.  F. James and M. Winkler, _C++ MINUIT User's Guide_ ([html](https://root.cern.ch/root/htmldoc/guides/minuit2/Minuit2.html) and [pdf](https://root.cern.ch/root/htmldoc/guides/minuit2/Minuit2.pdf));
 3.  F. James, _Minuit Tutorial on Function Minimization_ ([pdf](http://seal.cern.ch/documents/minuit/mntutorial.pdf));
 4.  F. James, _The Interpretation of Errors in Minuit_ ([pdf](http://seal.cern.ch/documents/minuit/mnerror.pdf));

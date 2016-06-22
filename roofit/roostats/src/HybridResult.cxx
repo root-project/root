@@ -100,11 +100,9 @@ void HybridResult::SetDataTestStatistics(double testStat_data_val)
 }
 
 ///////////////////////////////////////////////////////////////////////////
-
+/// Returns \f$1 - CL_{b}\f$ : the B p-value
 double HybridResult::NullPValue() const
 {
-   // return 1-CL_b : the B p-value
-
    if (fComputationsNulDoneFlag==false) {
       int nToys = fTestStat_b.size();
       if (nToys==0) {
@@ -131,11 +129,9 @@ double HybridResult::NullPValue() const
 }
 
 ///////////////////////////////////////////////////////////////////////////
-
+/// Returns \f$CL_{s+b}\f$ : the S+B p-value
 double HybridResult::AlternatePValue() const
 {
-   // return CL_s+b : the S+B p-value
-
    if (fComputationsAltDoneFlag==false) {
       int nToys = fTestStat_b.size();
       if (nToys==0) {
@@ -162,40 +158,37 @@ double HybridResult::AlternatePValue() const
 }
 
 ///////////////////////////////////////////////////////////////////////////
-
+/// Returns an estimate of the error on \f$CL_{b}\f$ assuming a binomial
+/// error on \f$CL_{b}\f$:
+/// \f[
+/// \sigma_{CL_{b}} = \sqrt{CL_{b} \left( 1 - CL_{b} \right) / n_{toys}}
+/// \f]
 Double_t HybridResult::CLbError() const
 {
-  // Returns an estimate of the error on CLb assuming a binomial error on
-  // CLb:
-  // BEGIN_LATEX
-  // #sigma_{CL_{b}} &=& #sqrt{CL_{b} #left( 1 - CL_{b} #right) / n_{toys}}
-  // END_LATEX
   unsigned const int n = fTestStat_b.size();
   return TMath::Sqrt(CLb() * (1. - CLb()) / n);
 }
 
 ///////////////////////////////////////////////////////////////////////////
-
+/// Returns an estimate of the error on \f$CL_{s+b}\f$ assuming a binomial
+/// error on \f$CL_{s+b}\f$:
+/// \f[
+/// \sigma_{CL_{s+b}} = \sqrt{CL_{s+b} \left( 1 - CL_{s+b} \right) / n_{toys}}
+/// \f]
 Double_t HybridResult::CLsplusbError() const
 {
-  // Returns an estimate of the error on CLsplusb assuming a binomial
-  // error on CLsplusb:
-  // BEGIN_LATEX
-  // #sigma_{CL_{s+b}} &=& #sqrt{CL_{s+b} #left( 1 - CL_{s+b} #right) / n_{toys}}
-  // END_LATEX
   unsigned const int n = fTestStat_sb.size();
   return TMath::Sqrt(CLsplusb() * (1. - CLsplusb()) / n);
 }
 
 ///////////////////////////////////////////////////////////////////////////
-
+/// Returns an estimate of the error on \f$CL_{s}\f$ through combination
+/// of the errors on \f$CL_{b}\f$ and \f$CL_{s+b}\f$:
+/// \f[
+/// \sigma_{CL_s} = CL_s \sqrt{\left( \frac{\sigma_{CL_{s+b}}}{CL_{s+b}} \right)^2 + \left( \frac{\sigma_{CL_{b}}}{CL_{b}} \right)^2}
+/// \f]
 Double_t HybridResult::CLsError() const
 {
-  // Returns an estimate of the error on CLs through combination of the
-  // errors on CLb and CLsplusb:
-  // BEGIN_LATEX
-  // #sigma_{CL_s} &=& CL_s #sqrt{#left( #frac{#sigma_{CL_{s+b}}}{CL_{s+b}} #right)^2 + #left( #frac{#sigma_{CL_{b}}}{CL_{b}} #right)^2}
-  // END_LATEX
   unsigned const int n_b = fTestStat_b.size();
   unsigned const int n_sb = fTestStat_sb.size();
   

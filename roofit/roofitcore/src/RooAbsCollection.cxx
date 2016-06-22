@@ -1002,7 +1002,7 @@ void RooAbsCollection::dump() const
 ///   FixedPrecision(int n)     -- Controls precision, set fixed number of digits
 ///   AutoPrecision(int n)      -- Controls precision. Number of shown digits is calculated from error 
 ///                                + n specified additional digits (1 is sensible default)
-///   VerbatimName(Bool_t flag) -- Put variable name in a \verb+   + clause.
+///   VerbatimName(Bool_t flag) -- Put variable name in a \\verb+   + clause.
 ///
 /// Example use: list.printLatex(Columns(2), Format("NEU",AutoPrecision(1),VerbatimName()) ) ;
 

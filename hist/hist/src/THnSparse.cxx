@@ -765,8 +765,7 @@ Double_t THnSparse::GetBinContent(Long64_t idx, Int_t* coord /* = 0 */) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get square of the error of bin addressed by linidx as
-/// BEGIN_LATEX #sum weight^{2}
-/// END_LATEX
+/// \f$\sum weight^{2}\f$
 /// If errors are not enabled (via Sumw2() or CalculateErrors())
 /// return contents.
 

@@ -445,7 +445,7 @@ UInt_t TMakeProject::GenerateForwardDeclaration(FILE *fp, const char *clname, ch
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add to the header file, the #include needed for the argument of
+/// Add to the header file, the \#include needed for the argument of
 /// this template.
 
 UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, char *inclist, Bool_t forward, const TList *extrainfos)
@@ -598,7 +598,7 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add to the header file anything that need to appear after the class
-/// declaration (this includes some #pragma link).
+/// declaration (this includes some \#pragma link).
 
 void TMakeProject::GeneratePostDeclaration(FILE *fp, const TVirtualStreamerInfo *info, char *inclist)
 {

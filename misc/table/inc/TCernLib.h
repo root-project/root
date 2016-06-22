@@ -15,7 +15,7 @@
 #include "Rtypes.h"
 #include <string.h>
 
-// http://wwwinfo.cern.ch/asdoc/shortwrupsdir/f110/top.html
+// https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f110/top.html
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //                                                                                   //
@@ -25,8 +25,9 @@
 // its negative, or a multiple of it, transpose a given matrix, build up a unit      //
 // matrix, multiply a matrix by a diagonal (from left or from right) and may         //
 // add the result to another matrix, add to square matrix the multiple of a diagonal //
-// matrix, compute the products <IMG WIDTH=79 HEIGHT=12 ALIGN=BOTTOM ALT="tex2html_wrap_inline191" SRC="gif/mxpack_ABAt.gif"> (<IMG WIDTH=16 HEIGHT=12 ALIGN=BOTTOM ALT="tex2html_wrap_inline193" SRC="gif/mxpack_At.gif"> denotes the transpose of <IMG WIDTH=1
-// It is assumed that matrices are begin_html <B>row-wise without gaps</B> end_html without gaps.                     //
+// matrix, compute the products X=ABA' (A' denotes the transpose of A) and X=A'BA.   //
+// It is assumed that matrices are <B>row-wise without gaps</B>, contrary to the     //
+// Fortran convention.                                                               //
 //                                                                                   //
 ///////////////////////////////////////////////////////////////////////////////////////
 

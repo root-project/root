@@ -40,8 +40,8 @@ TestStatistic that returns the ratio of profiled likelihoods.
 By default the calculation is:
 
 \f[
-	\log{    \frac{  \lambda( \mu_{alt} , {conditional \: MLE \: for \: alt \: nuisance}) }
-   	              { \lambda(\mu_{null} , {conditional \: MLE \: for \:  null \: nuisance}) } }
+        \log{    \frac{ \lambda(\mu_{alt}  , {conditional \: MLE \: for \: alt  \: nuisance}) }
+                      { \lambda(\mu_{null} , {conditional \: MLE \: for \: null \: nuisance}) } }
 \f]
 
 where \f$ \lambda \f$ is the profile likeihood ratio, so the 
@@ -50,11 +50,11 @@ MLE for the null and alternate are subtracted off.
 If ``SetSubtractMLE(false)`` then it calculates:
 
 \f[
+        \log{    \frac{ L(\mu_{alt}  , {conditional \: MLE \: for \: alt  \: nuisance}) }
+                      { L(\mu_{null} , {conditional \: MLE \: for \: null \: nuisance}) } }
+\f]
 
-	\log{    \frac{ L( \mu_alt , {conditional \: MLE \: for \: alt \: nuisance} ) }         
-                      { L(\mu_null , {conditional \: MLE \: for \:  null \: nuisance}) } }
-
-where \f$ L\$ is the Likelihood function. 
+where \f$ L \f$ is the Likelihood function.
 
 The values of the parameters of interest for the alternative 
 hypothesis are taken at the time of the construction.

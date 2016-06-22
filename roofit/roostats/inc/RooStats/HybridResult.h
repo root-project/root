@@ -85,7 +85,7 @@ namespace RooStats {
       /// The error on the "confidence level" of the alternative hypothesis
       Double_t CLsplusbError() const;
       
-      /// The error on the ratio CLs+b/CLb
+      /// The error on the ratio \f$CL_{s+b}/CL_{b}\f$
       Double_t CLsError() const;
 
    private:

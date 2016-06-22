@@ -972,9 +972,9 @@ Double_t TF1::Derivative2(Double_t x, Double_t *params, Double_t eps) const
 /// Getting the error via TF1::DerivativeError:
 ///   (total error = roundoff error + interpolation error)
 /// the estimate of the roundoff error is taken as follows:
-///Begin_Latex
-///    err = k#sqrt{f(x)^{2} + x^{2}deriv^{2}}#sqrt{#sum ai^{2}},
-///End_Latex
+/// \f[
+///    err = k\sqrt{f(x)^{2} + x^{2}deriv^{2}}\sqrt{\sum ai^{2}},
+/// \f]
 /// where k is the double precision, ai are coefficients used in
 /// central difference formulas
 /// interpolation error is decreased by making the step size h smaller.

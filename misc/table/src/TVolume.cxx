@@ -142,7 +142,7 @@ TVolume::TVolume(const char *name, const char *title, TShape *shape, Option_t *o
 ///                            10 - this unvisible, but sons are visible
 ///                            01 - this visible but sons
 ///                            11 - neither this nor its sons are visible
-/// Maps the value of the visibility flag to begin_html <a href="http://wwwinfo.cern.ch/asdoc/geant_html3/node128.html#SECTION056000000000000000000000">GEANT 3.21 "volume attributes"</a>end_html
+/// Maps the value of the visibility flag to <a href="https://cern-tex.web.cern.ch/cern-tex/geant_html3/node128.html#SECTION056000000000000000000000">GEANT 3.21 "volume attributes"</a>
 
 Int_t TVolume::MapStNode2GEANTVis(ENodeSEEN  vis)
 {
@@ -150,11 +150,12 @@ Int_t TVolume::MapStNode2GEANTVis(ENodeSEEN  vis)
    return mapVis[vis];
 }
 
-//______________________________________________________________________________
-//ENodeSEEN TVolume::MapGEANT2StNodeVis(Int_t vis)
+////////////////////////////////////////////////////////////////////////////////
+/// ENodeSEEN TVolume::MapGEANT2StNodeVis(Int_t vis)
+/// Maps the value of <a href="https://cern-tex.web.cern.ch/cern-tex/geant_html3/node128.html#SECTION056000000000000000000000">GEANT 3.21 "volume attributes"</a> to the visibility flag
+
 Int_t TVolume::MapGEANT2StNodeVis(Int_t vis)
 {
-// Maps the value of begin_html <a href="http://wwwinfo.cern.ch/asdoc/geant_html3/node128.html#SECTION056000000000000000000000">GEANT 3.21 "volume attributes"</a>end_html to the visibility flag
    const Int_t mapVis[4] = {1, -2, 0, -1 };
    Int_t i;
 //  for (i =0; i<3;i++) if (mapVis[i] == vis) return (ENodeSEEN)i;

@@ -841,7 +841,7 @@ TString* RooRealVar::format(const RooCmdArg& formatArg) const
 /// L = TLatex mode
 /// X = Latex mode
 /// Y = Latex table mode ( '=' replaced by '&' )
-/// V = Make name \verbatim in Latex mode
+/// V = Make name \\verbatim in Latex mode
 /// P = use error to control shown precision
 /// F = force fixed precision
 ///

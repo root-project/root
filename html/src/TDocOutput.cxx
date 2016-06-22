@@ -2463,7 +2463,7 @@ void TDocOutput::WriteLocation(std::ostream& out, TModuleDocInfo* module, const 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write the first part of the links shown ontop of each doc page;
-/// one <div> has to be closed by caller so additional items can still
+/// one \<div\> has to be closed by caller so additional items can still
 /// be added.
 
 void TDocOutput::WriteTopLinks(std::ostream& out, TModuleDocInfo* module, const char* classname,

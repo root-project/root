@@ -6,7 +6,7 @@
 /// ~~~ {.cpp}
 /// root > .x permute.C
 /// root > .x permute.C+ with ACLIC
-///~~~
+/// ~~~
 ///
 /// \macro_output
 /// \macro_code
