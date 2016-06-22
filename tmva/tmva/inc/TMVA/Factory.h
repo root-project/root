@@ -93,6 +93,9 @@ namespace TMVA {
       // no default  constructor
       Factory( TString theJobName, TFile* theTargetFile, TString theOption = "" );
 
+      // contructor to work without file
+      Factory( TString theJobName, TString theOption = "" );
+
       // default destructor
       virtual ~Factory();
 
@@ -202,7 +205,7 @@ namespace TMVA {
       Bool_t                                    fVerbose;         //! verbose mode
       Bool_t                                    fCorrelations;    //! enable to calculate corelations
       Bool_t                                    fROC;             //! enable to calculate ROC values
-      Bool_t                                    fSilentFile;      //! enable to reduce the output file
+      const Bool_t                              fSilentFile;      //! used in contructor wihtout file 
 
       TString                                   fJobName;         //! jobname, used as extension in weight file names
 

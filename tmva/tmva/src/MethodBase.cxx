@@ -565,7 +565,7 @@ void TMVA::MethodBase::TrainMethod()
    if (Help()) PrintHelpMessage();
           
    // all histograms should be created in the method's subdirectory
-   BaseDir()->cd();
+   if(!IsSilentFile())BaseDir()->cd();
 
    // once calculate all the transformation (e.g. the sequence of Decorr:Gauss:Decorr)
    //    needed for this classifier
@@ -617,8 +617,8 @@ void TMVA::MethodBase::TrainMethod()
 
    // write additional monitoring histograms to main target file (not the weight file)
    // again, make sure the histograms go into the method's subdirectory
-   BaseDir()->cd();
-   WriteMonitoringHistosToFile();
+   if(!IsSilentFile()) BaseDir()->cd();
+   if(!IsSilentFile()) WriteMonitoringHistosToFile();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
