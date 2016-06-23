@@ -230,7 +230,7 @@ void FilterClass()
          do {
             size_t e = gLineString.find('\n', b);
             if (e != string::npos) e++;
-            if (spos) printf("%-*s%s", spos, "///",
+            if (spos) printf("%-*s%s", (int) spos, "///",
                               gLineString.substr(b, e - b).c_str());
             else printf("%s", gLineString.substr(b, e - b).c_str());
             b = e;
