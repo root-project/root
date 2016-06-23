@@ -781,6 +781,9 @@ void Preprocessor::Lex(Token &Result) {
     }
   } while (!ReturnedToken);
 
+  if (Result.is(tok::code_completion))
+      setCodeCompletionIdentifierInfo(Result.getIdentifierInfo());
+
   LastTokenWasAt = Result.is(tok::at);
 }
 
