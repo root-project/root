@@ -253,7 +253,6 @@ def isDirForPCH(dirName):
                            "math/quadp",
                            "math/splot",
                            "math/unuran",
-                           "math/vc",
                            "math/vdt",
                            "tmva/rmva")
 
