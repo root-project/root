@@ -4,8 +4,7 @@
 # (20/01/2004)  --elathan  <elathan@phys.uoa.gr>
 #
 # original header:
-# To see the output of this macro, click begin_html <a href="gif/hsum.gif" >here</a> end_html
-# Simple example illustrating how to use the C++ interpreter	
+# Simple example illustrating how to use the C++ interpreter
 # to fill histograms in a loop and show the graphics results
 
 gROOT.Reset
@@ -27,13 +26,13 @@ s2     = TH1F.new("s2","This is the second signal",100,-4,4)
     main.SetFillColor(16)
     s1.SetFillColor(42)
     s2.SetFillColor(46)
-    slider = nil 
+    slider = nil
 
 # Fill histograms randomly
 
 rnd = TRandom.new.SetSeed
 kUPDATE = 500
-10000.times do |i| 
+10000.times do |i|
     xmain = rnd.Gaus(-1,1.5)
     xs1   = rnd.Gaus(-0.5,0.5)
     xs2   = rnd.Landau(1,0.15)
@@ -43,8 +42,8 @@ kUPDATE = 500
     total.Fill(xmain)
     total.Fill(xs1,0.3)
     total.Fill(xs2,0.2)
-    if (i && (i%kUPDATE) == 0) 
-        if (i == kUPDATE) 
+    if (i && (i%kUPDATE) == 0)
+        if (i == kUPDATE)
             total.Draw("e1p")
             main.Draw("same")
             s1.Draw("same")
