@@ -52,6 +52,7 @@
 
 #include <fenv.h> // turn on or off exceptions for NaN and other numeric exceptions
 
+#include "xxhash.h"
 
 namespace TMVA
 {
