@@ -148,7 +148,7 @@ $(UNURANLIB):   $(UNRCFG) $(UNRO) $(UNURANO) $(UNURANDO) $(ORDER_) \
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"  \
 		   "$(SOFLAGS)" libUnuran.$(SOEXT) $@     \
 		   "$(UNURANO) $(UNURANDO)"             \
-		   "$(UNURANLIBEXTRA) $(UNRO) $(UNURANLIBDIR) $(UNURANLIB)"
+		   "$(UNURANLIBEXTRA) $(UNRO)"
 
 $(call pcmrule,UNURAN)
 	$(noop)
