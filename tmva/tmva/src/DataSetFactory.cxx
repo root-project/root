@@ -83,7 +83,7 @@
 
 using namespace std;
 
-TMVA::DataSetFactory* TMVA::DataSetFactory::fgInstance = 0;
+//TMVA::DataSetFactory* TMVA::DataSetFactory::fgInstance = 0;
 
 namespace TMVA {
    // calculate the largest common divider

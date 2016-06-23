@@ -69,7 +69,7 @@ TMVA::DataSetManager::DataSetManager( DataInputHandler& dataInput )
 
 TMVA::DataSetManager::~DataSetManager()
 {
-   DataSetFactory::destroyNewInstance(fDatasetFactory);
+   if(fDatasetFactory) delete fDatasetFactory;
 
    delete fLogger;
 }
@@ -83,7 +83,7 @@ TMVA::DataSet* TMVA::DataSetManager::CreateDataSet( const TString& dsiName )
    if (!dsi) Log() << kFATAL << "DataSetInfo object '" << dsiName << "' not found" << Endl;
 
    // factory to create dataset from datasetinfo and datainput
-   if(!fDatasetFactory) { fDatasetFactory = DataSetFactory::NewInstance(); }
+   if(!fDatasetFactory) { fDatasetFactory =new  DataSetFactory(); }
    return fDatasetFactory->CreateDataSet( *dsi, fDataInput );
 }
 

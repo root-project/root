@@ -246,22 +246,14 @@ namespace TMVA {
 
    public:
 
-
-
-      // singleton class
-      static DataSetFactory& Instance() { if (!fgInstance) fgInstance = new DataSetFactory(); return *fgInstance; }
-      static void destroyInstance() { if (fgInstance) { delete fgInstance; fgInstance=0; } }
-
-      DataSet* CreateDataSet( DataSetInfo &, DataInputHandler& );
-
-      static DataSetFactory* NewInstance() { return new DataSetFactory(); }
-      static void destroyNewInstance(DataSetFactory* iOther) { delete iOther;}
-   protected:
-
       ~DataSetFactory();
 
       DataSetFactory();
-      static DataSetFactory *fgInstance;
+
+      DataSet* CreateDataSet( DataSetInfo &, DataInputHandler& );
+   protected:
+     
+      DataSetFactory *fgInstance;
 
       DataSet*  BuildInitialDataSet( DataSetInfo&, TMVA::DataInputHandler& );
       DataSet*  BuildDynamicDataSet( DataSetInfo& );
