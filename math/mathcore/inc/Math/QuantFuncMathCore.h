@@ -53,7 +53,7 @@ namespace Math {
    *  \f[ D(x) = \int_{x}^{+\infty} p(x') dx' \f]
    *
    *  These functions are defined in the header file <em>Math/ProbFunc.h<em> or in the global one
-   *  including all statistical dunctions <em>Math/DistFunc.h<em>
+   *  including all statistical functions <em>Math/DistFunc.h<em>
    *
    *
    * <strong>NOTE:</strong> In the old releases (< 5.14) the <em>_quantile</em> functions were called
@@ -209,7 +209,7 @@ namespace Math {
       <A HREF="http://mathworld.wolfram.com/Chi-SquaredDistribution.html">
       Mathworld</A>.
       It is implemented using  chisquared_quantile_c, therefore is not very precise for small z.
-      It is reccomended to use the MathMore function (ROOT::MathMore::chisquared_quantile )implemented using GSL
+      It is recommended to use the MathMore function (ROOT::MathMore::chisquared_quantile )implemented using GSL
 
       @ingroup QuantFunc
 
@@ -311,7 +311,7 @@ namespace Math {
       <A HREF="http://mathworld.wolfram.com/GammaDistribution.html">
       Mathworld</A>.
       It is implemented using  chisquared_quantile_c, therefore is not very precise for small z.
-      For this special cases it is reccomended to use the MathMore function ROOT::MathMore::gamma_quantile
+      For this special cases it is recommended to use the MathMore function ROOT::MathMore::gamma_quantile
       implemented using GSL
 
 
@@ -528,7 +528,7 @@ namespace Math {
    <A HREF="http://dx.doi.org/10.1016/0010-4655(84)90085-7">Computer Phys. Comm. 31 (1984) 97-111</A>
    <A HREF="http://dx.doi.org/10.1016/j.cpc.2008.03.002">[Erratum-ibid. 178 (2008) 972]</A>.
    The same algorithms as in
-   <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/g110/top.html">
+   <A HREF="https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/g110/top.html">
    CERNLIB</A> (RANLAN) is used.
 
    @param z The argument \f$z\f$
