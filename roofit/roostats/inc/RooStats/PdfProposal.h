@@ -53,7 +53,7 @@ given PDF.
 To make Propose(xPrime, x) dependent on x, configure with
 PdfProposal::AddMapping(varToUpdate, valueToUse).  For example, suppose we have:
 
-````{.cpp}
+~~~{.cpp}
 // our parameter
 RooRealVar p("p", "p", 5, 0, 10);
 
@@ -74,14 +74,14 @@ pdfProposal.AddMapping(meanP, p); // each call of Propose(xPrime, x), meanP in
 // number of proposals. If you don't call this function, the default cache size
 // is 1, which can be slow.
 pdfProposal.SetCacheSize(desiredCacheSize);
-````
+~~~
 
 PdfProposal currently uses a fixed cache size. Adaptive caching methods are in the works
 for future versions.
 
 */
 
-   
+
    class PdfProposal : public ProposalFunction {
 
    public:

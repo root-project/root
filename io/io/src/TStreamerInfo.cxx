@@ -2155,7 +2155,7 @@ void TStreamerInfo::BuildOld()
          }
       } else if (newClass.GetClass()) {
          // Sometime BuildOld is called again.
-         // In that case we migth already have fix up the streamer element.
+         // In that case we might already have fix up the streamer element.
          // So we need to go back to the original information!
          newClass.Reset();
          TClass* oldClass = TClass::GetClass(TClassEdit::ShortType(element->GetTypeName(), TClassEdit::kDropTrailStar).c_str());
@@ -2538,8 +2538,8 @@ void TStreamerInfo::BuildOld()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// If opt cointains 'built', reset this StreamerInfo as if Build or BuildOld
-/// was never called on it (usefull to force their re-running).
+/// If opt contains 'built', reset this StreamerInfo as if Build or BuildOld
+/// was never called on it (useful to force their re-running).
 
 void TStreamerInfo::Clear(Option_t *option)
 {
@@ -2570,7 +2570,7 @@ void TStreamerInfo::Clear(Option_t *option)
 
 namespace {
    // TMemberInfo
-   // Local helper class to be able to compare data member represened by
+   // Local helper class to be able to compare data member represented by
    // 2 distinct TStreamerInfos
    class TMemberInfo {
    public:
@@ -2771,7 +2771,7 @@ TObject *TStreamerInfo::Clone(const char *newname) const
 Bool_t TStreamerInfo::CompareContent(TClass *cl, TVirtualStreamerInfo *info, Bool_t warn, Bool_t complete, TFile *file)
 {
    Bool_t result = kTRUE;
-   R__ASSERT( (cl==0 || info==0) && (cl!=0 || info!=0) /* must compare to only one thhing! */);
+   R__ASSERT( (cl==0 || info==0) && (cl!=0 || info!=0) /* must compare to only one thing! */);
 
    TString name;
    TString type;
@@ -3145,7 +3145,7 @@ void TStreamerInfo::ForceWriteInfo(TFile* file, Bool_t force)
 /// type described by this streamerInfo, return the actual type of the
 /// object (i.e. the type described by this streamerInfo is a base class
 /// of the actual type of the object.
-/// This routine should only be called if the class decribed by this
+/// This routine should only be called if the class described by this
 /// StreamerInfo is 'emulated'.
 
 TClass *TStreamerInfo::GetActualClass(const void *obj) const
@@ -3161,7 +3161,7 @@ TClass *TStreamerInfo::GetActualClass(const void *obj) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true if the checksum passed as argument is one of the checksum
-/// value produced by the older checksum calulcation algorithm.
+/// value produced by the older checksum calculation algorithm.
 
 Bool_t TStreamerInfo::MatchLegacyCheckSum(UInt_t checksum) const
 {
@@ -3746,7 +3746,7 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add to the header file, the #include need for this class.
+/// Add to the header file, the \#include need for this class.
 
 UInt_t TStreamerInfo::GenerateIncludes(FILE *fp, char *inclist, const TList *extrainfos)
 {
@@ -3950,7 +3950,7 @@ Int_t TStreamerInfo::GetDataMemberOffset(TDataMember *dm, TMemberStreamer *&stre
    if (!fClass->IsLoaded()) {
       // If the 'class' is not loaded, we do not have a TClass bootstrap and thus
       // the 'RealData' might not have enough information because of the lack
-      // of proper ShowMember imlementation.
+      // of proper ShowMember implementation.
       if (! (dm->Property() & kIsStatic) ) {
          // Give an offset only to non-static members.
          offset = dm->GetOffset();
@@ -4401,7 +4401,7 @@ void TStreamerInfo::InsertArtificialElements(std::vector<const ROOT::TSchemaRule
          if ( !GetElements()->FindObject(src->GetName()) ) {
             // Missing source.
 #if 0 // Don't warn about not activating the rule.  If don't warn the user can
-      // have more flexibility in specifiying when the rule applies and relying
+      // have more flexibility in specifying when the rule applies and relying
       // on both the version number *and* the presence of the source members.
       // Activating this warning would for example mean that we need to carefully
       // tweak $ROOTSYS/etc/class.rules.
@@ -4927,7 +4927,7 @@ void TStreamerInfo::Destructor(void* obj, Bool_t dtorOnly)
 
    if (!dtorOnly && fNVirtualInfoLoc) {
       // !dtorOnly is used to filter out the case where this is called for
-      // a base class or embeded object of the outer most class.
+      // a base class or embedded object of the outer most class.
       TStreamerInfo *allocator = *(TStreamerInfo**)(p + fVirtualInfoLoc[0]);
       if (allocator != this) {
 
