@@ -129,7 +129,7 @@ double HybridResult::NullPValue() const
 }
 
 ///////////////////////////////////////////////////////////////////////////
-/// return CL_s+b : the S+B p-value
+/// Returns \f$CL_{s+b}\f$ : the S+B p-value
 
 double HybridResult::AlternatePValue() const
 {

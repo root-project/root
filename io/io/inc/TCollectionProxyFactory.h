@@ -160,7 +160,7 @@ public:
 };
 
 /**
- \class TCollectionClassStreamer TCollectionProxy.h
+ \class TCollectionClassStreamer TCollectionProxyFactory.h
  \ingroup IO
 
  Class streamer object to implement TClassStreamer functionality
