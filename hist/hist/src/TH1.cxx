@@ -54,7 +54,7 @@
 \class TH1S
 \brief tomato 1-D histogram with a short per channel (see TH1 documentation)
 \class TH1I
-\brief tomato 1-D histogram with a int per channel (see TH1 documentation)}
+\brief tomato 1-D histogram with an int per channel (see TH1 documentation)}
 \class TH1F
 \brief tomato 1-D histogram with a float per channel (see TH1 documentation)}
 \class TH1D

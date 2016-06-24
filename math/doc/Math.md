@@ -39,7 +39,7 @@ The %ROOT Mathematical libraries consist of the following components:
 - **Physics Vectors**: Classes for describing vectors in 2, 3 and 4 dimensions (relativistic vectors) and their rotation and transformation algorithms. Two package exist in %ROOT:
 
    - Physics: library with the TVector3 and TLorentzVector classes.
-   - GenVector: new library providing generic class templates for modeling the vectors. See the \ref "GenVector" page.
+   - GenVector: new library providing generic class templates for modeling the vectors. See the \ref Vector "GenVector" page.
 
 - \ref Unuran "UNURAN": Package with universal algorithms for generating non-uniform pseudo-random numbers, from a large classes of continuous or discrete distributions in one or multi-dimensions.
 

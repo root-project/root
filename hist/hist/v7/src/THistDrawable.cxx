@@ -1,4 +1,4 @@
-/// \file ROOT/THistDrawable.cxx
+/// \file THistDrawable.cxx
 /// \ingroup Hist ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-09-11

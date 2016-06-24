@@ -343,8 +343,9 @@ double *TCL::traat(const double *a, double *s, int m, int n)
 /// CERN PROGLIB# F112    TRAL            .VERSION KERNFOR  4.15  861204
 /// ORIG. 18/12/74 WH
 /// tral.F -- translated by f2c (version 19970219).
+///
 /// See original documentation of CERNLIB package
-/// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html) <!--
+/// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
 
 float *TCL::tral(const float *a, const float *u, float *b, int m, int n)
 {
@@ -356,7 +357,7 @@ float *TCL::tral(const float *a, const float *u, float *b, int m, int n)
 /// Triangular - Rectangular Multiplication
 ///
 /// tral.F -- translated by f2c (version 19970219).
-/// CERN PROGLIB# F112    TRAL            .VERSION KERNFOR  4.15  861204 */
+/// CERN PROGLIB# F112    TRAL            .VERSION KERNFOR  4.15  861204
 /// ORIG. 18/12/74 WH
 ///
 /// See original documentation of CERNLIB package
@@ -459,7 +460,7 @@ double *TCL::tralt(const double *a, const double *u, double *b, int m, int n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Symmetric - Rectangular Multiplication
 ///
-/// CERN PROGLIB# F112    TRAS            .VERSION KERNFOR  4.15  861204 */
+/// CERN PROGLIB# F112    TRAS            .VERSION KERNFOR  4.15  861204
 /// ORIG. 18/12/74 WH
 /// tras.F -- translated by f2c (version 19970219).
 ///
@@ -475,7 +476,7 @@ float *TCL::tras(const float *a, const float *s, float *b, int m, int n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Symmetric - Rectangular Multiplication
 ///
-/// CERN PROGLIB# F112    TRAS            .VERSION KERNFOR  4.15  861204 */
+/// CERN PROGLIB# F112    TRAS            .VERSION KERNFOR  4.15  861204
 /// ORIG. 18/12/74 WH
 /// tras.F -- translated by f2c (version 19970219).
 ///
@@ -529,7 +530,7 @@ double *TCL::tras(const double *a, const double *s, double *b, int m, int n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Transformation of Symmetric Matrix
 ///
-/// CERN PROGLIB# F112    TRASAT          .VERSION KERNFOR  4.15  861204 */
+/// CERN PROGLIB# F112    TRASAT          .VERSION KERNFOR  4.15  861204
 /// ORIG. 18/12/74 WH
 /// trasat.F -- translated by f2c (version 19970219).
 ///
@@ -545,7 +546,7 @@ float *TCL::trasat(const float *a, const float *s, float *r__, int m, int n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Transformation of Symmetric Matrix
 ///
-/// CERN PROGLIB# F112    TRASAT          .VERSION KERNFOR  4.15  861204 */
+/// CERN PROGLIB# F112    TRASAT          .VERSION KERNFOR  4.15  861204
 /// ORIG. 18/12/74 WH
 /// trasat.F -- translated by f2c (version 19970219).
 ///
@@ -561,7 +562,7 @@ double *TCL::trasat(const double *a, const double *s, double *r__, int m, int n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Transformation of Symmetric Matrix
 ///
-/// CERN PROGLIB# F112    TRASAT          .VERSION KERNFOR  4.15  861204 */
+/// CERN PROGLIB# F112    TRASAT          .VERSION KERNFOR  4.15  861204
 /// ORIG. 18/12/74 WH
 /// trasat.F -- translated by f2c (version 19970219).
 ///
@@ -579,7 +580,7 @@ float *TCL::trasat(const double *a, const float *s, float *r__, int m, int n)
 ////////////////////////////////////////////////////////////////////////////////
 /// trata.F -- translated by f2c (version 19970219).
 ///
-/// CERN PROGLIB# F112    TRATA           .VERSION KERNFOR  4.15  861204 */
+/// CERN PROGLIB# F112    TRATA           .VERSION KERNFOR  4.15  861204
 /// ORIG. 18/12/74 WH
 ///
 /// See original documentation of CERNLIB package
@@ -951,7 +952,7 @@ float *TCL::trla(const float *u, const float *a, float *b, int m, int n)
 ///
 /// CERN PROGLIB# F112    TRLTA           .VERSION KERNFOR  4.15  861204
 /// ORIG. 18/12/74 WH
-//
+///
 /// See original documentation of CERNLIB package
 /// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
 
@@ -1167,7 +1168,7 @@ float *TCL::trsinv(const float *g, float *gi, int n)
 ////////////////////////////////////////////////////////////////////////////////
 /// trsmlu.F -- translated by f2c (version 19970219).
 ///
-/// CERN PROGLIB# F112    TRSMLU          .VERSION KERNFOR  4.15  861204 */
+/// CERN PROGLIB# F112    TRSMLU          .VERSION KERNFOR  4.15  861204
 /// ORIG. 18/12/74 WH
 ///
 /// See original documentation of CERNLIB package
@@ -1202,7 +1203,7 @@ float *TCL::trsmlu(const float *u, float *s, int n)
 ////////////////////////////////////////////////////////////////////////////////
 /// trsmul.F -- translated by f2c (version 19970219).
 ///
-/// CERN PROGLIB# F112    TRSMUL          .VERSION KERNFOR  4.15  861204 */
+/// CERN PROGLIB# F112    TRSMUL          .VERSION KERNFOR  4.15  861204
 /// ORIG. 18/12/74 WH
 ///
 /// See original documentation of CERNLIB package
@@ -1286,7 +1287,7 @@ float *TCL::trupck(const float *u, float *s, int m)
 } /* trupck_ */
 
 ////////////////////////////////////////////////////////////////////////////////
-///trsat.F -- translated by f2c (version 19970219).
+/// trsat.F -- translated by f2c (version 19970219).
 ///
 /// CERN PROGLIB# F112    TRSAT           .VERSION KERNFOR  4.15  861204
 /// ORIG. 18/12/74 WH
@@ -1300,7 +1301,6 @@ float *TCL::trsat(const float *s, const float *a, float *b, int m, int n)
    /* Local variables */
    int inds, i__, j, k, ia, ib, is;
    double sum;
-
 
    /* Parameter adjustments */
    --b;    --a;    --s;
@@ -1386,7 +1386,7 @@ double *TCL::trata(const double *a, double *r__, int m, int n)
 ///
 /// CERN PROGLIB# F112    TRATS           .VERSION KERNFOR  4.15  861204
 /// ORIG. 18/12/74 WH
-//
+///
 /// See original documentation of CERNLIB package
 /// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
 
@@ -1550,6 +1550,7 @@ L42:
 ///
 /// CERN PROGLIB# F112    TRCHUL          .VERSION KERNFOR  4.16  870601
 /// ORIG. 18/12/74 WH
+///
 /// See original documentation of CERNLIB package
 /// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
 
@@ -1613,7 +1614,6 @@ L42:
 /// CERN PROGLIB# F112    TRINV           .VERSION KERNFOR  4.15  861204
 /// ORIG. 18/12/74 WH
 ///
-///
 /// See original documentation of CERNLIB package
 /// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
 
@@ -1670,7 +1670,6 @@ double *TCL::trinv(const double *t, double *s, int n)
 ///
 /// CERN PROGLIB# F112    TRLA            .VERSION KERNFOR  4.15  861204
 /// ORIG. 18/12/74 WH
-///
 ///
 /// See original documentation of CERNLIB package
 /// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
