@@ -9,5 +9,5 @@ void read_from_file(){
 
     // Draw it
     auto myCanvas = new TCanvas();
-    h->Draw();
+    h->DrawClone();
 }
