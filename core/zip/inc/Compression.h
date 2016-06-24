@@ -32,7 +32,7 @@ namespace ROOT {
    // the level the greater the compression and more CPU time
    // and memory resources used during compression. Level 0
    // means no compression.
-   enum ECompressionAlgorithm { kUseGlobalSetting,
+   enum ECompressionAlgorithm { kUseGlobalCompressionSetting,
                                 kZLIB,
                                 kLZMA,
                                 kOldCompressionAlgo,
@@ -41,7 +41,11 @@ namespace ROOT {
                                 kUndefinedCompressionAlgorithm
    };
 
+   // Deprecated name, do *not* use:
+   static const enum ECompressionAlgorithm kUseGlobalSetting = kUseGlobalCompressionSetting;
+
 #if defined(__cplusplus)
+
    int CompressionSettings(ECompressionAlgorithm algorithm,
                            int compressionLevel);
 }

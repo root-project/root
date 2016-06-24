@@ -576,7 +576,7 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
     return;
   }
 
-  if (compressionAlgorithm == kUseGlobalSetting) {
+  if (compressionAlgorithm == kUseGlobalCompressionSetting) {
     compressionAlgorithm = R__ZipMode;
   }
 
@@ -589,7 +589,7 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
   // The very old algorithm for backward compatibility
   // 0 for selecting with R__ZipMode in a backward compatible way
   // 3 for selecting in other cases
-  if (compressionAlgorithm == kOldCompressionAlgo || compressionAlgorithm == kUseGlobalSetting) {
+  if (compressionAlgorithm == kOldCompressionAlgo || compressionAlgorithm == kUseGlobalCompressionSetting) {
     bits_internal_state state;
     ush att      = (ush)UNKNOWN;
     ush flags    = 0;
