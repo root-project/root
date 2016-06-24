@@ -8,6 +8,8 @@
 
 #include "Math/Util.h"
 
+#include "xxhash.h"
+
 
 namespace TMVA
 {
@@ -16,8 +18,16 @@ namespace TMVA
 
 
 
-
-
+/*! \brief xxHash initializations
+  *
+ * 
+ */
+	XXH32_state_t state;
+	int seed = 0x9747b28c;	// Used to initialize the hash value, use whatever
+				//   value you want, but always the same.
+	XXH32_reset(&state, seed);
+	
+	int BUCKET_SIZE = 8;
 
 
 
@@ -1415,7 +1425,8 @@ namespace TMVA
             if (eInitStrategy == WeightInitializationStrategy::XAVIER)
             {
                 // input and output properties
-                int numInput = inputSize ();
+                //int numInput = inputSize ();
+		int numInput = BUCKET_SIZE;
 
                 // compute variance and mean of input and output
                 //...
