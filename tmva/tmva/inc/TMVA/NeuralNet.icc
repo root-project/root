@@ -758,7 +758,7 @@ namespace TMVA
  * \param settings the settings for the training (e.g. multithreading or not, regularization etc.)
  */
         template <typename Minimizer>
-            double Net::train (std::vector<double>& weights, 
+            double Net::train (std::vector<double>& weightBucket, 
                                std::vector<Pattern>& trainPattern, 
                                const std::vector<Pattern>& testPattern, 
                                Minimizer& minimizer, Settings& settings)
@@ -822,7 +822,7 @@ namespace TMVA
                 {
                     if (isWeightsForDrop)
                     {
-                        dropOutWeightFactor (weights, dropFractions);
+                        dropOutWeightFactor (weightBucket, dropFractions);
                         isWeightsForDrop = false;
                     }
 
@@ -885,10 +885,10 @@ namespace TMVA
                             Batch batch (it, it+1);
                             output.clear ();
                             std::tuple<Settings&, Batch&, DropContainer&> passThrough (settings, batch, dropContainerTest);
-                            double testPatternError = (*this) (passThrough, weights, ModeOutput::FETCH, output);
+                            double testPatternError = (*this) (passThrough, weightBucket, ModeOutput::FETCH, output);
                             if (output.size () == 1)
                             {
-                                /* std::vector<double> out = (*this).compute (p.input (), weights); */
+                                /* std::vector<double> out = (*this).compute (p.input (), weightBucket); */
                                 /* assert (output.at (0) == out.at (0)); */
                                 settings.testSample (testPatternError, output.at (0), p.output ().at (0), weight);
                             }
@@ -901,12 +901,12 @@ namespace TMVA
                     settings.endTestCycle ();
 //                    testError /= weightSum;
 
-                    settings.computeResult (*this, weights);
+                    settings.computeResult (*this, weightBucket);
 
                     hasConverged = settings.hasConverged (testError);
                     if (!hasConverged && !isWeightsForDrop)
                     {
-                        dropOutWeightFactor (weights, dropFractions, true); // inverse
+                        dropOutWeightFactor (weightBucket, dropFractions, true); // inverse
                         isWeightsForDrop = true;
                     }
                 }
@@ -963,7 +963,7 @@ namespace TMVA
  * \param dropContainer the data for dropping-out nodes (regularization technique)
  */
         template <typename Iterator, typename Minimizer>
-            inline double Net::trainCycle (Minimizer& minimizer, std::vector<double>& weights, 
+            inline double Net::trainCycle (Minimizer& minimizer, std::vector<double>& weightBucket, 
                                            Iterator itPatternBegin, Iterator itPatternEnd, Settings& settings, DropContainer& dropContainer)
         {
             double error = 0.0;
@@ -1024,7 +1024,7 @@ namespace TMVA
                                         {
                                             Batch& batch = *it;
                                             std::tuple<Settings&, Batch&, DropContainer&> settingsAndBatch (settings, batch, dropContainer);
-                                            localError += minimizer ((*this), weights, settingsAndBatch); /// call the minimizer
+                                            localError += minimizer ((*this), weightBucket, settingsAndBatch); /// call the minimizer
                                         }
                                         return localError;
                                     })
@@ -1039,7 +1039,7 @@ namespace TMVA
                 for (auto& batch : batches)
                 {
                     std::tuple<Settings&, Batch&, DropContainer&> settingsAndBatch (settings, batch, dropContainer);
-                    error += minimizer ((*this), weights, settingsAndBatch);
+                    error += minimizer ((*this), weightBucket, settingsAndBatch);
                 }
             }
         
