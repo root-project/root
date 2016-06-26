@@ -13,17 +13,6 @@
  **********************************************************************/
 
 
-#if defined(__CINT__) && !defined(__MAKECINT__)
-// avoid to include header file when using CINT
-#ifndef _WIN32
-#include "../lib/libMathCore.so"
-#else
-#include "../bin/libMathCore.dll"
-#endif
-
-#else
-
-
 #ifndef ROOT_Math_QuantFuncMathCore
 #define ROOT_Math_QuantFuncMathCore
 
@@ -631,5 +620,3 @@ namespace Math {
 
 
 #endif // ROOT_Math_QuantFuncMathCore
-
-#endif // if defined (__CINT__) && !defined(__MAKECINT__)
