@@ -130,7 +130,7 @@ namespace cling {
     ///\param[in] PRT - the transaction (ParseResultTransaction, really) to be
     /// committed
     ///
-    void commitTransaction(ParseResultTransaction PRT);
+    void commitTransaction(ParseResultTransaction& PRT);
 
     ///\brief Runs the consumers (e.g. CodeGen) on a non-parsed transaction.
     ///
@@ -138,15 +138,11 @@ namespace cling {
     ///
     void emitTransaction(Transaction* T);
 
-    ///\brief Reverts the interpreter into its previous state.
-    ///
-    /// If one of the declarations caused error in clang it is rolled back from
-    /// the AST. This is essential feature for the error recovery subsystem.
-    /// Also this is a key entry point for the code unloading.
+    ///\brief Remove a Transaction from the collection of Transactions.
     ///
     ///\param[in] T - The transaction to be reverted from the AST
     ///
-    void rollbackTransaction(Transaction* T);
+    void deregisterTransaction(Transaction& T);
 
     ///\brief Returns the first transaction the incremental parser saw.
     ///
