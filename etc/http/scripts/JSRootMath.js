@@ -567,24 +567,29 @@
       return JSROOT.Math.chisquared_cdf_c(chi2,ndf,0);
    }
 
+   JSROOT.Math.Gaus = function(x, mean, sigma) {
+      return Math.exp(-0.5 * Math.pow((x-mean) / sigma, 2));
+   }
+
    JSROOT.Math.gaus = function(f, x, i) {
-      return f['fParams'][i+0] * Math.exp(-0.5 * Math.pow((x-f['fParams'][i+1]) / f['fParams'][i+2], 2));
+      // function used when gaus(0) used in the TFormula
+      return f.GetParValue(i+0) * Math.exp(-0.5 * Math.pow((x-f.GetParValue(i+1)) / f.GetParValue(i+2), 2));
    };
 
    JSROOT.Math.gausn = function(f, x, i) {
-      return JSROOT.Math.gaus(f, x, i)/(Math.sqrt(2 * Math.PI) * f['fParams'][i+2]);
+      return JSROOT.Math.gaus(f, x, i)/(Math.sqrt(2 * Math.PI) * f.GetParValue(i+2));
    };
 
    JSROOT.Math.expo = function(f, x, i) {
-      return Math.exp(f['fParams'][i+0] + f['fParams'][i+1] * x);
+      return Math.exp(f.GetParValue(i+0) + f.GetParValue(i+1) * x);
    };
 
    JSROOT.Math.landau = function(f, x, i) {
-      return JSROOT.Math.Landau(x, f['fParams'][i+1],f['fParams'][i+2], false);
+      return JSROOT.Math.Landau(x, f.GetParValue(i+1),f.GetParValue(i+2), false);
    }
 
    JSROOT.Math.landaun = function(f, x, i) {
-      return JSROOT.Math.Landau(x, f['fParams'][i+1],f['fParams'][i+2], true);
+      return JSROOT.Math.Landau(x, f.GetParValue(i+1),f.GetParValue(i+2), true);
    }
 
    return JSROOT;

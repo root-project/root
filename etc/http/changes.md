@@ -1,5 +1,26 @@
 # JSROOT changelog
 
+## Changes in 4.5.1
+1. Fix - correctly handle ^2..^9 in TFormula equations
+2. Fix - support TMath::Gaus in TFormula 
+3. Fix - correctly display ^2 and ^3 in SVG text output 
+4. Fix - do not show tooltips for empty TProfile bins
+5. Fix - statbox toggling was not working on subpads
+6. Fix - positioning of 3D objects in Webkit browsers in complex layouts
+7. Fix - difference in TF1 between ROOT5/6 (#54)  
+ 
+
+## Changes in 4.5.0
+1. Zooming with mouse wheel
+2. Context menus for many different objects attributes are provided
+3. Context menu for every drawn object can be activated via toolbar button 
+4. Support browsing of TTask and derived classes (#40)
+5. Apply user range for drawing TH1/TH2 histograms, also when superimposed (#44) 
+6. Implement scaling factor like x10^3 on the vertical axes 
+7. Provide shortcut buttons for each subpad
+8. Implement simple drawing for TBox, TWbox, TSliderBox classes
+
+
 ## Changes in 4.4.4
 1. Fix - toggling of statbox was not working in all situations 
 2. Fix - for mouse rect zooming use only left mouse button
@@ -31,7 +52,7 @@
 4. Fix - draw histogram bins on frame boundary
 5. Fix - use alternative color for shapes with default black color  
 6. Fix - correctly handle pcon/pgon shape with rmin==rmax on top or bottom side
-   
+  
 
 ## Changes in 4.4
 1. Fix faces orientation for all TGeo shapes. 
