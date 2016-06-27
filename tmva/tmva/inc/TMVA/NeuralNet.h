@@ -74,63 +74,80 @@ namespace TMVA
       {
       public:
       MeanVariance() 
-         : m_n(0)
-            , m_sumWeights(0)
-            , m_sumWeightsSquared(0)
-            , m_mean(0)
-            , m_squared(0)
-            {}
+          : m_n(0)
+              , m_sumWeights(0)
+              , m_mean(0)
+              , m_squared(0)
+          {}
 
-         inline void clear() 
-         { 
-            m_n = 0; 
-            m_sumWeights = 0;
-            m_sumWeightsSquared = 0;
-         }
+          inline void clear() 
+          { 
+              m_n = 0; 
+              m_sumWeights = 0;
+              m_mean = 0;
+              m_squared = 0;
+          }
 
-         template <typename T>
-            inline void add(T value, double weight = 1.0)
-            {
-               m_n++; // a value has been added
+          template <typename T>
+              inline void add(T value, double weight = 1.0)
+          {
+              ++m_n; // a value has been added
 
-               double dValue = (double)value;
-               if (m_n == 1) // initialization
-                  {
-                     m_mean = dValue;
-                     m_squared = 0.0;
-                     m_sumWeightsSquared = weight*weight;
-                     m_sumWeights = weight;
-                     return;
-                  }
+              if (m_n == 1) // initialization
+              {
+                  m_mean = value;
+                  m_squared = 0.0;
+                  m_sumWeights = weight;
+                  return;
+              }
 
-               double tmpWeight = m_sumWeights+weight;
-               double diff      = dValue - m_mean;
+              double tmpWeight = m_sumWeights+weight;
+              double Q      = value - m_mean;
 
-               double tmp = diff*weight/tmpWeight;
-               m_mean    = m_mean + tmp;
-               m_squared = m_squared + tmpWeight*diff*tmp;
+              double R = Q*weight/tmpWeight;
+              m_mean    += R;
+              m_squared += m_sumWeights*R*Q;
 
-               m_sumWeights = tmpWeight;
-               m_sumWeightsSquared += weight*weight;
-            }
+              m_sumWeights = tmpWeight;
+          }
+
+          template <typename ITERATOR>
+              inline void add (ITERATOR itBegin, ITERATOR itEnd)
+          {
+              for (ITERATOR it = itBegin; it != itEnd; ++it)
+                  add (*it);
+          }
 
 
 
-         inline int    count()      const { return m_n; }
-         inline double weights()    const { if(m_n==0) return 0; return m_sumWeights; }
-         inline double mean()       const { if(m_n==0) return 0; return m_mean; }
-         inline double var_N() const { if(m_n==0) return 0; return (m_squared/m_sumWeights); }
-         //        inline double var ()   const { return (Variance_N()*m_n/(m_n-1)); }    // unbiased for small sample sizes
-         inline double var ()   const { if(m_n==0) return 0; if(m_squared<=0) return 0.0; return (m_squared*m_sumWeights/(m_sumWeights*m_sumWeights-m_sumWeightsSquared)); }    // unbiased for small sample sizes
-         inline double stdDev_N () const { return sqrt( var_N() ); }
-         inline double stdDev ()   const { return sqrt( var() ); } // unbiased for small sample sizes
+          inline int    count()      const { return m_n; }
+          inline double weights()    const { if(m_n==0) return 0; return m_sumWeights; }
+          inline double mean()       const { if(m_n==0) return 0; return m_mean; }
+          inline double var() const
+          {
+              if(m_n==0)
+                  return 0;
+              if (m_squared <= 0)
+                  return 0;
+              return (m_squared/m_sumWeights);
+          }
+    
+          inline double var_corr ()   const
+          {
+              if (m_n <= 1)
+                  return var ();
+        
+              return (var()*m_n/(m_n-1));    // unbiased for small sample sizes
+          } 
+    
+          inline double stdDev_corr () const { return sqrt( var_corr() ); }
+          inline double stdDev ()   const { return sqrt( var() ); } // unbiased for small sample sizes
 
       private:
-         size_t m_n;
-         double m_sumWeights;
-         double m_sumWeightsSquared;
-         double m_mean;
-         double m_squared;
+          size_t m_n;
+          double m_sumWeights;
+          double m_mean;
+          double m_squared;
       };
 
 
