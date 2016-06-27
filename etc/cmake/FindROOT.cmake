@@ -7,6 +7,7 @@
 # ROOT_LIBRARIES      Most common libraries
 # ROOT_<name>_LIBRARY Full path to the library <name>
 # ROOT_LIBRARY_DIR    PATH to the library directory
+# ROOT_ETC_DIR        PATH to the etc directory
 # ROOT_DEFINITIONS    Compiler definitions
 # ROOT_CXX_FLAGS      Compiler flags to used by client packages
 # ROOT_C_FLAGS        Compiler flags to used by client packages
@@ -32,6 +33,12 @@ execute_process(
     OUTPUT_VARIABLE ROOT_INCLUDE_DIR
     OUTPUT_STRIP_TRAILING_WHITESPACE)
 set(ROOT_INCLUDE_DIRS ${ROOT_INCLUDE_DIR})
+
+execute_process(
+    COMMAND ${ROOT_CONFIG_EXECUTABLE} --etcdir
+    OUTPUT_VARIABLE ROOT_ETC_DIR
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+set(ROOT_ETC_DIRS ${ROOT_ETC_DIR})
 
 execute_process(
     COMMAND ${ROOT_CONFIG_EXECUTABLE} --libdir
