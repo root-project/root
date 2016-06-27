@@ -1165,7 +1165,7 @@
       this.select_main().property('flex_block_drag', true);
 
       this._controls = new THREE.OrbitControls(this._camera, this._renderer.domElement);
-      this._controls.enableDamping = true;
+      this._controls.enableDamping = false;
       this._controls.dampingFactor = 0.25;
       this._controls.enableZoom = true;
       this._controls.target.copy(this._lookat);

@@ -44,11 +44,6 @@
          if (requirejs.defined(module) || (cfg_paths && (module in cfg_paths)))
             delete paths[module];
 
-      // add mapping if script loaded as bower module 'jsroot'
-//      if (cfg_paths  && ('jsroot' in cfg_paths))
-//           requirejs.config({ map : { "*": { "JSRootCore": "jsroot" } } });
-
-
       // configure all dependencies
       requirejs.config({
         paths: paths,
@@ -94,7 +89,7 @@
    }
 } (function(JSROOT) {
 
-   JSROOT.version = "4.4.4 20/04/2016";
+   JSROOT.version = "4.5.1 27/06/2016";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -137,7 +132,7 @@
 
    // default draw styles, can be changed after loading of JSRootCore.js
    JSROOT.gStyle = {
-         Tooltip : 2, // 0 - off, 1-default, 2-advanced (experimental)
+         Tooltip : 1, // 0 - off, 1 - on
          ContextMenu : true,
          Zooming : true,
          MoveResize : true,   // enable move and resize of elements like statbox, title, pave, colz
@@ -157,8 +152,9 @@
          Palette : 57,
          MathJax : 0,  // 0 - never, 1 - only for complex cases, 2 - always
          ProgressBox : true,  // show progress box
-         Embed3DinSVG : 2,  // 0 - no embed, 1 - overlay over SVG (IE), 2 - embed into SVG (works only with Firefox and Chrome)
-         NoWebGL : false // if true, WebGL will be disabled
+         Embed3DinSVG : 2,  // 0 - no embed, only 3D plot, 1 - overlay over SVG (IE/WebKit), 2 - embed into SVG (only Firefox)
+         NoWebGL : false, // if true, WebGL will be disabled,
+         EndErrorSize : 2 // size in pixels of end error for E1 draw options
       };
 
    JSROOT.BIT = function(n) { return 1 << (n); }
@@ -711,8 +707,7 @@
 
       if (!('doing_assert' in jsroot)) jsroot.doing_assert = [];
 
-
-      if ((typeof kind != 'string') || (kind == ''))
+      if ((typeof kind !== 'string') || (kind == ''))
          return jsroot.CallBack(callback);
 
       if (kind=='__next__') {
@@ -1175,6 +1170,7 @@
             if (! ('_func' in this) || (this._title !== this.fTitle)) {
 
               var _func = this.fTitle;
+              if (_func === "gaus") _func = "gaus(0)";
 
               if ('formulas' in this)
                  for (var i=0;i<this.formulas.length;++i)
@@ -1186,6 +1182,7 @@
               if (typeof JSROOT.Math == 'object') {
                  this._math = JSROOT.Math;
                  _func = _func.replace('TMath::Prob(', 'this._math.Prob(');
+                 _func = _func.replace('TMath::Gaus(', 'this._math.Gaus(');
                  _func = _func.replace('gaus(', 'this._math.gaus(this, x, ');
                  _func = _func.replace('gausn(', 'this._math.gausn(this, x, ');
                  _func = _func.replace('expo(', 'this._math.expo(this, x, ');
@@ -1195,14 +1192,17 @@
               _func = _func.replace('pi', 'Math.PI');
               for (var i=0;i<this.fNpar;++i)
                  while(_func.indexOf('['+i+']') != -1)
-                    _func = _func.replace('['+i+']', this.GetParValue(i));
+                    _func = _func.replace('['+i+']', '('+this.GetParValue(i)+')');
               _func = _func.replace(/\b(sin)\b/gi, 'Math.sin');
               _func = _func.replace(/\b(cos)\b/gi, 'Math.cos');
               _func = _func.replace(/\b(tan)\b/gi, 'Math.tan');
               _func = _func.replace(/\b(exp)\b/gi, 'Math.exp');
+              for (var n=2;n<10;++n)
+                 _func = _func.replace('x^'+n, 'Math.pow(x,'+n+')');
 
-               this._func = new Function("x", "return " + _func).bind(this);
-               this._title = this.fTitle;
+              this._func = new Function("x", "return " + _func).bind(this);
+
+              this._title = this.fTitle;
             }
 
             return this._func(x);
@@ -1434,14 +1434,6 @@
       }
 
       var src = JSROOT.source_fullpath;
-
-//      if (JSROOT.source_min) {
-//         if ( typeof define === "function" && define.amd ) {
-            // all references are done with 'JSRootCore' name,
-            // define it directly, otherwise it will be loaded once again
-//            define('JSRootCore', [], JSROOT);
-//         }
-//      }
 
       if (JSROOT.GetUrlOption('gui', src) !== null)
          return window_on_load( function() { JSROOT.BuildSimpleGUI(); } );

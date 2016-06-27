@@ -33,7 +33,7 @@
    JSROOT.Painter.createMenu = function(maincallback, menuname) {
       if (!menuname || (typeof menuname !== 'string')) menuname = 'root_ctx_menu';
 
-      var menu = { element:null, code:"", cnt: 1, funcs : {}, separ : false };
+      var menu = { element: null, code: "", cnt: 1, funcs: {}, separ: false };
 
       menu.add = function(name, arg, func) {
          if (name == "separator") { this.code += "<li>-</li>"; this.separ = true; return; }
@@ -44,21 +44,21 @@
          }
 
          if (name=="endsub:") { this.code += "</ul></li>"; return; }
-         var close_tag = "</li>";
-         if (name.indexOf("sub:")==0) { name = name.substr(4); close_tag="<ul>"; }
+         var close_tag = "</li>", style = "padding-top:2px;padding-bottom:1px";
+         if (name.indexOf("sub:")==0) { name = name.substr(4); close_tag="<ul>"; style += ";padding-right:2em"}
 
-         if (typeof arg == 'function') { func = arg; arg = name; }
+         if (typeof arg == 'function') { func = arg; arg = name;  }
 
          // if ((arg==null) || (typeof arg != 'string')) arg = name;
 
-         if (name.indexOf("chk:")==0) { name = "<span class='ui-icon ui-icon-check'></span>" + name.substr(4); } else
-         if (name.indexOf("unk:")==0) { name = "<span class='ui-icon ui-icon-blank'></span>" + name.substr(4); }
+         if (name.indexOf("chk:")==0) { name = "<span class='ui-icon ui-icon-check' style='margin:1px'></span>" + name.substr(4); } else
+         if (name.indexOf("unk:")==0) { name = "<span class='ui-icon ui-icon-blank' style='margin:1px'></span>" + name.substr(4); }
 
          // special handling of first versions with menu support
          if (($.ui.version.indexOf("1.10")==0) || ($.ui.version.indexOf("1.9")==0))
             name = '<a href="#">' + name + '</a>';
 
-         this.code += "<li cnt='" + this.cnt + "' arg='" + arg + "'>" + name + close_tag;
+         this.code += "<li cnt='" + this.cnt + "' arg='" + arg + "' style='" + style + "'>" + name + close_tag;
          if (typeof func == 'function') this.funcs[this.cnt] = func; // keep call-back function
 
          this.cnt++;
@@ -86,17 +86,31 @@
       }
 
       menu.remove = function() {
-         if (this.element!==null) this.element.remove();
+         if (this.element!==null) {
+            this.element.remove();
+            if (this.close_callback) this.close_callback();
+            document.body.removeEventListener('click', this.remove_bind);
+         }
          this.element = null;
       }
 
-      menu.show = function(event) {
+      menu.remove_bind = menu.remove.bind(menu);
+
+      menu.show = function(event, close_callback) {
          this.remove();
 
-         document.body.onclick = function(e) { menu.remove(); }
+         if (typeof close_callback == 'function') this.close_callback = close_callback;
 
-         this.element = $(document.body).append('<ul class="jsroot_ctxmenu">' + this.code + '</ul>')
-                                        .find('.jsroot_ctxmenu');
+         document.body.addEventListener('click', this.remove_bind);
+
+         var oldmenu = document.getElementById(menuname);
+         if (oldmenu) oldmenu.parentNode.removeChild(oldmenu);
+
+         $(document.body).append('<ul class="jsroot_ctxmenu">' + this.code + '</ul>');
+
+         this.element = $('.jsroot_ctxmenu');
+
+         var pthis = this;
 
          this.element
             .attr('id', menuname)
@@ -109,11 +123,11 @@
                select: function( event, ui ) {
                   var arg = ui.item.attr('arg');
                   var cnt = ui.item.attr('cnt');
-                  var func = cnt ? menu.funcs[cnt] : null;
-                  menu.remove();
+                  var func = cnt ? pthis.funcs[cnt] : null;
+                  pthis.remove();
                   if (typeof func == 'function') {
                      if ('painter' in menu)
-                        func.bind(menu['painter'])(arg); // if 'painter' field set, returned as this to callback
+                        func.bind(pthis.painter)(arg); // if 'painter' field set, returned as this to callback
                      else
                         func(arg);
                   }
@@ -171,7 +185,10 @@
          can_click = true;
 
       var can_menu = can_click;
-      if (!can_menu && (typeof hitem._kind == 'string') && (hitem._kind.indexOf("ROOT.")==0)) can_menu = true;
+      if (!can_menu && (typeof hitem._kind == 'string') && (hitem._kind.indexOf("ROOT.")==0)) {
+         can_menu = true;
+         can_click = true;
+      }
 
       if (img2.length==0) img2 = img1;
       if (img1.length==0) img1 = (has_childs || hitem._more) ? "img_folder" : "img_page";
@@ -317,7 +334,7 @@
                .style('overflow', 'auto')
                .style('width', '100%')
                .style('height', '100%')
-               .style('font-size', this.with_icons ? "12px" : "15px" );
+               .style('font-size', this.with_icons ? "12px" : "15px");
 
       for (var n=0;n<factcmds.length;++n) {
          var btn =
@@ -378,11 +395,16 @@
       if (node===null) return;
       var d3cont = d3.select(node.parentNode);
       var itemname = d3cont.attr('item');
-
       if (itemname == null) return;
 
       var hitem = this.Find(itemname);
       if (hitem == null) return;
+
+      var prnt = hitem, dflt = undefined;
+      while (prnt) {
+         if ((dflt = prnt._click_action) !== undefined) break;
+         prnt = prnt._parent;
+      }
 
       if (!place || (place=="")) place = "item";
 
@@ -397,7 +419,8 @@
       if ((place=="item") && ('_expand' in hitem)) place = "plusminus";
 
       // special case - one should expand item
-      if ((place == "plusminus") && !('_childs' in hitem) && hitem._more)
+      if (((place == "plusminus") && !('_childs' in hitem) && hitem._more) ||
+          ((place == "item") && (dflt === "expand")))
          return this.expand(itemname, null, d3cont);
 
       if (place == "item") {
@@ -405,6 +428,7 @@
             return this.player(itemname);
 
          var handle = JSROOT.getDrawHandle(hitem._kind);
+
          if (handle != null) {
             if ('aslink' in handle)
                return window.open(itemname + "/");
@@ -419,10 +443,14 @@
                return this.expand(itemname, null, d3cont);
          }
 
-         if ((hitem['_childs'] == null))
+         if (!hitem._childs && (this.default_by_click === "expand"))
             return this.expand(itemname, null, d3cont);
 
-         if (!('_childs' in hitem) || (hitem === this.h)) return;
+         // cannot draw, but can inspect ROOT objects
+         if ((typeof hitem._kind === "string") && (hitem._kind.indexOf("ROOT.")===0))
+            return this.display(itemname, "inspect");
+
+         if (!hitem._childs || (hitem === this.h)) return;
       }
 
       if (hitem._isopen)
@@ -850,7 +878,7 @@
          .width(Math.round(w * 0.58))
          .height(Math.round(h * 0.58))
          .resizable({
-            helper: "flex-resizable-helper",
+            helper: "jsroot-flex-resizable-helper",
             start: function(event, ui) {
                // bring element to front when start resizing
                $(this).appendTo($(this).parent());
