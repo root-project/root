@@ -115,15 +115,15 @@ namespace TMVA
  */
         template <typename ItSource, typename ItWeight, typename ItTarget>
             void applyWeights (ItSource itSourceBegin, ItSource itSourceEnd,
-                               ItWeight itWeight,
+                               int weightIndex,
                                ItTarget itTargetBegin, ItTarget itTargetEnd)
         {
             for (auto itSource = itSourceBegin; itSource != itSourceEnd; ++itSource)
             {
                 for (auto itTarget = itTargetBegin; itTarget != itTargetEnd; ++itTarget)
                 {
-                    (*itTarget) += (*itSource) * (*itWeight);
-                    ++itWeight;
+                    (*itTarget) += (*itSource) * (weightBucket[XXH32(seed, weightIndex) % BUCKET_SIZE]);
+                    ++weightIndex;
                 }
             }
         }
