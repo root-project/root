@@ -12,18 +12,18 @@
 #ifndef ROOT_TPoolProcessor
 #define ROOT_TPoolProcessor
 
-#include "TMPWorker.h"
-#include "PoolUtils.h"
 #include "MPCode.h"
 #include "MPSendRecv.h"
+#include "PoolUtils.h"
+#include "TError.h"
+#include "TEntryList.h"
+#include "TEventList.h"
+#include "TFile.h"
+#include "TH1.h"
+#include "TKey.h"
+#include "TMPWorker.h"
 #include "TTree.h"
 #include "TTreeReader.h"
-#include "TEventList.h"
-#include "TEntryList.h"
-#include "TTree.h"
-#include "TFile.h"
-#include "TKey.h"
-#include "TH1.h"
 #include <memory>
 #include <string>
 #include <sstream>
@@ -152,7 +152,7 @@ void TPoolProcessor<F>::Process(unsigned code, MPCodeBufPair& msg)
    if (code == PoolCode::kProcRange || code == PoolCode::kProcTree) {
       if (code == PoolCode::kProcTree && !fTree) {
          // This must be defined
-         std::cerr << "[S]: Process:kProcTree fTree undefined!\n";
+         Error("TPoolProcessor::Process", "[S]: Process:kProcTree fTree undefined!\n");
          return;
       }
       //retrieve the total number of entries ranges processed so far by TPool

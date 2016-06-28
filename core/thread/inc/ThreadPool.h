@@ -48,7 +48,7 @@ public:
    using TPool<ThreadPool>::Reduce;
 
 private:
-         tbb::task_scheduler_init fInitTBB{tbb::task_scheduler_init::deferred};
+    tbb::task_scheduler_init fInitTBB{tbb::task_scheduler_init::deferred};
 };
 
 /************ TEMPLATE METHODS IMPLEMENTATION ******************/
