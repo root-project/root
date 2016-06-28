@@ -53,7 +53,7 @@ int NumericalMinimization(const char * minName = "Minuit2",
    min->SetTolerance(0.001);
    min->SetPrintLevel(1);
 
-   // create funciton wrapper for minmizer
+   // create function wrapper for minimizer
    // a IMultiGenFunction type
    ROOT::Math::Functor f(&RosenBrock,2);
    double step[2] = {0.01,0.01};
@@ -68,7 +68,7 @@ int NumericalMinimization(const char * minName = "Minuit2",
 
    min->SetFunction(f);
 
-   // Set the free variables to be minimized!
+   // Set the free variables to be minimized !
    min->SetVariable(0,"x",variable[0], step[0]);
    min->SetVariable(1,"y",variable[1], step[1]);
 
