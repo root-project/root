@@ -287,7 +287,6 @@ int TNetXNGSystem::Unlink(const char *path)
    XRootDStatus st = fFileSystem->Stat(url.GetPath(), info);
    if (!st.IsOK()) {
       Error("Unlink", "%s", st.GetErrorMessage().c_str());
-      delete info;
       return -1;
    }
 
