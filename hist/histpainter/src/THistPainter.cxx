@@ -217,7 +217,7 @@ using `TH1::GetOption`:
 | "E"      | Draw error bars. |
 | "AXIS"   | Draw only axis. |
 | "AXIG"   | Draw only grid (if the grid is requested). |
-| "HIST"   | When an histogram has errors it is visualized by default with error bars. To visualize it without errors use the option "HIST" together with the required option (eg "hist same c").  The "HIST" option can also be used to plot only the histogram and not the associated function(s). |
+| <a name="OPTHIST">"HIST"</a>   | When an histogram has errors it is visualized by default with error bars. To visualize it without errors use the option "HIST" together with the required option (eg "hist same c").  The "HIST" option can also be used to plot only the histogram and not the associated function(s). |
 | "FUNC"   | When an histogram has a fitted function, this option allows to draw the fit result only. |
 | "SAME"   | Superimpose on previous picture in the same pad. |
 | "LEGO"   | Draw a lego plot with hidden line removal. |
@@ -732,12 +732,10 @@ End_Macro
 ### <a name="HP10"></a> The "BAR" and "HBAR" options
 
 
-When the option "bar" or "hbar" is specified, a bar chart is drawn. A vertical
-bar-chart is drawn with the options `bar`, `bar0`,
-`bar1`, `bar2`, `bar3`, `bar4`.
-An horizontal bar-chart is drawn with the options `hbar`,
-`hbar0`, `hbar1`, `hbar2``, `hbar3`,
-`hbar4` (hbars.C).
+When the option `bar` or `hbar` is specified, a bar chart is drawn. A vertical
+bar-chart is drawn with the options `bar`, `bar0`, `bar1`, `bar2`, `bar3`, `bar4`.
+An horizontal bar-chart is drawn with the options `hbar`, `hbar0`, `hbar1`,
+`hbar2`, `hbar3`, `hbar4` (hbars.C).
 
 - The bar is filled with the histogram fill color.
 - The left side of the bar is drawn with a light fill color.
@@ -748,6 +746,8 @@ An horizontal bar-chart is drawn with the options `hbar`,
    - 20% for option "(h)bar2"
    - 30% for option "(h)bar3"
    - 40% for option "(h)bar4"
+
+When an histogram has errors the option ["HIST"](#OPTHIST) together with the `(h)bar` option.
 
 Begin_Macro(source)
 ../../../tutorials/hist/hbars.C
