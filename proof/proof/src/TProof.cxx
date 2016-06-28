@@ -5320,6 +5320,9 @@ Long64_t TProof::Process(TDSet *dset, const char *selector, Option_t *option,
       fWrksOutputReady->Clear();
    }
 
+   // Make sure the selector path is in the macro path
+   TProof::AssertMacroPath(selector);
+
    // Reset time measurements
    fQuerySTW.Reset();
 
@@ -8561,6 +8564,23 @@ Int_t TProof::UploadPackage(const char *pack, EUploadPackageOpt opt,
    return 0;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Make sure that the directory path contained by macro is in the macro path
+
+void TProof::AssertMacroPath(const char *macro)
+{
+   static TString macrop(gROOT->GetMacroPath());
+   if (macro && strlen(macro) > 0) {
+      TString dirn(gSystem->DirName(macro));
+      if (!macrop.Contains(dirn)) {
+         macrop += TString::Format("%s:", dirn.Data());
+         gROOT->SetMacroPath(macrop);
+      }
+   }
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Load the specified macro on master, workers and, if notOnClient is
 /// kFALSE, on the client. The macro file is uploaded if new or updated.
@@ -8586,6 +8606,9 @@ Int_t TProof::Load(const char *macro, Bool_t notOnClient, Bool_t uniqueWorkers,
       Error("Load", "need to specify a macro name");
       return -1;
    }
+
+   // Make sure the path is in the macro path
+   TProof::AssertMacroPath(macro);
 
    if (TestBit(TProof::kIsClient) && !wrks) {
 
