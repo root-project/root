@@ -98,6 +98,12 @@
 
 #include <TCanvas.h>
 
+Double_t auc[NumFolds];
+Int_t y[NumFolds];
+for(Int_t i = 0; i < NumFolds; i++){
+	y[i] = i+1;
+	}
+
 const Int_t  MinNoTrainingEvents = 10;
 //const Int_t  MinNoTestEvents     = 1;
 TFile* TMVA::Factory::fgTargetFile = 0;
@@ -2111,9 +2117,14 @@ float TMVA::Factory::CrossValidate(DataLoader * loader, Types::EMVA theMethod, T
       for(UInt_t l=0; l<ROCs.size(); ++l){
          if (rocIntegrals) rocIntegrals[l] = ROCs.at(l);
          std::cout << "Fold " << l+1 << " ROCIntegral: " << ROCs.at(l) << std::endl;
+	auc[l] = ROCs.at(l);
       }
       std::cout << "Average ROCIntegral: " << sumFOM/(double)NumFolds << std::endl;
    }
+
+   TCanvas c1 = new TCanvas("c1","AUC Histo");
+   gr = new TGraph(NumFolds, auc, y);
+   gr->Draw("AC*");
 
    return sumFOM/(double)NumFolds;
   
