@@ -518,7 +518,8 @@ namespace TMVA
             , m_deltas (other.m_deltas)
             , m_valueGradients (other.m_valueGradients)
             , m_values (other.m_values)
-            , m_hasDropOut (false)
+        , m_itDropOut (other.m_itDropOut)
+        , m_hasDropOut (other.m_hasDropOut)
             , m_itConstWeightBegin   (other.m_itConstWeightBegin)
             , m_itGradientBegin (other.m_itGradientBegin)
             , m_activationFunction (other.m_activationFunction)
@@ -537,14 +538,15 @@ namespace TMVA
             : m_size (other.m_size)
             , m_itInputBegin (other.m_itInputBegin)
             , m_itInputEnd (other.m_itInputEnd)
-            , m_deltas (other.m_deltas)
-            , m_valueGradients (other.m_valueGradients)
-            , m_values (other.m_values)
-            , m_hasDropOut (false)
+        , m_deltas (std::move(other.m_deltas))
+        , m_valueGradients (std::move(other.m_valueGradients))
+        , m_values (std::move(other.m_values))
+        , m_itDropOut (other.m_itDropOut)
+        , m_hasDropOut (other.m_hasDropOut)
             , m_itConstWeightBegin   (other.m_itConstWeightBegin)
             , m_itGradientBegin (other.m_itGradientBegin)
-            , m_activationFunction (other.m_activationFunction)
-            , m_inverseActivationFunction (other.m_inverseActivationFunction)
+        , m_activationFunction (std::move(other.m_activationFunction))
+        , m_inverseActivationFunction (std::move(other.m_inverseActivationFunction))
             , m_isInputLayer (other.m_isInputLayer)
             , m_hasWeights (other.m_hasWeights)
             , m_hasGradients (other.m_hasGradients)
@@ -583,7 +585,7 @@ namespace TMVA
          iterator_type valuesEnd   () { assert (!m_isInputLayer); return end (m_values); } ///< returns iterator to the end of the (node) values
 
          ModeOutputValues outputMode () const { return m_eModeOutput; } ///< returns the output mode
-         container_type probabilities () { return computeProbabilities (); } ///< computes the probabilities from the current node values and returns them 
+    container_type probabilities () const { return computeProbabilities (); } ///< computes the probabilities from the current node values and returns them 
 
          iterator_type deltasBegin () { return begin (m_deltas); } ///< returns iterator to the begin of the deltas (back-propagation)
          iterator_type deltasEnd   () { return end   (m_deltas); } ///< returns iterator to the end of the deltas (back-propagation)
@@ -617,7 +619,7 @@ namespace TMVA
          void clearDropOut () { m_hasDropOut = false; }
     
          bool hasDropOut () const { return m_hasDropOut; } ///< has this layer drop-out turned on?
-         const_dropout_iterator dropOut () const { return m_itDropOut; } ///< return the begin of the drop-out information
+    const_dropout_iterator dropOut () const { assert (m_hasDropOut); return m_itDropOut; } ///< return the begin of the drop-out information
     
          size_t size () const { return m_size; } ///< return the size of the layer
 
@@ -627,7 +629,7 @@ namespace TMVA
           *
           * 
           */
-         container_type computeProbabilities ();
+    container_type computeProbabilities () const;
 
       private:
     
@@ -643,7 +645,7 @@ namespace TMVA
          bool m_hasDropOut; ///< dropOut is turned on?
 
          const_iterator_type m_itConstWeightBegin; ///< const iterator to the first weight of this layer in the weight vector
-         iterator_type       m_itGradientBegin;  ///< const iterator to the first gradient of this layer in the gradient vector
+         iterator_type       m_itGradientBegin;  ///< iterator to the first gradient of this layer in the gradient vector
 
          std::shared_ptr<std::function<double(double)>> m_activationFunction; ///< activation function for this layer
          std::shared_ptr<std::function<double(double)>> m_inverseActivationFunction; ///< inverse activation function for this layer
@@ -712,9 +714,6 @@ namespace TMVA
       template <typename LAYERDATA>
          void forward (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData);
 
-      template <typename LAYERDATA>
-         void forward_training (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData);
-
 
       template <typename LAYERDATA>
          void backward (LAYERDATA& prevLayerData, LAYERDATA& currLayerData);
@@ -743,8 +742,7 @@ namespace TMVA
                    MinimizerType _eMinimizerType = MinimizerType::fSteepest, 
                    double _learningRate = 1e-5, double _momentum = 0.3, 
                    int _repetitions = 3,
-                   bool _multithreading = true,
-                   bool _doBatchNormalization = true);
+                   bool _multithreading = true);
     
          /*! \brief d'tor
           *
@@ -817,7 +815,6 @@ namespace TMVA
          EnumRegularization regularization () const { return m_regularization; } ///< some regularization of the DNN is turned on?
 
          bool useMultithreading () const { return m_useMultithreading; } ///< is multithreading turned on?
-         bool doBatchNormalization () const { return m_doBatchNormalization; }
 
 
          void pads (int numPads) { if (fMonitoring) fMonitoring->pads (numPads); } ///< preparation for monitoring
@@ -866,7 +863,6 @@ namespace TMVA
 
       protected:
          bool m_useMultithreading;
-         bool m_doBatchNormalization;
 
          std::shared_ptr<Monitoring> fMonitoring;
       };
@@ -909,10 +905,9 @@ namespace TMVA
                                  double _factorWeightDecay = 1e-5, EnumRegularization _regularization = EnumRegularization::NONE, 
                                  size_t _scaleToNumEvents = 0, MinimizerType _eMinimizerType = MinimizerType::fSteepest, 
                                  double _learningRate = 1e-5, double _momentum = 0.3, int _repetitions = 3,
-                                 bool _useMultithreading = true,
-                                 bool _useBatchNormalization = true)
+                                 bool _useMultithreading = true)
             : Settings (name, _convergenceSteps, _batchSize, _testRepetitions, _factorWeightDecay, 
-                        _regularization, _eMinimizerType, _learningRate, _momentum, _repetitions, _useMultithreading, _useBatchNormalization)
+                        _regularization, _eMinimizerType, _learningRate, _momentum, _repetitions, _useMultithreading)
             , m_ams ()
             , m_sumOfSigWeights (0)
             , m_sumOfBkgWeights (0)
@@ -1126,7 +1121,8 @@ namespace TMVA
             double train (std::vector<double>& weights, 
                           std::vector<Pattern>& trainPattern, 
                           const std::vector<Pattern>& testPattern, 
-                          Minimizer& minimizer, Settings& settings);
+                  Minimizer& minimizer,
+                  Settings& settings);
 
          /*! \brief pre-training for future use
           *
@@ -1150,9 +1146,12 @@ namespace TMVA
           */
          template <typename Iterator, typename Minimizer>
             inline double trainCycle (Minimizer& minimizer, std::vector<double>& weights, 
-                                      Iterator itPatternBegin, Iterator itPatternEnd, Settings& settings, DropContainer& dropContainer);
+			      Iterator itPatternBegin, Iterator itPatternEnd,
+                              Settings& settings,
+                              DropContainer& dropContainer);
 
          size_t numWeights (size_t trainingStartLayer = 0) const; ///< returns the number of weights in this net
+    size_t numNodes   (size_t trainingStartLayer = 0) const; ///< returns the number of nodes in this net
 
          template <typename Weights>
             std::vector<double> compute (const std::vector<double>& input, const Weights& weights) const; ///< compute the net with the given input and the given weights
@@ -1164,21 +1163,63 @@ namespace TMVA
             double operator() (PassThrough& settingsAndBatch, const Weights& weights, ModeOutput eFetch, OutContainer& outputContainer) const; ///< execute computation of the DNN for one mini-batch; helper function
     
          template <typename Weights, typename Gradients, typename PassThrough>
-            double operator() (PassThrough& settingsAndBatch, const Weights& weights, Gradients& gradients) const;  ///< execute computation of the DNN for one mini-batch (used by the minimizer); returns gradients as well
+        double operator() (PassThrough& settingsAndBatch, Weights& weights, Gradients& gradients) const;  ///< execute computation of the DNN for one mini-batch (used by the minimizer); returns gradients as well
 
          template <typename Weights, typename Gradients, typename PassThrough, typename OutContainer>
-            double operator() (PassThrough& settingsAndBatch, const Weights& weights, Gradients& gradients, ModeOutput eFetch, OutContainer& outputContainer) const;
+        double operator() (PassThrough& settingsAndBatch, Weights& weights, Gradients& gradients, ModeOutput eFetch, OutContainer& outputContainer) const;
 
 
+    template <typename LayerContainer, typename DropContainer, typename ItWeight, typename ItGradient>
+        std::vector<std::vector<LayerData>> prepareLayerData (LayerContainer& layers,
+                                                              Batch& batch,
+                                                              const DropContainer& dropContainer,
+                                                              ItWeight itWeightBegin,
+                                                              ItWeight itWeightEnd, 
+                                                              ItGradient itGradientBegin,
+                                                              ItGradient itGradientEnd,
+                                                              size_t& totalNumWeights) const;
+
+    template <typename LayerContainer>
+        void forwardPattern (const LayerContainer& _layers,
+                             std::vector<LayerData>& layerData) const;
 
 
-         /*! \brief main DNN computation function
+    template <typename LayerContainer, typename LayerPatternContainer>
+        void forwardBatch (const LayerContainer& _layers,
+                           LayerPatternContainer& layerPatternData,
+                           std::vector<double>& valuesMean,
+                           std::vector<double>& valuesStdDev,
+                           size_t trainFromLayer) const;
+    
+    template <typename OutputContainer>
+        void fetchOutput (const LayerData& lastLayerData, OutputContainer& outputContainer) const;
+
+    template <typename OutputContainer>
+        void fetchOutput (const std::vector<LayerData>& layerPatternData, OutputContainer& outputContainer) const;
+
+
+    template <typename ItWeight>
+        std::tuple</*sumError*/double,/*sumWeights*/double> computeError (const Settings& settings,
+                                                                          std::vector<LayerData>& lastLayerData,
+                                                                          Batch& batch,
+                                                                          ItWeight itWeightBegin,
+                                                                          ItWeight itWeightEnd) const;
+
+    template <typename Settings>
+        void backPropagate (std::vector<std::vector<LayerData>>& layerPatternData,
+                            const Settings& settings,
+                            size_t trainFromLayer,
+                            size_t totalNumWeights) const;
+
+    
+
+    /*! \brief main NN computation function
           *
           * 
           */
          template <typename LayerContainer, typename PassThrough, typename ItWeight, typename ItGradient, typename OutContainer>
             double forward_backward (LayerContainer& layers, PassThrough& settingsAndBatch, 
-                                     ItWeight itWeightBegin, 
+			     ItWeight itWeightBegin, ItWeight itWeightEnd, 
                                      ItGradient itGradientBegin, ItGradient itGradientEnd, 
                                      size_t trainFromLayer, 
                                      OutContainer& outputContainer, bool fetchOutput) const;
@@ -1236,6 +1277,7 @@ namespace TMVA
 
 
 
+typedef std::tuple<Settings&, Batch&, DropContainer&> pass_through_type;
 
 
 

@@ -75,11 +75,11 @@ namespace TMVA
 
 
 
-/*! \brief apply weights using drop-out
+/*! \brief apply weights using drop-out; for no drop out, provide (&bool = true) to itDrop such that *itDrop becomes "true"
  *
  * itDrop correlates with itSourceBegin 
  */
-        template <typename ItSource, typename ItWeight, typename ItTarget, typename ItDrop>
+template <bool HasDropOut, typename ItSource, typename ItWeight, typename ItTarget, typename ItDrop>
             void applyWeights (ItSource itSourceBegin, ItSource itSourceEnd,
                                ItWeight itWeight,
                                ItTarget itTargetBegin, ItTarget itTargetEnd,
@@ -89,80 +89,42 @@ namespace TMVA
             {
                 for (auto itTarget = itTargetBegin; itTarget != itTargetEnd; ++itTarget)
                 {
-                    if (*itDrop)
+            if (!HasDropOut || *itDrop)
                         (*itTarget) += (*itSource) * (*itWeight);
                     ++itWeight;
                 }
-                ++itDrop;        
-            }
-        }
-
-
-
-/*! \brief apply weights without drop-out
- *
- * 
- */
-        template <typename ItSource, typename ItWeight, typename ItTarget>
-            void applyWeights (ItSource itSourceBegin, ItSource itSourceEnd,
-                               ItWeight itWeight,
-                               ItTarget itTargetBegin, ItTarget itTargetEnd)
-        {
-            for (auto itSource = itSourceBegin; itSource != itSourceEnd; ++itSource)
-            {
-                for (auto itTarget = itTargetBegin; itTarget != itTargetEnd; ++itTarget)
-                {
-                    (*itTarget) += (*itSource) * (*itWeight);
-                    ++itWeight;
-                }
+        if (HasDropOut) ++itDrop;        
             }
         }
 
 
 
 
-/*! \brief apply weights backwards (for backprop)
- *
- * 
- */
-        template <typename ItSource, typename ItWeight, typename ItPrev>
-            void applyWeightsBackwards (ItSource itCurrBegin, ItSource itCurrEnd,
-                                        ItWeight itWeight,
-                                        ItPrev itPrevBegin, ItPrev itPrevEnd)
-        {
-            for (auto itPrev = itPrevBegin; itPrev != itPrevEnd; ++itPrev)
-            {
-                for (auto itCurr = itCurrBegin; itCurr != itCurrEnd; ++itCurr)
-                {
-                    (*itPrev) += (*itCurr) * (*itWeight);
-                    ++itWeight;
-                }
-            }
-        }
 
 
-
-/*! \brief apply weights backwards (for backprop)
+/*! \brief apply weights backwards (for backprop); for no drop out, provide (&bool = true) to itDrop such that *itDrop becomes "true"
  *
  * itDrop correlates with itPrev (to be in agreement with "applyWeights" where it correlates with itSources (same node as itTarget here in applyBackwards)
  */
-        template <typename ItSource, typename ItWeight, typename ItPrev, typename ItDrop>
+template <bool HasDropOut, typename ItSource, typename ItWeight, typename ItPrev, typename ItDrop>
             void applyWeightsBackwards (ItSource itCurrBegin, ItSource itCurrEnd,
                                         ItWeight itWeight,
-                                        ItPrev itPrevBegin, ItPrev itPrevEnd,
-                                        ItDrop itDrop)
+                            ItPrev itPrevBegin, ItPrev itPrevEnd,
+                            ItDrop itDrop)
         {
             for (auto itPrev = itPrevBegin; itPrev != itPrevEnd; ++itPrev)
             {
                 for (auto itCurr = itCurrBegin; itCurr != itCurrEnd; ++itCurr)
                 {
-                    if (*itDrop)
-                        (*itPrev) += (*itCurr) * (*itWeight);
-                    ++itWeight; 
+            if (!HasDropOut || *itDrop)
+                    (*itPrev) += (*itCurr) * (*itWeight);
+                    ++itWeight;
                 }
-                ++itDrop;
+        if (HasDropOut) ++itDrop;
             }
         }
+
+
 
 
 
@@ -221,7 +183,7 @@ namespace TMVA
                 auto itTargetGradient = itTargetGradientBegin;
                 while (itTargetDelta != itTargetDeltaEnd)
                 {
-                    (*itGradient) += - (*itTargetDelta) * (*itSource) * (*itTargetGradient);
+            (*itGradient) -= (*itTargetDelta) * (*itSource) * (*itTargetGradient);
                     ++itTargetDelta; ++itTargetGradient; ++itGradient;
                 }
                 ++itSource; 
@@ -325,7 +287,7 @@ namespace TMVA
                 auto itPrevG = begin (m_prevGradients);
                 auto itPrevGEnd = end (m_prevGradients);
                 auto itLocWeight = begin (localWeights);
-                for (; itPrevG != itPrevGEnd; ++itPrevG)
+                for (; itPrevG != itPrevGEnd; ++itPrevG, ++itLocWeight)
                 {
                     (*itPrevG) *= m_beta;
                     (*itLocWeight) += (*itPrevG);
@@ -333,6 +295,7 @@ namespace TMVA
 
                 E = fitnessFunction (passThrough, localWeights, gradients);
 //            plotGradients (gradients);
+//            plotWeights (localWeights);
 
                 double alpha = gaussDouble (m_alpha, m_alpha/2.0);
 //            double alpha = m_alpha;
@@ -380,6 +343,8 @@ namespace TMVA
             }
             return E;
         }
+
+
 
 
 
@@ -562,7 +527,7 @@ namespace TMVA
 
 
 
-/*! \brief apply the weights in forward direction of the DNN
+/*! \brief apply the weights (and functions) in forward direction of the DNN
  *
  * 
  */
@@ -571,63 +536,48 @@ namespace TMVA
         {
             if (prevLayerData.hasDropOut ())
             {        
-                applyWeights (prevLayerData.valuesBegin (), prevLayerData.valuesEnd (), 
+        applyWeights<true> (prevLayerData.valuesBegin (), prevLayerData.valuesEnd (), 
                               currLayerData.weightsBegin (), 
                               currLayerData.valuesBegin (), currLayerData.valuesEnd (),
                               prevLayerData.dropOut ());
             }
             else
             {
-                applyWeights (prevLayerData.valuesBegin (), prevLayerData.valuesEnd (), 
+        bool dummy = true;
+        applyWeights<false> (prevLayerData.valuesBegin (), prevLayerData.valuesEnd (), 
                               currLayerData.weightsBegin (), 
-                              currLayerData.valuesBegin (), currLayerData.valuesEnd ());
+                             currLayerData.valuesBegin (), currLayerData.valuesEnd (),
+                             &dummy); // dummy to turn on all nodes (no drop out)
             }
         }
 
-/*! \brief apply weights (and functions) in forward direction and compute the gradients
- *
- * 
- */
-        template <typename LAYERDATA>
-            void forward_training (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData)
-        {
-            if (prevLayerData.hasDropOut ())
-            {        
-                applyWeights (prevLayerData.valuesBegin (), prevLayerData.valuesEnd (), 
-                              currLayerData.weightsBegin (), 
-                              currLayerData.valuesBegin (), currLayerData.valuesEnd (),
-                              prevLayerData.dropOut ());
-            }
-            else
-            {
-                applyWeights (prevLayerData.valuesBegin (), prevLayerData.valuesEnd (), 
-                              currLayerData.weightsBegin (), 
-                              currLayerData.valuesBegin (), currLayerData.valuesEnd ());
-            }
-        }
 
 
 /*! \brief backward application of the weights (back-propagation of the error)
  *
  * 
  */
-        template <typename LAYERDATA>
-            void backward (LAYERDATA& prevLayerData, LAYERDATA& currLayerData)
-        {
-            if (prevLayerData.hasDropOut ())
-            {
-                applyWeightsBackwards (currLayerData.deltasBegin (), currLayerData.deltasEnd (), 
-                                       currLayerData.weightsBegin (), 
-                                       prevLayerData.deltasBegin (), prevLayerData.deltasEnd (),
-                                       prevLayerData.dropOut ());
-            }
-            else
-            {
-                applyWeightsBackwards (currLayerData.deltasBegin (), currLayerData.deltasEnd (), 
-                                       currLayerData.weightsBegin (), 
-                                       prevLayerData.deltasBegin (), prevLayerData.deltasEnd ());
-            }
-        }
+template <typename LAYERDATA>
+    void backward (LAYERDATA& prevLayerData, LAYERDATA& currLayerData)
+{
+    if (prevLayerData.hasDropOut ())
+    {
+        applyWeightsBackwards<true> (currLayerData.deltasBegin (), currLayerData.deltasEnd (), 
+                                     currLayerData.weightsBegin (), 
+                                     prevLayerData.deltasBegin (), prevLayerData.deltasEnd (),
+                                     prevLayerData.dropOut ());
+    }
+    else
+    {
+        bool dummy = true;
+        applyWeightsBackwards<false> (currLayerData.deltasBegin (), currLayerData.deltasEnd (), 
+                                      currLayerData.weightsBegin (), 
+                                      prevLayerData.deltasBegin (), prevLayerData.deltasEnd (),
+                                      &dummy); // dummy to use all nodes (no drop out)
+    }
+}
+
+
 
 
 
@@ -751,7 +701,8 @@ namespace TMVA
             double Net::train (std::vector<double>& weights, 
                                std::vector<Pattern>& trainPattern, 
                                const std::vector<Pattern>& testPattern, 
-                               Minimizer& minimizer, Settings& settings)
+                           Minimizer& minimizer,
+                           Settings& settings)
         {
 //        std::cout << "START TRAINING" << std::endl;
             settings.startTrainCycle ();
@@ -806,15 +757,16 @@ namespace TMVA
                 trainError = trainCycle (minimizer, weights, begin (trainPattern), end (trainPattern), settings, dropContainer);
 	    
 
-                // check if we execute a test
+	    // ------ check if we have to execute a test ------------------
                 bool hasConverged = false;
-                if (testCycleCount % settings.testRepetitions () == 0)
+            if (testCycleCount % settings.testRepetitions () == 0) // we test only everye "testRepetitions" repetition
                 {
                     if (isWeightsForDrop)
                     {
                         dropOutWeightFactor (weights, dropFractions);
                         isWeightsForDrop = false;
                     }
+
 
                     testError = 0;
                     //double weightSum = 0;
@@ -825,13 +777,14 @@ namespace TMVA
                         size_t patternPerThread = testPattern.size () / numThreads;
                         std::vector<Batch> batches;
                         auto itPat = testPattern.begin ();
-                        auto itPatEnd = testPattern.end ();
+                    // auto itPatEnd = testPattern.end ();
                         for (size_t idxThread = 0; idxThread < numThreads-1; ++idxThread)
                         {
                             batches.push_back (Batch (itPat, itPat + patternPerThread));
                             itPat += patternPerThread;
                         }
-                        batches.insert (batches.end (), Batch (itPat, itPatEnd));
+                    if (itPat != testPattern.end ())
+                        batches.push_back (Batch (itPat, testPattern.end ()));
 
                         std::vector<std::future<std::tuple<double,std::vector<double>>>> futures;
                         for (auto& batch : batches)
@@ -841,52 +794,58 @@ namespace TMVA
                                 std::async (std::launch::async, [&]() 
                                             {
                                                 std::vector<double> localOutput;
-                                                std::tuple<Settings&, Batch&, DropContainer&> passThrough (settings, batch, dropContainerTest);
+                                            pass_through_type passThrough (settings, batch, dropContainerTest);
                                                 double testBatchError = (*this) (passThrough, weights, ModeOutput::FETCH, localOutput);
                                                 return std::make_tuple (testBatchError, localOutput);
                                             })
                                 );
                         }
 
+                    auto itBatch = batches.begin  ();
                         for (auto& f : futures)
                         {
                             std::tuple<double,std::vector<double>> result = f.get ();
                             testError += std::get<0>(result) / batches.size ();
                             std::vector<double> output = std::get<1>(result);
-                            if (output.size () == testPattern.size ())
+
+                        //if (output.size () == testPattern.size ())
                             {
-                                auto it = begin (testPattern);
+                            //auto it = begin (testPattern);
+                            auto it = (*itBatch).begin ();
                                 for (double out : output)
                                 {
                                     settings.testSample (0, out, (*it).output ().at (0), (*it).weight ());
                                     ++it;
                                 }
                             }
+                        ++itBatch;
                         }
                     
                     }
                     else
                     {
                         std::vector<double> output;
-                        for (auto it = begin (testPattern), itEnd = end (testPattern); it != itEnd; ++it)
+                    //for (auto it = begin (testPattern), itEnd = end (testPattern); it != itEnd; ++it)
                         {
-                            const Pattern& p = (*it);
-                            double weight = p.weight ();
-                            Batch batch (it, it+1);
+                        //const Pattern& p = (*it);
+                        //double weight = p.weight ();
+                        //Batch batch (it, it+1);
+                        Batch batch (begin (testPattern), end (testPattern));
                             output.clear ();
-                            std::tuple<Settings&, Batch&, DropContainer&> passThrough (settings, batch, dropContainerTest);
+                        pass_through_type passThrough (settings, batch, dropContainerTest);
                             double testPatternError = (*this) (passThrough, weights, ModeOutput::FETCH, output);
-                            if (output.size () == 1)
+
+                        auto it = batch.begin ();
+                        for (double out : output)
                             {
-                                /* std::vector<double> out = (*this).compute (p.input (), weights); */
-                                /* assert (output.at (0) == out.at (0)); */
-                                settings.testSample (testPatternError, output.at (0), p.output ().at (0), weight);
+                            settings.testSample (0, out, (*it).output ().at (0), (*it).weight ());
+                            ++it;
                             }
                             //weightSum += fabs (weight);
                             //testError += testPatternError*weight;
-                            testError += testPatternError;
+                        testError += testPatternError; /// batch.size ();
                         }
-                        testError /= testPattern.size ();
+                    // testError /= testPattern.size ();
                     }
                     settings.endTestCycle ();
 //                    testError /= weightSum;
@@ -1013,7 +972,7 @@ namespace TMVA
                                         for (auto it = batchRange.first, itEnd = batchRange.second; it != itEnd; ++it)
                                         {
                                             Batch& batch = *it;
-                                            std::tuple<Settings&, Batch&, DropContainer&> settingsAndBatch (settings, batch, dropContainer);
+                                        pass_through_type settingsAndBatch (settings, batch, dropContainer);
                                             localError += minimizer ((*this), weights, settingsAndBatch); /// call the minimizer
                                         }
                                         return localError;
@@ -1059,6 +1018,8 @@ namespace TMVA
             auto itInputEnd = end (input);
             layerData.push_back (LayerData (itInputBegin, itInputEnd));
             size_t numNodesPrev = input.size ();
+        
+        // -------------------- prepare layer data with one pattern -------------------------------
             for (auto& layer: m_layers)
             {
                 layerData.push_back (LayerData (layer.numNodes (), itWeight, 
@@ -1071,24 +1032,11 @@ namespace TMVA
 	    
 
             // --------- forward -------------
-            size_t idxLayer = 0, idxLayerEnd = m_layers.size ();
-            for (; idxLayer < idxLayerEnd; ++idxLayer)
-            {
-                LayerData& prevLayerData = layerData.at (idxLayer);
-                LayerData& currLayerData = layerData.at (idxLayer+1);
-		
-                forward (prevLayerData, currLayerData);
-                applyFunctions (currLayerData.valuesBegin (), currLayerData.valuesEnd (), currLayerData.activationFunction ());
-            }
+        forwardPattern (m_layers, layerData);
 
             // ------------- fetch output ------------------
-            if (TMVA::DNN::isFlagSet (ModeOutputValues::DIRECT, layerData.back ().outputMode ()))
-            {
                 std::vector<double> output;
-                output.assign (layerData.back ().valuesBegin (), layerData.back ().valuesEnd ());
-                return output;
-            }
-            std::vector<double> output (layerData.back ().probabilities ());
+        fetchOutput (layerData.back (), output);
             return output;
         }
 
@@ -1098,7 +1046,7 @@ namespace TMVA
         {
             std::vector<double> nothing; // empty gradients; no backpropagation is done, just forward
             assert (numWeights () == weights.size ());
-            double error = forward_backward(m_layers, settingsAndBatch, std::begin (weights), std::begin (nothing), std::end (nothing), 10000, nothing, false);
+	double error = forward_backward(m_layers, settingsAndBatch, std::begin (weights), std::end (weights), std::begin (nothing), std::end (nothing), 10000, nothing, false);
             return error;
         }
 
@@ -1107,32 +1055,328 @@ namespace TMVA
         {
             std::vector<double> nothing; // empty gradients; no backpropagation is done, just forward
             assert (numWeights () == weights.size ());
-            double error = forward_backward(m_layers, settingsAndBatch, std::begin (weights), std::begin (nothing), std::end (nothing), 10000, outputContainer, true);
+	double error = forward_backward(m_layers, settingsAndBatch, std::begin (weights), std::end (weights), std::begin (nothing), std::end (nothing), 10000, outputContainer, true);
             return error;
         }
 
     
         template <typename Weights, typename Gradients, typename PassThrough>
-            double Net::operator() (PassThrough& settingsAndBatch, const Weights& weights, Gradients& gradients) const
+        double Net::operator() (PassThrough& settingsAndBatch, Weights& weights, Gradients& gradients) const
         {
             std::vector<double> nothing;
             assert (numWeights () == weights.size ());
             assert (weights.size () == gradients.size ());
-            double error = forward_backward(m_layers, settingsAndBatch, std::begin (weights), std::begin (gradients), std::end (gradients), 0, nothing, false);
+	double error = forward_backward(m_layers, settingsAndBatch, std::begin (weights), std::end (weights), std::begin (gradients), std::end (gradients), 0, nothing, false);
             return error;
         }
 
         template <typename Weights, typename Gradients, typename PassThrough, typename OutContainer>
-            double Net::operator() (PassThrough& settingsAndBatch, const Weights& weights, Gradients& gradients, ModeOutput eFetch, OutContainer& outputContainer) const
+        double Net::operator() (PassThrough& settingsAndBatch, Weights& weights, Gradients& gradients, ModeOutput eFetch, OutContainer& outputContainer) const
         {
             MATH_UNUSED(eFetch);
             assert (numWeights () == weights.size ());
             assert (weights.size () == gradients.size ());
-            double error = forward_backward(m_layers, settingsAndBatch, std::begin (weights), std::begin (gradients), std::end (gradients), 0, outputContainer, true);
+	double error = forward_backward(m_layers, settingsAndBatch, std::begin (weights), std::end (weights), std::begin (gradients), std::end (gradients), 0, outputContainer, true);
             return error;
         }
 
 
+
+    template <typename LayerContainer, typename DropContainer, typename ItWeight, typename ItGradient>
+        std::vector<std::vector<LayerData>> Net::prepareLayerData (LayerContainer& _layers,
+                                                                   Batch& batch,
+                                                                   const DropContainer& dropContainer,
+                                                                   ItWeight itWeightBegin,
+                                                                   ItWeight itWeightEnd, 
+                                                                   ItGradient itGradientBegin,
+                                                                   ItGradient itGradientEnd,
+                                                                   size_t& totalNumWeights) const
+    {
+        LayerData::const_dropout_iterator itDropOut;
+        bool usesDropOut = !dropContainer.empty ();
+        if (usesDropOut)
+            itDropOut = std::begin (dropContainer);
+        
+	if (_layers.empty ())
+	    throw std::string ("no layers in this net");
+        
+        
+        // ----------- create layer data -------------------------------------------------------
+        assert (_layers.back ().numNodes () == outputSize ());
+        totalNumWeights = 0;
+        size_t totalNumNodes = 0;
+        std::vector<std::vector<LayerData>> layerPatternData;
+        layerPatternData.reserve (_layers.size ()+1);
+        ItWeight itWeight = itWeightBegin;
+        ItGradient itGradient = itGradientBegin;
+        size_t numNodesPrev = inputSize ();
+        typename Pattern::const_iterator itInputBegin;
+        typename Pattern::const_iterator itInputEnd;
+
+        ItWeight itGammaBegin = itWeightBegin + numWeights ();
+        ItWeight itBetaBegin = itWeightBegin + numWeights () + numNodes ();
+        ItGradient itGradGammaBegin = itGradientBegin + numWeights ();
+        ItGradient itGradBetaBegin = itGradientBegin + numWeights () + numNodes ();
+
+        
+        // --------------------- prepare layer data for input layer ----------------------------
+        layerPatternData.push_back (std::vector<LayerData>());
+	for (const Pattern& _pattern : batch)
+        {
+            std::vector<LayerData>& layerData = layerPatternData.back ();
+            layerData.push_back (LayerData (numNodesPrev));
+
+            itInputBegin = _pattern.beginInput ();
+            itInputEnd = _pattern.endInput ();
+            layerData.back ().setInput (itInputBegin, itInputEnd);
+            
+            if (usesDropOut)
+                layerData.back ().setDropOut (itDropOut);
+
+        }
+
+        
+        if (usesDropOut)
+            itDropOut += _layers.back ().numNodes ();
+
+        // ---------------- prepare subsequent layers ---------------------------------------------
+        // for each of the layers
+        for (auto itLayer = begin (_layers), itLayerEnd = end (_layers); itLayer != itLayerEnd; ++itLayer)
+        {
+            bool isOutputLayer = (itLayer+1 == itLayerEnd);
+            bool isFirstHiddenLayer = (itLayer == begin (_layers));
+            
+            auto& layer = *itLayer;
+            layerPatternData.push_back (std::vector<LayerData>());
+            // for each pattern, prepare a layerData
+            for (const Pattern& _pattern : batch)
+            {
+                std::vector<LayerData>& layerData = layerPatternData.back ();
+                //layerData.push_back (LayerData (numNodesPrev));
+
+                if (itGradientBegin == itGradientEnd)
+                {
+                    layerData.push_back (LayerData (layer.numNodes (), itWeight, 
+                                                    layer.activationFunction (),
+                                                    layer.modeOutputValues ()));
+                }
+                else
+                {
+                    layerData.push_back (LayerData (layer.numNodes (), itWeight, itGradient, 
+                                                    layer.activationFunction (),
+                                                    layer.inverseActivationFunction (),
+                                                    layer.modeOutputValues ()));
+                }
+
+                if (usesDropOut)
+                {
+                    layerData.back ().setDropOut (itDropOut);
+                }
+
+            }
+
+            if (usesDropOut)
+            {
+                itDropOut += layer.numNodes ();
+            }
+            size_t _numWeights = layer.numWeights (numNodesPrev);
+            totalNumWeights += _numWeights;
+            itWeight += _numWeights;
+            itGradient += _numWeights;
+            numNodesPrev = layer.numNodes ();
+            totalNumNodes += numNodesPrev;
+
+        }
+	assert (totalNumWeights > 0);
+        return layerPatternData;
+}
+
+
+
+    template <typename LayerContainer>
+        void Net::forwardPattern (const LayerContainer& _layers,
+                                  std::vector<LayerData>& layerData) const
+    {
+	size_t idxLayer = 0, idxLayerEnd = m_layers.size ();
+        size_t cumulativeNodeCount = 0;
+	for (; idxLayer < idxLayerEnd; ++idxLayer)
+	{
+	    LayerData& prevLayerData = layerData.at (idxLayer);
+	    LayerData& currLayerData = layerData.at (idxLayer+1);
+		
+	    forward (prevLayerData, currLayerData);
+
+            applyFunctions (currLayerData.valuesBegin (), currLayerData.valuesEnd (), currLayerData.activationFunction ());
+	}
+    }
+
+
+
+
+    template <typename LayerContainer, typename LayerPatternContainer>
+        void Net::forwardBatch (const LayerContainer& _layers,
+                                LayerPatternContainer& layerPatternData,
+                                std::vector<double>& valuesMean,
+                                std::vector<double>& valuesStdDev,
+                                size_t trainFromLayer) const
+    {
+        valuesMean.clear ();
+        valuesStdDev.clear ();
+        
+        // ---------------------------------- loop over layers and pattern -------------------------------------------------------
+        size_t cumulativeNodeCount = 0;
+	for (size_t idxLayer = 0, idxLayerEnd = layerPatternData.size (); idxLayer < idxLayerEnd-1; ++idxLayer) 
+	{
+	    bool doTraining = idxLayer >= trainFromLayer;
+
+            // get layer-pattern data for this and the corresponding one from the next layer
+            std::vector<LayerData>& prevLayerPatternData = layerPatternData.at (idxLayer);
+            std::vector<LayerData>& currLayerPatternData = layerPatternData.at (idxLayer+1);
+
+            size_t numPattern = prevLayerPatternData.size ();
+            size_t numNodesLayer = _layers.at (idxLayer).numNodes ();
+
+            std::vector<MeanVariance> means (numNodesLayer);
+            // ---------------- loop over layerDatas of pattern compute forward ----------------------------
+            for (size_t idxPattern = 0; idxPattern < numPattern; ++idxPattern)
+            {
+		const LayerData& prevLayerData = prevLayerPatternData.at (idxPattern);
+		LayerData& currLayerData = currLayerPatternData.at (idxPattern);
+                
+            
+                forward (prevLayerData, currLayerData); // feed forward
+            }
+            
+            // ---------------- loop over layerDatas of pattern apply non-linearities ----------------------------
+            for (size_t idxPattern = 0; idxPattern < numPattern; ++idxPattern)
+            {
+		//const LayerData& prevLayerData = prevLayerPatternData.at (idxPattern);
+		LayerData& currLayerData = currLayerPatternData.at (idxPattern);
+                
+		if (doTraining)
+                    applyFunctions (currLayerData.valuesBegin (), currLayerData.valuesEnd (), currLayerData.activationFunction (), 
+                                    currLayerData.inverseActivationFunction (), currLayerData.valueGradientsBegin ());
+		else
+                    applyFunctions (currLayerData.valuesBegin (), currLayerData.valuesEnd (), currLayerData.activationFunction ());
+            }
+
+            // accumulate node count
+            cumulativeNodeCount += numNodesLayer;
+        }
+}
+
+
+
+
+    template <typename OutputContainer>
+        void Net::fetchOutput (const LayerData& lastLayerData, OutputContainer& outputContainer) const
+    {
+        ModeOutputValues eModeOutput = lastLayerData.outputMode ();
+        if (isFlagSet (ModeOutputValues::DIRECT, eModeOutput))
+        {
+            outputContainer.insert (outputContainer.end (), lastLayerData.valuesBegin (), lastLayerData.valuesEnd ());
+        }
+        else if (isFlagSet (ModeOutputValues::SIGMOID, eModeOutput) ||
+                 isFlagSet (ModeOutputValues::SOFTMAX, eModeOutput))
+        {
+            const auto& prob = lastLayerData.probabilities ();
+            outputContainer.insert (outputContainer.end (), prob.begin (), prob.end ()) ;
+        }
+        else
+            assert (false);
+    }
+
+
+
+
+    template <typename OutputContainer>
+        void Net::fetchOutput (const std::vector<LayerData>& lastLayerPatternData, OutputContainer& outputContainer) const
+    {
+        for (const LayerData& lastLayerData : lastLayerPatternData)
+            fetchOutput (lastLayerData, outputContainer);
+    }
+
+
+
+    template <typename ItWeight>
+        std::tuple</*sumError*/double,/*sumWeights*/double> Net::computeError (const Settings& settings,
+                                                                               std::vector<LayerData>& lastLayerData,
+                                                                               Batch& batch,
+                                                                               ItWeight itWeightBegin,
+                                                                               ItWeight itWeightEnd) const
+    {
+        typename std::vector<LayerData>::iterator itLayerData    = lastLayerData.begin ();
+        typename std::vector<LayerData>::iterator itLayerDataEnd = lastLayerData.end ();
+
+        typename std::vector<Pattern>::const_iterator itPattern = batch.begin ();
+        typename std::vector<Pattern>::const_iterator itPatternEnd = batch.end ();
+
+        double sumWeights (0.0);
+        double sumError (0.0);
+        
+        size_t idxPattern = 0;
+        for ( ; itPattern != itPatternEnd; ++itPattern, ++itLayerData)
+        {
+            ++idxPattern;
+                
+            // compute E and the deltas of the computed output and the true output
+            LayerData& layerData = (*itLayerData);
+            const Pattern& _pattern = (*itPattern);
+            double error = errorFunction (layerData, _pattern.output (), 
+                                          itWeightBegin, itWeightEnd, 
+                                          _pattern.weight (), settings.factorWeightDecay (),
+                                          settings.regularization ());
+            sumWeights += fabs (_pattern.weight ());
+            sumError += error;
+        }
+        return std::make_tuple (sumError, sumWeights);
+    }
+
+
+
+    template <typename Settings>
+        void Net::backPropagate (std::vector<std::vector<LayerData>>& layerPatternData,
+                                 const Settings& settings,
+                                 size_t trainFromLayer,
+                                 size_t totalNumWeights) const
+    {
+        bool doTraining = layerPatternData.size () > trainFromLayer;
+        if (doTraining) // training
+        {
+            // ------------- backpropagation -------------
+            size_t idxLayer = layerPatternData.size ();
+            for (auto itLayerPatternData = layerPatternData.rbegin (), itLayerPatternDataBegin = layerPatternData.rend ();
+                 itLayerPatternData != itLayerPatternDataBegin; ++itLayerPatternData)
+            {
+                --idxLayer;
+                if (idxLayer <= trainFromLayer) // no training
+                    break;
+
+                std::vector<LayerData>& currLayerDataColl = *(itLayerPatternData);
+                std::vector<LayerData>& prevLayerDataColl = *(itLayerPatternData+1);
+                
+                size_t idxPattern = 0;
+                for (typename std::vector<LayerData>::iterator itCurrLayerData = begin (currLayerDataColl), itCurrLayerDataEnd = end (currLayerDataColl),
+                     itPrevLayerData = begin (prevLayerDataColl), itPrevLayerDataEnd = end (prevLayerDataColl);
+                     itCurrLayerData != itCurrLayerDataEnd; ++itCurrLayerData, ++itPrevLayerData, ++idxPattern)
+                {
+                    LayerData& currLayerData = (*itCurrLayerData);
+                    LayerData& prevLayerData = *(itPrevLayerData);
+
+                    backward (prevLayerData, currLayerData);
+
+                    // the factorWeightDecay has to be scaled by 1/n where n is the number of weights (synapses)
+                    // because L1 and L2 regularization
+                    //
+                    //  http://neuralnetworksanddeeplearning.com/chap3.html#overfitting_and_regularization
+                    //
+                    // L1 : -factorWeightDecay*sgn(w)/numWeights
+                    // L2 : -factorWeightDecay/numWeights
+                    update (prevLayerData, currLayerData, settings.factorWeightDecay ()/totalNumWeights, settings.regularization ());
+                }
+            }
+        }
+    }
 
 
 
@@ -1142,258 +1386,54 @@ namespace TMVA
  */
         template <typename LayerContainer, typename PassThrough, typename ItWeight, typename ItGradient, typename OutContainer>
             double Net::forward_backward (LayerContainer& _layers, PassThrough& settingsAndBatch, 
-                                          ItWeight itWeightBegin, 
+                                      ItWeight itWeightBegin, ItWeight itWeightEnd,
                                           ItGradient itGradientBegin, ItGradient itGradientEnd, 
                                           size_t trainFromLayer, 
-                                          OutContainer& outputContainer, bool fetchOutput) const
+                                      OutContainer& outputContainer, bool doFetchOutput) const
         {
             Settings& settings = std::get<0>(settingsAndBatch);
             Batch& batch = std::get<1>(settingsAndBatch);
             DropContainer& dropContainer = std::get<2>(settingsAndBatch);
 
-            bool doBatchNormalization = settings.doBatchNormalization ();
-            bool usesDropOut = !dropContainer.empty ();
-
-            LayerData::const_dropout_iterator itDropOut;
-            if (usesDropOut)
-                itDropOut = std::begin (dropContainer);
-        
-            if (_layers.empty ())
-            {
-                std::cout << "no layers in this net" << std::endl;
-                throw std::string ("no layers in this net");
-            }
-
-
             double sumError = 0.0;
             double sumWeights = 0.0;	// -------------
 
-            // ----------- create layer data -------------------------------------------------------
-            assert (_layers.back ().numNodes () == outputSize ());
-            size_t totalNumWeights = 0;
-            std::vector<std::vector<LayerData>> layerPatternData;
-            layerPatternData.reserve (_layers.size ()+1);
-            ItWeight itWeight = itWeightBegin;
-            ItGradient itGradient = itGradientBegin;
-            size_t numNodesPrev = inputSize ();
-            typename Pattern::const_iterator itInputBegin;
-            typename Pattern::const_iterator itInputEnd;
 
-            // --------------------- prepare layer data for input layer ----------------------------
-            layerPatternData.push_back (std::vector<LayerData>());
-            layerPatternData.back () . reserve(batch.size());
-            for (const Pattern& _pattern : batch)
-            {
-                std::vector<LayerData>& layerData = layerPatternData.back ();
-                layerData.push_back (LayerData (numNodesPrev));
+        // ----------------------------- prepare layer data -------------------------------------
+        size_t totalNumWeights (0);
+        std::vector<std::vector<LayerData>> layerPatternData = prepareLayerData (_layers,
+                                                                                 batch,
+                                                                                 dropContainer,
+                                                                                 itWeightBegin,
+                                                                                 itWeightEnd, 
+                                                                                 itGradientBegin,
+                                                                                 itGradientEnd,
+                                                                                 totalNumWeights);
 
-                itInputBegin = _pattern.beginInput ();
-                itInputEnd = _pattern.endInput ();
-                layerData.back ().setInput (itInputBegin, itInputEnd);
             
-                if (usesDropOut)
-                {
-                    layerData.back ().setDropOut (itDropOut);
-                }
-            }
-            if (usesDropOut)
-            {
-                itDropOut += _layers.back ().numNodes ();
-            }
 
-            // ---------------- prepare subsequent layers ---------------------------------------------
-            // for each of the layers
-            for (auto& layer: _layers)
-            {
-                layerPatternData.push_back (std::vector<LayerData>());
-                layerPatternData.back () . reserve(batch.size());
-                // for each pattern, prepare a layerData
-                for (const Pattern& _pattern : batch)
-                {
-                    std::vector<LayerData>& layerData = layerPatternData.back ();
-                    //layerData.push_back (LayerData (numNodesPrev));
-
-                    if (itGradientBegin == itGradientEnd)
-                        layerData.push_back (LayerData (layer.numNodes (), itWeight, 
-                                                        layer.activationFunction (),
-                                                        layer.modeOutputValues ()));
-                    else
-                        layerData.push_back (LayerData (layer.numNodes (), itWeight, itGradient, 
-                                                        layer.activationFunction (),
-                                                        layer.inverseActivationFunction (),
-                                                        layer.modeOutputValues ()));
-
-                    if (usesDropOut)
-                    {
-                        layerData.back ().setDropOut (itDropOut);
-                    }
-                }
-
-                if (usesDropOut)
-                {
-                    itDropOut += layer.numNodes ();
-                }
-                size_t _numWeights = layer.numWeights (numNodesPrev);
-                totalNumWeights += _numWeights;
-                itWeight += _numWeights;
-                itGradient += _numWeights;
-                numNodesPrev = layer.numNodes ();
-            }
-            assert (totalNumWeights > 0);
-
-
-
-            // ---------------------------------- loop over layers and pattern -------------------------------------------------------
-            for (size_t idxLayer = 0, idxLayerEnd = layerPatternData.size (); idxLayer < idxLayerEnd-1; ++idxLayer) //std::vector<LayerData>& layerPattern : layerPatternData)
-            {
-                bool doTraining = idxLayer >= trainFromLayer;
-
-                // get layer-pattern data for this and the corresponding one from the next layer
-                std::vector<LayerData>& prevLayerPatternData = layerPatternData.at (idxLayer);
-                std::vector<LayerData>& currLayerPatternData = layerPatternData.at (idxLayer+1);
-
-                size_t numPattern = prevLayerPatternData.size ();
-
-                std::vector<MeanVariance> means (_layers.at (idxLayer).numNodes ());
-                // ---------------- loop over layerDatas of pattern compute forward ----------------------------
-                for (size_t idxPattern = 0; idxPattern < numPattern; ++idxPattern)
-                {
-                    const LayerData& prevLayerData = prevLayerPatternData.at (idxPattern);
-                    LayerData& currLayerData = currLayerPatternData.at (idxPattern);
-                
-            
-                    if (doTraining)
-                        forward_training (prevLayerData, currLayerData);
-                    else
-                        forward (prevLayerData, currLayerData);
-
-
-                    // -------- compute batch mean and variance if batch normalization is turned on ------------------
-                    if (doBatchNormalization && doTraining)
-                    {
-//                    means.at (idxPattern).add (*(prevLayerData.valuesBegin ()+idxPattern));
-                    }
-                }
-
-                // ---------------- do batch normalization ----------------------------
-                if (doBatchNormalization)
-                {
-                    if (doTraining) // take means and variances from batch
-                    {
-                        for (size_t idxPattern = 0; idxPattern < numPattern; ++idxPattern)
-                        {
-                        }
-                    }
-                    else // take average mean and variance for batch normalization
-                    {
-                    }
-                }
-            
-                // ---------------- loop over layerDatas of pattern apply non-linearities ----------------------------
-                for (size_t idxPattern = 0; idxPattern < numPattern; ++idxPattern)
-                {
-//                     const LayerData& prevLayerData = prevLayerPatternData.at (idxPattern);
-                    LayerData& currLayerData = currLayerPatternData.at (idxPattern);
-                
-                    if (doTraining)
-                        applyFunctions (currLayerData.valuesBegin (), currLayerData.valuesEnd (), currLayerData.activationFunction (), 
-                                        currLayerData.inverseActivationFunction (), currLayerData.valueGradientsBegin ());
-                    else
-                        applyFunctions (currLayerData.valuesBegin (), currLayerData.valuesEnd (), currLayerData.activationFunction ());
-                }
-
-            }
-
-
-
+        // ---------------------------------- propagate forward ------------------------------------------------------------------
+        std::vector<double> valuesMean;
+        std::vector<double> valuesStdDev;
+        forwardBatch (_layers, layerPatternData, valuesMean, valuesStdDev, trainFromLayer);
 
         
             // ------------- fetch output ------------------
-            if (fetchOutput)
+        if (doFetchOutput)
             {
-                for (LayerData& lastLayerData : layerPatternData.back ())
-                {
-                    ModeOutputValues eModeOutput = lastLayerData.outputMode ();
-                    if (TMVA::DNN::isFlagSet (ModeOutputValues::DIRECT, eModeOutput))
-                    {
-                        outputContainer.insert (outputContainer.end (), lastLayerData.valuesBegin (), lastLayerData.valuesEnd ());
-                    }
-                    else if (TMVA::DNN::isFlagSet (ModeOutputValues::SIGMOID, eModeOutput) ||
-                             TMVA::DNN::isFlagSet (ModeOutputValues::SOFTMAX, eModeOutput))
-                    {
-                        const auto& probs = lastLayerData.probabilities ();
-                        outputContainer.insert (outputContainer.end (), probs.begin (), probs.end ());
-                    }
-                    else
-                        assert (false);
-                }
+            fetchOutput (layerPatternData.back (), outputContainer);
             }
 
 
             // ------------- error computation -------------
-            std::vector<LayerData>& lastLayerData = layerPatternData.back ();
+        std::tie (sumError, sumWeights) = computeError (settings, layerPatternData.back (), batch, itWeightBegin, itWeightBegin + totalNumWeights);
 
-            bool doTraining = layerPatternData.size () > trainFromLayer;
 
-            typename std::vector<LayerData>::iterator itLayerData    = lastLayerData.begin ();
-            typename std::vector<LayerData>::iterator itLayerDataEnd = lastLayerData.end ();
-
-            typename std::vector<Pattern>::const_iterator itPattern = batch.begin ();
-            typename std::vector<Pattern>::const_iterator itPatternEnd = batch.end ();
-
-            size_t idxPattern = 0;
-            for ( ; itPattern != itPatternEnd; ++itPattern, ++itLayerData)
-            {
-                ++idxPattern;
-                
-                // compute E and the deltas of the computed output and the true output
-                LayerData& layerData = (*itLayerData);
-                const Pattern& _pattern = (*itPattern);
-                itWeight = itWeightBegin;
-                double error = errorFunction (layerData, _pattern.output (), 
-                                              itWeight, itWeight + totalNumWeights, 
-                                              _pattern.weight (), settings.factorWeightDecay (),
-                                              settings.regularization ());
-                sumWeights += fabs (_pattern.weight ());
-                sumError += error;
-            }
-            
-            if (doTraining) // training
-            {
                 // ------------- backpropagation -------------
-                size_t idxLayer = layerPatternData.size ();
-                for (auto itLayerPatternData = layerPatternData.rbegin (), itLayerPatternDataBegin = layerPatternData.rend ();
-                     itLayerPatternData != itLayerPatternDataBegin; ++itLayerPatternData)
-                {
-                    --idxLayer;
-                    if (idxLayer <= trainFromLayer) // no training
-                        break;
+        backPropagate (layerPatternData, settings, trainFromLayer, totalNumWeights);
 
-                    std::vector<LayerData>& currLayerDataColl = *(itLayerPatternData);
-                    std::vector<LayerData>& prevLayerDataColl = *(itLayerPatternData+1);
                 
-                    idxPattern = 0;
-                    for (typename std::vector<LayerData>::iterator itCurrLayerData = begin (currLayerDataColl), itCurrLayerDataEnd = end (currLayerDataColl),
-                             itPrevLayerData = begin (prevLayerDataColl), itPrevLayerDataEnd = end (prevLayerDataColl);
-                         itCurrLayerData != itCurrLayerDataEnd; ++itCurrLayerData, ++itPrevLayerData, ++idxPattern)
-                    {
-                        LayerData& currLayerData = (*itCurrLayerData);
-                        LayerData& prevLayerData = *(itPrevLayerData);
-
-                        backward (prevLayerData, currLayerData);
-
-                        // the factorWeightDecay has to be scaled by 1/n where n is the number of weights (synapses)
-                        // because L1 and L2 regularization
-                        //
-                        //  http://neuralnetworksanddeeplearning.com/chap3.html#overfitting_and_regularization
-                        //
-                        // L1 : -factorWeightDecay*sgn(w)/numWeights
-                        // L2 : -factorWeightDecay/numWeights
-                        update (prevLayerData, currLayerData, settings.factorWeightDecay ()/totalNumWeights, settings.regularization ());
-                    }
-                }
-            }
-        
+        // --- compile the measures
             double batchSize = std::distance (std::begin (batch), std::end (batch));
             for (auto it = itGradientBegin; it != itGradientEnd; ++it)
                 (*it) /= batchSize;
@@ -1574,116 +1614,115 @@ namespace TMVA
 
 
 
+// /*! \brief pre-training
+//  *
+//  * in development
+//  */
+//         template <typename Minimizer>
+//             void Net::preTrain (std::vector<double>& weights,
+//                                 std::vector<Pattern>& trainPattern,
+//                                 const std::vector<Pattern>& testPattern,
+//                                 Minimizer& minimizer, Settings& settings)
+//         {
+//             auto itWeightGeneral = std::begin (weights);
+//             std::vector<Pattern> prePatternTrain (trainPattern.size ());
+//             std::vector<Pattern> prePatternTest (testPattern.size ());
 
-/*! \brief pre-training
- *
- * in development
- */
-        template <typename Minimizer>
-            void Net::preTrain (std::vector<double>& weights,
-                                std::vector<Pattern>& trainPattern,
-                                const std::vector<Pattern>& testPattern,
-                                Minimizer& minimizer, Settings& settings)
-        {
-            auto itWeightGeneral = std::begin (weights);
-            std::vector<Pattern> prePatternTrain (trainPattern.size ());
-            std::vector<Pattern> prePatternTest (testPattern.size ());
+//             size_t _inputSize = inputSize ();
 
-            size_t _inputSize = inputSize ();
+//             // transform pattern using the created preNet
+//             auto initializePrePattern = [&](const std::vector<Pattern>& pttrnInput, std::vector<Pattern>& pttrnOutput)
+//                 {
+//                     pttrnOutput.clear ();
+//                     std::transform (std::begin (pttrnInput), std::end (pttrnInput),
+//                                     std::back_inserter (pttrnOutput), 
+//                                     [](const Pattern& p)
+//             {
+//                 Pattern pat (p.input (), p.input (), p.weight ());
+//                 return pat;
+//             });
+//                 };
 
-            // transform pattern using the created preNet
-            auto initializePrePattern = [&](const std::vector<Pattern>& pttrnInput, std::vector<Pattern>& pttrnOutput)
-                {
-                    pttrnOutput.clear ();
-                    std::transform (std::begin (pttrnInput), std::end (pttrnInput),
-                                    std::back_inserter (pttrnOutput), 
-                                    [](const Pattern& p)
-            {
-                Pattern pat (p.input (), p.input (), p.weight ());
-                return pat;
-            });
-                };
+//             initializePrePattern (trainPattern, prePatternTrain);
+//             initializePrePattern (testPattern, prePatternTest);
 
-            initializePrePattern (trainPattern, prePatternTrain);
-            initializePrePattern (testPattern, prePatternTest);
+//             std::vector<double> originalDropFractions = settings.dropFractions ();
 
-            std::vector<double> originalDropFractions = settings.dropFractions ();
+//             for (auto& _layer : layers ())
+//             {
+//                 // compute number of weights (as a function of the number of incoming nodes)
+//                 // fetch number of nodes
+//                 size_t numNodes = _layer.numNodes ();
+//                 size_t _numWeights = _layer.numWeights (_inputSize);
 
-            for (auto& _layer : layers ())
-            {
-                // compute number of weights (as a function of the number of incoming nodes)
-                // fetch number of nodes
-                size_t numNodes = _layer.numNodes ();
-                size_t _numWeights = _layer.numWeights (_inputSize);
+//                 // ------------------
+//                 DNN::Net preNet;
+//                 if (!originalDropFractions.empty ())
+//                 {
+//                     originalDropFractions.erase (originalDropFractions.begin ());
+//                     settings.setDropOut (originalDropFractions.begin (), originalDropFractions.end (), settings.dropRepetitions ());
+//                 }
+//                 std::vector<double> preWeights;
 
-                // ------------------
-                DNN::Net preNet;
-                if (!originalDropFractions.empty ())
-                {
-                    originalDropFractions.erase (originalDropFractions.begin ());
-                    settings.setDropOut (originalDropFractions.begin (), originalDropFractions.end (), settings.dropRepetitions ());
-                }
-                std::vector<double> preWeights;
+//                 // define the preNet (pretraining-net) for this layer
+//                 // outputSize == inputSize, because this is an autoencoder;
+//                 preNet.setInputSize (_inputSize);
+//                 preNet.addLayer (DNN::Layer (numNodes, _layer.activationFunctionType ()));
+//                 preNet.addLayer (DNN::Layer (_inputSize, DNN::EnumFunction::LINEAR, DNN::ModeOutputValues::DIRECT)); 
+//                 preNet.setErrorFunction (DNN::ModeErrorFunction::SUMOFSQUARES);
+//                 preNet.setOutputSize (_inputSize); // outputSize is the inputSize (autoencoder)
 
-                // define the preNet (pretraining-net) for this layer
-                // outputSize == inputSize, because this is an autoencoder;
-                preNet.setInputSize (_inputSize);
-                preNet.addLayer (DNN::Layer (numNodes, _layer.activationFunctionType ()));
-                preNet.addLayer (DNN::Layer (_inputSize, DNN::EnumFunction::LINEAR, DNN::ModeOutputValues::DIRECT)); 
-                preNet.setErrorFunction (DNN::ModeErrorFunction::SUMOFSQUARES);
-                preNet.setOutputSize (_inputSize); // outputSize is the inputSize (autoencoder)
+//                 // initialize weights
+//                 preNet.initializeWeights (DNN::WeightInitializationStrategy::XAVIERUNIFORM, 
+//                                           std::back_inserter (preWeights));
 
-                // initialize weights
-                preNet.initializeWeights (DNN::WeightInitializationStrategy::XAVIERUNIFORM, 
-                                          std::back_inserter (preWeights));
-
-                // overwrite already existing weights from the "general" weights
-                std::copy (itWeightGeneral, itWeightGeneral+_numWeights, preWeights.begin ());
-                std::copy (itWeightGeneral, itWeightGeneral+_numWeights, preWeights.begin ()+_numWeights); // set identical weights for the temporary output layer
+//                 // overwrite already existing weights from the "general" weights
+//                 std::copy (itWeightGeneral, itWeightGeneral+_numWeights, preWeights.begin ());
+//                 std::copy (itWeightGeneral, itWeightGeneral+_numWeights, preWeights.begin ()+_numWeights); // set identical weights for the temporary output layer
             
 
-                // train the "preNet"
-                preNet.train (preWeights, prePatternTrain, prePatternTest, minimizer, settings);
+//                 // train the "preNet"
+//                 preNet.train (preWeights, prePatternTrain, prePatternTest, minimizer, settings);
 
-                // fetch the pre-trained weights (without the output part of the autoencoder)
-                std::copy (std::begin (preWeights), std::begin (preWeights) + _numWeights, itWeightGeneral);
+//                 // fetch the pre-trained weights (without the output part of the autoencoder)
+//                 std::copy (std::begin (preWeights), std::begin (preWeights) + _numWeights, itWeightGeneral);
 
-                // advance the iterator on the incoming weights
-                itWeightGeneral += _numWeights;
+//                 // advance the iterator on the incoming weights
+//                 itWeightGeneral += _numWeights;
 
-                // remove the weights of the output layer of the preNet
-                preWeights.erase (preWeights.begin () + _numWeights, preWeights.end ());
+//                 // remove the weights of the output layer of the preNet
+//                 preWeights.erase (preWeights.begin () + _numWeights, preWeights.end ());
 
-                // remove the outputLayer of the preNet
-                preNet.removeLayer ();
+//                 // remove the outputLayer of the preNet
+//                 preNet.removeLayer ();
 
-                // set the output size to the number of nodes in the new output layer (== last hidden layer)
-                preNet.setOutputSize (numNodes);
+//                 // set the output size to the number of nodes in the new output layer (== last hidden layer)
+//                 preNet.setOutputSize (numNodes);
             
-                // transform pattern using the created preNet
-                auto proceedPattern = [&](std::vector<Pattern>& pttrn)
-                    {
-                        std::vector<Pattern> newPttrn;
-                        std::for_each (std::begin (pttrn), std::end (pttrn),
-                                       [&preNet,&preWeights,&newPttrn](Pattern& p)
-                {
-                    std::vector<double> output = preNet.compute (p.input (), preWeights);
-                    Pattern pat (output, output, p.weight ());
-                    newPttrn.push_back (pat);
-//                    p = pat;
-                });
-                        return newPttrn;
-                    };
+//                 // transform pattern using the created preNet
+//                 auto proceedPattern = [&](std::vector<Pattern>& pttrn)
+//                     {
+//                         std::vector<Pattern> newPttrn;
+//                         std::for_each (std::begin (pttrn), std::end (pttrn),
+//                                        [&preNet,&preWeights,&newPttrn](Pattern& p)
+//                 {
+//                     std::vector<double> output = preNet.compute (p.input (), preWeights);
+//                     Pattern pat (output, output, p.weight ());
+//                     newPttrn.push_back (pat);
+// //                    p = pat;
+//                 });
+//                         return newPttrn;
+//                     };
 
 
-                prePatternTrain = proceedPattern (prePatternTrain);
-                prePatternTest = proceedPattern (prePatternTest);
+//                 prePatternTrain = proceedPattern (prePatternTrain);
+//                 prePatternTest = proceedPattern (prePatternTest);
 
 
-                // the new input size is the output size of the already reduced preNet
-                _inputSize = preNet.layers ().back ().numNodes ();
-            }
-        }
+//                 // the new input size is the output size of the already reduced preNet
+//                 _inputSize = preNet.layers ().back ().numNodes ();
+//             }
+//         }
 
 
 
