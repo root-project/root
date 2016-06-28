@@ -44,6 +44,9 @@ class TMethod;
 class TObjArray;
 class TEnum;
 class TListOfEnums;
+namespace cling {
+   class ClingTabCompletion;
+}   
 
 R__EXTERN TVirtualMutex *gInterpreterMutex;
 
@@ -228,6 +231,8 @@ public:
    virtual void   SetTempLevel(int /* val */) const {;}
    virtual int    UnloadFile(const char * /* path */) const {return 0;}
    virtual TInterpreterValue *CreateTemporary() { return 0; }
+   virtual void   CodeComplete(const std::string&, size_t&,
+                               std::vector<std::string>&) {;}
 
    // core/meta helper functions.
    virtual EReturnType MethodCallReturnType(TFunction *func) const = 0;

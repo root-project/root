@@ -33,58 +33,75 @@ using namespace textinput;
 
 namespace {
    // TTabCom adapter.
-   class ROOTTabCompletion: public TabCompletion {
-   public:
-      ROOTTabCompletion(): fLineBuf(new char[fgLineBufSize]) {}
-      virtual ~ROOTTabCompletion() { delete []fLineBuf; }
+   // class ROOTTabCompletion: public TabCompletion {
+   // public:
+   //    ROOTTabCompletion(): fLineBuf(new char[fgLineBufSize]) {}
+   //    virtual ~ROOTTabCompletion() { delete []fLineBuf; }
 
-      ROOTTabCompletion(const ROOTTabCompletion&) = delete;
-      ROOTTabCompletion& operator=(const ROOTTabCompletion&) = delete;
+   //    ROOTTabCompletion(const ROOTTabCompletion&) = delete;
+   //    ROOTTabCompletion& operator=(const ROOTTabCompletion&) = delete;
+
+   //    // Returns false on error
+   //    bool Complete(Text& line /*in+out*/, size_t& cursor /*in+out*/,
+   //                  EditorRange& r /*out*/,
+   //                  std::vector<std::string>& displayCompletions /*out*/) {
+   //       strlcpy(fLineBuf, line.GetText().c_str(), fgLineBufSize);
+   //       int cursorInt = (int) cursor;
+   //       std::stringstream sstr;
+   //       size_t posFirstChange = gApplication->TabCompletionHook(fLineBuf, &cursorInt, sstr);
+   //       if (posFirstChange == (size_t) -1) {
+   //          // no change
+   //          return true;
+   //       }
+
+   //       line = std::string(fLineBuf);
+   //       std::string compLine;
+   //       while (std::getline(sstr, compLine)) {
+   //          displayCompletions.push_back(compLine);
+   //       }
+   //       std::sort(displayCompletions.begin(), displayCompletions.end());
+
+   //       size_t lenLineBuf = strlen(fLineBuf);
+   //       if (posFirstChange == (size_t) -2) {
+   //          // redraw whole line, incl prompt
+   //          r.fEdit.Extend(Range::AllWithPrompt());
+   //          r.fDisplay.Extend(Range::AllWithPrompt());
+   //       } else {
+   //          if (!lenLineBuf) {
+   //             r.fEdit.Extend(Range::AllText());
+   //             r.fDisplay.Extend(Range::AllText());
+   //          } else {
+   //             r.fEdit.Extend(Range(posFirstChange, Range::End()));
+   //             r.fDisplay.Extend(Range(posFirstChange, Range::End()));
+   //          }
+   //       }
+   //       cursor = (size_t)cursorInt;
+   //       line.GetColors().resize(lenLineBuf);
+   //       return true;
+   //    }
+   // private:
+   //    static const size_t fgLineBufSize;
+   //    char* fLineBuf;
+   // };
+   // const size_t ROOTTabCompletion::fgLineBufSize = 16*1024;
+
+   class TClingTabCompletion: public TabCompletion {
+   public:
+      TClingTabCompletion() {}
+      virtual ~TClingTabCompletion() {}
+
+      TClingTabCompletion(const TClingTabCompletion&) = delete;
+      TClingTabCompletion& operator=(const TClingTabCompletion&) = delete;
 
       // Returns false on error
       bool Complete(Text& line /*in+out*/, size_t& cursor /*in+out*/,
                     EditorRange& r /*out*/,
                     std::vector<std::string>& displayCompletions /*out*/) {
-         strlcpy(fLineBuf, line.GetText().c_str(), fgLineBufSize);
-         int cursorInt = (int) cursor;
-         std::stringstream sstr;
-         size_t posFirstChange = gApplication->TabCompletionHook(fLineBuf, &cursorInt, sstr);
-         if (posFirstChange == (size_t) -1) {
-            // no change
-            return true;
-         }
-
-         line = std::string(fLineBuf);
-         std::string compLine;
-         while (std::getline(sstr, compLine)) {
-            displayCompletions.push_back(compLine);
-         }
-         std::sort(displayCompletions.begin(), displayCompletions.end());
-
-         size_t lenLineBuf = strlen(fLineBuf);
-         if (posFirstChange == (size_t) -2) {
-            // redraw whole line, incl prompt
-            r.fEdit.Extend(Range::AllWithPrompt());
-            r.fDisplay.Extend(Range::AllWithPrompt());
-         } else {
-            if (!lenLineBuf) {
-               r.fEdit.Extend(Range::AllText());
-               r.fDisplay.Extend(Range::AllText());
-            } else {
-               r.fEdit.Extend(Range(posFirstChange, Range::End()));
-               r.fDisplay.Extend(Range(posFirstChange, Range::End()));
-            }
-         }
-         cursor = (size_t)cursorInt;
-         line.GetColors().resize(lenLineBuf);
+         gInterpreter->CodeComplete(line.GetText(), cursor,
+                                          displayCompletions);
          return true;
       }
-   private:
-      static const size_t fgLineBufSize;
-      char* fLineBuf;
    };
-   const size_t ROOTTabCompletion::fgLineBufSize = 16*1024;
-
 
    // Helper to define the lifetime of the TextInput singleton.
    class TextInputHolder {
@@ -144,7 +161,7 @@ namespace {
       Reader* fReader; // Default StreamReader
       std::string fInputLine; // Taken from TextInput
       ROOT::TextInputColorizer fCol; // Colorizer
-      ROOTTabCompletion fTabComp; // Tab completion handler / TTabCom adapter
+      TClingTabCompletion fTabComp; // Tab completion handler / TTabCom adapter
 
       // Config values:
       static std::string fgHistoryFile;

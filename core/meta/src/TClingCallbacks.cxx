@@ -14,6 +14,7 @@
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/InterpreterCallbacks.h"
 #include "cling/Interpreter/Transaction.h"
+#include "cling/Interpreter/ClingTabCompletion.h" 
 #include "cling/Utils/AST.h"
 
 #include "clang/AST/ASTConsumer.h"
