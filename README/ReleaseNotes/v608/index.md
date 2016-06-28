@@ -140,8 +140,8 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 ## Math Libraries
 
 * Improve thread safety of TMinuit constructor [ROOT-8217]
-* Vc has ben removed from the ROOT sources. If the option 'vc' is enabled, the package will be searched (by default), 
-  alternatively the source tarfile can be downloded and build with the option 'builtin_vc'. 
+* Vc has ben removed from the ROOT sources. If the option 'vc' is enabled, the package will be searched (by default),
+  alternatively the source tarfile can be downloded and build with the option 'builtin_vc'.
 
 ## RooFit Libraries
 
@@ -214,9 +214,10 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 * New optional parameter "option" in TPad::BuildLegend to set the TLegend option (Georg Troska).
 * TCandle: a new candle plot painter class. It is now used in THistPainter and THStack
   to paint candle plots (Georg Troska).
-* Fix two issues with the fill patterns in `TTextDump` (reported [here](https://sft.its.cern.ch/jira/browse/ROOT-8206)):
+* Fix two issues with the fill patterns in `TTeXDump` (reported [here](https://sft.its.cern.ch/jira/browse/ROOT-8206)):
     - The pattern number 3 was not implemented.
     - Filled area drawn with pattern where surrounded by a solid line.
+* Support custom line styles in `TTeXDump` as requested [here](https://sft.its.cern.ch/jira/browse/ROOT-8215)
 * `TColor::GetFreeColorIndex()` allows to make sure the new color is created with an
   unused color index.
 
