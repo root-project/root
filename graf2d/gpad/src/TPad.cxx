@@ -4106,6 +4106,15 @@ TPad *TPad::Pick(Int_t px, Int_t py, TObjLink *&pickobj)
       if (!button->IsEditable()) pickobj = 0;
    }
 
+   if (TestBit(kCannotPick)) {
+
+      if (picked == this) {
+         // cannot pick pad itself!
+         picked = 0;
+      }
+
+   }
+
    gPad = padsav;
    return picked;
 }
