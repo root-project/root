@@ -32,9 +32,10 @@
 class TBrowser;
 class TFileMergeInfo;
 
-class TRatioPlot : public TNamed {
+class TRatioPlot : /*public TNamed,*/ public TPad {
 private:
    TRatioPlot& operator=(const TRatioPlot&); // Not implemented
+   TRatioPlot(const TRatioPlot &hrp);
    static const Int_t DIVIDE_HIST = 1;
    static const Int_t DIVIDE_GRAPH = 2;
 
@@ -56,23 +57,23 @@ protected:
    TAxis *fSharedXAxis;
 
 
-   void BuildRatio();
-   void CalculateSizes();
-   void SetupPads();
-
+   virtual void BuildRatio();
+   virtual void CalculateSizes();
+   virtual void SyncAxesRanges();
+   virtual void SetupPads();
 
 public:
 
    TRatioPlot();
    TRatioPlot(TH1* h1, TH1* h2, const char *name /*=0*/, const char *title /*=0*/, Option_t *divideOption = "");
-   TRatioPlot(const TRatioPlot &hrp);
-   virtual ~TRatioPlot();
+//   virtual ~TRatioPlot();
    virtual void     Draw(Option_t *chopt="");
    virtual void Browse(TBrowser *b);
 
    virtual void SetSplitFraction(Float_t sf);
    virtual void Paint(Option_t *opt = "");
 
+   virtual void UnZoom(TAxis*);
 
 
    ClassDef(TRatioPlot, 1)  //A ratio of histograms
