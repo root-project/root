@@ -681,11 +681,18 @@ void TUnixSystem::SetDisplay()
             }
 #ifndef UTMP_NO_ADDR
             else if (utmp_entry->ut_addr) {
-               struct hostent *he;
-               if ((he = gethostbyaddr((const char*)&utmp_entry->ut_addr,
-                                       sizeof(utmp_entry->ut_addr), AF_INET))) {
+
+               struct sockaddr_in addr;
+               addr.sin_family = AF_INET;
+               addr.sin_port = 0;
+               memcpy(&addr.sin_addr, &utmp_entry->ut_addr, sizeof(addr.sin_addr));
+               memset(&addr.sin_zero[0], 0, sizeof(addr.sin_zero));
+               struct sockaddr *sa = (struct sockaddr *) &addr;    // input
+
+               char hbuf[NI_MAXHOST];
+               if (getnameinfo(sa, sizeof(struct sockaddr), hbuf, sizeof(hbuf), nullptr, 0, NI_NAMEREQD) == 0) {
                   char disp[64];
-                  snprintf(disp, sizeof(disp), "%s:0.0", he->h_name);
+                  snprintf(disp, sizeof(disp), "%s:0.0", hbuf);
                   Setenv("DISPLAY", disp);
                   Warning("SetDisplay", "DISPLAY not set, setting it to %s",
                           disp);
@@ -2993,70 +3000,89 @@ void TUnixSystem::ResetTimer(TTimer *ti)
 
 TInetAddress TUnixSystem::GetHostByName(const char *hostname)
 {
-   struct hostent *host_ptr;
-   const char     *host;
-   int             type;
-   UInt_t          addr;    // good for 4 byte addresses
-
-   // Note that http://linux.die.net/man/3/gethostbyaddr
-   // claims:
-   //   The gethostbyname*() and gethostbyaddr*() functions are obsolete.
-   //   Applications should use getaddrinfo(3) and getnameinfo(3) instead.
-
-   // gethostbyaddr return the address of static data, we need to insure
-   // exclusive access ... the 'right' solution is to switch to getaddrinfo
-
-   R__LOCKGUARD(gROOTMutex);
-
+   UInt_t addr;    // good for 4 byte addresses
+   Bool_t isinaddr = kFALSE;         
 #ifdef HASNOT_INETATON
-   if ((addr = (UInt_t)inet_addr(hostname)) != INADDR_NONE) {
+   isinaddr = (addr = (UInt_t)inet_addr(hostname)) != INADDR_NONE) ? kTRUE : kFALSE;
 #else
    struct in_addr ad;
-   if (inet_aton(hostname, &ad)) {
-      memcpy(&addr, &ad.s_addr, sizeof(ad.s_addr));
+   isinaddr = inet_aton(hostname, &ad);
+   if (isinaddr) memcpy(&addr, &ad.s_addr, sizeof(ad.s_addr));
 #endif
-      type = AF_INET;
-      if ((host_ptr = gethostbyaddr((const char *)&addr,
-                                    sizeof(addr), AF_INET))) {
-         host = host_ptr->h_name;
-         TInetAddress a(host, ntohl(addr), type);
-         UInt_t addr2;
-         Int_t  i;
-         for (i = 1; host_ptr->h_addr_list[i]; i++) {
-            memcpy(&addr2, host_ptr->h_addr_list[i], host_ptr->h_length);
-            a.AddAddress(ntohl(addr2));
+
+   std::string host(hostname);
+   if (isinaddr) {
+      struct sockaddr_in sin;
+      sin.sin_family = AF_INET;
+      sin.sin_port = 0;
+      memcpy(&sin.sin_addr.s_addr, &addr, sizeof(sin.sin_addr.s_addr));
+      memset(&sin.sin_zero[0], 0, sizeof(sin.sin_zero));
+      struct sockaddr *sa = (struct sockaddr *) &sin;    /* input */
+
+      char hbuf[NI_MAXHOST];
+
+      int rc = getnameinfo(sa, sizeof(struct sockaddr), hbuf, sizeof(hbuf), nullptr, 0, NI_NAMEREQD);
+      if (rc != 0 ) {
+         if (rc == EAI_NONAME) {
+            if (gDebug > 0)
+               Error("GetHostByName", "unknown host '%s'", hostname);
+            return TInetAddress("UnNamedHost", 0, -1);
+         } else {
+            Error("GetHostByName", "getnameinfo failed for '%s': '%s'", hostname, gai_strerror(rc));
+            return TInetAddress();
          }
-         for (i = 0; host_ptr->h_aliases[i]; i++)
-            a.AddAlias(host_ptr->h_aliases[i]);
-         return a;
-      } else {
-         host = "UnNamedHost";
       }
-   } else if ((host_ptr = gethostbyname(hostname))) {
-      // Check the address type for an internet host
-      if (host_ptr->h_addrtype != AF_INET) {
-         Error("GetHostByName", "%s is not an internet host\n", hostname);
-         return TInetAddress();
-      }
-      memcpy(&addr, host_ptr->h_addr, host_ptr->h_length);
-      host = host_ptr->h_name;
-      type = host_ptr->h_addrtype;
-      TInetAddress a(host, ntohl(addr), type);
-      UInt_t addr2;
-      Int_t  i;
-      for (i = 1; host_ptr->h_addr_list[i]; i++) {
-         memcpy(&addr2, host_ptr->h_addr_list[i], host_ptr->h_length);
-         a.AddAddress(ntohl(addr2));
-      }
-      for (i = 0; host_ptr->h_aliases[i]; i++)
-         a.AddAlias(host_ptr->h_aliases[i]);
-      return a;
-   } else {
-      if (gDebug > 0) Error("GetHostByName", "unknown host %s", hostname);
-      return TInetAddress(hostname, 0, -1);
+      host = hbuf;
    }
 
-   return TInetAddress(host, ntohl(addr), type);
+   // Hints structure
+   struct addrinfo hints;
+   memset(&hints, 0, sizeof(struct addrinfo));
+   hints.ai_family = AF_INET;        // Ask IPv4
+   hints.ai_socktype = 0;            // Any socket type
+   hints.ai_flags = AI_CANONNAME;    // Get canonical name
+   hints.ai_protocol = 0;            // Any protocol
+   hints.ai_canonname = nullptr;
+   hints.ai_addr = nullptr;
+   hints.ai_next = nullptr;
+
+   struct addrinfo *res;
+   int rc = getaddrinfo(host.c_str(), nullptr, &hints, &res);
+   if (rc != 0) {
+      if (rc == EAI_NONAME) {
+         if (gDebug > 0)
+            Error("GetHostByName", "unknown host '%s'", host.c_str());
+         return TInetAddress("UnNamedHost", 0, -1);
+      } else {
+         Error("GetHostByName", "getaddrinfo failed for '%s': '%s'", host.c_str(), gai_strerror(rc));
+         return TInetAddress();
+      }
+   }
+   if (res[0].ai_canonname) host = res[0].ai_canonname;
+   // Prepare output
+   TInetAddress a(host.c_str(),
+                  ntohl(((sockaddr_in *)(res[0].ai_addr))->sin_addr.s_addr),
+                  res[0].ai_family);
+   struct addrinfo *rp = res[0].ai_next;
+   for (; rp != NULL; rp = rp->ai_next) {
+      UInt_t arp = ntohl(((sockaddr_in *)(rp->ai_addr))->sin_addr.s_addr);
+      std::vector<UInt_t> addrs = a.GetAddresses();
+      Bool_t newad = kTRUE;
+      for (UInt_t sad : addrs) {
+         if (sad == arp) {
+            newad = kFALSE;
+            break;
+         }
+      }
+      if (newad) {
+         a.AddAddress(ntohl(((sockaddr_in *)(rp->ai_addr))->sin_addr.s_addr));
+         if (rp->ai_canonname) a.AddAlias(rp->ai_canonname);
+      }
+   }
+   // Release memory
+   freeaddrinfo(res);
+   // Done
+   return a;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3078,23 +3104,23 @@ TInetAddress TUnixSystem::GetSockName(int sock)
       return TInetAddress();
    }
 
-   struct hostent *host_ptr;
-   const char *hostname;
-   int         family;
-   UInt_t      iaddr;
-
-   if ((host_ptr = gethostbyaddr((const char *)&addr.sin_addr,
-                                 sizeof(addr.sin_addr), AF_INET))) {
-      memcpy(&iaddr, host_ptr->h_addr, host_ptr->h_length);
-      hostname = host_ptr->h_name;
-      family   = host_ptr->h_addrtype;
-   } else {
-      memcpy(&iaddr, &addr.sin_addr, sizeof(addr.sin_addr));
-      hostname = "????";
-      family   = AF_INET;
+   struct sockaddr *sa = (struct sockaddr *) &addr;    /* input */
+   char hbuf[NI_MAXHOST];
+   int rc = 0;
+   if ((rc = getnameinfo(sa, sizeof(struct sockaddr), hbuf, sizeof(hbuf),
+                         nullptr, 0, NI_NAMEREQD)) != 0) {
+      Error("GetSockName", "getnameinfo failed: '%s'", gai_strerror(rc));
+      return TInetAddress();
    }
 
-   return TInetAddress(hostname, ntohl(iaddr), family, ntohs(addr.sin_port));
+   TInetAddress a = GetHostByName(hbuf);
+   if (a.IsValid()) {
+      a.fFamily = addr.sin_family;
+      a.fPort = ntohs(addr.sin_port);
+      return a;
+   }
+   // Failure
+   return TInetAddress();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3116,23 +3142,23 @@ TInetAddress TUnixSystem::GetPeerName(int sock)
       return TInetAddress();
    }
 
-   struct hostent *host_ptr;
-   const char *hostname;
-   int         family;
-   UInt_t      iaddr;
-
-   if ((host_ptr = gethostbyaddr((const char *)&addr.sin_addr,
-                                 sizeof(addr.sin_addr), AF_INET))) {
-      memcpy(&iaddr, host_ptr->h_addr, host_ptr->h_length);
-      hostname = host_ptr->h_name;
-      family   = host_ptr->h_addrtype;
-   } else {
-      memcpy(&iaddr, &addr.sin_addr, sizeof(addr.sin_addr));
-      hostname = "????";
-      family   = AF_INET;
+   int rc = 0;
+   struct sockaddr *sa = (struct sockaddr *) &addr;    /* input */
+   char hbuf[NI_MAXHOST];
+   if ((rc = getnameinfo(sa, sizeof(struct sockaddr), hbuf, sizeof(hbuf),
+                         nullptr, 0, NI_NAMEREQD)) != 0) {
+      Error("GetPeerName", "getnameinfo failed: '%s'", gai_strerror(rc));
+      return TInetAddress();
    }
 
-   return TInetAddress(hostname, ntohl(iaddr), family, ntohs(addr.sin_port));
+   TInetAddress a = GetHostByName(hbuf);
+   if (a.IsValid()) {
+      a.fFamily = addr.sin_family;
+      a.fPort = ntohs(addr.sin_port);
+      return a;
+   }
+   // Failure
+   return TInetAddress();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
