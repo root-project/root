@@ -19,6 +19,7 @@
 #pragma link C++ class TGraphPainter;
 #pragma link C++ class THistPainter;
 #pragma link C++ class TPaletteAxis+;
+#pragma link C++ class TRatioPlot+;
 
 // needed since new class definition of TGraph2DPainter
 #pragma extra_include "TGraph2D.h";

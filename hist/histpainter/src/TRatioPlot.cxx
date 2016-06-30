@@ -22,6 +22,11 @@
 #include "TGraphErrors.h"
 #include "TGAxis.h"
 
+
+#define _(x) std::cout << #x;
+#define __(x) std::cout << x << std::endl ;
+#define var_dump(v) _(v); std::cout << "=" << (v) << std::endl;
+
 ClassImp(TRatioPlot)
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -151,6 +156,8 @@ void TRatioPlot::Browse(TBrowser *b)
 /// Draw
 void TRatioPlot::Draw(Option_t *option)
 {
+   TVirtualPad *padsav = gPad;
+
 //   TString opt = option;
 //   opt.ToLower();
 //   if (gPad) {
@@ -165,61 +172,211 @@ void TRatioPlot::Draw(Option_t *option)
 //   AppendPad(opt.Data());
 
    BuildRatio();
-   CalculateSizes();
 
-   fUpperPad->Draw();
-   fLowerPad->Draw();
 
-   fTopPad->SetFillStyle(0);
-   fTopPad->Draw();
+//
+//   fTopPad->SetFillStyle(0);
+//   fTopPad->Draw();
 
 
    // set up graphical axis
-   TGaxis *gaxis = new TGaxis(0., 0.2, 1., 0.2, 0., 10.);
+//   TGaxis *gaxis = new TGaxis(0., 0.2, 1., 0.2, 0., 10.);
 
 
+//   fUpperPad->cd();
+//
+//   fH1->GetXaxis()->SetLabelOffset(999);
+//   fH1->GetXaxis()->SetLabelSize(0);
+//   fH1->GetXaxis()->SetTickLength(0);
+//
+//   fH1->Draw("E");
+//   fH2->Draw("hist same");
+//
+//   fTopPad->cd();
+//   gaxis->Draw();
+////   fSharedXAxis->Draw();
+//
+//
+//   fLowerPad->cd();
+//   fRatioGraph->GetXaxis()->SetLabelOffset(999);
+//   fRatioGraph->GetXaxis()->SetLabelSize(0);
+//   fRatioGraph->GetXaxis()->SetTickLength(0);
+//   fRatioGraph->Draw("AP");
+//   gaxis->Draw();
+//
+//
+////   fSharedXAxis->Draw();
+//fParentPad->cd();
+
+//   padsav->cd();
+//   AppendPad();
+
+   fUpperPad->AppendPad();
+   fLowerPad->AppendPad();
+
+   fTopPad->SetFillStyle(0);
+   fTopPad->AppendPad();
+
+
+   Double_t newGlobFirst = fSharedXAxis->GetBinLowEdge(fSharedXAxis->GetFirst());
+   Double_t newGlobLast = fSharedXAxis->GetBinUpEdge(fSharedXAxis->GetLast());
 
    fUpperPad->cd();
-
-   fH1->GetXaxis()->SetLabelOffset(999);
-   fH1->GetXaxis()->SetLabelSize(0);
-   fH1->GetXaxis()->SetTickLength(0);
-
+//   fUpperFrameHist = fUpperPad->DrawFrame(newGlobFirst, 0, newGlobLast, 100);
    fH1->Draw("E");
    fH2->Draw("hist same");
 
-   fTopPad->cd();
-   gaxis->Draw();
-//   fSharedXAxis->Draw();
-
-
    fLowerPad->cd();
-   fRatioGraph->GetXaxis()->SetLabelOffset(999);
-   fRatioGraph->GetXaxis()->SetLabelSize(0);
-   fRatioGraph->GetXaxis()->SetTickLength(0);
+//   fLowerFrameHist = fLowerPad->DrawFrame(newGlobFirst, 0, newGlobLast, 5);
    fRatioGraph->Draw("AP");
-   gaxis->Draw();
-
-
-//   fSharedXAxis->Draw();
-
-   fParentPad->cd();
-
-   AppendPad();
 }
 
 void TRatioPlot::Paint(Option_t *opt) {
 
    std::cout << "RP Paint called " << opt << std::endl;
 
-   fH1->SetLineColor(kRed);
+   // lets check if the axis range of one of our pads has changed
+   TAxis *upAxis = fUpperFrameHist->GetXaxis();
+   TAxis *lowAxis = fLowerFrameHist->GetXaxis();
 
+   var_dump(fUpperFrameHist->GetYaxis());
+
+//   var_dump(fUpperFrameHist->GetXaxis());
+//   var_dump(fLowerFrameHist->GetXaxis());
+
+//   Double_t upFirst = upAxis->GetFirst();
+//   Double_t upLast  = upAxis->GetLast();
+//   Double_t lowFirst = lowAxis->GetFirst();
+//   Double_t lowLast  = lowAxis->GetLast();
+//
+//   Double_t globFirst = fSharedXAxis->GetFirst();
+//   Double_t globLast  = fSharedXAxis->GetLast();
+
+//   var_dump(upFirst);
+//   var_dump(upLast);
+//   var_dump(lowFirst);
+//   var_dump(lowLast);
+//   var_dump(globFirst);
+//   var_dump(globLast);
+
+//   if (upFirst != globFirst || upLast != globLast) {
+//      __("up zoomed");
+//      fSharedXAxis->SetRange(upFirst, upLast);
+//   }
+//   else if (lowFirst != globFirst || lowLast != globLast) {
+//      __("low zoomed");
+//      fSharedXAxis->SetRange(lowFirst, lowLast);
+//
+//   }
+//   else {
+//      __("not zoomed")
+//   }
+//
+//   Double_t newGlobFirst = fSharedXAxis->GetFirst();
+//   Double_t newGlobLast = fSharedXAxis->GetLast();
+//
+//   lowAxis->SetRange(newGlobFirst, newGlobLast);
+//   upAxis->SetRange(newGlobFirst, newGlobLast);
+//   upAxis->SetRange(newGlobFirst, newGlobLast);
+
+
+
+
+   Double_t upFirst = fH1->GetXaxis()->GetBinLowEdge(fH1->GetXaxis()->GetFirst());
+   Double_t upLast  = fH1->GetXaxis()->GetBinUpEdge(fH1->GetXaxis()->GetLast());
+//   Double_t lowFirst = fRatioGraph->GetXaxis()->GetXmin();
+//   Double_t lowLast  = fRatioGraph->GetXaxis()->GetXmax();
+   Double_t lowFirst = fRatioGraph->GetXaxis()->GetBinLowEdge(fRatioGraph->GetXaxis()->GetFirst());
+   Double_t lowLast  = fRatioGraph->GetXaxis()->GetBinUpEdge(fRatioGraph->GetXaxis()->GetLast());
+
+
+   Double_t globFirst = fSharedXAxis->GetBinLowEdge(fSharedXAxis->GetFirst());
+   Double_t globLast = fSharedXAxis->GetBinUpEdge(fSharedXAxis->GetLast());
+
+   var_dump(upFirst);
+   var_dump(upLast);
+   var_dump(lowFirst);
+   var_dump(lowLast);
+//   var_dump(lowFirstalt);
+//   var_dump(lowLastalt);
+   var_dump(globFirst);
+   var_dump(globLast);
+
+   if (upFirst != globFirst || upLast != globLast) {
+      __("up zoomed");
+      fSharedXAxis->SetRangeUser(upFirst, upLast);
+   }
+   else if (lowFirst != globFirst || lowLast != globLast) {
+      __("low zoomed");
+      fSharedXAxis->SetRangeUser(lowFirst, lowLast);
+
+   }
+   else {
+      __("not zoomed")
+   }
+
+
+
+//   Int_t upFirst =  fH1->GetXaxis()->GetFirst();
+//   Int_t upLast  =  fH1->GetXaxis()->GetLast();
+//   Int_t lowFirst = fRatioGraph->GetXaxis()->GetFirst();
+//   Int_t lowLast  = fRatioGraph->GetXaxis()->GetLast();
+//
+//   Int_t globFirst = fSharedXAxis->GetFirst();
+//   Int_t globLast  = fSharedXAxis->GetLast();
+//
+//   var_dump(upFirst);
+//   var_dump(upLast);
+//   var_dump(lowFirst);
+//   var_dump(lowLast);
+//   var_dump(globFirst);
+//   var_dump(globLast);
+//
+//   if (upFirst != globFirst || upLast != globLast) {
+//      __("up zoomed");
+//      fSharedXAxis->SetRange(upFirst, upLast);
+//   }
+//   else if (lowFirst != globFirst || lowLast != globLast) {
+//      __("low zoomed");
+//      fSharedXAxis->SetRange(lowFirst, lowLast);
+//
+//   }
+//   else {
+//      __("not zoomed")
+//   }
+//
+//   Double_t newGlobFirst = fSharedXAxis->GetFirst();
+//   Double_t newGlobLast  = fSharedXAxis->GetLast();
+//
+//   fRatioGraph->GetXaxis()->SetRange(newGlobFirst, newGlobLast);
+//   fH1->GetXaxis()->SetRange(newGlobFirst, newGlobLast);
+//   fH2->GetXaxis()->SetRange(newGlobFirst, newGlobLast);
+
+
+
+   CalculateSizes();
+
+
+
+
+
+
+//   fH1->SetLineColor(kRed);
+
+//   fUpperPad->ResizePad();
 //   fUpperPad->Paint();
+
+//   fUpperPad->ls();
+
 //   fLowerPad->Paint();
 //   fTopPad->Paint();
 
-//   fH1->Paint();
-//   fH2->Paint();
+//   fUpperPad->cd();
+//   fH1->Draw("E");
+//   fH2->Draw("hist same");
+//
+//   fLowerPad->cd();
+//   fRatioGraph->Draw("AP");
 
 //   fTopPad->SetFillStyle(0);
 //   fTopPad->Draw();
@@ -233,12 +390,17 @@ void TRatioPlot::CalculateSizes() {
    fLowerPad->SetTopMargin(0.05);
 
    // sync ranges
-   double first = fSharedXAxis->GetBinLowEdge(fSharedXAxis->GetFirst());
-   double last = fSharedXAxis->GetBinUpEdge(fSharedXAxis->GetLast());
+   Double_t first = fSharedXAxis->GetBinLowEdge(fSharedXAxis->GetFirst());
+   Double_t last = fSharedXAxis->GetBinUpEdge(fSharedXAxis->GetLast());
 
-   std::cout << first << "-" << last << std::endl;
+   __(__FUNCTION__)
+   var_dump(first);
+   var_dump(last);
 
+   fRatioGraph->GetXaxis()->SetLimits(first, last);
    fRatioGraph->GetXaxis()->SetRangeUser(first, last);
+   fH1->GetXaxis()->SetRangeUser(first, last);
+   fH2->GetXaxis()->SetRangeUser(first, last);
 
 }
 

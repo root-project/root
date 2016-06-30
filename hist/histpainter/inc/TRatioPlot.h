@@ -26,6 +26,7 @@
 #include "TGraphAsymmErrors.h"
 #include "TGraph.h"
 #include "TAxis.h"
+#include "TH1F.h"
 
 
 class TBrowser;
