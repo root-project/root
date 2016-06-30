@@ -19,8 +19,8 @@
 
 #include "TClass.h"
 
+#include "RStringView.h"
 #include <memory>
-#include <experimental/string_view>
 #include <typeinfo>
 
 namespace ROOT {
