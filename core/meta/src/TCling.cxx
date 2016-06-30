@@ -975,11 +975,7 @@ bool TClingLookupHelper__ExistingTypeCheck(const std::string &tname,
       // All of this C gymnastic is to avoid allocations on the heap
       const auto enName = lastPos;
       const auto scopeNameSize = ((Long64_t)lastPos - (Long64_t)inner) / sizeof(decltype(*lastPos)) - 2;
-#ifdef R__WIN32
       char *scopeName = new char[scopeNameSize + 1];
-#else
-      char scopeName[scopeNameSize + 1]; // on the stack, +1 for the terminating character '\0'
-#endif
       strncpy(scopeName, inner, scopeNameSize);
       scopeName[scopeNameSize] = '\0';
       // Check if the scope is in the list of classes
@@ -995,9 +991,7 @@ bool TClingLookupHelper__ExistingTypeCheck(const std::string &tname,
             if (enumTable && enumTable->THashList::FindObject(enName)) return true;
          }
       }
-#ifdef R__WIN32
       delete [] scopeName;
-#endif
    } else
    {
       // We don't have any scope: this could only be a global enum
