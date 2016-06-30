@@ -185,6 +185,7 @@ public:
    virtual void      DrawCrosshair();
    TH1F             *DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax, const char *title="");
    virtual void      ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis);
+   virtual void      UnZoom(TAxis *axis);
    virtual TObject  *FindObject(const char *name) const;
    virtual TObject  *FindObject(const TObject *obj) const;
    virtual void      UseCurrentStyle();  // *MENU*

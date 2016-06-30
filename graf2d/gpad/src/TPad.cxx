@@ -6581,3 +6581,10 @@ void TPad::SetBBoxY2(const Int_t y)
    ResizePad();
 }
 
+void TPad::UnZoom(TAxis *axis)
+{
+   // if this pad has mother and is not its own mother, delegate to mother
+   if (fMother && fMother != this) {
+      fMother->UnZoom(axis);
+   }
+}
