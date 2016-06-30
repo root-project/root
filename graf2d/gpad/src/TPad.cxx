@@ -2495,6 +2495,13 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
             zoombox = 0;
          }
       }
+
+      // HACK ? paint the canvas
+//      std::cout << "TPad::ExecuteEventAxis [" << fName << "]" << std::endl;
+      if (fCanvas) {
+         fCanvas->Paint();
+      }
+
       break;
    }
 }
