@@ -91,7 +91,7 @@ namespace TMVA
  */
         template <typename ItSource, typename ItWeight, typename ItTarget, typename ItDrop>
             void applyWeights (ItSource itSourceBegin, ItSource itSourceEnd,
-                               int weightIndex,
+                               int weightIndex, std::vector<double>& weightBucket,
                                ItTarget itTargetBegin, ItTarget itTargetEnd,
                                ItDrop itDrop)
         {
@@ -115,7 +115,7 @@ namespace TMVA
  */
         template <typename ItSource, typename ItWeight, typename ItTarget>
             void applyWeights (ItSource itSourceBegin, ItSource itSourceEnd,
-                               int weightIndex,
+                               int weightIndex, std::vector<double>& weightBucket,
                                ItTarget itTargetBegin, ItTarget itTargetEnd)
         {
             for (auto itSource = itSourceBegin; itSource != itSourceEnd; ++itSource)
@@ -137,7 +137,7 @@ namespace TMVA
  */
         template <typename ItSource, typename ItWeight, typename ItPrev>
             void applyWeightsBackwards (ItSource itCurrBegin, ItSource itCurrEnd,
-                                        int weightIndex,
+                                        int weightIndex, std::vector<double>& weightBucket,
                                         ItPrev itPrevBegin, ItPrev itPrevEnd)
         {
             for (auto itPrev = itPrevBegin; itPrev != itPrevEnd; ++itPrev)
@@ -158,7 +158,7 @@ namespace TMVA
  */
         template <typename ItSource, typename ItWeight, typename ItPrev, typename ItDrop>
             void applyWeightsBackwards (ItSource itCurrBegin, ItSource itCurrEnd,
-                                        int weightIndex,
+                                        int weightIndex, std::vector<double>& weightBucket,
                                         ItPrev itPrevBegin, ItPrev itPrevEnd,
                                         ItDrop itDrop)
         {
@@ -278,7 +278,7 @@ namespace TMVA
                          ItDelta itTargetDeltaBegin, ItDelta itTargetDeltaEnd, 
                          ItTargetGradient itTargetGradientBegin, 
                          ItGradient itGradient, 
-                         ItWeight itWeight, double weightDecay)
+                         int weightIndex, std::vector<double>& weightBucket, double weightDecay)
         {
             // ! the factor weightDecay has to be already scaled by 1/n where n is the number of weights
             while (itSource != itSourceEnd)
@@ -287,8 +287,8 @@ namespace TMVA
                 auto itTargetGradient = itTargetGradientBegin;
                 while (itTargetDelta != itTargetDeltaEnd)
                 {
-                    (*itGradient) -= + (*itTargetDelta) * (*itSource) * (*itTargetGradient) + computeRegularization<Regularization>(*itWeight,weightDecay);
-                    ++itTargetDelta; ++itTargetGradient; ++itGradient; ++itWeight;
+                    (*itGradient) -= + (*itTargetDelta) * (*itSource) * (*itTargetGradient) + computeRegularization<Regularization>(weightBucket[XXH32(seed, weightIndex) % BUCKET_SIZE],weightDecay);
+                    ++itTargetDelta; ++itTargetGradient; ++itGradient; ++weightIndex;
                 }
                 ++itSource; 
             }
@@ -308,17 +308,17 @@ namespace TMVA
  * Can be used with multithreading (i.e. "HogWild!" style); see call in trainCycle
  */
         template <typename Function, typename Weights, typename PassThrough>
-            double Steepest::operator() (Function& fitnessFunction, Weights& weights, PassThrough& passThrough) 
+            double Steepest::operator() (Function& fitnessFunction, int currLayerWeightIndex, int nextLayerWeightIndex, std::vector<double>& weightBucket, PassThrough& passThrough) 
         {
-            size_t numWeights = weights.size ();
-            std::vector<double> gradients (numWeights, 0.0);
-            std::vector<double> localWeights (begin (weights), end (weights));
+            size_t numWeights = nextLayerWeightIndex - currLayerWeightIndex + 1;
+            std::vector<double> gradients (numWeights, 0.0); 
+            std::vector<double> localWeightBucket (begin (weightBucket), end (weightBucket));
 
             double E = 1e10;
             if (m_prevGradients.size () != numWeights)
             {
                 m_prevGradients.clear ();
-                m_prevGradients.assign (weights.size (), 0);
+                m_prevGradients.assign (nextLayerWeightIndex - currLayerWeightIndex + 1, 0);
             }
 
             bool success = true;
@@ -334,11 +334,12 @@ namespace TMVA
                 // apply momentum before computing the new gradient
                 auto itPrevG = begin (m_prevGradients);
                 auto itPrevGEnd = end (m_prevGradients);
-                auto itLocWeight = begin (localWeights);
+                int locWeightIndex = currLayerWeightIndex;
                 for (; itPrevG != itPrevGEnd; ++itPrevG)
                 {
                     (*itPrevG) *= m_beta;
-                    (*itLocWeight) += (*itPrevG);
+                    (localWeightBucket[XXH32(seed, locWeightIndex) % BUCKET_SIZE]) += (*itPrevG);
+                    ++locWeightIndex;
                 }
 
                 E = fitnessFunction (passThrough, localWeights, gradients);
@@ -378,11 +379,11 @@ namespace TMVA
                 }
                 else
                 {
-                    auto itW = std::begin (weights);
-                    std::for_each (std::begin (gradients), std::end (gradients), [&itW](double& g)
+                    int weightIndex = currLayerWeightIndex;
+                    std::for_each (std::begin (gradients), std::end (gradients), [&weightIndex](double& g)
                                    {
-                                       *itW += g;
-                                       ++itW;
+                                       *(weightBucket[XXH32(seed, weightIndex) % BUCKET_SIZE]) += g;
+                                       ++weightIndex;
                                    });
                 }
 
