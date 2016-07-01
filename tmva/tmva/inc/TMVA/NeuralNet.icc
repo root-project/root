@@ -91,7 +91,7 @@ namespace TMVA
  */
         template <typename ItSource, typename ItWeight, typename ItTarget, typename ItDrop>
             void applyWeights (ItSource itSourceBegin, ItSource itSourceEnd,
-                               ItWeight itWeight,
+                               int weightIndex,
                                ItTarget itTargetBegin, ItTarget itTargetEnd,
                                ItDrop itDrop)
         {
@@ -100,8 +100,8 @@ namespace TMVA
                 for (auto itTarget = itTargetBegin; itTarget != itTargetEnd; ++itTarget)
                 {
                     if (*itDrop)
-                        (*itTarget) += (*itSource) * (*itWeight);
-                    ++itWeight;
+                        (*itTarget) += (*itSource) * (weightBucket[XXH32(seed, weightIndex) % BUCKET_SIZE]);
+                    ++weightIndex;
                 }
                 ++itDrop;        
             }
@@ -137,15 +137,15 @@ namespace TMVA
  */
         template <typename ItSource, typename ItWeight, typename ItPrev>
             void applyWeightsBackwards (ItSource itCurrBegin, ItSource itCurrEnd,
-                                        ItWeight itWeight,
+                                        int weightIndex,
                                         ItPrev itPrevBegin, ItPrev itPrevEnd)
         {
             for (auto itPrev = itPrevBegin; itPrev != itPrevEnd; ++itPrev)
             {
                 for (auto itCurr = itCurrBegin; itCurr != itCurrEnd; ++itCurr)
                 {
-                    (*itPrev) += (*itCurr) * (*itWeight);
-                    ++itWeight;
+                    (*itPrev) += (*itCurr) * (weightBucket[XXH32(seed, weightIndex) % BUCKET_SIZE]);
+                    ++weightIndex;
                 }
             }
         }
@@ -158,7 +158,7 @@ namespace TMVA
  */
         template <typename ItSource, typename ItWeight, typename ItPrev, typename ItDrop>
             void applyWeightsBackwards (ItSource itCurrBegin, ItSource itCurrEnd,
-                                        ItWeight itWeight,
+                                        int weightIndex,
                                         ItPrev itPrevBegin, ItPrev itPrevEnd,
                                         ItDrop itDrop)
         {
@@ -167,8 +167,8 @@ namespace TMVA
                 for (auto itCurr = itCurrBegin; itCurr != itCurrEnd; ++itCurr)
                 {
                     if (*itDrop)
-                        (*itPrev) += (*itCurr) * (*itWeight);
-                    ++itWeight; 
+                        (*itPrev) += (*itCurr) * (weightBucket[XXH32(seed, weightIndex) % BUCKET_SIZE]);
+                    ++weightIndex; 
                 }
                 ++itDrop;
             }
