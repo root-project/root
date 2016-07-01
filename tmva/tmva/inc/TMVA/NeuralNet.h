@@ -240,12 +240,12 @@ namespace TMVA
 
 
       template <typename ItSource, typename ItWeight, typename ItTarget>
-         void applyWeights (ItSource itSourceBegin, ItSource itSourceEnd, ItWeight itWeight, ItTarget itTargetBegin, ItTarget itTargetEnd);
+         void applyWeights (ItSource itSourceBegin, ItSource itSourceEnd, int weightIndex, std::vector<double>& weightBucket, ItTarget itTargetBegin, ItTarget itTargetEnd);
 
 
 
       template <typename ItSource, typename ItWeight, typename ItPrev>
-         void applyWeightsBackwards (ItSource itCurrBegin, ItSource itCurrEnd, ItWeight itWeight, ItPrev itPrevBegin, ItPrev itPrevEnd);
+         void applyWeightsBackwards (ItSource itCurrBegin, ItSource itCurrEnd, int weightIndex, std::vector<double>& weightBucket, ItPrev itPrevBegin, ItPrev itPrevEnd);
 
 
 
@@ -273,7 +273,7 @@ namespace TMVA
                       ItDelta itTargetDeltaBegin, ItDelta itTargetDeltaEnd, 
                       ItTargetGradient itTargetGradientBegin, 
                       ItGradient itGradient, 
-                      ItWeight itWeight, double weightDecay);
+                      int weightIndex, std::vector<double>& weightBucket, double weightDecay);
 
 
 
