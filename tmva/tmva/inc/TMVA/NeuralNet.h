@@ -348,7 +348,7 @@ namespace TMVA
           *                    called
           */
          template <typename Function, typename Weights, typename PassThrough>
-            double operator() (Function& fitnessFunction, Weights& weights, PassThrough& passThrough);
+            double operator() (Function& fitnessFunction, int currLayerWeightIndex, int nextLayerWeightIndex, std::vector<double>& weightBucket, PassThrough& passThrough);
 
 
          double m_alpha; ///< internal parameter (learningRate)
