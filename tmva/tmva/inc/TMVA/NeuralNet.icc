@@ -382,7 +382,7 @@ namespace TMVA
                     int weightIndex = currLayerWeightIndex;
                     std::for_each (std::begin (gradients), std::end (gradients), [&weightIndex](double& g)
                                    {
-                                       *(weightBucket[XXH32(seed, weightIndex) % BUCKET_SIZE]) += g;
+                                       weightBucket[XXH32(seed, weightIndex) % BUCKET_SIZE] += g;
                                        ++weightIndex;
                                    });
                 }
@@ -530,16 +530,17 @@ namespace TMVA
  * 
  */
         template <typename ItWeight>
-            double weightDecay (double error, ItWeight itWeight, ItWeight itWeightEnd, double factorWeightDecay, EnumRegularization eRegularization)
+            double weightDecay (double error, int currLayerWeightIndex, int nextLayerWeightIndex, std::vector<double>& weightBucket, double factorWeightDecay, EnumRegularization eRegularization)
         {
             if (eRegularization == EnumRegularization::L1)
             {
                 // weight decay (regularization)
                 double w = 0;
                 size_t n = 0;
-                for (; itWeight != itWeightEnd; ++itWeight, ++n)
+                int weightIndex;
+                for (weightIndex = currLayerWeightIndex; weightIndex != nextLayerWeightIndex; ++weightIndex, ++n)
                 {
-                    double weight = (*itWeight);
+                    double weight = (weightBucket[XXH32(seed, weightIndex) % BUCKET_SIZE]);
                     w += std::fabs (weight);
                 }
                 return error + 0.5 * w * factorWeightDecay / n;
@@ -549,9 +550,9 @@ namespace TMVA
                 // weight decay (regularization)
                 double w = 0;
                 size_t n = 0;
-                for (; itWeight != itWeightEnd; ++itWeight, ++n)
+                for (weightIndex = currLayerWeightIndex; weightIndex != nextLayerWeightIndex; ++weightIndex, ++n)
                 {
-                    double weight = (*itWeight);
+                    double weight = (weightBucket[XXH32(seed, weightIndex) % BUCKET_SIZE]);
                     w += weight*weight;
                 }
                 return error + 0.5 * w * factorWeightDecay / n;
