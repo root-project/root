@@ -2,8 +2,6 @@
 
 TObjArray
 TObjArrayIter
-TObjLink
-TObjOptLink
 TObjString
 TObject
 TObjectRefSpy
