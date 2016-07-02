@@ -4197,7 +4197,10 @@ int RootCling(int argc,
 
    // cling-only arguments
    clingArgs.push_back(TMetaUtils::GetInterpreterExtraIncludePath(buildingROOT));
-   clingArgs.push_back("-D__ROOTCLING__");
+   // We do not want __ROOTCLING__ in the pch!
+   if (!onepcm) {
+      clingArgs.push_back("-D__ROOTCLING__");
+   }
    clingArgs.push_back("-fsyntax-only");
    clingArgs.push_back("-Xclang");
    clingArgs.push_back("-main-file-name");
