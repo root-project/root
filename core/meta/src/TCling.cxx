@@ -70,6 +70,7 @@ clang/LLVM technology.
 #include "TStreamerInfo.h" // This is here to avoid to use the plugin manager
 #include "ThreadLocalStorage.h"
 #include "TFile.h"
+#include "TKey.h"
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
@@ -1312,7 +1313,16 @@ bool TCling::LoadPCM(TString pcmFileName,
       auto listOfKeys = pcmFile->GetListOfKeys();
 
       // This is an empty pcm
-      if (listOfKeys && listOfKeys->GetSize() == 0) {
+      if (
+         listOfKeys &&
+         (
+            (listOfKeys->GetSize() == 0) || // Nothing here, or
+            (
+               (listOfKeys->GetSize() == 1) && // only one, and
+               !strcmp(((TKey*)listOfKeys->At(0))->GetName(), "EMPTY") // name is EMPTY
+            )
+         )
+      ) {
          delete pcmFile;
          gDebug = oldDebug;
          return kTRUE;
