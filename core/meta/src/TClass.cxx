@@ -5578,7 +5578,9 @@ void TClass::PostLoadCheck()
    {
       SetClassVersion(-1);
    }
-   else if (IsLoaded() && HasDataMemberInfo() && fStreamerInfo && (!IsForeign()||fClassVersion>1) )
+   // Note: We are careful to check the class version first because checking
+   //       for foreign can trigger an AutoParse.
+   else if (IsLoaded() && HasDataMemberInfo() && fStreamerInfo && ((fClassVersion > 1) || !IsForeign()))
    {
       R__LOCKGUARD(gInterpreterMutex);
 
