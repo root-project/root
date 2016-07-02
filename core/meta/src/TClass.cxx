@@ -5447,6 +5447,14 @@ void TClass::LoadClassInfo() const
    // as this thread return early since the work was done.
    if (!fCanLoadClassInfo) return;
 
+   // If class info already loaded then do nothing.  This can happen if the
+   // class was registered by a dictionary, but the info came from reading
+   // the pch.
+   // Note: This check avoids using AutoParse for classes in the pch!
+   if (fClassInfo) {
+      return;
+   }
+
    gInterpreter->AutoParse(GetName());
    if (!fClassInfo) gInterpreter->SetClassInfo(const_cast<TClass*>(this));   // sets fClassInfo pointer
    if (!gInterpreter->IsAutoParsingSuspended()) {
