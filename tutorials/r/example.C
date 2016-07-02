@@ -1,10 +1,14 @@
+#include "TMath.h"
+#include "Math/PdfFunc.h"
+#include "TMatrixD.h"
+#include "TError.h"
+#include <array>
+#include <vector>
 #include "TRInterface.h"
-
 // simple example on how to use ROOT-R interface
 
 void example() {
-
-    auto r = ROOT::R::TRInterface::Instance();
+    ROOT::R::TRInterface &r = ROOT::R::TRInterface::Instance();
     // print R version
     r.Execute("print(version$version.string)");
 
@@ -54,4 +58,10 @@ void example() {
        Error("ROOT-R-Example","Different function value forund in r = %f and ROOT = %f", value_r, value_root);
 
     
+}
+
+int main()
+{
+  example();
+  return 0;
 }
