@@ -33,6 +33,7 @@ The following people have contributed to this new version:
  Danilo Piparo, CERN/SFT,\
  Timur Pocheptsov, CERN/SFT,\
  Fons Rademakers, CERN/IT/Openlab,\
+ Paul Russo, FNAL,\
  Enric Tejedor Saavedra, CERN/SFT,\
  Liza Sakellari, CERN/SFT,\
  Manuel Tobias Schiller,CERN, LHCb\
@@ -683,8 +684,16 @@ Changes will be part of the future 6.06/06
 - Fix the validity of TRef after the first ProcessID is full.
 - Fix thread safety of TSystem::ExpandPathName [ROOT-8205].
 
+### Dictionaries
+
+- Do not autoparse headers for classes in the pch.
+- Avoid autoparse on IsForeign() if possible.
+- Check for new-style empty pcm with key named "EMPTY" created since commit 90047b0cba6fd295f5c5722749a0d043fbc11ea5.
+- Do not insert macro definition of __ROOTCLING__ into the pch.
+
 ### TTree
 
 - Properly handle the last element of arrays in the TTreeFormula functions MinIf and MaxIf [ROOT-7258]
 - Fix detection of errors that appears in nested TTreeFormula [ROOT-8218]
+- Avoid autoparse looking for default constructor in TTreeCloner::CopyStreamerInfos().
 
