@@ -88,6 +88,10 @@ Add a new mode for `TClass::SetCanSplit` (2) which indicates that this class and
 * Fix ROOT-7879: Prevent LinkDef files to be listed in a rootmap file and use (as the user actually expects) the header files #included in the linkdef file, if any, as the top level headers.
 * Add the *noIncludePaths* switch both for rootcling and genreflex to allow to loose track of the include paths in input to the dictionary generator.
 * Fix handling of template parameter pack in the forward declaration printer. [ROOT-8096]
+* Do not autoparse headers for classes in the pch.
+* Avoid autoparse on IsForeign() if possible.
+* Check for new-style empty pcm with key named "EMPTY" created since commit 90047b0cba6fd295f5c5722749a0d043fbc11ea5.
+* Do not insert macro definition of __ROOTCLING__ into the pch.
 
 ### Interpreter Library
 
