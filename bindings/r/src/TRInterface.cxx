@@ -202,7 +202,7 @@ void TRInterface::ProcessEventsLoop()
             int usec = 10000;
             fd = R_checkActivity(usec, 0);
             R_runHandlers(R_InputHandlers, fd);
-            gSystem->Sleep(100);
+            sleep(100);
          }
       });
       th->Run();
