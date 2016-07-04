@@ -57,3 +57,9 @@ void example() {
     if (value_r != value_root)
        Error("ROOT-R-Example","Different function value forund in r = %f and ROOT = %f", value_r, value_root);
 }
+
+int main()
+{
+  example();
+  return 0;
+}
