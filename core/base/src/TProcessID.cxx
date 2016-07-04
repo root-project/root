@@ -68,7 +68,7 @@ static inline ULong_t Void_Hash(const void *ptr)
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
 
-TProcessID::TProcessID()
+TProcessID::TProcessID() : fLock(ATOMIC_FLAG_INIT)
 {
    fCount = 0;
    fObjects = 0;
@@ -166,7 +166,11 @@ UInt_t TProcessID::AssignID(TObject *obj)
 
 void TProcessID::CheckInit()
 {
-   if (!fObjects) fObjects = new TObjArray(100);
+   if (!fObjects) {
+       while (fLock.test_and_set(std::memory_order_acquire));  // acquire lock
+       if (!fObjects) fObjects = new TObjArray(100);
+       fLock.clear(std::memory_order_release);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -269,8 +273,8 @@ TProcessID *TProcessID::GetSessionProcessID()
 
 Int_t TProcessID::IncrementCount()
 {
-   if (!fObjects) fObjects = new TObjArray(100);
-   fCount++;
+   CheckInit();
+   ++fCount;
    return fCount;
 }
 
