@@ -658,7 +658,7 @@ template <typename LAYERDATA>
                 if (itDrop == itDropEnd)
                     break;
 
-                size_t numNodes = layer.numNodes ();
+                size_t _numNodes = layer.numNodes ();
 
                 double dropFraction = *itDrop;
                 double pPrev = 1.0 - dropFractionPrev;
@@ -678,7 +678,7 @@ template <typename LAYERDATA>
                     *itWeight *= p;
                     ++itWeight;
                 }
-                numNodesPrev = numNodes;
+                numNodesPrev = _numNodes;
                 dropFractionPrev = dropFraction;
                 ++itDrop;
             }
@@ -734,21 +734,21 @@ template <typename LAYERDATA>
                 {
                     // fill the dropOut-container
                     dropContainer.clear ();
-                    size_t numNodes = inputSize ();
+                    size_t _numNodes = inputSize ();
                     double dropFraction = 0.0;
                     dropFraction = dropFractions.at (dropIndex);
                     ++dropIndex;
-                    fillDropContainer (dropContainer, dropFraction, numNodes);
+                    fillDropContainer (dropContainer, dropFraction, _numNodes);
                     for (auto itLayer = begin (m_layers), itLayerEnd = end (m_layers); itLayer != itLayerEnd; ++itLayer, ++dropIndex)
                     {
                         auto& layer = *itLayer;
-                        numNodes = layer.numNodes ();
+                        _numNodes = layer.numNodes ();
                         // how many nodes have to be dropped
                         dropFraction = 0.0;
                         if (dropFractions.size () > dropIndex)
                             dropFraction = dropFractions.at (dropIndex);
                     
-                        fillDropContainer (dropContainer, dropFraction, numNodes);
+                        fillDropContainer (dropContainer, dropFraction, _numNodes);
                     }
                     isWeightsForDrop = true;
                 }
@@ -1087,7 +1087,7 @@ template <typename LAYERDATA>
                                                                    Batch& batch,
                                                                    const DropContainer& dropContainer,
                                                                    ItWeight itWeightBegin,
-                                                                   ItWeight itWeightEnd, 
+                                                                   ItWeight /*itWeightEnd*/, 
                                                                    ItGradient itGradientBegin,
                                                                    ItGradient itGradientEnd,
                                                                    size_t& totalNumWeights) const
@@ -1113,10 +1113,10 @@ template <typename LAYERDATA>
         typename Pattern::const_iterator itInputBegin;
         typename Pattern::const_iterator itInputEnd;
 
-        ItWeight itGammaBegin = itWeightBegin + numWeights ();
-        ItWeight itBetaBegin = itWeightBegin + numWeights () + numNodes ();
-        ItGradient itGradGammaBegin = itGradientBegin + numWeights ();
-        ItGradient itGradBetaBegin = itGradientBegin + numWeights () + numNodes ();
+        // ItWeight itGammaBegin = itWeightBegin + numWeights ();
+        // ItWeight itBetaBegin = itWeightBegin + numWeights () + numNodes ();
+        // ItGradient itGradGammaBegin = itGradientBegin + numWeights ();
+        // ItGradient itGradBetaBegin = itGradientBegin + numWeights () + numNodes ();
 
         
         // --------------------- prepare layer data for input layer ----------------------------
@@ -1197,7 +1197,7 @@ template <typename LAYERDATA>
         void Net::forwardPattern (const LayerContainer& _layers,
                                   std::vector<LayerData>& layerData) const
     {
-	size_t idxLayer = 0, idxLayerEnd = m_layers.size ();
+	size_t idxLayer = 0, idxLayerEnd = _layers.size ();
         size_t cumulativeNodeCount = 0;
 	for (; idxLayer < idxLayerEnd; ++idxLayer)
 	{
