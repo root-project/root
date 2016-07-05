@@ -7,7 +7,7 @@ if(MACOSX_GLU_DEPRECATED)
   add_definitions(-Wno-deprecated-declarations)
 endif()
 
-ROOT_LINKER_LIBRARY(FTGL *.cxx LIBRARIES ${OPENGL_LIBRARIES} ${FREETYPE_LIBRARIES} ${ZLIB_LIBRARY})
+ROOT_LINKER_LIBRARY(FTGL *.cxx LIBRARIES ${OPENGL_LIBRARIES} ${FREETYPE_LIBRARIES} ${ZLIB_LIB})
 if(builtin_freetype)
   add_dependencies(FTGL FREETYPE)
 endif()

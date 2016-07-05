@@ -27,9 +27,10 @@ if(NOT builtin_zlib)
    endif()
 endif()
 if(builtin_zlib)
-  if(WIN32)
-    set(ZLIB_LIBRARY "")
-  endif()
+  set(ZLIB_LIBRARY "" CACHE PATH "" FORCE)
+endif()
+if(ZLIB_LIBRARY)
+  set(ZLIB_LIB ${ZLIB_LIBRARY})
 endif()
 
 #---Check for Freetype---------------------------------------------------------------
