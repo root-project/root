@@ -1,3 +1,5 @@
+#include <type_traits>
+
 class UserClass
 {
 public:
@@ -19,6 +21,28 @@ namespace UserSpace
 }
 
 template <typename T> void globalSet(T&) {}
+
+template <class T>
+struct Outer {
+   template <class A, class B> using EnableIfSame_t
+      = typename std::enable_if<std::is_same<A, B>::value>::type;
+
+   // Test for methods with all defaulted params, typical for enable-if'ed
+   // methods, that TClass::GetListOfMethods() should really report.
+   template <class A = T, class = EnableIfSame_t<A, T>>
+   Outer();
+
+   template <class A = T, class = EnableIfSame_t<A, T>>
+   void AFunction(float);
+
+   template <class A = T, class = EnableIfSame_t<A, T>>
+   void AFunction(A);
+
+   template <class A = T, class = EnableIfSame_t<A, long>>
+   void ThisOneShouldBeDisabled(A);
+
+   void AFunction(double);
+};
 
 void CheckTemplate(TClass *cl)
 {
@@ -186,6 +210,15 @@ void Check(TClass *cl)
    fprintf(stdout,"\n");
 }
 
+
+void CheckEnableIf() {
+   TClass* cl = TClass::GetClass("Outer<int>");
+   cl->GetListOfMethods(false)->ls("noaddr");
+   cl->GetListOfMethods(true)->ls("noaddr");
+   //printf("TClass::New() on Outer<int> does%s create an object\n",
+   //       cl->New() ? "": " not");
+}
+
 void execTemplate()
 {
    Check(TClass::GetClass("UserClass"));
@@ -193,6 +226,7 @@ void execTemplate()
    CheckTemplate(TClass::GetClass("UserClass"));
    CheckTemplate(TClass::GetClass("UserSpace"));
 
-   //CheckGlobal();
    CheckGlobalTemplate();
+
+   CheckEnableIf();
 }
