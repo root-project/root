@@ -450,7 +450,7 @@
 
 /*---- deprecation -----------------------------------------------------------*/
 
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(__GNUC__) || defined(__clang__) || defined(__INTEL_COMPILER)
 #   define R__DEPRECATED(REASON) __attribute__((deprecated(REASON)))
 #elif defined(_MSC_VER)
 #   define R__DEPRECATED(REASON) __declspec(deprecated(REASON))
