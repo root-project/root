@@ -266,12 +266,12 @@ Int_t TAxis::FindBin(Double_t x)
    Int_t bin;
    // NOTE: This should not be allowed for Alphanumeric histograms,
    // but it is heavily used (legacy) in the TTreePlayer to fill alphanumeric histograms.
-   // but in case of alphanumeric do-not extend the axis. It makes no sense 
+   // but in case of alphanumeric do-not extend the axis. It makes no sense
    if (IsAlphanumeric() && gDebug) Info("FindBin","Numeric query on alphanumeric axis - Sorting the bins or extending the axes / rebinning can alter the correspondence between the label and the bin interval.");
    if (x < fXmin) {              //*-* underflow
       bin = 0;
       if (fParent == 0) return bin;
-      if (!CanExtend() || IsAlphanumeric() ) return bin;   
+      if (!CanExtend() || IsAlphanumeric() ) return bin;
       ((TH1*)fParent)->ExtendAxis(x,this);
       return FindFixBin(x);
    } else  if ( !(x < fXmax)) {     //*-* overflow  (note the way to catch NaN)
@@ -315,7 +315,7 @@ Int_t TAxis::FindBin(const char *label)
       // we set the axis alphanumeric
       // when list of labels does not exist
       // do we want to do this also when histogram is not empty ?????
-      if (CanBeAlphanumeric() ) { 
+      if (CanBeAlphanumeric() ) {
          SetCanExtend(kTRUE);
          SetAlphanumeric(kTRUE);
          if (fXmax <= fXmin) {
@@ -333,7 +333,7 @@ Int_t TAxis::FindBin(const char *label)
    // if labels is not in the list and we have already labels
    if (!IsAlphanumeric()) {
       // if bins without labels exist or if the axis cannot be set to alphanumeric
-      if (HasBinWithoutLabel() || !CanBeAlphanumeric() ) {         
+      if (HasBinWithoutLabel() || !CanBeAlphanumeric() ) {
          Info("FindBin","Label %s is not in the list and the axis is not alphanumeric - ignore it",label);
          return -1;
       }
@@ -372,13 +372,13 @@ Int_t TAxis::FindBin(const char *label)
 Int_t TAxis::FindFixBin(const char *label) const
 {
    //create list of labels if it does not exist yet
-   if (!fLabels) return -1; 
- 
+   if (!fLabels) return -1;
+
    // search for label in the existing list and return it if it exists
    TObjString *obj = (TObjString*)fLabels->FindObject(label);
    if (obj) return (Int_t)obj->GetUniqueID();
    return -1;
-}   
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -817,7 +817,7 @@ void TAxis::SetBinLabel(Int_t bin, const char *label)
    obj->SetUniqueID((UInt_t)bin);
 
    // check for Alphanumeric case (labels for each bin)
-   if (CanBeAlphanumeric() && fLabels->GetSize() == fNbins) {      
+   if (CanBeAlphanumeric() && fLabels->GetSize() == fNbins) {
       SetAlphanumeric(kTRUE);
       SetCanExtend(kTRUE);
    }
