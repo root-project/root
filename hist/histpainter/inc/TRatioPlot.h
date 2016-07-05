@@ -26,6 +26,7 @@
 #include "TGraphAsymmErrors.h"
 #include "TGraph.h"
 #include "TAxis.h"
+#include "TGAxis.h"
 #include "TH1F.h"
 
 
@@ -55,12 +56,14 @@ protected:
 
    TGraph *fRatioGraph;
    TAxis *fSharedXAxis;
-
+   TGaxis *fUpperGaxis;
+   TGaxis *fLowerGaxis;
 
    virtual void BuildRatio();
    virtual void CalculateSizes();
    virtual void SyncAxesRanges();
    virtual void SetupPads();
+   virtual void CreateVisualAxes();
 
 public:
 

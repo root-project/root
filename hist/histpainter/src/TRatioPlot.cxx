@@ -20,7 +20,7 @@
 #include "TString.h"
 #include "TGraphAsymmErrors.h"
 #include "TGraphErrors.h"
-
+#include "TGAxis.h"
 
 #define _(x) std::cout << #x;
 #define __(x) std::cout << x << std::endl ;
@@ -61,7 +61,9 @@ TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, const char *name /*=0*/, const char *ti
      fLowerPad(0),
      fTopPad(0),
      fRatioGraph(0),
-     fSharedXAxis(0)
+     fSharedXAxis(0),
+     fUpperGaxis(0),
+     fLowerGaxis(0)
 {
    gROOT->GetListOfCleanups()->Add(this);
 
@@ -103,7 +105,6 @@ TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, const char *name /*=0*/, const char *ti
 void TRatioPlot::SetupPads() {
 
    if (fUpperPad != 0) {
-//      fUpperPad->IsA()->
       delete fUpperPad;
       fUpperPad = 0;
    }
@@ -186,6 +187,13 @@ void TRatioPlot::Draw(Option_t *option)
 
    fLowerPad->cd();
    fRatioGraph->Draw("AP");
+
+
+   fTopPad->cd();
+//   fUpperGaxis->Draw();
+//   fLowerGaxis->Draw();
+
+
 }
 
 void TRatioPlot::Paint(Option_t *opt) {
@@ -203,28 +211,31 @@ void TRatioPlot::Paint(Option_t *opt) {
    Double_t globFirst = fSharedXAxis->GetBinLowEdge(fSharedXAxis->GetFirst());
    Double_t globLast = fSharedXAxis->GetBinUpEdge(fSharedXAxis->GetLast());
 
-   var_dump(upFirst);
-   var_dump(upLast);
-   var_dump(lowFirst);
-   var_dump(lowLast);
-   var_dump(globFirst);
-   var_dump(globLast);
+//   var_dump(upFirst);
+//   var_dump(upLast);
+//   var_dump(lowFirst);
+//   var_dump(lowLast);
+//   var_dump(globFirst);
+//   var_dump(globLast);
 
    if (upFirst != globFirst || upLast != globLast) {
-      __("up zoomed");
+//      __("up zoomed");
       fSharedXAxis->SetRangeUser(upFirst, upLast);
    }
    else if (lowFirst != globFirst || lowLast != globLast) {
-      __("low zoomed");
+//      __("low zoomed");
       fSharedXAxis->SetRangeUser(lowFirst, lowLast);
-
    }
    else {
-      __("not zoomed")
+//      __("not zoomed")
    }
 
 
    CalculateSizes();
+   CreateVisualAxes();
+
+   fUpperGaxis->Paint();
+   fLowerGaxis->Paint();
 
    fUpperPad->Paint();
    fLowerPad->Paint();
@@ -234,12 +245,13 @@ void TRatioPlot::Paint(Option_t *opt) {
 void TRatioPlot::CalculateSizes()
 {
 
-   __(__PRETTY_FUNCTION__ << " called");
+//   __(__PRETTY_FUNCTION__ << " called");
 
    fUpperPad->SetBottomMargin(0.05);
    fLowerPad->SetTopMargin(0.05);
 
    SyncAxesRanges();
+
 }
 
 void TRatioPlot::SyncAxesRanges()
@@ -248,8 +260,8 @@ void TRatioPlot::SyncAxesRanges()
    Double_t first = fSharedXAxis->GetBinLowEdge(fSharedXAxis->GetFirst());
    Double_t last = fSharedXAxis->GetBinUpEdge(fSharedXAxis->GetLast());
 
-   var_dump(first);
-   var_dump(last);
+//   var_dump(first);
+//   var_dump(last);
 
    fRatioGraph->GetXaxis()->SetLimits(first, last);
    fRatioGraph->GetXaxis()->SetRangeUser(first, last);
@@ -260,7 +272,7 @@ void TRatioPlot::SyncAxesRanges()
 
 void TRatioPlot::BuildRatio()
 {
-   __(__PRETTY_FUNCTION__ << " called");
+//   __(__PRETTY_FUNCTION__ << " called");
 
    if (fRatioGraph != 0) {
       // have ratio graph, delete it
@@ -286,14 +298,97 @@ void TRatioPlot::BuildRatio()
 
 }
 
-void TRatioPlot::UnZoom(TAxis*)
+void TRatioPlot::CreateVisualAxes()
 {
+
    __(__PRETTY_FUNCTION__ << " called");
 
-   fSharedXAxis->SetRange(0, 0);
+   if (fUpperGaxis != 0) {
+      delete fUpperGaxis;
+   }
 
-//   var_dump(fSharedXAxis->GetFirst());
-//   var_dump(fSharedXAxis->GetLast());
+   if (fLowerGaxis != 0) {
+      delete fLowerGaxis;
+   }
+//
+//   Double_t upWNDC = fUpperPad->GetWNDC();
+//   Double_t upHNDC = fUpperPad->GetHNDC();
+//   Double_t upLowXNDC = fUpperPad->GetXlowNDC();
+//   Double_t upLowYNDC = fUpperPad->GetYlowNDC();
+//   Double_t lowWNDC = fLowerPad->GetWNDC();
+//   Double_t lowHNDC = fLowerPad->GetHNDC();
+//   Double_t lowLowXNDC = fLowerPad->GetXlowNDC();
+//   Double_t lowLowYNDC = fLowerPad->GetYlowNDC();
+//
+//
+//
+//   var_dump(upWNDC);
+//   var_dump(upHNDC);
+//   var_dump(upLowXNDC);
+//   var_dump(upLowYNDC);
+//   var_dump(lowWNDC);
+//   var_dump(lowHNDC);
+//   var_dump(lowLowXNDC);
+//   var_dump(lowLowYNDC);
+
+
+   Double_t upUxmin = fUpperPad->GetUxmin();
+   Double_t upUxmax = fUpperPad->GetUxmax();
+   Double_t upUymin = fUpperPad->GetUymin();
+   Double_t upUymax = fUpperPad->GetUymax();
+   Double_t lowUxmin = fLowerPad->GetUxmin();
+   Double_t lowUxmax = fLowerPad->GetUxmax();
+   Double_t lowUymin = fLowerPad->GetUymin();
+   Double_t lowUymax = fLowerPad->GetUymax();
+
+
+   var_dump(upUxmin);
+   var_dump(upUxmax);
+   var_dump(upUymin);
+   var_dump(upUymax);
+   var_dump(lowUxmin);
+   var_dump(lowUxmax);
+   var_dump(lowUymin);
+   var_dump(lowUymax);
+
+
+
+
+
+   Double_t upX1 = fUpperPad->GetX1();
+   Double_t upX2 = fUpperPad->GetX2();
+   Double_t upY1 = fUpperPad->GetY1();
+   Double_t lowX1 = fUpperPad->GetX1();
+   Double_t lowX2 = fUpperPad->GetX2();
+   Double_t lowY1 = fUpperPad->GetY1();
+
+   var_dump(upX1);
+   var_dump(upX2);
+   var_dump(upY1);
+   var_dump(lowX1);
+   var_dump(lowX2);
+   var_dump(lowY1);
+
+
+   fUpperGaxis = new TGaxis(upX1, upY1, upX2, upY1, 0., 1.);
+   fLowerGaxis = new TGaxis(lowX1, lowY1, lowX2, lowY1, 0., 1.);
+
+   TVirtualPad *padsav = gPad;
+
+   fTopPad->cd();
+
+   fUpperGaxis->Draw();
+   fLowerGaxis->Draw();
+
+   padsav->cd();
+
+}
+
+void TRatioPlot::UnZoom(TAxis*)
+{
+//   __(__PRETTY_FUNCTION__ << " called");
+
+   fSharedXAxis->SetRange(0, 0);
 
    SyncAxesRanges();
    Paint();
