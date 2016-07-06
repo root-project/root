@@ -417,13 +417,16 @@ void TMVA::MethodBoost::Train()
 
 
       // creating the directory of the classifier
-      if (fMonitorBoostedMethod) {
-         methodDir=GetFile()->GetDirectory(dirName=Form("%s_B%04i",fBoostedMethodName.Data(),fCurrentMethodIdx));
-         if (methodDir==0) {
-            methodDir=BaseDir()->mkdir(dirName,dirTitle=Form("Directory Boosted %s #%04i", fBoostedMethodName.Data(),fCurrentMethodIdx));
-         }
-         fCurrentMethod->SetMethodDir(methodDir);
-         fCurrentMethod->BaseDir()->cd();
+      if(!IsSilentFile())
+      {
+        if (fMonitorBoostedMethod) {
+            methodDir=GetFile()->GetDirectory(dirName=Form("%s_B%04i",fBoostedMethodName.Data(),fCurrentMethodIdx));
+            if (methodDir==0) {
+                methodDir=BaseDir()->mkdir(dirName,dirTitle=Form("Directory Boosted %s #%04i", fBoostedMethodName.Data(),fCurrentMethodIdx));
+            }
+            fCurrentMethod->SetMethodDir(methodDir);
+            fCurrentMethod->BaseDir()->cd();
+        }
       }
 
       // training
@@ -435,7 +438,7 @@ void TMVA::MethodBoost::Train()
       if (fBoostType=="Bagging") Bagging();  // you want also to train the first classifier on a bagged sample
       SingleTrain();
       TMVA::MsgLogger::EnableOutput();
-      fCurrentMethod->WriteMonitoringHistosToFile();
+      if(!IsSilentFile())fCurrentMethod->WriteMonitoringHistosToFile();
       
       // calculate MVA values of current method for all events in training sample
       // (used later on to get 'misclassified events' etc for the boosting
@@ -661,7 +664,16 @@ void TMVA::MethodBoost::SingleTrain()
 {
    Data()->SetCurrentType(Types::kTraining);
    MethodBase* meth = dynamic_cast<MethodBase*>(GetLastMethod());
-   if (meth) meth->TrainMethod();
+   if (meth){
+       if(IsSilentFile()) meth->SetSilentFile(kTRUE);
+       if(IsModelPersistence()){
+           TString _fFileDir= DataInfo().GetName();
+           _fFileDir+="/"+gConfig().GetIONames().fWeightFileDir;
+           meth->SetWeightFileDir(_fFileDir);
+       }
+       meth->SetModelPersistence(IsModelPersistence());
+       meth->TrainMethod();
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

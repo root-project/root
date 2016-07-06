@@ -96,7 +96,7 @@ namespace TMVA {
 
       friend class Factory;
       friend class RootFinder;
-
+      friend class MethodBoost;
    public:
 
       enum EWeightFileType { kROOT=0, kTEXT };
@@ -350,6 +350,10 @@ namespace TMVA {
       void SetSilentFile(Bool_t status){fSilentFile=status;}
       Bool_t IsSilentFile(){return fSilentFile;}
       
+      //Model Persistence
+      void SetModelPersistence(Bool_t status){fModelPersistence=status;}//added support to create/remove dir here if exits or not
+      Bool_t IsModelPersistence(){return fModelPersistence;}
+      
       // the TMVA version can be obtained and checked using
       //    if (GetTrainingTMVAVersionCode()>TMVA_VERSION(3,7,2)) {...}
       // or
@@ -559,6 +563,8 @@ namespace TMVA {
 
       //SilentFile
       Bool_t fSilentFile;
+      //Model Persistence
+      Bool_t fModelPersistence;
       
       TString          fParentDir;           // method parent name, like booster name
 

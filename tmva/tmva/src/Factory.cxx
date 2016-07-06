@@ -99,7 +99,6 @@ const Int_t  MinNoTrainingEvents = 10;
 
 ClassImp(TMVA::Factory)
 
-#define RECREATE_METHODS kTRUE
 #define READXML          kTRUE
 
 //number of bits for bitset
@@ -124,7 +123,8 @@ TMVA::Factory::Factory( TString jobName, TFile* theTargetFile, TString theOption
    fJobName              ( jobName ),
    fDataAssignType       ( kAssignEvents ),
    fATreeEvent           ( NULL ),
-   fAnalysisType         ( Types::kClassification )
+   fAnalysisType         ( Types::kClassification ),
+   fModelPersistence     (kTRUE)
 {
    fgTargetFile = theTargetFile;
 
@@ -158,6 +158,9 @@ TMVA::Factory::Factory( TString jobName, TFile* theTargetFile, TString theOption
 //    DeclareOptionRef( fSilentFile,   "SilentFile", "Reduce the information saved in the output file (default: False)" );
    DeclareOptionRef( drawProgressBar,
                      "DrawProgressBar", "Draw progress bar to display training, testing and evaluation schedule (default: True)" );
+   DeclareOptionRef( fModelPersistence,
+                     "ModelPersistence",
+                     "Option to save the trained model in xml file or using serialization");
 
    TString analysisType("Auto");
    DeclareOptionRef( analysisType,
@@ -198,7 +201,8 @@ TMVA::Factory::Factory( TString jobName, TString theOption )
    fJobName              ( jobName ),
    fDataAssignType       ( kAssignEvents ),
    fATreeEvent           ( NULL ),
-   fAnalysisType         ( Types::kClassification )
+   fAnalysisType         ( Types::kClassification ),
+   fModelPersistence     (kTRUE)
 {
    fgTargetFile = 0;
 
@@ -232,7 +236,10 @@ TMVA::Factory::Factory( TString jobName, TString theOption )
 //    DeclareOptionRef( fSilentFile,   "SilentFile", "Reduce the information saved in the output file (default: False)" );
    DeclareOptionRef( drawProgressBar,
                      "DrawProgressBar", "Draw progress bar to display training, testing and evaluation schedule (default: True)" );
-
+   DeclareOptionRef( fModelPersistence,
+                     "ModelPersistence",
+                     "Option to save the trained model in xml file or using serialization");
+   
    TString analysisType("Auto");
    DeclareOptionRef( analysisType,
                      "AnalysisType", "Set the analysis type (Classification, Regression, Multiclass, Auto) (default: Auto)" );
@@ -330,7 +337,7 @@ void TMVA::Factory::SetVerbose( Bool_t v )
 TMVA::MethodBase* TMVA::Factory::BookMethod( TMVA::DataLoader *loader, TString theMethodName, TString methodTitle, TString theOption )
 {
    // Book a classifier or regression method
-   gSystem->MakeDirectory(loader->GetName());//creating directory for DataLoader output
+   if(fModelPersistence) gSystem->MakeDirectory(loader->GetName());//creating directory for DataLoader output
 
    TString datasetname=loader->GetName();
   
@@ -429,6 +436,14 @@ TMVA::MethodBase* TMVA::Factory::BookMethod( TMVA::DataLoader *loader, TString t
    
 //    method->SetWeightFileDir(Form("%s/%s",loader->GetName(),method->GetWeightFileDir().Data()));//setting up weight file dir
    //method->fDataLoader=loader;
+   
+   if(fModelPersistence)
+   {
+        TString fFileDir=loader->GetName();
+        fFileDir+="/"+gConfig().GetIONames().fWeightFileDir;
+        method->SetWeightFileDir(fFileDir);
+   }
+   method->SetModelPersistence(fModelPersistence);
    method->SetAnalysisType( fAnalysisType );
    method->SetupMethod();
    method->ParseOptions();
@@ -882,7 +897,7 @@ void TMVA::Factory::TrainAllMethods()
       // of the methods (in TMVAClassificationApplication) is consistent with the results obtained
       // in the testing
       Log() << Endl;
-      if (RECREATE_METHODS) {
+      if (fModelPersistence) {
 
 	  Log() << kINFO << "=== Destroy and recreate all methods via weight files for testing ===" << Endl << Endl;
 	  if(!IsSilentFile())RootBaseDir()->cd();

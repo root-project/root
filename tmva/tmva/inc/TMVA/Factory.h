@@ -222,7 +222,9 @@ namespace TMVA {
       Float_t*                                  fATreeEvent;         // event variables
 
       Types::EAnalysisType                      fAnalysisType;    //! the training type
-
+      Bool_t                                    fModelPersistence;//!option to save the trained model in xml file or using serialization
+      
+      
    protected:
 
       ClassDef(Factory,0);  // The factory creates all MVA methods, and performs their training and testing

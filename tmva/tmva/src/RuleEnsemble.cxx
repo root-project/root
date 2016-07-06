@@ -713,9 +713,13 @@ void TMVA::RuleEnsemble::MakeLinearTerms()
       fLinNorm[v] = CalcLinNorm(stdl);
    }
    // Save PDFs - for debugging purpose
-   for (UInt_t v=0; v<nvars; v++) {
-      fLinPDFS[v]->Write();
-      fLinPDFB[v]->Write();
+   MethodBase *fMB=const_cast<MethodBase *>(fRuleFit->GetMethodBase());
+   if(!fMB->IsSilentFile())
+   {
+        for (UInt_t v=0; v<nvars; v++) {
+            fLinPDFS[v]->Write();
+            fLinPDFB[v]->Write();
+        }
    }
 }
 

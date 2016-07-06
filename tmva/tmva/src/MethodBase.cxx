@@ -197,10 +197,10 @@ TMVA::MethodBase::MethodBase( const TString& jobName,
    fSetupCompleted            (kFALSE)
 {
    SetTestvarName();
-   // default extension for weight files
-   fFileDir=fDataSetInfo.GetName();
-   fFileDir+="/"+gConfig().GetIONames().fWeightFileDir;
-   SetWeightFileDir(fFileDir);
+//    // default extension for weight files
+//    fFileDir=fDataSetInfo.GetName();
+//    fFileDir+="/"+gConfig().GetIONames().fWeightFileDir;
+//    SetWeightFileDir(fFileDir);
    //    SetWeightFileDir( gConfig().GetIONames().fWeightFileDir );
 }
 
@@ -260,11 +260,11 @@ TMVA::MethodBase::MethodBase( Types::EMVA methodType,
    fSplTrainRefB              ( 0 ),
    fSetupCompleted            (kFALSE)
 {
-   // constructor used for Testing + Application of the MVA,
-   // only (no training), using given WeightFiles
-   fFileDir=fDataSetInfo.GetName();
-   fFileDir+="/"+gConfig().GetIONames().fWeightFileDir;
-   SetWeightFileDir(fFileDir);
+//    // constructor used for Testing + Application of the MVA,
+//    // only (no training), using given WeightFiles
+//    fFileDir=fDataSetInfo.GetName();
+//    fFileDir+="/"+gConfig().GetIONames().fWeightFileDir;
+//    SetWeightFileDir(fFileDir);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -565,7 +565,7 @@ void TMVA::MethodBase::TrainMethod()
    if (Help()) PrintHelpMessage();
           
    // all histograms should be created in the method's subdirectory
-   if(!IsSilentFile())BaseDir()->cd();
+   if(!IsSilentFile()) BaseDir()->cd();
 
    // once calculate all the transformation (e.g. the sequence of Decorr:Gauss:Decorr)
    //    needed for this classifier
