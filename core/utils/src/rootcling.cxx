@@ -15,7 +15,7 @@
 #endif
 
 extern "C" {
-   R__DLLEXPORT void usedToIdentifyRootClingByDlSym() {};
+   R__DLLEXPORT void usedToIdentifyRootClingByDlSym() {}
 }
 
 const char *shortHelp =
