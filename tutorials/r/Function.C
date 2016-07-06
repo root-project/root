@@ -43,10 +43,13 @@ void Function()
    
    print(confint(fit));
    
-   devnew("Fitting Regression");
-   plot(xdata,ydata);
+   if(!gROOT->IsBatch()) 
+   {
+        devnew("Fitting Regression");
+        plot(xdata,ydata);
    
-   TRObject xgrid=seq(min(xdata),max(xdata),Label["len"]=10);
-   lines(xgrid,predict(fit,xgrid),Label["col"] = "green");
-   devoff(Label["which"] = devcur() );
+        TRObject xgrid=seq(min(xdata),max(xdata),Label["len"]=10);
+        lines(xgrid,predict(fit,xgrid),Label["col"] = "green");
+        devoff(Label["which"] = devcur() );
+   }
 }
