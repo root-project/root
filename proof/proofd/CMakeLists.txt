@@ -10,6 +10,7 @@ ROOT_USE_PACKAGE(net/auth)
 include_directories(${XROOTD_INCLUDE_DIRS})
 add_definitions(${XROOTD_CFLAGS})
 ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-nonnull-compare)
+ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-undefined-bool-conversion)
 
 if(WIN32)
   ROOT_LINKER_LIBRARY(XrdProofd XProofProtUtils.cxx LIBRARIES ${XROOTD_LIBRARIES})

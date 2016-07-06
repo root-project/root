@@ -647,23 +647,23 @@ if(xrootd)
   endif()
 endif()
 if(builtin_xrootd)
-  set(xrootd_version 3.3.6)
-  set(xrootd_versionnum 300030006)
-  message(STATUS "Downloading and building XROOTD version ${xrootd_version}") 
+  set(xrootd_version 4.2.2)
+  set(xrootd_versionnum 400020002)
+  message(STATUS "Downloading and building XROOTD version ${xrootd_version}")
   string(REPLACE "-Wall " "" __cxxflags "${CMAKE_CXX_FLAGS}")  # Otherwise it produces many warnings
   string(REPLACE "-W " "" __cxxflags "${__cxxflags}")          # Otherwise it produces many warnings
-  ROOT_ADD_CXX_FLAG(__cxxflags -Wno-duplicate-decl-specifier)
-  ROOT_ADD_CXX_FLAG(__cxxflags -Wno-deprecated-declarations)
   ExternalProject_Add(
     XROOTD
     URL http://xrootd.org/download/v${xrootd_version}/xrootd-${xrootd_version}.tar.gz
     INSTALL_DIR ${CMAKE_BINARY_DIR}
-    CMAKE_ARGS -DENABLE_PERL=FALSE
-               -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
                -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
                -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                -DCMAKE_CXX_FLAGS=${__cxxflags}
+               -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
+               -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
+               -DENABLE_PYTHON=OFF
     LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
   )
   # We cannot call find_package(XROOTD) becuase the package is not yet built. So, we need to emulate what it defines....
@@ -674,10 +674,14 @@ if(builtin_xrootd)
     endif()
   endif()
   set(XROOTD_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include/xrootd ${CMAKE_BINARY_DIR}/include/xrootd/private)
-  set(XROOTD_LIBRARIES ${CMAKE_BINARY_DIR}/${_LIBDIR_DEFAULT}/libXrdMain${CMAKE_SHARED_LIBRARY_SUFFIX}
-                       ${CMAKE_BINARY_DIR}/${_LIBDIR_DEFAULT}/libXrdUtils${CMAKE_SHARED_LIBRARY_SUFFIX}
+  set(XROOTD_LIBRARIES ${CMAKE_BINARY_DIR}/${_LIBDIR_DEFAULT}/libXrdUtils${CMAKE_SHARED_LIBRARY_SUFFIX}
                        ${CMAKE_BINARY_DIR}/${_LIBDIR_DEFAULT}/libXrdClient${CMAKE_SHARED_LIBRARY_SUFFIX}
                        ${CMAKE_BINARY_DIR}/${_LIBDIR_DEFAULT}/libXrdCl${CMAKE_SHARED_LIBRARY_SUFFIX})
+  if(xrootd_version VERSION_LESS 4)
+    list(APPEND XROOTD_LIBRARIES ${CMAKE_BINARY_DIR}/${_LIBDIR_DEFAULT}/libXrdMain${CMAKE_SHARED_LIBRARY_SUFFIX})
+  else()
+    set(XROOTD_NOMAIN TRUE)
+  endif()
   set(XROOTD_CFLAGS "-DROOTXRDVERS=${xrootd_versionnum}")
   install(DIRECTORY ${CMAKE_BINARY_DIR}/${_LIBDIR_DEFAULT}/ DESTINATION ${CMAKE_INSTALL_LIBDIR}
                     COMPONENT libraries
