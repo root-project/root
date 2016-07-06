@@ -670,9 +670,8 @@ of delete of some entities at the end of the process.
 - [ROOT-8149] - Memory leak in TList I/O
 
 
-## HEAD of the v6-06-00-patches branch
-
-Changes will be part of the future 6.06/06
+## Release 6.06/06
+Released on July 6, 2016
 
 ### Cling
 
@@ -697,3 +696,24 @@ Changes will be part of the future 6.06/06
 - Fix detection of errors that appears in nested TTreeFormula [ROOT-8218]
 - Avoid autoparse looking for default constructor in TTreeCloner::CopyStreamerInfos().
 
+Release Notes - ROOT - Version 6.06/06
+
+## Bug Fixed in this release
+
+*   [[ROOT-6753](https://sft.its.cern.ch/jira/browse/ROOT-6753)] - PROOF-Lite doesn't find TSelector type from an already loaded library
+*   [[ROOT-7258](https://sft.its.cern.ch/jira/browse/ROOT-7258)] - MinIf and MaxIf TTreeFormula functions ignore last element
+*   [[ROOT-8038](https://sft.its.cern.ch/jira/browse/ROOT-8038)] - [patch] "for e in getSTLLikeCollection()" crashes pyroot
+*   [[ROOT-8166](https://sft.its.cern.ch/jira/browse/ROOT-8166)] - Update INSTALL to reflect CMake
+*   [[ROOT-8184](https://sft.its.cern.ch/jira/browse/ROOT-8184)] - Error building XrdSysPthread with GCC 6.1
+*   [[ROOT-8197](https://sft.its.cern.ch/jira/browse/ROOT-8197)] - rootcp not preserving kSingleKey
+*   [[ROOT-8205](https://sft.its.cern.ch/jira/browse/ROOT-8205)] - TSystem::ExpandPathName is not thread safe
+*   [[ROOT-8207](https://sft.its.cern.ch/jira/browse/ROOT-8207)] - tmva/tmva/CMakeLists.txt unnecessarily includes TreeViewer
+*   [[ROOT-8217](https://sft.its.cern.ch/jira/browse/ROOT-8217)] - TMinuit::TMinuit data race
+*   [[ROOT-8218](https://sft.its.cern.ch/jira/browse/ROOT-8218)] - Detection of TTreeFormula without breaking formula
+*   [[ROOT-8221](https://sft.its.cern.ch/jira/browse/ROOT-8221)] - Enum value kKey_Shift not accessible from python with ROOT 6
+*   [[ROOT-8226](https://sft.its.cern.ch/jira/browse/ROOT-8226)] - CMake 3.5.2: circular dependency libMathMore
+*   [[ROOT-8231](https://sft.its.cern.ch/jira/browse/ROOT-8231)] - _GLIBCXX_USE_CXX11_ABI=0 should be propagated into root-config --cflags
+
+## HEAD of the v6-06-00-patches branch
+
+Changes will be part of the future 6.06/08
