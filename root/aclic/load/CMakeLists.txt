@@ -5,7 +5,9 @@ ROOTTEST_ADD_TEST(autoload
                   DEPENDS autoloadtest.C)
 
 ROOTTEST_ADD_TEST(reload
-                  MACRO assertReload.C)
+                  COPY_TO_BUILDDIR Reload.root
+                  MACRO assertReload.C
+                  OUTREF assertReload.ref)
 
 ROOTTEST_ADD_TEST(linktest
                   MACRO execlinktest.C
