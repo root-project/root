@@ -85,7 +85,7 @@ $(GLLIB):       $(GLO) $(GLDO) $(ORDER_) $(MAINLIBS) $(GLLIBDEP) $(FTGLLIB) \
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libRGL.$(SOEXT) $@ "$(GLO) $(GLO1) $(GLDO)" \
 		   "$(GLLIBEXTRA) $(FTGLLIBDIR) $(FTGLLIBS) \
-		    $(GL2PSLIBDIR) $(GL2PSLIBS) \
+		    $(GL2PSLIBDIR) $(GL2PSLIB) \
 		    $(GLEWLIBDIR) $(GLEWLIBS) $(GLLIBS)"
 
 $(call pcmrule,GL)
