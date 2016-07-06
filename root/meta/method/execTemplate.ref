@@ -77,3 +77,4 @@ OBJ: TListOfFunctions	TListOfFunctions	List of TFunctions for a class : 0
       Outer<int>& Outer<int>::operator=(Outer<int>&&)
  OBJ: TMethod	~Outer<int>	 : 0
       void Outer<int>::~Outer<int>()
+TClass::New() on Outer<int> does create an object

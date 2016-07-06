@@ -30,7 +30,7 @@ struct Outer {
    // Test for methods with all defaulted params, typical for enable-if'ed
    // methods, that TClass::GetListOfMethods() should really report.
    template <class A = T, class = EnableIfSame_t<A, T>>
-   Outer();
+   Outer() {}
 
    template <class A = T, class = EnableIfSame_t<A, T>>
    void AFunction(float);
@@ -215,8 +215,8 @@ void CheckEnableIf() {
    TClass* cl = TClass::GetClass("Outer<int>");
    cl->GetListOfMethods(false)->ls("noaddr");
    cl->GetListOfMethods(true)->ls("noaddr");
-   //printf("TClass::New() on Outer<int> does%s create an object\n",
-   //       cl->New() ? "": " not");
+   printf("TClass::New() on Outer<int> does%s create an object\n",
+          cl->New() ? "": " not");
 }
 
 void execTemplate()
