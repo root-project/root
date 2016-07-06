@@ -3108,19 +3108,18 @@ TInetAddress TUnixSystem::GetSockName(int sock)
    char hbuf[NI_MAXHOST];
    int rc = 0;
    if ((rc = getnameinfo(sa, sizeof(struct sockaddr), hbuf, sizeof(hbuf),
-                         nullptr, 0, NI_NAMEREQD)) != 0) {
-      Error("GetSockName", "getnameinfo failed: '%s'", gai_strerror(rc));
-      return TInetAddress();
+                         nullptr, 0, 0)) == 0) {
+      TInetAddress a = GetHostByName(hbuf);
+      if (a.IsValid()) {
+         a.fFamily = addr.sin_family;
+         a.fPort = ntohs(addr.sin_port);
+         return a;
+      }
    }
-
-   TInetAddress a = GetHostByName(hbuf);
-   if (a.IsValid()) {
-      a.fFamily = addr.sin_family;
-      a.fPort = ntohs(addr.sin_port);
-      return a;
-   }
-   // Failure
-   return TInetAddress();
+   // Failure: return minimal information
+   UInt_t iaddr;
+   memcpy(&iaddr, &addr.sin_addr, sizeof(addr.sin_addr));
+   return TInetAddress("????", ntohl(iaddr), AF_INET, ntohs(addr.sin_port));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3146,19 +3145,18 @@ TInetAddress TUnixSystem::GetPeerName(int sock)
    struct sockaddr *sa = (struct sockaddr *) &addr;    /* input */
    char hbuf[NI_MAXHOST];
    if ((rc = getnameinfo(sa, sizeof(struct sockaddr), hbuf, sizeof(hbuf),
-                         nullptr, 0, NI_NAMEREQD)) != 0) {
-      Error("GetPeerName", "getnameinfo failed: '%s'", gai_strerror(rc));
-      return TInetAddress();
+                         nullptr, 0, 0)) == 0) {
+      TInetAddress a = GetHostByName(hbuf);
+      if (a.IsValid()) {
+         a.fFamily = addr.sin_family;
+         a.fPort = ntohs(addr.sin_port);
+         return a;
+      }
    }
-
-   TInetAddress a = GetHostByName(hbuf);
-   if (a.IsValid()) {
-      a.fFamily = addr.sin_family;
-      a.fPort = ntohs(addr.sin_port);
-      return a;
-   }
-   // Failure
-   return TInetAddress();
+   // Failure: return minimal information
+   UInt_t iaddr;
+   memcpy(&iaddr, &addr.sin_addr, sizeof(addr.sin_addr));
+   return TInetAddress("????", ntohl(iaddr), AF_INET, ntohs(addr.sin_port));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
