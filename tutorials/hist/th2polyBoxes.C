@@ -8,7 +8,7 @@
 ///
 /// \author Olivier Couet
 
-{
+TCanvas* th2polyBoxes() {
    TCanvas *ch2p2 = new TCanvas("ch2p2","ch2p2",600,400);
    gStyle->SetPalette(57);
    TH2Poly *h2p = new TH2Poly();
