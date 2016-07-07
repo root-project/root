@@ -269,7 +269,6 @@ macro(ROOTTEST_GENERATE_DICTIONARY dictname)
   
   add_test(NAME ${GENERATE_DICTIONARY_TEST}
            COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
-                                    --target  ${dictname}${fast}
                                     --target  ${targetname_libgen}${fast})
 
 endmacro(ROOTTEST_GENERATE_DICTIONARY)
@@ -341,7 +340,6 @@ macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
 
   add_test(NAME ${GENERATE_REFLEX_TEST}
            COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
-                                    --target ${targetname_dictgen}${fast}
                                     --target ${targetname_libgen}${fast})
 
 endmacro(ROOTTEST_GENERATE_REFLEX_DICTIONARY)
