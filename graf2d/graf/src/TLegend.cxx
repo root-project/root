@@ -919,6 +919,7 @@ void TLegend::SetHeader( const char *header, Option_t* option )
          opt = option;
          opt.ToLower();
          if ( opt.Contains("c") ) first->SetTextAlign(22);
+         else                     first->SetTextAlign(0);
          return;
       }
    }
