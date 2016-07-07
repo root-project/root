@@ -84,7 +84,7 @@ Begin_Macro(source)
    gr->Draw("P");
 
    leg = new TLegend(0.1,0.7,0.48,0.9);
-   leg->SetHeader("The Legend Title");
+   leg->SetHeader("The Legend Title","C"); // option "C" allows to center the header
    leg->AddEntry(h1,"Histogram filled with random numbers","f");
    leg->AddEntry("f1","Function abs(#frac{sin(x)}{x})","l");
    leg->AddEntry("gr","Graph with error bars","lep");
@@ -902,22 +902,31 @@ void TLegend::SetEntryOption( Option_t* option )
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets the header, which is the "title" that appears at the top of the legend.
+/// If `option` contains `C`, the title will be centered.
 
-void TLegend::SetHeader( const char *header )
+void TLegend::SetHeader( const char *header, Option_t* option )
 {
+   TString opt;
+
    if ( !fPrimitives ) fPrimitives = new TList;
    TIter next(fPrimitives);
    TLegendEntry *first;   // header is always the first entry
    if ((  first = (TLegendEntry*)next() )) {
-      TString opt = first->GetOption();
+      opt = first->GetOption();
       opt.ToLower();
       if ( opt.Contains("h") ) {
          first->SetLabel(header);
+         opt = option;
+         opt.ToLower();
+         if ( opt.Contains("c") ) first->SetTextAlign(22);
          return;
       }
    }
    first = new TLegendEntry( 0, header, "h" );
-   first->SetTextAlign(0);
+   opt = option;
+   opt.ToLower();
+   if ( opt.Contains("c") ) first->SetTextAlign(22);
+   else                     first->SetTextAlign(0);
    first->SetTextAngle(0);
    first->SetTextColor(0);
    first->SetTextFont(GetTextFont()); // default font is TLegend font for the header

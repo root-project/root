@@ -226,6 +226,7 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 * Support custom line styles in `TTeXDump` as requested [here](https://sft.its.cern.ch/jira/browse/ROOT-8215)
 * `TColor::GetFreeColorIndex()` allows to make sure the new color is created with an
   unused color index.
+* In `TLegend::SetHeader` the new option `C` allows to center the title.
 
 ## 3D Graphics Libraries
 
