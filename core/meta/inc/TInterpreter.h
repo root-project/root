@@ -44,9 +44,6 @@ class TMethod;
 class TObjArray;
 class TEnum;
 class TListOfEnums;
-namespace cling {
-   class ClingTabCompletion;
-}   
 
 R__EXTERN TVirtualMutex *gInterpreterMutex;
 

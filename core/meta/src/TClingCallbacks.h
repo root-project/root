@@ -25,7 +25,6 @@ namespace clang {
 namespace cling {
    class Interpreter;
    class Transaction;
-   class ClingTabCompletion;
 }
 
 namespace llvm {
@@ -44,7 +43,6 @@ private:
    bool fIsAutoParsingSuspended;
    bool fPPOldFlag;
    bool fPPChanged;
-
 public:
    TClingCallbacks(cling::Interpreter* interp);
 
