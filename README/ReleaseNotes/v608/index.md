@@ -232,6 +232,8 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 
 * When painting a `TH3` as 3D boxes, `TMarker3DBox` ignored the max and min values
   specified by `SetMaximum()` and `SetMinimum()`.
+* In `TMarker3DBox` when a box marker has a size equal to zero it is not painted.
+  Painting it produced a dot with the X11 backend.
 
 ## New histogram drawing options
 
