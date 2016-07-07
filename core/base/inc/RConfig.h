@@ -37,6 +37,13 @@
 #define R__NULLPTR
 #endif
 
+#if defined(__cplusplus) && (__cplusplus < 201103L)
+# error "ROOT requires support for C++11 or higher."
+# if defined(__GNUC__) || defined(__clang__)
+#  error "Pass `-std=c++11` as compiler argument."
+# endif
+#endif
+
 /*---- machines --------------------------------------------------------------*/
 
 #ifdef __hpux
@@ -198,6 +205,19 @@
 #   define R__LINUX
 #   define R__UNIX
 #   define R__BYTESWAP
+#   define R__B64
+#   define NEED_SIGJMP
+#endif
+
+#if defined(linux) && defined(__s390__)
+#   define R__LINUX
+#   define R__UNIX
+#   define NEED_SIGJMP
+#endif
+
+#if defined(linux) && defined(__s390x__)
+#   define R__LINUX
+#   define R__UNIX
 #   define R__B64
 #   define NEED_SIGJMP
 #endif
@@ -426,6 +446,17 @@
     /* Currently CINT does not really mind to have duplicates and     */
     /* does not work correctly as far as merging tokens is concerned. */
 #   define _R__UNIQUE_(X) X
+#endif
+
+/*---- deprecation -----------------------------------------------------------*/
+
+#if defined(__GNUC__) || defined(__clang__) || defined(__INTEL_COMPILER)
+#   define R__DEPRECATED(REASON) __attribute__((deprecated(REASON)))
+#elif defined(_MSC_VER)
+#   define R__DEPRECATED(REASON) __declspec(deprecated(REASON))
+#else
+#   pragma message("Deprecation not supported for this compiler.")
+#   define R__DEPRECATED(REASON)
 #endif
 
 /*---- misc ------------------------------------------------------------------*/

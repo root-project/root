@@ -39,12 +39,12 @@ public:
 class TImagePalette : public TObject {
 
 public:
-   UInt_t      fNumPoints;   // number of anchor points
-   Double_t   *fPoints;      // [fNumPoints] value of each anchor point [0..1]
-   UShort_t   *fColorRed;    // [fNumPoints] red color at each anchor point
-   UShort_t   *fColorGreen;  // [fNumPoints] green color at each anchor point
-   UShort_t   *fColorBlue;   // [fNumPoints] blue color at each anchor point
-   UShort_t   *fColorAlpha;  // [fNumPoints] alpha at each anchor point
+   UInt_t      fNumPoints;   ///< number of anchor points
+   Double_t   *fPoints;      ///< [fNumPoints] value of each anchor point [0..1]
+   UShort_t   *fColorRed;    ///< [fNumPoints] red color at each anchor point
+   UShort_t   *fColorGreen;  ///< [fNumPoints] green color at each anchor point
+   UShort_t   *fColorBlue;   ///< [fNumPoints] blue color at each anchor point
+   UShort_t   *fColorAlpha;  ///< [fNumPoints] alpha at each anchor point
 
    TImagePalette();
    TImagePalette(const TImagePalette &palette);
@@ -75,12 +75,12 @@ public:
    };
 
 protected:
-   EImageQuality    fImageQuality;       // *OPTION={GetMethod="GetImageQuality";SetMethod="SetImageQuality";Items=(kImgDefault="Default",kImgPoor="Poor",kImgFast="Fast",kImgGood="Good",kImgBest="Best")}*
-   UInt_t           fImageCompression;   // compression [0 .. 100] 0: no compression
-   Bool_t           fConstRatio;         // keep aspect ratio of image on the screen
-   TImagePalette    fPalette;            // color palette for value -> color conversion
-   TPaletteEditor  *fPaletteEditor;      //! GUI to edit the color palette
-   Bool_t           fPaletteEnabled;     //! kTRUE - palette is drawn on the image
+   EImageQuality    fImageQuality;       ///< *OPTION={GetMethod="GetImageQuality";SetMethod="SetImageQuality";Items=(kImgDefault="Default",kImgPoor="Poor",kImgFast="Fast",kImgGood="Good",kImgBest="Best")}*
+   UInt_t           fImageCompression;   ///< compression [0 .. 100] 0: no compression
+   Bool_t           fConstRatio;         ///< keep aspect ratio of image on the screen
+   TImagePalette    fPalette;            ///< color palette for value -> color conversion
+   TPaletteEditor  *fPaletteEditor;      ///<! GUI to edit the color palette
+   Bool_t           fPaletteEnabled;     ///<! kTRUE - palette is drawn on the image
 
 public:
    TAttImage();

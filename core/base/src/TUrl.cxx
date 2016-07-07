@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TUrl
+\ingroup Base
+
 This class represents a WWW compatible URL.
 It provides member functions to return the different parts of
 an URL. The supported url format is:

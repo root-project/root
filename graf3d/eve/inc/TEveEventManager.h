@@ -39,7 +39,7 @@ public:
    virtual void RemoveNewEventCommand(const TString& cmd);
    virtual void ClearNewEventCommands();
 
-   ClassDef(TEveEventManager, 1); // Base class for event management and navigation.
+   ClassDef(TEveEventManager, 0); // Base class for event management and navigation.
 };
 
 #endif

@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TChain
+\ingroup tree
+
 A chain is a collection of files containg TTree objects.
 When the chain is created, the first parameter is the default name
 for the Tree to be processed later on.

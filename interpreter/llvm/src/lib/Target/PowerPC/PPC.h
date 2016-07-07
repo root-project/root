@@ -16,7 +16,6 @@
 #define LLVM_LIB_TARGET_POWERPC_PPC_H
 
 #include "MCTargetDesc/PPCMCTargetDesc.h"
-#include <string>
 
 // GCC #defines PPC on Linux but we use it as our namespace name
 #undef PPC
@@ -34,15 +33,23 @@ namespace llvm {
 #ifndef NDEBUG
   FunctionPass *createPPCCTRLoopsVerify();
 #endif
+  FunctionPass *createPPCLoopPreIncPrepPass(PPCTargetMachine &TM);
+  FunctionPass *createPPCTOCRegDepsPass();
   FunctionPass *createPPCEarlyReturnPass();
   FunctionPass *createPPCVSXCopyPass();
   FunctionPass *createPPCVSXFMAMutatePass();
+  FunctionPass *createPPCVSXSwapRemovalPass();
+  FunctionPass *createPPCMIPeepholePass();
   FunctionPass *createPPCBranchSelectionPass();
+  FunctionPass *createPPCQPXLoadSplatPass();
   FunctionPass *createPPCISelDag(PPCTargetMachine &TM);
+  FunctionPass *createPPCTLSDynamicCallPass();
+  FunctionPass *createPPCBoolRetToIntPass();
   void LowerPPCMachineInstrToMCInst(const MachineInstr *MI, MCInst &OutMI,
                                     AsmPrinter &AP, bool isDarwin);
 
   void initializePPCVSXFMAMutatePass(PassRegistry&);
+  void initializePPCBoolRetToIntPass(PassRegistry&);
   extern char &PPCVSXFMAMutateID;
 
   namespace PPCII {
@@ -89,12 +96,7 @@ namespace llvm {
     MO_TOC_LO    = 7 << 4,
 
     // Symbol for VK_PPC_TLS fixup attached to an ADD instruction
-    MO_TLS       = 8 << 4,
-
-    // Symbols for VK_PPC_TLSGD and VK_PPC_TLSLD in __tls_get_addr
-    // call sequences.
-    MO_TLSLD     = 9 << 4,
-    MO_TLSGD     = 10 << 4
+    MO_TLS       = 8 << 4
   };
   } // end namespace PPCII
   

@@ -16,7 +16,7 @@
 TXMLParser is an abstract class which interfaces with Libxml2.
 Libxml2 is the XML C parser and toolkit developed for the Gnome
 project.
-The libxml library provides two interfaces to the parser, a DOM   
+The libxml library provides two interfaces to the parser, a DOM
 style tree interface and a SAX style event based interface.
 TXMLParser is parent class of TSAXParser and TDOMParser, which are
 a SAX interface and DOM interface of libxml.

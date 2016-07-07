@@ -236,7 +236,7 @@ TString TBufferJSON::ConvertToJSON(const void *obj, const TClass *cl,
 
       return TBufferJSON::ConvertToJSON(ptr, member, compact, arraylen);
    }
-  
+
    TBufferJSON buf;
 
    buf.SetCompact(compact);

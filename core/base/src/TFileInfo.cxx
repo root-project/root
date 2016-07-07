@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TFileInfo
+\ingroup Base
+
 Class describing a generic file including meta information.
 */
 

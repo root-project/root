@@ -1,5 +1,11 @@
-//Example of the old geometry package (now obsolete)
-//Author: Rene Brun
+/// \file
+/// \ingroup tutorial_geom
+/// Example of the old geometry package (now obsolete)
+//
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
 
 void geometry() {
    TString dir = gSystem->UnixPathName(__FILE__);

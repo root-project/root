@@ -273,7 +273,7 @@ Bool_t TQtClientWidget::SetKeyMask(Int_t keycode, UInt_t modifier, int insert)
       if (modifier & kKeyLockMask)    ikeys |= Qt::META;
       if (modifier & kKeyControlMask) ikeys |= Qt::CTRL;
       if (modifier & kKeyMod1Mask)    ikeys |= Qt::ALT;
-                                      ikeys |= keycode;
+      /* in all cases */              ikeys |= keycode;
    }
    QKeySequence keys(ikeys);
 

@@ -1151,7 +1151,7 @@ RooRealVar* RooAbsData::rmsVar(RooRealVar &var, const char* cutSpec, const char*
 ///    "A" shows asymmetric error, "U" shows unit, "H" hides the value
 ///  - `FixedPrecision(int n)` Controls precision, set fixed number of digits
 ///  - `AutoPrecision(int n)` Controls precision. Number of shown digits is calculated from error + n specified additional digits (1 is sensible default)
-///  - `VerbatimName(Bool_t flag)` Put variable name in a \verb+   + clause.
+///  - `VerbatimName(Bool_t flag)` Put variable name in a \\verb+   + clause.
 
 RooPlot* RooAbsData::statOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdArg& arg2,
              const RooCmdArg& arg3, const RooCmdArg& arg4, const RooCmdArg& arg5,

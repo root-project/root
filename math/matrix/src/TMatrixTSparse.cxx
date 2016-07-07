@@ -197,9 +197,9 @@ TMatrixTSparse<Element>::TMatrixTSparse(EMatrixCreatorsOp1 op,const TMatrixTSpar
          for (Int_t i = rowLwb; i <= rowLwb+nrows-1; i++)
             for (Int_t j = colLwb; j <= colLwb+ncols-1; j++)
                if (i==j) nr_nonzeros++;
-            Allocate(nrows,ncols,rowLwb,colLwb,1,nr_nonzeros);
-            UnitMatrix();
-            break;
+         Allocate(nrows,ncols,rowLwb,colLwb,1,nr_nonzeros);
+         UnitMatrix();
+         break;
       }
       case kTransposed:
       {

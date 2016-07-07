@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TLeafO
+\ingroup tree
+
 A TLeaf for a bool data type.
 */
 

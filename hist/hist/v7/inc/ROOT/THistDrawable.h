@@ -19,16 +19,18 @@
 #include "ROOT/THistDrawOptions.h"
 #include "ROOT/TLogger.h"
 
-#include "TSystem.h"
-
 #include <memory>
 
 namespace ROOT {
 namespace Experimental {
 
-template<class DATA> class THist;
+template<int DIMENSIONS, class PRECISION,
+  template <int D_, class P_, template <class P__> class STORAGE> class... STAT>
+class THist;
 
 namespace Internal {
+
+void LoadHistPainterLibrary();
 
 template <int DIMENSION>
 class THistPainterBase {
@@ -41,7 +43,7 @@ protected:
 public:
   static THistPainterBase<DIMENSION>* GetPainter() {
     if (!fgPainter)
-      gSystem->Load("libHistPainter");
+      LoadHistPainterLibrary();
     return fgPainter;
   }
 
@@ -53,21 +55,24 @@ extern template class THistPainterBase<1>;
 extern template class THistPainterBase<2>;
 extern template class THistPainterBase<3>;
 
-template <class DATA>
+template<int DIMENSIONS, class PRECISION,
+  template <int D_, class P_, template <class P__> class STORAGE> class... STAT>
 class THistDrawable final: public TDrawable {
+public:
+  using Hist_t = THist<DIMENSIONS, PRECISION, STAT...>;
 private:
-  std::weak_ptr<THist<DATA>> fHist;
-  THistDrawOptions<DATA::GetNDim()> fOpts;
+  std::weak_ptr<Hist_t> fHist;
+  THistDrawOptions<DIMENSIONS> fOpts;
 
 public:
-  THistDrawable(std::weak_ptr<THist<DATA>> hist,
-                THistDrawOptions<DATA::GetNDim()> opts): fHist(hist), fOpts(opts) {}
+  THistDrawable(std::weak_ptr<Hist_t> hist,
+                THistDrawOptions<DIMENSIONS> opts): fHist(hist), fOpts(opts) {}
 
   ~THistDrawable() = default;
 
   /// Paint the histogram
   void Paint() final {
-    THistPainterBase<DATA::GetNDim()>::GetPainter()->Paint(*this, fOpts);
+    THistPainterBase<DIMENSIONS>::GetPainter()->Paint(*this, fOpts);
   }
 };
 

@@ -10,13 +10,12 @@
 #include "BackendPasses.h"
 
 #include "llvm/Analysis/InlineCost.h"
-#include "llvm/IR/DataLayout.h"
+#include "llvm/IR/LegacyPassManager.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Verifier.h"
 #include "llvm/Transforms/IPO.h"
 #include "llvm/Transforms/IPO/InlinerPass.h"
 #include "llvm/Transforms/IPO/PassManagerBuilder.h"
-#include "llvm/PassManager.h"
 
 #include "clang/Basic/LangOptions.h"
 #include "clang/Basic/TargetOptions.h"
@@ -25,6 +24,7 @@
 using namespace cling;
 using namespace clang;
 using namespace llvm;
+using namespace llvm::legacy;
 
 namespace {
 
@@ -70,7 +70,7 @@ char InlinerKeepDeadFunc::ID = 0;
 
 
 BackendPasses::BackendPasses(const CodeGenOptions &CGOpts,
-                             const TargetOptions &TOpts,
+                             const clang::TargetOptions &TOpts,
                              const LangOptions &LOpts):
   m_CodeGenOptsVerifyModule(CGOpts.VerifyModule)
 {
@@ -83,13 +83,15 @@ BackendPasses::~BackendPasses() {
 }
 
 void BackendPasses::CreatePasses(const CodeGenOptions &CGOpts,
-                                 const TargetOptions &TOpts,
+                                 const clang::TargetOptions &TOpts,
                                  const LangOptions &LOpts)
 {
   // From BackEndUtil's clang::EmitAssemblyHelper::CreatePasses().
 
   unsigned OptLevel = CGOpts.OptimizationLevel;
-  CodeGenOptions::InliningMethod Inlining = CGOpts.getInlining();
+
+  // CodeGenOptions::InliningMethod Inlining = CGOpts.getInlining();
+  CodeGenOptions::InliningMethod Inlining = CodeGenOptions::NormalInlining;
 
   // Handle disabling of LLVM optimization, where we want to preserve the
   // internal module before any optimization.
@@ -98,6 +100,9 @@ void BackendPasses::CreatePasses(const CodeGenOptions &CGOpts,
     // Always keep at least ForceInline - NoInlining is deadly for libc++.
     // Inlining = CGOpts.NoInlining;
   }
+
+  OptLevel = 0; // we need to keep even "unused" values - until we
+  // feed incremental modules into the JIT.
 
   m_PMBuilder.reset(new PassManagerBuilder());
   m_PMBuilder->OptLevel = OptLevel;
@@ -137,13 +142,10 @@ void BackendPasses::CreatePasses(const CodeGenOptions &CGOpts,
   }
 
   // Set up the per-module pass manager.
-  m_MPM.reset(new PassManager());
-  m_MPM->add(new DataLayoutPass());
+  m_MPM.reset(new legacy::PassManager());
   //m_MPM->add(createTargetTransformInfoWrapperPass(getTargetIRAnalysis()));
   //if (!CGOpts.RewriteMapFiles.empty())
   //  addSymbolRewriterPass(CGOpts, m_MPM);
-  if (CGOpts.VerifyModule)
-    m_MPM->add(createDebugInfoVerifierPass());
 
   m_PMBuilder->populateModulePassManager(*m_MPM);
 }
@@ -151,8 +153,7 @@ void BackendPasses::CreatePasses(const CodeGenOptions &CGOpts,
 void BackendPasses::runOnModule(Module& M) {
 
   // Set up the per-function pass manager.
-  FunctionPassManager FPM(&M);
-  FPM.add(new DataLayoutPass());
+  legacy::FunctionPassManager FPM(&M);
   //FPM.add(createTargetTransformInfoWrapperPass(getTargetIRAnalysis()));
   if (m_CodeGenOptsVerifyModule)
       FPM.add(createVerifierPass());

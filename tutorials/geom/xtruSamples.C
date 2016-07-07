@@ -1,9 +1,16 @@
+/// \file
+/// \ingroup tutorial_geom
+/// Draw a sample of TXTRU shapes some convex, concave (and possibly malformed)
+///
+/// Change Bool_t's to test alternative specifications
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Robert Hatcher (rhatcher@fnal.gov) 2000.09.06
+
 void xtruSamples()
 {
-// Draw a sample of TXTRU shapes some convex, concave (and possibly malformed)
-// Change Bool_t's to test alternative specifications
-// Author: Robert Hatcher (rhatcher@fnal.gov) 2000.09.06
-
 // One normally specifies the x-y points in counter-clockwise order;
 // flip this to TRUE to test that it doesn't matter.
   Bool_t makecw      = kFALSE;

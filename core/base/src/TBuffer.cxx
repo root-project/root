@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TBuffer
+\ingroup Base
+
 Buffer base class used for serializing objects.
 */
 

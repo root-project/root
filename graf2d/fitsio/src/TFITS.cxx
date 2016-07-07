@@ -26,7 +26,7 @@
 ///
 /// TFITS requires CFITSIO library to be installed on your system. It
 /// is currently maintained by NASA/GSFC and can be downloaded from
-/// http://fits.gsfc.nasa.gov, as well as documentation.
+/// [NASA/GSFC web site](http://fits.gsfc.nasa.gov), as well as documentation.
 ///
 /// Using this interface is easy and straightforward. There is only 1 class
 /// called "TFITSHDU" which has several methods to extract data from a

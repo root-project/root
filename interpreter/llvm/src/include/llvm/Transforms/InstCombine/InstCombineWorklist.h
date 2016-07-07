@@ -11,6 +11,7 @@
 #define LLVM_TRANSFORMS_INSTCOMBINE_INSTCOMBINEWORKLIST_H
 
 #include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/IR/Instruction.h"
 #include "llvm/Support/Compiler.h"
@@ -27,8 +28,8 @@ class InstCombineWorklist {
   SmallVector<Instruction*, 256> Worklist;
   DenseMap<Instruction*, unsigned> WorklistMap;
 
-  void operator=(const InstCombineWorklist&RHS) LLVM_DELETED_FUNCTION;
-  InstCombineWorklist(const InstCombineWorklist&) LLVM_DELETED_FUNCTION;
+  void operator=(const InstCombineWorklist&RHS) = delete;
+  InstCombineWorklist(const InstCombineWorklist&) = delete;
 public:
   InstCombineWorklist() {}
 
@@ -60,13 +61,13 @@ public:
   /// AddInitialGroup - Add the specified batch of stuff in reverse order.
   /// which should only be done when the worklist is empty and when the group
   /// has no duplicates.
-  void AddInitialGroup(Instruction *const *List, unsigned NumEntries) {
+  void AddInitialGroup(ArrayRef<Instruction *> List) {
     assert(Worklist.empty() && "Worklist must be empty to add initial group");
-    Worklist.reserve(NumEntries+16);
-    WorklistMap.resize(NumEntries);
-    DEBUG(dbgs() << "IC: ADDING: " << NumEntries << " instrs to worklist\n");
-    for (unsigned Idx = 0; NumEntries; --NumEntries) {
-      Instruction *I = List[NumEntries-1];
+    Worklist.reserve(List.size()+16);
+    WorklistMap.reserve(List.size());
+    DEBUG(dbgs() << "IC: ADDING: " << List.size() << " instrs to worklist\n");
+    unsigned Idx = 0;
+    for (Instruction *I : reverse(List)) {
       WorklistMap.insert(std::make_pair(I, Idx++));
       Worklist.push_back(I);
     }

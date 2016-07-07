@@ -34,9 +34,9 @@ class TMethodCall;
 class TLeafElement : public TLeaf {
 
 protected:
-   char               *fAbsAddress;   //! Absolute leaf Address
-   Int_t               fID;           //element serial number in fInfo
-   Int_t               fType;         //leaf type
+   char               *fAbsAddress;   ///<! Absolute leaf Address
+   Int_t               fID;           ///<  element serial number in fInfo
+   Int_t               fType;         ///<  leaf type
 
 public:
    TLeafElement();

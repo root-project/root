@@ -17,8 +17,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "llvm/Transforms/IPO.h"
-#include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/ADT/StringExtras.h"
@@ -35,7 +33,8 @@
 #include "llvm/Pass.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
-#include <map>
+#include "llvm/Transforms/IPO.h"
+#include "llvm/Transforms/Utils/BasicBlockUtils.h"
 #include <set>
 #include <tuple>
 using namespace llvm;
@@ -73,8 +72,8 @@ namespace {
       }
 
       std::string getDescription() const {
-        return std::string((IsArg ? "Argument #" : "Return value #"))
-               + utostr(Idx) + " of function " + F->getName().str();
+        return (Twine(IsArg ? "Argument #" : "Return value #") + Twine(Idx) +
+                " of function " + F->getName()).str();
       }
     };
 
@@ -121,14 +120,6 @@ namespace {
 
     typedef SmallVector<RetOrArg, 5> UseVector;
 
-    // Map each LLVM function to corresponding metadata with debug info. If
-    // the function is replaced with another one, we should patch the pointer
-    // to LLVM function in metadata.
-    // As the code generation for module is finished (and DIBuilder is
-    // finalized) we assume that subprogram descriptors won't be changed, and
-    // they are stored in map for short duration anyway.
-    DenseMap<const Function *, DISubprogram> FunctionDIs;
-
   protected:
     // DAH uses this to specify a different ID.
     explicit DAE(char &ID) : ModulePass(ID) {}
@@ -146,7 +137,7 @@ namespace {
   private:
     Liveness MarkIfNotLive(RetOrArg Use, UseVector &MaybeLiveUses);
     Liveness SurveyUse(const Use *U, UseVector &MaybeLiveUses,
-                       unsigned RetValNum = 0);
+                       unsigned RetValNum = -1U);
     Liveness SurveyUses(const Value *V, UseVector &MaybeLiveUses);
 
     void SurveyFunction(const Function &F);
@@ -198,6 +189,13 @@ bool DAE::DeleteDeadVarargs(Function &Fn) {
   if (Fn.hasAddressTaken())
     return false;
 
+  // Don't touch naked functions. The assembly might be using an argument, or
+  // otherwise rely on the frame layout in a way that this analysis will not
+  // see.
+  if (Fn.hasFnAttribute(Attribute::Naked)) {
+    return false;
+  }
+
   // Okay, we know we can transform this function if safe.  Scan its body
   // looking for calls marked musttail or calls to llvm.vastart.
   for (Function::iterator BB = Fn.begin(), E = Fn.end(); BB != E; ++BB) {
@@ -229,7 +227,7 @@ bool DAE::DeleteDeadVarargs(Function &Fn) {
   // Create the new function body and insert it into the module...
   Function *NF = Function::Create(NFTy, Fn.getLinkage());
   NF->copyAttributesFrom(&Fn);
-  Fn.getParent()->getFunctionList().insert(&Fn, NF);
+  Fn.getParent()->getFunctionList().insert(Fn.getIterator(), NF);
   NF->takeName(&Fn);
 
   // Loop over all of the callers of the function, transforming the call sites
@@ -257,14 +255,17 @@ bool DAE::DeleteDeadVarargs(Function &Fn) {
       PAL = AttributeSet::get(Fn.getContext(), AttributesVec);
     }
 
+    SmallVector<OperandBundleDef, 1> OpBundles;
+    CS.getOperandBundlesAsDefs(OpBundles);
+
     Instruction *New;
     if (InvokeInst *II = dyn_cast<InvokeInst>(Call)) {
       New = InvokeInst::Create(NF, II->getNormalDest(), II->getUnwindDest(),
-                               Args, "", Call);
+                               Args, OpBundles, "", Call);
       cast<InvokeInst>(New)->setCallingConv(CS.getCallingConv());
       cast<InvokeInst>(New)->setAttributes(PAL);
     } else {
-      New = CallInst::Create(NF, Args, "", Call);
+      New = CallInst::Create(NF, Args, OpBundles, "", Call);
       cast<CallInst>(New)->setCallingConv(CS.getCallingConv());
       cast<CallInst>(New)->setAttributes(PAL);
       if (cast<CallInst>(Call)->isTailCall())
@@ -296,20 +297,12 @@ bool DAE::DeleteDeadVarargs(Function &Fn) {
   for (Function::arg_iterator I = Fn.arg_begin(), E = Fn.arg_end(),
        I2 = NF->arg_begin(); I != E; ++I, ++I2) {
     // Move the name and users over to the new version.
-    I->replaceAllUsesWith(I2);
-    I2->takeName(I);
+    I->replaceAllUsesWith(&*I2);
+    I2->takeName(&*I);
   }
 
   // Patch the pointer to LLVM function in debug info descriptor.
-  auto DI = FunctionDIs.find(&Fn);
-  if (DI != FunctionDIs.end()) {
-    DISubprogram SP = DI->second;
-    SP.replaceFunction(NF);
-    // Ensure the map is updated so it can be reused on non-varargs argument
-    // eliminations of the same function.
-    FunctionDIs.erase(DI);
-    FunctionDIs[NF] = SP;
-  }
+  NF->setSubprogram(Fn.getSubprogram());
 
   // Fix up any BlockAddresses that refer to the function.
   Fn.replaceAllUsesWith(ConstantExpr::getBitCast(NF, Fn.getType()));
@@ -326,7 +319,18 @@ bool DAE::DeleteDeadVarargs(Function &Fn) {
 /// instead.
 bool DAE::RemoveDeadArgumentsFromCallers(Function &Fn)
 {
-  if (Fn.isDeclaration() || Fn.mayBeOverridden())
+  // We cannot change the arguments if this TU does not define the function or
+  // if the linker may choose a function body from another TU, even if the
+  // nominal linkage indicates that other copies of the function have the same
+  // semantics. In the below example, the dead load from %p may not have been
+  // eliminated from the linker-chosen copy of f, so replacing %p with undef
+  // in callers may introduce undefined behavior.
+  //
+  // define linkonce_odr void @f(i32* %p) {
+  //   %v = load i32 %p
+  //   ret void
+  // }
+  if (!Fn.hasExactDefinition())
     return false;
 
   // Functions with local linkage should already have been handled, except the
@@ -334,29 +338,19 @@ bool DAE::RemoveDeadArgumentsFromCallers(Function &Fn)
   if (Fn.hasLocalLinkage() && !Fn.getFunctionType()->isVarArg())
     return false;
 
-  // If a function seen at compile time is not necessarily the one linked to
-  // the binary being built, it is illegal to change the actual arguments
-  // passed to it. These functions can be captured by isWeakForLinker().
-  // *NOTE* that mayBeOverridden() is insufficient for this purpose as it
-  // doesn't include linkage types like AvailableExternallyLinkage and
-  // LinkOnceODRLinkage. Take link_odr* as an example, it indicates a set of
-  // *EQUIVALENT* globals that can be merged at link-time. However, the
-  // semantic of *EQUIVALENT*-functions includes parameters. Changing
-  // parameters breaks this assumption.
-  //
-  if (Fn.isWeakForLinker())
+  // Don't touch naked functions. The assembly might be using an argument, or
+  // otherwise rely on the frame layout in a way that this analysis will not
+  // see.
+  if (Fn.hasFnAttribute(Attribute::Naked))
     return false;
 
   if (Fn.use_empty())
     return false;
 
   SmallVector<unsigned, 8> UnusedArgs;
-  for (Function::arg_iterator I = Fn.arg_begin(), E = Fn.arg_end(); 
-       I != E; ++I) {
-    Argument *Arg = I;
-
-    if (Arg->use_empty() && !Arg->hasByValOrInAllocaAttr())
-      UnusedArgs.push_back(Arg->getArgNo());
+  for (Argument &Arg : Fn.args()) {
+    if (Arg.use_empty() && !Arg.hasByValOrInAllocaAttr())
+      UnusedArgs.push_back(Arg.getArgNo());
   }
 
   if (UnusedArgs.empty())
@@ -387,12 +381,30 @@ bool DAE::RemoveDeadArgumentsFromCallers(Function &Fn)
 /// for void functions and 1 for functions not returning a struct. It returns
 /// the number of struct elements for functions returning a struct.
 static unsigned NumRetVals(const Function *F) {
-  if (F->getReturnType()->isVoidTy())
+  Type *RetTy = F->getReturnType();
+  if (RetTy->isVoidTy())
     return 0;
-  else if (StructType *STy = dyn_cast<StructType>(F->getReturnType()))
+  else if (StructType *STy = dyn_cast<StructType>(RetTy))
     return STy->getNumElements();
+  else if (ArrayType *ATy = dyn_cast<ArrayType>(RetTy))
+    return ATy->getNumElements();
   else
     return 1;
+}
+
+/// Returns the sub-type a function will return at a given Idx. Should
+/// correspond to the result type of an ExtractValue instruction executed with
+/// just that one Idx (i.e. only top-level structure is considered).
+static Type *getRetComponentType(const Function *F, unsigned Idx) {
+  Type *RetTy = F->getReturnType();
+  assert(!RetTy->isVoidTy() && "void type has no subtype");
+
+  if (StructType *STy = dyn_cast<StructType>(RetTy))
+    return STy->getElementType(Idx);
+  else if (ArrayType *ATy = dyn_cast<ArrayType>(RetTy))
+    return ATy->getElementType();
+  else
+    return RetTy;
 }
 
 /// MarkIfNotLive - This checks Use for liveness in LiveValues. If Use is not
@@ -425,9 +437,24 @@ DAE::Liveness DAE::SurveyUse(const Use *U,
       // function's return value is live. We use RetValNum here, for the case
       // that U is really a use of an insertvalue instruction that uses the
       // original Use.
-      RetOrArg Use = CreateRet(RI->getParent()->getParent(), RetValNum);
-      // We might be live, depending on the liveness of Use.
-      return MarkIfNotLive(Use, MaybeLiveUses);
+      const Function *F = RI->getParent()->getParent();
+      if (RetValNum != -1U) {
+        RetOrArg Use = CreateRet(F, RetValNum);
+        // We might be live, depending on the liveness of Use.
+        return MarkIfNotLive(Use, MaybeLiveUses);
+      } else {
+        DAE::Liveness Result = MaybeLive;
+        for (unsigned i = 0; i < NumRetVals(F); ++i) {
+          RetOrArg Use = CreateRet(F, i);
+          // We might be live, depending on the liveness of Use. If any
+          // sub-value is live, then the entire value is considered live. This
+          // is a conservative choice, and better tracking is possible.
+          DAE::Liveness SubResult = MarkIfNotLive(Use, MaybeLiveUses);
+          if (Result != Live)
+            Result = SubResult;
+        }
+        return Result;
+      }
     }
     if (const InsertValueInst *IV = dyn_cast<InsertValueInst>(V)) {
       if (U->getOperandNo() != InsertValueInst::getAggregateOperandIndex()
@@ -449,10 +476,14 @@ DAE::Liveness DAE::SurveyUse(const Use *U,
       return Result;
     }
 
-    if (ImmutableCallSite CS = V) {
+    if (auto CS = ImmutableCallSite(V)) {
       const Function *F = CS.getCalledFunction();
       if (F) {
         // Used in a direct call.
+
+        // The function argument is live if it is used as a bundle operand.
+        if (CS.isBundleOperand(U))
+          return Live;
 
         // Find the argument number. We know for sure that this use is an
         // argument, since if it was the function argument this would be an
@@ -512,6 +543,14 @@ void DAE::SurveyFunction(const Function &F) {
     return;
   }
 
+  // Don't touch naked functions. The assembly might be using an argument, or
+  // otherwise rely on the frame layout in a way that this analysis will not
+  // see.
+  if (F.hasFnAttribute(Attribute::Naked)) {
+    MarkLive(F);
+    return;
+  }
+
   unsigned RetCount = NumRetVals(&F);
   // Assume all return values are dead
   typedef SmallVector<Liveness, 5> RetVals;
@@ -541,7 +580,6 @@ void DAE::SurveyFunction(const Function &F) {
   // Keep track of the number of live retvals, so we can skip checks once all
   // of them turn out to be live.
   unsigned NumLiveRetVals = 0;
-  Type *STy = dyn_cast<StructType>(F.getReturnType());
   // Loop all uses of the function.
   for (const Use &U : F.uses()) {
     // If the function is PASSED IN as an argument, its address has been
@@ -563,34 +601,35 @@ void DAE::SurveyFunction(const Function &F) {
 
     // Now, check how our return value(s) is/are used in this caller. Don't
     // bother checking return values if all of them are live already.
-    if (NumLiveRetVals != RetCount) {
-      if (STy) {
-        // Check all uses of the return value.
-        for (const User *U : TheCall->users()) {
-          const ExtractValueInst *Ext = dyn_cast<ExtractValueInst>(U);
-          if (Ext && Ext->hasIndices()) {
-            // This use uses a part of our return value, survey the uses of
-            // that part and store the results for this index only.
-            unsigned Idx = *Ext->idx_begin();
-            if (RetValLiveness[Idx] != Live) {
-              RetValLiveness[Idx] = SurveyUses(Ext, MaybeLiveRetUses[Idx]);
-              if (RetValLiveness[Idx] == Live)
-                NumLiveRetVals++;
-            }
-          } else {
-            // Used by something else than extractvalue. Mark all return
-            // values as live.
-            for (unsigned i = 0; i != RetCount; ++i )
-              RetValLiveness[i] = Live;
-            NumLiveRetVals = RetCount;
-            break;
-          }
+    if (NumLiveRetVals == RetCount)
+      continue;
+
+    // Check all uses of the return value.
+    for (const Use &U : TheCall->uses()) {
+      if (ExtractValueInst *Ext = dyn_cast<ExtractValueInst>(U.getUser())) {
+        // This use uses a part of our return value, survey the uses of
+        // that part and store the results for this index only.
+        unsigned Idx = *Ext->idx_begin();
+        if (RetValLiveness[Idx] != Live) {
+          RetValLiveness[Idx] = SurveyUses(Ext, MaybeLiveRetUses[Idx]);
+          if (RetValLiveness[Idx] == Live)
+            NumLiveRetVals++;
         }
       } else {
-        // Single return value
-        RetValLiveness[0] = SurveyUses(TheCall, MaybeLiveRetUses[0]);
-        if (RetValLiveness[0] == Live)
+        // Used by something else than extractvalue. Survey, but assume that the
+        // result applies to all sub-values.
+        UseVector MaybeLiveAggregateUses;
+        if (SurveyUse(&U, MaybeLiveAggregateUses) == Live) {
           NumLiveRetVals = RetCount;
+          RetValLiveness.assign(RetCount, Live);
+          break;
+        } else {
+          for (unsigned i = 0; i != RetCount; ++i) {
+            if (RetValLiveness[i] != Live)
+              MaybeLiveRetUses[i].append(MaybeLiveAggregateUses.begin(),
+                                         MaybeLiveAggregateUses.end());
+          }
+        }
       }
     }
   }
@@ -617,7 +656,7 @@ void DAE::SurveyFunction(const Function &F) {
     } else {
       // See what the effect of this use is (recording any uses that cause
       // MaybeLive in MaybeLiveArgUses). 
-      Result = SurveyUses(AI, MaybeLiveArgUses);
+      Result = SurveyUses(&*AI, MaybeLiveArgUses);
     }
 
     // Mark the result.
@@ -775,39 +814,29 @@ bool DAE::RemoveDeadStuffFromFunction(Function *F) {
   if (RetTy->isVoidTy() || HasLiveReturnedArg) {
     NRetTy = RetTy;
   } else {
-    StructType *STy = dyn_cast<StructType>(RetTy);
-    if (STy)
-      // Look at each of the original return values individually.
-      for (unsigned i = 0; i != RetCount; ++i) {
-        RetOrArg Ret = CreateRet(F, i);
-        if (LiveValues.erase(Ret)) {
-          RetTypes.push_back(STy->getElementType(i));
-          NewRetIdxs[i] = RetTypes.size() - 1;
-        } else {
-          ++NumRetValsEliminated;
-          DEBUG(dbgs() << "DAE - Removing return value " << i << " from "
-                << F->getName() << "\n");
-        }
-      }
-    else
-      // We used to return a single value.
-      if (LiveValues.erase(CreateRet(F, 0))) {
-        RetTypes.push_back(RetTy);
-        NewRetIdxs[0] = 0;
+    // Look at each of the original return values individually.
+    for (unsigned i = 0; i != RetCount; ++i) {
+      RetOrArg Ret = CreateRet(F, i);
+      if (LiveValues.erase(Ret)) {
+        RetTypes.push_back(getRetComponentType(F, i));
+        NewRetIdxs[i] = RetTypes.size() - 1;
       } else {
-        DEBUG(dbgs() << "DAE - Removing return value from " << F->getName()
-              << "\n");
         ++NumRetValsEliminated;
+        DEBUG(dbgs() << "DAE - Removing return value " << i << " from "
+              << F->getName() << "\n");
       }
-    if (RetTypes.size() > 1)
-      // More than one return type? Return a struct with them. Also, if we used
-      // to return a struct and didn't change the number of return values,
-      // return a struct again. This prevents changing {something} into
-      // something and {} into void.
-      // Make the new struct packed if we used to return a packed struct
-      // already.
-      NRetTy = StructType::get(STy->getContext(), RetTypes, STy->isPacked());
-    else if (RetTypes.size() == 1)
+    }
+    if (RetTypes.size() > 1) {
+      // More than one return type? Reduce it down to size.
+      if (StructType *STy = dyn_cast<StructType>(RetTy)) {
+        // Make the new struct packed if we used to return a packed struct
+        // already.
+        NRetTy = StructType::get(STy->getContext(), RetTypes, STy->isPacked());
+      } else {
+        assert(isa<ArrayType>(RetTy) && "unexpected multi-value return");
+        NRetTy = ArrayType::get(RetTypes[0], RetTypes.size());
+      }
+    } else if (RetTypes.size() == 1)
       // One return type? Just a simple value then, but only if we didn't use to
       // return a struct with that simple value before.
       NRetTy = RetTypes.front();
@@ -826,17 +855,12 @@ bool DAE::RemoveDeadStuffFromFunction(Function *F) {
   // here. Currently, this should not be possible, but special handling might be
   // required when new return value attributes are added.
   if (NRetTy->isVoidTy())
-    RAttrs =
-      AttributeSet::get(NRetTy->getContext(), AttributeSet::ReturnIndex,
-                        AttrBuilder(RAttrs, AttributeSet::ReturnIndex).
-         removeAttributes(AttributeFuncs::
-                          typeIncompatible(NRetTy, AttributeSet::ReturnIndex),
-                          AttributeSet::ReturnIndex));
+    RAttrs = RAttrs.removeAttributes(NRetTy->getContext(),
+                                     AttributeSet::ReturnIndex,
+                                     AttributeFuncs::typeIncompatible(NRetTy));
   else
     assert(!AttrBuilder(RAttrs, AttributeSet::ReturnIndex).
-             hasAttributes(AttributeFuncs::
-                           typeIncompatible(NRetTy, AttributeSet::ReturnIndex),
-                           AttributeSet::ReturnIndex) &&
+             overlaps(AttributeFuncs::typeIncompatible(NRetTy)) &&
            "Return attributes no longer compatible?");
 
   if (RAttrs.hasAttributes(AttributeSet::ReturnIndex))
@@ -862,7 +886,7 @@ bool DAE::RemoveDeadStuffFromFunction(Function *F) {
   NF->setAttributes(NewPAL);
   // Insert the new function before the old function, so we won't be processing
   // it again.
-  F->getParent()->getFunctionList().insert(F, NF);
+  F->getParent()->getFunctionList().insert(F->getIterator(), NF);
   NF->takeName(F);
 
   // Loop over all of the callers of the function, transforming the call sites
@@ -880,13 +904,9 @@ bool DAE::RemoveDeadStuffFromFunction(Function *F) {
     AttributeSet RAttrs = CallPAL.getRetAttributes();
 
     // Adjust in case the function was changed to return void.
-    RAttrs =
-      AttributeSet::get(NF->getContext(), AttributeSet::ReturnIndex,
-                        AttrBuilder(RAttrs, AttributeSet::ReturnIndex).
-        removeAttributes(AttributeFuncs::
-                         typeIncompatible(NF->getReturnType(),
-                                          AttributeSet::ReturnIndex),
-                         AttributeSet::ReturnIndex));
+    RAttrs = RAttrs.removeAttributes(NRetTy->getContext(),
+                                     AttributeSet::ReturnIndex,
+                        AttributeFuncs::typeIncompatible(NF->getReturnType()));
     if (RAttrs.hasAttributes(AttributeSet::ReturnIndex))
       AttributesVec.push_back(AttributeSet::get(NF->getContext(), RAttrs));
 
@@ -931,14 +951,17 @@ bool DAE::RemoveDeadStuffFromFunction(Function *F) {
     // Reconstruct the AttributesList based on the vector we constructed.
     AttributeSet NewCallPAL = AttributeSet::get(F->getContext(), AttributesVec);
 
+    SmallVector<OperandBundleDef, 1> OpBundles;
+    CS.getOperandBundlesAsDefs(OpBundles);
+
     Instruction *New;
     if (InvokeInst *II = dyn_cast<InvokeInst>(Call)) {
       New = InvokeInst::Create(NF, II->getNormalDest(), II->getUnwindDest(),
-                               Args, "", Call);
+                               Args, OpBundles, "", Call->getParent());
       cast<InvokeInst>(New)->setCallingConv(CS.getCallingConv());
       cast<InvokeInst>(New)->setAttributes(NewCallPAL);
     } else {
-      New = CallInst::Create(NF, Args, "", Call);
+      New = CallInst::Create(NF, Args, OpBundles, "", Call);
       cast<CallInst>(New)->setCallingConv(CS.getCallingConv());
       cast<CallInst>(New)->setAttributes(NewCallPAL);
       if (cast<CallInst>(Call)->isTailCall())
@@ -959,19 +982,18 @@ bool DAE::RemoveDeadStuffFromFunction(Function *F) {
         if (!Call->getType()->isX86_MMXTy())
           Call->replaceAllUsesWith(Constant::getNullValue(Call->getType()));
       } else {
-        assert(RetTy->isStructTy() &&
+        assert((RetTy->isStructTy() || RetTy->isArrayTy()) &&
                "Return type changed, but not into a void. The old return type"
-               " must have been a struct!");
+               " must have been a struct or an array!");
         Instruction *InsertPt = Call;
         if (InvokeInst *II = dyn_cast<InvokeInst>(Call)) {
-          BasicBlock::iterator IP = II->getNormalDest()->begin();
-          while (isa<PHINode>(IP)) ++IP;
-          InsertPt = IP;
+          BasicBlock *NewEdge = SplitEdge(New->getParent(), II->getNormalDest());
+          InsertPt = &*NewEdge->getFirstInsertionPt();
         }
 
-        // We used to return a struct. Instead of doing smart stuff with all the
-        // uses of this struct, we will just rebuild it using
-        // extract/insertvalue chaining and let instcombine clean that up.
+        // We used to return a struct or array. Instead of doing smart stuff
+        // with all the uses, we will just rebuild it using extract/insertvalue
+        // chaining and let instcombine clean that up.
         //
         // Start out building up our return value from undef
         Value *RetVal = UndefValue::get(RetTy);
@@ -1014,8 +1036,8 @@ bool DAE::RemoveDeadStuffFromFunction(Function *F) {
     if (ArgAlive[i]) {
       // If this is a live argument, move the name and users over to the new
       // version.
-      I->replaceAllUsesWith(I2);
-      I2->takeName(I);
+      I->replaceAllUsesWith(&*I2);
+      I2->takeName(&*I);
       ++I2;
     } else {
       // If this argument is dead, replace any uses of it with null constants
@@ -1034,8 +1056,8 @@ bool DAE::RemoveDeadStuffFromFunction(Function *F) {
         if (NFTy->getReturnType()->isVoidTy()) {
           RetVal = nullptr;
         } else {
-          assert (RetTy->isStructTy());
-          // The original return value was a struct, insert
+          assert(RetTy->isStructTy() || RetTy->isArrayTy());
+          // The original return value was a struct or array, insert
           // extractvalue/insertvalue chains to extract only the values we need
           // to return and insert them into our new result.
           // This does generate messy code, but we'll let it to instcombine to
@@ -1067,9 +1089,7 @@ bool DAE::RemoveDeadStuffFromFunction(Function *F) {
       }
 
   // Patch the pointer to LLVM function in debug info descriptor.
-  auto DI = FunctionDIs.find(F);
-  if (DI != FunctionDIs.end())
-    DI->second.replaceFunction(NF);
+  NF->setSubprogram(F->getSubprogram());
 
   // Now that the old function is dead, delete it.
   F->eraseFromParent();
@@ -1078,10 +1098,10 @@ bool DAE::RemoveDeadStuffFromFunction(Function *F) {
 }
 
 bool DAE::runOnModule(Module &M) {
-  bool Changed = false;
+  if (skipModule(M))
+    return false;
 
-  // Collect debug info descriptors for functions.
-  FunctionDIs = makeSubprogramMap(M);
+  bool Changed = false;
 
   // First pass: Do a simple check to see if any functions can have their "..."
   // removed.  We can do this if they never call va_start.  This loop cannot be
@@ -1107,7 +1127,7 @@ bool DAE::runOnModule(Module &M) {
   for (Module::iterator I = M.begin(), E = M.end(); I != E; ) {
     // Increment now, because the function will probably get removed (ie.
     // replaced by a new one).
-    Function *F = I++;
+    Function *F = &*I++;
     Changed |= RemoveDeadStuffFromFunction(F);
   }
 

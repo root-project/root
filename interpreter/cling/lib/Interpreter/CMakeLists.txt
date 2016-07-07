@@ -21,6 +21,7 @@ add_cling_library(clingInterpreter
   AutoSynthesizer.cpp
   AutoloadCallback.cpp
   ASTImportSource.cpp
+  ASTTransformer.cpp
   BackendPasses.cpp
   CheckEmptyTransactionTransformer.cpp
   CIFactory.cpp
@@ -28,9 +29,12 @@ add_cling_library(clingInterpreter
   ClingPragmas.cpp
   DeclCollector.cpp
   DeclExtractor.cpp
+  DeclUnloader.cpp
   DynamicLibraryManager.cpp
   DynamicLookup.cpp
   DynamicExprInfo.cpp
+  Exception.cpp
+  ExceptionRTTI.cpp
   ForwardDeclPrinter.cpp
   IncrementalExecutor.cpp
   IncrementalJIT.cpp
@@ -41,11 +45,9 @@ add_cling_library(clingInterpreter
   LookupHelper.cpp
   NullDerefProtectionTransformer.cpp
   RequiredSymbols.cpp
-  ValueExtractionSynthesizer.cpp
-  Exception.cpp
   Transaction.cpp
-  ASTTransformer.cpp
   TransactionUnloader.cpp
+  ValueExtractionSynthesizer.cpp
   Value.cpp
   ValuePrinter.cpp
   ValuePrinterSynthesizer.cpp
@@ -55,10 +57,10 @@ add_cling_library(clingInterpreter
   clangAST
   )
 
-add_dependencies(clingInterpreter clangBasic clangAST)
+add_dependencies(clingInterpreter clangBasic clangAST LLVMCore)
 
 if(NOT WIN32)
-set_source_files_properties(Exception.cpp COMPILE_FLAGS -fexceptions)
+set_source_files_properties(ExceptionRTTI.cpp COMPILE_FLAGS "-fexceptions -frtti")
 endif()
 
 #set_source_files_properties(Exception.cpp COMPILE_FLAGS " /EHsc ")

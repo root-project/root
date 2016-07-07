@@ -136,51 +136,24 @@ Regenerate the configure scripts for both ``llvm`` and the ``test-suite``.
 In addition, the version numbers of all the Bugzilla components must be updated
 for the next release.
 
-Build the LLVM Release Candidates
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Tagging the LLVM Release Candidates
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Create release candidates for ``llvm``, ``clang``, ``dragonegg``, and the LLVM
-``test-suite`` by tagging the branch with the respective release candidate
-number.  For instance, to create **Release Candidate 1** you would issue the
-following commands:
+Tag release candidates using the tag.sh script in utils/release.
 
 ::
 
-  $ svn mkdir https://llvm.org/svn/llvm-project/llvm/tags/RELEASE_XYZ
-  $ svn copy https://llvm.org/svn/llvm-project/llvm/branches/release_XY \
-             https://llvm.org/svn/llvm-project/llvm/tags/RELEASE_XYZ/rc1
-
-  $ svn mkdir https://llvm.org/svn/llvm-project/cfe/tags/RELEASE_XYZ
-  $ svn copy https://llvm.org/svn/llvm-project/cfe/branches/release_XY \
-             https://llvm.org/svn/llvm-project/cfe/tags/RELEASE_XYZ/rc1
-
-  $ svn mkdir https://llvm.org/svn/llvm-project/dragonegg/tags/RELEASE_XYZ
-  $ svn copy https://llvm.org/svn/llvm-project/dragonegg/branches/release_XY \
-             https://llvm.org/svn/llvm-project/dragonegg/tags/RELEASE_XYZ/rc1
-
-  $ svn mkdir https://llvm.org/svn/llvm-project/test-suite/tags/RELEASE_XYZ
-  $ svn copy https://llvm.org/svn/llvm-project/test-suite/branches/release_XY \
-             https://llvm.org/svn/llvm-project/test-suite/tags/RELEASE_XYZ/rc1
-
-Similarly, **Release Candidate 2** would be named ``RC2`` and so on.  This keeps
-a permanent copy of the release candidate around for people to export and build
-as they wish.  The final released sources will be tagged in the ``RELEASE_XYZ``
-directory as ``Final`` (c.f. :ref:`tag`).
+  $ ./tag.sh -release X.Y.Z -rc $RC
 
 The Release Manager may supply pre-packaged source tarballs for users.  This can
-be done with the following commands:
+be done with the export.sh script in utils/release.
 
 ::
 
-  $ svn export https://llvm.org/svn/llvm-project/llvm/tags/RELEASE_XYZ/rc1 llvm-X.Yrc1
-  $ svn export https://llvm.org/svn/llvm-project/cfe/tags/RELEASE_XYZ/rc1 clang-X.Yrc1
-  $ svn export https://llvm.org/svn/llvm-project/dragonegg/tags/RELEASE_XYZ/rc1 dragonegg-X.Yrc1
-  $ svn export https://llvm.org/svn/llvm-project/test-suite/tags/RELEASE_XYZ/rc1 llvm-test-X.Yrc1
+  $ ./export.sh -release X.Y.Z -rc $RC
 
-  $ tar -cvf - llvm-X.Yrc1        | gzip > llvm-X.Yrc1.src.tar.gz
-  $ tar -cvf - clang-X.Yrc1       | gzip > clang-X.Yrc1.src.tar.gz
-  $ tar -cvf - dragonegg-X.Yrc1   | gzip > dragonegg-X.Yrc1.src.tar.gz
-  $ tar -cvf - llvm-test-X.Yrc1   | gzip > llvm-test-X.Yrc1.src.tar.gz
+This will generate source tarballs for each LLVM project being validated, which
+can be uploaded to the website for further testing.
 
 Building the Release
 --------------------
@@ -359,8 +332,25 @@ Below are the rules regarding patching the release branch:
 #. During the remaining rounds of testing, only patches that fix critical
    regressions may be applied.
 
-#. For dot releases all patches must mantain both API and ABI compatibility with
+#. For dot releases all patches must maintain both API and ABI compatibility with
    the previous major release.  Only bugfixes will be accepted.
+
+Merging Patches
+^^^^^^^^^^^^^^^
+
+The ``utils/release/merge.sh`` script can be used to merge individual revisions
+into any one of the llvm projects. To merge revision ``$N`` into project
+``$PROJ``, do:
+
+#. ``svn co https://llvm.org/svn/llvm-project/$PROJ/branches/release_XX
+   $PROJ.src``
+
+#. ``$PROJ.src/utils/release/merge.sh --proj $PROJ --rev $N``
+
+#. Run regression tests.
+
+#. ``cd $PROJ.src``. Run the ``svn commit`` command printed out by ``merge.sh``
+   in step 2.
 
 Release Final Tasks
 -------------------
@@ -384,21 +374,11 @@ mainline into the release branch.
 Tag the LLVM Final Release
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Tag the final release sources using the following procedure:
+Tag the final release sources using the tag.sh script in utils/release.
 
 ::
 
-  $ svn copy https://llvm.org/svn/llvm-project/llvm/branches/release_XY \
-             https://llvm.org/svn/llvm-project/llvm/tags/RELEASE_XYZ/Final
-
-  $ svn copy https://llvm.org/svn/llvm-project/cfe/branches/release_XY \
-             https://llvm.org/svn/llvm-project/cfe/tags/RELEASE_XYZ/Final
-
-  $ svn copy https://llvm.org/svn/llvm-project/dragonegg/branches/release_XY \
-             https://llvm.org/svn/llvm-project/dragonegg/tags/RELEASE_XYZ/Final
-
-  $ svn copy https://llvm.org/svn/llvm-project/test-suite/branches/release_XY \
-             https://llvm.org/svn/llvm-project/test-suite/tags/RELEASE_XYZ/Final
+  $ ./tag.sh -release X.Y.Z -final
 
 Update the LLVM Demo Page
 -------------------------

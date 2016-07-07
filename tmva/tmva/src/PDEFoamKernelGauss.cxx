@@ -51,7 +51,7 @@ ClassImp(TMVA::PDEFoamKernelGauss)
 /// Default constructor for streamer
 
 TMVA::PDEFoamKernelGauss::PDEFoamKernelGauss(Float_t sigma)
-   : PDEFoamKernelBase()
+: PDEFoamKernelBase()
    , fSigma(sigma)
 {
 }

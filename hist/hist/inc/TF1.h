@@ -308,6 +308,7 @@ public:
    // virtual void     AddVariable(const TString &name, Double_t value = 0) { if (fFormula) fFormula->AddVariable(name,value); }
    // virtual void     AddVariables(const TString *vars, Int_t size) { if (fFormula) fFormula->AddVariables(vars,size); }
    virtual Bool_t   AddToGlobalList(Bool_t on = kTRUE);
+   static  Bool_t   DefaultAddToGlobalList(Bool_t on = kTRUE);
    virtual void     Browse(TBrowser *b);
    virtual void     Copy(TObject &f1) const;
    virtual Double_t Derivative (Double_t x, Double_t *params=0, Double_t epsilon=0.001) const;

@@ -182,15 +182,20 @@ struct AccessTarget : public AccessedEntity {
 
   class SavedInstanceContext {
   public:
+    SavedInstanceContext(SavedInstanceContext &&S)
+        : Target(S.Target), Has(S.Has) {
+      S.Target = nullptr;
+    }
     ~SavedInstanceContext() {
-      Target.HasInstanceContext = Has;
+      if (Target)
+        Target->HasInstanceContext = Has;
     }
 
   private:
     friend struct AccessTarget;
     explicit SavedInstanceContext(AccessTarget &Target)
-      : Target(Target), Has(Target.HasInstanceContext) {}
-    AccessTarget &Target;
+        : Target(&Target), Has(Target.HasInstanceContext) {}
+    AccessTarget *Target;
     bool Has;
   };
 
@@ -286,9 +291,10 @@ static AccessResult IsDerivedFromInclusive(const CXXRecordDecl *Derived,
   SmallVector<const CXXRecordDecl*, 8> Queue; // actually a stack
 
   while (true) {
-    if (Derived->isDependentContext() && !Derived->hasDefinition())
+    if (Derived->isDependentContext() && !Derived->hasDefinition() &&
+        !Derived->isLambda())
       return AR_dependent;
-    
+
     for (const auto &I : Derived->bases()) {
       const CXXRecordDecl *RD;
 
@@ -405,14 +411,8 @@ static AccessResult MatchesFriend(Sema &S,
     return AR_accessible;
 
   if (EC.isDependent()) {
-    CanQualType FriendTy
-      = S.Context.getCanonicalType(S.Context.getTypeDeclType(Friend));
-
-    for (EffectiveContext::record_iterator
-           I = EC.Records.begin(), E = EC.Records.end(); I != E; ++I) {
-      CanQualType ContextTy
-        = S.Context.getCanonicalType(S.Context.getTypeDeclType(*I));
-      if (MightInstantiateTo(S, ContextTy, FriendTy))
+    for (const CXXRecordDecl *Context : EC.Records) {
+      if (MightInstantiateTo(Context, Friend))
         return AR_dependent;
     }
   }
@@ -1462,7 +1462,7 @@ static Sema::AccessResult CheckAccess(Sema &S, SourceLocation Loc,
   case AR_inaccessible: return Sema::AR_inaccessible;
   case AR_dependent: return Sema::AR_dependent;
   }
-  llvm_unreachable("falling off end");
+  llvm_unreachable("invalid access result");
 }
 
 void Sema::HandleDelayedAccessCheck(DelayedDiagnostic &DD, Decl *D) {
@@ -1665,8 +1665,12 @@ Sema::AccessResult Sema::CheckConstructorAccess(SourceLocation UseLoc,
   // Initializing a base sub-object is an instance method call on an
   // object of the derived class.  Otherwise, we have an instance method
   // call on an object of the constructed type.
+  //
+  // FIXME: If we have a parent, we're initializing the base class subobject
+  // in aggregate initialization. It's not clear whether the object class
+  // should be the base class or the derived class in that case.
   CXXRecordDecl *ObjectClass;
-  if (Entity.getKind() == InitializedEntity::EK_Base) {
+  if (Entity.getKind() == InitializedEntity::EK_Base && !Entity.getParent()) {
     ObjectClass = cast<CXXConstructorDecl>(CurContext)->getParent();
   } else {
     ObjectClass = NamingClass;
@@ -1762,11 +1766,11 @@ Sema::AccessResult Sema::CheckFriendAccess(NamedDecl *target) {
   // while the ParsingDeclarator is active.
   EffectiveContext EC(CurContext);
   switch (CheckEffectiveAccess(*this, EC, target->getLocation(), entity)) {
-  case AR_accessible: return Sema::AR_accessible;
-  case AR_inaccessible: return Sema::AR_inaccessible;
-  case AR_dependent: return Sema::AR_dependent;
+  case ::AR_accessible: return Sema::AR_accessible;
+  case ::AR_inaccessible: return Sema::AR_inaccessible;
+  case ::AR_dependent: return Sema::AR_dependent;
   }
-  llvm_unreachable("falling off end");
+  llvm_unreachable("invalid access result");
 }
 
 Sema::AccessResult Sema::CheckAddressOfMemberAccess(Expr *OvlExpr,

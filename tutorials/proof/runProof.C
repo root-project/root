@@ -766,7 +766,7 @@ void runProof(const char *what = "simple",
       sel.Form("%s/proof/ProofSimple.C%s", tutorials.Data(), aMode.Data());
       //
       // Run it for nevt times
-      TString xopt = TString::Format("%s %s", aFeedback.Data(), opt.Data());
+      TString xopt = aFeedback; if (!opt.IsNull()) xopt += TString::Format(" %s", opt.Data());
       proof->Process(sel.Data(), nevt, xopt);
 
    } else if (act == "h1") {
@@ -809,7 +809,7 @@ void runProof(const char *what = "simple",
       sel.Form("%s/tree/h1analysis.C%s", tutorials.Data(), aMode.Data());
       // Run it
       Printf("\nrunProof: running \"h1\"\n");
-      TString xopt = TString::Format("%s %s", aFeedback.Data(), opt.Data());
+      TString xopt = aFeedback; if (!opt.IsNull()) xopt += TString::Format(" %s", opt.Data());
       chain->Process(sel.Data(),xopt,nevt,first);
       // Cleanup the input list
       gProof->ClearInputData("elist");
@@ -862,7 +862,7 @@ void runProof(const char *what = "simple",
       // The selector string
       sel.Form("%s/proof/ProofPythia.C%s", tutorials.Data(), aMode.Data());
       // Run it for nevt times
-      TString xopt = TString::Format("%s %s", aFeedback.Data(), opt.Data());
+      TString xopt = aFeedback; if (!opt.IsNull()) xopt += TString::Format(" %s", opt.Data());
       proof->Process(sel.Data(), nevt, xopt);
 
   } else if (act == "event") {
@@ -889,7 +889,7 @@ void runProof(const char *what = "simple",
       // The selector string
       sel.Form("%s/proof/ProofEvent.C%s", tutorials.Data(), aMode.Data());
       // Run it for nevt times
-      TString xopt = TString::Format("%s %s", aFeedback.Data(), opt.Data());
+      TString xopt = aFeedback; if (!opt.IsNull()) xopt += TString::Format(" %s", opt.Data());
       proof->Process(sel.Data(), nevt, xopt);
 
   } else if (act == "eventproc") {
@@ -1018,7 +1018,7 @@ void runProof(const char *what = "simple",
       sel.Form("%s/proof/ProofEventProc.C%s", tutorials.Data(), aMode.Data());
       // Run it
       Printf("\nrunProof: running \"eventproc\"\n");
-      TString xopt = TString::Format("%s %s", aFeedback.Data(), opt.Data());
+      TString xopt = aFeedback; if (!opt.IsNull()) xopt += TString::Format(" %s", opt.Data());
       c->Process(sel.Data(), xopt, nevt, first);
 
    } else if (act == "ntuple") {
@@ -1092,7 +1092,8 @@ void runProof(const char *what = "simple",
       sel.Form("%s/proof/ProofNtuple.C%s", tutorials.Data(), aMode.Data());
 
       // Run it for nevt times
-      TString xopt = TString::Format("%s %s", aFeedback.Data(), opt.Data());
+      TString xopt = aFeedback; if (!opt.IsNull()) xopt += TString::Format(" %s", opt.Data());
+      Printf("runProof: selector file '%s', options: '%s'", sel.Data(), xopt.Data());
       proof->Process(sel.Data(), nevt, xopt);
 
       // Reset input variables
@@ -1128,7 +1129,7 @@ void runProof(const char *what = "simple",
       sel.Form("%s/proof/ProofNtuple.C%s", tutorials.Data(), aMode.Data());
       //
       // Run it for nevt times
-      TString xopt = TString::Format("%s %s", aFeedback.Data(), opt.Data());
+      TString xopt = aFeedback; if (!opt.IsNull()) xopt += TString::Format(" %s", opt.Data());
       proof->Process(sel.Data(), nevt, xopt);
 
       // The TFileCollection must be in the output
@@ -1235,7 +1236,7 @@ void runProof(const char *what = "simple",
       // Process with friends
       dset->AddFriend(dsetf, "friend");
       sel.Form("%s/proof/ProofFriends.C%s", tutorials.Data(), aMode.Data());
-      TString xopt = TString::Format("%s %s", aFeedback.Data(), opt.Data());
+      TString xopt = aFeedback; if (!opt.IsNull()) xopt += TString::Format(" %s", opt.Data());
       dset->Process(sel, xopt);
       // Clear the files created by this run
       proof->ClearData(TProof::kUnregistered | TProof::kForceClear);
@@ -1307,7 +1308,7 @@ void runProof(const char *what = "simple",
       sel.Form("%s/proof/ProofSimpleFile.C%s", tutorials.Data(), aMode.Data());
       //
       // Run it for nevt times
-      TString xopt = TString::Format("%s %s", aFeedback.Data(), opt.Data());
+      TString xopt = aFeedback; if (!opt.IsNull()) xopt += TString::Format(" %s", opt.Data());
       proof->Process(sel.Data(), nevt, xopt);
 
    } else if (act == "stdvec") {

@@ -75,7 +75,7 @@ namespace TMVA {
       RegressionVariance(){fName = "Variance for Regression";}
 
       //copy constructor
-      RegressionVariance( const RegressionVariance& s ): fName ( s.fName ) {}
+   RegressionVariance( const RegressionVariance& s ): fName ( s.fName ) {}
 
       // destructor
       virtual ~RegressionVariance(){}
@@ -95,7 +95,7 @@ namespace TMVA {
 
       TString fName;  // name of the concrete Separation Index impementation
  
-      ClassDef(RegressionVariance,0) // Interface to different separation critiera used in training algorithms
+      ClassDef(RegressionVariance,0); // Interface to different separation critiera used in training algorithms
    };
 
 

@@ -165,13 +165,13 @@ void SelectionRules::ClearSelectionRules()
 }
 
 template<class RULE>
-static bool HasDuplicate(RULE* rule, 
+static bool HasDuplicate(RULE* rule,
                          std::unordered_map<std::string,RULE*>& storedRules,
                          const std::string& attrName){
    auto itRetCodePair = storedRules.emplace( attrName, rule );
 
    auto storedRule = storedRules[attrName];
-   
+
    if (itRetCodePair.second ||
        storedRule->GetSelected() != rule->GetSelected())  return false;
    auto areEqual = SelectionRulesUtils::areEqual(storedRule,rule);
@@ -229,7 +229,7 @@ static bool Implies(ClassSelectionRule& patternRule, ClassSelectionRule& nameRul
 
    // Now check if the pattern matches the name
    auto implies = 0 ==  fnmatch(pattern, name, FNM_PATHNAME);
-   
+
    if (implies){
       static const auto msg = "The pattern rule %s matches the name rule %s. "
       "Since the name rule has compatible attributes, "

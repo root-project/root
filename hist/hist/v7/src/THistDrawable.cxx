@@ -1,4 +1,4 @@
-/// \file ROOT/THistDrawable.cxx
+/// \file THistDrawable.cxx
 /// \ingroup Hist ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-09-11
@@ -14,8 +14,15 @@
 
 #include "ROOT/THistDrawable.h"
 
+#include "TSystem.h" // TSystem::Load
+
 using namespace ROOT::Experimental;
 using namespace ROOT::Experimental::Internal;
+
+void ROOT::Experimental::Internal::LoadHistPainterLibrary() {
+    gSystem->Load("libHistPainter");
+}
+
 
 template <int DIMENSION>
 THistPainterBase<DIMENSION>::~THistPainterBase() { fgPainter = nullptr; }

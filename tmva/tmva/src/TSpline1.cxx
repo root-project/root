@@ -42,7 +42,7 @@ ClassImp(TMVA::TSpline1)
 /// TSpline is a TNamed object
 
 TMVA::TSpline1::TSpline1( const TString& title, TGraph* theGraph )
-   : fGraph( theGraph )
+: fGraph( theGraph )
 {
    SetNameTitle( title, title );  
 }

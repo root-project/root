@@ -9,6 +9,8 @@
  *************************************************************************/
 
 /** \class TVirtualPadEditor
+\ingroup Base
+
 Abstract base class used by ROOT graphics editor
 */
 

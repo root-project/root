@@ -69,7 +69,7 @@ namespace TMVA {
 
    public:
 
-      TMVAGaussPair( Float_t f, Float_t w ): fF(f), fW(w) {}
+   TMVAGaussPair( Float_t f, Float_t w ): fF(f), fW(w) {}
       Bool_t  operator >  ( const TMVAGaussPair &p ) const { return fF >  p.fF; }
       Bool_t  operator <  ( const TMVAGaussPair &p ) const { return fF <  p.fF; }
       Bool_t  operator == ( const TMVAGaussPair &p ) const { return fF == p.fF; }
@@ -126,7 +126,7 @@ namespace TMVA {
       UInt_t fElementsperbin;  // av number of events stored per bin in cum dist
       Double_t OldCumulant(Float_t x, TH1* h ) const;
 
-      ClassDef(VariableGaussTransform,0) // Variable transformation: Gauss transformation
+      ClassDef(VariableGaussTransform,0); // Variable transformation: Gauss transformation
    };
 
 } // namespace TMVA

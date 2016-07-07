@@ -46,26 +46,28 @@ struct THistViewOutOfRange {
  \class THistView
  A view on a histogram, selecting a range on a subset of dimensions.
  */
-template <int DIMENSIONS, class PRECISION>
+template<int DIMENSIONS, class PRECISION,
+  template <int D_, class P_, template <class P__> class S_> class... STAT>
 class THistView {
 public:
-  using Hist_t = THist<DIMENSIONS, PRECISION>;
-  using AxisIter_t = Hist::AxisIter_t<DIMENSIONS>;
-  using AxisRange_t = Hist::AxisIterRange_t<DIMENSIONS>;
+  using Hist_t = THist<DIMENSIONS, PRECISION, STAT...>;
+  using AxisRange_t = typename Hist_t::AxisIterRange_t;
+  using HistViewOutOfRange_t = THistViewOutOfRange<THistView>;
 
-  using const_iterator = Internal::THistBinIter<THistViewOutOfRange>;
+  using const_iterator = Detail::THistBinIter<typename Hist_t::ImplBase_t>;
 
   THistView(Hist_t& hist, int nbins, const AxisRange_t& range):
      fHist(hist), fNBins(nbins), fRange(range) {}
 
   bool IsBinOutOfRange(int idx) const noexcept {
-    // TODO: implement IsBinOutOfRange()!
+    // TODO: use fRange!
+    return idx < 0 || idx > fNBins;
   }
 
   void SetRange(int axis, double from, double to) {
-    TAxisView axis = fHist.GetImpl()->GetAxis(axis);
-    fRange[axis] = axis.FindBin(from);
-    fRange[axis] = axis.FindBin(to);
+    TAxisView axisView = fHist.GetImpl()->GetAxis(axis);
+    fRange[axis] = axisView.FindBin(from);
+    fRange[axis] = axisView.FindBin(to);
   }
 
   const_iterator begin() const noexcept {
@@ -73,12 +75,11 @@ public:
     size_t nbins = fHist.GetNBins();
     while (IsBinOutOfRange(beginidx) && beginidx < nbins)
       ++beginidx;
-    return const_iterator(beginidx, THistViewOutOfRange(*this));
+    return const_iterator(beginidx, HistViewOutOfRange_t(*this));
   }
 
   const_iterator end() const noexcept  {
-    return const_iterator(fHist.GetImpl().GetNBins(),
-                          Internal::HistIterFullRange_t());
+    return const_iterator(fHist.GetImpl(), fHist.GetImpl().GetNBins());
   }
 
 private:

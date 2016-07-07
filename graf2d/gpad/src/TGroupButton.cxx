@@ -33,7 +33,11 @@ from the group with the same name are disabled.
 
 For examples of use of TGroupButton objects, see:
 AttFillCanvas, TAttLineCanvas, TAttTextCanvas and TAttMarkerCanvas.
+
+A TGroupButton object is a specialized TPad including possible list
+of primitives used to build selections and options menus in a canvas.
 */
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// GroupButton default constructor.
@@ -70,7 +74,7 @@ void TGroupButton::DisplayColorTable(const char *action, Double_t x0, Double_t y
    Int_t color;
    Double_t xlow, ylow, hs, ws;
 
-   // draw colortable buttons
+   // draw color table buttons
    hs = hc/5;
    ws = wc/10;
    char command[32];

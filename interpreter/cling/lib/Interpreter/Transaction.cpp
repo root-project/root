@@ -59,8 +59,6 @@ namespace cling {
                && "All nested transactions must be committed!");
         delete (*m_NestedTransactions)[i];
       }
-    if (getExecutor())
-      getExecutor()->unloadFromJIT(m_Module.get(), getExeUnloadHandle());
   }
 
   NamedDecl* Transaction::containsNamedDecl(llvm::StringRef name) const {
@@ -146,7 +144,8 @@ namespace cling {
       // declaration, because each time Sema believes a vtable is used it emits
       // that callback.
       // For reference (clang::CodeGen::CodeGenModule::EmitVTable).
-      if (oldDCI.m_Call != kCCIHandleVTable)
+      if (oldDCI.m_Call != kCCIHandleVTable
+          && oldDCI.m_Call != kCCIHandleCXXImplicitFunctionInstantiation)
         assert(oldDCI != DCI && "Duplicates?!");
     }
     // We want to assert there is only one wrapper per transaction.

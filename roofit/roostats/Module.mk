@@ -84,14 +84,3 @@ distclean::     distclean-$(MODNAME)
 
 # Optimize dictionary with stl containers.
 $(ROOSTATSDO): NOOPT = $(OPT)
-
-#FIXME: Disable modules build for roostats until the compiler issue gets fixed.
-ifeq ($(CXXMODULES),yes)
-ifeq ($(PLATFORM),macosx)
-#FIXME: Disable modules build the roostats' dictionary on macos because there is
-#a bug in the toolchain (ROOT, clang?) saying there are too many open files.
-
-$(ROOSTATSO) $(ROOSTATSDO): CXXFLAGS := $(filter-out $(ROOT_CXXMODULES_FLAGS),$(CXXFLAGS))
-         CFLAGS   := $(filter-out $(ROOT_CXXMODULES_FLAGS),$(CFLAGS))
-endif
-endif

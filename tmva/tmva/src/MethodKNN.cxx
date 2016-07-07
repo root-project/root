@@ -61,11 +61,11 @@ ClassImp(TMVA::MethodKNN)
 ////////////////////////////////////////////////////////////////////////////////
 /// standard constructor
 
-TMVA::MethodKNN::MethodKNN( const TString& jobName,
-                            const TString& methodTitle,
-                            DataSetInfo& theData, 
-                            const TString& theOption,
-                            TDirectory* theTargetDir ) 
+   TMVA::MethodKNN::MethodKNN( const TString& jobName,
+                               const TString& methodTitle,
+                               DataSetInfo& theData, 
+                               const TString& theOption,
+                               TDirectory* theTargetDir ) 
    : TMVA::MethodBase(jobName, Types::kKNN, methodTitle, theData, theOption, theTargetDir)
    , fSumOfWeightsS(0)
    , fSumOfWeightsB(0)

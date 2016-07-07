@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TTreeSQL
+\ingroup tree
+
 Implement TTree for a SQL backend
 */
 

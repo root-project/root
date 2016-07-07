@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TTime
+\ingroup Base
+
 Basic time type with millisecond precision.
 */
 

@@ -15,6 +15,7 @@
 #include "clang/Basic/DiagnosticOptions.h"
 #include "clang/Driver/Compilation.h"
 #include "clang/Driver/Driver.h"
+#include "clang/Driver/Action.h"
 #include "clang/Driver/Options.h"
 #include "clang/Driver/Tool.h"
 #include "clang/Frontend/CompilerInstance.h"
@@ -38,15 +39,13 @@ clang::createInvocationFromCommandLine(ArrayRef<const char *> ArgList,
     Diags = CompilerInstance::createDiagnostics(new DiagnosticOptions);
   }
 
-  SmallVector<const char *, 16> Args;
-  Args.push_back("<clang>"); // FIXME: Remove dummy argument.
-  Args.insert(Args.end(), ArgList.begin(), ArgList.end());
+  SmallVector<const char *, 16> Args(ArgList.begin(), ArgList.end());
 
   // FIXME: Find a cleaner way to force the driver into restricted modes.
   Args.push_back("-fsyntax-only");
 
   // FIXME: We shouldn't have to pass in the path info.
-  driver::Driver TheDriver("clang", llvm::sys::getDefaultTargetTriple(),
+  driver::Driver TheDriver(Args[0], llvm::sys::getDefaultTargetTriple(),
                            *Diags);
 
   // Don't check that inputs exist, they may have been remapped.
@@ -61,9 +60,25 @@ clang::createInvocationFromCommandLine(ArrayRef<const char *> ArgList,
   }
 
   // We expect to get back exactly one command job, if we didn't something
-  // failed.
+  // failed. CUDA compilation is an exception as it creates multiple jobs. If
+  // that's the case, we proceed with the first job. If caller needs particular
+  // CUDA job, it should be controlled via --cuda-{host|device}-only option
+  // passed to the driver.
   const driver::JobList &Jobs = C->getJobs();
-  if (Jobs.size() != 1 || !isa<driver::Command>(*Jobs.begin())) {
+  bool CudaCompilation = false;
+  if (Jobs.size() > 1) {
+    for (auto &A : C->getActions()){
+      // On MacOSX real actions may end up being wrapped in BindArchAction
+      if (isa<driver::BindArchAction>(A))
+        A = *A->input_begin();
+      if (isa<driver::CudaDeviceAction>(A)) {
+        CudaCompilation = true;
+        break;
+      }
+    }
+  }
+  if (Jobs.size() == 0 || !isa<driver::Command>(*Jobs.begin()) ||
+      (Jobs.size() > 1 && !CudaCompilation)) {
     SmallString<256> Msg;
     llvm::raw_svector_ostream OS(Msg);
     Jobs.Print(OS, "; ", true);

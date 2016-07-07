@@ -146,9 +146,9 @@ namespace TMVA {
       //
       const std::vector< const TMVA::DecisionTree *> & GetForest()     const { return fForest; }
       const RuleEnsemble                       & GetRuleEnsemble()     const { return fRuleEnsemble; }
-            RuleEnsemble                       * GetRuleEnsemblePtr()        { return &fRuleEnsemble; }
+      RuleEnsemble                       * GetRuleEnsemblePtr()        { return &fRuleEnsemble; }
       const RuleFitParams                      & GetRuleFitParams()    const { return fRuleFitParams; }
-            RuleFitParams                      * GetRuleFitParamsPtr()       { return &fRuleFitParams; }
+      RuleFitParams                      * GetRuleFitParamsPtr()       { return &fRuleFitParams; }
       const MethodRuleFit                      * GetMethodRuleFit()    const { return fMethodRuleFit; }
       const MethodBase                         * GetMethodBase()       const { return fMethodBase; }
 
@@ -178,7 +178,7 @@ namespace TMVA {
 
       static const Int_t randSEED = 0; // set to 1 for debugging purposes or to zero for random seeds
 
-      ClassDef(RuleFit,0)  // Calculations for Friedman's RuleFit method
+      ClassDef(RuleFit,0);  // Calculations for Friedman's RuleFit method
    };
 }
 

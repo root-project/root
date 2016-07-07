@@ -22,7 +22,7 @@ extern "C" {
 #endif
 #endif
 
-typedef enum { kInit = -1, kLine1, kOneChar, kCleanUp } EGetLineMode;
+typedef enum { kInit = -1, kLine1, kOneChar, kCleanUp, kClear } EGetLineMode;
 
 const char *Getline(const char *prompt);
 const char *Getlinem(EGetLineMode mode, const char *prompt);

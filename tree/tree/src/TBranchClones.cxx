@@ -26,6 +26,8 @@
 ClassImp(TBranchClones)
 
 /** \class TBranchClones
+\ingroup tree
+
 A Branch for the case of an array of clone objects.
 
 See TTree.

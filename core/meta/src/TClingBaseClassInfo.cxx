@@ -77,7 +77,11 @@ TClingBaseClassInfo::TClingBaseClassInfo(cling::Interpreter* interp,
       return;
    }
    fDecl = CRD;
-   fIter = CRD->bases_begin();
+   {
+      // In particular if the base are templated, this might deserialize.
+      cling::Interpreter::PushTransactionRAII RAII(fInterp);
+      fIter = CRD->bases_begin();
+   }
 }
 
 TClingBaseClassInfo::TClingBaseClassInfo(cling::Interpreter* interp,
@@ -172,14 +176,14 @@ TClingBaseClassInfo::GenerateBaseOffsetFunction(const TClingClassInfo * fromDeri
    const clang::RecordDecl* fromDerivedDecl
       = dyn_cast<clang::RecordDecl>(fromDerivedClass->GetDecl());
    if (!fromDerivedDecl) {
-      Error("TClingBaseClassInfo::GenerateBaseOffsetFunction",
+      ::Error("TClingBaseClassInfo::GenerateBaseOffsetFunction",
             "Offset of non-class %s is ill-defined!", fromDerivedClass->Name());
       return 0;
    }
    const clang::RecordDecl* toBaseDecl
       = dyn_cast<clang::RecordDecl>(toBaseClass->GetDecl());
    if (!toBaseDecl) {
-      Error("TClingBaseClassInfo::GenerateBaseOffsetFunction",
+      ::Error("TClingBaseClassInfo::GenerateBaseOffsetFunction",
             "Offset of non-class %s is ill-defined!", toBaseClass->Name());
       return 0;
    }
@@ -226,7 +230,7 @@ TClingBaseClassInfo::GenerateBaseOffsetFunction(const TClingClassInfo * fromDeri
    void* f = fInterp->compileFunction(wrapper_name, code, true /*ifUnique*/,
                                       false /*withAccessControl*/);
    if (!f) {
-      Error("TClingBaseClassInfo::GenerateBaseOffsetFunction",
+      ::Error("TClingBaseClassInfo::GenerateBaseOffsetFunction",
             "Compilation failed!");
       return 0;
    }
@@ -446,12 +450,12 @@ ptrdiff_t TClingBaseClassInfo::Offset(void * address, bool isDerivedObject) cons
             derivedName = buf;
          }
          if (clang_val == -2) {
-            Error("TClingBaseClassInfo::Offset",
+            ::Error("TClingBaseClassInfo::Offset",
                   "The class %s does not derive from the base %s.",
                   derivedName.Data(), baseName.Data());
          } else {
             // clang_val == -3
-            Error("TClingBaseClassInfo::Offset",
+            ::Error("TClingBaseClassInfo::Offset",
                   "There are multiple paths from derived class %s to base class %s.",
                   derivedName.Data(), baseName.Data());
          }
@@ -462,7 +466,7 @@ ptrdiff_t TClingBaseClassInfo::Offset(void * address, bool isDerivedObject) cons
    }
    // Verify the address of the instantiated object
    if (!address) {
-      Error("TClingBaseClassInfo::Offset", "The address of the object for virtual base offset calculation is not valid.");
+      ::Error("TClingBaseClassInfo::Offset", "The address of the object for virtual base offset calculation is not valid.");
       return -1;
    }
 
@@ -493,7 +497,7 @@ long TClingBaseClassInfo::Property() const
    const clang::CXXRecordDecl* BaseCRD
       = llvm::dyn_cast<CXXRecordDecl>(fBaseInfo->GetDecl());
    if (!CRD || !BaseCRD) {
-      Error("TClingBaseClassInfo::Property",
+      ::Error("TClingBaseClassInfo::Property",
             "The derived class or the base class do not have a CXXRecordDecl.");
       return property;
    }
@@ -503,7 +507,7 @@ long TClingBaseClassInfo::Property() const
    if (!CRD->isDerivedFrom(BaseCRD, Paths)) {
       // Error really unexpected here, because construction / iteration guarantees
       //inheritance;
-      Error("TClingBaseClassInfo", "Class not derived from given base.");
+      ::Error("TClingBaseClassInfo", "Class not derived from given base.");
    }
    if (Paths.getDetectedVirtual()) {
       property |= kIsVirtualBase;

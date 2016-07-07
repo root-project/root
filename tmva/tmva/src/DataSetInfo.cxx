@@ -177,7 +177,7 @@ Bool_t TMVA::DataSetInfo::IsSignal( const TMVA::Event* ev ) const
 std::vector<Float_t>*  TMVA::DataSetInfo::GetTargetsForMulticlass( const TMVA::Event* ev ) 
 {
    if( !fTargetsForMulticlass ) fTargetsForMulticlass = new std::vector<Float_t>( GetNClasses() );
-//   fTargetsForMulticlass->resize( GetNClasses() );
+   //   fTargetsForMulticlass->resize( GetNClasses() );
    fTargetsForMulticlass->assign( GetNClasses(), 0.0 );
    fTargetsForMulticlass->at( ev->GetClass() ) = 1.0;
    return fTargetsForMulticlass;
@@ -459,7 +459,7 @@ TMVA::DataSet* TMVA::DataSetInfo::GetDataSet() const
 {
    if (fDataSet==0 || fNeedsRebuilding) {
       if(fDataSet!=0) ClearDataSet();
-//      fDataSet = DataSetManager::Instance().CreateDataSet(GetName()); //DSMTEST replaced by following lines
+      //      fDataSet = DataSetManager::Instance().CreateDataSet(GetName()); //DSMTEST replaced by following lines
       if( !fDataSetManager )
          Log() << kFATAL << Form("Dataset[%s] : ",fName.Data()) << "DataSetManager has not been set in DataSetInfo (GetDataSet() )." << Endl;
       fDataSet = fDataSetManager->CreateDataSet(GetName());

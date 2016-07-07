@@ -450,7 +450,6 @@ public:
 
   void SetVerbose(bool verbose);
 
-  void Reset();
 private:
 
   //These are declarations, which can contain nested class declarations,
@@ -556,12 +555,6 @@ void ClassPrinter::DisplayClass(const std::string& className)const
 void ClassPrinter::SetVerbose(bool verbose)
 {
   fVerbose = verbose;
-}
-
-//______________________________________________________________________________
-void ClassPrinter::Reset()
-{
-  fSeenDecls.clear();
 }
 
 //______________________________________________________________________________
@@ -1129,9 +1122,9 @@ void GlobalsPrinter::DisplayGlobals()const
   //Try to print global macro definitions (object-like only).
   const Preprocessor& pp = compiler->getPreprocessor();
   for (macro_iterator macro = pp.macro_begin(); macro != pp.macro_end(); ++macro) {
-    if (macro->second->getMacroInfo()
-        && macro->second->getMacroInfo()->isObjectLike())
-      DisplayObjectLikeMacro(macro->first, macro->second->getMacroInfo());
+    auto MI = macro->second.getLatest()->getMacroInfo();
+    if (MI && MI->isObjectLike())
+      DisplayObjectLikeMacro(macro->first, MI);
   }
 
   //TODO: fSeenDecls - should I check that some declaration is already visited?
@@ -1168,17 +1161,16 @@ void GlobalsPrinter::DisplayGlobal(const std::string& name)const
   const TranslationUnitDecl* const tuDecl = compiler->getASTContext().getTranslationUnitDecl();
   assert(tuDecl != 0 && "DisplayGlobal, translation unit is empty");
 
-  //fSeenDecls.clear();
   bool found = false;
 
   // Could trigger deserialization of decls.
   Interpreter::PushTransactionRAII RAII(const_cast<Interpreter*>(fInterpreter));
   const Preprocessor& pp = compiler->getPreprocessor();
   for (macro_iterator macro = pp.macro_begin(); macro != pp.macro_end(); ++macro) {
-    if (macro->second->getMacroInfo()
-        && macro->second->getMacroInfo()->isObjectLike()) {
+    auto MI = macro->second.getLatest()->getMacroInfo();
+    if (MI && MI->isObjectLike()) {
       if (name == macro->first->getName().data()) {
-        DisplayObjectLikeMacro(macro->first, macro->second->getMacroInfo());
+        DisplayObjectLikeMacro(macro->first, MI);
         found = true;
       }
     }
@@ -1421,8 +1413,6 @@ void TypedefPrinter::DisplayTypedefs()const
 
   const TranslationUnitDecl* const tuDecl = compiler->getASTContext().getTranslationUnitDecl();
   assert(tuDecl != 0 && "DisplayTypedefs, translation unit is empty");
-
-  //fSeenDecls.clear();
 
   fOut.Print("List of typedefs");
   ProcessNestedDeclarations(tuDecl);

@@ -35,34 +35,35 @@ namespace RooStats {
 
    HypoTestResult is a base class for results from hypothesis tests.
    Any tool inheriting from HypoTestCalculator can return a HypoTestResult.
-   As such, it stores a p-value for the null-hypothesis (eg. background-only) 
-   and an alternate hypothesis (eg. signal+background).  
-   The p-values can also be transformed into confidence levels (CLb, CLsplusb) in a trivial way.
-   The ratio of the CLsplusb to CLb is often called CLs, and is considered useful, though it is 
-   not a probability.
-   Finally, the p-value of the null can be transformed into a number of equivalent Gaussian sigma using the 
-   Significance method.
+   As such, it stores a p-value for the null-hypothesis (eg. background-only)
+   and an alternate hypothesis (eg. signal+background).
+   The p-values can also be transformed into confidence levels
+   (\f$CL_{b}\f$, \f$CL_{s+b}\f$) in a trivial way.
+   The ratio of the \f$CL_{s+b}\f$ to \f$CL_{b}\f$ is often called
+   \f$CL_{s}\f$, and is considered useful, though it is not a probability.
+   Finally, the p-value of the null can be transformed into a number of
+   equivalent Gaussian sigma using the Significance method.
 
    The p-value of the null for a given test statistic is rigorously defined and
    this is the starting point for the following conventions.
-   
+
 ### Conventions used in this class
 
 The p-value for the null and alternate are on the **same side** of the
 observed value of the test statistic. This is the more standard
 convention and avoids confusion when doing inverted tests.
 
-For exclusion, we also want the formula
-CLs = CLs+b / CLb to hold which therefore defines our conventions
-for CLs+b and CLb. CLs was specifically invented for exclusion
+For exclusion, we also want the formula \f$CL_{s} = CL_{s+b} / CL_{b}\f$
+to hold which therefore defines our conventions for \f$CL_{s+b}\f$ and
+\f$CL_{b}\f$. \f$CL_{s}\f$ was specifically invented for exclusion
 and therefore all quantities need be related through the assignments
-as they are for exclusion: **CLs+b = p_{s+b}; CLb = p_b**. This
+as they are for exclusion: \f$CL_{s+b} = p_{s+b}\f$; \f$CL_{b} = p_{b}\f$. This
 is derived by considering the scenarios of a powerful and not powerful
-inverted test, where for the not so powerful test, CLs must be
+inverted test, where for the not so powerful test, \f$CL_{s}\f$ must be
 close to one.
 
 For results of Hypothesis tests,
-CLs has no similar direct interpretation as for exclusion and can
+\f$CL_{s}\f$ has no similar direct interpretation as for exclusion and can
 be larger than one.
 
 */
@@ -70,17 +71,17 @@ be larger than one.
    class HypoTestResult : public TNamed {
 
    public:
-      
+
       /// default constructor
       explicit HypoTestResult(const char* name = 0);
-      
-      /// copy constructo
+
+      /// copy constructor
       HypoTestResult(const HypoTestResult& other);
 
-      /// constructor from name, null and alternate p values 
+      /// constructor from name, null and alternate p values
       HypoTestResult(const char* name, Double_t nullp, Double_t altp);
 
-      /// destructor 
+      /// destructor
       virtual ~HypoTestResult();
 
       /// assignment operator
@@ -101,7 +102,7 @@ be larger than one.
       /// Convert  AlternatePValue into a "confidence level"
       virtual Double_t CLsplusb() const { return !fBackgroundIsAlt ? AlternatePValue() : NullPValue(); }
 
-      /// CLs is simply CLs+b/CLb (not a method, but a quantity)
+      /// \f$CL_{s}\f$ is simply \f$CL_{s+b}/CL_{b}\f$ (not a method, but a quantity)
       virtual Double_t CLs() const {
          double thisCLb = CLb();
          if (thisCLb == 0) {
@@ -144,7 +145,7 @@ be larger than one.
       /// The error on the "confidence level" of the alternative hypothesis
       Double_t CLsplusbError() const;
 
-      /// The error on the ratio CLs+b/CLb
+      /// The error on the ratio \f$CL_{s+b}/CL_{b}\f$
       Double_t CLsError() const;
 
       /// The error on the Null p-value
@@ -162,10 +163,10 @@ be larger than one.
 
    protected:
 
-      mutable Double_t fNullPValue; // p-value for the null hypothesis (small number means disfavored)
-      mutable Double_t fAlternatePValue; // p-value for the alternate hypothesis (small number means disfavored)
-      mutable Double_t fNullPValueError; // error of p-value for the null hypothesis (small number means disfavored)
-      mutable Double_t fAlternatePValueError; // error of p-value for the alternate hypothesis (small number means disfavored)
+      mutable Double_t fNullPValue; // p-value for the null hypothesis (small number means disfavoured)
+      mutable Double_t fAlternatePValue; // p-value for the alternate hypothesis (small number means disfavoured)
+      mutable Double_t fNullPValueError; // error of p-value for the null hypothesis (small number means disfavoured)
+      mutable Double_t fAlternatePValueError; // error of p-value for the alternate hypothesis (small number means disfavoured)
       Double_t fTestStatisticData; // result of the test statistic evaluated on data
       const RooArgList* fAllTestStatisticsData; // for the case of multiple test statistics, holds all the results
       SamplingDistribution *fNullDistr;

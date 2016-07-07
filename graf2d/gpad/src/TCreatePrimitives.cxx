@@ -75,8 +75,8 @@ void TCreatePrimitives::Ellipse(Int_t event, Int_t px, Int_t py, Int_t mode)
    switch (event) {
 
    case kButton1Down:
-      x0 = gPad->AbsPixeltoX(px);
-      y0 = gPad->AbsPixeltoY(py);
+      x0   = gPad->AbsPixeltoX(px);
+      y0   = gPad->AbsPixeltoY(py);
       xold = gPad->AbsPixeltoX(px);
       yold = gPad->AbsPixeltoY(py);
       break;
@@ -157,7 +157,7 @@ void TCreatePrimitives::Ellipse(Int_t event, Int_t px, Int_t py, Int_t mode)
 
 void TCreatePrimitives::Line(Int_t event, Int_t px, Int_t py, Int_t mode)
 {
-   static Double_t x0, y0;
+   static Double_t x0, y0, x1, y1;
 
    static Int_t pxold, pyold;
    static Int_t px0, py0;
@@ -166,33 +166,29 @@ void TCreatePrimitives::Line(Int_t event, Int_t px, Int_t py, Int_t mode)
    switch (event) {
 
    case kButton1Down:
-      x0 = gPad->AbsPixeltoX(px);
-      y0 = gPad->AbsPixeltoY(py);
+      x0    = gPad->AbsPixeltoX(px);
+      y0    = gPad->AbsPixeltoY(py);
       px0   = px; py0   = py;
       pxold = px; pyold = py;
-      if (gPad->GetLogx()) {
-         px0 = TMath::Power(10,px0);
-         pxold = TMath::Power(10,pxold);
-      }
-      if (gPad->GetLogy()) {
-         py0 = TMath::Power(10,py0);
-         pyold = TMath::Power(10,pyold);
-      }
+      if (gPad->GetLogx()) x0   = TMath::Power(10,x0);
+      if (gPad->GetLogy()) y0   = TMath::Power(10,y0);
       break;
 
    case kButton1Motion:
       pxold = px;
       pyold = py;
 
-      if (gPad->GetLogx()) pxold = TMath::Power(10,pxold);
-      if (gPad->GetLogy()) pyold = TMath::Power(10,pyold);
+      x1 = gPad->AbsPixeltoX(pxold);
+      y1 = gPad->AbsPixeltoY(pyold);
+      if (gPad->GetLogx()) x1 = TMath::Power(10,x1);
+      if (gPad->GetLogy()) y1 = TMath::Power(10,y1);
 
       if (mode == kLine) {
          if (fgLine){
-            fgLine->SetX2(gPad->AbsPixeltoX(pxold));
-            fgLine->SetY2(gPad->AbsPixeltoY(pyold));
+            fgLine->SetX2(x1);
+            fgLine->SetY2(y1);
          } else {
-            fgLine = new TLine(x0,y0,gPad->AbsPixeltoX(pxold),gPad->AbsPixeltoY(pyold));
+            fgLine = new TLine(x0,y0,x1,y1);
             fgLine->Draw();
          }
          gPad->Modified(kTRUE);
@@ -201,10 +197,10 @@ void TCreatePrimitives::Line(Int_t event, Int_t px, Int_t py, Int_t mode)
 
       if (mode == kArrow) {
          if (fgArrow){
-            fgArrow->SetX2(gPad->AbsPixeltoX(pxold));
-            fgArrow->SetY2(gPad->AbsPixeltoY(pyold));
+            fgArrow->SetX2(x1);
+            fgArrow->SetY2(y1);
          } else {
-            fgArrow = new TArrow(x0,y0,gPad->AbsPixeltoX(pxold),gPad->AbsPixeltoY(pyold)
+            fgArrow = new TArrow(x0,y0,x1,y1
                                  , TArrow::GetDefaultArrowSize()
                                  , TArrow::GetDefaultOption());
             fgArrow->Draw();
@@ -214,9 +210,9 @@ void TCreatePrimitives::Line(Int_t event, Int_t px, Int_t py, Int_t mode)
       }
 
       if (mode == kCurlyLine) {
-         if (fgCLine) fgCLine->SetEndPoint(gPad->AbsPixeltoX(pxold), gPad->AbsPixeltoY(pyold));
+         if (fgCLine) fgCLine->SetEndPoint(x1, y1);
          else  {
-            fgCLine = new TCurlyLine(gPad->AbsPixeltoX(px0),gPad->AbsPixeltoY(py0),gPad->AbsPixeltoX(pxold),gPad->AbsPixeltoY(pyold)
+            fgCLine = new TCurlyLine(x0,y0,x1,y1
                                      , TCurlyLine::GetDefaultWaveLength()
                                      , TCurlyLine::GetDefaultAmplitude());
             fgCLine->Draw();
@@ -230,7 +226,7 @@ void TCreatePrimitives::Line(Int_t event, Int_t px, Int_t py, Int_t mode)
          radius = gPad->PixeltoX((Int_t)(TMath::Sqrt((Double_t)((px-px0)*(px-px0) + (py-py0)*(py-py0)))))
                  - gPad->PixeltoX(0);
          if (fgCArc) {
-            fgCArc->SetStartPoint(gPad->AbsPixeltoX(pxold), gPad->AbsPixeltoY(pyold));
+            fgCArc->SetStartPoint(x1, y1);
             fgCArc->SetRadius(radius);
          } else {
             phimin = 0;
@@ -337,6 +333,7 @@ void TCreatePrimitives::Pad(Int_t event, Int_t px, Int_t py, Int_t)
       ylow = (Double_t(py1) - Double_t(pyl))/(Double_t(py1) - Double_t(py2));
       xup  = (Double_t(pxt) - Double_t(px1))/(Double_t(px2) - Double_t(px1));
       yup  = (Double_t(py1) - Double_t(pyt))/(Double_t(py1) - Double_t(py2));
+
       gROOT->SetEditorMode();
       if (xup <= xlow || yup <= ylow) return;
       newpad = new TPad(Form("%s_%d",gPad->GetName(),n+1),"newpad",xlow, ylow, xup, yup);

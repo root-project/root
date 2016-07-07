@@ -42,6 +42,8 @@ const UInt_t kDisplacementMask = 0xFF000000;  // In the streamer the two highest
 ClassImp(TBasket)
 
 /** \class TBasket
+\ingroup tree
+
 Manages buffers for branches of a Tree.
 
 See picture in TTree.

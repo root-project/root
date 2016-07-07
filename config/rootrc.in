@@ -240,6 +240,9 @@ Browser.SortBy:              name
 Browser.GroupView:           10000
 Browser.ShowHidden:          no
 Browser.AutoThumbnail:       yes
+# Set the ExpandDirectories option to "no" to prevent expanding
+# the parent directory tree (for example on nfs)
+Browser.ExpandDirectories    yes
 # Start URL for the TRootBrowser embedded HTML renderer
 Browser.StartUrl:            http://root.cern.ch/root/html/ClassIndex.html
 
@@ -719,14 +722,18 @@ Davix.UseOldClient: @useoldwebfile@
 # Davix.GSI.GridMode: y
 
 # Sets the Amazon S3 authentication parameters
+# Region is optional - if provided, davix will use v4 signatures
+# Token is optional, and enables the use of STS temporary credentials
 # Davix.S3.SecretKey: secret
-# Davix.S3.AccessKey: token
+# Davix.S3.AccessKey: access
+# Davix.S3.Region: region
+# Davix.S3.Token: token
 
 # NOTE: The authentication of TDavixFile/TDavixSystem can be influenced
 # through some well known environment variables:
-# X509_USER_CERT, X509_USER_KEY, X509_USER_PROXY
-# They have the usual meaning for the X509 Grid things. The gEnv vars
-# have higher priority over the these envvars.
+# X509_USER_CERT, X509_USER_KEY, X509_USER_PROXY,
+# S3_ACCESS_KEY, S3_SECRET_KEY, S3_REGION, S3_TOKEN
+# The gEnv vars have higher priority over the these envvars.
 
 # Example of custom setting for the Rint application (root.exe).
 # This overrides the default specified above for a generic application.

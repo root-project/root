@@ -139,7 +139,7 @@ public:
       Redecl(Redecl != Sema::NotForRedeclaration),
       HideTags(true),
       Diagnose(Redecl == Sema::NotForRedeclaration),
-      AllowHidden(Redecl == Sema::ForRedeclaration),
+      AllowHidden(false),
       Shadowed(false)
   {
     configure();
@@ -161,7 +161,7 @@ public:
       Redecl(Redecl != Sema::NotForRedeclaration),
       HideTags(true),
       Diagnose(Redecl == Sema::NotForRedeclaration),
-      AllowHidden(Redecl == Sema::ForRedeclaration),
+      AllowHidden(false),
       Shadowed(false)
   {
     configure();
@@ -184,6 +184,49 @@ public:
       AllowHidden(Other.AllowHidden),
       Shadowed(false)
   {}
+
+  // FIXME: Remove these deleted methods once the default build includes
+  // -Wdeprecated.
+  LookupResult(const LookupResult &) = delete;
+  LookupResult &operator=(const LookupResult &) = delete;
+
+  LookupResult(LookupResult &&Other)
+      : ResultKind(std::move(Other.ResultKind)),
+        Ambiguity(std::move(Other.Ambiguity)), Decls(std::move(Other.Decls)),
+        Paths(std::move(Other.Paths)),
+        NamingClass(std::move(Other.NamingClass)),
+        BaseObjectType(std::move(Other.BaseObjectType)),
+        SemaPtr(std::move(Other.SemaPtr)), NameInfo(std::move(Other.NameInfo)),
+        NameContextRange(std::move(Other.NameContextRange)),
+        LookupKind(std::move(Other.LookupKind)), IDNS(std::move(Other.IDNS)),
+        Redecl(std::move(Other.Redecl)), HideTags(std::move(Other.HideTags)),
+        Diagnose(std::move(Other.Diagnose)),
+        AllowHidden(std::move(Other.AllowHidden)),
+        Shadowed(std::move(Other.Shadowed)) {
+    Other.Paths = nullptr;
+    Other.Diagnose = false;
+  }
+  LookupResult &operator=(LookupResult &&Other) {
+    ResultKind = std::move(Other.ResultKind);
+    Ambiguity = std::move(Other.Ambiguity);
+    Decls = std::move(Other.Decls);
+    Paths = std::move(Other.Paths);
+    NamingClass = std::move(Other.NamingClass);
+    BaseObjectType = std::move(Other.BaseObjectType);
+    SemaPtr = std::move(Other.SemaPtr);
+    NameInfo = std::move(Other.NameInfo);
+    NameContextRange = std::move(Other.NameContextRange);
+    LookupKind = std::move(Other.LookupKind);
+    IDNS = std::move(Other.IDNS);
+    Redecl = std::move(Other.Redecl);
+    HideTags = std::move(Other.HideTags);
+    Diagnose = std::move(Other.Diagnose);
+    AllowHidden = std::move(Other.AllowHidden);
+    Shadowed = std::move(Other.Shadowed);
+    Other.Paths = nullptr;
+    Other.Diagnose = false;
+    return *this;
+  }
 
   ~LookupResult() {
     if (Diagnose) diagnose();
@@ -228,10 +271,11 @@ public:
 
   /// \brief Determine whether this lookup is permitted to see hidden
   /// declarations, such as those in modules that have not yet been imported.
-  bool isHiddenDeclarationVisible() const {
-    return AllowHidden || LookupKind == Sema::LookupTagName;
+  bool isHiddenDeclarationVisible(NamedDecl *ND) const {
+    return AllowHidden ||
+           (isForRedeclaration() && ND->isExternallyVisible());
   }
-  
+
   /// Sets whether tag declarations should be hidden by non-tag
   /// declarations during resolution.  The default is true.
   void setHideTags(bool Hide) {
@@ -291,9 +335,6 @@ public:
     if (!D->isHidden())
       return true;
 
-    if (SemaRef.ActiveTemplateInstantiations.empty())
-      return false;
-
     // During template instantiation, we can refer to hidden declarations, if
     // they were visible in any module along the path of instantiation.
     return isVisibleSlow(SemaRef, D);
@@ -305,7 +346,7 @@ public:
     if (!D->isInIdentifierNamespace(IDNS))
       return nullptr;
 
-    if (isHiddenDeclarationVisible() || isVisible(getSema(), D))
+    if (isVisible(getSema(), D) || isHiddenDeclarationVisible(D))
       return D;
 
     return getAcceptableDeclSlow(D);
@@ -513,10 +554,10 @@ public:
   /// \brief Change this lookup's redeclaration kind.
   void setRedeclarationKind(Sema::RedeclarationKind RK) {
     Redecl = RK;
-    AllowHidden = (RK == Sema::ForRedeclaration);
     configure();
   }
 
+  void dump();
   void print(raw_ostream &);
 
   /// Suppress the diagnostics that would normally fire because of this
@@ -567,6 +608,11 @@ public:
     {}
 
   public:
+    Filter(Filter &&F)
+        : Results(F.Results), I(F.I), Changed(F.Changed),
+          CalledDone(F.CalledDone) {
+      F.CalledDone = true;
+    }
     ~Filter() {
       assert(CalledDone &&
              "LookupResult::Filter destroyed without done() call");
@@ -722,7 +768,13 @@ public:
 class ADLResult {
 private:
   /// A map from canonical decls to the 'most recent' decl.
-  llvm::DenseMap<NamedDecl*, NamedDecl*> Decls;
+  llvm::MapVector<NamedDecl*, NamedDecl*> Decls;
+
+  struct select_second {
+    NamedDecl *operator()(std::pair<NamedDecl*, NamedDecl*> P) const {
+      return P.second;
+    }
+  };
 
 public:
   /// Adds a new ADL candidate to this map.
@@ -733,23 +785,11 @@ public:
     Decls.erase(cast<NamedDecl>(D->getCanonicalDecl()));
   }
 
-  class iterator
-      : public llvm::iterator_adaptor_base<
-            iterator, llvm::DenseMap<NamedDecl *, NamedDecl *>::iterator,
-            std::forward_iterator_tag, NamedDecl *> {
-    friend class ADLResult;
+  typedef llvm::mapped_iterator<decltype(Decls)::iterator, select_second>
+      iterator;
 
-    iterator(llvm::DenseMap<NamedDecl *, NamedDecl *>::iterator Iter)
-        : iterator_adaptor_base(std::move(Iter)) {}
-
-  public:
-    iterator() {}
-
-    value_type operator*() const { return I->second; }
-  };
-
-  iterator begin() { return iterator(Decls.begin()); }
-  iterator end() { return iterator(Decls.end()); }
+  iterator begin() { return iterator(Decls.begin(), select_second()); }
+  iterator end() { return iterator(Decls.end(), select_second()); }
 };
 
 }

@@ -694,7 +694,7 @@ void TMVA::MethodBDT::Reset( void )
    fForest.clear();
 
    fBoostWeights.clear();
-   if (fMonitorNtuple) fMonitorNtuple->Delete(); fMonitorNtuple=NULL;
+   if (fMonitorNtuple) { fMonitorNtuple->Delete(); fMonitorNtuple=NULL; }
    fVariableImportance.clear();
    fResiduals.clear();
    // now done in "InitEventSample" which is called in "Train"

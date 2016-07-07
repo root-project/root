@@ -876,7 +876,7 @@ void TMatrixTBase<Element>::Print(Option_t *option) const
          printf("%4d |",i+rowlwb-1);
          for (Int_t j = sheet_counter; j < sheet_counter+cols_per_sheet && j <= ncols; j++)
             printf(format,(*this)(i+rowlwb-1,j+collwb-1));
-            printf("\n");
+         printf("\n");
       }
    }
    printf("\n");

@@ -11,7 +11,7 @@ set(_occdirs ${CASROOT} ${CASS_DIR} $ENV{CASROOT} /opt/occ)
 
 find_path(OCC_INCLUDE_DIR
           NAMES Standard_Real.hxx
-          HINTS ${_occdirs} /usr/include/opencascade
+          HINTS ${_occdirs} /usr/include/opencascade /usr/include/oce
           PATH_SUFFIXES inc
           DOC "Specify the directory containing Standard_Real.hxx")
 

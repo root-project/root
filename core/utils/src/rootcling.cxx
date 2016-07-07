@@ -15,7 +15,7 @@
 #endif
 
 extern "C" {
-   R__DLLEXPORT void usedToIdentifyRootClingByDlSym() {};
+   R__DLLEXPORT void usedToIdentifyRootClingByDlSym() {}
 }
 
 const char *shortHelp =
@@ -197,7 +197,9 @@ const char *rootClingHelp =
    "  This allows the header to be inlined within the dictionary.               \n"
    "                                                                            \n"
    " -interpreteronly\tNo IO information in the dictionary                      \n"
-   " -noIncludePaths\tDon't keep track of the include paths passed to rootcling \n";
+   "                                                                            \n"
+   " -noIncludePaths\tDo not store the headers' directories in the dictionary.  \n"
+   "  Instead, rely on the environment variable $ROOT_INCLUDE_PATH at runtime.  \n";
 
 
 
@@ -2270,7 +2272,8 @@ int GenerateModule(TModuleGenerator &modGen,
    // From PCHGenerator and friends:
    llvm::SmallVector<char, 128> Buffer;
    llvm::BitstreamWriter Stream(Buffer);
-   clang::ASTWriter Writer(Stream);
+   llvm::ArrayRef<llvm::IntrusiveRefCntPtr<clang::ModuleFileExtension>> Extensions;
+   clang::ASTWriter Writer(Stream, Extensions);
    llvm::raw_ostream *OS
       = CI->createOutputFile(modGen.GetModuleFileName().c_str(),
                              /*Binary=*/true,
@@ -3196,7 +3199,6 @@ void CreateDictHeader(std::ostream &dictStream, const std::string &main_dictname
                << "#include <stddef.h>\n"
                << "#include <stdio.h>\n"
                << "#include <stdlib.h>\n"
-               << "#include <math.h>\n"
                << "#include <string.h>\n"
                << "#include <assert.h>\n"
                << "#define G__DICTIONARY\n"
@@ -4192,7 +4194,10 @@ int RootCling(int argc,
 #else
    clingArgs.push_back(std::string("-I") + TROOT__GetEtcDir());
 #endif
-   clingArgs.push_back("-D__ROOTCLING__");
+   // We do not want __ROOTCLING__ in the pch!
+   if (!onepcm) {
+      clingArgs.push_back("-D__ROOTCLING__");
+   }
    clingArgs.push_back("-fsyntax-only");
    clingArgs.push_back("-Xclang");
    clingArgs.push_back("-main-file-name");
@@ -4236,6 +4241,28 @@ int RootCling(int argc,
    cling::Interpreter interp(clingArgsC.size(), &clingArgsC[0],
                              resourceDir.c_str());
 #endif // ROOT_STAGE1_BUILD
+   if (ROOT::TMetaUtils::GetErrorIgnoreLevel() == ROOT::TMetaUtils::kInfo) {
+      ROOT::TMetaUtils::Info(0, "\n");
+      ROOT::TMetaUtils::Info(0, "==== INTERPRETER CONFIGURATION ====\n");
+      ROOT::TMetaUtils::Info(0, "== Include paths\n");
+      interp.DumpIncludePath();
+      printf("\n\n");
+      fflush(stdout);
+
+      ROOT::TMetaUtils::Info(0, "== Included files\n");
+      interp.printIncludedFiles(llvm::outs());
+      llvm::outs() << "\n\n";
+      llvm::outs().flush();
+
+      ROOT::TMetaUtils::Info(0, "== Language Options\n");
+      const clang::LangOptions& LangOpts
+         = interp.getCI()->getASTContext().getLangOpts();
+#define LANGOPT(Name, Bits, Default, Description) \
+      ROOT::TMetaUtils::Info(0, "%s = %d // %s\n", #Name, (int)LangOpts.Name, Description);
+#define ENUM_LANGOPT(Name, Type, Bits, Default, Description)
+#include "clang/Basic/LangOptions.def"
+      ROOT::TMetaUtils::Info(0, "==== END interpreter configuration ====\n\n");
+   }
 
    interp.getOptions().ErrorOut = true;
    interp.enableRawInput(true);
@@ -4252,7 +4279,6 @@ int RootCling(int argc,
             || interp.declare("#include <assert.h>\n"
                               "#include <stdlib.h>\n"
                               "#include <stddef.h>\n"
-                              "#include <math.h>\n"
                               "#include <string.h>\n"
                              ) != cling::Interpreter::kSuccess
             || interp.declare("#include \"Rtypes.h\"\n"
@@ -5672,7 +5698,7 @@ int GenReflex(int argc, char **argv)
          NOTYPE ,
          "" , "noIncludePaths",
          ROOT::option::Arg::None,
-         "--noIncludePaths\tDo not store the include paths. Rely at runtime on the ROOT_INCLUDE_PATH.\n"
+         "--noIncludePaths\tDo not store the headers' directories in the dictionary. Instead, rely on the environment variable $ROOT_INCLUDE_PATH at runtime.\n"
       },
 
       // Left intentionally empty not to be shown in the help, like in the first genreflex

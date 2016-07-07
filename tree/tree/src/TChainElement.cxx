@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TChainElement
+\ingroup tree
+
 A TChainElement describes a component of a TChain.
 */
 

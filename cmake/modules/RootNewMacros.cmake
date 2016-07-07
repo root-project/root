@@ -42,7 +42,7 @@ endif()
 if(soversion)
   set(ROOT_LIBRARY_PROPERTIES ${ROOT_LIBRARY_PROPERTIES}
       VERSION ${ROOT_VERSION}
-      SOVERSION ${ROOT_MAJOR_VERSION}
+      SOVERSION ${ROOT_MAJOR_VERSION}.${ROOT_MINOR_VERSION}
       SUFFIX ${libsuffix}
       PREFIX ${libprefix} )
 else()
@@ -417,6 +417,7 @@ function(ROOT_LINKER_LIBRARY library)
     add_library(${library} ${_all} SHARED ${lib_srcs})
     target_link_libraries(${library} ${ARG_LIBRARIES} ${ARG_DEPENDENCIES})
     set_target_properties(${library} PROPERTIES ${ROOT_LIBRARY_PROPERTIES} LINK_FLAGS -DEF:${library}.def)
+
     #---set the .def file as generated------------------------------------
     set_source_files_properties(${library}.def PROPERTIES GENERATED 1)
     #---create a custom pre-link command that runs bindexplib
@@ -446,6 +447,12 @@ function(ROOT_LINKER_LIBRARY library)
   set_property(GLOBAL APPEND PROPERTY ROOT_EXPORTED_TARGETS ${library})
   set_target_properties(${library} PROPERTIES OUTPUT_NAME ${library_name})
   set_target_properties(${library} PROPERTIES LINK_INTERFACE_LIBRARIES "${ARG_DEPENDENCIES}")
+  # Do not add -Dname_EXPORTS to the command-line when building files in this
+  # target. Doing so is actively harmful for the modules build because it
+  # creates extra module variants, and not useful because we don't use these
+  # macros.
+  set_target_properties(${library} PROPERTIES DEFINE_SYMBOL "")
+
   #----Installation details-------------------------------------------------------
   if(NOT ARG_TEST AND NOT ARG_NOINSTALL AND CMAKE_LIBRARY_OUTPUT_DIRECTORY)
     if(ARG_CMAKENOEXPORT)
@@ -480,6 +487,11 @@ function(ROOT_OBJECT_LIBRARY library)
 
   #--- Only for building shared libraries
   set_property(TARGET ${library} PROPERTY POSITION_INDEPENDENT_CODE 1)
+  # Do not add -Dname_EXPORTS to the command-line when building files in this
+  # target. Doing so is actively harmful for the modules build because it
+  # creates extra module variants, and not useful because we don't use these
+  # macros.
+  set_target_properties(${library} PROPERTIES DEFINE_SYMBOL "")
 
   #--- Fill the property OBJECTS with all the object files
   #    This is needed becuase the generator expression $<TARGET_OBJECTS:target>
@@ -518,6 +530,12 @@ function(ROOT_MODULE_LIBRARY library)
   include_directories(${CMAKE_BINARY_DIR}/include)
   add_library( ${library} SHARED ${lib_srcs})
   set_target_properties(${library}  PROPERTIES ${ROOT_LIBRARY_PROPERTIES})
+  # Do not add -Dname_EXPORTS to the command-line when building files in this
+  # target. Doing so is actively harmful for the modules build because it
+  # creates extra module variants, and not useful because we don't use these
+  # macros.
+  set_target_properties(${library} PROPERTIES DEFINE_SYMBOL "")
+
   target_link_libraries(${library} ${ARG_LIBRARIES})
   #----Installation details-------------------------------------------------------
   install(TARGETS ${library} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries

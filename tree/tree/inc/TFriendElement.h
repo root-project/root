@@ -35,11 +35,11 @@ class TClass;
 class TFriendElement : public TNamed {
 
 protected:
-   TTree        *fParentTree;  //!pointer to the parent TTree
-   TTree        *fTree;        //!pointer to the TTree described by this element
-   TFile        *fFile;        //!pointer to the file containing the friend TTree
-   TString       fTreeName;    // name of the friend TTree
-   Bool_t        fOwnFile;     // true if file is managed by this class
+   TTree        *fParentTree;  ///<! pointer to the parent TTree
+   TTree        *fTree;        ///<! pointer to the TTree described by this element
+   TFile        *fFile;        ///<! pointer to the file containing the friend TTree
+   TString       fTreeName;    ///<  name of the friend TTree
+   Bool_t        fOwnFile;     ///<  true if file is managed by this class
 
    TFriendElement(const TFriendElement&);
    TFriendElement& operator=(const TFriendElement&);

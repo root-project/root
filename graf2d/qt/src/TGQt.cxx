@@ -394,10 +394,10 @@ protected: // singleton
 public:
 
    static TQtEventInputHandler *Instance() {
-     if (!gfQtEventInputHandler)
-       gfQtEventInputHandler =  new  TQtEventInputHandler();
-       gfQtEventInputHandler->Start(240);
-       return gfQtEventInputHandler;
+      if (!gfQtEventInputHandler)
+         gfQtEventInputHandler =  new  TQtEventInputHandler();
+      gfQtEventInputHandler->Start(240);
+      return gfQtEventInputHandler;
    }
    Bool_t Notify()     {
       Timeout();       // emit Timeout() signal
@@ -571,8 +571,8 @@ QPaintDevice *TGQt::iwid(Int_t wd)
 {
    QPaintDevice *topDevice = 0;
    if (0 <= wd && wd <= int(fWidgetArray->MaxId()) )
-     topDevice = (*fWidgetArray)[wd];
-     if (topDevice == (QPaintDevice *)(-1) ) topDevice = 0;
+      topDevice = (*fWidgetArray)[wd];
+   if (topDevice == (QPaintDevice *)(-1) ) topDevice = 0;
    else {
      assert(wd <= Int_t(fWidgetArray->MaxTotalId()));
      // this is allowed from the embedded TCanvas dtor only.

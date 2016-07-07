@@ -38,6 +38,16 @@ if(builtin_zlib)
   set(ZLIB_LIBRARY "" CACHE PATH "" FORCE)
 endif()
 
+#---Check for Unuran ------------------------------------------------------------------
+if(NOT builtin_unuran)
+  message(STATUS "Looking for Unuran")
+  find_Package(Unuran)
+  if(NOT UNURAN_FOUND)
+    message(STATUS "Unuran not found. Switching on builtin_unuran option")
+    set(builtin_unuran ON CACHE BOOL "" FORCE)
+  endif()
+endif()
+
 #---Check for Freetype---------------------------------------------------------------
 if(NOT builtin_freetype)
   message(STATUS "Looking for Freetype")
@@ -440,6 +450,16 @@ if(opengl)
   endif()
 endif()
 
+#---Check for gl2ps ------------------------------------------------------------------
+if(NOT builtin_gl2ps)
+  message(STATUS "Looking for gl2ps")
+  find_Package(gl2ps)
+  if(NOT GL2PS_FOUND)
+    message(STATUS "gl2ps not found. Switching on builtin_gl2ps option")
+    set(builtin_gl2ps ON CACHE BOOL "" FORCE)
+  endif()
+endif()
+
 #---Check for Graphviz installation-------------------------------------------------------
 if(gviz)
   message(STATUS "Looking for Graphviz")
@@ -562,15 +582,29 @@ if(ssl OR builtin_openssl)
 endif()
 
 #---Check for Castor-------------------------------------------------------------------
-if(castor OR rfio)
+if(castor)
   message(STATUS "Looking for Castor")
   find_package(Castor)
   if(NOT CASTOR_FOUND)
     if(fail-on-missing)
       message(FATAL_ERROR "Castor libraries not found and they are required (castor option enabled)")
     else()
-      message(STATUS "Castor not found. Switching off castor/rfio option")
+      message(STATUS "Castor not found. Switching off castor option")
       set(castor OFF CACHE BOOL "" FORCE)
+    endif()
+  endif()
+endif()
+
+#---Check for RFIO-------------------------------------------------------------------
+if(rfio)
+  message(STATUS "Looking for RFIO")
+  find_package(Castor)
+  find_package(DPM)
+  if(NOT CASTOR_FOUND AND NOT DPM_FOUND)
+    if(fail-on-missing)
+      message(FATAL_ERROR "Castor or DPM libraries not found and one of them is required (rfio option enabled)")
+    else()
+      message(STATUS "Castor or DPM not found. Switching off rfio option")
       set(rfio OFF CACHE BOOL "" FORCE)
     endif()
   endif()
@@ -783,8 +817,8 @@ if(xrootd)
   endif()
 endif()
 if(builtin_xrootd)
-  set(xrootd_version 4.2.2)
-  set(xrootd_versionnum 400020002)
+  set(xrootd_version 4.3.0)
+  set(xrootd_versionnum 400030000)
   message(STATUS "Downloading and building XROOTD version ${xrootd_version}")
   string(REPLACE "-Wall " "" __cxxflags "${CMAKE_CXX_FLAGS}")  # Otherwise it produces many warnings
   string(REPLACE "-W " "" __cxxflags "${__cxxflags}")          # Otherwise it produces many warnings
@@ -981,7 +1015,7 @@ if(davix OR builtin_davix)
     if(NOT davix)
       set(davix ON CACHE BOOL "" FORCE)
     endif()
-    set(DAVIX_VERSION 0.3.6)
+    set(DAVIX_VERSION 0.6.3)
     message(STATUS "Downloading and building Davix version ${DAVIX_VERSION}")
     string(REPLACE "-Wall " "" __cxxflags "${CMAKE_CXX_FLAGS}")                      # Otherwise it produces tones of warnings
     string(REPLACE "-W " "" __cxxflags "${__cxxflags}")
@@ -995,7 +1029,7 @@ if(davix OR builtin_davix)
       # http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix/davix-embedded-${DAVIX_VERSION}.tar.gz
       URL ${repository_tarfiles}/davix-embedded-${DAVIX_VERSION}.tar.gz
       # Patch need. see https://github.com/cern-it-sdc-id/davix/issues/6
-      PATCH_COMMAND patch -p1 -i ${CMAKE_SOURCE_DIR}/cmake/patches/davix-${DAVIX_VERSION}.patch 
+      # PATCH_COMMAND patch -p1 -i ${CMAKE_SOURCE_DIR}/cmake/patches/davix-${DAVIX_VERSION}.patch 
       CMAKE_CACHE_ARGS -DCMAKE_PREFIX_PATH:STRING=${OPENSSL_PREFIX}
       CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
                  -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
@@ -1009,7 +1043,7 @@ if(davix OR builtin_davix)
                  -DCMAKE_CXX_FLAGS=${__cxxflags}
                  -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
                  -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
-                 -DLIB_SUFFIX=""
+                 -DLIB_SUFFIX=
       LOG_BUILD 1 LOG_CONFIGURE 1 LOG_DOWNLOAD 1 LOG_INSTALL 1
     )
     ExternalProject_Get_Property(DAVIX INSTALL_DIR)
@@ -1041,8 +1075,11 @@ if(vc)
       set(vc OFF CACHE BOOL "" FORCE)
     endif()
   elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.0)
-      message(STATUS "VC requires Clang version >= 4.0; switching OFF 'vc' option")
+    if ( APPLE AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4)
+      message(STATUS "VC requires Apple Clang version >= 4.0; switching OFF 'vc' option")
+      set(vc OFF CACHE BOOL "" FORCE)
+    elseif (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.1)
+      message(STATUS "VC requires Clang version >= 3.1; switching OFF 'vc' option")
       set(vc OFF CACHE BOOL "" FORCE)
     endif()
   elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
@@ -1079,13 +1116,19 @@ if(imt)
   if(NOT builtin_tbb)
     message(STATUS "Looking for TBB")
     find_package(TBB)
+    if(TBB_FOUND)
+      if(${TBB_VERSION} VERSION_LESS 4.3)
+        message(STATUS "TBB version < 4.3. Switching on builtin_tbb option")
+        set(builtin_tbb ON CACHE BOOL "" FORCE)
+      endif()
+    endif()  
     if(NOT TBB_FOUND)
       message(STATUS "TBB not found. Switching on builtin_tbb option")
       set(builtin_tbb ON CACHE BOOL "" FORCE)
     endif()
   endif()
   if(builtin_tbb)
-    set(tbb_version 42_20140122)
+    set(tbb_version 44_20160128)
     ExternalProject_Add(
       TBB
       URL ${repository_tarfiles}/tbb${tbb_version}oss_src.tgz
@@ -1115,6 +1158,18 @@ if(geocad)
       message(STATUS "For the time being switching OFF 'geocad' option")
       set(geocad OFF CACHE BOOL "" FORCE)
     endif()
+  endif()
+endif()
+
+#---Check for VecGeom--------------------------------------------------------------------
+if (vecgeom)
+  message(STATUS "Looking for VecGeom")
+  find_package(VecGeom ${VecGeom_FIND_VERSION} CONFIG QUIET)
+  if(NOT VecGeom_FOUND )
+      message(STATUS "VecGeom not found. Ensure that the installation of VecGeom is in the CMAKE_PREFIX_PATH")
+      message(STATUS "              example: CMAKE_PREFIX_PATH=<VecGeom_install_path>/lib/CMake/VecGeom")
+      message(STATUS "              For the time being switching OFF 'vecgeom' option")
+      set(vecgeom OFF CACHE BOOL "" FORCE)
   endif()
 endif()
 

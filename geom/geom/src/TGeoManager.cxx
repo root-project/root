@@ -368,6 +368,7 @@ TGeoManager::TGeoManager()
       fKeyPNEId = 0;
       fValuePNEId = 0;
       fMultiThread = kFALSE;
+      fRaytraceMode = 0;
       fMaxThreads = 0;
       fUsePWNav = kFALSE;
       fParallelWorld = 0;
@@ -469,6 +470,7 @@ void TGeoManager::Init()
    fKeyPNEId = 0;
    fValuePNEId = 0;
    fMultiThread = kFALSE;
+   fRaytraceMode = 0;
    fMaxThreads = 0;
    fUsePWNav = kFALSE;
    fParallelWorld = 0;
@@ -544,6 +546,7 @@ TGeoManager::TGeoManager(const TGeoManager& gm) :
   fValuePNEId(0),
   fMaxThreads(0),
   fMultiThread(kFALSE),
+  fRaytraceMode(0),
   fUsePWNav(kFALSE),
   fParallelWorld(0)
 {
@@ -626,6 +629,7 @@ TGeoManager& TGeoManager::operator=(const TGeoManager& gm)
       fKeyPNEId = 0;
       fValuePNEId = 0;
       fMultiThread = kFALSE;
+      fRaytraceMode = 0;
       fMaxThreads = 0;
       fUsePWNav = kFALSE;
       fParallelWorld = 0;
@@ -2865,6 +2869,15 @@ void TGeoManager::ResetUserData()
    TIter next(fVolumes);
    TGeoVolume *vol;
    while ((vol=(TGeoVolume*)next())) vol->SetField(0);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Change raytracing mode.
+
+void TGeoManager::SetRTmode(Int_t mode)
+{
+   fRaytraceMode = mode;
+   if (fPainter && fPainter->IsRaytracing()) ModifiedPad();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

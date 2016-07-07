@@ -1,4 +1,4 @@
-/// \file RArrayView.h
+/// \file ROOT/RTupleApply.h
 /// \ingroup Base StdExt ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-09-06
@@ -15,17 +15,10 @@
 #ifndef ROOT7_RTupleApply
 #define ROOT7_RTupleApply
 
-#ifdef R__HAS_STD_TUPLE_APPLY
+#include "RConfigure.h"
 
-#include <tuple>
-
-#elif defined(R__HAS_STD_EXPERIMENTAL_TUPLE_APPLY)
-
-#include <experimental/tuple>
-namespace std {
-  using template <class F, class Tuple> constexpr decltype(auto) apply(F&& f, Tuple&& t);
-}
-
+#ifdef R__HAS_STD_APPLY
+# include <tuple>
 #else
 # include "ROOT/impl_tuple_apply.h"
 #endif

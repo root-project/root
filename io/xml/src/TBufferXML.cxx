@@ -1103,9 +1103,9 @@ void TBufferXML::ClassEnd(const TClass*)
 /// which should be now streamed in custom streamer
 ///
 /// Following combinations are supported:
-///   -# name = "ClassName", typeName = 0 or typename==ClassName. 
-/// This is a case, when data of parent class "ClassName" should be streamed. 
-/// For instance, if class directly inherited from TObject, custom streamer 
+///   -# name = "ClassName", typeName = 0 or typename==ClassName.
+/// This is a case, when data of parent class "ClassName" should be streamed.
+/// For instance, if class directly inherited from TObject, custom streamer
 /// should include following code:
 /// ~~~{.cpp}
 /// b.ClassMember("TObject");
@@ -1293,13 +1293,13 @@ void TBufferXML::PerformPostProcessing()
          if (nodeuchar==0) return;
          if (nodecharstar!=0)
             str = fXML->GetAttr(nodecharstar, xmlio::v);
-	 fXML->UnlinkFreeNode(nodeuchar);
+         fXML->UnlinkFreeNode(nodeuchar);
          fXML->UnlinkFreeNode(nodeint);
          fXML->UnlinkFreeNode(nodecharstar);
       } else {
          if (nodestring!=0)
             str = fXML->GetAttr(nodestring, xmlio::v);
-	 fXML->UnlinkFreeNode(nodestring);
+         fXML->UnlinkFreeNode(nodestring);
       }
 
       fXML->NewAttr(elemnode, 0, "str", str);
@@ -1377,7 +1377,7 @@ void TBufferXML::PerformPreProcessing(const TStreamerElement* elem, XMLNodePoint
          snprintf(sbuf, sizeof(sbuf), "%d", len);
          if (len<255) {
             fXML->NewAttr(ucharnode,0,xmlio::v,sbuf);
-	 } else {
+         } else {
             fXML->NewAttr(ucharnode,0,xmlio::v,"255");
             XMLNodePointer_t intnode = fXML->NewChild(elemnode, 0, xmlio::Int, 0);
             fXML->NewAttr(intnode, 0, xmlio::v, sbuf);

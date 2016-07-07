@@ -21,7 +21,6 @@
 #include "ValueExtractionSynthesizer.h"
 #include "TransactionPool.h"
 #include "ASTTransformer.h"
-#include "TransactionUnloader.h"
 #include "ValuePrinterSynthesizer.h"
 #include "cling/Interpreter/CIFactory.h"
 #include "cling/Interpreter/Interpreter.h"
@@ -125,7 +124,7 @@ namespace {
   if (!II)
     return;
   const clang::DefMacroDirective* MD
-    = llvm::dyn_cast<clang::DefMacroDirective>(PP.getMacroDirective(II));
+    = llvm::dyn_cast<clang::DefMacroDirective>(PP.getLocalMacroDirective(II));
   if (!MD)
     return;
   const clang::MacroInfo* MI = MD->getMacroInfo();
@@ -174,6 +173,8 @@ namespace cling {
 
     if (CI->getFrontendOpts().ProgramAction != clang::frontend::ParseSyntaxOnly){
       m_CodeGen.reset(CreateLLVMCodeGen(CI->getDiagnostics(), "cling-module-0",
+                                        CI->getHeaderSearchOpts(),
+                                        CI->getPreprocessorOpts(),
                                         CI->getCodeGenOpts(),
                                         *m_Interpreter->getLLVMContext()
                                         ));
@@ -183,25 +184,6 @@ namespace cling {
     }
 
     initializeVirtualFile();
-
-    // Add transformers to the IncrementalParser, which owns them
-    Sema* TheSema = &CI->getSema();
-    // Register the AST Transformers
-    typedef std::unique_ptr<ASTTransformer> ASTTPtr_t;
-    std::vector<ASTTPtr_t> ASTTransformers;
-    ASTTransformers.emplace_back(new AutoSynthesizer(TheSema));
-    ASTTransformers.emplace_back(new EvaluateTSynthesizer(TheSema));
-
-    typedef std::unique_ptr<WrapperTransformer> WTPtr_t;
-    std::vector<WTPtr_t> WrapperTransformers;
-    WrapperTransformers.emplace_back(new ValuePrinterSynthesizer(TheSema, 0));
-    WrapperTransformers.emplace_back(new DeclExtractor(TheSema));
-    WrapperTransformers.emplace_back(new NullDerefProtectionTransformer(TheSema));
-    WrapperTransformers.emplace_back(new ValueExtractionSynthesizer(TheSema, isChildInterpreter));
-    WrapperTransformers.emplace_back(new CheckEmptyTransactionTransformer(TheSema));
-
-    m_Consumer->SetTransformers(std::move(ASTTransformers),
-                                std::move(WrapperTransformers));
   }
 
   void
@@ -220,7 +202,10 @@ namespace cling {
     CO.ValuePrinting = CompilationOptions::VPDisabled;
     CO.CodeGeneration = hasCodeGenerator();
 
-    // pull in PCHs
+    Transaction* CurT = beginTransaction(CO);
+    Preprocessor& PP = m_CI->getPreprocessor();
+
+    // Pull in PCH.
     const std::string& PCHFileName
       = m_CI->getInvocation().getPreprocessorOpts().ImplicitPCHInclude;
     if (!PCHFileName.empty()) {
@@ -233,19 +218,17 @@ namespace cling {
       result.push_back(endTransaction(CurT));
     }
 
-    Transaction* CurT = beginTransaction(CO);
-    Sema* TheSema = &m_CI->getSema();
-    Preprocessor& PP = m_CI->getPreprocessor();
     addClingPragmas(*m_Interpreter);
+
+    // Must happen after attaching the PCH, else PCH elements will end up
+    // being lexed.
+    PP.EnterMainSourceFile();
+
+    Sema* TheSema = &m_CI->getSema();
     m_Parser.reset(new Parser(PP, *TheSema,
                               false /*skipFuncBodies*/));
-    PP.EnterMainSourceFile();
-    // Initialize the parser after we have entered the main source file.
+    // Initialize the parser after PP has entered the main source file.
     m_Parser->Initialize();
-    // Perform initialization that occurs after the parser has been initialized
-    // but before it parses anything. Initializes the consumers too.
-    // No - already done by m_Parser->Initialize().
-    // TheSema->Initialize();
 
     ExternalASTSource *External = TheSema->getASTContext().getExternalSource();
     if (External)
@@ -369,7 +352,7 @@ namespace cling {
     return ParseResultTransaction(T, ParseResult);
   }
 
-  void IncrementalParser::commitTransaction(ParseResultTransaction PRT) {
+  void IncrementalParser::commitTransaction(ParseResultTransaction& PRT) {
     Transaction* T = PRT.getPointer();
     if (!T) {
       if (PRT.getInt() != kSuccess) {
@@ -409,7 +392,9 @@ namespace cling {
       Diags.Reset(/*soft=*/true);
       Diags.getClient()->clear();
 
-      rollbackTransaction(T);
+      PRT.setPointer(nullptr);
+      PRT.setInt(kFailed);
+      m_Interpreter->unload(*T);
 
       if (MustStartNewModule) {
         // Create a new module.
@@ -435,13 +420,15 @@ namespace cling {
 
       for (Transaction::const_nested_iterator I = T->nested_begin(),
             E = T->nested_end(); I != E; ++I)
-        if ((*I)->getState() != Transaction::kCommitted)
-          commitTransaction(ParseResultTransaction(*I, PR));
+        if ((*I)->getState() != Transaction::kCommitted) {
+          ParseResultTransaction PRT(*I, PR);
+          commitTransaction(PRT);
+        }
     }
 
     // If there was an error coming from the transformers.
     if (T->getIssuedDiags() == Transaction::kErrors) {
-      rollbackTransaction(T);
+      m_Interpreter->unload(*T);
       return;
     }
 
@@ -474,7 +461,7 @@ namespace cling {
             >= Interpreter::kExeFirstError) {
           // Roll back on error in initializers
           //assert(0 && "Error on inits.");
-          rollbackTransaction(T);
+          m_Interpreter->unload(*T);
           T->setState(Transaction::kRolledBackWithErrors);
           return;
         }
@@ -532,6 +519,7 @@ namespace cling {
     // trigger emission of weak symbols by providing use.
     ParseResultTransaction PRT = endTransaction(deserT);
     commitTransaction(PRT);
+    deserT = PRT.getPointer();
 
     // This llvm::Module is done; finalize it and pass it to the execution
     // engine.
@@ -554,7 +542,9 @@ namespace cling {
       // Reset the module builder to clean up global initializers, c'tors, d'tors
       getCodeGenerator()->HandleTranslationUnit(Context);
       FileName = OldName;
-      commitTransaction(endTransaction(deserT));
+      auto PRT = endTransaction(deserT);
+      commitTransaction(PRT);
+      deserT = PRT.getPointer();
 
       std::unique_ptr<llvm::Module> M(getCodeGenerator()->ReleaseModule());
 
@@ -586,46 +576,25 @@ namespace cling {
     // Transform IR
     bool success = true;
     if (!success)
-      rollbackTransaction(T);
+      m_Interpreter->unload(*T);
     if (m_BackendPasses && T->getModule())
       m_BackendPasses->runOnModule(*T->getModule());
     return success;
   }
 
-  void IncrementalParser::rollbackTransaction(Transaction* T) {
-    assert(T && "Must have value");
-    // We can revert the most recent transaction or a nested transaction of a
-    // transaction that is not in the middle of the transaction collection
-    // (i.e. at the end or not yet added to the collection at all).
-    assert(!T->getTopmostParent()->getNext() &&
-           "Can not revert previous transactions");
-    assert((T->getState() != Transaction::kRolledBack ||
-            T->getState() != Transaction::kRolledBackWithErrors) &&
-           "Transaction already rolled back.");
-    if (m_Interpreter->getOptions().ErrorOut)
-      return;
-
-    if (InterpreterCallbacks* callbacks = m_Interpreter->getCallbacks())
-      callbacks->TransactionRollback(*T);
-
-    TransactionUnloader U(&getCI()->getSema(), m_CodeGen.get());
-
-    if (!T->getParent()) {
+  void IncrementalParser::deregisterTransaction(Transaction& T) {
+    if (Transaction* Parent = T.getParent()) {
+      Parent->removeNestedTransaction(&T);
+      T.setParent(0);
+    } else {
       // Remove from the queue
-      assert(T == m_Transactions.back() && "Out of order transaction removal");
+      assert(&T == m_Transactions.back() && "Out of order transaction removal");
       m_Transactions.pop_back();
       if (!m_Transactions.empty())
         m_Transactions.back()->setNext(0);
     }
 
-    if (U.RevertTransaction(T))
-      T->setState(Transaction::kRolledBack);
-    else
-      T->setState(Transaction::kRolledBackWithErrors);
-
-    // Keep T alive: someone else might have grabbed that T and needs to detect
-    // that it's bad.
-    //m_TransactionPool->releaseTransaction(T);
+    m_TransactionPool->releaseTransaction(&T);
   }
 
   std::vector<const Transaction*> IncrementalParser::getAllTransactions() {
@@ -751,6 +720,7 @@ namespace cling {
 
     m_MemoryBuffers.push_back(std::make_pair(MBNonOwn, FID));
 
+    // NewLoc only used for diags.
     PP.EnterSourceFile(FID, /*DirLookup*/0, NewLoc);
     m_Consumer->getTransaction()->setBufferFID(FID);
 
@@ -837,6 +807,32 @@ namespace cling {
     for(size_t i = 0, e = m_Transactions.size(); i < e; ++i) {
       m_Transactions[i]->printStructureBrief();
     }
+  }
+
+  void IncrementalParser::SetTransformers(bool isChildInterpreter) {
+    // Add transformers to the IncrementalParser, which owns them
+    Sema* TheSema = &m_CI->getSema();
+    // Register the AST Transformers
+    typedef std::unique_ptr<ASTTransformer> ASTTPtr_t;
+    std::vector<ASTTPtr_t> ASTTransformers;
+    ASTTransformers.emplace_back(new AutoSynthesizer(TheSema));
+    ASTTransformers.emplace_back(new EvaluateTSynthesizer(TheSema));
+    if (hasCodeGenerator()) {
+       // Don't protect against crashes if we cannot run anything.
+       // cling might also be in a PCH-generation mode; don't inject our Sema pointer
+       // into the PCH.
+       ASTTransformers.emplace_back(new NullDerefProtectionTransformer(m_Interpreter));
+    }
+
+    typedef std::unique_ptr<WrapperTransformer> WTPtr_t;
+    std::vector<WTPtr_t> WrapperTransformers;
+    WrapperTransformers.emplace_back(new ValuePrinterSynthesizer(TheSema, 0));
+    WrapperTransformers.emplace_back(new DeclExtractor(TheSema));
+    WrapperTransformers.emplace_back(new ValueExtractionSynthesizer(TheSema, isChildInterpreter));
+    WrapperTransformers.emplace_back(new CheckEmptyTransactionTransformer(TheSema));
+
+    m_Consumer->SetTransformers(std::move(ASTTransformers),
+                                std::move(WrapperTransformers));
   }
 
 

@@ -97,7 +97,10 @@ distclean::     distclean-$(MODNAME)
 ifeq ($(ARCH),win32)
 $(EVEO) $(EVEDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%) $(FTGLINCDIR:%=-I%) $(FTGLCPPFLAGS)
 else
-$(EVEO) $(EVEDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%) $(FTGLINCDIR:%=-I%) $(FTGLCPPFLAGS)
+# We need to disallow the direct use of gl.h. This way people will see the error
+# and the suggested fix. This happens by providing our own "fake" system gl.h.
+$(EVEO) $(EVEDO): CXXFLAGS += -isystem $(ROOT_SRCDIR)/graf3d/glew/isystem/ \
+		  $(OPENGLINCDIR:%=-I%) $(FTGLINCDIR:%=-I%) $(FTGLCPPFLAGS)
 $(EVEO): CXXFLAGS += $(GLEWINCDIR:%=-I%) $(GLEWCPPFLAGS)
 endif
 ifeq ($(MACOSX_GLU_DEPRECATED),yes)
@@ -113,11 +116,3 @@ $(MODNAME)-echo-h2:
 # Optimize dictionary with stl containers.
 $(EVEDO1): NOOPT = $(OPT)
 $(EVEDO2): NOOPT = $(OPT)
-
-#FIXME: Disable modules build for graf3d until the glew.h issue gets fixed.
-ifeq ($(CXXMODULES),yes)
-ifeq ($(PLATFORM),macosx)
-$(EVEO): CXXFLAGS := $(filter-out $(ROOT_CXXMODULES_FLAGS),$(CXXFLAGS))
-         CFLAGS   := $(filter-out $(ROOT_CXXMODULES_FLAGS),$(CFLAGS))
-endif
-endif

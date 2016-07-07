@@ -41,10 +41,10 @@
 class TPolyLine3D : public TObject, public TAttLine, public TAtt3D
 {
 protected:
-   Int_t        fN;            //Number of points
-   Float_t     *fP;            //[3*fN] Array of 3-D coordinates  (x,y,z)
-   TString      fOption;       //options
-   Int_t        fLastPoint;    //The index of the last filled point
+   Int_t        fN;            ///< Number of points
+   Float_t     *fP;            ///< [3*fN] Array of 3-D coordinates  (x,y,z)
+   TString      fOption;       ///< options
+   Int_t        fLastPoint;    ///< The index of the last filled point
 
 public:
    TPolyLine3D();

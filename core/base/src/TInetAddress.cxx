@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TInetAddress
+\ingroup Base
+
 This class represents an Internet Protocol (IP) address.
 */
 

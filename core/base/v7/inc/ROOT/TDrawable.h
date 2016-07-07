@@ -1,4 +1,4 @@
-/// \file TDirectory.h
+/// \file ROOT/TDrawable.h
 /// \ingroup Base ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-08-07

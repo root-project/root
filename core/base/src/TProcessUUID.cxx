@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TProcessUUID
+\ingroup Base
+
 This class is a specialized TProcessID managing the list of UUIDs.
 In addition to TProcessID, this object has the following members:
 

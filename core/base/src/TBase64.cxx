@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TBase64
+\ingroup Base
+
 This code implements the Base64 encoding and decoding.
 
 Base64 encoded messages are typically used in authentication

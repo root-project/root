@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TPluginManager
+\ingroup Base
+
 This class implements a plugin library manager.
 
 It keeps track of a list of plugin handlers. A plugin handler knows which plugin

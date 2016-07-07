@@ -14,13 +14,13 @@
 
 set -e
 
-projects="llvm cfe dragonegg test-suite compiler-rt libcxx libcxxabi clang-tools-extra polly lldb lld openmp"
+projects="llvm cfe test-suite compiler-rt libcxx libcxxabi clang-tools-extra polly lldb lld openmp libunwind"
 base_url="https://llvm.org/svn/llvm-project"
 
 release=""
 rc=""
 
-function usage() {
+usage() {
     echo "Export the SVN sources and build tarballs from them"
     echo "usage: `basename $0`"
     echo " "
@@ -29,7 +29,7 @@ function usage() {
     echo "  -final         The final tag"
 }
 
-function export_sources() {
+export_sources() {
     release_no_dot=`echo $release | sed -e 's,\.,,g'`
     tag_dir="tags/RELEASE_$release_no_dot/$rc"
 
@@ -78,6 +78,9 @@ if [ "x$release" = "x" ]; then
     echo "error: need to specify a release version"
     exit 1
 fi
+
+# Make sure umask is not overly restrictive.
+umask 0022
 
 export_sources
 exit 0

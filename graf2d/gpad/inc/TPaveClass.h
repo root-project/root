@@ -12,14 +12,6 @@
 #define ROOT_TPaveClass
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TPaveClass                                                           //
-//                                                                      //
-// A TPaveLabel specialized for TClassTree objects                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #ifndef ROOT_TPaveLabel
 #include "TPaveLabel.h"
 #endif
@@ -31,7 +23,7 @@
 class TPaveClass : public TPaveLabel{
 
 protected:
-   TClassTree   *fClassTree;       //Pointer to the TClassTree referencing this object
+   TClassTree   *fClassTree;       ///< Pointer to the TClassTree referencing this object
 
 public:
    TPaveClass();

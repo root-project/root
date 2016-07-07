@@ -37,23 +37,14 @@ def FCMP_S32_MM : MMRel, CEQS_FT<"s", FGR32, II_C_CC_S, MipsFPCmp>,
 def FCMP_D32_MM : MMRel, CEQS_FT<"d", AFGR64, II_C_CC_D, MipsFPCmp>,
                   CEQS_FM_MM<1>;
 
-def BC1F_MM : MMRel, BC1F_FT<"bc1f", brtarget_mm, IIBranch, MIPS_BRANCH_F>,
+def BC1F_MM : MMRel, BC1F_FT<"bc1f", brtarget_mm, II_BC1F, MIPS_BRANCH_F>,
               BC1F_FM_MM<0x1c>, ISA_MIPS1_NOT_32R6_64R6;
-def BC1T_MM : MMRel, BC1F_FT<"bc1t", brtarget_mm, IIBranch, MIPS_BRANCH_T>,
+def BC1T_MM : MMRel, BC1F_FT<"bc1t", brtarget_mm, II_BC1T, MIPS_BRANCH_T>,
               BC1F_FM_MM<0x1d>, ISA_MIPS1_NOT_32R6_64R6;
-
-def CEIL_W_S_MM  : MMRel, ABSS_FT<"ceil.w.s", FGR32Opnd, FGR32Opnd, II_CEIL>,
-                   ROUND_W_FM_MM<0, 0x6c>;
 def CVT_W_S_MM   : MMRel, ABSS_FT<"cvt.w.s", FGR32Opnd, FGR32Opnd, II_CVT>,
                    ROUND_W_FM_MM<0, 0x24>;
-def FLOOR_W_S_MM : MMRel, ABSS_FT<"floor.w.s", FGR32Opnd, FGR32Opnd, II_FLOOR>,
-                   ROUND_W_FM_MM<0, 0x2c>;
-def ROUND_W_S_MM : MMRel, ABSS_FT<"round.w.s", FGR32Opnd, FGR32Opnd, II_ROUND>,
+def ROUND_W_S_MM : MMRel, StdMMR6Rel, ABSS_FT<"round.w.s", FGR32Opnd, FGR32Opnd, II_ROUND>,
                    ROUND_W_FM_MM<0, 0xec>;
-def TRUNC_W_S_MM : MMRel, ABSS_FT<"trunc.w.s", FGR32Opnd, FGR32Opnd, II_TRUNC>,
-                   ROUND_W_FM_MM<0, 0xac>;
-def FSQRT_S_MM : MMRel, ABSS_FT<"sqrt.s", FGR32Opnd, FGR32Opnd, II_SQRT_S,
-                                fsqrt>, ROUND_W_FM_MM<0, 0x28>;
 
 def CEIL_W_MM  : MMRel, ABSS_FT<"ceil.w.d", FGR32Opnd, AFGR64Opnd, II_CEIL>,
                  ROUND_W_FM_MM<1, 0x6c>;
@@ -61,7 +52,7 @@ def CVT_W_MM   : MMRel, ABSS_FT<"cvt.w.d", FGR32Opnd, AFGR64Opnd, II_CVT>,
                  ROUND_W_FM_MM<1, 0x24>;
 def FLOOR_W_MM : MMRel, ABSS_FT<"floor.w.d", FGR32Opnd, AFGR64Opnd, II_FLOOR>,
                  ROUND_W_FM_MM<1, 0x2c>;
-def ROUND_W_MM : MMRel, ABSS_FT<"round.w.d", FGR32Opnd, AFGR64Opnd, II_ROUND>,
+def ROUND_W_MM : MMRel, StdMMR6Rel, ABSS_FT<"round.w.d", FGR32Opnd, AFGR64Opnd, II_ROUND>,
                  ROUND_W_FM_MM<1, 0xec>;
 def TRUNC_W_MM : MMRel, ABSS_FT<"trunc.w.d", FGR32Opnd, AFGR64Opnd, II_TRUNC>,
                  ROUND_W_FM_MM<1, 0xac>;
@@ -95,7 +86,7 @@ def FNEG_MM : MMRel, ABSS_FT<"neg.d", AFGR64Opnd, AFGR64Opnd, II_NEG, fneg>,
               ABS_FM_MM<1, 0x2d>;
 
 def FMOV_D32_MM : MMRel, ABSS_FT<"mov.d", AFGR64Opnd, AFGR64Opnd, II_MOV_D>,
-                  ABS_FM_MM<1, 0x1>, AdditionalRequires<[NotFP64bit]>;
+                  ABS_FM_MM<1, 0x1>, FGR_32;
 
 def MOVZ_I_S_MM : MMRel, CMov_I_F_FT<"movz.s", GPR32Opnd, FGR32Opnd,
                                      II_MOVZ_S>, CMov_I_F_FM_MM<0x78, 0>;
@@ -123,10 +114,6 @@ def MFC1_MM : MMRel, MFC1_FT<"mfc1", GPR32Opnd, FGR32Opnd,
                              II_MFC1, bitconvert>, MFC1_FM_MM<0x80>;
 def MTC1_MM : MMRel, MTC1_FT<"mtc1", FGR32Opnd, GPR32Opnd,
                              II_MTC1, bitconvert>, MFC1_FM_MM<0xa0>;
-def MFHC1_MM : MMRel, MFC1_FT<"mfhc1", GPR32Opnd, AFGR64Opnd, II_MFHC1>,
-               MFC1_FM_MM<0xc0>, ISA_MIPS32R2, AdditionalRequires<[NotFP64bit]>;
-def MTHC1_MM : MMRel, MTC1_64_FT<"mthc1", AFGR64Opnd, GPR32Opnd, II_MTHC1>,
-               MFC1_FM_MM<0xe0>, ISA_MIPS32R2, AdditionalRequires<[NotFP64bit]>;
 
 def MADD_S_MM : MMRel, MADDS_FT<"madd.s", FGR32Opnd, II_MADD_S, fadd>,
                 MADDS_FM_MM<0x1>;
@@ -145,4 +132,19 @@ def NMADD_D32_MM : MMRel, NMADDS_FT<"nmadd.d", AFGR64Opnd, II_NMADD_D, fadd>,
                    MADDS_FM_MM<0xa>;
 def NMSUB_D32_MM : MMRel, NMADDS_FT<"nmsub.d", AFGR64Opnd, II_NMSUB_D, fsub>,
                    MADDS_FM_MM<0x2a>;
+}
+
+let AdditionalPredicates = [InMicroMips] in {
+  def FLOOR_W_S_MM : MMRel, ABSS_FT<"floor.w.s", FGR32Opnd, FGR32Opnd,
+    II_FLOOR>, ROUND_W_FM_MM<0, 0x2c>;
+  def TRUNC_W_S_MM : MMRel, StdMMR6Rel, ABSS_FT<"trunc.w.s", FGR32Opnd,
+    FGR32Opnd, II_TRUNC>, ROUND_W_FM_MM<0, 0xac>;
+  def CEIL_W_S_MM  : MMRel, ABSS_FT<"ceil.w.s", FGR32Opnd, FGR32Opnd, II_CEIL>,
+    ROUND_W_FM_MM<0, 0x6c>;
+  def FSQRT_S_MM : MMRel, ABSS_FT<"sqrt.s", FGR32Opnd, FGR32Opnd, II_SQRT_S,
+    fsqrt>, ROUND_W_FM_MM<0, 0x28>;
+  def MTHC1_MM : MMRel, MTC1_64_FT<"mthc1", AFGR64Opnd, GPR32Opnd, II_MTHC1>,
+             MFC1_FM_MM<0xe0>, ISA_MIPS32R2, FGR_32;
+  def MFHC1_MM : MMRel, MFC1_FT<"mfhc1", GPR32Opnd, AFGR64Opnd, II_MFHC1>,
+                 MFC1_FM_MM<0xc0>, ISA_MIPS32R2, FGR_32;
 }

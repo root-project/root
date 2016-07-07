@@ -60,6 +60,8 @@ Int_t TBranch::fgCount = 0;
 #endif
 
 /** \class TBranch
+\ingroup tree
+
 A TTree is a list of TBranches
 
 A TBranch supports:
@@ -137,18 +139,18 @@ TBranch::TBranch()
 ///         variable. If the first variable does not have a type, it is
 ///         assumed of type F by default. The list of currently supported
 ///         types is given below:
-///            - C : a character string terminated by the 0 character
-///            - B : an 8 bit signed integer (Char_t)
-///            - b : an 8 bit unsigned integer (UChar_t)
-///            - S : a 16 bit signed integer (Short_t)
-///            - s : a 16 bit unsigned integer (UShort_t)
-///            - I : a 32 bit signed integer (Int_t)
-///            - i : a 32 bit unsigned integer (UInt_t)
-///            - F : a 32 bit floating point (Float_t)
-///            - D : a 64 bit floating point (Double_t)
-///            - L : a 64 bit signed integer (Long64_t)
-///            - l : a 64 bit unsigned integer (ULong64_t)
-///            - O : [the letter 'o', not a zero] a boolean (Bool_t)
+///            - `C` : a character string terminated by the 0 character
+///            - `B` : an 8 bit signed integer (`Char_t`)
+///            - `b` : an 8 bit unsigned integer (`UChar_t`)
+///            - `S` : a 16 bit signed integer (`Short_t`)
+///            - `s` : a 16 bit unsigned integer (`UShort_t`)
+///            - `I` : a 32 bit signed integer (`Int_t`)
+///            - `i` : a 32 bit unsigned integer (`UInt_t`)
+///            - `F` : a 32 bit floating point (`Float_t`)
+///            - `D` : a 64 bit floating point (`Double_t`)
+///            - `L` : a 64 bit signed integer (`Long64_t`)
+///            - `l` : a 64 bit unsigned integer (`ULong64_t`)
+///            - `O` : [the letter `o`, not a zero] a boolean (`Bool_t`)
 ///
 ///         Arrays of values are supported with the following syntax:
 ///         - If leaf name has the form var[nelem], where nelem is alphanumeric, then
@@ -496,16 +498,16 @@ TBuffer* TBranch::GetTransientBuffer(Int_t size)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add the basket to this branch.
+///
+/// Warning: if the basket are not 'flushed/copied' in the same
+/// order as they were created, this will induce a slow down in
+/// the insert (since we'll need to move all the record that are
+/// entere 'too early').
+/// Warning we also assume that the __current__ write basket is
+/// not present (aka has been removed).
 
 void TBranch::AddBasket(TBasket& b, Bool_t ondisk, Long64_t startEntry)
 {
-   // Warning: if the basket are not 'flushed/copied' in the same
-   // order as they were created, this will induce a slow down in
-   // the insert (since we'll need to move all the record that are
-   // entere 'too early').
-   // Warning we also assume that the __current__ write basket is
-   // not present (aka has been removed).
-
    TBasket *basket = &b;
 
    basket->SetBranch(this);
@@ -612,6 +614,7 @@ void TBranch::Browse(TBrowser* b)
  /// then call Reset(). If the option contains "all", delete also the baskets
  /// for the subbranches.
  /// The branch is reset.
+ ///
  /// NOTE that this function must be used with extreme care. Deleting branch baskets
  /// fragments the file and may introduce inefficiencies when adding new entries
  /// in the Tree or later on when reading the Tree.
@@ -742,7 +745,6 @@ void TBranch::ExpandBasketArrays()
 /// If a write error occurs, the number of bytes returned is -1.
 /// If no data are written, because e.g. the branch is disabled,
 /// the number of bytes returned is 0.
-///
 
 Int_t TBranch::Fill()
 {
@@ -1211,11 +1213,13 @@ const char* TBranch::GetIconName() const
 /// The input argument "entry" is the entry number in the current tree.
 /// In case of a TChain, the entry number in the current Tree must be found
 /// before calling this function. For example:
+///
 ///~~~ {.cpp}
 ///     TChain* chain = ...;
 ///     Long64_t localEntry = chain->LoadTree(entry);
 ///     branch->GetEntry(localEntry);
 ///~~~
+///
 /// The function returns the number of bytes read from the input buffer.
 /// If entry does not exist, the function returns 0.
 /// If an I/O error occurs, the function returns -1.
@@ -1716,6 +1720,7 @@ void TBranch::KeepCircular(Long64_t maxEntries)
 ///  You can call TTree::SetMaxVirtualSize(maxmemory) to instruct
 ///  the system that the total size of the imported baskets does not
 ///  exceed maxmemory bytes.
+///
 ///  The function returns the number of baskets that have been put in memory.
 ///  This method may be called to force all baskets of one or more branches
 ///  in memory when random access to entries in this branch is required.

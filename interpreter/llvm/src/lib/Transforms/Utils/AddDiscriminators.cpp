@@ -52,33 +52,36 @@
 // http://wiki.dwarfstd.org/index.php?title=Path_Discriminators
 //===----------------------------------------------------------------------===//
 
-#include "llvm/Transforms/Scalar.h"
+#include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/DenseSet.h"
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/DIBuilder.h"
 #include "llvm/IR/DebugInfo.h"
 #include "llvm/IR/Instructions.h"
+#include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
 #include "llvm/Pass.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/Transforms/Scalar.h"
 
 using namespace llvm;
 
 #define DEBUG_TYPE "add-discriminators"
 
 namespace {
-  struct AddDiscriminators : public FunctionPass {
-    static char ID; // Pass identification, replacement for typeid
-    AddDiscriminators() : FunctionPass(ID) {
-      initializeAddDiscriminatorsPass(*PassRegistry::getPassRegistry());
-    }
+struct AddDiscriminators : public FunctionPass {
+  static char ID; // Pass identification, replacement for typeid
+  AddDiscriminators() : FunctionPass(ID) {
+    initializeAddDiscriminatorsPass(*PassRegistry::getPassRegistry());
+  }
 
-    bool runOnFunction(Function &F) override;
-  };
-}
+  bool runOnFunction(Function &F) override;
+};
+} // end anonymous namespace
 
 char AddDiscriminators::ID = 0;
 INITIALIZE_PASS_BEGIN(AddDiscriminators, "add-discriminators",
@@ -89,17 +92,12 @@ INITIALIZE_PASS_END(AddDiscriminators, "add-discriminators",
 // Command line option to disable discriminator generation even in the
 // presence of debug information. This is only needed when debugging
 // debug info generation issues.
-static cl::opt<bool>
-NoDiscriminators("no-discriminators", cl::init(false),
-                 cl::desc("Disable generation of discriminator information."));
+static cl::opt<bool> NoDiscriminators(
+    "no-discriminators", cl::init(false),
+    cl::desc("Disable generation of discriminator information."));
 
 FunctionPass *llvm::createAddDiscriminatorsPass() {
   return new AddDiscriminators();
-}
-
-static bool hasDebugInfo(const Function &F) {
-  NamedMDNode *CUNodes = F.getParent()->getNamedMetadata("llvm.dbg.cu");
-  return CUNodes != nullptr;
 }
 
 /// \brief Assign DWARF discriminators.
@@ -159,8 +157,7 @@ bool AddDiscriminators::runOnFunction(Function &F) {
   // Simlarly, if the function has no debug info, do nothing.
   // Finally, if this module is built with dwarf versions earlier than 4,
   // do nothing (discriminator support is a DWARF 4 feature).
-  if (NoDiscriminators ||
-      !hasDebugInfo(F) ||
+  if (NoDiscriminators || !F.getSubprogram() ||
       F.getParent()->getDwarfVersion() < 4)
     return false;
 
@@ -169,49 +166,74 @@ bool AddDiscriminators::runOnFunction(Function &F) {
   LLVMContext &Ctx = M->getContext();
   DIBuilder Builder(*M, /*AllowUnresolved*/ false);
 
-  // Traverse all the blocks looking for instructions in different
-  // blocks that are at the same file:line location.
-  for (Function::iterator I = F.begin(), E = F.end(); I != E; ++I) {
-    BasicBlock *B = I;
-    TerminatorInst *Last = B->getTerminator();
-    DebugLoc LastLoc = Last->getDebugLoc();
-    if (LastLoc.isUnknown()) continue;
-    DILocation LastDIL(LastLoc.getAsMDNode(Ctx));
+  typedef std::pair<StringRef, unsigned> Location;
+  typedef DenseMap<const BasicBlock *, Metadata *> BBScopeMap;
+  typedef DenseMap<Location, BBScopeMap> LocationBBMap;
+  typedef DenseMap<Location, unsigned> LocationDiscriminatorMap;
+  typedef DenseSet<Location> LocationSet;
 
-    for (unsigned I = 0; I < Last->getNumSuccessors(); ++I) {
-      BasicBlock *Succ = Last->getSuccessor(I);
-      Instruction *First = Succ->getFirstNonPHIOrDbgOrLifetime();
-      DebugLoc FirstLoc = First->getDebugLoc();
-      if (FirstLoc.isUnknown()) continue;
-      DILocation FirstDIL(FirstLoc.getAsMDNode(Ctx));
+  LocationBBMap LBM;
+  LocationDiscriminatorMap LDM;
 
-      // If the first instruction (First) of Succ is at the same file
-      // location as B's last instruction (Last), add a new
-      // discriminator for First's location and all the instructions
-      // in Succ that share the same location with First.
-      if (FirstDIL.atSameLineAs(LastDIL)) {
-        // Create a new lexical scope and compute a new discriminator
-        // number for it.
-        StringRef Filename = FirstDIL.getFilename();
-        DIScope Scope = FirstDIL.getScope();
-        DIFile File = Builder.createFile(Filename, Scope.getDirectory());
-        unsigned Discriminator = FirstDIL.computeNewDiscriminator(Ctx);
-        DILexicalBlockFile NewScope =
-            Builder.createLexicalBlockFile(Scope, File, Discriminator);
-        DILocation NewDIL = FirstDIL.copyWithNewScope(Ctx, NewScope);
-        DebugLoc newDebugLoc = DebugLoc::getFromDILocation(NewDIL);
+  // Traverse all instructions in the function. If the source line location
+  // of the instruction appears in other basic block, assign a new
+  // discriminator for this instruction.
+  for (BasicBlock &B : F) {
+    for (auto &I : B.getInstList()) {
+      if (isa<DbgInfoIntrinsic>(&I))
+        continue;
+      const DILocation *DIL = I.getDebugLoc();
+      if (!DIL)
+        continue;
+      Location L = std::make_pair(DIL->getFilename(), DIL->getLine());
+      auto &BBMap = LBM[L];
+      auto R = BBMap.insert(std::make_pair(&B, (Metadata *)nullptr));
+      if (BBMap.size() == 1)
+        continue;
+      bool InsertSuccess = R.second;
+      Metadata *&NewScope = R.first->second;
+      // If we could insert a different block in the same location, a
+      // discriminator is needed to distinguish both instructions.
+      if (InsertSuccess) {
+        auto *Scope = DIL->getScope();
+        auto *File =
+            Builder.createFile(DIL->getFilename(), Scope->getDirectory());
+        NewScope = Builder.createLexicalBlockFile(Scope, File, ++LDM[L]);
+      }
+      I.setDebugLoc(DILocation::get(Ctx, DIL->getLine(), DIL->getColumn(),
+                                    NewScope, DIL->getInlinedAt()));
+      DEBUG(dbgs() << DIL->getFilename() << ":" << DIL->getLine() << ":"
+                   << DIL->getColumn() << ":"
+                   << dyn_cast<DILexicalBlockFile>(NewScope)->getDiscriminator()
+                   << I << "\n");
+      Changed = true;
+    }
+  }
 
-        // Attach this new debug location to First and every
-        // instruction following First that shares the same location.
-        for (BasicBlock::iterator I1(*First), E1 = Succ->end(); I1 != E1;
-             ++I1) {
-          if (I1->getDebugLoc() != FirstLoc) break;
-          I1->setDebugLoc(newDebugLoc);
-          DEBUG(dbgs() << NewDIL.getFilename() << ":" << NewDIL.getLineNumber()
-                       << ":" << NewDIL.getColumnNumber() << ":"
-                       << NewDIL.getDiscriminator() << *I1 << "\n");
-        }
-        DEBUG(dbgs() << "\n");
+  // Traverse all instructions and assign new discriminators to call
+  // instructions with the same lineno that are in the same basic block.
+  // Sample base profile needs to distinguish different function calls within
+  // a same source line for correct profile annotation.
+  for (BasicBlock &B : F) {
+    LocationSet CallLocations;
+    for (auto &I : B.getInstList()) {
+      CallInst *Current = dyn_cast<CallInst>(&I);
+      if (!Current || isa<DbgInfoIntrinsic>(&I))
+        continue;
+
+      DILocation *CurrentDIL = Current->getDebugLoc();
+      if (!CurrentDIL)
+        continue;
+      Location L =
+          std::make_pair(CurrentDIL->getFilename(), CurrentDIL->getLine());
+      if (!CallLocations.insert(L).second) {
+        auto *Scope = CurrentDIL->getScope();
+        auto *File = Builder.createFile(CurrentDIL->getFilename(),
+                                        Scope->getDirectory());
+        auto *NewScope = Builder.createLexicalBlockFile(Scope, File, ++LDM[L]);
+        Current->setDebugLoc(DILocation::get(Ctx, CurrentDIL->getLine(),
+                                             CurrentDIL->getColumn(), NewScope,
+                                             CurrentDIL->getInlinedAt()));
         Changed = true;
       }
     }

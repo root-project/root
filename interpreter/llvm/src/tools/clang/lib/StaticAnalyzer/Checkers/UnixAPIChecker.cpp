@@ -77,15 +77,15 @@ void UnixAPIChecker::ReportOpenBug(CheckerContext &C,
                                    ProgramStateRef State,
                                    const char *Msg,
                                    SourceRange SR) const {
-  ExplodedNode *N = C.generateSink(State);
+  ExplodedNode *N = C.generateErrorNode(State);
   if (!N)
     return;
 
   LazyInitialize(BT_open, "Improper use of 'open'");
 
-  BugReport *Report = new BugReport(*BT_open, Msg, N);
+  auto Report = llvm::make_unique<BugReport>(*BT_open, Msg, N);
   Report->addRange(SR);
-  C.emitReport(Report);
+  C.emitReport(std::move(Report));
 }
 
 void UnixAPIChecker::CheckOpen(CheckerContext &C, const CallExpr *CE) const {
@@ -114,7 +114,7 @@ void UnixAPIChecker::CheckOpen(CheckerContext &C, const CallExpr *CE) const {
   // The definition of O_CREAT is platform specific.  We need a better way
   // of querying this information from the checking environment.
   if (!Val_O_CREAT.hasValue()) {
-    if (C.getASTContext().getTargetInfo().getTriple().getVendor() 
+    if (C.getASTContext().getTargetInfo().getTriple().getVendor()
                                                       == llvm::Triple::Apple)
       Val_O_CREAT = 0x0200;
     else {
@@ -182,7 +182,7 @@ void UnixAPIChecker::CheckPthreadOnce(CheckerContext &C,
   if (!R || !isa<StackSpaceRegion>(R->getMemorySpace()))
     return;
 
-  ExplodedNode *N = C.generateSink(state);
+  ExplodedNode *N = C.generateErrorNode(state);
   if (!N)
     return;
 
@@ -200,9 +200,9 @@ void UnixAPIChecker::CheckPthreadOnce(CheckerContext &C,
 
   LazyInitialize(BT_pthreadOnce, "Improper use of 'pthread_once'");
 
-  BugReport *report = new BugReport(*BT_pthreadOnce, os.str(), N);
+  auto report = llvm::make_unique<BugReport>(*BT_pthreadOnce, os.str(), N);
   report->addRange(CE->getArg(0)->getSourceRange());
-  C.emitReport(report);
+  C.emitReport(std::move(report));
 }
 
 //===----------------------------------------------------------------------===//
@@ -220,7 +220,7 @@ static bool IsZeroByteAllocation(ProgramStateRef state,
                                 ProgramStateRef *falseState) {
   std::tie(*trueState, *falseState) =
     state->assume(argVal.castAs<DefinedSVal>());
-  
+
   return (*falseState && !*trueState);
 }
 
@@ -231,7 +231,7 @@ bool UnixAPIChecker::ReportZeroByteAllocation(CheckerContext &C,
                                               ProgramStateRef falseState,
                                               const Expr *arg,
                                               const char *fn_name) const {
-  ExplodedNode *N = C.generateSink(falseState);
+  ExplodedNode *N = C.generateErrorNode(falseState);
   if (!N)
     return false;
 
@@ -239,13 +239,13 @@ bool UnixAPIChecker::ReportZeroByteAllocation(CheckerContext &C,
                  "Undefined allocation of 0 bytes (CERT MEM04-C; CWE-131)");
 
   SmallString<256> S;
-  llvm::raw_svector_ostream os(S);    
+  llvm::raw_svector_ostream os(S);
   os << "Call to '" << fn_name << "' has an allocation size of 0 bytes";
-  BugReport *report = new BugReport(*BT_mallocZero, os.str(), N);
+  auto report = llvm::make_unique<BugReport>(*BT_mallocZero, os.str(), N);
 
   report->addRange(arg->getSourceRange());
   bugreporter::trackNullOrUndefValue(N, arg, *report);
-  C.emitReport(report);
+  C.emitReport(std::move(report));
 
   return true;
 }
@@ -272,13 +272,13 @@ void UnixAPIChecker::BasicAllocationCheck(CheckerContext &C,
 
   // Is the value perfectly constrained to zero?
   if (IsZeroByteAllocation(state, argVal, &trueState, &falseState)) {
-    (void) ReportZeroByteAllocation(C, falseState, arg, fn); 
+    (void) ReportZeroByteAllocation(C, falseState, arg, fn);
     return;
   }
   // Assume the value is non-zero going forward.
   assert(trueState);
   if (trueState != state)
-    C.addTransition(trueState);                           
+    C.addTransition(trueState);
 }
 
 void UnixAPIChecker::CheckCallocZero(CheckerContext &C,

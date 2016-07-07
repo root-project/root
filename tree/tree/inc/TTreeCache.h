@@ -37,30 +37,30 @@ public:
    enum EPrefillType { kNoPrefill, kAllBranches };
 
 protected:
-   Long64_t        fEntryMin;    //! first entry in the cache
-   Long64_t        fEntryMax;    //! last entry in the cache
-   Long64_t        fEntryCurrent;//! current lowest entry number in the cache
-   Long64_t        fEntryNext;   //! next entry number where cache must be filled
-   Int_t           fNbranches;   //! Number of branches in the cache
-   Int_t           fNReadOk;     //Number of blocks read and found in the cache
-   Int_t           fNReadMiss;   //Number of blocks read and not found in the chache
-   Int_t           fNReadPref;   //Number of blocks that were prefetched
-   TObjArray      *fBranches;    //! List of branches to be stored in the cache
-   TList          *fBrNames;     //! list of branch names in the cache
-   TTree          *fTree;        //! pointer to the current Tree
-   Bool_t          fIsLearning;  //! true if cache is in learning mode
-   Bool_t          fIsManual;    //! true if cache is StopLearningPhase was used
-   Bool_t          fFirstBuffer; //! true if first buffer is used for prefetching
-   Bool_t          fOneTime;     //! used in the learning phase
-   Bool_t          fReverseRead; //!  reading in reverse mode
-   Int_t           fFillTimes;   //!  how many times we can fill the current buffer
-   Bool_t          fFirstTime;   //! save the fact that we processes the first entry
-   Long64_t        fFirstEntry;  //! save the value of the first entry
-   Bool_t          fReadDirectionSet; //! read direction established
-   Bool_t          fEnabled;     //! cache enabled for cached reading
-   EPrefillType    fPrefillType; // Whether a prefilling is enabled (and if applicable which type)
-   static  Int_t   fgLearnEntries; // number of entries used for learning mode
-   Bool_t          fAutoCreated; //! true if cache was automatically created
+   Long64_t        fEntryMin;         ///<! first entry in the cache
+   Long64_t        fEntryMax;         ///<! last entry in the cache
+   Long64_t        fEntryCurrent;     ///<! current lowest entry number in the cache
+   Long64_t        fEntryNext;        ///<! next entry number where cache must be filled
+   Int_t           fNbranches;        ///<! Number of branches in the cache
+   Int_t           fNReadOk;          ///<  Number of blocks read and found in the cache
+   Int_t           fNReadMiss;        ///<  Number of blocks read and not found in the cache
+   Int_t           fNReadPref;        ///<  Number of blocks that were prefetched
+   TObjArray      *fBranches;         ///<! List of branches to be stored in the cache
+   TList          *fBrNames;          ///<! list of branch names in the cache
+   TTree          *fTree;             ///<! pointer to the current Tree
+   Bool_t          fIsLearning;       ///<! true if cache is in learning mode
+   Bool_t          fIsManual;         ///<! true if cache is StopLearningPhase was used
+   Bool_t          fFirstBuffer;      ///<! true if first buffer is used for prefetching
+   Bool_t          fOneTime;          ///<! used in the learning phase
+   Bool_t          fReverseRead;      ///<! reading in reverse mode
+   Int_t           fFillTimes;        ///<! how many times we can fill the current buffer
+   Bool_t          fFirstTime;        ///<! save the fact that we processes the first entry
+   Long64_t        fFirstEntry;       ///<! save the value of the first entry
+   Bool_t          fReadDirectionSet; ///<! read direction established
+   Bool_t          fEnabled;          ///<! cache enabled for cached reading
+   EPrefillType    fPrefillType;      ///<  Whether a pre-filling is enabled (and if applicable which type)
+   static  Int_t   fgLearnEntries;    ///<  number of entries used for learning mode
+   Bool_t          fAutoCreated;      ///<! true if cache was automatically created
 
 private:
    TTreeCache(const TTreeCache &);            //this class cannot be copied

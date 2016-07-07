@@ -55,7 +55,9 @@ F77           = gfortran
 endif
 F77FLAGS      = -std=legacy
 F77LIBS      := $(shell $(F77) -print-file-name=libgfortran.a)
+ifneq ($(shell $(F77) -print-file-name=libgfortranbegin.a),libgfortranbegin.a)
 F77LIBS      += $(shell $(F77) -print-file-name=libgfortranbegin.a)
+endif
 endif
 
 ifneq ($(findstring g77, $(F77)),)

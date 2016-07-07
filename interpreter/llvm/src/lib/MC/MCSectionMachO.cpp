@@ -70,8 +70,10 @@ ENTRY(nullptr /*FIXME*/,     S_ATTR_LOC_RELOC)
 };
 
 MCSectionMachO::MCSectionMachO(StringRef Segment, StringRef Section,
-                               unsigned TAA, unsigned reserved2, SectionKind K)
-  : MCSection(SV_MachO, K), TypeAndAttributes(TAA), Reserved2(reserved2) {
+                               unsigned TAA, unsigned reserved2, SectionKind K,
+                               MCSymbol *Begin)
+    : MCSection(SV_MachO, K, Begin), TypeAndAttributes(TAA),
+      Reserved2(reserved2) {
   assert(Segment.size() <= 16 && Section.size() <= 16 &&
          "Segment or section string too long");
   for (unsigned i = 0; i != 16; ++i) {
@@ -175,7 +177,7 @@ std::string MCSectionMachO::ParseSectionSpecifier(StringRef Spec,        // In.
   TAAParsed = false;
 
   SmallVector<StringRef, 5> SplitSpec;
-  Spec.split(SplitSpec, ",");
+  Spec.split(SplitSpec, ',');
   // Remove leading and trailing whitespace.
   auto GetEmptyOrTrim = [&SplitSpec](size_t Idx) -> StringRef {
     return SplitSpec.size() > Idx ? SplitSpec[Idx].trim() : StringRef();
@@ -233,7 +235,7 @@ std::string MCSectionMachO::ParseSectionSpecifier(StringRef Spec,        // In.
 
   // The attribute list is a '+' separated list of attributes.
   SmallVector<StringRef, 1> SectionAttrs;
-  Attrs.split(SectionAttrs, "+", /*MaxSplit=*/-1, /*KeepEmpty=*/false);
+  Attrs.split(SectionAttrs, '+', /*MaxSplit=*/-1, /*KeepEmpty=*/false);
 
   for (StringRef &SectionAttr : SectionAttrs) {
     auto AttrDescriptorI = std::find_if(

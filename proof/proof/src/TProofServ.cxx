@@ -3044,6 +3044,8 @@ Int_t TProofServ::SetupCommon()
       new TProofLockPath(TString::Format("%s/%s%s",
                          gSystem->TempDirectory(), kPROOF_CacheLockFile,
                          TString(fCacheDir).ReplaceAll("/","%").Data()));
+   // Make also sure the cache path is in the macro path
+   TProof::AssertMacroPath(TString::Format("%s/.", fCacheDir.Data()));
 
    // Check and make sure "packages" directory exists
    TString packdir = gEnv->GetValue("ProofServ.PackageDir",

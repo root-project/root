@@ -34,7 +34,8 @@ class raw_ostream;
 /// \brief Create and return a pass that writes the module to the specified
 /// \c raw_ostream.
 ModulePass *createPrintModulePass(raw_ostream &OS,
-                                  const std::string &Banner = "");
+                                  const std::string &Banner = "",
+                                  bool ShouldPreserveUseListOrder = false);
 
 /// \brief Create and return a pass that prints functions to the specified
 /// \c raw_ostream as they are processed.
@@ -46,6 +47,12 @@ FunctionPass *createPrintFunctionPass(raw_ostream &OS,
 BasicBlockPass *createPrintBasicBlockPass(raw_ostream &OS,
                                           const std::string &Banner = "");
 
+/// Print out a name of an LLVM value without any prefixes.
+///
+/// The name is surrounded with ""'s and escaped if it has any special or
+/// non-printable characters in it.
+void printLLVMNameWithoutPrefix(raw_ostream &OS, StringRef Name);
+
 /// \brief Pass for printing a Module as LLVM's text IR assembly.
 ///
 /// Note: This pass is for use with the new pass manager. Use the create...Pass
@@ -53,10 +60,12 @@ BasicBlockPass *createPrintBasicBlockPass(raw_ostream &OS,
 class PrintModulePass {
   raw_ostream &OS;
   std::string Banner;
+  bool ShouldPreserveUseListOrder;
 
 public:
   PrintModulePass();
-  PrintModulePass(raw_ostream &OS, const std::string &Banner = "");
+  PrintModulePass(raw_ostream &OS, const std::string &Banner = "",
+                  bool ShouldPreserveUseListOrder = false);
 
   PreservedAnalyses run(Module &M);
 

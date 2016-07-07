@@ -79,7 +79,7 @@ namespace TMVA {
       Bool_t fTrim;                     // take care, that the number of individuals is less fPopSize (trimming is done after the fitness of the individuals is assessed)
       UInt_t fSeed;                     // Seed for the random generator (0 takes random seeds)
       
-      ClassDef(GeneticFitter,0) // Fitter using a Genetic Algorithm
+      ClassDef(GeneticFitter,0); // Fitter using a Genetic Algorithm
    };
 
 } // namespace TMVA

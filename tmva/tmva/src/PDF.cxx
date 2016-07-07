@@ -60,35 +60,35 @@ ClassImp(TMVA::PDF)
 /// default constructor needed for ROOT I/O
 
 TMVA::PDF::PDF( const TString& name, Bool_t norm )
-   : Configurable   (""),
-     fUseHistogram  ( kFALSE ),
-     fPDFName       ( name ),
-     fNsmooth       ( 0 ),
-     fMinNsmooth    (-1 ),
-     fMaxNsmooth    (-1 ),
-     fNSmoothHist   ( 0 ),
-     fInterpolMethod( PDF::kSpline2 ),
-     fSpline        ( 0 ),
-     fPDFHist       ( 0 ),
-     fHist          ( 0 ),
-     fHistOriginal  ( 0 ),
-     fGraph         ( 0 ),
-     fIGetVal       ( 0 ),
-     fHistAvgEvtPerBin  ( 0 ),
-     fHistDefinedNBins  ( 0 ),
-     fKDEtypeString     ( 0 ),
-     fKDEiterString     ( 0 ),
-     fBorderMethodString( 0 ),
-     fInterpolateString ( 0 ),
-     fKDEtype       ( KDEKernel::kNone ),
-     fKDEiter       ( KDEKernel::kNonadaptiveKDE ),
-     fKDEborder     ( KDEKernel::kNoTreatment ),
-     fFineFactor    ( 0. ),
-     fReadingVersion( 0 ),
-     fCheckHist     ( kFALSE ),
-     fNormalize     ( norm ),
-     fSuffix        ( "" ),
-     fLogger        ( 0 )
+: Configurable   (""),
+   fUseHistogram  ( kFALSE ),
+   fPDFName       ( name ),
+   fNsmooth       ( 0 ),
+   fMinNsmooth    (-1 ),
+   fMaxNsmooth    (-1 ),
+   fNSmoothHist   ( 0 ),
+   fInterpolMethod( PDF::kSpline2 ),
+   fSpline        ( 0 ),
+   fPDFHist       ( 0 ),
+   fHist          ( 0 ),
+   fHistOriginal  ( 0 ),
+   fGraph         ( 0 ),
+   fIGetVal       ( 0 ),
+   fHistAvgEvtPerBin  ( 0 ),
+   fHistDefinedNBins  ( 0 ),
+   fKDEtypeString     ( 0 ),
+   fKDEiterString     ( 0 ),
+   fBorderMethodString( 0 ),
+   fInterpolateString ( 0 ),
+   fKDEtype       ( KDEKernel::kNone ),
+   fKDEiter       ( KDEKernel::kNonadaptiveKDE ),
+   fKDEborder     ( KDEKernel::kNoTreatment ),
+   fFineFactor    ( 0. ),
+   fReadingVersion( 0 ),
+   fCheckHist     ( kFALSE ),
+   fNormalize     ( norm ),
+   fSuffix        ( "" ),
+   fLogger        ( 0 )
 {
    fLogger   = new MsgLogger(this);
    GetThisPdfThreadLocal() = this;
@@ -746,8 +746,8 @@ Double_t TMVA::PDF::GetValInverse( Double_t y, Bool_t isMonotonouslyIncreasingFu
    Double_t x       =xValueLowerBin+lengthX*fraction;
 
    // comparison for test purposes
-//   std::cout << "lb " << lowerBin << "  hb " << higherBin << "  lbv " << lowerBinValue << "  hbv " << higherBinValue << "  frac " << fraction << std::endl;
-//   std::cout << "y " << y << "  inv x " << x << "  straight y " << GetVal(x) << std::endl;
+   //   std::cout << "lb " << lowerBin << "  hb " << higherBin << "  lbv " << lowerBinValue << "  hbv " << higherBinValue << "  frac " << fraction << std::endl;
+   //   std::cout << "y " << y << "  inv x " << x << "  straight y " << GetVal(x) << std::endl;
 
    return x;
 }
@@ -756,7 +756,7 @@ Double_t TMVA::PDF::GetValInverse( Double_t y, Bool_t isMonotonouslyIncreasingFu
 /// find bin from value on ordinate
 
 void TMVA::PDF::FindBinInverse( const TH1* histogram, Int_t& lowerBin, Int_t& higherBin, Double_t& lowerBinValue, Double_t& higherBinValue, 
-				Double_t y, Bool_t isMonotonouslyIncreasingFunction ) const
+                                Double_t y, Bool_t isMonotonouslyIncreasingFunction ) const
 {
    if (isMonotonouslyIncreasingFunction) {
       higherBin=histogram->GetNbinsX();
@@ -765,16 +765,16 @@ void TMVA::PDF::FindBinInverse( const TH1* histogram, Int_t& lowerBin, Int_t& hi
       Int_t bin=higherBin/2;
       
       while (bin>lowerBin && bin<higherBin) {
-	 Double_t binContent=histogram->GetBinContent(bin);
+         Double_t binContent=histogram->GetBinContent(bin);
 
-	 if (y<binContent) {
-	    higherBin     =bin;
-	    higherBinValue=binContent;
-	 }
-	 else if (y>=binContent){
-	    lowerBin      =bin;
-	    lowerBinValue =binContent;
-	 }
+         if (y<binContent) {
+            higherBin     =bin;
+            higherBinValue=binContent;
+         }
+         else if (y>=binContent){
+            lowerBin      =bin;
+            lowerBinValue =binContent;
+         }
          bin=lowerBin+(higherBin-lowerBin)/2;
       }
       return;
@@ -783,15 +783,15 @@ void TMVA::PDF::FindBinInverse( const TH1* histogram, Int_t& lowerBin, Int_t& hi
    for (Int_t bin=0, binEnd=histogram->GetNbinsX(); bin<binEnd; ++bin) {
       Double_t binContent=histogram->GetBinContent(bin);
       if (binContent<y) {
-	 lowerBin =bin;
-	 higherBin=bin;
-	 lowerBinValue =binContent;
-	 higherBinValue=binContent;
+         lowerBin =bin;
+         higherBin=bin;
+         lowerBinValue =binContent;
+         higherBinValue=binContent;
       }
       else {
-	 higherBin=bin;
-	 higherBinValue=binContent;
-	 break;
+         higherBin=bin;
+         higherBinValue=binContent;
+         break;
       }
    }
 }

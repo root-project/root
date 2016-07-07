@@ -43,8 +43,12 @@ void httpserver(const char* jobname = "job1", Long64_t maxcnt = 0)
    // dabc agent, connects to DABC master_host:1237, works only when DABC configured
    // THttpServer* serv = new THttpServer(Form("dabc:master_host:1237?top=%s_dabc", jobname));
 
-   // when read-only mode disabled one could execute object methdos like TTree::Draw()
+   // when read-only mode disabled one could execute object methods like TTree::Draw()
    serv->SetReadOnly(kFALSE);
+
+   // One could specify location of newer version of JSROOT
+   // serv->SetJSROOT("https://root.cern.ch/js/latest/");
+   // serv->SetJSROOT("http://jsroot.gsi.de/latest/");
 
    gBenchmark->Start(jobname);
 

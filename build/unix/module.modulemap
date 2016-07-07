@@ -32,18 +32,8 @@ module "Fit/SparseData.h" { header "Fit/SparseData.h" export * }
 module "Fit/UnBinData.h" { header "Fit/UnBinData.h" export * }
 module "FontCache.h" { header "FontCache.h" export * }
 module "Foption.h" { header "Foption.h" export * }
-module "GL/glew.h" {
-  // FIXME this would have worked if glu.h didn't include OpenGLAvailability.h (on MACOS),
-  // which in turn attaches the whole OpenGL top module, introducing definition conflicts.
-  // This has a feature request pending on clang's mailing list:
-  // http://permalink.gmane.org/gmane.comp.compilers.clang.devel/45326
-  // When the issue is addressed/resolved as permitting these example this should be
-  // fixable.
-  // A solution to this issue is to build this module explicitly with disabled system module
-  // maps. This would disable OpenGL system modules and switch to textual inclusion.
+module "GL/glew.h" [extern_c] {
   header "GL/glew.h"
-  config_macros __gl_h_, __GL_H__, __glext_h_, __GLEXT_H_, __gl_ATI_h_
-  conflict OpenGL.GL, "gl.h must not be included, glew needs only glu.h"
   export *
 }
 module "GL/glxew.h" { header "GL/glxew.h" export * }
@@ -401,7 +391,11 @@ module "RRemoteProtocol.h" { header "RRemoteProtocol.h" export * }
 module "RStipples.h" { header "RStipples.h" export * }
 module "RStringView.h" { header "RStringView.h" export * }
 module "RVersion.h" { header "RVersion.h" export * }
-module "RWrap_libcpp_string_view.h" { header "RWrap_libcpp_string_view.h" export * }
+module "RWrap_libcpp_string_view.h" {
+  header "RWrap_libcpp_string_view.h"
+  header "libcpp_string_view.h"
+  export *
+}
 module "RZip.h" { header "RZip.h" export * }
 module "Riosfwd.h" { header "Riosfwd.h" export * }
 module "Riostream.h" { header "Riostream.h" export * }
@@ -850,7 +844,12 @@ module "TBranchProxy.h" { header "TBranchProxy.h" export * }
 module "TBranchProxyClassDescriptor.h" { header "TBranchProxyClassDescriptor.h" export * }
 module "TBranchProxyDescriptor.h" { header "TBranchProxyDescriptor.h" export * }
 module "TBranchProxyDirector.h" { header "TBranchProxyDirector.h" export * }
-module "TBranchProxyTemplate.h" { header "TBranchProxyTemplate.h" export * }
+// TBranchProxyTemplate.h checks for R__BRANCHPROXY_GENERATOR_VERSION thus it
+// cannot be modularized.
+module "TBranchProxyTemplate.h" {
+  textual header "TBranchProxyTemplate.h"
+  export *
+}
 module "TBranchRef.h" { header "TBranchRef.h" export * }
 module "TBranchSTL.h" { header "TBranchSTL.h" export * }
 module "TBrowser.h" { header "TBrowser.h" export * }
@@ -2196,7 +2195,7 @@ module "XLFDParser.h" { header "XLFDParser.h" export * }
 module "ZipLZMA.h" { header "ZipLZMA.h" export * }
 module "cfortran.h" [extern_c] { header "cfortran.h" export * }
 module "config.h" { header "config.h" export * }
-module "libcpp_string_view.h" { header "libcpp_string_view.h" export * }
+//module "libcpp_string_view.h" { header "libcpp_string_view.h" export * } // see RWrap_libcpp_string_view
 module "mmalloc.h" { header "mmalloc.h" export * }
 module "mmconfig.h" { header "mmconfig.h" export * }
 module "mmprivate.h" { header "mmprivate.h" export * }

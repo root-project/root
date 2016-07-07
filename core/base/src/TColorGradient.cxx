@@ -10,6 +10,9 @@
  *************************************************************************/
 
 /** \class TColorGradient
+\ingroup Base
+\ingroup GraphicsAtt
+
 TColorGradient extends basic TColor.
 Actually, this is not a simple color, but linear gradient + shadow
 for filled area. By inheriting from TColor, gradients can be placed

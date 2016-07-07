@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TNamed
+\ingroup Base
+
 The TNamed class is the base class for all named ROOT classes.
 
 A TNamed contains the essential elements (name, title)
@@ -120,7 +122,8 @@ void TNamed::Print(Option_t *) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Change (i.e. set) the name of the TNamed.
+/// Set the name of the TNamed.
+///
 /// WARNING: if the object is a member of a THashTable or THashList container
 /// the container must be Rehash()'ed after SetName(). For example the list
 /// of objects in the current directory is a THashList.
@@ -132,7 +135,7 @@ void TNamed::SetName(const char *name)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Change (i.e. set) all the TNamed parameters (name and title).
+/// Set all the TNamed parameters (name and title).
 //
 /// WARNING: if the name is changed and the object is a member of a
 /// THashTable or THashList container the container must be Rehash()'ed
@@ -147,7 +150,7 @@ void TNamed::SetNameTitle(const char *name, const char *title)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Change (i.e. set) the title of the TNamed.
+/// Set the title of the TNamed.
 
 void TNamed::SetTitle(const char *title)
 {

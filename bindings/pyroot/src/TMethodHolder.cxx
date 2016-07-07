@@ -16,6 +16,7 @@
 #include "TException.h"       // for TRY ... CATCH
 #include "TVirtualMutex.h"    // for R__LOCKGUARD2
 #include "TClassEdit.h"       // demangler
+#include "TInterpreter.h"     // for Interpreter exceptions
 
 // Standard
 #include <assert.h>
@@ -69,6 +70,9 @@ inline PyObject* PyROOT::TMethodHolder::CallFast( void* self, ptrdiff_t offset, 
    } catch ( TPyException& ) {
       result = nullptr;           // error already set
    } catch ( std::exception& e ) {
+      if (gInterpreter->DiagnoseIfInterpreterException(e)) {
+         return result;
+      }
    // map user exceptions .. this needs to move to Cppyy.cxx
       TClass* cl = TClass::GetClass( typeid(e) );
 
@@ -76,10 +80,10 @@ inline PyObject* PyROOT::TMethodHolder::CallFast( void* self, ptrdiff_t offset, 
       std::string exception_type;
       if (cl) exception_type = cl->GetName();
       else {
-	int errorCode;
-        std::unique_ptr<char[]> demangled(TClassEdit::DemangleTypeIdName(typeid(e),errorCode));
-        if (errorCode) exception_type = typeid(e).name();
-        else exception_type = demangled.get();
+         int errorCode;
+         std::unique_ptr<char[]> demangled(TClassEdit::DemangleTypeIdName(typeid(e),errorCode));
+         if (errorCode) exception_type = typeid(e).name();
+         else exception_type = demangled.get();
       }
       PyObject* pyexc = PyDict_GetItemString( pyUserExcepts, exception_type.c_str() );
       if ( !pyexc ) {
@@ -193,7 +197,7 @@ std::string PyROOT::TMethodHolder::GetSignatureString()
          sig << " " << parname;
 
       const std::string& defvalue = Cppyy::GetMethodArgDefault( fMethod, iarg );
-      if ( ! defvalue.empty() ) 
+      if ( ! defvalue.empty() )
          sig << " = " << defvalue;
       ifirst++;
    }

@@ -46,7 +46,7 @@ void TMVA::likelihoodrefs(TString dataset, TDirectory *lhdir ) {
                char cn[20];
                sprintf( cn, "cv%d_%s", ic+1, titName.Data() );
                ++ic;
-               TString n = hname;	  
+               TString n = hname;
                c[ic] = new TCanvas( cn, Form( "%s reference for variable: %s", 
                                               titName.Data(),(n.ReplaceAll("_sig","")).Data() ), 
                                     ic*50+50, ic*20, width, height ); 
@@ -78,7 +78,7 @@ void TMVA::likelihoodrefs(TString dataset, TDirectory *lhdir ) {
             legS->AddEntry(h,"Input data (signal)","p");
 
             // background
-            TString bname( hname );	
+            TString bname( hname );
             b = (TH1F*)lhdir->Get( bname.ReplaceAll("_sig","_bgd") );
             cPad = (TPad*)c[ic]->cd(2);
             color = 2;
@@ -140,7 +140,7 @@ void TMVA::likelihoodrefs(TString dataset, TDirectory *lhdir ) {
                legS->AddEntry(h,"Estimated PDF (norm. signal)","l");
                h->Draw("histsame");
                legS->Draw();
-	  
+          
                Double_t pBscale = 1.0/(b->GetSumOfWeights()*b->GetBinWidth(1));
                b->Scale( pBscale/hBscale );
                color = 2;
@@ -152,16 +152,15 @@ void TMVA::likelihoodrefs(TString dataset, TDirectory *lhdir ) {
 
                // draw the legends
                legB->Draw();
-	  
+          
                hasBeenUsed.push_back( pname.Data() );
-            }	  
-
+            }
             c[ic]->Update();
 
             // write to file
             TString fname = Form( "%s/plots/%s_refs_c%i",dataset.Data(), titName.Data(), ic+1 );
             TMVAGlob::imgconv( c[ic], fname );
-            //	c[ic]->Update();
+            //c[ic]->Update();
 
             newCanvas = kTRUE;
             hasBeenUsed.push_back( hname.Data() );

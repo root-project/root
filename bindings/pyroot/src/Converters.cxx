@@ -36,6 +36,24 @@ namespace PyROOT {
 
 }
 
+//- pretend-ctypes helpers ----------------------------------------------------
+#if PY_VERSION_HEX >= 0x02050000
+
+struct PyROOT_tagCDataObject { // non-public (but so far very stable)
+    PyObject_HEAD
+    char* b_ptr;
+};
+
+static inline PyTypeObject* GetCTypesType( const char* name ) {
+   PyObject* ct = PyImport_ImportModule( "ctypes" );
+   if ( ! ct ) return nullptr;
+   PyTypeObject* ct_t = (PyTypeObject*)PyObject_GetAttrString( ct, name );
+   Py_DECREF( ct );
+   return ct_t;
+}
+
+#endif
+
 //- custom helpers to check ranges --------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -264,21 +282,29 @@ PYROOT_IMPLEMENT_BASIC_CONVERTER( Long, Long_t, Long_t, PyLong_FromLong, PyROOT_
 Bool_t PyROOT::TLongRefConverter::SetArg(
       PyObject* pyobject, TParameter& para, TCallContext* /* ctxt */ )
 {
-   if ( ! TCustomInt_CheckExact( pyobject ) ) {
-      if ( PyInt_Check( pyobject ) )
-         PyErr_SetString( PyExc_TypeError, "use ROOT.Long for pass-by-ref of longs" );
-      return kFALSE;
+#if PY_VERSION_HEX < 0x03000000
+   if ( TCustomInt_CheckExact( pyobject ) ) {
+      para.fValue.fVoidp = (void*)&((PyIntObject*)pyobject)->ob_ival;
+      para.fTypeCode = 'V';
+      return kTRUE;
+   }
+#endif
+
+#if PY_VERSION_HEX < 0x02050000
+   PyErr_SetString( PyExc_TypeError, "use ROOT.Long for pass-by-ref of longs" );
+   return kFALSE;
+#endif
+
+// TODO: this keeps a refcount to the type .. it should be okay to drop that
+   static PyTypeObject* c_long_type = GetCTypesType( "c_long" );
+   if ( Py_TYPE( pyobject ) == c_long_type ) {
+      para.fValue.fVoidp = (void*)((PyROOT_tagCDataObject*)pyobject)->b_ptr;
+      para.fTypeCode = 'V';
+      return kTRUE;
    }
 
-#if PY_VERSION_HEX < 0x03000000
-   para.fValue.fVoidp = (void*)&((PyIntObject*)pyobject)->ob_ival;
-   para.fTypeCode = 'V';
-   return kTRUE;
-#else
-   (void)para;
-   PyErr_SetString( PyExc_NotImplementedError, "int pass-by-ref not implemented in p3" );
-   return kFALSE; // there no longer is a PyIntObject in p3
-#endif
+   PyErr_SetString( PyExc_TypeError, "use ctypes.c_long for pass-by-ref of longs" );
+   return kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -302,16 +328,23 @@ PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( ULongLong, ULong64_t, PyLongOrInt_As
 Bool_t PyROOT::TIntRefConverter::SetArg(
       PyObject* pyobject, TParameter& para, TCallContext* /* ctxt */ )
 {
-   if ( TCustomInt_CheckExact( pyobject ) ) {
 #if PY_VERSION_HEX < 0x03000000
+   if ( TCustomInt_CheckExact( pyobject ) ) {
       para.fValue.fVoidp = (void*)&((PyIntObject*)pyobject)->ob_ival;
       para.fTypeCode = 'V';
       return kTRUE;
-#else
-      PyErr_SetString( PyExc_NotImplementedError, "int pass-by-ref not implemented in p3" );
-      return kFALSE; // there no longer is a PyIntObject in p3
-#endif
    }
+#endif
+
+#if PY_VERSION_HEX >= 0x02050000
+// TODO: this keeps a refcount to the type .. it should be okay to drop that
+   static PyTypeObject* c_int_type = GetCTypesType( "c_int" );
+   if ( Py_TYPE( pyobject ) == c_int_type ) {
+      para.fValue.fVoidp = (void*)((PyROOT_tagCDataObject*)pyobject)->b_ptr;
+      para.fTypeCode = 'V';
+      return kTRUE;
+   }
+#endif
 
 // alternate, pass pointer from buffer
    int buflen = Utility::GetBuffer( pyobject, 'i', sizeof(int), para.fValue.fVoidp );
@@ -320,7 +353,11 @@ Bool_t PyROOT::TIntRefConverter::SetArg(
       return kTRUE;
    };
 
+#if PY_VERSION_HEX < 0x02050000
    PyErr_SetString( PyExc_TypeError, "use ROOT.Long for pass-by-ref of ints" );
+#else
+   PyErr_SetString( PyExc_TypeError, "use ctypes.c_int for pass-by-ref of ints" );
+#endif
    return kFALSE;
 }
 

@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TContextMenuImp
+\ingroup Base
+
 This class provides an interface to GUI independent context sensitive popup menus.
 */
 

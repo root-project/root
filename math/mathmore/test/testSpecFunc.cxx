@@ -127,9 +127,16 @@ int testSpecFunc() {
 
    // increase tolerance when using Cephes (test values are correctly checked with Mathematica
    // GSL was more precise in this case
-   iret |= compare("inc_gamma(100,99) ", ROOT::Math::inc_gamma(100.,99.), 0.4733043303994607, 100);
+   // Adapt also to 32 bits architectures
+#if defined(R__B64)
+      const int inc_gamma_scale = 100;
+#else
+      const int inc_gamma_scale = 200;
+#endif
 
-   iret |= compare("inc_gamma_c(100,99) ", ROOT::Math::inc_gamma_c(100.,99.), 0.5266956696005394, 100);
+   iret |= compare("inc_gamma(100,99) ", ROOT::Math::inc_gamma(100.,99.), 0.4733043303994607, inc_gamma_scale);
+
+   iret |= compare("inc_gamma_c(100,99) ", ROOT::Math::inc_gamma_c(100.,99.), 0.5266956696005394, inc_gamma_scale);
 
    // need to increase here by a further factor of 5 for Windows
    iret |= compare("inc_gamma_c(1000,1000.1) ", ROOT::Math::inc_gamma_c(1000.,1000.1),  0.4945333598559338247, 5000);

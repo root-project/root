@@ -263,7 +263,192 @@ almost never be stored or mentioned directly.  They are intended solely for use
 when defining a function which should be able to efficiently accept concatenated
 strings.
 
+.. _error_apis:
+
+Error handling
+--------------
+
+Proper error handling helps us identify bugs in our code, and helps end-users
+understand errors in their tool usage. Errors fall into two broad categories:
+*programmatic* and *recoverable*, with different strategies for handling and
+reporting.
+
+Programmatic Errors
+^^^^^^^^^^^^^^^^^^^
+
+Programmatic errors are violations of program invariants or API contracts, and
+represent bugs within the program itself. Our aim is to document invariants, and
+to abort quickly at the point of failure (providing some basic diagnostic) when
+invariants are broken at runtime.
+
+The fundamental tools for handling programmatic errors are assertions and the
+llvm_unreachable function. Assertions are used to express invariant conditions,
+and should include a message describing the invariant:
+
+.. code-block:: c++
+
+  assert(isPhysReg(R) && "All virt regs should have been allocated already.");
+
+The llvm_unreachable function can be used to document areas of control flow
+that should never be entered if the program invariants hold:
+
+.. code-block:: c++
+
+  enum { Foo, Bar, Baz } X = foo();
+
+  switch (X) {
+    case Foo: /* Handle Foo */; break;
+    case Bar: /* Handle Bar */; break;
+    default:
+      llvm_unreachable("X should be Foo or Bar here");
+  }
+
+Recoverable Errors
+^^^^^^^^^^^^^^^^^^
+
+Recoverable errors represent an error in the program's environment, for example
+a resource failure (a missing file, a dropped network connection, etc.), or
+malformed input. These errors should be detected and communicated to a level of
+the program where they can be handled appropriately. Handling the error may be
+as simple as reporting the issue to the user, or it may involve attempts at
+recovery.
+
+Recoverable errors are modeled using LLVM's ``Error`` scheme. This scheme
+represents errors using function return values, similar to classic C integer
+error codes, or C++'s ``std::error_code``. However, the ``Error`` class is
+actually a lightweight wrapper for user-defined error types, allowing arbitrary
+information to be attached to describe the error. This is similar to the way C++
+exceptions allow throwing of user-defined types.
+
+Success values are created by calling ``Error::success()``:
+
+.. code-block:: c++
+
+  Error foo() {
+    // Do something.
+    // Return success.
+    return Error::success();
+  }
+
+Success values are very cheap to construct and return - they have minimal
+impact on program performance.
+
+Failure values are constructed using ``make_error<T>``, where ``T`` is any class
+that inherits from the ErrorInfo utility:
+
+.. code-block:: c++
+
+  class MyError : public ErrorInfo<MyError> {
+  public:
+    MyError(std::string Msg) : Msg(Msg) {}
+    void log(OStream &OS) const override { OS << "MyError - " << Msg; }
+    static char ID;
+  private:
+    std::string Msg;
+  };
+
+  char MyError::ID = 0; // In MyError.cpp
+
+  Error bar() {
+    if (checkErrorCondition)
+      return make_error<MyError>("Error condition detected");
+
+    // No error - proceed with bar.
+
+    // Return success value.
+    return Error::success();
+  }
+
+Error values can be implicitly converted to bool: true for error, false for
+success, enabling the following idiom:
+
+.. code-block:: c++
+
+  Error mayFail();
+
+  Error foo() {
+    if (auto Err = mayFail())
+      return Err;
+    // Success! We can proceed.
+    ...
+
+For functions that can fail but need to return a value the ``Expected<T>``
+utility can be used. Values of this type can be constructed with either a
+``T``, or a ``Error``. Expected<T> values are also implicitly convertible to
+boolean, but with the opposite convention to Error: true for success, false for
+error. If success, the ``T`` value can be accessed via the dereference operator.
+If failure, the ``Error`` value can be extracted using the ``takeError()``
+method. Idiomatic usage looks like:
+
+.. code-block:: c++
+
+  Expected<float> parseAndSquareRoot(IStream &IS) {
+    float f;
+    OS >> f;
+    if (f < 0)
+      return make_error<FloatingPointError>(...);
+    return sqrt(f);
+  }
+
+  Error foo(IStream &IS) {
+    if (auto SqrtOrErr = parseAndSquartRoot(IS)) {
+      float Sqrt = *SqrtOrErr;
+      // ...
+    } else
+      return SqrtOrErr.takeError();
+  }
+
+All Error instances, whether success or failure, must be either checked or
+moved from (via std::move or a return) before they are destructed. Accidentally
+discarding an unchecked error will cause a program abort at the point where the
+unchecked value's destructor is run, making it easy to identify and fix
+violations of this rule.
+
+Success values are considered checked once they have been tested (by invoking
+the boolean conversion operator):
+
+.. code-block:: c++
+
+  if (auto Err = canFail(...))
+    return Err; // Failure value - move error to caller.
+
+  // Safe to continue: Err was checked.
+
+In contrast, the following code will always cause an abort, regardless of the
+return value of ``foo``:
+
+.. code-block:: c++
+
+    canFail();
+    // Program will always abort here, even if canFail() returns Success, since
+    // the value is not checked.
+
+Failure values are considered checked once a handler for the error type has
+been activated:
+
+.. code-block:: c++
+
+  auto Err = canFail(...);
+  if (auto Err2 =
+       handleErrors(std::move(Err),
+         [](std::unique_ptr<MyError> M) {
+           // Try to handle 'M'. If successful, return a success value from
+           // the handler.
+           if (tryToHandle(M))
+             return Error::success();
+
+           // We failed to handle 'M' - return it from the handler.
+           // This value will be passed back from catchErrors and
+           // wind up in Err2, where it will be returned from this function.
+           return Error(std::move(M));
+         })))
+    return Err2;
+
+
 .. _function_apis:
+
+More information on Error and its related utilities can be found in the
+Error.h header file.
 
 Passing functions and other callable objects
 --------------------------------------------
@@ -366,7 +551,7 @@ Then you can run your pass like this:
 
 Using the ``DEBUG()`` macro instead of a home-brewed solution allows you to not
 have to create "yet another" command line option for the debug output for your
-pass.  Note that ``DEBUG()`` macros are disabled for optimized builds, so they
+pass.  Note that ``DEBUG()`` macros are disabled for non-asserts builds, so they
 do not cause a performance impact at all (for the same reason, they should also
 not contain side-effects!).
 
@@ -383,21 +568,17 @@ Fine grained debug info with ``DEBUG_TYPE`` and the ``-debug-only`` option
 Sometimes you may find yourself in a situation where enabling ``-debug`` just
 turns on **too much** information (such as when working on the code generator).
 If you want to enable debug information with more fine-grained control, you
-can define the ``DEBUG_TYPE`` macro and use the ``-debug-only`` option as
+should define the ``DEBUG_TYPE`` macro and use the ``-debug-only`` option as
 follows:
 
 .. code-block:: c++
 
-  #undef  DEBUG_TYPE
-  DEBUG(errs() << "No debug type\n");
   #define DEBUG_TYPE "foo"
   DEBUG(errs() << "'foo' debug type\n");
   #undef  DEBUG_TYPE
   #define DEBUG_TYPE "bar"
   DEBUG(errs() << "'bar' debug type\n"));
   #undef  DEBUG_TYPE
-  #define DEBUG_TYPE ""
-  DEBUG(errs() << "No debug type (2)\n");
 
 Then you can run your pass like this:
 
@@ -406,24 +587,26 @@ Then you can run your pass like this:
   $ opt < a.bc > /dev/null -mypass
   <no output>
   $ opt < a.bc > /dev/null -mypass -debug
-  No debug type
   'foo' debug type
   'bar' debug type
-  No debug type (2)
   $ opt < a.bc > /dev/null -mypass -debug-only=foo
   'foo' debug type
   $ opt < a.bc > /dev/null -mypass -debug-only=bar
   'bar' debug type
+  $ opt < a.bc > /dev/null -mypass -debug-only=foo,bar
+  'foo' debug type
+  'bar' debug type
 
 Of course, in practice, you should only set ``DEBUG_TYPE`` at the top of a file,
-to specify the debug type for the entire module (if you do this before you
-``#include "llvm/Support/Debug.h"``, you don't have to insert the ugly
-``#undef``'s).  Also, you should use names more meaningful than "foo" and "bar",
-because there is no system in place to ensure that names do not conflict.  If
-two different modules use the same string, they will all be turned on when the
-name is specified.  This allows, for example, all debug information for
-instruction scheduling to be enabled with ``-debug-only=InstrSched``, even if
-the source lives in multiple files.
+to specify the debug type for the entire module. Be careful that you only do
+this after including Debug.h and not around any #include of headers. Also, you
+should use names more meaningful than "foo" and "bar", because there is no
+system in place to ensure that names do not conflict. If two different modules
+use the same string, they will all be turned on when the name is specified.
+This allows, for example, all debug information for instruction scheduling to be
+enabled with ``-debug-only=InstrSched``, even if the source lives in multiple
+files. The name must not include a comma (,) as that is used to separate the
+arguments of the ``-debug-only`` option.
 
 For performance reasons, -debug-only is not available in optimized build
 (``--enable-optimized``) of LLVM.
@@ -435,10 +618,8 @@ preceding example could be written as:
 
 .. code-block:: c++
 
-  DEBUG_WITH_TYPE("", errs() << "No debug type\n");
   DEBUG_WITH_TYPE("foo", errs() << "'foo' debug type\n");
   DEBUG_WITH_TYPE("bar", errs() << "'bar' debug type\n"));
-  DEBUG_WITH_TYPE("", errs() << "No debug type (2)\n");
 
 .. _Statistic:
 
@@ -487,6 +668,9 @@ gathered, use the '``-stats``' option:
 
   $ opt -stats -mypassname < program.bc > /dev/null
   ... statistics output ...
+
+Note that in order to use the '``-stats``' option, LLVM must be
+compiled with assertions enabled.
 
 When running ``opt`` on a C file from the SPEC benchmark suite, it gives a
 report that looks like this:
@@ -937,7 +1121,7 @@ There are a variety of ways to pass around and use strings in C and C++, and
 LLVM adds a few new options to choose from.  Pick the first option on this list
 that will do what you need, they are ordered according to their relative cost.
 
-Note that is is generally preferred to *not* pass strings around as ``const
+Note that it is generally preferred to *not* pass strings around as ``const
 char*``'s.  These have a number of problems, including the fact that they
 cannot represent embedded nul ("\0") characters, and do not have a length
 available efficiently.  The general replacement for '``const char*``' is
@@ -1102,10 +1286,10 @@ If you have a set-like data structure that is usually small and whose elements
 are reasonably small, a ``SmallSet<Type, N>`` is a good choice.  This set has
 space for N elements in place (thus, if the set is dynamically smaller than N,
 no malloc traffic is required) and accesses them with a simple linear search.
-When the set grows beyond 'N' elements, it allocates a more expensive
+When the set grows beyond N elements, it allocates a more expensive
 representation that guarantees efficient access (for most types, it falls back
-to std::set, but for pointers it uses something far better, :ref:`SmallPtrSet
-<dss_smallptrset>`.
+to :ref:`std::set <dss_set>`, but for pointers it uses something far better,
+:ref:`SmallPtrSet <dss_smallptrset>`.
 
 The magic of this class is that it handles small sets extremely efficiently, but
 gracefully handles extremely large sets without loss of efficiency.  The
@@ -1117,16 +1301,31 @@ and erasing, but does not support iteration.
 llvm/ADT/SmallPtrSet.h
 ^^^^^^^^^^^^^^^^^^^^^^
 
-SmallPtrSet has all the advantages of ``SmallSet`` (and a ``SmallSet`` of
+``SmallPtrSet`` has all the advantages of ``SmallSet`` (and a ``SmallSet`` of
 pointers is transparently implemented with a ``SmallPtrSet``), but also supports
-iterators.  If more than 'N' insertions are performed, a single quadratically
+iterators.  If more than N insertions are performed, a single quadratically
 probed hash table is allocated and grows as needed, providing extremely
 efficient access (constant time insertion/deleting/queries with low constant
 factors) and is very stingy with malloc traffic.
 
-Note that, unlike ``std::set``, the iterators of ``SmallPtrSet`` are invalidated
-whenever an insertion occurs.  Also, the values visited by the iterators are not
-visited in sorted order.
+Note that, unlike :ref:`std::set <dss_set>`, the iterators of ``SmallPtrSet``
+are invalidated whenever an insertion occurs.  Also, the values visited by the
+iterators are not visited in sorted order.
+
+.. _dss_stringset:
+
+llvm/ADT/StringSet.h
+^^^^^^^^^^^^^^^^^^^^
+
+``StringSet`` is a thin wrapper around :ref:`StringMap\<char\> <dss_stringmap>`,
+and it allows efficient storage and retrieval of unique strings.
+
+Functionally analogous to ``SmallSet<StringRef>``, ``StringSet`` also supports
+iteration. (The iterator dereferences to a ``StringMapEntry<char>``, so you
+need to call ``i->getKey()`` to access the item of the StringSet.)  On the
+other hand, ``StringSet`` doesn't support range-insertion and
+copy-construction, which :ref:`SmallSet <dss_smallset>` and :ref:`SmallPtrSet
+<dss_smallptrset>` do support.
 
 .. _dss_denseset:
 
@@ -1294,8 +1493,9 @@ never use hash_set and unordered_set because they are generally very expensive
 (each insertion requires a malloc) and very non-portable.
 
 std::multiset is useful if you're not interested in elimination of duplicates,
-but has all the drawbacks of std::set.  A sorted vector (where you don't delete
-duplicate entries) or some other approach is almost always better.
+but has all the drawbacks of :ref:`std::set <dss_set>`.  A sorted vector
+(where you don't delete duplicate entries) or some other approach is almost
+always better.
 
 .. _ds_map:
 
@@ -1681,11 +1881,11 @@ pointer from an iterator is very straight-forward.  Assuming that ``i`` is a
 
 However, the iterators you'll be working with in the LLVM framework are special:
 they will automatically convert to a ptr-to-instance type whenever they need to.
-Instead of derferencing the iterator and then taking the address of the result,
+Instead of dereferencing the iterator and then taking the address of the result,
 you can simply assign the iterator to the proper pointer type and you get the
 dereference and address-of operation as a result of the assignment (behind the
-scenes, this is a result of overloading casting mechanisms).  Thus the last line
-of the last example,
+scenes, this is a result of overloading casting mechanisms).  Thus the second
+line of the last example,
 
 .. code-block:: c++
 
@@ -1813,7 +2013,7 @@ chain of ``F``:
 
   Function *F = ...;
 
-  for (User *U : GV->users()) {    
+  for (User *U : F->users()) {
     if (Instruction *Inst = dyn_cast<Instruction>(U)) {
       errs() << "F is used in instruction:\n";
       errs() << *Inst << "\n";
@@ -1849,7 +2049,7 @@ Iterating over predecessors & successors of blocks
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Iterating over the predecessors and successors of a block is quite easy with the
-routines defined in ``"llvm/Support/CFG.h"``.  Just use code like this to
+routines defined in ``"llvm/IR/CFG.h"``.  Just use code like this to
 iterate over all predecessors of BB:
 
 .. code-block:: c++
@@ -2219,11 +2419,6 @@ determine what context they belong to by looking at their own ``Type``.  If you
 are adding new entities to LLVM IR, please try to maintain this interface
 design.
 
-For clients that do *not* require the benefits of isolation, LLVM provides a
-convenience API ``getGlobalContext()``.  This returns a global, lazily
-initialized ``LLVMContext`` that may be used in situations where isolation is
-not a concern.
-
 .. _jitthreading:
 
 Threads and the JIT
@@ -2550,6 +2745,22 @@ section on :ref:`isa and dyn_cast <isa>` and our :doc:`detailed document
 <HowToSetUpLLVMStyleRTTI>` which describes how you can implement this
 pattern for use with the LLVM helpers.
 
+.. _abi_breaking_checks:
+
+ABI Breaking Checks
+-------------------
+
+Checks and asserts that alter the LLVM C++ ABI are predicated on the
+preprocessor symbol `LLVM_ENABLE_ABI_BREAKING_CHECKS` -- LLVM
+libraries built with `LLVM_ENABLE_ABI_BREAKING_CHECKS` are not ABI
+compatible LLVM libraries built without it defined.  By default,
+turning on assertions also turns on `LLVM_ENABLE_ABI_BREAKING_CHECKS`
+so a default +Asserts build is not ABI compatible with a
+default -Asserts build.  Clients that want ABI compatibility
+between +Asserts and -Asserts builds should use the CMake or autoconf
+build systems to set `LLVM_ENABLE_ABI_BREAKING_CHECKS` independently
+of `LLVM_ENABLE_ASSERTIONS`.
+
 .. _coreclasses:
 
 The Core LLVM Class Hierarchy Reference
@@ -2563,8 +2774,9 @@ doxygen info: `Type Clases <http://llvm.org/doxygen/classllvm_1_1Type.html>`_
 
 The Core LLVM classes are the primary means of representing the program being
 inspected or transformed.  The core LLVM classes are defined in header files in
-the ``include/llvm/`` directory, and implemented in the ``lib/VMCore``
-directory.
+the ``include/llvm/IR`` directory, and implemented in the ``lib/IR``
+directory. It's worth noting that, for historical reasons, this library is
+called ``libLLVMCore.so``, not ``libLLVMIR.so`` as you might expect.
 
 .. _Type:
 
@@ -2632,7 +2844,7 @@ Important Derived Types
   Subclass of SequentialType for vector types.  A vector type is similar to an
   ArrayType but is distinguished because it is a first class type whereas
   ArrayType is not.  Vector types are used for vector operations and are usually
-  small vectors of of an integer or floating point type.
+  small vectors of an integer or floating point type.
 
 ``StructType``
   Subclass of DerivedTypes for struct types.

@@ -118,7 +118,7 @@ that @G defines *space* for an i32 in the global data area, but its
 *name* actually refers to the address for that space. Stack variables
 work the same way, except that instead of being declared with global
 variable definitions, they are declared with the `LLVM alloca
-instruction <../LangRef.html#i_alloca>`_:
+instruction <../LangRef.html#alloca-instruction>`_:
 
 .. code-block:: llvm
 
@@ -221,7 +221,7 @@ variables in certain circumstances:
    funny pointer arithmetic is involved, the alloca will not be
    promoted.
 #. mem2reg only works on allocas of `first
-   class <../LangRef.html#t_classifications>`_ values (such as pointers,
+   class <../LangRef.html#first-class-types>`_ values (such as pointers,
    scalars and vectors), and only if the array size of the allocation is
    1 (or missing in the .ll file). mem2reg is not capable of promoting
    structs or arrays to registers. Note that the "scalarrepl" pass is
@@ -252,13 +252,13 @@ is:
    technique dovetails very naturally with this style of debug info.
 
 If nothing else, this makes it much easier to get your front-end up and
-running, and is very simple to implement. Lets extend Kaleidoscope with
+running, and is very simple to implement. Let's extend Kaleidoscope with
 mutable variables now!
 
 Mutable Variables in Kaleidoscope
 =================================
 
-Now that we know the sort of problem we want to tackle, lets see what
+Now that we know the sort of problem we want to tackle, let's see what
 this looks like in the context of our little Kaleidoscope language.
 We're going to add two features:
 
@@ -306,7 +306,7 @@ Adjusting Existing Variables for Mutation
 The symbol table in Kaleidoscope is managed at code generation time by
 the '``NamedValues``' map. This map currently keeps track of the LLVM
 "Value\*" that holds the double value for the named variable. In order
-to support mutation, we need to change this slightly, so that it
+to support mutation, we need to change this slightly, so that
 ``NamedValues`` holds the *memory location* of the variable in question.
 Note that this change is a refactoring: it changes the structure of the
 code, but does not (by itself) change the behavior of the compiler. All
@@ -339,7 +339,7 @@ the function:
                                               const std::string &VarName) {
       IRBuilder<> TmpB(&TheFunction->getEntryBlock(),
                      TheFunction->getEntryBlock().begin());
-      return TmpB.CreateAlloca(Type::getDoubleTy(getGlobalContext()), 0,
+      return TmpB.CreateAlloca(Type::getDoubleTy(LLVMContext), 0,
                                VarName.c_str());
     }
 
@@ -355,10 +355,11 @@ from the stack slot:
 
 .. code-block:: c++
 
-    Value *VariableExprAST::Codegen() {
+    Value *VariableExprAST::codegen() {
       // Look this variable up in the function.
       Value *V = NamedValues[Name];
-      if (V == 0) return ErrorV("Unknown variable name");
+      if (!V)
+        return LogErrorV("Unknown variable name");
 
       // Load the value.
       return Builder.CreateLoad(V, Name.c_str());
@@ -366,7 +367,7 @@ from the stack slot:
 
 As you can see, this is pretty straightforward. Now we need to update
 the things that define the variables to set up the alloca. We'll start
-with ``ForExprAST::Codegen`` (see the `full code listing <#code>`_ for
+with ``ForExprAST::codegen()`` (see the `full code listing <#id1>`_ for
 the unabridged code):
 
 .. code-block:: c++
@@ -377,16 +378,18 @@ the unabridged code):
       AllocaInst *Alloca = CreateEntryBlockAlloca(TheFunction, VarName);
 
         // Emit the start code first, without 'variable' in scope.
-      Value *StartVal = Start->Codegen();
-      if (StartVal == 0) return 0;
+      Value *StartVal = Start->codegen();
+      if (!StartVal)
+        return nullptr;
 
       // Store the value into the alloca.
       Builder.CreateStore(StartVal, Alloca);
       ...
 
       // Compute the end condition.
-      Value *EndCond = End->Codegen();
-      if (EndCond == 0) return EndCond;
+      Value *EndCond = End->codegen();
+      if (!EndCond)
+        return nullptr;
 
       // Reload, increment, and restore the alloca.  This handles the case where
       // the body of the loop mutates the variable.
@@ -396,7 +399,7 @@ the unabridged code):
       ...
 
 This code is virtually identical to the code `before we allowed mutable
-variables <LangImpl5.html#forcodegen>`_. The big difference is that we
+variables <LangImpl5.html#code-generation-for-the-for-loop>`_. The big difference is that we
 no longer have to construct a PHI node, and we use load/store to access
 the variable as needed.
 
@@ -423,7 +426,7 @@ them. The code for this is also pretty simple:
 
 For each argument, we make an alloca, store the input value to the
 function into the alloca, and register the alloca as the memory location
-for the argument. This method gets invoked by ``FunctionAST::Codegen``
+for the argument. This method gets invoked by ``FunctionAST::codegen()``
 right after it sets up the entry block for the function.
 
 The final missing piece is adding the mem2reg pass, which allows us to
@@ -569,13 +572,13 @@ implement codegen for the assignment operator. This looks like:
 
 .. code-block:: c++
 
-    Value *BinaryExprAST::Codegen() {
+    Value *BinaryExprAST::codegen() {
       // Special case '=' because we don't want to emit the LHS as an expression.
       if (Op == '=') {
         // Assignment requires the LHS to be an identifier.
-        VariableExprAST *LHSE = dynamic_cast<VariableExprAST*>(LHS);
+        VariableExprAST *LHSE = dynamic_cast<VariableExprAST*>(LHS.get());
         if (!LHSE)
-          return ErrorV("destination of '=' must be a variable");
+          return LogErrorV("destination of '=' must be a variable");
 
 Unlike the rest of the binary operators, our assignment operator doesn't
 follow the "emit LHS, emit RHS, do computation" model. As such, it is
@@ -587,12 +590,14 @@ allowed.
 .. code-block:: c++
 
         // Codegen the RHS.
-        Value *Val = RHS->Codegen();
-        if (Val == 0) return 0;
+        Value *Val = RHS->codegen();
+        if (!Val)
+          return nullptr;
 
         // Look up the name.
         Value *Variable = NamedValues[LHSE->getName()];
-        if (Variable == 0) return ErrorV("Unknown variable name");
+        if (!Variable)
+          return LogErrorV("Unknown variable name");
 
         Builder.CreateStore(Val, Variable);
         return Val;
@@ -627,12 +632,12 @@ When run, this example prints "123" and then "4", showing that we did
 actually mutate the value! Okay, we have now officially implemented our
 goal: getting this to work requires SSA construction in the general
 case. However, to be really useful, we want the ability to define our
-own local variables, lets add this next!
+own local variables, let's add this next!
 
 User-defined Local Variables
 ============================
 
-Adding var/in is just like any other other extensions we made to
+Adding var/in is just like any other extension we made to
 Kaleidoscope: we extend the lexer, the parser, the AST and the code
 generator. The first step for adding our new 'var/in' construct is to
 extend the lexer. As before, this is pretty trivial, the code looks like
@@ -649,10 +654,14 @@ this:
     ...
     static int gettok() {
     ...
-        if (IdentifierStr == "in") return tok_in;
-        if (IdentifierStr == "binary") return tok_binary;
-        if (IdentifierStr == "unary") return tok_unary;
-        if (IdentifierStr == "var") return tok_var;
+        if (IdentifierStr == "in")
+          return tok_in;
+        if (IdentifierStr == "binary")
+          return tok_binary;
+        if (IdentifierStr == "unary")
+          return tok_unary;
+        if (IdentifierStr == "var")
+          return tok_var;
         return tok_identifier;
     ...
 
@@ -663,14 +672,15 @@ var/in, it looks like this:
 
     /// VarExprAST - Expression class for var/in
     class VarExprAST : public ExprAST {
-      std::vector<std::pair<std::string, ExprAST*> > VarNames;
-      ExprAST *Body;
-    public:
-      VarExprAST(const std::vector<std::pair<std::string, ExprAST*> > &varnames,
-                 ExprAST *body)
-      : VarNames(varnames), Body(body) {}
+      std::vector<std::pair<std::string, std::unique_ptr<ExprAST>>> VarNames;
+      std::unique_ptr<ExprAST> Body;
 
-      virtual Value *Codegen();
+    public:
+      VarExprAST(std::vector<std::pair<std::string, std::unique_ptr<ExprAST>>> VarNames,
+                 std::unique_ptr<ExprAST> body)
+      : VarNames(std::move(VarNames)), Body(std::move(Body)) {}
+
+      virtual Value *codegen();
     };
 
 var/in allows a list of names to be defined all at once, and each name
@@ -690,15 +700,22 @@ do is add it as a primary expression:
     ///   ::= ifexpr
     ///   ::= forexpr
     ///   ::= varexpr
-    static ExprAST *ParsePrimary() {
+    static std::unique_ptr<ExprAST> ParsePrimary() {
       switch (CurTok) {
-      default: return Error("unknown token when expecting an expression");
-      case tok_identifier: return ParseIdentifierExpr();
-      case tok_number:     return ParseNumberExpr();
-      case '(':            return ParseParenExpr();
-      case tok_if:         return ParseIfExpr();
-      case tok_for:        return ParseForExpr();
-      case tok_var:        return ParseVarExpr();
+      default:
+        return LogError("unknown token when expecting an expression");
+      case tok_identifier:
+        return ParseIdentifierExpr();
+      case tok_number:
+        return ParseNumberExpr();
+      case '(':
+        return ParseParenExpr();
+      case tok_if:
+        return ParseIfExpr();
+      case tok_for:
+        return ParseForExpr();
+      case tok_var:
+        return ParseVarExpr();
       }
     }
 
@@ -708,14 +725,14 @@ Next we define ParseVarExpr:
 
     /// varexpr ::= 'var' identifier ('=' expression)?
     //                    (',' identifier ('=' expression)?)* 'in' expression
-    static ExprAST *ParseVarExpr() {
+    static std::unique_ptr<ExprAST> ParseVarExpr() {
       getNextToken();  // eat the var.
 
-      std::vector<std::pair<std::string, ExprAST*> > VarNames;
+      std::vector<std::pair<std::string, std::unique_ptr<ExprAST>>> VarNames;
 
       // At least one variable name is required.
       if (CurTok != tok_identifier)
-        return Error("expected identifier after var");
+        return LogError("expected identifier after var");
 
 The first part of this code parses the list of identifier/expr pairs
 into the local ``VarNames`` vector.
@@ -727,22 +744,22 @@ into the local ``VarNames`` vector.
         getNextToken();  // eat identifier.
 
         // Read the optional initializer.
-        ExprAST *Init = 0;
+        std::unique_ptr<ExprAST> Init;
         if (CurTok == '=') {
           getNextToken(); // eat the '='.
 
           Init = ParseExpression();
-          if (Init == 0) return 0;
+          if (!Init) return nullptr;
         }
 
-        VarNames.push_back(std::make_pair(Name, Init));
+        VarNames.push_back(std::make_pair(Name, std::move(Init)));
 
         // End of var list, exit loop.
         if (CurTok != ',') break;
         getNextToken(); // eat the ','.
 
         if (CurTok != tok_identifier)
-          return Error("expected identifier list after var");
+          return LogError("expected identifier list after var");
       }
 
 Once all the variables are parsed, we then parse the body and create the
@@ -752,13 +769,15 @@ AST node:
 
       // At this point, we have to have 'in'.
       if (CurTok != tok_in)
-        return Error("expected 'in' keyword after 'var'");
+        return LogError("expected 'in' keyword after 'var'");
       getNextToken();  // eat 'in'.
 
-      ExprAST *Body = ParseExpression();
-      if (Body == 0) return 0;
+      auto Body = ParseExpression();
+      if (!Body)
+        return nullptr;
 
-      return new VarExprAST(VarNames, Body);
+      return llvm::make_unique<VarExprAST>(std::move(VarNames),
+                                           std::move(Body));
     }
 
 Now that we can parse and represent the code, we need to support
@@ -766,7 +785,7 @@ emission of LLVM IR for it. This code starts out with:
 
 .. code-block:: c++
 
-    Value *VarExprAST::Codegen() {
+    Value *VarExprAST::codegen() {
       std::vector<AllocaInst *> OldBindings;
 
       Function *TheFunction = Builder.GetInsertBlock()->getParent();
@@ -774,7 +793,7 @@ emission of LLVM IR for it. This code starts out with:
       // Register all variables and emit their initializer.
       for (unsigned i = 0, e = VarNames.size(); i != e; ++i) {
         const std::string &VarName = VarNames[i].first;
-        ExprAST *Init = VarNames[i].second;
+        ExprAST *Init = VarNames[i].second.get();
 
 Basically it loops over all the variables, installing them one at a
 time. For each variable we put into the symbol table, we remember the
@@ -789,10 +808,11 @@ previous value that we replace in OldBindings.
         //    var a = a in ...   # refers to outer 'a'.
         Value *InitVal;
         if (Init) {
-          InitVal = Init->Codegen();
-          if (InitVal == 0) return 0;
+          InitVal = Init->codegen();
+          if (!InitVal)
+            return nullptr;
         } else { // If not specified, use 0.0.
-          InitVal = ConstantFP::get(getGlobalContext(), APFloat(0.0));
+          InitVal = ConstantFP::get(LLVMContext, APFloat(0.0));
         }
 
         AllocaInst *Alloca = CreateEntryBlockAlloca(TheFunction, VarName);
@@ -814,8 +834,9 @@ we evaluate the body of the var/in expression:
 .. code-block:: c++
 
       // Codegen the body, now that all vars are in scope.
-      Value *BodyVal = Body->Codegen();
-      if (BodyVal == 0) return 0;
+      Value *BodyVal = Body->codegen();
+      if (!BodyVal)
+        return nullptr;
 
 Finally, before returning, we restore the previous variable bindings:
 
@@ -856,5 +877,5 @@ Here is the code:
 .. literalinclude:: ../../examples/Kaleidoscope/Chapter7/toy.cpp
    :language: c++
 
-`Next: Extending the Language: Debug Information <LangImpl8.html>`_
+`Next: Adding Debug Information <LangImpl8.html>`_
 

@@ -70,6 +70,7 @@ clang/LLVM technology.
 #include "TStreamerInfo.h" // This is here to avoid to use the plugin manager
 #include "ThreadLocalStorage.h"
 #include "TFile.h"
+#include "TKey.h"
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
@@ -336,6 +337,14 @@ public:
       return true; // returning false will abort the in-depth traversal.
    }
 };
+
+////////////////////////////////////////////////////////////////////////////////
+/// Print a StackTrace!
+
+extern "C"
+void TCling__PrintStackTrace() {
+   gSystem->StackTrace();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Update TClingClassInfo for a class (e.g. upon seeing a definition).
@@ -967,11 +976,7 @@ bool TClingLookupHelper__ExistingTypeCheck(const std::string &tname,
       // All of this C gymnastic is to avoid allocations on the heap
       const auto enName = lastPos;
       const auto scopeNameSize = ((Long64_t)lastPos - (Long64_t)inner) / sizeof(decltype(*lastPos)) - 2;
-#ifdef R__WIN32
       char *scopeName = new char[scopeNameSize + 1];
-#else
-      char scopeName[scopeNameSize + 1]; // on the stack, +1 for the terminating character '\0'
-#endif
       strncpy(scopeName, inner, scopeNameSize);
       scopeName[scopeNameSize] = '\0';
       // Check if the scope is in the list of classes
@@ -987,9 +992,7 @@ bool TClingLookupHelper__ExistingTypeCheck(const std::string &tname,
             if (enumTable && enumTable->THashList::FindObject(enName)) return true;
          }
       }
-#ifdef R__WIN32
       delete [] scopeName;
-#endif
    } else
    {
       // We don't have any scope: this could only be a global enum
@@ -1172,16 +1175,20 @@ TCling::TCling(const char *name, const char *title)
    //optind = 1;  // make sure getopt() works in the main program
 #endif // R__WIN32
 
-   // Attach cling callbacks
+   // Enable dynamic lookup
+   if (!fromRootCling) {
+      fInterpreter->enableDynamicLookup();
+   }
+
+   // Attach cling callbacks last; they might need TROOT::fInterpreter
+   // and should thus not be triggered during the equivalent of
+   // TROOT::fInterpreter = new TCling;
    std::unique_ptr<TClingCallbacks>
       clingCallbacks(new TClingCallbacks(fInterpreter));
    fClingCallbacks = clingCallbacks.get();
    fClingCallbacks->SetAutoParsingSuspended(fIsAutoParsingSuspended);
    fInterpreter->setCallbacks(std::move(clingCallbacks));
 
-   if (!fromRootCling) {
-      fInterpreter->enableDynamicLookup();
-   }
 }
 
 
@@ -1254,6 +1261,21 @@ static const char *FindLibraryName(void (*func)())
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Helper to initialize TVirtualStreamerInfo's factor early.
+/// Use static initialization to insure only one TStreamerInfo is created.
+static bool R__InitStreamerInfoFactory()
+{
+   // Use lambda since SetFactory return void.
+   auto setFactory = []() {
+      TVirtualStreamerInfo::SetFactory(new TStreamerInfo());
+      return kTRUE;
+   };
+   static bool doneFactory = setFactory();
+   return doneFactory; // avoid unused variable warning.
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Tries to load a PCM; returns true on success.
 
 bool TCling::LoadPCM(TString pcmFileName,
@@ -1284,7 +1306,7 @@ bool TCling::LoadPCM(TString pcmFileName,
    // Prevent the ROOT-PCMs hitting this during auto-load during
    // JITting - which will cause recursive compilation.
    // Avoid to call the plugin manager at all.
-   TVirtualStreamerInfo::SetFactory(new TStreamerInfo());
+   R__InitStreamerInfoFactory();
 
    if (gROOT->IsRootFile(pcmFileName)) {
       Int_t oldDebug = gDebug;
@@ -1302,7 +1324,16 @@ bool TCling::LoadPCM(TString pcmFileName,
       auto listOfKeys = pcmFile->GetListOfKeys();
 
       // This is an empty pcm
-      if (listOfKeys && listOfKeys->GetSize() == 0) {
+      if (
+         listOfKeys &&
+         (
+            (listOfKeys->GetSize() == 0) || // Nothing here, or
+            (
+               (listOfKeys->GetSize() == 1) && // only one, and
+               !strcmp(((TKey*)listOfKeys->At(0))->GetName(), "EMPTY") // name is EMPTY
+            )
+         )
+      ) {
          delete pcmFile;
          gDebug = oldDebug;
          return kTRUE;
@@ -1856,10 +1887,13 @@ static int HandleInterpreterException(cling::MetaProcessor* metaProcessor,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TCling::DiagnoseIfInterpreterException(std::exception &e) const
+bool TCling::DiagnoseIfInterpreterException(const std::exception &e) const
 {
-   if (auto ie = dynamic_cast<cling::InterpreterException*>(&e))
+   if (auto ie = dynamic_cast<const cling::InterpreterException*>(&e)) {
       ie->diagnose();
+      return true;
+   }
+   return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1918,6 +1952,7 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
       }
       ~InterpreterFlagsRAII_t() {
          fInterpreter->enableDynamicLookup(fWasDynamicLookupEnabled);
+         gROOT->SetLineHasBeenProcessed();
       }
    } interpreterFlagsRAII(fInterpreter);
 
@@ -2590,6 +2625,7 @@ Bool_t TCling::IsLoaded(const char* filename) const
                                                                         const clang::DirectoryEntry *>>(),
                                               /*SearchPath*/ 0,
                                               /*RelativePath*/ 0,
+                                              /*RequestingModule*/ 0,
                                               /*SuggestedModule*/ 0,
                                               /*SkipCache*/ false,
                                               /*OpenFile*/ false,
@@ -5600,24 +5636,12 @@ void TCling::UpdateListsOnCommitted(const cling::Transaction &T) {
    if (!HandleNewTransaction(T)) return;
 
    bool isTUTransaction = false;
-   if (T.decls_end()-T.decls_begin() == 1 && !T.hasNestedTransactions()) {
+   if (!T.empty() && T.decls_begin() + 1 == T.decls_end() && !T.hasNestedTransactions()) {
       clang::Decl* FirstDecl = *(T.decls_begin()->m_DGR.begin());
-      if (clang::TranslationUnitDecl* TU
-          = dyn_cast<clang::TranslationUnitDecl>(FirstDecl)) {
+      if (llvm::isa<clang::TranslationUnitDecl>(FirstDecl)) {
          // The is the first transaction, we have to expose to meta
          // what's already in the AST.
          isTUTransaction = true;
-
-         // FIXME: don't load the world. Really, don't. Maybe
-         // instead smarten TROOT::GetListOfWhateveros() which
-         // currently is a THashList but could be a
-         // TInterpreterLookupCollection, one that reimplements
-         // TCollection::FindObject(name) and performs a lookup
-         // if not found in its T(Hash)List.
-         cling::Interpreter::PushTransactionRAII RAII(fInterpreter);
-         for (clang::DeclContext::decl_iterator TUI = TU->decls_begin(),
-                 TUE = TU->decls_end(); TUI != TUE; ++TUI)
-            ((TCling*)gCling)->HandleNewDecl(*TUI, (*TUI)->isFromASTFile(),modifiedTClasses);
       }
    }
 
@@ -5752,13 +5776,13 @@ void TCling::UpdateListsOnUnloaded(const cling::Transaction &T)
    TListOfFunctionTemplates* functiontemplates = (TListOfFunctionTemplates*)gROOT->GetListOfFunctionTemplates();
    TListOfEnums* enums = (TListOfEnums*)gROOT->GetListOfEnums();
    TListOfDataMembers* globals = (TListOfDataMembers*)gROOT->GetListOfGlobals();
-  cling::Transaction::const_nested_iterator iNested = T.nested_begin();
+   cling::Transaction::const_nested_iterator iNested = T.nested_begin();
    for(cling::Transaction::const_iterator I = T.decls_begin(), E = T.decls_end();
        I != E; ++I) {
       if (I->m_Call == cling::Transaction::kCCIHandleVTable)
          continue;
 
-     if (I->m_Call == cling::Transaction::kCCINone) {
+      if (I->m_Call == cling::Transaction::kCCINone) {
          UpdateListsOnUnloaded(**iNested);
          ++iNested;
          continue;

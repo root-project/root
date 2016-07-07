@@ -8,18 +8,6 @@
  *                                                                    *
  **********************************************************************/
 
-
-#if defined(__CINT__) && !defined(__MAKECINT__)
-// avoid to include header file when using CINT
-#ifndef _WIN32
-#include "../lib/libMathCore.so"
-#else
-#include "../bin/libMathCore.dll"
-#endif
-
-#else
-
-
 #ifndef ROOT_Math_ProbFuncMathCore
 #define ROOT_Math_ProbFuncMathCore
 
@@ -54,7 +42,7 @@ namespace Math {
    * their usage is deprecated.
    *
    *  These functions are defined in the header file <em>Math/ProbFunc.h<em> or in the global one
-   *  including all statistical dunctions <em>Math/DistFunc.h<em>
+   *  including all statistical functions <em>Math/DistFunc.h<em>
    *
    */
 
@@ -203,45 +191,45 @@ namespace Math {
    /**
 
       Cumulative distribution for the Crystal Ball distribution function
-      
-      See the definition of the Crystal Ball function at 
+
+      See the definition of the Crystal Ball function at
       <A HREF="http://en.wikipedia.org/wiki/Crystal_Ball_function">
       Wikipedia</A>.
-      
-      The distribution is defined only for n > 1 when the integral converges 
+
+      The distribution is defined only for n > 1 when the integral converges
 
       @ingroup ProbFunc
 
-   */   
+   */
    double crystalball_cdf(double x, double alpha, double n, double sigma, double x0 = 0);
-   
+
    /**
 
       Complement of the Cumulative distribution for the Crystal Ball distribution
-      
-      See the definition of the Crystal Ball function at 
+
+      See the definition of the Crystal Ball function at
       <A HREF="http://en.wikipedia.org/wiki/Crystal_Ball_function">
       Wikipedia</A>.
-      
-      The distribution is defined only for n > 1 when the integral converges 
+
+      The distribution is defined only for n > 1 when the integral converges
 
       @ingroup ProbFunc
 
-   */   
+   */
    double crystalball_cdf_c(double x, double alpha, double n, double sigma, double x0 = 0);
-   
+
    /**
       Integral of the not-normalized Crystal Ball function
-      
-      See the definition of the Crystal Ball function at 
+
+      See the definition of the Crystal Ball function at
       <A HREF="http://en.wikipedia.org/wiki/Crystal_Ball_function">
       Wikipedia</A>.
-      
-      see ROOT::Math::crystalball_function for the function evaluation. 
+
+      see ROOT::Math::crystalball_function for the function evaluation.
 
       @ingroup ProbFunc
 
-   */   
+   */
    double crystalball_integral(double x, double alpha, double n, double sigma, double x0 = 0);
 
    /**
@@ -381,7 +369,7 @@ namespace Math {
    <A HREF="http://dx.doi.org/10.1016/0010-4655(84)90085-7">Computer Phys. Comm. 31 (1984) 97-111</A>
    <A HREF="http://dx.doi.org/10.1016/j.cpc.2008.03.002">[Erratum-ibid. 178 (2008) 972]</A>.
    The same algorithms as in
-   <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/g110/top.html">
+   <A HREF="https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/g110/top.html">
    CERNLIB</A> (DISLAN) is used.
 
    @param x The argument \f$x\f$
@@ -740,7 +728,7 @@ namespace Math {
    In the case of the Landau, first and second momentum functions are provided for the Landau
    distribution truncated only on the right side.
    These functions are defined in the header file <em>Math/ProbFunc.h<em> or in the global one
-   including all statistical dunctions <em>Math/StatFunc.h<em>
+   including all statistical functions <em>Math/StatFunc.h<em>
 
    */
 
@@ -756,7 +744,7 @@ namespace Math {
    <A HREF="http://dx.doi.org/10.1016/0010-4655(84)90085-7">Computer Phys. Comm. 31 (1984) 97-111</A>
    <A HREF="http://dx.doi.org/10.1016/j.cpc.2008.03.002">[Erratum-ibid. 178 (2008) 972]</A>.
    The same algorithms as in
-   <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/g110/top.html">
+   <A HREF="https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/g110/top.html">
    CERNLIB</A> (XM1LAN)  is used
 
    @param x The argument \f$x\f$
@@ -783,7 +771,7 @@ namespace Math {
    <A HREF="http://dx.doi.org/10.1016/0010-4655(84)90085-7">Computer Phys. Comm. 31 (1984) 97-111</A>
    <A HREF="http://dx.doi.org/10.1016/j.cpc.2008.03.002">[Erratum-ibid. 178 (2008) 972]</A>.
    The same algorithms as in
-   <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/g110/top.html">
+   <A HREF="https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/g110/top.html">
    CERNLIB</A> (XM1LAN)  is used
 
    @param x The argument \f$x\f$
@@ -803,5 +791,3 @@ namespace Math {
 
 
 #endif // ROOT_Math_ProbFuncMathCore
-
-#endif // if defined (__CINT__) && !defined(__MAKECINT__)

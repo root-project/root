@@ -10,9 +10,9 @@
  *************************************************************************/
 
 /**
-\class TFPBlock TFPBlock.cxx 
-\ingroup IO                                           
-                                                            
+\class TFPBlock TFPBlock.cxx
+\ingroup IO
+
 This class represents the encapsulation of a block request.
 It contains the chunks to be prefetched and also serves as a
 container for the information read.

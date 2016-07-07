@@ -31,6 +31,9 @@ EPILOG="""Examples:
 
 - rooteventselector -c 1 source.root:tree dest.root
   Change the compression factor of the destination file 'dest.root' and  copy the tree 'tree' from 'source.root' to 'dest.root'. For more information about compression settings of ROOT file, please look at the reference guide available on the ROOT site.
+
+- rooteventselector -s "(branch1Value > 100)&&( branch2Value )" source.root:tree dest.root
+  Copy the tree 'tree' from 'source.root' to 'dest.root' and apply a selection to the output tree.
 """
 
 def execute():
@@ -40,6 +43,7 @@ def execute():
     parser.add_argument("--recreate", help=cmdLineUtils.RECREATE_HELP, action="store_true")
     parser.add_argument("-f","--first", type=int, default=0, help=FIRST_EVENT_HELP)
     parser.add_argument("-l","--last", type=int, default=-1, help=LAST_EVENT_HELP)
+    parser.add_argument("-s","--selection", default="")
 
     # Put arguments in shape
     sourceList, destFileName, destPathSplit, optDict = cmdLineUtils.getSourceDestListOptDict(parser)
@@ -47,6 +51,6 @@ def execute():
     # Process rootEventselector
     return cmdLineUtils.rootEventselector(sourceList, destFileName, destPathSplit, \
                                           compress=optDict["compress"], recreate=optDict["recreate"], \
-                                          first=optDict["first"], last=optDict["last"])
+                                          first=optDict["first"], last=optDict["last"], selectionString=optDict["selection"])
 
 sys.exit(execute())

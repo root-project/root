@@ -10,8 +10,7 @@
 /// \author Rene Brun
 
 void loopdir() {
-   TString tutdir = gROOT->GetTutorialsDir();
-   TFile *f1 = TFile::Open(tutdir+"/hsimple.root");
+   TFile *f1 = TFile::Open("hsimple.root");
    TIter next(f1->GetListOfKeys());
    TKey *key;
    TCanvas c1;

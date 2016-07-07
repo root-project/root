@@ -50,7 +50,7 @@ ModulePass* llvm::createPartialInliningPass() { return new PartialInliner(); }
 
 Function* PartialInliner::unswitchFunction(Function* F) {
   // First, verify that this function is an unswitching candidate...
-  BasicBlock* entryBlock = F->begin();
+  BasicBlock *entryBlock = &F->front();
   BranchInst *BR = dyn_cast<BranchInst>(entryBlock->getTerminator());
   if (!BR || BR->isUnconditional())
     return nullptr;
@@ -58,23 +58,21 @@ Function* PartialInliner::unswitchFunction(Function* F) {
   BasicBlock* returnBlock = nullptr;
   BasicBlock* nonReturnBlock = nullptr;
   unsigned returnCount = 0;
-  for (succ_iterator SI = succ_begin(entryBlock), SE = succ_end(entryBlock);
-       SI != SE; ++SI)
-    if (isa<ReturnInst>((*SI)->getTerminator())) {
-      returnBlock = *SI;
+  for (BasicBlock *BB : successors(entryBlock)) {
+    if (isa<ReturnInst>(BB->getTerminator())) {
+      returnBlock = BB;
       returnCount++;
     } else
-      nonReturnBlock = *SI;
+      nonReturnBlock = BB;
+  }
   
   if (returnCount != 1)
     return nullptr;
   
   // Clone the function, so that we can hack away on it.
   ValueToValueMapTy VMap;
-  Function* duplicateFunction = CloneFunction(F, VMap,
-                                              /*ModuleLevelChanges=*/false);
+  Function* duplicateFunction = CloneFunction(F, VMap);
   duplicateFunction->setLinkage(GlobalValue::InternalLinkage);
-  F->getParent()->getFunctionList().push_back(duplicateFunction);
   BasicBlock* newEntryBlock = cast<BasicBlock>(VMap[entryBlock]);
   BasicBlock* newReturnBlock = cast<BasicBlock>(VMap[returnBlock]);
   BasicBlock* newNonReturnBlock = cast<BasicBlock>(VMap[nonReturnBlock]);
@@ -89,18 +87,18 @@ Function* PartialInliner::unswitchFunction(Function* F) {
   // of which will go outside.
   BasicBlock* preReturn = newReturnBlock;
   newReturnBlock = newReturnBlock->splitBasicBlock(
-                                              newReturnBlock->getFirstNonPHI());
+      newReturnBlock->getFirstNonPHI()->getIterator());
   BasicBlock::iterator I = preReturn->begin();
-  BasicBlock::iterator Ins = newReturnBlock->begin();
+  Instruction *Ins = &newReturnBlock->front();
   while (I != preReturn->end()) {
     PHINode* OldPhi = dyn_cast<PHINode>(I);
     if (!OldPhi) break;
-    
-    PHINode* retPhi = PHINode::Create(OldPhi->getType(), 2, "", Ins);
+
+    PHINode *retPhi = PHINode::Create(OldPhi->getType(), 2, "", Ins);
     OldPhi->replaceAllUsesWith(retPhi);
     Ins = newReturnBlock->getFirstNonPHI();
-    
-    retPhi->addIncoming(I, preReturn);
+
+    retPhi->addIncoming(&*I, preReturn);
     retPhi->addIncoming(OldPhi->getIncomingValueForBlock(newEntryBlock),
                         newEntryBlock);
     OldPhi->removeIncomingValue(newEntryBlock);
@@ -116,8 +114,8 @@ Function* PartialInliner::unswitchFunction(Function* F) {
        FE = duplicateFunction->end(); FI != FE; ++FI)
     if (&*FI != newEntryBlock && &*FI != newReturnBlock &&
         &*FI != newNonReturnBlock)
-      toExtract.push_back(FI);
-      
+      toExtract.push_back(&*FI);
+
   // The CodeExtractor needs a dominator tree.
   DominatorTree DT;
   DT.recalculate(*duplicateFunction);
@@ -149,6 +147,9 @@ Function* PartialInliner::unswitchFunction(Function* F) {
 }
 
 bool PartialInliner::runOnModule(Module& M) {
+  if (skipModule(M))
+    return false;
+
   std::vector<Function*> worklist;
   worklist.reserve(M.size());
   for (Module::iterator FI = M.begin(), FE = M.end(); FI != FE; ++FI)

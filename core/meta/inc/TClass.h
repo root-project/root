@@ -449,7 +449,7 @@ public:
    TVirtualStreamerInfo     *GetStreamerInfoAbstractEmulated(Int_t version=0) const;
    TVirtualStreamerInfo     *FindStreamerInfoAbstractEmulated(UInt_t checksum) const;
    const std::type_info     *GetTypeInfo() const { return fTypeInfo; };
-   Bool_t             HasDictionary();
+   Bool_t             HasDictionary() const;
    static Bool_t      HasDictionarySelection(const char* clname);
    void               GetMissingDictionaries(THashTable& result, bool recurse = false);
    void               IgnoreTObjectStreamer(Bool_t ignore=kTRUE);

@@ -25,6 +25,8 @@
 
 #include "XrdProofdManager.h"
 
+#include "XrdVersion.hh"
+#include "Xrd/XrdProtocol.hh"
 #include "XrdOuc/XrdOucEnv.hh"
 #include "XrdOuc/XrdOucStream.hh"
 #include "XrdSys/XrdSysPriv.hh"
@@ -51,6 +53,9 @@
 // Tracing utilities
 #include "XrdProofdTrace.h"
 
+#include <grp.h>
+#include <unistd.h>
+
 // Auxilliary sructure used internally to extract list of allowed/denied user names
 // when running in access control mode
 typedef struct {
@@ -58,10 +63,13 @@ typedef struct {
    XrdOucString denied;
 } xpd_acm_lists_t;
 
+// Protocol loader; arguments: const char *pname, char *parms,  XrdProtocol_Config *pi
+typedef XrdProtocol *(*XrdProtocolLoader_t)(const char *, char *, XrdProtocol_Config *);
+
 #ifdef __sun
 /*-
  * Copyright (c) 1991, 1993
- *	The Regents of the University of California.  All rights reserved.
+ * The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -73,8 +81,8 @@ typedef struct {
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ * This product includes software developed by the University of
+ * California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -94,7 +102,7 @@ typedef struct {
 
 #if 0
 #if defined(LIBC_SCCS) && !defined(lint)
-static char sccsid[] = "@(#)getgrouplist.c	8.2 (Berkeley) 12/8/94";
+static char sccsid[] = "@(#)getgrouplist.c   8.2 (Berkeley) 12/8/94";
 #endif /* LIBC_SCCS and not lint */
 #include <sys/cdefs.h>
 __FBSDID("$FreeBSD: src/lib/libc/gen/getgrouplist.c,v 1.14 2005/05/03 16:20:03 delphij Exp $");
@@ -105,54 +113,52 @@ __FBSDID("$FreeBSD: src/lib/libc/gen/getgrouplist.c,v 1.14 2005/05/03 16:20:03 d
  */
 #include <sys/types.h>
 
-#include <grp.h>
 #include <string.h>
-#include <unistd.h>
 
 int
 getgrouplist(const char *uname, gid_t agroup, gid_t *groups, int *grpcnt)
 {
-	const struct group *grp;
-	int i, maxgroups, ngroups, ret;
+   const struct group *grp;
+   int i, maxgroups, ngroups, ret;
 
-	ret = 0;
-	ngroups = 0;
-	maxgroups = *grpcnt;
-	/*
-	 * When installing primary group, duplicate it;
-	 * the first element of groups is the effective gid
-	 * and will be overwritten when a setgid file is executed.
-	 */
-	groups ? groups[ngroups++] = agroup : ngroups++;
-	if (maxgroups > 1)
-		groups ? groups[ngroups++] = agroup : ngroups++;
-	/*
-	 * Scan the group file to find additional groups.
-	 */
-	setgrent();
-	while ((grp = getgrent()) != NULL) {
-		if (groups) {
-			for (i = 0; i < ngroups; i++) {
-				if (grp->gr_gid == groups[i])
-					goto skip;
-			}
-		}
-		for (i = 0; grp->gr_mem[i]; i++) {
-			if (!strcmp(grp->gr_mem[i], uname)) {
-				if (ngroups >= maxgroups) {
-					ret = -1;
-					break;
-				}
-				groups ? groups[ngroups++] = grp->gr_gid : ngroups++;
-				break;
-			}
-		}
+   ret = 0;
+   ngroups = 0;
+   maxgroups = *grpcnt;
+   /*
+    * When installing primary group, duplicate it;
+    * the first element of groups is the effective gid
+    * and will be overwritten when a setgid file is executed.
+    */
+   groups ? groups[ngroups++] = agroup : ngroups++;
+   if (maxgroups > 1)
+      groups ? groups[ngroups++] = agroup : ngroups++;
+   /*
+    * Scan the group file to find additional groups.
+    */
+   setgrent();
+   while ((grp = getgrent()) != NULL) {
+      if (groups) {
+         for (i = 0; i < ngroups; i++) {
+            if (grp->gr_gid == groups[i])
+               goto skip;
+         }
+      }
+      for (i = 0; grp->gr_mem[i]; i++) {
+         if (!strcmp(grp->gr_mem[i], uname)) {
+            if (ngroups >= maxgroups) {
+               ret = -1;
+               break;
+            }
+            groups ? groups[ngroups++] = grp->gr_gid : ngroups++;
+            break;
+         }
+      }
 skip:
-		;
-	}
-	endgrent();
-	*grpcnt = ngroups;
-	return (ret);
+      ;
+   }
+   endgrent();
+   *grpcnt = ngroups;
+   return (ret);
 }
 #endif
 
@@ -213,9 +219,13 @@ void *XrdProofdManagerCron(void *p)
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
-XrdProofdManager::XrdProofdManager(XrdProtocol_Config *pi, XrdSysError *edest)
+XrdProofdManager::XrdProofdManager(char *parms, XrdProtocol_Config *pi, XrdSysError *edest)
                  : XrdProofdConfig(pi->ConfigFN, edest)
 {
+
+   fParms = parms; // only used for construction: not to be trusted later on
+   fPi = pi;       // only used for construction: not to be trusted later on
+
    fSrvType = kXPD_AnyServer;
    fEffectiveUser = "";
    fHost = "";
@@ -240,8 +250,9 @@ XrdProofdManager::XrdProofdManager(XrdProtocol_Config *pi, XrdSysError *edest)
    fDataDirOpts = "";    // Default: no action
    fDataDirUrlOpts = ""; // Default: none
 
-   // Rootd file serving enabled by default in readonly mode
-   fRootdExe = "<>";
+   ////// This is deprecated: see fXrootd below
+   // Rootd file serving enabled by default in readonly mode 
+   fRootdExe = "";
    // Add mandatory arguments
    fRootdArgs.push_back(XrdOucString("-i"));
    fRootdArgs.push_back(XrdOucString("-nologin"));
@@ -259,6 +270,10 @@ XrdProofdManager::XrdProofdManager(XrdProtocol_Config *pi, XrdSysError *edest)
    fRootdArgsPtrs[fRootdArgs.size() + 1] = 0;
    // Started with 'system' (not 'fork')
    fRootdFork = 0;
+   /////////////////////////////////////////////////////////////////
+
+   // Tools to enable xrootd file serving
+   fXrootdLibPath = "<>";
 
    // Proof admin path
    fAdminPath = pi->AdmPath;
@@ -315,6 +330,41 @@ XrdProofdManager::~XrdProofdManager()
    SafeDelete(fROOTMgr);
    SafeDelete(fSessionMgr);
    SafeDelArray(fRootdArgsPtrs);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Load the Xrootd protocol, if required
+
+XrdProtocol *XrdProofdManager::LoadXrootd(char *parms, XrdProtocol_Config *pi, XrdSysError *edest)
+{
+   XPDLOC(ALL, "Manager::LoadXrootd")
+
+   XrdProtocol *xrp = 0;
+
+   // Create the plug-in instance
+   XrdSysPlugin *xplg = new XrdSysPlugin((edest ? edest : (XrdSysError *)0), fXrootdLibPath.c_str());
+   if (!xplg) {
+      TRACE(XERR, "could not create plugin instance for "<<fXrootdLibPath.c_str());
+      return xrp;
+   }
+
+   // Get the function
+   XrdProtocolLoader_t ep = (XrdProtocolLoader_t) xplg->getPlugin("XrdgetProtocol");
+   if (!ep) {
+      TRACE(XERR, "could not find 'XrdgetProtocol()' in "<<fXrootdLibPath.c_str());
+      return xrp;
+   }
+
+   // Get the server object
+   if (!(xrp = (*ep)("xrootd", parms, pi))) {
+      TRACE(XERR, "Unable to create xrootd protocol service object via " << fXrootdLibPath.c_str());
+      SafeDelete(xplg);
+   } else {
+      // Notify
+      TRACE(ALL, "xrootd protocol service created");
+   }
+
+   return xrp;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1188,6 +1238,12 @@ int XrdProofdManager::Config(bool rcf)
       return -1;
    }
 
+   // Xrootd protocol service
+   if ((fXrootd = LoadXrootd(fParms, fPi, fEDest))) {
+      // If enabled, Xrootd takes precedence
+      fRootdExe = "";
+   }
+
    // File server
    if (fRootdExe.length() > 0) {
       // Absolute or relative?
@@ -1371,6 +1427,7 @@ void XrdProofdManager::RegisterDirectives()
    Register("rootdallow", new XrdProofdDirective("rootdallow", this, &DoDirectiveClass));
    Register("xrd.protocol", new XrdProofdDirective("xrd.protocol", this, &DoDirectiveClass));
    Register("filterlibpaths", new XrdProofdDirective("filterlibpaths", this, &DoDirectiveClass));
+   Register("xrootd", new XrdProofdDirective("xrootd", this, &DoDirectiveClass));
    // Register config directives for strings
    Register("tmp", new XrdProofdDirective("tmp", (void *)&fTMPdir, &DoDirectiveString));
    Register("poolurl", new XrdProofdDirective("poolurl", (void *)&fPoolURL, &DoDirectiveString));
@@ -1515,6 +1572,8 @@ int XrdProofdManager::DoDirective(XrdProofdDirective *d,
       return DoDirectivePort(val, cfg, rcf);
    } else if (d->fName == "filterlibpaths") {
       return DoDirectiveFilterLibPaths(val, cfg, rcf);
+   } else if (d->fName == "xrootd") {
+      return DoDirectiveXrootd(val, cfg, rcf);
    }
    TRACE(XERR, "unknown directive: " << d->fName);
    return -1;
@@ -1926,6 +1985,30 @@ int XrdProofdManager::DoDirectiveDataDir(char *val, XrdOucStream *cfg, bool)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Process 'xrootd' directive
+///  xpd.xrootd [path/]libXrdXrootd.so
+
+int XrdProofdManager::DoDirectiveXrootd(char *val, XrdOucStream *, bool)
+{
+   XPDLOC(ALL, "Manager::DoDirectiveXrootd")
+
+   if (!val)
+      // undefined inputs
+      return -1;
+   TRACE(ALL, "val: "<< val);
+   // Check version (v3 does not have the plugin, loading v4 may lead to problems)
+   if (XrdMajorVNUM(XrdVNUMBER) < 4) {
+      TRACE(ALL, "WARNING: built against an XRootD version without libXrdXrootd.so :");
+      TRACE(ALL, "WARNING:    loading external " << val << " may lead to incompatibilities");
+   }
+
+   fXrootdLibPath = val;
+
+   // Done
+   return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Process 'rootd' directive
 ///  xpd.rootd deny|allow [rootsys:<tag>] [path:abs-path/] [mode:ro|rw]
 ///            [auth:none|full] [other_rootd_args]
@@ -1946,7 +2029,7 @@ int XrdProofdManager::DoDirectiveRootd(char *val, XrdOucStream *cfg, bool)
 
    // Parse directive
    XrdOucString mode("ro"), auth("none"), fork("0");
-   bool denied = 0;
+   bool denied = 1;
    char *nxt = val;
    do {
       if (!strcmp(nxt, "deny") || !strcmp(nxt, "disable") || !strcmp(nxt, "off")) {
@@ -1955,6 +2038,7 @@ int XrdProofdManager::DoDirectiveRootd(char *val, XrdOucStream *cfg, bool)
       } else if (!strcmp(nxt, "allow") || !strcmp(nxt, "enable") || !strcmp(nxt, "on")) {
          denied = 0;
          fRootdExe = "<>";
+         TRACE(ALL, "Use of this directive is deprecated: use xpd.xrootd instead");
       } else if (!strncmp(nxt, "mode:", 5)) {
          mode = nxt + 5;
       } else if (!strncmp(nxt, "auth:", 5)) {
@@ -2008,6 +2092,8 @@ int XrdProofdManager::DoDirectiveRootdAllow(char *val, XrdOucStream *cfg, bool)
    if (!val)
       // undefined inputs
       return -1;
+
+   TRACE(ALL, "Use of this and 'xpd.rootd' directives is deprecated: use xpd.xrootd instead");
 
    TRACE(ALL, "val: "<< val);
 

@@ -42,6 +42,18 @@ OPTIONS
 
   File to check (defaults to stdin).
 
+.. option:: --match-full-lines
+
+ By default, FileCheck allows matches of anywhere on a line. This
+ option will require all positive matches to cover an entire
+ line. Leading and trailing whitespace is ignored, unless
+ :option:`--strict-whitespace` is also specified. (Note: negative
+ matches from ``CHECK-NOT`` are not affected by this option!)
+
+ Passing this option is equivalent to inserting ``{{^ *}}`` or
+ ``{{^}}`` before, and ``{{ *$}}`` or ``{{$}}`` after every positive
+ check pattern.
+
 .. option:: --strict-whitespace
 
  By default, FileCheck canonicalizes input horizontal whitespace (spaces and
@@ -184,6 +196,31 @@ For example, something like this works as you'd expect:
 "``CHECK-NEXT:``" directives reject the input unless there is exactly one
 newline between it and the previous directive.  A "``CHECK-NEXT:``" cannot be
 the first directive in a file.
+
+The "CHECK-SAME:" directive
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Sometimes you want to match lines and would like to verify that matches happen
+on the same line as the previous match.  In this case, you can use "``CHECK:``"
+and "``CHECK-SAME:``" directives to specify this.  If you specified a custom
+check prefix, just use "``<PREFIX>-SAME:``".
+
+"``CHECK-SAME:``" is particularly powerful in conjunction with "``CHECK-NOT:``"
+(described below).
+
+For example, the following works like you'd expect:
+
+.. code-block:: llvm
+
+   !0 = !DILocation(line: 5, scope: !1, inlinedAt: !2)
+
+   ; CHECK:       !DILocation(line: 5,
+   ; CHECK-NOT:               column:
+   ; CHECK-SAME:              scope: ![[SCOPE:[0-9]+]]
+
+"``CHECK-SAME:``" directives reject the input if there are any newlines between
+it and the previous directive.  A "``CHECK-SAME:``" cannot be the first
+directive in a file.
 
 The "CHECK-NOT:" directive
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -339,7 +376,7 @@ simply uniquely match a single line in the file being verified.
 FileCheck Pattern Matching Syntax
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The "``CHECK:``" and "``CHECK-NOT:``" directives both take a pattern to match.
+All FileCheck directives take a pattern to match.
 For most uses of FileCheck, fixed string matching is perfectly sufficient.  For
 some things, a more flexible form of matching is desired.  To support this,
 FileCheck allows you to specify regular expressions in matching strings,

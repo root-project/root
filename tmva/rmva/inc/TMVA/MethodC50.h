@@ -74,7 +74,10 @@ namespace TMVA {
       virtual void ReadWeightsFromXML(void *wghtnode) {}    // = 0;
       virtual void ReadWeightsFromStream(std::istream &) {} //= 0;       // backward compatibility
 
-      void ReadStateFromFile();
+      // signal/background classification response for all current set of data 
+      virtual std::vector<Double_t> GetMvaValues(Long64_t firstEvt = 0, Long64_t lastEvt = -1, Bool_t logProgress = false);
+
+      void ReadModelFromFile();
    private :
       DataSetManager    *fDataSetManager;     // DSMTEST
       friend class Factory;                   // DSMTEST

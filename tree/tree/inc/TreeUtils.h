@@ -14,7 +14,7 @@
 // TreeUtils                                                            //
 //                                                                      //
 // Different standalone functions to work with trees and tuples,        //
-// not reqiuired to be a member of any class.                           //
+// not required to be a member of any class.                           //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 

@@ -331,7 +331,8 @@ Int_t TProofLite::Init(const char *, const char *conffile,
       TString globpack = gEnv->GetValue("Proof.GlobalPackageDirs","");
       TProofServ::ResolveKeywords(globpack);
       Int_t nglb = TPackMgr::RegisterGlobalPath(globpack);
-      Info("Init", " %d global package directories registered", nglb);
+      if (gDebug > 0)
+         Info("Init", " %d global package directories registered", nglb);
    }
 
    // Start workers

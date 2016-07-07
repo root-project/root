@@ -1,11 +1,3 @@
-#---Do not build roofit with modules until the issue gets fixed-----------------
-if(cxxmodules)
-  if(ROOT_ARCHITECTURE MATCHES macosx)
-    string(REPLACE "${ROOT_CXXMODULES_FLAGS}" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-    string(REPLACE "${ROOT_CXXMODULES_FLAGS}" "" CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
-  endif()
-endif(cxxmodules)
-
 if(NOT CMAKE_PROJECT_NAME STREQUAL ROOT)
   cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
   project(RooFit)

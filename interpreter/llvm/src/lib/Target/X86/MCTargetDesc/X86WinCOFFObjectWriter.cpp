@@ -25,7 +25,7 @@ namespace {
   class X86WinCOFFObjectWriter : public MCWinCOFFObjectTargetWriter {
   public:
     X86WinCOFFObjectWriter(bool Is64Bit);
-    virtual ~X86WinCOFFObjectWriter();
+    ~X86WinCOFFObjectWriter() override;
 
     unsigned getRelocType(const MCValue &Target, const MCFixup &Fixup,
                           bool IsCrossSection,
@@ -53,11 +53,15 @@ unsigned X86WinCOFFObjectWriter::getRelocType(const MCValue &Target,
     case FK_PCRel_4:
     case X86::reloc_riprel_4byte:
     case X86::reloc_riprel_4byte_movq_load:
+    case X86::reloc_riprel_4byte_relax:
+    case X86::reloc_riprel_4byte_relax_rex:
       return COFF::IMAGE_REL_AMD64_REL32;
     case FK_Data_4:
     case X86::reloc_signed_4byte:
       if (Modifier == MCSymbolRefExpr::VK_COFF_IMGREL32)
         return COFF::IMAGE_REL_AMD64_ADDR32NB;
+      if (Modifier == MCSymbolRefExpr::VK_SECREL)
+        return COFF::IMAGE_REL_AMD64_SECREL;
       return COFF::IMAGE_REL_AMD64_ADDR32;
     case FK_Data_8:
       return COFF::IMAGE_REL_AMD64_ADDR64;
@@ -78,6 +82,8 @@ unsigned X86WinCOFFObjectWriter::getRelocType(const MCValue &Target,
     case X86::reloc_signed_4byte:
       if (Modifier == MCSymbolRefExpr::VK_COFF_IMGREL32)
         return COFF::IMAGE_REL_I386_DIR32NB;
+      if (Modifier == MCSymbolRefExpr::VK_SECREL)
+        return COFF::IMAGE_REL_AMD64_SECREL;
       return COFF::IMAGE_REL_I386_DIR32;
     case FK_SecRel_2:
       return COFF::IMAGE_REL_I386_SECTION;
@@ -90,7 +96,7 @@ unsigned X86WinCOFFObjectWriter::getRelocType(const MCValue &Target,
     llvm_unreachable("Unsupported COFF machine type.");
 }
 
-MCObjectWriter *llvm::createX86WinCOFFObjectWriter(raw_ostream &OS,
+MCObjectWriter *llvm::createX86WinCOFFObjectWriter(raw_pwrite_stream &OS,
                                                    bool Is64Bit) {
   MCWinCOFFObjectTargetWriter *MOTW = new X86WinCOFFObjectWriter(Is64Bit);
   return createWinCOFFObjectWriter(MOTW, OS);

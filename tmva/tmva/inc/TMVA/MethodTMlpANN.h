@@ -124,7 +124,7 @@ namespace TMVA {
       // default initialisation called by all constructors
       void Init( void );
 
-      ClassDef(MethodTMlpANN,0) // Implementation of interface for TMultiLayerPerceptron
+      ClassDef(MethodTMlpANN,0); // Implementation of interface for TMultiLayerPerceptron
    };
 
 } // namespace TMVA

@@ -13,14 +13,6 @@
 #define ROOT_TPaveLabel
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TPaveLabel                                                           //
-//                                                                      //
-// PaveLabel  A Pave with a label.                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #ifndef ROOT_TPave
 #include "TPave.h"
 #endif
@@ -32,7 +24,7 @@
 class TPaveLabel : public TPave, public TAttText {
 
 protected:
-   TString      fLabel;         //Label written at the center of Pave
+   TString      fLabel;         ///< Label written at the center of Pave
 
 public:
    TPaveLabel();

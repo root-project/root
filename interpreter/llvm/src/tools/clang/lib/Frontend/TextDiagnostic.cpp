@@ -777,7 +777,7 @@ void TextDiagnostic::emitDiagnosticLoc(SourceLocation Loc, PresumedLoc PLoc,
   if (PLoc.isInvalid()) {
     // At least print the file name if available:
     FileID FID = SM.getFileID(Loc);
-    if (!FID.isInvalid()) {
+    if (FID.isValid()) {
       const FileEntry* FE = SM.getFileEntryForID(FID);
       if (FE && FE->isValid()) {
         OS << FE->getName();
@@ -799,18 +799,18 @@ void TextDiagnostic::emitDiagnosticLoc(SourceLocation Loc, PresumedLoc PLoc,
   OS << PLoc.getFilename();
   switch (DiagOpts->getFormat()) {
   case DiagnosticOptions::Clang: OS << ':'  << LineNo; break;
-  case DiagnosticOptions::Msvc:  OS << '('  << LineNo; break;
+  case DiagnosticOptions::MSVC:  OS << '('  << LineNo; break;
   case DiagnosticOptions::Vi:    OS << " +" << LineNo; break;
   }
 
   if (DiagOpts->ShowColumn)
     // Compute the column number.
     if (unsigned ColNo = PLoc.getColumn()) {
-      if (DiagOpts->getFormat() == DiagnosticOptions::Msvc) {
+      if (DiagOpts->getFormat() == DiagnosticOptions::MSVC) {
         OS << ',';
         // Visual Studio 2010 or earlier expects column number to be off by one
         if (LangOpts.MSCompatibilityVersion &&
-            LangOpts.MSCompatibilityVersion < 170000000)
+            !LangOpts.isCompatibleWithMSVC(LangOptions::MSVC2012))
           ColNo--;
       } else
         OS << ':';
@@ -819,7 +819,15 @@ void TextDiagnostic::emitDiagnosticLoc(SourceLocation Loc, PresumedLoc PLoc,
   switch (DiagOpts->getFormat()) {
   case DiagnosticOptions::Clang:
   case DiagnosticOptions::Vi:    OS << ':';    break;
-  case DiagnosticOptions::Msvc:  OS << ") : "; break;
+  case DiagnosticOptions::MSVC:
+    // MSVC2013 and before print 'file(4) : error'. MSVC2015 gets rid of the
+    // space and prints 'file(4): error'.
+    OS << ')';
+    if (LangOpts.MSCompatibilityVersion &&
+        !LangOpts.isCompatibleWithMSVC(LangOptions::MSVC2015))
+      OS << ' ';
+    OS << ": ";
+    break;
   }
 
   if (DiagOpts->ShowSourceRanges && !Ranges.empty()) {
@@ -875,7 +883,7 @@ void TextDiagnostic::emitDiagnosticLoc(SourceLocation Loc, PresumedLoc PLoc,
 void TextDiagnostic::emitIncludeLocation(SourceLocation Loc,
                                          PresumedLoc PLoc,
                                          const SourceManager &SM) {
-  if (DiagOpts->ShowLocation)
+  if (DiagOpts->ShowLocation && PLoc.isValid())
     OS << "In file included from " << PLoc.getFilename() << ':'
        << PLoc.getLine() << ":\n";
   else
@@ -885,18 +893,18 @@ void TextDiagnostic::emitIncludeLocation(SourceLocation Loc,
 void TextDiagnostic::emitImportLocation(SourceLocation Loc, PresumedLoc PLoc,
                                         StringRef ModuleName,
                                         const SourceManager &SM) {
-  if (DiagOpts->ShowLocation)
+  if (DiagOpts->ShowLocation && PLoc.isValid())
     OS << "In module '" << ModuleName << "' imported from "
        << PLoc.getFilename() << ':' << PLoc.getLine() << ":\n";
   else
-    OS << "In module " << ModuleName << "':\n";
+    OS << "In module '" << ModuleName << "':\n";
 }
 
 void TextDiagnostic::emitBuildingModuleLocation(SourceLocation Loc,
                                                 PresumedLoc PLoc,
                                                 StringRef ModuleName,
                                                 const SourceManager &SM) {
-  if (DiagOpts->ShowLocation && PLoc.getFilename())
+  if (DiagOpts->ShowLocation && PLoc.isValid())
     OS << "While building module '" << ModuleName << "' imported from "
       << PLoc.getFilename() << ':' << PLoc.getLine() << ":\n";
   else
@@ -1060,7 +1068,7 @@ void TextDiagnostic::emitSnippetAndCaret(
     SmallVectorImpl<CharSourceRange>& Ranges,
     ArrayRef<FixItHint> Hints,
     const SourceManager &SM) {
-  assert(!Loc.isInvalid() && "must have a valid source location here");
+  assert(Loc.isValid() && "must have a valid source location here");
   assert(Loc.isFileID() && "must have a file location here");
 
   // If caret diagnostics are enabled and we have location, we want to
@@ -1082,9 +1090,12 @@ void TextDiagnostic::emitSnippetAndCaret(
 
   // Get information about the buffer it points into.
   bool Invalid = false;
-  const char *BufStart = SM.getBufferData(FID, &Invalid).data();
+  StringRef BufData = SM.getBufferData(FID, &Invalid);
   if (Invalid)
     return;
+
+  const char *BufStart = BufData.data();
+  const char *BufEnd = BufStart + BufData.size();
 
   unsigned LineNo = SM.getLineNumber(FID, FileOffset);
   unsigned ColNo = SM.getColumnNumber(FID, FileOffset);
@@ -1101,15 +1112,20 @@ void TextDiagnostic::emitSnippetAndCaret(
   // Compute the line end.  Scan forward from the error position to the end of
   // the line.
   const char *LineEnd = TokPtr;
-  while (*LineEnd != '\n' && *LineEnd != '\r' && *LineEnd != '\0')
+  while (*LineEnd != '\n' && *LineEnd != '\r' && LineEnd != BufEnd)
     ++LineEnd;
 
   // Arbitrarily stop showing snippets when the line is too long.
   if (size_t(LineEnd - LineStart) > MaxLineLengthToPrint)
     return;
 
+  // Trim trailing null-bytes.
+  StringRef Line(LineStart, LineEnd - LineStart);
+  while (Line.size() > ColNo && Line.back() == '\0')
+    Line = Line.drop_back();
+
   // Copy the line of code into an std::string for ease of manipulation.
-  std::string SourceLine(LineStart, LineEnd);
+  std::string SourceLine(Line.begin(), Line.end());
 
   // Build the byte to column map.
   const SourceColumnMap sourceColMap(SourceLine, DiagOpts->TabStop);

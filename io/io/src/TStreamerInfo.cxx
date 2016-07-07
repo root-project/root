@@ -410,6 +410,52 @@ void TStreamerInfo::Build()
          dmTitle = "->";
       }
 
+      // Let's check if we have a collection of unique pointers of T.
+      // In this case, we'll transform it in a collection of T*.
+      // e.g. list<unique_ptr<T>> --> list<T*>
+      bool isUniquePtrColl = false;
+      auto stlContType = dm->IsSTLContainer();
+      if (stlContType) {
+         // Simple case: something like stlcoll<T>, e.g. list or vector.
+         std::vector<std::string> v;
+         int i;
+         TClassEdit::GetSplit(dmType, v, i);
+         bool isArg1UniquePtr = TClassEdit::IsUniquePtr(v[1]);
+         bool isMapColl = stlContType == ROOT::kSTLmap ||
+                          stlContType == ROOT::kSTLunorderedmap ||
+                          stlContType == ROOT::kSTLmultimap ||
+                          stlContType == ROOT::kSTLunorderedmultimap;
+         bool isArg2UniquePtr = TClassEdit::IsUniquePtr(v[2]);
+         isUniquePtrColl = isArg1UniquePtr || isArg2UniquePtr;
+
+         // We could have a container with one or two template arguments, e.g.
+         // a forward_list or a map.
+         if (isUniquePtrColl) {
+            uniquePtrTypeNameBuf = v[0] + "<";
+
+            if (isArg1UniquePtr) {
+               uniquePtrTypeNameBuf += TClassEdit::GetUniquePtrType(v[1]);
+               uniquePtrTypeNameBuf += "*";
+            } else {
+               uniquePtrTypeNameBuf += v[1];
+            }
+
+            if (isMapColl){
+               uniquePtrTypeNameBuf += ",";
+               if (isArg2UniquePtr) {
+                  uniquePtrTypeNameBuf += TClassEdit::GetUniquePtrType(v[2]);
+                  uniquePtrTypeNameBuf += "*";
+               } else {
+                  uniquePtrTypeNameBuf += v[2];
+               }
+            }
+            uniquePtrTypeNameBuf += ">";
+            dmType = uniquePtrTypeNameBuf.c_str();
+            dmFull = uniquePtrTypeNameBuf.c_str();
+         }
+      }
+
+
       TDataMember* dmCounter = 0;
       if (dmIsPtr) {
          //
@@ -482,19 +528,29 @@ void TStreamerInfo::Build()
          if (!strcmp(dmType, "string") || !strcmp(dmType, "std::string") || !strcmp(dmType, full_string_name)) {
             element = new TStreamerSTLstring(dmName, dmTitle, offset, dmFull, dmIsPtr);
          } else if (dm->IsSTLContainer()) {
-            TVirtualCollectionProxy *proxy = TClass::GetClass(dm->GetTypeName() /* the underlying type */)->GetCollectionProxy();
+            TVirtualCollectionProxy *proxy = TClass::GetClass(dmType /* the underlying type */)->GetCollectionProxy();
             if (proxy) element = new TStreamerSTL(dmName, dmTitle, offset, dmFull, *proxy, dmIsPtr);
-            else element = new TStreamerSTL(dmName, dmTitle, offset, dmFull, dm->GetTrueTypeName(), dmIsPtr);
+            else element = new TStreamerSTL(dmName, dmTitle, offset, dmFull, dmFull, dmIsPtr);
             if (((TStreamerSTL*)element)->GetSTLtype() != ROOT::kSTLvector) {
+               auto printErrorMsg = [&](const char* category)
+                  {
+                     std::string uptr_msg;
+                     if (isUniquePtrColl) {
+                        uptr_msg = ": the collection \"";
+                        uptr_msg += element->GetClassPointer()->GetName();
+                        uptr_msg += "\" should be selected to allow ROOT to perform I/O operations";
+                     }
+                     Error("Build","The class \"%s\" is %s and for its data member \"%s\" we do not have a dictionary for the collection \"%s\"%s. Because of this, we will not be able to read or write this data member.",GetName(), category, dmName, dm->GetTypeName(), uptr_msg.c_str());
+                  };
                if (fClass->IsLoaded()) {
                   if (!element->GetClassPointer()->IsLoaded()) {
-                     Error("Build","The class \"%s\" is compiled and for its the data member \"%s\", we do not have a dictionary for the collection \"%s\", we will not be able to read or write this data member.",GetName(),dmName,element->GetClassPointer()->GetName());
+                     printErrorMsg("compiled");
                      delete element;
                      continue;
                   }
                } else if (fClass->GetState() == TClass::kInterpreted) {
                   if (element->GetClassPointer()->GetCollectionProxy()->GetProperties() & TVirtualCollectionProxy::kIsEmulated) {
-                     Error("Build","The class \"%s\" is interpreted and for its the data member \"%s\", we do not have a dictionary for the collection \"%s\", we will not be able to read or write this data member.",GetName(),dmName,element->GetClassPointer()->GetName());
+                     printErrorMsg("interpreted");
                      delete element;
                      continue;
                   }
@@ -1875,7 +1931,10 @@ void TStreamerInfo::BuildOld()
                }
 
                if (!bc) {
-                  Error("BuildOld", "Could not find STL base class: %s for %s\n", element->GetName(), GetName());
+                  // Error("BuildOld", "Could not find STL base class: %s for %s\n", element->GetName(), GetName());
+                  offset = kMissing;
+                  element->SetOffset(kMissing);
+                  element->SetNewType(-1);
                   continue;
                } else if (bc->GetClassPointer()->GetCollectionProxy()
                           && !bc->GetClassPointer()->IsLoaded()
@@ -2096,7 +2155,7 @@ void TStreamerInfo::BuildOld()
          }
       } else if (newClass.GetClass()) {
          // Sometime BuildOld is called again.
-         // In that case we migth already have fix up the streamer element.
+         // In that case we might already have fix up the streamer element.
          // So we need to go back to the original information!
          newClass.Reset();
          TClass* oldClass = TClass::GetClass(TClassEdit::ShortType(element->GetTypeName(), TClassEdit::kDropTrailStar).c_str());
@@ -2479,8 +2538,8 @@ void TStreamerInfo::BuildOld()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// If opt cointains 'built', reset this StreamerInfo as if Build or BuildOld
-/// was never called on it (usefull to force their re-running).
+/// If opt contains 'built', reset this StreamerInfo as if Build or BuildOld
+/// was never called on it (useful to force their re-running).
 
 void TStreamerInfo::Clear(Option_t *option)
 {
@@ -2511,7 +2570,7 @@ void TStreamerInfo::Clear(Option_t *option)
 
 namespace {
    // TMemberInfo
-   // Local helper class to be able to compare data member represened by
+   // Local helper class to be able to compare data member represented by
    // 2 distinct TStreamerInfos
    class TMemberInfo {
    public:
@@ -2712,7 +2771,7 @@ TObject *TStreamerInfo::Clone(const char *newname) const
 Bool_t TStreamerInfo::CompareContent(TClass *cl, TVirtualStreamerInfo *info, Bool_t warn, Bool_t complete, TFile *file)
 {
    Bool_t result = kTRUE;
-   R__ASSERT( (cl==0 || info==0) && (cl!=0 || info!=0) /* must compare to only one thhing! */);
+   R__ASSERT( (cl==0 || info==0) && (cl!=0 || info!=0) /* must compare to only one thing! */);
 
    TString name;
    TString type;
@@ -3086,7 +3145,7 @@ void TStreamerInfo::ForceWriteInfo(TFile* file, Bool_t force)
 /// type described by this streamerInfo, return the actual type of the
 /// object (i.e. the type described by this streamerInfo is a base class
 /// of the actual type of the object.
-/// This routine should only be called if the class decribed by this
+/// This routine should only be called if the class described by this
 /// StreamerInfo is 'emulated'.
 
 TClass *TStreamerInfo::GetActualClass(const void *obj) const
@@ -3102,7 +3161,7 @@ TClass *TStreamerInfo::GetActualClass(const void *obj) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true if the checksum passed as argument is one of the checksum
-/// value produced by the older checksum calulcation algorithm.
+/// value produced by the older checksum calculation algorithm.
 
 Bool_t TStreamerInfo::MatchLegacyCheckSum(UInt_t checksum) const
 {
@@ -3687,10 +3746,14 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add to the header file, the #include need for this class.
+/// Add to the header file, the \#include need for this class.
 
 UInt_t TStreamerInfo::GenerateIncludes(FILE *fp, char *inclist, const TList *extrainfos)
 {
+   if (inclist[0]==0) {
+      // Always have this include for ClassDef.
+      TMakeProject::AddInclude( fp, "Rtypes.h", kFALSE, inclist);
+   }
    UInt_t ninc = 0;
 
    const char *clname = GetName();
@@ -3754,9 +3817,6 @@ UInt_t TStreamerInfo::GenerateIncludes(FILE *fp, char *inclist, const TList *ext
          // This is a template, we need to check the template parameter.
          ninc += TMakeProject::GenerateIncludeForTemplate(fp, element->GetTypeName(), inclist, kFALSE, extrainfos);
       }
-   }
-   if (inclist[0]==0) {
-      TMakeProject::AddInclude( fp, "TNamed.h", kFALSE, inclist);
    }
    return ninc;
 }
@@ -3890,7 +3950,7 @@ Int_t TStreamerInfo::GetDataMemberOffset(TDataMember *dm, TMemberStreamer *&stre
    if (!fClass->IsLoaded()) {
       // If the 'class' is not loaded, we do not have a TClass bootstrap and thus
       // the 'RealData' might not have enough information because of the lack
-      // of proper ShowMember imlementation.
+      // of proper ShowMember implementation.
       if (! (dm->Property() & kIsStatic) ) {
          // Give an offset only to non-static members.
          offset = dm->GetOffset();
@@ -4341,7 +4401,7 @@ void TStreamerInfo::InsertArtificialElements(std::vector<const ROOT::TSchemaRule
          if ( !GetElements()->FindObject(src->GetName()) ) {
             // Missing source.
 #if 0 // Don't warn about not activating the rule.  If don't warn the user can
-      // have more flexibility in specifiying when the rule applies and relying
+      // have more flexibility in specifying when the rule applies and relying
       // on both the version number *and* the presence of the source members.
       // Activating this warning would for example mean that we need to carefully
       // tweak $ROOTSYS/etc/class.rules.
@@ -4756,6 +4816,7 @@ void TStreamerInfo::DestructorImpl(void* obj, Bool_t dtorOnly)
          case TStreamerInfo::kOffsetP + TStreamerInfo::kUInt:   DeleteBasicPointer(eaddr,ele,UInt_t);  continue;
          case TStreamerInfo::kOffsetP + TStreamerInfo::kULong:  DeleteBasicPointer(eaddr,ele,ULong_t);  continue;
          case TStreamerInfo::kOffsetP + TStreamerInfo::kULong64:DeleteBasicPointer(eaddr,ele,ULong64_t);  continue;
+         case TStreamerInfo::kCharStar:                         DeleteBasicPointer(eaddr,ele,Char_t);  continue;
       }
 
 
@@ -4866,7 +4927,7 @@ void TStreamerInfo::Destructor(void* obj, Bool_t dtorOnly)
 
    if (!dtorOnly && fNVirtualInfoLoc) {
       // !dtorOnly is used to filter out the case where this is called for
-      // a base class or embeded object of the outer most class.
+      // a base class or embedded object of the outer most class.
       TStreamerInfo *allocator = *(TStreamerInfo**)(p + fVirtualInfoLoc[0]);
       if (allocator != this) {
 

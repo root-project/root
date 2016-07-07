@@ -1,5 +1,5 @@
 // @(#):$Id$
-// Author: M.Gheata 
+// Author: M.Gheata
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -40,8 +40,8 @@ class TGeoHypeEditor : public TGeoGedFrame {
 
 protected:
 
-   Double_t             fRini;              // Initial  inner radius 
-   Double_t             fRouti;             // Initial  outer radius 
+   Double_t             fRini;              // Initial  inner radius
+   Double_t             fRouti;             // Initial  outer radius
    Double_t             fDzi;               // Initial  half length Dz
    Double_t             fStIni;             // Initial  stereo angle for inner surface
    Double_t             fStOuti;            // Initial  stereo angle for outer surface
@@ -61,7 +61,7 @@ protected:
    TGCheckButton       *fDelayed;           // Check button for delayed draw
 
    virtual void ConnectSignals2Slots();   // Connect the signals to the slots
-   Bool_t       IsDelayed() const;   
+   Bool_t       IsDelayed() const;
 
 public:
    TGeoHypeEditor(const TGWindow *p = 0,
@@ -80,8 +80,8 @@ public:
    void           DoName();
    void           DoApply();
    void           DoUndo();
-   
+
    ClassDef(TGeoHypeEditor,0)   // TGeoHype editor
-};   
-  
-#endif                    
+};
+
+#endif

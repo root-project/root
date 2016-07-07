@@ -22,18 +22,20 @@
 
 #include "llvm/ADT/IndexedMap.h"
 #include "llvm/ADT/SmallVector.h"
+#include "llvm/Analysis/AliasAnalysis.h"
 #include "llvm/CodeGen/LiveInterval.h"
 #include "llvm/CodeGen/MachineBasicBlock.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
 #include "llvm/CodeGen/SlotIndexes.h"
 #include "llvm/Support/Allocator.h"
+#include "llvm/Support/CommandLine.h"
 #include "llvm/Target/TargetRegisterInfo.h"
 #include <cmath>
-#include <iterator>
 
 namespace llvm {
 
-  class AliasAnalysis;
+extern cl::opt<bool> UseSegmentSetForPhysRegs;
+
   class BitVector;
   class BlockFrequency;
   class LiveRangeCalc;
@@ -97,12 +99,12 @@ namespace llvm {
   public:
     static char ID; // Pass identification, replacement for typeid
     LiveIntervals();
-    virtual ~LiveIntervals();
+    ~LiveIntervals() override;
 
     // Calculate the spill weight to assign to a single instruction.
     static float getSpillWeight(bool isDef, bool isUse,
                                 const MachineBlockFrequencyInfo *MBFI,
-                                const MachineInstr *Instr);
+                                const MachineInstr &Instr);
 
     LiveInterval &getInterval(unsigned Reg) {
       if (hasInterval(Reg))
@@ -142,15 +144,14 @@ namespace llvm {
     /// Given a register and an instruction, adds a live segment from that
     /// instruction to the end of its MBB.
     LiveInterval::Segment addSegmentToEndOfBlock(unsigned reg,
-                                                 MachineInstr* startInst);
+                                                 MachineInstr &startInst);
 
-    /// shrinkToUses - After removing some uses of a register, shrink its live
-    /// range to just the remaining uses. This method does not compute reaching
-    /// defs for new uses, and it doesn't remove dead defs.
-    /// Dead PHIDef values are marked as unused.
-    /// New dead machine instructions are added to the dead vector.
-    /// Return true if the interval may have been separated into multiple
-    /// connected components.
+    /// After removing some uses of a register, shrink its live range to just
+    /// the remaining uses. This method does not compute reaching defs for new
+    /// uses, and it doesn't remove dead defs.
+    /// Dead PHIDef values are marked as unused. New dead machine instructions
+    /// are added to the dead vector. Returns true if the interval may have been
+    /// separated into multiple connected components.
     bool shrinkToUses(LiveInterval *li,
                       SmallVectorImpl<MachineInstr*> *dead = nullptr);
 
@@ -158,6 +159,8 @@ namespace llvm {
     /// shrinkToUses(LiveInterval *li, SmallVectorImpl<MachineInstr*> *dead)
     /// that works on a subregister live range and only looks at uses matching
     /// the lane mask of the subregister range.
+    /// This may leave the subrange empty which needs to be cleaned up with
+    /// LiveInterval::removeEmptySubranges() afterwards.
     void shrinkToUses(LiveInterval::SubRange &SR, unsigned Reg);
 
     /// extendToIndices - Extend the live range of LI to reach all points in
@@ -191,13 +194,13 @@ namespace llvm {
 
     /// isNotInMIMap - returns true if the specified machine instr has been
     /// removed or was never entered in the map.
-    bool isNotInMIMap(const MachineInstr* Instr) const {
+    bool isNotInMIMap(const MachineInstr &Instr) const {
       return !Indexes->hasIndex(Instr);
     }
 
     /// Returns the base index of the given instruction.
-    SlotIndex getInstructionIndex(const MachineInstr *instr) const {
-      return Indexes->getInstructionIndex(instr);
+    SlotIndex getInstructionIndex(const MachineInstr &Instr) const {
+      return Indexes->getInstructionIndex(Instr);
     }
 
     /// Returns the instruction associated with the given index.
@@ -236,27 +239,22 @@ namespace llvm {
       RegMaskBlocks.push_back(std::make_pair(RegMaskSlots.size(), 0));
     }
 
-    SlotIndex InsertMachineInstrInMaps(MachineInstr *MI) {
+    SlotIndex InsertMachineInstrInMaps(MachineInstr &MI) {
       return Indexes->insertMachineInstrInMaps(MI);
     }
 
     void InsertMachineInstrRangeInMaps(MachineBasicBlock::iterator B,
                                        MachineBasicBlock::iterator E) {
       for (MachineBasicBlock::iterator I = B; I != E; ++I)
-        Indexes->insertMachineInstrInMaps(I);
+        Indexes->insertMachineInstrInMaps(*I);
     }
 
-    void RemoveMachineInstrFromMaps(MachineInstr *MI) {
+    void RemoveMachineInstrFromMaps(MachineInstr &MI) {
       Indexes->removeMachineInstrFromMaps(MI);
     }
 
-    void ReplaceMachineInstrInMaps(MachineInstr *MI, MachineInstr *NewMI) {
+    void ReplaceMachineInstrInMaps(MachineInstr &MI, MachineInstr &NewMI) {
       Indexes->replaceMachineInstrInMaps(MI, NewMI);
-    }
-
-    bool findLiveInMBBs(SlotIndex Start, SlotIndex End,
-                        SmallVectorImpl<MachineBasicBlock*> &MBBs) const {
-      return Indexes->findLiveInMBBs(Start, End, MBBs);
     }
 
     VNInfo::Allocator& getVNInfoAllocator() { return VNInfoAllocator; }
@@ -289,7 +287,7 @@ namespace llvm {
     /// are not supported.
     ///
     /// \param UpdateFlags Update live intervals for nonallocatable physregs.
-    void handleMove(MachineInstr* MI, bool UpdateFlags = false);
+    void handleMove(MachineInstr &MI, bool UpdateFlags = false);
 
     /// moveIntoBundle - Update intervals for operands of MI so that they
     /// begin/end on the SlotIndex for BundleStart.
@@ -299,7 +297,7 @@ namespace llvm {
     /// Requires MI and BundleStart to have SlotIndexes, and assumes
     /// existing liveness is accurate. BundleStart should be the first
     /// instruction in the Bundle.
-    void handleMoveIntoBundle(MachineInstr* MI, MachineInstr* BundleStart,
+    void handleMoveIntoBundle(MachineInstr &MI, MachineInstr &BundleStart,
                               bool UpdateFlags = false);
 
     /// repairIntervalsInRange - Update live intervals for instructions in a
@@ -377,7 +375,8 @@ namespace llvm {
       LiveRange *LR = RegUnitRanges[Unit];
       if (!LR) {
         // Compute missing ranges on demand.
-        RegUnitRanges[Unit] = LR = new LiveRange();
+        // Use segment set to speed-up initial computation of the live range.
+        RegUnitRanges[Unit] = LR = new LiveRange(UseSegmentSetForPhysRegs);
         computeRegUnitRange(*LR, Unit);
       }
       return *LR;
@@ -401,6 +400,15 @@ namespace llvm {
     /// Remove value number and related live segments of @p LI and its subranges
     /// that start at position @p Pos.
     void removeVRegDefAt(LiveInterval &LI, SlotIndex Pos);
+
+    /// Split separate components in LiveInterval \p LI into separate intervals.
+    void splitSeparateComponents(LiveInterval &LI,
+                                 SmallVectorImpl<LiveInterval*> &SplitLIs);
+
+    /// For live interval \p LI with correct SubRanges construct matching
+    /// information for the main live range. Expects the main live range to not
+    /// have any segments or value numbers.
+    void constructMainRangeFromSubranges(LiveInterval &LI);
 
   private:
     /// Compute live intervals for all virtual registers.
@@ -436,7 +444,7 @@ namespace llvm {
     void repairOldRegInRange(MachineBasicBlock::iterator Begin,
                              MachineBasicBlock::iterator End,
                              const SlotIndex endIdx, LiveRange &LR,
-                             unsigned Reg, unsigned LaneMask = ~0u);
+                             unsigned Reg, LaneBitmask LaneMask = ~0u);
 
     class HMEditor;
   };

@@ -1081,6 +1081,9 @@ namespace {
          if ( end )
             PyObject_SetAttr( iter, PyStrings::gEnd, end );
          Py_XDECREF( end );
+
+         // add iterated collection as attribute so its refcount stays >= 1 while it's being iterated over
+         PyObject_SetAttr( iter, PyUnicode_FromString("_collection"), self );
       }
       return iter;
    }
@@ -2447,6 +2450,7 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
          PyObject_SetAttrString( pyclass, "value_type", pyvalue_type );
          Py_DECREF( pyvalue_type );
       }
+      gInterpreter->TypedefInfo_Delete( ti );
 
    // provide a slice-able __getitem__, if possible
       if ( HasAttrDirect( pyclass, PyStrings::gVectorAt ) )

@@ -38,10 +38,10 @@ class TTree;
 class TFileCacheRead;
 
 class TTreeCloner {
-   TString    fWarningMsg;       //Text of the error message lead to an 'invalid' state
+   TString    fWarningMsg;       ///< Text of the error message lead to an 'invalid' state
 
    Bool_t     fIsValid;
-   Bool_t     fNeedConversion;   //True if the fast merge is not possible but a slow merge might possible.
+   Bool_t     fNeedConversion;   ///< True if the fast merge is not possible but a slow merge might possible.
    UInt_t     fOptions;
    TTree     *fFromTree;
    TTree     *fToTree;
@@ -50,21 +50,21 @@ class TTreeCloner {
    TObjArray  fToBranches;
 
    UInt_t     fMaxBaskets;
-   UInt_t    *fBasketBranchNum;  //[fMaxBaskets] Index of the branch(es) of the basket.
-   UInt_t    *fBasketNum;        //[fMaxBaskets] index of the basket within the branch.
+   UInt_t    *fBasketBranchNum;  ///<[fMaxBaskets] Index of the branch(es) of the basket.
+   UInt_t    *fBasketNum;        ///<[fMaxBaskets] index of the basket within the branch.
 
-   Long64_t  *fBasketSeek;       //[fMaxBaskets] list of basket position to be read.
-   Long64_t  *fBasketEntry;      //[fMaxBaskets] list of basket start entries.
-   UInt_t    *fBasketIndex;      //[fMaxBaskets] ordered list of basket indices to be written.
+   Long64_t  *fBasketSeek;       ///<[fMaxBaskets] list of basket position to be read.
+   Long64_t  *fBasketEntry;      ///<[fMaxBaskets] list of basket start entries.
+   UInt_t    *fBasketIndex;      ///<[fMaxBaskets] ordered list of basket indices to be written.
 
-   UShort_t   fPidOffset;        //Offset to be added to the copied key/basket.
+   UShort_t   fPidOffset;        ///< Offset to be added to the copied key/basket.
 
-   UInt_t     fCloneMethod;      //Indicates which cloning method was selected.
-   Long64_t   fToStartEntries;   //Number of entries in the target tree before any addition.
+   UInt_t     fCloneMethod;      ///< Indicates which cloning method was selected.
+   Long64_t   fToStartEntries;   ///< Number of entries in the target tree before any addition.
 
-   Int_t           fCacheSize;   //Requested size of the file cache
-   TFileCacheRead *fFileCache;   //File Cache used to reduce the number of individual reads
-   TFileCacheRead *fPrevCache;   //Cache that set before the TTreeCloner ctor for the 'from' TTree if any.
+   Int_t           fCacheSize;   ///< Requested size of the file cache
+   TFileCacheRead *fFileCache;   ///< File Cache used to reduce the number of individual reads
+   TFileCacheRead *fPrevCache;   ///< Cache that set before the TTreeCloner ctor for the 'from' TTree if any.
 
    enum ECloneMethod {
       kDefault             = 0,

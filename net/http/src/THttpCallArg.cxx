@@ -59,8 +59,8 @@ THttpCallArg::~THttpCallArg()
 ////////////////////////////////////////////////////////////////////////////////
 /// method used to get or set http header in the string buffer
 /// Header has following format:
-///   field1 : value1\r\n
-///   field2 : value2\r\n
+///   field1 : value1\\r\\n
+///   field2 : value2\\r\\n
 /// Such format corresponds to header format in HTTP requests
 
 TString THttpCallArg::AccessHeader(TString& buf, const char* name, const char* value, Bool_t doing_set)

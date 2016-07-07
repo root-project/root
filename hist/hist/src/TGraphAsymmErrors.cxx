@@ -510,26 +510,33 @@ void TGraphAsymmErrors::BayesDivide(const TH1* pass, const TH1* total, Option_t 
 ///
 /// If the histograms are not filled with unit weights, the number of effective
 /// entries is used to normalise the bin contents which might lead to wrong results.
-/// Begin_Latex effective entries = #frac{(#sum w_{i})^{2}}{#sum w_{i}^{2}}End_Latex
-///
+/// \f[
+/// \text{effective entries} = \frac{(\sum w_{i})^{2}}{\sum w_{i}^{2}}
+/// \f]
 /// The points are assigned a x value at the center of each histogram bin.
-/// The y values are Begin_Latex eff = #frac{pass}{total} End_Latex for all options except for the
+/// The y values are \f$\text{eff} = \frac{\text{pass}}{\text{total}}\f$
+/// for all options except for the
 /// bayesian methods where the result depends on the chosen option.
 ///
-/// If the denominator becomes 0 or pass >  total, the corresponding bin is
+/// If the denominator becomes 0 or pass > total, the corresponding bin is
 /// skipped.
 ///
 /// 2) calculating ratios of two Poisson means (option 'pois'):
 /// --------------------------------------------------------------
 ///
 /// The two histograms are interpreted as independent Poisson processes and the ratio
-/// Begin_Latex #tau = #frac{n_{1}}{n_{2}} = #frac{#varepsilon}{1 - #varepsilon} with #varepsilon = #frac{n_{1}}{n_{1} + n_{2}} End_Latex
-/// The histogram 'pass' is interpreted as n_{1} and the total histogram
-/// is used for n_{2}
+/// \f[
+/// \tau = \frac{n_{1}}{n_{2}} = \frac{\varepsilon}{1 - \varepsilon}
+/// \f]
+/// with \f$\varepsilon = \frac{n_{1}}{n_{1} + n_{2}}\f$.
+/// The histogram 'pass' is interpreted as \f$n_{1}\f$ and the total histogram
+/// is used for \f$n_{2}\f$.
 ///
 /// The (asymmetric) uncertainties of the Poisson ratio are linked to the uncertainties
 /// of efficiency by a parameter transformation:
-/// Begin_Latex #Delta #tau_{low/up} = #frac{1}{(1 - #varepsilon)^{2}} #Delta #varepsilon_{low/up} End_Latex
+/// \f[
+/// \Delta \tau_{low/up} = \frac{1}{(1 - \varepsilon)^{2}} \Delta \varepsilon_{low/up}
+/// \f]
 ///
 /// The x errors span each histogram bin (lowedge ... lowedge+width)
 /// The y errors depend on the chosen statistic methode which can be determined
@@ -563,8 +570,8 @@ void TGraphAsymmErrors::BayesDivide(const TH1* pass, const TH1* total, Option_t 
 /// oscillation on the actual coverage probability a couple of approximations and
 /// methodes has been developped. For a detailed discussion, please have a look at
 /// this statistical paper:
-/// <a href="http://www-stat.wharton.upenn.edu/~tcai/paper/Binomial-StatSci.pdf"
-/// > http://www-stat.wharton.upenn.edu/~tcai/paper/Binomial-StatSci.pdf</a>
+/// http://www-stat.wharton.upenn.edu/~tcai/paper/Binomial-StatSci.pdf
+
 
 void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
 {
@@ -586,7 +593,7 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
    //compare sum of weights with sum of squares of weights
    // re-compute here to be sure to get the right values
    Double_t psumw = 0;
-   Double_t psumw2 = 0; 
+   Double_t psumw2 = 0;
    if (pass->GetSumw2()->fN > 0) {
       for (int i = 0; i < pass->GetNcells(); ++i) {
          psumw += pass->GetBinContent(i);
@@ -601,7 +608,7 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
       bEffective = true;
 
    Double_t tsumw = 0;
-   Double_t tsumw2 = 0; 
+   Double_t tsumw2 = 0;
    if (total->GetSumw2()->fN > 0) {
       for (int i = 0; i < total->GetNcells(); ++i) {
          tsumw += total->GetBinContent(i);
@@ -643,7 +650,7 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
       option.ReplaceAll("v","");
       bVerbose = true;
       if (bEffective)
-         Info("Divide","weight will be considered in the Histogram Ratio"); 
+         Info("Divide","weight will be considered in the Histogram Ratio");
    }
 
 
@@ -798,9 +805,9 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
           {
              // tw += pw;
              // tw2 += pw2;
-             // compute ratio on the effective entries ( p and t) 
+             // compute ratio on the effective entries ( p and t)
              // special case is when (pw=0, pw2=0) in this case we cannot get the bin weight.
-             // we use then the overall weight of the full histogram 
+             // we use then the overall weight of the full histogram
              if (pw == 0 && pw2 == 0)
                 p = 0;
              else
@@ -823,7 +830,7 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
                 // weight of histogram - sumw2/sumw
                 wratio = (pw * tsumw) /(p * tsumw2 );
              else if (p > 0)
-                wratio = pw/p; //not sure if needed 
+                wratio = pw/p; //not sure if needed
              else {
                 // case both pw and tw are zero - we skip these bins
                 if (!plot0Bins) continue; // skip bins with total <= 0

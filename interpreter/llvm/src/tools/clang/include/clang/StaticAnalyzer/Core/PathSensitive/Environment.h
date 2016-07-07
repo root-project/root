@@ -26,6 +26,7 @@ namespace ento {
 
 class EnvironmentManager;
 class SValBuilder;
+class SymbolReaper;
 
 /// An entry in the environment consists of a Stmt and an LocationContext.
 /// This allows the environment to manage context-sensitive bindings,
@@ -106,7 +107,6 @@ private:
 
 public:
   EnvironmentManager(llvm::BumpPtrAllocator& Allocator) : F(Allocator) {}
-  ~EnvironmentManager() {}
 
   Environment getInitialEnvironment() {
     return Environment(F.getEmptyMap());

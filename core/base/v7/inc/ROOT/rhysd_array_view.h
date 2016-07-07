@@ -1,4 +1,4 @@
-/// \file rhysd_array_view.h
+/// \file ROOT/rhysd_array_view.h
 /// \ingroup Base StdExt ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-09-06
@@ -28,6 +28,8 @@
 #include <initializer_list>
 
 namespace std {
+
+inline namespace __ROOT {
 
 using std::size_t;
 
@@ -539,6 +541,7 @@ array_view<T> make_view(std::initializer_list<T> const& l)
 }
 // }}}
 
+} // inline namespace __ROOT
 } // namespace std
 
 

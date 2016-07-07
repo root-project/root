@@ -176,7 +176,7 @@ namespace TMVA {
       Bool_t                      fCanNormalize; // the tree can be normalised
       std::vector< std::pair<Double_t,const TMVA::Event*> > fNormalizeTreeTable;
       
-      ClassDef(BinarySearchTree,0) // Binary search tree including volume search method  
+      ClassDef(BinarySearchTree,0); // Binary search tree including volume search method  
    };
   
 } // namespace TMVA

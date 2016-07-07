@@ -1,5 +1,5 @@
 /* @(#)root/multiproc:$Id$ */
-// Author: Enrico Guiraud September 2015
+// Author: Enrico Guiraud September 2015.
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -12,18 +12,18 @@
 #ifndef ROOT_TPoolProcessor
 #define ROOT_TPoolProcessor
 
-#include "TMPWorker.h"
-#include "PoolUtils.h"
 #include "MPCode.h"
 #include "MPSendRecv.h"
+#include "PoolUtils.h"
+#include "TError.h"
+#include "TEntryList.h"
+#include "TEventList.h"
+#include "TFile.h"
+#include "TH1.h"
+#include "TKey.h"
+#include "TMPWorker.h"
 #include "TTree.h"
 #include "TTreeReader.h"
-#include "TEventList.h"
-#include "TEntryList.h"
-#include "TTree.h"
-#include "TFile.h"
-#include "TKey.h"
-#include "TH1.h"
 #include <memory>
 #include <string>
 #include <sstream>
@@ -152,7 +152,7 @@ void TPoolProcessor<F>::Process(unsigned code, MPCodeBufPair& msg)
    if (code == PoolCode::kProcRange || code == PoolCode::kProcTree) {
       if (code == PoolCode::kProcTree && !fTree) {
          // This must be defined
-         std::cerr << "[S]: Process:kProcTree fTree undefined!\n";
+         Error("TPoolProcessor::Process", "[S]: Process:kProcTree fTree undefined!\n");
          return;
       }
       //retrieve the total number of entries ranges processed so far by TPool
@@ -227,7 +227,7 @@ void TPoolProcessor<F>::Process(unsigned code, MPCodeBufPair& msg)
       MPSend(GetSocket(), PoolCode::kProcError, reply.data());
       return;
    }
-   
+
    //execute function
    auto res = fProcFunc(reader);
 
@@ -238,12 +238,13 @@ void TPoolProcessor<F>::Process(unsigned code, MPCodeBufPair& msg)
    fProcessedEntries += finish - start;
 
    if(fCanReduce) {
-      fReducedResult = static_cast<decltype(fReducedResult)>(PoolUtils::ReduceObjects({res, fReducedResult})); //TODO try not to copy these into a vector, do everything by ref. std::vector<T&>?
+      PoolUtils::ReduceObjects<TObject *> redfunc;
+      fReducedResult = static_cast<decltype(fReducedResult)>(redfunc({res, fReducedResult})); //TODO try not to copy these into a vector, do everything by ref. std::vector<T&>?
    } else {
       fCanReduce = true;
       fReducedResult = res;
    }
-      
+
    if(fMaxNEntries == fProcessedEntries)
       //we are done forever
       MPSend(GetSocket(), PoolCode::kProcResult, fReducedResult);
@@ -285,7 +286,7 @@ TTree *TPoolProcessor<F>::RetrieveTree(TFile *fp)
             if (!strcmp(key->GetClassName(), "TTree") || !strcmp(key->GetClassName(), "TNtuple"))
                tree = static_cast<TTree*>(fp->Get(key->GetName()));
          }
-      }    
+      }
    } else {
       tree = static_cast<TTree*>(fp->Get(fTreeName.c_str()));
    }

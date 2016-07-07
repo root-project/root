@@ -62,7 +62,11 @@ public:
    }
    Double_t operator()(Double_t x) const
    {
-      return fFunction1->Eval(x) * fFunction2->Eval(fT0-x);
+      // use EvalPar that is faster
+      Double_t xx[2];
+      xx[0] = x;
+      xx[1] = fT0-x;
+      return fFunction1->EvalPar(xx,nullptr) * fFunction2->EvalPar(xx+1,nullptr);
    }
 };
 
@@ -262,6 +266,7 @@ void TF1Convolution::MakeFFTConv()
       // need to normalize by dividing by the number of points and multiply by the bin width = Range/Number of points
       fGraphConv->SetPoint(i, x[i], fftinverse->GetPointReal(j)*(fXmax-fXmin)/(fNofPoints*fNofPoints) );  
    }
+   fGraphConv->SetBit(TGraph::kIsSortedX); // indicate that points are sorted in X to speed up TGraph::Eval
    fFlagGraph = true; // we can use the graph
 }
 

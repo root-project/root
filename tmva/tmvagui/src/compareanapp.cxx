@@ -8,7 +8,7 @@
 TString DerivedPlotName = "Rarity";
 
 void TMVA::compareanapp( TString finAn , TString finApp , 
-                   HistType htype , bool useTMVAStyle )
+                         HistType htype , bool useTMVAStyle )
 {
    cout << "=== Compare histograms of two files ===" << endl;
    cout << "    File-1: " << finAn << endl;
@@ -90,7 +90,7 @@ void TMVA::compareanapp( TString finAn , TString finApp ,
                           Form("rarity_%s",methodTitle.Data()));
 
          TCanvas* c = new TCanvas( Form("canvas%d", countCanvas+1), ctitle, 
-                          countCanvas*50+200, countCanvas*20, width, width*0.78 ); 
+                                   countCanvas*50+200, countCanvas*20, width, width*0.78 ); 
           
          // set the histogram style
          TMVAGlob::SetSignalAndBackgroundStyle( sig, bgd );

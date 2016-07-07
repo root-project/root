@@ -21,10 +21,6 @@
 #include "ARMGenRegisterInfo.inc"
 
 namespace llvm {
-  class ARMSubtarget;
-  class ARMBaseInstrInfo;
-  class Type;
-
 /// Register allocation hints.
 namespace ARMRI {
   enum {
@@ -66,6 +62,12 @@ static inline bool isARMArea3Register(unsigned Reg, bool isIOS) {
   switch (Reg) {
     case D15: case D14: case D13: case D12:
     case D11: case D10: case D9:  case D8:
+    case D7:  case D6:  case D5:  case D4:
+    case D3:  case D2:  case D1:  case D0:
+    case D31: case D30: case D29: case D28:
+    case D27: case D26: case D25: case D24:
+    case D23: case D22: case D21: case D20:
+    case D19: case D18: case D17: case D16:
       return true;
     default:
       return false;
@@ -82,28 +84,26 @@ static inline bool isCalleeSavedRegister(unsigned Reg,
 
 class ARMBaseRegisterInfo : public ARMGenRegisterInfo {
 protected:
-  const ARMSubtarget &STI;
-
-  /// FramePtr - ARM physical register used as frame ptr.
-  unsigned FramePtr;
-
   /// BasePtr - ARM physical register used as a base ptr in complex stack
   /// frames. I.e., when we need a 3rd base, not just SP and FP, due to
   /// variable size stack objects.
   unsigned BasePtr;
 
   // Can be only subclassed.
-  explicit ARMBaseRegisterInfo(const ARMSubtarget &STI);
+  explicit ARMBaseRegisterInfo();
 
   // Return the opcode that implements 'Op', or 0 if no opcode
   unsigned getOpcode(int Op) const;
 
 public:
   /// Code Generation virtual methods...
+  const MCPhysReg *getCalleeSavedRegs(const MachineFunction *MF) const override;
   const MCPhysReg *
-  getCalleeSavedRegs(const MachineFunction *MF = nullptr) const override;
-  const uint32_t *getCallPreservedMask(CallingConv::ID) const override;
-  const uint32_t *getNoPreservedMask() const;
+  getCalleeSavedRegsViaCopy(const MachineFunction *MF) const override;
+  const uint32_t *getCallPreservedMask(const MachineFunction &MF,
+                                       CallingConv::ID) const override;
+  const uint32_t *getNoPreservedMask() const override;
+  const uint32_t *getTLSCallPreservedMask(const MachineFunction &MF) const;
 
   /// getThisReturnPreservedMask - Returns a call preserved mask specific to the
   /// case that 'returned' is on an i32 first argument if the calling convention
@@ -113,7 +113,8 @@ public:
   ///
   /// Should return NULL in the case that the calling convention does not have
   /// this property
-  const uint32_t *getThisReturnPreservedMask(CallingConv::ID) const;
+  const uint32_t *getThisReturnPreservedMask(const MachineFunction &MF,
+                                             CallingConv::ID) const;
 
   BitVector getReservedRegs(const MachineFunction &MF) const override;
 
@@ -124,7 +125,8 @@ public:
   getCrossCopyRegClass(const TargetRegisterClass *RC) const override;
 
   const TargetRegisterClass *
-  getLargestLegalSuperClass(const TargetRegisterClass *RC) const override;
+  getLargestLegalSuperClass(const TargetRegisterClass *RC,
+                            const MachineFunction &MF) const override;
 
   unsigned getRegPressureLimit(const TargetRegisterClass *RC,
                                MachineFunction &MF) const override;
@@ -133,17 +135,15 @@ public:
                              ArrayRef<MCPhysReg> Order,
                              SmallVectorImpl<MCPhysReg> &Hints,
                              const MachineFunction &MF,
-                             const VirtRegMap *VRM) const override;
+                             const VirtRegMap *VRM,
+                             const LiveRegMatrix *Matrix) const override;
 
-  void UpdateRegAllocHint(unsigned Reg, unsigned NewReg,
+  void updateRegAllocHint(unsigned Reg, unsigned NewReg,
                           MachineFunction &MF) const override;
-
-  bool avoidWriteAfterWrite(const TargetRegisterClass *RC) const override;
 
   bool hasBasePointer(const MachineFunction &MF) const;
 
-  bool canRealignStack(const MachineFunction &MF) const;
-  bool needsStackRealignment(const MachineFunction &MF) const override;
+  bool canRealignStack(const MachineFunction &MF) const override;
   int64_t getFrameIndexInstrOffset(const MachineInstr *MI,
                                    int Idx) const override;
   bool needsFrameBaseReg(MachineInstr *MI, int64_t Offset) const override;
@@ -152,7 +152,7 @@ public:
                                     int64_t Offset) const override;
   void resolveFrameIndex(MachineInstr &MI, unsigned BaseReg,
                          int64_t Offset) const override;
-  bool isFrameOffsetLegal(const MachineInstr *MI,
+  bool isFrameOffsetLegal(const MachineInstr *MI, unsigned BaseReg,
                           int64_t Offset) const override;
 
   bool cannotEliminateFrame(const MachineFunction &MF) const;

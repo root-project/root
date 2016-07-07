@@ -66,7 +66,7 @@ namespace TMVA {
       GiniIndexWithLaplace() { fName="GiniLaplace"; }
 
       // copy constructor
-      GiniIndexWithLaplace( const GiniIndexWithLaplace& g): SeparationBase(g) {}
+   GiniIndexWithLaplace( const GiniIndexWithLaplace& g): SeparationBase(g) {}
 
       //destructor
       virtual ~GiniIndexWithLaplace(){}
@@ -76,7 +76,7 @@ namespace TMVA {
 
    protected:
       
-      ClassDef(GiniIndexWithLaplace,0) // Implementation of the GiniIndexWithLaplace as separation criterion
+      ClassDef(GiniIndexWithLaplace,0); // Implementation of the GiniIndexWithLaplace as separation criterion
    };  
 
 } // namespace TMVA

@@ -1,5 +1,50 @@
 # JSROOT changelog
 
+## Changes in 4.5.1
+1. Fix - correctly handle ^2..^9 in TFormula equations
+2. Fix - support TMath::Gaus in TFormula 
+3. Fix - correctly display ^2 and ^3 in SVG text output 
+4. Fix - do not show tooltips for empty TProfile bins
+5. Fix - statbox toggling was not working on subpads
+6. Fix - positioning of 3D objects in Webkit browsers in complex layouts
+7. Fix - difference in TF1 between ROOT5/6 (#54)  
+ 
+
+## Changes in 4.5.0
+1. Zooming with mouse wheel
+2. Context menus for many different objects attributes are provided
+3. Context menu for every drawn object can be activated via toolbar button 
+4. Support browsing of TTask and derived classes (#40)
+5. Apply user range for drawing TH1/TH2 histograms, also when superimposed (#44) 
+6. Implement scaling factor like x10^3 on the vertical axes 
+7. Provide shortcut buttons for each subpad
+8. Implement simple drawing for TBox, TWbox, TSliderBox classes
+
+
+## Changes in 4.4.4
+1. Fix - toggling of statbox was not working in all situations 
+2. Fix - for mouse rect zooming use only left mouse button
+3. Fix - correctly draw TH2 with lego option, when histogram has negative bin content
+4. Fix - log axis drawing with no visible ticks 
+
+
+## Changes in 4.4.3
+1. Fix - wrong selection of TH1 Y axis range when errors are displayed (#44) 
+2. Fix - apply user range for TH1 X-axis zooming (#44)   
+3. Fix - protect against pathological case of 1-bin histogram
+4. Fix - use error plot by default in TH1 only when positive sumw2 entry exists
+5. Fix - for TH2 box draw option draw at least 1px rect for non-empty bin
+6. Fix - support transparency (alpha) in TColor (#45)
+7. Fix - correct tooltip handling for graphs with lines and markers
+8. Fix - interactive zooming in TH2 when doing histogram update  
+
+
+## Changes in 4.4.2
+1. Fix - statistic collection for TH2
+2. Fix - correct handling of empty TList in browser/inspector
+3. Fix - support TFolder in browser/inspector (#40)
+
+
 ## Changes in 4.4.1
 1. Fix - colz palette resize when drawing histogram second time
 2. Fix - use embeded in TCanvas color for background color of canvas itself
@@ -7,7 +52,7 @@
 4. Fix - draw histogram bins on frame boundary
 5. Fix - use alternative color for shapes with default black color  
 6. Fix - correctly handle pcon/pgon shape with rmin==rmax on top or bottom side
-   
+  
 
 ## Changes in 4.4
 1. Fix faces orientation for all TGeo shapes. 

@@ -101,8 +101,13 @@ Bool_t TPython::Initialize()
 
    if ( ! Py_IsInitialized() ) {
    // this happens if Cling comes in first
+#if PY_VERSION_HEX < 0x03020000
       PyEval_InitThreads();
+#endif
       Py_Initialize();
+#if PY_VERSION_HEX >= 0x03020000
+      PyEval_InitThreads();
+#endif
 
    // try again to see if the interpreter is initialized
       if ( ! Py_IsInitialized() ) {
@@ -214,7 +219,13 @@ void TPython::LoadMacro( const char* name )
    PyObject* old = PyDict_Values( gMainDict );
 
 // actual execution
+#if PY_VERSION_HEX < 0x03000000
    Exec( (std::string( "execfile(\"" ) + name + "\")").c_str() );
+#else
+   Exec( (std::string("__pyroot_f = open(\"" ) + name + "\"); "
+                      "exec(__pyroot_f.read()); "
+                      "__pyroot_f.close(); del __pyroot_f" ).c_str() );
+#endif
 
 // obtain new __main__ contents
    PyObject* current = PyDict_Values( gMainDict );
@@ -237,8 +248,8 @@ void TPython::LoadMacro( const char* name )
          // need to check for both exact and derived (differences exist between older and newer
          // versions of python ... bug?)
             if ( (pyModName && pyClName) &&\
-                 ( (PyBytes_CheckExact( pyModName ) && PyBytes_CheckExact( pyClName )) ||\
-                   (PyBytes_Check( pyModName ) && PyBytes_Check( pyClName ))\
+                 ( (PyROOT_PyUnicode_CheckExact( pyModName ) && PyROOT_PyUnicode_CheckExact( pyClName )) ||\
+                   (PyROOT_PyUnicode_Check( pyModName ) && PyROOT_PyUnicode_Check( pyClName ))\
                  ) ) {
             // build full, qualified name
                std::string fullname = PyROOT_PyUnicode_AsString( pyModName );
@@ -350,10 +361,10 @@ Bool_t TPython::Exec( const char* cmd )
    if ( result ) {
       Py_DECREF( result );
       return kTRUE;
-   } else {
-      PyErr_Print();
-      return kFALSE;
    }
+
+   PyErr_Print();
+   return kFALSE;
 }
 
 

@@ -500,9 +500,10 @@ void MCMCIntervalPlot::DrawTailFractionInterval(const Option_t* options)
       for (i = 1; i <= nBins; i++) {
          // remove bins outside interval
          center = copy->GetBinCenter(i);
-         if (center < ll || center > ul)
+         if (center < ll || center > ul) {
             copy->SetBinContent(i, 0);
             copy->SetBinError(i, 0);
+         }
       }
 
       hist->Scale(1/hist->GetBinContent(hist->GetMaximumBin()));

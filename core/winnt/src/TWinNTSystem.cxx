@@ -2117,11 +2117,44 @@ const char *TWinNTSystem::WorkingDirectory()
    return WorkingDirectory('\0');
 }
 
+//////////////////////////////////////////////////////////////////////////////
+/// Return the working directory for the default drive
+
+std::string TWinNTSystem::GetWorkingDirectory() const
+{
+   char *wdpath = GetWorkingDirectory('\0');
+   std::string cwd;
+   if (wdpath) {
+      cwd = wdpath;
+      free(wdpath);
+   }
+   return cwd;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 ///  Return working directory for the selected drive
 ///  driveletter == 0 means return the working durectory for the default drive
 
 const char *TWinNTSystem::WorkingDirectory(char driveletter)
+{
+   char *wdpath = GetWorkingDirectory(driveletter);
+   if (wdpath) {
+      fWdpath = wdpath;
+
+      // Make sure the drive letter is upper case
+      if (fWdpath[1] == ':')
+         fWdpath[0] = toupper(fWdpath[0]);
+
+      free(wdpath);
+   }
+   return fWdpath;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+///  Return working directory for the selected drive (helper function).
+///  The caller must free the return value.
+
+char *TWinNTSystem::GetWorkingDirectory(char driveletter) const
 {
    char *wdpath = 0;
    char drive = driveletter ? toupper( driveletter ) - 'A' + 1 : 0;
@@ -2135,12 +2168,8 @@ const char *TWinNTSystem::WorkingDirectory(char driveletter)
       Warning("WorkingDirectory", "getcwd() failed");
       return 0;
    }
-   fWdpath = wdpath;
-   // Make sure the drive letter is upper case
-   if (fWdpath[1] == ':')
-      fWdpath[0] = toupper(fWdpath[0]);
-   free(wdpath);
-   return fWdpath;
+
+   return wdpath;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2149,6 +2178,25 @@ const char *TWinNTSystem::WorkingDirectory(char driveletter)
 const char *TWinNTSystem::HomeDirectory(const char *userName)
 {
    static char mydir[kMAXPATHLEN] = "./";
+   FillWithHomeDirectory(mydir);
+   return mydir;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+/// Return the user's home directory.
+
+std::string TWinNTSystem::GetHomeDirectory(const char *userName) const
+{
+   char mydir[kMAXPATHLEN] = "./";
+   FillWithHomeDirectory(mydir); 
+   return std::string(mydir); 
+}
+
+//////////////////////////////////////////////////////////////////////////////
+/// Fill buffer with user's home directory.
+
+void TWinNTSystem::FillWithHomeDirectory(const char *userName, char *mydir) const
+{
    const char *h = 0;
    if (!(h = ::getenv("home"))) h = ::getenv("HOME");
 
@@ -2175,6 +2223,7 @@ const char *TWinNTSystem::HomeDirectory(const char *userName)
       mydir[0] = toupper(mydir[0]);
    return mydir;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return a user configured or systemwide directory to create
@@ -2914,7 +2963,7 @@ needshell:
 
    // escape shell quote characters
    // EscChar(patbuf, stuffedPat, sizeof(stuffedPat), shellStuff, shellEscape);
-   patbuf0 = ExpandFileName(patbuf0.Data());
+   ExpandFileName(patbuf0);
    Int_t lbuf = ::ExpandEnvironmentStrings(
                                  patbuf0.Data(), // pointer to string with environment variables
                                  cmd,            // pointer to string with expanded environment variables

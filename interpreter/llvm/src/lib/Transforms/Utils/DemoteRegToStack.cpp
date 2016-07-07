@@ -35,8 +35,21 @@ AllocaInst *llvm::DemoteRegToStack(Instruction &I, bool VolatileLoads,
                           I.getName()+".reg2mem", AllocaPoint);
   } else {
     Function *F = I.getParent()->getParent();
-    Slot = new AllocaInst(I.getType(), nullptr, I.getName()+".reg2mem",
-                          F->getEntryBlock().begin());
+    Slot = new AllocaInst(I.getType(), nullptr, I.getName() + ".reg2mem",
+                          &F->getEntryBlock().front());
+  }
+
+  // We cannot demote invoke instructions to the stack if their normal edge
+  // is critical. Therefore, split the critical edge and create a basic block
+  // into which the store can be inserted.
+  if (InvokeInst *II = dyn_cast<InvokeInst>(&I)) {
+    if (!II->getNormalDest()->getSinglePredecessor()) {
+      unsigned SuccNum = GetSuccessorNumber(II->getParent(), II->getNormalDest());
+      assert(isCriticalEdge(II, SuccNum) && "Expected a critical edge!");
+      BasicBlock *BB = SplitCriticalEdge(II, SuccNum);
+      assert(BB && "Unable to split critical edge.");
+      (void)BB;
+    }
   }
 
   // Change all of the users of the instruction to read from the stack slot.
@@ -71,36 +84,20 @@ AllocaInst *llvm::DemoteRegToStack(Instruction &I, bool VolatileLoads,
     }
   }
 
-
   // Insert stores of the computed value into the stack slot. We have to be
   // careful if I is an invoke instruction, because we can't insert the store
   // AFTER the terminator instruction.
   BasicBlock::iterator InsertPt;
   if (!isa<TerminatorInst>(I)) {
-    InsertPt = &I;
-    ++InsertPt;
+    InsertPt = ++I.getIterator();
+    for (; isa<PHINode>(InsertPt) || InsertPt->isEHPad(); ++InsertPt)
+      /* empty */;   // Don't insert before PHI nodes or landingpad instrs.
   } else {
     InvokeInst &II = cast<InvokeInst>(I);
-    if (II.getNormalDest()->getSinglePredecessor())
-      InsertPt = II.getNormalDest()->getFirstInsertionPt();
-    else {
-      // We cannot demote invoke instructions to the stack if their normal edge
-      // is critical.  Therefore, split the critical edge and insert the store
-      // in the newly created basic block.
-      unsigned SuccNum = GetSuccessorNumber(I.getParent(), II.getNormalDest());
-      TerminatorInst *TI = &cast<TerminatorInst>(I);
-      assert (isCriticalEdge(TI, SuccNum) &&
-              "Expected a critical edge!");
-      BasicBlock *BB = SplitCriticalEdge(TI, SuccNum);
-      assert (BB && "Unable to split critical edge.");
-      InsertPt = BB->getFirstInsertionPt();
-    }
+    InsertPt = II.getNormalDest()->getFirstInsertionPt();
   }
 
-  for (; isa<PHINode>(InsertPt) || isa<LandingPadInst>(InsertPt); ++InsertPt)
-    /* empty */;   // Don't insert before PHI nodes or landingpad instrs.
-
-  new StoreInst(&I, Slot, InsertPt);
+  new StoreInst(&I, Slot, &*InsertPt);
   return Slot;
 }
 
@@ -120,8 +117,8 @@ AllocaInst *llvm::DemotePHIToStack(PHINode *P, Instruction *AllocaPoint) {
                           P->getName()+".reg2mem", AllocaPoint);
   } else {
     Function *F = P->getParent()->getParent();
-    Slot = new AllocaInst(P->getType(), nullptr, P->getName()+".reg2mem",
-                          F->getEntryBlock().begin());
+    Slot = new AllocaInst(P->getType(), nullptr, P->getName() + ".reg2mem",
+                          &F->getEntryBlock().front());
   }
 
   // Iterate over each operand inserting a store in each predecessor.
@@ -135,12 +132,12 @@ AllocaInst *llvm::DemotePHIToStack(PHINode *P, Instruction *AllocaPoint) {
   }
 
   // Insert a load in place of the PHI and replace all uses.
-  BasicBlock::iterator InsertPt = P;
+  BasicBlock::iterator InsertPt = P->getIterator();
 
-  for (; isa<PHINode>(InsertPt) || isa<LandingPadInst>(InsertPt); ++InsertPt)
+  for (; isa<PHINode>(InsertPt) || InsertPt->isEHPad(); ++InsertPt)
     /* empty */;   // Don't insert before PHI nodes or landingpad instrs.
 
-  Value *V = new LoadInst(Slot, P->getName()+".reload", InsertPt);
+  Value *V = new LoadInst(Slot, P->getName() + ".reload", &*InsertPt);
   P->replaceAllUsesWith(V);
 
   // Delete PHI.

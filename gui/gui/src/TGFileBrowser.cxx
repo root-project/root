@@ -1194,7 +1194,8 @@ static const TGPicture *MakeLinkPic(const TGPicture *pic)
       lnk_name.Prepend("lnk_");
       merged = gClient->GetPicturePool()->GetPicture(lnk_name.Data(),
                                           img1->GetPixmap(), img1->GetMask());
-      if (img2) delete img2; delete img1;
+      if (img2) delete img2;
+      delete img1;
       return merged;
    }
    return pic;
@@ -1671,7 +1672,13 @@ void TGFileBrowser::GotoDir(const char *path)
       fListTree->AdjustPosition(item);
       return;
    }
+   // if the Browser.ExpandDirectories option is set to "no", then don't
+   // expand the parent directory tree (for example on nfs)
+   TString str = gEnv->GetValue("Browser.ExpandDirectories", "yes");
+   str.ToLower();
+   expand = (str == "yes") ? kTRUE : kFALSE;
    TString first = ((TObjString*)tokens->At(0))->GetName();
+   // always prevent expanding the parent directory tree on afs
    if (first == "afs")
       expand = kFALSE;
    if (first.Length() == 2 && first.EndsWith(":")) {

@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TEnv
+\ingroup Base
+
 The TEnv class reads config files, by default named `.rootrc`.
 Three types of config files are read: global, user and local files. The
 global file is `$ROOTSYS/etc/system<name>` (or `ROOTETCDIR/system<name>`)

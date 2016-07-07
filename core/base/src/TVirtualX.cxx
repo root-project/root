@@ -20,6 +20,7 @@ These classes are not meant to be used directly by ROOT users.
 
 /** \class TVirtualX
 \ingroup GraphicsBackends
+\ingroup Base
 Semi-Abstract base class defining a generic interface to the underlying, low
 level, native graphics backend (X11, Win32, MacOS, OpenGL...).
 An instance of TVirtualX itself defines a batch interface to the graphics system.

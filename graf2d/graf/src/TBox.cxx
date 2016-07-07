@@ -151,13 +151,17 @@ Int_t TBox::DistancetoPrimitive(Int_t px, Int_t py)
 
    // Are we on the edges?
    Int_t dxl = TMath::Abs(px - pxl);
-   if (py < pyl) dxl += pyl - py; if (py > pyt) dxl += py - pyt;
+   if (py < pyl) dxl += pyl - py;
+   if (py > pyt) dxl += py - pyt;
    Int_t dxt = TMath::Abs(px - pxt);
-   if (py < pyl) dxt += pyl - py; if (py > pyt) dxt += py - pyt;
+   if (py < pyl) dxt += pyl - py;
+   if (py > pyt) dxt += py - pyt;
    Int_t dyl = TMath::Abs(py - pyl);
-   if (px < pxl) dyl += pxl - px; if (px > pxt) dyl += px - pxt;
+   if (px < pxl) dyl += pxl - px;
+   if (px > pxt) dyl += px - pxt;
    Int_t dyt = TMath::Abs(py - pyt);
-   if (px < pxl) dyt += pxl - px; if (px > pxt) dyt += px - pxt;
+   if (px < pxl) dyt += pxl - px;
+   if (px > pxt) dyt += px - pxt;
 
    Int_t distance = dxl;
    if (dxt < distance) distance = dxt;

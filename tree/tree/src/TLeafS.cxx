@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TLeafS
+\ingroup tree
+
 A TLeaf for a 16 bit Integer data type.
 */
 

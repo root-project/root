@@ -119,7 +119,8 @@ public:
    virtual       TMatrixTBase<Element> &SetColIndexArray(Int_t * /*data*/) { MayNotUse("SetColIndexArray(Int_t *)"); return *this; }
 
    virtual void Clear(Option_t * /*option*/ ="") { if (this->fIsOwner) Delete_m(this->fNelems,fElements);
-                                                   else fElements = 0;  this->fNelems = 0; }
+                                                   else fElements = 0;
+                                                   this->fNelems = 0; }
 
            TMatrixT    <Element> &Use     (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Element *data);
    const   TMatrixT    <Element> &Use     (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,const Element *data) const

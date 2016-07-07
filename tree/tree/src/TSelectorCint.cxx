@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TSelectorCint
+\ingroup tree
+
 This class is a special version of TSelector for user interpreted classes.
 */
 

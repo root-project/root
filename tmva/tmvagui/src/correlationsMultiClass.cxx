@@ -12,7 +12,7 @@
 //        - use of colors or grey scale
 //        - use of TMVA plotting TStyle
 void TMVA::correlationsMultiClass(TString dataset, TString fin , Bool_t /* isRegression */ , 
-                                   Bool_t /* greyScale */ , Bool_t useTMVAStyle  )
+                                  Bool_t /* greyScale */ , Bool_t useTMVAStyle  )
 {
 
    // set style and remove existing canvas'

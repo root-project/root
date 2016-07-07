@@ -91,11 +91,11 @@ namespace TMVA {
 
       Float_t  GetValue( UInt_t ivar) const;
       std::vector<Float_t>& GetValues() 
-      {
-	  //For a detailed explanation, please see the heading "Avoid Duplication in const and Non-const Member Function," on p. 23, in Item 3 "Use const whenever possible," in Effective C++, 3d ed by Scott Meyers, ISBN-13: 9780321334879.
-	  // http://stackoverflow.com/questions/123758/how-do-i-remove-code-duplication-between-similar-const-and-non-const-member-func
-	  return const_cast<std::vector<Float_t>&>( static_cast<const Event&>(*this).GetValues() );
-      }
+         {
+            //For a detailed explanation, please see the heading "Avoid Duplication in const and Non-const Member Function," on p. 23, in Item 3 "Use const whenever possible," in Effective C++, 3d ed by Scott Meyers, ISBN-13: 9780321334879.
+            // http://stackoverflow.com/questions/123758/how-do-i-remove-code-duplication-between-similar-const-and-non-const-member-func
+            return const_cast<std::vector<Float_t>&>( static_cast<const Event&>(*this).GetValues() );
+         }
       const std::vector<Float_t>& GetValues() const;
 
       Float_t  GetTarget( UInt_t itgt ) const { return fTargets.at(itgt); }
@@ -123,6 +123,7 @@ namespace TMVA {
 
       static   void SetIsTraining(Bool_t);
       static   void SetIgnoreNegWeightsInTraining(Bool_t);
+
    private:
 
       static   Bool_t          fgIsTraining;    // mark if we are in an actual training or "evaluation/testing" phase --> ignoreNegWeights only in actual training !

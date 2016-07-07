@@ -238,18 +238,16 @@ void TDatabasePDG::Print(Option_t *option) const
 /// PDG convention already)
 /// Source: BaBar User Guide, Neil I. Geddes,
 ///
-///Begin_Html
+/// see <A href="http://www.slac.stanford.edu/BFROOT/www/Computing/Environment/NewUser/htmlbug/node51.html"> Conversion table</A>
+///
+/// with some fixes by PB, marked with (PB) below. Checked against
+/// PDG listings from 2000.
+///
+/// Paul Balm, Nov 19, 2001
 
 Int_t TDatabasePDG::ConvertGeant3ToPdg(Int_t Geant3number) const
 {
-  /*
-   see <A href="http://www.slac.stanford.edu/BFROOT/www/Computing/Environment/NewUser/htmlbug/node51.html"> Conversion table</A>
-  */
-  //End_Html
-  // with some fixes by PB, marked with (PB) below. Checked against
-  // PDG listings from 2000.
-  //
-  // Paul Balm, Nov 19, 2001
+
 
    switch(Geant3number) {
 

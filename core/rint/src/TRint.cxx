@@ -98,14 +98,17 @@ Bool_t TInterruptHandler::Notify()
    // make sure we use the sbrk heap (in case of mapped files)
    gMmallocDesc = 0;
 
-   Break("TInterruptHandler::Notify", "keyboard interrupt");
-   if (TROOT::Initialized()) {
+   if (TROOT::Initialized() && gROOT->IsLineProcessing()) {
+      Break("TInterruptHandler::Notify", "keyboard interrupt");
       Getlinem(kInit, "Root > ");
       gCling->Reset();
 #ifndef WIN32
    if (gException)
       Throw(GetSignal());
 #endif
+   } else {
+      // Reset input.
+      Getlinem(kClear, ((TRint*)gApplication)->GetPrompt());
    }
 
    return kTRUE;

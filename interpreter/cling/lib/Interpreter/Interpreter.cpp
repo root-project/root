@@ -11,12 +11,13 @@
 #include "ClingUtils.h"
 
 #include "cling-compiledata.h"
+#include "ASTImportSource.h"
 #include "DynamicLookup.h"
 #include "ForwardDeclPrinter.h"
 #include "IncrementalExecutor.h"
 #include "IncrementalParser.h"
 #include "MultiplexInterpreterCallbacks.h"
-#include "ASTImportSource.h"
+#include "TransactionUnloader.h"
 
 #include "cling/Interpreter/CIFactory.h"
 #include "cling/Interpreter/ClangInternalState.h"
@@ -229,6 +230,8 @@ namespace cling {
          AutoLoadCB(new AutoloadCallback(this, showSuggestions));
       setCallbacks(std::move(AutoLoadCB));
     }
+
+    m_IncrParser->SetTransformers(isChildInterp);
   }
 
   ///\brief Constructor for the child Interpreter.
@@ -265,6 +268,10 @@ namespace cling {
     for (size_t i = 0, e = m_StoredStates.size(); i != e; ++i)
       delete m_StoredStates[i];
     getCI()->getDiagnostics().getClient()->EndSourceFile();
+    // LookupHelper's ~Parser needs the PP from IncrParser's CI, so do this
+    // first:
+    m_LookupHelper.reset();
+
     // We want to keep the callback alive during the shutdown of Sema, CodeGen
     // and the ASTContext. For that to happen we shut down the IncrementalParser
     // explicitly, before the implicit destruction (through the unique_ptr) of
@@ -525,8 +532,16 @@ namespace cling {
   Interpreter::CompilationResult
   Interpreter::process(const std::string& input, Value* V /* = 0 */,
                        Transaction** T /* = 0 */) {
-    if (isRawInputEnabled() || !ShouldWrapInput(input))
-      return declare(input, T);
+    if (isRawInputEnabled() || !ShouldWrapInput(input)) {
+      CompilationOptions CO;
+      CO.DeclarationExtraction = 0;
+      CO.ValuePrinting = 0;
+      CO.ResultEvaluation = 0;
+      CO.DynamicScoping = isDynamicLookupEnabled();
+      CO.Debug = isPrintingDebug();
+      CO.CheckPointerValidity = 1;
+      return DeclareInternal(input, CO, T);
+    }
 
     CompilationOptions CO;
     CO.DeclarationExtraction = 1;
@@ -534,6 +549,7 @@ namespace cling {
     CO.ResultEvaluation = (bool)V;
     CO.DynamicScoping = isDynamicLookupEnabled();
     CO.Debug = isPrintingDebug();
+    CO.CheckPointerValidity = 1;
     if (EvaluateInternal(input, CO, V, T) == Interpreter::kFailure) {
       return Interpreter::kFailure;
     }
@@ -631,6 +647,7 @@ namespace cling {
     CO.ResultEvaluation = 0;
     CO.DynamicScoping = isDynamicLookupEnabled();
     CO.Debug = isPrintingDebug();
+    CO.CheckPointerValidity = 0;
 
     return DeclareInternal(input, CO, T);
   }
@@ -676,10 +693,12 @@ namespace cling {
     m_IncrParser->addTransaction(T);
     m_IncrParser->markWholeTransactionAsUsed(T);
     T->setState(Transaction::kCollecting);
-    m_IncrParser->commitTransaction(m_IncrParser->endTransaction(T));
+    auto PRT = m_IncrParser->endTransaction(T);
+    m_IncrParser->commitTransaction(PRT);
 
-    if (executeTransaction(*T))
-      return Interpreter::kSuccess;
+    if ((T = PRT.getPointer()))
+      if (executeTransaction(*T))
+        return Interpreter::kSuccess;
 
     return Interpreter::kFailure;
   }
@@ -995,6 +1014,11 @@ namespace cling {
   Interpreter::DeclareInternal(const std::string& input,
                                const CompilationOptions& CO,
                                Transaction** T /* = 0 */) const {
+    assert(CO.DeclarationExtraction == 0
+           && CO.ValuePrinting == 0
+           && CO.ResultEvaluation == 0
+           && "Compilation Options not compatible with \"declare\" mode.");
+
     StateDebuggerRAII stateDebugger(this);
 
     IncrementalParser::ParseResultTransaction PRT
@@ -1116,8 +1140,53 @@ namespace cling {
 
     std::string code;
     code += "#include \"" + filename + "\"";
-    CompilationResult res = declare(code, T);
+
+    CompilationOptions CO;
+    CO.DeclarationExtraction = 0;
+    CO.ValuePrinting = 0;
+    CO.ResultEvaluation = 0;
+    CO.DynamicScoping = isDynamicLookupEnabled();
+    CO.Debug = isPrintingDebug();
+    CO.CheckPointerValidity = 1;
+    CompilationResult res = DeclareInternal(code, CO, T);
     return res;
+  }
+
+  void Interpreter::unload(Transaction& T) {
+    if (InterpreterCallbacks* callbacks = getCallbacks())
+      callbacks->TransactionUnloaded(T);
+    if (m_Executor) { // we also might be in fsyntax-only mode.
+      m_Executor->runAndRemoveStaticDestructors(&T);
+      if (!T.getExecutor()) {
+        // this transaction might be queued in the executor
+        m_Executor->unloadFromJIT(T.getModule(),
+                                  Transaction::ExeUnloadHandle({(void*)(size_t)-1}));
+      }
+    }
+
+    // We can revert the most recent transaction or a nested transaction of a
+    // transaction that is not in the middle of the transaction collection
+    // (i.e. at the end or not yet added to the collection at all).
+    assert(!T.getTopmostParent()->getNext() &&
+           "Can not revert previous transactions");
+    assert((T.getState() != Transaction::kRolledBack ||
+            T.getState() != Transaction::kRolledBackWithErrors) &&
+           "Transaction already rolled back.");
+    if (getOptions().ErrorOut)
+      return;
+
+    if (InterpreterCallbacks* callbacks = getCallbacks())
+      callbacks->TransactionRollback(T);
+
+    TransactionUnloader U(this, &getCI()->getSema(),
+                          m_IncrParser->getCodeGenerator(),
+                          m_Executor.get());
+    if (U.RevertTransaction(&T))
+      T.setState(Transaction::kRolledBack);
+    else
+      T.setState(Transaction::kRolledBackWithErrors);
+
+    m_IncrParser->deregisterTransaction(T);
   }
 
   void Interpreter::unload(unsigned numberOfTransactions) {
@@ -1127,12 +1196,7 @@ namespace cling {
         llvm::errs() << "cling: invalid last transaction; unload failed!\n";
         return;
       }
-      if (InterpreterCallbacks* callbacks = getCallbacks())
-        callbacks->TransactionUnloaded(*T);
-      if (m_Executor) // we also might be in fsyntax-only mode.
-        m_Executor->runAndRemoveStaticDestructors(T);
-      m_IncrParser->rollbackTransaction(T);
-
+      unload(*T);
       if (!--numberOfTransactions)
         break;
     }

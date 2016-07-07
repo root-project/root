@@ -89,9 +89,6 @@ public:
    virtual void       PaintBarH(Option_t *option);
    virtual void       PaintBoxes(Option_t *option);
    virtual void       PaintCandlePlot(Option_t *option);
-   virtual void       PaintOneCandle(Double_t candlePosition, Double_t candleWidth, TH1 *proj);
-   virtual void       PaintOneCandleLBox(Int_t nPoints, Double_t *x, Double_t *y, Bool_t swapXY = kFALSE, Bool_t fill = kFALSE);
-   virtual void       PaintOneCandleLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, bool swapXY = false);
    virtual void       PaintViolinPlot(Option_t *option);
    virtual void       PaintColorLevels(Option_t *option);
    virtual void       PaintColorLevelsFast(Option_t *option);

@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TApplication
+\ingroup Base
+
 This class creates the ROOT Application Environment that interfaces
 to the windowing system eventloop and eventhandlers.
 This class must be instantiated exactly once in any given

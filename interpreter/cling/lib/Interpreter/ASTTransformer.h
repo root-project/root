@@ -12,6 +12,7 @@
 
 #include "llvm/ADT/PointerIntPair.h"
 
+#include "clang/AST/Decl.h" // for Result(Decl)
 #include "clang/AST/DeclGroup.h"
 
 #include "cling/Interpreter/Transaction.h"
@@ -94,7 +95,9 @@ namespace cling {
     ///
     Result Transform(clang::Decl* D, Transaction* T) {
       m_Transaction = T;
-      return Transform(D);
+      if (getCompilationOpts().CheckPointerValidity)
+        return Transform(D);
+      return Result(D, true);
     }
 
   protected:

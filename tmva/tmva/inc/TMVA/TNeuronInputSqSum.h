@@ -72,7 +72,7 @@ namespace TMVA {
       // name of the class
       TString GetName() { return "Sum of weighted activations squared"; }
 
-      ClassDef(TNeuronInputSqSum,0) // Calculates square of  weighted sum of neuron inputs
+      ClassDef(TNeuronInputSqSum,0); // Calculates square of  weighted sum of neuron inputs
    };
 
 } // namespace TMVA

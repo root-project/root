@@ -160,7 +160,9 @@ static bool IsSupportedClass(TClass *cl)
       TClassEdit::GetSplit(cl->GetName(), out, i);
       std::string_view containedObjectTypeName(out[1].c_str());
       if (TClassEdit::IsUniquePtr(containedObjectTypeName)) {
-         Error("CloseStreamerInfoROOTFile", "Collections of unique pointers such as the selected %s are not yet supported.\n", cl->GetName());
+         auto clName = cl->GetName();
+         // Here we can use the new name for the error message
+         Error("CloseStreamerInfoROOTFile", "A collection of unique pointers was selected: %s. These are not supported. If you whish to perform I/O operations with %s, just select the same collection of raw C pointers.\n", clName, clName);
          return false;
       }
    }
@@ -218,7 +220,6 @@ bool CloseStreamerInfoROOTFile(bool writeEmptyRootPCM)
                Error("CloseStreamerInfoROOTFile", "Cannot find class %s.\n", dmTypeName);
                return false;
             }
-            if (!IsSupportedClass(clm)) return false;
          }
       }
 

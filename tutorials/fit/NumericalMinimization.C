@@ -1,12 +1,16 @@
-// Example on how to use the new Minimizer class in ROOT
-//  Show usage with all the possible minimizers.
-// Minimize the Rosenbrock function (a 2D -function)
-// This example is described also in
-// http://root.cern.ch/drupal/content/numerical-minimization#multidim_minim
-// input : minimizer name + algorithm name
-// randomSeed: = <0 : fixed value: 0 random with seed 0; >0 random with given seed
-//
-//Author: L. Moneta Dec 2010
+/// \file
+/// \ingroup tutorial_fit
+/// Example on how to use the new Minimizer class in ROOT
+///  Show usage with all the possible minimizers.
+/// Minimize the Rosenbrock function (a 2D -function)
+/// This example is described also in
+/// http://root.cern.ch/drupal/content/numerical-minimization#multidim_minim
+/// input : minimizer name + algorithm name
+/// randomSeed: = <0 : fixed value: 0 random with seed 0; >0 random with given seed
+///
+/// \macro_code
+///
+/// \author Lorenzo Moneta
 
 #include "Math/Minimizer.h"
 #include "Math/Factory.h"
@@ -49,7 +53,7 @@ int NumericalMinimization(const char * minName = "Minuit2",
    min->SetTolerance(0.001);
    min->SetPrintLevel(1);
 
-   // create funciton wrapper for minmizer
+   // create function wrapper for minimizer
    // a IMultiGenFunction type
    ROOT::Math::Functor f(&RosenBrock,2);
    double step[2] = {0.01,0.01};
@@ -64,7 +68,7 @@ int NumericalMinimization(const char * minName = "Minuit2",
 
    min->SetFunction(f);
 
-   // Set the free variables to be minimized!
+   // Set the free variables to be minimized !
    min->SetVariable(0,"x",variable[0], step[0]);
    min->SetVariable(1,"y",variable[1], step[1]);
 

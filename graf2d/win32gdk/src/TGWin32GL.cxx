@@ -9,13 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGWin32GL                                                            //
-//                                                                      //
-// The TGWin32GL is win32gdk implementation of TVirtualGLImp class.     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGWin32GL
+\ingroup win32
+
+The TGWin32GL is win32gdk implementation of TVirtualGLImp class.
+*/
+
 #include <deque>
 
 #include "TGWin32GL.h"

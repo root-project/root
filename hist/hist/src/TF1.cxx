@@ -141,22 +141,22 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////
 /** \class TF1
-    \ingroup Hist 
+    \ingroup Hist
     \brief 1-Dim function class
 
 
 ## TF1: 1-Dim function class
 
-A TF1 object is a 1-Dim function defined between a lower and upper limit.   
-The function may be a simple function based on a TFormula expression or a precompiled user function.   
-The function may have associated parameters.   
+A TF1 object is a 1-Dim function defined between a lower and upper limit.
+The function may be a simple function based on a TFormula expression or a precompiled user function.
+The function may have associated parameters.
 TF1 graphics function is via the TH1 and TGraph drawing functions.
 
 The following types of functions can be created:
 
 1.  [Expression using variable x and no parameters]([#F1)
 2.  [Expression using variable x with parameters](#F2)
-3.  [Lambda Expression with variable x and parameters](#F3)  
+3.  [Lambda Expression with variable x and parameters](#F3)
 4.  [A general C function with parameters](#F4)
 5.  [A general C++ function object (functor) with parameters](#F5)
 6.  [A member function with parameters of a general C++ class](#F6)
@@ -168,28 +168,28 @@ The following types of functions can be created:
 #### Case 1: inline expression using standard C++ functions/operators
 
 Begin_Macro(source)
-{ 
-TF1 *fa1 = new TF1("fa1","sin(x)/x",0,10); 
-fa1->Draw(); 
-} 
+{
+TF1 *fa1 = new TF1("fa1","sin(x)/x",0,10);
+fa1->Draw();
+}
 End_Macro
 
 #### Case 2: inline expression using a ROOT function (e.g. from TMath) without parameters
 
 
-Begin_Macro(source) 
+Begin_Macro(source)
 {
-  TF1 *fa2 = new TF1("fa2","TMath::DiLog(x)",0,10); 
-  fa2->Draw(); 
-} 
+  TF1 *fa2 = new TF1("fa2","TMath::DiLog(x)",0,10);
+  fa2->Draw();
+}
 End_Macro
 
 #### Case 3: inline expression using a user defined CLING function by name
 
 ~~~~{.cpp}
-Double_t myFunc(x) { return x+sin(x); } 
+Double_t myFunc(x) { return x+sin(x); }
 ....
-TF1 *fa3 = new TF1("fa3","myFunc(x)",-3,5); 
+TF1 *fa3 = new TF1("fa3","myFunc(x)",-3,5);
 fa3->Draw();
 ~~~~
 
@@ -197,11 +197,11 @@ fa3->Draw();
 
 #### Case 1: inline expression using standard C++ functions/operators
 
-* Example a: 
+* Example a:
 
 
 ~~~~{.cpp}
-TF1 *fa = new TF1("fa","[0]*x*sin([1]*x)",-3,3); 
+TF1 *fa = new TF1("fa","[0]*x*sin([1]*x)",-3,3);
 ~~~~
 
 This creates a function of variable x with 2 parameters. The parameters must be initialized via:
@@ -237,26 +237,26 @@ Parameters may be given a name:
 
 
 
-Begin_Macro(source) 
-{ 
+Begin_Macro(source)
+{
     TCanvas *c = new TCanvas("c","c",0,0,500,300);
-    TF1 *fb2 = new TF1("fa3","TMath::Landau(x,[0],[1],0)",-5,10); 
-    fb2->SetParameters(0.2,1.3); fb2->Draw(); 
-    return c; 
-} 
+    TF1 *fb2 = new TF1("fa3","TMath::Landau(x,[0],[1],0)",-5,10);
+    fb2->SetParameters(0.2,1.3); fb2->Draw();
+    return c;
+}
 End_Macro
 
 ###<a name="F3"></a> 3 - A lambda expression with variables and parameters **(NEW)**
 
-TF1 now supports using lambda expressions in the formula. This allows, by using a full C++ syntax the full power of lambda 
-functions and still mantain the capability of storing the function in a file which cannot be done with 
-funciton pointer or lambda written not as expression, but as code (see items belows). 
+TF1 now supports using lambda expressions in the formula. This allows, by using a full C++ syntax the full power of lambda
+functions and still mantain the capability of storing the function in a file which cannot be done with
+funciton pointer or lambda written not as expression, but as code (see items belows).
 
 Example on how using lambda to define a sum of two functions. Note that is necessary to provide the number of parameters
 ~~~~{.cpp}
 TF1 f1("f1","sin(x)",0,10);
 TF1 f2("f2","cos(x)",0,10);
-TF1 fsum("f1","[&](double *x, double *p){ return p[0]*f1(x) + p[1]*f2(x); }",0,10,2); 
+TF1 fsum("f1","[&](double *x, double *p){ return p[0]*f1(x) + p[1]*f2(x); }",0,10,2);
 ~~~~
 
 ###<a name="F4"></a> 4 - A general C function with parameters
@@ -348,11 +348,11 @@ class  MyFunctionObject {
 #### Using a lambda function as a general C++ functor object
 
 From C++11 we can use both std::function or even better lambda functions to create the TF1. As above the lambda must have the right signature but can capture whatever we want. For example we can make
-a TF1 from the TGraph::Eval function as shown below where we use a sfunction parameter the graph normalization.  
+a TF1 from the TGraph::Eval function as shown below where we use a sfunction parameter the graph normalization.
 
 ~~~~{.cpp}
-TGraph * g = new TGraph(npointx, xvec, yvec); 
-TF1 * f = new TF1("f",[&](double*x, double *p){ return p[0]*g->Eval(x[0]); }, xmin, xmax, 1);   
+TGraph * g = new TGraph(npointx, xvec, yvec);
+TF1 * f = new TF1("f",[&](double*x, double *p){ return p[0]*g->Eval(x[0]); }, xmin, xmax, 1);
 ~~~~
 
 
@@ -379,7 +379,7 @@ class  MyFunction {
 }
 ~~~~
 
-See also the tutorial __math/exampleFunctor.C__ for a running example. 
+See also the tutorial __math/exampleFunctor.C__ for a running example.
 */
 ////////////////////////////////////////////////////////////////////////////
 
@@ -608,13 +608,18 @@ void TF1::DoInitialize() {
    fMinimum = -1111;
    fMaximum = -1111;
 
-   if (fgAddToGlobList && gROOT) {
+   // add to global list of functions if default adding is on OR if bit is set
+   if (fgAddToGlobList  && gROOT) {
+      SetBit(kNotGlobal,kFALSE);
       R__LOCKGUARD2(gROOTMutex);
       // Store formula in linked list of formula in ROOT
       TF1 *f1old = (TF1*)gROOT->GetListOfFunctions()->FindObject(fName);
       gROOT->GetListOfFunctions()->Remove(f1old);
       gROOT->GetListOfFunctions()->Add(this);
    }
+   else
+      SetBit(kNotGlobal,kTRUE);
+
    if (gStyle) {
       SetLineColor(gStyle->GetFuncColor());
       SetLineWidth(gStyle->GetFuncWidth());
@@ -624,27 +629,45 @@ void TF1::DoInitialize() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Static method to add/avoid to add automatically functions to the global list  (gROOT->GetListOfFunctions() )
+/// After having called this static method, all the functions created afterwards will follow the
+/// desired behaviour.
+/// By defult the functions are added automatically
+/// It returns the previous status (true if the functions are added automatically)
+
+Bool_t TF1::DefaultAddToGlobalList(Bool_t on)
+{
+   R__LOCKGUARD2(gROOTMutex);
+   bool previous = fgAddToGlobList;
+   fgAddToGlobList = on;
+   return previous;
+}
+////////////////////////////////////////////////////////////////////////////////
 /// Add to global list of functions (gROOT->GetListOfFunctions() )
-/// return previous status (true of functions was already in the list false if not)
+/// return previous status (true if the function was already in the list false if not)
 
 Bool_t TF1::AddToGlobalList(Bool_t on)
 {
    if (!gROOT) return false;
 
-   bool prevStatus = TestBit(kNotGlobal);
-   if (prevStatus != on) SetBit(kNotGlobal,on);
+   bool prevStatus = !TestBit(kNotGlobal);
    if (on )  {
       if (prevStatus) {
+         R__LOCKGUARD2(gROOTMutex);
          assert (gROOT->GetListOfFunctions()->FindObject(this) != nullptr);
          return on; // do nothing
       }
       // do I need to delete previous one with the same name ???
       //TF1 * old = dynamic_cast<TF1*>( gROOT->GetListOfFunctions()->FindObject(GetName()) );
       //if (old) gROOT->GetListOfFunctions()->Remove(old);
+      R__LOCKGUARD2(gROOTMutex);
       gROOT->GetListOfFunctions()->Add(this);
+      SetBit(kNotGlobal,kFALSE);
    }
    else if (prevStatus) {
-      // if previous status was on and now is off
+      // if previous status was on and now is off we need to remove the function
+      SetBit(kNotGlobal,kTRUE);
+      R__LOCKGUARD2(gROOTMutex);
       TF1 * old = dynamic_cast<TF1*>( gROOT->GetListOfFunctions()->FindObject(GetName()) );
       if (!old) {
          Warning("AddToGlobalList","Function is supposed to be in the global list but it is not present");
@@ -949,9 +972,9 @@ Double_t TF1::Derivative2(Double_t x, Double_t *params, Double_t eps) const
 /// Getting the error via TF1::DerivativeError:
 ///   (total error = roundoff error + interpolation error)
 /// the estimate of the roundoff error is taken as follows:
-///Begin_Latex
-///    err = k#sqrt{f(x)^{2} + x^{2}deriv^{2}}#sqrt{#sum ai^{2}},
-///End_Latex
+/// \f[
+///    err = k\sqrt{f(x)^{2} + x^{2}deriv^{2}}\sqrt{\sum ai^{2}},
+/// \f]
 /// where k is the double precision, ai are coefficients used in
 /// central difference formulas
 /// interpolation error is decreased by making the step size h smaller.
@@ -1164,9 +1187,8 @@ Double_t TF1::Eval(Double_t x, Double_t y, Double_t z, Double_t t) const
    if (fType == 0) return fFormula->Eval(x,y,z,t);
 
    Double_t xx[4] = {x, y, z, t};
-   Double_t *pp = GetParameters();
-   ((TF1*)this)->InitArgs(xx,pp);
-   
+   Double_t *pp = (Double_t*)fParams->GetParameters();
+   if (fType==2) ((TF1*)this)->InitArgs(xx,pp);
    return ((TF1*)this)->EvalPar(xx,pp);
 }
 
@@ -1191,14 +1213,14 @@ Double_t TF1::Eval(Double_t x, Double_t y, Double_t z, Double_t t) const
 
 Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
 {
-   fgCurrent = this;
+   //fgCurrent = this;
 
    if (fType == 0)
    {
       assert(fFormula);
       if (fNormalized && fNormIntegral != 0)
          return fFormula->EvalPar(x,params)/fNormIntegral;
-      else 
+      else
          return fFormula->EvalPar(x,params);
    }
    Double_t result = 0;
@@ -1209,10 +1231,10 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
          else        result = fFunctor((Double_t*)x,(Double_t*)fParams->GetParameters());
 
       }else          result = GetSave(x);
-      
+
       if (fNormalized && fNormIntegral!=0)
          result = result/fNormIntegral;
-        
+
       return result;
    }
    if (fType == 2) {
@@ -1264,6 +1286,7 @@ void TF1::FixParameter(Int_t ipar, Double_t value)
 
 TF1 *TF1::GetCurrent()
 {
+   ::Warning("TF1::GetCurrent","This function is obsolete and is working only for the current painted functions");
    return fgCurrent;
 }
 
@@ -2250,7 +2273,7 @@ Double_t TF1::Integral(Double_t a, Double_t b,  Double_t epsrel)
       result = AnalyticalIntegral(this, a, b);
       // if it is a formula that havent been implmented in analytical integral a NaN is return
       if (!TMath::IsNaN(result)) return result;
-      if (gDebug) 
+      if (gDebug)
          Warning("analytical integral not available for %s - with number %d  compute numerical integral",GetName(),GetNumber());
    }
    return IntegralOneDim(a,b, epsrel, epsrel, error);
@@ -2332,7 +2355,7 @@ Double_t TF1::IntegralOneDim(Double_t a, Double_t b,  Double_t epsrel, Double_t 
    //Double_t *parameters = GetParameters();
    TF1_EvalWrapper wf1( this, 0, fgAbsValue );
    Double_t result = 0;
-   Int_t status = 0; 
+   Int_t status = 0;
    if (ROOT::Math::IntegratorOneDimOptions::DefaultIntegratorType() == ROOT::Math::IntegrationOneDim::kGAUSS ) {
       ROOT::Math::GaussIntegrator iod(epsabs, epsrel);
       iod.SetFunction(wf1);
@@ -2363,9 +2386,13 @@ Double_t TF1::IntegralOneDim(Double_t a, Double_t b,  Double_t epsrel, Double_t 
    if (status != 0) {
       std::string igName = ROOT::Math::IntegratorOneDim::GetName(ROOT::Math::IntegratorOneDimOptions::DefaultIntegratorType());
       Warning("IntegralOneDim","Error found in integrating function %s in [%f,%f] using %s. Result = %f +/- %f  - status = %d",GetName(),a,b,igName.c_str(),result,error,status);
-      std::cout << "Function Parameters = { ";
-      for (int ipar = 0; ipar < GetNpar(); ++ipar) std::cout << GetParName(ipar) << "=" << GetParameter(ipar) << " ";
-      std::cout << "}\n";
+      TString msg("\t\tFunction Parameters = {");
+      for (int ipar = 0; ipar < GetNpar(); ++ipar) {
+         msg += TString::Format(" %s =  %f ",GetParName(ipar), GetParameter(ipar));
+         if (ipar < GetNpar()-1) msg += TString(",");
+         else msg += TString("}");
+      }
+      Info("IntegralOneDim","%s",msg.Data());
    }
    return result;
 }
@@ -3279,7 +3306,7 @@ void TF1::Streamer(TBuffer &b)
             // case of a function pointers
             fParams = new TF1Parameters(fNpar);
             fName = fold.GetName();
-            fTitle = fold.GetTitle(); 
+            fTitle = fold.GetTitle();
          }
          // need to set parameter values
          SetParameters(fold.GetParameters() );
@@ -3350,9 +3377,9 @@ void TF1::Update()
        fNormIntegral = Integral(fXmin,fXmax, ROOT::Math::IntegratorOneDimOptions::DefaultRelTolerance());
        fNormalized = true;
    }
-   else 
+   else
       fNormIntegral = 0;
-   
+
    // std::vector<double>x(fNdim);
    // if ((fType == 1) && !fFunctor.Empty())  fFunctor(x.data(), (Double_t*)fParams);
 }
@@ -3496,7 +3523,7 @@ TGraph *TF1::CalcGaussLegendreSamplingPoints(Int_t num, Double_t eps)
 /** \f[
           W(x)=1  -1<x<1 \\
           (j+1)P_{j+1} = (2j+1)xP_j-jP_{j-1}
-    \f] 
+    \f]
 **/
 /// num is the number of sampling points (>0)
 /// x and w are arrays of size num

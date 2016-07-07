@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TApplicationImp
+\ingroup Base
+
 ABC describing GUI independent application implementation protocol.
 */
 

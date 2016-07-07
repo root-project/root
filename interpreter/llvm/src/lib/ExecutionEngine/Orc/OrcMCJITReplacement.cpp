@@ -13,7 +13,7 @@
 namespace {
 
 static struct RegisterJIT {
-  RegisterJIT() { llvm::OrcMCJITReplacement::Register(); }
+  RegisterJIT() { llvm::orc::OrcMCJITReplacement::Register(); }
 } JITRegistrator;
 
 }
@@ -21,10 +21,11 @@ static struct RegisterJIT {
 extern "C" void LLVMLinkInOrcMCJITReplacement() {}
 
 namespace llvm {
+namespace orc {
 
 GenericValue
 OrcMCJITReplacement::runFunction(Function *F,
-                                 const std::vector<GenericValue> &ArgValues) {
+                                 ArrayRef<GenericValue> ArgValues) {
   assert(F && "Function *F was null at entry to run()");
 
   void *FPtr = getPointerToFunction(F);
@@ -122,4 +123,6 @@ OrcMCJITReplacement::runFunction(Function *F,
 
   llvm_unreachable("Full-featured argument passing not supported yet!");
 }
-}
+
+} // End namespace orc.
+} // End namespace llvm.

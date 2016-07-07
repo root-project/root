@@ -30,8 +30,8 @@ void httpcontrol()
    THttpServer* serv = new THttpServer("http:8080");
 
    // One could specify location of newer version of JSROOT
-   // serv->SetJSROOT("https://root.cern.ch/js/3.5/");
-   // serv->SetJSROOT("http://web-docs.gsi.de/~linev/js/3.5/");
+   // serv->SetJSROOT("https://root.cern.ch/js/latest/");
+   // serv->SetJSROOT("http://jsroot.gsi.de/latest/");
 
    // register histograms
    serv->Register("/", hpx);

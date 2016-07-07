@@ -323,6 +323,10 @@ def P8Itineraries : ProcessorItineraries<
                                                   P8_DU4, P8_DU5, P8_DU6], 0>,
                                    InstrStage<1, [P8_FPU1, P8_FPU2]>],
                                   [5, 1, 1]>,
+  InstrItinData<IIC_FPAddSub    , [InstrStage<1, [P8_DU1, P8_DU2, P8_DU3,
+                                                  P8_DU4, P8_DU5, P8_DU6], 0>,
+                                   InstrStage<1, [P8_FPU1, P8_FPU2]>],
+                                  [5, 1, 1]>,
   InstrItinData<IIC_FPCompare   , [InstrStage<1, [P8_DU1, P8_DU2, P8_DU3,
                                                   P8_DU4, P8_DU5, P8_DU6], 0>,
                                    InstrStage<1, [P8_FPU1, P8_FPU2]>],
@@ -387,7 +391,6 @@ def P8Model : SchedMachineModel {
                        // up to six non-branch instructions.
                        // up to two branches in a dispatch group.
 
-  let MinLatency = 0;  // Out-of-order dispatch.
   let LoadLatency = 3; // Optimistic load latency assuming bypass.
                        // This is overriden by OperandCycles if the
                        // Itineraries are queried instead.
@@ -395,6 +398,8 @@ def P8Model : SchedMachineModel {
 
   // Try to make sure we have at least 10 dispatch groups in a loop.
   let LoopMicroOpBufferSize = 60;
+
+  let CompleteModel = 0;
 
   let Itineraries = P8Itineraries;
 }

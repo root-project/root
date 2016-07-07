@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TTreeCache
+\ingroup tree
+
 A specialized TFileCacheRead object for a TTree.
 
 This class acts as a file cache, registering automatically the baskets from
@@ -493,7 +495,7 @@ Int_t TTreeCache::DropBranch(TBranch *b, Bool_t subbranches /*= kFALSE*/)
       --fNbranches;
       if (gDebug > 0) printf("Entry: %lld, un-registering branch: %s\n",b->GetTree()->GetReadEntry(),b->GetName());
    }
-   fBrNames->Remove(fBrNames->FindObject(b->GetName()));
+   delete fBrNames->Remove(fBrNames->FindObject(b->GetName()));
 
    // process subbranches
    Int_t res = 0;

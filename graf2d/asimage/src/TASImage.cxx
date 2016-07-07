@@ -149,16 +149,16 @@ typedef struct {
 
 //______________________________________________________________________________
 #define _alphaBlend(bot, top) {\
-   __argb32__ *t = (__argb32__*)(top);\
-   __argb32__ *b = (__argb32__*)(bot);\
-   int aa = 255-t->a;\
+   __argb32__ *T = (__argb32__*)(top);\
+   __argb32__ *B = (__argb32__*)(bot);\
+   int aa = 255-T->a;\
    if (!aa) {\
       *bot = *top;\
    } else { \
-      b->a = ((b->a*aa)>>8) + t->a;\
-      b->r = (b->r*aa + t->r*t->a)>>8;\
-      b->g = (b->g*aa + t->g*t->a)>>8;\
-      b->b = (b->b*aa + t->b*t->a)>>8;\
+      B->a = ((B->a*aa)>>8) + T->a;\
+      B->r = (B->r*aa + T->r*T->a)>>8;\
+      B->g = (B->g*aa + T->g*T->a)>>8;\
+      B->b = (B->b*aa + T->b*T->a)>>8;\
    }\
 }\
 
@@ -313,8 +313,6 @@ TASImage::TASImage(const TASImage &img) : TImage(img)
 
 TASImage &TASImage::operator=(const TASImage &img)
 {
-   SetDefaults();
-
    if (this != &img && img.IsValid()) {
       TImage::operator=(img);
 
@@ -3642,7 +3640,7 @@ UInt_t *TASImage::GetRgbaArray()
 
    for (i = 0; i < img->height; i++) {
       for (j = 0; j < img->width; j++) {
-         idx = y + j;
+         idx = Idx(y + j);
          argb = img->alt.argb32[idx];
          a = argb >> 24;
          rgb =  argb & 0x00ffffff;
@@ -3719,7 +3717,7 @@ UInt_t *TASImage::GetScanline(UInt_t y)
 #define FillSpansInternal(npt, ppt, widths, color) do {\
    UInt_t yy = ppt[0].fY*fImage->width;\
    for (UInt_t i = 0; i < npt; i++) {\
-      _MEMSET_(&fImage->alt.argb32[yy + ppt[i].fX], widths[i], color);\
+      _MEMSET_(&fImage->alt.argb32[Idx(yy + ppt[i].fX)], widths[i], color);\
       yy += ((i+1 < npt) && (ppt[i].fY != ppt[i+1].fY) ? fImage->width : 0);\
    }\
 } while (0)
@@ -3730,6 +3728,26 @@ UInt_t *TASImage::GetScanline(UInt_t y)
 
 void TASImage::FillRectangleInternal(UInt_t col, Int_t x, Int_t y, UInt_t width, UInt_t height)
 {
+
+   if (!InitVisual()) {
+      Warning("FillRectangle", "Visual not initiated");
+      return;
+   }
+
+   if (!fImage) {
+      Warning("FillRectangle", "no image");
+      return;
+   }
+
+   if (!fImage->alt.argb32) {
+      BeginPaint();
+   }
+
+   if (!fImage->alt.argb32) {
+      Warning("FillRectangle", "Failed to get pixel array");
+      return;
+   }
+
    ARGB32 color = (ARGB32)col;
 
    if (width  == 0) width = 1;
@@ -3768,10 +3786,10 @@ void TASImage::FillRectangleInternal(UInt_t col, Int_t x, Int_t y, UInt_t width,
             int j = x + width;
             while (j > x) {
                j--;
-               _alphaBlend(&fImage->alt.argb32[yyy + j], &color);
+               _alphaBlend(&fImage->alt.argb32[Idx(yyy + j)], &color);
             }
+            yyy += fImage->width;
          }
-         yyy += fImage->width;
       }
    }
 }
@@ -3837,7 +3855,7 @@ void TASImage::DrawVLine(UInt_t x, UInt_t y1, UInt_t y2, UInt_t col, UInt_t thic
    for (UInt_t y = y1; y <= y2; y++) {
       for (UInt_t w = 0; w < thick; w++) {
          if (x + w < fImage->width) {
-            _alphaBlend(&fImage->alt.argb32[yy + (x + w)], &color);
+            _alphaBlend(&fImage->alt.argb32[Idx(yy + (x + w))], &color);
          }
       }
       yy += fImage->width;
@@ -3872,7 +3890,7 @@ void TASImage::DrawHLine(UInt_t y, UInt_t x1, UInt_t x2, UInt_t col, UInt_t thic
    for (UInt_t w = 0; w < thick; w++) {
       for (UInt_t x = x1; x <= x2; x++) {
          if (y + w < fImage->height) {
-            _alphaBlend(&fImage->alt.argb32[yy + x], &color);
+            _alphaBlend(&fImage->alt.argb32[Idx(yy + x)], &color);
          }
       }
       yy += fImage->width;
@@ -3964,12 +3982,13 @@ void TASImage::DrawLineInternal(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
       }
 
       yy = y*fImage->width;
-      _alphaBlend(&fImage->alt.argb32[yy + x], &color);
+      _alphaBlend(&fImage->alt.argb32[Idx(yy + x)], &color);
       q = (y2 - y1) * ydir;
 
       if (q > 0) {
          while (x < xend) {
-            idx = yy + x;
+
+            idx = Idx(yy + x);
             _alphaBlend(&fImage->alt.argb32[idx], &color);
             x++;
 
@@ -3982,7 +4001,7 @@ void TASImage::DrawLineInternal(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
          }
       } else {
          while (x < xend) {
-            idx = yy + x;
+            idx = Idx(yy + x);
             _alphaBlend(&fImage->alt.argb32[idx], &color);
             x++;
 
@@ -4013,12 +4032,12 @@ void TASImage::DrawLineInternal(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
       }
 
       yy = y*fImage->width;
-      _alphaBlend(&fImage->alt.argb32[yy + x], &color);
+      _alphaBlend(&fImage->alt.argb32[Idx(yy + x)], &color);
       q = (x2 - x1) * xdir;
 
       if (q > 0) {
          while (y < yend) {
-            idx = yy + x;
+            idx = Idx(yy + x);
             _alphaBlend(&fImage->alt.argb32[idx], &color);
             y++;
             yy += fImage->width;
@@ -4032,7 +4051,7 @@ void TASImage::DrawLineInternal(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
          }
       } else {
          while (y < yend) {
-            idx = yy + x;
+            idx = Idx(yy + x);
             _alphaBlend(&fImage->alt.argb32[idx], &color);
             y++;
             yy += fImage->width;
@@ -4174,7 +4193,7 @@ void TASImage::DrawDashHLine(UInt_t y, UInt_t x1, UInt_t x2, UInt_t nDash,
       for (UInt_t w = 0; w < thick; w++) {
          if (y + w < fImage->height) {
             if ((iDash%2)==0) {
-               _alphaBlend(&fImage->alt.argb32[(y + w)*fImage->width + x], &color);
+               _alphaBlend(&fImage->alt.argb32[Idx((y + w)*fImage->width + x)], &color);
             }
          }
       }
@@ -4230,7 +4249,7 @@ void TASImage::DrawDashVLine(UInt_t x, UInt_t y1, UInt_t y2, UInt_t nDash,
       for (UInt_t w = 0; w < thick; w++) {
          if (x + w < fImage->width) {
             if ((iDash%2)==0) {
-               _alphaBlend(&fImage->alt.argb32[yy + (x + w)], &color);
+               _alphaBlend(&fImage->alt.argb32[Idx(yy + (x + w))], &color);
             }
          }
       }
@@ -4294,12 +4313,12 @@ void TASImage::DrawDashZLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
       }
 
       yy = y*fImage->width;
-      _alphaBlend(&fImage->alt.argb32[y*fImage->width + x], &color);
+      _alphaBlend(&fImage->alt.argb32[Idx(y*fImage->width + x)], &color);
       q = (y2 - y1) * ydir;
 
       if (q > 0) {
          while (x < xend) {
-            idx = yy + x;
+            idx = Idx(yy + x);
             if ((iDash%2) == 0) {
                _alphaBlend(&fImage->alt.argb32[idx], &color);
             }
@@ -4323,7 +4342,7 @@ void TASImage::DrawDashZLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
          }
       } else {
          while (x < xend) {
-            idx = yy + x;
+            idx = Idx(yy + x);
             if ((iDash%2) == 0) {
                _alphaBlend(&fImage->alt.argb32[idx], &color);
             }
@@ -4372,12 +4391,12 @@ void TASImage::DrawDashZLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
       }
 
       yy = y*fImage->width;
-      _alphaBlend(&fImage->alt.argb32[y*fImage->width + x], &color);
+      _alphaBlend(&fImage->alt.argb32[Idx(y*fImage->width + x)], &color);
       q = (x2 - x1) * xdir;
 
       if (q > 0) {
          while (y < yend) {
-            idx = yy + x;
+            idx = Idx(yy + x);
             if ((iDash%2) == 0) {
                _alphaBlend(&fImage->alt.argb32[idx], &color);
             }
@@ -4403,7 +4422,7 @@ void TASImage::DrawDashZLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
          }
       } else {
          while (y < yend) {
-            idx = yy + x;
+            idx = Idx(yy + x);
             if ((iDash%2) == 0) {
                _alphaBlend(&fImage->alt.argb32[idx], &color);
             }
@@ -4691,7 +4710,7 @@ void TASImage::PutPixel(Int_t x, Int_t y, const char *col)
                fImage->width, x, fImage->height, y);
       return;
    }
-   _alphaBlend(&fImage->alt.argb32[y*fImage->width + x], &color);
+   _alphaBlend(&fImage->alt.argb32[Idx(y*fImage->width + x)], &color);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4746,7 +4765,7 @@ void TASImage::PolyPoint(UInt_t npt, TPoint *ppt, const char *col, TImage::ECoor
       if ((x < 0) || (y < 0) || (x >= (int)fImage->width) || (y >= (int)fImage->height)) {
          continue;
       }
-      _alphaBlend(&fImage->alt.argb32[y*fImage->width + x], &color);
+      _alphaBlend(&fImage->alt.argb32[Idx(y*fImage->width + x)], &color);
    }
 
    if (ipt) {
@@ -4821,7 +4840,7 @@ void TASImage::FillSpans(UInt_t npt, TPoint *ppt, UInt_t *widths, const char *co
              (ppt[i].fY >= (Int_t)fImage->height) || (ppt[i].fY < 0)) continue;
 
          x = ppt[i].fX + j;
-         idx = yy + x;
+         idx = Idx(yy + x);
 
          if (!stipple) {
             _alphaBlend(&fImage->alt.argb32[idx], &color);
@@ -4882,7 +4901,7 @@ void TASImage::FillSpans(UInt_t npt, TPoint *ppt, UInt_t *widths, TImage *tile)
          if ((ppt[i].fX >= (Int_t)fImage->width) || (ppt[i].fX < 0) ||
              (ppt[i].fY >= (Int_t)fImage->height) || (ppt[i].fY < 0)) continue;
          x = ppt[i].fX + j;
-         idx = yyy + x;
+         idx = Idx(yyy + x);
          xx = x%tile->GetWidth();
          yy = ppt[i].fY%tile->GetHeight();
          ii = yy*tile->GetWidth() + xx;
@@ -4932,7 +4951,7 @@ void TASImage::CropSpans(UInt_t npt, TPoint *ppt, UInt_t *widths)
 
    for (y = 0; (int)y < y0; y++) {
       for (x = 0; x < fImage->width; x++) {
-         idx = yy + x;
+         idx = Idx(yy + x);
          if (idx < sz) fImage->alt.argb32[idx] = 0;
       }
       yy += fImage->width;
@@ -4940,11 +4959,11 @@ void TASImage::CropSpans(UInt_t npt, TPoint *ppt, UInt_t *widths)
 
    for (i = 0; i < npt; i++) {
       for (x = 0; (int)x < ppt[i].fX; x++) {
-         idx = ppt[i].fY*fImage->width + x;
+         idx = Idx(ppt[i].fY*fImage->width + x);
          if (idx < sz) fImage->alt.argb32[idx] = 0;
       }
       for (x = ppt[i].fX + widths[i] + 1; x < fImage->width; x++) {
-         idx = ppt[i].fY*fImage->width + x;
+         idx = Idx(ppt[i].fY*fImage->width + x);
          if (idx < sz) fImage->alt.argb32[idx] = 0;
       }
    }
@@ -4952,7 +4971,7 @@ void TASImage::CropSpans(UInt_t npt, TPoint *ppt, UInt_t *widths)
    yy = y1*fImage->width;
    for (y = y1; y < fImage->height; y++) {
       for (x = 0; x < fImage->width; x++) {
-         idx = yy + x;
+         idx = Idx(yy + x);
          if (idx < sz) fImage->alt.argb32[idx] = 0;
       }
       yy += fImage->width;
@@ -5023,11 +5042,11 @@ void TASImage::CopyArea(TImage *dst, Int_t xsrc, Int_t ysrc, UInt_t w,  UInt_t h
    if (fImage->alt.argb32 && out->alt.argb32) {
       for (y = 0; y < (int)h; y++) {
          for (x = 0; x < (int)w; x++) {
-            idx = yy + x + xsrc;
+            idx = Idx(yy + x + xsrc);
             if ((x + xdst < 0) || (ydst + y < 0) ||
                 (x + xdst >= (int)out->width) || (y + ydst >= (int)out->height) ) continue;
 
-            idx2 = (ydst + y)*out->width + x + xdst;
+            idx2 = Idx((ydst + y)*out->width + x + xdst);
 
             switch ((EGraphicsFunction)gfunc) {
                case kGXclear:
@@ -5686,6 +5705,7 @@ void TASImage::DrawGlyph(void *bitmap, UInt_t color, Int_t bx, Int_t by)
 {
    static UInt_t col[5];
    Int_t x, y, yy, y0, xx;
+   Bool_t has_alpha = (color & 0xff000000) != 0xff000000;
 
    ULong_t r, g, b;
    int idx = 0;
@@ -5705,7 +5725,7 @@ void TASImage::DrawGlyph(void *bitmap, UInt_t color, Int_t bx, Int_t by)
          bxx = bx + x;
          if ((bxx >= (int)fImage->width) || (bxx < 0)) continue;
 
-         idx = bxx + yy;
+         idx = Idx(bxx + yy);
          r += ((fImage->alt.argb32[idx] & 0xff0000) >> 16);
          g += ((fImage->alt.argb32[idx] & 0x00ff00) >> 8);
          b += (fImage->alt.argb32[idx] & 0x0000ff);
@@ -5734,6 +5754,7 @@ void TASImage::DrawGlyph(void *bitmap, UInt_t color, Int_t bx, Int_t by)
    }
 
    yy = y0;
+   ARGB32 acolor;
    for (y = 0; y < (int) source->rows; y++) {
       byy = by + y;
       if ((byy >= (int)fImage->height) || (byy <0)) continue;
@@ -5747,8 +5768,13 @@ void TASImage::DrawGlyph(void *bitmap, UInt_t color, Int_t bx, Int_t by)
          if (d > 4) d = 4;
 
          if (d && (x < (int) source->width) && (bxx < (int)fImage->width) && (bxx >= 0)) {
-            idx = bxx + yy;
-            fImage->alt.argb32[idx] = (ARGB32)col[d];
+            idx = Idx(bxx + yy);
+            acolor = (ARGB32)col[d];
+            if (has_alpha) {
+               _alphaBlend(&fImage->alt.argb32[idx], &acolor);
+            } else {
+               fImage->alt.argb32[idx] = acolor;
+            }
          }
       }
       yy += fImage->width;
@@ -6514,7 +6540,7 @@ void TASImage::Gray(Bool_t on)
 
       for (i = 0; i < fImage->height; i++) {
          for (j = 0; j < fImage->width; j++) {
-            idx = y + j;
+            idx = Idx(y + j);
 
             r = ((fImage->alt.argb32[idx] & 0xff0000) >> 16);
             g = ((fImage->alt.argb32[idx] & 0x00ff00) >> 8);
@@ -6781,3 +6807,14 @@ Bool_t TASImage::SetJpegDpi(const char *name, UInt_t set)
 
    return kTRUE;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return a valid index in fImage tables to avoid seg-fault by accessing out of
+/// indices out of array's ranges.
+
+Int_t TASImage::Idx(Int_t idx)
+{
+   // The size of arrays like fImage->alt.argb32 is fImage->width*fImage->height
+   return TMath::Min(idx,(Int_t)(fImage->width*fImage->height));
+}
+
