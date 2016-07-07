@@ -620,7 +620,7 @@ Add a new mode for `TClass::SetCanSplit` (2) which indicates that this class and
 ## Release 6.06/04
 Released on May 4, 2016
 
-## General
+### General
 
 * Significant update of the valgrind suppression file to hide intentional lack
 of delete of some entities at the end of the process.
@@ -696,9 +696,7 @@ Released on July 6, 2016
 - Fix detection of errors that appears in nested TTreeFormula [ROOT-8218]
 - Avoid autoparse looking for default constructor in TTreeCloner::CopyStreamerInfos().
 
-Release Notes - ROOT - Version 6.06/06
-
-## Bug Fixed in this release
+### Bugs fixed in this release
 
 *   [[ROOT-6753](https://sft.its.cern.ch/jira/browse/ROOT-6753)] - PROOF-Lite doesn't find TSelector type from an already loaded library
 *   [[ROOT-7258](https://sft.its.cern.ch/jira/browse/ROOT-7258)] - MinIf and MaxIf TTreeFormula functions ignore last element
