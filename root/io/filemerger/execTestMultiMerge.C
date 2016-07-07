@@ -1,5 +1,6 @@
 #include "TFile.h"
-#include <lzma.h>
+
+extern "C" uint32_t lzma_version_number(void);
 
 int testMergedFile(const char *filename, Int_t compSetting, Long64_t fileSize)
 {
