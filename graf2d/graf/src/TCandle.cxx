@@ -362,7 +362,7 @@ void TCandle::Paint(Option_t *)
          Double_t scaledBinContent = fProj->GetBinContent(bin)/myScale;
          if (scaledBinContent >0 && scaledBinContent < 1) scaledBinContent = 1; //Outliers have a typical bincontent between 0 and 1, when scaling they would disappear
             for (int j=0; j < (int)scaledBinContent; j++) {
-               if (nOutliers > maxOutliers) break;
+               if (nOutliers >= maxOutliers) break;
                if (IsOption(kPointsAllScat)) { //Draw outliers and "all" values scattered
                   outliersX[nOutliers] = fPosCandleAxis - fCandleWidth/2. + fCandleWidth*random.Rndm();
                   outliersY[nOutliers] = fProj->GetBinLowEdge(bin) + fProj->GetBinWidth(bin)*random.Rndm();
