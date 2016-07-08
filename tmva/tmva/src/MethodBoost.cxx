@@ -444,7 +444,7 @@ void TMVA::MethodBoost::Train()
       // (used later on to get 'misclassified events' etc for the boosting
       CalcMVAValues();
 
-      if (fCurrentMethodIdx==0 && fMonitorBoostedMethod) CreateMVAHistorgrams();
+      if(!IsSilentFile()) if (fCurrentMethodIdx==0 && fMonitorBoostedMethod) CreateMVAHistorgrams();
       
       // get ROC integral and overlap integral for single method on
       // training sample if fMethodWeightType == "ByROC" or the user
@@ -829,11 +829,14 @@ void TMVA::MethodBoost::FindMVACut(MethodBase *method)
 
    
    Log() << kDEBUG << "(old step) Setting method cut to " <<method->GetSignalReferenceCut()<< Endl;
-   
-   // mvaS ->Delete();  
-   // mvaB ->Delete();
-   // mvaSC->Delete();
-   // mvaBC->Delete();
+
+   if(IsSilentFile())
+   {
+        mvaS ->Delete();  
+        mvaB ->Delete();
+        mvaSC->Delete();
+        mvaBC->Delete();
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -894,15 +897,18 @@ Double_t TMVA::MethodBoost::AdaBoost(MethodBase* method, Bool_t discreteAdaBoost
       v = fMVAvalues->at(ievt);
       w = ev->GetWeight();
       sumAll += w;
-      if (fMonitorBoostedMethod) {
-         if (sig) {
-            fBTrainSigMVAHist[fCurrentMethodIdx]->Fill(v,w);
-            fTrainSigMVAHist[fCurrentMethodIdx]->Fill(v,ev->GetOriginalWeight());
-         }
-         else {
-            fBTrainBgdMVAHist[fCurrentMethodIdx]->Fill(v,w);
-            fTrainBgdMVAHist[fCurrentMethodIdx]->Fill(v,ev->GetOriginalWeight());
-         }
+      if(!IsSilentFile())
+      {
+        if (fMonitorBoostedMethod) {
+            if (sig) {
+                fBTrainSigMVAHist[fCurrentMethodIdx]->Fill(v,w);
+                fTrainSigMVAHist[fCurrentMethodIdx]->Fill(v,ev->GetOriginalWeight());
+            }
+            else {
+                fBTrainBgdMVAHist[fCurrentMethodIdx]->Fill(v,w);
+                fTrainBgdMVAHist[fCurrentMethodIdx]->Fill(v,ev->GetOriginalWeight());
+            }
+        }
       }
       
       if (discreteAdaBoost){

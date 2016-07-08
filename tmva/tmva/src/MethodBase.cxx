@@ -617,8 +617,11 @@ void TMVA::MethodBase::TrainMethod()
 
    // write additional monitoring histograms to main target file (not the weight file)
    // again, make sure the histograms go into the method's subdirectory
-   if(!IsSilentFile()) BaseDir()->cd();
-   if(!IsSilentFile()) WriteMonitoringHistosToFile();
+   if(!IsSilentFile())
+   {
+       BaseDir()->cd();
+       WriteMonitoringHistosToFile();
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
