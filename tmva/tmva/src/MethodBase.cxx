@@ -2052,9 +2052,11 @@ void TMVA::MethodBase::CreateMVAPdfs()
    gTools().NormHist( histMVAPdfB );
 
    // momentary hack for ROOT problem
-   histMVAPdfS->Write();
-   histMVAPdfB->Write();
-
+   if(!IsSilentFile())
+   {
+        histMVAPdfS->Write();
+        histMVAPdfB->Write();
+   }
    // create PDFs
    fMVAPdfS->BuildPDF   ( histMVAPdfS );
    fMVAPdfB->BuildPDF   ( histMVAPdfB );
