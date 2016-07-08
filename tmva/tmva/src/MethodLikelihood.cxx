@@ -374,22 +374,21 @@ void TMVA::MethodLikelihood::Train( void )
          xmax[ivar]=xmax[ivar]+1; // make sure that all entries are included in histogram
          Int_t ixmax = TMath::Nint( xmax[ivar] );
          Int_t nbins = ixmax - ixmin;
-
-         (*fHistSig)[ivar] = new TH1F( var + "_sig", var + " signal training",     nbins, ixmin, ixmax );
-         (*fHistBgd)[ivar] = new TH1F( var + "_bgd", var + " background training", nbins, ixmin, ixmax );
+         (*fHistSig)[ivar] = new TH1F(GetMethodName()+"_"+var + "_sig", var + " signal training",     nbins, ixmin, ixmax );
+         (*fHistBgd)[ivar] = new TH1F(GetMethodName()+"_"+var + "_bgd", var + " background training", nbins, ixmin, ixmax );
       } else {
 
          UInt_t minNEvt = TMath::Min(Data()->GetNEvtSigTrain(),Data()->GetNEvtBkgdTrain());
          Int_t nbinsS = (*fPDFSig)[ivar]->GetHistNBins( minNEvt );
          Int_t nbinsB = (*fPDFBgd)[ivar]->GetHistNBins( minNEvt );
 
-         (*fHistSig)[ivar] = new TH1F( Form("%s_sig",var.Data()),
-                                       Form("%s signal training",var.Data()), nbinsS, xmin[ivar], xmax[ivar] );
-         (*fHistBgd)[ivar] = new TH1F( Form("%s_bgd",var.Data()),
-                                       Form("%s background training",var.Data()), nbinsB, xmin[ivar], xmax[ivar] );
+         (*fHistSig)[ivar] = new TH1F( Form("%s_%s_sig",GetMethodName().Data(),var.Data()),
+                                       Form("%s_%s signal training",GetMethodName().Data(),var.Data()), nbinsS, xmin[ivar], xmax[ivar] );
+         (*fHistBgd)[ivar] = new TH1F( Form("%s_%s_bgd",GetMethodName().Data(),var.Data()),
+                                       Form("%s_%s background training",GetMethodName().Data(),var.Data()), nbinsB, xmin[ivar], xmax[ivar] );
       }
    }
-
+   
    // ----- fill the reference histograms
    Log() << kINFO << "Filling reference histograms" << Endl;
 
