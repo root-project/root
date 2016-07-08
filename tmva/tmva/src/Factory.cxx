@@ -377,7 +377,12 @@ TMVA::MethodBase* TMVA::Factory::BookMethod( TMVA::DataLoader *loader, TString t
                            "Number of times the classifier will be boosted" );
    conf->ParseOptions();
    delete conf;
-
+   TString fFileDir;
+   if(fModelPersistence)
+   {
+       fFileDir=loader->GetName();
+       fFileDir+="/"+gConfig().GetIONames().fWeightFileDir;
+   }
    // initialize methods
    IMethod* im;
    if (!boostNum) {
@@ -398,6 +403,9 @@ TMVA::MethodBase* TMVA::Factory::BookMethod( TMVA::DataLoader *loader, TString t
       MethodBoost* methBoost = dynamic_cast<MethodBoost*>(im); // DSMTEST divided into two lines
       if (!methBoost) // DSMTEST
          Log() << kFATAL << "Method with type kBoost cannot be casted to MethodCategory. /Factory" << Endl; // DSMTEST
+
+      if(fModelPersistence) methBoost->SetWeightFileDir(fFileDir);
+      methBoost->SetModelPersistence(fModelPersistence);
       methBoost->SetBoostedMethodName( theMethodName ); // DSMTEST divided into two lines
       methBoost->fDataSetManager = loader->fDataSetManager; // DSMTEST
       methBoost->SetFile(fgTargetFile);
@@ -412,6 +420,9 @@ TMVA::MethodBase* TMVA::Factory::BookMethod( TMVA::DataLoader *loader, TString t
       MethodCategory *methCat = (dynamic_cast<MethodCategory*>(im)); // DSMTEST
       if (!methCat) // DSMTEST
          Log() << kFATAL << "Method with type kCategory cannot be casted to MethodCategory. /Factory" << Endl; // DSMTEST
+      
+      if(fModelPersistence) methCat->SetWeightFileDir(fFileDir);
+      methCat->SetModelPersistence(fModelPersistence);
       methCat->fDataSetManager = loader->fDataSetManager; // DSMTEST
       methCat->SetFile(fgTargetFile);
       methCat->SetSilentFile(IsSilentFile());
@@ -437,12 +448,7 @@ TMVA::MethodBase* TMVA::Factory::BookMethod( TMVA::DataLoader *loader, TString t
 //    method->SetWeightFileDir(Form("%s/%s",loader->GetName(),method->GetWeightFileDir().Data()));//setting up weight file dir
    //method->fDataLoader=loader;
    
-   if(fModelPersistence)
-   {
-        TString fFileDir=loader->GetName();
-        fFileDir+="/"+gConfig().GetIONames().fWeightFileDir;
-        method->SetWeightFileDir(fFileDir);
-   }
+   if(fModelPersistence) method->SetWeightFileDir(fFileDir);
    method->SetModelPersistence(fModelPersistence);
    method->SetAnalysisType( fAnalysisType );
    method->SetupMethod();
@@ -928,7 +934,13 @@ void TMVA::Factory::TrainAllMethods()
 		else methCat->fDataSetManager = m->DataInfo().GetDataSetManager();
 	    }
 	    //ToDo, Do we need to fill the DataSetManager of MethodBoost here too?
-	    
+            
+            
+            TString fFileDir= m->DataInfo().GetName();
+            fFileDir+="/"+gConfig().GetIONames().fWeightFileDir;
+            m->SetWeightFileDir(fFileDir);
+            m->SetModelPersistence(fModelPersistence);
+            m->SetSilentFile(IsSilentFile());
 	    m->SetAnalysisType(fAnalysisType);
 	    m->SetupMethod();
 	    m->ReadStateFromFile();
@@ -1178,12 +1190,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
 	    // perform the evaluation
 	    theMethod->TestClassification();
 	    
-// 	    //removing all the output of File
-// 	    if(IsSilentFile())
-// 	    {	      
-// 	      fgTargetFile->Delete(itrMap->first);
-// 	      
-// 	    }
+
 	    // evaluate the classifier
 	    mname[isel].push_back( theMethod->GetMethodName() );
 	    sig[isel].push_back  ( theMethod->GetSignificance() );
