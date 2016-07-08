@@ -476,11 +476,14 @@ void TMVA::MethodMLP::BFGSMinimize( Int_t nEpochs )
 
    // create histograms for overtraining monitoring
    Int_t nbinTest = Int_t(nEpochs/fTestRate);
-   fEstimatorHistTrain = new TH1F( "estimatorHistTrain", "training estimator",
+   if(!IsSilentFile())
+   {
+       fEstimatorHistTrain = new TH1F( "estimatorHistTrain", "training estimator",
                                    nbinTest, Int_t(fTestRate/2), nbinTest*fTestRate+Int_t(fTestRate/2) );
-   fEstimatorHistTest  = new TH1F( "estimatorHistTest", "test estimator",
+       fEstimatorHistTest  = new TH1F( "estimatorHistTest", "test estimator",
                                    nbinTest, Int_t(fTestRate/2), nbinTest*fTestRate+Int_t(fTestRate/2) );
-
+   }
+   
    Int_t nSynapses = fSynapses->GetEntriesFast();
    Int_t nWeights  = nSynapses;
 
@@ -594,9 +597,11 @@ void TMVA::MethodMLP::BFGSMinimize( Int_t nEpochs )
          //testE  = CalculateEstimator( Types::kTesting,  i ) - fPrior/Float_t(GetNEvents()); // estimator for test sample //zjh
          trainE = CalculateEstimator( Types::kTraining, i ) ; // estimator for training sample  //zjh
          testE  = CalculateEstimator( Types::kTesting,  i ) ; // estimator for test sample //zjh
-         fEstimatorHistTrain->Fill( i+1, trainE );
-         fEstimatorHistTest ->Fill( i+1, testE );
-
+         if(!IsSilentFile()) //saved to see in TMVAGui, no needed without file
+         {
+            fEstimatorHistTrain->Fill( i+1, trainE );
+            fEstimatorHistTest ->Fill( i+1, testE );
+         }
          Bool_t success = kFALSE;
          if ((testE < GetCurrentValue()) || (GetCurrentValue()<1e-100)) {
             success = kTRUE;
