@@ -55,6 +55,7 @@
 #include "TMVA/MsgLogger.h"
 #include "TMVA/Tools.h"
 #include "TMVA/Types.h"
+#include "TMVA/Config.h"
 
 using std::vector;
 
@@ -197,6 +198,12 @@ void TMVA::MethodCompositeBase::ReadWeightsFromXML( void* wghtnode )
          Log() << kFATAL << "Could not read method from XML" << Endl;
 
       void* methXML = gTools().GetChild(ch);
+      
+      TString _fFileDir= meth->DataInfo().GetName();
+      _fFileDir+="/"+gConfig().GetIONames().fWeightFileDir;
+      meth->SetWeightFileDir(_fFileDir);
+      meth->SetModelPersistence(IsModelPersistence());
+      meth->SetSilentFile(IsSilentFile());
       meth->SetupMethod();
       meth->SetMsgType(kWARNING);
       meth->ParseOptions();
