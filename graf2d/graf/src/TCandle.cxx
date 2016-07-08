@@ -47,10 +47,13 @@ TCandle::TCandle()
    fBoxDown       = 0.;
    fWhiskerUp     = 0.;
    fWhiskerDown   = 0.;
-   fNDatapoints   = 0;
    fLogX          = 0;
    fLogY          = 0;
    fDismiss       = 0;
+   fProj          = 0;
+   fOption        = kNoOption;
+   fNDatapoints   = 0;
+   fDatapoints    = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
