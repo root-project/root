@@ -48,7 +48,9 @@ TCandle::TCandle()
    fWhiskerUp     = 0.;
    fWhiskerDown   = 0.;
    fNDatapoints   = 0;
-   fDismiss = 0;
+   fLogX          = 0;
+   fLogY          = 0;
+   fDismiss       = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -73,7 +75,8 @@ TCandle::TCandle(const Double_t candlePos, const Double_t candleWidth, TH1D *pro
    fProj          = proj;
    fDismiss       = 0;
    fOption        = kNoOption;
-
+   fLogX          = 0;
+   fLogY          = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
