@@ -187,7 +187,7 @@ End_Macro
 #### Case 3: inline expression using a user defined CLING function by name
 
 ~~~~{.cpp}
-Double_t myFunc(x) { return x+sin(x); }
+Double_t myFunc(double x) { return x+sin(x); }
 ....
 TF1 *fa3 = new TF1("fa3","myFunc(x)",-3,5);
 fa3->Draw();
