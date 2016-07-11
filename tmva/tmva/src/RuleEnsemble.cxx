@@ -662,6 +662,8 @@ void TMVA::RuleEnsemble::MakeLinearTerms()
    UInt_t   indquantM;
    UInt_t   indquantP;
    
+   MethodBase *fMB=const_cast<MethodBase *>(fRuleFit->GetMethodBase());
+   
    for (UInt_t v=0; v<nvars; v++) {
       varsum[v] = 0;
       varsum2[v] = 0;
@@ -687,12 +689,16 @@ void TMVA::RuleEnsemble::MakeLinearTerms()
       //
       fLinDM[v] = vardata[v][indquantM].first; // delta-
       fLinDP[v] = vardata[v][indquantP].first; // delta+
-      if (fLinPDFB[v]) delete fLinPDFB[v];
-      if (fLinPDFS[v]) delete fLinPDFS[v];
-      fLinPDFB[v] = new TH1F(Form("bkgvar%d",v),"bkg temphist",40,fLinDM[v],fLinDP[v]);
-      fLinPDFS[v] = new TH1F(Form("sigvar%d",v),"sig temphist",40,fLinDM[v],fLinDP[v]);
-      fLinPDFB[v]->Sumw2();
-      fLinPDFS[v]->Sumw2();
+        
+      if(!fMB->IsSilentFile())
+      {
+            if (fLinPDFB[v]) delete fLinPDFB[v];
+            if (fLinPDFS[v]) delete fLinPDFS[v];
+            fLinPDFB[v] = new TH1F(Form("bkgvar%d",v),"bkg temphist",40,fLinDM[v],fLinDP[v]);
+            fLinPDFS[v] = new TH1F(Form("sigvar%d",v),"sig temphist",40,fLinDM[v],fLinDP[v]);
+            fLinPDFB[v]->Sumw2();
+            fLinPDFS[v]->Sumw2();
+      }
       //
       Int_t type;
       const Double_t w = 1.0/fRuleFit->GetNEveEff();
@@ -703,8 +709,11 @@ void TMVA::RuleEnsemble::MakeLinearTerms()
          lx = TMath::Min( fLinDP[v], TMath::Max( fLinDM[v], val ) );
          varsum[v] += ew*lx;
          varsum2[v] += ew*lx*lx;
-         if (type==1) fLinPDFS[v]->Fill(lx,w*ew);
-         else         fLinPDFB[v]->Fill(lx,w*ew);
+         if(!fMB->IsSilentFile())
+         {
+             if (type==1) fLinPDFS[v]->Fill(lx,w*ew);
+             else         fLinPDFB[v]->Fill(lx,w*ew);
+         }
       }
       //
       // Get normalization.
@@ -713,7 +722,6 @@ void TMVA::RuleEnsemble::MakeLinearTerms()
       fLinNorm[v] = CalcLinNorm(stdl);
    }
    // Save PDFs - for debugging purpose
-   MethodBase *fMB=const_cast<MethodBase *>(fRuleFit->GetMethodBase());
    if(!fMB->IsSilentFile())
    {
         for (UInt_t v=0; v<nvars; v++) {
