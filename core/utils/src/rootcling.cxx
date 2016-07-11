@@ -5525,7 +5525,7 @@ int GenReflex(int argc, char **argv)
       "      In order for ROOT to pick up the information in the rootmaps, they\n"
       "      have to be located in the library path and have the .rootmap extension.\n"
       "      An example rootmap file could be:\n"
-      "      { decl }\n"
+      "      { decls }\n"
       "      template <class T> class A;\n"
       "      [ libMyLib.so ]\n"
       "      class A<double>\n"
