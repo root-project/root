@@ -6842,7 +6842,21 @@ void TClass::RemoveStreamerInfo(Int_t slot)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return true if we have access to a default constructor.
+/// Return true if we have access to a constructor useable for I/O.  This is
+/// typically the default constructor but can also be a constructor specifically
+/// marked for I/O (for example a constructor taking a TRootIOCtor* as an
+/// argument).  In other words, if this routine returns true, TClass::New is
+/// guarantee to succeed.
+/// To know if the class described by this TClass has a default constructor
+/// (public or not), use
+/// \code{.cpp}
+///     cl->GetProperty() & kClassHasDefaultCtor
+/// \code
+/// To know if the class described by this TClass has a public default
+/// constructor use:
+/// \code{.cpp}
+///    gInterpreter->ClassInfo_HasDefaultConstructor(aClass->GetClassInfo());
+/// \code
 
 Bool_t TClass::HasDefaultConstructor() const
 {
