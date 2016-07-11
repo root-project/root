@@ -1013,6 +1013,8 @@ void TPad::DeleteExec(const char *name)
 
 Int_t TPad::DistancetoPrimitive(Int_t px, Int_t py)
 {
+//   std::cout << __PRETTY_FUNCTION__ << "[" << fName << "]" << " called" << std::endl;
+
    Int_t pxl, pyl, pxt, pyt;
    Int_t px1 = gPad->XtoAbsPixel(fX1);
    Int_t py1 = gPad->YtoAbsPixel(fY1);
@@ -1598,6 +1600,8 @@ void TPad::DrawColorTable()
 
 void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
+
+//   std::cout << __PRETTY_FUNCTION__ << "[" << fName << "]" << " called" << std::endl;
    const Int_t kMaxDiff = 5;
    const Int_t kMinSize = 20;
    static Int_t pxorg, pyorg;
@@ -1695,7 +1699,7 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
       // No break !!!
 
-   case kMouseMotion:
+      case kMouseMotion:
 
       px1 = XtoAbsPixel(fX1);
       py1 = YtoAbsPixel(fY1);
@@ -2494,12 +2498,6 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
             zoombox->Delete();
             zoombox = 0;
          }
-      }
-
-      // HACK ? paint the canvas
-//      std::cout << "TPad::ExecuteEventAxis [" << fName << "]" << std::endl;
-      if (fCanvas) {
-         fCanvas->Paint();
       }
 
       break;
@@ -4012,6 +4010,8 @@ void TPad::PaintTextNDC(Double_t u, Double_t v, const wchar_t *text)
 
 TPad *TPad::Pick(Int_t px, Int_t py, TObjLink *&pickobj)
 {
+
+//   std::cout << __PRETTY_FUNCTION__ << "[" << fName << "]" << " called" << std::endl;
    //the two following statements are necessary under NT (multithreaded)
    //when a TCanvas object is being created and a thread calling TPad::Pick
    //before the TPad constructor has completed in the other thread
@@ -4118,6 +4118,7 @@ TPad *TPad::Pick(Int_t px, Int_t py, TObjLink *&pickobj)
       if (picked == this) {
          // cannot pick pad itself!
          picked = 0;
+         pickobj = new TObjLink(0);
       }
 
    }

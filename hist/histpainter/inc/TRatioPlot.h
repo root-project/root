@@ -34,6 +34,7 @@ class TBrowser;
 class TFileMergeInfo;
 
 class TRatioPlot : /*public TNamed,*/ public TPad {
+
 private:
    TRatioPlot& operator=(const TRatioPlot&); // Not implemented
    TRatioPlot(const TRatioPlot &hrp);
@@ -41,6 +42,7 @@ private:
    static const Int_t DIVIDE_GRAPH = 2;
 
 protected:
+
    TVirtualPad *fParentPad;
    TPad *fUpperPad;
    TPad *fLowerPad;
@@ -59,11 +61,28 @@ protected:
    TGaxis *fUpperGaxis;
    TGaxis *fLowerGaxis;
 
+   Double_t fUpTopMargin = 0.1;
+   Double_t fUpBottomMargin = 0.05;
+   Double_t fUpBottomMarginNominal = 0.05;
+
+   Double_t fLowTopMargin = 0.05;
+   Double_t fLowTopMarginNominal = 0.05;
+   Double_t fLowBottomMargin = 0.1;
+
+   Double_t fLeftMargin = 0.1;
+   Double_t fRightMargin = 0.1;
+
+   Double_t fSeparationMargin;
+
+//   TObjLink *fRealLnk = 0;
+
    virtual void BuildRatio();
    virtual void CalculateSizes();
    virtual void SyncAxesRanges();
    virtual void SetupPads();
    virtual void CreateVisualAxes();
+   virtual void SyncPadMargins();
+   virtual void SetPadMargins();
 
 public:
 
@@ -77,7 +96,10 @@ public:
    virtual void Paint(Option_t *opt = "");
 
    virtual void UnZoom(TAxis*);
+//   virtual void ExecuteEvent(Int_t event, Int_t px, Int_t py);
+//   virtual TPad* Pick(Int_t px, Int_t py, TObjLink *&pickobj);
 
+   virtual void RangeAxisChanged();
 
    ClassDef(TRatioPlot, 1)  //A ratio of histograms
 };
