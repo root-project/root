@@ -1,4 +1,13 @@
 TEST_TARGETS += newTest
+
+#leave here
+ifeq ($(ARCH),aix5)
+PACKAGES = namespace template InheritMulti
+else
+PACKAGES = namespace template nstemplate InheritMulti
+endif
+DICTS = $(PACKAGES:%=%dict.C)
+
 CLEAN_TARGETS += $(ALL_LIBRARIES) ti_files $(DICTS) $(DICTS_H) ii_files \
 	*.$(ObjSuf) *.$(DllSuf) *.lib *.def test.root so_locations *~ \
 	*.exp .def *.log *.pdb *.rootmap 
@@ -18,26 +27,9 @@ local_all: main
 .PHONY: main
 
 
-#ifeq ($(PLATFORM),win32)
-#CXXFLAGS += -TP
-#LIBSFORLINK = $(LIBS)
-#else
-#ifeq ($(ARCH),solarisCC)
-#CXXFLAGS += -ptr.
-#else
-#LIBSFORLINK = 
-#endif
-#endif
 
-#leave here
-ifeq ($(ARCH),aix5)
-PACKAGES = namespace template InheritMulti
-else
-PACKAGES = namespace template nstemplate InheritMulti
-endif
 
 SHARED_LIBS = $(PACKAGES:%=%.$(DllSuf)) 
-DICTS = $(PACKAGES:%=%dict.C)
 DICTS_H = $(PACKAGES:%=%dict.h)
 
 main: $(SHARED_LIBS)
