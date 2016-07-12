@@ -1114,7 +1114,7 @@ void TAxis::UnZoom()
    gPad->SetView();
 
    // @TODO: Does this make sense? Maybe it would be better to repaint from top?
-   gPad->UnZoom(this);
+//   gPad->UnZoom(this);
 
    //unzoom object owning this axis
    SetRange(0,0);
@@ -1173,6 +1173,8 @@ void TAxis::UnZoom()
          hobj->GetXaxis()->SetRange(0,0);
       }
    }
+
+   gPad->UnZoomed();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

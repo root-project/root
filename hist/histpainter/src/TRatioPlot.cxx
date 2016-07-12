@@ -65,8 +65,10 @@ TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, const char *name /*=0*/, const char *ti
      fTopPad(0),
      fRatioGraph(0),
      fSharedXAxis(0),
-     fUpperGaxis(0),
-     fLowerGaxis(0)
+     fUpperGXaxis(0),
+     fLowerGXaxis(0),
+     fUpperGYaxis(0),
+     fLowerGYaxis(0)
 {
    gROOT->GetListOfCleanups()->Add(this);
 
@@ -117,35 +119,30 @@ void TRatioPlot::SetupPads() {
       fLowerPad = 0;
    }
 
+   fUpperPad = new TPad(TString::Format("%s_%s", fName.Data(), "upper_pad"), "", 0., fSplitFraction, 1., 1.);
+   fLowerPad = new TPad(TString::Format("%s_%s", fName.Data(), "lower_pad"), "", 0., 0., 1., fSplitFraction);
+
+   SetPadMargins();
+
+   // connect to the pads signal
+   fUpperPad->Connect("RangeChanged()", "TRatioPlot", this, "RangeAxisChanged()");
+   fLowerPad->Connect("RangeChanged()", "TRatioPlot", this, "RangeAxisChanged()");
+
+   fUpperPad->Connect("UnZoomed()", "TRatioPlot", this, "UnZoomed()");
+   fLowerPad->Connect("UnZoomed()", "TRatioPlot", this, "UnZoomed()");
+
+
+
    if (fTopPad != 0) {
       delete fTopPad;
       fTopPad = 0;
    }
 
-   fUpperPad = new TPad(TString::Format("%s_%s", fName.Data(), "upper_pad"), "", 0., fSplitFraction, 1., 1.);
-   fLowerPad = new TPad(TString::Format("%s_%s", fName.Data(), "lower_pad"), "", 0., 0., 1., fSplitFraction);
-
-
-//   fUpperPad->SetTopMargin(fUpTopMargin);
-//   fUpperPad->SetBottomMargin(fUpBottomMargin);
-//   fUpperPad->SetLeftMargin(fLeftMargin);
-//   fUpperPad->SetRightMargin(fRightMargin);
-//
-//   fLowerPad->SetTopMargin(fLowTopMargin);
-//   fLowerPad->SetBottomMargin(fLowBottomMargin);
-//   fLowerPad->SetLeftMargin(fLeftMargin);
-//   fLowerPad->SetRightMargin(fRightMargin);
-
-   SetPadMargins();
-
-
-   fTopPad = new TPad(TString::Format("%s_%s", fName.Data(), "top_pad"), "", 0., 0., 1., 1.);
+   Double_t margin = 0;//0.01;
+   fTopPad = new TPad(TString::Format("%s_%s", fName.Data(), "top_pad"), "", margin, margin, 1-margin, 1-margin);
 
    fTopPad->SetBit(kCannotPick);
 
-   // connect to the pads events
-   fUpperPad->Connect("RangeChanged()", "TRatioPlot", this, "RangeAxisChanged()");
-   fLowerPad->Connect("RangeChanged()", "TRatioPlot", this, "RangeAxisChanged()");
 }
 
 
@@ -160,9 +157,7 @@ void TRatioPlot::SetupPads() {
 ////////////////////////////////////////////////////////////////////////////////
 /// TRatioPlot copy constructor
 
-TRatioPlot::TRatioPlot(const TRatioPlot &hrp) //:
-//   TPad(hrp)//,
-//   TNamed(hrp)
+TRatioPlot::TRatioPlot(const TRatioPlot &hrp)
 {
    Warning("TRatioPlot", "Copy constructor not yet implemented");
     return;
@@ -190,69 +185,59 @@ void TRatioPlot::Draw(Option_t *option)
    BuildRatio();
    TPad::Draw(option);
 
-   // we are a TPad o.O
+   // we are a TPad
    cd();
 
    fUpperPad->Draw();
    fLowerPad->Draw();
 
    fTopPad->SetFillStyle(0);
-   fTopPad->AppendPad();
+//   fTopPad->SetFillColor(kBlue);
+   fTopPad->Draw();
 
-
-   Double_t newGlobFirst = fSharedXAxis->GetBinLowEdge(fSharedXAxis->GetFirst());
-   Double_t newGlobLast = fSharedXAxis->GetBinUpEdge(fSharedXAxis->GetLast());
 
    fUpperPad->cd();
+
+
+   fH1->GetXaxis()->SetTickSize(0.);
+   fH1->GetXaxis()->SetLabelSize(0.);
+   fH1->GetYaxis()->SetTickSize(0.);
+   fH1->GetYaxis()->SetLabelSize(0.);
+
    fH1->Draw("E");
    fH2->Draw("hist same");
 
    fLowerPad->cd();
+
+   fRatioGraph->GetXaxis()->SetTickSize(0.);
+   fRatioGraph->GetXaxis()->SetLabelSize(0.);
+   fRatioGraph->GetYaxis()->SetTickSize(0.);
+   fRatioGraph->GetYaxis()->SetLabelSize(0.);
    fRatioGraph->Draw("AP");
 
 
    fTopPad->cd();
+
+//   CreateVisualAxes();
+
+   SyncAxesRanges();
+
    padsav->cd();
 
-   __(__FUNCTION__ << " gPad: " << gPad->GetName());
 }
 
 void TRatioPlot::Paint(Option_t *opt) {
 
-   __(__FUNCTION__ << " gPad: " << gPad->GetName());
+//   std::cout << "TRatioPlot::Paint called " << opt << std::endl;
 
-   std::cout << "TRatioPlot::Paint called " << opt << std::endl;
 
-   // lets check if the axis range of one of our pads has changed
+//   CalculateSizes();
 
-//   TList *upPrim = fUpperPad->GetListOfPrimitives();
-//   upPrim->ls();
-//
-//   TFrame *upFrame = dynamic_cast<TFrame*>(upPrim->At(0));
-//
-//   var_dump(upFrame);
+   fUpperPad->Paint();
+   fLowerPad->Paint();
 
-   CalculateSizes();
-//   CreateVisualAxes();
+   CreateVisualAxes();
 
-//   fUpperGaxis->Paint();
-//   fLowerGaxis->Paint();
-
-//   fUpperPad->Paint();
-//   fLowerPad->Paint();
-   fH1->Paint();
-   fH2->Paint();
-
-   __(__FUNCTION__ << " gPad: " << gPad->GetName());
-}
-
-void TRatioPlot::CalculateSizes()
-{
-
-//   __(__PRETTY_FUNCTION__ << " called");
-
-   fUpperPad->SetBottomMargin(0.05);
-   fLowerPad->SetTopMargin(0.05);
 
 }
 
@@ -262,8 +247,6 @@ void TRatioPlot::SyncAxesRanges()
    Double_t first = fSharedXAxis->GetBinLowEdge(fSharedXAxis->GetFirst());
    Double_t last = fSharedXAxis->GetBinUpEdge(fSharedXAxis->GetLast());
 
-//   var_dump(first);
-//   var_dump(last);
 
    fRatioGraph->GetXaxis()->SetLimits(first, last);
    fRatioGraph->GetXaxis()->SetRangeUser(first, last);
@@ -283,13 +266,13 @@ void TRatioPlot::BuildRatio()
    }
 
    if (fDivideMode == DIVIDE_GRAPH) {
-      std::cout << "DIVIDE_GRAPH " << fDivideOption << std::endl;
+//      std::cout << "DIVIDE_GRAPH " << fDivideOption << std::endl;
       TGraphAsymmErrors *ratioGraph = new TGraphAsymmErrors();
       ratioGraph->Divide(fH1, fH2, fDivideOption.Data());
       fRatioGraph = ratioGraph;
    }
    else {
-      std::cout << "DIVIDE_HIST " << fDivideOption << std::endl;
+//      std::cout << "DIVIDE_HIST " << fDivideOption << std::endl;
       TH1 *tmpHist = (TH1*)fH1->Clone();
       tmpHist->Reset();
       tmpHist->Divide(fH1, fH2, 1., 1., fDivideOption.Data());
@@ -299,30 +282,40 @@ void TRatioPlot::BuildRatio()
    fRatioGraph->SetTitle("");
 }
 
+
+
 void TRatioPlot::CreateVisualAxes()
 {
 
-   __(__PRETTY_FUNCTION__ << " called");
+//   __(__PRETTY_FUNCTION__ << " called");
 
-   if (fUpperGaxis != 0) {
-      delete fUpperGaxis;
+   if (fUpperGXaxis != 0) {
+      delete fUpperGXaxis;
    }
 
-   if (fLowerGaxis != 0) {
-      delete fLowerGaxis;
+   if (fLowerGXaxis != 0) {
+      delete fLowerGXaxis;
+   }
+
+   if (fUpperGYaxis != 0) {
+      delete fUpperGYaxis;
+   }
+
+   if (fLowerGYaxis != 0) {
+      delete fLowerGYaxis;
    }
 
 
-//   Double_t upTM = fUpperPad->GetTopMargin();
-//   Double_t upBM = fUpperPad->GetBottomMargin();
-//   Double_t upLM = fUpperPad->GetLeftMargin();
-//   Double_t upRM = fUpperPad->GetRightMargin();
-//
-//   Double_t lowTM = fLowerPad->GetTopMargin();
-//   Double_t lowBM = fLowerPad->GetBottomMargin();
-//   Double_t lowLM = fLowerPad->GetLeftMargin();
-//   Double_t lowRM = fLowerPad->GetRightMargin();
-//
+   Double_t upTM = fUpperPad->GetTopMargin();
+   Double_t upBM = fUpperPad->GetBottomMargin();
+   Double_t upLM = fUpperPad->GetLeftMargin();
+   Double_t upRM = fUpperPad->GetRightMargin();
+
+   Double_t lowTM = fLowerPad->GetTopMargin();
+   Double_t lowBM = fLowerPad->GetBottomMargin();
+   Double_t lowLM = fLowerPad->GetLeftMargin();
+   Double_t lowRM = fLowerPad->GetRightMargin();
+
 //   var_dump(upTM);
 //   var_dump(upBM);
 //   var_dump(upLM);
@@ -332,80 +325,48 @@ void TRatioPlot::CreateVisualAxes()
 //   var_dump(lowLM);
 //   var_dump(lowRM);
 
-//
-//   Double_t upWNDC = fUpperPad->GetWNDC();
-//   Double_t upHNDC = fUpperPad->GetHNDC();
-//   Double_t upLowXNDC = fUpperPad->GetXlowNDC();
-//   Double_t upLowYNDC = fUpperPad->GetYlowNDC();
-//   Double_t lowWNDC = fLowerPad->GetWNDC();
-//   Double_t lowHNDC = fLowerPad->GetHNDC();
-//   Double_t lowLowXNDC = fLowerPad->GetXlowNDC();
-//   Double_t lowLowYNDC = fLowerPad->GetYlowNDC();
-//
-//
-//
-//   var_dump(upWNDC);
-//   var_dump(upHNDC);
-//   var_dump(upLowXNDC);
-//   var_dump(upLowYNDC);
-//   var_dump(lowWNDC);
-//   var_dump(lowHNDC);
-//   var_dump(lowLowXNDC);
-//   var_dump(lowLowYNDC);
+//   Double_t mf = 0.01 + 1;
+
+   Double_t first = fSharedXAxis->GetBinLowEdge(fSharedXAxis->GetFirst());
+   Double_t last = fSharedXAxis->GetBinUpEdge(fSharedXAxis->GetLast());
 
 
-//   Double_t upUxmin = fUpperPad->GetUxmin();
-//   Double_t upUxmax = fUpperPad->GetUxmax();
-//   Double_t upUymin = fUpperPad->GetUymin();
-//   Double_t upUymax = fUpperPad->GetUymax();
-//   Double_t lowUxmin = fLowerPad->GetUxmin();
-//   Double_t lowUxmax = fLowerPad->GetUxmax();
-//   Double_t lowUymin = fLowerPad->GetUymin();
-//   Double_t lowUymax = fLowerPad->GetUymax();
-//
-//
-//   var_dump(upUxmin);
-//   var_dump(upUxmax);
-//   var_dump(upUymin);
-//   var_dump(upUymax);
-//   var_dump(lowUxmin);
-//   var_dump(lowUxmax);
-//   var_dump(lowUymin);
-//   var_dump(lowUymax);
-//
-//
-//
-//
-//
-//   Double_t upX1 = fUpperPad->GetX1();
-//   Double_t upX2 = fUpperPad->GetX2();
-//   Double_t upY1 = fUpperPad->GetY1();
-//   Double_t lowX1 = fUpperPad->GetX1();
-//   Double_t lowX2 = fUpperPad->GetX2();
-//   Double_t lowY1 = fUpperPad->GetY1();
-//
-//   var_dump(upX1);
-//   var_dump(upX2);
-//   var_dump(upY1);
-//   var_dump(lowX1);
-//   var_dump(lowX2);
-//   var_dump(lowY1);
+   Double_t upYFirst = fUpperPad->GetUymin();
+   Double_t upYLast = fUpperPad->GetUymax();
+   Double_t lowYFirst = fLowerPad->GetUymin();
+   Double_t lowYLast = fLowerPad->GetUymax();
+
+   var_dump(upYFirst);
+   var_dump(upYLast);
+   var_dump(lowYFirst);
+   var_dump(lowYLast);
 
 
-//   fUpperGaxis = new TGaxis(upLM, upBM+fSplitFraction, 1-upRM, upBM+fSplitFraction, 0., 1.);
-//   fLowerGaxis = new TGaxis(lowLM, lowBM, 1-lowRM, lowBM, 0., 1.);
+   fUpperGXaxis = new TGaxis(upLM, upBM*(1-fSplitFraction)+fSplitFraction, (1-upRM), upBM*(1-fSplitFraction)+fSplitFraction, first, last);
+   fUpperGXaxis->SetLabelSize(0.);
 
-//   fUpperGaxis = new TGaxis(0, 0, 0, 0, 0., 1.);
-//   fLowerGaxis = new TGaxis(0, 0, 0, 0, 0., 1.);
+   fLowerGXaxis = new TGaxis(lowLM, lowBM*fSplitFraction, 1-lowRM, lowBM*fSplitFraction, first, last);
 
-//   TVirtualPad *padsav = gPad;
-//
-//   fTopPad->cd();
+   fUpperGYaxis = new TGaxis(upLM, upBM*(1-fSplitFraction)+fSplitFraction, upLM, (1-upTM)*(1-fSplitFraction)+fSplitFraction, upYFirst, upYLast, 510, "-S");
+   fLowerGYaxis = new TGaxis(lowLM, lowBM*fSplitFraction, lowLM, (1-lowTM)*fSplitFraction, lowYFirst, lowYLast, 510, "-S");
 
-//   fUpperGaxis->Draw();
-//   fLowerGaxis->Draw();
-//
-//   padsav->cd();
+   Double_t ratio = ( (upBM-(1-upTM))*(1-fSplitFraction) ) / ( (lowBM-(1-lowTM))*fSplitFraction ) ;
+
+   var_dump(ratio);
+
+//   fUpperGYaxis->SetTickSize(0.02);
+   fLowerGYaxis->SetTickSize(fUpperGYaxis->GetTickSize()*ratio);
+
+   TVirtualPad *padsav = gPad;
+
+   fTopPad->cd();
+
+   fUpperGXaxis->Draw();
+   fLowerGXaxis->Draw();
+   fUpperGYaxis->Draw();
+   fLowerGYaxis->Draw();
+
+   padsav->cd();
 
 }
 
@@ -421,15 +382,8 @@ void TRatioPlot::SetPadMargins()
    fLowerPad->SetRightMargin(fRightMargin);
 }
 
-void TRatioPlot::SyncPadMargins()
+Bool_t TRatioPlot::SyncPadMargins()
 {
-
-//   TQObject *sender = GetSender();
-   var_dump(gTQSender == fUpperPad);
-
-
-//   var_dump(fUpperPad->GetLeftMargin());
-//   var_dump(fLowerPad->GetLeftMargin());
 
    Bool_t changed = kFALSE;
 
@@ -452,13 +406,8 @@ void TRatioPlot::SyncPadMargins()
    }
 
    if (changed) {
-      __("margins changed");
-      fLowerPad->SetLeftMargin(fLeftMargin);
-      fUpperPad->SetLeftMargin(fLeftMargin);
-      fLowerPad->SetRightMargin(fRightMargin);
-      fUpperPad->SetRightMargin(fRightMargin);
 
-      fCanvas->Update();
+      SetPadMargins();
    }
 
 
@@ -466,38 +415,41 @@ void TRatioPlot::SyncPadMargins()
    Double_t delta;
 
    if (fUpperPad->GetBottomMargin() != fUpBottomMargin) {
+
       verticalChanged = kTRUE;
       fUpBottomMargin = fUpperPad->GetBottomMargin();
       delta = (fUpBottomMargin - fUpBottomMarginNominal)*(1-fSplitFraction);
-   }  else if (fLowerPad->GetTopMargin() != fLowTopMargin) {
+
+   } else if (fLowerPad->GetTopMargin() != fLowTopMargin) {
+
       verticalChanged = kTRUE;
       fLowTopMargin = fLowerPad->GetTopMargin();
       delta = -(fLowTopMargin - fLowTopMarginNominal)*fSplitFraction;
+
+   } else if (fLowerPad->GetBottomMargin() != fLowBottomMargin) {
+
+      fLowBottomMargin = fLowerPad->GetBottomMargin();
+
+   } else if (fUpperPad->GetTopMargin() != fUpTopMargin) {
+
+      fUpTopMargin = fUpperPad->GetTopMargin();
+
    }
+
 
    if (verticalChanged) {
-      var_dump(fLowTopMargin);
-      var_dump(fUpBottomMargin);
-
-      var_dump(delta);
-
       SetSplitFraction(fSplitFraction + delta);
       SetPadMargins();
-//      Draw();
-
    }
 
-
-
-
+   return changed || verticalChanged;
 
 }
 
 void TRatioPlot::RangeAxisChanged()
 {
-   __(__PRETTY_FUNCTION__);
-   __(__FUNCTION__ << " gPad: " << gPad->GetName());
 
+//   __(__PRETTY_FUNCTION__);
 
    Double_t upFirst = fH1->GetXaxis()->GetBinLowEdge(fH1->GetXaxis()->GetFirst());
    Double_t upLast  = fH1->GetXaxis()->GetBinUpEdge(fH1->GetXaxis()->GetLast());
@@ -522,67 +474,52 @@ void TRatioPlot::RangeAxisChanged()
    else {
    }
 
+//   var_dump(upFirst);
+//   var_dump(upLast);
+//   var_dump(lowFirst);
+//   var_dump(lowLast);
+//   var_dump(globFirst);
+//   var_dump(globLast);
+
+
+
    if (upChanged || lowChanged) {
       __("Axis range changed");
       SyncAxesRanges();
-      fLowerPad->Paint();
-      fUpperPad->Paint();
-      fLowerPad->Update();
-      fUpperPad->Update();
    }
 
-   SyncPadMargins();
+   Bool_t marginsChanged = SyncPadMargins();
 
-   TVirtualPad *padsav = gPad;
-//   var_dump(gPad->GetName());
 
-   if (upChanged) {
-//      fLowerPad->cd();
-//      fLowerPad->Update();
-//      fLowerPad->Paint();
+   if (marginsChanged) {
+      SetSplitFraction(fSplitFraction);
+      Paint();
    }
 
    if (upChanged || lowChanged) {
-//      fParentPad->Modified();
-//      fParentPad->Update();
-//      fParentPad->Paint();
 
-      if (fCanvas) {
-//         __("have canvas");
-//         fCanvas->Modified();
-//         fCanvas->Update();
-//         fCanvas->Flush();
-      }
+
+      Paint();
+
 
    }
 
-   padsav->cd();
-
-
 }
 
-void TRatioPlot::UnZoom(TAxis*)
+void TRatioPlot::UnZoomed()
 {
-//   __(__PRETTY_FUNCTION__ << " called");
-//
-//   fSharedXAxis->SetRange(0, 0);
-//
-//   SyncAxesRanges();
-//   Paint();
+   __(__PRETTY_FUNCTION__ << " called");
 
+   fSharedXAxis->SetRange(0, 0);
+
+   SyncAxesRanges();
+
+
+   Paint();
 }
-
 
 void TRatioPlot::SetSplitFraction(Float_t sf) {
    fSplitFraction = sf;
-//   SetupPads();
-//   Draw();
    fUpperPad->SetPad(0., fSplitFraction, 1., 1.);
    fLowerPad->SetPad(0., 0., 1., fSplitFraction);
-
-//   var_dump(fUpperPad->GetBBoxY1());
-
-//   fUpperPad = new TPad(TString::Format("%s_%s", fName.Data(), "upper_pad"), "", );
-//   fLowerPad = new TPad(TString::Format("%s_%s", fName.Data(), "lower_pad"), "", 0., 0., 1., fSplitFraction);
-
 }

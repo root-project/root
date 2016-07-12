@@ -58,8 +58,10 @@ protected:
 
    TGraph *fRatioGraph;
    TAxis *fSharedXAxis;
-   TGaxis *fUpperGaxis;
-   TGaxis *fLowerGaxis;
+   TGaxis *fUpperGXaxis;
+   TGaxis *fLowerGXaxis;
+   TGaxis *fUpperGYaxis;
+   TGaxis *fLowerGYaxis;
 
    Double_t fUpTopMargin = 0.1;
    Double_t fUpBottomMargin = 0.05;
@@ -67,21 +69,19 @@ protected:
 
    Double_t fLowTopMargin = 0.05;
    Double_t fLowTopMarginNominal = 0.05;
-   Double_t fLowBottomMargin = 0.1;
+   Double_t fLowBottomMargin = 0.3;
 
    Double_t fLeftMargin = 0.1;
    Double_t fRightMargin = 0.1;
 
    Double_t fSeparationMargin;
-
-//   TObjLink *fRealLnk = 0;
+   Bool_t fIsUpdating = kFALSE;
 
    virtual void BuildRatio();
-   virtual void CalculateSizes();
    virtual void SyncAxesRanges();
    virtual void SetupPads();
    virtual void CreateVisualAxes();
-   virtual void SyncPadMargins();
+   virtual Bool_t SyncPadMargins();
    virtual void SetPadMargins();
 
 public:
@@ -95,9 +95,8 @@ public:
    virtual void SetSplitFraction(Float_t sf);
    virtual void Paint(Option_t *opt = "");
 
-   virtual void UnZoom(TAxis*);
-//   virtual void ExecuteEvent(Int_t event, Int_t px, Int_t py);
-//   virtual TPad* Pick(Int_t px, Int_t py, TObjLink *&pickobj);
+   virtual void UnZoomed();
+
 
    virtual void RangeAxisChanged();
 
