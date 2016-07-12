@@ -550,15 +550,15 @@ namespace TMVA
         /** \brief prepare the drop-out container given the provided drop-fractions
          *
          */
-        void Net::fillDropContainer (DropContainer& dropContainer, double dropFraction, size_t numNodes) const
+        void Net::fillDropContainer (DropContainer& dropContainer, double dropFraction, size_t _numNodes) const
         {
-            size_t numDrops = dropFraction * numNodes;
-            if (numDrops >= numNodes) // maintain at least one node
-                numDrops = numNodes - 1;
-            dropContainer.insert (end (dropContainer), numNodes-numDrops, true); // add the markers for the nodes which are enabled
+            size_t numDrops = dropFraction * _numNodes;
+            if (numDrops >= _numNodes) // maintain at least one node
+                numDrops = _numNodes - 1;
+            dropContainer.insert (end (dropContainer), _numNodes-numDrops, true); // add the markers for the nodes which are enabled
             dropContainer.insert (end (dropContainer), numDrops, false); // add the markers for the disabled nodes
             // shuffle 
-            std::random_shuffle (end (dropContainer)-numNodes, end (dropContainer)); // shuffle enabled and disabled markers
+            std::random_shuffle (end (dropContainer)-_numNodes, end (dropContainer)); // shuffle enabled and disabled markers
         }
 
 
