@@ -665,7 +665,7 @@ void TMVA::MethodBoost::SingleTrain()
    Data()->SetCurrentType(Types::kTraining);
    MethodBase* meth = dynamic_cast<MethodBase*>(GetLastMethod());
    if (meth){
-       if(IsSilentFile()) meth->SetSilentFile(kTRUE);
+       meth->SetSilentFile(IsSilentFile());
        if(IsModelPersistence()){
            TString _fFileDir= DataInfo().GetName();
            _fFileDir+="/"+gConfig().GetIONames().fWeightFileDir;

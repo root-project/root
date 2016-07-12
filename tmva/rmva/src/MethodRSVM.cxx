@@ -214,7 +214,6 @@ void MethodRSVM::DeclareOptions()
    DeclareOptionRef(fShrinking, "Shrinking", "option whether to use the shrinking-heuristics (default:‘TRUE’)");
    DeclareOptionRef(fCross, "Cross", "if a integer value k>0 is specified, a k-fold cross validation on the training data is performed to assess the\
                                        quality of the model: the accuracy rate for classification and the Mean Squared Error for regression");
-//    DeclareOptionRef(fProbability, "Probability", "logical indicating whether the model should allow for probability predictions (default: 'TRUE'");
    DeclareOptionRef(fFitted, "Fitted", "logical indicating whether the fitted values should be computed and included in the model or not (default: ‘TRUE’)");
 
 }

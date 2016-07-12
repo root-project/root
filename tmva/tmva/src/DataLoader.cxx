@@ -66,8 +66,6 @@
 #include "TMVA/ResultsRegression.h"
 #include "TMVA/ResultsMulticlass.h"
 
-//const Int_t  MinNoTrainingEvents = 10;
-//const Int_t  MinNoTestEvents     = 1;
 
 ClassImp(TMVA::DataLoader)
 
@@ -83,8 +81,6 @@ TMVA::DataLoader::DataLoader( TString thedlName)
    fDataAssignType       ( kAssignEvents ),
    fATreeEvent           ( NULL )
 {
-
-   //   DataSetManager::CreateInstance(*fDataInputHandler); // DSMTEST removed
    fDataSetManager = new DataSetManager( *fDataInputHandler ); // DSMTEST
 
    // render silent

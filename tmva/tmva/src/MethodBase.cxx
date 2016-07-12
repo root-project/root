@@ -198,10 +198,6 @@ TMVA::MethodBase::MethodBase( const TString& jobName,
 {
    SetTestvarName();
 //    // default extension for weight files
-//    fFileDir=fDataSetInfo.GetName();
-//    fFileDir+="/"+gConfig().GetIONames().fWeightFileDir;
-//    SetWeightFileDir(fFileDir);
-   //    SetWeightFileDir( gConfig().GetIONames().fWeightFileDir );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -262,9 +258,6 @@ TMVA::MethodBase::MethodBase( Types::EMVA methodType,
 {
 //    // constructor used for Testing + Application of the MVA,
 //    // only (no training), using given WeightFiles
-//    fFileDir=fDataSetInfo.GetName();
-//    fFileDir+="/"+gConfig().GetIONames().fWeightFileDir;
-//    SetWeightFileDir(fFileDir);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -384,9 +377,6 @@ void TMVA::MethodBase::InitBase()
    fEventCollections.resize( 2 );
    fEventCollections.at(0) = 0;
    fEventCollections.at(1) = 0;
-
-   // define "this" pointer
-//    ResetThisBase();
 
    // retrieve signal and background class index
    if (DataInfo().GetClassInfo("Signal") != 0) {
