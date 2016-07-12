@@ -41,7 +41,7 @@ const MipsRegisterInfo &Mips16InstrInfo::getRegisterInfo() const {
 /// the destination along with the FrameIndex of the loaded stack slot.  If
 /// not, return 0.  This predicate must return 0 if the instruction has
 /// any side effects other than loading from the stack slot.
-unsigned Mips16InstrInfo::isLoadFromStackSlot(const MachineInstr *MI,
+unsigned Mips16InstrInfo::isLoadFromStackSlot(const MachineInstr &MI,
                                               int &FrameIndex) const {
   return 0;
 }
@@ -51,15 +51,15 @@ unsigned Mips16InstrInfo::isLoadFromStackSlot(const MachineInstr *MI,
 /// the source reg along with the FrameIndex of the loaded stack slot.  If
 /// not, return 0.  This predicate must return 0 if the instruction has
 /// any side effects other than storing to the stack slot.
-unsigned Mips16InstrInfo::isStoreToStackSlot(const MachineInstr *MI,
+unsigned Mips16InstrInfo::isStoreToStackSlot(const MachineInstr &MI,
                                              int &FrameIndex) const {
   return 0;
 }
 
 void Mips16InstrInfo::copyPhysReg(MachineBasicBlock &MBB,
-                                  MachineBasicBlock::iterator I, DebugLoc DL,
-                                  unsigned DestReg, unsigned SrcReg,
-                                  bool KillSrc) const {
+                                  MachineBasicBlock::iterator I,
+                                  const DebugLoc &DL, unsigned DestReg,
+                                  unsigned SrcReg, bool KillSrc) const {
   unsigned Opc = 0;
 
   if (Mips::CPU16RegsRegClass.contains(DestReg) &&
@@ -124,9 +124,9 @@ void Mips16InstrInfo::loadRegFromStack(MachineBasicBlock &MBB,
     .addMemOperand(MMO);
 }
 
-bool Mips16InstrInfo::expandPostRAPseudo(MachineBasicBlock::iterator MI) const {
-  MachineBasicBlock &MBB = *MI->getParent();
-  switch(MI->getDesc().getOpcode()) {
+bool Mips16InstrInfo::expandPostRAPseudo(MachineInstr &MI) const {
+  MachineBasicBlock &MBB = *MI.getParent();
+  switch (MI.getDesc().getOpcode()) {
   default:
     return false;
   case Mips::RetRA16:
@@ -134,7 +134,7 @@ bool Mips16InstrInfo::expandPostRAPseudo(MachineBasicBlock::iterator MI) const {
     break;
   }
 
-  MBB.erase(MI);
+  MBB.erase(MI.getIterator());
   return true;
 }
 
@@ -305,7 +305,8 @@ void Mips16InstrInfo::adjustStackPtr(unsigned SP, int64_t Amount,
 unsigned Mips16InstrInfo::loadImmediate(unsigned FrameReg, int64_t Imm,
                                         MachineBasicBlock &MBB,
                                         MachineBasicBlock::iterator II,
-                                        DebugLoc DL, unsigned &NewImm) const {
+                                        const DebugLoc &DL,
+                                        unsigned &NewImm) const {
   //
   // given original instruction is:
   // Instr rx, T[offset] where offset is too big.

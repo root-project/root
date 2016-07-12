@@ -122,8 +122,8 @@ struct PlaceBackedgeSafepointsImpl : public FunctionPass {
   bool runOnLoop(Loop *);
   void runOnLoopAndSubLoops(Loop *L) {
     // Visit all the subloops
-    for (auto I = L->begin(), E = L->end(); I != E; I++)
-      runOnLoopAndSubLoops(*I);
+    for (Loop *I : *L)
+      runOnLoopAndSubLoops(I);
     runOnLoop(L);
   }
 
@@ -131,8 +131,8 @@ struct PlaceBackedgeSafepointsImpl : public FunctionPass {
     SE = &getAnalysis<ScalarEvolutionWrapperPass>().getSE();
     DT = &getAnalysis<DominatorTreeWrapperPass>().getDomTree();
     LI = &getAnalysis<LoopInfoWrapperPass>().getLoopInfo();
-    for (auto I = LI->begin(), E = LI->end(); I != E; I++) {
-      runOnLoopAndSubLoops(*I);
+    for (Loop *I : *LI) {
+      runOnLoopAndSubLoops(I);
     }
     return false;
   }
@@ -277,9 +277,8 @@ static void scanOneBB(Instruction *Start, Instruction *End,
     if (BBI->isTerminator()) {
       BasicBlock *BB = BBI->getParent();
       for (BasicBlock *Succ : successors(BB)) {
-        if (Seen.count(Succ) == 0) {
+        if (Seen.insert(Succ).second) {
           Worklist.push_back(Succ);
-          Seen.insert(Succ);
         }
       }
     }

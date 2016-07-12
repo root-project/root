@@ -1918,16 +1918,39 @@ bool MaskedValueIsZero(Value *V, const APInt &Mask, unsigned Depth,
   return (KnownZero & Mask) == Mask;
 }
 
+/// For vector constants, loop over the elements and find the constant with the
+/// minimum number of sign bits. Return 0 if the value is not a vector constant
+/// or if any element was not analyzed; otherwise, return the count for the
+/// element with the minimum number of sign bits.
+static unsigned computeNumSignBitsVectorConstant(Value *V, unsigned TyBits) {
+  auto *CV = dyn_cast<Constant>(V);
+  if (!CV || !CV->getType()->isVectorTy())
+    return 0;
 
+  unsigned MinSignBits = TyBits;
+  unsigned NumElts = CV->getType()->getVectorNumElements();
+  for (unsigned i = 0; i != NumElts; ++i) {
+    // If we find a non-ConstantInt, bail out.
+    auto *Elt = dyn_cast_or_null<ConstantInt>(CV->getAggregateElement(i));
+    if (!Elt)
+      return 0;
+
+    // If the sign bit is 1, flip the bits, so we always count leading zeros.
+    APInt EltVal = Elt->getValue();
+    if (EltVal.isNegative())
+      EltVal = ~EltVal;
+    MinSignBits = std::min(MinSignBits, EltVal.countLeadingZeros());
+  }
+
+  return MinSignBits;
+}
 
 /// Return the number of times the sign bit of the register is replicated into
 /// the other bits. We know that at least 1 bit is always equal to the sign bit
 /// (itself), but other cases can give us information. For example, immediately
 /// after an "ashr X, 2", we know that the top 3 bits are all equal to each
-/// other, so we return 3.
-///
-/// 'Op' must have a scalar integer type.
-///
+/// other, so we return 3. For vectors, return the number of sign bits for the
+/// vector element with the mininum number of known sign bits.
 unsigned ComputeNumSignBits(Value *V, unsigned Depth, const Query &Q) {
   unsigned TyBits = Q.DL.getTypeSizeInBits(V->getType()->getScalarType());
   unsigned Tmp, Tmp2;
@@ -2123,26 +2146,25 @@ unsigned ComputeNumSignBits(Value *V, unsigned Depth, const Query &Q) {
 
   // Finally, if we can prove that the top bits of the result are 0's or 1's,
   // use this information.
+
+  // If we can examine all elements of a vector constant successfully, we're
+  // done (we can't do any better than that). If not, keep trying.
+  if (unsigned VecSignBits = computeNumSignBitsVectorConstant(V, TyBits))
+    return VecSignBits;
+
   APInt KnownZero(TyBits, 0), KnownOne(TyBits, 0);
-  APInt Mask;
   computeKnownBits(V, KnownZero, KnownOne, Depth, Q);
 
-  if (KnownZero.isNegative()) {        // sign bit is 0
-    Mask = KnownZero;
-  } else if (KnownOne.isNegative()) {  // sign bit is 1;
-    Mask = KnownOne;
-  } else {
-    // Nothing known.
-    return FirstAnswer;
-  }
+  // If we know that the sign bit is either zero or one, determine the number of
+  // identical bits in the top of the input value.
+  if (KnownZero.isNegative())
+    return std::max(FirstAnswer, KnownZero.countLeadingOnes());
 
-  // Okay, we know that the sign bit in Mask is set.  Use CLZ to determine
-  // the number of identical bits in the top of the input value.
-  Mask = ~Mask;
-  Mask <<= Mask.getBitWidth()-TyBits;
-  // Return # leading zeros.  We use 'min' here in case Val was zero before
-  // shifting.  We don't want to return '64' as for an i32 "0".
-  return std::max(FirstAnswer, std::min(TyBits, Mask.countLeadingZeros()));
+  if (KnownOne.isNegative())
+    return std::max(FirstAnswer, KnownOne.countLeadingOnes());
+
+  // computeKnownBits gave us no extra information about the top bits.
+  return FirstAnswer;
 }
 
 /// This function computes the integer multiple of Base that equals V.
@@ -3030,8 +3052,7 @@ bool llvm::onlyUsedByLifetimeMarkers(const Value *V) {
 
 bool llvm::isSafeToSpeculativelyExecute(const Value *V,
                                         const Instruction *CtxI,
-                                        const DominatorTree *DT,
-                                        const TargetLibraryInfo *TLI) {
+                                        const DominatorTree *DT) {
   const Operator *Inst = dyn_cast<Operator>(V);
   if (!Inst)
     return false;
@@ -3082,8 +3103,8 @@ bool llvm::isSafeToSpeculativelyExecute(const Value *V,
             Attribute::SanitizeAddress))
       return false;
     const DataLayout &DL = LI->getModule()->getDataLayout();
-    return isDereferenceableAndAlignedPointer(
-        LI->getPointerOperand(), LI->getAlignment(), DL, CtxI, DT, TLI);
+    return isDereferenceableAndAlignedPointer(LI->getPointerOperand(),
+                                              LI->getAlignment(), DL, CtxI, DT);
   }
   case Instruction::Call: {
     if (const IntrinsicInst *II = dyn_cast<IntrinsicInst>(Inst)) {
@@ -3168,7 +3189,7 @@ bool llvm::mayBeMemoryDependent(const Instruction &I) {
 }
 
 /// Return true if we know that the specified value is never null.
-bool llvm::isKnownNonNull(const Value *V, const TargetLibraryInfo *TLI) {
+bool llvm::isKnownNonNull(const Value *V) {
   assert(V->getType()->isPointerTy() && "V must be pointer type");
 
   // Alloca never returns null, malloc might.
@@ -3235,8 +3256,8 @@ static bool isKnownNonNullFromDominatingCondition(const Value *V,
 }
 
 bool llvm::isKnownNonNullAt(const Value *V, const Instruction *CtxI,
-                   const DominatorTree *DT, const TargetLibraryInfo *TLI) {
-  if (isKnownNonNull(V, TLI))
+                            const DominatorTree *DT) {
+  if (isKnownNonNull(V))
     return true;
 
   return CtxI ? ::isKnownNonNullFromDominatingCondition(V, CtxI, DT) : false;
@@ -3444,19 +3465,46 @@ OverflowResult llvm::computeOverflowForSignedAdd(Value *LHS, Value *RHS,
 }
 
 bool llvm::isGuaranteedToTransferExecutionToSuccessor(const Instruction *I) {
-  // FIXME: This conservative implementation can be relaxed. E.g. most
-  // atomic operations are guaranteed to terminate on most platforms
-  // and most functions terminate.
+  // A memory operation returns normally if it isn't volatile. A volatile
+  // operation is allowed to trap.
+  //
+  // An atomic operation isn't guaranteed to return in a reasonable amount of
+  // time because it's possible for another thread to interfere with it for an
+  // arbitrary length of time, but programs aren't allowed to rely on that.
+  if (const LoadInst *LI = dyn_cast<LoadInst>(I))
+    return !LI->isVolatile();
+  if (const StoreInst *SI = dyn_cast<StoreInst>(I))
+    return !SI->isVolatile();
+  if (const AtomicCmpXchgInst *CXI = dyn_cast<AtomicCmpXchgInst>(I))
+    return !CXI->isVolatile();
+  if (const AtomicRMWInst *RMWI = dyn_cast<AtomicRMWInst>(I))
+    return !RMWI->isVolatile();
+  if (const MemIntrinsic *MII = dyn_cast<MemIntrinsic>(I))
+    return !MII->isVolatile();
 
-  // Calls can throw and thus not terminate, and invokes may not terminate and
-  // could throw to non-successor (see bug 24185 for details).
-  if (isa<CallInst>(I) || isa<InvokeInst>(I))
-    // However, llvm.dbg intrinsics are safe, since they're no-ops.
-    return isa<DbgInfoIntrinsic>(I);
+  // If there is no successor, then execution can't transfer to it.
+  if (const auto *CRI = dyn_cast<CleanupReturnInst>(I))
+    return !CRI->unwindsToCaller();
+  if (const auto *CatchSwitch = dyn_cast<CatchSwitchInst>(I))
+    return !CatchSwitch->unwindsToCaller();
+  if (isa<ResumeInst>(I))
+    return false;
+  if (isa<ReturnInst>(I))
+    return false;
 
-  return !I->isAtomic() &&       // atomics may never succeed on some platforms
-         !isa<ResumeInst>(I) &&  // has no successors
-         !isa<ReturnInst>(I);    // has no successors
+  // Calls can throw, or contain an infinite loop, or kill the process.
+  if (CallSite CS = CallSite(const_cast<Instruction*>(I))) {
+    // Calls which don't write to arbitrary memory are safe.
+    // FIXME: Ignoring infinite loops without any side-effects is too aggressive,
+    // but it's consistent with other passes. See http://llvm.org/PR965 .
+    // FIXME: This isn't aggressive enough; a call which only writes to a
+    // global is guaranteed to return.
+    return CS.onlyReadsMemory() || CS.onlyAccessesArgMemory() ||
+           match(I, m_Intrinsic<Intrinsic::assume>());
+  }
+
+  // Other instructions return normally.
+  return true;
 }
 
 bool llvm::isGuaranteedToExecuteForEveryIteration(const Instruction *I,

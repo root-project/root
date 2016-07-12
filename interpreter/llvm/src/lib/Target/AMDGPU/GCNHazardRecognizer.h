@@ -14,8 +14,8 @@
 #ifndef LLVM_LIB_TARGET_AMDGPUHAZARDRECOGNIZERS_H
 #define LLVM_LIB_TARGET_AMDGPUHAZARDRECOGNIZERS_H
 
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/CodeGen/ScheduleHazardRecognizer.h"
-#include <functional>
 #include <list>
 
 namespace llvm {
@@ -24,19 +24,20 @@ class MachineFunction;
 class MachineInstr;
 class ScheduleDAG;
 class SIInstrInfo;
+class SISubtarget;
 
 class GCNHazardRecognizer final : public ScheduleHazardRecognizer {
-
-  // This variable stores the instruction that has been emitted this cycle.
-  // It will be added to EmittedInstrs, when AdvanceCycle() or RecedeCycle() is
+  // This variable stores the instruction that has been emitted this cycle. It
+  // will be added to EmittedInstrs, when AdvanceCycle() or RecedeCycle() is
   // called.
   MachineInstr *CurrCycleInstr;
   std::list<MachineInstr*> EmittedInstrs;
   const MachineFunction &MF;
+  const SISubtarget &ST;
 
   int getWaitStatesSinceDef(unsigned Reg,
-                            std::function<bool(MachineInstr*)> IsHazardDef =
-                            [](MachineInstr*) {return true;});
+                            function_ref<bool(MachineInstr *)> IsHazardDef =
+                                [](MachineInstr *) { return true; });
 
   int checkSMEMSoftClauseHazards(MachineInstr *SMEM);
   int checkSMRDHazards(MachineInstr *SMRD);

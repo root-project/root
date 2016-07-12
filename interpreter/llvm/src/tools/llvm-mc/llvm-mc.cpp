@@ -52,9 +52,9 @@ OutputFilename("o", cl::desc("Output filename"),
 static cl::opt<bool>
 ShowEncoding("show-encoding", cl::desc("Show instruction encodings"));
 
-static cl::opt<bool>
-RelaxELFRel("relax-relocations", cl::init(false),
-  cl::desc("Emit R_X86_64_GOTPCRELX instead of R_X86_64_GOTPCREL"));
+static cl::opt<bool> RelaxELFRel(
+    "relax-relocations", cl::init(true),
+    cl::desc("Emit R_X86_64_GOTPCRELX instead of R_X86_64_GOTPCREL"));
 
 static cl::opt<DebugCompressionType>
 CompressDebugSections("compress-debug-sections", cl::ValueOptional,
@@ -250,7 +250,7 @@ static int AsLexInput(SourceMgr &SrcMgr, MCAsmInfo &MAI,
 
   bool Error = false;
   while (Lexer.Lex().isNot(AsmToken::Eof)) {
-    AsmToken Tok = Lexer.getTok();
+    const AsmToken &Tok = Lexer.getTok();
 
     switch (Tok.getKind()) {
     default:

@@ -284,7 +284,7 @@ class EG_CF_RAT <bits <8> cfinst, bits <6> ratinst, bits<4> ratid, bits<4> mask,
 }
 
 class VTX_READ <string name, bits<8> buffer_id, dag outs, list<dag> pattern>
-    : InstR600ISA <outs, (ins MEMxi:$src_gpr), name, pattern>,
+    : InstR600ISA <outs, (ins MEMxi:$src_gpr), !strconcat("  ", name), pattern>,
       VTX_WORD1_GPR {
 
   // Static fields
@@ -336,11 +336,36 @@ def load_param : LoadParamFrag<load>;
 def load_param_exti8 : LoadParamFrag<az_extloadi8>;
 def load_param_exti16 : LoadParamFrag<az_extloadi16>;
 
-def isR600 : Predicate<"Subtarget->getGeneration() <= AMDGPUSubtarget::R700">;
+class LoadVtxId1 <PatFrag load> : PatFrag <
+  (ops node:$ptr), (load node:$ptr), [{
+  const MemSDNode *LD = cast<MemSDNode>(N);
+  return LD->getAddressSpace() == AMDGPUAS::GLOBAL_ADDRESS ||
+         (LD->getAddressSpace() == AMDGPUAS::CONSTANT_ADDRESS &&
+           !isa<GlobalValue>(GetUnderlyingObject(
+           LD->getMemOperand()->getValue(), CurDAG->getDataLayout())));
+}]>;
+
+def vtx_id1_az_extloadi8 : LoadVtxId1 <az_extloadi8>;
+def vtx_id1_az_extloadi16 : LoadVtxId1 <az_extloadi16>;
+def vtx_id1_load : LoadVtxId1 <load>;
+
+class LoadVtxId2 <PatFrag load> : PatFrag <
+  (ops node:$ptr), (load node:$ptr), [{
+  const MemSDNode *LD = cast<MemSDNode>(N);
+  return LD->getAddressSpace() == AMDGPUAS::CONSTANT_ADDRESS &&
+         isa<GlobalValue>(GetUnderlyingObject(
+         LD->getMemOperand()->getValue(), CurDAG->getDataLayout()));
+}]>;
+
+def vtx_id2_az_extloadi8 : LoadVtxId2 <az_extloadi8>;
+def vtx_id2_az_extloadi16 : LoadVtxId2 <az_extloadi16>;
+def vtx_id2_load : LoadVtxId2 <load>;
+
+def isR600 : Predicate<"Subtarget->getGeneration() <= R600Subtarget::R700">;
 
 def isR600toCayman
     : Predicate<
-          "Subtarget->getGeneration() <= AMDGPUSubtarget::NORTHERN_ISLANDS">;
+          "Subtarget->getGeneration() <= R600Subtarget::NORTHERN_ISLANDS">;
 
 //===----------------------------------------------------------------------===//
 // R600 SDNodes
@@ -860,7 +885,7 @@ class R600_TEX <bits<11> inst, string opName> :
           i32imm:$RESOURCE_ID, i32imm:$SAMPLER_ID,
           CT:$COORD_TYPE_X, CT:$COORD_TYPE_Y, CT:$COORD_TYPE_Z,
           CT:$COORD_TYPE_W),
-          !strconcat(opName,
+          !strconcat("  ", opName,
           " $DST_GPR.$DST_SEL_X$DST_SEL_Y$DST_SEL_Z$DST_SEL_W, "
           "$SRC_GPR.$srcx$srcy$srcz$srcw "
           "RID:$RESOURCE_ID SID:$SAMPLER_ID "
@@ -1539,8 +1564,9 @@ let isTerminator = 1, usesCustomInserter = 1, isBranch = 1, isBarrier = 1 in {
 //===---------------------------------------------------------------------===//
 let isTerminator = 1, isReturn = 1, hasCtrlDep = 1,
     usesCustomInserter = 1 in {
-  def RETURN          : ILFormat<(outs), (ins variable_ops),
-      "RETURN", [(IL_retflag)]>;
+  def RETURN : ILFormat<(outs), (ins variable_ops),
+    "RETURN", [(AMDGPUendpgm)]
+  >;
 }
 
 //===----------------------------------------------------------------------===//

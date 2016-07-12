@@ -909,7 +909,7 @@ Address CGOpenMPRuntime::getOrCreateDefaultLocation(unsigned Flags) {
     auto DefaultOpenMPLocation = new llvm::GlobalVariable(
         CGM.getModule(), IdentTy, /*isConstant*/ true,
         llvm::GlobalValue::PrivateLinkage, /*Initializer*/ nullptr);
-    DefaultOpenMPLocation->setUnnamedAddr(true);
+    DefaultOpenMPLocation->setUnnamedAddr(llvm::GlobalValue::UnnamedAddr::Global);
     DefaultOpenMPLocation->setAlignment(Align.getQuantity());
 
     llvm::Constant *Zero = llvm::ConstantInt::get(CGM.Int32Ty, 0, true);
@@ -2840,7 +2840,7 @@ CGOpenMPRuntime::createOffloadingBinaryDescriptorRegistration() {
       M, DeviceImagesInitTy, /*isConstant=*/true,
       llvm::GlobalValue::InternalLinkage, DeviceImagesInit,
       ".omp_offloading.device_images");
-  DeviceImages->setUnnamedAddr(true);
+  DeviceImages->setUnnamedAddr(llvm::GlobalValue::UnnamedAddr::Global);
 
   // This is a Zero array to be used in the creation of the constant expressions
   llvm::Constant *Index[] = {llvm::Constant::getNullValue(CGM.Int32Ty),
@@ -2903,7 +2903,7 @@ void CGOpenMPRuntime::createOffloadEntry(llvm::Constant *ID,
       new llvm::GlobalVariable(M, StrPtrInit->getType(), /*isConstant=*/true,
                                llvm::GlobalValue::InternalLinkage, StrPtrInit,
                                ".omp_offloading.entry_name");
-  Str->setUnnamedAddr(true);
+  Str->setUnnamedAddr(llvm::GlobalValue::UnnamedAddr::Global);
   llvm::Constant *StrPtr = llvm::ConstantExpr::getBitCast(Str, CGM.Int8PtrTy);
 
   // Create the entry struct.
@@ -4815,8 +4815,7 @@ void CGOpenMPRuntime::emitTargetOutlinedFunctionHelper(
   CGOpenMPTargetRegionInfo CGInfo(CS, CodeGen, EntryFnName);
   CodeGenFunction::CGCapturedStmtRAII CapInfoRAII(CGF, &CGInfo);
 
-  OutlinedFn =
-      CGF.GenerateOpenMPCapturedStmtFunction(CS, /*CastValToPtr=*/true);
+  OutlinedFn = CGF.GenerateOpenMPCapturedStmtFunction(CS);
 
   // If this target outline function is not an offload entry, we don't need to
   // register it.
@@ -5271,7 +5270,7 @@ private:
                .getPointer();
 
       // If the variable is a pointer and is being dereferenced (i.e. is not
-      // the last component), the base has to be the pointer itself, not his
+      // the last component), the base has to be the pointer itself, not its
       // reference.
       if (I->getAssociatedDeclaration()->getType()->isAnyPointerType() &&
           std::next(I) != CE) {
@@ -5485,7 +5484,6 @@ public:
       MappableExprsHandler::MapValuesArrayTy &CurPointers,
       MappableExprsHandler::MapValuesArrayTy &CurSizes,
       MappableExprsHandler::MapFlagsArrayTy &CurMapTypes) {
-    auto &Ctx = CGF.getContext();
 
     // Do the default mapping.
     if (CI.capturesThis()) {
@@ -5497,36 +5495,17 @@ public:
       CurMapTypes.push_back(MappableExprsHandler::OMP_MAP_TO |
                             MappableExprsHandler::OMP_MAP_FROM);
     } else if (CI.capturesVariableByCopy()) {
+      CurBasePointers.push_back(CV);
+      CurPointers.push_back(CV);
       if (!RI.getType()->isAnyPointerType()) {
-        // If the field is not a pointer, we need to save the actual value
-        // and load it as a void pointer.
+        // We have to signal to the runtime captures passed by value that are
+        // not pointers.
         CurMapTypes.push_back(MappableExprsHandler::OMP_MAP_PRIVATE_VAL);
-        auto DstAddr = CGF.CreateMemTemp(Ctx.getUIntPtrType(),
-                                         Twine(CI.getCapturedVar()->getName()) +
-                                             ".casted");
-        LValue DstLV = CGF.MakeAddrLValue(DstAddr, Ctx.getUIntPtrType());
-
-        auto *SrcAddrVal = CGF.EmitScalarConversion(
-            DstAddr.getPointer(), Ctx.getPointerType(Ctx.getUIntPtrType()),
-            Ctx.getPointerType(RI.getType()), SourceLocation());
-        LValue SrcLV = CGF.MakeNaturalAlignAddrLValue(SrcAddrVal, RI.getType());
-
-        // Store the value using the source type pointer.
-        CGF.EmitStoreThroughLValue(RValue::get(CV), SrcLV);
-
-        // Load the value using the destination type pointer.
-        CurBasePointers.push_back(
-            CGF.EmitLoadOfLValue(DstLV, SourceLocation()).getScalarVal());
-        CurPointers.push_back(CurBasePointers.back());
-
-        // Get the size of the type to be used in the map.
         CurSizes.push_back(CGF.getTypeSize(RI.getType()));
       } else {
         // Pointers are implicitly mapped with a zero size and no flags
         // (other than first map that is added for all implicit maps).
         CurMapTypes.push_back(0u);
-        CurBasePointers.push_back(CV);
-        CurPointers.push_back(CV);
         CurSizes.push_back(llvm::Constant::getNullValue(CGF.SizeTy));
       }
     } else {
@@ -5623,7 +5602,7 @@ emitOffloadingArrays(CodeGenFunction &CGF, llvm::Value *&BasePointersArray,
           CGM.getModule(), SizesArrayInit->getType(),
           /*isConstant=*/true, llvm::GlobalValue::PrivateLinkage,
           SizesArrayInit, ".offload_sizes");
-      SizesArrayGbl->setUnnamedAddr(true);
+      SizesArrayGbl->setUnnamedAddr(llvm::GlobalValue::UnnamedAddr::Global);
       SizesArray = SizesArrayGbl;
     }
 
@@ -5635,7 +5614,7 @@ emitOffloadingArrays(CodeGenFunction &CGF, llvm::Value *&BasePointersArray,
         CGM.getModule(), MapTypesArrayInit->getType(),
         /*isConstant=*/true, llvm::GlobalValue::PrivateLinkage,
         MapTypesArrayInit, ".offload_maptypes");
-    MapTypesArrayGbl->setUnnamedAddr(true);
+    MapTypesArrayGbl->setUnnamedAddr(llvm::GlobalValue::UnnamedAddr::Global);
     MapTypesArray = MapTypesArrayGbl;
 
     for (unsigned i = 0; i < PointerNumVal; ++i) {
@@ -6426,7 +6405,7 @@ void CGOpenMPRuntime::emitDeclareSimdFunction(const FunctionDecl *FD,
   if (isa<CXXMethodDecl>(FD))
     ParamPositions.insert({FD, 0});
   unsigned ParamPos = ParamPositions.size();
-  for (auto *P : FD->params()) {
+  for (auto *P : FD->parameters()) {
     ParamPositions.insert({P->getCanonicalDecl(), ParamPos});
     ++ParamPos;
   }

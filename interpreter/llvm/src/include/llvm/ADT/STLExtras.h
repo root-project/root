@@ -419,6 +419,22 @@ bool is_contained(R &&Range, const E &Element) {
   return std::find(Range.begin(), Range.end(), Element) != Range.end();
 }
 
+/// Wrapper function around std::count_if to count the number of times an
+/// element satisfying a given predicate occurs in a range.
+template <typename R, typename UnaryPredicate>
+auto count_if(R &&Range, UnaryPredicate &&P)
+    -> typename std::iterator_traits<decltype(Range.begin())>::difference_type {
+  return std::count_if(Range.begin(), Range.end(), P);
+}
+
+/// Wrapper function around std::transform to apply a function to a range and
+/// store the result elsewhere.
+template <typename R, class OutputIt, typename UnaryPredicate>
+OutputIt transform(R &&Range, OutputIt d_first, UnaryPredicate &&P) {
+  return std::transform(Range.begin(), Range.end(), d_first,
+                        std::forward<UnaryPredicate>(P));
+}
+
 //===----------------------------------------------------------------------===//
 //     Extra additions to <memory>
 //===----------------------------------------------------------------------===//

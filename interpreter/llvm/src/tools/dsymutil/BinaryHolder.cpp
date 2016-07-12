@@ -73,7 +73,8 @@ BinaryHolder::GetMemoryBuffersForFile(StringRef Filename,
 
   auto ErrOrFat = object::MachOUniversalBinary::create(
       CurrentMemoryBuffer->getMemBufferRef());
-  if (ErrOrFat.getError()) {
+  if (!ErrOrFat) {
+    consumeError(ErrOrFat.takeError());
     // Not a fat binary must be a standard one. Return a one element vector.
     return std::vector<MemoryBufferRef>{CurrentMemoryBuffer->getMemBufferRef()};
   }
@@ -145,7 +146,8 @@ BinaryHolder::MapArchiveAndGetMemberBuffers(StringRef Filename,
   std::vector<MemoryBufferRef> ArchiveBuffers;
   auto ErrOrFat = object::MachOUniversalBinary::create(
       CurrentMemoryBuffer->getMemBufferRef());
-  if (ErrOrFat.getError()) {
+  if (!ErrOrFat) {
+    consumeError(ErrOrFat.takeError());
     // Not a fat binary must be a standard one.
     ArchiveBuffers.push_back(CurrentMemoryBuffer->getMemBufferRef());
   } else {
@@ -157,8 +159,8 @@ BinaryHolder::MapArchiveAndGetMemberBuffers(StringRef Filename,
 
   for (auto MemRef : ArchiveBuffers) {
     auto ErrOrArchive = object::Archive::create(MemRef);
-    if (auto Err = ErrOrArchive.getError())
-      return Err;
+    if (!ErrOrArchive)
+      return errorToErrorCode(ErrOrArchive.takeError());
     CurrentArchives.push_back(std::move(*ErrOrArchive));
   }
   return GetArchiveMemberBuffers(Filename, Timestamp);

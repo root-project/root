@@ -42,11 +42,13 @@
 #include "llvm/IR/MDBuilder.h"
 #include "llvm/IR/Metadata.h"
 #include "llvm/IR/Operator.h"
+#include "llvm/IR/PatternMatch.h"
 #include "llvm/IR/ValueHandle.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/MathExtras.h"
 #include "llvm/Support/raw_ostream.h"
 using namespace llvm;
+using namespace llvm::PatternMatch;
 
 #define DEBUG_TYPE "local"
 
@@ -148,9 +150,7 @@ bool llvm::ConstantFoldTerminator(BasicBlock *BB, bool DeleteDeadConditions,
           SmallVector<uint32_t, 8> Weights;
           for (unsigned MD_i = 1, MD_e = MD->getNumOperands(); MD_i < MD_e;
                ++MD_i) {
-            ConstantInt *CI =
-                mdconst::dyn_extract<ConstantInt>(MD->getOperand(MD_i));
-            assert(CI);
+            auto *CI = mdconst::extract<ConstantInt>(MD->getOperand(MD_i));
             Weights.push_back(CI->getValue().getZExtValue());
           }
           // Merge weight of this case to the default weight.
@@ -456,14 +456,23 @@ simplifyAndDCEInstruction(Instruction *I,
   if (Value *SimpleV = SimplifyInstruction(I, DL)) {
     // Add the users to the worklist. CAREFUL: an instruction can use itself,
     // in the case of a phi node.
-    for (User *U : I->users())
-      if (U != I)
+    for (User *U : I->users()) {
+      if (U != I) {
         WorkList.insert(cast<Instruction>(U));
+      }
+    }
 
     // Replace the instruction with its simplified value.
-    I->replaceAllUsesWith(SimpleV);
-    I->eraseFromParent();
-    return true;
+    bool Changed = false;
+    if (!I->use_empty()) {
+      I->replaceAllUsesWith(SimpleV);
+      Changed = true;
+    }
+    if (isInstructionTriviallyDead(I, TLI)) {
+      I->eraseFromParent();
+      Changed = true;
+    }
+    return Changed;
   }
   return false;
 }
@@ -1182,6 +1191,38 @@ DbgDeclareInst *llvm::FindAllocaDbgDeclare(Value *V) {
   return nullptr;
 }
 
+static void DIExprAddDeref(SmallVectorImpl<uint64_t> &Expr) {
+  Expr.push_back(dwarf::DW_OP_deref);
+}
+
+static void DIExprAddOffset(SmallVectorImpl<uint64_t> &Expr, int Offset) {
+  if (Offset > 0) {
+    Expr.push_back(dwarf::DW_OP_plus);
+    Expr.push_back(Offset);
+  } else if (Offset < 0) {
+    Expr.push_back(dwarf::DW_OP_minus);
+    Expr.push_back(-Offset);
+  }
+}
+
+static DIExpression *BuildReplacementDIExpr(DIBuilder &Builder,
+                                            DIExpression *DIExpr, bool Deref,
+                                            int Offset) {
+  if (!Deref && !Offset)
+    return DIExpr;
+  // Create a copy of the original DIDescriptor for user variable, prepending
+  // "deref" operation to a list of address elements, as new llvm.dbg.declare
+  // will take a value storing address of the memory for variable, not
+  // alloca itself.
+  SmallVector<uint64_t, 4> NewDIExpr;
+  if (Deref)
+    DIExprAddDeref(NewDIExpr);
+  DIExprAddOffset(NewDIExpr, Offset);
+  if (DIExpr)
+    NewDIExpr.append(DIExpr->elements_begin(), DIExpr->elements_end());
+  return Builder.createExpression(NewDIExpr);
+}
+
 bool llvm::replaceDbgDeclare(Value *Address, Value *NewAddress,
                              Instruction *InsertBefore, DIBuilder &Builder,
                              bool Deref, int Offset) {
@@ -1193,25 +1234,7 @@ bool llvm::replaceDbgDeclare(Value *Address, Value *NewAddress,
   auto *DIExpr = DDI->getExpression();
   assert(DIVar && "Missing variable");
 
-  if (Deref || Offset) {
-    // Create a copy of the original DIDescriptor for user variable, prepending
-    // "deref" operation to a list of address elements, as new llvm.dbg.declare
-    // will take a value storing address of the memory for variable, not
-    // alloca itself.
-    SmallVector<uint64_t, 4> NewDIExpr;
-    if (Deref)
-      NewDIExpr.push_back(dwarf::DW_OP_deref);
-    if (Offset > 0) {
-      NewDIExpr.push_back(dwarf::DW_OP_plus);
-      NewDIExpr.push_back(Offset);
-    } else if (Offset < 0) {
-      NewDIExpr.push_back(dwarf::DW_OP_minus);
-      NewDIExpr.push_back(-Offset);
-    }
-    if (DIExpr)
-      NewDIExpr.append(DIExpr->elements_begin(), DIExpr->elements_end());
-    DIExpr = Builder.createExpression(NewDIExpr);
-  }
+  DIExpr = BuildReplacementDIExpr(Builder, DIExpr, Deref, Offset);
 
   // Insert llvm.dbg.declare immediately after the original alloca, and remove
   // old llvm.dbg.declare.
@@ -1224,6 +1247,46 @@ bool llvm::replaceDbgDeclareForAlloca(AllocaInst *AI, Value *NewAllocaAddress,
                                       DIBuilder &Builder, bool Deref, int Offset) {
   return replaceDbgDeclare(AI, NewAllocaAddress, AI->getNextNode(), Builder,
                            Deref, Offset);
+}
+
+static void replaceOneDbgValueForAlloca(DbgValueInst *DVI, Value *NewAddress,
+                                        DIBuilder &Builder, int Offset) {
+  DebugLoc Loc = DVI->getDebugLoc();
+  auto *DIVar = DVI->getVariable();
+  auto *DIExpr = DVI->getExpression();
+  assert(DIVar && "Missing variable");
+
+  // This is an alloca-based llvm.dbg.value. The first thing it should do with
+  // the alloca pointer is dereference it. Otherwise we don't know how to handle
+  // it and give up.
+  if (!DIExpr || DIExpr->getNumElements() < 1 ||
+      DIExpr->getElement(0) != dwarf::DW_OP_deref)
+    return;
+
+  // Insert the offset immediately after the first deref.
+  // We could just change the offset argument of dbg.value, but it's unsigned...
+  if (Offset) {
+    SmallVector<uint64_t, 4> NewDIExpr;
+    DIExprAddDeref(NewDIExpr);
+    DIExprAddOffset(NewDIExpr, Offset);
+    NewDIExpr.append(DIExpr->elements_begin() + 1, DIExpr->elements_end());
+    DIExpr = Builder.createExpression(NewDIExpr);
+  }
+
+  Builder.insertDbgValueIntrinsic(NewAddress, DVI->getOffset(), DIVar, DIExpr,
+                                  Loc, DVI);
+  DVI->eraseFromParent();
+}
+
+void llvm::replaceDbgValueForAlloca(AllocaInst *AI, Value *NewAllocaAddress,
+                                    DIBuilder &Builder, int Offset) {
+  if (auto *L = LocalAsMetadata::getIfExists(AI))
+    if (auto *MDV = MetadataAsValue::getIfExists(AI->getContext(), L))
+      for (auto UI = MDV->use_begin(), UE = MDV->use_end(); UI != UE;) {
+        Use &U = *UI++;
+        if (auto *DVI = dyn_cast<DbgValueInst>(U.getUser()))
+          replaceOneDbgValueForAlloca(DVI, NewAllocaAddress, Builder, Offset);
+      }
 }
 
 unsigned llvm::removeAllNonTerminatorAndEHPadInstructions(BasicBlock *BB) {
@@ -1251,8 +1314,8 @@ unsigned llvm::changeToUnreachable(Instruction *I, bool UseLLVMTrap) {
   BasicBlock *BB = I->getParent();
   // Loop over all of the successors, removing BB's entry from any PHI
   // nodes.
-  for (succ_iterator SI = succ_begin(BB), SE = succ_end(BB); SI != SE; ++SI)
-    (*SI)->removePredecessor(BB);
+  for (BasicBlock *Successor : successors(BB))
+    Successor->removePredecessor(BB);
 
   // Insert a call to llvm.trap right before this.  This turns the undefined
   // behavior into a hard fail instead of falling through into random code.
@@ -1311,22 +1374,15 @@ static bool markAliveBlocks(Function &F,
     // Do a quick scan of the basic block, turning any obviously unreachable
     // instructions into LLVM unreachable insts.  The instruction combining pass
     // canonicalizes unreachable insts into stores to null or undef.
-    for (BasicBlock::iterator BBI = BB->begin(), E = BB->end(); BBI != E;++BBI){
+    for (Instruction &I : *BB) {
       // Assumptions that are known to be false are equivalent to unreachable.
       // Also, if the condition is undefined, then we make the choice most
       // beneficial to the optimizer, and choose that to also be unreachable.
-      if (IntrinsicInst *II = dyn_cast<IntrinsicInst>(BBI)) {
+      if (auto *II = dyn_cast<IntrinsicInst>(&I)) {
         if (II->getIntrinsicID() == Intrinsic::assume) {
-          bool MakeUnreachable = false;
-          if (isa<UndefValue>(II->getArgOperand(0)))
-            MakeUnreachable = true;
-          else if (ConstantInt *Cond =
-                   dyn_cast<ConstantInt>(II->getArgOperand(0)))
-            MakeUnreachable = Cond->isZero();
-
-          if (MakeUnreachable) {
+          if (match(II->getArgOperand(0), m_CombineOr(m_Zero(), m_Undef()))) {
             // Don't insert a call to llvm.trap right before the unreachable.
-            changeToUnreachable(&*BBI, false);
+            changeToUnreachable(II, false);
             Changed = true;
             break;
           }
@@ -1341,8 +1397,8 @@ static bool markAliveBlocks(Function &F,
           // Note: unlike in llvm.assume, it is not "obviously profitable" for
           // guards to treat `undef` as `false` since a guard on `undef` can
           // still be useful for widening.
-          if (auto *CI = dyn_cast<ConstantInt>(II->getArgOperand(0)))
-            if (CI->isZero() && !isa<UnreachableInst>(II->getNextNode())) {
+          if (match(II->getArgOperand(0), m_Zero()))
+            if (!isa<UnreachableInst>(II->getNextNode())) {
               changeToUnreachable(II->getNextNode(), /*UseLLVMTrap=*/ false);
               Changed = true;
               break;
@@ -1350,15 +1406,20 @@ static bool markAliveBlocks(Function &F,
         }
       }
 
-      if (CallInst *CI = dyn_cast<CallInst>(BBI)) {
+      if (auto *CI = dyn_cast<CallInst>(&I)) {
+        Value *Callee = CI->getCalledValue();
+        if (isa<ConstantPointerNull>(Callee) || isa<UndefValue>(Callee)) {
+          changeToUnreachable(CI, /*UseLLVMTrap=*/false);
+          Changed = true;
+          break;
+        }
         if (CI->doesNotReturn()) {
           // If we found a call to a no-return function, insert an unreachable
           // instruction after it.  Make sure there isn't *already* one there
           // though.
-          ++BBI;
-          if (!isa<UnreachableInst>(BBI)) {
+          if (!isa<UnreachableInst>(CI->getNextNode())) {
             // Don't insert a call to llvm.trap right before the unreachable.
-            changeToUnreachable(&*BBI, false);
+            changeToUnreachable(CI->getNextNode(), false);
             Changed = true;
           }
           break;
@@ -1368,7 +1429,7 @@ static bool markAliveBlocks(Function &F,
       // Store to undef and store to null are undefined and used to signal that
       // they should be changed to unreachable by passes that can't modify the
       // CFG.
-      if (StoreInst *SI = dyn_cast<StoreInst>(BBI)) {
+      if (auto *SI = dyn_cast<StoreInst>(&I)) {
         // Don't touch volatile stores.
         if (SI->isVolatile()) continue;
 
@@ -1442,9 +1503,9 @@ static bool markAliveBlocks(Function &F,
     }
 
     Changed |= ConstantFoldTerminator(BB, true);
-    for (succ_iterator SI = succ_begin(BB), SE = succ_end(BB); SI != SE; ++SI)
-      if (Reachable.insert(*SI).second)
-        Worklist.push_back(*SI);
+    for (BasicBlock *Successor : successors(BB))
+      if (Reachable.insert(Successor).second)
+        Worklist.push_back(Successor);
   } while (!Worklist.empty());
   return Changed;
 }
@@ -1503,10 +1564,9 @@ bool llvm::removeUnreachableBlocks(Function &F, LazyValueInfo *LVI) {
     if (Reachable.count(&*BB))
       continue;
 
-    for (succ_iterator SI = succ_begin(&*BB), SE = succ_end(&*BB); SI != SE;
-         ++SI)
-      if (Reachable.count(*SI))
-        (*SI)->removePredecessor(&*BB);
+    for (BasicBlock *Successor : successors(&*BB))
+      if (Reachable.count(Successor))
+        Successor->removePredecessor(&*BB);
     if (LVI)
       LVI->eraseBlock(&*BB);
     BB->dropAllReferences();
@@ -1887,4 +1947,30 @@ bool llvm::recognizeBSwapOrBitReverseIdiom(
   Function *F = Intrinsic::getDeclaration(I->getModule(), Intrin, ITy);
   InsertedInsts.push_back(CallInst::Create(F, Res->Provider, "rev", I));
   return true;
+}
+
+// CodeGen has special handling for some string functions that may replace
+// them with target-specific intrinsics.  Since that'd skip our interceptors
+// in ASan/MSan/TSan/DFSan, and thus make us miss some memory accesses,
+// we mark affected calls as NoBuiltin, which will disable optimization
+// in CodeGen.
+void llvm::maybeMarkSanitizerLibraryCallNoBuiltin(CallInst *CI,
+                                          const TargetLibraryInfo *TLI) {
+  Function *F = CI->getCalledFunction();
+  LibFunc::Func Func;
+  if (!F || F->hasLocalLinkage() || !F->hasName() ||
+      !TLI->getLibFunc(F->getName(), Func))
+    return;
+  switch (Func) {
+    default: break;
+    case LibFunc::memcmp:
+    case LibFunc::memchr:
+    case LibFunc::strcpy:
+    case LibFunc::stpcpy:
+    case LibFunc::strcmp:
+    case LibFunc::strlen:
+    case LibFunc::strnlen:
+      CI->addAttribute(AttributeSet::FunctionIndex, Attribute::NoBuiltin);
+      break;
+  }
 }

@@ -4185,17 +4185,6 @@ static void handleTypeTagForDatatypeAttr(Sema &S, Decl *D,
                                     Attr.getAttributeSpellingListIndex()));
 }
 
-static void handleKernelAttr(Sema &S, Decl *D, const AttributeList &Attr) {
-  if (S.LangOpts.RenderScript) {
-    D->addAttr(::new (S.Context)
-               KernelAttr(Attr.getRange(), S.Context,
-                          Attr.getAttributeSpellingListIndex()));
-  } else {
-    S.Diag(Attr.getLoc(), diag::warn_attribute_ignored) << "kernel";
-  }
-}
-
-
 //===----------------------------------------------------------------------===//
 // Checker-specific attribute handlers.
 //===----------------------------------------------------------------------===//
@@ -4534,10 +4523,9 @@ static void handleObjCRuntimeName(Sema &S, Decl *D,
                                  Attr.getAttributeSpellingListIndex()));
 }
 
-// when a user wants to use objc_boxable with a union or struct
-// but she doesn't have access to the declaration (legacy/third-party code)
-// then she can 'enable' this feature via trick with a typedef
-// e.g.:
+// When a user wants to use objc_boxable with a union or struct
+// but they don't have access to the declaration (legacy/third-party code)
+// then they can 'enable' this feature with a typedef:
 // typedef struct __attribute((objc_boxable)) legacy_struct legacy_struct;
 static void handleObjCBoxable(Sema &S, Decl *D, const AttributeList &Attr) {
   bool notify = false;
@@ -5922,8 +5910,8 @@ static void ProcessDeclAttribute(Sema &S, Scope *scope, Decl *D,
     handleTypeTagForDatatypeAttr(S, D, Attr);
     break;
 
-  case AttributeList::AT_Kernel:
-    handleKernelAttr(S, D, Attr);
+  case AttributeList::AT_RenderScriptKernel:
+    handleSimpleAttribute<RenderScriptKernelAttr>(S, D, Attr);
     break;
   }
 }

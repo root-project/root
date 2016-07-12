@@ -548,6 +548,32 @@ AST_POLYMORPHIC_MATCHER_P(
                              Builder);
 }
 
+/// \brief Matches expressions that match InnerMatcher after any implicit AST
+/// nodes are stripped off.
+///
+/// Parentheses and explicit casts are not discarded.
+/// Given
+/// \code
+///   class C {};
+///   C a = C();
+///   C b;
+///   C c = b;
+/// \endcode
+/// The matchers
+/// \code
+///    varDecl(hasInitializer(ignoringImplicit(cxxConstructExpr())))
+/// \endcode
+/// would match the declarations for a, b, and c.
+/// While
+/// \code
+///    varDecl(hasInitializer(cxxConstructExpr()))
+/// \endcode
+/// only match the declarations for b and c.
+AST_MATCHER_P(Expr, ignoringImplicit, ast_matchers::internal::Matcher<Expr>,
+              InnerMatcher) {
+  return InnerMatcher.matches(*Node.IgnoreImplicit(), Finder, Builder);
+}
+
 /// \brief Matches expressions that match InnerMatcher after any implicit casts
 /// are stripped off.
 ///
@@ -2171,6 +2197,19 @@ AST_MATCHER_P(CXXRecordDecl, hasMethod, internal::Matcher<CXXMethodDecl>,
                                     Node.method_end(), Finder, Builder);
 }
 
+/// \brief Matches the generated class of lambda expressions.
+///
+/// Given:
+/// \code
+///   auto x = []{};
+/// \endcode
+///
+/// \c cxxRecordDecl(isLambda()) matches the implicit class declaration of
+/// \c decltype(x)
+AST_MATCHER(CXXRecordDecl, isLambda) {
+  return Node.isLambda();
+}
+
 /// \brief Matches AST nodes that have child AST nodes that match the
 /// provided matcher.
 ///
@@ -3770,6 +3809,47 @@ AST_MATCHER_P(CXXMethodDecl, ofClass,
           InnerMatcher.matches(*Parent, Finder, Builder));
 }
 
+/// \brief Matches each method overriden by the given method. This matcher may
+/// produce multiple matches.
+///
+/// Given
+/// \code
+///   class A { virtual void f(); };
+///   class B : public A { void f(); };
+///   class C : public B { void f(); };
+/// \endcode
+/// cxxMethodDecl(ofClass(hasName("C")),
+///               forEachOverridden(cxxMethodDecl().bind("b"))).bind("d")
+///   matches once, with "b" binding "A::f" and "d" binding "C::f" (Note
+///   that B::f is not overridden by C::f).
+///
+/// The check can produce multiple matches in case of multiple inheritance, e.g.
+/// \code
+///   class A1 { virtual void f(); };
+///   class A2 { virtual void f(); };
+///   class C : public A1, public A2 { void f(); };
+/// \endcode
+/// cxxMethodDecl(ofClass(hasName("C")),
+///               forEachOverridden(cxxMethodDecl().bind("b"))).bind("d")
+///   matches twice, once with "b" binding "A1::f" and "d" binding "C::f", and
+///   once with "b" binding "A2::f" and "d" binding "C::f".
+AST_MATCHER_P(CXXMethodDecl, forEachOverridden,
+              internal::Matcher<CXXMethodDecl>, InnerMatcher) {
+  BoundNodesTreeBuilder Result;
+  bool Matched = false;
+  for (const auto *Overridden : Node.overridden_methods()) {
+    BoundNodesTreeBuilder OverriddenBuilder(*Builder);
+    const bool OverriddenMatched =
+        InnerMatcher.matches(*Overridden, Finder, &OverriddenBuilder);
+    if (OverriddenMatched) {
+      Matched = true;
+      Result.addMatch(OverriddenBuilder);
+    }
+  }
+  *Builder = std::move(Result);
+  return Matched;
+}
+
 /// \brief Matches if the given method declaration is virtual.
 ///
 /// Given
@@ -4614,6 +4694,21 @@ AST_TYPELOC_TRAVERSE_MATCHER(pointee, getPointee,
 /// typedefType()
 ///   matches "typedef int X"
 AST_TYPE_MATCHER(TypedefType, typedefType);
+
+/// \brief Matches enum types.
+///
+/// Given
+/// \code
+///   enum C { Green };
+///   enum class S { Red };
+///
+///   C c;
+///   S s;
+/// \endcode
+//
+/// \c enumType() matches the type of the variable declarations of both \c c and
+/// \c s.
+AST_TYPE_MATCHER(EnumType, enumType);
 
 /// \brief Matches template specialization types.
 ///

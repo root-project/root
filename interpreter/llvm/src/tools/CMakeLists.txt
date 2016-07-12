@@ -51,11 +51,8 @@ if(LLVM_NOCLING)
   set(LLVM_TOOL_CLING_BUILD Off)
 endif()
 
-if(DEFINED ROOT_BINARY_DIR)
-  # Building as part of ROOT.
-  if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../../../cling)
-    add_llvm_external_project(../../../cling)
-  endif()
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../../../cling)
+  add_llvm_external_project(../../../cling)
 endif()
 
 # Automatically add remaining sub-directories containing a 'CMakeLists.txt'

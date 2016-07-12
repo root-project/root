@@ -76,9 +76,7 @@ static unsigned computeBasePointerSaveOffset(const PPCSubtarget &STI) {
   // SVR4 ABI: First slot in the general register save area.
   return STI.isPPC64()
              ? -16U
-             : (STI.getTargetMachine().getRelocationModel() == Reloc::PIC_)
-                   ? -12U
-                   : -8U;
+             : STI.getTargetMachine().isPositionIndependent() ? -12U : -8U;
 }
 
 PPCFrameLowering::PPCFrameLowering(const PPCSubtarget &STI)
@@ -1830,7 +1828,7 @@ eliminateCallFramePseudoInstr(MachineFunction &MF, MachineBasicBlock &MBB,
       unsigned LISInstr = is64Bit ? PPC::LIS8 : PPC::LIS;
       unsigned ORIInstr = is64Bit ? PPC::ORI8 : PPC::ORI;
       MachineInstr *MI = I;
-      DebugLoc dl = MI->getDebugLoc();
+      const DebugLoc &dl = MI->getDebugLoc();
 
       if (isInt<16>(CalleeAmt)) {
         BuildMI(MBB, I, dl, TII.get(ADDIInstr), StackReg)

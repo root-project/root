@@ -1015,9 +1015,11 @@ dumpSymbolNamesFromObject(SymbolicFile &Obj, bool printName,
     }
     if (PrintAddress && isa<ObjectFile>(Obj)) {
       SymbolRef SymRef(Sym);
-      ErrorOr<uint64_t> AddressOrErr = SymRef.getAddress();
-      if (error(AddressOrErr.getError()))
+      Expected<uint64_t> AddressOrErr = SymRef.getAddress();
+      if (!AddressOrErr) {
+        consumeError(AddressOrErr.takeError());
         break;
+      }
       S.Address = *AddressOrErr;
     }
     S.TypeChar = getNMTypeChar(Obj, Sym);
@@ -1169,7 +1171,7 @@ static void dumpSymbolNamesFromFile(std::string &Filename) {
               error(std::move(E), Filename, ArchFlags.size() > 1 ?
                     StringRef(I->getArchTypeName()) : StringRef());
               continue;
-            } else if (ErrorOr<std::unique_ptr<Archive>> AOrErr =
+            } else if (Expected<std::unique_ptr<Archive>> AOrErr =
                            I->getAsArchive()) {
               std::unique_ptr<Archive> &A = *AOrErr;
               for (Archive::child_iterator AI = A->child_begin(),
@@ -1207,6 +1209,12 @@ static void dumpSymbolNamesFromFile(std::string &Filename) {
                                             ArchitectureName);
                 }
               }
+            } else {
+              consumeError(AOrErr.takeError());
+              error(Filename + " for architecture " +
+                    StringRef(I->getArchTypeName()) +
+                    " is not a Mach-O file or an archive file",
+                    "Mach-O universal file");
             }
           }
         }
@@ -1236,7 +1244,7 @@ static void dumpSymbolNamesFromFile(std::string &Filename) {
                      ObjOrErr.takeError())) {
             error(std::move(E), Filename);
             return;
-          } else if (ErrorOr<std::unique_ptr<Archive>> AOrErr =
+          } else if (Expected<std::unique_ptr<Archive>> AOrErr =
                          I->getAsArchive()) {
             std::unique_ptr<Archive> &A = *AOrErr;
             for (Archive::child_iterator AI = A->child_begin(),
@@ -1264,6 +1272,12 @@ static void dumpSymbolNamesFromFile(std::string &Filename) {
                 dumpSymbolNamesFromObject(*O, false, ArchiveName);
               }
             }
+          } else {
+            consumeError(AOrErr.takeError());
+            error(Filename + " for architecture " +
+                  StringRef(I->getArchTypeName()) +
+                  " is not a Mach-O file or an archive file",
+                  "Mach-O universal file");
           }
           return;
         }
@@ -1299,7 +1313,8 @@ static void dumpSymbolNamesFromFile(std::string &Filename) {
         error(std::move(E), Filename, moreThanOneArch ?
               StringRef(I->getArchTypeName()) : StringRef());
         continue;
-      } else if (ErrorOr<std::unique_ptr<Archive>> AOrErr = I->getAsArchive()) {
+      } else if (Expected<std::unique_ptr<Archive>> AOrErr =
+                  I->getAsArchive()) {
         std::unique_ptr<Archive> &A = *AOrErr;
         for (Archive::child_iterator AI = A->child_begin(), AE = A->child_end();
              AI != AE; ++AI) {
@@ -1334,6 +1349,12 @@ static void dumpSymbolNamesFromFile(std::string &Filename) {
             dumpSymbolNamesFromObject(*O, false, ArchiveName, ArchitectureName);
           }
         }
+      } else {
+        consumeError(AOrErr.takeError());
+        error(Filename + " for architecture " +
+              StringRef(I->getArchTypeName()) +
+              " is not a Mach-O file or an archive file",
+              "Mach-O universal file");
       }
     }
     return;

@@ -415,9 +415,10 @@ BackendConsumer::StackSizeDiagHandler(const llvm::DiagnosticInfoStackSize &D) {
     return false;
 
   if (const Decl *ND = Gen->GetDeclForMangledName(D.getFunction().getName())) {
+    // FIXME: Shouldn't need to truncate to uint32_t
     Diags.Report(ND->getASTContext().getFullLoc(ND->getLocation()),
                  diag::warn_fe_frame_larger_than)
-        << D.getStackSize() << Decl::castToDeclContext(ND);
+      << static_cast<uint32_t>(D.getStackSize()) << Decl::castToDeclContext(ND);
     return true;
   }
 
@@ -534,7 +535,7 @@ void BackendConsumer::OptimizationRemarkHandler(
   // llvm::DiagnosticInfo::AlwasyPrint or if the -Rpass-analysis flag has a
   // regular expression that matches the name of the pass name in \p D.
 
-  if (D.getPassName() == llvm::DiagnosticInfo::AlwaysPrint ||
+  if (D.shouldAlwaysPrint() ||
       (CodeGenOpts.OptimizationRemarkAnalysisPattern &&
        CodeGenOpts.OptimizationRemarkAnalysisPattern->match(D.getPassName())))
     EmitOptimizationMessage(
@@ -547,7 +548,7 @@ void BackendConsumer::OptimizationRemarkHandler(
   // llvm::DiagnosticInfo::AlwasyPrint or if the -Rpass-analysis flag has a
   // regular expression that matches the name of the pass name in \p D.
 
-  if (D.getPassName() == llvm::DiagnosticInfo::AlwaysPrint ||
+  if (D.shouldAlwaysPrint() ||
       (CodeGenOpts.OptimizationRemarkAnalysisPattern &&
        CodeGenOpts.OptimizationRemarkAnalysisPattern->match(D.getPassName())))
     EmitOptimizationMessage(
@@ -560,7 +561,7 @@ void BackendConsumer::OptimizationRemarkHandler(
   // llvm::DiagnosticInfo::AlwasyPrint or if the -Rpass-analysis flag has a
   // regular expression that matches the name of the pass name in \p D.
 
-  if (D.getPassName() == llvm::DiagnosticInfo::AlwaysPrint ||
+  if (D.shouldAlwaysPrint() ||
       (CodeGenOpts.OptimizationRemarkAnalysisPattern &&
        CodeGenOpts.OptimizationRemarkAnalysisPattern->match(D.getPassName())))
     EmitOptimizationMessage(

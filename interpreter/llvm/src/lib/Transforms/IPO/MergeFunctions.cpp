@@ -1578,10 +1578,10 @@ bool MergeFunctions::runOnModule(Module &M) {
     DEBUG(dbgs() << "size of worklist: " << Worklist.size() << '\n');
 
     // Insert functions and merge them.
-    for (std::vector<WeakVH>::iterator I = Worklist.begin(),
-           E = Worklist.end(); I != E; ++I) {
-      if (!*I) continue;
-      Function *F = cast<Function>(*I);
+    for (WeakVH &I : Worklist) {
+      if (!I)
+        continue;
+      Function *F = cast<Function>(I);
       if (!F->isDeclaration() && !F->hasAvailableExternallyLinkage()) {
         Changed |= insert(F);
       }
@@ -1637,7 +1637,7 @@ void MergeFunctions::replaceDirectCallers(Function *Old, Function *New) {
 
 // Replace G with an alias to F if possible, or else a thunk to F. Deletes G.
 void MergeFunctions::writeThunkOrAlias(Function *F, Function *G) {
-  if (HasGlobalAliases && G->hasUnnamedAddr()) {
+  if (HasGlobalAliases && G->hasGlobalUnnamedAddr()) {
     if (G->hasExternalLinkage() || G->hasLocalLinkage() ||
         G->hasWeakLinkage()) {
       writeAlias(F, G);

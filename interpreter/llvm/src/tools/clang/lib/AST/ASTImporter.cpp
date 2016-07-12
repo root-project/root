@@ -3010,7 +3010,7 @@ Decl *ASTNodeImporter::VisitFunctionDecl(FunctionDecl *D) {
 
   // Import the function parameters.
   SmallVector<ParmVarDecl *, 8> Parameters;
-  for (auto P : D->params()) {
+  for (auto P : D->parameters()) {
     ParmVarDecl *ToP = cast_or_null<ParmVarDecl>(Importer.Import(P));
     if (!ToP)
       return nullptr;
@@ -3276,7 +3276,7 @@ Decl *ASTNodeImporter::VisitIndirectFieldDecl(IndirectFieldDecl *D) {
 
   IndirectFieldDecl *ToIndirectField = IndirectFieldDecl::Create(
       Importer.getToContext(), DC, Loc, Name.getAsIdentifierInfo(), T,
-      NamedChain, D->getChainingSize());
+      {NamedChain, D->getChainingSize()});
 
   for (const auto *Attr : D->attrs())
     ToIndirectField->addAttr(Attr->clone(Importer.getToContext()));
@@ -3619,7 +3619,7 @@ Decl *ASTNodeImporter::VisitObjCMethodDecl(ObjCMethodDecl *D) {
 
   // Import the parameters
   SmallVector<ParmVarDecl *, 5> ToParams;
-  for (auto *FromP : D->params()) {
+  for (auto *FromP : D->parameters()) {
     ParmVarDecl *ToP = cast_or_null<ParmVarDecl>(Importer.Import(FromP));
     if (!ToP)
       return nullptr;
@@ -4553,8 +4553,7 @@ Decl *ASTNodeImporter::VisitClassTemplateSpecializationDecl(
                                                  D->getTagKind(), DC, 
                                                  StartLoc, IdLoc,
                                                  ClassTemplate,
-                                                 TemplateArgs.data(), 
-                                                 TemplateArgs.size(), 
+                                                 TemplateArgs,
                                                  /*PrevDecl=*/nullptr);
     D2->setSpecializationKind(D->getSpecializationKind());
 
@@ -4755,7 +4754,7 @@ Decl *ASTNodeImporter::VisitVarTemplateSpecializationDecl(
     // Create a new specialization.
     D2 = VarTemplateSpecializationDecl::Create(
         Importer.getToContext(), DC, StartLoc, IdLoc, VarTemplate, T, TInfo,
-        D->getStorageClass(), TemplateArgs.data(), TemplateArgs.size());
+        D->getStorageClass(), TemplateArgs);
     D2->setSpecializationKind(D->getSpecializationKind());
     D2->setTemplateArgsInfo(D->getTemplateArgsInfo());
 
@@ -4981,7 +4980,8 @@ Stmt *ASTNodeImporter::VisitIfStmt(IfStmt *S) {
   if (!ToElseStmt && S->getElse())
     return nullptr;
   return new (Importer.getToContext()) IfStmt(Importer.getToContext(),
-                                              ToIfLoc, ToConditionVariable,
+                                              ToIfLoc, S->isConstexpr(),
+                                              ToConditionVariable,
                                               ToCondition, ToThenStmt,
                                               ToElseLoc, ToElseStmt);
 }
@@ -5430,19 +5430,17 @@ Expr *ASTNodeImporter::VisitDesignatedInitExpr(DesignatedInitExpr *DIE) {
   }
 
   SmallVector<Designator, 4> Designators(DIE->size());
-  std::transform(DIE->designators_begin(), DIE->designators_end(),
-                 Designators.begin(),
-    [this](const Designator &D) -> Designator {
-      return ImportDesignator(D);
-    });
+  llvm::transform(DIE->designators(), Designators.begin(),
+                  [this](const Designator &D) -> Designator {
+                    return ImportDesignator(D);
+                  });
 
-  for (auto I = DIE->designators_begin(), E = DIE->designators_end(); I != E;
-       ++I)
-    if (I->isFieldDesignator() && !I->getFieldName())
+  for (const Designator &D : DIE->designators())
+    if (D.isFieldDesignator() && !D.getFieldName())
       return nullptr;
 
   return DesignatedInitExpr::Create(
-        Importer.getToContext(), Designators.data(), Designators.size(),
+        Importer.getToContext(), Designators,
         IndexExprs, Importer.Import(DIE->getEqualOrColonLoc()),
         DIE->usesGNUSyntax(), Init);
 }

@@ -1311,9 +1311,9 @@ SDValue NVPTXTargetLowering::LowerCall(TargetLowering::CallLoweringInfo &CLI,
                                  InFlag };
 
       unsigned opcode = NVPTXISD::StoreParam;
-      if (Outs[OIdx].Flags.isZExt())
+      if (Outs[OIdx].Flags.isZExt() && VT.getSizeInBits() < 32)
         opcode = NVPTXISD::StoreParamU32;
-      else if (Outs[OIdx].Flags.isSExt())
+      else if (Outs[OIdx].Flags.isSExt() && VT.getSizeInBits() < 32)
         opcode = NVPTXISD::StoreParamS32;
       Chain = DAG.getMemIntrinsicNode(opcode, dl, CopyParamVTs, CopyParamOps,
                                       VT, MachinePointerInfo());
@@ -2065,8 +2065,8 @@ static bool isImageOrSamplerVal(const Value *arg, const Module *context) {
 
 SDValue NVPTXTargetLowering::LowerFormalArguments(
     SDValue Chain, CallingConv::ID CallConv, bool isVarArg,
-    const SmallVectorImpl<ISD::InputArg> &Ins, SDLoc dl, SelectionDAG &DAG,
-    SmallVectorImpl<SDValue> &InVals) const {
+    const SmallVectorImpl<ISD::InputArg> &Ins, const SDLoc &dl,
+    SelectionDAG &DAG, SmallVectorImpl<SDValue> &InVals) const {
   MachineFunction &MF = DAG.getMachineFunction();
   const DataLayout &DL = DAG.getDataLayout();
   auto PtrVT = getPointerTy(DAG.getDataLayout());
@@ -2365,13 +2365,12 @@ SDValue NVPTXTargetLowering::LowerFormalArguments(
   return Chain;
 }
 
-
 SDValue
 NVPTXTargetLowering::LowerReturn(SDValue Chain, CallingConv::ID CallConv,
                                  bool isVarArg,
                                  const SmallVectorImpl<ISD::OutputArg> &Outs,
                                  const SmallVectorImpl<SDValue> &OutVals,
-                                 SDLoc dl, SelectionDAG &DAG) const {
+                                 const SDLoc &dl, SelectionDAG &DAG) const {
   MachineFunction &MF = DAG.getMachineFunction();
   const Function *F = MF.getFunction();
   Type *RetTy = F->getReturnType();

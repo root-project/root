@@ -33,13 +33,14 @@ using namespace llvm;
 
 #define DEBUG_TYPE "bpf-lower"
 
-static void fail(SDLoc DL, SelectionDAG &DAG, const char *Msg) {
+static void fail(const SDLoc &DL, SelectionDAG &DAG, const char *Msg) {
   MachineFunction &MF = DAG.getMachineFunction();
   DAG.getContext()->diagnose(
       DiagnosticInfoUnsupported(*MF.getFunction(), Msg, DL.getDebugLoc()));
 }
 
-static void fail(SDLoc DL, SelectionDAG &DAG, const char *Msg, SDValue Val) {
+static void fail(const SDLoc &DL, SelectionDAG &DAG, const char *Msg,
+                 SDValue Val) {
   MachineFunction &MF = DAG.getMachineFunction();
   std::string Str;
   raw_string_ostream OS(Str);
@@ -149,8 +150,8 @@ SDValue BPFTargetLowering::LowerOperation(SDValue Op, SelectionDAG &DAG) const {
 
 SDValue BPFTargetLowering::LowerFormalArguments(
     SDValue Chain, CallingConv::ID CallConv, bool IsVarArg,
-    const SmallVectorImpl<ISD::InputArg> &Ins, SDLoc DL, SelectionDAG &DAG,
-    SmallVectorImpl<SDValue> &InVals) const {
+    const SmallVectorImpl<ISD::InputArg> &Ins, const SDLoc &DL,
+    SelectionDAG &DAG, SmallVectorImpl<SDValue> &InVals) const {
   switch (CallConv) {
   default:
     llvm_unreachable("Unsupported calling convention");
@@ -345,7 +346,7 @@ BPFTargetLowering::LowerReturn(SDValue Chain, CallingConv::ID CallConv,
                                bool IsVarArg,
                                const SmallVectorImpl<ISD::OutputArg> &Outs,
                                const SmallVectorImpl<SDValue> &OutVals,
-                               SDLoc DL, SelectionDAG &DAG) const {
+                               const SDLoc &DL, SelectionDAG &DAG) const {
   unsigned Opc = BPFISD::RET_FLAG;
 
   // CCValAssign - represent the assignment of the return value to a location
@@ -390,8 +391,8 @@ BPFTargetLowering::LowerReturn(SDValue Chain, CallingConv::ID CallConv,
 
 SDValue BPFTargetLowering::LowerCallResult(
     SDValue Chain, SDValue InFlag, CallingConv::ID CallConv, bool IsVarArg,
-    const SmallVectorImpl<ISD::InputArg> &Ins, SDLoc DL, SelectionDAG &DAG,
-    SmallVectorImpl<SDValue> &InVals) const {
+    const SmallVectorImpl<ISD::InputArg> &Ins, const SDLoc &DL,
+    SelectionDAG &DAG, SmallVectorImpl<SDValue> &InVals) const {
 
   MachineFunction &MF = DAG.getMachineFunction();
   // Assign locations to each value returned by this call.
@@ -492,12 +493,12 @@ SDValue BPFTargetLowering::LowerGlobalAddress(SDValue Op,
 }
 
 MachineBasicBlock *
-BPFTargetLowering::EmitInstrWithCustomInserter(MachineInstr *MI,
+BPFTargetLowering::EmitInstrWithCustomInserter(MachineInstr &MI,
                                                MachineBasicBlock *BB) const {
   const TargetInstrInfo &TII = *BB->getParent()->getSubtarget().getInstrInfo();
-  DebugLoc DL = MI->getDebugLoc();
+  DebugLoc DL = MI.getDebugLoc();
 
-  assert(MI->getOpcode() == BPF::Select && "Unexpected instr type to insert");
+  assert(MI.getOpcode() == BPF::Select && "Unexpected instr type to insert");
 
   // To "insert" a SELECT instruction, we actually have to insert the diamond
   // control-flow pattern.  The incoming instruction knows the destination vreg
@@ -528,9 +529,9 @@ BPFTargetLowering::EmitInstrWithCustomInserter(MachineInstr *MI,
   BB->addSuccessor(Copy1MBB);
 
   // Insert Branch if Flag
-  unsigned LHS = MI->getOperand(1).getReg();
-  unsigned RHS = MI->getOperand(2).getReg();
-  int CC = MI->getOperand(3).getImm();
+  unsigned LHS = MI.getOperand(1).getReg();
+  unsigned RHS = MI.getOperand(2).getReg();
+  int CC = MI.getOperand(3).getImm();
   switch (CC) {
   case ISD::SETGT:
     BuildMI(BB, DL, TII.get(BPF::JSGT_rr))
@@ -584,12 +585,12 @@ BPFTargetLowering::EmitInstrWithCustomInserter(MachineInstr *MI,
   //  %Result = phi [ %FalseValue, Copy0MBB ], [ %TrueValue, ThisMBB ]
   // ...
   BB = Copy1MBB;
-  BuildMI(*BB, BB->begin(), DL, TII.get(BPF::PHI), MI->getOperand(0).getReg())
-      .addReg(MI->getOperand(5).getReg())
+  BuildMI(*BB, BB->begin(), DL, TII.get(BPF::PHI), MI.getOperand(0).getReg())
+      .addReg(MI.getOperand(5).getReg())
       .addMBB(Copy0MBB)
-      .addReg(MI->getOperand(4).getReg())
+      .addReg(MI.getOperand(4).getReg())
       .addMBB(ThisMBB);
 
-  MI->eraseFromParent(); // The pseudo instruction is gone now.
+  MI.eraseFromParent(); // The pseudo instruction is gone now.
   return BB;
 }
