@@ -1860,7 +1860,7 @@ void TStreamerInfo::BuildOld()
                }
             }
             // We need to initialize the element now, as we need the
-            // correct StraemerInfo next.
+            // correct StreamerInfo next.
             element->Init(this);
 
             // Force the StreamerInfo "Compilation" of the base classes first. This is necessary in
