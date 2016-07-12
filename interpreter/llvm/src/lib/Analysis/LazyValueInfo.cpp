@@ -38,18 +38,19 @@ using namespace PatternMatch;
 
 #define DEBUG_TYPE "lazy-value-info"
 
-char LazyValueInfo::ID = 0;
-INITIALIZE_PASS_BEGIN(LazyValueInfo, "lazy-value-info",
+char LazyValueInfoWrapperPass::ID = 0;
+INITIALIZE_PASS_BEGIN(LazyValueInfoWrapperPass, "lazy-value-info",
                 "Lazy Value Information Analysis", false, true)
 INITIALIZE_PASS_DEPENDENCY(AssumptionCacheTracker)
 INITIALIZE_PASS_DEPENDENCY(TargetLibraryInfoWrapperPass)
-INITIALIZE_PASS_END(LazyValueInfo, "lazy-value-info",
+INITIALIZE_PASS_END(LazyValueInfoWrapperPass, "lazy-value-info",
                 "Lazy Value Information Analysis", false, true)
 
 namespace llvm {
-  FunctionPass *createLazyValueInfoPass() { return new LazyValueInfo(); }
+  FunctionPass *createLazyValueInfoPass() { return new LazyValueInfoWrapperPass(); }
 }
 
+char LazyValueAnalysis::PassID;
 
 //===----------------------------------------------------------------------===//
 //                               LVILatticeVal
@@ -66,7 +67,7 @@ class LVILatticeVal {
     /// This Value has no known value yet.  As a result, this implies the
     /// producing instruction is dead.  Caution: We use this as the starting
     /// state in our local meet rules.  In this usage, it's taken to mean
-    /// "nothing known yet".  
+    /// "nothing known yet".
     undefined,
 
     /// This Value has a specific constant value.  (For integers, constantrange
@@ -115,7 +116,7 @@ public:
     Res.markOverdefined();
     return Res;
   }
-  
+
   bool isUndefined() const     { return Tag == undefined; }
   bool isConstant() const      { return Tag == constant; }
   bool isNotConstant() const   { return Tag == notconstant; }
@@ -317,7 +318,7 @@ static bool hasSingleValue(const LVILatticeVal &Val) {
 /// * This method does not promise to return the most precise possible lattice
 ///   value implied by A and B.  It is allowed to return any lattice element
 ///   which is at least as strong as *either* A or B (unless our facts
-///   conflict, see below).  
+///   conflict, see below).
 /// * Due to unreachable code, the intersection of two lattice values could be
 ///   contradictory.  If this happens, we return some valid lattice value so as
 ///   not confuse the rest of LVI.  Ideally, we'd always return Undefined, but
@@ -353,7 +354,7 @@ static LVILatticeVal intersect(LVILatticeVal A, LVILatticeVal B) {
     A.getConstantRange().intersectWith(B.getConstantRange());
   // Note: An empty range is implicitly converted to overdefined internally.
   // TODO: We could instead use Undefined here since we've proven a conflict
-  // and thus know this path must be unreachable. 
+  // and thus know this path must be unreachable.
   return LVILatticeVal::getRange(std::move(Range));
 }
 
@@ -440,34 +441,31 @@ namespace {
         lookup(Val)[BB] = Result;
     }
 
-    LVILatticeVal getBlockValue(Value *Val, BasicBlock *BB);
-    bool getEdgeValue(Value *V, BasicBlock *F, BasicBlock *T,
-                      LVILatticeVal &Result,
-                      Instruction *CxtI = nullptr);
-    bool hasBlockValue(Value *Val, BasicBlock *BB);
+  LVILatticeVal getBlockValue(Value *Val, BasicBlock *BB);
+  bool getEdgeValue(Value *V, BasicBlock *F, BasicBlock *T,
+                    LVILatticeVal &Result, Instruction *CxtI = nullptr);
+  bool hasBlockValue(Value *Val, BasicBlock *BB);
 
-    // These methods process one work item and may add more. A false value
-    // returned means that the work item was not completely processed and must
-    // be revisited after going through the new items.
-    bool solveBlockValue(Value *Val, BasicBlock *BB);
-    bool solveBlockValueNonLocal(LVILatticeVal &BBLV,
-                                 Value *Val, BasicBlock *BB);
-    bool solveBlockValuePHINode(LVILatticeVal &BBLV,
-                                PHINode *PN, BasicBlock *BB);
-    bool solveBlockValueSelect(LVILatticeVal &BBLV,
-                               SelectInst *S, BasicBlock *BB); 
-    bool solveBlockValueBinaryOp(LVILatticeVal &BBLV,
-                              Instruction *BBI, BasicBlock *BB);
-    bool solveBlockValueCast(LVILatticeVal &BBLV,
-                             Instruction *BBI, BasicBlock *BB);
-   void intersectAssumeBlockValueConstantRange(Value *Val, LVILatticeVal &BBLV,
-                                            Instruction *BBI);
+  // These methods process one work item and may add more. A false value
+  // returned means that the work item was not completely processed and must
+  // be revisited after going through the new items.
+  bool solveBlockValue(Value *Val, BasicBlock *BB);
+  bool solveBlockValueNonLocal(LVILatticeVal &BBLV, Value *Val, BasicBlock *BB);
+  bool solveBlockValuePHINode(LVILatticeVal &BBLV, PHINode *PN, BasicBlock *BB);
+  bool solveBlockValueSelect(LVILatticeVal &BBLV, SelectInst *S,
+                             BasicBlock *BB);
+  bool solveBlockValueBinaryOp(LVILatticeVal &BBLV, Instruction *BBI,
+                               BasicBlock *BB);
+  bool solveBlockValueCast(LVILatticeVal &BBLV, Instruction *BBI,
+                           BasicBlock *BB);
+  void intersectAssumeBlockValueConstantRange(Value *Val, LVILatticeVal &BBLV,
+                                              Instruction *BBI);
 
-    void solve();
+  void solve();
 
-    ValueCacheEntryTy &lookup(Value *V) {
-      return ValueCache[LVIValueHandle(V, this)];
-    }
+  ValueCacheEntryTy &lookup(Value *V) {
+    return ValueCache[LVIValueHandle(V, this)];
+  }
 
     bool isOverdefined(Value *V, BasicBlock *BB) const {
       auto ODI = OverDefinedCache.find(BB);
@@ -496,7 +494,7 @@ namespace {
 
       return lookup(V)[BB];
     }
-    
+
   public:
     /// This is the query interface to determine the lattice
     /// value for the specified Value* at the end of the specified block.
@@ -562,8 +560,8 @@ void LazyValueInfoCache::eraseBlock(BasicBlock *BB) {
   if (ODI != OverDefinedCache.end())
     OverDefinedCache.erase(ODI);
 
-  for (auto I = ValueCache.begin(), E = ValueCache.end(); I != E; ++I)
-    I->second.erase(BB);
+  for (auto &I : ValueCache)
+    I.second.erase(BB);
 }
 
 void LazyValueInfoCache::solve() {
@@ -930,12 +928,12 @@ bool LazyValueInfoCache::solveBlockValueSelect(LVILatticeVal &BBLV,
       case SPF_SMAX:                   /// Signed maximum
         BBLV.markConstantRange(TrueCR.smax(FalseCR));
         return true;
-      case SPF_UMAX:                   /// Unsigned maximum        
+      case SPF_UMAX:                   /// Unsigned maximum
         BBLV.markConstantRange(TrueCR.umax(FalseCR));
         return true;
       };
     }
-    
+
     // TODO: ABS, NABS from the SelectPatternResult
   }
 
@@ -962,7 +960,7 @@ bool LazyValueInfoCache::solveBlockValueSelect(LVILatticeVal &BBLV,
     //   %siv.next = select i1 %39, i32 16, i32 %40
     //   %siv.next = constantrange<0, 17> not <-1, 17>
     // In general, this can handle any clamp idiom which tests the edge
-    // condition via an equality or inequality.  
+    // condition via an equality or inequality.
     ICmpInst::Predicate Pred = ICI->getPredicate();
     Value *A = ICI->getOperand(0);
     if (ConstantInt *CIBase = dyn_cast<ConstantInt>(ICI->getOperand(1))) {
@@ -995,7 +993,7 @@ bool LazyValueInfoCache::solveBlockValueSelect(LVILatticeVal &BBLV,
       };
     }
   }
-  
+
   LVILatticeVal Result;  // Start Undefined.
   Result.mergeIn(TrueVal, DL);
   Result.mergeIn(FalseVal, DL);
@@ -1030,7 +1028,6 @@ bool LazyValueInfoCache::solveBlockValueCast(LVILatticeVal &BBLV,
     return true;
   }
 
-  
   // Figure out the range of the LHS.  If that fails, we still apply the
   // transfer rule on the full set since we may be able to locally infer
   // interesting facts.
@@ -1107,7 +1104,7 @@ bool LazyValueInfoCache::solveBlockValueBinaryOp(LVILatticeVal &BBLV,
     BBLV.markOverdefined();
     return true;
   };
-  
+
   // Figure out the range of the LHS.  If that fails, use a conservative range,
   // but apply the transfer rule anyways.  This lets us pick up facts from
   // expressions like "and i32 (call i32 @foo()), 32"
@@ -1174,7 +1171,7 @@ bool getValueFromFromCondition(Value *Val, ICmpInst *ICI,
   if (isa<Constant>(ICI->getOperand(1))) {
     if (ICI->isEquality() && ICI->getOperand(0) == Val) {
       // We know that V has the RHS constant if this is a true SETEQ or
-      // false SETNE. 
+      // false SETNE.
       if (isTrueDest == (ICI->getPredicate() == ICmpInst::ICMP_EQ))
         Result = LVILatticeVal::get(cast<Constant>(ICI->getOperand(1)));
       else
@@ -1206,7 +1203,7 @@ bool getValueFromFromCondition(Value *Val, ICmpInst *ICI,
       return true;
     }
   }
-  
+
   return false;
 }
 
@@ -1284,7 +1281,7 @@ bool LazyValueInfoCache::getEdgeValue(Value *Val, BasicBlock *BBFrom,
     // If we couldn't constrain the value on the edge, LocalResult doesn't
     // provide any information.
     LocalResult.markOverdefined();
-  
+
   if (hasSingleValue(LocalResult)) {
     // Can't get any more precise here
     Result = LocalResult;
@@ -1438,28 +1435,31 @@ static LazyValueInfoCache &getCache(void *&PImpl, AssumptionCache *AC,
   return *static_cast<LazyValueInfoCache*>(PImpl);
 }
 
-bool LazyValueInfo::runOnFunction(Function &F) {
-  AC = &getAnalysis<AssumptionCacheTracker>().getAssumptionCache(F);
+bool LazyValueInfoWrapperPass::runOnFunction(Function &F) {
+  Info.AC = &getAnalysis<AssumptionCacheTracker>().getAssumptionCache(F);
   const DataLayout &DL = F.getParent()->getDataLayout();
 
   DominatorTreeWrapperPass *DTWP =
       getAnalysisIfAvailable<DominatorTreeWrapperPass>();
-  DT = DTWP ? &DTWP->getDomTree() : nullptr;
+  Info.DT = DTWP ? &DTWP->getDomTree() : nullptr;
+  Info.TLI = &getAnalysis<TargetLibraryInfoWrapperPass>().getTLI();
 
-  TLI = &getAnalysis<TargetLibraryInfoWrapperPass>().getTLI();
-
-  if (PImpl)
-    getCache(PImpl, AC, &DL, DT).clear();
+  if (Info.PImpl)
+    getCache(Info.PImpl, Info.AC, &DL, Info.DT).clear();
 
   // Fully lazy.
   return false;
 }
 
-void LazyValueInfo::getAnalysisUsage(AnalysisUsage &AU) const {
+void LazyValueInfoWrapperPass::getAnalysisUsage(AnalysisUsage &AU) const {
   AU.setPreservesAll();
   AU.addRequired<AssumptionCacheTracker>();
   AU.addRequired<TargetLibraryInfoWrapperPass>();
 }
+
+LazyValueInfo &LazyValueInfoWrapperPass::getLVI() { return Info; }
+
+LazyValueInfo::~LazyValueInfo() { releaseMemory(); }
 
 void LazyValueInfo::releaseMemory() {
   // If the cache was allocated, free it.
@@ -1467,6 +1467,16 @@ void LazyValueInfo::releaseMemory() {
     delete &getCache(PImpl, AC, nullptr);
     PImpl = nullptr;
   }
+}
+
+void LazyValueInfoWrapperPass::releaseMemory() { Info.releaseMemory(); }
+
+LazyValueInfo LazyValueAnalysis::run(Function &F, FunctionAnalysisManager &FAM) {
+  auto &AC = FAM.getResult<AssumptionAnalysis>(F);
+  auto &TLI = FAM.getResult<TargetLibraryAnalysis>(F);
+  auto *DT = FAM.getCachedResult<DominatorTreeAnalysis>(F);
+
+  return LazyValueInfo(&AC, &TLI, DT);
 }
 
 Constant *LazyValueInfo::getConstant(Value *V, BasicBlock *BB,
@@ -1486,7 +1496,7 @@ Constant *LazyValueInfo::getConstant(Value *V, BasicBlock *BB,
 }
 
 ConstantRange LazyValueInfo::getConstantRange(Value *V, BasicBlock *BB,
-					      Instruction *CxtI) {
+                                              Instruction *CxtI) {
   assert(V->getType()->isIntegerTy());
   unsigned Width = V->getType()->getIntegerBitWidth();
   const DataLayout &DL = BB->getModule()->getDataLayout();
@@ -1630,7 +1640,7 @@ LazyValueInfo::getPredicateAt(unsigned Pred, Value *V, Constant *C,
   // We limit the search to one step backwards from the current BB and value.
   // We could consider extending this to search further backwards through the
   // CFG and/or value graph, but there are non-obvious compile time vs quality
-  // tradeoffs.  
+  // tradeoffs.
   if (CxtI) {
     BasicBlock *BB = CxtI->getParent();
 
@@ -1650,10 +1660,10 @@ LazyValueInfo::getPredicateAt(unsigned Pred, Value *V, Constant *C,
         for (unsigned i = 0, e = PHI->getNumIncomingValues(); i < e; i++) {
           Value *Incoming = PHI->getIncomingValue(i);
           BasicBlock *PredBB = PHI->getIncomingBlock(i);
-          // Note that PredBB may be BB itself.        
+          // Note that PredBB may be BB itself.
           Tristate Result = getPredicateOnEdge(Pred, Incoming, C, PredBB, BB,
                                                CxtI);
-          
+
           // Keep going as long as we've seen a consistent known result for
           // all inputs.
           Baseline = (i == 0) ? Result /* First iteration */

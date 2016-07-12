@@ -16,6 +16,7 @@
 #ifndef LLVM_CLANG_AST_DECLCXX_H
 #define LLVM_CLANG_AST_DECLCXX_H
 
+#include "clang/AST/ASTContext.h"
 #include "clang/AST/ASTUnresolvedSet.h"
 #include "clang/AST/Attr.h"
 #include "clang/AST/Decl.h"
@@ -29,6 +30,7 @@ namespace clang {
 
 class ClassTemplateDecl;
 class ClassTemplateSpecializationDecl;
+class ConstructorUsingShadowDecl;
 class CXXBasePath;
 class CXXBasePaths;
 class CXXConstructorDecl;
@@ -165,13 +167,13 @@ class CXXBaseSpecifier {
   SourceLocation EllipsisLoc;
 
   /// \brief Whether this is a virtual base class or not.
-  bool Virtual : 1;
+  unsigned Virtual : 1;
 
   /// \brief Whether this is the base of a class (true) or of a struct (false).
   ///
   /// This determines the mapping from the access specifier as written in the
   /// source code to the access specifier used for semantic analysis.
-  bool BaseOfClass : 1;
+  unsigned BaseOfClass : 1;
 
   /// \brief Access specifier as written in the source code (may be AS_none).
   ///
@@ -181,7 +183,7 @@ class CXXBaseSpecifier {
 
   /// \brief Whether the class contains a using declaration
   /// to inherit the named class's constructors.
-  bool InheritConstructors : 1;
+  unsigned InheritConstructors : 1;
 
   /// \brief The type of the base class.
   ///
@@ -1298,7 +1300,7 @@ public:
   }
 
   /// \brief Determine whether this class has a using-declaration that names
-  /// a base class constructor.
+  /// a user-declared base class constructor.
   bool hasInheritedConstructor() const {
     return data().HasInheritedConstructor;
   }
@@ -1829,6 +1831,8 @@ public:
   method_iterator begin_overridden_methods() const;
   method_iterator end_overridden_methods() const;
   unsigned size_overridden_methods() const;
+  typedef ASTContext::overridden_method_range overridden_method_range;
+  overridden_method_range overridden_methods() const;
 
   /// Returns the parent of this method declaration, which
   /// is the class in which this method is defined.
@@ -1944,15 +1948,15 @@ class CXXCtorInitializer final
 
   /// \brief If the initializee is a type, whether that type makes this
   /// a delegating initialization.
-  bool IsDelegating : 1;
+  unsigned IsDelegating : 1;
 
   /// \brief If the initializer is a base initializer, this keeps track
   /// of whether the base is virtual or not.
-  bool IsVirtual : 1;
+  unsigned IsVirtual : 1;
 
   /// \brief Whether or not the initializer is explicitly written
   /// in the sources.
-  bool IsWritten : 1;
+  unsigned IsWritten : 1;
 
   /// If IsWritten is true, then this number keeps track of the textual order
   /// of this initializer in the original sources, counting from 0; otherwise,
@@ -2154,6 +2158,23 @@ public:
   friend TrailingObjects;
 };
 
+/// Description of a constructor that was inherited from a base class.
+class InheritedConstructor {
+  ConstructorUsingShadowDecl *Shadow;
+  CXXConstructorDecl *BaseCtor;
+
+public:
+  InheritedConstructor() : Shadow(), BaseCtor() {}
+  InheritedConstructor(ConstructorUsingShadowDecl *Shadow,
+                       CXXConstructorDecl *BaseCtor)
+      : Shadow(Shadow), BaseCtor(BaseCtor) {}
+
+  explicit operator bool() const { return Shadow; }
+
+  ConstructorUsingShadowDecl *getShadowDecl() const { return Shadow; }
+  CXXConstructorDecl *getConstructor() const { return BaseCtor; }
+};
+
 /// \brief Represents a C++ constructor within a class.
 ///
 /// For example:
@@ -2164,41 +2185,51 @@ public:
 ///   explicit X(int); // represented by a CXXConstructorDecl.
 /// };
 /// \endcode
-class CXXConstructorDecl : public CXXMethodDecl {
+class CXXConstructorDecl final
+    : public CXXMethodDecl,
+      private llvm::TrailingObjects<CXXConstructorDecl, InheritedConstructor> {
   void anchor() override;
 
   /// \name Support for base and member initializers.
   /// \{
   /// \brief The arguments used to initialize the base or member.
   LazyCXXCtorInitializersPtr CtorInitializers;
-  unsigned NumCtorInitializers : 31;
+  unsigned NumCtorInitializers : 30;
   /// \}
 
   /// \brief Whether this constructor declaration has the \c explicit keyword
   /// specified.
   unsigned IsExplicitSpecified : 1;
 
+  /// \brief Whether this constructor declaration is an implicitly-declared
+  /// inheriting constructor.
+  unsigned IsInheritingConstructor : 1;
+
   CXXConstructorDecl(ASTContext &C, CXXRecordDecl *RD, SourceLocation StartLoc,
                      const DeclarationNameInfo &NameInfo,
                      QualType T, TypeSourceInfo *TInfo,
                      bool isExplicitSpecified, bool isInline,
-                     bool isImplicitlyDeclared, bool isConstexpr)
+                     bool isImplicitlyDeclared, bool isConstexpr,
+                     InheritedConstructor Inherited)
     : CXXMethodDecl(CXXConstructor, C, RD, StartLoc, NameInfo, T, TInfo,
                     SC_None, isInline, isConstexpr, SourceLocation()),
       CtorInitializers(nullptr), NumCtorInitializers(0),
-      IsExplicitSpecified(isExplicitSpecified) {
+      IsExplicitSpecified(isExplicitSpecified),
+      IsInheritingConstructor((bool)Inherited) {
     setImplicit(isImplicitlyDeclared);
+    if (Inherited)
+      *getTrailingObjects<InheritedConstructor>() = Inherited;
   }
 
 public:
-  static CXXConstructorDecl *CreateDeserialized(ASTContext &C, unsigned ID);
-  static CXXConstructorDecl *Create(ASTContext &C, CXXRecordDecl *RD,
-                                    SourceLocation StartLoc,
-                                    const DeclarationNameInfo &NameInfo,
-                                    QualType T, TypeSourceInfo *TInfo,
-                                    bool isExplicit,
-                                    bool isInline, bool isImplicitlyDeclared,
-                                    bool isConstexpr);
+  static CXXConstructorDecl *CreateDeserialized(ASTContext &C, unsigned ID,
+                                                bool InheritsConstructor);
+  static CXXConstructorDecl *
+  Create(ASTContext &C, CXXRecordDecl *RD, SourceLocation StartLoc,
+         const DeclarationNameInfo &NameInfo, QualType T, TypeSourceInfo *TInfo,
+         bool isExplicit, bool isInline, bool isImplicitlyDeclared,
+         bool isConstexpr,
+         InheritedConstructor Inherited = InheritedConstructor());
 
   /// \brief Determine whether this constructor declaration has the
   /// \c explicit keyword specified.
@@ -2345,11 +2376,15 @@ public:
   /// an object.
   bool isSpecializationCopyingObject() const;
 
-  /// \brief Get the constructor that this inheriting constructor is based on.
-  const CXXConstructorDecl *getInheritedConstructor() const;
+  /// \brief Determine whether this is an implicit constructor synthesized to
+  /// model a call to a constructor inherited from a base class.
+  bool isInheritingConstructor() const { return IsInheritingConstructor; }
 
-  /// \brief Set the constructor that this inheriting constructor is based on.
-  void setInheritedConstructor(const CXXConstructorDecl *BaseCtor);
+  /// \brief Get the constructor that this inheriting constructor is based on.
+  InheritedConstructor getInheritedConstructor() const {
+    return IsInheritingConstructor ? *getTrailingObjects<InheritedConstructor>()
+                                   : InheritedConstructor();
+  }
 
   CXXConstructorDecl *getCanonicalDecl() override {
     return cast<CXXConstructorDecl>(FunctionDecl::getCanonicalDecl());
@@ -2364,6 +2399,7 @@ public:
 
   friend class ASTDeclReader;
   friend class ASTDeclWriter;
+  friend TrailingObjects;
 };
 
 /// \brief Represents a C++ destructor within a class.
@@ -2808,18 +2844,6 @@ class UsingShadowDecl : public NamedDecl, public Redeclarable<UsingShadowDecl> {
   NamedDecl *UsingOrNextShadow;
   friend class UsingDecl;
 
-  UsingShadowDecl(ASTContext &C, DeclContext *DC, SourceLocation Loc,
-                  UsingDecl *Using, NamedDecl *Target)
-    : NamedDecl(UsingShadow, DC, Loc, DeclarationName()),
-      redeclarable_base(C), Underlying(Target),
-      UsingOrNextShadow(reinterpret_cast<NamedDecl *>(Using)) {
-    if (Target) {
-      setDeclName(Target->getDeclName());
-      IdentifierNamespace = Target->getIdentifierNamespace();
-    }
-    setImplicit();
-  }
-
   typedef Redeclarable<UsingShadowDecl> redeclarable_base;
   UsingShadowDecl *getNextRedeclarationImpl() override {
     return getNextRedeclaration();
@@ -2831,11 +2855,16 @@ class UsingShadowDecl : public NamedDecl, public Redeclarable<UsingShadowDecl> {
     return getMostRecentDecl();
   }
 
+protected:
+  UsingShadowDecl(Kind K, ASTContext &C, DeclContext *DC, SourceLocation Loc,
+                  UsingDecl *Using, NamedDecl *Target);
+  UsingShadowDecl(Kind K, ASTContext &C, EmptyShell);
+
 public:
   static UsingShadowDecl *Create(ASTContext &C, DeclContext *DC,
                                  SourceLocation Loc, UsingDecl *Using,
                                  NamedDecl *Target) {
-    return new (C, DC) UsingShadowDecl(C, DC, Loc, Using, Target);
+    return new (C, DC) UsingShadowDecl(UsingShadow, C, DC, Loc, Using, Target);
   }
 
   static UsingShadowDecl *CreateDeserialized(ASTContext &C, unsigned ID);
@@ -2847,6 +2876,7 @@ public:
   using redeclarable_base::redecls;
   using redeclarable_base::getPreviousDecl;
   using redeclarable_base::getMostRecentDecl;
+  using redeclarable_base::isFirstDecl;
 
   UsingShadowDecl *getCanonicalDecl() override {
     return getFirstDecl();
@@ -2877,7 +2907,125 @@ public:
   }
 
   static bool classof(const Decl *D) { return classofKind(D->getKind()); }
-  static bool classofKind(Kind K) { return K == Decl::UsingShadow; }
+  static bool classofKind(Kind K) {
+    return K == Decl::UsingShadow || K == Decl::ConstructorUsingShadow;
+  }
+
+  friend class ASTDeclReader;
+  friend class ASTDeclWriter;
+};
+
+/// \brief Represents a shadow constructor declaration introduced into a
+/// class by a C++11 using-declaration that names a constructor.
+///
+/// For example:
+/// \code
+/// struct Base { Base(int); };
+/// struct Derived {
+///    using Base::Base; // creates a UsingDecl and a ConstructorUsingShadowDecl
+/// };
+/// \endcode
+class ConstructorUsingShadowDecl final : public UsingShadowDecl {
+  void anchor() override;
+
+  /// \brief If this constructor using declaration inherted the constructor
+  /// from an indirect base class, this is the ConstructorUsingShadowDecl
+  /// in the named direct base class from which the declaration was inherited.
+  ConstructorUsingShadowDecl *NominatedBaseClassShadowDecl;
+
+  /// \brief If this constructor using declaration inherted the constructor
+  /// from an indirect base class, this is the ConstructorUsingShadowDecl
+  /// that will be used to construct the unique direct or virtual base class
+  /// that receives the constructor arguments.
+  ConstructorUsingShadowDecl *ConstructedBaseClassShadowDecl;
+
+  /// \brief \c true if the constructor ultimately named by this using shadow
+  /// declaration is within a virtual base class subobject of the class that
+  /// contains this declaration.
+  unsigned IsVirtual : 1;
+
+  ConstructorUsingShadowDecl(ASTContext &C, DeclContext *DC, SourceLocation Loc,
+                             UsingDecl *Using, NamedDecl *Target,
+                             bool TargetInVirtualBase)
+      : UsingShadowDecl(ConstructorUsingShadow, C, DC, Loc, Using,
+                        Target->getUnderlyingDecl()),
+        NominatedBaseClassShadowDecl(
+            dyn_cast<ConstructorUsingShadowDecl>(Target)),
+        ConstructedBaseClassShadowDecl(NominatedBaseClassShadowDecl),
+        IsVirtual(TargetInVirtualBase) {
+    // If we found a constructor for a non-virtual base class, but it chains to
+    // a constructor for a virtual base, we should directly call the virtual
+    // base constructor instead.
+    // FIXME: This logic belongs in Sema.
+    if (!TargetInVirtualBase && NominatedBaseClassShadowDecl &&
+        NominatedBaseClassShadowDecl->constructsVirtualBase()) {
+      ConstructedBaseClassShadowDecl =
+          NominatedBaseClassShadowDecl->ConstructedBaseClassShadowDecl;
+      IsVirtual = true;
+    }
+  }
+  ConstructorUsingShadowDecl(ASTContext &C, EmptyShell Empty)
+      : UsingShadowDecl(ConstructorUsingShadow, C, Empty) {}
+
+public:
+  static ConstructorUsingShadowDecl *Create(ASTContext &C, DeclContext *DC,
+                                            SourceLocation Loc,
+                                            UsingDecl *Using, NamedDecl *Target,
+                                            bool IsVirtual);
+  static ConstructorUsingShadowDecl *CreateDeserialized(ASTContext &C,
+                                                        unsigned ID);
+
+  /// Returns the parent of this using shadow declaration, which
+  /// is the class in which this is declared.
+  //@{
+  const CXXRecordDecl *getParent() const {
+    return cast<CXXRecordDecl>(getDeclContext());
+  }
+  CXXRecordDecl *getParent() {
+    return cast<CXXRecordDecl>(getDeclContext());
+  }
+  //@}
+
+  /// \brief Get the inheriting constructor declaration for the direct base
+  /// class from which this using shadow declaration was inherited, if there is
+  /// one. This can be different for each redeclaration of the same shadow decl.
+  ConstructorUsingShadowDecl *getNominatedBaseClassShadowDecl() const {
+    return NominatedBaseClassShadowDecl;
+  }
+
+  /// \brief Get the inheriting constructor declaration for the base class
+  /// for which we don't have an explicit initializer, if there is one.
+  ConstructorUsingShadowDecl *getConstructedBaseClassShadowDecl() const {
+    return ConstructedBaseClassShadowDecl;
+  }
+
+  /// \brief Get the base class that was named in the using declaration. This
+  /// can be different for each redeclaration of this same shadow decl.
+  CXXRecordDecl *getNominatedBaseClass() const;
+
+  /// \brief Get the base class whose constructor or constructor shadow
+  /// declaration is passed the constructor arguments.
+  CXXRecordDecl *getConstructedBaseClass() const {
+    return cast<CXXRecordDecl>((ConstructedBaseClassShadowDecl
+                                    ? ConstructedBaseClassShadowDecl
+                                    : getTargetDecl())
+                                   ->getDeclContext());
+  }
+
+  /// \brief Returns \c true if the constructed base class is a virtual base
+  /// class subobject of this declaration's class.
+  bool constructsVirtualBase() const {
+    return IsVirtual;
+  }
+
+  /// \brief Get the constructor or constructor template in the derived class
+  /// correspnding to this using shadow declaration, if it has been implicitly
+  /// declared already.
+  CXXConstructorDecl *getConstructor() const;
+  void setConstructor(NamedDecl *Ctor);
+
+  static bool classof(const Decl *D) { return classofKind(D->getKind()); }
+  static bool classofKind(Kind K) { return K == ConstructorUsingShadow; }
 
   friend class ASTDeclReader;
   friend class ASTDeclWriter;

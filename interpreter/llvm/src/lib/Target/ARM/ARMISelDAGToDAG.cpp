@@ -83,7 +83,7 @@ public:
 
   /// getI32Imm - Return a target constant of type i32 with the specified
   /// value.
-  inline SDValue getI32Imm(unsigned Imm, SDLoc dl) {
+  inline SDValue getI32Imm(unsigned Imm, const SDLoc &dl) {
     return CurDAG->getTargetConstant(Imm, dl, MVT::i32);
   }
 
@@ -270,7 +270,7 @@ private:
   SDNode *createQuadQRegsNode(EVT VT, SDValue V0, SDValue V1, SDValue V2, SDValue V3);
 
   // Get the alignment operand for a NEON VLD or VST instruction.
-  SDValue GetVLDSTAlign(SDValue Align, SDLoc dl, unsigned NumVecs,
+  SDValue GetVLDSTAlign(SDValue Align, const SDLoc &dl, unsigned NumVecs,
                         bool is64BitVector);
 
   /// Returns the number of instructions required to materialize the given
@@ -485,7 +485,7 @@ unsigned ARMDAGToDAGISel::ConstantMaterializationCost(unsigned Val) const {
   if (Subtarget->isThumb()) {
     if (Val <= 255) return 1;                               // MOV
     if (Subtarget->hasV6T2Ops() && Val <= 0xffff) return 1; // MOVW
-    if (Val <= 511) return 2;                               // MOV + ADDi8
+    if (Val <= 510) return 2;                               // MOV + ADDi8
     if (~Val <= 255) return 2;                              // MOV + MVN
     if (ARM_AM::isThumbImmShiftedVal(Val)) return 2;        // MOV + LSL
   } else {
@@ -1473,7 +1473,7 @@ bool ARMDAGToDAGISel::SelectT2AddrModeExclusive(SDValue N, SDValue &Base,
 //===--------------------------------------------------------------------===//
 
 /// getAL - Returns a ARMCC::AL immediate node.
-static inline SDValue getAL(SelectionDAG *CurDAG, SDLoc dl) {
+static inline SDValue getAL(SelectionDAG *CurDAG, const SDLoc &dl) {
   return CurDAG->getTargetConstant((uint64_t)ARMCC::AL, dl, MVT::i32);
 }
 
@@ -1693,7 +1693,7 @@ SDNode *ARMDAGToDAGISel::createQuadQRegsNode(EVT VT, SDValue V0, SDValue V1,
 /// GetVLDSTAlign - Get the alignment (in bytes) for the alignment operand
 /// of a NEON VLD or VST instruction.  The supported values depend on the
 /// number of registers being loaded.
-SDValue ARMDAGToDAGISel::GetVLDSTAlign(SDValue Align, SDLoc dl,
+SDValue ARMDAGToDAGISel::GetVLDSTAlign(SDValue Align, const SDLoc &dl,
                                        unsigned NumVecs, bool is64BitVector) {
   unsigned NumRegs = NumVecs;
   if (!is64BitVector && NumVecs < 3)
@@ -2832,15 +2832,18 @@ void ARMDAGToDAGISel::Select(SDNode *N) {
       // a t2BIC, don't do any manual transform here as this can be
       // handled by the generic ISel machinery.
       bool PreferImmediateEncoding =
-          Subtarget->hasThumb2() && !is_t2_so_imm(Imm) && is_t2_so_imm_not(Imm);
+        Subtarget->hasThumb2() && (is_t2_so_imm(Imm) || is_t2_so_imm_not(Imm));
       if (!PreferImmediateEncoding &&
           ConstantMaterializationCost(Imm) >
               ConstantMaterializationCost(~Imm)) {
         // The current immediate costs more to materialize than a negated
         // immediate, so negate the immediate and use a BIC.
         SDValue NewImm =
-            CurDAG->getConstant(~N1C->getZExtValue(), dl, MVT::i32);
-        CurDAG->RepositionNode(N->getIterator(), NewImm.getNode());
+          CurDAG->getConstant(~N1C->getZExtValue(), dl, MVT::i32);
+        // If the new constant didn't exist before, reposition it in the topological
+        // ordering so it is just before N. Otherwise, don't touch its location.
+        if (NewImm->getNodeId() == -1)
+          CurDAG->RepositionNode(N->getIterator(), NewImm.getNode());
 
         if (!Subtarget->hasThumb2()) {
           SDValue Ops[] = {CurDAG->getRegister(ARM::CPSR, MVT::i32),
@@ -2939,7 +2942,47 @@ void ARMDAGToDAGISel::Select(SDNode *N) {
       return;
     }
   }
+  case ARMISD::UMAAL: {
+    unsigned Opc = Subtarget->isThumb() ? ARM::t2UMAAL : ARM::UMAAL;
+    SDValue Ops[] = { N->getOperand(0), N->getOperand(1),
+                      N->getOperand(2), N->getOperand(3),
+                      getAL(CurDAG, dl),
+                      CurDAG->getRegister(0, MVT::i32) };
+    ReplaceNode(N, CurDAG->getMachineNode(Opc, dl, MVT::i32, MVT::i32, Ops));
+    return;
+  }
   case ARMISD::UMLAL:{
+    // UMAAL is similar to UMLAL but it adds two 32-bit values to the
+    // 64-bit multiplication result.
+    if (Subtarget->hasV6Ops() && N->getOperand(2).getOpcode() == ARMISD::ADDC &&
+        N->getOperand(3).getOpcode() == ARMISD::ADDE) {
+
+      SDValue Addc = N->getOperand(2);
+      SDValue Adde = N->getOperand(3);
+
+      if (Adde.getOperand(2).getNode() == Addc.getNode()) {
+
+        ConstantSDNode *Op0 = dyn_cast<ConstantSDNode>(Adde.getOperand(0));
+        ConstantSDNode *Op1 = dyn_cast<ConstantSDNode>(Adde.getOperand(1));
+
+        if (Op0 && Op1 && Op0->getZExtValue() == 0 && Op1->getZExtValue() == 0)
+        {
+          // Select UMAAL instead: UMAAL RdLo, RdHi, Rn, Rm
+          // RdLo = one operand to be added, lower 32-bits of res
+          // RdHi = other operand to be added, upper 32-bits of res
+          // Rn = first multiply operand
+          // Rm = second multiply operand
+          SDValue Ops[] = { N->getOperand(0), N->getOperand(1),
+                            Addc.getOperand(0), Addc.getOperand(1),
+                            getAL(CurDAG, dl),
+                            CurDAG->getRegister(0, MVT::i32) };
+          unsigned opc = Subtarget->isThumb() ? ARM::t2UMAAL : ARM::UMAAL;
+          CurDAG->SelectNodeTo(N, opc, MVT::i32, MVT::i32, Ops);
+          return;
+        }
+      }
+    }
+
     if (Subtarget->isThumb()) {
       SDValue Ops[] = { N->getOperand(0), N->getOperand(1), N->getOperand(2),
                         N->getOperand(3), getAL(CurDAG, dl),
@@ -3335,6 +3378,38 @@ void ARMDAGToDAGISel::Select(SDNode *N) {
     default:
       break;
 
+    case Intrinsic::arm_mrrc:
+    case Intrinsic::arm_mrrc2: {
+      SDLoc dl(N);
+      SDValue Chain = N->getOperand(0);
+      unsigned Opc;
+
+      if (Subtarget->isThumb())
+        Opc = (IntNo == Intrinsic::arm_mrrc ? ARM::t2MRRC : ARM::t2MRRC2);
+      else
+        Opc = (IntNo == Intrinsic::arm_mrrc ? ARM::MRRC : ARM::MRRC2);
+
+      SmallVector<SDValue, 5> Ops;
+      Ops.push_back(getI32Imm(cast<ConstantSDNode>(N->getOperand(2))->getZExtValue(), dl)); /* coproc */
+      Ops.push_back(getI32Imm(cast<ConstantSDNode>(N->getOperand(3))->getZExtValue(), dl)); /* opc */
+      Ops.push_back(getI32Imm(cast<ConstantSDNode>(N->getOperand(4))->getZExtValue(), dl)); /* CRm */
+
+      // The mrrc2 instruction in ARM doesn't allow predicates, the top 4 bits of the encoded
+      // instruction will always be '1111' but it is possible in assembly language to specify
+      // AL as a predicate to mrrc2 but it doesn't make any difference to the encoded instruction.
+      if (Opc != ARM::MRRC2) {
+        Ops.push_back(getAL(CurDAG, dl));
+        Ops.push_back(CurDAG->getRegister(0, MVT::i32));
+      }
+
+      Ops.push_back(Chain);
+
+      // Writes to two registers.
+      const EVT RetType[] = {MVT::i32, MVT::i32, MVT::Other};
+
+      ReplaceNode(N, CurDAG->getMachineNode(Opc, dl, RetType, Ops));
+      return;
+    }
     case Intrinsic::arm_ldaexd:
     case Intrinsic::arm_ldrexd: {
       SDLoc dl(N);
@@ -3356,11 +3431,8 @@ void ARMDAGToDAGISel::Select(SDNode *N) {
       ResTys.push_back(MVT::Other);
 
       // Place arguments in the right order.
-      SmallVector<SDValue, 7> Ops;
-      Ops.push_back(MemAddr);
-      Ops.push_back(getAL(CurDAG, dl));
-      Ops.push_back(CurDAG->getRegister(0, MVT::i32));
-      Ops.push_back(Chain);
+      SDValue Ops[] = {MemAddr, getAL(CurDAG, dl),
+                       CurDAG->getRegister(0, MVT::i32), Chain};
       SDNode *Ld = CurDAG->getMachineNode(NewOpc, dl, ResTys, Ops);
       // Transfer memoperands.
       MachineSDNode::mmo_iterator MemOp = MF->allocateMemRefsArray(1);
@@ -3529,8 +3601,8 @@ void ARMDAGToDAGISel::Select(SDNode *N) {
     case Intrinsic::arm_neon_vst2: {
       static const uint16_t DOpcodes[] = { ARM::VST2d8, ARM::VST2d16,
                                            ARM::VST2d32, ARM::VST1q64 };
-      static uint16_t QOpcodes[] = { ARM::VST2q8Pseudo, ARM::VST2q16Pseudo,
-                                     ARM::VST2q32Pseudo };
+      static const uint16_t QOpcodes[] = { ARM::VST2q8Pseudo, ARM::VST2q16Pseudo,
+                                           ARM::VST2q32Pseudo };
       SelectVST(N, false, 2, DOpcodes, QOpcodes, nullptr);
       return;
     }
@@ -3630,12 +3702,9 @@ void ARMDAGToDAGISel::Select(SDNode *N) {
   case ARMISD::VTBL1: {
     SDLoc dl(N);
     EVT VT = N->getValueType(0);
-    SmallVector<SDValue, 6> Ops;
-
-    Ops.push_back(N->getOperand(0));
-    Ops.push_back(N->getOperand(1));
-    Ops.push_back(getAL(CurDAG, dl));                // Predicate
-    Ops.push_back(CurDAG->getRegister(0, MVT::i32)); // Predicate Register
+    SDValue Ops[] = {N->getOperand(0), N->getOperand(1),
+                     getAL(CurDAG, dl),                 // Predicate
+                     CurDAG->getRegister(0, MVT::i32)}; // Predicate Register
     ReplaceNode(N, CurDAG->getMachineNode(ARM::VTBL1, dl, VT, Ops));
     return;
   }
@@ -3648,11 +3717,8 @@ void ARMDAGToDAGISel::Select(SDNode *N) {
     SDValue V1 = N->getOperand(1);
     SDValue RegSeq = SDValue(createDRegPairNode(MVT::v16i8, V0, V1), 0);
 
-    SmallVector<SDValue, 6> Ops;
-    Ops.push_back(RegSeq);
-    Ops.push_back(N->getOperand(2));
-    Ops.push_back(getAL(CurDAG, dl));                // Predicate
-    Ops.push_back(CurDAG->getRegister(0, MVT::i32)); // Predicate Register
+    SDValue Ops[] = {RegSeq, N->getOperand(2), getAL(CurDAG, dl), // Predicate
+                     CurDAG->getRegister(0, MVT::i32)}; // Predicate Register
     ReplaceNode(N, CurDAG->getMachineNode(ARM::VTBL2, dl, VT, Ops));
     return;
   }
@@ -3675,8 +3741,9 @@ void ARMDAGToDAGISel::Select(SDNode *N) {
 // and obtain the integer operands from them, adding these operands to the
 // provided vector.
 static void getIntOperandsFromRegisterString(StringRef RegString,
-                                             SelectionDAG *CurDAG, SDLoc DL,
-                                             std::vector<SDValue>& Ops) {
+                                             SelectionDAG *CurDAG,
+                                             const SDLoc &DL,
+                                             std::vector<SDValue> &Ops) {
   SmallVector<StringRef, 5> Fields;
   RegString.split(Fields, ':');
 

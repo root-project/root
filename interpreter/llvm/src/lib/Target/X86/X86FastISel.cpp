@@ -22,7 +22,6 @@
 #include "X86Subtarget.h"
 #include "X86TargetMachine.h"
 #include "llvm/Analysis/BranchProbabilityInfo.h"
-#include "llvm/CodeGen/Analysis.h"
 #include "llvm/CodeGen/FastISel.h"
 #include "llvm/CodeGen/FunctionLoweringInfo.h"
 #include "llvm/CodeGen/MachineConstantPool.h"
@@ -83,7 +82,8 @@ public:
 #include "X86GenFastISel.inc"
 
 private:
-  bool X86FastEmitCompare(const Value *LHS, const Value *RHS, EVT VT, DebugLoc DL);
+  bool X86FastEmitCompare(const Value *LHS, const Value *RHS, EVT VT,
+                          const DebugLoc &DL);
 
   bool X86FastEmitLoad(EVT VT, X86AddressMode &AM, MachineMemOperand *MMO,
                        unsigned &ResultReg, unsigned Alignment = 1);
@@ -957,9 +957,8 @@ redo_gep:
     // our address and just match the value instead of completely failing.
     AM = SavedAM;
 
-    for (SmallVectorImpl<const Value *>::reverse_iterator
-           I = GEPs.rbegin(), E = GEPs.rend(); I != E; ++I)
-      if (handleConstantAddresses(*I, AM))
+    for (const Value *I : reverse(GEPs))
+      if (handleConstantAddresses(I, AM))
         return true;
 
     return false;
@@ -1365,8 +1364,8 @@ static unsigned X86ChooseCmpImmediateOpcode(EVT VT, const ConstantInt *RHSC) {
   }
 }
 
-bool X86FastISel::X86FastEmitCompare(const Value *Op0, const Value *Op1,
-                                     EVT VT, DebugLoc CurDbgLoc) {
+bool X86FastISel::X86FastEmitCompare(const Value *Op0, const Value *Op1, EVT VT,
+                                     const DebugLoc &CurDbgLoc) {
   unsigned Op0Reg = getRegForValue(Op0);
   if (Op0Reg == 0) return false;
 
@@ -3738,7 +3737,7 @@ bool X86FastISel::tryToFoldLoadIntoMI(MachineInstr *MI, unsigned OpNo,
   AM.getFullAddress(AddrOps);
 
   MachineInstr *Result = XII.foldMemoryOperandImpl(
-      *FuncInfo.MF, MI, OpNo, AddrOps, FuncInfo.InsertPt, Size, Alignment,
+      *FuncInfo.MF, *MI, OpNo, AddrOps, FuncInfo.InsertPt, Size, Alignment,
       /*AllowCommute=*/true);
   if (!Result)
     return false;

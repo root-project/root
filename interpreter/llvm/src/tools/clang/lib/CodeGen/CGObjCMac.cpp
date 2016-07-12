@@ -236,13 +236,11 @@ public:
     CodeGen::CodeGenTypes &Types = CGM.getTypes();
     ASTContext &Ctx = CGM.getContext();
     // id objc_getProperty (id, SEL, ptrdiff_t, bool)
-    SmallVector<CanQualType,4> Params;
     CanQualType IdType = Ctx.getCanonicalParamType(Ctx.getObjCIdType());
     CanQualType SelType = Ctx.getCanonicalParamType(Ctx.getObjCSelType());
-    Params.push_back(IdType);
-    Params.push_back(SelType);
-    Params.push_back(Ctx.getPointerDiffType()->getCanonicalTypeUnqualified());
-    Params.push_back(Ctx.BoolTy);
+    CanQualType Params[] = {
+        IdType, SelType,
+        Ctx.getPointerDiffType()->getCanonicalTypeUnqualified(), Ctx.BoolTy};
     llvm::FunctionType *FTy =
         Types.GetFunctionType(
           Types.arrangeBuiltinFunctionDeclaration(IdType, Params));
@@ -253,15 +251,15 @@ public:
     CodeGen::CodeGenTypes &Types = CGM.getTypes();
     ASTContext &Ctx = CGM.getContext();
     // void objc_setProperty (id, SEL, ptrdiff_t, id, bool, bool)
-    SmallVector<CanQualType,6> Params;
     CanQualType IdType = Ctx.getCanonicalParamType(Ctx.getObjCIdType());
     CanQualType SelType = Ctx.getCanonicalParamType(Ctx.getObjCSelType());
-    Params.push_back(IdType);
-    Params.push_back(SelType);
-    Params.push_back(Ctx.getPointerDiffType()->getCanonicalTypeUnqualified());
-    Params.push_back(IdType);
-    Params.push_back(Ctx.BoolTy);
-    Params.push_back(Ctx.BoolTy);
+    CanQualType Params[] = {
+        IdType,
+        SelType,
+        Ctx.getPointerDiffType()->getCanonicalTypeUnqualified(),
+        IdType,
+        Ctx.BoolTy,
+        Ctx.BoolTy};
     llvm::FunctionType *FTy =
         Types.GetFunctionType(
           Types.arrangeBuiltinFunctionDeclaration(Ctx.VoidTy, Params));
@@ -1943,7 +1941,7 @@ CGObjCCommonMac::EmitMessageSend(CodeGen::CodeGenFunction &CGF,
   // Emit a null-check if there's a consumed argument other than the receiver.
   bool RequiresNullCheck = false;
   if (ReceiverCanBeNull && CGM.getLangOpts().ObjCAutoRefCount && Method) {
-    for (const auto *ParamDecl : Method->params()) {
+    for (const auto *ParamDecl : Method->parameters()) {
       if (ParamDecl->hasAttr<NSConsumedAttr>()) {
         if (!nullReturn.NullBB)
           nullReturn.init(CGF, Arg0);
@@ -6828,7 +6826,7 @@ CGObjCNonFragileABIMac::EmitVTableMessageSend(CodeGenFunction &CGF,
   
   bool requiresnullCheck = false;
   if (CGM.getLangOpts().ObjCAutoRefCount && method)
-    for (const auto *ParamDecl : method->params()) {
+    for (const auto *ParamDecl : method->parameters()) {
       if (ParamDecl->hasAttr<NSConsumedAttr>()) {
         if (!nullReturn.NullBB)
           nullReturn.init(CGF, arg0);

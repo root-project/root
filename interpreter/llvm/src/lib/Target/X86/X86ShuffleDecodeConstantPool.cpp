@@ -199,7 +199,7 @@ void DecodeVPERMIL2PMask(const Constant *C, unsigned M2Z, unsigned ElSize,
     // Bits[2:1] - (Per Lane) PD Shuffle Mask.
     // Bits[2:0] - (Per Lane) PS Shuffle Mask.
     uint64_t Selector = cast<ConstantInt>(COp)->getZExtValue();
-    int MatchBit = (Selector >> 3) & 0x1;
+    unsigned MatchBit = (Selector >> 3) & 0x1;
 
     // M2Z[0:1]     MatchBit
     //   0Xb           X        Source selected by Selector index.
@@ -207,7 +207,7 @@ void DecodeVPERMIL2PMask(const Constant *C, unsigned M2Z, unsigned ElSize,
     //   10b           1        Zero.
     //   11b           0        Zero.
     //   11b           1        Source selected by Selector index.
-    if ((M2Z & 0x2) != 0 && MatchBit != (M2Z & 0x1)) {
+    if ((M2Z & 0x2) != 0u && MatchBit != (M2Z & 0x1)) {
       ShuffleMask.push_back(SM_SentinelZero);
       continue;
     }
@@ -300,6 +300,7 @@ void DecodeVPERMVMask(const Constant *C, MVT VT,
   if (MaskTy->isVectorTy()) {
     unsigned NumElements = MaskTy->getVectorNumElements();
     if (NumElements == VT.getVectorNumElements()) {
+      unsigned EltMaskSize = Log2_64(NumElements);
       for (unsigned i = 0; i < NumElements; ++i) {
         Constant *COp = C->getAggregateElement(i);
         if (!COp || (!isa<UndefValue>(COp) && !isa<ConstantInt>(COp))) {
@@ -309,9 +310,9 @@ void DecodeVPERMVMask(const Constant *C, MVT VT,
         if (isa<UndefValue>(COp))
           ShuffleMask.push_back(SM_SentinelUndef);
         else {
-          uint64_t Element = cast<ConstantInt>(COp)->getZExtValue();
-          Element &= (1 << NumElements) - 1;
-          ShuffleMask.push_back(Element);
+          APInt Element = cast<ConstantInt>(COp)->getValue();
+          Element = Element.getLoBits(EltMaskSize);
+          ShuffleMask.push_back(Element.getZExtValue());
         }
       }
     }

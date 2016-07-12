@@ -20,24 +20,27 @@
 namespace llvm {
 
 class R600InstrInfo;
+class R600Subtarget;
 
 class R600TargetLowering final : public AMDGPUTargetLowering {
 public:
-  R600TargetLowering(TargetMachine &TM, const AMDGPUSubtarget &STI);
-  MachineBasicBlock * EmitInstrWithCustomInserter(MachineInstr *MI,
-      MachineBasicBlock * BB) const override;
+  R600TargetLowering(const TargetMachine &TM, const R600Subtarget &STI);
+
+  const R600Subtarget *getSubtarget() const;
+
+  MachineBasicBlock *
+  EmitInstrWithCustomInserter(MachineInstr &MI,
+                              MachineBasicBlock *BB) const override;
   SDValue LowerOperation(SDValue Op, SelectionDAG &DAG) const override;
   SDValue PerformDAGCombine(SDNode *N, DAGCombinerInfo &DCI) const override;
   void ReplaceNodeResults(SDNode * N,
                           SmallVectorImpl<SDValue> &Results,
                           SelectionDAG &DAG) const override;
-  SDValue LowerFormalArguments(
-                              SDValue Chain,
-                              CallingConv::ID CallConv,
-                              bool isVarArg,
-                              const SmallVectorImpl<ISD::InputArg> &Ins,
-                              SDLoc DL, SelectionDAG &DAG,
-                              SmallVectorImpl<SDValue> &InVals) const override;
+  SDValue LowerFormalArguments(SDValue Chain, CallingConv::ID CallConv,
+                               bool isVarArg,
+                               const SmallVectorImpl<ISD::InputArg> &Ins,
+                               const SDLoc &DL, SelectionDAG &DAG,
+                               SmallVectorImpl<SDValue> &InVals) const override;
   EVT getSetCCResultType(const DataLayout &DL, LLVMContext &,
                          EVT VT) const override;
 
@@ -51,13 +54,13 @@ private:
   /// first nine dwords of a Vertex Buffer.  These implicit parameters are
   /// lowered to load instructions which retrieve the values from the Vertex
   /// Buffer.
-  SDValue LowerImplicitParameter(SelectionDAG &DAG, EVT VT,
-                                 SDLoc DL, unsigned DwordOffset) const;
+  SDValue LowerImplicitParameter(SelectionDAG &DAG, EVT VT, const SDLoc &DL,
+                                 unsigned DwordOffset) const;
 
   void lowerImplicitParameter(MachineInstr *MI, MachineBasicBlock &BB,
       MachineRegisterInfo & MRI, unsigned dword_offset) const;
   SDValue OptimizeSwizzle(SDValue BuildVector, SDValue Swz[], SelectionDAG &DAG,
-                          SDLoc DL) const;
+                          const SDLoc &DL) const;
   SDValue vectorToVerticalVector(SelectionDAG &DAG, SDValue Vector) const;
 
   SDValue lowerFrameIndex(SDValue Op, SelectionDAG &DAG) const;
@@ -87,6 +90,10 @@ private:
   bool isZero(SDValue Op) const;
   bool isHWTrueValue(SDValue Op) const;
   bool isHWFalseValue(SDValue Op) const;
+
+ bool FoldOperand(SDNode *ParentNode, unsigned SrcIdx, SDValue &Src,
+                  SDValue &Neg, SDValue &Abs, SDValue &Sel, SDValue &Imm,
+                  SelectionDAG &DAG) const;
 
   SDNode *PostISelFolding(MachineSDNode *N, SelectionDAG &DAG) const override;
 };

@@ -183,6 +183,24 @@ class InstRI<bits<12> op, dag outs, dag ins, string asmstr, list<dag> pattern>
   let Inst{15-0}  = I2;
 }
 
+class InstRIEa<bits<16> op, dag outs, dag ins, string asmstr, list<dag> pattern>
+  : InstSystemZ<6, outs, ins, asmstr, pattern> {
+  field bits<48> Inst;
+  field bits<48> SoftFail = 0;
+
+  bits<4> R1;
+  bits<16> I2;
+  bits<4> M3;
+
+  let Inst{47-40} = op{15-8};
+  let Inst{39-36} = R1;
+  let Inst{35-32} = 0;
+  let Inst{31-16} = I2;
+  let Inst{15-12} = M3;
+  let Inst{11-8}  = 0;
+  let Inst{7-0}   = op{7-0};
+}
+
 class InstRIEb<bits<16> op, dag outs, dag ins, string asmstr, list<dag> pattern>
   : InstSystemZ<6, outs, ins, asmstr, pattern> {
   field bits<48> Inst;
@@ -345,6 +363,22 @@ class InstRRF<bits<16> op, dag outs, dag ins, string asmstr, list<dag> pattern>
   let Inst{31-16} = op;
   let Inst{15-12} = R3;
   let Inst{11-8}  = R4;
+  let Inst{7-4}   = R1;
+  let Inst{3-0}   = R2;
+}
+
+class InstRRFc<bits<16> op, dag outs, dag ins, string asmstr, list<dag> pattern>
+  : InstSystemZ<4, outs, ins, asmstr, pattern> {
+  field bits<32> Inst;
+  field bits<32> SoftFail = 0;
+
+  bits<4> R1;
+  bits<4> R2;
+  bits<4> M3;
+
+  let Inst{31-16} = op;
+  let Inst{15-12} = M3;
+  let Inst{11-8}  = 0;
   let Inst{7-4}   = R1;
   let Inst{3-0}   = R2;
 }
@@ -966,6 +1000,10 @@ class InstVRX<bits<16> op, dag outs, dag ins, string asmstr, list<dag> pattern>
 //
 //   Compare:
 //     Two input operands and an implicit CC output operand.
+//
+//   Test:
+//     Two input operands and an implicit CC output operand.  The second
+//     input operand is an "address" operand used as a test class mask.
 //
 //   Ternary:
 //     One register output operand and three input operands.
@@ -1920,6 +1958,14 @@ class CompareVRRa<string mnemonic, bits<16> opcode, SDPatternOperator operator,
   let M3 = type;
   let M4 = 0;
   let M5 = 0;
+}
+
+class TestRXE<string mnemonic, bits<16> opcode, SDPatternOperator operator,
+              RegisterOperand cls>
+  : InstRXE<opcode, (outs), (ins cls:$R1, bdxaddr12only:$XBD2),
+            mnemonic#"\t$R1, $XBD2",
+            [(operator cls:$R1, bdxaddr12only:$XBD2)]> {
+  let M3 = 0;
 }
 
 class TernaryRRD<string mnemonic, bits<16> opcode,

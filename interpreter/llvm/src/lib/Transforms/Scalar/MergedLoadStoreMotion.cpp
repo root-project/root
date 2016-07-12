@@ -72,6 +72,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "llvm/Transforms/Scalar/MergedLoadStoreMotion.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/Analysis/AliasAnalysis.h"
 #include "llvm/Analysis/CFG.h"
@@ -79,6 +80,7 @@
 #include "llvm/Analysis/Loads.h"
 #include "llvm/Analysis/MemoryBuiltins.h"
 #include "llvm/Analysis/MemoryDependenceAnalysis.h"
+#include "llvm/Analysis/ValueTracking.h"
 #include "llvm/IR/Metadata.h"
 #include "llvm/IR/PatternMatch.h"
 #include "llvm/Support/Debug.h"
@@ -94,32 +96,20 @@ using namespace llvm;
 //===----------------------------------------------------------------------===//
 //                         MergedLoadStoreMotion Pass
 //===----------------------------------------------------------------------===//
+class MergedLoadStoreMotion {
+  MemoryDependenceResults *MD = nullptr;
+  AliasAnalysis *AA = nullptr;
 
-namespace {
-class MergedLoadStoreMotion : public FunctionPass {
-  AliasAnalysis *AA;
-  MemoryDependenceResults *MD;
+  // The mergeLoad/Store algorithms could have Size0 * Size1 complexity,
+  // where Size0 and Size1 are the #instructions on the two sides of
+  // the diamond. The constant chosen here is arbitrary. Compiler Time
+  // Control is enforced by the check Size0 * Size1 < MagicCompileTimeControl.
+  const int MagicCompileTimeControl = 250;
 
 public:
-  static char ID; // Pass identification, replacement for typeid
-  MergedLoadStoreMotion()
-      : FunctionPass(ID), MD(nullptr), MagicCompileTimeControl(250) {
-    initializeMergedLoadStoreMotionPass(*PassRegistry::getPassRegistry());
-  }
-
-  bool runOnFunction(Function &F) override;
+  bool run(Function &F, MemoryDependenceResults *MD, AliasAnalysis &AA);
 
 private:
-  // This transformation requires dominator postdominator info
-  void getAnalysisUsage(AnalysisUsage &AU) const override {
-    AU.setPreservesCFG();
-    AU.addRequired<AAResultsWrapperPass>();
-    AU.addPreserved<GlobalsAAWrapperPass>();
-    AU.addPreserved<MemoryDependenceWrapperPass>();
-  }
-
-  // Helper routines
-
   ///
   /// \brief Remove instruction from parent and update memory dependence
   /// analysis.
@@ -144,30 +134,7 @@ private:
                                  const Instruction &End, MemoryLocation Loc);
   bool sinkStore(BasicBlock *BB, StoreInst *SinkCand, StoreInst *ElseInst);
   bool mergeStores(BasicBlock *BB);
-  // The mergeLoad/Store algorithms could have Size0 * Size1 complexity,
-  // where Size0 and Size1 are the #instructions on the two sides of
-  // the diamond. The constant chosen here is arbitrary. Compiler Time
-  // Control is enforced by the check Size0 * Size1 < MagicCompileTimeControl.
-  const int MagicCompileTimeControl;
 };
-
-char MergedLoadStoreMotion::ID = 0;
-} // anonymous namespace
-
-///
-/// \brief createMergedLoadStoreMotionPass - The public interface to this file.
-///
-FunctionPass *llvm::createMergedLoadStoreMotionPass() {
-  return new MergedLoadStoreMotion();
-}
-
-INITIALIZE_PASS_BEGIN(MergedLoadStoreMotion, "mldst-motion",
-                      "MergedLoadStoreMotion", false, false)
-INITIALIZE_PASS_DEPENDENCY(MemoryDependenceWrapperPass)
-INITIALIZE_PASS_DEPENDENCY(AAResultsWrapperPass)
-INITIALIZE_PASS_DEPENDENCY(GlobalsAAWrapperPass)
-INITIALIZE_PASS_END(MergedLoadStoreMotion, "mldst-motion",
-                    "MergedLoadStoreMotion", false, false)
 
 ///
 /// \brief Remove instruction from parent and update memory dependence analysis.
@@ -232,7 +199,7 @@ bool MergedLoadStoreMotion::isLoadHoistBarrierInRange(
   if (!SafeToLoadUnconditionally)
     for (const Instruction &Inst :
          make_range(Start.getIterator(), End.getIterator()))
-      if (Inst.mayThrow())
+      if (!isGuaranteedToTransferExecutionToSuccessor(&Inst))
         return true;
   MemoryLocation Loc = MemoryLocation::get(LI);
   return AA->canInstructionRangeModRef(Start, End, Loc, MRI_Mod);
@@ -264,7 +231,7 @@ LoadInst *MergedLoadStoreMotion::canHoistFromBlock(BasicBlock *BB1,
 
     MemoryLocation Loc0 = MemoryLocation::get(Load0);
     MemoryLocation Loc1 = MemoryLocation::get(Load1);
-    if (AA->isMustAlias(Loc0, Loc1) && Load0->isSameOperationAs(Load1) &&
+    if (Load0->isSameOperationAs(Load1) && AA->isMustAlias(Loc0, Loc1) &&
         !isLoadHoistBarrierInRange(BB1->front(), *Load1, Load1,
                                    SafeToLoadUnconditionally) &&
         !isLoadHoistBarrierInRange(BB0->front(), *Load0, Load0,
@@ -410,11 +377,8 @@ StoreInst *MergedLoadStoreMotion::canSinkFromBlock(BasicBlock *BB1,
                                                    StoreInst *Store0) {
   DEBUG(dbgs() << "can Sink? : "; Store0->dump(); dbgs() << "\n");
   BasicBlock *BB0 = Store0->getParent();
-  for (BasicBlock::reverse_iterator RBI = BB1->rbegin(), RBE = BB1->rend();
-       RBI != RBE; ++RBI) {
-    Instruction *Inst = &*RBI;
-
-    auto *Store1 = dyn_cast<StoreInst>(Inst);
+  for (Instruction &Inst : reverse(*BB1)) {
+    auto *Store1 = dyn_cast<StoreInst>(&Inst);
     if (!Store1)
       continue;
 
@@ -552,16 +516,10 @@ bool MergedLoadStoreMotion::mergeStores(BasicBlock *T) {
   return MergedStores;
 }
 
-///
-/// \brief Run the transformation for each function
-///
-bool MergedLoadStoreMotion::runOnFunction(Function &F) {
-  if (skipFunction(F))
-    return false;
-
-  auto *MDWP = getAnalysisIfAvailable<MemoryDependenceWrapperPass>();
-  MD = MDWP ? &MDWP->getMemDep() : nullptr;
-  AA = &getAnalysis<AAResultsWrapperPass>().getAAResults();
+bool MergedLoadStoreMotion::run(Function &F, MemoryDependenceResults *MD,
+                                AliasAnalysis &AA) {
+  this->MD = MD;
+  this->AA = &AA;
 
   bool Changed = false;
   DEBUG(dbgs() << "Instruction Merger\n");
@@ -579,4 +537,67 @@ bool MergedLoadStoreMotion::runOnFunction(Function &F) {
     }
   }
   return Changed;
+}
+
+namespace {
+class MergedLoadStoreMotionLegacyPass : public FunctionPass {
+public:
+  static char ID; // Pass identification, replacement for typeid
+  MergedLoadStoreMotionLegacyPass() : FunctionPass(ID) {
+    initializeMergedLoadStoreMotionLegacyPassPass(
+        *PassRegistry::getPassRegistry());
+  }
+
+  ///
+  /// \brief Run the transformation for each function
+  ///
+  bool runOnFunction(Function &F) override {
+    if (skipFunction(F))
+      return false;
+    MergedLoadStoreMotion Impl;
+    auto *MDWP = getAnalysisIfAvailable<MemoryDependenceWrapperPass>();
+    return Impl.run(F, MDWP ? &MDWP->getMemDep() : nullptr,
+                    getAnalysis<AAResultsWrapperPass>().getAAResults());
+  }
+
+private:
+  // This transformation requires dominator postdominator info
+  void getAnalysisUsage(AnalysisUsage &AU) const override {
+    AU.setPreservesCFG();
+    AU.addRequired<AAResultsWrapperPass>();
+    AU.addPreserved<GlobalsAAWrapperPass>();
+    AU.addPreserved<MemoryDependenceWrapperPass>();
+  }
+};
+
+char MergedLoadStoreMotionLegacyPass::ID = 0;
+} // anonymous namespace
+
+///
+/// \brief createMergedLoadStoreMotionPass - The public interface to this file.
+///
+FunctionPass *llvm::createMergedLoadStoreMotionPass() {
+  return new MergedLoadStoreMotionLegacyPass();
+}
+
+INITIALIZE_PASS_BEGIN(MergedLoadStoreMotionLegacyPass, "mldst-motion",
+                      "MergedLoadStoreMotion", false, false)
+INITIALIZE_PASS_DEPENDENCY(MemoryDependenceWrapperPass)
+INITIALIZE_PASS_DEPENDENCY(AAResultsWrapperPass)
+INITIALIZE_PASS_END(MergedLoadStoreMotionLegacyPass, "mldst-motion",
+                    "MergedLoadStoreMotion", false, false)
+
+PreservedAnalyses
+MergedLoadStoreMotionPass::run(Function &F, AnalysisManager<Function> &AM) {
+  MergedLoadStoreMotion Impl;
+  auto *MD = AM.getCachedResult<MemoryDependenceAnalysis>(F);
+  auto &AA = AM.getResult<AAManager>(F);
+  if (!Impl.run(F, MD, AA))
+    return PreservedAnalyses::all();
+
+  // FIXME: This should also 'preserve the CFG'.
+  PreservedAnalyses PA;
+  PA.preserve<GlobalsAA>();
+  PA.preserve<MemoryDependenceAnalysis>();
+  return PA;
 }

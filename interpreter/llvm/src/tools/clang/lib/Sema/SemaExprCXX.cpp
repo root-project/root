@@ -872,6 +872,92 @@ bool Sema::CheckCXXThrowOperand(SourceLocation ThrowLoc,
   return false;
 }
 
+static QualType adjustCVQualifiersForCXXThisWithinLambda(
+    ArrayRef<FunctionScopeInfo *> FunctionScopes, QualType ThisTy,
+    DeclContext *CurSemaContext, ASTContext &ASTCtx) {
+
+  QualType ClassType = ThisTy->getPointeeType();
+  LambdaScopeInfo *CurLSI = nullptr;
+  DeclContext *CurDC = CurSemaContext;
+
+  // Iterate through the stack of lambdas starting from the innermost lambda to
+  // the outermost lambda, checking if '*this' is ever captured by copy - since
+  // that could change the cv-qualifiers of the '*this' object.
+  // The object referred to by '*this' starts out with the cv-qualifiers of its
+  // member function.  We then start with the innermost lambda and iterate
+  // outward checking to see if any lambda performs a by-copy capture of '*this'
+  // - and if so, any nested lambda must respect the 'constness' of that
+  // capturing lamdbda's call operator.
+  //
+
+  // The issue is that we cannot rely entirely on the FunctionScopeInfo stack
+  // since ScopeInfos are pushed on during parsing and treetransforming. But
+  // since a generic lambda's call operator can be instantiated anywhere (even
+  // end of the TU) we need to be able to examine its enclosing lambdas and so
+  // we use the DeclContext to get a hold of the closure-class and query it for
+  // capture information.  The reason we don't just resort to always using the
+  // DeclContext chain is that it is only mature for lambda expressions
+  // enclosing generic lambda's call operators that are being instantiated.
+
+  for (int I = FunctionScopes.size();
+       I-- && isa<LambdaScopeInfo>(FunctionScopes[I]);
+       CurDC = getLambdaAwareParentOfDeclContext(CurDC)) {
+    CurLSI = cast<LambdaScopeInfo>(FunctionScopes[I]);
+    
+    if (!CurLSI->isCXXThisCaptured()) 
+        continue;
+      
+    auto C = CurLSI->getCXXThisCapture();
+
+    if (C.isCopyCapture()) {
+      ClassType.removeLocalCVRQualifiers(Qualifiers::CVRMask);
+      if (CurLSI->CallOperator->isConst())
+        ClassType.addConst();
+      return ASTCtx.getPointerType(ClassType);
+    }
+  }
+  // We've run out of ScopeInfos but check if CurDC is a lambda (which can
+  // happen during instantiation of generic lambdas)
+  if (isLambdaCallOperator(CurDC)) {
+    assert(CurLSI);
+    assert(isGenericLambdaCallOperatorSpecialization(CurLSI->CallOperator));
+    assert(CurDC == getLambdaAwareParentOfDeclContext(CurLSI->CallOperator));
+    
+    auto IsThisCaptured =
+        [](CXXRecordDecl *Closure, bool &IsByCopy, bool &IsConst) {
+      IsConst = false;
+      IsByCopy = false;
+      for (auto &&C : Closure->captures()) {
+        if (C.capturesThis()) {
+          if (C.getCaptureKind() == LCK_StarThis)
+            IsByCopy = true;
+          if (Closure->getLambdaCallOperator()->isConst())
+            IsConst = true;
+          return true;
+        }
+      }
+      return false;
+    };
+
+    bool IsByCopyCapture = false;
+    bool IsConstCapture = false;
+    CXXRecordDecl *Closure = cast<CXXRecordDecl>(CurDC->getParent());
+    while (Closure &&
+           IsThisCaptured(Closure, IsByCopyCapture, IsConstCapture)) {
+      if (IsByCopyCapture) {
+        ClassType.removeLocalCVRQualifiers(Qualifiers::CVRMask);
+        if (IsConstCapture)
+          ClassType.addConst();
+        return ASTCtx.getPointerType(ClassType);
+      }
+      Closure = isLambdaCallOperator(Closure->getParent())
+                    ? cast<CXXRecordDecl>(Closure->getParent()->getParent())
+                    : nullptr;
+    }
+  }
+  return ASTCtx.getPointerType(ClassType);
+}
+
 QualType Sema::getCurrentThisType() {
   DeclContext *DC = getFunctionLevelDeclContext();
   QualType ThisTy = CXXThisTypeOverride;
@@ -902,20 +988,13 @@ QualType Sema::getCurrentThisType() {
       ThisTy = Context.getPointerType(ClassTy);
     }
   }
-   // Add const for '* this' capture if not mutable.
-  if (isLambdaCallOperator(CurContext)) {
-    LambdaScopeInfo *LSI = getCurLambda();
-    assert(LSI);
-    if (LSI->isCXXThisCaptured()) {
-      auto C = LSI->getCXXThisCapture();
-      QualType BaseType = ThisTy->getPointeeType();
-      if ((C.isThisCapture() && C.isCopyCapture()) &&
-          LSI->CallOperator->isConst() && !BaseType.isConstQualified()) {
-        BaseType.addConst();
-        ThisTy = Context.getPointerType(BaseType);
-      }
-    }
-  }
+
+  // If we are within a lambda's call operator, the cv-qualifiers of 'this'
+  // might need to be adjusted if the lambda or any of its enclosing lambda's
+  // captures '*this' by copy.
+  if (!ThisTy.isNull() && isLambdaCallOperator(CurContext))
+    return adjustCVQualifiersForCXXThisWithinLambda(FunctionScopes, ThisTy,
+                                                    CurContext, Context);
   return ThisTy;
 }
 
@@ -953,22 +1032,36 @@ Sema::CXXThisScopeRAII::~CXXThisScopeRAII() {
 static Expr *captureThis(Sema &S, ASTContext &Context, RecordDecl *RD,
                          QualType ThisTy, SourceLocation Loc,
                          const bool ByCopy) {
-  QualType CaptureThisTy = ByCopy ? ThisTy->getPointeeType() : ThisTy;
  
-  FieldDecl *Field
-       = FieldDecl::Create(Context, RD, Loc, Loc, nullptr, CaptureThisTy,
-                       Context.getTrivialTypeSourceInfo(CaptureThisTy, Loc),
-                        nullptr, false, ICIS_NoInit);
+  QualType AdjustedThisTy = ThisTy;
+  // The type of the corresponding data member (not a 'this' pointer if 'by
+  // copy').
+  QualType CaptureThisFieldTy = ThisTy;
+  if (ByCopy) {
+    // If we are capturing the object referred to by '*this' by copy, ignore any
+    // cv qualifiers inherited from the type of the member function for the type
+    // of the closure-type's corresponding data member and any use of 'this'.
+    CaptureThisFieldTy = ThisTy->getPointeeType();
+    CaptureThisFieldTy.removeLocalCVRQualifiers(Qualifiers::CVRMask);
+    AdjustedThisTy = Context.getPointerType(CaptureThisFieldTy);
+  }
+  
+  FieldDecl *Field = FieldDecl::Create(
+      Context, RD, Loc, Loc, nullptr, CaptureThisFieldTy,
+      Context.getTrivialTypeSourceInfo(CaptureThisFieldTy, Loc), nullptr, false,
+      ICIS_NoInit);
+
   Field->setImplicit(true);
   Field->setAccess(AS_private);
   RD->addDecl(Field);
-  Expr *This = new (Context) CXXThisExpr(Loc, ThisTy, /*isImplicit*/true);
+  Expr *This =
+      new (Context) CXXThisExpr(Loc, ThisTy, /*isImplicit*/ true);
   if (ByCopy) {
     Expr *StarThis =  S.CreateBuiltinUnaryOp(Loc,
                                       UO_Deref,
                                       This).get();
     InitializedEntity Entity = InitializedEntity::InitializeLambdaCapture(
-      nullptr, CaptureThisTy, Loc);
+      nullptr, CaptureThisFieldTy, Loc);
     InitializationKind InitKind = InitializationKind::CreateDirect(Loc, Loc, Loc);
     InitializationSequence Init(S, Entity, InitKind, StarThis);
     ExprResult ER = Init.Perform(S, Entity, InitKind, StarThis);
@@ -1067,12 +1160,12 @@ bool Sema::CheckCXXThisCapture(SourceLocation Loc, const bool Explicit,
          "*this) by copy");
   // FIXME: We need to delay this marking in PotentiallyPotentiallyEvaluated
   // contexts.
-
+  QualType ThisTy = getCurrentThisType();
   for (unsigned idx = MaxFunctionScopesIndex; NumCapturingClosures; 
       --idx, --NumCapturingClosures) {
     CapturingScopeInfo *CSI = cast<CapturingScopeInfo>(FunctionScopes[idx]);
     Expr *ThisExpr = nullptr;
-    QualType ThisTy = getCurrentThisType();
+    
     if (LambdaScopeInfo *LSI = dyn_cast<LambdaScopeInfo>(CSI)) {
       // For lambda expressions, build a field and an initializing expression,
       // and capture the *enclosing object* by copy only if this is the first
@@ -1087,7 +1180,7 @@ bool Sema::CheckCXXThisCapture(SourceLocation Loc, const bool Explicit,
                       false/*ByCopy*/);
 
     bool isNested = NumCapturingClosures > 1;
-    CSI->addThisCapture(isNested, Loc, ThisTy, ThisExpr, ByCopy);
+    CSI->addThisCapture(isNested, Loc, ThisExpr, ByCopy);
   }
   return false;
 }
@@ -1129,7 +1222,14 @@ Sema::ActOnCXXTypeConstructExpr(ParsedType TypeRep,
   if (!TInfo)
     TInfo = Context.getTrivialTypeSourceInfo(Ty, SourceLocation());
 
-  return BuildCXXTypeConstructExpr(TInfo, LParenLoc, exprs, RParenLoc);
+  auto Result = BuildCXXTypeConstructExpr(TInfo, LParenLoc, exprs, RParenLoc);
+  // Avoid creating a non-type-dependent expression that contains typos.
+  // Non-type-dependent expressions are liable to be discarded without
+  // checking for embedded typos.
+  if (!Result.isInvalid() && Result.get()->isInstantiationDependent() &&
+      !Result.get()->isTypeDependent())
+    Result = CorrectDelayedTyposInExpr(Result.get());
+  return Result;
 }
 
 /// ActOnCXXTypeConstructExpr - Parse construction of a specified type.
@@ -2961,11 +3061,22 @@ void Sema::CheckVirtualDtorCall(CXXDestructorDecl *dtor, SourceLocation Loc,
   }
 }
 
+Sema::ConditionResult Sema::ActOnConditionVariable(Decl *ConditionVar,
+                                                   SourceLocation StmtLoc,
+                                                   ConditionKind CK) {
+  ExprResult E =
+      CheckConditionVariable(cast<VarDecl>(ConditionVar), StmtLoc, CK);
+  if (E.isInvalid())
+    return ConditionError();
+  return ConditionResult(*this, ConditionVar, MakeFullExpr(E.get(), StmtLoc),
+                         CK == ConditionKind::ConstexprIf);
+}
+
 /// \brief Check the use of the given variable as a C++ condition in an if,
 /// while, do-while, or switch statement.
 ExprResult Sema::CheckConditionVariable(VarDecl *ConditionVar,
                                         SourceLocation StmtLoc,
-                                        bool ConvertToBoolean) {
+                                        ConditionKind CK) {
   if (ConditionVar->isInvalidDecl())
     return ExprError();
 
@@ -2989,17 +3100,22 @@ ExprResult Sema::CheckConditionVariable(VarDecl *ConditionVar,
 
   MarkDeclRefReferenced(cast<DeclRefExpr>(Condition.get()));
 
-  if (ConvertToBoolean) {
-    Condition = CheckBooleanCondition(Condition.get(), StmtLoc);
-    if (Condition.isInvalid())
-      return ExprError();
+  switch (CK) {
+  case ConditionKind::Boolean:
+    return CheckBooleanCondition(StmtLoc, Condition.get());
+
+  case ConditionKind::ConstexprIf:
+    return CheckBooleanCondition(StmtLoc, Condition.get(), true);
+
+  case ConditionKind::Switch:
+    return CheckSwitchCondition(StmtLoc, Condition.get());
   }
 
-  return Condition;
+  llvm_unreachable("unexpected condition kind");
 }
 
 /// CheckCXXBooleanCondition - Returns true if a conversion to bool is invalid.
-ExprResult Sema::CheckCXXBooleanCondition(Expr *CondExpr) {
+ExprResult Sema::CheckCXXBooleanCondition(Expr *CondExpr, bool IsConstexpr) {
   // C++ 6.4p4:
   // The value of a condition that is an initialized declaration in a statement
   // other than a switch statement is the value of the declared variable
@@ -3008,7 +3124,12 @@ ExprResult Sema::CheckCXXBooleanCondition(Expr *CondExpr) {
   // The value of a condition that is an expression is the value of the
   // expression, implicitly converted to bool.
   //
-  return PerformContextuallyConvertToBool(CondExpr);
+  // FIXME: Return this value to the caller so they don't need to recompute it.
+  llvm::APSInt Value(/*BitWidth*/1);
+  return (IsConstexpr && !CondExpr->isValueDependent())
+             ? CheckConvertedConstantExpression(CondExpr, Context.BoolTy, Value,
+                                                CCEK_ConstexprIf)
+             : PerformContextuallyConvertToBool(CondExpr);
 }
 
 /// Helper function to determine whether this is the (deprecated) C++
@@ -3072,9 +3193,8 @@ static ExprResult BuildCXXCastArgument(Sema &S,
     if (S.CompleteConstructorCall(Constructor, From, CastLoc, ConstructorArgs))
       return ExprError();
 
-    S.CheckConstructorAccess(CastLoc, Constructor,
-                             InitializedEntity::InitializeTemporary(Ty),
-                             Constructor->getAccess());
+    S.CheckConstructorAccess(CastLoc, Constructor, FoundDecl,
+                             InitializedEntity::InitializeTemporary(Ty));
     if (S.DiagnoseUseOfDecl(Method, CastLoc))
       return ExprError();
 
@@ -5551,7 +5671,7 @@ ExprResult Sema::MaybeBindToTemporary(Expr *E) {
     if (!ReturnsRetained && E->getType()->isObjCARCImplicitlyUnretainedType())
       return E;
 
-    ExprNeedsCleanups = true;
+    Cleanup.setExprNeedsCleanups(true);
 
     CastKind ck = (ReturnsRetained ? CK_ARCConsumeObject
                                    : CK_ARCReclaimReturnedObject);
@@ -5604,7 +5724,7 @@ ExprResult Sema::MaybeBindToTemporary(Expr *E) {
       return E;
 
     // We need a cleanup, but we don't need to remember the temporary.
-    ExprNeedsCleanups = true;
+    Cleanup.setExprNeedsCleanups(true);
   }
 
   CXXTemporary *Temp = CXXTemporary::Create(Context, Destructor);
@@ -5631,14 +5751,16 @@ Expr *Sema::MaybeCreateExprWithCleanups(Expr *SubExpr) {
 
   unsigned FirstCleanup = ExprEvalContexts.back().NumCleanupObjects;
   assert(ExprCleanupObjects.size() >= FirstCleanup);
-  assert(ExprNeedsCleanups || ExprCleanupObjects.size() == FirstCleanup);
-  if (!ExprNeedsCleanups)
+  assert(Cleanup.exprNeedsCleanups() ||
+         ExprCleanupObjects.size() == FirstCleanup);
+  if (!Cleanup.exprNeedsCleanups())
     return SubExpr;
 
   auto Cleanups = llvm::makeArrayRef(ExprCleanupObjects.begin() + FirstCleanup,
                                      ExprCleanupObjects.size() - FirstCleanup);
 
-  Expr *E = ExprWithCleanups::Create(Context, SubExpr, Cleanups);
+  auto *E = ExprWithCleanups::Create(
+      Context, SubExpr, Cleanup.cleanupsHaveSideEffects(), Cleanups);
   DiscardCleanupsInEvaluationContext();
 
   return E;
@@ -5649,7 +5771,7 @@ Stmt *Sema::MaybeCreateStmtWithCleanups(Stmt *SubStmt) {
 
   CleanupVarDeclMarking();
 
-  if (!ExprNeedsCleanups)
+  if (!Cleanup.exprNeedsCleanups())
     return SubStmt;
 
   // FIXME: In order to attach the temporaries, wrap the statement into
@@ -5755,7 +5877,7 @@ ExprResult Sema::ActOnDecltypeExpression(Expr *E) {
       return ExprError();
 
     // We need a cleanup, but we don't need to remember the temporary.
-    ExprNeedsCleanups = true;
+    Cleanup.setExprNeedsCleanups(true);
   }
 
   // Possibly strip off the top CXXBindTemporaryExpr.
@@ -5950,7 +6072,7 @@ static bool CheckArrow(Sema& S, QualType& ObjectType, Expr *&Base,
     if (const PointerType *Ptr = ObjectType->getAs<PointerType>()) {
       ObjectType = Ptr->getPointeeType();
     } else if (!Base->isTypeDependent()) {
-      // The user wrote "p->" when she probably meant "p."; fix it.
+      // The user wrote "p->" when they probably meant "p."; fix it.
       S.Diag(OpLoc, diag::err_typecheck_member_reference_suggestion)
         << ObjectType << true
         << FixItHint::CreateReplacement(OpLoc, ".");
@@ -6554,7 +6676,7 @@ static void CheckIfAnyEnclosingLambdasMustCaptureAnyPotentialCaptures(
 
 static ExprResult attemptRecovery(Sema &SemaRef,
                                   const TypoCorrectionConsumer &Consumer,
-                                  TypoCorrection TC) {
+                                  const TypoCorrection &TC) {
   LookupResult R(SemaRef, Consumer.getLookupResult().getLookupNameInfo(),
                  Consumer.getLookupResult().getLookupKind());
   const CXXScopeSpec *SS = Consumer.getSS();

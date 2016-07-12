@@ -371,7 +371,7 @@ protected:
 
   // If true, emit GOTPCRELX/REX_GOTPCRELX instead of GOTPCREL, on
   // X86_64 ELF.
-  bool RelaxELFRelocations = false;
+  bool RelaxELFRelocations = true;
 
 public:
   explicit MCAsmInfo();
@@ -497,7 +497,7 @@ public:
   bool getAlignmentIsInBytes() const { return AlignmentIsInBytes; }
   unsigned getTextAlignFillValue() const { return TextAlignFillValue; }
   const char *getGlobalDirective() const { return GlobalDirective; }
-  bool doesSetDirectiveSuppressesReloc() const {
+  bool doesSetDirectiveSuppressReloc() const {
     return SetDirectiveSuppressesReloc;
   }
   bool hasAggressiveSymbolFolding() const { return HasAggressiveSymbolFolding; }

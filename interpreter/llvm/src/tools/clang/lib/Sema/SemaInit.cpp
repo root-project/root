@@ -1193,8 +1193,8 @@ void InitListChecker::CheckSubElementType(const InitializedEntity &Entity,
     // Fall through for subaggregate initialization.
 
   } else {
-    assert((ElemType->isRecordType() || ElemType->isVectorType()) &&
-           "Unexpected type");
+    assert((ElemType->isRecordType() || ElemType->isVectorType() ||
+            ElemType->isClkEventT()) && "Unexpected type");
 
     // C99 6.7.8p13:
     //
@@ -1976,8 +1976,8 @@ static DesignatedInitExpr *CloneDesignatedInitExpr(Sema &SemaRef,
   SmallVector<Expr*, 4> IndexExprs(NumIndexExprs);
   for (unsigned I = 0; I < NumIndexExprs; ++I)
     IndexExprs[I] = DIE->getSubExpr(I + 1);
-  return DesignatedInitExpr::Create(SemaRef.Context, DIE->designators_begin(),
-                                    DIE->size(), IndexExprs,
+  return DesignatedInitExpr::Create(SemaRef.Context, DIE->designators(),
+                                    IndexExprs,
                                     DIE->getEqualOrColonLoc(),
                                     DIE->usesGNUSyntax(), DIE->getInit());
 }
@@ -2837,7 +2837,7 @@ ExprResult Sema::ActOnDesignatedInitializer(Designation &Desig,
 
   DesignatedInitExpr *DIE
     = DesignatedInitExpr::Create(Context,
-                                 Designators.data(), Designators.size(),
+                                 Designators,
                                  InitExpressions, Loc, GNUSyntax,
                                  Init.getAs<Expr>());
 
@@ -4807,8 +4807,8 @@ static void checkIndirectCopyRestoreSource(Sema &S, Expr *src) {
   // If isWeakAccess to true, there will be an implicit 
   // load which requires a cleanup.
   if (S.getLangOpts().ObjCAutoRefCount && isWeakAccess)
-    S.ExprNeedsCleanups = true;
-  
+    S.Cleanup.setExprNeedsCleanups(true);
+
   if (iik == IIK_okay) return;
 
   S.Diag(src->getExprLoc(), diag::err_arc_nonlocal_writeback)
@@ -5519,8 +5519,8 @@ static ExprResult CopyObject(Sema &S,
   SmallVector<Expr*, 8> ConstructorArgs;
   CurInit.get(); // Ownership transferred into MultiExprArg, below.
 
-  S.CheckConstructorAccess(Loc, Constructor, Entity,
-                           Best->FoundDecl.getAccess(), IsExtraneousCopy);
+  S.CheckConstructorAccess(Loc, Constructor, Best->FoundDecl, Entity,
+                           IsExtraneousCopy);
 
   if (IsExtraneousCopy) {
     // If this is a totally extraneous copy for C++03 reference
@@ -5603,7 +5603,7 @@ static void CheckCXX98CompatAccessibleCopy(Sema &S,
   switch (OR) {
   case OR_Success:
     S.CheckConstructorAccess(Loc, cast<CXXConstructorDecl>(Best->Function),
-                             Entity, Best->FoundDecl.getAccess(), Diag);
+                             Best->FoundDecl, Entity, Diag);
     // FIXME: Check default arguments as far as that's possible.
     break;
 
@@ -5729,7 +5729,6 @@ PerformConstructorInitialization(Sema &S,
 
   if (isExplicitTemporary(Entity, Kind, NumArgs)) {
     // An explicitly-constructed temporary, e.g., X(1, 2).
-    S.MarkFunctionReferenced(Loc, Constructor);
     if (S.DiagnoseUseOfDecl(Constructor, Loc))
       return ExprError();
 
@@ -5740,6 +5739,14 @@ PerformConstructorInitialization(Sema &S,
       (Kind.getKind() == InitializationKind::IK_DirectList)
       ? SourceRange(LBraceLoc, RBraceLoc)
       : Kind.getParenRange();
+
+    if (auto *Shadow = dyn_cast<ConstructorUsingShadowDecl>(
+            Step.Function.FoundDecl.getDecl())) {
+      Constructor = S.findInheritingConstructor(Loc, Constructor, Shadow);
+      if (S.DiagnoseUseOfDecl(Constructor, Loc))
+        return ExprError();
+    }
+    S.MarkFunctionReferenced(Loc, Constructor);
 
     CurInit = new (S.Context) CXXTemporaryObjectExpr(
         S.Context, Constructor, TSInfo,
@@ -5795,8 +5802,7 @@ PerformConstructorInitialization(Sema &S,
     return ExprError();
 
   // Only check access if all of that succeeded.
-  S.CheckConstructorAccess(Loc, Constructor, Entity,
-                           Step.Function.FoundDecl.getAccess());
+  S.CheckConstructorAccess(Loc, Constructor, Step.Function.FoundDecl, Entity);
   if (S.DiagnoseUseOfDecl(Step.Function.FoundDecl, Loc))
     return ExprError();
 
@@ -6182,6 +6188,22 @@ static void CheckForNullPointerDereference(Sema &S, const Expr *E) {
   }
 }
 
+MaterializeTemporaryExpr *
+Sema::CreateMaterializeTemporaryExpr(QualType T, Expr *Temporary,
+                                     bool BoundToLvalueReference) {
+  auto MTE = new (Context)
+      MaterializeTemporaryExpr(T, Temporary, BoundToLvalueReference);
+
+  // Order an ExprWithCleanups for lifetime marks.
+  //
+  // TODO: It'll be good to have a single place to check the access of the
+  // destructor and generate ExprWithCleanups for various uses. Currently these
+  // are done in both CreateMaterializeTemporaryExpr and MaybeBindToTemporary,
+  // but there may be a chance to merge them.
+  Cleanup.setExprNeedsCleanups(false);
+  return MTE;
+}
+
 ExprResult
 InitializationSequence::Perform(Sema &S,
                                 const InitializedEntity &Entity,
@@ -6446,7 +6468,7 @@ InitializationSequence::Perform(Sema &S,
         return ExprError();
 
       // Materialize the temporary into memory.
-      MaterializeTemporaryExpr *MTE = new (S.Context) MaterializeTemporaryExpr(
+      MaterializeTemporaryExpr *MTE = S.CreateMaterializeTemporaryExpr(
           Entity.getType().getNonReferenceType(), CurInit.get(),
           Entity.getType()->isLValueReferenceType());
 
@@ -6466,7 +6488,7 @@ InitializationSequence::Perform(Sema &S,
            MTE->getType()->isObjCLifetimeType()) ||
           (MTE->getStorageDuration() == SD_Automatic &&
            MTE->getType().isDestructedType()))
-        S.ExprNeedsCleanups = true;
+        S.Cleanup.setExprNeedsCleanups(true);
 
       CurInit = MTE;
       break;
@@ -6513,8 +6535,8 @@ InitializationSequence::Perform(Sema &S,
         if (CurInit.isInvalid())
           return ExprError();
 
-        S.CheckConstructorAccess(Kind.getLocation(), Constructor, Entity,
-                                 FoundFn.getAccess());
+        S.CheckConstructorAccess(Kind.getLocation(), Constructor, FoundFn,
+                                 Entity);
         if (S.DiagnoseUseOfDecl(FoundFn, Kind.getLocation()))
           return ExprError();
 
@@ -6858,9 +6880,9 @@ InitializationSequence::Perform(Sema &S,
         << CurInit.get()->getSourceRange();
 
       // Materialize the temporary into memory.
-      MaterializeTemporaryExpr *MTE = new (S.Context)
-          MaterializeTemporaryExpr(CurInit.get()->getType(), CurInit.get(),
-                                   /*BoundToLvalueReference=*/false);
+      MaterializeTemporaryExpr *MTE = S.CreateMaterializeTemporaryExpr(
+          CurInit.get()->getType(), CurInit.get(),
+          /*BoundToLvalueReference=*/false);
 
       // Maybe lifetime-extend the array temporary's subobjects to match the
       // entity's lifetime.
@@ -7276,17 +7298,20 @@ bool InitializationSequence::Diagnose(Sema &S,
             isa<CXXConstructorDecl>(S.CurContext)) {
           // This is implicit default initialization of a member or
           // base within a constructor. If no viable function was
-          // found, notify the user that she needs to explicitly
+          // found, notify the user that they need to explicitly
           // initialize this base/member.
           CXXConstructorDecl *Constructor
             = cast<CXXConstructorDecl>(S.CurContext);
+          const CXXRecordDecl *InheritedFrom = nullptr;
+          if (auto Inherited = Constructor->getInheritedConstructor())
+            InheritedFrom = Inherited.getShadowDecl()->getNominatedBaseClass();
           if (Entity.getKind() == InitializedEntity::EK_Base) {
             S.Diag(Kind.getLocation(), diag::err_missing_default_ctor)
-              << (Constructor->getInheritedConstructor() ? 2 :
-                  Constructor->isImplicit() ? 1 : 0)
+              << (InheritedFrom ? 2 : Constructor->isImplicit() ? 1 : 0)
               << S.Context.getTypeDeclType(Constructor->getParent())
               << /*base=*/0
-              << Entity.getType();
+              << Entity.getType()
+              << InheritedFrom;
 
             RecordDecl *BaseDecl
               = Entity.getBaseSpecifier()->getType()->getAs<RecordType>()
@@ -7295,11 +7320,11 @@ bool InitializationSequence::Diagnose(Sema &S,
               << S.Context.getTagDeclType(BaseDecl);
           } else {
             S.Diag(Kind.getLocation(), diag::err_missing_default_ctor)
-              << (Constructor->getInheritedConstructor() ? 2 :
-                  Constructor->isImplicit() ? 1 : 0)
+              << (InheritedFrom ? 2 : Constructor->isImplicit() ? 1 : 0)
               << S.Context.getTypeDeclType(Constructor->getParent())
               << /*member=*/1
-              << Entity.getName();
+              << Entity.getName()
+              << InheritedFrom;
             S.Diag(Entity.getDecl()->getLocation(),
                    diag::note_member_declared_at);
 

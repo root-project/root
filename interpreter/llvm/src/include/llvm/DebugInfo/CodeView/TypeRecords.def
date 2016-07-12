@@ -71,6 +71,7 @@ MEMBER_RECORD(LF_MEMBER, 0x150d, DataMember)
 MEMBER_RECORD(LF_NESTTYPE, 0x1510, NestedType)
 MEMBER_RECORD(LF_ONEMETHOD, 0x1511, OneMethod)
 MEMBER_RECORD(LF_ENUMERATE, 0x1502, Enumerator)
+MEMBER_RECORD(LF_INDEX, 0x1404, ListContinuation)
 
 // ID leaf records. Subsequent leaf types may be referenced from .debug$S.
 TYPE_RECORD(LF_FUNC_ID, 0x1601, FuncId)
@@ -81,6 +82,8 @@ TYPE_RECORD(LF_BUILDINFO, 0x1603, BuildInfo)
 TYPE_RECORD_ALIAS(LF_SUBSTR_LIST, 0x1604, StringList, ArgList)
 TYPE_RECORD(LF_STRING_ID, 0x1605, StringId)
 TYPE_RECORD(LF_UDT_SRC_LINE, 0x1606, UdtSourceLine)
+TYPE_RECORD(LF_UDT_MOD_SRC_LINE, 0x1607, UdtModSourceLine)
+
 
 TYPE_RECORD(LF_METHODLIST, 0x1206, MethodOverloadList)
 
@@ -166,7 +169,6 @@ CV_TYPE(LF_DIMVARLU, 0x120a)
 // Member type records. These are generally not length prefixed, and appear
 // inside of a field list record.
 CV_TYPE(LF_FRIENDFCN_ST, 0x1403)
-CV_TYPE(LF_INDEX, 0x1404)
 CV_TYPE(LF_MEMBER_ST, 0x1405)
 CV_TYPE(LF_STMEMBER_ST, 0x1406)
 CV_TYPE(LF_METHOD_ST, 0x1407)
@@ -195,8 +197,6 @@ CV_TYPE(LF_VECTOR, 0x151b)
 CV_TYPE(LF_MATRIX, 0x151c)
 
 // ID leaf records. Subsequent leaf types may be referenced from .debug$S.
-
-CV_TYPE(LF_UDT_MOD_SRC_LINE, 0x1607)
 
 // Numeric leaf types. These are generally contained in other records, and not
 // encountered in the main type stream.

@@ -85,8 +85,8 @@ const char *DINode::getFlagString(unsigned Flag) {
 
 unsigned DINode::splitFlags(unsigned Flags,
                             SmallVectorImpl<unsigned> &SplitFlags) {
-  // Accessibility flags need to be specially handled, since they're packed
-  // together.
+  // Accessibility and member pointer flags need to be specially handled, since
+  // they're packed together.
   if (unsigned A = Flags & FlagAccessibility) {
     if (A == FlagPrivate)
       SplitFlags.push_back(FlagPrivate);
@@ -95,6 +95,15 @@ unsigned DINode::splitFlags(unsigned Flags,
     else
       SplitFlags.push_back(FlagPublic);
     Flags &= ~A;
+  }
+  if (unsigned R = Flags & FlagPtrToMemberRep) {
+    if (R == FlagSingleInheritance)
+      SplitFlags.push_back(FlagSingleInheritance);
+    else if (R == FlagMultipleInheritance)
+      SplitFlags.push_back(FlagMultipleInheritance);
+    else
+      SplitFlags.push_back(FlagVirtualInheritance);
+    Flags &= ~R;
   }
 
 #define HANDLE_DI_FLAG(ID, NAME)                                               \
@@ -403,22 +412,22 @@ DISubprogram *DISubprogram::getImpl(
     MDString *LinkageName, Metadata *File, unsigned Line, Metadata *Type,
     bool IsLocalToUnit, bool IsDefinition, unsigned ScopeLine,
     Metadata *ContainingType, unsigned Virtuality, unsigned VirtualIndex,
-    unsigned Flags, bool IsOptimized, Metadata *Unit, Metadata *TemplateParams,
-    Metadata *Declaration, Metadata *Variables, StorageType Storage,
-    bool ShouldCreate) {
+    int ThisAdjustment, unsigned Flags, bool IsOptimized, Metadata *Unit,
+    Metadata *TemplateParams, Metadata *Declaration, Metadata *Variables,
+    StorageType Storage, bool ShouldCreate) {
   assert(isCanonical(Name) && "Expected canonical MDString");
   assert(isCanonical(LinkageName) && "Expected canonical MDString");
-  DEFINE_GETIMPL_LOOKUP(DISubprogram,
-                        (Scope, Name, LinkageName, File, Line, Type,
-                         IsLocalToUnit, IsDefinition, ScopeLine, ContainingType,
-                         Virtuality, VirtualIndex, Flags, IsOptimized, Unit,
-                         TemplateParams, Declaration, Variables));
+  DEFINE_GETIMPL_LOOKUP(
+      DISubprogram,
+      (Scope, Name, LinkageName, File, Line, Type, IsLocalToUnit, IsDefinition,
+       ScopeLine, ContainingType, Virtuality, VirtualIndex, ThisAdjustment,
+       Flags, IsOptimized, Unit, TemplateParams, Declaration, Variables));
   Metadata *Ops[] = {File,           Scope,       Name,           Name,
                      LinkageName,    Type,        ContainingType, Unit,
                      TemplateParams, Declaration, Variables};
-  DEFINE_GETIMPL_STORE(DISubprogram,
-                       (Line, ScopeLine, Virtuality, VirtualIndex, Flags,
-                        IsLocalToUnit, IsDefinition, IsOptimized),
+  DEFINE_GETIMPL_STORE(DISubprogram, (Line, ScopeLine, Virtuality, VirtualIndex,
+                                      ThisAdjustment, Flags, IsLocalToUnit,
+                                      IsDefinition, IsOptimized),
                        Ops);
 }
 

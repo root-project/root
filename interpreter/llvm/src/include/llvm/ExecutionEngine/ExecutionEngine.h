@@ -22,7 +22,6 @@
 #include "llvm/IR/Module.h"
 #include "llvm/IR/ValueHandle.h"
 #include "llvm/IR/ValueMap.h"
-#include "llvm/MC/MCCodeGenInfo.h"
 #include "llvm/Object/Binary.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/Mutex.h"
@@ -478,11 +477,11 @@ public:
   /// specified function pointer is invoked to create it.  If it returns null,
   /// the JIT will abort.
   void InstallLazyFunctionCreator(FunctionCreator C) {
-    LazyFunctionCreator = C;
+    LazyFunctionCreator = std::move(C);
   }
 
 protected:
-  ExecutionEngine(const DataLayout DL) : DL(std::move(DL)){}
+  ExecutionEngine(DataLayout DL) : DL(std::move(DL)) {}
   explicit ExecutionEngine(DataLayout DL, std::unique_ptr<Module> M);
   explicit ExecutionEngine(std::unique_ptr<Module> M);
 

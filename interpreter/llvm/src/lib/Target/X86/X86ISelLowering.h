@@ -310,6 +310,11 @@ namespace llvm {
       // Vector shift elements
       VSHL, VSRL, VSRA,
 
+      // Vector variable shift right arithmetic.
+      // Unlike ISD::SRA, in case shift count greater then element size
+      // use sign bit to fill destination data element.
+      VSRAV,
+
       // Vector shift elements by immediate
       VSHLI, VSRLI, VSRAI,
 
@@ -510,8 +515,6 @@ namespace llvm {
       // Memory barriers.
       MEMBARRIER,
       MFENCE,
-      SFENCE,
-      LFENCE,
 
       // Store FP status word into i16 register.
       FNSTSW16r,
@@ -747,9 +750,8 @@ namespace llvm {
     bool hasCopyImplyingStackAdjustment(MachineFunction *MF) const override;
 
     MachineBasicBlock *
-      EmitInstrWithCustomInserter(MachineInstr *MI,
-                                  MachineBasicBlock *MBB) const override;
-
+    EmitInstrWithCustomInserter(MachineInstr &MI,
+                                MachineBasicBlock *MBB) const override;
 
     /// This method returns the name of a target specific DAG node.
     const char *getTargetNodeName(unsigned Opcode) const override;
@@ -757,6 +759,10 @@ namespace llvm {
     bool isCheapToSpeculateCttz() const override;
 
     bool isCheapToSpeculateCtlz() const override;
+
+    bool hasBitPreservingFPLogic(EVT VT) const override {
+      return VT == MVT::f32 || VT == MVT::f64 || VT.isVector();
+    }
 
     bool hasAndNotCompare(SDValue Y) const override;
 
@@ -1021,16 +1027,15 @@ namespace llvm {
     SDValue LowerCallResult(SDValue Chain, SDValue InFlag,
                             CallingConv::ID CallConv, bool isVarArg,
                             const SmallVectorImpl<ISD::InputArg> &Ins,
-                            SDLoc dl, SelectionDAG &DAG,
+                            const SDLoc &dl, SelectionDAG &DAG,
                             SmallVectorImpl<SDValue> &InVals) const;
-    SDValue LowerMemArgument(SDValue Chain,
-                             CallingConv::ID CallConv,
+    SDValue LowerMemArgument(SDValue Chain, CallingConv::ID CallConv,
                              const SmallVectorImpl<ISD::InputArg> &ArgInfo,
-                             SDLoc dl, SelectionDAG &DAG,
-                             const CCValAssign &VA,  MachineFrameInfo *MFI,
-                              unsigned i) const;
+                             const SDLoc &dl, SelectionDAG &DAG,
+                             const CCValAssign &VA, MachineFrameInfo *MFI,
+                             unsigned i) const;
     SDValue LowerMemOpCallTo(SDValue Chain, SDValue StackPtr, SDValue Arg,
-                             SDLoc dl, SelectionDAG &DAG,
+                             const SDLoc &dl, SelectionDAG &DAG,
                              const CCValAssign &VA,
                              ISD::ArgFlagsTy Flags) const;
 
@@ -1049,8 +1054,9 @@ namespace llvm {
                                     const SmallVectorImpl<ISD::InputArg> &Ins,
                                            SelectionDAG& DAG) const;
     SDValue EmitTailCallLoadRetAddr(SelectionDAG &DAG, SDValue &OutRetAddr,
-                                SDValue Chain, bool IsTailCall, bool Is64Bit,
-                                int FPDiff, SDLoc dl) const;
+                                    SDValue Chain, bool IsTailCall,
+                                    bool Is64Bit, int FPDiff,
+                                    const SDLoc &dl) const;
 
     unsigned GetAlignedArgumentStackSize(unsigned StackSize,
                                          SelectionDAG &DAG) const;
@@ -1071,7 +1077,7 @@ namespace llvm {
     SDValue LowerINSERT_VECTOR_ELT(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerConstantPool(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerBlockAddress(SDValue Op, SelectionDAG &DAG) const;
-    SDValue LowerGlobalAddress(const GlobalValue *GV, SDLoc dl,
+    SDValue LowerGlobalAddress(const GlobalValue *GV, const SDLoc &dl,
                                int64_t Offset, SelectionDAG &DAG) const;
     SDValue LowerGlobalAddress(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerGlobalTLSAddress(SDValue Op, SelectionDAG &DAG) const;
@@ -1084,8 +1090,8 @@ namespace llvm {
     SDValue LowerTRUNCATE(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerFP_TO_SINT(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerFP_TO_UINT(SDValue Op, SelectionDAG &DAG) const;
-    SDValue LowerToBT(SDValue And, ISD::CondCode CC,
-                      SDLoc dl, SelectionDAG &DAG) const;
+    SDValue LowerToBT(SDValue And, ISD::CondCode CC, const SDLoc &dl,
+                      SelectionDAG &DAG) const;
     SDValue LowerSETCC(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerSETCCE(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerSELECT(SDValue Op, SelectionDAG &DAG) const;
@@ -1108,19 +1114,17 @@ namespace llvm {
     SDValue LowerGC_TRANSITION_END(SDValue Op, SelectionDAG &DAG) const;
 
     SDValue
-      LowerFormalArguments(SDValue Chain,
-                           CallingConv::ID CallConv, bool isVarArg,
-                           const SmallVectorImpl<ISD::InputArg> &Ins,
-                           SDLoc dl, SelectionDAG &DAG,
-                           SmallVectorImpl<SDValue> &InVals) const override;
+    LowerFormalArguments(SDValue Chain, CallingConv::ID CallConv, bool isVarArg,
+                         const SmallVectorImpl<ISD::InputArg> &Ins,
+                         const SDLoc &dl, SelectionDAG &DAG,
+                         SmallVectorImpl<SDValue> &InVals) const override;
     SDValue LowerCall(CallLoweringInfo &CLI,
                       SmallVectorImpl<SDValue> &InVals) const override;
 
-    SDValue LowerReturn(SDValue Chain,
-                        CallingConv::ID CallConv, bool isVarArg,
+    SDValue LowerReturn(SDValue Chain, CallingConv::ID CallConv, bool isVarArg,
                         const SmallVectorImpl<ISD::OutputArg> &Outs,
                         const SmallVectorImpl<SDValue> &OutVals,
-                        SDLoc dl, SelectionDAG &DAG) const override;
+                        const SDLoc &dl, SelectionDAG &DAG) const override;
 
     bool supportSplitCSR(MachineFunction *MF) const override {
       return MF->getFunction()->getCallingConv() == CallingConv::CXX_FAST_TLS &&
@@ -1156,60 +1160,60 @@ namespace llvm {
 
     bool needsCmpXchgNb(Type *MemType) const;
 
-    void SetupEntryBlockForSjLj(MachineInstr *MI, MachineBasicBlock *MBB,
+    void SetupEntryBlockForSjLj(MachineInstr &MI, MachineBasicBlock *MBB,
                                 MachineBasicBlock *DispatchBB, int FI) const;
 
     // Utility function to emit the low-level va_arg code for X86-64.
-    MachineBasicBlock *EmitVAARG64WithCustomInserter(
-                       MachineInstr *MI,
-                       MachineBasicBlock *MBB) const;
+    MachineBasicBlock *
+    EmitVAARG64WithCustomInserter(MachineInstr &MI,
+                                  MachineBasicBlock *MBB) const;
 
     /// Utility function to emit the xmm reg save portion of va_start.
-    MachineBasicBlock *EmitVAStartSaveXMMRegsWithCustomInserter(
-                                                   MachineInstr *BInstr,
-                                                   MachineBasicBlock *BB) const;
+    MachineBasicBlock *
+    EmitVAStartSaveXMMRegsWithCustomInserter(MachineInstr &BInstr,
+                                             MachineBasicBlock *BB) const;
 
-    MachineBasicBlock *EmitLoweredSelect(MachineInstr *I,
+    MachineBasicBlock *EmitLoweredSelect(MachineInstr &I,
                                          MachineBasicBlock *BB) const;
 
-    MachineBasicBlock *EmitLoweredAtomicFP(MachineInstr *I,
+    MachineBasicBlock *EmitLoweredAtomicFP(MachineInstr &I,
                                            MachineBasicBlock *BB) const;
 
-    MachineBasicBlock *EmitLoweredCatchRet(MachineInstr *MI,
+    MachineBasicBlock *EmitLoweredCatchRet(MachineInstr &MI,
                                            MachineBasicBlock *BB) const;
 
-    MachineBasicBlock *EmitLoweredCatchPad(MachineInstr *MI,
+    MachineBasicBlock *EmitLoweredCatchPad(MachineInstr &MI,
                                            MachineBasicBlock *BB) const;
 
-    MachineBasicBlock *EmitLoweredSegAlloca(MachineInstr *MI,
+    MachineBasicBlock *EmitLoweredSegAlloca(MachineInstr &MI,
                                             MachineBasicBlock *BB) const;
 
-    MachineBasicBlock *EmitLoweredTLSAddr(MachineInstr *MI,
+    MachineBasicBlock *EmitLoweredTLSAddr(MachineInstr &MI,
                                           MachineBasicBlock *BB) const;
 
-    MachineBasicBlock *EmitLoweredTLSCall(MachineInstr *MI,
+    MachineBasicBlock *EmitLoweredTLSCall(MachineInstr &MI,
                                           MachineBasicBlock *BB) const;
 
-    MachineBasicBlock *emitEHSjLjSetJmp(MachineInstr *MI,
+    MachineBasicBlock *emitEHSjLjSetJmp(MachineInstr &MI,
                                         MachineBasicBlock *MBB) const;
 
-    MachineBasicBlock *emitEHSjLjLongJmp(MachineInstr *MI,
+    MachineBasicBlock *emitEHSjLjLongJmp(MachineInstr &MI,
                                          MachineBasicBlock *MBB) const;
 
-    MachineBasicBlock *emitFMA3Instr(MachineInstr *MI,
+    MachineBasicBlock *emitFMA3Instr(MachineInstr &MI,
                                      MachineBasicBlock *MBB) const;
 
-    MachineBasicBlock *EmitSjLjDispatchBlock(MachineInstr *MI,
+    MachineBasicBlock *EmitSjLjDispatchBlock(MachineInstr &MI,
                                              MachineBasicBlock *MBB) const;
 
     /// Emit nodes that will be selected as "test Op0,Op0", or something
     /// equivalent, for use with the given x86 condition code.
-    SDValue EmitTest(SDValue Op0, unsigned X86CC, SDLoc dl,
+    SDValue EmitTest(SDValue Op0, unsigned X86CC, const SDLoc &dl,
                      SelectionDAG &DAG) const;
 
     /// Emit nodes that will be selected as "cmp Op0,Op1", or something
     /// equivalent, for use with the given x86 condition code.
-    SDValue EmitCmp(SDValue Op0, SDValue Op1, unsigned X86CC, SDLoc dl,
+    SDValue EmitCmp(SDValue Op0, SDValue Op1, unsigned X86CC, const SDLoc &dl,
                     SelectionDAG &DAG) const;
 
     /// Convert a comparison if required by the subtarget.

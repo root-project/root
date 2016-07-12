@@ -604,10 +604,10 @@ static bool isLdOffsetInRangeOfSt(MachineInstr *LoadInst,
   assert(isMatchingStore(LoadInst, StoreInst) && "Expect only matched ld/st.");
   int LoadSize = getMemScale(LoadInst);
   int StoreSize = getMemScale(StoreInst);
-  int UnscaledStOffset = TII->isUnscaledLdSt(StoreInst)
+  int UnscaledStOffset = TII->isUnscaledLdSt(*StoreInst)
                              ? getLdStOffsetOp(StoreInst).getImm()
                              : getLdStOffsetOp(StoreInst).getImm() * StoreSize;
-  int UnscaledLdOffset = TII->isUnscaledLdSt(LoadInst)
+  int UnscaledLdOffset = TII->isUnscaledLdSt(*LoadInst)
                              ? getLdStOffsetOp(LoadInst).getImm()
                              : getLdStOffsetOp(LoadInst).getImm() * LoadSize;
   return (UnscaledStOffset <= UnscaledLdOffset) &&
@@ -963,8 +963,8 @@ AArch64LoadStoreOpt::promoteLoadFromStore(MachineBasicBlock::iterator LoadI,
     // performance and correctness are verified only in little-endian.
     if (!Subtarget->isLittleEndian())
       return NextI;
-    bool IsUnscaled = TII->isUnscaledLdSt(LoadI);
-    assert(IsUnscaled == TII->isUnscaledLdSt(StoreI) &&
+    bool IsUnscaled = TII->isUnscaledLdSt(*LoadI);
+    assert(IsUnscaled == TII->isUnscaledLdSt(*StoreI) &&
            "Unsupported ld/st match");
     assert(LoadSize <= StoreSize && "Invalid load size");
     int UnscaledLdOffset = IsUnscaled
@@ -1072,24 +1072,24 @@ static int alignTo(int Num, int PowOf2) {
   return (Num + PowOf2 - 1) & ~(PowOf2 - 1);
 }
 
-static bool mayAlias(MachineInstr *MIa, MachineInstr *MIb,
+static bool mayAlias(MachineInstr &MIa, MachineInstr &MIb,
                      const AArch64InstrInfo *TII) {
   // One of the instructions must modify memory.
-  if (!MIa->mayStore() && !MIb->mayStore())
+  if (!MIa.mayStore() && !MIb.mayStore())
     return false;
 
   // Both instructions must be memory operations.
-  if (!MIa->mayLoadOrStore() && !MIb->mayLoadOrStore())
+  if (!MIa.mayLoadOrStore() && !MIb.mayLoadOrStore())
     return false;
 
   return !TII->areMemAccessesTriviallyDisjoint(MIa, MIb);
 }
 
-static bool mayAlias(MachineInstr *MIa,
+static bool mayAlias(MachineInstr &MIa,
                      SmallVectorImpl<MachineInstr *> &MemInsns,
                      const AArch64InstrInfo *TII) {
-  for (auto &MIb : MemInsns)
-    if (mayAlias(MIa, MIb, TII))
+  for (MachineInstr *MIb : MemInsns)
+    if (mayAlias(MIa, *MIb, TII))
       return true;
 
   return false;
@@ -1146,16 +1146,29 @@ bool AArch64LoadStoreOpt::findMatchingStore(
       return false;
 
     // If we encounter a store aliased with the load, return early.
-    if (MI->mayStore() && mayAlias(LoadMI, MI, TII))
+    if (MI->mayStore() && mayAlias(*LoadMI, *MI, TII))
       return false;
   } while (MBBI != B && Count < Limit);
   return false;
 }
 
-// Returns true if these two opcodes can be merged or paired.  Otherwise,
-// returns false.
-static bool canMergeOpc(unsigned OpcA, unsigned OpcB, LdStPairFlags &Flags,
-                        const AArch64InstrInfo *TII) {
+// Returns true if FirstMI and MI are candidates for merging or pairing.
+// Otherwise, returns false.
+static bool areCandidatesToMergeOrPair(MachineInstr *FirstMI, MachineInstr *MI,
+                                       LdStPairFlags &Flags,
+                                       const AArch64InstrInfo *TII) {
+  // If this is volatile or if pairing is suppressed, not a candidate.
+  if (MI->hasOrderedMemoryRef() || TII->isLdStPairSuppressed(*MI))
+    return false;
+
+  // We should have already checked FirstMI for pair suppression and volatility.
+  assert(!FirstMI->hasOrderedMemoryRef() &&
+         !TII->isLdStPairSuppressed(*FirstMI) &&
+         "FirstMI shouldn't get here if either of these checks are true.");
+
+  unsigned OpcA = FirstMI->getOpcode();
+  unsigned OpcB = MI->getOpcode();
+
   // Opcodes match: nothing more to check.
   if (OpcA == OpcB)
     return true;
@@ -1198,9 +1211,8 @@ AArch64LoadStoreOpt::findMatchingInsn(MachineBasicBlock::iterator I,
   MachineInstr *FirstMI = I;
   ++MBBI;
 
-  unsigned Opc = FirstMI->getOpcode();
   bool MayLoad = FirstMI->mayLoad();
-  bool IsUnscaled = TII->isUnscaledLdSt(FirstMI);
+  bool IsUnscaled = TII->isUnscaledLdSt(*FirstMI);
   unsigned Reg = getLdStRegOp(FirstMI).getReg();
   unsigned BaseReg = getLdStBaseOp(FirstMI).getReg();
   int Offset = getLdStOffsetOp(FirstMI).getImm();
@@ -1226,7 +1238,7 @@ AArch64LoadStoreOpt::findMatchingInsn(MachineBasicBlock::iterator I,
     ++Count;
 
     Flags.setSExtIdx(-1);
-    if (canMergeOpc(Opc, MI->getOpcode(), Flags, TII) &&
+    if (areCandidatesToMergeOrPair(FirstMI, MI, Flags, TII) &&
         getLdStOffsetOp(MI).isImm()) {
       assert(MI->mayLoadOrStore() && "Expected memory operation.");
       // If we've found another instruction with the same opcode, check to see
@@ -1235,13 +1247,9 @@ AArch64LoadStoreOpt::findMatchingInsn(MachineBasicBlock::iterator I,
       // check for +1/-1. Make sure to check the new instruction offset is
       // actually an immediate and not a symbolic reference destined for
       // a relocation.
-      //
-      // Pairwise instructions have a 7-bit signed offset field. Single insns
-      // have a 12-bit unsigned offset field. To be a valid combine, the
-      // final offset must be in range.
       unsigned MIBaseReg = getLdStBaseOp(MI).getReg();
       int MIOffset = getLdStOffsetOp(MI).getImm();
-      bool MIIsUnscaled = TII->isUnscaledLdSt(MI);
+      bool MIIsUnscaled = TII->isUnscaledLdSt(*MI);
       if (IsUnscaled != MIIsUnscaled) {
         // We're trying to pair instructions that differ in how they are scaled.
         // If FirstMI is scaled then scale the offset of MI accordingly.
@@ -1261,12 +1269,6 @@ AArch64LoadStoreOpt::findMatchingInsn(MachineBasicBlock::iterator I,
       if (BaseReg == MIBaseReg && ((Offset == MIOffset + OffsetStride) ||
                                    (Offset + OffsetStride == MIOffset))) {
         int MinOffset = Offset < MIOffset ? Offset : MIOffset;
-        // If this is a volatile load/store that otherwise matched, stop looking
-        // as something is going on that we don't have enough information to
-        // safely transform. Similarly, stop if we see a hint to avoid pairs.
-        if (MI->hasOrderedMemoryRef() || TII->isLdStPairSuppressed(MI))
-          return E;
-
         if (FindNarrowMerge) {
           // If the alignment requirements of the scaled wide load/store
           // instruction can't express the offset of the scaled narrow input,
@@ -1279,8 +1281,10 @@ AArch64LoadStoreOpt::findMatchingInsn(MachineBasicBlock::iterator I,
             continue;
           }
         } else {
-          // If the resultant immediate offset of merging these instructions
-          // is out of range for a pairwise instruction, bail and keep looking.
+          // Pairwise instructions have a 7-bit signed offset field. Single
+          // insns have a 12-bit unsigned offset field.  If the resultant
+          // immediate offset of merging these instructions is out of range for
+          // a pairwise instruction, bail and keep looking.
           if (!inBoundsForPair(IsUnscaled, MinOffset, OffsetStride)) {
             trackRegDefsUses(MI, ModifiedRegs, UsedRegs, TRI);
             MemInsns.push_back(MI);
@@ -1310,7 +1314,7 @@ AArch64LoadStoreOpt::findMatchingInsn(MachineBasicBlock::iterator I,
         // first.
         if (!ModifiedRegs[getLdStRegOp(MI).getReg()] &&
             !(MI->mayLoad() && UsedRegs[getLdStRegOp(MI).getReg()]) &&
-            !mayAlias(MI, MemInsns, TII)) {
+            !mayAlias(*MI, MemInsns, TII)) {
           Flags.setMergeForward(false);
           return MBBI;
         }
@@ -1321,7 +1325,7 @@ AArch64LoadStoreOpt::findMatchingInsn(MachineBasicBlock::iterator I,
         // into the second.
         if (!ModifiedRegs[getLdStRegOp(FirstMI).getReg()] &&
             !(MayLoad && UsedRegs[getLdStRegOp(FirstMI).getReg()]) &&
-            !mayAlias(FirstMI, MemInsns, TII)) {
+            !mayAlias(*FirstMI, MemInsns, TII)) {
           Flags.setMergeForward(true);
           return MBBI;
         }
@@ -1606,7 +1610,7 @@ bool AArch64LoadStoreOpt::tryToMergeLdStInst(
   MachineInstr *MI = MBBI;
   MachineBasicBlock::iterator E = MI->getParent()->end();
 
-  if (!TII->isCandidateToMergeOrPair(MI))
+  if (!TII->isCandidateToMergeOrPair(*MI))
     return false;
 
   // For promotable zero stores, the stored value should be WZR.
@@ -1638,13 +1642,13 @@ bool AArch64LoadStoreOpt::tryToPairLdStInst(MachineBasicBlock::iterator &MBBI) {
   MachineInstr *MI = MBBI;
   MachineBasicBlock::iterator E = MI->getParent()->end();
 
-  if (!TII->isCandidateToMergeOrPair(MI))
+  if (!TII->isCandidateToMergeOrPair(*MI))
     return false;
 
   // Early exit if the offset is not possible to match. (6 bits of positive
   // range, plus allow an extra one in case we find a later insn that matches
   // with Offset-1)
-  bool IsUnscaled = TII->isUnscaledLdSt(MI);
+  bool IsUnscaled = TII->isUnscaledLdSt(*MI);
   int Offset = getLdStOffsetOp(MI).getImm();
   int OffsetStride = IsUnscaled ? getMemScale(MI) : 1;
   if (!inBoundsForPair(IsUnscaled, Offset, OffsetStride))
@@ -1656,7 +1660,7 @@ bool AArch64LoadStoreOpt::tryToPairLdStInst(MachineBasicBlock::iterator &MBBI) {
       findMatchingInsn(MBBI, Flags, LdStLimit, /* FindNarrowMerge = */ false);
   if (Paired != E) {
     ++NumPairCreated;
-    if (TII->isUnscaledLdSt(MI))
+    if (TII->isUnscaledLdSt(*MI))
       ++NumUnscaledPairCreated;
     // Keeping the iterator straight is a pain, so we let the merge routine tell
     // us what the next instruction is after it's done mucking about.
@@ -1678,7 +1682,7 @@ bool AArch64LoadStoreOpt::optimizeBlock(MachineBasicBlock &MBB,
   //        ldrh w2, [x0, #6]
   //        ; becomes
   //        str w1, [x0, #4]
-  //        lsr	w2, w1, #16
+  //        lsr w2, w1, #16
   for (MachineBasicBlock::iterator MBBI = MBB.begin(), E = MBB.end();
        MBBI != E;) {
     MachineInstr *MI = MBBI;

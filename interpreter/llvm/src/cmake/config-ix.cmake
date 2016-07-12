@@ -110,7 +110,13 @@ if( NOT PURE_WINDOWS )
 endif()
 
 if(HAVE_LIBPTHREAD)
-  set(PTHREAD_LIB pthread)
+  # We want to find pthreads library and at the moment we do want to
+  # have it reported as '-l<lib>' instead of '-pthread'.
+  # TODO: switch to -pthread once the rest of the build system can deal with it.
+  set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
+  set(THREADS_HAVE_PTHREAD_ARG Off)
+  find_package(Threads REQUIRED)
+  set(PTHREAD_LIB ${CMAKE_THREAD_LIBS_INIT})
 endif()
 
 # Don't look for these libraries on Windows. Also don't look for them if we're
@@ -386,8 +392,6 @@ elseif (LLVM_NATIVE_ARCH MATCHES "wasm32")
   set(LLVM_NATIVE_ARCH WebAssembly)
 elseif (LLVM_NATIVE_ARCH MATCHES "wasm64")
   set(LLVM_NATIVE_ARCH WebAssembly)
-elseif (LLVM_NATIVE_ARCH MATCHES "s390")
-  set(LLVM_NATIVE_ARCH SystemZ)
 else ()
   message(FATAL_ERROR "Unknown architecture ${LLVM_NATIVE_ARCH}")
 endif ()

@@ -487,7 +487,7 @@ PICLevel::Level Module::getPICLevel() const {
   auto *Val = cast_or_null<ConstantAsMetadata>(getModuleFlag("PIC Level"));
 
   if (!Val)
-    return PICLevel::Default;
+    return PICLevel::NotPIC;
 
   return static_cast<PICLevel::Level>(
       cast<ConstantInt>(Val->getValue())->getZExtValue());
@@ -509,18 +509,6 @@ PIELevel::Level Module::getPIELevel() const {
 
 void Module::setPIELevel(PIELevel::Level PL) {
   addModuleFlag(ModFlagBehavior::Error, "PIE Level", PL);
-}
-
-void Module::setMaximumFunctionCount(uint64_t Count) {
-  addModuleFlag(ModFlagBehavior::Error, "MaxFunctionCount", Count);
-}
-
-Optional<uint64_t> Module::getMaximumFunctionCount() {
-  auto *Val =
-      cast_or_null<ConstantAsMetadata>(getModuleFlag("MaxFunctionCount"));
-  if (!Val)
-    return None;
-  return cast<ConstantInt>(Val->getValue())->getZExtValue();
 }
 
 void Module::setProfileSummary(Metadata *M) {

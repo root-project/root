@@ -163,7 +163,7 @@ public:
   AttributeSet getAttributes() const { return AttributeSets; }
 
   /// @brief Set the attribute list for this Function.
-  void setAttributes(AttributeSet attrs) { AttributeSets = attrs; }
+  void setAttributes(AttributeSet Attrs) { AttributeSets = Attrs; }
 
   /// @brief Add function attributes to this function.
   void addFnAttr(Attribute::AttrKind N) {
@@ -172,9 +172,9 @@ public:
   }
 
   /// @brief Remove function attributes from this function.
-  void removeFnAttr(Attribute::AttrKind N) {
+  void removeFnAttr(Attribute::AttrKind Kind) {
     setAttributes(AttributeSets.removeAttribute(
-        getContext(), AttributeSet::FunctionIndex, N));
+        getContext(), AttributeSet::FunctionIndex, Kind));
   }
 
   /// @brief Add function attributes to this function.
@@ -205,12 +205,10 @@ public:
 
   /// @brief Return the attribute for the given attribute kind.
   Attribute getFnAttribute(Attribute::AttrKind Kind) const {
-    if (!hasFnAttribute(Kind))
-      return Attribute();
-    return AttributeSets.getAttribute(AttributeSet::FunctionIndex, Kind);
+    return getAttribute(AttributeSet::FunctionIndex, Kind);
   }
   Attribute getFnAttribute(StringRef Kind) const {
-    return AttributeSets.getAttribute(AttributeSet::FunctionIndex, Kind);
+    return getAttribute(AttributeSet::FunctionIndex, Kind);
   }
 
   /// \brief Return the stack alignment for the function.
@@ -230,20 +228,34 @@ public:
   void clearGC();
 
   /// @brief adds the attribute to the list of attributes.
-  void addAttribute(unsigned i, Attribute::AttrKind attr);
+  void addAttribute(unsigned i, Attribute::AttrKind Kind);
+
+  /// @brief adds the attribute to the list of attributes.
+  void addAttribute(unsigned i, Attribute Attr);
 
   /// @brief adds the attributes to the list of attributes.
-  void addAttributes(unsigned i, AttributeSet attrs);
+  void addAttributes(unsigned i, AttributeSet Attrs);
 
   /// @brief removes the attribute from the list of attributes.
-  void removeAttribute(unsigned i, Attribute::AttrKind attr);
+  void removeAttribute(unsigned i, Attribute::AttrKind Kind);
+
+  /// @brief removes the attribute from the list of attributes.
+  void removeAttribute(unsigned i, StringRef Kind);
 
   /// @brief removes the attributes from the list of attributes.
-  void removeAttributes(unsigned i, AttributeSet attr);
+  void removeAttributes(unsigned i, AttributeSet Attrs);
 
   /// @brief check if an attributes is in the list of attributes.
-  bool hasAttribute(unsigned i, Attribute::AttrKind attr) const {
-    return getAttributes().hasAttribute(i, attr);
+  bool hasAttribute(unsigned i, Attribute::AttrKind Kind) const {
+    return getAttributes().hasAttribute(i, Kind);
+  }
+
+  Attribute getAttribute(unsigned i, Attribute::AttrKind Kind) const {
+    return AttributeSets.getAttribute(i, Kind);
+  }
+
+  Attribute getAttribute(unsigned i, StringRef Kind) const {
+    return AttributeSets.getAttribute(i, Kind);
   }
 
   /// @brief adds the dereferenceable attribute to the list of attributes.
@@ -284,6 +296,14 @@ public:
   }
   void setOnlyReadsMemory() {
     addFnAttr(Attribute::ReadOnly);
+  }
+
+  /// @brief Determine if the function does not access or only writes memory.
+  bool doesNotReadMemory() const {
+    return doesNotAccessMemory() || hasFnAttribute(Attribute::WriteOnly);
+  }
+  void setDoesNotReadMemory() {
+    addFnAttr(Attribute::WriteOnly);
   }
 
   /// @brief Determine if the call can access memmory only using pointers based

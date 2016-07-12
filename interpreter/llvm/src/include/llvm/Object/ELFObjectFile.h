@@ -19,6 +19,7 @@
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/Triple.h"
 #include "llvm/ADT/iterator_range.h"
+#include "llvm/MC/SubtargetFeature.h"
 #include "llvm/Object/Binary.h"
 #include "llvm/Object/ELF.h"
 #include "llvm/Object/ELFTypes.h"
@@ -51,6 +52,7 @@ class ELFObjectFileBase : public ObjectFile {
 protected:
   ELFObjectFileBase(unsigned int Type, MemoryBufferRef Source);
 
+  virtual uint16_t getEMachine() const = 0;
   virtual uint64_t getSymbolSize(DataRefImpl Symb) const = 0;
   virtual uint8_t getSymbolOther(DataRefImpl Symb) const = 0;
   virtual uint8_t getSymbolELFType(DataRefImpl Symb) const = 0;
@@ -67,6 +69,8 @@ public:
   elf_symbol_iterator_range symbols() const;
 
   static inline bool classof(const Binary *v) { return v->isELF(); }
+
+  SubtargetFeatures getFeatures() const override;
 };
 
 class ELFSectionRef : public SectionRef {
@@ -179,6 +183,7 @@ ELFObjectFileBase::symbols() const {
 }
 
 template <class ELFT> class ELFObjectFile : public ELFObjectFileBase {
+  uint16_t getEMachine() const override;
   uint64_t getSymbolSize(DataRefImpl Sym) const override;
 
 public:
@@ -202,7 +207,7 @@ protected:
 
   void moveSymbolNext(DataRefImpl &Symb) const override;
   Expected<StringRef> getSymbolName(DataRefImpl Symb) const override;
-  ErrorOr<uint64_t> getSymbolAddress(DataRefImpl Symb) const override;
+  Expected<uint64_t> getSymbolAddress(DataRefImpl Symb) const override;
   uint64_t getSymbolValueImpl(DataRefImpl Symb) const override;
   uint32_t getSymbolAlignment(DataRefImpl Symb) const override;
   uint64_t getCommonSymbolSizeImpl(DataRefImpl Symb) const override;
@@ -392,7 +397,7 @@ uint64_t ELFObjectFile<ELFT>::getSymbolValueImpl(DataRefImpl Symb) const {
 }
 
 template <class ELFT>
-ErrorOr<uint64_t>
+Expected<uint64_t>
 ELFObjectFile<ELFT>::getSymbolAddress(DataRefImpl Symb) const {
   uint64_t Result = getSymbolValue(Symb);
   const Elf_Sym *ESym = getSymbol(Symb);
@@ -410,7 +415,7 @@ ELFObjectFile<ELFT>::getSymbolAddress(DataRefImpl Symb) const {
     ErrorOr<const Elf_Shdr *> SectionOrErr =
         EF.getSection(ESym, SymTab, ShndxTable);
     if (std::error_code EC = SectionOrErr.getError())
-      return EC;
+      return errorCodeToError(EC);
     const Elf_Shdr *Section = *SectionOrErr;
     if (Section)
       Result += Section->sh_addr;
@@ -425,6 +430,11 @@ uint32_t ELFObjectFile<ELFT>::getSymbolAlignment(DataRefImpl Symb) const {
   if (Sym->st_shndx == ELF::SHN_COMMON)
     return Sym->st_value;
   return 0;
+}
+
+template <class ELFT>
+uint16_t ELFObjectFile<ELFT>::getEMachine() const {
+  return EF.getHeader()->e_machine;
 }
 
 template <class ELFT>

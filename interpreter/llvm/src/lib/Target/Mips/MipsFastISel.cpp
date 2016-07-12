@@ -1,4 +1,4 @@
-//===-- MipsastISel.cpp - Mips FastISel implementation --------------------===//
+//===-- MipsFastISel.cpp - Mips FastISel implementation --------------------===//
 //
 // The LLVM Compiler Infrastructure
 //
@@ -208,7 +208,7 @@ public:
     bool ISASupported = !Subtarget->hasMips32r6() &&
                         !Subtarget->inMicroMipsMode() && Subtarget->hasMips32();
     TargetSupported =
-        ISASupported && (TM.getRelocationModel() == Reloc::PIC_) &&
+        ISASupported && TM.isPositionIndependent() &&
         (static_cast<const MipsTargetMachine &>(TM).getABI().IsO32());
     UnsupportedFPMode = Subtarget->isFP64bit();
   }
@@ -956,7 +956,7 @@ bool MipsFastISel::selectFPExt(const Instruction *I) {
     return false;
 
   unsigned SrcReg =
-      getRegForValue(Src); // his must be a 32 bit floating point register class
+      getRegForValue(Src); // this must be a 32bit floating point register class
                            // maybe we should handle this differently
   if (!SrcReg)
     return false;

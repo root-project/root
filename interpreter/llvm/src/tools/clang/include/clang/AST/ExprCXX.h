@@ -1318,6 +1318,73 @@ public:
   friend class ASTStmtReader;
 };
 
+/// \brief Represents a call to an inherited base class constructor from an
+/// inheriting constructor. This call implicitly forwards the arguments from
+/// the enclosing context (an inheriting constructor) to the specified inherited
+/// base class constructor.
+class CXXInheritedCtorInitExpr : public Expr {
+private:
+  CXXConstructorDecl *Constructor;
+
+  /// The location of the using declaration.
+  SourceLocation Loc;
+
+  /// Whether this is the construction of a virtual base.
+  unsigned ConstructsVirtualBase : 1;
+
+  /// Whether the constructor is inherited from a virtual base class of the
+  /// class that we construct.
+  unsigned InheritedFromVirtualBase : 1;
+
+public:
+  /// \brief Construct a C++ inheriting construction expression.
+  CXXInheritedCtorInitExpr(SourceLocation Loc, QualType T,
+                           CXXConstructorDecl *Ctor, bool ConstructsVirtualBase,
+                           bool InheritedFromVirtualBase)
+      : Expr(CXXInheritedCtorInitExprClass, T, VK_RValue, OK_Ordinary, false,
+             false, false, false),
+        Constructor(Ctor), Loc(Loc),
+        ConstructsVirtualBase(ConstructsVirtualBase),
+        InheritedFromVirtualBase(InheritedFromVirtualBase) {
+    assert(!T->isDependentType());
+  }
+
+  /// \brief Construct an empty C++ inheriting construction expression.
+  explicit CXXInheritedCtorInitExpr(EmptyShell Empty)
+      : Expr(CXXInheritedCtorInitExprClass, Empty), Constructor(nullptr),
+        ConstructsVirtualBase(false), InheritedFromVirtualBase(false) {}
+
+  /// \brief Get the constructor that this expression will call.
+  CXXConstructorDecl *getConstructor() const { return Constructor; }
+
+  /// \brief Determine whether this constructor is actually constructing
+  /// a base class (rather than a complete object).
+  bool constructsVBase() const { return ConstructsVirtualBase; }
+  CXXConstructExpr::ConstructionKind getConstructionKind() const {
+    return ConstructsVirtualBase ? CXXConstructExpr::CK_VirtualBase
+                                 : CXXConstructExpr::CK_NonVirtualBase;
+  }
+
+  /// \brief Determine whether the inherited constructor is inherited from a
+  /// virtual base of the object we construct. If so, we are not responsible
+  /// for calling the inherited constructor (the complete object constructor
+  /// does that), and so we don't need to pass any arguments.
+  bool inheritedFromVBase() const { return InheritedFromVirtualBase; }
+
+  SourceLocation getLocation() const LLVM_READONLY { return Loc; }
+  SourceLocation getLocStart() const LLVM_READONLY { return Loc; }
+  SourceLocation getLocEnd() const LLVM_READONLY { return Loc; }
+
+  static bool classof(const Stmt *T) {
+    return T->getStmtClass() == CXXInheritedCtorInitExprClass;
+  }
+  child_range children() {
+    return child_range(child_iterator(), child_iterator());
+  }
+
+  friend class ASTStmtReader;
+};
+
 /// \brief Represents an explicit C++ type conversion that uses "functional"
 /// notation (C++ [expr.type.conv]).
 ///
@@ -1758,12 +1825,12 @@ class CXXNewExpr : public Expr {
   SourceRange DirectInitRange;
 
   /// Was the usage ::new, i.e. is the global new to be used?
-  bool GlobalNew : 1;
+  unsigned GlobalNew : 1;
   /// Do we allocate an array? If so, the first SubExpr is the size expression.
-  bool Array : 1;
+  unsigned Array : 1;
   /// If this is an array allocation, does the usual deallocation
   /// function for the allocated type want to know the allocated size?
-  bool UsualArrayDeleteWantsSize : 1;
+  unsigned UsualArrayDeleteWantsSize : 1;
   /// The number of placement new arguments.
   unsigned NumPlacementArgs : 13;
   /// What kind of initializer do we have? Could be none, parens, or braces.
@@ -2362,7 +2429,7 @@ class ExpressionTraitExpr : public Expr {
   /// \brief The trait. A ExpressionTrait enum in MSVC compatible unsigned.
   unsigned ET : 31;
   /// \brief The value of the type trait. Unspecified if dependent.
-  bool Value : 1;
+  unsigned Value : 1;
 
   /// \brief The location of the type trait keyword.
   SourceLocation Loc;
@@ -2872,7 +2939,8 @@ private:
   Stmt *SubExpr;
 
   ExprWithCleanups(EmptyShell, unsigned NumObjects);
-  ExprWithCleanups(Expr *SubExpr, ArrayRef<CleanupObject> Objects);
+  ExprWithCleanups(Expr *SubExpr, bool CleanupsHaveSideEffects,
+                   ArrayRef<CleanupObject> Objects);
 
   friend TrailingObjects;
   friend class ASTStmtReader;
@@ -2882,6 +2950,7 @@ public:
                                   unsigned numObjects);
 
   static ExprWithCleanups *Create(const ASTContext &C, Expr *subexpr,
+                                  bool CleanupsHaveSideEffects,
                                   ArrayRef<CleanupObject> objects);
 
   ArrayRef<CleanupObject> getObjects() const {
@@ -2898,6 +2967,9 @@ public:
 
   Expr *getSubExpr() { return cast<Expr>(SubExpr); }
   const Expr *getSubExpr() const { return cast<Expr>(SubExpr); }
+  bool cleanupsHaveSideEffects() const {
+    return ExprWithCleanupsBits.CleanupsHaveSideEffects;
+  }
 
   /// As with any mutator of the AST, be very careful
   /// when modifying an existing AST to preserve its invariants.

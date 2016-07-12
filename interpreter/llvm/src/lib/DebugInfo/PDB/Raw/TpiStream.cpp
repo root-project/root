@@ -9,6 +9,7 @@
 
 #include "llvm/DebugInfo/PDB/Raw/TpiStream.h"
 
+#include "llvm/DebugInfo/CodeView/CVTypeVisitor.h"
 #include "llvm/DebugInfo/CodeView/CodeView.h"
 #include "llvm/DebugInfo/CodeView/StreamReader.h"
 #include "llvm/DebugInfo/CodeView/TypeIndex.h"
@@ -24,19 +25,13 @@
 #include "llvm/Support/Endian.h"
 
 using namespace llvm;
+using namespace llvm::codeview;
 using namespace llvm::support;
 using namespace llvm::pdb;
 
 namespace {
 const uint32_t MinHashBuckets = 0x1000;
 const uint32_t MaxHashBuckets = 0x40000;
-}
-
-static uint32_t HashBufferV8(uint8_t *buffer, uint32_t NumBuckets) {
-  // Not yet implemented, this is probably some variation of CRC32 but we need
-  // to be sure of the precise implementation otherwise we won't be able to work
-  // with persisted hash values.
-  return 0;
 }
 
 // This corresponds to `HDR` in PDB/dbi/tpi.h.
@@ -65,28 +60,100 @@ struct TpiStream::HeaderInfo {
 
 TpiStream::TpiStream(const PDBFile &File,
                      std::unique_ptr<MappedBlockStream> Stream)
-    : Pdb(File), Stream(std::move(Stream)), HashFunction(nullptr) {}
+    : Pdb(File), Stream(std::move(Stream)) {}
 
 TpiStream::~TpiStream() {}
 
+// Corresponds to `fUDTAnon`.
+template <typename T> static bool isAnonymous(T &Rec) {
+  StringRef Name = Rec.getName();
+  return Name == "<unnamed-tag>" || Name == "__unnamed" ||
+      Name.endswith("::<unnamed-tag>") || Name.endswith("::__unnamed");
+}
+
+// Computes a hash for a given TPI record.
+template <typename T>
+static uint32_t getTpiHash(T &Rec, const CVRecord<TypeLeafKind> &RawRec) {
+  auto Opts = static_cast<uint16_t>(Rec.getOptions());
+
+  bool ForwardRef =
+      Opts & static_cast<uint16_t>(ClassOptions::ForwardReference);
+  bool Scoped = Opts & static_cast<uint16_t>(ClassOptions::Scoped);
+  bool UniqueName = Opts & static_cast<uint16_t>(ClassOptions::HasUniqueName);
+  bool IsAnon = UniqueName && isAnonymous(Rec);
+
+  if (!ForwardRef && !Scoped && !IsAnon)
+    return hashStringV1(Rec.getName());
+  if (!ForwardRef && UniqueName && !IsAnon)
+    return hashStringV1(Rec.getUniqueName());
+  return hashBufferV8(RawRec.RawData);
+}
+
+namespace {
+class TpiHashVerifier : public TypeVisitorCallbacks {
+public:
+  TpiHashVerifier(FixedStreamArray<support::ulittle32_t> &HashValues,
+                  uint32_t NumHashBuckets)
+      : HashValues(HashValues), NumHashBuckets(NumHashBuckets) {}
+
+  Error visitUdtSourceLine(UdtSourceLineRecord &Rec) override {
+    return verifySourceLine(Rec);
+  }
+
+  Error visitUdtModSourceLine(UdtModSourceLineRecord &Rec) override {
+    return verifySourceLine(Rec);
+  }
+
+  Error visitClass(ClassRecord &Rec) override { return verify(Rec); }
+  Error visitEnum(EnumRecord &Rec) override { return verify(Rec); }
+  Error visitUnion(UnionRecord &Rec) override { return verify(Rec); }
+
+  Error visitTypeBegin(const CVRecord<TypeLeafKind> &Rec) override {
+    ++Index;
+    RawRecord = &Rec;
+    return Error::success();
+  }
+
+private:
+  template <typename T> Error verify(T &Rec) {
+    uint32_t Hash = getTpiHash(Rec, *RawRecord);
+    if (Hash % NumHashBuckets != HashValues[Index])
+      return errorInvalidHash();
+    return Error::success();
+  }
+
+  template <typename T> Error verifySourceLine(T &Rec) {
+    char Buf[4];
+    support::endian::write32le(Buf, Rec.getUDT().getIndex());
+    uint32_t Hash = hashStringV1(StringRef(Buf, 4));
+    if (Hash % NumHashBuckets != HashValues[Index])
+      return errorInvalidHash();
+    return Error::success();
+  }
+
+  Error errorInvalidHash() {
+    return make_error<RawError>(
+        raw_error_code::invalid_tpi_hash,
+        "Type index is 0x" + utohexstr(TypeIndex::FirstNonSimpleIndex + Index));
+  }
+
+  FixedStreamArray<support::ulittle32_t> HashValues;
+  const CVRecord<TypeLeafKind> *RawRecord;
+  uint32_t NumHashBuckets;
+  uint32_t Index = -1;
+};
+}
+
 // Verifies that a given type record matches with a given hash value.
 // Currently we only verify SRC_LINE records.
-static Error verifyTIHash(const codeview::CVType &Rec, uint32_t Expected,
-                          uint32_t NumHashBuckets) {
-  ArrayRef<uint8_t> D = Rec.Data;
-  if (Rec.Type == codeview::LF_UDT_SRC_LINE ||
-      Rec.Type == codeview::LF_UDT_MOD_SRC_LINE) {
-    uint32_t Hash =
-        hashStringV1(StringRef((const char *)D.data(), 4)) % NumHashBuckets;
-    if (Hash != Expected)
-      return make_error<RawError>(raw_error_code::corrupt_file,
-                                  "Corrupt TPI hash table.");
-  }
-  return Error::success();
+Error TpiStream::verifyHashValues() {
+  TpiHashVerifier Verifier(HashValues, Header->NumHashBuckets);
+  CVTypeVisitor Visitor(Verifier);
+  return Visitor.visitTypeStream(TypeRecords);
 }
 
 Error TpiStream::reload() {
-  codeview::StreamReader Reader(*Stream);
+  StreamReader Reader(*Stream);
 
   if (Reader.bytesRemaining() < sizeof(HeaderInfo))
     return make_error<RawError>(raw_error_code::corrupt_file,
@@ -113,8 +180,6 @@ Error TpiStream::reload() {
     return make_error<RawError>(raw_error_code::corrupt_file,
                                 "TPI Stream Invalid number of hash buckets.");
 
-  HashFunction = HashBufferV8;
-
   // The actual type records themselves come from this stream
   if (auto EC = Reader.readArray(TypeRecords, Header->TypeRecordBytes))
     return EC;
@@ -128,7 +193,7 @@ Error TpiStream::reload() {
       MappedBlockStream::createIndexedStream(Header->HashStreamIndex, Pdb);
   if (!HS)
     return HS.takeError();
-  codeview::StreamReader HSR(**HS);
+  StreamReader HSR(**HS);
 
   uint32_t NumHashValues = Header->HashValueBuffer.Length / sizeof(ulittle32_t);
   if (NumHashValues != NumTypeRecords())
@@ -155,13 +220,8 @@ Error TpiStream::reload() {
 
   // TPI hash table is a parallel array for the type records.
   // Verify that the hash values match with type records.
-  size_t I = 0;
-  bool HasError;
-  for (const codeview::CVType &Rec : types(&HasError)) {
-    if (auto EC = verifyTIHash(Rec, HashValues[I], Header->NumHashBuckets))
-      return EC;
-    ++I;
-  }
+  if (auto EC = verifyHashValues())
+    return EC;
 
   return Error::success();
 }
@@ -190,22 +250,22 @@ uint16_t TpiStream::getTypeHashStreamAuxIndex() const {
 uint32_t TpiStream::NumHashBuckets() const { return Header->NumHashBuckets; }
 uint32_t TpiStream::getHashKeySize() const { return Header->HashKeySize; }
 
-codeview::FixedStreamArray<support::ulittle32_t>
+FixedStreamArray<support::ulittle32_t>
 TpiStream::getHashValues() const {
   return HashValues;
 }
 
-codeview::FixedStreamArray<TypeIndexOffset>
+FixedStreamArray<TypeIndexOffset>
 TpiStream::getTypeIndexOffsets() const {
   return TypeIndexOffsets;
 }
 
-codeview::FixedStreamArray<TypeIndexOffset>
+FixedStreamArray<TypeIndexOffset>
 TpiStream::getHashAdjustments() const {
   return HashAdjustments;
 }
 
-iterator_range<codeview::CVTypeArray::Iterator>
+iterator_range<CVTypeArray::Iterator>
 TpiStream::types(bool *HadError) const {
   return llvm::make_range(TypeRecords.begin(HadError), TypeRecords.end());
 }

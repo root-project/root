@@ -18,7 +18,6 @@
 #include "LLVMLTORevision.h"
 #endif
 
-#include "UpdateCompilerUsed.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/Analysis/ModuleSummaryAnalysis.h"

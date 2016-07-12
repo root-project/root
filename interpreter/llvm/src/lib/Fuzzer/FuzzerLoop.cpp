@@ -60,14 +60,13 @@ struct CoverageController {
     PcMapResetCurrent();
   }
 
-  static void ResetCounters(const Fuzzer::FuzzingOptions &Options) {
+  static void ResetCounters(const FuzzingOptions &Options) {
     if (Options.UseCounters) {
       EF->__sanitizer_update_counter_bitset_and_clear_counters(0);
     }
   }
 
-  static void Prepare(const Fuzzer::FuzzingOptions &Options,
-                      Fuzzer::Coverage *C) {
+  static void Prepare(const FuzzingOptions &Options, Fuzzer::Coverage *C) {
     if (Options.UseCounters) {
       size_t NumCounters = EF->__sanitizer_get_number_of_counters();
       C->CounterBitmap.resize(NumCounters);
@@ -76,8 +75,7 @@ struct CoverageController {
 
   // Records data to a maximum coverage tracker. Returns true if additional
   // coverage was discovered.
-  static bool RecordMax(const Fuzzer::FuzzingOptions &Options,
-                        Fuzzer::Coverage *C) {
+  static bool RecordMax(const FuzzingOptions &Options, Fuzzer::Coverage *C) {
     bool Res = false;
 
     uint64_t NewBlockCoverage = EF->__sanitizer_get_total_unique_coverage();
@@ -124,6 +122,28 @@ struct CoverageController {
   }
 };
 
+// Leak detection is expensive, so we first check if there were more mallocs
+// than frees (using the sanitizer malloc hooks) and only then try to call lsan.
+struct MallocFreeTracer {
+  void Start() {
+    Mallocs = 0;
+    Frees = 0;
+  }
+  // Returns true if there were more mallocs than frees.
+  bool Stop() { return Mallocs > Frees; }
+  std::atomic<size_t> Mallocs;
+  std::atomic<size_t> Frees;
+};
+
+static MallocFreeTracer AllocTracer;
+
+void MallocHook(const volatile void *ptr, size_t size) {
+  AllocTracer.Mallocs++;
+}
+void FreeHook(const volatile void *ptr) {
+  AllocTracer.Frees++;
+}
+
 Fuzzer::Fuzzer(UserCallback CB, MutationDispatcher &MD, FuzzingOptions Options)
     : CB(CB), MD(MD), Options(Options) {
   SetDeathCallback();
@@ -132,6 +152,8 @@ Fuzzer::Fuzzer(UserCallback CB, MutationDispatcher &MD, FuzzingOptions Options)
   F = this;
   ResetCoverage();
   IsMyThread = true;
+  if (Options.DetectLeaks && EF->__sanitizer_install_malloc_and_free_hooks)
+    EF->__sanitizer_install_malloc_and_free_hooks(MallocHook, FreeHook);
 }
 
 void Fuzzer::LazyAllocateCurrentUnitData() {
@@ -444,38 +466,6 @@ void Fuzzer::RunOneAndUpdateCorpus(const uint8_t *Data, size_t Size) {
     ReportNewCoverage({Data, Data + Size});
 }
 
-// Leak detection is expensive, so we first check if there were more mallocs
-// than frees (using the sanitizer malloc hooks) and only then try to call lsan.
-struct MallocFreeTracer {
-  void Start() {
-    Mallocs = 0;
-    Frees = 0;
-  }
-  // Returns true if there were more mallocs than frees.
-  bool Stop() { return Mallocs > Frees; }
-  size_t Mallocs;
-  size_t Frees;
-};
-
-static thread_local MallocFreeTracer AllocTracer;
-
-// FIXME: The hooks only count on Linux because
-// on Mac OSX calls to malloc are intercepted before
-// thread local storage is initialised leading to
-// crashes when accessing ``AllocTracer``.
-extern "C" {
-__attribute__((weak))
-void __sanitizer_malloc_hook(void *ptr, size_t size) {
-  if (!LIBFUZZER_APPLE)
-    AllocTracer.Mallocs++;
-}
-__attribute__((weak))
-void __sanitizer_free_hook(void *ptr) {
-  if (!LIBFUZZER_APPLE)
-    AllocTracer.Frees++;
-}
-}  // extern "C"
-
 size_t Fuzzer::GetCurrentUnitInFuzzingThead(const uint8_t **Data) const {
   assert(InFuzzingThread());
   *Data = CurrentUnitData;
@@ -683,8 +673,6 @@ void Fuzzer::MutateAndTestOne() {
     assert(NewSize <= Options.MaxLen &&
            "Mutator return overisized unit");
     Size = NewSize;
-    if (Options.OnlyASCII)
-      ToASCII(CurrentUnitData, Size);
     if (i == 0)
       StartTraceRecording();
     RunOneAndUpdateCorpus(CurrentUnitData, Size);

@@ -60,6 +60,8 @@ public:
 
   uint32_t getLength() const override { return Length; }
 
+  Error commit() const override { return Stream->commit(); }
+
   StreamRef drop_front(uint32_t N) const {
     if (!Stream)
       return StreamRef();
@@ -88,8 +90,6 @@ public:
       return false;
     return true;
   }
-
-  bool operator!=(const StreamRef &Other) const { return !(*this == Other); }
 
 private:
   const StreamInterface *Stream;

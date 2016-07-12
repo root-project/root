@@ -398,7 +398,7 @@ operations:
   MemoryDependencyAnalysis (which is also used by other passes like GVN).
 
 * Folding a load: Any atomic load from a constant global can be constant-folded,
-  because it cannot be observed.  Similar reasoning allows scalarrepl with
+  because it cannot be observed.  Similar reasoning allows sroa with
   atomic loads and stores.
 
 Atomics and Codegen
@@ -578,7 +578,7 @@ runtime support library.
 LLVM will emit a call to an appropriate ``__sync_*`` routine if the target
 ISelLowering code has set the corresponding ``ATOMIC_CMPXCHG``, ``ATOMIC_SWAP``,
 or ``ATOMIC_LOAD_*`` operation to "Expand", and if it has opted-into the
-availablity of those library functions via a call to ``initSyncLibcalls()``.
+availability of those library functions via a call to ``initSyncLibcalls()``.
 
 The full set of functions that may be called by LLVM is (for ``N`` being 1, 2,
 4, 8, or 16)::
