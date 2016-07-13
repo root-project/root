@@ -20,10 +20,9 @@
 #include "TString.h"
 #include "TGraphAsymmErrors.h"
 #include "TGraphErrors.h"
-#include "TGAxis.h"
+#include "TGaxis.h"
 #include "TCanvas.h"
 #include "TFrame.h"
-#include "../inc/TRatioPlot.h"
 
 #define _(x) std::cout << #x;
 #define __(x) std::cout << x << std::endl ;
@@ -228,14 +227,34 @@ void TRatioPlot::Draw(Option_t *option)
 
 void TRatioPlot::Paint(Option_t *opt) {
 
+
+//   if (fPainting) {
+//      return;
+//   }
+
+   __("TRatioPlot::Paint" << " begin");
+//   fPainting = kTRUE;
+
 //   std::cout << "TRatioPlot::Paint called " << opt << std::endl;
 
 
 //   CalculateSizes();
 
-   fUpperPad->Paint();
-   fLowerPad->Paint();
+//   fUpperPad->Paint();
+//   fLowerPad->Paint();
 
+   TPad::Paint(opt);
+//   CreateVisualAxes();
+
+
+//   fPainting = kFALSE;
+   __("TRatioPlot::Paint" << " end");
+}
+
+void TRatioPlot::PaintModified()
+{
+
+   TPad::PaintModified();
    CreateVisualAxes();
 
 
@@ -354,7 +373,13 @@ void TRatioPlot::CreateVisualAxes()
 
    var_dump(ratio);
 
-//   fUpperGYaxis->SetTickSize(0.02);
+//   fUpperGYaxis->SetTickSize(0);
+//   fLowerGYaxis->SetTickSize(0);
+//   fUpperGXaxis->SetTickSize(0);
+//   fLowerGXaxis->SetTickSize(0);
+
+
+
    fLowerGYaxis->SetTickSize(fUpperGYaxis->GetTickSize()*ratio);
 
    TVirtualPad *padsav = gPad;
@@ -449,7 +474,7 @@ Bool_t TRatioPlot::SyncPadMargins()
 void TRatioPlot::RangeAxisChanged()
 {
 
-//   __(__PRETTY_FUNCTION__);
+   __("TRatioPlot::RangeAxisChanged" << " begin");
 
    Double_t upFirst = fH1->GetXaxis()->GetBinLowEdge(fH1->GetXaxis()->GetFirst());
    Double_t upLast  = fH1->GetXaxis()->GetBinUpEdge(fH1->GetXaxis()->GetLast());
@@ -486,6 +511,15 @@ void TRatioPlot::RangeAxisChanged()
    if (upChanged || lowChanged) {
       __("Axis range changed");
       SyncAxesRanges();
+      CreateVisualAxes();
+
+      fUpperPad->Modified();
+      fLowerPad->Modified();
+      fTopPad->Modified();
+      Modified();
+      fCanvas->Modified();
+      fCanvas->Update();
+
    }
 
    Bool_t marginsChanged = SyncPadMargins();
@@ -493,17 +527,17 @@ void TRatioPlot::RangeAxisChanged()
 
    if (marginsChanged) {
       SetSplitFraction(fSplitFraction);
-      Paint();
+
+      fUpperPad->Modified();
+      fLowerPad->Modified();
+      fTopPad->Modified();
+      Modified();
+      fCanvas->Modified();
+      fCanvas->Update();
    }
 
-   if (upChanged || lowChanged) {
 
-
-      Paint();
-
-
-   }
-
+   __("TRatioPlot::RangeAxisChanged" << " end");
 }
 
 void TRatioPlot::UnZoomed()
@@ -515,7 +549,14 @@ void TRatioPlot::UnZoomed()
    SyncAxesRanges();
 
 
-   Paint();
+//   Paint();
+
+   fUpperPad->Modified();
+   fLowerPad->Modified();
+   fTopPad->Modified();
+   Modified();
+   fCanvas->Modified();
+   fCanvas->Update();
 }
 
 void TRatioPlot::SetSplitFraction(Float_t sf) {

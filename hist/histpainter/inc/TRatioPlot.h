@@ -26,7 +26,7 @@
 #include "TGraphAsymmErrors.h"
 #include "TGraph.h"
 #include "TAxis.h"
-#include "TGAxis.h"
+#include "TGaxis.h"
 #include "TH1F.h"
 
 
@@ -76,6 +76,7 @@ protected:
 
    Double_t fSeparationMargin;
    Bool_t fIsUpdating = kFALSE;
+   Bool_t fPainting = kFALSE;
 
    virtual void BuildRatio();
    virtual void SyncAxesRanges();
@@ -94,6 +95,7 @@ public:
 
    virtual void SetSplitFraction(Float_t sf);
    virtual void Paint(Option_t *opt = "");
+   virtual void PaintModified();
 
    virtual void UnZoomed();
 
