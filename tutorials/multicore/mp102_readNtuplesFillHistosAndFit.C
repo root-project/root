@@ -4,9 +4,8 @@
 /// We express parallelism with multiprocessing as it is done with multithreading
 /// in mt102_readNtuplesFillHistosAndFit.
 ///
-/// \macro_output
 /// \macro_code
-
+///
 /// \author Danilo Piparo
 
 Int_t mp102_readNtuplesFillHistosAndFit()

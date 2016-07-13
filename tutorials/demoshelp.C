@@ -1,3 +1,11 @@
+/// \file
+/// \ingroup Tutorials
+/// This macro shows help on running the Demos.
+///
+/// \macro_code
+///
+/// \author Rene Brun
+
 void demoshelp() {
    //
    new TCanvas("chelp","Help to run demos",200,10,700,500);

@@ -1,7 +1,13 @@
-{
-   // This macro shows a control bar o run some of the ROOT tutorials.
-   // To execute an item, click with the left mouse button.
+/// \file
+/// \ingroup Tutorials
+/// This macro shows a control bar to run some of the ROOT tutorials.
+/// To execute an item, click with the left mouse button.
+///
+/// \macro_code
+///
+/// \author Rene Brun
 
+{
    gROOT->Reset();
 
    //Add the tutorials directory to the macro path

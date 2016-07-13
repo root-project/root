@@ -1,11 +1,15 @@
-// @(#)root/tutorials:$Id$
-// Author: Rene Brun   02/09/2000
+/// \file
+/// \ingroup Tutorials
+/// This script is a representation using TTasks of the Geant3 simulation program
+/// This example uses directly TTask objects.
+/// A real implementation would require one class per task derived from TTask.
+///
+/// \macro_code
+///
+/// \author Rene Brun
+
 void geant3tasks()
 {
-// this script is a representation using TTasks of the Geant3 simulation program
-// This example uses directly TTask objects.
-// A real implementation would require one class per task derived from TTask.
-
    TTask *geant3 = new TTask("geant3","Geant3 simulation main program");
    gROOT->GetListOfTasks()->Add(geant3);
    TTask *uginit = new TTask("uginit","Initialisation manager");

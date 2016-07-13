@@ -6,6 +6,7 @@
 ///
 /// \macro_image
 /// \macro_code
+///
 /// \author Danilo Piparo
 
 const UInt_t poolSize = 4U;
