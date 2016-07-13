@@ -700,15 +700,14 @@ namespace TMVA
  * this function computes the factor and applies it to the weights
  */
         template <typename WeightsType, typename DropProbabilities>
-            void Net::dropOutWeightFactor (WeightsType& weights,
+            void Net::dropOutWeightFactor (int currLayerWeightIndex, int nextLayerWeightIndex, std::vector<double>& weightBucket,
                                            const DropProbabilities& drops, 
                                            bool inverse)
         {
-            if (drops.empty () || weights.empty ())
+            if (drops.empty () || weights.empty ()) //Edit this later. *****************
                 return;
 
-            auto itWeight = std::begin (weights);
-            auto itWeightEnd = std::end (weights);
+            int weightIndex = currLayerWeightIndex;
             auto itDrop = std::begin (drops);
             auto itDropEnd = std::end (drops);
             size_t numNodesPrev = inputSize ();
@@ -734,11 +733,11 @@ namespace TMVA
                 size_t _numWeights = layer.numWeights (numNodesPrev);
                 for (size_t iWeight = 0; iWeight < _numWeights; ++iWeight)
                 {
-                    if (itWeight == itWeightEnd)
+                    if (weightIndex == nextLayerWeightIndex)
                         break;
                 
-                    *itWeight *= p;
-                    ++itWeight;
+                    *(weightBucket[XXH32(seed, weightIndex) % BUCKET_SIZE]) *= p;
+                    ++weightIndex;
                 }
                 numNodesPrev = numNodes;
                 dropFractionPrev = dropFraction;
