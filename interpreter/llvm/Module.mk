@@ -5,7 +5,7 @@
 
 MODNAME      := llvm
 MODDIR       := $(ROOT_SRCDIR)/interpreter/$(MODNAME)
-LLVMDIRO     := $(call stripsrc,$(MODDIR)/src)
+LLVMDIRO     := $(call stripsrc,$(MODDIR)/obj)
 LLVMDIRI     := $(call stripsrc,$(MODDIR)/inst)
 
 ifneq ($(BUILTINLLVM),yes)
@@ -186,7 +186,7 @@ $(LLVMDEPO): $(LLVMDEPS)
 		$$LLVM_HOST \
 		$$LLVM_TARGET \
 		-DCMAKE_INSTALL_PREFIX=$(ROOT_OBJDIR)/$(LLVMDIRI) \
-		-DROOT_BINARY_DIR=$(ROOT_OBJDIR) \
+		-DROOT_CLASSIC=ON \
 		-DLLVM_BUILD_DOCS=OFF \
 		-DLLVM_BUILD_TESTS=OFF \
 		-DLLVM_ENABLE_WARNINGS=ON \
