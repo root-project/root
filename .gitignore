@@ -22,6 +22,10 @@ etc/allDict.h
 *_dictUmbrella.h
 *_rdict.pcm
 
+# MacOS Xcode
+xcuserdata
+project.xcworkspace
+
 # Other Stuff
 *.d
 
