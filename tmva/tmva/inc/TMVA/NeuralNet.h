@@ -1094,7 +1094,7 @@ namespace TMVA
           * 
           */
          template <typename WeightsType, typename DropProbabilities>
-            void dropOutWeightFactor (WeightsType& weights,
+            void dropOutWeightFactor (int currLayerWeightIndex, int nextLayerWeightIndex, std::vector<double>& weightBucke,
                                       const DropProbabilities& drops, 
                                       bool inverse = false);
 
