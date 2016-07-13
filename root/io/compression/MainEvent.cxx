@@ -305,7 +305,7 @@ int main(int argc, char **argv)
       int expectedSize = -1;
       if (comp == 0) expectedSize = 5534559;
       else if (comp == 101) expectedSize = 1254808;
-      else if (comp == 201) expectedSize = 1116706;
+      else if (comp == 201) expectedSize = 1111230;
       else if (comp == 301) expectedSize = 1265018;
       else if (comp == 5) expectedSize = 1208369;
 
