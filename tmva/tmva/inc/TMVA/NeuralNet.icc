@@ -1087,7 +1087,7 @@ template <typename LAYERDATA>
                                                                    Batch& batch,
                                                                    const DropContainer& dropContainer,
                                                                    ItWeight itWeightBegin,
-                                                                   ItWeight itWeightEnd, 
+                                                                   ItWeight /*itWeightEnd*/, 
                                                                    ItGradient itGradientBegin,
                                                                    ItGradient itGradientEnd,
                                                                    size_t& totalNumWeights) const
@@ -1113,10 +1113,10 @@ template <typename LAYERDATA>
         typename Pattern::const_iterator itInputBegin;
         typename Pattern::const_iterator itInputEnd;
 
-        ItWeight itGammaBegin = itWeightBegin + numWeights ();
-        ItWeight itBetaBegin = itWeightBegin + numWeights () + numNodes ();
-        ItGradient itGradGammaBegin = itGradientBegin + numWeights ();
-        ItGradient itGradBetaBegin = itGradientBegin + numWeights () + numNodes ();
+        // ItWeight itGammaBegin = itWeightBegin + numWeights ();
+        // ItWeight itBetaBegin = itWeightBegin + numWeights () + numNodes ();
+        // ItGradient itGradGammaBegin = itGradientBegin + numWeights ();
+        // ItGradient itGradBetaBegin = itGradientBegin + numWeights () + numNodes ();
 
         
         // --------------------- prepare layer data for input layer ----------------------------
@@ -1197,7 +1197,7 @@ template <typename LAYERDATA>
         void Net::forwardPattern (const LayerContainer& _layers,
                                   std::vector<LayerData>& layerData) const
     {
-	size_t idxLayer = 0, idxLayerEnd = m_layers.size ();
+	size_t idxLayer = 0, idxLayerEnd = _layers.size ();
         size_t cumulativeNodeCount = 0;
 	for (; idxLayer < idxLayerEnd; ++idxLayer)
 	{
