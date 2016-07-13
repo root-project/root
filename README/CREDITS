@@ -779,6 +779,10 @@ N: Benjamin Ragan-Kelley
 E: benjaminrk@gmail.com
 D: cling / Jupyter integration
 
+N: Dan Riley
+E: Daniel.Riley@cornell.edu
+D: Reduce memory/cpu waster in LZMA usage
+
 N: Reiner Rohlfs
 E: Reiner.Rohlfs@obs.unige.ch
 D: various contributions to GUI classes
