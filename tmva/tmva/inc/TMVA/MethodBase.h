@@ -411,7 +411,7 @@ namespace TMVA {
       Bool_t                DoMulticlass() const { return fAnalysisType == Types::kMulticlass; }
 
       // setter method for suppressing writing to XML and writing of standalone classes
-      void                  DisableWriting(Bool_t setter){ fDisableWriting = setter; }
+      void                  DisableWriting(Bool_t setter){ fModelPersistence = setter?kFALSE:kTRUE; }//DEPRECATED
 
    protected:
 
@@ -535,7 +535,6 @@ namespace TMVA {
       // MethodCuts redefines some of the evaluation variables and histograms -> must access private members
       friend class MethodCuts;
 
-      Bool_t           fDisableWriting;       //! set to true in order to suppress writing to XML
 
       // data sets
       DataSetInfo&     fDataSetInfo;         //! the data set information (sometimes needed)

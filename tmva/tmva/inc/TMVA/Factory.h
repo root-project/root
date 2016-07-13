@@ -156,6 +156,7 @@ namespace TMVA {
       TDirectory* RootBaseDir() { return (TDirectory*)fgTargetFile; }
 
       Bool_t IsSilentFile();
+      Bool_t IsModelPersistence();
       
       Double_t GetROCIntegral(DataLoader *loader,TString theMethodName);
       Double_t GetROCIntegral(TString  datasetname,TString theMethodName);
@@ -182,9 +183,6 @@ namespace TMVA {
       TH1F* EvaluateImportanceRandom( DataLoader *loader,UInt_t nseeds, Types::EMVA theMethod,  TString methodTitle, const char *theOption = "" );
       
       TH1F* GetImportance(const int nbits,std::vector<Double_t> importances,std::vector<TString> varNames);
-      
-      //method to do a copy of TTrees in subseeds in Variable Importance
-      void VIDataLoaderCopy(DataLoader *des,DataLoader *src);
       
       void WriteDataInformation(DataSetInfo&     fDataSetInfo);
 

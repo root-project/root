@@ -153,7 +153,6 @@ TMVA::MethodBase::MethodBase( const TString& jobName,
    fAnalysisType              ( Types::kNoAnalysisType ),
    fRegressionReturnVal       ( 0 ),
    fMulticlassReturnVal       ( 0 ),
-   fDisableWriting            ( kFALSE ),
    fDataSetInfo               ( dsi ),
    fSignalReferenceCut        ( 0.5 ),
    fSignalReferenceCutOrientation( 1. ),
@@ -169,6 +168,7 @@ TMVA::MethodBase::MethodBase( const TString& jobName,
    fMethodBaseDir             ( 0 ),
    fFile                      ( 0 ),
    fSilentFile                (kFALSE),
+   fModelPersistence          (kTRUE),
    fWeightFile                ( "" ),
    fEffS                      ( 0 ),
    fDefaultPDF                ( 0 ),
@@ -229,6 +229,7 @@ TMVA::MethodBase::MethodBase( Types::EMVA methodType,
    fMethodBaseDir             ( 0 ),
    fFile                      ( 0 ),
    fSilentFile                (kFALSE),
+   fModelPersistence          (kTRUE),
    fWeightFile                ( weightFile ),
    fEffS                      ( 0 ),
    fDefaultPDF                ( 0 ),
@@ -600,10 +601,10 @@ void TMVA::MethodBase::TrainMethod()
 
    // write the current MVA state into stream
    // produced are one text file and one ROOT file
-   if (!fDisableWriting ) WriteStateToFile();
+   if (fModelPersistence ) WriteStateToFile();
 
    // produce standalone make class (presently only supported for classification)
-   if ((!DoRegression()) && (!fDisableWriting)) MakeClass();
+   if ((!DoRegression()) && (fModelPersistence)) MakeClass();
 
    // write additional monitoring histograms to main target file (not the weight file)
    // again, make sure the histograms go into the method's subdirectory
@@ -1206,7 +1207,7 @@ void TMVA::MethodBase::WriteStateToXML( void* parent ) const
    AddVarsXMLTo( parent );
 
    // write spectator info
-   if (!fDisableWriting)
+   if (fModelPersistence)
       AddSpectatorsXMLTo( parent );
 
    // write class info if in multiclass mode

@@ -382,10 +382,10 @@ void TMVA::MethodLikelihood::Train( void )
          Int_t nbinsS = (*fPDFSig)[ivar]->GetHistNBins( minNEvt );
          Int_t nbinsB = (*fPDFBgd)[ivar]->GetHistNBins( minNEvt );
 
-         (*fHistSig)[ivar] = new TH1F( Form("%s_%s_sig",GetMethodName().Data(),var.Data()),
-                                       Form("%s_%s signal training",GetMethodName().Data(),var.Data()), nbinsS, xmin[ivar], xmax[ivar] );
-         (*fHistBgd)[ivar] = new TH1F( Form("%s_%s_bgd",GetMethodName().Data(),var.Data()),
-                                       Form("%s_%s background training",GetMethodName().Data(),var.Data()), nbinsB, xmin[ivar], xmax[ivar] );
+         (*fHistSig)[ivar] = new TH1F( Form("%s_%s_%s_sig",DataInfo().GetName(),GetMethodName().Data(),var.Data()),
+                                       Form("%s_%s_%s signal training",DataInfo().GetName(),GetMethodName().Data(),var.Data()), nbinsS, xmin[ivar], xmax[ivar] );
+         (*fHistBgd)[ivar] = new TH1F( Form("%s_%s_%s_bgd",DataInfo().GetName(),GetMethodName().Data(),var.Data()),
+                                       Form("%s_%s_%s background training",DataInfo().GetName(),GetMethodName().Data(),var.Data()), nbinsB, xmin[ivar], xmax[ivar] );
       }
    }
    

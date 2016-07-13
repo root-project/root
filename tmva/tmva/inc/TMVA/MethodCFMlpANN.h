@@ -131,9 +131,6 @@ namespace TMVA {
       Double_t GetData ( Int_t isel, Int_t ivar ) const { return (*fData)(isel, ivar); }
       Int_t    GetClass( Int_t ivar             ) const { return (*fClass)[ivar]; }
 
-      // static pointer to this object (required for external functions
-      //NOTE: removed static value for new design
-      MethodCFMlpANN* This( void );
 
       // ranking of input variables
       const Ranking* CreateRanking() { return 0; }
@@ -160,8 +157,6 @@ namespace TMVA {
       void DeclareOptions();
       void ProcessOptions();
       
-      MethodCFMlpANN* fgThis; // this carrier
-
       // LUTs
       TMatrixF       *fData;     // the (data,var) string
       std::vector<Int_t> *fClass;    // the event class (1=signal, 2=background)
@@ -173,7 +168,8 @@ namespace TMVA {
       // additional member variables for the independent NN::Evaluation phase
       Double_t**    fYNN;       // weights
       TString       fLayerSpec; // the hidden layer specification string
-
+      Int_t MethodCFMlpANN_nsel;
+      
       // auxiliary member functions
       Double_t EvalANN( std::vector<Double_t>&, Bool_t& isOK );
       void     NN_ava ( Double_t* );

@@ -284,6 +284,11 @@ Bool_t TMVA::Factory::IsSilentFile()
   return fSilentFile;
 }
 
+//_______________________________________________________________________
+Bool_t TMVA::Factory::IsModelPersistence()
+{
+    return fModelPersistence;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
@@ -905,7 +910,7 @@ void TMVA::Factory::TrainAllMethods()
       if (fModelPersistence) {
 
 	  Log() << kINFO << "=== Destroy and recreate all methods via weight files for testing ===" << Endl << Endl;
-	  if(!IsSilentFile())RootBaseDir()->cd();
+	  if(!IsSilentFile()) RootBaseDir()->cd();
 
 	  // iterate through all booked methods
 	  for (UInt_t i=0; i<methods->size(); i++) {
