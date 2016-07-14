@@ -257,7 +257,6 @@ void TRatioPlot::PaintModified()
    TPad::PaintModified();
    CreateVisualAxes();
 
-
 }
 
 void TRatioPlot::SyncAxesRanges()
@@ -355,10 +354,10 @@ void TRatioPlot::CreateVisualAxes()
    Double_t lowYFirst = fLowerPad->GetUymin();
    Double_t lowYLast = fLowerPad->GetUymax();
 
-   var_dump(upYFirst);
-   var_dump(upYLast);
-   var_dump(lowYFirst);
-   var_dump(lowYLast);
+//   var_dump(upYFirst);
+//   var_dump(upYLast);
+//   var_dump(lowYFirst);
+//   var_dump(lowYLast);
 
 
    fUpperGXaxis = new TGaxis(upLM, upBM*(1-fSplitFraction)+fSplitFraction, (1-upRM), upBM*(1-fSplitFraction)+fSplitFraction, first, last);
@@ -371,7 +370,7 @@ void TRatioPlot::CreateVisualAxes()
 
    Double_t ratio = ( (upBM-(1-upTM))*(1-fSplitFraction) ) / ( (lowBM-(1-lowTM))*fSplitFraction ) ;
 
-   var_dump(ratio);
+//   var_dump(ratio);
 
 //   fUpperGYaxis->SetTickSize(0);
 //   fLowerGYaxis->SetTickSize(0);
@@ -513,6 +512,9 @@ void TRatioPlot::RangeAxisChanged()
       SyncAxesRanges();
       CreateVisualAxes();
 
+//      fH1->Paint();
+//      fH2->Paint();
+
       fUpperPad->Modified();
       fLowerPad->Modified();
       fTopPad->Modified();
@@ -536,6 +538,18 @@ void TRatioPlot::RangeAxisChanged()
       fCanvas->Update();
    }
 
+   // @TODO
+   // Always do this to catch y axis change?
+   // Good idea?
+
+//   CreateVisualAxes();
+//
+//   fUpperPad->Modified();
+//   fLowerPad->Modified();
+//   fTopPad->Modified();
+//   Modified();
+//   fCanvas->Modified();
+//   fCanvas->Update();
 
    __("TRatioPlot::RangeAxisChanged" << " end");
 }
