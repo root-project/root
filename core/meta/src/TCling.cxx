@@ -2635,6 +2635,7 @@ Bool_t TCling::IsLoaded(const char* filename) const
                                               /*RequestingModule*/ 0,
                                               /*SuggestedModule*/ 0,
                                               /*SkipCache*/ false,
+                                              /*BuildSystemModule*/ false,
                                               /*OpenFile*/ false,
                                               /*CacheFail*/ false);
    if (FE && FE->isValid()) {

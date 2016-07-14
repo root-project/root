@@ -3198,6 +3198,7 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
                                 0/*Searchpath*/, 0/*RelPath*/,
                                 0/*RequestingModule*/, 0/*SuggestedModule*/,
                                 false /*SkipCache*/,
+                                false /*BuildSystemModule*/,
                                 false /*OpenFile*/, true /*CacheFailures*/);
       if (FEhdr) break;
       headerFID = sourceManager.getFileID(includeLoc);
@@ -3976,7 +3977,7 @@ clang::Module* ROOT::TMetaUtils::declareModuleMap(clang::CompilerInstance* CI,
                                     const clang::DirectoryEntry *>>(),
                                  0 /*SearchPath*/, 0 /*RelativePath*/,
                                  0 /*RequestingModule*/, 0 /*SuggestedModule*/,
-                                 false /*SkipCache*/,
+                                 false /*SkipCache*/, false /*BuildSystemModule*/,
                                  false /*OpenFile*/, true /*CacheFailures*/);
       if (!hdrFileEntry) {
          std::cerr << "TMetaUtils::declareModuleMap: "
