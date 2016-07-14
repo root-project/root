@@ -96,9 +96,8 @@ namespace {
       // Returns false on error
       bool Complete(Text& line /*in+out*/, size_t& cursor /*in+out*/,
                     EditorRange& r /*out*/,
-                    std::vector<std::string>& displayCompletions /*out*/) {
-         gInterpreter->CodeComplete(line.GetText(), cursor,
-                                          displayCompletions);
+                    std::vector<std::string>& completions /*out*/) {
+         gInterpreter->CodeComplete(line.GetText(), cursor, completions);
          return true;
       }
    };
@@ -161,7 +160,7 @@ namespace {
       Reader* fReader; // Default StreamReader
       std::string fInputLine; // Taken from TextInput
       ROOT::TextInputColorizer fCol; // Colorizer
-      TClingTabCompletion fTabComp; // Tab completion handler / TTabCom adapter
+      ROOTTabCompletion fTabComp; // Tab completion handler / TTabCom adapter
 
       // Config values:
       static std::string fgHistoryFile;
