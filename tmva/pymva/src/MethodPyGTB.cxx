@@ -391,13 +391,14 @@ void MethodPyGTB::Train()
 //     std::cout<<std::endl;
    //     pValue =PyObject_CallObject(fClassifier, PyUnicode_FromString("classes_"));
    //     PyObject_Print(pValue, stdout, 0);
-
-   TString path = GetWeightFileDir() + "/PyGTBModel.PyData";
-   Log() << Endl;
-   Log() << gTools().Color("bold") << "--- Saving State File In:" << gTools().Color("reset") << path << Endl;
-   Log() << Endl;
-
-  Serialize(path,fClassifier);
+   if (IsModelPersistence())
+   {
+        TString path = GetWeightFileDir() + "/PyGTBModel.PyData";
+        Log() << Endl;
+        Log() << gTools().Color("bold") << "--- Saving State File In:" << gTools().Color("reset") << path << Endl;
+        Log() << Endl;
+        Serialize(path,fClassifier);
+   }
 }
 
 //_______________________________________________________________________
@@ -414,7 +415,7 @@ Double_t MethodPyGTB::GetMvaValue(Double_t *errLower, Double_t *errUpper)
    // cannot determine error
    NoErrorCalc(errLower, errUpper);
 
-   if (!fClassifier) ReadModelFromFile();
+   if (IsModelPersistence()) ReadModelFromFile();
 
    Double_t mvaValue;
    const TMVA::Event *e = Data()->GetEvent();

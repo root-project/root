@@ -1145,9 +1145,9 @@ void TMVA::MethodBDT::Train()
 
    // book monitoring histograms (for AdaBost only)   
 
-   TH1* h = new TH1F("BoostWeight",hname,nBins,xMin,xMax);
-   TH1* nodesBeforePruningVsTree = new TH1I("NodesBeforePruning","nodes before pruning",fNTrees,0,fNTrees);
-   TH1* nodesAfterPruningVsTree = new TH1I("NodesAfterPruning","nodes after pruning",fNTrees,0,fNTrees);
+   TH1* h = new TH1F(Form("%s_BoostWeight",DataInfo().GetName()),hname,nBins,xMin,xMax);
+   TH1* nodesBeforePruningVsTree = new TH1I(Form("%s_NodesBeforePruning",DataInfo().GetName()),"nodes before pruning",fNTrees,0,fNTrees);
+   TH1* nodesAfterPruningVsTree = new TH1I(Form("%s_NodesAfterPruning",DataInfo().GetName()),"nodes after pruning",fNTrees,0,fNTrees);
 
       
 

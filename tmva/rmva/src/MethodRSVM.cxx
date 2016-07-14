@@ -76,7 +76,6 @@ MethodRSVM::MethodRSVM(const TString &jobName,
    fCross = 0;
    fProbability = kFALSE;
    fFitted = kTRUE;
-   SetWeightFileDir(gConfig().GetIONames().fWeightFileDir);
 }
 
 //_______________________________________________________________________
@@ -106,7 +105,6 @@ MethodRSVM::MethodRSVM(DataSetInfo &theData, const TString &theWeightFile)
    fCross = 0;
    fProbability = kTRUE;
    fFitted = kTRUE;
-   SetWeightFileDir(gConfig().GetIONames().fWeightFileDir);
 }
 
 
@@ -169,13 +167,15 @@ void MethodRSVM::Train()
                     ROOT::R::Label["probability"] = fProbability, \
                     ROOT::R::Label["fitted"] = fFitted);
    fModel = new ROOT::R::TRObject(Model);
-   TString path = GetWeightFileDir() + "/RSVMModel.RData";
-   Log() << Endl;
-   Log() << gTools().Color("bold") << "--- Saving State File In:" << gTools().Color("reset") << path << Endl;
-   Log() << Endl;
-   r["RSVMModel"] << Model;
-   r << "save(RSVMModel,file='" + path + "')";
-
+   if (IsModelPersistence())
+   {
+        TString path = GetWeightFileDir() + "/RSVMModel.RData";
+        Log() << Endl;
+        Log() << gTools().Color("bold") << "--- Saving State File In:" << gTools().Color("reset") << path << Endl;
+        Log() << Endl;
+        r["RSVMModel"] << Model;
+        r << "save(RSVMModel,file='" + path + "')";
+   }
 }
 
 //_______________________________________________________________________
@@ -260,9 +260,8 @@ Double_t MethodRSVM::GetMvaValue(Double_t *errLower, Double_t *errUpper)
       fDfEvent[DataInfo().GetListOfVariables()[i].Data()] = ev->GetValues()[i];
    }
    //if using persistence model
-   if (!fModel) {
-      ReadStateFromFile();
-   }
+   if (IsModelPersistence()) ReadStateFromFile();
+
    ROOT::R::TRObject result = predict(*fModel, fDfEvent, ROOT::R::Label["decision.values"] = kTRUE, ROOT::R::Label["probability"] = kTRUE);
    TVectorD values = result.GetAttribute("decision.values");
    mvaValue = values[0]; //returning signal prob
@@ -310,13 +309,10 @@ std::vector<Double_t> MethodRSVM::GetMvaValues(Long64_t firstEvt, Long64_t lastE
       evtData[DataInfo().GetListOfVariables()[i].Data()] = inputData[i];
    }
    //if using persistence model
-   if (!fModel) {
-      ReadModelFromFile();
-   }
+   if (IsModelPersistence()) ReadModelFromFile();
 
    std::vector<Double_t> mvaValues(nEvents);
 
-   std::cout << "calling predict.... " << std::endl;
 
    ROOT::R::TRObject result = predict(*fModel, evtData, ROOT::R::Label["decision.values"] = kTRUE, ROOT::R::Label["probability"] = kTRUE);
 

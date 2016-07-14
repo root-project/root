@@ -65,8 +65,6 @@ MethodRXGB::MethodRXGB(const TString &jobName,
 {
    // standard constructor for the RXGB
 
-// default extension for weight files
-   SetWeightFileDir(gConfig().GetIONames().fWeightFileDir);
 }
 
 //_______________________________________________________________________
@@ -85,8 +83,6 @@ MethodRXGB::MethodRXGB(DataSetInfo &theData, const TString &theWeightFile)
      fModel(NULL)
 {
 
-// default extension for weight files
-   SetWeightFileDir(gConfig().GetIONames().fWeightFileDir);
 }
 
 
@@ -143,11 +139,14 @@ void MethodRXGB::Train()
                          ROOT::R::Label["params"] = params);
 
    fModel = new ROOT::R::TRObject(Model);
-   TString path = GetWeightFileDir() + "/RXGBModel.RData";
-   Log() << Endl;
-   Log() << gTools().Color("bold") << "--- Saving State File In:" << gTools().Color("reset") << path << Endl;
-   Log() << Endl;
-   xgbsave(Model, path);
+   if (IsModelPersistence())
+   {
+        TString path = GetWeightFileDir() + "/RXGBModel.RData";
+        Log() << Endl;
+        Log() << gTools().Color("bold") << "--- Saving State File In:" << gTools().Color("reset") << path << Endl;
+        Log() << Endl;
+        xgbsave(Model, path);
+   }
 }
 
 //_______________________________________________________________________
@@ -183,9 +182,8 @@ Double_t MethodRXGB::GetMvaValue(Double_t *errLower, Double_t *errUpper)
       fDfEvent[DataInfo().GetListOfVariables()[i].Data()] = ev->GetValues()[i];
    }
    //if using persistence model
-   if (!fModel) {
-      ReadStateFromFile();
-   }
+   if (IsModelPersistence()) ReadStateFromFile();
+   
    mvaValue = (Double_t)predict(*fModel, xgbdmatrix(ROOT::R::Label["data"] = asmatrix(fDfEvent)));
    return mvaValue;
 }
@@ -231,9 +229,7 @@ std::vector<Double_t> MethodRXGB::GetMvaValues(Long64_t firstEvt, Long64_t lastE
       evtData[DataInfo().GetListOfVariables()[i].Data()] = inputData[i];
    }
    //if using persistence model
-   if (!fModel) {
-      ReadModelFromFile();
-   }
+   if (IsModelPersistence()) ReadModelFromFile();
 
    std::vector<Double_t> mvaValues(nEvents); 
    ROOT::R::TRObject pred = predict(*fModel, xgbdmatrix(ROOT::R::Label["data"] = asmatrix(evtData)));
