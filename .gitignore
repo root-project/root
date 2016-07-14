@@ -187,6 +187,19 @@ core/base/src/RGitCommit.h
 
 # /interpreter/cling/lib/Interpreter/
 /interpreter/cling/lib/Interpreter/cling-compiledata.h
+/interpreter/cling/lib/Interpreter/cling-compiledata.h.in
+
+# /interpreter/cling/...
+/interpreter/cling/CMakeFiles
+/interpreter/cling/Makefile
+/interpreter/cling/cmake_install.cmake
+/interpreter/cling/*/CMakeFiles
+/interpreter/cling/*/Makefile
+/interpreter/cling/*/cmake_install.cmake
+/interpreter/cling/lib/*/CMakeFiles
+/interpreter/cling/lib/*/Makefile
+/interpreter/cling/lib/*/cmake_install.cmake
+/interpreter/cling/lib/cmake
 
 # /interpreter/llvm/
 /interpreter/llvm/obj
