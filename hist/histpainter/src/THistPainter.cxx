@@ -2785,6 +2785,7 @@ THistPainter::~THistPainter()
 Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
 {
 
+   Double_t defaultLabelSize = 0.04; // See TAttAxis.h for source of this value
 
    const Int_t big = 9999;
    const Int_t kMaxDiff = 7;
@@ -2829,7 +2830,7 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
    dsame = kFALSE;
    if (doption.Contains("same")) dsame = kTRUE;
 
-   dyaxis = Int_t(2*(puymin-puymax)*fYaxis->GetLabelSize());
+   dyaxis = Int_t(2*(puymin-puymax)*TMath::Max(Double_t(fYaxis->GetLabelSize()), defaultLabelSize));
    if (doption.Contains("y+")) {
       xyaxis = puxmax + Int_t((puxmax-puxmin)*fYaxis->GetLabelOffset());
       if (px <= xyaxis+dyaxis && px >= xyaxis && py >puymax && py < puymin) {
@@ -2850,7 +2851,7 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
       }
    }
 
-   dxaxis = Int_t((puymin-puymax)*fXaxis->GetLabelSize());
+   dxaxis = Int_t((puymin-puymax)*TMath::Max(Double_t(fXaxis->GetLabelSize()), defaultLabelSize));
    if (doption.Contains("x+")) {
       yxaxis = puymax - Int_t((puymin-puymax)*fXaxis->GetLabelOffset());
       if (py >= yxaxis-dxaxis && py <= yxaxis && px <puxmax && px > puxmin) {
