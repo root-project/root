@@ -227,7 +227,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
     assert(0) ; 
   }
 
-  importTH1(vars,*const_cast<TH1*>(hist),wgt, kFALSE) ;
+  importTH1(vars,*hist,wgt, kFALSE) ;
 
   _dstore->setExternalWeightArray(_wgt,_errLo,_errHi,_sumw2) ;
   TRACE_CREATE
@@ -374,7 +374,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
 ////////////////////////////////////////////////////////////////////////////////
 /// Import data from given TH1/2/3 into this RooDataHist
 
-void RooDataHist::importTH1(const RooArgList& vars, TH1& histo, Double_t wgt, Bool_t doDensityCorrection) 
+void RooDataHist::importTH1(const RooArgList& vars, const TH1& histo, Double_t wgt, Bool_t doDensityCorrection) 
 {
   // Adjust binning of internal observables to match that of input THx
   Int_t offset[3] ;
@@ -578,7 +578,7 @@ void RooDataHist::importDHistSet(const RooArgList& /*vars*/, RooCategory& indexC
 /// observable to binning in given reference TH1. Used by constructors
 /// that import data from an external TH1
 
-void RooDataHist::adjustBinning(const RooArgList& vars, TH1& href, Int_t* offset) 
+void RooDataHist::adjustBinning(const RooArgList& vars, const TH1& href, Int_t* offset) 
 {
   // X
   RooRealVar* xvar = (RooRealVar*) _vars.find(*vars.at(0)) ;
