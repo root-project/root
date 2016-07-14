@@ -97,8 +97,7 @@ RooHist::RooHist(const TH1 &data, Double_t nominalBinWidth, Double_t nSigma, Roo
     const TAxis *axis= ((TH1&)data).GetXaxis();
     if(axis->GetNbins() > 0) _nominalBinWidth= (axis->GetXmax() - axis->GetXmin())/axis->GetNbins();
   }
-  // TH1::GetYaxis() is not const (why!?)
-  setYAxisLabel(const_cast<TH1&>(data).GetYaxis()->GetTitle());
+  setYAxisLabel(data.GetYaxis()->GetTitle());
 
   // initialize our contents from the input histogram's contents
   Int_t nbin= data.GetNbinsX();
