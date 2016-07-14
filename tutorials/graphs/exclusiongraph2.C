@@ -1,3 +1,4 @@
+/// \notebook
 /// \file
 /// \ingroup tutorial_graphs
 /// Draw several graphs with an exclusion zones.
