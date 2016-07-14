@@ -1,3 +1,4 @@
+/// \notebook
 /// \file
 /// \ingroup tutorial_graphs
 /// Macro to test interpolation function Approx
@@ -10,8 +11,7 @@
 TCanvas *vC1;
 TGraph *grxy, *grin, *grout;
 
-void DrawSmooth(Int_t pad, const char *title, const char *xt,
-                const char *yt)
+void DrawSmooth(Int_t pad, const char *title, const char *xt, const char *yt)
 {
   vC1->cd(pad);
   TH1F *vFrame = gPad->DrawFrame(0,0,15,150);
