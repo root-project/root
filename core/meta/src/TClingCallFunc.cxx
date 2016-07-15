@@ -1702,6 +1702,7 @@ void TClingCallFunc::exec(void *address, void *ret) const
                      vh_ary.push_back(vh);
                      vp_ary.push_back(&vh_ary.back());
                   }
+                  break;
                default: {
                      // There should be no others.  This is here in case
                      // this changes in the future.
