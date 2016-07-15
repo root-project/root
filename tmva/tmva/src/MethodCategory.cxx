@@ -154,10 +154,15 @@ TMVA::IMethod* TMVA::MethodCategory::AddMethod( const TCut& theCut,
    MethodBase *method = (dynamic_cast<MethodBase*>(addedMethod));
    if(method==0) return 0;
 
+   if(fModelPersistence) method->SetWeightFileDir(fFileDir);
+   method->SetModelPersistence(fModelPersistence);
    method->SetAnalysisType( fAnalysisType );
    method->SetupMethod();
    method->ParseOptions();
    method->ProcessSetup();
+   method->SetFile(fFile);
+   method->SetSilentFile(IsSilentFile());
+   
 
    // set or create correct method base dir for added method
    const TString dirName(Form("Method_%s",method->GetMethodTypeName().Data()));
