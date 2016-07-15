@@ -182,6 +182,7 @@ $(LLVMDEPO): $(LLVMDEPS)
 		echo "*** Configuring LLVM in $(dir $@) ..."; \
 		mkdir -p $(dir $@) && \
 		cd $(dir $@)  && \
+		unset LDFLAGS && \
 		cmake $(LLVM_CXX_VERSION) \
 		$$LLVM_HOST \
 		$$LLVM_TARGET \
