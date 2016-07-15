@@ -3728,9 +3728,10 @@ static void KeepNParams(clang::QualType& normalizedType,
    // becomes true when a parameter has a value equal to its default
    for (int formal = 0, inst = 0; formal != nArgs; ++formal, ++inst) {
       const NamedDecl* tParPtr = tPars.getParam(formal);
-      if (!tParPtr) Error("KeepNParams",
-                          "The parameter number %s is null.\n",
-                          formal);
+      if (!tParPtr) {
+         Error("KeepNParams", "The parameter number %s is null.\n", formal);
+         continue;
+      }
 
       // Stop if the normalized TemplateSpecializationType has less arguments than
       // the one index is pointing at.
