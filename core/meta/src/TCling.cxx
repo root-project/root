@@ -2047,7 +2047,7 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
          cling::MetaProcessor::MaybeRedirectOutputRAII RAII(fMetaProcessor);
 
          // Turn off autoparsing if this is an include directive
-         bool isInclusionDirective = sLine.Contains("\n#include");
+         bool isInclusionDirective = sLine.Contains("\n#include") || sLine.BeginsWith("#include");
          if (isInclusionDirective) {
             SuspendAutoParsing autoParseRaii(this);
             indent = HandleInterpreterException(fMetaProcessor, sLine, compRes, &result);
