@@ -2721,6 +2721,8 @@ void TCling::UpdateListOfLoadedSharedLibraries()
       LinkMap_t* linkMap = (LinkMap_t*) ((PointerNo4_t*)procLinkMap->fPtr)->fPtr;
       RegisterLoadedSharedLibrary(linkMap->fName);
       fPrevLoadedDynLibInfo = linkMap;
+      // reduce use count of link map structure:
+      dlclose(procLinkMap);
    }
 
    LinkMap_t* iDyLib = (LinkMap_t*)fPrevLoadedDynLibInfo;
