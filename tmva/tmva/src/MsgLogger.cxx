@@ -76,8 +76,7 @@ void   TMVA::MsgLogger::EnableOutput()  { fgInhibitOutput = kFALSE; }
 /// constructor
 
 TMVA::MsgLogger::MsgLogger( const TObject* source, EMsgType minType )
-   : fObjSource ( source ),
-     fStrSource ( "" ),
+: TNamed(source->GetName(),source->GetTitle()),
      fActiveType( kINFO ),
      fMinType   ( minType )
 {
@@ -87,9 +86,8 @@ TMVA::MsgLogger::MsgLogger( const TObject* source, EMsgType minType )
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
-TMVA::MsgLogger::MsgLogger( const std::string& source, EMsgType minType )
-   : fObjSource ( 0 ),
-     fStrSource ( source ),
+TMVA::MsgLogger::MsgLogger( const std::string& source, EMsgType minType ): 
+TNamed(source.c_str(),"MsgLogger"),
      fActiveType( kINFO ),
      fMinType   ( minType )
 {
@@ -100,8 +98,7 @@ TMVA::MsgLogger::MsgLogger( const std::string& source, EMsgType minType )
 /// constructor
 
 TMVA::MsgLogger::MsgLogger( EMsgType minType )
-   : fObjSource ( 0 ),
-     fStrSource ( "Unknown" ),
+   : TNamed("Unknown","MsgLogger"),
      fActiveType( kINFO ),
      fMinType   ( minType )
 {
@@ -110,15 +107,15 @@ TMVA::MsgLogger::MsgLogger( EMsgType minType )
 
 ////////////////////////////////////////////////////////////////////////////////
 /// copy constructor
+// : std::basic_ios<MsgLogger::char_type, MsgLogger::traits_type>(),
+// // std::ostringstream(),
 
-TMVA::MsgLogger::MsgLogger( const MsgLogger& parent )
-   : std::basic_ios<MsgLogger::char_type, MsgLogger::traits_type>(),
-     std::ostringstream(),
-     TObject(),
-     fObjSource(0)
+TMVA::MsgLogger::MsgLogger( const MsgLogger& parent ):
+TNamed(parent.GetName(),parent.GetTitle())
 {
    InitMaps();
    *this = parent;
+   fMsg  = parent.fMsg;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -134,10 +131,11 @@ TMVA::MsgLogger::~MsgLogger()
 TMVA::MsgLogger& TMVA::MsgLogger::operator= ( const MsgLogger& parent )
 {
    if (&parent != this) {
-      fObjSource  = parent.fObjSource;
-      fStrSource  = parent.fStrSource;
+      this->SetName(parent.GetName());
+      this->SetTitle(parent.GetTitle());
       fActiveType = parent.fActiveType;
       fMinType    = parent.fMinType;
+      fMsg        = parent.fMsg;
    }
 
    return *this;
@@ -148,10 +146,8 @@ TMVA::MsgLogger& TMVA::MsgLogger::operator= ( const MsgLogger& parent )
 
 std::string TMVA::MsgLogger::GetFormattedSource() const
 {
-   std::string source_name;
-   if (fObjSource) source_name = fObjSource->GetName();
-   else            source_name = fStrSource;
-
+   std::string source_name = this->GetName();
+   
    if (source_name.size() > fgMaxSourceSize) {
       source_name = source_name.substr( 0, fgMaxSourceSize - 3 );
       source_name += "...";
@@ -180,7 +176,7 @@ void TMVA::MsgLogger::Send()
    // make sure the source name is no longer than fgMaxSourceSize:
    std::string source_name = GetFormattedSource();
 
-   std::string message = this->str();
+   std::string message = fMsg.Data();
    std::string::size_type previous_pos = 0, current_pos = 0;
 
    // slice the message into lines:
@@ -200,7 +196,7 @@ void TMVA::MsgLogger::Send()
    }
 
    // reset the stream buffer:
-   this->str( "" );
+   fMsg = "" ;
    fActiveType = kINFO; // To always print messages that have no level specified...
    return;
 }

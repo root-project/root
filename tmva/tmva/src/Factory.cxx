@@ -127,8 +127,8 @@ TMVA::Factory::Factory( TString jobName, TFile* theTargetFile, TString theOption
    fModelPersistence     (kTRUE)
 {
    fgTargetFile = theTargetFile;
-
-
+   fLogger->SetSource(GetName());
+   
    // render silent
    if (gTools().CheckForSilentOption( GetOptions() )) Log().InhibitOutput(); // make sure is silent if wanted to
 
@@ -205,7 +205,8 @@ TMVA::Factory::Factory( TString jobName, TString theOption )
    fModelPersistence     (kTRUE)
 {
    fgTargetFile = 0;
-
+   fLogger->SetSource(GetName());
+   
 
    // render silent
    if (gTools().CheckForSilentOption( GetOptions() )) Log().InhibitOutput(); // make sure is silent if wanted to
@@ -1638,7 +1639,6 @@ void TMVA::Factory::EvaluateAllMethods( void )
 		}
 		Log() << kINFO << hLine << Endl;
 		Log() << kINFO << Endl; 
-		Log().flush();
 		if (gTools().CheckForSilentOption( GetOptions() )) Log().InhibitOutput();
 	    }//end fROC
 	  }

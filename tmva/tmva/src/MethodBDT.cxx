@@ -1059,7 +1059,9 @@ std::map<TString,Double_t>  TMVA::MethodBDT::OptimizeTuningParameters(TString fo
    std::map<TString,TMVA::Interval*>::iterator it;
    for(it=tuneParameters.begin(); it!= tuneParameters.end(); it++){
       Log() << kWARNING << it->first << Endl;
-      (it->second)->Print(Log());  
+      std::ostringstream oss;
+      (it->second)->Print(oss);
+      Log()<<oss.str();
       Log()<<Endl;
    }
    

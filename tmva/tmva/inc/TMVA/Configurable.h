@@ -132,10 +132,11 @@ namespace TMVA {
       // set message type
       void SetMsgType( EMsgType t ) { fLogger->SetMinType(t); }
 
-
+   protected:
+      mutable MsgLogger* fLogger;                     //! message logger
+      
    private:
 
-      mutable MsgLogger* fLogger;                     //! message logger
 
       template <class T>
          void AssignOpt( const TString& name, T& valAssign ) const;

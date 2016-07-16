@@ -197,6 +197,8 @@ TMVA::MethodBase::MethodBase( const TString& jobName,
    fSetupCompleted            (kFALSE)
 {
    SetTestvarName();
+   fLogger->SetSource(GetName());
+   
 //    // default extension for weight files
 }
 
@@ -257,6 +259,7 @@ TMVA::MethodBase::MethodBase( Types::EMVA methodType,
    fSplTrainRefB              ( 0 ),
    fSetupCompleted            (kFALSE)
 {
+   fLogger->SetSource(GetName());
 //    // constructor used for Testing + Application of the MVA,
 //    // only (no training), using given WeightFiles
 }
