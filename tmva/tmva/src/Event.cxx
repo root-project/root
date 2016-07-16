@@ -192,7 +192,8 @@ void TMVA::Event::SetVariableArrangement( std::vector<UInt_t>* const m ) const {
    // mapping from global variable index (the position in the vector)
    // to the new index in the subset of variables used by the
    // composite classifier
-   fVariableArrangement = *m;
+    if(!m)fVariableArrangement.clear();
+    else fVariableArrangement = *m;
 }
 
 
