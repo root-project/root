@@ -223,7 +223,7 @@ namespace TMVA {
 
    protected:
 
-      ClassDef(DataLoader,0);
+      ClassDef(DataLoader,1);
    };
    //utility function to copy dataloaders
    void DataLoaderCopy(TMVA::DataLoader* des, TMVA::DataLoader* src);

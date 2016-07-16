@@ -11,7 +11,7 @@ if(NOT CMAKE_PROJECT_NAME STREQUAL ROOT)
   include(${ROOTSYS}/cmake/modules/StandaloneBuild.cmake)
 endif()
 
-set(headers1 Configurable.h Event.h Factory.h DataLoader.h MethodBase.h MethodCompositeBase.h
+set(headers1 Configurable.h Factory.h  MethodBase.h MethodCompositeBase.h
 	     MethodANNBase.h MethodTMlpANN.h MethodRuleFit.h MethodCuts.h MethodFisher.h
 	     MethodKNN.h MethodCFMlpANN.h MethodCFMlpANN_Utils.h MethodLikelihood.h
 	     MethodHMatrix.h MethodPDERS.h MethodBDT.h MethodDT.h MethodSVM.h MethodBayesClassifier.h
@@ -36,14 +36,16 @@ set(headers4 TNeuron.h TSynapse.h TActivationChooser.h TActivation.h TActivation
 	     VariableTransformBase.h VariableIdentityTransform.h VariableDecorrTransform.h VariablePCATransform.h 
 	     VariableGaussTransform.h VariableNormalizeTransform.h VariableRearrangeTransform.h VariableTransform.h ROCCalc.h ROCCurve.h)
 
+set(headers5 Event.h DataLoader.h DataSet.h DataSetInfo.h DataInputHandler.h DataSetManager.h DataSetFactory.h)
+
 #---Need to suffix each header name by TMVA/  -----------------
-foreach(hs headers1 headers2 headers3 headers4)
+foreach(hs headers1 headers2 headers3 headers4 headers5)
   foreach(h ${${hs}})
     set(t${hs} ${t${hs}} TMVA/${h})
   endforeach()
 endforeach()
 
-ROOT_GENERATE_DICTIONARY(G__TMVA ${theaders1} ${theaders2} ${theaders3} ${theaders4}   MODULE TMVA LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
+ROOT_GENERATE_DICTIONARY(G__TMVA ${theaders1} ${theaders2} ${theaders3} ${theaders4} ${theaders5}  MODULE TMVA LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
 
 ROOT_LINKER_LIBRARY(TMVA *.cxx G__TMVA.cxx LIBRARIES Core
                     DEPENDENCIES RIO Hist Tree TreePlayer MLP Minuit XMLIO)

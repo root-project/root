@@ -56,7 +56,7 @@ namespace TMVA {
 
    class MsgLogger;
    
-   class TreeInfo {
+   class TreeInfo:public TObject {
 
    public:
 
@@ -77,9 +77,11 @@ namespace TMVA {
       Double_t         fWeight;   //! weight for the tree
       Types::ETreeType fTreeType; //! tree is for training/testing/both
       Bool_t           fOwner;    //! true if created from file
+   protected:
+       ClassDef(TreeInfo,1);      
    };
 
-   class DataInputHandler {
+   class DataInputHandler :public TObject {
 
    public:
 
@@ -134,6 +136,8 @@ namespace TMVA {
       std::map< std::string, Bool_t   >                  fExplicitTrainTest; //! if set to true the user has specified training and testing data explicitly
       mutable MsgLogger*                                 fLogger;   // message logger
       MsgLogger& Log() const { return *fLogger; }
+   protected:
+       ClassDef(DataInputHandler,1);
    };
 }
 
