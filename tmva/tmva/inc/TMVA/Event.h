@@ -140,7 +140,7 @@ namespace TMVA {
       mutable std::vector<Float_t>* fValuesDynamic;   // the event values
       std::vector<Float_t>   fTargets;         // target values for regression
       mutable std::vector<Float_t>   fSpectators;      // "visisting" variables not used in MVAs ; mutable, to be able to copy the dynamic values in there
-      mutable std::vector<UInt_t>*   fVariableArrangement;  // needed for MethodCategories, where we can train on other than the main variables
+      mutable std::vector<UInt_t>    fVariableArrangement;  // needed for MethodCategories, where we can train on other than the main variables
 
       UInt_t                         fClass;           // class number
       Double_t                       fWeight;          // event weight (product of global and individual weights)

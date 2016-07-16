@@ -192,7 +192,7 @@ void TMVA::Event::SetVariableArrangement( std::vector<UInt_t>* const m ) const {
    // mapping from global variable index (the position in the vector)
    // to the new index in the subset of variables used by the
    // composite classifier
-   fVariableArrangement = m;
+   fVariableArrangement = *m;
 }
 
 
@@ -235,11 +235,11 @@ void TMVA::Event::CopyVarValues( const Event& other )
 Float_t TMVA::Event::GetValue( UInt_t ivar ) const
 {
    Float_t retval;
-   if (fVariableArrangement==0) {
+   if (fVariableArrangement.size()==0) {
       retval = fDynamic ? ( ((*fValuesDynamic).at(ivar)) ) : fValues.at(ivar); 
    } 
    else {
-      UInt_t mapIdx = (*fVariableArrangement)[ivar];
+      UInt_t mapIdx = fVariableArrangement[ivar];
       //   std::cout<< fDynamic ; 
       if (fDynamic){
          //     std::cout<< " " << (*fValuesDynamic).size() << " " << fValues.size() << std::endl;
@@ -268,7 +268,7 @@ Float_t TMVA::Event::GetSpectator( UInt_t ivar) const
 
 const std::vector<Float_t>& TMVA::Event::GetValues() const
 {
-   if (fVariableArrangement==0) {
+   if (fVariableArrangement.size()==0) {
 
       if (fDynamic) {
          fValues.clear();
@@ -282,8 +282,8 @@ const std::vector<Float_t>& TMVA::Event::GetValues() const
       UInt_t mapIdx;
       if (fDynamic) {
          fValues.clear();
-         for (UInt_t i=0; i< fVariableArrangement->size(); i++){
-            mapIdx = (*fVariableArrangement)[i];
+         for (UInt_t i=0; i< fVariableArrangement.size(); i++){
+            mapIdx = fVariableArrangement[i];
             fValues.push_back(((*fValuesDynamic).at(mapIdx)));
          }
       } else {
@@ -291,8 +291,8 @@ const std::vector<Float_t>& TMVA::Event::GetValues() const
          // (change them permanently) ... guess the only way is to add a 'fValuesRearranged' array, 
          // and living with the fact that it 'doubles' the Event size :(
          fValuesRearranged.clear();
-         for (UInt_t i=0; i< fVariableArrangement->size(); i++){
-            mapIdx = (*fVariableArrangement)[i];
+         for (UInt_t i=0; i< fVariableArrangement.size(); i++){
+            mapIdx = fVariableArrangement[i];
             fValuesRearranged.push_back(fValues.at(mapIdx));
          }
          return fValuesRearranged;
@@ -308,8 +308,8 @@ UInt_t TMVA::Event::GetNVariables() const
 {
    // if variables have to arranged (as it is the case for the
    // composite classifier) the number of the variables changes
-   if (fVariableArrangement==0) return fValues.size();
-   else                         return fVariableArrangement->size();
+   if (fVariableArrangement.size()==0) return fValues.size();
+   else                         return fVariableArrangement.size();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -328,8 +328,8 @@ UInt_t TMVA::Event::GetNSpectators() const
    // if variables have to arranged (as it is the case for the
    // composite classifier) the number of the variables changes
 
-   if (fVariableArrangement==0) return fSpectators.size();
-   else                         return fValues.size()-fVariableArrangement->size();
+   if (fVariableArrangement.size()==0) return fSpectators.size();
+   else                         return fValues.size()-fVariableArrangement.size();
 }
 
 
