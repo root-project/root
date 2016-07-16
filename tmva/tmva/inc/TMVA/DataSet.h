@@ -44,6 +44,9 @@
 #ifndef ROOT_TObject
 #include "TObject.h"
 #endif
+#ifndef ROOT_TNamed
+#include "TNamed.h"
+#endif
 #ifndef ROOT_TString
 #include "TString.h"
 #endif
@@ -77,10 +80,10 @@ namespace TMVA {
    class MsgLogger;
    class Results;
 
-   class DataSet {
+   class DataSet :public TNamed {
 
    public:
-
+      DataSet();
       DataSet(const DataSetInfo&);
       virtual ~DataSet();
 
@@ -154,10 +157,9 @@ namespace TMVA {
    private:
 
       // data members
-      DataSet();
       void DestroyCollection( Types::ETreeType type, Bool_t deleteEvents );
 
-      const DataSetInfo&         fdsi;                //! datasetinfo that created this dataset
+      const DataSetInfo         *fdsi;                //! datasetinfo that created this dataset
 
       std::vector<Event*>::iterator        fEvtCollIt;
       std::vector< std::vector<Event*>*  > fEventCollection; //! list of events for training/testing/...
@@ -192,6 +194,9 @@ namespace TMVA {
 
       void  ApplyTrainingBlockDivision();
       void  ApplyTrainingSetDivision();
+   protected:
+       
+       ClassDef(DataSet,1);
    };
 }
 

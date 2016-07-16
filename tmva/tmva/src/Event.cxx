@@ -39,6 +39,9 @@
 Bool_t TMVA::Event::fgIsTraining = kFALSE;
 Bool_t TMVA::Event::fgIgnoreNegWeightsInTraining = kFALSE;
 
+
+ClassImp(TMVA::Event)
+
 ////////////////////////////////////////////////////////////////////////////////
 /// copy constructor
 
@@ -122,7 +125,7 @@ TMVA::Event::Event( const std::vector<Float_t>& ev,
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor for single events
 
-TMVA::Event::Event( const std::vector<Float_t*>*& evdyn, UInt_t nvar )
+TMVA::Event::Event( const std::vector<Float_t>*& evdyn, UInt_t nvar )
    : fValues(nvar),
      fValuesDynamic(0),
      fTargets(0),
@@ -134,14 +137,15 @@ TMVA::Event::Event( const std::vector<Float_t*>*& evdyn, UInt_t nvar )
      fDynamic(true),
      fDoNotBoost(kFALSE)
 {
-   fValuesDynamic = (std::vector<Float_t*>*) evdyn;
+   fValuesDynamic = (std::vector<Float_t>*) evdyn;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// copy constructor
 
 TMVA::Event::Event( const Event& event ) 
-   : fValues(event.fValues),
+   : TObject(event),
+     fValues(event.fValues),
      fValuesDynamic(event.fValuesDynamic),
      fTargets(event.fTargets),
      fSpectators(event.fSpectators),
@@ -156,15 +160,15 @@ TMVA::Event::Event( const Event& event )
       fValues.clear();
       UInt_t nvar = event.GetNVariables();
       UInt_t idx=0;
-      std::vector<Float_t*>::iterator itDyn=event.fValuesDynamic->begin(), itDynEnd=event.fValuesDynamic->end();
+      std::vector<Float_t>::iterator itDyn=event.fValuesDynamic->begin(), itDynEnd=event.fValuesDynamic->end();
       for (; itDyn!=itDynEnd && idx<nvar; ++itDyn){
-         Float_t value=*(*itDyn);
+         Float_t value=(*itDyn);
          fValues.push_back( value );
          ++idx;
       }
       fSpectators.clear();
       for (; itDyn!=itDynEnd; ++itDyn){
-         Float_t value=*(*itDyn);
+         Float_t value=(*itDyn);
          fSpectators.push_back( value );
          ++idx;
       }
@@ -204,15 +208,15 @@ void TMVA::Event::CopyVarValues( const Event& other )
       UInt_t nvar = other.GetNVariables();
       fValues.clear();
       UInt_t idx=0;
-      std::vector<Float_t*>::iterator itDyn=other.fValuesDynamic->begin(), itDynEnd=other.fValuesDynamic->end();
+      std::vector<Float_t>::iterator itDyn=other.fValuesDynamic->begin(), itDynEnd=other.fValuesDynamic->end();
       for (; itDyn!=itDynEnd && idx<nvar; ++itDyn){
-         Float_t value=*(*itDyn);
+         Float_t value=(*itDyn);
          fValues.push_back( value );
          ++idx;
       }
       fSpectators.clear();
       for (; itDyn!=itDynEnd; ++itDyn){
-         Float_t value=*(*itDyn);
+         Float_t value=(*itDyn);
          fSpectators.push_back( value );
          ++idx;
       }
@@ -232,14 +236,14 @@ Float_t TMVA::Event::GetValue( UInt_t ivar ) const
 {
    Float_t retval;
    if (fVariableArrangement==0) {
-      retval = fDynamic ? ( *((*fValuesDynamic).at(ivar)) ) : fValues.at(ivar); 
+      retval = fDynamic ? ( ((*fValuesDynamic).at(ivar)) ) : fValues.at(ivar); 
    } 
    else {
       UInt_t mapIdx = (*fVariableArrangement)[ivar];
       //   std::cout<< fDynamic ; 
       if (fDynamic){
          //     std::cout<< " " << (*fValuesDynamic).size() << " " << fValues.size() << std::endl;
-         retval = *((*fValuesDynamic).at(mapIdx));
+         retval = ((*fValuesDynamic).at(mapIdx));
       }
       else{
          //retval = fValues.at(ivar);
@@ -255,7 +259,7 @@ Float_t TMVA::Event::GetValue( UInt_t ivar ) const
 
 Float_t TMVA::Event::GetSpectator( UInt_t ivar) const 
 {
-   if (fDynamic) return *(fValuesDynamic->at(GetNVariables()+ivar));
+   if (fDynamic) return (fValuesDynamic->at(GetNVariables()+ivar));
    else          return fSpectators.at(ivar);
 }
 
@@ -268,9 +272,9 @@ const std::vector<Float_t>& TMVA::Event::GetValues() const
 
       if (fDynamic) {
          fValues.clear();
-         for (std::vector<Float_t*>::const_iterator it = fValuesDynamic->begin(), itEnd=fValuesDynamic->end()-GetNSpectators(); 
+         for (std::vector<Float_t>::const_iterator it = fValuesDynamic->begin(), itEnd=fValuesDynamic->end()-GetNSpectators(); 
               it != itEnd; ++it) { 
-            Float_t val = *(*it); 
+            Float_t val = (*it); 
             fValues.push_back( val ); 
          }
       }
@@ -280,7 +284,7 @@ const std::vector<Float_t>& TMVA::Event::GetValues() const
          fValues.clear();
          for (UInt_t i=0; i< fVariableArrangement->size(); i++){
             mapIdx = (*fVariableArrangement)[i];
-            fValues.push_back(*((*fValuesDynamic).at(mapIdx)));
+            fValues.push_back(((*fValuesDynamic).at(mapIdx)));
          }
       } else {
          // hmm now you have a problem, as you do not want to mess with the original event variables
@@ -337,7 +341,7 @@ void TMVA::Event::SetVal( UInt_t ivar, Float_t val )
    if ((fDynamic ?( (*fValuesDynamic).size() ) : fValues.size())<=ivar)
       (fDynamic ?( (*fValuesDynamic).resize(ivar+1) ) : fValues.resize(ivar+1));
 
-   (fDynamic ?( *(*fValuesDynamic)[ivar] ) : fValues[ivar])=val;
+   (fDynamic ?( (*fValuesDynamic)[ivar] ) : fValues[ivar])=val;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

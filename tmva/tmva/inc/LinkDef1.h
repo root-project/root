@@ -15,6 +15,7 @@
 #pragma link C++ class TMVA::DataLoader+;
 #pragma link C++ class TMVA::TreeInfo+;
 #pragma link C++ class TMVA::DataInputHandler+;
+#pragma link C++ class TMVA::DataSet+;
 
 // the classifiers
 #pragma link C++ class TMVA::MethodBase+;
