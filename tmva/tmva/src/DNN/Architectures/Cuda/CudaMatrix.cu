@@ -94,7 +94,6 @@ inline void TCudaMatrix::InitializeCuda()
        CUDACHECK(cudaMalloc(& fCurandStates, TDevice::NThreads(*this)));
    }
    if (TDevice::NThreads(*this) > (int) fNCurandStates) {
-       std::cout << "enlarging rand states: " << fNCurandStates << std::endl;
        fNCurandStates = TDevice::NThreads(*this);
        if (fCurandStates) {
            cudaFree(fCurandStates);
