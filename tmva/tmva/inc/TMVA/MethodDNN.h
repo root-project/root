@@ -132,7 +132,7 @@ namespace TMVA {
 
 
    private:
-      TMVA::DNN::Net  fNet;
+      TMVA::DNN::Net fNet;
       std::vector<double> fWeights;
 
       TString  fLayoutString;
