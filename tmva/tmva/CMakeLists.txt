@@ -35,6 +35,18 @@ set(headers4 TNeuron.h TSynapse.h TActivationChooser.h TActivation.h TActivation
 	     TNeuronInputSqSum.h TNeuronInputAbs.h Types.h Ranking.h RuleFit.h RuleFitAPI.h IMethod.h MsgLogger.h
 	     VariableTransformBase.h VariableIdentityTransform.h VariableDecorrTransform.h VariablePCATransform.h 
 	     VariableGaussTransform.h VariableNormalizeTransform.h VariableRearrangeTransform.h VariableTransform.h ROCCalc.h ROCCurve.h)
+set(dnn_files src/DNN/Architectures/Reference.cxx src/DNN/Architectures/Reference/DataLoader.cxx)
+set(dnn_cuda_files src/DNN/Architectures/Cuda/ActivationFunctions.cu
+                   src/DNN/Architectures/Cuda/Arithmetic.cu
+                   src/DNN/Architectures/Cuda/CudaMatrix.cu
+                   src/DNN/Architectures/Cuda/DataLoader.cu
+                   src/DNN/Architectures/Cuda/Dropout.cu
+                   src/DNN/Architectures/Cuda/Initialization.cu
+                   src/DNN/Architectures/Cuda/Kernels.cu
+                   src/DNN/Architectures/Cuda/LossFunctions.cu
+                   src/DNN/Architectures/Cuda/OutputFunctions.cu
+                   src/DNN/Architectures/Cuda/Propagation.cu
+                   src/DNN/Architectures/Cuda/Regularization.cu)
 
 #---Need to suffix each header name by TMVA/  -----------------
 foreach(hs headers1 headers2 headers3 headers4)
@@ -45,7 +57,19 @@ endforeach()
 
 ROOT_GENERATE_DICTIONARY(G__TMVA ${theaders1} ${theaders2} ${theaders3} ${theaders4}   MODULE TMVA LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
 
-ROOT_LINKER_LIBRARY(TMVA *.cxx G__TMVA.cxx LIBRARIES Core
+#---Handle CUDA dependent code. -----------------
+find_package(CUDA)
+if (CUDA_FOUND)
+  set(CUDA_HOST_COMPILER "/usr/bin/g++-4.8")
+  cuda_add_library(dnn_cuda ${dnn_cuda_files})
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDNNCUDA")
+  set(cuda_libraries dnn_cuda ${CUDA_CUBLAS_LIBRARIES})
+else (CUDA_FOUND)
+  set(cuda_libraries)
+endif(CUDA_FOUND)
+
+root_linker_library(TMVA *.cxx G__TMVA.cxx ${dnn_files}
+                    LIBRARIES Core ${cuda_libraries}
                     DEPENDENCIES RIO Hist Tree TreePlayer MLP Minuit XMLIO)
 
 install(DIRECTORY inc/TMVA/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/TMVA
@@ -63,7 +87,7 @@ if(NOT gnuinstall)
                  PATTERN "data" EXCLUDE)
 endif()
 
-#ROOT_ADD_TEST_SUBDIRECTORY(test)
+ROOT_ADD_TEST_SUBDIRECTORY(test/DNN)
 
 
 
