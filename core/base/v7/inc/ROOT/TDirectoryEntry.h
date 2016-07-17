@@ -20,82 +20,86 @@
 #include <chrono>
 #include <memory>
 #include <typeinfo>
+#include <typeindex>
 
 namespace ROOT {
 namespace Experimental {
 
 namespace Internal {
 
-/**
-  Abstract base for a `TDirectory` element.
- */
-class TDirectoryEntryPtrBase {
+// Forward declaration for TDirectoryEntry::operator bool()
+class TDirectoryEntry;
+inline bool operator!=(const TDirectoryEntry& lhs, const TDirectoryEntry& rhs);
+
+class TDirectoryEntry {
 public:
-  virtual ~TDirectoryEntryPtrBase() {}
   using clock_t = std::chrono::system_clock;
   using time_point_t = std::chrono::time_point<clock_t>;
 
-private:
-  time_point_t fDate = clock_t::now(); ///< Time of last change
-  TClass* fType = 0; ///< The type of the object
-
-protected:
-  TDirectoryEntryPtrBase() = default;
-
 public:
-  /// Constructor setting the type.
-  TDirectoryEntryPtrBase(TClass* cl): fType(cl) {}
+  TDirectoryEntry(): TDirectoryEntry(nullptr) {}
+  TDirectoryEntry(std::nullptr_t):
+    TDirectoryEntry(std::make_shared<std::nullptr_t>(nullptr)) {}
+  template<class T>
+  explicit TDirectoryEntry(T* ptr):
+    TDirectoryEntry(std::make_shared<T>(*ptr)) {}
+  template<class T>
+  explicit TDirectoryEntry(const std::shared_ptr<T>& ptr):
+    fTypeInfo(typeid(T)),
+    fType(TClass::GetClass(typeid(T))),
+    fObj(ptr),
+    fThrower(&TDirectoryEntry::Thrower<T>) {}
 
   /// Get the last change date of the entry.
   const time_point_t& GetDate() const { return fDate; }
-
-  /// Get the object's type.
-  TClass* GetType() const { return fType; }
 
   /// Inform the entry that it has been modified, and needs to update its
   /// last-changed time stamp.
   void SetChanged() { fDate = clock_t::now(); }
 
-  /// Abstract interface to retrieve the address of the object represented by
-  /// this entry, if any.
-  virtual void* GetObjectAddr() const = 0;
+  /// Type of the object represented by this entry.
+  std::type_index GetTypeInfo() const { return fTypeInfo; }
 
-  /// Abstract interface to retrieve the type of the object represented by this
-  /// entry.
-  virtual const std::type_info& GetTypeInfo() const = 0;
-};
-
-
-/**
- Type-aware part of an entry in a TDirectory. It can manage the lifetime of an
- object, or only inform about last-change date and the type of an object.
- */
-
-template <class T>
-class TDirectoryEntryPtr: public TDirectoryEntryPtrBase {
-public:
-  /// Initialize a TDirectoryEntryPtr from an existing object ("write").
-  TDirectoryEntryPtr(T&& obj):
-    TDirectoryEntryPtrBase(TClass::GetClass(typeid(T))),  fObj(obj) {}
-
-  /// Initialize a TDirectoryEntryPtr from an existing object ("write").
-  TDirectoryEntryPtr(const std::shared_ptr<T>& ptr): fObj(ptr) {}
-
-  virtual ~TDirectoryEntryPtr() {}
+  /// Get the object's type.
+  TClass* GetType() const { return fType; }
 
   /// Retrieve the `shared_ptr` of the referenced object.
-  std::shared_ptr<T>& GetPointer() const { return fObj; }
+  std::shared_ptr<void>& GetPointer() { return fObj; }
+  const std::shared_ptr<void>& GetPointer() const { return fObj; }
 
-  /// Retrieve the address of the object managed by this entry.
-  /// Returns `nullptr` if no object is managed by this entry.
-  void* GetObjectAddr() const final { return fObj.get(); }
+  template<class U>
+  std::shared_ptr<U> CastPointer() const;
 
-  /// Type of the object represented by this entry.
-  const std::type_info& GetTypeInfo() const final { return typeid(T); }
+  explicit operator bool() const { return *this != TDirectoryEntry(); }
 
 private:
-  std::shared_ptr<T> fObj; ///< Object referenced by this entry, if any.
+  template<class T>
+  void Thrower() const { throw static_cast<T*>(fObj.get()); }
+
+  time_point_t fDate = clock_t::now(); ///< Time of last change
+  std::type_index fTypeInfo;
+  TClass* fType; ///< The type of the object
+  std::shared_ptr<void> fObj;
+  void (TDirectoryEntry::*fThrower)() const;
 };
+
+template<class U>
+std::shared_ptr<U> TDirectoryEntry::CastPointer() const
+{
+  try { (this->*fThrower)(); }
+  catch (U* ptr) { return std::shared_ptr<U>(fObj, static_cast<U*>(ptr)); }
+  catch (...) {}
+  return std::shared_ptr<U>();
+}
+
+inline bool operator==(const TDirectoryEntry& lhs, const TDirectoryEntry& rhs)
+{
+  return lhs.GetPointer() == rhs.GetPointer()
+    && lhs.GetTypeInfo() == rhs.GetTypeInfo();
+}
+
+inline bool operator!=(const TDirectoryEntry& lhs, const TDirectoryEntry& rhs)
+{ return !(lhs == rhs); }
 
 } // namespace Internal
 
