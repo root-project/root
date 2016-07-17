@@ -42,6 +42,9 @@
 #include "TMVA/Config.h"
 #include "TMVA/Ranking.h"
 
+#include "TMVA/DNN/Net.h"
+#include "TMVA/DNN/Architectures/Reference.h"
+
 #include "TMVA/NeuralNet.h"
 #include "TMVA/Monitoring.h"
 
@@ -52,7 +55,10 @@ REGISTER_METHOD(DNN)
 
 ClassImp(TMVA::MethodDNN)
 
-
+using TMVA::DNN::EActivationFunction;
+using TMVA::DNN::ELossFunction;
+using TMVA::DNN::EInitialization;
+using TMVA::DNN::EOutputFunction;
 
 
    namespace TMVA
@@ -160,6 +166,7 @@ void TMVA::MethodDNN::DeclareOptions()
    AddPreDefVal(TString("XAVIERUNIFORM"));
    AddPreDefVal(TString("LAYERSIZE"));
 
+   DeclareOptionRef(fGPUString="True", "GPU", "Use GPU for training.");
 
    DeclareOptionRef(fTrainingStrategy="LearningRate=1e-1,Momentum=0.3,Repetitions=3,ConvergenceSteps=50,BatchSize=30,TestRepetitions=7,WeightDecay=0.0,Renormalize=L2,DropConfig=0.0,DropRepetitions=5|LearningRate=1e-4,Momentum=0.3,Repetitions=3,ConvergenceSteps=50,BatchSize=20,TestRepetitions=7,WeightDecay=0.001,Renormalize=L2,DropConfig=0.0+0.5+0.5,DropRepetitions=5,Multithreading=True",    "TrainingStrategy",    "defines the training strategies");
 
@@ -388,6 +395,12 @@ void TMVA::MethodDNN::ProcessOptions()
    else
       fWeightInitializationStrategy = TMVA::DNN::WeightInitializationStrategy::XAVIER;
 
+   fGPUString.ToUpper ();
+   if (fGPUString.BeginsWith ("T"))
+       fGPU = true;
+   else
+       fGPU = false;
+
    // create settings
    if (fAnalysisType == Types::kClassification)
       {
@@ -492,160 +505,383 @@ void TMVA::MethodDNN::ProcessOptions()
 //______________________________________________________________________________
 void TMVA::MethodDNN::Train()
 {
-    
-   fMonitoring = NULL;
-   // if (!fMonitoring)
-   // {
-   //     fMonitoring = make_shared<Monitoring>();
-   //     fMonitoring->Start ();
-   // }
+    if (fGPU) {
+        TrainGPU();
+    } else {
 
-   // INITIALIZATION
-   // create pattern
-   std::vector<Pattern> trainPattern;
-   std::vector<Pattern> testPattern;
+       fMonitoring = NULL;
+       // if (!fMonitoring)
+       // {
+       //     fMonitoring = make_shared<Monitoring>();
+       //     fMonitoring->Start ();
+       // }
 
-   const std::vector<TMVA::Event*>& eventCollectionTraining = GetEventCollection (Types::kTraining);
-   const std::vector<TMVA::Event*>& eventCollectionTesting  = GetEventCollection (Types::kTesting);
+       // INITIALIZATION
+       // create pattern
+       std::vector<Pattern> trainPattern;
+       std::vector<Pattern> testPattern;
 
-   for (size_t iEvt = 0, iEvtEnd = eventCollectionTraining.size (); iEvt < iEvtEnd; ++iEvt)
-      {
-         const TMVA::Event* event = eventCollectionTraining.at (iEvt);
-         const std::vector<Float_t>& values  = event->GetValues  ();
-         if (fAnalysisType == Types::kClassification)
-            {
-               double outputValue = event->GetClass () == 0 ? 0.9 : 0.1;
-               trainPattern.push_back (Pattern (values.begin  (), values.end (), outputValue, event->GetWeight ()));
-               trainPattern.back ().addInput (1.0); // bias node
-            }
-         else
-            {
-               const std::vector<Float_t>& targets = event->GetTargets ();
-               trainPattern.push_back (Pattern (values.begin  (), values.end (), targets.begin (), targets.end (), event->GetWeight ()));
-               trainPattern.back ().addInput (1.0); // bias node
-            }
-      }
+       const std::vector<TMVA::Event*>& eventCollectionTraining = GetEventCollection (Types::kTraining);
+       const std::vector<TMVA::Event*>& eventCollectionTesting  = GetEventCollection (Types::kTesting);
 
-   for (size_t iEvt = 0, iEvtEnd = eventCollectionTesting.size (); iEvt < iEvtEnd; ++iEvt)
-      {
-         const TMVA::Event* event = eventCollectionTesting.at (iEvt);
-         const std::vector<Float_t>& values  = event->GetValues  ();
-         if (fAnalysisType == Types::kClassification)
-            {
-               double outputValue = event->GetClass () == 0 ? 0.9 : 0.1;
-               testPattern.push_back (Pattern (values.begin  (), values.end (), outputValue, event->GetWeight ()));
-               testPattern.back ().addInput (1.0); // bias node
-            }
-         else
-            {
-               const std::vector<Float_t>& targets = event->GetTargets ();
-               testPattern.push_back (Pattern (values.begin  (), values.end (), targets.begin (), targets.end (), event->GetWeight ()));
-               testPattern.back ().addInput (1.0); // bias node
-            }
-      }
+       for (size_t iEvt = 0, iEvtEnd = eventCollectionTraining.size (); iEvt < iEvtEnd; ++iEvt)
+       {
+          const TMVA::Event* event = eventCollectionTraining.at (iEvt);
+          const std::vector<Float_t>& values  = event->GetValues  ();
+          if (fAnalysisType == Types::kClassification)
+          {
+             double outputValue = event->GetClass () == 0 ? 0.9 : 0.1;
+             trainPattern.push_back (Pattern (values.begin  (), values.end (), outputValue, event->GetWeight ()));
+             trainPattern.back ().addInput (1.0); // bias node
+          }
+          else
+          {
+             const std::vector<Float_t>& targets = event->GetTargets ();
+             trainPattern.push_back (Pattern (values.begin  (), values.end (), targets.begin (), targets.end (), event->GetWeight ()));
+             trainPattern.back ().addInput (1.0); // bias node
+          }
+       }
 
-   if (trainPattern.empty () || testPattern.empty ())
-      return;
+       for (size_t iEvt = 0, iEvtEnd = eventCollectionTesting.size (); iEvt < iEvtEnd; ++iEvt)
+       {
+          const TMVA::Event* event = eventCollectionTesting.at (iEvt);
+          const std::vector<Float_t>& values  = event->GetValues  ();
+          if (fAnalysisType == Types::kClassification)
+          {
+             double outputValue = event->GetClass () == 0 ? 0.9 : 0.1;
+             testPattern.push_back (Pattern (values.begin  (), values.end (), outputValue, event->GetWeight ()));
+             testPattern.back ().addInput (1.0); // bias node
+          }
+          else
+          {
+             const std::vector<Float_t>& targets = event->GetTargets ();
+             testPattern.push_back (Pattern (values.begin  (), values.end (), targets.begin (), targets.end (), event->GetWeight ()));
+             testPattern.back ().addInput (1.0); // bias node
+          }
+       }
 
-   // create net and weights
-   fNet.clear ();
-   fWeights.clear ();
+       if (trainPattern.empty () || testPattern.empty ())
+           return;
 
-   // if "resume" from saved weights
-   if (fResume)
-      {
-         std::cout << ".. resume" << std::endl;
-         //        std::tie (fNet, fWeights) = ReadWeights (fFileName);
-      }
-   else // initialize weights and net
-      {
-         size_t inputSize = GetNVariables (); //trainPattern.front ().input ().size ();
-         size_t outputSize = fAnalysisType == Types::kClassification ? 1 : GetNTargets (); //trainPattern.front ().output ().size ();
-         fNet.setInputSize (inputSize + 1); // num vars + bias node
-         fNet.setOutputSize (outputSize); // num vars + bias node
+       // create net and weights
+       fNet.clear ();
+       fWeights.clear ();
+
+       // if "resume" from saved weights
+       if (fResume)
+       {
+          std::cout << ".. resume" << std::endl;
+          //        std::tie (fNet, fWeights) = ReadWeights (fFileName);
+       }
+       else // initialize weights and net
+       {
+          size_t inputSize = GetNVariables (); //trainPattern.front ().input ().size ();
+          size_t outputSize = fAnalysisType == Types::kClassification ? 1 : GetNTargets (); //trainPattern.front ().output ().size ();
+          fNet.setInputSize (inputSize + 1); // num vars + bias node
+          fNet.setOutputSize (outputSize); // num vars + bias node
         
-         // configure neural net
-         auto itLayout = std::begin (fLayout), itLayoutEnd = std::end (fLayout)-1; // all layers except the last one
-         for ( ; itLayout != itLayoutEnd; ++itLayout)
-            {
-               fNet.addLayer (DNN::Layer ((*itLayout).first, (*itLayout).second)); 
-               Log() << kINFO 
-                     << "Add Layer with " << (*itLayout).first << " nodes." 
-                     << Endl;
-            }
+          // configure neural net
+          auto itLayout = std::begin (fLayout), itLayoutEnd = std::end (fLayout)-1; // all layers except the last one
+          for ( ; itLayout != itLayoutEnd; ++itLayout)
+          {
+             fNet.addLayer (DNN::Layer ((*itLayout).first, (*itLayout).second)); 
+             Log() << kINFO 
+                   << "Add Layer with " << (*itLayout).first << " nodes." 
+                   << Endl;
+          }
 
-         DNN::ModeOutputValues eModeOutputValues = DNN::ModeOutputValues::SIGMOID;
-         if (fAnalysisType == Types::kRegression)
-            {
-               eModeOutputValues = DNN::ModeOutputValues::DIRECT;
-            }
-         else if ((fAnalysisType == Types::kClassification ||
-                   fAnalysisType == Types::kMulticlass) &&
-                  fModeErrorFunction == TMVA::DNN::ModeErrorFunction::SUMOFSQUARES)
-            {
-               eModeOutputValues = DNN::ModeOutputValues::DIRECT;
-            }
-         fNet.addLayer (DNN::Layer (outputSize, (*itLayout).second, eModeOutputValues)); 
-         Log() << kINFO 
-               << "Add Layer with " << outputSize << " nodes." 
-               << Endl << Endl;
-         fNet.setErrorFunction (fModeErrorFunction); 
+          DNN::ModeOutputValues eModeOutputValues = DNN::ModeOutputValues::SIGMOID;
+          if (fAnalysisType == Types::kRegression)
+          {
+             eModeOutputValues = DNN::ModeOutputValues::DIRECT;
+          }
+          else if ((fAnalysisType == Types::kClassification ||
+                    fAnalysisType == Types::kMulticlass) &&
+                   fModeErrorFunction == TMVA::DNN::ModeErrorFunction::SUMOFSQUARES)
+          {
+             eModeOutputValues = DNN::ModeOutputValues::DIRECT;
+          }
+          fNet.addLayer (DNN::Layer (outputSize, (*itLayout).second, eModeOutputValues)); 
+          Log() << kINFO 
+                << "Add Layer with " << outputSize << " nodes." 
+                << Endl << Endl;
+          fNet.setErrorFunction (fModeErrorFunction); 
 
-         size_t numWeights = fNet.numWeights ();
-         Log() << kINFO 
-               << "Total number of Synapses = " 
-               << numWeights
-               << Endl;
+          size_t numWeights = fNet.numWeights ();
+          Log() << kINFO 
+                << "Total number of Synapses = " 
+                << numWeights
+                << Endl;
 
-         // initialize weights
-         fNet.initializeWeights (fWeightInitializationStrategy, 
-                                 std::back_inserter (fWeights));
-      }
+          // initialize weights
+          fNet.initializeWeights (fWeightInitializationStrategy, 
+                                  std::back_inserter (fWeights));
+       }
 
 
-   // loop through settings 
-   // and create "settings" and minimizer 
-   int idxSetting = 0;
-   for (auto itSettings = std::begin (fSettings), itSettingsEnd = std::end (fSettings); itSettings != itSettingsEnd; ++itSettings, ++idxSetting)
+       // loop through settings 
+       // and create "settings" and minimizer 
+       int idxSetting = 0;
+       for (auto itSettings = std::begin (fSettings), itSettingsEnd = std::end (fSettings); itSettings != itSettingsEnd; ++itSettings, ++idxSetting)
+       {
+          std::shared_ptr<TMVA::DNN::Settings> ptrSettings = *itSettings;
+          ptrSettings->setMonitoring (fMonitoring);
+          Log() << kINFO
+                << "Training with learning rate = " << ptrSettings->learningRate ()
+                << ", momentum = " << ptrSettings->momentum ()
+                << ", repetitions = " << ptrSettings->repetitions ()
+                << Endl;
+
+          ptrSettings->setProgressLimits ((idxSetting)*100.0/(fSettings.size ()), (idxSetting+1)*100.0/(fSettings.size ()));
+
+          const std::vector<double>& dropConfig = ptrSettings->dropFractions ();
+          if (!dropConfig.empty ())
+          {
+             Log () << kINFO << "Drop configuration" << Endl
+                    << "    drop repetitions = " << ptrSettings->dropRepetitions () << Endl;
+          }
+          int idx = 0;
+          for (auto f : dropConfig)
+          {
+             Log () << kINFO << "    Layer " << idx << " = " << f << Endl;
+             ++idx;
+          }
+          Log () << kINFO << Endl;
+        
+          if (ptrSettings->minimizerType () == TMVA::DNN::MinimizerType::fSteepest)
+          {
+             DNN::Steepest minimizer (ptrSettings->learningRate (), ptrSettings->momentum (), ptrSettings->repetitions ());
+             /*E =*/fNet.train (fWeights, trainPattern, testPattern, minimizer, *ptrSettings.get ());
+          }
+          ptrSettings.reset ();
+          Log () << kINFO << Endl;
+       }
+       fMonitoring = 0;
+    }
+}
+
+void TMVA::MethodDNN::TrainGPU()
+{
+
+#ifdef DNNCUDA // Included only if DNNCUDA flag is set.
+
+   TMVA::DNN::TNet<TMVA::DNN::TCuda> GPUNet{};
+
+   size_t inputSize = GetNVariables ();
+   size_t outputSize = (GetNTargets() == 0) ? 1 : GetNTargets();
+
+   GPUNet.SetInputWidth(inputSize);
+
+   // Also need to set standard net structure.
+   fNet.setInputSize (inputSize + 1);
+   fNet.setOutputSize (outputSize);
+
+   // configure neural net
+   auto itLayout = std::begin (fLayout), itLayoutEnd = std::end (fLayout)-1; // all layers except the last one
+   for ( ; itLayout != itLayoutEnd; ++itLayout)
+   {
+      fNet.addLayer (DNN::Layer ((*itLayout).first, (*itLayout).second)); 
+      TMVA::DNN::EnumFunction f = (*itLayout).second;
+      switch(f)
       {
+      case DNN::EnumFunction::RELU :
+          GPUNet.AddLayer((*itLayout).first, EActivationFunction::RELU);
+          break;
+      case DNN::EnumFunction::SYMMRELU :
+          GPUNet.AddLayer((*itLayout).first, EActivationFunction::SYMMRELU);
+          break;
+      case DNN::EnumFunction::SOFTSIGN :
+          GPUNet.AddLayer((*itLayout).first, EActivationFunction::SOFTSIGN);
+          break;
+      case DNN::EnumFunction::SIGMOID :
+          GPUNet.AddLayer((*itLayout).first, EActivationFunction::SIGMOID);
+          break;
+      case DNN::EnumFunction::LINEAR :
+          GPUNet.AddLayer((*itLayout).first, EActivationFunction::IDENTITY);
+          break;
+      case DNN::EnumFunction::GAUSS :
+          GPUNet.AddLayer((*itLayout).first, EActivationFunction::GAUSS);
+          break;
+      default :
+          GPUNet.AddLayer((*itLayout).first, EActivationFunction::IDENTITY);
+          break;
+      }
+   }
+
+   DNN::ModeOutputValues eModeOutputValues = DNN::ModeOutputValues::SIGMOID;
+   if (fAnalysisType == Types::kRegression)
+   {
+      eModeOutputValues = DNN::ModeOutputValues::DIRECT;
+      GPUNet.AddLayer(outputSize, EActivationFunction::IDENTITY);
+      GPUNet.SetLossFunction(ELossFunction::MEANSQUAREDERROR);
+   } else if ((fAnalysisType == Types::kClassification ||
+               fAnalysisType == Types::kMulticlass) &&
+              fModeErrorFunction == TMVA::DNN::ModeErrorFunction::SUMOFSQUARES) {
+      GPUNet.AddLayer(outputSize, EActivationFunction::IDENTITY);
+      GPUNet.SetLossFunction(ELossFunction::MEANSQUAREDERROR);
+   } else {
+      eModeOutputValues = DNN::ModeOutputValues::DIRECT;
+      GPUNet.AddLayer(outputSize, EActivationFunction::IDENTITY);
+      GPUNet.SetLossFunction(ELossFunction::CROSSENTROPY);
+   }
+
+   fNet.addLayer (DNN::Layer (outputSize, (*itLayout).second, eModeOutputValues));
+   fNet.setErrorFunction (fModeErrorFunction);
+
+   GPUNet.Print();
+
+   switch(fWeightInitializationStrategy)
+   {
+   case DNN::WeightInitializationStrategy::XAVIER :
+       GPUNet.Initialize(EInitialization::GAUSS);
+       break;
+   case DNN::WeightInitializationStrategy::XAVIERUNIFORM:
+       GPUNet.Initialize(EInitialization::UNIFORM);
+       break;
+   default :
+       GPUNet.Initialize(EInitialization::GAUSS);
+       break;
+   }
+
+   size_t nTrainingSamples = GetEventCollection(Types::kTraining).size();
+   size_t nTestSamples     = GetEventCollection(Types::kTesting).size();
+
+   int idxSetting = 0;
+   for (auto itSettings = std::begin (fSettings), itSettingsEnd = std::end (fSettings);
+        itSettings != itSettingsEnd; ++itSettings, ++idxSetting)
+      {
+
          std::shared_ptr<TMVA::DNN::Settings> ptrSettings = *itSettings;
          ptrSettings->setMonitoring (fMonitoring);
+
          Log() << kINFO
-               << "Training with learning rate = " << ptrSettings->learningRate ()
+               << "Training on GPU with learning rate = "
+               << ptrSettings->learningRate ()
                << ", momentum = " << ptrSettings->momentum ()
                << ", repetitions = " << ptrSettings->repetitions ()
                << Endl;
 
-         ptrSettings->setProgressLimits ((idxSetting)*100.0/(fSettings.size ()), (idxSetting+1)*100.0/(fSettings.size ()));
+         ptrSettings->setProgressLimits ((idxSetting)*100.0/(fSettings.size ()),
+                                         (idxSetting+1)*100.0/(fSettings.size ()));
 
          const std::vector<double>& dropConfig = ptrSettings->dropFractions ();
          if (!dropConfig.empty ())
-            {
-               Log () << kINFO << "Drop configuration" << Endl
-                      << "    drop repetitions = " << ptrSettings->dropRepetitions () << Endl;
-            }
+         {
+            Log () << kINFO << "Drop configuration" << Endl
+                   << "    drop repetitions = "
+                   << ptrSettings->dropRepetitions () << Endl;
+         }
+
+         auto trainNet = GPUNet.CreateClone(ptrSettings->batchSize());
          int idx = 0;
          for (auto f : dropConfig)
-            {
-               Log () << kINFO << "    Layer " << idx << " = " << f << Endl;
-               ++idx;
-            }
+         {
+            Log () << kINFO << "    Layer " << idx << " = " << f << Endl;
+            trainNet.GetLayer(idx).SetDropoutProbability(f);
+            ++idx;
+         }
          Log () << kINFO << Endl;
-        
-         if (ptrSettings->minimizerType () == TMVA::DNN::MinimizerType::fSteepest)
-            {
-               DNN::Steepest minimizer (ptrSettings->learningRate (), ptrSettings->momentum (), ptrSettings->repetitions ());
-               /*E =*/fNet.train (fWeights, trainPattern, testPattern, minimizer, *ptrSettings.get ());
+
+         std::cout << "train samples: " << nTrainingSamples << std::endl;
+         using DataLoader_t = typename DNN::TCuda::DataLoader_t<DNN::TMVAInput_t>;
+         DataLoader_t trainingData(GetEventCollection(Types::kTraining),
+                                   nTrainingSamples,
+                                   trainNet.GetBatchSize(),
+                                   trainNet.GetInputWidth(),
+                                   trainNet.GetOutputWidth());
+
+         DataLoader_t testData(GetEventCollection(Types::kTesting),
+                               nTestSamples,
+                               nTestSamples,
+                               trainNet.GetInputWidth(),
+                               trainNet.GetOutputWidth());
+         auto testNet   = GPUNet.CreateClone(testData.GetBatchSize());
+         DNN::TGradientDescent<DNN::TCuda> minimizer{};
+
+         minimizer.Reset();
+         minimizer.SetLearningRate(ptrSettings->learningRate());
+         minimizer.SetTestInterval(ptrSettings->testRepetitions());
+         minimizer.SetConvergenceSteps(ptrSettings->convergenceSteps());
+
+         bool converged = false;
+         size_t stepCount = 0;
+
+         while (!converged)
+         {
+            // Perform minimization steps for a full epoch.
+            if ((stepCount % minimizer.GetTestInterval()) != 0) {
+               for (auto batch : trainingData) {
+                  auto inputMatrix  = batch.GetInput();
+                  auto outputMatrix = batch.GetOutput();
+                  minimizer.StepReducedWeights(trainNet, inputMatrix, outputMatrix);
+               }
+            } else {
+               Double_t trainingError = 0.0;
+               for (auto batch : trainingData) {
+                  auto inputMatrix  = batch.GetInput();
+                  auto outputMatrix = batch.GetOutput();
+                  trainingError += minimizer.StepReducedWeights(
+                      trainNet,
+                      inputMatrix,
+                      outputMatrix);
+               }
+               trainingError /= (Double_t) trainingData.GetNBatchesInEpoch();
+
+               auto testBatch  = *testData.begin();
+               auto testInput  = testBatch.GetInput();
+               auto testOutput = testBatch.GetOutput();
+               minimizer.TestError(testNet, testInput, testOutput);
+
+               TString convText = Form("(train/test/epo/conv/maxco): %.3g/%.3g/%d/%d",
+                                       trainingError,
+                                       minimizer.GetTestError(),
+                                       (int) stepCount,
+                                       (int) minimizer.GetConvergenceCount ());
+               std::cout << convText << std::endl;
+               converged = minimizer.HasConverged();
             }
          ptrSettings.reset ();
          Log () << kINFO << Endl;
+         }
+         fMonitoring = 0;
       }
-   fMonitoring = 0;
+   fWeights.clear();
+
+   size_t weightIndex = 0;
+   size_t prevLayerWidth = GPUNet.GetInputWidth();
+
+   for (size_t l = 0; l < GPUNet.GetDepth(); l++) {
+      auto &layer = GPUNet.GetLayer(l);
+      size_t layerWidth = layer.GetWidth();
+      size_t layerSize = prevLayerWidth * layerWidth;
+      fWeights.reserve(fWeights.size() + layerSize);
+      TMatrixT<Double_t> Weights(layer.GetWeights());
+
+      for (size_t j = 0; j < (size_t) Weights.GetNcols(); j++) {
+         for (size_t i = 0; i < (size_t) Weights.GetNrows(); i++) {
+            fWeights.push_back(Weights(i,j));
+         }
+      }
+
+      Weights.Print();
+
+      if (l == 0) {
+         fWeights.reserve(fWeights.size() + layerWidth);
+         TMatrixT<Double_t> theta(layer.GetBiases());
+         for (size_t i = 0; i < layerWidth; i++) {
+             fWeights.push_back(theta(i,0));
+         }
+      }
+      prevLayerWidth = layerWidth;
+   }
+
+#else // DNNCUDA flag not set.
+
+   Log() << kFATAL << "CUDA backend not enabled. Please make sure "
+                      "you have CUDA installed and it was successfully "
+                      "detected by CMAKE." << Endl;
+#endif // DNNCUDA
 }
-
-
-
-
 
 //_______________________________________________________________________
 Double_t TMVA::MethodDNN::GetMvaValue( Double_t* /*errLower*/, Double_t* /*errUpper*/ )
