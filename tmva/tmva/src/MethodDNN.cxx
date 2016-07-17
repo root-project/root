@@ -728,8 +728,6 @@ void TMVA::MethodDNN::TrainGPU()
    fNet.addLayer (DNN::Layer (outputSize, (*itLayout).second, eModeOutputValues));
    fNet.setErrorFunction (fModeErrorFunction);
 
-   GPUNet.Print();
-
    switch(fWeightInitializationStrategy)
    {
    case DNN::WeightInitializationStrategy::XAVIER :
