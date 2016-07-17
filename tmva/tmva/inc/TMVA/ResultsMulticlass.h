@@ -72,7 +72,8 @@ namespace TMVA {
       // setters
       void     SetValue( std::vector<Float_t>& value, Int_t ievt );
       void     Resize( Int_t entries )  { fMultiClassValues.resize( entries ); }
-      void     Clear()                  { fMultiClassValues.clear(); }
+      using TObject::Clear;
+      virtual void     Clear(Option_t *)  { fMultiClassValues.clear(); }
 
       // getters
       Long64_t GetSize() const        { return fMultiClassValues.size(); }
@@ -99,6 +100,10 @@ namespace TMVA {
       std::vector<Float_t> fAchievableEff;
       std::vector<Float_t> fAchievablePur;
       std::vector<std::vector<Double_t> > fBestCuts;
+   protected:
+       
+       ClassDef(ResultsMulticlass,2);
+
    }; 
 
 }

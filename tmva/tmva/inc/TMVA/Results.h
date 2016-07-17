@@ -60,7 +60,7 @@ namespace TMVA {
    class DataSet;
    class MsgLogger;
 
-   class Results {
+   class Results:public TObject {
 
    public:
 
@@ -85,7 +85,8 @@ namespace TMVA {
       Bool_t              DoesExist(const TString & alias) const;
 
       // delete all stored data
-      void Delete();
+//       using TObject::Delete;
+      virtual void Delete(Option_t *option="");
 
       virtual const std::vector< Float_t >&  operator [] ( Int_t ievt ) const = 0;
 
@@ -96,6 +97,10 @@ namespace TMVA {
       std::map<TString, TObject*>* fHistAlias;   //! internal map for quick access to stored histograms
       mutable MsgLogger*           fLogger;   // message logger
       MsgLogger& Log() const { return *fLogger; }    
+   protected:
+       
+       ClassDef(Results,1);
+       
    };
 }
 

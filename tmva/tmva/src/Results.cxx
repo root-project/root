@@ -36,6 +36,8 @@
 
 #include <vector>
 
+ClassImp(TMVA::Results)
+
 namespace TMVA {
    class DataSetInfo;
 }
@@ -136,7 +138,7 @@ TGraph* TMVA::Results::GetGraph(const TString & alias) const
 ////////////////////////////////////////////////////////////////////////////////
 /// delete all stored histograms
 
-void TMVA::Results::Delete()
+void TMVA::Results::Delete(Option_t *)
 {
    fStorage->Delete();
    fHistAlias->clear();

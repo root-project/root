@@ -12,6 +12,12 @@
 #pragma link C++ class TMVA::Event+;
 #pragma link C++ class TMVA::kNN::Event+;
 #pragma link C++ class TMVA::Factory+;
+
+//required to enable serialization on DataLoader for paralellism.
+#pragma link C++ class TMVA::Results+;
+#pragma link C++ class TMVA::ResultsClassification+;
+#pragma link C++ class TMVA::ResultsMulticlass+;
+#pragma link C++ class TMVA::ResultsRegression+;
 #pragma link C++ class TMVA::DataLoader+;
 #pragma link C++ class TMVA::TreeInfo+;
 #pragma link C++ class TMVA::DataInputHandler+;

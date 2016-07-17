@@ -2170,7 +2170,7 @@ float TMVA::Factory::CrossValidate(DataLoader * loader, Types::EMVA theMethod, T
       
          TMVA::MethodBase * smethod = dynamic_cast<TMVA::MethodBase*>(fMethodsMap[seedloader->GetName()][0][0]);
          TMVA::ResultsClassification * sresults = (TMVA::ResultsClassification*)smethod->Data()->GetResults(smethod->GetMethodName(), Types::kTesting, Types::kClassification);
-         sresults->Clear();
+         sresults->Clear("");
          sresults->Delete();
          delete sresults;
          fgTargetFile->cd();
