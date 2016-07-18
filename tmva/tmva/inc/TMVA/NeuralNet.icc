@@ -89,9 +89,9 @@ namespace TMVA
  *
  * itDrop correlates with itSourceBegin 
  */
-        template <typename ItSource, typename ItWeight, typename ItTarget, typename ItDrop>
+        template <typename ItSource, typename ItTarget, typename ItDrop>
             void applyWeights (ItSource itSourceBegin, ItSource itSourceEnd,
-                               int weightIndex, std::vector<double>& weightBucket,
+                               int itWeight, std::vector<double>& weightBucket,
                                ItTarget itTargetBegin, ItTarget itTargetEnd,
                                ItDrop itDrop)
         {
@@ -100,8 +100,8 @@ namespace TMVA
                 for (auto itTarget = itTargetBegin; itTarget != itTargetEnd; ++itTarget)
                 {
                     if (*itDrop)
-                        (*itTarget) += (*itSource) * (weightBucket[XXH32(seed, weightIndex) % BUCKET_SIZE]);
-                    ++weightIndex;
+                        (*itTarget) += (*itSource) * (weightBucket[XXH32(seed, itWeight) % BUCKET_SIZE]);
+                    ++itWeight;
                 }
                 ++itDrop;        
             }
@@ -113,17 +113,17 @@ namespace TMVA
  *
  * 
  */
-        template <typename ItSource, typename ItWeight, typename ItTarget>
+        template <typename ItSource, typename ItTarget>
             void applyWeights (ItSource itSourceBegin, ItSource itSourceEnd,
-                               int weightIndex, std::vector<double>& weightBucket,
+                               int itWeight, std::vector<double>& weightBucket,
                                ItTarget itTargetBegin, ItTarget itTargetEnd)
         {
             for (auto itSource = itSourceBegin; itSource != itSourceEnd; ++itSource)
             {
                 for (auto itTarget = itTargetBegin; itTarget != itTargetEnd; ++itTarget)
                 {
-                    (*itTarget) += (*itSource) * (weightBucket[XXH32(seed, weightIndex) % BUCKET_SIZE]);
-                    ++weightIndex;
+                    (*itTarget) += (*itSource) * (weightBucket[XXH32(seed, itWeight) % BUCKET_SIZE]);
+                    ++itWeight;
                 }
             }
         }
@@ -135,17 +135,17 @@ namespace TMVA
  *
  * 
  */
-        template <typename ItSource, typename ItWeight, typename ItPrev>
+        template <typename ItSource, typename ItPrev>
             void applyWeightsBackwards (ItSource itCurrBegin, ItSource itCurrEnd,
-                                        int weightIndex, std::vector<double>& weightBucket,
+                                        int itWeight, std::vector<double>& weightBucket,
                                         ItPrev itPrevBegin, ItPrev itPrevEnd)
         {
             for (auto itPrev = itPrevBegin; itPrev != itPrevEnd; ++itPrev)
             {
                 for (auto itCurr = itCurrBegin; itCurr != itCurrEnd; ++itCurr)
                 {
-                    (*itPrev) += (*itCurr) * (weightBucket[XXH32(seed, weightIndex) % BUCKET_SIZE]);
-                    ++weightIndex;
+                    (*itPrev) += (*itCurr) * (weightBucket[XXH32(seed, itWeight) % BUCKET_SIZE]);
+                    ++itWeight;
                 }
             }
         }
@@ -156,9 +156,9 @@ namespace TMVA
  *
  * itDrop correlates with itPrev (to be in agreement with "applyWeights" where it correlates with itSources (same node as itTarget here in applyBackwards)
  */
-        template <typename ItSource, typename ItWeight, typename ItPrev, typename ItDrop>
+        template <typename ItSource, typename ItPrev, typename ItDrop>
             void applyWeightsBackwards (ItSource itCurrBegin, ItSource itCurrEnd,
-                                        int weightIndex, std::vector<double>& weightBucket,
+                                        int itWeight, std::vector<double>& weightBucket,
                                         ItPrev itPrevBegin, ItPrev itPrevEnd,
                                         ItDrop itDrop)
         {
@@ -167,8 +167,8 @@ namespace TMVA
                 for (auto itCurr = itCurrBegin; itCurr != itCurrEnd; ++itCurr)
                 {
                     if (*itDrop)
-                        (*itPrev) += (*itCurr) * (weightBucket[XXH32(seed, weightIndex) % BUCKET_SIZE]);
-                    ++weightIndex; 
+                        (*itPrev) += (*itCurr) * (weightBucket[XXH32(seed, itWeight) % BUCKET_SIZE]);
+                    ++itWeight; 
                 }
                 ++itDrop;
             }
@@ -200,16 +200,16 @@ namespace TMVA
  *
  * 
  */
-        template <typename ItValue, typename Fnc, typename InvFnc, typename ItGradient>
-            void applyFunctions (ItValue itValue, ItValue itValueEnd, Fnc fnc, InvFnc invFnc, ItGradient itGradient)
+        template <typename ItValue, typename Fnc, typename InvFnc>
+            void applyFunctions (ItValue itValue, ItValue itValueEnd, Fnc fnc, InvFnc invFnc, int itGradient, std::vector<double>& gradientBucket)
         {
             while (itValue != itValueEnd)
             {
                 auto& value = (*itValue);
                 value = (*fnc.get ()) (value);
-                (*itGradient) = (*invFnc.get ()) (value);
+                (gradientBucket[XXH32(seed, itGradient) % BUCKET_SIZE]) = (*invFnc.get ()) (value);
         
-                ++itValue; ++itGradient;
+                ++itValue; ++gradientIndex;
             }
         }
 
@@ -221,17 +221,18 @@ namespace TMVA
  */
         template <typename ItSource, typename ItDelta, typename ItTargetGradient, typename ItGradient>
             void update (ItSource itSource, ItSource itSourceEnd, 
-                         ItDelta itTargetDeltaBegin, ItDelta itTargetDeltaEnd, 
-                         ItTargetGradient itTargetGradientBegin, 
-                         ItGradient itGradient)
+                         int itTargetDeltaBegin, int itTargetDeltaEnd, 
+                         int itTargetGradientBegin, 
+                         int itGradient,
+                         std::vector<double>& gradientBucket)
         {
             while (itSource != itSourceEnd)
             {
-                auto itTargetDelta = itTargetDeltaBegin;
-                auto itTargetGradient = itTargetGradientBegin;
-                while (itTargetDelta != itTargetDeltaEnd)
+                int itTargetDelta = itTargetDeltaBegin;
+                int itTargetGradient = itTargetGradientBegin;
+                while (targetDeltaIndex != targetDeltaEnd)
                 {
-                    (*itGradient) += - (*itTargetDelta) * (*itSource) * (*itTargetGradient);
+                    (gradientBucket[XXH32(seed, itGradient) % BUCKET_SIZE]) += - (gradientBucket[XXH32(seed, itTargetDelta) % BUCKET_SIZE]) * (*itSource) * (gradientBucket[XXH32(seed, itTargetGradient) % BUCKET_SIZE]);
                     ++itTargetDelta; ++itTargetGradient; ++itGradient;
                 }
                 ++itSource; 
@@ -278,7 +279,7 @@ namespace TMVA
                          ItDelta itTargetDeltaBegin, ItDelta itTargetDeltaEnd, 
                          ItTargetGradient itTargetGradientBegin, 
                          ItGradient itGradient, 
-                         int weightIndex, std::vector<double>& weightBucket, double weightDecay)
+                         int itWeight, std::vector<double>& weightBucket, double weightDecay)
         {
             // ! the factor weightDecay has to be already scaled by 1/n where n is the number of weights
             while (itSource != itSourceEnd)
@@ -287,8 +288,8 @@ namespace TMVA
                 auto itTargetGradient = itTargetGradientBegin;
                 while (itTargetDelta != itTargetDeltaEnd)
                 {
-                    (*itGradient) -= + (*itTargetDelta) * (*itSource) * (*itTargetGradient) + computeRegularization<Regularization>(weightBucket[XXH32(seed, weightIndex) % BUCKET_SIZE],weightDecay);
-                    ++itTargetDelta; ++itTargetGradient; ++itGradient; ++weightIndex;
+                    (*itGradient) -= + (*itTargetDelta) * (*itSource) * (*itTargetGradient) + computeRegularization<Regularization>(weightBucket[XXH32(seed, itWeight) % BUCKET_SIZE],weightDecay);
+                    ++itTargetDelta; ++itTargetGradient; ++itGradient; ++itWeight;
                 }
                 ++itSource; 
             }
@@ -307,7 +308,7 @@ namespace TMVA
  *
  * Can be used with multithreading (i.e. "HogWild!" style); see call in trainCycle
  */
-        template <typename Function, typename Weights, typename PassThrough>
+        template <typename Function, typename PassThrough>
             double Steepest::operator() (Function& fitnessFunction, int currLayerWeightIndex, int nextLayerWeightIndex, std::vector<double>& weightBucket, PassThrough& passThrough) 
         {
             size_t numWeights = nextLayerWeightIndex - currLayerWeightIndex + 1;
@@ -318,7 +319,7 @@ namespace TMVA
             if (m_prevGradients.size () != numWeights)
             {
                 m_prevGradients.clear ();
-                m_prevGradients.assign (nextLayerWeightIndex - currLayerWeightIndex + 1, 0);
+                m_prevGradients.assign (numWeights, 0);
             }
 
             bool success = true;
@@ -334,15 +335,15 @@ namespace TMVA
                 // apply momentum before computing the new gradient
                 auto itPrevG = begin (m_prevGradients);
                 auto itPrevGEnd = end (m_prevGradients);
-                int locWeightIndex = currLayerWeightIndex;
+                int itLocWeight = currLayerWeightIndex;
                 for (; itPrevG != itPrevGEnd; ++itPrevG)
                 {
                     (*itPrevG) *= m_beta;
-                    (localWeightBucket[XXH32(seed, locWeightIndex) % BUCKET_SIZE]) += (*itPrevG);
-                    ++locWeightIndex;
+                    (localWeightBucket[XXH32(seed, itLocWeight) % BUCKET_SIZE]) += (*itPrevG);
+                    ++itLocWeight;
                 }
 
-                E = fitnessFunction (passThrough, localWeights, gradients);
+                E = fitnessFunction (passThrough, localWeights, gradients);  //************** Edit this later ***************
 //            plotGradients (gradients);
 
                 double alpha = gaussDouble (m_alpha, m_alpha/2.0);
@@ -371,7 +372,7 @@ namespace TMVA
                 {
                     m_alpha /= 2;
                     std::cout << "\nlearning rate reduced to " << m_alpha << std::endl;
-                    std::for_each (weights.begin (), weights.end (), [maxGrad](double& w)
+                    std::for_each (weights.begin(), weights.end(), [maxGrad](double& w)     //************ Edit this later ***************
                                    {
                                        w /= maxGrad;
                                    });
@@ -379,11 +380,11 @@ namespace TMVA
                 }
                 else
                 {
-                    int weightIndex = currLayerWeightIndex;
-                    std::for_each (std::begin (gradients), std::end (gradients), [&weightIndex](double& g)
+                    int itWeight = currLayerWeightIndex;
+                    std::for_each (std::begin (gradients), std::end (gradients), [&itWeight](double& g)
                                    {
-                                       weightBucket[XXH32(seed, weightIndex) % BUCKET_SIZE] += g;
-                                       ++weightIndex;
+                                       weightBucket[XXH32(seed, itWeight) % BUCKET_SIZE] += g;
+                                       ++itWeight;
                                    });
                 }
 
@@ -537,10 +538,10 @@ namespace TMVA
                 // weight decay (regularization)
                 double w = 0;
                 size_t n = 0;
-                int weightIndex;
-                for (weightIndex = currLayerWeightIndex; weightIndex != nextLayerWeightIndex; ++weightIndex, ++n)
+                int itWeight;
+                for (itWeight = currLayerWeightIndex; itWeight != nextLayerWeightIndex; ++itWeight, ++n)
                 {
-                    double weight = (weightBucket[XXH32(seed, weightIndex) % BUCKET_SIZE]);
+                    double weight = (weightBucket[XXH32(seed, itWeight) % BUCKET_SIZE]);
                     w += std::fabs (weight);
                 }
                 return error + 0.5 * w * factorWeightDecay / n;
@@ -550,9 +551,9 @@ namespace TMVA
                 // weight decay (regularization)
                 double w = 0;
                 size_t n = 0;
-                for (weightIndex = currLayerWeightIndex; weightIndex != nextLayerWeightIndex; ++weightIndex, ++n)
+                for (itWeight = currLayerWeightIndex; itWeight != nextLayerWeightIndex; ++itWeight, ++n)
                 {
-                    double weight = (weightBucket[XXH32(seed, weightIndex) % BUCKET_SIZE]);
+                    double weight = (weightBucket[XXH32(seed, itWeight) % BUCKET_SIZE]);
                     w += weight*weight;
                 }
                 return error + 0.5 * w * factorWeightDecay / n;
@@ -570,7 +571,7 @@ namespace TMVA
 
 
 
-
+// ********* Edit this later ***************
 
 
 
@@ -707,7 +708,7 @@ namespace TMVA
             if (drops.empty () || weights.empty ()) //Edit this later. *****************
                 return;
 
-            int weightIndex = currLayerWeightIndex;
+            int itWeight = currLayerWeightIndex;
             auto itDrop = std::begin (drops);
             auto itDropEnd = std::end (drops);
             size_t numNodesPrev = inputSize ();
@@ -733,11 +734,11 @@ namespace TMVA
                 size_t _numWeights = layer.numWeights (numNodesPrev);
                 for (size_t iWeight = 0; iWeight < _numWeights; ++iWeight)
                 {
-                    if (weightIndex == nextLayerWeightIndex)
+                    if (itWeight == nextLayerWeightIndex)
                         break;
                 
-                    *(weightBucket[XXH32(seed, weightIndex) % BUCKET_SIZE]) *= p;
-                    ++weightIndex;
+                    *(weightBucket[XXH32(seed, itWeight) % BUCKET_SIZE]) *= p;
+                    ++itWeight;
                 }
                 numNodesPrev = numNodes;
                 dropFractionPrev = dropFraction;
