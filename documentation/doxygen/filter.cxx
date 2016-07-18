@@ -298,11 +298,12 @@ void FilterTutorial()
          m = fopen(StringFormat("%s/macros/%s",gOutDir.c_str(),gMacroName.c_str()).c_str(), "w");
          ReplaceAll(gLineString, "\\macro_code", StringFormat("\\include %s",gMacroName.c_str()));
       }
-      
+
       // notebook found
       if (gLineString.find("\\notebook") != string::npos) {
          ExecuteCommand(StringFormat("python converttonotebook.py %s %s/notebooks/",
                                           gFileName.c_str(), gOutDir.c_str()));
+         ReplaceAll(gLineString, "\\notebook", StringFormat( "\\htmlonly View this tutorial in notebook format in <a href=\"http://nbviewer.jupyter.org/url/root.cern.ch/doc/master/notebooks/%s.nbconvert.ipynb\"> <img src=\"nbviewer.gif\" alt=\"nbviewer.gif\" align=\"middle\"style=\"width:118px;height:36px;\"> </a> or in <a href=\"../notebooks/%s.html\">html</a>.  \\endhtmlonly", gMacroName.c_str(), gMacroName.c_str()));
       }
       // \macro_output found
       if (gLineString.find("\\macro_output") != string::npos) {

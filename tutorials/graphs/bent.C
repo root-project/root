@@ -1,8 +1,8 @@
-/// \notebook
 /// \file
 /// \ingroup tutorial_graphs
 /// Bent error bars
 ///
+/// \notebook
 /// \macro_image
 /// \macro_code
 ///

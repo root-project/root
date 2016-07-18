@@ -1,7 +1,8 @@
-/// \notebook
 /// \file
 /// \ingroup tutorial_graphs
 /// Macro to test interpolation function Approx
+///
+/// \notebook
 ///
 /// \macro_image
 /// \macro_code
