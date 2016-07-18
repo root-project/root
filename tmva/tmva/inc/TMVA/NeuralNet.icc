@@ -760,7 +760,7 @@ namespace TMVA
  * \param settings the settings for the training (e.g. multithreading or not, regularization etc.)
  */
         template <typename Minimizer>
-            double Net::train (std::vector<double>& weightBucket, 
+            double Net::train (int currLayerWeightIndex, int nextLayerWeightIndex, std::vector<double>& weightBucket, 
                                std::vector<Pattern>& trainPattern, 
                                const std::vector<Pattern>& testPattern, 
                                Minimizer& minimizer, Settings& settings)
@@ -815,7 +815,7 @@ namespace TMVA
                 }
 
                 // execute training cycle
-                trainError = trainCycle (minimizer, weights, begin (trainPattern), end (trainPattern), settings, dropContainer);
+                trainError = trainCycle (minimizer, weights, begin (trainPattern), end (trainPattern), settings, dropContainer); // *********** Edit this after trainCycle() ***********
 	    
 
                 // check if we execute a test
@@ -824,7 +824,7 @@ namespace TMVA
                 {
                     if (isWeightsForDrop)
                     {
-                        dropOutWeightFactor (weightBucket, dropFractions);
+                        dropOutWeightFactor (currLayerWeightIndex, nextLayerWeightIndex, weightBucket, dropFractions, false);
                         isWeightsForDrop = false;
                     }
 
@@ -854,7 +854,7 @@ namespace TMVA
                                             {
                                                 std::vector<double> localOutput;
                                                 std::tuple<Settings&, Batch&, DropContainer&> passThrough (settings, batch, dropContainerTest);
-                                                double testBatchError = (*this) (passThrough, weights, ModeOutput::FETCH, localOutput);
+                                                double testBatchError = (*this) (passThrough, weights, ModeOutput::FETCH, localOutput);  // *********** Edit this after trainCycle() *********** 
                                                 return std::make_tuple (testBatchError, localOutput);
                                             })
                                 );
@@ -870,7 +870,7 @@ namespace TMVA
                                 auto it = begin (testPattern);
                                 for (double out : output)
                                 {
-                                    settings.testSample (0, out, (*it).output ().at (0), (*it).weight ());
+                                    settings.testSample (0, out, (*it).output ().at (0), (*it).weight ()); //*********** Edit this later ***********
                                     ++it;
                                 }
                             }
@@ -883,11 +883,11 @@ namespace TMVA
                         for (auto it = begin (testPattern), itEnd = end (testPattern); it != itEnd; ++it)
                         {
                             const Pattern& p = (*it);
-                            double weight = p.weight ();
+                            double weight = p.weight (); //*********** Edit this after trainCycle() ***********
                             Batch batch (it, it+1);
                             output.clear ();
                             std::tuple<Settings&, Batch&, DropContainer&> passThrough (settings, batch, dropContainerTest);
-                            double testPatternError = (*this) (passThrough, weightBucket, ModeOutput::FETCH, output);
+                            double testPatternError = (*this) (passThrough, weightBucket, ModeOutput::FETCH, output); // *********** Edit this after trainCycle() ***********
                             if (output.size () == 1)
                             {
                                 /* std::vector<double> out = (*this).compute (p.input (), weightBucket); */
@@ -908,7 +908,7 @@ namespace TMVA
                     hasConverged = settings.hasConverged (testError);
                     if (!hasConverged && !isWeightsForDrop)
                     {
-                        dropOutWeightFactor (weightBucket, dropFractions, true); // inverse
+                        dropOutWeightFactor (currLayerWeightIndex, nextLayerWeightIndex, weightBucket, dropFractions, true); // inverse
                         isWeightsForDrop = true;
                     }
                 }
