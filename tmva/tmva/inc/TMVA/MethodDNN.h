@@ -59,7 +59,10 @@
 
 #include "TMVA/DNN/Net.h"
 #include "TMVA/DNN/Minimizers.h"
+
+#ifdef DNNCUDA
 #include "TMVA/DNN/Architectures/Cuda.h"
+#endif
 
 
 namespace TMVA {
