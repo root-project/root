@@ -2047,7 +2047,7 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
          cling::MetaProcessor::MaybeRedirectOutputRAII RAII(fMetaProcessor);
 
          // Turn off autoparsing if this is an include directive
-         bool isInclusionDirective = sLine.Contains("\n#include");
+         bool isInclusionDirective = sLine.Contains("\n#include") || sLine.BeginsWith("#include");
          if (isInclusionDirective) {
             SuspendAutoParsing autoParseRaii(this);
             indent = HandleInterpreterException(fMetaProcessor, sLine, compRes, &result);
@@ -2721,6 +2721,8 @@ void TCling::UpdateListOfLoadedSharedLibraries()
       LinkMap_t* linkMap = (LinkMap_t*) ((PointerNo4_t*)procLinkMap->fPtr)->fPtr;
       RegisterLoadedSharedLibrary(linkMap->fName);
       fPrevLoadedDynLibInfo = linkMap;
+      // reduce use count of link map structure:
+      dlclose(procLinkMap);
    }
 
    LinkMap_t* iDyLib = (LinkMap_t*)fPrevLoadedDynLibInfo;
@@ -6353,6 +6355,15 @@ TInterpreterValue *TCling::CreateTemporary()
 {
    TClingValue *val = new TClingValue;
    return val;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// The call to Cling's tab complition.
+
+void TCling::CodeComplete(const std::string& line, size_t& cursor,
+                          std::vector<std::string>& completions)
+{
+   fInterpreter->codeComplete(line, cursor, completions);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

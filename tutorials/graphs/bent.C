@@ -1,3 +1,4 @@
+/// \notebook
 /// \file
 /// \ingroup tutorial_graphs
 /// Bent error bars

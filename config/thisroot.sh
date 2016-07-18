@@ -77,6 +77,11 @@ if [ -n "${old_rootsys}" ] ; then
       drop_from_path $CMAKE_PREFIX_PATH ${old_rootsys}
       CMAKE_PREFIX_PATH=$newpath
    fi
+   if [ -n "${JUPYTER_PATH}" ]; then
+      drop_from_path $JUPYTER_PATH ${old_rootsys}/etc/notebook
+      JUPYTER_PATH=$newpath
+   fi
+
 fi
 
 if [ -z "${MANPATH}" ]; then
@@ -136,6 +141,11 @@ else
    CMAKE_PREFIX_PATH=$ROOTSYS:$CMAKE_PREFIX_PATH; export CMAKE_PREFIX_PATH
 fi
 
+if [ -z "${JUPYTER_PATH}" ]; then
+   JUPYTER_PATH=$ROOTSYS/etc/notebook; export JUPYTER_PATH       # Linux, ELF HP-UX
+else
+   JUPYTER_PATH=$ROOTSYS/etc/notebook:$JUPYTER_PATH; export JUPYTER_PATH
+fi
 
 if [ "x`root-config --arch | grep -v win32gcc | grep -i win32`" != "x" ]; then
   ROOTSYS="`cygpath -w $ROOTSYS`"

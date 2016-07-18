@@ -11,8 +11,8 @@
 #include "ClingUtils.h"
 
 #include "cling-compiledata.h"
-#include "ASTImportSource.h"
 #include "DynamicLookup.h"
+#include "ExternalInterpreterSource.h"
 #include "ForwardDeclPrinter.h"
 #include "IncrementalExecutor.h"
 #include "IncrementalParser.h"
@@ -21,6 +21,7 @@
 
 #include "cling/Interpreter/CIFactory.h"
 #include "cling/Interpreter/ClangInternalState.h"
+#include "cling/Interpreter/ClingCodeCompleteConsumer.h"
 #include "cling/Interpreter/CompilationOptions.h"
 #include "cling/Interpreter/DynamicLibraryManager.h"
 #include "cling/Interpreter/LookupHelper.h"
@@ -237,7 +238,7 @@ namespace cling {
   ///\brief Constructor for the child Interpreter.
   /// Passing the parent Interpreter as an argument.
   ///
-  Interpreter::Interpreter(Interpreter &parentInterpreter, int argc,
+  Interpreter::Interpreter(const Interpreter &parentInterpreter, int argc,
                            const char* const *argv,
                            const char* llvmdir /*= 0*/, bool noRuntime) :
     Interpreter(argc, argv, llvmdir, noRuntime, /* isChildInterp */ true) {
@@ -245,8 +246,8 @@ namespace cling {
     // its parent interpreter.
 
     // The "bridge" between the interpreters.
-    ASTImportSource *myExternalSource =
-      new ASTImportSource(&parentInterpreter, this);
+    ExternalInterpreterSource *myExternalSource =
+      new ExternalInterpreterSource(&parentInterpreter, this);
 
     llvm::IntrusiveRefCntPtr <ExternalASTSource>
       astContextExternalSource(myExternalSource);
@@ -255,7 +256,7 @@ namespace cling {
 
     // Inform the Translation Unit Decl of I2 that it has to search somewhere
     // else to find the declarations.
-    getCI()->getASTContext().getTranslationUnitDecl()->setHasExternalVisibleStorage();
+    getCI()->getASTContext().getTranslationUnitDecl()->setHasExternalVisibleStorage(true);
 
     // Give my IncrementalExecutor a pointer to the Incremental executor of the
     // parent Interpreter.
@@ -639,6 +640,34 @@ namespace cling {
     return Result;
   }
 
+
+  Interpreter::CompilationResult
+  Interpreter::CodeCompleteInternal(const std::string& input, unsigned offset) {
+
+    CompilationOptions CO;
+    CO.DeclarationExtraction = 0;
+    CO.ValuePrinting = 0;
+    CO.ResultEvaluation = 0;
+    CO.DynamicScoping = isDynamicLookupEnabled();
+    CO.Debug = isPrintingDebug();
+    CO.CheckPointerValidity = 0;
+    CO.CodeCompletionOffset = offset;
+
+
+    std::string wrappedInput = input;
+    std::string wrapperName;
+    if (ShouldWrapInput(input))
+      WrapInput(wrappedInput, wrapperName, CO);
+
+    StateDebuggerRAII stateDebugger(this);
+
+    // This triggers the FileEntry to be created and the completion
+    // point to be set in clang.
+    m_IncrParser->Parse(wrappedInput, CO);
+
+    return kSuccess;
+  }
+
   Interpreter::CompilationResult
   Interpreter::declare(const std::string& input, Transaction** T/*=0 */) {
     CompilationOptions CO;
@@ -664,6 +693,61 @@ namespace cling {
     CO.ResultEvaluation = 1;
 
     return EvaluateInternal(input, CO, &V);
+  }
+
+  Interpreter::CompilationResult
+  Interpreter::codeComplete(const std::string& line, size_t& cursor,
+                            std::vector<std::string>& completions) const {
+
+    const char * const argV = "cling";
+    std::string resourceDir = this->getCI()->getHeaderSearchOpts().ResourceDir;
+    // Remove the extra 3 directory names "/lib/clang/3.9.0"
+    StringRef parentResourceDir = llvm::sys::path::parent_path(
+                                  llvm::sys::path::parent_path(
+                                  llvm::sys::path::parent_path(resourceDir)));
+    std::string llvmDir = parentResourceDir.str();
+
+    Interpreter childInterpreter(*this, 1, &argV, llvmDir.c_str());
+
+    auto childCI = childInterpreter.getCI();
+    clang::Sema &childSemaRef = childCI->getSema();
+
+    // Create the CodeCompleteConsumer with InterpreterCallbacks
+    // from the parent interpreter and set the consumer for the child
+    // interpreter.
+    ClingCodeCompleteConsumer* consumer = new ClingCodeCompleteConsumer(
+                getCI()->getFrontendOpts().CodeCompleteOpts, completions);
+    // Child interpreter CI will own consumer!
+    childCI->setCodeCompletionConsumer(consumer);
+    childSemaRef.CodeCompleter = consumer;
+
+    // Ignore diagnostics when we tab complete.
+    // This is because we get redefinition errors due to the import of the decls.
+    clang::IgnoringDiagConsumer* ignoringDiagConsumer =
+                                            new clang::IgnoringDiagConsumer();                      
+    childSemaRef.getDiagnostics().setClient(ignoringDiagConsumer, true);
+    DiagnosticsEngine& parentDiagnostics = this->getCI()->getSema().getDiagnostics();
+
+    std::unique_ptr<DiagnosticConsumer> ownerDiagConsumer = 
+                                                parentDiagnostics.takeClient();
+    auto clientDiagConsumer = parentDiagnostics.getClient();
+    parentDiagnostics.setClient(ignoringDiagConsumer, /*owns*/ false);
+
+    // The child will desirialize decls from *this. We need a transaction RAII.
+    PushTransactionRAII RAII(this);
+
+    // Triger the code completion.
+    childInterpreter.CodeCompleteInternal(line, cursor);
+
+    // Restore the original diagnostics client for parent interpreter.
+    parentDiagnostics.setClient(clientDiagConsumer,
+                                ownerDiagConsumer.release() != nullptr);
+
+    // FIX-ME : Change it in the Incremental Parser
+    // It does not work by call unload in IncrementalParser, might be to early.
+    childInterpreter.unload(1);
+
+    return kSuccess;
   }
 
   Interpreter::CompilationResult
@@ -787,9 +871,14 @@ namespace cling {
     return true;
   }
 
-  void Interpreter::WrapInput(std::string& input, std::string& fname) {
+  void Interpreter::WrapInput(std::string& input, std::string& fname,
+                              CompilationOptions &CO) {
     fname = createUniqueWrapper();
-    input.insert(0, "void " + fname + "(void* vpClingValue) {\n ");
+    std::string wrapperHeader = "void " + fname + "(void* vpClingValue) {\n ";
+    if (CO.CodeCompletionOffset != -1) {
+      CO.CodeCompletionOffset += wrapperHeader.size();
+    }
+    input.insert(0, wrapperHeader);
     input.append("\n;\n}");
   }
 
@@ -1041,7 +1130,7 @@ namespace cling {
     // Wrap the expression
     std::string WrapperName;
     std::string Wrapper = input;
-    WrapInput(Wrapper, WrapperName);
+    WrapInput(Wrapper, WrapperName, CO);
 
     // We have wrapped and need to disable warnings that are caused by
     // non-default C++ at the prompt:
@@ -1411,5 +1500,7 @@ namespace cling {
     // Avoid assertion in the ~IncrementalParser.
     T.setState(Transaction::kCommitted);
   }
+
+
 
 } //end namespace cling

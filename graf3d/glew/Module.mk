@@ -28,10 +28,6 @@ ALLLIBS     += $(GLEWLIB)
 # include all dependency files
 INCLUDEFILES += $(GLEWDEP)
 
-ifeq ($(MACOSX_MINOR),3)
-GLEWLIBEXTRA += -lz
-endif
-
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 

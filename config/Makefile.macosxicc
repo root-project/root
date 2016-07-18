@@ -17,7 +17,6 @@ endif
 # OS version
 MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
 MACOSX_CPU   := $(shell uname -p)
-FINK_DIR     := $(shell which fink 2>&1 | sed -ne "s/\/bin\/fink//p")
 
 ifeq ($(CXX14),yes)
 CXX11FLAGS    = -std=c++1y
@@ -72,7 +71,6 @@ LDFLAGS      += $(EXTRA_LDFLAGS)
 
 FORCELINK     = no
 
-ifeq ($(subst $(MACOSX_MINOR),,1234),1234)
 ifeq ($(USECONFIG),FALSE)
 SOFLAGS       = -dynamiclib -single_module -Wl,-dead_strip_dylibs \
                 -install_name @rpath/
@@ -80,17 +78,7 @@ else
 SOFLAGS       = -dynamiclib -single_module -Wl,-dead_strip_dylibs \
                 -install_name $(LIBDIR)/
 endif
-else
-ifeq ($(subst $(MACOSX_MINOR),,123),123)
-SOFLAGS       = -dynamiclib -single_module \
-                -undefined dynamic_lookup -install_name $(LIBDIR)/
-endif
-endif
-ifeq ($(subst $(MACOSX_MINOR),,1234),1234)
 SOEXT         = so
-else
-SOEXT         = dylib
-endif
 
 # System libraries:
 SYSLIBS       = -lm $(OSTHREADLIBDIR) \
@@ -145,6 +133,20 @@ MACOSX_GLU_DEPRECATED = yes
 MACOSX_KRB5_DEPRECATED = yes
 endif
 ifeq ($(MACOSX_MINOR),10)
+MACOSX_SSL_DEPRECATED = yes
+MACOSX_ODBC_DEPRECATED = yes
+MACOSX_GLU_DEPRECATED = yes
+MACOSX_KRB5_DEPRECATED = yes
+MACOSX_LDAP_DEPRECATED = yes
+endif
+ifeq ($(MACOSX_MINOR),11)
+MACOSX_SSL_DEPRECATED = yes
+MACOSX_ODBC_DEPRECATED = yes
+MACOSX_GLU_DEPRECATED = yes
+MACOSX_KRB5_DEPRECATED = yes
+MACOSX_LDAP_DEPRECATED = yes
+endif
+ifeq ($(MACOSX_MINOR),12)
 MACOSX_SSL_DEPRECATED = yes
 MACOSX_ODBC_DEPRECATED = yes
 MACOSX_GLU_DEPRECATED = yes
