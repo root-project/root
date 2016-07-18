@@ -1907,7 +1907,7 @@ Int_t TDirectoryFile::WriteTObject(const TObject *obj, const char *name, Option_
 /// TopClass *top = ....;
 /// directory->WriteObject(top,"name of object")
 /// ~~~
-/// See laso remarks in TDirectoryFile::WriteTObject
+/// See also remarks in TDirectoryFile::WriteTObject
 
 Int_t TDirectoryFile::WriteObjectAny(const void *obj, const char *classname, const char *name, Option_t *option, Int_t bufsize)
 {
