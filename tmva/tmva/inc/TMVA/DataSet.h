@@ -161,7 +161,6 @@ namespace TMVA {
 
       const DataSetInfo         *fdsi;                //! datasetinfo that created this dataset
 
-      std::vector<Event*>::iterator        fEvtCollIt;
       std::vector< std::vector<Event*>*  > fEventCollection; //! list of events for training/testing/...
 
       std::vector< std::map< TString, Results* > > fResults;         //!  [train/test/...][method-identifier]

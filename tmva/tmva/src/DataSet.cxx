@@ -261,7 +261,6 @@ void TMVA::DataSet::AddEvent(Event * ev, Types::ETreeType type)
 {
    fEventCollection.at(Int_t(type))->push_back(ev);
    if (ev->GetWeight()<0) fHasNegativeEventWeights = kTRUE;
-   fEvtCollIt=fEventCollection.at(fCurrentTreeIdx)->begin();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -278,7 +277,6 @@ void TMVA::DataSet::SetEventCollection(std::vector<TMVA::Event*>* events, Types:
    for (std::vector<Event*>::iterator it = fEventCollection.at(t)->begin(); it < fEventCollection.at(t)->end(); it++) {
       IncrementNClassEvents( t, (*it)->GetClass() );
    }
-   fEvtCollIt=fEventCollection.at(fCurrentTreeIdx)->begin();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
