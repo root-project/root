@@ -60,7 +60,6 @@ ROOT_GENERATE_DICTIONARY(G__TMVA ${theaders1} ${theaders2} ${theaders3} ${theade
 #---Handle CUDA dependent code. -----------------
 find_package(CUDA)
 if (CUDA_FOUND)
-  set(CUDA_HOST_COMPILER "/usr/bin/g++-4.8")
   cuda_add_library(dnn_cuda ${dnn_cuda_files})
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDNNCUDA")
   set(cuda_libraries dnn_cuda ${CUDA_CUBLAS_LIBRARIES})
