@@ -85,6 +85,22 @@ namespace {
    };
    const size_t ROOTTabCompletion::fgLineBufSize = 16*1024;
 
+   class TClingTabCompletion: public TabCompletion {
+   public:
+      TClingTabCompletion() {}
+      virtual ~TClingTabCompletion() {}
+
+      TClingTabCompletion(const TClingTabCompletion&) = delete;
+      TClingTabCompletion& operator=(const TClingTabCompletion&) = delete;
+
+      // Returns false on error
+      bool Complete(Text& line /*in+out*/, size_t& cursor /*in+out*/,
+                    EditorRange& r /*out*/,
+                    std::vector<std::string>& completions /*out*/) {
+         gInterpreter->CodeComplete(line.GetText(), cursor, completions);
+         return true;
+      }
+   };
 
    // Helper to define the lifetime of the TextInput singleton.
    class TextInputHolder {
