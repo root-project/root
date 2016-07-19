@@ -26,19 +26,19 @@ Double_t testMultiply()
         TCudaMatrix ACuda(A), ATCuda(AT), BCuda(B), BTCuda(BT),  CCuda(C);
 
         TReference<Double_t>::MultiplyTranspose(C, A, BT);
-        TCuda::MultiplyTranspose(CCuda, ACuda, BTCuda);
+        TCuda<false>::MultiplyTranspose(CCuda, ACuda, BTCuda);
         TMatrixT<Double_t> CRef(CCuda);
         Double_t error = maximumRelativeError(C, CRef);
         maximumError   = std::max(error, maximumError);
 
         C.Mult(A,B);
-        TCuda::Multiply(CCuda, ACuda, BCuda);
+        TCuda<false>::Multiply(CCuda, ACuda, BCuda);
         CRef = CCuda;
         error = maximumRelativeError(C, CRef);
         maximumError   = std::max(error, maximumError);
 
         C.TMult(AT,B);
-        TCuda::TransposeMultiply(CCuda, ATCuda, BCuda);
+        TCuda<false>::TransposeMultiply(CCuda, ATCuda, BCuda);
         CRef = CCuda;
         error = maximumRelativeError(C, CRef);
         maximumError   = std::max(error, maximumError);
@@ -64,7 +64,7 @@ Double_t testAddRowWise()
       TCudaMatrix ACuda(A), BCuda(B), thetaCuda(theta);
 
       TReference<Double_t>::AddRowWise(A, theta);
-      TCuda::AddRowWise(ACuda,thetaCuda);
+      TCuda<false>::AddRowWise(ACuda,thetaCuda);
       TMatrixT<Double_t> ARef(ACuda);
 
       Double_t error = maximumRelativeError(A, ARef);
@@ -95,7 +95,7 @@ Double_t testHadamard()
          }
       }
 
-      TCuda::Hadamard(ACuda, BCuda);
+      TCuda<false>::Hadamard(ACuda, BCuda);
       TMatrixT<Double_t> ARef(ACuda);
       Double_t error = maximumRelativeError(A, ARef);
       maximumError   = std::max(error, maximumError);
@@ -124,9 +124,9 @@ Double_t testReduction()
       TCudaMatrix ACuda(A);
 
       TCudaMatrix BCuda(1,n);
-      TCuda::InitializeZero(BCuda);
-      Double_t s  = TCuda::Sum(A);
-      TCuda::SumColumns(BCuda, ACuda);
+      TCuda<false>::InitializeZero(BCuda);
+      Double_t s  = TCuda<false>::Sum(A);
+      TCuda<false>::SumColumns(BCuda, ACuda);
       TMatrixT<Double_t> B(BCuda);
 
       Double_t error = s - ((Double_t) m * n);
@@ -162,7 +162,7 @@ Double_t testScaleAdd()
 
       Double_t beta = ((Double_t) rand()) / ((Double_t) RAND_MAX);
       TReference<Double_t>::ScaleAdd(A, B, beta);
-      TCuda::ScaleAdd(ACuda, BCuda, beta);
+      TCuda<false>::ScaleAdd(ACuda, BCuda, beta);
 
       Double_t error = maximumRelativeError(A, (TMatrixT<Double_t>) ACuda);
       maximumError   = std::max(error, maximumError);

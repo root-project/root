@@ -27,19 +27,19 @@ int main()
 
     double error;
 
-    error = testBackpropagationWeightsLinear<TCuda>(1.0);
+    error = testBackpropagationWeightsLinear<TCuda<false>>(1.0);
     if (error > 1e-7)
         return 1;
 
-    error = testBackpropagationL1Regularization<TCuda>(1e-2);
+    error = testBackpropagationL1Regularization<TCuda<false>>(1e-2);
     if (error > 1e-7)
         return 1;
 
-    error = testBackpropagationL2Regularization<TCuda>(1.0);
+    error = testBackpropagationL2Regularization<TCuda<false>>(1.0);
     if (error > 1e-7)
         return 1;
 
-    error = testBackpropagationBiasesLinear<TCuda>(1.0);
+    error = testBackpropagationBiasesLinear<TCuda<false>>(1.0);
     if (error > 1e-7)
         return 1;
 
