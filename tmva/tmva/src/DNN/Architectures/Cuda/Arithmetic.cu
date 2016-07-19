@@ -24,9 +24,10 @@ namespace DNN
 {
 
 //____________________________________________________________________________
-void TCuda::Multiply(TCudaMatrix &C,
-                    const TCudaMatrix &A,
-                    const TCudaMatrix &B)
+template<bool doProfiling>
+void TCuda<doProfiling>::Multiply(TCudaMatrix &C,
+                                  const TCudaMatrix &A,
+                                  const TCudaMatrix &B)
 {
    int m, n, k;
    m = A.GetNrows();
@@ -45,9 +46,10 @@ void TCuda::Multiply(TCudaMatrix &C,
 }
 
 //____________________________________________________________________________
-void TCuda::TransposeMultiply(TCudaMatrix & C,
-                             const TCudaMatrix & A,
-                             const TCudaMatrix & B)
+template<bool doProfiling>
+void TCuda<doProfiling>::TransposeMultiply(TCudaMatrix & C,
+                                           const TCudaMatrix & A,
+                                           const TCudaMatrix & B)
 {
    int m, n, k;
    k = A.GetNrows();
@@ -66,8 +68,9 @@ void TCuda::TransposeMultiply(TCudaMatrix & C,
 }
 
 //____________________________________________________________________________
-void TCuda::Hadamard(TCudaMatrix &B,
-                    const TCudaMatrix &A)
+template<bool doProfiling>
+void TCuda<doProfiling>::Hadamard(TCudaMatrix &B,
+                                  const TCudaMatrix &A)
 {
    dim3 blockDims = TDevice::BlockDims();
    dim3 gridDims  = TDevice::GridDims(B);
@@ -79,7 +82,8 @@ void TCuda::Hadamard(TCudaMatrix &B,
 }
 
 //____________________________________________________________________________
-CudaDouble_t TCuda::Sum(const TCudaMatrix &A)
+template<bool doProfiling>
+CudaDouble_t TCuda<doProfiling>::Sum(const TCudaMatrix &A)
 {
    dim3 blockDims = TDevice::BlockDims();
    dim3 gridDims  = TDevice::GridDims(A);
@@ -95,7 +99,8 @@ CudaDouble_t TCuda::Sum(const TCudaMatrix &A)
 }
 
 //____________________________________________________________________________
-void TCuda::SumColumns(TCudaMatrix &B, const TCudaMatrix &A)
+template<bool doProfiling>
+void TCuda<doProfiling>::SumColumns(TCudaMatrix &B, const TCudaMatrix &A)
 {
    dim3 blockDims = TDevice::BlockDims();
    dim3 gridDims  = TDevice::GridDims(A);
@@ -109,7 +114,10 @@ void TCuda::SumColumns(TCudaMatrix &B, const TCudaMatrix &A)
 }
 
 //____________________________________________________________________________
-void TCuda::ScaleAdd(TCudaMatrix &B, const TCudaMatrix &A, CudaDouble_t alpha)
+template<bool doProfiling>
+void TCuda<doProfiling>::ScaleAdd(TCudaMatrix &B,
+                                  const TCudaMatrix &A,
+                                  CudaDouble_t alpha)
 {
    cublasDaxpy(A.GetCublasHandle(), A.GetNoElements(), &alpha,
                A.GetDataPointer(), 1,

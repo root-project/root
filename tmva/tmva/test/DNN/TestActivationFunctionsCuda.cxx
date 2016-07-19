@@ -29,13 +29,13 @@ int main()
 
     // Identity.
 
-    error = testIdentity<TCuda>(10);
+    error = testIdentity<TCuda<false>>(10);
     std::cout << "Testing identity activation:            ";
     std::cout << "maximum relative error = " << error << std::endl;
     if (error > 1e-10)
         return 1;
 
-    error = testIdentityDerivative<TCuda>(10);
+    error = testIdentityDerivative<TCuda<false>>(10);
     std::cout << "Testing identity activation derivative: ";
     std::cout << "maximum relative error = " << error << std::endl;
     if (error > 1e-10)
@@ -43,13 +43,13 @@ int main()
 
     // ReLU.
 
-    error = testRelu<TCuda>(10);
+    error = testRelu<TCuda<false>>(10);
     std::cout << "Testing ReLU activation:                ";
     std::cout << "maximum relative error = " << error << std::endl;
     if (error > 1e-10)
         return 1;
 
-    error = testReluDerivative<TCuda>(10);
+    error = testReluDerivative<TCuda<false>>(10);
     std::cout << "Testing ReLU activation derivative:     ";
     std::cout << "maximum relative error = " << error << std::endl;
     if (error > 1e-10)
@@ -57,13 +57,13 @@ int main()
 
     // Sigmoid.
 
-    error = testSigmoid<TCuda>(10);
+    error = testSigmoid<TCuda<false>>(10);
     std::cout << "Testing Sigmoid activation:             ";
     std::cout << "maximum relative error = " << error << std::endl;
     if (error > 1e-10)
         return 1;
 
-    error = testSigmoidDerivative<TCuda>(10);
+    error = testSigmoidDerivative<TCuda<false>>(10);
     std::cout << "Testing Sigmoid activation derivative:  ";
     std::cout << "maximum relative error = " << error << std::endl;
     if (error > 1e-10)

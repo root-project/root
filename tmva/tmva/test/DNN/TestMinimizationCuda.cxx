@@ -25,7 +25,7 @@ using namespace TMVA::DNN;
 int main()
 {
    using Matrix_t = TMatrixT<Double_t>;
-   using Net_t    = TNet<TCuda>;
+   using Net_t    = TNet<TCuda<false>>;
 
    Matrix_t XTrain(4000,20), YTrain(4000,20), XTest(20,20), YTest(20,20), W(20, 20);
 
@@ -48,11 +48,10 @@ int main()
 
    Net_t net(20, 20, ELossFunction::MEANSQUAREDERROR);
    net.AddLayer(100, EActivationFunction::IDENTITY);
-   net.AddLayer(100, EActivationFunction::IDENTITY);
    net.AddLayer(20, EActivationFunction::IDENTITY);
    net.Initialize(EInitialization::GAUSS);
 
-   TGradientDescent<TCuda> minimizer(0.001, 20, 20);
+   TGradientDescent<TCuda<false>> minimizer(0.001, 1, 20);
    minimizer.Train(trainData, 4000, testData, 20, net);
 
    TMatrixT<Double_t> I(20,20); identityMatrix(I);

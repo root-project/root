@@ -30,13 +30,13 @@ int main()
     // Mean Squared Error.
     //
 
-    error = testMeanSquaredError<TCuda>(10);
+    error = testMeanSquaredError<TCuda<false>>(10);
     std::cout << "Testing mean squared error loss:     ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
     if (error > 1e-10)
         return 1;
 
-    error = testMeanSquaredErrorGradients<TCuda>(10);
+    error = testMeanSquaredErrorGradients<TCuda<false>>(10);
     std::cout << "Testing mean squared error gradient: ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
     if (error > 1e-10)
@@ -46,13 +46,13 @@ int main()
     // Cross Entropy.
     //
 
-    error = testCrossEntropy<TCuda>(10);
+    error = testCrossEntropy<TCuda<false>>(10);
     std::cout << "Testing cross entropy loss:          ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
     if (error > 1e-10)
         return 1;
 
-    error = testCrossEntropyGradients<TCuda>(10);
+    error = testCrossEntropyGradients<TCuda<false>>(10);
     std::cout << "Testing mean squared error gradient: ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
     if (error > 1e-10)

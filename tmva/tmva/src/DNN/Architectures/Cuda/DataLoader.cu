@@ -208,7 +208,8 @@ auto TCudaDataLoader<Data_t>::GetCurrentBatch(size_t batchIndex)
     outputDataPointer += fTransferBatchSize * fInputMatrixSize;
     outputDataPointer += bufferIndex * fOutputMatrixSize;
 
-    cudaStreamSynchronize(fDataStreams[nextStreamIndex]);
+    if (bufferIndex == 0)
+        cudaStreamSynchronize(fDataStreams[nextStreamIndex]);
     return TCudaBatch(fBatchSize, fNinputFeatures, fNoutputFeatures,
                      inputDataPointer, outputDataPointer, fDataStreams[nextStreamIndex]);
 }

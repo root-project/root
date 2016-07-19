@@ -36,17 +36,10 @@ set(headers4 TNeuron.h TSynapse.h TActivationChooser.h TActivation.h TActivation
 	     VariableTransformBase.h VariableIdentityTransform.h VariableDecorrTransform.h VariablePCATransform.h 
 	     VariableGaussTransform.h VariableNormalizeTransform.h VariableRearrangeTransform.h VariableTransform.h ROCCalc.h ROCCurve.h)
 set(dnn_files src/DNN/Architectures/Reference.cxx src/DNN/Architectures/Reference/DataLoader.cxx)
-set(dnn_cuda_files src/DNN/Architectures/Cuda/ActivationFunctions.cu
-                   src/DNN/Architectures/Cuda/Arithmetic.cu
+set(dnn_cuda_files src/DNN/Architectures/Cuda.cu
                    src/DNN/Architectures/Cuda/CudaMatrix.cu
                    src/DNN/Architectures/Cuda/DataLoader.cu
-                   src/DNN/Architectures/Cuda/Dropout.cu
-                   src/DNN/Architectures/Cuda/Initialization.cu
-                   src/DNN/Architectures/Cuda/Kernels.cu
-                   src/DNN/Architectures/Cuda/LossFunctions.cu
-                   src/DNN/Architectures/Cuda/OutputFunctions.cu
-                   src/DNN/Architectures/Cuda/Propagation.cu
-                   src/DNN/Architectures/Cuda/Regularization.cu)
+                   src/DNN/Architectures/Cuda/Kernels.cu)
 
 set(headers5 Event.h Results.h ResultsClassification.h ResultsRegression.h ResultsMulticlass.h VariableInfo.h ClassInfo.h
              DataLoader.h DataSet.h DataSetInfo.h DataInputHandler.h DataSetManager.h DataSetFactory.h)
