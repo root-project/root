@@ -583,9 +583,13 @@ del ModuleFacade
 ### Add some infrastructure if we are being imported via a Jupyter Kernel ------
 if '__IPYTHON__' in __builtins__ and __IPYTHON__:
    from IPython import get_ipython
+   import sys, os
+   pathToThisFile = os.path.dirname(os.path.abspath(__file__))
+   sys.path.append(os.path.expanduser(os.path.join(pathToThisFile,"JsMVA/python")))
    ip = get_ipython()
    if hasattr(ip,"kernel"):
       import JupyROOT
+      import JsMVA
 
 ### b/c of circular references, the facade needs explicit cleanup ---------------
 import atexit

@@ -45,5 +45,9 @@ set( JupyROOTDirName "JupyROOT")
 install (DIRECTORY ${JupyROOTDirName} DESTINATION ${runtimedir})
 file(COPY ${JupyROOTDirName} DESTINATION ${CMAKE_BINARY_DIR}/${runtimedir})
 
+set( JsMVADirName "JsMVA")
+install (DIRECTORY ${JsMVADirName} DESTINATION ${runtimedir})
+file(COPY ${JsMVADirName} DESTINATION ${CMAKE_BINARY_DIR}/${runtimedir})
+
 #---Install headers----------------------------------------------------------
 ROOT_INSTALL_HEADERS()
