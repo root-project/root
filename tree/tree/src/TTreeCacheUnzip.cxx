@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TTreeCacheUnzip
+\ingroup tree
 
 Specialization of TTreeCache for parallel Unzipping.
 
@@ -1130,18 +1131,17 @@ Int_t TTreeCacheUnzip::UnzipCache(Int_t &startindex, Int_t &locbuffsz, char *&lo
       locbuffsz = rdlen;
       locbuff = new char[locbuffsz];
       //memset(locbuff, 0, locbuffsz);
-   } else
-      if(locbuffsz > rdlen*3) {
-         if (locbuff) delete [] locbuff;
-         locbuffsz = rdlen*2;
-         locbuff = new char[locbuffsz];
-         //memset(locbuff, 0, locbuffsz);
-      }
+   } else if(locbuffsz > rdlen*3) {
+      if (locbuff) delete [] locbuff;
+      locbuffsz = rdlen*2;
+      locbuff = new char[locbuffsz];
+      //memset(locbuff, 0, locbuffsz);
+   }
 
-      if (gDebug > 0)
-      Info("UnzipCache", "Going to unzip block %d", idxtounzip);
+   if (gDebug > 0)
+     Info("UnzipCache", "Going to unzip block %d", idxtounzip);
 
-      readbuf = ReadBufferExt(locbuff, rdoffs, rdlen, loc);
+   readbuf = ReadBufferExt(locbuff, rdoffs, rdlen, loc);
 
    {
       R__LOCKGUARD(fMutexList);

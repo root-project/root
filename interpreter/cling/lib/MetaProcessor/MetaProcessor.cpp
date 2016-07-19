@@ -123,7 +123,10 @@ namespace cling {
     m_backupFDStderr = copyFileDescriptor(STDERR_FILENO);
   }
 
-  MetaProcessor::~MetaProcessor() {}
+  MetaProcessor::~MetaProcessor() {
+    close(m_backupFDStdout);
+    close(m_backupFDStderr);
+  }
 
   int MetaProcessor::process(const char* input_text,
                              Interpreter::CompilationResult& compRes,
@@ -231,6 +234,7 @@ namespace cling {
              && content[posNonWS] == '/' && content[posNonWS+1] == '/') {
         // Remove the comment line
         posNonWS = content.find_first_of('\n', posNonWS+2)+1;
+        posNonWS = content.find_first_not_of(whitespace, posNonWS);
       }
       std::string::size_type replaced = posNonWS;
       if (posNonWS != std::string::npos && content[posNonWS] == '{') {

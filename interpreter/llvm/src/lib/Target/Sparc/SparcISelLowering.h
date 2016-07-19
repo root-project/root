@@ -22,7 +22,7 @@ namespace llvm {
   class SparcSubtarget;
 
   namespace SPISD {
-    enum {
+    enum NodeType : unsigned {
       FIRST_NUMBER = ISD::BUILTIN_OP_END,
       CMPICC,      // Compare two GPR operands, set icc+xcc.
       CMPFCC,      // Compare two FP operands, set fcc.
@@ -32,6 +32,9 @@ namespace llvm {
       SELECT_ICC,  // Select between two values using the current ICC flags.
       SELECT_XCC,  // Select between two values using the current XCC flags.
       SELECT_FCC,  // Select between two values using the current FCC flags.
+
+      EH_SJLJ_SETJMP,  // builtin setjmp operation
+      EH_SJLJ_LONGJMP, // builtin longjmp operation
 
       Hi, Lo,      // Hi/Lo operations, typically on a global address.
 
@@ -54,9 +57,11 @@ namespace llvm {
   class SparcTargetLowering : public TargetLowering {
     const SparcSubtarget *Subtarget;
   public:
-    SparcTargetLowering(TargetMachine &TM, const SparcSubtarget &STI);
+    SparcTargetLowering(const TargetMachine &TM, const SparcSubtarget &STI);
     SDValue LowerOperation(SDValue Op, SelectionDAG &DAG) const override;
-
+    
+    bool useSoftFloat() const override;
+    
     /// computeKnownBitsForTargetNode - Determine which of the bits specified
     /// in Mask are known to be either zero or one and return them in the
     /// KnownZero/KnownOne bitsets.
@@ -67,12 +72,12 @@ namespace llvm {
                                        unsigned Depth = 0) const override;
 
     MachineBasicBlock *
-      EmitInstrWithCustomInserter(MachineInstr *MI,
-                                  MachineBasicBlock *MBB) const override;
+    EmitInstrWithCustomInserter(MachineInstr &MI,
+                                MachineBasicBlock *MBB) const override;
 
     const char *getTargetNodeName(unsigned Opcode) const override;
 
-    ConstraintType getConstraintType(const std::string &Constraint) const override;
+    ConstraintType getConstraintType(StringRef Constraint) const override;
     ConstraintWeight
     getSingleConstraintMatchWeight(AsmOperandInfo &info,
                                    const char *constraint) const override;
@@ -80,33 +85,62 @@ namespace llvm {
                                       std::string &Constraint,
                                       std::vector<SDValue> &Ops,
                                       SelectionDAG &DAG) const override;
-    std::pair<unsigned, const TargetRegisterClass*>
-    getRegForInlineAsmConstraint(const std::string &Constraint, MVT VT) const override;
+
+    unsigned
+    getInlineAsmMemConstraint(StringRef ConstraintCode) const override {
+      if (ConstraintCode == "o")
+        return InlineAsm::Constraint_o;
+      return TargetLowering::getInlineAsmMemConstraint(ConstraintCode);
+    }
+
+    std::pair<unsigned, const TargetRegisterClass *>
+    getRegForInlineAsmConstraint(const TargetRegisterInfo *TRI,
+                                 StringRef Constraint, MVT VT) const override;
 
     bool isOffsetFoldingLegal(const GlobalAddressSDNode *GA) const override;
-    MVT getScalarShiftAmountTy(EVT LHSTy) const override { return MVT::i32; }
+    MVT getScalarShiftAmountTy(const DataLayout &, EVT) const override {
+      return MVT::i32;
+    }
+
+    unsigned getRegisterByName(const char* RegName, EVT VT,
+                               SelectionDAG &DAG) const override;
+
+    /// If a physical register, this returns the register that receives the
+    /// exception address on entry to an EH pad.
+    unsigned
+    getExceptionPointerRegister(const Constant *PersonalityFn) const override {
+      return SP::I0;
+    }
+
+    /// If a physical register, this returns the register that receives the
+    /// exception typeid on entry to a landing pad.
+    unsigned
+    getExceptionSelectorRegister(const Constant *PersonalityFn) const override {
+      return SP::I1;
+    }
+
+    /// Override to support customized stack guard loading.
+    bool useLoadStackGuardNode() const override;
+    void insertSSPDeclarations(Module &M) const override;
 
     /// getSetCCResultType - Return the ISD::SETCC ValueType
-    EVT getSetCCResultType(LLVMContext &Context, EVT VT) const override;
+    EVT getSetCCResultType(const DataLayout &DL, LLVMContext &Context,
+                           EVT VT) const override;
 
     SDValue
-      LowerFormalArguments(SDValue Chain,
-                           CallingConv::ID CallConv,
-                           bool isVarArg,
-                           const SmallVectorImpl<ISD::InputArg> &Ins,
-                           SDLoc dl, SelectionDAG &DAG,
-                           SmallVectorImpl<SDValue> &InVals) const override;
-    SDValue LowerFormalArguments_32(SDValue Chain,
-                                    CallingConv::ID CallConv,
+    LowerFormalArguments(SDValue Chain, CallingConv::ID CallConv, bool isVarArg,
+                         const SmallVectorImpl<ISD::InputArg> &Ins,
+                         const SDLoc &dl, SelectionDAG &DAG,
+                         SmallVectorImpl<SDValue> &InVals) const override;
+    SDValue LowerFormalArguments_32(SDValue Chain, CallingConv::ID CallConv,
                                     bool isVarArg,
                                     const SmallVectorImpl<ISD::InputArg> &Ins,
-                                    SDLoc dl, SelectionDAG &DAG,
+                                    const SDLoc &dl, SelectionDAG &DAG,
                                     SmallVectorImpl<SDValue> &InVals) const;
-    SDValue LowerFormalArguments_64(SDValue Chain,
-                                    CallingConv::ID CallConv,
+    SDValue LowerFormalArguments_64(SDValue Chain, CallingConv::ID CallConv,
                                     bool isVarArg,
                                     const SmallVectorImpl<ISD::InputArg> &Ins,
-                                    SDLoc dl, SelectionDAG &DAG,
+                                    const SDLoc &dl, SelectionDAG &DAG,
                                     SmallVectorImpl<SDValue> &InVals) const;
 
     SDValue
@@ -117,27 +151,30 @@ namespace llvm {
     SDValue LowerCall_64(TargetLowering::CallLoweringInfo &CLI,
                          SmallVectorImpl<SDValue> &InVals) const;
 
-    SDValue
-      LowerReturn(SDValue Chain,
-                  CallingConv::ID CallConv, bool isVarArg,
-                  const SmallVectorImpl<ISD::OutputArg> &Outs,
-                  const SmallVectorImpl<SDValue> &OutVals,
-                  SDLoc dl, SelectionDAG &DAG) const override;
-    SDValue LowerReturn_32(SDValue Chain,
-                           CallingConv::ID CallConv, bool IsVarArg,
+    SDValue LowerReturn(SDValue Chain, CallingConv::ID CallConv, bool isVarArg,
+                        const SmallVectorImpl<ISD::OutputArg> &Outs,
+                        const SmallVectorImpl<SDValue> &OutVals,
+                        const SDLoc &dl, SelectionDAG &DAG) const override;
+    SDValue LowerReturn_32(SDValue Chain, CallingConv::ID CallConv,
+                           bool IsVarArg,
                            const SmallVectorImpl<ISD::OutputArg> &Outs,
                            const SmallVectorImpl<SDValue> &OutVals,
-                           SDLoc DL, SelectionDAG &DAG) const;
-    SDValue LowerReturn_64(SDValue Chain,
-                           CallingConv::ID CallConv, bool IsVarArg,
+                           const SDLoc &DL, SelectionDAG &DAG) const;
+    SDValue LowerReturn_64(SDValue Chain, CallingConv::ID CallConv,
+                           bool IsVarArg,
                            const SmallVectorImpl<ISD::OutputArg> &Outs,
                            const SmallVectorImpl<SDValue> &OutVals,
-                           SDLoc DL, SelectionDAG &DAG) const;
+                           const SDLoc &DL, SelectionDAG &DAG) const;
 
     SDValue LowerGlobalAddress(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerGlobalTLSAddress(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerConstantPool(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerBlockAddress(SDValue Op, SelectionDAG &DAG) const;
+
+    SDValue LowerEH_SJLJ_SETJMP(SDValue Op, SelectionDAG &DAG,
+                                const SparcTargetLowering &TLI) const ;
+    SDValue LowerEH_SJLJ_LONGJMP(SDValue Op, SelectionDAG &DAG,
+                                 const SparcTargetLowering &TLI) const ;
 
     unsigned getSRetArgSize(SelectionDAG &DAG, SDValue Callee) const;
     SDValue withTargetFlags(SDValue Op, unsigned TF, SelectionDAG &DAG) const;
@@ -145,16 +182,15 @@ namespace llvm {
                          SelectionDAG &DAG) const;
     SDValue makeAddress(SDValue Op, SelectionDAG &DAG) const;
 
-    SDValue LowerF128_LibCallArg(SDValue Chain, ArgListTy &Args,
-                                 SDValue Arg, SDLoc DL,
-                                 SelectionDAG &DAG) const;
+    SDValue LowerF128_LibCallArg(SDValue Chain, ArgListTy &Args, SDValue Arg,
+                                 const SDLoc &DL, SelectionDAG &DAG) const;
     SDValue LowerF128Op(SDValue Op, SelectionDAG &DAG,
                         const char *LibFuncName,
                         unsigned numArgs) const;
-    SDValue LowerF128Compare(SDValue LHS, SDValue RHS,
-                             unsigned &SPCC,
-                             SDLoc DL,
-                             SelectionDAG &DAG) const;
+    SDValue LowerF128Compare(SDValue LHS, SDValue RHS, unsigned &SPCC,
+                             const SDLoc &DL, SelectionDAG &DAG) const;
+
+    SDValue LowerINTRINSIC_WO_CHAIN(SDValue Op, SelectionDAG &DAG) const;
 
     bool ShouldShrinkFPConstant(EVT VT) const override {
       // Do not shrink FP constpool if VT == MVT::f128.
@@ -162,16 +198,25 @@ namespace llvm {
       return VT != MVT::f128;
     }
 
-    void ReplaceNodeResults(SDNode *N,
-                                    SmallVectorImpl<SDValue>& Results,
-                                    SelectionDAG &DAG) const override;
+    bool shouldInsertFencesForAtomic(const Instruction *I) const override {
+      // FIXME: We insert fences for each atomics and generate
+      // sub-optimal code for PSO/TSO. (Approximately nobody uses any
+      // mode but TSO, which makes this even more silly)
+      return true;
+    }
 
-    MachineBasicBlock *expandSelectCC(MachineInstr *MI, MachineBasicBlock *BB,
+    AtomicExpansionKind shouldExpandAtomicRMWInIR(AtomicRMWInst *AI) const override;
+
+    void ReplaceNodeResults(SDNode *N,
+                            SmallVectorImpl<SDValue>& Results,
+                            SelectionDAG &DAG) const override;
+
+    MachineBasicBlock *expandSelectCC(MachineInstr &MI, MachineBasicBlock *BB,
                                       unsigned BROpcode) const;
-    MachineBasicBlock *expandAtomicRMW(MachineInstr *MI,
-                                       MachineBasicBlock *BB,
-                                       unsigned Opcode,
-                                       unsigned CondCode = 0) const;
+    MachineBasicBlock *emitEHSjLjSetJmp(MachineInstr &MI,
+                                        MachineBasicBlock *MBB) const;
+    MachineBasicBlock *emitEHSjLjLongJmp(MachineInstr &MI,
+                                         MachineBasicBlock *MBB) const;
   };
 } // end namespace llvm
 

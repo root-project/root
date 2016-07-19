@@ -61,12 +61,10 @@ namespace TMVA {
       MethodRuleFit( const TString& jobName,
                      const TString& methodTitle, 
                      DataSetInfo& theData,
-                     const TString& theOption = "",
-                     TDirectory* theTargetDir = 0 );
+                     const TString& theOption = "");
 
       MethodRuleFit( DataSetInfo& theData,
-                     const TString& theWeightFile,
-                     TDirectory* theTargetDir = NULL );
+                     const TString& theWeightFile);
 
       virtual ~MethodRuleFit( void );
 
@@ -151,13 +149,13 @@ namespace TMVA {
 
       // check variable range and set var to lower or upper if out of range
       template<typename T>
-      inline Bool_t VerifyRange( MsgLogger& mlog, const char *varstr, T& var, const T& vmin, const T& vmax );
+         inline Bool_t VerifyRange( MsgLogger& mlog, const char *varstr, T& var, const T& vmin, const T& vmax );
 
       template<typename T>
-      inline Bool_t VerifyRange( MsgLogger& mlog, const char *varstr, T& var, const T& vmin, const T& vmax, const T& vdef );
+         inline Bool_t VerifyRange( MsgLogger& mlog, const char *varstr, T& var, const T& vmin, const T& vmax, const T& vdef );
 
       template<typename T>
-      inline Int_t VerifyRange( const T& var, const T& vmin, const T& vmax );
+         inline Int_t VerifyRange( const T& var, const T& vmin, const T& vmax );
 
       // the option handling methods
       void DeclareOptions();
@@ -218,7 +216,7 @@ namespace TMVA {
       Double_t                     fRuleMinDist;    // rule min distance - see RuleEnsemble
       Double_t                     fLinQuantile;    // quantile cut to remove outliers - see RuleEnsemble
 
-      ClassDef(MethodRuleFit,0)  // Friedman's RuleFit method
+      ClassDef(MethodRuleFit,0);  // Friedman's RuleFit method
    };
 
 } // namespace TMVA

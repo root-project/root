@@ -61,12 +61,11 @@ ClassImp(TMVA::MethodKNN)
 ////////////////////////////////////////////////////////////////////////////////
 /// standard constructor
 
-TMVA::MethodKNN::MethodKNN( const TString& jobName,
-                            const TString& methodTitle,
-                            DataSetInfo& theData, 
-                            const TString& theOption,
-                            TDirectory* theTargetDir ) 
-   : TMVA::MethodBase(jobName, Types::kKNN, methodTitle, theData, theOption, theTargetDir)
+   TMVA::MethodKNN::MethodKNN( const TString& jobName,
+                               const TString& methodTitle,
+                               DataSetInfo& theData, 
+                               const TString& theOption ) 
+   : TMVA::MethodBase(jobName, Types::kKNN, methodTitle, theData, theOption)
    , fSumOfWeightsS(0)
    , fSumOfWeightsB(0)
    , fModule(0)
@@ -86,9 +85,8 @@ TMVA::MethodKNN::MethodKNN( const TString& jobName,
 /// constructor from weight file
 
 TMVA::MethodKNN::MethodKNN( DataSetInfo& theData, 
-                            const TString& theWeightFile,  
-                            TDirectory* theTargetDir ) 
-   : TMVA::MethodBase( Types::kKNN, theData, theWeightFile, theTargetDir)
+                            const TString& theWeightFile) 
+   : TMVA::MethodBase( Types::kKNN, theData, theWeightFile)
    , fSumOfWeightsS(0)
    , fSumOfWeightsB(0)
    , fModule(0)

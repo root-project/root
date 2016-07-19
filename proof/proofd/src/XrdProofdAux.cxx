@@ -32,6 +32,8 @@
 // Tracing
 #include "XrdProofdTrace.h"
 
+#include <grp.h>
+
 // Local definitions
 #ifdef XPD_MAXLEN
 #undefine XPD_MAXLEN
@@ -1086,7 +1088,7 @@ int XrdProofdAux::GetProcesses(const char *pn, std::map<int,XrdOucString> *pmap)
    if (fp != 0) {
       char line[2048] = { 0 };
       while (fgets(line, sizeof(line), fp)) {
-         int pid = (int) XrdProofdAux::GetLong(&line[from]);
+         int pid = (int) XrdProofdAux::GetLong(&line[0]);
          pmap->insert(std::make_pair(pid, XrdOucString(line)));
          np++;
       }

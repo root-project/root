@@ -1,4 +1,4 @@
-/// \file TFit.h
+/// \file ROOT/TFit.h
 /// \ingroup MathCore ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-09-06
@@ -20,14 +20,14 @@
 
 #include "ROOT/RArrayView.h"
 
+#include "ROOT/THist.h"
+
 namespace ROOT {
 namespace Experimental {
 
 class TFitResult {
 
 };
-
-template <int DIMENSION, class PRECISION> class THist;
 
 template <int DIMENSION>
 class TFunction {
@@ -36,9 +36,10 @@ public:
                                   const std::array_view<double>& par)> func) {}
 };
 
-template <int DIMENSION, class PRECISION>
-TFitResult FitTo(const THist<DIMENSION, PRECISION>& hist,
-               const TFunction<DIMENSION>& func,
+template<int DIMENSIONS, class PRECISION,
+  template <int D_, class P_, template <class P__> class S_> class... STAT>
+TFitResult FitTo(const THist<DIMENSIONS, PRECISION, STAT...>& hist,
+               const TFunction<DIMENSIONS>& func,
                std::array_view<double> paramInit){
   return TFitResult();
 }

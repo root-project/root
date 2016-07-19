@@ -63,7 +63,7 @@ namespace TMVA {
       Double_t fSigma;       // new samples are generated randomly with a gaussian probability with fSigma around the current best value
       UInt_t   fSeed;        // Seed for the random generator (0 takes random seeds)
 
-      ClassDef(MCFitter,0) //  Fitter using Monte Carlo sampling of parameters 
+      ClassDef(MCFitter,0); //  Fitter using Monte Carlo sampling of parameters 
    };
 
 } // namespace TMVA

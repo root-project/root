@@ -23,14 +23,6 @@
  #include <ntverp.h>
 #endif
 
-#ifdef __MINGW32__
- #if (HAVE_LIBIMAGEHLP != 1)
-  #error "libimagehlp.a should be present"
- #endif
-#else
- #pragma comment(lib, "dbghelp.lib")
-#endif
-
 namespace llvm {
 using namespace sys;
 
@@ -39,10 +31,21 @@ using namespace sys;
 //===          and must not be UNIX code.
 //===----------------------------------------------------------------------===//
 
+typedef BOOL (WINAPI *fpEnumerateLoadedModules)(HANDLE,PENUMLOADED_MODULES_CALLBACK64,PVOID);
+static fpEnumerateLoadedModules fEnumerateLoadedModules;
 static DenseSet<HMODULE> *OpenedHandles;
 
+static bool loadDebugHelp(void) {
+  HMODULE hLib = ::LoadLibraryW(L"Dbghelp.dll");
+  if (hLib) {
+    fEnumerateLoadedModules = (fpEnumerateLoadedModules)
+      ::GetProcAddress(hLib, "EnumerateLoadedModules64");
+  }
+  return fEnumerateLoadedModules != 0;
+}
+
 static BOOL CALLBACK
-ELM_Callback(WIN32_ELMCB_PCSTR ModuleName, ULONG_PTR ModuleBase,
+ELM_Callback(PCSTR ModuleName, DWORD64 ModuleBase,
              ULONG ModuleSize, PVOID UserContext) {
   OpenedHandles->insert((HMODULE)ModuleBase);
   return TRUE;
@@ -57,7 +60,14 @@ DynamicLibrary DynamicLibrary::getPermanentLibrary(const char *filename,
     if (OpenedHandles == 0)
       OpenedHandles = new DenseSet<HMODULE>();
 
-    EnumerateLoadedModules(GetCurrentProcess(), ELM_Callback, 0);
+    if (!fEnumerateLoadedModules) {
+      if (!loadDebugHelp()) {
+        assert(false && "These APIs should always be available");
+        return DynamicLibrary();
+      }
+    }
+
+    fEnumerateLoadedModules(GetCurrentProcess(), ELM_Callback, 0);
     // Dummy library that represents "search all handles".
     // This is mostly to ensure that the return value still shows up as "valid".
     return DynamicLibrary(&OpenedHandles);
@@ -66,14 +76,14 @@ DynamicLibrary DynamicLibrary::getPermanentLibrary(const char *filename,
   SmallVector<wchar_t, MAX_PATH> filenameUnicode;
   if (std::error_code ec = windows::UTF8ToUTF16(filename, filenameUnicode)) {
     SetLastError(ec.value());
-    MakeErrMsg(errMsg, std::string(filename) + ": Can't convert to UTF-16: ");
+    MakeErrMsg(errMsg, std::string(filename) + ": Can't convert to UTF-16");
     return DynamicLibrary();
   }
   
   HMODULE a_handle = LoadLibraryW(filenameUnicode.data());
 
   if (a_handle == 0) {
-    MakeErrMsg(errMsg, std::string(filename) + ": Can't open : ");
+    MakeErrMsg(errMsg, std::string(filename) + ": Can't open");
     return DynamicLibrary();
   }
 

@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "llvm-c/Core.h"
+#include "llvm-c/Support.h"
 #include "caml/alloc.h"
 #include "caml/custom.h"
 #include "caml/memory.h"
@@ -114,6 +115,49 @@ static value alloc_variant(int tag, void *Value) {
     return alloc_variant(0, pfun(Kid));                   \
   }
 
+/*===-- Context error handling --------------------------------------------===*/
+
+void llvm_diagnostic_handler_trampoline(LLVMDiagnosticInfoRef DI,
+                                        void *DiagnosticContext) {
+  caml_callback(*((value *)DiagnosticContext), (value)DI);
+}
+
+/* Diagnostic.t -> string */
+CAMLprim value llvm_get_diagnostic_description(value Diagnostic) {
+  return llvm_string_of_message(
+      LLVMGetDiagInfoDescription((LLVMDiagnosticInfoRef)Diagnostic));
+}
+
+/* Diagnostic.t -> DiagnosticSeverity.t */
+CAMLprim value llvm_get_diagnostic_severity(value Diagnostic) {
+  return Val_int(LLVMGetDiagInfoSeverity((LLVMDiagnosticInfoRef)Diagnostic));
+}
+
+static void llvm_remove_diagnostic_handler(LLVMContextRef C) {
+  if (LLVMContextGetDiagnosticHandler(C) ==
+      llvm_diagnostic_handler_trampoline) {
+    value *Handler = (value *)LLVMContextGetDiagnosticContext(C);
+    remove_global_root(Handler);
+    free(Handler);
+  }
+}
+
+/* llcontext -> (Diagnostic.t -> unit) option -> unit */
+CAMLprim value llvm_set_diagnostic_handler(LLVMContextRef C, value Handler) {
+  llvm_remove_diagnostic_handler(C);
+  if (Handler == Val_int(0)) {
+    LLVMContextSetDiagnosticHandler(C, NULL, NULL);
+  } else {
+    value *DiagnosticContext = malloc(sizeof(value));
+    if (DiagnosticContext == NULL)
+      caml_raise_out_of_memory();
+    caml_register_global_root(DiagnosticContext);
+    *DiagnosticContext = Field(Handler, 0);
+    LLVMContextSetDiagnosticHandler(C, llvm_diagnostic_handler_trampoline,
+                                    DiagnosticContext);
+  }
+  return Val_unit;
+}
 
 /*===-- Contexts ----------------------------------------------------------===*/
 
@@ -124,6 +168,7 @@ CAMLprim LLVMContextRef llvm_create_context(value Unit) {
 
 /* llcontext -> unit */
 CAMLprim value llvm_dispose_context(LLVMContextRef C) {
+  llvm_remove_diagnostic_handler(C);
   LLVMContextDispose(C);
   return Val_unit;
 }
@@ -689,6 +734,17 @@ CAMLprim value llvm_get_mdstring(LLVMValueRef V) {
   CAMLreturn(Val_int(0));
 }
 
+CAMLprim value llvm_get_mdnode_operands(LLVMValueRef V) {
+  CAMLparam0();
+  CAMLlocal1(Operands);
+  unsigned int n;
+
+  n = LLVMGetMDNodeNumOperands(V);
+  Operands = alloc(n, 0);
+  LLVMGetMDNodeOperands(V, (LLVMValueRef *)  Operands);
+  CAMLreturn(Operands);
+}
+
 /* llmodule -> string -> llvalue array */
 CAMLprim value llvm_get_namedmd(LLVMModuleRef M, value Name)
 {
@@ -937,6 +993,17 @@ CAMLprim value llvm_linkage(LLVMValueRef Global) {
 /* Linkage.t -> llvalue -> unit */
 CAMLprim value llvm_set_linkage(value Linkage, LLVMValueRef Global) {
   LLVMSetLinkage(Global, Int_val(Linkage));
+  return Val_unit;
+}
+
+/* llvalue -> bool */
+CAMLprim value llvm_unnamed_addr(LLVMValueRef Global) {
+  return Val_bool(LLVMHasUnnamedAddr(Global));
+}
+
+/* bool -> llvalue -> unit */
+CAMLprim value llvm_set_unnamed_addr(value UseUnnamedAddr, LLVMValueRef Global) {
+  LLVMSetUnnamedAddr(Global, Bool_val(UseUnnamedAddr));
   return Val_unit;
 }
 
@@ -2187,6 +2254,15 @@ CAMLprim LLVMValueRef llvm_build_phi(value Incoming, value Name, value B) {
     LLVMAddIncoming(PhiNode, (LLVMValueRef*) &Field(Hd, 0),
                     (LLVMBasicBlockRef*) &Field(Hd, 1), 1);
   }
+
+  return PhiNode;
+}
+
+/* lltype -> string -> llbuilder -> value */
+CAMLprim LLVMValueRef llvm_build_empty_phi(LLVMTypeRef Type, value Name, value B) {
+  LLVMValueRef PhiNode;
+
+  return LLVMBuildPhi(Builder_val(B), Type, String_val(Name));
 
   return PhiNode;
 }

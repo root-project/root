@@ -69,34 +69,29 @@ bool SlotIndexes::runOnMachineFunction(MachineFunction &fn) {
   indexList.push_back(createEntry(nullptr, index));
 
   // Iterate over the function.
-  for (MachineFunction::iterator mbbItr = mf->begin(), mbbEnd = mf->end();
-       mbbItr != mbbEnd; ++mbbItr) {
-    MachineBasicBlock *mbb = &*mbbItr;
-
+  for (MachineBasicBlock &MBB : *mf) {
     // Insert an index for the MBB start.
     SlotIndex blockStartIndex(&indexList.back(), SlotIndex::Slot_Block);
 
-    for (MachineBasicBlock::iterator miItr = mbb->begin(), miEnd = mbb->end();
-         miItr != miEnd; ++miItr) {
-      MachineInstr *mi = miItr;
-      if (mi->isDebugValue())
+    for (MachineInstr &MI : MBB) {
+      if (MI.isDebugValue())
         continue;
 
       // Insert a store index for the instr.
-      indexList.push_back(createEntry(mi, index += SlotIndex::InstrDist));
+      indexList.push_back(createEntry(&MI, index += SlotIndex::InstrDist));
 
       // Save this base index in the maps.
-      mi2iMap.insert(std::make_pair(mi, SlotIndex(&indexList.back(),
-                                                  SlotIndex::Slot_Block)));
+      mi2iMap.insert(std::make_pair(
+          &MI, SlotIndex(&indexList.back(), SlotIndex::Slot_Block)));
     }
 
     // We insert one blank instructions between basic blocks.
     indexList.push_back(createEntry(nullptr, index += SlotIndex::InstrDist));
 
-    MBBRanges[mbb->getNumber()].first = blockStartIndex;
-    MBBRanges[mbb->getNumber()].second = SlotIndex(&indexList.back(),
+    MBBRanges[MBB.getNumber()].first = blockStartIndex;
+    MBBRanges[MBB.getNumber()].second = SlotIndex(&indexList.back(),
                                                    SlotIndex::Slot_Block);
-    idx2MBBMap.push_back(IdxMBBPair(blockStartIndex, mbb));
+    idx2MBBMap.push_back(IdxMBBPair(blockStartIndex, &MBB));
   }
 
   // Sort the Idx2MBBMap
@@ -127,7 +122,7 @@ void SlotIndexes::renumberIndexes() {
 void SlotIndexes::renumberIndexes(IndexList::iterator curItr) {
   // Number indexes with half the default spacing so we can catch up quickly.
   const unsigned Space = SlotIndex::InstrDist/2;
-  assert((Space & 3) == 0 && "InstrDist must be a multiple of 2*NUM");
+  static_assert((Space & 3) == 0, "InstrDist must be a multiple of 2*NUM");
 
   IndexList::iterator startItr = std::prev(curItr);
   unsigned index = startItr->getIndex();
@@ -150,9 +145,9 @@ void SlotIndexes::repairIndexesInRange(MachineBasicBlock *MBB,
   // does the same thing.
   // Find anchor points, which are at the beginning/end of blocks or at
   // instructions that already have indexes.
-  while (Begin != MBB->begin() && !hasIndex(Begin))
+  while (Begin != MBB->begin() && !hasIndex(*Begin))
     --Begin;
-  while (End != MBB->end() && !hasIndex(End))
+  while (End != MBB->end() && !hasIndex(*End))
     ++End;
 
   bool includeStart = (Begin == MBB->begin());
@@ -160,20 +155,20 @@ void SlotIndexes::repairIndexesInRange(MachineBasicBlock *MBB,
   if (includeStart)
     startIdx = getMBBStartIdx(MBB);
   else
-    startIdx = getInstructionIndex(Begin);
+    startIdx = getInstructionIndex(*Begin);
 
   SlotIndex endIdx;
   if (End == MBB->end())
     endIdx = getMBBEndIdx(MBB);
   else
-    endIdx = getInstructionIndex(End);
+    endIdx = getInstructionIndex(*End);
 
   // FIXME: Conceptually, this code is implementing an iterator on MBB that
   // optionally includes an additional position prior to MBB->begin(), indicated
   // by the includeStart flag. This is done so that we can iterate MIs in a MBB
   // in parallel with SlotIndexes, but there should be a better way to do this.
-  IndexList::iterator ListB = startIdx.listEntry();
-  IndexList::iterator ListI = endIdx.listEntry();
+  IndexList::iterator ListB = startIdx.listEntry()->getIterator();
+  IndexList::iterator ListI = endIdx.listEntry()->getIterator();
   MachineBasicBlock::iterator MBBI = End;
   bool pastStart = false;
   while (ListI != ListB || MBBI != Begin || (includeStart && !pastStart)) {
@@ -182,7 +177,7 @@ void SlotIndexes::repairIndexesInRange(MachineBasicBlock *MBB,
            "Decremented past the beginning of region to repair.");
 
     MachineInstr *SlotMI = ListI->getInstr();
-    MachineInstr *MI = (MBBI != MBB->end() && !pastStart) ? MBBI : nullptr;
+    MachineInstr *MI = (MBBI != MBB->end() && !pastStart) ? &*MBBI : nullptr;
     bool MBBIAtBegin = MBBI == Begin && (!includeStart || pastStart);
 
     if (SlotMI == MI && !MBBIAtBegin) {
@@ -199,7 +194,7 @@ void SlotIndexes::repairIndexesInRange(MachineBasicBlock *MBB,
     } else {
       --ListI;
       if (SlotMI)
-        removeMachineInstrFromMaps(SlotMI);
+        removeMachineInstrFromMaps(*SlotMI);
     }
   }
 
@@ -207,14 +202,14 @@ void SlotIndexes::repairIndexesInRange(MachineBasicBlock *MBB,
   // to update the IndexList while we are iterating it.
   for (MachineBasicBlock::iterator I = End; I != Begin;) {
     --I;
-    MachineInstr *MI = I;
-    if (!MI->isDebugValue() && mi2iMap.find(MI) == mi2iMap.end())
+    MachineInstr &MI = *I;
+    if (!MI.isDebugValue() && mi2iMap.find(&MI) == mi2iMap.end())
       insertMachineInstrInMaps(MI);
   }
 }
 
 #if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
-void SlotIndexes::dump() const {
+LLVM_DUMP_METHOD void SlotIndexes::dump() const {
   for (IndexList::const_iterator itr = indexList.begin();
        itr != indexList.end(); ++itr) {
     dbgs() << itr->getIndex() << " ";
@@ -242,7 +237,7 @@ void SlotIndex::print(raw_ostream &os) const {
 
 #if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
 // Dump a SlotIndex to stderr.
-void SlotIndex::dump() const {
+LLVM_DUMP_METHOD void SlotIndex::dump() const {
   print(dbgs());
   dbgs() << "\n";
 }

@@ -68,7 +68,7 @@ protected:
    virtual Int_t       GetHunk(TSocket *s, char *hunk, Int_t maxsize);
    virtual const char *HttpTerminator(const char *start, const char *peeked, Int_t peeklen);
    virtual Int_t       GetFromWeb(char *buf, Int_t len, const TString &msg);
-   virtual Int_t       GetFromWeb10(char *buf, Int_t len, const TString &msg);
+   virtual Int_t       GetFromWeb10(char *buf, Int_t len, const TString &msg, Int_t nseg = 0, Long64_t *seg_pos = 0, Int_t *seg_len = 0);
    virtual Bool_t      ReadBuffer10(char *buf, Int_t len);
    virtual Bool_t      ReadBuffers10(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf);
    virtual void        SetMsgReadBuffer10(const char *redirectLocation = 0, Bool_t tempRedirect = kFALSE);

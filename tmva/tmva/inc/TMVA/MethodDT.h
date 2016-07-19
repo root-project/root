@@ -63,12 +63,10 @@ namespace TMVA {
       MethodDT( const TString& jobName, 
                 const TString& methodTitle, 
                 DataSetInfo& theData,
-                const TString& theOption = "",
-                TDirectory* theTargetDir = 0 );
+                const TString& theOption = "");
 
       MethodDT( DataSetInfo& dsi, 
-                const TString& theWeightFile,  
-                TDirectory* theTargetDir = NULL );
+                const TString& theWeightFile);
 
       virtual ~MethodDT( void );
 
@@ -150,9 +148,9 @@ namespace TMVA {
 
       Bool_t fPruneBeforeBoost; //aincient variable, only needed for "CompatibilityOptions" 
 
-      ClassDef(MethodDT,0)  // Analysis of Decision Trees 
+      ClassDef(MethodDT,0);  // Analysis of Decision Trees 
 
-         };
+   };
 }
 
 #endif

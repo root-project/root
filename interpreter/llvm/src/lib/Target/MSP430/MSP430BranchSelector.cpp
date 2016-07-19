@@ -39,6 +39,11 @@ namespace {
 
     bool runOnMachineFunction(MachineFunction &Fn) override;
 
+    MachineFunctionProperties getRequiredProperties() const override {
+      return MachineFunctionProperties().set(
+          MachineFunctionProperties::Property::AllVRegsAllocated);
+    }
+
     const char *getPassName() const override {
       return "MSP430 Branch Selector";
     }
@@ -64,7 +69,7 @@ bool MSP430BSel::runOnMachineFunction(MachineFunction &Fn) {
   unsigned FuncSize = 0;
   for (MachineFunction::iterator MFI = Fn.begin(), E = Fn.end(); MFI != E;
        ++MFI) {
-    MachineBasicBlock *MBB = MFI;
+    MachineBasicBlock *MBB = &*MFI;
 
     unsigned BlockSize = 0;
     for (MachineBasicBlock::iterator MBBI = MBB->begin(), EE = MBB->end();

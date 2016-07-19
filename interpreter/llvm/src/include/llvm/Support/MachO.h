@@ -29,7 +29,9 @@ namespace llvm {
       MH_MAGIC_64 = 0xFEEDFACFu,
       MH_CIGAM_64 = 0xCFFAEDFEu,
       FAT_MAGIC   = 0xCAFEBABEu,
-      FAT_CIGAM   = 0xBEBAFECAu
+      FAT_CIGAM   = 0xBEBAFECAu,
+      FAT_MAGIC_64 = 0xCAFEBABFu,
+      FAT_CIGAM_64 = 0xBFBAFECAu
     };
 
     enum HeaderFileType {
@@ -84,56 +86,14 @@ namespace llvm {
       LC_REQ_DYLD    = 0x80000000u
     };
 
+#define HANDLE_LOAD_COMMAND(LCName, LCValue, LCStruct) \
+    LCName = LCValue,
+
     enum LoadCommandType : uint32_t {
-      // Constants for the "cmd" field in llvm::MachO::load_command
-      LC_SEGMENT              = 0x00000001u,
-      LC_SYMTAB               = 0x00000002u,
-      LC_SYMSEG               = 0x00000003u,
-      LC_THREAD               = 0x00000004u,
-      LC_UNIXTHREAD           = 0x00000005u,
-      LC_LOADFVMLIB           = 0x00000006u,
-      LC_IDFVMLIB             = 0x00000007u,
-      LC_IDENT                = 0x00000008u,
-      LC_FVMFILE              = 0x00000009u,
-      LC_PREPAGE              = 0x0000000Au,
-      LC_DYSYMTAB             = 0x0000000Bu,
-      LC_LOAD_DYLIB           = 0x0000000Cu,
-      LC_ID_DYLIB             = 0x0000000Du,
-      LC_LOAD_DYLINKER        = 0x0000000Eu,
-      LC_ID_DYLINKER          = 0x0000000Fu,
-      LC_PREBOUND_DYLIB       = 0x00000010u,
-      LC_ROUTINES             = 0x00000011u,
-      LC_SUB_FRAMEWORK        = 0x00000012u,
-      LC_SUB_UMBRELLA         = 0x00000013u,
-      LC_SUB_CLIENT           = 0x00000014u,
-      LC_SUB_LIBRARY          = 0x00000015u,
-      LC_TWOLEVEL_HINTS       = 0x00000016u,
-      LC_PREBIND_CKSUM        = 0x00000017u,
-      LC_LOAD_WEAK_DYLIB      = 0x80000018u,
-      LC_SEGMENT_64           = 0x00000019u,
-      LC_ROUTINES_64          = 0x0000001Au,
-      LC_UUID                 = 0x0000001Bu,
-      LC_RPATH                = 0x8000001Cu,
-      LC_CODE_SIGNATURE       = 0x0000001Du,
-      LC_SEGMENT_SPLIT_INFO   = 0x0000001Eu,
-      LC_REEXPORT_DYLIB       = 0x8000001Fu,
-      LC_LAZY_LOAD_DYLIB      = 0x00000020u,
-      LC_ENCRYPTION_INFO      = 0x00000021u,
-      LC_DYLD_INFO            = 0x00000022u,
-      LC_DYLD_INFO_ONLY       = 0x80000022u,
-      LC_LOAD_UPWARD_DYLIB    = 0x80000023u,
-      LC_VERSION_MIN_MACOSX   = 0x00000024u,
-      LC_VERSION_MIN_IPHONEOS = 0x00000025u,
-      LC_FUNCTION_STARTS      = 0x00000026u,
-      LC_DYLD_ENVIRONMENT     = 0x00000027u,
-      LC_MAIN                 = 0x80000028u,
-      LC_DATA_IN_CODE         = 0x00000029u,
-      LC_SOURCE_VERSION       = 0x0000002Au,
-      LC_DYLIB_CODE_SIGN_DRS  = 0x0000002Bu,
-      LC_ENCRYPTION_INFO_64   = 0x0000002Cu,
-      LC_LINKER_OPTION        = 0x0000002Du,
-      LC_LINKER_OPTIMIZATION_HINT = 0x0000002Eu
+      #include "llvm/Support/MachO.def"
     };
+
+#undef HANDLE_LOAD_COMMAND
 
     enum : uint32_t {
       // Constant bits for the "flags" field in llvm::MachO::segment_command
@@ -141,7 +101,6 @@ namespace llvm {
       SG_FVMLIB              = 0x2u,
       SG_NORELOC             = 0x4u,
       SG_PROTECTED_VERSION_1 = 0x8u,
-
 
       // Constant masks for the "flags" field in llvm::MachO::section and
       // llvm::MachO::section_64
@@ -334,7 +293,6 @@ namespace llvm {
       EXPORT_SYMBOL_FLAGS_KIND_ABSOLUTE       = 0x02u
     };
 
-
     enum {
       // Constant masks for the "n_type" field in llvm::MachO::nlist and
       // llvm::MachO::nlist_64
@@ -385,7 +343,7 @@ namespace llvm {
       SELF_LIBRARY_ORDINAL   = 0x0,
       MAX_LIBRARY_ORDINAL    = 0xfd,
       DYNAMIC_LOOKUP_ORDINAL = 0xfe,
-      EXECUTABLE_ORDINAL     = 0xff 
+      EXECUTABLE_ORDINAL     = 0xff
     };
 
     enum StabType {
@@ -506,7 +464,6 @@ namespace llvm {
       // Must be followed by ARM64_RELOC_PAGE21 or ARM64_RELOC_PAGEOFF12.
       ARM64_RELOC_ADDEND              = 10,
 
-
       // Constant values for the r_type field in an x86_64 architecture
       // llvm::MachO::relocation_info or llvm::MachO::scattered_relocation_info
       // structure
@@ -529,7 +486,6 @@ namespace llvm {
       VM_PROT_WRITE   = 0x2,
       VM_PROT_EXECUTE = 0x4
     };
-
 
     // Structs from <mach-o/loader.h>
 
@@ -784,7 +740,6 @@ namespace llvm {
                flags:8;
     };
 
-
     struct twolevel_hints_command {
       uint32_t cmd;
       uint32_t cmdsize;
@@ -924,7 +879,6 @@ namespace llvm {
       uint64_t stacksize;
     };
 
-
     // Structs from <mach-o/fat.h>
     struct fat_header {
       uint32_t magic;
@@ -937,6 +891,15 @@ namespace llvm {
       uint32_t offset;
       uint32_t size;
       uint32_t align;
+    };
+
+    struct fat_arch_64 {
+      uint32_t cputype;
+      uint32_t cpusubtype;
+      uint64_t offset;
+      uint64_t size;
+      uint32_t align;
+      uint32_t reserved;
     };
 
     // Structs from <mach-o/reloc.h>
@@ -995,8 +958,29 @@ namespace llvm {
       uint64_t n_value;
     };
 
-
     // Byte order swapping functions for MachO structs
+
+    inline void swapStruct(fat_header &mh) {
+      sys::swapByteOrder(mh.magic);
+      sys::swapByteOrder(mh.nfat_arch);
+    }
+
+    inline void swapStruct(fat_arch &mh) {
+      sys::swapByteOrder(mh.cputype);
+      sys::swapByteOrder(mh.cpusubtype);
+      sys::swapByteOrder(mh.offset);
+      sys::swapByteOrder(mh.size);
+      sys::swapByteOrder(mh.align);
+    }
+
+    inline void swapStruct(fat_arch_64 &mh) {
+      sys::swapByteOrder(mh.cputype);
+      sys::swapByteOrder(mh.cpusubtype);
+      sys::swapByteOrder(mh.offset);
+      sys::swapByteOrder(mh.size);
+      sys::swapByteOrder(mh.align);
+      sys::swapByteOrder(mh.reserved);
+    }
 
     inline void swapStruct(mach_header &mh) {
       sys::swapByteOrder(mh.magic);
@@ -1282,6 +1266,58 @@ namespace llvm {
 
     inline void swapStruct(uint32_t &C) {
       sys::swapByteOrder(C);
+    }
+
+    inline void swapStruct(prebind_cksum_command &C) {
+      sys::swapByteOrder(C.cmd);
+      sys::swapByteOrder(C.cmdsize);
+      sys::swapByteOrder(C.cksum);
+    }
+
+    inline void swapStruct(twolevel_hints_command &C) {
+      sys::swapByteOrder(C.cmd);
+      sys::swapByteOrder(C.cmdsize);
+      sys::swapByteOrder(C.offset);
+      sys::swapByteOrder(C.nhints);
+    }
+
+    inline void swapStruct(prebound_dylib_command &C) {
+      sys::swapByteOrder(C.cmd);
+      sys::swapByteOrder(C.cmdsize);
+      sys::swapByteOrder(C.name);
+      sys::swapByteOrder(C.nmodules);
+      sys::swapByteOrder(C.linked_modules);
+    }
+
+    inline void swapStruct(fvmfile_command &C) {
+      sys::swapByteOrder(C.cmd);
+      sys::swapByteOrder(C.cmdsize);
+      sys::swapByteOrder(C.name);
+      sys::swapByteOrder(C.header_addr);
+    }
+
+    inline void swapStruct(symseg_command &C) {
+      sys::swapByteOrder(C.cmd);
+      sys::swapByteOrder(C.cmdsize);
+      sys::swapByteOrder(C.offset);
+      sys::swapByteOrder(C.size);
+    }
+
+    inline void swapStruct(ident_command &C) {
+      sys::swapByteOrder(C.cmd);
+      sys::swapByteOrder(C.cmdsize);
+    }
+
+    inline void swapStruct(fvmlib &C) {
+      sys::swapByteOrder(C.name);
+      sys::swapByteOrder(C.minor_version);
+      sys::swapByteOrder(C.header_addr);
+    }
+
+    inline void swapStruct(fvmlib_command &C) {
+      sys::swapByteOrder(C.cmd);
+      sys::swapByteOrder(C.cmdsize);
+      swapStruct(C.fvmlib);
     }
 
     // Get/Set functions from <mach-o/nlist.h>
@@ -1673,6 +1709,13 @@ namespace llvm {
       sizeof(x86_float_state_t) / sizeof(uint32_t);
     const uint32_t x86_EXCEPTION_STATE_COUNT =
       sizeof(x86_exception_state_t) / sizeof(uint32_t);
+
+    // Define a union of all load command structs
+    #define LOAD_COMMAND_STRUCT(LCStruct) LCStruct LCStruct##_data;
+
+    union macho_load_command {
+      #include "llvm/Support/MachO.def"
+    };
 
   } // end namespace MachO
 } // end namespace llvm

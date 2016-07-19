@@ -306,6 +306,8 @@ public: // Public Interface
    virtual void   SetTempLevel(int val) const;
    virtual int    UnloadFile(const char* path) const;
 
+   void               CodeComplete(const std::string&, size_t&,
+                                   std::vector<std::string>&);
    TInterpreterValue *CreateTemporary();
    void               RegisterTemporary(const TInterpreterValue& value);
    void               RegisterTemporary(const cling::Value& value);
@@ -316,7 +318,7 @@ public: // Public Interface
    // core/meta helper functions.
    virtual EReturnType MethodCallReturnType(TFunction *func) const;
    virtual void GetFunctionName(const clang::FunctionDecl *decl, std::string &name) const;
-   void DiagnoseIfInterpreterException(std::exception &e) const;
+   virtual bool DiagnoseIfInterpreterException(const std::exception &e) const;
 
    // CallFunc interface
    virtual DeclId_t GetDeclId(CallFunc_t *info) const;

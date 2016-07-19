@@ -22,31 +22,14 @@
 #include "llvm/MC/MCSection.h"
 #include "llvm/MC/MCSymbol.h"
 #include "llvm/Support/Debug.h"
+#include "llvm/Support/EndianStream.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/LEB128.h"
 #include "llvm/Support/Path.h"
 #include "llvm/Support/SourceMgr.h"
 #include "llvm/Support/raw_ostream.h"
+
 using namespace llvm;
-
-// Given a special op, return the address skip amount (in units of
-// DWARF2_LINE_MIN_INSN_LENGTH.
-#define SPECIAL_ADDR(op) (((op) - DWARF2_LINE_OPCODE_BASE)/DWARF2_LINE_RANGE)
-
-// The maximum address skip amount that can be encoded with a special op.
-#define MAX_SPECIAL_ADDR_DELTA         SPECIAL_ADDR(255)
-
-// First special line opcode - leave room for the standard opcodes.
-// Note: If you want to change this, you'll have to update the
-// "standard_opcode_lengths" table that is emitted in DwarfFileTable::Emit().
-#define DWARF2_LINE_OPCODE_BASE         13
-
-// Minimum line offset in a special line info. opcode.  This value
-// was chosen to give a reasonable range of values.
-#define DWARF2_LINE_BASE                -5
-
-// Range of line offsets in a special line info. opcode.
-#define DWARF2_LINE_RANGE               14
 
 static inline uint64_t ScaleAddrDelta(MCContext &Context, uint64_t AddrDelta) {
   unsigned MinInsnLength = Context.getAsmInfo()->getMinInstAlignment();
@@ -64,23 +47,23 @@ static inline uint64_t ScaleAddrDelta(MCContext &Context, uint64_t AddrDelta) {
 // and if there is information from the last .loc directive that has yet to have
 // a line entry made for it is made.
 //
-void MCLineEntry::Make(MCObjectStreamer *MCOS, const MCSection *Section) {
+void MCDwarfLineEntry::Make(MCObjectStreamer *MCOS, MCSection *Section) {
   if (!MCOS->getContext().getDwarfLocSeen())
     return;
 
   // Create a symbol at in the current section for use in the line entry.
-  MCSymbol *LineSym = MCOS->getContext().CreateTempSymbol();
-  // Set the value of the symbol to use for the MCLineEntry.
+  MCSymbol *LineSym = MCOS->getContext().createTempSymbol();
+  // Set the value of the symbol to use for the MCDwarfLineEntry.
   MCOS->EmitLabel(LineSym);
 
   // Get the current .loc info saved in the context.
   const MCDwarfLoc &DwarfLoc = MCOS->getContext().getCurrentDwarfLoc();
 
   // Create a (local) line entry with the symbol and the current .loc info.
-  MCLineEntry LineEntry(LineSym, DwarfLoc);
+  MCDwarfLineEntry LineEntry(LineSym, DwarfLoc);
 
   // clear DwarfLocSeen saying the current .loc info is now used.
-  MCOS->getContext().ClearDwarfLocSeen();
+  MCOS->getContext().clearDwarfLocSeen();
 
   // Add the line entry to this section's entries.
   MCOS->getContext()
@@ -98,15 +81,15 @@ static inline const MCExpr *MakeStartMinusEndExpr(const MCStreamer &MCOS,
                                                   int IntVal) {
   MCSymbolRefExpr::VariantKind Variant = MCSymbolRefExpr::VK_None;
   const MCExpr *Res =
-    MCSymbolRefExpr::Create(&End, Variant, MCOS.getContext());
+    MCSymbolRefExpr::create(&End, Variant, MCOS.getContext());
   const MCExpr *RHS =
-    MCSymbolRefExpr::Create(&Start, Variant, MCOS.getContext());
+    MCSymbolRefExpr::create(&Start, Variant, MCOS.getContext());
   const MCExpr *Res1 =
-    MCBinaryExpr::Create(MCBinaryExpr::Sub, Res, RHS, MCOS.getContext());
+    MCBinaryExpr::create(MCBinaryExpr::Sub, Res, RHS, MCOS.getContext());
   const MCExpr *Res2 =
-    MCConstantExpr::Create(IntVal, MCOS.getContext());
+    MCConstantExpr::create(IntVal, MCOS.getContext());
   const MCExpr *Res3 =
-    MCBinaryExpr::Create(MCBinaryExpr::Sub, Res1, Res2, MCOS.getContext());
+    MCBinaryExpr::create(MCBinaryExpr::Sub, Res1, Res2, MCOS.getContext());
   return Res3;
 }
 
@@ -115,8 +98,8 @@ static inline const MCExpr *MakeStartMinusEndExpr(const MCStreamer &MCOS,
 // in the LineSection.
 //
 static inline void
-EmitDwarfLineTable(MCObjectStreamer *MCOS, const MCSection *Section,
-                   const MCLineSection::MCLineEntryCollection &LineEntries) {
+EmitDwarfLineTable(MCObjectStreamer *MCOS, MCSection *Section,
+                   const MCLineSection::MCDwarfLineEntryCollection &LineEntries) {
   unsigned FileNum = 1;
   unsigned LastLine = 1;
   unsigned Column = 0;
@@ -125,47 +108,45 @@ EmitDwarfLineTable(MCObjectStreamer *MCOS, const MCSection *Section,
   unsigned Discriminator = 0;
   MCSymbol *LastLabel = nullptr;
 
-  // Loop through each MCLineEntry and encode the dwarf line number table.
-  for (auto it = LineEntries.begin(),
-            ie = LineEntries.end();
-       it != ie; ++it) {
+  // Loop through each MCDwarfLineEntry and encode the dwarf line number table.
+  for (const MCDwarfLineEntry &LineEntry : LineEntries) {
+    int64_t LineDelta = static_cast<int64_t>(LineEntry.getLine()) - LastLine;
 
-    if (FileNum != it->getFileNum()) {
-      FileNum = it->getFileNum();
+    if (FileNum != LineEntry.getFileNum()) {
+      FileNum = LineEntry.getFileNum();
       MCOS->EmitIntValue(dwarf::DW_LNS_set_file, 1);
       MCOS->EmitULEB128IntValue(FileNum);
     }
-    if (Column != it->getColumn()) {
-      Column = it->getColumn();
+    if (Column != LineEntry.getColumn()) {
+      Column = LineEntry.getColumn();
       MCOS->EmitIntValue(dwarf::DW_LNS_set_column, 1);
       MCOS->EmitULEB128IntValue(Column);
     }
-    if (Discriminator != it->getDiscriminator()) {
-      Discriminator = it->getDiscriminator();
+    if (Discriminator != LineEntry.getDiscriminator()) {
+      Discriminator = LineEntry.getDiscriminator();
       unsigned Size = getULEB128Size(Discriminator);
       MCOS->EmitIntValue(dwarf::DW_LNS_extended_op, 1);
       MCOS->EmitULEB128IntValue(Size + 1);
       MCOS->EmitIntValue(dwarf::DW_LNE_set_discriminator, 1);
       MCOS->EmitULEB128IntValue(Discriminator);
     }
-    if (Isa != it->getIsa()) {
-      Isa = it->getIsa();
+    if (Isa != LineEntry.getIsa()) {
+      Isa = LineEntry.getIsa();
       MCOS->EmitIntValue(dwarf::DW_LNS_set_isa, 1);
       MCOS->EmitULEB128IntValue(Isa);
     }
-    if ((it->getFlags() ^ Flags) & DWARF2_FLAG_IS_STMT) {
-      Flags = it->getFlags();
+    if ((LineEntry.getFlags() ^ Flags) & DWARF2_FLAG_IS_STMT) {
+      Flags = LineEntry.getFlags();
       MCOS->EmitIntValue(dwarf::DW_LNS_negate_stmt, 1);
     }
-    if (it->getFlags() & DWARF2_FLAG_BASIC_BLOCK)
+    if (LineEntry.getFlags() & DWARF2_FLAG_BASIC_BLOCK)
       MCOS->EmitIntValue(dwarf::DW_LNS_set_basic_block, 1);
-    if (it->getFlags() & DWARF2_FLAG_PROLOGUE_END)
+    if (LineEntry.getFlags() & DWARF2_FLAG_PROLOGUE_END)
       MCOS->EmitIntValue(dwarf::DW_LNS_set_prologue_end, 1);
-    if (it->getFlags() & DWARF2_FLAG_EPILOGUE_BEGIN)
+    if (LineEntry.getFlags() & DWARF2_FLAG_EPILOGUE_BEGIN)
       MCOS->EmitIntValue(dwarf::DW_LNS_set_epilogue_begin, 1);
 
-    int64_t LineDelta = static_cast<int64_t>(it->getLine()) - LastLine;
-    MCSymbol *Label = it->getLabel();
+    MCSymbol *Label = LineEntry.getLabel();
 
     // At this point we want to emit/create the sequence to encode the delta in
     // line numbers and the increment of the address from the previous Label
@@ -174,39 +155,32 @@ EmitDwarfLineTable(MCObjectStreamer *MCOS, const MCSection *Section,
     MCOS->EmitDwarfAdvanceLineAddr(LineDelta, LastLabel, Label,
                                    asmInfo->getPointerSize());
 
-    LastLine = it->getLine();
+    Discriminator = 0;
+    LastLine = LineEntry.getLine();
     LastLabel = Label;
   }
 
   // Emit a DW_LNE_end_sequence for the end of the section.
-  // Using the pointer Section create a temporary label at the end of the
-  // section and use that and the LastLabel to compute the address delta
-  // and use INT64_MAX as the line delta which is the signal that this is
-  // actually a DW_LNE_end_sequence.
+  // Use the section end label to compute the address delta and use INT64_MAX
+  // as the line delta which is the signal that this is actually a
+  // DW_LNE_end_sequence.
+  MCSymbol *SectionEnd = MCOS->endSection(Section);
 
-  // Switch to the section to be able to create a symbol at its end.
-  // TODO: keep track of the last subsection so that this symbol appears in the
-  // correct place.
-  MCOS->SwitchSection(Section);
+  // Switch back the dwarf line section, in case endSection had to switch the
+  // section.
+  MCContext &Ctx = MCOS->getContext();
+  MCOS->SwitchSection(Ctx.getObjectFileInfo()->getDwarfLineSection());
 
-  MCContext &context = MCOS->getContext();
-  // Create a symbol at the end of the section.
-  MCSymbol *SectionEnd = context.CreateTempSymbol();
-  // Set the value of the symbol, as we are at the end of the section.
-  MCOS->EmitLabel(SectionEnd);
-
-  // Switch back the dwarf line section.
-  MCOS->SwitchSection(context.getObjectFileInfo()->getDwarfLineSection());
-
-  const MCAsmInfo *asmInfo = MCOS->getContext().getAsmInfo();
+  const MCAsmInfo *AsmInfo = Ctx.getAsmInfo();
   MCOS->EmitDwarfAdvanceLineAddr(INT64_MAX, LastLabel, SectionEnd,
-                                 asmInfo->getPointerSize());
+                                 AsmInfo->getPointerSize());
 }
 
 //
 // This emits the Dwarf file and the line tables.
 //
-void MCDwarfLineTable::Emit(MCObjectStreamer *MCOS) {
+void MCDwarfLineTable::Emit(MCObjectStreamer *MCOS,
+                            MCDwarfLineTableParams Params) {
   MCContext &context = MCOS->getContext();
 
   auto &LineTables = context.getMCDwarfLineTables();
@@ -221,14 +195,17 @@ void MCDwarfLineTable::Emit(MCObjectStreamer *MCOS) {
 
   // Handle the rest of the Compile Units.
   for (const auto &CUIDTablePair : LineTables)
-    CUIDTablePair.second.EmitCU(MCOS);
+    CUIDTablePair.second.EmitCU(MCOS, Params);
 }
 
-void MCDwarfDwoLineTable::Emit(MCStreamer &MCOS) const {
-  MCOS.EmitLabel(Header.Emit(&MCOS, None).second);
+void MCDwarfDwoLineTable::Emit(MCStreamer &MCOS,
+                               MCDwarfLineTableParams Params) const {
+  MCOS.EmitLabel(Header.Emit(&MCOS, Params, None).second);
 }
 
-std::pair<MCSymbol *, MCSymbol *> MCDwarfLineTableHeader::Emit(MCStreamer *MCOS) const {
+std::pair<MCSymbol *, MCSymbol *>
+MCDwarfLineTableHeader::Emit(MCStreamer *MCOS,
+                             MCDwarfLineTableParams Params) const {
   static const char StandardOpcodeLengths[] = {
       0, // length of DW_LNS_copy
       1, // length of DW_LNS_advance_pc
@@ -243,8 +220,10 @@ std::pair<MCSymbol *, MCSymbol *> MCDwarfLineTableHeader::Emit(MCStreamer *MCOS)
       0, // length of DW_LNS_set_epilogue_begin
       1  // DW_LNS_set_isa
   };
-  assert(array_lengthof(StandardOpcodeLengths) == (DWARF2_LINE_OPCODE_BASE - 1));
-  return Emit(MCOS, StandardOpcodeLengths);
+  assert(array_lengthof(StandardOpcodeLengths) >=
+         (Params.DWARF2LineOpcodeBase - 1U));
+  return Emit(MCOS, Params, makeArrayRef(StandardOpcodeLengths,
+                                         Params.DWARF2LineOpcodeBase - 1));
 }
 
 static const MCExpr *forceExpAbs(MCStreamer &OS, const MCExpr* Expr) {
@@ -253,9 +232,9 @@ static const MCExpr *forceExpAbs(MCStreamer &OS, const MCExpr* Expr) {
   if (Context.getAsmInfo()->hasAggressiveSymbolFolding())
     return Expr;
 
-  MCSymbol *ABS = Context.CreateTempSymbol();
+  MCSymbol *ABS = Context.createTempSymbol();
   OS.EmitAssignment(ABS, Expr);
-  return MCSymbolRefExpr::Create(ABS, Context);
+  return MCSymbolRefExpr::create(ABS, Context);
 }
 
 static void emitAbsValue(MCStreamer &OS, const MCExpr *Value, unsigned Size) {
@@ -264,20 +243,19 @@ static void emitAbsValue(MCStreamer &OS, const MCExpr *Value, unsigned Size) {
 }
 
 std::pair<MCSymbol *, MCSymbol *>
-MCDwarfLineTableHeader::Emit(MCStreamer *MCOS,
+MCDwarfLineTableHeader::Emit(MCStreamer *MCOS, MCDwarfLineTableParams Params,
                              ArrayRef<char> StandardOpcodeLengths) const {
-
   MCContext &context = MCOS->getContext();
 
   // Create a symbol at the beginning of the line table.
   MCSymbol *LineStartSym = Label;
   if (!LineStartSym)
-    LineStartSym = context.CreateTempSymbol();
+    LineStartSym = context.createTempSymbol();
   // Set the value of the symbol, as we are at the start of the line table.
   MCOS->EmitLabel(LineStartSym);
 
   // Create a symbol for the end of the section (to be set when we get there).
-  MCSymbol *LineEndSym = context.CreateTempSymbol();
+  MCSymbol *LineEndSym = context.createTempSymbol();
 
   // The first 4 bytes is the total length of the information for this
   // compilation unit (not including these 4 bytes for the length).
@@ -288,7 +266,7 @@ MCDwarfLineTableHeader::Emit(MCStreamer *MCOS,
   MCOS->EmitIntValue(2, 2);
 
   // Create a symbol for the end of the prologue (to be set when we get there).
-  MCSymbol *ProEndSym = context.CreateTempSymbol(); // Lprologue_end
+  MCSymbol *ProEndSym = context.createTempSymbol(); // Lprologue_end
 
   // Length of the prologue, is the next 4 bytes.  Which is the start of the
   // section to the end of the prologue.  Not including the 4 bytes for the
@@ -301,8 +279,8 @@ MCDwarfLineTableHeader::Emit(MCStreamer *MCOS,
   // Parameters of the state machine, are next.
   MCOS->EmitIntValue(context.getAsmInfo()->getMinInstAlignment(), 1);
   MCOS->EmitIntValue(DWARF2_LINE_DEFAULT_IS_STMT, 1);
-  MCOS->EmitIntValue(DWARF2_LINE_BASE, 1);
-  MCOS->EmitIntValue(DWARF2_LINE_RANGE, 1);
+  MCOS->EmitIntValue(Params.DWARF2LineBase, 1);
+  MCOS->EmitIntValue(Params.DWARF2LineRange, 1);
   MCOS->EmitIntValue(StandardOpcodeLengths.size() + 1, 1);
 
   // Standard opcode lengths
@@ -337,8 +315,9 @@ MCDwarfLineTableHeader::Emit(MCStreamer *MCOS,
   return std::make_pair(LineStartSym, LineEndSym);
 }
 
-void MCDwarfLineTable::EmitCU(MCObjectStreamer *MCOS) const {
-  MCSymbol *LineEndSym = Header.Emit(MCOS).second;
+void MCDwarfLineTable::EmitCU(MCObjectStreamer *MCOS,
+                              MCDwarfLineTableParams Params) const {
+  MCSymbol *LineEndSym = Header.Emit(MCOS, Params).second;
 
   // Put out the line tables.
   for (const auto &LineSec : MCLineSections.getMCLineEntries())
@@ -365,11 +344,13 @@ unsigned MCDwarfLineTableHeader::getFile(StringRef &Directory,
   }
   assert(!FileName.empty());
   if (FileNumber == 0) {
-    FileNumber = SourceIdMap.size() + 1;
-    assert((MCDwarfFiles.empty() || FileNumber == MCDwarfFiles.size()) &&
-           "Don't mix autonumbered and explicit numbered line table usage");
+    // File numbers start with 1 and/or after any file numbers
+    // allocated by inline-assembler .file directives.
+    FileNumber = MCDwarfFiles.empty() ? 1 : MCDwarfFiles.size();
+    SmallString<256> Buffer;
     auto IterBool = SourceIdMap.insert(
-        std::make_pair((Directory + Twine('\0') + FileName).str(), FileNumber));
+        std::make_pair((Directory + Twine('\0') + FileName).toStringRef(Buffer),
+                       FileNumber));
     if (!IterBool.second)
       return IterBool.first->second;
   }
@@ -422,20 +403,30 @@ unsigned MCDwarfLineTableHeader::getFile(StringRef &Directory,
 }
 
 /// Utility function to emit the encoding to a streamer.
-void MCDwarfLineAddr::Emit(MCStreamer *MCOS, int64_t LineDelta,
-                           uint64_t AddrDelta) {
+void MCDwarfLineAddr::Emit(MCStreamer *MCOS, MCDwarfLineTableParams Params,
+                           int64_t LineDelta, uint64_t AddrDelta) {
   MCContext &Context = MCOS->getContext();
   SmallString<256> Tmp;
   raw_svector_ostream OS(Tmp);
-  MCDwarfLineAddr::Encode(Context, LineDelta, AddrDelta, OS);
+  MCDwarfLineAddr::Encode(Context, Params, LineDelta, AddrDelta, OS);
   MCOS->EmitBytes(OS.str());
 }
 
+/// Given a special op, return the address skip amount (in units of
+/// DWARF2_LINE_MIN_INSN_LENGTH).
+static uint64_t SpecialAddr(MCDwarfLineTableParams Params, uint64_t op) {
+  return (op - Params.DWARF2LineOpcodeBase) / Params.DWARF2LineRange;
+}
+
 /// Utility function to encode a Dwarf pair of LineDelta and AddrDeltas.
-void MCDwarfLineAddr::Encode(MCContext &Context, int64_t LineDelta,
-                             uint64_t AddrDelta, raw_ostream &OS) {
+void MCDwarfLineAddr::Encode(MCContext &Context, MCDwarfLineTableParams Params,
+                             int64_t LineDelta, uint64_t AddrDelta,
+                             raw_ostream &OS) {
   uint64_t Temp, Opcode;
   bool NeedCopy = false;
+
+  // The maximum address skip amount that can be encoded with a special op.
+  uint64_t MaxSpecialAddrDelta = SpecialAddr(Params, 255);
 
   // Scale the address delta by the minimum instruction length.
   AddrDelta = ScaleAddrDelta(Context, AddrDelta);
@@ -444,9 +435,9 @@ void MCDwarfLineAddr::Encode(MCContext &Context, int64_t LineDelta,
   // DW_LNE_end_sequence. We cannot use special opcodes here, since we want the
   // end_sequence to emit the matrix entry.
   if (LineDelta == INT64_MAX) {
-    if (AddrDelta == MAX_SPECIAL_ADDR_DELTA)
+    if (AddrDelta == MaxSpecialAddrDelta)
       OS << char(dwarf::DW_LNS_const_add_pc);
-    else {
+    else if (AddrDelta) {
       OS << char(dwarf::DW_LNS_advance_pc);
       encodeULEB128(AddrDelta, OS);
     }
@@ -457,16 +448,17 @@ void MCDwarfLineAddr::Encode(MCContext &Context, int64_t LineDelta,
   }
 
   // Bias the line delta by the base.
-  Temp = LineDelta - DWARF2_LINE_BASE;
+  Temp = LineDelta - Params.DWARF2LineBase;
 
   // If the line increment is out of range of a special opcode, we must encode
   // it with DW_LNS_advance_line.
-  if (Temp >= DWARF2_LINE_RANGE) {
+  if (Temp >= Params.DWARF2LineRange ||
+      Temp + Params.DWARF2LineOpcodeBase > 255) {
     OS << char(dwarf::DW_LNS_advance_line);
     encodeSLEB128(LineDelta, OS);
 
     LineDelta = 0;
-    Temp = 0 - DWARF2_LINE_BASE;
+    Temp = 0 - Params.DWARF2LineBase;
     NeedCopy = true;
   }
 
@@ -477,19 +469,19 @@ void MCDwarfLineAddr::Encode(MCContext &Context, int64_t LineDelta,
   }
 
   // Bias the opcode by the special opcode base.
-  Temp += DWARF2_LINE_OPCODE_BASE;
+  Temp += Params.DWARF2LineOpcodeBase;
 
   // Avoid overflow when addr_delta is large.
-  if (AddrDelta < 256 + MAX_SPECIAL_ADDR_DELTA) {
+  if (AddrDelta < 256 + MaxSpecialAddrDelta) {
     // Try using a special opcode.
-    Opcode = Temp + AddrDelta * DWARF2_LINE_RANGE;
+    Opcode = Temp + AddrDelta * Params.DWARF2LineRange;
     if (Opcode <= 255) {
       OS << char(Opcode);
       return;
     }
 
     // Try using DW_LNS_const_add_pc followed by special op.
-    Opcode = Temp + (AddrDelta - MAX_SPECIAL_ADDR_DELTA) * DWARF2_LINE_RANGE;
+    Opcode = Temp + (AddrDelta - MaxSpecialAddrDelta) * Params.DWARF2LineRange;
     if (Opcode <= 255) {
       OS << char(dwarf::DW_LNS_const_add_pc);
       OS << char(Opcode);
@@ -503,8 +495,10 @@ void MCDwarfLineAddr::Encode(MCContext &Context, int64_t LineDelta,
 
   if (NeedCopy)
     OS << char(dwarf::DW_LNS_copy);
-  else
+  else {
+    assert(Temp <= 255 && "Buggy special opcode encoding.");
     OS << char(Temp);
+  }
 }
 
 // Utility function to write a tuple for .debug_abbrev.
@@ -523,10 +517,14 @@ static void EmitGenDwarfAbbrev(MCStreamer *MCOS) {
   MCOS->EmitULEB128IntValue(1);
   MCOS->EmitULEB128IntValue(dwarf::DW_TAG_compile_unit);
   MCOS->EmitIntValue(dwarf::DW_CHILDREN_yes, 1);
-  EmitAbbrev(MCOS, dwarf::DW_AT_stmt_list, dwarf::DW_FORM_data4);
-  if (MCOS->getContext().getGenDwarfSectionSyms().size() > 1 &&
-      MCOS->getContext().getDwarfVersion() >= 3) {
-    EmitAbbrev(MCOS, dwarf::DW_AT_ranges, dwarf::DW_FORM_data4);
+  EmitAbbrev(MCOS, dwarf::DW_AT_stmt_list, context.getDwarfVersion() >= 4
+                                               ? dwarf::DW_FORM_sec_offset
+                                               : dwarf::DW_FORM_data4);
+  if (context.getGenDwarfSectionSyms().size() > 1 &&
+      context.getDwarfVersion() >= 3) {
+    EmitAbbrev(MCOS, dwarf::DW_AT_ranges, context.getDwarfVersion() >= 4
+                                              ? dwarf::DW_FORM_sec_offset
+                                              : dwarf::DW_FORM_data4);
   } else {
     EmitAbbrev(MCOS, dwarf::DW_AT_low_pc, dwarf::DW_FORM_addr);
     EmitAbbrev(MCOS, dwarf::DW_AT_high_pc, dwarf::DW_FORM_addr);
@@ -616,13 +614,13 @@ static void EmitGenDwarfAranges(MCStreamer *MCOS,
 
   // Now emit the table of pairs of PointerSize'ed values for the section
   // addresses and sizes.
-  for (const auto &sec : Sections) {
-    MCSymbol *StartSymbol = sec.second.first;
-    MCSymbol *EndSymbol = sec.second.second;
+  for (MCSection *Sec : Sections) {
+    const MCSymbol *StartSymbol = Sec->getBeginSymbol();
+    MCSymbol *EndSymbol = Sec->getEndSymbol(context);
     assert(StartSymbol && "StartSymbol must not be NULL");
     assert(EndSymbol && "EndSymbol must not be NULL");
 
-    const MCExpr *Addr = MCSymbolRefExpr::Create(
+    const MCExpr *Addr = MCSymbolRefExpr::create(
       StartSymbol, MCSymbolRefExpr::VK_None, context);
     const MCExpr *Size = MakeStartMinusEndExpr(*MCOS,
       *StartSymbol, *EndSymbol, 0);
@@ -648,9 +646,9 @@ static void EmitGenDwarfInfo(MCStreamer *MCOS,
 
   // Create a symbol at the start and end of this section used in here for the
   // expression to calculate the length in the header.
-  MCSymbol *InfoStart = context.CreateTempSymbol();
+  MCSymbol *InfoStart = context.createTempSymbol();
   MCOS->EmitLabel(InfoStart);
-  MCSymbol *InfoEnd = context.CreateTempSymbol();
+  MCSymbol *InfoEnd = context.createTempSymbol();
 
   // First part: the header.
 
@@ -705,18 +703,18 @@ static void EmitGenDwarfInfo(MCStreamer *MCOS,
     const auto TextSection = Sections.begin();
     assert(TextSection != Sections.end() && "No text section found");
 
-    MCSymbol *StartSymbol = TextSection->second.first;
-    MCSymbol *EndSymbol = TextSection->second.second;
+    MCSymbol *StartSymbol = (*TextSection)->getBeginSymbol();
+    MCSymbol *EndSymbol = (*TextSection)->getEndSymbol(context);
     assert(StartSymbol && "StartSymbol must not be NULL");
     assert(EndSymbol && "EndSymbol must not be NULL");
 
     // AT_low_pc, the first address of the default .text section.
-    const MCExpr *Start = MCSymbolRefExpr::Create(
+    const MCExpr *Start = MCSymbolRefExpr::create(
         StartSymbol, MCSymbolRefExpr::VK_None, context);
     MCOS->EmitValue(Start, AddrSize);
 
     // AT_high_pc, the last address of the default .text section.
-    const MCExpr *End = MCSymbolRefExpr::Create(
+    const MCExpr *End = MCSymbolRefExpr::create(
       EndSymbol, MCSymbolRefExpr::VK_None, context);
     MCOS->EmitValue(End, AddrSize);
   }
@@ -778,7 +776,7 @@ static void EmitGenDwarfInfo(MCStreamer *MCOS,
     MCOS->EmitIntValue(Entry.getLineNumber(), 4);
 
     // AT_low_pc, start address of the label.
-    const MCExpr *AT_low_pc = MCSymbolRefExpr::Create(Entry.getLabel(),
+    const MCExpr *AT_low_pc = MCSymbolRefExpr::create(Entry.getLabel(),
                                              MCSymbolRefExpr::VK_None, context);
     MCOS->EmitValue(AT_low_pc, AddrSize);
 
@@ -811,17 +809,16 @@ static void EmitGenDwarfRanges(MCStreamer *MCOS) {
 
   MCOS->SwitchSection(context.getObjectFileInfo()->getDwarfRangesSection());
 
-  for (const auto sec : Sections) {
-
-    MCSymbol *StartSymbol = sec.second.first;
-    MCSymbol *EndSymbol = sec.second.second;
+  for (MCSection *Sec : Sections) {
+    const MCSymbol *StartSymbol = Sec->getBeginSymbol();
+    MCSymbol *EndSymbol = Sec->getEndSymbol(context);
     assert(StartSymbol && "StartSymbol must not be NULL");
     assert(EndSymbol && "EndSymbol must not be NULL");
 
     // Emit a base address selection entry for the start of this section
-    const MCExpr *SectionStartAddr = MCSymbolRefExpr::Create(
+    const MCExpr *SectionStartAddr = MCSymbolRefExpr::create(
       StartSymbol, MCSymbolRefExpr::VK_None, context);
-    MCOS->EmitFill(AddrSize, 0xFF);
+    MCOS->emitFill(AddrSize, 0xFF);
     MCOS->EmitValue(SectionStartAddr, AddrSize);
 
     // Emit a range list entry spanning this section
@@ -852,7 +849,7 @@ void MCGenDwarfInfo::Emit(MCStreamer *MCOS) {
     LineSectionSymbol = MCOS->getDwarfLineTableSymbol(0);
   MCSymbol *AbbrevSectionSymbol = nullptr;
   MCSymbol *InfoSectionSymbol = nullptr;
-  MCSymbol *RangesSectionSymbol = NULL;
+  MCSymbol *RangesSectionSymbol = nullptr;
 
   // Create end symbols for each section, and remove empty sections
   MCOS->getContext().finalizeDwarfSections(*MCOS);
@@ -871,18 +868,18 @@ void MCGenDwarfInfo::Emit(MCStreamer *MCOS) {
 
   MCOS->SwitchSection(context.getObjectFileInfo()->getDwarfInfoSection());
   if (CreateDwarfSectionSymbols) {
-    InfoSectionSymbol = context.CreateTempSymbol();
+    InfoSectionSymbol = context.createTempSymbol();
     MCOS->EmitLabel(InfoSectionSymbol);
   }
   MCOS->SwitchSection(context.getObjectFileInfo()->getDwarfAbbrevSection());
   if (CreateDwarfSectionSymbols) {
-    AbbrevSectionSymbol = context.CreateTempSymbol();
+    AbbrevSectionSymbol = context.createTempSymbol();
     MCOS->EmitLabel(AbbrevSectionSymbol);
   }
   if (UseRangesSection) {
     MCOS->SwitchSection(context.getObjectFileInfo()->getDwarfRangesSection());
     if (CreateDwarfSectionSymbols) {
-      RangesSectionSymbol = context.CreateTempSymbol();
+      RangesSectionSymbol = context.createTempSymbol();
       MCOS->EmitLabel(RangesSectionSymbol);
     }
   }
@@ -940,7 +937,7 @@ void MCGenDwarfLabelEntry::Make(MCSymbol *Symbol, MCStreamer *MCOS,
   // values so that they don't have things like an ARM thumb bit from the
   // original symbol. So when used they won't get a low bit set after
   // relocation.
-  MCSymbol *Label = context.CreateTempSymbol();
+  MCSymbol *Label = context.createTempSymbol();
   MCOS->EmitLabel(Label);
 
   // Create and entry for the info and add it to the other entries.
@@ -1005,36 +1002,29 @@ static void EmitPersonality(MCStreamer &streamer, const MCSymbol &symbol,
 }
 
 namespace {
-  class FrameEmitterImpl {
-    int CFAOffset;
-    bool IsEH;
-    const MCSymbol *SectionStart;
-  public:
-    FrameEmitterImpl(bool isEH)
-        : CFAOffset(0), IsEH(isEH), SectionStart(nullptr) {}
+class FrameEmitterImpl {
+  int CFAOffset = 0;
+  int InitialCFAOffset = 0;
+  bool IsEH;
+  MCObjectStreamer &Streamer;
 
-    void setSectionStart(const MCSymbol *Label) { SectionStart = Label; }
+public:
+  FrameEmitterImpl(bool IsEH, MCObjectStreamer &Streamer)
+      : IsEH(IsEH), Streamer(Streamer) {}
 
-    /// Emit the unwind information in a compact way.
-    void EmitCompactUnwind(MCObjectStreamer &streamer,
-                           const MCDwarfFrameInfo &frame);
+  /// Emit the unwind information in a compact way.
+  void EmitCompactUnwind(const MCDwarfFrameInfo &frame);
 
-    const MCSymbol &EmitCIE(MCObjectStreamer &streamer,
-                            const MCSymbol *personality,
-                            unsigned personalityEncoding,
-                            const MCSymbol *lsda,
-                            bool IsSignalFrame,
-                            unsigned lsdaEncoding,
-                            bool IsSimple);
-    MCSymbol *EmitFDE(MCObjectStreamer &streamer,
-                      const MCSymbol &cieStart,
-                      const MCDwarfFrameInfo &frame);
-    void EmitCFIInstructions(MCObjectStreamer &streamer,
-                             ArrayRef<MCCFIInstruction> Instrs,
-                             MCSymbol *BaseLabel);
-    void EmitCFIInstruction(MCObjectStreamer &Streamer,
-                            const MCCFIInstruction &Instr);
-  };
+  const MCSymbol &EmitCIE(const MCSymbol *personality,
+                          unsigned personalityEncoding, const MCSymbol *lsda,
+                          bool IsSignalFrame, unsigned lsdaEncoding,
+                          bool IsSimple);
+  void EmitFDE(const MCSymbol &cieStart, const MCDwarfFrameInfo &frame,
+               bool LastInSection, const MCSymbol &SectionStart);
+  void EmitCFIInstructions(ArrayRef<MCCFIInstruction> Instrs,
+                           MCSymbol *BaseLabel);
+  void EmitCFIInstruction(const MCCFIInstruction &Instr);
+};
 
 } // end anonymous namespace
 
@@ -1042,14 +1032,18 @@ static void emitEncodingByte(MCObjectStreamer &Streamer, unsigned Encoding) {
   Streamer.EmitIntValue(Encoding, 1);
 }
 
-void FrameEmitterImpl::EmitCFIInstruction(MCObjectStreamer &Streamer,
-                                          const MCCFIInstruction &Instr) {
+void FrameEmitterImpl::EmitCFIInstruction(const MCCFIInstruction &Instr) {
   int dataAlignmentFactor = getDataAlignmentFactor(Streamer);
+  auto *MRI = Streamer.getContext().getRegisterInfo();
 
   switch (Instr.getOperation()) {
   case MCCFIInstruction::OpRegister: {
     unsigned Reg1 = Instr.getRegister();
     unsigned Reg2 = Instr.getRegister2();
+    if (!IsEH) {
+      Reg1 = MRI->getDwarfRegNum(MRI->getLLVMRegNum(Reg1, true), false);
+      Reg2 = MRI->getDwarfRegNum(MRI->getLLVMRegNum(Reg2, true), false);
+    }
     Streamer.EmitIntValue(dwarf::DW_CFA_register, 1);
     Streamer.EmitULEB128IntValue(Reg1);
     Streamer.EmitULEB128IntValue(Reg2);
@@ -1082,8 +1076,11 @@ void FrameEmitterImpl::EmitCFIInstruction(MCObjectStreamer &Streamer,
     return;
   }
   case MCCFIInstruction::OpDefCfa: {
+    unsigned Reg = Instr.getRegister();
+    if (!IsEH)
+      Reg = MRI->getDwarfRegNum(MRI->getLLVMRegNum(Reg, true), false);
     Streamer.EmitIntValue(dwarf::DW_CFA_def_cfa, 1);
-    Streamer.EmitULEB128IntValue(Instr.getRegister());
+    Streamer.EmitULEB128IntValue(Reg);
     CFAOffset = -Instr.getOffset();
     Streamer.EmitULEB128IntValue(CFAOffset);
 
@@ -1091,8 +1088,11 @@ void FrameEmitterImpl::EmitCFIInstruction(MCObjectStreamer &Streamer,
   }
 
   case MCCFIInstruction::OpDefCfaRegister: {
+    unsigned Reg = Instr.getRegister();
+    if (!IsEH)
+      Reg = MRI->getDwarfRegNum(MRI->getLLVMRegNum(Reg, true), false);
     Streamer.EmitIntValue(dwarf::DW_CFA_def_cfa_register, 1);
-    Streamer.EmitULEB128IntValue(Instr.getRegister());
+    Streamer.EmitULEB128IntValue(Reg);
 
     return;
   }
@@ -1103,6 +1103,9 @@ void FrameEmitterImpl::EmitCFIInstruction(MCObjectStreamer &Streamer,
       Instr.getOperation() == MCCFIInstruction::OpRelOffset;
 
     unsigned Reg = Instr.getRegister();
+    if (!IsEH)
+      Reg = MRI->getDwarfRegNum(MRI->getLLVMRegNum(Reg, true), false);
+
     int Offset = Instr.getOffset();
     if (IsRelative)
       Offset -= CFAOffset;
@@ -1136,7 +1139,14 @@ void FrameEmitterImpl::EmitCFIInstruction(MCObjectStreamer &Streamer,
   }
   case MCCFIInstruction::OpRestore: {
     unsigned Reg = Instr.getRegister();
+    if (!IsEH)
+      Reg = MRI->getDwarfRegNum(MRI->getLLVMRegNum(Reg, true), false);
     Streamer.EmitIntValue(dwarf::DW_CFA_restore | Reg, 1);
+    return;
+  }
+  case MCCFIInstruction::OpGnuArgsSize: {
+    Streamer.EmitIntValue(dwarf::DW_CFA_GNU_args_size, 1);
+    Streamer.EmitULEB128IntValue(Instr.getOffset());
     return;
   }
   case MCCFIInstruction::OpEscape:
@@ -1147,11 +1157,9 @@ void FrameEmitterImpl::EmitCFIInstruction(MCObjectStreamer &Streamer,
 }
 
 /// Emit frame instructions to describe the layout of the frame.
-void FrameEmitterImpl::EmitCFIInstructions(MCObjectStreamer &streamer,
-                                           ArrayRef<MCCFIInstruction> Instrs,
+void FrameEmitterImpl::EmitCFIInstructions(ArrayRef<MCCFIInstruction> Instrs,
                                            MCSymbol *BaseLabel) {
-  for (unsigned i = 0, N = Instrs.size(); i < N; ++i) {
-    const MCCFIInstruction &Instr = Instrs[i];
+  for (const MCCFIInstruction &Instr : Instrs) {
     MCSymbol *Label = Instr.getLabel();
     // Throw out move if the label is invalid.
     if (Label && !Label->isDefined()) continue; // Not emitted, in dead code.
@@ -1160,18 +1168,17 @@ void FrameEmitterImpl::EmitCFIInstructions(MCObjectStreamer &streamer,
     if (BaseLabel && Label) {
       MCSymbol *ThisSym = Label;
       if (ThisSym != BaseLabel) {
-        streamer.EmitDwarfAdvanceFrameAddr(BaseLabel, ThisSym);
+        Streamer.EmitDwarfAdvanceFrameAddr(BaseLabel, ThisSym);
         BaseLabel = ThisSym;
       }
     }
 
-    EmitCFIInstruction(streamer, Instr);
+    EmitCFIInstruction(Instr);
   }
 }
 
 /// Emit the unwind information in a compact way.
-void FrameEmitterImpl::EmitCompactUnwind(MCObjectStreamer &Streamer,
-                                         const MCDwarfFrameInfo &Frame) {
+void FrameEmitterImpl::EmitCompactUnwind(const MCDwarfFrameInfo &Frame) {
   MCContext &Context = Streamer.getContext();
   const MCObjectFileInfo *MOFI = Context.getObjectFileInfo();
 
@@ -1234,36 +1241,48 @@ void FrameEmitterImpl::EmitCompactUnwind(MCObjectStreamer &Streamer,
     Streamer.EmitIntValue(0, Size); // No LSDA
 }
 
-const MCSymbol &FrameEmitterImpl::EmitCIE(MCObjectStreamer &streamer,
-                                          const MCSymbol *personality,
+static unsigned getCIEVersion(bool IsEH, unsigned DwarfVersion) {
+  if (IsEH)
+    return 1;
+  switch (DwarfVersion) {
+  case 2:
+    return 1;
+  case 3:
+    return 3;
+  case 4:
+  case 5:
+    return 4;
+  }
+  llvm_unreachable("Unknown version");
+}
+
+const MCSymbol &FrameEmitterImpl::EmitCIE(const MCSymbol *personality,
                                           unsigned personalityEncoding,
                                           const MCSymbol *lsda,
                                           bool IsSignalFrame,
                                           unsigned lsdaEncoding,
                                           bool IsSimple) {
-  MCContext &context = streamer.getContext();
+  MCContext &context = Streamer.getContext();
   const MCRegisterInfo *MRI = context.getRegisterInfo();
   const MCObjectFileInfo *MOFI = context.getObjectFileInfo();
 
-  MCSymbol *sectionStart = context.CreateTempSymbol();
-  streamer.EmitLabel(sectionStart);
+  MCSymbol *sectionStart = context.createTempSymbol();
+  Streamer.EmitLabel(sectionStart);
 
-  MCSymbol *sectionEnd = context.CreateTempSymbol();
+  MCSymbol *sectionEnd = context.createTempSymbol();
 
   // Length
-  const MCExpr *Length = MakeStartMinusEndExpr(streamer, *sectionStart,
-                                               *sectionEnd, 4);
-  emitAbsValue(streamer, Length, 4);
+  const MCExpr *Length =
+      MakeStartMinusEndExpr(Streamer, *sectionStart, *sectionEnd, 4);
+  emitAbsValue(Streamer, Length, 4);
 
   // CIE ID
   unsigned CIE_ID = IsEH ? 0 : -1;
-  streamer.EmitIntValue(CIE_ID, 4);
+  Streamer.EmitIntValue(CIE_ID, 4);
 
   // Version
-  // For DWARF2, we use CIE version 1
-  // For DWARF3+, we use CIE version 3
-  uint8_t CIEVersion = context.getDwarfVersion() <= 2 ? 1 : 3;
-  streamer.EmitIntValue(CIEVersion, 1);
+  uint8_t CIEVersion = getCIEVersion(IsEH, context.getDwarfVersion());
+  Streamer.EmitIntValue(CIEVersion, 1);
 
   // Augmentation String
   SmallString<8> Augmentation;
@@ -1276,24 +1295,32 @@ const MCSymbol &FrameEmitterImpl::EmitCIE(MCObjectStreamer &streamer,
     Augmentation += "R";
     if (IsSignalFrame)
       Augmentation += "S";
-    streamer.EmitBytes(Augmentation.str());
+    Streamer.EmitBytes(Augmentation);
   }
-  streamer.EmitIntValue(0, 1);
+  Streamer.EmitIntValue(0, 1);
+
+  if (CIEVersion >= 4) {
+    // Address Size
+    Streamer.EmitIntValue(context.getAsmInfo()->getPointerSize(), 1);
+
+    // Segment Descriptor Size
+    Streamer.EmitIntValue(0, 1);
+  }
 
   // Code Alignment Factor
-  streamer.EmitULEB128IntValue(context.getAsmInfo()->getMinInstAlignment());
+  Streamer.EmitULEB128IntValue(context.getAsmInfo()->getMinInstAlignment());
 
   // Data Alignment Factor
-  streamer.EmitSLEB128IntValue(getDataAlignmentFactor(streamer));
+  Streamer.EmitSLEB128IntValue(getDataAlignmentFactor(Streamer));
 
   // Return Address Register
   if (CIEVersion == 1) {
     assert(MRI->getRARegister() <= 255 &&
            "DWARF 2 encodes return_address_register in one byte");
-    streamer.EmitIntValue(MRI->getDwarfRegNum(MRI->getRARegister(), true), 1);
+    Streamer.EmitIntValue(MRI->getDwarfRegNum(MRI->getRARegister(), IsEH), 1);
   } else {
-    streamer.EmitULEB128IntValue(
-        MRI->getDwarfRegNum(MRI->getRARegister(), true));
+    Streamer.EmitULEB128IntValue(
+        MRI->getDwarfRegNum(MRI->getRARegister(), IsEH));
   }
 
   // Augmentation Data Length (optional)
@@ -1304,28 +1331,28 @@ const MCSymbol &FrameEmitterImpl::EmitCIE(MCObjectStreamer &streamer,
       // Personality Encoding
       augmentationLength += 1;
       // Personality
-      augmentationLength += getSizeForEncoding(streamer, personalityEncoding);
+      augmentationLength += getSizeForEncoding(Streamer, personalityEncoding);
     }
     if (lsda)
       augmentationLength += 1;
     // Encoding of the FDE pointers
     augmentationLength += 1;
 
-    streamer.EmitULEB128IntValue(augmentationLength);
+    Streamer.EmitULEB128IntValue(augmentationLength);
 
     // Augmentation Data (optional)
     if (personality) {
       // Personality Encoding
-      emitEncodingByte(streamer, personalityEncoding);
+      emitEncodingByte(Streamer, personalityEncoding);
       // Personality
-      EmitPersonality(streamer, *personality, personalityEncoding);
+      EmitPersonality(Streamer, *personality, personalityEncoding);
     }
 
     if (lsda)
-      emitEncodingByte(streamer, lsdaEncoding);
+      emitEncodingByte(Streamer, lsdaEncoding);
 
     // Encoding of the FDE pointers
-    emitEncodingByte(streamer, MOFI->getFDEEncoding());
+    emitEncodingByte(Streamer, MOFI->getFDEEncoding());
   }
 
   // Initial Instructions
@@ -1334,126 +1361,127 @@ const MCSymbol &FrameEmitterImpl::EmitCIE(MCObjectStreamer &streamer,
   if (!IsSimple) {
     const std::vector<MCCFIInstruction> &Instructions =
         MAI->getInitialFrameState();
-    EmitCFIInstructions(streamer, Instructions, nullptr);
+    EmitCFIInstructions(Instructions, nullptr);
   }
 
-  // Padding
-  streamer.EmitValueToAlignment(IsEH ? 4 : MAI->getPointerSize());
+  InitialCFAOffset = CFAOffset;
 
-  streamer.EmitLabel(sectionEnd);
+  // Padding
+  Streamer.EmitValueToAlignment(IsEH ? 4 : MAI->getPointerSize());
+
+  Streamer.EmitLabel(sectionEnd);
   return *sectionStart;
 }
 
-MCSymbol *FrameEmitterImpl::EmitFDE(MCObjectStreamer &streamer,
-                                    const MCSymbol &cieStart,
-                                    const MCDwarfFrameInfo &frame) {
-  MCContext &context = streamer.getContext();
-  MCSymbol *fdeStart = context.CreateTempSymbol();
-  MCSymbol *fdeEnd = context.CreateTempSymbol();
+void FrameEmitterImpl::EmitFDE(const MCSymbol &cieStart,
+                               const MCDwarfFrameInfo &frame,
+                               bool LastInSection,
+                               const MCSymbol &SectionStart) {
+  MCContext &context = Streamer.getContext();
+  MCSymbol *fdeStart = context.createTempSymbol();
+  MCSymbol *fdeEnd = context.createTempSymbol();
   const MCObjectFileInfo *MOFI = context.getObjectFileInfo();
 
-  // Length
-  const MCExpr *Length = MakeStartMinusEndExpr(streamer, *fdeStart, *fdeEnd, 0);
-  emitAbsValue(streamer, Length, 4);
+  CFAOffset = InitialCFAOffset;
 
-  streamer.EmitLabel(fdeStart);
+  // Length
+  const MCExpr *Length = MakeStartMinusEndExpr(Streamer, *fdeStart, *fdeEnd, 0);
+  emitAbsValue(Streamer, Length, 4);
+
+  Streamer.EmitLabel(fdeStart);
 
   // CIE Pointer
   const MCAsmInfo *asmInfo = context.getAsmInfo();
   if (IsEH) {
-    const MCExpr *offset = MakeStartMinusEndExpr(streamer, cieStart, *fdeStart,
-                                                 0);
-    emitAbsValue(streamer, offset, 4);
+    const MCExpr *offset =
+        MakeStartMinusEndExpr(Streamer, cieStart, *fdeStart, 0);
+    emitAbsValue(Streamer, offset, 4);
   } else if (!asmInfo->doesDwarfUseRelocationsAcrossSections()) {
-    const MCExpr *offset = MakeStartMinusEndExpr(streamer, *SectionStart,
-                                                 cieStart, 0);
-    emitAbsValue(streamer, offset, 4);
+    const MCExpr *offset =
+        MakeStartMinusEndExpr(Streamer, SectionStart, cieStart, 0);
+    emitAbsValue(Streamer, offset, 4);
   } else {
-    streamer.EmitSymbolValue(&cieStart, 4);
+    Streamer.EmitSymbolValue(&cieStart, 4);
   }
 
   // PC Begin
   unsigned PCEncoding =
       IsEH ? MOFI->getFDEEncoding() : (unsigned)dwarf::DW_EH_PE_absptr;
-  unsigned PCSize = getSizeForEncoding(streamer, PCEncoding);
-  emitFDESymbol(streamer, *frame.Begin, PCEncoding, IsEH);
+  unsigned PCSize = getSizeForEncoding(Streamer, PCEncoding);
+  emitFDESymbol(Streamer, *frame.Begin, PCEncoding, IsEH);
 
   // PC Range
-  const MCExpr *Range = MakeStartMinusEndExpr(streamer, *frame.Begin,
-                                              *frame.End, 0);
-  emitAbsValue(streamer, Range, PCSize);
+  const MCExpr *Range =
+      MakeStartMinusEndExpr(Streamer, *frame.Begin, *frame.End, 0);
+  emitAbsValue(Streamer, Range, PCSize);
 
   if (IsEH) {
     // Augmentation Data Length
     unsigned augmentationLength = 0;
 
     if (frame.Lsda)
-      augmentationLength += getSizeForEncoding(streamer, frame.LsdaEncoding);
+      augmentationLength += getSizeForEncoding(Streamer, frame.LsdaEncoding);
 
-    streamer.EmitULEB128IntValue(augmentationLength);
+    Streamer.EmitULEB128IntValue(augmentationLength);
 
     // Augmentation Data
     if (frame.Lsda)
-      emitFDESymbol(streamer, *frame.Lsda, frame.LsdaEncoding, true);
+      emitFDESymbol(Streamer, *frame.Lsda, frame.LsdaEncoding, true);
   }
 
   // Call Frame Instructions
-  EmitCFIInstructions(streamer, frame.Instructions, frame.Begin);
+  EmitCFIInstructions(frame.Instructions, frame.Begin);
 
   // Padding
-  streamer.EmitValueToAlignment(PCSize);
+  // The size of a .eh_frame section has to be a multiple of the alignment
+  // since a null CIE is interpreted as the end. Old systems overaligned
+  // .eh_frame, so we do too and account for it in the last FDE.
+  unsigned Align = LastInSection ? asmInfo->getPointerSize() : PCSize;
+  Streamer.EmitValueToAlignment(Align);
 
-  return fdeEnd;
+  Streamer.EmitLabel(fdeEnd);
 }
 
 namespace {
-  struct CIEKey {
-    static const CIEKey getEmptyKey() {
-      return CIEKey(nullptr, 0, -1, false, false);
-    }
-    static const CIEKey getTombstoneKey() {
-      return CIEKey(nullptr, -1, 0, false, false);
-    }
+struct CIEKey {
+  static const CIEKey getEmptyKey() {
+    return CIEKey(nullptr, 0, -1, false, false);
+  }
+  static const CIEKey getTombstoneKey() {
+    return CIEKey(nullptr, -1, 0, false, false);
+  }
 
-    CIEKey(const MCSymbol *Personality_, unsigned PersonalityEncoding_,
-           unsigned LsdaEncoding_, bool IsSignalFrame_, bool IsSimple_)
-        : Personality(Personality_), PersonalityEncoding(PersonalityEncoding_),
-          LsdaEncoding(LsdaEncoding_), IsSignalFrame(IsSignalFrame_),
-          IsSimple(IsSimple_) {}
-    const MCSymbol *Personality;
-    unsigned PersonalityEncoding;
-    unsigned LsdaEncoding;
-    bool IsSignalFrame;
-    bool IsSimple;
-  };
-}
+  CIEKey(const MCSymbol *Personality, unsigned PersonalityEncoding,
+         unsigned LsdaEncoding, bool IsSignalFrame, bool IsSimple)
+      : Personality(Personality), PersonalityEncoding(PersonalityEncoding),
+        LsdaEncoding(LsdaEncoding), IsSignalFrame(IsSignalFrame),
+        IsSimple(IsSimple) {}
+  const MCSymbol *Personality;
+  unsigned PersonalityEncoding;
+  unsigned LsdaEncoding;
+  bool IsSignalFrame;
+  bool IsSimple;
+};
+} // anonymous namespace
 
 namespace llvm {
-  template <>
-  struct DenseMapInfo<CIEKey> {
-    static CIEKey getEmptyKey() {
-      return CIEKey::getEmptyKey();
-    }
-    static CIEKey getTombstoneKey() {
-      return CIEKey::getTombstoneKey();
-    }
-    static unsigned getHashValue(const CIEKey &Key) {
-      return static_cast<unsigned>(hash_combine(Key.Personality,
-                                                Key.PersonalityEncoding,
-                                                Key.LsdaEncoding,
-                                                Key.IsSignalFrame,
-                                                Key.IsSimple));
-    }
-    static bool isEqual(const CIEKey &LHS,
-                        const CIEKey &RHS) {
-      return LHS.Personality == RHS.Personality &&
-        LHS.PersonalityEncoding == RHS.PersonalityEncoding &&
-        LHS.LsdaEncoding == RHS.LsdaEncoding &&
-        LHS.IsSignalFrame == RHS.IsSignalFrame &&
-        LHS.IsSimple == RHS.IsSimple;
-    }
-  };
-}
+template <> struct DenseMapInfo<CIEKey> {
+  static CIEKey getEmptyKey() { return CIEKey::getEmptyKey(); }
+  static CIEKey getTombstoneKey() { return CIEKey::getTombstoneKey(); }
+  static unsigned getHashValue(const CIEKey &Key) {
+    return static_cast<unsigned>(
+        hash_combine(Key.Personality, Key.PersonalityEncoding, Key.LsdaEncoding,
+                     Key.IsSignalFrame, Key.IsSimple));
+  }
+  static bool isEqual(const CIEKey &LHS, const CIEKey &RHS) {
+    return LHS.Personality == RHS.Personality &&
+           LHS.PersonalityEncoding == RHS.PersonalityEncoding &&
+           LHS.LsdaEncoding == RHS.LsdaEncoding &&
+           LHS.IsSignalFrame == RHS.IsSignalFrame &&
+           LHS.IsSimple == RHS.IsSimple;
+  }
+};
+} // namespace llvm
 
 void MCDwarfFrameEmitter::Emit(MCObjectStreamer &Streamer, MCAsmBackend *MAB,
                                bool IsEH) {
@@ -1461,15 +1489,14 @@ void MCDwarfFrameEmitter::Emit(MCObjectStreamer &Streamer, MCAsmBackend *MAB,
 
   MCContext &Context = Streamer.getContext();
   const MCObjectFileInfo *MOFI = Context.getObjectFileInfo();
-  FrameEmitterImpl Emitter(IsEH);
+  FrameEmitterImpl Emitter(IsEH, Streamer);
   ArrayRef<MCDwarfFrameInfo> FrameArray = Streamer.getDwarfFrameInfos();
 
   // Emit the compact unwind info if available.
   bool NeedsEHFrameSection = !MOFI->getSupportsCompactUnwindWithoutEHFrame();
   if (IsEH && MOFI->getCompactUnwindSection()) {
     bool SectionEmitted = false;
-    for (unsigned i = 0, n = FrameArray.size(); i < n; ++i) {
-      const MCDwarfFrameInfo &Frame = FrameArray[i];
+    for (const MCDwarfFrameInfo &Frame : FrameArray) {
       if (Frame.CompactUnwindEncoding == 0) continue;
       if (!SectionEmitted) {
         Streamer.SwitchSection(MOFI->getCompactUnwindSection());
@@ -1479,36 +1506,28 @@ void MCDwarfFrameEmitter::Emit(MCObjectStreamer &Streamer, MCAsmBackend *MAB,
       NeedsEHFrameSection |=
         Frame.CompactUnwindEncoding ==
           MOFI->getCompactUnwindDwarfEHFrameOnly();
-      Emitter.EmitCompactUnwind(Streamer, Frame);
+      Emitter.EmitCompactUnwind(Frame);
     }
   }
 
   if (!NeedsEHFrameSection) return;
 
-  const MCSection &Section =
-    IsEH ? *const_cast<MCObjectFileInfo*>(MOFI)->getEHFrameSection() :
-           *MOFI->getDwarfFrameSection();
+  MCSection &Section =
+      IsEH ? *const_cast<MCObjectFileInfo *>(MOFI)->getEHFrameSection()
+           : *MOFI->getDwarfFrameSection();
 
   Streamer.SwitchSection(&Section);
-  MCSymbol *SectionStart = Context.CreateTempSymbol();
+  MCSymbol *SectionStart = Context.createTempSymbol();
   Streamer.EmitLabel(SectionStart);
-  Emitter.setSectionStart(SectionStart);
 
-  MCSymbol *FDEEnd = nullptr;
   DenseMap<CIEKey, const MCSymbol *> CIEStarts;
 
   const MCSymbol *DummyDebugKey = nullptr;
-  NeedsEHFrameSection = !MOFI->getSupportsCompactUnwindWithoutEHFrame();
-  for (unsigned i = 0, n = FrameArray.size(); i < n; ++i) {
-    const MCDwarfFrameInfo &Frame = FrameArray[i];
-
-    // Emit the label from the previous iteration
-    if (FDEEnd) {
-      Streamer.EmitLabel(FDEEnd);
-      FDEEnd = nullptr;
-    }
-
-    if (!NeedsEHFrameSection && Frame.CompactUnwindEncoding !=
+  bool CanOmitDwarf = MOFI->getOmitDwarfIfHaveCompactUnwind();
+  for (auto I = FrameArray.begin(), E = FrameArray.end(); I != E;) {
+    const MCDwarfFrameInfo &Frame = *I;
+    ++I;
+    if (CanOmitDwarf && Frame.CompactUnwindEncoding !=
           MOFI->getCompactUnwindDwarfEHFrameOnly())
       // Don't generate an EH frame if we don't need one. I.e., it's taken care
       // of by the compact unwind encoding.
@@ -1518,18 +1537,12 @@ void MCDwarfFrameEmitter::Emit(MCObjectStreamer &Streamer, MCAsmBackend *MAB,
                Frame.LsdaEncoding, Frame.IsSignalFrame, Frame.IsSimple);
     const MCSymbol *&CIEStart = IsEH ? CIEStarts[Key] : DummyDebugKey;
     if (!CIEStart)
-      CIEStart = &Emitter.EmitCIE(Streamer, Frame.Personality,
-                                  Frame.PersonalityEncoding, Frame.Lsda,
-                                  Frame.IsSignalFrame,
-                                  Frame.LsdaEncoding,
-                                  Frame.IsSimple);
+      CIEStart = &Emitter.EmitCIE(Frame.Personality, Frame.PersonalityEncoding,
+                                  Frame.Lsda, Frame.IsSignalFrame,
+                                  Frame.LsdaEncoding, Frame.IsSimple);
 
-    FDEEnd = Emitter.EmitFDE(Streamer, *CIEStart, Frame);
+    Emitter.EmitFDE(*CIEStart, Frame, I == E, *SectionStart);
   }
-
-  Streamer.EmitValueToAlignment(Context.getAsmInfo()->getPointerSize());
-  if (FDEEnd)
-    Streamer.EmitLabel(FDEEnd);
 }
 
 void MCDwarfFrameEmitter::EmitAdvanceLoc(MCObjectStreamer &Streamer,
@@ -1555,18 +1568,17 @@ void MCDwarfFrameEmitter::EncodeAdvanceLoc(MCContext &Context,
     OS << uint8_t(dwarf::DW_CFA_advance_loc1);
     OS << uint8_t(AddrDelta);
   } else if (isUInt<16>(AddrDelta)) {
-    // FIXME: check what is the correct behavior on a big endian machine.
     OS << uint8_t(dwarf::DW_CFA_advance_loc2);
-    OS << uint8_t( AddrDelta       & 0xff);
-    OS << uint8_t((AddrDelta >> 8) & 0xff);
+    if (Context.getAsmInfo()->isLittleEndian())
+      support::endian::Writer<support::little>(OS).write<uint16_t>(AddrDelta);
+    else
+      support::endian::Writer<support::big>(OS).write<uint16_t>(AddrDelta);
   } else {
-    // FIXME: check what is the correct behavior on a big endian machine.
     assert(isUInt<32>(AddrDelta));
     OS << uint8_t(dwarf::DW_CFA_advance_loc4);
-    OS << uint8_t( AddrDelta        & 0xff);
-    OS << uint8_t((AddrDelta >> 8)  & 0xff);
-    OS << uint8_t((AddrDelta >> 16) & 0xff);
-    OS << uint8_t((AddrDelta >> 24) & 0xff);
-
+    if (Context.getAsmInfo()->isLittleEndian())
+      support::endian::Writer<support::little>(OS).write<uint32_t>(AddrDelta);
+    else
+      support::endian::Writer<support::big>(OS).write<uint32_t>(AddrDelta);
   }
 }

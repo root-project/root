@@ -1,4 +1,6 @@
 add_llvm_library(LLVMMCJIT
   MCJIT.cpp
-  SectionMemoryManager.cpp
+
+  DEPENDS
+  intrinsics_gen
   )

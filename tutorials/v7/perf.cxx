@@ -1,8 +1,11 @@
-/// \file perf.cxx
-/// \ingroup Tutorials
-/// \author Axel Naumann <axel@cern.ch>
+/// \file
+/// \ingroup tutorial_v7
+///
+/// \macro_code
+///
 /// \date 2015-07-08
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+/// \author Axel Naumann <axel@cern.ch>
 
 /*************************************************************************
  * Copyright (C) 1995-2015, Rene Brun and Fons Rademakers.               *
@@ -23,21 +26,21 @@
 long createNew(int count) {
   long ret = 1;
   for (int i = 0; i < count; ++i) {
-    experimental::TH2D hist({{{100, 0., 1.}, {{0., 1., 2., 3., 10.}}}});
+    Experimental::TH2D hist({{{100, 0., 1.}, {{0., 1., 2., 3., 10.}}}});
     ret ^= (long)&hist;
   }
   return ret;
 }
 
 long fillNew(int count) {
-  experimental::TH2D hist({{{100, 0., 1.}, {{0., 1., 2., 3., 10.}}}});
+  Experimental::TH2D hist({{{100, 0., 1.}, {{0., 1., 2., 3., 10.}}}});
   for (int i = 0; i < count; ++i)
     hist.Fill({0.611, 0.611});
   return hist.GetNDim();
 }
 
 long fillN(int count) {
-  experimental::TH2D hist({{{100, 0., 1.}, {{0., 1., 2., 3., 10.}}}});
+  Experimental::TH2D hist({{{100, 0., 1.}, {{0., 1., 2., 3., 10.}}}});
   std::vector<std::array<double,2>> v(count);
   for (int i = 0; i < count; ++i)
     v[i] = {0.611, 0.611};
@@ -46,8 +49,8 @@ long fillN(int count) {
 }
 
 long fillBufferedNew(int count) {
-  experimental::TH2D hist({{{100, 0., 1.}, {{0., 1., 2., 3., 10.}}}});
-  experimental::THistBufferedFill<experimental::TH2D> filler(hist);
+  Experimental::TH2D hist({{{100, 0., 1.}, {{0., 1., 2., 3., 10.}}}});
+  Experimental::THistBufferedFill<Experimental::TH2D> filler(hist);
   for (int i = 0; i < count; ++i)
     filler.Fill({0.611, 0.611});
   return hist.GetNDim();

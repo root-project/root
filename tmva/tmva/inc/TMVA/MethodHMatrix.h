@@ -66,12 +66,10 @@ namespace TMVA {
       MethodHMatrix( const TString& jobName, 
                      const TString& methodTitle, 
                      DataSetInfo& theData,
-                     const TString& theOption = "",
-                     TDirectory* theTargetDir = 0 );
+                     const TString& theOption = "");
 
       MethodHMatrix( DataSetInfo& theData, 
-                     const TString& theWeightFile,  
-                     TDirectory* theTargetDir = NULL );
+                     const TString& theWeightFile);
 
       virtual ~MethodHMatrix();
     
@@ -123,7 +121,7 @@ namespace TMVA {
       // default initialisation method called by all constructors
       void Init(); 
 
-      ClassDef(MethodHMatrix,0) // H-Matrix method, a simple comparison of chi-squared estimators for signal and background
+      ClassDef(MethodHMatrix,0); // H-Matrix method, a simple comparison of chi-squared estimators for signal and background
    }; 
 
 } // namespace TMVA

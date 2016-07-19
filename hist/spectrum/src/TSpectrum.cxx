@@ -39,6 +39,10 @@
  - [Spectrum.pdf](ftp://root.cern.ch/download/doc/spectrum/Spectrum.pdf)
  - [SpectrumLetter.pdf](ftp://root.cern.ch/download/doc/spectrum/SpectrumLetter.pdf)
  - [Spectrum.epub](ftp://root.cern.ch/download/doc/spectrum/Spectrum.epub)
+
+ See also the
+ [online documentation](https://root.cern.ch/guides/tspectrum-manual) and
+ [tutorials](https://root.cern.ch/doc/master/group__tutorial__spectrum.html).
 */
 
 Int_t TSpectrum::fgIterations    = 3;

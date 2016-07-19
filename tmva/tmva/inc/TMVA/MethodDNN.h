@@ -61,21 +61,19 @@
 
 namespace TMVA {
 
-    class MethodDNN : public MethodBase
+   class MethodDNN : public MethodBase
    {
 
    public:
 
       // standard constructors
       MethodDNN ( const TString& jobName,
-                 const TString&  methodTitle,
-                 DataSetInfo& theData,
-                 const TString& theOption,
-                 TDirectory* theTargetDir = 0 );
+                  const TString&  methodTitle,
+                  DataSetInfo& theData,
+                  const TString& theOption);
 
       MethodDNN ( DataSetInfo& theData,
-                 const TString& theWeightFile,
-                 TDirectory* theTargetDir = 0 );
+                  const TString& theWeightFile );
 
       virtual ~MethodDNN();
 
@@ -150,7 +148,7 @@ namespace TMVA {
       TString  fFileName;
       double fScaleToNumEvents;
 
-      ClassDef(MethodDNN,0) // neural network 
+      ClassDef(MethodDNN,0); // neural network 
    };
 
 } // namespace TMVA
@@ -158,16 +156,16 @@ namespace TMVA {
 
 // make_unqiue is only available with C++14
 template <typename T, typename... Args>
-std::unique_ptr<T> make_unique (Args&&... args)
+   std::unique_ptr<T> make_unique (Args&&... args)
 {
-    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+   return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
 
 // make_shared is only available with C++14
 template <typename T, typename... Args>
-std::shared_ptr<T> make_shared (Args&&... args)
+   std::shared_ptr<T> make_shared (Args&&... args)
 {
-    return std::shared_ptr<T>(new T(std::forward<Args>(args)...));
+   return std::shared_ptr<T>(new T(std::forward<Args>(args)...));
 }
 
 

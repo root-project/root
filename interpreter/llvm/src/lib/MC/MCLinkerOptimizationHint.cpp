@@ -9,7 +9,8 @@
 
 #include "llvm/MC/MCLinkerOptimizationHint.h"
 #include "llvm/MC/MCAsmLayout.h"
-#include "llvm/MC/MCStreamer.h"
+#include "llvm/MC/MCAssembler.h"
+#include "llvm/MC/MCMachObjectWriter.h"
 #include "llvm/Support/LEB128.h"
 
 using namespace llvm;
@@ -22,14 +23,36 @@ using namespace llvm;
 // - Its argN.
 // <arg1> to <argN> are absolute addresses in the object file, i.e.,
 // relative addresses from the beginning of the object file.
-void MCLOHDirective::Emit_impl(raw_ostream &OutStream,
+void MCLOHDirective::emit_impl(raw_ostream &OutStream,
                                const MachObjectWriter &ObjWriter,
                                const MCAsmLayout &Layout) const {
-  const MCAssembler &Asm = Layout.getAssembler();
   encodeULEB128(Kind, OutStream);
   encodeULEB128(Args.size(), OutStream);
-  for (LOHArgs::const_iterator It = Args.begin(), EndIt = Args.end();
-       It != EndIt; ++It)
-    encodeULEB128(ObjWriter.getSymbolAddress(&Asm.getSymbolData(**It), Layout),
-                  OutStream);
+  for (const MCSymbol *Arg : Args)
+    encodeULEB128(ObjWriter.getSymbolAddress(*Arg, Layout), OutStream);
+}
+
+void MCLOHDirective::emit(MachObjectWriter &ObjWriter,
+                          const MCAsmLayout &Layout) const {
+  raw_ostream &OutStream = ObjWriter.getStream();
+  emit_impl(OutStream, ObjWriter, Layout);
+}
+
+uint64_t MCLOHDirective::getEmitSize(const MachObjectWriter &ObjWriter,
+                                     const MCAsmLayout &Layout) const {
+  class raw_counting_ostream : public raw_ostream {
+    uint64_t Count;
+
+    void write_impl(const char *, size_t size) override { Count += size; }
+
+    uint64_t current_pos() const override { return Count; }
+
+  public:
+    raw_counting_ostream() : Count(0) {}
+    ~raw_counting_ostream() override { flush(); }
+  };
+
+  raw_counting_ostream OutStream;
+  emit_impl(OutStream, ObjWriter, Layout);
+  return OutStream.tell();
 }

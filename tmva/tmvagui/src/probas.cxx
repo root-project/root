@@ -124,7 +124,7 @@ void TMVA::probas(TString dataset, TString fin , Bool_t useTMVAStyle  )
                for (int i=0; i<= 5; i++) {
                   TString hspline = hnameS + Form("_smoothed_hist_from_spline%i",i);
                   sigF = (TH1*)instDir->Get( hspline );
-  	    
+            
                   if (sigF) {
                      bkgF = (TH1*)instDir->Get( hspline.ReplaceAll("_tr_S","_tr_B") );
                      break;
@@ -144,7 +144,7 @@ void TMVA::probas(TString dataset, TString fin , Bool_t useTMVAStyle  )
                   return;
                }
                else  {
-                    // remove the signal suffix
+                  // remove the signal suffix
 
                   // check that exist
                   if (NULL != sigF && NULL != bkgF && NULL!=sig && NULL!=bgd) {

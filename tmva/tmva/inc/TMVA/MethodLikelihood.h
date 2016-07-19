@@ -68,12 +68,10 @@ namespace TMVA {
       MethodLikelihood( const TString& jobName, 
                         const TString& methodTitle, 
                         DataSetInfo& theData,
-                        const TString& theOption = "",
-                        TDirectory* theTargetDir = 0 );
+                        const TString& theOption = "");
   
       MethodLikelihood( DataSetInfo& theData, 
-                        const TString& theWeightFile,  
-                        TDirectory* theTargetDir = NULL );
+                        const TString& theWeightFile);
 
       virtual ~MethodLikelihood();
     
@@ -156,7 +154,7 @@ namespace TMVA {
       TString              fKDEtypeString;             // Kernel type to use for KDE (string)
       TString*             fInterpolateString;         // which interpolation method used for reference histograms (individual for each variable)
 
-      ClassDef(MethodLikelihood,0) // Likelihood analysis ("non-parametric approach") 
+      ClassDef(MethodLikelihood,0); // Likelihood analysis ("non-parametric approach") 
    };
 
 } // namespace TMVA

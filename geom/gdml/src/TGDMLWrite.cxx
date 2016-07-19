@@ -1608,9 +1608,9 @@ XMLNodePointer_t TGDMLWrite::CreatePhysVolN(const char *name, Int_t copyno, cons
    fPhysVolCnt++;
    XMLNodePointer_t childN;
    XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, "physvol", 0);
-   fGdmlE->NewAttr(mainN, 0, "name", name);   
+   fGdmlE->NewAttr(mainN, 0, "name", name);
    fGdmlE->NewAttr(mainN, 0, "copynumber", TString::Format("%d",copyno));
-   
+
    childN = fGdmlE->NewChild(0, 0, "volumeref", 0);
    fGdmlE->NewAttr(childN, 0, "ref", volref);
    fGdmlE->AddChild(mainN, childN);

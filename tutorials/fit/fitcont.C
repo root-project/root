@@ -1,17 +1,24 @@
+/// \file
+/// \ingroup tutorial_fit
+/// Example illustrating how to draw the n-sigma contour of a Minuit fit.
+/// To get the n-sigma contour the ERRDEF parameter in Minuit has to set
+/// to n^2. The fcn function has to be set before the routine is called.
+///
+/// WARNING!!! This test works only with TMinuit
+///
+/// The TGraph object is created via the interpreter. The user must cast it
+/// to a TGraph*
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Rene Brun
+
 #include "TMinuit.h"
 
 void fitcont()
 {
-   // Example illustrating how to draw the n-sigma contour of a Minuit fit.
-   // To get the n-sigma contour the ERRDEF parameter in Minuit has to set
-   // to n^2. The fcn function has to be set before the routine is called.
-   //
-   // WARNING!!! This test works only with TMinuit
-   //
-   // The TGraph object is created via the interpreter. The user must cast it
-   // to a TGraph*
-   // Author:  Rene Brun
-
    //be sure default is Minuit since we will use gMinuit
    TVirtualFitter::SetDefaultFitter("Minuit");
 

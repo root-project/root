@@ -13,16 +13,6 @@
 #define ROOT_TControlBarButton
 
 
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-// TControlBarButton                                                          //
-//                                                                            //
-// This class defines the control bar buttons.                                //
-//                                                                            //
-//                                                                            //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
-
 #ifndef ROOT_Rtypes
 #include "Rtypes.h"
 #endif
@@ -35,8 +25,8 @@
 class TControlBarButton : public TNamed {
 
 protected:
-   Int_t    fType;       //button type
-   TString  fAction;     //action to be executed
+   Int_t    fType;       ///< button type
+   TString  fAction;     ///< action to be executed
 
 public:
    enum { kButton = 1, kDrawnButton, kSeparator };

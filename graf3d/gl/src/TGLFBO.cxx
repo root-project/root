@@ -10,11 +10,10 @@
  *************************************************************************/
 
 #include "TGLFBO.h"
+#include "TGLIncludes.h"
 #include <TMath.h>
 #include <TString.h>
 #include <TError.h>
-
-#include <GL/glew.h>
 
 #include <stdexcept>
 

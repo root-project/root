@@ -17,22 +17,19 @@
 
 class TPoint;
 
-// This class implements a curly or wavy arc typically used
-// to draw Feynman diagrams.
-
 #include "TCurlyLine.h"
 
 class TCurlyArc : public TCurlyLine {
 
 private:
-   Double_t fR1;                  //  Radius of arc
-   Double_t fPhimin;              //  start phi (degrees)
-   Double_t fPhimax;              //  end phi (degrees)
-   Double_t fTheta;               //  used internally
+   Double_t fR1;                  ///< Radius of arc
+   Double_t fPhimin;              ///< start phi (degrees)
+   Double_t fPhimax;              ///< end phi (degrees)
+   Double_t fTheta;               ///< used internally
 
-   static Double_t fgDefaultWaveLength;   //default wavelength
-   static Double_t fgDefaultAmplitude;    //default amplitude
-   static Bool_t   fgDefaultIsCurly;      //default curly type
+   static Double_t fgDefaultWaveLength;   ///< default wavelength
+   static Double_t fgDefaultAmplitude;    ///< default amplitude
+   static Bool_t   fgDefaultIsCurly;      ///< default curly type
 
 public:
    TCurlyArc();

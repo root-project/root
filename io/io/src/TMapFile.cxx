@@ -14,45 +14,45 @@
 
 /**
 \class TMapFile
-\ingroup IO 
+\ingroup IO
 
-This class implements a shared memory region mapped to a file.     
-Objects can be placed into this shared memory area using the Add() 
-member function. To actually place a copy of the object is shared  
-memory call Update() also whenever the mapped object(s) change(s)  
-call Update() to put a fresh copy in the shared memory. This extra 
-step is necessary since it is not possible to share objects with   
-virtual pointers between processes (the vtbl ptr points to the     
-originators unique address space and can not be used by the        
+This class implements a shared memory region mapped to a file.
+Objects can be placed into this shared memory area using the Add()
+member function. To actually place a copy of the object is shared
+memory call Update() also whenever the mapped object(s) change(s)
+call Update() to put a fresh copy in the shared memory. This extra
+step is necessary since it is not possible to share objects with
+virtual pointers between processes (the vtbl ptr points to the
+originators unique address space and can not be used by the
 consumer process(es)). Consumer processes can map the memory region
-from this file and access the objects stored in it via the Get()   
-method (which returns a copy of the object stored in the shared    
-memory with correct vtbl ptr set). Only objects of classes with a  
-Streamer() member function defined can be shared.                  
-                                                                   
+from this file and access the objects stored in it via the Get()
+method (which returns a copy of the object stored in the shared
+memory with correct vtbl ptr set). Only objects of classes with a
+Streamer() member function defined can be shared.
+
 I know the current implementation is not ideal (you need to copy to
-and from the shared memory file) but the main problem is with the  
+and from the shared memory file) but the main problem is with the
 class' virtual_table pointer. This pointer points to a table unique
-for every process. Therefore, different options are:               
-  -# One could allocate an object directly in shared memory in the 
-     producer, but the consumer still has to copy the object from  
-     shared memory into a local object which has the correct vtbl  
+for every process. Therefore, different options are:
+  -# One could allocate an object directly in shared memory in the
+     producer, but the consumer still has to copy the object from
+     shared memory into a local object which has the correct vtbl
      pointer for that process (copy ctor's can be used for creating
-     the local copy).                                              
-  -# Another possibility is to only allow objects without virtual  
-     functions in shared memory (like simple C structs), or to     
-     forbid (how?) the consumer from calling any virtual functions 
-     of the objects in shared memory.                              
+     the local copy).
+  -# Another possibility is to only allow objects without virtual
+     functions in shared memory (like simple C structs), or to
+     forbid (how?) the consumer from calling any virtual functions
+     of the objects in shared memory.
   -# A last option is to copy the object internals to shared memory
-     and copy them again from there. This is what is done in the   
+     and copy them again from there. This is what is done in the
      TMapFile (using the object Streamer() to make a deep copy).
 
 Option 1) saves one copy, but requires solid copy ctor's (along the
 full inheritance chain) to rebuild the object in the consumer. Most
 classes don't provide these copy ctor's, especially not when objects
-contain collections, etc. 2) is too limiting or dangerous (calling 
-accidentally a virtual function will segv). So since we have a     
-robust Streamer mechanism I opted for 3).                          
+contain collections, etc. 2) is too limiting or dangerous (calling
+accidentally a virtual function will segv). So since we have a
+robust Streamer mechanism I opted for 3).
 **/
 
 
@@ -149,9 +149,9 @@ TMapRec::~TMapRec()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This method returns a pointer to the original object. 
+/// This method returns a pointer to the original object.
 
-/// NOTE: this pointer is only valid in the process that produces the shared 
+/// NOTE: this pointer is only valid in the process that produces the shared
 /// memory file. In a consumer process this pointer is illegal! Be careful.
 
 TObject *TMapRec::GetObject() const
@@ -192,7 +192,7 @@ TMapFile::TMapFile()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a memory mapped file. 
+/// Create a memory mapped file.
 ///
 /// This opens a file (to which the
 /// memory will be mapped) and attaches a memory region to it.
@@ -910,7 +910,7 @@ Int_t TMapFile::ReleaseSemaphore()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Close a mapped file.
-/// 
+///
 /// First detach mapped memory then close file.
 /// No member functions of a TMapFile that was opened in write mode
 /// may be called after Close() (this includes, of course, "delete" which
@@ -1111,7 +1111,7 @@ TMapFile *TMapFile::Create(const char *name, Option_t *option, Int_t size,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set preferred map address. 
+/// Set preferred map address.
 ///
 /// Find out preferred map address as follows:
 ///   -# Run consumer program to find the preferred map address. Remember begin of mapped region, i.e. 0x40b4c000

@@ -55,6 +55,7 @@
 #include "TMVA/MsgLogger.h"
 #include "TMVA/Tools.h"
 #include "TMVA/Types.h"
+#include "TMVA/Config.h"
 
 using std::vector;
 
@@ -66,9 +67,8 @@ TMVA::MethodCompositeBase::MethodCompositeBase( const TString& jobName,
                                                 Types::EMVA methodType,
                                                 const TString& methodTitle,
                                                 DataSetInfo& theData,
-                                                const TString& theOption,
-                                                TDirectory* theTargetDir )
-   : TMVA::MethodBase( jobName, methodType, methodTitle, theData, theOption, theTargetDir ),
+                                                const TString& theOption )
+: TMVA::MethodBase( jobName, methodType, methodTitle, theData, theOption),
    fCurrentMethodIdx(0), fCurrentMethod(0)
 {}
 
@@ -76,10 +76,9 @@ TMVA::MethodCompositeBase::MethodCompositeBase( const TString& jobName,
 
 TMVA::MethodCompositeBase::MethodCompositeBase( Types::EMVA methodType,
                                                 DataSetInfo& dsi,
-                                                const TString& weightFile,
-                                                TDirectory* theTargetDir )
-   : TMVA::MethodBase( methodType, dsi, weightFile, theTargetDir ),
-   fCurrentMethodIdx(0), fCurrentMethod(0)     
+                                                const TString& weightFile)
+   : TMVA::MethodBase( methodType, dsi, weightFile),
+     fCurrentMethodIdx(0), fCurrentMethod(0)     
 {}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -115,23 +114,23 @@ void TMVA::MethodCompositeBase::AddWeightsXMLTo( void* parent ) const
    void* wght = gTools().AddChild(parent, "Weights");
    gTools().AddAttr( wght, "NMethods",   fMethods.size()   );
    for (UInt_t i=0; i< fMethods.size(); i++)
-   {
-      void* methxml = gTools().AddChild( wght, "Method" );
-      MethodBase* method = dynamic_cast<MethodBase*>(fMethods[i]);
-      gTools().AddAttr(methxml,"Index",          i );
-      gTools().AddAttr(methxml,"Weight",         fMethodWeight[i]);
-      gTools().AddAttr(methxml,"MethodSigCut",   method->GetSignalReferenceCut());
-      gTools().AddAttr(methxml,"MethodSigCutOrientation", method->GetSignalReferenceCutOrientation());
-      gTools().AddAttr(methxml,"MethodTypeName", method->GetMethodTypeName());
-      gTools().AddAttr(methxml,"MethodName",     method->GetMethodName()   );
-      gTools().AddAttr(methxml,"JobName",        method->GetJobName());
-      gTools().AddAttr(methxml,"Options",        method->GetOptions());
-      if (method->fTransformationPointer)
-         gTools().AddAttr(methxml,"UseMainMethodTransformation", TString("true"));
-      else
-         gTools().AddAttr(methxml,"UseMainMethodTransformation", TString("false"));
-      method->AddWeightsXMLTo(methxml);
-   }
+      {
+         void* methxml = gTools().AddChild( wght, "Method" );
+         MethodBase* method = dynamic_cast<MethodBase*>(fMethods[i]);
+         gTools().AddAttr(methxml,"Index",          i );
+         gTools().AddAttr(methxml,"Weight",         fMethodWeight[i]);
+         gTools().AddAttr(methxml,"MethodSigCut",   method->GetSignalReferenceCut());
+         gTools().AddAttr(methxml,"MethodSigCutOrientation", method->GetSignalReferenceCutOrientation());
+         gTools().AddAttr(methxml,"MethodTypeName", method->GetMethodTypeName());
+         gTools().AddAttr(methxml,"MethodName",     method->GetMethodName()   );
+         gTools().AddAttr(methxml,"JobName",        method->GetJobName());
+         gTools().AddAttr(methxml,"Options",        method->GetOptions());
+         if (method->fTransformationPointer)
+            gTools().AddAttr(methxml,"UseMainMethodTransformation", TString("true"));
+         else
+            gTools().AddAttr(methxml,"UseMainMethodTransformation", TString("false"));
+         method->AddWeightsXMLTo(methxml);
+      }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -190,7 +189,7 @@ void TMVA::MethodCompositeBase::ReadWeightsFromXML( void* wghtnode )
          ((TMVA::MethodBoost*)this)->BookMethod( Types::Instance().GetMethodType( methodTypeName), methodName,  optionString );
       }
       fMethods.push_back(ClassifierFactory::Instance().Create(
-         std::string(methodTypeName),jobName, methodName,DataInfo(),optionString));
+                                                              std::string(methodTypeName),jobName, methodName,DataInfo(),optionString));
 
       fMethodWeight.push_back(methodWeight);
       MethodBase* meth = dynamic_cast<MethodBase*>(fMethods.back());
@@ -199,6 +198,12 @@ void TMVA::MethodCompositeBase::ReadWeightsFromXML( void* wghtnode )
          Log() << kFATAL << "Could not read method from XML" << Endl;
 
       void* methXML = gTools().GetChild(ch);
+      
+      TString _fFileDir= meth->DataInfo().GetName();
+      _fFileDir+="/"+gConfig().GetIONames().fWeightFileDir;
+      meth->SetWeightFileDir(_fFileDir);
+      meth->SetModelPersistence(IsModelPersistence());
+      meth->SetSilentFile(IsSilentFile());
       meth->SetupMethod();
       meth->SetMsgType(kWARNING);
       meth->ParseOptions();
@@ -222,7 +227,7 @@ void  TMVA::MethodCompositeBase::ReadWeightsFromStream( std::istream& istr )
 {
    TString var, dummy;
    TString methodName, methodTitle=GetMethodName(),
-    jobName=GetJobName(),optionString=GetOptions();
+      jobName=GetJobName(),optionString=GetOptions();
    UInt_t methodNum; Double_t methodWeight;
    // and read the Weights (BDT coefficients)
    // coverity[tainted_data_argument]

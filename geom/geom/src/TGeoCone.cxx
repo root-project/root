@@ -873,7 +873,9 @@ Double_t TGeoCone::Safety(const Double_t *point, Bool_t in) const
    saf[1] = TGeoShape::SafetySeg(r,point[2], fRmax2, fDz, fRmin2, fDz, !in);
    saf[2] = TGeoShape::SafetySeg(r,point[2], fRmin2, fDz, fRmin1, -fDz, !in);
    saf[3] = TGeoShape::SafetySeg(r,point[2], fRmax1, -fDz, fRmax2, fDz, !in);
-   return saf[TMath::LocMin(4,saf)];
+   Double_t safety = saf[TMath::LocMin(4,saf)];
+   if (safety>1.E20) safety = 0.;
+   return safety;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

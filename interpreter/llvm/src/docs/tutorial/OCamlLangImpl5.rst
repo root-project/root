@@ -175,10 +175,10 @@ Kaleidoscope looks like this:
 To visualize the control flow graph, you can use a nifty feature of the
 LLVM '`opt <http://llvm.org/cmds/opt.html>`_' tool. If you put this LLVM
 IR into "t.ll" and run "``llvm-as < t.ll | opt -analyze -view-cfg``", `a
-window will pop up <../ProgrammersManual.html#ViewGraph>`_ and you'll
+window will pop up <../ProgrammersManual.html#viewing-graphs-while-debugging-code>`_ and you'll
 see this graph:
 
-.. figure:: LangImpl5-cfg.png
+.. figure:: LangImpl05-cfg.png
    :align: center
    :alt: Example CFG
 
@@ -336,7 +336,7 @@ for the 'then' block.
           let phi = build_phi incoming "iftmp" builder in
 
 The first two lines here are now familiar: the first adds the "merge"
-block to the Function object. The second block changes the insertion
+block to the Function object. The second changes the insertion
 point so that newly created code will go into the "merge" block. Once
 that is done, we need to create the PHI node and set up the block/value
 pairs for the PHI.

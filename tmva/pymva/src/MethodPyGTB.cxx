@@ -41,6 +41,9 @@
 #include "TMVA/ClassifierFactory.h"
 
 #include "TMVA/Results.h"
+#include "TMVA/ResultsClassification.h"
+#include "TMVA/Timer.h"
+
 
 
 
@@ -54,9 +57,8 @@ ClassImp(MethodPyGTB)
 MethodPyGTB::MethodPyGTB(const TString &jobName,
                          const TString &methodTitle,
                          DataSetInfo &dsi,
-                         const TString &theOption,
-                         TDirectory *theTargetDir) :
-   PyMethodBase(jobName, Types::kPyGTB, methodTitle, dsi, theOption, theTargetDir),
+                         const TString &theOption) :
+   PyMethodBase(jobName, Types::kPyGTB, methodTitle, dsi, theOption),
    loss("deviance"),
    learning_rate(0.1),
    n_estimators(100),
@@ -75,8 +77,8 @@ MethodPyGTB::MethodPyGTB(const TString &jobName,
 }
 
 //_______________________________________________________________________
-MethodPyGTB::MethodPyGTB(DataSetInfo &theData, const TString &theWeightFile, TDirectory *theTargetDir)
-   : PyMethodBase(Types::kPyGTB, theData, theWeightFile, theTargetDir),
+MethodPyGTB::MethodPyGTB(DataSetInfo &theData, const TString &theWeightFile)
+   : PyMethodBase(Types::kPyGTB, theData, theWeightFile),
      loss("deviance"),
      learning_rate(0.1),
      n_estimators(100),
@@ -389,13 +391,14 @@ void MethodPyGTB::Train()
 //     std::cout<<std::endl;
    //     pValue =PyObject_CallObject(fClassifier, PyUnicode_FromString("classes_"));
    //     PyObject_Print(pValue, stdout, 0);
-
-   TString path = GetWeightFileDir() + "/PyGTBModel.PyData";
-   Log() << Endl;
-   Log() << gTools().Color("bold") << "--- Saving State File In:" << gTools().Color("reset") << path << Endl;
-   Log() << Endl;
-
-  Serialize(path,fClassifier);
+   if (IsModelPersistence())
+   {
+        TString path = GetWeightFileDir() + "/PyGTBModel.PyData";
+        Log() << Endl;
+        Log() << gTools().Color("bold") << "--- Saving State File In:" << gTools().Color("reset") << path << Endl;
+        Log() << Endl;
+        Serialize(path,fClassifier);
+   }
 }
 
 //_______________________________________________________________________
@@ -405,18 +408,19 @@ void MethodPyGTB::TestClassification()
 }
 
 
+
 //_______________________________________________________________________
 Double_t MethodPyGTB::GetMvaValue(Double_t *errLower, Double_t *errUpper)
 {
    // cannot determine error
    NoErrorCalc(errLower, errUpper);
 
-   if (!fClassifier) ReadStateFromFile();
+   if (IsModelPersistence()) ReadModelFromFile();
 
    Double_t mvaValue;
    const TMVA::Event *e = Data()->GetEvent();
    UInt_t nvars = e->GetNVariables();
-   int *dims = new int[2];
+   int dims[2];
    dims[0] = 1;
    dims[1] = nvars;
    PyArrayObject *pEvent= (PyArrayObject *)PyArray_FromDims(2, dims, NPY_FLOAT);
@@ -429,12 +433,14 @@ Double_t MethodPyGTB::GetMvaValue(Double_t *errLower, Double_t *errUpper)
    mvaValue = proba[0]; //getting signal prob
    Py_DECREF(result);
    Py_DECREF(pEvent);
-   delete dims;
+
    return mvaValue;
 }
 
+
+
 //_______________________________________________________________________
-void MethodPyGTB::ReadStateFromFile()
+void MethodPyGTB::ReadModelFromFile()
 {
    if (!PyIsInitialized()) {
       PyInitialize();
@@ -466,4 +472,5 @@ void MethodPyGTB::GetHelpMessage() const
    Log() << Endl;
    Log() << "<None>" << Endl;
 }
+
 

@@ -1,11 +1,18 @@
-// Get in memory an histogram from a root file and fit a user defined function.
-// Note that a user defined function must always be defined
-// as in this example:
-//  - first parameter: array of variables (in this example only 1-dimension)
-//  - second parameter: array of parameters
-// Note also that in case of user defined functions, one must set
-// an initial value for each parameter.
-//Author: Rene Brun
+/// \file
+/// \ingroup tutorial_fit
+/// Get in memory an histogram from a root file and fit a user defined function.
+/// Note that a user defined function must always be defined
+/// as in this example:
+///  - first parameter: array of variables (in this example only 1-dimension)
+///  - second parameter: array of parameters
+/// Note also that in case of user defined functions, one must set
+/// an initial value for each parameter.
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Rene Brun
 
 Double_t fitf(Double_t *x, Double_t *par)
 {

@@ -98,12 +98,10 @@ namespace TMVA {
       MethodMLP( const TString& jobName,
                  const TString&  methodTitle,
                  DataSetInfo& theData,
-                 const TString& theOption,
-                 TDirectory* theTargetDir = 0 );
+                 const TString& theOption );
 
       MethodMLP( DataSetInfo& theData,
-                 const TString& theWeightFile,
-                 TDirectory* theTargetDir = 0 );
+                 const TString& theWeightFile );
 
       virtual ~MethodMLP();
 
@@ -194,7 +192,7 @@ namespace TMVA {
       void               GetApproxInvHessian ( TMatrixD& InvHessian, bool regulate=true );   //rank-1 approximation, neglect 2nd derivatives. //zjh
       void               UpdateRegulators();    // zjh
       void               UpdatePriors();        // zjh
-      Int_t				 fUpdateLimit;          // zjh
+      Int_t              fUpdateLimit;          // zjh
 
       ETrainingMethod fTrainingMethod; // method of training, BP or GA
       TString         fTrainMethodS;   // training method option param
@@ -242,7 +240,7 @@ namespace TMVA {
       static const Bool_t fgPRINT_SEQ           = kFALSE; // debug flags
       static const Bool_t fgPRINT_BATCH         = kFALSE; // debug flags
 
-      ClassDef(MethodMLP,0) // Multi-layer perceptron implemented specifically for TMVA
+      ClassDef(MethodMLP,0); // Multi-layer perceptron implemented specifically for TMVA
    };
 
 } // namespace TMVA

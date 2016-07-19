@@ -50,7 +50,7 @@ namespace TMVA
       virtual Float_t Estimate(PDEFoam*, std::vector<Float_t>&, ECellValue);
 
       ClassDef(PDEFoamKernelTrivial, 1) // trivial PDEFoam kernel estimator
-   }; // end of PDEFoamKernelTrivial
+         }; // end of PDEFoamKernelTrivial
 }  // namespace TMVA
 
 #endif

@@ -15,6 +15,7 @@
 
 /** \class TObjectRefSpy
     \class TObjectSpy
+\ingroup Base
 
 Monitors objects for deletion and reflects the deletion by reverting
 the internal pointer to zero. When this pointer is zero we know the

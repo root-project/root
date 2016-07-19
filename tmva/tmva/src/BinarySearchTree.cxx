@@ -80,7 +80,7 @@ ClassImp(TMVA::BinarySearchTree)
 /// default constructor
 
 TMVA::BinarySearchTree::BinarySearchTree( void ) :
-   BinaryTree(),
+BinaryTree(),
    fPeriod      ( 1 ),
    fCurrentDepth( 0 ),
    fStatisticsIsValid( kFALSE ),
@@ -253,8 +253,8 @@ Double_t TMVA::BinarySearchTree::GetSumOfWeights( Int_t theType ) const
 {
    if (fSumOfWeights <= 0) {
       Log() << kWARNING << "you asked for the SumOfWeights, which is not filled yet"
-              << " I call CalcStatistics which hopefully fixes things" 
-              << Endl;
+            << " I call CalcStatistics which hopefully fixes things" 
+            << Endl;
    }
    if (fSumOfWeights <= 0) Log() << kFATAL << " Zero events in your Search Tree" <<Endl;
 
@@ -283,9 +283,9 @@ Double_t TMVA::BinarySearchTree::Fill( const std::vector<Event*>& events, Int_t 
    UInt_t nevents = 0;
    if (fSumOfWeights != 0) {
       Log() << kWARNING 
-              << "You are filling a search three that is not empty.. "
-              << " do you know what you are doing?"
-              << Endl;
+            << "You are filling a search three that is not empty.. "
+            << " do you know what you are doing?"
+            << Endl;
    }
    for (UInt_t ievt=0; ievt<n; ievt++) {
       // insert event into binary tree
@@ -418,7 +418,7 @@ Double_t TMVA::BinarySearchTree::SearchVolume( Node* t, Volume* volume, Int_t de
    Int_t  d = depth%this->GetPeriode();
    if (d != st->GetSelector()) {
       Log() << kFATAL << "<SearchVolume> selector in Searchvolume " 
-              << d << " != " << "node "<< st->GetSelector() << Endl;
+            << d << " != " << "node "<< st->GetSelector() << Endl;
    }
    tl = (*(volume->fLower))[d] <  st->GetEventV()[d];  // Should we descend left?
    tr = (*(volume->fUpper))[d] >= st->GetEventV()[d];  // Should we descend right?
@@ -474,8 +474,8 @@ void TMVA::BinarySearchTree::CalcStatistics( Node* n )
       
    const std::vector<Float_t> & evtVec = currentNode->GetEventV();
    Double_t                     weight = currentNode->GetWeight();
-//    Int_t                        type   = currentNode->IsSignal(); 
-//   Int_t                        type   = currentNode->IsSignal() ? 0 : 1; 
+   //    Int_t                        type   = currentNode->IsSignal(); 
+   //   Int_t                        type   = currentNode->IsSignal() ? 0 : 1; 
    Int_t                        type   = Int_t(currentNode->GetClass())== Types::kSignal ? 0 : 1; 
 
    fNEventsW[type] += weight;
@@ -536,7 +536,7 @@ Int_t TMVA::BinarySearchTree::SearchVolumeWithMaxLimit( Volume *volume, std::vec
 
       if (d != st.first->GetSelector()) {
          Log() << kFATAL << "<SearchVolume> selector in Searchvolume "
-                 << d << " != " << "node "<< st.first->GetSelector() << Endl;
+               << d << " != " << "node "<< st.first->GetSelector() << Endl;
       }
 
       tl = (*(volume->fLower))[d] <  st.first->GetEventV()[d] && st.first->GetLeft()  != NULL;  // Should we descend left?

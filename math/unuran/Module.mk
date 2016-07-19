@@ -12,6 +12,8 @@ UNURANDIR    := $(MODDIR)
 UNURANDIRS   := $(UNURANDIR)/src
 UNURANDIRI   := $(UNURANDIR)/inc
 
+ifeq ($(BUILTINUNURAN),yes)
+
 UNRVERS      := unuran-1.8.0-root
 
 UNRSRCS      := $(MODDIRS)/$(UNRVERS).tar.gz
@@ -43,15 +45,18 @@ UNRS         := $(filter %.c, \
                 $(filter $(UNRDIRS)/src/uniform/%,$(UNRTARCONTENT)) \
                 $(filter $(UNRDIRS)/src/urng/%,$(UNRTARCONTENT)))
 endif
-UNRO         := $(UNRS:.c=.o)
+UNRFLAGS     := -I$(UNRDIRS)/src
 
-ifeq ($(PLATFORM),win32)
-UNRLIBS      := $(UNRDIRS)/src/.libs/libunuran.lib
 else
-UNRLIBS      := $(UNRDIRS)/src/.libs/libunuran.a
+
+UNURANETAG   :=
+UNRCFG       :=
+UNRS         :=
+UNRFLAGS     := $(UNURANINCDIR:%=-I%)
+
 endif
 
-UNRFLAGS     :=  -I$(UNRDIRS)/src
+UNRO         := $(UNRS:.c=.o)
 
 ##### libUnuran #####
 UNURANL      := $(MODDIRI)/LinkDef.h
@@ -83,6 +88,8 @@ INCLUDEFILES += $(UNURANDEP)
 
 include/%.h: 	$(UNURANDIRI)/%.h $(UNURANETAG)
 		cp $< $@
+
+ifeq ($(BUILTINUNURAN),yes)
 
 $(UNURANDEP):   $(UNRCFG)
 $(UNRS):        $(UNURANETAG)
@@ -134,6 +141,8 @@ $(UNRCFG):	$(UNURANETAG)
 		GNUMAKE=$(MAKE) ./configure  CC="$$ACC"  \
 		CFLAGS="$$ACFLAGS");
 
+endif
+
 $(UNURANLIB):   $(UNRCFG) $(UNRO) $(UNURANO) $(UNURANDO) $(ORDER_) \
                 $(MAINLIBS) $(UNURANLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"  \
@@ -158,16 +167,19 @@ all-$(MODNAME): $(UNURANLIB)
 
 clean-$(MODNAME):
 		@rm -f $(UNURANO) $(UNURANDO)
+ifeq ($(BUILTINUNURAN),yes)
 		-@(if [ -d $(UNRDIRS) ]; then \
 			cd $(UNRDIRS); \
 			$(MAKE) clean; \
 		fi)
+endif
 
 clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(UNURANO) $(UNURANDO) $(UNURANETAG) $(UNURANDEP) \
 		   $(UNURANDS) $(UNURANDH) $(UNURANLIB) $(UNURANMAP)
+ifeq ($(BUILTINUNURAN),yes)
 		@mv $(UNRSRCS) $(UNRDIR)/-$(UNRVERS).tar.gz
 ifeq ($(UNURKEEP),yes)
 		@mv $(UNRDIRS) $(UNRDIRS).keep
@@ -177,6 +189,7 @@ ifeq ($(UNURKEEP),yes)
 		@mv $(UNRDIRS).keep $(UNRDIRS)
 endif
 		@mv $(UNRDIR)/-$(UNRVERS).tar.gz $(UNRSRCS)
+endif
 
 distclean::     distclean-$(MODNAME)
 
@@ -184,6 +197,7 @@ distclean::     distclean-$(MODNAME)
 
 $(UNURANO): CXXFLAGS += $(UNRFLAGS)
 
+ifeq ($(BUILTINUNURAN),yes)
 ifeq ($(PLATFORM),win32)
 $(UNRO): CFLAGS := $(filter-out -FIsehmap.h,$(filter-out -Iinclude,$(CFLAGS) -I$(UNRDIRS) -I$(UNRDIRS)/src/ -I$(UNRDIRS)/src/utils -DHAVE_CONFIG_H))
 else
@@ -193,4 +207,5 @@ $(UNRO): CFLAGS := $(filter-out -Iinclude,$(CFLAGS) -I$(UNRDIRS) -I$(UNRDIRS)/sr
 endif
 ifeq ($(CC),icc)
 $(UNRO): CFLAGS += -mp
+endif
 endif

@@ -62,7 +62,7 @@ namespace TMVA
 
       // ---------- ROOT class definition
       ClassDef(PDEFoamDiscriminant, 1) // Tree of PDEFoamCells
-   }; // end of PDEFoamDiscriminant
+         }; // end of PDEFoamDiscriminant
 
 }  // namespace TMVA
 

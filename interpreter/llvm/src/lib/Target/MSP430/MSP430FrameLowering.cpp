@@ -22,7 +22,6 @@
 #include "llvm/CodeGen/MachineRegisterInfo.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/Function.h"
-#include "llvm/Support/CommandLine.h"
 #include "llvm/Target/TargetOptions.h"
 
 using namespace llvm;
@@ -39,8 +38,9 @@ bool MSP430FrameLowering::hasReservedCallFrame(const MachineFunction &MF) const 
   return !MF.getFrameInfo()->hasVarSizedObjects();
 }
 
-void MSP430FrameLowering::emitPrologue(MachineFunction &MF) const {
-  MachineBasicBlock &MBB = MF.front();   // Prolog goes in entry BB
+void MSP430FrameLowering::emitPrologue(MachineFunction &MF,
+                                       MachineBasicBlock &MBB) const {
+  assert(&MF.front() == &MBB && "Shrink-wrapping not yet supported");
   MachineFrameInfo *MFI = MF.getFrameInfo();
   MSP430MachineFunctionInfo *MSP430FI = MF.getInfo<MSP430MachineFunctionInfo>();
   const MSP430InstrInfo &TII =
@@ -223,9 +223,9 @@ MSP430FrameLowering::restoreCalleeSavedRegisters(MachineBasicBlock &MBB,
   return true;
 }
 
-void MSP430FrameLowering::
-eliminateCallFramePseudoInstr(MachineFunction &MF, MachineBasicBlock &MBB,
-                              MachineBasicBlock::iterator I) const {
+MachineBasicBlock::iterator MSP430FrameLowering::eliminateCallFramePseudoInstr(
+    MachineFunction &MF, MachineBasicBlock &MBB,
+    MachineBasicBlock::iterator I) const {
   const MSP430InstrInfo &TII =
       *static_cast<const MSP430InstrInfo *>(MF.getSubtarget().getInstrInfo());
   unsigned StackAlign = getStackAlignment();
@@ -282,7 +282,7 @@ eliminateCallFramePseudoInstr(MachineFunction &MF, MachineBasicBlock &MBB,
     }
   }
 
-  MBB.erase(I);
+  return MBB.erase(I);
 }
 
 void

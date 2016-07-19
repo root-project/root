@@ -464,7 +464,7 @@ TLinearFitter& TLinearFitter::operator=(const TLinearFitter& tlf)
       fY2Temp = tlf.fY2Temp;
       for(Int_t i = 0; i < 1000; i++) fVal[i] = tlf.fVal[i];
 
-      if(fInputFunction) delete fInputFunction; fInputFunction = 0;
+      if(fInputFunction) { delete fInputFunction; fInputFunction = 0; }
       if(tlf.fInputFunction) fInputFunction = new TFormula(*tlf.fInputFunction);
 
       fNpoints=tlf.fNpoints;
@@ -474,7 +474,7 @@ TLinearFitter& TLinearFitter::operator=(const TLinearFitter& tlf)
       fNfixed=tlf.fNfixed;
       fSpecial=tlf.fSpecial;
 
-      if(fFormula) delete [] fFormula; fFormula = 0;
+      if(fFormula) { delete [] fFormula; fFormula = 0; }
       if (tlf.fFormula) {
          fFormula = new char[fFormulaSize+1];
          strlcpy(fFormula,tlf.fFormula,fFormulaSize+1);
@@ -488,7 +488,7 @@ TLinearFitter& TLinearFitter::operator=(const TLinearFitter& tlf)
       fRobust=tlf.fRobust;
       fFitsample=tlf.fFitsample;
 
-      if(fFixedParams) delete [] fFixedParams; fFixedParams = 0;
+      if(fFixedParams) { delete [] fFixedParams; fFixedParams = 0; }
       if ( tlf.fFixedParams && fNfixed > 0 ) {
          fFixedParams=new Bool_t[fNfixed];
          for(Int_t i=0; i< fNfixed; ++i)
@@ -1471,6 +1471,7 @@ Int_t TLinearFitter::Merge(TCollection *list)
 void TLinearFitter::SetBasisFunctions(TObjArray * functions)
 {
    fFunctions = *(functions);
+   fFunctions.SetOwner(kTRUE); 
    int size = fFunctions.GetEntries();
 
    fNfunctions=size;
@@ -1565,6 +1566,9 @@ void TLinearFitter::SetFormula(const char *formula)
       if (!fFunctions.IsEmpty())
          fFunctions.Clear();
 
+      // do not own the functions in this case
+      fFunctions.SetOwner(kFALSE); 
+
       fNfunctions = oa->GetEntriesFast();
       fFunctions.Expand(fNfunctions);
 
@@ -1582,9 +1586,10 @@ void TLinearFitter::SetFormula(const char *formula)
       for (i=0; i<fNfunctions; i++) {
          replaceformula = ((TObjString *)oa->UncheckedAt(i))->GetString();
          // look first if exists in the map
-         TFormula * f = nullptr; 
-         if (fgFormulaMap.count(replaceformula ) > 0) 
-            f = fgFormulaMap.find(replaceformula )->second;
+         TFormula * f = nullptr;
+         auto elem = fgFormulaMap.find(replaceformula );
+         if (elem != fgFormulaMap.end() )
+            f = elem->second;
          else {
             // create a new formula and add in the static map
             f = new TFormula("f", replaceformula.Data());

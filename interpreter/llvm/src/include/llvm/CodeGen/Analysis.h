@@ -15,14 +15,19 @@
 #define LLVM_CODEGEN_ANALYSIS_H
 
 #include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/Triple.h"
 #include "llvm/CodeGen/ISDOpcodes.h"
 #include "llvm/IR/CallSite.h"
 #include "llvm/IR/InlineAsm.h"
 #include "llvm/IR/Instructions.h"
+#include "llvm/Support/CodeGen.h"
 
 namespace llvm {
 class GlobalValue;
+class MachineBasicBlock;
+class MachineFunction;
 class TargetLoweringBase;
 class TargetLowering;
 class TargetMachine;
@@ -37,7 +42,7 @@ struct EVT;
 /// Given an LLVM IR aggregate type and a sequence of insertvalue or
 /// extractvalue indices that identify a member, return the linearized index of
 /// the start of the member, i.e the number of element in memory before the
-/// seeked one. This is disconnected from the number of bytes.
+/// sought one. This is disconnected from the number of bytes.
 ///
 /// \param Ty is the type indexed by \p Indices.
 /// \param Indices is an optional pointer in the indices list to the current
@@ -64,7 +69,7 @@ inline unsigned ComputeLinearIndex(Type *Ty,
 /// If Offsets is non-null, it points to a vector to be filled in
 /// with the in-memory offsets of each of the individual values.
 ///
-void ComputeValueVTs(const TargetLowering &TLI, Type *Ty,
+void ComputeValueVTs(const TargetLowering &TLI, const DataLayout &DL, Type *Ty,
                      SmallVectorImpl<EVT> &ValueVTs,
                      SmallVectorImpl<uint64_t> *Offsets = nullptr,
                      uint64_t StartingOffset = 0);
@@ -114,6 +119,9 @@ bool returnTypeIsEligibleForTailCall(const Function *F,
 // analysis makes sense when the information can be passed down to the linker
 // or we are in LTO.
 bool canBeOmittedFromSymbolTable(const GlobalValue *GV);
+
+DenseMap<const MachineBasicBlock *, int>
+getFuncletMembership(const MachineFunction &MF);
 
 } // End llvm namespace
 

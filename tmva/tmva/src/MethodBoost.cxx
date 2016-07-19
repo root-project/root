@@ -83,12 +83,11 @@ ClassImp(TMVA::MethodBoost)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TMVA::MethodBoost::MethodBoost( const TString& jobName,
-                                const TString& methodTitle,
-                                DataSetInfo& theData,
-                                const TString& theOption,
-                                TDirectory* theTargetDir ) :
-   TMVA::MethodCompositeBase( jobName, Types::kBoost, methodTitle, theData, theOption, theTargetDir )
+   TMVA::MethodBoost::MethodBoost( const TString& jobName,
+                                   const TString& methodTitle,
+                                   DataSetInfo& theData,
+                                   const TString& theOption ) :
+   TMVA::MethodCompositeBase( jobName, Types::kBoost, methodTitle, theData, theOption)
    , fBoostNum(0)
    , fDetailedMonitoring(kFALSE)
    , fAdaBoostBeta(0)
@@ -110,9 +109,8 @@ TMVA::MethodBoost::MethodBoost( const TString& jobName,
 ////////////////////////////////////////////////////////////////////////////////
 
 TMVA::MethodBoost::MethodBoost( DataSetInfo& dsi,
-                                const TString& theWeightFile,
-                                TDirectory* theTargetDir )
-   : TMVA::MethodCompositeBase( Types::kBoost, dsi, theWeightFile, theTargetDir )
+                                const TString& theWeightFile)
+   : TMVA::MethodCompositeBase( Types::kBoost, dsi, theWeightFile)
    , fBoostNum(0)
    , fDetailedMonitoring(kFALSE)
    , fAdaBoostBeta(0)
@@ -247,7 +245,7 @@ Bool_t TMVA::MethodBoost::BookMethod( Types::EMVA theMethod, TString methodTitle
    fBoostedMethodOptions  = theOption;
    TString opts=theOption;
    opts.ToLower();
-//    if (opts.Contains("vartransform")) Log() << kFATAL << "It is not possible to use boost in conjunction with variable transform. Please remove either Boost_Num or VarTransform from the option string"<< methodTitle<<Endl;
+   //    if (opts.Contains("vartransform")) Log() << kFATAL << "It is not possible to use boost in conjunction with variable transform. Please remove either Boost_Num or VarTransform from the option string"<< methodTitle<<Endl;
 
    return kTRUE;
 }
@@ -372,7 +370,7 @@ void TMVA::MethodBoost::Train()
    if (varTrafoStart >0) {
       Ssiz_t varTrafoEnd  =fBoostedMethodOptions.Index(":",varTrafoStart);
       if (varTrafoEnd<varTrafoStart)
-	 varTrafoEnd=fBoostedMethodOptions.Length();
+         varTrafoEnd=fBoostedMethodOptions.Length();
       fBoostedMethodOptions.Remove(varTrafoStart,varTrafoEnd-varTrafoStart);
    }
 
@@ -419,13 +417,16 @@ void TMVA::MethodBoost::Train()
 
 
       // creating the directory of the classifier
-      if (fMonitorBoostedMethod) {
-         methodDir=MethodBaseDir()->GetDirectory(dirName=Form("%s_B%04i",fBoostedMethodName.Data(),fCurrentMethodIdx));
-         if (methodDir==0) {
-            methodDir=BaseDir()->mkdir(dirName,dirTitle=Form("Directory Boosted %s #%04i", fBoostedMethodName.Data(),fCurrentMethodIdx));
-         }
-         fCurrentMethod->SetMethodDir(methodDir);
-         fCurrentMethod->BaseDir()->cd();
+      if(!IsSilentFile())
+      {
+        if (fMonitorBoostedMethod) {
+            methodDir=GetFile()->GetDirectory(dirName=Form("%s_B%04i",fBoostedMethodName.Data(),fCurrentMethodIdx));
+            if (methodDir==0) {
+                methodDir=BaseDir()->mkdir(dirName,dirTitle=Form("Directory Boosted %s #%04i", fBoostedMethodName.Data(),fCurrentMethodIdx));
+            }
+            fCurrentMethod->SetMethodDir(methodDir);
+            fCurrentMethod->BaseDir()->cd();
+        }
       }
 
       // training
@@ -437,18 +438,18 @@ void TMVA::MethodBoost::Train()
       if (fBoostType=="Bagging") Bagging();  // you want also to train the first classifier on a bagged sample
       SingleTrain();
       TMVA::MsgLogger::EnableOutput();
-      fCurrentMethod->WriteMonitoringHistosToFile();
+      if(!IsSilentFile())fCurrentMethod->WriteMonitoringHistosToFile();
       
       // calculate MVA values of current method for all events in training sample
       // (used later on to get 'misclassified events' etc for the boosting
       CalcMVAValues();
 
-      if (fCurrentMethodIdx==0 && fMonitorBoostedMethod) CreateMVAHistorgrams();
+      if(!IsSilentFile()) if (fCurrentMethodIdx==0 && fMonitorBoostedMethod) CreateMVAHistorgrams();
       
       // get ROC integral and overlap integral for single method on
       // training sample if fMethodWeightType == "ByROC" or the user
       // wants detailed monitoring
-	 
+         
       // boosting (reweight training sample)
       MonitorBoost(Types::kBeforeBoosting,fCurrentMethodIdx);
       SingleBoost(fCurrentMethod);
@@ -663,7 +664,16 @@ void TMVA::MethodBoost::SingleTrain()
 {
    Data()->SetCurrentType(Types::kTraining);
    MethodBase* meth = dynamic_cast<MethodBase*>(GetLastMethod());
-   if (meth) meth->TrainMethod();
+   if (meth){
+       meth->SetSilentFile(IsSilentFile());
+       if(IsModelPersistence()){
+           TString _fFileDir= DataInfo().GetName();
+           _fFileDir+="/"+gConfig().GetIONames().fWeightFileDir;
+           meth->SetWeightFileDir(_fFileDir);
+       }
+       meth->SetModelPersistence(IsModelPersistence());
+       meth->TrainMethod();
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -762,7 +772,7 @@ void TMVA::MethodBoost::FindMVACut(MethodBase *method)
          separationGain = sepGain->GetSeparationGain(sSel,bSel,sTot,bTot);
          //         mvaCut=mvaSC->GetBinCenter(ibin);
          mvaCut=mvaSC->GetBinLowEdge(ibin+1);
-	 //         if (sSel/bSel > (sTot-sSel)/(bTot-bSel)) mvaCutOrientation=-1;
+         //         if (sSel/bSel > (sTot-sSel)/(bTot-bSel)) mvaCutOrientation=-1;
          if (sSel*(bTot-bSel) > (sTot-sSel)*bSel) mvaCutOrientation=-1;
          else                                     mvaCutOrientation=1;
          sSelCut=sSel;
@@ -770,20 +780,20 @@ void TMVA::MethodBoost::FindMVACut(MethodBase *method)
          //         std::cout << "new cut at " << mvaCut << "with s="<<sTot-sSel << " b="<<bTot-bSel << std::endl;
       }
       /*
-      Double_t ori;
-      if (sSel/bSel > (sTot-sSel)/(bTot-bSel)) ori=-1;
-      else                                     ori=1;
-      std::cout << ibin << " mvacut="<<mvaCut
-                << " sTot=" << sTot
-                << " bTot=" << bTot
-                << " sSel=" << sSel
-                << " bSel=" << bSel
-                << " s/b(1)=" << sSel/bSel
-                << " s/b(2)=" << (sTot-sSel)/(bTot-bSel)
-                << " sepGain="<<sepGain->GetSeparationGain(sSel,bSel,sTot,bTot) 
-                << " sepGain2="<<sepGain2->GetSeparationGain(sSel,bSel,sTot,bTot)
-                << "      " <<ori
-                << std::endl;
+        Double_t ori;
+        if (sSel/bSel > (sTot-sSel)/(bTot-bSel)) ori=-1;
+        else                                     ori=1;
+        std::cout << ibin << " mvacut="<<mvaCut
+        << " sTot=" << sTot
+        << " bTot=" << bTot
+        << " sSel=" << sSel
+        << " bSel=" << bSel
+        << " s/b(1)=" << sSel/bSel
+        << " s/b(2)=" << (sTot-sSel)/(bTot-bSel)
+        << " sepGain="<<sepGain->GetSeparationGain(sSel,bSel,sTot,bTot) 
+        << " sepGain2="<<sepGain2->GetSeparationGain(sSel,bSel,sTot,bTot)
+        << "      " <<ori
+        << std::endl;
       */
          
    }
@@ -793,24 +803,24 @@ void TMVA::MethodBoost::FindMVACut(MethodBase *method)
       double leftIndex  =sepGain->GetSeparationIndex(sSelCut,bSelCut);
       double rightIndex  =sepGain->GetSeparationIndex(sTot-sSelCut,bTot-bSelCut);
       std::cout 
-              << " sTot=" << sTot
-              << " bTot=" << bTot
-              << " s="<<sSelCut
-              << " b="<<bSelCut
-              << " s2="<<(sTot-sSelCut)
-              << " b2="<<(bTot-bSelCut)
-              << " s/b(1)=" << sSelCut/bSelCut
-              << " s/b(2)=" << (sTot-sSelCut)/(bTot-bSelCut)
-              << " index before cut=" << parentIndex
-              << " after: left=" << leftIndex
-              << " after: right=" << rightIndex
-              << " sepGain=" << parentIndex-( (sSelCut+bSelCut) * leftIndex + (sTot-sSelCut+bTot-bSelCut) * rightIndex )/(sTot+bTot)
-              << " sepGain="<<separationGain
-              << " sepGain="<<sepGain->GetSeparationGain(sSelCut,bSelCut,sTot,bTot)
-              << " cut=" << mvaCut 
-              << " idx="<<fCurrentMethodIdx
-              << " cutOrientation="<<mvaCutOrientation
-              << std::endl;
+         << " sTot=" << sTot
+         << " bTot=" << bTot
+         << " s="<<sSelCut
+         << " b="<<bSelCut
+         << " s2="<<(sTot-sSelCut)
+         << " b2="<<(bTot-bSelCut)
+         << " s/b(1)=" << sSelCut/bSelCut
+         << " s/b(2)=" << (sTot-sSelCut)/(bTot-bSelCut)
+         << " index before cut=" << parentIndex
+         << " after: left=" << leftIndex
+         << " after: right=" << rightIndex
+         << " sepGain=" << parentIndex-( (sSelCut+bSelCut) * leftIndex + (sTot-sSelCut+bTot-bSelCut) * rightIndex )/(sTot+bTot)
+         << " sepGain="<<separationGain
+         << " sepGain="<<sepGain->GetSeparationGain(sSelCut,bSelCut,sTot,bTot)
+         << " cut=" << mvaCut 
+         << " idx="<<fCurrentMethodIdx
+         << " cutOrientation="<<mvaCutOrientation
+         << std::endl;
    }
    method->SetSignalReferenceCut(mvaCut);
    method->SetSignalReferenceCutOrientation(mvaCutOrientation);
@@ -819,11 +829,14 @@ void TMVA::MethodBoost::FindMVACut(MethodBase *method)
 
    
    Log() << kDEBUG << "(old step) Setting method cut to " <<method->GetSignalReferenceCut()<< Endl;
-   
-   // mvaS ->Delete();  
-   // mvaB ->Delete();
-   // mvaSC->Delete();
-   // mvaBC->Delete();
+
+   if(IsSilentFile())
+   {
+        mvaS ->Delete();  
+        mvaB ->Delete();
+        mvaSC->Delete();
+        mvaBC->Delete();
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -884,15 +897,18 @@ Double_t TMVA::MethodBoost::AdaBoost(MethodBase* method, Bool_t discreteAdaBoost
       v = fMVAvalues->at(ievt);
       w = ev->GetWeight();
       sumAll += w;
-      if (fMonitorBoostedMethod) {
-         if (sig) {
-            fBTrainSigMVAHist[fCurrentMethodIdx]->Fill(v,w);
-            fTrainSigMVAHist[fCurrentMethodIdx]->Fill(v,ev->GetOriginalWeight());
-         }
-         else {
-            fBTrainBgdMVAHist[fCurrentMethodIdx]->Fill(v,w);
-            fTrainBgdMVAHist[fCurrentMethodIdx]->Fill(v,ev->GetOriginalWeight());
-         }
+      if(!IsSilentFile())
+      {
+        if (fMonitorBoostedMethod) {
+            if (sig) {
+                fBTrainSigMVAHist[fCurrentMethodIdx]->Fill(v,w);
+                fTrainSigMVAHist[fCurrentMethodIdx]->Fill(v,ev->GetOriginalWeight());
+            }
+            else {
+                fBTrainBgdMVAHist[fCurrentMethodIdx]->Fill(v,w);
+                fTrainBgdMVAHist[fCurrentMethodIdx]->Fill(v,ev->GetOriginalWeight());
+            }
+        }
       }
       
       if (discreteAdaBoost){
@@ -1209,11 +1225,11 @@ Double_t TMVA::MethodBoost::GetBoostROCIntegral(Bool_t singleMethod, Types::ETre
       else                          mva_b->Fill( (*mvaRes)[ievt], w );
 
       if (CalcOverlapIntergral) {
-	 Float_t w_ov = ev->GetWeight();
-	 if (DataInfo().IsSignal(ev))  
-	    mva_s_overlap->Fill( (*mvaRes)[ievt], w_ov );
-	 else
-	    mva_b_overlap->Fill( (*mvaRes)[ievt], w_ov );
+         Float_t w_ov = ev->GetWeight();
+         if (DataInfo().IsSignal(ev))  
+            mva_s_overlap->Fill( (*mvaRes)[ievt], w_ov );
+         else
+            mva_b_overlap->Fill( (*mvaRes)[ievt], w_ov );
       }
    }
    gTools().NormHist( mva_s );
@@ -1231,10 +1247,10 @@ Double_t TMVA::MethodBoost::GetBoostROCIntegral(Bool_t singleMethod, Types::ETre
 
       fOverlap_integral = 0.0;
       for (Int_t bin=1; bin<=mva_s_overlap->GetNbinsX(); bin++){
-	 Double_t bc_s = mva_s_overlap->GetBinContent(bin);
-	 Double_t bc_b = mva_b_overlap->GetBinContent(bin);
-	 if (bc_s > 0.0 && bc_b > 0.0)
-	    fOverlap_integral += TMath::Min(bc_s, bc_b);
+         Double_t bc_s = mva_s_overlap->GetBinContent(bin);
+         Double_t bc_b = mva_b_overlap->GetBinContent(bin);
+         if (bc_s > 0.0 && bc_b > 0.0)
+            fOverlap_integral += TMath::Min(bc_s, bc_b);
       }
 
       delete mva_s_overlap;

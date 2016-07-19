@@ -34,6 +34,7 @@ class TH2;
 class TH2F;
 class TSpline;
 class TSpline1;
+class TGraph;
 
 namespace TMVA {
 
@@ -49,13 +50,17 @@ namespace TMVA {
     
 
     Double_t GetROCIntegral();
+    TGraph* GetROCCurve(const UInt_t points=100);//nvidisions = #points -1
     
   private:
-    std::vector<Float_t> fMvaS;
-    std::vector<Float_t> fMvaB;
-
+    void EpsilonCount();
     mutable MsgLogger* fLogger;   //! message logger
     MsgLogger& Log() const { return *fLogger; }                       
+    TGraph *fGraph;
+    std::vector<Float_t> fMvaS;
+    std::vector<Float_t> fMvaB;
+    std::vector<Float_t> fEpsilonSig;
+    std::vector<Float_t> fEpsilonBgk;
 
   };
 }

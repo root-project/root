@@ -190,7 +190,7 @@ D: contribution in RooStats
 
 N: Bianca-Cristina Cristescu
 E: bianca-cristina.cristescu@cern.ch
-D: contributions to ROOT6 / meta
+D: contributions to ROOT6 / meta and cling.
 
 N: David Dagenhart
 E: wdd@fnal.gov
@@ -218,6 +218,10 @@ D: TTree support for csv files
 N: Adrien Devresse
 E: adrien.devresse@cern.ch
 D: libRDAVIX, the davix client code
+
+N: Baozeng Ding
+E: sploving1@gmail.com
+D: Contribution to cling's pointer validity checker
 
 N: Mat Dobbs
 E: Matthew.Adam.Dobbs@cern.ch
@@ -774,6 +778,10 @@ D: initial event generator interface
 N: Benjamin Ragan-Kelley
 E: benjaminrk@gmail.com
 D: cling / Jupyter integration
+
+N: Dan Riley
+E: Daniel.Riley@cornell.edu
+D: Reduce memory/cpu waster in LZMA usage
 
 N: Reiner Rohlfs
 E: Reiner.Rohlfs@obs.unige.ch

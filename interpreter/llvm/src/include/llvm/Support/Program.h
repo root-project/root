@@ -16,10 +16,11 @@
 
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/Support/ErrorOr.h"
-#include "llvm/Support/Path.h"
 #include <system_error>
 
 namespace llvm {
+class StringRef;
+
 namespace sys {
 
   /// This is the OS-specific separator for PATH like environment variables:
@@ -42,6 +43,8 @@ struct ProcessInfo {
 #else
 #error "ProcessInfo is not defined for this platform!"
 #endif
+
+  enum : ProcessId { InvalidPid = 0 };
 
   /// The process identifier.
   ProcessId Pid;
@@ -66,8 +69,7 @@ struct ProcessInfo {
   /// \returns The fully qualified path to the first \p Name in \p Paths if it
   ///   exists. \p Name if \p Name has slashes in it. Otherwise an error.
   ErrorOr<std::string>
-  findProgramByName(StringRef Name,
-                    ArrayRef<StringRef> Paths = ArrayRef<StringRef>());
+  findProgramByName(StringRef Name, ArrayRef<StringRef> Paths = None);
 
   // These functions change the specified standard stream (stdin or stdout) to
   // binary mode. They return errc::success if the specified stream
@@ -130,7 +132,7 @@ struct ProcessInfo {
 
   /// Return true if the given arguments fit within system-specific
   /// argument length limits.
-  bool argumentsFitWithinSystemLimits(ArrayRef<const char*> Args);
+  bool commandLineFitsWithinSystemLimits(StringRef Program, ArrayRef<const char*> Args);
 
   /// File encoding options when writing contents that a non-UTF8 tool will
   /// read (on Windows systems). For UNIX, we always use UTF-8.

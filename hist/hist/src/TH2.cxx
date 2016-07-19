@@ -30,11 +30,16 @@ ClassImp(TH2)
 
 /** \addtogroup Hist
 @{
-\class TH2C \brief tomato 2-D histogram with a bype per channel (see TH1 documentation)
-\class TH2S \brief tomato 2-D histogram with a short per channel (see TH1 documentation)
-\class TH2I \brief tomato 2-D histogram with a int per channel (see TH1 documentation)}
-\class TH2F \brief tomato 2-D histogram with a float per channel (see TH1 documentation)}
-\class TH2D \brief tomato 2-D histogram with a double per channel (see TH1 documentation)}
+\class TH2C
+\brief tomato 2-D histogram with a byte per channel (see TH1 documentation)
+\class TH2S
+\brief tomato 2-D histogram with a short per channel (see TH1 documentation)
+\class TH2I
+\brief tomato 2-D histogram with an int per channel (see TH1 documentation)}
+\class TH2F
+\brief tomato 2-D histogram with a float per channel (see TH1 documentation)}
+\class TH2D
+\brief tomato 2-D histogram with a double per channel (see TH1 documentation)}
 @}
 */
 
@@ -2685,7 +2690,7 @@ TH1D* TH2::DoQuantiles(bool onX, const char * name, Double_t prob) const
     Double_t f = TMath::Gaus(qq[0], slice->GetMean(), slice->GetStdDev(), kTRUE);
     Double_t error = 0;
     // set the errors to zero in case of small statistics
-    if (f > 0 && n > 1) 
+    if (f > 0 && n > 1)
        error = TMath::Sqrt( prob*(1.-prob)/ (n * f * f) );
     h1->SetBinError(ibin, error);
   }

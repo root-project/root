@@ -40,13 +40,13 @@ class TFile;
 class TEntryListFromFile: public TEntryList
 {
 protected:
-   TString    fListFileName;  //from this string names of all files can be found
-   TString    fListName;      //name of the list
-   Int_t      fNFiles;        //total number of files
-   Long64_t   *fListOffset;   //[fNFiles] numbers of entries in ind. lists
-   TFile      *fFile;         //currently open file
-                              //fCurrent points to the currently open list
-   TObjArray *fFileNames;     //! points to the fFiles data member of the corresponding chain
+   TString    fListFileName;  ///<  from this string names of all files can be found
+   TString    fListName;      ///<  name of the list
+   Int_t      fNFiles;        ///<  total number of files
+   Long64_t   *fListOffset;   ///<[fNFiles] numbers of entries in ind. lists
+   TFile      *fFile;         ///< currently open file
+                              ///<  fCurrent points to the currently open list
+   TObjArray *fFileNames;     ///<! points to the fFiles data member of the corresponding chain
 
    // Obsolete use TTree::kMaxEntries
    static constexpr auto kBigNumber = std::numeric_limits<Long64_t>::max();

@@ -163,7 +163,7 @@ void TPointSet3D::Streamer(TBuffer &R__b)
          R__b >> n;
          for (Int_t i=0; i<n; ++i) {
             TObject* o = (TObject*) R__b.ReadObjectAny(TObject::Class());
-            if (gDebug > 0) printf("Read[%2d]: ", i); o->Print();
+            if (gDebug > 0) { printf("Read[%2d]: ", i); o->Print(); }
          }
       }
    } else {
@@ -173,7 +173,7 @@ void TPointSet3D::Streamer(TBuffer &R__b)
          TObject* o;
          TIter next(&fIds);
          while ((o = next())) {
-            if (gDebug > 0) printf("Writing: "); o->Print();
+            if (gDebug > 0) { printf("Writing: "); o->Print(); }
             R__b.WriteObjectAny(o, TObject::Class());
          }
       }

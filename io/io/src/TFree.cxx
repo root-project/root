@@ -22,7 +22,7 @@ ClassImp(TFree)
 \ingroup IO
 Service class for TFile.
 
-Each file has a linked list of free segments. Each free segment is described 
+Each file has a linked list of free segments. Each free segment is described
 by its firts and last address.
 When an object is written to a file, a new Key (see TKey)
 is created. The first free segment big enough to accomodate the object

@@ -73,7 +73,13 @@ function(add_ocaml_library name)
 
   get_property(system_libs TARGET LLVMSupport PROPERTY LLVM_SYSTEM_LIBS)
   foreach(system_lib ${system_libs})
-    list(APPEND ocaml_flags "-l${system_lib}" )
+    if (system_lib MATCHES "^-")
+      # If it's an option, pass it without changes.
+      list(APPEND ocaml_flags "${system_lib}" )
+    else()
+      # Otherwise assume it's a library name we need to link with.
+      list(APPEND ocaml_flags "-l${system_lib}" )
+    endif()
   endforeach()
 
   string(REPLACE ";" " " ARG_CFLAGS "${ARG_CFLAGS}")
@@ -149,7 +155,7 @@ function(add_ocaml_library name)
             "-I" "${LLVM_LIBRARY_DIR}/ocaml/"
             "-dump" "${bin}/${name}.odoc"
             ${ocaml_pkgs} ${ocaml_inputs}
-    DEPENDS ${ocaml_inputs}
+    DEPENDS ${ocaml_inputs} ${ocaml_outputs}
     COMMENT "Building OCaml documentation for ${name}"
     VERBATIM)
 

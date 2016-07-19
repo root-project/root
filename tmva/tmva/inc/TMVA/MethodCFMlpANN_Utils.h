@@ -99,11 +99,11 @@ namespace TMVA {
 
    protected:
 
-      static Int_t             fg_100;          // constant
-      static Int_t             fg_0;            // constant
+      Int_t             fg_100;          // constant
+      Int_t             fg_0;            // constant
       static const Int_t       fg_max_nVar_;    // static maximum number of input variables
       static const Int_t       fg_max_nNodes_;  // maximum number of nodes per variable
-      static Int_t             fg_999;          // constant
+      Int_t             fg_999;          // constant
       static const char* const fg_MethodName;   // method name for print
 
       Double_t W_ref(const Double_t wNN[], Int_t a_1, Int_t a_2, Int_t a_3) const {
@@ -136,7 +136,7 @@ namespace TMVA {
       // dynamic data table
       class VARn2 {
       public:
-         VARn2() : fNevt(0), fNvar(0) { 
+      VARn2() : fNevt(0), fNvar(0) { 
             fxx = 0;
          }
          ~VARn2() {
@@ -203,7 +203,7 @@ namespace TMVA {
 
    public:
 
-      ClassDef(MethodCFMlpANN_Utils,0)  // Implementation of Clermond-Ferrand artificial neural network
+      ClassDef(MethodCFMlpANN_Utils,0);  // Implementation of Clermond-Ferrand artificial neural network
    };
 
 } // namespace TMVA

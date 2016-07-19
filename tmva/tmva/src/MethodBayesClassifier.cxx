@@ -45,12 +45,11 @@ ClassImp(TMVA::MethodBayesClassifier)
 ////////////////////////////////////////////////////////////////////////////////
 /// standard constructor
 
-TMVA::MethodBayesClassifier::MethodBayesClassifier( const TString& jobName,
-                                                    const TString& methodTitle,
-                                                    DataSetInfo& theData, 
-                                                    const TString& theOption,
-                                                    TDirectory* theTargetDir ) :
-   TMVA::MethodBase( jobName, Types::kBayesClassifier, methodTitle, theData, theOption, theTargetDir )
+   TMVA::MethodBayesClassifier::MethodBayesClassifier( const TString& jobName,
+                                                       const TString& methodTitle,
+                                                       DataSetInfo& theData, 
+                                                       const TString& theOption ) :
+   TMVA::MethodBase( jobName, Types::kBayesClassifier, methodTitle, theData, theOption)
 {
 }
 
@@ -58,9 +57,8 @@ TMVA::MethodBayesClassifier::MethodBayesClassifier( const TString& jobName,
 /// constructor from weight file
 
 TMVA::MethodBayesClassifier::MethodBayesClassifier( DataSetInfo& theData, 
-                                                    const TString& theWeightFile,  
-                                                    TDirectory* theTargetDir ) :
-   TMVA::MethodBase( Types::kBayesClassifier, theData, theWeightFile, theTargetDir ) 
+                                                    const TString& theWeightFile) :
+   TMVA::MethodBase( Types::kBayesClassifier, theData, theWeightFile) 
 {
 }
 

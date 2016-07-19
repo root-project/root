@@ -40,28 +40,39 @@ llvm::Type *CGOpenCLRuntime::convertOpenCLSpecificType(const Type *T) {
   default: 
     llvm_unreachable("Unexpected opencl builtin type!");
     return nullptr;
-  case BuiltinType::OCLImage1d:
-    return llvm::PointerType::get(llvm::StructType::create(
-                           Ctx, "opencl.image1d_t"), ImgAddrSpc);
-  case BuiltinType::OCLImage1dArray:
-    return llvm::PointerType::get(llvm::StructType::create(
-                           Ctx, "opencl.image1d_array_t"), ImgAddrSpc);
-  case BuiltinType::OCLImage1dBuffer:
-    return llvm::PointerType::get(llvm::StructType::create(
-                           Ctx, "opencl.image1d_buffer_t"), ImgAddrSpc);
-  case BuiltinType::OCLImage2d:
-    return llvm::PointerType::get(llvm::StructType::create(
-                           Ctx, "opencl.image2d_t"), ImgAddrSpc);
-  case BuiltinType::OCLImage2dArray:
-    return llvm::PointerType::get(llvm::StructType::create(
-                           Ctx, "opencl.image2d_array_t"), ImgAddrSpc);
-  case BuiltinType::OCLImage3d:
-    return llvm::PointerType::get(llvm::StructType::create(
-                           Ctx, "opencl.image3d_t"), ImgAddrSpc);
+#define IMAGE_TYPE(ImgType, Id, SingletonId, Access, Suffix) \
+  case BuiltinType::Id: \
+    return llvm::PointerType::get( \
+        llvm::StructType::create(Ctx, "opencl." #ImgType "_" #Suffix "_t"), \
+        ImgAddrSpc);
+#include "clang/Basic/OpenCLImageTypes.def"
   case BuiltinType::OCLSampler:
     return llvm::IntegerType::get(Ctx, 32);
   case BuiltinType::OCLEvent:
     return llvm::PointerType::get(llvm::StructType::create(
                            Ctx, "opencl.event_t"), 0);
+  case BuiltinType::OCLClkEvent:
+    return llvm::PointerType::get(
+        llvm::StructType::create(Ctx, "opencl.clk_event_t"), 0);
+  case BuiltinType::OCLQueue:
+    return llvm::PointerType::get(
+        llvm::StructType::create(Ctx, "opencl.queue_t"), 0);
+  case BuiltinType::OCLNDRange:
+    return llvm::PointerType::get(
+        llvm::StructType::create(Ctx, "opencl.ndrange_t"), 0);
+  case BuiltinType::OCLReserveID:
+    return llvm::PointerType::get(
+        llvm::StructType::create(Ctx, "opencl.reserve_id_t"), 0);
   }
+}
+
+llvm::Type *CGOpenCLRuntime::getPipeType() {
+  if (!PipeTy){
+    uint32_t PipeAddrSpc =
+      CGM.getContext().getTargetAddressSpace(LangAS::opencl_global);
+    PipeTy = llvm::PointerType::get(llvm::StructType::create(
+      CGM.getLLVMContext(), "opencl.pipe_t"), PipeAddrSpc);
+  }
+
+  return PipeTy;
 }

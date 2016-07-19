@@ -60,7 +60,7 @@ void Delaunay2D::SetInputPoints(int n, const double * x, const double * y, const
 
 
 #ifdef THREAD_SAFE
-   fInit		 = Initialization::UNINITIALIZED;
+   fInit         = Initialization::UNINITIALIZED;
 #else
    fInit         = kFALSE;
 #endif
@@ -171,38 +171,38 @@ void Delaunay2D::FindAllTriangles()
 #ifdef HAS_CGAL
 /// CGAL implementation of normalize points
 void Delaunay2D::DonormalizePoints() {
-	for (Int_t n = 0; n < fNpoints; n++) {
-		//Point p(xTransformer(fX[n]), yTransformer(fY[n]));
-		Point p(linear_transform(fX[n], fOffsetX, fScaleFactorX),
-				linear_transform(fY[n], fOffsetY, fScaleFactorY));
+   for (Int_t n = 0; n < fNpoints; n++) {
+      //Point p(xTransformer(fX[n]), yTransformer(fY[n]));
+      Point p(linear_transform(fX[n], fOffsetX, fScaleFactorX),
+              linear_transform(fY[n], fOffsetY, fScaleFactorY));
 
-		fNormalizedPoints.insert(std::make_pair(p, n));
-	}
+      fNormalizedPoints.insert(std::make_pair(p, n));
+   }
 }
 
 /// CGAL implementation for finding triangles 
 void Delaunay2D::DoFindTriangles() {
-	fCGALdelaunay.insert(fNormalizedPoints.begin(), fNormalizedPoints.end());
+   fCGALdelaunay.insert(fNormalizedPoints.begin(), fNormalizedPoints.end());
 
-	std::transform(fCGALdelaunay.finite_faces_begin(),
-			fCGALdelaunay.finite_faces_end(), std::back_inserter(fTriangles),
-			[] (const Delaunay::Face face) -> Triangle {
+   std::transform(fCGALdelaunay.finite_faces_begin(),
+                  fCGALdelaunay.finite_faces_end(), std::back_inserter(fTriangles),
+                  [] (const Delaunay::Face face) -> Triangle {
 
-				Triangle tri;
+                     Triangle tri;
 
-				auto transform = [&] (const unsigned int i) {
-					tri.x[i] = face.vertex(i)->point().x();
-					tri.y[i] = face.vertex(i)->point().y();
-					tri.idx[i] = face.vertex(i)->info();
-				};
+                     auto transform = [&] (const unsigned int i) {
+                        tri.x[i] = face.vertex(i)->point().x();
+                        tri.y[i] = face.vertex(i)->point().y();
+                        tri.idx[i] = face.vertex(i)->info();
+                     };
 
-				transform(0);
-				transform(1);
-				transform(2);
+                     transform(0);
+                     transform(1);
+                     transform(2);
 
-				return tri;
+                     return tri;
 
-			});
+                  });
 }
 
 /// CGAL implementation for interpolation
@@ -216,23 +216,23 @@ double Delaunay2D::DoInterpolateNormalized(double xx, double yy)
     FindAllTriangles();
 
    //coordinate computation
-	Point p(xx, yy);
+   Point p(xx, yy);
 
-	std::vector<std::pair<Point, Coord_type> > coords;
-	auto nn = CGAL::natural_neighbor_coordinates_2(fCGALdelaunay, p,
-			std::back_inserter(coords));
+   std::vector<std::pair<Point, Coord_type> > coords;
+   auto nn = CGAL::natural_neighbor_coordinates_2(fCGALdelaunay, p,
+                                                  std::back_inserter(coords));
 
-	//std::cout << std::this_thread::get_id() << ": Found " << coords.size() << " points" << std::endl;
+   //std::cout << std::this_thread::get_id() << ": Found " << coords.size() << " points" << std::endl;
 
-	if(!nn.third) //neighbor finding was NOT successfull, return standard value
-		return fZout;
+   if(!nn.third) //neighbor finding was NOT successfull, return standard value
+      return fZout;
 
-	//printf("found neighbors %u\n", coords.size());
+   //printf("found neighbors %u\n", coords.size());
 
-	Coord_type res = CGAL::linear_interpolation(coords.begin(), coords.end(),
-			nn.second, Value_access(fNormalizedPoints, fZ));
+   Coord_type res = CGAL::linear_interpolation(coords.begin(), coords.end(),
+                                               nn.second, Value_access(fNormalizedPoints, fZ));
 
-	//std::cout << std::this_thread::get_id() << ": Result " << res << std::endl;
+   //std::cout << std::this_thread::get_id() << ": Result " << res << std::endl;
 
    return res;
 }
@@ -241,134 +241,134 @@ double Delaunay2D::DoInterpolateNormalized(double xx, double yy)
 
 /// Triangle implementation for normalizing the points
 void Delaunay2D::DoNormalizePoints() {
-	for (Int_t n = 0; n < fNpoints; n++) {
-		fXN.push_back(Linear_transform(fX[n], fOffsetX, fScaleFactorX));
-		fYN.push_back(Linear_transform(fY[n], fOffsetY, fScaleFactorY));
-	}
+   for (Int_t n = 0; n < fNpoints; n++) {
+      fXN.push_back(Linear_transform(fX[n], fOffsetX, fScaleFactorX));
+      fYN.push_back(Linear_transform(fY[n], fOffsetY, fScaleFactorY));
+   }
 
-	//also initialize fXCellStep and FYCellStep
-	fXCellStep = fNCells / (fXNmax - fXNmin);
-	fYCellStep = fNCells / (fYNmax - fYNmin);
+   //also initialize fXCellStep and FYCellStep
+   fXCellStep = fNCells / (fXNmax - fXNmin);
+   fYCellStep = fNCells / (fYNmax - fYNmin);
 }
 
 /// Triangle implementation for finding all the triangles 
 void Delaunay2D::DoFindTriangles() {
 
-	auto initStruct = [] (triangulateio & s) {
-							  s.pointlist = nullptr;                                               /* In / out */
-							  s.pointattributelist = nullptr;                                      /* In / out */
-							  s.pointmarkerlist = nullptr;                                          /* In / out */
-							  s.numberofpoints = 0;                                            /* In / out */
-							  s.numberofpointattributes = 0;                                   /* In / out */
+   auto initStruct = [] (triangulateio & s) {
+      s.pointlist = nullptr;              /* In / out */
+      s.pointattributelist = nullptr;     /* In / out */
+      s.pointmarkerlist = nullptr;        /* In / out */
+      s.numberofpoints = 0;               /* In / out */
+      s.numberofpointattributes = 0;      /* In / out */
 
-							  s.trianglelist = nullptr;                                             /* In / out */
-							  s.triangleattributelist = nullptr;                                   /* In / out */
-							  s.trianglearealist = nullptr;                                         /* In only */
-							  s.neighborlist = nullptr;                                             /* Out only */
-							  s.numberoftriangles = 0;                                         /* In / out */
-							  s.numberofcorners = 0;                                           /* In / out */
-							  s.numberoftriangleattributes = 0;                                /* In / out */
+      s.trianglelist = nullptr;           /* In / out */
+      s.triangleattributelist = nullptr;  /* In / out */
+      s.trianglearealist = nullptr;       /* In only */
+      s.neighborlist = nullptr;           /* Out only */
+      s.numberoftriangles = 0;            /* In / out */
+      s.numberofcorners = 0;              /* In / out */
+      s.numberoftriangleattributes = 0;   /* In / out */
 
-							  s.segmentlist = nullptr;                                              /* In / out */
-							  s.segmentmarkerlist = nullptr;                                        /* In / out */
-							  s.numberofsegments = 0;                                          /* In / out */
+      s.segmentlist = nullptr;            /* In / out */
+      s.segmentmarkerlist = nullptr;      /* In / out */
+      s.numberofsegments = 0;             /* In / out */
 
-							  s.holelist = nullptr;                        /* In / pointer to array copied out */
-							  s.numberofholes = 0;                                      /* In / copied out */
+      s.holelist = nullptr;               /* In / pointer to array copied out */
+      s.numberofholes = 0;                /* In / copied out */
 
-							  s.regionlist = nullptr;                      /* In / pointer to array copied out */
-							  s.numberofregions = 0;                                    /* In / copied out */
+      s.regionlist = nullptr;             /* In / pointer to array copied out */
+      s.numberofregions = 0;              /* In / copied out */
 
-							  s.edgelist = nullptr;                                                 /* Out only */
-							  s.edgemarkerlist = nullptr;            /* Not used with Voronoi diagram; out only */
-							  s.normlist = nullptr;                /* Used only with Voronoi diagram; out only */
-							  s.numberofedges = 0;                                             /* Out only */
-						};
+      s.edgelist = nullptr;               /* Out only */
+      s.edgemarkerlist = nullptr;         /* Not used with Voronoi diagram; out only */
+      s.normlist = nullptr;               /* Used only with Voronoi diagram; out only */
+      s.numberofedges = 0;                /* Out only */
+   };
 
-	auto freeStruct = [] (triangulateio & s) {
-							  if(s.pointlist != nullptr) free(s.pointlist);                                               /* In / out */
-							  if(s.pointattributelist != nullptr) free(s.pointattributelist);                                      /* In / out */
-							  if(s.pointmarkerlist != nullptr) free(s.pointmarkerlist);                                          /* In / out */
+   auto freeStruct = [] (triangulateio & s) {
+      if(s.pointlist != nullptr) free(s.pointlist);                         /* In / out */
+      if(s.pointattributelist != nullptr) free(s.pointattributelist);       /* In / out */
+      if(s.pointmarkerlist != nullptr) free(s.pointmarkerlist);             /* In / out */
 
-							  if(s.trianglelist != nullptr) free(s.trianglelist);                                             /* In / out */
-							  if(s.triangleattributelist != nullptr) free(s.triangleattributelist);                                   /* In / out */
-							  if(s.trianglearealist != nullptr) free(s.trianglearealist);                                         /* In only */
-							  if(s.neighborlist != nullptr) free(s.neighborlist);                                             /* Out only */
+      if(s.trianglelist != nullptr) free(s.trianglelist);                   /* In / out */
+      if(s.triangleattributelist != nullptr) free(s.triangleattributelist); /* In / out */
+      if(s.trianglearealist != nullptr) free(s.trianglearealist);           /* In only */
+      if(s.neighborlist != nullptr) free(s.neighborlist);                   /* Out only */
 
-							  if(s.segmentlist != nullptr) free(s.segmentlist);                                              /* In / out */
-							  if(s.segmentmarkerlist != nullptr) free(s.segmentmarkerlist);                                        /* In / out */
+      if(s.segmentlist != nullptr) free(s.segmentlist);                     /* In / out */
+      if(s.segmentmarkerlist != nullptr) free(s.segmentmarkerlist);         /* In / out */
 
-							  if(s.holelist != nullptr) free(s.holelist);                        /* In / pointer to array copied out */
+      if(s.holelist != nullptr) free(s.holelist);             /* In / pointer to array copied out */
 
-							  if(s.regionlist != nullptr) free(s.regionlist);                      /* In / pointer to array copied out */
+      if(s.regionlist != nullptr) free(s.regionlist);         /* In / pointer to array copied out */
 
-							  if(s.edgelist != nullptr) free(s.edgelist);                                                 /* Out only */
-							  if(s.edgemarkerlist != nullptr) free(s.edgemarkerlist);            /* Not used with Voronoi diagram; out only */
-							  if(s.normlist != nullptr) free(s.normlist);                /* Used only with Voronoi diagram; out only */
-						};
+      if(s.edgelist != nullptr) free(s.edgelist);             /* Out only */
+      if(s.edgemarkerlist != nullptr) free(s.edgemarkerlist); /* Not used with Voronoi diagram; out only */
+      if(s.normlist != nullptr) free(s.normlist);             /* Used only with Voronoi diagram; out only */
+   };
 
-	struct triangulateio in, out;
-	initStruct(in); initStruct(out);
+   struct triangulateio in, out;
+   initStruct(in); initStruct(out);
 
-	/* Define input points. */
+   /* Define input points. */
 
-	in.numberofpoints = fNpoints;
-	in.pointlist = (REAL *) malloc(in.numberofpoints * 2 * sizeof(REAL));
+   in.numberofpoints = fNpoints;
+   in.pointlist = (REAL *) malloc(in.numberofpoints * 2 * sizeof(REAL));
 
-	for (Int_t i = 0; i < fNpoints; ++i) {
-		in.pointlist[2 * i] = fXN[i];
-		in.pointlist[2 * i + 1] = fYN[i];
-	}
+   for (Int_t i = 0; i < fNpoints; ++i) {
+      in.pointlist[2 * i] = fXN[i];
+      in.pointlist[2 * i + 1] = fYN[i];
+   }
 
-	triangulate((char *) "zQN", &in, &out, nullptr);
+   triangulate((char *) "zQN", &in, &out, nullptr);
 
-	fTriangles.resize(out.numberoftriangles);
-	for(int t = 0; t < out.numberoftriangles; ++t){
-		Triangle tri;
+   fTriangles.resize(out.numberoftriangles);
+   for(int t = 0; t < out.numberoftriangles; ++t){
+      Triangle tri;
 
-		auto transform = [&] (const unsigned int v) {
-			//each triangle as numberofcorners vertices ( = 3)
-			tri.idx[v] = out.trianglelist[t*out.numberofcorners + v];
+      auto transform = [&] (const unsigned int v) {
+         //each triangle as numberofcorners vertices ( = 3)
+         tri.idx[v] = out.trianglelist[t*out.numberofcorners + v];
 
-			//printf("triangle %u vertex %u: point %u/%i\n", t, v, tri.idx[v], out.numberofpoints);
+         //printf("triangle %u vertex %u: point %u/%i\n", t, v, tri.idx[v], out.numberofpoints);
 
-			//pointlist is [x0 y0 x1 y1 ...]
-			tri.x[v] = in.pointlist[tri.idx[v] * 2 + 0];
+         //pointlist is [x0 y0 x1 y1 ...]
+         tri.x[v] = in.pointlist[tri.idx[v] * 2 + 0];
 
-			//printf("\t x: %f\n", tri.x[v]);
+         //printf("\t x: %f\n", tri.x[v]);
 
-			tri.y[v] = in.pointlist[tri.idx[v] * 2 + 1];
+         tri.y[v] = in.pointlist[tri.idx[v] * 2 + 1];
 
-			//printf("\t y: %f\n", tri.y[v]);
-		};
+         //printf("\t y: %f\n", tri.y[v]);
+      };
 
-		transform(0);
-		transform(1);
-		transform(2);
+      transform(0);
+      transform(1);
+      transform(2);
 
-		//see comment in header for CGAL fallback section
-		tri.invDenom = 1 / ( (tri.y[1] - tri.y[2])*(tri.x[0] - tri.x[2]) + (tri.x[2] - tri.x[1])*(tri.y[0] - tri.y[2]) );
+      //see comment in header for CGAL fallback section
+      tri.invDenom = 1 / ( (tri.y[1] - tri.y[2])*(tri.x[0] - tri.x[2]) + (tri.x[2] - tri.x[1])*(tri.y[0] - tri.y[2]) );
 
-		fTriangles[t] = tri;
+      fTriangles[t] = tri;
 
-		auto bx = std::minmax({tri.x[0], tri.x[1], tri.x[2]});
-		auto by = std::minmax({tri.y[0], tri.y[1], tri.y[2]});
+      auto bx = std::minmax({tri.x[0], tri.x[1], tri.x[2]});
+      auto by = std::minmax({tri.y[0], tri.y[1], tri.y[2]});
 
-		unsigned int cellXmin = CellX(bx.first);
-		unsigned int cellXmax = CellX(bx.second);
+      unsigned int cellXmin = CellX(bx.first);
+      unsigned int cellXmax = CellX(bx.second);
 
-		unsigned int cellYmin = CellY(by.first);
-		unsigned int cellYmax = CellY(by.second);
+      unsigned int cellYmin = CellY(by.first);
+      unsigned int cellYmax = CellY(by.second);
 
-		for(unsigned int i = cellXmin; i <= cellXmax; ++i)
-			for(unsigned int j = cellYmin; j <= cellYmax; ++j){
-				//printf("(%u,%u) = %u\n", i, j, Cell(i,j));
-				fCells[Cell(i,j)].insert(t);
-			}
+      for(unsigned int i = cellXmin; i <= cellXmax; ++i) {
+         for(unsigned int j = cellYmin; j <= cellYmax; ++j) {
+            //printf("(%u,%u) = %u\n", i, j, Cell(i,j));
+            fCells[Cell(i,j)].insert(t);
+         }
+      }
+   }
 
-	}
-
-	freeStruct(in); freeStruct(out);
+   freeStruct(in); freeStruct(out);
 }
 
 /// Triangle implementation for interpolation
@@ -383,65 +383,66 @@ double Delaunay2D::DoInterpolateNormalized(double xx, double yy)
 
     //see comment in header for CGAL fallback section
     auto bayCoords = [&] (const unsigned int t) -> std::tuple<double, double, double> {
-    	double la = ( (fTriangles[t].y[1] - fTriangles[t].y[2])*(xx - fTriangles[t].x[2])
-    					 + (fTriangles[t].x[2] - fTriangles[t].x[1])*(yy - fTriangles[t].y[2]) ) * fTriangles[t].invDenom;
-    	double lb = ( (fTriangles[t].y[2] - fTriangles[t].y[0])*(xx - fTriangles[t].x[2])
-    			         + (fTriangles[t].x[0] - fTriangles[t].x[2])*(yy - fTriangles[t].y[2]) ) * fTriangles[t].invDenom;
+       double la = ( (fTriangles[t].y[1] - fTriangles[t].y[2])*(xx - fTriangles[t].x[2])
+                    + (fTriangles[t].x[2] - fTriangles[t].x[1])*(yy - fTriangles[t].y[2]) ) * fTriangles[t].invDenom;
+       double lb = ( (fTriangles[t].y[2] - fTriangles[t].y[0])*(xx - fTriangles[t].x[2])
+                    + (fTriangles[t].x[0] - fTriangles[t].x[2])*(yy - fTriangles[t].y[2]) ) * fTriangles[t].invDenom;
 
-    	return std::make_tuple(la, lb, (1 - la - lb));
+       return std::make_tuple(la, lb, (1 - la - lb));
     };
 
     auto inTriangle = [] (const std::tuple<double, double, double> & coords) -> bool {
-    	return std::get<0>(coords) >= 0 && std::get<1>(coords) >= 0 && std::get<2>(coords) >= 0;
+       return std::get<0>(coords) >= 0 && std::get<1>(coords) >= 0 && std::get<2>(coords) >= 0;
     };
     
-	int cX = CellX(xx);
-	int cY = CellY(yy);
+   int cX = CellX(xx);
+   int cY = CellY(yy);
 
-	if(cX < 0 || cX > fNCells || cY < 0 || cY > fNCells)
-		return fZout; //TODO some more fancy interpolation here
+   if(cX < 0 || cX > fNCells || cY < 0 || cY > fNCells)
+      return fZout; //TODO some more fancy interpolation here
 
     for(unsigned int t : fCells[Cell(cX, cY)]){
-    	auto coords = bayCoords(t);
+       auto coords = bayCoords(t);
 
-    	if(inTriangle(coords)){
-    		//we found the triangle -> interpolate using the barycentric interpolation
-    		return std::get<0>(coords) * fZ[fTriangles[t].idx[0]]
-    		     + std::get<1>(coords) * fZ[fTriangles[t].idx[1]]
-    		     + std::get<2>(coords) * fZ[fTriangles[t].idx[2]];
+       if(inTriangle(coords)){
+          //we found the triangle -> interpolate using the barycentric interpolation
+          return std::get<0>(coords) * fZ[fTriangles[t].idx[0]]
+                 + std::get<1>(coords) * fZ[fTriangles[t].idx[1]]
+               + std::get<2>(coords) * fZ[fTriangles[t].idx[2]];
 
-    	}
+       }
     }
 
     //debugging
 
-    /*for(unsigned int t = 0; t < fNdt; ++t){
-    	auto coords = bayCoords(t);
+    /*
+    for(unsigned int t = 0; t < fNdt; ++t) {
+       auto coords = bayCoords(t);
 
-    	if(inTriangle(coords)){
+       if(inTriangle(coords)){
 
-    		//brute force found a triangle -> grid not
-    		printf("Found triangle %u for (%f,%f) -> (%u,%u)\n", t, xx,yy, cX, cY);
-    		printf("Triangles in grid cell: ");
-    		for(unsigned int x : fCells[Cell(cX, cY)])
-    			printf("%u ", x);
-    		printf("\n");
+          //brute force found a triangle -> grid not
+          printf("Found triangle %u for (%f,%f) -> (%u,%u)\n", t, xx,yy, cX, cY);
+          printf("Triangles in grid cell: ");
+          for(unsigned int x : fCells[Cell(cX, cY)])
+             printf("%u ", x);
+          printf("\n");
 
-    		printf("Triangle %u is in cells: ", t);
-    		for(unsigned int i = 0; i <= fNCells; ++i)
-    			for(unsigned int j = 0; j <= fNCells; ++j)
-    				if(fCells[Cell(i,j)].count(t))
-    					printf("(%u,%u) ", i, j);
-    		printf("\n");
-    		for(unsigned int i = 0; i < 3; ++i)
-    			printf("\tpoint %u (%u): (%f,%f) -> (%u,%u)\n", i, fTriangles[t].idx[i], fTriangles[t].x[i], fTriangles[t].y[i], CellX(fTriangles[t].x[i]), CellY(fTriangles[t].y[i]));
+          printf("Triangle %u is in cells: ", t);
+          for(unsigned int i = 0; i <= fNCells; ++i)
+             for(unsigned int j = 0; j <= fNCells; ++j)
+                if(fCells[Cell(i,j)].count(t))
+                   printf("(%u,%u) ", i, j);
+          printf("\n");
+          for(unsigned int i = 0; i < 3; ++i)
+             printf("\tpoint %u (%u): (%f,%f) -> (%u,%u)\n", i, fTriangles[t].idx[i], fTriangles[t].x[i], fTriangles[t].y[i], CellX(fTriangles[t].x[i]), CellY(fTriangles[t].y[i]));
 
-    		//we found the triangle -> interpolate using the barycentric interpolation
-    		return std::get<0>(coords) * fZ[fTriangles[t].idx[0]]
-    		     + std::get<1>(coords) * fZ[fTriangles[t].idx[1]]
-    		     + std::get<2>(coords) * fZ[fTriangles[t].idx[2]];
+          //we found the triangle -> interpolate using the barycentric interpolation
+          return std::get<0>(coords) * fZ[fTriangles[t].idx[0]]
+                 + std::get<1>(coords) * fZ[fTriangles[t].idx[1]]
+                 + std::get<2>(coords) * fZ[fTriangles[t].idx[2]];
 
-    	}
+       }
     }
 
     printf("Could not find a triangle for point (%f,%f)\n", xx, yy);

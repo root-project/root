@@ -1,13 +1,9 @@
 set(LLVM_LINK_COMPONENTS
-  Core
-  ExecutionEngine
-  MCJIT
-  Support
-  native
+  all
   )
-
-set(LLVM_REQUIRES_RTTI 1)
 
 add_kaleidoscope_chapter(Kaleidoscope-Ch8
   toy.cpp
   )
+
+export_executable_symbols(Kaleidoscope-Ch8)

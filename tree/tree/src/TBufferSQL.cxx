@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TBufferSQL
+\ingroup tree
 Implement TBuffer for a SQL backend.
 */
 

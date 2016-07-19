@@ -1,3 +1,14 @@
+/* @(#)root/multiproc:$Id$ */
+// Author: Enrico Guiraud July 2015
+
+/*************************************************************************
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+ 
 #include "TProcPool.h"
 
 //////////////////////////////////////////////////////////////////////////
@@ -88,7 +99,7 @@ void TProcPool::Reset()
 {
    fNProcessed = 0;
    fNToProcess = 0;
-   fTask = ETask::kNoTask;
+   fTaskType = ETask::kNoTask;
 }
 
 
@@ -100,9 +111,9 @@ void TProcPool::ReplyToFuncResult(TSocket *s)
 {
    if (fNProcessed < fNToProcess) {
       //this cannot be a "greedy worker" task
-      if (fTask == ETask::kMap)
+      if (fTaskType == ETask::kMap)
          MPSend(s, PoolCode::kExecFunc);
-      else if (fTask == ETask::kMapWithArg)
+      else if (fTaskType == ETask::kMapWithArg)
          MPSend(s, PoolCode::kExecFuncWithArg, fNProcessed);
       ++fNProcessed;
    } else //whatever the task is, we are done
@@ -118,13 +129,13 @@ void TProcPool::ReplyToIdle(TSocket *s)
 {
    if (fNProcessed < fNToProcess) {
       //we are executing a "greedy worker" task
-      if (fTask == ETask::kMapRedWithArg)
+      if (fTaskType == ETask::kMapWithArg)
          MPSend(s, PoolCode::kExecFuncWithArg, fNProcessed);
-      else if (fTask == ETask::kMapRed)
+      else if (fTaskType == ETask::kMap)
          MPSend(s, PoolCode::kExecFunc);
-      else if (fTask == ETask::kProcByRange)
+      else if (fTaskType == ETask::kProcByRange)
          MPSend(s, PoolCode::kProcRange, fNProcessed);
-      else if (fTask == ETask::kProcByFile)
+      else if (fTaskType == ETask::kProcByFile)
          MPSend(s, PoolCode::kProcFile, fNProcessed);
       ++fNProcessed;
    } else

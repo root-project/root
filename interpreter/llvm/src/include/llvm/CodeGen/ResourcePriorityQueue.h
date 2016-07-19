@@ -64,7 +64,7 @@ namespace llvm {
     /// ResourcesModel - Represents VLIW state.
     /// Not limited to VLIW targets per say, but assumes
     /// definition of DFA by a target.
-    DFAPacketizer *ResourcesModel;
+    std::unique_ptr<DFAPacketizer> ResourcesModel;
 
     /// Resource model - packet/bundle model. Purely
     /// internal at the time.
@@ -72,14 +72,10 @@ namespace llvm {
 
     /// Heuristics for estimating register pressure.
     unsigned ParallelLiveRanges;
-    signed HorizontalVerticalBalance;
+    int HorizontalVerticalBalance;
 
   public:
     ResourcePriorityQueue(SelectionDAGISel *IS);
-
-    ~ResourcePriorityQueue() {
-      delete ResourcesModel;
-    }
 
     bool isBottomUp() const override { return false; }
 
@@ -107,14 +103,14 @@ namespace llvm {
 
     /// Single cost function reflecting benefit of scheduling SU
     /// in the current cycle.
-    signed SUSchedulingCost (SUnit *SU);
+    int SUSchedulingCost (SUnit *SU);
 
     /// InitNumRegDefsLeft - Determine the # of regs defined by this node.
     ///
     void initNumRegDefsLeft(SUnit *SU);
     void updateNumRegDefsLeft(SUnit *SU);
-    signed regPressureDelta(SUnit *SU, bool RawPressure = false);
-    signed rawRegPressureDelta (SUnit *SU, unsigned RCId);
+    int regPressureDelta(SUnit *SU, bool RawPressure = false);
+    int rawRegPressureDelta (SUnit *SU, unsigned RCId);
 
     bool empty() const override { return Queue.empty(); }
 
@@ -123,8 +119,6 @@ namespace llvm {
     SUnit *pop() override;
 
     void remove(SUnit *SU) override;
-
-    void dump(ScheduleDAG* DAG) const override;
 
     /// scheduledNode - Main resource tracking point.
     void scheduledNode(SUnit *Node) override;

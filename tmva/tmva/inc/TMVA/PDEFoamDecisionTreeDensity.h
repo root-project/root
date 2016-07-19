@@ -68,7 +68,7 @@ namespace TMVA
       virtual void FillHistograms(TMVA::Volume&, std::vector<TH1D*>&, std::vector<TH1D*>&, std::vector<TH1D*>&, std::vector<TH1D*>&);
 
       ClassDef(PDEFoamDecisionTreeDensity, 1) // Class for decision tree like PDEFoam density
-   };  //end of PDEFoamDecisionTreeDensity
+         };  //end of PDEFoamDecisionTreeDensity
 
 }  // namespace TMVA
 

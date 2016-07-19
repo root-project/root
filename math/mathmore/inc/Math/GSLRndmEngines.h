@@ -207,6 +207,11 @@ namespace Math {
       double Gamma(double a, double b) const;
 
       /**
+         Beta distribution
+      */
+      double Beta(double a, double b) const;
+
+      /**
          Log Normal distribution
       */
       double LogNormal(double zeta, double sigma) const;
@@ -225,6 +230,21 @@ namespace Math {
          t student distribution
       */
       double tDist(double nu) const;
+
+      /**
+         Rayleigh distribution
+      */
+      double Rayleigh(double sigma) const;
+
+      /**
+         Logistic distribution
+      */
+      double Logistic(double a) const;
+
+      /**
+         Pareto distribution
+      */
+      double Pareto(double a, double b) const;
 
       /**
          generate random numbers in a 2D circle of radious 1

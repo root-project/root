@@ -10,13 +10,12 @@
 #ifndef LLVM_ADT_ARRAYREF_H
 #define LLVM_ADT_ARRAYREF_H
 
+#include "llvm/ADT/Hashing.h"
 #include "llvm/ADT/None.h"
-#include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallVector.h"
 #include <vector>
 
 namespace llvm {
-
   /// ArrayRef - Represent a constant reference to an array (0 or more elements
   /// consecutively in memory), i.e. a start pointer and a length.  It allows
   /// various APIs to take consecutive elements easily and conveniently.
@@ -43,19 +42,6 @@ namespace llvm {
 
     /// The number of elements.
     size_type Length;
-
-    /// \brief A dummy "optional" type that is only created by implicit
-    /// conversion from a reference to T.
-    ///
-    /// This type must *only* be used in a function argument or as a copy of
-    /// a function argument, as otherwise it will hold a pointer to a temporary
-    /// past that temporaries' lifetime.
-    struct TRefOrNothing {
-      const T *TPtr;
-
-      TRefOrNothing() : TPtr(nullptr) {}
-      TRefOrNothing(const T &TRef) : TPtr(&TRef) {}
-    };
 
   public:
     /// @name Constructors
@@ -97,20 +83,38 @@ namespace llvm {
     /*implicit*/ LLVM_CONSTEXPR ArrayRef(const T (&Arr)[N])
       : Data(Arr), Length(N) {}
 
-#if LLVM_HAS_INITIALIZER_LISTS
     /// Construct an ArrayRef from a std::initializer_list.
     /*implicit*/ ArrayRef(const std::initializer_list<T> &Vec)
-    : Data(Vec.begin() == Vec.end() ? (T*)0 : Vec.begin()),
+    : Data(Vec.begin() == Vec.end() ? (T*)nullptr : Vec.begin()),
       Length(Vec.size()) {}
-#endif
 
     /// Construct an ArrayRef<const T*> from ArrayRef<T*>. This uses SFINAE to
     /// ensure that only ArrayRefs of pointers can be converted.
     template <typename U>
-    ArrayRef(const ArrayRef<U *> &A,
+    ArrayRef(
+        const ArrayRef<U *> &A,
+        typename std::enable_if<
+           std::is_convertible<U *const *, T const *>::value>::type * = nullptr)
+      : Data(A.data()), Length(A.size()) {}
+
+    /// Construct an ArrayRef<const T*> from a SmallVector<T*>. This is
+    /// templated in order to avoid instantiating SmallVectorTemplateCommon<T>
+    /// whenever we copy-construct an ArrayRef.
+    template<typename U, typename DummyT>
+    /*implicit*/ ArrayRef(
+      const SmallVectorTemplateCommon<U *, DummyT> &Vec,
+      typename std::enable_if<
+          std::is_convertible<U *const *, T const *>::value>::type * = nullptr)
+      : Data(Vec.data()), Length(Vec.size()) {
+    }
+
+    /// Construct an ArrayRef<const T*> from std::vector<T*>. This uses SFINAE
+    /// to ensure that only vectors of pointers can be converted.
+    template<typename U, typename A>
+    ArrayRef(const std::vector<U *, A> &Vec,
              typename std::enable_if<
                  std::is_convertible<U *const *, T const *>::value>::type* = 0)
-      : Data(A.data()), Length(A.size()) {}
+      : Data(Vec.data()), Length(Vec.size()) {}
 
     /// @}
     /// @name Simple Operations
@@ -145,7 +149,7 @@ namespace llvm {
     // copy - Allocate copy in Allocator and return ArrayRef<T> to it.
     template <typename Allocator> ArrayRef<T> copy(Allocator &A) {
       T *Buff = A.template Allocate<T>(Length);
-      std::copy(begin(), end(), Buff);
+      std::uninitialized_copy(begin(), end(), Buff);
       return ArrayRef<T>(Buff, Length);
     }
 
@@ -153,30 +157,30 @@ namespace llvm {
     bool equals(ArrayRef RHS) const {
       if (Length != RHS.Length)
         return false;
-      // Don't use std::equal(), since it asserts in MSVC on nullptr iterators.
-      for (auto L = begin(), LE = end(), R = RHS.begin(); L != LE; ++L, ++R)
-        // Match std::equal() in using == (instead of !=) to minimize API
-        // requirements of ArrayRef'ed types.
-        if (!(*L == *R))
-          return false;
-      return true;
+      return std::equal(begin(), end(), RHS.begin());
     }
 
     /// slice(n) - Chop off the first N elements of the array.
-    ArrayRef<T> slice(unsigned N) const {
+    ArrayRef<T> slice(size_t N) const {
       assert(N <= size() && "Invalid specifier");
       return ArrayRef<T>(data()+N, size()-N);
     }
 
     /// slice(n, m) - Chop off the first N elements of the array, and keep M
     /// elements in the array.
-    ArrayRef<T> slice(unsigned N, unsigned M) const {
+    ArrayRef<T> slice(size_t N, size_t M) const {
       assert(N+M <= size() && "Invalid specifier");
       return ArrayRef<T>(data()+N, M);
     }
 
-    // \brief Drop the last \p N elements of the array.
-    ArrayRef<T> drop_back(unsigned N = 1) const {
+    /// \brief Drop the first \p N elements of the array.
+    ArrayRef<T> drop_front(size_t N = 1) const {
+      assert(size() >= N && "Dropping more elements than exist");
+      return slice(N, size() - N);
+    }
+
+    /// \brief Drop the last \p N elements of the array.
+    ArrayRef<T> drop_back(size_t N = 1) const {
       assert(size() >= N && "Dropping more elements than exist");
       return slice(0, size() - N);
     }
@@ -201,47 +205,6 @@ namespace llvm {
     /// @{
     operator std::vector<T>() const {
       return std::vector<T>(Data, Data+Length);
-    }
-
-    /// @}
-    /// @{
-    /// @name Convenience methods
-
-    /// @brief Predicate for testing that the array equals the exact sequence of
-    /// arguments.
-    ///
-    /// Will return false if the size is not equal to the exact number of
-    /// arguments given or if the array elements don't equal the argument
-    /// elements in order. Currently supports up to 16 arguments, but can
-    /// easily be extended.
-    bool equals(TRefOrNothing Arg0 = TRefOrNothing(),
-                TRefOrNothing Arg1 = TRefOrNothing(),
-                TRefOrNothing Arg2 = TRefOrNothing(),
-                TRefOrNothing Arg3 = TRefOrNothing(),
-                TRefOrNothing Arg4 = TRefOrNothing(),
-                TRefOrNothing Arg5 = TRefOrNothing(),
-                TRefOrNothing Arg6 = TRefOrNothing(),
-                TRefOrNothing Arg7 = TRefOrNothing(),
-                TRefOrNothing Arg8 = TRefOrNothing(),
-                TRefOrNothing Arg9 = TRefOrNothing(),
-                TRefOrNothing Arg10 = TRefOrNothing(),
-                TRefOrNothing Arg11 = TRefOrNothing(),
-                TRefOrNothing Arg12 = TRefOrNothing(),
-                TRefOrNothing Arg13 = TRefOrNothing(),
-                TRefOrNothing Arg14 = TRefOrNothing(),
-                TRefOrNothing Arg15 = TRefOrNothing()) {
-      TRefOrNothing Args[] = {Arg0,  Arg1,  Arg2,  Arg3, Arg4,  Arg5,
-                              Arg6,  Arg7,  Arg8,  Arg9, Arg10, Arg11,
-                              Arg12, Arg13, Arg14, Arg15};
-      if (size() > array_lengthof(Args))
-        return false;
-
-      for (unsigned i = 0, e = size(); i != e; ++i)
-        if (Args[i].TPtr == nullptr || (*this)[i] != *Args[i].TPtr)
-          return false;
-
-      // Either the size is exactly as many args, or the next arg must be null.
-      return size() == array_lengthof(Args) || Args[size()].TPtr == nullptr;
     }
 
     /// @}
@@ -316,16 +279,27 @@ namespace llvm {
     }
 
     /// slice(n) - Chop off the first N elements of the array.
-    MutableArrayRef<T> slice(unsigned N) const {
+    MutableArrayRef<T> slice(size_t N) const {
       assert(N <= this->size() && "Invalid specifier");
       return MutableArrayRef<T>(data()+N, this->size()-N);
     }
 
     /// slice(n, m) - Chop off the first N elements of the array, and keep M
     /// elements in the array.
-    MutableArrayRef<T> slice(unsigned N, unsigned M) const {
+    MutableArrayRef<T> slice(size_t N, size_t M) const {
       assert(N+M <= this->size() && "Invalid specifier");
       return MutableArrayRef<T>(data()+N, M);
+    }
+
+    /// \brief Drop the first \p N elements of the array.
+    MutableArrayRef<T> drop_front(size_t N = 1) const {
+      assert(this->size() >= N && "Dropping more elements than exist");
+      return slice(N, this->size() - N);
+    }
+
+    MutableArrayRef<T> drop_back(size_t N = 1) const {
+      assert(this->size() >= N && "Dropping more elements than exist");
+      return slice(0, this->size() - N);
     }
 
     /// @}
@@ -376,6 +350,16 @@ namespace llvm {
     return Vec;
   }
 
+  /// Construct an ArrayRef from an ArrayRef (no-op) (const)
+  template <typename T> ArrayRef<T> makeArrayRef(const ArrayRef<T> &Vec) {
+    return Vec;
+  }
+
+  /// Construct an ArrayRef from an ArrayRef (no-op)
+  template <typename T> ArrayRef<T> &makeArrayRef(ArrayRef<T> &Vec) {
+    return Vec;
+  }
+
   /// Construct an ArrayRef from a C array.
   template<typename T, size_t N>
   ArrayRef<T> makeArrayRef(const T (&Arr)[N]) {
@@ -403,6 +387,10 @@ namespace llvm {
   template <typename T> struct isPodLike<ArrayRef<T> > {
     static const bool value = true;
   };
-}
 
-#endif
+  template <typename T> hash_code hash_value(ArrayRef<T> S) {
+    return hash_combine_range(S.begin(), S.end());
+  }
+} // end namespace llvm
+
+#endif // LLVM_ADT_ARRAYREF_H

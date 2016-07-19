@@ -21,6 +21,8 @@
 ClassImp(TNtupleD)
 
 /** \class TNtupleD
+\ingroup tree
+
 A simple TTree restricted to a list of double variables only.
 
 Each variable goes to a separate branch.

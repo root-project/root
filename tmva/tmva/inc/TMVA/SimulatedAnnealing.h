@@ -118,7 +118,7 @@ namespace TMVA {
 
       Double_t fProgress;
 
-      ClassDef(SimulatedAnnealing,0)  // Base class for Simulated Annealing fitting
+      ClassDef(SimulatedAnnealing,0);  // Base class for Simulated Annealing fitting
    };
 
 } // namespace TMVA

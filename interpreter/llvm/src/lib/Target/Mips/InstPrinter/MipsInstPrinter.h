@@ -73,8 +73,6 @@ enum CondCode {
 const char *MipsFCCToString(Mips::CondCode CC);
 } // end namespace Mips
 
-class TargetMachine;
-
 class MipsInstPrinter : public MCInstPrinter {
 public:
   MipsInstPrinter(const MCAsmInfo &MAI, const MCInstrInfo &MII,
@@ -86,7 +84,8 @@ public:
   static const char *getRegisterName(unsigned RegNo);
 
   void printRegName(raw_ostream &OS, unsigned RegNo) const override;
-  void printInst(const MCInst *MI, raw_ostream &O, StringRef Annot) override;
+  void printInst(const MCInst *MI, raw_ostream &O, StringRef Annot,
+                 const MCSubtargetInfo &STI) override;
 
   bool printAliasInstr(const MCInst *MI, raw_ostream &OS);
   void printCustomAliasOperand(const MCInst *MI, unsigned OpIdx,
@@ -94,8 +93,8 @@ public:
 
 private:
   void printOperand(const MCInst *MI, unsigned OpNo, raw_ostream &O);
-  void printUnsignedImm(const MCInst *MI, int opNum, raw_ostream &O);
-  void printUnsignedImm8(const MCInst *MI, int opNum, raw_ostream &O);
+  template <unsigned Bits, unsigned Offset = 0>
+  void printUImm(const MCInst *MI, int opNum, raw_ostream &O);
   void printMemOperand(const MCInst *MI, int opNum, raw_ostream &O);
   void printMemOperandEA(const MCInst *MI, int opNum, raw_ostream &O);
   void printFCCOperand(const MCInst *MI, int opNum, raw_ostream &O);

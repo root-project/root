@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TListOfTypes
+\ingroup Base
 
 A collection of TDataType designed to hold the typedef information
 and numerical type information.  The collection is populated on demand.

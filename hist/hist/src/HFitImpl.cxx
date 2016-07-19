@@ -18,6 +18,7 @@
 #include "Fit/BinData.h"
 #include "Fit/UnBinData.h"
 #include "Fit/Chi2FCN.h"
+#include "Fit/PoissonLikelihoodFCN.h"
 #include "HFitInterface.h"
 #include "Math/MinimizerOptions.h"
 #include "Math/Minimizer.h"
@@ -77,7 +78,7 @@ namespace HFit {
    void StoreAndDrawFitFunction(FitObject * h1, TF1 * f1, const ROOT::Fit::DataRange & range, bool, bool, const char *goption);
 
    template <class FitObject>
-   double ComputeChi2(const FitObject & h1, TF1 &f1, bool useRange );
+   double ComputeChi2(const FitObject & h1, TF1 &f1, bool useRange, bool usePL );
 
 
 
@@ -993,16 +994,16 @@ TFitResultPtr ROOT::Fit::FitObject(THnBase * s1, TF1 *f1 , Foption_t & foption ,
 
 // function to compute the simple chi2 for graphs and histograms
 
-double ROOT::Fit::Chisquare(const TH1 & h1,  TF1 & f1, bool useRange) {
-   return HFit::ComputeChi2(h1,f1,useRange);
+double ROOT::Fit::Chisquare(const TH1 & h1,  TF1 & f1, bool useRange, bool usePL) {
+   return HFit::ComputeChi2(h1,f1,useRange, usePL);
 }
 
 double ROOT::Fit::Chisquare(const TGraph & g, TF1 & f1, bool useRange) {
-   return HFit::ComputeChi2(g,f1, useRange);
+   return HFit::ComputeChi2(g,f1, useRange, false);
 }
 
 template<class FitObject>
-double HFit::ComputeChi2(const FitObject & obj,  TF1  & f1, bool useRange ) {
+double HFit::ComputeChi2(const FitObject & obj,  TF1  & f1, bool useRange, bool usePL ) {
 
    // implement using the fitting classes
    ROOT::Fit::DataOptions opt;
@@ -1017,6 +1018,11 @@ double HFit::ComputeChi2(const FitObject & obj,  TF1  & f1, bool useRange ) {
       return -1;
    }
    ROOT::Math::WrappedMultiTF1  wf1(f1);
+   if (usePL) {
+      // use the poisson log-lokelihood (Baker-Cousins chi2)
+      ROOT::Fit::PoissonLLFunction nll(data, wf1);
+      return 2.* nll( f1.GetParameters() ) ;
+   }
    ROOT::Fit::Chi2Function chi2(data, wf1);
    return chi2(f1.GetParameters() );
 

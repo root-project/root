@@ -48,7 +48,7 @@ TMVA::Volume::Volume( std::vector<Double_t>* l, std::vector<Double_t>* u )
      fUpper( u ),
      fOwnerShip (kFALSE){
    // constructor specifying the volume by std::vectors of doubles
-}
+     }
 
 TMVA::Volume::Volume( std::vector<Float_t>* l, std::vector<Float_t>* u ) 
 {

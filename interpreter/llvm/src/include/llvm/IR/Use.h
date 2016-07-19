@@ -25,12 +25,9 @@
 #ifndef LLVM_IR_USE_H
 #define LLVM_IR_USE_H
 
-#include "llvm-c/Core.h"
 #include "llvm/ADT/PointerIntPair.h"
 #include "llvm/Support/CBindingWrapping.h"
-#include "llvm/Support/Compiler.h"
 #include <cstddef>
-#include <iterator>
 
 namespace llvm {
 
@@ -77,7 +74,7 @@ public:
   typedef PointerIntPair<User *, 1, unsigned> UserRef;
 
 private:
-  Use(const Use &U) LLVM_DELETED_FUNCTION;
+  Use(const Use &U) = delete;
 
   /// Destructor - Only for zap()
   ~Use() {
@@ -102,14 +99,8 @@ public:
 
   inline void set(Value *Val);
 
-  Value *operator=(Value *RHS) {
-    set(RHS);
-    return RHS;
-  }
-  const Use &operator=(const Use &RHS) {
-    set(RHS.Val);
-    return *this;
-  }
+  inline Value *operator=(Value *RHS);
+  inline const Use &operator=(const Use &RHS);
 
   Value *operator->() { return Val; }
   const Value *operator->() const { return Val; }

@@ -2639,14 +2639,27 @@ Int_t TClass::GetBaseClassOffsetRecurse(const TClass *cl)
          Int_t size = elems.GetLast()+1;
          for(Int_t i=0; i<size; i++) {
             element = (TStreamerElement*)elems[i];
-            if (element->IsA() == TStreamerBase::Class()) {
-               TStreamerBase *base = (TStreamerBase*)element;
-               TClass *baseclass = base->GetClassPointer();
-               if (!baseclass) return -1;
-               Int_t subOffset = baseclass->GetBaseClassOffsetRecurse(cl);
-               if (subOffset == -2) return -2;
-               if (subOffset != -1) return offset+subOffset;
-               offset += baseclass->Size();
+            if (element->IsBase()) {
+               if (element->IsA() == TStreamerBase::Class()) {
+                  TStreamerBase *base = (TStreamerBase*)element;
+                  TClass *baseclass = base->GetClassPointer();
+                  if (!baseclass) return -1;
+                  Int_t subOffset = baseclass->GetBaseClassOffsetRecurse(cl);
+                  if (subOffset == -2) return -2;
+                  if (subOffset != -1) return offset+subOffset;
+                  offset += baseclass->Size();
+               } else if (element->IsA() == TStreamerSTL::Class()) {
+                  TStreamerSTL *base = (TStreamerSTL*)element;
+                  TClass *baseclass = base->GetClassPointer();
+                  if (!baseclass) return -1;
+                  Int_t subOffset = baseclass->GetBaseClassOffsetRecurse(cl);
+                  if (subOffset == -2) return -2;
+                  if (subOffset != -1) return offset+subOffset;
+                  offset += baseclass->Size();
+
+               } else {
+                  Error("GetBaseClassOffsetRecurse","Unexpected element type for base class: %s\n",element->IsA()->GetName());
+               }
             }
          }
          return -1;
@@ -3667,7 +3680,7 @@ void TClass::GetMenuItems(TList *list)
 /// This is equivalent to ask if a class is coming from a bootstrapping
 /// procedure initiated during the loading of a library.
 
-Bool_t TClass::HasDictionary()
+Bool_t TClass::HasDictionary() const
 {
    return IsLoaded();
 }
@@ -5435,6 +5448,14 @@ void TClass::LoadClassInfo() const
    // as this thread return early since the work was done.
    if (!fCanLoadClassInfo) return;
 
+   // If class info already loaded then do nothing.  This can happen if the
+   // class was registered by a dictionary, but the info came from reading
+   // the pch.
+   // Note: This check avoids using AutoParse for classes in the pch!
+   if (fClassInfo) {
+      return;
+   }
+
    gInterpreter->AutoParse(GetName());
    if (!fClassInfo) gInterpreter->SetClassInfo(const_cast<TClass*>(this));   // sets fClassInfo pointer
    if (!gInterpreter->IsAutoParsingSuspended()) {
@@ -5558,7 +5579,9 @@ void TClass::PostLoadCheck()
    {
       SetClassVersion(-1);
    }
-   else if (IsLoaded() && HasDataMemberInfo() && fStreamerInfo && (!IsForeign()||fClassVersion>1) )
+   // Note: We are careful to check the class version first because checking
+   //       for foreign can trigger an AutoParse.
+   else if (IsLoaded() && HasDataMemberInfo() && fStreamerInfo && ((fClassVersion > 1) || !IsForeign()))
    {
       R__LOCKGUARD(gInterpreterMutex);
 
@@ -6819,7 +6842,21 @@ void TClass::RemoveStreamerInfo(Int_t slot)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return true if we have access to a default constructor.
+/// Return true if we have access to a constructor useable for I/O.  This is
+/// typically the default constructor but can also be a constructor specifically
+/// marked for I/O (for example a constructor taking a TRootIOCtor* as an
+/// argument).  In other words, if this routine returns true, TClass::New is
+/// guarantee to succeed.
+/// To know if the class described by this TClass has a default constructor
+/// (public or not), use
+/// \code{.cpp}
+///     cl->GetProperty() & kClassHasDefaultCtor
+/// \code
+/// To know if the class described by this TClass has a public default
+/// constructor use:
+/// \code{.cpp}
+///    gInterpreter->ClassInfo_HasDefaultConstructor(aClass->GetClassInfo());
+/// \code
 
 Bool_t TClass::HasDefaultConstructor() const
 {

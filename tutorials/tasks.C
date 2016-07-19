@@ -1,12 +1,18 @@
-// Example of TTasks.
-// Create a hierarchy of objects derived from TTask in library Mytasks
-// Show the tasks in a browser.
-// To execute a Task, use the context context menu and select
-// the item "ExecuteTask"
-// see also other functions in the TTask context menu, such as
-//   -setting a breakpoint in one or more tasks
-//   -enabling/disabling one task, etc
-//Author: Rene Brun
+/// \file
+/// \ingroup Tutorials
+/// Example of TTasks.
+/// Create a hierarchy of objects derived from TTask in library Mytasks
+/// Show the tasks in a browser.
+/// To execute a Task, use the context context menu and select
+/// the item "ExecuteTask"
+/// see also other functions in the TTask context menu, such as
+///  - setting a breakpoint in one or more tasks
+///  - enabling/disabling one task, etc
+///
+/// \macro_code
+///
+/// \author Rene Brun
+
 #ifndef __RUN_TASKS__
 
 void tasks()

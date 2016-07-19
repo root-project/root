@@ -649,7 +649,8 @@ void TGFileContainer::GetFilePictures(const TGPicture **pic,
             *pic = fClient->GetPicturePool()->GetPicture(lnk_name.Data(),
                                  img1->GetPixmap(), img1->GetMask());
             fCleanups->Add(((TObject *)*pic));
-            if (img2) delete img2; delete img1;
+            if (img2) delete img2;
+            delete img1;
          }
          img1 = TImage::Create();
          if (img1) {
@@ -662,7 +663,8 @@ void TGFileContainer::GetFilePictures(const TGPicture **pic,
             *lpic = fClient->GetPicturePool()->GetPicture(lnk_name.Data(),
                                  img1->GetPixmap(), img1->GetMask());
             fCleanups->Add(((TObject *)*lpic));
-            if (img2) delete img2; delete img1;
+            if (img2) delete img2;
+            delete img1;
          }
       }
       else {

@@ -19,6 +19,7 @@
 #include <vector>
 
 namespace llvm {
+  class BitVector;
   class CalleeSavedInfo;
   class MachineFunction;
   class RegScavenger;
@@ -69,6 +70,18 @@ public:
   ///
   unsigned getStackAlignment() const { return StackAlignment; }
 
+  /// alignSPAdjust - This method aligns the stack adjustment to the correct
+  /// alignment.
+  ///
+  int alignSPAdjust(int SPAdj) const {
+    if (SPAdj < 0) {
+      SPAdj = -alignTo(-SPAdj, StackAlignment);
+    } else {
+      SPAdj = alignTo(SPAdj, StackAlignment);
+    }
+    return SPAdj;
+  }
+
   /// getTransientStackAlignment - This method returns the number of bytes to
   /// which the stack pointer must be aligned at all times, even between
   /// calls.
@@ -82,6 +95,11 @@ public:
   bool isStackRealignable() const {
     return StackRealignable;
   }
+
+  /// Return the skew that has to be applied to stack alignment under
+  /// certain conditions (e.g. stack was adjusted before function \p MF
+  /// was called).
+  virtual unsigned getStackAlignmentSkew(const MachineFunction &MF) const;
 
   /// getOffsetOfLocalArea - This method returns the offset of the local area
   /// from the stack pointer on entrance to a function.
@@ -128,23 +146,44 @@ public:
     return false;
   }
 
+  /// Returns true if the target will correctly handle shrink wrapping.
+  virtual bool enableShrinkWrapping(const MachineFunction &MF) const {
+    return false;
+  }
+
+  /// Returns true if the stack slot holes in the fixed and callee-save stack
+  /// area should be used when allocating other stack locations to reduce stack
+  /// size.
+  virtual bool enableStackSlotScavenging(const MachineFunction &MF) const {
+    return false;
+  }
+
   /// emitProlog/emitEpilog - These methods insert prolog and epilog code into
   /// the function.
-  virtual void emitPrologue(MachineFunction &MF) const = 0;
+  virtual void emitPrologue(MachineFunction &MF,
+                            MachineBasicBlock &MBB) const = 0;
   virtual void emitEpilogue(MachineFunction &MF,
                             MachineBasicBlock &MBB) const = 0;
 
+  /// Replace a StackProbe stub (if any) with the actual probe code inline
+  virtual void inlineStackProbe(MachineFunction &MF,
+                                MachineBasicBlock &PrologueMBB) const {}
+
   /// Adjust the prologue to have the function use segmented stacks. This works
   /// by adding a check even before the "normal" function prologue.
-  virtual void adjustForSegmentedStacks(MachineFunction &MF) const { }
+  virtual void adjustForSegmentedStacks(MachineFunction &MF,
+                                        MachineBasicBlock &PrologueMBB) const {}
 
   /// Adjust the prologue to add Erlang Run-Time System (ERTS) specific code in
   /// the assembly prologue to explicitly handle the stack.
-  virtual void adjustForHiPEPrologue(MachineFunction &MF) const { }
+  virtual void adjustForHiPEPrologue(MachineFunction &MF,
+                                     MachineBasicBlock &PrologueMBB) const {}
 
   /// Adjust the prologue to add an allocation at a fixed offset from the frame
   /// pointer.
-  virtual void adjustForFrameAllocatePrologue(MachineFunction &MF) const { }
+  virtual void
+  adjustForFrameAllocatePrologue(MachineFunction &MF,
+                                 MachineBasicBlock &PrologueMBB) const {}
 
   /// spillCalleeSavedRegisters - Issues instruction(s) to spill all callee
   /// saved registers and returns true if it isn't possible / profitable to do
@@ -167,6 +206,9 @@ public:
                                         const TargetRegisterInfo *TRI) const {
     return false;
   }
+
+  /// Return true if the target needs to disable frame pointer elimination.
+  virtual bool noFramePointerElim(const MachineFunction &MF) const;
 
   /// hasFP - Return true if the specified function should have a dedicated
   /// frame pointer register. For most targets this is true only if the function
@@ -198,33 +240,34 @@ public:
   // has any stack objects. However, targets may want to override this.
   virtual bool needsFrameIndexResolution(const MachineFunction &MF) const;
 
-  /// getFrameIndexOffset - Returns the displacement from the frame register to
-  /// the stack frame of the specified index.
-  virtual int getFrameIndexOffset(const MachineFunction &MF, int FI) const;
-
   /// getFrameIndexReference - This method should return the base register
   /// and offset used to reference a frame index location. The offset is
   /// returned directly, and the base register is returned via FrameReg.
   virtual int getFrameIndexReference(const MachineFunction &MF, int FI,
                                      unsigned &FrameReg) const;
 
-  /// Same as above, except that the 'base register' will always be RSP, not
-  /// RBP on x86.  This is used exclusively for lowering STATEPOINT nodes.
-  /// TODO: This should really be a parameterizable choice.
-  virtual int getFrameIndexReferenceFromSP(const MachineFunction &MF, int FI,
-                                          unsigned &FrameReg) const {
-    // default to calling normal version, we override this on x86 only
-    llvm_unreachable("unimplemented for non-x86");
-    return 0;
+  /// Same as \c getFrameIndexReference, except that the stack pointer (as
+  /// opposed to the frame pointer) will be the preferred value for \p
+  /// FrameReg. This is generally used for emitting statepoint or EH tables that
+  /// use offsets from RSP.  If \p IgnoreSPUpdates is true, the returned
+  /// offset is only guaranteed to be valid with respect to the value of SP at
+  /// the end of the prologue.
+  virtual int getFrameIndexReferencePreferSP(const MachineFunction &MF, int FI,
+                                             unsigned &FrameReg,
+                                             bool IgnoreSPUpdates) const {
+    // Always safe to dispatch to getFrameIndexReference.
+    return getFrameIndexReference(MF, FI, FrameReg);
   }
 
-  /// processFunctionBeforeCalleeSavedScan - This method is called immediately
-  /// before PrologEpilogInserter scans the physical registers used to determine
-  /// what callee saved registers should be spilled. This method is optional.
-  virtual void processFunctionBeforeCalleeSavedScan(MachineFunction &MF,
-                                             RegScavenger *RS = nullptr) const {
-
-  }
+  /// This method determines which of the registers reported by
+  /// TargetRegisterInfo::getCalleeSavedRegs() should actually get saved.
+  /// The default implementation checks populates the \p SavedRegs bitset with
+  /// all registers which are modified in the function, targets may override
+  /// this function to save additional registers.
+  /// This method also sets up the register scavenger ensuring there is a free
+  /// register or a frameindex available.
+  virtual void determineCalleeSaves(MachineFunction &MF, BitVector &SavedRegs,
+                                    RegScavenger *RS = nullptr) const;
 
   /// processFunctionBeforeFrameFinalized - This method is called immediately
   /// before the specified function's frame layout (MF.getFrameInfo()) is
@@ -235,19 +278,58 @@ public:
                                              RegScavenger *RS = nullptr) const {
   }
 
-  /// eliminateCallFramePseudoInstr - This method is called during prolog/epilog
-  /// code insertion to eliminate call frame setup and destroy pseudo
-  /// instructions (but only if the Target is using them).  It is responsible
-  /// for eliminating these instructions, replacing them with concrete
-  /// instructions.  This method need only be implemented if using call frame
-  /// setup/destroy pseudo instructions.
-  ///
-  virtual void
+  virtual unsigned getWinEHParentFrameOffset(const MachineFunction &MF) const {
+    report_fatal_error("WinEH not implemented for this target");
+  }
+
+  /// This method is called during prolog/epilog code insertion to eliminate
+  /// call frame setup and destroy pseudo instructions (but only if the Target
+  /// is using them).  It is responsible for eliminating these instructions,
+  /// replacing them with concrete instructions.  This method need only be
+  /// implemented if using call frame setup/destroy pseudo instructions.
+  /// Returns an iterator pointing to the instruction after the replaced one.
+  virtual MachineBasicBlock::iterator
   eliminateCallFramePseudoInstr(MachineFunction &MF,
                                 MachineBasicBlock &MBB,
                                 MachineBasicBlock::iterator MI) const {
     llvm_unreachable("Call Frame Pseudo Instructions do not exist on this "
                      "target!");
+  }
+
+
+  /// Order the symbols in the local stack frame.
+  /// The list of objects that we want to order is in \p objectsToAllocate as
+  /// indices into the MachineFrameInfo. The array can be reordered in any way
+  /// upon return. The contents of the array, however, may not be modified (i.e.
+  /// only their order may be changed).
+  /// By default, just maintain the original order.
+  virtual void
+  orderFrameObjects(const MachineFunction &MF,
+                    SmallVectorImpl<int> &objectsToAllocate) const {
+  }
+
+  /// Check whether or not the given \p MBB can be used as a prologue
+  /// for the target.
+  /// The prologue will be inserted first in this basic block.
+  /// This method is used by the shrink-wrapping pass to decide if
+  /// \p MBB will be correctly handled by the target.
+  /// As soon as the target enable shrink-wrapping without overriding
+  /// this method, we assume that each basic block is a valid
+  /// prologue.
+  virtual bool canUseAsPrologue(const MachineBasicBlock &MBB) const {
+    return true;
+  }
+
+  /// Check whether or not the given \p MBB can be used as a epilogue
+  /// for the target.
+  /// The epilogue will be inserted before the first terminator of that block.
+  /// This method is used by the shrink-wrapping pass to decide if
+  /// \p MBB will be correctly handled by the target.
+  /// As soon as the target enable shrink-wrapping without overriding
+  /// this method, we assume that each basic block is a valid
+  /// epilogue.
+  virtual bool canUseAsEpilogue(const MachineBasicBlock &MBB) const {
+    return true;
   }
 };
 

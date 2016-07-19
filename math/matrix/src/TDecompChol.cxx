@@ -414,7 +414,7 @@ TVectorD NormalEqn(const TMatrixD &A,const TVectorD &b)
 ///   b : (m)     vector
 ///   x : (n)     vector
 ///   W : (m x m) weight matrix with W(i,j) = 1/std(i)^2  for i == j
-///                                         = 0           fir i != j
+///                                         = 0           for i != j
 
 TVectorD NormalEqn(const TMatrixD &A,const TVectorD &b,const TVectorD &std)
 {
@@ -457,7 +457,7 @@ TMatrixD NormalEqn(const TMatrixD &A,const TMatrixD &B)
 ///   B : (m x nb) matrix, nb >= 1
 ///  mX : (n x nb) matrix
 ///   W : (m x m) weight matrix with W(i,j) = 1/std(i)^2  for i == j
-///                                         = 0           fir i != j
+///                                         = 0           for i != j
 /// ~~~
 
 TMatrixD NormalEqn(const TMatrixD &A,const TMatrixD &B,const TVectorD &std)

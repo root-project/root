@@ -7,6 +7,7 @@
 # ROOT_LIBRARIES      Most common libraries
 # ROOT_<name>_LIBRARY Full path to the library <name>
 # ROOT_LIBRARY_DIR    PATH to the library directory
+# ROOT_ETC_DIR        PATH to the etc directory
 # ROOT_DEFINITIONS    Compiler definitions
 # ROOT_CXX_FLAGS      Compiler flags to used by client packages
 # ROOT_C_FLAGS        Compiler flags to used by client packages
@@ -34,6 +35,12 @@ execute_process(
 set(ROOT_INCLUDE_DIRS ${ROOT_INCLUDE_DIR})
 
 execute_process(
+    COMMAND ${ROOT_CONFIG_EXECUTABLE} --etcdir
+    OUTPUT_VARIABLE ROOT_ETC_DIR
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+set(ROOT_ETC_DIRS ${ROOT_ETC_DIR})
+
+execute_process(
     COMMAND ${ROOT_CONFIG_EXECUTABLE} --libdir
     OUTPUT_VARIABLE ROOT_LIBRARY_DIR
     OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -46,10 +53,14 @@ foreach(_cpt ${rootlibs} ${ROOT_FIND_COMPONENTS})
   if(ROOT_${_cpt}_LIBRARY)
     mark_as_advanced(ROOT_${_cpt}_LIBRARY)
     list(APPEND ROOT_LIBRARIES ${ROOT_${_cpt}_LIBRARY})
-    list(REMOVE_ITEM ROOT_FIND_COMPONENTS ${_cpt})
+    if(ROOT_FIND_COMPONENTS)
+      list(REMOVE_ITEM ROOT_FIND_COMPONENTS ${_cpt})
+    endif()
   endif()
 endforeach()
-list(REMOVE_DUPLICATES ROOT_LIBRARIES)
+if(ROOT_LIBRARIES)
+  list(REMOVE_DUPLICATES ROOT_LIBRARIES)
+endif()
 
 execute_process(
     COMMAND ${ROOT_CONFIG_EXECUTABLE} --cflags

@@ -10,14 +10,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/** 
+/**
 \class TCastorFile TCastorFile.cxx
 \ingroup IO
 A TNetFile interfaced to the Castor storage backend
 
 A TCastorFile is like a normal TNetFile except that it obtains the
 remote node (disk server) via the CASTOR API, once the disk server
-and the local file path are determined, the file will be accessed 
+and the local file path are determined, the file will be accessed
 via the rootd daemon. File names have to be specified like:
 ~~~{.bash}
 castor:/castor/cern.ch/user/r/rdm/bla.root
@@ -32,7 +32,7 @@ castor:///castor?path=/castor/cern.ch/user/r/rdm/bla.root&svcClass=MYSVCLASS&cas
 ~~~
 
 The path is mandatory as parameter but all the other ones are optional.
-Use "&rootAuth=<auth_prot_code>" in the option field to force the 
+Use "&rootAuth=<auth_prot_code>" in the option field to force the
 specified authentication protocol when contacting the server, e.g.
 ~~~{.bash}
 castor:///castor?path=/castor/cern.ch/user/r/rdm/bla.root&svcClass=MYSVCLASS&castorVersion=MYCASTORVERSION&rootAuth=3

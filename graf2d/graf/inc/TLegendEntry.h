@@ -14,14 +14,6 @@
 #define ROOT_TLegendEntry
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TLegendEntry                                                         //
-// Matthew.Adam.Dobbs@Cern.CH, September 1999                           //
-// Storage class for one entry of a TLegend                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #ifndef ROOT_TObject
 #include "TObject.h"
 #endif
@@ -60,9 +52,9 @@ public:
    virtual void          SetOption( Option_t *option="lpf" ) { fOption = option; } // *MENU*
 
 protected:
-   TObject      *fObject;   // pointer to object being represented by this entry
-   TString       fLabel;    // Text associated with the entry, will become latex
-   TString       fOption;   // Options associated with this entry
+   TObject      *fObject;   ///< pointer to object being represented by this entry
+   TString       fLabel;    ///< Text associated with the entry, will become latex
+   TString       fOption;   ///< Options associated with this entry
 
 private:
    TLegendEntry& operator=(const TLegendEntry&); // Not implemented

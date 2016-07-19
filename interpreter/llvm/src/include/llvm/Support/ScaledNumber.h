@@ -282,7 +282,7 @@ int compare(DigitsT LDigits, int16_t LScale, DigitsT RDigits, int16_t RScale) {
 ///
 /// As a convenience, returns the matching scale.  If the output value of one
 /// number is zero, returns the scale of the other.  If both are zero, which
-/// scale is returned is unspecifed.
+/// scale is returned is unspecified.
 template <class DigitsT>
 int16_t matchScales(DigitsT &LDigits, int16_t &LScale, DigitsT &RDigits,
                     int16_t &RScale) {
@@ -334,7 +334,7 @@ std::pair<DigitsT, int16_t> getSum(DigitsT LDigits, int16_t LScale,
                                    DigitsT RDigits, int16_t RScale) {
   static_assert(!std::numeric_limits<DigitsT>::is_signed, "expected unsigned");
 
-  // Check inputs up front.  This is only relevent if addition overflows, but
+  // Check inputs up front.  This is only relevant if addition overflows, but
   // testing here should catch more bugs.
   assert(LScale < INT16_MAX && "scale too large");
   assert(RScale < INT16_MAX && "scale too large");
@@ -514,7 +514,7 @@ public:
       : Digits(Digits), Scale(Scale) {}
 
 private:
-  ScaledNumber(const std::pair<uint64_t, int16_t> &X)
+  ScaledNumber(const std::pair<DigitsT, int16_t> &X)
       : Digits(X.first), Scale(X.second) {}
 
 public:
@@ -670,14 +670,7 @@ public:
     return ScaledNumbers::compare(Digits, Scale, X.Digits, X.Scale);
   }
   int compareTo(uint64_t N) const {
-    ScaledNumber Scaled = get(N);
-    int Compare = compare(Scaled);
-    if (Width == 64 || Compare != 0)
-      return Compare;
-
-    // Check for precision loss.  We know *this == RoundTrip.
-    uint64_t RoundTrip = Scaled.template toInt<uint64_t>();
-    return N == RoundTrip ? 0 : RoundTrip < N ? -1 : 1;
+    return ScaledNumbers::compare<uint64_t>(Digits, Scale, N, 0);
   }
   int compareTo(int64_t N) const { return N < 0 ? 1 : compareTo(uint64_t(N)); }
 
@@ -732,9 +725,19 @@ SCALED_NUMBER_BOP(+, += )
 SCALED_NUMBER_BOP(-, -= )
 SCALED_NUMBER_BOP(*, *= )
 SCALED_NUMBER_BOP(/, /= )
-SCALED_NUMBER_BOP(<<, <<= )
-SCALED_NUMBER_BOP(>>, >>= )
 #undef SCALED_NUMBER_BOP
+
+template <class DigitsT>
+ScaledNumber<DigitsT> operator<<(const ScaledNumber<DigitsT> &L,
+                                 int16_t Shift) {
+  return ScaledNumber<DigitsT>(L) <<= Shift;
+}
+
+template <class DigitsT>
+ScaledNumber<DigitsT> operator>>(const ScaledNumber<DigitsT> &L,
+                                 int16_t Shift) {
+  return ScaledNumber<DigitsT>(L) >>= Shift;
+}
 
 template <class DigitsT>
 raw_ostream &operator<<(raw_ostream &OS, const ScaledNumber<DigitsT> &X) {
@@ -856,7 +859,6 @@ template <class DigitsT> void ScaledNumber<DigitsT>::shiftLeft(int32_t Shift) {
   }
 
   Digits <<= Shift;
-  return;
 }
 
 template <class DigitsT> void ScaledNumber<DigitsT>::shiftRight(int32_t Shift) {
@@ -883,7 +885,6 @@ template <class DigitsT> void ScaledNumber<DigitsT>::shiftRight(int32_t Shift) {
   }
 
   Digits >>= Shift;
-  return;
 }
 
 template <typename T> struct isPodLike;
@@ -893,4 +894,4 @@ template <typename T> struct isPodLike<ScaledNumber<T>> {
 
 } // end namespace llvm
 
-#endif
+#endif // LLVM_SUPPORT_SCALEDNUMBER_H

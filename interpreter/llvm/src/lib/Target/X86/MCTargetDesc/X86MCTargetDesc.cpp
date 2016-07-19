@@ -16,7 +16,6 @@
 #include "InstPrinter/X86IntelInstPrinter.h"
 #include "X86MCAsmInfo.h"
 #include "llvm/ADT/Triple.h"
-#include "llvm/MC/MCCodeGenInfo.h"
 #include "llvm/MC/MCInstrAnalysis.h"
 #include "llvm/MC/MCInstrInfo.h"
 #include "llvm/MC/MCRegisterInfo.h"
@@ -42,12 +41,11 @@ using namespace llvm;
 #define GET_SUBTARGETINFO_MC_DESC
 #include "X86GenSubtargetInfo.inc"
 
-std::string X86_MC::ParseX86Triple(StringRef TT) {
-  Triple TheTriple(TT);
+std::string X86_MC::ParseX86Triple(const Triple &TT) {
   std::string FS;
-  if (TheTriple.getArch() == Triple::x86_64)
+  if (TT.getArch() == Triple::x86_64)
     FS = "+64bit-mode,-32bit-mode,-16bit-mode";
-  else if (TheTriple.getEnvironment() != Triple::CODE16)
+  else if (TT.getEnvironment() != Triple::CODE16)
     FS = "-64bit-mode,+32bit-mode,-16bit-mode";
   else
     FS = "-64bit-mode,-32bit-mode,+16bit-mode";
@@ -55,149 +53,7 @@ std::string X86_MC::ParseX86Triple(StringRef TT) {
   return FS;
 }
 
-/// GetCpuIDAndInfo - Execute the specified cpuid and return the 4 values in the
-/// specified arguments.  If we can't run cpuid on the host, return true.
-bool X86_MC::GetCpuIDAndInfo(unsigned value, unsigned *rEAX,
-                             unsigned *rEBX, unsigned *rECX, unsigned *rEDX) {
-#if defined(__x86_64__) || defined(_M_AMD64) || defined (_M_X64)
-  #if defined(__GNUC__)
-    // gcc doesn't know cpuid would clobber ebx/rbx. Preseve it manually.
-    asm ("movq\t%%rbx, %%rsi\n\t"
-         "cpuid\n\t"
-         "xchgq\t%%rbx, %%rsi\n\t"
-         : "=a" (*rEAX),
-           "=S" (*rEBX),
-           "=c" (*rECX),
-           "=d" (*rEDX)
-         :  "a" (value));
-    return false;
-  #elif defined(_MSC_VER)
-    int registers[4];
-    __cpuid(registers, value);
-    *rEAX = registers[0];
-    *rEBX = registers[1];
-    *rECX = registers[2];
-    *rEDX = registers[3];
-    return false;
-  #else
-    return true;
-  #endif
-#elif defined(i386) || defined(__i386__) || defined(__x86__) || defined(_M_IX86)
-  #if defined(__GNUC__)
-    asm ("movl\t%%ebx, %%esi\n\t"
-         "cpuid\n\t"
-         "xchgl\t%%ebx, %%esi\n\t"
-         : "=a" (*rEAX),
-           "=S" (*rEBX),
-           "=c" (*rECX),
-           "=d" (*rEDX)
-         :  "a" (value));
-    return false;
-  #elif defined(_MSC_VER)
-    __asm {
-      mov   eax,value
-      cpuid
-      mov   esi,rEAX
-      mov   dword ptr [esi],eax
-      mov   esi,rEBX
-      mov   dword ptr [esi],ebx
-      mov   esi,rECX
-      mov   dword ptr [esi],ecx
-      mov   esi,rEDX
-      mov   dword ptr [esi],edx
-    }
-    return false;
-  #else
-    return true;
-  #endif
-#else
-  return true;
-#endif
-}
-
-/// GetCpuIDAndInfoEx - Execute the specified cpuid with subleaf and return the
-/// 4 values in the specified arguments.  If we can't run cpuid on the host,
-/// return true.
-bool X86_MC::GetCpuIDAndInfoEx(unsigned value, unsigned subleaf, unsigned *rEAX,
-                               unsigned *rEBX, unsigned *rECX, unsigned *rEDX) {
-#if defined(__x86_64__) || defined(_M_AMD64) || defined (_M_X64)
-  #if defined(__GNUC__)
-    // gcc desn't know cpuid would clobber ebx/rbx. Preseve it manually.
-    asm ("movq\t%%rbx, %%rsi\n\t"
-         "cpuid\n\t"
-         "xchgq\t%%rbx, %%rsi\n\t"
-         : "=a" (*rEAX),
-           "=S" (*rEBX),
-           "=c" (*rECX),
-           "=d" (*rEDX)
-         :  "a" (value),
-            "c" (subleaf));
-    return false;
-  #elif defined(_MSC_VER)
-    // __cpuidex was added in MSVC++ 9.0 SP1
-    #if (_MSC_VER > 1500) || (_MSC_VER == 1500 && _MSC_FULL_VER >= 150030729)
-      int registers[4];
-      __cpuidex(registers, value, subleaf);
-      *rEAX = registers[0];
-      *rEBX = registers[1];
-      *rECX = registers[2];
-      *rEDX = registers[3];
-      return false;
-    #else
-      return true;
-    #endif
-  #else
-    return true;
-  #endif
-#elif defined(i386) || defined(__i386__) || defined(__x86__) || defined(_M_IX86)
-  #if defined(__GNUC__)
-    asm ("movl\t%%ebx, %%esi\n\t"
-         "cpuid\n\t"
-         "xchgl\t%%ebx, %%esi\n\t"
-         : "=a" (*rEAX),
-           "=S" (*rEBX),
-           "=c" (*rECX),
-           "=d" (*rEDX)
-         :  "a" (value),
-            "c" (subleaf));
-    return false;
-  #elif defined(_MSC_VER)
-    __asm {
-      mov   eax,value
-      mov   ecx,subleaf
-      cpuid
-      mov   esi,rEAX
-      mov   dword ptr [esi],eax
-      mov   esi,rEBX
-      mov   dword ptr [esi],ebx
-      mov   esi,rECX
-      mov   dword ptr [esi],ecx
-      mov   esi,rEDX
-      mov   dword ptr [esi],edx
-    }
-    return false;
-  #else
-    return true;
-  #endif
-#else
-  return true;
-#endif
-}
-
-void X86_MC::DetectFamilyModel(unsigned EAX, unsigned &Family,
-                               unsigned &Model) {
-  Family = (EAX >> 8) & 0xf; // Bits 8 - 11
-  Model  = (EAX >> 4) & 0xf; // Bits 4 - 7
-  if (Family == 6 || Family == 0xf) {
-    if (Family == 0xf)
-      // Examine extended family ID if family ID is F.
-      Family += (EAX >> 20) & 0xff;    // Bits 20 - 27
-    // Examine extended model ID if family ID is 6 or F.
-    Model += ((EAX >> 16) & 0xf) << 4; // Bits 16 - 19
-  }
-}
-
-unsigned X86_MC::getDwarfRegFlavour(Triple TT, bool isEH) {
+unsigned X86_MC::getDwarfRegFlavour(const Triple &TT, bool isEH) {
   if (TT.getArch() == Triple::x86_64)
     return DWARFFlavour::X86_64;
 
@@ -209,20 +65,67 @@ unsigned X86_MC::getDwarfRegFlavour(Triple TT, bool isEH) {
   return DWARFFlavour::X86_32_Generic;
 }
 
-void X86_MC::InitLLVM2SEHRegisterMapping(MCRegisterInfo *MRI) {
+void X86_MC::initLLVMToSEHAndCVRegMapping(MCRegisterInfo *MRI) {
   // FIXME: TableGen these.
-  for (unsigned Reg = X86::NoRegister+1; Reg < X86::NUM_TARGET_REGS; ++Reg) {
+  for (unsigned Reg = X86::NoRegister + 1; Reg < X86::NUM_TARGET_REGS; ++Reg) {
     unsigned SEH = MRI->getEncodingValue(Reg);
     MRI->mapLLVMRegToSEHReg(Reg, SEH);
   }
+
+  // These CodeView registers are numbered sequentially starting at value 1.
+  static const MCPhysReg LowCVRegs[] = {
+      X86::AL,  X86::CL,  X86::DL,  X86::BL,  X86::AH,  X86::CH,
+      X86::DH,  X86::BH,  X86::AX,  X86::CX,  X86::DX,  X86::BX,
+      X86::SP,  X86::BP,  X86::SI,  X86::DI,  X86::EAX, X86::ECX,
+      X86::EDX, X86::EBX, X86::ESP, X86::EBP, X86::ESI, X86::EDI,
+  };
+  unsigned CVLowRegStart = 1;
+  for (unsigned I = 0; I < array_lengthof(LowCVRegs); ++I)
+    MRI->mapLLVMRegToCVReg(LowCVRegs[I], I + CVLowRegStart);
+
+  MRI->mapLLVMRegToCVReg(X86::EFLAGS, 34);
+
+  // The x87 registers start at 128 and are numbered sequentially.
+  unsigned FP0Start = 128;
+  for (unsigned I = 0; I < 8; ++I)
+    MRI->mapLLVMRegToCVReg(X86::FP0 + I, FP0Start + I);
+
+  // The low 8 XMM registers start at 154 and are numbered sequentially.
+  unsigned CVXMM0Start = 154;
+  for (unsigned I = 0; I < 8; ++I)
+    MRI->mapLLVMRegToCVReg(X86::XMM0 + I, CVXMM0Start + I);
+
+  // The high 8 XMM registers start at 252 and are numbered sequentially.
+  unsigned CVXMM8Start = 252;
+  for (unsigned I = 0; I < 8; ++I)
+    MRI->mapLLVMRegToCVReg(X86::XMM8 + I, CVXMM8Start + I);
+
+  // FIXME: XMM16 and above from AVX512 not yet documented.
+
+  // AMD64 registers start at 324 and count up.
+  unsigned CVX64RegStart = 324;
+  static const MCPhysReg CVX64Regs[] = {
+      X86::SIL,   X86::DIL,   X86::BPL,   X86::SPL,   X86::RAX,   X86::RBX,
+      X86::RCX,   X86::RDX,   X86::RSI,   X86::RDI,   X86::RBP,   X86::RSP,
+      X86::R8,    X86::R9,    X86::R10,   X86::R11,   X86::R12,   X86::R13,
+      X86::R14,   X86::R15,   X86::R8B,   X86::R9B,   X86::R10B,  X86::R11B,
+      X86::R12B,  X86::R13B,  X86::R14B,  X86::R15B,  X86::R8W,   X86::R9W,
+      X86::R10W,  X86::R11W,  X86::R12W,  X86::R13W,  X86::R14W,  X86::R15W,
+      X86::R8D,   X86::R9D,   X86::R10D,  X86::R11D,  X86::R12D,  X86::R13D,
+      X86::R14D,  X86::R15D,  X86::YMM0,  X86::YMM1,  X86::YMM2,  X86::YMM3,
+      X86::YMM4,  X86::YMM5,  X86::YMM6,  X86::YMM7,  X86::YMM8,  X86::YMM9,
+      X86::YMM10, X86::YMM11, X86::YMM12, X86::YMM13, X86::YMM14, X86::YMM15,
+  };
+  for (unsigned I = 0; I < array_lengthof(CVX64Regs); ++I)
+    MRI->mapLLVMRegToCVReg(CVX64Regs[I], CVX64RegStart + I);
 }
 
-MCSubtargetInfo *X86_MC::createX86MCSubtargetInfo(StringRef TT, StringRef CPU,
-                                                  StringRef FS) {
+MCSubtargetInfo *X86_MC::createX86MCSubtargetInfo(const Triple &TT,
+                                                  StringRef CPU, StringRef FS) {
   std::string ArchFS = X86_MC::ParseX86Triple(TT);
   if (!FS.empty()) {
     if (!ArchFS.empty())
-      ArchFS = ArchFS + "," + FS.str();
+      ArchFS = (Twine(ArchFS) + "," + FS).str();
     else
       ArchFS = FS;
   }
@@ -231,9 +134,7 @@ MCSubtargetInfo *X86_MC::createX86MCSubtargetInfo(StringRef TT, StringRef CPU,
   if (CPUName.empty())
     CPUName = "generic";
 
-  MCSubtargetInfo *X = new MCSubtargetInfo();
-  InitX86MCSubtargetInfo(X, TT, CPUName, ArchFS);
-  return X;
+  return createX86MCSubtargetInfoImpl(TT, CPUName, ArchFS);
 }
 
 static MCInstrInfo *createX86MCInstrInfo() {
@@ -242,23 +143,20 @@ static MCInstrInfo *createX86MCInstrInfo() {
   return X;
 }
 
-static MCRegisterInfo *createX86MCRegisterInfo(StringRef TT) {
-  Triple TheTriple(TT);
-  unsigned RA = (TheTriple.getArch() == Triple::x86_64)
-    ? X86::RIP     // Should have dwarf #16.
-    : X86::EIP;    // Should have dwarf #8.
+static MCRegisterInfo *createX86MCRegisterInfo(const Triple &TT) {
+  unsigned RA = (TT.getArch() == Triple::x86_64)
+                    ? X86::RIP  // Should have dwarf #16.
+                    : X86::EIP; // Should have dwarf #8.
 
   MCRegisterInfo *X = new MCRegisterInfo();
-  InitX86MCRegisterInfo(X, RA,
-                        X86_MC::getDwarfRegFlavour(TheTriple, false),
-                        X86_MC::getDwarfRegFlavour(TheTriple, true),
-                        RA);
-  X86_MC::InitLLVM2SEHRegisterMapping(X);
+  InitX86MCRegisterInfo(X, RA, X86_MC::getDwarfRegFlavour(TT, false),
+                        X86_MC::getDwarfRegFlavour(TT, true), RA);
+  X86_MC::initLLVMToSEHAndCVRegMapping(X);
   return X;
 }
 
-static MCAsmInfo *createX86MCAsmInfo(const MCRegisterInfo &MRI, StringRef TT) {
-  Triple TheTriple(TT);
+static MCAsmInfo *createX86MCAsmInfo(const MCRegisterInfo &MRI,
+                                     const Triple &TheTriple) {
   bool is64Bit = TheTriple.getArch() == Triple::x86_64;
 
   MCAsmInfo *MAI;
@@ -270,7 +168,8 @@ static MCAsmInfo *createX86MCAsmInfo(const MCRegisterInfo &MRI, StringRef TT) {
   } else if (TheTriple.isOSBinFormatELF()) {
     // Force the use of an ELF container.
     MAI = new X86ELFMCAsmInfo(TheTriple);
-  } else if (TheTriple.isWindowsMSVCEnvironment()) {
+  } else if (TheTriple.isWindowsMSVCEnvironment() ||
+             TheTriple.isWindowsCoreCLREnvironment()) {
     MAI = new X86MCAsmInfoMicrosoft(TheTriple);
   } else if (TheTriple.isOSCygMing() ||
              TheTriple.isWindowsItaniumEnvironment()) {
@@ -299,44 +198,9 @@ static MCAsmInfo *createX86MCAsmInfo(const MCRegisterInfo &MRI, StringRef TT) {
   return MAI;
 }
 
-static MCCodeGenInfo *createX86MCCodeGenInfo(StringRef TT, Reloc::Model RM,
-                                             CodeModel::Model CM,
-                                             CodeGenOpt::Level OL) {
-  MCCodeGenInfo *X = new MCCodeGenInfo();
-
-  Triple T(TT);
-  bool is64Bit = T.getArch() == Triple::x86_64;
-
-  if (RM == Reloc::Default) {
-    // Darwin defaults to PIC in 64 bit mode and dynamic-no-pic in 32 bit mode.
-    // Win64 requires rip-rel addressing, thus we force it to PIC. Otherwise we
-    // use static relocation model by default.
-    if (T.isOSDarwin()) {
-      if (is64Bit)
-        RM = Reloc::PIC_;
-      else
-        RM = Reloc::DynamicNoPIC;
-    } else if (T.isOSWindows() && is64Bit)
-      RM = Reloc::PIC_;
-    else
-      RM = Reloc::Static;
-  }
-
-  // ELF and X86-64 don't have a distinct DynamicNoPIC model.  DynamicNoPIC
-  // is defined as a model for code which may be used in static or dynamic
-  // executables but not necessarily a shared library. On X86-32 we just
-  // compile in -static mode, in x86-64 we use PIC.
-  if (RM == Reloc::DynamicNoPIC) {
-    if (is64Bit)
-      RM = Reloc::PIC_;
-    else if (!T.isOSDarwin())
-      RM = Reloc::Static;
-  }
-
-  // If we are on Darwin, disallow static relocation model in X86-64 mode, since
-  // the Mach-O file format doesn't support it.
-  if (RM == Reloc::Static && T.isOSDarwin() && is64Bit)
-    RM = Reloc::PIC_;
+static void adjustCodeGenOpts(const Triple &TT, Reloc::Model RM,
+                              CodeModel::Model &CM) {
+  bool is64Bit = TT.getArch() == Triple::x86_64;
 
   // For static codegen, if we're not already set, use Small codegen.
   if (CM == CodeModel::Default)
@@ -344,51 +208,24 @@ static MCCodeGenInfo *createX86MCCodeGenInfo(StringRef TT, Reloc::Model RM,
   else if (CM == CodeModel::JITDefault)
     // 64-bit JIT places everything in the same buffer except external funcs.
     CM = is64Bit ? CodeModel::Large : CodeModel::Small;
-
-  X->InitMCCodeGenInfo(RM, CM, OL);
-  return X;
 }
 
-static MCStreamer *createMCStreamer(const Target &T, StringRef TT,
-                                    MCContext &Ctx, MCAsmBackend &MAB,
-                                    raw_ostream &_OS, MCCodeEmitter *_Emitter,
-                                    const MCSubtargetInfo &STI, bool RelaxAll) {
-  Triple TheTriple(TT);
-
-  switch (TheTriple.getObjectFormat()) {
-  default: llvm_unreachable("unsupported object format");
-  case Triple::MachO:
-    return createMachOStreamer(Ctx, MAB, _OS, _Emitter, RelaxAll);
-  case Triple::COFF:
-    assert(TheTriple.isOSWindows() && "only Windows COFF is supported");
-    return createX86WinCOFFStreamer(Ctx, MAB, _Emitter, _OS, RelaxAll);
-  case Triple::ELF:
-    return createELFStreamer(Ctx, MAB, _OS, _Emitter, RelaxAll);
-  }
-}
-
-static MCInstPrinter *createX86MCInstPrinter(const Target &T,
+static MCInstPrinter *createX86MCInstPrinter(const Triple &T,
                                              unsigned SyntaxVariant,
                                              const MCAsmInfo &MAI,
                                              const MCInstrInfo &MII,
-                                             const MCRegisterInfo &MRI,
-                                             const MCSubtargetInfo &STI) {
+                                             const MCRegisterInfo &MRI) {
   if (SyntaxVariant == 0)
-    return new X86ATTInstPrinter(MAI, MII, MRI, STI);
+    return new X86ATTInstPrinter(MAI, MII, MRI);
   if (SyntaxVariant == 1)
     return new X86IntelInstPrinter(MAI, MII, MRI);
   return nullptr;
 }
 
-static MCRelocationInfo *createX86MCRelocationInfo(StringRef TT,
+static MCRelocationInfo *createX86MCRelocationInfo(const Triple &TheTriple,
                                                    MCContext &Ctx) {
-  Triple TheTriple(TT);
-  if (TheTriple.isOSBinFormatMachO() && TheTriple.getArch() == Triple::x86_64)
-    return createX86_64MachORelocationInfo(Ctx);
-  else if (TheTriple.isOSBinFormatELF())
-    return createX86_64ELFRelocationInfo(Ctx);
   // Default to the stock relocation info.
-  return llvm::createMCRelocationInfo(TT, Ctx);
+  return llvm::createMCRelocationInfo(TheTriple, Ctx);
 }
 
 static MCInstrAnalysis *createX86MCInstrAnalysis(const MCInstrInfo *Info) {
@@ -397,61 +234,223 @@ static MCInstrAnalysis *createX86MCInstrAnalysis(const MCInstrInfo *Info) {
 
 // Force static initialization.
 extern "C" void LLVMInitializeX86TargetMC() {
-  // Register the MC asm info.
-  RegisterMCAsmInfoFn A(TheX86_32Target, createX86MCAsmInfo);
-  RegisterMCAsmInfoFn B(TheX86_64Target, createX86MCAsmInfo);
+  for (Target *T : {&TheX86_32Target, &TheX86_64Target}) {
+    // Register the MC asm info.
+    RegisterMCAsmInfoFn X(*T, createX86MCAsmInfo);
 
-  // Register the MC codegen info.
-  RegisterMCCodeGenInfoFn C(TheX86_32Target, createX86MCCodeGenInfo);
-  RegisterMCCodeGenInfoFn D(TheX86_64Target, createX86MCCodeGenInfo);
+    // Register the MC codegen info.
+    RegisterMCAdjustCodeGenOptsFn Y(*T, adjustCodeGenOpts);
 
-  // Register the MC instruction info.
-  TargetRegistry::RegisterMCInstrInfo(TheX86_32Target, createX86MCInstrInfo);
-  TargetRegistry::RegisterMCInstrInfo(TheX86_64Target, createX86MCInstrInfo);
+    // Register the MC instruction info.
+    TargetRegistry::RegisterMCInstrInfo(*T, createX86MCInstrInfo);
 
-  // Register the MC register info.
-  TargetRegistry::RegisterMCRegInfo(TheX86_32Target, createX86MCRegisterInfo);
-  TargetRegistry::RegisterMCRegInfo(TheX86_64Target, createX86MCRegisterInfo);
+    // Register the MC register info.
+    TargetRegistry::RegisterMCRegInfo(*T, createX86MCRegisterInfo);
 
-  // Register the MC subtarget info.
-  TargetRegistry::RegisterMCSubtargetInfo(TheX86_32Target,
-                                          X86_MC::createX86MCSubtargetInfo);
-  TargetRegistry::RegisterMCSubtargetInfo(TheX86_64Target,
-                                          X86_MC::createX86MCSubtargetInfo);
+    // Register the MC subtarget info.
+    TargetRegistry::RegisterMCSubtargetInfo(*T,
+                                            X86_MC::createX86MCSubtargetInfo);
 
-  // Register the MC instruction analyzer.
-  TargetRegistry::RegisterMCInstrAnalysis(TheX86_32Target,
-                                          createX86MCInstrAnalysis);
-  TargetRegistry::RegisterMCInstrAnalysis(TheX86_64Target,
-                                          createX86MCInstrAnalysis);
+    // Register the MC instruction analyzer.
+    TargetRegistry::RegisterMCInstrAnalysis(*T, createX86MCInstrAnalysis);
 
-  // Register the code emitter.
-  TargetRegistry::RegisterMCCodeEmitter(TheX86_32Target,
-                                        createX86MCCodeEmitter);
-  TargetRegistry::RegisterMCCodeEmitter(TheX86_64Target,
-                                        createX86MCCodeEmitter);
+    // Register the code emitter.
+    TargetRegistry::RegisterMCCodeEmitter(*T, createX86MCCodeEmitter);
+
+    // Register the object streamer.
+    TargetRegistry::RegisterCOFFStreamer(*T, createX86WinCOFFStreamer);
+
+    // Register the MCInstPrinter.
+    TargetRegistry::RegisterMCInstPrinter(*T, createX86MCInstPrinter);
+
+    // Register the MC relocation info.
+    TargetRegistry::RegisterMCRelocationInfo(*T, createX86MCRelocationInfo);
+  }
 
   // Register the asm backend.
   TargetRegistry::RegisterMCAsmBackend(TheX86_32Target,
                                        createX86_32AsmBackend);
   TargetRegistry::RegisterMCAsmBackend(TheX86_64Target,
                                        createX86_64AsmBackend);
-
-  // Register the object streamer.
-  TargetRegistry::RegisterMCObjectStreamer(TheX86_32Target,
-                                           createMCStreamer);
-  TargetRegistry::RegisterMCObjectStreamer(TheX86_64Target,
-                                           createMCStreamer);
-
-  // Register the MCInstPrinter.
-  TargetRegistry::RegisterMCInstPrinter(TheX86_32Target,
-                                        createX86MCInstPrinter);
-  TargetRegistry::RegisterMCInstPrinter(TheX86_64Target,
-                                        createX86MCInstPrinter);
-
-  // Register the MC relocation info.
-  TargetRegistry::RegisterMCRelocationInfo(TheX86_32Target,
-                                           createX86MCRelocationInfo);
-  TargetRegistry::RegisterMCRelocationInfo(TheX86_64Target,
-                                           createX86MCRelocationInfo);
 }
+
+unsigned llvm::getX86SubSuperRegisterOrZero(unsigned Reg, unsigned Size,
+                                            bool High) {
+  switch (Size) {
+  default: return 0;
+  case 8:
+    if (High) {
+      switch (Reg) {
+      default: return getX86SubSuperRegisterOrZero(Reg, 64);
+      case X86::SIL: case X86::SI: case X86::ESI: case X86::RSI:
+        return X86::SI;
+      case X86::DIL: case X86::DI: case X86::EDI: case X86::RDI:
+        return X86::DI;
+      case X86::BPL: case X86::BP: case X86::EBP: case X86::RBP:
+        return X86::BP;
+      case X86::SPL: case X86::SP: case X86::ESP: case X86::RSP:
+        return X86::SP;
+      case X86::AH: case X86::AL: case X86::AX: case X86::EAX: case X86::RAX:
+        return X86::AH;
+      case X86::DH: case X86::DL: case X86::DX: case X86::EDX: case X86::RDX:
+        return X86::DH;
+      case X86::CH: case X86::CL: case X86::CX: case X86::ECX: case X86::RCX:
+        return X86::CH;
+      case X86::BH: case X86::BL: case X86::BX: case X86::EBX: case X86::RBX:
+        return X86::BH;
+      }
+    } else {
+      switch (Reg) {
+      default: return 0;
+      case X86::AH: case X86::AL: case X86::AX: case X86::EAX: case X86::RAX:
+        return X86::AL;
+      case X86::DH: case X86::DL: case X86::DX: case X86::EDX: case X86::RDX:
+        return X86::DL;
+      case X86::CH: case X86::CL: case X86::CX: case X86::ECX: case X86::RCX:
+        return X86::CL;
+      case X86::BH: case X86::BL: case X86::BX: case X86::EBX: case X86::RBX:
+        return X86::BL;
+      case X86::SIL: case X86::SI: case X86::ESI: case X86::RSI:
+        return X86::SIL;
+      case X86::DIL: case X86::DI: case X86::EDI: case X86::RDI:
+        return X86::DIL;
+      case X86::BPL: case X86::BP: case X86::EBP: case X86::RBP:
+        return X86::BPL;
+      case X86::SPL: case X86::SP: case X86::ESP: case X86::RSP:
+        return X86::SPL;
+      case X86::R8B: case X86::R8W: case X86::R8D: case X86::R8:
+        return X86::R8B;
+      case X86::R9B: case X86::R9W: case X86::R9D: case X86::R9:
+        return X86::R9B;
+      case X86::R10B: case X86::R10W: case X86::R10D: case X86::R10:
+        return X86::R10B;
+      case X86::R11B: case X86::R11W: case X86::R11D: case X86::R11:
+        return X86::R11B;
+      case X86::R12B: case X86::R12W: case X86::R12D: case X86::R12:
+        return X86::R12B;
+      case X86::R13B: case X86::R13W: case X86::R13D: case X86::R13:
+        return X86::R13B;
+      case X86::R14B: case X86::R14W: case X86::R14D: case X86::R14:
+        return X86::R14B;
+      case X86::R15B: case X86::R15W: case X86::R15D: case X86::R15:
+        return X86::R15B;
+      }
+    }
+  case 16:
+    switch (Reg) {
+    default: return 0;
+    case X86::AH: case X86::AL: case X86::AX: case X86::EAX: case X86::RAX:
+      return X86::AX;
+    case X86::DH: case X86::DL: case X86::DX: case X86::EDX: case X86::RDX:
+      return X86::DX;
+    case X86::CH: case X86::CL: case X86::CX: case X86::ECX: case X86::RCX:
+      return X86::CX;
+    case X86::BH: case X86::BL: case X86::BX: case X86::EBX: case X86::RBX:
+      return X86::BX;
+    case X86::SIL: case X86::SI: case X86::ESI: case X86::RSI:
+      return X86::SI;
+    case X86::DIL: case X86::DI: case X86::EDI: case X86::RDI:
+      return X86::DI;
+    case X86::BPL: case X86::BP: case X86::EBP: case X86::RBP:
+      return X86::BP;
+    case X86::SPL: case X86::SP: case X86::ESP: case X86::RSP:
+      return X86::SP;
+    case X86::R8B: case X86::R8W: case X86::R8D: case X86::R8:
+      return X86::R8W;
+    case X86::R9B: case X86::R9W: case X86::R9D: case X86::R9:
+      return X86::R9W;
+    case X86::R10B: case X86::R10W: case X86::R10D: case X86::R10:
+      return X86::R10W;
+    case X86::R11B: case X86::R11W: case X86::R11D: case X86::R11:
+      return X86::R11W;
+    case X86::R12B: case X86::R12W: case X86::R12D: case X86::R12:
+      return X86::R12W;
+    case X86::R13B: case X86::R13W: case X86::R13D: case X86::R13:
+      return X86::R13W;
+    case X86::R14B: case X86::R14W: case X86::R14D: case X86::R14:
+      return X86::R14W;
+    case X86::R15B: case X86::R15W: case X86::R15D: case X86::R15:
+      return X86::R15W;
+    }
+  case 32:
+    switch (Reg) {
+    default: return 0;
+    case X86::AH: case X86::AL: case X86::AX: case X86::EAX: case X86::RAX:
+      return X86::EAX;
+    case X86::DH: case X86::DL: case X86::DX: case X86::EDX: case X86::RDX:
+      return X86::EDX;
+    case X86::CH: case X86::CL: case X86::CX: case X86::ECX: case X86::RCX:
+      return X86::ECX;
+    case X86::BH: case X86::BL: case X86::BX: case X86::EBX: case X86::RBX:
+      return X86::EBX;
+    case X86::SIL: case X86::SI: case X86::ESI: case X86::RSI:
+      return X86::ESI;
+    case X86::DIL: case X86::DI: case X86::EDI: case X86::RDI:
+      return X86::EDI;
+    case X86::BPL: case X86::BP: case X86::EBP: case X86::RBP:
+      return X86::EBP;
+    case X86::SPL: case X86::SP: case X86::ESP: case X86::RSP:
+      return X86::ESP;
+    case X86::R8B: case X86::R8W: case X86::R8D: case X86::R8:
+      return X86::R8D;
+    case X86::R9B: case X86::R9W: case X86::R9D: case X86::R9:
+      return X86::R9D;
+    case X86::R10B: case X86::R10W: case X86::R10D: case X86::R10:
+      return X86::R10D;
+    case X86::R11B: case X86::R11W: case X86::R11D: case X86::R11:
+      return X86::R11D;
+    case X86::R12B: case X86::R12W: case X86::R12D: case X86::R12:
+      return X86::R12D;
+    case X86::R13B: case X86::R13W: case X86::R13D: case X86::R13:
+      return X86::R13D;
+    case X86::R14B: case X86::R14W: case X86::R14D: case X86::R14:
+      return X86::R14D;
+    case X86::R15B: case X86::R15W: case X86::R15D: case X86::R15:
+      return X86::R15D;
+    }
+  case 64:
+    switch (Reg) {
+    default: return 0;
+    case X86::AH: case X86::AL: case X86::AX: case X86::EAX: case X86::RAX:
+      return X86::RAX;
+    case X86::DH: case X86::DL: case X86::DX: case X86::EDX: case X86::RDX:
+      return X86::RDX;
+    case X86::CH: case X86::CL: case X86::CX: case X86::ECX: case X86::RCX:
+      return X86::RCX;
+    case X86::BH: case X86::BL: case X86::BX: case X86::EBX: case X86::RBX:
+      return X86::RBX;
+    case X86::SIL: case X86::SI: case X86::ESI: case X86::RSI:
+      return X86::RSI;
+    case X86::DIL: case X86::DI: case X86::EDI: case X86::RDI:
+      return X86::RDI;
+    case X86::BPL: case X86::BP: case X86::EBP: case X86::RBP:
+      return X86::RBP;
+    case X86::SPL: case X86::SP: case X86::ESP: case X86::RSP:
+      return X86::RSP;
+    case X86::R8B: case X86::R8W: case X86::R8D: case X86::R8:
+      return X86::R8;
+    case X86::R9B: case X86::R9W: case X86::R9D: case X86::R9:
+      return X86::R9;
+    case X86::R10B: case X86::R10W: case X86::R10D: case X86::R10:
+      return X86::R10;
+    case X86::R11B: case X86::R11W: case X86::R11D: case X86::R11:
+      return X86::R11;
+    case X86::R12B: case X86::R12W: case X86::R12D: case X86::R12:
+      return X86::R12;
+    case X86::R13B: case X86::R13W: case X86::R13D: case X86::R13:
+      return X86::R13;
+    case X86::R14B: case X86::R14W: case X86::R14D: case X86::R14:
+      return X86::R14;
+    case X86::R15B: case X86::R15W: case X86::R15D: case X86::R15:
+      return X86::R15;
+    }
+  }
+}
+
+unsigned llvm::getX86SubSuperRegister(unsigned Reg, unsigned Size, bool High) {
+  unsigned Res = getX86SubSuperRegisterOrZero(Reg, Size, High);
+  assert(Res != 0 && "Unexpected register or VT");
+  return Res;
+}
+
+

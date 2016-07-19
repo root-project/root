@@ -22,7 +22,7 @@
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
-#include "llvm/PassManager.h"
+#include "llvm/IR/LegacyPassManager.h"
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/Triple.h"
 #include "llvm/Support/raw_ostream.h"
@@ -83,15 +83,13 @@ std::unique_ptr<TargetMachine>
   if (!TheTarget) {
     llvm::errs() << "cling::IncrementalExecutor: unable to find target:\n"
                  << Error;
+    return std::unique_ptr<TargetMachine>();
   }
 
   std::string MCPU;
   std::string FeaturesStr;
 
   TargetOptions Options = TargetOptions();
-  Options.NoFramePointerElim = 1;
-  Options.JITEmitDebugInfo = 1;
-  Reloc::Model RelocModel = Reloc::Default;
   CodeModel::Model CMModel = CodeModel::JITDefault;
   CodeGenOpt::Level OptLevel = CodeGenOpt::Default;
   switch (CGOpt.OptimizationLevel) {
@@ -106,7 +104,8 @@ std::unique_ptr<TargetMachine>
   TM.reset(TheTarget->createTargetMachine(TheTriple.getTriple(),
                                           MCPU, FeaturesStr,
                                           Options,
-                                          RelocModel, CMModel,
+                                          Optional<Reloc::Model>(),
+                                          CMModel,
                                           OptLevel));
   return TM;
 }
@@ -288,8 +287,8 @@ IncrementalExecutor::runStaticInitializersOnce(const Transaction& T) {
     // }
 
     // Erase __cxx_global_var_init(N-1)() first.
-    (*I)->removeDeadConstantUsers();
-    (*I)->eraseFromParent();
+    //(*I)->removeDeadConstantUsers();
+    //(*I)->eraseFromParent();
   }
 
   return kExeSuccess;

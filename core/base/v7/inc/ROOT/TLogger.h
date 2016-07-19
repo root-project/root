@@ -1,4 +1,4 @@
-/// \file TDirectory.h
+/// \file ROOT/TLogger.h
 /// \ingroup Base ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-03-29
@@ -18,12 +18,9 @@
 #include <array>
 #include <memory>
 #include <sstream>
-#include <experimental/string_view>
+#include "RStringView.h"
 #include <vector>
 
-namespace std {
-  using experimental::string_view;
-}
 
 namespace ROOT {
 namespace Experimental {

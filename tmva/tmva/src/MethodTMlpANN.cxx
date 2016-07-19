@@ -28,19 +28,19 @@
 
 /* Begin_Html
 
-  This is the TMVA TMultiLayerPerceptron interface class. It provides the
-  training and testing the ROOT internal MLP class in the TMVA framework.<be>
+   This is the TMVA TMultiLayerPerceptron interface class. It provides the
+   training and testing the ROOT internal MLP class in the TMVA framework.<be>
 
-  Available learning methods:<br>
-  <ul>
-  <li>Stochastic      </li>
-  <li>Batch           </li>
-  <li>SteepestDescent </li>
-  <li>RibierePolak    </li>
-  <li>FletcherReeves  </li>
-  <li>BFGS            </li>
-  </ul>
-End_Html */
+   Available learning methods:<br>
+   <ul>
+   <li>Stochastic      </li>
+   <li>Batch           </li>
+   <li>SteepestDescent </li>
+   <li>RibierePolak    </li>
+   <li>FletcherReeves  </li>
+   <li>BFGS            </li>
+   </ul>
+   End_Html */
 //
 //  See the TMultiLayerPerceptron class description
 //  for details on this ANN.
@@ -91,12 +91,11 @@ ClassImp(TMVA::MethodTMlpANN)
 ////////////////////////////////////////////////////////////////////////////////
 /// standard constructor
 
-TMVA::MethodTMlpANN::MethodTMlpANN( const TString& jobName,
-                                    const TString& methodTitle,
-                                    DataSetInfo& theData,
-                                    const TString& theOption,
-                                    TDirectory* theTargetDir) :
-   TMVA::MethodBase( jobName, Types::kTMlpANN, methodTitle, theData, theOption, theTargetDir ),
+   TMVA::MethodTMlpANN::MethodTMlpANN( const TString& jobName,
+                                       const TString& methodTitle,
+                                       DataSetInfo& theData,
+                                       const TString& theOption) :
+   TMVA::MethodBase( jobName, Types::kTMlpANN, methodTitle, theData, theOption),
    fMLP(0),
    fLocalTrainingTree(0),
    fNcycles(100),
@@ -109,9 +108,8 @@ TMVA::MethodTMlpANN::MethodTMlpANN( const TString& jobName,
 /// constructor from weight file
 
 TMVA::MethodTMlpANN::MethodTMlpANN( DataSetInfo& theData,
-                                    const TString& theWeightFile,
-                                    TDirectory* theTargetDir ) :
-   TMVA::MethodBase( Types::kTMlpANN, theData, theWeightFile, theTargetDir ),
+                                    const TString& theWeightFile) :
+   TMVA::MethodBase( Types::kTMlpANN, theData, theWeightFile),
    fMLP(0),
    fLocalTrainingTree(0),
    fNcycles(100),

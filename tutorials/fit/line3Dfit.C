@@ -1,13 +1,18 @@
-//Fitting of a TGraph2D with a 3D straight line
-//
-// run this macro by doing:
-//
-// root>.x line3Dfit.C+
-//
-
-//Author: L. Moneta
-//
-
+/// \file
+/// \ingroup tutorial_fit
+/// Fitting of a TGraph2D with a 3D straight line
+///
+/// run this macro by doing:
+///
+/// ~~~ {.cpp}
+/// root>.x line3Dfit.C+
+/// ~~~
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Lorenzo Moneta
 
 #include <TMath.h>
 #include <TGraph2D.h>
@@ -24,9 +29,9 @@
 using namespace ROOT::Math;
 
 
-// define the parameteric line equation
+// define the parametric line equation
 void line(double t, const double *p, double &x, double &y, double &z) {
-   // a parameteric line is define from 6 parameters but 4 are independent
+   // a parametric line is define from 6 parameters but 4 are independent
    // x0,y0,z0,z1,y1,z1 which are the coordinates of two points on the line
    // can choose z0 = 0 if line not parallel to x-y plane and z1 = 1;
    x = p[0] + p[1]*t;

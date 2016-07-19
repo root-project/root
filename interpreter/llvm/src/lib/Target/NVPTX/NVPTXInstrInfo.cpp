@@ -28,41 +28,41 @@ using namespace llvm;
 // Pin the vtable to this file.
 void NVPTXInstrInfo::anchor() {}
 
-// FIXME: Add the subtarget support on this constructor.
-NVPTXInstrInfo::NVPTXInstrInfo(NVPTXSubtarget &STI)
-    : NVPTXGenInstrInfo(), RegInfo(STI) {}
+NVPTXInstrInfo::NVPTXInstrInfo() : NVPTXGenInstrInfo(), RegInfo() {}
 
-void NVPTXInstrInfo::copyPhysReg(
-    MachineBasicBlock &MBB, MachineBasicBlock::iterator I, DebugLoc DL,
-    unsigned DestReg, unsigned SrcReg, bool KillSrc) const {
+void NVPTXInstrInfo::copyPhysReg(MachineBasicBlock &MBB,
+                                 MachineBasicBlock::iterator I,
+                                 const DebugLoc &DL, unsigned DestReg,
+                                 unsigned SrcReg, bool KillSrc) const {
   const MachineRegisterInfo &MRI = MBB.getParent()->getRegInfo();
   const TargetRegisterClass *DestRC = MRI.getRegClass(DestReg);
   const TargetRegisterClass *SrcRC = MRI.getRegClass(SrcReg);
 
-  if (DestRC != SrcRC)
-    report_fatal_error("Attempted to created cross-class register copy");
+  if (DestRC->getSize() != SrcRC->getSize())
+    report_fatal_error("Copy one register into another with a different width");
 
-  if (DestRC == &NVPTX::Int32RegsRegClass)
-    BuildMI(MBB, I, DL, get(NVPTX::IMOV32rr), DestReg)
-      .addReg(SrcReg, getKillRegState(KillSrc));
-  else if (DestRC == &NVPTX::Int1RegsRegClass)
-    BuildMI(MBB, I, DL, get(NVPTX::IMOV1rr), DestReg)
-      .addReg(SrcReg, getKillRegState(KillSrc));
-  else if (DestRC == &NVPTX::Float32RegsRegClass)
-    BuildMI(MBB, I, DL, get(NVPTX::FMOV32rr), DestReg)
-      .addReg(SrcReg, getKillRegState(KillSrc));
-  else if (DestRC == &NVPTX::Int16RegsRegClass)
-    BuildMI(MBB, I, DL, get(NVPTX::IMOV16rr), DestReg)
-      .addReg(SrcReg, getKillRegState(KillSrc));
-  else if (DestRC == &NVPTX::Int64RegsRegClass)
-    BuildMI(MBB, I, DL, get(NVPTX::IMOV64rr), DestReg)
-      .addReg(SrcReg, getKillRegState(KillSrc));
-  else if (DestRC == &NVPTX::Float64RegsRegClass)
-    BuildMI(MBB, I, DL, get(NVPTX::FMOV64rr), DestReg)
-      .addReg(SrcReg, getKillRegState(KillSrc));
-  else {
+  unsigned Op;
+  if (DestRC == &NVPTX::Int1RegsRegClass) {
+    Op = NVPTX::IMOV1rr;
+  } else if (DestRC == &NVPTX::Int16RegsRegClass) {
+    Op = NVPTX::IMOV16rr;
+  } else if (DestRC == &NVPTX::Int32RegsRegClass) {
+    Op = (SrcRC == &NVPTX::Int32RegsRegClass ? NVPTX::IMOV32rr
+                                             : NVPTX::BITCONVERT_32_F2I);
+  } else if (DestRC == &NVPTX::Int64RegsRegClass) {
+    Op = (SrcRC == &NVPTX::Int64RegsRegClass ? NVPTX::IMOV64rr
+                                             : NVPTX::BITCONVERT_64_F2I);
+  } else if (DestRC == &NVPTX::Float32RegsRegClass) {
+    Op = (SrcRC == &NVPTX::Float32RegsRegClass ? NVPTX::FMOV32rr
+                                               : NVPTX::BITCONVERT_32_I2F);
+  } else if (DestRC == &NVPTX::Float64RegsRegClass) {
+    Op = (SrcRC == &NVPTX::Float64RegsRegClass ? NVPTX::FMOV64rr
+                                               : NVPTX::BITCONVERT_64_I2F);
+  } else {
     llvm_unreachable("Bad register copy");
   }
+  BuildMI(MBB, I, DL, get(Op), DestReg)
+      .addReg(SrcReg, getKillRegState(KillSrc));
 }
 
 bool NVPTXInstrInfo::isMoveInstr(const MachineInstr &MI, unsigned &SrcReg,
@@ -86,27 +86,6 @@ bool NVPTXInstrInfo::isMoveInstr(const MachineInstr &MI, unsigned &SrcReg,
   }
 
   return false;
-}
-
-bool NVPTXInstrInfo::isReadSpecialReg(MachineInstr &MI) const {
-  switch (MI.getOpcode()) {
-  default:
-    return false;
-  case NVPTX::INT_PTX_SREG_NTID_X:
-  case NVPTX::INT_PTX_SREG_NTID_Y:
-  case NVPTX::INT_PTX_SREG_NTID_Z:
-  case NVPTX::INT_PTX_SREG_TID_X:
-  case NVPTX::INT_PTX_SREG_TID_Y:
-  case NVPTX::INT_PTX_SREG_TID_Z:
-  case NVPTX::INT_PTX_SREG_CTAID_X:
-  case NVPTX::INT_PTX_SREG_CTAID_Y:
-  case NVPTX::INT_PTX_SREG_CTAID_Z:
-  case NVPTX::INT_PTX_SREG_NCTAID_X:
-  case NVPTX::INT_PTX_SREG_NCTAID_Y:
-  case NVPTX::INT_PTX_SREG_NCTAID_Z:
-  case NVPTX::INT_PTX_SREG_WARPSIZE:
-    return true;
-  }
 }
 
 bool NVPTXInstrInfo::isLoadInstr(const MachineInstr &MI,
@@ -172,14 +151,14 @@ bool NVPTXInstrInfo::AnalyzeBranch(
     SmallVectorImpl<MachineOperand> &Cond, bool AllowModify) const {
   // If the block has no terminators, it just falls into the block after it.
   MachineBasicBlock::iterator I = MBB.end();
-  if (I == MBB.begin() || !isUnpredicatedTerminator(--I))
+  if (I == MBB.begin() || !isUnpredicatedTerminator(*--I))
     return false;
 
   // Get the last instruction in the block.
   MachineInstr *LastInst = I;
 
   // If there is only one terminator instruction, process it.
-  if (I == MBB.begin() || !isUnpredicatedTerminator(--I)) {
+  if (I == MBB.begin() || !isUnpredicatedTerminator(*--I)) {
     if (LastInst->getOpcode() == NVPTX::GOTO) {
       TBB = LastInst->getOperand(0).getMBB();
       return false;
@@ -197,7 +176,7 @@ bool NVPTXInstrInfo::AnalyzeBranch(
   MachineInstr *SecondLastInst = I;
 
   // If there are three terminators, we don't know what sort of block this is.
-  if (SecondLastInst && I != MBB.begin() && isUnpredicatedTerminator(--I))
+  if (SecondLastInst && I != MBB.begin() && isUnpredicatedTerminator(*--I))
     return true;
 
   // If the block ends with NVPTX::GOTO and NVPTX:CBranch, handle it.
@@ -248,9 +227,11 @@ unsigned NVPTXInstrInfo::RemoveBranch(MachineBasicBlock &MBB) const {
   return 2;
 }
 
-unsigned NVPTXInstrInfo::InsertBranch(
-    MachineBasicBlock &MBB, MachineBasicBlock *TBB, MachineBasicBlock *FBB,
-    const SmallVectorImpl<MachineOperand> &Cond, DebugLoc DL) const {
+unsigned NVPTXInstrInfo::InsertBranch(MachineBasicBlock &MBB,
+                                      MachineBasicBlock *TBB,
+                                      MachineBasicBlock *FBB,
+                                      ArrayRef<MachineOperand> Cond,
+                                      const DebugLoc &DL) const {
   // Shouldn't be a fall through.
   assert(TBB && "InsertBranch must not be told to insert a fallthrough");
   assert((Cond.size() == 1 || Cond.size() == 0) &&

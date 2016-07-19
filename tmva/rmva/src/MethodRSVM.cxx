@@ -35,6 +35,7 @@
 #include "TMVA/ClassifierFactory.h"
 
 #include "TMVA/Results.h"
+#include "TMVA/Timer.h"
 
 using namespace TMVA;
 
@@ -49,9 +50,8 @@ Bool_t MethodRSVM::IsModuleLoaded = ROOT::R::TRInterface::Instance().Require("e1
 MethodRSVM::MethodRSVM(const TString &jobName,
                        const TString &methodTitle,
                        DataSetInfo &dsi,
-                       const TString &theOption,
-                       TDirectory *theTargetDir) :
-   RMethodBase(jobName, Types::kRSVM, methodTitle, dsi, theOption, theTargetDir),
+                       const TString &theOption) :
+   RMethodBase(jobName, Types::kRSVM, methodTitle, dsi, theOption),
    fMvaCounter(0),
    svm("svm"),
    predict("predict"),
@@ -74,14 +74,13 @@ MethodRSVM::MethodRSVM(const TString &jobName,
    fEpsilon = 0.1;
    fShrinking = kTRUE;
    fCross = 0;
-   fProbability = kTRUE;
+   fProbability = kFALSE;
    fFitted = kTRUE;
-   SetWeightFileDir(gConfig().GetIONames().fWeightFileDir);
 }
 
 //_______________________________________________________________________
-MethodRSVM::MethodRSVM(DataSetInfo &theData, const TString &theWeightFile, TDirectory *theTargetDir)
-   : RMethodBase(Types::kRSVM, theData, theWeightFile, theTargetDir),
+MethodRSVM::MethodRSVM(DataSetInfo &theData, const TString &theWeightFile)
+   : RMethodBase(Types::kRSVM, theData, theWeightFile),
      fMvaCounter(0),
      svm("svm"),
      predict("predict"),
@@ -106,7 +105,6 @@ MethodRSVM::MethodRSVM(DataSetInfo &theData, const TString &theWeightFile, TDire
    fCross = 0;
    fProbability = kTRUE;
    fFitted = kTRUE;
-   SetWeightFileDir(gConfig().GetIONames().fWeightFileDir);
 }
 
 
@@ -143,6 +141,12 @@ void MethodRSVM::Train()
    ClassWeightsTrain["background"] = Data()->GetNEvtBkgdTrain();
    ClassWeightsTrain["signal"] = Data()->GetNEvtSigTrain();
 
+   Log() << kINFO
+         << " Probability is " << fProbability
+         << " Tolerance is " << fTolerance
+         << " Type is "  << fType
+         << Endl;
+
 
    SEXP Model = svm(ROOT::R::Label["x"] = fDfTrain, \
                     ROOT::R::Label["y"] = asfactor(fFactorTrain), \
@@ -163,13 +167,15 @@ void MethodRSVM::Train()
                     ROOT::R::Label["probability"] = fProbability, \
                     ROOT::R::Label["fitted"] = fFitted);
    fModel = new ROOT::R::TRObject(Model);
-   TString path = GetWeightFileDir() + "/RSVMModel.RData";
-   Log() << Endl;
-   Log() << gTools().Color("bold") << "--- Saving State File In:" << gTools().Color("reset") << path << Endl;
-   Log() << Endl;
-   r["RSVMModel"] << Model;
-   r << "save(RSVMModel,file='" + path + "')";
-
+   if (IsModelPersistence())
+   {
+        TString path = GetWeightFileDir() + "/RSVMModel.RData";
+        Log() << Endl;
+        Log() << gTools().Color("bold") << "--- Saving State File In:" << gTools().Color("reset") << path << Endl;
+        Log() << Endl;
+        r["RSVMModel"] << Model;
+        r << "save(RSVMModel,file='" + path + "')";
+   }
 }
 
 //_______________________________________________________________________
@@ -208,7 +214,6 @@ void MethodRSVM::DeclareOptions()
    DeclareOptionRef(fShrinking, "Shrinking", "option whether to use the shrinking-heuristics (default:‘TRUE’)");
    DeclareOptionRef(fCross, "Cross", "if a integer value k>0 is specified, a k-fold cross validation on the training data is performed to assess the\
                                        quality of the model: the accuracy rate for classification and the Mean Squared Error for regression");
-   DeclareOptionRef(fProbability, "Probability", "logical indicating whether the model should allow for probability predictions.");
    DeclareOptionRef(fFitted, "Fitted", "logical indicating whether the fitted values should be computed and included in the model or not (default: ‘TRUE’)");
 
 }
@@ -255,18 +260,100 @@ Double_t MethodRSVM::GetMvaValue(Double_t *errLower, Double_t *errUpper)
       fDfEvent[DataInfo().GetListOfVariables()[i].Data()] = ev->GetValues()[i];
    }
    //if using persistence model
-   if (!fModel) {
-      ReadStateFromFile();
-   }
+   if (IsModelPersistence()) ReadStateFromFile();
+
    ROOT::R::TRObject result = predict(*fModel, fDfEvent, ROOT::R::Label["decision.values"] = kTRUE, ROOT::R::Label["probability"] = kTRUE);
    TVectorD values = result.GetAttribute("decision.values");
    mvaValue = values[0]; //returning signal prob
    return mvaValue;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// get all the MVA values for the events of the current Data type
+std::vector<Double_t> MethodRSVM::GetMvaValues(Long64_t firstEvt, Long64_t lastEvt, Bool_t logProgress)
+{
+   Long64_t nEvents = Data()->GetNEvents();
+   if (firstEvt > lastEvt || lastEvt > nEvents) lastEvt = nEvents;
+   if (firstEvt < 0) firstEvt = 0;
+
+   nEvents = lastEvt-firstEvt; 
+
+   UInt_t nvars = Data()->GetNVariables();
+
+   // use timer
+   Timer timer( nEvents, GetName(), kTRUE );
+   if (logProgress) 
+      Log() << kINFO<<Form("Dataset[%s] : ",DataInfo().GetName())<< "Evaluation of " << GetMethodName() << " on "
+            << (Data()->GetCurrentType()==Types::kTraining?"training":"testing") << " sample (" << nEvents << " events)" << Endl;
+ 
+
+   // fill R DATA FRAME with events data
+   std::vector<std::vector<Float_t> > inputData(nvars);
+   for (UInt_t i = 0; i < nvars; i++) {
+      inputData[i] =  std::vector<Float_t>(nEvents); 
+   }
+   
+   for (Int_t ievt=firstEvt; ievt<lastEvt; ievt++) {
+     Data()->SetCurrentEvent(ievt);
+      const TMVA::Event *e = Data()->GetEvent();
+      assert(nvars == e->GetNVariables());
+      for (UInt_t i = 0; i < nvars; i++) {
+         inputData[i][ievt] = e->GetValue(i);
+      }
+      // if (ievt%100 == 0)
+      //    std::cout << "Event " << ievt << "  type" << DataInfo().IsSignal(e) << " : " << pValue[ievt*nvars] << "  " << pValue[ievt*nvars+1] << "  " << pValue[ievt*nvars+2] << std::endl;
+   }
+
+   ROOT::R::TRDataFrame evtData;
+   for (UInt_t i = 0; i < nvars; i++) {
+      evtData[DataInfo().GetListOfVariables()[i].Data()] = inputData[i];
+   }
+   //if using persistence model
+   if (IsModelPersistence()) ReadModelFromFile();
+
+   std::vector<Double_t> mvaValues(nEvents);
+
+
+   ROOT::R::TRObject result = predict(*fModel, evtData, ROOT::R::Label["decision.values"] = kTRUE, ROOT::R::Label["probability"] = kTRUE);
+
+   r["result"] << result;
+   r << "v2 <- attr(result, \"probabilities\") ";
+   int probSize = 0;
+   r["length(v2)"] >> probSize; 
+   //r << "print(v2)";
+   if (probSize > 0) {
+      std::vector<Double_t> probValues  = result.GetAttribute("probabilities");
+      // probabilities are for both cases
+      assert(probValues.size() == 2*mvaValues.size());
+      for (int i = 0; i < nEvents; ++i)
+         // R stores vector column-wise (as in Fortran)
+         // and signal probabilities are the second column
+         mvaValues[i] = probValues[nEvents+i];
+      
+   }
+   // use decision values
+   else {
+      Log() << kINFO << " : Probabilities are not available. Use decision values instead !" << Endl;
+      //std::cout << "examine the result " << std::endl;
+      std::vector<Double_t> probValues = result.GetAttribute("decision.values");
+      mvaValues = probValues; 
+   // std::cout << "decision values " << values1.size() << std::endl;
+   // for ( auto & v : values1) std::cout << v << "  ";
+   // std::cout << std::endl;
+   }
+   
+
+   if (logProgress) {
+      Log() << kINFO <<Form("Dataset[%s] : ",DataInfo().GetName())<< "Elapsed time for evaluation of " << nEvents <<  " events: "
+            << timer.GetElapsedTime() << "       " << Endl;
+   }
+
+   return mvaValues;
+
+}
 
 //_______________________________________________________________________
-void TMVA::MethodRSVM::ReadStateFromFile()
+void TMVA::MethodRSVM::ReadModelFromFile()
 {
    ROOT::R::TRInterface::Instance().Require("e1071");
    TString path = GetWeightFileDir() + "/RSVMModel.RData";

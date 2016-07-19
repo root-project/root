@@ -30,7 +30,7 @@ GEOMH1       := TGeoAtt.h TGeoStateInfo.h TGeoBoolNode.h \
                 TGeoScaledShape.h TVirtualGeoPainter.h TVirtualGeoTrack.h \
 		TGeoPolygon.h TGeoXtru.h TGeoPhysicalNode.h \
                 TGeoHelix.h TGeoParaboloid.h TGeoElement.h TGeoHalfSpace.h \
-                TGeoBuilder.h TGeoNavigator.h
+                TGeoBuilder.h TGeoNavigator.h TVirtualGeoConverter.h
 GEOMH2       := TGeoPatternFinder.h TGeoCache.h TVirtualMagField.h \
                 TGeoUniformMagField.h TGeoGlobalMagField.h TGeoBranchArray.h \
                 TGeoExtension.h TGeoParallelWorld.h

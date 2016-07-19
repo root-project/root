@@ -415,7 +415,7 @@ dash indicates that an operation is not accepted according to a corresponding
 specification.
 
 ============================== ======= ======= ======= =======
-         Opeator               OpenCL  AltiVec   GCC    NEON
+         Operator              OpenCL  AltiVec   GCC    NEON
 ============================== ======= ======= ======= =======
 []                               yes     yes     yes     --
 unary operators +, --            yes     yes     yes     --
@@ -449,7 +449,7 @@ An optional string message can be added to the ``deprecated`` and
 If the deprecated or unavailable declaration is used, the message will be
 incorporated into the appropriate diagnostic:
 
-.. code-block:: c++
+.. code-block:: none
 
   harmless.c:4:3: warning: 'explode' is deprecated: extremely unsafe, use 'combust' instead!!!
         [-Wdeprecated-declarations]
@@ -935,6 +935,14 @@ C11 ``_Thread_local``
 Use ``__has_feature(c_thread_local)`` or ``__has_extension(c_thread_local)``
 to determine if support for ``_Thread_local`` variables is enabled.
 
+Modules
+-------
+
+Use ``__has_feature(modules)`` to determine if Modules have been enabled.
+For example, compiling code with ``-fmodules`` enables the use of Modules.
+
+More information could be found `here <http://clang.llvm.org/docs/Modules.html>`_.
+
 Checks for Type Trait Primitives
 ================================
 
@@ -1009,11 +1017,12 @@ The following type trait primitives are supported by Clang:
   ``argtypes...`` such that no non-trivial functions are called as part of
   that initialization.  This trait is required to implement the C++11 standard
   library.
-* ``__is_destructible`` (MSVC 2013): partially implemented
-* ``__is_nothrow_destructible`` (MSVC 2013): partially implemented
+* ``__is_destructible`` (MSVC 2013)
+* ``__is_nothrow_destructible`` (MSVC 2013)
 * ``__is_nothrow_assignable`` (MSVC 2013, clang)
 * ``__is_constructible`` (MSVC 2013, clang)
 * ``__is_nothrow_constructible`` (MSVC 2013, clang)
+* ``__is_assignable`` (MSVC 2015, clang)
 
 Blocks
 ======
@@ -1497,6 +1506,35 @@ C-style cast applied to each element of the first argument.
 
 Query for this feature with ``__has_builtin(__builtin_convertvector)``.
 
+``__builtin_bitreverse``
+------------------------
+
+* ``__builtin_bitreverse8``
+* ``__builtin_bitreverse16``
+* ``__builtin_bitreverse32``
+* ``__builtin_bitreverse64``
+
+**Syntax**:
+
+.. code-block:: c++
+
+     __builtin_bitreverse32(x)
+
+**Examples**:
+
+.. code-block:: c++
+
+      uint8_t rev_x = __builtin_bitreverse8(x);
+      uint16_t rev_x = __builtin_bitreverse16(x);
+      uint32_t rev_y = __builtin_bitreverse32(y);
+      uint64_t rev_z = __builtin_bitreverse64(z);
+
+**Description**:
+
+The '``__builtin_bitreverse``' family of builtins is used to reverse
+the bitpattern of an integer value; for example ``0b10110110`` becomes
+``0b01101101``.
+
 ``__builtin_unreachable``
 -------------------------
 
@@ -1531,6 +1569,33 @@ the optimizer can take advantage of this to produce better code.  This builtin
 takes no arguments and produces a void result.
 
 Query for this feature with ``__has_builtin(__builtin_unreachable)``.
+
+``__builtin_unpredictable``
+---------------------------
+
+``__builtin_unpredictable`` is used to indicate that a branch condition is
+unpredictable by hardware mechanisms such as branch prediction logic.
+
+**Syntax**:
+
+.. code-block:: c++
+
+    __builtin_unpredictable(long long)
+
+**Example of use**:
+
+.. code-block:: c++
+
+  if (__builtin_unpredictable(x > 0)) {
+     foo();
+  }
+
+**Description**:
+
+The ``__builtin_unpredictable()`` builtin is expected to be used with control
+flow conditions such as in ``if`` and ``switch`` statements.
+
+Query for this feature with ``__has_builtin(__builtin_unpredictable)``.
 
 ``__sync_swap``
 ---------------
@@ -1644,17 +1709,20 @@ an example of their usage:
   errorcode_t security_critical_application(...) {
     unsigned x, y, result;
     ...
-    if (__builtin_umul_overflow(x, y, &result))
+    if (__builtin_mul_overflow(x, y, &result))
       return kErrorCodeHackers;
     ...
     use_multiply(result);
     ...
   }
 
-A complete enumeration of the builtins are:
+Clang provides the following checked arithmetic builtins:
 
 .. code-block:: c
 
+  bool __builtin_add_overflow   (type1 x, type2 y, type3 *sum);
+  bool __builtin_sub_overflow   (type1 x, type2 y, type3 *diff);
+  bool __builtin_mul_overflow   (type1 x, type2 y, type3 *prod);
   bool __builtin_uadd_overflow  (unsigned x, unsigned y, unsigned *sum);
   bool __builtin_uaddl_overflow (unsigned long x, unsigned long y, unsigned long *sum);
   bool __builtin_uaddll_overflow(unsigned long long x, unsigned long long y, unsigned long long *sum);
@@ -1674,6 +1742,39 @@ A complete enumeration of the builtins are:
   bool __builtin_smull_overflow (long x, long y, long *prod);
   bool __builtin_smulll_overflow(long long x, long long y, long long *prod);
 
+Each builtin performs the specified mathematical operation on the
+first two arguments and stores the result in the third argument.  If
+possible, the result will be equal to mathematically-correct result
+and the builtin will return 0.  Otherwise, the builtin will return
+1 and the result will be equal to the unique value that is equivalent
+to the mathematically-correct result modulo two raised to the *k*
+power, where *k* is the number of bits in the result type.  The
+behavior of these builtins is well-defined for all argument values.
+
+The first three builtins work generically for operands of any integer type,
+including boolean types.  The operands need not have the same type as each
+other, or as the result.  The other builtins may implicitly promote or
+convert their operands before performing the operation.
+
+Query for this feature with ``__has_builtin(__builtin_add_overflow)``, etc.
+
+Floating point builtins
+---------------------------------------
+
+``__builtin_canonicalize``
+--------------------------
+
+.. code-block:: c
+
+   double __builtin_canonicalize(double);
+   float __builtin_canonicalizef(float);
+   long double__builtin_canonicalizel(long double);
+
+Returns the platform specific canonical encoding of a floating point
+number. This canonicalization is useful for implementing certain
+numeric primitives such as frexp. See `LLVM canonicalize intrinsic
+<http://llvm.org/docs/LangRef.html#llvm-canonicalize-intrinsic>`_ for
+more information on the semantics.
 
 .. _langext-__c11_atomic:
 
@@ -1707,6 +1808,9 @@ The macros ``__ATOMIC_RELAXED``, ``__ATOMIC_CONSUME``, ``__ATOMIC_ACQUIRE``,
 provided, with values corresponding to the enumerators of C11's
 ``memory_order`` enumeration.
 
+(Note that Clang additionally provides GCC-compatible ``__atomic_*``
+builtins)
+
 Low-level ARM exclusive memory builtins
 ---------------------------------------
 
@@ -1722,6 +1826,7 @@ instructions for implementing atomic operations.
   void __builtin_arm_clrex(void);
 
 The types ``T`` currently supported are:
+
 * Integer types with width at most 64 bits (or 128 bits on AArch64).
 * Floating-point types
 * Pointer types.
@@ -1739,6 +1844,26 @@ care should be exercised.
 
 For these reasons the higher level atomic primitives should be preferred where
 possible.
+
+Non-temporal load/store builtins
+--------------------------------
+
+Clang provides overloaded builtins allowing generation of non-temporal memory
+accesses.
+
+.. code-block:: c
+
+  T __builtin_nontemporal_load(T *addr);
+  void __builtin_nontemporal_store(T value, T *addr);
+
+The types ``T`` currently supported are:
+
+* Integer types.
+* Floating-point types.
+* Vector types.
+
+Note that the compiler does not guarantee that non-temporal loads or stores
+will be used.
 
 Non-standard C++11 Attributes
 =============================
@@ -1780,7 +1905,7 @@ in the `ARM C Language Extensions Release 2.0
 <http://infocenter.arm.com/help/topic/com.arm.doc.ihi0053c/IHI0053C_acle_2_0.pdf>`_.
 Note that these intrinsics are implemented as motion barriers that block
 reordering of memory accesses and side effect instructions. Other instructions
-like simple arithmatic may be reordered around the intrinsic. If you expect to
+like simple arithmetic may be reordered around the intrinsic. If you expect to
 have no reordering at all, use inline assembly instead.
 
 X86/X86-64 Language Extensions
@@ -1788,12 +1913,13 @@ X86/X86-64 Language Extensions
 
 The X86 backend has these language extensions:
 
-Memory references off the GS segment
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Memory references to specified segments
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Annotating a pointer with address space #256 causes it to be code generated
-relative to the X86 GS segment register, and address space #257 causes it to be
-relative to the X86 FS segment.  Note that this is a very very low-level
+relative to the X86 GS segment register, address space #257 causes it to be
+relative to the X86 FS segment, and address space #258 causes it to be
+relative to the X86 SS segment.  Note that this is a very very low-level
 feature that should only be used if you know what you're doing (for example in
 an OS kernel).
 
@@ -1836,6 +1962,9 @@ with :doc:`ThreadSanitizer`.
 
 Use ``__has_feature(memory_sanitizer)`` to check if the code is being built
 with :doc:`MemorySanitizer`.
+
+Use ``__has_feature(safe_stack)`` to check if the code is being built
+with :doc:`SafeStack`.
 
 
 Extensions for selectively disabling optimization
@@ -1921,9 +2050,9 @@ Extensions for loop hint optimizations
 
 The ``#pragma clang loop`` directive is used to specify hints for optimizing the
 subsequent for, while, do-while, or c++11 range-based for loop. The directive
-provides options for vectorization, interleaving, and unrolling. Loop hints can
-be specified before any loop and will be ignored if the optimization is not safe
-to apply.
+provides options for vectorization, interleaving, unrolling and
+distribution. Loop hints can be specified before any loop and will be ignored if
+the optimization is not safe to apply.
 
 Vectorization and Interleaving
 ------------------------------
@@ -1979,11 +2108,23 @@ iterations. Full unrolling is only possible if the loop trip count is known at
 compile time. Partial unrolling replicates the loop body within the loop and
 reduces the trip count.
 
+If ``unroll(enable)`` is specified the unroller will attempt to fully unroll the
+loop if the trip count is known at compile time. If the fully unrolled code size
+is greater than an internal limit the loop will be partially unrolled up to this
+limit. If the trip count is not known at compile time the loop will be partially
+unrolled with a heuristically chosen unroll factor.
+
+.. code-block:: c++
+
+  #pragma clang loop unroll(enable)
+  for(...) {
+    ...
+  }
+
 If ``unroll(full)`` is specified the unroller will attempt to fully unroll the
-loop if the trip count is known at compile time. If the loop count is not known
-or the fully unrolled code size is greater than the limit specified by the
-`-pragma-unroll-threshold` command line option the loop will be partially
-unrolled subject to the same limit.
+loop if the trip count is known at compile time identically to
+``unroll(enable)``. However, with ``unroll(full)`` the loop will not be unrolled
+if the loop count is not known at compile time.
 
 .. code-block:: c++
 
@@ -1995,7 +2136,7 @@ unrolled subject to the same limit.
 The unroll count can be specified explicitly with ``unroll_count(_value_)`` where
 _value_ is a positive integer. If this value is greater than the trip count the
 loop will be fully unrolled. Otherwise the loop is partially unrolled subject
-to the `-pragma-unroll-threshold` limit.
+to the same code size limit as with ``unroll(enable)``.
 
 .. code-block:: c++
 
@@ -2005,6 +2146,38 @@ to the `-pragma-unroll-threshold` limit.
   }
 
 Unrolling of a loop can be prevented by specifying ``unroll(disable)``.
+
+Loop Distribution
+-----------------
+
+Loop Distribution allows splitting a loop into multiple loops.  This is
+beneficial for example when the entire loop cannot be vectorized but some of the
+resulting loops can.
+
+If ``distribute(enable))`` is specified and the loop has memory dependencies
+that inhibit vectorization, the compiler will attempt to isolate the offending
+operations into a new loop.  This optimization is not enabled by default, only
+loops marked with the pragma are considered.
+
+.. code-block:: c++
+
+  #pragma clang loop distribute(enable)
+  for (i = 0; i < N; ++i) {
+    S1: A[i + 1] = A[i] + B[i];
+    S2: C[i] = D[i] * E[i];
+  }
+
+This loop will be split into two loops between statements S1 and S2.  The
+second loop containing S2 will be vectorized.
+
+Loop Distribution is currently not enabled by default in the optimizer because
+it can hurt performance in some cases.  For example, instruction-level
+parallelism could be reduced by sequentializing the execution of the
+statements S1 and S2 above.
+
+If Loop Distribution is turned on globally with
+``-mllvm -enable-loop-distribution``, specifying ``distribute(disable)`` can
+be used the disable it on a per-loop basis.
 
 Additional Information
 ----------------------

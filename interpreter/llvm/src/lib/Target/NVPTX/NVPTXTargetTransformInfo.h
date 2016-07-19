@@ -37,8 +37,9 @@ class NVPTXTTIImpl : public BasicTTIImplBase<NVPTXTTIImpl> {
   const NVPTXTargetLowering *getTLI() const { return TLI; };
 
 public:
-  explicit NVPTXTTIImpl(const NVPTXTargetMachine *TM)
-      : BaseT(TM), ST(TM->getSubtargetImpl()), TLI(ST->getTargetLowering()) {}
+  explicit NVPTXTTIImpl(const NVPTXTargetMachine *TM, const Function &F)
+      : BaseT(TM, F.getParent()->getDataLayout()), ST(TM->getSubtargetImpl()),
+        TLI(ST->getTargetLowering()) {}
 
   // Provide value semantics. MSVC requires that we spell all of these out.
   NVPTXTTIImpl(const NVPTXTTIImpl &Arg)
@@ -46,27 +47,23 @@ public:
   NVPTXTTIImpl(NVPTXTTIImpl &&Arg)
       : BaseT(std::move(static_cast<BaseT &>(Arg))), ST(std::move(Arg.ST)),
         TLI(std::move(Arg.TLI)) {}
-  NVPTXTTIImpl &operator=(const NVPTXTTIImpl &RHS) {
-    BaseT::operator=(static_cast<const BaseT &>(RHS));
-    ST = RHS.ST;
-    TLI = RHS.TLI;
-    return *this;
-  }
-  NVPTXTTIImpl &operator=(NVPTXTTIImpl &&RHS) {
-    BaseT::operator=(std::move(static_cast<BaseT &>(RHS)));
-    ST = std::move(RHS.ST);
-    TLI = std::move(RHS.TLI);
-    return *this;
-  }
 
   bool hasBranchDivergence() { return true; }
 
-  unsigned getArithmeticInstrCost(
+  bool isSourceOfDivergence(const Value *V);
+
+  // Increase the inlining cost threshold by a factor of 5, reflecting that
+  // calls are particularly expensive in NVPTX.
+  unsigned getInliningThresholdMultiplier() { return 5; }
+
+  int getArithmeticInstrCost(
       unsigned Opcode, Type *Ty,
       TTI::OperandValueKind Opd1Info = TTI::OK_AnyValue,
       TTI::OperandValueKind Opd2Info = TTI::OK_AnyValue,
       TTI::OperandValueProperties Opd1PropInfo = TTI::OP_None,
       TTI::OperandValueProperties Opd2PropInfo = TTI::OP_None);
+
+  void getUnrollingPreferences(Loop *L, TTI::UnrollingPreferences &UP);
 };
 
 } // end namespace llvm

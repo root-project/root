@@ -12,7 +12,7 @@
 //static TControlBar* CorrGui_Global__cbar = 0;
 
 void TMVA::CorrGui(TString dataset,  TString fin, TString dirName , TString title ,
-               Bool_t isRegression  )
+                   Bool_t isRegression  )
 {
    // Use this script in order to run the various individual macros
    // that plot the output of TMVA (e.g. running TMVAnalysis.C),
@@ -30,7 +30,7 @@ void TMVA::CorrGui(TString dataset,  TString fin, TString dirName , TString titl
 
    // create the control bar
    TControlBar* cbar = new TControlBar( "vertical", title, 50, 50 );
-//   CorrGui_Global__cbar = cbar;
+   //   CorrGui_Global__cbar = cbar;
 
    const char* buttonType = "button";
 
@@ -75,7 +75,7 @@ void TMVA::CorrGui(TString dataset,  TString fin, TString dirName , TString titl
             hname.ReplaceAll("__Signal","");
             hname.ReplaceAll("__Regression","");
             Var[it] = hname;
-            ++it;	
+            ++it;
          }
       }
    }

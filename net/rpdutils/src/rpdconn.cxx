@@ -18,6 +18,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "rpdconn.h"
+
 #include <arpa/inet.h>
 #include <errno.h>
 #include <netdb.h>
@@ -30,7 +32,6 @@
 #include <sys/types.h>
 #include <sys/un.h>
 
-#include "rpdconn.h"
 #include "RConfig.h"
 
 #define RPD_MAXLEN 8192

@@ -312,6 +312,36 @@ namespace {
       } else
          PyErr_Clear();
 
+#if PY_VERSION_HEX >= 0x03030000
+      if ( mp->ma_keys->dk_usable <= 0 ) {
+      // big risk that this lookup will result in a resize, so force it here
+      // to be able to reset the lookup function; of course, this is nowhere
+      // near fool-proof, but should cover interactive usage ...
+         PYROOT_GET_DICT_LOOKUP( mp ) = gDictLookupOrg;
+         const int maxinsert = 5;
+         PyObject* buf[maxinsert];
+         for ( int varmax = 1; varmax <= maxinsert; ++varmax ) {
+            for ( int ivar = 0; ivar < varmax; ++ivar ) {
+               buf[ivar] = PyROOT_PyUnicode_FromFormat( "__ROOT_FORCE_RESIZE_%d", ivar );
+               PyDict_SetItem( (PyObject*)mp, buf[ivar], Py_None);
+            }
+            for ( int ivar = 0; ivar < varmax; ++ivar ) {
+               PyDict_DelItem( (PyObject*)mp, buf[ivar] );
+               Py_DECREF( buf[ivar] );
+            }
+            if ( 0 < mp->ma_keys->dk_usable )
+               break;
+         }
+
+      // make sure the entry pointer is still valid by re-doing the lookup
+         ep = PYROOT_ORGDICT_LOOKUP( mp, key, hash, value_addr );
+
+      // full reset of all lookup functions
+         gDictLookupOrg = PYROOT_GET_DICT_LOOKUP( mp );
+         PYROOT_GET_DICT_LOOKUP( mp ) = RootLookDictString; // restore
+      }
+#endif
+
    // stopped calling into ROOT
       gDictLookupActive = kFALSE;
 
@@ -330,10 +360,11 @@ namespace {
          return 0;
 
    // Notwithstanding the code changes, the following does not work for p3.3 and
-   // later: once the dictionary is resized, its lookup function on its keys will
-   // revert to the default (lookdict_unicode_nodummy) and only if the resizing
-   // dictionary has the generic lookdict function as dk_lookup for its keys, will
-   // this be set on the new keys.
+   // later: once the dictionary is resized for anything other than an insert (see
+   // hack in RootLookDictString), its lookup function on its keys will revert to
+   // the default (lookdict_unicode_nodummy) and only if the resizing dictionary
+   // has the generic lookdict function as dk_lookup for its keys, will this be
+   // set on the new keys.
       PYROOT_GET_DICT_LOOKUP( dict ) = RootLookDictString;
 
       Py_INCREF( Py_None );

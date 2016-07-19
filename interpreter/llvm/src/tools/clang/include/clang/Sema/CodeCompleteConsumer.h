@@ -15,12 +15,15 @@
 
 #include "clang-c/Index.h"
 #include "clang/AST/CanonicalType.h"
+#include "clang/AST/DeclBase.h"
 #include "clang/AST/Type.h"
 #include "clang/Sema/CodeCompleteOptions.h"
+#include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Allocator.h"
 #include <string>
+#include <utility>
 
 namespace clang {
 
@@ -440,15 +443,15 @@ private:
   /// entity being completed by this result.
   const char *BriefComment;
   
-  CodeCompletionString(const CodeCompletionString &) LLVM_DELETED_FUNCTION;
-  void operator=(const CodeCompletionString &) LLVM_DELETED_FUNCTION;
+  CodeCompletionString(const CodeCompletionString &) = delete;
+  void operator=(const CodeCompletionString &) = delete;
 
   CodeCompletionString(const Chunk *Chunks, unsigned NumChunks,
                        unsigned Priority, CXAvailabilityKind Availability,
                        const char **Annotations, unsigned NumAnnotations,
                        StringRef ParentName,
                        const char *BriefComment);
-  ~CodeCompletionString() { }
+  ~CodeCompletionString() = default;
 
   friend class CodeCompletionBuilder;
   friend class CodeCompletionResult;
@@ -498,20 +501,7 @@ public:
 class CodeCompletionAllocator : public llvm::BumpPtrAllocator {
 public:
   /// \brief Copy the given string into this allocator.
-  const char *CopyString(StringRef String);
-
-  /// \brief Copy the given string into this allocator.
-  const char *CopyString(Twine String);
-
-  // \brief Copy the given string into this allocator.
-  const char *CopyString(const char *String) {
-    return CopyString(StringRef(String));
-  }
-
-  /// \brief Copy the given string into this allocator.
-  const char *CopyString(const std::string &String) {
-    return CopyString(StringRef(String));
-  }
+  const char *CopyString(const Twine &String);
 };
 
 /// \brief Allocator for a cached set of global code completions.
@@ -528,8 +518,8 @@ class CodeCompletionTUInfo {
 
 public:
   explicit CodeCompletionTUInfo(
-                    IntrusiveRefCntPtr<GlobalCodeCompletionAllocator> Allocator)
-    : AllocatorRef(Allocator) { }
+      IntrusiveRefCntPtr<GlobalCodeCompletionAllocator> Allocator)
+      : AllocatorRef(std::move(Allocator)) {}
 
   IntrusiveRefCntPtr<GlobalCodeCompletionAllocator> getAllocatorRef() const {
     return AllocatorRef;
@@ -777,11 +767,13 @@ public:
   /// \param Allocator The allocator that will be used to allocate the
   /// string itself.
   CodeCompletionString *CreateCodeCompletionString(Sema &S,
+                                         const CodeCompletionContext &CCContext,
                                            CodeCompletionAllocator &Allocator,
                                            CodeCompletionTUInfo &CCTUInfo,
                                            bool IncludeBriefComments);
   CodeCompletionString *CreateCodeCompletionString(ASTContext &Ctx,
                                                    Preprocessor &PP,
+                                         const CodeCompletionContext &CCContext,
                                            CodeCompletionAllocator &Allocator,
                                            CodeCompletionTUInfo &CCTUInfo,
                                            bool IncludeBriefComments);
@@ -921,6 +913,14 @@ public:
   /// \brief Deregisters and destroys this code-completion consumer.
   virtual ~CodeCompleteConsumer();
 
+  /// \name Code-completion filtering
+  //@{
+  /// \brief Check if the result should be filtered out.
+  virtual bool isResultFilteredOut(StringRef Filter,
+                                   CodeCompletionResult Results) {
+    return false;
+  }
+
   /// \name Code-completion callbacks
   //@{
   /// \brief Process the finalized code-completion results.
@@ -973,6 +973,8 @@ public:
   void ProcessOverloadCandidates(Sema &S, unsigned CurrentArg,
                                  OverloadCandidate *Candidates,
                                  unsigned NumCandidates) override;
+
+  bool isResultFilteredOut(StringRef Filter, CodeCompletionResult Results) override;
 
   CodeCompletionAllocator &getAllocator() override {
     return CCTUInfo.getAllocator();

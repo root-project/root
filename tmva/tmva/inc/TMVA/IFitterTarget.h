@@ -60,7 +60,7 @@ namespace TMVA {
 
    private:
 
-      ClassDef(IFitterTarget,0) // base class for a fitter "target"
+      ClassDef(IFitterTarget,0); // base class for a fitter "target"
    };
 
 } // namespace TMVA

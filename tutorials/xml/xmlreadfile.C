@@ -1,7 +1,13 @@
-// Example to read and parse any xml file, supported by TXMLEngine class
-// The input file, produced by xmlnewfile.C macro is used
-// If you need full xml syntax support, use TXMLParser instead
-//Author: Sergey Linev
+/// \file
+/// \ingroup tutorial_xml
+/// Example to read and parse any xml file, supported by TXMLEngine class
+/// The input file, produced by xmlnewfile.C macro is used
+/// If you need full xml syntax support, use TXMLParser instead
+///
+/// \macro_output
+/// \macro_code
+///
+/// \author Sergey Linev
 
 #include "TXMLEngine.h"
 

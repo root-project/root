@@ -1,15 +1,18 @@
-// Author: David Gonzalez Maline
-// Based on Olivier's $ROOTSYS/tutorials/graphcs/graph_edit_playback.C
-
-// This file will test all the transient frames (aka Dialog windows)
-// displayed in the fitpanel, as the rest of the functionality is
-// tried automatically with the UnitTest.C unit.
-
-// This implies trying the Set Parameters dialog and the Advanced one.
-
-// At every operation, a png file will be saved. These files will be
-// later on compared with some references values, to have an stimation
-// of the goodness of the test.
+/// \file
+/// \ingroup tutorial_fit
+/// This file will test all the transient frames (aka Dialog windows)
+/// displayed in the fitpanel, as the rest of the functionality is
+/// tried automatically with the UnitTest.C unit.
+///
+/// This implies trying the Set Parameters dialog and the Advanced one.
+///
+/// At every operation, a png file will be saved. These files will be
+/// later on compared with some references values, to have an estimation
+/// of the goodness of the test.
+///
+/// \macro_code
+///
+/// \author David Gonzalez Maline
 
 #include "TSystem.h"
 #include "TSystemFile.h"

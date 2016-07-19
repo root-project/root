@@ -16,6 +16,7 @@
 #include "llvm/ADT/Statistic.h"
 #include "llvm/Analysis/MemoryBuiltins.h"
 #include "llvm/Analysis/TargetFolder.h"
+#include "llvm/Analysis/TargetLibraryInfo.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/InstIterator.h"
@@ -24,7 +25,6 @@
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
-#include "llvm/Analysis/TargetLibraryInfo.h"
 using namespace llvm;
 
 #define DEBUG_TYPE "bounds-checking"
@@ -36,7 +36,7 @@ STATISTIC(ChecksAdded, "Bounds checks added");
 STATISTIC(ChecksSkipped, "Bounds checks skipped");
 STATISTIC(ChecksUnable, "Bounds checks unable to add");
 
-typedef IRBuilder<true, TargetFolder> BuilderTy;
+typedef IRBuilder<TargetFolder> BuilderTy;
 
 namespace {
   struct BoundsChecking : public FunctionPass {
@@ -49,12 +49,10 @@ namespace {
     bool runOnFunction(Function &F) override;
 
     void getAnalysisUsage(AnalysisUsage &AU) const override {
-      AU.addRequired<DataLayoutPass>();
       AU.addRequired<TargetLibraryInfoWrapperPass>();
     }
 
   private:
-    const DataLayout *DL;
     const TargetLibraryInfo *TLI;
     ObjectSizeOffsetEvaluator *ObjSizeEval;
     BuilderTy *Builder;
@@ -63,7 +61,7 @@ namespace {
 
     BasicBlock *getTrapBB();
     void emitBranchToTrap(Value *Cmp = nullptr);
-    bool instrument(Value *Ptr, Value *Val);
+    bool instrument(Value *Ptr, Value *Val, const DataLayout &DL);
  };
 }
 
@@ -84,7 +82,7 @@ BasicBlock *BoundsChecking::getTrapBB() {
   Builder->SetInsertPoint(TrapBB);
 
   llvm::Value *F = Intrinsic::getDeclaration(Fn->getParent(), Intrinsic::trap);
-  CallInst *TrapCall = Builder->CreateCall(F);
+  CallInst *TrapCall = Builder->CreateCall(F, {});
   TrapCall->setDoesNotReturn();
   TrapCall->setDoesNotThrow();
   TrapCall->setDebugLoc(Inst->getDebugLoc());
@@ -108,7 +106,7 @@ void BoundsChecking::emitBranchToTrap(Value *Cmp) {
   }
   ++ChecksAdded;
 
-  Instruction *Inst = Builder->GetInsertPoint();
+  BasicBlock::iterator Inst = Builder->GetInsertPoint();
   BasicBlock *OldBB = Inst->getParent();
   BasicBlock *Cont = OldBB->splitBasicBlock(Inst);
   OldBB->getTerminator()->eraseFromParent();
@@ -125,8 +123,9 @@ void BoundsChecking::emitBranchToTrap(Value *Cmp) {
 /// result from the load or the value being stored. It is used to determine the
 /// size of memory block that is touched.
 /// Returns true if any change was made to the IR, false otherwise.
-bool BoundsChecking::instrument(Value *Ptr, Value *InstVal) {
-  uint64_t NeededSize = DL->getTypeStoreSize(InstVal->getType());
+bool BoundsChecking::instrument(Value *Ptr, Value *InstVal,
+                                const DataLayout &DL) {
+  uint64_t NeededSize = DL.getTypeStoreSize(InstVal->getType());
   DEBUG(dbgs() << "Instrument " << *Ptr << " for " << Twine(NeededSize)
               << " bytes\n");
 
@@ -141,7 +140,7 @@ bool BoundsChecking::instrument(Value *Ptr, Value *InstVal) {
   Value *Offset = SizeOffset.second;
   ConstantInt *SizeCI = dyn_cast<ConstantInt>(Size);
 
-  Type *IntTy = DL->getIntPtrType(Ptr->getType());
+  Type *IntTy = DL.getIntPtrType(Ptr->getType());
   Value *NeededSizeVal = ConstantInt::get(IntTy, NeededSize);
 
   // three checks are required to ensure safety:
@@ -165,7 +164,7 @@ bool BoundsChecking::instrument(Value *Ptr, Value *InstVal) {
 }
 
 bool BoundsChecking::runOnFunction(Function &F) {
-  DL = &getAnalysis<DataLayoutPass>().getDataLayout();
+  const DataLayout &DL = F.getParent()->getDataLayout();
   TLI = &getAnalysis<TargetLibraryInfoWrapperPass>().getTLI();
 
   TrapBB = nullptr;
@@ -186,19 +185,21 @@ bool BoundsChecking::runOnFunction(Function &F) {
   }
 
   bool MadeChange = false;
-  for (std::vector<Instruction*>::iterator i = WorkList.begin(),
-       e = WorkList.end(); i != e; ++i) {
-    Inst = *i;
+  for (Instruction *i : WorkList) {
+    Inst = i;
 
     Builder->SetInsertPoint(Inst);
     if (LoadInst *LI = dyn_cast<LoadInst>(Inst)) {
-      MadeChange |= instrument(LI->getPointerOperand(), LI);
+      MadeChange |= instrument(LI->getPointerOperand(), LI, DL);
     } else if (StoreInst *SI = dyn_cast<StoreInst>(Inst)) {
-      MadeChange |= instrument(SI->getPointerOperand(), SI->getValueOperand());
+      MadeChange |=
+          instrument(SI->getPointerOperand(), SI->getValueOperand(), DL);
     } else if (AtomicCmpXchgInst *AI = dyn_cast<AtomicCmpXchgInst>(Inst)) {
-      MadeChange |= instrument(AI->getPointerOperand(),AI->getCompareOperand());
+      MadeChange |=
+          instrument(AI->getPointerOperand(), AI->getCompareOperand(), DL);
     } else if (AtomicRMWInst *AI = dyn_cast<AtomicRMWInst>(Inst)) {
-      MadeChange |= instrument(AI->getPointerOperand(), AI->getValOperand());
+      MadeChange |=
+          instrument(AI->getPointerOperand(), AI->getValOperand(), DL);
     } else {
       llvm_unreachable("unknown Instruction type");
     }

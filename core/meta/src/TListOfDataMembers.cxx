@@ -553,7 +553,7 @@ void TListOfDataMembers::Unload()
    while (lnk) {
       TDictionary *data = (TDictionary *)lnk->GetObject();
       UnmapObject(data);
-      fUnloaded = new THashList;
+      if (!fUnloaded) fUnloaded = new THashList;
       fUnloaded->Add(data);
 
       lnk = lnk->Next();
@@ -576,7 +576,7 @@ void TListOfDataMembers::Unload(TDictionary *mem)
       // list and move it to the list of unloaded objects.
 
       UnmapObject(mem);
-      fUnloaded = new THashList;
+      if (!fUnloaded) fUnloaded = new THashList;
       fUnloaded->Add(mem);
    }
 }

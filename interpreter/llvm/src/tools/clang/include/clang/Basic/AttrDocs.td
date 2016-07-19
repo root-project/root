@@ -181,6 +181,11 @@ to enforce the provided alignment assumption.
 def EnableIfDocs : Documentation {
   let Category = DocCatFunction;
   let Content = [{
+.. Note:: Some features of this attribute are experimental. The meaning of
+  multiple enable_if attributes on a single declaration is subject to change in
+  a future version of clang. Also, the ABI is not standardized and the name
+  mangling may change in future versions. To avoid that, use asm labels.
+
 The ``enable_if`` attribute can be placed on function declarations to control
 which overload is selected based on the values of the function's arguments.
 When combined with the ``overloadable`` attribute, this feature is also
@@ -255,6 +260,152 @@ only a single candidate. In a call to g(1, 1), the call is ambiguous even though
 not ODR-equivalent.
 
 Query for this feature with ``__has_attribute(enable_if)``.
+
+Note that functions with one or more ``enable_if`` attributes may not have
+their address taken, unless all of the conditions specified by said
+``enable_if`` are constants that evaluate to ``true``. For example:
+
+.. code-block:: c
+
+  const int TrueConstant = 1;
+  const int FalseConstant = 0;
+  int f(int a) __attribute__((enable_if(a > 0, "")));
+  int g(int a) __attribute__((enable_if(a == 0 || a != 0, "")));
+  int h(int a) __attribute__((enable_if(1, "")));
+  int i(int a) __attribute__((enable_if(TrueConstant, "")));
+  int j(int a) __attribute__((enable_if(FalseConstant, "")));
+
+  void fn() {
+    int (*ptr)(int);
+    ptr = &f; // error: 'a > 0' is not always true
+    ptr = &g; // error: 'a == 0 || a != 0' is not a truthy constant
+    ptr = &h; // OK: 1 is a truthy constant
+    ptr = &i; // OK: 'TrueConstant' is a truthy constant
+    ptr = &j; // error: 'FalseConstant' is a constant, but not truthy
+  }
+
+Because ``enable_if`` evaluation happens during overload resolution,
+``enable_if`` may give unintuitive results when used with templates, depending
+on when overloads are resolved. In the example below, clang will emit a
+diagnostic about no viable overloads for ``foo`` in ``bar``, but not in ``baz``:
+
+.. code-block:: c++
+
+  double foo(int i) __attribute__((enable_if(i > 0, "")));
+  void *foo(int i) __attribute__((enable_if(i <= 0, "")));
+  template <int I>
+  auto bar() { return foo(I); }
+
+  template <typename T>
+  auto baz() { return foo(T::number); }
+
+  struct WithNumber { constexpr static int number = 1; };
+  void callThem() {
+    bar<sizeof(WithNumber)>();
+    baz<WithNumber>();
+  }
+
+This is because, in ``bar``, ``foo`` is resolved prior to template
+instantiation, so the value for ``I`` isn't known (thus, both ``enable_if``
+conditions for ``foo`` fail). However, in ``baz``, ``foo`` is resolved during
+template instantiation, so the value for ``T::number`` is known.
+  }];
+}
+
+def PassObjectSizeDocs : Documentation {
+  let Category = DocCatVariable; // Technically it's a parameter doc, but eh.
+  let Content = [{
+.. Note:: The mangling of functions with parameters that are annotated with
+  ``pass_object_size`` is subject to change. You can get around this by
+  using ``__asm__("foo")`` to explicitly name your functions, thus preserving
+  your ABI; also, non-overloadable C functions with ``pass_object_size`` are
+  not mangled.
+
+The ``pass_object_size(Type)`` attribute can be placed on function parameters to
+instruct clang to call ``__builtin_object_size(param, Type)`` at each callsite
+of said function, and implicitly pass the result of this call in as an invisible
+argument of type ``size_t`` directly after the parameter annotated with
+``pass_object_size``. Clang will also replace any calls to
+``__builtin_object_size(param, Type)`` in the function by said implicit
+parameter.
+
+Example usage:
+
+.. code-block:: c
+
+  int bzero1(char *const p __attribute__((pass_object_size(0))))
+      __attribute__((noinline)) {
+    int i = 0;
+    for (/**/; i < (int)__builtin_object_size(p, 0); ++i) {
+      p[i] = 0;
+    }
+    return i;
+  }
+
+  int main() {
+    char chars[100];
+    int n = bzero1(&chars[0]);
+    assert(n == sizeof(chars));
+    return 0;
+  }
+
+If successfully evaluating ``__builtin_object_size(param, Type)`` at the
+callsite is not possible, then the "failed" value is passed in. So, using the
+definition of ``bzero1`` from above, the following code would exit cleanly:
+
+.. code-block:: c
+
+  int main2(int argc, char *argv[]) {
+    int n = bzero1(argv);
+    assert(n == -1);
+    return 0;
+  }
+
+``pass_object_size`` plays a part in overload resolution. If two overload
+candidates are otherwise equally good, then the overload with one or more
+parameters with ``pass_object_size`` is preferred. This implies that the choice
+between two identical overloads both with ``pass_object_size`` on one or more
+parameters will always be ambiguous; for this reason, having two such overloads
+is illegal. For example:
+
+.. code-block:: c++
+
+  #define PS(N) __attribute__((pass_object_size(N)))
+  // OK
+  void Foo(char *a, char *b); // Overload A
+  // OK -- overload A has no parameters with pass_object_size.
+  void Foo(char *a PS(0), char *b PS(0)); // Overload B
+  // Error -- Same signature (sans pass_object_size) as overload B, and both
+  // overloads have one or more parameters with the pass_object_size attribute.
+  void Foo(void *a PS(0), void *b);
+
+  // OK
+  void Bar(void *a PS(0)); // Overload C
+  // OK
+  void Bar(char *c PS(1)); // Overload D
+
+  void main() {
+    char known[10], *unknown;
+    Foo(unknown, unknown); // Calls overload B
+    Foo(known, unknown); // Calls overload B
+    Foo(unknown, known); // Calls overload B
+    Foo(known, known); // Calls overload B
+
+    Bar(known); // Calls overload D
+    Bar(unknown); // Calls overload D
+  }
+
+Currently, ``pass_object_size`` is a bit restricted in terms of its usage:
+
+* Only one use of ``pass_object_size`` is allowed per parameter.
+
+* It is an error to take the address of a function with ``pass_object_size`` on
+  any of its parameters. If you wish to do this, you can create an overload
+  without ``pass_object_size`` on any parameters.
+
+* It is an error to apply the ``pass_object_size`` attribute to parameters that
+  are not pointers. Additionally, any parameter that ``pass_object_size`` is
+  applied to must be marked ``const`` at its function's definition.
   }];
 }
 
@@ -366,6 +517,15 @@ use the retaining behavior attributes (``ns_returns_retained``,
 ``ns_returns_not_retained``, etc).
 
 Query for this feature with ``__has_attribute(objc_method_family)``.
+  }];
+}
+
+def NoDebugDocs : Documentation {
+  let Category = DocCatVariable;
+  let Content = [{
+The ``nodebug`` attribute allows you to suppress debugging information for a
+function or method, or for a variable that is not a parameter or a non-static
+data member.
   }];
 }
 
@@ -487,6 +647,41 @@ can only be placed before an @protocol or @interface declaration:
     }];
 }
 
+def ObjCRuntimeVisibleDocs : Documentation {
+    let Category = DocCatFunction;
+    let Content = [{
+This attribute specifies that the Objective-C class to which it applies is visible to the Objective-C runtime but not to the linker. Classes annotated with this attribute cannot be subclassed and cannot have categories defined for them.
+    }];
+}
+
+def ObjCBoxableDocs : Documentation {
+    let Category = DocCatFunction;
+    let Content = [{
+Structs and unions marked with the ``objc_boxable`` attribute can be used 
+with the Objective-C boxed expression syntax, ``@(...)``.
+
+**Usage**: ``__attribute__((objc_boxable))``. This attribute 
+can only be placed on a declaration of a trivially-copyable struct or union:
+
+.. code-block:: objc
+
+  struct __attribute__((objc_boxable)) some_struct {
+    int i;
+  };
+  union __attribute__((objc_boxable)) some_union {
+    int i;
+    float f;
+  };
+  typedef struct __attribute__((objc_boxable)) _some_struct some_struct;
+
+  // ...
+
+  some_struct ss;
+  NSValue *boxed = @(ss);
+
+    }];
+}
+
 def AvailabilityDocs : Documentation {
   let Category = DocCatFunction;
   let Content = [{
@@ -496,7 +691,7 @@ the function declaration for a hypothetical function ``f``:
 
 .. code-block:: c++
 
-  void f(void) __attribute__((availability(macosx,introduced=10.4,deprecated=10.6,obsoleted=10.7)));
+  void f(void) __attribute__((availability(macos,introduced=10.4,deprecated=10.6,obsoleted=10.7)));
 
 The availability attribute states that ``f`` was introduced in Mac OS X 10.4,
 deprecated in Mac OS X 10.6, and obsoleted in Mac OS X 10.7.  This information
@@ -531,6 +726,11 @@ message=\ *string-literal*
   error about use of a deprecated or obsoleted declaration.  Useful to direct
   users to replacement APIs.
 
+replacement=\ *string-literal*
+  Additional message text that Clang will use to provide Fix-It when emitting
+  a warning about use of a deprecated declaration. The Fix-It will replace
+  the deprecated declaration with the new declaration specified.
+
 Multiple availability attributes can be placed on a declaration, which may
 correspond to different platforms.  Only the availability attribute with the
 platform corresponding to the target platform will be used; any others will be
@@ -543,18 +743,34 @@ are:
   the ``-mios-version-min=*version*`` or ``-miphoneos-version-min=*version*``
   command-line arguments.
 
-``macosx``
+``macos``
   Apple's Mac OS X operating system.  The minimum deployment target is
   specified by the ``-mmacosx-version-min=*version*`` command-line argument.
+  ``macosx`` is supported for backward-compatibility reasons, but it is
+  deprecated.
 
-A declaration can be used even when deploying back to a platform version prior
-to when the declaration was introduced.  When this happens, the declaration is
-`weakly linked
+``tvos``
+  Apple's tvOS operating system.  The minimum deployment target is specified by
+  the ``-mtvos-version-min=*version*`` command-line argument.
+
+``watchos``
+  Apple's watchOS operating system.  The minimum deployment target is specified by
+  the ``-mwatchos-version-min=*version*`` command-line argument.
+
+A declaration can typically be used even when deploying back to a platform
+version prior to when the declaration was introduced.  When this happens, the
+declaration is `weakly linked
 <https://developer.apple.com/library/mac/#documentation/MacOSX/Conceptual/BPFrameworks/Concepts/WeakLinking.html>`_,
 as if the ``weak_import`` attribute were added to the declaration.  A
 weakly-linked declaration may or may not be present a run-time, and a program
 can determine whether the declaration is present by checking whether the
 address of that declaration is non-NULL.
+
+The flag ``strict`` disallows using API when deploying back to a
+platform version prior to when the declaration was introduced.  An
+attempt to use such API before its introduction causes a hard error.
+Weakly-linking is almost always a better API choice, since it allows
+users to query availability at runtime.
 
 If there are multiple declarations of the same entity, the availability
 attributes must either match on a per-platform basis or later
@@ -563,33 +779,85 @@ platform. For example:
 
 .. code-block:: c
 
-  void g(void) __attribute__((availability(macosx,introduced=10.4)));
-  void g(void) __attribute__((availability(macosx,introduced=10.4))); // okay, matches
+  void g(void) __attribute__((availability(macos,introduced=10.4)));
+  void g(void) __attribute__((availability(macos,introduced=10.4))); // okay, matches
   void g(void) __attribute__((availability(ios,introduced=4.0))); // okay, adds a new platform
-  void g(void); // okay, inherits both macosx and ios availability from above.
-  void g(void) __attribute__((availability(macosx,introduced=10.5))); // error: mismatch
+  void g(void); // okay, inherits both macos and ios availability from above.
+  void g(void) __attribute__((availability(macos,introduced=10.5))); // error: mismatch
 
 When one method overrides another, the overriding method can be more widely available than the overridden method, e.g.,:
 
 .. code-block:: objc
 
   @interface A
-  - (id)method __attribute__((availability(macosx,introduced=10.4)));
-  - (id)method2 __attribute__((availability(macosx,introduced=10.4)));
+  - (id)method __attribute__((availability(macos,introduced=10.4)));
+  - (id)method2 __attribute__((availability(macos,introduced=10.4)));
   @end
 
   @interface B : A
-  - (id)method __attribute__((availability(macosx,introduced=10.3))); // okay: method moved into base class later
-  - (id)method __attribute__((availability(macosx,introduced=10.5))); // error: this method was available via the base class in 10.4
+  - (id)method __attribute__((availability(macos,introduced=10.3))); // okay: method moved into base class later
+  - (id)method __attribute__((availability(macos,introduced=10.5))); // error: this method was available via the base class in 10.4
   @end
+  }];
+}
+
+def WarnMaybeUnusedDocs : Documentation {
+  let Category = DocCatVariable;
+  let Heading = "maybe_unused, unused, gnu::unused";
+  let Content = [{
+When passing the ``-Wunused`` flag to Clang, entities that are unused by the
+program may be diagnosed. The ``[[maybe_unused]]`` (or
+``__attribute__((unused))``) attribute can be used to silence such diagnostics
+when the entity cannot be removed. For instance, a local variable may exist
+solely for use in an ``assert()`` statement, which makes the local variable
+unused when ``NDEBUG`` is defined.
+
+The attribute may be applied to the declaration of a class, a typedef, a
+variable, a function or method, a function parameter, an enumeration, an
+enumerator, a non-static data member, or a label.
+
+.. code-block: c++
+  #include <cassert>
+
+  [[maybe_unused]] void f([[maybe_unused]] bool thing1,
+                          [[maybe_unused]] bool thing2) {
+    [[maybe_unused]] bool b = thing1 && thing2;
+    assert(b);
+  }
+  }];
+}
+
+def WarnUnusedResultsDocs : Documentation {
+  let Category = DocCatFunction;
+  let Heading = "nodiscard, warn_unused_result, clang::warn_unused_result, gnu::warn_unused_result";
+  let Content  = [{
+Clang supports the ability to diagnose when the results of a function call
+expression are discarded under suspicious circumstances. A diagnostic is
+generated when a function or its return type is marked with ``[[nodiscard]]``
+(or ``__attribute__((warn_unused_result))``) and the function call appears as a
+potentially-evaluated discarded-value expression that is not explicitly cast to
+`void`.
+
+.. code-block: c++
+  struct [[nodiscard]] error_info { /*...*/ };
+  error_info enable_missile_safety_mode();
+  
+  void launch_missiles();
+  void test_missiles() {
+    enable_missile_safety_mode(); // diagnoses
+    launch_missiles();
+  }
+  error_info &foo();
+  void f() { foo(); } // Does not diagnose, error_info is a reference.  
   }];
 }
 
 def FallthroughDocs : Documentation {
   let Category = DocCatStmt;
+  let Heading = "fallthrough, clang::fallthrough";
   let Content = [{
-The ``clang::fallthrough`` attribute is used along with the
-``-Wimplicit-fallthrough`` argument to annotate intentional fall-through
+The ``fallthrough`` (or ``clang::fallthrough``) attribute is used
+to annotate intentional fall-through
 between switch labels.  It can only be applied to a null statement placed at a
 point of execution between any statement and the next switch label.  It is
 common to mark these places with a specific comment, but this attribute is
@@ -599,6 +867,10 @@ be used wherever an intended fall-through occurs.  It is designed to mimic
 control-flow statements like ``break;``, so it can be placed in most places
 where ``break;`` can, but only if there are no statements on the execution path
 between it and the next switch label.
+
+By default, Clang does not warn on unannotated fallthrough from one ``switch``
+case to another. Diagnostics on fallthrough without a corresponding annotation
+can be enabled with the ``-Wimplicit-fallthrough`` argument.
 
 Here is an example:
 
@@ -671,6 +943,65 @@ The semantics are as follows:
   the execution state of the code which generated the exception. In this case
   a sequence equivalent to "movs pc, lr" will be used.
   }];
+}
+
+def MipsInterruptDocs : Documentation {
+  let Category = DocCatFunction;
+  let Content = [{
+Clang supports the GNU style ``__attribute__((interrupt("ARGUMENT")))`` attribute on
+MIPS targets. This attribute may be attached to a function definition and instructs
+the backend to generate appropriate function entry/exit code so that it can be used
+directly as an interrupt service routine.
+
+By default, the compiler will produce a function prologue and epilogue suitable for
+an interrupt service routine that handles an External Interrupt Controller (eic)
+generated interrupt. This behaviour can be explicitly requested with the "eic"
+argument.
+
+Otherwise, for use with vectored interrupt mode, the argument passed should be
+of the form "vector=LEVEL" where LEVEL is one of the following values:
+"sw0", "sw1", "hw0", "hw1", "hw2", "hw3", "hw4", "hw5". The compiler will
+then set the interrupt mask to the corresponding level which will mask all
+interrupts up to and including the argument.
+
+The semantics are as follows:
+
+- The prologue is modified so that the Exception Program Counter (EPC) and
+  Status coprocessor registers are saved to the stack. The interrupt mask is
+  set so that the function can only be interrupted by a higher priority
+  interrupt. The epilogue will restore the previous values of EPC and Status.
+
+- The prologue and epilogue are modified to save and restore all non-kernel
+  registers as necessary.
+
+- The FPU is disabled in the prologue, as the floating pointer registers are not
+  spilled to the stack.
+
+- The function return sequence is changed to use an exception return instruction.
+
+- The parameter sets the interrupt mask for the function corresponding to the
+  interrupt level specified. If no mask is specified the interrupt mask
+  defaults to "eic".
+  }];
+}
+
+def TargetDocs : Documentation {
+  let Category = DocCatFunction;
+  let Content = [{
+Clang supports the GNU style ``__attribute__((target("OPTIONS")))`` attribute.
+This attribute may be attached to a function definition and instructs
+the backend to use different code generation options than were passed on the
+command line.
+
+The current set of options correspond to the existing "subtarget features" for
+the target with or without a "-mno-" in front corresponding to the absence
+of the feature, as well as ``arch="CPU"`` which will change the default "CPU"
+for the function.
+
+Example "subtarget features" from the x86 backend include: "mmx", "sse", "sse4.2",
+"avx", "xop" and largely correspond to the machine specific options handled by
+the front end.
+}];
 }
 
 def DocCatAMDGPURegisterAttributes :
@@ -920,6 +1251,22 @@ This attribute accepts a single parameter that must be one of the following:
   }];
 }
 
+def NoSanitizeDocs : Documentation {
+  let Category = DocCatFunction;
+  let Content = [{
+Use the ``no_sanitize`` attribute on a function declaration to specify
+that a particular instrumentation or set of instrumentations should not be
+applied to that function. The attribute takes a list of string literals,
+which have the same meaning as values accepted by the ``-fno-sanitize=``
+flag. For example, ``__attribute__((no_sanitize("address", "thread")))``
+specifies that AddressSanitizer and ThreadSanitizer should not be applied
+to the function.
+
+See :ref:`Controlling Code Generation <controlling-code-generation>` for a
+full list of supported sanitizer flags.
+  }];
+}
+
 def NoSanitizeAddressDocs : Documentation {
   let Category = DocCatFunction;
   // This function has multiple distinct spellings, and so it requires a custom
@@ -936,6 +1283,7 @@ not be applied to that function.
 
 def NoSanitizeThreadDocs : Documentation {
   let Category = DocCatFunction;
+  let Heading = "no_sanitize_thread";
   let Content = [{
 .. _langext-thread_sanitizer:
 
@@ -948,6 +1296,7 @@ tool to avoid false positives and provide meaningful stack traces.
 
 def NoSanitizeMemoryDocs : Documentation {
   let Category = DocCatFunction;
+  let Heading = "no_sanitize_memory";
   let Content = [{
 .. _langext-memory_sanitizer:
 
@@ -1206,6 +1555,26 @@ manipulating bits of the enumerator when issuing warnings.
   }];
 }
 
+def EmptyBasesDocs : Documentation {
+  let Category = DocCatType;
+  let Content = [{
+The empty_bases attribute permits the compiler to utilize the
+empty-base-optimization more frequently.
+This attribute only applies to struct, class, and union types.
+It is only supported when using the Microsoft C++ ABI.
+  }];
+}
+
+def LayoutVersionDocs : Documentation {
+  let Category = DocCatType;
+  let Content = [{
+The layout_version attribute requests that the compiler utilize the class
+layout rules of a particular compiler version.
+This attribute only applies to struct, class, and union types.
+It is only supported when using the Microsoft C++ ABI.
+  }];
+}
+
 def MSInheritanceDocs : Documentation {
   let Category = DocCatType;
   let Heading = "__single_inhertiance, __multiple_inheritance, __virtual_inheritance";
@@ -1253,6 +1622,15 @@ an error:
 }];
 }
 
+def MSNoVTableDocs : Documentation {
+  let Category = DocCatType;
+  let Content = [{
+This attribute can be added to a class declaration or definition to signal to
+the compiler that constructors and destructors will not reference the virtual
+function table. It is only supported when using the Microsoft C++ ABI.
+  }];
+}
+
 def OptnoneDocs : Documentation {
   let Category = DocCatFunction;
   let Content = [{
@@ -1292,7 +1670,9 @@ Loop unrolling optimization hints can be specified with ``#pragma unroll`` and
 do-while, or c++11 range-based for loop.
 
 Specifying ``#pragma unroll`` without a parameter directs the loop unroller to
-attempt to fully unroll the loop if the trip count is known at compile time:
+attempt to fully unroll the loop if the trip count is known at compile time and
+attempt to partially unroll the loop if the trip count is not known at compile
+time:
 
 .. code-block:: c++
 
@@ -1336,6 +1716,46 @@ for further details including limitations of the unroll hints.
   }];
 }
 
+def OpenCLUnrollHintDocs : Documentation {
+  let Category = DocCatStmt;
+  let Heading = "__attribute__((opencl_unroll_hint))";
+  let Content = [{
+The opencl_unroll_hint attribute qualifier can be used to specify that a loop
+(for, while and do loops) can be unrolled. This attribute qualifier can be
+used to specify full unrolling or partial unrolling by a specified amount.
+This is a compiler hint and the compiler may ignore this directive. See
+`OpenCL v2.0 <https://www.khronos.org/registry/cl/specs/opencl-2.0.pdf>`_
+s6.11.5 for details.
+  }];
+}
+
+def OpenCLAccessDocs : Documentation {
+  let Category = DocCatStmt;
+  let Heading = "__read_only, __write_only, __read_write (read_only, write_only, read_write)";
+  let Content = [{
+The access qualifiers must be used with image object arguments or pipe arguments
+to declare if they are being read or written by a kernel or function.
+
+The read_only/__read_only, write_only/__write_only and read_write/__read_write
+names are reserved for use as access qualifiers and shall not be used otherwise.
+
+.. code-block:: c
+
+  kernel void
+  foo (read_only image2d_t imageA,
+       write_only image2d_t imageB) {
+    ...
+  }
+
+In the above example imageA is a read-only 2D image object, and imageB is a
+write-only 2D image object.
+
+The read_write (or __read_write) qualifier can not be used with pipe.
+
+More details can be found in the OpenCL C language Spec v2.0, Section 6.6.
+    }];
+}
+
 def DocOpenCLAddressSpaces : DocumentationCategory<"OpenCL Address Spaces"> {
   let Content = [{
 The address space qualifier may be used to specify the region of memory that is
@@ -1360,7 +1780,6 @@ More details can be found in the OpenCL C language Spec v2.0, Section 6.5.
 
 def OpenCLAddressSpaceGenericDocs : Documentation {
   let Category = DocOpenCLAddressSpaces;
-  let Heading = "__generic(generic)";
   let Content = [{
 The generic address space attribute is only available with OpenCL v2.0 and later.
 It can be used with pointer types. Variables in global and local scope and
@@ -1373,7 +1792,6 @@ spaces.
 
 def OpenCLAddressSpaceConstantDocs : Documentation {
   let Category = DocOpenCLAddressSpaces;
-  let Heading = "__constant(constant)";
   let Content = [{
 The constant address space attribute signals that an object is located in
 a constant (non-modifiable) memory region. It is available to all work items.
@@ -1385,7 +1803,6 @@ have an initializer.
 
 def OpenCLAddressSpaceGlobalDocs : Documentation {
   let Category = DocOpenCLAddressSpaces;
-  let Heading = "__global(global)";
   let Content = [{
 The global address space attribute specifies that an object is allocated in
 global memory, which is accessible by all work items. The content stored in this
@@ -1398,7 +1815,6 @@ scope) variables and static local variable as well.
 
 def OpenCLAddressSpaceLocalDocs : Documentation {
   let Category = DocOpenCLAddressSpaces;
-  let Heading = "__local(local)";
   let Content = [{
 The local address space specifies that an object is allocated in the local (work
 group) memory area, which is accessible to all work items in the same work
@@ -1411,7 +1827,6 @@ space are allowed. Local address space variables cannot have an initializer.
 
 def OpenCLAddressSpacePrivateDocs : Documentation {
   let Category = DocOpenCLAddressSpaces;
-  let Heading = "__private(private)";
   let Content = [{
 The private address space specifies that an object is allocated in the private
 (work item) memory. Other work items cannot access the same memory area and its
@@ -1419,5 +1834,619 @@ content is destroyed after work item execution ends. Local variables can be
 declared in the private address space. Function arguments are always in the
 private address space. Kernel function arguments of a pointer or an array type
 cannot point to the private address space.
+  }];
+}
+
+def OpenCLNoSVMDocs : Documentation {
+  let Category = DocCatVariable;
+  let Content = [{
+OpenCL 2.0 supports the optional ``__attribute__((nosvm))`` qualifier for
+pointer variable. It informs the compiler that the pointer does not refer
+to a shared virtual memory region. See OpenCL v2.0 s6.7.2 for details.
+
+Since it is not widely used and has been removed from OpenCL 2.1, it is ignored
+by Clang.
+  }];
+}
+def NullabilityDocs : DocumentationCategory<"Nullability Attributes"> {
+  let Content = [{
+Whether a particular pointer may be "null" is an important concern when working with pointers in the C family of languages. The various nullability attributes indicate whether a particular pointer can be null or not, which makes APIs more expressive and can help static analysis tools identify bugs involving null pointers. Clang supports several kinds of nullability attributes: the ``nonnull`` and ``returns_nonnull`` attributes indicate which function or method parameters and result types can never be null, while nullability type qualifiers indicate which pointer types can be null (``_Nullable``) or cannot be null (``_Nonnull``). 
+
+The nullability (type) qualifiers express whether a value of a given pointer type can be null (the ``_Nullable`` qualifier), doesn't have a defined meaning for null (the ``_Nonnull`` qualifier), or for which the purpose of null is unclear (the ``_Null_unspecified`` qualifier). Because nullability qualifiers are expressed within the type system, they are more general than the ``nonnull`` and ``returns_nonnull`` attributes, allowing one to express (for example) a nullable pointer to an array of nonnull pointers. Nullability qualifiers are written to the right of the pointer to which they apply. For example:
+
+  .. code-block:: c
+
+    // No meaningful result when 'ptr' is null (here, it happens to be undefined behavior).
+    int fetch(int * _Nonnull ptr) { return *ptr; }
+
+    // 'ptr' may be null.
+    int fetch_or_zero(int * _Nullable ptr) {
+      return ptr ? *ptr : 0;
+    }
+
+    // A nullable pointer to non-null pointers to const characters.
+    const char *join_strings(const char * _Nonnull * _Nullable strings, unsigned n);
+
+In Objective-C, there is an alternate spelling for the nullability qualifiers that can be used in Objective-C methods and properties using context-sensitive, non-underscored keywords. For example:
+
+  .. code-block:: objective-c
+
+    @interface NSView : NSResponder
+      - (nullable NSView *)ancestorSharedWithView:(nonnull NSView *)aView;
+      @property (assign, nullable) NSView *superview;
+      @property (readonly, nonnull) NSArray *subviews;
+    @end
+  }];
+}
+
+def TypeNonNullDocs : Documentation {
+  let Category = NullabilityDocs;
+  let Content = [{
+The ``_Nonnull`` nullability qualifier indicates that null is not a meaningful value for a value of the ``_Nonnull`` pointer type. For example, given a declaration such as:
+
+  .. code-block:: c
+
+    int fetch(int * _Nonnull ptr);
+
+a caller of ``fetch`` should not provide a null value, and the compiler will produce a warning if it sees a literal null value passed to ``fetch``. Note that, unlike the declaration attribute ``nonnull``, the presence of ``_Nonnull`` does not imply that passing null is undefined behavior: ``fetch`` is free to consider null undefined behavior or (perhaps for backward-compatibility reasons) defensively handle null.
+  }];
+}
+
+def TypeNullableDocs : Documentation {
+  let Category = NullabilityDocs;
+  let Content = [{
+The ``_Nullable`` nullability qualifier indicates that a value of the ``_Nullable`` pointer type can be null. For example, given:
+
+  .. code-block:: c
+
+    int fetch_or_zero(int * _Nullable ptr);
+
+a caller of ``fetch_or_zero`` can provide null. 
+  }];
+}
+
+def TypeNullUnspecifiedDocs : Documentation {
+  let Category = NullabilityDocs;
+  let Content = [{
+The ``_Null_unspecified`` nullability qualifier indicates that neither the ``_Nonnull`` nor ``_Nullable`` qualifiers make sense for a particular pointer type. It is used primarily to indicate that the role of null with specific pointers in a nullability-annotated header is unclear, e.g., due to overly-complex implementations or historical factors with a long-lived API.
+  }];
+}
+
+def NonNullDocs : Documentation {
+  let Category = NullabilityDocs;
+  let Content = [{
+The ``nonnull`` attribute indicates that some function parameters must not be null, and can be used in several different ways. It's original usage (`from GCC <https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#Common-Function-Attributes>`_) is as a function (or Objective-C method) attribute that specifies which parameters of the function are nonnull in a comma-separated list. For example:
+
+  .. code-block:: c
+
+    extern void * my_memcpy (void *dest, const void *src, size_t len)
+                    __attribute__((nonnull (1, 2)));
+
+Here, the ``nonnull`` attribute indicates that parameters 1 and 2
+cannot have a null value. Omitting the parenthesized list of parameter indices means that all parameters of pointer type cannot be null:
+
+  .. code-block:: c
+
+    extern void * my_memcpy (void *dest, const void *src, size_t len)
+                    __attribute__((nonnull));
+
+Clang also allows the ``nonnull`` attribute to be placed directly on a function (or Objective-C method) parameter, eliminating the need to specify the parameter index ahead of type. For example:
+
+  .. code-block:: c
+
+    extern void * my_memcpy (void *dest __attribute__((nonnull)),
+                             const void *src __attribute__((nonnull)), size_t len);
+
+Note that the ``nonnull`` attribute indicates that passing null to a non-null parameter is undefined behavior, which the optimizer may take advantage of to, e.g., remove null checks. The ``_Nonnull`` type qualifier indicates that a pointer cannot be null in a more general manner (because it is part of the type system) and does not imply undefined behavior, making it more widely applicable.
+  }];
+}
+
+def ReturnsNonNullDocs : Documentation {
+  let Category = NullabilityDocs;
+  let Content = [{
+The ``returns_nonnull`` attribute indicates that a particular function (or Objective-C method) always returns a non-null pointer. For example, a particular system ``malloc`` might be defined to terminate a process when memory is not available rather than returning a null pointer:
+
+  .. code-block:: c
+
+    extern void * malloc (size_t size) __attribute__((returns_nonnull));
+
+The ``returns_nonnull`` attribute implies that returning a null pointer is undefined behavior, which the optimizer may take advantage of. The ``_Nonnull`` type qualifier indicates that a pointer cannot be null in a more general manner (because it is part of the type system) and does not imply undefined behavior, making it more widely applicable
+}];
+}
+
+def NoAliasDocs : Documentation {
+  let Category = DocCatFunction;
+  let Content = [{
+The ``noalias`` attribute indicates that the only memory accesses inside
+function are loads and stores from objects pointed to by its pointer-typed
+arguments, with arbitrary offsets.
+  }];
+}
+
+def OMPDeclareSimdDocs : Documentation {
+  let Category = DocCatFunction;
+  let Heading = "#pragma omp declare simd";
+  let Content = [{
+The `declare simd` construct can be applied to a function to enable the creation
+of one or more versions that can process multiple arguments using SIMD
+instructions from a single invocation in a SIMD loop. The `declare simd`
+directive is a declarative directive. There may be multiple `declare simd`
+directives for a function. The use of a `declare simd` construct on a function
+enables the creation of SIMD versions of the associated function that can be
+used to process multiple arguments from a single invocation from a SIMD loop
+concurrently.
+The syntax of the `declare simd` construct is as follows:
+
+  .. code-block:: c
+
+  #pragma omp declare simd [clause[[,] clause] ...] new-line
+  [#pragma omp declare simd [clause[[,] clause] ...] new-line]
+  [...]
+  function definition or declaration
+
+where clause is one of the following:
+
+  .. code-block:: c
+
+  simdlen(length)
+  linear(argument-list[:constant-linear-step])
+  aligned(argument-list[:alignment])
+  uniform(argument-list)
+  inbranch
+  notinbranch
+
+  }];
+}
+
+def OMPDeclareTargetDocs : Documentation {
+  let Category = DocCatFunction;
+  let Heading = "#pragma omp declare target";
+  let Content = [{
+The `declare target` directive specifies that variables and functions are mapped
+to a device for OpenMP offload mechanism.
+
+The syntax of the declare target directive is as follows:
+
+  .. code-block:: c
+
+  #pragma omp declare target new-line
+  declarations-definition-seq
+  #pragma omp end declare target new-line
+  }];
+}
+
+def NotTailCalledDocs : Documentation {
+  let Category = DocCatFunction;
+  let Content = [{
+The ``not_tail_called`` attribute prevents tail-call optimization on statically bound calls. It has no effect on indirect calls. Virtual functions, objective-c methods, and functions marked as ``always_inline`` cannot be marked as ``not_tail_called``.
+
+For example, it prevents tail-call optimization in the following case:
+
+  .. code-block:: c
+
+    int __attribute__((not_tail_called)) foo1(int);
+
+    int foo2(int a) {
+      return foo1(a); // No tail-call optimization on direct calls.
+    }
+
+However, it doesn't prevent tail-call optimization in this case:
+
+  .. code-block:: c
+
+    int __attribute__((not_tail_called)) foo1(int);
+
+    int foo2(int a) {
+      int (*fn)(int) = &foo1;
+
+      // not_tail_called has no effect on an indirect call even if the call can be
+      // resolved at compile time.
+      return (*fn)(a);
+    }
+
+Marking virtual functions as ``not_tail_called`` is an error:
+
+  .. code-block:: c++
+
+    class Base {
+    public:
+      // not_tail_called on a virtual function is an error.
+      [[clang::not_tail_called]] virtual int foo1();
+
+      virtual int foo2();
+
+      // Non-virtual functions can be marked ``not_tail_called``.
+      [[clang::not_tail_called]] int foo3();
+    };
+
+    class Derived1 : public Base {
+    public:
+      int foo1() override;
+
+      // not_tail_called on a virtual function is an error.
+      [[clang::not_tail_called]] int foo2() override;
+    };
+  }];
+}
+
+def InternalLinkageDocs : Documentation {
+  let Category = DocCatFunction;
+  let Content = [{
+The ``internal_linkage`` attribute changes the linkage type of the declaration to internal.
+This is similar to C-style ``static``, but can be used on classes and class methods. When applied to a class definition,
+this attribute affects all methods and static data members of that class.
+This can be used to contain the ABI of a C++ library by excluding unwanted class methods from the export tables.
+  }];
+}
+
+def DisableTailCallsDocs : Documentation {
+  let Category = DocCatFunction;
+  let Content = [{
+The ``disable_tail_calls`` attribute instructs the backend to not perform tail call optimization inside the marked function.
+
+For example:
+
+  .. code-block:: c
+
+    int callee(int);
+
+    int foo(int a) __attribute__((disable_tail_calls)) {
+      return callee(a); // This call is not tail-call optimized.
+    }
+
+Marking virtual functions as ``disable_tail_calls`` is legal.
+
+  .. code-block:: c++
+
+    int callee(int);
+
+    class Base {
+    public:
+      [[clang::disable_tail_calls]] virtual int foo1() {
+        return callee(); // This call is not tail-call optimized.
+      }
+    };
+
+    class Derived1 : public Base {
+    public:
+      int foo1() override {
+        return callee(); // This call is tail-call optimized.
+      }
+    };
+
+  }];
+}
+
+def AnyX86InterruptDocs : Documentation {
+  let Category = DocCatFunction;
+  let Content = [{
+Clang supports the GNU style ``__attribute__((interrupt))`` attribute on
+x86/x86-64 targets.The compiler generates function entry and exit sequences
+suitable for use in an interrupt handler when this attribute is present.
+The 'IRET' instruction, instead of the 'RET' instruction, is used to return
+from interrupt or exception handlers.  All registers, except for the EFLAGS
+register which is restored by the 'IRET' instruction, are preserved by the
+compiler.
+
+Any interruptible-without-stack-switch code must be compiled with
+-mno-red-zone since interrupt handlers can and will, because of the
+hardware design, touch the red zone.
+
+1. interrupt handler must be declared with a mandatory pointer argument:
+
+  .. code-block:: c
+
+    struct interrupt_frame
+    {
+      uword_t ip;
+      uword_t cs;
+      uword_t flags;
+      uword_t sp;
+      uword_t ss;
+    };
+
+    __attribute__ ((interrupt))
+    void f (struct interrupt_frame *frame) {
+      ...
+    }
+
+2. exception handler:
+
+  The exception handler is very similar to the interrupt handler with
+  a different mandatory function signature:
+
+  .. code-block:: c
+
+    __attribute__ ((interrupt))
+    void f (struct interrupt_frame *frame, uword_t error_code) {
+      ...
+    }
+
+  and compiler pops 'ERROR_CODE' off stack before the 'IRET' instruction.
+
+  The exception handler should only be used for exceptions which push an
+  error code and all other exceptions must use the interrupt handler.
+  The system will crash if the wrong handler is used.
+  }];
+}
+
+def SwiftCallDocs : Documentation {
+  let Category = DocCatVariable;
+  let Content = [{
+The ``swiftcall`` attribute indicates that a function should be called
+using the Swift calling convention for a function or function pointer.
+
+The lowering for the Swift calling convention, as described by the Swift
+ABI documentation, occurs in multiple phases.  The first, "high-level"
+phase breaks down the formal parameters and results into innately direct
+and indirect components, adds implicit paraameters for the generic
+signature, and assigns the context and error ABI treatments to parameters
+where applicable.  The second phase breaks down the direct parameters
+and results from the first phase and assigns them to registers or the
+stack.  The ``swiftcall`` convention only handles this second phase of
+lowering; the C function type must accurately reflect the results
+of the first phase, as follows:
+
+- Results classified as indirect by high-level lowering should be
+  represented as parameters with the ``swift_indirect_result`` attribute.
+
+- Results classified as direct by high-level lowering should be represented
+  as follows:
+
+  - First, remove any empty direct results.
+
+  - If there are no direct results, the C result type should be ``void``.
+
+  - If there is one direct result, the C result type should be a type with
+    the exact layout of that result type.
+
+  - If there are a multiple direct results, the C result type should be
+    a struct type with the exact layout of a tuple of those results.
+
+- Parameters classified as indirect by high-level lowering should be
+  represented as parameters of pointer type.
+
+- Parameters classified as direct by high-level lowering should be
+  omitted if they are empty types; otherwise, they should be represented
+  as a parameter type with a layout exactly matching the layout of the
+  Swift parameter type.
+
+- The context parameter, if present, should be represented as a trailing
+  parameter with the ``swift_context`` attribute.
+
+- The error result parameter, if present, should be represented as a
+  trailing parameter (always following a context parameter) with the
+  ``swift_error_result`` attribute.
+
+``swiftcall`` does not support variadic arguments or unprototyped functions.
+
+The parameter ABI treatment attributes are aspects of the function type.
+A function type which which applies an ABI treatment attribute to a
+parameter is a different type from an otherwise-identical function type
+that does not.  A single parameter may not have multiple ABI treatment
+attributes.
+
+Support for this feature is target-dependent, although it should be
+supported on every target that Swift supports.  Query for this support
+with ``__has_attribute(swiftcall)``.  This implies support for the
+``swift_context``, ``swift_error_result``, and ``swift_indirect_result``
+attributes.
+  }];
+}
+
+def SwiftContextDocs : Documentation {
+  let Category = DocCatVariable;
+  let Content = [{
+The ``swift_context`` attribute marks a parameter of a ``swiftcall``
+function as having the special context-parameter ABI treatment.
+
+This treatment generally passes the context value in a special register
+which is normally callee-preserved.
+
+A ``swift_context`` parameter must either be the last parameter or must be
+followed by a ``swift_error_result`` parameter (which itself must always be
+the last parameter).
+
+A context parameter must have pointer or reference type.
+  }];
+}
+
+def SwiftErrorResultDocs : Documentation {
+  let Category = DocCatVariable;
+  let Content = [{
+The ``swift_error_result`` attribute marks a parameter of a ``swiftcall``
+function as having the special error-result ABI treatment.
+
+This treatment generally passes the underlying error value in and out of
+the function through a special register which is normally callee-preserved.
+This is modeled in C by pretending that the register is addressable memory:
+
+- The caller appears to pass the address of a variable of pointer type.
+  The current value of this variable is copied into the register before
+  the call; if the call returns normally, the value is copied back into the
+  variable.
+
+- The callee appears to receive the address of a variable.  This address
+  is actually a hidden location in its own stack, initialized with the
+  value of the register upon entry.  When the function returns normally,
+  the value in that hidden location is written back to the register.
+
+A ``swift_error_result`` parameter must be the last parameter, and it must be
+preceded by a ``swift_context`` parameter.
+
+A ``swift_error_result`` parameter must have type ``T**`` or ``T*&`` for some
+type T.  Note that no qualifiers are permitted on the intermediate level.
+
+It is undefined behavior if the caller does not pass a pointer or
+reference to a valid object.
+
+The standard convention is that the error value itself (that is, the
+value stored in the apparent argument) will be null upon function entry,
+but this is not enforced by the ABI.
+  }];
+}
+
+def SwiftIndirectResultDocs : Documentation {
+  let Category = DocCatVariable;
+  let Content = [{
+The ``swift_indirect_result`` attribute marks a parameter of a ``swiftcall``
+function as having the special indirect-result ABI treatmenet.
+
+This treatment gives the parameter the target's normal indirect-result
+ABI treatment, which may involve passing it differently from an ordinary
+parameter.  However, only the first indirect result will receive this
+treatment.  Furthermore, low-level lowering may decide that a direct result
+must be returned indirectly; if so, this will take priority over the
+``swift_indirect_result`` parameters.
+
+A ``swift_indirect_result`` parameter must either be the first parameter or
+follow another ``swift_indirect_result`` parameter.
+
+A ``swift_indirect_result`` parameter must have type ``T*`` or ``T&`` for
+some object type ``T``.  If ``T`` is a complete type at the point of
+definition of a function, it is undefined behavior if the argument
+value does not point to storage of adequate size and alignment for a
+value of type ``T``.
+
+Making indirect results explicit in the signature allows C functions to
+directly construct objects into them without relying on language
+optimizations like C++'s named return value optimization (NRVO).
+  }];
+}
+
+def AbiTagsDocs : Documentation {
+  let Category = DocCatFunction;
+  let Content = [{
+The ``abi_tag`` attribute can be applied to a function, variable, class or
+inline namespace declaration to modify the mangled name of the entity. It gives
+the ability to distinguish between different versions of the same entity but
+with different ABI versions supported. For example, a newer version of a class
+could have a different set of data members and thus have a different size. Using
+the ``abi_tag`` attribute, it is possible to have different mangled names for
+a global variable of the class type. Therefor, the old code could keep using
+the old manged name and the new code will use the new mangled name with tags.
+  }];
+}
+
+def PreserveMostDocs : Documentation {
+  let Category = DocCatCallingConvs;
+  let Content = [{
+On X86-64 and AArch64 targets, this attribute changes the calling convention of
+a function. The ``preserve_most`` calling convention attempts to make the code
+in the caller as unintrusive as possible. This convention behaves identically
+to the ``C`` calling convention on how arguments and return values are passed,
+but it uses a different set of caller/callee-saved registers. This alleviates
+the burden of saving and recovering a large register set before and after the
+call in the caller. If the arguments are passed in callee-saved registers,
+then they will be preserved by the callee across the call. This doesn't
+apply for values returned in callee-saved registers.
+
+- On X86-64 the callee preserves all general purpose registers, except for
+  R11. R11 can be used as a scratch register. Floating-point registers
+  (XMMs/YMMs) are not preserved and need to be saved by the caller.
+
+The idea behind this convention is to support calls to runtime functions
+that have a hot path and a cold path. The hot path is usually a small piece
+of code that doesn't use many registers. The cold path might need to call out to
+another function and therefore only needs to preserve the caller-saved
+registers, which haven't already been saved by the caller. The
+`preserve_most` calling convention is very similar to the ``cold`` calling
+convention in terms of caller/callee-saved registers, but they are used for
+different types of function calls. ``coldcc`` is for function calls that are
+rarely executed, whereas `preserve_most` function calls are intended to be
+on the hot path and definitely executed a lot. Furthermore ``preserve_most``
+doesn't prevent the inliner from inlining the function call.
+
+This calling convention will be used by a future version of the Objective-C
+runtime and should therefore still be considered experimental at this time.
+Although this convention was created to optimize certain runtime calls to
+the Objective-C runtime, it is not limited to this runtime and might be used
+by other runtimes in the future too. The current implementation only
+supports X86-64 and AArch64, but the intention is to support more architectures
+in the future.
+  }];
+}
+
+def PreserveAllDocs : Documentation {
+  let Category = DocCatCallingConvs;
+  let Content = [{
+On X86-64 and AArch64 targets, this attribute changes the calling convention of
+a function. The ``preserve_all`` calling convention attempts to make the code
+in the caller even less intrusive than the ``preserve_most`` calling convention.
+This calling convention also behaves identical to the ``C`` calling convention
+on how arguments and return values are passed, but it uses a different set of
+caller/callee-saved registers. This removes the burden of saving and
+recovering a large register set before and after the call in the caller. If
+the arguments are passed in callee-saved registers, then they will be
+preserved by the callee across the call. This doesn't apply for values
+returned in callee-saved registers.
+
+- On X86-64 the callee preserves all general purpose registers, except for
+  R11. R11 can be used as a scratch register. Furthermore it also preserves
+  all floating-point registers (XMMs/YMMs).
+
+The idea behind this convention is to support calls to runtime functions
+that don't need to call out to any other functions.
+
+This calling convention, like the ``preserve_most`` calling convention, will be
+used by a future version of the Objective-C runtime and should be considered
+experimental at this time.
+  }];
+}
+
+def DeprecatedDocs : Documentation {
+  let Category = DocCatFunction;
+  let Content = [{
+The ``deprecated`` attribute can be applied to a function, a variable, or a
+type. This is useful when identifying functions, variables, or types that are
+expected to be removed in a future version of a program.
+
+Consider the function declaration for a hypothetical function ``f``:
+
+.. code-block:: c++
+
+  void f(void) __attribute__((deprecated("message", "replacement")));
+
+When spelled as `__attribute__((deprecated))`, the deprecated attribute can have
+two optional string arguments. The first one is the message to display when
+emitting the warning; the second one enables the compiler to provide a Fix-It
+to replace the deprecated name with a new name. Otherwise, when spelled as
+`[[gnu::deprecated]] or [[deprecated]]`, the attribute can have one optional
+string argument which is the message to display when emitting the warning.
+  }];
+}
+
+def IFuncDocs : Documentation {
+  let Category = DocCatFunction;
+  let Content = [{
+``__attribute__((ifunc("resolver")))`` is used to mark that the address of a declaration should be resolved at runtime by calling a resolver function.
+
+The symbol name of the resolver function is given in quotes.  A function with this name (after mangling) must be defined in the current translation unit; it may be ``static``.  The resolver function should take no arguments and return a pointer.
+
+The ``ifunc`` attribute may only be used on a function declaration.  A function declaration with an ``ifunc`` attribute is considered to be a definition of the declared entity.  The entity must not have weak linkage; for example, in C++, it cannot be applied to a declaration if a definition at that location would be considered inline.
+
+Not all targets support this attribute.  ELF targets support this attribute when using binutils v2.20.1 or higher and glibc v2.11.1 or higher.  Non-ELF targets currently do not support this attribute.
+  }];
+}
+
+def LTOVisibilityDocs : Documentation {
+  let Category = DocCatType;
+  let Content = [{
+See :doc:`LTOVisibility`.
+  }];
+}
+
+def RenderScriptKernelAttributeDocs : Documentation {
+  let Category = DocCatFunction;
+  let Content = [{
+``__attribute__((kernel))`` is used to mark a ``kernel`` function in
+RenderScript.
+
+In RenderScript, ``kernel`` functions are used to express data-parallel
+computations.  The RenderScript runtime efficiently parallelizes ``kernel``
+functions to run on computational resources such as multi-core CPUs and GPUs.
+See the RenderScript_ documentation for more information.
+
+.. _RenderScript: https://developer.android.com/guide/topics/renderscript/compute.html
   }];
 }

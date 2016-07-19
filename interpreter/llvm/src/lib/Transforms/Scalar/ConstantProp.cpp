@@ -22,7 +22,6 @@
 #include "llvm/ADT/Statistic.h"
 #include "llvm/Analysis/ConstantFolding.h"
 #include "llvm/IR/Constant.h"
-#include "llvm/IR/DataLayout.h"
 #include "llvm/IR/InstIterator.h"
 #include "llvm/IR/Instruction.h"
 #include "llvm/Pass.h"
@@ -62,14 +61,16 @@ FunctionPass *llvm::createConstantPropagationPass() {
 }
 
 bool ConstantPropagation::runOnFunction(Function &F) {
+  if (skipFunction(F))
+    return false;
+
   // Initialize the worklist to all of the instructions ready to process...
   std::set<Instruction*> WorkList;
-  for(inst_iterator i = inst_begin(F), e = inst_end(F); i != e; ++i) {
-      WorkList.insert(&*i);
-  }
+  for (Instruction &I: instructions(&F))
+    WorkList.insert(&I);
+
   bool Changed = false;
-  DataLayoutPass *DLP = getAnalysisIfAvailable<DataLayoutPass>();
-  const DataLayout *DL = DLP ? &DLP->getDataLayout() : nullptr;
+  const DataLayout &DL = F.getParent()->getDataLayout();
   TargetLibraryInfo *TLI =
       &getAnalysis<TargetLibraryInfoWrapperPass>().getTLI();
 

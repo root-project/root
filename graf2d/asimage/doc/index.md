@@ -3,8 +3,9 @@
 \brief Classes interfacing to libAfterImage.
 
   - [libAfterImage Imaging Library.](http://www.afterstep.org/afterimage/index.php)
-  - [Drawing an image in a pad.](http://root.cern.ch/root/html/tutorials/image/rose_image.C.html)
-  - [Illustration of the TASImage class and an image editor.](http://root.cern.ch/root/html/tutorials/image/galaxy_image.C.html)
-  - [Inserting images in a pad.](http://root.cern.ch/root/html/tutorials/image/img2pad.C.html)
-  - [Save an image in various formats: .png, .gif, .xpm and tiff.](http://root.cern.ch/root/html/tutorials/image/imgconv.C.html)
-  - [create a canvas and save as png.](http://root.cern.ch/root/html/tutorials/image/pad2png.C.html)
+  - Several tutorials demonstrate how to use images in ROOT:
+    - rose_image.C shows how to draw an image in a pad.
+    - galaxy_image.C illustrates the TASImage class and an image editor.
+    - img2pad.C shows how to insert images in a pad.
+    - imgconv.C shows how to save an image in various formats: .png, .gif, .xpm and tiff.
+    - pad2png.C create a canvas and save as png.

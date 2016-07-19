@@ -1,10 +1,13 @@
-// Script illustrating the use of transparency with ||-Coord.
-// It displays the same data set twice. The first time without transparency and
-// the second time with transparency. On the second plot, several clusters
-// appear.
-
-//Authors: Olivier Couet (original macro), adapted for TGCocoa by Timur Pocheptsov (26/09/2012).
-
+/// \file
+/// \ingroup tutorial_cocoa
+/// Script illustrating the use of transparency with ||-Coord.
+/// It displays the same data set twice. The first time without transparency and
+/// the second time with transparency. On the second plot, several clusters
+/// appear.
+///
+/// \macro_code
+///
+/// \authors Timur Pocheptsov, Olivier Couet
 
 //All these includes are (only) to make the macro
 //ACLiCable.

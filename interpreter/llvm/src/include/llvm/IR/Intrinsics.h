@@ -17,6 +17,8 @@
 #define LLVM_IR_INTRINSICS_H
 
 #include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/None.h"
+#include "llvm/ADT/Optional.h"
 #include <string>
 
 namespace llvm {
@@ -32,7 +34,7 @@ class AttributeSet;
 /// function known by LLVM. The enum values are returned by
 /// Function::getIntrinsicID().
 namespace Intrinsic {
-  enum ID {
+  enum ID : unsigned {
     not_intrinsic = 0,   // Must be zero
 
     // Get the intrinsic enums generated from Intrinsics.td
@@ -52,6 +54,11 @@ namespace Intrinsic {
   /// Returns true if the intrinsic can be overloaded.
   bool isOverloaded(ID id);
 
+  /// Returns true if the intrinsic is a leaf, i.e. it does not make any calls
+  /// itself.  Most intrinsics are leafs, the exceptions being the patchpoint
+  /// and statepoint intrinsics. These call (or invoke) their "target" argument.
+  bool isLeaf(ID id);
+
   /// Return the attributes for an intrinsic.
   AttributeSet getAttributes(LLVMContext &C, ID id);
 
@@ -64,6 +71,13 @@ namespace Intrinsic {
   /// the intrinsic.
   Function *getDeclaration(Module *M, ID id, ArrayRef<Type*> Tys = None);
 
+  /// Looks up Name in NameTable via binary search. NameTable must be sorted
+  /// and all entries must start with "llvm.".  If NameTable contains an exact
+  /// match for Name or a prefix of Name followed by a dot, its index in
+  /// NameTable is returned. Otherwise, -1 is returned.
+  int lookupLLVMIntrinsicByName(ArrayRef<const char *> NameTable,
+                                StringRef Name);
+
   /// Map a GCC builtin name to an intrinsic ID.
   ID getIntrinsicForGCCBuiltin(const char *Prefix, const char *BuiltinName);
 
@@ -74,10 +88,10 @@ namespace Intrinsic {
   /// intrinsic. This is returned by getIntrinsicInfoTableEntries.
   struct IITDescriptor {
     enum IITDescriptorKind {
-      Void, VarArg, MMX, Metadata, Half, Float, Double,
+      Void, VarArg, MMX, Token, Metadata, Half, Float, Double,
       Integer, Vector, Pointer, Struct,
       Argument, ExtendArgument, TruncArgument, HalfVecArgument,
-      SameVecWidthArgument, PtrToArgument
+      SameVecWidthArgument, PtrToArgument, VecOfPtrsToElt
     } Kind;
 
     union {
@@ -99,13 +113,15 @@ namespace Intrinsic {
     unsigned getArgumentNumber() const {
       assert(Kind == Argument || Kind == ExtendArgument ||
              Kind == TruncArgument || Kind == HalfVecArgument ||
-             Kind == SameVecWidthArgument || Kind == PtrToArgument);
+             Kind == SameVecWidthArgument || Kind == PtrToArgument ||
+             Kind == VecOfPtrsToElt);
       return Argument_Info >> 3;
     }
     ArgKind getArgumentKind() const {
       assert(Kind == Argument || Kind == ExtendArgument ||
              Kind == TruncArgument || Kind == HalfVecArgument ||
-             Kind == SameVecWidthArgument || Kind == PtrToArgument);
+             Kind == SameVecWidthArgument || Kind == PtrToArgument ||
+             Kind == VecOfPtrsToElt);
       return (ArgKind)(Argument_Info & 7);
     }
 
@@ -118,6 +134,25 @@ namespace Intrinsic {
   /// Return the IIT table descriptor for the specified intrinsic into an array
   /// of IITDescriptors.
   void getIntrinsicInfoTableEntries(ID id, SmallVectorImpl<IITDescriptor> &T);
+
+  /// Match the specified type (which comes from an intrinsic argument or return
+  /// value) with the type constraints specified by the .td file. If the given
+  /// type is an overloaded type it is pushed to the ArgTys vector.
+  ///
+  /// Returns false if the given type matches with the constraints, true
+  /// otherwise.
+  bool matchIntrinsicType(Type *Ty, ArrayRef<IITDescriptor> &Infos,
+                          SmallVectorImpl<Type*> &ArgTys);
+
+  /// Verify if the intrinsic has variable arguments. This method is intended to
+  /// be called after all the fixed arguments have been matched first.
+  ///
+  /// This method returns true on error.
+  bool matchIntrinsicVarArg(bool isVarArg, ArrayRef<IITDescriptor> &Infos);
+
+  // Checks if the intrinsic name matches with its signature and if not
+  // returns the declaration with the same signature and remangled name.
+  llvm::Optional<Function*> remangleIntrinsicFunction(Function *F);
 
 } // End Intrinsic namespace
 

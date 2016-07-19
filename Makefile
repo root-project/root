@@ -130,9 +130,6 @@ MODULES += core/utils
 ifeq ($(PLATFORM),ios)
 MODULES      += graf2d/ios
 endif
-ifeq ($(BUILDVC),yes)
-MODULES      += math/vc
-endif
 ifeq ($(BUILDVDT),yes)
 MODULES      += math/vdt
 endif
@@ -339,7 +336,7 @@ MODULES      += core/unix core/winnt graf2d/x11 graf2d/x11ttf \
                 geom/geocad geom/gdml graf3d/eve net/glite misc/memstat \
                 math/genvector net/bonjour graf3d/gviz3d graf2d/gviz \
                 proof/proofbench proof/afdsmgrd graf2d/ios \
-                graf2d/quartz graf2d/cocoa core/macosx math/vc math/vdt \
+                graf2d/quartz graf2d/cocoa core/macosx math/vdt \
                 net/http bindings/r main/python
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
@@ -512,7 +509,6 @@ MAKEDISTSRC   := $(ROOT_SRCDIR)/build/unix/makedistsrc.sh
 MAKEVERSION   := $(ROOT_SRCDIR)/build/unix/makeversion.sh
 MAKECOMPDATA  := $(ROOT_SRCDIR)/build/unix/compiledata.sh
 MAKECHANGELOG := $(ROOT_SRCDIR)/build/unix/makechangelog.sh
-MAKEHTML      := $(ROOT_SRCDIR)/build/unix/makehtml.sh
 MAKELOGHTML   := $(ROOT_SRCDIR)/build/unix/makeloghtml.sh
 MAKEPLUGINS   := $(ROOT_SRCDIR)/build/unix/makeplugins-ios.sh
 MAKERELNOTES  := $(ROOT_SRCDIR)/build/unix/makereleasenotes.sh
@@ -615,6 +611,8 @@ INCLUDEFILES :=
 ##### RULES #####
 .SUFFIXES: .cxx .mm .d
 .PRECIOUS: include/%.h
+
+print-%  : ; @echo $* = $($*)
 
 build/rmkdepend/%.o: $(ROOT_SRCDIR)/build/rmkdepend/%.cxx
 	$(MAKEDIR)
@@ -1127,7 +1125,7 @@ plugins-ios: $(ROOTEXE)
 	@$(MAKEPLUGINS)
 
 changelog:
-	@$(MAKECHANGELOG)
+	@$(MAKECHANGELOG) $(ROOT_SRCDIR)
 
 releasenotes:
 	@$(MAKERELNOTES)
@@ -1158,7 +1156,7 @@ ifneq ($(USECONFIG),FALSE)
 	fi
 endif
 	@$(MAKELOGHTML)
-	@$(MAKEHTML)
+	@$(MAKE) -C $(ROOT_SRCDIR)/documentation/doxygen
 else
 html:
 	@echo "Error: Generating the html doc requires to enable the asimage component when running configure." && exit 1

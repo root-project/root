@@ -261,13 +261,13 @@ bool TLimit::Fluctuate(TLimitDataSource * input, TLimitDataSource * output,
             for(int i=1; i<=newsignal->GetNbinsX(); i++) {
                newsignal->SetBinContent(i,oldsignal->GetBinContent(i)+generator->Gaus(0,oldsignal->GetBinError(i)));
             }
-            newsignal->SetDirectory(0);
-            TH1 *newbackground = (TH1*)(output->GetBackground()->At(channel));
-            TH1 *oldbackground = (TH1*)(input->GetBackground()->At(channel));
-            if(stat)
-               for(int i=1; i<=newbackground->GetNbinsX(); i++)
-                  newbackground->SetBinContent(i,oldbackground->GetBinContent(i)+generator->Gaus(0,oldbackground->GetBinError(i)));
-            newbackground->SetDirectory(0);
+         newsignal->SetDirectory(0);
+         TH1 *newbackground = (TH1*)(output->GetBackground()->At(channel));
+         TH1 *oldbackground = (TH1*)(input->GetBackground()->At(channel));
+         if(stat)
+            for(int i=1; i<=newbackground->GetNbinsX(); i++)
+               newbackground->SetBinContent(i,oldbackground->GetBinContent(i)+generator->Gaus(0,oldbackground->GetBinError(i)));
+         newbackground->SetDirectory(0);
       }
       return 1;
    }

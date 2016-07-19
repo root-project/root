@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TRemoteObject
+\ingroup Base
 
 The TRemoteObject class provides protocol for browsing ROOT objects
 from a remote ROOT session.

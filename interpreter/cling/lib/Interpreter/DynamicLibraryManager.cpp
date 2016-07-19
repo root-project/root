@@ -323,10 +323,14 @@ namespace cling {
 
   DynamicLibraryManager::LoadLibResult
   DynamicLibraryManager::loadLibrary(const std::string& libStem,
-                                     bool permanent) {
-    std::string canonicalLoadedLib = lookupLibrary(libStem);
-    if (canonicalLoadedLib.empty())
-      return kLoadLibNotFound;
+                                     bool permanent, bool resolved) {
+    std::string       lResolved;
+    const std::string &canonicalLoadedLib = resolved ? libStem : lResolved;
+    if (!resolved) {
+      lResolved = lookupLibrary(libStem);
+      if (lResolved.empty())
+        return kLoadLibNotFound;
+    }
 
     if (m_LoadedLibraries.find(canonicalLoadedLib) != m_LoadedLibraries.end())
       return kLoadLibAlreadyLoaded;
@@ -370,8 +374,10 @@ namespace cling {
     DyLibHandle dyLibHandle = 0;
     for (DyLibs::const_iterator I = m_DyLibs.begin(), E = m_DyLibs.end();
          I != E; ++I) {
-      if (I->second == canonicalLoadedLib)
+      if (I->second == canonicalLoadedLib) {
         dyLibHandle = I->first;
+        break;
+      }
     }
 
     std::string errMsg;

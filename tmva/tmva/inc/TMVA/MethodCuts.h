@@ -79,12 +79,10 @@ namespace TMVA {
       MethodCuts( const TString& jobName,
                   const TString& methodTitle, 
                   DataSetInfo& theData,
-                  const TString& theOption = "MC:150:10000:",
-                  TDirectory* theTargetFile = 0 );
+                  const TString& theOption = "MC:150:10000:");
 
       MethodCuts( DataSetInfo& theData,
-                  const TString& theWeightFile,
-                  TDirectory* theTargetDir = NULL );
+                  const TString& theWeightFile);
 
       // this is a workaround which is necessary since CINT is not capable of handling dynamic casts
       static MethodCuts* DynamicCast( IMethod* method ) { return dynamic_cast<MethodCuts*>(method); }
@@ -251,7 +249,7 @@ namespace TMVA {
       // default initialisation method called by all constructors
       void     Init( void );
 
-      ClassDef(MethodCuts,0)  // Multivariate optimisation of signal efficiency
+      ClassDef(MethodCuts,0);  // Multivariate optimisation of signal efficiency
    };
 
 } // namespace TMVA

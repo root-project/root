@@ -97,16 +97,6 @@ static unsigned int branchTargetOperand(MachineInstr *MI) {
   llvm_unreachable("Unknown branch type");
 }
 
-static bool isUnconditionalBranch(unsigned int Opcode) {
-  switch (Opcode) {
-  default: return false;
-  case Mips::Bimm16:
-  case Mips::BimmX16:
-  case Mips::JalB16:
-    return true;
-  }
-}
-
 static unsigned int longformBranchOpcode(unsigned int Opcode) {
   switch (Opcode) {
   case Mips::Bimm16:
@@ -342,8 +332,6 @@ namespace {
   /// the branch fix up pass.
   bool HasFarJump;
 
-  const TargetMachine &TM;
-  bool IsPIC;
   const MipsSubtarget *STI;
   const Mips16InstrInfo *TII;
   MipsFunctionInfo *MFI;
@@ -364,16 +352,20 @@ namespace {
 
   public:
     static char ID;
-    MipsConstantIslands(TargetMachine &tm)
-        : MachineFunctionPass(ID), TM(tm),
-          IsPIC(TM.getRelocationModel() == Reloc::PIC_), STI(nullptr),
-          MF(nullptr), MCP(nullptr), PrescannedForConstants(false) {}
+    MipsConstantIslands()
+        : MachineFunctionPass(ID), STI(nullptr), MF(nullptr), MCP(nullptr),
+          PrescannedForConstants(false) {}
 
     const char *getPassName() const override {
       return "Mips Constant Islands";
     }
 
     bool runOnMachineFunction(MachineFunction &F) override;
+
+    MachineFunctionProperties getRequiredProperties() const override {
+      return MachineFunctionProperties().set(
+          MachineFunctionProperties::Property::AllVRegsAllocated);
+    }
 
     void doInitialPlacement(std::vector<MachineInstr*> &CPEMIs);
     CPEntry *findConstPoolEntry(unsigned CPI, const MachineInstr *CPEMI);
@@ -437,10 +429,9 @@ void MipsConstantIslands::dumpBBs() {
     }
   });
 }
-/// createMipsLongBranchPass - Returns a pass that converts branches to long
-/// branches.
-FunctionPass *llvm::createMipsConstantIslandPass(MipsTargetMachine &tm) {
-  return new MipsConstantIslands(tm);
+/// Returns a pass that converts branches to long branches.
+FunctionPass *llvm::createMipsConstantIslandPass() {
+  return new MipsConstantIslands();
 }
 
 bool MipsConstantIslands::runOnMachineFunction(MachineFunction &mf) {
@@ -560,7 +551,7 @@ MipsConstantIslands::doInitialPlacement(std::vector<MachineInstr*> &CPEMIs) {
   // identity mapping of CPI's to CPE's.
   const std::vector<MachineConstantPoolEntry> &CPs = MCP->getConstants();
 
-  const DataLayout &TD = *MF->getTarget().getDataLayout();
+  const DataLayout &TD = MF->getDataLayout();
   for (unsigned i = 0, e = CPs.size(); i != e; ++i) {
     unsigned Size = TD.getTypeAllocSize(CPs[i].getType());
     assert(Size >= 4 && "Too small constant pool entry");
@@ -598,12 +589,12 @@ MipsConstantIslands::doInitialPlacement(std::vector<MachineInstr*> &CPEMIs) {
 /// into the block immediately after it.
 static bool BBHasFallthrough(MachineBasicBlock *MBB) {
   // Get the next machine basic block in the function.
-  MachineFunction::iterator MBBI = MBB;
+  MachineFunction::iterator MBBI = MBB->getIterator();
   // Can't fall off end of function.
   if (std::next(MBBI) == MBB->getParent()->end())
     return false;
 
-  MachineBasicBlock *NextBB = std::next(MBBI);
+  MachineBasicBlock *NextBB = &*std::next(MBBI);
   for (MachineBasicBlock::succ_iterator I = MBB->succ_begin(),
        E = MBB->succ_end(); I != E; ++I)
     if (*I == NextBB)
@@ -656,11 +647,11 @@ initializeFunctionInfo(const std::vector<MachineInstr*> &CPEMIs) {
   // alignment assumptions, as we don't know for sure the size of any
   // instructions in the inline assembly.
   for (MachineFunction::iterator I = MF->begin(), E = MF->end(); I != E; ++I)
-    computeBlockSize(I);
+    computeBlockSize(&*I);
 
 
   // Compute block offsets.
-  adjustBBOffsetsAfter(MF->begin());
+  adjustBBOffsetsAfter(&MF->front());
 
   // Now go back through the instructions and build up our data structures.
   for (MachineFunction::iterator MBBI = MF->begin(), E = MF->end();
@@ -879,7 +870,7 @@ MachineBasicBlock *MipsConstantIslands::splitBlockBeforeInstr
   // Create a new MBB for the code after the OrigBB.
   MachineBasicBlock *NewBB =
     MF->CreateMachineBasicBlock(OrigBB->getBasicBlock());
-  MachineFunction::iterator MBBI = OrigBB; ++MBBI;
+  MachineFunction::iterator MBBI = ++OrigBB->getIterator();
   MF->insert(MBBI, NewBB);
 
   // Splice the instructions starting with MI over to NewBB.
@@ -967,8 +958,8 @@ bool MipsConstantIslands::isWaterInRange(unsigned UserOffset,
   unsigned CPELogAlign = getCPELogAlign(U.CPEMI);
   unsigned CPEOffset = BBInfo[Water->getNumber()].postOffset(CPELogAlign);
   unsigned NextBlockOffset, NextBlockAlignment;
-  MachineFunction::const_iterator NextBlock = Water;
-  if (++NextBlock == MF->end()) {
+  MachineFunction::const_iterator NextBlock = ++Water->getIterator();
+  if (NextBlock == MF->end()) {
     NextBlockOffset = BBInfo[Water->getNumber()].postOffset();
     NextBlockAlignment = 0;
   } else {
@@ -985,7 +976,7 @@ bool MipsConstantIslands::isWaterInRange(unsigned UserOffset,
     Growth = CPEEnd - NextBlockOffset;
     // Compute the padding that would go at the end of the CPE to align the next
     // block.
-    Growth += OffsetToAlignment(CPEEnd, 1u << NextBlockAlignment);
+    Growth += OffsetToAlignment(CPEEnd, 1ULL << NextBlockAlignment);
 
     // If the CPE is to be inserted before the instruction, that will raise
     // the offset of the instruction. Also account for unknown alignment padding
@@ -1261,7 +1252,7 @@ void MipsConstantIslands::createNewWater(unsigned CPUserIndex,
     if (isOffsetInRange(UserOffset, CPEOffset, U)) {
       DEBUG(dbgs() << "Split at end of BB#" << UserMBB->getNumber()
             << format(", expected CPE offset %#x\n", CPEOffset));
-      NewMBB = std::next(MachineFunction::iterator(UserMBB));
+      NewMBB = &*++UserMBB->getIterator();
       // Add an unconditional branch from UserMBB to fallthrough block.  Record
       // it for branch lengthening; this new branch will not get out of range,
       // but if the preceding conditional branch is out of range, the targets
@@ -1371,8 +1362,7 @@ bool MipsConstantIslands::handleConstantPoolUser(unsigned CPUserIndex) {
       NewWaterList.insert(NewIsland);
 
     // The new CPE goes before the following block (NewMBB).
-    NewMBB = std::next(MachineFunction::iterator(WaterBB));
-
+    NewMBB = &*++WaterBB->getIterator();
   } else {
     // No water found.
     // we first see if a longer form of the instrucion could have reached
@@ -1389,7 +1379,7 @@ bool MipsConstantIslands::handleConstantPoolUser(unsigned CPUserIndex) {
     // next iteration for constant pools, but in this context, we don't want
     // it.  Check for this so it will be removed from the WaterList.
     // Also remove any entry from NewWaterList.
-    MachineBasicBlock *WaterBB = std::prev(MachineFunction::iterator(NewMBB));
+    MachineBasicBlock *WaterBB = &*--NewMBB->getIterator();
     IP = std::find(WaterList.begin(), WaterList.end(), WaterBB);
     if (IP != WaterList.end())
       NewWaterList.erase(WaterBB);
@@ -1406,7 +1396,7 @@ bool MipsConstantIslands::handleConstantPoolUser(unsigned CPUserIndex) {
     WaterList.erase(IP);
 
   // Okay, we know we can put an island before NewMBB now, do it!
-  MF->insert(NewMBB, NewIsland);
+  MF->insert(NewMBB->getIterator(), NewIsland);
 
   // Update internal data structures to account for the newly inserted MBB.
   updateForInsertedWaterBlock(NewIsland);
@@ -1431,9 +1421,7 @@ bool MipsConstantIslands::handleConstantPoolUser(unsigned CPUserIndex) {
 
   // Increase the size of the island block to account for the new entry.
   BBInfo[NewIsland->getNumber()].Size += Size;
-  adjustBBOffsetsAfter(std::prev(MachineFunction::iterator(NewIsland)));
-
-
+  adjustBBOffsetsAfter(&*--NewIsland->getIterator());
 
   // Finally, change the CPI in the instruction operand to be ID.
   for (unsigned i = 0, e = UserMI->getNumOperands(); i != e; ++i)
@@ -1613,7 +1601,7 @@ MipsConstantIslands::fixupConditionalBr(ImmBranch &Br) {
   ++NumCBrFixed;
   if (BMI != MI) {
     if (std::next(MachineBasicBlock::iterator(MI)) == std::prev(MBB->end()) &&
-        isUnconditionalBranch(BMI->getOpcode())) {
+        BMI->isUnconditionalBranch()) {
       // Last MI in the BB is an unconditional branch. Can we simply invert the
       // condition and swap destinations:
       // beqz L1
@@ -1645,7 +1633,7 @@ MipsConstantIslands::fixupConditionalBr(ImmBranch &Br) {
     MBB->back().eraseFromParent();
     // BBInfo[SplitBB].Offset is wrong temporarily, fixed below
   }
-  MachineBasicBlock *NextBB = std::next(MachineFunction::iterator(MBB));
+  MachineBasicBlock *NextBB = &*++MBB->getIterator();
 
   DEBUG(dbgs() << "  Insert B to BB#" << DestBB->getNumber()
                << " also invert condition and change dest. to BB#"
@@ -1713,4 +1701,3 @@ void MipsConstantIslands::prescanForConstants() {
     }
   }
 }
-

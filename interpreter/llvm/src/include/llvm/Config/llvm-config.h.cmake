@@ -29,6 +29,10 @@
 /* Installation directory for documentation */
 #cmakedefine LLVM_DOCSDIR "${LLVM_DOCSDIR}"
 
+/* Define if LLVM is built with asserts and checks that change the layout of
+   client-visible data structures.  */
+#cmakedefine LLVM_ENABLE_ABI_BREAKING_CHECKS
+
 /* Define if threads enabled */
 #cmakedefine01 LLVM_ENABLE_THREADS
 
@@ -87,10 +91,13 @@
 #cmakedefine LLVM_USE_OPROFILE 1
 
 /* Major version of the LLVM API */
-#cmakedefine LLVM_VERSION_MAJOR ${LLVM_VERSION_MAJOR}
+#define LLVM_VERSION_MAJOR ${LLVM_VERSION_MAJOR}
 
 /* Minor version of the LLVM API */
-#cmakedefine LLVM_VERSION_MINOR ${LLVM_VERSION_MINOR}
+#define LLVM_VERSION_MINOR ${LLVM_VERSION_MINOR}
+
+/* Patch version of the LLVM API */
+#define LLVM_VERSION_PATCH ${LLVM_VERSION_PATCH}
 
 /* LLVM version string */
 #define LLVM_VERSION_STRING "${PACKAGE_VERSION}"

@@ -1,5 +1,5 @@
 // @(#):$Id$
-// Author: M.Gheata 
+// Author: M.Gheata
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -51,7 +51,7 @@ protected:
 
    TGTextEntry         *fShapeName;         // Shape name text entry
    TGNumberEntry       *fEDx1;              // Number entry for  DX1
-   TGNumberEntry       *fEDx2;              // Number entry for  DX2 
+   TGNumberEntry       *fEDx2;              // Number entry for  DX2
    TGNumberEntry       *fEDy;               // Number entry for  DY
    TGNumberEntry       *fEDz;               // Number entry for  DZ
    TGTextButton        *fApply;             // Apply-Button to accept changes
@@ -59,7 +59,7 @@ protected:
    TGCheckButton       *fDelayed;           // Check button for delayed draw
 
    virtual void ConnectSignals2Slots();   // Connect the signals to the slots
-   Bool_t       IsDelayed() const;   
+   Bool_t       IsDelayed() const;
 
 public:
    TGeoTrd1Editor(const TGWindow *p = 0,
@@ -77,8 +77,8 @@ public:
    void           DoName();
    void           DoApply();
    void           DoUndo();
-   
+
    ClassDef(TGeoTrd1Editor,0)   // TGeoTrd1 editor
-};   
-  
-#endif                    
+};
+
+#endif

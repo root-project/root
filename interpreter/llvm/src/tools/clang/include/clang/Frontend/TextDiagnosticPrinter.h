@@ -40,12 +40,12 @@ class TextDiagnosticPrinter : public DiagnosticConsumer {
 public:
   TextDiagnosticPrinter(raw_ostream &os, DiagnosticOptions *diags,
                         bool OwnsOutputStream = false);
-  virtual ~TextDiagnosticPrinter();
+  ~TextDiagnosticPrinter() override;
 
   /// setPrefix - Set the diagnostic printer prefix string, which will be
   /// printed at the start of any diagnostics. If empty, no prefix string is
   /// used.
-  void setPrefix(std::string Value) { Prefix = Value; }
+  void setPrefix(std::string Value) { Prefix = std::move(Value); }
 
   void BeginSourceFile(const LangOptions &LO, const Preprocessor *PP) override;
   void EndSourceFile() override;

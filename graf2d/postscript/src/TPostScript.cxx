@@ -2605,9 +2605,9 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
 
    // Text alignment.
    Int_t txalh = fTextAlign/10;
-   if (txalh <1) txalh = 1; if (txalh > 3) txalh = 3;
+   if (txalh <1) txalh = 1; else if (txalh > 3) txalh = 3;
    Int_t txalv = fTextAlign%10;
-   if (txalv <1) txalv = 1; if (txalv > 3) txalv = 3;
+   if (txalv <1) txalv = 1; else if (txalv > 3) txalv = 3;
    if (txalv == 3) {
       y -= 0.8*tsizey*TMath::Cos(kDEGRAD*fTextAngle);
       x += 0.8*tsizex*TMath::Sin(kDEGRAD*fTextAngle);
@@ -2813,9 +2813,9 @@ void TPostScript::Text(Double_t xx, Double_t yy, const wchar_t *chars)
 
    // Text alignment.
    Int_t txalh = fTextAlign/10;
-   if (txalh <1) txalh = 1; if (txalh > 3) txalh = 3;
+   if (txalh <1) txalh = 1; else if (txalh > 3) txalh = 3;
    Int_t txalv = fTextAlign%10;
-   if (txalv <1) txalv = 1; if (txalv > 3) txalv = 3;
+   if (txalv <1) txalv = 1; else if (txalv > 3) txalv = 3;
    if (txalv == 3) {
       y -= 0.8*tsizey*TMath::Cos(kDEGRAD*fTextAngle);
       x += 0.8*tsizex*TMath::Sin(kDEGRAD*fTextAngle);

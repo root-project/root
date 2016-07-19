@@ -58,6 +58,7 @@ extern "C" {
                                   llvm::StringRef canonicalName);
    void TCling__LibraryUnloadedRTTI(const void* dyLibHandle,
                                     llvm::StringRef canonicalName);
+   void TCling__PrintStackTrace();
 }
 
 TClingCallbacks::TClingCallbacks(cling::Interpreter* interp)
@@ -636,7 +637,7 @@ bool TClingCallbacks::tryInjectImplicitAutoKeyword(LookupResult &R, Scope *S) {
    SourceLocation Loc = R.getNameLoc();
    VarDecl* Result = VarDecl::Create(C, DC, Loc, Loc, II,
                                      C.getAutoType(QualType(),
-                                                   /*IsDecltypeAuto*/false,
+                                                   clang::AutoTypeKeyword::Auto,
                                                    /*IsDependent*/false),
                                      /*TypeSourceInfo*/0, SC_None);
 
@@ -718,3 +719,6 @@ void TClingCallbacks::LibraryUnloaded(const void* dyLibHandle,
    TCling__LibraryUnloadedRTTI(dyLibHandle, canonicalName);
 }
 
+void TClingCallbacks::PrintStackTrace() {
+   TCling__PrintStackTrace();
+}

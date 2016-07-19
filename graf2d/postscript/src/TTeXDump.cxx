@@ -261,15 +261,34 @@ void TTeXDump::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
       SetColor(fFillColor);
       PrintStr("@");
       PrintStr("\\draw [pattern=");
-      if (fillsi==1)  PrintStr("crosshatch dots");
-      if (fillsi==2)  PrintStr("dots");
-      if (fillsi==4)  PrintStr("north east lines");
-      if (fillsi==5)  PrintStr("north west lines");
-      if (fillsi==6)  PrintStr("vertical lines");
-      if (fillsi==7)  PrintStr("horizontal lines");
-      if (fillsi==10) PrintStr("bricks");
-      if (fillsi==13) PrintStr("crosshatch");
-      PrintStr(", pattern color=c");
+      switch (fillsi) {
+      case 1 :
+         PrintStr("crosshatch dots");
+         break;
+      case 2 :
+      case 3 :
+         PrintStr("dots");
+         break;
+      case 4 :
+         PrintStr("north east lines");
+         break;
+      case 5 :
+         PrintStr("north west lines");
+         break;
+      case 6 :
+         PrintStr("vertical lines");
+         break;
+      case 7 :
+         PrintStr("horizontal lines");
+         break;
+      case 10 :
+          PrintStr("bricks");
+         break;
+      case 13 :
+         PrintStr("crosshatch");
+         break;
+      }
+      PrintStr(", draw opacity=0, pattern color=c");
       if (fCurrentAlpha != 1.) {
          PrintStr(", fill opacity=");
          WriteReal(fCurrentAlpha, kFALSE);
@@ -503,36 +522,34 @@ void TTeXDump::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
       SetColor(fLineColor);
       PrintStr("@");
       PrintStr("\\draw [c");
-      switch(fLineStyle) {
-      case 1:
-         break;
-      case 2:
-         PrintStr(",dashed");
-         break;
-      case 3:
-         PrintStr(",dotted");
-         break;
-      case 4:
-         PrintStr(",dash pattern=on 2.4pt off 3.2pt on 0.8pt off 3.2pt");
-         break;
-      case 5:
-         PrintStr(",dash pattern=on 4pt off 2.4pt on 0.8pt off 2.4pt");
-         break;
-      case 6:
-         PrintStr(",dash pattern=on 4pt off 2.4pt on 0.8pt off 2.4pt on 0.8pt off 2.4pt on 0.8pt off 2.4pt");
-         break;
-      case 7:
-         PrintStr(",dash pattern=on 4pt off 4pt");
-         break;
-      case 8:
-         PrintStr(",dash pattern=on 4pt off 2.4pt on 0.8pt off 2.4pt on 0.8pt off 2.4pt");
-         break;
-      case 9:
-         PrintStr(",dash pattern=on 16pt off 4pt");
-         break;
-      case 10:
-         PrintStr(",dash pattern=on 16pt off 8pt on 0.8pt off 8pt");
-         break;
+      TString spec = gStyle->GetLineStyleString(fLineStyle);
+      TString tikzSpec;
+      TString stripped = TString{spec.Strip(TString::kBoth)};
+      if (stripped.Length()) {
+         tikzSpec.Append(",dash pattern=");
+         Ssiz_t i{0}, j{0};
+         bool on{true}, iterate{true};
+
+         while (iterate){
+            j = stripped.Index(" ", 1, i, TString::kExact);
+            if (j == kNPOS){
+               iterate = false;
+               j = stripped.Length();
+            }
+
+            if (on) {
+               tikzSpec.Append("on ");
+               on = false;
+            } else {
+               tikzSpec.Append("off ");
+               on = true;
+            }
+            int num = TString{stripped(i, j - i)}.Atoi();
+            float pt = 0.2*num;
+            tikzSpec.Append(TString::Format("%.2fpt ", pt));
+            i = j + 1;
+         }
+         PrintStr(tikzSpec.Data());
       }
       PrintStr(",line width=");
       WriteReal(0.3*fLineScale*fLineWidth, kFALSE);
@@ -546,15 +563,34 @@ void TTeXDump::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
          PrintStr("\\draw [c");
       } else {
          PrintStr("\\draw [pattern=");
-         if (fillsi==1)  PrintStr("crosshatch dots");
-         if (fillsi==2)  PrintStr("dots");
-         if (fillsi==4)  PrintStr("north east lines");
-         if (fillsi==5)  PrintStr("north west lines");
-         if (fillsi==6)  PrintStr("vertical lines");
-         if (fillsi==7)  PrintStr("horizontal lines");
-         if (fillsi==10) PrintStr("bricks");
-         if (fillsi==13) PrintStr("crosshatch");
-         PrintStr(", pattern color=c");
+         switch (fillsi) {
+         case 1 :
+            PrintStr("crosshatch dots");
+            break;
+         case 2 :
+         case 3 :
+            PrintStr("dots");
+            break;
+         case 4 :
+            PrintStr("north east lines");
+            break;
+         case 5 :
+            PrintStr("north west lines");
+            break;
+         case 6 :
+            PrintStr("vertical lines");
+            break;
+         case 7 :
+            PrintStr("horizontal lines");
+            break;
+         case 10 :
+             PrintStr("bricks");
+            break;
+         case 13 :
+            PrintStr("crosshatch");
+            break;
+         }
+         PrintStr(", draw opacity=0, pattern color=c");
       }
       if (fCurrentAlpha != 1.) {
          PrintStr(", fill opacity=");
@@ -749,9 +785,9 @@ void TTeXDump::Text(Double_t x, Double_t y, const char *chars)
    t.ReplaceAll("%","\\%");
 
    Int_t txalh = fTextAlign/10;
-   if (txalh <1) txalh = 1; if (txalh > 3) txalh = 3;
+   if (txalh <1) txalh = 1; else if (txalh > 3) txalh = 3;
    Int_t txalv = fTextAlign%10;
-   if (txalv <1) txalv = 1; if (txalv > 3) txalv = 3;
+   if (txalv <1) txalv = 1; else if (txalv > 3) txalv = 3;
    SetColor(fTextColor);
    PrintStr("@");
    PrintStr("\\draw");

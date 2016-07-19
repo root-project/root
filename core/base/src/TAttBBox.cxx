@@ -13,6 +13,9 @@
 #include "TAttBBox.h"
 
 /** \class TAttBBox
+\ingroup Base
+\ingroup GraphicsAtt
+
 Helper for management of bounding-box information.
 Optionally used by classes that use direct OpenGL rendering
 via `<Class>GL class`.

@@ -13,14 +13,6 @@
 #define ROOT_TGWin32GL
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGWin32GL                                                            //
-//                                                                      //
-// The TGWin32GL is win32gdk implementation of TVirtualGLImp class.     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #ifndef ROOT_TVirtualGL
 #include "TVirtualGL.h"
 #endif
@@ -46,7 +38,7 @@ public:
    Int_t    CreateGLContext(Int_t winInd);
 
    //[            Off-screen rendering part
-   //create DIB section to read GL buffer into it, 
+   //create DIB section to read GL buffer into it,
    //ctxInd is the index, returned by CreateGLContext
    Bool_t   AttachOffScreenDevice(Int_t ctxInd, Int_t x, Int_t y, UInt_t w, UInt_t h);
    Bool_t   ResizeOffScreenDevice(Int_t devInd, Int_t x, Int_t y, UInt_t w, UInt_t h);
@@ -60,7 +52,7 @@ public:
    void     ExtractViewport(Int_t devInd, Int_t *vp);
    //Read GL buffer into DIB
    void     ReadGLBuffer(Int_t devInd);
-   //]            
+   //]
 
    //Make the gl context current
    Bool_t   MakeCurrent(Int_t devInd);

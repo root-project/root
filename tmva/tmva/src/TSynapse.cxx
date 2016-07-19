@@ -48,13 +48,13 @@ ClassImp(TMVA::TSynapse);
 /// constructor
 
 TMVA::TSynapse::TSynapse()
-  : fWeight( 0 ),
-    fLearnRate( 0 ),
-    fDelta( 0 ),
-    fDEDw( 0 ),
-    fCount( 0 ),
-    fPreNeuron( NULL ),
-    fPostNeuron( NULL )
+   : fWeight( 0 ),
+     fLearnRate( 0 ),
+     fDelta( 0 ),
+     fDEDw( 0 ),
+     fCount( 0 ),
+     fPreNeuron( NULL ),
+     fPostNeuron( NULL )
 {
    fWeight     = fgUNINITIALIZED;
 }

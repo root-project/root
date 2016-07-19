@@ -175,6 +175,13 @@ struct staticInitHelper{
 
    staticInitHelper()
    {
+#if defined(R__B64)
+      const int sincosTolerance = 4;
+      const int tanTolerance = 5;
+#else
+      const int sincosTolerance = 19;
+      const int tanTolerance = 19;
+#endif
       referenceValues["Expf"]  =  std::make_pair(1.f,8);
       referenceValues["Sinf"]  =  std::make_pair(1.f,11);
       referenceValues["Cosf"]  =  std::make_pair(1.f,10);
@@ -185,9 +192,9 @@ struct staticInitHelper{
       referenceValues["Asinf"] =  std::make_pair(1.f,5);
       referenceValues["Acosf"] =  std::make_pair(1.f,12);
       referenceValues["Exp"]   =  std::make_pair(1.f,4);
-      referenceValues["Sin"]   =  std::make_pair(1.f,4);
-      referenceValues["Cos"]   =  std::make_pair(1.f,4);
-      referenceValues["Tan"]   =  std::make_pair(1.f,7);
+      referenceValues["Sin"]   =  std::make_pair(1.f,sincosTolerance);
+      referenceValues["Cos"]   =  std::make_pair(1.f,sincosTolerance);
+      referenceValues["Tan"]   =  std::make_pair(1.f,tanTolerance);
       referenceValues["Atan"]  =  std::make_pair(1.f,4);
       referenceValues["Log"]   =  std::make_pair(1.f,4);
       referenceValues["Isqrt"] =  std::make_pair(.4f,4);  // Fix fluctuation on x86_64-slc5-gcc47

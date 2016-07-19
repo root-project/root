@@ -516,7 +516,7 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type, Bool_t silent)
 
 Bool_t TGenCollectionProxy::Value::IsValid()
 {
-   
+
 
    return fSize != std::string::npos;
 }

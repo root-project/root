@@ -37,15 +37,17 @@ cscope.files
 cscope.out
 autoconf/aclocal.m4
 autoconf/autom4te.cache
-compile_commands.json
+/compile_commands.json
 
 #==============================================================================#
 # Directories to ignore (do not add trailing '/'s, they skip symlinks).
 #==============================================================================#
 # External projects that are tracked independently.
 projects/*
-!projects/CMakeLists.txt
+!projects/*.*
 !projects/Makefile
+runtimes/*
+!runtimes/*.*
 # Clang, which is tracked independently.
 # but not for ROOT!
 # tools/clang

@@ -1,5 +1,5 @@
 // @(#):$Id$
-// Author: M.Gheata 
+// Author: M.Gheata
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -44,7 +44,7 @@ ClassImp(TGeoSphereEditor)
 
 enum ETGeoSphereWid {
    kSPHERE_NAME, kSPHERE_RMIN, kSPHERE_RMAX, kSPHERE_THETA1,
-   kSPHERE_THETA2, kSPHERE_PHI1, kSPHERE_PHI2, kSPHERE_PHI, kSPHERE_THETA, 
+   kSPHERE_THETA2, kSPHERE_PHI1, kSPHERE_PHI2, kSPHERE_PHI, kSPHERE_THETA,
    kSPHERE_APPLY, kSPHERE_UNDO
 };
 
@@ -85,7 +85,7 @@ TGeoSphereEditor::TGeoSphereEditor(const TGWindow *p, Int_t width,
    fERmin->Resize(100, fERmin->GetDefaultHeight());
    f1->AddFrame(fERmin, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
    compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
-   
+
    // Number entry for Rmax
    f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
                                  kLHintsExpandX | kOwnBackground);
@@ -99,14 +99,14 @@ TGeoSphereEditor::TGeoSphereEditor(const TGWindow *p, Int_t width,
    f1->AddFrame(fERmax, new TGLayoutHints(kLHintsRight, 2, 2, 4, 4));
    compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
    AddFrame(compxyz, new TGLayoutHints(kLHintsLeft, 2, 2, 2, 2));
-   
+
    MakeTitle("Phi/theta range");
    TGCompositeFrame *f11 = new TGCompositeFrame(this, 150,200, kHorizontalFrame);
    compxyz = new TGCompositeFrame(f11, 75, 200, kHorizontalFrame | kRaisedFrame);
    // Vertical slider
    fSPhi = new TGDoubleVSlider(compxyz,140);
    fSPhi->SetRange(0.,720.);
-   compxyz->AddFrame(fSPhi, new TGLayoutHints(kLHintsLeft | kLHintsExpandY, 2, 2, 4, 4)); 
+   compxyz->AddFrame(fSPhi, new TGLayoutHints(kLHintsLeft | kLHintsExpandY, 2, 2, 4, 4));
    f1 = new TGCompositeFrame(compxyz, 50, 200, kVerticalFrame);
    f1->AddFrame(new TGLabel(f1, "Phi min."), new TGLayoutHints(kLHintsTop | kLHintsLeft, 2, 2, 2, 2));
    fEPhi1 = new TGNumberEntry(f1, 0., 5, kSPHERE_PHI1);
@@ -127,15 +127,15 @@ TGeoSphereEditor::TGeoSphereEditor(const TGWindow *p, Int_t width,
    f1->AddFrame(fEPhi2, new TGLayoutHints(kLHintsBottom | kLHintsLeft | kLHintsExpandX, 2, 2, 2, 2));
    f1->AddFrame(new TGLabel(f1, "Phi max."), new TGLayoutHints(kLHintsBottom | kLHintsLeft, 2, 2, 2, 2));
    compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX | kLHintsExpandY, 2, 2, 2, 2));
-   
+
    compxyz->Resize(75,150);
    f11->AddFrame(compxyz, new TGLayoutHints(kLHintsLeft, 0,0,0,0));
-      
+
    compxyz = new TGCompositeFrame(f11, 75, 200, kHorizontalFrame | kRaisedFrame);
    // Vertical slider
    fSTheta = new TGDoubleVSlider(compxyz,140);
    fSTheta->SetRange(0.,180.);
-   compxyz->AddFrame(fSTheta, new TGLayoutHints(kLHintsLeft | kLHintsExpandY, 2, 2, 4, 4)); 
+   compxyz->AddFrame(fSTheta, new TGLayoutHints(kLHintsLeft | kLHintsExpandY, 2, 2, 4, 4));
    f1 = new TGCompositeFrame(compxyz, 50, 200, kVerticalFrame);
    f1->AddFrame(new TGLabel(f1, "Theta min."), new TGLayoutHints(kLHintsTop | kLHintsLeft, 2, 2, 2, 2));
    fETheta1 = new TGNumberEntry(f1, 0., 5, kSPHERE_THETA1);
@@ -155,17 +155,17 @@ TGeoSphereEditor::TGeoSphereEditor(const TGWindow *p, Int_t width,
    f1->AddFrame(fETheta2, new TGLayoutHints(kLHintsBottom | kLHintsLeft | kLHintsExpandX, 2, 2, 2, 2));
    f1->AddFrame(new TGLabel(f1, "Theta max."), new TGLayoutHints(kLHintsBottom | kLHintsLeft, 2, 2, 2, 2));
    compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX | kLHintsExpandY, 2, 2, 2, 2));
-   
+
    compxyz->Resize(75,150);
-   f11->AddFrame(compxyz, new TGLayoutHints(kLHintsRight, 0, 0, 0, 0));  
+   f11->AddFrame(compxyz, new TGLayoutHints(kLHintsRight, 0, 0, 0, 0));
 
    AddFrame(f11, new TGLayoutHints(kLHintsLeft, 0, 0, 0, 0));
-   
+
    // Delayed draw
    f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth | kSunkenFrame);
    fDelayed = new TGCheckButton(f1, "Delayed draw");
    f1->AddFrame(fDelayed, new TGLayoutHints(kLHintsLeft , 2, 2, 4, 4));
-   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
+   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
 
    // Buttons
    f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth);
@@ -175,7 +175,7 @@ TGeoSphereEditor::TGeoSphereEditor(const TGWindow *p, Int_t width,
    fUndo = new TGTextButton(f1, "Undo");
    f1->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
    fUndo->Associate(this);
-   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
+   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
    fUndo->SetSize(fApply->GetSize());
 }
 
@@ -187,10 +187,10 @@ TGeoSphereEditor::~TGeoSphereEditor()
    TGFrameElement *el;
    TIter next(GetList());
    while ((el = (TGFrameElement *)next())) {
-      if (el->fFrame->IsComposite()) 
+      if (el->fFrame->IsComposite())
          TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
-   Cleanup();   
+   Cleanup();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -220,8 +220,8 @@ void TGeoSphereEditor::SetModel(TObject* obj)
 {
    if (obj == 0 || (obj->IsA()!=TGeoSphere::Class())) {
       SetActive(kFALSE);
-      return;                 
-   } 
+      return;
+   }
    fShape = (TGeoSphere*)obj;
    fRmini = fShape->GetRmin();
    fRmaxi = fShape->GetRmax();
@@ -239,10 +239,10 @@ void TGeoSphereEditor::SetModel(TObject* obj)
    fETheta2->SetNumber(fTheta2i);
    fSPhi->SetPosition(fPhi1i, fPhi2i);
    fSTheta->SetPosition(fTheta1i, fTheta2i);
-   
+
    fApply->SetEnabled(kFALSE);
    fUndo->SetEnabled(kFALSE);
-   
+
    if (fInit) ConnectSignals2Slots();
    SetActive();
 }
@@ -282,7 +282,7 @@ void TGeoSphereEditor::DoApply()
       fLock = kTRUE;
       fSPhi->SetPosition(phi1,phi2);
       fLock = kFALSE;
-   }   
+   }
    Double_t theta1 = fETheta1->GetNumber();
    Double_t theta2 = fETheta2->GetNumber();
    fShape->SetSphDimensions(rmin, rmax, theta1,theta2,phi1,phi2);
@@ -294,7 +294,7 @@ void TGeoSphereEditor::DoApply()
          fShape->Draw();
          fPad->GetView()->ShowAxis();
       } else Update();
-   }   
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -322,7 +322,7 @@ void TGeoSphereEditor::DoUndo()
    fUndo->SetEnabled(kFALSE);
    fApply->SetEnabled(kFALSE);
 }
-   
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot for Rmin.
 
@@ -333,11 +333,11 @@ void TGeoSphereEditor::DoRmin()
    if (rmin <= 0.) {
       rmin = 0.;
       fERmin->SetNumber(rmin);
-   }   
+   }
    if (rmin >= rmax) {
       rmin = rmax - 0.1;
       fERmin->SetNumber(rmin);
-   }   
+   }
    DoModified();
    if (!IsDelayed()) DoApply();
 }
@@ -352,12 +352,12 @@ void TGeoSphereEditor::DoRmax()
    if (rmax <= 0.) {
       rmax = 0.1;
       fERmax->SetNumber(rmax);
-   }   
+   }
    if (rmax < rmin+1.e-10) {
       rmax = rmin + 0.1;
       if (rmin < 0.) rmin = 0.;
       fERmax->SetNumber(rmax);
-   }   
+   }
    DoModified();
    if (!IsDelayed()) DoApply();
 }
@@ -372,11 +372,11 @@ void TGeoSphereEditor::DoPhi1()
    if (phi1 > 360-1.e-10) {
       phi1 = 0.;
       fEPhi1->SetNumber(phi1);
-   }   
+   }
    if (phi2<phi1+1.e-10) {
       phi1 = phi2 - 0.1;
       fEPhi1->SetNumber(phi1);
-   }   
+   }
    if (!fLock) {
       DoModified();
       fLock = kTRUE;
@@ -395,11 +395,11 @@ void TGeoSphereEditor::DoPhi2()
    if (phi2-phi1 > 360.) {
       phi2 -= 360.;
       fEPhi2->SetNumber(phi2);
-   }   
+   }
    if (phi2<phi1+1.e-10) {
       phi2 = phi1 + 0.1;
       fEPhi2->SetNumber(phi2);
-   }   
+   }
    if (!fLock) {
       DoModified();
       fLock = kTRUE;
@@ -419,7 +419,7 @@ void TGeoSphereEditor::DoPhi()
       fEPhi1->SetNumber(fSPhi->GetMinPosition());
       fLock = kTRUE;
       fEPhi2->SetNumber(fSPhi->GetMaxPosition());
-   } else fLock = kFALSE;   
+   } else fLock = kFALSE;
    if (!IsDelayed()) DoApply();
 }
 
@@ -433,7 +433,7 @@ void TGeoSphereEditor::DoTheta1()
    if (theta2<theta1+1.e-10) {
       theta2 = theta1 + 0.1;
       fETheta2->SetNumber(theta2);
-   }   
+   }
    if (!fLock) {
       DoModified();
       fLock = kTRUE;
@@ -452,7 +452,7 @@ void TGeoSphereEditor::DoTheta2()
    if (theta2<theta1+1.e-10) {
       theta1 = theta2 - 0.1;
       fETheta1->SetNumber(theta1);
-   }   
+   }
    if (!fLock) {
       DoModified();
       fLock = kTRUE;
@@ -472,6 +472,6 @@ void TGeoSphereEditor::DoTheta()
       fETheta1->SetNumber(fSTheta->GetMinPosition());
       fLock = kTRUE;
       fETheta2->SetNumber(fSTheta->GetMaxPosition());
-   } else fLock = kFALSE;   
+   } else fLock = kFALSE;
    if (!IsDelayed()) DoApply();
 }

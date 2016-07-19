@@ -778,7 +778,7 @@ void TMVA::RuleFit::MakeVisHists()
 
    const TString corrDirName = "CorrelationPlots";   
    
-   TDirectory* rootDir   = Factory::RootBaseDir();
+   TDirectory* rootDir   = fMethodBase->GetFile();
    TDirectory* varDir    = 0;
    TDirectory* corrDir   = 0;
 

@@ -6,31 +6,61 @@
 # LICENSE.TXT for details.
 #------------------------------------------------------------------------------
 
-set( LLVM_LINK_COMPONENTS
-  bitwriter
-  mcjit
-  orcjit
-  native
-  option
-  ipo
-  instrumentation
-  objcarcopts
+set(LIBS
+  clangDriver
+  clangFrontend
+  clangParse
+  clangSema
+  clangAST
+  clangLex
+  clangSerialization
+  clangCodeGen
+  clangBasic
+
+  clingUtils
 )
 
-add_cling_library(clingInterpreter
+find_library(DL_LIBRARY_PATH dl)
+if (DL_LIBRARY_PATH)
+  list(APPEND LIBS dl)
+endif()
+
+
+set( LLVM_LINK_COMPONENTS
+  analysis
+  core
+  executionengine
+  ipo
+  mc
+  native
+  nativecodegen
+  object
+  option
+  orcjit
+  runtimedyld
+  support
+  target
+)
+
+add_cling_library(clingInterpreter OBJECT
   AutoSynthesizer.cpp
   AutoloadCallback.cpp
-  ASTImportSource.cpp
+  ASTTransformer.cpp
   BackendPasses.cpp
   CheckEmptyTransactionTransformer.cpp
   CIFactory.cpp
   ClangInternalState.cpp
+  ClingCodeCompleteConsumer.cpp
   ClingPragmas.cpp
   DeclCollector.cpp
   DeclExtractor.cpp
+  DeclUnloader.cpp
   DynamicLibraryManager.cpp
   DynamicLookup.cpp
   DynamicExprInfo.cpp
+  Exception.cpp
+  ExceptionRTTI.cpp
+  ExternalInterpreterSource.cpp
   ForwardDeclPrinter.cpp
   IncrementalExecutor.cpp
   IncrementalJIT.cpp
@@ -41,24 +71,19 @@ add_cling_library(clingInterpreter
   LookupHelper.cpp
   NullDerefProtectionTransformer.cpp
   RequiredSymbols.cpp
-  ValueExtractionSynthesizer.cpp
-  Exception.cpp
   Transaction.cpp
-  ASTTransformer.cpp
   TransactionUnloader.cpp
+  ValueExtractionSynthesizer.cpp
   Value.cpp
   ValuePrinter.cpp
   ValuePrinterSynthesizer.cpp
 
   LINK_LIBS
-  clangBasic
-  clangAST
-  )
-
-add_dependencies(clingInterpreter clangBasic clangAST)
+  ${LIBS}
+)
 
 if(NOT WIN32)
-set_source_files_properties(Exception.cpp COMPILE_FLAGS -fexceptions)
+set_source_files_properties(ExceptionRTTI.cpp COMPILE_FLAGS "-fexceptions -frtti")
 endif()
 
 #set_source_files_properties(Exception.cpp COMPILE_FLAGS " /EHsc ")

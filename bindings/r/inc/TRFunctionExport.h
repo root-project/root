@@ -150,6 +150,14 @@ namespace ROOT {
          Default TRFunctionExport constructor
          */
          TRFunctionExport();
+	 
+         /**
+         Default TRFunctionExport destructor
+         */
+         ~TRFunctionExport()
+	 {
+	   if(f) delete f;
+	 }
          /**
          TRFunctionExport copy constructor
          \param fun other TRFunctionExport

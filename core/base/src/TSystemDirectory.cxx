@@ -9,9 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////
-
 /** \class TSystemDirectory
+\ingroup Base
+
 Describes an Operating System directory for the browser.
 */
 

@@ -14,13 +14,13 @@
 #ifndef LLVM_LIB_TARGET_MIPS_MIPSTARGETMACHINE_H
 #define LLVM_LIB_TARGET_MIPS_MIPSTARGETMACHINE_H
 
+#include "MCTargetDesc/MipsABIInfo.h"
 #include "MipsSubtarget.h"
 #include "llvm/CodeGen/BasicTTIImpl.h"
 #include "llvm/CodeGen/Passes.h"
 #include "llvm/CodeGen/SelectionDAGISel.h"
 #include "llvm/Target/TargetFrameLowering.h"
 #include "llvm/Target/TargetMachine.h"
-#include "MCTargetDesc/MipsABIInfo.h"
 
 namespace llvm {
 class formatted_raw_ostream;
@@ -31,7 +31,6 @@ class MipsTargetMachine : public LLVMTargetMachine {
   std::unique_ptr<TargetLoweringObjectFile> TLOF;
   // Selected ABI
   MipsABIInfo ABI;
-  const DataLayout DL; // Calculates type size & alignment
   MipsSubtarget *Subtarget;
   MipsSubtarget DefaultSubtarget;
   MipsSubtarget NoMips16Subtarget;
@@ -40,15 +39,15 @@ class MipsTargetMachine : public LLVMTargetMachine {
   mutable StringMap<std::unique_ptr<MipsSubtarget>> SubtargetMap;
 
 public:
-  MipsTargetMachine(const Target &T, StringRef TT, StringRef CPU, StringRef FS,
-                    const TargetOptions &Options, Reloc::Model RM,
-                    CodeModel::Model CM, CodeGenOpt::Level OL, bool isLittle);
+  MipsTargetMachine(const Target &T, const Triple &TT, StringRef CPU,
+                    StringRef FS, const TargetOptions &Options,
+                    Optional<Reloc::Model> RM, CodeModel::Model CM,
+                    CodeGenOpt::Level OL, bool isLittle);
   ~MipsTargetMachine() override;
 
   TargetIRAnalysis getTargetIRAnalysis() override;
 
-  const DataLayout *getDataLayout() const override { return &DL; }
-  const MipsSubtarget *getSubtargetImpl() const override {
+  const MipsSubtarget *getSubtargetImpl() const {
     if (Subtarget)
       return Subtarget;
     return &DefaultSubtarget;
@@ -70,25 +69,25 @@ public:
   const MipsABIInfo &getABI() const { return ABI; }
 };
 
-/// MipsebTargetMachine - Mips32/64 big endian target machine.
+/// Mips32/64 big endian target machine.
 ///
 class MipsebTargetMachine : public MipsTargetMachine {
   virtual void anchor();
 public:
-  MipsebTargetMachine(const Target &T, StringRef TT,
-                      StringRef CPU, StringRef FS, const TargetOptions &Options,
-                      Reloc::Model RM, CodeModel::Model CM,
+  MipsebTargetMachine(const Target &T, const Triple &TT, StringRef CPU,
+                      StringRef FS, const TargetOptions &Options,
+                      Optional<Reloc::Model> RM, CodeModel::Model CM,
                       CodeGenOpt::Level OL);
 };
 
-/// MipselTargetMachine - Mips32/64 little endian target machine.
+/// Mips32/64 little endian target machine.
 ///
 class MipselTargetMachine : public MipsTargetMachine {
   virtual void anchor();
 public:
-  MipselTargetMachine(const Target &T, StringRef TT,
-                      StringRef CPU, StringRef FS, const TargetOptions &Options,
-                      Reloc::Model RM, CodeModel::Model CM,
+  MipselTargetMachine(const Target &T, const Triple &TT, StringRef CPU,
+                      StringRef FS, const TargetOptions &Options,
+                      Optional<Reloc::Model> RM, CodeModel::Model CM,
                       CodeGenOpt::Level OL);
 };
 

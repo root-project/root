@@ -96,7 +96,7 @@ public:
 
    virtual TClass* ProjectedClass(const TEveProjection* p) const;
 
-   ClassDef(TEvePointSet, 1); // Set of 3D points with same marker attributes; optionally each point can be assigned an external TRef or a number of integer indices.
+   ClassDef(TEvePointSet, 0); // Set of 3D points with same marker attributes; optionally each point can be assigned an external TRef or a number of integer indices.
 };
 
 
@@ -159,7 +159,7 @@ public:
 
    void SetRange(Double_t min, Double_t max);
 
-   ClassDef(TEvePointSetArray, 1); // Array of TEvePointSet's filled via a common point-source; range of displayed TEvePointSet's can be controlled, based on a separating quantity provided on fill-time by a user.
+   ClassDef(TEvePointSetArray, 0); // Array of TEvePointSet's filled via a common point-source; range of displayed TEvePointSet's can be controlled, based on a separating quantity provided on fill-time by a user.
 };
 
 
@@ -188,7 +188,7 @@ public:
    virtual void PointSelected(Int_t id);
 
 
-   ClassDef(TEvePointSetProjected, 1); // Projected copy of a TEvePointSet.
+   ClassDef(TEvePointSetProjected, 0); // Projected copy of a TEvePointSet.
 };
 
 #endif

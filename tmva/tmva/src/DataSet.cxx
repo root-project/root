@@ -652,7 +652,7 @@ TTree* TMVA::DataSet::GetTree( Types::ETreeType type )
 
 
       Log() << kDEBUG << Form("Dataset[%s] : ",fdsi.GetName()) << "analysis type: " << (itMethod->second->GetAnalysisType()==Types::kRegression ? "Regression" :
-                                               (itMethod->second->GetAnalysisType()==Types::kMulticlass ? "Multiclass" : "Classification" )) << Endl;
+                                                                                        (itMethod->second->GetAnalysisType()==Types::kMulticlass ? "Multiclass" : "Classification" )) << Endl;
       
       if (itMethod->second->GetAnalysisType() == Types::kClassification) {
          // classification

@@ -42,6 +42,11 @@ namespace {
      initializeDeadMachineInstructionElimPass(*PassRegistry::getPassRegistry());
     }
 
+    void getAnalysisUsage(AnalysisUsage &AU) const override {
+      AU.setPreservesCFG();
+      MachineFunctionPass::getAnalysisUsage(AU);
+    }
+
   private:
     bool isDead(const MachineInstr *MI) const;
   };
@@ -60,12 +65,12 @@ bool DeadMachineInstructionElim::isDead(const MachineInstr *MI) const {
     return false;
 
   // Don't delete frame allocation labels.
-  if (MI->getOpcode() == TargetOpcode::FRAME_ALLOC)
+  if (MI->getOpcode() == TargetOpcode::LOCAL_ESCAPE)
     return false;
 
   // Don't delete instructions with side effects.
   bool SawStore = false;
-  if (!MI->isSafeToMove(TII, nullptr, SawStore) && !MI->isPHI())
+  if (!MI->isSafeToMove(nullptr, SawStore) && !MI->isPHI())
     return false;
 
   // Examine each operand.
@@ -90,7 +95,7 @@ bool DeadMachineInstructionElim::isDead(const MachineInstr *MI) const {
 }
 
 bool DeadMachineInstructionElim::runOnMachineFunction(MachineFunction &MF) {
-  if (skipOptnoneFunction(*MF.getFunction()))
+  if (skipFunction(*MF.getFunction()))
     return false;
 
   bool AnyChanges = false;
@@ -101,26 +106,22 @@ bool DeadMachineInstructionElim::runOnMachineFunction(MachineFunction &MF) {
   // Loop over all instructions in all blocks, from bottom to top, so that it's
   // more likely that chains of dependent but ultimately dead instructions will
   // be cleaned up.
-  for (MachineFunction::reverse_iterator I = MF.rbegin(), E = MF.rend();
-       I != E; ++I) {
-    MachineBasicBlock *MBB = &*I;
-
+  for (MachineBasicBlock &MBB : make_range(MF.rbegin(), MF.rend())) {
     // Start out assuming that reserved registers are live out of this block.
     LivePhysRegs = MRI->getReservedRegs();
 
     // Add live-ins from sucessors to LivePhysRegs. Normally, physregs are not
     // live across blocks, but some targets (x86) can have flags live out of a
     // block.
-    for (MachineBasicBlock::succ_iterator S = MBB->succ_begin(),
-           E = MBB->succ_end(); S != E; S++)
-      for (MachineBasicBlock::livein_iterator LI = (*S)->livein_begin();
-           LI != (*S)->livein_end(); LI++)
-        LivePhysRegs.set(*LI);
+    for (MachineBasicBlock::succ_iterator S = MBB.succ_begin(),
+           E = MBB.succ_end(); S != E; S++)
+      for (const auto &LI : (*S)->liveins())
+        LivePhysRegs.set(LI.PhysReg);
 
     // Now scan the instructions and delete dead ones, tracking physreg
     // liveness as we go.
-    for (MachineBasicBlock::reverse_iterator MII = MBB->rbegin(),
-         MIE = MBB->rend(); MII != MIE; ) {
+    for (MachineBasicBlock::reverse_iterator MII = MBB.rbegin(),
+         MIE = MBB.rend(); MII != MIE; ) {
       MachineInstr *MI = &*MII;
 
       // If the instruction is dead, delete it!
@@ -132,7 +133,7 @@ bool DeadMachineInstructionElim::runOnMachineFunction(MachineFunction &MF) {
         MI->eraseFromParentAndMarkDBGValuesForRemoval();
         AnyChanges = true;
         ++NumDeletes;
-        MIE = MBB->rend();
+        MIE = MBB.rend();
         // MII is now pointing to the next instruction to process,
         // so don't increment it.
         continue;

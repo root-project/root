@@ -55,7 +55,7 @@ namespace TMVA
 
       // ---------- ROOT class definition
       ClassDef(PDEFoamEvent, 1) // Tree of PDEFoamCells
-   }; // end of PDEFoamEvent
+         }; // end of PDEFoamEvent
 
 }  // namespace TMVA
 

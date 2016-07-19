@@ -54,7 +54,7 @@ namespace TMVA {
 
       // setters
       void                       SetConvergenceParameters(  Int_t steps, Double_t improvement )  
-                                                                  { fSteps = steps; fImprovement = improvement; }
+      { fSteps = steps; fImprovement = improvement; }
       void                       SetCurrentValue(  Float_t value )  { fCurrentValue = value; }
       Float_t                    GetCurrentValue()                  { return fCurrentValue; }
       void                       ResetConvergenceCounter()  { fCounter = -1; fMaxCounter = 0; }

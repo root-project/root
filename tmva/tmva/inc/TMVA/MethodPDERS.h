@@ -71,12 +71,10 @@ namespace TMVA {
       MethodPDERS( const TString& jobName,
                    const TString& methodTitle, 
                    DataSetInfo& theData,
-                   const TString& theOption,
-                   TDirectory* theTargetDir = 0 );
+                   const TString& theOption);
 
       MethodPDERS( DataSetInfo& theData,
-                   const TString& theWeightFile,
-                   TDirectory* theTargetDir = NULL );
+                   const TString& theWeightFile);
 
       virtual ~MethodPDERS( void );
 
@@ -226,7 +224,7 @@ namespace TMVA {
 
       void Init( void );
 
-      ClassDef(MethodPDERS,0) // Multi-dimensional probability density estimator range search (PDERS) method
+      ClassDef(MethodPDERS,0); // Multi-dimensional probability density estimator range search (PDERS) method
    };
 
 } // namespace TMVA

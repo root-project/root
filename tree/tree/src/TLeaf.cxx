@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TLeaf
+\ingroup tree
+
 A TLeaf describes individual elements of a TBranch
 See TBranch structure in TTree.
 */

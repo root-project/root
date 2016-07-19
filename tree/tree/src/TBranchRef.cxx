@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TBranchRef
+\ingroup tree
+
 A branch containing and managing a TRefTable for TRef autoloading.
 It loads the TBranch containing a referenced object when requested
 by TRef::GetObject(), so the reference can be resolved. The

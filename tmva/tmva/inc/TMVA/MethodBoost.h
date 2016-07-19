@@ -65,12 +65,10 @@ namespace TMVA {
       MethodBoost( const TString& jobName,
                    const TString& methodTitle,
                    DataSetInfo& theData,
-                   const TString& theOption = "",
-                   TDirectory* theTargetDir = NULL );
+                   const TString& theOption = "" );
 
       MethodBoost( DataSetInfo& dsi,
-                   const TString& theWeightFile,
-                   TDirectory* theTargetDir = NULL );
+                   const TString& theWeightFile );
 
       virtual ~MethodBoost( void );
 
@@ -176,13 +174,13 @@ namespace TMVA {
       // MVA output from each classifier over the testing hist
       std::vector< TH1* >   fTestSigMVAHist;
       std::vector
-< TH1* >   fTestBgdMVAHist;
+         < TH1* >   fTestBgdMVAHist;
       
       //monitoring tree/ntuple and it's variables
       TTree*                fMonitorTree;     // tree  to monitor values during the boosting      
       Double_t              fBoostWeight;        // the weight used to boost the next classifier      
       Double_t              fMethodError;     // estimation of the level error of the classifier 
-                                                  // analysing the train dataset      
+      // analysing the train dataset      
       Double_t           fROC_training;       // roc integral of last trained method (on training sample)
 
       // overlap integral of mva distributions for signal and
@@ -203,7 +201,7 @@ namespace TMVA {
       // get help message text
       void GetHelpMessage() const;
 
-      ClassDef(MethodBoost,0)
+      ClassDef(MethodBoost,0);
    };
 }
 

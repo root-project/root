@@ -228,11 +228,13 @@ public:
    virtual void   SetTempLevel(int /* val */) const {;}
    virtual int    UnloadFile(const char * /* path */) const {return 0;}
    virtual TInterpreterValue *CreateTemporary() { return 0; }
+   virtual void   CodeComplete(const std::string&, size_t&,
+                               std::vector<std::string>&) {;}
 
    // core/meta helper functions.
    virtual EReturnType MethodCallReturnType(TFunction *func) const = 0;
    virtual ULong64_t GetInterpreterStateMarker() const = 0;
-   virtual void DiagnoseIfInterpreterException(std::exception &e) const = 0;
+   virtual bool DiagnoseIfInterpreterException(const std::exception &e) const = 0;
 
    typedef TDictionary::DeclId_t DeclId_t;
    virtual DeclId_t GetDeclId(CallFunc_t *info) const = 0;

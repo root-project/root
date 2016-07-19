@@ -126,9 +126,8 @@ ClassImp(TMVA::MethodDT)
    TMVA::MethodDT::MethodDT( const TString& jobName,
                              const TString& methodTitle,
                              DataSetInfo& theData,
-                             const TString& theOption,
-                             TDirectory* theTargetDir ) :
-   TMVA::MethodBase( jobName, Types::kDT, methodTitle, theData, theOption, theTargetDir )
+                             const TString& theOption) :
+   TMVA::MethodBase( jobName, Types::kDT, methodTitle, theData, theOption)
    , fTree(0)
    , fSepType(0)
    , fMinNodeEvents(0)
@@ -152,9 +151,8 @@ ClassImp(TMVA::MethodDT)
 ///constructor from Reader
 
 TMVA::MethodDT::MethodDT( DataSetInfo& dsi,
-                          const TString& theWeightFile,
-                          TDirectory* theTargetDir ) :
-   TMVA::MethodBase( Types::kDT, dsi, theWeightFile, theTargetDir )
+                          const TString& theWeightFile) :
+   TMVA::MethodBase( Types::kDT, dsi, theWeightFile)
    , fTree(0)
    , fSepType(0)
    , fMinNodeEvents(0)
@@ -504,11 +502,11 @@ Double_t TMVA::MethodDT::TestTreeQuality( DecisionTree *dt )
    // test the tree quality.. in terms of Miscalssification
    Double_t SumCorrect=0,SumWrong=0;
    for (Long64_t ievt=0; ievt<Data()->GetNEvents(); ievt++)
-   {
-      const Event * ev = Data()->GetEvent(ievt);
-      if ((dt->CheckEvent(ev) > dt->GetNodePurityLimit() ) == DataInfo().IsSignal(ev)) SumCorrect+=ev->GetWeight();
-      else SumWrong+=ev->GetWeight();
-   }
+      {
+         const Event * ev = Data()->GetEvent(ievt);
+         if ((dt->CheckEvent(ev) > dt->GetNodePurityLimit() ) == DataInfo().IsSignal(ev)) SumCorrect+=ev->GetWeight();
+         else SumWrong+=ev->GetWeight();
+      }
    Data()->SetCurrentType(Types::kTraining);
    return  SumCorrect / (SumCorrect + SumWrong);
 }

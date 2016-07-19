@@ -94,19 +94,25 @@ Stmt *AnalysisDeclContext::getBody(bool &IsAutosynthesized) const {
   IsAutosynthesized = false;
   if (const FunctionDecl *FD = dyn_cast<FunctionDecl>(D)) {
     Stmt *Body = FD->getBody();
-    if (!Body && Manager && Manager->synthesizeBodies()) {
-      Body = getBodyFarm(getASTContext(), Manager->Injector.get()).getBody(FD);
-      if (Body)
+    if (Manager && Manager->synthesizeBodies()) {
+      Stmt *SynthesizedBody =
+          getBodyFarm(getASTContext(), Manager->Injector.get()).getBody(FD);
+      if (SynthesizedBody) {
+        Body = SynthesizedBody;
         IsAutosynthesized = true;
+      }
     }
     return Body;
   }
   else if (const ObjCMethodDecl *MD = dyn_cast<ObjCMethodDecl>(D)) {
     Stmt *Body = MD->getBody();
-    if (!Body && Manager && Manager->synthesizeBodies()) {
-      Body = getBodyFarm(getASTContext(), Manager->Injector.get()).getBody(MD);
-      if (Body)
+    if (Manager && Manager->synthesizeBodies()) {
+      Stmt *SynthesizedBody =
+          getBodyFarm(getASTContext(), Manager->Injector.get()).getBody(MD);
+      if (SynthesizedBody) {
+        Body = SynthesizedBody;
         IsAutosynthesized = true;
+      }
     }
     return Body;
   } else if (const BlockDecl *BD = dyn_cast<BlockDecl>(D))
@@ -135,6 +141,10 @@ bool AnalysisDeclContext::isBodyAutosynthesizedFromModelFile() const {
   return Tmp && Body->getLocStart().isValid();
 }
 
+/// Returns true if \param VD is an Objective-C implicit 'self' parameter.
+static bool isSelfDecl(const VarDecl *VD) {
+  return isa<ImplicitParamDecl>(VD) && VD->getName() == "self";
+}
 
 const ImplicitParamDecl *AnalysisDeclContext::getSelfDecl() const {
   if (const ObjCMethodDecl *MD = dyn_cast<ObjCMethodDecl>(D))
@@ -143,9 +153,26 @@ const ImplicitParamDecl *AnalysisDeclContext::getSelfDecl() const {
     // See if 'self' was captured by the block.
     for (const auto &I : BD->captures()) {
       const VarDecl *VD = I.getVariable();
-      if (VD->getName() == "self")
+      if (isSelfDecl(VD))
         return dyn_cast<ImplicitParamDecl>(VD);
     }    
+  }
+
+  auto *CXXMethod = dyn_cast<CXXMethodDecl>(D);
+  if (!CXXMethod)
+    return nullptr;
+
+  const CXXRecordDecl *parent = CXXMethod->getParent();
+  if (!parent->isLambda())
+    return nullptr;
+
+  for (const LambdaCapture &LC : parent->captures()) {
+    if (!LC.capturesVariable())
+      continue;
+
+    VarDecl *VD = LC.getCapturedVar();
+    if (isSelfDecl(VD))
+      return dyn_cast<ImplicitParamDecl>(VD);
   }
 
   return nullptr;
@@ -298,6 +325,21 @@ AnalysisDeclContext::getBlockInvocationContext(const LocationContext *parent,
                                                const void *ContextData) {
   return getLocationContextManager().getBlockInvocationContext(this, parent,
                                                                BD, ContextData);
+}
+
+bool AnalysisDeclContext::isInStdNamespace(const Decl *D) {
+  const DeclContext *DC = D->getDeclContext()->getEnclosingNamespaceContext();
+  const NamespaceDecl *ND = dyn_cast<NamespaceDecl>(DC);
+  if (!ND)
+    return false;
+
+  while (const DeclContext *Parent = ND->getParent()) {
+    if (!isa<NamespaceDecl>(Parent))
+      break;
+    ND = cast<NamespaceDecl>(Parent);
+  }
+
+  return ND->isStdNamespace();
 }
 
 LocationContextManager & AnalysisDeclContext::getLocationContextManager() {
@@ -472,9 +514,9 @@ public:
   : BEVals(bevals), BC(bc) {}
 
   void VisitStmt(Stmt *S) {
-    for (Stmt::child_range I = S->children(); I; ++I)
-      if (Stmt *child = *I)
-        Visit(child);
+    for (Stmt *Child : S->children())
+      if (Child)
+        Visit(Child);
   }
 
   void VisitDeclRefExpr(DeclRefExpr *DR) {
@@ -530,14 +572,14 @@ static DeclVec* LazyInitializeReferencedDecls(const BlockDecl *BD,
   return BV;
 }
 
-std::pair<AnalysisDeclContext::referenced_decls_iterator,
-          AnalysisDeclContext::referenced_decls_iterator>
+llvm::iterator_range<AnalysisDeclContext::referenced_decls_iterator>
 AnalysisDeclContext::getReferencedBlockVars(const BlockDecl *BD) {
   if (!ReferencedBlockVars)
     ReferencedBlockVars = new llvm::DenseMap<const BlockDecl*,void*>();
 
-  DeclVec *V = LazyInitializeReferencedDecls(BD, (*ReferencedBlockVars)[BD], A);
-  return std::make_pair(V->begin(), V->end());
+  const DeclVec *V =
+      LazyInitializeReferencedDecls(BD, (*ReferencedBlockVars)[BD], A);
+  return llvm::make_range(V->begin(), V->end());
 }
 
 ManagedAnalysis *&AnalysisDeclContext::getAnalysisImpl(const void *tag) {

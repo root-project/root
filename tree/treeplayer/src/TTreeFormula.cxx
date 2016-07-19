@@ -929,7 +929,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
             // This is inside a TClonesArray.
 
             if (!element) {
-               Warning("DefineVariable",
+               Warning("DefinedVariable",
                        "Missing TStreamerElement in object in TClonesArray section");
                return -2;
             }
@@ -968,7 +968,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
             // This is inside a Collection
 
             if (!element) {
-               Warning("DefineVariable","Missing TStreamerElement in object in Collection section");
+               Warning("DefinedVariable","Missing TStreamerElement in object in Collection section");
                return -2;
             }
             // First we need to recover the collection.
@@ -2701,6 +2701,14 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
       fManager->SetBit(kNeedEntries);
       return code;
    }
+   if (name == "LocalEntries$") {
+      Int_t code = fNcodes++;
+      fCodes[code] = 0;
+      fLookupType[code] = kLocalEntries;
+      SetBit(kNeedEntries); // FIXME: necessary?
+      fManager->SetBit(kNeedEntries); // FIXME: necessary?
+      return code;
+   }
    if (name == "Iteration$") {
       Int_t code = fNcodes++;
       fCodes[code] = 0;
@@ -2929,6 +2937,10 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
                   fVarIndexes[code][dim] = new TTreeFormula("index_var",
                                                             varindex,
                                                             fTree);
+                  if (fVarIndexes[code][dim]->GetNdim() == 0) {
+                     // Parsing failed for the index, let's stop here ....
+                     return -1;
+                  }
                   current += strlen(varindex)+1; // move to the end of the index array
                }
             }
@@ -3619,6 +3631,7 @@ void* TTreeFormula::EvalObject(int instance)
       case kIndexOfEntry:
       case kIndexOfLocalEntry:
       case kEntries:
+      case kLocalEntries:
       case kLength:
       case kLengthFunc:
       case kIteration:
@@ -3818,7 +3831,7 @@ template<typename T> T FindMin(TTreeFormula *arr, TTreeFormula *condition) {
          condval = condition->EvalInstance<T>(i);
          ++i;
       } while (!condval && i<len);
-      if (i==len) {
+      if (!condval && i==len) {
          return 0;
       }
       if (i!=1) {
@@ -3850,7 +3863,7 @@ template<typename T> T FindMax(TTreeFormula *arr, TTreeFormula *condition) {
          condval = condition->EvalInstance<T>(i);
          ++i;
       } while (!condval && i<len);
-      if (i==len) {
+      if (!condval && i==len) {
          return 0;
       }
       if (i!=1) {
@@ -3938,6 +3951,7 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
          case kIndexOfEntry: return (T)fTree->GetReadEntry();
          case kIndexOfLocalEntry: return (T)fTree->GetTree()->GetReadEntry();
          case kEntries:      return (T)fTree->GetEntries();
+         case kLocalEntries: return (T)fTree->GetTree()->GetEntries();
          case kLength:       return fManager->fNdata;
          case kLengthFunc:   return ((TTreeFormula*)fAliases.UncheckedAt(0))->GetNdata();
          case kIteration:    return instance;
@@ -4026,7 +4040,8 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
                          continue;
             case kasinh: tab[pos-1] = TMath::ASinH(tab[pos-1]); continue;
             case katanh: if (TMath::Abs(tab[pos-1]) > 1) {tab[pos-1] = 0;} // indetermination
-                     else tab[pos-1] = TMath::ATanH(tab[pos-1]); continue;
+                         else tab[pos-1] = TMath::ATanH(tab[pos-1]);
+                         continue;
             case katan2: pos--; tab[pos-1] = TMath::ATan2(tab[pos-1],tab[pos]); continue;
 
             case kfmod : pos--; tab[pos-1] = fmod_local(tab[pos-1],tab[pos]); continue;
@@ -4035,7 +4050,8 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
             case ksqrt : tab[pos-1] = TMath::Sqrt(TMath::Abs(tab[pos-1])); continue;
 
             case kstrstr : pos2 -= 2; pos++;if (strstr(stringStack[pos2],stringStack[pos2+1])) tab[pos-1]=1;
-                                        else tab[pos-1]=0; continue;
+                                            else tab[pos-1]=0;
+                           continue;
 
             case kmin : pos--; tab[pos-1] = std::min(tab[pos-1],tab[pos]); continue;
             case kmax : pos--; tab[pos-1] = std::max(tab[pos-1],tab[pos]); continue;
@@ -4055,15 +4071,18 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
             case kpi   : pos++; tab[pos-1] = TMath::ACos(-1); continue;
 
             case kabs  : tab[pos-1] = TMath::Abs(tab[pos-1]); continue;
-            case ksign : if (tab[pos-1] < 0) tab[pos-1] = -1; else tab[pos-1] = 1; continue;
+            case ksign : if (tab[pos-1] < 0) tab[pos-1] = -1; else tab[pos-1] = 1;
+                         continue;
             case kint  : tab[pos-1] = T(Long64_t(tab[pos-1])); continue;
             case kSignInv: tab[pos-1] = -1 * tab[pos-1]; continue;
             case krndm : pos++; tab[pos-1] = gRandom->Rndm(1); continue;
 
             case kAnd  : pos--; if (tab[pos-1]!=0 && tab[pos]!=0) tab[pos-1]=1;
-                                else tab[pos-1]=0; continue;
+                                else tab[pos-1]=0;
+                         continue;
             case kOr   : pos--; if (tab[pos-1]!=0 || tab[pos]!=0) tab[pos-1]=1;
-                                else tab[pos-1]=0; continue;
+                                else tab[pos-1]=0;
+                         continue;
 
             case kEqual      : pos--; tab[pos-1] = (tab[pos-1] == tab[pos]) ? 1 : 0; continue;
             case kNotEqual   : pos--; tab[pos-1] = (tab[pos-1] != tab[pos]) ? 1 : 0; continue;
@@ -4074,9 +4093,11 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
             case kNot        :        tab[pos-1] = (tab[pos-1] !=        0) ? 0 : 1; continue;
 
             case kStringEqual : pos2 -= 2; pos++; if (!strcmp(stringStack[pos2+1],stringStack[pos2])) tab[pos-1]=1;
-                                                  else tab[pos-1]=0; continue;
+                                                  else tab[pos-1]=0;
+                                continue;
             case kStringNotEqual: pos2 -= 2; pos++;if (strcmp(stringStack[pos2+1],stringStack[pos2])) tab[pos-1]=1;
-                                                   else tab[pos-1]=0; continue;
+                                                   else tab[pos-1]=0;
+                                  continue;
 
             case kBitAnd    : pos--; tab[pos-1]= ((ULong64_t) tab[pos-1]) & ((ULong64_t) tab[pos]); continue;
             case kBitOr     : pos--; tab[pos-1]= ((ULong64_t) tab[pos-1]) | ((ULong64_t) tab[pos]); continue;
@@ -4184,6 +4205,7 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
                case kIndexOfEntry: tab[pos++] = (T)fTree->GetReadEntry(); continue;
                case kIndexOfLocalEntry: tab[pos++] = (T)fTree->GetTree()->GetReadEntry(); continue;
                case kEntries:      tab[pos++] = (T)fTree->GetEntries(); continue;
+               case kLocalEntries: tab[pos++] = (T)fTree->GetTree()->GetEntries(); continue;
                case kLength:       tab[pos++] = fManager->fNdata; continue;
                case kLengthFunc:   tab[pos++] = ((TTreeFormula*)fAliases.UncheckedAt(i))->GetNdata(); continue;
                case kIteration:    tab[pos++] = instance; continue;
@@ -4562,6 +4584,7 @@ Bool_t TTreeFormula::IsInteger(Bool_t fast) const
          case kIndexOfEntry:
          case kIndexOfLocalEntry:
          case kEntries:
+         case kLocalEntries:
          case kLength:
          case kLengthFunc:
          case kIteration:
@@ -4594,6 +4617,7 @@ Bool_t TTreeFormula::IsLeafInteger(Int_t code) const
          case kIndexOfEntry:
          case kIndexOfLocalEntry:
          case kEntries:
+         case kLocalEntries:
          case kLength:
          case kLengthFunc:
          case kIteration:

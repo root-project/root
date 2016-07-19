@@ -142,11 +142,21 @@ set(zliblibdir ${ZLIB_LIBRARY_DIR})
 set(zliblib ${ZLIB_LIBRARY})
 set(zlibincdir ${ZLIB_INCLUDE_DIR})
 
+set(builtinunuran ${value${builtin_unuran}})
+set(unuranlibdir ${UNURAN_LIBRARY_DIR})
+set(unuranlib ${UNURAN_LIBRARY})
+set(unuranincdir ${UNURAN_INCLUDE_DIR})
+
 set(buildgl ${value${opengl}})
 set(opengllibdir ${OPENGL_LIBRARY_DIR})
 set(openglulib ${OPENGL_glu_LIBRARY})
 set(opengllib ${OPENGL_gl_LIBRARY})
 set(openglincdir ${OPENGL_INCLUDE_DIR})
+
+set(builtingl2ps ${value${builtin_gl2ps}})
+set(gl2pslibdir ${GL2PS_LIBRARY_DIR})
+set(gl2pslib ${GL2PS_LIBRARY})
+set(gl2psincdir ${GL2PS_INCLUDE_DIR})
 
 set(buildldap ${value${ldap}})
 set(ldaplibdir ${LDAP_LIBRARY_DIR})
@@ -408,7 +418,15 @@ find_program(PERL_EXECUTABLE perl)
 set(perl ${PERL_EXECUTABLE})
 
 #---RConfigure-------------------------------------------------------------------------------------------------
-set(setresuid undef)
+# set(setresuid undef)
+CHECK_CXX_SOURCE_COMPILES("#include <unistd.h>
+  int main() { uid_t r = 0, e = 0, s = 0; if (setresuid(r, e, s) != 0) { }; return 0;}" found_setresuid)
+if(found_setresuid)
+  set(setresuid define)
+else()
+  set(setresuid undef)
+endif()
+
 if(mathmore)
   set(hasmathmore define)
 else()
@@ -506,6 +524,22 @@ else()
   set(hasstodstringview undef)
 endif()
 
+CHECK_CXX_SOURCE_COMPILES("#include <tuple>
+int main() { std::tuple<int> tup;std::apply(tup, [](int){}); return 0;}" found_stdapply)
+if(found_stdapply)
+  set(hasstdapply define)
+else()
+  set(hasstdapply undef)
+endif()
+
+CHECK_CXX_SOURCE_COMPILES("#include <functional>
+int main() { return std::invoke([](int i){return i;}, 0); }" found_stdinvoke)
+if(found_stdinvoke)
+  set(hasstdinvoke define)
+else()
+  set(hasstdinvoke undef)
+endif()
+
 #---root-config----------------------------------------------------------------------------------------------
 ROOT_SHOW_OPTIONS(features)
 string(REPLACE "c++11" "cxx11" features ${features}) # change the name of the c++11 feature needed for root-config.in
@@ -527,7 +561,16 @@ install(FILES ${CMAKE_BINARY_DIR}/include/RConfigure.h DESTINATION ${CMAKE_INSTA
 execute_Process(COMMAND hostname OUTPUT_VARIABLE BuildNodeInfo OUTPUT_STRIP_TRAILING_WHITESPACE )
 
 configure_file(${CMAKE_SOURCE_DIR}/config/rootrc.in ${CMAKE_BINARY_DIR}/etc/system.rootrc @ONLY NEWLINE_STYLE UNIX)
+configure_file(${CMAKE_SOURCE_DIR}/config/rootauthrc.in ${CMAKE_BINARY_DIR}/etc/system.rootauthrc @ONLY NEWLINE_STYLE UNIX)
+configure_file(${CMAKE_SOURCE_DIR}/config/rootdaemonrc.in ${CMAKE_BINARY_DIR}/etc/system.rootdaemonrc @ONLY NEWLINE_STYLE UNIX)
+
+configure_file(${CMAKE_SOURCE_DIR}/config/rootd.in ${CMAKE_BINARY_DIR}/etc/daemons/rootd.rc.d @ONLY NEWLINE_STYLE UNIX)
+configure_file(${CMAKE_SOURCE_DIR}/config/rootd.xinetd.in ${CMAKE_BINARY_DIR}/etc/daemons/rootd.xinetd @ONLY NEWLINE_STYLE UNIX)
+configure_file(${CMAKE_SOURCE_DIR}/config/proofd.in ${CMAKE_BINARY_DIR}/etc/daemons/proofd.rc.d @ONLY NEWLINE_STYLE UNIX)
+configure_file(${CMAKE_SOURCE_DIR}/config/proofd.xinetd.in ${CMAKE_BINARY_DIR}/etc/daemons/proofd.xinetd @ONLY NEWLINE_STYLE UNIX)
+
 configure_file(${CMAKE_SOURCE_DIR}/config/RConfigOptions.in include/RConfigOptions.h NEWLINE_STYLE UNIX)
+
 if(ruby)
   file(APPEND ${CMAKE_BINARY_DIR}/include/RConfigOptions.h "\#define R__RUBY_MAJOR ${RUBY_MAJOR_VERSION}\n\#define R__RUBY_MINOR ${RUBY_MINOR_VERSION}\n")
 endif()
@@ -544,8 +587,10 @@ configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/ROOTConfig-version.cmake.in
 #---Compiler flags (because user apps are a bit dependent on them...)----------------------------------------
 string(REGEX REPLACE "(^|[ ]*)-W[^ ]*" "" __cxxflags "${CMAKE_CXX_FLAGS}")
 string(REGEX REPLACE "(^|[ ]*)-W[^ ]*" "" __cflags "${CMAKE_C_FLAGS}")
-string(REGEX REPLACE "(^|[ ]*)-W[^ ]*" "" __fflags "${CMAKE_fortran_FLAGS}")
+string(REGEX REPLACE "(^|[ ]*)-W[^ ]*" "" __fflags "${CMAKE_Fortran_FLAGS}")
+string(REGEX MATCHALL "-(D|U)[^ ]*" __defs "${CMAKE_CXX_FLAGS}")
 set(ROOT_COMPILER_FLAG_HINTS "#
+set(ROOT_DEFINITIONS \"${__defs}\")
 set(ROOT_CXX_FLAGS \"${__cxxflags}\")
 set(ROOT_C_FLAGS \"${__cflags}\")
 set(ROOT_fortran_FLAGS \"${__fflags}\")
@@ -623,6 +668,9 @@ else()
         "${libdir}" "-lCore" "-lRint" "${incdir}" "" "" "${ROOT_ARCHITECTURE}" "" "${explicitlink}" )
 endif()
 
+#---Get the value of CMAKE_CXX_FLAGS provided by the user in the command line
+set(usercflags ${CMAKE_CXX_FLAGS-CACHED})
+
 configure_file(${CMAKE_SOURCE_DIR}/config/root-config.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/root-config @ONLY NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/config/memprobe.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/memprobe @ONLY NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.sh @ONLY NEWLINE_STYLE UNIX)
@@ -674,7 +722,20 @@ install(FILES ${CMAKE_BINARY_DIR}/include/RConfigOptions.h
 
 install(FILES ${CMAKE_BINARY_DIR}/etc/root.mimes
               ${CMAKE_BINARY_DIR}/etc/system.rootrc
+              ${CMAKE_BINARY_DIR}/etc/system.rootauthrc
+              ${CMAKE_BINARY_DIR}/etc/system.rootdaemonrc
               DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
+
+install(FILES ${CMAKE_BINARY_DIR}/etc/daemons/rootd.rc.d
+              ${CMAKE_BINARY_DIR}/etc/daemons/proofd.rc.d
+              PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
+                          GROUP_EXECUTE GROUP_READ
+                          WORLD_EXECUTE WORLD_READ
+              DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/daemons)
+
+install(FILES ${CMAKE_BINARY_DIR}/etc/daemons/rootd.xinetd
+              ${CMAKE_BINARY_DIR}/etc/daemons/proofd.xinetd
+              DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/daemons)
 
 install(FILES ${CMAKE_BINARY_DIR}/root-help.el DESTINATION ${CMAKE_INSTALL_ELISPDIR})
 

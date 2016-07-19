@@ -1,8 +1,13 @@
-void xtruDraw() {
-// Draw a "representative" TXTRU shape
-// Canvas saved as xtru.gif can be used for TXTRU THtml output
-// Author: Robert Hatcher (rhatcher@fnal.gov) 2000.09.06
+/// \file
+/// \ingroup tutorial_geom
+/// Draw a "representative" TXTRU shape
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Robert Hatcher (rhatcher@fnal.gov) 2000.09.06
 
+void xtruDraw() {
   TCanvas *canvas = new TCanvas("xtru","Example XTRU object",200,10,640,640);
 
 // Create a new geometry

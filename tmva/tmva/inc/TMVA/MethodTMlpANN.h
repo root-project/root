@@ -55,12 +55,10 @@ namespace TMVA {
       MethodTMlpANN( const TString& jobName, 
                      const TString& methodTitle, 
                      DataSetInfo& theData,
-                     const TString& theOption = "3000:N-1:N-2", 
-                     TDirectory* theTargetDir = 0 );
+                     const TString& theOption = "3000:N-1:N-2");
 
       MethodTMlpANN( DataSetInfo& theData, 
-                     const TString& theWeightFile,  
-                     TDirectory* theTargetDir = NULL );
+                     const TString& theWeightFile);
 
       virtual ~MethodTMlpANN( void );
     
@@ -124,7 +122,7 @@ namespace TMVA {
       // default initialisation called by all constructors
       void Init( void );
 
-      ClassDef(MethodTMlpANN,0) // Implementation of interface for TMultiLayerPerceptron
+      ClassDef(MethodTMlpANN,0); // Implementation of interface for TMultiLayerPerceptron
    };
 
 } // namespace TMVA

@@ -34,7 +34,7 @@ set(headers4 TNeuron.h TSynapse.h TActivationChooser.h TActivation.h TActivation
          TActivationTanh.h TActivationRadial.h TActivationReLU.h TNeuronInputChooser.h TNeuronInput.h TNeuronInputSum.h
 	     TNeuronInputSqSum.h TNeuronInputAbs.h Types.h Ranking.h RuleFit.h RuleFitAPI.h IMethod.h MsgLogger.h
 	     VariableTransformBase.h VariableIdentityTransform.h VariableDecorrTransform.h VariablePCATransform.h 
-	     VariableGaussTransform.h VariableNormalizeTransform.h VariableRearrangeTransform.h ROCCalc.h ROCCurve.h)
+	     VariableGaussTransform.h VariableNormalizeTransform.h VariableRearrangeTransform.h VariableTransform.h ROCCalc.h ROCCurve.h)
 
 #---Need to suffix each header name by TMVA/  -----------------
 foreach(hs headers1 headers2 headers3 headers4)
@@ -46,7 +46,7 @@ endforeach()
 ROOT_GENERATE_DICTIONARY(G__TMVA ${theaders1} ${theaders2} ${theaders3} ${theaders4}   MODULE TMVA LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
 
 ROOT_LINKER_LIBRARY(TMVA *.cxx G__TMVA.cxx LIBRARIES Core
-                    DEPENDENCIES RIO Hist Tree TreeViewer  MLP Minuit XMLIO)
+                    DEPENDENCIES RIO Hist Tree TreePlayer MLP Minuit XMLIO)
 
 install(DIRECTORY inc/TMVA/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/TMVA
                             COMPONENT headers

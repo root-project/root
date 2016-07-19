@@ -11,6 +11,7 @@
 //  modules for the ASTReader.
 //
 //===----------------------------------------------------------------------===//
+#include "clang/Frontend/PCHContainerOperations.h"
 #include "clang/Lex/HeaderSearch.h"
 #include "clang/Lex/ModuleMap.h"
 #include "clang/Serialization/GlobalModuleIndex.h"
@@ -58,8 +59,7 @@ ModuleManager::addModule(StringRef FileName, ModuleKind Type,
                          unsigned Generation,
                          off_t ExpectedSize, time_t ExpectedModTime,
                          ASTFileSignature ExpectedSignature,
-                         std::function<ASTFileSignature(llvm::BitstreamReader &)>
-                             ReadSignature,
+                         ASTFileSignatureReader ReadSignature,
                          ModuleFile *&Module,
                          std::string &ErrorStr) {
   Module = nullptr;
@@ -95,6 +95,10 @@ ModuleManager::addModule(StringRef FileName, ModuleKind Type,
     New->File = Entry;
     New->ImportLoc = ImportLoc;
     Chain.push_back(New);
+    if (!New->isModule())
+      PCHChain.push_back(New);
+    if (!ImportedBy)
+      Roots.push_back(New);
     NewModule = true;
     ModuleEntry = New;
 
@@ -135,10 +139,9 @@ ModuleManager::addModule(StringRef FileName, ModuleKind Type,
 
       New->Buffer = std::move(*Buf);
     }
-    
-    // Initialize the stream
-    New->StreamFile.init((const unsigned char *)New->Buffer->getBufferStart(),
-                         (const unsigned char *)New->Buffer->getBufferEnd());
+
+    // Initialize the stream.
+    PCHContainerRdr.ExtractPCH(New->Buffer->getMemBufferRef(), New->StreamFile);
   }
 
   if (ExpectedSignature) {
@@ -156,7 +159,14 @@ ModuleManager::addModule(StringRef FileName, ModuleKind Type,
         // invalidate the file cache for Entry, and that is not safe if this
         // module is *itself* up to date, but has an out-of-date importer.
         Modules.erase(Entry);
+        assert(Chain.back() == ModuleEntry);
         Chain.pop_back();
+        if (!ModuleEntry->isModule())
+          PCHChain.pop_back();
+        if (Roots.back() == ModuleEntry)
+          Roots.pop_back();
+        else
+          assert(ImportedBy);
         delete ModuleEntry;
       }
       return OutOfDate;
@@ -184,14 +194,29 @@ void ModuleManager::removeModules(
   if (first == last)
     return;
 
+  // Explicitly clear VisitOrder since we might not notice it is stale.
+  VisitOrder.clear();
+
   // Collect the set of module file pointers that we'll be removing.
   llvm::SmallPtrSet<ModuleFile *, 4> victimSet(first, last);
 
+  auto IsVictim = [&](ModuleFile *MF) {
+    return victimSet.count(MF);
+  };
   // Remove any references to the now-destroyed modules.
   for (unsigned i = 0, n = Chain.size(); i != n; ++i) {
-    Chain[i]->ImportedBy.remove_if([&](ModuleFile *MF) {
-      return victimSet.count(MF);
-    });
+    Chain[i]->ImportedBy.remove_if(IsVictim);
+  }
+  Roots.erase(std::remove_if(Roots.begin(), Roots.end(), IsVictim),
+              Roots.end());
+
+  // Remove the modules from the PCH chain.
+  for (auto I = first; I != last; ++I) {
+    if (!(*I)->isModule()) {
+      PCHChain.erase(std::find(PCHChain.begin(), PCHChain.end(), *I),
+                     PCHChain.end());
+      break;
+    }
   }
 
   // Delete the modules and erase them from the various structures.
@@ -270,8 +295,10 @@ void ModuleManager::moduleFileAccepted(ModuleFile *MF) {
   ModulesInCommonWithGlobalIndex.push_back(MF);
 }
 
-ModuleManager::ModuleManager(FileManager &FileMgr)
-  : FileMgr(FileMgr), GlobalIndex(), FirstVisitState(nullptr) {}
+ModuleManager::ModuleManager(FileManager &FileMgr,
+                             const PCHContainerReader &PCHContainerRdr)
+    : FileMgr(FileMgr), PCHContainerRdr(PCHContainerRdr), GlobalIndex(),
+      FirstVisitState(nullptr) {}
 
 ModuleManager::~ModuleManager() {
   for (unsigned i = 0, e = Chain.size(); i != e; ++i)
@@ -279,10 +306,8 @@ ModuleManager::~ModuleManager() {
   delete FirstVisitState;
 }
 
-void
-ModuleManager::visit(bool (*Visitor)(ModuleFile &M, void *UserData),
-                     void *UserData,
-                     llvm::SmallPtrSetImpl<ModuleFile *> *ModuleFilesHit) {
+void ModuleManager::visit(llvm::function_ref<bool(ModuleFile &M)> Visitor,
+                          llvm::SmallPtrSetImpl<ModuleFile *> *ModuleFilesHit) {
   // If the visitation order vector is the wrong size, recompute the order.
   if (VisitOrder.size() != Chain.size()) {
     unsigned N = size();
@@ -295,28 +320,24 @@ ModuleManager::visit(bool (*Visitor)(ModuleFile &M, void *UserData),
     SmallVector<ModuleFile *, 4> Queue;
     Queue.reserve(N);
     llvm::SmallVector<unsigned, 4> UnusedIncomingEdges;
-    UnusedIncomingEdges.reserve(size());
-    for (ModuleIterator M = begin(), MEnd = end(); M != MEnd; ++M) {
-      if (unsigned Size = (*M)->ImportedBy.size())
-        UnusedIncomingEdges.push_back(Size);
-      else {
-        UnusedIncomingEdges.push_back(0);
-        Queue.push_back(*M);
-      }
+    UnusedIncomingEdges.resize(size());
+    for (ModuleFile *M : llvm::reverse(*this)) {
+      unsigned Size = M->ImportedBy.size();
+      UnusedIncomingEdges[M->Index] = Size;
+      if (!Size)
+        Queue.push_back(M);
     }
 
     // Traverse the graph, making sure to visit a module before visiting any
     // of its dependencies.
-    unsigned QueueStart = 0;
-    while (QueueStart < Queue.size()) {
-      ModuleFile *CurrentModule = Queue[QueueStart++];
+    while (!Queue.empty()) {
+      ModuleFile *CurrentModule = Queue.pop_back_val();
       VisitOrder.push_back(CurrentModule);
 
       // For any module that this module depends on, push it on the
       // stack (if it hasn't already been marked as visited).
-      for (llvm::SetVector<ModuleFile *>::iterator
-             M = CurrentModule->Imports.begin(),
-             MEnd = CurrentModule->Imports.end();
+      for (auto M = CurrentModule->Imports.rbegin(),
+                MEnd = CurrentModule->Imports.rend();
            M != MEnd; ++M) {
         // Remove our current module as an impediment to visiting the
         // module we depend on. If we were the last unvisited module
@@ -358,7 +379,7 @@ ModuleManager::visit(bool (*Visitor)(ModuleFile &M, void *UserData),
     // Visit the module.
     assert(State->VisitNumber[CurrentModule->Index] == VisitNumber - 1);
     State->VisitNumber[CurrentModule->Index] = VisitNumber;
-    if (!Visitor(*CurrentModule, UserData))
+    if (!Visitor(*CurrentModule))
       continue;
 
     // The visitor has requested that cut off visitation of any
@@ -387,46 +408,6 @@ ModuleManager::visit(bool (*Visitor)(ModuleFile &M, void *UserData),
   }
 
   returnVisitState(State);
-}
-
-/// \brief Perform a depth-first visit of the current module.
-static bool visitDepthFirst(ModuleFile &M, 
-                            bool (*Visitor)(ModuleFile &M, bool Preorder, 
-                                            void *UserData), 
-                            void *UserData,
-                            SmallVectorImpl<bool> &Visited) {
-  // Preorder visitation
-  if (Visitor(M, /*Preorder=*/true, UserData))
-    return true;
-  
-  // Visit children
-  for (llvm::SetVector<ModuleFile *>::iterator IM = M.Imports.begin(),
-                                            IMEnd = M.Imports.end();
-       IM != IMEnd; ++IM) {
-    if (Visited[(*IM)->Index])
-      continue;
-    Visited[(*IM)->Index] = true;
-
-    if (visitDepthFirst(**IM, Visitor, UserData, Visited))
-      return true;
-  }  
-  
-  // Postorder visitation
-  return Visitor(M, /*Preorder=*/false, UserData);
-}
-
-void ModuleManager::visitDepthFirst(bool (*Visitor)(ModuleFile &M, bool Preorder, 
-                                                    void *UserData), 
-                                    void *UserData) {
-  SmallVector<bool, 16> Visited(size(), false);
-  for (unsigned I = 0, N = Chain.size(); I != N; ++I) {
-    if (Visited[Chain[I]->Index])
-      continue;
-    Visited[Chain[I]->Index] = true;
-
-    if (::visitDepthFirst(*Chain[I], Visitor, UserData, Visited))
-      return;
-  }
 }
 
 bool ModuleManager::lookupModuleFile(StringRef FileName,

@@ -53,10 +53,10 @@ TMVA::MCFitter::MCFitter( IFitterTarget& target,
                           const TString& name, 
                           const std::vector<Interval*>& ranges, 
                           const TString& theOption ) 
-   : TMVA::FitterBase( target, name, ranges, theOption ),
-     fSamples( 0 ),
-     fSigma  ( 1 ),
-     fSeed   ( 0 )
+: TMVA::FitterBase( target, name, ranges, theOption ),
+   fSamples( 0 ),
+   fSigma  ( 1 ),
+   fSeed   ( 0 )
 {
    DeclareOptions();
    ParseOptions();
@@ -69,7 +69,7 @@ void TMVA::MCFitter::DeclareOptions()
 {
    DeclareOptionRef( fSamples = 100000, "SampleSize", "Number of Monte Carlo events in toy sample" );  
    DeclareOptionRef( fSigma   = -1.0,   "Sigma", 
-                    "If > 0: new points are generated according to Gauss around best value and with \"Sigma\" in units of interval length" );  
+                     "If > 0: new points are generated according to Gauss around best value and with \"Sigma\" in units of interval length" );  
    DeclareOptionRef( fSeed    = 100,    "Seed",       "Seed for the random generator (0 takes random seeds)" );  
 }
 
@@ -91,7 +91,7 @@ Double_t TMVA::MCFitter::Run( std::vector<Double_t>& pars )
    // sanity check
    if ((Int_t)pars.size() != GetNpars())
       Log() << kFATAL << "<Run> Mismatch in number of parameters: "
-              << GetNpars() << " != " << pars.size() << Endl;
+            << GetNpars() << " != " << pars.size() << Endl;
 
    // timing of MC
    Timer timer( fSamples, GetName() ); 
@@ -156,7 +156,7 @@ Double_t TMVA::MCFitter::Run( std::vector<Double_t>& pars )
 
    // get elapsed time
    Log() << kINFO << "Elapsed time: " << timer.GetElapsedTime() 
-           << "                           " << Endl;  
+         << "                           " << Endl;  
    
    return bestFit;
 }

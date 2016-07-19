@@ -158,9 +158,8 @@ ClassImp(TMVA::MethodBDT)
 TMVA::MethodBDT::MethodBDT( const TString& jobName,
                             const TString& methodTitle,
                             DataSetInfo& theData,
-                            const TString& theOption,
-                            TDirectory* theTargetDir ) :
-   TMVA::MethodBase( jobName, Types::kBDT, methodTitle, theData, theOption, theTargetDir )
+                            const TString& theOption ) :
+   TMVA::MethodBase( jobName, Types::kBDT, methodTitle, theData, theOption)
    , fTrainSample(0)
    , fNTrees(0)
    , fSigToBkgFraction(0) 
@@ -212,9 +211,8 @@ TMVA::MethodBDT::MethodBDT( const TString& jobName,
 ////////////////////////////////////////////////////////////////////////////////
 
 TMVA::MethodBDT::MethodBDT( DataSetInfo& theData,
-                            const TString& theWeightFile,
-                            TDirectory* theTargetDir )
-   : TMVA::MethodBase( Types::kBDT, theData, theWeightFile, theTargetDir )
+                            const TString& theWeightFile)
+   : TMVA::MethodBase( Types::kBDT, theData, theWeightFile)
    , fTrainSample(0)
    , fNTrees(0)
    , fSigToBkgFraction(0) 
@@ -694,7 +692,7 @@ void TMVA::MethodBDT::Reset( void )
    fForest.clear();
 
    fBoostWeights.clear();
-   if (fMonitorNtuple) fMonitorNtuple->Delete(); fMonitorNtuple=NULL;
+   if (fMonitorNtuple) { fMonitorNtuple->Delete(); fMonitorNtuple=NULL; }
    fVariableImportance.clear();
    fResiduals.clear();
    // now done in "InitEventSample" which is called in "Train"
@@ -1147,9 +1145,9 @@ void TMVA::MethodBDT::Train()
 
    // book monitoring histograms (for AdaBost only)   
 
-   TH1* h = new TH1F("BoostWeight",hname,nBins,xMin,xMax);
-   TH1* nodesBeforePruningVsTree = new TH1I("NodesBeforePruning","nodes before pruning",fNTrees,0,fNTrees);
-   TH1* nodesAfterPruningVsTree = new TH1I("NodesAfterPruning","nodes after pruning",fNTrees,0,fNTrees);
+   TH1* h = new TH1F(Form("%s_BoostWeight",DataInfo().GetName()),hname,nBins,xMin,xMax);
+   TH1* nodesBeforePruningVsTree = new TH1I(Form("%s_NodesBeforePruning",DataInfo().GetName()),"nodes before pruning",fNTrees,0,fNTrees);
+   TH1* nodesAfterPruningVsTree = new TH1I(Form("%s_NodesAfterPruning",DataInfo().GetName()),"nodes after pruning",fNTrees,0,fNTrees);
 
       
 

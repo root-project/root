@@ -64,12 +64,10 @@ namespace TMVA
       MethodKNN(const TString& jobName, 
                 const TString& methodTitle, 
                 DataSetInfo& theData,
-                const TString& theOption = "KNN",
-                TDirectory* theTargetDir = NULL);
+                const TString& theOption = "KNN");
 
       MethodKNN(DataSetInfo& theData, 
-                const TString& theWeightFile,  
-                TDirectory* theTargetDir = NULL);
+                const TString& theWeightFile);
       
       virtual ~MethodKNN( void );
     
@@ -149,7 +147,7 @@ namespace TMVA
       // for backward compatibility
       Int_t fTreeOptDepth;    // number of binary tree levels used for optimization
 
-      ClassDef(MethodKNN,0) // k Nearest Neighbour classifier
+      ClassDef(MethodKNN,0); // k Nearest Neighbour classifier
    };
 
 } // namespace TMVA

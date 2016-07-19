@@ -205,10 +205,10 @@ void TSVG::Off()
 void TSVG::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
 {
    static Double_t x[4], y[4];
-   Double_t ix1 = XtoSVG(x1);
-   Double_t ix2 = XtoSVG(x2);
-   Double_t iy1 = YtoSVG(y1);
-   Double_t iy2 = YtoSVG(y2);
+   Double_t ix1 = XtoSVG(TMath::Min(x1,x2));
+   Double_t ix2 = XtoSVG(TMath::Max(x1,x2));
+   Double_t iy1 = YtoSVG(TMath::Min(y1,y2));
+   Double_t iy2 = YtoSVG(TMath::Max(y1,y2));
    Int_t fillis = fFillStyle/1000;
    Int_t fillsi = fFillStyle%1000;
 
@@ -1396,9 +1396,9 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
    Double_t ix    = XtoSVG(xx);
    Double_t iy    = YtoSVG(yy);
    Double_t txalh = fTextAlign/10;
-   if (txalh <1) txalh = 1; if (txalh > 3) txalh = 3;
+   if (txalh <1) txalh = 1; else if (txalh > 3) txalh = 3;
    Double_t txalv = fTextAlign%10;
-   if (txalv <1) txalv = 1; if (txalv > 3) txalv = 3;
+   if (txalv <1) txalv = 1; else if (txalv > 3) txalv = 3;
 
    Double_t     wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
    Double_t     hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
@@ -1432,7 +1432,7 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
    }
 
    PrintStr("@");
-   PrintFast(9,"<text x=\"");
+   PrintFast(30,"<text xml:space=\"preserve\" x=\"");
    WriteReal(ix, kFALSE);
    PrintFast(5,"\" y=\"");
    WriteReal(iy, kFALSE);

@@ -99,7 +99,7 @@ MipsSETargetLowering::MipsSETargetLowering(const MipsTargetMachine &TM,
     setTargetDAGCombine(ISD::XOR);
   }
 
-  if (!Subtarget.abiUsesSoftFloat()) {
+  if (!Subtarget.useSoftFloat()) {
     addRegisterClass(MVT::f32, &Mips::FGR32RegClass);
 
     // When dealing with single precision only, use libcalls
@@ -224,7 +224,7 @@ MipsSETargetLowering::MipsSETargetLowering(const MipsTargetMachine &TM,
     setOperationAction(ISD::SELECT_CC, MVT::i64, Expand);
   }
 
-  computeRegisterProperties();
+  computeRegisterProperties(Subtarget.getRegisterInfo());
 }
 
 const MipsTargetLowering *
@@ -793,14 +793,14 @@ static SDValue performSUBECombine(SDNode *N, SelectionDAG &DAG,
   return SDValue();
 }
 
-static SDValue genConstMult(SDValue X, uint64_t C, SDLoc DL, EVT VT,
+static SDValue genConstMult(SDValue X, uint64_t C, const SDLoc &DL, EVT VT,
                             EVT ShiftTy, SelectionDAG &DAG) {
   // Clear the upper (64 - VT.sizeInBits) bits.
   C &= ((uint64_t)-1) >> (64 - VT.getSizeInBits());
 
   // Return 0.
   if (C == 0)
-    return DAG.getConstant(0, VT);
+    return DAG.getConstant(0, DL, VT);
 
   // Return x.
   if (C == 1)
@@ -809,7 +809,7 @@ static SDValue genConstMult(SDValue X, uint64_t C, SDLoc DL, EVT VT,
   // If c is power of 2, return (shl x, log2(c)).
   if (isPowerOf2_64(C))
     return DAG.getNode(ISD::SHL, DL, VT, X,
-                       DAG.getConstant(Log2_64(C), ShiftTy));
+                       DAG.getConstant(Log2_64(C), DL, ShiftTy));
 
   unsigned Log2Ceil = Log2_64_Ceil(C);
   uint64_t Floor = 1LL << Log2_64(C);
@@ -838,8 +838,9 @@ static SDValue performMULCombine(SDNode *N, SelectionDAG &DAG,
 
   if (ConstantSDNode *C = dyn_cast<ConstantSDNode>(N->getOperand(1)))
     if (!VT.isVector())
-      return genConstMult(N->getOperand(0), C->getZExtValue(), SDLoc(N),
-                          VT, TL->getScalarShiftAmountTy(VT), DAG);
+      return genConstMult(N->getOperand(0), C->getZExtValue(), SDLoc(N), VT,
+                          TL->getScalarShiftAmountTy(DAG.getDataLayout(), VT),
+                          DAG);
 
   return SDValue(N, 0);
 }
@@ -864,8 +865,9 @@ static SDValue performDSPShiftCombine(unsigned Opc, SDNode *N, EVT Ty,
       (SplatValue.getZExtValue() >= EltSize))
     return SDValue();
 
-  return DAG.getNode(Opc, SDLoc(N), Ty, N->getOperand(0),
-                     DAG.getConstant(SplatValue.getZExtValue(), MVT::i32));
+  SDLoc DL(N);
+  return DAG.getNode(Opc, DL, Ty, N->getOperand(0),
+                     DAG.getConstant(SplatValue.getZExtValue(), DL, MVT::i32));
 }
 
 static SDValue performSHLCombine(SDNode *N, SelectionDAG &DAG,
@@ -1109,9 +1111,9 @@ MipsSETargetLowering::PerformDAGCombine(SDNode *N, DAGCombinerInfo &DCI) const {
 }
 
 MachineBasicBlock *
-MipsSETargetLowering::EmitInstrWithCustomInserter(MachineInstr *MI,
+MipsSETargetLowering::EmitInstrWithCustomInserter(MachineInstr &MI,
                                                   MachineBasicBlock *BB) const {
-  switch (MI->getOpcode()) {
+  switch (MI.getOpcode()) {
   default:
     return MipsTargetLowering::EmitInstrWithCustomInserter(MI, BB);
   case Mips::BPOSGE32_PSEUDO:
@@ -1145,16 +1147,22 @@ MipsSETargetLowering::EmitInstrWithCustomInserter(MachineInstr *MI,
   case Mips::INSERT_FD_PSEUDO:
     return emitINSERT_FD(MI, BB);
   case Mips::INSERT_B_VIDX_PSEUDO:
+  case Mips::INSERT_B_VIDX64_PSEUDO:
     return emitINSERT_DF_VIDX(MI, BB, 1, false);
   case Mips::INSERT_H_VIDX_PSEUDO:
+  case Mips::INSERT_H_VIDX64_PSEUDO:
     return emitINSERT_DF_VIDX(MI, BB, 2, false);
   case Mips::INSERT_W_VIDX_PSEUDO:
+  case Mips::INSERT_W_VIDX64_PSEUDO:
     return emitINSERT_DF_VIDX(MI, BB, 4, false);
   case Mips::INSERT_D_VIDX_PSEUDO:
+  case Mips::INSERT_D_VIDX64_PSEUDO:
     return emitINSERT_DF_VIDX(MI, BB, 8, false);
   case Mips::INSERT_FW_VIDX_PSEUDO:
+  case Mips::INSERT_FW_VIDX64_PSEUDO:
     return emitINSERT_DF_VIDX(MI, BB, 4, true);
   case Mips::INSERT_FD_VIDX_PSEUDO:
+  case Mips::INSERT_FD_VIDX64_PSEUDO:
     return emitINSERT_DF_VIDX(MI, BB, 8, true);
   case Mips::FILL_FW_PSEUDO:
     return emitFILL_FW(MI, BB);
@@ -1171,6 +1179,10 @@ bool MipsSETargetLowering::isEligibleForTailCallOptimization(
     const CCState &CCInfo, unsigned NextStackOffset,
     const MipsFunctionInfo &FI) const {
   if (!EnableMipsTailCalls)
+    return false;
+
+  // Exception has to be cleared with eret.
+  if (FI.isISR())
     return false;
 
   // Return false if either the callee or caller has a byval argument.
@@ -1212,7 +1224,7 @@ SDValue MipsSETargetLowering::lowerLOAD(SDValue Op, SelectionDAG &DAG) const {
                            Nd.getAlignment());
 
   // i32 load from higher address.
-  Ptr = DAG.getNode(ISD::ADD, DL, PtrVT, Ptr, DAG.getConstant(4, PtrVT));
+  Ptr = DAG.getNode(ISD::ADD, DL, PtrVT, Ptr, DAG.getConstant(4, DL, PtrVT));
   SDValue Hi = DAG.getLoad(MVT::i32, DL, Lo.getValue(1), Ptr,
                            MachinePointerInfo(), Nd.isVolatile(),
                            Nd.isNonTemporal(), Nd.isInvariant(),
@@ -1237,9 +1249,9 @@ SDValue MipsSETargetLowering::lowerSTORE(SDValue Op, SelectionDAG &DAG) const {
   SDValue Val = Nd.getValue(), Ptr = Nd.getBasePtr(), Chain = Nd.getChain();
   EVT PtrVT = Ptr.getValueType();
   SDValue Lo = DAG.getNode(MipsISD::ExtractElementF64, DL, MVT::i32,
-                           Val, DAG.getConstant(0, MVT::i32));
+                           Val, DAG.getConstant(0, DL, MVT::i32));
   SDValue Hi = DAG.getNode(MipsISD::ExtractElementF64, DL, MVT::i32,
-                           Val, DAG.getConstant(1, MVT::i32));
+                           Val, DAG.getConstant(1, DL, MVT::i32));
 
   if (!Subtarget.isLittle())
     std::swap(Lo, Hi);
@@ -1250,7 +1262,7 @@ SDValue MipsSETargetLowering::lowerSTORE(SDValue Op, SelectionDAG &DAG) const {
                        Nd.getAAInfo());
 
   // i32 store to higher address.
-  Ptr = DAG.getNode(ISD::ADD, DL, PtrVT, Ptr, DAG.getConstant(4, PtrVT));
+  Ptr = DAG.getNode(ISD::ADD, DL, PtrVT, Ptr, DAG.getConstant(4, DL, PtrVT));
   return DAG.getStore(Chain, DL, Hi, Ptr, MachinePointerInfo(),
                       Nd.isVolatile(), Nd.isNonTemporal(),
                       std::min(Nd.getAlignment(), 4U), Nd.getAAInfo());
@@ -1280,16 +1292,15 @@ SDValue MipsSETargetLowering::lowerMulDiv(SDValue Op, unsigned NewOpc,
   return DAG.getMergeValues(Vals, DL);
 }
 
-
-static SDValue initAccumulator(SDValue In, SDLoc DL, SelectionDAG &DAG) {
+static SDValue initAccumulator(SDValue In, const SDLoc &DL, SelectionDAG &DAG) {
   SDValue InLo = DAG.getNode(ISD::EXTRACT_ELEMENT, DL, MVT::i32, In,
-                             DAG.getConstant(0, MVT::i32));
+                             DAG.getConstant(0, DL, MVT::i32));
   SDValue InHi = DAG.getNode(ISD::EXTRACT_ELEMENT, DL, MVT::i32, In,
-                             DAG.getConstant(1, MVT::i32));
+                             DAG.getConstant(1, DL, MVT::i32));
   return DAG.getNode(MipsISD::MTLOHI, DL, MVT::Untyped, InLo, InHi);
 }
 
-static SDValue extractLOHI(SDValue Op, SDLoc DL, SelectionDAG &DAG) {
+static SDValue extractLOHI(SDValue Op, const SDLoc &DL, SelectionDAG &DAG) {
   SDValue Lo = DAG.getNode(MipsISD::MFLO, DL, MVT::i32, Op);
   SDValue Hi = DAG.getNode(MipsISD::MFHI, DL, MVT::i32, Op);
   return DAG.getNode(ISD::BUILD_PAIR, DL, MVT::i64, Lo, Hi);
@@ -1381,7 +1392,7 @@ static SDValue lowerMSASplatZExt(SDValue Op, unsigned OpNr, SelectionDAG &DAG) {
   SDValue LaneB = Op->getOperand(2);
 
   if (ResVecTy == MVT::v2i64) {
-    LaneA = DAG.getConstant(0, MVT::i32);
+    LaneA = DAG.getConstant(0, DL, MVT::i32);
     ViaVecTy = MVT::v4i32;
   } else
     LaneA = LaneB;
@@ -1389,8 +1400,8 @@ static SDValue lowerMSASplatZExt(SDValue Op, unsigned OpNr, SelectionDAG &DAG) {
   SDValue Ops[16] = { LaneA, LaneB, LaneA, LaneB, LaneA, LaneB, LaneA, LaneB,
                       LaneA, LaneB, LaneA, LaneB, LaneA, LaneB, LaneA, LaneB };
 
-  SDValue Result = DAG.getNode(ISD::BUILD_VECTOR, DL, ViaVecTy,
-                       makeArrayRef(Ops, ViaVecTy.getVectorNumElements()));
+  SDValue Result = DAG.getBuildVector(
+      ViaVecTy, DL, makeArrayRef(Ops, ViaVecTy.getVectorNumElements()));
 
   if (ViaVecTy != ResVecTy)
     Result = DAG.getNode(ISD::BITCAST, DL, ResVecTy, Result);
@@ -1399,7 +1410,8 @@ static SDValue lowerMSASplatZExt(SDValue Op, unsigned OpNr, SelectionDAG &DAG) {
 }
 
 static SDValue lowerMSASplatImm(SDValue Op, unsigned ImmOp, SelectionDAG &DAG) {
-  return DAG.getConstant(Op->getConstantOperandVal(ImmOp), Op->getValueType(0));
+  return DAG.getConstant(Op->getConstantOperandVal(ImmOp), SDLoc(Op),
+                         Op->getValueType(0));
 }
 
 static SDValue getBuildVectorSplat(EVT VecTy, SDValue SplatValue,
@@ -1415,7 +1427,7 @@ static SDValue getBuildVectorSplat(EVT VecTy, SDValue SplatValue,
 
     SplatValueA = DAG.getNode(ISD::TRUNCATE, DL, MVT::i32, SplatValue);
     SplatValueB = DAG.getNode(ISD::SRL, DL, MVT::i64, SplatValue,
-                              DAG.getConstant(32, MVT::i32));
+                              DAG.getConstant(32, DL, MVT::i32));
     SplatValueB = DAG.getNode(ISD::TRUNCATE, DL, MVT::i32, SplatValueB);
   }
 
@@ -1429,8 +1441,8 @@ static SDValue getBuildVectorSplat(EVT VecTy, SDValue SplatValue,
                       SplatValueA, SplatValueB, SplatValueA, SplatValueB,
                       SplatValueA, SplatValueB, SplatValueA, SplatValueB };
 
-  SDValue Result = DAG.getNode(ISD::BUILD_VECTOR, DL, ViaVecTy,
-                       makeArrayRef(Ops, ViaVecTy.getVectorNumElements()));
+  SDValue Result = DAG.getBuildVector(
+      ViaVecTy, DL, makeArrayRef(Ops, ViaVecTy.getVectorNumElements()));
 
   if (VecTy != ViaVecTy)
     Result = DAG.getNode(ISD::BITCAST, DL, VecTy, Result);
@@ -1451,16 +1463,17 @@ static SDValue lowerMSABinaryBitImmIntr(SDValue Op, SelectionDAG &DAG,
     if (ConstantSDNode *CImm = dyn_cast<ConstantSDNode>(Imm)) {
       APInt BitImm = APInt(64, 1) << CImm->getAPIntValue();
 
-      SDValue BitImmHiOp = DAG.getConstant(BitImm.lshr(32).trunc(32), MVT::i32);
-      SDValue BitImmLoOp = DAG.getConstant(BitImm.trunc(32), MVT::i32);
+      SDValue BitImmHiOp = DAG.getConstant(BitImm.lshr(32).trunc(32), DL,
+                                           MVT::i32);
+      SDValue BitImmLoOp = DAG.getConstant(BitImm.trunc(32), DL, MVT::i32);
 
       if (BigEndian)
         std::swap(BitImmLoOp, BitImmHiOp);
 
-      Exp2Imm =
-          DAG.getNode(ISD::BITCAST, DL, MVT::v2i64,
-                      DAG.getNode(ISD::BUILD_VECTOR, DL, MVT::v4i32, BitImmLoOp,
-                                  BitImmHiOp, BitImmLoOp, BitImmHiOp));
+      Exp2Imm = DAG.getNode(
+          ISD::BITCAST, DL, MVT::v2i64,
+          DAG.getBuildVector(MVT::v4i32, DL,
+                             {BitImmLoOp, BitImmHiOp, BitImmLoOp, BitImmHiOp}));
     }
   }
 
@@ -1474,8 +1487,8 @@ static SDValue lowerMSABinaryBitImmIntr(SDValue Op, SelectionDAG &DAG,
 
     Exp2Imm = getBuildVectorSplat(VecTy, Imm, BigEndian, DAG);
 
-    Exp2Imm =
-        DAG.getNode(ISD::SHL, DL, VecTy, DAG.getConstant(1, VecTy), Exp2Imm);
+    Exp2Imm = DAG.getNode(ISD::SHL, DL, VecTy, DAG.getConstant(1, DL, VecTy),
+                          Exp2Imm);
   }
 
   return DAG.getNode(Opc, DL, VecTy, Op->getOperand(1), Exp2Imm);
@@ -1484,7 +1497,7 @@ static SDValue lowerMSABinaryBitImmIntr(SDValue Op, SelectionDAG &DAG,
 static SDValue lowerMSABitClear(SDValue Op, SelectionDAG &DAG) {
   EVT ResTy = Op->getValueType(0);
   SDLoc DL(Op);
-  SDValue One = DAG.getConstant(1, ResTy);
+  SDValue One = DAG.getConstant(1, DL, ResTy);
   SDValue Bit = DAG.getNode(ISD::SHL, DL, ResTy, One, Op->getOperand(2));
 
   return DAG.getNode(ISD::AND, DL, ResTy, Op->getOperand(1),
@@ -1496,7 +1509,7 @@ static SDValue lowerMSABitClearImm(SDValue Op, SelectionDAG &DAG) {
   EVT ResTy = Op->getValueType(0);
   APInt BitImm = APInt(ResTy.getVectorElementType().getSizeInBits(), 1)
                  << cast<ConstantSDNode>(Op->getOperand(2))->getAPIntValue();
-  SDValue BitMask = DAG.getConstant(~BitImm, ResTy);
+  SDValue BitMask = DAG.getConstant(~BitImm, DL, ResTy);
 
   return DAG.getNode(ISD::AND, DL, ResTy, Op->getOperand(1), BitMask);
 }
@@ -1578,8 +1591,8 @@ SDValue MipsSETargetLowering::lowerINTRINSIC_WO_CHAIN(SDValue Op,
     APInt Mask = APInt::getHighBitsSet(EltTy.getSizeInBits(),
                                        Op->getConstantOperandVal(3));
     return DAG.getNode(ISD::VSELECT, DL, VecTy,
-                       DAG.getConstant(Mask, VecTy, true), Op->getOperand(2),
-                       Op->getOperand(1));
+                       DAG.getConstant(Mask, DL, VecTy, true),
+                       Op->getOperand(2), Op->getOperand(1));
   }
   case Intrinsic::mips_binsri_b:
   case Intrinsic::mips_binsri_h:
@@ -1591,8 +1604,8 @@ SDValue MipsSETargetLowering::lowerINTRINSIC_WO_CHAIN(SDValue Op,
     APInt Mask = APInt::getLowBitsSet(EltTy.getSizeInBits(),
                                       Op->getConstantOperandVal(3));
     return DAG.getNode(ISD::VSELECT, DL, VecTy,
-                       DAG.getConstant(Mask, VecTy, true), Op->getOperand(2),
-                       Op->getOperand(1));
+                       DAG.getConstant(Mask, DL, VecTy, true),
+                       Op->getOperand(2), Op->getOperand(1));
   }
   case Intrinsic::mips_bmnz_v:
     return DAG.getNode(ISD::VSELECT, DL, Op->getValueType(0), Op->getOperand(3),
@@ -1613,7 +1626,7 @@ SDValue MipsSETargetLowering::lowerINTRINSIC_WO_CHAIN(SDValue Op,
   case Intrinsic::mips_bneg_w:
   case Intrinsic::mips_bneg_d: {
     EVT VecTy = Op->getValueType(0);
-    SDValue One = DAG.getConstant(1, VecTy);
+    SDValue One = DAG.getConstant(1, DL, VecTy);
 
     return DAG.getNode(ISD::XOR, DL, VecTy, Op->getOperand(1),
                        DAG.getNode(ISD::SHL, DL, VecTy, One,
@@ -1649,7 +1662,7 @@ SDValue MipsSETargetLowering::lowerINTRINSIC_WO_CHAIN(SDValue Op,
   case Intrinsic::mips_bset_w:
   case Intrinsic::mips_bset_d: {
     EVT VecTy = Op->getValueType(0);
-    SDValue One = DAG.getConstant(1, VecTy);
+    SDValue One = DAG.getConstant(1, DL, VecTy);
 
     return DAG.getNode(ISD::OR, DL, VecTy, Op->getOperand(1),
                        DAG.getNode(ISD::SHL, DL, VecTy, One,
@@ -1776,9 +1789,11 @@ SDValue MipsSETargetLowering::lowerINTRINSIC_WO_CHAIN(SDValue Op,
     return DAG.getNode(ISD::UDIV, DL, Op->getValueType(0), Op->getOperand(1),
                        Op->getOperand(2));
   case Intrinsic::mips_fadd_w:
-  case Intrinsic::mips_fadd_d:
+  case Intrinsic::mips_fadd_d: {
+    // TODO: If intrinsics have fast-math-flags, propagate them.
     return DAG.getNode(ISD::FADD, DL, Op->getValueType(0), Op->getOperand(1),
                        Op->getOperand(2));
+  }
   // Don't lower mips_fcaf_[wd] since LLVM folds SETFALSE condcodes away
   case Intrinsic::mips_fceq_w:
   case Intrinsic::mips_fceq_d:
@@ -1821,9 +1836,11 @@ SDValue MipsSETargetLowering::lowerINTRINSIC_WO_CHAIN(SDValue Op,
     return DAG.getSetCC(DL, Op->getValueType(0), Op->getOperand(1),
                         Op->getOperand(2), ISD::SETUNE);
   case Intrinsic::mips_fdiv_w:
-  case Intrinsic::mips_fdiv_d:
+  case Intrinsic::mips_fdiv_d: {
+    // TODO: If intrinsics have fast-math-flags, propagate them.
     return DAG.getNode(ISD::FDIV, DL, Op->getValueType(0), Op->getOperand(1),
                        Op->getOperand(2));
+  }
   case Intrinsic::mips_ffint_u_w:
   case Intrinsic::mips_ffint_u_d:
     return DAG.getNode(ISD::UINT_TO_FP, DL, Op->getValueType(0),
@@ -1836,18 +1853,17 @@ SDValue MipsSETargetLowering::lowerINTRINSIC_WO_CHAIN(SDValue Op,
   case Intrinsic::mips_fill_h:
   case Intrinsic::mips_fill_w:
   case Intrinsic::mips_fill_d: {
-    SmallVector<SDValue, 16> Ops;
     EVT ResTy = Op->getValueType(0);
-
-    for (unsigned i = 0; i < ResTy.getVectorNumElements(); ++i)
-      Ops.push_back(Op->getOperand(1));
+    SmallVector<SDValue, 16> Ops(ResTy.getVectorNumElements(),
+                                 Op->getOperand(1));
 
     // If ResTy is v2i64 then the type legalizer will break this node down into
     // an equivalent v4i32.
-    return DAG.getNode(ISD::BUILD_VECTOR, DL, ResTy, Ops);
+    return DAG.getBuildVector(ResTy, DL, Ops);
   }
   case Intrinsic::mips_fexp2_w:
   case Intrinsic::mips_fexp2_d: {
+    // TODO: If intrinsics have fast-math-flags, propagate them.
     EVT ResTy = Op->getValueType(0);
     return DAG.getNode(
         ISD::FMUL, SDLoc(Op), ResTy, Op->getOperand(1),
@@ -1861,11 +1877,14 @@ SDValue MipsSETargetLowering::lowerINTRINSIC_WO_CHAIN(SDValue Op,
     return DAG.getNode(ISD::FMA, SDLoc(Op), Op->getValueType(0),
                        Op->getOperand(1), Op->getOperand(2), Op->getOperand(3));
   case Intrinsic::mips_fmul_w:
-  case Intrinsic::mips_fmul_d:
+  case Intrinsic::mips_fmul_d: {
+    // TODO: If intrinsics have fast-math-flags, propagate them.
     return DAG.getNode(ISD::FMUL, DL, Op->getValueType(0), Op->getOperand(1),
                        Op->getOperand(2));
+  }
   case Intrinsic::mips_fmsub_w:
   case Intrinsic::mips_fmsub_d: {
+    // TODO: If intrinsics have fast-math-flags, propagate them.
     EVT ResTy = Op->getValueType(0);
     return DAG.getNode(ISD::FSUB, SDLoc(Op), ResTy, Op->getOperand(1),
                        DAG.getNode(ISD::FMUL, SDLoc(Op), ResTy,
@@ -1878,9 +1897,11 @@ SDValue MipsSETargetLowering::lowerINTRINSIC_WO_CHAIN(SDValue Op,
   case Intrinsic::mips_fsqrt_d:
     return DAG.getNode(ISD::FSQRT, DL, Op->getValueType(0), Op->getOperand(1));
   case Intrinsic::mips_fsub_w:
-  case Intrinsic::mips_fsub_d:
+  case Intrinsic::mips_fsub_d: {
+    // TODO: If intrinsics have fast-math-flags, propagate them.
     return DAG.getNode(ISD::FSUB, DL, Op->getValueType(0), Op->getOperand(1),
                        Op->getOperand(2));
+  }
   case Intrinsic::mips_ftrunc_u_w:
   case Intrinsic::mips_ftrunc_u_d:
     return DAG.getNode(ISD::FP_TO_UINT, DL, Op->getValueType(0),
@@ -1925,7 +1946,7 @@ SDValue MipsSETargetLowering::lowerINTRINSIC_WO_CHAIN(SDValue Op,
   case Intrinsic::mips_insve_d:
     return DAG.getNode(MipsISD::INSVE, DL, Op->getValueType(0),
                        Op->getOperand(1), Op->getOperand(2), Op->getOperand(3),
-                       DAG.getConstant(0, MVT::i32));
+                       DAG.getConstant(0, DL, MVT::i32));
   case Intrinsic::mips_ldi_b:
   case Intrinsic::mips_ldi_h:
   case Intrinsic::mips_ldi_w:
@@ -2144,6 +2165,10 @@ SDValue MipsSETargetLowering::lowerINTRINSIC_WO_CHAIN(SDValue Op,
   case Intrinsic::mips_xori_b:
     return DAG.getNode(ISD::XOR, DL, Op->getValueType(0),
                        Op->getOperand(1), lowerMSASplatImm(Op, 2, DAG));
+  case Intrinsic::thread_pointer: {
+    EVT PtrVT = getPointerTy(DAG.getDataLayout());
+    return DAG.getNode(MipsISD::ThreadPointer, DL, PtrVT);
+  }
   }
 }
 
@@ -2289,11 +2314,11 @@ lowerEXTRACT_VECTOR_ELT(SDValue Op, SelectionDAG &DAG) const {
 }
 
 static bool isConstantOrUndef(const SDValue Op) {
-  if (Op->getOpcode() == ISD::UNDEF)
+  if (Op->isUndef())
     return true;
-  if (dyn_cast<ConstantSDNode>(Op))
+  if (isa<ConstantSDNode>(Op))
     return true;
-  if (dyn_cast<ConstantFPSDNode>(Op))
+  if (isa<ConstantFPSDNode>(Op))
     return true;
   return false;
 }
@@ -2365,7 +2390,7 @@ SDValue MipsSETargetLowering::lowerBUILD_VECTOR(SDValue Op,
     }
 
     // SelectionDAG::getConstant will promote SplatValue appropriately.
-    SDValue Result = DAG.getConstant(SplatValue, ViaVecTy);
+    SDValue Result = DAG.getConstant(SplatValue, DL, ViaVecTy);
 
     // Bitcast to the type we originally wanted
     if (ViaVecTy != ResTy)
@@ -2387,7 +2412,7 @@ SDValue MipsSETargetLowering::lowerBUILD_VECTOR(SDValue Op,
     for (unsigned i = 0; i < NumElts; ++i) {
       Vector = DAG.getNode(ISD::INSERT_VECTOR_ELT, DL, ResTy, Vector,
                            Node->getOperand(i),
-                           DAG.getConstant(i, MVT::i32));
+                           DAG.getConstant(i, DL, MVT::i32));
     }
     return Vector;
   }
@@ -2403,7 +2428,7 @@ SDValue MipsSETargetLowering::lowerBUILD_VECTOR(SDValue Op,
 // It is therefore possible to lower into SHF when the mask takes the form:
 //   <a, b, c, d, a+4, b+4, c+4, d+4, a+8, b+8, c+8, d+8, ...>
 // When undef's appear they are treated as if they were whatever value is
-// necessary in order to fit the above form.
+// necessary in order to fit the above forms.
 //
 // For example:
 //   %2 = shufflevector <8 x i16> %0, <8 x i16> undef,
@@ -2457,181 +2482,331 @@ static SDValue lowerVECTOR_SHUFFLE_SHF(SDValue Op, EVT ResTy,
     Imm |= Idx & 0x3;
   }
 
-  return DAG.getNode(MipsISD::SHF, SDLoc(Op), ResTy,
-                     DAG.getConstant(Imm, MVT::i32), Op->getOperand(0));
+  SDLoc DL(Op);
+  return DAG.getNode(MipsISD::SHF, DL, ResTy,
+                     DAG.getConstant(Imm, DL, MVT::i32), Op->getOperand(0));
+}
+
+/// Determine whether a range fits a regular pattern of values.
+/// This function accounts for the possibility of jumping over the End iterator.
+template <typename ValType>
+static bool
+fitsRegularPattern(typename SmallVectorImpl<ValType>::const_iterator Begin,
+                   unsigned CheckStride,
+                   typename SmallVectorImpl<ValType>::const_iterator End,
+                   ValType ExpectedIndex, unsigned ExpectedIndexStride) {
+  auto &I = Begin;
+
+  while (I != End) {
+    if (*I != -1 && *I != ExpectedIndex)
+      return false;
+    ExpectedIndex += ExpectedIndexStride;
+
+    // Incrementing past End is undefined behaviour so we must increment one
+    // step at a time and check for End at each step.
+    for (unsigned n = 0; n < CheckStride && I != End; ++n, ++I)
+      ; // Empty loop body.
+  }
+  return true;
+}
+
+// Determine whether VECTOR_SHUFFLE is a SPLATI.
+//
+// It is a SPLATI when the mask is:
+//   <x, x, x, ...>
+// where x is any valid index.
+//
+// When undef's appear in the mask they are treated as if they were whatever
+// value is necessary in order to fit the above form.
+static bool isVECTOR_SHUFFLE_SPLATI(SDValue Op, EVT ResTy,
+                                    SmallVector<int, 16> Indices,
+                                    SelectionDAG &DAG) {
+  assert((Indices.size() % 2) == 0);
+
+  int SplatIndex = -1;
+  for (const auto &V : Indices) {
+    if (V != -1) {
+      SplatIndex = V;
+      break;
+    }
+  }
+
+  return fitsRegularPattern<int>(Indices.begin(), 1, Indices.end(), SplatIndex,
+                                 0);
 }
 
 // Lower VECTOR_SHUFFLE into ILVEV (if possible).
 //
 // ILVEV interleaves the even elements from each vector.
 //
-// It is possible to lower into ILVEV when the mask takes the form:
-//   <0, n, 2, n+2, 4, n+4, ...>
+// It is possible to lower into ILVEV when the mask consists of two of the
+// following forms interleaved:
+//   <0, 2, 4, ...>
+//   <n, n+2, n+4, ...>
 // where n is the number of elements in the vector.
+// For example:
+//   <0, 0, 2, 2, 4, 4, ...>
+//   <0, n, 2, n+2, 4, n+4, ...>
 //
 // When undef's appear in the mask they are treated as if they were whatever
-// value is necessary in order to fit the above form.
+// value is necessary in order to fit the above forms.
 static SDValue lowerVECTOR_SHUFFLE_ILVEV(SDValue Op, EVT ResTy,
                                          SmallVector<int, 16> Indices,
                                          SelectionDAG &DAG) {
-  assert ((Indices.size() % 2) == 0);
-  int WsIdx = 0;
-  int WtIdx = ResTy.getVectorNumElements();
+  assert((Indices.size() % 2) == 0);
 
-  for (unsigned i = 0; i < Indices.size(); i += 2) {
-    if (Indices[i] != -1 && Indices[i] != WsIdx)
-      return SDValue();
-    if (Indices[i+1] != -1 && Indices[i+1] != WtIdx)
-      return SDValue();
-    WsIdx += 2;
-    WtIdx += 2;
-  }
+  SDValue Wt;
+  SDValue Ws;
+  const auto &Begin = Indices.begin();
+  const auto &End = Indices.end();
 
-  return DAG.getNode(MipsISD::ILVEV, SDLoc(Op), ResTy, Op->getOperand(0),
-                     Op->getOperand(1));
+  // Check even elements are taken from the even elements of one half or the
+  // other and pick an operand accordingly.
+  if (fitsRegularPattern<int>(Begin, 2, End, 0, 2))
+    Wt = Op->getOperand(0);
+  else if (fitsRegularPattern<int>(Begin, 2, End, Indices.size(), 2))
+    Wt = Op->getOperand(1);
+  else
+    return SDValue();
+
+  // Check odd elements are taken from the even elements of one half or the
+  // other and pick an operand accordingly.
+  if (fitsRegularPattern<int>(Begin + 1, 2, End, 0, 2))
+    Ws = Op->getOperand(0);
+  else if (fitsRegularPattern<int>(Begin + 1, 2, End, Indices.size(), 2))
+    Ws = Op->getOperand(1);
+  else
+    return SDValue();
+
+  return DAG.getNode(MipsISD::ILVEV, SDLoc(Op), ResTy, Ws, Wt);
 }
 
 // Lower VECTOR_SHUFFLE into ILVOD (if possible).
 //
 // ILVOD interleaves the odd elements from each vector.
 //
-// It is possible to lower into ILVOD when the mask takes the form:
-//   <1, n+1, 3, n+3, 5, n+5, ...>
+// It is possible to lower into ILVOD when the mask consists of two of the
+// following forms interleaved:
+//   <1, 3, 5, ...>
+//   <n+1, n+3, n+5, ...>
 // where n is the number of elements in the vector.
+// For example:
+//   <1, 1, 3, 3, 5, 5, ...>
+//   <1, n+1, 3, n+3, 5, n+5, ...>
 //
 // When undef's appear in the mask they are treated as if they were whatever
-// value is necessary in order to fit the above form.
+// value is necessary in order to fit the above forms.
 static SDValue lowerVECTOR_SHUFFLE_ILVOD(SDValue Op, EVT ResTy,
                                          SmallVector<int, 16> Indices,
                                          SelectionDAG &DAG) {
-  assert ((Indices.size() % 2) == 0);
-  int WsIdx = 1;
-  int WtIdx = ResTy.getVectorNumElements() + 1;
+  assert((Indices.size() % 2) == 0);
 
-  for (unsigned i = 0; i < Indices.size(); i += 2) {
-    if (Indices[i] != -1 && Indices[i] != WsIdx)
-      return SDValue();
-    if (Indices[i+1] != -1 && Indices[i+1] != WtIdx)
-      return SDValue();
-    WsIdx += 2;
-    WtIdx += 2;
-  }
+  SDValue Wt;
+  SDValue Ws;
+  const auto &Begin = Indices.begin();
+  const auto &End = Indices.end();
 
-  return DAG.getNode(MipsISD::ILVOD, SDLoc(Op), ResTy, Op->getOperand(0),
-                     Op->getOperand(1));
-}
+  // Check even elements are taken from the odd elements of one half or the
+  // other and pick an operand accordingly.
+  if (fitsRegularPattern<int>(Begin, 2, End, 1, 2))
+    Wt = Op->getOperand(0);
+  else if (fitsRegularPattern<int>(Begin, 2, End, Indices.size() + 1, 2))
+    Wt = Op->getOperand(1);
+  else
+    return SDValue();
 
-// Lower VECTOR_SHUFFLE into ILVL (if possible).
-//
-// ILVL interleaves consecutive elements from the left half of each vector.
-//
-// It is possible to lower into ILVL when the mask takes the form:
-//   <0, n, 1, n+1, 2, n+2, ...>
-// where n is the number of elements in the vector.
-//
-// When undef's appear in the mask they are treated as if they were whatever
-// value is necessary in order to fit the above form.
-static SDValue lowerVECTOR_SHUFFLE_ILVL(SDValue Op, EVT ResTy,
-                                        SmallVector<int, 16> Indices,
-                                        SelectionDAG &DAG) {
-  assert ((Indices.size() % 2) == 0);
-  int WsIdx = 0;
-  int WtIdx = ResTy.getVectorNumElements();
+  // Check odd elements are taken from the odd elements of one half or the
+  // other and pick an operand accordingly.
+  if (fitsRegularPattern<int>(Begin + 1, 2, End, 1, 2))
+    Ws = Op->getOperand(0);
+  else if (fitsRegularPattern<int>(Begin + 1, 2, End, Indices.size() + 1, 2))
+    Ws = Op->getOperand(1);
+  else
+    return SDValue();
 
-  for (unsigned i = 0; i < Indices.size(); i += 2) {
-    if (Indices[i] != -1 && Indices[i] != WsIdx)
-      return SDValue();
-    if (Indices[i+1] != -1 && Indices[i+1] != WtIdx)
-      return SDValue();
-    WsIdx ++;
-    WtIdx ++;
-  }
-
-  return DAG.getNode(MipsISD::ILVL, SDLoc(Op), ResTy, Op->getOperand(0),
-                     Op->getOperand(1));
+  return DAG.getNode(MipsISD::ILVOD, SDLoc(Op), ResTy, Wt, Ws);
 }
 
 // Lower VECTOR_SHUFFLE into ILVR (if possible).
 //
-// ILVR interleaves consecutive elements from the right half of each vector.
+// ILVR interleaves consecutive elements from the right (lowest-indexed) half of
+// each vector.
 //
-// It is possible to lower into ILVR when the mask takes the form:
-//   <x, n+x, x+1, n+x+1, x+2, n+x+2, ...>
-// where n is the number of elements in the vector and x is half n.
+// It is possible to lower into ILVR when the mask consists of two of the
+// following forms interleaved:
+//   <0, 1, 2, ...>
+//   <n, n+1, n+2, ...>
+// where n is the number of elements in the vector.
+// For example:
+//   <0, 0, 1, 1, 2, 2, ...>
+//   <0, n, 1, n+1, 2, n+2, ...>
 //
 // When undef's appear in the mask they are treated as if they were whatever
-// value is necessary in order to fit the above form.
+// value is necessary in order to fit the above forms.
 static SDValue lowerVECTOR_SHUFFLE_ILVR(SDValue Op, EVT ResTy,
                                         SmallVector<int, 16> Indices,
                                         SelectionDAG &DAG) {
-  assert ((Indices.size() % 2) == 0);
-  unsigned NumElts = ResTy.getVectorNumElements();
-  int WsIdx = NumElts / 2;
-  int WtIdx = NumElts + NumElts / 2;
+  assert((Indices.size() % 2) == 0);
 
-  for (unsigned i = 0; i < Indices.size(); i += 2) {
-    if (Indices[i] != -1 && Indices[i] != WsIdx)
-      return SDValue();
-    if (Indices[i+1] != -1 && Indices[i+1] != WtIdx)
-      return SDValue();
-    WsIdx ++;
-    WtIdx ++;
-  }
+  SDValue Wt;
+  SDValue Ws;
+  const auto &Begin = Indices.begin();
+  const auto &End = Indices.end();
 
-  return DAG.getNode(MipsISD::ILVR, SDLoc(Op), ResTy, Op->getOperand(0),
-                     Op->getOperand(1));
+  // Check even elements are taken from the right (lowest-indexed) elements of
+  // one half or the other and pick an operand accordingly.
+  if (fitsRegularPattern<int>(Begin, 2, End, 0, 1))
+    Wt = Op->getOperand(0);
+  else if (fitsRegularPattern<int>(Begin, 2, End, Indices.size(), 1))
+    Wt = Op->getOperand(1);
+  else
+    return SDValue();
+
+  // Check odd elements are taken from the right (lowest-indexed) elements of
+  // one half or the other and pick an operand accordingly.
+  if (fitsRegularPattern<int>(Begin + 1, 2, End, 0, 1))
+    Ws = Op->getOperand(0);
+  else if (fitsRegularPattern<int>(Begin + 1, 2, End, Indices.size(), 1))
+    Ws = Op->getOperand(1);
+  else
+    return SDValue();
+
+  return DAG.getNode(MipsISD::ILVR, SDLoc(Op), ResTy, Ws, Wt);
+}
+
+// Lower VECTOR_SHUFFLE into ILVL (if possible).
+//
+// ILVL interleaves consecutive elements from the left (highest-indexed) half
+// of each vector.
+//
+// It is possible to lower into ILVL when the mask consists of two of the
+// following forms interleaved:
+//   <x, x+1, x+2, ...>
+//   <n+x, n+x+1, n+x+2, ...>
+// where n is the number of elements in the vector and x is half n.
+// For example:
+//   <x, x, x+1, x+1, x+2, x+2, ...>
+//   <x, n+x, x+1, n+x+1, x+2, n+x+2, ...>
+//
+// When undef's appear in the mask they are treated as if they were whatever
+// value is necessary in order to fit the above forms.
+static SDValue lowerVECTOR_SHUFFLE_ILVL(SDValue Op, EVT ResTy,
+                                        SmallVector<int, 16> Indices,
+                                        SelectionDAG &DAG) {
+  assert((Indices.size() % 2) == 0);
+
+  unsigned HalfSize = Indices.size() / 2;
+  SDValue Wt;
+  SDValue Ws;
+  const auto &Begin = Indices.begin();
+  const auto &End = Indices.end();
+
+  // Check even elements are taken from the left (highest-indexed) elements of
+  // one half or the other and pick an operand accordingly.
+  if (fitsRegularPattern<int>(Begin, 2, End, HalfSize, 1))
+    Wt = Op->getOperand(0);
+  else if (fitsRegularPattern<int>(Begin, 2, End, Indices.size() + HalfSize, 1))
+    Wt = Op->getOperand(1);
+  else
+    return SDValue();
+
+  // Check odd elements are taken from the left (highest-indexed) elements of
+  // one half or the other and pick an operand accordingly.
+  if (fitsRegularPattern<int>(Begin + 1, 2, End, HalfSize, 1))
+    Ws = Op->getOperand(0);
+  else if (fitsRegularPattern<int>(Begin + 1, 2, End, Indices.size() + HalfSize,
+                                   1))
+    Ws = Op->getOperand(1);
+  else
+    return SDValue();
+
+  return DAG.getNode(MipsISD::ILVL, SDLoc(Op), ResTy, Ws, Wt);
 }
 
 // Lower VECTOR_SHUFFLE into PCKEV (if possible).
 //
 // PCKEV copies the even elements of each vector into the result vector.
 //
-// It is possible to lower into PCKEV when the mask takes the form:
-//   <0, 2, 4, ..., n, n+2, n+4, ...>
+// It is possible to lower into PCKEV when the mask consists of two of the
+// following forms concatenated:
+//   <0, 2, 4, ...>
+//   <n, n+2, n+4, ...>
 // where n is the number of elements in the vector.
+// For example:
+//   <0, 2, 4, ..., 0, 2, 4, ...>
+//   <0, 2, 4, ..., n, n+2, n+4, ...>
 //
 // When undef's appear in the mask they are treated as if they were whatever
-// value is necessary in order to fit the above form.
+// value is necessary in order to fit the above forms.
 static SDValue lowerVECTOR_SHUFFLE_PCKEV(SDValue Op, EVT ResTy,
                                          SmallVector<int, 16> Indices,
                                          SelectionDAG &DAG) {
-  assert ((Indices.size() % 2) == 0);
-  int Idx = 0;
+  assert((Indices.size() % 2) == 0);
 
-  for (unsigned i = 0; i < Indices.size(); ++i) {
-    if (Indices[i] != -1 && Indices[i] != Idx)
-      return SDValue();
-    Idx += 2;
-  }
+  SDValue Wt;
+  SDValue Ws;
+  const auto &Begin = Indices.begin();
+  const auto &Mid = Indices.begin() + Indices.size() / 2;
+  const auto &End = Indices.end();
 
-  return DAG.getNode(MipsISD::PCKEV, SDLoc(Op), ResTy, Op->getOperand(0),
-                     Op->getOperand(1));
+  if (fitsRegularPattern<int>(Begin, 1, Mid, 0, 2))
+    Wt = Op->getOperand(0);
+  else if (fitsRegularPattern<int>(Begin, 1, Mid, Indices.size(), 2))
+    Wt = Op->getOperand(1);
+  else
+    return SDValue();
+
+  if (fitsRegularPattern<int>(Mid, 1, End, 0, 2))
+    Ws = Op->getOperand(0);
+  else if (fitsRegularPattern<int>(Mid, 1, End, Indices.size(), 2))
+    Ws = Op->getOperand(1);
+  else
+    return SDValue();
+
+  return DAG.getNode(MipsISD::PCKEV, SDLoc(Op), ResTy, Ws, Wt);
 }
 
 // Lower VECTOR_SHUFFLE into PCKOD (if possible).
 //
 // PCKOD copies the odd elements of each vector into the result vector.
 //
-// It is possible to lower into PCKOD when the mask takes the form:
-//   <1, 3, 5, ..., n+1, n+3, n+5, ...>
+// It is possible to lower into PCKOD when the mask consists of two of the
+// following forms concatenated:
+//   <1, 3, 5, ...>
+//   <n+1, n+3, n+5, ...>
 // where n is the number of elements in the vector.
+// For example:
+//   <1, 3, 5, ..., 1, 3, 5, ...>
+//   <1, 3, 5, ..., n+1, n+3, n+5, ...>
 //
 // When undef's appear in the mask they are treated as if they were whatever
-// value is necessary in order to fit the above form.
+// value is necessary in order to fit the above forms.
 static SDValue lowerVECTOR_SHUFFLE_PCKOD(SDValue Op, EVT ResTy,
                                          SmallVector<int, 16> Indices,
                                          SelectionDAG &DAG) {
-  assert ((Indices.size() % 2) == 0);
-  int Idx = 1;
+  assert((Indices.size() % 2) == 0);
 
-  for (unsigned i = 0; i < Indices.size(); ++i) {
-    if (Indices[i] != -1 && Indices[i] != Idx)
-      return SDValue();
-    Idx += 2;
-  }
+  SDValue Wt;
+  SDValue Ws;
+  const auto &Begin = Indices.begin();
+  const auto &Mid = Indices.begin() + Indices.size() / 2;
+  const auto &End = Indices.end();
 
-  return DAG.getNode(MipsISD::PCKOD, SDLoc(Op), ResTy, Op->getOperand(0),
-                     Op->getOperand(1));
+  if (fitsRegularPattern<int>(Begin, 1, Mid, 1, 2))
+    Wt = Op->getOperand(0);
+  else if (fitsRegularPattern<int>(Begin, 1, Mid, Indices.size() + 1, 2))
+    Wt = Op->getOperand(1);
+  else
+    return SDValue();
+
+  if (fitsRegularPattern<int>(Mid, 1, End, 1, 2))
+    Ws = Op->getOperand(0);
+  else if (fitsRegularPattern<int>(Mid, 1, End, Indices.size() + 1, 2))
+    Ws = Op->getOperand(1);
+  else
+    return SDValue();
+
+  return DAG.getNode(MipsISD::PCKOD, SDLoc(Op), ResTy, Ws, Wt);
 }
 
 // Lower VECTOR_SHUFFLE into VSHF.
@@ -2667,9 +2842,9 @@ static SDValue lowerVECTOR_SHUFFLE_VSHF(SDValue Op, EVT ResTy,
 
   for (SmallVector<int, 16>::iterator I = Indices.begin(); I != Indices.end();
        ++I)
-    Ops.push_back(DAG.getTargetConstant(*I, MaskEltTy));
+    Ops.push_back(DAG.getTargetConstant(*I, DL, MaskEltTy));
 
-  SDValue MaskVec = DAG.getNode(ISD::BUILD_VECTOR, DL, MaskVecTy, Ops);
+  SDValue MaskVec = DAG.getBuildVector(MaskVecTy, DL, Ops);
 
   if (Using1stVec && Using2ndVec) {
     Op0 = Op->getOperand(0);
@@ -2707,32 +2882,31 @@ SDValue MipsSETargetLowering::lowerVECTOR_SHUFFLE(SDValue Op,
   for (int i = 0; i < ResTyNumElts; ++i)
     Indices.push_back(Node->getMaskElt(i));
 
-  SDValue Result = lowerVECTOR_SHUFFLE_SHF(Op, ResTy, Indices, DAG);
-  if (Result.getNode())
+  // splati.[bhwd] is preferable to the others but is matched from
+  // MipsISD::VSHF.
+  if (isVECTOR_SHUFFLE_SPLATI(Op, ResTy, Indices, DAG))
+    return lowerVECTOR_SHUFFLE_VSHF(Op, ResTy, Indices, DAG);
+  SDValue Result;
+  if ((Result = lowerVECTOR_SHUFFLE_ILVEV(Op, ResTy, Indices, DAG)))
     return Result;
-  Result = lowerVECTOR_SHUFFLE_ILVEV(Op, ResTy, Indices, DAG);
-  if (Result.getNode())
+  if ((Result = lowerVECTOR_SHUFFLE_ILVOD(Op, ResTy, Indices, DAG)))
     return Result;
-  Result = lowerVECTOR_SHUFFLE_ILVOD(Op, ResTy, Indices, DAG);
-  if (Result.getNode())
+  if ((Result = lowerVECTOR_SHUFFLE_ILVL(Op, ResTy, Indices, DAG)))
     return Result;
-  Result = lowerVECTOR_SHUFFLE_ILVL(Op, ResTy, Indices, DAG);
-  if (Result.getNode())
+  if ((Result = lowerVECTOR_SHUFFLE_ILVR(Op, ResTy, Indices, DAG)))
     return Result;
-  Result = lowerVECTOR_SHUFFLE_ILVR(Op, ResTy, Indices, DAG);
-  if (Result.getNode())
+  if ((Result = lowerVECTOR_SHUFFLE_PCKEV(Op, ResTy, Indices, DAG)))
     return Result;
-  Result = lowerVECTOR_SHUFFLE_PCKEV(Op, ResTy, Indices, DAG);
-  if (Result.getNode())
+  if ((Result = lowerVECTOR_SHUFFLE_PCKOD(Op, ResTy, Indices, DAG)))
     return Result;
-  Result = lowerVECTOR_SHUFFLE_PCKOD(Op, ResTy, Indices, DAG);
-  if (Result.getNode())
+  if ((Result = lowerVECTOR_SHUFFLE_SHF(Op, ResTy, Indices, DAG)))
     return Result;
   return lowerVECTOR_SHUFFLE_VSHF(Op, ResTy, Indices, DAG);
 }
 
-MachineBasicBlock * MipsSETargetLowering::
-emitBPOSGE32(MachineInstr *MI, MachineBasicBlock *BB) const{
+MachineBasicBlock *
+MipsSETargetLowering::emitBPOSGE32(MachineInstr &MI,
+                                   MachineBasicBlock *BB) const {
   // $bb:
   //  bposge32_pseudo $vr0
   //  =>
@@ -2749,7 +2923,7 @@ emitBPOSGE32(MachineInstr *MI, MachineBasicBlock *BB) const{
   MachineRegisterInfo &RegInfo = BB->getParent()->getRegInfo();
   const TargetInstrInfo *TII = Subtarget.getInstrInfo();
   const TargetRegisterClass *RC = &Mips::GPR32RegClass;
-  DebugLoc DL = MI->getDebugLoc();
+  DebugLoc DL = MI.getDebugLoc();
   const BasicBlock *LLVM_BB = BB->getBasicBlock();
   MachineFunction::iterator It = std::next(MachineFunction::iterator(BB));
   MachineFunction *F = BB->getParent();
@@ -2773,6 +2947,8 @@ emitBPOSGE32(MachineInstr *MI, MachineBasicBlock *BB) const{
 
   // Insert the real bposge32 instruction to $BB.
   BuildMI(BB, DL, TII->get(Mips::BPOSGE32)).addMBB(TBB);
+  // Insert the real bposge32c instruction to $BB.
+  BuildMI(BB, DL, TII->get(Mips::BPOSGE32C_MMR3)).addMBB(TBB);
 
   // Fill $FBB.
   unsigned VR2 = RegInfo.createVirtualRegister(RC);
@@ -2787,16 +2963,18 @@ emitBPOSGE32(MachineInstr *MI, MachineBasicBlock *BB) const{
 
   // Insert phi function to $Sink.
   BuildMI(*Sink, Sink->begin(), DL, TII->get(Mips::PHI),
-          MI->getOperand(0).getReg())
-    .addReg(VR2).addMBB(FBB).addReg(VR1).addMBB(TBB);
+          MI.getOperand(0).getReg())
+      .addReg(VR2)
+      .addMBB(FBB)
+      .addReg(VR1)
+      .addMBB(TBB);
 
-  MI->eraseFromParent();   // The pseudo instruction is gone now.
+  MI.eraseFromParent(); // The pseudo instruction is gone now.
   return Sink;
 }
 
-MachineBasicBlock * MipsSETargetLowering::
-emitMSACBranchPseudo(MachineInstr *MI, MachineBasicBlock *BB,
-                     unsigned BranchOp) const{
+MachineBasicBlock *MipsSETargetLowering::emitMSACBranchPseudo(
+    MachineInstr &MI, MachineBasicBlock *BB, unsigned BranchOp) const {
   // $bb:
   //  vany_nonzero $rd, $ws
   //  =>
@@ -2814,7 +2992,7 @@ emitMSACBranchPseudo(MachineInstr *MI, MachineBasicBlock *BB,
   MachineRegisterInfo &RegInfo = BB->getParent()->getRegInfo();
   const TargetInstrInfo *TII = Subtarget.getInstrInfo();
   const TargetRegisterClass *RC = &Mips::GPR32RegClass;
-  DebugLoc DL = MI->getDebugLoc();
+  DebugLoc DL = MI.getDebugLoc();
   const BasicBlock *LLVM_BB = BB->getBasicBlock();
   MachineFunction::iterator It = std::next(MachineFunction::iterator(BB));
   MachineFunction *F = BB->getParent();
@@ -2838,8 +3016,8 @@ emitMSACBranchPseudo(MachineInstr *MI, MachineBasicBlock *BB,
 
   // Insert the real bnz.b instruction to $BB.
   BuildMI(BB, DL, TII->get(BranchOp))
-    .addReg(MI->getOperand(1).getReg())
-    .addMBB(TBB);
+      .addReg(MI.getOperand(1).getReg())
+      .addMBB(TBB);
 
   // Fill $FBB.
   unsigned RD1 = RegInfo.createVirtualRegister(RC);
@@ -2854,10 +3032,13 @@ emitMSACBranchPseudo(MachineInstr *MI, MachineBasicBlock *BB,
 
   // Insert phi function to $Sink.
   BuildMI(*Sink, Sink->begin(), DL, TII->get(Mips::PHI),
-          MI->getOperand(0).getReg())
-    .addReg(RD1).addMBB(FBB).addReg(RD2).addMBB(TBB);
+          MI.getOperand(0).getReg())
+      .addReg(RD1)
+      .addMBB(FBB)
+      .addReg(RD2)
+      .addMBB(TBB);
 
-  MI->eraseFromParent();   // The pseudo instruction is gone now.
+  MI.eraseFromParent(); // The pseudo instruction is gone now.
   return Sink;
 }
 
@@ -2871,25 +3052,37 @@ emitMSACBranchPseudo(MachineInstr *MI, MachineBasicBlock *BB,
 // When n is zero, the equivalent operation can be performed with (potentially)
 // zero instructions due to register overlaps. This optimization is never valid
 // for lane 1 because it would require FR=0 mode which isn't supported by MSA.
-MachineBasicBlock * MipsSETargetLowering::
-emitCOPY_FW(MachineInstr *MI, MachineBasicBlock *BB) const{
+MachineBasicBlock *
+MipsSETargetLowering::emitCOPY_FW(MachineInstr &MI,
+                                  MachineBasicBlock *BB) const {
   const TargetInstrInfo *TII = Subtarget.getInstrInfo();
   MachineRegisterInfo &RegInfo = BB->getParent()->getRegInfo();
-  DebugLoc DL = MI->getDebugLoc();
-  unsigned Fd = MI->getOperand(0).getReg();
-  unsigned Ws = MI->getOperand(1).getReg();
-  unsigned Lane = MI->getOperand(2).getImm();
+  DebugLoc DL = MI.getDebugLoc();
+  unsigned Fd = MI.getOperand(0).getReg();
+  unsigned Ws = MI.getOperand(1).getReg();
+  unsigned Lane = MI.getOperand(2).getImm();
 
-  if (Lane == 0)
-    BuildMI(*BB, MI, DL, TII->get(Mips::COPY), Fd).addReg(Ws, 0, Mips::sub_lo);
-  else {
-    unsigned Wt = RegInfo.createVirtualRegister(&Mips::MSA128WRegClass);
+  if (Lane == 0) {
+    unsigned Wt = Ws;
+    if (!Subtarget.useOddSPReg()) {
+      // We must copy to an even-numbered MSA register so that the
+      // single-precision sub-register is also guaranteed to be even-numbered.
+      Wt = RegInfo.createVirtualRegister(&Mips::MSA128WEvensRegClass);
+
+      BuildMI(*BB, MI, DL, TII->get(Mips::COPY), Wt).addReg(Ws);
+    }
+
+    BuildMI(*BB, MI, DL, TII->get(Mips::COPY), Fd).addReg(Wt, 0, Mips::sub_lo);
+  } else {
+    unsigned Wt = RegInfo.createVirtualRegister(
+        Subtarget.useOddSPReg() ? &Mips::MSA128WRegClass :
+                                  &Mips::MSA128WEvensRegClass);
 
     BuildMI(*BB, MI, DL, TII->get(Mips::SPLATI_W), Wt).addReg(Ws).addImm(Lane);
     BuildMI(*BB, MI, DL, TII->get(Mips::COPY), Fd).addReg(Wt, 0, Mips::sub_lo);
   }
 
-  MI->eraseFromParent();   // The pseudo instruction is gone now.
+  MI.eraseFromParent(); // The pseudo instruction is gone now.
   return BB;
 }
 
@@ -2903,16 +3096,17 @@ emitCOPY_FW(MachineInstr *MI, MachineBasicBlock *BB) const{
 // When n is zero, the equivalent operation can be performed with (potentially)
 // zero instructions due to register overlaps. This optimization is always
 // valid because FR=1 mode which is the only supported mode in MSA.
-MachineBasicBlock * MipsSETargetLowering::
-emitCOPY_FD(MachineInstr *MI, MachineBasicBlock *BB) const{
+MachineBasicBlock *
+MipsSETargetLowering::emitCOPY_FD(MachineInstr &MI,
+                                  MachineBasicBlock *BB) const {
   assert(Subtarget.isFP64bit());
 
   const TargetInstrInfo *TII = Subtarget.getInstrInfo();
   MachineRegisterInfo &RegInfo = BB->getParent()->getRegInfo();
-  unsigned Fd  = MI->getOperand(0).getReg();
-  unsigned Ws  = MI->getOperand(1).getReg();
-  unsigned Lane = MI->getOperand(2).getImm() * 2;
-  DebugLoc DL = MI->getDebugLoc();
+  unsigned Fd = MI.getOperand(0).getReg();
+  unsigned Ws = MI.getOperand(1).getReg();
+  unsigned Lane = MI.getOperand(2).getImm() * 2;
+  DebugLoc DL = MI.getDebugLoc();
 
   if (Lane == 0)
     BuildMI(*BB, MI, DL, TII->get(Mips::COPY), Fd).addReg(Ws, 0, Mips::sub_64);
@@ -2923,7 +3117,7 @@ emitCOPY_FD(MachineInstr *MI, MachineBasicBlock *BB) const{
     BuildMI(*BB, MI, DL, TII->get(Mips::COPY), Fd).addReg(Wt, 0, Mips::sub_64);
   }
 
-  MI->eraseFromParent();   // The pseudo instruction is gone now.
+  MI.eraseFromParent(); // The pseudo instruction is gone now.
   return BB;
 }
 
@@ -2934,16 +3128,18 @@ emitCOPY_FD(MachineInstr *MI, MachineBasicBlock *BB) const{
 // subreg_to_reg $wt:sub_lo, $fs
 // insve_w $wd[$n], $wd_in, $wt[0]
 MachineBasicBlock *
-MipsSETargetLowering::emitINSERT_FW(MachineInstr *MI,
+MipsSETargetLowering::emitINSERT_FW(MachineInstr &MI,
                                     MachineBasicBlock *BB) const {
   const TargetInstrInfo *TII = Subtarget.getInstrInfo();
   MachineRegisterInfo &RegInfo = BB->getParent()->getRegInfo();
-  DebugLoc DL = MI->getDebugLoc();
-  unsigned Wd = MI->getOperand(0).getReg();
-  unsigned Wd_in = MI->getOperand(1).getReg();
-  unsigned Lane = MI->getOperand(2).getImm();
-  unsigned Fs = MI->getOperand(3).getReg();
-  unsigned Wt = RegInfo.createVirtualRegister(&Mips::MSA128WRegClass);
+  DebugLoc DL = MI.getDebugLoc();
+  unsigned Wd = MI.getOperand(0).getReg();
+  unsigned Wd_in = MI.getOperand(1).getReg();
+  unsigned Lane = MI.getOperand(2).getImm();
+  unsigned Fs = MI.getOperand(3).getReg();
+  unsigned Wt = RegInfo.createVirtualRegister(
+      Subtarget.useOddSPReg() ? &Mips::MSA128WRegClass :
+                                &Mips::MSA128WEvensRegClass);
 
   BuildMI(*BB, MI, DL, TII->get(Mips::SUBREG_TO_REG), Wt)
       .addImm(0)
@@ -2955,7 +3151,7 @@ MipsSETargetLowering::emitINSERT_FW(MachineInstr *MI,
       .addReg(Wt)
       .addImm(0);
 
-  MI->eraseFromParent(); // The pseudo instruction is gone now.
+  MI.eraseFromParent(); // The pseudo instruction is gone now.
   return BB;
 }
 
@@ -2966,17 +3162,17 @@ MipsSETargetLowering::emitINSERT_FW(MachineInstr *MI,
 // subreg_to_reg $wt:sub_64, $fs
 // insve_d $wd[$n], $wd_in, $wt[0]
 MachineBasicBlock *
-MipsSETargetLowering::emitINSERT_FD(MachineInstr *MI,
+MipsSETargetLowering::emitINSERT_FD(MachineInstr &MI,
                                     MachineBasicBlock *BB) const {
   assert(Subtarget.isFP64bit());
 
   const TargetInstrInfo *TII = Subtarget.getInstrInfo();
   MachineRegisterInfo &RegInfo = BB->getParent()->getRegInfo();
-  DebugLoc DL = MI->getDebugLoc();
-  unsigned Wd = MI->getOperand(0).getReg();
-  unsigned Wd_in = MI->getOperand(1).getReg();
-  unsigned Lane = MI->getOperand(2).getImm();
-  unsigned Fs = MI->getOperand(3).getReg();
+  DebugLoc DL = MI.getDebugLoc();
+  unsigned Wd = MI.getOperand(0).getReg();
+  unsigned Wd_in = MI.getOperand(1).getReg();
+  unsigned Lane = MI.getOperand(2).getImm();
+  unsigned Fs = MI.getOperand(3).getReg();
   unsigned Wt = RegInfo.createVirtualRegister(&Mips::MSA128DRegClass);
 
   BuildMI(*BB, MI, DL, TII->get(Mips::SUBREG_TO_REG), Wt)
@@ -2989,7 +3185,7 @@ MipsSETargetLowering::emitINSERT_FD(MachineInstr *MI,
       .addReg(Wt)
       .addImm(0);
 
-  MI->eraseFromParent(); // The pseudo instruction is gone now.
+  MI.eraseFromParent(); // The pseudo instruction is gone now.
   return BB;
 }
 
@@ -3013,22 +3209,23 @@ MipsSETargetLowering::emitINSERT_FD(MachineInstr *MI,
 // (INSVE_[WD], $wdtmp2, 0, $wdtmp1, 0)
 // (NEG $lanetmp2, $lanetmp1)
 // (SLD_B $wd, $wdtmp2, $wdtmp2,  $lanetmp2)
-MachineBasicBlock *
-MipsSETargetLowering::emitINSERT_DF_VIDX(MachineInstr *MI,
-                                         MachineBasicBlock *BB,
-                                         unsigned EltSizeInBytes,
-                                         bool IsFP) const {
+MachineBasicBlock *MipsSETargetLowering::emitINSERT_DF_VIDX(
+    MachineInstr &MI, MachineBasicBlock *BB, unsigned EltSizeInBytes,
+    bool IsFP) const {
   const TargetInstrInfo *TII = Subtarget.getInstrInfo();
   MachineRegisterInfo &RegInfo = BB->getParent()->getRegInfo();
-  DebugLoc DL = MI->getDebugLoc();
-  unsigned Wd = MI->getOperand(0).getReg();
-  unsigned SrcVecReg = MI->getOperand(1).getReg();
-  unsigned LaneReg = MI->getOperand(2).getReg();
-  unsigned SrcValReg = MI->getOperand(3).getReg();
+  DebugLoc DL = MI.getDebugLoc();
+  unsigned Wd = MI.getOperand(0).getReg();
+  unsigned SrcVecReg = MI.getOperand(1).getReg();
+  unsigned LaneReg = MI.getOperand(2).getReg();
+  unsigned SrcValReg = MI.getOperand(3).getReg();
 
   const TargetRegisterClass *VecRC = nullptr;
+  // FIXME: This should be true for N32 too.
   const TargetRegisterClass *GPRRC =
-      Subtarget.isGP64bit() ? &Mips::GPR64RegClass : &Mips::GPR32RegClass;
+      Subtarget.isABI_N64() ? &Mips::GPR64RegClass : &Mips::GPR32RegClass;
+  unsigned SubRegIdx = Subtarget.isABI_N64() ? Mips::sub_32 : 0;
+  unsigned ShiftOp = Subtarget.isABI_N64() ? Mips::DSLL : Mips::SLL;
   unsigned EltLog2Size;
   unsigned InsertOp = 0;
   unsigned InsveOp = 0;
@@ -3073,7 +3270,7 @@ MipsSETargetLowering::emitINSERT_DF_VIDX(MachineInstr *MI,
   // Convert the lane index into a byte index
   if (EltSizeInBytes != 1) {
     unsigned LaneTmp1 = RegInfo.createVirtualRegister(GPRRC);
-    BuildMI(*BB, MI, DL, TII->get(Mips::SLL), LaneTmp1)
+    BuildMI(*BB, MI, DL, TII->get(ShiftOp), LaneTmp1)
         .addReg(LaneReg)
         .addImm(EltLog2Size);
     LaneReg = LaneTmp1;
@@ -3084,7 +3281,7 @@ MipsSETargetLowering::emitINSERT_DF_VIDX(MachineInstr *MI,
   BuildMI(*BB, MI, DL, TII->get(Mips::SLD_B), WdTmp1)
       .addReg(SrcVecReg)
       .addReg(SrcVecReg)
-      .addReg(LaneReg);
+      .addReg(LaneReg, 0, SubRegIdx);
 
   unsigned WdTmp2 = RegInfo.createVirtualRegister(VecRC);
   if (IsFP) {
@@ -3106,15 +3303,16 @@ MipsSETargetLowering::emitINSERT_DF_VIDX(MachineInstr *MI,
   // sld.df inteprets $rt modulo the number of columns so we only need to negate
   // the lane index to do this.
   unsigned LaneTmp2 = RegInfo.createVirtualRegister(GPRRC);
-  BuildMI(*BB, MI, DL, TII->get(Mips::SUB), LaneTmp2)
-      .addReg(Mips::ZERO)
+  BuildMI(*BB, MI, DL, TII->get(Subtarget.isABI_N64() ? Mips::DSUB : Mips::SUB),
+          LaneTmp2)
+      .addReg(Subtarget.isABI_N64() ? Mips::ZERO_64 : Mips::ZERO)
       .addReg(LaneReg);
   BuildMI(*BB, MI, DL, TII->get(Mips::SLD_B), Wd)
       .addReg(WdTmp2)
       .addReg(WdTmp2)
-      .addReg(LaneTmp2);
+      .addReg(LaneTmp2, 0, SubRegIdx);
 
-  MI->eraseFromParent(); // The pseudo instruction is gone now.
+  MI.eraseFromParent(); // The pseudo instruction is gone now.
   return BB;
 }
 
@@ -3126,13 +3324,13 @@ MipsSETargetLowering::emitINSERT_DF_VIDX(MachineInstr *MI,
 // insert_subreg $wt2:subreg_lo, $wt1, $fs
 // splati.w $wd, $wt2[0]
 MachineBasicBlock *
-MipsSETargetLowering::emitFILL_FW(MachineInstr *MI,
+MipsSETargetLowering::emitFILL_FW(MachineInstr &MI,
                                   MachineBasicBlock *BB) const {
   const TargetInstrInfo *TII = Subtarget.getInstrInfo();
   MachineRegisterInfo &RegInfo = BB->getParent()->getRegInfo();
-  DebugLoc DL = MI->getDebugLoc();
-  unsigned Wd = MI->getOperand(0).getReg();
-  unsigned Fs = MI->getOperand(1).getReg();
+  DebugLoc DL = MI.getDebugLoc();
+  unsigned Wd = MI.getOperand(0).getReg();
+  unsigned Fs = MI.getOperand(1).getReg();
   unsigned Wt1 = RegInfo.createVirtualRegister(&Mips::MSA128WRegClass);
   unsigned Wt2 = RegInfo.createVirtualRegister(&Mips::MSA128WRegClass);
 
@@ -3143,7 +3341,7 @@ MipsSETargetLowering::emitFILL_FW(MachineInstr *MI,
       .addImm(Mips::sub_lo);
   BuildMI(*BB, MI, DL, TII->get(Mips::SPLATI_W), Wd).addReg(Wt2).addImm(0);
 
-  MI->eraseFromParent(); // The pseudo instruction is gone now.
+  MI.eraseFromParent(); // The pseudo instruction is gone now.
   return BB;
 }
 
@@ -3155,15 +3353,15 @@ MipsSETargetLowering::emitFILL_FW(MachineInstr *MI,
 // insert_subreg $wt2:subreg_64, $wt1, $fs
 // splati.d $wd, $wt2[0]
 MachineBasicBlock *
-MipsSETargetLowering::emitFILL_FD(MachineInstr *MI,
+MipsSETargetLowering::emitFILL_FD(MachineInstr &MI,
                                   MachineBasicBlock *BB) const {
   assert(Subtarget.isFP64bit());
 
   const TargetInstrInfo *TII = Subtarget.getInstrInfo();
   MachineRegisterInfo &RegInfo = BB->getParent()->getRegInfo();
-  DebugLoc DL = MI->getDebugLoc();
-  unsigned Wd = MI->getOperand(0).getReg();
-  unsigned Fs = MI->getOperand(1).getReg();
+  DebugLoc DL = MI.getDebugLoc();
+  unsigned Wd = MI.getOperand(0).getReg();
+  unsigned Fs = MI.getOperand(1).getReg();
   unsigned Wt1 = RegInfo.createVirtualRegister(&Mips::MSA128DRegClass);
   unsigned Wt2 = RegInfo.createVirtualRegister(&Mips::MSA128DRegClass);
 
@@ -3174,7 +3372,7 @@ MipsSETargetLowering::emitFILL_FD(MachineInstr *MI,
       .addImm(Mips::sub_64);
   BuildMI(*BB, MI, DL, TII->get(Mips::SPLATI_D), Wd).addReg(Wt2).addImm(0);
 
-  MI->eraseFromParent();   // The pseudo instruction is gone now.
+  MI.eraseFromParent(); // The pseudo instruction is gone now.
   return BB;
 }
 
@@ -3185,25 +3383,25 @@ MipsSETargetLowering::emitFILL_FD(MachineInstr *MI,
 // ldi.w $ws, 1
 // fexp2.w $wd, $ws, $wt
 MachineBasicBlock *
-MipsSETargetLowering::emitFEXP2_W_1(MachineInstr *MI,
+MipsSETargetLowering::emitFEXP2_W_1(MachineInstr &MI,
                                     MachineBasicBlock *BB) const {
   const TargetInstrInfo *TII = Subtarget.getInstrInfo();
   MachineRegisterInfo &RegInfo = BB->getParent()->getRegInfo();
   const TargetRegisterClass *RC = &Mips::MSA128WRegClass;
   unsigned Ws1 = RegInfo.createVirtualRegister(RC);
   unsigned Ws2 = RegInfo.createVirtualRegister(RC);
-  DebugLoc DL = MI->getDebugLoc();
+  DebugLoc DL = MI.getDebugLoc();
 
   // Splat 1.0 into a vector
   BuildMI(*BB, MI, DL, TII->get(Mips::LDI_W), Ws1).addImm(1);
   BuildMI(*BB, MI, DL, TII->get(Mips::FFINT_U_W), Ws2).addReg(Ws1);
 
   // Emit 1.0 * fexp2(Wt)
-  BuildMI(*BB, MI, DL, TII->get(Mips::FEXP2_W), MI->getOperand(0).getReg())
+  BuildMI(*BB, MI, DL, TII->get(Mips::FEXP2_W), MI.getOperand(0).getReg())
       .addReg(Ws2)
-      .addReg(MI->getOperand(1).getReg());
+      .addReg(MI.getOperand(1).getReg());
 
-  MI->eraseFromParent(); // The pseudo instruction is gone now.
+  MI.eraseFromParent(); // The pseudo instruction is gone now.
   return BB;
 }
 
@@ -3214,24 +3412,24 @@ MipsSETargetLowering::emitFEXP2_W_1(MachineInstr *MI,
 // ldi.d $ws, 1
 // fexp2.d $wd, $ws, $wt
 MachineBasicBlock *
-MipsSETargetLowering::emitFEXP2_D_1(MachineInstr *MI,
+MipsSETargetLowering::emitFEXP2_D_1(MachineInstr &MI,
                                     MachineBasicBlock *BB) const {
   const TargetInstrInfo *TII = Subtarget.getInstrInfo();
   MachineRegisterInfo &RegInfo = BB->getParent()->getRegInfo();
   const TargetRegisterClass *RC = &Mips::MSA128DRegClass;
   unsigned Ws1 = RegInfo.createVirtualRegister(RC);
   unsigned Ws2 = RegInfo.createVirtualRegister(RC);
-  DebugLoc DL = MI->getDebugLoc();
+  DebugLoc DL = MI.getDebugLoc();
 
   // Splat 1.0 into a vector
   BuildMI(*BB, MI, DL, TII->get(Mips::LDI_D), Ws1).addImm(1);
   BuildMI(*BB, MI, DL, TII->get(Mips::FFINT_U_D), Ws2).addReg(Ws1);
 
   // Emit 1.0 * fexp2(Wt)
-  BuildMI(*BB, MI, DL, TII->get(Mips::FEXP2_D), MI->getOperand(0).getReg())
+  BuildMI(*BB, MI, DL, TII->get(Mips::FEXP2_D), MI.getOperand(0).getReg())
       .addReg(Ws2)
-      .addReg(MI->getOperand(1).getReg());
+      .addReg(MI.getOperand(1).getReg());
 
-  MI->eraseFromParent(); // The pseudo instruction is gone now.
+  MI.eraseFromParent(); // The pseudo instruction is gone now.
   return BB;
 }

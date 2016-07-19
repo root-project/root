@@ -12,14 +12,16 @@
 
 #include "cling-compiledata.h"
 #include "DynamicLookup.h"
+#include "ExternalInterpreterSource.h"
 #include "ForwardDeclPrinter.h"
 #include "IncrementalExecutor.h"
 #include "IncrementalParser.h"
 #include "MultiplexInterpreterCallbacks.h"
-#include "ASTImportSource.h"
+#include "TransactionUnloader.h"
 
 #include "cling/Interpreter/CIFactory.h"
 #include "cling/Interpreter/ClangInternalState.h"
+#include "cling/Interpreter/ClingCodeCompleteConsumer.h"
 #include "cling/Interpreter/CompilationOptions.h"
 #include "cling/Interpreter/DynamicLibraryManager.h"
 #include "cling/Interpreter/LookupHelper.h"
@@ -229,12 +231,14 @@ namespace cling {
          AutoLoadCB(new AutoloadCallback(this, showSuggestions));
       setCallbacks(std::move(AutoLoadCB));
     }
+
+    m_IncrParser->SetTransformers(isChildInterp);
   }
 
   ///\brief Constructor for the child Interpreter.
   /// Passing the parent Interpreter as an argument.
   ///
-  Interpreter::Interpreter(Interpreter &parentInterpreter, int argc,
+  Interpreter::Interpreter(const Interpreter &parentInterpreter, int argc,
                            const char* const *argv,
                            const char* llvmdir /*= 0*/, bool noRuntime) :
     Interpreter(argc, argv, llvmdir, noRuntime, /* isChildInterp */ true) {
@@ -242,8 +246,8 @@ namespace cling {
     // its parent interpreter.
 
     // The "bridge" between the interpreters.
-    ASTImportSource *myExternalSource =
-      new ASTImportSource(&parentInterpreter, this);
+    ExternalInterpreterSource *myExternalSource =
+      new ExternalInterpreterSource(&parentInterpreter, this);
 
     llvm::IntrusiveRefCntPtr <ExternalASTSource>
       astContextExternalSource(myExternalSource);
@@ -252,7 +256,7 @@ namespace cling {
 
     // Inform the Translation Unit Decl of I2 that it has to search somewhere
     // else to find the declarations.
-    getCI()->getASTContext().getTranslationUnitDecl()->setHasExternalVisibleStorage();
+    getCI()->getASTContext().getTranslationUnitDecl()->setHasExternalVisibleStorage(true);
 
     // Give my IncrementalExecutor a pointer to the Incremental executor of the
     // parent Interpreter.
@@ -265,6 +269,10 @@ namespace cling {
     for (size_t i = 0, e = m_StoredStates.size(); i != e; ++i)
       delete m_StoredStates[i];
     getCI()->getDiagnostics().getClient()->EndSourceFile();
+    // LookupHelper's ~Parser needs the PP from IncrParser's CI, so do this
+    // first:
+    m_LookupHelper.reset();
+
     // We want to keep the callback alive during the shutdown of Sema, CodeGen
     // and the ASTContext. For that to happen we shut down the IncrementalParser
     // explicitly, before the implicit destruction (through the unique_ptr) of
@@ -525,8 +533,16 @@ namespace cling {
   Interpreter::CompilationResult
   Interpreter::process(const std::string& input, Value* V /* = 0 */,
                        Transaction** T /* = 0 */) {
-    if (isRawInputEnabled() || !ShouldWrapInput(input))
-      return declare(input, T);
+    if (isRawInputEnabled() || !ShouldWrapInput(input)) {
+      CompilationOptions CO;
+      CO.DeclarationExtraction = 0;
+      CO.ValuePrinting = 0;
+      CO.ResultEvaluation = 0;
+      CO.DynamicScoping = isDynamicLookupEnabled();
+      CO.Debug = isPrintingDebug();
+      CO.CheckPointerValidity = 1;
+      return DeclareInternal(input, CO, T);
+    }
 
     CompilationOptions CO;
     CO.DeclarationExtraction = 1;
@@ -534,6 +550,7 @@ namespace cling {
     CO.ResultEvaluation = (bool)V;
     CO.DynamicScoping = isDynamicLookupEnabled();
     CO.Debug = isPrintingDebug();
+    CO.CheckPointerValidity = 1;
     if (EvaluateInternal(input, CO, V, T) == Interpreter::kFailure) {
       return Interpreter::kFailure;
     }
@@ -623,6 +640,34 @@ namespace cling {
     return Result;
   }
 
+
+  Interpreter::CompilationResult
+  Interpreter::CodeCompleteInternal(const std::string& input, unsigned offset) {
+
+    CompilationOptions CO;
+    CO.DeclarationExtraction = 0;
+    CO.ValuePrinting = 0;
+    CO.ResultEvaluation = 0;
+    CO.DynamicScoping = isDynamicLookupEnabled();
+    CO.Debug = isPrintingDebug();
+    CO.CheckPointerValidity = 0;
+    CO.CodeCompletionOffset = offset;
+
+
+    std::string wrappedInput = input;
+    std::string wrapperName;
+    if (ShouldWrapInput(input))
+      WrapInput(wrappedInput, wrapperName, CO);
+
+    StateDebuggerRAII stateDebugger(this);
+
+    // This triggers the FileEntry to be created and the completion
+    // point to be set in clang.
+    m_IncrParser->Parse(wrappedInput, CO);
+
+    return kSuccess;
+  }
+
   Interpreter::CompilationResult
   Interpreter::declare(const std::string& input, Transaction** T/*=0 */) {
     CompilationOptions CO;
@@ -631,6 +676,7 @@ namespace cling {
     CO.ResultEvaluation = 0;
     CO.DynamicScoping = isDynamicLookupEnabled();
     CO.Debug = isPrintingDebug();
+    CO.CheckPointerValidity = 0;
 
     return DeclareInternal(input, CO, T);
   }
@@ -647,6 +693,61 @@ namespace cling {
     CO.ResultEvaluation = 1;
 
     return EvaluateInternal(input, CO, &V);
+  }
+
+  Interpreter::CompilationResult
+  Interpreter::codeComplete(const std::string& line, size_t& cursor,
+                            std::vector<std::string>& completions) const {
+
+    const char * const argV = "cling";
+    std::string resourceDir = this->getCI()->getHeaderSearchOpts().ResourceDir;
+    // Remove the extra 3 directory names "/lib/clang/3.9.0"
+    StringRef parentResourceDir = llvm::sys::path::parent_path(
+                                  llvm::sys::path::parent_path(
+                                  llvm::sys::path::parent_path(resourceDir)));
+    std::string llvmDir = parentResourceDir.str();
+
+    Interpreter childInterpreter(*this, 1, &argV, llvmDir.c_str());
+
+    auto childCI = childInterpreter.getCI();
+    clang::Sema &childSemaRef = childCI->getSema();
+
+    // Create the CodeCompleteConsumer with InterpreterCallbacks
+    // from the parent interpreter and set the consumer for the child
+    // interpreter.
+    ClingCodeCompleteConsumer* consumer = new ClingCodeCompleteConsumer(
+                getCI()->getFrontendOpts().CodeCompleteOpts, completions);
+    // Child interpreter CI will own consumer!
+    childCI->setCodeCompletionConsumer(consumer);
+    childSemaRef.CodeCompleter = consumer;
+
+    // Ignore diagnostics when we tab complete.
+    // This is because we get redefinition errors due to the import of the decls.
+    clang::IgnoringDiagConsumer* ignoringDiagConsumer =
+                                            new clang::IgnoringDiagConsumer();                      
+    childSemaRef.getDiagnostics().setClient(ignoringDiagConsumer, true);
+    DiagnosticsEngine& parentDiagnostics = this->getCI()->getSema().getDiagnostics();
+
+    std::unique_ptr<DiagnosticConsumer> ownerDiagConsumer = 
+                                                parentDiagnostics.takeClient();
+    auto clientDiagConsumer = parentDiagnostics.getClient();
+    parentDiagnostics.setClient(ignoringDiagConsumer, /*owns*/ false);
+
+    // The child will desirialize decls from *this. We need a transaction RAII.
+    PushTransactionRAII RAII(this);
+
+    // Triger the code completion.
+    childInterpreter.CodeCompleteInternal(line, cursor);
+
+    // Restore the original diagnostics client for parent interpreter.
+    parentDiagnostics.setClient(clientDiagConsumer,
+                                ownerDiagConsumer.release() != nullptr);
+
+    // FIX-ME : Change it in the Incremental Parser
+    // It does not work by call unload in IncrementalParser, might be to early.
+    childInterpreter.unload(1);
+
+    return kSuccess;
   }
 
   Interpreter::CompilationResult
@@ -676,10 +777,12 @@ namespace cling {
     m_IncrParser->addTransaction(T);
     m_IncrParser->markWholeTransactionAsUsed(T);
     T->setState(Transaction::kCollecting);
-    m_IncrParser->commitTransaction(m_IncrParser->endTransaction(T));
+    auto PRT = m_IncrParser->endTransaction(T);
+    m_IncrParser->commitTransaction(PRT);
 
-    if (executeTransaction(*T))
-      return Interpreter::kSuccess;
+    if ((T = PRT.getPointer()))
+      if (executeTransaction(*T))
+        return Interpreter::kSuccess;
 
     return Interpreter::kFailure;
   }
@@ -768,9 +871,14 @@ namespace cling {
     return true;
   }
 
-  void Interpreter::WrapInput(std::string& input, std::string& fname) {
+  void Interpreter::WrapInput(std::string& input, std::string& fname,
+                              CompilationOptions &CO) {
     fname = createUniqueWrapper();
-    input.insert(0, "void " + fname + "(void* vpClingValue) {\n ");
+    std::string wrapperHeader = "void " + fname + "(void* vpClingValue) {\n ";
+    if (CO.CodeCompletionOffset != -1) {
+      CO.CodeCompletionOffset += wrapperHeader.size();
+    }
+    input.insert(0, wrapperHeader);
     input.append("\n;\n}");
   }
 
@@ -995,6 +1103,11 @@ namespace cling {
   Interpreter::DeclareInternal(const std::string& input,
                                const CompilationOptions& CO,
                                Transaction** T /* = 0 */) const {
+    assert(CO.DeclarationExtraction == 0
+           && CO.ValuePrinting == 0
+           && CO.ResultEvaluation == 0
+           && "Compilation Options not compatible with \"declare\" mode.");
+
     StateDebuggerRAII stateDebugger(this);
 
     IncrementalParser::ParseResultTransaction PRT
@@ -1017,7 +1130,7 @@ namespace cling {
     // Wrap the expression
     std::string WrapperName;
     std::string Wrapper = input;
-    WrapInput(Wrapper, WrapperName);
+    WrapInput(Wrapper, WrapperName, CO);
 
     // We have wrapped and need to disable warnings that are caused by
     // non-default C++ at the prompt:
@@ -1101,7 +1214,7 @@ namespace cling {
     DynamicLibraryManager* DLM = getDynamicLibraryManager();
     std::string canonicalLib = DLM->lookupLibrary(filename);
     if (allowSharedLib && !canonicalLib.empty()) {
-      switch (DLM->loadLibrary(filename, /*permanent*/false)) {
+      switch (DLM->loadLibrary(canonicalLib, /*permanent*/false, /*resolved*/true)) {
       case DynamicLibraryManager::kLoadLibSuccess: // Intentional fall through
       case DynamicLibraryManager::kLoadLibAlreadyLoaded:
         return kSuccess;
@@ -1116,8 +1229,53 @@ namespace cling {
 
     std::string code;
     code += "#include \"" + filename + "\"";
-    CompilationResult res = declare(code, T);
+
+    CompilationOptions CO;
+    CO.DeclarationExtraction = 0;
+    CO.ValuePrinting = 0;
+    CO.ResultEvaluation = 0;
+    CO.DynamicScoping = isDynamicLookupEnabled();
+    CO.Debug = isPrintingDebug();
+    CO.CheckPointerValidity = 1;
+    CompilationResult res = DeclareInternal(code, CO, T);
     return res;
+  }
+
+  void Interpreter::unload(Transaction& T) {
+    if (InterpreterCallbacks* callbacks = getCallbacks())
+      callbacks->TransactionUnloaded(T);
+    if (m_Executor) { // we also might be in fsyntax-only mode.
+      m_Executor->runAndRemoveStaticDestructors(&T);
+      if (!T.getExecutor()) {
+        // this transaction might be queued in the executor
+        m_Executor->unloadFromJIT(T.getModule(),
+                                  Transaction::ExeUnloadHandle({(void*)(size_t)-1}));
+      }
+    }
+
+    // We can revert the most recent transaction or a nested transaction of a
+    // transaction that is not in the middle of the transaction collection
+    // (i.e. at the end or not yet added to the collection at all).
+    assert(!T.getTopmostParent()->getNext() &&
+           "Can not revert previous transactions");
+    assert((T.getState() != Transaction::kRolledBack ||
+            T.getState() != Transaction::kRolledBackWithErrors) &&
+           "Transaction already rolled back.");
+    if (getOptions().ErrorOut)
+      return;
+
+    if (InterpreterCallbacks* callbacks = getCallbacks())
+      callbacks->TransactionRollback(T);
+
+    TransactionUnloader U(this, &getCI()->getSema(),
+                          m_IncrParser->getCodeGenerator(),
+                          m_Executor.get());
+    if (U.RevertTransaction(&T))
+      T.setState(Transaction::kRolledBack);
+    else
+      T.setState(Transaction::kRolledBackWithErrors);
+
+    m_IncrParser->deregisterTransaction(T);
   }
 
   void Interpreter::unload(unsigned numberOfTransactions) {
@@ -1127,12 +1285,7 @@ namespace cling {
         llvm::errs() << "cling: invalid last transaction; unload failed!\n";
         return;
       }
-      if (InterpreterCallbacks* callbacks = getCallbacks())
-        callbacks->TransactionUnloaded(*T);
-      if (m_Executor) // we also might be in fsyntax-only mode.
-        m_Executor->runAndRemoveStaticDestructors(T);
-      m_IncrParser->rollbackTransaction(T);
-
+      unload(*T);
       if (!--numberOfTransactions)
         break;
     }
@@ -1347,5 +1500,7 @@ namespace cling {
     // Avoid assertion in the ~IncrementalParser.
     T.setState(Transaction::kCommitted);
   }
+
+
 
 } //end namespace cling

@@ -22,16 +22,15 @@
 using namespace llvm;
 
 Thumb1InstrInfo::Thumb1InstrInfo(const ARMSubtarget &STI)
-  : ARMBaseInstrInfo(STI), RI(STI) {
-}
+    : ARMBaseInstrInfo(STI), RI() {}
 
 /// getNoopForMachoTarget - Return the noop instruction to use for a noop.
 void Thumb1InstrInfo::getNoopForMachoTarget(MCInst &NopInst) const {
   NopInst.setOpcode(ARM::tMOVr);
-  NopInst.addOperand(MCOperand::CreateReg(ARM::R8));
-  NopInst.addOperand(MCOperand::CreateReg(ARM::R8));
-  NopInst.addOperand(MCOperand::CreateImm(ARMCC::AL));
-  NopInst.addOperand(MCOperand::CreateReg(0));
+  NopInst.addOperand(MCOperand::createReg(ARM::R8));
+  NopInst.addOperand(MCOperand::createReg(ARM::R8));
+  NopInst.addOperand(MCOperand::createImm(ARMCC::AL));
+  NopInst.addOperand(MCOperand::createReg(0));
 }
 
 unsigned Thumb1InstrInfo::getUnindexedOpcode(unsigned Opc) const {
@@ -39,12 +38,12 @@ unsigned Thumb1InstrInfo::getUnindexedOpcode(unsigned Opc) const {
 }
 
 void Thumb1InstrInfo::copyPhysReg(MachineBasicBlock &MBB,
-                                  MachineBasicBlock::iterator I, DebugLoc DL,
-                                  unsigned DestReg, unsigned SrcReg,
-                                  bool KillSrc) const {
+                                  MachineBasicBlock::iterator I,
+                                  const DebugLoc &DL, unsigned DestReg,
+                                  unsigned SrcReg, bool KillSrc) const {
   // Need to check the arch.
   MachineFunction &MF = *MBB.getParent();
-  const ARMSubtarget &st = MF.getTarget().getSubtarget<ARMSubtarget>();
+  const ARMSubtarget &st = MF.getSubtarget<ARMSubtarget>();
 
   assert(ARM::GPRRegClass.contains(DestReg, SrcReg) &&
          "Thumb1 can only copy GPR registers");
@@ -58,7 +57,7 @@ void Thumb1InstrInfo::copyPhysReg(MachineBasicBlock &MBB,
     // Some things to try that should be better:
     //   * 'mov hi, $src; mov $dst, hi', with hi as either r10 or r11
     //   * 'movs $dst, $src' if cpsr isn't live
-    // See: http://lists.cs.uiuc.edu/pipermail/llvmdev/2014-August/075998.html
+    // See: http://lists.llvm.org/pipermail/llvm-dev/2014-August/075998.html
 
     // 'MOV lo, lo' is unpredictable on < v6, so use the stack to do it
     AddDefaultPred(BuildMI(MBB, I, DL, get(ARM::tPUSH)))
@@ -85,11 +84,9 @@ storeRegToStackSlot(MachineBasicBlock &MBB, MachineBasicBlock::iterator I,
 
     MachineFunction &MF = *MBB.getParent();
     MachineFrameInfo &MFI = *MF.getFrameInfo();
-    MachineMemOperand *MMO =
-      MF.getMachineMemOperand(MachinePointerInfo::getFixedStack(FI),
-                              MachineMemOperand::MOStore,
-                              MFI.getObjectSize(FI),
-                              MFI.getObjectAlignment(FI));
+    MachineMemOperand *MMO = MF.getMachineMemOperand(
+        MachinePointerInfo::getFixedStack(MF, FI), MachineMemOperand::MOStore,
+        MFI.getObjectSize(FI), MFI.getObjectAlignment(FI));
     AddDefaultPred(BuildMI(MBB, I, DL, get(ARM::tSTRspi))
                    .addReg(SrcReg, getKillRegState(isKill))
                    .addFrameIndex(FI).addImm(0).addMemOperand(MMO));
@@ -113,21 +110,20 @@ loadRegFromStackSlot(MachineBasicBlock &MBB, MachineBasicBlock::iterator I,
 
     MachineFunction &MF = *MBB.getParent();
     MachineFrameInfo &MFI = *MF.getFrameInfo();
-    MachineMemOperand *MMO =
-      MF.getMachineMemOperand(MachinePointerInfo::getFixedStack(FI),
-                              MachineMemOperand::MOLoad,
-                              MFI.getObjectSize(FI),
-                              MFI.getObjectAlignment(FI));
+    MachineMemOperand *MMO = MF.getMachineMemOperand(
+        MachinePointerInfo::getFixedStack(MF, FI), MachineMemOperand::MOLoad,
+        MFI.getObjectSize(FI), MFI.getObjectAlignment(FI));
     AddDefaultPred(BuildMI(MBB, I, DL, get(ARM::tLDRspi), DestReg)
                    .addFrameIndex(FI).addImm(0).addMemOperand(MMO));
   }
 }
 
-void
-Thumb1InstrInfo::expandLoadStackGuard(MachineBasicBlock::iterator MI,
-                                      Reloc::Model RM) const {
-  if (RM == Reloc::PIC_)
-    expandLoadStackGuardBase(MI, ARM::tLDRLIT_ga_pcrel, ARM::tLDRi, RM);
+void Thumb1InstrInfo::expandLoadStackGuard(
+    MachineBasicBlock::iterator MI) const {
+  MachineFunction &MF = *MI->getParent()->getParent();
+  const TargetMachine &TM = MF.getTarget();
+  if (TM.isPositionIndependent())
+    expandLoadStackGuardBase(MI, ARM::tLDRLIT_ga_pcrel, ARM::tLDRi);
   else
-    expandLoadStackGuardBase(MI, ARM::tLDRLIT_ga_abs, ARM::tLDRi, RM);
+    expandLoadStackGuardBase(MI, ARM::tLDRLIT_ga_abs, ARM::tLDRi);
 }

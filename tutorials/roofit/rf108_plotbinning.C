@@ -4,8 +4,8 @@
 ///
 ///  Plotting unbinned data with alternate and variable binnings
 ///
-///
 /// \macro_code
+///
 /// \author 07/2008 - Wouter Verkerke
 
 
@@ -105,7 +105,7 @@ void rf108_plotbinning()
   // Create plot frame in dt
   RooPlot* aframe = dt.frame(Range(-10,10),Title("mixState asymmetry distribution with custom binning")) ;
 
-  // Plot mixState asymmetry of data with specified customg binning
+  // Plot mixState asymmetry of data with specified custom binning
   data->plotOn(aframe,Asymmetry(mixState),Binning(abins)) ;
 
   // Plot corresponding property of p.d.f

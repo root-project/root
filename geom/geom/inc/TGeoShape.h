@@ -137,6 +137,7 @@ public:
    static  Bool_t        IsSegCrossing(Double_t x1, Double_t y1, Double_t x2, Double_t y2,Double_t x3, Double_t y3,Double_t x4, Double_t y4);
    static  Bool_t        IsInPhiRange(const Double_t *point, Double_t phi1, Double_t phi2);
    virtual Bool_t        IsReflected() const {return kFALSE;}
+   virtual Bool_t        IsVecGeom() const {return kFALSE;}
    Bool_t                IsRunTimeShape() const {return TestShapeBit(kGeoRunTimeShape);}
    Bool_t                IsValid() const {return !TestShapeBit(kGeoInvalidShape);}
    virtual Bool_t        IsValidBox() const                      = 0;

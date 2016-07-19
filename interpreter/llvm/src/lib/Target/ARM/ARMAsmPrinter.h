@@ -51,6 +51,11 @@ class LLVM_LIBRARY_VISIBILITY ARMAsmPrinter : public AsmPrinter {
   /// labels used for ARMv4t thumb code to make register indirect calls.
   SmallVector<std::pair<unsigned, MCSymbol*>, 4> ThumbIndirectPads;
 
+  /// OptimizationGoals - Maintain a combined optimization goal for all
+  /// functions in a module: one of Tag_ABI_optimization_goals values,
+  /// -1 if uninitialized, 0 if conflicting goals
+  int OptimizationGoals;
+
 public:
   explicit ARMAsmPrinter(TargetMachine &TM,
                          std::unique_ptr<MCStreamer> Streamer);
@@ -59,8 +64,7 @@ public:
     return "ARM Assembly / Object Emitter";
   }
 
-  void printOperand(const MachineInstr *MI, int OpNum, raw_ostream &O,
-                    const char *Modifier = nullptr);
+  void printOperand(const MachineInstr *MI, int OpNum, raw_ostream &O);
 
   bool PrintAsmOperand(const MachineInstr *MI, unsigned OpNum,
                        unsigned AsmVariant, const char *ExtraCode,
@@ -72,8 +76,9 @@ public:
   void emitInlineAsmEnd(const MCSubtargetInfo &StartInfo,
                         const MCSubtargetInfo *EndInfo) const override;
 
-  void EmitJumpTable(const MachineInstr *MI);
-  void EmitJump2Table(const MachineInstr *MI);
+  void EmitJumpTableAddrs(const MachineInstr *MI);
+  void EmitJumpTableInsts(const MachineInstr *MI);
+  void EmitJumpTableTBInst(const MachineInstr *MI, unsigned OffsetWidth);
   void EmitInstruction(const MachineInstr *MI) override;
   bool runOnMachineFunction(MachineFunction &F) override;
 
@@ -84,12 +89,13 @@ public:
   void EmitFunctionEntryLabel() override;
   void EmitStartOfAsmFile(Module &M) override;
   void EmitEndOfAsmFile(Module &M) override;
-  void EmitXXStructor(const Constant *CV) override;
+  void EmitXXStructor(const DataLayout &DL, const Constant *CV) override;
 
   // lowerOperand - Convert a MachineOperand into the equivalent MCOperand.
   bool lowerOperand(const MachineOperand &MO, MCOperand &MCOp);
 
 private:
+
   // Helpers for EmitStartOfAsmFile() and EmitEndOfAsmFile()
   void emitAttributes();
 
@@ -105,17 +111,19 @@ private:
 public:
   unsigned getISAEncoding() override {
     // ARM/Darwin adds ISA to the DWARF info for each function.
-    if (!Subtarget->isTargetMachO())
+    const Triple &TT = TM.getTargetTriple();
+    if (!TT.isOSBinFormatMachO())
       return 0;
-    return Subtarget->isThumb() ?
-      ARM::DW_ISA_ARM_thumb : ARM::DW_ISA_ARM_arm;
+    bool isThumb = TT.getArch() == Triple::thumb ||
+                   TT.getArch() == Triple::thumbeb ||
+                   TT.getSubArch() == Triple::ARMSubArch_v7m ||
+                   TT.getSubArch() == Triple::ARMSubArch_v6m;
+    return isThumb ? ARM::DW_ISA_ARM_thumb : ARM::DW_ISA_ARM_arm;
   }
 
 private:
   MCOperand GetSymbolRef(const MachineOperand &MO, const MCSymbol *Symbol);
-  MCSymbol *GetARMJTIPICJumpTableLabel2(unsigned uid, unsigned uid2) const;
-
-  MCSymbol *GetARMSJLJEHLabel() const;
+  MCSymbol *GetARMJTIPICJumpTableLabel(unsigned uid) const;
 
   MCSymbol *GetARMGVSymbol(const GlobalValue *GV, unsigned char TargetFlags);
 

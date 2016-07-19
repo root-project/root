@@ -117,13 +117,15 @@ private:
   void emitCaret(SourceLocation Loc, DiagnosticsEngine::Level Level,
                  ArrayRef<CharSourceRange> Ranges, ArrayRef<FixItHint> Hints,
                  const SourceManager &SM);
+  void emitSingleMacroExpansion(SourceLocation Loc,
+                                DiagnosticsEngine::Level Level,
+                                ArrayRef<CharSourceRange> Ranges,
+                                const SourceManager &SM);
   void emitMacroExpansions(SourceLocation Loc,
                            DiagnosticsEngine::Level Level,
                            ArrayRef<CharSourceRange> Ranges,
                            ArrayRef<FixItHint> Hints,
-                           const SourceManager &SM,
-                           unsigned &MacroDepth,
-                           unsigned OnMacroInst = 0);
+                           const SourceManager &SM);
 public:
   /// \brief Emit a diagnostic.
   ///
@@ -155,8 +157,8 @@ public:
   DiagnosticNoteRenderer(const LangOptions &LangOpts,
                          DiagnosticOptions *DiagOpts)
     : DiagnosticRenderer(LangOpts, DiagOpts) {}
-  
-  virtual ~DiagnosticNoteRenderer();
+
+  ~DiagnosticNoteRenderer() override;
 
   void emitIncludeLocation(SourceLocation Loc, PresumedLoc PLoc,
                            const SourceManager &SM) override;

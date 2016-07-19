@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TTreeCloner
+\ingroup tree
+
 Class implementing or helping  the various TTree cloning method
 */
 

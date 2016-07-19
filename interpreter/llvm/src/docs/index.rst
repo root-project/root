@@ -65,6 +65,8 @@ representation.
    :hidden:
 
    CMake
+   CMakePrimer
+   AdvancedBuilds
    HowToBuildOnARM
    HowToCrossCompileLLVM
    CommandGuide/index
@@ -83,7 +85,11 @@ representation.
    Passes
    YamlIO
    GetElementPtr
+   Frontend/PerformanceTips
    MCJITDesignAndImplementation
+   CodeOfConduct
+   CompileCudaWithLLVM
+   ReportingGuide
 
 :doc:`GettingStarted`
    Discusses how to get up and running quickly with the LLVM infrastructure.
@@ -150,6 +156,11 @@ representation.
   Answers to some very frequent questions about LLVM's most frequently
   misunderstood instruction.
 
+:doc:`Frontend/PerformanceTips`
+   A collection of tips for frontend authors on how to generate IR 
+   which LLVM is able to effectively optimize.
+
+
 Programming Documentation
 =========================
 
@@ -166,6 +177,8 @@ For developers of applications which use LLVM as a library.
    HowToSetUpLLVMStyleRTTI
    ProgrammersManual
    Extensions
+   LibFuzzer
+   ScudoHardenedAllocator
 
 :doc:`LLVM Language Reference Manual <LangRef>`
   Defines the LLVM intermediate representation and the assembly form of the
@@ -207,6 +220,12 @@ For developers of applications which use LLVM as a library.
 :doc:`CompilerWriterInfo`
   A list of helpful links for compiler writers.
 
+:doc:`LibFuzzer`
+  A library for writing in-process guided fuzzers.
+
+:doc:`ScudoHardenedAllocator`
+  A library that implements a security-hardened `malloc()`.
+
 Subsystem Documentation
 =======================
 
@@ -237,13 +256,16 @@ For API clients and LLVM developers.
    WritingAnLLVMPass
    HowToUseAttributes
    NVPTXUsage
-   R600Usage
+   AMDGPUUsage
    StackMaps
    InAlloca
    BigEndianNEON
    CoverageMappingFormat
    Statepoints
    MergeFunctions
+   TypeMetadata
+   FaultMaps
+   MIRLangRef
 
 :doc:`WritingAnLLVMPass`
    Information on how to write LLVM transformations and analyses.
@@ -255,6 +277,10 @@ For API clients and LLVM developers.
    The design and implementation of the LLVM code generator.  Useful if you are
    working on retargetting LLVM to a new architecture, designing a new codegen
    pass, or enhancing existing components.
+
+:doc:`Machine IR (MIR) Format Reference Manual <MIRLangRef>`
+   A reference manual for the MIR serialization format, which is used to test
+   LLVM's code generation passes.
 
 :doc:`TableGen <TableGen/index>`
    Describes the TableGen tool, which is used heavily by the LLVM code
@@ -322,8 +348,8 @@ For API clients and LLVM developers.
 :doc:`NVPTXUsage`
    This document describes using the NVPTX back-end to compile GPU kernels.
 
-:doc:`R600Usage`
-   This document describes how to use the R600 back-end.
+:doc:`AMDGPUUsage`
+   This document describes how to use the AMDGPU back-end.
 
 :doc:`StackMaps`
   LLVM support for mapping instruction addresses to the location of
@@ -343,6 +369,15 @@ For API clients and LLVM developers.
 :doc:`MergeFunctions`
   Describes functions merging optimization.
 
+:doc:`InAlloca`
+  Description of the ``inalloca`` argument attribute.
+
+:doc:`FaultMaps`
+  LLVM support for folding control flow into faulting machine instructions.
+
+:doc:`CompileCudaWithLLVM`
+  LLVM support for CUDA.
+
 Development Process Documentation
 =================================
 
@@ -352,7 +387,6 @@ Information about LLVM's development process.
    :hidden:
 
    DeveloperPolicy
-   MakefileGuide
    Projects
    LLVMBuild
    HowToReleaseLLVM
@@ -372,9 +406,6 @@ Information about LLVM's development process.
 :doc:`LLVMBuild`
   Describes the LLVMBuild organization and files used by LLVM to specify
   component descriptions.
-
-:doc:`MakefileGuide`
-  Describes how the LLVM makefiles work and how to use them.
 
 :doc:`HowToReleaseLLVM`
   This is a guide to preparing LLVM releases. Most developers can ignore it.
@@ -402,12 +433,12 @@ Mailing Lists
 If you can't find what you need in these docs, try consulting the mailing
 lists.
 
-`Developer's List (llvmdev)`__
+`Developer's List (llvm-dev)`__
   This list is for people who want to be included in technical discussions of
   LLVM. People post to this list when they have questions about writing code
   for or using the LLVM tools. It is relatively low volume.
 
-  .. __: http://lists.cs.uiuc.edu/mailman/listinfo/llvmdev
+  .. __: http://lists.llvm.org/mailman/listinfo/llvm-dev
 
 `Commits Archive (llvm-commits)`__
   This list contains all commit messages that are made when LLVM developers
@@ -416,26 +447,26 @@ lists.
   stay on the bleeding edge of LLVM development. This list is very high
   volume.
 
-  .. __: http://lists.cs.uiuc.edu/pipermail/llvm-commits/
+  .. __: http://lists.llvm.org/pipermail/llvm-commits/
 
-`Bugs & Patches Archive (llvmbugs)`__
+`Bugs & Patches Archive (llvm-bugs)`__
   This list gets emailed every time a bug is opened and closed. It is
-  higher volume than the LLVMdev list.
+  higher volume than the LLVM-dev list.
 
-  .. __: http://lists.cs.uiuc.edu/pipermail/llvmbugs/
+  .. __: http://lists.llvm.org/pipermail/llvm-bugs/
 
 `Test Results Archive (llvm-testresults)`__
   A message is automatically sent to this list by every active nightly tester
   when it completes.  As such, this list gets email several times each day,
   making it a high volume list.
 
-  .. __: http://lists.cs.uiuc.edu/pipermail/llvm-testresults/
+  .. __: http://lists.llvm.org/pipermail/llvm-testresults/
 
 `LLVM Announcements List (llvm-announce)`__
   This is a low volume list that provides important announcements regarding
   LLVM.  It gets email about once a month.
 
-  .. __: http://lists.cs.uiuc.edu/mailman/listinfo/llvm-announce
+  .. __: http://lists.llvm.org/mailman/listinfo/llvm-announce
 
 IRC
 ---

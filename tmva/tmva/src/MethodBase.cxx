@@ -118,6 +118,7 @@
 #include "TMVA/VariableInfo.h"
 #include "TMVA/VariableNormalizeTransform.h"
 #include "TMVA/VariablePCATransform.h"
+#include "TMVA/VariableTransform.h"
 #include "TMVA/Version.h"
 
 ClassImp(TMVA::MethodBase)
@@ -143,8 +144,7 @@ TMVA::MethodBase::MethodBase( const TString& jobName,
                               Types::EMVA methodType,
                               const TString& methodTitle,
                               DataSetInfo& dsi,
-                              const TString& theOption,
-                              TDirectory* theBaseDir) :
+                              const TString& theOption) :
    IMethod(),
    Configurable               ( theOption ),
    fTmpEvent                  ( 0 ),
@@ -153,7 +153,6 @@ TMVA::MethodBase::MethodBase( const TString& jobName,
    fAnalysisType              ( Types::kNoAnalysisType ),
    fRegressionReturnVal       ( 0 ),
    fMulticlassReturnVal       ( 0 ),
-   fDisableWriting            ( kFALSE ),
    fDataSetInfo               ( dsi ),
    fSignalReferenceCut        ( 0.5 ),
    fSignalReferenceCutOrientation( 1. ),
@@ -166,7 +165,10 @@ TMVA::MethodBase::MethodBase( const TString& jobName,
    fROOTTrainingVersion       ( ROOT_VERSION_CODE ),
    fConstructedFromWeightFile ( kFALSE ),
    fBaseDir                   ( 0 ),
-   fMethodBaseDir             ( theBaseDir ),
+   fMethodBaseDir             ( 0 ),
+   fFile                      ( 0 ),
+   fSilentFile                (kFALSE),
+   fModelPersistence          (kTRUE),
    fWeightFile                ( "" ),
    fEffS                      ( 0 ),
    fDefaultPDF                ( 0 ),
@@ -195,11 +197,7 @@ TMVA::MethodBase::MethodBase( const TString& jobName,
    fSetupCompleted            (kFALSE)
 {
    SetTestvarName();
-   // default extension for weight files
-   fFileDir=fDataSetInfo.GetName();
-   fFileDir+="/"+gConfig().GetIONames().fWeightFileDir;
-   SetWeightFileDir(fFileDir);
-//    SetWeightFileDir( gConfig().GetIONames().fWeightFileDir );
+//    // default extension for weight files
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -208,8 +206,7 @@ TMVA::MethodBase::MethodBase( const TString& jobName,
 
 TMVA::MethodBase::MethodBase( Types::EMVA methodType,
                               DataSetInfo& dsi,
-                              const TString& weightFile,
-                              TDirectory* theBaseDir ) :
+                              const TString& weightFile ) :
    IMethod(),
    Configurable(""),
    fTmpEvent                  ( 0 ),
@@ -228,8 +225,11 @@ TMVA::MethodBase::MethodBase( Types::EMVA methodType,
    fTMVATrainingVersion       ( 0 ),
    fROOTTrainingVersion       ( 0 ),
    fConstructedFromWeightFile ( kTRUE ),
-   fBaseDir                   ( theBaseDir ),
+   fBaseDir                   ( 0 ),
    fMethodBaseDir             ( 0 ),
+   fFile                      ( 0 ),
+   fSilentFile                (kFALSE),
+   fModelPersistence          (kTRUE),
    fWeightFile                ( weightFile ),
    fEffS                      ( 0 ),
    fDefaultPDF                ( 0 ),
@@ -257,11 +257,8 @@ TMVA::MethodBase::MethodBase( Types::EMVA methodType,
    fSplTrainRefB              ( 0 ),
    fSetupCompleted            (kFALSE)
 {
-   // constructor used for Testing + Application of the MVA,
-   // only (no training), using given WeightFiles
-   fFileDir=fDataSetInfo.GetName();
-   fFileDir+="/"+gConfig().GetIONames().fWeightFileDir;
-   SetWeightFileDir(fFileDir);
+//    // constructor used for Testing + Application of the MVA,
+//    // only (no training), using given WeightFiles
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -382,9 +379,6 @@ void TMVA::MethodBase::InitBase()
    fEventCollections.at(0) = 0;
    fEventCollections.at(1) = 0;
 
-   // define "this" pointer
-   ResetThisBase();
-
    // retrieve signal and background class index
    if (DataInfo().GetClassInfo("Signal") != 0) {
       fSignalClass = DataInfo().GetClassInfo("Signal")->GetNumber();
@@ -466,7 +460,7 @@ void TMVA::MethodBase::ProcessBaseOptions()
       SetOptions( fMVAPdfS->GetOptions() );
    }
 
-   TMVA::MethodBase::CreateVariableTransforms( fVarTransformString,
+   TMVA::CreateVariableTransforms( fVarTransformString,
                                                DataInfo(),
                                                GetTransformationHandler(),
                                                Log() );
@@ -492,122 +486,6 @@ void TMVA::MethodBase::ProcessBaseOptions()
             << fVerbosityLevelString << "' unknown." << Endl;
    }
    Event::SetIgnoreNegWeightsInTraining(fIgnoreNegWeightsInTraining);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// create variable transformations
-
-void TMVA::MethodBase::CreateVariableTransforms( const TString& trafoDefinitionIn,
-                                                 TMVA::DataSetInfo& dataInfo,
-                                                 TMVA::TransformationHandler& transformationHandler,
-                                                 TMVA::MsgLogger& log )
-{
-   TString trafoDefinition(trafoDefinitionIn);
-   if (trafoDefinition == "None") return; // no transformations
-
-   // workaround for transformations to complicated to be handled by makeclass
-   // count number of transformations with incomplete set of variables
-   TString trafoDefinitionCheck(trafoDefinitionIn);
-   int npartial = 0, ntrafo=0;
-   for (Int_t pos = 0, siz = trafoDefinition.Sizeof(); pos < siz; ++pos) {
-      TString ch = trafoDefinition(pos,1);
-      if ( ch == "(" ) npartial++;
-      if ( ch == "+" || ch == ",") ntrafo++;
-   }
-   if (npartial>1) {
-      log << kWARNING << "The use of multiple partial variable transformations during the application phase can be properly invoked via the \"Reader\", but it is not yet implemented in \"MakeClass\", the creation mechanism for standalone C++ application classes. The standalone C++ class produced by this training job is thus INCOMPLETE AND MUST NOT BE USED! The transformation in question is: " << trafoDefinitionIn << Endl; // ToDo make info and do not write the standalone class
-      //
-      // this does not work since this function is static
-      // fDisableWriting=true; // disable creation of stand-alone class
-      // ToDo we need to tell the transformation that it cannot write itself
-   }
-   // workaround end
-
-   Int_t parenthesisCount = 0;
-   for (Int_t position = 0, size = trafoDefinition.Sizeof(); position < size; ++position) {
-      TString ch = trafoDefinition(position,1);
-      if      (ch == "(")                          ++parenthesisCount;
-      else if (ch == ")")                          --parenthesisCount;
-      else if (ch == "," && parenthesisCount == 0) trafoDefinition.Replace(position,1,'+');
-   }
-
-   TList* trList = gTools().ParseFormatLine( trafoDefinition, "+" );
-   TListIter trIt(trList);
-   while (TObjString* os = (TObjString*)trIt()) {
-      TString tdef = os->GetString();
-      Int_t idxCls = -1;
-
-      TString variables = "";
-      if (tdef.Contains("(")) { // contains selection of variables
-         Ssiz_t parStart = tdef.Index( "(" );
-         Ssiz_t parLen   = tdef.Index( ")", parStart )-parStart+1;
-
-         variables = tdef(parStart,parLen);
-         tdef.Remove(parStart,parLen);
-         variables.Remove(parLen-1,1);
-         variables.Remove(0,1);
-      }
-
-      TList* trClsList = gTools().ParseFormatLine( tdef, "_" ); // split entry to get trf-name and class-name
-      TListIter trClsIt(trClsList);
-      if (trClsList->GetSize() < 1) log << kFATAL <<Form("Dataset[%s] : ",dataInfo.GetName())<< "Incorrect transformation string provided." << Endl;
-      const TString& trName = ((TObjString*)trClsList->At(0))->GetString();
-
-      if (trClsList->GetEntries() > 1) {
-         TString trCls = "AllClasses";
-         ClassInfo *ci = NULL;
-         trCls  = ((TObjString*)trClsList->At(1))->GetString();
-         if (trCls != "AllClasses") {
-            ci = dataInfo.GetClassInfo( trCls );
-            if (ci == NULL)
-               log << kFATAL <<Form("Dataset[%s] : ",dataInfo.GetName())<< "Class " << trCls << " not known for variable transformation "
-                   << trName << ", please check." << Endl;
-            else
-               idxCls = ci->GetNumber();
-         }
-      }
-
-      VariableTransformBase* transformation = NULL;
-      if      (trName == "I" || trName == "Ident" || trName == "Identity") {
-         if (variables.Length() == 0) variables = "_V_";
-         transformation = new VariableIdentityTransform( dataInfo);
-      }
-      else if (trName == "D" || trName == "Deco" || trName == "Decorrelate") {
-         if (variables.Length() == 0) variables = "_V_";
-         transformation = new VariableDecorrTransform( dataInfo);
-      }
-      else if (trName == "P" || trName == "PCA") {
-         if (variables.Length() == 0) variables = "_V_";
-         transformation = new VariablePCATransform   ( dataInfo);
-      }
-      else if (trName == "U" || trName == "Uniform") {
-         if (variables.Length() == 0) variables = "_V_,_T_";
-         transformation = new VariableGaussTransform ( dataInfo, "Uniform" );
-      }
-      else if (trName == "G" || trName == "Gauss") {
-         if (variables.Length() == 0) variables = "_V_";
-         transformation = new VariableGaussTransform ( dataInfo);
-      }
-      else if (trName == "N" || trName == "Norm" || trName == "Normalise" || trName == "Normalize") {
-         if (variables.Length() == 0) variables = "_V_,_T_";
-         transformation = new VariableNormalizeTransform( dataInfo);
-      }
-      else log << kFATAL <<Form("Dataset[%s] : ",dataInfo.GetName())<< "<ProcessOptions> Variable transform '"
-               << trName << "' unknown." << Endl;
-
-      if (transformation) {
-         ClassInfo* clsInfo = dataInfo.GetClassInfo(idxCls);
-         if (clsInfo )
-            log << kINFO <<Form("Dataset[%s] : ",dataInfo.GetName())<< "Create Transformation \"" << trName << "\" with reference class "
-                << clsInfo->GetName() << "=("<< idxCls <<")"<<Endl;
-         else
-            log << kINFO <<Form("Dataset[%s] : ",dataInfo.GetName())<< "Create Transformation \"" << trName << "\" with events from all classes." << Endl;
-
-         transformation->SelectInput( variables );
-         transformationHandler.AddTransformation(transformation, idxCls);
-      }
-   }
-   return;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -676,9 +554,9 @@ void TMVA::MethodBase::TrainMethod()
 
    // train the MVA method
    if (Help()) PrintHelpMessage();
-	  
+          
    // all histograms should be created in the method's subdirectory
-   BaseDir()->cd();
+   if(!IsSilentFile()) BaseDir()->cd();
 
    // once calculate all the transformation (e.g. the sequence of Decorr:Gauss:Decorr)
    //    needed for this classifier
@@ -723,15 +601,18 @@ void TMVA::MethodBase::TrainMethod()
 
    // write the current MVA state into stream
    // produced are one text file and one ROOT file
-   if (!fDisableWriting ) WriteStateToFile();
+   if (fModelPersistence ) WriteStateToFile();
 
    // produce standalone make class (presently only supported for classification)
-   if ((!DoRegression()) && (!fDisableWriting)) MakeClass();
+   if ((!DoRegression()) && (fModelPersistence)) MakeClass();
 
    // write additional monitoring histograms to main target file (not the weight file)
    // again, make sure the histograms go into the method's subdirectory
-   BaseDir()->cd();
-   WriteMonitoringHistosToFile();
+   if(!IsSilentFile())
+   {
+       BaseDir()->cd();
+       WriteMonitoringHistosToFile();
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -875,32 +756,62 @@ void TMVA::MethodBase::AddClassifierOutput( Types::ETreeType type )
    ResultsClassification* clRes =
       (ResultsClassification*)Data()->GetResults(GetMethodName(), type, Types::kClassification );
 
-   Long64_t nEvents = Data()->GetNEvents();
+
+   Long64_t nEvents =  Data()->GetNEvents();
+   std::vector<Double_t> mvaValues = GetMvaValues(0, nEvents, true); 
+
+   
+   clRes->Resize( nEvents );
 
    // use timer
    Timer timer( nEvents, GetName(), kTRUE );
 
-   Log() << kINFO<<Form("Dataset[%s] : ",DataInfo().GetName())<< "Evaluation of " << GetMethodName() << " on "
-         << (type==Types::kTraining?"training":"testing") << " sample (" << nEvents << " events)" << Endl;
-
-   clRes->Resize( nEvents );
    for (Int_t ievt=0; ievt<nEvents; ievt++) {
-      Data()->SetCurrentEvent(ievt);
-      clRes->SetValue( GetMvaValue(), ievt );
-
-      // print progress
-      Int_t modulo = Int_t(nEvents/100);
-      if (modulo <= 0 ) modulo = 1;
-      if (ievt%modulo == 0) timer.DrawProgressBar( ievt );
+      clRes->SetValue( mvaValues[ievt], ievt );
    }
-
-   Log() << kINFO <<Form("Dataset[%s] : ",DataInfo().GetName())<< "Elapsed time for evaluation of " << nEvents <<  " events: "
-         << timer.GetElapsedTime() << "       " << Endl;
 
    // store time used for testing
    if (type==Types::kTesting)
       SetTestTime(timer.ElapsedSeconds());
 
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// get all the MVA values for the events of the current Data type
+std::vector<Double_t> TMVA::MethodBase::GetMvaValues(Long64_t firstEvt, Long64_t lastEvt, Bool_t logProgress)
+{
+
+   Long64_t nEvents = Data()->GetNEvents();
+   if (firstEvt > lastEvt || lastEvt > nEvents) lastEvt = nEvents;
+   if (firstEvt < 0) firstEvt = 0;
+   std::vector<Double_t> values(lastEvt-firstEvt);
+   // log in case of looping on all the events 
+   nEvents = values.size();
+
+   // use timer
+   Timer timer( nEvents, GetName(), kTRUE );
+   if (logProgress) 
+      Log() << kINFO<<Form("Dataset[%s] : ",DataInfo().GetName())<< "Evaluation of " << GetMethodName() << " on "
+            << (Data()->GetCurrentType()==Types::kTraining?"training":"testing") << " sample (" << nEvents << " events)" << Endl;
+
+
+   for (Int_t ievt=firstEvt; ievt<lastEvt; ievt++) {
+      Data()->SetCurrentEvent(ievt);
+      values[ievt] = GetMvaValue();
+
+      // print progress
+      if (logProgress) {
+         Int_t modulo = Int_t(nEvents/100);
+         if (modulo <= 0 ) modulo = 1;
+         if (ievt%modulo == 0) timer.DrawProgressBar( ievt );
+      }
+   }
+   if (logProgress) {
+       Log() << kINFO <<Form("Dataset[%s] : ",DataInfo().GetName())<< "Elapsed time for evaluation of " << nEvents <<  " events: "
+         << timer.GetElapsedTime() << "       " << Endl;
+   }
+   
+   return values;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1072,7 +983,7 @@ void TMVA::MethodBase::TestClassification()
    // sanity checks: tree must exist, and theVar must be in tree
    if (0==mvaRes && !(GetMethodTypeName().Contains("Cuts"))) {
       Log()<<Form("Dataset[%s] : ",DataInfo().GetName()) << "mvaRes " << mvaRes << " GetMethodTypeName " << GetMethodTypeName()
-            << " contains " << !(GetMethodTypeName().Contains("Cuts")) << Endl;
+           << " contains " << !(GetMethodTypeName().Contains("Cuts")) << Endl;
       Log() << kFATAL<<Form("Dataset[%s] : ",DataInfo().GetName()) << "<TestInit> Test variable " << GetTestvarName()
             << " not found in tree" << Endl;
    }
@@ -1097,13 +1008,13 @@ void TMVA::MethodBase::TestClassification()
    // classifier response distributions for training sample
    // MVA plots used for graphics representation (signal)
    TString TestvarName;
-   if(TMVA::Factory::IsSilentFile())
-   {
-     TestvarName=Form("[%s]%s",DataInfo().GetName(),GetTestvarName().Data());
-   }else
-   {
-     TestvarName=GetTestvarName();
-   }
+   if(IsSilentFile())
+      {
+         TestvarName=Form("[%s]%s",DataInfo().GetName(),GetTestvarName().Data());
+      }else
+      {
+         TestvarName=GetTestvarName();
+      }
    TH1* mva_s = new TH1D( TestvarName + "_S",TestvarName + "_S", fNbinsMVAoutput, fXmin, sxmax );
    TH1* mva_b = new TH1D( TestvarName + "_B",TestvarName + "_B", fNbinsMVAoutput, fXmin, sxmax );
    mvaRes->Store(mva_s, "MVA_S");
@@ -1296,7 +1207,7 @@ void TMVA::MethodBase::WriteStateToXML( void* parent ) const
    AddVarsXMLTo( parent );
 
    // write spectator info
-   if (!fDisableWriting)
+   if (fModelPersistence)
       AddSpectatorsXMLTo( parent );
 
    // write class info if in multiclass mode
@@ -1928,16 +1839,16 @@ TDirectory* TMVA::MethodBase::BaseDir() const
    TString defaultDir = GetMethodName();
    TDirectory *sdir = methodDir->GetDirectory(defaultDir.Data());
    if(!sdir)
-   {
-        Log()<<kDEBUG<<Form("Dataset[%s] : ",DataInfo().GetName())<<" Base Directory for " << GetMethodTypeName() << " does not exist yet--> created it" <<Endl;
-        sdir = methodDir->mkdir(defaultDir);
-        sdir->cd();
+      {
+         Log()<<kDEBUG<<Form("Dataset[%s] : ",DataInfo().GetName())<<" Base Directory for " << GetMethodTypeName() << " does not exist yet--> created it" <<Endl;
+         sdir = methodDir->mkdir(defaultDir);
+         sdir->cd();
          // write weight file name into target file
-        TObjString wfilePath( gSystem->WorkingDirectory() );
-        TObjString wfileName( GetWeightFileName() );
-        wfilePath.Write( "TrainingPath" );
-        wfileName.Write( "WeightFileName" );
-   }
+         TObjString wfilePath( gSystem->WorkingDirectory() );
+         TObjString wfileName( GetWeightFileName() );
+         wfilePath.Write( "TrainingPath" );
+         wfileName.Write( "WeightFileName" );
+      }
 
    Log()<<kDEBUG<<Form("Dataset[%s] : ",DataInfo().GetName())<<" Base Directory for " << GetMethodTypeName() << " existed, return it.." <<Endl;
    return sdir;
@@ -1947,27 +1858,27 @@ TDirectory* TMVA::MethodBase::BaseDir() const
 /// returns the ROOT directory where all instances of the
 /// corresponding MVA method are stored
 
-TDirectory* TMVA::MethodBase::MethodBaseDir() const
-{
-   if (fMethodBaseDir != 0) return fMethodBaseDir;
-
-   Log()<<kDEBUG<<Form("Dataset[%s] : ",DataInfo().GetName())<<" Base Directory for " << GetMethodTypeName() << " not set yet --> check if already there.." <<Endl;
-   
-   
-   TDirectory *fFactoryBaseDir=Factory::RootBaseDir();
+ TDirectory* TMVA::MethodBase::MethodBaseDir() const
+ {
+    if (fMethodBaseDir != 0) return fMethodBaseDir;
+ 
+    Log()<<kDEBUG<<Form("Dataset[%s] : ",DataInfo().GetName())<<" Base Directory for " << GetMethodTypeName() << " not set yet --> check if already there.." <<Endl;
+    
+    
+    TDirectory *fFactoryBaseDir=GetFile();
    
    fMethodBaseDir = fFactoryBaseDir->GetDirectory(DataInfo().GetName());
    if(!fMethodBaseDir) //creating dataset directory
-   {
-       fMethodBaseDir = fFactoryBaseDir->mkdir(DataInfo().GetName(),Form("Base directory for dataset %s",DataInfo().GetName()));
-       if(!fMethodBaseDir)Log()<<kFATAL<<"Can not create dir "<<DataInfo().GetName();
-   }
+      {
+         fMethodBaseDir = fFactoryBaseDir->mkdir(DataInfo().GetName(),Form("Base directory for dataset %s",DataInfo().GetName()));
+         if(!fMethodBaseDir)Log()<<kFATAL<<"Can not create dir "<<DataInfo().GetName();
+      }
    TString _methodDir = Form("Method_%s",GetMethodName().Data());
    fMethodBaseDir = fMethodBaseDir->GetDirectory(_methodDir.Data());
    
    if(!fMethodBaseDir){
-       fMethodBaseDir = fFactoryBaseDir->GetDirectory(DataInfo().GetName())->mkdir(_methodDir.Data(),Form("Directory for all %s methods", GetMethodTypeName().Data()));
-       Log()<<kDEBUG<<Form("Dataset[%s] : ",DataInfo().GetName())<<" Base Directory for " << GetMethodName() << " does not exist yet--> created it" <<Endl;
+      fMethodBaseDir = fFactoryBaseDir->GetDirectory(DataInfo().GetName())->mkdir(_methodDir.Data(),Form("Directory for all %s methods", GetMethodTypeName().Data()));
+      Log()<<kDEBUG<<Form("Dataset[%s] : ",DataInfo().GetName())<<" Base Directory for " << GetMethodName() << " does not exist yet--> created it" <<Endl;
    }
 
    Log()<<kDEBUG<<Form("Dataset[%s] : ",DataInfo().GetName())<<"Return from MethodBaseDir() after creating base directory "<<Endl;
@@ -2135,9 +2046,11 @@ void TMVA::MethodBase::CreateMVAPdfs()
    gTools().NormHist( histMVAPdfB );
 
    // momentary hack for ROOT problem
-   histMVAPdfS->Write();
-   histMVAPdfB->Write();
-
+   if(!IsSilentFile())
+   {
+        histMVAPdfS->Write();
+        histMVAPdfB->Write();
+   }
    // create PDFs
    fMVAPdfS->BuildPDF   ( histMVAPdfS );
    fMVAPdfB->BuildPDF   ( histMVAPdfB );
@@ -2328,9 +2241,7 @@ Double_t TMVA::MethodBase::GetEfficiency( const TString& theString, Types::ETree
       // make the background-vs-signal efficiency plot
 
       // create root finder
-      // reset static "this" pointer before calling external function
-      ResetThisBase();
-      RootFinder rootFinder( &IGetEffForRoot, fXmin, fXmax );
+      RootFinder rootFinder( this, fXmin, fXmax );
 
       Double_t effB = 0;
       fEffS = eff_s; // to be set for the root finder
@@ -2502,13 +2413,16 @@ Double_t TMVA::MethodBase::GetTrainingEfficiency(const TString& theString)
       // sign if cut
       Int_t sign = (fCutOrientation == kPositive) ? +1 : -1;
 
+      std::vector<Double_t> mvaValues = GetMvaValues(0,Data()->GetNEvents());
+      assert( (Long64_t) mvaValues.size() == Data()->GetNEvents()); 
+
       // this method is unbinned
       for (Int_t ievt=0; ievt<Data()->GetNEvents(); ievt++) {
 
          Data()->SetCurrentEvent(ievt);
          const Event* ev = GetEvent();
 
-         Double_t theVal    = GetMvaValue();
+         Double_t theVal    = mvaValues[ievt]; 
          Double_t theWeight = ev->GetWeight();
 
          TH1* theEffHist = DataInfo().IsSignal(ev) ? mva_eff_tr_s : mva_eff_tr_b;
@@ -2560,9 +2474,7 @@ Double_t TMVA::MethodBase::GetTrainingEfficiency(const TString& theString)
       // make the background-vs-signal efficiency plot
 
       // create root finder
-      // reset static "this" pointer before calling external function
-      ResetThisBase();
-      RootFinder rootFinder(&IGetEffForRoot, fXmin, fXmax );
+      RootFinder rootFinder(this, fXmin, fXmax );
 
       Double_t effB = 0;
       fEffS = results->GetHist("MVA_TRAINEFF_S");
@@ -3161,17 +3073,9 @@ void TMVA::MethodBase::PrintHelpMessage() const
 // ----------------------- r o o t   f i n d i n g ----------------------------
 
 ////////////////////////////////////////////////////////////////////////////////
-/// interface for RootFinder
-
-Double_t TMVA::MethodBase::IGetEffForRoot( Double_t theCut )
-{
-   return MethodBase::GetThisBase()->GetEffForRoot( theCut );
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// returns efficiency as function of cut
 
-Double_t TMVA::MethodBase::GetEffForRoot( Double_t theCut )
+Double_t TMVA::MethodBase::GetValueForRoot( Double_t theCut )
 {
    Double_t retval=0;
 
@@ -3242,38 +3146,23 @@ TString TMVA::MethodBase::GetTrainingROOTVersionString() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return a pointer the base class of this method
-
-TMVA::MethodBase* TMVA::MethodBase::GetThisBase()
-{
-   return GetThisBaseThreadLocal();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// reset required for RootFinder
-
-void TMVA::MethodBase::ResetThisBase()
-{
-   GetThisBaseThreadLocal() = this;
-}
-////////////////////////////////////////////////////////////////////////////////
 
 Double_t TMVA::MethodBase::GetKSTrainingVsTest(Char_t SorB, TString opt){
    ResultsClassification* mvaRes = dynamic_cast<ResultsClassification*>
       ( Data()->GetResults(GetMethodName(),Types::kTesting, Types::kClassification) );
 
    if (mvaRes != NULL) {
-     TH1D *mva_s = dynamic_cast<TH1D*> (mvaRes->GetHist("MVA_S"));
-     TH1D *mva_b = dynamic_cast<TH1D*> (mvaRes->GetHist("MVA_B"));
-     TH1D *mva_s_tr = dynamic_cast<TH1D*> (mvaRes->GetHist("MVA_TRAIN_S"));
-     TH1D *mva_b_tr = dynamic_cast<TH1D*> (mvaRes->GetHist("MVA_TRAIN_B"));
+      TH1D *mva_s = dynamic_cast<TH1D*> (mvaRes->GetHist("MVA_S"));
+      TH1D *mva_b = dynamic_cast<TH1D*> (mvaRes->GetHist("MVA_B"));
+      TH1D *mva_s_tr = dynamic_cast<TH1D*> (mvaRes->GetHist("MVA_TRAIN_S"));
+      TH1D *mva_b_tr = dynamic_cast<TH1D*> (mvaRes->GetHist("MVA_TRAIN_B"));
 
-     if ( !mva_s || !mva_b || !mva_s_tr || !mva_b_tr) return -1;
+      if ( !mva_s || !mva_b || !mva_s_tr || !mva_b_tr) return -1;
 
-     if (SorB == 's' || SorB == 'S')
-       return mva_s->KolmogorovTest( mva_s_tr, opt.Data() );
-     else
-       return mva_b->KolmogorovTest( mva_b_tr, opt.Data() );
+      if (SorB == 's' || SorB == 'S')
+         return mva_s->KolmogorovTest( mva_s_tr, opt.Data() );
+      else
+         return mva_b->KolmogorovTest( mva_b_tr, opt.Data() );
    }
    return -1;
 }

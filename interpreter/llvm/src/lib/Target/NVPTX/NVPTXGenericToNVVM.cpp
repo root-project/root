@@ -22,10 +22,10 @@
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Intrinsics.h"
+#include "llvm/IR/LegacyPassManager.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Operator.h"
 #include "llvm/IR/ValueMap.h"
-#include "llvm/PassManager.h"
 #include "llvm/Transforms/Utils/ValueMapper.h"
 
 using namespace llvm;
@@ -81,12 +81,12 @@ bool GenericToNVVM::runOnModule(Module &M) {
 
   for (Module::global_iterator I = M.global_begin(), E = M.global_end();
        I != E;) {
-    GlobalVariable *GV = I++;
+    GlobalVariable *GV = &*I++;
     if (GV->getType()->getAddressSpace() == llvm::ADDRESS_SPACE_GENERIC &&
         !llvm::isTexture(*GV) && !llvm::isSurface(*GV) &&
         !llvm::isSampler(*GV) && !GV->getName().startswith("llvm.")) {
       GlobalVariable *NewGV = new GlobalVariable(
-          M, GV->getType()->getElementType(), GV->isConstant(),
+          M, GV->getValueType(), GV->isConstant(),
           GV->getLinkage(),
           GV->hasInitializer() ? GV->getInitializer() : nullptr,
           "", GV, GV->getThreadLocalMode(), llvm::ADDRESS_SPACE_GLOBAL);
@@ -117,7 +117,7 @@ bool GenericToNVVM::runOnModule(Module &M) {
           Value *Operand = II->getOperand(i);
           if (isa<Constant>(Operand)) {
             II->setOperand(
-                i, remapConstant(&M, I, cast<Constant>(Operand), Builder));
+                i, remapConstant(&M, &*I, cast<Constant>(Operand), Builder));
           }
         }
       }
@@ -132,10 +132,8 @@ bool GenericToNVVM::runOnModule(Module &M) {
 
   // Walk through the metadata section and update the debug information
   // associated with the global variables in the default address space.
-  for (Module::named_metadata_iterator I = M.named_metadata_begin(),
-                                       E = M.named_metadata_end();
-       I != E; I++) {
-    remapNamedMDNode(VM, I);
+  for (NamedMDNode &I : M.named_metadata()) {
+    remapNamedMDNode(VM, &I);
   }
 
   // Walk through the global variable  initializers, and replace any use of
@@ -174,7 +172,7 @@ Value *GenericToNVVM::getOrInsertCVTA(Module *M, Function *F,
 
   // See if the address space conversion requires the operand to be bitcast
   // to i8 addrspace(n)* first.
-  EVT ExtendedGVType = EVT::getEVT(GVType->getElementType(), true);
+  EVT ExtendedGVType = EVT::getEVT(GV->getValueType(), true);
   if (!ExtendedGVType.isInteger() && !ExtendedGVType.isFloatingPoint()) {
     // A bitcast to i8 addrspace(n)* on the operand is needed.
     LLVMContext &Context = M->getContext();
@@ -184,21 +182,18 @@ Value *GenericToNVVM::getOrInsertCVTA(Module *M, Function *F,
     // Insert the address space conversion.
     Type *ResultType =
         PointerType::get(Type::getInt8Ty(Context), llvm::ADDRESS_SPACE_GENERIC);
-    SmallVector<Type *, 2> ParamTypes;
-    ParamTypes.push_back(ResultType);
-    ParamTypes.push_back(DestTy);
     Function *CVTAFunction = Intrinsic::getDeclaration(
-        M, Intrinsic::nvvm_ptr_global_to_gen, ParamTypes);
+        M, Intrinsic::nvvm_ptr_global_to_gen, {ResultType, DestTy});
     CVTA = Builder.CreateCall(CVTAFunction, CVTA, "cvta");
     // Another bitcast from i8 * to <the element type of GVType> * is
     // required.
     DestTy =
-        PointerType::get(GVType->getElementType(), llvm::ADDRESS_SPACE_GENERIC);
+        PointerType::get(GV->getValueType(), llvm::ADDRESS_SPACE_GENERIC);
     CVTA = Builder.CreateBitCast(CVTA, DestTy, "cvta");
   } else {
     // A simple CVTA is enough.
     SmallVector<Type *, 2> ParamTypes;
-    ParamTypes.push_back(PointerType::get(GVType->getElementType(),
+    ParamTypes.push_back(PointerType::get(GV->getValueType(),
                                           llvm::ADDRESS_SPACE_GENERIC));
     ParamTypes.push_back(GVType);
     Function *CVTAFunction = Intrinsic::getDeclaration(
@@ -232,8 +227,7 @@ Value *GenericToNVVM::remapConstant(Module *M, Function *F, Constant *C,
     if (I != GVMap.end()) {
       NewValue = getOrInsertCVTA(M, F, I->second, Builder);
     }
-  } else if (isa<ConstantVector>(C) || isa<ConstantArray>(C) ||
-             isa<ConstantStruct>(C)) {
+  } else if (isa<ConstantAggregate>(C)) {
     // If any element in the constant vector or aggregate C is or uses a global
     // variable in GVMap, the constant C needs to be reconstructed, using a set
     // of instructions.
@@ -318,9 +312,8 @@ Value *GenericToNVVM::remapConstantExpr(Module *M, Function *F, ConstantExpr *C,
                               NewOperands[0], NewOperands[1]);
   case Instruction::FCmp:
     // CompareConstantExpr (fcmp)
-    assert(false && "Address space conversion should have no effect "
-                    "on float point CompareConstantExpr (fcmp)!");
-    return C;
+    llvm_unreachable("Address space conversion should have no effect "
+                     "on float point CompareConstantExpr (fcmp)!");
   case Instruction::ExtractElement:
     // ExtractElementConstantExpr
     return Builder.CreateExtractElement(NewOperands[0], NewOperands[1]);
@@ -343,9 +336,11 @@ Value *GenericToNVVM::remapConstantExpr(Module *M, Function *F, ConstantExpr *C,
     // GetElementPtrConstantExpr
     return cast<GEPOperator>(C)->isInBounds()
                ? Builder.CreateGEP(
+                     cast<GEPOperator>(C)->getSourceElementType(),
                      NewOperands[0],
                      makeArrayRef(&NewOperands[1], NumOperands - 1))
                : Builder.CreateInBoundsGEP(
+                     cast<GEPOperator>(C)->getSourceElementType(),
                      NewOperands[0],
                      makeArrayRef(&NewOperands[1], NumOperands - 1));
   case Instruction::Select:
@@ -362,8 +357,7 @@ Value *GenericToNVVM::remapConstantExpr(Module *M, Function *F, ConstantExpr *C,
       return Builder.CreateCast(Instruction::CastOps(C->getOpcode()),
                                 NewOperands[0], C->getType());
     }
-    assert(false && "GenericToNVVM encountered an unsupported ConstantExpr");
-    return C;
+    llvm_unreachable("GenericToNVVM encountered an unsupported ConstantExpr");
   }
 }
 

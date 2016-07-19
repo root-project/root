@@ -16,9 +16,11 @@
 #include "clang/AST/Attr.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/DeclObjC.h"
+#include "clang/AST/DeclOpenMP.h"
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
+#include "clang/AST/ExprOpenMP.h"
 #include "clang/AST/PrettyPrinter.h"
 #include "clang/AST/StmtVisitor.h"
 #include "clang/Basic/CharInfo.h"
@@ -396,8 +398,9 @@ void StmtPrinter::VisitGCCAsmStmt(GCCAsmStmt *Node) {
     }
 
     VisitStringLiteral(Node->getOutputConstraintLiteral(i));
-    OS << " ";
+    OS << " (";
     Visit(Node->getOutputExpr(i));
+    OS << ")";
   }
 
   // Inputs
@@ -415,8 +418,9 @@ void StmtPrinter::VisitGCCAsmStmt(GCCAsmStmt *Node) {
     }
 
     VisitStringLiteral(Node->getInputConstraintLiteral(i));
-    OS << " ";
+    OS << " (";
     Visit(Node->getInputExpr(i));
+    OS << ")";
   }
 
   // Clobbers
@@ -599,6 +603,8 @@ public:
 
 void OMPClausePrinter::VisitOMPIfClause(OMPIfClause *Node) {
   OS << "if(";
+  if (Node->getNameModifier() != OMPD_unknown)
+    OS << getOpenMPDirectiveName(Node->getNameModifier()) << ": ";
   Node->getCondition()->printPretty(OS, nullptr, Policy, 0);
   OS << ")";
 }
@@ -621,6 +627,12 @@ void OMPClausePrinter::VisitOMPSafelenClause(OMPSafelenClause *Node) {
   OS << ")";
 }
 
+void OMPClausePrinter::VisitOMPSimdlenClause(OMPSimdlenClause *Node) {
+  OS << "simdlen(";
+  Node->getSimdlen()->printPretty(OS, nullptr, Policy, 0);
+  OS << ")";
+}
+
 void OMPClausePrinter::VisitOMPCollapseClause(OMPCollapseClause *Node) {
   OS << "collapse(";
   Node->getNumForLoops()->printPretty(OS, nullptr, Policy, 0);
@@ -640,17 +652,32 @@ void OMPClausePrinter::VisitOMPProcBindClause(OMPProcBindClause *Node) {
 }
 
 void OMPClausePrinter::VisitOMPScheduleClause(OMPScheduleClause *Node) {
-  OS << "schedule("
-     << getOpenMPSimpleClauseTypeName(OMPC_schedule, Node->getScheduleKind());
-  if (Node->getChunkSize()) {
+  OS << "schedule(";
+  if (Node->getFirstScheduleModifier() != OMPC_SCHEDULE_MODIFIER_unknown) {
+    OS << getOpenMPSimpleClauseTypeName(OMPC_schedule,
+                                        Node->getFirstScheduleModifier());
+    if (Node->getSecondScheduleModifier() != OMPC_SCHEDULE_MODIFIER_unknown) {
+      OS << ", ";
+      OS << getOpenMPSimpleClauseTypeName(OMPC_schedule,
+                                          Node->getSecondScheduleModifier());
+    }
+    OS << ": ";
+  }
+  OS << getOpenMPSimpleClauseTypeName(OMPC_schedule, Node->getScheduleKind());
+  if (auto *E = Node->getChunkSize()) {
     OS << ", ";
-    Node->getChunkSize()->printPretty(OS, nullptr, Policy);
+    E->printPretty(OS, nullptr, Policy);
   }
   OS << ")";
 }
 
-void OMPClausePrinter::VisitOMPOrderedClause(OMPOrderedClause *) {
+void OMPClausePrinter::VisitOMPOrderedClause(OMPOrderedClause *Node) {
   OS << "ordered";
+  if (auto *Num = Node->getNumForLoops()) {
+    OS << "(";
+    Num->printPretty(OS, nullptr, Policy, 0);
+    OS << ")";
+  }
 }
 
 void OMPClausePrinter::VisitOMPNowaitClause(OMPNowaitClause *) {
@@ -659,6 +686,10 @@ void OMPClausePrinter::VisitOMPNowaitClause(OMPNowaitClause *) {
 
 void OMPClausePrinter::VisitOMPUntiedClause(OMPUntiedClause *) {
   OS << "untied";
+}
+
+void OMPClausePrinter::VisitOMPNogroupClause(OMPNogroupClause *) {
+  OS << "nogroup";
 }
 
 void OMPClausePrinter::VisitOMPMergeableClause(OMPMergeableClause *) {
@@ -681,19 +712,68 @@ void OMPClausePrinter::VisitOMPSeqCstClause(OMPSeqCstClause *) {
   OS << "seq_cst";
 }
 
+void OMPClausePrinter::VisitOMPThreadsClause(OMPThreadsClause *) {
+  OS << "threads";
+}
+
+void OMPClausePrinter::VisitOMPSIMDClause(OMPSIMDClause *) { OS << "simd"; }
+
+void OMPClausePrinter::VisitOMPDeviceClause(OMPDeviceClause *Node) {
+  OS << "device(";
+  Node->getDevice()->printPretty(OS, nullptr, Policy, 0);
+  OS << ")";
+}
+
+void OMPClausePrinter::VisitOMPNumTeamsClause(OMPNumTeamsClause *Node) {
+  OS << "num_teams(";
+  Node->getNumTeams()->printPretty(OS, nullptr, Policy, 0);
+  OS << ")";
+}
+
+void OMPClausePrinter::VisitOMPThreadLimitClause(OMPThreadLimitClause *Node) {
+  OS << "thread_limit(";
+  Node->getThreadLimit()->printPretty(OS, nullptr, Policy, 0);
+  OS << ")";
+}
+
+void OMPClausePrinter::VisitOMPPriorityClause(OMPPriorityClause *Node) {
+  OS << "priority(";
+  Node->getPriority()->printPretty(OS, nullptr, Policy, 0);
+  OS << ")";
+}
+
+void OMPClausePrinter::VisitOMPGrainsizeClause(OMPGrainsizeClause *Node) {
+  OS << "grainsize(";
+  Node->getGrainsize()->printPretty(OS, nullptr, Policy, 0);
+  OS << ")";
+}
+
+void OMPClausePrinter::VisitOMPNumTasksClause(OMPNumTasksClause *Node) {
+  OS << "num_tasks(";
+  Node->getNumTasks()->printPretty(OS, nullptr, Policy, 0);
+  OS << ")";
+}
+
+void OMPClausePrinter::VisitOMPHintClause(OMPHintClause *Node) {
+  OS << "hint(";
+  Node->getHint()->printPretty(OS, nullptr, Policy, 0);
+  OS << ")";
+}
+
 template<typename T>
 void OMPClausePrinter::VisitOMPClauseList(T *Node, char StartSym) {
   for (typename T::varlist_iterator I = Node->varlist_begin(),
                                     E = Node->varlist_end();
-         I != E; ++I) {
+       I != E; ++I) {
     assert(*I && "Expected non-null Stmt");
+    OS << (I == Node->varlist_begin() ? StartSym : ',');
     if (DeclRefExpr *DRE = dyn_cast<DeclRefExpr>(*I)) {
-      OS << (I == Node->varlist_begin() ? StartSym : ',');
-      cast<NamedDecl>(DRE->getDecl())->printQualifiedName(OS);
-    } else {
-      OS << (I == Node->varlist_begin() ? StartSym : ',');
+      if (isa<OMPCapturedExprDecl>(DRE->getDecl()))
+        DRE->printPretty(OS, nullptr, Policy, 0);
+      else
+        DRE->getDecl()->printQualifiedName(OS);
+    } else
       (*I)->printPretty(OS, nullptr, Policy, 0);
-    }
   }
 }
 
@@ -754,7 +834,13 @@ void OMPClausePrinter::VisitOMPReductionClause(OMPReductionClause *Node) {
 void OMPClausePrinter::VisitOMPLinearClause(OMPLinearClause *Node) {
   if (!Node->varlist_empty()) {
     OS << "linear";
+    if (Node->getModifierLoc().isValid()) {
+      OS << '('
+         << getOpenMPSimpleClauseTypeName(OMPC_linear, Node->getModifier());
+    }
     VisitOMPClauseList(Node, '(');
+    if (Node->getModifierLoc().isValid())
+      OS << ')';
     if (Node->getStep() != nullptr) {
       OS << ": ";
       Node->getStep()->printPretty(OS, nullptr, Policy, 0);
@@ -796,6 +882,70 @@ void OMPClausePrinter::VisitOMPFlushClause(OMPFlushClause *Node) {
     VisitOMPClauseList(Node, '(');
     OS << ")";
   }
+}
+
+void OMPClausePrinter::VisitOMPDependClause(OMPDependClause *Node) {
+  OS << "depend(";
+  OS << getOpenMPSimpleClauseTypeName(Node->getClauseKind(),
+                                      Node->getDependencyKind());
+  if (!Node->varlist_empty()) {
+    OS << " :";
+    VisitOMPClauseList(Node, ' ');
+  }
+  OS << ")";
+}
+
+void OMPClausePrinter::VisitOMPMapClause(OMPMapClause *Node) {
+  if (!Node->varlist_empty()) {
+    OS << "map(";
+    if (Node->getMapType() != OMPC_MAP_unknown) {
+      if (Node->getMapTypeModifier() != OMPC_MAP_unknown) {
+        OS << getOpenMPSimpleClauseTypeName(OMPC_map, 
+                                            Node->getMapTypeModifier());
+        OS << ',';
+      }
+      OS << getOpenMPSimpleClauseTypeName(OMPC_map, Node->getMapType());
+      OS << ':';
+    }
+    VisitOMPClauseList(Node, ' ');
+    OS << ")";
+  }
+}
+
+void OMPClausePrinter::VisitOMPToClause(OMPToClause *Node) {
+  if (!Node->varlist_empty()) {
+    OS << "to";
+    VisitOMPClauseList(Node, '(');
+    OS << ")";
+  }
+}
+
+void OMPClausePrinter::VisitOMPFromClause(OMPFromClause *Node) {
+  if (!Node->varlist_empty()) {
+    OS << "from";
+    VisitOMPClauseList(Node, '(');
+    OS << ")";
+  }
+}
+
+void OMPClausePrinter::VisitOMPDistScheduleClause(OMPDistScheduleClause *Node) {
+  OS << "dist_schedule(" << getOpenMPSimpleClauseTypeName(
+                           OMPC_dist_schedule, Node->getDistScheduleKind());
+  if (auto *E = Node->getChunkSize()) {
+    OS << ", ";
+    E->printPretty(OS, nullptr, Policy);
+  }
+  OS << ")";
+}
+
+void OMPClausePrinter::VisitOMPDefaultmapClause(OMPDefaultmapClause *Node) {
+  OS << "defaultmap(";
+  OS << getOpenMPSimpleClauseTypeName(OMPC_defaultmap,
+                                      Node->getDefaultmapModifier());
+  OS << ": ";
+  OS << getOpenMPSimpleClauseTypeName(OMPC_defaultmap,
+    Node->getDefaultmapKind());
+  OS << ")";
 }
 }
 
@@ -868,6 +1018,7 @@ void StmtPrinter::VisitOMPCriticalDirective(OMPCriticalDirective *Node) {
     Node->getDirectiveName().printName(OS);
     OS << ")";
   }
+  OS << " ";
   PrintOMPExecutableDirective(Node);
 }
 
@@ -908,13 +1059,18 @@ void StmtPrinter::VisitOMPTaskwaitDirective(OMPTaskwaitDirective *Node) {
   PrintOMPExecutableDirective(Node);
 }
 
+void StmtPrinter::VisitOMPTaskgroupDirective(OMPTaskgroupDirective *Node) {
+  Indent() << "#pragma omp taskgroup";
+  PrintOMPExecutableDirective(Node);
+}
+
 void StmtPrinter::VisitOMPFlushDirective(OMPFlushDirective *Node) {
   Indent() << "#pragma omp flush ";
   PrintOMPExecutableDirective(Node);
 }
 
 void StmtPrinter::VisitOMPOrderedDirective(OMPOrderedDirective *Node) {
-  Indent() << "#pragma omp ordered";
+  Indent() << "#pragma omp ordered ";
   PrintOMPExecutableDirective(Node);
 }
 
@@ -928,8 +1084,90 @@ void StmtPrinter::VisitOMPTargetDirective(OMPTargetDirective *Node) {
   PrintOMPExecutableDirective(Node);
 }
 
+void StmtPrinter::VisitOMPTargetDataDirective(OMPTargetDataDirective *Node) {
+  Indent() << "#pragma omp target data ";
+  PrintOMPExecutableDirective(Node);
+}
+
+void StmtPrinter::VisitOMPTargetEnterDataDirective(
+    OMPTargetEnterDataDirective *Node) {
+  Indent() << "#pragma omp target enter data ";
+  PrintOMPExecutableDirective(Node);
+}
+
+void StmtPrinter::VisitOMPTargetExitDataDirective(
+    OMPTargetExitDataDirective *Node) {
+  Indent() << "#pragma omp target exit data ";
+  PrintOMPExecutableDirective(Node);
+}
+
+void StmtPrinter::VisitOMPTargetParallelDirective(
+    OMPTargetParallelDirective *Node) {
+  Indent() << "#pragma omp target parallel ";
+  PrintOMPExecutableDirective(Node);
+}
+
+void StmtPrinter::VisitOMPTargetParallelForDirective(
+    OMPTargetParallelForDirective *Node) {
+  Indent() << "#pragma omp target parallel for ";
+  PrintOMPExecutableDirective(Node);
+}
+
 void StmtPrinter::VisitOMPTeamsDirective(OMPTeamsDirective *Node) {
   Indent() << "#pragma omp teams ";
+  PrintOMPExecutableDirective(Node);
+}
+
+void StmtPrinter::VisitOMPCancellationPointDirective(
+    OMPCancellationPointDirective *Node) {
+  Indent() << "#pragma omp cancellation point "
+           << getOpenMPDirectiveName(Node->getCancelRegion());
+  PrintOMPExecutableDirective(Node);
+}
+
+void StmtPrinter::VisitOMPCancelDirective(OMPCancelDirective *Node) {
+  Indent() << "#pragma omp cancel "
+           << getOpenMPDirectiveName(Node->getCancelRegion()) << " ";
+  PrintOMPExecutableDirective(Node);
+}
+
+void StmtPrinter::VisitOMPTaskLoopDirective(OMPTaskLoopDirective *Node) {
+  Indent() << "#pragma omp taskloop ";
+  PrintOMPExecutableDirective(Node);
+}
+
+void StmtPrinter::VisitOMPTaskLoopSimdDirective(
+    OMPTaskLoopSimdDirective *Node) {
+  Indent() << "#pragma omp taskloop simd ";
+  PrintOMPExecutableDirective(Node);
+}
+
+void StmtPrinter::VisitOMPDistributeDirective(OMPDistributeDirective *Node) {
+  Indent() << "#pragma omp distribute ";
+  PrintOMPExecutableDirective(Node);
+}
+
+void StmtPrinter::VisitOMPTargetUpdateDirective(
+    OMPTargetUpdateDirective *Node) {
+  Indent() << "#pragma omp target update ";
+  PrintOMPExecutableDirective(Node);
+}
+
+void StmtPrinter::VisitOMPDistributeParallelForDirective(
+    OMPDistributeParallelForDirective *Node) {
+  Indent() << "#pragma omp distribute parallel for ";
+  PrintOMPExecutableDirective(Node);
+}
+
+void StmtPrinter::VisitOMPDistributeParallelForSimdDirective(
+    OMPDistributeParallelForSimdDirective *Node) {
+  Indent() << "#pragma omp distribute parallel for simd ";
+  PrintOMPExecutableDirective(Node);
+}
+
+void StmtPrinter::VisitOMPDistributeSimdDirective(
+    OMPDistributeSimdDirective *Node) {
+  Indent() << "#pragma omp distribute simd ";
   PrintOMPExecutableDirective(Node);
 }
 
@@ -938,6 +1176,10 @@ void StmtPrinter::VisitOMPTeamsDirective(OMPTeamsDirective *Node) {
 //===----------------------------------------------------------------------===//
 
 void StmtPrinter::VisitDeclRefExpr(DeclRefExpr *Node) {
+  if (auto *OCED = dyn_cast<OMPCapturedExprDecl>(Node->getDecl())) {
+    OCED->getInit()->IgnoreImpCasts()->printPretty(OS, nullptr, Policy);
+    return;
+  }
   if (NestedNameSpecifier *Qualifier = Node->getQualifier())
     Qualifier->print(OS, Policy);
   if (Node->hasTemplateKeyword())
@@ -1013,6 +1255,7 @@ void StmtPrinter::VisitCharacterLiteral(CharacterLiteral *Node) {
   switch (Node->getKind()) {
   case CharacterLiteral::Ascii: break; // no prefix.
   case CharacterLiteral::Wide:  OS << 'L'; break;
+  case CharacterLiteral::UTF8:  OS << "u8"; break;
   case CharacterLiteral::UTF16: OS << 'u'; break;
   case CharacterLiteral::UTF32: OS << 'U'; break;
   }
@@ -1051,6 +1294,12 @@ void StmtPrinter::VisitCharacterLiteral(CharacterLiteral *Node) {
     OS << "'\\v'";
     break;
   default:
+    // A character literal might be sign-extended, which
+    // would result in an invalid \U escape sequence.
+    // FIXME: multicharacter literals such as '\xFF\xFF\xFF\xFF'
+    // are not correctly handled.
+    if ((value & ~0xFFu) == ~0xFFu && Node->getKind() == CharacterLiteral::Ascii)
+      value &= 0xFFu;
     if (value < 256 && isPrintable((unsigned char)value))
       OS << "'" << (char)value << "'";
     else if (value < 256)
@@ -1069,7 +1318,8 @@ void StmtPrinter::VisitIntegerLiteral(IntegerLiteral *Node) {
   // Emit suffixes.  Integer literals are always a builtin integer type.
   switch (Node->getType()->getAs<BuiltinType>()->getKind()) {
   default: llvm_unreachable("Unexpected type for integer literal!");
-  case BuiltinType::SChar:     OS << "i8"; break;
+  case BuiltinType::Char_S:
+  case BuiltinType::Char_U:    OS << "i8"; break;
   case BuiltinType::UChar:     OS << "Ui8"; break;
   case BuiltinType::Short:     OS << "i16"; break;
   case BuiltinType::UShort:    OS << "Ui16"; break;
@@ -1079,8 +1329,6 @@ void StmtPrinter::VisitIntegerLiteral(IntegerLiteral *Node) {
   case BuiltinType::ULong:     OS << "UL"; break;
   case BuiltinType::LongLong:  OS << "LL"; break;
   case BuiltinType::ULongLong: OS << "ULL"; break;
-  case BuiltinType::Int128:    OS << "i128"; break;
-  case BuiltinType::UInt128:   OS << "Ui128"; break;
   }
 }
 
@@ -1102,6 +1350,7 @@ static void PrintFloatingLiteral(raw_ostream &OS, FloatingLiteral *Node,
   case BuiltinType::Double:     break; // no suffix.
   case BuiltinType::Float:      OS << 'F'; break;
   case BuiltinType::LongDouble: OS << 'L'; break;
+  case BuiltinType::Float128:   OS << 'Q'; break;
   }
 }
 
@@ -1154,8 +1403,8 @@ void StmtPrinter::VisitOffsetOfExpr(OffsetOfExpr *Node) {
   OS << ", ";
   bool PrintedSomething = false;
   for (unsigned i = 0, n = Node->getNumComponents(); i < n; ++i) {
-    OffsetOfExpr::OffsetOfNode ON = Node->getComponent(i);
-    if (ON.getKind() == OffsetOfExpr::OffsetOfNode::Array) {
+    OffsetOfNode ON = Node->getComponent(i);
+    if (ON.getKind() == OffsetOfNode::Array) {
       // Array node
       OS << "[";
       PrintExpr(Node->getIndexExpr(ON.getArrayExprIndex()));
@@ -1165,7 +1414,7 @@ void StmtPrinter::VisitOffsetOfExpr(OffsetOfExpr *Node) {
     }
 
     // Skip implicit base indirections.
-    if (ON.getKind() == OffsetOfExpr::OffsetOfNode::Base)
+    if (ON.getKind() == OffsetOfNode::Base)
       continue;
 
     // Field or identifier node.
@@ -1188,15 +1437,18 @@ void StmtPrinter::VisitUnaryExprOrTypeTraitExpr(UnaryExprOrTypeTraitExpr *Node){
     OS << "sizeof";
     break;
   case UETT_AlignOf:
-    if (Policy.LangOpts.CPlusPlus)
+    if (Policy.Alignof)
       OS << "alignof";
-    else if (Policy.LangOpts.C11)
+    else if (Policy.UnderscoreAlignof)
       OS << "_Alignof";
     else
       OS << "__alignof";
     break;
   case UETT_VecStep:
     OS << "vec_step";
+    break;
+  case UETT_OpenMPRequiredSimdAlign:
+    OS << "__builtin_omp_required_simd_align";
     break;
   }
   if (Node->isArgumentType()) {
@@ -1229,6 +1481,19 @@ void StmtPrinter::VisitArraySubscriptExpr(ArraySubscriptExpr *Node) {
   PrintExpr(Node->getLHS());
   OS << "[";
   PrintExpr(Node->getRHS());
+  OS << "]";
+}
+
+void StmtPrinter::VisitOMPArraySectionExpr(OMPArraySectionExpr *Node) {
+  PrintExpr(Node->getBase());
+  OS << "[";
+  if (Node->getLowerBound())
+    PrintExpr(Node->getLowerBound());
+  if (Node->getColonLoc().isValid()) {
+    OS << ":";
+    if (Node->getLength())
+      PrintExpr(Node->getLength());
+  }
   OS << "]";
 }
 
@@ -1394,35 +1659,55 @@ void StmtPrinter::VisitParenListExpr(ParenListExpr* Node) {
 }
 
 void StmtPrinter::VisitDesignatedInitExpr(DesignatedInitExpr *Node) {
-  for (DesignatedInitExpr::designators_iterator D = Node->designators_begin(),
-                      DEnd = Node->designators_end();
-       D != DEnd; ++D) {
-    if (D->isFieldDesignator()) {
-      if (D->getDotLoc().isInvalid()) {
-        if (IdentifierInfo *II = D->getFieldName())
+  bool NeedsEquals = true;
+  for (const DesignatedInitExpr::Designator &D : Node->designators()) {
+    if (D.isFieldDesignator()) {
+      if (D.getDotLoc().isInvalid()) {
+        if (IdentifierInfo *II = D.getFieldName()) {
           OS << II->getName() << ":";
+          NeedsEquals = false;
+        }
       } else {
-        OS << "." << D->getFieldName()->getName();
+        OS << "." << D.getFieldName()->getName();
       }
     } else {
       OS << "[";
-      if (D->isArrayDesignator()) {
-        PrintExpr(Node->getArrayIndex(*D));
+      if (D.isArrayDesignator()) {
+        PrintExpr(Node->getArrayIndex(D));
       } else {
-        PrintExpr(Node->getArrayRangeStart(*D));
+        PrintExpr(Node->getArrayRangeStart(D));
         OS << " ... ";
-        PrintExpr(Node->getArrayRangeEnd(*D));
+        PrintExpr(Node->getArrayRangeEnd(D));
       }
       OS << "]";
     }
   }
 
-  OS << " = ";
+  if (NeedsEquals)
+    OS << " = ";
+  else
+    OS << " ";
   PrintExpr(Node->getInit());
 }
 
+void StmtPrinter::VisitDesignatedInitUpdateExpr(
+    DesignatedInitUpdateExpr *Node) {
+  OS << "{";
+  OS << "/*base*/";
+  PrintExpr(Node->getBase());
+  OS << ", ";
+
+  OS << "/*updater*/";
+  PrintExpr(Node->getUpdater());
+  OS << "}";
+}
+
+void StmtPrinter::VisitNoInitExpr(NoInitExpr *Node) {
+  OS << "/*no init*/";
+}
+
 void StmtPrinter::VisitImplicitValueInitExpr(ImplicitValueInitExpr *Node) {
-  if (Policy.LangOpts.CPlusPlus) {
+  if (Node->getType()->getAsCXXRecordDecl()) {
     OS << "/*implicit*/";
     Node->getType().print(OS, Policy);
     OS << "()";
@@ -1611,6 +1896,13 @@ void StmtPrinter::VisitMSPropertyRefExpr(MSPropertyRefExpr *Node) {
   OS << Node->getPropertyDecl()->getDeclName();
 }
 
+void StmtPrinter::VisitMSPropertySubscriptExpr(MSPropertySubscriptExpr *Node) {
+  PrintExpr(Node->getBase());
+  OS << "[";
+  PrintExpr(Node->getIdx());
+  OS << "]";
+}
+
 void StmtPrinter::VisitUserDefinedLiteral(UserDefinedLiteral *Node) {
   switch (Node->getLiteralOperatorKind()) {
   case UserDefinedLiteral::LOK_Raw:
@@ -1621,6 +1913,15 @@ void StmtPrinter::VisitUserDefinedLiteral(UserDefinedLiteral *Node) {
     const TemplateArgumentList *Args =
       cast<FunctionDecl>(DRE->getDecl())->getTemplateSpecializationArgs();
     assert(Args);
+
+    if (Args->size() != 1) {
+      OS << "operator\"\"" << Node->getUDSuffix()->getName();
+      TemplateSpecializationType::PrintTemplateArgumentList(
+          OS, Args->data(), Args->size(), Policy);
+      OS << "()";
+      return;
+    }
+
     const TemplateArgument &Pack = Args->get(0);
     for (const auto &P : Pack.pack_elements()) {
       char C = (char)P.getAsIntegral().getZExtValue();
@@ -1694,20 +1995,24 @@ void StmtPrinter::VisitCXXBindTemporaryExpr(CXXBindTemporaryExpr *Node) {
 
 void StmtPrinter::VisitCXXTemporaryObjectExpr(CXXTemporaryObjectExpr *Node) {
   Node->getType().print(OS, Policy);
-  if (Node->isListInitialization())
+  if (Node->isStdInitListInitialization())
+    /* Nothing to do; braces are part of creating the std::initializer_list. */;
+  else if (Node->isListInitialization())
     OS << "{";
   else
     OS << "(";
   for (CXXTemporaryObjectExpr::arg_iterator Arg = Node->arg_begin(),
                                          ArgEnd = Node->arg_end();
        Arg != ArgEnd; ++Arg) {
-    if (Arg->isDefaultArgument())
+    if ((*Arg)->isDefaultArgument())
       break;
     if (Arg != Node->arg_begin())
       OS << ", ";
     PrintExpr(*Arg);
   }
-  if (Node->isListInitialization())
+  if (Node->isStdInitListInitialization())
+    /* See above. */;
+  else if (Node->isListInitialization())
     OS << "}";
   else
     OS << ")";
@@ -1742,9 +2047,11 @@ void StmtPrinter::VisitLambdaExpr(LambdaExpr *Node) {
     case LCK_This:
       OS << "this";
       break;
-
+    case LCK_StarThis:
+      OS << "*this";
+      break;
     case LCK_ByRef:
-      if (Node->getCaptureDefault() != LCD_ByRef || C->isInitCapture())
+      if (Node->getCaptureDefault() != LCD_ByRef || Node->isInitCapture(C))
         OS << '&';
       OS << C->getCapturedVar()->getName();
       break;
@@ -1756,7 +2063,7 @@ void StmtPrinter::VisitLambdaExpr(LambdaExpr *Node) {
       llvm_unreachable("VLA type in explicit captures.");
     }
 
-    if (C->isInitCapture())
+    if (Node->isInitCapture(C))
       PrintExpr(C->getCapturedVar()->getInit());
   }
   OS << ']';
@@ -1765,7 +2072,7 @@ void StmtPrinter::VisitLambdaExpr(LambdaExpr *Node) {
     OS << " (";
     CXXMethodDecl *Method = Node->getCallOperator();
     NeedComma = false;
-    for (auto P : Method->params()) {
+    for (auto P : Method->parameters()) {
       if (NeedComma) {
         OS << ", ";
       } else {
@@ -1876,7 +2183,7 @@ void StmtPrinter::VisitCXXPseudoDestructorExpr(CXXPseudoDestructorExpr *E) {
 }
 
 void StmtPrinter::VisitCXXConstructExpr(CXXConstructExpr *E) {
-  if (E->isListInitialization())
+  if (E->isListInitialization() && !E->isStdInitListInitialization())
     OS << "{";
 
   for (unsigned i = 0, e = E->getNumArgs(); i != e; ++i) {
@@ -1889,8 +2196,13 @@ void StmtPrinter::VisitCXXConstructExpr(CXXConstructExpr *E) {
     PrintExpr(E->getArg(i));
   }
 
-  if (E->isListInitialization())
+  if (E->isListInitialization() && !E->isStdInitListInitialization())
     OS << "}";
+}
+
+void StmtPrinter::VisitCXXInheritedCtorInitExpr(CXXInheritedCtorInitExpr *E) {
+  // Parens are printed by the surrounding context.
+  OS << "<forwarded>";
 }
 
 void StmtPrinter::VisitCXXStdInitializerListExpr(CXXStdInitializerListExpr *E) {
@@ -2046,6 +2358,31 @@ void StmtPrinter::VisitCXXFoldExpr(CXXFoldExpr *E) {
   OS << ")";
 }
 
+// C++ Coroutines TS
+
+void StmtPrinter::VisitCoroutineBodyStmt(CoroutineBodyStmt *S) {
+  Visit(S->getBody());
+}
+
+void StmtPrinter::VisitCoreturnStmt(CoreturnStmt *S) {
+  OS << "co_return";
+  if (S->getOperand()) {
+    OS << " ";
+    Visit(S->getOperand());
+  }
+  OS << ";";
+}
+
+void StmtPrinter::VisitCoawaitExpr(CoawaitExpr *S) {
+  OS << "co_await ";
+  PrintExpr(S->getOperand());
+}
+
+void StmtPrinter::VisitCoyieldExpr(CoyieldExpr *S) {
+  OS << "co_yield ";
+  PrintExpr(S->getOperand());
+}
+
 // Obj-C
 
 void StmtPrinter::VisitObjCStringLiteral(ObjCStringLiteral *Node) {
@@ -2060,14 +2397,11 @@ void StmtPrinter::VisitObjCBoxedExpr(ObjCBoxedExpr *E) {
 
 void StmtPrinter::VisitObjCArrayLiteral(ObjCArrayLiteral *E) {
   OS << "@[ ";
-  StmtRange ch = E->children();
-  if (ch.first != ch.second) {
-    while (1) {
-      Visit(*ch.first);
-      ++ch.first;
-      if (ch.first == ch.second) break;
+  ObjCArrayLiteral::child_range Ch = E->children();
+  for (auto I = Ch.begin(), E = Ch.end(); I != E; ++I) {
+    if (I != Ch.begin())
       OS << ", ";
-    }
+    Visit(*I);
   }
   OS << " ]";
 }
@@ -2192,7 +2526,7 @@ void StmtPrinter::VisitOpaqueValueExpr(OpaqueValueExpr *Node) {
 
 void StmtPrinter::VisitTypoExpr(TypoExpr *Node) {
   // TODO: Print something reasonable for a TypoExpr, if necessary.
-  assert(false && "Cannot print TypoExpr nodes");
+  llvm_unreachable("Cannot print TypoExpr nodes");
 }
 
 void StmtPrinter::VisitAsTypeExpr(AsTypeExpr *Node) {

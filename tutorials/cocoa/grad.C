@@ -1,7 +1,12 @@
-//Author: Timur Pocheptsov, 25/09/2012 (?)
-//This macro shows how to create and use linear gradients to fill
-//a histogram or a pad.
-//Requires OS X and ROOT configured with --enable-cocoa.
+/// \file
+/// \ingroup tutorial_cocoa
+/// This macro shows how to create and use linear gradients to fill
+/// a histogram or a pad.
+/// Requires OS X and ROOT configured with --enable-cocoa.
+///
+/// \macro_code
+///
+/// \author Timur Pocheptsov
 
 //Includes for ACLiC (cling does not need them).
 #include "TColorGradient.h"

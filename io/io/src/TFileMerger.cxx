@@ -14,7 +14,7 @@
 \ingroup IO
 
 This class provides file copy and merging services.
-                                                                  
+
 It can be used to copy files (not only ROOT files), using TFile or
 any of its remote file access plugins. It is therefore usefull in
 a Grid environment where the files might be accessable via Castor,
@@ -289,7 +289,7 @@ Bool_t TFileMerger::OutputFile(const char *outputfile, Bool_t force)
 ////////////////////////////////////////////////////////////////////////////////
 /// Open merger output file.
 ///
-/// The 'mode' parameter is passed to the TFile constructor as the option, it 
+/// The 'mode' parameter is passed to the TFile constructor as the option, it
 /// should be one of 'NEW','CREATE','RECREATE','UPDATE'
 /// 'UPDATE' is usually used in conjunction with IncrementalMerge.
 
@@ -334,7 +334,7 @@ void TFileMerger::PrintFiles(Option_t *options)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Merge the files. 
+/// Merge the files.
 ///
 /// If no output file was specified it will write into
 /// the file "FileMerger.root" in the working directory. Returns true
@@ -840,13 +840,13 @@ Bool_t TFileMerger::PartialMerge(Int_t in_type)
          }
       }
       fFileList->Clear();
-      if (fExcessFiles->GetEntries() > 0) {
+      if (result && fExcessFiles->GetEntries() > 0) {
          // We merge the first set of files in the output,
          // we now need to open the next set and make
          // sure we accumulate into the output, so we
          // switch to incremental merging (if not already set)
          type = type | kIncremental;
-         OpenExcessFiles();
+         result = OpenExcessFiles();
       }
    }
    if (!result) {

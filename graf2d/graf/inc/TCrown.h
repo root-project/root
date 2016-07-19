@@ -13,15 +13,6 @@
 #define ROOT_TCrown
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TCrown                                                               //
-//                                                                      //
-// A crown is defined by an inner and outer radius                      //
-// It can also be a truncated crown with [phimin,phimax]                //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #ifndef ROOT_TEllipse
 #include "TEllipse.h"
 #endif

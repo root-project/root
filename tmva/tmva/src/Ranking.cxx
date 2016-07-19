@@ -44,10 +44,10 @@ ClassImp(TMVA::Ranking)
 /// default constructor
 
 TMVA::Ranking::Ranking() 
-   : fRanking(),
-     fContext(""),
-     fRankingDiscriminatorName( "" ),
-     fLogger( new MsgLogger("", kINFO) )
+: fRanking(),
+   fContext(""),
+   fRankingDiscriminatorName( "" ),
+   fLogger( new MsgLogger("", kINFO) )
 {
 }
 

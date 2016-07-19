@@ -15,10 +15,13 @@
 namespace llvm {
 class MCAsmInfoELF : public MCAsmInfo {
   virtual void anchor();
-  const MCSection *
-  getNonexecutableStackSection(MCContext &Ctx) const override final;
+  MCSection *getNonexecutableStackSection(MCContext &Ctx) const final;
 
 protected:
+  /// Targets which have non-executable stacks by default can set this to false
+  /// to disable the special section which requests a non-executable stack.
+  bool UsesNonexecutableStackSection;
+
   MCAsmInfoELF();
 };
 }

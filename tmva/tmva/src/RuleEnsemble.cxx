@@ -662,6 +662,8 @@ void TMVA::RuleEnsemble::MakeLinearTerms()
    UInt_t   indquantM;
    UInt_t   indquantP;
    
+   MethodBase *fMB=const_cast<MethodBase *>(fRuleFit->GetMethodBase());
+   
    for (UInt_t v=0; v<nvars; v++) {
       varsum[v] = 0;
       varsum2[v] = 0;
@@ -687,12 +689,16 @@ void TMVA::RuleEnsemble::MakeLinearTerms()
       //
       fLinDM[v] = vardata[v][indquantM].first; // delta-
       fLinDP[v] = vardata[v][indquantP].first; // delta+
-      if (fLinPDFB[v]) delete fLinPDFB[v];
-      if (fLinPDFS[v]) delete fLinPDFS[v];
-      fLinPDFB[v] = new TH1F(Form("bkgvar%d",v),"bkg temphist",40,fLinDM[v],fLinDP[v]);
-      fLinPDFS[v] = new TH1F(Form("sigvar%d",v),"sig temphist",40,fLinDM[v],fLinDP[v]);
-      fLinPDFB[v]->Sumw2();
-      fLinPDFS[v]->Sumw2();
+        
+      if(!fMB->IsSilentFile())
+      {
+            if (fLinPDFB[v]) delete fLinPDFB[v];
+            if (fLinPDFS[v]) delete fLinPDFS[v];
+            fLinPDFB[v] = new TH1F(Form("bkgvar%d",v),"bkg temphist",40,fLinDM[v],fLinDP[v]);
+            fLinPDFS[v] = new TH1F(Form("sigvar%d",v),"sig temphist",40,fLinDM[v],fLinDP[v]);
+            fLinPDFB[v]->Sumw2();
+            fLinPDFS[v]->Sumw2();
+      }
       //
       Int_t type;
       const Double_t w = 1.0/fRuleFit->GetNEveEff();
@@ -703,8 +709,11 @@ void TMVA::RuleEnsemble::MakeLinearTerms()
          lx = TMath::Min( fLinDP[v], TMath::Max( fLinDM[v], val ) );
          varsum[v] += ew*lx;
          varsum2[v] += ew*lx*lx;
-         if (type==1) fLinPDFS[v]->Fill(lx,w*ew);
-         else         fLinPDFB[v]->Fill(lx,w*ew);
+         if(!fMB->IsSilentFile())
+         {
+             if (type==1) fLinPDFS[v]->Fill(lx,w*ew);
+             else         fLinPDFB[v]->Fill(lx,w*ew);
+         }
       }
       //
       // Get normalization.
@@ -713,9 +722,12 @@ void TMVA::RuleEnsemble::MakeLinearTerms()
       fLinNorm[v] = CalcLinNorm(stdl);
    }
    // Save PDFs - for debugging purpose
-   for (UInt_t v=0; v<nvars; v++) {
-      fLinPDFS[v]->Write();
-      fLinPDFB[v]->Write();
+   if(!fMB->IsSilentFile())
+   {
+        for (UInt_t v=0; v<nvars; v++) {
+            fLinPDFS[v]->Write();
+            fLinPDFB[v]->Write();
+        }
    }
 }
 
@@ -890,17 +902,17 @@ void TMVA::RuleEnsemble::RuleResponseStats()
       }
       // Fill tagging probabilities
       if (ntag>0 && neve > 0) { // should always be the case, but let's make sure and keep coverity quiet
-	 fRulePTag.push_back(Double_t(ntag)/Double_t(neve));
-	 fRulePSS.push_back(Double_t(nss)/Double_t(ntag));
-	 fRulePSB.push_back(Double_t(nsb)/Double_t(ntag));
-	 fRulePBS.push_back(Double_t(nbs)/Double_t(ntag));
-	 fRulePBB.push_back(Double_t(nbb)/Double_t(ntag));
+         fRulePTag.push_back(Double_t(ntag)/Double_t(neve));
+         fRulePSS.push_back(Double_t(nss)/Double_t(ntag));
+         fRulePSB.push_back(Double_t(nsb)/Double_t(ntag));
+         fRulePBS.push_back(Double_t(nbs)/Double_t(ntag));
+         fRulePBB.push_back(Double_t(nbb)/Double_t(ntag));
       }
       //
    }
    fRuleFSig = (nsig>0) ? static_cast<Double_t>(nsig)/static_cast<Double_t>(nsig+nbkg) : 0;
    for ( UInt_t v=0; v<nvars; v++) {
-     fRuleVarFrac[v] =  (nrules>0) ? Double_t(varcnt[v])/Double_t(nrules) : 0;
+      fRuleVarFrac[v] =  (nrules>0) ? Double_t(varcnt[v])/Double_t(nrules) : 0;
    }
 }
 

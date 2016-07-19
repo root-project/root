@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TDatime
+\ingroup Base
+
 This class stores the date and time with a precision of one second
 in an unsigned 32 bit word (950130 124559).
 The date is stored with the origin being the 1st January 1995.

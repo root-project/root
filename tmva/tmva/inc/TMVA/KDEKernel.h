@@ -85,12 +85,12 @@ namespace TMVA {
       TH1F         *fFirstIterHist;      // histogram to be filled in the hidden iteration
       TH1F         *fSigmaHist;         // contains the Sigmas Widths for adaptive KDE 
       Bool_t        fHiddenIteration;   // Defines if whats currently running is the 
-                                     // (first) hidden iteration when doing adaptive KDE
+      // (first) hidden iteration when doing adaptive KDE
 
       mutable MsgLogger* fLogger;   // message logger
       MsgLogger& Log() const { return *fLogger; }    
       
-      ClassDef(KDEKernel,0) // Kernel density estimator for PDF smoothing
+      ClassDef(KDEKernel,0); // Kernel density estimator for PDF smoothing
       
    };// namespace TMVA
 }

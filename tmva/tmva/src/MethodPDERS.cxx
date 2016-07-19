@@ -104,12 +104,11 @@ ClassImp(TMVA::MethodPDERS)
 ////////////////////////////////////////////////////////////////////////////////
 /// standard constructor for the PDERS method
 
-TMVA::MethodPDERS::MethodPDERS( const TString& jobName,
-                                const TString& methodTitle,
-                                DataSetInfo& theData,
-                                const TString& theOption,
-                                TDirectory* theTargetDir ) :
-   MethodBase( jobName, Types::kPDERS, methodTitle, theData, theOption, theTargetDir ),
+   TMVA::MethodPDERS::MethodPDERS( const TString& jobName,
+                                   const TString& methodTitle,
+                                   DataSetInfo& theData,
+                                   const TString& theOption) :
+   MethodBase( jobName, Types::kPDERS, methodTitle, theData, theOption),
    fFcnCall(0),
    fVRangeMode(kAdaptive),
    fKernelEstimator(kBox),
@@ -138,9 +137,8 @@ TMVA::MethodPDERS::MethodPDERS( const TString& jobName,
 /// construct MethodPDERS through from file
 
 TMVA::MethodPDERS::MethodPDERS( DataSetInfo& theData,
-                                const TString& theWeightFile,
-                                TDirectory* theTargetDir ) :
-   MethodBase( Types::kPDERS, theData, theWeightFile, theTargetDir ),
+                                const TString& theWeightFile) :
+   MethodBase( Types::kPDERS, theData, theWeightFile),
    fFcnCall(0),
    fVRangeMode(kAdaptive),
    fKernelEstimator(kBox),
@@ -331,15 +329,15 @@ void TMVA::MethodPDERS::ProcessOptions()
    // TODO: Add parameter validation
 
    Log() << kVERBOSE << "interpreted option string: vRangeMethod: '"
-           << (const char*)((fVRangeMode == kMinMax) ? "MinMax" :
-                            (fVRangeMode == kUnscaled) ? "Unscaled" :
-                            (fVRangeMode == kRMS   ) ? "RMS" : "Adaptive") << "'" << Endl;
+         << (const char*)((fVRangeMode == kMinMax) ? "MinMax" :
+                          (fVRangeMode == kUnscaled) ? "Unscaled" :
+                          (fVRangeMode == kRMS   ) ? "RMS" : "Adaptive") << "'" << Endl;
    if (fVRangeMode == kMinMax || fVRangeMode == kRMS)
       Log() << kVERBOSE << "deltaFrac: " << fDeltaFrac << Endl;
    else
       Log() << kVERBOSE << "nEventsMin/Max, maxVIterations, initialScale: "
-              << fNEventsMin << "  " << fNEventsMax
-              << "  " << fMaxVIterations << "  " << fInitialScale << Endl;
+            << fNEventsMin << "  " << fNEventsMax
+            << "  " << fMaxVIterations << "  " << fInitialScale << Endl;
    Log() << kVERBOSE << "KernelEstimator = " << fKernelString << Endl;
 }
 
@@ -352,9 +350,9 @@ void TMVA::MethodPDERS::ProcessOptions()
 void TMVA::MethodPDERS::Train( void )
 {
    if (IsNormalised()) Log() << kFATAL << "\"Normalise\" option cannot be used with PDERS; "
-                               << "please remove the option from the configuration string, or "
-                               << "use \"!Normalise\""
-                               << Endl;
+                             << "please remove the option from the configuration string, or "
+                             << "use \"!Normalise\""
+                             << Endl;
 
    CreateBinarySearchTree( Types::kTraining );
 
@@ -505,9 +503,9 @@ void TMVA::MethodPDERS::SetVolumeElement( void ) {
             Log() << kFATAL << "<SetVolumeElement> RMS not computed: " << fAverageRMS.size() << Endl;
          (*fDelta)[ivar] = fAverageRMS[ivar]*fDeltaFrac;
          Log() << kVERBOSE << "delta of var[" << (*fInputVars)[ivar]
-                 << "\t]: " << fAverageRMS[ivar]
-                 << "\t  |  comp with |max - min|: " << (GetXmax( ivar ) - GetXmin( ivar ))
-                 << Endl;
+               << "\t]: " << fAverageRMS[ivar]
+               << "\t  |  comp with |max - min|: " << (GetXmax( ivar ) - GetXmin( ivar ))
+               << Endl;
          break;
       case kMinMax:
          (*fDelta)[ivar] = (GetXmax( ivar ) - GetXmin( ivar ))*fDeltaFrac;
@@ -517,7 +515,7 @@ void TMVA::MethodPDERS::SetVolumeElement( void ) {
          break;
       default:
          Log() << kFATAL << "<SetVolumeElement> unknown range-set mode: "
-                 << fVRangeMode << Endl;
+               << fVRangeMode << Endl;
       }
       (*fShift)[ivar] = 0.5; // volume is centered around test value
    }
@@ -611,7 +609,7 @@ void TMVA::MethodPDERS::GetSample( const Event& e,
          fHelpVolume = volume;
 
          UpdateThis(); // necessary update of static pointer
-         RootFinder rootFinder( &IGetVolumeContentForRoot, 0.01, 50, 200, 10 );
+         RootFinder rootFinder( this, 0.01, 50, 200, 10 );
          Double_t scale = rootFinder.Root( (fNEventsMin + fNEventsMax)/2.0 );
 
          volume->ScaleInterval( scale );
@@ -845,17 +843,17 @@ Double_t TMVA::MethodPDERS::CKernelEstimate( const Event & event,
    // Iteration over sample points
    for (std::vector<const BinarySearchTreeNode*>::iterator iev = events.begin(); iev != events.end(); iev++) {
 
-   // First switch to the one dimensional distance
-   Double_t normalized_distance = GetNormalizedDistance (event, *(*iev), dim_normalization);
+      // First switch to the one dimensional distance
+      Double_t normalized_distance = GetNormalizedDistance (event, *(*iev), dim_normalization);
 
-   // always working within the hyperelipsoid, except for when we don't
-   // note that rejection ratio goes to 1 as nvar goes to infinity
-   if (normalized_distance > 1 && fKernelEstimator != kBox) continue;
+      // always working within the hyperelipsoid, except for when we don't
+      // note that rejection ratio goes to 1 as nvar goes to infinity
+      if (normalized_distance > 1 && fKernelEstimator != kBox) continue;
 
-   if ( (*iev)->GetClass()==fSignalClass )
-      pdfSumS += ApplyKernelFunction (normalized_distance) * (*iev)->GetWeight();
-   else
-      pdfSumB += ApplyKernelFunction (normalized_distance) * (*iev)->GetWeight();
+      if ( (*iev)->GetClass()==fSignalClass )
+         pdfSumS += ApplyKernelFunction (normalized_distance) * (*iev)->GetWeight();
+      else
+         pdfSumB += ApplyKernelFunction (normalized_distance) * (*iev)->GetWeight();
    }
    pdfSumS = KernelNormalization( pdfSumS < 0. ? 0. : pdfSumS );
    pdfSumB = KernelNormalization( pdfSumB < 0. ? 0. : pdfSumB );
@@ -884,7 +882,7 @@ void TMVA::MethodPDERS::RKernelEstimate( const Event & event,
    //   std::vector<Float_t> pdfSum;
    pdfSum->clear();
    Float_t pdfDiv = 0;
-    fNRegOut = 1; // for now, regression is just for 1 dimension
+   fNRegOut = 1; // for now, regression is just for 1 dimension
 
    for (Int_t ivar = 0; ivar < fNRegOut ; ivar++)
       pdfSum->push_back( 0 );
@@ -1122,10 +1120,10 @@ void TMVA::MethodPDERS::ReadWeightsFromXML( void* wghtnode)
    fBinaryTree->CalcStatistics();
    fBinaryTree->CountNodes();
    if (fBinaryTree->GetSumOfWeights( Types::kSignal ) > 0)
-     fScaleS = 1.0/fBinaryTree->GetSumOfWeights( Types::kSignal );
+      fScaleS = 1.0/fBinaryTree->GetSumOfWeights( Types::kSignal );
    else fScaleS = 1;
    if (fBinaryTree->GetSumOfWeights( Types::kBackground ) > 0)
-     fScaleB = 1.0/fBinaryTree->GetSumOfWeights( Types::kBackground );
+      fScaleB = 1.0/fBinaryTree->GetSumOfWeights( Types::kBackground );
    else fScaleB = 1;
    Log() << kINFO << "signal and background scales: " << fScaleS << " " << fScaleB << Endl;
    CalcAverages();

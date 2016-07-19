@@ -10,10 +10,12 @@
 #ifndef LLVM_CLANG_DRIVER_COMPILATION_H
 #define LLVM_CLANG_DRIVER_COMPILATION_H
 
+#include "clang/Driver/Action.h"
 #include "clang/Driver/Job.h"
 #include "clang/Driver/Util.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/Support/Path.h"
+#include <map>
 
 namespace llvm {
 namespace opt {
@@ -25,7 +27,6 @@ namespace opt {
 namespace clang {
 namespace driver {
   class Driver;
-  class JobAction;
   class JobList;
   class ToolChain;
 
@@ -38,6 +39,17 @@ class Compilation {
   /// The default tool chain.
   const ToolChain &DefaultToolChain;
 
+  /// A mask of all the programming models the host has to support in the
+  /// current compilation.
+  unsigned ActiveOffloadMask;
+
+  /// Array with the toolchains of offloading host and devices in the order they
+  /// were requested by the user. We are preserving that order in case the code
+  /// generation needs to derive a programming-model-specific semantic out of
+  /// it.
+  std::multimap<Action::OffloadKind, const ToolChain *>
+      OrderedOffloadingToolchains;
+
   /// The original (untranslated) input argument list.
   llvm::opt::InputArgList *Args;
 
@@ -45,7 +57,12 @@ class Compilation {
   /// own argument translation.
   llvm::opt::DerivedArgList *TranslatedArgs;
 
-  /// The list of actions.
+  /// The list of actions we've created via MakeAction.  This is not accessible
+  /// to consumers; it's here just to manage ownership.
+  std::vector<std::unique_ptr<Action>> AllActions;
+
+  /// The list of actions.  This is maintained and modified by consumers, via
+  /// getActions().
   ActionList Actions;
 
   /// The root list of jobs.
@@ -81,6 +98,52 @@ public:
   const Driver &getDriver() const { return TheDriver; }
 
   const ToolChain &getDefaultToolChain() const { return DefaultToolChain; }
+  const ToolChain *getOffloadingHostToolChain() const {
+    auto It = OrderedOffloadingToolchains.find(Action::OFK_Host);
+    if (It != OrderedOffloadingToolchains.end())
+      return It->second;
+    return nullptr;
+  }
+  unsigned isOffloadingHostKind(Action::OffloadKind Kind) const {
+    return ActiveOffloadMask & Kind;
+  }
+
+  /// Iterator that visits device toolchains of a given kind.
+  typedef const std::multimap<Action::OffloadKind,
+                              const ToolChain *>::const_iterator
+      const_offload_toolchains_iterator;
+  typedef std::pair<const_offload_toolchains_iterator,
+                    const_offload_toolchains_iterator>
+      const_offload_toolchains_range;
+
+  template <Action::OffloadKind Kind>
+  const_offload_toolchains_range getOffloadToolChains() const {
+    return OrderedOffloadingToolchains.equal_range(Kind);
+  }
+
+  // Return an offload toolchain of the provided kind. Only one is expected to
+  // exist.
+  template <Action::OffloadKind Kind>
+  const ToolChain *getSingleOffloadToolChain() const {
+    auto TCs = getOffloadToolChains<Kind>();
+
+    assert(TCs.first != TCs.second &&
+           "No tool chains of the selected kind exist!");
+    assert(std::next(TCs.first) == TCs.second &&
+           "More than one tool chain of the this kind exist.");
+    return TCs.first->second;
+  }
+
+  void addOffloadDeviceToolChain(const ToolChain *DeviceToolChain,
+                                 Action::OffloadKind OffloadKind) {
+    assert(OffloadKind != Action::OFK_Host && OffloadKind != Action::OFK_None &&
+           "This is not a device tool chain!");
+
+    // Update the host offload kind to also contain this kind.
+    ActiveOffloadMask |= OffloadKind;
+    OrderedOffloadingToolchains.insert(
+        std::make_pair(OffloadKind, DeviceToolChain));
+  }
 
   const llvm::opt::InputArgList &getInputArgs() const { return *Args; }
 
@@ -90,6 +153,15 @@ public:
 
   ActionList &getActions() { return Actions; }
   const ActionList &getActions() const { return Actions; }
+
+  /// Creates a new Action owned by this Compilation.
+  ///
+  /// The new Action is *not* added to the list returned by getActions().
+  template <typename T, typename... Args> T *MakeAction(Args &&... Arg) {
+    T *RawPtr = new T(std::forward<Args>(Arg)...);
+    AllActions.push_back(std::unique_ptr<Action>(RawPtr));
+    return RawPtr;
+  }
 
   JobList &getJobs() { return Jobs; }
   const JobList &getJobs() const { return Jobs; }
@@ -169,8 +241,9 @@ public:
   ///
   /// \param FailingCommands - For non-zero results, this will be a vector of
   /// failing commands and their associated result code.
-  void ExecuteJob(const Job &J,
-     SmallVectorImpl< std::pair<int, const Command *> > &FailingCommands) const;
+  void ExecuteJobs(
+      const JobList &Jobs,
+      SmallVectorImpl<std::pair<int, const Command *>> &FailingCommands) const;
 
   /// initCompilationForDiagnostics - Remove stale state and suppress output
   /// so compilation can be reexecuted to generate additional diagnostic
@@ -178,7 +251,16 @@ public:
   void initCompilationForDiagnostics();
 
   /// Return true if we're compiling for diagnostics.
-  bool isForDiagnostics() { return ForDiagnostics; }
+  bool isForDiagnostics() const { return ForDiagnostics; }
+
+  /// Redirect - Redirect output of this compilation. Can only be done once.
+  ///
+  /// \param Redirects - array of pointers to paths. The array
+  /// should have a size of three. The inferior process's
+  /// stdin(0), stdout(1), and stderr(2) will be redirected to the
+  /// corresponding paths. This compilation instance becomes
+  /// the owner of Redirects and will delete the array and StringRef's.
+  void Redirect(const StringRef** Redirects);
 };
 
 } // end namespace driver

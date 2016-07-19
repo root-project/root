@@ -8,8 +8,8 @@
 //===----------------------------------------------------------------------===//
 
 #include "MCTargetDesc/MipsBaseInfo.h"
-#include "MipsMachineFunction.h"
 #include "MipsInstrInfo.h"
+#include "MipsMachineFunction.h"
 #include "MipsSubtarget.h"
 #include "MipsTargetMachine.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
@@ -24,51 +24,7 @@ static cl::opt<bool>
 FixGlobalBaseReg("mips-fix-global-base-reg", cl::Hidden, cl::init(true),
                  cl::desc("Always use $gp as the global base register."));
 
-// class MipsCallEntry.
-MipsCallEntry::MipsCallEntry(StringRef N) {
-#ifndef NDEBUG
-  Name = N;
-  Val = nullptr;
-#endif
-}
-
-MipsCallEntry::MipsCallEntry(const GlobalValue *V) {
-#ifndef NDEBUG
-  Val = V;
-#endif
-}
-
-bool MipsCallEntry::isConstant(const MachineFrameInfo *) const {
-  return false;
-}
-
-bool MipsCallEntry::isAliased(const MachineFrameInfo *) const {
-  return false;
-}
-
-bool MipsCallEntry::mayAlias(const MachineFrameInfo *) const {
-  return false;
-}
-
-void MipsCallEntry::printCustom(raw_ostream &O) const {
-  O << "MipsCallEntry: ";
-#ifndef NDEBUG
-  if (Val)
-    O << Val->getName();
-  else
-    O << Name;
-#endif
-}
-
-MipsFunctionInfo::~MipsFunctionInfo() {
-  for (StringMap<const MipsCallEntry *>::iterator
-       I = ExternalCallEntries.begin(), E = ExternalCallEntries.end(); I != E;
-       ++I)
-    delete I->getValue();
-
-  for (const auto &Entry : GlobalCallEntries)
-    delete Entry.second;
-}
+MipsFunctionInfo::~MipsFunctionInfo() {}
 
 bool MipsFunctionInfo::globalBaseRegSet() const {
   return GlobalBaseReg;
@@ -79,27 +35,22 @@ unsigned MipsFunctionInfo::getGlobalBaseReg() {
   if (GlobalBaseReg)
     return GlobalBaseReg;
 
+  MipsSubtarget const &STI =
+      static_cast<const MipsSubtarget &>(MF.getSubtarget());
+
   const TargetRegisterClass *RC =
-      static_cast<const MipsSubtarget &>(MF.getSubtarget()).inMips16Mode()
+      STI.inMips16Mode()
           ? &Mips::CPU16RegsRegClass
-          : static_cast<const MipsTargetMachine &>(MF.getTarget())
-                    .getABI()
-                    .IsN64()
-                ? &Mips::GPR64RegClass
-                : &Mips::GPR32RegClass;
+          : STI.inMicroMipsMode()
+                ? STI.hasMips64()
+                      ? &Mips::GPRMM16_64RegClass
+                      : &Mips::GPRMM16RegClass
+                : static_cast<const MipsTargetMachine &>(MF.getTarget())
+                          .getABI()
+                          .IsN64()
+                      ? &Mips::GPR64RegClass
+                      : &Mips::GPR32RegClass;
   return GlobalBaseReg = MF.getRegInfo().createVirtualRegister(RC);
-}
-
-bool MipsFunctionInfo::mips16SPAliasRegSet() const {
-  return Mips16SPAliasReg;
-}
-unsigned MipsFunctionInfo::getMips16SPAliasReg() {
-  // Return if it has already been initialized.
-  if (Mips16SPAliasReg)
-    return Mips16SPAliasReg;
-
-  const TargetRegisterClass *RC = &Mips::CPU16RegsRegClass;
-  return Mips16SPAliasReg = MF.getRegInfo().createVirtualRegister(RC);
 }
 
 void MipsFunctionInfo::createEhDataRegsFI() {
@@ -114,27 +65,32 @@ void MipsFunctionInfo::createEhDataRegsFI() {
   }
 }
 
+void MipsFunctionInfo::createISRRegFI() {
+  // ISRs require spill slots for Status & ErrorPC Coprocessor 0 registers.
+  // The current implementation only supports Mips32r2+ not Mips64rX. Status
+  // is always 32 bits, ErrorPC is 32 or 64 bits dependant on architecture,
+  // however Mips32r2+ is the supported architecture.
+  const TargetRegisterClass *RC = &Mips::GPR32RegClass;
+
+  for (int I = 0; I < 2; ++I)
+    ISRDataRegFI[I] = MF.getFrameInfo()->CreateStackObject(
+        RC->getSize(), RC->getAlignment(), false);
+}
+
 bool MipsFunctionInfo::isEhDataRegFI(int FI) const {
   return CallsEhReturn && (FI == EhDataRegFI[0] || FI == EhDataRegFI[1]
                         || FI == EhDataRegFI[2] || FI == EhDataRegFI[3]);
 }
 
-MachinePointerInfo MipsFunctionInfo::callPtrInfo(StringRef Name) {
-  const MipsCallEntry *&E = ExternalCallEntries[Name];
-
-  if (!E)
-    E = new MipsCallEntry(Name);
-
-  return MachinePointerInfo(E);
+bool MipsFunctionInfo::isISRRegFI(int FI) const {
+  return IsISR && (FI == ISRDataRegFI[0] || FI == ISRDataRegFI[1]);
+}
+MachinePointerInfo MipsFunctionInfo::callPtrInfo(const char *ES) {
+  return MachinePointerInfo(MF.getPSVManager().getExternalSymbolCallEntry(ES));
 }
 
-MachinePointerInfo MipsFunctionInfo::callPtrInfo(const GlobalValue *Val) {
-  const MipsCallEntry *&E = GlobalCallEntries[Val];
-
-  if (!E)
-    E = new MipsCallEntry(Val);
-
-  return MachinePointerInfo(E);
+MachinePointerInfo MipsFunctionInfo::callPtrInfo(const GlobalValue *GV) {
+  return MachinePointerInfo(MF.getPSVManager().getGlobalValueCallEntry(GV));
 }
 
 int MipsFunctionInfo::getMoveF64ViaSpillFI(const TargetRegisterClass *RC) {

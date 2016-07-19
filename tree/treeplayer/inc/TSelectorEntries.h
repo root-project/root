@@ -32,6 +32,7 @@ class TTree;
 class TTreeFormula;
 
 class TSelectorEntries : public TSelector {
+   Bool_t          fOwnInput;       // true if we created the input list.
 public :
    TTree          *fChain;          //! pointer to the analyzed TTree or TChain
    TTreeFormula   *fSelect;         //  Pointer to selection formula

@@ -306,7 +306,7 @@ UInt_t TMakeProject::GenerateClassPrefix(FILE *fp, const char *clname, Bool_t to
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Generate an empty StreamerInfo for the given type (no recursion) if it is not
-/// not known in the list of class. 
+/// not known in the list of class.
 ///
 /// If the type itself is a template,
 /// we mark it with version 1 (a class) otherwise we mark it as version -3 (an enum).
@@ -380,7 +380,7 @@ void TMakeProject::GenerateMissingStreamerInfos(TList *extrainfos, const char *c
             break;
          case '>':
             if (nest == 0) return; // The name is not well formed, give up.
-            --nest; /* intentional fall throught to the next case */
+            --nest; /* intentional fall through to the next case */
          case ',':
             if ((clname[i] == ',' && nest == 1) || (clname[i] == '>' && nest == 0)) {
                TString incName(clname + last, i - last);
@@ -445,7 +445,7 @@ UInt_t TMakeProject::GenerateForwardDeclaration(FILE *fp, const char *clname, ch
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add to the header file, the #include needed for the argument of
+/// Add to the header file, the \#include needed for the argument of
 /// this template.
 
 UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, char *inclist, Bool_t forward, const TList *extrainfos)
@@ -464,7 +464,7 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
             break;
          case '>':
             if (nest==0) return ninc; // the name is not well formed, give up.
-            --nest; /* intentional fall throught to the next case */
+            --nest; /* intentional fall through to the next case */
          case ',':
             if ((clname[i] == ',' && nest == 1) || (clname[i] == '>' && nest == 0)) {
                TString incName(clname + last, i - last);
@@ -598,7 +598,7 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add to the header file anything that need to appear after the class
-/// declaration (this includes some #pragma link).
+/// declaration (this includes some \#pragma link).
 
 void TMakeProject::GeneratePostDeclaration(FILE *fp, const TVirtualStreamerInfo *info, char *inclist)
 {

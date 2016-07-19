@@ -40,13 +40,10 @@ static const DeclRefExpr *FindBlockDeclRefExpr(const Stmt *S,
     if (BR->getDecl() == VD)
       return BR;
 
-  for (Stmt::const_child_iterator I = S->child_begin(), E = S->child_end();
-       I!=E; ++I)
-    if (const Stmt *child = *I) {
-      const DeclRefExpr *BR = FindBlockDeclRefExpr(child, VD);
-      if (BR)
+  for (const Stmt *Child : S->children())
+    if (Child)
+      if (const DeclRefExpr *BR = FindBlockDeclRefExpr(Child, VD))
         return BR;
-    }
 
   return nullptr;
 }
@@ -77,7 +74,7 @@ UndefCapturedBlockVarChecker::checkPostStmt(const BlockExpr *BE,
     // Get the VarRegion associated with VD in the local stack frame.
     if (Optional<UndefinedVal> V =
           state->getSVal(I.getOriginalRegion()).getAs<UndefinedVal>()) {
-      if (ExplodedNode *N = C.generateSink()) {
+      if (ExplodedNode *N = C.generateErrorNode()) {
         if (!BT)
           BT.reset(
               new BuiltinBug(this, "uninitialized variable captured by block"));
@@ -86,17 +83,17 @@ UndefCapturedBlockVarChecker::checkPostStmt(const BlockExpr *BE,
         SmallString<128> buf;
         llvm::raw_svector_ostream os(buf);
 
-        os << "Variable '" << VD->getName() 
+        os << "Variable '" << VD->getName()
            << "' is uninitialized when captured by block";
 
-        BugReport *R = new BugReport(*BT, os.str(), N);
+        auto R = llvm::make_unique<BugReport>(*BT, os.str(), N);
         if (const Expr *Ex = FindBlockDeclRefExpr(BE->getBody(), VD))
           R->addRange(Ex->getSourceRange());
         R->addVisitor(llvm::make_unique<FindLastStoreBRVisitor>(
             *V, VR, /*EnableNullFPSuppression*/ false));
         R->disablePathPruning();
         // need location of block
-        C.emitReport(R);
+        C.emitReport(std::move(R));
       }
     }
   }

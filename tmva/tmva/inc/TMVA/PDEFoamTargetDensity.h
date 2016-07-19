@@ -57,7 +57,7 @@ namespace TMVA
       virtual Double_t Density(std::vector<Double_t> &Xarg, Double_t &event_density);
 
       ClassDef(PDEFoamTargetDensity, 1) //Class for Target density
-   };  //end of PDEFoamTargetDensity
+         };  //end of PDEFoamTargetDensity
 
 }  // namespace TMVA
 

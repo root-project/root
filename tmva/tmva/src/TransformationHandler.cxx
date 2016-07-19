@@ -162,7 +162,7 @@ const TMVA::Event* TMVA::TransformationHandler::InverseTransform( const Event* e
    UInt_t nvars = 0, ntgts = 0, nspcts = 0;
    while (VariableTransformBase *trf = (VariableTransformBase*) trIt() ) { // shouldn't be the transformation called in the inverse order for the inversetransformation?????
       if (trf->IsCreated()) {
-         trf->CountVariableTypes( nvars, ntgts, nspcts );	 
+         trf->CountVariableTypes( nvars, ntgts, nspcts ); 
          if( !(suppressIfNoTargets && ntgts==0) )
             trEv = trf->InverseTransform(ev, (*rClsIt) );
       }
@@ -178,9 +178,9 @@ const TMVA::Event* TMVA::TransformationHandler::InverseTransform( const Event* e
    //    UInt_t nvars = 0, ntgts = 0, nspcts = 0;
    //    while (VariableTransformBase *trf = (VariableTransformBase*) trIt() ) { // shouldn't be the transformation called in the inverse order for the inversetransformation?????
    //       if (trf->IsCreated()) {
-   // 	 trf->CountVariableTypes( nvars, ntgts, nspcts );	 
-   // 	 if( !(suppressIfNoTargets && ntgts==0) )
-   // 	    trEv = trf->InverseTransform(ev, (*rClsIt) );
+   //          trf->CountVariableTypes( nvars, ntgts, nspcts );
+   //    if( !(suppressIfNoTargets && ntgts==0) )
+   //       trEv = trf->InverseTransform(ev, (*rClsIt) );
    //       }
    //       else break;
    //       rClsIt++;

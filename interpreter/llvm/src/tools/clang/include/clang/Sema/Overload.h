@@ -83,7 +83,8 @@ namespace clang {
     ICK_TransparentUnionConversion, ///< Transparent Union Conversions
     ICK_Writeback_Conversion,  ///< Objective-C ARC writeback conversion
     ICK_Zero_Event_Conversion, ///< Zero constant to event (OpenCL1.2 6.12.10)
-    ICK_Num_Conversion_Kinds   ///< The number of conversion kinds
+    ICK_C_Only_Conversion,     ///< Conversions allowed in C, but not C++
+    ICK_Num_Conversion_Kinds,  ///< The number of conversion kinds
   };
 
   /// ImplicitConversionRank - The rank of an implicit conversion
@@ -95,7 +96,9 @@ namespace clang {
     ICR_Promotion,               ///< Promotion
     ICR_Conversion,              ///< Conversion
     ICR_Complex_Real_Conversion, ///< Complex <-> Real conversion
-    ICR_Writeback_Conversion     ///< ObjC ARC writeback conversion
+    ICR_Writeback_Conversion,    ///< ObjC ARC writeback conversion
+    ICR_C_Conversion             ///< Conversion only allowed in the C standard.
+                                 ///  (e.g. void* to char*)
   };
 
   ImplicitConversionRank GetConversionRank(ImplicitConversionKind Kind);
@@ -196,6 +199,7 @@ namespace clang {
     /// conversions are either identity conversions or derived-to-base
     /// conversions.
     CXXConstructorDecl *CopyConstructor;
+    DeclAccessPair FoundCopyConstructor;
 
     void setFromType(QualType T) { FromTypePtr = T.getAsOpaquePtr(); }
     void setToType(unsigned Idx, QualType T) { 
@@ -279,7 +283,7 @@ namespace clang {
 
   /// Represents an ambiguous user-defined conversion sequence.
   struct AmbiguousConversionSequence {
-    typedef SmallVector<FunctionDecl*, 4> ConversionSet;
+    typedef SmallVector<std::pair<NamedDecl*, FunctionDecl*>, 4> ConversionSet;
 
     void *FromTypePtr;
     void *ToTypePtr;
@@ -302,8 +306,8 @@ namespace clang {
       return *reinterpret_cast<const ConversionSet*>(Buffer);
     }
 
-    void addConversion(FunctionDecl *D) {
-      conversions().push_back(D);
+    void addConversion(NamedDecl *Found, FunctionDecl *D) {
+      conversions().push_back(std::make_pair(Found, D));
     }
 
     typedef ConversionSet::iterator iterator;
@@ -393,7 +397,7 @@ namespace clang {
 
     /// \brief Whether the target is really a std::initializer_list, and the
     /// sequence only represents the worst element conversion.
-    bool StdInitializerListElement : 1;
+    unsigned StdInitializerListElement : 1;
 
     void setKind(Kind K) {
       destruct();
@@ -567,8 +571,8 @@ namespace clang {
     /// This conversion candidate is not viable because its result
     /// type is not implicitly convertible to the desired type.
     ovl_fail_bad_final_conversion,
-    
-    /// This conversion function template specialization candidate is not 
+
+    /// This conversion function template specialization candidate is not
     /// viable because the final conversion was not an exact match.
     ovl_fail_final_conversion_not_exact,
 
@@ -579,7 +583,10 @@ namespace clang {
 
     /// This candidate function was not viable because an enable_if
     /// attribute disabled it.
-    ovl_fail_enable_if
+    ovl_fail_enable_if,
+
+    /// This candidate was not viable because its address could not be taken.
+    ovl_fail_addr_not_available
   };
 
   /// OverloadCandidate - A single candidate in an overload set (C++ 13.3).
@@ -718,8 +725,8 @@ namespace clang {
     llvm::AlignedCharArray<llvm::AlignOf<ImplicitConversionSequence>::Alignment,
                            16 * sizeof(ImplicitConversionSequence)> InlineSpace;
 
-    OverloadCandidateSet(const OverloadCandidateSet &) LLVM_DELETED_FUNCTION;
-    void operator=(const OverloadCandidateSet &) LLVM_DELETED_FUNCTION;
+    OverloadCandidateSet(const OverloadCandidateSet &) = delete;
+    void operator=(const OverloadCandidateSet &) = delete;
 
     void destroyCandidates();
 
@@ -791,6 +798,30 @@ namespace clang {
                                  const OverloadCandidate& Cand2,
                                  SourceLocation Loc,
                                  bool UserDefinedConversion = false);
+
+  struct ConstructorInfo {
+    DeclAccessPair FoundDecl;
+    CXXConstructorDecl *Constructor;
+    FunctionTemplateDecl *ConstructorTmpl;
+    explicit operator bool() const { return Constructor; }
+  };
+  // FIXME: Add an AddOverloadCandidate / AddTemplateOverloadCandidate overload
+  // that takes one of these.
+  inline ConstructorInfo getConstructorInfo(NamedDecl *ND) {
+    if (isa<UsingDecl>(ND))
+      return ConstructorInfo{};
+
+    // For constructors, the access check is performed against the underlying
+    // declaration, not the found declaration.
+    auto *D = ND->getUnderlyingDecl();
+    ConstructorInfo Info = {DeclAccessPair::make(ND, D->getAccess()), nullptr,
+                            nullptr};
+    Info.ConstructorTmpl = dyn_cast<FunctionTemplateDecl>(D);
+    if (Info.ConstructorTmpl)
+      D = Info.ConstructorTmpl->getTemplatedDecl();
+    Info.Constructor = dyn_cast<CXXConstructorDecl>(D);
+    return Info;
+  }
 } // end namespace clang
 
 #endif // LLVM_CLANG_SEMA_OVERLOAD_H

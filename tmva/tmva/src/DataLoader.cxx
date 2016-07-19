@@ -41,6 +41,7 @@
 #include "TPrincipal.h"
 #include "TMath.h"
 #include "TObjString.h"
+#include "TRandom3.h"
 
 #include "TMVA/DataLoader.h"
 #include "TMVA/Config.h"
@@ -65,8 +66,6 @@
 #include "TMVA/ResultsRegression.h"
 #include "TMVA/ResultsMulticlass.h"
 
-//const Int_t  MinNoTrainingEvents = 10;
-//const Int_t  MinNoTestEvents     = 1;
 
 ClassImp(TMVA::DataLoader)
 
@@ -82,12 +81,10 @@ TMVA::DataLoader::DataLoader( TString thedlName)
    fDataAssignType       ( kAssignEvents ),
    fATreeEvent           ( NULL )
 {
-
-   //   DataSetManager::CreateInstance(*fDataInputHandler); // DSMTEST removed
    fDataSetManager = new DataSetManager( *fDataInputHandler ); // DSMTEST
 
    // render silent
-//    if (gTools().CheckForSilentOption( GetOptions() )) Log().InhibitOutput(); // make sure is silent if wanted to
+   //    if (gTools().CheckForSilentOption( GetOptions() )) Log().InhibitOutput(); // make sure is silent if wanted to
 }
 
 
@@ -209,7 +206,7 @@ void TMVA::DataLoader::AddTestEvent( const TString& className, const std::vector
 
 //_______________________________________________________________________
 void TMVA::DataLoader::AddEvent( const TString& className, Types::ETreeType tt,
-                              const std::vector<Double_t>& event, Double_t weight ) 
+                                 const std::vector<Double_t>& event, Double_t weight ) 
 {
    // add event
    // vector event : the order of values is: variables + targets + spectators
@@ -264,7 +261,7 @@ void TMVA::DataLoader::SetInputTreesFromEventAssignTrees()
 
 //_______________________________________________________________________
 void TMVA::DataLoader::AddTree( TTree* tree, const TString& className, Double_t weight, 
-                             const TCut& cut, const TString& treetype )
+                                const TCut& cut, const TString& treetype )
 {
    // number of signal events (used to compute significance)
    Types::ETreeType tt = Types::kMaxTreeType;
@@ -281,7 +278,7 @@ void TMVA::DataLoader::AddTree( TTree* tree, const TString& className, Double_t 
 
 //_______________________________________________________________________
 void TMVA::DataLoader::AddTree( TTree* tree, const TString& className, Double_t weight, 
-                             const TCut& cut, Types::ETreeType tt )
+                                const TCut& cut, Types::ETreeType tt )
 {
    if(!tree)
       Log() << kFATAL << "Tree does not exist (empty pointer)." << Endl;
@@ -375,7 +372,7 @@ void TMVA::DataLoader::SetTree( TTree* tree, const TString& className, Double_t 
 
 //_______________________________________________________________________
 void  TMVA::DataLoader::SetInputTrees( TTree* signal, TTree* background, 
-                                    Double_t signalWeight, Double_t backgroundWeight )
+                                       Double_t signalWeight, Double_t backgroundWeight )
 {
    // define the input trees for signal and background; no cuts are applied
    AddTree( signal,     "Signal",     signalWeight,     TCut(""), Types::kMaxTreeType );
@@ -384,7 +381,7 @@ void  TMVA::DataLoader::SetInputTrees( TTree* signal, TTree* background,
 
 //_______________________________________________________________________
 void TMVA::DataLoader::SetInputTrees( const TString& datFileS, const TString& datFileB, 
-                                   Double_t signalWeight, Double_t backgroundWeight )
+                                      Double_t signalWeight, Double_t backgroundWeight )
 {
    DataInput().AddTree( datFileS, "Signal", signalWeight );
    DataInput().AddTree( datFileB, "Background", backgroundWeight );
@@ -402,7 +399,7 @@ void TMVA::DataLoader::SetInputTrees( TTree* inputTree, const TCut& SigCut, cons
 
 //_______________________________________________________________________
 void TMVA::DataLoader::AddVariable( const TString& expression, const TString& title, const TString& unit, 
-                                 char type, Double_t min, Double_t max )
+                                    char type, Double_t min, Double_t max )
 {
    // user inserts discriminating variable in data set info
    DefaultDataSetInfo().AddVariable( expression, title, unit, min, max, type ); 
@@ -410,7 +407,7 @@ void TMVA::DataLoader::AddVariable( const TString& expression, const TString& ti
 
 //_______________________________________________________________________
 void TMVA::DataLoader::AddVariable( const TString& expression, char type,
-                                 Double_t min, Double_t max )
+                                    Double_t min, Double_t max )
 {
    // user inserts discriminating variable in data set info
    DefaultDataSetInfo().AddVariable( expression, "", "", min, max, type ); 
@@ -418,7 +415,7 @@ void TMVA::DataLoader::AddVariable( const TString& expression, char type,
 
 //_______________________________________________________________________
 void TMVA::DataLoader::AddTarget( const TString& expression, const TString& title, const TString& unit, 
-                               Double_t min, Double_t max )
+                                  Double_t min, Double_t max )
 {
    // user inserts target in data set info
 
@@ -430,7 +427,7 @@ void TMVA::DataLoader::AddTarget( const TString& expression, const TString& titl
 
 //_______________________________________________________________________
 void TMVA::DataLoader::AddSpectator( const TString& expression, const TString& title, const TString& unit, 
-                                  Double_t min, Double_t max )
+                                     Double_t min, Double_t max )
 {
    // user inserts target in data set info
    DefaultDataSetInfo().AddSpectator( expression, title, unit, min, max ); 
@@ -499,8 +496,8 @@ void TMVA::DataLoader::AddCut( const TCut& cut, const TString& className )
 
 //_______________________________________________________________________
 void TMVA::DataLoader::PrepareTrainingAndTestTree( const TCut& cut, 
-                                                Int_t NsigTrain, Int_t NbkgTrain, Int_t NsigTest, Int_t NbkgTest,
-                                                const TString& otherOpt )
+                                                   Int_t NsigTrain, Int_t NbkgTrain, Int_t NsigTest, Int_t NbkgTest,
+                                                   const TString& otherOpt )
 {
    // prepare the training and test trees
    SetInputTreesFromEventAssignTrees();
@@ -550,4 +547,210 @@ void TMVA::DataLoader::PrepareTrainingAndTestTree( TCut sigcut, TCut bkgcut, con
 
    DefaultDataSetInfo().SetSplitOptions( splitOpt );
 }
+
+//______________________________________________________________________
+void TMVA::DataLoader::PrepareTrainingAndTestTree(int foldNumber, Types::ETreeType tt)
+{
+  DataInput().ClearSignalTreeList();
+  DataInput().ClearBackgroundTreeList();
+
+  TString CrossValidate = "ParameterOpt";
+
+  int numFolds = fTrainSigTree.size();
+
+  for(int i=0; i<numFolds; ++i){
+    if(CrossValidate == "PerformanceEst"){
+      if(i!=foldNumber){
+	AddTree( fTrainSigTree.at(i),     "Signal",     1.0,     TCut(""), Types::kTraining );
+	AddTree( fTrainBkgTree.at(i),     "Background", 1.0,     TCut(""), Types::kTraining );
+	AddTree( fTestSigTree.at(i),      "Signal",     1.0,     TCut(""), Types::kTraining );
+	AddTree( fTestBkgTree.at(i),      "Background", 1.0,     TCut(""), Types::kTraining );
+      }
+      else{
+	AddTree( fTrainSigTree.at(i),     "Signal",     1.0,     TCut(""), Types::kTesting );
+	AddTree( fTrainBkgTree.at(i),     "Background", 1.0,     TCut(""), Types::kTesting );
+	AddTree( fTestSigTree.at(i),      "Signal",     1.0,     TCut(""), Types::kTesting );
+	AddTree( fTestBkgTree.at(i),      "Background", 1.0,     TCut(""), Types::kTesting );
+      }
+    }
+    else if(CrossValidate == "ParameterOpt"){
+      if(tt == Types::kTraining){
+	if(i!=foldNumber){
+	  AddTree( fTrainSigTree.at(i),     "Signal",     1.0,     TCut(""), Types::kTraining );
+	  AddTree( fTrainBkgTree.at(i),     "Background", 1.0,     TCut(""), Types::kTraining );
+	}
+	else{
+	  AddTree( fTrainSigTree.at(i),     "Signal",     1.0,     TCut(""), Types::kTesting );
+	  AddTree( fTrainBkgTree.at(i),     "Background", 1.0,     TCut(""), Types::kTesting );
+	}
+      }
+      else if(tt == Types::kTesting){
+	if(i!=foldNumber){
+	  AddTree( fTestSigTree.at(i),     "Signal",     1.0,     TCut(""), Types::kTraining );
+	  AddTree( fTestBkgTree.at(i),     "Background", 1.0,     TCut(""), Types::kTraining );
+	}
+	else{
+	  AddTree( fTestSigTree.at(i),     "Signal",     1.0,     TCut(""), Types::kTesting );
+	  AddTree( fTestBkgTree.at(i),     "Background", 1.0,     TCut(""), Types::kTesting );
+	}
+      }
+    }
+  }
+
+}
+
+void TMVA::DataLoader::MakeKFoldDataSet(int numberFolds)
+{
+  
+  UInt_t nSigTrees = DataInput().GetNSignalTrees();
+  UInt_t nBkgTrees = DataInput().GetNBackgroundTrees();
+
+  if(nSigTrees == 1){
+    std::vector<TTree*> tempSigTrees = SplitSets(DataInput().SignalTreeInfo(0).GetTree(), 1, 2);
+    fTrainSigTree = SplitSets(tempSigTrees.at(0), 0, numberFolds);
+    fTestSigTree = SplitSets(tempSigTrees.at(1), 1, numberFolds);
+  }
+  if(nBkgTrees == 1){
+    std::vector<TTree*> tempBkgTrees = SplitSets(DataInput().BackgroundTreeInfo(0).GetTree(), 1, 2);
+    fTrainBkgTree = SplitSets(tempBkgTrees.at(0), 0, numberFolds);
+    fTestBkgTree = SplitSets(tempBkgTrees.at(1), 1, numberFolds);
+  }
+
+  for(UInt_t i=0; i<nSigTrees; ++i){
+    if(DataInput().SignalTreeInfo(i).GetTreeType() == Types::kTraining){
+      fTrainSigTree = SplitSets(DataInput().SignalTreeInfo(i).GetTree(), i, numberFolds);
+    }
+    else if(DataInput().SignalTreeInfo(i).GetTreeType() == Types::kTesting){
+      fTestSigTree = SplitSets(DataInput().SignalTreeInfo(i).GetTree(), i, numberFolds);
+    }
+  }
+  for(UInt_t j=0; j<nBkgTrees; ++j){
+    if(DataInput().BackgroundTreeInfo(j).GetTreeType() == Types::kTraining){
+      fTrainBkgTree = SplitSets(DataInput().BackgroundTreeInfo(j).GetTree(), j, numberFolds);
+    }
+    else if(DataInput().BackgroundTreeInfo(j).GetTreeType() == Types::kTesting){
+      fTestBkgTree = SplitSets(DataInput().BackgroundTreeInfo(j).GetTree(), j, numberFolds);
+    }
+  }
+
+  DataInput().ClearSignalTreeList();
+  DataInput().ClearBackgroundTreeList();
+
+  nSigTrees = DataInput().GetNSignalTrees();
+  nBkgTrees = DataInput().GetNBackgroundTrees();
+
+}
+
+void TMVA::DataLoader::ValidationKFoldSet(){
+  DefaultDataSetInfo().GetDataSet()->DivideTrainingSet(2);
+  DefaultDataSetInfo().GetDataSet()->MoveTrainingBlock(1, Types::kValidation, kTRUE);
+}
+
+std::vector<TTree*> TMVA::DataLoader::SplitSets(TTree * oldTree, int seedNum, int numFolds)
+{
+  std::vector<TTree*> tempTrees;
+
+  for(int l=0; l<numFolds; ++l){
+    tempTrees.push_back(oldTree->CloneTree(0));
+    tempTrees.at(l)->SetDirectory(0);
+  }
+
+  TRandom3 r(seedNum);
+
+  Long64_t nEntries = oldTree->GetEntries();
+
+  std::vector<TBranch*> branches;
+
+  //TBranch * typeBranch = oldTree->GetBranch("type");
+  //branches.push_back(typeBranch);
+  //oldTree->SetBranchAddress( "type",   &fATreeType);
+  //TBranch * weightBranch = oldTree->GetBranch("weight");
+  //branches.push_back(weightBranch);
+  //oldTree->SetBranchAddress( "weight", &fATreeWeight);
+
+  std::vector<VariableInfo>& vars = DefaultDataSetInfo().GetVariableInfos();
+  std::vector<VariableInfo>& tgts = DefaultDataSetInfo().GetTargetInfos();
+  std::vector<VariableInfo>& spec = DefaultDataSetInfo().GetSpectatorInfos();
+
+  UInt_t varsSize = vars.size();
+
+  if (!fATreeEvent) fATreeEvent = new Float_t[vars.size()+tgts.size()+spec.size()];
+  // add variables
+  for (UInt_t ivar=0; ivar<vars.size(); ivar++) {
+    TString vname = vars[ivar].GetExpression();
+    if(vars[ivar].GetExpression() != vars[ivar].GetLabel()){
+      varsSize--;
+      continue; 
+    }
+    TBranch * branch = oldTree->GetBranch(vname);
+    branches.push_back(branch);
+    oldTree->SetBranchAddress(vname, &(fATreeEvent[ivar]));
+  }
+  // add targets
+  for (UInt_t itgt=0; itgt<tgts.size(); itgt++) {
+    TString vname = tgts[itgt].GetExpression();
+    if(tgts[itgt].GetExpression() != tgts[itgt].GetLabel()){ continue; }
+    TBranch * branch = oldTree->GetBranch(vname);
+    branches.push_back(branch);
+    oldTree->SetBranchAddress( vname, &(fATreeEvent[vars.size()+itgt]));
+  }
+  // add spectators
+  for (UInt_t ispc=0; ispc<spec.size(); ispc++) {
+    TString vname = spec[ispc].GetExpression();
+    if(spec[ispc].GetExpression() != spec[ispc].GetLabel()){ continue; }
+    TBranch * branch = oldTree->GetBranch(vname);
+    branches.push_back(branch);
+    oldTree->SetBranchAddress( vname, &(fATreeEvent[vars.size()+tgts.size()+ispc]));
+  }
+
+  Long64_t foldSize = nEntries/numFolds;
+  Long64_t inSet = 0;
+
+  for(Long64_t i=0; i<nEntries; i++){
+    for(UInt_t j=0; j<vars.size(); j++){ fATreeEvent[j]=0; }
+    oldTree->GetEvent(i);
+    bool inTree = false;
+    if(inSet == foldSize*numFolds){
+      break;
+    }
+    else{
+      while(!inTree){
+	int s = r.Integer(numFolds);
+	if(tempTrees.at(s)->GetEntries()<foldSize){
+	  tempTrees.at(s)->Fill();
+	  inSet++;
+	  inTree=true;
+	}
+      }
+    }
+  }
+
+  return tempTrees;
+}
+
+//_______________________________________________________________________
+//Copy method use in VI and CV
+TMVA::DataLoader* TMVA::DataLoader::MakeCopy(TString name)
+{
+    TMVA::DataLoader* des=new TMVA::DataLoader(name);
+    DataLoaderCopy(des,this);
+    return des;
+}
+
+//_______________________________________________________________________
+void TMVA::DataLoaderCopy(TMVA::DataLoader* des, TMVA::DataLoader* src)
+{
+    //Loading Dataset from DataInputHandler for subseed
+    for( std::vector<TreeInfo>::const_iterator treeinfo=src->DataInput().Sbegin();treeinfo!=src->DataInput().Send();treeinfo++)
+    {
+      des->AddSignalTree( (*treeinfo).GetTree(), (*treeinfo).GetWeight(),(*treeinfo).GetTreeType());
+    }
+
+    for( std::vector<TreeInfo>::const_iterator treeinfo=src->DataInput().Bbegin();treeinfo!=src->DataInput().Bend();treeinfo++)
+    {
+      des->AddBackgroundTree( (*treeinfo).GetTree(), (*treeinfo).GetWeight(),(*treeinfo).GetTreeType());
+    }
+}
+
+
 

@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class TFileCollection
+\ingroup Base
 
 Class that contains a list of TFileInfo's and accumulated meta
 data information about its entries. This class is used to describe

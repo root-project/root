@@ -51,9 +51,14 @@ namespace {
   struct PadShortFunc : public MachineFunctionPass {
     static char ID;
     PadShortFunc() : MachineFunctionPass(ID)
-                   , Threshold(4), TM(nullptr), TII(nullptr) {}
+                   , Threshold(4), STI(nullptr), TII(nullptr) {}
 
     bool runOnMachineFunction(MachineFunction &MF) override;
+
+    MachineFunctionProperties getRequiredProperties() const override {
+      return MachineFunctionProperties().set(
+          MachineFunctionProperties::Property::AllVRegsAllocated);
+    }
 
     const char *getPassName() const override {
       return "X86 Atom pad short functions";
@@ -79,7 +84,7 @@ namespace {
     // VisitedBBs - Cache of previously visited BBs.
     DenseMap<MachineBasicBlock*, VisitedBBInfo> VisitedBBs;
 
-    const TargetMachine *TM;
+    const X86Subtarget *STI;
     const TargetInstrInfo *TII;
   };
 
@@ -93,24 +98,23 @@ FunctionPass *llvm::createX86PadShortFunctions() {
 /// runOnMachineFunction - Loop over all of the basic blocks, inserting
 /// NOOP instructions before early exits.
 bool PadShortFunc::runOnMachineFunction(MachineFunction &MF) {
-  const AttributeSet &FnAttrs = MF.getFunction()->getAttributes();
-  if (FnAttrs.hasAttribute(AttributeSet::FunctionIndex,
-                           Attribute::OptimizeForSize) ||
-      FnAttrs.hasAttribute(AttributeSet::FunctionIndex,
-                           Attribute::MinSize)) {
+  if (skipFunction(*MF.getFunction()))
+    return false;
+
+  if (MF.getFunction()->optForSize()) {
     return false;
   }
 
-  TM = &MF.getTarget();
-  if (!TM->getSubtarget<X86Subtarget>().padShortFunctions())
+  STI = &MF.getSubtarget<X86Subtarget>();
+  if (!STI->padShortFunctions())
     return false;
 
-  TII = TM->getSubtargetImpl()->getInstrInfo();
+  TII = STI->getInstrInfo();
 
   // Search through basic blocks and mark the ones that have early returns
   ReturnBBs.clear();
   VisitedBBs.clear();
-  findReturns(MF.begin());
+  findReturns(&MF.front());
 
   bool MadeChange = false;
 
@@ -195,8 +199,7 @@ bool PadShortFunc::cyclesUntilReturn(MachineBasicBlock *MBB,
       return true;
     }
 
-    CyclesToEnd += TII->getInstrLatency(
-        TM->getSubtargetImpl()->getInstrItineraryData(), MI);
+    CyclesToEnd += TII->getInstrLatency(STI->getInstrItineraryData(), *MI);
   }
 
   VisitedBBs[MBB] = VisitedBBInfo(false, CyclesToEnd);

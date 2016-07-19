@@ -1,6 +1,6 @@
 
 #---Define the way we want to build and what of llvm/clang/cling------------------------------------
-set(LLVM_ENABLE_WARNINGS OFF CACHE BOOL "")
+set(LLVM_ENABLE_WARNINGS ON CACHE BOOL "")
 set(LLVM_INCLUDE_TESTS OFF CACHE BOOL "")
 set(LLVM_INCLUDE_EXAMPLES OFF CACHE BOOL "")
 set(LLVM_BUILD_TOOLS OFF CACHE BOOL "")
@@ -10,15 +10,19 @@ set(LLVM_FORCE_USE_OLD_TOOLCHAIN ON CACHE BOOL "")
 # mechanism.
 set(LLVM_ENABLE_THREADS OFF CACHE BOOL "")
 if(cxx14)
-  set(LLVM_ENABLE_CXX1Y ON CACHE BOOL "")
+  set(LLVM_ENABLE_CXX1Y ON CACHE BOOL "" FORCE)
 endif()
 
 set(CMAKE_REQUIRED_QUIET 1)  # Make the configuration of LLVM quiet
 
 if(ROOT_ARCHITECTURE MATCHES linuxarm64)
   set(ROOT_CLING_TARGET "AArch64")
+elseif(ROOT_ARCHITECTURE MATCHES linuxarm)
+  set(ROOT_CLING_TARGET "ARM")
 elseif(ROOT_ARCHITECTURE MATCHES linuxppc64gcc)
   set(ROOT_CLING_TARGET "PowerPC")
+elseif(ROOT_ARCHITECTURE MATCHES linuxs390)
+  set(ROOT_CLING_TARGET "SystemZ")
 elseif(ROOT_ARCHITECTURE MATCHES linux)
   set(ROOT_CLING_TARGET "X86")
 elseif(ROOT_ARCHITECTURE MATCHES macosx)
@@ -40,8 +44,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${INTERP_ADDITIONAL_FLAGS}")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${INTERP_ADDITIONAL_FLAGS}")
 
 #---Do not transform warnings in errors-------------------------------------------------------------
-string(REPLACE "-Werror" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-string(REPLACE "-Wshadow" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+string(REPLACE "-Werror " "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+string(REPLACE "-Wshadow " "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 
 #---Build LLVM/Clang with symbol visibility=hidden--------------------------------------------------
 ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -fvisibility=hidden)
@@ -66,6 +70,7 @@ else()
   endif()
 endif()
 set(CMAKE_BUILD_TYPE ${LLVM_BUILD_TYPE})
+set(BUILD_SHARED_LIBS "NO")
 #--- Do not build cling as part of llvm.
 set(LLVM_NOCLING "YES")
 
@@ -100,11 +105,18 @@ mark_as_advanced(FORCE BUG_REPORT_URL BUILD_CLANG_FORMAT_VS_PLUGIN BUILD_SHARED_
                        GCC_INSTALL_PREFIX LIBCLANG_BUILD_STATIC TOOL_INFO_PLIST)
 mark_as_advanced(CLEAR LLVM_ENABLE_ASSERTIONS LLVM_BUILD_TYPE)
 #---Set into parent scope LLVM_VERSION --------------------------------------------------------------
-file(READ ${CMAKE_CURRENT_SOURCE_DIR}/llvm/src/configure _filestr)
-string(REGEX REPLACE ".*PACKAGE_VERSION='([0-9]+[.][0-9]+[.][0-9]+).*" "\\1" _llvm_version ${_filestr})
-set(LLVM_VERSION ${_llvm_version} PARENT_SCOPE)
+set(llvmconfigfile "${CMAKE_CURRENT_SOURCE_DIR}/llvm/src/CMakeLists.txt")
+file(READ ${llvmconfigfile} _filestr)
+foreach(versionpart LLVM_VERSION_MAJOR LLVM_VERSION_MINOR LLVM_VERSION_PATCH)
+  if(${_filestr} MATCHES "set[(](${versionpart}[^)]+)")
+    string(REGEX REPLACE " *${versionpart} ([^)]+).*" "\\1" ${versionpart} "${CMAKE_MATCH_1}")
+  else()
+    MESSAGE(FATAL_ERROR "Cannot extract LLVM version number (${versionpart}) from ${llvmconfigfile}")
+  endif()
+endforeach()
+set(LLVM_VERSION "${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}.${LLVM_VERSION_PATCH}" PARENT_SCOPE)
 
 #---Added some missing dependencies------------------------------------------------------------------
-add_dependencies(clingUtils clangCodeGen)
+add_dependencies(clingUtils clangCodeGen clangAST)
 add_dependencies(clingInterpreter clangBasic clangAST ClangDriverOptions)
 add_dependencies(clingMetaProcessor clangAST ClangDriverOptions)

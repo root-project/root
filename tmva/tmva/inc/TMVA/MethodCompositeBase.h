@@ -56,14 +56,12 @@ namespace TMVA {
                            Types::EMVA methodType,
                            const TString& methodTitle,
                            DataSetInfo& theData,
-                           const TString& theOption = "",
-                           TDirectory* theTargetDir = NULL );
+                           const TString& theOption = "" );
 
 
       MethodCompositeBase( Types::EMVA methodType,
                            DataSetInfo& dsi,
-                           const TString& weightFile,
-                           TDirectory* theBaseDir = 0 );
+                           const TString& weightFile );
 
       using MethodBase::ReadWeightsFromStream;
 
@@ -115,7 +113,7 @@ namespace TMVA {
       //the weight of every classifier used in the GetMVA method
       std::vector<Double_t>      fMethodWeight;
 
-      ClassDef(MethodCompositeBase,0)
+      ClassDef(MethodCompositeBase,0);
 
    };
 }

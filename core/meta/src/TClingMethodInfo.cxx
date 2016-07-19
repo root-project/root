@@ -32,18 +32,22 @@ compiler, not CINT.
 #include "ThreadLocalStorage.h"
 
 #include "cling/Interpreter/Interpreter.h"
+#include "cling/Interpreter/LookupHelper.h"
 #include "cling/Utils/AST.h"
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/DeclTemplate.h"
+#include "clang/AST/ExprCXX.h"
 #include "clang/AST/GlobalDecl.h"
 #include "clang/AST/Mangle.h"
 #include "clang/AST/PrettyPrinter.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/IdentifierTable.h"
+#include "clang/Sema/Lookup.h"
 #include "clang/Sema/Sema.h"
+#include "clang/Sema/Template.h"
 
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/raw_ostream.h"
@@ -248,6 +252,93 @@ int TClingMethodInfo::NDefaultArg() const
    return static_cast<int>(defaulted_params);
 }
 
+/*
+static bool HasUnexpandedParameterPack(clang::QualType QT, clang::Sema& S) {
+   if (llvm::isa<PackExpansionType>(*QT)) {
+      // We are not going to expand the pack here...
+      return true;
+   }
+   SmallVector<UnexpandedParameterPack, 4> Unexpanded;
+   S.collectUnexpandedParameterPacks (QT, Unexpanded);
+
+   return !Unexpanded.empty();
+}
+ */
+
+static void InstantiateFuncTemplateWithDefaults(clang::FunctionTemplateDecl* FTDecl,
+                                                clang::Sema& S,
+                                                const cling::LookupHelper& LH) {
+   // Force instantiation if it doesn't exist yet, by looking it up.
+   using namespace clang;
+
+   auto templateParms = FTDecl->getTemplateParameters();
+   if (templateParms->containsUnexpandedParameterPack())
+      return;
+
+   if (templateParms->getMinRequiredArguments() > 0)
+      return;
+
+   if (templateParms->size() > 0) {
+      NamedDecl *arg0 = *templateParms->begin();
+      if (arg0->isTemplateParameterPack())
+         return;
+      if (auto TTP = dyn_cast<TemplateTypeParmDecl>(*templateParms->begin())) {
+         if (!TTP->hasDefaultArgument())
+            return;
+      } else if (auto NTTP = dyn_cast<NonTypeTemplateParmDecl>(
+         *templateParms->begin())) {
+         if (!NTTP->hasDefaultArgument())
+            return;
+      } else {
+         // TemplateTemplateParmDecl, pack
+         return;
+      }
+   }
+
+   FunctionDecl *templatedDecl = FTDecl->getTemplatedDecl();
+   Decl *declCtxDecl = dyn_cast<Decl>(FTDecl->getDeclContext());
+
+   llvm::SmallVector<QualType, 8> paramTypes;
+   bool skip = false; // whether we should not look this up.
+   const ClassTemplateSpecializationDecl *ctxInstance
+      = dyn_cast<ClassTemplateSpecializationDecl>(declCtxDecl);
+   // Collect the function arguments of the templated function, substituting
+   // dependent types as possible.
+   for (const clang::ParmVarDecl *param: templatedDecl->parameters()) {
+      QualType paramType = param->getOriginalType();
+
+      // If the function type is dependent, try to resolve it through the class's
+      // template arguments. If that fails, skip this function.
+      if (ctxInstance && paramType->isDependentType()) {
+         /*if (HasUnexpandedParameterPack(paramType, S)) {
+            // We are not going to expand the pack here...
+            skip = true;
+            break;
+         }*/
+
+         MultiLevelTemplateArgumentList MLTAL(
+            ctxInstance->getTemplateInstantiationArgs());
+         Sema::InstantiatingTemplate Inst(S, SourceLocation(), templatedDecl);
+         paramType = S.SubstType(paramType, MLTAL, SourceLocation(),
+                                 templatedDecl->getDeclName());
+
+         if (paramType->isDependentType()) {
+            // Even after resolving the types through the surrounding template
+            // this argument type is still dependent: do not look it up.
+            skip = true;
+            break;
+         }
+      }
+      paramTypes.push_back(paramType);
+   }
+
+   if (!skip) {
+      LH.findFunctionProto(declCtxDecl, FTDecl->getNameAsString(),
+                           paramTypes, LH.NoDiagnostics,
+                           templatedDecl->getType().isConstQualified());
+   }
+}
+
 int TClingMethodInfo::InternalNext()
 {
 
@@ -298,10 +389,21 @@ int TClingMethodInfo::InternalNext()
 
       clang::FunctionTemplateDecl *templateDecl =
          llvm::dyn_cast<clang::FunctionTemplateDecl>(*fIter);
+
       if ( templateDecl ) {
          // SpecIterator calls clang::FunctionTemplateDecl::spec_begin
-         // which calls clang::FunctionTemplateDecl::LoadLazySpecializations
+         // which calls clang::FunctionTemplateDecl::LoadLazySpecializations.
+         // Instantiation below can also trigger deserialization.
          cling::Interpreter::PushTransactionRAII RAII(fInterp);
+
+         // If this function template can be instantiated without template
+         // arguments then it's worth having it. This commonly happens for
+         // enable_if'ed functions.
+         // Whatever this finds / instantiates will be picked up by the
+         // SpecIterator below.
+         InstantiateFuncTemplateWithDefaults(templateDecl, fInterp->getSema(),
+                                             fInterp->getLookupHelper());
+
          SpecIterator subiter(templateDecl);
          if (subiter) {
             delete fTemplateSpecIter;

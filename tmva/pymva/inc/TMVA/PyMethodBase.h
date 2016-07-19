@@ -68,15 +68,13 @@ namespace TMVA {
                    Types::EMVA methodType,
                    const TString &methodTitle,
                    DataSetInfo &dsi,
-                   const TString &theOption = "",
-                   TDirectory *theBaseDir = 0);
+                   const TString &theOption = "");
 
       // constructor used for Testing + Application of the MVA, only (no training),
       // using given weight file
       PyMethodBase(Types::EMVA methodType,
                    DataSetInfo &dsi,
-                   const TString &weightFile,
-                   TDirectory *theBaseDir = 0);
+                   const TString &weightFile);
 
       // default destructur
       virtual ~PyMethodBase();
@@ -106,10 +104,17 @@ namespace TMVA {
       // the actual "weights"
       virtual void AddWeightsXMLTo(void *parent) const = 0;
       virtual void ReadWeightsFromXML(void *wghtnode) = 0;
-      virtual void ReadWeightsFromStream(std::istream &) = 0;        // backward compatibility
+      virtual void ReadWeightsFromStream(std::istream &) = 0;        // backward compatibility      
       virtual void ReadWeightsFromStream(TFile &) {}                 // backward compatibility
 
+
+      virtual void ReadModelFromFile() = 0;
+
+      // signal/background classification response for all current set of data 
+      virtual std::vector<Double_t> GetMvaValues(Long64_t firstEvt = 0, Long64_t lastEvt = -1, Bool_t logProgress = false);
+
    protected:
+      
       PyObject *fModule;//Module to load
       PyObject *fClassifier;//Classifier object
 

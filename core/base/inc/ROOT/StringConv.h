@@ -50,9 +50,15 @@ void ToHumanReadableSize(value_type bytes,
      { "EB", "EiB" },
      { "ZB", "ZiB" },
      { "YB", "YiB" } };
-   unsigned int unit = si ? 1000 : 1024;
+   value_type unit = si ? 1000 : 1024;
    int exp = 0;
-   if (bytes > 0) {
+   if (bytes == unit) {
+      // On some 32bit platforms, the result of
+      //    (int) (std::log(bytes) / std::log(unit)
+      // in the case of bytes==unit ends up surpringly to be zero
+      // rather than one, so 'hard code' the result
+      exp = 1;
+   } else if (bytes > 0) {
       exp = std::min( (int) (std::log(bytes) / std::log(unit)),
                      (int) (sizeof(suffix) / sizeof(suffix[0]) - 1));
    }

@@ -20,9 +20,11 @@
 #ifndef LLVM_ADT_SETVECTOR_H
 #define LLVM_ADT_SETVECTOR_H
 
+#include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/SmallSet.h"
 #include <algorithm>
 #include <cassert>
+#include <utility>
 #include <vector>
 
 namespace llvm {
@@ -33,7 +35,7 @@ namespace llvm {
 /// property of a deterministic iteration order. The order of iteration is the
 /// order of insertion.
 template <typename T, typename Vector = std::vector<T>,
-                      typename Set = SmallSet<T, 16> >
+          typename Set = DenseSet<T>>
 class SetVector {
 public:
   typedef T value_type;
@@ -44,6 +46,8 @@ public:
   typedef Vector vector_type;
   typedef typename vector_type::const_iterator iterator;
   typedef typename vector_type::const_iterator const_iterator;
+  typedef typename vector_type::const_reverse_iterator reverse_iterator;
+  typedef typename vector_type::const_reverse_iterator const_reverse_iterator;
   typedef typename vector_type::size_type size_type;
 
   /// \brief Construct an empty SetVector
@@ -54,6 +58,8 @@ public:
   SetVector(It Start, It End) {
     insert(Start, End);
   }
+
+  ArrayRef<T> getArrayRef() const { return vector_; }
 
   /// \brief Determine if the SetVector is empty or not.
   bool empty() const {
@@ -85,6 +91,26 @@ public:
     return vector_.end();
   }
 
+  /// \brief Get an reverse_iterator to the end of the SetVector.
+  reverse_iterator rbegin() {
+    return vector_.rbegin();
+  }
+
+  /// \brief Get a const_reverse_iterator to the end of the SetVector.
+  const_reverse_iterator rbegin() const {
+    return vector_.rbegin();
+  }
+
+  /// \brief Get a reverse_iterator to the beginning of the SetVector.
+  reverse_iterator rend() {
+    return vector_.rend();
+  }
+
+  /// \brief Get a const_reverse_iterator to the beginning of the SetVector.
+  const_reverse_iterator rend() const {
+    return vector_.rend();
+  }
+
   /// \brief Return the last element of the SetVector.
   const T &back() const {
     assert(!empty() && "Cannot call back() on empty SetVector!");
@@ -98,7 +124,7 @@ public:
   }
 
   /// \brief Insert a new element into the SetVector.
-  /// \returns true iff the element was inserted into the SetVector.
+  /// \returns true if the element was inserted into the SetVector.
   bool insert(const value_type &X) {
     bool result = set_.insert(X).second;
     if (result)
@@ -126,6 +152,24 @@ public:
     return false;
   }
 
+  /// Erase a single element from the set vector.
+  /// \returns an iterator pointing to the next element that followed the
+  /// element erased. This is the end of the SetVector if the last element is
+  /// erased.
+  iterator erase(iterator I) {
+    const key_type &V = *I;
+    assert(set_.count(V) && "Corrupted SetVector instances!");
+    set_.erase(V);
+
+    // FIXME: No need to use the non-const iterator when built with
+    // std:vector.erase(const_iterator) as defined in C++11. This is for
+    // compatibility with non-standard libstdc++ up to 4.8 (fixed in 4.9).
+    auto NI = vector_.begin();
+    std::advance(NI, std::distance<iterator>(NI, I));
+
+    return vector_.erase(NI);
+  }
+
   /// \brief Remove items from the set vector based on a predicate function.
   ///
   /// This is intended to be equivalent to the following code, if we could
@@ -150,7 +194,6 @@ public:
     return true;
   }
 
-
   /// \brief Count the number of elements of a given key in the SetVector.
   /// \returns 0 if the element is not in the SetVector, 1 if it is.
   size_type count(const key_type &key) const {
@@ -169,7 +212,7 @@ public:
     set_.erase(back());
     vector_.pop_back();
   }
-  
+
   T LLVM_ATTRIBUTE_UNUSED_RESULT pop_back_val() {
     T Ret = back();
     pop_back();
@@ -183,6 +226,31 @@ public:
   bool operator!=(const SetVector &that) const {
     return vector_ != that.vector_;
   }
+  
+  /// \brief Compute This := This u S, return whether 'This' changed.
+  /// TODO: We should be able to use set_union from SetOperations.h, but
+  ///       SetVector interface is inconsistent with DenseSet.
+  template <class STy>
+  bool set_union(const STy &S) {
+    bool Changed = false;
+
+    for (typename STy::const_iterator SI = S.begin(), SE = S.end(); SI != SE;
+         ++SI)
+      if (insert(*SI))
+        Changed = true;
+
+    return Changed;
+  }
+
+  /// \brief Compute This := This - B
+  /// TODO: We should be able to use set_subtract from SetOperations.h, but
+  ///       SetVector interface is inconsistent with DenseSet.
+  template <class STy>
+  void set_subtract(const STy &S) {
+    for (typename STy::const_iterator SI = S.begin(), SE = S.end(); SI != SE;
+         ++SI)
+      remove(*SI);
+  }
 
 private:
   /// \brief A wrapper predicate designed for use with std::remove_if.
@@ -195,7 +263,8 @@ private:
     set_type &set_;
 
   public:
-    TestAndEraseFromSet(UnaryPredicate P, set_type &set_) : P(P), set_(set_) {}
+    TestAndEraseFromSet(UnaryPredicate P, set_type &set_)
+        : P(std::move(P)), set_(set_) {}
 
     template <typename ArgumentT>
     bool operator()(const ArgumentT &Arg) {

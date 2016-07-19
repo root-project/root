@@ -65,12 +65,10 @@ namespace TMVA {
       MethodCategory( const TString& jobName,
                       const TString& methodTitle,
                       DataSetInfo& theData,
-                      const TString& theOption = "",
-                      TDirectory* theTargetDir = NULL );
+                      const TString& theOption = "" );
 
       MethodCategory( DataSetInfo& dsi,
-                      const TString& theWeightFile,
-                      TDirectory* theTargetDir = NULL );
+                      const TString& theWeightFile );
 
       virtual ~MethodCategory( void );
 
@@ -136,7 +134,7 @@ namespace TMVA {
       friend class Reader;  // DSMTEST
       friend class MethodBoost;  // DSMTEST
 
-      ClassDef(MethodCategory,0)
+      ClassDef(MethodCategory,0);
    };
 }
 

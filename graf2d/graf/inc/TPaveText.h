@@ -13,14 +13,6 @@
 #define ROOT_TPaveText
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TPaveText                                                            //
-//                                                                      //
-// PaveText   A Pave with several lines of text.                        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #ifndef ROOT_TPave
 #include "TPave.h"
 #endif
@@ -35,10 +27,10 @@
 class TPaveText : public TPave, public TAttText {
 
 protected:
-   TString    fLabel;          //Label written at the top of the pavetext
-   Int_t      fLongest;        //Length of the longest line
-   Float_t    fMargin;         //Text margin
-   TList      *fLines;         //List of labels
+   TString    fLabel;          ///< Label written at the top of the pavetext
+   Int_t      fLongest;        ///< Length of the longest line
+   Float_t    fMargin;         ///< Text margin
+   TList      *fLines;         ///< List of labels
 
 
 public:

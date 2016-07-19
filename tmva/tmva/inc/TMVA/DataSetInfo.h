@@ -195,7 +195,7 @@ namespace TMVA {
       void                       SetDataSetManager( DataSetManager* dsm ) { fDataSetManager = dsm; } // DSMTEST
       friend class DataSetManager;  // DSMTEST (datasetmanager test)
 
-      DataSetInfo( const DataSetInfo& ) : TObject() {}
+   DataSetInfo( const DataSetInfo& ) : TObject() {}
 
       void PrintCorrelationMatrix( TTree* theTree );
 

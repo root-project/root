@@ -13,4 +13,8 @@ endif()
 if(geocad)
   add_subdirectory(geocad)
 endif()
+if(vecgeom)
+  add_subdirectory(vecgeom)
+endif()
+  
 

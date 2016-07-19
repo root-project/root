@@ -32,7 +32,6 @@ namespace llvm {
 namespace clang {
   class ASTContext;
   class ASTDeserializationListener;
-  class CodeGenerator;
   class CompilerInstance;
   class Decl;
   class DeclContext;
@@ -222,6 +221,17 @@ namespace cling {
                                        Value* V = 0,
                                        Transaction** T = 0);
 
+    ///\brief Worker function to code complete after all the mechanism
+    /// has been set up.
+    ///
+    ///\param [in] input - The input being completed.
+    ///\param [in] offset - The offset for the completion point.
+    ///
+    ///\returns Whether the operation was fully successful.
+    ///
+    CompilationResult CodeCompleteInternal(const std::string& input,
+                                           unsigned offset);
+
     ///\brief Decides whether the input line should be wrapped into a function
     /// declaration that can later be executed.
     ///
@@ -239,7 +249,8 @@ namespace cling {
     ///\param [out] input - The input to wrap.
     ///\param [out] fname - The wrapper function's name.
     ///
-    void WrapInput(std::string& input, std::string& fname);
+    void WrapInput(std::string& input, std::string& fnamem,
+                   CompilationOptions &CO);
 
     ///\brief Runs given wrapper function.
     ///
@@ -304,7 +315,7 @@ namespace cling {
     ///\param[in] llvmdir - ???
     ///\param[in] noRuntime - flag to control the presence of runtime universe
     ///
-    Interpreter(Interpreter &parentInterpreter,int argc, const char* const *argv,
+    Interpreter(const Interpreter &parentInterpreter,int argc, const char* const *argv,
                 const char* llvmdir = 0, bool noRuntime = true);
 
     virtual ~Interpreter();
@@ -468,6 +479,20 @@ namespace cling {
     ///
     CompilationResult parseForModule(const std::string& input);
 
+    ///\brief Code completes user input.
+    ///
+    /// The interface circumvents the most of the extra work necessary to
+    /// code complete code.
+    ///
+    /// @param[in] input - The input containing the string to be completed.
+    /// @param[in] cursor - The offset for the completion point.
+    /// @param[out] completions - The results for teh completion
+    ///
+    ///\returns Whether the operation was fully successful.
+    ///
+    CompilationResult codeComplete(const std::string& line, size_t& cursor,
+                                   std::vector<std::string>& completions) const;
+
     ///\brief Compiles input line, which doesn't contain statements.
     ///
     /// The interface circumvents the most of the extra work necessary to
@@ -552,12 +577,23 @@ namespace cling {
                                bool allowSharedLib = true,
                                Transaction** T = 0);
 
+    ///\brief Unloads (forgets) a transaction from AST and JITed symbols.
+    ///
+    /// If one of the declarations caused error in clang it is rolled back from
+    /// the AST. This is essential feature for the error recovery subsystem.
+    /// This is also a key entry point for the code unloading.
+    ///
+    ///\param[in] T - the transaction to unload.
+    ///
+    void unload(Transaction& T);
+
     ///\brief Unloads (forgets) given number of transactions.
     ///
     ///\param[in] numberOfTransactions - how many transactions to revert
     ///                                  starting from the last.
     ///
     void unload(unsigned numberOfTransactions);
+
     void runAndRemoveStaticDestructors();
     void runAndRemoveStaticDestructors(unsigned numberOfTransactions);
 
