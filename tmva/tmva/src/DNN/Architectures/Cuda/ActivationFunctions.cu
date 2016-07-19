@@ -29,9 +29,9 @@ void TCuda::IdentityDerivative(TCudaMatrix & A)
    dim3 blockDims = TDevice::BlockDims();
    dim3 gridDims  = TDevice::GridDims(A);
    cudaStream_t s = A.GetComputeStream();
-   identity_derivative<<<gridDims, blockDims, 0, s>>>(A.GetDataPointer(),
-                                                      (int) A.GetNrows(),
-                                                      (int) A.GetNcols());
+   ::TMVA::DNN::Cuda::IdentityDerivative<<<gridDims, blockDims, 0, s>>>(A.GetDataPointer(),
+                                                                  (int) A.GetNrows(),
+                                                                  (int) A.GetNcols());
 }
 
 //______________________________________________________________________________
@@ -40,9 +40,9 @@ void TCuda::Relu(TCudaMatrix & A)
    dim3 blockDims = TDevice::BlockDims();
    dim3 gridDims  = TDevice::GridDims(A);
    cudaStream_t s = A.GetComputeStream();
-   relu<<<gridDims, blockDims, 0, s>>>(A.GetDataPointer(),
-                                       (int) A.GetNrows(),
-                                       (int) A.GetNcols());
+   ::TMVA::DNN::Cuda::Relu<<<gridDims, blockDims, 0, s>>>(A.GetDataPointer(),
+                                                  (int) A.GetNrows(),
+                                                  (int) A.GetNcols());
 }
 
 //______________________________________________________________________________
@@ -51,10 +51,11 @@ void TCuda::ReluDerivative(TCudaMatrix & B, const TCudaMatrix & A)
    dim3 blockDims = TDevice::BlockDims();
    dim3 gridDims  = TDevice::GridDims(B);
    cudaStream_t s = A.GetComputeStream();
-   relu_derivative<<<gridDims, blockDims, 0, s>>>(B.GetDataPointer(),
-                                                  A.GetDataPointer(),
-                                                  (int) A.GetNrows(),
-                                                  (int) A.GetNcols());
+   ::TMVA::DNN::Cuda::ReluDerivative<<<gridDims, blockDims, 0, s>>>(
+       B.GetDataPointer(),
+       A.GetDataPointer(),
+       (int) A.GetNrows(),
+       (int) A.GetNcols());
 }
 
 //______________________________________________________________________________
@@ -63,9 +64,10 @@ void TCuda::Sigmoid(TCudaMatrix & A)
    dim3 blockDims = TDevice::BlockDims();
    dim3 gridDims  = TDevice::GridDims(A);
    cudaStream_t s = A.GetComputeStream();
-   sigmoid<<<gridDims, blockDims, 0, s>>>(A.GetDataPointer(),
-                                          (int) A.GetNrows(),
-                                          (int) A.GetNcols());
+   ::TMVA::DNN::Cuda::Sigmoid<<<gridDims, blockDims, 0, s>>>(
+       A.GetDataPointer(),
+       (int) A.GetNrows(),
+       (int) A.GetNcols());
 }
 
 //______________________________________________________________________________
@@ -74,10 +76,11 @@ void TCuda::SigmoidDerivative(TCudaMatrix & B, const TCudaMatrix & A)
    dim3 blockDims = TDevice::BlockDims();
    dim3 gridDims  = TDevice::GridDims(B);
    cudaStream_t s = A.GetComputeStream();
-   sigmoid_derivative<<<gridDims, blockDims, 0, s>>>(B.GetDataPointer(),
-                                                     A.GetDataPointer(),
-                                                     (int) A.GetNrows(),
-                                                     (int) A.GetNcols());
+   ::TMVA::DNN::Cuda::SigmoidDerivative<<<gridDims, blockDims, 0, s>>>(
+       B.GetDataPointer(),
+       A.GetDataPointer(),
+       (int) A.GetNrows(),
+       (int) A.GetNcols());
 }
 
 //______________________________________________________________________________
@@ -86,9 +89,10 @@ void TCuda::Tanh(TCudaMatrix & A)
    dim3 blockDims = TDevice::BlockDims();
    dim3 gridDims  = TDevice::GridDims(A);
    cudaStream_t s = A.GetComputeStream();
-   tanh<<<gridDims, blockDims, 0, s>>>(A.GetDataPointer(),
-                                       (int) A.GetNrows(),
-                                       (int) A.GetNcols());
+   ::TMVA::DNN::Cuda::Tanh<<<gridDims, blockDims, 0, s>>>(
+       A.GetDataPointer(),
+       (int) A.GetNrows(),
+       (int) A.GetNcols());
 }
 
 //______________________________________________________________________________
@@ -97,10 +101,11 @@ void TCuda::TanhDerivative(TCudaMatrix & B, const TCudaMatrix & A)
    dim3 blockDims = TDevice::BlockDims();
    dim3 gridDims  = TDevice::GridDims(B);
    cudaStream_t s = A.GetComputeStream();
-   tanh_derivative<<<gridDims, blockDims, 0, s>>>(B.GetDataPointer(),
-                                                  A.GetDataPointer(),
-                                                  (int) A.GetNrows(),
-                                                  (int) A.GetNcols());
+   ::TMVA::DNN::Cuda::TanhDerivative<<<gridDims, blockDims, 0, s>>>(
+       B.GetDataPointer(),
+       A.GetDataPointer(),
+       (int) A.GetNrows(),
+       (int) A.GetNcols());
 }
 
 //______________________________________________________________________________
@@ -109,9 +114,9 @@ void TCuda::SymmetricRelu(TCudaMatrix & A)
    dim3 blockDims = TDevice::BlockDims();
    dim3 gridDims  = TDevice::GridDims(A);
    cudaStream_t s = A.GetComputeStream();
-   symmetric_relu<<<gridDims, blockDims, 0, s>>>(A.GetDataPointer(),
-                                                 (int) A.GetNrows(),
-                                                 (int) A.GetNcols());
+   ::TMVA::DNN::Cuda::SymmetricRelu<<<gridDims, blockDims, 0, s>>>(A.GetDataPointer(),
+                                                             (int) A.GetNrows(),
+                                                             (int) A.GetNcols());
 }
 
 //______________________________________________________________________________
@@ -120,10 +125,11 @@ void TCuda::SymmetricReluDerivative(TCudaMatrix & B, const TCudaMatrix & A)
    dim3 blockDims = TDevice::BlockDims();
    dim3 gridDims  = TDevice::GridDims(B);
    cudaStream_t s = A.GetComputeStream();
-   symmetric_relu_derivative<<<gridDims, blockDims, 0, s>>>(B.GetDataPointer(),
-                                                            A.GetDataPointer(),
-                                                            (int) A.GetNrows(),
-                                                            (int) A.GetNcols());
+   ::TMVA::DNN::Cuda::SymmetricReluDerivative<<<gridDims, blockDims, 0, s>>>(
+       B.GetDataPointer(),
+       A.GetDataPointer(),
+       (int) A.GetNrows(),
+       (int) A.GetNcols());
 }
 
 //______________________________________________________________________________
@@ -132,9 +138,10 @@ void TCuda::SoftSign(TCudaMatrix & A)
    dim3 blockDims = TDevice::BlockDims();
    dim3 gridDims  = TDevice::GridDims(A);
    cudaStream_t s = A.GetComputeStream();
-   soft_sign<<<gridDims, blockDims, 0, s>>>(A.GetDataPointer(),
-                                            (int) A.GetNrows(),
-                                            (int) A.GetNcols());
+   ::TMVA::DNN::Cuda::SoftSign<<<gridDims, blockDims, 0, s>>>(
+       A.GetDataPointer(),
+       (int) A.GetNrows(),
+       (int) A.GetNcols());
 }
 
 //______________________________________________________________________________
@@ -143,10 +150,11 @@ void TCuda::SoftSignDerivative(TCudaMatrix & B, const TCudaMatrix & A)
    dim3 blockDims = TDevice::BlockDims();
    dim3 gridDims  = TDevice::GridDims(B);
    cudaStream_t s = A.GetComputeStream();
-   soft_sign_derivative<<<gridDims, blockDims, 0, s>>>(B.GetDataPointer(),
-                                                       A.GetDataPointer(),
-                                                       (int) A.GetNrows(),
-                                                       (int) A.GetNcols());
+   ::TMVA::DNN::Cuda::SoftSignDerivative<<<gridDims, blockDims, 0, s>>>(
+       B.GetDataPointer(),
+       A.GetDataPointer(),
+       (int) A.GetNrows(),
+       (int) A.GetNcols());
 }
 
 //______________________________________________________________________________
@@ -155,9 +163,10 @@ void TCuda::Gauss(TCudaMatrix & A)
    dim3 blockDims = TDevice::BlockDims();
    dim3 gridDims  = TDevice::GridDims(A);
    cudaStream_t s = A.GetComputeStream();
-   gauss<<<gridDims, blockDims, 0, s>>>(A.GetDataPointer(),
-                                        (int) A.GetNrows(),
-                                        (int) A.GetNcols());
+   ::TMVA::DNN::Cuda::Gauss<<<gridDims, blockDims, 0, s>>>(
+       A.GetDataPointer(),
+       (int) A.GetNrows(),
+       (int) A.GetNcols());
 }
 
 //______________________________________________________________________________
@@ -166,10 +175,11 @@ void TCuda::GaussDerivative(TCudaMatrix & B, const TCudaMatrix & A)
    dim3 blockDims = TDevice::BlockDims();
    dim3 gridDims  = TDevice::GridDims(B);
    cudaStream_t s = A.GetComputeStream();
-   gauss_derivative<<<gridDims, blockDims, 0, s>>>(B.GetDataPointer(),
-                                                   A.GetDataPointer(),
-                                                   (int) A.GetNrows(),
-                                                   (int) A.GetNcols());
+   ::TMVA::DNN::Cuda::GaussDerivative<<<gridDims, blockDims, 0, s>>>(
+       B.GetDataPointer(),
+       A.GetDataPointer(),
+       (int) A.GetNrows(),
+       (int) A.GetNcols());
 }
 
 } // namespace DNN

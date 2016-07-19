@@ -72,10 +72,10 @@ void TCuda::Hadamard(TCudaMatrix &B,
    dim3 blockDims = TDevice::BlockDims();
    dim3 gridDims  = TDevice::GridDims(B);
    cudaStream_t s = A.GetComputeStream();
-   hadamard<<<gridDims, blockDims, 0, s>>>(B.GetDataPointer(),
-                                           A.GetDataPointer(),
-                                           A.GetNrows(),
-                                           A.GetNcols());
+   ::TMVA::DNN::Cuda::Hadamard<<<gridDims, blockDims, 0, s>>>(B.GetDataPointer(),
+                                                              A.GetDataPointer(),
+                                                              A.GetNrows(),
+                                                              A.GetNcols());
 }
 
 //____________________________________________________________________________
@@ -86,7 +86,7 @@ CudaDouble_t TCuda::Sum(const TCudaMatrix &A)
    cudaStream_t s = A.GetComputeStream();
 
    TCudaMatrix::ResetDeviceReturn();
-   reduce_matrix<<<gridDims, blockDims, 0, s>>>(
+   ::TMVA::DNN::Cuda::ReduceMatrix<<<gridDims, blockDims, 0, s>>>(
        TCudaMatrix::GetDeviceReturnPointer(),
        A.GetDataPointer(),
        A.GetNrows(),
@@ -102,10 +102,10 @@ void TCuda::SumColumns(TCudaMatrix &B, const TCudaMatrix &A)
 
    cudaMemset(B.GetDataPointer(), 0, A.GetNcols() * sizeof(CudaDouble_t));
    cudaStream_t s = A.GetComputeStream();
-   sum_columns<<<gridDims, blockDims, 0, s>>>(B.GetDataPointer(),
-                                              A.GetDataPointer(),
-                                              A.GetNrows(),
-                                              A.GetNcols());
+   ::TMVA::DNN::Cuda::SumColumns<<<gridDims, blockDims, 0, s>>>(B.GetDataPointer(),
+                                                                A.GetDataPointer(),
+                                                                A.GetNrows(),
+                                                                A.GetNcols());
 }
 
 //____________________________________________________________________________

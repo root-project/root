@@ -109,8 +109,8 @@ void TCudaMatrix::InitializeCurandStates()
 {
    dim3 blockDims = TDevice::BlockDims();
    dim3 gridDims  = TDevice::GridDims(*this);
-   initialize_curand_states<<<gridDims, blockDims>>>(time(nullptr),
-                                                     fCurandStates);
+   ::TMVA::DNN::Cuda::InitializeCurandStates<<<gridDims, blockDims>>>(time(nullptr),
+                                                                      fCurandStates);
 
 }
 

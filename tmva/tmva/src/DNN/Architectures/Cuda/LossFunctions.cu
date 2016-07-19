@@ -31,7 +31,7 @@ CudaDouble_t TCuda::MeanSquaredError(const TCudaMatrix & Y,
     dim3 gridDims  = TDevice::GridDims(Y);
     cudaStream_t s = Y.GetComputeStream();
     TCudaMatrix::ResetDeviceReturn();
-    mean_squared_error<<<gridDims, blockDims, 0, s>>>(
+    ::TMVA::DNN::Cuda::MeanSquaredError<<<gridDims, blockDims, 0, s>>>(
         TCudaMatrix::GetDeviceReturnPointer(),
         Y.GetDataPointer(),
         output.GetDataPointer(),
@@ -48,7 +48,7 @@ void TCuda::MeanSquaredErrorGradients(TCudaMatrix & dY,
    dim3 blockDims = TDevice::BlockDims();
    dim3 gridDims  = TDevice::GridDims(Y);
    cudaStream_t s = Y.GetComputeStream();
-   mean_squared_error_gradients<<<gridDims, blockDims, 0, s>>>(
+   ::TMVA::DNN::Cuda::MeanSquaredErrorGradients<<<gridDims, blockDims, 0, s>>>(
        dY.GetDataPointer(),
        Y.GetDataPointer(),
        output.GetDataPointer(),
@@ -64,7 +64,7 @@ CudaDouble_t TCuda::CrossEntropy(const TCudaMatrix & Y,
    dim3 gridDims  = TDevice::GridDims(Y);
    TCudaMatrix::ResetDeviceReturn();
    cudaStream_t s = Y.GetComputeStream();
-   cross_entropy<<<gridDims, blockDims, 0, s>>>(
+   ::TMVA::DNN::Cuda::CrossEntropy<<<gridDims, blockDims, 0, s>>>(
        TCudaMatrix::GetDeviceReturnPointer(),
        Y.GetDataPointer(),
        output.GetDataPointer(),
@@ -81,11 +81,12 @@ void TCuda::CrossEntropyGradients(TCudaMatrix & dY,
    dim3 blockDims = TDevice::BlockDims();
    dim3 gridDims  = TDevice::GridDims(Y);
    cudaStream_t s = Y.GetComputeStream();
-   cross_entropy_gradients<<<gridDims, blockDims, 0, s>>>(dY.GetDataPointer(),
-                                                          Y.GetDataPointer(),
-                                                          output.GetDataPointer(),
-                                                          (int) Y.GetNrows(),
-                                                          (int) Y.GetNcols());
+   ::TMVA::DNN::Cuda::CrossEntropyGradients<<<gridDims, blockDims, 0, s>>>(
+       dY.GetDataPointer(),
+       Y.GetDataPointer(),
+       output.GetDataPointer(),
+       (int) Y.GetNrows(),
+       (int) Y.GetNcols());
 }
 
 } // namespace DNN

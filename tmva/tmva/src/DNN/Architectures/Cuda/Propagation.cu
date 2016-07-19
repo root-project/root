@@ -21,6 +21,7 @@
 namespace TMVA {
 namespace DNN  {
 
+
 void TCuda::MultiplyTranspose(TCudaMatrix &output,
                             const TCudaMatrix &input,
                             const TCudaMatrix &Weights)
@@ -47,7 +48,7 @@ void TCuda::AddRowWise(TCudaMatrix &Weights,
    dim3 blockDims = TDevice::BlockDims();
    dim3 gridDims  = TDevice::GridDims(Weights);
    cudaStream_t s = Weights.GetComputeStream();
-   add_row_wise<<<gridDims, blockDims, 0, s>>>(
+   ::TMVA::DNN::Cuda::AddRowWise<<<gridDims, blockDims, 0, s>>>(
        Weights.GetDataPointer(),
        theta.GetDataPointer(),
        Weights.GetNrows(),

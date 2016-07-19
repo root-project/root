@@ -21,9 +21,10 @@
 
 namespace TMVA {
 namespace DNN  {
+namespace Cuda {
 
 //____________________________________________________________________________
-__device__ CudaDouble_t atomicAdd(CudaDouble_t* address, CudaDouble_t val)
+__device__ CudaDouble_t AtomicAdd(CudaDouble_t* address, CudaDouble_t val)
 {
    unsigned long long int* address_as_ull = (unsigned long long int*)address;
    unsigned long long int old = *address_as_ull, assumed;
@@ -37,7 +38,7 @@ __device__ CudaDouble_t atomicAdd(CudaDouble_t* address, CudaDouble_t val)
 }
 
 //____________________________________________________________________________
-__device__ void reduce_sum_vertical(CudaDouble_t *result, CudaDouble_t * sdata)
+__device__ void ReduceSumVertical(CudaDouble_t *result, CudaDouble_t * sdata)
 {
    // i,j are block row and column indices.
    int i = threadIdx.y;
@@ -107,13 +108,13 @@ __device__ void reduce_sum_vertical(CudaDouble_t *result, CudaDouble_t * sdata)
    }
    __syncthreads();
    if (i == 0) {
-      atomicAdd(result + j, sdata[index]);
+      AtomicAdd(result + j, sdata[index]);
    }
    __syncthreads();
 }
 
 //____________________________________________________________________________
-__device__ void reduce_sum(CudaDouble_t *result, CudaDouble_t * sdata)
+__device__ void ReduceSum(CudaDouble_t *result, CudaDouble_t * sdata)
 {
    int tid = threadIdx.x + threadIdx.y * blockDim.x;
 
@@ -179,16 +180,16 @@ __device__ void reduce_sum(CudaDouble_t *result, CudaDouble_t * sdata)
       }
    }
    if (tid == 0) {
-       atomicAdd(result, sdata[0]);
+       AtomicAdd(result, sdata[0]);
    }
 
    __syncthreads();
 }
 
 //____________________________________________________________________________
-__global__ void add_row_wise(CudaDouble_t * W,
-                             const CudaDouble_t * theta,
-                             int m, int n)
+__global__ void AddRowWise(CudaDouble_t * W,
+                           const CudaDouble_t * theta,
+                           int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
    int j = blockDim.x * blockIdx.x + threadIdx.x;
@@ -199,7 +200,7 @@ __global__ void add_row_wise(CudaDouble_t * W,
 }
 
 //____________________________________________________________________________
-__global__ void hadamard(CudaDouble_t * B,
+__global__ void Hadamard(CudaDouble_t * B,
                          const CudaDouble_t * A,
                          int m, int n)
 {
@@ -212,8 +213,8 @@ __global__ void hadamard(CudaDouble_t * B,
 }
 
 //____________________________________________________________________________
-__global__ void identity_derivative(CudaDouble_t * A,
-                                    int m, int n)
+__global__ void IdentityDerivative(CudaDouble_t * A,
+                                   int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
    int j = blockDim.x * blockIdx.x + threadIdx.x;
@@ -224,7 +225,7 @@ __global__ void identity_derivative(CudaDouble_t * A,
 }
 
 //____________________________________________________________________________
-__global__ void relu(CudaDouble_t * A,
+__global__ void Relu(CudaDouble_t * A,
                      int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
@@ -238,8 +239,8 @@ __global__ void relu(CudaDouble_t * A,
 }
 
 //____________________________________________________________________________
-__global__ void relu_derivative(CudaDouble_t * B,
-                                const CudaDouble_t * A, int m, int n)
+__global__ void ReluDerivative(CudaDouble_t * B,
+                               const CudaDouble_t * A, int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
    int j = blockDim.x * blockIdx.x + threadIdx.x;
@@ -252,7 +253,7 @@ __global__ void relu_derivative(CudaDouble_t * B,
 }
 
 //____________________________________________________________________________
-__global__ void sigmoid(CudaDouble_t * A,
+__global__ void Sigmoid(CudaDouble_t * A,
                         int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
@@ -266,7 +267,7 @@ __global__ void sigmoid(CudaDouble_t * A,
 }
 
 //____________________________________________________________________________
-__global__ void sigmoid(CudaDouble_t * B,
+__global__ void Sigmoid(CudaDouble_t * B,
                         const CudaDouble_t * A,
                         int m, int n)
 {
@@ -280,9 +281,9 @@ __global__ void sigmoid(CudaDouble_t * B,
    }
 }
 //____________________________________________________________________________
-__global__ void sigmoid_derivative(CudaDouble_t * B,
-                                   const CudaDouble_t * A,
-                                   int m, int n)
+__global__ void SigmoidDerivative(CudaDouble_t * B,
+                                  const CudaDouble_t * A,
+                                  int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
    int j = blockDim.x * blockIdx.x + threadIdx.x;
@@ -295,8 +296,8 @@ __global__ void sigmoid_derivative(CudaDouble_t * B,
 }
 
 //____________________________________________________________________________
-__global__ void tanh(CudaDouble_t * A,
-                        int m, int n)
+__global__ void Tanh(CudaDouble_t * A,
+                     int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
    int j = blockDim.x * blockIdx.x + threadIdx.x;
@@ -309,9 +310,9 @@ __global__ void tanh(CudaDouble_t * A,
 }
 
 //____________________________________________________________________________
-__global__ void tanh_derivative(CudaDouble_t * B,
-                                   const CudaDouble_t * A,
-                                   int m, int n)
+__global__ void TanhDerivative(CudaDouble_t * B,
+                               const CudaDouble_t * A,
+                               int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
    int j = blockDim.x * blockIdx.x + threadIdx.x;
@@ -324,8 +325,8 @@ __global__ void tanh_derivative(CudaDouble_t * B,
 }
 
 //____________________________________________________________________________
-__global__ void symmetric_relu(CudaDouble_t * A,
-                               int m, int n)
+__global__ void SymmetricRelu(CudaDouble_t * A,
+                              int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
    int j = blockDim.x * blockIdx.x + threadIdx.x;
@@ -337,9 +338,9 @@ __global__ void symmetric_relu(CudaDouble_t * A,
 }
 
 //____________________________________________________________________________
-__global__ void symmetric_relu_derivative(CudaDouble_t * B,
-                                          const CudaDouble_t * A,
-                                          int m, int n)
+__global__ void SymmetricReluDerivative(CudaDouble_t * B,
+                                        const CudaDouble_t * A,
+                                        int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
    int j = blockDim.x * blockIdx.x + threadIdx.x;
@@ -351,7 +352,7 @@ __global__ void symmetric_relu_derivative(CudaDouble_t * B,
 }
 
 //____________________________________________________________________________
-__global__ void soft_sign(CudaDouble_t * A,
+__global__ void SoftSign(CudaDouble_t * A,
                           int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
@@ -365,9 +366,9 @@ __global__ void soft_sign(CudaDouble_t * A,
 }
 
 //____________________________________________________________________________
-__global__ void soft_sign_derivative(CudaDouble_t * B,
-                                     const CudaDouble_t * A,
-                                     int m, int n)
+__global__ void SoftSignDerivative(CudaDouble_t * B,
+                                   const CudaDouble_t * A,
+                                   int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
    int j = blockDim.x * blockIdx.x + threadIdx.x;
@@ -380,7 +381,7 @@ __global__ void soft_sign_derivative(CudaDouble_t * B,
 }
 
 //____________________________________________________________________________
-__global__ void gauss(CudaDouble_t * A,
+__global__ void Gauss(CudaDouble_t * A,
                       int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
@@ -394,9 +395,9 @@ __global__ void gauss(CudaDouble_t * A,
 }
 
 //____________________________________________________________________________
-__global__ void gauss_derivative(CudaDouble_t * B,
-                                 const CudaDouble_t * A,
-                                 int m, int n)
+__global__ void GaussDerivative(CudaDouble_t * B,
+                                const CudaDouble_t * A,
+                                int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
    int j = blockDim.x * blockIdx.x + threadIdx.x;
@@ -409,10 +410,10 @@ __global__ void gauss_derivative(CudaDouble_t * B,
 }
 
 //____________________________________________________________________________
-__global__ void mean_squared_error(CudaDouble_t * result,
-                                   const CudaDouble_t * Y,
-                                   const CudaDouble_t * output,
-                                   int m, int n)
+__global__ void MeanSquaredError(CudaDouble_t * result,
+                                 const CudaDouble_t * Y,
+                                 const CudaDouble_t * output,
+                                 int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
    int j = blockDim.x * blockIdx.x + threadIdx.x;
@@ -428,13 +429,13 @@ __global__ void mean_squared_error(CudaDouble_t * result,
    } else {
        sdata[tid] = 0.0;
    }
-   reduce_sum(result, sdata);
+   ReduceSum(result, sdata);
 }
 
 //____________________________________________________________________________
-__global__ void squared_sum(CudaDouble_t * result,
-                            const CudaDouble_t * A,
-                            int m, int n)
+__global__ void SquaredSum(CudaDouble_t * result,
+                           const CudaDouble_t * A,
+                           int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
    int j = blockDim.x * blockIdx.x + threadIdx.x;
@@ -449,13 +450,13 @@ __global__ void squared_sum(CudaDouble_t * result,
    } else {
        sdata[tid] = 0.0;
    }
-   reduce_sum(result, sdata);
+   ReduceSum(result, sdata);
 }
 
 //____________________________________________________________________________
-__global__ void absolute_sum(CudaDouble_t * result,
-                             const CudaDouble_t * A,
-                             int m, int n)
+__global__ void AbsoluteSum(CudaDouble_t * result,
+                            const CudaDouble_t * A,
+                            int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
    int j = blockDim.x * blockIdx.x + threadIdx.x;
@@ -469,14 +470,14 @@ __global__ void absolute_sum(CudaDouble_t * result,
    } else {
        sdata[tid] = 0.0;
    }
-   reduce_sum(result, sdata);
+   ReduceSum(result, sdata);
 }
 
 //____________________________________________________________________________
-__global__ void mean_squared_error_gradients(CudaDouble_t * dY,
-                                             const CudaDouble_t * Y,
-                                             const CudaDouble_t * output,
-                                             int m, int n)
+__global__ void MeanSquaredErrorGradients(CudaDouble_t * dY,
+                                          const CudaDouble_t * Y,
+                                          const CudaDouble_t * output,
+                                          int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
    int j = blockDim.x * blockIdx.x + threadIdx.x;
@@ -487,10 +488,10 @@ __global__ void mean_squared_error_gradients(CudaDouble_t * dY,
 }
 
 //____________________________________________________________________________
-__global__ void add_l1_regularization_gradients(CudaDouble_t * A,
-                                                const CudaDouble_t * B,
-                                                CudaDouble_t weightDecay,
-                                                int m, int n)
+__global__ void AddL1RegularizationGradients(CudaDouble_t * A,
+                                             const CudaDouble_t * B,
+                                             CudaDouble_t weightDecay,
+                                             int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
    int j = blockDim.x * blockIdx.x + threadIdx.x;
@@ -503,10 +504,10 @@ __global__ void add_l1_regularization_gradients(CudaDouble_t * A,
 }
 
 //____________________________________________________________________________
-__global__ void add_l2_regularization_gradients(CudaDouble_t * A,
-                                                const CudaDouble_t * B,
-                                                CudaDouble_t weightDecay,
-                                                int m, int n)
+__global__ void AddL2RegularizationGradients(CudaDouble_t * A,
+                                             const CudaDouble_t * B,
+                                             CudaDouble_t weightDecay,
+                                             int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
    int j = blockDim.x * blockIdx.x + threadIdx.x;
@@ -518,10 +519,10 @@ __global__ void add_l2_regularization_gradients(CudaDouble_t * A,
 }
 
 //____________________________________________________________________________
-__global__ void cross_entropy(CudaDouble_t * result,
-                              const CudaDouble_t * Y,
-                              const CudaDouble_t * output,
-                              int m, int n)
+__global__ void CrossEntropy(CudaDouble_t * result,
+                             const CudaDouble_t * Y,
+                             const CudaDouble_t * output,
+                             int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
    int j = blockDim.x * blockIdx.x + threadIdx.x;
@@ -539,14 +540,14 @@ __global__ void cross_entropy(CudaDouble_t * result,
        sdata[tid] = 0.0;
    }
 
-   reduce_sum(result, sdata);
+   ReduceSum(result, sdata);
 }
 
 //____________________________________________________________________________
-__global__ void cross_entropy_gradients(CudaDouble_t * dY,
-                                        const CudaDouble_t * Y,
-                                        const CudaDouble_t * output,
-                                        int m, int n)
+__global__ void CrossEntropyGradients(CudaDouble_t * dY,
+                                      const CudaDouble_t * Y,
+                                      const CudaDouble_t * output,
+                                      int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
    int j = blockDim.x * blockIdx.x + threadIdx.x;
@@ -561,9 +562,9 @@ __global__ void cross_entropy_gradients(CudaDouble_t * dY,
 }
 
 //____________________________________________________________________________
-__global__ void reduce_matrix(CudaDouble_t *result,
-                              const CudaDouble_t *A,
-                              int m, int n)
+__global__ void ReduceMatrix(CudaDouble_t *result,
+                             const CudaDouble_t *A,
+                             int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
    int j = blockDim.x * blockIdx.x + threadIdx.x;
@@ -576,11 +577,11 @@ __global__ void reduce_matrix(CudaDouble_t *result,
    else
        smem[tid] = 0.0;
 
-   reduce_sum(result, smem);
+   ReduceSum(result, smem);
 }
 
 //____________________________________________________________________________
-__global__ void sum_columns(CudaDouble_t *B,
+__global__ void SumColumns(CudaDouble_t *B,
                             const CudaDouble_t *A,
                             int m, int n)
 {
@@ -598,12 +599,12 @@ __global__ void sum_columns(CudaDouble_t *B,
        smem[blockIndex] = 0.0;
    }
 
-   reduce_sum_vertical(B + blockDim.x * blockIdx.x, smem);
+   ReduceSumVertical(B + blockDim.x * blockIdx.x, smem);
 }
 
 //____________________________________________________________________________
-__global__ void initialize_curand_states(unsigned long long seed,
-                                   curandState_t *state)
+__global__ void InitializeCurandStates(unsigned long long seed,
+                                       curandState_t *state)
 {
    int i   = blockDim.y * blockIdx.y + threadIdx.y;
    int j   = blockDim.x * blockIdx.x + threadIdx.x;
@@ -612,7 +613,7 @@ __global__ void initialize_curand_states(unsigned long long seed,
 }
 
 //____________________________________________________________________________
-__global__ void dropout(CudaDouble_t *A,
+__global__ void Dropout(CudaDouble_t *A,
                         int m, int n,
                         CudaDouble_t dropoutProbability,
                         curandState_t *state)
@@ -630,5 +631,6 @@ __global__ void dropout(CudaDouble_t *A,
    }
 }
 
+} // namespace Cuda
 } // namespace DNN
 } // namespace TMVA

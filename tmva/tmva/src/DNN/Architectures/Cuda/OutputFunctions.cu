@@ -28,10 +28,10 @@ void TCuda::Sigmoid(TCudaMatrix & B,
    dim3 blockDims = TDevice::BlockDims();
    dim3 gridDims  = TDevice::GridDims(B);
    cudaStream_t s = A.GetComputeStream();
-   sigmoid<<<gridDims, blockDims, 0, s>>>(B.GetDataPointer(),
-                                          A.GetDataPointer(),
-                                          (int) A.GetNrows(),
-                                          (int) A.GetNcols());
+   ::TMVA::DNN::Cuda::Sigmoid<<<gridDims, blockDims, 0, s>>>(B.GetDataPointer(),
+                                                             A.GetDataPointer(),
+                                                             (int) A.GetNrows(),
+                                                             (int) A.GetNcols());
 }
 
 } // namespace DNN
