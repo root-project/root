@@ -35,6 +35,7 @@ set(headers4 TNeuron.h TSynapse.h TActivationChooser.h TActivation.h TActivation
 	     TNeuronInputSqSum.h TNeuronInputAbs.h Types.h Ranking.h RuleFit.h RuleFitAPI.h IMethod.h MsgLogger.h
 	     VariableTransformBase.h VariableIdentityTransform.h VariableDecorrTransform.h VariablePCATransform.h 
 	     VariableGaussTransform.h VariableNormalizeTransform.h VariableRearrangeTransform.h VariableTransform.h ROCCalc.h ROCCurve.h)
+
 set(dnn_files src/DNN/Architectures/Reference.cxx
   src/DNN/Architectures/Reference/DataLoader.cxx)
 set(dnn_cuda_files src/DNN/Architectures/Cuda/ActivationFunctions.cu
@@ -42,13 +43,7 @@ set(dnn_cuda_files src/DNN/Architectures/Cuda/ActivationFunctions.cu
                    src/DNN/Architectures/Cuda/Buffers.cxx
                    src/DNN/Architectures/Cuda/CudaMatrix.cu
                    src/DNN/Architectures/Cuda/DataLoader.cu
-                   src/DNN/Architectures/Cuda/Dropout.cu
-                   src/DNN/Architectures/Cuda/Initialization.cu
-                   src/DNN/Architectures/Cuda/Kernels.cu
-                   src/DNN/Architectures/Cuda/LossFunctions.cu
-                   src/DNN/Architectures/Cuda/OutputFunctions.cu
-                   src/DNN/Architectures/Cuda/Propagation.cu
-                   src/DNN/Architectures/Cuda/Regularization.cu)
+                   src/DNN/Architectures/Cuda/Kernels.cu)
 
 #---Need to suffix each header name by TMVA/  -----------------
 foreach(hs headers1 headers2 headers3 headers4)

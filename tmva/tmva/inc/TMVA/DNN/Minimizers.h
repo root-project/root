@@ -236,6 +236,7 @@ template <typename Data_t, typename Net_t>
 
 //______________________________________________________________________________
 template<typename Architecture_t>
+<<<<<<< df80c5e79cbfefd2d3fc371c72f59f37e35bbd74
     template <typename Net_t>
     void inline TGradientDescent<Architecture_t>::Step(Net_t & net,
                                                        Matrix_t &input,
@@ -243,6 +244,13 @@ template<typename Architecture_t>
 {
     //Scalar_t loss = net.Loss(input, output);
     //fTrainingError = loss;
+=======
+template <typename Net_t>
+void inline TGradientDescent<Architecture_t>::Step(Net_t & net,
+                                                   Matrix_t &input,
+                                                   const Matrix_t &output)
+{
+>>>>>>> First implementation of profiling for Cuda devices.
     net.Forward(input);
     net.Backward(input, output);
 
@@ -396,7 +404,7 @@ bool inline TGradientDescent<Architecture_t>::HasConverged()
       fConvergenceCount = 0;
       fMinimumError     = fTestError;
    } else {
-      fConvergenceCount++;
+      fConvergenceCount += fTestInterval;
    }
 
    return (fConvergenceCount >= fConvergenceSteps);

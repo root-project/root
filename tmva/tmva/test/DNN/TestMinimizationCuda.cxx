@@ -25,5 +25,4 @@ using namespace TMVA::DNN;
 int main()
 {
    testMinimization<TCuda>();
-   
 }
