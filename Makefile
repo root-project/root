@@ -1125,7 +1125,7 @@ plugins-ios: $(ROOTEXE)
 	@$(MAKEPLUGINS)
 
 changelog:
-	@$(MAKECHANGELOG)
+	@$(MAKECHANGELOG) $(ROOT_SRCDIR)
 
 releasenotes:
 	@$(MAKERELNOTES)
