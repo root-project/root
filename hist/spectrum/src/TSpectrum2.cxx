@@ -65,14 +65,20 @@ TSpectrum2::TSpectrum2() :TNamed("Spectrum", "Miroslav Morhac peak finder")
    fPosition   = new Double_t[n];
    fPositionX  = new Double_t[n];
    fPositionY  = new Double_t[n];
+   fResolution = 1;
    fHistogram  = 0;
    fNPeaks     = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///  - maxpositions:  maximum number of peaks
+///  - resolution:    determines resolution of the neighbouring peaks
+///                   default value is 1 correspond to 3 sigma distance
+///                   between peaks. Higher values allow higher resolution
+///                   (smaller distance between peaks.
+///                   May be set later through SetResolution.
 
-TSpectrum2::TSpectrum2(Int_t maxpositions) :TNamed("Spectrum", "Miroslav Morhac peak finder")
+TSpectrum2::TSpectrum2(Int_t maxpositions, Double_t resolution) :TNamed("Spectrum", "Miroslav Morhac peak finder")
 {
    Int_t n = maxpositions;
    fMaxPeaks  = n;
@@ -81,6 +87,7 @@ TSpectrum2::TSpectrum2(Int_t maxpositions) :TNamed("Spectrum", "Miroslav Morhac 
    fPositionY = new Double_t[n];
    fHistogram = 0;
    fNPeaks    = 0;
+   SetResolution(resolution);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -271,6 +278,21 @@ Int_t TSpectrum2::Search(const TH1 * hin, Double_t sigma,
    pm->SetMarkerSize(1.3);
    ((TH1*)hin)->Draw(option);
    return npeaks;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///  resolution: determines resolution of the neighboring peaks
+///              default value is 1 correspond to 3 sigma distance
+///              between peaks. Higher values allow higher resolution
+///              (smaller distance between peaks.
+///              May be set later through SetResolution.
+
+void TSpectrum2::SetResolution(Double_t resolution)
+{
+   if (resolution > 1)
+      fResolution = resolution;
+   else
+      fResolution = 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
