@@ -749,5 +749,13 @@ void TMVA::DataLoaderCopy(TMVA::DataLoader* des, TMVA::DataLoader* src)
     }
 }
 
+//_______________________________________________________________________
+TH2* TMVA::DataLoader::GetCorrelationMatrix(const TString& className)
+{
+   //returns the correlation matrix of datasets
+   const TMatrixD * m = DefaultDataSetInfo().CorrelationMatrix(className);
+   return DefaultDataSetInfo().CreateCorrelationMatrixHist(m,
+           "CorrelationMatrix"+className, "Correlation Matrix ("+className+")");
+}
 
 
