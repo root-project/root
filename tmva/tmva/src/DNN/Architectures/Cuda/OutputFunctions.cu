@@ -22,21 +22,16 @@ namespace TMVA
 namespace DNN
 {
 
-template<bool doProfiling>
-void TCuda<doProfiling>::Sigmoid(TCudaMatrix & B,
-                                 const TCudaMatrix & A)
+void TCuda::Sigmoid(TCudaMatrix & B,
+                    const TCudaMatrix & A)
 {
    dim3 blockDims = TDevice::BlockDims();
    dim3 gridDims  = TDevice::GridDims(B);
    cudaStream_t s = A.GetComputeStream();
-
-   tick();
-   sigmoid<<<gridDims, blockDims, 0, s>>>(B.GetDataPointer(),
-                                          A.GetDataPointer(),
-                                          (int) A.GetNrows(),
-                                          (int) A.GetNcols());
-   tock(fTimings.TimeSigmoidOutput);
-
+   ::TMVA::DNN::Cuda::Sigmoid<<<gridDims, blockDims, 0, s>>>(B.GetDataPointer(),
+                                                             A.GetDataPointer(),
+                                                             (int) A.GetNrows(),
+                                                             (int) A.GetNcols());
 }
 
 } // namespace DNN

@@ -23,82 +23,65 @@ namespace TMVA {
 namespace DNN  {
 
 //______________________________________________________________________________
-template<bool doProfiling>
-CudaDouble_t TCuda<doProfiling>::L1Regularization(const TCudaMatrix & A)
+CudaDouble_t TCuda::L1Regularization(const TCudaMatrix & A)
+{
+    dim3 blockDims = TDevice::BlockDims();
+    dim3 gridDims  = TDevice::GridDims(A);
+    cudaStream_t s = A.GetComputeStream();
+    TCudaMatrix::ResetDeviceReturn();
+    ::TMVA::DNN::Cuda::AbsoluteSum<<<gridDims, blockDims, 0, s>>>(
+        TCudaMatrix::GetDeviceReturnPointer(),
+        A.GetDataPointer(),
+        (int) A.GetNrows(),
+        (int) A.GetNcols());
+    return TCudaMatrix::GetDeviceReturn();
+}
+
+//______________________________________________________________________________
+void TCuda::AddL1RegularizationGradients(TCudaMatrix & B,
+                                        const TCudaMatrix & A,
+                                        CudaDouble_t weightDecay)
+{
+   dim3 blockDims = TDevice::BlockDims();
+   dim3 gridDims  = TDevice::GridDims(B);
+   cudaStream_t s = A.GetComputeStream();
+   ::TMVA::DNN::Cuda::AddL1RegularizationGradients<<<gridDims, blockDims, 0, s>>>(
+       B.GetDataPointer(),
+       A.GetDataPointer(),
+       weightDecay,
+       (int) A.GetNrows(),
+       (int) A.GetNcols());
+}
+
+//______________________________________________________________________________
+CudaDouble_t TCuda::L2Regularization(const TCudaMatrix & A)
 {
    dim3 blockDims = TDevice::BlockDims();
    dim3 gridDims  = TDevice::GridDims(A);
    cudaStream_t s = A.GetComputeStream();
-
-   tick();
    TCudaMatrix::ResetDeviceReturn();
-   absolute_sum<<<gridDims, blockDims, 0, s>>>(
+   ::TMVA::DNN::Cuda::SquaredSum<<<gridDims, blockDims, 0, s>>>(
        TCudaMatrix::GetDeviceReturnPointer(),
        A.GetDataPointer(),
        (int) A.GetNrows(),
        (int) A.GetNcols());
-   CudaDouble_t result = TCudaMatrix::GetDeviceReturn();
-   tock(fTimings.TimeL1Regularization);
-   return result;
+   return TCudaMatrix::GetDeviceReturn();
 }
 
 //______________________________________________________________________________
-template<bool doProfiling>
-void TCuda<doProfiling>::AddL1RegularizationGradients(TCudaMatrix & B,
-                                                      const TCudaMatrix & A,
-                                                      CudaDouble_t weightDecay)
+void TCuda::AddL2RegularizationGradients(TCudaMatrix & B,
+                                        const TCudaMatrix & A,
+                                        CudaDouble_t weightDecay)
 {
    dim3 blockDims = TDevice::BlockDims();
    dim3 gridDims  = TDevice::GridDims(B);
    cudaStream_t s = A.GetComputeStream();
-
-   tick();
-   add_l1_regularization_gradients<<<gridDims, blockDims, 0, s>>>(
+   ::TMVA::DNN::Cuda::AddL2RegularizationGradients<<<gridDims, blockDims, 0, s>>>(
        B.GetDataPointer(),
        A.GetDataPointer(),
        weightDecay,
        (int) A.GetNrows(),
        (int) A.GetNcols());
-   tock(fTimings.TimeAddL1RegularizationGradients);
-}
-
-//______________________________________________________________________________
-template<bool doProfiling>
-CudaDouble_t TCuda<doProfiling>::L2Regularization(const TCudaMatrix & A)
-{
-   dim3 blockDims = TDevice::BlockDims();
-   dim3 gridDims  = TDevice::GridDims(A);
-   cudaStream_t s = A.GetComputeStream();
-
-   tick();
-   TCudaMatrix::ResetDeviceReturn();
-   squared_sum<<<gridDims, blockDims, 0, s>>>(TCudaMatrix::GetDeviceReturnPointer(),
-                                              A.GetDataPointer(),
-                                              (int) A.GetNrows(),
-                                              (int) A.GetNcols());
-   CudaDouble_t result = TCudaMatrix::GetDeviceReturn();
-   tock(fTimings.TimeL2Regularization);
-   return result;
-}
-
-//______________________________________________________________________________
-template<bool doProfiling>
-void TCuda<doProfiling>::AddL2RegularizationGradients(TCudaMatrix & B,
-                                                      const TCudaMatrix & A,
-                                                      CudaDouble_t weightDecay)
-{
-   dim3 blockDims = TDevice::BlockDims();
-   dim3 gridDims  = TDevice::GridDims(B);
-   cudaStream_t s = A.GetComputeStream();
-
-   tick();
-   add_l2_regularization_gradients<<<gridDims, blockDims, 0, s>>>(
-       B.GetDataPointer(),
-       A.GetDataPointer(),
-       weightDecay,
-       (int) A.GetNrows(),
-       (int) A.GetNcols());
-   tock(fTimings.TimeAddL2RegularizationGradients);
 }
 
 } // namspace DNN
