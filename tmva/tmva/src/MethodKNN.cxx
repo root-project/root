@@ -288,6 +288,8 @@ void TMVA::MethodKNN::Train()
 
    // create kd-tree (binary tree) structure
    MakeKNN();
+
+   ExitFromTraining();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

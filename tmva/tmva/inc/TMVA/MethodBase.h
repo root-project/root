@@ -82,6 +82,7 @@ class TDirectory;
 class TSpline;
 class TH1F;
 class TH1D;
+class TMultiGraph;
 
 namespace TMVA {
 
@@ -91,6 +92,30 @@ namespace TMVA {
    class MethodCuts;
    class MethodBoost;
    class DataSetInfo;
+
+   //////////////////////////////////////////////////////////////////////////
+   //                                                                      //
+   // IPythonInteractive                                                   //
+   //                                                                      //
+   // Helper class for tracking errors during the training                 //
+   // in Jupyter notebook. This class is needed by JsMVA                   //
+   //                                                                      //
+   //////////////////////////////////////////////////////////////////////////
+   class IPythonInteractive {
+   public:
+       IPythonInteractive();
+       ~IPythonInteractive();
+       void Init(std::vector<TString>& graphTitles);
+       void AddPoint(Double_t x, Double_t y1, Double_t y2);
+       void AddPoint(std::vector<Double_t>& dat);
+       inline TMultiGraph* Get() {return fMultiGraph;}
+       inline bool NotInitialized(){ return fNumGraphs==0;};
+   private:
+       TMultiGraph* fMultiGraph;
+       std::vector<TGraph*> fGraphs;
+       Int_t fNumGraphs;
+       Int_t fIndex;
+   };
 
    class MethodBase : virtual public IMethod, public Configurable {
 
@@ -412,6 +437,43 @@ namespace TMVA {
 
       // setter method for suppressing writing to XML and writing of standalone classes
       void                  DisableWriting(Bool_t setter){ fModelPersistence = setter?kFALSE:kTRUE; }//DEPRECATED
+
+    protected:
+      // helper variables for JsMVA
+      IPythonInteractive *fInteractive = nullptr;
+      bool fExitFromTraining = false;
+      UInt_t fIPyMaxIter = 0, fIPyCurrentIter = 0;
+
+    public:
+
+      // initializing IPythonInteractive class (for JsMVA only)
+      inline void InitIPythonInteractive(){
+        if (fInteractive) delete fInteractive;
+        fInteractive = new IPythonInteractive();
+      }
+
+      // get training errors (for JsMVA only)
+      inline TMultiGraph* GetInteractiveTrainingError(){return fInteractive->Get();}
+
+      // stop's the training process (for JsMVA only)
+      inline void ExitFromTraining(){
+        fExitFromTraining = true;
+      }
+
+      // check's if the training ended (for JsMVA only)
+      inline bool TrainingEnded(){
+        if (fExitFromTraining && fInteractive){
+          delete fInteractive;
+          fInteractive = nullptr;
+        }
+        return fExitFromTraining;
+      }
+
+      // get fIPyMaxIter
+      inline UInt_t GetMaxIter(){ return fIPyMaxIter; }
+
+      // get fIPyCurrentIter
+      inline UInt_t GetCurrentIter(){ return fIPyCurrentIter; }
 
    protected:
 

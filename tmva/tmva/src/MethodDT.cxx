@@ -389,6 +389,7 @@ void TMVA::MethodDT::Train( void )
    if (fPruneMethod != DecisionTree::kNoPruning) fTree->PruneTree();
 
    TMVA::DecisionTreeNode::fgIsTraining=false;
+   ExitFromTraining();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
