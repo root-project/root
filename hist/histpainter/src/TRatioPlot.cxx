@@ -124,8 +124,8 @@ void TRatioPlot::SetupPads() {
    SetPadMargins();
 
    // connect to the pads signal
-   fUpperPad->Connect("RangeChanged()", "TRatioPlot", this, "RangeAxisChanged()");
-   fLowerPad->Connect("RangeChanged()", "TRatioPlot", this, "RangeAxisChanged()");
+   fUpperPad->Connect("RangeAxisChanged()", "TRatioPlot", this, "RangeAxisChanged()");
+   fLowerPad->Connect("RangeAxisChanged()", "TRatioPlot", this, "RangeAxisChanged()");
 
    fUpperPad->Connect("UnZoomed()", "TRatioPlot", this, "UnZoomed()");
    fLowerPad->Connect("UnZoomed()", "TRatioPlot", this, "UnZoomed()");
@@ -472,8 +472,13 @@ Bool_t TRatioPlot::SyncPadMargins()
 
 void TRatioPlot::RangeAxisChanged()
 {
+   if (fIsUpdating) {
+      return;
+   }
 
    __("TRatioPlot::RangeAxisChanged" << " begin");
+
+   fIsUpdating = kTRUE;
 
    Double_t upFirst = fH1->GetXaxis()->GetBinLowEdge(fH1->GetXaxis()->GetFirst());
    Double_t upLast  = fH1->GetXaxis()->GetBinUpEdge(fH1->GetXaxis()->GetLast());
@@ -551,6 +556,7 @@ void TRatioPlot::RangeAxisChanged()
 //   fCanvas->Modified();
 //   fCanvas->Update();
 
+   fIsUpdating = kFALSE;
    __("TRatioPlot::RangeAxisChanged" << " end");
 }
 
