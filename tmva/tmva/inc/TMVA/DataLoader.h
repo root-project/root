@@ -49,6 +49,7 @@
 class TFile;
 class TTree;
 class TDirectory;
+class TH2;
 
 namespace TMVA {
 
@@ -170,6 +171,8 @@ namespace TMVA {
       std::vector<TTree*> SplitSets(TTree * oldTree, int seedNum, int numFolds);
 
       const DataSetInfo& GetDefaultDataSetInfo(){ return DefaultDataSetInfo(); }
+
+      TH2* GetCorrelationMatrix(const TString& className);
  
       //Copy method use in VI and CV
       DataLoader* MakeCopy(TString name);
