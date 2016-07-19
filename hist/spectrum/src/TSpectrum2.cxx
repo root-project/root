@@ -25,9 +25,21 @@
 
  These NIM papers are also available as doc or ps files from:
 
- - [SpectrumDec.ps.gz](ftp://root.cern.ch/root/SpectrumDec.ps.gz)
- - [SpectrumSrc.ps.gz](ftp://root.cern.ch/root/SpectrumSrc.ps.gz)
- - [SpectrumBck.ps.gz](ftp://root.cern.ch/root/SpectrumBck.ps.gz)
+ - [SpectrumDec.ps.gz](ftp://root.cern.ch/download/SpectrumDec.ps.gz)
+ - [SpectrumSrc.ps.gz](ftp://root.cern.ch/download/SpectrumSrc.ps.gz)
+ - [SpectrumBck.ps.gz](ftp://root.cern.ch/download/SpectrumBck.ps.gz)
+
+  Manual:
+
+ - [Spectrum.doc](ftp://root.cern.ch/download/Spectrum.doc)
+ - [Spectrum.html](ftp://root.cern.ch/download/doc/spectrum/Spectrum.html)
+ - [Spectrum.pdf](ftp://root.cern.ch/download/doc/spectrum/Spectrum.pdf)
+ - [SpectrumLetter.pdf](ftp://root.cern.ch/download/doc/spectrum/SpectrumLetter.pdf)
+ - [Spectrum.epub](ftp://root.cern.ch/download/doc/spectrum/Spectrum.epub)
+
+ See also the
+ [online documentation](https://root.cern.ch/guides/tspectrum-manual) and
+ [tutorials](https://root.cern.ch/doc/master/group__tutorial__spectrum.html).
 
  All the figures in this page were prepared using the DaqProVis
  system, Data Acquisition, Processing and Visualization system,
@@ -64,7 +76,7 @@ TSpectrum2::TSpectrum2() :TNamed("Spectrum", "Miroslav Morhac peak finder")
 
 ////////////////////////////////////////////////////////////////////////////////
 ///  - maxpositions:  maximum number of peaks
-///  - resolution:    determines resolution of the neighbouring peaks
+///  - resolution:    *NOT USED* determines resolution of the neighbouring peaks
 ///                   default value is 1 correspond to 3 sigma distance
 ///                   between peaks. Higher values allow higher resolution
 ///                   (smaller distance between peaks.
@@ -273,6 +285,7 @@ Int_t TSpectrum2::Search(const TH1 * hin, Double_t sigma,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+///  *NOT USED*
 ///  resolution: determines resolution of the neighboring peaks
 ///              default value is 1 correspond to 3 sigma distance
 ///              between peaks. Higher values allow higher resolution
