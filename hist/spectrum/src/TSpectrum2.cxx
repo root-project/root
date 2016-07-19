@@ -37,6 +37,10 @@
  - [SpectrumLetter.pdf](ftp://root.cern.ch/download/doc/spectrum/SpectrumLetter.pdf)
  - [Spectrum.epub](ftp://root.cern.ch/download/doc/spectrum/Spectrum.epub)
 
+ See also the
+ [online documentation](https://root.cern.ch/guides/tspectrum-manual) and
+ [tutorials](https://root.cern.ch/doc/master/group__tutorial__spectrum.html).
+
  All the figures in this page were prepared using the DaqProVis
  system, Data Acquisition, Processing and Visualization system,
  developed at the Institute of Physics, Slovak Academy of Sciences, Bratislava,
