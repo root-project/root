@@ -21,7 +21,9 @@
 namespace TMVA {
 namespace DNN  {
 
-void TCuda::MultiplyTranspose(TCudaMatrix &output,
+//______________________________________________________________________________
+template<bool doProfiling>
+void TCuda<doProfiling>::MultiplyTranspose(TCudaMatrix &output,
                             const TCudaMatrix &input,
                             const TCudaMatrix &Weights)
 {
@@ -31,6 +33,7 @@ void TCuda::MultiplyTranspose(TCudaMatrix &output,
    n = Weights.GetNrows();
    CudaDouble_t alpha = 1.0, beta = 0.0;
 
+   tick();
    // Compute C = beta * C + alpha * (A * B^T)
    cublasDgemm(input.GetCublasHandle(),
                CUBLAS_OP_N, CUBLAS_OP_T,
@@ -39,44 +42,55 @@ void TCuda::MultiplyTranspose(TCudaMatrix &output,
                Weights.GetDataPointer(), n,   // *B, ldb
                & beta,                           // beta
                output.GetDataPointer(), m);   // *C, ldc
+   tock(fTimings.TimeMultiplyTranspose);
 }
 
-void TCuda::AddRowWise(TCudaMatrix &Weights,
+//______________________________________________________________________________
+template<bool doProfiling>
+void TCuda<doProfiling>::AddRowWise(TCudaMatrix &Weights,
                       const TCudaMatrix &theta)
 {
    dim3 blockDims = TDevice::BlockDims();
    dim3 gridDims  = TDevice::GridDims(Weights);
    cudaStream_t s = Weights.GetComputeStream();
+
+   tick();
    add_row_wise<<<gridDims, blockDims, 0, s>>>(
        Weights.GetDataPointer(),
        theta.GetDataPointer(),
        Weights.GetNrows(),
        Weights.GetNcols());
+   tock(fTimings.TimeAddRowWise);
 }
 
-void TCuda::Backward(TCudaMatrix & activation_gradients_backward,
-                    TCudaMatrix & weight_gradients,
-                    TCudaMatrix & bias_gradients,
-                    TCudaMatrix & df,
-                    const TCudaMatrix & activation_gradients,
-                    const TCudaMatrix & weights,
-                    const TCudaMatrix & activation_backward)
+//______________________________________________________________________________
+template<bool doProfiling>
+void TCuda<doProfiling>::Backward(TCudaMatrix & activation_gradients_backward,
+                                  TCudaMatrix & weight_gradients,
+                                  TCudaMatrix & bias_gradients,
+                                  TCudaMatrix & df,
+                                  const TCudaMatrix & activation_gradients,
+                                  const TCudaMatrix & weights,
+                                  const TCudaMatrix & activation_backward)
 {
    // Compute element-wise product.
-   TCuda::Hadamard(df, activation_gradients);
+   Hadamard(df, activation_gradients);
+
+   tick();
 
    // Activation gradients.
    if (activation_gradients_backward.GetNoElements() > 0)
-       TCuda::Multiply(activation_gradients_backward, df, weights);
+      Multiply(activation_gradients_backward, df, weights);
 
    // Weight gradients.
    if (weight_gradients.GetNoElements() > 0)
-       TCuda::TransposeMultiply(weight_gradients, df, activation_backward);
+      TransposeMultiply(weight_gradients, df, activation_backward);
 
    // Bias gradients.
    if (bias_gradients.GetNoElements() > 0)
-       TCuda::SumColumns(bias_gradients, df);
+      SumColumns(bias_gradients, df);
 
+   tock(fTimings.TimeBackward);
 }
 
 } // namespace DNN

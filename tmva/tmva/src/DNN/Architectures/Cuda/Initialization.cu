@@ -23,7 +23,8 @@ namespace DNN
 {
 
 //______________________________________________________________________________
-void TCuda::InitializeGauss(TCudaMatrix & A)
+template<bool doProfiling>
+void TCuda<doProfiling>::InitializeGauss(TCudaMatrix & A)
 {
    size_t m,n;
    m = A.GetNrows();
@@ -41,7 +42,8 @@ void TCuda::InitializeGauss(TCudaMatrix & A)
 }
 
 //______________________________________________________________________________
-void TCuda::InitializeUniform(TCudaMatrix & A)
+template<bool doProfiling>
+void TCuda<doProfiling>::InitializeUniform(TCudaMatrix & A)
 {
    size_t m,n;
    m = A.GetNrows();
@@ -59,7 +61,8 @@ void TCuda::InitializeUniform(TCudaMatrix & A)
 }
 
 //______________________________________________________________________________
-void TCuda::InitializeIdentity(TCudaMatrix & A)
+template<bool doProfiling>
+void TCuda<doProfiling>::InitializeIdentity(TCudaMatrix & A)
 {
    size_t m,n;
    m = A.GetNrows();
@@ -77,7 +80,8 @@ void TCuda::InitializeIdentity(TCudaMatrix & A)
 }
 
 //______________________________________________________________________________
-void TCuda::InitializeZero(TCudaMatrix & A)
+template<bool doProfiling>
+void TCuda<doProfiling>::InitializeZero(TCudaMatrix & A)
 {
    size_t m,n;
    m = A.GetNrows();
