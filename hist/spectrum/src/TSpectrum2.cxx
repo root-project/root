@@ -72,7 +72,7 @@ TSpectrum2::TSpectrum2() :TNamed("Spectrum", "Miroslav Morhac peak finder")
 
 ////////////////////////////////////////////////////////////////////////////////
 ///  - maxpositions:  maximum number of peaks
-///  - resolution:    determines resolution of the neighbouring peaks
+///  - resolution:    *NOT USED* determines resolution of the neighbouring peaks
 ///                   default value is 1 correspond to 3 sigma distance
 ///                   between peaks. Higher values allow higher resolution
 ///                   (smaller distance between peaks.
@@ -281,6 +281,7 @@ Int_t TSpectrum2::Search(const TH1 * hin, Double_t sigma,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+///  *NOT USED*
 ///  resolution: determines resolution of the neighboring peaks
 ///              default value is 1 correspond to 3 sigma distance
 ///              between peaks. Higher values allow higher resolution
