@@ -511,6 +511,11 @@ void TMVA::MethodDNN::Train()
 
    Log() << kINFO << "Using Standard Implementation.";
 
+  if (fInteractive && fInteractive->NotInitialized()){
+    std::vector<TString> titles = {"Error on training set", "Error on test set"};
+    fInteractive->Init(titles);
+  }
+
    std::vector<Pattern> trainPattern;
    std::vector<Pattern> testPattern;
 
@@ -680,6 +685,8 @@ void TMVA::MethodDNN::Train()
          }
       }
    }
+   if (!fExitFromTraining) fIPyMaxIter = fIPyCurrentIter;
+   ExitFromTraining();
 }
 
 //______________________________________________________________________________

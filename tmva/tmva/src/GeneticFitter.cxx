@@ -113,11 +113,14 @@ Double_t TMVA::GeneticFitter::Run( std::vector<Double_t>& pars )
 
    // timing of GA
    Timer timer( 100*(fCycles), GetName() ); 
+   if (fIPyMaxIter) *fIPyMaxIter = 100*(fCycles);
    timer.DrawProgressBar( 0 );
 
    Double_t progress = 0.;
 
    for (Int_t cycle = 0; cycle < fCycles; cycle++) {
+     if (fIPyCurrentIter) *fIPyCurrentIter = 100*(cycle);
+     if (fExitFromTraining && *fExitFromTraining) break;
       GetFitterTarget().ProgressNotifier( "GA", "cycle" );
       // ---- perform series of fits to achieve best convergence
          

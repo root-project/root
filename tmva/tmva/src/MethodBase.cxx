@@ -137,6 +137,75 @@ const Int_t    NBIN_HIST_HIGH = 10000;
 #pragma warning ( disable : 4355 )
 #endif
 
+
+#include "TGraph.h"
+#include "TMultiGraph.h"
+
+////////////////////////////////////////////////////////////////////////////////
+/// standard constructur
+TMVA::IPythonInteractive::IPythonInteractive() : fMultiGraph(new TMultiGraph())
+{
+   fNumGraphs = 0;
+   fIndex = 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// standard destructor
+TMVA::IPythonInteractive::~IPythonInteractive()
+{
+   if (fMultiGraph){
+      delete fMultiGraph;
+      fMultiGraph = nullptr;
+   }
+   return;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// creating error graphs with specific names and adding them to multigraph
+void TMVA::IPythonInteractive::Init(std::vector<TString>& graphTitles)
+{
+  if (fNumGraphs!=0){
+    std::cerr << kERROR << "IPythonInteractive::Init: already initialized..." << std::endl;
+    return;
+  }
+  Int_t color = 2;
+  for(auto& title : graphTitles){
+    fGraphs.push_back( new TGraph() );
+    fGraphs.back()->SetTitle(title);
+    fGraphs.back()->SetName(title);
+    fGraphs.back()->SetFillColor(color);
+    fGraphs.back()->SetMarkerColor(color);
+    fMultiGraph->Add(fGraphs.back());
+    color      += 2;
+    fNumGraphs += 1;
+  }
+  return;
+}
+////////////////////////////////////////////////////////////////////////////////
+/// inserting points to graphs
+void TMVA::IPythonInteractive::AddPoint(Double_t x, Double_t y1, Double_t y2)
+{
+   fGraphs[0]->Set(fIndex+1);
+   fGraphs[1]->Set(fIndex+1);
+   fGraphs[0]->SetPoint(fIndex, x, y1);
+   fGraphs[1]->SetPoint(fIndex, x, y2);
+   fIndex++;
+   return;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// inserting points to graphs
+void TMVA::IPythonInteractive::AddPoint(std::vector<Double_t>& dat)
+{
+  for(Int_t i=0; i<fNumGraphs;i++){
+    fGraphs[i]->Set(fIndex+1);
+    fGraphs[i]->SetPoint(fIndex, dat[0], dat[i+1]);
+  }
+   fIndex++;
+   return;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// standard constructur
 

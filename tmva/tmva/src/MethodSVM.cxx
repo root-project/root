@@ -287,6 +287,7 @@ void TMVA::MethodSVM::ProcessOptions()
 
 void TMVA::MethodSVM::Train()
 {
+   fIPyMaxIter = fMaxIter;
    Data()->SetCurrentType(Types::kTraining);
 
    Log() << kDEBUG << "Create event vector"<< Endl;
@@ -382,6 +383,8 @@ void TMVA::MethodSVM::Train()
    Timer timer( GetName() );
    Log() << kINFO << "Sorry, no computing time forecast available for SVM, please wait ..." << Endl;
 
+   fWgSet->SetIPythonInteractive(&fExitFromTraining, &fIPyCurrentIter);
+
    fWgSet->Train(fMaxIter);
 
    Log() << kINFO << "Elapsed time: " << timer.GetElapsedTime()
@@ -391,6 +394,9 @@ void TMVA::MethodSVM::Train()
    fSupportVectors = fWgSet->GetSupportVectors();
    delete fWgSet;
    fWgSet=0;
+
+    if (!fExitFromTraining) fIPyMaxIter = fIPyCurrentIter;
+    ExitFromTraining();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

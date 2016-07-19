@@ -286,6 +286,7 @@ void TMVA::MethodCFMlpANN::Train( void )
    Int_t *nodes = new Int_t[nlayers];
    Int_t ncycles(fNcycles);
 
+
    for (Int_t i=0; i<nlayers; i++) nodes[i] = fNodes[i]; // full copy of class member
 
    if (fYNN != 0) {
@@ -305,6 +306,8 @@ void TMVA::MethodCFMlpANN::Train( void )
 #endif  
 
    delete [] nodes;
+
+   ExitFromTraining();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
