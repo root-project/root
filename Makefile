@@ -509,7 +509,6 @@ MAKEDISTSRC   := $(ROOT_SRCDIR)/build/unix/makedistsrc.sh
 MAKEVERSION   := $(ROOT_SRCDIR)/build/unix/makeversion.sh
 MAKECOMPDATA  := $(ROOT_SRCDIR)/build/unix/compiledata.sh
 MAKECHANGELOG := $(ROOT_SRCDIR)/build/unix/makechangelog.sh
-MAKEHTML      := $(ROOT_SRCDIR)/build/unix/makehtml.sh
 MAKELOGHTML   := $(ROOT_SRCDIR)/build/unix/makeloghtml.sh
 MAKEPLUGINS   := $(ROOT_SRCDIR)/build/unix/makeplugins-ios.sh
 MAKERELNOTES  := $(ROOT_SRCDIR)/build/unix/makereleasenotes.sh
@@ -1157,7 +1156,7 @@ ifneq ($(USECONFIG),FALSE)
 	fi
 endif
 	@$(MAKELOGHTML)
-	@$(MAKEHTML)
+	@$(MAKE) -C $(ROOT_SRCDIR)/documentation/doxygen
 else
 html:
 	@echo "Error: Generating the html doc requires to enable the asimage component when running configure." && exit 1
