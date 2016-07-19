@@ -142,6 +142,9 @@ Double_t TMVA::SimulatedAnnealingFitter::Run( std::vector<Double_t>& pars )
    sa.SetOptions( fMaxCalls, fInitialTemperature, fMinTemperature, fEps, fKernelTemperatureS,
                   fTemperatureScale, fAdaptiveSpeed, fTemperatureAdaptiveStep, 
                   fUseDefaultScale, fUseDefaultTemperature );
+
+  if (fIPyMaxIter) *fIPyMaxIter = fMaxCalls;
+  sa.SetIPythonInteractive(fExitFromTraining, fIPyCurrentIter);
    // minimise
    Double_t fcn = sa.Minimize( pars );
 

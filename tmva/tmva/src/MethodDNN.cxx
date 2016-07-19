@@ -492,7 +492,11 @@ void TMVA::MethodDNN::ProcessOptions()
 //______________________________________________________________________________
 void TMVA::MethodDNN::Train()
 {
-    
+  if (fInteractive && fInteractive->NotInitialized()){
+    std::vector<TString> titles = {"Error on training set", "Error on test set"};
+    fInteractive->Init(titles);
+  }
+
    fMonitoring = NULL;
    // if (!fMonitoring)
    // {
@@ -632,6 +636,8 @@ void TMVA::MethodDNN::Train()
             }
          Log () << kINFO << Endl;
         
+         fNet.SetIpythonInteractive(fInteractive, &fExitFromTraining, &fIPyMaxIter, &fIPyCurrentIter);
+
          if (ptrSettings->minimizerType () == TMVA::DNN::MinimizerType::fSteepest)
             {
                DNN::Steepest minimizer (ptrSettings->learningRate (), ptrSettings->momentum (), ptrSettings->repetitions ());
@@ -641,6 +647,8 @@ void TMVA::MethodDNN::Train()
          Log () << kINFO << Endl;
       }
    fMonitoring = 0;
+   if (!fExitFromTraining) fIPyMaxIter = fIPyCurrentIter;
+   ExitFromTraining();
 }
 
 

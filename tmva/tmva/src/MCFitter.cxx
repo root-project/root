@@ -95,6 +95,7 @@ Double_t TMVA::MCFitter::Run( std::vector<Double_t>& pars )
 
    // timing of MC
    Timer timer( fSamples, GetName() ); 
+   if (fIPyMaxIter) *fIPyMaxIter = fSamples;
    
    std::vector<Double_t> parameters;
    std::vector<Double_t> bestParameters;
@@ -122,6 +123,8 @@ Double_t TMVA::MCFitter::Run( std::vector<Double_t>& pars )
 
    // loop over all MC samples
    for (Int_t sample = 0; sample < fSamples; sample++) {
+     if (fIPyCurrentIter) *fIPyCurrentIter = sample;
+     if (fExitFromTraining && *fExitFromTraining) break;
 
       // dice the parameters
       parIt = parameters.begin();

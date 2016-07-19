@@ -144,6 +144,8 @@ void TMVA::MethodLD::Train( void )
 
    // nice output
    PrintCoefficients();
+
+   ExitFromTraining();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

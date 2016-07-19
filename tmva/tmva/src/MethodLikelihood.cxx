@@ -443,6 +443,7 @@ void TMVA::MethodLikelihood::Train( void )
       if ((*fPDFSig)[ivar]->GetSmoothedHist() != 0) (*fHistSig_smooth)[ivar] = (*fPDFSig)[ivar]->GetSmoothedHist();
       if ((*fPDFBgd)[ivar]->GetSmoothedHist() != 0) (*fHistBgd_smooth)[ivar] = (*fPDFBgd)[ivar]->GetSmoothedHist();
    }
+   ExitFromTraining();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
