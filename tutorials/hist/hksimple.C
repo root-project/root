@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_hist
+/// \notebook
 /// Illustrates the advantages of a TH1K histogram
 ///
 /// \macro_image
@@ -8,6 +9,7 @@
 /// \author Victor Perevovchikov
 
 void padRefresh(TPad *pad,int flag=0);
+
 void hksimple()
 {
 // Create a new canvas.
@@ -29,7 +31,7 @@ void hksimple()
   }
 
 // Fill histograms randomly
-  gRandom->SetSeed(12345);
+  Random->SetSeed(12345);
   Float_t px, py, pz;
   const Int_t kUPDATE = 10;
   for (Int_t i = 0; i <= 300; i++) {
@@ -43,6 +45,7 @@ void hksimple()
   for (j=0;j<3;j++) hpx[j]->Fit("gaus");
   padRefresh(c1);
 }
+
 void padRefresh(TPad *pad,int flag)
 {
   if (!pad) return;

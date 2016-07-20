@@ -303,7 +303,7 @@ void FilterTutorial()
       if (gLineString.find("\\notebook") != string::npos) {
          ExecuteCommand(StringFormat("python converttonotebook.py %s %s/notebooks/",
                                           gFileName.c_str(), gOutDir.c_str()));
-         ReplaceAll(gLineString, "\\notebook", StringFormat( "\\htmlonly <a href=\"http://nbviewer.jupyter.org/url/root.cern.ch/doc/master/notebooks/%s.nbconvert.ipynb\"> <img src=\"https://img.shields.io/badge/View-Notebook-orange.svg\" alt=\"View in nbviewer\"> </a>  \\endhtmlonly", gMacroName.c_str()));
+         ReplaceAll(gLineString, "\\notebook", StringFormat( "\\htmlonly <a href=\"http://nbviewer.jupyter.org/url/root.cern.ch/doc/master/notebooks/%s.nbconvert.ipynb\"> <img src=\"https://img.shields.io/badge/View-Notebook-orange.svg\" alt=\"View in nbviewer\" style=\"height:1em\" >  </a> <a href=\"https://swan002.cern.ch/?projurl=https://root.cern.ch/doc/master/notebooks/%s.nbconvert.ipynb\"> ", gMacroName.c_str() , gMacroName.c_str()) + string("<img src=\"https://img.shields.io/badge/Open%20in-SWAN-blue.svg\" alt=\"Open in SWAN\" style=\"height:1em\" >  </a> \\endhtmlonly"));
       }
       // \macro_output found
       if (gLineString.find("\\macro_output") != string::npos) {

@@ -3,7 +3,6 @@
 /// \notebook
 /// Draw several graphs with an exclusion zones.
 ///
-/// \notebook
 /// \macro_image
 /// \macro_code
 ///

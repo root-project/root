@@ -10,7 +10,7 @@
 void candleplotstack()
 {
    gStyle->SetTimeOffset(0);
-   TRandom *rand      = new TRandom();
+   TRandom *randnum      = new TRandom();
    TDatime *dateBegin = new TDatime(2010,1,1,0,0,0);
    TDatime *dateEnd   = new TDatime(2011,1,1,0,0,0);
    TH2I *h1 = new TH2I("h1","Machine A",12,dateBegin->Convert(),dateEnd->Convert(),1000,0,1000);
@@ -20,9 +20,9 @@ void candleplotstack()
    float Rand;
    for (int i = dateBegin->Convert(); i < dateEnd->Convert(); i+=86400*30) {
       for (int j = 0; j < 1000; j++) {
-         Rand = rand->Gaus(500+sin(i/10000000.)*100,50); h1->Fill(i,Rand);
-         Rand = rand->Gaus(500+sin(i/11000000.)*100,70); h2->Fill(i,Rand);
-         Rand = rand->Gaus(500+sin(i/11000000.)*100,90); h3->Fill(i,Rand);
+         Rand = randnum->Gaus(500+sin(i/10000000.)*100,50); h1->Fill(i,Rand);
+         Rand = randnum->Gaus(500+sin(i/11000000.)*100,70); h2->Fill(i,Rand);
+         Rand = randnum->Gaus(500+sin(i/11000000.)*100,90); h3->Fill(i,Rand);
       }
    }
 
@@ -42,5 +42,5 @@ void candleplotstack()
 
    c1->Modified();
 
-   gPad->BuildLegend(0.75,0.75,0.95,0.95,"", "f");
+   gPad->BuildLegend(0.75,0.75,0.95,0.95,"");
 }

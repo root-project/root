@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_hist
+/// \notebook
 /// Example showing how to combine the various candle plot options.
 ///
 /// \macro_image
@@ -12,13 +13,13 @@ void candleplotoption()
    TCanvas *c1 = new TCanvas("c1","Candle Presets",1200,800);
    c1->Divide(3,2);
 
-   TRandom *rand = new TRandom();
+   TRandom *randnum = new TRandom();
    TH2I *h1 = new TH2I("h1","Sin",18,0,360,300,-1.5,1.5);
    h1->GetXaxis()->SetTitle("Deg");
    float myRand;
    for (int i = 0; i < 360; i+=10) {
       for (int j = 0; j < 100; j++) {
-         myRand = rand->Gaus(sin(i*3.14/180),0.2);
+         myRand = randnum->Gaus(sin(i*3.14/180),0.2);
          h1->Fill(i,myRand);
       }
    }
