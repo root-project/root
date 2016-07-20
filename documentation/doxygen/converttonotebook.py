@@ -23,9 +23,8 @@
 # defintion. Finally, as with Python macros, relevant informatin is extracted from the header, and
 # newline comments are converted into Markdown cells (unless they are in helper functions).
 #
-# The script creates an .html version and an .ipynb version of the macro, both with the full
-# output included. The files are named:
-#     <macro>.C.html
+# The script creates an .ipynb version of the macro,  with the full output included. 
+# The files are named:
 #     <macro>.C.nbconvert.ipynb
 #
 # It is called by filter.cxx, which in turn is called by doxygen when processing any file
@@ -144,7 +143,10 @@ def cppfunction(text):
 
     match = p.search(text)
 
-    return match.group()
+    if match:
+        return match.group()
+    else:
+        return text
 
 
 def cppcomments (text):
@@ -186,7 +188,11 @@ def split(text):
     matches = p.findall(text)
 
     helpers=[]
+<<<<<<< HEAD
+    main = ""
+=======
     main = None
+>>>>>>> 7b027ae2ff56f2df3fcf95606e838ee781241259
     for match in matches:
         if name in match:
             main = match
@@ -326,7 +332,7 @@ def main(text):
 
     ## The two commands to create an html version of the notebook and a notebook with the output
     print time.time() - starttime
-    subprocess.call(["jupyter", "nbconvert","--ExecutePreprocessor.timeout=60", "--to=html", "--execute",  outdir+outname])
+    #subprocess.call(["jupyter", "nbconvert","--ExecutePreprocessor.timeout=60", "--to=html", "--execute",  outdir+outname])
     subprocess.call(["jupyter", "nbconvert","--ExecutePreprocessor.timeout=60",  "--to=notebook", "--execute",  outdir+outname])
     os.remove(outdir+outname)
 

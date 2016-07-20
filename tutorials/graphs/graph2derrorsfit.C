@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_graphs
+/// \notebook
 /// Draw and fit a TGraph2DErrors
 ///
 /// \macro_image
