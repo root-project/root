@@ -61,6 +61,8 @@ class. All details about the various painting options are given in this class.
   - The TGraph constructors do not have the TGraph title and name as parameters.
     A TGraph has the default title and name "Graph". To change the default title
     and name `SetTitle` and `SetName` should be called on the TGraph after its creation.
+    TGraph was a light weight object to start with, like TPolyline or TPolyMarker.
+    That’s why it did not have any title and name parameters in the constructors.
 
 The picture below gives an example:
 Begin_Macro(source)

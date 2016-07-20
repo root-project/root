@@ -69,7 +69,7 @@ Note that in any of these three cases, `SetPoint()` can be used to change a data
 point or add a new one. If the data point index (`i`) is greater than the
 current size of the internal arrays, they are automatically extended.
 
-The TGraph2D constructors do not have the TGraph2D title and name as parameters.
+Like TGraph the TGraph2D constructors do not have the TGraph2D title and name as parameters.
 A TGraph2D has the default title and name "Graph2D". To change the default title
 and name `SetTitle` and `SetName` should be called on the TGraph2D after its creation.
 
