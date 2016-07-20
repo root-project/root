@@ -511,10 +511,10 @@ void TMVA::MethodDNN::Train()
 
    Log() << kINFO << "Using Standard Implementation.";
 
-  if (fInteractive && fInteractive->NotInitialized()){
-    std::vector<TString> titles = {"Error on training set", "Error on test set"};
-    fInteractive->Init(titles);
-  }
+   if (fInteractive && fInteractive->NotInitialized()){
+      std::vector<TString> titles = {"Error on training set", "Error on test set"};
+      fInteractive->Init(titles);
+   }
 
    std::vector<Pattern> trainPattern;
    std::vector<Pattern> testPattern;

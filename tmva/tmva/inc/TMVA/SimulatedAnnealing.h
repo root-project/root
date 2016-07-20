@@ -124,8 +124,8 @@ namespace TMVA {
       Double_t fProgress;
 
       // variables for JsMVA
-      UInt_t *fIPyCurrentIter=nullptr;
-      bool * fExitFromTraining;
+      UInt_t *fIPyCurrentIter = nullptr;
+      bool * fExitFromTraining = nullptr;
 
       ClassDef(SimulatedAnnealing,0);  // Base class for Simulated Annealing fitting
    };

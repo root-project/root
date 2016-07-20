@@ -88,8 +88,8 @@ namespace TMVA {
       mutable MsgLogger*          fLogger;      //! message logger
       
       // variables for JsMVA
-      UInt_t *fIPyCurrentIter=nullptr;
-      bool * fExitFromTraining;
+      UInt_t *fIPyCurrentIter = nullptr;
+      bool * fExitFromTraining = nullptr;
 
       void SetIndex( TMVA::SVEvent* );
    };
