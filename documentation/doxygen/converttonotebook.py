@@ -176,14 +176,12 @@ def cppcomments (text):
 
 def split(text):
     """
-    Splits the text string into main, helpers, and rest. main in the main function, i.e. the function that
-    has the same name as the macro file. Headers is a list of strings, each a helper function, i.e. any
+    Splits the text string into main, helpers, and rest. main is the main function, i.e. the function that
+    has the same name as the macro file. Helpers is a list of strings, each a helper function, i.e. any
     other function that is not the main funciton. Finally, rest is a string containing any top-level
     code outside of any function. Intended for C++ files only.
     """
-    p = re.compile(r'^void\s\w*\(.*?\).*?\{.*?^\}|^int\s\w*\(.*?\).*?\{.*?^\}|^string\s\w*\(.*?\).*?\{.*?^\}|\
-    double\s\w*\(.*?\).*?\{.*?^\}|^float\s\w*\(.*?\).*?\{.*?^\}|^char\s\w*\(.*?\).*?\{.*?^\}',
-     flags = re.DOTALL | re.MULTILINE)
+    p = re.compile(r'^void\s\w*\(.*?\).*?\{.*?^\}|^int\s\w*\(.*?\).*?\{.*?^\}|^string\s\w*\(.*?\).*?\{.*?^\}|double\s\w*\(.*?\).*?\{.*?^\}|^float\s\w*\(.*?\).*?\{.*?^\}|^char\s\w*\(.*?\).*?\{.*?^\}|^TCanvas\s\*\w*\(.*?\).*?\{.*?^\}|^TString\s\w*\(.*?\).*?\{.*?^\}|^Double_t\s\w*\(.*?\).*?\{.*?^\}', flags = re.DOTALL | re.MULTILINE)
 
     matches = p.findall(text)
 
@@ -204,6 +202,27 @@ def split(text):
     rest = rest.rstrip() #remove newlines at the end of string
 
     return main, helpers, rest
+
+def processmain(text):
+    """
+    """
+    addition = ''
+    keepfunction = False
+    
+
+    regex = re.compile(r'(?<=\().*?(?=\))',flags = re.DOTALL | re.MULTILINE)
+    arguments = regex.search(text)
+    print arguments.group()
+    if text.startswith("TCanvas") or len(arguments.group())>3: 
+        keepfunction = True
+        p = re.compile(r'(?<=(?<=int\s)|(?<=void\s)|(?<=string\s)|(?<=double\s)|(?<=float\s)|(?<=char\s)|(?<=TCanvas\s)).*?(?=\s?\()',flags = re.DOTALL | re.MULTILINE)
+
+        match = p.search(text)
+        functionname=match.group()
+        addition = "\n# <markdowncell> \n# Call the main function \n# <codecell>\n%s()" %functionname
+        
+    return text, addition, keepfunction 
+
 
 #-------------------------------------
 #----- Preliminary definitions--------
@@ -244,7 +263,7 @@ elif extension in ("C", "c", "cpp", "C++", "cxx"):
     text, description, author, notebook = cppheader(text)
 
 
-def main(text):
+def mainfunction(text):
     """
     Main function. Calls all other functions, depending on whether the macro input is in python or c++.
     It adds the header information. Also, it adds a cell that draws all canvases. The working text is
@@ -255,7 +274,9 @@ def main(text):
     ## Modify text from macros to suit a notebook
     if extension in ("C", "c", "cpp", "C++", "cxx") :
         main, helpers, rest = split(text)
-        main = cppcomments(unindenter(cppfunction(main))) # Remove function, Unindent, and convert comments to Markdown cells
+        main, addition, keepfunction = processmain(main)
+        if not keepfunction:
+            main = cppcomments(unindenter(cppfunction(main))) # Remove function, Unindent, and convert comments to Markdown cells
         rest = cppcomments(rest) # Convert top level code comments to Markdown cells
 
         ## Construct text by starting wwith top level code, then the helper functions, and finally the main function.
@@ -264,8 +285,11 @@ def main(text):
             text+= "\n# <markdowncell>\n A helper function is created: \n# <codecell>\n%%cpp -d\n"
             text+=helper
         text+="\n# <codecell>\n"
+        if keepfunction:
+            text+="%%cpp -d\n"
         text+=main
-
+        if addition:
+            text+=addition
     if extension == "py":
         text = pythoncomments(text) # Convert comments into Markdown cells
 
@@ -337,7 +361,7 @@ def main(text):
 os.environ["DYLD_LIBRARY_PATH"] = os.environ["ROOTSYS"] + "/lib"
 
 if notebook and extension in ("C", "c", "cpp", "C++", "cxx", "py"):
-    main(text)
+    mainfunction(text)
     print time.time() - starttime
 else:
     pass

@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_hist
+/// \notebook
 /// Example of bar charts with 1-d histograms.
 ///
 /// \macro_image

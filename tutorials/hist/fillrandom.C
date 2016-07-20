@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_hist
+/// \notebook
 /// Fill a 1-D histogram from a parametric function.
 ///
 /// \macro_image
