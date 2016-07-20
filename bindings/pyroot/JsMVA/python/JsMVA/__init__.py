@@ -5,5 +5,4 @@ def loadExtensions():
     extMgr = ExtensionManager(ip)
     extMgr.load_extension("JsMVA.JsMVAMagic")
 
-
-loadExtensions();
+loadExtensions()

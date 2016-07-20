@@ -14,6 +14,7 @@ from ipywidgets import widgets
 from threading import Thread
 import time
 from string import Template
+import types
 
 
 ## Getting method object from factory
@@ -438,9 +439,9 @@ def DrawDecisionTree(fac, datasetName, methodName):
     container = widgets.HBox([label,treeSelector, drawTree])
     display(container)
 
-## Rewrites the TMVA::Factory::TrainAllMethods function. This function provides interactive training.
+## Rewrite function for TMVA::Factory::TrainAllMethods. This function provides interactive training.
 # @param fac the factory object pointer
-def __TrainAllMethods(fac):
+def ChangeTrainAllMethods(fac):
     clear_output()
     #stop button
     button = """
@@ -591,9 +592,87 @@ def __TrainAllMethods(fac):
             t.join()
     return
 
+## Get's special parameters from kwargs and converts to positional parameter
+def __ConvertKwargsToArgs(positionalArgumentsToNamed, *args, **kwargs):
+    # args[0] = self
+    args = list(args)
+    idx = 0
+    PositionalArgsEnded = False
+    for argName in positionalArgumentsToNamed:
+        if not PositionalArgsEnded:
+            if argName in kwargs:
+                if (idx+1)!=len(args):
+                    raise AttributeError
+                PositionalArgsEnded = True
+            else:
+                idx += 1
+        if PositionalArgsEnded and argName not in kwargs:
+            raise AttributeError
+        if argName in kwargs:
+            args.append(kwargs[argName])
+            del kwargs[argName]
+    args = tuple(args)
+    return (args, kwargs)
 
-ROOT.TMVA.MethodBase.GetInteractiveTrainingError._threaded = True
-ROOT.TMVA.MethodBase.ExitFromTraining._threaded = True
-ROOT.TMVA.MethodBase.TrainingEnded._threaded = True
-ROOT.TMVA.MethodBase.TrainMethod._threaded = True
-ROOT.TMVA.Factory.TrainAllMethods = __TrainAllMethods
+## Converts object to TMVA style option string
+def __ProcessParameters(optStringStartIndex, *args, **kwargs):
+    originalFunction = None
+    if optStringStartIndex!=-10:
+        originalFunction = kwargs["originalFunction"]
+        del kwargs["originalFunction"]
+    OptionStringPassed = False
+    if (len(args)-1) == optStringStartIndex:
+        opt = args[optStringStartIndex] + ":"
+        tmp = list(args)
+        del tmp[optStringStartIndex]
+        args = tuple(tmp)
+        OptionStringPassed = True
+    else:
+        opt = ""
+    for key in kwargs:
+        if type(kwargs[key]) == types.BooleanType:
+            if kwargs[key] == True:
+                opt += key + ":"
+            else:
+                opt += "!" + key + ":"
+        else:
+            opt += key + "=" + str(kwargs[key]) + ":"
+    tmp = list(args)
+    if OptionStringPassed or len(kwargs)>0:
+        tmp.append( opt[:-1] )
+    return ( originalFunction, tuple(tmp) )
+
+## Rewrite the constructor of TMVA::Factory
+def ChangeCallOriginal__init__(*args,  **kwargs):
+    try:
+        args, kwargs = __ConvertKwargsToArgs(["JobName", "TargetFile"], *args, **kwargs)
+    except AttributeError:
+        try:
+            args, kwargs = __ConvertKwargsToArgs(["JobName"], *args, **kwargs)
+        except AttributeError:
+            raise AttributeError
+    originalFunction, args = __ProcessParameters(3, *args, **kwargs)
+    return originalFunction(*args)
+
+## Rewrite the constructor of TMVA::Factory
+def ChangeCallOriginalBookMethod(*args,  **kwargs):
+    compositeOpts = False
+    composite = False
+    if "Composite" in kwargs:
+        composite = kwargs["Composite"]
+        del kwargs["Composite"]
+        if "CompositeOptions" in kwargs:
+            compositeOpts = kwargs["CompositeOptions"]
+            del kwargs["CompositeOptions"]
+    args, kwargs = __ConvertKwargsToArgs(["DataLoader", "Method", "MethodTitle"], *args, **kwargs)
+    originalFunction, args = __ProcessParameters(4, *args, **kwargs)
+    if composite!=False:
+        args = list(args)
+        args.append(composite)
+        args = tuple(args)
+    if compositeOpts!=False:
+        o, compositeOptStr = __ProcessParameters(-10, **compositeOpts)
+        args = list(args)
+        args.append(compositeOptStr[0])
+        args = tuple(args)
+    return originalFunction(*args)

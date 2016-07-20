@@ -17,6 +17,12 @@ import Factory
 # to TMVA::Factory, TMVA::DataLoader
 class functions:
 
+    ## Threaded functions
+    ThreadedFunctions = {
+        "MethodBase": ["GetInteractiveTrainingError", "ExitFromTraining", "TrainingEnded", "TrainMethod",
+                       "GetMaxIter", "GetCurrentIter"]
+    }
+
     ## The method inserter function
     # @param target which class to insert
     # @param source module which contains the methods to insert
@@ -27,6 +33,24 @@ class functions:
             if hasattr(target, arg):
                 continue
             setattr(target, arg, getattr(source, arg))
+
+    ## This method change TMVA methods with new methods
+    # @param target which class to insert
+    # @param source module which contains the methods to insert
+    # @param args list of methods to insert
+    @staticmethod
+    def __changeMethod(target, source, *args):
+        def rewriter(originalFunction, newFunction):
+            def wrapper(*args, **kwargs):
+                kwargs["originalFunction"] = originalFunction
+                return newFunction(*args, **kwargs)
+            return wrapper
+        for arg in args:
+            if arg.find("CallOriginal")!=-1:
+                originalName = arg.replace("Change", "").replace("CallOriginal", "")
+                setattr(target, originalName, rewriter(getattr(target, originalName), getattr(source, arg)))
+            else:
+                setattr(target, arg.replace("Change", ""), getattr(source, arg))
 
     ## The method removes inserted functions from class
     # @param target from which class to remove functions
@@ -54,6 +78,11 @@ class functions:
     def register():
         functions.__register(ROOT.TMVA.DataLoader, DataLoader, *functions.__getMethods(DataLoader, "Draw"))
         functions.__register(ROOT.TMVA.Factory,    Factory,    *functions.__getMethods(Factory,    "Draw"))
+        functions.__changeMethod(ROOT.TMVA.Factory,    Factory,    *functions.__getMethods(Factory,    "Change"))
+        functions.__changeMethod(ROOT.TMVA.DataLoader, DataLoader, *functions.__getMethods(DataLoader, "Change"))
+        for key in functions.ThreadedFunctions:
+            for func in functions.ThreadedFunctions[key]:
+                setattr(getattr(getattr(ROOT.TMVA, key), func), "_threaded", True)
 
     ## This function will remove all functions which name contains "Draw" from TMVA.DataLoader and TMVA.Factory
     # if the function was inserted from DataLoader and Factory modules
@@ -65,9 +94,8 @@ class functions:
 
 ## Class for creating the output scripts and inserting them to cell output
 class JsDraw:
-    #__jsMVASourceDir = "https://rawgit.com/qati/GSOC16/master/src/js"
     ## String containing the link to JavaScript files
-    __jsMVASourceDir = "http://localhost:8888/notebooks/code/GSOC/wd/src/js"
+    __jsMVASourceDir = "https://rawgit.com/qati/GSOC16/master/src/js"
 
     ## Drawing are sizes
     jsCanvasWidth   = 800
