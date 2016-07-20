@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_hist
+/// \notebook
 /// Demo of Timers.
 ///
 /// Simple example illustrating how to use the C++ interpreter
@@ -12,14 +13,14 @@
 ///
 /// \author Rene Brun
 
-Float_t ratio;
+Float_t ratioratio;
 TSlider *slider;
 TCanvas *c1;
 
 void hsumUpdate()
 {
 // called when Timer times out
-   if (slider) slider->SetRange(0, ::ratio);
+   if (slider) slider->SetRange(0, ::ratioratio);
    c1->Modified();
    c1->Update();
 }
@@ -58,7 +59,7 @@ void hsumTimer(Int_t nfill=100000)
   Float_t xs1, xs2, xmain;
   gRandom->SetSeed();
   for (Int_t i=0; i<nfill; i++) {
-     ::ratio = Float_t(i)/Float_t(nfill);
+     ::ratioratio = Float_t(i)/Float_t(nfill);
      if (gSystem->ProcessEvents()) break;
      xmain = gRandom->Gaus(-1,1.5);
      xs1   = gRandom->Gaus(-0.5,0.5);

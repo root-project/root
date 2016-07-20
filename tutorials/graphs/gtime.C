@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_graphs
+/// \notebook
 /// Example of TGraphTime.
 ///
 /// \macro_image

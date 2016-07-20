@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_graphs
+/// \notebook
 /// Examples of use of the spline classes.
 ///
 /// \macro_image
@@ -7,7 +8,7 @@
 ///
 /// \author Federico Carminati
 
-void splines_test (Int_t np=23, Double_t a=-0.5, Double_t b=31)
+void splines_test(Int_t np=23, Double_t a=-0.5, Double_t b=31)
 {
   // array of points
   Double_t *xx=0, *yy=0;

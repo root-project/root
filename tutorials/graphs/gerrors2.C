@@ -1,8 +1,8 @@
 /// \file
 /// \ingroup tutorial_graphs
+/// \notebook
 /// Draw two graphs with error bars
 ///
-/// \notebook
 /// \macro_image
 /// \macro_code
 ///
