@@ -188,11 +188,7 @@ def split(text):
     matches = p.findall(text)
 
     helpers=[]
-<<<<<<< HEAD
     main = ""
-=======
-    main = None
->>>>>>> 7b027ae2ff56f2df3fcf95606e838ee781241259
     for match in matches:
         if name in match:
             main = match
