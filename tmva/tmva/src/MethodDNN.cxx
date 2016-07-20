@@ -636,7 +636,7 @@ void TMVA::MethodDNN::Train()
             }
          Log () << kINFO << Endl;
         
-         fNet.SetIpythonInteractive(fInteractive, &fExitFromTraining, &fIPyMaxIter, &fIPyCurrentIter);
+         if (fInteractive) fNet.SetIpythonInteractive(fInteractive, &fExitFromTraining, &fIPyMaxIter, &fIPyCurrentIter);
 
          if (ptrSettings->minimizerType () == TMVA::DNN::MinimizerType::fSteepest)
             {

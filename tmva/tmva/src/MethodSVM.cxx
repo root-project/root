@@ -383,7 +383,7 @@ void TMVA::MethodSVM::Train()
    Timer timer( GetName() );
    Log() << kINFO << "Sorry, no computing time forecast available for SVM, please wait ..." << Endl;
 
-   fWgSet->SetIPythonInteractive(&fExitFromTraining, &fIPyCurrentIter);
+   if (fInteractive) fWgSet->SetIPythonInteractive(&fExitFromTraining, &fIPyCurrentIter);
 
    fWgSet->Train(fMaxIter);
 

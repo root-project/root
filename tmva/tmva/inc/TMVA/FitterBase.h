@@ -97,8 +97,8 @@ namespace TMVA {
       TString                             fClassName;    // remove TMVA:: from TObject name
 
       // variables needed by JsMVA
-      UInt_t *fIPyCurrentIter=nullptr, *fIPyMaxIter=nullptr;
-      bool* fExitFromTraining;
+      UInt_t *fIPyCurrentIter = nullptr, *fIPyMaxIter = nullptr;
+      bool* fExitFromTraining = nullptr;
 
       ClassDef(FitterBase,0); // Baseclass for fitters
    };

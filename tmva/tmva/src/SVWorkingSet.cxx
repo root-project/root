@@ -391,7 +391,7 @@ void TMVA::SVWorkingSet::Train(UInt_t nMaxIter)
 
    while ((numChanged > 0) || (examineAll > 0)) {
      if (fIPyCurrentIter) *fIPyCurrentIter = numit;
-     if (*fExitFromTraining) break;
+     if (fExitFromTraining && *fExitFromTraining) break;
       numChanged = 0;
       if (examineAll) {
          for (idIter = fInputData->begin(); idIter!=fInputData->end(); idIter++){

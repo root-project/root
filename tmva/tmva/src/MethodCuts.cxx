@@ -692,7 +692,7 @@ void  TMVA::MethodCuts::Train( void )
          Log() << kFATAL << "Wrong fit method: " << fFitMethod << Endl;
       }
 
-      fitter->SetIPythonInteractive(&fExitFromTraining, &fIPyMaxIter, &fIPyCurrentIter);
+      if (fInteractive) fitter->SetIPythonInteractive(&fExitFromTraining, &fIPyMaxIter, &fIPyCurrentIter);
 
       fitter->CheckForUnusedOptions();
 
