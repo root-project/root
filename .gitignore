@@ -190,6 +190,10 @@ AutoDict_*.cxx
 # /root/io/clones/
 /root/io/clones/*.root
 
+# /root/io/complex/
+/root/io/complex/*.root
+/root/io/complex/*.xml
+
 # /root/io/compression/
 /root/io/compression/Event
 /root/io/compression/Event*.root
@@ -200,6 +204,9 @@ AutoDict_*.cxx
 
 # /root/io/constmembers/
 /root/io/constmembers/*.root
+
+# /root/io/cpp11Containers/
+/root/io/cpp11Containers/*.root
 
 # /root/io/customCollection/
 /root/io/customCollection/coll.root
@@ -298,6 +305,7 @@ AutoDict_*.cxx
 /root/io/filemerger/input*.root
 /root/io/filemerger/merged*.root
 /root/io/filemerger/hsimple*.root
+/root/io/filemerger/mzfile*.root
 
 # /root/io/float16/
 /root/io/float16/*.root
@@ -460,9 +468,10 @@ AutoDict_*.cxx
 /root/io/newstl/AutoDict*
 /root/io/newstl/pospelov
 /root/io/newstl/latest
-/root/io/newstl/4-*
 /root/io/newstl/3-*
+/root/io/newstl/4-*
 /root/io/newstl/5-*
+/root/io/newstl/6-*
 /root/io/newstl/*.root
 
 # /root/io/perf/
@@ -566,6 +575,9 @@ AutoDict_*.cxx
 
 # /root/io/webfile/
 
+# /root/io/withoutDictionaries/
+/root/io/withoutDictionaries/*.root
+
 # /root/io/xml/
 /root/io/xml/file.xml
 
@@ -627,11 +639,23 @@ AutoDict_*.cxx
 /root/meta/evolution/mixedBase_v1.root
 /root/meta/evolution/mixedBase_v2.root
 
+# /root/meta/fwdDecls/
+/root/meta/fwdDecls/testa
+/root/meta/fwdDecls/testb
+/root/meta/fwdDecls/testc
+
 # /root/meta/genreflex
 /root/meta/genreflex/dicts/*
+/root/meta/genreflex/ofile.root
 
 # root/meta/genreflex/XMLParsing
 root/meta/genreflex/XMLParsing/dicts/*
+
+# /root/meta/iotypeioname/
+/root/meta/iotypeioname/*.xml
+
+# /root/meta/loadAllLibs/
+/root/meta/loadAllLibs/assert*.ref
 
 # /root/meta/tclass/
 /root/meta/tclass/pairs.root
