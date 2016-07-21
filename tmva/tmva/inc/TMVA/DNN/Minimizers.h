@@ -90,12 +90,19 @@ public:
     Scalar_t Step(Net_t &net,
                   Matrix_t &input,
                   const Matrix_t &output);
-    /** Similar to Step(...) but only trains bias terms in the first layer. This is
-     *  for compatibility with the previous implementation. */
+    /** Does not evaluate the loss and therefore not trigger a possible synchronization
+     *  with the device. Trains the weights of each layer, but only the bias terms of
+     *  the first layer for compatibility with the previous implementation. */
     template <typename Net_t>
-    Scalar_t StepReducedWeights(Net_t &net,
-                                Matrix_t &input,
-                                const Matrix_t &output);
+    void StepReducedWeights(Net_t &net,
+                            Matrix_t &input,
+                            const Matrix_t &output);
+    /** Similar to StepReducedWeights(...) but also evaluates the loss. May trigger
+     * synchronization with the device. */
+    template <typename Net_t>
+    Scalar_t StepReducedWeightsLoss(Net_t &net,
+                                    Matrix_t &input,
+                                    const Matrix_t &output);
     template <typename Net_t>
     inline void TestError(Net_t &net,
                           Matrix_t &input,
@@ -214,8 +221,33 @@ template<typename Architecture_t>
 
 //______________________________________________________________________________
 template<typename Architecture_t>
+template <typename Net_t>
+void inline TGradientDescent<Architecture_t>::StepReducedWeights(
+    Net_t & net,
+    Matrix_t &input,
+    const Matrix_t &output)
+{
+   net.Forward(input);
+   net.Backward(input, output);
+
+   for (size_t i = 0; i < net.GetDepth(); i++)
+   {
+      auto &layer = net.GetLayer(i);
+      Architecture_t::ScaleAdd(layer.GetWeights(),
+                               layer.GetWeightGradients(),
+                               -fLearningRate);
+      if (i == 0) {
+         Architecture_t::ScaleAdd(layer.GetBiases(),
+                                  layer.GetBiasGradients(),
+                                  -fLearningRate);
+      }
+   }
+}
+
+//______________________________________________________________________________
+template<typename Architecture_t>
     template <typename Net_t>
-    auto inline TGradientDescent<Architecture_t>::StepReducedWeights(
+    auto inline TGradientDescent<Architecture_t>::StepReducedWeightsLoss(
         Net_t & net,
         Matrix_t &input,
         const Matrix_t &output)
@@ -239,7 +271,6 @@ template<typename Architecture_t>
    }
    return loss;
 }
-
 
 //______________________________________________________________________________
 template<typename Architecture_t>

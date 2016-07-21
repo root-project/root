@@ -749,28 +749,28 @@ void TMVA::MethodDNN::TrainGPU()
         itSettings != itSettingsEnd; ++itSettings, ++idxSetting)
       {
 
-         std::shared_ptr<TMVA::DNN::Settings> ptrSettings = *itSettings;
-         ptrSettings->setMonitoring (fMonitoring);
+         TMVA::DNN::Settings settings = **itSettings;
+         settings.setMonitoring (fMonitoring);
 
          Log() << kINFO
                << "Training on GPU with learning rate = "
-               << ptrSettings->learningRate ()
-               << ", momentum = " << ptrSettings->momentum ()
-               << ", repetitions = " << ptrSettings->repetitions ()
+               << settings.learningRate ()
+               << ", momentum = " << settings.momentum ()
+               << ", repetitions = " << settings.repetitions ()
                << Endl;
 
-         ptrSettings->setProgressLimits ((idxSetting)*100.0/(fSettings.size ()),
+         settings.setProgressLimits ((idxSetting)*100.0/(fSettings.size ()),
                                          (idxSetting+1)*100.0/(fSettings.size ()));
 
-         const std::vector<double>& dropConfig = ptrSettings->dropFractions ();
+         const std::vector<double>& dropConfig = settings.dropFractions ();
          if (!dropConfig.empty ())
          {
             Log () << kINFO << "Drop configuration" << Endl
                    << "    drop repetitions = "
-                   << ptrSettings->dropRepetitions () << Endl;
+                   << settings.dropRepetitions () << Endl;
          }
 
-         auto trainNet = GPUNet.CreateClone(ptrSettings->batchSize());
+         auto trainNet = GPUNet.CreateClone(settings.batchSize());
          int idx = 0;
          for (auto f : dropConfig)
          {
@@ -780,7 +780,6 @@ void TMVA::MethodDNN::TrainGPU()
          }
          Log () << kINFO << Endl;
 
-         std::cout << "train samples: " << nTrainingSamples << std::endl;
          using DataLoader_t = typename DNN::TCuda::DataLoader_t<DNN::TMVAInput_t>;
          DataLoader_t trainingData(GetEventCollection(Types::kTraining),
                                    nTrainingSamples,
@@ -797,9 +796,9 @@ void TMVA::MethodDNN::TrainGPU()
          DNN::TGradientDescent<DNN::TCuda> minimizer{};
 
          minimizer.Reset();
-         minimizer.SetLearningRate(ptrSettings->learningRate());
-         minimizer.SetTestInterval(ptrSettings->testRepetitions());
-         minimizer.SetConvergenceSteps(ptrSettings->convergenceSteps());
+         minimizer.SetLearningRate(settings.learningRate());
+         minimizer.SetTestInterval(settings.testRepetitions());
+         minimizer.SetConvergenceSteps(settings.convergenceSteps());
 
          bool converged = false;
          size_t stepCount = 0;
@@ -818,7 +817,7 @@ void TMVA::MethodDNN::TrainGPU()
                for (auto batch : trainingData) {
                   auto inputMatrix  = batch.GetInput();
                   auto outputMatrix = batch.GetOutput();
-                  trainingError += minimizer.StepReducedWeights(
+                  trainingError += minimizer.StepReducedWeightsLoss(
                       trainNet,
                       inputMatrix,
                       outputMatrix);
@@ -835,11 +834,13 @@ void TMVA::MethodDNN::TrainGPU()
                                        minimizer.GetTestError(),
                                        (int) stepCount,
                                        (int) minimizer.GetConvergenceCount ());
-               std::cout << convText << std::endl;
+               Double_t progress = minimizer.GetConvergenceCount()
+                                   / settings.convergenceSteps();
+               settings.cycle(progress, convText);
                converged = minimizer.HasConverged();
             }
-         ptrSettings.reset ();
-         Log () << kINFO << Endl;
+            Log () << kINFO << Endl;
+            stepCount++;
          }
          fMonitoring = 0;
       }
