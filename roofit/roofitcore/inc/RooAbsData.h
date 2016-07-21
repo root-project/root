@@ -55,8 +55,10 @@ public:
   RooAbsDataStore* store() { return _dstore ; }
   const RooAbsDataStore* store() const { return _dstore ; }
   const TTree* tree() const ;
+  TTree* export_tree() const ;
    
   void convertToVectorStore() ;
+  void convertToTreeStore() ;
 
   void attachBuffers(const RooArgSet& extObs) ;
   void resetBuffers() ;
@@ -262,7 +264,7 @@ protected:
 
 private:
 
-  ClassDef(RooAbsData,4) // Abstract data collection
+  ClassDef(RooAbsData,5) // Abstract data collection
 };
 
 #endif

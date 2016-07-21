@@ -33,6 +33,7 @@ points for its contents and provides an iterator over its elements
 #include "TBuffer.h"
 #include "TClass.h"
 #include "TMath.h"
+#include "TTree.h"
 
 #include "RooAbsData.h"
 #include "RooFormulaVar.h"
@@ -2330,8 +2331,43 @@ Bool_t RooAbsData::hasFilledCache() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// give access to internal data TTree (if it exists)
+/// RooDataSet keeps ownership, RooFit is responsible for deleting.
 
 const TTree* RooAbsData::tree() const
 {
-  return _dstore->tree() ;
+  if (dynamic_cast<const RooTreeDataStore*>(_dstore)) {
+    return _dstore->tree();
+  } else {
+    coutW(InputArguments) << "RooAbsData::tree(" << GetName() << ") WARNING: is not of StorageType::Tree. "
+             << "Use export_tree() instead or convert to tree storage." << endl ;
+    return (TTree*)nullptr;
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// clone internal data TTree or create it from vector-based storage
+/// transfers ownership, user is responsible for deleting.
+
+TTree* RooAbsData::export_tree() const
+{
+  if (dynamic_cast<const RooTreeDataStore*>(_dstore)) {
+    return const_cast<TTree*>(_dstore->tree())->CloneTree();
+  } else {
+    RooTreeDataStore buffer(GetName(), GetTitle(), *get(), *_dstore);
+    TTree* t = &(buffer.tree());
+    return (TTree*)(t->CloneTree());
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Convert vector-based storage to tree-based storage
+
+void RooAbsData::convertToTreeStore()
+{
+  if (nullptr==dynamic_cast<RooTreeDataStore*>(_dstore)) {
+    RooTreeDataStore* newStore = new RooTreeDataStore(GetName(), GetTitle(), *get(), *_dstore);
+    delete _dstore;
+    _dstore = newStore;
+  }
 }
