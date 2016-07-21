@@ -11,7 +11,7 @@ if(NOT CMAKE_PROJECT_NAME STREQUAL ROOT)
   include(${ROOTSYS}/cmake/modules/StandaloneBuild.cmake)
 endif()
 
-set(headers1 Configurable.h Factory.h  MethodBase.h MethodCompositeBase.h
+set(headers1 Configurable.h Event.h Factory.h DataLoader.h MethodBase.h MethodCompositeBase.h
 	     MethodANNBase.h MethodTMlpANN.h MethodRuleFit.h MethodCuts.h MethodFisher.h
 	     MethodKNN.h MethodCFMlpANN.h MethodCFMlpANN_Utils.h MethodLikelihood.h
 	     MethodHMatrix.h MethodPDERS.h MethodBDT.h MethodDT.h MethodSVM.h MethodBayesClassifier.h
@@ -41,20 +41,14 @@ set(dnn_cuda_files src/DNN/Architectures/Cuda.cu
                    src/DNN/Architectures/Cuda/DataLoader.cu
                    src/DNN/Architectures/Cuda/Kernels.cu)
 
-set(headers5 Event.h Results.h ResultsClassification.h ResultsRegression.h ResultsMulticlass.h VariableInfo.h ClassInfo.h
-             DataLoader.h DataSet.h DataSetInfo.h DataInputHandler.h DataSetManager.h DataSetFactory.h)
-
-set(dnn_blas_files src/DNN/Architectures/Cpu.cxx
-                   src/DNN/Architectures/Cpu/CpuMatrix.cxx)
-
 #---Need to suffix each header name by TMVA/  -----------------
-foreach(hs headers1 headers2 headers3 headers4 headers5)
+foreach(hs headers1 headers2 headers3 headers4)
   foreach(h ${${hs}})
     set(t${hs} ${t${hs}} TMVA/${h})
   endforeach()
 endforeach()
 
-ROOT_GENERATE_DICTIONARY(G__TMVA ${theaders1} ${theaders2} ${theaders3} ${theaders4} ${theaders5}  MODULE TMVA LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
+ROOT_GENERATE_DICTIONARY(G__TMVA ${theaders1} ${theaders2} ${theaders3} ${theaders4}   MODULE TMVA LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
 
 #---Handle CUDA dependent code. -----------------
 find_package(CUDA)
@@ -63,20 +57,28 @@ if (CUDA_FOUND)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDNNCUDA")
   set(cuda_libraries dnn_cuda ${CUDA_CUBLAS_LIBRARIES})
 else (CUDA_FOUND)
-  set(cuda_libraries)
+  set(dnn_cuda_libraries)
 endif(CUDA_FOUND)
 
+<<<<<<< Updated upstream
+root_linker_library(TMVA *.cxx G__TMVA.cxx ${dnn_files}
+                    LIBRARIES Core ${cuda_libraries}
+=======
 #---Handle BLAS dependent code. -----------------
 find_package(BLAS)
 if (BLAS_FOUND)
-  root_linker_library(dnn_blas ${dnn_blas_files} ${BLAS_LIBRARIES})
-  set(blas_libraries dnn_cuda ${BLAS_LIBRARIES})
+  set(dnn_cpu_files src/DNN/Architectures/Cpu.cxx
+    src/DNN/Architectures/Cpu/CpuMatrix.cxx
+    src/DNN/Architectures/Cpu/DataLoader.cxx)
+  set(dnn_cpu_libraries MathCore Matrix ${BLAS_LIBRARIES} tbb ${CMAKE_THREAD_LIBS_INIT})
 else (BLAS_FOUND)
-  set(blas_libraries)
+  set(dnn_cpu_file)
+  set(dnn_cpu_libraries)
 endif(BLAS_FOUND)
 
-root_linker_library(TMVA *.cxx G__TMVA.cxx ${dnn_files}
-                    LIBRARIES Core Thread ${cuda_libraries} &{blas_libraries}
+root_linker_library(TMVA *.cxx G__TMVA.cxx ${dnn_files} ${dnn_cpu_files}
+                    LIBRARIES Core Thread ${cuda_libraries} ${dnn_cpu_libraries}
+>>>>>>> Stashed changes
                     DEPENDENCIES RIO Hist Tree TreePlayer MLP Minuit XMLIO)
 
 install(DIRECTORY inc/TMVA/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/TMVA
