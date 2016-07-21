@@ -152,7 +152,7 @@ private:
 
    size_t fBatchSize;  ///< Batch size used for training and evaluation.
    size_t fInputWidth; ///< Number of neurons of the previous layer.
-   size_t fWidth;       ///< Number of neurons of this layer.
+   size_t fWidth;      ///< Number of neurons of this layer.
 
    Scalar_t fDropoutProbability;  ///< Probability that an input is active.
 

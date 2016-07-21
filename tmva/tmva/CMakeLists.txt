@@ -44,6 +44,9 @@ set(dnn_cuda_files src/DNN/Architectures/Cuda.cu
 set(headers5 Event.h Results.h ResultsClassification.h ResultsRegression.h ResultsMulticlass.h VariableInfo.h ClassInfo.h
              DataLoader.h DataSet.h DataSetInfo.h DataInputHandler.h DataSetManager.h DataSetFactory.h)
 
+set(dnn_blas_files src/DNN/Architectures/Cpu.cxx
+                   src/DNN/Architectures/Cpu/CpuMatrix.cxx)
+
 #---Need to suffix each header name by TMVA/  -----------------
 foreach(hs headers1 headers2 headers3 headers4 headers5)
   foreach(h ${${hs}})
@@ -63,8 +66,17 @@ else (CUDA_FOUND)
   set(cuda_libraries)
 endif(CUDA_FOUND)
 
+#---Handle BLAS dependent code. -----------------
+find_package(BLAS)
+if (BLAS_FOUND)
+  root_linker_library(dnn_blas ${dnn_blas_files} ${BLAS_LIBRARIES})
+  set(blas_libraries dnn_cuda ${BLAS_LIBRARIES})
+else (BLAS_FOUND)
+  set(blas_libraries)
+endif(BLAS_FOUND)
+
 root_linker_library(TMVA *.cxx G__TMVA.cxx ${dnn_files}
-                    LIBRARIES Core ${cuda_libraries}
+                    LIBRARIES Core Thread ${cuda_libraries} &{blas_libraries}
                     DEPENDENCIES RIO Hist Tree TreePlayer MLP Minuit XMLIO)
 
 install(DIRECTORY inc/TMVA/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/TMVA
