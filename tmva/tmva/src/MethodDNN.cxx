@@ -647,7 +647,7 @@ void TMVA::MethodDNN::Train()
              ++idx;
           }
           Log () << kINFO << Endl;
-
+        
           if (ptrSettings->minimizerType () == TMVA::DNN::MinimizerType::fSteepest)
           {
              DNN::Steepest minimizer (ptrSettings->learningRate (), ptrSettings->momentum (), ptrSettings->repetitions ());
@@ -665,7 +665,7 @@ void TMVA::MethodDNN::TrainGPU()
 
 #ifdef DNNCUDA // Included only if DNNCUDA flag is set.
 
-   TMVA::DNN::TNet<TMVA::DNN::TCuda<false>> GPUNet{};
+   TMVA::DNN::TNet<TMVA::DNN::TCuda> GPUNet{};
 
    size_t inputSize = GetNVariables ();
    size_t outputSize = (GetNTargets() == 0) ? 1 : GetNTargets();
@@ -796,7 +796,7 @@ void TMVA::MethodDNN::TrainGPU()
                                trainNet.GetInputWidth(),
                                trainNet.GetOutputWidth());
          auto testNet   = GPUNet.CreateClone(testData.GetBatchSize());
-         DNN::TGradientDescent<DNN::TCuda<false>> minimizer{};
+         DNN::TGradientDescent<DNN::TCuda> minimizer{};
 
          minimizer.Reset();
          minimizer.SetLearningRate(settings.learningRate());
@@ -842,6 +842,7 @@ void TMVA::MethodDNN::TrainGPU()
                settings.cycle(progress, convText);
                converged = minimizer.HasConverged();
             }
+            Log () << kINFO << Endl;
             stepCount++;
          }
          fMonitoring = 0;
