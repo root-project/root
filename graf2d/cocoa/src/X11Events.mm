@@ -16,7 +16,6 @@
 
 #include <Cocoa/Cocoa.h>
 
-#include "CocoaConstants.h"
 #include "ROOTOpenGLView.h"
 #include "QuartzWindow.h"
 #include "CocoaUtils.h"
@@ -266,15 +265,15 @@ NSUInteger GetCocoaKeyModifiersFromROOTKeyModifiers(UInt_t rootModifiers)
    NSUInteger cocoaModifiers = 0;
 
    if (rootModifiers & kKeyLockMask)
-      cocoaModifiers |= Details::kAlphaShiftKeyMask;
+      cocoaModifiers |= NSAlphaShiftKeyMask;
    if (rootModifiers & kKeyShiftMask)
-      cocoaModifiers |= Details::kShiftKeyMask;
+      cocoaModifiers |= NSShiftKeyMask;
    if (rootModifiers & kKeyControlMask)
-      cocoaModifiers |= Details::kControlKeyMask;
+      cocoaModifiers |= NSControlKeyMask;
    if (rootModifiers & kKeyMod1Mask)
-      cocoaModifiers |= Details::kAlternateKeyMask;
+      cocoaModifiers |= NSAlternateKeyMask;
    if (rootModifiers & kKeyMod2Mask)
-      cocoaModifiers |= Details::kCommandKeyMask;
+      cocoaModifiers |= NSCommandKeyMask;
 
    return cocoaModifiers;
 }
@@ -285,15 +284,15 @@ UInt_t GetKeyboardModifiers()
    const NSUInteger modifiers = [NSEvent modifierFlags];
 
    UInt_t rootModifiers = 0;
-   if (modifiers & Details::kAlphaShiftKeyMask)
+   if (modifiers & NSAlphaShiftKeyMask)
       rootModifiers |= kKeyLockMask;
-   if (modifiers & Details::kShiftKeyMask)
+   if (modifiers & NSShiftKeyMask)
       rootModifiers |= kKeyShiftMask;
-   if (modifiers & Details::kControlKeyMask)
+   if (modifiers & NSControlKeyMask)
       rootModifiers |= kKeyControlMask;
-   if (modifiers & Details::kAlternateKeyMask)
+   if (modifiers & NSAlternateKeyMask)
       rootModifiers |= kKeyMod1Mask;
-   if (modifiers & Details::kCommandKeyMask)
+   if (modifiers & NSCommandKeyMask)
       rootModifiers |= kKeyMod2Mask;
 
    return rootModifiers;
@@ -376,15 +375,15 @@ unsigned GetKeyboardModifiersFromCocoaEvent(NSEvent *theEvent)
 
    const NSUInteger modifiers = [theEvent modifierFlags];
    unsigned rootModifiers = 0;
-   if (modifiers & Details::kAlphaShiftKeyMask)
+   if (modifiers & NSAlphaShiftKeyMask)
       rootModifiers |= kKeyLockMask;
-   if (modifiers & Details::kShiftKeyMask)
+   if (modifiers & NSShiftKeyMask)
       rootModifiers |= kKeyShiftMask;
-   if (modifiers & Details::kControlKeyMask)
+   if (modifiers & NSControlKeyMask)
       rootModifiers |= kKeyControlMask;
-   if (modifiers & Details::kAlternateKeyMask)
+   if (modifiers & NSAlternateKeyMask)
       rootModifiers |= kKeyMod1Mask;
-   if (modifiers & Details::kCommandKeyMask)
+   if (modifiers & NSCommandKeyMask)
       rootModifiers |= kKeyMod2Mask;
 
    return rootModifiers;
@@ -1743,7 +1742,7 @@ void EventTranslator::GenerateKeyEventActiveGrab(NSView<X11Window> *eventView, N
    assert(fFocusView != nil && "GenerateKeyEventActiveGrab, fFocusView is nil");
 
    //TODO: assert on possible event types?
-   const Mask_t eventMask = theEvent.type == Details::kKeyDown ? kKeyPressMask : kKeyReleaseMask;
+   const Mask_t eventMask = theEvent.type == NSKeyDown ? kKeyPressMask : kKeyReleaseMask;
 
    if (Detail::IsParent(fFocusView, eventView) || fFocusView == eventView) {
       NSView<X11Window> * const testView = Detail::FindViewToPropagateEvent(eventView, eventMask);
@@ -1752,7 +1751,7 @@ void EventTranslator::GenerateKeyEventActiveGrab(NSView<X11Window> *eventView, N
    } else
       GenerateKeyEventForView(fFocusView, theEvent);//Should I check the mask???
 
-   if (theEvent.type == Details::kKeyUp && fKeyGrabView) {
+   if (theEvent.type == NSKeyUp && fKeyGrabView) {
       //Cancel grab?
 
       //NSString *characters = [theEvent charactersIgnoringModifiers];
@@ -1793,10 +1792,10 @@ void EventTranslator::GenerateKeyEventForView(NSView<X11Window> *view, NSEvent *
    //Generate key press event for a view without grab.
    assert(view != nil && "GenerateKeyEventForView, parameter 'view' is nil");
    assert(theEvent != nil && "GenerateKeyEventForView, parameter 'theEvent' is nil");
-   assert((theEvent.type == Details::kKeyDown || theEvent.type == Details::kKeyUp) &&
+   assert(theEvent.type == NSKeyDown || theEvent.type == NSKeyUp &&
           "GenerateKeyEvenForView, event's type must be keydown or keyup");
 
-   const Mask_t eventType = theEvent.type == Details::kKeyDown ? kKeyPressMask : kKeyReleaseMask;
+   const Mask_t eventType = theEvent.type == NSKeyDown ? kKeyPressMask : kKeyReleaseMask;
 
    //TODO: this is not implemented, do I need it? (can require interface changes then).
    NSView<X11Window> *childView = nil;
@@ -1870,7 +1869,7 @@ void EventTranslator::FindKeyGrabView(NSView<X11Window> *eventView, NSEvent *the
    assert([characters length] > 0 && "FindKeyGrabView, characters is an empty string");
 
    const unichar keyCode = [characters characterAtIndex : 0];
-   const NSUInteger modifiers = [theEvent modifierFlags] & Details::kDeviceIndependentModifierFlagsMask;
+   const NSUInteger modifiers = [theEvent modifierFlags] & NSDeviceIndependentModifierFlagsMask;
 
    NSView<X11Window> *currentView = fFocusView;
    if (eventView != fFocusView && Detail::IsParent(fFocusView, eventView))
