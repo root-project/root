@@ -42,5 +42,5 @@ void candleplot() {
    h1->Draw("candle2");
    h2->Draw("candle3 same");
 
-   gPad->BuildLegend(0.6,0.7,0.7,0.8,"");
+   gPad->BuildLegend(0.6,0.7,0.7,0.8);
 }
