@@ -381,7 +381,7 @@ order:
 ``` {.cpp}
 MyClass(UserClass1*);
 MyClass(UserClass2*);
-MyClass(TRootIoCtor*);
+MyClass(TRootIOCtor*);
 MyClass();   // Or a constructor with all its arguments defaulted.
 ```
 
