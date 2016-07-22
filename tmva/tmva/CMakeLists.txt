@@ -64,10 +64,6 @@ else (CUDA_FOUND)
   set(dnn_cuda_libraries)
 endif(CUDA_FOUND)
 
-<<<<<<< Updated upstream
-root_linker_library(TMVA *.cxx G__TMVA.cxx ${dnn_files}
-                    LIBRARIES Core ${cuda_libraries}
-=======
 #---Handle BLAS dependent code. -----------------
 find_package(BLAS)
 if (BLAS_FOUND)
@@ -82,7 +78,6 @@ endif(BLAS_FOUND)
 
 root_linker_library(TMVA *.cxx G__TMVA.cxx ${dnn_files} ${dnn_cpu_files}
                     LIBRARIES Core Thread ${cuda_libraries} ${dnn_cpu_libraries}
->>>>>>> Stashed changes
                     DEPENDENCIES RIO Hist Tree TreePlayer MLP Minuit XMLIO)
 
 install(DIRECTORY inc/TMVA/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/TMVA
