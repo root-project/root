@@ -44,8 +44,6 @@ auto testSum()
    Scalar_t sum = 0.0, sumTotal = 0.0;
 
    for (auto b : loader) {
-      auto && inputMatrix  = b.GetInput();
-      auto && outputMatrix = b.GetOutput();
       Architecture_t::SumColumns(Sum, b.GetInput());
       sum += Sum(0, 0);
    }
@@ -66,7 +64,6 @@ auto testIdentity()
 {
 
     using Scalar_t     = typename Architecture_t::Scalar_t;
-    using Matrix_t     = typename Architecture_t::Matrix_t;
     using Net_t        = TNet<Architecture_t>;
 
     using DataLoader_t = typename Architecture_t::template DataLoader_t<MatrixInput_t>;
