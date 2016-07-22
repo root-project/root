@@ -1,5 +1,5 @@
 // @(#)root/tmva/tmva/dnn:$Id$
-// Author: Simon Pfreundschuh 12/07/16
+// Author: Simon Pfreundschuh 21/07/16
 
 /*************************************************************************
  * Copyright (C) 2016, Simon Pfreundschuh                                *
@@ -9,18 +9,22 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////
-// Test the reference data loader implementation. //
-////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////
+// Test the multi-threaded CPU data loader implementation. //
+/////////////////////////////////////////////////////////////
 
-#include "TMVA/DNN/Architectures/Reference.h"
+#include "TMVA/DNN/Architectures/Cpu.h"
 #include "TestDataLoader.h"
 
 using namespace TMVA::DNN;
 
 int main ()
 {
-   Double_t error = testIdentity<TReference<Double_t>>();
-   std::cout << "Testing reference data loader: Mex. rel. error = " << error;
-   std::cout << std::endl;
+   std::cout << "Testing data loader:" << std::endl;
+   Double_t error = testIdentity<TCpu<Double_t, false>>();
+   std::cout << "Identity: " << error << std::endl;
+   error = testSum<TCpu<Double_t, false>>();
+   std::cout << "Sum     : " << error << std::endl;
+
+   return 0;
 }
