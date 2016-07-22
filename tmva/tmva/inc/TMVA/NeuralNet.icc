@@ -116,8 +116,8 @@ template <bool HasDropOut, typename ItSource, typename ItWeight, typename ItPrev
             {
                 for (auto itCurr = itCurrBegin; itCurr != itCurrEnd; ++itCurr)
                 {
-            if (!HasDropOut || *itDrop)
-                    (*itPrev) += (*itCurr) * (*itWeight);
+                   if (!HasDropOut || *itDrop)
+                      (*itPrev) += (*itCurr) * (*itWeight);
                     ++itWeight;
                 }
         if (HasDropOut) ++itDrop;
@@ -783,8 +783,8 @@ template <typename LAYERDATA>
                             batches.push_back (Batch (itPat, itPat + patternPerThread));
                             itPat += patternPerThread;
                         }
-                    if (itPat != testPattern.end ())
-                        batches.push_back (Batch (itPat, testPattern.end ()));
+                        if (itPat != testPattern.end ())
+                            batches.push_back (Batch (itPat, testPattern.end ()));
 
                         std::vector<std::future<std::tuple<double,std::vector<double>>>> futures;
                         for (auto& batch : batches)
