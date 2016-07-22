@@ -440,8 +440,12 @@ namespace ROOT {
          void Print(const char* label = "")
          {
             TRFunctionImport print("print");
-            if (label == "") print(df);
-            else print(df[label.Data()]);
+            if (label && !label[0]) {
+               // label is ""
+               print(df);
+            } else {
+               print(df[label]);
+            }
          }
          ClassDef(TRDataFrame, 0) //
       };
