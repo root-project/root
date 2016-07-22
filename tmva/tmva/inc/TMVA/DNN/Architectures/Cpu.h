@@ -301,7 +301,7 @@ template <>
 inline void TCpu<Double_t, true>::tick() {}
 
 template <>
-inline void TCpu<Double_t, true>::tock(Scalar_t &result) {}
+inline void TCpu<Double_t, true>::tock(Scalar_t &) {}
 
 } // namespace DNN
 } // namespace TMVA

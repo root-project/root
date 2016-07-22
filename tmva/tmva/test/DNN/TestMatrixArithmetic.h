@@ -31,7 +31,7 @@ auto testMultiplication(size_t ntests)
    using Matrix_t = typename Architecture_t::Matrix_t;
 
    Scalar_t maximumError = 0.0;
-   for (size_t i = 0; i < ntests; i++) {
+   for (size_t t = 0; t < ntests; t++) {
 
       size_t m, n, k;
       m = rand() % 100 + 1;
@@ -66,8 +66,8 @@ auto testMultiplication(size_t ntests)
       maximumError   = std::max(error, maximumError);
 
       // A .* B
-      for (size_t i = 0; i < ARef.GetNrows(); i++) {
-         for (size_t j = 0; j < ARef.GetNcols(); j++) {
+      for (size_t i = 0; i < (size_t) ARef.GetNrows(); i++) {
+         for (size_t j = 0; j < (size_t) ARef.GetNcols(); j++) {
             ARef(i,j) *= A2Ref(i,j);
          }
       }
@@ -92,7 +92,7 @@ auto testSumColumns(size_t ntests)
    using Matrix_t = typename Architecture_t::Matrix_t;
 
    Scalar_t maximumError = 0.0;
-   for (size_t i = 0; i < ntests; i++) {
+   for (size_t t = 0; t < ntests; t++) {
 
       Scalar_t error;
 
@@ -102,8 +102,8 @@ auto testSumColumns(size_t ntests)
 
       TMatrixT<Scalar_t> ARef(m,n), BRef(n,1);
 
-      for (size_t i = 0; i < ARef.GetNrows(); i++) {
-         for (size_t j = 0; j < ARef.GetNcols(); j++) {
+      for (size_t i = 0; i < (size_t) ARef.GetNrows(); i++) {
+         for (size_t j = 0; j < (size_t) ARef.GetNcols(); j++) {
             ARef(i,j) = j;
             if (i == 0) BRef(j, 0) = m * j;
          }
