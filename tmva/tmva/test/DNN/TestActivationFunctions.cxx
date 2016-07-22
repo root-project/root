@@ -83,13 +83,13 @@ int main()
 
     // Symmetric ReLU.
 
-    error = testSymmetricRelu<TReference<double>>(10);
+    error = testSymmetricReluDerivative<TReference<double>>(10);
     std::cout << "Testing Symm. ReLU activation:             ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
     if (error > 1e-10)
         return 1;
 
-    error = testSymmetricRelu<TReference<double>>(10);
+    error = testSymmetricReluDerivative<TReference<double>>(10);
     std::cout << "Testing Symm. ReLU activation derivative:  ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
     if (error > 1e-10)
@@ -103,7 +103,7 @@ int main()
     if (error > 1e-10)
         return 1;
 
-    error = testSoftSign<TReference<double>>(10);
+    error = testSoftSignDerivative<TReference<double>>(10);
     std::cout << "Testing Soft Sign activation derivative:   ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
     if (error > 1e-10)
@@ -117,7 +117,7 @@ int main()
     if (error > 1e-10)
         return 1;
 
-    error = testGauss<TReference<double>>(10);
+    error = testGaussDerivative<TReference<double>>(10);
     std::cout << "Testing Gauss activation derivative:       ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
     if (error > 1e-10)

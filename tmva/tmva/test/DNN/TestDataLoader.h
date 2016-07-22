@@ -32,7 +32,7 @@ auto testDataLoader()
 
     using DataLoader_t = typename Architecture_t::template DataLoader_t<MatrixInput_t>;
 
-    Matrix_t X(2000, 100); randomMatrix(X);
+    TMatrixT<Double_t> X(2000, 100); randomMatrix(X);
     MatrixInput_t input(X, X);
     DataLoader_t loader(input, 2000, 20, 100, 100);
 
@@ -43,8 +43,8 @@ auto testDataLoader()
 
     Scalar_t maximumError = 0.0;
     for (auto b : loader) {
-        Matrix_t inputMatrix  = b.GetInput();
-        Matrix_t outputMatrix = b.GetOutput();
+        auto && inputMatrix  = b.GetInput();
+        auto && outputMatrix = b.GetOutput();
         Scalar_t error = net.Loss(inputMatrix, outputMatrix);
         maximumError = std::max(error, maximumError);
     }

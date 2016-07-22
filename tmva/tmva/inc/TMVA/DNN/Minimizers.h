@@ -222,8 +222,8 @@ template <typename Data_t, typename Net_t>
                    << seconds << " [s] => " << nFlops * 1e-9 / seconds
                    << " GFlop/s" << std::endl;
          auto b = *testLoader.begin();
-         auto inputMatrix  = b.GetInput();
-         auto outputMatrix = b.GetOutput();
+         auto && inputMatrix  = b.GetInput();
+         auto && outputMatrix = b.GetOutput();
 
          Scalar_t loss = testNet.Loss(inputMatrix, outputMatrix);
          std::cout << fStepCount << ": " << loss << std::endl;
