@@ -40,7 +40,7 @@ The following people have contributed to this new version:
 
 <a name="core-libs"></a>
 
-## general
+## General
 
 * Remove many instances of new warnings issued by gcc 6.1
 * Significant update of the valgrind suppression file to hide intentional lack
