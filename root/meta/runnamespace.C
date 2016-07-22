@@ -40,5 +40,9 @@ gROOT->GetListOfGlobalFunctions()->FindObject("globalFuncInline")->Print();
    }
    TCollection* overloads = clA->GetListOfMethodOverloads("f");
    printf ("Full A: there are %d A::f() overloads.\n", overloads->GetSize());
+
+   // ROOT-8292:
+   gROOT->ProcessLine("namespace A { template <typename T> class sort { sort(const T& t); }; }");
+   gROOT->ProcessLine("A::sort<int>* Aptr = nullptr;");
    return 0;
 };
