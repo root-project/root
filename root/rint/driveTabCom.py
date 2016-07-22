@@ -29,3 +29,5 @@ out, err = proc.communicate()
 # Then write the subprocess's output to our output streams.
 sys.stdout.write(out)
 sys.stderr.write(err)
+
+exit(proc.returncode)
