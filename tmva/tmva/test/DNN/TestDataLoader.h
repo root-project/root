@@ -21,8 +21,47 @@ namespace TMVA
 namespace DNN
 {
 
+/** Test that the data loader loads all data in the data set by summing
+ *  up all elements batch wise and comparing to the result over the complete
+ *  data set. */
+//______________________________________________________________________________
 template <typename Architecture_t>
-auto testDataLoader()
+auto testSum()
+    -> typename Architecture_t::Scalar_t
+{
+   using Scalar_t     = typename Architecture_t::Scalar_t;
+   using Matrix_t     = typename Architecture_t::Matrix_t;
+   using DataLoader_t = typename Architecture_t::template DataLoader_t<MatrixInput_t>;
+
+   size_t nSamples = 10000;
+   TMatrixT<Double_t> X(nSamples,1);
+   randomMatrix(X);
+   MatrixInput_t input(X, X);
+   DataLoader_t  loader(input, nSamples, 5, 1, 1);
+
+   Matrix_t XArch(X), Sum(1,1), SumTotal(1,1);
+
+   Scalar_t sum = 0.0, sumTotal = 0.0;
+
+   for (auto b : loader) {
+      auto && inputMatrix  = b.GetInput();
+      auto && outputMatrix = b.GetOutput();
+      Architecture_t::SumColumns(Sum, b.GetInput());
+      sum += Sum(0, 0);
+   }
+
+   Architecture_t::SumColumns(SumTotal, XArch);
+   sumTotal = SumTotal(0,0);
+
+   return fabs(sumTotal - sum);
+}
+
+/** Test the data loader by loading identical input and output data, running it
+ *  through an identity neural network and computing the the mean squared error.
+ *  Should obviously be zero. */
+//______________________________________________________________________________
+template <typename Architecture_t>
+auto testIdentity()
     -> typename Architecture_t::Scalar_t
 {
 
