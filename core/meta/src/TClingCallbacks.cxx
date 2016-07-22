@@ -270,8 +270,15 @@ bool TClingCallbacks::LookupObject(clang::TagDecl* Tag) {
    // Clang needs Tag's complete definition. Can we parse it?
    if (fIsAutoloadingRecursively || fIsAutoParsingSuspended) return false;
 
+   Sema &SemaR = m_Interpreter->getSema();
+
+   SourceLocation Loc = Tag->getLocation();
+   if (SemaR.getSourceManager().isInSystemHeader(Loc)) {
+      // We will not help the system headers, sorry.
+      return false;
+   }
+
    if (RecordDecl* RD = dyn_cast<RecordDecl>(Tag)) {
-      Sema &SemaR = m_Interpreter->getSema();
       ASTContext& C = SemaR.getASTContext();
       Preprocessor &PP = SemaR.getPreprocessor();
       Parser& P = const_cast<Parser&>(m_Interpreter->getParser());
