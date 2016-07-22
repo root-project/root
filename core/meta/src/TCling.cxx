@@ -5291,9 +5291,11 @@ UInt_t TCling::AutoParseImplRecurse(const char *cls, bool topLevel)
          }
          delete tokens;
          // Now, let's check if the last scope, the template, has a definition, i.e. it's not a fwd decl
-         if (auto templateDecl = llvm::dyn_cast_or_null<clang::ClassTemplateDecl>(previousScopeAsNamedDecl)) {
-            if (auto templatedDecl = templateDecl->getTemplatedDecl()) {
-               skipFirstEntry = nullptr != templatedDecl->getDefinition();
+         if ((clang::NamedDecl*)-1 != previousScopeAsNamedDecl) {
+            if (auto templateDecl = llvm::dyn_cast_or_null<clang::ClassTemplateDecl>(previousScopeAsNamedDecl)) {
+               if (auto templatedDecl = templateDecl->getTemplatedDecl()) {
+                  skipFirstEntry = nullptr != templatedDecl->getDefinition();
+               }
             }
          }
 
