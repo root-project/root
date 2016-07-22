@@ -284,6 +284,8 @@ bool TClingCallbacks::LookupObject(clang::TagDecl* Tag) {
       Parser& P = const_cast<Parser&>(m_Interpreter->getParser());
       Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
       Parser::ParserCurTokRestoreRAII savedCurToken(P);
+      Sema::DelayedInfoRAII semaInfoRAII(SemaR);
+
       // After we have saved the token reset the current one to something which
       // is safe (semi colon usually means empty decl)
       Token& Tok = const_cast<Token&>(P.getCurToken());
