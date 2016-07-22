@@ -18,14 +18,14 @@ namespace DNN
     template <typename Architecture>
         void constructRandomLinearNet(TNet<Architecture> & net)
     {
-        int nlayers = rand() % 5 + 1;
+        int nlayers = 5; //rand() % 5 + 1;
 
         std::vector<EActivationFunction> ActivationFunctions
             = {EActivationFunction::IDENTITY};
 
         for (int i = 0; i < nlayers; i++)
         {
-            int width = rand() % 10 + 1;
+            int width = 50; //rand() % 50 + 1;
             EActivationFunction f =
                 ActivationFunctions[rand() % ActivationFunctions.size()];
             net.AddLayer(width, f);

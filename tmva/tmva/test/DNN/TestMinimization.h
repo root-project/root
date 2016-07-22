@@ -32,17 +32,19 @@ template <typename Architecture>
    using Matrix_t = typename Architecture::Matrix_t;
    using Net_t    = TNet<Architecture>;
 
-   Matrix_t XTrain(4000,20), YTrain(4000,20), XTest(20,20), YTest(20,20), W(20, 20);
+   TMatrixT<Double_t> XTrain(4000,20), YTrain(4000,20), XTest(20,20),
+       YTest(20,20), W(20, 20);
 
    randomMatrix(W);
    randomMatrix(XTrain);
    randomMatrix(XTest);
-   Architecture::MultiplyTranspose(YTrain, XTrain, W);
-   Architecture::MultiplyTranspose(YTest, XTest, W);
+   YTrain.MultT(XTrain, W);
+   YTest.MultT(XTest, W);
 
    Net_t net(20, 20, ELossFunction::MEANSQUAREDERROR);
-   net.AddLayer(100, EActivationFunction::IDENTITY);
-   net.AddLayer(100, EActivationFunction::IDENTITY);
+   net.AddLayer(200, EActivationFunction::IDENTITY);
+   net.AddLayer(200, EActivationFunction::IDENTITY);
+   net.AddLayer(200, EActivationFunction::IDENTITY);
    net.AddLayer(20, EActivationFunction::IDENTITY);
    net.Initialize(EInitialization::GAUSS);
 
