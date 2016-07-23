@@ -69,14 +69,13 @@ ClassImp(TMVA::DataSet)
 TMVA::DataSet::DataSet(const DataSetInfo& dsi) 
     :TNamed(dsi.GetName(),"DataSet"),
      fdsi(&dsi),
-     fEventCollection(4,(std::vector<Event*>*)0),
+     fEventCollection(4),
      fCurrentTreeIdx(0),
      fCurrentEventIdx(0),
      fHasNegativeEventWeights(kFALSE),
      fLogger( new MsgLogger(TString(TString("Dataset:")+dsi.GetName()).Data()) ),
      fTrainingBlockSize(0)
 {
-   for (UInt_t i=0; i<4; i++) fEventCollection[i] = new std::vector<Event*>;
    
    fClassEvents.resize(4);
    fBlockBelongToTraining.reserve(10);
@@ -99,14 +98,13 @@ TMVA::DataSet::DataSet(const DataSetInfo& dsi)
 
 TMVA::DataSet::DataSet() 
     :fdsi(new DataSetInfo(GetName())),
-     fEventCollection(4,(std::vector<Event*>*)0),
+     fEventCollection(4),
      fCurrentTreeIdx(0),
      fCurrentEventIdx(0),
      fHasNegativeEventWeights(kFALSE),
      fLogger( new MsgLogger(TString(TString("Dataset:")+GetName()).Data()) ),
      fTrainingBlockSize(0)
 {
-    for (UInt_t i=0; i<4; i++) fEventCollection[i] = new std::vector<Event*>;
     
     fClassEvents.resize(4);
     fBlockBelongToTraining.reserve(10);
@@ -208,12 +206,12 @@ Long64_t TMVA::DataSet::GetNClassEvents( Int_t type, UInt_t classNumber )
 void TMVA::DataSet::DestroyCollection(Types::ETreeType type, Bool_t deleteEvents )
 {
    UInt_t i = TreeIndex(type);
-   if (i>=fEventCollection.size() || fEventCollection[i]==0) return;
+   if (i>=fEventCollection.size() || fEventCollection[i].size()==0) return;
    if (deleteEvents) {
-      for (UInt_t j=0; j<fEventCollection[i]->size(); j++) delete (*fEventCollection[i])[j];
+       
+      for (UInt_t j=0; j<fEventCollection[i].size(); j++) delete fEventCollection[i][j];
    }
-   delete fEventCollection[i];
-   fEventCollection[i]=0;
+   fEventCollection[i].clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -222,10 +220,10 @@ const TMVA::Event* TMVA::DataSet::GetEvent() const
 {
    if (fSampling.size() > UInt_t(fCurrentTreeIdx) && fSampling.at(fCurrentTreeIdx)) {
       Long64_t iEvt = fSamplingSelected.at(fCurrentTreeIdx).at( fCurrentEventIdx )->second;
-      return (*(fEventCollection.at(fCurrentTreeIdx))).at(iEvt);
+      return ((fEventCollection.at(fCurrentTreeIdx))).at(iEvt);
    }
    else {
-      return (*(fEventCollection.at(fCurrentTreeIdx))).at(fCurrentEventIdx);
+      return ((fEventCollection.at(fCurrentTreeIdx))).at(fCurrentEventIdx);
    }
 }
 
@@ -259,7 +257,7 @@ UInt_t TMVA::DataSet::GetNSpectators() const
 
 void TMVA::DataSet::AddEvent(Event * ev, Types::ETreeType type) 
 {
-   fEventCollection.at(Int_t(type))->push_back(ev);
+   fEventCollection.at(Int_t(type)).push_back(ev);
    if (ev->GetWeight()<0) fHasNegativeEventWeights = kTRUE;
 }
 
@@ -273,8 +271,9 @@ void TMVA::DataSet::SetEventCollection(std::vector<TMVA::Event*>* events, Types:
 
    const Int_t t = TreeIndex(type);
    ClearNClassEvents( type );
-   fEventCollection.at(t) = events;
-   for (std::vector<Event*>::iterator it = fEventCollection.at(t)->begin(); it < fEventCollection.at(t)->end(); it++) {
+   //pointer to std::vector is not serializable,
+   fEventCollection.at(t) = *events;
+   for (std::vector<Event*>::iterator it = fEventCollection.at(t).begin(); it < fEventCollection.at(t).end(); it++) {
       IncrementNClassEvents( t, (*it)->GetClass() );
    }
 }
@@ -377,11 +376,11 @@ void TMVA::DataSet::DivideTrainingSet( UInt_t blockNum )
    if (fBlockBelongToTraining.size() == blockNum) return;
    // storing the original training vector
    if (fBlockBelongToTraining.size() == 1) {
-      if (fEventCollection[tOrg] == 0)
-         fEventCollection[tOrg]=new std::vector<TMVA::Event*>(fEventCollection[tTrn]->size());
-      fEventCollection[tOrg]->clear();
-      for (UInt_t i=0; i<fEventCollection[tTrn]->size(); i++)
-         fEventCollection[tOrg]->push_back((*fEventCollection[tTrn])[i]);
+      if (fEventCollection[tOrg].size() == 0)
+         fEventCollection[tOrg].resize(fEventCollection[tTrn].size());
+      fEventCollection[tOrg].clear();
+      for (UInt_t i=0; i<fEventCollection[tTrn].size(); i++)
+         fEventCollection[tOrg].push_back(fEventCollection[tTrn][i]);
       fClassEvents[tOrg] = fClassEvents[tTrn];
    }
    //reseting the event division vector
@@ -397,17 +396,17 @@ void TMVA::DataSet::DivideTrainingSet( UInt_t blockNum )
 void TMVA::DataSet::ApplyTrainingSetDivision()
 {
    Int_t tOrg = TreeIndex(Types::kTrainingOriginal), tTrn = TreeIndex(Types::kTraining), tVld = TreeIndex(Types::kValidation);
-   fEventCollection[tTrn]->clear();
-   if (fEventCollection[tVld]==0)
-      fEventCollection[tVld] = new std::vector<TMVA::Event*>(fEventCollection[tOrg]->size());
-   fEventCollection[tVld]->clear();
+   fEventCollection[tTrn].clear();
+   if (fEventCollection[tVld].size()==0)
+      fEventCollection[tVld].resize(fEventCollection[tOrg].size());
+   fEventCollection[tVld].clear();
 
    //creating the new events collections, notice that the events that can't be evenly divided belong to the last event
-   for (UInt_t i=0; i<fEventCollection[tOrg]->size(); i++) {
+   for (UInt_t i=0; i<fEventCollection[tOrg].size(); i++) {
       if (fBlockBelongToTraining[i % fBlockBelongToTraining.size()])
-         fEventCollection[tTrn]->push_back((*fEventCollection[tOrg])[i]);
+         fEventCollection[tTrn].push_back(fEventCollection[tOrg][i]);
       else
-         fEventCollection[tVld]->push_back((*fEventCollection[tOrg])[i]);
+         fEventCollection[tVld].push_back(fEventCollection[tOrg][i]);
    }
 }
 

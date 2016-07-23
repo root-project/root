@@ -161,7 +161,7 @@ namespace TMVA {
 
       const DataSetInfo         *fdsi;                //! datasetinfo that created this dataset
 
-      std::vector< std::vector<Event*>*  > fEventCollection; //! list of events for training/testing/...
+      std::vector< std::vector<Event*>  > fEventCollection; //! list of events for training/testing/...
 
       std::vector< std::map< TString, Results* > > fResults;         //!  [train/test/...][method-identifier]
 
@@ -238,7 +238,7 @@ inline Long64_t TMVA::DataSet::GetNEvents(Types::ETreeType type) const
 //_______________________________________________________________________
 inline const std::vector<TMVA::Event*>& TMVA::DataSet::GetEventCollection( TMVA::Types::ETreeType type ) const
 {
-   return *(fEventCollection.at(TreeIndex(type)));
+   return fEventCollection.at(TreeIndex(type));
 }
 
 
