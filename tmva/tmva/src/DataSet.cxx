@@ -148,13 +148,6 @@ TMVA::DataSet::~DataSet()
    // delete sampling
    if (fSamplingRandom != 0 ) delete fSamplingRandom;
 
-   std::vector< std::pair< Float_t, Long64_t >* >::iterator itEv;
-   std::vector< std::vector<std::pair< Float_t, Long64_t >* > >::iterator treeIt;
-   for (treeIt = fSamplingEventList.begin(); treeIt != fSamplingEventList.end(); treeIt++ ) {
-      for (itEv = (*treeIt).begin(); itEv != (*treeIt).end(); itEv++) {
-         delete (*itEv);
-      }
-   }
 
    // need also to delete fEventCollections[2] and [3], not sure if they are used
    DestroyCollection( Types::kValidation, deleteEvents );
@@ -219,7 +212,7 @@ void TMVA::DataSet::DestroyCollection(Types::ETreeType type, Bool_t deleteEvents
 const TMVA::Event* TMVA::DataSet::GetEvent() const
 {
    if (fSampling.size() > UInt_t(fCurrentTreeIdx) && fSampling.at(fCurrentTreeIdx)) {
-      Long64_t iEvt = fSamplingSelected.at(fCurrentTreeIdx).at( fCurrentEventIdx )->second;
+      Long64_t iEvt = fSamplingSelected.at(fCurrentTreeIdx).at( fCurrentEventIdx ).second;
       return ((fEventCollection.at(fCurrentTreeIdx))).at(iEvt);
    }
    else {
@@ -470,7 +463,7 @@ void TMVA::DataSet::InitSampling( Float_t fraction, Float_t weight, UInt_t seed 
 
    if (fSamplingEventList.size() < UInt_t(treeIdx+1) ) fSamplingEventList.resize(treeIdx+1);
    if (fSamplingSelected.size() < UInt_t(treeIdx+1) ) fSamplingSelected.resize(treeIdx+1);
-   for (it = fSamplingEventList.at(treeIdx).begin(); it != fSamplingEventList.at(treeIdx).end(); it++ ) delete (*it);
+//    for (it = fSamplingEventList.at(treeIdx).begin(); it != fSamplingEventList.at(treeIdx).end(); it++ ) delete (*it);
    fSamplingEventList.at(treeIdx).clear();
    fSamplingSelected.at(treeIdx).clear();
 
@@ -495,7 +488,7 @@ void TMVA::DataSet::InitSampling( Float_t fraction, Float_t weight, UInt_t seed 
    fSamplingEventList.at( treeIdx ).reserve( nEvts );
    fSamplingSelected.at( treeIdx ).reserve( fSamplingNEvents.at(treeIdx) );
    for (Long64_t ievt=0; ievt<nEvts; ievt++) {
-      std::pair<Float_t,Long64_t> *p = new std::pair<Float_t,Long64_t>(1.0,ievt);
+      std::pair<Float_t,Long64_t> p(1.0,ievt);
       fSamplingEventList.at( treeIdx ).push_back( p );
    }
 
@@ -521,8 +514,8 @@ void TMVA::DataSet::CreateSampling() const
    fSamplingSelected.at(treeIdx).clear();
 
    // create a temporary event-list
-   std::vector< std::pair< Float_t, Long64_t >* > evtList;
-   std::vector< std::pair< Float_t, Long64_t >* >::iterator evtListIt;
+   std::vector< std::pair< Float_t, Long64_t > > evtList;
+   std::vector< std::pair< Float_t, Long64_t > >::iterator evtListIt;
 
    // some variables
    Float_t sumWeights = 0;
@@ -532,7 +525,7 @@ void TMVA::DataSet::CreateSampling() const
 
    // sum up all the weights (internal weights for importance sampling)
    for (evtListIt = evtList.begin(); evtListIt != evtList.end(); evtListIt++) {
-      sumWeights += (*evtListIt)->first;
+      sumWeights += (*evtListIt).first;
    }
    evtListIt = evtList.begin();
 
@@ -553,7 +546,7 @@ void TMVA::DataSet::CreateSampling() const
    std::vector< Float_t >::iterator rndsIt = rnds.begin();
    Float_t runningSum = 0.000000001;
    for (evtListIt = evtList.begin(); evtListIt != evtList.end();) {
-      runningSum += (*evtListIt)->first;
+      runningSum += (*evtListIt).first;
       if (runningSum >= (*rndsIt)) {
          fSamplingSelected.at(treeIdx).push_back( (*evtListIt) );
          evtListIt = evtList.erase( evtListIt );
@@ -590,7 +583,7 @@ void TMVA::DataSet::EventResult( Bool_t successful, Long64_t evtNumber )
                << fSamplingEventList.at(fCurrentTreeIdx).size() << " of tree " << fCurrentTreeIdx << ")" << Endl;
          return;
       }
-      Float_t weight = fSamplingEventList.at(fCurrentTreeIdx).at( iEvt )->first;
+      Float_t weight = fSamplingEventList.at(fCurrentTreeIdx).at( iEvt ).first;
       if (!successful) {
          //      weight /= (fSamplingWeight.at(fCurrentTreeIdx)/fSamplingEventList.at(fCurrentTreeIdx).size());
          weight /= fSamplingWeight.at(fCurrentTreeIdx);
@@ -600,7 +593,7 @@ void TMVA::DataSet::EventResult( Bool_t successful, Long64_t evtNumber )
          //      weight *= (fSamplingWeight.at(fCurrentTreeIdx)/fSamplingEventList.at(fCurrentTreeIdx).size());
          weight *= fSamplingWeight.at(fCurrentTreeIdx);
       }
-      fSamplingEventList.at(fCurrentTreeIdx).at( iEvt )->first = weight;
+      fSamplingEventList.at(fCurrentTreeIdx).at( iEvt ).first = weight;
    }
 }
 

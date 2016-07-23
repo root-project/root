@@ -172,8 +172,8 @@ namespace TMVA {
       std::vector<Char_t>        fSampling;                    // random or importance sampling (not all events are taken) !! Bool_t are stored ( no std::vector<bool> taken for speed (performance) issues )
       std::vector<Int_t>         fSamplingNEvents;            // number of events which should be sampled
       std::vector<Float_t>       fSamplingWeight;              // weight change factor [weight is indicating if sampling is random (1.0) or importance (<1.0)] 
-      mutable std::vector< std::vector< std::pair< Float_t, Long64_t >* > > fSamplingEventList;  // weights and indices for sampling
-      mutable std::vector< std::vector< std::pair< Float_t, Long64_t >* > > fSamplingSelected;   // selected events
+      mutable std::vector< std::vector< std::pair< Float_t, Long64_t > > > fSamplingEventList;  // weights and indices for sampling
+      mutable std::vector< std::vector< std::pair< Float_t, Long64_t > > > fSamplingSelected;   // selected events
       TRandom3                   *fSamplingRandom;             // random generator for sampling
 
 
