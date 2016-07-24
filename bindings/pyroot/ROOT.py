@@ -528,7 +528,14 @@ class ModuleFacade( types.ModuleType ):
     # use either the input hook or thread to send events to GUIs
       if self.PyConfig.StartGuiThread and \
             not ( self.keeppolling or _root.gROOT.IsBatch() ):
-         if self.PyConfig.StartGuiThread == 'inputhook' or\
+         if '__IPYTHON__' in __builtins__ and 'IPython' in sys.modules and sys.modules['IPython'].version_info[0] >= 5 :
+            from IPython.terminal import pt_inputhooks
+            def _inputhook(context):
+               while not context.input_is_ready():
+                 _root.gSystem.ProcessEvents()    
+            pt_inputhooks.register('ROOT',_inputhook)
+            get_ipython().run_line_magic('gui', 'ROOT')
+         elif self.PyConfig.StartGuiThread == 'inputhook' or\
                _root.gSystem.InheritsFrom( 'TMacOSXSystem' ):
           # new, PyOS_InputHook based mechanism
             if PyConfig.GUIThreadScheduleOnce:
