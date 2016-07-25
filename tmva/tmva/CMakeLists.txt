@@ -36,10 +36,17 @@ set(headers4 TNeuron.h TSynapse.h TActivationChooser.h TActivation.h TActivation
 	     VariableTransformBase.h VariableIdentityTransform.h VariableDecorrTransform.h VariablePCATransform.h 
 	     VariableGaussTransform.h VariableNormalizeTransform.h VariableRearrangeTransform.h VariableTransform.h ROCCalc.h ROCCurve.h)
 set(dnn_files src/DNN/Architectures/Reference.cxx src/DNN/Architectures/Reference/DataLoader.cxx)
-set(dnn_cuda_files src/DNN/Architectures/Cuda.cu
+set(dnn_cuda_files src/DNN/Architectures/Cuda/ActivationFunctions.cu
+                   src/DNN/Architectures/Cuda/Arithmetic.cu
                    src/DNN/Architectures/Cuda/CudaMatrix.cu
                    src/DNN/Architectures/Cuda/DataLoader.cu
-                   src/DNN/Architectures/Cuda/Kernels.cu)
+                   src/DNN/Architectures/Cuda/Dropout.cu
+                   src/DNN/Architectures/Cuda/Initialization.cu
+                   src/DNN/Architectures/Cuda/Kernels.cu
+                   src/DNN/Architectures/Cuda/LossFunctions.cu
+                   src/DNN/Architectures/Cuda/OutputFunctions.cu
+                   src/DNN/Architectures/Cuda/Propagation.cu
+                   src/DNN/Architectures/Cuda/Regularization.cu)
 
 #---Need to suffix each header name by TMVA/  -----------------
 foreach(hs headers1 headers2 headers3 headers4)
@@ -57,23 +64,11 @@ if (CUDA_FOUND)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDNNCUDA")
   set(cuda_libraries dnn_cuda ${CUDA_CUBLAS_LIBRARIES})
 else (CUDA_FOUND)
-  set(dnn_cuda_libraries)
+  set(cuda_libraries)
 endif(CUDA_FOUND)
 
-#---Handle BLAS dependent code. -----------------
-find_package(BLAS)
-if (BLAS_FOUND)
-  set(dnn_cpu_files src/DNN/Architectures/Cpu.cxx
-    src/DNN/Architectures/Cpu/CpuMatrix.cxx
-    src/DNN/Architectures/Cpu/DataLoader.cxx)
-  set(dnn_cpu_libraries MathCore Matrix ${BLAS_LIBRARIES} tbb ${CMAKE_THREAD_LIBS_INIT})
-else (BLAS_FOUND)
-  set(dnn_cpu_file)
-  set(dnn_cpu_libraries)
-endif(BLAS_FOUND)
-
-root_linker_library(TMVA *.cxx G__TMVA.cxx ${dnn_files} ${dnn_cpu_files}
-                    LIBRARIES Core Thread ${cuda_libraries} ${dnn_cpu_libraries}
+root_linker_library(TMVA *.cxx G__TMVA.cxx ${dnn_files}
+                    LIBRARIES Core ${cuda_libraries}
                     DEPENDENCIES RIO Hist Tree TreePlayer MLP Minuit XMLIO)
 
 install(DIRECTORY inc/TMVA/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/TMVA

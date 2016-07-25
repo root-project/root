@@ -75,34 +75,10 @@ if (CUDA_FOUND)
   TARGET_LINK_LIBRARIES(testMinimizationCuda ${Libraries} dnn_cuda
     ${CUDA_CUBLAS_LIBRARIES})
   ROOT_ADD_TEST(TMVA-DNN-MinimizationCuda COMMAND testMinimizationCuda)
+
+  # DNN - Arithmetic Cuda
+  CUDA_ADD_EXECUTABLE(testArithmeticCuda TestMatrixArithmeticCuda.cxx)
+  TARGET_LINK_LIBRARIES(testArithmeticCuda ${Libraries} dnn_cuda
+    ${CUDA_CUBLAS_LIBRARIES})
+  ROOT_ADD_TEST(TMVA-DNN-ArithmeticCuda COMMAND testArithmeticCuda)
 endif (CUDA_FOUND)
-
-# DNN - Data Loader
-find_package(BLAS)
-ROOT_EXECUTABLE(testArithmeticCpu TestMatrixArithmeticCpu.cxx
-                LIBRARIES ${Libraries})
-ROOT_ADD_TEST(TMVA-DNN-Arithmetic-Cpu COMMAND testArithmeticCpu)
-
-ROOT_EXECUTABLE(testActivationFunctionsCpu TestActivationFunctionsCpu.cxx
-                LIBRARIES ${Libraries})
-ROOT_ADD_TEST(TMVA-DNN-Activation-Functions-Cpu COMMAND testActivationFunctionsCpu)
-
-ROOT_EXECUTABLE(testLossFunctionsCpu TestLossFunctionsCpu.cxx
-                LIBRARIES ${Libraries})
-ROOT_ADD_TEST(TMVA-DNN-Loss-Functions-Cpu COMMAND testLossFunctionsCpu)
-
-ROOT_EXECUTABLE(testDerivativesCpu TestDerivativesCpu.cxx
-                LIBRARIES ${Libraries})
-ROOT_ADD_TEST(TMVA-DNN-Derivatives-Cpu COMMAND testDerivativesCpu)
-
-ROOT_EXECUTABLE(testBackpropagationCpu TestBackpropagationCpu.cxx
-                LIBRARIES ${Libraries})
-ROOT_ADD_TEST(TMVA-DNN-Backpropagation-Cpu COMMAND testBackpropagationCpu)
-
-ROOT_EXECUTABLE(testDataLoaderCpu TestDataLoaderCpu.cxx
-                LIBRARIES ${Libraries})
-ROOT_ADD_TEST(TMVA-DNN-Data-Loader-Cpu COMMAND testDataLoaderCpu)
-
-ROOT_EXECUTABLE(testMinimizationCpu TestMinimizationCpu.cxx
-                LIBRARIES ${Libraries})
-ROOT_ADD_TEST(TMVA-DNN-Minimization-Cpu COMMAND testMinimizationCpu)
