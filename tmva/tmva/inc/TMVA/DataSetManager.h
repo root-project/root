@@ -51,7 +51,7 @@ namespace TMVA {
    class DataSetFactory; // DSMTEST
    class MsgLogger;
    class Factory;
-   class DataSetManager {
+   class DataSetManager:public TObject {
       friend class Factory;
    public:
 
@@ -87,12 +87,16 @@ namespace TMVA {
       TMVA::DataSetFactory* fDatasetFactory;
 
       // access to input data
-      DataInputHandler& DataInput() { return fDataInput; }
+      DataInputHandler& DataInput() { return *fDataInput; }
 
-      DataInputHandler&          fDataInput;             //! source of input data
-      TList                      fDataSetInfoCollection; //! all registered dataset definitions
+      DataInputHandler           *fDataInput;             // source of input data
+      TList                      fDataSetInfoCollection; // all registered dataset definitions
       MsgLogger*                 fLogger;   // message logger
-      MsgLogger& Log() const { return *fLogger; }    
+      MsgLogger& Log() const { return *fLogger; }
+   public:
+       
+       ClassDef(DataSetManager,1);
+       
    };
 }
 

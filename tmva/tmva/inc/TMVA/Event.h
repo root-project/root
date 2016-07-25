@@ -147,7 +147,7 @@ namespace TMVA {
       mutable Double_t               fBoostWeight;     // internal weight to be set by boosting algorithm
       Bool_t                         fDynamic;         // is set when the dynamic values are taken
       mutable Bool_t                 fDoNotBoost;       // mark event as not to be boosted (used to compensate for events with negative event weights
-   protected:
+   public:
        
        ClassDef(Event,1);
        

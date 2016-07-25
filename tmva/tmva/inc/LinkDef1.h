@@ -23,8 +23,9 @@
 #pragma link C++ class TMVA::VariableInfo+;
 #pragma link C++ class TMVA::ClassInfo+;
 #pragma link C++ class TMVA::DataInputHandler+;
-#pragma link C++ class TMVA::DataSetInfo+;
 #pragma link C++ class TMVA::DataSet+;
+#pragma link C++ class TMVA::DataSetInfo+;
+#pragma link C++ class TMVA::DataSetManager+;
 
 // the classifiers
 #pragma link C++ class TMVA::MethodBase+;
