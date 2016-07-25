@@ -26,6 +26,8 @@
 #pragma link C++ class TMVA::DataSet+;
 #pragma link C++ class TMVA::DataSetInfo+;
 #pragma link C++ class TMVA::DataSetManager+;
+#pragma link C++ class TMVA::DataSetFactory+;
+#pragma link C++ class TMVA::DataSetFactory::EventStats+;
 
 // the classifiers
 #pragma link C++ class TMVA::MethodBase+;

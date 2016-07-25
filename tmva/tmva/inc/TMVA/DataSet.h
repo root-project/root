@@ -193,7 +193,7 @@ namespace TMVA {
 
       void  ApplyTrainingBlockDivision();
       void  ApplyTrainingSetDivision();
-   protected:
+   public:
        
        ClassDef(DataSet,1);
    };

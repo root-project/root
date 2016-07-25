@@ -205,7 +205,7 @@ namespace TMVA {
    // =========================================================
 
 
-   class DataSetFactory {
+   class DataSetFactory:public TObject {
 
       typedef std::vector<Event* >                             EventVector;
       typedef std::vector< EventVector >                        EventVectorOfClasses;
@@ -225,7 +225,7 @@ namespace TMVA {
          Float_t  nWeEvBeforeCut;
          Float_t  nWeEvAfterCut;
          Double_t nNegWeights;
-         Float_t* varAvLength;
+         Float_t* varAvLength;//->
       EventStats():
          nTrainingEventsRequested(0),
             nTestingEventsRequested(0),
@@ -253,7 +253,6 @@ namespace TMVA {
       DataSet* CreateDataSet( DataSetInfo &, DataInputHandler& );
    protected:
      
-      DataSetFactory *fgInstance;
 
       DataSet*  BuildInitialDataSet( DataSetInfo&, TMVA::DataInputHandler& );
       DataSet*  BuildDynamicDataSet( DataSetInfo& );
@@ -302,24 +301,27 @@ namespace TMVA {
       // data members
 
       // verbosity
-      Bool_t                     fVerbose;           //! Verbosity
-      TString                    fVerboseLevel;      //! VerboseLevel
+      Bool_t                     fVerbose;           // Verbosity
+      TString                    fVerboseLevel;      // VerboseLevel
 
-      Bool_t                     fScaleWithPreselEff; //! how to deal with requested #events in connection with preselection cuts 
+      Bool_t                     fScaleWithPreselEff; // how to deal with requested #events in connection with preselection cuts 
 
       // the event
-      TTree*                     fCurrentTree;       //! the tree, events are currently read from
-      UInt_t                     fCurrentEvtIdx;     //! the current event (to avoid reading of the same event)
+      TTree*                     fCurrentTree;       // the tree, events are currently read from
+      UInt_t                     fCurrentEvtIdx;     // the current event (to avoid reading of the same event)
 
       // the formulas for reading the original tree
-      std::vector<TTreeFormula*> fInputFormulas;   //! input variables
-      std::vector<TTreeFormula*> fTargetFormulas;  //! targets
-      std::vector<TTreeFormula*> fCutFormulas;     //! cuts
-      std::vector<TTreeFormula*> fWeightFormula;   //! weights
-      std::vector<TTreeFormula*> fSpectatorFormulas; //! spectators
+      std::vector<TTreeFormula*> fInputFormulas;   // input variables
+      std::vector<TTreeFormula*> fTargetFormulas;  // targets
+      std::vector<TTreeFormula*> fCutFormulas;     // cuts
+      std::vector<TTreeFormula*> fWeightFormula;   // weights
+      std::vector<TTreeFormula*> fSpectatorFormulas; // spectators
 
-      MsgLogger*                 fLogger;          //! message logger
+      MsgLogger*                 fLogger;          // message logger
       MsgLogger& Log() const { return *fLogger; }
+   public:
+       
+       ClassDef(DataSetFactory,1);
    };
 }
 
