@@ -522,7 +522,7 @@ void TMVA::Factory::WriteDataInformation(DataSetInfo&     fDataSetInfo)
       for (UInt_t cls = 0; cls < fDataSetInfo.GetNClasses() ; cls++) {
          m = fDataSetInfo.CorrelationMatrix(fDataSetInfo.GetClassInfo(cls)->GetName());
          h = fDataSetInfo.CreateCorrelationMatrixHist(m, TString("CorrelationMatrix")+fDataSetInfo.GetClassInfo(cls)->GetName(),
-                                                              "Correlation Matrix ("+ fDataSetInfo.GetClassInfo(cls)->GetName() +TString(")"));
+                                                              TString("Correlation Matrix (")+ fDataSetInfo.GetClassInfo(cls)->GetName() +TString(")"));
          if (h!=0) {
             h->Write();
             delete h;
@@ -1541,7 +1541,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
 
 	      TString header= "DataSet Name     MVA Method     "; 
 	      for(UInt_t icls = 0; icls<theMethod->fDataSetInfo.GetNClasses(); ++icls){
-		  header += Form("%-12s ",theMethod->fDataSetInfo.GetClassInfo(icls)->GetName().Data());
+		  header += Form("%-12s ",theMethod->fDataSetInfo.GetClassInfo(icls)->GetName());
 	      }
 	      Log() << kINFO << header << Endl;
 	      Log() << kINFO << hLine << Endl;

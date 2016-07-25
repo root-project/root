@@ -159,7 +159,7 @@ namespace TMVA {
       // data members
       void DestroyCollection( Types::ETreeType type, Bool_t deleteEvents );
 
-      const DataSetInfo         *fdsi;                //! datasetinfo that created this dataset
+      const DataSetInfo         *fdsi;                //-> datasetinfo that created this dataset
 
       std::vector< std::vector<Event*>  > fEventCollection; // list of events for training/testing/...
 

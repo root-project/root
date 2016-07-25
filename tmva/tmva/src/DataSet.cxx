@@ -183,7 +183,7 @@ Long64_t TMVA::DataSet::GetNClassEvents( Int_t type, UInt_t classNumber )
    catch (std::out_of_range excpt) {
       ClassInfo* ci = fdsi->GetClassInfo( classNumber );
       Log() << kFATAL << Form("Dataset[%s] : ",fdsi->GetName()) << "No " << (type==0?"training":(type==1?"testing":"_unknown_type_")) 
-            << " events for class " << (ci==NULL?"_no_name_known_":ci->GetName().Data()) << " (index # "<<classNumber<<")"
+            << " events for class " << (ci==NULL?"_no_name_known_":ci->GetName()) << " (index # "<<classNumber<<")"
             << " available. Check if all class names are spelled correctly and if events are" 
             << " passing the selection cuts." << Endl;
    } 
