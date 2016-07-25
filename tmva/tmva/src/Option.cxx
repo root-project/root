@@ -33,6 +33,8 @@
 #include "ThreadLocalStorage.h"
 #include "TString.h"
 
+ClassImp(TMVA::OptionBase)
+
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
 

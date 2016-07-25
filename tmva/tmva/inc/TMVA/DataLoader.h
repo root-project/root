@@ -68,7 +68,6 @@ namespace TMVA {
       // default destructor
       virtual ~DataLoader();
 
-//       virtual const char*  GetName() const { return fName.Data(); }
 
       // add events to training and testing trees
       void AddSignalTrainingEvent    ( const std::vector<Double_t>& event, Double_t weight = 1.0 );
@@ -190,7 +189,7 @@ namespace TMVA {
       DataSetManager* fDataSetManager; // DSMTEST
 
  
-      DataInputHandler*                         fDataInputHandler;
+      DataInputHandler*                         fDataInputHandler;//->
 
       std::vector<TMVA::VariableTransformBase*> fDefaultTrfs;     // list of transformations on default DataSet
 

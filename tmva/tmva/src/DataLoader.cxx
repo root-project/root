@@ -82,8 +82,6 @@ TMVA::DataLoader::DataLoader( TString thedlName)
 {
    fDataSetManager = new DataSetManager( *fDataInputHandler ); // DSMTEST
    SetName(thedlName.Data());
-   // render silent
-   //    if (gTools().CheckForSilentOption( GetOptions() )) Log().InhibitOutput(); // make sure is silent if wanted to
 }
 
 
@@ -91,7 +89,6 @@ TMVA::DataLoader::DataLoader( TString thedlName)
 TMVA::DataLoader::~DataLoader( void )
 {
    // destructor
-   //   delete fATreeEvent;
 
    std::vector<TMVA::VariableTransformBase*>::iterator trfIt = fDefaultTrfs.begin();
    for (;trfIt != fDefaultTrfs.end(); trfIt++) delete (*trfIt);

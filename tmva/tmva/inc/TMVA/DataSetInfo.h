@@ -207,7 +207,7 @@ namespace TMVA {
       // expressions/formulas
       std::vector<VariableInfo>  fVariables;         // list of variable expressions/internal names
       std::vector<VariableInfo>  fTargets;           // list of targets expressions/internal names
-      std::vector<VariableInfo>  fSpectators;          // list of spectators expressions/internal names
+      std::vector<VariableInfo>  fSpectators;        // list of spectators expressions/internal names
 
       // the classes
       mutable std::vector<ClassInfo*> fClasses;      // name and other infos of the classes
@@ -227,7 +227,7 @@ namespace TMVA {
 
       UInt_t                     fSignalClass;       // index of the class with the name signal
 
-      std::vector<Float_t>*      fTargetsForMulticlass;       //! all targets 0 except the one with index==classNumber
+      std::vector<Float_t>*      fTargetsForMulticlass;//! all targets 0 except the one with index==classNumber
       
       mutable MsgLogger*         fLogger;            // message logger
       MsgLogger& Log() const { return *fLogger; }

@@ -159,22 +159,22 @@ namespace TMVA {
       // data members
       void DestroyCollection( Types::ETreeType type, Bool_t deleteEvents );
 
-      const DataSetInfo         *fdsi;                //-> datasetinfo that created this dataset
+      const DataSetInfo         *fdsi;                       //-> datasetinfo that created this dataset
 
-      std::vector< std::vector<Event*>  > fEventCollection; // list of events for training/testing/...
+      std::vector< std::vector<Event*>  > fEventCollection;  // list of events for training/testing/...
 
-      std::vector< std::map< TString, Results* > > fResults;         //  [train/test/...][method-identifier]
+      std::vector< std::map< TString, Results* > > fResults; //  [train/test/...][method-identifier]
 
       mutable UInt_t             fCurrentTreeIdx;
       mutable Long64_t           fCurrentEventIdx;
 
       // event sampling
-      std::vector<Char_t>        fSampling;                    // random or importance sampling (not all events are taken) !! Bool_t are stored ( no std::vector<bool> taken for speed (performance) issues )
+      std::vector<Char_t>        fSampling;                   // random or importance sampling (not all events are taken) !! Bool_t are stored ( no std::vector<bool> taken for speed (performance) issues )
       std::vector<Int_t>         fSamplingNEvents;            // number of events which should be sampled
-      std::vector<Float_t>       fSamplingWeight;              // weight change factor [weight is indicating if sampling is random (1.0) or importance (<1.0)] 
+      std::vector<Float_t>       fSamplingWeight;             // weight change factor [weight is indicating if sampling is random (1.0) or importance (<1.0)] 
       mutable std::vector< std::vector< std::pair< Float_t, Long64_t > > > fSamplingEventList;  // weights and indices for sampling
       mutable std::vector< std::vector< std::pair< Float_t, Long64_t > > > fSamplingSelected;   // selected events
-      TRandom3                   *fSamplingRandom;             // random generator for sampling
+      TRandom3                   *fSamplingRandom;             //-> random generator for sampling
 
 
       // further things
@@ -183,7 +183,7 @@ namespace TMVA {
 
       Bool_t                     fHasNegativeEventWeights;     // true if at least one signal or bkg event has negative weight
 
-      mutable MsgLogger*         fLogger;   // message logger
+      mutable MsgLogger*         fLogger;   //-> message logger
       MsgLogger& Log() const { return *fLogger; }
       std::vector<Char_t>        fBlockBelongToTraining;       // when dividing the dataset to blocks, sets whether 
                                                                // the certain block is in the Training set or else 
