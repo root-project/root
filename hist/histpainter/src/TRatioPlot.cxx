@@ -53,21 +53,26 @@ TRatioPlot::TRatioPlot()
 ///
 
 // @TODO: This should work with stacks as well
+// @TODO: Needs options for axes
+// @TODO: Needs options for drawing of h1, h2, ratio
+// @TODO: Need getters for pads
+
 TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, const char *name /*=0*/, const char *title /*=0*/, Option_t *divideOption)
    : TPad(name, title, 0, 0, 1, 1),
-//     TNamed(name, title),
-     fH1(h1),
-     fH2(h2),
-     fDivideOption(0),
      fUpperPad(0),
      fLowerPad(0),
      fTopPad(0),
+     fH1(h1),
+     fH2(h2),
+     fDivideOption(0),
      fRatioGraph(0),
      fSharedXAxis(0),
      fUpperGXaxis(0),
      fLowerGXaxis(0),
      fUpperGYaxis(0),
-     fLowerGYaxis(0)
+     fLowerGYaxis(0),
+     fUpYaxis(0),
+     fLowYaxis(0)
 {
    gROOT->GetListOfCleanups()->Add(this);
 
@@ -85,8 +90,6 @@ TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, const char *name /*=0*/, const char *ti
    }
 
 
-   // taking x axis information from h1 by cloning it x axis
-   fSharedXAxis = (TAxis*)(fH1->GetXaxis()->Clone());
 
    fParentPad = gPad;
 
@@ -103,10 +106,21 @@ TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, const char *name /*=0*/, const char *ti
    }
 
    fDivideOption = divideOptionString;
+
+
+   // build ratio, everything is ready
+   BuildRatio();
+
+   // taking x axis information from h1 by cloning it x axis
+   fSharedXAxis = (TAxis*)(fH1->GetXaxis()->Clone());
+   fUpYaxis = (TAxis*)(fH1->GetYaxis()->Clone());
+   fLowYaxis = (TAxis*)(fRatioGraph->GetYaxis()->Clone());
 }
 
 
 void TRatioPlot::SetupPads() {
+
+   // this method will delete all the pads before recreating them
 
    if (fUpperPad != 0) {
       delete fUpperPad;
@@ -130,6 +144,8 @@ void TRatioPlot::SetupPads() {
    fUpperPad->Connect("UnZoomed()", "TRatioPlot", this, "UnZoomed()");
    fLowerPad->Connect("UnZoomed()", "TRatioPlot", this, "UnZoomed()");
 
+   fUpperPad->Connect("Resized()", "TRatioPlot", this, "SubPadResized()");
+   fLowerPad->Connect("Resized()", "TRatioPlot", this, "SubPadResized()");
 
 
    if (fTopPad != 0) {
@@ -137,7 +153,7 @@ void TRatioPlot::SetupPads() {
       fTopPad = 0;
    }
 
-   Double_t margin = 0;//0.01;
+   Double_t margin = 0;
    fTopPad = new TPad(TString::Format("%s_%s", fName.Data(), "top_pad"), "", margin, margin, 1-margin, 1-margin);
 
    fTopPad->SetBit(kCannotPick);
@@ -145,18 +161,11 @@ void TRatioPlot::SetupPads() {
 }
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// TRatioPlot destructor
-
-//TRatioPlot::~TRatioPlot()
-//{
-//   gROOT->GetListOfCleanups()->Remove(this);
-//}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TRatioPlot copy constructor
 
-TRatioPlot::TRatioPlot(const TRatioPlot &hrp)
+TRatioPlot::TRatioPlot(const TRatioPlot &/*hrp*/)
 {
    Warning("TRatioPlot", "Copy constructor not yet implemented");
     return;
@@ -172,16 +181,54 @@ void TRatioPlot::Browse(TBrowser *b)
    gPad->Update();
 }
 
+void TRatioPlot::SetUpTopMargin(Float_t margin)
+{
+   fUpTopMargin = margin;
+   SetPadMargins();
+}
+
+void TRatioPlot::SetUpBottomMargin(Float_t margin)
+{
+   fUpBottomMargin = margin;
+   SetPadMargins();
+}
+
+void TRatioPlot::SetLowTopMargin(Float_t margin)
+{
+   fLowTopMargin = margin;
+   SetPadMargins();
+}
+
+void TRatioPlot::SetLowBottomMargin(Float_t margin)
+{
+   fLowBottomMargin = margin;
+   SetPadMargins();
+}
+
+void TRatioPlot::SetLeftMargin(Float_t margin)
+{
+   fLeftMargin = margin;
+   SetPadMargins();
+}
+
+void TRatioPlot::SetRightMargin(Float_t margin)
+{
+   fRightMargin = margin;
+   SetPadMargins();
+}
+
+
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw
 void TRatioPlot::Draw(Option_t *option)
 {
 
-   __("TRatioPlot::Draw called");
+   //__("TRatioPlot::Draw called");
 
    TVirtualPad *padsav = gPad;
 
-   BuildRatio();
    TPad::Draw(option);
 
    // we are a TPad
@@ -191,13 +238,12 @@ void TRatioPlot::Draw(Option_t *option)
    fLowerPad->Draw();
 
    fTopPad->SetFillStyle(0);
-//   fTopPad->SetFillColor(kBlue);
    fTopPad->Draw();
 
 
    fUpperPad->cd();
 
-
+   // we need to hide the original axes of the hist 
    fH1->GetXaxis()->SetTickSize(0.);
    fH1->GetXaxis()->SetLabelSize(0.);
    fH1->GetYaxis()->SetTickSize(0.);
@@ -208,6 +254,7 @@ void TRatioPlot::Draw(Option_t *option)
 
    fLowerPad->cd();
 
+   // hide visual axis of lower pad display
    fRatioGraph->GetXaxis()->SetTickSize(0.);
    fRatioGraph->GetXaxis()->SetLabelSize(0.);
    fRatioGraph->GetYaxis()->SetTickSize(0.);
@@ -217,80 +264,83 @@ void TRatioPlot::Draw(Option_t *option)
 
    fTopPad->cd();
 
-//   CreateVisualAxes();
-
+   // assign same axis ranges to lower pad as in upper pad
+   // the visual axes will be created on paint
    SyncAxesRanges();
 
    padsav->cd();
 
 }
 
+// Does not really do anything right now, other than call super
+// @TODO: Remove this if not needed
 void TRatioPlot::Paint(Option_t *opt) {
-
-
-//   if (fPainting) {
-//      return;
-//   }
-
-   __("TRatioPlot::Paint" << " begin");
-//   fPainting = kTRUE;
-
-//   std::cout << "TRatioPlot::Paint called " << opt << std::endl;
-
-
-//   CalculateSizes();
-
-//   fUpperPad->Paint();
-//   fLowerPad->Paint();
-
    TPad::Paint(opt);
-//   CreateVisualAxes();
-
-
-//   fPainting = kFALSE;
-   __("TRatioPlot::Paint" << " end");
 }
 
 void TRatioPlot::PaintModified()
 {
-
    TPad::PaintModified();
-   CreateVisualAxes();
+   
+   // sync y axes
+   fH1->GetYaxis()->ImportAttributes(fUpYaxis);
+   fRatioGraph->GetYaxis()->ImportAttributes(fLowYaxis);
 
+   fH1->GetXaxis()->SetTickSize(0.);
+   fH1->GetXaxis()->SetLabelSize(0.);
+   fH1->GetYaxis()->SetTickSize(0.);
+   fH1->GetYaxis()->SetLabelSize(0.);
+   
+   fRatioGraph->GetXaxis()->SetTickSize(0.);
+   fRatioGraph->GetXaxis()->SetLabelSize(0.);
+   fRatioGraph->GetYaxis()->SetTickSize(0.);
+   fRatioGraph->GetYaxis()->SetLabelSize(0.);
+   
+   // create the visual axes
+   CreateVisualAxes();
 }
 
 void TRatioPlot::SyncAxesRanges()
 {
-   // sync ranges
+   // get ranges from the shared axis clone
    Double_t first = fSharedXAxis->GetBinLowEdge(fSharedXAxis->GetFirst());
    Double_t last = fSharedXAxis->GetBinUpEdge(fSharedXAxis->GetLast());
 
-
+   // set range on computed graph, have to set it twice becaus 
+   // TGraph's axis looks strange otherwise
    fRatioGraph->GetXaxis()->SetLimits(first, last);
    fRatioGraph->GetXaxis()->SetRangeUser(first, last);
+
    fH1->GetXaxis()->SetRangeUser(first, last);
-   fH2->GetXaxis()->SetRangeUser(first, last);
+   //fH2->GetXaxis()->SetRangeUser(first, last);
 
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Build the lower plot according to which constructor was called, and
+/// which options were passed.
+/// @TODO: Actually implement this, currently it can only do ratios
 void TRatioPlot::BuildRatio()
 {
 //   __(__PRETTY_FUNCTION__ << " called");
 
+   // Clear and delete the graph if not exists
    if (fRatioGraph != 0) {
-      // have ratio graph, delete it
       fRatioGraph->IsA()->Destructor(fRatioGraph);
       fRatioGraph = 0;
    }
 
+   // Determine the divide mode and create the lower graph accordingly
+   // Pass divide options given in constructor
    if (fDivideMode == DIVIDE_GRAPH) {
-//      std::cout << "DIVIDE_GRAPH " << fDivideOption << std::endl;
+      // use TGraphAsymmErrors Divide method to create
       TGraphAsymmErrors *ratioGraph = new TGraphAsymmErrors();
       ratioGraph->Divide(fH1, fH2, fDivideOption.Data());
       fRatioGraph = ratioGraph;
    }
    else {
-//      std::cout << "DIVIDE_HIST " << fDivideOption << std::endl;
+      // Use TH1's Divide method
+      // @TODO: Add factors for both histograms: c1, c2, via constructor and setters
       TH1 *tmpHist = (TH1*)fH1->Clone();
       tmpHist->Reset();
       tmpHist->Divide(fH1, fH2, 1., 1., fDivideOption.Data());
@@ -301,11 +351,14 @@ void TRatioPlot::BuildRatio()
 }
 
 
-
+////////////////////////////////////////////////////////////////////////////////
+/// (Re-)Creates the TGAxis objects that are used for consistent display of the 
+/// axes.
 void TRatioPlot::CreateVisualAxes()
 {
 
 //   __(__PRETTY_FUNCTION__ << " called");
+
 
    if (fUpperGXaxis != 0) {
       delete fUpperGXaxis;
@@ -323,7 +376,8 @@ void TRatioPlot::CreateVisualAxes()
       delete fLowerGYaxis;
    }
 
-
+   // figure out where the axis has to go.
+   // Implicit assumption is, that the top pad spans the full other pads
    Double_t upTM = fUpperPad->GetTopMargin();
    Double_t upBM = fUpperPad->GetBottomMargin();
    Double_t upLM = fUpperPad->GetLeftMargin();
@@ -334,66 +388,48 @@ void TRatioPlot::CreateVisualAxes()
    Double_t lowLM = fLowerPad->GetLeftMargin();
    Double_t lowRM = fLowerPad->GetRightMargin();
 
-//   var_dump(upTM);
-//   var_dump(upBM);
-//   var_dump(upLM);
-//   var_dump(upRM);
-//   var_dump(lowTM);
-//   var_dump(lowBM);
-//   var_dump(lowLM);
-//   var_dump(lowRM);
-
-//   Double_t mf = 0.01 + 1;
-
    Double_t first = fSharedXAxis->GetBinLowEdge(fSharedXAxis->GetFirst());
    Double_t last = fSharedXAxis->GetBinUpEdge(fSharedXAxis->GetLast());
-
 
    Double_t upYFirst = fUpperPad->GetUymin();
    Double_t upYLast = fUpperPad->GetUymax();
    Double_t lowYFirst = fLowerPad->GetUymin();
    Double_t lowYLast = fLowerPad->GetUymax();
 
-//   var_dump(upYFirst);
-//   var_dump(upYLast);
-//   var_dump(lowYFirst);
-//   var_dump(lowYLast);
+   Float_t sf = fSplitFraction;
+
+   fUpperGXaxis = new TGaxis(upLM, upBM*(1-sf)+sf, (1-upRM), upBM*(1-sf)+sf, first, last);
+   fLowerGXaxis = new TGaxis(lowLM, lowBM*sf, 1-lowRM, lowBM*sf, first, last);
+   fUpperGYaxis = new TGaxis(upLM, upBM*(1-sf)+sf, upLM, (1-upTM)*(1-sf)+sf, upYFirst, upYLast, 510, "-S");
+   fLowerGYaxis = new TGaxis(lowLM, lowBM*sf, lowLM, (1-lowTM)*sf, lowYFirst, lowYLast, 510, "-S");
+
+   // import infos from TAxes
+   fUpperGXaxis->ImportAxisAttributes(fSharedXAxis);
+   fUpperGYaxis->ImportAxisAttributes(fUpYaxis);
+   fLowerGXaxis->ImportAxisAttributes(fSharedXAxis);
+   fLowerGYaxis->ImportAxisAttributes(fLowYaxis);
 
 
-   fUpperGXaxis = new TGaxis(upLM, upBM*(1-fSplitFraction)+fSplitFraction, (1-upRM), upBM*(1-fSplitFraction)+fSplitFraction, first, last);
+   // normalize the tick sizes. y axis ticks should be consistent
+   // even if their length is different
+   Double_t ratio = ( (upBM-(1-upTM))*(1-sf) ) / ( (lowBM-(1-lowTM))*sf ) ;
    fUpperGXaxis->SetLabelSize(0.);
-
-   fLowerGXaxis = new TGaxis(lowLM, lowBM*fSplitFraction, 1-lowRM, lowBM*fSplitFraction, first, last);
-
-   fUpperGYaxis = new TGaxis(upLM, upBM*(1-fSplitFraction)+fSplitFraction, upLM, (1-upTM)*(1-fSplitFraction)+fSplitFraction, upYFirst, upYLast, 510, "-S");
-   fLowerGYaxis = new TGaxis(lowLM, lowBM*fSplitFraction, lowLM, (1-lowTM)*fSplitFraction, lowYFirst, lowYLast, 510, "-S");
-
-   Double_t ratio = ( (upBM-(1-upTM))*(1-fSplitFraction) ) / ( (lowBM-(1-lowTM))*fSplitFraction ) ;
-
-//   var_dump(ratio);
-
-//   fUpperGYaxis->SetTickSize(0);
-//   fLowerGYaxis->SetTickSize(0);
-//   fUpperGXaxis->SetTickSize(0);
-//   fLowerGXaxis->SetTickSize(0);
-
-
-
    fLowerGYaxis->SetTickSize(fUpperGYaxis->GetTickSize()*ratio);
 
+   // draw TG axes to top pad
    TVirtualPad *padsav = gPad;
-
    fTopPad->cd();
-
    fUpperGXaxis->Draw();
    fLowerGXaxis->Draw();
    fUpperGYaxis->Draw();
    fLowerGYaxis->Draw();
-
    padsav->cd();
 
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the margins of all the pads to the value specified in class members.
+/// This one is called whenever those are changed, e.g. in setters
 void TRatioPlot::SetPadMargins()
 {
    fUpperPad->SetTopMargin(fUpTopMargin);
@@ -406,6 +442,10 @@ void TRatioPlot::SetPadMargins()
    fLowerPad->SetRightMargin(fRightMargin);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Figures out which pad margin has deviated from the stored ones,
+/// to figure out what the new nominal is and set the other pad to it
+/// subsequently.
 Bool_t TRatioPlot::SyncPadMargins()
 {
 
@@ -430,31 +470,32 @@ Bool_t TRatioPlot::SyncPadMargins()
    }
 
    if (changed) {
-
       SetPadMargins();
    }
 
-
    Bool_t verticalChanged = kFALSE;
-   Double_t delta;
 
    if (fUpperPad->GetBottomMargin() != fUpBottomMargin) {
 
       verticalChanged = kTRUE;
       fUpBottomMargin = fUpperPad->GetBottomMargin();
-      delta = (fUpBottomMargin - fUpBottomMarginNominal)*(1-fSplitFraction);
 
-   } else if (fLowerPad->GetTopMargin() != fLowTopMargin) {
+   }
+   
+   if (fLowerPad->GetTopMargin() != fLowTopMargin) {
 
       verticalChanged = kTRUE;
       fLowTopMargin = fLowerPad->GetTopMargin();
-      delta = -(fLowTopMargin - fLowTopMarginNominal)*fSplitFraction;
 
-   } else if (fLowerPad->GetBottomMargin() != fLowBottomMargin) {
+   }
+   
+   if (fLowerPad->GetBottomMargin() != fLowBottomMargin) {
 
       fLowBottomMargin = fLowerPad->GetBottomMargin();
 
-   } else if (fUpperPad->GetTopMargin() != fUpTopMargin) {
+   }
+   
+   if (fUpperPad->GetTopMargin() != fUpTopMargin) {
 
       fUpTopMargin = fUpperPad->GetTopMargin();
 
@@ -462,7 +503,6 @@ Bool_t TRatioPlot::SyncPadMargins()
 
 
    if (verticalChanged) {
-      SetSplitFraction(fSplitFraction + delta);
       SetPadMargins();
    }
 
@@ -470,16 +510,21 @@ Bool_t TRatioPlot::SyncPadMargins()
 
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Slot that receives the RangeAxisChanged signal from any of the pads and
+/// reacts correspondingly.
 void TRatioPlot::RangeAxisChanged()
 {
+   // Only run this concurrently once, in case it's called async
    if (fIsUpdating) {
       return;
    }
 
-   __("TRatioPlot::RangeAxisChanged" << " begin");
+   //__("TRatioPlot::RangeAxisChanged" << " begin");
 
    fIsUpdating = kTRUE;
 
+   // get axis ranges for upper and lower 
    Double_t upFirst = fH1->GetXaxis()->GetBinLowEdge(fH1->GetXaxis()->GetFirst());
    Double_t upLast  = fH1->GetXaxis()->GetBinUpEdge(fH1->GetXaxis()->GetLast());
 
@@ -492,6 +537,7 @@ void TRatioPlot::RangeAxisChanged()
    Bool_t upChanged = kFALSE;
    Bool_t lowChanged = kFALSE;
 
+   // determine which one has changed
    if (upFirst != globFirst || upLast != globLast) {
       fSharedXAxis->SetRangeUser(upFirst, upLast);
       upChanged = kTRUE;
@@ -500,77 +546,82 @@ void TRatioPlot::RangeAxisChanged()
       fSharedXAxis->SetRangeUser(lowFirst, lowLast);
       lowChanged = kTRUE;
    }
-   else {
-   }
-
-//   var_dump(upFirst);
-//   var_dump(upLast);
-//   var_dump(lowFirst);
-//   var_dump(lowLast);
-//   var_dump(globFirst);
-//   var_dump(globLast);
-
-
 
    if (upChanged || lowChanged) {
-      __("Axis range changed");
       SyncAxesRanges();
       CreateVisualAxes();
 
-//      fH1->Paint();
-//      fH2->Paint();
-
+      // @TODO: Fix updating, it's not working if zooming on lower axis
       fUpperPad->Modified();
       fLowerPad->Modified();
       fTopPad->Modified();
       Modified();
       fCanvas->Modified();
       fCanvas->Update();
-
    }
 
+   // sync the margins in case the user has dragged one of them
    Bool_t marginsChanged = SyncPadMargins();
 
 
    if (marginsChanged) {
       SetSplitFraction(fSplitFraction);
-
+      CreateVisualAxes();
+      
+      // @TODO: Fix updating, it's not working if zooming on lower axis
       fUpperPad->Modified();
       fLowerPad->Modified();
       fTopPad->Modified();
       Modified();
       fCanvas->Modified();
       fCanvas->Update();
+
    }
 
-   // @TODO
-   // Always do this to catch y axis change?
-   // Good idea?
 
-//   CreateVisualAxes();
-//
-//   fUpperPad->Modified();
-//   fLowerPad->Modified();
-//   fTopPad->Modified();
-//   Modified();
-//   fCanvas->Modified();
-//   fCanvas->Update();
+   // figure out if y axis has changed 
+   Double_t upYFirst = fUpperPad->GetUymin();
+   Double_t upYLast = fUpperPad->GetUymax();
+   Double_t lowYFirst = fLowerPad->GetUymin();
+   Double_t lowYLast = fLowerPad->GetUymax();
+
+   
+
+   Bool_t ychanged = (
+         upYFirst != fUpYFirst
+      || upYLast != fUpYLast
+      || lowYFirst != fLowYFirst
+      || lowYLast != fLowYLast
+   );
+   
+   fUpYFirst = upYFirst;
+   fUpYLast = upYLast;
+   fLowYFirst = lowYFirst;
+   fLowYLast = lowYLast;
+
+   // recreate axes if y changed
+   if (ychanged) {
+      CreateVisualAxes();
+   }
 
    fIsUpdating = kFALSE;
-   __("TRatioPlot::RangeAxisChanged" << " end");
+   //__("TRatioPlot::RangeAxisChanged" << " end");
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for the UnZoomed signal that was introduced to TAxis. 
+/// Unzooms both pads
 void TRatioPlot::UnZoomed()
 {
-   __(__PRETTY_FUNCTION__ << " called");
+   //__(__PRETTY_FUNCTION__ << " called");
 
+   // this is what resets the range
    fSharedXAxis->SetRange(0, 0);
-
    SyncAxesRanges();
 
-
-//   Paint();
-
+   // Flushing
+   // @TODO: Flushing is not working all the time
    fUpperPad->Modified();
    fLowerPad->Modified();
    fTopPad->Modified();
@@ -579,6 +630,52 @@ void TRatioPlot::UnZoomed()
    fCanvas->Update();
 }
 
+void TRatioPlot::SubPadResized() 
+{
+   if (fIsPadUpdating) {
+      return;
+   }
+
+   fIsPadUpdating = kTRUE;
+
+   //Float_t upxlow = fUpperPad->GetAbsXlowNDC();
+   Float_t upylow = fUpperPad->GetAbsYlowNDC();
+   //Float_t uph = fUpperPad->GetAbsHNDC();
+   //Float_t upw = fUpperPad->GetAbsWNDC();
+   //Float_t upyup = upylow + uph; 
+   //Float_t upxup = upxlow + upw;
+
+   //Float_t lowxlow = fLowerPad->GetAbsXlowNDC();
+   Float_t lowylow = fLowerPad->GetAbsYlowNDC();
+   Float_t lowh = fLowerPad->GetAbsHNDC();
+   //Float_t loww = fLowerPad->GetAbsWNDC();
+   Float_t lowyup = lowylow + lowh; 
+   //Float_t lowxup = lowxlow + loww;
+
+   Bool_t changed = kFALSE;
+
+   if (upylow != fSplitFraction) {
+      // up changed
+      SetSplitFraction(upylow);
+      changed = kTRUE;
+   }
+   else if (lowyup != fSplitFraction) {
+      // low changed
+      SetSplitFraction(lowyup);
+      changed = kTRUE;
+   }
+    
+   if (changed) {
+      CreateVisualAxes();
+   }
+
+   fIsPadUpdating = kFALSE;
+
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the fraction of the parent pad, at which the to sub pads should meet
 void TRatioPlot::SetSplitFraction(Float_t sf) {
    fSplitFraction = sf;
    fUpperPad->SetPad(0., fSplitFraction, 1., 1.);

@@ -1113,9 +1113,6 @@ void TAxis::UnZoom()
    if (!gPad) return;
    gPad->SetView();
 
-   // @TODO: Does this make sense? Maybe it would be better to repaint from top?
-//   gPad->UnZoom(this);
-
    //unzoom object owning this axis
    SetRange(0,0);
    TH1 *hobj1 = (TH1*)GetParent();

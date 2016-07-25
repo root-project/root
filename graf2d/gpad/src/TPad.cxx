@@ -2130,8 +2130,9 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          // Reset pad parameters and recompute conversion coefficients
          ResizePad();
 
+
          // emit signal
-         RangeChanged();
+         //RangeChanged();
       }
 
       break;
@@ -4118,7 +4119,7 @@ TPad *TPad::Pick(Int_t px, Int_t py, TObjLink *&pickobj)
       if (picked == this) {
          // cannot pick pad itself!
          picked = 0;
-         pickobj = new TObjLink(0);
+         //pickobj = new TObjLink(0);
       }
 
    }
@@ -5017,6 +5018,9 @@ void TPad::ResizePad(Option_t *option)
          padsav->cd();
       }
    }
+
+   Resized();
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
