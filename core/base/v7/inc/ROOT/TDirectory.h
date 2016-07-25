@@ -168,11 +168,13 @@ public:
   void Add(const std::string& name, const std::shared_ptr<T>& ptr) {
     Internal::TDirectoryEntry entry(ptr);
     // FIXME: CXX17: insert_or_assign
-    bool inserted = fContent.insert({name, entry}).second;
-    if (!inserted) {
+    auto idx = fContent.find(name);
+    if (idx != fContent.end()) {
       R__LOG_HERE(ELogLevel::kWarning, "CORE")
         << "Replacing object with name \"" << name << "\"" << std::endl;
-      fContent[name] = entry;
+      idx->second.swap(entry);
+    } else {
+      fContent[name].swap(entry);
     }
   }
 
