@@ -40,7 +40,6 @@ public:
     TDirectoryEntry(std::make_shared<T>(*ptr)) {}
   template<class T>
   explicit TDirectoryEntry(const std::shared_ptr<T>& ptr):
-    fTypeInfo(&typeid(T)),
     fType(TClass::GetClass(typeid(T))),
     fObj(ptr) {}
 
@@ -52,7 +51,7 @@ public:
   void SetChanged() { fDate = clock_t::now(); }
 
   /// Type of the object represented by this entry.
-  const std::type_info& GetTypeInfo() const { return *fTypeInfo; }
+  const std::type_info& GetTypeInfo() const { return *fType->GetTypeInfo(); }
 
   /// Get the object's type.
   TClass* GetType() const { return fType; }
@@ -68,7 +67,6 @@ public:
 
 private:
   time_point_t fDate = clock_t::now(); ///< Time of last change
-  const std::type_info* fTypeInfo;
   TClass* fType;
   std::shared_ptr<void> fObj;
 };
