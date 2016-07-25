@@ -65,6 +65,8 @@ public:
 
   explicit operator bool() const { return !!fObj; }
 
+  void swap(TDirectoryEntry& other) noexcept;
+
 private:
   time_point_t fDate = clock_t::now(); ///< Time of last change
   TClass* fType;
@@ -77,6 +79,20 @@ std::shared_ptr<U> TDirectoryEntry::CastPointer() const
   if (auto ptr = fType->DynamicCast(TClass::GetClass(typeid(U)), fObj.get()))
     return std::shared_ptr<U>(fObj, static_cast<U*>(ptr));
   return std::shared_ptr<U>();
+}
+
+inline void TDirectoryEntry::swap(TDirectoryEntry& other) noexcept
+{
+  using std::swap;
+
+  swap(fDate, other.fDate);
+  swap(fType, other.fType);
+  swap(fObj, other.fObj);
+}
+
+inline void swap(TDirectoryEntry& e1, TDirectoryEntry& e2) noexcept
+{
+  e1.swap(e2);
 }
 
 inline bool operator==(const TDirectoryEntry& lhs, const TDirectoryEntry& rhs)
