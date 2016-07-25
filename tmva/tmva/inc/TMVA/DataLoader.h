@@ -63,13 +63,12 @@ namespace TMVA {
       friend class Factory;
    public:
 
-      // no default  constructor
-      DataLoader( TString thedlName);
+       DataLoader( TString thedlName="default");
 
       // default destructor
       virtual ~DataLoader();
 
-      virtual const char*  GetName() const { return fName.Data(); }
+//       virtual const char*  GetName() const { return fName.Data(); }
 
       // add events to training and testing trees
       void AddSignalTrainingEvent    ( const std::vector<Double_t>& event, Double_t weight = 1.0 );
@@ -193,22 +192,20 @@ namespace TMVA {
  
       DataInputHandler*                         fDataInputHandler;
 
-      std::vector<TMVA::VariableTransformBase*> fDefaultTrfs;     //! list of transformations on default DataSet
+      std::vector<TMVA::VariableTransformBase*> fDefaultTrfs;     // list of transformations on default DataSet
 
       // cd to local directory
-      TString                                   fOptions;         //! option string given by construction (presently only "V")
-      TString                                   fTransformations; //! List of transformations to test
-      Bool_t                                    fVerbose;         //! verbose mode
-
-      TString                                   fName;         //! name, used as directory in output
+      TString                                   fOptions;         // option string given by construction (presently only "V")
+      TString                                   fTransformations; // List of transformations to test
+      Bool_t                                    fVerbose;         // verbose mode
 
       // flag determining the way training and test data are assigned to DataLoader
       enum DataAssignType { kUndefined = 0, 
                             kAssignTrees,
                             kAssignEvents };
-      DataAssignType                            fDataAssignType;  //! flags for data assigning
-      std::vector<TTree*>                       fTrainAssignTree; //! for each class: tmp tree if user wants to assign the events directly
-      std::vector<TTree*>                       fTestAssignTree;  //! for each class: tmp tree if user wants to assign the events directly
+      DataAssignType                            fDataAssignType;  // flags for data assigning
+      std::vector<TTree*>                       fTrainAssignTree; // for each class: tmp tree if user wants to assign the events directly
+      std::vector<TTree*>                       fTestAssignTree;  // for each class: tmp tree if user wants to assign the events directly
 
       std::vector<TTree*>                       fTrainSigTree;
       std::vector<TTree*>                       fTrainBkgTree;
@@ -217,13 +214,13 @@ namespace TMVA {
 
       Int_t                                     fATreeType;          // type of event (=classIndex)
       Float_t                                   fATreeWeight;        // weight of the event
-      Float_t*                                  fATreeEvent;         // event variables
+      std::vector<Float_t>                      fATreeEvent;         // event variables
       
-      Types::EAnalysisType                      fAnalysisType;    //! the training type
+      Types::EAnalysisType                      fAnalysisType;    // the training type
 
    protected:
 
-      ClassDef(DataLoader,1);
+      ClassDef(DataLoader,2);
    };
    //utility function to copy dataloaders
    void DataLoaderCopy(TMVA::DataLoader* des, TMVA::DataLoader* src);

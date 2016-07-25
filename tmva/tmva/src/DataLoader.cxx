@@ -77,12 +77,11 @@ TMVA::DataLoader::DataLoader( TString thedlName)
    fDataInputHandler     ( new DataInputHandler ),
    fTransformations      ( "I" ),
    fVerbose              ( kFALSE ),
-   fName                 ( thedlName ),
    fDataAssignType       ( kAssignEvents ),
-   fATreeEvent           ( NULL )
+   fATreeEvent           (0)
 {
    fDataSetManager = new DataSetManager( *fDataInputHandler ); // DSMTEST
-
+   SetName(thedlName.Data());
    // render silent
    //    if (gTools().CheckForSilentOption( GetOptions() )) Log().InhibitOutput(); // make sure is silent if wanted to
 }
@@ -143,21 +142,21 @@ TTree* TMVA::DataLoader::CreateEventAssignTrees( const TString& name )
    std::vector<VariableInfo>& tgts = DefaultDataSetInfo().GetTargetInfos();
    std::vector<VariableInfo>& spec = DefaultDataSetInfo().GetSpectatorInfos();
 
-   if (!fATreeEvent) fATreeEvent = new Float_t[vars.size()+tgts.size()+spec.size()];
+   if (fATreeEvent.size()==0) fATreeEvent.resize(vars.size()+tgts.size()+spec.size());
    // add variables
    for (UInt_t ivar=0; ivar<vars.size(); ivar++) {
       TString vname = vars[ivar].GetExpression();
-      assignTree->Branch( vname, &(fATreeEvent[ivar]), vname + "/F" );
+      assignTree->Branch( vname, &fATreeEvent[ivar], vname + "/F" );
    }
    // add targets
    for (UInt_t itgt=0; itgt<tgts.size(); itgt++) {
       TString vname = tgts[itgt].GetExpression();
-      assignTree->Branch( vname, &(fATreeEvent[vars.size()+itgt]), vname + "/F" );
+      assignTree->Branch( vname, &fATreeEvent[vars.size()+itgt], vname + "/F" );
    }
    // add spectators
    for (UInt_t ispc=0; ispc<spec.size(); ispc++) {
       TString vname = spec[ispc].GetExpression();
-      assignTree->Branch( vname, &(fATreeEvent[vars.size()+tgts.size()+ispc]), vname + "/F" );
+      assignTree->Branch( vname, &fATreeEvent[vars.size()+tgts.size()+ispc], vname + "/F" );
    }
    return assignTree;
 }
@@ -674,7 +673,7 @@ std::vector<TTree*> TMVA::DataLoader::SplitSets(TTree * oldTree, int seedNum, in
 
   UInt_t varsSize = vars.size();
 
-  if (!fATreeEvent) fATreeEvent = new Float_t[vars.size()+tgts.size()+spec.size()];
+  if (fATreeEvent.size()==0) fATreeEvent.resize(vars.size()+tgts.size()+spec.size());
   // add variables
   for (UInt_t ivar=0; ivar<vars.size(); ivar++) {
     TString vname = vars[ivar].GetExpression();
@@ -684,7 +683,7 @@ std::vector<TTree*> TMVA::DataLoader::SplitSets(TTree * oldTree, int seedNum, in
     }
     TBranch * branch = oldTree->GetBranch(vname);
     branches.push_back(branch);
-    oldTree->SetBranchAddress(vname, &(fATreeEvent[ivar]));
+    oldTree->SetBranchAddress(vname, &fATreeEvent[ivar]);
   }
   // add targets
   for (UInt_t itgt=0; itgt<tgts.size(); itgt++) {
@@ -692,7 +691,7 @@ std::vector<TTree*> TMVA::DataLoader::SplitSets(TTree * oldTree, int seedNum, in
     if(tgts[itgt].GetExpression() != tgts[itgt].GetLabel()){ continue; }
     TBranch * branch = oldTree->GetBranch(vname);
     branches.push_back(branch);
-    oldTree->SetBranchAddress( vname, &(fATreeEvent[vars.size()+itgt]));
+    oldTree->SetBranchAddress( vname, &fATreeEvent[vars.size()+itgt]);
   }
   // add spectators
   for (UInt_t ispc=0; ispc<spec.size(); ispc++) {
@@ -700,7 +699,7 @@ std::vector<TTree*> TMVA::DataLoader::SplitSets(TTree * oldTree, int seedNum, in
     if(spec[ispc].GetExpression() != spec[ispc].GetLabel()){ continue; }
     TBranch * branch = oldTree->GetBranch(vname);
     branches.push_back(branch);
-    oldTree->SetBranchAddress( vname, &(fATreeEvent[vars.size()+tgts.size()+ispc]));
+    oldTree->SetBranchAddress( vname, &fATreeEvent[vars.size()+tgts.size()+ispc]);
   }
 
   Long64_t foldSize = nEntries/numFolds;

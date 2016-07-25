@@ -55,12 +55,6 @@ namespace TMVA {
       friend class Factory;
    public:
 
-
-      // singleton class
-      //      static DataSetManager& Instance();
-      //      static void            CreateInstance( DataInputHandler& dataInput );
-      //      static void            DestroyInstance();
-
       // private default constructor
       DataSetManager(); // DSMTEST
       DataSetManager( DataInputHandler& dataInput ); //DSMTEST
@@ -76,13 +70,6 @@ namespace TMVA {
 
    private:
 
-      //      ~DataSetManager(); // DSMTEST moved to public
-
-      //      static DataSetManager* fgDSManager; // removed DSMTEST
-
-      // private default constructor
-      /*       DataSetManager(); */ // DSMTEST
-      /*       DataSetManager( DataInputHandler& dataInput ); */ // DSMTEST
 
       TMVA::DataSetFactory* fDatasetFactory;
 
