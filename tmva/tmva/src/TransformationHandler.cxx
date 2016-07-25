@@ -574,7 +574,7 @@ void TMVA::TransformationHandler::PlotVariables (const std::vector<Event*>& even
                      // scatter plot
                      TH2F* h2 = new TH2F( Form( "scat_%s_vs_%s_%s%s" , myVarj.Data(), myVari.Data(), 
                                                 className.Data(), transfType.Data() ), 
-                                          Form( "%s versus %s (%s)%s", infoj.GetTitle().Data(), info.GetTitle().Data(), 
+                                          Form( "%s versus %s (%s)%s", infoj.GetTitle(), info.GetTitle(), 
                                                 className.Data(), transfType.Data() ), 
                                           nbins2D, rxmin , rxmax, 
                                           nbins2D, rymin , rymax );
@@ -588,7 +588,7 @@ void TMVA::TransformationHandler::PlotVariables (const std::vector<Event*>& even
                                                        myVari.Data(), className.Data(), 
                                                        transfType.Data() ), 
                                                  Form( "profile %s versus %s (%s)%s", 
-                                                       infoj.GetTitle().Data(), info.GetTitle().Data(), 
+                                                       infoj.GetTitle(), info.GetTitle(), 
                                                        className.Data(), transfType.Data() ), nbins1D, 
                                                  rxmin, rxmax );
                      //                                                 info.GetMin(), info.GetMax() );

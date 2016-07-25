@@ -320,7 +320,7 @@ namespace TMVA {
       // internal names and expressions of input variables
       const TString&   GetInputVar  ( Int_t i ) const { return DataInfo().GetVariableInfo(i).GetInternalName(); }
       const TString&   GetInputLabel( Int_t i ) const { return DataInfo().GetVariableInfo(i).GetLabel(); }
-      const TString&   GetInputTitle( Int_t i ) const { return DataInfo().GetVariableInfo(i).GetTitle(); }
+      const char *     GetInputTitle( Int_t i ) const { return DataInfo().GetVariableInfo(i).GetTitle(); }
 
       // normalisation and limit accessors
       Double_t         GetMean( Int_t ivar ) const { return GetTransformationHandler().GetMean(ivar); }

@@ -161,9 +161,9 @@ namespace TMVA {
 
       const DataSetInfo         *fdsi;                //! datasetinfo that created this dataset
 
-      std::vector< std::vector<Event*>  > fEventCollection; //! list of events for training/testing/...
+      std::vector< std::vector<Event*>  > fEventCollection; // list of events for training/testing/...
 
-      std::vector< std::map< TString, Results* > > fResults;         //!  [train/test/...][method-identifier]
+      std::vector< std::map< TString, Results* > > fResults;         //  [train/test/...][method-identifier]
 
       mutable UInt_t             fCurrentTreeIdx;
       mutable Long64_t           fCurrentEventIdx;
@@ -178,7 +178,7 @@ namespace TMVA {
 
 
       // further things
-      std::vector< std::vector<Long64_t> > fClassEvents;       //! number of events of class 0,1,2,... in training[0] 
+      std::vector< std::vector<Long64_t> > fClassEvents;       // number of events of class 0,1,2,... in training[0] 
                                                                // and testing[1] (+validation, trainingoriginal)
 
       Bool_t                     fHasNegativeEventWeights;     // true if at least one signal or bkg event has negative weight
