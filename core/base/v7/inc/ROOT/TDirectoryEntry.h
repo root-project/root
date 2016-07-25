@@ -64,7 +64,7 @@ public:
   template<class U>
   std::shared_ptr<U> CastPointer() const;
 
-  explicit operator bool() const { return *fTypeInfo != typeid(std::nullptr_t); }
+  explicit operator bool() const { return !!fObj; }
 
 private:
   time_point_t fDate = clock_t::now(); ///< Time of last change
