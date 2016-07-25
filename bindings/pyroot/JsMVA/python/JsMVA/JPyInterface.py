@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-## @package JsMVA/JPyInterface
-#  @authors  Attila Bagoly <battila93@gmail.com>
-# This package is responsible for adding the drawing methods to TMVA
+## @package JsMVA.JPyInterface
+# JPyInterface is responsible for adding the drawing methods to TMVA
 # and for creating the JavaScript outputs from objects.
+#  @authors  Attila Bagoly <battila93@gmail.com>
 
 
 from IPython.core.display import display, HTML
@@ -10,6 +10,7 @@ from string import Template
 import ROOT
 import DataLoader
 import Factory
+import types
 
 
 ## Function inserter class
@@ -51,6 +52,63 @@ class functions:
                 setattr(target, originalName, rewriter(getattr(target, originalName), getattr(source, arg)))
             else:
                 setattr(target, arg.replace("Change", ""), getattr(source, arg))
+
+    ## Get's special parameters from kwargs and converts to positional parameter
+    @staticmethod
+    def ConvertSpecKwargsToArgs(positionalArgumentsToNamed, *args, **kwargs):
+        # args[0] = self
+        args = list(args)
+        idx = 0
+        PositionalArgsEnded = False
+        for argName in positionalArgumentsToNamed:
+            if not PositionalArgsEnded:
+                if argName in kwargs:
+                    if (idx + 1) != len(args):
+                        raise AttributeError
+                    PositionalArgsEnded = True
+                else:
+                    idx += 1
+            if PositionalArgsEnded and argName not in kwargs:
+                raise AttributeError
+            if argName in kwargs:
+                args.append(kwargs[argName])
+                del kwargs[argName]
+        args = tuple(args)
+        return (args, kwargs)
+
+    ## Converts object to TMVA style option string
+    @staticmethod
+    def ProcessParameters(optStringStartIndex, *args, **kwargs):
+        originalFunction = None
+        if optStringStartIndex != -10:
+            originalFunction = kwargs["originalFunction"]
+            del kwargs["originalFunction"]
+        OptionStringPassed = False
+        if (len(args) - 1) == optStringStartIndex:
+            opt = args[optStringStartIndex] + ":"
+            tmp = list(args)
+            del tmp[optStringStartIndex]
+            args = tuple(tmp)
+            OptionStringPassed = True
+        else:
+            opt = ""
+        for key in kwargs:
+            if type(kwargs[key]) == types.BooleanType:
+                if kwargs[key] == True:
+                    opt += key + ":"
+                else:
+                    opt += "!" + key + ":"
+            elif type(kwargs[key]) == types.ListType:
+                ss = ""
+                for o in kwargs[key]:
+                    ss += str(o) + ";"
+                opt += key + "=" + ss[:-1] + ":"
+            else:
+                opt += key + "=" + str(kwargs[key]) + ":"
+        tmp = list(args)
+        if OptionStringPassed or len(kwargs) > 0:
+            tmp.append(opt[:-1])
+        return (originalFunction, tuple(tmp))
 
     ## The method removes inserted functions from class
     # @param target from which class to remove functions
@@ -95,7 +153,8 @@ class functions:
 ## Class for creating the output scripts and inserting them to cell output
 class JsDraw:
     ## String containing the link to JavaScript files
-    __jsMVASourceDir = "https://rawgit.com/qati/GSOC16/master/src/js"
+    #__jsMVASourceDir = "https://rawgit.com/qati/GSOC16/master/src/js"
+    __jsMVASourceDir = "http://localhost:8888/notebooks/GSOC/wd/src/js"
 
     ## Drawing are sizes
     jsCanvasWidth   = 800
@@ -151,7 +210,7 @@ script.parentElement.parentElement.remove();
 
     ## Inserts the data inserter JavaScript code to output
     # @param obj ROOT object (will be converted to JSON) or JSON string containing the data to be inserted
-    # @param jsDrawMethod the JsMVA JavaScrip object method name to be used for inserting the new data
+    # @param dataInserterMethod the JsMVA JavaScrip object method name to be used for inserting the new data
     # @param objIsJSON obj is ROOT object or JSON
     @staticmethod
     def InsertData(obj, dataInserterMethod="updateTrainingTestingErrors", objIsJSON=False):
@@ -173,7 +232,7 @@ script.parentElement.parentElement.remove();
     @staticmethod
     def sbPlot(sig, bkg, title):
         canvas = ROOT.TCanvas("csbplot", title["plot"], JsDraw.jsCanvasWidth, JsDraw.jsCanvasHeight)
-        sig.SetMaximum(ROOT.TMath.Max(sig.GetMaximum(),bkg.GetMaximum()*1.1))
+        sig.SetMaximum(ROOT.TMath.Max(sig.GetMaximum()*1.1,bkg.GetMaximum()*1.1))
         sig.SetTitle(sig.GetTitle().replace("(Signal)",""))
         sig.GetXaxis().SetTitle(title["xaxis"])
         sig.GetYaxis().SetTitle(title["yaxis"])

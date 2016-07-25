@@ -4,13 +4,6 @@
 
 
 (function(factory){
-    
-    require.config({
-       paths:{
-           d3: "https://root.cern.ch/js/notebook/scripts/d3.v3.min"
-       } 
-    });
-
     var url = "";
     if (require.s.contexts.hasOwnProperty("_")) {
         url = require.s.contexts._.config.paths["JsMVA"].replace("src/js/JsMVA.min","");
@@ -114,8 +107,9 @@
     };
 
     var drawLabels = function(nodeContainer) {
+        var height = style.node.height;
         nodeContainer.append("text")
-            .attr("dy", (style.node.height * 0.35) + "px")
+            .attr("dy", height* 0.35)
             .attr("class", "label1")
             .attr("dx", style.text.padding)
             .style("fill-opacity", 1e-6)
@@ -129,7 +123,7 @@
         nodeContainer.append("text")
             .attr("class", "label2")
             .attr("dx", style.text.padding)
-            .attr("dy", (style.node.height*0.75)+"px")
+            .attr("dy", height*0.75)
             .style("fill-opacity", 1e-6)
             .style("cursor", "pointer")
             .text(function(d){
@@ -261,6 +255,7 @@
     var makePathNodesBigger = function(node, i, clear){
         var width = (clear) ? style.node.width : 2*style.node.width,
             height = (clear) ? style.node.height : 1.5*style.node.height;
+        console.log("anim height:"+String(height));
         svg.selectAll("g.nodes rect").filter(function(d){d.bigger=(clear) ? false : true; return d.id==node.id;})
             .transition().duration(style.aduration/2)
             .attr("width", width+"px")
