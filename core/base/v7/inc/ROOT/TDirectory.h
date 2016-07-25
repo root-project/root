@@ -92,7 +92,7 @@ public:
   /// \param name  - Key of the object.
   /// \param args  - arguments to be passed to the constructor of `T`
   template <class T, class... ARGS>
-  decltype(auto) Create(const std::string& name, ARGS&&... args) {
+  std::shared_ptr<ToContentType_t<T>> Create(const std::string& name, ARGS&&... args) {
     auto ptr = std::make_shared<ToContentType_t<T>>(std::forward<ARGS>(args)...);
     Add(name, ptr);
     return ptr;
@@ -148,7 +148,7 @@ public:
   /// \throws TDirectoryTypeMismatch if the object stored under this name is of
   ///   a type that is not a derived type of `T`.
   template <class T>
-  decltype(auto) Get(const std::string& name) {
+  std::shared_ptr<ToContentType_t<T>> Get(const std::string& name) {
     auto idx = fContent.find(name);
     if (idx != fContent.end()) {
       if (idx->second.GetTypeInfo() == typeid(ToContentType_t<T>))
@@ -159,7 +159,7 @@ public:
       throw TDirectoryTypeMismatch(name);
     }
     throw TDirectoryUnknownKey(name);
-    return std::shared_ptr<ToContentType_t<T>>(); // never happens
+    return nullptr; // never happens
   }
 
   /// Add an existing object (rather a `shared_ptr` to it) to the TDirectory.
