@@ -38,7 +38,9 @@ __device__ CudaDouble_t AtomicAdd(CudaDouble_t* address, CudaDouble_t val)
 }
 
 //____________________________________________________________________________
-__device__ void ReduceSumVertical(CudaDouble_t *result, CudaDouble_t * sdata)
+__device__ void ReduceSumVertical(CudaDouble_t *result,
+                                  CudaDouble_t * sdata,
+                                  int n)
 {
    // i,j are block row and column indices.
    int i = threadIdx.y;
@@ -107,7 +109,7 @@ __device__ void ReduceSumVertical(CudaDouble_t *result, CudaDouble_t * sdata)
       }
    }
    __syncthreads();
-   if (i == 0) {
+   if ((i == 0) && ((blockIdx.x * blockDim.x + threadIdx.x) < n)) {
       AtomicAdd(result + j, sdata[index]);
    }
    __syncthreads();
@@ -599,7 +601,7 @@ __global__ void SumColumns(CudaDouble_t *B,
        smem[blockIndex] = 0.0;
    }
 
-   ReduceSumVertical(B + blockDim.x * blockIdx.x, smem);
+   ReduceSumVertical(B + blockDim.x * blockIdx.x, smem, n);
 }
 
 //____________________________________________________________________________
