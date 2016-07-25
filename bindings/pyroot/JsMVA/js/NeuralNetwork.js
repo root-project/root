@@ -3,12 +3,6 @@
  */
 
 (function(factory){
-    require.config({
-        paths: {
-            d3: "https://root.cern.ch/js/notebook/scripts/d3.v3.min"
-        }
-    });
-
     define(['d3'], function(d3){
         return factory({}, d3);
     });
@@ -45,10 +39,16 @@
         "synapse": {
             "colors": {
                 "negative": "#00005E",
-                "positive": "#5E0000"//"#FF4B00"
+                "positive": "#FF4B00"
             },
-            "default_width_range": [0.5, 2],
-            "width_range": [0.5, 2],
+            "deepNet_colors":{
+                "negative": "rgba(0,0,94, 0.4)",
+                "positive": "rgba(94,0,0, 0.4)"//"#FF4B00"
+            },
+            "default_width_range": [0.5, 5],
+            "width_range": [0.5, 5],
+            "deepNet_default_width_range": [0.5, 2],
+            "deepNet_width_range": [0.5, 2],
             "default_alpha": 0.7,
             "alpha": 0.7,
             "mouseon": {
@@ -63,7 +63,11 @@
             "pos": {"x": 150, "y": 10},
             "rect": {"width": 10, "height":10},
             "dy": 20,
-            "padding": 10
+            "padding": 10,
+            "deepNet_colors": {
+                "negative": "rgb(0,0,94)",
+                "positive": "rgb(94,0,0)"//"#FF4B00"
+            }
         }
     };
 
@@ -220,7 +224,7 @@
                 .filter(function(x){return !(d[0].neuron==x[0].neuron&&d[0].layer==x[0].layer);}).transition();
             allbutnotthis.selectAll("circle").filter(function(x){return (d[0].layer+1)!=x[0].layer})
                 .style("fill-opacity", style["neuron"]["mouseon"]["alpha"])
-                .attr("r", function(d){return d[0].radius})
+                .attr("r", function(d){return d[0].radius});
             allbutnotthis.selectAll("path")
                 .style("stroke-opacity", style["synapse"]["mouseon"]["alpha"]);
         });
@@ -232,7 +236,7 @@
                 .style("fill-opacity", 1)
                 .attr("r", function(d){return d[0].radius;});
             gg.selectAll("path")
-                .style("stroke-opacity", style["synapse"]["alpha"])
+                .style("stroke-opacity", 1)
                 .attr("stroke-width", function(d){
                     return d.type=="positive" ? scaleSynapsisPos(d.weight) : scaleSynapsisNeg(Math.abs(d.weight));
                 });
@@ -370,13 +374,22 @@
         return net;
     };
 
-    var drawDeepNetNeurons = function (context, neuronsattr) {
+    var drawDeepNetNeurons = function (context,  neuronsattr, vars) {
         for(var i=0;i<neuronsattr.length;i++){
             context.beginPath();
-            context.arc(neuronsattr[i].position.x, neuronsattr[i].position.y, neuronsattr[i].radius, 0, 2*Math.PI);
-            context.fillStyle = style["neuron"]["colors"][neuronsattr[i].type];;
+            context.arc(neuronsattr[i].position.x+30, neuronsattr[i].position.y, neuronsattr[i].radius, 0, 2*Math.PI);
+            context.fillStyle = style["neuron"]["colors"][neuronsattr[i].type];
             context.fill();
             context.closePath();
+        }
+        if (vars!==undefined){
+            context.font = "16px bold Comic Sans MS";
+            context.fillStyle = "#000";
+            var text;
+            for(var k=0;k<vars.length;k++){
+                text = vars[k] + ":";
+                context.fillText(text, neuronsattr[k].position.x+10-context.measureText(text).width, neuronsattr[k].position.y+5);
+            }
         }
     };
 
@@ -387,10 +400,10 @@
             for(si in synapses){
                 d = synapses[si];
                 ctx.beginPath();
-                ctx.moveTo(d.pos[0].x, d.pos[0].y);
-                ctx.lineTo(d.pos[1].x, d.pos[1].y);
+                ctx.moveTo(d.pos[0].x+30, d.pos[0].y);
+                ctx.lineTo(d.pos[1].x+30, d.pos[1].y);
                 ctx.lineWidth = d.type=="positive" ? scaleSynapsisPos(d.weight) : scaleSynapsisNeg(Math.abs(d.weight));
-                ctx.strokeStyle = style["synapse"]["colors"][d.type];
+                ctx.strokeStyle = style["synapse"]["deepNet_colors"][d.type];
                 ctx.stroke();
                 ctx.closePath();
             }
@@ -407,8 +420,27 @@
 
         for(i=0;i<num_layers;i++) {
             drawDeepNetSynapses(context, net, layers[i], i, layers[i + 1]);
-            drawDeepNetNeurons(context, layers[i]);
+            drawDeepNetNeurons(context, layers[i], i==0 ? net["variables"] : undefined);
         }
+    };
+
+    var drawDNNLabels = function(context){
+        context.beginPath();
+        context.fillStyle = style["legend"]["deepNet_colors"]["positive"];
+        context.rect(canvas.width-170, 10, style["legend"]["rect"]["width"], style["legend"]["rect"]["height"]);
+        context.fill();
+        context.closePath();
+        context.beginPath();
+        context.fillStyle = style["legend"]["deepNet_colors"]["negative"];
+        context.rect(canvas.width-170, 30, style["legend"]["rect"]["width"], style["legend"]["rect"]["height"]);
+        context.fill();
+        context.closePath();
+
+        context.font = "16px bold Comic Sans MS";
+        context.fillStyle = style["legend"]["deepNet_colors"]["positive"];
+        context.fillText("Positive weight", canvas.width-150, 20);
+        context.fillStyle = style["legend"]["deepNet_colors"]["negative"];
+        context.fillText("Negative weight", canvas.width-150, 40);
     };
 
 
@@ -421,26 +453,25 @@
 
         net = transformDeepNetObject(netobj);
 
-        style.synapse.width_range = [0.1, 0.5];
-        style.synapse.alpha = 0.9;
-        scaleSynapsisPos.range(style["synapse"]["width_range"]);
-        scaleSynapsisNeg.range(style["synapse"]["width_range"]);
+        scaleSynapsisPos.range(style["synapse"]["deepNet_width_range"]);
+        scaleSynapsisNeg.range(style["synapse"]["deepNet_width_range"]);
 
         var context = div.append("canvas")
             .attr("width", canvas.width+"px")
             .attr("height", canvas.height+"px")
-            .call(d3.behavior.zoom().scaleExtent([1, 10]).on("zoom", function(){
+            .call(d3.behavior.zoom().scaleExtent([1, 20]).on("zoom", function(){
                 context.save();
                 context.clearRect(0, 0, canvas.width, canvas.height);
                 context.translate(d3.event.translate[0], d3.event.translate[1]);
                 context.scale(d3.event.scale, d3.event.scale);
                 drawDeepNetwork(context, net);
+                drawDNNLabels(context);
                 context.restore();
             }))
             .node().getContext("2d");
 
-
         drawDeepNetwork(context, net);
+        drawDNNLabels(context);
 
     };
 

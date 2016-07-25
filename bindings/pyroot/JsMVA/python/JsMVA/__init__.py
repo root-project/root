@@ -1,3 +1,6 @@
+## @mainpage
+# @package JsMVA
+# @image html JsMVA.jpg
 from IPython.core.extensions import ExtensionManager
 
 def loadExtensions():

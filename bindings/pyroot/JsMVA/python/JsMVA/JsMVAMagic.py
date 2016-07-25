@@ -1,5 +1,6 @@
 # -*- coding:utf-8 -*-
-## Magic class for JsMVA
+## @package JsMVA.JsMVAMagic
+# IPython magic class for JsMVA
 #  @authors: Attila Bagoly <battila93@gmail.com>
 
 from IPython.core.magic import Magics, magics_class, line_magic
