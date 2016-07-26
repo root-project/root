@@ -52,7 +52,10 @@ const Color_t  kColors[3] = { kRed, kGreen, kYellow };
 // Global variables.
 //------------------------------------------------------------------------------
 
-class TPythia6;
+#include "TPythia6.h"
+#include "TGeoTube.h"
+#include "TMCParticle.h"
+
 TPythia6   *g_pythia = 0;
 
 // Implemented in MultiView.C
