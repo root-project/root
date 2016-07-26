@@ -7,7 +7,7 @@
 # front of the TAG it is preceding.
 #
 # All text after a single hash (#) is considered a comment and will be ignored.
-# The format is:a
+# The format is:
 # TAG = value [value, ...]
 # For lists, items can also be appended using:
 # TAG += value [value, ...]
