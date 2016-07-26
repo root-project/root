@@ -278,6 +278,13 @@ bool TClingCallbacks::LookupObject(clang::TagDecl* Tag) {
       return false;
    }
 
+   for (auto ReRD: Tag->redecls()) {
+      // Don't autoparse a TagDecl while we are parsing its definition!
+      if (ReRD->isBeingDefined())
+         return false;
+   }
+
+
    if (RecordDecl* RD = dyn_cast<RecordDecl>(Tag)) {
       ASTContext& C = SemaR.getASTContext();
       Preprocessor &PP = SemaR.getPreprocessor();
