@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_graphics
+/// \notebook
 /// This macro demonstrates the use of color transparency.
 ///
 /// It is done by specifying the alpha value of a given color.

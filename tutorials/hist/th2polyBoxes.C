@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_hist
+/// \notebook
 /// This tutorial illustrates how to create an histogram with polygonal
 /// bins (TH2Poly). The bins are boxes.
 ///
@@ -8,7 +9,7 @@
 ///
 /// \author Olivier Couet
 
-TCanvas* th2polyBoxes() {
+TCanvas *th2polyBoxes() {
    TCanvas *ch2p2 = new TCanvas("ch2p2","ch2p2",600,400);
    gStyle->SetPalette(57);
    TH2Poly *h2p = new TH2Poly();

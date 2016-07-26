@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_graphics
+/// \notebook
 /// Example illustrating divided pads and Latex.
 ///
 /// \macro_image

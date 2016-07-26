@@ -26,7 +26,7 @@ void reverseaxis()
    ReverseYAxis(hpxpy);
 }
 
-void ReverseXAxis (TH1 *h)
+void ReverseXAxis(TH1 *h)
 {
    // Remove the current axis
    h->GetXaxis()->SetLabelOffset(999);
@@ -45,7 +45,7 @@ void ReverseXAxis (TH1 *h)
    newaxis->Draw();
 }
 
-void ReverseYAxis (TH1 *h)
+void ReverseYAxis(TH1 *h)
 {
    // Remove the current axis
    h->GetYaxis()->SetLabelOffset(999);

@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_graphics
+/// \notebook
 /// Simple example illustrating how to draw TGaxis objects in various formats.
 ///
 /// \macro_image

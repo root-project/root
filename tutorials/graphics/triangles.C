@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_graphics
+/// \notebook
 /// Generate small triangles randomly in the canvas.
 /// Each triangle has a unique id and a random color in the color palette
 ///
