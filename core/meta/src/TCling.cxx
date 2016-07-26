@@ -99,6 +99,7 @@ clang/LLVM technology.
 #include "cling/Interpreter/Transaction.h"
 #include "cling/MetaProcessor/MetaProcessor.h"
 #include "cling/Utils/AST.h"
+#include "cling/Utils/SourceNormalization.h"
 #include "cling/Interpreter/Exception.h"
 
 #include "llvm/IR/GlobalValue.h"
@@ -2010,28 +2011,24 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
          }
       } else {
          // not ACLiC
-         bool unnamedMacro = false;
+         size_t unnamedMacroOpenCurly;
          {
+            std::string code;
             std::string line;
             std::ifstream in(fname);
-            static const char whitespace[] = " \t\r\n";
             while (in) {
                std::getline(in, line);
-               std::string::size_type posNonWS = line.find_first_not_of(whitespace);
-               if (posNonWS == std::string::npos) continue;
-               if (line[posNonWS] == '/' && line[posNonWS + 1] == '/')
-                  // Too bad, we only suppose C++ comments here.
-                  continue;
-               unnamedMacro = (line[posNonWS] == '{');
-               break;
+               code += line + "\n";
             }
+            unnamedMacroOpenCurly
+              = cling::utils::isUnnamedMacro(code, fInterpreter->getCI()->getLangOpts());
          }
 
          fCurExecutingMacros.push_back(fname);
          cling::MetaProcessor::MaybeRedirectOutputRAII RAII(fMetaProcessor);
-         if (unnamedMacro) {
+         if (unnamedMacroOpenCurly != std::string::npos) {
             compRes = fMetaProcessor->readInputFromFile(fname.Data(), &result,
-                                                        true /*ignoreOutmostBlock*/);
+                                                        unnamedMacroOpenCurly);
          } else {
             // No DynLookup for .x, .L of named macros.
             fInterpreter->enableDynamicLookup(false);
