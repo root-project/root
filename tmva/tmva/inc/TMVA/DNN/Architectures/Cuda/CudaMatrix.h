@@ -141,12 +141,12 @@ public:
 
 private:
 
-    static size_t         fInstances;    ///< Number of existing TCudaMatrix instances.
-    static cublasHandle_t  fCublasHandle;
-    static CudaDouble_t  * fDeviceReturn; ///< Buffer for kernel return values.
-    static cudaStream_t    fComputeStream; ///< Stream used for running the neural
-    static curandState_t * fCurandStates;
-    static size_t          fNCurandStates;
+   static size_t          fInstances;    ///< Number of existing TCudaMatrix instances.
+   static cublasHandle_t  fCublasHandle;
+   static CudaDouble_t  * fDeviceReturn; ///< Buffer for kernel return values.
+   static cudaStream_t    fComputeStream; ///< Stream used for running the neural
+   static curandState_t * fCurandStates;
+   static size_t          fNCurandStates;
 
     cudaStream_t  fDataStream;
     size_t         fNRows, fNCols;
