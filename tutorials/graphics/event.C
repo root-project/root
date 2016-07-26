@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_graphics
+/// \notebook
 /// Illustrate some basic primitives.
 ///
 /// \macro_image

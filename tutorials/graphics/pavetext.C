@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_graphics
+/// \notebook
 /// Draw a pave text.
 ///
 /// \macro_image

@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_graphics
+/// \notebook
 /// Show 3-d polymarker.
 ///
 /// \macro_image

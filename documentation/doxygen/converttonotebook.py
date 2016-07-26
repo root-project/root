@@ -179,19 +179,20 @@ def split(text):
     Splits the text string into main, helpers, and rest. main is the main function, i.e. the function that
     has the same name as the macro file. Helpers is a list of strings, each a helper function, i.e. any
     other function that is not the main funciton. Finally, rest is a string containing any top-level
-    code outside of any function. Intended for C++ files only.
+    code outside of any function. Intended for C++ files only. 
     """
-    p = re.compile(r'^void\s\w*\(.*?\).*?\{.*?^\}|^int\s\w*\(.*?\).*?\{.*?^\}|^string\s\w*\(.*?\).*?\{.*?^\}|double\s\w*\(.*?\).*?\{.*?^\}|^float\s\w*\(.*?\).*?\{.*?^\}|^char\s\w*\(.*?\).*?\{.*?^\}|^TCanvas\s\*\w*\(.*?\).*?\{.*?^\}|^TString\s\w*\(.*?\).*?\{.*?^\}|^Double_t\s\w*\(.*?\).*?\{.*?^\}', flags = re.DOTALL | re.MULTILINE)
+    #p = re.compile(r'^void\s\w*?\s?\([\w\n=,*\_ ]*\)\s*\{.*?^\}|^int\s\w*?\s?\([\w\n=,*\_ ]*\)\s*\{.*?^\}|^string\s\w*?\s?\([\w\n=,*\_ ]*\)\s*\{.*?^\}|^double\s\w*?\s?\([\w\n=,*\_ ]*\)\s*\{.*?^\}|^float\s\w*?\s?\([\w\n=,*\_ ]*\)\s*\{.*?^\}|^char\s\w*?\s?\([\w\n=,*\_ ]*\)\s*\{.*?^\}|^TCanvas\s\*\w*\(.*?\).*?\{.*?^\}|^TString\s\w*?\s?\([\w\n=,*\_ ]*\)\s*\{.*?^\}|^Double_t\s\w*?\s?\([\w\n=,*\_ ]*\)\s*\{.*?^\}', flags = re.DOTALL | re.MULTILINE)
 
-    matches = p.findall(text)
-
+    p = re.compile(r'(^void\s|^int\s|^string\s|^double\s|^float\s|^char\s|^TCanvas\s|^TString\s|^Double_t\s)\*?\w*?\s?\([^\)]*\)\s*\{.*?^\}', flags = re.DOTALL | re.MULTILINE)
+    matches = p.finditer(text)
     helpers=[]
     main = ""
     for match in matches:
-        if name in match:
-            main = match
+
+        if name in match.group()[:match.group().find("\n")]:
+            main = match.group()
         else:
-            helpers.append(match)
+            helpers.append(match.group())
 
     ## Create rest by replacing the main and helper funcitons with blank strings
     rest = text.replace(main, "")
@@ -205,25 +206,39 @@ def split(text):
 
 def processmain(text):
     """
+    Evaluates whether the main function returns a TCanvas or requires input. If it does then the keepfunction
+    flag is True, meaning the function wont be extracted by cppfunction. If the initial condition is true then
+    an extra cell is added before at the end that calls the main function is returned, and added later.
     """
     addition = ''
     keepfunction = False
     
-
     regex = re.compile(r'(?<=\().*?(?=\))',flags = re.DOTALL | re.MULTILINE)
     arguments = regex.search(text)
-    print arguments.group()
-    if text.startswith("TCanvas") or len(arguments.group())>3: 
-        keepfunction = True
-        p = re.compile(r'(?<=(?<=int\s)|(?<=void\s)|(?<=string\s)|(?<=double\s)|(?<=float\s)|(?<=char\s)|(?<=TCanvas\s)).*?(?=\s?\()',flags = re.DOTALL | re.MULTILINE)
+    if text: 
+        if text.startswith("TCanvas") or len(arguments.group())>3: 
+            keepfunction = True
+            p = re.compile(r'(?<=(?<=int\s)|(?<=void\s)|(?<=string\s)|(?<=double\s)|(?<=float\s)|(?<=char\s)|(?<=TCanvas\s)).*?(?=\s?\()',flags = re.DOTALL | re.MULTILINE)
 
-        match = p.search(text)
-        functionname=match.group()
-        addition = "\n# <markdowncell> \n# Call the main function \n# <codecell>\n%s()" %functionname
+            match = p.search(text)
+            functionname=match.group()
+            addition = "\n# <markdowncell> \n# Call the main function \n# <codecell>\n%s()" %functionname
         
     return text, addition, keepfunction 
 
+def getfile(text):
+    getfilecell = ""
+    if "TString dir = gSystem->UnixPathName(__FILE__);" in text:
+        text = text.replace("TString dir = gSystem->UnixPathName(__FILE__);", "")
+        getfilecell = "# <codecell>\n!wget -q http://root.cern.ch/files/%s.dat \nTString dir = \"%s.dat\"; " % (name, path)
+        return text, getfilecell
+    if "TString dat = gSystem->UnixPathName(__FILE__);" in text:
+        text = text.replace("TString dat = gSystem->UnixPathName(__FILE__);", "")
 
+        getfilecell = "# <codecell>\n!wget -q http://root.cern.ch/files/%s.dat \nTString dat = \"%s.dat\"; " % (name, name)
+        return text, getfilecell
+    else:
+        return text, getfilecell
 #-------------------------------------
 #----- Preliminary definitions--------
 #-------------------------------------
@@ -233,10 +248,11 @@ def processmain(text):
 pathname = str(sys.argv[1])
 pathnoext = os.path.dirname(pathname)
 filename = os.path.basename(pathname)
+path = pathname.replace(filename, "")
 name,extension = filename.split(".")
 outname= filename + ".ipynb"
 
-## print pathname, filename, name, extension, outname
+#print pathname, "**" , filename,"**" ,  name, "**" , extension,"**" ,  outname , pathname.replace(filename, "")
 ## Extract output directory
 try:
     outdir = str(sys.argv[2])
@@ -267,12 +283,13 @@ def mainfunction(text):
     """
     Main function. Calls all other functions, depending on whether the macro input is in python or c++.
     It adds the header information. Also, it adds a cell that draws all canvases. The working text is
-    then converted to a version 3 jupytr notebook, subsequently updated to a version 4. Then, metadata
+    then converted to a version 3 jupyter notebook, subsequently updated to a version 4. Then, metadata
     associated with the language the macro is written in is attatched to he notebook. Finally the
-    notebook is exectue and output in both HTML and Jupyter notebook formats.
+    notebook is executed and output as a Jupyter notebook.
     """
     ## Modify text from macros to suit a notebook
     if extension in ("C", "c", "cpp", "C++", "cxx") :
+        text, getfilecell = getfile(text)
         main, helpers, rest = split(text)
         main, addition, keepfunction = processmain(main)
         if not keepfunction:
@@ -280,7 +297,12 @@ def mainfunction(text):
         rest = cppcomments(rest) # Convert top level code comments to Markdown cells
 
         ## Construct text by starting wwith top level code, then the helper functions, and finally the main function.
-        text= rest
+        if getfilecell:
+            text = getfilecell
+            text+= rest
+        else:
+            text = rest
+        
         for helper in helpers:
             text+= "\n# <markdowncell>\n A helper function is created: \n# <codecell>\n%%cpp -d\n"
             text+=helper
@@ -301,7 +323,7 @@ def mainfunction(text):
     if extension == ("C" or "c" or "cpp" or "c++"):
         text +="\n# <markdowncell> \n# Draw all canvases \n# <codecell>\ngROOT->GetListOfCanvases()->Draw()"
     if extension == "py":
-        text +="\n# <markdowncell> \n# Draw all canvases \n# <codecell>\nimport ROOT \ngROOT.GetListOfCanvases().Draw()"
+        text +="\n# <markdowncell> \n# Draw all canvases \n# <codecell>\nfrom ROOT import gROOT \ngROOT.GetListOfCanvases().Draw()"
 
     ## Create a notebook from the working text
     nbook = v3.reads_py(text)  

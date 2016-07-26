@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_hist
+/// \notebook
 /// Show the slice of a TH2 following the mouse position.
 ///
 /// \macro_image
