@@ -163,7 +163,7 @@ namespace TMVA {
 
       std::vector< std::vector<Event*>  > fEventCollection;  // list of events for training/testing/...
 
-      std::vector< std::map< TString, Results* > > fResults; //  [train/test/...][method-identifier]
+      std::vector< std::map< TString, Results* > > fResults; //!  [train/test/...][method-identifier]
 
       mutable UInt_t             fCurrentTreeIdx;
       mutable Long64_t           fCurrentEventIdx;

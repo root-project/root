@@ -121,8 +121,6 @@ TMVA::Factory::Factory( TString jobName, TFile* theTargetFile, TString theOption
    fROC                  ( kTRUE ),
    fSilentFile           ( kFALSE ),
    fJobName              ( jobName ),
-   fDataAssignType       ( kAssignEvents ),
-   fATreeEvent           ( NULL ),
    fAnalysisType         ( Types::kClassification ),
    fModelPersistence     (kTRUE)
 {
@@ -155,7 +153,6 @@ TMVA::Factory::Factory( TString jobName, TFile* theTargetFile, TString theOption
    DeclareOptionRef( fCorrelations, "Correlations", "boolean to show correlation in output" );
    DeclareOptionRef( fROC, "ROC", "boolean to show ROC in output" );
    DeclareOptionRef( silent,   "Silent", "Batch mode: boolean silent flag inhibiting any output from TMVA after the creation of the factory class object (default: False)" );
-//    DeclareOptionRef( fSilentFile,   "SilentFile", "Reduce the information saved in the output file (default: False)" );
    DeclareOptionRef( drawProgressBar,
                      "DrawProgressBar", "Draw progress bar to display training, testing and evaluation schedule (default: True)" );
    DeclareOptionRef( fModelPersistence,
@@ -199,8 +196,6 @@ TMVA::Factory::Factory( TString jobName, TString theOption )
    fROC                  ( kTRUE ),
    fSilentFile           ( kTRUE ),
    fJobName              ( jobName ),
-   fDataAssignType       ( kAssignEvents ),
-   fATreeEvent           ( NULL ),
    fAnalysisType         ( Types::kClassification ),
    fModelPersistence     (kTRUE)
 {
@@ -218,7 +213,7 @@ TMVA::Factory::Factory( TString jobName, TString theOption )
 
    // histograms are not automatically associated with the current
    // directory and hence don't go out of scope when closing the file
-   // TH1::AddDirectory(kFALSE);
+   TH1::AddDirectory(kFALSE);
    Bool_t silent          = kFALSE;
 #ifdef WIN32
    // under Windows, switch progress bar and color off by default, as the typical windows shell doesn't handle these (would need different sequences..)
@@ -449,10 +444,7 @@ TMVA::MethodBase* TMVA::Factory::BookMethod( TMVA::DataLoader *loader, TString t
       }
       return 0;
    }
-   
-//    method->SetWeightFileDir(Form("%s/%s",loader->GetName(),method->GetWeightFileDir().Data()));//setting up weight file dir
-   //method->fDataLoader=loader;
-   
+      
    if(fModelPersistence) method->SetWeightFileDir(fFileDir);
    method->SetModelPersistence(fModelPersistence);
    method->SetAnalysisType( fAnalysisType );

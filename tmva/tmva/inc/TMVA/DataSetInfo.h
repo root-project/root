@@ -227,7 +227,7 @@ namespace TMVA {
 
       UInt_t                     fSignalClass;       // index of the class with the name signal
 
-      std::vector<Float_t>*      fTargetsForMulticlass;//! all targets 0 except the one with index==classNumber
+      std::vector<Float_t>*      fTargetsForMulticlass;//-> all targets 0 except the one with index==classNumber
       
       mutable MsgLogger*         fLogger;            // message logger
       MsgLogger& Log() const { return *fLogger; }

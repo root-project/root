@@ -42,6 +42,8 @@ namespace TMVA {
    class DataSetInfo;
 }
 
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
@@ -54,6 +56,17 @@ TMVA::Results::Results( const DataSetInfo* dsi, TString resultsName )
 {
    fStorage->SetOwner();
 }
+
+TMVA::Results::Results( ) 
+: fTreeType(Types::kTraining),
+fDsi(0),
+fStorage( new TList() ),
+fHistAlias( new std::map<TString, TObject*> ),
+fLogger( new MsgLogger("Results", kINFO))
+{
+    fStorage->SetOwner();
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor

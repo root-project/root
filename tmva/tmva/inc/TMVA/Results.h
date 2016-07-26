@@ -64,8 +64,9 @@ namespace TMVA {
 
    public:
 
-      Results( const DataSetInfo* dsi, TString resultsName  );
-      virtual ~Results();
+       Results( const DataSetInfo* dsi, TString resultsName  );
+       Results();
+       virtual ~Results();
 
       // setters
       void                Store( TObject* obj, const char* alias=0 );

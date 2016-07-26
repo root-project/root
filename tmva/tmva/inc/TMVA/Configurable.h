@@ -116,7 +116,7 @@ namespace TMVA {
       Bool_t      fLooseOptionCheckingEnabled;       // checker for option string
 
       // classes and method related to easy and flexible option parsing
-      OptionBase* fLastDeclaredOption;  //-> last declared option
+      OptionBase* fLastDeclaredOption;  //! last declared option
       TList       fListOfOptions;       // option list
 
       TString     fConfigDescription;   // description of this configurable
