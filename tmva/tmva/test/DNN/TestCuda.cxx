@@ -141,6 +141,7 @@ Double_t testReduction()
    return maximumError;
 }
 
+//_________________________________________________________________________________
 Double_t testScaleAdd()
 {
    const size_t ntests   = 10;

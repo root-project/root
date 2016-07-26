@@ -40,6 +40,7 @@ int main()
 
    randomMatrix(XTrain);
    randomMatrix(XTest);
+
    TReference<Double_t>::MultiplyTranspose(YTrain, XTrain, W);
    TReference<Double_t>::MultiplyTranspose(YTest, XTest, W);
 
