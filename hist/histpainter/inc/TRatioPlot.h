@@ -53,6 +53,9 @@ protected:
 
    Int_t fDivideMode;
    TString fDivideOption;
+   TString fOptH1;
+   TString fOptH2;
+   TString fOptGraph;
 
    Float_t fSplitFraction = 0.3;
 
@@ -62,6 +65,10 @@ protected:
    TGaxis *fLowerGXaxis;
    TGaxis *fUpperGYaxis;
    TGaxis *fLowerGYaxis;
+   TGaxis *fUpperGXaxisMirror;
+   TGaxis *fLowerGXaxisMirror;
+   TGaxis *fUpperGYaxisMirror;
+   TGaxis *fLowerGYaxisMirror;
 
    TAxis *fUpYaxis;
    TAxis *fLowYaxis;
@@ -100,7 +107,8 @@ protected:
 public:
 
    TRatioPlot();
-   TRatioPlot(TH1* h1, TH1* h2, const char *name /*=0*/, const char *title /*=0*/, Option_t *divideOption = "");
+   TRatioPlot(TH1* h1, TH1* h2, const char *name /*=0*/, const char *title /*=0*/, 
+         Option_t *divideOption = "", Option_t *optH1 = "hist", Option_t *optH2 = "E", Option_t *optGraph = "AP");
    virtual void Draw(Option_t *chopt="");
    virtual void Browse(TBrowser *b);
 
@@ -112,6 +120,9 @@ public:
    void SetLeftMargin(Float_t margin);
    void SetRightMargin(Float_t margin);
    
+   void SetSeparationMargin(Float_t);
+
+
    virtual void SetSplitFraction(Float_t sf);
    virtual void Paint(Option_t *opt = "");
    virtual void PaintModified();

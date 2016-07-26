@@ -57,7 +57,8 @@ TRatioPlot::TRatioPlot()
 // @TODO: Needs options for drawing of h1, h2, ratio
 // @TODO: Need getters for pads
 
-TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, const char *name /*=0*/, const char *title /*=0*/, Option_t *divideOption)
+TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, const char *name /*=0*/, const char *title /*=0*/, 
+      Option_t *divideOption, Option_t *optH1, Option_t *optH2, Option_t *optGraph)
    : TPad(name, title, 0, 0, 1, 1),
      fUpperPad(0),
      fLowerPad(0),
@@ -65,12 +66,19 @@ TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, const char *name /*=0*/, const char *ti
      fH1(h1),
      fH2(h2),
      fDivideOption(0),
+     fOptH1(0),
+     fOptH2(0),
+     fOptGraph(0),
      fRatioGraph(0),
      fSharedXAxis(0),
      fUpperGXaxis(0),
      fLowerGXaxis(0),
      fUpperGYaxis(0),
      fLowerGYaxis(0),
+     fUpperGXaxisMirror(0),
+     fLowerGXaxisMirror(0),
+     fUpperGYaxisMirror(0),
+     fLowerGYaxisMirror(0),
      fUpYaxis(0),
      fLowYaxis(0)
 {
@@ -107,6 +115,16 @@ TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, const char *name /*=0*/, const char *ti
 
    fDivideOption = divideOptionString;
 
+   TString optH1String = TString(optH1);
+   TString optH2String = TString(optH2);
+   TString optGraphString = TString(optGraph);
+   
+   optH2String.ReplaceAll("same", "");
+   optH2String.ReplaceAll("SAME", "");
+
+   fOptH1 = optH1String;
+   fOptH2 = optH2String;
+   fOptGraph = optGraphString;
 
    // build ratio, everything is ready
    BuildRatio();
@@ -217,6 +235,13 @@ void TRatioPlot::SetRightMargin(Float_t margin)
    SetPadMargins();
 }
 
+void TRatioPlot::SetSeparationMargin(Float_t margin)
+{
+   Float_t sf = fSplitFraction;
+   fUpBottomMargin = margin/2./(1-sf);
+   fLowTopMargin = margin/2./sf;
+   SetPadMargins();
+}
 
 
 
@@ -249,8 +274,8 @@ void TRatioPlot::Draw(Option_t *option)
    fH1->GetYaxis()->SetTickSize(0.);
    fH1->GetYaxis()->SetLabelSize(0.);
 
-   fH1->Draw("E");
-   fH2->Draw("hist same");
+   fH1->Draw(fOptH1);
+   fH2->Draw(fOptH2+"same");
 
    fLowerPad->cd();
 
@@ -259,7 +284,7 @@ void TRatioPlot::Draw(Option_t *option)
    fRatioGraph->GetXaxis()->SetLabelSize(0.);
    fRatioGraph->GetYaxis()->SetTickSize(0.);
    fRatioGraph->GetYaxis()->SetLabelSize(0.);
-   fRatioGraph->Draw("AP");
+   fRatioGraph->Draw(fOptGraph);
 
 
    fTopPad->cd();
@@ -360,21 +385,16 @@ void TRatioPlot::CreateVisualAxes()
 //   __(__PRETTY_FUNCTION__ << " called");
 
 
-   if (fUpperGXaxis != 0) {
-      delete fUpperGXaxis;
-   }
+   if (fUpperGXaxis != 0) delete fUpperGXaxis;
+   if (fLowerGXaxis != 0) delete fLowerGXaxis;
+   if (fUpperGYaxis != 0) delete fUpperGYaxis;
+   if (fLowerGYaxis != 0) delete fLowerGYaxis;
 
-   if (fLowerGXaxis != 0) {
-      delete fLowerGXaxis;
-   }
+   if (fUpperGXaxisMirror != 0) delete fUpperGXaxisMirror;
+   if (fLowerGXaxisMirror != 0) delete fLowerGXaxisMirror;
+   if (fUpperGYaxisMirror != 0) delete fUpperGYaxisMirror;
+   if (fLowerGYaxisMirror != 0) delete fLowerGYaxisMirror;
 
-   if (fUpperGYaxis != 0) {
-      delete fUpperGYaxis;
-   }
-
-   if (fLowerGYaxis != 0) {
-      delete fLowerGYaxis;
-   }
 
    // figure out where the axis has to go.
    // Implicit assumption is, that the top pad spans the full other pads
@@ -398,10 +418,17 @@ void TRatioPlot::CreateVisualAxes()
 
    Float_t sf = fSplitFraction;
 
-   fUpperGXaxis = new TGaxis(upLM, upBM*(1-sf)+sf, (1-upRM), upBM*(1-sf)+sf, first, last);
+   fUpperGXaxis = new TGaxis(upLM, upBM*(1-sf)+sf, (1-upRM), upBM*(1-sf)+sf, first, last, 510, "+U");
    fLowerGXaxis = new TGaxis(lowLM, lowBM*sf, 1-lowRM, lowBM*sf, first, last);
    fUpperGYaxis = new TGaxis(upLM, upBM*(1-sf)+sf, upLM, (1-upTM)*(1-sf)+sf, upYFirst, upYLast, 510, "-S");
    fLowerGYaxis = new TGaxis(lowLM, lowBM*sf, lowLM, (1-lowTM)*sf, lowYFirst, lowYLast, 510, "-S");
+
+   // U would disable labels but breaks tick size, so S and SetLabelSize(0.)
+   fUpperGXaxisMirror = new TGaxis(upLM, (1-upTM)*(1-sf)+sf, (1-upRM), (1-upTM)*(1-sf)+sf, first, last, 510, "-S");
+   fLowerGXaxisMirror = new TGaxis(lowLM, (1-lowTM)*sf, 1-lowRM, (1-lowTM)*sf, first, last, 510, "-S");
+   fUpperGYaxisMirror = new TGaxis(1-upRM, upBM*(1-sf)+sf, 1-upRM, (1-upTM)*(1-sf)+sf, upYFirst, upYLast, 510, "+S");
+   fLowerGYaxisMirror = new TGaxis(1-lowRM, lowBM*sf, 1-lowRM, (1-lowTM)*sf, lowYFirst, lowYLast, 510, "+S");
+   
 
    // import infos from TAxes
    fUpperGXaxis->ImportAxisAttributes(fSharedXAxis);
@@ -409,12 +436,43 @@ void TRatioPlot::CreateVisualAxes()
    fLowerGXaxis->ImportAxisAttributes(fSharedXAxis);
    fLowerGYaxis->ImportAxisAttributes(fLowYaxis);
 
+   fUpperGXaxis->SetNdivisions(fSharedXAxis->GetNdivisions());
+   fUpperGYaxis->SetNdivisions(fUpYaxis->GetNdivisions());
+   fLowerGXaxis->SetNdivisions(fSharedXAxis->GetNdivisions());
+   fLowerGYaxis->SetNdivisions(fLowYaxis->GetNdivisions());
+   
+   // check if gPad has the all sides axis set
+
+   Bool_t mirroredAxes = gPad->GetFrameFillStyle() == 0; 
+
+   if (mirroredAxes) {
+   
+      fUpperGXaxisMirror->ImportAxisAttributes(fSharedXAxis);
+      fUpperGYaxisMirror->ImportAxisAttributes(fUpYaxis);
+      fLowerGXaxisMirror->ImportAxisAttributes(fSharedXAxis);
+      fLowerGYaxisMirror->ImportAxisAttributes(fLowYaxis);
+
+      fUpperGXaxisMirror->SetNdivisions(fSharedXAxis->GetNdivisions());
+      fUpperGYaxisMirror->SetNdivisions(fUpYaxis->GetNdivisions());
+      fLowerGXaxisMirror->SetNdivisions(fSharedXAxis->GetNdivisions());
+      fLowerGYaxisMirror->SetNdivisions(fLowYaxis->GetNdivisions());
+      
+      fUpperGXaxisMirror->SetLabelSize(0.);
+      fLowerGXaxisMirror->SetLabelSize(0.);
+      fUpperGYaxisMirror->SetLabelSize(0.);
+      fLowerGYaxisMirror->SetLabelSize(0.);
+
+   }
+
 
    // normalize the tick sizes. y axis ticks should be consistent
    // even if their length is different
    Double_t ratio = ( (upBM-(1-upTM))*(1-sf) ) / ( (lowBM-(1-lowTM))*sf ) ;
-   fUpperGXaxis->SetLabelSize(0.);
-   fLowerGYaxis->SetTickSize(fUpperGYaxis->GetTickSize()*ratio);
+   //fUpperGXaxis->SetLabelSize(0.);
+   Double_t ticksize = fUpperGYaxis->GetTickSize()*ratio;  
+   var_dump(ticksize);
+   fLowerGYaxis->SetTickSize(ticksize);
+   fLowerGYaxisMirror->SetTickSize(ticksize);
 
    // draw TG axes to top pad
    TVirtualPad *padsav = gPad;
@@ -423,6 +481,16 @@ void TRatioPlot::CreateVisualAxes()
    fLowerGXaxis->Draw();
    fUpperGYaxis->Draw();
    fLowerGYaxis->Draw();
+
+   if (mirroredAxes) {
+
+      fUpperGXaxisMirror->Draw();
+      fLowerGXaxisMirror->Draw();
+      fUpperGYaxisMirror->Draw();
+      fLowerGYaxisMirror->Draw();
+
+   }
+
    padsav->cd();
 
 }
