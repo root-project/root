@@ -51,9 +51,9 @@
 
 //#include <iostream>
 
-Bool_t TF1::fgAbsValue    = kFALSE;
+std::atomic<Bool_t> TF1::fgAbsValue(kFALSE);
 Bool_t TF1::fgRejectPoint = kFALSE;
-Bool_t TF1::fgAddToGlobList = kTRUE;
+std::atomic<Bool_t> TF1::fgAddToGlobList(kTRUE);
 static Double_t gErrorTF1 = 0;
 
 ClassImp(TF1)
@@ -421,7 +421,7 @@ TF1::TF1():
 /// the formula string is "fffffff" and "xxxx" and "yyyy" are the
 /// titles for the X and Y axis respectively.
 
-TF1::TF1(const char *name,const char *formula, Double_t xmin, Double_t xmax) :
+TF1::TF1(const char *name,const char *formula, Double_t xmin, Double_t xmax, EAddToList addToGlobList) :
    TNamed(name,formula), TAttLine(), TAttFill(), TAttMarker(),
    fNpx(100), fType(0),
    fNpfits(0), fNDF(0), fChisquare(0),
@@ -451,7 +451,7 @@ TF1::TF1(const char *name,const char *formula, Double_t xmin, Double_t xmax) :
       MakeZombie();
    }
 
-   DoInitialize();
+   DoInitialize(addToGlobList);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -468,7 +468,7 @@ TF1::TF1(const char *name,const char *formula, Double_t xmin, Double_t xmax) :
 ///
 /// WARNING! A function created with this constructor cannot be Cloned.
 
-TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar,Int_t ndim) :
+TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar,Int_t ndim, EAddToList addToGlobList) :
    TNamed(name,name), TAttLine(), TAttFill(), TAttMarker(),
    fXmin(xmin), fXmax(xmax),
    fNpar(npar), fNdim(ndim),
@@ -500,7 +500,7 @@ TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar,Int_t ndim) 
       return;
    }
 
-   DoInitialize();
+   DoInitialize(addToGlobList);
 }
 
 
@@ -517,7 +517,7 @@ TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar,Int_t ndim) 
 ///
 /// WARNING! A function created with this constructor cannot be Cloned.
 
-TF1::TF1(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim) :
+TF1::TF1(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim, EAddToList addToGlobList) :
    TNamed(name,name), TAttLine(), TAttFill(), TAttMarker(),
    fXmin(xmin), fXmax(xmax),
    fNpar(npar), fNdim(ndim),
@@ -535,7 +535,7 @@ TF1::TF1(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin
    fParams(new TF1Parameters(npar) )
 
 {
-   DoInitialize();
+   DoInitialize(addToGlobList);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -551,7 +551,7 @@ TF1::TF1(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin
 ///
 /// WARNING! A function created with this constructor cannot be Cloned.
 
-TF1::TF1(const char *name,Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim) :
+TF1::TF1(const char *name,Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim, EAddToList addToGlobList) :
    TNamed(name,name), TAttLine(), TAttFill(), TAttMarker(),
    fXmin(xmin), fXmax(xmax),
    fNpar(npar), fNdim(ndim),
@@ -568,7 +568,7 @@ TF1::TF1(const char *name,Double_t (*fcn)(const Double_t *, const Double_t *), D
    fFormula(0),
    fParams(new TF1Parameters(npar) )
 {
-   DoInitialize();
+   DoInitialize(addToGlobList);
 }
 
 
@@ -583,7 +583,7 @@ TF1::TF1(const char *name,Double_t (*fcn)(const Double_t *, const Double_t *), D
 ///
 /// WARNING! A function created with this constructor cannot be Cloned.
 
-TF1::TF1(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim ) :
+TF1::TF1(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim, EAddToList addToGlobList ) :
    TNamed(name,name), TAttLine(), TAttFill(), TAttMarker(),
    fXmin(xmin), fXmax(xmax),
    fNpar(npar), fNdim(ndim),
@@ -601,20 +601,22 @@ TF1::TF1(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin, Double_t x
    fParams(new TF1Parameters(npar) )
 
 {
-    DoInitialize();
+    DoInitialize(addToGlobList);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Common initialization of the TF1. Add to the global list and
 /// set the default style
 
-void TF1::DoInitialize() {
+void TF1::DoInitialize(EAddToList addToGlobalList) {
 
    fMinimum = -1111;
    fMaximum = -1111;
 
    // add to global list of functions if default adding is on OR if bit is set
-   if (fgAddToGlobList  && gROOT) {
+   bool doAdd = ((addToGlobalList == EAddToList::kDefault && fgAddToGlobList)
+                 || addToGlobalList == EAddToList::kAdd);
+   if (doAdd && gROOT) {
       SetBit(kNotGlobal,kFALSE);
       R__LOCKGUARD2(gROOTMutex);
       // Store formula in linked list of formula in ROOT
@@ -643,11 +645,9 @@ void TF1::DoInitialize() {
 
 Bool_t TF1::DefaultAddToGlobalList(Bool_t on)
 {
-   R__LOCKGUARD2(gROOTMutex);
-   bool previous = fgAddToGlobList;
-   fgAddToGlobList = on;
-   return previous;
+   return fgAddToGlobList.exchange(on);
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Add to global list of functions (gROOT->GetListOfFunctions() )
 /// return previous status (true if the function was already in the list false if not)
