@@ -95,7 +95,7 @@ namespace {
 
       // Returns false on error
       bool Complete(Text& line /*in+out*/, size_t& cursor /*in+out*/,
-                    EditorRange& r /*out*/,
+                    EditorRange& /* r */ /*out*/,
                     std::vector<std::string>& completions /*out*/) {
          gInterpreter->CodeComplete(line.GetText(), cursor, completions);
          return true;
