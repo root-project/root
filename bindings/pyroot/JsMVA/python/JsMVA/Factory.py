@@ -633,7 +633,9 @@ def ChangeCallOriginalEvaluateImportance(*args,  **kwargs):
         return originalFunction(*args)
     args, kwargs = JPyInterface.functions.ConvertSpecKwargsToArgs(["DataLoader", "VIType", "Method", "MethodTitle"], *args, **kwargs)
     originalFunction, args = JPyInterface.functions.ProcessParameters(5, *args, **kwargs)
-    return originalFunction(*args)
+    hist = originalFunction(*args)
+    JPyInterface.JsDraw.Draw(hist)
+    return hist
 
 ## Rewrite the constructor of TMVA::Factory::CrossValidate
 def ChangeCallOriginalCrossValidate(*args,  **kwargs):
@@ -641,19 +643,28 @@ def ChangeCallOriginalCrossValidate(*args,  **kwargs):
         originalFunction, args = JPyInterface.functions.ProcessParameters(0, *args, **kwargs)
         return originalFunction(*args)
     optParams = False
-    rocIntegrals = False
+    NumFolds  = 5
+    remakeDataSet = True
+    rocIntegrals = None
     if "optParams" in kwargs:
         optParams = kwargs["optParams"]
         del kwargs["optParams"]
+    if "NumFolds" in kwargs:
+        NumFolds = kwargs["NumFolds"]
+        del kwargs["NumFolds"]
+    if "remakeDataSet" in kwargs:
+        remakeDataSet = kwargs["remakeDataSet"]
+        del kwargs["remakeDataSet"]
     if "rocIntegrals" in kwargs:
         rocIntegrals = kwargs["rocIntegrals"]
         del kwargs["rocIntegrals"]
     args, kwargs = JPyInterface.functions.ConvertSpecKwargsToArgs(["DataLoader", "Method", "MethodTitle"], *args, **kwargs)
     originalFunction, args = JPyInterface.functions.ProcessParameters(4, *args, **kwargs)
     args = list(args)
-    if optParams!=False:
-        args.append(optParams)
-    if rocIntegrals!=False:
+    args.append(optParams)
+    args.append(NumFolds)
+    args.append(remakeDataSet)
+    if rocIntegrals!=None and rocIntegrals!=0:
         args.append(rocIntegrals)
     args = tuple(args)
     return originalFunction(*args)
