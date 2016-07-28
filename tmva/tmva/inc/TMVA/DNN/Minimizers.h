@@ -87,9 +87,9 @@ public:
       rate \f$\alpha\f$ and subtracted from the weights and bias values of each
       layer. */
     template <typename Net_t>
-    Scalar_t Step(Net_t &net,
-                  Matrix_t &input,
-                  const Matrix_t &output);
+    void Step(Net_t &net,
+              Matrix_t &input,
+              const Matrix_t &output);
     /** Does not evaluate the loss and therefore not trigger a possible synchronization
      *  with the device. Trains the weights of each layer, but only the bias terms of
      *  the first layer for compatibility with the previous implementation. */
@@ -197,13 +197,13 @@ template <typename Data_t, typename Net_t>
 //______________________________________________________________________________
 template<typename Architecture_t>
     template <typename Net_t>
-    auto inline TGradientDescent<Architecture_t>::Step(Net_t & net,
+    void inline TGradientDescent<Architecture_t>::Step(Net_t & net,
                                                        Matrix_t &input,
                                                        const Matrix_t &output)
-    -> Scalar_t
 {
-    Scalar_t loss = net.Loss(input, output);
-    fTrainingError = loss;
+    //Scalar_t loss = net.Loss(input, output);
+    //fTrainingError = loss;
+    net.Forward(input);
     net.Backward(input, output);
 
     for (size_t i = 0; i < net.GetDepth(); i++)
@@ -216,7 +216,6 @@ template<typename Architecture_t>
                                  layer.GetBiasGradients(),
                                  -fLearningRate);
     }
-    return loss;
 }
 
 //______________________________________________________________________________

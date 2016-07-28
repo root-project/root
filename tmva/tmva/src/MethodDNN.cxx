@@ -687,6 +687,9 @@ void TMVA::MethodDNN::TrainGPU()
       case DNN::EnumFunction::RELU :
           GPUNet.AddLayer((*itLayout).first, EActivationFunction::RELU);
           break;
+      case DNN::EnumFunction::TANH :
+          GPUNet.AddLayer((*itLayout).first, EActivationFunction::TANH);
+          break;
       case DNN::EnumFunction::SYMMRELU :
           GPUNet.AddLayer((*itLayout).first, EActivationFunction::SYMMRELU);
           break;
