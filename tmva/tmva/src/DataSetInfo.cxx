@@ -60,7 +60,6 @@
 #include "TMVA/Types.h"
 #include "TMVA/VariableInfo.h"
 
-ClassImp(TMVA::DataSetInfo)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor

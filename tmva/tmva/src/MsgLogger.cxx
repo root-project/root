@@ -49,8 +49,6 @@
 #include "Rtypes.h"
 #include "TObject.h"
 
-ClassImp(TMVA::MsgLogger)
-
 // declaration of global variables
 // this is the hard-coded maximum length of the source names
 const UInt_t                           TMVA::MsgLogger::fgMaxSourceSize = 25;

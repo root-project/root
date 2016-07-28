@@ -38,8 +38,6 @@ namespace TMVA {
    class DataSetInfo;
 }
 
-ClassImp(TMVA::ResultsClassification)
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor

@@ -36,8 +36,6 @@
 
 #include <vector>
 
-ClassImp(TMVA::Results)
-
 namespace TMVA {
    class DataSetInfo;
 }

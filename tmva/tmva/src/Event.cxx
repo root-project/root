@@ -39,9 +39,6 @@
 Bool_t TMVA::Event::fgIsTraining = kFALSE;
 Bool_t TMVA::Event::fgIgnoreNegWeightsInTraining = kFALSE;
 
-
-ClassImp(TMVA::Event)
-
 ////////////////////////////////////////////////////////////////////////////////
 /// copy constructor
 
