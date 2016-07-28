@@ -27,16 +27,9 @@ int main()
    using Matrix_t = TMatrixT<Double_t>;
    using Net_t    = TNet<TCuda>;
 
-   Matrix_t XTrain(40000,20), YTrain(40000,20), XTest(20,20), YTest(20,20), W(20, 20);
+   Matrix_t XTrain(100000,20), YTrain(100000,20), XTest(20,20), YTest(20,20), W(20, 20);
 
    randomMatrix(W);
-
-   for (size_t i = 0; i < 40000; i++) {
-      for (size_t j = 0; j < 20; j++) {
-         XTrain(i,j) = i;
-         YTrain(i,j) = i;
-      }
-   }
 
    randomMatrix(XTrain);
    randomMatrix(XTest);
@@ -47,7 +40,7 @@ int main()
    MatrixInput_t trainData(XTrain, YTrain);
    MatrixInput_t testData(XTest, YTest);
 
-   Net_t net(400, 20, ELossFunction::MEANSQUAREDERROR);
+   Net_t net(1000, 20, ELossFunction::MEANSQUAREDERROR);
 
    net.AddLayer(200, EActivationFunction::IDENTITY);
    net.AddLayer(200, EActivationFunction::IDENTITY);
@@ -57,7 +50,7 @@ int main()
    auto testnet = net.CreateClone(20);
 
    TGradientDescent<TCuda> minimizer(0.001, 20, 20);
-   minimizer.Train(trainData, 40000, testData, 20, net);
+   minimizer.Train(trainData, 100000, testData, 20, net);
 
    TMatrixT<Double_t> I(20,20); identityMatrix(I);
    TCudaMatrix ICuda(I);
