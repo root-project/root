@@ -147,16 +147,20 @@ public:
   ///   a type that is not a derived type of `T`.
   template <class T>
   std::shared_ptr<ToContentType_t<T>> Get(const std::string& name) {
-    auto idx = fContent.find(name);
-    if (idx != fContent.end()) {
-      if (idx->second.GetTypeInfo() == typeid(ToContentType_t<T>))
-        return std::static_pointer_cast<ToContentType_t<T>>(idx->second.GetPointer());
-      if (auto ptr = idx->second.CastPointer<ToContentType_t<T>>())
-        return ptr;
+    const auto& pair = Find<T>(name);
+    const Internal::TDirectoryEntry& entry = pair.first;
+    EFindStatus status = pair.second;
+    switch (status) {
+    case EFindStatus::kValidValue:
+      return std::static_pointer_cast<ToContentType_t<T>>(entry.GetPointer());
+    case EFindStatus::kValidValueBase:
+      return entry.CastPointer<ToContentType_t<T>>();
+    case EFindStatus::kTypeMismatch:
       // FIXME: add expected versus actual type name as c'tor args
       throw TDirectoryTypeMismatch(name);
+    case EFindStatus::kKeyNameNotFound:
+      throw TDirectoryUnknownKey(name);
     }
-    throw TDirectoryUnknownKey(name);
     return nullptr; // never happens
   }
 
