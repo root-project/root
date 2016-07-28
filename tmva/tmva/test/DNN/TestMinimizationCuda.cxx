@@ -27,11 +27,11 @@ int main()
    using Matrix_t = TMatrixT<Double_t>;
    using Net_t    = TNet<TCuda>;
 
-   Matrix_t XTrain(4000,20), YTrain(4000,20), XTest(20,20), YTest(20,20), W(20, 20);
+   Matrix_t XTrain(40000,20), YTrain(40000,20), XTest(20,20), YTest(20,20), W(20, 20);
 
    randomMatrix(W);
 
-   for (size_t i = 0; i < 4000; i++) {
+   for (size_t i = 0; i < 40000; i++) {
       for (size_t j = 0; j < 20; j++) {
          XTrain(i,j) = i;
          YTrain(i,j) = i;
@@ -47,23 +47,26 @@ int main()
    MatrixInput_t trainData(XTrain, YTrain);
    MatrixInput_t testData(XTest, YTest);
 
-   Net_t net(20, 20, ELossFunction::MEANSQUAREDERROR);
-   net.AddLayer(100, EActivationFunction::IDENTITY);
-   net.AddLayer(100, EActivationFunction::IDENTITY);
+   Net_t net(400, 20, ELossFunction::MEANSQUAREDERROR);
+
+   net.AddLayer(200, EActivationFunction::IDENTITY);
+   net.AddLayer(200, EActivationFunction::IDENTITY);
+   net.AddLayer(200, EActivationFunction::IDENTITY);
    net.AddLayer(20, EActivationFunction::IDENTITY);
    net.Initialize(EInitialization::GAUSS);
+   auto testnet = net.CreateClone(20);
 
    TGradientDescent<TCuda> minimizer(0.001, 20, 20);
-   minimizer.Train(trainData, 4000, testData, 20, net);
+   minimizer.Train(trainData, 40000, testData, 20, net);
 
    TMatrixT<Double_t> I(20,20); identityMatrix(I);
    TCudaMatrix ICuda(I);
 
-   net.Forward(ICuda);
+   testnet.Forward(ICuda);
 
    TMatrixT<Double_t> WT(20, 20);
    WT.Transpose(W);
 
-   auto error = maximumRelativeError((TMatrixT<Double_t>) net.GetOutput(), WT);
+   auto error = maximumRelativeError((TMatrixT<Double_t>) testnet.GetOutput(), WT);
    std::cout << "Maximum relative error: " << error << std::endl;
 }

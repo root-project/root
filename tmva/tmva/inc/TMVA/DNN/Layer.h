@@ -282,7 +282,7 @@ template<typename Architecture_t>
 {
    std::cout << "Width: " << fWeights.GetNrows();
    std::cout << ", activation function: ";
-   std::cout << static_cast<char>(fF) << std::endl;
+   std::cout << static_cast<int>(fF) << std::endl;
 }
 
 //______________________________________________________________________________
