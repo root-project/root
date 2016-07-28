@@ -167,7 +167,7 @@ TMVA::DataSet* TMVA::DataSetFactory::BuildDynamicDataSet( TMVA::DataSetInfo& dsi
       dsi.GetClassInfo( "data" )->SetNumber(0);
    }
 
-   std::vector<Float_t>* evdyn = new std::vector<Float_t>(0);
+   std::vector<Float_t*>* evdyn = new std::vector<Float_t*>(0);
 
    std::vector<VariableInfo>& varinfos = dsi.GetVariableInfos();
 
@@ -179,14 +179,14 @@ TMVA::DataSet* TMVA::DataSetFactory::BuildDynamicDataSet( TMVA::DataSetInfo& dsi
       Float_t* external=(Float_t*)(*it).GetExternalLink();
       if (external==0)
          Log() << kDEBUG << Form("Dataset[%s] : ",dsi.GetName()) << "The link to the external variable is NULL while I am trying to build a dynamic data set. In this case fTmpEvent from MethodBase HAS TO BE USED in the method to get useful values in variables." << Endl;
-      else evdyn->push_back (*external);
+      else evdyn->push_back (external);
    }
 
    std::vector<VariableInfo>& spectatorinfos = dsi.GetSpectatorInfos();
    it = spectatorinfos.begin();
-   for (;it!=spectatorinfos.end();it++) evdyn->push_back( *(Float_t*)(*it).GetExternalLink() );
+   for (;it!=spectatorinfos.end();it++) evdyn->push_back( (Float_t*)(*it).GetExternalLink() );
 
-   TMVA::Event * ev = new Event((const std::vector<Float_t>*&)evdyn, varinfos.size());
+   TMVA::Event * ev = new Event((const std::vector<Float_t*>*&)evdyn, varinfos.size());
    std::vector<Event*>* newEventVector = new std::vector<Event*>;
    newEventVector->push_back(ev);
 

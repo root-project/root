@@ -51,7 +51,7 @@ TMVA::VariableInfo::VariableInfo( const TString& expression, const TString& titl
      fXmeanNorm   ( 0 ),
      fXrmsNorm    ( 0 ),
      fNormalized  ( normalized ),
-     fExternalData( (char*)external ),
+     fExternalData( external ),
      fVarCounter  ( varCounter )
 {
    if ( TMath::Abs(max - min) <= FLT_MIN ) {
