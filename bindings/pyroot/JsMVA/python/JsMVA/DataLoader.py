@@ -45,7 +45,7 @@ def GetInputVariableHist(dl, className, variableName, numBin, processTrfs=""):
             transformed = trf.CalcTransformations(inputEvents, 1)
         else:
             tmp = trf.CalcTransformations(transformed, 1)
-            del transformed[:]
+            del transformed
             transformed = tmp
 
     if transformed!=0:
@@ -82,10 +82,15 @@ def DrawCorrelationMatrix(dl, className):
 # @param dl The object pointer
 # @param variableName string containing the variable name
 # @param numBin for creating the histogram
-# @param processTrfs string containing the list of transformations to be used on input variable; eg. "I;N;D;P;U;G,D"
-def DrawInputVariable(dl, variableName, numBin=100, processTrfs=""):
-    sig = GetInputVariableHist(dl, "Signal",     variableName, numBin, processTrfs)
-    bkg = GetInputVariableHist(dl, "Background", variableName, numBin, processTrfs)
+# @param processTrfs list of transformations to be used on input variable; eg. ["I", "N", "D", "P", "U", "G"]"
+def DrawInputVariable(dl, variableName, numBin=100, processTrfs=[]):
+    processTrfsSTR = ""
+    if len(processTrfs)>0:
+        for o in processTrfs:
+            processTrfsSTR += str(o) + ";"
+        processTrfsSTR = processTrfsSTR[:-1]
+    sig = GetInputVariableHist(dl, "Signal",     variableName, numBin, processTrfsSTR)
+    bkg = GetInputVariableHist(dl, "Background", variableName, numBin, processTrfsSTR)
     c, l = JPyInterface.JsDraw.sbPlot(sig, bkg, {"xaxis": sig.GetTitle(),
                                     "yaxis": "Number of events",
                                     "plot": "Input variable: "+sig.GetTitle()})

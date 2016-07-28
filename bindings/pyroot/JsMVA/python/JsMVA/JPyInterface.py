@@ -101,7 +101,15 @@ class functions:
             elif type(kwargs[key]) == types.ListType:
                 ss = ""
                 for o in kwargs[key]:
-                    ss += str(o) + ";"
+                    if type(o) == types.DictType:
+                        sst = ""
+                        for kk in o:
+                            sst += kk + "=" + str(o[kk]) + ","
+                        ss += sst[:-1] + "|"
+                    elif key=="Layout":
+                        ss += str(o) + ","
+                    else:
+                        ss += str(o) + ";"
                 opt += key + "=" + ss[:-1] + ":"
             else:
                 opt += key + "=" + str(kwargs[key]) + ":"
@@ -153,8 +161,7 @@ class functions:
 ## Class for creating the output scripts and inserting them to cell output
 class JsDraw:
     ## String containing the link to JavaScript files
-    #__jsMVASourceDir = "https://rawgit.com/qati/GSOC16/master/src/js"
-    __jsMVASourceDir = "http://localhost:8888/notebooks/GSOC/wd/src/js"
+    __jsMVASourceDir = "https://rawgit.com/qati/GSOC16/master/src/js"
 
     ## Drawing are sizes
     jsCanvasWidth   = 800
