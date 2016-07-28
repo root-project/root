@@ -1770,6 +1770,8 @@ void TCling::RegisterModule(const char* modulename,
 #endif
 
       if (!hasHeaderParsingOnDemand){
+         SuspendAutoParsing autoParseRaii(this);
+
          const cling::Transaction* watermark = fInterpreter->getLastTransaction();
          cling::Interpreter::CompilationResult compRes = fInterpreter->parseForModule(code.Data());
          if (isACLiC) {
