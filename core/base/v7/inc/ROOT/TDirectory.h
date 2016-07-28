@@ -100,7 +100,6 @@ public:
 
   /// Find the TDirectoryEntry associated to the name. Returns empty TDirectoryEntry if
   /// nothing is found.
-  // FIXME: CXX17: return std::optional<TDirectoryEntry>
   Internal::TDirectoryEntry Find(const std::string& name) const {
     auto idx = fContent.find(name);
     if (idx == fContent.end())
@@ -121,7 +120,6 @@ public:
   /// Find the TDirectoryEntry associated with the name.
   /// \returns empty TDirectoryEntry in `first` if nothing is found, or if the type does not
   ///    match the expected type. `second` contains the reason.
-  // FIXME: CXX17: return std::optional<TDirectoryEntry>
   /// \note if `second` is kValidValue, then static_pointer_cast<`T`>(`first`.GetPointer())
   ///    is shared_ptr<`T`> to initially stored object
   /// \note if `second` is kValidValueBase, then `first`.CastPointer<`T`>()
