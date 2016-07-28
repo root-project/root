@@ -89,8 +89,7 @@ namespace TMVA {
       // Accept stream modifiers
       MsgLogger& operator<< ( MsgLogger& _f );
       MsgLogger& operator<< ( MsgLogger& (*_f)( MsgLogger& ));
-      MsgLogger& operator<< ( std::ostream& _f );
-      MsgLogger& operator<< ( std::ios& _f );
+      MsgLogger& operator<< ( std::ios& (*_f)(std::ios&) );
       MsgLogger& operator<< ( std::ostream& (*_f)( std::ostream& ));
       // Accept message type specification
       MsgLogger& operator<< ( EMsgType type );
@@ -155,15 +154,7 @@ namespace TMVA {
        return (_f)(*this);
    } 
    
-   inline MsgLogger& MsgLogger::operator<< ( std::ostream& _f )
-   {
-      std::ostringstream os;
-      os<<_f; 
-      fMsg+=os.str();
-      return *this;
-   }
-
-   inline MsgLogger& MsgLogger::operator<< ( std::ios& _f )
+   inline MsgLogger& MsgLogger::operator<< (  std::ios& (*_f)(std::ios&) )
    {
        std::ostringstream os;
        os<<_f; 
