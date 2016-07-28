@@ -95,15 +95,6 @@ inline void swap(TDirectoryEntry& e1, TDirectoryEntry& e2) noexcept
   e1.swap(e2);
 }
 
-inline bool operator==(const TDirectoryEntry& lhs, const TDirectoryEntry& rhs)
-{
-  return lhs.GetPointer() == rhs.GetPointer()
-    && lhs.GetTypeInfo() == rhs.GetTypeInfo();
-}
-
-inline bool operator!=(const TDirectoryEntry& lhs, const TDirectoryEntry& rhs)
-{ return !(lhs == rhs); }
-
 } // namespace Internal
 
 } // namespace Experimental
