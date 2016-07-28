@@ -148,92 +148,92 @@ private:
    static curandState_t * fCurandStates;
    static size_t          fNCurandStates;
 
-    cudaStream_t  fDataStream;
-    size_t         fNRows, fNCols;
-    CudaDouble_t * fDeviceData;
-    bool fOwner; ///< Indicates whether matrix owns memory or not.
+   cudaStream_t  fDataStream;
+   size_t         fNRows, fNCols;
+   CudaDouble_t * fDeviceData;
+   bool fOwner; ///< Indicates whether matrix owns memory or not.
 
 public:
 
-    /** Desctructor frees memory if owned by this matrix. */
-    ~TCudaMatrix()
-    {
-       fInstances--;
-       if (fDeviceData && fOwner) {
-          cudaFree(fDeviceData);
-       }
-/*        if (fInstances == 0) */
-/*            cudaDeviceReset(); */
-    }
+   /** Desctructor frees memory if owned by this matrix. */
+   ~TCudaMatrix()
+   {
+      fInstances--;
+      if (fDeviceData && fOwner) {
+         cudaFree(fDeviceData);
+      }
+      /*        if (fInstances == 0) */
+      /*            cudaDeviceReset(); */
+   }
 
-    /** Return the compute stream in which matrix operations are performed.
-     *   The same for all instances. */
-    inline static cudaStream_t GetComputeStream() {return fComputeStream;}
+   /** Return the compute stream in which matrix operations are performed.
+    *   The same for all instances. */
+   inline static cudaStream_t GetComputeStream() {return fComputeStream;}
 
-    /** Set the return buffer on the device to the specified value. This is
-     * required for example for reductions in order to initialize the
-     * accumulator. */
-    inline static void ResetDeviceReturn(CudaDouble_t value = 0.0)
-    {
-        CudaDouble_t buffer = value;
-        cudaMemcpy(fDeviceReturn, & buffer, sizeof(CudaDouble_t),
-                   cudaMemcpyHostToDevice);
-    }
+   /** Set the return buffer on the device to the specified value. This is
+    * required for example for reductions in order to initialize the
+    * accumulator. */
+   inline static void ResetDeviceReturn(CudaDouble_t value = 0.0)
+   {
+      CudaDouble_t buffer = value;
+      cudaMemcpy(fDeviceReturn, & buffer, sizeof(CudaDouble_t),
+                 cudaMemcpyHostToDevice);
+   }
 
-    /** Transfer the value in the device return buffer to the host. */
-    inline static CudaDouble_t GetDeviceReturn()
-    {
-        CudaDouble_t buffer;
-        cudaMemcpy(& buffer, fDeviceReturn, sizeof(CudaDouble_t),
-                   cudaMemcpyDeviceToHost);
-        return buffer;
-    }
+   /** Transfer the value in the device return buffer to the host. */
+   inline static CudaDouble_t GetDeviceReturn()
+   {
+      CudaDouble_t buffer;
+      cudaMemcpy(& buffer, fDeviceReturn, sizeof(CudaDouble_t),
+                 cudaMemcpyDeviceToHost);
+      return buffer;
+   }
 
-    /** Return device pointer to the device return buffer */
-    inline static CudaDouble_t *  GetDeviceReturnPointer() {return fDeviceReturn;}
-    inline static curandState_t * GetCurandStatesPointer() {return fCurandStates;}
+   /** Return device pointer to the device return buffer */
+   inline static CudaDouble_t *  GetDeviceReturnPointer() {return fDeviceReturn;}
+   inline static curandState_t * GetCurandStatesPointer() {return fCurandStates;}
 
-    TCudaMatrix();
-    TCudaMatrix(size_t i, size_t j);
-    TCudaMatrix(const TMatrixT<CudaDouble_t> &);
-    TCudaMatrix(CudaDouble_t * deviceData,
+   TCudaMatrix();
+   TCudaMatrix(size_t i, size_t j);
+   TCudaMatrix(const TMatrixT<CudaDouble_t> &);
+   TCudaMatrix(CudaDouble_t * deviceData,
                size_t m, size_t n,
                cudaStream_t dataStream);
 
-    TCudaMatrix(const TCudaMatrix &) = delete;
-    TCudaMatrix(TCudaMatrix && A);
+   TCudaMatrix(const TCudaMatrix &) = delete;
+   TCudaMatrix(TCudaMatrix && A);
 
 
-    /** Convert cuda matrix to Root TMatrix. */
-    operator TMatrixT<CudaDouble_t>() const;
+   /** Convert cuda matrix to Root TMatrix. */
+   operator TMatrixT<CudaDouble_t>() const;
 
-    void CopyToDevice(CudaDouble_t *source);
-    void CopyFromDevice(CudaDouble_t *dest);
+   void CopyToDevice(CudaDouble_t *source);
+   void CopyFromDevice(CudaDouble_t *dest);
 
-    size_t GetNrows() const {return fNRows;}
-    size_t GetNcols() const {return fNCols;}
-    size_t GetNoElements() const {return fNRows * fNCols;}
-    const CudaDouble_t *       GetDataPointer() const {return fDeviceData;}
-          CudaDouble_t *       GetDataPointer()       {return fDeviceData;}
-    const cublasHandle_t & GetCublasHandle() const    {return fCublasHandle;}
+   size_t GetNrows() const {return fNRows;}
+   size_t GetNcols() const {return fNCols;}
+   size_t GetNoElements() const {return fNRows * fNCols;}
+   const CudaDouble_t *       GetDataPointer() const {return fDeviceData;}
+   CudaDouble_t *       GetDataPointer()       {return fDeviceData;}
+   const cublasHandle_t & GetCublasHandle() const    {return fCublasHandle;}
 
-    /** Access to elements of device matrices provided through TCudaDeviceReference
-     *  class. Note that access is synchronous end enforces device synchronization
-     *  on all streams. Only used for testing. */
-    TCudaDeviceReference operator()(size_t i, size_t j) const
-    {
-        CudaDouble_t * elementPointer = fDeviceData + j * fNRows + i;
-        return TCudaDeviceReference(elementPointer);
-    }
+   /** Access to elements of device matrices provided through TCudaDeviceReference
+    *  class. Note that access is synchronous end enforces device synchronization
+    *  on all streams. Only used for testing. */
+   TCudaDeviceReference operator()(size_t i, size_t j) const
+   {
+      CudaDouble_t * elementPointer = fDeviceData + j * fNRows + i;
+      return TCudaDeviceReference(elementPointer);
+   }
 
-    /** Get the data stream which executes the memory transfer for this
-     *  matrix. */
-    cudaStream_t GetDataStream()    const {return fDataStream;}
+   /** Get the data stream which executes the memory transfer for this
+    *  matrix. */
+   cudaStream_t GetDataStream()    const {return fDataStream;}
 
 private:
 
-    void InitializeCuda();
-    void InitializeCurandStates();
+   void InitializeCuda();
+   void InitializeCurandStates();
 
 };
 
