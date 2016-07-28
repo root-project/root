@@ -839,7 +839,6 @@ void TMVA::MethodDNN::TrainGPU()
                settings.cycle(progress, convText);
                converged = minimizer.HasConverged();
             }
-            Log () << kINFO << Endl;
             stepCount++;
          }
          fMonitoring = 0;
@@ -861,8 +860,6 @@ void TMVA::MethodDNN::TrainGPU()
             fWeights.push_back(Weights(i,j));
          }
       }
-
-      Weights.Print();
 
       if (l == 0) {
          fWeights.reserve(fWeights.size() + layerWidth);
