@@ -16,6 +16,7 @@
 #include "TRatioPlot.h"
 #include "TBrowser.h"
 #include "TH1.h"
+#include "TF1.h"
 #include "TPad.h"
 #include "TString.h"
 #include "TGraphAsymmErrors.h"
@@ -50,22 +51,21 @@ TRatioPlot::TRatioPlot()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/// Constructor for two histograms 
 
 // @TODO: This should work with stacks as well
 // @TODO: Needs options for axes
-// @TODO: Needs options for drawing of h1, h2, ratio
-// @TODO: Need getters for pads
 
 TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, const char *name /*=0*/, const char *title /*=0*/, 
-      Option_t *divideOption, Option_t *optH1, Option_t *optH2, Option_t *optGraph)
+      Option_t *displayOption, Option_t *optH1, Option_t *optH2, Option_t *optGraph,
+      Double_t c1, Double_t c2)
    : TPad(name, title, 0, 0, 1, 1),
      fUpperPad(0),
      fLowerPad(0),
      fTopPad(0),
      fH1(h1),
      fH2(h2),
-     fDivideOption(0),
+     fDisplayOption(0),
      fOptH1(0),
      fOptH2(0),
      fOptGraph(0),
@@ -103,17 +103,19 @@ TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, const char *name /*=0*/, const char *ti
 
    SetupPads();
 
-   TString divideOptionString = TString(divideOption);
+   TString displayOptionString = TString(displayOption);
 
-   if (divideOptionString.Contains("errprop")) {
-      divideOptionString.ReplaceAll("errprop","");
-      fDivideMode = DIVIDE_HIST;
-   }
-   else {
-      fDivideMode = DIVIDE_GRAPH;
+   if (displayOptionString.Contains("errprop")) {
+      displayOptionString.ReplaceAll("errprop", "");
+      fDisplayMode = DIVIDE_HIST;
+   } else if (displayOptionString.Contains("diff")) {
+      displayOptionString.ReplaceAll("diff", "");
+      fDisplayMode = DIFFERENCE;   
+   } else {
+      fDisplayMode = DIVIDE_GRAPH;
    }
 
-   fDivideOption = divideOptionString;
+   fDisplayOption = displayOptionString;
 
    TString optH1String = TString(optH1);
    TString optH2String = TString(optH2);
@@ -127,12 +129,75 @@ TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, const char *name /*=0*/, const char *ti
    fOptGraph = optGraphString;
 
    // build ratio, everything is ready
-   BuildRatio();
+   BuildRatio(c1, c2);
 
    // taking x axis information from h1 by cloning it x axis
    fSharedXAxis = (TAxis*)(fH1->GetXaxis()->Clone());
    fUpYaxis = (TAxis*)(fH1->GetYaxis()->Clone());
    fLowYaxis = (TAxis*)(fRatioGraph->GetYaxis()->Clone());
+}
+
+
+TRatioPlot::TRatioPlot(TH1* h1, const char *name, const char *title, Option_t *displayOption, Option_t *optH1,
+         Option_t *fitOpt, Option_t *optGraph) 
+   : TPad(name, title, 0, 0, 1, 1),
+     fUpperPad(0),
+     fLowerPad(0),
+     fTopPad(0),
+     fH1(h1),
+     fH2(0),
+     fDisplayOption(0),
+     fOptH1(0),
+     fOptH2(0),
+     fOptGraph(0),
+     fRatioGraph(0),
+     fSharedXAxis(0),
+     fUpperGXaxis(0),
+     fLowerGXaxis(0),
+     fUpperGYaxis(0),
+     fLowerGYaxis(0),
+     fUpperGXaxisMirror(0),
+     fLowerGXaxisMirror(0),
+     fUpperGYaxisMirror(0),
+     fLowerGYaxisMirror(0),
+     fUpYaxis(0)
+{
+   gROOT->GetListOfCleanups()->Add(this);
+
+   if (!fH1) {
+      Warning("TRatioPlot", "Need a histogram.");
+      return;
+   }
+
+   Bool_t h1IsTH1=fH1->IsA()->InheritsFrom(TH1::Class());
+
+   if (!h1IsTH1) {
+      Warning("TRatioPlot", "Need a histogram deriving from TH2 or TH3.");
+      return;
+   }
+
+   TList *h1Functions = fH1->GetListOfFunctions();
+
+   if (h1Functions->GetSize() < 1) {
+      Warning("TRatioPlot", "Histogram given needs to have a (fit) function associated with it");
+      return;
+   }
+
+   fParentPad = gPad;
+
+   SetupPads();
+
+   fDisplayMode = FIT_RESIDUAL;
+
+   BuildRatio();
+
+   fOptH1 = optH1;
+   fOptGraph = optGraph;
+
+   fSharedXAxis = (TAxis*)(fH1->GetXaxis()->Clone());
+   fUpYaxis = (TAxis*)(fH1->GetYaxis()->Clone());
+   fLowYaxis = (TAxis*)(fRatioGraph->GetYaxis()->Clone());
+
 }
 
 
@@ -275,7 +340,10 @@ void TRatioPlot::Draw(Option_t *option)
    fH1->GetYaxis()->SetLabelSize(0.);
 
    fH1->Draw(fOptH1);
-   fH2->Draw(fOptH2+"same");
+   
+   if (fH2 != 0) {
+      fH2->Draw(fOptH2+"same");
+   }
 
    fLowerPad->cd();
 
@@ -345,7 +413,7 @@ void TRatioPlot::SyncAxesRanges()
 /// Build the lower plot according to which constructor was called, and
 /// which options were passed.
 /// @TODO: Actually implement this, currently it can only do ratios
-void TRatioPlot::BuildRatio()
+void TRatioPlot::BuildRatio(Double_t c1, Double_t c2)
 {
 //   __(__PRETTY_FUNCTION__ << " called");
 
@@ -357,19 +425,59 @@ void TRatioPlot::BuildRatio()
 
    // Determine the divide mode and create the lower graph accordingly
    // Pass divide options given in constructor
-   if (fDivideMode == DIVIDE_GRAPH) {
+   if (fDisplayMode == DIVIDE_GRAPH) {
       // use TGraphAsymmErrors Divide method to create
+      
+      TH1 *tmpH1 = (TH1*)fH1->Clone();
+      TH1 *tmpH2 = (TH1*)fH2->Clone();
+
+      tmpH1->Scale(c1);
+      tmpH2->Scale(c2);
+
       TGraphAsymmErrors *ratioGraph = new TGraphAsymmErrors();
-      ratioGraph->Divide(fH1, fH2, fDivideOption.Data());
+      ratioGraph->Divide(tmpH1, tmpH2, fDisplayOption.Data());
       fRatioGraph = ratioGraph;
-   }
-   else {
+
+      delete tmpH1;
+      delete tmpH2;
+
+   } else if (fDisplayMode == DIFFERENCE) {
+
+      TH1 *tmpHist = (TH1*)fH1->Clone();
+
+      tmpHist->Reset();
+
+      tmpHist->Add(fH1, fH2, c1, -1*c2);
+      fRatioGraph = new TGraphErrors(tmpHist);
+
+      delete tmpHist;
+   } else if (fDisplayMode == FIT_RESIDUAL) {
+      
+      TF1 *func = dynamic_cast<TF1*>(fH1->GetListOfFunctions()->At(0));
+      TH1D *tmpHist = dynamic_cast<TH1D*>(fH1->Clone());
+      tmpHist->Reset();
+
+      Double_t res;
+      Double_t error;
+      for (Int_t i=1; i<=fH1->GetNbinsX();++i) {
+         error = fH1->GetBinError(i);
+         error = error == 0 ? 1 : error;
+         res = (fH1->GetBinContent(i)- func->Eval(fH1->GetBinCenter(i) ) ) / error;
+         tmpHist->SetBinContent(i, res);
+         tmpHist->SetBinError(i, 1);
+      }
+      
+      fRatioGraph = new TGraphErrors(tmpHist);
+
+      delete tmpHist;
+   } else if (fDisplayMode == DIVIDE_HIST){
       // Use TH1's Divide method
-      // @TODO: Add factors for both histograms: c1, c2, via constructor and setters
       TH1 *tmpHist = (TH1*)fH1->Clone();
       tmpHist->Reset();
-      tmpHist->Divide(fH1, fH2, 1., 1., fDivideOption.Data());
+      tmpHist->Divide(fH1, fH2, c1, c2, fDisplayOption.Data());
       fRatioGraph = new TGraphErrors(tmpHist);
+   
+      delete tmpHist;
    }
 
    fRatioGraph->SetTitle("");
@@ -470,7 +578,6 @@ void TRatioPlot::CreateVisualAxes()
    Double_t ratio = ( (upBM-(1-upTM))*(1-sf) ) / ( (lowBM-(1-lowTM))*sf ) ;
    //fUpperGXaxis->SetLabelSize(0.);
    Double_t ticksize = fUpperGYaxis->GetTickSize()*ratio;  
-   var_dump(ticksize);
    fLowerGYaxis->SetTickSize(ticksize);
    fLowerGYaxisMirror->SetTickSize(ticksize);
 

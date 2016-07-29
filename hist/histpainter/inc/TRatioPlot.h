@@ -40,6 +40,8 @@ private:
    TRatioPlot(const TRatioPlot &hrp);
    static const Int_t DIVIDE_HIST = 1;
    static const Int_t DIVIDE_GRAPH = 2;
+   static const Int_t DIFFERENCE = 3;
+   static const Int_t FIT_RESIDUAL = 4;
 
 protected:
 
@@ -51,11 +53,13 @@ protected:
    TH1 *fH1;
    TH1 *fH2;
 
-   Int_t fDivideMode;
-   TString fDivideOption;
+   Int_t fDisplayMode;
+   TString fDisplayOption;
    TString fOptH1;
    TString fOptH2;
    TString fOptGraph;
+   
+
 
    Float_t fSplitFraction = 0.3;
 
@@ -97,7 +101,7 @@ protected:
    Bool_t fIsPadUpdating = kFALSE;
    Bool_t fPainting = kFALSE;
 
-   virtual void BuildRatio();
+   virtual void BuildRatio(Double_t c1 = 1., Double_t c2 = 1.);
    virtual void SyncAxesRanges();
    virtual void SetupPads();
    virtual void CreateVisualAxes();
@@ -107,8 +111,10 @@ protected:
 public:
 
    TRatioPlot();
-   TRatioPlot(TH1* h1, TH1* h2, const char *name /*=0*/, const char *title /*=0*/, 
-         Option_t *divideOption = "", Option_t *optH1 = "hist", Option_t *optH2 = "E", Option_t *optGraph = "AP");
+   TRatioPlot(TH1* h1, TH1* h2, const char *name /*=0*/, const char *title /*=0*/, Option_t *displayOption = "", Option_t *optH1 = "hist", Option_t *optH2 = "E", Option_t *optGraph = "AP", Double_t c1 = 1., Double_t c2 = 1.);
+
+   TRatioPlot(TH1* h1, const char *name, const char *title, Option_t *displayOption = "", Option_t *optH1 = "", Option_t *fitOpt = "L", Option_t *optGraph = "AP");
+
    virtual void Draw(Option_t *chopt="");
    virtual void Browse(TBrowser *b);
 
@@ -137,6 +143,9 @@ public:
    virtual TAxis *GetLowYaxis() { return fLowYaxis; }
 
    virtual TGraph *GetRatioGraph() { return fRatioGraph; }
+
+   virtual TPad * GetUpperPad() { return fUpperPad; }
+   virtual TPad * GetLowerPad() { return fLowerPad; }
 
    ClassDef(TRatioPlot, 1)  //A ratio of histograms
 };
