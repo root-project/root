@@ -433,7 +433,7 @@ const TSeqCollection *TTabCom::GetListOfClasses()
       while (const auto key = next()) {
          // This is not needed with the new rootmap format
          const char* className = key->GetName();
-         if (strncmp(className, "Library.", 8))
+         if (!strncmp(className, "Library.", 8))
             className += 8;
 
          if (!strstr(className, ".h"))
