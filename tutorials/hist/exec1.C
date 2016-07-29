@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_hist
+/// \notebook
 /// Echo object at mouse position.
 /// Example of macro called when a pad is redrawn
 /// one must create a TExec object in the following way

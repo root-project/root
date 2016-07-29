@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_hist
-/// \notebook
+/// \notebook -js
 /// Demo of Timers.
 ///
 /// Simple example illustrating how to use the C++ interpreter

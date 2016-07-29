@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_fit
+/// \notebook -nodraw
 /// Multi-Dimensional Parametrisation and Fitting
 ///
 /// \macro_output
@@ -64,7 +65,7 @@ int CompareResults(TMultiDimFit *fit, bool doFit)
   2.83819,
   -3.48855,
   -3.97612
-};
+  };
 
    // the right coefficients (after fit)
   double GoodCoeffs[] = {
@@ -89,7 +90,7 @@ int CompareResults(TMultiDimFit *fit, bool doFit)
      3.516,
      -4.111,
      -3.823,
-};
+  };
 
 // Good Powers
   int GoodPower[] = {
@@ -114,7 +115,7 @@ int CompareResults(TMultiDimFit *fit, bool doFit)
   1,  2,  2,  2,
   2,  1,  2,  2,
   2,  2,  2,  1
-};
+  };
 
   Int_t nc = fit->GetNCoefficients();
   Int_t nv = fit->GetNVariables();

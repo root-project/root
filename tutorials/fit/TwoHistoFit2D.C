@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_fit
+/// \notebook
 /// Example to fit two histograms at the same time.
 ///
 /// \macro_image

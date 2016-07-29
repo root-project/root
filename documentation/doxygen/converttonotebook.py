@@ -44,6 +44,7 @@ from datetime import datetime, date
 
 starttime = time.time()
 
+
 #-------------------------------------
 #-------- Fuction definitions---------
 #-------------------------------------
@@ -71,11 +72,17 @@ def pythonheader(text):
     description=''
     author=''
     notebook=False
+    jsroot=False
+    nodraw=False
     for i, line in enumerate(lines):
         if line.startswith("## \\aut"):
             author = line[11:]
         elif line.startswith("## \\note"):
             notebook=True
+            if "-js" in line:
+                jsroot = True
+            if "-nodraw" in line:
+                nodrwa = True
         elif line.startswith("##"):
             if not line.startswith("## \\") and not line == "##":
                 description+=(line[3:]+ '\n')
@@ -85,7 +92,7 @@ def pythonheader(text):
     for j in lines[i:]:
         newtext += (j+"\n")
 
-    return newtext, description, author, notebook
+    return newtext, description, author, notebook, jsroot, nodraw
 
 def pythoncomments (text):
     """
@@ -119,11 +126,17 @@ def cppheader(text):
     description=''
     author=''
     notebook=False
+    jsroot = False
+    nodraw = False
     for i, line in enumerate(lines):
         if line.startswith("/// \\aut"):
             author = line[12:]
         if line.startswith("/// \\note"):
             notebook=True
+            if "-js" in line:
+                jsroot = True
+            if "-nodraw" in line:
+                nodraw = True
         if line.startswith("///"):
             if not line.startswith("/// \\") and not line == "///":
                 description+=(line[4:]+ '\n')
@@ -133,7 +146,7 @@ def cppheader(text):
     for j in lines[i:]:
         newtext += (j+"\n")
 
-    return newtext, description, author, notebook
+    return newtext, description, author, notebook, jsroot, nodraw
 
 def cppfunction(text):
     """
@@ -183,13 +196,13 @@ def split(text):
     """
     #p = re.compile(r'^void\s\w*?\s?\([\w\n=,*\_ ]*\)\s*\{.*?^\}|^int\s\w*?\s?\([\w\n=,*\_ ]*\)\s*\{.*?^\}|^string\s\w*?\s?\([\w\n=,*\_ ]*\)\s*\{.*?^\}|^double\s\w*?\s?\([\w\n=,*\_ ]*\)\s*\{.*?^\}|^float\s\w*?\s?\([\w\n=,*\_ ]*\)\s*\{.*?^\}|^char\s\w*?\s?\([\w\n=,*\_ ]*\)\s*\{.*?^\}|^TCanvas\s\*\w*\(.*?\).*?\{.*?^\}|^TString\s\w*?\s?\([\w\n=,*\_ ]*\)\s*\{.*?^\}|^Double_t\s\w*?\s?\([\w\n=,*\_ ]*\)\s*\{.*?^\}', flags = re.DOTALL | re.MULTILINE)
 
-    p = re.compile(r'(^void\s|^int\s|^string\s|^double\s|^float\s|^char\s|^TCanvas\s|^TString\s|^Double_t\s)\*?\w*?\s?\([^\)]*\)\s*\{.*?^\}', flags = re.DOTALL | re.MULTILINE)
+    p = re.compile(r'(^void|^int|^Int_t|^TF1|^string|^bool|^double|^float|^char|^TCanvas|^TString|^Double_t)\s?\*?\s?\w*?\s?\([^\)]*\)\s*\{.*?^\}', flags = re.DOTALL | re.MULTILINE)
     matches = p.finditer(text)
     helpers=[]
     main = ""
     for match in matches:
 
-        if name in match.group()[:match.group().find("\n")]:
+        if name in match.group()[:match.group().find("\n")]: #if name is in the first line
             main = match.group()
         else:
             helpers.append(match.group())
@@ -200,9 +213,27 @@ def split(text):
     for helper in helpers:
         rest = rest.replace(helper, "")
 
-    rest = rest.rstrip() #remove newlines at the end of string
+    newhelpers=[]
+    lines=text.splitlines()
+    for helper in helpers:
+        for i, line in enumerate(lines):
+            if line.startswith(helper[:helper.find("\n")]):
+                if lines[i-1].startswith("//"):
+                    helperdescription = lines[i-1][2:]
+                    rest = rest.replace(helperdescription, "")
+                    break
+                else:
+                    helperdescription = "A helper funciton is created:"
+                    break
+                
+               
+        if "main" not in helper[:helper.find("\n")]: #remove void main function
+            newhelpers.append("\n# <markdowncell>\n " + helperdescription + " \n# <codecell>\n%%cpp -d\n" + helper )
+    
 
-    return main, helpers, rest
+    rest = rest.rstrip() #remove newlines at the end of string
+    print  "MAIN \n\n\n" , main, "\n\n HELPERS\n\n\n", newhelpers, "\n\nREST\n\n\n",rest
+    return main, newhelpers, rest
 
 def processmain(text):
     """
@@ -215,14 +246,16 @@ def processmain(text):
     
     regex = re.compile(r'(?<=\().*?(?=\))',flags = re.DOTALL | re.MULTILINE)
     arguments = regex.search(text)
+    print "\n\nTEXT\n\n" , text , "ENDTEXT"
     if text: 
         if text.startswith("TCanvas") or len(arguments.group())>3: 
             keepfunction = True
-            p = re.compile(r'(?<=(?<=int\s)|(?<=void\s)|(?<=string\s)|(?<=double\s)|(?<=float\s)|(?<=char\s)|(?<=TCanvas\s)).*?(?=\s?\()',flags = re.DOTALL | re.MULTILINE)
+            p = re.compile(r'(?<=(?<=int)|(?<=void)|(?<=TF1)|(?<=Int_t)|(?<=string)|(?<=double)|(?<=float)|(?<=char)|(?<=TString)|(?<=bool)|(?<=TCanvas))\s?\*?\s?[^\s]*?(?=\s?\()',flags = re.DOTALL | re.MULTILINE)
 
             match = p.search(text)
-            functionname=match.group()
-            addition = "\n# <markdowncell> \n# Call the main function \n# <codecell>\n%s()" %functionname
+            functionname=match.group().strip(" *")
+            print "FUCNITONNAME", functionname
+            addition = "\n# <markdowncell> \n# Call the main function \n# <codecell>\n%s();" %functionname
         
     return text, addition, keepfunction 
 
@@ -251,6 +284,8 @@ filename = os.path.basename(pathname)
 path = pathname.replace(filename, "")
 name,extension = filename.split(".")
 outname= filename + ".ipynb"
+outnameconverted= filename + ".nbconvert.ipynb"
+
 
 #print pathname, "**" , filename,"**" ,  name, "**" , extension,"**" ,  outname , pathname.replace(filename, "")
 ## Extract output directory
@@ -273,10 +308,10 @@ with open(pathname) as fpin:
 
 ## Extract information from header and remove header from text
 if extension == "py":
-    text, description, author, notebook = pythonheader(text)
+    text, description, author, notebook, jsroot, nodraw = pythonheader(text)
 
 elif extension in ("C", "c", "cpp", "C++", "cxx"):
-    text, description, author, notebook = cppheader(text)
+    text, description, author, notebook, jsroot, nodraw = cppheader(text)
 
 
 def mainfunction(text):
@@ -304,11 +339,12 @@ def mainfunction(text):
             text = rest
         
         for helper in helpers:
-            text+= "\n# <markdowncell>\n A helper function is created: \n# <codecell>\n%%cpp -d\n"
             text+=helper
-        text+="\n# <codecell>\n"
+
         if keepfunction:
-            text+="%%cpp -d\n"
+            text+="\n# <markdowncell>\n# The main function is defined\n# <codecell>\n%%cpp -d\n"
+        else:
+            text+="\n# <codecell>\n"
         text+=main
         if addition:
             text+=addition
@@ -316,15 +352,21 @@ def mainfunction(text):
         text = pythoncomments(text) # Convert comments into Markdown cells
 
     ## Add the title and header of the notebook    
-    text= "# <markdowncell> \n# # %s\n# %s# \n# This notebook tutorial was automatically generated from the macro found\
-     in the ROOT repository on %s.\n# **Author:** %s \n# <codecell>\n%s" % (name.title(), description, date, author, text)
+    text= "# <markdowncell> \n# # %s\n# %s# \n# \n# **Author:** %s  \n# <small>This notebook tutorial was automatically generated from the macro found " \
+    "in the ROOT repository on %s.</small>\n# <codecell>\n%s" % (name.title(), description, author, date, text)
 
     ## Add cell at the end of the notebook that draws all the canveses. Add a Markdown cell before explaining it.
-    if extension == ("C" or "c" or "cpp" or "c++"):
-        text +="\n# <markdowncell> \n# Draw all canvases \n# <codecell>\ngROOT->GetListOfCanvases()->Draw()"
-    if extension == "py":
-        text +="\n# <markdowncell> \n# Draw all canvases \n# <codecell>\nfrom ROOT import gROOT \ngROOT.GetListOfCanvases().Draw()"
-
+    if jsroot:
+        if extension == ("C" or "c" or "cpp" or "c++"):
+            text +="\n# <markdowncell> \n# Draw all canvases \n# <codecell>\n%jsroot\ngROOT->GetListOfCanvases()->Draw()"
+        if extension == "py":
+            text +="\n# <markdowncell> \n# Draw all canvases \n# <codecell>\n%jsroot\nfrom ROOT import gROOT \ngROOT.GetListOfCanvases().Draw()"
+    
+    elif not nodraw:
+        if extension == ("C" or "c" or "cpp" or "c++"):
+            text +="\n# <markdowncell> \n# Draw all canvases \n# <codecell>\ngROOT->GetListOfCanvases()->Draw()"
+        if extension == "py":
+            text +="\n# <markdowncell> \n# Draw all canvases \n# <codecell>\nfrom ROOT import gROOT \ngROOT.GetListOfCanvases().Draw()"
     ## Create a notebook from the working text
     nbook = v3.reads_py(text)  
     nbook = v4.upgrade(nbook)  # Upgrade v3 to v4
@@ -376,6 +418,8 @@ def mainfunction(text):
     print time.time() - starttime
     #subprocess.call(["jupyter", "nbconvert","--ExecutePreprocessor.timeout=60", "--to=html", "--execute",  outdir+outname])
     subprocess.call(["jupyter", "nbconvert","--ExecutePreprocessor.timeout=60",  "--to=notebook", "--execute",  outdir+outname])
+    if jsroot:
+        subprocess.call(["jupyter", "trust",  outdir+outnameconverted])
     os.remove(outdir+outname)
 
 ## Set DYLD_LIBRARY_PATH. When run without root access or as a different user, epecially from Mac systems,

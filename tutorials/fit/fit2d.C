@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_fit
+/// \notebook -js
 /// Example illustrating how to fit a 2-d histogram of type y=f(x)
 ///
 /// \macro_image

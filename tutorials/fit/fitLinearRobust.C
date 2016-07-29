@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_fit
+/// \notebook -js
 /// This tutorial shows how the least trimmed squares regression,
 /// included in the TLinearFitter class, can be used for fitting
 /// in cases when the data contains outliers.

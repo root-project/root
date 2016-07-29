@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_fit
+/// \notebook
 /// Fitting 1-D histograms with minuit2
 ///
 /// \macro_image

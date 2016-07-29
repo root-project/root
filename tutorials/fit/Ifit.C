@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_fit
+/// \notebook -nodraw
 ///   Example of a program to fit non-equidistant data points
 ///
 ///   The fitting function fcn is a simple chisquare function

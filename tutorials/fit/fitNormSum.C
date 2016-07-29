@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_fit
+/// \notebook
 /// Tutorial for normalized sum of two functions
 /// Here: a background exponential and a crystalball function
 /// Parameters can be set:

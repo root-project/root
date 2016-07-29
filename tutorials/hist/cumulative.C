@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_hist
-/// \notebook
+/// \notebook -js
 /// Illustrate use of the TH1::GetCumulative method.
 ///
 /// \macro_image

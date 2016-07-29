@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_graphics
-/// \notebook
+/// \notebook -js
 /// Show several TGaxis formats.
 ///
 /// \macro_image

@@ -1,6 +1,7 @@
 /// \file
 /// \ingroup tutorial_fit
 /// Fitting a 2-D histogram
+/// \notebook
 /// This tutorial illustrates :
 ///  - how to create a 2-d function
 ///  - fill a 2-d histogram randomly from this function
