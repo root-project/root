@@ -31,6 +31,11 @@ public:
   using clock_t = std::chrono::system_clock;
   using time_point_t = std::chrono::time_point<clock_t>;
 
+private:
+  time_point_t fDate = clock_t::now(); ///< Time of last change
+  TClass* fType;
+  std::shared_ptr<void> fObj;
+
 public:
   TDirectoryEntry(): TDirectoryEntry(nullptr) {}
   TDirectoryEntry(std::nullptr_t):
@@ -66,23 +71,16 @@ public:
   explicit operator bool() const { return !!fObj; }
 
   void swap(TDirectoryEntry& other) noexcept;
-
-private:
-  time_point_t fDate = clock_t::now(); ///< Time of last change
-  TClass* fType;
-  std::shared_ptr<void> fObj;
 };
 
 template<class U>
-std::shared_ptr<U> TDirectoryEntry::CastPointer() const
-{
+std::shared_ptr<U> TDirectoryEntry::CastPointer() const {
   if (auto ptr = fType->DynamicCast(TClass::GetClass(typeid(U)), fObj.get()))
     return std::shared_ptr<U>(fObj, static_cast<U*>(ptr));
   return std::shared_ptr<U>();
 }
 
-inline void TDirectoryEntry::swap(TDirectoryEntry& other) noexcept
-{
+inline void TDirectoryEntry::swap(TDirectoryEntry& other) noexcept {
   using std::swap;
 
   swap(fDate, other.fDate);
@@ -90,8 +88,7 @@ inline void TDirectoryEntry::swap(TDirectoryEntry& other) noexcept
   swap(fObj, other.fObj);
 }
 
-inline void swap(TDirectoryEntry& e1, TDirectoryEntry& e2) noexcept
-{
+inline void swap(TDirectoryEntry& e1, TDirectoryEntry& e2) noexcept {
   e1.swap(e2);
 }
 
