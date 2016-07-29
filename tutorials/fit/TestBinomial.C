@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_fit
+/// \notebook -js
 /// Perform a fit to a set of data with binomial errors
 /// like those derived from the division of two histograms.
 /// Three different fits are performed and compared:

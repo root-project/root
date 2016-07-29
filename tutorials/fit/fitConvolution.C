@@ -1,12 +1,13 @@
 /// \file
 /// \ingroup tutorial_fit
+/// \notebook -js
 /// Tutorial for convolution of two functions
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
 ///
-/// \author Aurélie Flandi
+/// \author Aurelie Flandi
 
 #include <stdio.h>
 #include <TMath.h>

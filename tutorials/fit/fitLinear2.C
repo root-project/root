@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_fit
+/// \notebook -nodraw
 /// Fit a 5d hyperplane by n points, using the linear fitter directly
 ///
 /// This macro shows some features of the TLinearFitter class

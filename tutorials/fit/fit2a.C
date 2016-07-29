@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_fit
+/// \notebook
 /// Fitting a 2-D histogram (a variant)
 /// This tutorial illustrates :
 ///  - how to create a 2-d function

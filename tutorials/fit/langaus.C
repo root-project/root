@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_fit
+/// \notebook
 /// Convoluted Landau and Gaussian Fitting Function
 ///         (using ROOT's Landau and Gauss functions)
 ///

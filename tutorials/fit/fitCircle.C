@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_fit
+/// \notebook
 /// Generate points distributed with some errors around a circle
 /// Fit a circle through the points and draw
 /// To run the script, do, eg

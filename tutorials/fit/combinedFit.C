@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_fit
+/// \notebook
 /// Combined (simultaneous) fit of two histogram with separate functions
 /// and some common parameters
 ///
@@ -38,6 +39,8 @@ int iparSB[5] = { 1, // exp amplitude in S+B histo
                   4, // gaussian mean
                   5  // gaussian sigma
 };
+
+// Create the GlobalCHi2 structure
 
 struct GlobalChi2 {
    GlobalChi2(  ROOT::Math::IMultiGenFunction & f1,

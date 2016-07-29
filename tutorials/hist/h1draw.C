@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_hist
+/// \notebook
 /// 1-D histogram drawing options.
 /// We attach (or generate) the ROOT file in `$ROOTSYS/tutorials/hsimple.root`
 /// or `$PWD/hsimple.root`

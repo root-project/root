@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_hist
+/// \notebook
 /// This tutorial illustrates how to create an histogram with hexagonal
 /// bins (TH2Poly), fill it and draw it using GL.
 ///

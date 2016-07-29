@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_fit
+/// \notebook -js
 /// Example of fitting with a linear function, using TLinearFitter
 /// This example is for a TGraphErrors, but it can also be used
 /// when fitting a histogram, a TGraph2D or a TMultiGraph

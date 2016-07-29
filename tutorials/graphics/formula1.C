@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_graphics
-/// \notebook
+/// \notebook -js
 /// Display interpreted functions.
 ///
 /// \macro_image

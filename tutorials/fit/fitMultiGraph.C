@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_fit
+/// \notebook -js
 /// fitting a parabola to a multigraph of 3 partly overlapping graphs
 /// with different errors
 ///

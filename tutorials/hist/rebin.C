@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_hist
-/// \notebook
+/// \notebook -js
 /// Rebin a variable bin-width histogram.
 ///
 /// This tutorial illustrates how to:
