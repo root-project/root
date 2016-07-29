@@ -554,7 +554,7 @@ char *TRint::GetPrompt()
 
 const char *TRint::SetPrompt(const char *newPrompt)
 {
-   static TString op = fDefaultPrompt;
+   TString op = fDefaultPrompt;
 
    if (newPrompt && strlen(newPrompt) <= 55)
       fDefaultPrompt = newPrompt;
@@ -746,10 +746,14 @@ Long_t  TRint::ProcessLineNr(const char* filestem, const char *line, Int_t *erro
    if (line && line[0] != '.') {
       TString lineWithNr = TString::Format("#line 1 \"%s%d\"\n", filestem, fNcmd - 1);
       int res = ProcessLine(lineWithNr + line, kFALSE, error);
-      if (*error == TInterpreter::kProcessing)
+      if (*error == TInterpreter::kProcessing) {
+         if (!fNonContinuePrompt.Length())
+            fNonContinuePrompt = fDefaultPrompt;
          SetPrompt("root (cont'ed, cancel with .@) [%d]");
-      else
-         SetPrompt("root [%d] ");
+      } else if (fNonContinuePrompt.Length()) {
+         SetPrompt(fNonContinuePrompt);
+         fNonContinuePrompt.Clear();
+      }
       return res;
    }
    if (line && line[0] == '.' && line[1] == '@') {

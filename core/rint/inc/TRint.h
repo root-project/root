@@ -37,6 +37,7 @@ class TRint : public TApplication {
 private:
    Int_t         fNcmd;               // command history number
    TString       fDefaultPrompt;      // default prompt: "root [%d] "
+   TString       fNonContinuePrompt;  // default prompt before continue prompt was set
    char          fPrompt[64];         // interpreter prompt
    Bool_t        fInterrupt;          // if true macro execution will be stopped
    Int_t         fCaughtSignal;       // TRint just caught a signal
