@@ -203,7 +203,7 @@ namespace TMVA {
       Bool_t                                    fVerbose;         //! verbose mode
       Bool_t                                    fCorrelations;    //! enable to calculate corelations
       Bool_t                                    fROC;             //! enable to calculate ROC values
-      const Bool_t                              fSilentFile;      //! used in contructor wihtout file 
+      Bool_t                                    fSilentFile;      //! used in contructor wihtout file 
 
       TString                                   fJobName;         //! jobname, used as extension in weight file names
 

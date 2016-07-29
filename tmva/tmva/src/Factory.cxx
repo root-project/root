@@ -1662,7 +1662,9 @@ void TMVA::Factory::EvaluateAllMethods( void )
 
 TH1F* TMVA::Factory::EvaluateImportance(DataLoader *loader,VIType vitype, Types::EMVA theMethod,  TString methodTitle, const char *theOption)
 {
-  
+  fModelPersistence=kFALSE;
+  fSilentFile=kTRUE;//we need silent file here beause we need fast classification results
+    
   //getting number of variables and variable names from loader
   const int nbits = loader->DefaultDataSetInfo().GetNVariables();
   if(vitype==VIType::kShort)
@@ -1681,7 +1683,7 @@ TH1F* TMVA::Factory::EvaluateImportance(DataLoader *loader,VIType vitype, Types:
 
 TH1F* TMVA::Factory::EvaluateImportanceAll(DataLoader *loader, Types::EMVA theMethod,  TString methodTitle, const char *theOption)
 {
-  
+    
   uint64_t x = 0;
   uint64_t y = 0;
   
@@ -1729,15 +1731,8 @@ TH1F* TMVA::Factory::EvaluateImportanceAll(DataLoader *loader, Types::EMVA theMe
     //cleaning information to process subseeds
     TMVA::MethodBase *smethod=dynamic_cast<TMVA::MethodBase*>(fMethodsMap[xbitset.to_string().c_str()][0][0]);
     TMVA::ResultsClassification  *sresults = (TMVA::ResultsClassification*)smethod->Data()->GetResults(smethod->GetMethodName(), Types::kTesting, Types::kClassification);
-    sresults->Delete();
     delete sresults;
-    fgTargetFile->cd();
-    fgTargetFile->Delete(seedloader->GetName());
-    fgTargetFile->Delete(Form("%s;1",seedloader->GetName()));
-    fgTargetFile->Flush();
-    delete seedloader;
-    gSystem->Exec(Form("rm -rf %s", xbitset.to_string().c_str()));
-    
+    delete seedloader;    
     this->DeleteAllMethods();
     
     fMethodsMap.clear();
@@ -1782,8 +1777,7 @@ static long int sum(long int i)
 
 
 TH1F* TMVA::Factory::EvaluateImportanceShort(DataLoader *loader, Types::EMVA theMethod,  TString methodTitle, const char *theOption)
-{
-  
+{    
   uint64_t x = 0;
   uint64_t y = 0;
   
@@ -1830,18 +1824,11 @@ TH1F* TMVA::Factory::EvaluateImportanceShort(DataLoader *loader, Types::EMVA the
   //cleaning information to process subseeds
   TMVA::MethodBase *smethod=dynamic_cast<TMVA::MethodBase*>(fMethodsMap[xbitset.to_string().c_str()][0][0]);
   TMVA::ResultsClassification  *sresults = (TMVA::ResultsClassification*)smethod->Data()->GetResults(smethod->GetMethodName(), Types::kTesting, Types::kClassification);
-  sresults->Delete();
   delete sresults;
-  fgTargetFile->cd();
-  fgTargetFile->Delete(seedloader->GetName());
-  fgTargetFile->Delete(Form("%s;1",seedloader->GetName()));
-  fgTargetFile->Flush();
-  delete seedloader;
-  gSystem->Exec(Form("rm -rf %s", xbitset.to_string().c_str()));
-  
+  delete seedloader;  
   this->DeleteAllMethods();
-  
   fMethodsMap.clear();
+  
   //removing global result because it is requiring alot amount of RAM for all seeds
   
   for (uint32_t i = 0; i < VIBITS; ++i) {
@@ -1882,16 +1869,10 @@ TH1F* TMVA::Factory::EvaluateImportanceShort(DataLoader *loader, Types::EMVA the
       //cleaning information
       TMVA::MethodBase *ssmethod=dynamic_cast<TMVA::MethodBase*>(fMethodsMap[ybitset.to_string().c_str()][0][0]);
       TMVA::ResultsClassification *ssresults = (TMVA::ResultsClassification*)ssmethod->Data()->GetResults(ssmethod->GetMethodName(), Types::kTesting, Types::kClassification);
-      ssresults->Delete();
       delete ssresults;
-      fgTargetFile->cd();
-      fgTargetFile->Delete(subseedloader->GetName());//deleting directories in global file
-      fgTargetFile->Delete(Form("%s;1",subseedloader->GetName()));//deleting directories in global file
-      fgTargetFile->Flush();
       delete subseedloader;
       this->DeleteAllMethods();
       fMethodsMap.clear();
-      gSystem->Exec(Form("rm -rf %s", ybitset.to_string().c_str()));
     }
   }
    std::cout<<"--- Variable Importance Results (Short)"<<std::endl;
@@ -1899,7 +1880,7 @@ TH1F* TMVA::Factory::EvaluateImportanceShort(DataLoader *loader, Types::EMVA the
 }
 
 TH1F* TMVA::Factory::EvaluateImportanceRandom(DataLoader *loader, UInt_t nseeds, Types::EMVA theMethod,  TString methodTitle, const char *theOption)
-{
+{    
    TRandom3 *rangen = new TRandom3(0);  //Random Gen.
 
    uint64_t x = 0;
@@ -1950,19 +1931,11 @@ TH1F* TMVA::Factory::EvaluateImportanceRandom(DataLoader *loader, UInt_t nseeds,
       //cleaning information to process subseeds
       TMVA::MethodBase *smethod=dynamic_cast<TMVA::MethodBase*>(fMethodsMap[xbitset.to_string().c_str()][0][0]);
       TMVA::ResultsClassification  *sresults = (TMVA::ResultsClassification*)smethod->Data()->GetResults(smethod->GetMethodName(), Types::kTesting, Types::kClassification);
-      sresults->Delete();
       delete sresults;
-      fgTargetFile->cd();
-      fgTargetFile->Delete(seedloader->GetName());
-      fgTargetFile->Delete(Form("%s;1",seedloader->GetName()));
-      fgTargetFile->Flush();
       delete seedloader;
-      // std::vector<TMVA::VariableTransformBase *>::iterator trfIt = fDefaultTrfs.begin();
-      gSystem->Exec(Form("rm -rf %s", xbitset.to_string().c_str()));
-      
       this->DeleteAllMethods();
-      
       fMethodsMap.clear();
+      
       //removing global result because it is requiring alot amount of RAM for all seeds
       
       for (uint32_t i = 0; i < 32; ++i) {
@@ -2005,16 +1978,10 @@ TH1F* TMVA::Factory::EvaluateImportanceRandom(DataLoader *loader, UInt_t nseeds,
             //cleaning information
 	    TMVA::MethodBase *ssmethod=dynamic_cast<TMVA::MethodBase*>(fMethodsMap[ybitset.to_string().c_str()][0][0]);
             TMVA::ResultsClassification *ssresults = (TMVA::ResultsClassification*)ssmethod->Data()->GetResults(ssmethod->GetMethodName(), Types::kTesting, Types::kClassification);
-	    ssresults->Delete();
             delete ssresults;
-            fgTargetFile->cd();
-            fgTargetFile->Delete(subseedloader->GetName());//deleting directories in global file
-            fgTargetFile->Delete(Form("%s;1",subseedloader->GetName()));//deleting directories in global file
-            fgTargetFile->Flush();
             delete subseedloader;
             this->DeleteAllMethods();
             fMethodsMap.clear();
-            gSystem->Exec(Form("rm -rf %s", ybitset.to_string().c_str()));            
          }
       }
    }
