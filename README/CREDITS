@@ -247,6 +247,10 @@ N: Rutger v.d. Eijk
 E: r36@nikhef.nl
 D: various contributions to GUI classes
 
+N: Andrey Erokhin
+E: Andrey.Erokhin@cern.ch
+D: ROOT::TDirectory
+
 N: Giulio Eulisse
 E: Giulio.Eulisse@cern.ch
 D: class TQtLock
