@@ -117,6 +117,7 @@
 #pragma link C++ class TNDArrayRef<const UShort_t>+;
 */
 #pragma link C++ class THn+;
+#pragma link C++ class THnChain+;
 #pragma link C++ class THnT<Float_t>+;
 //#pragma link C++ class THnT<Float16_t>+;
 #pragma link C++ class THnT<Double_t>+;
