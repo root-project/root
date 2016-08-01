@@ -18,7 +18,7 @@ void w(const char* filename) {
    TH1F meansUPtr2 ("meansUPtr2","meansUPtr2",64, -4, 4);
    TH1F meansUPtr3 ("meansUPtr3","meansUPtr3",64, -4, 4);   
 
-   auto f = TFile::Open(filename,"RECREATE");
+   std::unique_ptr<TFile> f (TFile::Open(filename,"RECREATE"));
    auto a = new A("RowWise");
 
    printHistoInfo(a->GetHPtr(), "Write Row-wise");
@@ -52,7 +52,6 @@ void w(const char* filename) {
 
 
    delete a;
-   delete f;
 }
 
 void r(const char* filename) {
@@ -64,7 +63,7 @@ void r(const char* filename) {
    TH1F meansUPtr2 ("meansUPtr2","meansUPtr2",64, -4, 4);
    TH1F meansUPtr3 ("meansUPtr3","meansUPtr3",64, -4, 4);
 
-   auto f = TFile::Open(filename);
+   std::unique_ptr<TFile> f (TFile::Open(filename));
    auto a = (A*) f->Get("theAInstance");
    printHistoInfo(a->GetHPtr(), "Read Row-wise");
    printHistoInfo(a->GetHUPtr(), "Read Row-wise");
@@ -73,7 +72,7 @@ void r(const char* filename) {
    }
 
    if (strstr(filename,"root")){
-      TTreeReader tr("mytree", f);
+      TTreeReader tr("mytree", f.get());
       TTreeReaderValue<A> myA(tr, "theABranch");
 
       while (tr.Next()) {
@@ -94,9 +93,6 @@ void r(const char* filename) {
       printHistoInfo(&meansUPtr2, "Read Column-wise 2");
       printHistoInfo(&meansUPtr3, "Read Column-wise 3");
    }
-
-   delete f;
-
 
 }
 
