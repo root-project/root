@@ -1,6 +1,5 @@
 /// \file
 /// \ingroup tutorial_fit
-/// \notebook
 /// This file will test all the transient frames (aka Dialog windows)
 /// displayed in the fitpanel, as the rest of the functionality is
 /// tried automatically with the UnitTest.C unit.

@@ -1,6 +1,5 @@
 /// \file
 /// \ingroup tutorial_graphics
-/// \notebook
 /// This macro draws various formula in a canvas.
 /// It also prints the canvas as a Postscript file using TMathText.
 ///
