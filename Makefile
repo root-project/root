@@ -597,9 +597,10 @@ ALLHDRS :=
 ifeq ($(CXXMODULES),yes)
 # Copy the modulemap in $ROOTSYS/include first.
 ALLHDRS  := include/module.modulemap
-ROOT_CXXMODULES_FLAGS = -fmodules -fmodule-map-file=$(ROOT_OBJDIR)/include/module.modulemap -fmodules-cache-path=$(ROOT_OBJDIR)/include/pcms/
-CXXFLAGS += $(ROOT_CXXMODULES_FLAGS)
-CFLAGS   += $(ROOT_CXXMODULES_FLAGS)
+ROOT_CXXMODULES_CXXFLAGS =  -fmodules -fcxx-modules -Xclang -fmodules-local-submodule-visibility -fmodules-cache-path=$(ROOT_OBJDIR)/include/pcms/
+ROOT_CXXMODULES_CFLAGS =  -fmodules -fmodules-cache-path=$(ROOT_OBJDIR)/include/pcms/
+CXXFLAGS += $(ROOT_CXXMODULES_CXXFLAGS)
+CFLAGS   += $(ROOT_CXXMODULES_CFLAGS)
 endif
 
 
@@ -1133,7 +1134,7 @@ ROOTCLING_CXXFLAGS := $(CXXFLAGS)
 # rootcling doesn't know what to do with these flags.
 # FIXME: Disable until until somebody teaches it.
 ifeq ($(CXXMODULES),yes)
-ROOTCLING_CXXFLAGS := $(filter-out $(ROOT_CXXMODULES_FLAGS),$(CXXFLAGS))
+ROOTCLING_CXXFLAGS := $(filter-out $(ROOT_CXXMODULES_CXXFLAGS),$(CXXFLAGS))
 endif
 
 $(ROOTPCH): $(MAKEPCH) $(ROOTCLINGSTAGE1DEP) $(ALLHDRS) $(CLINGETCPCH) $(ORDER_) $(ALLLIBS)
