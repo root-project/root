@@ -514,7 +514,7 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
 	  tstore->loadValues(t,&cutVarTmp,cutRange);      	
 	} else {
 	  RooTreeDataStore tmpstore(name,title,_vars,wgtVarName) ;
-	  tmpstore.loadValues(impTree,&cutVarTmp,cutRange) ;
+	  tmpstore.loadValues(t,&cutVarTmp,cutRange) ;
 	  _dstore->append(tmpstore) ;
 	}
 	f->Close() ;
@@ -571,7 +571,7 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
 	  tstore->loadValues(t,cutVar,cutRange);      	
 	} else {
 	  RooTreeDataStore tmpstore(name,title,_vars,wgtVarName) ;
-	  tmpstore.loadValues(impTree,cutVar,cutRange) ;
+	  tmpstore.loadValues(t,cutVar,cutRange) ;
 	  _dstore->append(tmpstore) ;
 	}
 
@@ -627,7 +627,7 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
 	  tstore->loadValues(t,0,cutRange);      	
 	} else {
 	  RooTreeDataStore tmpstore(name,title,_vars,wgtVarName) ;
-	  tmpstore.loadValues(impTree,0,cutRange) ;
+	  tmpstore.loadValues(t,0,cutRange) ;
 	  _dstore->append(tmpstore) ;
 	}
 	f->Close() ;
