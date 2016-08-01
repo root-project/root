@@ -524,8 +524,8 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
 {
    // In order to store the meaningful for the IO comments we have to transform
    // the comment into annotation of the given decl.
-   // This works only with comments in the headers, so no selectionrules in an xml
-   // file.
+   // This works only with comments in the headers, so no selection rules in an
+   // xml file.
 
    using namespace clang;
    SourceLocation commentSLoc;
@@ -535,9 +535,6 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
    Sema &S = interpreter.getCI()->getSema();
 
    SourceRange commentRange;
-
-//    if (genreflex::verbose)
-//       std::cout << "\nInspecting class declaration " << thisClassName << " for annotations\n";
 
    // Fetch the selection rule associated to this class
    clang::Decl *declBaseClassPtr = static_cast<clang::Decl *>(&CXXRD);
