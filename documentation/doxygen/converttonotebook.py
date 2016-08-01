@@ -417,7 +417,9 @@ def mainfunction(text):
     ## The two commands to create an html version of the notebook and a notebook with the output
     print time.time() - starttime
     #subprocess.call(["jupyter", "nbconvert","--ExecutePreprocessor.timeout=60", "--to=html", "--execute",  outdir+outname])
-    subprocess.call(["jupyter", "nbconvert","--ExecutePreprocessor.timeout=60",  "--to=notebook", "--execute",  outdir+outname])
+    r = subprocess.call(["jupyter", "nbconvert","--ExecutePreprocessor.timeout=90",  "--to=notebook", "--execute",  outdir+outname])
+    if r != 0:
+         sys.stderr.write( "ERROR: Nbconvert failed for notebook %s \n" % outname)
     if jsroot:
         subprocess.call(["jupyter", "trust",  outdir+outnameconverted])
     os.remove(outdir+outname)
