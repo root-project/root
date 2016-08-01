@@ -1,16 +1,17 @@
 # - Finds ROOT instalation
 # This module sets up ROOT information
 # It defines:
-# ROOT_FOUND          If the ROOT is found
-# ROOT_INCLUDE_DIR    PATH to the include directory
-# ROOT_INCLUDE_DIRS   PATH to the include directories (not cached)
-# ROOT_LIBRARIES      Most common libraries
-# ROOT_<name>_LIBRARY Full path to the library <name>
-# ROOT_LIBRARY_DIR    PATH to the library directory
-# ROOT_ETC_DIR        PATH to the etc directory
-# ROOT_DEFINITIONS    Compiler definitions
-# ROOT_CXX_FLAGS      Compiler flags to used by client packages
-# ROOT_C_FLAGS        Compiler flags to used by client packages
+# ROOT_FOUND             If the ROOT is found
+# ROOT_INCLUDE_DIR       PATH to the include directory
+# ROOT_INCLUDE_DIRS      PATH to the include directories (not cached)
+# ROOT_LIBRARIES         Most common libraries
+# ROOT_<name>_LIBRARY    Full path to the library <name>
+# ROOT_LIBRARY_DIR       PATH to the library directory
+# ROOT_ETC_DIR           PATH to the etc directory
+# ROOT_DEFINITIONS       Compiler definitions
+# ROOT_CXX_FLAGS         Compiler flags to used by client packages
+# ROOT_C_FLAGS           Compiler flags to used by client packages
+# ROOT_EXE_LINKER_FLAGS  Linker flags to used by client packages
 #
 # Updated by K. Smith (ksmith37@nd.edu) to properly handle
 #  dependencies in ROOT_GENERATE_DICTIONARY
@@ -46,7 +47,7 @@ execute_process(
     OUTPUT_STRIP_TRAILING_WHITESPACE)
 set(ROOT_LIBRARY_DIRS ${ROOT_LIBRARY_DIR})
 
-set(rootlibs Core Cint RIO Net Hist Graf Graf3d Gpad Tree Rint Postscript Matrix Physics MathCore Thread)
+set(rootlibs Core RIO Net Hist Graf Graf3d Gpad Tree Rint Postscript Matrix Physics MathCore Thread MultiProc)
 set(ROOT_LIBRARIES)
 foreach(_cpt ${rootlibs} ${ROOT_FIND_COMPONENTS})
   find_library(ROOT_${_cpt}_LIBRARY ${_cpt} HINTS ${ROOT_LIBRARY_DIR})
@@ -70,6 +71,12 @@ string(REGEX MATCHALL "-(D|U)[^ ]*" ROOT_DEFINITIONS "${__cflags}")
 string(REGEX REPLACE "(^|[ ]*)-I[^ ]*" "" ROOT_CXX_FLAGS "${__cflags}")
 string(REGEX REPLACE "(^|[ ]*)-I[^ ]*" "" ROOT_C_FLAGS "${__cflags}")
 
+execute_process(
+    COMMAND ${ROOT_CONFIG_EXECUTABLE} --ldflags
+    OUTPUT_VARIABLE __ldflags
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+set(ROOT_EXE_LINKER_FLAGS "${__ldflags}")
+
 set(ROOT_USE_FILE ${CMAKE_CURRENT_LIST_DIR}/RootUseFile.cmake)
 
 execute_process(
@@ -88,7 +95,7 @@ find_package_handle_standard_args(ROOT DEFAULT_MSG ROOT_CONFIG_EXECUTABLE
 mark_as_advanced(ROOT_CONFIG_EXECUTABLE)
 
 include(CMakeParseArguments)
-find_program(ROOTCINT_EXECUTABLE rootcint HINTS $ENV{ROOTSYS}/bin)
+find_program(ROOTCLING_EXECUTABLE rootcling HINTS $ENV{ROOTSYS}/bin)
 find_program(GENREFLEX_EXECUTABLE genreflex HINTS $ENV{ROOTSYS}/bin)
 find_package(GCCXML)
 
@@ -128,9 +135,9 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     set(linkdefs ${linkdefs} ${linkFile})
     unset(linkFile CACHE)
   endforeach()
-  #---call rootcint------------------------------------------
+  #---call rootcling------------------------------------------
   add_custom_command(OUTPUT ${dictionary}.cxx
-                     COMMAND ${ROOTCINT_EXECUTABLE} -cint -f  ${dictionary}.cxx
+                     COMMAND ${ROOTCLING_EXECUTABLE} -f ${dictionary}.cxx
                                           -c ${ARG_OPTIONS} ${includedirs} ${headerfiles} ${linkdefs}
                      DEPENDS ${headerfiles} ${linkdefs} VERBATIM)
 endfunction()
