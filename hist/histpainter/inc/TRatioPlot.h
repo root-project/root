@@ -42,6 +42,8 @@ private:
    static const Int_t DIVIDE_GRAPH = 2;
    static const Int_t DIFFERENCE = 3;
    static const Int_t FIT_RESIDUAL = 4;
+   static const Int_t ERROR_SYMMETRIC = 5;
+   static const Int_t ERROR_ASYMMETRIC = 6;
 
 protected:
 
@@ -54,6 +56,7 @@ protected:
    TH1 *fH2;
 
    Int_t fDisplayMode;
+   Int_t fErrorMode = 5;
    TString fDisplayOption;
    TString fOptH1;
    TString fOptH2;

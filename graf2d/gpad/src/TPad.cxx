@@ -3199,6 +3199,10 @@ void TPad::PaintModified()
 
    while (lnk) {
       obj = lnk->GetObject();
+      //std::cout << "obj: " << obj << std::endl;
+      //if (obj != 0) {
+         //std::cout << "obj name: " << obj->GetName() << std::endl;
+      //}
       if (obj->InheritsFrom(TPad::Class())) {
          ((TPad*)obj)->PaintModified();
       } else if (IsModified() || IsTransparent()) {
@@ -4058,6 +4062,7 @@ TPad *TPad::Pick(Int_t px, Int_t py, TObjLink *&pickobj)
 
       //If canvas prefers GL, all 3d objects must be drawn/selected by
       //gl viewer
+      //std::cout << "obj: " << obj->GetName() << std::endl;
       if (obj->InheritsFrom(TAtt3D::Class()) && fEmbeddedGL) {
          lnk = lnk->Prev();
          continue;
@@ -4119,7 +4124,6 @@ TPad *TPad::Pick(Int_t px, Int_t py, TObjLink *&pickobj)
       if (picked == this) {
          // cannot pick pad itself!
          picked = 0;
-         //pickobj = new TObjLink(0);
       }
 
    }
@@ -4967,8 +4971,13 @@ void TPad::ResizePad(Option_t *option)
    if (!fPrimitives) fPrimitives = new TList;
    TIter    next(GetListOfPrimitives());
    while ((obj = next())) {
+      //std::cout << obj->InheritsFrom(TPad::Class()) << std::endl;
+      //std::cout << fName << std::endl;
       if (obj->InheritsFrom(TPad::Class()))
          ((TPad*)obj)->ResizePad(option);
+      //if (dynamic_cast<TPad*>(obj)) {
+         //((TPad*)obj)->ResizePad(option); 
+      //}
    }
 
    // Reset all current sizes
@@ -5003,6 +5012,7 @@ void TPad::ResizePad(Option_t *option)
             fPixmapID = GetPainter()->CreateDrawable(w, h);
          } else {
             if (gVirtualX->ResizePixmap(fPixmapID, w, h)) {
+               Resized();
                Modified(kTRUE);
             }
          }
@@ -5018,8 +5028,6 @@ void TPad::ResizePad(Option_t *option)
          padsav->cd();
       }
    }
-
-   Resized();
 
 }
 
