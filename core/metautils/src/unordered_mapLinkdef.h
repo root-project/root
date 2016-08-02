@@ -1,8 +1,5 @@
 #include <unordered_map>
 #include <string>
-#ifndef __hpux
-using namespace std;
-#endif
 
 #pragma create TClass unordered_map<int,int>;
 #pragma create TClass unordered_map<long,int>;

@@ -1,12 +1,6 @@
-#ifdef __CINT__
 #include <multimap>
-#else
 #include <map>
-#endif
 #include <string>
-#ifndef __hpux
-using namespace std;
-#endif
 
 #pragma create TClass multimap<char*,int>;
 #pragma create TClass multimap<char*,long>;
@@ -18,5 +12,4 @@ using namespace std;
 #pragma create TClass multimap<string,long>;
 #pragma create TClass multimap<string,double>;
 #pragma create TClass multimap<string,void*>;
-//#pragma create TClass multimap<string,string>;
 
