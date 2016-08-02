@@ -24,7 +24,7 @@
 #include "TGaxis.h"
 #include "TCanvas.h"
 #include "TFrame.h"
-#include "TMatrixD.h"
+#include "TMath.h"
 
 #define _(x) std::cout << #x;
 #define __(x) std::cout << x << std::endl ;
@@ -230,7 +230,7 @@ void TRatioPlot::SetupPads() {
    fUpperPad->SetLogy(gPad->GetLogy());
    fUpperPad->SetLogx(gPad->GetLogx());
    //fLowerPad->SetLogy(gPad->GetLogy());
-   fLowerPad->SetLogx(gPad->GetLogx());
+   //fLowerPad->SetLogx(gPad->GetLogx());
 
    SetPadMargins();
 
@@ -348,10 +348,10 @@ void TRatioPlot::Draw(Option_t *option)
    fUpperPad->cd();
 
    // we need to hide the original axes of the hist 
-   //fH1->GetXaxis()->SetTickSize(0.);
-   //fH1->GetXaxis()->SetLabelSize(0.);
-   //fH1->GetYaxis()->SetTickSize(0.);
-   //fH1->GetYaxis()->SetLabelSize(0.);
+   fH1->GetXaxis()->SetTickSize(0.);
+   fH1->GetXaxis()->SetLabelSize(0.);
+   fH1->GetYaxis()->SetTickSize(0.);
+   fH1->GetYaxis()->SetLabelSize(0.);
 
    fH1->Draw(fOptH1);
    
@@ -362,10 +362,10 @@ void TRatioPlot::Draw(Option_t *option)
    fLowerPad->cd();
 
    // hide visual axis of lower pad display
-   //fRatioGraph->GetXaxis()->SetTickSize(0.);
-   //fRatioGraph->GetXaxis()->SetLabelSize(0.);
-   //fRatioGraph->GetYaxis()->SetTickSize(0.);
-   //fRatioGraph->GetYaxis()->SetLabelSize(0.);
+   fRatioGraph->GetXaxis()->SetTickSize(0.);
+   fRatioGraph->GetXaxis()->SetLabelSize(0.);
+   fRatioGraph->GetYaxis()->SetTickSize(0.);
+   fRatioGraph->GetYaxis()->SetLabelSize(0.);
    fRatioGraph->Draw(fOptGraph);
 
 
@@ -397,15 +397,15 @@ void TRatioPlot::PaintModified()
    fH1->GetYaxis()->ImportAttributes(fUpYaxis);
    fRatioGraph->GetYaxis()->ImportAttributes(fLowYaxis);
 
-   //fH1->GetXaxis()->SetTickSize(0.);
-   //fH1->GetXaxis()->SetLabelSize(0.);
-   //fH1->GetYaxis()->SetTickSize(0.);
-   //fH1->GetYaxis()->SetLabelSize(0.);
+   fH1->GetXaxis()->SetTickSize(0.);
+   fH1->GetXaxis()->SetLabelSize(0.);
+   fH1->GetYaxis()->SetTickSize(0.);
+   fH1->GetYaxis()->SetLabelSize(0.);
    
-   //fRatioGraph->GetXaxis()->SetTickSize(0.);
-   //fRatioGraph->GetXaxis()->SetLabelSize(0.);
-   //fRatioGraph->GetYaxis()->SetTickSize(0.);
-   //fRatioGraph->GetYaxis()->SetLabelSize(0.);
+   fRatioGraph->GetXaxis()->SetTickSize(0.);
+   fRatioGraph->GetXaxis()->SetLabelSize(0.);
+   fRatioGraph->GetYaxis()->SetTickSize(0.);
+   fRatioGraph->GetYaxis()->SetLabelSize(0.);
    
    if (fIsUpdating) fIsUpdating = kFALSE;
 }
@@ -541,7 +541,7 @@ void TRatioPlot::BuildRatio(Double_t c1, Double_t c2)
 /// axes.
 void TRatioPlot::CreateVisualAxes()
 {
-   return;
+   //return;
    TVirtualPad *padsav = gPad;
    fTopPad->cd();
 
@@ -601,11 +601,44 @@ void TRatioPlot::CreateVisualAxes()
    //fLowerGYaxisMirror = new TGaxis(1-lowRM, lowBM*sf, 1-lowRM, (1-lowTM)*sf, lowYFirst, lowYLast, 510, "+S");
  
 
+
    Bool_t logx = padsav->GetLogx();
    Bool_t logy = padsav->GetLogy();
 
+   //var_dump(upYFirst);
+   //var_dump(upYLast);
+   //var_dump(lowYFirst);
+   //var_dump(lowYLast);
+
+   //if (logy) upYFirst = TMath::Max(1e-2, upYFirst);
+   //var_dump(upYFirst);
+   if (logy) {
+      
+      upYFirst = TMath::Power(10, upYFirst);
+      upYLast = TMath::Power(10, upYLast);
+         
+      if (upYFirst <= 0 || upYLast <= 0) {
+         Error(__FUNCTION__, "Cannot set Y axis to log scale");
+      }
+   }
+
+   // this is different than in y, y already has pad coords converted, x not...
+   if (logx) {
+      if (first <= 0 || last <= 0) {
+         Error(__FUNCTION__, "Cannot set X axis to log scale");
+      }
+      
+      //first = TMath::Power(10, first);
+      //last = TMath::Power(10, last);
+
+
+   }
+
+   //var_dump(first);
+   //var_dump(last);
+
    TString xopt = "";
-   //if (logx) xopt.Append("G");
+   if (logx) xopt.Append("G");
    TString yopt = "";
    if (logy) yopt.Append("G");
 
@@ -662,8 +695,8 @@ void TRatioPlot::CreateVisualAxes()
    fLowerGYaxis->SetX2(lowLM);
    fLowerGYaxis->SetY1(lowBM*sf);
    fLowerGYaxis->SetY2((1-lowTM)*sf);
-   fLowerGYaxis->SetWmin(upYFirst);
-   fLowerGYaxis->SetWmax(upYLast);
+   fLowerGYaxis->SetWmin(lowYFirst);
+   fLowerGYaxis->SetWmax(lowYLast);
 
 
    fUpperGXaxis->SetNdivisions(fSharedXAxis->GetNdivisions());
@@ -671,6 +704,7 @@ void TRatioPlot::CreateVisualAxes()
    fLowerGXaxis->SetNdivisions(fSharedXAxis->GetNdivisions());
    fLowerGYaxis->SetNdivisions(fLowYaxis->GetNdivisions());
 
+   // @FIXME: This renders wrong Wmin/Wmax first, complains about negative values
    if (mirroredAxes) {
       if (fUpperGXaxisMirror == 0) {
          fUpperGXaxisMirror = (TGaxis*)fUpperGXaxis->Clone(); 
@@ -703,28 +737,36 @@ void TRatioPlot::CreateVisualAxes()
       fUpperGXaxisMirror->SetX2(1-upRM);
       fUpperGXaxisMirror->SetY1((1-upTM)*(1-sf)+sf);
       fUpperGXaxisMirror->SetY2((1-upTM)*(1-sf)+sf);
+      fUpperGXaxisMirror->SetWmin(first);
+      fUpperGXaxisMirror->SetWmax(last);
       
       fUpperGYaxisMirror->SetX1(1-upRM); 
       fUpperGYaxisMirror->SetX2(1-upRM); 
       fUpperGYaxisMirror->SetY1(upBM*(1-sf)+sf);
       fUpperGYaxisMirror->SetY2( (1-upTM)*(1-sf)+sf );
+      fUpperGYaxisMirror->SetWmin(upYFirst);
+      fUpperGYaxisMirror->SetWmax(upYLast);
 
       fLowerGXaxisMirror->SetX1(lowLM);
       fLowerGXaxisMirror->SetX2(1-lowRM);
       fLowerGXaxisMirror->SetY1((1-lowTM)*sf);
       fLowerGXaxisMirror->SetY2((1-lowTM)*sf); 
+      fLowerGXaxisMirror->SetWmin(first);
+      fLowerGXaxisMirror->SetWmax(last);
 
       fLowerGYaxisMirror->SetX1(1-lowRM); 
       fLowerGYaxisMirror->SetX2(1-lowRM); 
       fLowerGYaxisMirror->SetY1(lowBM*sf);
       fLowerGYaxisMirror->SetY2((1-lowTM)*sf);
+      fLowerGYaxisMirror->SetWmin(lowYFirst);
+      fLowerGYaxisMirror->SetWmax(lowYLast);
 
 
       // set correct options
-      fUpperGXaxisMirror->SetOption("-S");
-      fUpperGYaxisMirror->SetOption("+S");
-      fLowerGXaxisMirror->SetOption("-S");
-      fLowerGYaxisMirror->SetOption("+S");
+      fUpperGXaxisMirror->SetOption("-S"+xopt);
+      fUpperGYaxisMirror->SetOption("+S"+yopt);
+      fLowerGXaxisMirror->SetOption("-S"+xopt);
+      fLowerGYaxisMirror->SetOption("+");
  
 
       fUpperGXaxisMirror->SetNdivisions(fSharedXAxis->GetNdivisions());
