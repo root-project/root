@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_fit
+/// \notebook
 /// Estimate the error in the integral of a fitted function
 /// taking into account the errors in the parameters resulting from the fit.
 /// The error is estimated also using the correlations values obtained from

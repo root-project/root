@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_graphs
-///
+/// \notebook
 /// Hint: Spherical waves
 ///
 /// \macro_image

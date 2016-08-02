@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_io
+/// \notebook -nodraw
 /// Example of script showing how to navigate in a ROOT file
 /// with sub-directories and read the objects in each sub-directory.
 /// This example uses the file produced by the tutorial importCode.C

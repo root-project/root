@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_fit
+/// \notebook
 /// Fitting of a TGraph2D with a 3D straight line
 ///
 /// run this macro by doing:
@@ -98,8 +99,8 @@ Int_t line3Dfit()
    Int_t nd = 10000;
 
 
-//    double xmin = 0; double ymin = 0;
-//    double xmax = 10; double ymax = 10;
+   // double xmin = 0; double ymin = 0;
+   // double xmax = 10; double ymax = 10;
 
    TGraph2D * gr = new TGraph2D();
 
@@ -129,7 +130,9 @@ Int_t line3Dfit()
    SumDistance2 sdist(gr);
 #ifdef __CINT__
    ROOT::Math::Functor fcn(&sdist,4,"SumDistance2");
+   cout << "CINT" << endl;
 #else
+   cout << "NOT CINT" << endl;
    ROOT::Math::Functor fcn(sdist,4);
 #endif
    // set the function and the initial parameter values

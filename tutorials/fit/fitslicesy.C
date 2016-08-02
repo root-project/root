@@ -23,8 +23,8 @@ void fitslicesy() {
    gStyle->SetTitleH(0.1);
 
 // Connect the input file and get the 2-d histogram in memory
-   TString dir = gROOT.GetTutorialsDir()
-   dir.Append("/hsimple.C")
+   TString dir = gROOT->GetTutorialsDir();
+   dir.Append("/hsimple.C");
    dir.ReplaceAll("/./","/");
    if (!gInterpreter->IsLoaded(dir.Data())) gInterpreter->LoadMacro(dir.Data());
    TFile *hsimple = (TFile*)gROOT->ProcessLineFast("hsimple(1)");

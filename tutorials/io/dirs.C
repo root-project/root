@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_io
+/// \notebook -nodraw
 /// This macro illustrates how to create a hierarchy of directories
 /// in a Root file.
 /// Ten directories called plane0, plane1, ..., plane9 are created.

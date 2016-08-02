@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_fit
+/// \notebook
 /// Illustrates TVirtualFitter::GetConfidenceIntervals
 /// This method computes confidence intervals for the fitted function
 ///
