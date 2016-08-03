@@ -371,8 +371,8 @@
       if (shape._typename == "TGeoCtub")
          for (var n=0;n<geometry.vertices.length;++n) {
             var vertex = geometry.vertices[n];
-            if (vertex.z<0) vertex.z = -shape.fDz-(vertex.x*shape.fNlow[0]+vertex.x*shape.fNlow[1])/shape.fNlow[2];
-                       else vertex.z = shape.fDz-(vertex.y*shape.fNhigh[0]+vertex.y*shape.fNhigh[1])/shape.fNhigh[2];
+            if (vertex.z<0) vertex.z = -shape.fDz-(vertex.x*shape.fNlow[0]+vertex.y*shape.fNlow[1])/shape.fNlow[2];
+                       else vertex.z = shape.fDz-(vertex.x*shape.fNhigh[0]+vertex.y*shape.fNhigh[1])/shape.fNhigh[2];
          }
 
       var color = new THREE.Color(); // make dummy color for all faces
@@ -572,7 +572,6 @@
       return geometry;
    }
 
-
    JSROOT.GEO.createPolygon = function( shape ) {
 
       var thetaStart = shape.fPhi1, thetaLength = shape.fDphi;
@@ -588,6 +587,10 @@
       var geometry = new THREE.Geometry();
 
       var color = new THREE.Color();
+
+      var hasrmin = false;
+      for (var layer=0; layer < shape.fNz; ++layer)
+         if (shape.fRmin[layer] > 0) hasrmin = true;
 
       var phi0 = thetaStart*Math.PI/180, dphi = thetaLength/radiusSegments*Math.PI/180;
 
@@ -637,9 +640,12 @@
 
             var curr_indx = geometry.vertices.length;
 
-            // create vertices for the layer
-            for (var seg=0; seg < layerVerticies; ++seg)
-               geometry.vertices.push( new THREE.Vector3( rad*_cos[seg], rad*_sin[seg], layerz ));
+            // create vertices for the layer (if rmin===0, only central point is included
+            if ((side===0) || hasrmin)
+               for (var seg=0; seg < layerVerticies; ++seg)
+                  geometry.vertices.push( new THREE.Vector3( rad*_cos[seg], rad*_sin[seg], layerz ));
+            else
+               geometry.vertices.push( new THREE.Vector3( 0, 0, layerz ));
 
             if (pnts !== null) {
                if (side === 0) {
@@ -652,7 +658,7 @@
                }
             }
 
-            if (layer>0)  // create faces
+            if ((layer>0) && ((side===0) || hasrmin))  // create faces
                for (var seg=0;seg < radiusSegments;++seg) {
                   var seg1 = (seg + 1) % layerVerticies;
                   geometry.faces.push( new THREE.Face3( prev_indx + seg, (side === 0) ? (prev_indx + seg1) : (curr_indx + seg) , curr_indx + seg1, null, color, 0 ) );
@@ -669,8 +675,15 @@
          var inside = indxs[1][layer], outside = indxs[0][layer];
          for (var seg=0; seg < radiusSegments; ++seg) {
             var seg1 = (seg + 1) % layerVerticies;
-            geometry.faces.push( new THREE.Face3( outside + seg, (layer===0) ? (inside + seg) : (outside + seg1), inside + seg1, null, color, 0 ) );
-            geometry.faces.push( new THREE.Face3( outside + seg, inside + seg1, (layer===0) ? (outside + seg1) : (inside + seg), null, color, 0 ));
+            if (hasrmin) {
+               geometry.faces.push( new THREE.Face3( outside + seg, (layer===0) ? (inside + seg) : (outside + seg1), inside + seg1, null, color, 0 ) );
+               geometry.faces.push( new THREE.Face3( outside + seg, inside + seg1, (layer===0) ? (outside + seg1) : (inside + seg), null, color, 0 ));
+            } else
+            if (layer==0) {
+               geometry.faces.push( new THREE.Face3( outside + seg, inside, outside + seg1, null, color, 0 ));
+            } else {
+               geometry.faces.push( new THREE.Face3( outside + seg1, inside, outside + seg, null, color, 0 ));
+            }
          }
       }
 
@@ -704,7 +717,6 @@
 
       return geometry;
    }
-
 
    JSROOT.GEO.createXtru = function( shape ) {
 
