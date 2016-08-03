@@ -2482,7 +2482,7 @@
          for (var i=0;i<contour.length-1;++i) {
             var z0 = z(contour[i]);
             var z1 = z(contour[i+1]);
-            var col = this.main_painter().getValueColor(contour[i]);
+            var col = this.main_painter().getValueColor((contour[i] + contour[i+1])/2);
 
             var pnt = { x: 128, width: 256, y: Math.round(z1/h*512) , height: Math.round((z0-z1)/h*512), fill: col };
 
@@ -2544,7 +2544,7 @@
             for (var i=0;i<contour.length-1;++i) {
                var z0 = z(contour[i]),
                    z1 = z(contour[i+1]),
-                   col = this.main_painter().getValueColor(contour[i]);
+                   col = this.main_painter().getValueColor((contour[i]+contour[i+1])/2);
 
                var r = this.draw_g.append("svg:rect")
                           .attr("x", 0)
@@ -3113,6 +3113,10 @@
                zmin = this.zoom_zmin;
                zmax = this.zoom_zmax;
             }
+            if ((this.histo.fMinimum != -1111) && (this.histo.fMaximum != -1111)) {
+               zmin = this.histo.fMinimum;
+               zmax = this.histo.fMaximum;
+            }
             this.CreateContour(nlevels, zmin, zmax, this.minposbin);
          }
       }
@@ -3128,17 +3132,19 @@
          return l;
       }
 
+      // bins less than zmin not drawn
+      if (zc < this.zmin) return -111;
+
+      // if bin content exactly zmin, draw it when col0 specified or when content is positive
+      if (zc===this.zmin) return ((this.zmin > 0) || (this.options.Color === 111)) ? 0 : -1;
+
       return Math.floor(0.01+(zc-this.zmin)*(this.fContour.length-1)/(this.zmax-this.zmin));
    }
 
    JSROOT.TH2Painter.prototype.getValueColor = function(zc, asindx) {
       var index = this.getContourIndex(zc);
 
-      if (index<0) {
-         // do not draw bin where color is negative, only with col0 option minimal values are shown
-         if (this.options.Color !== 111) return null;
-         index = 0;
-      }
+      if (index<0) return null;
 
       if (this.fPalette == null)
          this.fPalette = JSROOT.Painter.GetColorPalette(this.options.Palette);
@@ -3199,7 +3205,7 @@
           i2 = this.GetSelectIndex("x", "right", 1),
           j1 = this.GetSelectIndex("y", "left", 0),
           j2 = this.GetSelectIndex("y", "right", 1),
-          name = this.GetTipName("\n"),
+          name = this.GetTipName("<br/>"),
           xx = [], yy = [], i, j, x, y,
           nbins = 0, binz = 0, sumz = 0;
 
@@ -3426,7 +3432,7 @@
       for (i = handle.i1; i < handle.i2; ++i) {
          for (j = handle.j1; j < handle.j2; ++j) {
             binz = histo.getBinContent(i + 1, j + 1);
-            if ((binz == 0) || (binz < this.minbin)) continue;
+            //if ((binz == 0) || (binz < this.minbin)) continue;
 
             colindx = this.getValueColor(binz, true);
             if (colindx === null) continue;
@@ -3469,12 +3475,12 @@
                        .append("svg:g")
                        .attr("class","th2_text");
 
-      this.StartTextDrawing(42, 20, text_g);
+      this.StartTextDrawing(42, 20, text_g, 20);
 
       for (i = handle.i1; i < handle.i2; ++i)
          for (j = handle.j1; j < handle.j2; ++j) {
             binz = histo.getBinContent(i + 1, j + 1);
-            if ((binz == 0) || (binz < this.minbin)) continue;
+            //if ((binz == 0) || (binz < this.minbin)) continue;
 
             colindx = this.getValueColor(binz, true);
             if (colindx === null) continue;
@@ -3729,11 +3735,11 @@
 
       var ttrect = this.draw_g.select(".tooltip_bin");
 
-      var binz = (find === 2) ? histo.getBinContent(i+1,j+1) : -100;
+      var binz = (find === 2) ? histo.getBinContent(i+1,j+1) : 0;
 
-      // console.log('find = ' + find + '  binz = ' + binz + '  minbin ' + this.minbin);
+      var colindx = (find === 2) ? this.getValueColor(binz, true) : null;
 
-      if ((find !== 2) || (binz === 0) || (binz < this.minbin)) {
+      if ((find !== 2) || (colindx === null)) {
          ttrect.remove();
          this.ProvideUserTooltip(null);
          return null;

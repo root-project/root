@@ -734,8 +734,15 @@
 
       this.Create3DScene();
 
-      this.zmin = this.options.Logz ? this.gmin0bin * 0.3 : this.gminbin;
+      var logz = this.options.Logz;
+
+      this.zmin = logz ? this.gmin0bin * 0.3 : this.gminbin;
       this.zmax = this.gmaxbin * 1.05; // not very nice
+
+      if (this.histo.fMinimum !== -1111) this.zmin = this.histo.fMinimum;
+      if (this.histo.fMaximum !== -1111) this.zmax = this.histo.fMaximum;
+
+      if (logz && (this.zmin<=0)) this.zmin = this.zmax * 1e-5;
 
       this.DrawXYZ();
 
