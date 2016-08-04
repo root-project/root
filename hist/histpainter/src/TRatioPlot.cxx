@@ -55,8 +55,7 @@ TRatioPlot::TRatioPlot()
 /// Constructor for two histograms 
 
 // @TODO: This should work with stacks as well
-// @TODO: Needs options for axes
-
+// @FIXME: SaveAs does not refresh axes, needs to be called twice
 TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, const char *name /*=0*/, const char *title /*=0*/, 
       Option_t *displayOption, Option_t *optH1, Option_t *optH2, Option_t *optGraph,
       Double_t c1, Double_t c2)
@@ -186,7 +185,6 @@ TRatioPlot::TRatioPlot(TH1* h1, const char *name, const char *title, Option_t *d
 
    fParentPad = gPad;
 
-   SetupPads();
 
    fDisplayMode = FIT_RESIDUAL;
    
@@ -206,6 +204,10 @@ TRatioPlot::TRatioPlot(TH1* h1, const char *name, const char *title, Option_t *d
    fSharedXAxis = (TAxis*)(fH1->GetXaxis()->Clone());
    fUpYaxis = (TAxis*)(fH1->GetYaxis()->Clone());
    fLowYaxis = (TAxis*)(fRatioGraph->GetYaxis()->Clone());
+ 
+   //SyncAxesRanges();
+   
+   SetupPads();
 
 }
 
@@ -229,8 +231,7 @@ void TRatioPlot::SetupPads() {
 
    fUpperPad->SetLogy(gPad->GetLogy());
    fUpperPad->SetLogx(gPad->GetLogx());
-   //fLowerPad->SetLogy(gPad->GetLogy());
-   //fLowerPad->SetLogx(gPad->GetLogx());
+   fLowerPad->SetLogx(gPad->GetLogx());
 
    SetPadMargins();
 
@@ -350,8 +351,10 @@ void TRatioPlot::Draw(Option_t *option)
    // we need to hide the original axes of the hist 
    fH1->GetXaxis()->SetTickSize(0.);
    fH1->GetXaxis()->SetLabelSize(0.);
+   fH1->GetXaxis()->SetTitleSize(0.);
    fH1->GetYaxis()->SetTickSize(0.);
    fH1->GetYaxis()->SetLabelSize(0.);
+   fH1->GetYaxis()->SetTitleSize(0.);
 
    fH1->Draw(fOptH1);
    
@@ -364,8 +367,10 @@ void TRatioPlot::Draw(Option_t *option)
    // hide visual axis of lower pad display
    fRatioGraph->GetXaxis()->SetTickSize(0.);
    fRatioGraph->GetXaxis()->SetLabelSize(0.);
+   fRatioGraph->GetXaxis()->SetTitleSize(0.);
    fRatioGraph->GetYaxis()->SetTickSize(0.);
    fRatioGraph->GetYaxis()->SetLabelSize(0.);
+   fRatioGraph->GetYaxis()->SetTitleSize(0.);
    fRatioGraph->Draw(fOptGraph);
 
 
@@ -399,13 +404,17 @@ void TRatioPlot::PaintModified()
 
    fH1->GetXaxis()->SetTickSize(0.);
    fH1->GetXaxis()->SetLabelSize(0.);
+   fH1->GetXaxis()->SetTitleSize(0.);
    fH1->GetYaxis()->SetTickSize(0.);
    fH1->GetYaxis()->SetLabelSize(0.);
+   fH1->GetYaxis()->SetTitleSize(0.);
    
    fRatioGraph->GetXaxis()->SetTickSize(0.);
    fRatioGraph->GetXaxis()->SetLabelSize(0.);
+   fRatioGraph->GetXaxis()->SetTitleSize(0.);
    fRatioGraph->GetYaxis()->SetTickSize(0.);
    fRatioGraph->GetYaxis()->SetLabelSize(0.);
+   fRatioGraph->GetYaxis()->SetTitleSize(0.);
    
    if (fIsUpdating) fIsUpdating = kFALSE;
 }
@@ -480,6 +489,11 @@ void TRatioPlot::BuildRatio(Double_t c1, Double_t c2)
 
       Double_t res;
       Double_t error;
+
+      // @TODO: Implement bin error option. Here? 
+      // virtual void TH1::SetBinErrorOption    (    EBinErrorOpt     type    )    
+      //
+
       for (Int_t i=1; i<=fH1->GetNbinsX();++i) {
          
          if (fErrorMode == ERROR_ASYMMETRIC) {
@@ -564,6 +578,10 @@ void TRatioPlot::CreateVisualAxes()
    //if (fUpperGYaxisMirror != 0) delete fUpperGYaxisMirror;
    //if (fLowerGYaxisMirror != 0) delete fLowerGYaxisMirror;
 
+   // shared y axis needs to import from ratio
+   // and up y from shared up y
+   //fUpYaxis->ImportAttributes(fH1->GetYaxis());
+   //fLowYaxis->ImportAttributes(fRatioGraph->GetYaxis());
 
    // figure out where the axis has to go.
    // Implicit assumption is, that the top pad spans the full other pads
@@ -602,24 +620,32 @@ void TRatioPlot::CreateVisualAxes()
  
 
 
-   Bool_t logx = padsav->GetLogx();
-   Bool_t logy = padsav->GetLogy();
-
-   //var_dump(upYFirst);
-   //var_dump(upYLast);
-   //var_dump(lowYFirst);
-   //var_dump(lowYLast);
+   //Bool_t logx = padsav->GetLogx();
+   //Bool_t logy = padsav->GetLogy();
+   Bool_t logx = fUpperPad->GetLogx() || fLowerPad->GetLogx();
+   Bool_t uplogy = fUpperPad->GetLogy();
+   Bool_t lowlogy = fLowerPad->GetLogy();
 
    //if (logy) upYFirst = TMath::Max(1e-2, upYFirst);
    //var_dump(upYFirst);
-   if (logy) {
+   if (uplogy) {
       
       upYFirst = TMath::Power(10, upYFirst);
       upYLast = TMath::Power(10, upYLast);
          
       if (upYFirst <= 0 || upYLast <= 0) {
-         Error(__FUNCTION__, "Cannot set Y axis to log scale");
+         Error(__FUNCTION__, "Cannot set upper Y axis to log scale");
       }
+   }
+
+   if (lowlogy) {
+      lowYFirst = TMath::Power(10, lowYFirst);
+      lowYLast = TMath::Power(10, lowYLast);
+
+      if (lowYFirst <= 0 || lowYLast <= 0) {
+         Error(__FUNCTION__, "Cannot set lower Y axis to log scale");
+      }
+
    }
 
    // this is different than in y, y already has pad coords converted, x not...
@@ -633,15 +659,24 @@ void TRatioPlot::CreateVisualAxes()
 
 
    }
-
-   //var_dump(first);
-   //var_dump(last);
+   
+   var_dump(logx);
+   var_dump(uplogy);
+   var_dump(lowlogy);
+   var_dump(upYFirst);
+   var_dump(upYLast);
+   var_dump(lowYFirst);
+   var_dump(lowYLast);
+   var_dump(first);
+   var_dump(last);
+   __("");
 
    TString xopt = "";
    if (logx) xopt.Append("G");
-   TString yopt = "";
-   if (logy) yopt.Append("G");
-
+   TString upyopt = "";
+   if (uplogy) upyopt.Append("G");
+   TString lowyopt = "";
+   if (lowlogy) lowyopt.Append("G");
 
    if (fUpperGXaxis == 0) {
       fUpperGXaxis = new TGaxis(0, 0, 1, 1, 0, 1, 510, "+U"+xopt);
@@ -649,7 +684,7 @@ void TRatioPlot::CreateVisualAxes()
    }
 
    if (fUpperGYaxis == 0) { 
-      fUpperGYaxis = new TGaxis(0, 0, 1, 1, upYFirst, upYLast, 510, "S"+yopt);
+      fUpperGYaxis = new TGaxis(0, 0, 1, 1, upYFirst, upYLast, 510, "S"+upyopt);
       fUpperGYaxis->Draw();   
    }   
    
@@ -659,7 +694,7 @@ void TRatioPlot::CreateVisualAxes()
    }   
    
    if (fLowerGYaxis == 0) {
-      fLowerGYaxis = new TGaxis(0, 0, 1, 1, lowYFirst, lowYLast, 510, "-S");
+      fLowerGYaxis = new TGaxis(0, 0, 1, 1, lowYFirst, lowYLast, 510, "-S"+lowyopt);
       fLowerGYaxis->Draw();
    }
 
@@ -669,6 +704,8 @@ void TRatioPlot::CreateVisualAxes()
    fLowerGXaxis->ImportAxisAttributes(fSharedXAxis);
    fLowerGYaxis->ImportAxisAttributes(fLowYaxis);
    
+   // remove title from upper x axis
+   fUpperGXaxis->SetTitle("");
 
    fUpperGXaxis->SetX1(upLM);
    fUpperGXaxis->SetX2(1-upRM);
@@ -703,8 +740,17 @@ void TRatioPlot::CreateVisualAxes()
    fUpperGYaxis->SetNdivisions(fUpYaxis->GetNdivisions());
    fLowerGXaxis->SetNdivisions(fSharedXAxis->GetNdivisions());
    fLowerGYaxis->SetNdivisions(fLowYaxis->GetNdivisions());
+ 
+   var_dump(fLowYaxis->GetNdivisions());
+   var_dump(fLowerGYaxis->GetNdiv());
 
-   // @FIXME: This renders wrong Wmin/Wmax first, complains about negative values
+   // normalize the tick sizes. y axis ticks should be consistent
+   // even if their length is different
+   Double_t ratio = ( (upBM-(1-upTM))*(1-sf) ) / ( (lowBM-(1-lowTM))*sf ) ;
+   fUpperGXaxis->SetLabelSize(0.);
+   Double_t ticksize = fUpperGYaxis->GetTickSize()*ratio;  
+   fLowerGYaxis->SetTickSize(ticksize);
+
    if (mirroredAxes) {
       if (fUpperGXaxisMirror == 0) {
          fUpperGXaxisMirror = (TGaxis*)fUpperGXaxis->Clone(); 
@@ -712,6 +758,7 @@ void TRatioPlot::CreateVisualAxes()
       } 
 
       if (fUpperGYaxisMirror == 0) {
+         //fUpperGYaxisMirror = new TGaxis(0, 0, 1, 1, 0, 1, 510, "+U");
          fUpperGYaxisMirror = (TGaxis*)fUpperGYaxis->Clone(); 
          fUpperGYaxisMirror->Draw();
       }
@@ -725,12 +772,18 @@ void TRatioPlot::CreateVisualAxes()
          fLowerGYaxisMirror = (TGaxis*)fLowerGYaxis->Clone();
          fLowerGYaxisMirror->Draw(); 
       }
-      
 
       fUpperGXaxisMirror->ImportAxisAttributes(fSharedXAxis);
       fUpperGYaxisMirror->ImportAxisAttributes(fUpYaxis);
       fLowerGXaxisMirror->ImportAxisAttributes(fSharedXAxis);
       fLowerGYaxisMirror->ImportAxisAttributes(fLowYaxis);
+
+      // remove titles
+      fUpperGXaxisMirror->SetTitle("");
+      fUpperGYaxisMirror->SetTitle("");
+      fLowerGXaxisMirror->SetTitle("");
+      fLowerGYaxisMirror->SetTitle("");
+
 
       // move them about
       fUpperGXaxisMirror->SetX1(upLM);
@@ -753,20 +806,21 @@ void TRatioPlot::CreateVisualAxes()
       fLowerGXaxisMirror->SetY2((1-lowTM)*sf); 
       fLowerGXaxisMirror->SetWmin(first);
       fLowerGXaxisMirror->SetWmax(last);
-
+         
       fLowerGYaxisMirror->SetX1(1-lowRM); 
       fLowerGYaxisMirror->SetX2(1-lowRM); 
       fLowerGYaxisMirror->SetY1(lowBM*sf);
       fLowerGYaxisMirror->SetY2((1-lowTM)*sf);
       fLowerGYaxisMirror->SetWmin(lowYFirst);
       fLowerGYaxisMirror->SetWmax(lowYLast);
+      fLowerGYaxisMirror->SetTickSize(ticksize);
 
 
       // set correct options
       fUpperGXaxisMirror->SetOption("-S"+xopt);
-      fUpperGYaxisMirror->SetOption("+S"+yopt);
+      fUpperGYaxisMirror->SetOption("+S"+upyopt);
       fLowerGXaxisMirror->SetOption("-S"+xopt);
-      fLowerGYaxisMirror->SetOption("+");
+      fLowerGYaxisMirror->SetOption("+S"+lowyopt);
  
 
       fUpperGXaxisMirror->SetNdivisions(fSharedXAxis->GetNdivisions());
@@ -782,13 +836,6 @@ void TRatioPlot::CreateVisualAxes()
 
 
 
-   // normalize the tick sizes. y axis ticks should be consistent
-   // even if their length is different
-   Double_t ratio = ( (upBM-(1-upTM))*(1-sf) ) / ( (lowBM-(1-lowTM))*sf ) ;
-   fUpperGXaxis->SetLabelSize(0.);
-   Double_t ticksize = fUpperGYaxis->GetTickSize()*ratio;  
-   fLowerGYaxis->SetTickSize(ticksize);
-   if (mirroredAxes) fLowerGYaxisMirror->SetTickSize(ticksize);
 
 
 
@@ -897,6 +944,14 @@ Bool_t TRatioPlot::SyncPadMargins()
 /// reacts correspondingly.
 void TRatioPlot::RangeAxisChanged()
 {
+   // check if rp is already drawn.
+   TList *siblings = gPad->GetListOfPrimitives();
+   if (siblings->FindObject(this) == 0) {
+      // not drawn yet
+      return;
+   }
+
+   
    // Only run this concurrently once, in case it's called async
    if (fIsUpdating) {
       return;
@@ -905,6 +960,24 @@ void TRatioPlot::RangeAxisChanged()
    //__("TRatioPlot::RangeAxisChanged" << " begin");
 
    fIsUpdating = kTRUE;
+
+   // find out if logx has changed
+   // @TODO: It's not working yet
+   if (gPad->GetLogx()) {
+      if (!fUpperPad->GetLogx() || !fLowerPad->GetLogx()) {
+         gPad->SetLogx(kFALSE);
+      }
+   } else {
+      if (fUpperPad->GetLogx() || fLowerPad->GetLogx()) {
+         gPad->SetLogx(kTRUE);
+      }
+   }
+
+   // set log to pad
+   fUpperPad->SetLogy(gPad->GetLogy());
+   fUpperPad->SetLogx(gPad->GetLogx());
+   fLowerPad->SetLogx(gPad->GetLogx());
+
 
    // get axis ranges for upper and lower 
    Double_t upFirst = fH1->GetXaxis()->GetBinLowEdge(fH1->GetXaxis()->GetFirst());
