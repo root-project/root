@@ -1,6 +1,6 @@
 # JSROOT changelog
 
-## Changes in 4.5.2
+## Changes in 4.5.3
 1. Fix - position of TFrame in canvas/pad
 2. Fix - use histogram fMinimum/fMaximum when creating color palette
 3. Fix - correctly draw empty th2 bins when zmin<0 is specified  
