@@ -350,7 +350,7 @@
             btn.append('img').attr("src", factcmds[n]._icon);
       }
 
-      d3p = maindiv.append("p");
+      var d3p = maindiv.append("p");
 
       d3p.append("a").attr("href", '#').text("open all").on("click", function() { h.toggle(true); d3.event.preventDefault(); });
       d3p.append("text").text(" | ");
