@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_math
+/// \notebook
 /// Test of the TMath::Vavilov distribution
 ///
 /// \macro_image
@@ -15,28 +16,28 @@
 void vavilov()
 {
    Int_t n = 1000;
-   Double_t *x  = new Double_t[n];
-   Double_t *y1 = new Double_t[n];
-   Double_t *y2 = new Double_t[n];
-   Double_t *y3 = new Double_t[n];
-   Double_t *y4 = new Double_t[n];
+   Double_t *xvalues  = new Double_t[n];
+   Double_t *yvalues1 = new Double_t[n];
+   Double_t *yvalues2 = new Double_t[n];
+   Double_t *yvalues3 = new Double_t[n];
+   Double_t *yvalues4 = new Double_t[n];
 
    TRandom r;
    for (Int_t i=0; i<n; i++) {
-      x[i]  = r.Uniform(-2, 10);
-      y1[i] = TMath::Vavilov(x[i], 0.3, 0.5);
-      y2[i] = TMath::Vavilov(x[i], 0.15, 0.5);
-      y3[i] = TMath::Vavilov(x[i], 0.25, 0.5);
-      y4[i] = TMath::Vavilov(x[i], 0.05, 0.5);
+      xvalues[i]  = r.Uniform(-2, 10);
+      yvalues1[i] = TMath::Vavilov(xvalues[i], 0.3, 0.5);
+      yvalues2[i] = TMath::Vavilov(xvalues[i], 0.15, 0.5);
+      yvalues3[i] = TMath::Vavilov(xvalues[i], 0.25, 0.5);
+      yvalues4[i] = TMath::Vavilov(xvalues[i], 0.05, 0.5);
    }
 
    TCanvas *c1 = new TCanvas("c1", "Vavilov density");
    c1->SetGrid();
    c1->SetHighLightColor(19);
-   TGraph *gr1 = new TGraph(n, x, y1);
-   TGraph *gr2 = new TGraph(n, x, y2);
-   TGraph *gr3 = new TGraph(n, x, y3);
-   TGraph *gr4 = new TGraph(n, x, y4);
+   TGraph *gr1 = new TGraph(n, xvalues, yvalues1);
+   TGraph *gr2 = new TGraph(n, xvalues, yvalues2);
+   TGraph *gr3 = new TGraph(n, xvalues, yvalues3);
+   TGraph *gr4 = new TGraph(n, xvalues, yvalues4);
    gr1->SetTitle("TMath::Vavilov density");
    gr1->Draw("ap");
    gr2->Draw("psame");

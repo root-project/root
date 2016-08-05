@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_image
+/// \notebook
 /// Display image in canvas and pad.
 ///
 /// \macro_image

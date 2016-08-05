@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_math
+/// \notebook -nodraw
 /// Example of using multiroot finder based on GSL algorithm.
 /// Find the root of Rosenbrock system of equations:
 /// \f[

@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_tree
-///
+/// \notebook
 /// This macro can be used to get aggregate information on the size
 /// take on disk or in memory by the various branches in a TTree.
 ///

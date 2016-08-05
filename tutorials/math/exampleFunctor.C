@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_math
+/// \notebook
 /// Tutorial illustrating how creating a TF1 class using functor or class member functions
 ///
 /// can be run with:

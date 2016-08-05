@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_math
+/// \notebook
 /// Example describing how to use the different cumulative distribution functions in ROOT.
 /// The macro shows four of them with
 /// respect to their two variables. In order to run the macro type:

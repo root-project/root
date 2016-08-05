@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_math
+/// \notebook -nodraw
 /// Tutorial illustrating the use of TMath::Permute
 /// can be run with:
 ///

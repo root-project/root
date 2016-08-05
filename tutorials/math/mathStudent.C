@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_math
+/// \notebook
 /// Tutorial illustrating the use of the Student and F distributions
 ///
 /// \macro_image

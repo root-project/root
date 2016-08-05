@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_math
+/// \notebooks
 /// This program demonstrates the computation of 95 % C.L. limits.
 /// It uses a set of randomly created histograms.
 ///

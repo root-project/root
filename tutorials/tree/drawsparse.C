@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_tree
-///
+/// \notebook
 /// Convert a THnSparse to a TTree using efficient iteration through the THnSparse
 /// and draw a THnSparse using TParallelCoord.
 /// The plot will contain one line for each filled bin,

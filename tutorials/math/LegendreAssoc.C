@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_math
+/// \notebook
 /// Example describing the usage of different kinds of Associate Legendre Polynomials
 /// To execute the macro type in:
 ///

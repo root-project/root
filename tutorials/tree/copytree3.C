@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_tree
-///
+/// \notebook -nodraw
 /// Example of Root macro to copy a subset of a Tree to a new Tree, selecting entries.
 ///
 /// Only selected entries are copied to the new Tree.
@@ -14,7 +14,12 @@ void copytree3() {
    gSystem->Load("$ROOTSYS/test/libEvent");
 
    //Get old file, old tree and set top branch address
-   TFile *oldfile = new TFile("$ROOTSYS/test/Event.root");
+   TFile *oldfile;
+   TString dir = "$ROOTSYS/test/Event.root";
+   gSystem->ExpandPathName(dir);
+   if (!gSystem->AccessPathName(dir))
+       {oldfile = new TFile("$ROOTSYS/test/Event.root");}
+   else {oldfile = new TFile("./Event.root");}
    TTree *oldtree = (TTree*)oldfile->Get("T");
    Long64_t nentries = oldtree->GetEntries();
    Event *event   = 0;
