@@ -5353,6 +5353,7 @@ void TPad::SetLogx(Int_t value)
    fLogx = value;
    delete fView; fView=0;
    Modified();
+   RangeAxisChanged();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -5366,6 +5367,7 @@ void TPad::SetLogy(Int_t value)
    fLogy = value;
    delete fView; fView=0;
    Modified();
+   RangeAxisChanged();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -5376,6 +5378,7 @@ void TPad::SetLogz(Int_t value)
    fLogz = value;
    delete fView; fView=0;
    Modified();
+   RangeAxisChanged();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
