@@ -21,6 +21,13 @@ env:
     - CCACHE_CPP2=1
     - CLING_BUILD_DEPS=$TRAVIS_BUILD_DIR/deps/
     - CLING_LOCAL_BIN=$TRAVIS_BUILD_DIR/bin/
+    - TIMEOUT=0
+
+
+# Do not build our sync branch.
+branches:
+  except:
+    - /^__internal.*$/
 
 
 matrix:
@@ -69,7 +76,6 @@ matrix:
       env: CXX_COMPILER='clang++' CC_COMPILER='clang' BUILD_TYPE='Release'
 
   allow_failures:
-    - os: osx
     # libc++-dev is not whitelisted yet (https://github.com/travis-ci/apt-package-whitelist/issues/3266)
     # The build falls back to an old version and fails.
     - os: linux
@@ -86,7 +92,14 @@ install:
     export CMAKE=$CLING_BUILD_DEPS/cmake/CMake.app/Contents/bin/cmake
     brew install ccache
     PATH=/usr/local/opt/ccache/libexec:$PATH
+    # Try to workaround travis-ci/travis-ci#6410 by
+    # introducing a timeout fulction, which will timeout before the builder,
+    # returning a 'fake' success (eg. 0), tricking it to store the cache.
+    TIMEOUT=2400
   fi
+
+  # Implement a platform-independent timeout function.
+  function timeout() { perl -e 'alarm shift; exec @ARGV' "$@"; }
 
   if [ ! -f $CMAKE ]; then
     mkdir -pv $CLING_BUILD_DEPS/cmake
@@ -105,28 +118,28 @@ before_script:
 - $CXX --version
 
 script:
-#- |
-#  mkdir -pv $CLING_LOCAL_BIN
-#  touch "$CLING_LOCAL_BIN/$CXX"; ls "$CLING_LOCAL_BIN/$CXX" ; echo "ccache $CXX" > "$CLING_LOCAL_BIN/$CXX"
-#  echo "ccache $CC" > "$CLING_LOCAL_BIN/$CC"
-#  chmod +x "$CLING_LOCAL_BIN/$CXX" && chmod +x "$CLING_LOCAL_BIN/$CC"
 - |
   if [ -z $TRAVIS_TAG ]; then
-    tools/packaging/cpt.py --current-dev=tar --with-cling-url=https://github.com/vgvassilev/cling --verbose --debug-on-error
+    timeout $TIMEOUT tools/packaging/cpt.py --current-dev=tar --with-cling-url=https://github.com/$TRAVIS_REPO_SLUG --verbose --debug-on-error
   else
-    tools/packaging/cpt.py --last-stable=tar --with-cling-url=https://github.com/vgvassilev/cling
+    tools/packaging/cpt.py --last-stable=tar --with-cling-url=https://github.com/$TRAVIS_REPO_SLUG
   fi
+
+  # Convert the timeout exit code to 0.
+  RESULT=$?; if [ $RESULT -eq 0 ] || [ $RESULT -eq 142 ]; then true; else false; fi;
+
 - ccache -s
 
 notifications:
   recipients:
-  - ani07nov@gmail.com
-  - vvasilev@cern.ch
+    - cling-dev@cern.ch
   email:
     on_success: change
     on_failure: always
   template:
-  - "%{repository}/%{branch} (%{commit} - %{author}): %{message}"
+    - "%{repository}/%{branch} (%{commit} - %{author}): %{message}"
+    - "Build details: %{build_url}"
+    - "Change view : %{compare_url}"
 
 before_deploy:
 - export RELEASE_TARBALL=$(ls $HOME/ci/build/cling*.tar.bz2)
@@ -140,7 +153,7 @@ deploy:
   file: '${RELEASE_TARBALL}'
   on:
     tags: true
-    repo: vgvassilev/cling
+    repo: $TRAVIS_REPO_SLUG
 
 after_failure:
 - |

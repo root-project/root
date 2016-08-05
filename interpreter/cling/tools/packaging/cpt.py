@@ -146,7 +146,7 @@ def box_draw(msg):
 +-----------------------------------------------------------------------------+''' % (msg, spacer))
 
 
-def wget(url, out_dir, retries=3):
+def wget(url, out_dir, rename_file=None, retries=3):
     file_name = url.split('/')[-1]
     print("  HTTP request sent, awaiting response ... ")
     u = urlopen(url)
@@ -185,6 +185,11 @@ def wget(url, out_dir, retries=3):
             status += chr(8) * (len(status) + 1)
             print(status, end=' ')
         f.close()
+        if rename_file:
+            ffrom = os.path.join(out_dir, file_name)
+            fto = os.path.join(out_dir, rename_file)
+            print('Moving file: ' + ffrom + ' -> ' + fto)
+            os.rename(ffrom, fto)
         print()
 
 
@@ -391,51 +396,34 @@ def compile(arg):
 
     os.makedirs(os.path.join(workdir, 'builddir'))
 
-    if platform.system() == 'Windows':
-        if not CMAKE:
-            CMAKE = os.path.join(TMP_PREFIX, 'bin', 'cmake', 'bin', 'cmake.exe')
-
-        if args['create_dev_env'] == 'debug':
-            box_draw("Configure Cling with CMake and generate Visual Studio 11 project files")
-            exec_subprocess_call('%s -G "Visual Studio 11" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=%s ..\%s' % (
-                CMAKE, TMP_PREFIX, os.path.basename(srcdir)), LLVM_OBJ_ROOT)
-
-            box_draw("Building Cling (using %s cores)" % (cores))
-            exec_subprocess_call('%s --build . --target clang --config Debug' % (CMAKE), LLVM_OBJ_ROOT)
-
-            exec_subprocess_call('%s --build . --target cling --config Debug' % (CMAKE), LLVM_OBJ_ROOT)
-
-        else:
-            box_draw("Configure Cling with CMake and generate Visual Studio 11 project files")
-            exec_subprocess_call(
-                '%s -G "Visual Studio 11" -DLLVM_ENABLE_LIBCXX=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=%s ..\%s' % (
-                    CMAKE, TMP_PREFIX, os.path.basename(srcdir)), LLVM_OBJ_ROOT)
-
-            box_draw("Building Cling (using %s cores)" % (cores))
-            exec_subprocess_call('%s --build . --target clang --config Release' % (CMAKE), LLVM_OBJ_ROOT)
-
-            exec_subprocess_call('%s --build . --target cling --config Release' % (CMAKE), LLVM_OBJ_ROOT)
-
-            box_draw("Install compiled binaries to prefix (using %s cores)" % (cores))
-            exec_subprocess_call('%s --build . --target INSTALL --config Release' % (CMAKE), LLVM_OBJ_ROOT)
-
-    else:
-        box_draw('Configure Cling with CMake')
-        build_type = 'Debug' if args.get('create_dev_env') else 'Release'
-
-        exec_subprocess_call(
-            (CMAKE or 'cmake') + ' '
+    build_type = 'Debug' if args.get('create_dev_env') else 'Release'
+    cmake_config_flags = (
             '-DLLVM_ENABLE_LIBCXX=ON '
             '-DCMAKE_BUILD_TYPE={0} '
             '-DLLVM_TARGETS_TO_BUILD=host '
             '-DCMAKE_INSTALL_PREFIX={1} '
-            '../{2}'.format(
-                build_type,
-                TMP_PREFIX,
-                os.path.basename(srcdir)
-            ),
-            LLVM_OBJ_ROOT
-        )
+            '../{2}'.format(build_type, TMP_PREFIX, os.path.basename(srcdir))
+    )
+
+
+    if platform.system() == 'Windows':
+        if not CMAKE:
+            CMAKE = os.path.join(TMP_PREFIX, 'bin', 'cmake', 'bin', 'cmake.exe')
+
+        box_draw("Configure Cling with CMake and generate Visual Studio 14 project files")
+        exec_subprocess_call('%s -G "Visual Studio 14" %s ..\%s' % (
+            CMAKE, cmake_config_flags, os.path.basename(srcdir)), LLVM_OBJ_ROOT)
+
+        box_draw("Building Cling (using %s cores)" % (cores))
+
+        exec_subprocess_call('%s --build . --target cling --config Debug' % (CMAKE), LLVM_OBJ_ROOT)
+        box_draw("Install compiled binaries to prefix (using %s cores)" % (cores))
+        exec_subprocess_call('%s --build . --target INSTALL' % (CMAKE), LLVM_OBJ_ROOT)
+
+    else:
+        box_draw('Configure Cling with CMake')
+
+        exec_subprocess_call((CMAKE or 'cmake') + ' ' + cmake_config_flags, LLVM_OBJ_ROOT)
 
         box_draw('Building Cling (using {0} cores)'.format(cores))
         make_command = 'make -j{0} cling'.format(cores)
@@ -479,8 +467,11 @@ def install_prefix():
 
 def test_cling():
     box_draw("Run Cling test suite")
-    if platform.system() != 'Windows':
-        exec_subprocess_call('make cling-test', LLVM_OBJ_ROOT)
+    # FIXME: Factor out the setting of CMAKE.
+    if platform.system() == 'Windows':
+        CMAKE = os.path.join(TMP_PREFIX, 'bin', 'cmake', 'bin', 'cmake.exe')
+
+    exec_subprocess_call('cmake --build . --target check-cling', LLVM_OBJ_ROOT)
 
 
 def tarball():
@@ -978,9 +969,9 @@ rm -rf %{buildroot}
 ###############################################################################
 
 def check_win(pkg):
-    # Check for Microsoft Visual Studio 11.0
+    # Check for Microsoft Visual Studio 14.0
     if pkg == "msvc":
-        if exec_subprocess_check_output('REG QUERY HKEY_CLASSES_ROOT\VisualStudio.DTE.11.0', 'C:\\').find(
+        if exec_subprocess_check_output('REG QUERY HKEY_CLASSES_ROOT\VisualStudio.DTE.14.0', 'C:\\').find(
                 'ERROR') == -1:
             print(pkg.ljust(20) + '[OK]'.ljust(30))
         else:
@@ -1014,14 +1005,16 @@ def check_win(pkg):
             print(pkg.ljust(20) + '[OK]'.ljust(30))
 
 
+def is_os_64bit():
+    return platform.machine().endswith('64')
+
 def get_win_dep():
     box_draw("Download NSIS compiler")
-    html = urlopen('http://sourceforge.net/p/nsis/code/HEAD/tree/NSIS/tags/').read().decode('utf-8')
-    NSIS_VERSION = html[html.rfind('<a href="v'):html.find('>', html.rfind('<a href="v'))].strip('<a href="v').strip(
-        '"')
-    NSIS_VERSION = NSIS_VERSION[:1] + '.' + NSIS_VERSION[1:]
+    html = urlopen('https://sourceforge.net/p/nsis/code/6780/log/?path=/NSIS/tags').read().decode('utf-8')
+    pin = '<p>Tagging for release'
+    NSIS_VERSION = html[html.find(pin):html.find('</div>', html.find(pin))].strip(pin + ' ')
     print('Latest version of NSIS is: ' + NSIS_VERSION)
-    wget(url="http://sourceforge.net/projects/nsis/files/NSIS%%203%%20Pre-release/%s/nsis-%s.zip" % (
+    wget(url="https://sourceforge.net/projects/nsis/files/NSIS%%203/%s/nsis-%s.zip" % (
         NSIS_VERSION, NSIS_VERSION),
          out_dir=TMP_PREFIX)
     print('Extracting: ' + os.path.join(TMP_PREFIX, 'nsis-%s.zip' % (NSIS_VERSION)))
@@ -1031,18 +1024,30 @@ def get_win_dep():
     os.rename(os.path.join(TMP_PREFIX, 'bin', 'nsis-%s' % (NSIS_VERSION)), os.path.join(TMP_PREFIX, 'bin', 'nsis'))
 
     box_draw("Download CMake for Windows")
-    html = urlopen('http://www.cmake.org/cmake/resources/software.html').read().decode('utf-8')
-    CMAKE_VERSION = html[html.find('Latest Release ('): html.find(')', html.find('Latest Release ('))].strip(
-        'Latest Release (')
-    print('Latest stable version of CMake is: ' + CMAKE_VERSION)
-    wget(url='http://www.cmake.org/files/v%s/cmake-%s-win32-x86.zip' % (CMAKE_VERSION[:3], CMAKE_VERSION),
-         out_dir=TMP_PREFIX)
-    print('Extracting: ' + os.path.join(TMP_PREFIX, 'cmake-%s-win32-x86.zip' % (CMAKE_VERSION)))
-    zip = zipfile.ZipFile(os.path.join(TMP_PREFIX, 'cmake-%s-win32-x86.zip' % (CMAKE_VERSION)))
-    zip.extractall(os.path.join(TMP_PREFIX, 'bin'))
-    print('Remove file: ' + os.path.join(TMP_PREFIX, 'cmake-%s-win32-x86.zip' % (CMAKE_VERSION)))
-    os.rename(os.path.join(TMP_PREFIX, 'bin', 'cmake-%s-win32-x86' % (CMAKE_VERSION)),
-              os.path.join(TMP_PREFIX, 'bin', 'cmake'))
+
+    print('Downloading nightly release of cmake')
+
+    if is_os_64bit():
+        wget(url='https://cmake.org/files/dev/cmake-3.6.20160801-g62452-win64-x64.zip',
+             out_dir=TMP_PREFIX, rename_file='cmake-3.6.20160801-g62452.zip')
+    else:
+        wget(url='https://cmake.org/files/dev/cmake-3.6.20160801-g62452-win32-x86.zip',
+             out_dir=TMP_PREFIX, rename_file='cmake-3.6.20160801-g62452.zip')
+
+    zip_file = os.path.join(TMP_PREFIX, 'cmake-3.6.20160801-g62452.zip')
+    print('Extracting: ' + zip_file)
+    zip = zipfile.ZipFile(zip_file)
+    tmp_bin_dir = os.path.join(TMP_PREFIX, 'bin')
+    zip.extractall(tmp_bin_dir)
+    print('Remove file: ' + os.path.join(TMP_PREFIX, 'cmake-3.6.20160801-g62452.zip'))
+
+    if is_os_64bit():
+        os.rename(os.path.join(tmp_bin_dir, 'cmake-3.6.20160801-g62452-win64-x64'),
+                  os.path.join(TMP_PREFIX, 'bin', 'cmake'))
+    else:
+        os.rename(os.path.join(tmp_bin_dir, 'cmake-3.6.20160801-g62452-win32-x86'),
+                  os.path.join(TMP_PREFIX, 'bin', 'cmake'))
+    print()
 
 
 def make_nsi():
@@ -1617,7 +1622,7 @@ Install/update the required packages by:
         check_win('git')
         check_win('python')
         check_win('SSL')
-        # Check Windows registry for keys that prove an MS Visual Studio 11.0 installation
+        # Check Windows registry for keys that prove an MS Visual Studio 14.0 installation
         check_win('msvc')
         print('''
 Refer to the documentation of CPT for information on setting up your Windows environment.
