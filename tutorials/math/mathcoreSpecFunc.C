@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_math
+/// \notebook
 /// Example macro describing how to use the special mathematical functions
 /// taking full advantage of the precision and speed of the C99 compliant
 /// environments. To execute the macro type in:

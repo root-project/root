@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_math
+/// \notebook
 /// Example showing how to write and read a std vector of ROOT::Math LorentzVector in a ROOT tree.
 /// In the write() function a variable number of track Vectors is generated
 /// according to a Poisson distribution with random momentum uniformly distributed
@@ -155,7 +156,7 @@ int mathcoreVectorCollection() {
 
    gSystem->Load("libMathCore");
    gSystem->Load("libPhysics");
-   // in CINT need to do that after having loading the library
+    // in CINT need to do that after having loading the library
    using namespace ROOT::Math;
 
    cout << "This tutorial can run only using ACliC, compiling it by doing: " << endl;

@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_image
+/// \notebook
 /// Demonstrates how to access and manipulate ARGB pixel values of an image +...
 ///  - how to make a part of an image to be transparent.
 ///  - how to merge/alphablend an image with transparent colors

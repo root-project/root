@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_math
+/// \notebook
 ///  Data unfolding using Singular Value Decomposition
 ///
 /// TSVDUnfold example

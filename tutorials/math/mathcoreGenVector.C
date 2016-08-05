@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_math
+/// \notebook -nodraw
 /// Example macro testing available methods and operation of the GenVector classes.
 /// The results are compared and check at the
 /// numerical precision levels.
@@ -874,9 +875,9 @@ int testRotation() {
    if (ok == 0) std::cout << "\t OK " << std::endl;
    else  std::cout << std::endl;
       return ok;
-   }
+}
 
-   void mathcoreGenVector() {
+void mathcoreGenVector() {
 
    #ifdef __CINT__
    gSystem->Load("libMathCore");

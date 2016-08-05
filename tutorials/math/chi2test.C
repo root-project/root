@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_math
+/// \notebook
 /// Example to use chi2 test for comparing two histograms
 /// One unweighted histogram is compared with a weighted histogram.
 /// The normalized residuals are retrieved and plotted in a simple graph.

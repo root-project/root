@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_math
+/// \notebook -js
 /// Demo for quantiles
 ///
 /// \macro_image

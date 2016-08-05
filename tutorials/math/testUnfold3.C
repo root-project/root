@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_unfold
+/// \notebook
 /// Simple Test program for the class TUnfoldDensity
 ///
 /// 1-dimensional unfolding with background subtraction

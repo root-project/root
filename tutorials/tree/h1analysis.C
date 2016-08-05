@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_tree
-///
+/// \notebook -header -nodraw
 ///  Example of analysis class for the H1 data.
 /// 
 ///  This file uses 4 large data sets from the H1 collaboration at DESY Hamburg.

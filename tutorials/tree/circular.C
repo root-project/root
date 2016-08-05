@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_tree
-///
+/// \notebook -nodraw
 /// Example of a circular Tree
 ///
 /// Circular Trees are interesting in online real time environments

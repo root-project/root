@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_math
+/// \notebook
 /// Example of sampling a multi-dim distribution using the DistSampler class
 /// NOTE: This tutorial must be run with ACLIC
 ///
@@ -32,6 +33,8 @@
 // This however requires that  the code must be compiled with ACLIC
 
 bool debug = false;
+
+// Define the GausND strcture
 struct GausND {
 
    TVectorD X;
@@ -87,6 +90,7 @@ struct GausND {
    }
 };
 
+// Use the Math namespace
 using namespace ROOT::Math;
 
 void multidimSampling() {
@@ -98,7 +102,7 @@ void multidimSampling() {
   return;
 #endif
 
-   const int N = 100000;
+   const int N = 10000;
    //const int NBin = 1000;
    const int DIM = 4;
 

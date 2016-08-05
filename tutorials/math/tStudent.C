@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_math
+/// \notebook
 /// Example macro describing the student t distribution
 ///
 /// ~~~ {.cpp}

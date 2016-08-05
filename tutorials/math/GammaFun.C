@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_math
+/// \notebook
 /// Example showing the usage of the major special math functions  (gamma, beta, erf)  in ROOT
 /// To execute the macro type in:
 ///

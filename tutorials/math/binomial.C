@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_math
+/// \notebook -nodraw
 /// tutorial illustrating the use of TMath::Binomial
 /// can be run with:
 ///

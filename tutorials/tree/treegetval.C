@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_tree
+/// \notebook
 /// Illustrates how to retrieve  TTree variables in arrays.
 ///
 /// This example:
