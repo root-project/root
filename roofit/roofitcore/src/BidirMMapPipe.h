@@ -424,6 +424,18 @@ class BidirMMapPipe {
 	 */
 	~BidirMMapPipe();
 
+	/** @brief return the current setting of the debug flag
+	 *
+	 * @returns an integer with the debug Setting
+	 */
+	static int debugflag() { return s_debugflag; }
+
+	/** @brief set the debug flags
+	 *
+	 * @param flag 	debug flags (if zero, no messages are printed)
+	 */
+	static void setDebugflag(int flag) { s_debugflag = flag; }
+
 	/** @brief read from pipe
 	 *
 	 * @param addr	where to put read data
@@ -877,6 +889,8 @@ class BidirMMapPipe {
 	static BidirMMapPipe_impl::PagePool* s_pagepool;
 	/// page pool reference counter
 	static unsigned s_pagepoolrefcnt;
+	/// debug flag
+	static int s_debugflag;
 
 	/// return page pool
 	static BidirMMapPipe_impl::PagePool& pagepool();
