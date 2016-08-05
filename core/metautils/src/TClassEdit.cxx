@@ -1797,6 +1797,7 @@ string TClassEdit::InsertStd(const char *tname)
       "time_put",
       "unary_function",
       "unary_negate",
+      "unique_pointer",
       "underflow_error",
       "unordered_map",
       "unordered_multimap",
