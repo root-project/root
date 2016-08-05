@@ -13,8 +13,8 @@
 
 void FirstContour()
 {
-   TString dir = gSystem->UnixPathName(__FILE__);
-   dir.ReplaceAll("FirstContour.C","../hsimple.C");
+   TString dir = gROOT->GetTutorialsDir();
+   dir.Append("/hsimple.C");
    dir.ReplaceAll("/./","/");
    if (!gInterpreter->IsLoaded(dir.Data())) gInterpreter->LoadMacro(dir.Data());
    TFile *file = (TFile*)gROOT->ProcessLineFast("hsimple(1)");

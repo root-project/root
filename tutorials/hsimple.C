@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup Tutorials
+/// \notebook
 ///  This program creates :
 ///    - a one dimensional histogram
 ///    - a two dimensional histogram
@@ -33,8 +34,7 @@
 TFile *hsimple(Int_t get=0)
 {
    TString filename = "hsimple.root";
-   TString dir = gSystem->UnixPathName(__FILE__);
-   dir.ReplaceAll("hsimple.C","");
+   TString dir = gROOT->GetTutorialsDir();
    dir.ReplaceAll("/./","/");
    TFile *hfile = 0;
    if (get) {
@@ -106,6 +106,6 @@ TFile *hsimple(Int_t get=0)
    c1->Modified();
    return hfile;
 
-// Note that the file is automatically close when application terminates
-// or when the file destructor is called.
+   // Note that the file is automatically close when application terminates
+   // or when the file destructor is called.
 }

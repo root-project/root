@@ -7,6 +7,7 @@
 ///
 /// \author Rene Brun
 
+void draw2dopt()
 {
    gStyle->SetOptStat(0);
    gStyle->SetPalette(1);

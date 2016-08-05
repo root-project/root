@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_io
+/// \notebook -nodraw
 /// Macro to add histogram files
 /// This macro is kept for didactical purposes only: use instead the executable $ROOTSYS/bin/hadd !
 /// 

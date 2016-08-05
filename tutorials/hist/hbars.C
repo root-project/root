@@ -12,8 +12,8 @@ TCanvas *hbars() {
    cout << gSystem->DirName(__FILE__) << endl;
 
    // Try to open first the file cernstaff.root in tutorials/tree directory
-   TString filedir = gSystem->DirName(__FILE__);
-   filedir += TString("/../tree/");
+   TString filedir = gROOT->GetTutorialsDir();
+   filedir += TString("/tree/");
    TString filename = "cernstaff.root";
    bool fileNotFound = gSystem->AccessPathName(filename); // note opposite return code
 

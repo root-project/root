@@ -89,7 +89,7 @@
    }
 } (function(JSROOT) {
 
-   JSROOT.version = "4.5.1 27/06/2016";
+   JSROOT.version = "4.5.3 4/08/2016";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -279,8 +279,10 @@
          map.obj.push(src);
          map.clones.push(tgt);
          for (var i = 0; i < src.length; ++i)
-            tgt.push(JSROOT.clone(src[i], map));
-
+            if (typeof src[i] === 'object')
+               tgt.push(JSROOT.clone(src[i], map));
+            else
+               tgt.push(src[i]);
          return tgt;
       }
 

@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_fit
+/// \notebook
 /// Get in memory an histogram from a root file and fit a user defined function.
 /// Note that a user defined function must always be defined
 /// as in this example:
@@ -24,8 +25,8 @@ Double_t fitf(Double_t *x, Double_t *par)
 }
 void myfit()
 {
-   TString dir = gSystem->UnixPathName(__FILE__);
-   dir.ReplaceAll("myfit.C","../hsimple.C");
+   TString dir = gROOT->GetTutorialsDir();
+   dir.Append("/hsimple.C");
    dir.ReplaceAll("/./","/");
    if (!gInterpreter->IsLoaded(dir.Data())) gInterpreter->LoadMacro(dir.Data());
    TFile *hsimple = (TFile*)gROOT->ProcessLineFast("hsimple(1)");

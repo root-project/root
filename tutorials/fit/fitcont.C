@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_fit
+/// \notebook
 /// Example illustrating how to draw the n-sigma contour of a Minuit fit.
 /// To get the n-sigma contour the ERRDEF parameter in Minuit has to set
 /// to n^2. The fcn function has to be set before the routine is called.

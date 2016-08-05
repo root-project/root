@@ -2253,7 +2253,7 @@
       // options
    }
 
-   JSROOT.TObjectPainter.prototype.StartTextDrawing = function(font_face, font_size, draw_g) {
+   JSROOT.TObjectPainter.prototype.StartTextDrawing = function(font_face, font_size, draw_g, max_font_size) {
       // we need to preserve font to be able rescle at the end
 
       if (!draw_g) draw_g = this.draw_g;
@@ -2266,6 +2266,7 @@
       draw_g.property('mathjax_use', false);
       draw_g.property('text_factor', 0.);
       draw_g.property('max_text_width', 0); // keep maximal text width, use it later
+      draw_g.property('max_font_size', max_font_size);
    }
 
    JSROOT.TObjectPainter.prototype.TextScaleFactor = function(value, draw_g) {
@@ -2326,6 +2327,8 @@
       if ((f>0) && ((f<0.9) || (f>1.))) {
          var font = draw_g.property('text_font');
          font.size = Math.floor(font.size/f);
+         if (draw_g.property('max_font_size') && (font.size>draw_g.property('max_font_size')))
+            font.size = draw_g.property('max_font_size');
          draw_g.call(font.func);
       }
 
@@ -2559,8 +2562,8 @@
             JSROOT.extend(this, {
                fX1NDC: root_pad.fLeftMargin,
                fX2NDC: 1 - root_pad.fRightMargin,
-               fY1NDC: root_pad.fTopMargin,
-               fY2NDC: 1 - root_pad.fBottomMargin
+               fY1NDC: root_pad.fBottomMargin,
+               fY2NDC: 1 - root_pad.fTopMargin
             });
       }
 
@@ -2569,23 +2572,6 @@
          bordersize = tframe.fBorderSize;
          lineatt = JSROOT.Painter.createAttLine(tframe);
          framecolor = this.createAttFill(tframe);
-         if (!has_ndc && (root_pad !== null)) {
-            var xspan = width / Math.abs(root_pad.fX2 - root_pad.fX1),
-                yspan = height / Math.abs(root_pad.fY2 - root_pad.fY1),
-                px1 = (tframe.fX1 - root_pad.fX1) * xspan,
-                py1 = (tframe.fY1 - root_pad.fY1) * yspan,
-                px2 = (tframe.fX2 - root_pad.fX1) * xspan,
-                py2 = (tframe.fY2 - root_pad.fY1) * yspan,
-                pxl, pxt, pyl, pyt;
-            if (px1 < px2) { pxl = px1; pxt = px2; }
-                      else { pxl = px2; pxt = px1; }
-            if (py1 < py2) { pyl = py1; pyt = py2; }
-                      else { pyl = py2; pyt = py1; }
-            this.fX1NDC = pxl / width;
-            this.fY1NDC = pyl / height;
-            this.fX2NDC = pxt / width;
-            this.fY2NDC = pyt / height;
-         }
       } else {
          if (root_pad)
             framecolor = this.createAttFill(null, root_pad.fFrameFillStyle, root_pad.fFrameFillColor);
@@ -3963,7 +3949,8 @@
       painter.SetDivId(divid);  // now add to painters list
 
       painter.AddButton(JSROOT.ToolbarIcons.camera, "Create PNG", "CanvasSnapShot");
-      painter.AddButton(JSROOT.ToolbarIcons.question, "Access context menus", "PadContextMenus");
+      if (JSROOT.gStyle.ContextMenu)
+         painter.AddButton(JSROOT.ToolbarIcons.question, "Access context menus", "PadContextMenus");
 
       if (can==null) {
          if (opt.indexOf("noframe") < 0)
@@ -3991,7 +3978,8 @@
 
       if (painter.MatchObjectType("TPad") && (!painter.has_canvas || painter.HasObjectsToDraw())) {
          painter.AddButton(JSROOT.ToolbarIcons.camera, "Create PNG", "PadSnapShot");
-         painter.AddButton(JSROOT.ToolbarIcons.question, "Access context menus", "PadContextMenus");
+         if (JSROOT.gStyle.ContextMenu)
+            painter.AddButton(JSROOT.ToolbarIcons.question, "Access context menus", "PadContextMenus");
       }
 
       var prev_name = "";
@@ -3999,7 +3987,7 @@
       if (painter.has_canvas) {
          // we select current pad, where all drawing is performed
          prev_name = painter.svg_canvas().property('current_pad');
-         painter.svg_canvas().property('current_pad', pad.fName);
+         painter.svg_canvas().property('current_pad', painter.this_pad_name);
       }
 
       painter.DrawPrimitive(0, function() {

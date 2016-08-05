@@ -25,8 +25,8 @@
 
 void h1draw()
 {
-   TString dir = gSystem->UnixPathName(__FILE__);
-   dir.ReplaceAll("h1draw.C","../hsimple.C");
+   TString dir = gROOT->GetTutorialsDir();
+   dir.Append("/hsimple.C");
    dir.ReplaceAll("/./","/");
    if (gBenchmark->GetBench("hsimple") < 0) gInterpreter->LoadMacro(dir.Data());
    TFile *example = (TFile*)gROOT->ProcessLineFast("hsimple(1)");

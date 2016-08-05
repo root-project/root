@@ -150,7 +150,7 @@ static bool IsSupportedClass(TClass *cl)
       if (TClassEdit::IsUniquePtr(containedObjectTypeName)) {
          auto clName = cl->GetName();
          // Here we can use the new name for the error message
-         Error("CloseStreamerInfoROOTFile", "A collection of unique pointers was selected: %s. These are not supported. If you whish to perform I/O operations with %s, just select the same collection of raw C pointers.\n", clName, clName);
+         Error("CloseStreamerInfoROOTFile", "A collection of unique pointers was selected: %s. These are not supported. If you wish to perform I/O operations with %s, just select the same collection of raw C pointers.\n", clName, clName);
          return false;
       }
    }

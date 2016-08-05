@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_fit
+/// \notebook
 /// Illustrates how to use the TH1::FitSlicesY function
 /// It uses the TH2F histogram generated in macro hsimple.C
 /// It invokes FitSlicesY and draw the fitted "mean" and "sigma"
@@ -22,8 +23,8 @@ void fitslicesy() {
    gStyle->SetTitleH(0.1);
 
 // Connect the input file and get the 2-d histogram in memory
-   TString dir = gSystem->UnixPathName(__FILE__);
-   dir.ReplaceAll("fitslicesy.C","../hsimple.C");
+   TString dir = gROOT->GetTutorialsDir();
+   dir.Append("/hsimple.C");
    dir.ReplaceAll("/./","/");
    if (!gInterpreter->IsLoaded(dir.Data())) gInterpreter->LoadMacro(dir.Data());
    TFile *hsimple = (TFile*)gROOT->ProcessLineFast("hsimple(1)");

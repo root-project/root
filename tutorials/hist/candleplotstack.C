@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_hist
+/// \notebook
 /// Example showing how a THStack with candle plot option.
 ///
 /// \macro_image

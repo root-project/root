@@ -1,5 +1,15 @@
 # JSROOT changelog
 
+## Changes in 4.5.3
+1. Fix - position of TFrame in canvas/pad
+2. Fix - use histogram fMinimum/fMaximum when creating color palette
+3. Fix - correctly draw empty th2 bins when zmin<0 is specified  
+4. Fix - limit th2 text output size 
+5. Fix - use histogram fMinimum/fMaximum when drawing z axis in lego plot 
+6. Fix - error in TGeoCtub shape creation
+7. Fix - error in pcon/pgon shapes when Rmin===0 
+
+
 ## Changes in 4.5.1
 1. Fix - correctly handle ^2..^9 in TFormula equations
 2. Fix - support TMath::Gaus in TFormula 

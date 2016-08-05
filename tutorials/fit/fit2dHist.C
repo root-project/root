@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_fit
-/// \notebook -js
+/// \notebook
 ///
 /// Example to fit two histograms at the same time via TVirtualFitter
 ///

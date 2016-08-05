@@ -196,7 +196,7 @@ def split(text):
     """
     #p = re.compile(r'^void\s\w*?\s?\([\w\n=,*\_ ]*\)\s*\{.*?^\}|^int\s\w*?\s?\([\w\n=,*\_ ]*\)\s*\{.*?^\}|^string\s\w*?\s?\([\w\n=,*\_ ]*\)\s*\{.*?^\}|^double\s\w*?\s?\([\w\n=,*\_ ]*\)\s*\{.*?^\}|^float\s\w*?\s?\([\w\n=,*\_ ]*\)\s*\{.*?^\}|^char\s\w*?\s?\([\w\n=,*\_ ]*\)\s*\{.*?^\}|^TCanvas\s\*\w*\(.*?\).*?\{.*?^\}|^TString\s\w*?\s?\([\w\n=,*\_ ]*\)\s*\{.*?^\}|^Double_t\s\w*?\s?\([\w\n=,*\_ ]*\)\s*\{.*?^\}', flags = re.DOTALL | re.MULTILINE)
 
-    p = re.compile(r'(^void|^int|^Int_t|^TF1|^string|^bool|^double|^float|^char|^TCanvas|^TString|^Double_t)\s?\*?\s?\w*?\s?\([^\)]*\)\s*\{.*?^\}', flags = re.DOTALL | re.MULTILINE)
+    p = re.compile(r'(^void|^int|^Int_t|^TF1|^string|^bool|^double|^float|^char|^TCanvas|^TString|^TSeqCollection|^Double_t|^TFile)\s?\*?\s?\w*?\s?\([^\)]*\)\s*\{.*?^\}', flags = re.DOTALL | re.MULTILINE)
     matches = p.finditer(text)
     helpers=[]
     main = ""
@@ -232,7 +232,6 @@ def split(text):
     
 
     rest = rest.rstrip() #remove newlines at the end of string
-    print  "MAIN \n\n\n" , main, "\n\n HELPERS\n\n\n", newhelpers, "\n\nREST\n\n\n",rest
     return main, newhelpers, rest
 
 def processmain(text):
@@ -246,15 +245,13 @@ def processmain(text):
     
     regex = re.compile(r'(?<=\().*?(?=\))',flags = re.DOTALL | re.MULTILINE)
     arguments = regex.search(text)
-    print "\n\nTEXT\n\n" , text , "ENDTEXT"
     if text: 
         if text.startswith("TCanvas") or len(arguments.group())>3: 
             keepfunction = True
-            p = re.compile(r'(?<=(?<=int)|(?<=void)|(?<=TF1)|(?<=Int_t)|(?<=string)|(?<=double)|(?<=float)|(?<=char)|(?<=TString)|(?<=bool)|(?<=TCanvas))\s?\*?\s?[^\s]*?(?=\s?\()',flags = re.DOTALL | re.MULTILINE)
+            p = re.compile(r'(?<=(?<=int)|(?<=void)|(?<=TF1)|(?<=Int_t)|(?<=string)|(?<=double)|(?<=float)|(?<=char)|(?<=TString)|(?<=bool)|(?<=TSeqCollection)|(?<=TCanvas)|(?<=TFile))\s?\*?\s?[^\s]*?(?=\s?\()',flags = re.DOTALL | re.MULTILINE)
 
             match = p.search(text)
             functionname=match.group().strip(" *")
-            print "FUCNITONNAME", functionname
             addition = "\n# <markdowncell> \n# Call the main function \n# <codecell>\n%s();" %functionname
         
     return text, addition, keepfunction 
@@ -417,7 +414,9 @@ def mainfunction(text):
     ## The two commands to create an html version of the notebook and a notebook with the output
     print time.time() - starttime
     #subprocess.call(["jupyter", "nbconvert","--ExecutePreprocessor.timeout=60", "--to=html", "--execute",  outdir+outname])
-    subprocess.call(["jupyter", "nbconvert","--ExecutePreprocessor.timeout=60",  "--to=notebook", "--execute",  outdir+outname])
+    r = subprocess.call(["jupyter", "nbconvert","--ExecutePreprocessor.timeout=90",  "--to=notebook", "--execute",  outdir+outname])
+    if r != 0:
+         sys.stderr.write( "WARNING: Nbconvert failed for notebook %s \n" % outname)
     if jsroot:
         subprocess.call(["jupyter", "trust",  outdir+outnameconverted])
     os.remove(outdir+outname)
