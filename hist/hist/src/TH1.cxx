@@ -8426,7 +8426,10 @@ Double_t TH1::GetBinError(Int_t bin) const
 
 Double_t TH1::GetBinErrorLow(Int_t bin) const
 {
-   if (fBinStatErrOpt == kNormal || fSumw2.fN) return GetBinError(bin);
+   if (fBinStatErrOpt == kNormal) return GetBinError(bin);
+   // in case of weighted histogram check if it is really weighted 
+   if (fSumw2.fN && fTsumw != fTsumw2) return GetBinError(bin); 
+
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
    if (fBuffer) ((TH1*)this)->BufferEmpty();
@@ -8454,7 +8457,9 @@ Double_t TH1::GetBinErrorLow(Int_t bin) const
 
 Double_t TH1::GetBinErrorUp(Int_t bin) const
 {
-   if (fBinStatErrOpt == kNormal || fSumw2.fN) return GetBinError(bin);
+   if (fBinStatErrOpt == kNormal) return GetBinError(bin);
+   // in case of weighted histogram check if it is really weighted 
+   if (fSumw2.fN && fTsumw != fTsumw2) return GetBinError(bin); 
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
    if (fBuffer) ((TH1*)this)->BufferEmpty();
