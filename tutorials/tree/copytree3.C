@@ -19,7 +19,8 @@ void copytree3() {
    gSystem->ExpandPathName(dir);
    if (!gSystem->AccessPathName(dir))
        {oldfile = new TFile("$ROOTSYS/test/Event.root");}
-   else {oldfile = new TFile("./Event.root");}   TTree *oldtree = (TTree*)oldfile->Get("T");
+   else {oldfile = new TFile("./Event.root");}
+   TTree *oldtree = (TTree*)oldfile->Get("T");
    Long64_t nentries = oldtree->GetEntries();
    Event *event   = 0;
    oldtree->SetBranchAddress("event",&event);
