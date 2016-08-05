@@ -925,7 +925,7 @@ static void R__FindTrailing(std::string &full,  /*modified*/
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
-///  Stores in output (after emptying it) the splited type.
+///  Stores in output (after emptying it) the split type.
 ///  Stores the location of the tail (nested names) in nestedLoc (0 indicates no tail).
 ///  Return the number of elements stored.
 ///
