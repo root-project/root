@@ -47,6 +47,9 @@ endif
 ifeq ($(LIBCXX),yes)
 CXX11FLAGS   += -stdlib=libc++
 CXX11LDFLAGS  = -stdlib=libc++
+else
+CXX11FLAGS   += -stdlib=libstdc++
+CXX11LDFLAGS  = -stdlib=libstdc++
 endif
 else
 CXX           = g++

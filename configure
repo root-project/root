@@ -2616,16 +2616,20 @@ fi
 #
 # needs gcc > 4.7.x or clang
 
-# OSX 10.9 only has libc++ with clang so make sure this option is turned on
-if test "x$macosx109" = "xyes" && echo $altcxx | grep 'clang++' > /dev/null 2>&1; then
-    enable_libcxx="yes"
-fi
-if test "x$macosx109" = "xyes" && echo $altcxx | grep 'icc' > /dev/null 2>&1; then
-    enable_libcxx="yes"
-fi
-# iOS 7.0 only has libc++ with clang so make sure this option is turned on
-if test "x$ios7" = "xyes" && echo $altcxx | grep 'clang++' > /dev/null 2>&1; then
-    enable_libcxx="yes"
+if test "x$enable_libcxx_explicit" = "xno"; then
+   enable_libcxx="no"
+else
+   # OSX 10.9 only has libc++ with clang so make sure this option is turned on
+   if test "x$macosx109" = "xyes" && echo $altcxx | grep 'clang++' > /dev/null 2>&1; then
+       enable_libcxx="yes"
+   fi
+   if test "x$macosx109" = "xyes" && echo $altcxx | grep 'icc' > /dev/null 2>&1; then
+       enable_libcxx="yes"
+   fi
+   # iOS 7.0 only has libc++ with clang so make sure this option is turned on
+   if test "x$ios7" = "xyes" && echo $altcxx | grep 'clang++' > /dev/null 2>&1; then
+       enable_libcxx="yes"
+   fi
 fi
 
 uselibcxx="undef"
@@ -6584,8 +6588,13 @@ fi
 #
 message "Checking whether to build libRooFit"
 if test "x$enable_roofit" = "xyes" || test ! "x$ROOFIT" = "x"; then
-    enable_roofit="yes"
-    result "yes"
+    if test "x$enable_libcxx" = "xno" && test "x$platform" = "xmacosx"; then
+        enable_roofit=""
+        result "no"
+    else
+        enable_roofit="yes"
+        result "yes"
+    fi
 else
     enable_roofit=""
     result "no"

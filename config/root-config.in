@@ -468,6 +468,7 @@ freebsd* | openbsd* | linux*)
    done
    ;;
 macosx*)
+   setlibcxx="no"
    for f in $features ; do
       if test "x$f" = "xthread" ; then
          if [ $macosx_minor -ge 5 ]; then
@@ -492,8 +493,13 @@ macosx*)
       if test "x$f" = "xlibcxx" ; then
          auxcflags="-stdlib=libc++ $auxcflags"
          auxlibs="-stdlib=libc++ $auxlibs"
+         setlibcxx="yes"
       fi
    done
+   if test "x$setlibcxx" = "xno" ; then
+      auxcflags="-stdlib=libstdc++ $auxcflags"
+      auxlibs="-stdlib=libstdc++ $auxlibs"
+   fi
    ;;
 hpuxacc | hpuxia64acc)
    for f in $features ; do
