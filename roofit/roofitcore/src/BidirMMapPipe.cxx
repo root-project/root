@@ -1589,7 +1589,6 @@ int simplechild(BidirMMapPipe& pipe)
 	if (pipe.eof()) break;
 	if (!str.empty()) {
 	    std::cout << "[CHILD] :  read: " << str << std::endl;
-	    if (BidirMMapPipe::debugflag() && !msgprinted) {
 	    str = "... early in the morning?";
 	}
 	pipe << str << BidirMMapPipe::flush;
