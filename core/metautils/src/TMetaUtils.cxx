@@ -3905,6 +3905,142 @@ void ROOT::TMetaUtils::GetNormalizedName(std::string &norm_name,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// Perhaps if this can be accomplished instantiating a template with cling itself?
+// The issue is how to follow templates such as maps with two arguments.
+
+class NameCleanerForIO {
+   std::string fName;
+   std::vector<std::unique_ptr<NameCleanerForIO>> fArgumentNodes = {};
+   NameCleanerForIO* fMother;
+   ROOT::ESTLType IsMotherSTLCont()
+   {
+      if (!fMother) return ROOT::kNotSTL;
+      return TClassEdit::IsSTLCont(fMother->fName+"<>");
+   }
+
+public:
+   NameCleanerForIO(const std::string& templateInstanceName = "",
+                    TClassEdit::EModType mode = TClassEdit::kNone,
+                    NameCleanerForIO* mother = nullptr):fMother(mother)
+   {
+      if (templateInstanceName.back() != '>') {
+         fName = templateInstanceName;
+         return;
+      }
+      std::vector<std::string> v;
+      int dummy=0;
+      TClassEdit::GetSplit(templateInstanceName.c_str(), v, dummy, mode);
+      fName = v.front();
+      unsigned int nargs = v.size() - 2;
+      for (unsigned int i=0;i<nargs;++i) {
+         fArgumentNodes.emplace_back(new NameCleanerForIO(v[i+1],mode,this));
+      }
+   }
+
+   std::string ToString()
+   {
+
+      std::string name(fName);
+
+      // We have in hands a case like unique_ptr< ... >
+      // Perhaps we could treat atomics as well like this?
+      if (!fMother && TClassEdit::IsUniquePtr(fName+"<")) {
+         name = fArgumentNodes.front()->ToString();
+         return name;
+      }
+
+      // Now we treat the case of the collections of unique ptrs
+      auto stlContType = IsMotherSTLCont();
+      if (stlContType != ROOT::kNotSTL && TClassEdit::IsUniquePtr(fName+"<")) {
+         name = fArgumentNodes.front()->ToString();
+         name += "*";
+         return name;
+      }
+
+      if (fArgumentNodes.empty()) return name;
+
+      name += "<";
+      for (auto& node : fArgumentNodes) {
+         name += node->ToString() + ",";
+      }
+      name.pop_back(); // Remove the last comma.
+      name += name.back() == '>' ? " >" : ">"; // Respect name normalisation
+
+      return name;
+   }
+
+   void Print(const std::string& indent = ""){
+      std::cout << indent << "* " << fName << " " << this << " with " << fArgumentNodes.size() << " arguments and mother " << fMother << std::endl;
+      for (auto& node : fArgumentNodes) {
+         std::string indent2(indent+"   ");
+         node->Print(indent2);
+      }
+   }
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::string ROOT::TMetaUtils::GetNameForIO(const std::string& templateInstanceName,
+                                             TClassEdit::EModType mode)
+{
+   NameCleanerForIO node(templateInstanceName, mode);
+   auto nameForIO = node.ToString();
+   if (ROOT::TMetaUtils::GetErrorIgnoreLevel() <= ROOT::TMetaUtils::kNote &&
+       nameForIO != templateInstanceName) {
+      ROOT::TMetaUtils::Info("GetNameForIO",
+                             "Name transformed: %s -> %s\n",
+                             templateInstanceName.c_str(),
+                             nameForIO.c_str());
+    }
+    return nameForIO;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+std::pair<std::string,clang::QualType>
+ROOT::TMetaUtils::GetNameTypeForIO(const clang::QualType& thisType,
+                                   const cling::Interpreter &interpreter,
+                                   const TNormalizedCtxt &normCtxt,
+                                   TClassEdit::EModType mode)
+{
+   std::string thisTypeName;
+   GetNormalizedName(thisTypeName, thisType, interpreter, normCtxt );
+   auto thisTypeNameForIO = ROOT::TMetaUtils::GetNameForIO(thisTypeName);
+   auto& lookupHelper = interpreter.getLookupHelper();
+
+   const clang::Type* typePtrForIO;
+   lookupHelper.findScope(thisTypeNameForIO,
+                          cling::LookupHelper::DiagSetting::NoDiagnostics,
+                          &typePtrForIO);
+   clang::QualType typeForIO(typePtrForIO,0);
+
+   // Check if this is a class. Indeed it could well be a POD
+   if (!typeForIO->isRecordType()) {
+      return std::make_pair(thisTypeNameForIO,typeForIO);
+   }
+
+   auto thisDeclForIO = typeForIO->getAsCXXRecordDecl();
+   if (!thisDeclForIO) {
+      std::string err = "The type for IO corresponding to ";
+      err += thisTypeName + " is " + thisTypeNameForIO + " and it could not be found in the AST.\n";
+      ROOT::TMetaUtils::Error("ROOT::TMetaUtils::GetTypeForIO",
+                              err.c_str());
+      return std::make_pair(thisTypeName,thisType);
+   }
+
+   return std::make_pair(thisTypeNameForIO,typeForIO);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+clang::QualType ROOT::TMetaUtils::GetTypeForIO(const clang::QualType& thisType,
+                                               const cling::Interpreter &interpreter,
+                                               const TNormalizedCtxt &normCtxt,
+                                               TClassEdit::EModType mode)
+{
+   return GetNameTypeForIO(thisType, interpreter, normCtxt, mode).second;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 std::string ROOT::TMetaUtils::GetROOTIncludeDir(bool rootbuild)
 {
