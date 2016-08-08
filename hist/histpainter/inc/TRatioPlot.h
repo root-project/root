@@ -24,6 +24,7 @@
 #include "TH1.h"
 #include "TPad.h"
 #include "TGraphAsymmErrors.h"
+#include "TGraphErrors.h"
 #include "TGraph.h"
 #include "TAxis.h"
 #include "TGaxis.h"
@@ -67,6 +68,9 @@ protected:
    Float_t fSplitFraction = 0.3;
 
    TGraph *fRatioGraph;
+   TGraphAsymmErrors *fConfidenceIntervals = 0;
+
+
    TAxis *fSharedXAxis;
    TGaxis *fUpperGXaxis;
    TGaxis *fLowerGXaxis;
@@ -79,6 +83,10 @@ protected:
 
    TAxis *fUpYaxis;
    TAxis *fLowYaxis;
+
+   TLine *fGridline = 0;
+   Bool_t fShowGridline = kTRUE;
+
 
    // store y axis ranges so we can trigger redraw when they change
    Double_t fUpYFirst = -1;
