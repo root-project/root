@@ -55,13 +55,26 @@ void ROOT::Internal::RStl::GenerateTClassFor(const clang::QualType &type, const 
 {
    // Force the generation of the TClass for the given class.
 
-   const clang::CXXRecordDecl *stlclass = type.getTypePtr()->getAsCXXRecordDecl();
-   if (stlclass == 0) {
+   clang::QualType thisType = type;
+
+   auto typePtr = thisType.getTypePtr();
+   const clang::CXXRecordDecl *stlclass = typePtr->getAsCXXRecordDecl();
+   if (!stlclass) {
       return;
    }
+
+   // Transform the type to the corresponding one for IO
+   auto typeForIO = ROOT::TMetaUtils::GetTypeForIO(thisType, interp, normCtxt);
+   if (typeForIO.getTypePtr() != typePtr)
+      stlclass = typeForIO->getAsCXXRecordDecl();
+   if (!stlclass) {
+      return;
+   }
+   thisType = typeForIO;
+
    const clang::ClassTemplateSpecializationDecl *templateCl = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(stlclass);
 
-   if (templateCl == 0) {
+   if (!templateCl) {
       ROOT::TMetaUtils::Error("RStl::GenerateTClassFor","%s not in a template",
             ROOT::TMetaUtils::GetQualifiedName(*stlclass).c_str());
    }
@@ -80,7 +93,17 @@ void ROOT::Internal::RStl::GenerateTClassFor(const clang::QualType &type, const 
       }
    }
 
-   fList.insert( ROOT::TMetaUtils::AnnotatedRecordDecl(++fgCount,type.getTypePtr(),stlclass,"",false /* for backward compatibility rather than 'true' .. neither really make a difference */,false,false,false,-1, interp, normCtxt) );
+   fList.insert( ROOT::TMetaUtils::AnnotatedRecordDecl(++fgCount,
+                                                       thisType.getTypePtr(),
+                                                       stlclass,
+                                                       "",
+                                                       false /* for backward compatibility rather than 'true' .. neither really make a difference */,
+                                                       false,
+                                                       false,
+                                                       false,
+                                                       -1,
+                                                       interp,
+                                                       normCtxt) );
 
    // fprintf(stderr,"Registered the STL class %s as needing a dictionary\n",R__GetQualifiedName(*stlclass).c_str());
 
@@ -107,7 +130,7 @@ void ROOT::Internal::RStl::GenerateTClassFor(const clang::QualType &type, const 
 void ROOT::Internal::RStl::GenerateTClassFor(const char *requestedName, const clang::CXXRecordDecl *stlclass, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
 {
    // Force the generation of the TClass for the given class.
-
+   ROOT::TMetaUtils::Warning("","Hello\n");
    const clang::ClassTemplateSpecializationDecl *templateCl = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(stlclass);
 
    if (templateCl == 0) {
