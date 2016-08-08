@@ -715,3 +715,9 @@ Released on July 6, 2016
 ## HEAD of the v6-06-00-patches branch
 
 Changes will be part of the future 6.06/08
+
+### Hist
+
+* Resolved issues with inconsistent handling of the 'gaus' function in TFormula [[ROT-8105]]
+
+
