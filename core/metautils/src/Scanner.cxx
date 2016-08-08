@@ -898,12 +898,35 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
             return true;
          }
 
-         const std::string& name_value = selected->GetAttributeName();
+         // Replace on the fly the type if the type for IO is different for example
+         // in presence of unique_ptr<T> or collections thereof.
+         // The following lines are very delicate: we need to preserve the special
+         // ROOT opaque typedefs.
+         clang::QualType thisType(selected->GetRequestedType(), 0);
+         std::string attr_name = selected->GetAttributeName().c_str();
+         if (llvm::isa<clang::ClassTemplateSpecializationDecl>(recordDecl)) {
+            auto nameTypeForIO = ROOT::TMetaUtils::GetNameTypeForIO(thisType, fInterpreter, fNormCtxt);
+            auto typeForIO = nameTypeForIO.second;
+            // It could be that we have in hands a type which is not a class, e.g.
+            // in presence of unique_ptr<T> we got a T with T=double.
+            if (!typeForIO->isRecordType()) return true;
+
+            if (typeForIO.getTypePtr() != thisType.getTypePtr()){
+               if (auto recordDeclForIO = typeForIO->getAsCXXRecordDecl()) {
+                  fDeclSelRuleMap.erase(fDeclSelRuleMap.find(recordDecl->getCanonicalDecl()));
+                  recordDecl = recordDeclForIO;
+                  fDeclSelRuleMap[recordDecl]=selected;
+                  thisType = typeForIO;
+                  attr_name = nameTypeForIO.first;
+               }
+            }
+         }
+
          if (selected->HasAttributeName()) {
             ROOT::TMetaUtils::AnnotatedRecordDecl annRecDecl(selected->GetIndex(),
-                                                            selected->GetRequestedType(),
+                                                            thisType.getTypePtr(),
                                                             recordDecl,
-                                                            name_value.c_str(),
+                                                            attr_name.c_str(),
                                                             selected->RequestStreamerInfo(),
                                                             selected->RequestNoStreamer(),
                                                             selected->RequestNoInputOperator(),
