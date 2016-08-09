@@ -31,9 +31,13 @@ template <typename Architecture>
 {
    using Matrix_t = typename Architecture::Matrix_t;
    using Net_t    = TNet<Architecture>;
+  
+   size_t nSamples  = 100000;
+   size_t nFeatures = 20;
+   size_t batchSize = 1000;
 
-   TMatrixT<Double_t> XTrain(4000,20), YTrain(4000,20), XTest(20,20),
-       YTest(20,20), W(20, 20);
+   TMatrixT<Double_t> XTrain(nSamples, nFeatures), YTrain(nSamples, 1),
+    XTest(batchSize, nFeatures), YTest(batchSize, 1), W(1, nFeatures);
 
    randomMatrix(W);
    randomMatrix(XTrain);
@@ -41,27 +45,18 @@ template <typename Architecture>
    YTrain.MultT(XTrain, W);
    YTest.MultT(XTest, W);
 
-   Net_t net(20, 20, ELossFunction::MEANSQUAREDERROR);
-   net.AddLayer(100, EActivationFunction::IDENTITY);
-   net.AddLayer(100, EActivationFunction::IDENTITY);
-   net.AddLayer(20, EActivationFunction::IDENTITY);
+   Net_t net(batchSize, nFeatures, ELossFunction::MEANSQUAREDERROR);
+   net.AddLayer(1000, EActivationFunction::TANH);
+   net.AddLayer(1000, EActivationFunction::TANH);
+   net.AddLayer(1000, EActivationFunction::TANH);
+   net.AddLayer(1, EActivationFunction::IDENTITY);
    net.Initialize(EInitialization::GAUSS);
 
-   TGradientDescent<Architecture> minimizer(0.00001, 5, 10);
+   TGradientDescent<Architecture> minimizer(0.000001, 1, 10);
    MatrixInput_t trainingData(XTrain, YTrain);
    MatrixInput_t testData(XTest, YTest);
-   minimizer.Train(trainingData, 4000, testData, 20, net, 1);
+   minimizer.Train(trainingData, nSamples, testData, batchSize, net, 4);
 
-   Matrix_t I(20,20); identityMatrix(I);
-
-   net.Forward(I);
-
-   TMatrixT<Double_t> WT(20, 20);
-   WT.Transpose(W);
-
-   auto error = maximumRelativeError((TMatrixT<Double_t>) net.GetOutput(), WT);
-   std::cout << "Maximum relative error: " << error << std::endl;
-
-   return error;
+   return 0.0;
 }
 
