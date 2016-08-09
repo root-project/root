@@ -12,6 +12,7 @@
 #define TMVA_DNN_MINIMIZERS
 
 #include "DataLoader.h"
+#include <chrono>
 
 namespace TMVA {
 namespace DNN {
@@ -186,8 +187,13 @@ template <typename Data_t, typename Net_t>
        }
    }
 
+   std::chrono::time_point<std::chrono::system_clock> start, end;
+   start = std::chrono::system_clock::now();
+
    while (!converged)
    {
+      fStepCount++;
+
       size_t netIndex = 0;
       for (auto b : trainLoader) {
          // Perform minimization step.
@@ -199,6 +205,13 @@ template <typename Data_t, typename Net_t>
 
       // Compute test error.
       if ((fStepCount % fTestInterval) == 0) {
+         end   = std::chrono::system_clock::now();
+         std::chrono::duration<double> elapsed_seconds = end - start;
+         start = std::chrono::system_clock::now();
+         double seconds = elapsed_seconds.count();
+         std::cout << "Elapsed time for " << fTestInterval << " Epochs: "
+                   << seconds << " [s] => " << net.GetNFlops() * 1e-6 / seconds
+                   << " GFlop/s" << std::endl;
          auto b = *testLoader.begin();
          auto inputMatrix  = b.GetInput();
          auto outputMatrix = b.GetOutput();
@@ -207,7 +220,7 @@ template <typename Data_t, typename Net_t>
          std::cout << fStepCount << ": " << loss << std::endl;
          converged = HasConverged();
       }
-      fStepCount++;
+
    }
    return fMinimumError;
 }
