@@ -48,10 +48,10 @@ template <typename Architecture>
    net.AddLayer(20, EActivationFunction::IDENTITY);
    net.Initialize(EInitialization::GAUSS);
 
-   TGradientDescent<Architecture> minimizer(0.001, 20, 20);
+   TGradientDescent<Architecture> minimizer(0.00001, 5, 10);
    MatrixInput_t trainingData(XTrain, YTrain);
    MatrixInput_t testData(XTest, YTest);
-   minimizer.Train(trainingData, 4000, testData, 20, net);
+   minimizer.Train(trainingData, 4000, testData, 20, net, 1);
 
    Matrix_t I(20,20); identityMatrix(I);
 

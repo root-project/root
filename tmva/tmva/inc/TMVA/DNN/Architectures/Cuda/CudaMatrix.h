@@ -29,6 +29,7 @@
 #include "TMatrixT.h"
 
 #include "Types.h"
+#include "Buffers.h"
 
 #define CUDACHECK(ans) {cudaError((ans), __FILE__, __LINE__); }
 
@@ -144,65 +145,42 @@ private:
    static size_t          fInstances;    ///< Number of existing TCudaMatrix instances.
    static cublasHandle_t  fCublasHandle;
    static CudaDouble_t  * fDeviceReturn; ///< Buffer for kernel return values.
-   static cudaStream_t    fComputeStream; ///< Stream used for running the neural
    static curandState_t * fCurandStates;
    static size_t          fNCurandStates;
 
-   cudaStream_t  fDataStream;
-   size_t         fNRows, fNCols;
-   CudaDouble_t * fDeviceData;
-   bool fOwner; ///< Indicates whether matrix owns memory or not.
+   size_t            fNRows;
+   size_t            fNCols;
+   TCudaDeviceBuffer fElementBuffer;
 
 public:
-
-   /** Desctructor frees memory if owned by this matrix. */
-   ~TCudaMatrix()
-   {
-      fInstances--;
-      if (fDeviceData && fOwner) {
-         cudaFree(fDeviceData);
-      }
-      /*        if (fInstances == 0) */
-      /*            cudaDeviceReset(); */
-   }
-
-   /** Return the compute stream in which matrix operations are performed.
-    *   The same for all instances. */
-   inline static cudaStream_t GetComputeStream() {return fComputeStream;}
-
-   /** Set the return buffer on the device to the specified value. This is
-    * required for example for reductions in order to initialize the
-    * accumulator. */
-   inline static void ResetDeviceReturn(CudaDouble_t value = 0.0)
-   {
-      CudaDouble_t buffer = value;
-      cudaMemcpy(fDeviceReturn, & buffer, sizeof(CudaDouble_t),
-                 cudaMemcpyHostToDevice);
-   }
-
-   /** Transfer the value in the device return buffer to the host. */
-   inline static CudaDouble_t GetDeviceReturn()
-   {
-      CudaDouble_t buffer;
-      cudaMemcpy(& buffer, fDeviceReturn, sizeof(CudaDouble_t),
-                 cudaMemcpyDeviceToHost);
-      return buffer;
-   }
-
-   /** Return device pointer to the device return buffer */
-   inline static CudaDouble_t *  GetDeviceReturnPointer() {return fDeviceReturn;}
-   inline static curandState_t * GetCurandStatesPointer() {return fCurandStates;}
 
    TCudaMatrix();
    TCudaMatrix(size_t i, size_t j);
    TCudaMatrix(const TMatrixT<CudaDouble_t> &);
-   TCudaMatrix(CudaDouble_t * deviceData,
-               size_t m, size_t n,
-               cudaStream_t dataStream);
+   TCudaMatrix(TCudaDeviceBuffer buffer, size_t m, size_t n);
 
-   TCudaMatrix(const TCudaMatrix &) = delete;
-   TCudaMatrix(TCudaMatrix && A);
+   TCudaMatrix(const TCudaMatrix  &) = default;
+   TCudaMatrix(      TCudaMatrix &&) = default;
+   TCudaMatrix & operator=(const TCudaMatrix  &) = default;
+   TCudaMatrix & operator=(      TCudaMatrix &&) = default;
+   ~TCudaMatrix() = default;
 
+   /** Return the compute stream associated with this matrix */
+   inline cudaStream_t GetComputeStream() const;
+   inline void         SetComputeStream(cudaStream_t stream);
+   /** Blocking synchronization with the associated compute stream, if it's
+    * not the default stream. */
+   inline void Synchronize(const TCudaMatrix &) const;
+   /** Set the return buffer on the device to the specified value. This is
+    * required for example for reductions in order to initialize the
+    * accumulator. */
+   inline static void ResetDeviceReturn(CudaDouble_t value = 0.0);
+   /** Transfer the value in the device return buffer to the host. */
+   inline static CudaDouble_t GetDeviceReturn();
+
+   /** Return device pointer to the device return buffer */
+   inline static CudaDouble_t *  GetDeviceReturnPointer() {return fDeviceReturn;}
+   inline static curandState_t * GetCurandStatesPointer() {return fCurandStates;}
 
    /** Convert cuda matrix to Root TMatrix. */
    operator TMatrixT<CudaDouble_t>() const;
@@ -213,8 +191,8 @@ public:
    size_t GetNrows() const {return fNRows;}
    size_t GetNcols() const {return fNCols;}
    size_t GetNoElements() const {return fNRows * fNCols;}
-   const CudaDouble_t *       GetDataPointer() const {return fDeviceData;}
-   CudaDouble_t *       GetDataPointer()       {return fDeviceData;}
+   const CudaDouble_t * GetDataPointer() const {return fElementBuffer;}
+   CudaDouble_t *       GetDataPointer()       {return fElementBuffer;}
    const cublasHandle_t & GetCublasHandle() const    {return fCublasHandle;}
 
    /** Access to elements of device matrices provided through TCudaDeviceReference
@@ -222,13 +200,10 @@ public:
     *  on all streams. Only used for testing. */
    TCudaDeviceReference operator()(size_t i, size_t j) const
    {
-      CudaDouble_t * elementPointer = fDeviceData + j * fNRows + i;
+      CudaDouble_t * elementPointer = fElementBuffer;
+      elementPointer += j * fNRows + i;
       return TCudaDeviceReference(elementPointer);
    }
-
-   /** Get the data stream which executes the memory transfer for this
-    *  matrix. */
-   cudaStream_t GetDataStream()    const {return fDataStream;}
 
 private:
 
@@ -236,6 +211,46 @@ private:
    void InitializeCurandStates();
 
 };
+
+//
+// Inline Functions.
+//______________________________________________________________________________
+inline cudaStream_t TCudaMatrix::GetComputeStream() const
+{
+   return fElementBuffer.GetComputeStream();
+}
+
+//______________________________________________________________________________
+inline void TCudaMatrix::SetComputeStream(cudaStream_t stream)
+{
+   return fElementBuffer.SetComputeStream(stream);
+}
+
+//______________________________________________________________________________
+inline void TCudaMatrix::Synchronize(const TCudaMatrix &A) const {
+   cudaEvent_t event;
+   cudaEventCreateWithFlags(&event, cudaEventDisableTiming);
+   cudaEventRecord(event, A.GetComputeStream());
+   cudaStreamWaitEvent(fElementBuffer.GetComputeStream(), event, 0);
+   cudaEventDestroy(event);
+}
+
+//______________________________________________________________________________
+inline void TCudaMatrix::ResetDeviceReturn(CudaDouble_t value)
+{
+   CudaDouble_t buffer = value;
+   cudaMemcpy(fDeviceReturn, & buffer, sizeof(CudaDouble_t),
+              cudaMemcpyHostToDevice);
+}
+
+//______________________________________________________________________________
+inline CudaDouble_t TCudaMatrix::GetDeviceReturn()
+{
+   CudaDouble_t buffer;
+   cudaMemcpy(& buffer, fDeviceReturn, sizeof(CudaDouble_t),
+              cudaMemcpyDeviceToHost);
+   return buffer;
+}
 
 } // namespace DNN
 } // namespace TMVA

@@ -24,14 +24,16 @@ namespace DNN
 {
 
 //______________________________________________________________________________
-void TCuda::IdentityDerivative(TCudaMatrix & A)
+void TCuda::IdentityDerivative(TCudaMatrix & B, const TCudaMatrix & A)
 {
    dim3 blockDims = TDevice::BlockDims();
-   dim3 gridDims  = TDevice::GridDims(A);
+   dim3 gridDims  = TDevice::GridDims(B);
    cudaStream_t s = A.GetComputeStream();
-   ::TMVA::DNN::Cuda::IdentityDerivative<<<gridDims, blockDims, 0, s>>>(A.GetDataPointer(),
-                                                                  (int) A.GetNrows(),
-                                                                  (int) A.GetNcols());
+   ::TMVA::DNN::Cuda::IdentityDerivative<<<gridDims, blockDims, 0, s>>>(
+       B.GetDataPointer(),
+       (int) B.GetNrows(),
+       (int) B.GetNcols());
+   B.SetComputeStream(s);
 }
 
 //______________________________________________________________________________
@@ -56,6 +58,7 @@ void TCuda::ReluDerivative(TCudaMatrix & B, const TCudaMatrix & A)
        A.GetDataPointer(),
        (int) A.GetNrows(),
        (int) A.GetNcols());
+   B.SetComputeStream(s);
 }
 
 //______________________________________________________________________________
@@ -81,6 +84,7 @@ void TCuda::SigmoidDerivative(TCudaMatrix & B, const TCudaMatrix & A)
        A.GetDataPointer(),
        (int) A.GetNrows(),
        (int) A.GetNcols());
+   B.SetComputeStream(s);
 }
 
 //______________________________________________________________________________
@@ -106,6 +110,7 @@ void TCuda::TanhDerivative(TCudaMatrix & B, const TCudaMatrix & A)
        A.GetDataPointer(),
        (int) A.GetNrows(),
        (int) A.GetNcols());
+   B.SetComputeStream(s);
 }
 
 //______________________________________________________________________________
@@ -130,6 +135,7 @@ void TCuda::SymmetricReluDerivative(TCudaMatrix & B, const TCudaMatrix & A)
        A.GetDataPointer(),
        (int) A.GetNrows(),
        (int) A.GetNcols());
+   B.SetComputeStream(s);
 }
 
 //______________________________________________________________________________
@@ -155,6 +161,7 @@ void TCuda::SoftSignDerivative(TCudaMatrix & B, const TCudaMatrix & A)
        A.GetDataPointer(),
        (int) A.GetNrows(),
        (int) A.GetNcols());
+   B.SetComputeStream(s);
 }
 
 //______________________________________________________________________________
@@ -180,6 +187,7 @@ void TCuda::GaussDerivative(TCudaMatrix & B, const TCudaMatrix & A)
        A.GetDataPointer(),
        (int) A.GetNrows(),
        (int) A.GetNcols());
+   B.SetComputeStream(s);
 }
 
 } // namespace DNN

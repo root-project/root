@@ -24,7 +24,8 @@ namespace DNN
 
 //______________________________________________________________________________
 template<typename Real_t>
-void TReference<Real_t>::IdentityDerivative(TMatrixT<Real_t> & B)
+void TReference<Real_t>::IdentityDerivative(TMatrixT<Real_t> & B,
+                                            const TMatrixT<Real_t> &A)
 {
    size_t m,n;
    m = B.GetNrows();

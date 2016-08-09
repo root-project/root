@@ -24,7 +24,8 @@ void TCuda::Dropout(TCudaMatrix &A, CudaDouble_t dropoutProbability)
 {
    dim3 blockDims = TDevice::BlockDims();
    dim3 gridDims  = TDevice::GridDims(A);
-   ::TMVA::DNN::Cuda::Dropout<<<gridDims, blockDims>>>(
+   cudaStream_t s = A.GetComputeStream();
+   ::TMVA::DNN::Cuda::Dropout<<<gridDims, blockDims, 0, s>>>(
        A.GetDataPointer(),
        (int) A.GetNrows(),
        (int) A.GetNcols(),

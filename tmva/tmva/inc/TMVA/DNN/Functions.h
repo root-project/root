@@ -112,7 +112,7 @@ inline void evaluateDerivative(typename Architecture_t::Matrix_t & B,
 {
     switch(f)
     {
-    case EActivationFunction::IDENTITY : Architecture_t::IdentityDerivative(B);
+    case EActivationFunction::IDENTITY : Architecture_t::IdentityDerivative(B, A);
         break;
     case EActivationFunction::RELU     : Architecture_t::ReluDerivative(B, A);
         break;

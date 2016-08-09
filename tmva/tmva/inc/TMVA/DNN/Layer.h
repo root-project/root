@@ -19,6 +19,7 @@
 
 #include <iostream>
 
+#include "TMatrix.h"
 #include "Functions.h"
 
 namespace TMVA
@@ -80,6 +81,7 @@ public:
           size_t             Width,
           EActivationFunction f,
           Scalar_t           dropoutProbability);
+   TLayer(const TLayer &);
 
    /*! Initialize fWeights according to the given initialization
     *  method. */
@@ -234,6 +236,23 @@ template<typename Architecture_t>
 
 //______________________________________________________________________________
 template<typename Architecture_t>
+TLayer<Architecture_t>::TLayer(const TLayer &layer)
+    : fBatchSize(layer.fBatchSize),
+    fInputWidth(layer.fInputWidth), fWidth(layer.fWidth),
+    fWeights(layer.fWidth, layer.fInputWidth), fBiases(layer.fWidth, 1),
+    fOutput(layer.fBatchSize, layer.fWidth),
+    fDerivatives(layer.fBatchSize, layer.fWidth),
+    fWeightGradients(layer.fWidth, layer.fInputWidth),
+    fBiasGradients(layer.fWidth, 1),
+    fActivationGradients(layer.fBatchSize, layer.fWidth),
+    fF(layer.fF)
+{
+    std::cout << "Copy const. " << std::endl;
+   // Nothing to do here.
+}
+
+//______________________________________________________________________________
+template<typename Architecture_t>
 auto TLayer<Architecture_t>::Initialize(EInitialization m)
 -> void
 {
@@ -281,8 +300,19 @@ template<typename Architecture_t>
    void TLayer<Architecture_t>::Print() const
 {
    std::cout << "Width: " << fWeights.GetNrows();
+   std::cout << "Biases: " << std::endl;
+   ((TMatrixT<Double_t>) fBiases).Print();
+   std::cout << "Weights: " << std::endl;
+   ((TMatrixT<Double_t>) fWeights).Print();
    std::cout << ", activation function: ";
    std::cout << static_cast<int>(fF) << std::endl;
+   ((TMatrixT<Double_t>) fOutput).Print();
+   std::cout << "weight gradients: " << std::endl;
+   ((TMatrixT<Double_t>) fWeightGradients).Print();
+   std::cout << "bias gradients: " << std::endl;
+   ((TMatrixT<Double_t>) fBiasGradients).Print();
+
+//   ((TMatrixT<Double_t>) fBiases).Print();
 }
 
 //______________________________________________________________________________

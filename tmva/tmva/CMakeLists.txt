@@ -35,9 +35,11 @@ set(headers4 TNeuron.h TSynapse.h TActivationChooser.h TActivation.h TActivation
 	     TNeuronInputSqSum.h TNeuronInputAbs.h Types.h Ranking.h RuleFit.h RuleFitAPI.h IMethod.h MsgLogger.h
 	     VariableTransformBase.h VariableIdentityTransform.h VariableDecorrTransform.h VariablePCATransform.h 
 	     VariableGaussTransform.h VariableNormalizeTransform.h VariableRearrangeTransform.h VariableTransform.h ROCCalc.h ROCCurve.h)
-set(dnn_files src/DNN/Architectures/Reference.cxx src/DNN/Architectures/Reference/DataLoader.cxx)
+set(dnn_files src/DNN/Architectures/Reference.cxx
+  src/DNN/Architectures/Reference/DataLoader.cxx)
 set(dnn_cuda_files src/DNN/Architectures/Cuda/ActivationFunctions.cu
                    src/DNN/Architectures/Cuda/Arithmetic.cu
+                   src/DNN/Architectures/Cuda/Buffers.cxx
                    src/DNN/Architectures/Cuda/CudaMatrix.cu
                    src/DNN/Architectures/Cuda/DataLoader.cu
                    src/DNN/Architectures/Cuda/Dropout.cu

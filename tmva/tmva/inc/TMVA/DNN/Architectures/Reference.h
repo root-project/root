@@ -105,7 +105,8 @@ public:
     */
    ///@{
    static void Identity(TMatrixT<Real_t> & B);
-   static void IdentityDerivative(TMatrixT<Real_t> & B);
+   static void IdentityDerivative(TMatrixT<Real_t> & B,
+                                  const TMatrixT<Real_t> & A);
 
    static void Relu(TMatrixT<Real_t> & B);
    static void ReluDerivative(TMatrixT<Real_t> & B,

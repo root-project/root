@@ -81,4 +81,9 @@ if (CUDA_FOUND)
   TARGET_LINK_LIBRARIES(testArithmeticCuda ${Libraries} dnn_cuda
     ${CUDA_CUBLAS_LIBRARIES})
   ROOT_ADD_TEST(TMVA-DNN-ArithmeticCuda COMMAND testArithmeticCuda)
+
+  # DNN - Arithmetic Cuda
+  CUDA_ADD_EXECUTABLE(testDataLoaderCuda TestDataLoaderCuda.cxx)
+  TARGET_LINK_LIBRARIES(testDataLoaderCuda ${Libraries} dnn_cuda
+    ${CUDA_CUBLAS_LIBRARIES})
 endif (CUDA_FOUND)

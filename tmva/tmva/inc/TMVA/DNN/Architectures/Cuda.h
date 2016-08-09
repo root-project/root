@@ -25,8 +25,10 @@
 
 #include "Cuda/Types.h"
 #include "Cuda/Kernels.h"
+#include "Cuda/Buffers.h"
 #include "Cuda/DataLoader.h"
 #include "Cuda/CudaMatrix.h"
+#include "TMVA/DNN/DataLoader.h"
 
 
 namespace TMVA
@@ -56,11 +58,12 @@ private:
 
 public:
 
-    using Scalar_t   = CudaDouble_t;
-    using Matrix_t   = TCudaMatrix;
-
-    template<typename Data_t>
-    using DataLoader_t = TCudaDataLoader<Data_t>;
+    using Scalar_t       = CudaDouble_t;
+    using Matrix_t       = TCudaMatrix;
+    using DeviceBuffer_t = TCudaDeviceBuffer;
+    using HostBuffer_t   = TCudaHostBuffer;
+    template <typename Data_t>
+    using DataLoader_t   = TCudaDataLoader<Data_t>;
 
    //____________________________________________________________________________
    //
@@ -108,6 +111,9 @@ public:
    static void ScaleAdd(TCudaMatrix & A,
                         const TCudaMatrix & B,
                         Scalar_t beta = 1.0);
+
+   static void Copy(TCudaMatrix & B,
+                    const TCudaMatrix & A);
    ///@}
 
    //____________________________________________________________________________
@@ -123,7 +129,8 @@ public:
     */
    ///@{
    static void Identity(TCudaMatrix & B);
-   static void IdentityDerivative(TCudaMatrix & B);
+   static void IdentityDerivative(TCudaMatrix & B,
+                                  const TCudaMatrix & A);
 
    static void Relu(TCudaMatrix & B);
    static void ReluDerivative(TCudaMatrix & B,

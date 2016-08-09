@@ -15,6 +15,7 @@
  /////////////////////////////////////////////////////////////
 
 #include "TRandom.h"
+#include "TMatrix.h"
 #include "TMVA/DNN/Architectures/Cuda.h"
 
 namespace TMVA
@@ -31,14 +32,16 @@ void TCuda<doProfiling>::InitializeGauss(TCudaMatrix & A)
    n = A.GetNcols();
 
    TRandom rand(time(nullptr));
+   TMatrixT<CudaDouble_t> B(m, n);
 
    Real_t sigma = sqrt(2.0 / ((Real_t) n));
 
    for (size_t i = 0; i < m; i++) {
       for (size_t j = 0; j < n; j++) {
-         A(i,j) = rand.Gaus(0.0, sigma);
+         B(i,j) = rand.Gaus(0.0, sigma);
       }
    }
+   A = B;
 }
 
 //______________________________________________________________________________
@@ -50,14 +53,16 @@ void TCuda<doProfiling>::InitializeUniform(TCudaMatrix & A)
    n = A.GetNcols();
 
    TRandom rand(time(nullptr));
+   TMatrixT<CudaDouble_t> B(m, n);
 
    Real_t range = sqrt(2.0 / ((Real_t) n));
 
    for (size_t i = 0; i < m; i++) {
       for (size_t j = 0; j < n; j++) {
-         A(i,j) = rand.Uniform(-range, range);
+         B(i,j) = rand.Uniform(-range, range);
       }
    }
+   A = B;
 }
 
 //______________________________________________________________________________
@@ -67,16 +72,18 @@ void TCuda<doProfiling>::InitializeIdentity(TCudaMatrix & A)
    size_t m,n;
    m = A.GetNrows();
    n = A.GetNcols();
+   TMatrixT<CudaDouble_t> B(m, n);
 
    for (size_t i = 0; i < m; i++) {
       for (size_t j = 0; j < n ; j++) {
-         A(i,j) = 0.0;
+         B(i,j) = 0.0;
       }
 
       if (i < n) {
-         A(i,i) = 1.0;
+         B(i,i) = 1.0;
       }
    }
+   A = B;
 }
 
 //______________________________________________________________________________
@@ -86,12 +93,14 @@ void TCuda<doProfiling>::InitializeZero(TCudaMatrix & A)
    size_t m,n;
    m = A.GetNrows();
    n = A.GetNcols();
+   TMatrixT<CudaDouble_t> B(m, n);
 
    for (size_t i = 0; i < m * n; i++) {
       for (size_t j = 0; j < n ; j++) {
-         A(i,j) = 0.0;
+         B(i,j) = 0.0;
       }
    }
+   A = B;
 }
 
 } // namespace DNN
