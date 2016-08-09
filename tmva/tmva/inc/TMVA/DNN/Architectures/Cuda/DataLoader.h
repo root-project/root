@@ -9,17 +9,18 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////
-// Declaration of the TCudaDataLoader class, which implements a        //
-// prefetching data loader for CUDA architecture. Also contains       //
-// the TCudaBatch class and the TCudaBatchIterator representing batches //
-// and an iterator over batches in a data set for CUDA architectures  //
-////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
+// Declaration of the TCudaDataLoader class, which implements a          //
+// prefetching data loader for CUDA architecture. Also contains          //
+// the TCudaBatch class and the TCudaBatchIterator representing batches  //
+// and an iterator over batches in a data set for CUDA architectures     //
+///////////////////////////////////////////////////////////////////////////
 
 #ifndef TMVA_DNN_ARCHITECTURES_CUDA_DATA
 #define TMVA_DNN_ARCHITECTURES_CUDA_DATA
 
 #include "CudaMatrix.h"
+#include "Buffers.h"
 #include "TMVA/Event.h"
 #include <algorithm>
 #include <iterator>
@@ -75,8 +76,9 @@ public:
      *  with it. */
     TCudaMatrix GetInput()
     {
-        return TCudaMatrix(fInputMatrixData, fBatchSize, fNinputFeatures,
-                        fDataStream);
+        size_t size = fBatchSize * fNinputFeatures;
+        return TCudaMatrix(TCudaDeviceBuffer(fInputMatrixData, size, fDataStream),
+                           fBatchSize, fNinputFeatures);
     }
 
     /** Return the outpur data as a TCudaMatrix. Also forwards the data stream in
@@ -84,8 +86,9 @@ public:
      */
     TCudaMatrix GetOutput()
     {
-        return TCudaMatrix(fOutputMatrixData, fBatchSize, fNoutputFeatures,
-                        fDataStream);
+        size_t size = fBatchSize * fNoutputFeatures;
+        return TCudaMatrix(TCudaDeviceBuffer(fOutputMatrixData, size, fDataStream),
+                           fBatchSize, fNoutputFeatures);
     }
 };
 

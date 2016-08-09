@@ -11,6 +11,8 @@
 #ifndef TMVA_DNN_MINIMIZERS
 #define TMVA_DNN_MINIMIZERS
 
+#include "DataLoader.h"
+
 namespace TMVA {
 namespace DNN {
 
@@ -52,8 +54,6 @@ class TGradientDescent
 public:
     using Scalar_t = typename Architecture_t::Scalar_t;
     using Matrix_t = typename Architecture_t::Matrix_t;
-    template<typename Data_t>
-    using DataLoader_t = typename Architecture_t::template DataLoader_t<Data_t>;
 
 private:
     size_t   fBatchSize; ///< Batch size to use for the training.
@@ -76,20 +76,18 @@ public:
     /*! Train the given net using the given training input data (events), training
       output data (labels), test input data (events), test output data (labels). */
     template <typename Data_t, typename Net_t>
-        Scalar_t Train(const Data_t & TrainingDataIn,
-                       size_t nTrainingSamples,
-                       const Data_t & TestDataIn,
-                       size_t nTestSamples,
-                       Net_t & net);
+        Scalar_t Train(const Data_t & TrainingDataIn, size_t nTrainingSamples,
+                       const Data_t & TestDataIn, size_t nTestSamples,
+                       Net_t & net, size_t nThreads = 1);
     /*! Perform a single optimization step on a given batch. Propagates the input
       matrix foward through the net, evaluates the loss and propagates the gradients
       backward through the net. The computed gradients are scaled by the learning
       rate \f$\alpha\f$ and subtracted from the weights and bias values of each
       layer. */
     template <typename Net_t>
-    void Step(Net_t &net,
-              Matrix_t &input,
-              const Matrix_t &output);
+    void Step(Net_t &net, Matrix_t &input, const Matrix_t &output);
+    template <typename Net_t>
+    void Step(Net_t &master, Net_t &net, Matrix_t &input, const Matrix_t &output);
     /** Does not evaluate the loss and therefore not trigger a possible synchronization
      *  with the device. Trains the weights of each layer, but only the bias terms of
      *  the first layer for compatibility with the previous implementation. */
@@ -151,7 +149,8 @@ template <typename Data_t, typename Net_t>
                                                  size_t nTrainingSamples,
                                                  const Data_t & testData,
                                                  size_t nTestSamples,
-                                                 Net_t & net)
+                                                 Net_t & net,
+                                                 size_t nThreads)
    -> Scalar_t
 {
    // Reset iteration state.
@@ -162,21 +161,40 @@ template <typename Data_t, typename Net_t>
    // Prepare training data.
    bool converged = false;
 
-   DataLoader_t<Data_t> trainLoader(trainingData, nTrainingSamples,
-                                    net.GetBatchSize(),
-                                    net.GetInputWidth(), net.GetOutputWidth());
+   TDataLoader<Data_t, Architecture_t> trainLoader(trainingData, nTrainingSamples,
+                                                   net.GetBatchSize(),
+                                                   net.GetInputWidth(),
+                                                   net.GetOutputWidth(), nThreads);
    auto testNet = net.CreateClone(nTestSamples);
-   DataLoader_t<Data_t> testLoader(testData, nTestSamples,
-                                   testNet.GetBatchSize(),
-                                   testNet.GetInputWidth(), net.GetOutputWidth());
+   TDataLoader<Data_t, Architecture_t> testLoader(testData, nTestSamples,
+                                                  testNet.GetBatchSize(),
+                                                  testNet.GetInputWidth(),
+                                                  net.GetOutputWidth());
+   std::vector<Net_t> nets{};
+   nets.reserve(nThreads);
+   for (size_t i = 0; i < nThreads; i++) {
+       nets.push_back(net);
+       for (size_t j = 0; j < net.GetDepth(); j++)
+       {
+           std::cout << "copy" << std::endl;
+           auto &masterLayer = net.GetLayer(j);
+           auto &layer = nets.back().GetLayer(j);
+           Architecture_t::Copy(layer.GetWeights(),
+                                masterLayer.GetWeights());
+           Architecture_t::Copy(layer.GetBiases(),
+                                masterLayer.GetBiases());
+       }
+   }
 
    while (!converged)
    {
+      size_t netIndex = 0;
       for (auto b : trainLoader) {
          // Perform minimization step.
          auto inputMatrix  = b.GetInput();
          auto outputMatrix = b.GetOutput();
-         Step(net, inputMatrix, outputMatrix);
+         Step(net, nets[netIndex % nThreads], inputMatrix, outputMatrix);
+         netIndex++;
       }
 
       // Compute test error.
@@ -217,6 +235,37 @@ template<typename Architecture_t>
                                  -fLearningRate);
     }
 }
+
+//______________________________________________________________________________
+template<typename Architecture_t>
+    template <typename Net_t>
+    void inline TGradientDescent<Architecture_t>::Step(Net_t & master,
+                                                       Net_t & net,
+                                                       Matrix_t &input,
+                                                       const Matrix_t &output)
+{
+    //Scalar_t loss = net.Loss(input, output);
+    //fTrainingError = loss;
+    net.Forward(input);
+    net.Backward(input, output);
+
+    for (size_t i = 0; i < net.GetDepth(); i++)
+    {
+        auto &masterLayer = master.GetLayer(i);
+        auto &layer = net.GetLayer(i);
+        Architecture_t::ScaleAdd(masterLayer.GetWeights(),
+                                 layer.GetWeightGradients(),
+                                 -fLearningRate);
+        Architecture_t::Copy(layer.GetWeights(),
+                             masterLayer.GetWeights());
+        Architecture_t::ScaleAdd(masterLayer.GetBiases(),
+                                 layer.GetBiasGradients(),
+                                 -fLearningRate);
+        Architecture_t::Copy(layer.GetBiases(),
+                             masterLayer.GetBiases());
+    }
+}
+
 
 //______________________________________________________________________________
 template<typename Architecture_t>

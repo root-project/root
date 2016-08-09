@@ -33,6 +33,8 @@ void TCuda::MultiplyTranspose(TCudaMatrix &output,
    CudaDouble_t alpha = 1.0, beta = 0.0;
 
    // Compute C = beta * C + alpha * (A * B^T)
+   cudaStream_t s = input.GetComputeStream();
+   cublasSetStream(input.GetCublasHandle(), s);
    cublasDgemm(input.GetCublasHandle(),
                CUBLAS_OP_N, CUBLAS_OP_T,
                m, n, k, & alpha,
@@ -40,6 +42,7 @@ void TCuda::MultiplyTranspose(TCudaMatrix &output,
                Weights.GetDataPointer(), n,   // *B, ldb
                & beta,                           // beta
                output.GetDataPointer(), m);   // *C, ldc
+   output.SetComputeStream(s);
 }
 
 void TCuda::AddRowWise(TCudaMatrix &Weights,
@@ -78,6 +81,15 @@ void TCuda::Backward(TCudaMatrix & activation_gradients_backward,
    if (bias_gradients.GetNoElements() > 0)
        TCuda::SumColumns(bias_gradients, df);
 
+}
+
+void TCuda::Copy(TCudaMatrix & B, const TCudaMatrix & A)
+{
+   size_t m = B.GetNrows();
+   size_t n = B.GetNcols();
+   cudaMemcpy(B.GetDataPointer(), A.GetDataPointer(),
+              m * n * sizeof(CudaDouble_t), cudaMemcpyDeviceToDevice);
+       // , A.GetComputeStream());
 }
 
 } // namespace DNN

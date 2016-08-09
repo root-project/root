@@ -34,6 +34,9 @@ void TCuda::Multiply(TCudaMatrix &C,
    n = B.GetNcols();
    CudaDouble_t alpha = 1.0, beta = 0.0;
 
+   cudaStream_t s = A.GetComputeStream();
+   cublasSetStream(A.GetCublasHandle(), s);
+
    // Compute C = beta * C + alpha * (A * B)
    cublasDgemm(A.GetCublasHandle(),
                CUBLAS_OP_N, CUBLAS_OP_N,
@@ -42,6 +45,8 @@ void TCuda::Multiply(TCudaMatrix &C,
                B.GetDataPointer(), k,   // *B, ldb
                & beta,                  // beta
                C.GetDataPointer(), m);  // *C, ldc
+
+   C.SetComputeStream(s);
 }
 
 //____________________________________________________________________________
@@ -55,6 +60,9 @@ void TCuda::TransposeMultiply(TCudaMatrix & C,
    n = B.GetNcols();
    CudaDouble_t alpha = 1.0, beta = 0.0;
 
+   cudaStream_t s = A.GetComputeStream();
+   cublasSetStream(A.GetCublasHandle(), s);
+
    // Compute C = beta * C + alpha * (A^T * B)
    cublasDgemm(A.GetCublasHandle(),
                CUBLAS_OP_T, CUBLAS_OP_N,
@@ -63,6 +71,8 @@ void TCuda::TransposeMultiply(TCudaMatrix & C,
                B.GetDataPointer(), k,     // *B, ldb
                & beta,                    // beta
                C.GetDataPointer(), m);    // *C, ldc
+
+   C.SetComputeStream(s);
 }
 
 //____________________________________________________________________________
@@ -76,6 +86,7 @@ void TCuda::Hadamard(TCudaMatrix &B,
                                                               A.GetDataPointer(),
                                                               A.GetNrows(),
                                                               A.GetNcols());
+   B.SetComputeStream(s);
 }
 
 //____________________________________________________________________________
@@ -100,17 +111,19 @@ void TCuda::SumColumns(TCudaMatrix &B, const TCudaMatrix &A)
    dim3 blockDims = TDevice::BlockDims();
    dim3 gridDims  = TDevice::GridDims(A);
 
-   cudaMemset(B.GetDataPointer(), 0, A.GetNcols() * sizeof(CudaDouble_t));
    cudaStream_t s = A.GetComputeStream();
+   cudaMemsetAsync(B.GetDataPointer(), 0, A.GetNcols() * sizeof(CudaDouble_t), s);
    ::TMVA::DNN::Cuda::SumColumns<<<gridDims, blockDims, 0, s>>>(B.GetDataPointer(),
                                                                 A.GetDataPointer(),
                                                                 A.GetNrows(),
                                                                 A.GetNcols());
+   B.SetComputeStream(s);
 }
 
 //____________________________________________________________________________
 void TCuda::ScaleAdd(TCudaMatrix &B, const TCudaMatrix &A, CudaDouble_t alpha)
 {
+   cudaStream_t s = B.GetComputeStream();
    cublasDaxpy(A.GetCublasHandle(), A.GetNoElements(), &alpha,
                A.GetDataPointer(), 1,
                B.GetDataPointer(), 1);

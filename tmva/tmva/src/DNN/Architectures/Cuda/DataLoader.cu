@@ -13,7 +13,8 @@
 // Implementation of the data loader for Cuda architectures. //
 ///////////////////////////////////////////////////////////////
 
-#include "TMVA/DNN/Architectures/Cuda/DataLoader.h"
+#include "TMVA/DNN/Architectures/Cuda.h"
+#include "TMVA/DNN/DataLoader.h"
 
 namespace TMVA {
 namespace DNN  {
@@ -183,7 +184,6 @@ inline CudaDouble_t * TCudaDataLoader<Data_t>::GetOutputTransferBuffer() const
 template <typename InputDataType>
 void TCudaDataLoader<InputDataType>::InvokeTransfer()
 {
-    cudaStreamSynchronize(TCudaMatrix::GetComputeStream());
     cudaMemcpyAsync(fDeviceData[fStreamIndex],
                     fHostData[fStreamIndex],
                     fTransferSize,
@@ -334,6 +334,44 @@ template class TCudaBatchIterator<MatrixInput_t>;
 template class TCudaBatchIterator<TMVAInput_t>;
 template class TCudaDataLoader<MatrixInput_t>;
 template class TCudaDataLoader<TMVAInput_t>;
+
+template<>
+void TDataLoader<MatrixInput_t, TCuda>::CopyInput(TCudaHostBuffer & buffer,
+                                                  IndexIterator_t sampleIterator,
+                                                  size_t batchSize)
+{
+   const TMatrixT<Double_t> &inputMatrix  = std::get<0>(fData);
+   size_t n = inputMatrix.GetNcols();
+
+   for (size_t i = 0; i < batchSize; i++) {
+      size_t sampleIndex = *sampleIterator;
+      for (size_t j = 0; j < n; j++) {
+         size_t bufferIndex = j * batchSize + i;
+         buffer[bufferIndex] = inputMatrix(sampleIndex, j);
+      }
+      sampleIterator++;
+   }
+}
+
+template<>
+void TDataLoader<MatrixInput_t, TCuda>::CopyOutput(TCudaHostBuffer & buffer,
+                                                   IndexIterator_t sampleIterator,
+                                                   size_t batchSize)
+{
+   const TMatrixT<Double_t> &outputMatrix  = std::get<1>(fData);
+   size_t n = outputMatrix.GetNcols();
+
+   for (size_t i = 0; i < batchSize; i++) {
+      size_t sampleIndex = *sampleIterator;
+      for (size_t j = 0; j < n; j++) {
+         size_t bufferIndex = j * batchSize + i;
+         buffer[bufferIndex] = outputMatrix(sampleIndex, j);
+      }
+      sampleIterator++;
+   }
+}
+
+template class TDataLoader<MatrixInput_t, TCuda>;
 
 } // namespace TMVA
 } // namespace DNN

@@ -25,40 +25,30 @@ namespace DNN  {
 size_t          TCudaMatrix::fInstances     = 0;
 cublasHandle_t  TCudaMatrix::fCublasHandle  = nullptr;
 CudaDouble_t  * TCudaMatrix::fDeviceReturn  = nullptr;
-cudaStream_t    TCudaMatrix::fComputeStream = 0;
 curandState_t * TCudaMatrix::fCurandStates  = nullptr;
 size_t          TCudaMatrix::fNCurandStates = 0;
 
 // Constructors.
 //____________________________________________________________________________
 TCudaMatrix::TCudaMatrix()
-    : fNRows(0), fNCols(0), fDeviceData(nullptr), fDataStream(0), fOwner(true)
+    : fNRows(0), fNCols(0), fElementBuffer()
 {
    InitializeCuda();
 }
 
 //____________________________________________________________________________
 TCudaMatrix::TCudaMatrix(size_t m, size_t n)
-    : fNRows(m), fNCols(n), fDataStream(0), fOwner(true)
+    : fNRows(m), fNCols(n), fElementBuffer(m * n, 0)
 {
    InitializeCuda();
-   CUDACHECK(cudaMalloc(&fDeviceData, fNRows * fNCols * sizeof(CudaDouble_t)));
-}
-
-//____________________________________________________________________________
-TCudaMatrix::TCudaMatrix(TCudaMatrix && A)
-    : fNRows(A.fNRows), fNCols(A.fNCols), fDataStream(0), fOwner(true)
-{
-   fDeviceData   = A.fDeviceData;
-   A.fDeviceData = nullptr;
 }
 
 //____________________________________________________________________________
 TCudaMatrix::TCudaMatrix(const TMatrixT<CudaDouble_t> & Host)
-    : fNRows(Host.GetNrows()), fNCols(Host.GetNcols()), fDataStream(0), fOwner(true)
+    : fNRows(Host.GetNrows()), fNCols(Host.GetNcols()),
+      fElementBuffer(Host.GetNoElements(), 0)
 {
    InitializeCuda();
-   cudaMalloc(&fDeviceData, fNRows * fNCols * sizeof(CudaDouble_t));
 
    CudaDouble_t * buffer = new CudaDouble_t[fNRows * fNCols];
    size_t index = 0;
@@ -69,16 +59,14 @@ TCudaMatrix::TCudaMatrix(const TMatrixT<CudaDouble_t> & Host)
       }
    }
 
-   cudaMemcpy(fDeviceData, buffer, fNRows * fNCols * sizeof(CudaDouble_t),
+   cudaMemcpy(fElementBuffer, buffer, fNRows * fNCols * sizeof(CudaDouble_t),
               cudaMemcpyHostToDevice);
 }
 
 //____________________________________________________________________________
-TCudaMatrix::TCudaMatrix(CudaDouble_t * deviceData,
-                        size_t m, size_t n,
-                        cudaStream_t dataStream)
-    : fDeviceData(deviceData), fNRows(m), fNCols(n), fDataStream(dataStream),
-      fOwner(false)
+TCudaMatrix::TCudaMatrix(TCudaDeviceBuffer buffer,
+                         size_t m, size_t n)
+    : fNRows(m), fNCols(n), fElementBuffer(buffer)
 {
    InitializeCuda();
 }
@@ -87,9 +75,7 @@ TCudaMatrix::TCudaMatrix(CudaDouble_t * deviceData,
 inline void TCudaMatrix::InitializeCuda()
 {
    if (fInstances == 0) {
-       CUDACHECK(cudaStreamCreate(&fComputeStream));
        cublasCreate(&fCublasHandle);
-       cublasSetStream(fCublasHandle, fComputeStream);
        CUDACHECK(cudaMalloc(& fDeviceReturn, sizeof(CudaDouble_t)));
        CUDACHECK(cudaMalloc(& fCurandStates, TDevice::NThreads(*this)));
    }
@@ -122,7 +108,7 @@ TCudaMatrix::operator TMatrixT<CudaDouble_t>() const
    TMatrixT<CudaDouble_t> hostMatrix(GetNrows(), GetNcols());
 
    CudaDouble_t * buffer = new CudaDouble_t[fNRows * fNCols];
-   cudaMemcpy(buffer, fDeviceData, fNRows * fNCols * sizeof(CudaDouble_t),
+   cudaMemcpy(buffer, fElementBuffer, fNRows * fNCols * sizeof(CudaDouble_t),
               cudaMemcpyDeviceToHost);
 
    size_t index = 0;
@@ -133,6 +119,7 @@ TCudaMatrix::operator TMatrixT<CudaDouble_t>() const
       }
    }
 
+   delete[] buffer;
    return hostMatrix;
 }
 

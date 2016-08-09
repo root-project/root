@@ -32,6 +32,7 @@ void TCuda::Sigmoid(TCudaMatrix & B,
                                                              A.GetDataPointer(),
                                                              (int) A.GetNrows(),
                                                              (int) A.GetNcols());
+   B.SetComputeStream(s);
 }
 
 } // namespace DNN

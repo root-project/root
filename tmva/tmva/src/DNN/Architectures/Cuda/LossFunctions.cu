@@ -47,13 +47,14 @@ void TCuda::MeanSquaredErrorGradients(TCudaMatrix & dY,
 {
    dim3 blockDims = TDevice::BlockDims();
    dim3 gridDims  = TDevice::GridDims(Y);
-   cudaStream_t s = Y.GetComputeStream();
+   cudaStream_t s = output.GetComputeStream();
    ::TMVA::DNN::Cuda::MeanSquaredErrorGradients<<<gridDims, blockDims, 0, s>>>(
        dY.GetDataPointer(),
        Y.GetDataPointer(),
        output.GetDataPointer(),
        (int) Y.GetNrows(),
        (int) Y.GetNcols());
+   dY.SetComputeStream(s);
 }
 
 //____________________________________________________________________________
@@ -80,13 +81,14 @@ void TCuda::CrossEntropyGradients(TCudaMatrix & dY,
 {
    dim3 blockDims = TDevice::BlockDims();
    dim3 gridDims  = TDevice::GridDims(Y);
-   cudaStream_t s = Y.GetComputeStream();
+   cudaStream_t s = output.GetComputeStream();
    ::TMVA::DNN::Cuda::CrossEntropyGradients<<<gridDims, blockDims, 0, s>>>(
        dY.GetDataPointer(),
        Y.GetDataPointer(),
        output.GetDataPointer(),
        (int) Y.GetNrows(),
        (int) Y.GetNcols());
+   dY.SetComputeStream(s);
 }
 
 } // namespace DNN
