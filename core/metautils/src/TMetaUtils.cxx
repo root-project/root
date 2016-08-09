@@ -3915,22 +3915,64 @@ class NameCleanerForIO {
    bool fHasChanged = false;
    ROOT::ESTLType IsMotherSTLCont()
    {
-      if (!fMother) return ROOT::kNotSTL;
-      return TClassEdit::IsSTLCont(fMother->fName+"<>");
+      return fMother ? TClassEdit::IsSTLCont(fMother->fName+"<>") : ROOT::kNotSTL;
    }
 
 public:
-   NameCleanerForIO(const std::string& templateInstanceName = "",
+   NameCleanerForIO(const std::string& clName = "",
                     TClassEdit::EModType mode = TClassEdit::kNone,
                     NameCleanerForIO* mother = nullptr):fMother(mother)
    {
-      if (templateInstanceName.back() != '>') {
-         fName = templateInstanceName;
+      if (clName.back() != '>') {
+         fName = clName;
          return;
       }
+
       std::vector<std::string> v;
       int dummy=0;
-      TClassEdit::GetSplit(templateInstanceName.c_str(), v, dummy, mode);
+      TClassEdit::GetSplit(clName.c_str(), v, dummy, mode);
+
+      // We could be in presence of templates such as A1<T1>::A2<T2>::A3<T3>
+      auto argsEnd = v.end();
+      auto argsBeginPlusOne = ++v.begin();
+      auto argPos = std::find_if(argsBeginPlusOne, argsEnd,
+                              [](std::string& arg){return arg.front() == ':';});
+      if (argPos != argsEnd) {
+         const int lenght = clName.size();
+         int wedgeBalance = 0;
+         int lastOpenWedge = 0;
+         for (int i=lenght-1;i>-1;i--) {
+            auto& c = clName.at(i);
+            if (c == '<') {
+               wedgeBalance++;
+               lastOpenWedge = i;
+            } else if (c == '>') {
+               wedgeBalance--;
+            } else if (c == ':' && 0 == wedgeBalance) {
+               // This would be A1<T1>::A2<T2>
+               auto nameToClean = clName.substr(0,i-1);
+               NameCleanerForIO node(nameToClean, mode);
+               auto cleanName = node.ToString();
+               fHasChanged = node.HasChanged();
+               // We got A1<T1>::A2<T2> cleaned
+
+               // We build the changed A1<T1>::A2<T2>::A3
+               cleanName += "::";
+               // Now we get A3 and append it
+               cleanName += clName.substr(i+1,lastOpenWedge-i-1);
+
+               // We now get the args of what in our case is A1<T1>::A2<T2>::A3
+               auto lastTemplate = &clName.data()[i+1];
+
+               // We split it
+               TClassEdit::GetSplit(lastTemplate, v, dummy, mode);
+               // We now replace the name of the template
+               v[0] = cleanName;
+               break;
+            }
+         }
+      }
+
       fName = v.front();
       unsigned int nargs = v.size() - 2;
       for (unsigned int i=0;i<nargs;++i) {
@@ -3938,11 +3980,10 @@ public:
       }
    }
 
-   bool HasChanged(){return fHasChanged;}
+   bool HasChanged() {return fHasChanged;}
 
    std::string ToString()
    {
-
       std::string name(fName);
 
       if (fArgumentNodes.empty()) return name;
@@ -3974,7 +4015,8 @@ public:
       return name;
    }
 
-   void Print(const std::string& indent = ""){
+   void Print(const std::string& indent = "")
+   {
       std::cout << indent << "* " << fName << " " << this << " with " << fArgumentNodes.size() << " arguments and mother " << fMother << std::endl;
       for (auto& node : fArgumentNodes) {
          std::string indent2(indent+"   ");
