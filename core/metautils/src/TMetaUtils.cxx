@@ -3945,10 +3945,13 @@ public:
 
       std::string name(fName);
 
+      if (fArgumentNodes.empty()) return name;
+
       // We have in hands a case like unique_ptr< ... >
       // Perhaps we could treat atomics as well like this?
       if (!fMother && TClassEdit::IsUniquePtr(fName+"<")) {
          name = fArgumentNodes.front()->ToString();
+         fHasChanged = true;
          return name;
       }
 
@@ -3961,15 +3964,13 @@ public:
          return name;
       }
 
-      if (fArgumentNodes.empty()) return name;
-
       name += "<";
       for (auto& node : fArgumentNodes) {
          name += node->ToString() + ",";
+         fHasChanged |= node->HasChanged();
       }
       name.pop_back(); // Remove the last comma.
       name += name.back() == '>' ? " >" : ">"; // Respect name normalisation
-      fHasChanged = true;
       return name;
    }
 
@@ -3990,17 +3991,16 @@ std::string ROOT::TMetaUtils::GetNameForIO(const std::string& templateInstanceNa
 {
    NameCleanerForIO node(templateInstanceName, mode);
    auto nameForIO = node.ToString();
-   if (ROOT::TMetaUtils::GetErrorIgnoreLevel() <= ROOT::TMetaUtils::kNote &&
-       nameForIO != templateInstanceName) {
-      ROOT::TMetaUtils::Info("GetNameForIO",
-                             "Name transformed: %s -> %s\n",
-                             templateInstanceName.c_str(),
-                             nameForIO.c_str());
-    }
-    if (hasChanged) {
+   if (hasChanged) {
       *hasChanged = node.HasChanged();
-    }
-    return nameForIO;
+      if (ROOT::TMetaUtils::GetErrorIgnoreLevel() <= ROOT::TMetaUtils::kNote) {
+         ROOT::TMetaUtils::Info("GetNameForIO",
+                                "Name transformed: %s -> %s\n",
+                                templateInstanceName.c_str(),
+                                nameForIO.c_str());
+         }
+   }
+   return nameForIO;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
