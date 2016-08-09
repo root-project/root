@@ -2,7 +2,7 @@
 # Author: Pau Miquel i Mir <pau.miquel.mir@cern.ch> <pmm1g15@soton.ac.uk>>
 # Date: July, 2016
 #
-# DISCLAIMER: This script is a prototype and a work in progress. Indeed, it is very that
+# DISCLAIMER: This script is a prototype and a work in progress. Indeed, it is possible that
 # it may not work for certain tutorials, and that it, or the tutorial, might need to be
 # tweaked slightly to ensure full functionality. Please do not hesistate to email the author
 # with any questions or with examples that do not work.
@@ -52,6 +52,7 @@ import os
 import sys
 import json
 import time
+import doctest
 import textwrap
 import subprocess
 from nbformat import v3, v4
@@ -62,7 +63,8 @@ from datetime import datetime, date
 # will not be properly defined. Thus, any other type returned by function  must be added to this list
 # for the script to work correctly.
 gTypesList = ["void", "int", "Int_t", "TF1", "string", "bool", "double", "float", "char",
-    "TCanvas", "TTree", "TString", "TseqCollection", "Double_t", "TFile", "Long64_t", "Bool_t"]
+    "TCanvas", "TTree", "TString", "TseqCollection", "Double_t", "TFile", "Long64_t", "Bool_t", "TH1",
+    "RooDataSet", "RooWorkspace"]
 
 # -------------------------------------
 # -------- Fuction definitions---------
@@ -71,6 +73,14 @@ gTypesList = ["void", "int", "Int_t", "TF1", "string", "bool", "double", "float"
 def unindenter(string):
     """
     Returns string with each line unindented by 3 spaces. If line isn't indented, it stays the same.
+    >>> unindenter("   foobar")
+    'foobar\\n'
+    >>> unindenter("foobar")
+    'foobar\\n'
+    >>> unindenter('''foobar
+    ...    foobar
+    ... foobar''')
+    'foobar\\nfoobar\\nfoobar\\n'
     """
     newstring = ''
     lines = string.splitlines()
@@ -89,6 +99,39 @@ def readHeaderPython(text):
     notebook boolean, which is True if the string \notebook is present in the header
     Also determine options (-js, -nodraw, -header) passed in \notebook command, and
     return their booleans
+    >>> readHeaderPython('''## \\file
+    ... ## \\ingroup tutorials
+    ... ## \\\\notebook
+    ... ## This is the description of the tutorial
+    ... ##
+    ... ## \\macro_image
+    ... ## \\macro_code
+    ... ##
+    ... ## \\\\author John Brown
+    ... def tutorialfuncion()''')
+    ('def tutorialfuncion()\\n', 'This is the description of the tutorial\\n\\n\\n', 'John Brown', True, False, False, False)
+    >>> readHeaderPython('''## \\file
+    ... ## \\ingroup tutorials
+    ... ## \\\\notebook -js
+    ... ## This is the description of the tutorial
+    ... ##
+    ... ## \\macro_image
+    ... ## \\macro_code
+    ... ##
+    ... ## \\\\author John Brown
+    ... def tutorialfuncion()''')
+    ('def tutorialfuncion()\\n', 'This is the description of the tutorial\\n\\n\\n', 'John Brown', True, True, False, False)
+    >>> readHeaderPython('''## \\file
+    ... ## \\ingroup tutorials
+    ... ## \\\\notebook -nodraw
+    ... ## This is the description of the tutorial
+    ... ##
+    ... ## \\macro_image
+    ... ## \\macro_code
+    ... ##
+    ... ## \\\\author John Brown
+    ... def tutorialfuncion()''')
+    ('def tutorialfuncion()\\n', 'This is the description of the tutorial\\n\\n\\n', 'John Brown', True, False, True, False)
     """
     lines = text.splitlines()
 
@@ -125,6 +168,14 @@ def pythonComments(text):
     """
     Converts comments delimited by # or ## and on a new line into a markdown cell.
     For python files only
+    >>> pythonComments('''## This is a
+    ... ## multiline comment
+    ... def function()''') 
+    '# <markdowncell>\\n## This is a\\n## multiline comment\\n# <codecell>\\ndef function()\\n'
+    >>> pythonComments('''def function():
+    ...     variable = 5 # Comment not in cell
+    ...     # Comment also not in cell''')
+    'def function():\\n    variable = 5 # Comment not in cell\\n    # Comment also not in cell\\n'
     """
     text = text.splitlines()
     newtext = ''
@@ -149,6 +200,39 @@ def readHeaderCpp(text):
     notebook boolean, which is True if the string \notebook is present in the header
     Also determine options (-js, -nodraw, -header) passed in \notebook command, and
     return their booleans
+    >>> readHeaderCpp('''/// \\file
+    ... /// \\ingroup tutorials
+    ... /// \\\\notebook
+    ... /// This is the description of the tutorial
+    ... ///
+    ... /// \\macro_image
+    ... /// \\macro_code
+    ... ///
+    ... /// \\\\author John Brown
+    ... void tutorialfuncion(){}''')
+    ('void tutorialfuncion(){}\\n', '# This is the description of the tutorial\\n# \\n# \\n', 'John Brown', True, False, False, False)
+    >>> readHeaderCpp('''/// \\file
+    ... /// \\ingroup tutorials
+    ... /// \\\\notebook -js
+    ... /// This is the description of the tutorial
+    ... ///
+    ... /// \\macro_image
+    ... /// \\macro_code
+    ... ///
+    ... /// \\\\author John Brown
+    ... void tutorialfuncion(){}''')
+    ('void tutorialfuncion(){}\\n', '# This is the description of the tutorial\\n# \\n# \\n', 'John Brown', True, True, False, False)
+    >>> readHeaderCpp('''/// \\file
+    ... /// \\ingroup tutorials
+    ... /// \\\\notebook -nodraw
+    ... /// This is the description of the tutorial
+    ... ///
+    ... /// \\macro_image
+    ... /// \\macro_code
+    ... ///
+    ... /// \\\\author John Brown
+    ... void tutorialfuncion(){}''')
+    ('void tutorialfuncion(){}\\n', '# This is the description of the tutorial\\n# \\n# \\n', 'John Brown', True, False, True, False)
     """
     lines = text.splitlines()
 
@@ -184,6 +268,27 @@ def readHeaderCpp(text):
 def cppFunction(text):
     """
     Extracts main function for the function enclosure by means of regular expression
+    >>> cppFunction('''void mainfunction(arguments = values){
+    ...    content of function
+    ...    which spans
+    ...    several lines
+    ... }''')
+    '\\n   content of function\\n   which spans\\n   several lines\\n'
+    >>> cppFunction('''void mainfunction(arguments = values)
+    ... {
+    ...    content of function
+    ...    which spans
+    ...    several lines
+    ... }''')
+    '\\n   content of function\\n   which spans\\n   several lines\\n'
+    >>> cppFunction('''void mainfunction(arguments = values
+    ... morearguments = morevalues)
+    ... {
+    ...    content of function
+    ...    which spans
+    ...    several lines
+    ... }''')
+    '\\n   content of function\\n   which spans\\n   several lines\\n'
     """
     functionContentRe = re.compile(r'(?<=\{).*(?=^\})', flags = re.DOTALL | re.MULTILINE)
 
@@ -197,6 +302,15 @@ def cppFunction(text):
 def cppComments(text):
     """
     Converts comments delimited by // and on a new line into a markdown cell. For C++ files only.
+    >>> cppComments('''// This is a
+    ... // multiline comment
+    ... void function(){}''') 
+    '# <markdowncell>\\n#  This is a\\n#  multiline comment\\n# <codecell>\\nvoid function(){}\\n'
+    >>> cppComments('''void function(){
+    ...    int variable = 5 // Comment not in cell
+    ...    // Comment also not in cell
+    ... }''')
+    'void function(){\\n   int variable = 5 // Comment not in cell\\n   // Comment also not in cell\\n}\\n'
     """
     text = text.splitlines()
     newtext = ''
@@ -228,8 +342,40 @@ def split(text):
     Comments immediately prior to a helper cell are converted into markdown cell,
     added to the helper, and removed from rest.
     Intended for C++ files only.
+    >>> split('''void tutorial(){
+    ...    content of tutorial
+    ... }''')
+    ('void tutorial(){\\n   content of tutorial\\n}', [], '')
+    >>> split('''void tutorial(){
+    ...    content of tutorial
+    ... }
+    ... void helper(arguments = values){
+    ...    helper function
+    ...    content spans lines
+    ... }''')
+    ('void tutorial(){\\n   content of tutorial\\n}', ['\\n# <markdowncell>\\n A helper function is created: \\n# <codecell>\\n%%cpp -d\\nvoid helper(arguments = values){\\n   helper function\\n   content spans lines\\n}'], '')
+    >>> split('''#include <header.h>
+    ... using namespace NAMESPACE
+    ... void tutorial(){
+    ...    content of tutorial
+    ... }
+    ... void helper(arguments = values){
+    ...    helper function
+    ...    content spans lines
+    ... }''')
+    ('void tutorial(){\\n   content of tutorial\\n}', ['\\n# <markdowncell>\\n A helper function is created: \\n# <codecell>\\n%%cpp -d\\nvoid helper(arguments = values){\\n   helper function\\n   content spans lines\\n}'], '#include <header.h>\\nusing namespace NAMESPACE')
+    >>> split('''void tutorial(){
+    ...    content of tutorial
+    ... }
+    ... // This is a multiline
+    ... // description of the
+    ... // helper function
+    ... void helper(arguments = values){
+    ...    helper function
+    ...    content spans lines
+    ... }''')
+    ('void tutorial(){\\n   content of tutorial\\n}', ['\\n# <markdowncell>\\n  This is a multiline description of the helper function \\n# <codecell>\\n%%cpp -d\\nvoid helper(arguments = values){\\n   helper function\\n   content spans lines\\n}'], '')
     """
-    
     functionReString="("
     for cpptype in gTypesList:
         functionReString += ("^%s|") % cpptype
@@ -267,7 +413,7 @@ def split(text):
                     commentList.reverse()
                     helperDescription = ''
                     for comment in commentList:
-                        if comment == "//":
+                        if comment in ("//", "// "):
                             helperDescription += "\n\n"  # Two newlines to create hard break in Markdown
                         else:
                             helperDescription += comment[2:]
@@ -289,6 +435,18 @@ def findFunctionName(text):
     """
     Takes a string representation of a C++ funciton as an input,
     finds and returns the name of the function
+    >>> findFunctionName('void functionName(arguments = values){}')
+    'functionName'
+    >>> findFunctionName('void functionName (arguments = values){}')
+    'functionName'
+    >>> findFunctionName('void *functionName(arguments = values){}')
+    'functionName'
+    >>> findFunctionName('void* functionName(arguments = values){}')
+    'functionName'
+    >>> findFunctionName('void * functionName(arguments = values){}')
+    'functionName'
+    >>> findFunctionName('void class::functionName(arguments = values){}')
+    'class::functionName'
     """
     functionNameReString="(?<="
     for cpptype in gTypesList:
@@ -310,6 +468,25 @@ def processmain(text):
     does then the keepfunction flag is True, meaning the function wont be extracted
     by cppFunction. If the initial condition is true then an extra cell is added
     before at the end that calls the main function is returned, and added later.
+    >>> processmain('''void function(){
+    ...    content of function
+    ...    spanning several
+    ...    lines
+    ... }''')
+    ('void function(){\\n   content of function\\n   spanning several\\n   lines\\n}', '', False)
+    >>> processmain('''void function(arguments = values){
+    ...    content of function
+    ...    spanning several
+    ...    lines
+    ... }''')
+    ('void function(arguments = values){\\n   content of function\\n   spanning several\\n   lines\\n}', '\\n# <markdowncell> \\n# Call the main function \\n# <codecell>\\nfunction();', True)
+    >>> processmain('''TCanvas function(){
+    ...    content of function
+    ...    spanning several
+    ...    lines
+    ...    return c1
+    ... }''') 
+    ('TCanvas function(){\\n   content of function\\n   spanning several\\n   lines\\n   return c1\\n}', '\\n# <markdowncell> \\n# Call the main function \\n# <codecell>\\nfunction();', True)
     """
     callMainFunction = ''
     keepfunction = False
@@ -338,22 +515,35 @@ def getLibMathMore(code):
         return "# <codecell> \ngSystem->Load(\"libMathMore\"); \n# <codecell> \n" + code
     return code
 
+def roofitRemoveSpacesComments(code):
+    
+    def changeString(matchObject):
+        matchString = matchObject.group()
+        matchString = matchString.replace("  " , "THISISASPACE")
+        matchString = matchString.replace(" " , "")
+        matchString = matchString.replace("THISISASPACE" , " ")
+        return matchString
+
+    newcode = re.sub("#\s\s\w\s[\w-]\s\w.*", changeString , code)
+    return newcode
+
 def fixes(code):
-    codeTransformers=[removePaletteEditor, runEventExe, getLibMathMore]
+    codeTransformers=[removePaletteEditor, runEventExe, getLibMathMore, roofitRemoveSpacesComments]
 
     for transformer in codeTransformers:
         code = transformer(code)
     return code
 
 def isCpp():
+    """
+    Return True if extension is a C++ file
+    """
     return extension in ("C", "c", "cpp", "C++", "cxx")
 
 
 # -------------------------------------
 # ------------ Main Program------------
 # -------------------------------------
-
-
 def mainfunction(text):
     """
     Main function. Calls all other functions, depending on whether the macro input is in python or c++.
@@ -397,12 +587,12 @@ def mainfunction(text):
     text = fixes(text)
 
     # Add the title and header of the notebook
-    text = "# <markdowncell> \n# # %s\n%s# \n# \n# **Author:** %s  \n# <small>This notebook tutorial" \
+    text = "# <markdowncell> \n# # %s\n%s# \n# \n# **Author:** %s  \n# <small>This notebook tutorial " \
         "was automatically generated from the macro found in the ROOT repository " \
-        "on %s.</small>\n# <codecell>\n%s" % (tutName.title(), description, author, date, text)
+        "on %s.</small>\n# <codecell>\n%s" % (tutTitle, description, author, date, text)
 
     # Add cell at the end of the notebook that draws all the canveses. Add a Markdown cell before explaining it.
-    if isJsroot:
+    if isJsroot and not nodraw:
         if isCpp():
             text += "\n# <markdowncell> \n# Draw all canvases \n# <codecell>\n%jsroot on\ngROOT->GetListOfCanvases()->Draw()"
         if extension == "py":
@@ -413,9 +603,7 @@ def mainfunction(text):
             text += "\n# <markdowncell> \n# Draw all canvases \n# <codecell>\ngROOT->GetListOfCanvases()->Draw()"
         if extension == "py":
             text += "\n# <markdowncell> \n# Draw all canvases \n# <codecell>\nfrom ROOT import gROOT \ngROOT.GetListOfCanvases().Draw()"
-
-    print text
-
+    
     # Create a notebook from the working text
     nbook = v3.reads_py(text)
     nbook = v4.upgrade(nbook)  # Upgrade v3 to v4
@@ -463,7 +651,7 @@ def mainfunction(text):
     with open(outPathName, 'w') as fout:
         json.dump(json_data, fout, indent=1, sort_keys=True)
 
-    print time.time() - starttime
+    print(time.time() - starttime)
     # Call commmand that executes the notebook and creates a new notebook with the output
     r = subprocess.call(["jupyter", "nbconvert", "--ExecutePreprocessor.timeout=90",  "--to=notebook", "--execute",  outPathName])
     if r != 0:
@@ -475,51 +663,57 @@ def mainfunction(text):
 
 if __name__ == "__main__":
 
-    # -------------------------------------
-    # ----- Preliminary definitions--------
-    # -------------------------------------
-
-    # Extract and define the name of the file as well as its derived names
-    tutPathName = str(sys.argv[1])
-    tutPath = os.path.dirname(tutPathName)
-    if tutPath.split("/")[-2] == "tutorials":
-        tutRelativePath = "$ROOTSYS/tutorials/%s/" % tutPath.split("/")[-1]
-    tutFileName = os.path.basename(tutPathName)
-    tutName, extension = tutFileName.split(".")
-    outname = tutFileName + ".ipynb"
-    outnameconverted = tutFileName + ".nbconvert.ipynb"
-
-    # Extract output directory
-    try:
-        outdir = str(sys.argv[2])
-    except:
-        outdir = tutPath
-
-    outPathName = os.path.join(outdir, outname)
-    # Find and define the time and date this script is run
-    date = datetime.now().strftime("%A, %B %d, %Y at %I:%M %p")
-
-    # -------------------------------------
-    # -------------------------------------
-    # -------------------------------------
-
-    # Set DYLD_LIBRARY_PATH. When run without root access or as a different user, epecially from Mac systems,
-    # it is possible for security reasons that the enviornment does not include this definition, so it is manually defined.
-    os.environ["DYLD_LIBRARY_PATH"] = os.environ["ROOTSYS"] + "/lib"
-
-    # Open the file to be converted
-    with open(tutPathName) as fin:
-        text = fin.read()
-
-    # Extract information from header and remove header from text
-    if extension == "py":
-        text, description, author, isNotebook, isJsroot, nodraw, needsHeaderFile = readHeaderPython(text)
-    elif isCpp():
-        text, description, author, isNotebook, isJsroot, nodraw, needsHeaderFile = readHeaderCpp(text)
-
-    if isNotebook:
-        starttime = time.time()
-        mainfunction(text)
-        print time.time() - starttime
+    if str(sys.argv[1]) == "-test":
+        tutName = "tutorial"
+        doctest.testmod(verbose=True)
+    
     else:
-        pass
+        # -------------------------------------
+        # ----- Preliminary definitions--------
+        # -------------------------------------
+
+        # Extract and define the name of the file as well as its derived names
+        tutPathName = str(sys.argv[1])
+        tutPath = os.path.dirname(tutPathName)
+        if tutPath.split("/")[-2] == "tutorials":
+            tutRelativePath = "$ROOTSYS/tutorials/%s/" % tutPath.split("/")[-1]
+        tutFileName = os.path.basename(tutPathName)
+        tutName, extension = tutFileName.split(".")
+        tutTitle = re.sub( r"([A-Z\d])", r" \1", tutName).title()
+        outname = tutFileName + ".ipynb"
+        outnameconverted = tutFileName + ".nbconvert.ipynb"
+
+        # Extract output directory
+        try:
+            outdir = str(sys.argv[2])
+        except:
+            outdir = tutPath
+
+        outPathName = os.path.join(outdir, outname)
+        # Find and define the time and date this script is run
+        date = datetime.now().strftime("%A, %B %d, %Y at %I:%M %p")
+
+        # -------------------------------------
+        # -------------------------------------
+        # -------------------------------------
+
+        # Set DYLD_LIBRARY_PATH. When run without root access or as a different user, epecially from Mac systems,
+        # it is possible for security reasons that the enviornment does not include this definition, so it is manually defined.
+        os.environ["DYLD_LIBRARY_PATH"] = os.environ["ROOTSYS"] + "/lib"
+
+        # Open the file to be converted
+        with open(tutPathName) as fin:
+            text = fin.read()
+
+        # Extract information from header and remove header from text
+        if extension == "py":
+            text, description, author, isNotebook, isJsroot, nodraw, needsHeaderFile = readHeaderPython(text)
+        elif isCpp():
+            text, description, author, isNotebook, isJsroot, nodraw, needsHeaderFile = readHeaderCpp(text)
+
+        if isNotebook:
+            starttime = time.time()
+            mainfunction(text)
+            print(time.time() - starttime)
+        else:
+            pass
