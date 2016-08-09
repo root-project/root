@@ -927,10 +927,12 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
                }
             }
          }
-
+         if (!thisType.isNull()) {
+            req_type = thisType.getTypePtr();
+         }
          if (selected->HasAttributeName()) {
             ROOT::TMetaUtils::AnnotatedRecordDecl annRecDecl(selected->GetIndex(),
-                                                            thisType.getTypePtr(),
+                                                            req_type,
                                                             recordDecl,
                                                             attr_name.c_str(),
                                                             selected->RequestStreamerInfo(),
