@@ -209,8 +209,10 @@ template <typename Data_t, typename Net_t>
          std::chrono::duration<double> elapsed_seconds = end - start;
          start = std::chrono::system_clock::now();
          double seconds = elapsed_seconds.count();
+         double nFlops  = (double) (fTestInterval * (nTrainingSamples / net.GetBatchSize()));
+                nFlops *= net.GetNFlops();
          std::cout << "Elapsed time for " << fTestInterval << " Epochs: "
-                   << seconds << " [s] => " << net.GetNFlops() * 1e-6 / seconds
+                   << seconds << " [s] => " << nFlops * 1e-9 / seconds
                    << " GFlop/s" << std::endl;
          auto b = *testLoader.begin();
          auto inputMatrix  = b.GetInput();
