@@ -599,7 +599,8 @@ void GetNormalizedName(std::string &norm_name,
 // Name normalisation is respected (e.g. spaces).
 // The implementation uses an internal class defined in the cxx file.
 std::string GetNameForIO(const std::string& templateInstanceName,
-                         TClassEdit::EModType mode = TClassEdit::kNone);
+                         TClassEdit::EModType mode = TClassEdit::kNone,
+                         bool* hasChanged = nullptr);
 
 //______________________________________________________________________________
 // Analog to GetNameForIO but with types.

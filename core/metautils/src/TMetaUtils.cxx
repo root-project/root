@@ -3912,6 +3912,7 @@ class NameCleanerForIO {
    std::string fName;
    std::vector<std::unique_ptr<NameCleanerForIO>> fArgumentNodes = {};
    NameCleanerForIO* fMother;
+   bool fHasChanged = false;
    ROOT::ESTLType IsMotherSTLCont()
    {
       if (!fMother) return ROOT::kNotSTL;
@@ -3937,6 +3938,8 @@ public:
       }
    }
 
+   bool HasChanged(){return fHasChanged;}
+
    std::string ToString()
    {
 
@@ -3954,6 +3957,7 @@ public:
       if (stlContType != ROOT::kNotSTL && TClassEdit::IsUniquePtr(fName+"<")) {
          name = fArgumentNodes.front()->ToString();
          name += "*";
+         fHasChanged = true;
          return name;
       }
 
@@ -3965,7 +3969,7 @@ public:
       }
       name.pop_back(); // Remove the last comma.
       name += name.back() == '>' ? " >" : ">"; // Respect name normalisation
-
+      fHasChanged = true;
       return name;
    }
 
@@ -3981,7 +3985,8 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 
 std::string ROOT::TMetaUtils::GetNameForIO(const std::string& templateInstanceName,
-                                             TClassEdit::EModType mode)
+                                           TClassEdit::EModType mode,
+                                           bool* hasChanged)
 {
    NameCleanerForIO node(templateInstanceName, mode);
    auto nameForIO = node.ToString();
@@ -3991,6 +3996,9 @@ std::string ROOT::TMetaUtils::GetNameForIO(const std::string& templateInstanceNa
                              "Name transformed: %s -> %s\n",
                              templateInstanceName.c_str(),
                              nameForIO.c_str());
+    }
+    if (hasChanged) {
+      *hasChanged = node.HasChanged();
     }
     return nameForIO;
 }
@@ -4004,7 +4012,10 @@ ROOT::TMetaUtils::GetNameTypeForIO(const clang::QualType& thisType,
 {
    std::string thisTypeName;
    GetNormalizedName(thisTypeName, thisType, interpreter, normCtxt );
-   auto thisTypeNameForIO = ROOT::TMetaUtils::GetNameForIO(thisTypeName);
+   bool hasChanged;
+   auto thisTypeNameForIO = ROOT::TMetaUtils::GetNameForIO(thisTypeName, mode, &hasChanged);
+   if (!hasChanged) return std::make_pair(thisTypeName,thisType);
+
    auto& lookupHelper = interpreter.getLookupHelper();
 
    const clang::Type* typePtrForIO;
