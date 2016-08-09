@@ -12,11 +12,7 @@
 class A{
 public:
    A():TH1FPtr(new TH1F("","b",64,0,4)),
-       TH1FUPtr(new TH1F("","b",64,0,4)){
-          TH1FUPtrs.emplace_back(new TH1F("a1","b",64,0,4));
-          TH1FUPtrs.emplace_back(new TH1F("a2","b",64,0,4));
-          TH1FUPtrs.emplace_back(new TH1F("a3","b",64,0,4));
-      };
+       TH1FUPtr(new TH1F("","b",64,0,4)){};
 
    A(const char* meta): TH1FPtr(new TH1F(meta,"b",64,0,4)),
                         TH1FUPtr(new TH1F((std::string(meta)+"_unique").c_str(),"b",64,0,4)){

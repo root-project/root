@@ -1,5 +1,17 @@
 ROOTTEST_ADD_TESTDIRS()
 
+ROOTTEST_GENERATE_REFLEX_DICTIONARY(classes3 classes3.h  SELECTION sel3.xml)
+
+ROOTTEST_ADD_TEST(checkDictionaries
+                  MACRO  checkDictionaries.C
+                  OUTREF checkDictionaries.ref
+                  DEPENDS ${GENERATE_REFLEX_TEST})
+
+
+ROOTTEST_ADD_TEST(aclicDataMemberSelection
+                  MACRO  aclic01.C+
+                  OUTREF aclic01.ref)
+
 ROOTTEST_GENERATE_REFLEX_DICTIONARY(classes2 classes2.h  SELECTION sel2.xml)
 
 ROOTTEST_ADD_TEST(streamerInfoError
@@ -13,11 +25,9 @@ ROOTTEST_ADD_TEST(customDeleteError
                   ERRREF  customDeleteError.eref
                   PASSRC 1)
 
-ROOTTEST_ADD_TEST(vectorOfUniquePointersError
+ROOTTEST_ADD_TEST(vectorOfUniquePointers
                   COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/classesError2.h
-                          --select=${CMAKE_CURRENT_SOURCE_DIR}/selError2.xml -I ${CMAKE_CURRENT_SOURCE_DIR}
-                  ERRREF  vectorOfUniquePointersError.eref
-                  PASSRC 1)
+                          --select=${CMAKE_CURRENT_SOURCE_DIR}/selError2.xml -I ${CMAKE_CURRENT_SOURCE_DIR})
 
 ROOTTEST_ADD_TEST(simpleRead
                   MACRO  rw.C

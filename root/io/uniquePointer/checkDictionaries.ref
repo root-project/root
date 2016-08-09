@@ -1,0 +1,13 @@
+
+Processing /home/dpiparo/RootDevel/Root6/head/roottest/root/io/uniquePointer/checkDictionaries.C...
+Class Class01 has a dictionary
+Class Class02 has a dictionary
+Class vector<int*> has a dictionary
+Class vector<double*> has a dictionary
+Class vector<list<double>*> has a dictionary
+Class set<vector<int*> > has a dictionary
+Class set<vector<double*> > has a dictionary
+Class map<char,vector<list<double>*> > has a dictionary
+Class set<vector<Class01*> > has a dictionary
+Class map<char,vector<list<Class01>*> > has a dictionary
+(int) 0

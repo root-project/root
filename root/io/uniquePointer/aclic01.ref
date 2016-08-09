@@ -1,0 +1,7 @@
+
+Processing /home/dpiparo/RootDevel/Root6/head/roottest/root/io/uniquePointer/aclic01.C+...
+Info in <TUnixSystem::ACLiC>: creating shared library /home/dpiparo/RootDevel/Root6/head/build/roottest/root/io/uniquePointer/aclic01_C.so
+Class aclic01Class01 has a dictionary
+Class vector<int*> has a dictionary
+Class vector<vector<vector<vector<list<TH1F*> > > > > has a dictionary
+(int) 0
