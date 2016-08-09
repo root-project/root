@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_image
-/// \notebook
+/// \notebook -nodraw
 /// Open rose512.jpg and save it in the following formats:
 ///  .png, .gif, .xpm and tiff.
 ///

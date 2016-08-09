@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_math
-/// \notebook
+/// \notebook -nodraw
 /// Example of  I/O of a mathcore Lorentz Vectors in a Tree and comparison with a TLorentzVector.
 /// A ROOT tree is written and read in both using either a XYZTVector or a TLorentzVector.
 ///

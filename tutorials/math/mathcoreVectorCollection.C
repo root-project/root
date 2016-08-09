@@ -85,7 +85,7 @@ double write(int n) {
    return sum;
 }
 
-   double read() {
+double read() {
    TRandom R;
    TStopwatch timer;
 
