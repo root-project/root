@@ -123,10 +123,11 @@ void TCuda::SumColumns(TCudaMatrix &B, const TCudaMatrix &A)
 //____________________________________________________________________________
 void TCuda::ScaleAdd(TCudaMatrix &B, const TCudaMatrix &A, CudaDouble_t alpha)
 {
-   cudaStream_t s = B.GetComputeStream();
+   cudaStream_t s = A.GetComputeStream();
    cublasDaxpy(A.GetCublasHandle(), A.GetNoElements(), &alpha,
                A.GetDataPointer(), 1,
                B.GetDataPointer(), 1);
+   B.SetComputeStream(s);
 }
 
 } // DNN

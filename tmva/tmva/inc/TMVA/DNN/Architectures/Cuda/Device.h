@@ -29,8 +29,8 @@ namespace DNN
 class TDevice
 {
 public:
-   static constexpr int BlockDimX = 32;
-   static constexpr int BlockDimY = 16;
+   static constexpr int BlockDimX = 1;
+   static constexpr int BlockDimY = 32;
    static constexpr int BlockSize = BlockDimX * BlockDimY;
 
    static dim3 BlockDims()
