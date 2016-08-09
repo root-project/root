@@ -125,6 +125,8 @@ public:
     * function f to the activation of the last layer in the network. */
    inline void Prediction(Matrix_t &Y_hat, EOutputFunction f) const;
 
+   Scalar_t            GetNFlops();
+
    size_t              GetDepth() const         {return fLayers.size();}
    size_t              GetBatchSize() const     {return fBatchSize;}
    Layer_t &           GetLayer(size_t i)       {return fLayers[i];}
@@ -309,7 +311,37 @@ template<typename Architecture_t, typename Layer_t>
 }
 
 //______________________________________________________________________________
+template<typename Architecture_t, typename Layer_t>
+auto TNet<Architecture_t, Layer_t>::GetNFlops()
+   -> Scalar_t
+{
+   Scalar_t flops = 0;
 
+   Scalar_t nb  = (Scalar_t) fBatchSize;
+   Scalar_t nlp = (Scalar_t) fInputWidth;
+
+   for(size_t i = 0; i < fLayers.size(); i++) {
+      Layer_t & layer = fLayers[i];
+      Scalar_t nl = (Scalar_t) layer.GetWidth();
+
+      // Forward propagation.
+      flops += nb * nl * (2.0 * nlp - 1); // Matrix mult.
+      flops += nb * nl;                   // Add bias values.
+      flops += 2 * nb * nl;               // Apply activation function and compute
+                                          // derivative.
+      // Backward propagation.
+      flops += nb * nl;                      // Hadamard
+      flops += nlp * nb * (2.0 * nlp - 1.0); // Weight gradients
+      flops += nl * (nb - 1);                // Bias gradients
+      if (i > 0) {
+         flops += nlp * nb * (2.0 * nl  - 1.0); // Previous layer gradients.
+      }
+      nlp = nl;
+   }
+   return flops;
+}
+
+//______________________________________________________________________________
 template<typename Architecture_t, typename Layer_t>
    void TNet<Architecture_t, Layer_t>::Print()
 {
