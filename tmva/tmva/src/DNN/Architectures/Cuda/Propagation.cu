@@ -87,9 +87,9 @@ void TCuda::Copy(TCudaMatrix & B, const TCudaMatrix & A)
 {
    size_t m = B.GetNrows();
    size_t n = B.GetNcols();
-   cudaMemcpy(B.GetDataPointer(), A.GetDataPointer(),
-              m * n * sizeof(CudaDouble_t), cudaMemcpyDeviceToDevice);
-       // , A.GetComputeStream());
+   cudaMemcpyAsync(B.GetDataPointer(), A.GetDataPointer(),
+                   m * n * sizeof(CudaDouble_t), cudaMemcpyDeviceToDevice,
+                   A.GetComputeStream());
 }
 
 } // namespace DNN
