@@ -130,7 +130,6 @@ void ROOT::Internal::RStl::GenerateTClassFor(const clang::QualType &type, const 
 void ROOT::Internal::RStl::GenerateTClassFor(const char *requestedName, const clang::CXXRecordDecl *stlclass, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
 {
    // Force the generation of the TClass for the given class.
-   ROOT::TMetaUtils::Warning("","Hello\n");
    const clang::ClassTemplateSpecializationDecl *templateCl = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(stlclass);
 
    if (templateCl == 0) {
