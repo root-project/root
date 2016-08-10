@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_roostats
+/// \notebook
 /// Standard tutorial macro for hypothesis test (for computing the discovery significance) using all
 /// RooStats hypotheiss tests calculators and test statistics.
 ///

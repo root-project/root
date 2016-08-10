@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_roostats
+/// \notebook
 /// OneSidedFrequentistUpperLimitWithBands
 ///
 /// This is a standard demo that can be used with any ROOT file

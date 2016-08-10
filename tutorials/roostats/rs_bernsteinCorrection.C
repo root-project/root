@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_roostats
+/// \notebook -js
 /// 'Bernstein Correction' RooStats tutorial macro
 ///
 /// This tutorial shows usage of a the BernsteinCorrection utility in RooStats.
@@ -25,9 +26,6 @@
 ///
 /// \author Kyle Cranmer
 
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
 #include "RooDataSet.h"
 #include "RooRealVar.h"
 #include "RooConstVar.h"
@@ -61,96 +59,96 @@ using namespace RooStats;
 //____________________________________
 void rs_bernsteinCorrection(){
 
-  // set range of observable
-  Double_t lowRange = -1, highRange =5;
+   // set range of observable
+   Double_t lowRange = -1, highRange =5;
 
-  // make a RooRealVar for the observable
-  RooRealVar x("x", "x", lowRange, highRange);
+   // make a RooRealVar for the observable
+   RooRealVar x("x", "x", lowRange, highRange);
 
-  // true model
-  RooGaussian narrow("narrow","",x,RooConst(0.), RooConst(.8));
-  RooGaussian wide("wide","",x,RooConst(0.), RooConst(2.));
-  RooAddPdf reality("reality","",RooArgList(narrow, wide), RooConst(0.8));
+   // true model
+   RooGaussian narrow("narrow","",x,RooConst(0.), RooConst(.8));
+   RooGaussian wide("wide","",x,RooConst(0.), RooConst(2.));
+   RooAddPdf reality("reality","",RooArgList(narrow, wide), RooConst(0.8));
 
-  RooDataSet* data = reality.generate(x,1000);
+   RooDataSet* data = reality.generate(x,1000);
 
-  // nominal model
-  RooRealVar sigma("sigma","",1.,0,10);
-  RooGaussian nominal("nominal","",x,RooConst(0.), sigma);
+   // nominal model
+   RooRealVar sigma("sigma","",1.,0,10);
+   RooGaussian nominal("nominal","",x,RooConst(0.), sigma);
 
-  RooWorkspace* wks = new RooWorkspace("myWorksspace");
+   RooWorkspace* wks = new RooWorkspace("myWorksspace");
 
-  wks->import(*data, Rename("data"));
-  wks->import(nominal);
+   wks->import(*data, Rename("data"));
+   wks->import(nominal);
 
-  // use Minuit2
-  ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
+   // use Minuit2
+   ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
 
-  // The tolerance sets the probability to add an unnecessary term.
-  // lower tolerance will add fewer terms, while higher tolerance
-  // will add more terms and provide a more flexible function.
-  Double_t tolerance = 0.05;
-  BernsteinCorrection bernsteinCorrection(tolerance);
-  Int_t degree = bernsteinCorrection.ImportCorrectedPdf(wks,"nominal","x","data");
+   // The tolerance sets the probability to add an unnecessary term.
+   // lower tolerance will add fewer terms, while higher tolerance
+   // will add more terms and provide a more flexible function.
+   Double_t tolerance = 0.05;
+   BernsteinCorrection bernsteinCorrection(tolerance);
+   Int_t degree = bernsteinCorrection.ImportCorrectedPdf(wks,"nominal","x","data");
 
-  if (degree < 0) {
-     Error("rs_bernsteinCorrection","Bernstein correction failed ! ");
-     return;
-  }
+   if (degree < 0) {
+      Error("rs_bernsteinCorrection","Bernstein correction failed ! ");
+      return;
+   }
 
-  cout << " Correction based on Bernstein Poly of degree " << degree << endl;
+   cout << " Correction based on Bernstein Poly of degree " << degree << endl;
 
 
-  RooPlot* frame = x.frame();
-  data->plotOn(frame);
-  // plot the best fit nominal model in blue
-  TString minimType =  ROOT::Math::MinimizerOptions::DefaultMinimizerType();
-  nominal.fitTo(*data,PrintLevel(0),Minimizer(minimType));
-  nominal.plotOn(frame);
+   RooPlot* frame = x.frame();
+   data->plotOn(frame);
+   // plot the best fit nominal model in blue
+   TString minimType =  ROOT::Math::MinimizerOptions::DefaultMinimizerType();
+   nominal.fitTo(*data,PrintLevel(0),Minimizer(minimType));
+   nominal.plotOn(frame);
 
-  // plot the best fit corrected model in red
-  RooAbsPdf* corrected = wks->pdf("corrected");
-  if (!corrected) return;
+   // plot the best fit corrected model in red
+   RooAbsPdf* corrected = wks->pdf("corrected");
+   if (!corrected) return;
 
-  // fit corrected model
-  corrected->fitTo(*data,PrintLevel(0),Minimizer(minimType) );
-  corrected->plotOn(frame,LineColor(kRed));
+   // fit corrected model
+   corrected->fitTo(*data,PrintLevel(0),Minimizer(minimType) );
+   corrected->plotOn(frame,LineColor(kRed));
 
-  // plot the correction term (* norm constant) in dashed green
-  // should make norm constant just be 1, not depend on binning of data
-  RooAbsPdf* poly = wks->pdf("poly");
-  if (poly)
-  poly->plotOn(frame,LineColor(kGreen), LineStyle(kDashed));
+   // plot the correction term (* norm constant) in dashed green
+   // should make norm constant just be 1, not depend on binning of data
+   RooAbsPdf* poly = wks->pdf("poly");
+   if (poly)
+   poly->plotOn(frame,LineColor(kGreen), LineStyle(kDashed));
 
-  // this is a switch to check the sampling distribution
-  // of -2 log LR for two comparisons:
-  // the first is for n-1 vs. n degree polynomial corrections
-  // the second is for n vs. n+1 degree polynomial corrections
-  // Here we choose n to be the one chosen by the tolerance
-  // critereon above, eg. n = "degree" in the code.
-  // Setting this to true is takes about 10 min.
-  bool checkSamplingDist = true;
-  int numToyMC = 20;  // increse this value for sensible results
+   // this is a switch to check the sampling distribution
+   // of -2 log LR for two comparisons:
+   // the first is for n-1 vs. n degree polynomial corrections
+   // the second is for n vs. n+1 degree polynomial corrections
+   // Here we choose n to be the one chosen by the tolerance
+   // critereon above, eg. n = "degree" in the code.
+   // Setting this to true is takes about 10 min.
+   bool checkSamplingDist = true;
+   int numToyMC = 20;  // increse this value for sensible results
 
-  TCanvas* c1 = new TCanvas();
-  if(checkSamplingDist) {
-    c1->Divide(1,2);
-    c1->cd(1);
-  }
-  frame->Draw();
-  gPad->Update();
+   TCanvas* c1 = new TCanvas();
+   if(checkSamplingDist) {
+      c1->Divide(1,2);
+      c1->cd(1);
+   }
+   frame->Draw();
+   gPad->Update();
 
-  if(checkSamplingDist) {
-    // check sampling dist
-    ROOT::Math::MinimizerOptions::SetDefaultPrintLevel(-1);
-    TH1F* samplingDist = new TH1F("samplingDist","",20,0,10);
-    TH1F* samplingDistExtra = new TH1F("samplingDistExtra","",20,0,10);
-    bernsteinCorrection.CreateQSamplingDist(wks,"nominal","x","data",samplingDist, samplingDistExtra, degree,numToyMC);
+   if(checkSamplingDist) {
+      // check sampling dist
+      ROOT::Math::MinimizerOptions::SetDefaultPrintLevel(-1);
+      TH1F* samplingDist = new TH1F("samplingDist","",20,0,10);
+      TH1F* samplingDistExtra = new TH1F("samplingDistExtra","",20,0,10);
+      bernsteinCorrection.CreateQSamplingDist(wks,"nominal","x","data",samplingDist, samplingDistExtra, degree,numToyMC);
 
-    c1->cd(2);
-    samplingDistExtra->SetLineColor(kRed);
-    samplingDistExtra->Draw();
-    samplingDist->Draw("same");
-  }
+      c1->cd(2);
+      samplingDistExtra->SetLineColor(kRed);
+      samplingDistExtra->Draw();
+      samplingDist->Draw("same");
+   }
 }
 

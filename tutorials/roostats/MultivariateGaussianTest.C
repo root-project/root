@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_roostats
+/// \notebook
 /// Comparison of MCMC and PLC in a multi-variate gaussian problem
 ///
 /// This tutorial produces an N-dimensional multivariate Gaussian

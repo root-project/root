@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_multicore
+/// \notebook -js
 /// Parallel fill of a histogram
 /// This tutorial shows how a histogram can be filled in parallel
 /// with a multiprocess approach.
