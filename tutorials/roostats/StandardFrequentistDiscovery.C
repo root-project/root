@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_roostats
+/// \notebook
 /// StandardFrequentistDiscovery
 ///
 ///  This is a standard demo that can be used with any ROOT file
@@ -50,8 +51,6 @@
 
 using namespace RooFit;
 using namespace RooStats;
-
-
 
 
 double StandardFrequentistDiscovery(

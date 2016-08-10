@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_multicore
+/// \notebook -nodraw
 /// Fill histograms in parallel and write them on file.
 /// This example expresses the parallelism of the mt001_fillHistos.C tutorial
 /// with multiprocessing techniques.

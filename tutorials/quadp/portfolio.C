@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_quadp
+/// \notebook
 /// This macro shows in detail the use of the quadratic programming package quadp .
 /// Running this macro :
 ///
@@ -291,98 +292,98 @@ TVectorD OptimalInvest(Double_t riskFactor,TVectorD r,TMatrixDSym Covar)
 //---------------------------------------------------------------------------
 void portfolio()
 {
-  const Int_t sDay = 20000809;
-  const Int_t eDay = 20040602;
+   const Int_t sDay = 20000809;
+   const Int_t eDay = 20040602;
 
-  const char *fname = "stock.root";
-  TFile *f = 0;
-  if (!gSystem->AccessPathName(fname)) {
-     f = TFile::Open(fname);
-  } else {
-     printf("accessing %s file from http://root.cern.ch/files\n",fname);
-     f = TFile::Open(Form("http://root.cern.ch/files/%s",fname));
-  }
-  if (!f) return;
+   const char *fname = "stock.root";
+   TFile *f = 0;
+   if (!gSystem->AccessPathName(fname)) {
+      f = TFile::Open(fname);
+   } else {
+      printf("accessing %s file from http://root.cern.ch/files\n",fname);
+      f = TFile::Open(Form("http://root.cern.ch/files/%s",fname));
+   }
+   if (!f) return;
 
-  TArrayF *data = new TArrayF[nrStocks];
-  for (Int_t i = 0; i < nrStocks; i++) {
-    const TString symbol = stocks[i];
-    data[i] = StockReturn(f,symbol,sDay,eDay);
-  }
+   TArrayF *data = new TArrayF[nrStocks];
+   for (Int_t i = 0; i < nrStocks; i++) {
+      const TString symbol = stocks[i];
+      data[i] = StockReturn(f,symbol,sDay,eDay);
+   }
 
-  const Int_t nrData = data[0].GetSize();
+   const Int_t nrData = data[0].GetSize();
 
-  TVectorD r(nrStocks);
-  for (Int_t i = 0; i < nrStocks; i++)
-    r[i] = data[i].GetSum()/nrData;
+   TVectorD r(nrStocks);
+   for (Int_t i = 0; i < nrStocks; i++)
+      r[i] = data[i].GetSum()/nrData;
 
-  TMatrixDSym Covar(nrStocks);
-  for (Int_t i = 0; i < nrStocks; i++) {
-    for (Int_t j = 0; j <= i; j++) {
-      Double_t sum = 0.;
-      for (Int_t k = 0; k < nrData; k++)
-        sum += (data[i][k]-r[i])*(data[j][k]-r[j]);
-      Covar(i,j) = Covar(j,i) = sum/nrData;
-    }
-  }
+   TMatrixDSym Covar(nrStocks);
+   for (Int_t i = 0; i < nrStocks; i++) {
+      for (Int_t j = 0; j <= i; j++) {
+         Double_t sum = 0.;
+         for (Int_t k = 0; k < nrData; k++)
+         sum += (data[i][k]-r[i])*(data[j][k]-r[j]);
+         Covar(i,j) = Covar(j,i) = sum/nrData;
+      }
+   }
 
-  const TVectorD weight1 = OptimalInvest(2.0,r,Covar);
-  const TVectorD weight2 = OptimalInvest(10.,r,Covar);
+   const TVectorD weight1 = OptimalInvest(2.0,r,Covar);
+   const TVectorD weight2 = OptimalInvest(10.,r,Covar);
 
-  cout << "stock     daily  daily   w1     w2" <<endl;
-  cout << "symb      return sdv              " <<endl;
-  for (Int_t i = 0; i < nrStocks; i++)
-    printf("%s\t: %.3f  %.3f  %.3f  %.3f\n",stocks[i],r[i],TMath::Sqrt(Covar[i][i]),weight1[i],weight2[i]);
+   cout << "stock     daily  daily   w1     w2" <<endl;
+   cout << "symb      return sdv              " <<endl;
+   for (Int_t i = 0; i < nrStocks; i++)
+      printf("%s\t: %.3f  %.3f  %.3f  %.3f\n",stocks[i],r[i],TMath::Sqrt(Covar[i][i]),weight1[i],weight2[i]);
 
-  TCanvas *c1 = new TCanvas("c1","Portfolio Optimizations",10,10,800,900);
-  c1->Divide(1,2);
+   TCanvas *c1 = new TCanvas("c1","Portfolio Optimizations",10,10,800,900);
+   c1->Divide(1,2);
 
-  // utility function / risk profile
+   // utility function / risk profile
 
-  c1->cd(1);
-  gPad->SetGridx();
-  gPad->SetGridy();
+   c1->cd(1);
+   gPad->SetGridx();
+   gPad->SetGridy();
 
-  TF1 *f1 = new TF1("f1",RiskProfile,0,2.5,1);
-  f1->SetParameter(0,2.0);
-  f1->SetLineColor(49);
-  f1->Draw("AC");
-  f1->GetHistogram()->SetXTitle("dollar");
-  f1->GetHistogram()->SetYTitle("utility");
-  f1->GetHistogram()->SetMinimum(0.0);
-  f1->GetHistogram()->SetMaximum(1.0);
-  TF1 *f2 = new TF1("f2",RiskProfile,0,2.5,1);
-  f2->SetParameter(0,10.);
-  f2->SetLineColor(50);
-  f2->Draw("CSAME");
+   TF1 *f1 = new TF1("f1",RiskProfile,0,2.5,1);
+   f1->SetParameter(0,2.0);
+   f1->SetLineColor(49);
+   f1->Draw("AC");
+   f1->GetHistogram()->SetXTitle("dollar");
+   f1->GetHistogram()->SetYTitle("utility");
+   f1->GetHistogram()->SetMinimum(0.0);
+   f1->GetHistogram()->SetMaximum(1.0);
+   TF1 *f2 = new TF1("f2",RiskProfile,0,2.5,1);
+   f2->SetParameter(0,10.);
+   f2->SetLineColor(50);
+   f2->Draw("CSAME");
 
-  TLegend *legend1 = new TLegend(0.50,0.65,0.70,0.82);
-  legend1->AddEntry(f1,"1-exp(-2.0*x)","l");
-  legend1->AddEntry(f2,"1-exp(-10.*x)","l");
-  legend1->Draw();
+   TLegend *legend1 = new TLegend(0.50,0.65,0.70,0.82);
+   legend1->AddEntry(f1,"1-exp(-2.0*x)","l");
+   legend1->AddEntry(f2,"1-exp(-10.*x)","l");
+   legend1->Draw();
 
-  // vertical bar chart of portfolio distribution
+   // vertical bar chart of portfolio distribution
 
-  c1->cd(2);
-  TH1F *h1 = new TH1F("h1","Portfolio Distribution",nrStocks,0,0);
-  TH1F *h2 = new TH1F("h2","Portfolio Distribution",nrStocks,0,0);
-  h1->SetStats(0);
-  h1->SetFillColor(49);
-  h2->SetFillColor(50);
-  h1->SetBarWidth(0.45);
-  h1->SetBarOffset(0.1);
-  h2->SetBarWidth(0.4);
-  h2->SetBarOffset(0.55);
-  for (Int_t i = 0; i < nrStocks; i++) {
-    h1->Fill(stocks[i],weight1[i]);
-    h2->Fill(stocks[i],weight2[i]);
-  }
+   c1->cd(2);
+   TH1F *h1 = new TH1F("h1","Portfolio Distribution",nrStocks,0,0);
+   TH1F *h2 = new TH1F("h2","Portfolio Distribution",nrStocks,0,0);
+   h1->SetStats(0);
+   h1->SetFillColor(49);
+   h2->SetFillColor(50);
+   h1->SetBarWidth(0.45);
+   h1->SetBarOffset(0.1);
+   h2->SetBarWidth(0.4);
+   h2->SetBarOffset(0.55);
+   for (Int_t i = 0; i < nrStocks; i++) {
+      h1->Fill(stocks[i],weight1[i]);
+      h2->Fill(stocks[i],weight2[i]);
+   }
 
-  h1->Draw("BAR2 HIST");
-  h2->Draw("BAR2SAME HIST");
+   h1->Draw("BAR2 HIST");
+   h2->Draw("BAR2SAME HIST");
 
-  TLegend *legend2 = new TLegend(0.50,0.65,0.70,0.82);
-  legend2->AddEntry(h1,"high risk","f");
-  legend2->AddEntry(h2,"low  risk","f");
-  legend2->Draw();
+   TLegend *legend2 = new TLegend(0.50,0.65,0.70,0.82);
+   legend2->AddEntry(h1,"high risk","f");
+   legend2->AddEntry(h2,"low  risk","f");
+   legend2->Draw();
 }

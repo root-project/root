@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_roostats
+/// \notebook
 ///  This example is a generalization of the on/off problem.
 ///
 ///  This example is a generalization of the on/off problem.

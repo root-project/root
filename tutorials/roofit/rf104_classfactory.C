@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_roofit
-/// \notebook
+/// \notebook -js
 ///  'BASIC FUNCTIONALITY' RooFit tutorial macro #104
 ///
 ///  The class factory for functions and p.d.f.s

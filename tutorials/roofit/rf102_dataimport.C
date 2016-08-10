@@ -128,7 +128,7 @@ void rf102_dataimport()
 
 
 TH1* makeTH1() 
-   {
+{
    // Create ROOT TH1 filled with a Gaussian distribution
 
    TH1D* hh = new TH1D("hh","hh",25,-10,10) ;

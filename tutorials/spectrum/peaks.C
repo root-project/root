@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_spectrum
+/// \notebook
 /// Getting Contours From TH2D.
 /// Illustrates how to find peaks in histograms.
 ///
