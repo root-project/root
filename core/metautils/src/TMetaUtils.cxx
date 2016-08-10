@@ -4064,6 +4064,13 @@ ROOT::TMetaUtils::GetNameTypeForIO(const clang::QualType& thisType,
    lookupHelper.findScope(thisTypeNameForIO,
                           cling::LookupHelper::DiagSetting::NoDiagnostics,
                           &typePtrForIO);
+
+   // This should never happen
+   if (!typePtrForIO) {
+      ROOT::TMetaUtils::Fatal("ROOT::TMetaUtils::GetTypeForIO",
+                              "Type not found: %s.",thisTypeNameForIO.c_str());
+   }
+
    clang::QualType typeForIO(typePtrForIO,0);
 
    // Check if this is a class. Indeed it could well be a POD
@@ -4073,10 +4080,8 @@ ROOT::TMetaUtils::GetNameTypeForIO(const clang::QualType& thisType,
 
    auto thisDeclForIO = typeForIO->getAsCXXRecordDecl();
    if (!thisDeclForIO) {
-      std::string err = "The type for IO corresponding to ";
-      err += thisTypeName + " is " + thisTypeNameForIO + " and it could not be found in the AST.\n";
       ROOT::TMetaUtils::Error("ROOT::TMetaUtils::GetTypeForIO",
-                              err.c_str());
+       "The type for IO corresponding to %s is %s and it could not be found in the AST as class.\n", thisTypeName.c_str(), thisTypeNameForIO.c_str());
       return std::make_pair(thisTypeName,thisType);
    }
 
