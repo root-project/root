@@ -64,7 +64,7 @@ from datetime import datetime, date
 # for the script to work correctly.
 gTypesList = ["void", "int", "Int_t", "TF1", "string", "bool", "double", "float", "char",
     "TCanvas", "TTree", "TString", "TseqCollection", "Double_t", "TFile", "Long64_t", "Bool_t", "TH1",
-    "RooDataSet", "RooWorkspace"]
+    "RooDataSet", "RooWorkspace" , "HypoTestInverterResult" , "TVectorD" , "TArrayF"]
 
 # -------------------------------------
 # -------- Fuction definitions---------
@@ -380,7 +380,7 @@ def split(text):
     for cpptype in gTypesList:
         functionReString += ("^%s|") % cpptype
     
-    functionReString = functionReString[:-1] + r")\s?\*?\s?[\w:]*?\s?\([^\)]*\)\s*\{.*?^\}"
+    functionReString = functionReString[:-1] + r")\s?\*?&?\s?[\w:]*?\s?\([^\)]*\)\s*\{.*?^\}"
     
     functionRe = re.compile(functionReString, flags = re.DOTALL | re.MULTILINE)
     #functionre = re.compile(r'(^void|^int|^Int_t|^TF1|^string|^bool|^double|^float|^char|^TCanvas|^TTree|^TString|^TSeqCollection|^Double_t|^TFile|^Long64_t|^Bool_t)\s?\*?\s?[\w:]*?\s?\([^\)]*\)\s*\{.*?^\}', flags = re.DOTALL | re.MULTILINE)
@@ -458,7 +458,7 @@ def findFunctionName(text):
 
     #functionnamere = re.compile(r'(?<=(?<=int)|(?<=void)|(?<=TF1)|(?<=Int_t)|(?<=string)|(?<=double)|(?<=Double_t)|(?<=float)|(?<=char)|(?<=TString)|(?<=bool)|(?<=TSeqCollection)|(?<=TCanvas)|(?<=TTree)|(?<=TFile)|(?<=Long64_t)|(?<=Bool_t))\s?\*?\s?[^\s]*?(?=\s?\()', flags = re.DOTALL | re.MULTILINE)
     match = functionNameRe.search(text)
-    functionname = match.group().strip(" *")
+    functionname = match.group().strip(" *\n")
     return functionname
 
 
@@ -527,8 +527,18 @@ def roofitRemoveSpacesComments(code):
     newcode = re.sub("#\s\s\w\s[\w-]\s\w.*", changeString , code)
     return newcode
 
+def roostatsRoofitDeclaceNamespace(code):
+    if "using namespace RooFit;\nusing namespace RooStats;" in code:
+        code = code.replace("using namespace RooFit;\nusing namespace RooStats;", "# <codecell>\n%%cpp -d\n// This is a workaround to make sure the namespace is used inside functions\nusing namespace RooFit;\nusing namespace RooStats;")
+
+    else:
+        code = code.replace("using namespace RooFit;", "# <codecell>\n%%cpp -d\n// This is a workaround to make sure the namespace is used inside functions\nusing namespace RooFit;")
+        code = code.replace("using namespace RooStats;", "# <codecell>\n%%cpp -d\n// This is a workaround to make sure the namespace is used inside functions\nusing namespace RooStats;")
+    return code
+
+
 def fixes(code):
-    codeTransformers=[removePaletteEditor, runEventExe, getLibMathMore, roofitRemoveSpacesComments]
+    codeTransformers=[removePaletteEditor, runEventExe, getLibMathMore, roofitRemoveSpacesComments, roostatsRoofitDeclaceNamespace]
 
     for transformer in codeTransformers:
         code = transformer(code)
