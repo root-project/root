@@ -29,6 +29,7 @@ namespace cling {
   //                 CommandSymbol := '.' | '//.'
   //                 Command := LCommand | XCommand | qCommand | UCommand |
   //                            ICommand | OCommand | RawInputCommand |
+  //                            RecursivePrintDepthCommand |
   //                            PrintDebugCommand | DynamicExtensionsCommand |
   //                            HelpCommand | FileExCommand | FilesCommand |
   //                            ClassCommand | GCommand | StoreStateCommand |
@@ -42,6 +43,7 @@ namespace cling {
   //                 ICommand := 'I' [FilePath]
   //                 OCommand := 'O'[' ']Constant
   //                 RawInputCommand := 'rawInput' [Constant]
+  //                 RecursivePrintDepthCommand := 'printDepth' [Constant]
   //                 PrintDebugCommand := 'printDebug' [Constant]
   //                 DebugCommand := 'debug' [Constant]
   //                 StoreStateCommand := 'storeState' "Ident"
@@ -94,6 +96,7 @@ namespace cling {
     bool isICommand();
     bool isOCommand();
     bool israwInputCommand();
+    bool isRecursivePrintDepthCommand();
     bool isdebugCommand();
     bool isprintDebugCommand();
     bool isstoreStateCommand();

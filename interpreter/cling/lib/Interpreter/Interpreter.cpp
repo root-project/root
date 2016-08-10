@@ -170,7 +170,7 @@ namespace cling {
                            const char* llvmdir /*= 0*/, bool noRuntime,
                            bool isChildInterp) :
     m_UniqueCounter(0), m_PrintDebug(false), m_DynamicLookupDeclared(false),
-    m_DynamicLookupEnabled(false), m_RawInputEnabled(false) {
+    m_DynamicLookupEnabled(false), m_RawInputEnabled(false), m_RecursivePrintDepth(2) {
 
     m_LLVMContext.reset(new llvm::LLVMContext);
     std::vector<unsigned> LeftoverArgsIdx;

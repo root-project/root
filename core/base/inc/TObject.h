@@ -217,7 +217,7 @@ enum EObjBits {
 };
 
 namespace cling {
-   std::string printValue(TObject *val);
+   std::string printValue(TObject *val, unsigned int);
 }
 
 #endif
