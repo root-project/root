@@ -112,6 +112,7 @@ Add a new mode for `TClass::SetCanSplit` (2) which indicates that this class and
 
 ## I/O Libraries
 
+* Support I/O of std::unique_ptrs and STL collections thereof.
 * Custom streamers need to #include TBuffer.h explicitly (see [section Core Libraries](#core-libs))
 * Check and flag short reads as errors in the xroot plugins. This fixes [ROOT-3341].
 * Added support for AWS temporary security credentials to TS3WebFile by allowing the security token to be given.
