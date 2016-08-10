@@ -592,17 +592,6 @@ void GetNormalizedName(std::string &norm_name,
                        const cling::Interpreter &interpreter);
 
 //______________________________________________________________________________
-// Decompose template name into pieces and remount it applying the necessary
-// transformations necessary for the ROOT IO subsystem, namely:
-// - Transform std::unique_ptr<T> into T (for selections) (also nested)
-// - Transform std::COLL<std::unique_ptr<T>> into std::COLL<T*> (also nested)
-// Name normalisation is respected (e.g. spaces).
-// The implementation uses an internal class defined in the cxx file.
-std::string GetNameForIO(const std::string& templateInstanceName,
-                         TClassEdit::EModType mode = TClassEdit::kNone,
-                         bool* hasChanged = nullptr);
-
-//______________________________________________________________________________
 // Analog to GetNameForIO but with types.
 // It uses the LookupHelper of Cling to transform the name in type.
 clang::QualType GetTypeForIO(const clang::QualType& templateInstanceType,

@@ -184,6 +184,10 @@ namespace TClassEdit {
       GetSplit(name.data(), v, i);
       return v[1];
    }
+   std::string GetNameForIO(const std::string& templateInstanceName,
+                           TClassEdit::EModType mode = TClassEdit::kNone,
+                           bool* hasChanged = nullptr);
+
    inline char* DemangleName(const char* mangled_name, int& errorCode)
    {
    // Demangle in a portable way the name.
