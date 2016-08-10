@@ -3917,6 +3917,11 @@ ROOT::TMetaUtils::GetNameTypeForIO(const clang::QualType& thisType,
    auto thisTypeNameForIO = TClassEdit::GetNameForIO(thisTypeName, mode, &hasChanged);
    if (!hasChanged) return std::make_pair(thisTypeName,thisType);
 
+   if (hasChanged && ROOT::TMetaUtils::GetErrorIgnoreLevel() <= ROOT::TMetaUtils::kNote) {
+      ROOT::TMetaUtils::Info("ROOT::TMetaUtils::GetTypeForIO", 
+        "Name changed from %s to %s\n", thisTypeName.c_str(), thisTypeNameForIO.c_str());
+   }
+
    auto& lookupHelper = interpreter.getLookupHelper();
 
    const clang::Type* typePtrForIO;
