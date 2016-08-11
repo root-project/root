@@ -29,7 +29,7 @@
 #include "TAxis.h"
 #include "TGaxis.h"
 #include "TH1F.h"
-
+#include "TFitResultPtr.h"
 
 class TBrowser;
 class TFileMergeInfo;
@@ -68,8 +68,10 @@ protected:
    Float_t fSplitFraction = 0.3;
 
    TGraph *fRatioGraph;
-   TGraphAsymmErrors *fConfidenceIntervals = 0;
+   TGraphErrors *fConfidenceInterval1 = 0;
+   TGraphErrors *fConfidenceInterval2 = 0;
 
+   TFitResult *fFitResult = 0;
 
    TAxis *fSharedXAxis;
    TGaxis *fUpperGXaxis;
@@ -112,13 +114,17 @@ protected:
    Bool_t fIsPadUpdating = kFALSE;
    Bool_t fPainting = kFALSE;
 
-   virtual void BuildRatio(Double_t c1 = 1., Double_t c2 = 1.);
    virtual void SyncAxesRanges();
    virtual void SetupPads();
    virtual void CreateVisualAxes();
    virtual Bool_t SyncPadMargins();
    virtual void SetPadMargins();
-   
+   virtual void CreateGridline();
+
+   virtual TGraph *GetLowerRefGraph();
+   virtual TAxis *GetLowerRefXaxis();
+   virtual TAxis *GetLowerRefYaxis();
+
    virtual Bool_t IsDrawn();
 
 public:
@@ -130,6 +136,8 @@ public:
 
    virtual void Draw(Option_t *chopt="");
    virtual void Browse(TBrowser *b);
+   
+   virtual void BuildRatio(Double_t c1 = 1., Double_t c2 = 1.);
 
    // Setters for margins
    void SetUpTopMargin(Float_t margin);
@@ -141,6 +149,8 @@ public:
    
    void SetSeparationMargin(Float_t);
 
+   virtual void SetFitResult(TFitResultPtr fitres) { fFitResult = fitres.Get(); }
+   virtual void SetFitResult(TFitResult *fitres) { fFitResult = fitres; }
 
    virtual void SetSplitFraction(Float_t sf);
    virtual void Paint(Option_t *opt = "");

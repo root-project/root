@@ -27,10 +27,11 @@
 #include "TMath.h"
 #include "TLine.h"
 #include "TVirtualFitter.h"
+#include "TFitResult.h"
 
 #define _(x) std::cout << #x;
-#define __(x) std::cout << x << std::endl ;
-#define var_dump(v) _(v); std::cout << "=" << (v) << std::endl;
+#define __(x) std::cout << "[" << std::string(__FILE__).substr(std::string(__FILE__).find_last_of("/\\") + 1) << ":" <<__LINE__ << "] " << x << std::endl ;
+#define var_dump(v) __(#v << "=" << (v));
 
 ClassImp(TRatioPlot)
 
@@ -395,26 +396,79 @@ void TRatioPlot::Draw(Option_t *option)
    }
 
    fLowerPad->cd();
-
-   // hide visual axis of lower pad display
-   fRatioGraph->GetXaxis()->SetTickSize(0.);
-   fRatioGraph->GetXaxis()->SetLabelSize(0.);
-   fRatioGraph->GetXaxis()->SetTitleSize(0.);
-   fRatioGraph->GetYaxis()->SetTickSize(0.);
-   fRatioGraph->GetYaxis()->SetLabelSize(0.);
-   fRatioGraph->GetYaxis()->SetTitleSize(0.);
-
+   
    // @FIXME: This causes problems with the axes, since fconfint is not read out. Multigraph?
-   fConfidenceIntervals->Draw("A3");
-   fConfidenceIntervals->SetLineColor(kRed); 
-   fConfidenceIntervals->SetFillColor(kYellow);
-   fRatioGraph->Draw(fOptGraph+"SAME");
-   //fConfidenceIntervals->Print();
+   fConfidenceInterval2->Draw("A3");
+   fConfidenceInterval2->SetFillColor(kGreen);
+   fConfidenceInterval1->Draw("3");
+   fConfidenceInterval1->SetFillColor(kYellow);
+   fRatioGraph->Draw("LX+SAME");
+
+   TAxis *refX = GetLowerRefXaxis();
+   TAxis *refY = GetLowerRefYaxis();
+   // hide visual axis of lower pad display
+   refX->SetTickSize(0.);
+   refX->SetLabelSize(0.);
+   refX->SetTitleSize(0.);
+   refY->SetTickSize(0.);
+   refY->SetLabelSize(0.);
+   refY->SetTitleSize(0.);
+
 
    // assign same axis ranges to lower pad as in upper pad
    // the visual axes will be created on paint
    SyncAxesRanges();
 
+   CreateGridline(); 
+
+   padsav->cd();
+
+}
+
+TGraph* TRatioPlot::GetLowerRefGraph() 
+{
+   if (fLowerPad == 0) {
+      Error(__FUNCTION__, "Lower pad has not been defined");
+      return 0;
+   }
+
+   TList *primlist = fLowerPad->GetListOfPrimitives();
+   if (primlist->GetSize() == 0) {
+      Error(__FUNCTION__, "Lower pad does not have primitives");
+      return 0;
+   }
+   
+   
+   TObjLink *lnk = primlist->FirstLink();
+
+   while (lnk) {
+      TObject *obj = lnk->GetObject();
+      
+      if (obj->InheritsFrom(TGraph::Class())) {
+         return (TGraph*)obj;
+      }
+
+
+      
+      lnk = lnk->Next();
+   }
+
+   Error(__FUNCTION__, "Did not find graph in list");
+   return 0;
+}
+
+TAxis* TRatioPlot::GetLowerRefXaxis()
+{
+   return GetLowerRefGraph()->GetXaxis(); 
+}
+
+TAxis* TRatioPlot::GetLowerRefYaxis() 
+{
+   return GetLowerRefGraph()->GetYaxis(); 
+}
+
+void TRatioPlot::CreateGridline()
+{
    if (fShowGridline) {
       if (fGridline == 0) {
          fGridline = new TLine(0, 0, 0, 0);
@@ -424,7 +478,6 @@ void TRatioPlot::Draw(Option_t *option)
 
       Double_t first = fSharedXAxis->GetBinLowEdge(fSharedXAxis->GetFirst());
       Double_t last = fSharedXAxis->GetBinUpEdge(fSharedXAxis->GetLast());
-     
       Double_t y = 1;
 
       if (fDisplayMode == DIFFERENCE || fDisplayMode == FIT_RESIDUAL) {
@@ -435,14 +488,8 @@ void TRatioPlot::Draw(Option_t *option)
       fGridline->SetX2(last);
       fGridline->SetY1(y);
       fGridline->SetY2(y);
-
    }
 
-
-   //fTopPad->cd();
-
-
-   padsav->cd();
 
 }
 
@@ -453,12 +500,7 @@ void TRatioPlot::Paint(Option_t *opt) {
 
 void TRatioPlot::PaintModified()
 {
-
-   //if (!IsDrawn()) return;
-
-
-   
-   // sync y axes
+      // sync y axes
    fH1->GetYaxis()->ImportAttributes(fUpYaxis);
    fRatioGraph->GetYaxis()->ImportAttributes(fLowYaxis);
 
@@ -478,7 +520,8 @@ void TRatioPlot::PaintModified()
    
    // create the visual axes
    CreateVisualAxes();
-      
+
+
    TPad::PaintModified();
    
    if (fIsUpdating) fIsUpdating = kFALSE;
@@ -494,6 +537,11 @@ void TRatioPlot::SyncAxesRanges()
    // TGraph's axis looks strange otherwise
    fRatioGraph->GetXaxis()->SetLimits(first, last);
    fRatioGraph->GetXaxis()->SetRangeUser(first, last);
+   
+   TAxis *ref = GetLowerRefXaxis();
+
+   ref->SetLimits(first, last);
+   ref->SetRangeUser(first, last);
 
    fH1->GetXaxis()->SetRangeUser(first, last);
 
@@ -504,16 +552,18 @@ void TRatioPlot::SyncAxesRanges()
 /// which options were passed.
 void TRatioPlot::BuildRatio(Double_t c1, Double_t c2)
 {
-//   __(__PRETTY_FUNCTION__ << " called");
-
    // Clear and delete the graph if not exists
    if (fRatioGraph != 0) {
       fRatioGraph->IsA()->Destructor(fRatioGraph);
       fRatioGraph = 0;
    }
 
-   if (fConfidenceIntervals == 0) {
-      fConfidenceIntervals = new TGraphAsymmErrors();
+   if (fConfidenceInterval1 == 0) {
+      fConfidenceInterval1 = new TGraphErrors();
+   }
+   
+   if (fConfidenceInterval2 == 0) {
+      fConfidenceInterval2 = new TGraphErrors();
    }
 
    // Determine the divide mode and create the lower graph accordingly
@@ -547,38 +597,68 @@ void TRatioPlot::BuildRatio(Double_t c1, Double_t c2)
    } else if (fDisplayMode == FIT_RESIDUAL) {
       
       TF1 *func = dynamic_cast<TF1*>(fH1->GetListOfFunctions()->At(0));
-      TH1D *tmpHist = dynamic_cast<TH1D*>(fH1->Clone());
-      tmpHist->Reset();
 
       fRatioGraph = new TGraphAsymmErrors();
-      Int_t ipoint = 1;
-      Int_t ipointconf = 1;
+      Int_t ipoint = 0;
+      Int_t ipointconf = 0;
 
-
+      // @TODO: Clean up other res display mode or reimplement it
 
       Double_t res;
-      Double_t resConfUp;
-      Double_t resConfLow;
+      //Double_t resConfUp;
+      //Double_t resConfLow;
       Double_t error;
-      Double_t errorConfUp;
-      Double_t errorConfLow;
+      //Double_t errorConfUp;
+      //Double_t errorConfLow;
 
-      TGraphErrors *uncert = new TGraphErrors();
+      //TGraphErrors *uncert = new TGraphErrors();
       
-      for (Int_t i=1; i<=fH1->GetNbinsX();++i) {
-            uncert->SetPoint(i, fH1->GetBinCenter(i), fH1->GetBinContent(i));
+
+      std::vector<double> ci;
+
+      
+      Double_t x[fH1->GetNbinsX()];
+      Double_t ci_arr[fH1->GetNbinsX()];
+      for (Int_t i=0; i<fH1->GetNbinsX();++i) {
+         x[i] = fH1->GetBinCenter(i+1);
       }
-      (TVirtualFitter::GetFitter())->GetConfidenceIntervals(uncert);
 
-      //uncert->Print();
+      Double_t cl = 0.95;
 
-      for (Int_t i=1; i<=fH1->GetNbinsX();++i) {
+      if (fFitResult != 0) {
+         // use this to get conf int
+
+         //ci = fFitResult->GetConfidenceIntervals(0.95, false);
+         fFitResult->GetConfidenceIntervals(fH1->GetNbinsX(), 1, 1, x, ci_arr, cl);
+         for (Int_t i=1; i<=fH1->GetNbinsX();++i) {
+            ci.push_back(ci_arr[i-1]);
+         }
+      } else {
+         (TVirtualFitter::GetFitter())->GetConfidenceIntervals(fH1->GetNbinsX(), 1, x, ci_arr, cl);
+
+         for (Int_t i=0; i<fH1->GetNbinsX();++i) {
+            ci.push_back(ci_arr[i]);
+         }
+
+      }
+
+      for (unsigned int i=0;i<ci.size();++i) {
+         //__("ci[" << i << "] x=" << fH1->GetBinCenter(i+1) << " y="  << ci[i]);
+         
+         fConfidenceInterval1->SetPoint(i, fH1->GetBinCenter(i+1), 0);
+         fConfidenceInterval1->SetPointError(i, fH1->GetBinWidth(i+1), ci[i]);
+         fConfidenceInterval2->SetPoint(i, fH1->GetBinCenter(i+1), 0);
+         fConfidenceInterval2->SetPointError(i, fH1->GetBinWidth(i+1), ci[i]*2); // two sigma
+      
+      }
+
+      for (Int_t i=0; i<=fH1->GetNbinsX();++i) {
          Double_t val = fH1->GetBinContent(i);
-         Double_t uncertX;
-         Double_t uncertY;
+         //Double_t uncertX;
+         //Double_t uncertY;
 
-         uncert->GetPoint(i, uncertX, uncertY);
-         Double_t uncertEy = uncert->GetErrorY(i);
+         //uncert->GetPoint(i, uncertX, uncertY);
+         //Double_t uncertEy = uncert->GetErrorY(i);
 
          //var_dump(val);
          //var_dump(uncertX);
@@ -599,14 +679,14 @@ void TRatioPlot::BuildRatio(Double_t c1, Double_t c2)
                error = errUp;
             }
 
-            errorConfUp = val - (uncertY+uncertEy) > 0 ? errLow : errUp;
-            errorConfLow = val - (uncertY-uncertEy) > 0 ? errLow : errUp;
+            //errorConfUp = val - (uncertY+uncertEy) > 0 ? errLow : errUp;
+            //errorConfLow = val - (uncertY-uncertEy) > 0 ? errLow : errUp;
 
 
          } else if (fErrorMode == ERROR_SYMMETRIC) {
             error = fH1->GetBinError(i);
-            errorConfUp = error;
-            errorConfLow = error;
+            //errorConfUp = error;
+            //errorConfLow = error;
          } else {
             Warning("TRatioPlot", "error mode is invalid");
             error = 0;
@@ -625,24 +705,24 @@ void TRatioPlot::BuildRatio(Double_t c1, Double_t c2)
             ++ipoint;
          }
 
-         if (errorConfUp != 0 && errorConfLow != 0 && error != 0) {
-            // @TODO: Error band calculation correct?
-            resConfUp = (val - uncertY+uncertEy) / errorConfUp - res; 
-            resConfLow = res - (val - uncertY-uncertEy) / errorConfLow;
+         //if (errorConfUp != 0 && errorConfLow != 0 && error != 0) {
+            //// @TODO: Error band calculation correct?
+            //resConfUp = (val - uncertY+uncertEy) / errorConfUp - res; 
+            //resConfLow = res - (val - uncertY-uncertEy) / errorConfLow;
             
-            fConfidenceIntervals->SetPoint(ipoint, fH1->GetBinCenter(i), res);
-            fConfidenceIntervals->SetPointEYhigh(ipoint, resConfUp);
-            fConfidenceIntervals->SetPointEYlow(ipoint, resConfLow);
+            //fConfidenceIntervals->SetPoint(ipoint, fH1->GetBinCenter(i), res);
+            //fConfidenceIntervals->SetPointEYhigh(ipoint, resConfUp);
+            //fConfidenceIntervals->SetPointEYlow(ipoint, resConfLow);
 
-            ++ipointconf;
-         }
+            //++ipointconf;
+         //}
       
 
       }
 
       //fConfidenceIntervals->Print();
 
-      delete uncert;
+      //delete uncert;
       
    } else if (fDisplayMode == DIVIDE_HIST){
       // Use TH1's Divide method
@@ -656,7 +736,7 @@ void TRatioPlot::BuildRatio(Double_t c1, Double_t c2)
 
    // need to set back to "" since recreation. we don't ever want
    // title on lower graph
-   fRatioGraph->SetTitle("");
+   GetLowerRefGraph()->SetTitle("");
 }
 
 
@@ -1017,6 +1097,7 @@ void TRatioPlot::RangeAxisChanged()
    }
 
    fIsUpdating = kTRUE;
+   
 
    // find out if logx has changed
    //var_dump(GetLogx());
@@ -1046,8 +1127,14 @@ void TRatioPlot::RangeAxisChanged()
    Double_t upFirst = fH1->GetXaxis()->GetBinLowEdge(fH1->GetXaxis()->GetFirst());
    Double_t upLast  = fH1->GetXaxis()->GetBinUpEdge(fH1->GetXaxis()->GetLast());
 
-   Double_t lowFirst = fRatioGraph->GetXaxis()->GetBinLowEdge(fRatioGraph->GetXaxis()->GetFirst());
-   Double_t lowLast  = fRatioGraph->GetXaxis()->GetBinUpEdge(fRatioGraph->GetXaxis()->GetLast());
+   //Double_t lowFirst = fRatioGraph->GetXaxis()->GetBinLowEdge(fRatioGraph->GetXaxis()->GetFirst());
+   //Double_t lowLast  = fRatioGraph->GetXaxis()->GetBinUpEdge(fRatioGraph->GetXaxis()->GetLast());
+   //Double_t lowFirst = fConfidenceIntervals->GetXaxis()->GetBinLowEdge(fConfidenceIntervals->GetXaxis()->GetFirst());
+   //Double_t lowLast  = fConfidenceIntervals->GetXaxis()->GetBinUpEdge(fConfidenceIntervals->GetXaxis()->GetLast());
+
+   TAxis *refX = GetLowerRefXaxis();
+   Double_t lowFirst = refX->GetBinLowEdge(refX->GetFirst());
+   Double_t lowLast = refX->GetBinUpEdge(refX->GetLast());
 
    Double_t globFirst = fSharedXAxis->GetBinLowEdge(fSharedXAxis->GetFirst());
    Double_t globLast = fSharedXAxis->GetBinUpEdge(fSharedXAxis->GetLast());
@@ -1068,6 +1155,7 @@ void TRatioPlot::RangeAxisChanged()
    if (upChanged || lowChanged) {
       SyncAxesRanges();
       CreateVisualAxes();
+      CreateGridline();   
 
       // @TODO: Fix updating, it's not working if zooming on lower axis
       fUpperPad->Modified();
@@ -1090,31 +1178,8 @@ void TRatioPlot::RangeAxisChanged()
       fCanvas->Update();
    }
 
-	// maybe we don't need this anymore
-   // figure out if y axis has changed 
-   //Double_t upYFirst = fUpperPad->GetUymin();
-   //Double_t upYLast = fUpperPad->GetUymax();
-   //Double_t lowYFirst = fLowerPad->GetUymin();
-   //Double_t lowYLast = fLowerPad->GetUymax();
-
-   //Bool_t ychanged = (
-         //upYFirst != fUpYFirst
-      //|| upYLast != fUpYLast
-      //|| lowYFirst != fLowYFirst
-      //|| lowYLast != fLowYLast
-   //);
-   
-   //fUpYFirst = upYFirst;
-   //fUpYLast = upYLast;
-   //fLowYFirst = lowYFirst;
-   //fLowYLast = lowYLast;
-
-   // recreate axes if y changed
-   //if (ychanged) {
-      //CreateVisualAxes();
-   //}
-
    CreateVisualAxes();
+   CreateGridline();   
    fIsUpdating = kFALSE;
 }
 
