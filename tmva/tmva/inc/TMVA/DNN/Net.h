@@ -135,6 +135,8 @@ public:
    Matrix_t &          GetOutput()              {return fLayers.back().GetOutput();}
    size_t              GetInputWidth() const    {return fInputWidth;}
    size_t              GetOutputWidth() const   {return fLayers.back().GetWidth();}
+   ERegularization     GetRegularization()      {return fR;}
+   Scalar_t            GetWeightDecay()         {return fWeightDecay;}
 
    void SetInputWidth(size_t InputWidth)     {fInputWidth = InputWidth;}
    void SetRegularization(ERegularization R) {fR = R;}
