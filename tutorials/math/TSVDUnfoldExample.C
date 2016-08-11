@@ -191,7 +191,6 @@ void TSVDUnfoldExample()
    leg->Draw();
 
    // covariance matrix
-   gStyle->SetPalette(1,0);
    TVirtualPad * c12 = c1->cd(2);
    c12->Divide(2,1);
    TVirtualPad * c2 = c12->cd(1);
