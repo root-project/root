@@ -970,6 +970,8 @@ TGPopupMenu::~TGPopupMenu()
 {
    // Delete a popup menu.
 
+   gClient->UnregisterPopup(this);
+
    if (fEntryList) fEntryList->Delete();
    delete fEntryList;
    delete fDelay;
