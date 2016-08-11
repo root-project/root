@@ -6,12 +6,12 @@ namespace Details {
 
 #ifdef MAC_OS_X_VERSION_10_12
 
-const NSEventModifierFlags kAlphaShiftKeyMask = NSEventModifierFlagCapsLock;
-const NSEventModifierFlags kShiftKeyMask = NSEventModifierFlagShift;
-const NSEventModifierFlags kControlKeyMask = NSEventModifierFlagControl;
-const NSEventModifierFlags kAlternateKeyMask = NSEventModifierFlagOption;
-const NSEventModifierFlags kCommandKeyMask = NSEventModifierFlagCommand;
-const NSEventModifierFlags kDeviceIndependentModifierFlagsMask = NSEventModifierFlagDeviceIndependentFlagsMask;
+const NSUInteger kAlphaShiftKeyMask = NSEventModifierFlagCapsLock;
+const NSUInteger kShiftKeyMask = NSEventModifierFlagShift;
+const NSUInteger kControlKeyMask = NSEventModifierFlagControl;
+const NSUInteger kAlternateKeyMask = NSEventModifierFlagOption;
+const NSUInteger kCommandKeyMask = NSEventModifierFlagCommand;
+const NSUInteger kDeviceIndependentModifierFlagsMask = NSEventModifierFlagDeviceIndependentFlagsMask;
 
 const NSEventType kKeyDown = NSEventTypeKeyDown;
 const NSEventType kKeyUp = NSEventTypeKeyUp;
@@ -27,12 +27,12 @@ const NSUInteger kBorderlessWindowMask = NSWindowStyleMaskBorderless;
 
 #else
 
-const NSEventModifierFlags kAlphaShiftKeyMask = NSAlphaShiftKeyMask;
-const NSEventModifierFlags kShiftKeyMask = NSShiftKeyMask;
-const NSEventModifierFlags kControlKeyMask = NSControlKeyMask;
-const NSEventModifierFlags kAlternateKeyMask = NSAlternateKeyMask;
-const NSEventModifierFlags kCommandKeyMask = NSCommandKeyMask;
-const NSEventModifierFlags kDeviceIndependentModifierFlagsMask = NSDeviceIndependentModifierFlagsMask;
+const NSUInteger kAlphaShiftKeyMask = NSAlphaShiftKeyMask;
+const NSUInteger kShiftKeyMask = NSShiftKeyMask;
+const NSUInteger kControlKeyMask = NSControlKeyMask;
+const NSUInteger kAlternateKeyMask = NSAlternateKeyMask;
+const NSUInteger kCommandKeyMask = NSCommandKeyMask;
+const NSUInteger kDeviceIndependentModifierFlagsMask = NSDeviceIndependentModifierFlagsMask;
 
 const NSEventType kKeyDown = NSKeyDown;
 const NSEventType kKeyUp = NSKeyUp;
