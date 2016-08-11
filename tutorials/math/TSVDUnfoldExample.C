@@ -149,7 +149,7 @@ void TSVDUnfoldExample()
    // Renormalize just to be able to plot on the same scale
    xini->Scale(0.7*datatrue->Integral()/xini->Integral());
 
-   TLegend *leg = new TLegend(0.58,0.68,0.99,0.88);
+   TLegend *leg = new TLegend(0.58,0.60,0.99,0.88);
    leg->SetBorderSize(0);
    leg->SetFillColor(0);
    leg->SetFillStyle(0);
@@ -158,28 +158,10 @@ void TSVDUnfoldExample()
    leg->AddEntry(data,"Reconstructed Data","l");
    leg->AddEntry(xini,"True MC","l");
 
-   TCanvas *c1 = new TCanvas( "c1", "Unfolding toy example with TSVDUnfold", 800, 700 );
+   TCanvas *c1 = new TCanvas( "c1", "Unfolding toy example with TSVDUnfold", 1000, 900 );
 
-   // --- Style settings -----------------------------------------
-   Int_t c_Canvas    = TColor::GetColor( "#f0f0f0" );
-   Int_t c_FrameFill = TColor::GetColor( "#fffffd" );
-   Int_t c_TitleBox  = TColor::GetColor( "#6D7B8D" );
-   Int_t c_TitleText = TColor::GetColor( "#FFFFFF" );
-
-   c1->SetFrameFillColor( c_FrameFill );
-   c1->SetFillColor     ( c_Canvas    );
    c1->Divide(1,2);
    TVirtualPad * c11 = c1->cd(1);
-   c11->SetFrameFillColor( c_FrameFill );
-   c11->SetFillColor     ( c_Canvas    );
-
-   gStyle->SetTitleFillColor( c_TitleBox  );
-   gStyle->SetTitleTextColor( c_TitleText );
-   gStyle->SetTitleBorderSize( 1 );
-   gStyle->SetTitleH( 0.052 );
-   gStyle->SetTitleX( c1->GetLeftMargin() );
-   gStyle->SetTitleY( 1 - c1->GetTopMargin() + gStyle->GetTitleH() );
-   gStyle->SetTitleW( 1 - c1->GetLeftMargin() - c1->GetRightMargin() );
 
    TH1D* frame = new TH1D( *unfres );
    frame->SetTitle( "Unfolding toy example with TSVDUnfold" );
@@ -213,8 +195,6 @@ void TSVDUnfoldExample()
    TVirtualPad * c12 = c1->cd(2);
    c12->Divide(2,1);
    TVirtualPad * c2 = c12->cd(1);
-   c2->SetFrameFillColor( c_FrameFill );
-   c2->SetFillColor     ( c_Canvas    );
    c2->SetRightMargin   ( 0.15         );
 
    TH2D* covframe = new TH2D( *ustatcov );
@@ -230,8 +210,6 @@ void TSVDUnfoldExample()
 
    // distribution of the d quantity
    TVirtualPad * c3 = c12->cd(2);
-   c3->SetFrameFillColor( c_FrameFill );
-   c3->SetFillColor     ( c_Canvas    );
    c3->SetLogy();
 
    TLine *line = new TLine( 0.,1.,40.,1. );
