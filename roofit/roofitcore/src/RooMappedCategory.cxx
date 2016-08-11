@@ -66,7 +66,7 @@ class RooMappedCategoryCache : public RooAbsCache {
         void initialise()
         {
             const RooMappedCategory& parent = *static_cast<const RooMappedCategory*>(_owner);
-            std::unique_ptr<TIterator> tit(static_cast<const RooAbsCategory&>(
+            TIterator* tit(static_cast<const RooAbsCategory&>(
                         parent._inputCat.arg()).typeIterator());
             for (const RooCatType* inCat = static_cast<const RooCatType*>(tit->Next());
                     inCat; inCat = static_cast<const RooCatType*>(tit->Next())) {
@@ -84,6 +84,7 @@ class RooMappedCategoryCache : public RooAbsCache {
                 }
                 if (!found) _map[inCat->getVal()] = parent._defCat;
             }
+            delete tit;
         }
 };
 
