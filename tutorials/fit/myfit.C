@@ -29,12 +29,12 @@ void myfit()
    dir.Append("/hsimple.C");
    dir.ReplaceAll("/./","/");
    if (!gInterpreter->IsLoaded(dir.Data())) gInterpreter->LoadMacro(dir.Data());
-   TFile *hsimple = (TFile*)gROOT->ProcessLineFast("hsimple(1)");
-   if (!hsimple) return;
+   TFile *hsimpleFile = (TFile*)gROOT->ProcessLineFast("hsimple(1)");
+   if (!hsimpleFile) return;
 
    TCanvas *c1 = new TCanvas("c1","the fit canvas",500,400);
 
-   TH1F *hpx = (TH1F*)hsimple->Get("hpx");
+   TH1F *hpx = (TH1F*)hsimpleFile->Get("hpx");
 
 // Creates a Root function based on function fitf above
    TF1 *func = new TF1("fitf",fitf,-2,2,3);
