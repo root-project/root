@@ -66,7 +66,6 @@ void fitMultiGraph()
 
    TCanvas *myc = new TCanvas("myc",
       "Fitting a MultiGraph of 3 TGraphErrors");
-   myc->SetFillColor(42);
    myc->SetGrid();
 
    mg->Draw("ap");
