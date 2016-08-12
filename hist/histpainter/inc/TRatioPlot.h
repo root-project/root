@@ -45,6 +45,7 @@ private:
    static const Int_t FIT_RESIDUAL = 4;
    static const Int_t ERROR_SYMMETRIC = 5;
    static const Int_t ERROR_ASYMMETRIC = 6;
+   static const Int_t ERROR_FUNC = 7;
 
 protected:
 
@@ -121,9 +122,6 @@ protected:
    virtual void SetPadMargins();
    virtual void CreateGridline();
 
-   virtual TGraph *GetLowerRefGraph();
-   virtual TAxis *GetLowerRefXaxis();
-   virtual TAxis *GetLowerRefYaxis();
 
    virtual Bool_t IsDrawn();
 
@@ -166,6 +164,9 @@ public:
    virtual TAxis *GetLowYaxis() { return fLowYaxis; }
 
    virtual TGraph *GetRatioGraph() { return fRatioGraph; }
+   virtual TGraph *GetLowerRefGraph();
+   virtual TAxis *GetLowerRefXaxis();
+   virtual TAxis *GetLowerRefYaxis();
 
    virtual TPad * GetUpperPad() { return fUpperPad; }
    virtual TPad * GetLowerPad() { return fLowerPad; }

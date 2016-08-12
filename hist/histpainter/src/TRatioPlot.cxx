@@ -205,6 +205,11 @@ TRatioPlot::TRatioPlot(TH1* h1, const char *name, const char *title, Option_t *d
       displayOptionString.ReplaceAll("errasym", "");
    }
 
+   if (displayOptionString.Contains("errfunc")) {
+      fErrorMode = ERROR_FUNC;
+      displayOptionString.ReplaceAll("errfunc", "");
+   }
+
    if (displayOptionString.Contains("grid")) {
       displayOptionString.ReplaceAll("grid", "");
       fShowGridline = kTRUE;
@@ -398,11 +403,19 @@ void TRatioPlot::Draw(Option_t *option)
    fLowerPad->cd();
    
    // @FIXME: This causes problems with the axes, since fconfint is not read out. Multigraph?
-   fConfidenceInterval2->Draw("A3");
    fConfidenceInterval2->SetFillColor(kGreen);
-   fConfidenceInterval1->Draw("3");
    fConfidenceInterval1->SetFillColor(kYellow);
-   fRatioGraph->Draw("LX+SAME");
+   
+   if (fDisplayMode == FIT_RESIDUAL) {
+      fConfidenceInterval2->Draw("A3");
+      fConfidenceInterval1->Draw("3");
+      fRatioGraph->Draw("LX+SAME");
+   } else {
+     
+      TString opt = fOptGraph;
+      fRatioGraph->Draw("A"+fOptGraph);
+   
+   }
 
    TAxis *refX = GetLowerRefXaxis();
    TAxis *refY = GetLowerRefYaxis();
@@ -600,72 +613,56 @@ void TRatioPlot::BuildRatio(Double_t c1, Double_t c2)
 
       fRatioGraph = new TGraphAsymmErrors();
       Int_t ipoint = 0;
-      Int_t ipointconf = 0;
-
-      // @TODO: Clean up other res display mode or reimplement it
 
       Double_t res;
-      //Double_t resConfUp;
-      //Double_t resConfLow;
-      Double_t error;
-      //Double_t errorConfUp;
-      //Double_t errorConfLow;
+      Double_t error;      
 
-      //TGraphErrors *uncert = new TGraphErrors();
-      
-
-      std::vector<double> ci;
+      std::vector<double> ci1;
+      std::vector<double> ci2;
 
       
-      Double_t x[fH1->GetNbinsX()];
-      Double_t ci_arr[fH1->GetNbinsX()];
+      Double_t x_arr[fH1->GetNbinsX()];
+      Double_t ci_arr1[fH1->GetNbinsX()];
+      Double_t ci_arr2[fH1->GetNbinsX()];
       for (Int_t i=0; i<fH1->GetNbinsX();++i) {
-         x[i] = fH1->GetBinCenter(i+1);
+         x_arr[i] = fH1->GetBinCenter(i+1);
       }
 
-      Double_t cl = 0.95;
+      Double_t cl1 = 0.68;
+      Double_t cl2 = 0.95;
 
       if (fFitResult != 0) {
          // use this to get conf int
 
          //ci = fFitResult->GetConfidenceIntervals(0.95, false);
-         fFitResult->GetConfidenceIntervals(fH1->GetNbinsX(), 1, 1, x, ci_arr, cl);
+         fFitResult->GetConfidenceIntervals(fH1->GetNbinsX(), 1, 1, x_arr, ci_arr1, cl1);
          for (Int_t i=1; i<=fH1->GetNbinsX();++i) {
-            ci.push_back(ci_arr[i-1]);
+            ci1.push_back(ci_arr1[i-1]);
+         }
+         
+         fFitResult->GetConfidenceIntervals(fH1->GetNbinsX(), 1, 1, x_arr, ci_arr2, cl2);
+         for (Int_t i=1; i<=fH1->GetNbinsX();++i) {
+            ci2.push_back(ci_arr2[i-1]);
          }
       } else {
-         (TVirtualFitter::GetFitter())->GetConfidenceIntervals(fH1->GetNbinsX(), 1, x, ci_arr, cl);
-
-         for (Int_t i=0; i<fH1->GetNbinsX();++i) {
-            ci.push_back(ci_arr[i]);
+         (TVirtualFitter::GetFitter())->GetConfidenceIntervals(fH1->GetNbinsX(), 1, x_arr, ci_arr1, cl1);
+         for (Int_t i=1; i<=fH1->GetNbinsX();++i) {
+            ci1.push_back(ci_arr1[i-1]);
+         }
+         (TVirtualFitter::GetFitter())->GetConfidenceIntervals(fH1->GetNbinsX(), 1, x_arr, ci_arr2, cl2);
+         for (Int_t i=1; i<=fH1->GetNbinsX();++i) {
+            ci2.push_back(ci_arr2[i-1]);
          }
 
       }
 
-      for (unsigned int i=0;i<ci.size();++i) {
-         //__("ci[" << i << "] x=" << fH1->GetBinCenter(i+1) << " y="  << ci[i]);
-         
-         fConfidenceInterval1->SetPoint(i, fH1->GetBinCenter(i+1), 0);
-         fConfidenceInterval1->SetPointError(i, fH1->GetBinWidth(i+1), ci[i]);
-         fConfidenceInterval2->SetPoint(i, fH1->GetBinCenter(i+1), 0);
-         fConfidenceInterval2->SetPointError(i, fH1->GetBinWidth(i+1), ci[i]*2); // two sigma
-      
-      }
+      Double_t x;
+      Double_t val;
 
       for (Int_t i=0; i<=fH1->GetNbinsX();++i) {
-         Double_t val = fH1->GetBinContent(i);
-         //Double_t uncertX;
-         //Double_t uncertY;
-
-         //uncert->GetPoint(i, uncertX, uncertY);
-         //Double_t uncertEy = uncert->GetErrorY(i);
-
-         //var_dump(val);
-         //var_dump(uncertX);
-         //var_dump(uncertY);
-         //var_dump(uncertEy);
-
- 
+         val = fH1->GetBinContent(i);
+         x = fH1->GetBinCenter(i+1);
+          
          if (fErrorMode == ERROR_ASYMMETRIC) {
             
             Double_t errUp = fH1->GetBinErrorUp(i);
@@ -679,51 +676,40 @@ void TRatioPlot::BuildRatio(Double_t c1, Double_t c2)
                error = errUp;
             }
 
-            //errorConfUp = val - (uncertY+uncertEy) > 0 ? errLow : errUp;
-            //errorConfLow = val - (uncertY-uncertEy) > 0 ? errLow : errUp;
-
 
          } else if (fErrorMode == ERROR_SYMMETRIC) {
             error = fH1->GetBinError(i);
-            //errorConfUp = error;
-            //errorConfLow = error;
+         } else if (fErrorMode == ERROR_FUNC) {
+
+            error = sqrt(func->Eval(x));
+
          } else {
             Warning("TRatioPlot", "error mode is invalid");
             error = 0;
          }
 
-         //var_dump(errorConfUp);
-         //var_dump(errorConfLow);
 
          if (error != 0) {
+            
+
             res = (fH1->GetBinContent(i)- func->Eval(fH1->GetBinCenter(i) ) ) / error;
+            __("x="<< x << " y=" << res << " err=" << error);
            
 
             ((TGraphAsymmErrors*)fRatioGraph)->SetPoint(ipoint, fH1->GetBinCenter(i), res);
             ((TGraphAsymmErrors*)fRatioGraph)->SetPointError(ipoint,  fH1->GetBinWidth(i)/2., fH1->GetBinWidth(i)/2., 0.5, 0.5);
 
+            fConfidenceInterval1->SetPoint(ipoint, x, 0);
+            fConfidenceInterval1->SetPointError(ipoint, x, ci1[i] / error);
+            fConfidenceInterval2->SetPoint(ipoint, x, 0);
+            fConfidenceInterval2->SetPointError(ipoint, x, ci2[i] / error);
+
             ++ipoint;
+            
          }
 
-         //if (errorConfUp != 0 && errorConfLow != 0 && error != 0) {
-            //// @TODO: Error band calculation correct?
-            //resConfUp = (val - uncertY+uncertEy) / errorConfUp - res; 
-            //resConfLow = res - (val - uncertY-uncertEy) / errorConfLow;
-            
-            //fConfidenceIntervals->SetPoint(ipoint, fH1->GetBinCenter(i), res);
-            //fConfidenceIntervals->SetPointEYhigh(ipoint, resConfUp);
-            //fConfidenceIntervals->SetPointEYlow(ipoint, resConfLow);
-
-            //++ipointconf;
-         //}
-      
-
       }
-
-      //fConfidenceIntervals->Print();
-
-      //delete uncert;
-      
+ 
    } else if (fDisplayMode == DIVIDE_HIST){
       // Use TH1's Divide method
       TH1 *tmpHist = (TH1*)fH1->Clone();
@@ -736,7 +722,9 @@ void TRatioPlot::BuildRatio(Double_t c1, Double_t c2)
 
    // need to set back to "" since recreation. we don't ever want
    // title on lower graph
-   GetLowerRefGraph()->SetTitle("");
+   fRatioGraph->SetTitle("");
+   fConfidenceInterval1->SetTitle("");
+   fConfidenceInterval2->SetTitle("");
 }
 
 
