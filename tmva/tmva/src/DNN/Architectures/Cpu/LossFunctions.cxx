@@ -51,8 +51,7 @@ Real_t TCpu<Real_t, doProfiling>::MeanSquaredError(const TCpuMatrix<Real_t> &Y,
    };
 
    Real_t norm = 1.0 / ((Real_t) Y.GetNcols() * Y.GetNrows());
-   auto & elementsY = Y.GetElements();
-   tbb::blocked_range<size_t> range(0, elementsY.size());
+   tbb::blocked_range<size_t> range(0, Y.GetNElements());
    return norm * parallel_reduce(range, 0.0, f, reduction);
 }
 
@@ -79,8 +78,7 @@ void TCpu<Real_t, doProfiling>::MeanSquaredErrorGradients(
       }
    };
 
-   auto & elementsY = Y.GetElements();
-   tbb::blocked_range<size_t> range(0, elementsY.size());
+   tbb::blocked_range<size_t> range(0, Y.GetNElements());
    parallel_for(range, f);
 }
 
@@ -112,8 +110,7 @@ Real_t TCpu<Real_t, doProfiling>::CrossEntropy(const TCpuMatrix<Real_t> &Y,
       return sum1 + sum2;
    };
 
-   auto & elementsY = Y.GetElements();
-   tbb::blocked_range<size_t> range(0, elementsY.size());
+   tbb::blocked_range<size_t> range(0, Y.GetNElements());
    Real_t norm = 1.0 / ((Real_t) Y.GetNcols() * Y.GetNrows());
    return - norm * parallel_reduce(range, 0.0, f, reduction);
 }
@@ -142,8 +139,7 @@ void TCpu<Real_t, doProfiling>::CrossEntropyGradients(
       }
    };
 
-   auto & elementsY = Y.GetElements();
-   tbb::blocked_range<size_t> range(0, elementsY.size());
+   tbb::blocked_range<size_t> range(0, Y.GetNElements());
    parallel_for(range, f);
 }
 

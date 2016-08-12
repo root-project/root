@@ -114,8 +114,7 @@ if (BLAS_FOUND)
     ROOT_EXECUTABLE(testDataLoaderCpu TestDataLoaderCpu.cxx
         LIBRARIES ${Libraries})
     ROOT_ADD_TEST(TMVA-DNN-Data-Loader-Cpu COMMAND testDataLoaderCpu)
-
     ROOT_EXECUTABLE(testMinimizationCpu TestMinimizationCpu.cxx
-        LIBRARIES ${Libraries})
+        LIBRARIES ${Libraries} ${BLAS_openblas_LIBRARY})
     ROOT_ADD_TEST(TMVA-DNN-Minimization-Cpu COMMAND testMinimizationCpu)
 endif (BLAS_FOUND)

@@ -14,6 +14,7 @@
 //////////////////////////////////////////////////
 
 #include "TMVA/DNN/Net.h"
+#include "TMVA/DNN/DataLoader.h"
 #include "Utility.h"
 
 namespace TMVA
@@ -31,20 +32,23 @@ auto testSum()
 {
    using Scalar_t     = typename Architecture_t::Scalar_t;
    using Matrix_t     = typename Architecture_t::Matrix_t;
-   using DataLoader_t = typename Architecture_t::template DataLoader_t<MatrixInput_t>;
+   using DataLoader_t = TDataLoader<MatrixInput_t, Architecture_t>;
 
    size_t nSamples = 10000;
    TMatrixT<Double_t> X(nSamples,1);
    randomMatrix(X);
+   for (size_t i = 0; i < 10000; i++) {
+      X(i,0) = i;
+   }
    MatrixInput_t input(X, X);
    DataLoader_t  loader(input, nSamples, 5, 1, 1);
 
    Matrix_t XArch(X), Sum(1,1), SumTotal(1,1);
-
    Scalar_t sum = 0.0, sumTotal = 0.0;
 
    for (auto b : loader) {
       Architecture_t::SumColumns(Sum, b.GetInput());
+      ((TMatrixT<Double_t>) b.GetInput()).Print();
       sum += Sum(0, 0);
    }
 
@@ -62,30 +66,28 @@ template <typename Architecture_t>
 auto testIdentity()
     -> typename Architecture_t::Scalar_t
 {
+   using Scalar_t     = typename Architecture_t::Scalar_t;
+   using Net_t        = TNet<Architecture_t>;
+   using DataLoader_t = TDataLoader<MatrixInput_t, Architecture_t>;
 
-    using Scalar_t     = typename Architecture_t::Scalar_t;
-    using Net_t        = TNet<Architecture_t>;
+   TMatrixT<Double_t> X(2000, 100); randomMatrix(X);
+   MatrixInput_t input(X, X);
+   DataLoader_t loader(input, 2000, 20, 100, 100);
 
-    using DataLoader_t = typename Architecture_t::template DataLoader_t<MatrixInput_t>;
+   Net_t net(20, 100, ELossFunction::MEANSQUAREDERROR);
+   net.AddLayer(100,  EActivationFunction::IDENTITY);
+   net.AddLayer(100,  EActivationFunction::IDENTITY);
+   net.Initialize(EInitialization::IDENTITY);
 
-    TMatrixT<Double_t> X(2000, 100); randomMatrix(X);
-    MatrixInput_t input(X, X);
-    DataLoader_t loader(input, 2000, 20, 100, 100);
+   Scalar_t maximumError = 0.0;
+   for (auto b : loader) {
+       auto inputMatrix  = b.GetInput();
+       auto outputMatrix = b.GetOutput();
+       Scalar_t error = net.Loss(inputMatrix, outputMatrix);
+       maximumError = std::max(error, maximumError);
+   }
 
-    Net_t net(20, 100, ELossFunction::MEANSQUAREDERROR);
-    net.AddLayer(100,  EActivationFunction::IDENTITY);
-    net.AddLayer(100,  EActivationFunction::IDENTITY);
-    net.Initialize(EInitialization::IDENTITY);
-
-    Scalar_t maximumError = 0.0;
-    for (auto b : loader) {
-        auto && inputMatrix  = b.GetInput();
-        auto && outputMatrix = b.GetOutput();
-        Scalar_t error = net.Loss(inputMatrix, outputMatrix);
-        maximumError = std::max(error, maximumError);
-    }
-
-    return maximumError;
+   return maximumError;
 }
 
 } // namespace DNN

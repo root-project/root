@@ -207,7 +207,6 @@ template <typename Data_t, typename Net_t>
             batches.push_back(trainLoader.GetBatch());
          }
          Step(net, nets, batches);
-         std::cout << "epoch." << std::endl;
       }
 
       // Compute test error.
@@ -222,8 +221,8 @@ template <typename Data_t, typename Net_t>
                    << seconds << " [s] => " << nFlops * 1e-9 / seconds
                    << " GFlop/s" << std::endl;
          auto b = *testLoader.begin();
-         auto && inputMatrix  = b.GetInput();
-         auto && outputMatrix = b.GetOutput();
+         auto inputMatrix  = b.GetInput();
+         auto outputMatrix = b.GetOutput();
 
          Scalar_t loss = testNet.Loss(inputMatrix, outputMatrix);
          std::cout << fStepCount << ": " << loss << std::endl;
@@ -236,8 +235,6 @@ template <typename Data_t, typename Net_t>
 
 //______________________________________________________________________________
 template<typename Architecture_t>
-<<<<<<< bec453318ed4bee185c49886c094407d8fb85e12
-<<<<<<< df80c5e79cbfefd2d3fc371c72f59f37e35bbd74
     template <typename Net_t>
     void inline TGradientDescent<Architecture_t>::Step(Net_t & net,
                                                        Matrix_t &input,
@@ -245,24 +242,7 @@ template<typename Architecture_t>
 {
     //Scalar_t loss = net.Loss(input, output);
     //fTrainingError = loss;
-=======
-template <typename Net_t>
-void inline TGradientDescent<Architecture_t>::Step(Net_t & net,
-                                                   Matrix_t &input,
-                                                   const Matrix_t &output)
-{
->>>>>>> First implementation of profiling for Cuda devices.
     net.Forward(input);
-=======
-    template <typename Net_t>
-    auto inline TGradientDescent<Architecture_t>::Step(Net_t & net,
-                                                       Matrix_t &input,
-                                                       const Matrix_t &output)
-    -> Scalar_t
-{
-    Scalar_t loss = net.Loss(input, output);
-    fTrainingError = loss;
->>>>>>> Pulled in changes from tmva_gpu branch.
     net.Backward(input, output);
 
     for (size_t i = 0; i < net.GetDepth(); i++)
@@ -275,38 +255,11 @@ void inline TGradientDescent<Architecture_t>::Step(Net_t & net,
                                  layer.GetBiasGradients(),
                                  -fLearningRate);
     }
-    return loss;
-}
-
-//______________________________________________________________________________
-template<typename Architecture_t>
-template <typename Net_t>
-void inline TGradientDescent<Architecture_t>::StepReducedWeights(
-    Net_t & net,
-    Matrix_t &input,
-    const Matrix_t &output)
-{
-   net.Forward(input);
-   net.Backward(input, output);
-
-   for (size_t i = 0; i < net.GetDepth(); i++)
-   {
-      auto &layer = net.GetLayer(i);
-      Architecture_t::ScaleAdd(layer.GetWeights(),
-                               layer.GetWeightGradients(),
-                               -fLearningRate);
-      if (i == 0) {
-         Architecture_t::ScaleAdd(layer.GetBiases(),
-                                  layer.GetBiasGradients(),
-                                  -fLearningRate);
-      }
-   }
 }
 
 //______________________________________________________________________________
 template<typename Architecture_t>
     template <typename Net_t>
-<<<<<<< bec453318ed4bee185c49886c094407d8fb85e12
     void inline TGradientDescent<Architecture_t>::Step(
         Net_t & master,
         std::vector<Net_t> & nets,
@@ -399,8 +352,6 @@ void inline TGradientDescent<Architecture_t>::StepReducedWeights(
 //______________________________________________________________________________
 template<typename Architecture_t>
     template <typename Net_t>
-=======
->>>>>>> Pulled in changes from tmva_gpu branch.
     auto inline TGradientDescent<Architecture_t>::StepReducedWeightsLoss(
         Net_t & net,
         Matrix_t &input,

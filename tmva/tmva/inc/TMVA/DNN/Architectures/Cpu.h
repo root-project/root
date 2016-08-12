@@ -19,6 +19,7 @@
 #define TMVA_DNN_ARCHITECTURES_CPU
 
 #include "TMVA/DNN/Timings.h"
+#include "Cpu/CpuBuffer.h"
 #include "Cpu/CpuMatrix.h"
 #include "Cpu/DataLoader.h"
 
@@ -34,7 +35,7 @@ namespace DNN
  * for this architecture as well as the remaining functions in the low-level
  * interface in the form of static members.
  */
-template<typename Real_t, bool doProfiling = false>
+template<typename AReal, bool doProfiling = false>
 class TCpu
 {
 
@@ -43,11 +44,10 @@ class TCpu
 
 public:
 
-   using Scalar_t     = Real_t;
-   using Matrix_t     = TCpuMatrix<Real_t>;
-
-   template <typename Data_t>
-   using DataLoader_t = TCpuDataLoader<Data_t, Real_t>;
+   using Scalar_t       = AReal;
+   using Matrix_t       = TCpuMatrix<AReal>;
+   using HostBuffer_t   = TCpuBuffer<AReal>;
+   using DeviceBuffer_t = TCpuBuffer<AReal>;
 
    //____________________________________________________________________________
    //
@@ -95,6 +95,9 @@ public:
    static void ScaleAdd(TCpuMatrix<Scalar_t> & A,
                         const TCpuMatrix<Scalar_t> & B,
                         Scalar_t beta = 1.0);
+
+   static void Copy(TCpuMatrix<Scalar_t> & B,
+                    const TCpuMatrix<Scalar_t> & A);
    ///@}
 
    //____________________________________________________________________________
@@ -109,7 +112,8 @@ public:
     * and writes the results into the result matrix.
     */
    ///@{
-   static void IdentityDerivative(TCpuMatrix<Scalar_t> & B);
+   static void IdentityDerivative(TCpuMatrix<Scalar_t> & B,
+                                  const TCpuMatrix<Scalar_t> &A);
 
    static void Relu(TCpuMatrix<Scalar_t> & B);
    static void ReluDerivative(TCpuMatrix<Scalar_t> & B,

@@ -43,7 +43,12 @@ set(dnn_cuda_files src/DNN/Architectures/Cuda/ActivationFunctions.cu
                    src/DNN/Architectures/Cuda/Buffers.cxx
                    src/DNN/Architectures/Cuda/CudaMatrix.cu
                    src/DNN/Architectures/Cuda/DataLoader.cu
-                   src/DNN/Architectures/Cuda/Kernels.cu)
+                   src/DNN/Architectures/Cuda/Initialization.cu
+                   src/DNN/Architectures/Cuda/Kernels.cu
+                   src/DNN/Architectures/Cuda/LossFunctions.cu
+                   src/DNN/Architectures/Cuda/OutputFunctions.cu
+                   src/DNN/Architectures/Cuda/Propagation.cu
+                   src/DNN/Architectures/Cuda/Regularization.cu)
 
 #---Need to suffix each header name by TMVA/  -----------------
 foreach(hs headers1 headers2 headers3 headers4)
@@ -68,11 +73,11 @@ endif(CUDA_FOUND)
 find_package(BLAS)
 if (BLAS_FOUND)
   set(dnn_cpu_files src/DNN/Architectures/Cpu.cxx
-    src/DNN/Architectures/Cpu/CpuMatrix.cxx
-    src/DNN/Architectures/Cpu/DataLoader.cxx)
+    src/DNN/Architectures/Cpu/CpuBuffer.cxx
+    src/DNN/Architectures/Cpu/CpuMatrix.cxx)
   set(dnn_cpu_libraries MathCore Matrix ${BLAS_LIBRARIES} tbb ${CMAKE_THREAD_LIBS_INIT})
 else (BLAS_FOUND)
-  set(dnn_cpu_file)
+  set(dnn_cpu_files)
   set(dnn_cpu_libraries)
 endif(BLAS_FOUND)
 
