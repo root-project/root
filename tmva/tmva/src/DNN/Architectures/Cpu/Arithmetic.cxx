@@ -88,8 +88,7 @@ void TCpu<Real_t, doProfiling>::Hadamard(TCpuMatrix<Real_t> &B,
       }
    };
 
-   auto & elementsA = A.GetElements();
-   tbb::blocked_range<size_t> range(0, elementsA.size());
+   tbb::blocked_range<size_t> range(0, A.GetNElements());
    parallel_for(range, f);
 }
 
@@ -127,6 +126,15 @@ void TCpu<Real_t, doProfiling>::ScaleAdd(TCpuMatrix<Real_t> &B,
    Real_t *y = B.GetRawDataPointer();
 
    ::TMVA::DNN::Blas::Axpy(&n, &alpha, x, &inc, y, &inc);
+}
+
+//____________________________________________________________________________
+template<typename Real_t, bool doProfiling>
+void TCpu<Real_t, doProfiling>::Copy(TCpuMatrix<Real_t> &B,
+                                     const TCpuMatrix<Real_t> &A)
+{
+   auto f = [](Real_t x) {return x;};
+   B.MapFrom(f, A);
 }
 
 } // DNN

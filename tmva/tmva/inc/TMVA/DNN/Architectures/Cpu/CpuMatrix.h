@@ -23,6 +23,9 @@
 
 #include "TMatrix.h"
 
+#include <iostream>
+#include "CpuBuffer.h"
+
 namespace TMVA
 {
 namespace DNN
@@ -37,36 +40,36 @@ namespace DNN
  * BLAS. Also provides Map and MapFrom routines for the efficient mapping of
  * activation functions onto matrices.
  */
-template<typename Real_t>
+template<typename AReal>
 class TCpuMatrix
 {
 private:
 
-   static std::vector<Real_t> fOnes; ///< Vector filled with ones used for BLAS calls.
-   std::vector<Real_t> fElements;    ///< The matrix element.
-   size_t fNCols;                    ///< Number of columns.
-   size_t fNRows;                    ///< Number of rows.
+   static std::vector<AReal> fOnes;  ///< Vector filled with ones used for BLAS calls.
 
-   using ElementVector_t = std::vector<Real_t>;
+   TCpuBuffer<AReal> fBuffer; ///< The buffer holding the matrix elements
+                              ///< in column-major format.
+   size_t            fNCols;
+   size_t            fNRows;
 
 public:
 
    /** Returns pointer to a vector holding only ones with a guaranteed length
     *  of the number of columns of every instantiated CpuMatrix object. */
-   static const Real_t * GetOnePointer() {return fOnes.data();}
+   static const AReal * GetOnePointer() {return fOnes.data();}
 
    /** Construct matrix and allocate space for its elements. */
    TCpuMatrix(size_t nRows, size_t nCols);
-   TCpuMatrix(const TMatrixT<Real_t> &);
+   TCpuMatrix(const TMatrixT<AReal> &);
+   TCpuMatrix(const TCpuBuffer<AReal> &buffer, size_t m, size_t n);
 
-   TCpuMatrix(TCpuMatrix &&)              = default;
-   TCpuMatrix & operator=(TCpuMatrix &&)  = default;
-   ~TCpuMatrix()                          = default;
+   TCpuMatrix(const TCpuMatrix  &)             = default;
+   TCpuMatrix(      TCpuMatrix &&)             = default;
+   TCpuMatrix & operator=(const TCpuMatrix &)  = default;
+   TCpuMatrix & operator=(TCpuMatrix &&)       = default;
+   ~TCpuMatrix()                               = default;
 
-   TCpuMatrix(const TCpuMatrix &)             = delete;
-   TCpuMatrix & operator=(const TCpuMatrix &) = delete;
-
-   operator TMatrixT<Real_t>() const;
+   operator TMatrixT<AReal>() const;
 
    /** Map the given function over the matrix elements. Executed in parallel
     *  using tbb. */
@@ -80,20 +83,16 @@ public:
 
    size_t GetNrows() const {return fNRows;}
    size_t GetNcols() const {return fNCols;}
-   size_t GetNElements() const {return fElements.size();}
+   size_t GetNElements() const {return fNRows * fNCols;}
 
    /** Return matrix element in row \p i and column \p j. */
-   Real_t   operator()(size_t i, size_t j) const {return fElements[j * fNRows + i];}
-   Real_t & operator()(size_t i, size_t j)       {return fElements[j * fNRows + i];}
-
-   /** Return element vector. */
-   ElementVector_t &       GetElements()       {return fElements;}
-   const ElementVector_t & GetElements() const {return fElements;}
+   AReal   operator()(size_t i, size_t j) const {return fBuffer[j * fNRows + i];}
+   AReal & operator()(size_t i, size_t j)       {return fBuffer[j * fNRows + i];}
 
    /** Return raw pointer to the elements stored contiguously in column-major
     *  order. */
-   Real_t *       GetRawDataPointer()        {return fElements.data();}
-   const Real_t * GetRawDataPointer()  const {return fElements.data();}
+   AReal *       GetRawDataPointer()        {return fBuffer;}
+   const AReal * GetRawDataPointer()  const {return fBuffer;}
 
 private:
 
@@ -103,13 +102,13 @@ private:
 
 // Inline Functions.
 //______________________________________________________________________________
-template<typename Real_t>
+template<typename AReal>
 template<typename Function_t>
-inline void TCpuMatrix<Real_t>::Map(Function_t &f)
+inline void TCpuMatrix<AReal>::Map(Function_t &f)
 {
-   Real_t __restrict__ *data = GetRawDataPointer();
+   AReal __restrict__ *data = GetRawDataPointer();
 
-   auto fRange = [&data, &f](const tbb::blocked_range<size_t> & range)
+   auto fRange = [data, &f](const tbb::blocked_range<size_t> & range)
    {
       size_t rangeBegin = range.begin();
       size_t rangeEnd   = range.end();
@@ -123,12 +122,12 @@ inline void TCpuMatrix<Real_t>::Map(Function_t &f)
    parallel_for(range, fRange);
 }
 
-template<typename Real_t>
+template<typename AReal>
 template<typename Function_t>
-inline void TCpuMatrix<Real_t>::MapFrom(Function_t &f, const TCpuMatrix &A)
+inline void TCpuMatrix<AReal>::MapFrom(Function_t &f, const TCpuMatrix &A)
 {
-         Real_t __restrict__ *dataB = GetRawDataPointer();
-   const Real_t __restrict__ *dataA = A.GetRawDataPointer();
+         AReal __restrict__ *dataB = GetRawDataPointer();
+   const AReal __restrict__ *dataA = A.GetRawDataPointer();
 
    auto fRange = [&dataB, &dataA, &f](const tbb::blocked_range<size_t> & range)
    {
