@@ -457,8 +457,7 @@ class NotebookDrawer(object):
 
 def setStyle():
     style=ROOT.gStyle
-    style.SetFuncWidth(1.5)
-    style.SetHistLineWidth(1.5)
+    style.SetFuncWidth(2)
 
 captures = []
 
