@@ -693,7 +693,7 @@ void TRatioPlot::BuildRatio(Double_t c1, Double_t c2)
             
 
             res = (fH1->GetBinContent(i)- func->Eval(fH1->GetBinCenter(i) ) ) / error;
-            __("x="<< x << " y=" << res << " err=" << error);
+            //__("x="<< x << " y=" << res << " err=" << error);
            
 
             ((TGraphAsymmErrors*)fRatioGraph)->SetPoint(ipoint, fH1->GetBinCenter(i), res);
@@ -762,6 +762,8 @@ void TRatioPlot::CreateVisualAxes()
 
    // check if gPad has the all sides axis set
    Bool_t mirroredAxes = fParentPad->GetFrameFillStyle() == 0 || GetFrameFillStyle() == 0; 
+   Bool_t axistop = fTickx == 1 || mirroredAxes;
+   Bool_t axisright = fTicky == 1 || mirroredAxes;
 
    Bool_t logx = fUpperPad->GetLogx() || fLowerPad->GetLogx();
    Bool_t uplogy = fUpperPad->GetLogy();
@@ -795,16 +797,6 @@ void TRatioPlot::CreateVisualAxes()
       }
    }
    
-   //var_dump(logx);
-   //var_dump(uplogy);
-   //var_dump(lowlogy);
-   //var_dump(upYFirst);
-   //var_dump(upYLast);
-   //var_dump(lowYFirst);
-   //var_dump(lowYLast);
-   //var_dump(first);
-   //var_dump(last);
-   //__("");
 
    // determine axes options to create log axes if needed
    TString xopt = "";
@@ -893,27 +885,27 @@ void TRatioPlot::CreateVisualAxes()
    
    // Create the axes on the other sides of the graphs 
    // This is steered by an option on the containing pad or self
-   if (mirroredAxes) {
+   if (axistop || axisright) {
       
       // only actually create them once, reuse otherwise b/c memory
       if (fUpperGXaxisMirror == 0) {
          fUpperGXaxisMirror = (TGaxis*)fUpperGXaxis->Clone(); 
-         fUpperGXaxisMirror->Draw(); 
+         if (axistop) fUpperGXaxisMirror->Draw(); 
       } 
+
+      if (fLowerGXaxisMirror == 0) { 
+         fLowerGXaxisMirror = (TGaxis*)fLowerGXaxis->Clone(); 
+         if (axistop) fLowerGXaxisMirror->Draw();
+      }
 
       if (fUpperGYaxisMirror == 0) {
          fUpperGYaxisMirror = (TGaxis*)fUpperGYaxis->Clone(); 
-         fUpperGYaxisMirror->Draw();
+         if (axisright) fUpperGYaxisMirror->Draw();
       }
       
-      if (fLowerGXaxisMirror == 0) { 
-         fLowerGXaxisMirror = (TGaxis*)fLowerGXaxis->Clone(); 
-         fLowerGXaxisMirror->Draw();
-      }
-
       if (fLowerGYaxisMirror == 0) {
          fLowerGYaxisMirror = (TGaxis*)fLowerGYaxis->Clone();
-         fLowerGYaxisMirror->Draw(); 
+         if (axisright) fLowerGYaxisMirror->Draw(); 
       }
 
       // import attributes from shared axes
