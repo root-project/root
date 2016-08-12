@@ -63,7 +63,7 @@ from datetime import datetime, date
 # will not be properly defined. Thus, any other type returned by function  must be added to this list
 # for the script to work correctly.
 gTypesList = ["void", "int", "Int_t", "TF1", "string", "bool", "double", "float", "char",
-    "TCanvas", "TTree", "TString", "TseqCollection", "Double_t", "TFile", "Long64_t", "Bool_t", "TH1",
+    "TCanvas", "TTree", "TString", "TSeqCollection", "Double_t", "TFile", "Long64_t", "Bool_t", "TH1",
     "RooDataSet", "RooWorkspace" , "HypoTestInverterResult" , "TVectorD" , "TArrayF"]
 
 # -------------------------------------
@@ -482,24 +482,31 @@ def processmain(text):
     ('void function(arguments = values){\\n   content of function\\n   spanning several\\n   lines\\n}', '\\n# <markdowncell> \\n# Call the main function \\n# <codecell>\\nfunction();', True)
     >>> processmain('''TCanvas function(){
     ...    content of function
-    ...    spanning several
+    ...    spanning several 
     ...    lines
     ...    return c1
     ... }''') 
-    ('TCanvas function(){\\n   content of function\\n   spanning several\\n   lines\\n   return c1\\n}', '\\n# <markdowncell> \\n# Call the main function \\n# <codecell>\\nfunction();', True)
+    ('TCanvas function(){\\n   content of function\\n   spanning several\\n   lines\\n   return c1\\n}', '\\n# <markdowncell> \\n# Call the main function \\n# <codecell>\\nfunction();', True , '')
     """
     callMainFunction = ''
-    keepfunction = False
+    argumentsCell = ''
+    keepFunction = False
 
     argumentesre = re.compile(r'(?<=\().*?(?=\))', flags = re.DOTALL | re.MULTILINE)
     arguments = argumentesre.search(text)
-    if text:
-        if text.startswith("TCanvas") or len(arguments.group()) > 3:
-            keepfunction = True
-            functionname = findFunctionName(text)
-            callMainFunction = "\n# <markdowncell> \n# Call the main function \n# <codecell>\n%s();" % functionname
+    if len(arguments.group()) > 3:
+        argumentsCell = "# <markdowncell> \n Arguments are defined. \n# <codecell>\n"
+        argumentList =  arguments.group().split(",")
+        for argument in argumentList:
+            argumentsCell += argument.strip() + ";\n"
+        argumentsCell += "# <codecell>\n"
 
-    return text, callMainFunction, keepfunction
+    if text.startswith("TCanvas"):
+        keepfunction = True
+        functionname = findFunctionName(text)
+        callMainFunction = "\n# <markdowncell> \n# Call the main function \n# <codecell>\n%s();" % functionname
+
+    return text, callMainFunction, keepFunction, argumentsCell
 
 # now define text transformers
 def removePaletteEditor(code):
@@ -527,18 +534,33 @@ def roofitRemoveSpacesComments(code):
     newcode = re.sub("#\s\s\w\s[\w-]\s\w.*", changeString , code)
     return newcode
 
-def roostatsRoofitDeclaceNamespace(code):
+def declareNamespace(code):
     if "using namespace RooFit;\nusing namespace RooStats;" in code:
-        code = code.replace("using namespace RooFit;\nusing namespace RooStats;", "# <codecell>\n%%cpp -d\n// This is a workaround to make sure the namespace is used inside functions\nusing namespace RooFit;\nusing namespace RooStats;")
+        code = code.replace("using namespace RooFit;\nusing namespace RooStats;", "# <codecell>\n%%cpp -d\n// This is a workaround to make sure the namespace is used inside functions\nusing namespace RooFit;\nusing namespace RooStats;\n# <codecell>\n")
 
     else:
-        code = code.replace("using namespace RooFit;", "# <codecell>\n%%cpp -d\n// This is a workaround to make sure the namespace is used inside functions\nusing namespace RooFit;")
-        code = code.replace("using namespace RooStats;", "# <codecell>\n%%cpp -d\n// This is a workaround to make sure the namespace is used inside functions\nusing namespace RooStats;")
+        code = code.replace("using namespace RooFit;", "# <codecell>\n%%cpp -d\n// This is a workaround to make sure the namespace is used inside functions\nusing namespace RooFit;\n# <codecell>\n")
+        code = code.replace("using namespace RooStats;", "# <codecell>\n%%cpp -d\n// This is a workaround to make sure the namespace is used inside functions\nusing namespace RooStats;\n# <codecell>\n")
+        code = code.replace("using namespace ROOT::Math;", "# <codecell>\n%%cpp -d\n// This is a workaround to make sure the namespace is used inside functions\nusing namespace ROOT::Math;\n# <codecell>\n")
+
     return code
 
 
+def rs401dGetFiles(code):
+    if tutName == "rs401d_FeldmanCousins":
+        code = code.replace(
+         """#if !defined(__CINT__) || defined(__MAKECINT__)\n#include "../tutorials/roostats/NuMuToNuE_Oscillation.h"\n#include "../tutorials/roostats/NuMuToNuE_Oscillation.cxx" // so that it can be executed directly\n#else\n#include "../tutorials/roostats/NuMuToNuE_Oscillation.cxx+" // so that it can be executed directly\n#endif""" , """std::string tutDir = gROOT->GetTutorialsDir();\nTString headerDir = TString::Format("#include \\\"%s/roostats/NuMuToNuE_Oscillation.h\\\"", tutDir.c_str());\nTString impDir = TString::Format("#include \\\"%s/roostats/NuMuToNuE_Oscillation.cxx\\\"", tutDir.c_str());\ngROOT->ProcessLine(headerDir);\ngROOT->ProcessLine(impDir);""")
+    return code
+
+def foamRemoveIfndef(code):
+    if tutName == "foam_demo":
+        code = code.replace("#if defined(__CINT__) && !defined(__MAKECINT__)\n{\n   std::cout << \"Using ACliC to run this macro since it uses custom classes\" << std::endl;\n   TString macroFileName = gSystem->UnixPathName(__FILE__);\n   gSystem->CompileMacro(macroFileName, \"k\");\n   foam_demo();\n}\n#else","")
+        code = code.replace("#endif", "")
+    return code
+
 def fixes(code):
-    codeTransformers=[removePaletteEditor, runEventExe, getLibMathMore, roofitRemoveSpacesComments, roostatsRoofitDeclaceNamespace]
+    codeTransformers=[removePaletteEditor, runEventExe, getLibMathMore,
+        roofitRemoveSpacesComments, declareNamespace, rs401dGetFiles ,foamRemoveIfndef]
 
     for transformer in codeTransformers:
         code = transformer(code)
@@ -551,6 +573,13 @@ def isCpp():
     return extension in ("C", "c", "cpp", "C++", "cxx")
 
 
+def findTimeout():
+   listLongtutorials = ["OneSidedFrequentistUpperLimitWithBands", "StandardBayesianNumericalDemo",
+   "TwoSidedFrequentistUpperLimitWithBands" , "HybridStandardForm", "rs401d_FeldmanCousins"]
+   if tutName in listLongtutorials:
+      return 300
+   else:
+      return 90
 # -------------------------------------
 # ------------ Main Program------------
 # -------------------------------------
@@ -565,9 +594,13 @@ def mainfunction(text):
     # Modify text from macros to suit a notebook
     if isCpp():
         main, helpers, rest = split(text)
-        main, callMainFunction, keepfunction = processmain(main)
+        main, callMainFunction, keepfunction, argumentsCell = processmain(main)
         if not keepfunction:
             main = cppComments(unindenter(cppFunction(main)))  # Remove function, Unindent, and convert comments to Markdown cells
+        
+        if argumentsCell:
+            main = argumentsCell + main
+
         rest = cppComments(rest)  # Convert top level code comments to Markdown cells
 
         # Construct text by starting with top level code, then the helper functions, and finally the main function.
@@ -662,8 +695,9 @@ def mainfunction(text):
         json.dump(json_data, fout, indent=1, sort_keys=True)
 
     print(time.time() - starttime)
+    timeout = findTimeout()
     # Call commmand that executes the notebook and creates a new notebook with the output
-    r = subprocess.call(["jupyter", "nbconvert", "--ExecutePreprocessor.timeout=90",  "--to=notebook", "--execute",  outPathName])
+    r = subprocess.call(["jupyter", "nbconvert", "--ExecutePreprocessor.timeout=%d" % timeout,  "--to=notebook", "--execute",  outPathName])
     if r != 0:
         sys.stderr.write("NOTEBOOK_CONVERSION_WARNING: Nbconvert failed for notebook %s with return code %s\n" %(outname,r))
     if isJsroot:
