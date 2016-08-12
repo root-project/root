@@ -22,7 +22,7 @@ void img2pad()
    c->SetFixedAspectRatio();
 
    TCanvas *c1 = new TCanvas("roses", "roses", 800, 800);
-   img->Draw("T100,100,yellow");
+   img->Draw("T100,100,#ffff00");
    //img->Draw("T100,100,#556655");
    //img->Draw("T100,100");
 

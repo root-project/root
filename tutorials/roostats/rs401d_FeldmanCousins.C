@@ -72,25 +72,25 @@ void rs401d_FeldmanCousins(bool doFeldmanCousins=false, bool doMCMC = true)
    t.Start();
 
 
-   /*
-      Taken from Feldman & Cousins paper, Phys.Rev.D57:3873-3889,1998.
-      e-Print: physics/9711021 (see page 13.)
 
-      Quantum mechanics dictates that the probability of such a transformation is given by the formula
-      P (νµ → ν e ) = sin^2 (2θ) sin^2 (1.27 ∆m^2 L /E )
-      where P is the probability for a νµ to transform into a νe , L is the distance in km between
-      the creation of the neutrino from meson decay and its interaction in the detector, E is the
-      neutrino energy in GeV, and ∆m^2 = |m^2− m^2 | in (eV/c^2 )^2 .
+   // Taken from Feldman & Cousins paper, Phys.Rev.D57:3873-3889,1998.
+   // e-Print: physics/9711021 (see page 13.)
+   //
+   // Quantum mechanics dictates that the probability of such a transformation is given by the formula
+   // $P (\nu\mu \rightarrow \nu e ) = sin^2 (2\theta) sin^2 (1.27 \Delta m^2 L /E )$
+   // where P is the probability for a $\nu\mu$ to transform into a $\nu e$ , L is the distance in km between
+   // the creation of the neutrino from meson decay and its interaction in the detector, E is the
+   // neutrino energy in GeV, and $\Delta m^2 = |m^2 - m^2 |$ in $(eV/c^2 )^2$ .
+   //
+   // To demonstrate how this works in practice, and how it compares to alternative approaches
+   // that have been used, we consider a toy model of a typical neutrino oscillation experiment.
+   // The toy model is defined by the following parameters: Mesons are assumed to decay to
+   // neutrinos uniformly in a region 600 m to 1000 m from the detector. The expected background
+   // from conventional $\nu e$ interactions and misidentified $\nu\mu$ interactions is assumed to be 100
+   // events in each of 5 energy bins which span the region from 10 to 60 GeV. We assume that
+   // the $\nu\mu$ flux is such that if $P (\nu\mu \rightarrow \nu e ) = 0.01$ averaged over any bin, then that bin would
+   // have an expected additional contribution of 100 events due to $\nu\mu \rightarrow \nu e$ oscillations.
 
-      To demonstrate how this works in practice, and how it compares to alternative approaches
-      that have been used, we consider a toy model of a typical neutrino oscillation experiment.
-      The toy model is deﬁned by the following parameters: Mesons are assumed to decay to
-      neutrinos uniformly in a region 600 m to 1000 m from the detector. The expected background
-      from conventional νe interactions and misidentiﬁed νµ interactions is assumed to be 100
-      events in each of 5 energy bins which span the region from 10 to 60 GeV. We assume that
-      the νµ ﬂux is such that if P (νµ → ν e ) = 0.01 averaged over any bin, then that bin would
-      have an expected additional contribution of 100 events due to νµ → ν e oscillations.
-      */
 
    // Make signal model model
    RooRealVar E("E","", 15,10,60,"GeV");
@@ -108,7 +108,7 @@ void rs401d_FeldmanCousins(bool doFeldmanCousins=false, bool doMCMC = true)
    // only E is observable, so create the signal model by integrating out L
    RooAbsPdf* sigModel = PnmuTone.createProjection(L);
 
-   // create   \int dE' dL' P(E',L' | \Delta m^2).
+   // create  $ \int dE' dL' P(E',L' | \Delta m^2)$.
    // Given RooFit will renormalize the PDF in the range of the observables,
    // the average probability to oscillate in the experiment's acceptance
    // needs to be incorporated into the extended term in the likelihood.
@@ -126,7 +126,7 @@ void rs401d_FeldmanCousins(bool doFeldmanCousins=false, bool doMCMC = true)
 
    // Getting the flux is a bit tricky.  It is more celear to include a cross section term that is not
    // explicitly refered to in the text, eg.
-   // # events in bin = flux * cross-section for nu_e interaction in E bin * average prob nu_mu osc. to nu_e in bin
+   // number events in bin = flux * cross-section for nu_e interaction in E bin * average prob nu_mu osc. to nu_e in bin
    // let maxEventsInBin = flux * cross-section for nu_e interaction in E bin
    // maxEventsInBin * 1% chance per bin =  100 events / bin
    // therefore maxEventsInBin = 10,000.
@@ -135,7 +135,7 @@ void rs401d_FeldmanCousins(bool doFeldmanCousins=false, bool doMCMC = true)
    RooConstVar inverseArea("inverseArea","1/(#Delta E #Delta L)",
                            1./(EPrime.getMax()-EPrime.getMin())/(LPrime.getMax()-LPrime.getMin()));
 
-   // sigNorm = maxEventsTot * (\int dE dL prob to oscillate in experiment / Area) * sin^2(2\theta)
+   // $sigNorm = maxEventsTot \cdot \int dE dL \frac{P_{oscillate\ in\ experiment}}{Area} \cdot {sin}^2(2\theta)$
    RooProduct sigNorm("sigNorm", "", RooArgSet(maxEventsTot, *intProbToOscInExp, inverseArea, sinSq2theta));
    // bkg = 5 bins * 100 events / bin
    RooConstVar bkgNorm("bkgNorm","normalization for background",500);

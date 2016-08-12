@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_fit
-/// \notebook
+/// \notebook -js
 /// Illustrates TVirtualFitter::GetConfidenceIntervals
 /// This method computes confidence intervals for the fitted function
 ///
@@ -41,12 +41,12 @@ void ConfidenceIntervals()
    fpol->SetLineWidth(2);
    gr->Fit(fpol, "Q");
 
-   //Create a TGraphErrors to hold the confidence intervals
+   /*Create a TGraphErrors to hold the confidence intervals*/
    TGraphErrors *grint = new TGraphErrors(ngr);
    grint->SetTitle("Fitted line with .95 conf. band");
    for (i=0; i<ngr; i++)
       grint->SetPoint(i, gr->GetX()[i], 0);
-   //Compute the confidence intervals at the x points of the created graph
+   /*Compute the confidence intervals at the x points of the created graph*/
    (TVirtualFitter::GetFitter())->GetConfidenceIntervals(grint);
    //Now the "grint" graph contains function values as its y-coordinates
    //and confidence intervals as the errors on these coordinates
@@ -70,7 +70,7 @@ void ConfidenceIntervals()
    h->Fit(f, "Q");
    h->Draw();
 
-   //Create a histogram to hold the confidence intervals
+   /*Create a histogram to hold the confidence intervals*/
    TH1D *hint = new TH1D("hint",
       "Fitted gaussian with .95 conf.band", 100, -3, 3);
    (TVirtualFitter::GetFitter())->GetConfidenceIntervals(hint);
@@ -104,7 +104,7 @@ void ConfidenceIntervals()
    //Fit the graph
    f2->SetParameters(0.5,1.5);
    gr2->Fit(f2, "Q");
-   //Compute the confidence intervals
+   /*Compute the confidence intervals*/
    (TVirtualFitter::GetFitter())->GetConfidenceIntervals(grint2);
    //Now the "grint2" graph contains function values as z-coordinates
    //and confidence intervals as their errors

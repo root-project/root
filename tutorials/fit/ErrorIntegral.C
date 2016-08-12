@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_fit
-/// \notebook
+/// \notebook -js
 /// Estimate the error in the integral of a fitted function
 /// taking into account the errors in the parameters resulting from the fit.
 /// The error is estimated also using the correlations values obtained from
@@ -42,42 +42,42 @@ double f(double * x, double * p) {
 
 #ifdef HAVE_OLD_ROOT_VERSION
 //____________________________________________________________________
-double df_dPar(double * x, double * p) {
-   // derivative of the function w.r..t parameters
-   // use calculated derivatives from TF1::GradientPar
+   double df_dPar(double * x, double * p) {
+      // derivative of the function w.r..t parameters
+      // use calculated derivatives from TF1::GradientPar
 
-   double grad[NPAR];
-   // p is used to specify for which parameter the derivative is computed
-   int ipar = int(p[0] );
-   assert (ipar >=0 && ipar < NPAR );
+      double grad[NPAR];
+      // p is used to specify for which parameter the derivative is computed
+      int ipar = int(p[0] );
+      assert (ipar >=0 && ipar < NPAR );
 
-   assert(fitFunc);
-   fitFunc->GradientPar(x, grad);
+      assert(fitFunc);
+      fitFunc->GradientPar(x, grad);
 
-   return grad[ipar];
-}
-
-//____________________________________________________________________
-double IntegralError(int npar, double * c, double * errPar,
-   double * covMatrix = 0) {
-// calculate the error on the integral given the parameter error and
-// the integrals of the gradient functions c[]
-
-   double err2 = 0;
-   for (int i = 0; i < npar; ++i) {
-      if (covMatrix == 0) { // assume error are uncorrelated
-         err2 += c[i] * c[i] * errPar[i] * errPar[i];
-      } else {
-         double s = 0;
-         for (int j = 0; j < npar; ++j) {
-            s += covMatrix[i*npar + j] * c[j];
-         }
-         err2 += c[i] * s;
-      }
+      return grad[ipar];
    }
 
-   return TMath::Sqrt(err2);
-}
+//____________________________________________________________________
+   double IntegralError(int npar, double * c, double * errPar,
+      double * covMatrix = 0) {
+      // calculate the error on the integral given the parameter error and
+      // the integrals of the gradient functions c[]
+
+      double err2 = 0;
+      for (int i = 0; i < npar; ++i) {
+         if (covMatrix == 0) { // assume error are uncorrelated
+            err2 += c[i] * c[i] * errPar[i] * errPar[i];
+         } else {
+            double s = 0;
+            for (int j = 0; j < npar; ++j) {
+               s += covMatrix[i*npar + j] * c[j];
+            }
+            err2 += c[i] * s;
+         }
+      }
+
+      return TMath::Sqrt(err2);
+   }
 #endif
 
 //____________________________________________________________________
@@ -94,7 +94,7 @@ void ErrorIntegral() {
 
    h1->Draw();
 
-   // calculate the integral
+   /* calculate the integral*/
    double integral = fitFunc->Integral(0,1);
 
    TVirtualFitter * fitter = TVirtualFitter::GetFitter();
@@ -103,8 +103,8 @@ void ErrorIntegral() {
 
 #ifdef HAVE_OLD_ROOT_VERSION
 
-   // calculate now the error (needs the derivatives of the function
-   // w..r.t the parameters)
+   /* calculate now the error (needs the derivatives of the function
+   w..r.t the parameters)*/
    TF1 * deriv_par0 = new TF1("dfdp0",df_dPar,0,1,1);
    deriv_par0->SetParameter(0,0);
 
@@ -118,17 +118,15 @@ void ErrorIntegral() {
 
    double * epar = fitFunc->GetParErrors();
 
-   // without correlations
+   /* without correlations*/
    double sigma_integral_0 = IntegralError(2,c,epar);
 
-
-
-   // with correlations
+   /*with correlations*/
    double sigma_integral = IntegralError(2,c,epar,covMatrix);
 
 #else
 
-   // using new function in TF1 (from 12/6/2007)
+   /* using new function in TF1 (from 12/6/2007)*/
    double sigma_integral = fitFunc->IntegralError(0,1);
 
 #endif

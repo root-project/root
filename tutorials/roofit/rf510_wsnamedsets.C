@@ -24,7 +24,8 @@
 #include "TAxis.h"
 #include "TFile.h"
 #include "TH1.h"
-using namespace RooFit ;
+
+using namespace RooFit;
 
 
 void fillWorkspace(RooWorkspace& w) ;

@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_matrix
-/// \notebook
+/// \notebook -nodraw
 /// This macro shows several ways to perform a linear least-squares
 /// analysis . To keep things simple we fit a straight line to 4
 /// data points

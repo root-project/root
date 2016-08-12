@@ -24,7 +24,8 @@
 #include "TCanvas.h"
 #include "TAxis.h"
 #include "TH1.h"
-using namespace RooFit ;
+
+using namespace RooFit;
 
 
 RooDataSet* makeFakeDataXY() ;

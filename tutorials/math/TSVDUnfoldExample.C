@@ -48,6 +48,7 @@ Double_t Reconstruct( Double_t xt, TRandom3& R )
 
 void TSVDUnfoldExample()
 {
+   gROOT->SetStyle("Plain");
    gStyle->SetOptStat(0);
 
    TRandom3 R;

@@ -1,7 +1,6 @@
 /// \file
 /// \ingroup tutorial_math
 /// \notebook
-///
 /// kdTreeBinning tutorial: bin the data in cells of equal content using a kd-tree
 ///
 /// Using TKDTree wrapper class as a data binning structure

@@ -168,4 +168,4 @@ void invertMatrix(Int_t msize=6)
    const Double_t U4_max_offdiag = (U4.Abs()).Max();
    std::cout << "  Maximum off-diagonal = " << U4_max_offdiag << std::endl;
    std::cout << "  Determinant          = " << det4 << std::endl;
-   }
+}

@@ -881,7 +881,7 @@ void mathcoreGenVector() {
 
    #ifdef __CINT__
    gSystem->Load("libMathCore");
-   using namespace ROOT::Math;
+   using namespace ROOT::Math ;
    #endif
 
    testVector3D();

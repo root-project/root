@@ -24,7 +24,7 @@
 #include "TFile.h"
 #include "TH1.h"
 
-using namespace RooFit ;
+using namespace RooFit;
 
 RooWorkspace* getWorkspace(Int_t mode) ;
 

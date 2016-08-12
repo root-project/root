@@ -157,7 +157,7 @@ int mathcoreVectorCollection() {
    gSystem->Load("libMathCore");
    gSystem->Load("libPhysics");
     // in CINT need to do that after having loading the library
-   using namespace ROOT::Math;
+   using namespace ROOT::Math ;
 
    cout << "This tutorial can run only using ACliC, compiling it by doing: " << endl;
    cout << "\t  .x tutorials/math/mathcoreVectorCollection.C+" << endl;
