@@ -10,7 +10,8 @@
  *************************************************************************/
 
 ////////////////////////////////////////////////////////////////
-// Implementation of output functions for CUDA architectures. //
+// Explicit instantiation of the Reference architecture class //
+// template for Double_t scalar types.                        //
 ////////////////////////////////////////////////////////////////
 
 #include "TMVA/DNN/Architectures/Cuda.h"
