@@ -19,7 +19,10 @@
 #define TMVA_DNN_ARCHITECTURES_CPU
 
 #include "TMVA/DNN/Timings.h"
+<<<<<<< HEAD
 #include "Cpu/CpuBuffer.h"
+=======
+>>>>>>> 055354f6262b9c10847d24ce0f683235cca9d892
 #include "Cpu/CpuMatrix.h"
 #include "Cpu/DataLoader.h"
 
@@ -35,7 +38,11 @@ namespace DNN
  * for this architecture as well as the remaining functions in the low-level
  * interface in the form of static members.
  */
+<<<<<<< HEAD
 template<typename AReal, bool doProfiling = false>
+=======
+template<typename Real_t, bool doProfiling = false>
+>>>>>>> 055354f6262b9c10847d24ce0f683235cca9d892
 class TCpu
 {
 
@@ -44,10 +51,18 @@ class TCpu
 
 public:
 
+<<<<<<< HEAD
    using Scalar_t       = AReal;
    using Matrix_t       = TCpuMatrix<AReal>;
    using HostBuffer_t   = TCpuBuffer<AReal>;
    using DeviceBuffer_t = TCpuBuffer<AReal>;
+=======
+   using Scalar_t     = Real_t;
+   using Matrix_t     = TCpuMatrix<Real_t>;
+
+   template <typename Data_t>
+   using DataLoader_t = TCpuDataLoader<Data_t, Real_t>;
+>>>>>>> 055354f6262b9c10847d24ce0f683235cca9d892
 
    //____________________________________________________________________________
    //
@@ -95,9 +110,12 @@ public:
    static void ScaleAdd(TCpuMatrix<Scalar_t> & A,
                         const TCpuMatrix<Scalar_t> & B,
                         Scalar_t beta = 1.0);
+<<<<<<< HEAD
 
    static void Copy(TCpuMatrix<Scalar_t> & B,
                     const TCpuMatrix<Scalar_t> & A);
+=======
+>>>>>>> 055354f6262b9c10847d24ce0f683235cca9d892
    ///@}
 
    //____________________________________________________________________________
@@ -112,8 +130,12 @@ public:
     * and writes the results into the result matrix.
     */
    ///@{
+<<<<<<< HEAD
    static void IdentityDerivative(TCpuMatrix<Scalar_t> & B,
                                   const TCpuMatrix<Scalar_t> &A);
+=======
+   static void IdentityDerivative(TCpuMatrix<Scalar_t> & B);
+>>>>>>> 055354f6262b9c10847d24ce0f683235cca9d892
 
    static void Relu(TCpuMatrix<Scalar_t> & B);
    static void ReluDerivative(TCpuMatrix<Scalar_t> & B,

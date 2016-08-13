@@ -225,4 +225,7 @@ void TCpuDataLoader<TMVAInput_t, Double_t>::CopyBatch(
 } // namespace DNN
 
 #endif
+<<<<<<< HEAD
 
+=======
+>>>>>>> 055354f6262b9c10847d24ce0f683235cca9d892

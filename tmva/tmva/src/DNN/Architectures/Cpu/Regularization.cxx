@@ -46,7 +46,12 @@ Real_t TCpu<Real_t, doProfiling>::L1Regularization(const TCpuMatrix<Real_t> &Wei
       return sum1 + sum2;
    };
 
+<<<<<<< HEAD
    tbb::blocked_range<size_t> range(0, Weights.GetNElements());
+=======
+   auto & elements = Weights.GetElements();
+   tbb::blocked_range<size_t> range(0, elements.size());
+>>>>>>> 055354f6262b9c10847d24ce0f683235cca9d892
    return parallel_reduce(range, 0.0, f, reduction);
 }
 
@@ -72,7 +77,12 @@ void TCpu<Real_t, doProfiling>::AddL1RegularizationGradients(
       }
    };
 
+<<<<<<< HEAD
    tbb::blocked_range<size_t> range(0, A.GetNElements());
+=======
+   auto & elements = A.GetElements();
+   tbb::blocked_range<size_t> range(0, elements.size());
+>>>>>>> 055354f6262b9c10847d24ce0f683235cca9d892
    parallel_for(range, f);
 }
 
@@ -100,7 +110,12 @@ Real_t TCpu<Real_t, doProfiling>::L2Regularization(const TCpuMatrix<Real_t> &Wei
       return sum1 + sum2;
    };
 
+<<<<<<< HEAD
    tbb::blocked_range<size_t> range(0, Weights.GetNElements());
+=======
+   auto & elements = Weights.GetElements();
+   tbb::blocked_range<size_t> range(0, elements.size());
+>>>>>>> 055354f6262b9c10847d24ce0f683235cca9d892
    return parallel_reduce(range, 0.0, f, reduction);
 }
 
@@ -125,7 +140,12 @@ void TCpu<Real_t, doProfiling>::AddL2RegularizationGradients(
       }
    };
 
+<<<<<<< HEAD
    tbb::blocked_range<size_t> range(0, A.GetNElements());
+=======
+   auto & elements = A.GetElements();
+   tbb::blocked_range<size_t> range(0, elements.size());
+>>>>>>> 055354f6262b9c10847d24ce0f683235cca9d892
    parallel_for(range, f);
 }
 

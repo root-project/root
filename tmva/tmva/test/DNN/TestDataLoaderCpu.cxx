@@ -21,9 +21,10 @@ using namespace TMVA::DNN;
 int main ()
 {
    std::cout << "Testing data loader:" << std::endl;
-   Double_t error;// = testIdentity<TCpu<Double_t, false>>();
+   Double_t error = testIdentity<TCpu<Double_t, false>>();
    std::cout << "Identity: " << error << std::endl;
    error = testSum<TCpu<Double_t, false>>();
    std::cout << "Sum     : " << error << std::endl;
+
    return 0;
 }
