@@ -260,10 +260,11 @@ template<typename Architecture_t>
 //______________________________________________________________________________
 template<typename Architecture_t>
     template <typename Net_t>
-    void inline TGradientDescent<Architecture_t>::Step(
+    void inline TGradientDescent<Architecture_t>::MomentumStep(
         Net_t & master,
         std::vector<Net_t> & nets,
-        std::vector<TBatch<Architecture_t>> & batches)
+        std::vector<TBatch<Architecture_t>> & batches,
+        Scalar_t momentum)
 {
    typename Architecture_t::Matrix_t dummy(0,0);
    size_t depth = master.GetDepth();
@@ -296,6 +297,12 @@ template<typename Architecture_t>
                                       nets[j].GetRegularization(),
                                       nets[j].GetWeightDecay());
       }
+      Architecture_t::ScaleAdd(master.GetLayer(i).GetWeightGradients(),
+                               nets[j].GetLayer(i).GetWeightsGradients(),
+                               - fLearningRate / momentum);
+      Architecture_t::ScaleAdd(master.GetLayer(i).GetBiasGradients(),
+                               nets[j].GetLayer(i).GetBiasGradients(),
+                               - fLearningRate / momentum);
    }
    for (size_t j = 0; j < nets.size(); j++) {
       nets[j].GetLayer(0).Backward(dummy,
@@ -304,25 +311,112 @@ template<typename Architecture_t>
                                    nets[j].GetWeightDecay());
    }
 
-   for (size_t j = 0; j < nets.size(); j++) {
-      for (size_t i = 0; i < depth; i++)
-      {
-         auto &masterLayer = master.GetLayer(i);
+   for (size_t i = 0; i < depth; i++)
+   {
+       auto &masterLayer = master.GetLayer(i);
+       Architecture_t::ScaleAdd(masterLayer.GetWeights(),
+                                masterLayer.GetWeightGradients(),
+                                momentum);
+       Architecture_t::ScaleAdd(masterLayer.GetBiases(),
+                                masterLayer.GetBiasGradients(),
+                                momentum);
+       for (size_t j = 0; j < nets.size(); j++) {
          auto &layer       = nets[j].GetLayer(i);
-         Architecture_t::ScaleAdd(masterLayer.GetWeights(),
-                                  layer.GetWeightGradients(),
-                                  -fLearningRate);
          Architecture_t::Copy(layer.GetWeights(),
                               masterLayer.GetWeights());
-         Architecture_t::ScaleAdd(masterLayer.GetBiases(),
-                                  layer.GetBiasGradients(),
-                                  -fLearningRate);
          Architecture_t::Copy(layer.GetBiases(),
                               masterLayer.GetBiases());
-      }
+       }
    }
 }
 
+//______________________________________________________________________________
+template<typename Architecture_t>
+    template <typename Net_t>
+    void inline TGradientDescent<Architecture_t>::NesterovMomentumStep(
+        Net_t & master,
+        std::vector<Net_t> & nets,
+        std::vector<TBatch<Architecture_t>> & batches,
+        Scalar_t momentum)
+{
+   typename Architecture_t::Matrix_t dummy(0,0);
+   size_t depth = master.GetDepth();
+
+   // Forward
+   for (size_t j = 0; j < nets.size(); j++) {
+      nets[j].GetLayer(0).Forward(batches[j].GetInput());
+   }
+
+   for (size_t i = 1; i < depth; i++)
+   {
+      for (size_t j = 0; j < nets.size(); j++) {
+         nets[j].GetLayer(i).Forward(nets[j].GetLayer(i-1).GetOutput());
+      }
+   }
+   // Gradients
+   for (size_t j = 0; j < nets.size(); j++) {
+      evaluateGradients<Architecture_t>(
+          nets[j].GetLayer(depth-1).GetActivationGradients(),
+          nets[j].GetLossFunction(),
+          batches[j].GetOutput(),
+          nets[j].GetLayer(depth-1).GetOutput());
+   }
+   // Backward
+   for (size_t i = depth - 1; i > 0; i--)
+   {
+      for (size_t j = 0; j < nets.size(); j++) {
+         nets[j].GetLayer(i).Backward(nets[j].GetLayer(i-1).GetActivationGradients(),
+                                      nets[j].GetLayer(i-1).GetOutput(),
+                                      nets[j].GetRegularization(),
+                                      nets[j].GetWeightDecay());
+      }
+      Architecture_t::ScaleAdd(master.GetLayer(i).GetWeightGradients(),
+                               nets[j].GetLayer(i).GetWeightsGradients(),
+                               - fLearningRate / momentum);
+      Architecture_t::ScaleAdd(master.GetLayer(i).GetBiasGradients(),
+                               nets[j].GetLayer(i).GetBiasGradients(),
+                               - fLearningRate / momentum);
+   }
+   for (size_t j = 0; j < nets.size(); j++) {
+      nets[j].GetLayer(0).Backward(dummy,
+                                   batches[j].GetInput(),
+                                   nets[j].GetRegularization(),
+                                   nets[j].GetWeightDecay());
+   }
+
+   for (size_t i = 0; i < depth; i++)
+   {
+      auto &masterLayer = master.GetLayer(i);
+      for (size_t j = 0; j < nets.size(); j++) {
+         auto &layer       = nets[j].GetLayer(i);
+         Architecture_t::Copy(layer.GetWeights(),
+                              masterLayer.GetWeights());
+         Architecture_t::Copy(layer.GetBiases(),
+                              masterLayer.GetBiases());
+         Architecture_t::ScaleAdd(layer.GetWeights(),
+                                  masterLayer.GetWeightGradients(),
+                                  momentum);
+         Architecture_t::ScaleAdd(layer.GetBiases(),
+                                  masterLayer.GetBiasGradients(),
+                                  momentum);
+      }
+      for (size_t j = 0; j < nets.size(); j++) {
+         auto &layer       = nets[j].GetLayer(i);
+         Architecture_t::ScaleAdd(masterLayer.GetWeightsGradients(),
+                                  layer.GetWeightGradients(),
+                                  - flearningRate / momentum);
+         Architecture_t::ScaleAdd(masterLayer.GetBiasGradients(),
+                                  layer.GetBiasGradients(),
+                                  - flearningRate / momentum);
+      }
+      Architecture_t::ScaleAdd(masterLayer.GetWeights(),
+                               masterLayer.GetWeightGradients(),
+                               momentum);
+      Architecture_t::ScaleAdd(masterLayer.GetBiases(),
+                               masterLayer.GetBiasGradients(),
+                               momentum);
+   }
+}
 
 //______________________________________________________________________________
 template<typename Architecture_t>

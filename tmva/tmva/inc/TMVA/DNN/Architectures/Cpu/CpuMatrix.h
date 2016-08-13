@@ -22,8 +22,6 @@
 #include "tbb/tbb.h"
 
 #include "TMatrix.h"
-
-#include <iostream>
 #include "CpuBuffer.h"
 
 namespace TMVA

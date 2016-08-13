@@ -21,7 +21,6 @@
 #include "TMVA/DNN/Timings.h"
 #include "Cpu/CpuBuffer.h"
 #include "Cpu/CpuMatrix.h"
-#include "Cpu/DataLoader.h"
 
 namespace TMVA
 {
