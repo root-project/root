@@ -1,3 +1,4 @@
+#include <multiset> //For backward compatibility only
 #include <set>
 #include <string>
 

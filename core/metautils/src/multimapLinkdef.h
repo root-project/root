@@ -1,3 +1,4 @@
+#include <multimap> //For backward compatibility only
 #include <map>
 #include <string>
 
