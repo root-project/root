@@ -42,6 +42,7 @@ set(dnn_cuda_files src/DNN/Architectures/Cuda/ActivationFunctions.cu
                    src/DNN/Architectures/Cuda/Arithmetic.cu
                    src/DNN/Architectures/Cuda/Buffers.cxx
                    src/DNN/Architectures/Cuda/CudaMatrix.cu
+                   src/DNN/Architectures/Cuda/Dropout.cu
                    src/DNN/Architectures/Cuda/DataLoader.cu
                    src/DNN/Architectures/Cuda/Initialization.cu
                    src/DNN/Architectures/Cuda/Kernels.cu
