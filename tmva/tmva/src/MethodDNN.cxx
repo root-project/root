@@ -799,6 +799,7 @@ void TMVA::MethodDNN::TrainGPU()
          DNN::TGradientDescent<DNN::TCuda> minimizer{};
 
          minimizer.Reset();
+         minimizer.SetBatchSize(settings.batchSize());
          minimizer.SetLearningRate(settings.learningRate());
          minimizer.SetTestInterval(settings.testRepetitions());
          minimizer.SetConvergenceSteps(settings.convergenceSteps());

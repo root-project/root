@@ -53,11 +53,11 @@ template <typename Architecture>
    net.AddLayer(1, EActivationFunction::IDENTITY);
    net.Initialize(EInitialization::GAUSS);
 
-   TGradientDescent<Architecture> minimizer(0.0001, 1, 1);
+   TGradientDescent<Architecture> minimizer(100, 0.000001, 1, 1);
    MatrixInput_t trainingData(XTrain, YTrain);
    MatrixInput_t testData(XTest, YTest);
    minimizer.Train(trainingData, nSamples, testData, batchSize, net, 1);
+   //minimizer.TrainMomentum(trainingData, nSamples, testData, batchSize, net, 0.01, 1);
 
    return 0.0;
 }
-

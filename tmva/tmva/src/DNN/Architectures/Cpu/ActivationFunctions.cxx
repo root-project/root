@@ -16,11 +16,6 @@
 
 #include "TMVA/DNN/Architectures/Cpu.h"
 #include <math.h>
-<<<<<<< HEAD
-#include <iostream>
-=======
->>>>>>> 055354f6262b9c10847d24ce0f683235cca9d892
-
 namespace TMVA
 {
 namespace DNN
@@ -28,12 +23,8 @@ namespace DNN
 
 //______________________________________________________________________________
 template<typename Real_t, bool doProfiling>
-<<<<<<< HEAD
 void TCpu<Real_t, doProfiling>::IdentityDerivative(TCpuMatrix<Real_t> & B,
                                                    const TCpuMatrix<Real_t> &A)
-=======
-void TCpu<Real_t, doProfiling>::IdentityDerivative(TCpuMatrix<Real_t> & B)
->>>>>>> 055354f6262b9c10847d24ce0f683235cca9d892
 {
    auto f = [](Real_t) {return 1.0;};
    B.Map(f);
