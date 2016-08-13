@@ -19,9 +19,8 @@
 #define TMVA_DNN_ARCHITECTURES_CUDA
 
 #include <utility>
-#include "cuda.h"
 
-#include "TMVA/DNN/Timings.h"
+#include "cuda.h"
 
 #include "Cuda/Types.h"
 #include "Cuda/Kernels.h"
@@ -29,7 +28,6 @@
 #include "Cuda/DataLoader.h"
 #include "Cuda/CudaMatrix.h"
 #include "TMVA/DNN/DataLoader.h"
-
 
 namespace TMVA
 {
@@ -43,18 +41,8 @@ namespace DNN
  * for this architecture as well as the remaining functions in the low-level
  * interface in the form of static members.
  */
-template<bool doProfiling = false>
 class TCuda
 {
-
-private:
-
-   static cudaEvent_t fStart;
-   static cudaEvent_t fStop;
-   static bool fIsInitialized;
-
-   static TTimings fTimings;
-   static void ResetTimings(){fTimings.Reset();}
 
 public:
 
@@ -300,47 +288,7 @@ public:
 
    /** Compute the sum of all elements in \p A */
    static CudaDouble_t Sum(const TCudaMatrix &A);
-
-private:
-
-   static inline void tick();
-   static inline void tock(CudaDouble_t &);
-
 };
-
-template <bool doProfiling>
-bool     TCuda<doProfiling>::fIsInitialized = false;
-
-template <bool doProfiling>
-TTimings TCuda<doProfiling>::fTimings{};
-
-template <>
-inline void TCuda<false>::tick() {}
-
-template <>
-inline void TCuda<false>::tock(CudaDouble_t &) {}
-
-template <>
-inline void TCuda<true>::tick()
-{
-   if (!fIsInitialized) {
-      fIsInitialized = true;
-      cudaEventCreate(&fStart);
-      cudaEventCreate(&fStop);
-   }
-
-   cudaEventRecord(fStart);
-}
-
-template <>
-inline void TCuda<true>::tock(CudaDouble_t &result)
-{
-   cudaEventRecord(fStop);
-   cudaEventSynchronize(fStop);
-   float time;
-   cudaEventElapsedTime(&time, fStart, fStop);
-   result = (Double_t) time;
-}
 
 } // namespace DNN
 } // namespace TMVA
