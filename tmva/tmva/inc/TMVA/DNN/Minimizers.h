@@ -207,7 +207,6 @@ template <typename Data_t, typename Net_t>
             batches.push_back(trainLoader.GetBatch());
          }
          Step(net, nets, batches);
-         std::cout << "epoch." << std::endl;
       }
 
       // Compute test error.
