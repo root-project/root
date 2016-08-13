@@ -16,8 +16,6 @@
 
 #include "TMVA/DNN/Architectures/Cpu.h"
 #include <math.h>
-#include <iostream>
-
 namespace TMVA
 {
 namespace DNN

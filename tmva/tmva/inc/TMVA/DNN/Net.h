@@ -99,6 +99,10 @@ public:
     *  initialization method. */
    inline void Initialize(EInitialization m);
 
+   /*! Initialize the gradients in the net to zero. Required if net is
+    *  used to store velocities of momentum-based minimization techniques. */
+   inline void InitializeGradients();
+
    /*! Forward a given input through the neural net. Computes
     *  all layer activations up to the output layer */
    inline void Forward(Matrix_t& X, bool applyDropout = false);
@@ -231,6 +235,16 @@ template<typename Architecture_t, typename Layer_t>
 {
    for (auto &l : fLayers) {
       l.Initialize(m);
+   }
+}
+
+//______________________________________________________________________________
+template<typename Architecture_t, typename Layer_t>
+   inline void TNet<Architecture_t, Layer_t>::InitializeGradients()
+{
+   for (auto &l : fLayers) {
+      initialize(l.GetWeightGradients(), EInitialization::ZERO);
+      initialize(l.GetBiasGradients(),   EInitialization::ZERO);
    }
 }
 
