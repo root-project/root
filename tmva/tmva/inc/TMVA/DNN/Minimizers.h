@@ -93,6 +93,8 @@ public:
     template <typename Net_t>
     void Step(Net_t &net, Matrix_t &input, const Matrix_t &output);
     template <typename Net_t>
+    Scalar_t StepLoss(Net_t &net, Matrix_t &input, const Matrix_t &output);
+    template <typename Net_t>
     void Step(Net_t &master,
               std::vector<Net_t> &nets,
               std::vector<TBatch<Architecture_t>> &batches);
@@ -344,21 +346,47 @@ template<typename Architecture_t>
                                                        Matrix_t &input,
                                                        const Matrix_t &output)
 {
-    //Scalar_t loss = net.Loss(input, output);
-    //fTrainingError = loss;
-    net.Forward(input);
-    net.Backward(input, output);
+   //Scalar_t loss = net.Loss(input, output);
+   //fTrainingError = loss;
+   net.Forward(input);
+   net.Backward(input, output);
 
-    for (size_t i = 0; i < net.GetDepth(); i++)
-    {
-        auto &layer = net.GetLayer(i);
-        Architecture_t::ScaleAdd(layer.GetWeights(),
-                                 layer.GetWeightGradients(),
-                                 -fLearningRate);
-        Architecture_t::ScaleAdd(layer.GetBiases(),
-                                 layer.GetBiasGradients(),
-                                 -fLearningRate);
-    }
+   for (size_t i = 0; i < net.GetDepth(); i++)
+   {
+      auto &layer = net.GetLayer(i);
+      Architecture_t::ScaleAdd(layer.GetWeights(),
+                               layer.GetWeightGradients(),
+                               -fLearningRate);
+      Architecture_t::ScaleAdd(layer.GetBiases(),
+                               layer.GetBiasGradients(),
+                               -fLearningRate);
+   }
+}
+
+//______________________________________________________________________________
+template<typename Architecture_t>
+template <typename Net_t>
+auto inline TGradientDescent<Architecture_t>::StepLoss(Net_t & net,
+                                                       Matrix_t &input,
+                                                       const Matrix_t &output)
+   -> Scalar_t
+{
+   //Scalar_t loss = net.Loss(input, output);
+   //fTrainingError = loss;
+   Scalar_t loss = net.Loss(input, output);
+   net.Backward(input, output);
+
+   for (size_t i = 0; i < net.GetDepth(); i++)
+   {
+      auto &layer = net.GetLayer(i);
+      Architecture_t::ScaleAdd(layer.GetWeights(),
+                               layer.GetWeightGradients(),
+                               -fLearningRate);
+      Architecture_t::ScaleAdd(layer.GetBiases(),
+                               layer.GetBiasGradients(),
+                               -fLearningRate);
+   }
+   return loss;
 }
 
 //______________________________________________________________________________

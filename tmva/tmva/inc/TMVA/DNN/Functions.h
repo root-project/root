@@ -30,20 +30,20 @@ namespace DNN
 /*! Enum that represents layer activation functions. */
 enum class EActivationFunction
 {
-   kIdentity = 0,
-   kRelu     = 1,
-   kSigmoid  = 2,
-   kTanh     = 3,
-   kSymmRelu = 4,
-   kSoftSign = 5,
-   kGauss    = 6
+   IDENTITY = 0,
+   RELU     = 1,
+   SIGMOID  = 2,
+   TANH     = 3,
+   SYMMRELU = 4,
+   SOFTSIGN = 5,
+   GAUSS    = 6
 };
 
 /*! Enum that represents output functions */
 enum class EOutputFunction
 {
-   kIdentity = 'I',
-   kSigmoid  = 'S'
+   IDENTITY = 'I',
+   SIGMOID  = 'S'
 };
 
 /*! Enum that represents objective functions for the net, i.e. functions
@@ -52,24 +52,24 @@ enum class EOutputFunction
 *  in the training process. */
 enum class ELossFunction
 {
-    kCrossEntropy     = 'C',
-    kMeanSquaredError = 'R'
+    CROSSENTROPY     = 'C',
+    MEANSQUAREDERROR = 'R'
 };
 
 /*! Enum representing the regularization type applied for a given layer */
 enum class ERegularization
 {
-    kNone = '0',
-    kL1   = '1',
-    kL2   = '2'
+    NONE = '0',
+    L1   = '1',
+    L2   = '2'
     };
 
 /* Enum represnting the initialization method used for this layer. */
 enum class EInitialization {
-    kGauss    = 'G',
-    kUniform  = 'U',
-    kIdentity = 'I',
-    kZero = 'Z'
+    GAUSS    = 'G',
+    UNIFORM  = 'U',
+    IDENTITY = 'I',
+    ZERO = 'Z'
 };
 
 //______________________________________________________________________________
@@ -85,18 +85,18 @@ inline void evaluate(typename Architecture_t::Matrix_t &A,
 {
     switch(f)
     {
-    case EActivationFunction::kIdentity : break;
-    case EActivationFunction::kRelu :     Architecture_t::Relu(A);
+    case EActivationFunction::IDENTITY : break;
+    case EActivationFunction::RELU :     Architecture_t::Relu(A);
         break;
-    case EActivationFunction::kSigmoid  :  Architecture_t::Sigmoid(A);
+    case EActivationFunction::SIGMOID  :  Architecture_t::Sigmoid(A);
         break;
-    case EActivationFunction::kTanh     :  Architecture_t::Tanh(A);
+    case EActivationFunction::TANH     :  Architecture_t::Tanh(A);
         break;
-    case EActivationFunction::kSymmRelu :  Architecture_t::SymmetricRelu(A);
+    case EActivationFunction::SYMMRELU :  Architecture_t::SymmetricRelu(A);
         break;
-    case EActivationFunction::kSoftSign :  Architecture_t::SoftSign(A);
+    case EActivationFunction::SOFTSIGN :  Architecture_t::SoftSign(A);
         break;
-    case EActivationFunction::kGauss    :  Architecture_t::Gauss(A);
+    case EActivationFunction::GAUSS    :  Architecture_t::Gauss(A);
         break;
     }
 }
@@ -112,19 +112,19 @@ inline void evaluateDerivative(typename Architecture_t::Matrix_t & B,
 {
     switch(f)
     {
-    case EActivationFunction::kIdentity : Architecture_t::IdentityDerivative(B, A);
+    case EActivationFunction::IDENTITY : Architecture_t::IdentityDerivative(B, A);
         break;
-    case EActivationFunction::kRelu     : Architecture_t::ReluDerivative(B, A);
+    case EActivationFunction::RELU     : Architecture_t::ReluDerivative(B, A);
         break;
-    case EActivationFunction::kSigmoid  : Architecture_t::SigmoidDerivative(B, A);
+    case EActivationFunction::SIGMOID  : Architecture_t::SigmoidDerivative(B, A);
         break;
-    case EActivationFunction::kTanh     : Architecture_t::TanhDerivative(B, A);
+    case EActivationFunction::TANH     : Architecture_t::TanhDerivative(B, A);
         break;
-    case EActivationFunction::kSymmRelu : Architecture_t::SymmetricReluDerivative(B, A);
+    case EActivationFunction::SYMMRELU : Architecture_t::SymmetricReluDerivative(B, A);
         break;
-    case EActivationFunction::kSoftSign : Architecture_t::SoftSignDerivative(B, A);
+    case EActivationFunction::SOFTSIGN : Architecture_t::SoftSignDerivative(B, A);
         break;
-    case EActivationFunction::kGauss    : Architecture_t::GaussDerivative(B, A);
+    case EActivationFunction::GAUSS    : Architecture_t::GaussDerivative(B, A);
         break;
     }
 }
@@ -143,8 +143,8 @@ inline void evaluate(typename Architecture_t::Matrix_t &A,
 {
     switch(f)
     {
-    case EOutputFunction::kIdentity : Architecture_t::Copy(A, X);
-    case EOutputFunction::kSigmoid  : Architecture_t::Sigmoid(A, X);
+    case EOutputFunction::IDENTITY : break;
+    case EOutputFunction::SIGMOID  : Architecture_t::Sigmoid(A, X);
         break;
     }
 }
@@ -164,9 +164,9 @@ inline auto evaluate(ELossFunction f,
 {
     switch(f)
     {
-    case ELossFunction::kCrossEntropy :
+    case ELossFunction::CROSSENTROPY :
         return Architecture_t::CrossEntropy(Y, output);
-    case ELossFunction::kMeanSquaredError :
+    case ELossFunction::MEANSQUAREDERROR :
         return Architecture_t::MeanSquaredError(Y, output);
     }
     return 0.0;
@@ -183,10 +183,10 @@ inline void evaluateGradients(typename Architecture_t::Matrix_t & dY,
 {
     switch(f)
     {
-    case ELossFunction::kCrossEntropy :
+    case ELossFunction::CROSSENTROPY :
         Architecture_t::CrossEntropyGradients(dY, Y, output);
         break;
-    case ELossFunction::kMeanSquaredError :
+    case ELossFunction::MEANSQUAREDERROR :
         Architecture_t::MeanSquaredErrorGradients(dY, Y, output);
         break;
     }
@@ -206,11 +206,11 @@ inline auto regularization(const typename Architecture_t::Matrix_t &A,
 {
     switch(R)
     {
-    case ERegularization::kNone :
+    case ERegularization::NONE :
         return 0.0;
-    case ERegularization::kL1 :
+    case ERegularization::L1 :
         return Architecture_t::L1Regularization(A);
-    case ERegularization::kL2 :
+    case ERegularization::L2 :
         return Architecture_t::L2Regularization(A);
     }
     return 0.0;
@@ -227,12 +227,12 @@ inline void addRegularizationGradients(typename Architecture_t::Matrix_t &A,
 {
     switch(R)
     {
-    case ERegularization::kNone :
+    case ERegularization::NONE :
         break;
-    case ERegularization::kL1 :
+    case ERegularization::L1 :
         Architecture_t::AddL1RegularizationGradients(A, W, weightDecay);
         break;
-    case ERegularization::kL2 :
+    case ERegularization::L2 :
         Architecture_t::AddL2RegularizationGradients(A, W, weightDecay);
         break;
     }
@@ -248,13 +248,13 @@ inline void initialize(typename Architecture_t::Matrix_t & A,
                        EInitialization m)
 {
    switch(m) {
-   case EInitialization::kGauss    : Architecture_t::InitializeGauss(A);
+   case EInitialization::GAUSS    : Architecture_t::InitializeGauss(A);
        break;
-   case EInitialization::kUniform  : Architecture_t::InitializeUniform(A);
+   case EInitialization::UNIFORM  : Architecture_t::InitializeUniform(A);
        break;
-   case EInitialization::kIdentity : Architecture_t::InitializeIdentity(A);
+   case EInitialization::IDENTITY : Architecture_t::InitializeIdentity(A);
        break;
-   case EInitialization::kZero     : Architecture_t::InitializeZero(A);
+   case EInitialization::ZERO     : Architecture_t::InitializeZero(A);
        break;
    }
 }
