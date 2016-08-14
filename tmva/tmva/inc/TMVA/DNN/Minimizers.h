@@ -70,10 +70,9 @@ private:
 
 public:
     TGradientDescent();
-    TGradientDescent(Scalar_t fBatchSize,
-                     Scalar_t learningRate,
-                     size_t convergenceSteps,
-                     size_t testInterval);
+    TGradientDescent(Scalar_t learningRate,
+                     size_t   convergenceSteps,
+                     size_t   testInterval);
     /*! Reset minimizer object to initial state. Does nothing for this minimizer. */
     void Reset() {};
     /*! Train the given net using the given training input data (events), training
@@ -125,6 +124,7 @@ public:
                           Matrix_t &input,
                           const Matrix_t &output);
     bool HasConverged();
+    bool HasConverged(Scalar_t testError);
 
     size_t   GetConvergenceCount() const {return fConvergenceCount;}
     size_t   GetConvergenceSteps() const {return fConvergenceSteps;}
@@ -150,13 +150,13 @@ template<typename Architecture_t>
 {
    // Nothing to do here.
 }
+
 //______________________________________________________________________________
 template<typename Architecture_t>
-TGradientDescent<Architecture_t>::TGradientDescent(Scalar_t batchSize,
-                                                   Scalar_t learningRate,
-                                                   size_t convergenceSteps,
-                                                   size_t testInterval)
-   : fBatchSize(batchSize), fStepCount(0), fConvergenceSteps(convergenceSteps),
+TGradientDescent<Architecture_t>::TGradientDescent(Scalar_t learningRate,
+                                                   size_t   convergenceSteps,
+                                                   size_t   testInterval)
+   : fBatchSize(0), fStepCount(0), fConvergenceSteps(convergenceSteps),
      fConvergenceCount(0), fTestInterval(testInterval), fLearningRate(learningRate),
      fMinimumError(1e100)
 {
@@ -674,6 +674,19 @@ bool inline TGradientDescent<Architecture_t>::HasConverged()
    return (fConvergenceCount >= fConvergenceSteps);
 }
 
+//______________________________________________________________________________
+template<typename Architecture_t>
+bool inline TGradientDescent<Architecture_t>::HasConverged(Scalar_t testError)
+{
+   fTestError = testError;
+   if (fTestError < fMinimumError * 0.999) {
+      fConvergenceCount = 0;
+      fMinimumError     = fTestError;
+   } else {
+      fConvergenceCount += fTestInterval;
+   }
+   return (fConvergenceCount >= fConvergenceSteps);
+}
 } // namespace DNN
 } // namespace TMVA
 

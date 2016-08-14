@@ -48,7 +48,7 @@ private:
 
 public:
 
-   TBatch(Matrix_t &&, Matrix_t &&);
+   TBatch(Matrix_t &, Matrix_t &);
    TBatch(const TBatch  &) = default;
    TBatch(      TBatch &&) = default;
    TBatch & operator=(const TBatch  &) = default;
@@ -145,7 +145,7 @@ public:
 // TBatch Class.
 //______________________________________________________________________________
 template<typename Architecture_t>
-TBatch<Architecture_t>::TBatch(Matrix_t && inputMatrix, Matrix_t && outputMatrix)
+TBatch<Architecture_t>::TBatch(Matrix_t & inputMatrix, Matrix_t & outputMatrix)
     : fInputMatrix(inputMatrix), fOutputMatrix(outputMatrix)
 {
     // Nothing to do here.
@@ -209,7 +209,7 @@ TBatch<Architecture_t> TDataLoader<Data_t, Architecture_t>::GetBatch()
    Matrix_t outputMatrix(outputDeviceBuffer, fBatchSize, fNOutputFeatures);
 
    fBatchIndex++;
-   return TBatch<Architecture_t>(std::move(inputMatrix), std::move(outputMatrix));
+   return TBatch<Architecture_t>(inputMatrix, outputMatrix);
 }
 
 template<typename Data_t, typename Architecture_t>
