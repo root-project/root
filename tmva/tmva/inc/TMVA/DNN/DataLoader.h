@@ -18,7 +18,6 @@
 
 #include "TMatrix.h"
 #include <vector>
-#include <iostream>
 
 #include "TMVA/Event.h"
 
@@ -31,7 +30,6 @@ namespace DNN  {
 using MatrixInput_t    = std::pair<const TMatrixT<Double_t> &,
                                    const TMatrixT<Double_t> &>;
 using TMVAInput_t      = std::vector<Event*>;
-using IndexIterator_t = typename std::vector<size_t>::iterator;
 
 //
 // TBatch Class.
@@ -97,6 +95,7 @@ private:
 
    using HostBuffer_t    = typename Architecture_t::HostBuffer_t;
    using DeviceBuffer_t  = typename Architecture_t::DeviceBuffer_t;
+   using IndexIterator_t = typename std::vector<size_t>::iterator;
    using Matrix_t        = typename Architecture_t::Matrix_t;
    using BatchIterator_t = TBatchIterator<Data_t, Architecture_t>;
 
@@ -117,7 +116,7 @@ private:
 public:
 
    TDataLoader(const Data_t & data, size_t nSamples, size_t batchSize,
-               size_t nInputFeatures, size_t nOutputFeatures, size_t nStreams = 1);
+               size_t nInputFeatures, size_t nOutputFeatures, size_t nStreams = 4);
    TDataLoader(const TDataLoader  &) = default;
    TDataLoader(      TDataLoader &&) = default;
    TDataLoader & operator=(const TDataLoader  &) = default;
@@ -133,7 +132,7 @@ public:
    BatchIterator_t begin() {return TBatchIterator<Data_t, Architecture_t>(*this);}
    BatchIterator_t end()
    {
-      return TBatchIterator<Data_t, Architecture_t>(*this,(fNSamples / fBatchSize));
+      return TBatchIterator<Data_t, Architecture_t>(*this, fNSamples / fBatchSize);
    }
 
    void Shuffle();
