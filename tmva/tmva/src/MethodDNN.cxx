@@ -503,7 +503,13 @@ void TMVA::MethodDNN::TrainGpu()
    size_t nTrainingSamples = GetEventCollection(Types::kTraining).size();
    size_t nTestSamples     = GetEventCollection(Types::kTesting).size();
 
+   fNet.Initialize(fWeightInitialization);
    for (TTrainingSettings & settings : fTrainingSettings) {
+
+
+      TNet<TCuda> net(settings.batchSize, fNet);
+      net.SetDropoutProbabilities(settings.dropoutProbabilities);
+      auto testNet = net.CreateClone(settings.batchSize);
 
       Log() << kINFO
             << "Training on GPU with learning rate = "
@@ -511,10 +517,8 @@ void TMVA::MethodDNN::TrainGpu()
             << ", momentum = " << settings.momentum
             << ", repetitions = " << settings.testInterval
             << Endl;
-
-      TNet<TCuda> net(settings.batchSize, fNet);
-      net.SetDropoutProbabilities(settings.dropoutProbabilities);
-      auto testNet = net.CreateClone(settings.batchSize);
+      net.Print();
+      testNet.Print();
 
       using DataLoader_t = TDataLoader<TMVAInput_t, TCuda>;
 
