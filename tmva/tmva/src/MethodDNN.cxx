@@ -594,12 +594,10 @@ void TMVA::MethodDNN::TrainGpu()
             for (auto batch : testData) {
                auto inputMatrix  = batch.GetInput();
                auto outputMatrix = batch.GetOutput();
-               trainingError += testNet.Loss(inputMatrix, outputMatrix);
+               testError += testNet.Loss(inputMatrix, outputMatrix);
             }
             testError /= (Double_t) (nTestSamples / settings.batchSize);
 
-            Log() << kInfo << "Epoch " << stepCount << ": Training error = "
-                  << trainingError << " // Test Error = " << testError << Endl;
             Log() << kInfo << "Epoch " << stepCount << ": Training error = "
                   << trainingError << " // Test Error = " << testError << Endl;
 
@@ -612,6 +610,8 @@ void TMVA::MethodDNN::TrainGpu()
             double nFlops  = (double) (settings.testInterval * (batchesInEpoch));
             nFlops *= net.GetNFlops();
 
+            Log() << kInfo << "Performance: " << nFlops / seconds  << " GFLOPS"
+                  << Endl;
             // Check convergence.
 
             converged = minimizer.HasConverged(testError);
