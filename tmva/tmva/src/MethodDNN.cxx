@@ -618,7 +618,6 @@ void TMVA::MethodDNN::TrainGpu()
 
             start = std::chrono::system_clock::now();
          }
-         stepCount++;
       }
       for (size_t l = 0; l < net.GetDepth(); l++) {
          fNet.GetLayer(l).GetWeights() = net.GetLayer(l).GetWeights();
