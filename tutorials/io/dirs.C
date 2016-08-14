@@ -62,7 +62,7 @@ void dirs() {
       cdtof->cd();    // change current directory to top
    }
 
-     // .. fill histograms
+   // Fill histograms
    TRandom r;
    for (i=0;i<nplanes;i++) {
       cdplane[i]->cd();
@@ -74,7 +74,7 @@ void dirs() {
       }
    }
 
-     // save histogram hierarchy in the file
+   // save histogram hierarchy in the file
    top->Write();
    delete top;
 }
