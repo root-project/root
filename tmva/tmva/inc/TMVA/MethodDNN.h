@@ -64,10 +64,6 @@
 #include "TMVA/DNN/Minimizers.h"
 #include "TMVA/DNN/Architectures/Reference.h"
 
-#ifdef DNNCPU
-#include "TMVA/DNN/Architectures/Cpu.h"
-#endif
-
 #ifdef DNNCUDA
 #include "TMVA/DNN/Architectures/Cuda.h"
 #endif
@@ -78,9 +74,6 @@ namespace TMVA {
 
 class MethodDNN : public MethodBase
 {
-    using Architecture_t = TReference<Double_t>;
-    using Net_t          = TNet<Architecture_t>;
-    using Matrix_t       = typename Architecture_t::Matrix_t;
 
 private:
 
@@ -97,7 +90,6 @@ private:
        Double_t              momentum;
        Double_t              weightDecay;
        std::vector<Double_t> dropoutProbabilities;
-       bool                  multithreading;
    };
 
    // the option handling methods
@@ -107,7 +99,7 @@ private:
    // general helper functions
    void     Init();
 
-   Net_t             fNet;
+   TNet<TReference<Double_t>> fNet;
    EInitialization   fWeightInitialization;
    EOutputFunction   fOutputFunction;
 
@@ -152,9 +144,9 @@ public:
                                       TString blockDelim,
                                       TString tokenDelim);
    void Train();
-   void TrainGpu();
-   template <typename AFloat>
    void TrainCpu();
+   void TrainGpu();
+   void TrainOpenCL();
 
    virtual Double_t GetMvaValue( Double_t* err=0, Double_t* errUpper=0 );
    virtual const std::vector<Float_t>& GetRegressionValues();

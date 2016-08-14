@@ -74,7 +74,7 @@ public:
    TNet(size_t batchSize,
         size_t inputWidth,
         ELossFunction fJ,
-        ERegularization fR = ERegularization::kNone,
+        ERegularization fR = ERegularization::NONE,
         Scalar_t fWeightDecay = 0.0);
    /*! Create a clone that uses the same weight and biases matrices but
     *  potentially a difference batch size. */
@@ -144,12 +144,11 @@ public:
    ERegularization     GetRegularization() const {return fR;}
    Scalar_t            GetWeightDecay() const    {return fWeightDecay;}
 
-   void SetBatchSize(size_t batchSize)       {fBatchSize = batchSize;}
-   void SetInputWidth(size_t inputWidth)     {fInputWidth = inputWidth;}
+   void SetInputWidth(size_t InputWidth)     {fInputWidth = InputWidth;}
    void SetRegularization(ERegularization R) {fR = R;}
    void SetLossFunction(ELossFunction J)     {fJ = J;}
    void SetWeightDecay(Scalar_t weightDecay) {fWeightDecay = weightDecay;}
-   void SetDropoutProbabilities(const std::vector<Double_t> & probabilities);
+   void SetDropoutProbabilities(const std::vector<Scalar_t> & probabilities);
 
    void Print();
 };
@@ -158,17 +157,7 @@ public:
 template<typename Architecture_t, typename Layer_t>
    TNet<Architecture_t, Layer_t>::TNet()
    : fBatchSize(0), fInputWidth(0), fDummy(0,0),
-   fJ(ELossFunction::kMeanSquaredError), fR(ERegularization::kNone)
-{
-   // Nothing to do here.
-}
-
-//______________________________________________________________________________
-
-template<typename Architecture_t, typename Layer_t>
-   TNet<Architecture_t, Layer_t>::TNet(const TNet & other)
-   : fBatchSize(other.fBatchSize), fInputWidth(other.fInputWidth),
-   fLayers(other.fLayers), fDummy(0,0), fJ(other.fJ), fR(other.fR)
+   fJ(ELossFunction::MEANSQUAREDERROR), fR(ERegularization::NONE)
 {
    // Nothing to do here.
 }
@@ -181,13 +170,12 @@ TNet<Architecture_t, Layer_t>::TNet(size_t batchSize,
    : fBatchSize(batchSize), fInputWidth(other.GetInputWidth()),
      fDummy(0,0), fJ(other.GetLossFunction()), fR(other.GetRegularization())
 {
-   fLayers.reserve(other.GetDepth());
    for (size_t i = 0; i < other.GetDepth(); i++) {
       AddLayer(other.GetLayer(i).GetWidth(),
                other.GetLayer(i).GetActivationFunction(),
                other.GetLayer(i).GetDropoutProbability());
-      fLayers[i].GetWeights() = (TMatrixT<Double_t>) other.GetLayer(i).GetWeights();
-      fLayers[i].GetBiases()  = (TMatrixT<Double_t>) other.GetLayer(i).GetBiases();
+      fLayers[i].GetWeights() = other.GetLayer(i).GetWeights();
+      fLayers[i].GetBiases()  = other.GetLayer(i).GetBiases();
    }
 }
 
@@ -261,8 +249,8 @@ template<typename Architecture_t, typename Layer_t>
    inline void TNet<Architecture_t, Layer_t>::InitializeGradients()
 {
    for (auto &l : fLayers) {
-      initialize<Architecture_t>(l.GetWeightGradients(), EInitialization::kZero);
-      initialize<Architecture_t>(l.GetBiasGradients(),   EInitialization::kZero);
+      initialize(l.GetWeightGradients(), EInitialization::ZERO);
+      initialize(l.GetBiasGradients(),   EInitialization::ZERO);
    }
 }
 
@@ -361,7 +349,7 @@ auto TNet<Architecture_t, Layer_t>::GetNFlops()
                                           // derivative.
       // Backward propagation.
       flops += nb * nl;                      // Hadamard
-      flops += nlp * nl * (2.0 * nb - 1.0);  // Weight gradients
+      flops += nlp * nb * (2.0 * nlp - 1.0); // Weight gradients
       flops += nl * (nb - 1);                // Bias gradients
       if (i > 0) {
          flops += nlp * nb * (2.0 * nl  - 1.0); // Previous layer gradients.
@@ -374,7 +362,7 @@ auto TNet<Architecture_t, Layer_t>::GetNFlops()
 //______________________________________________________________________________
 template<typename Architecture_t, typename Layer_t>
 void TNet<Architecture_t, Layer_t>::SetDropoutProbabilities(
-    const std::vector<Double_t> & probabilities)
+    const std::vector<Scalar_t> & probabilities)
 {
    for (size_t i = 0; i < fLayers.size(); i++) {
       if (i < probabilities.size()) {
@@ -390,8 +378,8 @@ template<typename Architecture_t, typename Layer_t>
    void TNet<Architecture_t, Layer_t>::Print()
 {
    std::cout << "DEEP NEURAL NETWORK:";
-   std::cout << " Loss function = " << static_cast<char>(fJ);
-   std::cout << ", Depth = " << fLayers.size() << std::endl;
+   std::cout << " Loss function: " << static_cast<char>(fJ);
+   std::cout << ", size: " << fLayers.size() << std::endl;
 
    size_t i = 1;
    for (auto & l : fLayers) {
