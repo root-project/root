@@ -177,7 +177,7 @@ auto TMVA::MethodDNN::ParseLayoutString(TString layoutString)
    // containing the number of neurons to go in each successive layer
    LayoutVector_t layout;
    const TString layerDelimiter(",");
-   const TString SubDelimiter("|");
+   const TString subDelimiter("|");
 
    const size_t inputSize = GetNvar();
 
@@ -189,7 +189,7 @@ auto TMVA::MethodDNN::ParseLayoutString(TString layoutString)
       int numNodes = 0;
       EActivationFunction activationFunction = EActivationFunction::TANH;
 
-      TObjArray* subStrings = layerString->GetString().Tokenize(layerDelimiter);
+      TObjArray* subStrings = layerString->GetString().Tokenize(subDelimiter);
       TIter nextToken (subStrings);
       TObjString* token = (TObjString *) nextToken();
       int idxToken = 0;
