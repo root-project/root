@@ -536,8 +536,8 @@ void TMVA::MethodDNN::TrainGpu()
                             net.GetInputWidth(),
                             net.GetOutputWidth());
       DNN::TGradientDescent<TCuda> minimizer(settings.learningRate,
-                                             settings.testInterval,
-                                             settings.convergenceSteps);
+                                             settings.convergenceSteps,
+                                             settings.testInterval);
 
       size_t nThreads = 1;
       std::vector<TNet<TCuda>> nets{};
@@ -598,7 +598,7 @@ void TMVA::MethodDNN::TrainGpu()
             }
             testError /= (Double_t) (nTestSamples / settings.batchSize);
 
-            Log() << kInfo << "Epoch " << stepCount << ": Training error = "
+            Log() << kInfo << " Epoch " << stepCount << ": Training error = "
                   << trainingError << " // Test Error = " << testError << Endl;
 
             // Throughput.
@@ -610,8 +610,8 @@ void TMVA::MethodDNN::TrainGpu()
             double nFlops  = (double) (settings.testInterval * (batchesInEpoch));
             nFlops *= net.GetNFlops();
 
-            Log() << kInfo << "Performance: " << nFlops / seconds  << " GFLOPS"
-                  << Endl;
+            Log() << kInfo << " Performance: " << nFlops * 1e-9 / seconds
+                  << " GFLOPS" << Endl;
             // Check convergence.
 
             converged = minimizer.HasConverged(testError);
@@ -656,7 +656,6 @@ Double_t TMVA::MethodDNN::GetMvaValue( Double_t* /*errLower*/, Double_t* /*errUp
    }
 
    fNet.Prediction(YHat, X, fOutputFunction);
-   fNet.Loss(X, YHat);
 
    return YHat(0,0);
 }
