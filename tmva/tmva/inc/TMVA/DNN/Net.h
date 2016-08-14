@@ -378,8 +378,8 @@ template<typename Architecture_t, typename Layer_t>
    void TNet<Architecture_t, Layer_t>::Print()
 {
    std::cout << "DEEP NEURAL NETWORK:";
-   std::cout << " Loss function: " << static_cast<char>(fJ);
-   std::cout << ", size: " << fLayers.size() << std::endl;
+   std::cout << " Loss function = " << static_cast<char>(fJ);
+   std::cout << ", Depth = " << fLayers.size() << std::endl;
 
    size_t i = 1;
    for (auto & l : fLayers) {
