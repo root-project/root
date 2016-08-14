@@ -67,6 +67,8 @@ private:
 public:
    TNet();
    TNet(const TNet & other);
+   template<typename OtherArchitecture_t>
+   TNet(size_t batchSize, const TNet<OtherArchitecture_t> &);
    /*! Construct a neural net for a given batch size with
     *  given output function * and regularization. */
    TNet(size_t batchSize,
@@ -127,27 +129,27 @@ public:
 
    Scalar_t            GetNFlops();
 
-   size_t              GetDepth() const         {return fLayers.size();}
-   size_t              GetBatchSize() const     {return fBatchSize;}
-   Layer_t &           GetLayer(size_t i)       {return fLayers[i];}
-   const Layer_t &     GetLayer(size_t i) const {return fLayers[i];}
-   ELossFunction       GetLossFunction() const  {return fJ;}
-   Matrix_t &          GetOutput()              {return fLayers.back().GetOutput();}
-   size_t              GetInputWidth() const    {return fInputWidth;}
-   size_t              GetOutputWidth() const   {return fLayers.back().GetWidth();}
-   ERegularization     GetRegularization()      {return fR;}
-   Scalar_t            GetWeightDecay()         {return fWeightDecay;}
+   size_t              GetDepth() const          {return fLayers.size();}
+   size_t              GetBatchSize() const      {return fBatchSize;}
+   Layer_t &           GetLayer(size_t i)        {return fLayers[i];}
+   const Layer_t &     GetLayer(size_t i) const  {return fLayers[i];}
+   ELossFunction       GetLossFunction() const   {return fJ;}
+   Matrix_t &          GetOutput()               {return fLayers.back().GetOutput();}
+   size_t              GetInputWidth() const     {return fInputWidth;}
+   size_t              GetOutputWidth() const    {return fLayers.back().GetWidth();}
+   ERegularization     GetRegularization() const {return fR;}
+   Scalar_t            GetWeightDecay() const    {return fWeightDecay;}
 
    void SetInputWidth(size_t InputWidth)     {fInputWidth = InputWidth;}
    void SetRegularization(ERegularization R) {fR = R;}
    void SetLossFunction(ELossFunction J)     {fJ = J;}
    void SetWeightDecay(Scalar_t weightDecay) {fWeightDecay = weightDecay;}
+   void SetDropoutProbabilities(const std::vector<Scalar_t> & probabilities);
 
    void Print();
 };
 
 //______________________________________________________________________________
-
 template<typename Architecture_t, typename Layer_t>
    TNet<Architecture_t, Layer_t>::TNet()
    : fBatchSize(0), fInputWidth(0), fDummy(0,0),
@@ -157,17 +159,23 @@ template<typename Architecture_t, typename Layer_t>
 }
 
 //______________________________________________________________________________
-
 template<typename Architecture_t, typename Layer_t>
-   TNet<Architecture_t, Layer_t>::TNet(const TNet & other)
-   : fBatchSize(other.fBatchSize), fInputWidth(other.fInputWidth),
-   fLayers(other.fLayers), fDummy(0,0), fJ(other.fJ), fR(other.fR)
+template<typename OtherArchitecture_t>
+TNet<Architecture_t, Layer_t>::TNet(size_t batchSize,
+                                    const TNet<OtherArchitecture_t> & other)
+   : fBatchSize(batchSize), fInputWidth(other.GetInputWidth()),
+     fDummy(0,0), fJ(other.GetLossFunction()), fR(other.GetRegularization())
 {
-   // Nothing to do here.
+   for (size_t i = 0; i < other.GetDepth(); i++) {
+      AddLayer(other.GetLayer(i).GetWidth(),
+               other.GetLayer(i).GetActivationFunction(),
+               other.GetLayer(i).GetDropoutProbability());
+      fLayers[i].GetWeights() = other.GetLayer(i).GetWeights();
+      fLayers[i].GetBiases()  = other.GetLayer(i).GetBiases();
+   }
 }
 
 //______________________________________________________________________________
-
 template<typename Architecture_t, typename Layer_t>
    TNet<Architecture_t, Layer_t>::TNet(size_t        batchSize,
                                        size_t        inputWidth,
@@ -181,7 +189,6 @@ template<typename Architecture_t, typename Layer_t>
 }
 
 //______________________________________________________________________________
-
 template<typename Architecture_t, typename Layer_t>
    auto TNet<Architecture_t, Layer_t>::CreateClone(size_t BatchSize)
    -> TNet<Architecture_t, TSharedLayer<Architecture_t>>
@@ -196,7 +203,6 @@ template<typename Architecture_t, typename Layer_t>
 }
 
 //______________________________________________________________________________
-
 template<typename Architecture_t, typename Layer_t>
    void TNet<Architecture_t, Layer_t>::AddLayer(size_t width,
                                                 EActivationFunction f,
@@ -268,7 +274,6 @@ template<typename Architecture_t, typename Layer_t>
 }
 
 //______________________________________________________________________________
-
 template<typename Architecture_t, typename Layer_t>
    inline auto TNet<Architecture_t, Layer_t>::Loss(const Matrix_t &Y) const
    -> Scalar_t
@@ -281,7 +286,6 @@ template<typename Architecture_t, typename Layer_t>
 }
 
 //______________________________________________________________________________
-
 template<typename Architecture_t, typename Layer_t>
    inline auto TNet<Architecture_t, Layer_t>::Loss(Matrix_t &X,
                                                    const Matrix_t &Y,
@@ -293,7 +297,6 @@ template<typename Architecture_t, typename Layer_t>
 }
 
 //______________________________________________________________________________
-
 template<typename Architecture_t, typename Layer_t>
    inline void TNet<Architecture_t, Layer_t>::Prediction(Matrix_t &Yhat,
                                                          Matrix_t &X,
@@ -304,7 +307,6 @@ template<typename Architecture_t, typename Layer_t>
 }
 
 //______________________________________________________________________________
-
 template<typename Architecture_t, typename Layer_t>
    inline void TNet<Architecture_t, Layer_t>::Prediction(Matrix_t &Y_hat,
                                                          EOutputFunction f) const
@@ -345,6 +347,20 @@ auto TNet<Architecture_t, Layer_t>::GetNFlops()
 
 //______________________________________________________________________________
 template<typename Architecture_t, typename Layer_t>
+void TNet<Architecture_t, Layer_t>::SetDropoutProbabilities(
+    const std::vector<Scalar_t> & probabilities)
+{
+   for (size_t i = 0; i < fLayers.size(); i++) {
+      if (i < probabilities.size()) {
+         fLayers[i].SetDropoutProbability(probabilities[i]);
+      } else {
+         fLayers[i].SetDropoutProbability(1.0);
+      }
+   }
+}
+
+//______________________________________________________________________________
+template<typename Architecture_t, typename Layer_t>
    void TNet<Architecture_t, Layer_t>::Print()
 {
    std::cout << "DEEP NEURAL NETWORK:";
@@ -359,8 +375,6 @@ template<typename Architecture_t, typename Layer_t>
    }
 
 }
-
-//______________________________________________________________________________
 
 } // namespace DNN
 } // namespace TMVA

@@ -13,6 +13,8 @@
 // Implementation of device and host buffers for CUDA architectures.  //
 ////////////////////////////////////////////////////////////////////////
 
+#include "TMVA/DNN/DataLoader.h"
+#include "TMVA/DNN/Architectures/Cuda.h"
 #include "TMVA/DNN/Architectures/Cuda/Buffers.h"
 #include "cuda_runtime.h"
 #include <iostream>
@@ -121,6 +123,100 @@ void TCudaDeviceBuffer::CopyTo(const TCudaHostBuffer &buffer) const
                    cudaMemcpyDeviceToHost, fComputeStream);
    buffer.fComputeStream = fComputeStream;
 }
+
+//______________________________________________________________________________
+template<>
+void TDataLoader<MatrixInput_t, TCuda>::CopyInput(TCudaHostBuffer & buffer,
+                                                  IndexIterator_t sampleIterator,
+                                                  size_t batchSize)
+{
+   const TMatrixT<Double_t> &inputMatrix  = std::get<0>(fData);
+   size_t n = inputMatrix.GetNcols();
+
+   for (size_t i = 0; i < batchSize; i++) {
+      size_t sampleIndex = *sampleIterator;
+      for (size_t j = 0; j < n; j++) {
+         size_t bufferIndex = j * batchSize + i;
+         buffer[bufferIndex] = inputMatrix(sampleIndex, j);
+      }
+      sampleIterator++;
+   }
+}
+
+//______________________________________________________________________________
+template<>
+void TDataLoader<MatrixInput_t, TCuda>::CopyOutput(TCudaHostBuffer & buffer,
+                                                   IndexIterator_t sampleIterator,
+                                                   size_t batchSize)
+{
+   const TMatrixT<Double_t> &outputMatrix  = std::get<1>(fData);
+   size_t n = outputMatrix.GetNcols();
+
+   for (size_t i = 0; i < batchSize; i++) {
+      size_t sampleIndex = *sampleIterator;
+      for (size_t j = 0; j < n; j++) {
+         size_t bufferIndex = j * batchSize + i;
+         buffer[bufferIndex] = outputMatrix(sampleIndex, j);
+      }
+      sampleIterator++;
+   }
+}
+
+//______________________________________________________________________________
+template<>
+void TDataLoader<TMVAInput_t, TCuda>::CopyInput(TCudaHostBuffer & buffer,
+                                                IndexIterator_t sampleIterator,
+                                                size_t batchSize)
+{
+   Event * event  = fData.front();
+   size_t n  = event->GetNVariables();
+   size_t nOutput = (event->GetNTargets() == 0) ? 1 : event->GetNTargets();
+
+   // Copy input variables.
+
+   for (size_t i = 0; i < batchSize; i++) {
+      for (size_t j = 0; j < n; j++) {
+          size_t sampleIndex = * sampleIterator++;
+          event = fData[sampleIndex];
+          // Copy input matrices.
+          for (size_t j = 0; j < n; j++) {
+              size_t bufferIndex = j * batchSize + i;
+              buffer[bufferIndex] = event->GetValue(j);
+          }
+      }
+   }
+}
+
+//______________________________________________________________________________
+template<>
+void TDataLoader<TMVAInput_t, TCuda>::CopyOutput(TCudaHostBuffer & buffer,
+                                                 IndexIterator_t sampleIterator,
+                                                 size_t batchSize)
+{
+   Event * event  = fData.front();
+   size_t n       = (event->GetNTargets() == 0) ? 1 : event->GetNTargets();
+
+   // Copy target(s).
+
+   for (size_t i = 0; i < batchSize; i++) {
+      for (size_t j = 0; j < n; j++) {
+         size_t sampleIndex = * sampleIterator++;
+         event = fData[sampleIndex];
+         // Copy input matrices.
+         for (size_t j = 0; j < n; j++) {
+            size_t bufferIndex = j * batchSize + i;
+            if (event->GetNTargets() == 0) {
+               buffer[bufferIndex] = (event->GetClass() == 0) ? 1.0 : 0.0;
+            } else {
+               buffer[bufferIndex] = event->GetTarget(j);
+            }
+         }
+      }
+   }
+}
+
+template class TDataLoader<MatrixInput_t, TCuda>;
+template class TDataLoader<TMVAInput_t, TCuda>;
 
 } // TMVA
 } // DNN
