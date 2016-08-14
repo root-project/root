@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_fit
 /// \notebook
-/// Fitting 1-D histograms with minuit2
+/// Demonstrate performance and usage of Minuit2 and Fumili2 for monodimensional fits.
 ///
 /// \macro_image
 /// \macro_output

@@ -1,6 +1,7 @@
 /// \file
 /// \ingroup tutorial_fit
 /// \notebook -js
+/// Perform fits with different configurations using Minuit2
 ///
 /// \macro_image
 /// \macro_output
