@@ -164,6 +164,16 @@ template<typename Architecture_t, typename Layer_t>
 }
 
 //______________________________________________________________________________
+
+template<typename Architecture_t, typename Layer_t>
+   TNet<Architecture_t, Layer_t>::TNet(const TNet & other)
+   : fBatchSize(other.fBatchSize), fInputWidth(other.fInputWidth),
+   fLayers(other.fLayers), fDummy(0,0), fJ(other.fJ), fR(other.fR)
+{
+   // Nothing to do here.
+}
+
+//______________________________________________________________________________
 template<typename Architecture_t, typename Layer_t>
 template<typename OtherArchitecture_t>
 TNet<Architecture_t, Layer_t>::TNet(size_t batchSize,
