@@ -174,14 +174,11 @@ void TDataLoader<TMVAInput_t, TCuda>::CopyInput(TCudaHostBuffer & buffer,
    // Copy input variables.
 
    for (size_t i = 0; i < batchSize; i++) {
+      size_t sampleIndex = * sampleIterator++;
+      event = fData[sampleIndex];
       for (size_t j = 0; j < n; j++) {
-          size_t sampleIndex = * sampleIterator++;
-          event = fData[sampleIndex];
-          // Copy input matrices.
-          for (size_t j = 0; j < n; j++) {
-              size_t bufferIndex = j * batchSize + i;
-              buffer[bufferIndex] = event->GetValue(j);
-          }
+         size_t bufferIndex = j * batchSize + i;
+         buffer[bufferIndex] = event->GetValue(j);
       }
    }
 }
@@ -198,17 +195,15 @@ void TDataLoader<TMVAInput_t, TCuda>::CopyOutput(TCudaHostBuffer & buffer,
    // Copy target(s).
 
    for (size_t i = 0; i < batchSize; i++) {
+       size_t sampleIndex = * sampleIterator++;
+       event = fData[sampleIndex];
       for (size_t j = 0; j < n; j++) {
-         size_t sampleIndex = * sampleIterator++;
-         event = fData[sampleIndex];
          // Copy output matrices.
-         for (size_t j = 0; j < n; j++) {
-            size_t bufferIndex = j * batchSize + i;
-            if (event->GetNTargets() == 0) {
-               buffer[bufferIndex] = (event->GetClass() == 0) ? 1.0 : 0.0;
-            } else {
-               buffer[bufferIndex] = event->GetTarget(j);
-            }
+         size_t bufferIndex = j * batchSize + i;
+         if (event->GetNTargets() == 0) {
+            buffer[bufferIndex] = (event->GetClass() == 0) ? 1.0 : 0.0;
+         } else {
+            buffer[bufferIndex] = event->GetTarget(j);
          }
       }
    }
