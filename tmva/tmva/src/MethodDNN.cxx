@@ -539,24 +539,54 @@ void TMVA::MethodDNN::TrainGpu()
                                              settings.testInterval,
                                              settings.convergenceSteps);
 
+      size_t nThreads = 1;
+      std::vector<TNet<TCuda>> nets{};
+      std::vector<TBatch<TCuda>> batches{};
+      nets.reserve(nThreads);
+      for (size_t i = 0; i < nThreads; i++) {
+         nets.push_back(net);
+         for (size_t j = 0; j < net.GetDepth(); j++)
+         {
+            auto &masterLayer = net.GetLayer(j);
+            auto &layer = nets.back().GetLayer(j);
+            TCuda::Copy(layer.GetWeights(),
+                                 masterLayer.GetWeights());
+            TCuda::Copy(layer.GetBiases(),
+                                 masterLayer.GetBiases());
+         }
+      }
+
       bool   converged = false;
       size_t stepCount = 0;
+      size_t batchesInEpoch = nTrainingSamples / net.GetBatchSize();
+
+      std::chrono::time_point<std::chrono::system_clock> start, end;
+      start = std::chrono::system_clock::now();
 
       while (!converged)
       {
+         stepCount++;
          // Perform minimization steps for a full epoch.
          if ((stepCount % minimizer.GetTestInterval()) != 0) {
-            for (auto batch : trainingData) {
-               auto inputMatrix  = batch.GetInput();
-               auto outputMatrix = batch.GetOutput();
-               minimizer.Step(net, inputMatrix, outputMatrix);
+            for (size_t i = 0; i < batchesInEpoch; i += nThreads) {
+               batches.clear();
+               for (size_t j = 0; j < nThreads; j++) {
+                  batches.reserve(nThreads);
+                  batches.push_back(trainingData.GetBatch());
+               }
+               minimizer.StepMomentum(net, nets, batches, settings.momentum);
             }
          } else {
+
+            end   = std::chrono::system_clock::now();
+
+            // Compute training and test error.
+
             Double_t trainingError = 0.0;
             for (auto batch : trainingData) {
                auto inputMatrix  = batch.GetInput();
                auto outputMatrix = batch.GetOutput();
-               trainingError += minimizer.StepLoss(net, inputMatrix, outputMatrix);
+               trainingError += net.Loss(inputMatrix, outputMatrix);
             }
             trainingError /= (Double_t) (nTrainingSamples / settings.batchSize);
 
@@ -564,14 +594,29 @@ void TMVA::MethodDNN::TrainGpu()
             for (auto batch : testData) {
                auto inputMatrix  = batch.GetInput();
                auto outputMatrix = batch.GetOutput();
-               testError += testNet.Loss(inputMatrix, outputMatrix);
+               trainingError += testNet.Loss(inputMatrix, outputMatrix);
             }
             testError /= (Double_t) (nTestSamples / settings.batchSize);
 
             Log() << kInfo << "Epoch " << stepCount << ": Training error = "
                   << trainingError << " // Test Error = " << testError << Endl;
+            Log() << kInfo << "Epoch " << stepCount << ": Training error = "
+                  << trainingError << " // Test Error = " << testError << Endl;
+
+            // Throughput.
+
+            std::chrono::duration<double> elapsed_seconds = end - start;
+
+            start = std::chrono::system_clock::now();
+            double seconds = elapsed_seconds.count();
+            double nFlops  = (double) (settings.testInterval * (batchesInEpoch));
+            nFlops *= net.GetNFlops();
+
+            // Check convergence.
 
             converged = minimizer.HasConverged(testError);
+
+            start = std::chrono::system_clock::now();
          }
          stepCount++;
       }
@@ -580,8 +625,6 @@ void TMVA::MethodDNN::TrainGpu()
          fNet.GetLayer(l).GetBiases()  = net.GetLayer(l).GetBiases();
       }
    }
-
-
 
 #else // DNNCUDA flag not set.
 
