@@ -133,7 +133,7 @@ public:
    BatchIterator_t begin() {return TBatchIterator<Data_t, Architecture_t>(*this);}
    BatchIterator_t end()
    {
-      return TBatchIterator<Data_t, Architecture_t>(*this,(fNSamples / fBatchSize));
+      return TBatchIterator<Data_t, Architecture_t>(*this, fNSamples / fBatchSize);
    }
 
    void Shuffle();
