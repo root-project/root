@@ -116,7 +116,7 @@ private:
 public:
 
    TDataLoader(const Data_t & data, size_t nSamples, size_t batchSize,
-               size_t nInputFeatures, size_t nOutputFeatures, size_t nStreams = 4);
+               size_t nInputFeatures, size_t nOutputFeatures, size_t nStreams = 1);
    TDataLoader(const TDataLoader  &) = default;
    TDataLoader(      TDataLoader &&) = default;
    TDataLoader & operator=(const TDataLoader  &) = default;
