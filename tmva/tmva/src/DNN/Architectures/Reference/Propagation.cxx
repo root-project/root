@@ -91,5 +91,12 @@ void TReference<Scalar_t>::ScaleAdd(TMatrixT<Scalar_t> & A,
    }
 }
 
+template<typename Scalar_t>
+void TReference<Scalar_t>::Copy(TMatrixT<Scalar_t> & A,
+                                const TMatrixT<Scalar_t> & B)
+{
+   A = B;
+}
+
 } // namespace DNN
 } // namespace TMVA

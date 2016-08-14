@@ -199,20 +199,21 @@ auto TMVA::MethodDNN::ParseLayoutString(TString layoutString)
          case 0:
          {
             TString strActFnc (token->GetString ());
-            if (strActFnc == "RELU")
+            if (strActFnc == "RELU") {
                 activationFunction = DNN::EActivationFunction::RELU;
-            else if (strActFnc == "TANH")
+            } else if (strActFnc == "TANH") {
                 activationFunction = DNN::EActivationFunction::TANH;
-            else if (strActFnc == "SYMMRELU")
+            } else if (strActFnc == "SYMMRELU") {
                 activationFunction = DNN::EActivationFunction::SYMMRELU;
-            else if (strActFnc == "SOFTSIGN")
+            } else if (strActFnc == "SOFTSIGN") {
                 activationFunction = DNN::EActivationFunction::SOFTSIGN;
-            else if (strActFnc == "SIGMOID")
+            } else if (strActFnc == "SIGMOID") {
                 activationFunction = DNN::EActivationFunction::SIGMOID;
-            else if (strActFnc == "LINEAR")
+            } else if (strActFnc == "LINEAR") {
                 activationFunction = DNN::EActivationFunction::IDENTITY;
-            else if (strActFnc == "GAUSS")
+            } else if (strActFnc == "GAUSS") {
                 activationFunction = DNN::EActivationFunction::GAUSS;
+            }
          }
          break;
          case 1: // number of nodes
@@ -390,6 +391,7 @@ void TMVA::MethodDNN::ProcessOptions()
    size_t inputSize = GetNVariables ();
    size_t outputSize = (GetNTargets() == 0) ? 1 : GetNTargets();
 
+   fNet.SetBatchSize(1);
    fNet.SetInputWidth(inputSize);
 
    auto itLayout    = std::begin (fLayout);
@@ -403,6 +405,7 @@ void TMVA::MethodDNN::ProcessOptions()
    // Loss function and output.
    //
 
+   fOutputFunction = EOutputFunction::SIGMOID;
    if (fAnalysisType == Types::kClassification)
    {
       if (fErrorStrategy == "SUMOFSQUARES") {
@@ -492,7 +495,6 @@ void TMVA::MethodDNN::Train()
 
    Log() << kINFO
          << "Standard training not yet implemented.";
-   fNet.Print();
 
 }
 
@@ -520,8 +522,6 @@ void TMVA::MethodDNN::TrainGpu()
             << ", momentum = " << settings.momentum
             << ", repetitions = " << settings.testInterval
             << Endl;
-      net.Print();
-      testNet.Print();
 
       using DataLoader_t = TDataLoader<TMVAInput_t, TCuda>;
 
@@ -549,16 +549,14 @@ void TMVA::MethodDNN::TrainGpu()
             for (auto batch : trainingData) {
                auto inputMatrix  = batch.GetInput();
                auto outputMatrix = batch.GetOutput();
-               minimizer.StepReducedWeights(net, inputMatrix, outputMatrix);
+               minimizer.Step(net, inputMatrix, outputMatrix);
             }
          } else {
             Double_t trainingError = 0.0;
             for (auto batch : trainingData) {
                auto inputMatrix  = batch.GetInput();
                auto outputMatrix = batch.GetOutput();
-               trainingError += minimizer.StepReducedWeightsLoss(net,
-                                                                 inputMatrix,
-                                                                 outputMatrix);
+               trainingError += minimizer.StepLoss(net, inputMatrix, outputMatrix);
             }
             trainingError /= (Double_t) (nTrainingSamples / settings.batchSize);
 
@@ -566,9 +564,9 @@ void TMVA::MethodDNN::TrainGpu()
             for (auto batch : testData) {
                auto inputMatrix  = batch.GetInput();
                auto outputMatrix = batch.GetOutput();
-               trainingError += testNet.Loss(inputMatrix, outputMatrix);
+               testError += testNet.Loss(inputMatrix, outputMatrix);
             }
-            testError /= (Double_t) (nTrainingSamples / settings.batchSize);
+            testError /= (Double_t) (nTestSamples / settings.batchSize);
 
             Log() << kInfo << "Epoch " << stepCount << ": Training error = "
                   << trainingError << " // Test Error = " << testError << Endl;
@@ -582,6 +580,7 @@ void TMVA::MethodDNN::TrainGpu()
          fNet.GetLayer(l).GetBiases()  = net.GetLayer(l).GetBiases();
       }
    }
+
 
 
 #else // DNNCUDA flag not set.
@@ -623,7 +622,6 @@ Double_t TMVA::MethodDNN::GetMvaValue( Double_t* /*errLower*/, Double_t* /*errUp
 //______________________________________________________________________________
 const std::vector<Float_t> &TMVA::MethodDNN::GetRegressionValues()
 {
-   std::cout << "Get Regression." << std::endl;
    size_t nVariables = GetEvent()->GetNVariables();
    TMatrixT<Double_t> X(1, nVariables);
 
@@ -675,6 +673,8 @@ void TMVA::MethodDNN::AddWeightsXMLTo( void* parent ) const
                                 gTools().StringFromInt(inputWidth));
    gTools().xmlengine().NewAttr(nn, 0, "Depth", gTools().StringFromInt(depth));
    gTools().xmlengine().NewAttr(nn, 0, "LossFunction", TString(lossFunction));
+   gTools().xmlengine().NewAttr(nn, 0, "OutputFunction",
+                                TString(static_cast<char>(fOutputFunction)));
 
    for (Int_t i = 0; i < depth; i++) {
       const auto& layer = fNet.GetLayer(i);
@@ -696,15 +696,19 @@ void TMVA::MethodDNN::ReadWeightsFromXML(void* rootXML)
    }
 
    fNet.Clear();
+   fNet.SetBatchSize(1);
+
    size_t inputWidth, depth;
    gTools().ReadAttr(netXML, "InputWidth", inputWidth);
    gTools().ReadAttr(netXML, "Depth", depth);
    char lossFunctionChar;
    gTools().ReadAttr(netXML, "LossFunction", lossFunctionChar);
+   char outputFunctionChar;
+   gTools().ReadAttr(netXML, "OutputFunction", outputFunctionChar);
 
    fNet.SetInputWidth(inputWidth);
    fNet.SetLossFunction(static_cast<ELossFunction>(lossFunctionChar));
-   std::cout << "Reading neural net: " << depth << " / " << lossFunctionChar << std::endl;
+   fOutputFunction = static_cast<EOutputFunction>(outputFunctionChar);
 
    auto layerXML = gTools().xmlengine().GetChild(netXML, "Layer");
    for (size_t i = 0; i < depth; i++) {
@@ -713,7 +717,6 @@ void TMVA::MethodDNN::ReadWeightsFromXML(void* rootXML)
 
       // Read activation function.
       gTools().ReadAttr(layerXML, "ActivationFunction", fString);
-      std::cout << "Activation char:" << fString(0) << std::endl;
       f = static_cast<EActivationFunction>(fString(0));
 
       // Read number of neurons.

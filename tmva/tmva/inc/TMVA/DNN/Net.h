@@ -144,7 +144,8 @@ public:
    ERegularization     GetRegularization() const {return fR;}
    Scalar_t            GetWeightDecay() const    {return fWeightDecay;}
 
-   void SetInputWidth(size_t InputWidth)     {fInputWidth = InputWidth;}
+   void SetBatchSize(size_t batchSize)       {fBatchSize = batchSize;}
+   void SetInputWidth(size_t inputWidth)     {fInputWidth = inputWidth;}
    void SetRegularization(ERegularization R) {fR = R;}
    void SetLossFunction(ELossFunction J)     {fJ = J;}
    void SetWeightDecay(Scalar_t weightDecay) {fWeightDecay = weightDecay;}
@@ -170,12 +171,14 @@ TNet<Architecture_t, Layer_t>::TNet(size_t batchSize,
    : fBatchSize(batchSize), fInputWidth(other.GetInputWidth()),
      fDummy(0,0), fJ(other.GetLossFunction()), fR(other.GetRegularization())
 {
+   fLayers.reserve(other.GetDepth());
    for (size_t i = 0; i < other.GetDepth(); i++) {
+      std::cout << "copying " << i << std::endl;
       AddLayer(other.GetLayer(i).GetWidth(),
                other.GetLayer(i).GetActivationFunction(),
                other.GetLayer(i).GetDropoutProbability());
-      fLayers.back().GetWeights() = other.GetLayer(i).GetWeights();
-      fLayers.back().GetBiases()  = other.GetLayer(i).GetBiases();
+      fLayers[i].GetWeights() = other.GetLayer(i).GetWeights();
+      fLayers[i].GetBiases()  = other.GetLayer(i).GetBiases();
    }
 }
 
