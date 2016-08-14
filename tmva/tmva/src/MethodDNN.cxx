@@ -479,17 +479,20 @@ void TMVA::MethodDNN::ProcessOptions()
 //______________________________________________________________________________
 void TMVA::MethodDNN::Train()
 {
-    if (fArchitectureString = "GPU") {
-        TrainGpu();
-    } else if (fArchitectureString = "OpenCL") {
-        TrainOpenCL();
-    } else if (fArchitectureString = "CPU") {
-        TrainCpu();
-    }
+   if (fArchitectureString = "GPU") {
+       TrainGpu();
+       return;
+   } else if (fArchitectureString = "OpenCL") {
+      TrainOpenCL();
+      return;
+   } else if (fArchitectureString = "CPU") {
+      TrainCpu();
+      return;
+   }
 
-    Log() << kINFO
-          << "Standard training not yet implemented.";
-    fNet.Print();
+   Log() << kINFO
+         << "Standard training not yet implemented.";
+   fNet.Print();
 
 }
 

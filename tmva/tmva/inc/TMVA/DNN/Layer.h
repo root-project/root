@@ -299,20 +299,9 @@ auto TLayer<Architecture_t>::Backward(Matrix_t & gradients_backward,
 template<typename Architecture_t>
    void TLayer<Architecture_t>::Print() const
 {
-   std::cout << "Width: " << fWeights.GetNrows();
-   std::cout << "Biases: " << std::endl;
-   ((TMatrixT<Double_t>) fBiases).Print();
-   std::cout << "Weights: " << std::endl;
-   ((TMatrixT<Double_t>) fWeights).Print();
-   std::cout << ", activation function: ";
+   std::cout << "Width = " << fWeights.GetNrows();
+   std::cout << ", Activation Function = ";
    std::cout << static_cast<int>(fF) << std::endl;
-   ((TMatrixT<Double_t>) fOutput).Print();
-   std::cout << "weight gradients: " << std::endl;
-   ((TMatrixT<Double_t>) fWeightGradients).Print();
-   std::cout << "bias gradients: " << std::endl;
-   ((TMatrixT<Double_t>) fBiasGradients).Print();
-
-//   ((TMatrixT<Double_t>) fBiases).Print();
 }
 
 //______________________________________________________________________________
