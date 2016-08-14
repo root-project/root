@@ -307,8 +307,8 @@ template <typename Data_t, typename Net_t>
       std::vector<TBatch<Architecture_t>> batches{};
       for (size_t i = 0; i < nTrainingSamples / net.GetBatchSize(); i += nThreads) {
          batches.clear();
+         batches.reserve(nThreads);
          for (size_t j = 0; j < nThreads; j++) {
-            batches.reserve(nThreads);
             batches.push_back(trainLoader.GetBatch());
          }
          StepMomentum(net, nets, batches, momentum);
