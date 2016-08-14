@@ -174,8 +174,8 @@ TNet<Architecture_t, Layer_t>::TNet(size_t batchSize,
       AddLayer(other.GetLayer(i).GetWidth(),
                other.GetLayer(i).GetActivationFunction(),
                other.GetLayer(i).GetDropoutProbability());
-      fLayers[i].GetWeights() = other.GetLayer(i).GetWeights();
-      fLayers[i].GetBiases()  = other.GetLayer(i).GetBiases();
+      fLayers.back().GetWeights() = other.GetLayer(i).GetWeights();
+      fLayers.back().GetBiases()  = other.GetLayer(i).GetBiases();
    }
 }
 
