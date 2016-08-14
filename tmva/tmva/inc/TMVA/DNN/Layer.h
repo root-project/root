@@ -388,9 +388,9 @@ auto inline TSharedLayer<Architecture_t>::Backward(Matrix_t & gradients_backward
 template<typename Architecture_t>
 void TSharedLayer<Architecture_t>::Print() const
 {
-   std::cout << "Width: " << fWeights.GetNrows();
-   std::cout << ", activation function: ";
-   std::cout << static_cast<char>(fF) << std::endl;
+   std::cout << "Width = " << fWeights.GetNrows();
+   std::cout << ", Activation Function = ";
+   std::cout << static_cast<int>(fF) << std::endl;
 }
 
 } // namespace DNN

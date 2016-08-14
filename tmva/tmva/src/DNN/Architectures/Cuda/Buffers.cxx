@@ -170,13 +170,13 @@ void TDataLoader<TMVAInput_t, TCuda>::CopyInput(TCudaHostBuffer & buffer,
 {
    Event * event  = fData.front();
    size_t n  = event->GetNVariables();
-   size_t nOutput = (event->GetNTargets() == 0) ? 1 : event->GetNTargets();
 
    // Copy input variables.
 
    for (size_t i = 0; i < batchSize; i++) {
       for (size_t j = 0; j < n; j++) {
           size_t sampleIndex = * sampleIterator++;
+          std::cout << "sampleindex: " << sampleIndex << std::endl;
           event = fData[sampleIndex];
           // Copy input matrices.
           for (size_t j = 0; j < n; j++) {
@@ -202,7 +202,8 @@ void TDataLoader<TMVAInput_t, TCuda>::CopyOutput(TCudaHostBuffer & buffer,
       for (size_t j = 0; j < n; j++) {
          size_t sampleIndex = * sampleIterator++;
          event = fData[sampleIndex];
-         // Copy input matrices.
+          std::cout << "sampleindex: " << sampleIndex << std::endl;
+         // Copy output matrices.
          for (size_t j = 0; j < n; j++) {
             size_t bufferIndex = j * batchSize + i;
             if (event->GetNTargets() == 0) {
