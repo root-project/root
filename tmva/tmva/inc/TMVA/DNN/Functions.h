@@ -54,7 +54,7 @@ enum class ELossFunction
 {
     CROSSENTROPY     = 'C',
     MEANSQUAREDERROR = 'R'
-    };
+};
 
 /*! Enum representing the regularization type applied for a given layer */
 enum class ERegularization
