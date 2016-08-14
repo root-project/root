@@ -78,9 +78,13 @@ public:
     /*! Train the given net using the given training input data (events), training
       output data (labels), test input data (events), test output data (labels). */
     template <typename Data_t, typename Net_t>
-        Scalar_t Train(const Data_t & TrainingDataIn, size_t nTrainingSamples,
-                       const Data_t & TestDataIn, size_t nTestSamples,
-                       Net_t & net, size_t nThreads = 1);
+    Scalar_t Train(const Data_t & TrainingDataIn, size_t nTrainingSamples,
+                   const Data_t & TestDataIn, size_t nTestSamples,
+                   Net_t & net, size_t nThreads = 1);
+    template <typename Data_t, typename Net_t>
+    Scalar_t TrainMomentum(const Data_t & TrainingDataIn, size_t nTrainingSamples,
+                           const Data_t & TestDataIn, size_t nTestSamples,
+                           Net_t & net, Scalar_t momentum, size_t nThreads = 1);
     /*! Perform a single optimization step on a given batch. Propagates the input
       matrix foward through the net, evaluates the loss and propagates the gradients
       backward through the net. The computed gradients are scaled by the learning
@@ -94,6 +98,16 @@ public:
     void Step(Net_t &master,
               std::vector<Net_t> &nets,
               std::vector<TBatch<Architecture_t>> &batches);
+    template <typename Net_t>
+    void StepMomentum(Net_t &master,
+                      std::vector<Net_t> &nets,
+                      std::vector<TBatch<Architecture_t>> &batches,
+                      Scalar_t momentum);
+    template <typename Net_t>
+    void StepNesterov(Net_t &master,
+                              std::vector<Net_t> &nets,
+                              std::vector<TBatch<Architecture_t>> &batches,
+                              Scalar_t momentum);
     /** Does not evaluate the loss and therefore not trigger a possible synchronization
      *  with the device. Trains the weights of each layer, but only the bias terms of
      *  the first layer for compatibility with the previous implementation. */
@@ -115,7 +129,7 @@ public:
     bool HasConverged(Scalar_t testError);
 
     size_t   GetConvergenceCount() const {return fConvergenceCount;}
-    size_t   getConvergenceSteps() const {return fConvergenceSteps;}
+    size_t   GetConvergenceSteps() const {return fConvergenceSteps;}
     Scalar_t GetTrainingError() const {return fTrainingError;}
     Scalar_t GetTestError() const     {return fTestError;}
     size_t   GetTestInterval() const  {return fTestInterval;}
@@ -123,6 +137,7 @@ public:
     void SetConvergenceSteps(size_t steps) {fConvergenceSteps = steps;}
     void SetTestInterval(size_t interval)  {fTestInterval = interval;}
     void SetLearningRate(Scalar_t rate)    {fLearningRate = rate;}
+    void SetBatchSize(Scalar_t rate)       {fBatchSize    = rate;}
 };
 
 //______________________________________________________________________________
@@ -211,6 +226,94 @@ template <typename Data_t, typename Net_t>
             batches.push_back(trainLoader.GetBatch());
          }
          Step(net, nets, batches);
+      }
+
+      // Compute test error.
+      if ((fStepCount % fTestInterval) == 0) {
+         end   = std::chrono::system_clock::now();
+         std::chrono::duration<double> elapsed_seconds = end - start;
+         start = std::chrono::system_clock::now();
+         double seconds = elapsed_seconds.count();
+         double nFlops  = (double) (fTestInterval * (nTrainingSamples / net.GetBatchSize()));
+                nFlops *= net.GetNFlops();
+         std::cout << "Elapsed time for " << fTestInterval << " Epochs: "
+                   << seconds << " [s] => " << nFlops * 1e-9 / seconds
+                   << " GFlop/s" << std::endl;
+         auto b = *testLoader.begin();
+         auto inputMatrix  = b.GetInput();
+         auto outputMatrix = b.GetOutput();
+
+         Scalar_t loss = testNet.Loss(inputMatrix, outputMatrix);
+         std::cout << fStepCount << ": " << loss << std::endl;
+         converged = HasConverged();
+      }
+
+   }
+   return fMinimumError;
+}
+
+//______________________________________________________________________________
+template<typename Architecture_t>
+template <typename Data_t, typename Net_t>
+    auto TGradientDescent<Architecture_t>::TrainMomentum(const Data_t & trainingData,
+                                                         size_t nTrainingSamples,
+                                                         const Data_t & testData,
+                                                         size_t nTestSamples,
+                                                         Net_t & net,
+                                                         Scalar_t momentum,
+                                                         size_t nThreads)
+   -> Scalar_t
+{
+   // Reset iteration state.
+   fMinimumError = 1e100;
+   fConvergenceCount = 0;
+   fStepCount = 0;
+
+   // Prepare training data.
+   bool converged = false;
+
+   TDataLoader<Data_t, Architecture_t> trainLoader(trainingData, nTrainingSamples,
+                                                   net.GetBatchSize(),
+                                                   net.GetInputWidth(),
+                                                   net.GetOutputWidth(), nThreads);
+   auto testNet = net.CreateClone(nTestSamples);
+   TDataLoader<Data_t, Architecture_t> testLoader(testData, nTestSamples,
+                                                  testNet.GetBatchSize(),
+                                                  testNet.GetInputWidth(),
+                                                  net.GetOutputWidth());
+   std::vector<Net_t> nets{};
+   nets.reserve(nThreads);
+   for (size_t i = 0; i < nThreads; i++) {
+       nets.push_back(net);
+       for (size_t j = 0; j < net.GetDepth(); j++)
+       {
+           std::cout << "copy" << std::endl;
+           auto &masterLayer = net.GetLayer(j);
+           auto &layer = nets.back().GetLayer(j);
+           Architecture_t::Copy(layer.GetWeights(),
+                                masterLayer.GetWeights());
+           Architecture_t::Copy(layer.GetBiases(),
+                                masterLayer.GetBiases());
+       }
+   }
+
+   std::chrono::time_point<std::chrono::system_clock> start, end;
+   start = std::chrono::system_clock::now();
+
+
+   while (!converged)
+   {
+      fStepCount++;
+
+      size_t netIndex = 0;
+      std::vector<TBatch<Architecture_t>> batches{};
+      for (size_t i = 0; i < nTrainingSamples / net.GetBatchSize(); i += nThreads) {
+         batches.clear();
+         batches.reserve(nThreads);
+         for (size_t j = 0; j < nThreads; j++) {
+            batches.push_back(trainLoader.GetBatch());
+         }
+         StepMomentum(net, nets, batches, momentum);
       }
 
       // Compute test error.
@@ -353,6 +456,175 @@ template<typename Architecture_t>
    }
 }
 
+//______________________________________________________________________________
+template<typename Architecture_t>
+    template <typename Net_t>
+    void inline TGradientDescent<Architecture_t>::StepMomentum(
+        Net_t & master,
+        std::vector<Net_t> & nets,
+        std::vector<TBatch<Architecture_t>> & batches,
+        Scalar_t momentum)
+{
+   typename Architecture_t::Matrix_t dummy(0,0);
+   size_t depth = master.GetDepth();
+
+   // Forward
+   for (size_t j = 0; j < nets.size(); j++) {
+      nets[j].GetLayer(0).Forward(batches[j].GetInput());
+   }
+
+   for (size_t i = 1; i < depth; i++)
+   {
+      for (size_t j = 0; j < nets.size(); j++) {
+         nets[j].GetLayer(i).Forward(nets[j].GetLayer(i-1).GetOutput());
+      }
+   }
+   // Gradients
+   for (size_t j = 0; j < nets.size(); j++) {
+      evaluateGradients<Architecture_t>(
+          nets[j].GetLayer(depth-1).GetActivationGradients(),
+          nets[j].GetLossFunction(),
+          batches[j].GetOutput(),
+          nets[j].GetLayer(depth-1).GetOutput());
+   }
+   // Backward
+   for (size_t i = depth - 1; i > 0; i--)
+   {
+      for (size_t j = 0; j < nets.size(); j++) {
+         nets[j].GetLayer(i).Backward(nets[j].GetLayer(i-1).GetActivationGradients(),
+                                      nets[j].GetLayer(i-1).GetOutput(),
+                                      nets[j].GetRegularization(),
+                                      nets[j].GetWeightDecay());
+         Architecture_t::ScaleAdd(master.GetLayer(i).GetWeightGradients(),
+                                  nets[j].GetLayer(i).GetWeightGradients(),
+                                  - fLearningRate / momentum);
+         Architecture_t::ScaleAdd(master.GetLayer(i).GetBiasGradients(),
+                                  nets[j].GetLayer(i).GetBiasGradients(),
+                                  - fLearningRate / momentum);
+      }
+      Architecture_t::ScaleAdd(master.GetLayer(i).GetWeightGradients(),
+                               master.GetLayer(i).GetWeightGradients(),
+                               momentum - 1.0);
+      Architecture_t::ScaleAdd(master.GetLayer(i).GetBiasGradients(),
+                               master.GetLayer(i).GetBiasGradients(),
+                               momentum - 1.0);
+   }
+   for (size_t j = 0; j < nets.size(); j++) {
+      nets[j].GetLayer(0).Backward(dummy,
+                                   batches[j].GetInput(),
+                                   nets[j].GetRegularization(),
+                                   nets[j].GetWeightDecay());
+   }
+
+   for (size_t i = 0; i < depth; i++)
+   {
+       auto &masterLayer = master.GetLayer(i);
+       Architecture_t::ScaleAdd(masterLayer.GetWeights(),
+                                masterLayer.GetWeightGradients(),
+                                1.0);
+       Architecture_t::ScaleAdd(masterLayer.GetBiases(),
+                                masterLayer.GetBiasGradients(),
+                                1.0);
+       for (size_t j = 0; j < nets.size(); j++) {
+         auto &layer       = nets[j].GetLayer(i);
+         Architecture_t::Copy(layer.GetWeights(),
+                              masterLayer.GetWeights());
+         Architecture_t::Copy(layer.GetBiases(),
+                              masterLayer.GetBiases());
+       }
+   }
+}
+
+//______________________________________________________________________________
+template<typename Architecture_t>
+    template <typename Net_t>
+    void inline TGradientDescent<Architecture_t>::StepNesterov(
+        Net_t & master,
+        std::vector<Net_t> & nets,
+        std::vector<TBatch<Architecture_t>> & batches,
+        Scalar_t momentum)
+{
+   typename Architecture_t::Matrix_t dummy(0,0);
+   size_t depth = master.GetDepth();
+
+   // Forward
+   for (size_t j = 0; j < nets.size(); j++) {
+      nets[j].GetLayer(0).Forward(batches[j].GetInput());
+   }
+
+   for (size_t i = 1; i < depth; i++)
+   {
+      for (size_t j = 0; j < nets.size(); j++) {
+         nets[j].GetLayer(i).Forward(nets[j].GetLayer(i-1).GetOutput());
+      }
+   }
+
+   // Gradients
+   for (size_t j = 0; j < nets.size(); j++) {
+      evaluateGradients<Architecture_t>(
+          nets[j].GetLayer(depth-1).GetActivationGradients(),
+          nets[j].GetLossFunction(),
+          batches[j].GetOutput(),
+          nets[j].GetLayer(depth-1).GetOutput());
+   }
+
+   // Backward
+   for (size_t i = depth - 1; i > 0; i--)
+   {
+      for (size_t j = 0; j < nets.size(); j++) {
+         nets[j].GetLayer(i).Backward(nets[j].GetLayer(i-1).GetActivationGradients(),
+                                      nets[j].GetLayer(i-1).GetOutput(),
+                                      nets[j].GetRegularization(),
+                                      nets[j].GetWeightDecay());
+      }
+   }
+
+   for (size_t j = 0; j < nets.size(); j++) {
+      nets[j].GetLayer(0).Backward(dummy,
+                                   batches[j].GetInput(),
+                                   nets[j].GetRegularization(),
+                                   nets[j].GetWeightDecay());
+   }
+
+   for (size_t i = 0; i < depth; i++)
+   {
+      auto &masterLayer = master.GetLayer(i);
+      for (size_t j = 0; j < nets.size(); j++) {
+         auto &layer       = nets[j].GetLayer(i);
+         Architecture_t::Copy(layer.GetWeights(),
+                              masterLayer.GetWeights());
+         Architecture_t::Copy(layer.GetBiases(),
+                              masterLayer.GetBiases());
+         Architecture_t::ScaleAdd(layer.GetWeights(),
+                                  masterLayer.GetWeightGradients(),
+                                  1.0);
+         Architecture_t::ScaleAdd(layer.GetBiases(),
+                                  masterLayer.GetBiasGradients(),
+                                  1.0);
+      }
+      for (size_t j = 0; j < nets.size(); j++) {
+         auto &layer       = nets[j].GetLayer(i);
+         Architecture_t::ScaleAdd(masterLayer.GetWeightGradients(),
+                                  layer.GetWeightGradients(),
+                                  - fLearningRate / momentum);
+         Architecture_t::ScaleAdd(masterLayer.GetBiasGradients(),
+                                  layer.GetBiasGradients(),
+                                  - fLearningRate / momentum);
+      }
+      Architecture_t::ScaleAdd(masterLayer.GetWeightGradients(),
+                               masterLayer.GetWeightGradients(),
+                               momentum - 1.0);
+      Architecture_t::ScaleAdd(masterLayer.GetBiasGradients(),
+                               masterLayer.GetBiasGradients(),
+                               momentum - 1.0);
+      Architecture_t::ScaleAdd(masterLayer.GetWeights(),
+                               masterLayer.GetWeightGradients(),
+                               1.0);
+      Architecture_t::ScaleAdd(masterLayer.GetBiases(),
+                               masterLayer.GetBiasGradients(),
+                               1.0);
+   }
+}
 
 //______________________________________________________________________________
 template<typename Architecture_t>

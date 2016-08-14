@@ -31,7 +31,7 @@ template <typename Architecture>
 {
    using Matrix_t = typename Architecture::Matrix_t;
    using Net_t    = TNet<Architecture>;
-  
+
    size_t nSamples  = 1000000;
    size_t nFeatures = 20;
    size_t batchSize = 1024;
@@ -46,6 +46,7 @@ template <typename Architecture>
    YTest.MultT(XTest, W);
 
    Net_t net(batchSize, nFeatures, ELossFunction::MEANSQUAREDERROR);
+<<<<<<< HEAD
    net.AddLayer(512, EActivationFunction::TANH);
    net.AddLayer(512, EActivationFunction::TANH);
    net.AddLayer(512, EActivationFunction::TANH);
@@ -58,7 +59,20 @@ template <typename Architecture>
    MatrixInput_t trainingData(XTrain, YTrain);
    MatrixInput_t testData(XTest, YTest);
    minimizer.Train(trainingData, nSamples, testData, batchSize, net, 8);
+=======
+   net.AddLayer(256, EActivationFunction::IDENTITY);
+   net.AddLayer(256, EActivationFunction::IDENTITY);
+   net.AddLayer(256, EActivationFunction::IDENTITY);
+   net.AddLayer(256, EActivationFunction::IDENTITY);
+   net.AddLayer(1, EActivationFunction::IDENTITY);
+   net.Initialize(EInitialization::GAUSS);
+
+   TGradientDescent<Architecture> minimizer(100, 0.000001, 1, 1);
+   MatrixInput_t trainingData(XTrain, YTrain);
+   MatrixInput_t testData(XTest, YTest);
+   //minimizer.Train(trainingData, nSamples, testData, batchSize, net, 1);
+   minimizer.TrainMomentum(trainingData, nSamples, testData, batchSize, net, 0.8, 1);
+>>>>>>> CPU
 
    return 0.0;
 }
-

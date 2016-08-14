@@ -18,6 +18,7 @@
 
 #include "TMatrix.h"
 #include <vector>
+#include <iostream>
 
 #include "TMVA/Event.h"
 
@@ -30,6 +31,7 @@ namespace DNN  {
 using MatrixInput_t    = std::pair<const TMatrixT<Double_t> &,
                                    const TMatrixT<Double_t> &>;
 using TMVAInput_t      = std::vector<Event*>;
+using IndexIterator_t = typename std::vector<size_t>::iterator;
 
 //
 // TBatch Class.
@@ -95,7 +97,6 @@ private:
 
    using HostBuffer_t    = typename Architecture_t::HostBuffer_t;
    using DeviceBuffer_t  = typename Architecture_t::DeviceBuffer_t;
-   using IndexIterator_t = typename std::vector<size_t>::iterator;
    using Matrix_t        = typename Architecture_t::Matrix_t;
    using BatchIterator_t = TBatchIterator<Data_t, Architecture_t>;
 
@@ -132,7 +133,11 @@ public:
    BatchIterator_t begin() {return TBatchIterator<Data_t, Architecture_t>(*this);}
    BatchIterator_t end()
    {
+<<<<<<< HEAD
       return TBatchIterator<Data_t, Architecture_t>(*this, fNSamples / fBatchSize);
+=======
+      return TBatchIterator<Data_t, Architecture_t>(*this,(fNSamples / fBatchSize));
+>>>>>>> CPU
    }
 
    void Shuffle();

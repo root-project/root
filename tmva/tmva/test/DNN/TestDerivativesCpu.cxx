@@ -11,11 +11,11 @@
 
 ///////////////////////////////////////////////////////////////////
 // Concrete instantiation of the generic derivative test for the //
-//  reference implementation.                                    //
+//  multi-threaded CPU implementation.                           //
 ///////////////////////////////////////////////////////////////////
 
 #include <iostream>
-#include "TMVA/DNN/Architectures/Cuda.h"
+#include "TMVA/DNN/Architectures/Cpu.h"
 #include "TestDerivatives.h"
 
 using namespace TMVA::DNN;
@@ -29,7 +29,7 @@ int main()
     //
 
     std::cout << "Activation Functions:" << std::endl;
-    error = testActivationFunctionDerivatives<TCuda<false>>();
+    error = testActivationFunctionDerivatives<TCpu<Double_t, false>>();
     std::cout << "Total    : ";
     std::cout << "Maximum Relative Error = " << print_error(error);
     std::cout << std::endl << std::endl;
@@ -41,7 +41,7 @@ int main()
     //
 
     std::cout << "Loss Functions:" << std::endl;
-    error = testLossFunctionGradients<TCuda<false>>();
+    error = testLossFunctionGradients<TCpu<Double_t, false>>();
     std::cout << "Total    : ";
     std::cout << "Maximum Relative Error = " << print_error(error);
     std::cout << std::endl << std::endl;
@@ -53,7 +53,7 @@ int main()
     //
 
     std::cout << "Regularization:" << std::endl;
-    error = testRegularizationGradients<TCuda<false>>();
+    error = testRegularizationGradients<TCpu<Double_t, false>>();
     std::cout << "Total    : ";
     std::cout << "Maximum Relative Error = " << print_error(error);
     std::cout << std::endl << std::endl;

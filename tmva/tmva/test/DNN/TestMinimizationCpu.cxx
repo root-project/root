@@ -10,19 +10,19 @@
  *************************************************************************/
 
 /////////////////////////////////////////////////////////////////////
-// Use the generic tests defined in TestMinimization.h to test the //
-// training of Neural Networks for CUDA architectures.             //
+// Train the multi-threaded CPU implementation of DNNs on a random //
+// linear mapping. In the linear case the minimization problem is  //
+// convex and the gradient descent training should converge to the //
+// global minimum.                                                 //
 /////////////////////////////////////////////////////////////////////
 
 #include <iostream>
-#include "TMVA/DNN/Architectures/Reference.h"
-#include "TMVA/DNN/Architectures/Cuda.h"
-#include "TMVA/DNN/Minimizers.h"
+#include "TMVA/DNN/Architectures/Cpu.h"
 #include "TestMinimization.h"
 
 using namespace TMVA::DNN;
 
 int main()
 {
-   testMinimization<TCuda>();
+    testMinimization<TCpu<double, false>>();
 }

@@ -11,10 +11,12 @@
 
 //////////////////////////////////////////////////////////////////////
 //  Concrete instantiation of the generic activation function test  //
-//  for the reference architecture.                                 //
+//  for the multi-threaded CPU implementation.                      //
 //////////////////////////////////////////////////////////////////////
 
 #include <iostream>
+#include "TMVA/DNN/Architectures/Cpu.h"
+#include "Utility.h"
 #include "TestActivationFunctions.h"
 
 using namespace TMVA::DNN;
@@ -27,55 +29,55 @@ int main()
 
     // Identity.
 
-    error = testIdentity<TReference<double>>(10);
-    std::cout << "Testing identity activation:               ";
-    std::cout << "maximum relative error = " << print_error(error) << std::endl;
+    error = testIdentity<TCpu<Double_t,false>>(10);
+    std::cout << "Testing identity activation:            ";
+    std::cout << "maximum relative error = " << error << std::endl;
     if (error > 1e-10)
         return 1;
 
-    error = testIdentityDerivative<TReference<double>>(10);
-    std::cout << "Testing identity activation derivative:    ";
-    std::cout << "maximum relative error = " << print_error(error) << std::endl;
+    error = testIdentityDerivative<TCpu<Double_t,false>>(10);
+    std::cout << "Testing identity activation derivative: ";
+    std::cout << "maximum relative error = " << error << std::endl;
     if (error > 1e-10)
         return 1;
 
     // ReLU.
 
-    error = testRelu<TReference<double>>(10);
-    std::cout << "Testing ReLU activation:                   ";
-    std::cout << "maximum relative error = " << print_error(error) << std::endl;
+    error = testRelu<TCpu<Double_t,false>>(10);
+    std::cout << "Testing ReLU activation:                ";
+    std::cout << "maximum relative error = " << error << std::endl;
     if (error > 1e-10)
         return 1;
 
-    error = testReluDerivative<TReference<double>>(10);
-    std::cout << "Testing ReLU activation derivative:        ";
-    std::cout << "maximum relative error = " << print_error(error) << std::endl;
+    error = testReluDerivative<TCpu<Double_t,false>>(10);
+    std::cout << "Testing ReLU activation derivative:     ";
+    std::cout << "maximum relative error = " << error << std::endl;
     if (error > 1e-10)
         return 1;
 
     // Sigmoid.
 
-    error = testSigmoid<TReference<double>>(10);
-    std::cout << "Testing Sigmoid activation:                ";
-    std::cout << "maximum relative error = " << print_error(error) << std::endl;
+    error = testSigmoid<TCpu<Double_t,false>>(10);
+    std::cout << "Testing Sigmoid activation:             ";
+    std::cout << "maximum relative error = " << error << std::endl;
     if (error > 1e-10)
         return 1;
 
-    error = testSigmoidDerivative<TReference<double>>(10);
-    std::cout << "Testing Sigmoid activation derivative:     ";
-    std::cout << "maximum relative error = " << print_error(error) << std::endl;
+    error = testSigmoidDerivative<TCpu<Double_t,false>>(10);
+    std::cout << "Testing Sigmoid activation derivative:  ";
+    std::cout << "maximum relative error = " << error << std::endl;
     if (error > 1e-10)
         return 1;
 
     // TanH.
 
-    error = testTanh<TReference<double>>(10);
+    error = testTanh<TCpu<Double_t, false>>(10);
     std::cout << "Testing TanH activation:                   ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
     if (error > 1e-10)
         return 1;
 
-    error = testTanhDerivative<TReference<double>>(10);
+    error = testTanhDerivative<TCpu<Double_t, false>>(10);
     std::cout << "Testing TanH activation derivative:        ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
     if (error > 1e-10)
@@ -83,13 +85,13 @@ int main()
 
     // Symmetric ReLU.
 
-    error = testSymmetricReluDerivative<TReference<double>>(10);
+    error = testSymmetricRelu<TCpu<Double_t, false>>(10);
     std::cout << "Testing Symm. ReLU activation:             ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
     if (error > 1e-10)
         return 1;
 
-    error = testSymmetricReluDerivative<TReference<double>>(10);
+    error = testSymmetricReluDerivative<TCpu<Double_t, false>>(10);
     std::cout << "Testing Symm. ReLU activation derivative:  ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
     if (error > 1e-10)
@@ -97,13 +99,13 @@ int main()
 
     // Soft Sign.
 
-    error = testSoftSign<TReference<double>>(10);
+    error = testSoftSign<TCpu<Double_t, false>>(10);
     std::cout << "Testing Soft Sign activation:              ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
     if (error > 1e-10)
         return 1;
 
-    error = testSoftSignDerivative<TReference<double>>(10);
+    error = testSoftSignDerivative<TCpu<Double_t, false>>(10);
     std::cout << "Testing Soft Sign activation derivative:   ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
     if (error > 1e-10)
@@ -111,13 +113,13 @@ int main()
 
     // Gauss.
 
-    error = testGauss<TReference<double>>(10);
+    error = testGauss<TCpu<Double_t, false>>(10);
     std::cout << "Testing Gauss activation:                  ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
     if (error > 1e-10)
         return 1;
 
-    error = testGaussDerivative<TReference<double>>(10);
+    error = testGaussDerivative<TCpu<Double_t, false>>(10);
     std::cout << "Testing Gauss activation derivative:       ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
     if (error > 1e-10)

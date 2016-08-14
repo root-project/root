@@ -2,7 +2,7 @@
 // Author: Simon Pfreundschuh
 
 /*************************************************************************
- * Copyright (C) 2016, Simon Pfreundschuh
+ * Copyright (C) 2016, Simon Pfreundschuh                                *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -11,12 +11,11 @@
 
 ////////////////////////////////////////////////////////////////////
 // Concrete instantiation of the generic backpropagation test for //
-// CUDA architectures.                                            //
+// multi-threaded CPU architectures.                              //
 ////////////////////////////////////////////////////////////////////
 
-#include <iostream>
-#include "TMVA/DNN/Architectures/Cuda.h"
 #include "TMatrix.h"
+#include "TMVA/DNN/Architectures/Cpu.h"
 #include "TestBackpropagation.h"
 
 using namespace TMVA::DNN;
@@ -27,19 +26,19 @@ int main()
 
     double error;
 
-    error = testBackpropagationWeightsLinear<TCuda<false>>(1.0);
+    error = testBackpropagationWeightsLinear<TCpu<Double_t, false>>(1.0);
     if (error > 1e-7)
         return 1;
 
-    error = testBackpropagationL1Regularization<TCuda<false>>(1e-2);
+    error = testBackpropagationL1Regularization<TCpu<Double_t, false>>(1e-2);
     if (error > 1e-7)
         return 1;
 
-    error = testBackpropagationL2Regularization<TCuda<false>>(1.0);
+    error = testBackpropagationL2Regularization<TCpu<Double_t, false>>(1.0);
     if (error > 1e-7)
         return 1;
 
-    error = testBackpropagationBiasesLinear<TCuda<false>>(1.0);
+    error = testBackpropagationBiasesLinear<TCpu<Double_t, false>>(1.0);
     if (error > 1e-7)
         return 1;
 

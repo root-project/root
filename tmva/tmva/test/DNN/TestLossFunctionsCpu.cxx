@@ -9,13 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-///////////////////////////////////////////////////////////////////
-// Test for the loss function reference implementation using the //
-// generic test defined in TestLossFunctions.h.                  //
-///////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+// Test for the loss function implementatoins for the           //
+// multi-threaded CPU version using the generic test defined in //
+// TestLossFunctions.h.                                         //
+//////////////////////////////////////////////////////////////////
 
 #include <iostream>
-#include "TMVA/DNN/Architectures/Cuda.h"
+#include "TMVA/DNN/Architectures/Cpu.h"
 #include "TestLossFunctions.h"
 
 using namespace TMVA::DNN;
@@ -30,13 +31,13 @@ int main()
     // Mean Squared Error.
     //
 
-    error = testMeanSquaredError<TCuda<false>>(10);
+    error = testMeanSquaredError<TCpu<Double_t, false>>(10);
     std::cout << "Testing mean squared error loss:     ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
     if (error > 1e-10)
         return 1;
 
-    error = testMeanSquaredErrorGradients<TCuda<false>>(10);
+    error = testMeanSquaredErrorGradients<TCpu<Double_t, false>>(10);
     std::cout << "Testing mean squared error gradient: ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
     if (error > 1e-10)
@@ -46,13 +47,13 @@ int main()
     // Cross Entropy.
     //
 
-    error = testCrossEntropy<TCuda<false>>(10);
+    error = testCrossEntropy<TCpu<Double_t, false>>(10);
     std::cout << "Testing cross entropy loss:          ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
     if (error > 1e-10)
         return 1;
 
-    error = testCrossEntropyGradients<TCuda<false>>(10);
+    error = testCrossEntropyGradients<TCpu<Double_t, false>>(10);
     std::cout << "Testing mean squared error gradient: ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
     if (error > 1e-10)

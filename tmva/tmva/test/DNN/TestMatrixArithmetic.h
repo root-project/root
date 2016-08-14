@@ -31,8 +31,8 @@ auto testMultiplication(size_t ntests)
    using Matrix_t = typename Architecture_t::Matrix_t;
 
    Scalar_t maximumError = 0.0;
-   for (size_t t = 0; t < ntests; t++) {
 
+   for (size_t t = 0; t < ntests; t++) {
       size_t m, n, k;
       m = rand() % 100 + 1;
       n = rand() % 100 + 1;
