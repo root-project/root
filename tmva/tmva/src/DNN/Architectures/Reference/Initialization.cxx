@@ -69,7 +69,7 @@ void TReference<Real_t>::InitializeIdentity(TMatrixT<Real_t> & A)
    n = A.GetNcols();
 
    for (size_t i = 0; i < m; i++) {
-      for (size_t j = 0; j < n ; j++) {
+      for (size_t j = 0; j < n; j++) {
          A(i,j) = 0.0;
       }
 
@@ -86,7 +86,7 @@ void TReference<Real_t>::InitializeZero(TMatrixT<Real_t> & A)
    m = A.GetNrows();
    n = A.GetNcols();
 
-   for (size_t i = 0; i < m * n; i++) {
+   for (size_t i = 0; i < m ; i++) {
       for (size_t j = 0; j < n ; j++) {
          A(i,j) = 0.0;
       }

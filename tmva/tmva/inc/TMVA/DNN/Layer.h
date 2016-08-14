@@ -247,8 +247,8 @@ TLayer<Architecture_t>::TLayer(const TLayer &layer)
     fActivationGradients(layer.fBatchSize, layer.fWidth),
     fF(layer.fF)
 {
-    std::cout << "Copy const. " << std::endl;
-   // Nothing to do here.
+   Architecture_t::Copy(fWeights, layer.GetWeights());
+   Architecture_t::Copy(fBiases,  layer.GetBiases());
 }
 
 //______________________________________________________________________________
@@ -301,6 +301,10 @@ template<typename Architecture_t>
 {
    std::cout << "Width = " << fWeights.GetNrows();
    std::cout << ", Activation Function = ";
+   std::cout << "Weights = " <<  std::endl;
+   ((TMatrixT<Double_t>) fWeights).Print();
+   std::cout << "Biases = " <<  std::endl;
+   ((TMatrixT<Double_t>) fBiases).Print();
    std::cout << static_cast<int>(fF) << std::endl;
 }
 
