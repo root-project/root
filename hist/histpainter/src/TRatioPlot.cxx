@@ -37,8 +37,75 @@ ClassImp(TRatioPlot)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/** \class TRatioPlot
+/** \class TRatioPlot 
     \ingroup Hist
+Class for displaying ratios, differences and fit residuals.
+
+TRatioPlot has two constructors, one which accepts two histograms, and is responsible
+for setting up the calculation of ratios and differences. This calculation is in part
+delegated to TEfficiency. A single option can be given as a parameter, that is 
+used to determine which procedure is chosen. The remaining option string is then
+passed through to the calculation, if applicable.
+
+## Ratios and differences
+
+Available options are:
+| Option     | Description                                                  |
+| ---------- | ------------------------------------------------------------ |
+| errprop    | uses the histogram `TH1::Divide` method, yields symmetric errors    |
+| diff       | subtracts the histograms                                     |
+| grid / nogrid | enable (default) or disable automatic drawing of the 0(1) dashed line |
+
+Begin_Macro(source)
+{
+   gStyle->SetOptStat(0);   
+   auto c1 = new TCanvas("c1", "A ratio example");
+   auto h1 = new TH1D("h1", "h1", 50, 0, 10);
+   auto h2 = new TH1D("h2", "h2", 50, 0, 10);
+   auto f1 = new TF1("f1", "exp(- x/[0] )");
+   f1->SetParameter(0, 3);
+   h1->FillRandom("f1", 1900);
+   h2->FillRandom("f1", 2000); 
+   h1->Sumw2();
+   h2->Scale(1.9 / 2.);
+   auto rp = new TRatioPlot(h1, h2, "rp", "rp", "pois", "hist", "E", "AP", 1., 1.);
+   rp->SetTicks(0, 1);
+   rp->Draw();
+   return c1;
+}
+End_Macro
+
+
+
+A second constructor only accepts a single histogram, but expects it to have a fitted
+function. The function is used to calculate the residual between the fit and the 
+histogram.
+
+| Option     | Description                                                  |
+| ---------- | ------------------------------------------------------------ |
+| errasym    | Uses calculated asymmetric errors from `TH1::GetBinErrorUp`/`TH1::GetBinErrorLow`. Note that you need to set `TH1::SetBinErrorOption` first |
+| errfunc    | Uses \f$ \sqrt{f(x)} \f$ as the error |
+
+The asymmetric error case uses the upper or lower error depending on whether the function value
+is above or below the histogram bin content.
+
+
+Begin_Macro(source)
+{
+   gStyle->SetOptStat(0);   
+   auto c1 = new TCanvas("c1", "fit residual simple"); 
+   auto h1 = new TH1D("h1", "h1", 50, -5, 5);
+   h1->FillRandom("gaus", 2000);
+   h1->Fit("gaus");
+   c1->Clear(); // Fit does not draw into correct pad
+   auto rp1 = new TRatioPlot((TH1*)h1->Clone(), "rp1", "rp1", "", "", "AP");
+   rp1->Draw();
+   rp1->GetLowYaxis()->SetTitle("ratio");
+   rp1->GetUpYaxis()->SetTitle("entries");
+   c1->Update();
+   return c1;
+}   
+End_Macro
 
 */
 
@@ -54,7 +121,17 @@ TRatioPlot::TRatioPlot()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor for two histograms 
-
+///
+/// \param h1 First histogram 
+/// \param h2 Second histogram 
+/// \param name Name for the object
+/// \param title Title for the object
+/// \param displayOption Steers the error calculation, as well as ratio / difference
+/// \param optH1 Drawing option for first histogram
+/// \param optH2 Drawing option for second histogram
+/// \param optGraph Drawing option the lower graph
+/// \param c1 Scaling factor for h1
+/// \param c2 Scaling factor for h2
 // @TODO: Class should work with stacks as well
 TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, const char *name /*=0*/, const char *title /*=0*/, 
       Option_t *displayOption, Option_t *optH1, Option_t *optH2, Option_t *optGraph,
@@ -137,8 +214,11 @@ TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, const char *name /*=0*/, const char *ti
    fOptH2 = optH2String;
    fOptGraph = optGraphString;
 
+   fC1 = c1;
+   fC2 = c2;
+
    // build ratio, everything is ready
-   BuildRatio(c1, c2);
+   BuildLowerPlot();
 
    // taking x axis information from h1 by cloning it x axis
    fSharedXAxis = (TAxis*)(fH1->GetXaxis()->Clone());
@@ -146,7 +226,15 @@ TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, const char *name /*=0*/, const char *ti
    fLowYaxis = (TAxis*)(fRatioGraph->GetYaxis()->Clone());
 }
 
-
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for one histogram and a fit.
+/// \param h1 The histogram 
+/// \param name Name for the object
+/// \param title Title for the object
+/// \param displayOption Steers the error calculation
+/// \param optH1 Drawing option for the histogram
+/// \param optGraph Drawing option the lower graph
+/// 
 TRatioPlot::TRatioPlot(TH1* h1, const char *name, const char *title, Option_t *displayOption, Option_t *optH1,
          /*Option_t *fitOpt, */Option_t *optGraph) 
    : TPad(name, title, 0, 0, 1, 1),
@@ -221,7 +309,7 @@ TRatioPlot::TRatioPlot(TH1* h1, const char *name, const char *title, Option_t *d
    
    fDisplayOption = displayOptionString;
 
-   BuildRatio();
+   BuildLowerPlot();
 
    fOptH1 = optH1;
    fOptGraph = optGraph;
@@ -316,42 +404,64 @@ void TRatioPlot::Browse(TBrowser *b)
    gPad->Update();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the top margin of the upper pad.
+/// \param margin The new margin
 void TRatioPlot::SetUpTopMargin(Float_t margin)
 {
    fUpTopMargin = margin;
    SetPadMargins();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the bottom margin of the upper pad.
+/// \param margin The new margin
 void TRatioPlot::SetUpBottomMargin(Float_t margin)
 {
    fUpBottomMargin = margin;
    SetPadMargins();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the top margin of the lower pad.
+/// \param margin The new margin
 void TRatioPlot::SetLowTopMargin(Float_t margin)
 {
    fLowTopMargin = margin;
    SetPadMargins();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the bottom margin of the lower pad.
+/// \param margin The new margin
 void TRatioPlot::SetLowBottomMargin(Float_t margin)
 {
    fLowBottomMargin = margin;
    SetPadMargins();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the left margin of both pads.
+/// \param margin The new margin
 void TRatioPlot::SetLeftMargin(Float_t margin)
 {
    fLeftMargin = margin;
    SetPadMargins();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the right margin of both pads.
+/// \param margin The new margin
 void TRatioPlot::SetRightMargin(Float_t margin)
 {
    fRightMargin = margin;
    SetPadMargins();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the margin that separates the two pads. The margin is split according
+/// to the relative sizes of the pads
+/// \param margin The new margin
 void TRatioPlot::SetSeparationMargin(Float_t margin)
 {
    Float_t sf = fSplitFraction;
@@ -401,8 +511,8 @@ void TRatioPlot::Draw(Option_t *option)
    }
 
    fLowerPad->cd();
-   
-   // @FIXME: This causes problems with the axes, since fconfint is not read out. Multigraph?
+  
+   // @TODO: Make colors configurable
    fConfidenceInterval2->SetFillColor(kGreen);
    fConfidenceInterval1->SetFillColor(kYellow);
    
@@ -438,6 +548,32 @@ void TRatioPlot::Draw(Option_t *option)
 
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the reference graph for the lower pad, which means the graph that
+/// is responsible for setting the coordinate system. It is the first graph
+/// added to the primitive list of the lower pad.
+/// This reference can be used to set the minimum and maximum of the lower pad. 
+/// Note that `TRatioPlot::Draw` needs to have been called first, since the 
+/// graphs are only created then.
+///
+/// Begin_Macro(source)
+/// {
+///    gStyle->SetOptStat(0);
+///    auto c1 = new TCanvas("c1", "fit residual simple");
+///    c1->SetLogy();
+///    auto h1 = new TH1D("h1", "h1", 50, -5, 5);
+///    h1->FillRandom("gaus", 2000);
+///    h1->Fit("gaus");
+///    h1->SetMinimum(0.001);
+///    c1->Clear();
+///    auto rp1 = new TRatioPlot(h1, "rp1", "rp1", "", "", "AP");
+///    rp1->Draw();
+///    rp1->GetLowerRefGraph()->SetMinimum(-2);
+///    rp1->GetLowerRefGraph()->SetMaximum(2);
+///    c1->Update();
+///    return c1;
+/// }
+/// End_Macro
 TGraph* TRatioPlot::GetLowerRefGraph() 
 {
    if (fLowerPad == 0) {
@@ -470,11 +606,21 @@ TGraph* TRatioPlot::GetLowerRefGraph()
    return 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Shortcut for
+/// ~~~{.cpp}
+/// rp->GetLowerRefGraph()->GetXaxis();
+/// ~~~
 TAxis* TRatioPlot::GetLowerRefXaxis()
 {
    return GetLowerRefGraph()->GetXaxis(); 
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Shortcut for
+/// ~~~{.cpp}
+/// rp->GetLowerRefGraph()->GetYaxis();
+/// ~~~
 TAxis* TRatioPlot::GetLowerRefYaxis() 
 {
    return GetLowerRefGraph()->GetYaxis(); 
@@ -506,11 +652,14 @@ void TRatioPlot::CreateGridline()
 
 }
 
+////////////////////////////////////////////////////////////////////////////////
 /// Does not really do anything right now, other than call super
 void TRatioPlot::Paint(Option_t *opt) {
    TPad::Paint(opt);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Creates the visual axes when painting.
 void TRatioPlot::PaintModified()
 {
       // sync y axes
@@ -540,6 +689,8 @@ void TRatioPlot::PaintModified()
    if (fIsUpdating) fIsUpdating = kFALSE;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Syncs the axes ranges from the shared ones to the actual ones.
 void TRatioPlot::SyncAxesRanges()
 {
    // get ranges from the shared axis clone
@@ -563,7 +714,7 @@ void TRatioPlot::SyncAxesRanges()
 ////////////////////////////////////////////////////////////////////////////////
 /// Build the lower plot according to which constructor was called, and
 /// which options were passed.
-void TRatioPlot::BuildRatio(Double_t c1, Double_t c2)
+void TRatioPlot::BuildLowerPlot()
 {
    // Clear and delete the graph if not exists
    if (fRatioGraph != 0) {
@@ -587,8 +738,8 @@ void TRatioPlot::BuildRatio(Double_t c1, Double_t c2)
       TH1 *tmpH1 = (TH1*)fH1->Clone();
       TH1 *tmpH2 = (TH1*)fH2->Clone();
 
-      tmpH1->Scale(c1);
-      tmpH2->Scale(c2);
+      tmpH1->Scale(fC1);
+      tmpH2->Scale(fC2);
 
       TGraphAsymmErrors *ratioGraph = new TGraphAsymmErrors();
       ratioGraph->Divide(tmpH1, tmpH2, fDisplayOption.Data());
@@ -603,7 +754,7 @@ void TRatioPlot::BuildRatio(Double_t c1, Double_t c2)
 
       tmpHist->Reset();
 
-      tmpHist->Add(fH1, fH2, c1, -1*c2);
+      tmpHist->Add(fH1, fH2, fC1, -1*fC2);
       fRatioGraph = new TGraphErrors(tmpHist);
 
       delete tmpHist;
@@ -628,8 +779,8 @@ void TRatioPlot::BuildRatio(Double_t c1, Double_t c2)
          x_arr[i] = fH1->GetBinCenter(i+1);
       }
 
-      Double_t cl1 = 0.68;
-      Double_t cl2 = 0.95;
+      Double_t cl1 = fCl1;
+      Double_t cl2 = fCl2;
 
       if (fFitResult != 0) {
          // use this to get conf int
@@ -714,7 +865,7 @@ void TRatioPlot::BuildRatio(Double_t c1, Double_t c2)
       // Use TH1's Divide method
       TH1 *tmpHist = (TH1*)fH1->Clone();
       tmpHist->Reset();
-      tmpHist->Divide(fH1, fH2, c1, c2, fDisplayOption.Data());
+      tmpHist->Divide(fH1, fH2, fC1, fC2, fDisplayOption.Data());
       fRatioGraph = new TGraphErrors(tmpHist);
    
       delete tmpHist;
@@ -1182,6 +1333,8 @@ void TRatioPlot::UnZoomed()
    fCanvas->Update();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Slot that handles common resizing of upper and lower pad.
 void TRatioPlot::SubPadResized() 
 {
 
@@ -1231,4 +1384,14 @@ void TRatioPlot::SetSplitFraction(Float_t sf) {
    fSplitFraction = sf;
    fUpperPad->SetPad(0., fSplitFraction, 1., 1.);
    fLowerPad->SetPad(0., 0., 1., fSplitFraction);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the confidence levels used to calculate the bands in the fit residual
+/// case. Defaults to 1 and 2 sigma. You have to call TRatioPlot::BuildLowerPlot
+/// to rebuild the bands.
+void TRatioPlot::SetConfidenceLevels(Double_t c1, Double_t c2)
+{
+   fCl1 = c1;
+   fCl2 = c2;
 }

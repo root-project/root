@@ -72,6 +72,12 @@ protected:
    TGraphErrors *fConfidenceInterval1 = 0;
    TGraphErrors *fConfidenceInterval2 = 0;
 
+   Double_t fCl1 = 0.6827;
+   Double_t fCl2 = 0.9545;
+
+   Double_t fC1 = 1.;
+   Double_t fC2 = 1.;
+
    TFitResult *fFitResult = 0;
 
    TAxis *fSharedXAxis;
@@ -135,8 +141,32 @@ public:
    virtual void Draw(Option_t *chopt="");
    virtual void Browse(TBrowser *b);
    
-   virtual void BuildRatio(Double_t c1 = 1., Double_t c2 = 1.);
+   virtual void BuildLowerPlot();
+   
+   virtual void Paint(Option_t *opt = "");
+   virtual void PaintModified();
+   
+   // Slots for signal receiving
+   virtual void UnZoomed();
+   virtual void RangeAxisChanged();
+   virtual void SubPadResized();
 
+   // Getters
+   virtual TAxis *GetXaxis() { return fSharedXAxis; }   
+   virtual TAxis *GetUpYaxis() { return fUpYaxis; }
+   virtual TAxis *GetLowYaxis() { return fLowYaxis; }
+
+   virtual TGraph *GetLowerRefGraph();
+   virtual TAxis *GetLowerRefXaxis();
+   virtual TAxis *GetLowerRefYaxis();
+
+   virtual TPad * GetUpperPad() { return fUpperPad; }
+   virtual TPad * GetLowerPad() { return fLowerPad; }
+   
+   // Setters
+   virtual void SetFitResult(TFitResultPtr fitres) { fFitResult = fitres.Get(); }
+   virtual void SetFitResult(TFitResult *fitres) { fFitResult = fitres; }
+   
    // Setters for margins
    void SetUpTopMargin(Float_t margin);
    void SetUpBottomMargin(Float_t margin);
@@ -145,31 +175,10 @@ public:
    void SetLeftMargin(Float_t margin);
    void SetRightMargin(Float_t margin);
    
-   void SetSeparationMargin(Float_t);
-
-   virtual void SetFitResult(TFitResultPtr fitres) { fFitResult = fitres.Get(); }
-   virtual void SetFitResult(TFitResult *fitres) { fFitResult = fitres; }
-
+   virtual void SetSeparationMargin(Float_t);
    virtual void SetSplitFraction(Float_t sf);
-   virtual void Paint(Option_t *opt = "");
-   virtual void PaintModified();
-
-   // Slots for signal receiving
-   virtual void UnZoomed();
-   virtual void RangeAxisChanged();
-   virtual void SubPadResized();
-
-   virtual TAxis *GetXaxis() { return fSharedXAxis; }   
-   virtual TAxis *GetUpYaxis() { return fUpYaxis; }
-   virtual TAxis *GetLowYaxis() { return fLowYaxis; }
-
-   virtual TGraph *GetRatioGraph() { return fRatioGraph; }
-   virtual TGraph *GetLowerRefGraph();
-   virtual TAxis *GetLowerRefXaxis();
-   virtual TAxis *GetLowerRefYaxis();
-
-   virtual TPad * GetUpperPad() { return fUpperPad; }
-   virtual TPad * GetLowerPad() { return fLowerPad; }
+   virtual void SetConfidenceLevels(Double_t cl1, Double_t cl2);
+   
 
    ClassDef(TRatioPlot, 1)  //A ratio of histograms
 };
