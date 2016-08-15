@@ -47,6 +47,7 @@ class TPoolPlayer : public TMPWorker {
    unsigned fNWorkers; ///< the number of workers spawned
    ULong64_t fMaxNEntries; ///< the maximum number of entries to be processed by this worker
    ULong64_t fProcessedEntries; ///< the number of entries processed by this worker so far
+   bool fFirstEntry = true;
 };
 
 #endif

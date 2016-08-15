@@ -8,7 +8,7 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
- 
+
 #include "TProcPool.h"
 #include "TPoolPlayer.h"
 
@@ -99,6 +99,7 @@ TList* TProcPool::ProcTree(TTree& tree, TSelector& selector, ULong64_t nToProces
    //prepare environment
    Reset();
    unsigned nWorkers = GetNWorkers();
+   selector.Begin(nullptr);
 
    //fork
    TPoolPlayer worker(selector, &tree, nWorkers, nToProcess/nWorkers);
@@ -148,6 +149,7 @@ TList* TProcPool::ProcTree(const std::vector<std::string>& fileNames, TSelector&
    //prepare environment
    Reset();
    unsigned nWorkers = GetNWorkers();
+   selector.Begin(nullptr);
 
    //fork
    TPoolPlayer worker(selector, fileNames, treeName, nWorkers, nToProcess);

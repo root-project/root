@@ -18,7 +18,10 @@ void TPoolPlayer::HandleInput(MPCodeBufPair& msg)
       ProcTree(msg);
    } else if (code == PoolCode::kProcRange || code == PoolCode::kProcFile) {
       ProcDataSet(code, msg);
-   } else {
+   } else if (code == PoolCode::kSendResult){
+      fSelector.SlaveTerminate();
+      MPSend(GetSocket(), PoolCode::kProcResult, fSelector.GetOutputList());
+   }else {
       //unknown code received
       std::string reply = "S" + std::to_string(GetPid());
       reply += ": unknown code received: " + std::to_string(code);
@@ -81,24 +84,21 @@ void TPoolPlayer::ProcDataSet(unsigned int code, MPCodeBufPair& msg)
       if (fProcessedEntries + finish - start > fMaxNEntries)
          finish = start + fMaxNEntries - fProcessedEntries;
 
-   fSelector.Begin(nullptr);
-   fSelector.SlaveBegin(nullptr);
+   if(fFirstEntry){
+     fSelector.SlaveBegin(nullptr);
+     fFirstEntry = false;
+   }
+
    fSelector.Init(tree);
    fSelector.Notify();
    for(Long64_t entry = start; entry<finish; ++entry) {
       fSelector.Process(entry);
    }
-   fSelector.SlaveTerminate();
 
    //update the number of processed entries
    fProcessedEntries += finish - start;
-      
-   if(fMaxNEntries == fProcessedEntries)
-      //we are done forever
-      MPSend(GetSocket(), PoolCode::kProcResult, fSelector.GetOutputList());
-   else
-      //we are done for now
-      MPSend(GetSocket(), PoolCode::kIdling);
+
+   MPSend(GetSocket(), PoolCode::kIdling);
 
    return;
 }
@@ -110,7 +110,7 @@ void TPoolPlayer::ProcTree(MPCodeBufPair& msg)
 
    // The tree must be defined at this level
    if(fTree == nullptr) {
-      std::cout << "tree undefined!\n" ; 
+      std::cout << "tree undefined!\n" ;
       //errors are handled inside RetrieveTree
       return;
    }
@@ -149,18 +149,20 @@ void TPoolPlayer::ProcTree(MPCodeBufPair& msg)
       f = TFile::Open(fTree->GetCurrentFile()->GetName());
       tree = (TTree *) f->Get(fTree->GetName());
    }
-   fSelector.SlaveBegin(nullptr);
+   if(fFirstEntry){
+     fSelector.SlaveBegin(nullptr);
+     fFirstEntry = false;
+   }
+
    fSelector.Init(tree);
    fSelector.Notify();
+
    for(Long64_t entry = start; entry<finish; ++entry) {
       fSelector.Process(entry);
    }
-   fSelector.SlaveTerminate();
 
    //update the number of processed entries
    fProcessedEntries += finish - start;
-
-   MPSend(GetSocket(), PoolCode::kProcResult, fSelector.GetOutputList());
 
    // Close the file and delete the tree, if required
    if (f) {
@@ -168,6 +170,8 @@ void TPoolPlayer::ProcTree(MPCodeBufPair& msg)
       delete f;
       f = 0;
    }
+
+   MPSend(GetSocket(), PoolCode::kIdling);
 
    return;
 }
