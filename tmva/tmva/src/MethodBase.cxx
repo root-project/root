@@ -581,12 +581,12 @@ void TMVA::MethodBase::TrainMethod()
    }
    else if (!DoRegression()) {
 
-      Log() <<Form("Dataset[%s] : ",DataInfo().GetName())<< "classification on training sample" << Endl;
-      AddClassifierOutput(Types::kTraining);
-      if (HasMVAPdfs()) {
-         CreateMVAPdfs();
-         AddClassifierOutputProb(Types::kTraining);
-      }
+//       Log() <<Form("Dataset[%s] : ",DataInfo().GetName())<< "classification on training sample" << Endl;
+//       AddClassifierOutput(Types::kTraining);
+//       if (HasMVAPdfs()) {
+//          CreateMVAPdfs();
+//          AddClassifierOutputProb(Types::kTraining);
+//       }
 
    } else {
 
