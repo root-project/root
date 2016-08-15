@@ -57,6 +57,12 @@
 #include "TMVA/NeuralNet.h"
 #endif
 
+#include "TMVA/DNN/Net.h"
+#include "TMVA/DNN/Minimizers.h"
+
+#ifdef DNNCUDA
+#include "TMVA/DNN/Architectures/Cuda.h"
+#endif
 
 
 namespace TMVA {
@@ -82,6 +88,7 @@ namespace TMVA {
       std::vector<std::map<TString,TString>> ParseKeyValueString(TString parseString, TString blockDelim, TString tokenDelim);
 
       void Train();
+      void TrainGPU();
 
       virtual Double_t GetMvaValue( Double_t* err=0, Double_t* errUpper=0 );
       virtual const std::vector<Float_t>& GetRegressionValues();
@@ -142,6 +149,8 @@ namespace TMVA {
       bool     fResume;
       TString  fWeightInitializationStrategyString;
       TMVA::DNN::WeightInitializationStrategy fWeightInitializationStrategy;
+      TString  fGPUString;
+      bool     fGPU;
 
       std::vector<std::shared_ptr<TMVA::DNN::Settings>> fSettings;
 
