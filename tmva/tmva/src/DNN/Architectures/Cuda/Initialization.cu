@@ -95,7 +95,7 @@ void TCuda<doProfiling>::InitializeZero(TCudaMatrix & A)
    n = A.GetNcols();
    TMatrixT<CudaDouble_t> B(m, n);
 
-   for (size_t i = 0; i < m * n; i++) {
+   for (size_t i = 0; i < m; i++) {
       for (size_t j = 0; j < n ; j++) {
          B(i,j) = 0.0;
       }

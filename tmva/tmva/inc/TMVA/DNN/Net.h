@@ -262,8 +262,8 @@ template<typename Architecture_t, typename Layer_t>
    inline void TNet<Architecture_t, Layer_t>::InitializeGradients()
 {
    for (auto &l : fLayers) {
-      initialize(l.GetWeightGradients(), EInitialization::ZERO);
-      initialize(l.GetBiasGradients(),   EInitialization::ZERO);
+      initialize<Architecture_t>(l.GetWeightGradients(), EInitialization::ZERO);
+      initialize<Architecture_t>(l.GetBiasGradients(),   EInitialization::ZERO);
    }
 }
 
