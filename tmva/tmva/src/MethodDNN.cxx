@@ -511,9 +511,9 @@ void TMVA::MethodDNN::TrainGpu()
    fNet.Initialize(fWeightInitialization);
    for (TTrainingSettings & settings : fTrainingSettings) {
 
-
       TNet<TCuda> net(settings.batchSize, fNet);
       net.SetDropoutProbabilities(settings.dropoutProbabilities);
+      net.InitializeGradients();
       auto testNet = net.CreateClone(settings.batchSize);
 
       Log() << kINFO
@@ -550,9 +550,9 @@ void TMVA::MethodDNN::TrainGpu()
             auto &masterLayer = net.GetLayer(j);
             auto &layer = nets.back().GetLayer(j);
             TCuda::Copy(layer.GetWeights(),
-                                 masterLayer.GetWeights());
+                        masterLayer.GetWeights());
             TCuda::Copy(layer.GetBiases(),
-                                 masterLayer.GetBiases());
+                        masterLayer.GetBiases());
          }
       }
 
@@ -574,7 +574,11 @@ void TMVA::MethodDNN::TrainGpu()
                   batches.reserve(nThreads);
                   batches.push_back(trainingData.GetBatch());
                }
-               minimizer.StepMomentum(net, nets, batches, settings.momentum);
+               if (settings.momentum > 0.0) {
+                  minimizer.StepMomentum(net, nets, batches, settings.momentum);
+               } else {
+                  minimizer.Step(net, nets, batches);
+               }
             }
          } else {
 
@@ -656,6 +660,7 @@ Double_t TMVA::MethodDNN::GetMvaValue( Double_t* /*errLower*/, Double_t* /*errUp
    }
 
    fNet.Prediction(YHat, X, fOutputFunction);
+   fNet.Loss(X, YHat);
 
    return YHat(0,0);
 }
