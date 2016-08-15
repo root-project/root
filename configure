@@ -6588,13 +6588,8 @@ fi
 #
 message "Checking whether to build libRooFit"
 if test "x$enable_roofit" = "xyes" || test ! "x$ROOFIT" = "x"; then
-    if test "x$enable_libcxx" = "xno" && test "x$platform" = "xmacosx"; then
-        enable_roofit=""
-        result "no"
-    else
-        enable_roofit="yes"
-        result "yes"
-    fi
+    enable_roofit="yes"
+    result "yes"
 else
     enable_roofit=""
     result "no"
