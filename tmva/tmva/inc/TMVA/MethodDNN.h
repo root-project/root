@@ -63,6 +63,7 @@
 #include "TMVA/DNN/Net.h"
 #include "TMVA/DNN/Minimizers.h"
 #include "TMVA/DNN/Architectures/Reference.h"
+#include "TMVA/DNN/Architectures/Cpu.h"
 
 #ifdef DNNCUDA
 #include "TMVA/DNN/Architectures/Cuda.h"
@@ -74,6 +75,9 @@ namespace TMVA {
 
 class MethodDNN : public MethodBase
 {
+    using Architecture_t = TCpu<Double_t>;
+    using Net_t          = TNet<Architecture_t>;
+    using Matrix_t       = typename Architecture_t::Matrix_t;
 
 private:
 
@@ -99,7 +103,7 @@ private:
    // general helper functions
    void     Init();
 
-   TNet<TReference<Double_t>> fNet;
+   Net_t             fNet;
    EInitialization   fWeightInitialization;
    EOutputFunction   fOutputFunction;
 
