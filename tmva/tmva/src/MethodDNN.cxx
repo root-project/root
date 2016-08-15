@@ -624,8 +624,8 @@ void TMVA::MethodDNN::TrainGpu()
          }
       }
       for (size_t l = 0; l < net.GetDepth(); l++) {
-         fNet.GetLayer(l).GetWeights() = net.GetLayer(l).GetWeights();
-         fNet.GetLayer(l).GetBiases()  = net.GetLayer(l).GetBiases();
+         fNet.GetLayer(l).GetWeights() = (TMatrixT<Double_t>) net.GetLayer(l).GetWeights();
+         fNet.GetLayer(l).GetBiases()  = (TMatrixT<Double_t>) net.GetLayer(l).GetBiases();
       }
    }
 
@@ -651,17 +651,15 @@ void TMVA::MethodDNN::TrainOpenCL()
 Double_t TMVA::MethodDNN::GetMvaValue( Double_t* /*errLower*/, Double_t* /*errUpper*/ )
 {
    size_t nVariables = GetEvent()->GetNVariables();
-   TMatrixT<Double_t> X(1, nVariables);
-   TMatrixT<Double_t> YHat(1, 1);
+   Matrix_t X(1, nVariables);
+   Matrix_t YHat(1, 1);
 
    const std::vector<Float_t>& inputValues = GetEvent()->GetValues();
    for (size_t i = 0; i < nVariables; i++) {
-       X(0,i) = inputValues[i];
+      X(0,i) = inputValues[i];
    }
 
    fNet.Prediction(YHat, X, fOutputFunction);
-   fNet.Loss(X, YHat);
-
    return YHat(0,0);
 }
 
@@ -669,7 +667,7 @@ Double_t TMVA::MethodDNN::GetMvaValue( Double_t* /*errLower*/, Double_t* /*errUp
 const std::vector<Float_t> &TMVA::MethodDNN::GetRegressionValues()
 {
    size_t nVariables = GetEvent()->GetNVariables();
-   TMatrixT<Double_t> X(1, nVariables);
+   Matrix_t X(1, nVariables);
 
    const Event *ev = GetEvent();
    const std::vector<Float_t>& inputValues = ev->GetValues();
@@ -677,7 +675,7 @@ const std::vector<Float_t> &TMVA::MethodDNN::GetRegressionValues()
        X(0,i) = inputValues[i];
 
    size_t nTargets = ev->GetNTargets();
-   TMatrixT<Double_t> YHat(1, nTargets);
+   Matrix_t YHat(1, nTargets);
    std::vector<Float_t> output(nTargets);
    auto net = fNet.CreateClone(1);
    net.Prediction(YHat, X, fOutputFunction);
@@ -756,6 +754,7 @@ void TMVA::MethodDNN::ReadWeightsFromXML(void* rootXML)
    fNet.SetLossFunction(static_cast<ELossFunction>(lossFunctionChar));
    fOutputFunction = static_cast<EOutputFunction>(outputFunctionChar);
 
+   size_t previousWidth = inputWidth;
    auto layerXML = gTools().xmlengine().GetChild(netXML, "Layer");
    for (size_t i = 0; i < depth; i++) {
       TString fString;
@@ -771,10 +770,15 @@ void TMVA::MethodDNN::ReadWeightsFromXML(void* rootXML)
       gTools().ReadAttr(matrixXML, "rows", width);
 
       fNet.AddLayer(width, f);
-      ReadMatrixXML(layerXML, "Weights", fNet.GetLayer(i).GetWeights());
-      ReadMatrixXML(layerXML, "Biases", fNet.GetLayer(i).GetBiases());
+      TMatrixT<Double_t> weights(width, previousWidth);
+      TMatrixT<Double_t> biases(width, 1);
+      ReadMatrixXML(layerXML, "Weights", weights);
+      ReadMatrixXML(layerXML, "Biases",  biases);
+      fNet.GetLayer(i).GetWeights() = weights;
+      fNet.GetLayer(i).GetBiases()  = biases;
 
       layerXML = gTools().GetNextChild(layerXML);
+      previousWidth = width;
    }
 }
 
