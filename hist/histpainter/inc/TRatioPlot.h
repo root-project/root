@@ -39,13 +39,21 @@ class TRatioPlot : public TPad {
 private:
    TRatioPlot& operator=(const TRatioPlot&); // Not implemented
    TRatioPlot(const TRatioPlot &hrp);
-   static const Int_t DIVIDE_HIST = 1;
-   static const Int_t DIVIDE_GRAPH = 2;
-   static const Int_t DIFFERENCE = 3;
-   static const Int_t FIT_RESIDUAL = 4;
-   static const Int_t ERROR_SYMMETRIC = 5;
-   static const Int_t ERROR_ASYMMETRIC = 6;
-   static const Int_t ERROR_FUNC = 7;
+
+   enum CalculationMode {
+      kDivideHist = 1,
+      kDivideGraph = 2,
+      kDifference = 3,
+      kFitResidual = 4,
+      kDifferenceSign = 5
+   };
+
+   enum ErrorMode {
+      kErrorSymmetric = 1,
+      kErrorAsymmetric = 2,
+      kErrorFunc = 3
+   };
+
 
 protected:
 

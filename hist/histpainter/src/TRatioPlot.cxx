@@ -184,12 +184,26 @@ TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, const char *name /*=0*/, const char *ti
 
    if (displayOptionString.Contains("errprop")) {
       displayOptionString.ReplaceAll("errprop", "");
-      fDisplayMode = DIVIDE_HIST;
+      fDisplayMode = TRatioPlot::CalculationMode::kDivideHist;
+   } else if (displayOptionString.Contains("diffsig")) {
+      displayOptionString.ReplaceAll("diffsig", "");
+      fDisplayMode = TRatioPlot::CalculationMode::kDifferenceSign;   
+      
+      // determine which error style
+      if (displayOptionString.Contains("errasym")) {
+         fErrorMode = TRatioPlot::ErrorMode::kErrorAsymmetric; 
+         displayOptionString.ReplaceAll("errasym", "");
+      }
+
+      if (displayOptionString.Contains("errfunc")) {
+         fErrorMode = TRatioPlot::ErrorMode::kErrorFunc;
+         displayOptionString.ReplaceAll("errfunc", "");
+      } 
    } else if (displayOptionString.Contains("diff")) {
       displayOptionString.ReplaceAll("diff", "");
-      fDisplayMode = DIFFERENCE;   
+      fDisplayMode = TRatioPlot::CalculationMode::kDifference;   
    } else {
-      fDisplayMode = DIVIDE_GRAPH;
+      fDisplayMode = TRatioPlot::CalculationMode::kDivideGraph;
    }
 
    if (displayOptionString.Contains("grid")) {
@@ -282,19 +296,18 @@ TRatioPlot::TRatioPlot(TH1* h1, const char *name, const char *title, Option_t *d
 
    fParentPad = gPad;
 
-
-   fDisplayMode = FIT_RESIDUAL;
+   fDisplayMode = TRatioPlot::CalculationMode::kFitResidual;
    
    TString displayOptionString = TString(displayOption);
    
    // determine which error style
    if (displayOptionString.Contains("errasym")) {
-      fErrorMode = ERROR_ASYMMETRIC; 
+      fErrorMode = TRatioPlot::ErrorMode::kErrorAsymmetric; 
       displayOptionString.ReplaceAll("errasym", "");
    }
 
    if (displayOptionString.Contains("errfunc")) {
-      fErrorMode = ERROR_FUNC;
+      fErrorMode = TRatioPlot::ErrorMode::kErrorFunc;
       displayOptionString.ReplaceAll("errfunc", "");
    }
 
@@ -516,7 +529,7 @@ void TRatioPlot::Draw(Option_t *option)
    fConfidenceInterval2->SetFillColor(kGreen);
    fConfidenceInterval1->SetFillColor(kYellow);
    
-   if (fDisplayMode == FIT_RESIDUAL) {
+   if (fDisplayMode == TRatioPlot::CalculationMode::kFitResidual) {
       fConfidenceInterval2->Draw("A3");
       fConfidenceInterval1->Draw("3");
       fRatioGraph->Draw("LX+SAME");
@@ -639,9 +652,6 @@ void TRatioPlot::CreateGridline()
       Double_t last = fSharedXAxis->GetBinUpEdge(fSharedXAxis->GetLast());
       Double_t y = 1;
 
-      if (fDisplayMode == DIFFERENCE || fDisplayMode == FIT_RESIDUAL) {
-         y = 0;
-      }
 
       fGridline->SetX1(first);
       fGridline->SetX2(last);
@@ -732,7 +742,7 @@ void TRatioPlot::BuildLowerPlot()
 
    // Determine the divide mode and create the lower graph accordingly
    // Pass divide options given in constructor
-   if (fDisplayMode == DIVIDE_GRAPH) {
+   if (fDisplayMode == TRatioPlot::CalculationMode::kDivideGraph) {
       // use TGraphAsymmErrors Divide method to create
       
       TH1 *tmpH1 = (TH1*)fH1->Clone();
@@ -748,7 +758,7 @@ void TRatioPlot::BuildLowerPlot()
       delete tmpH1;
       delete tmpH2;
 
-   } else if (fDisplayMode == DIFFERENCE) {
+   } else if (fDisplayMode == TRatioPlot::CalculationMode::kDifference) {
 
       TH1 *tmpHist = (TH1*)fH1->Clone();
 
@@ -758,7 +768,57 @@ void TRatioPlot::BuildLowerPlot()
       fRatioGraph = new TGraphErrors(tmpHist);
 
       delete tmpHist;
-   } else if (fDisplayMode == FIT_RESIDUAL) {
+   } else if (fDisplayMode == TRatioPlot::CalculationMode::kDifferenceSign) {
+      fRatioGraph = new TGraphAsymmErrors();
+      Int_t ipoint = 0;
+      Double_t res;
+      Double_t error;      
+
+      Double_t x;
+      Double_t val;
+      Double_t val2;
+
+      for (Int_t i=0; i<=fH1->GetNbinsX();++i) {
+         val = fH1->GetBinContent(i);
+         val2 = fH2->GetBinContent(i);
+         x = fH1->GetBinCenter(i+1);
+         
+         if (fErrorMode == TRatioPlot::ErrorMode::kErrorAsymmetric) {
+
+            Double_t errUp = fH1->GetBinErrorUp(i);
+            Double_t errLow = fH1->GetBinErrorLow(i);
+
+            if (val - val2 > 0) {
+               // h1 > h2
+               error = errLow;
+            } else {
+               // h1 < h2
+               error = errUp;
+            }
+
+
+         } else if (fErrorMode == TRatioPlot::ErrorMode::kErrorSymmetric) {
+            error = fH1->GetBinError(i);
+         } else {
+            Warning("TRatioPlot", "error mode is invalid");
+            error = 0;
+         }
+
+
+         if (error != 0) {
+
+
+            res = (val - val2) / error;
+
+            ((TGraphAsymmErrors*)fRatioGraph)->SetPoint(ipoint, fH1->GetBinCenter(i), res);
+            ((TGraphAsymmErrors*)fRatioGraph)->SetPointError(ipoint,  fH1->GetBinWidth(i)/2., fH1->GetBinWidth(i)/2., 0.5, 0.5);
+
+            ++ipoint;
+
+         }
+      } 
+
+   } else if (fDisplayMode == TRatioPlot::CalculationMode::kFitResidual) {
       
       TF1 *func = dynamic_cast<TF1*>(fH1->GetListOfFunctions()->At(0));
 
@@ -785,7 +845,6 @@ void TRatioPlot::BuildLowerPlot()
       if (fFitResult != 0) {
          // use this to get conf int
 
-         //ci = fFitResult->GetConfidenceIntervals(0.95, false);
          fFitResult->GetConfidenceIntervals(fH1->GetNbinsX(), 1, 1, x_arr, ci_arr1, cl1);
          for (Int_t i=1; i<=fH1->GetNbinsX();++i) {
             ci1.push_back(ci_arr1[i-1]);
@@ -814,7 +873,7 @@ void TRatioPlot::BuildLowerPlot()
          val = fH1->GetBinContent(i);
          x = fH1->GetBinCenter(i+1);
           
-         if (fErrorMode == ERROR_ASYMMETRIC) {
+         if (fErrorMode == TRatioPlot::ErrorMode::kErrorAsymmetric) {
             
             Double_t errUp = fH1->GetBinErrorUp(i);
             Double_t errLow = fH1->GetBinErrorLow(i);
@@ -828,9 +887,9 @@ void TRatioPlot::BuildLowerPlot()
             }
 
 
-         } else if (fErrorMode == ERROR_SYMMETRIC) {
+         } else if (fErrorMode == TRatioPlot::ErrorMode::kErrorSymmetric) {
             error = fH1->GetBinError(i);
-         } else if (fErrorMode == ERROR_FUNC) {
+         } else if (fErrorMode == TRatioPlot::ErrorMode::kErrorFunc) {
 
             error = sqrt(func->Eval(x));
 
@@ -846,7 +905,6 @@ void TRatioPlot::BuildLowerPlot()
             res = (fH1->GetBinContent(i)- func->Eval(fH1->GetBinCenter(i) ) ) / error;
             //__("x="<< x << " y=" << res << " err=" << error);
            
-
             ((TGraphAsymmErrors*)fRatioGraph)->SetPoint(ipoint, fH1->GetBinCenter(i), res);
             ((TGraphAsymmErrors*)fRatioGraph)->SetPointError(ipoint,  fH1->GetBinWidth(i)/2., fH1->GetBinWidth(i)/2., 0.5, 0.5);
 
@@ -861,7 +919,7 @@ void TRatioPlot::BuildLowerPlot()
 
       }
  
-   } else if (fDisplayMode == DIVIDE_HIST){
+   } else if (fDisplayMode == TRatioPlot::CalculationMode::kDivideHist){
       // Use TH1's Divide method
       TH1 *tmpHist = (TH1*)fH1->Clone();
       tmpHist->Reset();
@@ -1254,7 +1312,8 @@ void TRatioPlot::RangeAxisChanged()
    fLowerPad->SetLogx(GetLogx());
 
    // copy logy from rp to upper pad
-   fUpperPad->SetLogy(GetLogy());
+   //if (GetLogy() != 
+   //fUpperPad->SetLogy(GetLogy());
 
    // get axis ranges for upper and lower 
    Double_t upFirst = fH1->GetXaxis()->GetBinLowEdge(fH1->GetXaxis()->GetFirst());
@@ -1397,7 +1456,7 @@ void TRatioPlot::SetConfidenceLevels(Double_t c1, Double_t c2)
    fCl1 = c1;
    fCl2 = c2;
 }
-
+// @FIXME: SetLogy is not working interactively DONE
 ////////////////////////////////////////////////////////////////////////////////
 /// Set logx for both of the pads
 void TRatioPlot::SetLogx(Int_t value )
@@ -1412,5 +1471,7 @@ void TRatioPlot::SetLogx(Int_t value )
 void TRatioPlot::SetLogy(Int_t value)
 {
    TPad::SetLogy(value);
+   fUpperPad->SetLogy(value);
+}
 }
 
