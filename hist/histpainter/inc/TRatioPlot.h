@@ -125,7 +125,6 @@ protected:
    Float_t fLeftMargin = 0.1;
    Float_t fRightMargin = 0.1;
 
-   Float_t fSeparationMargin;
    Bool_t fIsUpdating = kFALSE;
    Bool_t fIsPadUpdating = kFALSE;
    Bool_t fPainting = kFALSE;

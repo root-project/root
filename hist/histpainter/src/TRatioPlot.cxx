@@ -107,6 +107,13 @@ Begin_Macro(source)
 }   
 End_Macro
 
+## Access to internal parts
+You can access the internal objects that are used to construct the plot via a series of 
+methods. `TRatioPlot::GetUpperPad` and `TRatioPlot::GetLowerPad` can be used to draw additional
+elements on top of the existing ones.
+`TRatioPlot::GetLowerRefGraph` returns a reference to the lower pad's graph that
+is responsible for the range, which enables you to modify the range.
+
 */
 
 
@@ -133,6 +140,8 @@ TRatioPlot::TRatioPlot()
 /// \param c1 Scaling factor for h1
 /// \param c2 Scaling factor for h2
 // @TODO: Class should work with stacks as well
+// @TODO !: Add option to have difference divided by error (significance)
+// @TODO !!: Needs to have a destructor that actually cleans up
 TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, const char *name /*=0*/, const char *title /*=0*/, 
       Option_t *displayOption, Option_t *optH1, Option_t *optH2, Option_t *optGraph,
       Double_t c1, Double_t c2)
