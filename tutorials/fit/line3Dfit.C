@@ -73,13 +73,6 @@ struct SumDistance2 {
       for (int i  = 0; i < npoints; ++i) {
          double d = distance2(x[i],y[i],z[i],par);
          sum += d;
-#ifdef DEBUG
-         if (first) std::cout << "point " << i << "\t"
-            << x[i] << "\t"
-            << y[i] << "\t"
-            << z[i] << "\t"
-            << std::sqrt(d) << std::endl;
-#endif
       }
       if (first)
          std::cout << "Total Initial distance square = " << sum << std::endl;
@@ -128,13 +121,7 @@ Int_t line3Dfit()
 
    // make the functor objet
    SumDistance2 sdist(gr);
-#ifdef __CINT__
-   ROOT::Math::Functor fcn(&sdist,4,"SumDistance2");
-   cout << "CINT" << endl;
-#else
-   cout << "NOT CINT" << endl;
    ROOT::Math::Functor fcn(sdist,4);
-#endif
    // set the function and the initial parameter values
    double pStart[4] = {1,1,1,1};
    fitter.SetFCN(fcn,pStart);
