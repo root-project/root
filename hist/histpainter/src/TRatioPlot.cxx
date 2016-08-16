@@ -139,6 +139,7 @@ TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, const char *name /*=0*/, const char *ti
    : TPad(name, title, 0, 0, 1, 1),
      fH1(h1),
      fH2(h2),
+     fGridlines() 
 {
    gROOT->GetListOfCleanups()->Add(this);
 
@@ -234,6 +235,7 @@ TRatioPlot::TRatioPlot(TH1* h1, const char *name, const char *title, Option_t *d
          /*Option_t *fitOpt, */Option_t *optGraph, TFitResult *fitres) 
    : TPad(name, title, 0, 0, 1, 1),
      fH1(h1),
+     fGridlines() 
 {
    gROOT->GetListOfCleanups()->Add(this);
 
@@ -603,27 +605,93 @@ TAxis* TRatioPlot::GetLowerRefYaxis()
    return GetLowerRefGraph()->GetYaxis(); 
 }
 
+// @TODO: Document CreateGridline
 void TRatioPlot::CreateGridline()
 {
-   if (fShowGridline) {
-      if (fGridline == 0) {
-         fGridline = new TLine(0, 0, 0, 0);
-         fGridline->SetLineStyle(2);
-         fGridline->Draw();
+   //__(__FUNCTION__);
+   TVirtualPad *padsav = gPad;
+   
+   fLowerPad->cd();
+
+   int curr = fGridlines.size();
+   int dest = fGridlinePositions.size();
+
+   if (curr > dest) {
+      // we have too many
+      //__("remove gridlines");
+      for (int i=0;i<curr-dest;++i) {
+         __(i);
+         // kill the line
+         delete fGridlines.at(i);
+         // remove it from list
+         fGridlines.erase(fGridlines.begin());
       }
+   } else if (curr < dest) {
+      // we don't have enough
+      //__("add gridlines");
+      
+      for (int i=0;i<dest-curr;++i) {
+         __(i);
+         TLine *newline = new TLine(0, 0, 0, 0);
+         newline->SetLineStyle(2);
+         newline->Draw();
+         fGridlines.push_back(newline);
+      }
+   } else {
+      //__("no gridline mod");
+      // nothing to do
+   }
+   
+   Double_t first = fSharedXAxis->GetBinLowEdge(fSharedXAxis->GetFirst());
+   Double_t last = fSharedXAxis->GetBinUpEdge(fSharedXAxis->GetLast());
 
-      Double_t first = fSharedXAxis->GetBinLowEdge(fSharedXAxis->GetFirst());
-      Double_t last = fSharedXAxis->GetBinUpEdge(fSharedXAxis->GetLast());
-      Double_t y = 1;
 
+   TLine *line;
+   double y;
+   for (int i=0;i<dest;++i) {
+      line = fGridlines.at(i); 
+      y = fGridlinePositions[i];
 
-      fGridline->SetX1(first);
-      fGridline->SetX2(last);
-      fGridline->SetY1(y);
-      fGridline->SetY2(y);
+      //__("");
+      //var_dump(i);
+      //var_dump(first);
+      //var_dump(last);
+      //var_dump(y);
+
+      line->SetX1(first);
+      line->SetX2(last);
+      line->SetY1(y);
+      line->SetY2(y);
+
    }
 
+   //if (fShowGridline) {
+      //if (fGridline == 0) {
+         //fGridline = new TLine(0, 0, 0, 0);
+         //fGridline->SetLineStyle(2);
+         //fGridline->Draw();
+      //}
 
+      //Double_t first = fSharedXAxis->GetBinLowEdge(fSharedXAxis->GetFirst());
+      //Double_t last = fSharedXAxis->GetBinUpEdge(fSharedXAxis->GetLast());
+      //Double_t y = 1;
+
+      //if (
+            //fDisplayMode == TRatioPlot::CalculationMode::kDifference 
+            //|| fDisplayMode == TRatioPlot::CalculationMode::kFitResidual
+            //|| fDisplayMode == TRatioPlot::CalculationMode::kDifferenceSign
+      //) {
+         //y = 0;
+      //}
+
+      //fGridline->SetX1(first);
+      //fGridline->SetX2(last);
+      //fGridline->SetY1(y);
+      //fGridline->SetY2(y);
+   //}
+
+
+   padsav->cd();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -656,7 +724,7 @@ void TRatioPlot::PaintModified()
    
    // create the visual axes
    CreateVisualAxes();
-
+   CreateGridline();
 
    TPad::PaintModified();
    
@@ -704,11 +772,19 @@ void TRatioPlot::BuildLowerPlot()
       fConfidenceInterval2 = new TGraphErrors();
    }
 
+
+
+   static Double_t divideGridlines[] = {0.7, 1.0, 1.3};
+   static Double_t diffGridlines[] = {2.0, 0.0, -2.0};
+   static Double_t signGridlines[] = {1.0, 0.0, -1.0};
+
    // Determine the divide mode and create the lower graph accordingly
    // Pass divide options given in constructor
    if (fDisplayMode == TRatioPlot::CalculationMode::kDivideGraph) {
       // use TGraphAsymmErrors Divide method to create
-      
+     
+      SetGridlines(divideGridlines, 3);
+
       TH1 *tmpH1 = (TH1*)fH1->Clone();
       TH1 *tmpH2 = (TH1*)fH2->Clone();
 
@@ -723,6 +799,7 @@ void TRatioPlot::BuildLowerPlot()
       delete tmpH2;
 
    } else if (fDisplayMode == TRatioPlot::CalculationMode::kDifference) {
+      SetGridlines(diffGridlines, 3);
 
       TH1 *tmpHist = (TH1*)fH1->Clone();
 
@@ -733,6 +810,9 @@ void TRatioPlot::BuildLowerPlot()
 
       delete tmpHist;
    } else if (fDisplayMode == TRatioPlot::CalculationMode::kDifferenceSign) {
+
+      SetGridlines(signGridlines, 3);
+      
       fRatioGraph = new TGraphAsymmErrors();
       Int_t ipoint = 0;
       Double_t res;
@@ -783,6 +863,8 @@ void TRatioPlot::BuildLowerPlot()
       } 
 
    } else if (fDisplayMode == TRatioPlot::CalculationMode::kFitResidual) {
+      
+      SetGridlines(signGridlines, 3);
       
       TF1 *func = dynamic_cast<TF1*>(fH1->GetListOfFunctions()->At(0));
 
@@ -884,6 +966,8 @@ void TRatioPlot::BuildLowerPlot()
       }
  
    } else if (fDisplayMode == TRatioPlot::CalculationMode::kDivideHist){
+      SetGridlines(divideGridlines, 3);
+      
       // Use TH1's Divide method
       TH1 *tmpHist = (TH1*)fH1->Clone();
       tmpHist->Reset();
@@ -1437,5 +1521,19 @@ void TRatioPlot::SetLogy(Int_t value)
    TPad::SetLogy(value);
    fUpperPad->SetLogy(value);
 }
+
+void TRatioPlot::SetGridlines(std::vector<double> gridlines) 
+{
+   fGridlinePositions = gridlines;
 }
 
+
+void TRatioPlot::SetGridlines(Double_t *gridlines, Int_t numGridlines)
+{
+   fGridlinePositions.clear();
+   //fGridlines.resize(numGridlines);
+   
+   for (Int_t i=0;i<numGridlines;++i) {
+      fGridlinePositions.push_back(gridlines[i]);
+   }
+}

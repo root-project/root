@@ -101,6 +101,8 @@ protected:
    TAxis *fUpYaxis = 0;
    TAxis *fLowYaxis = 0;
 
+   std::vector<TLine*> fGridlines;
+   std::vector<double> fGridlinePositions;
    Bool_t fShowGridline = kTRUE;
 
 
@@ -189,6 +191,8 @@ public:
    virtual void SetLogx(Int_t value = 1); // *TOGGLE*
    virtual void SetLogy(Int_t value = 1); // *TOGGLE*
 
+   virtual void SetGridlines(Double_t *gridlines, Int_t numGridlines); 
+   virtual void SetGridlines(std::vector<double> gridlines); 
 
    ClassDef(TRatioPlot, 1)  //A ratio of histograms
 };
