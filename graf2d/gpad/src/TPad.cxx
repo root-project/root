@@ -1013,8 +1013,6 @@ void TPad::DeleteExec(const char *name)
 
 Int_t TPad::DistancetoPrimitive(Int_t px, Int_t py)
 {
-//   std::cout << __PRETTY_FUNCTION__ << "[" << fName << "]" << " called" << std::endl;
-
    Int_t pxl, pyl, pxt, pyt;
    Int_t px1 = gPad->XtoAbsPixel(fX1);
    Int_t py1 = gPad->YtoAbsPixel(fY1);
@@ -1600,8 +1598,6 @@ void TPad::DrawColorTable()
 
 void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-
-//   std::cout << __PRETTY_FUNCTION__ << "[" << fName << "]" << " called" << std::endl;
    const Int_t kMaxDiff = 5;
    const Int_t kMinSize = 20;
    static Int_t pxorg, pyorg;
@@ -1699,7 +1695,7 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
       // No break !!!
 
-      case kMouseMotion:
+   case kMouseMotion:
 
       px1 = XtoAbsPixel(fX1);
       py1 = YtoAbsPixel(fY1);
@@ -2132,7 +2128,7 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
 
          // emit signal
-         //RangeChanged();
+         //RangeChanged(); // @TODO: Whats with this?
       }
 
       break;
@@ -2500,7 +2496,6 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
             zoombox = 0;
          }
       }
-
       break;
    }
 }
@@ -3199,10 +3194,6 @@ void TPad::PaintModified()
 
    while (lnk) {
       obj = lnk->GetObject();
-      //std::cout << "obj: " << obj << std::endl;
-      //if (obj != 0) {
-         //std::cout << "obj name: " << obj->GetName() << std::endl;
-      //}
       if (obj->InheritsFrom(TPad::Class())) {
          ((TPad*)obj)->PaintModified();
       } else if (IsModified() || IsTransparent()) {
@@ -4015,8 +4006,6 @@ void TPad::PaintTextNDC(Double_t u, Double_t v, const wchar_t *text)
 
 TPad *TPad::Pick(Int_t px, Int_t py, TObjLink *&pickobj)
 {
-
-//   std::cout << __PRETTY_FUNCTION__ << "[" << fName << "]" << " called" << std::endl;
    //the two following statements are necessary under NT (multithreaded)
    //when a TCanvas object is being created and a thread calling TPad::Pick
    //before the TPad constructor has completed in the other thread
@@ -4062,7 +4051,6 @@ TPad *TPad::Pick(Int_t px, Int_t py, TObjLink *&pickobj)
 
       //If canvas prefers GL, all 3d objects must be drawn/selected by
       //gl viewer
-      //std::cout << "obj: " << obj->GetName() << std::endl;
       if (obj->InheritsFrom(TAtt3D::Class()) && fEmbeddedGL) {
          lnk = lnk->Prev();
          continue;
@@ -4971,13 +4959,8 @@ void TPad::ResizePad(Option_t *option)
    if (!fPrimitives) fPrimitives = new TList;
    TIter    next(GetListOfPrimitives());
    while ((obj = next())) {
-      //std::cout << obj->InheritsFrom(TPad::Class()) << std::endl;
-      //std::cout << fName << std::endl;
       if (obj->InheritsFrom(TPad::Class()))
          ((TPad*)obj)->ResizePad(option);
-      //if (dynamic_cast<TPad*>(obj)) {
-         //((TPad*)obj)->ResizePad(option); 
-      //}
    }
 
    // Reset all current sizes
@@ -5028,7 +5011,6 @@ void TPad::ResizePad(Option_t *option)
          padsav->cd();
       }
    }
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6597,10 +6579,3 @@ void TPad::SetBBoxY2(const Int_t y)
    ResizePad();
 }
 
-void TPad::UnZoom(TAxis *axis)
-{
-   // if this pad has mother and is not its own mother, delegate to mother
-   if (fMother && fMother != this) {
-      fMother->UnZoom(axis);
-   }
-}
