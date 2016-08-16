@@ -261,7 +261,7 @@ def readHeaderCpp(text):
     newtext = ''
     for line in lines[i:]:
         newtext += (line + "\n")
-
+    description = description.replace("\\f$", "$")
     return newtext, description, author, isNotebook, isJsroot, nodraw, needsHeaderFile
 
 
@@ -488,25 +488,22 @@ def processmain(text):
     ... }''') 
     ('TCanvas function(){\\n   content of function\\n   spanning several\\n   lines\\n   return c1\\n}', '\\n# <markdowncell> \\n# Call the main function \\n# <codecell>\\nfunction();', True , '')
     """
-    callMainFunction = ''
     argumentsCell = ''
-    keepFunction = False
 
-    argumentesre = re.compile(r'(?<=\().*?(?=\))', flags = re.DOTALL | re.MULTILINE)
-    arguments = argumentesre.search(text)
+    argumentsre = re.compile(r'(?<=\().*?(?=\))', flags = re.DOTALL | re.MULTILINE)
+    arguments = argumentsre.search(text)
     if len(arguments.group()) > 3:
+        print arguments.group()
         argumentsCell = "# <markdowncell> \n Arguments are defined. \n# <codecell>\n"
-        argumentList =  arguments.group().split(",")
+        #argumentList =  arguments.group().split(",")
+        individualArgumentre = re.compile(r'[^/\n,]*?=[^/\n,]*') #, flags = re.DOTALL) #| re.MULTILINE)
+        argumentList=individualArgumentre.findall(arguments.group())
+        for argument in argumentList: print "ARGUMENT:", argument , "\n\n\n"
         for argument in argumentList:
-            argumentsCell += argument.strip() + ";\n"
+            argumentsCell += argument.strip("\n ") + ";\n"
         argumentsCell += "# <codecell>\n"
 
-    if text.startswith("TCanvas"):
-        keepfunction = True
-        functionname = findFunctionName(text)
-        callMainFunction = "\n# <markdowncell> \n# Call the main function \n# <codecell>\n%s();" % functionname
-
-    return text, callMainFunction, keepFunction, argumentsCell
+    return text, argumentsCell
 
 # now define text transformers
 def removePaletteEditor(code):
@@ -558,9 +555,23 @@ def foamRemoveIfndef(code):
         code = code.replace("#endif", "")
     return code
 
+
+def declareIncludes(code):
+    print code
+    code = re.sub(r"# <codecell>\s*#include", "# <codecell>\n%%cpp -d\n#include" , code)
+    print code
+    return code
+
+def tree4GetFiles(code):
+    if tutName == "tree4":
+        code = code.replace(
+         """#include \"../test/Event.h\"""" , """std::string tutDir = gROOT->GetTutorialsDir();\nTString headerDir = TString::Format("#include \\\"%s/roostats/NuMuToNuE_Oscillation.h\\\"", tutDir.c_str());\nTString impDir = TString::Format("#include \\\"%s/roostats/NuMuToNuE_Oscillation.cxx\\\"", tutDir.c_str());\ngROOT->ProcessLine(headerDir);\ngROOT->ProcessLine(impDir);""")
+    return code
+
 def fixes(code):
     codeTransformers=[removePaletteEditor, runEventExe, getLibMathMore,
-        roofitRemoveSpacesComments, declareNamespace, rs401dGetFiles ,foamRemoveIfndef]
+        roofitRemoveSpacesComments, declareNamespace, rs401dGetFiles ,
+        foamRemoveIfndef, declareIncludes]
 
     for transformer in codeTransformers:
         code = transformer(code)
@@ -594,9 +605,8 @@ def mainfunction(text):
     # Modify text from macros to suit a notebook
     if isCpp():
         main, helpers, rest = split(text)
-        main, callMainFunction, keepfunction, argumentsCell = processmain(main)
-        if not keepfunction:
-            main = cppComments(unindenter(cppFunction(main)))  # Remove function, Unindent, and convert comments to Markdown cells
+        main,  argumentsCell = processmain(main)
+        main = cppComments(unindenter(cppFunction(main)))  # Remove function, Unindent, and convert comments to Markdown cells
         
         if argumentsCell:
             main = argumentsCell + main
@@ -609,18 +619,12 @@ def mainfunction(text):
             text = "# <markdowncell>\n# The header file must be copied to the current directory\n# <codecell>\n.!cp %s%s.h .\n# <codecell>\n" % (tutRelativePath, tutName)
             text += rest
         else:
-            text = rest
+            text = "# <codecell>\n" + rest
 
         for helper in helpers:
             text += helper
 
-        if keepfunction:
-            text += "\n# <markdowncell>\n# The main function is defined\n# <codecell>\n%%cpp -d\n"
-        else:
-            text += "\n# <codecell>\n"
-        text += main
-        if callMainFunction:
-            text += callMainFunction
+        text += ("\n# <codecell>\n" + main)
 
     if extension == "py":
         text = pythonComments(text)  # Convert comments into Markdown cells
@@ -630,9 +634,9 @@ def mainfunction(text):
     text = fixes(text)
 
     # Add the title and header of the notebook
-    text = "# <markdowncell> \n# # %s\n%s# \n# \n# **Author:** %s  \n# <small>This notebook tutorial " \
-        "was automatically generated from the macro found in the ROOT repository " \
-        "on %s.</small>\n# <codecell>\n%s" % (tutTitle, description, author, date, text)
+    text = "# <markdowncell> \n# # %s\n%s# \n# \n# **Author:** %s  \n# <small>This notebook tutorial was automatically generated " \
+        "with [ROOTBOOK-izer (Beta)](https://github.com/root-mirror/root/blob/master/documentation/doxygen/converttonotebook.py) " \
+        "from the macro found in the ROOT repository  on %s.</small>\n# <codecell>\n%s" % (tutTitle, description, author, date, text)
 
     # Add cell at the end of the notebook that draws all the canveses. Add a Markdown cell before explaining it.
     if isJsroot and not nodraw:
@@ -702,7 +706,8 @@ def mainfunction(text):
         sys.stderr.write("NOTEBOOK_CONVERSION_WARNING: Nbconvert failed for notebook %s with return code %s\n" %(outname,r))
     if isJsroot:
         subprocess.call(["jupyter", "trust",  os.path.join(outdir + outnameconverted)])
-    os.remove(outPathName)
+    if r == 0:  # Only remove notebook without output if nbconvert succeedes 
+        os.remove(outPathName)
 
 
 if __name__ == "__main__":
