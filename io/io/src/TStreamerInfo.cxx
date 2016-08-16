@@ -245,7 +245,6 @@ namespace {
 ///
 /// A list of TStreamerElement derived classes is built by scanning
 /// one by one the list of data members of the analyzed class.
-
 void TStreamerInfo::Build()
 {
    // Did another thread already do the work?
@@ -373,8 +372,8 @@ void TStreamerInfo::Build()
 
    Int_t dsize;
    TDataMember* dm = 0;
-   std::string uniquePtrTypeNameBuf;
-   std::string uniquePtrTrueTypeNameBuf;
+   std::string typeNameBuf;
+   std::string trueTypeNameBuf;
    TIter nextd(fClass->GetListOfDataMembers());
    while ((dm = (TDataMember*) nextd())) {
       if (fClass->GetClassVersion() == 0) {
@@ -398,63 +397,17 @@ void TStreamerInfo::Build()
       const char* dmFull  = dm->GetTrueTypeName(); // Used to be GetFullTypeName ...
       Bool_t dmIsPtr = dm->IsaPointer();
 
-      bool isUniquePtr = TClassEdit::IsUniquePtr(dmType);
-      if (isUniquePtr) {
-         // Now check if the implementation of the unique_ptr allows to stream it
-         // as a normal pointer
-         uniquePtrTypeNameBuf = TClassEdit::GetUniquePtrType(dmType);
-         dmType = uniquePtrTypeNameBuf.c_str();
-         uniquePtrTrueTypeNameBuf = uniquePtrTypeNameBuf + "*";
-         dmFull = uniquePtrTrueTypeNameBuf.c_str();
-         dmIsPtr = true;
-         dmTitle = "->";
-      }
-
-      // Let's check if we have a collection of unique pointers of T.
-      // In this case, we'll transform it in a collection of T*.
-      // e.g. list<unique_ptr<T>> --> list<T*>
-      bool isUniquePtrColl = false;
-      auto stlContType = dm->IsSTLContainer();
-      if (stlContType) {
-         // Simple case: something like stlcoll<T>, e.g. list or vector.
-         std::vector<std::string> v;
-         int i;
-         TClassEdit::GetSplit(dmType, v, i);
-         bool isArg1UniquePtr = TClassEdit::IsUniquePtr(v[1]);
-         bool isMapColl = stlContType == ROOT::kSTLmap ||
-                          stlContType == ROOT::kSTLunorderedmap ||
-                          stlContType == ROOT::kSTLmultimap ||
-                          stlContType == ROOT::kSTLunorderedmultimap;
-         bool isArg2UniquePtr = TClassEdit::IsUniquePtr(v[2]);
-         isUniquePtrColl = isArg1UniquePtr || isArg2UniquePtr;
-
-         // We could have a container with one or two template arguments, e.g.
-         // a forward_list or a map.
-         if (isUniquePtrColl) {
-            uniquePtrTypeNameBuf = v[0] + "<";
-
-            if (isArg1UniquePtr) {
-               uniquePtrTypeNameBuf += TClassEdit::GetUniquePtrType(v[1]);
-               uniquePtrTypeNameBuf += "*";
-            } else {
-               uniquePtrTypeNameBuf += v[1];
-            }
-
-            if (isMapColl){
-               uniquePtrTypeNameBuf += ",";
-               if (isArg2UniquePtr) {
-                  uniquePtrTypeNameBuf += TClassEdit::GetUniquePtrType(v[2]);
-                  uniquePtrTypeNameBuf += "*";
-               } else {
-                  uniquePtrTypeNameBuf += v[2];
-               }
-            }
-            uniquePtrTypeNameBuf += ">";
-            dmType = uniquePtrTypeNameBuf.c_str();
-            dmFull = uniquePtrTypeNameBuf.c_str();
+      bool nameChanged;
+      trueTypeNameBuf = typeNameBuf = TClassEdit::GetNameForIO(dmFull, TClassEdit::EModType::kNone, &nameChanged);
+      if (nameChanged) {
+         if (TClassEdit::IsUniquePtr(dmFull)) {
+            dmIsPtr = true;
+            dmTitle = "->";
          }
+         while(typeNameBuf.back() == '*') typeNameBuf.pop_back();
+         dmFull = trueTypeNameBuf.c_str();
+         dmType = typeNameBuf.c_str();
       }
-
 
       TDataMember* dmCounter = 0;
       if (dmIsPtr) {
@@ -534,13 +487,7 @@ void TStreamerInfo::Build()
             if (((TStreamerSTL*)element)->GetSTLtype() != ROOT::kSTLvector) {
                auto printErrorMsg = [&](const char* category)
                   {
-                     std::string uptr_msg;
-                     if (isUniquePtrColl) {
-                        uptr_msg = ": the collection \"";
-                        uptr_msg += element->GetClassPointer()->GetName();
-                        uptr_msg += "\" should be selected to allow ROOT to perform I/O operations";
-                     }
-                     Error("Build","The class \"%s\" is %s and for its data member \"%s\" we do not have a dictionary for the collection \"%s\"%s. Because of this, we will not be able to read or write this data member.",GetName(), category, dmName, dm->GetTypeName(), uptr_msg.c_str());
+                     Error("Build","The class \"%s\" is %s and for its data member \"%s\" we do not have a dictionary for the collection \"%s\". Because of this, we will not be able to read or write this data member.",GetName(), category, dmName, dmType);
                   };
                if (fClass->IsLoaded()) {
                   if (!element->GetClassPointer()->IsLoaded()) {
@@ -2074,22 +2021,24 @@ void TStreamerInfo::BuildOld()
       TClassRef newClass;
 
       // at this point, we still may not have a dm
-      std::string uniquePtrTypeNameBuf;
+      std::string typeNameBuf;
       const char* dmType = nullptr;
       Bool_t dmIsPtr = false;
+      Bool_t isUniquePtr = false;
       if (dm) {
          dmType = dm->GetTypeName();
          dmIsPtr = dm->IsaPointer();
+
+         Bool_t nameChanged;
+         typeNameBuf = TClassEdit::GetNameForIO(dmType, TClassEdit::EModType::kNone, &nameChanged);
+         if (nameChanged) {
+            if (TClassEdit::IsUniquePtr(dmType)) {
+               isUniquePtr = true;
+               dmIsPtr = true;
+            }
+            dmType = typeNameBuf.c_str();
+         }
       }
-
-
-      bool isUniquePtr = (nullptr != dm) && TClassEdit::IsUniquePtr(dmType);
-      if (isUniquePtr) {
-         dmIsPtr = true;
-         uniquePtrTypeNameBuf = TClassEdit::GetUniquePtrType(dmType);
-         dmType = uniquePtrTypeNameBuf.c_str();
-      }
-
 
       if (dm && dm->IsPersistent()) {
          if (dm->GetDataType()) {
