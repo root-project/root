@@ -89,7 +89,6 @@ void tree0() {
   tree->StartViewer();
 
   //gROOT->SetStyle("Plain");   // uncomment to set a different style
-  gStyle->SetPalette(1);        // use precomputed color palette 1
 
   // now draw some tree variables
   TCanvas *c1 = new TCanvas();

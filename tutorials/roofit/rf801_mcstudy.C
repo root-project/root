@@ -115,7 +115,6 @@ void rf801_mcstudy()
 
 
    // Draw all plots on a canvas
-   gStyle->SetPalette(1) ;
    gStyle->SetOptStat(0) ;
    TCanvas* c = new TCanvas("rf801_mcstudy","rf801_mcstudy",900,900) ;
    c->Divide(3,3) ;

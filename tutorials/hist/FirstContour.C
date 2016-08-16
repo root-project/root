@@ -22,7 +22,6 @@ void FirstContour()
    TTree *ntuple = (TTree*)file->Get("ntuple");
 
    TCanvas *c1 = new TCanvas("c1","Contours",10,10,800,600);
-   gStyle->SetPalette(1);
    ntuple->Draw("py:px","px*px+py*py < 20", "contz,list");
 
    //we must call Update to force the canvas to be painted.  When

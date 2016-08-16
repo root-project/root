@@ -15,7 +15,6 @@
 
 TCanvas *earth(){
 
-   gStyle->SetPalette(1);
    gStyle->SetOptTitle(1);
    gStyle->SetOptStat(0);
 

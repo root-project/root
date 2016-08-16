@@ -30,7 +30,6 @@ void GammaFun() {
 
    gSystem->Load("libMathCore");
 
-   gStyle->SetPalette(1);
    gStyle->SetOptStat(0);
 
    TF1 *f1a = new TF1("Gamma(x)","ROOT::Math::tgamma(x)",-2,5);

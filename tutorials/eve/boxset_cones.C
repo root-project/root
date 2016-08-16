@@ -19,7 +19,6 @@ TEveBoxSet* boxset_cones(Float_t x=0, Float_t y=0, Float_t z=0,
   lines->SetLineWidth(2);
 
   TRandom r(0);
-  gStyle->SetPalette(1, 0);
   TEveRGBAPalette* pal = new TEveRGBAPalette(0, 500);
   TEveBoxSet* cones = new TEveBoxSet("ConeSet");
   cones->SetPalette(pal);

@@ -95,7 +95,6 @@ void rf608_fitresultaspdf()
 
 
    // Draw the 'sigar'
-   gStyle->SetPalette(1) ;
    new TCanvas("rf608_fitresultaspdf_1","rf608_fitresultaspdf_1",600,600) ;
    hh_3d->Draw("iso") ; 
 
