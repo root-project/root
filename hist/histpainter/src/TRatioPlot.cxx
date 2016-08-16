@@ -1253,6 +1253,8 @@ void TRatioPlot::RangeAxisChanged()
    fUpperPad->SetLogx(GetLogx());
    fLowerPad->SetLogx(GetLogx());
 
+   // copy logy from rp to upper pad
+   fUpperPad->SetLogy(GetLogy());
 
    // get axis ranges for upper and lower 
    Double_t upFirst = fH1->GetXaxis()->GetBinLowEdge(fH1->GetXaxis()->GetFirst());
@@ -1395,3 +1397,20 @@ void TRatioPlot::SetConfidenceLevels(Double_t c1, Double_t c2)
    fCl1 = c1;
    fCl2 = c2;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set logx for both of the pads
+void TRatioPlot::SetLogx(Int_t value )
+{
+   TPad::SetLogx(value);
+   fUpperPad->SetLogx(value); 
+   fLowerPad->SetLogx(value); 
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Sets logy for the upper pad.
+void TRatioPlot::SetLogy(Int_t value)
+{
+   TPad::SetLogy(value);
+}
+

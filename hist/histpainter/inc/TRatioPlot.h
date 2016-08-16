@@ -178,7 +178,10 @@ public:
    virtual void SetSeparationMargin(Float_t);
    virtual void SetSplitFraction(Float_t sf);
    virtual void SetConfidenceLevels(Double_t cl1, Double_t cl2);
-   
+
+   virtual void SetLogx(Int_t value = 1); // *TOGGLE*
+   virtual void SetLogy(Int_t value = 1); // *TOGGLE*
+
 
    ClassDef(TRatioPlot, 1)  //A ratio of histograms
 };
