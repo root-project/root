@@ -94,6 +94,7 @@ private:
        Double_t              momentum;
        Double_t              weightDecay;
        std::vector<Double_t> dropoutProbabilities;
+       bool                  multithreading;
    };
 
    // the option handling methods

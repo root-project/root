@@ -486,7 +486,20 @@ template<typename Architecture_t>
                                    batches[j].GetInput(),
                                    nets[j].GetRegularization(),
                                    nets[j].GetWeightDecay());
+      Architecture_t::ScaleAdd(master.GetLayer(0).GetWeightGradients(),
+                               nets[j].GetLayer(0).GetWeightGradients(),
+                               - fLearningRate / momentum);
+      Architecture_t::ScaleAdd(master.GetLayer(0).GetBiasGradients(),
+                               nets[j].GetLayer(0).GetBiasGradients(),
+                               - fLearningRate / momentum);
    }
+
+   Architecture_t::ScaleAdd(master.GetLayer(0).GetWeightGradients(),
+                            master.GetLayer(0).GetWeightGradients(),
+                            momentum - 1.0);
+   Architecture_t::ScaleAdd(master.GetLayer(0).GetBiasGradients(),
+                            master.GetLayer(0).GetBiasGradients(),
+                            momentum - 1.0);
 
    for (size_t i = 0; i < depth; i++)
    {
