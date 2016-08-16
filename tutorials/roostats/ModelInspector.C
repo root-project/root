@@ -496,10 +496,6 @@ void ModelInspector(const char* infile = "",
                     const char* modelConfigName = "ModelConfig",
                     const char* dataName = "obsData"){
 
-#ifdef __CINT__
-  cout <<"You must use ACLIC for this.  Use ModelInspector.C+"<<endl;
-  return;
-#endif
 
   /////////////////////////////////////////////////////////////
   // First part is just to access a user-defined file

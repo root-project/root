@@ -49,13 +49,7 @@ Int_t foam_demopers()
 
    //N.B. the integrand functions need to be reset
    // because cannot be made persistent
-   #ifdef __CINT__
-      // this can be done only in CINT
-      TFoamIntegrand    *rho= new TFDISTR();
-   #else
-      // this should be done with AClic or Cling
-      TFoamIntegrand * rho = (TFoamIntegrand*) gROOT->ProcessLine("return new TFDISTR();");
-   #endif
+   TFoamIntegrand * rho = (TFoamIntegrand*) gROOT->ProcessLine("return new TFDISTR();");
    FoamX->SetRho(rho);
 
    Double_t *MCvect =new Double_t[2]; // 2-dim vector generated in the MC run

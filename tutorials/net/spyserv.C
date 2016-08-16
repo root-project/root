@@ -20,9 +20,7 @@
 #include "TMessage.h"
 #include "TRandom.h"
 #include "TList.h"
-#ifndef __CINT__
 #include "TError.h"
-#endif
 
 
 class SpyServ {

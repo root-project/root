@@ -72,7 +72,6 @@
 ///
 /// \author Christian Holm Christensen
 
-#ifndef __CINT__
 #include "TApplication.h"
 #include "TPythia6.h"
 #include "TFile.h"
@@ -87,7 +86,7 @@
 #include "Riostream.h"
 #include <cstdlib>
 using namespace std;
-#endif
+
 
 #define FILENAME   "pythia.root"
 #define TREENAME   "tree"

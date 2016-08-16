@@ -14,14 +14,6 @@
 ///
 /// \author Stascek Jadach
 
-#if defined(__CINT__) && !defined(__MAKECINT__)
-{
-   std::cout << "Using ACliC to run this macro since it uses custom classes" << std::endl;
-   TString macroFileName = gSystem->UnixPathName(__FILE__);
-   gSystem->CompileMacro(macroFileName, "k");
-   foam_demo();
-}
-#else
 
 #include "Riostream.h"
 #include "TFile.h"

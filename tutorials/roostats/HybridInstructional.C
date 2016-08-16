@@ -132,12 +132,6 @@ void HybridInstructional() {
    // It takes ~4 min without PROOF and ~2 min with PROOF on 4 cores.
    // Of course, everything looks nicer with more toys, which takes longer.
 
-   #ifdef __CINT__
-   cout << "DO NOT RUN WITH CINT: we are using a custom test statistic ";
-   cout << "which requires that this tutorial must be compiled ";
-   cout << "with ACLIC" << endl;
-   return;
-   #endif
 
 
    TStopwatch t;

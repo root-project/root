@@ -42,10 +42,8 @@
 #include "TApplication.h"
 #include "TCanvas.h"
 
-#ifndef __CINT__  // need to exclude to avoid CINT re-defining them
 #include "Math/ProbFunc.h"
 #include "Math/DistFunc.h"
-#endif
 
 #include <iostream>
 #include <cassert>

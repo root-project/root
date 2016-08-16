@@ -180,21 +180,13 @@ TArrayF &StockReturn(TFile *f,const TString &name,Int_t sDay,Int_t eDay)
     b_date->GetEntry(i);
     b_closeAdj->GetEntry(i);
     if (data->fDate >= sDay && data->fDate <= eDay)
-#ifdef __CINT__
-      closeAdj.AddAt(data->fCloseAdj/100. , i );
-#else
       closeAdj[i] = data->fCloseAdj/100.;
-#endif
   }
 
   TArrayF *r = new TArrayF(nrEntries-1);
   for (Int_t i = 1; i < nrEntries; i++)
 //    (*r)[i-1] = closeAdj[i]-closeAdj[i-1];
-#ifdef __CINT__
-    r->AddAt(closeAdj[i]/closeAdj[i-1],1);
-#else
     (*r)[i-1] = closeAdj[i]/closeAdj[i-1];
-#endif
 
   return *r;
 }
@@ -289,7 +281,7 @@ TVectorD OptimalInvest(Double_t riskFactor,TVectorD r,TMatrixDSym Covar)
 }
 #endif
 
-//---------------------------------------------------------------------------
+ //---------------------------------------------------------------------------
 void portfolio()
 {
    const Int_t sDay = 20000809;

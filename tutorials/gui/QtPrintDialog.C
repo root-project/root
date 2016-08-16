@@ -24,22 +24,16 @@
 ///
 /// \author Valeri Fine   23/03/2006
 
-#ifndef __CINT__
+
 #  include <QPrintDialog>
 #  include <QPrinter>
 #  include <QPainter>
 #  include <QPixmap>
 #  include <TCanvas.h>
 #  include <TGQt.h>
-#endif
+
 void  QtPrintDialog(TVirtualPad *pad = 0) {
 
-#ifdef __CINT__
-   // Load the qt cint dictionary.
-   // One is recommended to do that at once somewhere.
-   // For example from one's custom rootlogon.C script
-   gSystem->Load("$ROOTSYS/cint/cint/include/qtcint");
-#endif
    TVirtualPad *pd = pad;
    if (!pd) pd = TPad::Pad(); // ->GetCanvas();
    if (pd) {

@@ -95,12 +95,6 @@ using namespace ROOT::Math;
 
 void multidimSampling() {
 
-#ifdef __CINT__
-   std::cout << "DO NOT RUN WITH CINT:" << std::endl;
-   std::cout << "we are using a custom function which requires" << std::endl;
-   std::cout << "that this tutorial must be compiled with ACLIC" << std::endl;
-  return;
-#endif
 
    const int N = 10000;
    //const int NBin = 1000;

@@ -137,12 +137,6 @@ void OneSidedFrequentistUpperLimitWithBands(const char* infile = "",
                                             const char* dataName = "obsData") {
 
 
-#ifdef __CINT__
-  cout << "DO NOT RUN WITH CINT: we are using a custom test statistic ";
-  cout << "which requires that this tutorial must be compiled ";
-  cout << "with ACLIC" << endl;
-  return;
-#endif
 
   double confidenceLevel=0.95;
   int nPointsToScan = 20;

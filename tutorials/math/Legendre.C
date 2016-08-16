@@ -10,12 +10,6 @@
 ///
 /// \author Lorenzo Moneta
 
-#if defined(__CINT__) && !defined(__MAKECINT__)
-{
-   gSystem->CompileMacro("Legendre.C", "k");
-   Legendre();
-}
-#else
 
 #include "TMath.h"
 #include "TF1.h"
@@ -61,4 +55,4 @@ void Legendre()
 
   Canvas->cd();
 }
-#endif
+

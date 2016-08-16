@@ -69,7 +69,6 @@
 ///
 /// \author Eddy Offermann
 
-#ifndef __CINT__
 #include "Riostream.h"
 #include "TMatrixD.h"
 #include "TVectorD.h"
@@ -77,14 +76,10 @@
 #include "TDecompChol.h"
 #include "TDecompSVD.h"
 #include "TF1.h"
-#endif
 
 
 void solveLinear(Double_t eps = 1.e-12)
 {
-#ifdef __CINT__
-  gSystem->Load("libMatrix");
-#endif
   cout << "Perform the fit  y = c0 + c1 * x in four different ways" << endl;
 
   const Int_t nrVar  = 2;

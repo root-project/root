@@ -19,15 +19,6 @@
 ///
 /// \author Matevz Tadel
 
-#if defined(__CINT__) && !defined(__MAKECINT__)
-{
-   Info("alice_vsd.C",
-        "Has to be run in compiled mode ... doing this for you.");
-   gSystem->CompileMacro("alice_vsd.C");
-   alice_vsd();
-}
-#else
-
 
 #include <TEveManager.h>
 #include <TEveEventManager.h>

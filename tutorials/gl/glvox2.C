@@ -30,25 +30,6 @@
 ///
 /// \author  Timur Pocheptsov
 
-#if defined(__CINT__) && !defined(__MAKECINT__)
-
-{
-  //gSystem->AddIncludePath("-I$ROOTSYS/include");
-   TString macroName;
-   const char *rootSysPath = gSystem->Getenv("ROOTSYS");
-   if (rootSysPath) {
-      macroName = rootSysPath;
-      if (!macroName.EndsWith("/") && !macroName.EndsWith("\\"))
-         macroName += "/";
-      macroName += "tutorials/gl/";
-   }
-
-   macroName += "glvox2.C++";
-   gROOT->LoadMacro(macroName.Data());
-   glvox2();
-}
-
-#else
 
 #include "TStyle.h"
 #include "TList.h"
@@ -124,4 +105,3 @@ void glvox2()
    hist->Draw("glcol");
 }
 
-#endif

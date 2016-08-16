@@ -29,9 +29,8 @@
 #include "TColor.h"
 #include "TLine.h"
 
-#if not defined(__CINT__) || defined(__MAKECINT__)
 #include "TSVDUnfold.h"
-#endif
+
 
 Double_t Reconstruct( Double_t xt, TRandom3& R )
 {

@@ -357,13 +357,7 @@ void runProof(const char *what = "simple",
               const char *masterurl = "proof://localhost:40000",
               Int_t nwrks = -1, TList *ins = 0)
 {
-#ifdef __CINT__
-   Printf("runProof: this script can only be executed via ACliC:");
-   Printf("runProof:      root [] .x <path>/runProof.C+");
-   Printf("runProof: or   root [] .L <path>/runProof.C+");
-   Printf("runProof:      root [] runProof(...)");
-   return;
-#endif
+
    gEnv->SetValue("Proof.StatsHist",1);
 
    TString u(masterurl);

@@ -10,9 +10,6 @@
 /// \author 07/2008 - Wouter Verkerke 
 
 
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
-#endif
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"

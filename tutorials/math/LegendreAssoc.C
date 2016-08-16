@@ -19,12 +19,6 @@
 ///
 /// \author Magdalena Slawinska
 
-#if defined(__CINT__) && !defined(__MAKECINT__)
-{
-   gSystem->CompileMacro("LegendreAssoc.C", "k");
-   LegendreAssoc();
-}
-#else
 
 #include "TMath.h"
 #include "TF1.h"
@@ -116,6 +110,4 @@ void LegendreAssoc()
       std::cout <<"Integral [-1,1] for Associated Legendre Polynomial of Degree " << nu << "\t = \t" << integral[nu] <<  std::endl;
    }
 }
-
-#endif
 
