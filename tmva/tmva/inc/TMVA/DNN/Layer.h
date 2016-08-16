@@ -301,10 +301,6 @@ template<typename Architecture_t>
 {
    std::cout << "Width = " << fWeights.GetNrows();
    std::cout << ", Activation Function = ";
-   std::cout << "Weights = " <<  std::endl;
-   ((TMatrixT<Double_t>) fWeights).Print();
-   std::cout << "Biases = " <<  std::endl;
-   ((TMatrixT<Double_t>) fBiases).Print();
    std::cout << static_cast<int>(fF) << std::endl;
 }
 

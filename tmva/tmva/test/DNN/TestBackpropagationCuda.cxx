@@ -2,7 +2,7 @@
 // Author: Simon Pfreundschuh
 
 /*************************************************************************
- * Copyright (C) 2016, Simon Pfreundschuh                                *
+ * Copyright (C) 2016, Simon Pfreundschuh
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -23,21 +23,25 @@ using namespace TMVA::DNN;
 
 int main()
 {
-    using Scalar_t = Double_t;
-
     std::cout << "Testing Backpropagation:" << std::endl;
+
     double error;
-    error = testBackpropagationWeightsLinear<TCuda<Scalar_t>>(1.0);
-    if (error > 1e-3)
+
+    error = testBackpropagationWeightsLinear<TCuda>(1.0);
+    if (error > 1e-7)
         return 1;
-    error = testBackpropagationL1Regularization<TCuda<Scalar_t>>(1e-2);
-    if (error > 1e-3)
+
+    error = testBackpropagationL1Regularization<TCuda>(1e-2);
+    if (error > 1e-7)
         return 1;
-    error = testBackpropagationL2Regularization<TCuda<Scalar_t>>(1.0);
-    if (error > 1e-3)
+
+    error = testBackpropagationL2Regularization<TCuda>(1.0);
+    if (error > 1e-7)
         return 1;
-    error = testBackpropagationBiasesLinear<TCuda<Scalar_t>>(1.0);
-    if (error > 1e-3)
+
+    error = testBackpropagationBiasesLinear<TCuda>(1.0);
+    if (error > 1e-7)
         return 1;
+
     return 0;
 }
