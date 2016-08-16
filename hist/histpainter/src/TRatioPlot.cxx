@@ -137,27 +137,8 @@ TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, const char *name /*=0*/, const char *ti
       Option_t *displayOption, Option_t *optH1, Option_t *optH2, Option_t *optGraph,
       Double_t c1, Double_t c2)
    : TPad(name, title, 0, 0, 1, 1),
-     fUpperPad(0),
-     fLowerPad(0),
-     fTopPad(0),
      fH1(h1),
      fH2(h2),
-     fDisplayOption(0),
-     fOptH1(0),
-     fOptH2(0),
-     fOptGraph(0),
-     fRatioGraph(0),
-     fSharedXAxis(0),
-     fUpperGXaxis(0),
-     fLowerGXaxis(0),
-     fUpperGYaxis(0),
-     fLowerGYaxis(0),
-     fUpperGXaxisMirror(0),
-     fLowerGXaxisMirror(0),
-     fUpperGYaxisMirror(0),
-     fLowerGYaxisMirror(0),
-     fUpYaxis(0),
-     fLowYaxis(0)
 {
    gROOT->GetListOfCleanups()->Add(this);
 
@@ -252,26 +233,7 @@ TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, const char *name /*=0*/, const char *ti
 TRatioPlot::TRatioPlot(TH1* h1, const char *name, const char *title, Option_t *displayOption, Option_t *optH1,
          /*Option_t *fitOpt, */Option_t *optGraph) 
    : TPad(name, title, 0, 0, 1, 1),
-     fUpperPad(0),
-     fLowerPad(0),
-     fTopPad(0),
      fH1(h1),
-     fH2(0),
-     fDisplayOption(0),
-     fOptH1(0),
-     fOptH2(0),
-     fOptGraph(0),
-     fRatioGraph(0),
-     fSharedXAxis(0),
-     fUpperGXaxis(0),
-     fLowerGXaxis(0),
-     fUpperGYaxis(0),
-     fLowerGYaxis(0),
-     fUpperGXaxisMirror(0),
-     fLowerGXaxisMirror(0),
-     fUpperGYaxisMirror(0),
-     fLowerGYaxisMirror(0),
-     fUpYaxis(0)
 {
    gROOT->GetListOfCleanups()->Add(this);
 

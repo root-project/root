@@ -57,26 +57,26 @@ private:
 
 protected:
 
-   TVirtualPad *fParentPad;
-   TPad *fUpperPad;
-   TPad *fLowerPad;
-   TPad *fTopPad;
+   TVirtualPad *fParentPad = 0;
+   TPad *fUpperPad = 0;
+   TPad *fLowerPad = 0;
+   TPad *fTopPad = 0;
 
-   TH1 *fH1;
-   TH1 *fH2;
+   TH1 *fH1 = 0;
+   TH1 *fH2 = 0;
 
-   Int_t fDisplayMode;
-   Int_t fErrorMode = 5;
-   TString fDisplayOption;
-   TString fOptH1;
-   TString fOptH2;
-   TString fOptGraph;
+   Int_t fDisplayMode = 0;
+   Int_t fErrorMode = TRatioPlot::ErrorMode::kErrorSymmetric;
+   TString fDisplayOption = "";
+   TString fOptH1 = "";
+   TString fOptH2 = "";
+   TString fOptGraph = "";
    
 
 
    Float_t fSplitFraction = 0.3;
 
-   TGraph *fRatioGraph;
+   TGraph *fRatioGraph = 0;
    TGraphErrors *fConfidenceInterval1 = 0;
    TGraphErrors *fConfidenceInterval2 = 0;
 
@@ -88,20 +88,19 @@ protected:
 
    TFitResult *fFitResult = 0;
 
-   TAxis *fSharedXAxis;
-   TGaxis *fUpperGXaxis;
-   TGaxis *fLowerGXaxis;
-   TGaxis *fUpperGYaxis;
-   TGaxis *fLowerGYaxis;
-   TGaxis *fUpperGXaxisMirror;
-   TGaxis *fLowerGXaxisMirror;
-   TGaxis *fUpperGYaxisMirror;
-   TGaxis *fLowerGYaxisMirror;
+   TAxis *fSharedXAxis = 0;
+   TGaxis *fUpperGXaxis = 0;
+   TGaxis *fLowerGXaxis = 0;
+   TGaxis *fUpperGYaxis = 0;
+   TGaxis *fLowerGYaxis = 0;
+   TGaxis *fUpperGXaxisMirror = 0;
+   TGaxis *fLowerGXaxisMirror = 0;
+   TGaxis *fUpperGYaxisMirror = 0;
+   TGaxis *fLowerGYaxisMirror = 0;
 
-   TAxis *fUpYaxis;
-   TAxis *fLowYaxis;
+   TAxis *fUpYaxis = 0;
+   TAxis *fLowYaxis = 0;
 
-   TLine *fGridline = 0;
    Bool_t fShowGridline = kTRUE;
 
 
