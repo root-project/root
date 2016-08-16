@@ -229,9 +229,9 @@ TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, const char *name /*=0*/, const char *ti
 /// \param displayOption Steers the error calculation
 /// \param optH1 Drawing option for the histogram
 /// \param optGraph Drawing option the lower graph
-/// 
+/// @TODO: add fitresult as optional argument
 TRatioPlot::TRatioPlot(TH1* h1, const char *name, const char *title, Option_t *displayOption, Option_t *optH1,
-         /*Option_t *fitOpt, */Option_t *optGraph) 
+         /*Option_t *fitOpt, */Option_t *optGraph, TFitResult *fitres) 
    : TPad(name, title, 0, 0, 1, 1),
      fH1(h1),
 {
@@ -257,6 +257,8 @@ TRatioPlot::TRatioPlot(TH1* h1, const char *name, const char *title, Option_t *d
    }
 
    fParentPad = gPad;
+   
+   fFitResult = fitres;
 
    fDisplayMode = TRatioPlot::CalculationMode::kFitResidual;
    
