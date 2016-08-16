@@ -2,6 +2,7 @@
 #include <vector>
 #include <list>
 #include <map>
+#include <unordered_map>
 #include <memory>
 #include "TClass.h"
 #include "TH1F.h"
@@ -10,18 +11,12 @@
 class aclic01Class01{
 private:
    vector<unique_ptr<int>> m0;
-//    set<vector<unique_ptr<int>>> m1;
-//    vector<vector<vector<vector<list<unique_ptr<TH1F>>>>>> m0;
-//    vector<map<int,unique_ptr<TH1F>>> m1;
-//    vector<map<int,TH1F*>> m2;
-//    vector<unique_ptr<int>> ints;
-//    vector<unique_ptr<double>> doubles;
-//    vector<list<double>*> listdoubles2;
-//    vector<unique_ptr<list<double>>> listdoubles;
-};
-
-class Dummy {
-   vector<vector<vector<vector<list<TH1F*>>>>> m;
+   set<vector<unique_ptr<int>>> m1;
+   vector<vector<vector<vector<list<unique_ptr<TH1F>>>>>> m2;
+   vector<map<int,unique_ptr<TH1F>>> m3;
+   vector<unique_ptr<double>> m6;
+   vector<unique_ptr<list<double>>> m7;
+   unordered_map<int, set<vector<map<int,unique_ptr<TH1F>>>>> m8;
 };
 
 int checkDict(const char* name){
@@ -48,7 +43,12 @@ int aclic01(){
 
    auto classNames = {"aclic01Class01",
                       "vector<int*>",
-                      "vector<vector<vector<vector<list<TH1F*>>>>>"};
+                      "set<vector<int*>>",
+                      "vector<vector<vector<vector<list<TH1F*>>>>>",
+                      "vector<map<int,TH1F*>>",
+                      "vector<double*>",
+                      "vector<list<double>*>",
+                      "unordered_map<int, set<vector<map<int, TH1F*>>>>"};
    int ret = 0;
    for (auto& className : classNames)
       ret += checkDict(className);
