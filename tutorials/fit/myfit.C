@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_fit
-/// \notebook
+/// \notebook -js
 /// Get in memory an histogram from a root file and fit a user defined function.
 /// Note that a user defined function must always be defined
 /// as in this example:

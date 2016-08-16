@@ -39,7 +39,7 @@ void principal(Int_t n=10, Int_t m=10000)
    TPrincipal* principal = new TPrincipal(n,"ND");
 
    // Use a pseudo-random number generator
-   TRandom* random = new TRandom;
+   TRandom* random1 = new TRandom;
 
    // Make the m data-points
    // Make a variable to hold our data
@@ -50,9 +50,9 @@ void principal(Int_t n=10, Int_t m=10000)
       // First we create the un-correlated, random variables, according
       // to one of three distributions
       for (Int_t j = 0; j < n - c; j++) {
-         if (j % 3 == 0)      data[j] = random->Gaus(5,1);
-         else if (j % 3 == 1) data[j] = random->Poisson(8);
-         else                 data[j] = random->Exp(2);
+         if (j % 3 == 0)      data[j] = random1->Gaus(5,1);
+         else if (j % 3 == 1) data[j] = random1->Poisson(8);
+         else                 data[j] = random1->Exp(2);
       }
 
       // Then we create the correlated variables

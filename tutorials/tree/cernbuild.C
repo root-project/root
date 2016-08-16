@@ -6,7 +6,7 @@
 /// \macro_code
 /// \author Rene Brun
 
-TFile *cernbuild(Int_t get=0, Int_t print=1) {
+TFile *cernbuild(Int_t getFile=0, Int_t print=1) {
 
    Int_t           Category;
    UInt_t          Flag;
@@ -29,8 +29,8 @@ TFile *cernbuild(Int_t get=0, Int_t print=1) {
    FILE *fp = fopen(Form("%scernstaff.dat",dir.Data()),"r");
 
    TFile *hfile = 0;
-   if (get) {
-      // if the argument get =1 return the file "cernstaff.root"
+   if (getFile) {
+      // if the argument getFile =1 return the file "cernstaff.root"
       // if the file does not exist, it is created
       if (!gSystem->AccessPathName(dir+"cernstaff.root",kFileExists)) {
          hfile = TFile::Open(dir+"cernstaff.root"); //in $ROOTSYS/tutorials/tree
@@ -72,7 +72,7 @@ TFile *cernbuild(Int_t get=0, Int_t print=1) {
 
    fclose(fp);
    delete hfile;
-   if (get) {
+   if (getFile) {
       //we come here when the script is executed outside $ROOTSYS/tutorials/tree
       hfile = TFile::Open(filename);
       return hfile;

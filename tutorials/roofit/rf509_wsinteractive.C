@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_roofit
+/// \notebook -js
 ///  'ORGANIZATION AND SIMULTANEOUS FITS' RooFit tutorial macro #509
 ///
 ///   Easy CINT interactive access to workspace contents through a
@@ -43,13 +44,13 @@ void rf509_wsinteractive()
    // but this does not work anymore in CLING. 
    // so this tutorial is an example on how to 
    // change the code
-   RooWorkspace* w = new RooWorkspace("w",kTRUE) ;
+   RooWorkspace* w1 = new RooWorkspace("w",kTRUE) ;
 
    // Fill workspace with p.d.f. and data in a separate function
-   fillWorkspace(*w) ;
+   fillWorkspace(*w1) ;
 
    // Print workspace contents
-   w->Print() ;
+   w1->Print() ;
 
    // this does not work anymore with CLING 
    // use normal workspace functionality 
@@ -65,8 +66,8 @@ void rf509_wsinteractive()
    //RooFitResult* r = w::model.fitTo(*d) ;
 
    // use normal workspace methods
-   RooAbsPdf * model = w->pdf("model");
-   RooRealVar * x = w->var("x");
+   RooAbsPdf * model = w1->pdf("model");
+   RooRealVar * x = w1->var("x");
 
    RooDataSet* d = model->generate(*x,1000) ;
    RooFitResult* r = model->fitTo(*d) ;
@@ -86,7 +87,7 @@ void rf509_wsinteractive()
    // model.plotOn(frame,Components(bkg),LineStyle(kDashed)) ;
 
    // new correct syntax 
-   RooAbsPdf *bkg = w->pdf("bkg");
+   RooAbsPdf *bkg = w1->pdf("bkg");
    model->plotOn(frame);
    model->plotOn(frame,Components(*bkg),LineStyle(kDashed)) ;
 

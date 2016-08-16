@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_roostats
-/// \notebook
+/// \notebook -js
 /// Demonstrate Z_Bi = Z_Gamma
 ///
 /// \macro_image
@@ -24,19 +24,19 @@ void Zbi_Zgamma() {
    // Make model for prototype on/off problem
    // Pois(x | s+b) * Pois(y | tau b )
    // for Z_Gamma, use uniform prior on b.
-   RooWorkspace* w = new RooWorkspace("w",true);
-   w->factory("Poisson::px(x[150,0,500],sum::splusb(s[0,0,100],b[100,0,300]))");
-   w->factory("Poisson::py(y[100,0,500],prod::taub(tau[1.],b))");
-   w->factory("Uniform::prior_b(b)");
+   RooWorkspace* w1 = new RooWorkspace("w",true);
+   w1->factory("Poisson::px(x[150,0,500],sum::splusb(s[0,0,100],b[100,0,300]))");
+   w1->factory("Poisson::py(y[100,0,500],prod::taub(tau[1.],b))");
+   w1->factory("Uniform::prior_b(b)");
 
    // construct the Bayesian-averaged model (eg. a projection pdf)
    // p'(x|s) = \int db p(x|s+b) * [ p(y|b) * prior(b) ]
-   w->factory("PROJ::averagedModel(PROD::foo(px|b,py,prior_b),b)") ;
+   w1->factory("PROJ::averagedModel(PROD::foo(px|b,py,prior_b),b)") ;
 
    // plot it, blue is averaged model, red is b known exactly
-   RooPlot* frame = w->var("x")->frame() ;
-   w->pdf("averagedModel")->plotOn(frame) ;
-   w->pdf("px")->plotOn(frame,LineColor(kRed)) ;
+   RooPlot* frame = w1->var("x")->frame() ;
+   w1->pdf("averagedModel")->plotOn(frame) ;
+   w1->pdf("px")->plotOn(frame,LineColor(kRed)) ;
    frame->Draw() ;
 
    // compare analytic calculation of Z_Bi
@@ -44,9 +44,9 @@ void Zbi_Zgamma() {
    // for an example with x = 150, y = 100
 
    // numeric RooFit Z_Gamma
-   w->var("y")->setVal(100);
-   w->var("x")->setVal(150);
-   RooAbsReal* cdf = w->pdf("averagedModel")->createCdf(*w->var("x"));
+   w1->var("y")->setVal(100);
+   w1->var("x")->setVal(150);
+   RooAbsReal* cdf = w1->pdf("averagedModel")->createCdf(*w1->var("x"));
    cdf->getVal(); // get ugly print messages out of the way
 
    cout << "Hybrid p-value = " << cdf->getVal() << endl;

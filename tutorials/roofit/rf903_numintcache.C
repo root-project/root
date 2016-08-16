@@ -38,14 +38,14 @@ void rf903_numintcache(Int_t mode=0)
    // -----------------------------------------------------------------------------------
 
    // Make/load workspace, exit here in mode 1
-   RooWorkspace* w = getWorkspace(mode) ;
+   RooWorkspace* w1 = getWorkspace(mode) ;
    if (mode==1) {
 
       // Show workspace that was created
-      w->Print() ;
+      w1->Print() ;
 
       // Show plot of cached integral values
-      RooDataHist* hhcache = (RooDataHist*) w->expensiveObjectCache().getObj(1) ;
+      RooDataHist* hhcache = (RooDataHist*) w1->expensiveObjectCache().getObj(1) ;
       if (hhcache) { 
 
          new TCanvas("rf903_numintcache","rf903_numintcache",600,600) ;
@@ -62,22 +62,22 @@ void rf903_numintcache(Int_t mode=0)
    // -----------------------------------------------------------------------------------
 
    // This is always slow (need to find maximum function value empirically in 3D space)
-   RooDataSet* d = w->pdf("model")->generate(RooArgSet(*w->var("x"),*w->var("y"),*w->var("z")),1000) ;
+   RooDataSet* d = w1->pdf("model")->generate(RooArgSet(*w1->var("x"),*w1->var("y"),*w1->var("z")),1000) ;
 
    // This is slow in mode 0, but fast in mode 1
-   w->pdf("model")->fitTo(*d,Verbose(kTRUE),Timer(kTRUE)) ; 
+   w1->pdf("model")->fitTo(*d,Verbose(kTRUE),Timer(kTRUE)) ; 
 
    // Projection on x (always slow as 2D integral over Y,Z at fitted value of a is not cached)
-   RooPlot* framex = w->var("x")->frame(Title("Projection of 3D model on X")) ;
+   RooPlot* framex = w1->var("x")->frame(Title("Projection of 3D model on X")) ;
    d->plotOn(framex) ;
-   w->pdf("model")->plotOn(framex) ;
+   w1->pdf("model")->plotOn(framex) ;
 
    // Draw x projection on canvas
    new TCanvas("rf903_numintcache","rf903_numintcache",600,600) ;
    framex->Draw() ;
 
    // Make workspace available on command line after macro finishes
-   gDirectory->Add(w) ;
+   gDirectory->Add(w1) ;
 
    return ;
 

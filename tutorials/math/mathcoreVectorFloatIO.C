@@ -100,7 +100,7 @@ void runIt() {
 #if defined(__CINT__) && !defined(__MAKECINT__)
    gSystem->Load("libMathCore");
    gSystem->Load("libPhysics");
-   using namespace ROOT::Math;
+   using namespace ROOT::Math ;
 
    cout << "This tutorial can run only using ACliC, you must run it by doing: " << endl;
    cout << "\t  .L tutorials/math/mathcoreVectorFloatIO.C+" << endl;
@@ -115,7 +115,7 @@ void mathcoreVectorFloatIO() {
 #if defined(__CINT__) && !defined(__MAKECINT__)
    gSystem->Load("libMathCore");
    gSystem->Load("libPhysics");
-   using namespace ROOT::Math;
+   using namespace ROOT::Math ;
 
    cout << "This tutorial can run only using ACliC, you must run it by doing: " << endl;
    cout << "\t  .L tutorials/math/mathcoreVectorFloatIO.C+" << endl;
