@@ -570,7 +570,6 @@ void TMVA::MethodDNN::Train()
       }
       if (i < fNet.GetDepth() - 1) {
          net.addLayer(Layer(fNet.GetLayer(i).GetWidth(), g));
-         std::cout << "Added layer: " << fNet.GetLayer(i).GetWidth() << " / " << static_cast<char>(g) << std::endl;
       } else {
          ModeOutputValues h;
          switch(fOutputFunction) {
@@ -578,7 +577,6 @@ void TMVA::MethodDNN::Train()
             case EOutputFunction::SIGMOID:  h = ModeOutputValues::SIGMOID; break;
          }
          net.addLayer(Layer(fNet.GetLayer(i).GetWidth(), g, h));
-         std::cout << "Output fun: " << static_cast<int>(h) << std::endl;
       }
    }
 
@@ -837,7 +835,6 @@ Double_t TMVA::MethodDNN::GetMvaValue( Double_t* /*errLower*/, Double_t* /*errUp
    }
 
    fNet.Prediction(YHat, X, fOutputFunction);
-   std::cout << "pred: " << YHat(0,0) << std::endl;
    return YHat(0,0);
 }
 
