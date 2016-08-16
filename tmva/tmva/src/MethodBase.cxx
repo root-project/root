@@ -581,12 +581,12 @@ void TMVA::MethodBase::TrainMethod()
    }
    else if (!DoRegression()) {
 
-//       Log() <<Form("Dataset[%s] : ",DataInfo().GetName())<< "classification on training sample" << Endl;
-//       AddClassifierOutput(Types::kTraining);
-//       if (HasMVAPdfs()) {
-//          CreateMVAPdfs();
-//          AddClassifierOutputProb(Types::kTraining);
-//       }
+      Log() <<Form("Dataset[%s] : ",DataInfo().GetName())<< "classification on training sample" << Endl;
+      AddClassifierOutput(Types::kTraining);
+      if (HasMVAPdfs()) {
+         CreateMVAPdfs();
+         AddClassifierOutputProb(Types::kTraining);
+      }
 
    } else {
 
@@ -797,7 +797,11 @@ std::vector<Double_t> TMVA::MethodBase::GetMvaValues(Long64_t firstEvt, Long64_t
 
    for (Int_t ievt=firstEvt; ievt<lastEvt; ievt++) {
       Data()->SetCurrentEvent(ievt);
-      values[ievt] = GetMvaValue();
+      if (Data()->GetCurrentType() == Types::kTraining) {
+         values[ievt] = 0.0;
+      } else {
+         values[ievt] = GetMvaValue();
+      }
 
       // print progress
       if (logProgress) {
