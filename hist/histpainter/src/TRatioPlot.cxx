@@ -125,6 +125,37 @@ TRatioPlot::TRatioPlot()
 {
 }
 
+TRatioPlot::~TRatioPlot()
+{
+
+   gROOT->GetListOfCleanups()->Remove(this);
+
+   if (fUpperPad != 0) delete fUpperPad;
+   if (fLowerPad != 0) delete fLowerPad;
+   if (fTopPad != 0) delete fTopPad;
+
+   if (fRatioGraph != 0) delete fRatioGraph;
+   if (fConfidenceInterval1 != 0) delete fConfidenceInterval1;
+   if (fConfidenceInterval2 != 0) delete fConfidenceInterval2;
+
+   for (unsigned int i=0;i<fGridlines.size();++i) {
+      delete (fGridlines[i]);
+   }
+
+   if (fSharedXAxis != 0) delete fSharedXAxis;
+   if (fUpperGXaxis != 0) delete fUpperGXaxis;
+   if (fLowerGXaxis != 0) delete fLowerGXaxis;
+   if (fUpperGYaxis != 0) delete fUpperGYaxis;
+   if (fLowerGYaxis != 0) delete fLowerGYaxis;
+   if (fUpperGXaxisMirror != 0) delete fUpperGYaxisMirror;
+   if (fLowerGXaxisMirror != 0) delete fLowerGXaxisMirror;
+   if (fUpperGYaxisMirror != 0) delete fUpperGYaxisMirror;
+   if (fLowerGYaxisMirror != 0) delete fLowerGYaxisMirror;
+
+   if (fUpYaxis != 0) delete fUpYaxis;
+   if (fLowYaxis != 0) delete fLowYaxis;  
+
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor for two histograms 
