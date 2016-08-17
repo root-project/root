@@ -32,6 +32,13 @@ enum EFPDialogBound {
    kFPDNoneBounded
 };
 
+/// Enumeration specifying if parameters
+/// have been modified by the user
+enum EFPDialogChange {
+   kFPDNoChange,
+   kFPDChange
+};
+
 class TF1;
 class TGNumberEntry;
 class TGTextEntry;
@@ -105,6 +112,7 @@ public:
    virtual void  HandleButtons(Bool_t update);
    virtual void  HandleShiftTab();
    virtual void  HandleTab();
+   virtual Bool_t HasChanges() { return fHasChanges; }
 
 protected:
    void SetParameters();
