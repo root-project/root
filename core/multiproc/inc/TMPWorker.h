@@ -19,6 +19,7 @@
 #include "TKey.h"
 #include "TSysEvtHandler.h" //TFileHandler
 #include "TTree.h"
+#include "TTreeCache.h"
 
 #include <memory> //unique_ptr
 #include <string>
@@ -34,7 +35,7 @@ public:
    TMPWorker();
    TMPWorker(const std::vector<std::string>& fileNames, const std::string& treeName, unsigned nWorkers, ULong64_t maxEntries);
    TMPWorker(TTree *tree, unsigned nWorkers, ULong64_t maxEntries);
-   virtual ~TMPWorker() {};
+   virtual ~TMPWorker();
    //it doesn't make sense to copy a TMPWorker (each one has a uniq_ptr to its socket)
    TMPWorker(const TMPWorker &) = delete;
    TMPWorker &operator=(const TMPWorker &) = delete;
@@ -49,12 +50,15 @@ protected:
    std::vector<std::string> fFileNames; ///< the files to be processed by all workers
    std::string fTreeName; ///< the name of the tree to be processed
    TTree *fTree; ///< pointer to the tree to be processed. It is only used if the tree is directly passed to TProcPool::Process as argument
+   TFile *fFile; ///< last open file
    unsigned fNWorkers; ///< the number of workers spawned
    ULong64_t fMaxNEntries; ///< the maximum number of entries to be processed by this worker
    ULong64_t fProcessedEntries; ///< the number of entries processed by this worker so far
 
+   void   CloseFile();
    TFile *OpenFile(const std::string& fileName);
    TTree *RetrieveTree(TFile *fp);
+   void   SetupTreeCache(TTree *tree);
 
 private:
    virtual void HandleInput(MPCodeBufPair &msg);
@@ -62,6 +66,12 @@ private:
    std::unique_ptr<TSocket> fS; ///< This worker's socket. The unique_ptr makes sure resources are released.
    pid_t fPid; ///< the PID of the process in which this worker is running
    unsigned fNWorker; ///< the ordinal number of this worker (0 to nWorkers-1)
+
+   // TTree cache handling
+   TTreeCache *fTreeCache;    // instance of the tree cache for the tree
+   Bool_t      fTreeCacheIsLearning; // Whether cache is in learning phase
+   Bool_t      fUseTreeCache; // Control usage of the tree cache
+   Long64_t    fCacheSize;    // Cache size
 };
 
 #endif

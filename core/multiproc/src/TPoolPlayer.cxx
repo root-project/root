@@ -45,19 +45,24 @@ void TPoolPlayer::ProcDataSet(unsigned int code, MPCodeBufPair& msg)
       fileN = ReadBuffer<unsigned>(msg.second.get());
    }
 
-   std::unique_ptr<TFile> fp(OpenFile(fFileNames[fileN]));
-   if (fp == nullptr) {
+   // Open the file
+   fFile = OpenFile(fFileNames[fileN]);
+   if (fFile == nullptr) {
       //errors are handled inside OpenFile
       return;
    }
 
    //retrieve the TTree with the specified name from file
    //we are not the owner of the TTree object, the file is!
-   TTree *tree = RetrieveTree(fp.get());
-   if(tree == nullptr) {
+   fTree = RetrieveTree(fFile);
+   if (fTree == nullptr) {
       //errors are handled inside RetrieveTree
       return;
    }
+   TTree *tree = fTree;
+
+   // Setup the cache, if required
+   SetupTreeCache(fTree);
 
    //create entries range
    Long64_t start = 0;
@@ -103,8 +108,6 @@ void TPoolPlayer::ProcDataSet(unsigned int code, MPCodeBufPair& msg)
    return;
 }
 
-
-
 void TPoolPlayer::ProcTree(MPCodeBufPair& msg)
 {
 
@@ -143,12 +146,17 @@ void TPoolPlayer::ProcTree(MPCodeBufPair& msg)
 
    //process tree
    TTree *tree = fTree;
-   TFile *f = 0;
+   CloseFile(); // May not be needed
    if (fTree->GetCurrentFile()) {
       // We need to reopen the file locally (TODO: to understand and fix this)
-      f = TFile::Open(fTree->GetCurrentFile()->GetName());
-      tree = (TTree *) f->Get(fTree->GetName());
+      fFile = TFile::Open(fTree->GetCurrentFile()->GetName());
+      tree = (TTree *) fFile->Get(fTree->GetName());
+      fTree = tree;
    }
+
+   // Setup the cache, if required
+   SetupTreeCache(fTree);
+
    if(fFirstEntry){
      fSelector.SlaveBegin(nullptr);
      fFirstEntry = false;
@@ -163,13 +171,6 @@ void TPoolPlayer::ProcTree(MPCodeBufPair& msg)
 
    //update the number of processed entries
    fProcessedEntries += finish - start;
-
-   // Close the file and delete the tree, if required
-   if (f) {
-      f->Close();
-      delete f;
-      f = 0;
-   }
 
    MPSend(GetSocket(), PoolCode::kIdling);
 

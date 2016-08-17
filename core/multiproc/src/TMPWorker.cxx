@@ -11,11 +11,14 @@
 
 #include "MPCode.h"
 #include "MPSendRecv.h"
+#include "TEnv.h"
 #include "TError.h"
 #include "TMPWorker.h"
 #include "TSystem.h"
 #include <memory> //unique_ptr
 #include <string>
+
+#include <iostream>
 
 //////////////////////////////////////////////////////////////////////////
 ///
@@ -51,28 +54,48 @@
 /// must be done once _before_ forking, while the initialization of the
 /// members must be done _after_ forking by each of the children processes.
 TMPWorker::TMPWorker()
-          : fFileNames(), fTreeName(), fTree(nullptr),
+          : fFileNames(), fTreeName(), fTree(nullptr), fFile(nullptr),
             fNWorkers(0), fMaxNEntries(0),
-            fProcessedEntries(0), fS(), fPid(0), fNWorker(0)
+            fProcessedEntries(0), fS(), fPid(0), fNWorker(0),
+            fTreeCache(0), fTreeCacheIsLearning(kFALSE),
+            fUseTreeCache(kTRUE), fCacheSize(-1)
 {
+  Int_t uc = gEnv->GetValue("MultiProc.UseTreeCache", 1);
+  if (uc != 1) fUseTreeCache = kFALSE;
+  fCacheSize = gEnv->GetValue("MultiProc.CacheSize", -1);
 }
 
 TMPWorker::TMPWorker(const std::vector<std::string>& fileNames,
                      const std::string& treeName,
                      unsigned nWorkers, ULong64_t maxEntries)
-          : fFileNames(fileNames), fTreeName(treeName), fTree(nullptr),
+          : fFileNames(fileNames), fTreeName(treeName), fTree(nullptr), fFile(nullptr),
             fNWorkers(nWorkers), fMaxNEntries(maxEntries),
-            fProcessedEntries(0), fS(), fPid(0), fNWorker(0)
+            fProcessedEntries(0), fS(), fPid(0), fNWorker(0),
+            fTreeCache(0), fTreeCacheIsLearning(kFALSE),
+            fUseTreeCache(kTRUE), fCacheSize(-1)
 {
+   Int_t uc = gEnv->GetValue("MultiProc.UseTreeCache", 1);
+   if (uc != 1) fUseTreeCache = kFALSE;
+   fCacheSize = gEnv->GetValue("MultiProc.CacheSize", -1);
 }
 
 TMPWorker::TMPWorker(TTree *tree, unsigned nWorkers, ULong64_t maxEntries)
-          : fFileNames(), fTreeName(), fTree(tree),
+          : fFileNames(), fTreeName(), fTree(tree), fFile(nullptr),
             fNWorkers(nWorkers), fMaxNEntries(maxEntries),
-            fProcessedEntries(0), fS(), fPid(0), fNWorker(0)
+            fProcessedEntries(0), fS(), fPid(0), fNWorker(0),
+            fTreeCache(0), fTreeCacheIsLearning(kFALSE),
+            fUseTreeCache(kTRUE), fCacheSize(-1)
 {
+   Int_t uc = gEnv->GetValue("MultiProc.UseTreeCache", 1);
+   if (uc != 1) fUseTreeCache = kFALSE;
+   fCacheSize = gEnv->GetValue("MultiProc.CacheSize", -1);
 }
 
+TMPWorker::~TMPWorker()
+{
+   // Properly close the open file, if any
+   CloseFile();
+}
 
 //////////////////////////////////////////////////////////////////////////
 /// This method is called by children processes right after forking.
@@ -138,6 +161,20 @@ void TMPWorker::HandleInput(MPCodeBufPair &msg)
    }
 }
 
+
+//////////////////////////////////////////////////////////////////////////
+/// Handle file closing.
+
+void TMPWorker::CloseFile()
+{
+   // Avoid destroying the cache; must be placed before deleting the trees
+   if (fFile) {
+      if (fTree) fFile->SetCacheRead(0, fTree);
+      delete fFile ;
+      fFile = 0;
+   }
+}
+
 //////////////////////////////////////////////////////////////////////////
 /// Handle file opening.
 
@@ -188,4 +225,35 @@ TTree *TMPWorker::RetrieveTree(TFile *fp)
    }
 
    return tree;
+}
+
+//////////////////////////////////////////////////////////////////////////
+/// Tree cache handling
+
+void TMPWorker::SetupTreeCache(TTree *tree)
+{
+   if (fUseTreeCache) {
+      TFile *curfile = tree->GetCurrentFile();
+      if (curfile) {
+         if (!fTreeCache) {
+            tree->SetCacheSize(fCacheSize);
+            fTreeCache = (TTreeCache *)curfile->GetCacheRead(tree);
+            if (fCacheSize < 0) fCacheSize = tree->GetCacheSize();
+         } else {
+            fTreeCache->ResetCache();
+            curfile->SetCacheRead(fTreeCache, tree);
+            fTreeCache->UpdateBranches(tree);
+         }
+         if (fTreeCache) {
+            fTreeCacheIsLearning = fTreeCache->IsLearning();
+            if (fTreeCacheIsLearning)
+               Info("SetupTreeCache","the tree cache is in learning phase");
+         }
+      } else {
+         Warning("SetupTreeCache", "default tree does not have a file attached: corruption? Tree cache untouched");
+      }
+   } else {
+      // Disable the cache
+      tree->SetCacheSize(0);
+   }
 }
