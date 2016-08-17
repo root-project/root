@@ -265,7 +265,7 @@ auto TProcPool::ProcTree(TFileCollection& files, F procFunc, const std::string& 
    std::vector<std::string> fileNames(files.GetNFiles());
    unsigned count = 0;
    for(auto f : *static_cast<THashList*>(files.GetList()))
-      fileNames[count++] = static_cast<TFileInfo*>(f)->GetCurrentUrl()->GetFile();
+      fileNames[count++] = static_cast<TFileInfo*>(f)->GetCurrentUrl()->GetUrl();
 
    return ProcTree(fileNames, procFunc, treeName, nToProcess);
 }
