@@ -15,78 +15,58 @@
 
 #include "TMVA/DNN/Architectures/Cuda/CudaMatrix.h"
 #include "TMVA/DNN/Architectures/Cuda/Device.h"
+#include "TMVA/DNN/Architectures/Cuda/Kernels.h"
 
 namespace TMVA {
 namespace DNN  {
 
-//____________________________________________________________________________
-__global__ void CurandInitializationKernel(unsigned long long seed,
-                                           curandState_t *state)
-{
-   int i   = blockDim.y * blockIdx.y + threadIdx.y;
-   int j   = blockDim.x * blockIdx.x + threadIdx.x;
-   int tid = i * gridDim.x + j;
-   curand_init(seed + tid, 0, tid, state + tid);
-}
-
 // Static members.
 //____________________________________________________________________________
-template<typename AFloat>
-size_t          TCudaMatrix<AFloat>::fInstances     = 0;
-template<typename AFloat>
-cublasHandle_t  TCudaMatrix<AFloat>::fCublasHandle  = nullptr;
-template<typename AFloat>
-AFloat        * TCudaMatrix<AFloat>::fDeviceReturn  = nullptr;
-template<typename AFloat>
-AFloat        * TCudaMatrix<AFloat>::fOnes          = nullptr;
-template<typename AFloat>
-curandState_t * TCudaMatrix<AFloat>::fCurandStates  = nullptr;
-template<typename AFloat>
-size_t          TCudaMatrix<AFloat>::fNCurandStates = 0;
-template<typename AFloat>
-size_t          TCudaMatrix<AFloat>::fNOnes         = 0;
+size_t          TCudaMatrix::fInstances     = 0;
+cublasHandle_t  TCudaMatrix::fCublasHandle  = nullptr;
+CudaDouble_t  * TCudaMatrix::fDeviceReturn  = nullptr;
+CudaDouble_t  * TCudaMatrix::fOnes          = nullptr;
+curandState_t * TCudaMatrix::fCurandStates  = nullptr;
+size_t          TCudaMatrix::fNCurandStates = 0;
+size_t          TCudaMatrix::fNOnes         = 0;
 
 // Constructors.
 //____________________________________________________________________________
-template<typename AFloat>
-TCudaMatrix<AFloat>::TCudaMatrix()
+TCudaMatrix::TCudaMatrix()
     : fNRows(0), fNCols(0), fElementBuffer()
 {
    InitializeCuda();
 }
 
 //____________________________________________________________________________
-template<typename AFloat>
-TCudaMatrix<AFloat>::TCudaMatrix(size_t m, size_t n)
+TCudaMatrix::TCudaMatrix(size_t m, size_t n)
     : fNRows(m), fNCols(n), fElementBuffer(m * n, 0)
 {
    InitializeCuda();
 }
 
 //____________________________________________________________________________
-template<typename AFloat>
-TCudaMatrix<AFloat>::TCudaMatrix(const TMatrixT<Double_t> & Host)
+TCudaMatrix::TCudaMatrix(const TMatrixT<CudaDouble_t> & Host)
     : fNRows(Host.GetNrows()), fNCols(Host.GetNcols()),
       fElementBuffer(Host.GetNoElements(), 0)
 {
    InitializeCuda();
 
-   AFloat * buffer = new AFloat[fNRows * fNCols];
+   CudaDouble_t * buffer = new CudaDouble_t[fNRows * fNCols];
    size_t index = 0;
    for (size_t j = 0; j < fNCols; j++) {
       for (size_t i = 0; i < fNRows; i++) {
-         buffer[index] = static_cast<AFloat>(Host(i, j));
+         buffer[index] = Host(i, j);
          index++;
       }
    }
 
-   cudaMemcpy(fElementBuffer, buffer, fNRows * fNCols * sizeof(AFloat),
+   cudaMemcpy(fElementBuffer, buffer, fNRows * fNCols * sizeof(CudaDouble_t),
               cudaMemcpyHostToDevice);
 }
 
 //____________________________________________________________________________
-template<typename AFloat>
-TCudaMatrix<AFloat>::TCudaMatrix(TCudaDeviceBuffer<AFloat> buffer,
+TCudaMatrix::TCudaMatrix(TCudaDeviceBuffer buffer,
                          size_t m, size_t n)
     : fNRows(m), fNCols(n), fElementBuffer(buffer)
 {
@@ -94,12 +74,11 @@ TCudaMatrix<AFloat>::TCudaMatrix(TCudaDeviceBuffer<AFloat> buffer,
 }
 
 //____________________________________________________________________________
-template <typename AFloat>
-inline void TCudaMatrix<AFloat>::InitializeCuda()
+inline void TCudaMatrix::InitializeCuda()
 {
    if (fInstances == 0) {
        cublasCreate(&fCublasHandle);
-       CUDACHECK(cudaMalloc(& fDeviceReturn, sizeof(AFloat)));
+       CUDACHECK(cudaMalloc(& fDeviceReturn, sizeof(CudaDouble_t)));
        CUDACHECK(cudaMalloc(& fCurandStates, TDevice::NThreads(*this)));
    }
    if (TDevice::NThreads(*this) > (int) fNCurandStates) {
@@ -115,41 +94,42 @@ inline void TCudaMatrix<AFloat>::InitializeCuda()
       if (fOnes) {
          cudaFree(fOnes);
       }
-      cudaMalloc(&fOnes, fNRows * sizeof(AFloat));
-      AFloat * buffer = new AFloat[fNRows];
+      cudaMalloc(&fOnes, fNRows * sizeof(CudaDouble_t));
+      CudaDouble_t * buffer = new CudaDouble_t[fNRows];
       for (size_t i = 0; i < fNRows; i++) {
          buffer[i] = 1.0;
       }
-      cudaMemcpy(fOnes, buffer, fNRows * sizeof(AFloat),
+      cudaMemcpy(fOnes, buffer, fNRows * sizeof(CudaDouble_t),
                  cudaMemcpyHostToDevice);
    }
    fInstances++;
 }
 
 //____________________________________________________________________________
-template<typename AFloat>
-void TCudaMatrix<AFloat>::InitializeCurandStates()
+void TCudaMatrix::InitializeCurandStates()
 {
    dim3 blockDims = TDevice::BlockDims();
    dim3 gridDims  = TDevice::GridDims(*this);
-   CurandInitializationKernel<<<gridDims, blockDims>>>(time(nullptr), fCurandStates);
+   ::TMVA::DNN::Cuda::InitializeCurandStates<<<gridDims, blockDims>>>(time(nullptr),
+                                                                      fCurandStates);
+
 }
+
 
 // Conversion to TMatrixT.
 //____________________________________________________________________________
-template<typename AFloat>
-TCudaMatrix<AFloat>::operator TMatrixT<Double_t>() const
+TCudaMatrix::operator TMatrixT<CudaDouble_t>() const
 {
-   TMatrixT<Double_t> hostMatrix(GetNrows(), GetNcols());
+   TMatrixT<CudaDouble_t> hostMatrix(GetNrows(), GetNcols());
 
-   AFloat * buffer = new AFloat[fNRows * fNCols];
-   cudaMemcpy(buffer, fElementBuffer, fNRows * fNCols * sizeof(AFloat),
+   CudaDouble_t * buffer = new CudaDouble_t[fNRows * fNCols];
+   cudaMemcpy(buffer, fElementBuffer, fNRows * fNCols * sizeof(CudaDouble_t),
               cudaMemcpyDeviceToHost);
 
    size_t index = 0;
    for (size_t j = 0; j < fNCols; j++) {
       for (size_t i = 0; i < fNRows; i++) {
-         hostMatrix(i, j) = static_cast<Double_t>(buffer[index]);
+         hostMatrix(i, j) = buffer[index];
          index++;
       }
    }
@@ -157,11 +137,6 @@ TCudaMatrix<AFloat>::operator TMatrixT<Double_t>() const
    delete[] buffer;
    return hostMatrix;
 }
-
-// Explicit Instantiations.
-
-template class TCudaMatrix<float>;
-template class TCudaMatrix<double>;
 
 } // namespace DNN
 } // namespace TMVA

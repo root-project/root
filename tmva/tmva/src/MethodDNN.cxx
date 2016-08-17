@@ -761,7 +761,6 @@ void TMVA::MethodDNN::TrainGpu()
             end   = std::chrono::system_clock::now();
 
             // Compute training and test error.
-
             Double_t trainingError = 0.0;
             for (auto batch : trainingData) {
                auto inputMatrix  = batch.GetInput();
@@ -787,7 +786,7 @@ void TMVA::MethodDNN::TrainGpu()
 
             start = std::chrono::system_clock::now();
             double seconds = elapsed_seconds.count();
-            double nFlops  = (double) (settings.testInterval * (batchesInEpoch));
+            double nFlops  = (double) (settings.testInterval * batchesInEpoch);
             nFlops *= net.GetNFlops();
 
             Log() << kInfo << " Performance: " << nFlops * 1e-9 / seconds
@@ -795,7 +794,6 @@ void TMVA::MethodDNN::TrainGpu()
             // Check convergence.
 
             converged = minimizer.HasConverged(testError);
-
             start = std::chrono::system_clock::now();
          }
       }
