@@ -93,6 +93,8 @@ TProcPool::TProcPool(unsigned nWorkers) : TMPClient(nWorkers)
    Reset();
 }
 
+//////////////////////////////////////////////////////////////////////////
+/// TSelector-based tree processing: memory resident tree
 
 TList* TProcPool::ProcTree(TTree& tree, TSelector& selector, ULong64_t nToProcess)
 {
@@ -145,6 +147,8 @@ TList* TProcPool::ProcTree(TTree& tree, TSelector& selector, ULong64_t nToProces
    return outList;
 }
 
+//////////////////////////////////////////////////////////////////////////
+/// TSelector-based tree processing: dataset as a vector of files
 
 TList* TProcPool::ProcTree(const std::vector<std::string>& fileNames, TSelector& selector, const std::string& treeName, ULong64_t nToProcess)
 {
@@ -206,6 +210,41 @@ TList* TProcPool::ProcTree(const std::vector<std::string>& fileNames, TSelector&
    ReapWorkers();
    fTaskType = ETask::kNoTask;
    return outList;
+
+
+//////////////////////////////////////////////////////////////////////////
+/// TSelector-based tree processing: dataset as a TFileCollection
+TList* TProcPool::ProcTree(TFileCollection& files, TSelector& selector, const std::string& treeName, ULong64_t nToProcess)
+{
+   std::vector<std::string> fileNames(files.GetNFiles());
+   unsigned count = 0;
+   for(auto f : *static_cast<THashList*>(files.GetList()))
+      fileNames[count++] = static_cast<TFileInfo*>(f)->GetCurrentUrl()->GetUrl();
+
+   TList *rl = ProcTree(fileNames, selector, treeName, nToProcess);
+   return rl;
+}
+
+//////////////////////////////////////////////////////////////////////////
+/// TSelector-based tree processing: dataset as a TChain
+TList* TProcPool::ProcTree(TChain& files, TSelector& selector, const std::string& treeName, ULong64_t nToProcess)
+{
+   TObjArray* filelist = files.GetListOfFiles();
+   std::vector<std::string> fileNames(filelist->GetEntries());
+   unsigned count = 0;
+   for(auto f : *filelist)
+      fileNames[count++] = f->GetTitle();
+
+   return ProcTree(fileNames, selector, treeName, nToProcess);
+}
+
+//////////////////////////////////////////////////////////////////////////
+/// TSelector-based tree processing: dataset as a single file
+TList* TProcPool::ProcTree(const std::string& fileName, TSelector& selector, const std::string& treeName, ULong64_t nToProcess)
+{
+   std::vector<std::string> singleFileName(1, fileName);
+   return ProcTree(singleFileName, selector, treeName, nToProcess);
+}
 
 /// Fix list of lists before merging (to avoid errors about duplicated objects)
 void TProcPool::FixLists(std::vector<TObject*> &lists) {
