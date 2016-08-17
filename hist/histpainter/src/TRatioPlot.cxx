@@ -500,9 +500,8 @@ void TRatioPlot::Draw(Option_t *option)
 
    fLowerPad->cd();
   
-   // @TODO: Make colors configurable
-   fConfidenceInterval2->SetFillColor(kGreen);
-   fConfidenceInterval1->SetFillColor(kYellow);
+   fConfidenceInterval2->SetFillColor(fCi1Color);
+   fConfidenceInterval1->SetFillColor(fCi2Color);
    
    if (fDisplayMode == TRatioPlot::CalculationMode::kFitResidual) {
       fConfidenceInterval2->Draw("A3");
@@ -1546,3 +1545,29 @@ void TRatioPlot::SetGridlines(Double_t *gridlines, Int_t numGridlines)
       fGridlinePositions.push_back(gridlines[i]);
    }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// \param ci1 Color of the 1 sigma band
+/// \param ci2 Color of the 2 sigma band
+/// Sets the color of the 1 and 2 sigma bands in the fit residual case.
+/// Begin_Macro(source)
+/// {
+///    gStyle->SetOptStat(0);
+///    auto c1 = new TCanvas("c1", "fit residual simple");
+///    auto h1 = new TH1D("h1", "h1", 50, -5, 5);
+///    h1->FillRandom("gaus", 2000);
+///    h1->Fit("gaus");
+///    c1->Clear();
+///    auto rp1 = new TRatioPlot(h1, "rp1", "rp1", "nogrid");
+///    rp1->SetConfidenceIntervalColors(kBlue, kRed);
+///    rp1->Draw();
+///    c1->Update();
+///    return c1;
+/// }
+/// End_Macro
+void TRatioPlot::SetConfidenceIntervalColors(Color_t ci1, Color_t ci2)
+{
+   fCi1Color = ci1; 
+   fCi2Color = ci2; 
+}
+

@@ -79,6 +79,9 @@ protected:
    TGraph *fRatioGraph = 0;
    TGraphErrors *fConfidenceInterval1 = 0;
    TGraphErrors *fConfidenceInterval2 = 0;
+   Color_t fCi1Color = kGreen;
+   Color_t fCi2Color = kYellow;
+
 
    Double_t fCl1 = 0.6827;
    Double_t fCl2 = 0.9545;
@@ -192,6 +195,8 @@ public:
 
    virtual void SetGridlines(Double_t *gridlines, Int_t numGridlines); 
    virtual void SetGridlines(std::vector<double> gridlines); 
+
+   virtual void SetConfidenceIntervalColors(Color_t ci1 = kGreen, Color_t ci2 = kYellow);
 
    ClassDef(TRatioPlot, 1)  //A ratio of histograms
 };
