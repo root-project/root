@@ -98,7 +98,7 @@ Begin_Macro(source)
    h1->FillRandom("gaus", 2000);
    h1->Fit("gaus");
    c1->Clear(); // Fit does not draw into correct pad
-   auto rp1 = new TRatioPlot((TH1*)h1->Clone(), "rp1", "rp1", "", "", "AP");
+   auto rp1 = new TRatioPlot((TH1*)h1->Clone(), "rp1", "rp1");
    rp1->Draw();
    rp1->GetLowYaxis()->SetTitle("ratio");
    rp1->GetUpYaxis()->SetTitle("entries");
@@ -171,8 +171,6 @@ TRatioPlot::~TRatioPlot()
 /// \param c1 Scaling factor for h1
 /// \param c2 Scaling factor for h2
 // @TODO: Class should work with stacks as well
-// @TODO !: Add option to have difference divided by error (significance)
-// @TODO !!: Needs to have a destructor that actually cleans up
 TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, const char *name /*=0*/, const char *title /*=0*/, 
       Option_t *displayOption, Option_t *optH1, Option_t *optH2, Option_t *optGraph,
       Double_t c1, Double_t c2)
@@ -270,7 +268,6 @@ TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, const char *name /*=0*/, const char *ti
 /// \param displayOption Steers the error calculation
 /// \param optH1 Drawing option for the histogram
 /// \param optGraph Drawing option the lower graph
-/// @TODO: add fitresult as optional argument
 TRatioPlot::TRatioPlot(TH1* h1, const char *name, const char *title, Option_t *displayOption, Option_t *optH1,
          /*Option_t *fitOpt, */Option_t *optGraph, TFitResult *fitres) 
    : TPad(name, title, 0, 0, 1, 1),
@@ -537,7 +534,7 @@ void TRatioPlot::Draw(Option_t *option)
    if (fDisplayMode == TRatioPlot::CalculationMode::kFitResidual) {
       fConfidenceInterval2->Draw("A3");
       fConfidenceInterval1->Draw("3");
-      fRatioGraph->Draw("LX+SAME");
+      fRatioGraph->Draw(fOptGraph+"SAME");
    } else {
      
       TString opt = fOptGraph;
@@ -584,7 +581,7 @@ void TRatioPlot::Draw(Option_t *option)
 ///    h1->Fit("gaus");
 ///    h1->SetMinimum(0.001);
 ///    c1->Clear();
-///    auto rp1 = new TRatioPlot(h1, "rp1", "rp1", "", "", "AP");
+///    auto rp1 = new TRatioPlot(h1, "rp1", "rp1");
 ///    rp1->Draw();
 ///    rp1->GetLowerRefGraph()->SetMinimum(-2);
 ///    rp1->GetLowerRefGraph()->SetMaximum(2);
@@ -1515,7 +1512,7 @@ void TRatioPlot::SetConfidenceLevels(Double_t c1, Double_t c2)
    fCl1 = c1;
    fCl2 = c2;
 }
-// @FIXME: SetLogy is not working interactively DONE
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Set logx for both of the pads
 void TRatioPlot::SetLogx(Int_t value )

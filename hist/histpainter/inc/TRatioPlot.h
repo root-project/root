@@ -148,7 +148,7 @@ public:
    virtual ~TRatioPlot();
    TRatioPlot(TH1* h1, TH1* h2, const char *name /*=0*/, const char *title /*=0*/, Option_t *displayOption = "", Option_t *optH1 = "hist", Option_t *optH2 = "E", Option_t *optGraph = "AP", Double_t c1 = 1., Double_t c2 = 1.);
 
-   TRatioPlot(TH1* h1, const char *name, const char *title, Option_t *displayOption = "", Option_t *optH1 = "", /*Option_t *fitOpt = "L",*/ Option_t *optGraph = "AP", TFitResult *fitres = 0);
+   TRatioPlot(TH1* h1, const char *name, const char *title, Option_t *displayOption = "", Option_t *optH1 = "", /*Option_t *fitOpt = "L",*/ Option_t *optGraph = "LX", TFitResult *fitres = 0);
 
    virtual void Draw(Option_t *chopt="");
    virtual void Browse(TBrowser *b);
