@@ -19,7 +19,7 @@
 #include "TROOT.h"
 #include "TFrame.h"
 
-static UInt_t color2rgb(TColor *col)
+UInt_t color2rgb(TColor *col)
 {
    // returns RGB value of color
 
