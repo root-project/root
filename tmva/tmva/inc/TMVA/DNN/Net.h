@@ -362,7 +362,7 @@ auto TNet<Architecture_t, Layer_t>::GetNFlops()
                                           // derivative.
       // Backward propagation.
       flops += nb * nl;                      // Hadamard
-      flops += nlp * nb * (2.0 * nlp - 1.0); // Weight gradients
+      flops += nlp * nl * (2.0 * nb - 1.0); // Weight gradients
       flops += nl * (nb - 1);                // Bias gradients
       if (i > 0) {
          flops += nlp * nb * (2.0 * nl  - 1.0); // Previous layer gradients.
