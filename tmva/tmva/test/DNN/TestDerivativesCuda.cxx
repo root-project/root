@@ -29,7 +29,7 @@ int main()
     //
 
     std::cout << "Activation Functions:" << std::endl;
-    error = testActivationFunctionDerivatives<TCuda<false>>();
+    error = testActivationFunctionDerivatives<TCuda>();
     std::cout << "Total    : ";
     std::cout << "Maximum Relative Error = " << print_error(error);
     std::cout << std::endl << std::endl;
@@ -41,7 +41,7 @@ int main()
     //
 
     std::cout << "Loss Functions:" << std::endl;
-    error = testLossFunctionGradients<TCuda<false>>();
+    error = testLossFunctionGradients<TCuda>();
     std::cout << "Total    : ";
     std::cout << "Maximum Relative Error = " << print_error(error);
     std::cout << std::endl << std::endl;
@@ -53,7 +53,7 @@ int main()
     //
 
     std::cout << "Regularization:" << std::endl;
-    error = testRegularizationGradients<TCuda<false>>();
+    error = testRegularizationGradients<TCuda>();
     std::cout << "Total    : ";
     std::cout << "Maximum Relative Error = " << print_error(error);
     std::cout << std::endl << std::endl;

@@ -199,7 +199,6 @@ template <typename Data_t, typename Net_t>
        nets.push_back(net);
        for (size_t j = 0; j < net.GetDepth(); j++)
        {
-           std::cout << "copy" << std::endl;
            auto &masterLayer = net.GetLayer(j);
            auto &layer = nets.back().GetLayer(j);
            Architecture_t::Copy(layer.GetWeights(),
@@ -211,7 +210,6 @@ template <typename Data_t, typename Net_t>
 
    std::chrono::time_point<std::chrono::system_clock> start, end;
    start = std::chrono::system_clock::now();
-
 
    while (!converged)
    {
@@ -230,21 +228,25 @@ template <typename Data_t, typename Net_t>
 
       // Compute test error.
       if ((fStepCount % fTestInterval) == 0) {
+
          end   = std::chrono::system_clock::now();
          std::chrono::duration<double> elapsed_seconds = end - start;
          start = std::chrono::system_clock::now();
          double seconds = elapsed_seconds.count();
-         double nFlops  = (double) (fTestInterval * (nTrainingSamples / net.GetBatchSize()));
-                nFlops *= net.GetNFlops();
+         double batchesInEpoch = (double) (nTrainingSamples / net.GetBatchSize());
+         double nFlops  = batchesInEpoch * fTestInterval;
+         nFlops *= net.GetNFlops();
          std::cout << "Elapsed time for " << fTestInterval << " Epochs: "
                    << seconds << " [s] => " << nFlops * 1e-9 / seconds
                    << " GFlop/s" << std::endl;
+
          auto b = *testLoader.begin();
          auto inputMatrix  = b.GetInput();
          auto outputMatrix = b.GetOutput();
-
          Scalar_t loss = testNet.Loss(inputMatrix, outputMatrix);
-         std::cout << fStepCount << ": " << loss << std::endl;
+
+         std::cout << "Step " << fStepCount << ": Training Error = "
+                   << loss << std::endl;
          converged = HasConverged();
       }
 
