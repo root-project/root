@@ -113,15 +113,22 @@ CudaDouble_t TCuda<doProfiling>::Sum(const TCudaMatrix &A)
 template<bool doProfiling>
 void TCuda<doProfiling>::SumColumns(TCudaMatrix &B, const TCudaMatrix &A)
 {
-   dim3 blockDims = TDevice::BlockDims();
-   dim3 gridDims  = TDevice::GridDims(A);
+   int m, n;
+   m = A.GetNrows();
+   n = A.GetNcols();
+   CudaDouble_t alpha = 1.0, beta = 0.0;
 
    cudaStream_t s = A.GetComputeStream();
-   cudaMemsetAsync(B.GetDataPointer(), 0, A.GetNcols() * sizeof(CudaDouble_t), s);
-   ::TMVA::DNN::Cuda::SumColumns<<<gridDims, blockDims, 0, s>>>(B.GetDataPointer(),
-                                                                A.GetDataPointer(),
-                                                                A.GetNrows(),
-                                                                A.GetNcols());
+   cublasSetStream(A.GetCublasHandle(), s);
+
+   // Compute C = beta * C + alpha * (A * B)
+   cublasDgemv(A.GetCublasHandle(), CUBLAS_OP_T,
+               m, n, & alpha,
+               A.GetDataPointer(), m,     // *A, lda
+               TCudaMatrix::GetOnes(), 1, // *x, incx
+               & beta,                    // beta
+               B.GetDataPointer(), 1);    // *y, incy
+
    B.SetComputeStream(s);
 }
 

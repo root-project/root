@@ -145,6 +145,8 @@ private:
    static size_t          fInstances;    ///< Number of existing TCudaMatrix instances.
    static cublasHandle_t  fCublasHandle;
    static CudaDouble_t  * fDeviceReturn; ///< Buffer for kernel return values.
+   static CudaDouble_t  * fOnes;         ///< Vector used for summations of columns.
+   static size_t          fNOnes;
    static curandState_t * fCurandStates;
    static size_t          fNCurandStates;
 
@@ -153,6 +155,8 @@ private:
    TCudaDeviceBuffer fElementBuffer;
 
 public:
+
+   static CudaDouble_t * GetOnes() {return fOnes;}
 
    TCudaMatrix();
    TCudaMatrix(size_t i, size_t j);

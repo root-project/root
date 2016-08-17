@@ -25,8 +25,10 @@ namespace DNN  {
 size_t          TCudaMatrix::fInstances     = 0;
 cublasHandle_t  TCudaMatrix::fCublasHandle  = nullptr;
 CudaDouble_t  * TCudaMatrix::fDeviceReturn  = nullptr;
+CudaDouble_t  * TCudaMatrix::fOnes          = nullptr;
 curandState_t * TCudaMatrix::fCurandStates  = nullptr;
 size_t          TCudaMatrix::fNCurandStates = 0;
+size_t          TCudaMatrix::fNOnes         = 0;
 
 // Constructors.
 //____________________________________________________________________________
@@ -86,6 +88,19 @@ inline void TCudaMatrix::InitializeCuda()
        }
        cudaMalloc(&fCurandStates, TDevice::NThreads(*this) * sizeof(curandState_t));
        InitializeCurandStates();
+   }
+   if (fNRows >  fNOnes) {
+      fNOnes = fNRows;
+      if (fOnes) {
+         cudaFree(fOnes);
+      }
+      cudaMalloc(&fOnes, fNRows * sizeof(CudaDouble_t));
+      CudaDouble_t * buffer = new CudaDouble_t[fNRows];
+      for (size_t i = 0; i < fNRows; i++) {
+         buffer[i] = 1.0;
+      }
+      cudaMemcpy(fOnes, buffer, fNRows * sizeof(CudaDouble_t),
+                 cudaMemcpyHostToDevice);
    }
    fInstances++;
 }
