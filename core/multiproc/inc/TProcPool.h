@@ -74,6 +74,7 @@ private:
    template<class T> void Collect(std::vector<T> &reslist);
    template<class T> void HandlePoolCode(MPCodeBufPair &msg, TSocket *sender, std::vector<T> &reslist);
 
+   void FixLists(std::vector<TObject*> &lists);
    void Reset();
    void ReplyToFuncResult(TSocket *s);
    void ReplyToIdle(TSocket *s);

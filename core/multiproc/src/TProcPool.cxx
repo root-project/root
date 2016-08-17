@@ -124,6 +124,9 @@ TList* TProcPool::ProcTree(TTree& tree, TSelector& selector, ULong64_t nToProces
    std::vector<TObject*> outLists;
    Collect(outLists);
 
+   // The first element must be a TList instead of a TSelector List, to avoid duplicate problems with merging
+   FixLists(outLists);
+
    PoolUtils::ReduceObjects<TObject *> redfunc;
    auto outList = static_cast<TList*>(redfunc(outLists));
    
@@ -184,6 +187,9 @@ TList* TProcPool::ProcTree(const std::vector<std::string>& fileNames, TSelector&
    std::vector<TObject*> outLists;
    Collect(outLists);
 
+   // The first element must be a TList instead of a TSelector List, to avoid duplicate problems with merging
+   FixLists(outLists);
+
    PoolUtils::ReduceObjects<TObject *> redfunc;
    auto outList = static_cast<TList*>(redfunc(outLists));
    
@@ -200,6 +206,20 @@ TList* TProcPool::ProcTree(const std::vector<std::string>& fileNames, TSelector&
    ReapWorkers();
    fTaskType = ETask::kNoTask;
    return outList;
+
+/// Fix list of lists before merging (to avoid errors about duplicated objects)
+void TProcPool::FixLists(std::vector<TObject*> &lists) {
+
+   // The first element must be a TList instead of a TSelector List, to avoid duplicate problems with merging
+   TList *firstlist = new TList;
+   TList *oldlist = (TList *) lists[0];
+   TIter nxo(oldlist);
+   TObject *o = 0;
+   while ((o = nxo())) { firstlist->Add(o); }
+   oldlist->SetOwner(kFALSE);
+   lists.erase(lists.begin());
+   lists.insert(lists.begin(), firstlist);
+   delete oldlist;
 }
 
 //////////////////////////////////////////////////////////////////////////
