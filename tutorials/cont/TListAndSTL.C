@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_cont
 /// \notebook -nodraw
-/// This is an example of using TList with STL algoritms in CINT.
+/// This is an example of using TList with STL algoritms in CLING.
 ///
 /// #### Output produced by `.x TListAndSTL.C`
 /// \macro_output
@@ -70,8 +70,7 @@ void TListAndSTL()
 
    //->>>>>>> Example #1 <<<<<<<-
    // running the std::for_each algorithm on the list
-   TIter iter(&list1);
-   for_each(iter.Begin(), TIter::End(), SEnumFunctor());
+   for_each(list1.begin(), list1.end(), SEnumFunctor());
 
    //->>>>>>> Example #2 <<<<<<<-
    // we can try to find something in the container
