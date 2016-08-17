@@ -716,6 +716,10 @@ Released on July 6, 2016
 
 Changes will be part of the future 6.06/08
 
+### Core
+
+* Prevent race condition in the creation of the list of base classes (but avoiding to publish the list too early)
+
 ### Hist
 
 * Resolved issues with inconsistent handling of the 'gaus' function in TFormula [[ROT-8105]]

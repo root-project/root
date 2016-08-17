@@ -1585,9 +1585,9 @@ TClass::~TClass()
 
    delete fPersistentRef.load();
 
-   if (fBase)
-      fBase->Delete();
-   delete fBase;   fBase=0;
+   if (fBase.load())
+      (*fBase).Delete();
+   delete fBase.load(); fBase = 0;
 
    if (fData)
       fData->Delete();
@@ -2199,7 +2199,7 @@ Bool_t TClass::CanSplitBaseAllow()
    // we can find out.
    if (!HasDataMemberInfo()) return kTRUE;
 
-   TObjLink *lnk = GetListOfBases() ? fBase->FirstLink() : 0;
+   TObjLink *lnk = GetListOfBases() ? fBase.load()->FirstLink() : 0;
 
    // Look at inheritance tree
    while (lnk) {
@@ -2594,7 +2594,7 @@ TClass *TClass::GetBaseClass(const TClass *cl)
 
    if (!HasDataMemberInfo()) return 0;
 
-   TObjLink *lnk = GetListOfBases() ? fBase->FirstLink() : 0;
+   TObjLink *lnk = GetListOfBases() ? fBase.load()->FirstLink() : 0;
 
    // otherwise look at inheritance tree
    while (lnk) {
@@ -2623,7 +2623,7 @@ Int_t TClass::GetBaseClassOffsetRecurse(const TClass *cl)
    // check if class name itself is equal to classname
    if (cl == this) return 0;
 
-   if (!fBase) {
+   if (!fBase.load()) {
       if (fCanLoadClassInfo) LoadClassInfo();
       // If the information was not provided by the root pcm files and
       // if we can not find the ClassInfo, we have to fall back to the
@@ -2670,7 +2670,7 @@ Int_t TClass::GetBaseClassOffsetRecurse(const TClass *cl)
    TBaseClass *inh;
    TObjLink *lnk = 0;
    if (fBase==0) lnk = GetListOfBases()->FirstLink();
-   else lnk = fBase->FirstLink();
+   else lnk = fBase.load()->FirstLink();
 
    // otherwise look at inheritance tree
    while (lnk) {
@@ -3962,8 +3962,8 @@ void TClass::ResetCaches()
    delete fAllPubData; fAllPubData = 0;
 
    if (fBase)
-      fBase->Delete();
-   delete fBase; fBase = 0;
+      (*fBase).Delete();
+   delete fBase.load(); fBase = 0;
 
    if (fRealData)
       fRealData->Delete();
