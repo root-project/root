@@ -14,6 +14,7 @@
 #include "DataLoader.h"
 #include "Functions.h"
 #include <chrono>
+#include "tbb/tbb.h"
 
 namespace TMVA {
 namespace DNN {
@@ -82,6 +83,10 @@ public:
                    const Data_t & TestDataIn, size_t nTestSamples,
                    Net_t & net, size_t nThreads = 1);
     template <typename Data_t, typename Net_t>
+    Scalar_t TrainTBB(const Data_t & TrainingDataIn, size_t nTrainingSamples,
+                      const Data_t & TestDataIn, size_t nTestSamples,
+                      Net_t & net, size_t nThreads = 1);
+    template <typename Data_t, typename Net_t>
     Scalar_t TrainMomentum(const Data_t & TrainingDataIn, size_t nTrainingSamples,
                            const Data_t & TestDataIn, size_t nTestSamples,
                            Net_t & net, Scalar_t momentum, size_t nThreads = 1);
@@ -98,6 +103,10 @@ public:
     void Step(Net_t &master,
               std::vector<Net_t> &nets,
               std::vector<TBatch<Architecture_t>> &batches);
+    template <typename Data_t, typename Net_t>
+    void StepTBB(Net_t &master,
+                 std::vector<Net_t> &nets,
+                 std::vector<TDataLoader<Data_t,Architecture_t>> &loaders);
     template <typename Net_t>
     void StepMomentum(Net_t &master,
                       std::vector<Net_t> &nets,
@@ -224,6 +233,97 @@ template <typename Data_t, typename Net_t>
             batches.push_back(trainLoader.GetBatch());
          }
          Step(net, nets, batches);
+      }
+
+      // Compute test error.
+      if ((fStepCount % fTestInterval) == 0) {
+
+         end   = std::chrono::system_clock::now();
+         std::chrono::duration<double> elapsed_seconds = end - start;
+         start = std::chrono::system_clock::now();
+         double seconds = elapsed_seconds.count();
+         double batchesInEpoch = (double) (nTrainingSamples / net.GetBatchSize());
+         double nFlops  = batchesInEpoch * fTestInterval;
+         nFlops *= net.GetNFlops();
+         std::cout << "Elapsed time for " << fTestInterval << " Epochs: "
+                   << seconds << " [s] => " << nFlops * 1e-9 / seconds
+                   << " GFlop/s" << std::endl;
+
+         auto b = *testLoader.begin();
+         auto inputMatrix  = b.GetInput();
+         auto outputMatrix = b.GetOutput();
+         Scalar_t loss = testNet.Loss(inputMatrix, outputMatrix);
+
+         std::cout << "Step " << fStepCount << ": Training Error = "
+                   << loss << std::endl;
+         converged = HasConverged();
+      }
+
+   }
+   return fMinimumError;
+}
+
+//______________________________________________________________________________
+template<typename Architecture_t>
+template <typename Data_t, typename Net_t>
+auto TGradientDescent<Architecture_t>::TrainTBB(const Data_t & trainingData,
+                                                size_t nTrainingSamples,
+                                                const Data_t & testData,
+                                                size_t nTestSamples,
+                                                Net_t & net,
+                                                size_t nThreads)
+    -> typename Architecture_t::Scalar_t
+{
+   // Reset iteration state.
+   fMinimumError = 1e100;
+   fConvergenceCount = 0;
+   fStepCount = 0;
+
+   // Prepare training data.
+   bool converged = false;
+
+   // Create data loaders.
+   std::vector<TDataLoader<Data_t, Architecture_t>> loaders;
+   loaders.reserve(nThreads);
+   for (size_t i = 0; i < nThreads; i++) {
+      loaders.emplace_back(trainingData, nTrainingSamples, net.GetBatchSize(),
+                           net.GetInputWidth(), net.GetOutputWidth(), 1);
+      loaders.back().Shuffle();
+   }
+   TDataLoader<Data_t, Architecture_t> trainLoader(trainingData, nTrainingSamples,
+                                                   net.GetBatchSize(),
+                                                   net.GetInputWidth(),
+                                                   net.GetOutputWidth(), nThreads);
+   auto testNet = net.CreateClone(nTestSamples);
+   TDataLoader<Data_t, Architecture_t> testLoader(testData, nTestSamples,
+                                                  testNet.GetBatchSize(),
+                                                  testNet.GetInputWidth(),
+                                                  net.GetOutputWidth());
+   // Create nets for parallel compute streams.
+   std::vector<Net_t> nets{};
+   nets.reserve(nThreads);
+   for (size_t i = 0; i < nThreads; i++) {
+       nets.push_back(net);
+       for (size_t j = 0; j < net.GetDepth(); j++)
+       {
+           auto &masterLayer = net.GetLayer(j);
+           auto &layer = nets.back().GetLayer(j);
+           Architecture_t::Copy(layer.GetWeights(),
+                                masterLayer.GetWeights());
+           Architecture_t::Copy(layer.GetBiases(),
+                                masterLayer.GetBiases());
+       }
+   }
+
+   std::chrono::time_point<std::chrono::system_clock> start, end;
+   start = std::chrono::system_clock::now();
+
+   while (!converged)
+   {
+      fStepCount++;
+
+      for (size_t i = 0; i < nTrainingSamples / net.GetBatchSize(); i += nThreads) {
+         StepTBB(net, nets, loaders);
       }
 
       // Compute test error.
@@ -455,6 +555,43 @@ template<typename Architecture_t>
                               masterLayer.GetBiases());
       }
    }
+}
+
+//______________________________________________________________________________
+template<typename Architecture_t>
+template <typename Data_t, typename Net_t>
+void inline TGradientDescent<Architecture_t>::StepTBB(
+    Net_t & master,
+    std::vector<Net_t> & nets,
+    std::vector<TDataLoader<Data_t, Architecture_t>> & loaders)
+{
+
+   auto backprop = [&](size_t i) {
+      auto batch = loaders[i].GetBatch();
+      auto input = batch.GetInput();
+      auto output = batch.GetOutput();
+
+      nets[i].Forward(input);
+      nets[i].Backward(input, output);
+   };
+
+   auto update = [&](size_t l) {
+      for (size_t i = 0; i < nets.size(); i++) {
+         Architecture_t::ScaleAdd(master.GetLayer(l).GetWeights(),
+                                  nets[i].GetLayer(l).GetWeightGradients(),
+                                  - fLearningRate);
+         Architecture_t::Copy(nets[i].GetLayer(l).GetWeights(),
+                              master.GetLayer(l).GetWeights());
+         Architecture_t::ScaleAdd(master.GetLayer(l).GetBiases(),
+                                  nets[i].GetLayer(l).GetBiasGradients(),
+                                  - fLearningRate);
+         Architecture_t::Copy(nets[i].GetLayer(l).GetBiases(),
+                              master.GetLayer(l).GetBiases());
+      }
+   };
+
+   tbb::parallel_for(size_t(0), nets.size(), backprop);
+   tbb::parallel_for(size_t(0), master.GetDepth(), update);
 }
 
 //______________________________________________________________________________
