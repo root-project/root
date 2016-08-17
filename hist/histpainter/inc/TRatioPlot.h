@@ -106,7 +106,7 @@ protected:
 
    std::vector<TLine*> fGridlines;
    std::vector<double> fGridlinePositions;
-   Bool_t fShowGridline = kTRUE;
+   Bool_t fShowGridlines = kTRUE;
 
 
    // store y axis ranges so we can trigger redraw when they change

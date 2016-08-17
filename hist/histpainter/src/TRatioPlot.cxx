@@ -54,7 +54,7 @@ Available options are:
 | ---------- | ------------------------------------------------------------ |
 | errprop    | uses the histogram `TH1::Divide` method, yields symmetric errors    |
 | diff       | subtracts the histograms                                     |
-| grid / nogrid | enable (default) or disable automatic drawing of the 0(1) dashed line |
+| grid / nogrid | enable (default) or disable drawing of dashed lines on lower plot |
 
 Begin_Macro(source)
 {
@@ -230,11 +230,11 @@ TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, const char *name /*=0*/, const char *ti
 
    if (displayOptionString.Contains("grid")) {
       displayOptionString.ReplaceAll("grid", "");
-      fShowGridline = kTRUE;
+      fShowGridlines = kTRUE;
    }
    if (displayOptionString.Contains("nogrid")) {
       displayOptionString.ReplaceAll("nogrid", "");
-      fShowGridline = kFALSE;
+      fShowGridlines = kFALSE;
    }
    
    fDisplayOption = displayOptionString;
@@ -319,11 +319,11 @@ TRatioPlot::TRatioPlot(TH1* h1, const char *name, const char *title, Option_t *d
 
    if (displayOptionString.Contains("grid")) {
       displayOptionString.ReplaceAll("grid", "");
-      fShowGridline = kTRUE;
+      fShowGridlines = kTRUE;
    }
    if (displayOptionString.Contains("nogrid")) {
       displayOptionString.ReplaceAll("nogrid", "");
-      fShowGridline = kFALSE;
+      fShowGridlines = kFALSE;
    }
    
    fDisplayOption = displayOptionString;
@@ -644,10 +644,13 @@ TAxis* TRatioPlot::GetLowerRefYaxis()
    return GetLowerRefGraph()->GetYaxis(); 
 }
 
-// @TODO: Document CreateGridline
 void TRatioPlot::CreateGridline()
 {
-   //__(__FUNCTION__);
+   
+   if (!fShowGridlines) {
+      return; // don't draw them
+   }
+   
    TVirtualPad *padsav = gPad;
    
    fLowerPad->cd();
@@ -659,25 +662,20 @@ void TRatioPlot::CreateGridline()
       // we have too many
       //__("remove gridlines");
       for (int i=0;i<curr-dest;++i) {
-         __(i);
          // kill the line
          delete fGridlines.at(i);
          // remove it from list
          fGridlines.erase(fGridlines.begin());
       }
    } else if (curr < dest) {
-      // we don't have enough
-      //__("add gridlines");
-      
+      // we don't have enough 
       for (int i=0;i<dest-curr;++i) {
-         __(i);
          TLine *newline = new TLine(0, 0, 0, 0);
          newline->SetLineStyle(2);
          newline->Draw();
          fGridlines.push_back(newline);
       }
    } else {
-      //__("no gridline mod");
       // nothing to do
    }
    
@@ -703,32 +701,6 @@ void TRatioPlot::CreateGridline()
       line->SetY2(y);
 
    }
-
-   //if (fShowGridline) {
-      //if (fGridline == 0) {
-         //fGridline = new TLine(0, 0, 0, 0);
-         //fGridline->SetLineStyle(2);
-         //fGridline->Draw();
-      //}
-
-      //Double_t first = fSharedXAxis->GetBinLowEdge(fSharedXAxis->GetFirst());
-      //Double_t last = fSharedXAxis->GetBinUpEdge(fSharedXAxis->GetLast());
-      //Double_t y = 1;
-
-      //if (
-            //fDisplayMode == TRatioPlot::CalculationMode::kDifference 
-            //|| fDisplayMode == TRatioPlot::CalculationMode::kFitResidual
-            //|| fDisplayMode == TRatioPlot::CalculationMode::kDifferenceSign
-      //) {
-         //y = 0;
-      //}
-
-      //fGridline->SetX1(first);
-      //fGridline->SetX2(last);
-      //fGridline->SetY1(y);
-      //fGridline->SetY2(y);
-   //}
-
 
    padsav->cd();
 }
@@ -814,7 +786,7 @@ void TRatioPlot::BuildLowerPlot()
 
 
    static Double_t divideGridlines[] = {0.7, 1.0, 1.3};
-   static Double_t diffGridlines[] = {2.0, 0.0, -2.0};
+   static Double_t diffGridlines[] = {0.0};
    static Double_t signGridlines[] = {1.0, 0.0, -1.0};
 
    // Determine the divide mode and create the lower graph accordingly
@@ -1561,12 +1533,36 @@ void TRatioPlot::SetLogy(Int_t value)
    fUpperPad->SetLogy(value);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// \param gridlines Vector of y positions for the dashes lines
+/// Can be used to override existing default lines (or disable them).
+/// Begin_Macro(source)
+/// {
+///    gStyle->SetOptStat(0);
+///    auto c1 = new TCanvas("c1", "fit residual simple");
+///    auto h1 = new TH1D("h1", "h1", 50, -5, 5);
+///    h1->FillRandom("gaus", 2000);
+///    h1->Fit("gaus");
+///    c1->Clear();
+///    auto rp1 = new TRatioPlot(h1, "rp1", "rp1");
+///    std::vector<double> lines = {-3, -2, -1, 0, 1, 2, 3};
+///    rp1->SetGridlines(lines);
+///    rp1->Draw();
+///    rp1->GetLowerRefGraph()->SetMinimum(-4);
+///    rp1->GetLowerRefGraph()->SetMaximum(4);
+///    c1->Update();
+///    return c1;
+/// }
+/// End_Macro
 void TRatioPlot::SetGridlines(std::vector<double> gridlines) 
 {
    fGridlinePositions = gridlines;
 }
 
-
+////////////////////////////////////////////////////////////////////////////////
+/// Set where horizontal, dashed lines are drawn on the lower pad.
+/// \param gridlines Double_t array of y positions for the dashed lines
+/// \param numGridlines Length of gridlines
 void TRatioPlot::SetGridlines(Double_t *gridlines, Int_t numGridlines)
 {
    fGridlinePositions.clear();
