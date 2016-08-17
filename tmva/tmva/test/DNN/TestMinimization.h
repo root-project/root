@@ -32,7 +32,7 @@ template <typename Architecture>
    using Matrix_t = typename Architecture::Matrix_t;
    using Net_t    = TNet<Architecture>;
 
-   size_t nSamples  = 1000000;
+   size_t nSamples  = 100000;
    size_t nFeatures = 20;
    size_t batchSize = 1024;
 
