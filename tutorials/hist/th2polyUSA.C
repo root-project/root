@@ -9,6 +9,7 @@
 /// political reality as of that time.
 ///
 /// \macro_code
+/// \macro_image(nobatch)
 ///
 /// \author Olivier Couet
 

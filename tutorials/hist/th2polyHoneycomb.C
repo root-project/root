@@ -4,6 +4,7 @@
 /// bins (TH2Poly), fill it and draw it using GL.
 ///
 /// \macro_code
+/// \macro_image(nobatch)
 ///
 /// \author  Olivier Couet
 
