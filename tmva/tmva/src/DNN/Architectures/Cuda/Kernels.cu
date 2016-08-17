@@ -611,7 +611,7 @@ __global__ void InitializeCurandStates(unsigned long long seed,
    int i   = blockDim.y * blockIdx.y + threadIdx.y;
    int j   = blockDim.x * blockIdx.x + threadIdx.x;
    int tid = i * gridDim.x + j;
-   curand_init(seed, 0, tid, state + tid);
+   curand_init(seed + tid, 0, tid, state + tid);
 }
 
 //____________________________________________________________________________
