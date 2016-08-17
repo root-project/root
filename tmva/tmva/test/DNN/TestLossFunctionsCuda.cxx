@@ -22,7 +22,6 @@ using namespace TMVA::DNN;
 
 int main()
 {
-    using Scalar_t = Double_t;
     std::cout << "Testing Loss Functions:" << std::endl << std::endl;
 
     double error;
@@ -31,31 +30,31 @@ int main()
     // Mean Squared Error.
     //
 
-    error = testMeanSquaredError<TCuda<Scalar_t>>(10);
+    error = testMeanSquaredError<TCuda>(10);
     std::cout << "Testing mean squared error loss:     ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
-    if (error > 1e-3)
+    if (error > 1e-10)
         return 1;
 
-    error = testMeanSquaredErrorGradients<TCuda<Scalar_t>>(10);
+    error = testMeanSquaredErrorGradients<TCuda>(10);
     std::cout << "Testing mean squared error gradient: ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
-    if (error > 1e-3)
+    if (error > 1e-10)
         return 1;
 
     //
     // Cross Entropy.
     //
 
-    error = testCrossEntropy<TCuda<Scalar_t>>(10);
+    error = testCrossEntropy<TCuda>(10);
     std::cout << "Testing cross entropy loss:          ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
-    if (error > 1e-3)
+    if (error > 1e-10)
         return 1;
 
-    error = testCrossEntropyGradients<TCuda<Scalar_t>>(10);
+    error = testCrossEntropyGradients<TCuda>(10);
     std::cout << "Testing mean squared error gradient: ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
-    if (error > 1e-3)
+    if (error > 1e-10)
         return 1;
 }

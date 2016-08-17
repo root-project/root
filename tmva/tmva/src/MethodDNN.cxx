@@ -663,7 +663,7 @@ void TMVA::MethodDNN::Train()
             layerBiases(i,0) = weights[weightIndex];
             weightIndex++;
          }
-      } else { 
+      } else {
          for (size_t i = 0; i < layerBiases.GetNrows(); i++) {
             layerBiases(i,0) = 0.0;
          }
@@ -685,6 +685,7 @@ void TMVA::MethodDNN::TrainGpu()
    for (TTrainingSettings & settings : fTrainingSettings) {
 
       TNet<TCuda> net(settings.batchSize, fNet);
+      net.SetWeightDecay(settings.weightDecay);
       net.SetDropoutProbabilities(settings.dropoutProbabilities);
       net.InitializeGradients();
       auto testNet = net.CreateClone(settings.batchSize);
@@ -742,20 +743,20 @@ void TMVA::MethodDNN::TrainGpu()
          stepCount++;
          // Perform minimization steps for a full epoch.
          trainingData.Shuffle();
+         for (size_t i = 0; i < batchesInEpoch; i += nThreads) {
+             batches.clear();
+             for (size_t j = 0; j < nThreads; j++) {
+                 batches.reserve(nThreads);
+                 batches.push_back(trainingData.GetBatch());
+             }
+             if (settings.momentum > 0.0) {
+                 minimizer.StepMomentum(net, nets, batches, settings.momentum);
+             } else {
+                 minimizer.Step(net, nets, batches);
+             }
+         }
+
          if ((stepCount % minimizer.GetTestInterval()) != 0) {
-            for (size_t i = 0; i < batchesInEpoch; i += nThreads) {
-               batches.clear();
-               for (size_t j = 0; j < nThreads; j++) {
-                  batches.reserve(nThreads);
-                  batches.push_back(trainingData.GetBatch());
-               }
-               if (settings.momentum > 0.0) {
-                  minimizer.StepMomentum(net, nets, batches, settings.momentum);
-               } else {
-                  minimizer.Step(net, nets, batches);
-               }
-            }
-         } else {
 
             end   = std::chrono::system_clock::now();
 

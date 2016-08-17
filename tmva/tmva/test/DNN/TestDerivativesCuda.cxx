@@ -22,19 +22,18 @@ using namespace TMVA::DNN;
 
 int main()
 {
-    using Scalar_t = Double_t;
-    Double_t error;
+    double error;
 
     //
     // Activation Functions
     //
 
     std::cout << "Activation Functions:" << std::endl;
-    error = testActivationFunctionDerivatives<TCuda<Scalar_t>>();
+    error = testActivationFunctionDerivatives<TCuda>();
     std::cout << "Total    : ";
-    std::cout << "Maximum Relative Error = " << error;
+    std::cout << "Maximum Relative Error = " << print_error(error);
     std::cout << std::endl << std::endl;
-    if (error > 1e-2)
+    if (error > 1e-5)
         return 1;
 
     //
@@ -42,11 +41,11 @@ int main()
     //
 
     std::cout << "Loss Functions:" << std::endl;
-    error = testLossFunctionGradients<TCuda<Scalar_t>>();
+    error = testLossFunctionGradients<TCuda>();
     std::cout << "Total    : ";
-    std::cout << "Maximum Relative Error = " << error;
+    std::cout << "Maximum Relative Error = " << print_error(error);
     std::cout << std::endl << std::endl;
-    if (error > 1e-3)
+    if (error > 1e-5)
         return 1;
 
     //
@@ -54,11 +53,11 @@ int main()
     //
 
     std::cout << "Regularization:" << std::endl;
-    error = testRegularizationGradients<TCuda<Scalar_t>>();
+    error = testRegularizationGradients<TCuda>();
     std::cout << "Total    : ";
-    std::cout << "Maximum Relative Error = " << error;
+    std::cout << "Maximum Relative Error = " << print_error(error);
     std::cout << std::endl << std::endl;
-    if (error > 1e-3)
+    if (error > 1e-5)
         return 1;
 
     return 0;
