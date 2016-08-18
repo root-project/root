@@ -686,6 +686,7 @@ void TMVA::MethodDNN::TrainGpu()
 
       TNet<TCuda> net(settings.batchSize, fNet);
       net.SetWeightDecay(settings.weightDecay);
+      net.SetRegularization(settings.regularization);
       net.SetDropoutProbabilities(settings.dropoutProbabilities);
       net.InitializeGradients();
       auto testNet = net.CreateClone(settings.batchSize);
@@ -756,7 +757,15 @@ void TMVA::MethodDNN::TrainGpu()
              }
          }
 
-         if ((stepCount % minimizer.GetTestInterval()) != 0) {
+         if ((stepCount % minimizer.GetTestInterval()) == 0) {
+
+            Double_t testError = 0.0;
+            for (auto batch : testData) {
+               auto inputMatrix  = batch.GetInput();
+               auto outputMatrix = batch.GetOutput();
+               testError += testNet.Loss(inputMatrix, outputMatrix);
+            }
+            testError /= (Double_t) (nTestSamples / settings.batchSize);
 
             end   = std::chrono::system_clock::now();
 
@@ -769,13 +778,6 @@ void TMVA::MethodDNN::TrainGpu()
             }
             trainingError /= (Double_t) (nTrainingSamples / settings.batchSize);
 
-            Double_t testError = 0.0;
-            for (auto batch : testData) {
-               auto inputMatrix  = batch.GetInput();
-               auto outputMatrix = batch.GetOutput();
-               testError += testNet.Loss(inputMatrix, outputMatrix);
-            }
-            testError /= (Double_t) (nTestSamples / settings.batchSize);
 
             Log() << kInfo << " Epoch " << stepCount << ": Training error = "
                   << trainingError << " // Test Error = " << testError << Endl;
