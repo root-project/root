@@ -50,10 +50,10 @@ auto testMinimization<TCpu<Double_t>>()
    net.AddLayer(1, EActivationFunction::IDENTITY);
    net.Initialize(EInitialization::GAUSS);
 
-   TGradientDescent<TCpu<Double_t>> minimizer(0.00001, 1, 1);
+   TGradientDescent<TCpu<Double_t>> minimizer(0.000001, 1, 1);
    MatrixInput_t trainingData(XTrain, YTrain);
    MatrixInput_t testData(XTest, YTest);
-   minimizer.TrainTBB(trainingData, nSamples, testData, batchSize, net, 4);
+   minimizer.TrainTBB(trainingData, nSamples, testData, batchSize, net, );
 
    return 0.0;
 }
