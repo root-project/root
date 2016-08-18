@@ -1,28 +1,40 @@
 ROOTTEST_ADD_TESTDIRS()
 
+ROOTTEST_ADD_TEST(modelReadDict2TFile
+                  MACRO  modelReadDict2.C
+                  MACROARG "\"model.root\""
+                  OUTREF modelReadDict2.ref
+                  DEPENDS roottest-root-io-stdarray-aclicModelWrite)
+
+# ROOTTEST_ADD_TEST(modelReadDict2TXMLFile
+#                   MACRO  modelReadDict2.C
+#                   MACROARG "\"model.xml\""
+#                   OUTREF modelReadDict2.ref
+#                   DEPENDS roottest-root-io-stdarray-aclicModelWrite)
+
 ROOTTEST_ADD_TEST(modelReadDictTFile
                   MACRO  modelReadDict.C+
                   MACROARG "\"model.root\""
                   OUTREF modelReadDict.ref
-                  DEPENDS model.root)
+                  DEPENDS roottest-root-io-stdarray-aclicModelWrite)
 
 ROOTTEST_ADD_TEST(modelReadDictTXMLFile
                   MACRO  modelReadDict.C+
                   MACROARG "\"model.xml\""
                   OUTREF modelReadDict.ref
-                  DEPENDS model.xml)
+                  DEPENDS roottest-root-io-stdarray-aclicModelWrite)
 
 ROOTTEST_ADD_TEST(modelReadNoDictTFile
                   MACRO  modelReadNoDict.C
                   MACROARG "\"model.root\""
                   OUTREF modelReadNoDict.ref
-                  DEPENDS model.root)
+                  DEPENDS roottest-root-io-stdarray-aclicModelWrite)
 
 # ROOTTEST_ADD_TEST(modelReadNoDictTXMLFile
 #                   MACRO  modelReadNoDict.C
 #                   MACROARG "\"model.xml\""
 #                   OUTREF modelReadNoDict.ref
-#                   DEPENDS aclicModelWrite)
+#                   DEPENDS roottest-root-io-stdarray-aclicModelWrite)
 
 ROOTTEST_ADD_TEST(aclicModelWrite
                   MACRO  aclicModelWrite.C+)
