@@ -324,14 +324,16 @@ void TMVA::TransformationHandler::CalcStats (const std::vector<Event*>& events )
    maxV = maxL + 2;
    // full column length
    UInt_t clen = maxL + 4*maxV + 11;
-   for (UInt_t i=0; i<clen; i++) Log() << "-";
-   Log() << Endl;
+   Log() << kHEADER ;
+   //for (UInt_t i=0; i<clen; i++) //Log() << "-";
+   
+   //Log() << Endl;
    // full column length
    Log() << std::setw(maxL) << "Variable";
    Log() << "  " << std::setw(maxV) << "Mean";
    Log() << " " << std::setw(maxV) << "RMS";
    Log() << "   " << std::setw(maxV) << "[        Min ";
-   Log() << "  " << std::setw(maxV) << "    Max ]" << Endl;;
+   Log() << "  " << std::setw(maxV) << "    Max ]"<< Endl;;
    for (UInt_t i=0; i<clen; i++) Log() << "-";
    Log() << Endl;
 
@@ -443,7 +445,7 @@ void TMVA::TransformationHandler::PlotVariables (const std::vector<Event*>& even
 {
    if (fRootBaseDir==0 && theDirectory == 0) return;
 
-   Log() << kINFO << "Plot event variables for ";
+   Log() << kDEBUG << "Plot event variables for ";
    if (theDirectory !=0) Log()<< TString(theDirectory->GetName()) << Endl;
    else Log() << GetName() << Endl;
 
@@ -769,8 +771,8 @@ void TMVA::TransformationHandler::PlotVariables (const std::vector<Event*>& even
 
       localDir = localDir->mkdir( "CorrelationPlots" );
       localDir ->cd();
-      Log() << kINFO << "Create scatter and profile plots in target-file directory: " << Endl;
-      Log() << kINFO << localDir->GetPath() << Endl;
+      Log() << kDEBUG << "Create scatter and profile plots in target-file directory: " << Endl;
+      Log() << kDEBUG << localDir->GetPath() << Endl;
    
       
       for (UInt_t i=0; i<nvar+ntgt; i++) {
@@ -909,7 +911,7 @@ void TMVA::TransformationHandler::ReadFromXML( void* trfsnode )
 
 void TMVA::TransformationHandler::PrintVariableRanking() const
 {
-   Log() << kINFO << " " << Endl;
+  //Log() << kINFO << " " << Endl;
    Log() << kINFO << "Ranking input variables (method unspecific)..." << Endl;
    std::vector<Ranking*>::const_iterator it = fRanking.begin();
    for (; it != fRanking.end(); it++) (*it)->Print();

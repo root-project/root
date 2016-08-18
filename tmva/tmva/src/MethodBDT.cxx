@@ -496,7 +496,9 @@ void TMVA::MethodBDT::ProcessOptions()
    if (fBoostType=="Grad") {
       fPruneMethod = DecisionTree::kNoPruning;
       if (fNegWeightTreatment=="InverseBoostNegWeights"){
-         Log() << kINFO << "the option *InverseBoostNegWeights* does not exist for BoostType=Grad --> change to new default for GradBoost *Pray*, i.e. simply keep them as if which should work fine for Grad Boost" << Endl;
+	Log() << kINFO << "the option *InverseBoostNegWeights* does not exist for BoostType=Grad --> change" << Endl;
+         Log() << kINFO << "to new default for GradBoost *Pray*" << Endl;
+	Log() << kDEBUG << "i.e. simply keep them as if which should work fine for Grad Boost" << Endl;
          fNegWeightTreatment="Pray";
          fNoNegWeightsInTraining=kFALSE;
       }
@@ -558,9 +560,10 @@ void TMVA::MethodBDT::ProcessOptions()
    }
 
    if (fUseFisherCuts) {
-      Log() << kWARNING << "Sorry, when using the option UseFisherCuts, the other option nCuts<0 (i.e. using" << Endl;
-      Log() << kWARNING << " a more elaborate node splitting algorithm) is not implemented. I will switch o " << Endl;
-      Log() << kWARNING << "--> I switch do default nCuts = 20 and use standard node splitting WITH possible Fisher criteria"<<Endl;
+      Log() << kWARNING << "When using the option UseFisherCuts, the other option nCuts<0 (i.e. using" << Endl;
+      Log() << " a more elaborate node splitting algorithm) is not implemented. " << Endl;
+      //I will switch o " << Endl;
+      //Log() << "--> I switch do default nCuts = 20 and use standard node splitting WITH possible Fisher criteria"<<Endl;
       fNCuts=20;
    }
    
@@ -576,7 +579,7 @@ void TMVA::MethodBDT::ProcessOptions()
    else if (fNegWeightTreatment == "nonegweightsintraining")   fNoNegWeightsInTraining = kTRUE;
    else if (fNegWeightTreatment == "inverseboostnegweights") fInverseBoostNegWeights = kTRUE;
    else if (fNegWeightTreatment == "pairnegweightsglobal")   fPairNegWeightsGlobal   = kTRUE;
-   else if (fNegWeightTreatment == "pray")   Log() << kWARNING << "Yes, good luck with praying " << Endl;
+   else if (fNegWeightTreatment == "pray")   Log() << kDEBUG << "Yes, good luck with praying " << Endl;
    else {
       Log() << kINFO << GetOptions() << Endl;
       Log() << kFATAL << "<ProcessOptions> unknown option for treating negative event weights during training " << fNegWeightTreatment << " requested" << Endl;
@@ -812,9 +815,9 @@ void TMVA::MethodBDT::InitEventSample( void )
    }
 
    if (!DoRegression()){
-      Log() << kINFO << "<InitEventSample> For classification trees, "<< Endl;
-      Log() << kINFO << " the effective number of backgrounds is scaled to match "<<Endl;
-      Log() << kINFO << " the signal. Othersise the first boosting step would do 'just that'!"<<Endl;
+      Log() << kDEBUG << "\t<InitEventSample> For classification trees, "<< Endl;
+      Log() << kDEBUG << " \tthe effective number of backgrounds is scaled to match "<<Endl;
+      Log() << kDEBUG << " \tthe signal. Otherwise the first boosting step would do 'just that'!"<<Endl;
       // it does not make sense in decision trees to start with unequal number of signal/background
       // events (weights) .. hence normalize them now (happens atherwise in first 'boosting step'
       // anyway..  
@@ -843,10 +846,10 @@ void TMVA::MethodBDT::InitEventSample( void )
       if (sumSigW && sumBkgW){
          Double_t normSig = nevents/((1+fSigToBkgFraction)*sumSigW)*fSigToBkgFraction;
          Double_t normBkg = nevents/((1+fSigToBkgFraction)*sumBkgW); ;
-         Log() << kINFO << "re-normlise events such that Sig and Bkg have respective sum of weights = " 
+         Log() << kDEBUG << "\tre-normalise events such that Sig and Bkg have respective sum of weights = " 
                << fSigToBkgFraction << Endl;
-         Log() << kINFO << "  sig->sig*"<<normSig << "ev. bkg->bkg*"<<normBkg << "ev." <<Endl;
-         Log() << kINFO << "#events: (reweighted) sig: "<< sumSigW*normSig << " bkg: " << sumBkgW*normBkg << Endl;
+         Log() << kDEBUG << "  \tsig->sig*"<<normSig << "ev. bkg->bkg*"<<normBkg << "ev." <<Endl;
+         Log() << kHEADER << "#events: (reweighted) sig: "<< sumSigW*normSig << " bkg: " << sumBkgW*normBkg << Endl;
          Log() << kINFO << "#events: (unweighted) sig: "<< sumSig << " bkg: " << sumBkg << Endl;
          for (Long64_t ievt=0; ievt<nevents; ievt++) {
             if ((DataInfo().IsSignal(fEventSample[ievt])) ) fEventSample[ievt]->SetBoostWeight(normSig);
@@ -1327,14 +1330,14 @@ void TMVA::MethodBDT::Train()
    }
 
    // get elapsed time
-   Log() << kINFO << "<Train> elapsed time: " << timer.GetElapsedTime()
+   Log() << kDEBUG << "\t<Train> elapsed time: " << timer.GetElapsedTime()
          << "                              " << Endl;
    if (fPruneMethod == DecisionTree::kNoPruning) {
-      Log() << kINFO << "<Train> average number of nodes (w/o pruning) : "
+      Log() << kDEBUG << "\t<Train> average number of nodes (w/o pruning) : "
             << nNodesBeforePruningCount/GetNTrees() << Endl;
    }
    else {
-      Log() << kINFO << "<Train> average number of nodes before/after pruning : "
+      Log() << kDEBUG << "\t<Train> average number of nodes before/after pruning : "
             << nNodesBeforePruningCount/GetNTrees() << " / "
             << nNodesAfterPruningCount/GetNTrees()
             << Endl;
@@ -2484,7 +2487,7 @@ const std::vector<Float_t> & TMVA::MethodBDT::GetRegressionValues()
 
 void  TMVA::MethodBDT::WriteMonitoringHistosToFile( void ) const
 {
-   Log() << kINFO << "Write monitoring histograms to file: " << BaseDir()->GetPath() << Endl;
+   Log() << kDEBUG << "\tWrite monitoring histograms to file: " << BaseDir()->GetPath() << Endl;
 
    //Results* results = Data()->GetResults(GetMethodName(), Types::kTraining, Types::kMaxAnalysisType);
    //results->GetStorage()->Write();
@@ -2922,21 +2925,21 @@ void TMVA::MethodBDT::DeterminePreselectionCuts(const std::vector<const TMVA::Ev
       }
    }
 
-   Log() << kINFO << " found and suggest the following possible pre-selection cuts " << Endl;
-   if (fDoPreselection) Log() << kINFO << "the training will be done after these cuts... and GetMVA value returns +1, (-1) for a signal (bkg) event that passes these cuts" << Endl;
-   else  Log() << kINFO << "as option DoPreselection was not used, these cuts however will not be performed, but the training will see the full sample"<<Endl;
+   Log() << kDEBUG << " \tfound and suggest the following possible pre-selection cuts " << Endl;
+   if (fDoPreselection) Log() << kDEBUG << "\tthe training will be done after these cuts... and GetMVA value returns +1, (-1) for a signal (bkg) event that passes these cuts" << Endl;
+   else  Log() << kDEBUG << "\tas option DoPreselection was not used, these cuts however will not be performed, but the training will see the full sample"<<Endl;
    for (UInt_t ivar=0; ivar < GetNvar(); ivar++ ) { // loop over all discriminating variables
       if (fIsLowBkgCut[ivar]){
-         Log() << kINFO  << " found cut: Bkg if var " << ivar << " < "  << fLowBkgCut[ivar] << Endl;
+         Log() << kDEBUG  << " \tfound cut: Bkg if var " << ivar << " < "  << fLowBkgCut[ivar] << Endl;
       } 
       if (fIsLowSigCut[ivar]){
-         Log() << kINFO  << " found cut: Sig if var " << ivar << " < "  << fLowSigCut[ivar] << Endl;
+         Log() << kDEBUG  << " \tfound cut: Sig if var " << ivar << " < "  << fLowSigCut[ivar] << Endl;
       }
       if (fIsHighBkgCut[ivar]){
-         Log() << kINFO  << " found cut: Bkg if var " << ivar << " > "  << fHighBkgCut[ivar] << Endl;
+         Log() << kDEBUG  << " \tfound cut: Bkg if var " << ivar << " > "  << fHighBkgCut[ivar] << Endl;
       } 
       if (fIsHighSigCut[ivar]){
-         Log() << kINFO  << " found cut: Sig if var " << ivar << " > "  << fHighSigCut[ivar] << Endl;
+         Log() << kDEBUG  << " \tfound cut: Sig if var " << ivar << " > "  << fHighSigCut[ivar] << Endl;
       }
    }
    

@@ -553,7 +553,7 @@ const TMVA::Ranking* TMVA::MethodFisher::CreateRanking()
 
 void TMVA::MethodFisher::PrintCoefficients( void ) 
 {
-   Log() << kINFO << "Results for Fisher coefficients:" << Endl;
+   Log() << kHEADER << "Results for Fisher coefficients:" << Endl;
 
    if (GetTransformationHandler().GetTransformationList().GetSize() != 0) {
       Log() << kINFO << "NOTE: The coefficients must be applied to TRANFORMED variables" << Endl;

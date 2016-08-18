@@ -53,7 +53,7 @@
 // this is the hard-coded maximum length of the source names
 const UInt_t                           TMVA::MsgLogger::fgMaxSourceSize = 25;
 
-const std::string                      TMVA::MsgLogger::fgPrefix = "--- ";
+const std::string                      TMVA::MsgLogger::fgPrefix = "";
 const std::string                      TMVA::MsgLogger::fgSuffix = ": ";
 #if __cplusplus > 199711L
 std::atomic<Bool_t>                                       TMVA::MsgLogger::fgInhibitOutput{kFALSE};
@@ -144,8 +144,15 @@ TMVA::MsgLogger& TMVA::MsgLogger::operator= ( const MsgLogger& parent )
 
 std::string TMVA::MsgLogger::GetFormattedSource() const
 {
-   std::string source_name = this->GetName();
-   
+   std::string source_name;
+   if (fActiveType == kHEADER)
+   {
+       source_name = this->GetName();
+   }
+   if (fActiveType == kWARNING)
+     {
+       source_name ="<WARNING>";
+     }
    if (source_name.size() > fgMaxSourceSize) {
       source_name = source_name.substr( 0, fgMaxSourceSize - 3 );
       source_name += "...";
@@ -205,26 +212,31 @@ void TMVA::MsgLogger::Send()
 
 void TMVA::MsgLogger::WriteMsg( EMsgType type, const std::string& line ) const
 {
-   if ( (type < fMinType || fgInhibitOutput) && type!=kFATAL ) return; // no output
+  if ( (type < fMinType || fgInhibitOutput) && type!=kFATAL ) return; // no output
 
-   std::map<EMsgType, std::string>::const_iterator stype;
+  std::map<EMsgType, std::string>::const_iterator stype;
 
-   if ((stype = fgTypeMap.load()->find( type )) != fgTypeMap.load()->end()) {
-      if (!gConfig().IsSilent() || type==kFATAL) {
-         if (gConfig().UseColor()) {
-            // no text for INFO or VERBOSE
-            if (type == kINFO || type == kVERBOSE)
-               std::cout << fgPrefix << line << std::endl; // no color for info
-            else
-               std::cout << fgColorMap.load()->find( type )->second << fgPrefix << "<"
-                         << stype->second << "> " << line  << "\033[0m" << std::endl;
-         }
-         else {
-            if (type == kINFO) std::cout << fgPrefix << line << std::endl;
-            else               std::cout << fgPrefix << "<" << stype->second << "> " << line << std::endl;
-         }
+  if ((stype = fgTypeMap.load()->find( type )) != fgTypeMap.load()->end()) {
+    if (!gConfig().IsSilent() || type==kFATAL) {
+      if (gConfig().UseColor()) {
+	// no text for INFO or VERBOSE
+	if (type == kHEADER || type ==kWARNING)
+	  std::cout << fgPrefix << line << std::endl; 
+	else if (type == kINFO || type == kVERBOSE)
+	  //std::cout << fgPrefix << line << std::endl; // no color for info
+	  std::cout << line << std::endl;
+	else{
+	  //std::cout<<"prefix='"<<fgPrefix<<"'"<<std::endl;
+	  std::cout << fgColorMap.load()->find( type )->second << "<" << stype->second << ">" << line << "\033[0m" << std::endl;
+}
       }
-   }
+
+      else {
+	if (type == kINFO) std::cout << fgPrefix << line << std::endl;
+	else               std::cout << fgPrefix << "<" << stype->second << "> " << line << std::endl;
+      }
+    }
+  }
 
    // take decision to stop if fatal error
    if (type == kFATAL) {
@@ -260,6 +272,7 @@ void TMVA::MsgLogger::InitMaps()
       (*tmp)[kERROR]    = std::string("ERROR");
       (*tmp)[kFATAL]    = std::string("FATAL");
       (*tmp)[kSILENT]   = std::string("SILENT");
+      (*tmp)[kHEADER]   = std::string("HEADER");
       const std::map<TMVA::EMsgType, std::string>* expected=0;
       if(fgTypeMap.compare_exchange_strong(expected,tmp)) {
          //Have the global own this

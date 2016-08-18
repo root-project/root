@@ -1332,7 +1332,7 @@ void TMVA::MethodBoost::MonitorBoost( Types::EBoostStage stage , UInt_t methodIn
       }
    }else{
       if (methodIndex < 3){
-         Log() << kINFO << "No detailed boost monitoring for " 
+         Log() << kDEBUG << "No detailed boost monitoring for " 
                << GetCurrentMethod(methodIndex)->GetMethodName() 
                << " yet available " << Endl;
       }

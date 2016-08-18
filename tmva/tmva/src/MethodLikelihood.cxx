@@ -674,7 +674,7 @@ void  TMVA::MethodLikelihood::ReadWeightsFromXML(void* wghtnode)
    void* descnode = gTools().GetChild(wghtnode);
    for (UInt_t ivar=0; ivar<nvars; ivar++){
       void* pdfnode = gTools().GetChild(descnode);
-      Log() << kINFO << "Reading signal and background PDF for variable: " << GetInputVar( ivar ) << Endl;
+      Log() << kDEBUG << "Reading signal and background PDF for variable: " << GetInputVar( ivar ) << Endl;
       if ((*fPDFSig)[ivar] !=0) delete (*fPDFSig)[ivar];
       if ((*fPDFBgd)[ivar] !=0) delete (*fPDFBgd)[ivar];
       (*fPDFSig)[ivar] = new PDF( GetInputVar( ivar ) + " PDF Sig" );
@@ -699,7 +699,7 @@ void  TMVA::MethodLikelihood::ReadWeightsFromStream( std::istream & istr )
    Bool_t addDirStatus = TH1::AddDirectoryStatus();
    TH1::AddDirectory(0); // this avoids the binding of the hists in TMVA::PDF to the current ROOT file
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++){
-      Log() << kINFO << "Reading signal and background PDF for variable: " << GetInputVar( ivar ) << Endl;
+      Log() << kDEBUG << "Reading signal and background PDF for variable: " << GetInputVar( ivar ) << Endl;
       if ((*fPDFSig)[ivar] !=0) delete (*fPDFSig)[ivar];
       if ((*fPDFBgd)[ivar] !=0) delete (*fPDFBgd)[ivar];
       (*fPDFSig)[ivar] = new PDF(GetInputVar( ivar ) + " PDF Sig" );

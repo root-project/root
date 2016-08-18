@@ -304,9 +304,9 @@ UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & ev
       this->GetRoot()->SetParentTree(this);
       fMinSize = fMinNodeSize/100. * eventSample.size();
       if (GetTreeID()==0){
-         Log() << kINFO << "The minimal node size MinNodeSize=" << fMinNodeSize << " fMinNodeSize="<<fMinNodeSize<< "% is translated to an actual number of events = "<< fMinSize<< " for the training sample size of " << eventSample.size() << Endl;
-         Log() << kINFO << "Note: This number will be taken as absolute minimum in the node, " << Endl;
-         Log() << kINFO << "      in terms of 'weighted events' and unweighted ones !! " << Endl;
+         Log() << kDEBUG << "\tThe minimal node size MinNodeSize=" << fMinNodeSize << " fMinNodeSize="<<fMinNodeSize<< "% is translated to an actual number of events = "<< fMinSize<< " for the training sample size of " << eventSample.size() << Endl;
+         Log() << kDEBUG << "\tNote: This number will be taken as absolute minimum in the node, " << Endl;
+         Log() << kDEBUG << "      \tin terms of 'weighted events' and unweighted ones !! " << Endl;
       }
    }
 

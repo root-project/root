@@ -113,6 +113,7 @@ namespace TMVA {
       void Send();
       void InitMaps();
       void WriteMsg( EMsgType type, const std::string& line ) const;
+      // void WriteEmpty... 
 
       static const std::string fgPrefix;          // the prefix of the source name
       static const std::string fgSuffix;          // suffix following source name

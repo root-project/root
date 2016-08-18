@@ -943,7 +943,7 @@ void TMVA::RuleEnsemble::RuleStatistics()
 
 void TMVA::RuleEnsemble::PrintRuleGen() const
 {
-   Log() << kINFO << "-------------------RULE ENSEMBLE SUMMARY------------------------"  << Endl;
+   Log() << kHEADER << "-------------------RULE ENSEMBLE SUMMARY------------------------"  << Endl;
    const MethodRuleFit *mrf = GetMethodRuleFit();
    if (mrf) Log() << kINFO << "Tree training method               : " << (mrf->UseBoost() ? "AdaBoost":"Random") << Endl;
    Log() << kINFO << "Number of events per tree          : " << fRuleFit->GetNTreeSample()    << Endl;
@@ -988,7 +988,7 @@ void TMVA::RuleEnsemble::Print() const
       }
    }
    //
-   Log() << kmtype << "Offset (a0) = " << fOffset << Endl;
+   Log() << kHEADER << "Offset (a0) = " << fOffset << Endl;
    //
    if (DoLinear()) {
       if (fLinNorm.size() > 0) {

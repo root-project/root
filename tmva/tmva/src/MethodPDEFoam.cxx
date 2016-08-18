@@ -448,7 +448,7 @@ void TMVA::MethodPDEFoam::Train( void )
          TrainMultiClassification();
       else {
          if (DataInfo().GetNormalization() != "EQUALNUMEVENTS" ) {
-            Log() << kINFO << "NormMode=" << DataInfo().GetNormalization()
+            Log() << kHEADER << "NormMode=" << DataInfo().GetNormalization()
                   << " chosen. Note that only NormMode=EqualNumEvents"
                   << " ensures that Discriminant values correspond to"
                   << " signal probabilities." << Endl;
