@@ -229,6 +229,27 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 * `TColor::GetFreeColorIndex()` allows to make sure the new color is created with an
   unused color index.
 * In `TLegend::SetHeader` the new option `C` allows to center the title.
+* New method `SetLabelAttributes` in `TGaxis` allowing to a fine tuning of
+  individual labels attributes. All the attributes can be changed and even the
+  label text itself. Example:
+  ~~~ {.cpp}
+  {
+     c1 = new TCanvas("c1","Examples of Gaxis",10,10,900,500);
+     c1->Range(-6,-0.1,6,0.1);
+     TGaxis *axis1 = new TGaxis(-5.5,0.,5.5,0.,0.0,100,510,"");
+     axis1->SetName("axis1");
+     axis1->SetTitle("Axis Title");
+     axis1->SetTitleSize(0.05);
+     axis1->SetTitleColor(kBlue);
+     axis1->SetTitleFont(42);
+     axis1->SetLabelAttributes(1,-1,-1,-1,2);
+     axis1->SetLabelAttributes(3,-1,0.);
+     axis1->SetLabelAttributes(5,30.,-1,0);
+     axis1->SetLabelAttributes(6,-1,-1,-1,3,-1,"6th label");
+     axis1->Draw();
+  }
+  ~~~
+* New class `TGaxisModLab`: a  TGaxis helper class used to store the modified labels.
 
 ## 3D Graphics Libraries
 
