@@ -90,7 +90,7 @@ void AddModel(RooWorkspace* wks){
    RooRealVar invMass("invMass", "M_{inv}", lowRange, highRange,"GeV");
 
 
-   /////////////////////////////////////////////
+   // --------------------------------------
    // make a simple signal model.
    RooRealVar mH("mH","Higgs Mass",130,90,160) ;
    RooRealVar sigma1("sigma1","Width of Gaussian",12.,2,100)  ;
@@ -100,7 +100,7 @@ void AddModel(RooWorkspace* wks){
    // and we assume we know the mass resolution
    sigma1.setConstant();
 
-   /////////////////////////////////////////////
+   // --------------------------------------
    // make zjj model.  Just like signal model
    RooRealVar mZ("mZ", "Z Mass", 91.2, 0, 100);
    RooRealVar sigma1_z("sigma1_z","Width of Gaussian",10.,6,100)  ;
@@ -111,7 +111,7 @@ void AddModel(RooWorkspace* wks){
    sigma1_z.setConstant();
 
 
-   //////////////////////////////////////////////
+   // --------------------------------------
    // make QCD model
    RooRealVar a0("a0","a0",0.26,-1,1) ;
    RooRealVar a1("a1","a1",-0.17596,-1,1) ;
@@ -124,7 +124,7 @@ void AddModel(RooWorkspace* wks){
    a1.setConstant();
    a2.setConstant();
 
-   //////////////////////////////////////////////
+   // --------------------------------------
    // combined model
 
    // Setting the fraction of Zjj to be 40% for initial guess.
@@ -232,7 +232,7 @@ void MakePlots(RooWorkspace* wks) {
    RooAbsData* data = wks->data("data");
 
 
-   //////////////////////////////////////////////////////////
+   // --------------------------------------
    // Make plots for the Alternate hypothesis, eg. let mu float
 
    mu->setConstant(kFALSE);
@@ -252,7 +252,7 @@ void MakePlots(RooWorkspace* wks) {
    frame->Draw() ;
    //  cdata->SaveAs("alternateFit.gif");
 
-   //////////////////////////////////////////////////////////
+   // --------------------------------------
    // Do Fit to the Null hypothesis.  Eg. fix mu=0
 
    mu->setVal(0); // set signal fraction to 0

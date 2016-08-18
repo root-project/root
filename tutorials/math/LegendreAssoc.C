@@ -4,9 +4,9 @@
 /// Example describing the usage of different kinds of Associate Legendre Polynomials
 /// To execute the macro type in:
 ///
-/// ~~~ {.cpp}
+/// ```cpp
 /// root[0] .x LegendreAssoc.C
-/// ~~~
+/// ```
 ///
 /// It draws common graphs for first 5
 /// Associate Legendre Polynomials
@@ -44,7 +44,7 @@ void LegendreAssoc()
    TLegend *leg1 = new TLegend(0.5, 0.7, 0.8, 0.89);
    TLegend *leg2 = new TLegend(0.5, 0.7, 0.8, 0.89);
 
-   //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+   //-------------------------------------------
    //drawing the set of Legendre functions
    TF1* L[5];
 

@@ -54,8 +54,9 @@ void TSVDUnfoldExample()
 
    const Double_t cutdummy= -99999.0;
 
-   // --- Data/MC toy generation -----------------------------------
-
+   // --------------------------------------
+   // Data/MC toy generation
+   //
    // The MC input
    Int_t nbins = 40;
    TH1D *xini = new TH1D("xini", "MC truth", nbins, -10.0, 10.0);
@@ -99,8 +100,9 @@ void TSVDUnfoldExample()
        statcov->SetBinContent(i,i,data->GetBinError(i)*data->GetBinError(i));
    }
 
-   // --- Here starts the actual unfolding -------------------------
-
+   // ----------------------------
+   // Here starts the actual unfolding
+   //
    // Create TSVDUnfold object and initialise
    TSVDUnfold *tsvdunf = new TSVDUnfold( data, statcov, bini, xini, Adet );
 
@@ -140,8 +142,9 @@ void TSVDUnfoldExample()
    TH2D* uinvcov = tsvdunf->GetXinv();
 
 
-   // --- Only plotting stuff below ------------------------------
-
+   // ---------------------------------
+   // Only plotting stuff below
+   
    for (int i=1; i<=unfres->GetNbinsX(); i++) {
       unfres->SetBinError(i, TMath::Sqrt(utaucov->GetBinContent(i,i)));
    }

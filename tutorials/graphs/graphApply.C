@@ -12,6 +12,7 @@
 ///
 /// \author Miro Helbich
 
+void graphApply()
 {
    const Int_t npoints=3;
    Double_t xaxis[npoints] = {1.,2.,3.};

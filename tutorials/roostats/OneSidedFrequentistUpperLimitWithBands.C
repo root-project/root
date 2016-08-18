@@ -16,11 +16,11 @@
 ///
 /// The first ~100 lines define a new test statistic, then the main macro starts.
 /// You may want to control:
-/// ~~~ {.cpp}
+/// ```cpp
 ///   double confidenceLevel=0.95;
 ///   int nPointsToScan = 30;
 ///   int nToyMC = 200;
-/// ~~~
+/// ```
 /// This uses a modified version of the profile likelihood ratio as
 /// a test statistic for upper limits (eg. test stat = 0 if muhat>mu).
 ///
@@ -62,11 +62,11 @@
 /// Note, if you have a boundary on the parameter of interest (eg. cross-section)
 /// the threshold on the one-sided test statistic starts off very small because we
 /// are only including downward fluctuations.  You can see the threshold in these printouts:
-/// ~~~ {.cpp}
+/// ```cpp
 /// [#0] PROGRESS:Generation -- generated toys: 500 / 999
 /// NeymanConstruction: Prog: 12/50 total MC = 39 this test stat = 0
 ///  SigXsecOverSM=0.69 alpha_syst1=0.136515 alpha_syst3=0.425415 beta_syst2=1.08496 [-1e+30, 0.011215]  in interval = 1
-/// ~~~
+/// ```
 /// this tells you the values of the parameters being used to generate the pseudo-experiments
 /// and the threshold in this case is 0.011215.  One would expect for 95% that the threshold
 /// would be ~1.35 once the cross-section is far enough away from 0 that it is essentially
@@ -128,7 +128,7 @@ using namespace RooStats;
 bool useProof = false;  // flag to control whether to use Proof
 int nworkers = 0;   // number of workers (default use all available cores)
 
-/////////////////////////////////////////////////////////////////////////
+// -------------------------------------------------------
 // The actual macro
 
 void OneSidedFrequentistUpperLimitWithBands(const char* infile = "",
@@ -138,14 +138,13 @@ void OneSidedFrequentistUpperLimitWithBands(const char* infile = "",
 
 
 
-  double confidenceLevel=0.95;
-  int nPointsToScan = 20;
-  int nToyMC = 200;
+   double confidenceLevel=0.95;
+   int nPointsToScan = 20;
+   int nToyMC = 200;
 
-  /////////////////////////////////////////////////////////////
-  // First part is just to access a user-defined file
-  // or create the standard example file if it doesn't exist
-  ////////////////////////////////////////////////////////////
+   // -------------------------------------------------------
+   // First part is just to access a user-defined file
+   // or create the standard example file if it doesn't exist
    const char* filename = "";
    if (!strcmp(infile,"")) {
       filename = "results/example_combined_GaussExample_model.root";
@@ -179,9 +178,8 @@ void OneSidedFrequentistUpperLimitWithBands(const char* infile = "",
    }
 
 
-   /////////////////////////////////////////////////////////////
+   // -------------------------------------------------------
    // Now get the data and workspace
-   ////////////////////////////////////////////////////////////
 
    // get the workspace out of the file
    RooWorkspace* w = (RooWorkspace*) file->Get(workspaceName);
@@ -203,16 +201,16 @@ void OneSidedFrequentistUpperLimitWithBands(const char* infile = "",
       return;
    }
 
-   /////////////////////////////////////////////////////////////
+   // -------------------------------------------------------
    // Now get the POI for convenience
    // you may want to adjust the range of your POI
-   ////////////////////////////////////////////////////////////
+   
    RooRealVar* firstPOI = (RooRealVar*) mc->GetParametersOfInterest()->first();
-   //  firstPOI->setMin(0);
-   //  firstPOI->setMax(10);
+   /*  firstPOI->setMin(0);*/
+   /*  firstPOI->setMax(10);*/
 
-   /////////////////////////////////////////////
-   // create and use the FeldmanCousins tool
+   // --------------------------------------------
+   // Create and use the FeldmanCousins tool
    // to find and plot the 95% confidence interval
    // on the parameter of interest as specified
    // in the model config
@@ -220,20 +218,20 @@ void OneSidedFrequentistUpperLimitWithBands(const char* infile = "",
    // so this is NOT a Feldman-Cousins interval
    FeldmanCousins fc(*data,*mc);
    fc.SetConfidenceLevel(confidenceLevel);
-   //  fc.AdditionalNToysFactor(0.25); // degrade/improve sampling that defines confidence belt
-   //  fc.UseAdaptiveSampling(true); // speed it up a bit, don't use for expectd limits
+   /*  fc.AdditionalNToysFactor(0.25); // degrade/improve sampling that defines confidence belt*/
+   /*  fc.UseAdaptiveSampling(true); // speed it up a bit, don't use for expectd limits*/
    fc.SetNBins(nPointsToScan); // set how many points per parameter of interest to scan
    fc.CreateConfBelt(true); // save the information in the belt for plotting
 
-   /////////////////////////////////////////////
+   // -------------------------------------------------------
    // Feldman-Cousins is a unified limit by definition
    // but the tool takes care of a few things for us like which values
    // of the nuisance parameters should be used to generate toys.
    // so let's just change the test statistic and realize this is
    // no longer "Feldman-Cousins" but is a fully frequentist Neyman-Construction.
-   //  ProfileLikelihoodTestStatModified onesided(*mc->GetPdf());
-   //  fc.GetTestStatSampler()->SetTestStatistic(&onesided);
-   // ((ToyMCSampler*) fc.GetTestStatSampler())->SetGenerateBinned(true);
+   /*  ProfileLikelihoodTestStatModified onesided(*mc->GetPdf());*/
+   /*  fc.GetTestStatSampler()->SetTestStatistic(&onesided);*/
+   /* ((ToyMCSampler*) fc.GetTestStatSampler())->SetGenerateBinned(true); */
    ToyMCSampler*  toymcsampler = (ToyMCSampler*) fc.GetTestStatSampler();
    ProfileLikelihoodTestStat* testStat = dynamic_cast<ProfileLikelihoodTestStat*>(toymcsampler->GetTestStatistic());
    testStat->SetOneSided(true);
@@ -255,7 +253,7 @@ void OneSidedFrequentistUpperLimitWithBands(const char* infile = "",
    // We can use PROOF to speed things along in parallel
    // However, the test statistic has to be installed on the workers
    // so either turn off PROOF or include the modified test statistic
-   // in your $ROOTSYS/roofit/roostats/inc directory,
+   // in your `$ROOTSYS/roofit/roostats/inc` directory,
    // add the additional line to the LinkDef.h file,
    // and recompile root.
    if (useProof) {
@@ -315,9 +313,8 @@ void OneSidedFrequentistUpperLimitWithBands(const char* infile = "",
    histOfThresholds->Draw();
    c1->cd(2);
 
-   /////////////////////////////////////////////////////////////
+   // -------------------------------------------------------
    // Now we generate the expected bands and power-constriant
-   ////////////////////////////////////////////////////////////
 
    // First: find parameter point for mu=0, with conditional MLEs for nuisance parameters
    RooAbsReal* nll = mc->GetPdf()->createNLL(*data);

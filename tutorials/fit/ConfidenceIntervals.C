@@ -24,7 +24,7 @@ void ConfidenceIntervals()
       "Confidence intervals on the fitted function",1200, 500);
    myc->Divide(3,1);
 
-/////1. A graph
+//### 1. A graph
    //Create and fill a graph
    Int_t ngr = 100;
    TGraph *gr = new TGraph(ngr);
@@ -58,7 +58,7 @@ void ConfidenceIntervals()
    gr->SetMarkerSize(0.7);
    gr->Draw("psame");
 
-/////2. A histogram
+//### 2. A histogram
    myc->cd(2);
    //Create, fill and fit a histogram
    Int_t nh=5000;
@@ -80,7 +80,7 @@ void ConfidenceIntervals()
    hint->SetFillColor(2);
    hint->Draw("e3 same");
 
-/////3. A 2d graph
+//### 3. A 2d graph
    //Create and fill the graph
    Int_t ngr2 = 100;
    Double_t z, rnd, e=0.3;

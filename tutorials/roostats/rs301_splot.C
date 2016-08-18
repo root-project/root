@@ -97,7 +97,7 @@ void AddModel(RooWorkspace* ws){
    RooRealVar isolation("isolation", "isolation", 0., 20., "GeV");
 
 
-   /////////////////////////////////////////////
+   // --------------------------------------
    // make 2-d model for Z including the invariant mass
    // distribution  and an isolation distribution which we want to
    // unfold from QCD.
@@ -123,7 +123,7 @@ void AddModel(RooWorkspace* ws){
    RooProdPdf zModel("zModel", "4-d model for Z",
                      RooArgSet(mZModel, zIsolationModel));
 
-   //////////////////////////////////////////////
+   // --------------------------------------
    // make QCD model
 
    std::cout << "make qcd model" << std::endl;
@@ -152,7 +152,7 @@ void AddModel(RooWorkspace* ws){
    RooProdPdf qcdModel("qcdModel", "2-d model for QCD",
       RooArgSet(qcdMassModel, qcdIsolationModel));
 
-   //////////////////////////////////////////////
+   // --------------------------------------
    // combined model
 
    // These variables represent the number of Z or QCD events

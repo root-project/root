@@ -5,6 +5,7 @@
 /// \macro_image
 /// \author Olivier Couet
 
+TCanvas * tmathtext2()
 {
    TCanvas *c1 = new TCanvas("mathtext","TMathText symbol",1200,1400);
 

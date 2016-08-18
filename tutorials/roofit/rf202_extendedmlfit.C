@@ -48,9 +48,9 @@ void rf202_extendedmlfit()
    RooRealVar sig1frac("sig1frac","fraction of component 1 in signal",0.8,0.,1.) ;
    RooAddPdf sig("sig","Signal",RooArgList(sig1,sig2),sig1frac) ;
 
-   /////////////////////
-   // M E T H O D   1 //
-   /////////////////////
+   //----------------
+   // M E T H O D   1
+   //================
 
 
    // C o n s t r u c t   e x t e n d e d   c o m p o s i t e   m o d e l 
@@ -89,9 +89,9 @@ void rf202_extendedmlfit()
    model.Print("t") ;
 
 
-   /////////////////////
-   // M E T H O D   2 //
-   /////////////////////
+   //----------------
+   // M E T H O D   2
+   //================
 
    // C o n s t r u c t   e x t e n d e d   c o m p o n e n t s   f i r s t
    // ---------------------------------------------------------------------

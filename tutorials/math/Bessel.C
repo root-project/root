@@ -4,9 +4,9 @@
 /// Show the different kinds of Bessel functions available in ROOT
 /// To execute the macro type in:
 ///
-/// ~~~ {.cpp}
+/// ```cpp
 /// root[0] .x Bessel.C
-/// ~~~
+/// ```
 ///
 /// It will create one canvas with the representation
 /// of the  cylindrical and spherical Bessel functions
@@ -75,13 +75,13 @@ void Bessel()
    leg->Draw();
    p1->Draw();
 
-   //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+   //------------------------------------------------
    DistCanvas->cd(2);
    gPad->SetGrid();
    gPad->SetFrameFillColor(19);
 
    TLegend *leg2 = new TLegend(0.75, 0.7, 0.89, 0.89);
-   //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+   //------------------------------------------------
    //Drawing Bessel k
    TF1* KBessel[5];
    for(int nu = 0; nu < n; nu++){
@@ -110,12 +110,12 @@ void Bessel()
    leg2->AddEntry(KBessel[4]->DrawCopy("same"), " K_4(x)", "l");
    leg2->Draw();
    p2->Draw();
-   //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+   //------------------------------------------------
    DistCanvas->cd(3);
    gPad->SetGrid();
    gPad->SetFrameFillColor(19);
    TLegend *leg3 = new TLegend(0.75, 0.7, 0.89, 0.89);
-   //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+   //------------------------------------------------
    //Drawing Bessel i
    TF1* iBessel[5];
    for(int nu = 0; nu <= 4; nu++){
@@ -145,12 +145,12 @@ void Bessel()
    leg3->AddEntry(iBessel[4]->DrawCopy("same"), " I_4(x)", "l");
    leg3->Draw();
    p3->Draw();
-   //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+   //------------------------------------------------
    DistCanvas->cd(4);
    gPad->SetGrid();
    gPad->SetFrameFillColor(19);
    TLegend *leg4 = new TLegend(0.75, 0.7, 0.89, 0.89);
-   //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+   //------------------------------------------------
    //drawing sph_bessel
    TF1* jBessel[5];
    for(int nu = 0; nu <= 4; nu++){

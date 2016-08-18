@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_roostats
-/// \notebook -js
+/// \notebook 
 /// 'Limit Example' RooStats tutorial macro #101
 /// This tutorial shows an example of creating a simple
 /// model for a number counting experiment with uncertainty
@@ -50,17 +50,16 @@ using namespace RooStats;
 
 void rs101_limitexample()
 {
-   /////////////////////////////////////////
+   // --------------------------------------
    // An example of setting a limit in a number counting experiment with uncertainty on background and signal
-   /////////////////////////////////////////
 
    // to time the macro
    TStopwatch t;
    t.Start();
 
-   /////////////////////////////////////////
+   // --------------------------------------
    // The Model building stage
-   /////////////////////////////////////////
+   // --------------------------------------
    RooWorkspace* wspace = new RooWorkspace();
    wspace->factory("Poisson::countingModel(obs[150,0,300], sum(s[50,0,120]*ratioSigEff[1.,0,3.],b[100]*ratioBkgEff[1.,0.,3.]))"); // counting model
    //  wspace->factory("Gaussian::sigConstraint(ratioSigEff,1,0.05)"); // 5% signal efficiency uncertainty
@@ -116,14 +115,14 @@ void rs101_limitexample()
    //ProfileLikelihoodCalculator plc(*data, *modelWithConstraints, paramOfInterest);
    ProfileLikelihoodCalculator plc(*data, modelConfig);
    plc.SetTestSize(.05);
-   ConfInterval* lrint = plc.GetInterval();  // that was easy.
+   ConfInterval* lrinterval = plc.GetInterval();  // that was easy.
 
    // Let's make a plot
    TCanvas* dataCanvas = new TCanvas("dataCanvas");
    dataCanvas->Divide(2,1);
 
    dataCanvas->cd(1);
-   LikelihoodIntervalPlot plotInt((LikelihoodInterval*)lrint);
+   LikelihoodIntervalPlot plotInt((LikelihoodInterval*)lrinterval);
    plotInt.SetTitle("Profile Likelihood Ratio and Posterior for S");
    plotInt.Draw();
 
@@ -159,8 +158,8 @@ void rs101_limitexample()
 
 
    // Get Lower and Upper limits from Profile Calculator
-   cout << "Profile lower limit on s = " << ((LikelihoodInterval*) lrint)->LowerLimit(*s) << endl;
-   cout << "Profile upper limit on s = " << ((LikelihoodInterval*) lrint)->UpperLimit(*s) << endl;
+   cout << "Profile lower limit on s = " << ((LikelihoodInterval*) lrinterval)->LowerLimit(*s) << endl;
+   cout << "Profile upper limit on s = " << ((LikelihoodInterval*) lrinterval)->UpperLimit(*s) << endl;
 
    // Get Lower and Upper limits from FeldmanCousins with profile construction
    if (fcint != NULL) {
@@ -226,12 +225,12 @@ void rs101_limitexample()
 
 
    delete wspace;
-   delete lrint;
+   delete lrinterval;
    delete mcInt;
    delete fcint;
    delete data;
 
-   /// print timing info
+   // print timing info
    t.Stop();
    t.Print();
 }

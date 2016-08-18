@@ -77,10 +77,9 @@ void StandardBayesianNumericalDemo(const char* infile = "",
 
 
 
-   /////////////////////////////////////////////////////////////
+   // -------------------------------------------------------
    // First part is just to access a user-defined file
    // or create the standard example file if it doesn't exist
-   ////////////////////////////////////////////////////////////
 
    const char* filename = "";
    if (!strcmp(infile,"")) {
@@ -115,9 +114,9 @@ void StandardBayesianNumericalDemo(const char* infile = "",
    }
 
 
-   /////////////////////////////////////////////////////////////
+   // -------------------------------------------------------
    // Tutorial starts here
-   ////////////////////////////////////////////////////////////
+   // -------------------------------------------------------
 
    // get the workspace out of the file
    RooWorkspace* w = (RooWorkspace*) file->Get(workspaceName);
@@ -139,7 +138,7 @@ void StandardBayesianNumericalDemo(const char* infile = "",
       return;
    }
 
-   /////////////////////////////////////////////
+   // ------------------------------------------
    // create and use the BayesianCalculator
    // to find and plot the 95% credible interval
    // on the parameter of interest as specified

@@ -19,15 +19,15 @@
 ///
 /// Usage:
 ///
-/// ~~~ {.cpp}
+/// ```cpp
 ///  >.x exampleMultiRoot.C()
-/// ~~~
+/// ```
 ///
 /// or
 ///
-/// ~~~ {.cpp}
+/// ```cpp
 /// >.x exampleMultiRoot(algoname,printlevel)
-/// ~~~
+/// ```
 ///
 /// where algoname is for an algorithm not using the derivatives:
 ///  hybridS (default) , hybrid, dnewton, broyden
@@ -58,7 +58,7 @@ void exampleMultiRoot(const char * algo = 0, int printlevel = 1) {
 #else
 
    ROOT::Math::MultiRootFinder r(algo);
-    //defining the function
+   //defining the function
    // use Rosenbrock functions
    TF2 * f1 = new TF2("f1","[0]*(1-x)+[1]*y");
    TF2 * f2 = new TF2("f2","[0]*(y-x*x)");
