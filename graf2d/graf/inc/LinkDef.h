@@ -31,6 +31,7 @@
 #pragma link C++ class TEllipse-;
 #pragma link C++ class TFrame+;
 #pragma link C++ class TGaxis-;
+#pragma link C++ class TGaxisModLab-;
 #pragma link C++ class TGraphPolar+;
 #pragma link C++ class TGraphPolargram+;
 #pragma link C++ class TGraphQQ+;
