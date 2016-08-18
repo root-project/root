@@ -4,10 +4,10 @@
 /// field configurations.
 /// Needs to be run in compiled mode.
 /// root
-/// ```cpp
+/// ~~~{.cpp}
 ///   .L track.C+
 ///   track(3, kTRUE)
-/// ```
+/// ~~~
 /// void track(Int_t mode = 5, Bool_t isRungeKutta = kTRUE)
 /// Modes are
 ///  0. B = 0, no difference btween signed and charge particles;

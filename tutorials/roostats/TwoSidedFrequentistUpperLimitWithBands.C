@@ -16,12 +16,12 @@
 /// that it produces.
 ///
 /// You may want to control:
-/// ```cpp
+/// ~~~{.cpp}
 ///   double confidenceLevel=0.95;
 ///   double additionalToysFac = 1.;
 ///   int nPointsToScan = 30;
 ///   int nToyMC = 500;
-/// ```
+/// ~~~
 ///
 /// This uses a modified version of the profile likelihood ratio as
 /// a test statistic for upper limits (eg. test stat = 0 if muhat>mu).

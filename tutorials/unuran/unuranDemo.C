@@ -11,11 +11,11 @@
 ///
 /// To execute the macro type in:
 ///
-/// ```cpp
+/// ~~~{.cpp}
 /// root[0]: gSystem->Load("libMathCore");
 /// root[0]: gSystem->Load("libUnuran");
 /// root[0]: .x  unuranDemo.C+
-/// ```
+/// ~~~
 ///
 /// \macro_code
 ///

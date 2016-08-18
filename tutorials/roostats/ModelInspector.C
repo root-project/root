@@ -6,11 +6,11 @@
 /// The usage is the same as the StandardXxxDemo.C macros.
 /// The macro expects a root file containing a workspace with a ModelConfig and a dataset
 ///
-/// ```cpp
+/// ~~~{.cpp}
 /// $ root
 /// .L ModelInspector.C+
 /// ModelInspector(fileName, workspaceName, modelConfigName, dataSetName);
-/// ```
+/// ~~~
 ///
 /// Drag the sliders to adjust the parameters of the model.
 /// the min and max range of the sliders are used to define the upper & lower variation

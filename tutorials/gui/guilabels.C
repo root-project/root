@@ -2,10 +2,10 @@
 /// \ingroup tutorial_gui
 /// This macro gives an example of how to create different kind of labels and the possibility to enable/disable them.
 /// To run it do either:
-/// ``` 
+/// ~~~ 
 /// .x guilabels.C
 /// .x guilabels.C++
-/// ``` 
+/// ~~~ 
 ///
 /// \macro_code
 ///

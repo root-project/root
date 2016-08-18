@@ -4,10 +4,10 @@
 /// Example for fitting signal/background.
 /// This example can be executed with:
 ///
-/// ```cpp
+/// ~~~{.cpp}
 /// root > .x FittingDemo.C  (using the CINT interpreter)
 /// root > .x FittingDemo.C+ (using the native complier via ACLIC)
-/// ```
+/// ~~~
 ///
 /// \macro_image
 /// \macro_output

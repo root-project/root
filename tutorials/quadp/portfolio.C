@@ -4,16 +4,16 @@
 /// This macro shows in detail the use of the quadratic programming package quadp .
 /// Running this macro :
 ///
-/// ```cpp
+/// ~~~{.cpp}
 ///     .x portfolio.C+
-/// ```
+/// ~~~
 ///
 /// or
 ///
-/// ```cpp
+/// ~~~{.cpp}
 /// gSystem->Load("libQuadp");
 /// .L portFolio.C+; portfolio()
-/// ```
+/// ~~~
 ///
 /// Let's first review what we exactly mean by "quadratic programming" :
 ///

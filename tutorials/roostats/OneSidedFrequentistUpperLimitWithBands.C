@@ -16,11 +16,11 @@
 ///
 /// The first ~100 lines define a new test statistic, then the main macro starts.
 /// You may want to control:
-/// ```cpp
+/// ~~~{.cpp}
 ///   double confidenceLevel=0.95;
 ///   int nPointsToScan = 30;
 ///   int nToyMC = 200;
-/// ```
+/// ~~~
 /// This uses a modified version of the profile likelihood ratio as
 /// a test statistic for upper limits (eg. test stat = 0 if muhat>mu).
 ///
@@ -62,11 +62,11 @@
 /// Note, if you have a boundary on the parameter of interest (eg. cross-section)
 /// the threshold on the one-sided test statistic starts off very small because we
 /// are only including downward fluctuations.  You can see the threshold in these printouts:
-/// ```cpp
+/// ~~~{.cpp}
 /// [#0] PROGRESS:Generation -- generated toys: 500 / 999
 /// NeymanConstruction: Prog: 12/50 total MC = 39 this test stat = 0
 ///  SigXsecOverSM=0.69 alpha_syst1=0.136515 alpha_syst3=0.425415 beta_syst2=1.08496 [-1e+30, 0.011215]  in interval = 1
-/// ```
+/// ~~~
 /// this tells you the values of the parameters being used to generate the pseudo-experiments
 /// and the threshold in this case is 0.011215.  One would expect for 95% that the threshold
 /// would be ~1.35 once the cross-section is far enough away from 0 that it is essentially

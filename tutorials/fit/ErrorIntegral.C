@@ -8,9 +8,9 @@
 ///
 /// run the macro doing:
 ///
-/// ```cpp
+/// ~~~{.cpp}
 ///  .x ErrorIntegral.C
-/// ```
+/// ~~~
 ///
 /// \macro_image
 /// \macro_output

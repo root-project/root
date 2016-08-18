@@ -26,9 +26,9 @@
 ///  You can also change the signal rate by changing muVal.
 ///
 ///  The script produces a lot plots, you can merge them by doing:
-/// ```cpp
+/// ~~~{.cpp}
 ///  gs -q -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -sOutputFile=merged.pdf `ls *pdf`
-/// ```
+/// ~~~
 ///
 /// \macro_image
 /// \macro_output

@@ -2,10 +2,10 @@
 /// \ingroup tutorial_gui
 /// This macro gives an example of different buttons' layout.
 /// To run it do either:
-/// ``` 
+/// ~~~ 
 /// .x buttonsLayout.C
 /// .x buttonsLayout.C++
-/// ``` 
+/// ~~~ 
 ///
 /// \macro_code
 ///

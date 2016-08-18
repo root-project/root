@@ -6,7 +6,7 @@
 ///
 /// Usage:
 ///
-/// ```cpp
+/// ~~~{.cpp}
 /// root>.L StandardHypoTestDemo.C
 /// root> StandardHypoTestDemo("fileName","workspace name","S+B modelconfig name","B model name","data set name",calculator type, test statistic type, number of toys)
 ///
@@ -19,7 +19,7 @@
 ///              = 1 Tevatron
 ///              = 2 Profile Likelihood
 ///              = 3 Profile Likelihood one sided (i.e. = 0 if mu_hat < 0)
-/// ```
+/// ~~~
 ///
 /// \macro_image
 /// \macro_output
@@ -133,11 +133,11 @@ void StandardHypoTestDemo(const char* infile = "",
    //RooRandom::randomGenerator()->SetSeed(0);
 
    // to change minimizers
-   // ```bash
+   // ~~~{.bash}
    // ROOT::Math::MinimizerOptions::SetDefaultStrategy(0);
    // ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
    // ROOT::Math::MinimizerOptions::SetDefaultTolerance(1);
-   // ```
+   // ~~~
 
   // -------------------------------------------------------
   // First part is just to access a user-defined file

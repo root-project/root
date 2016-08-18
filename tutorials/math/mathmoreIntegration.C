@@ -5,9 +5,9 @@
 /// it calculates the numerically cumulative integral of a distribution (like in this case the BreitWigner)
 /// to execute the macro type it (you need to compile with AClic)
 ///
-/// ```cpp
+/// ~~~{.cpp}
 /// root[0] .x mathmoreIntegration.C+
-/// ```
+/// ~~~
 ///
 /// This tutorials require having libMathMore built with ROOT.
 ///

@@ -312,15 +312,15 @@ void HybridStandardForm() {
    hc1.ForcePriorNuisanceAlt(*w->pdf("py"));
    hc1.ForcePriorNuisanceNull(*w->pdf("py"));
    // if you wanted to use the ad hoc Gaussian prior instead
-   // ```
+   // ~~~
    //  hc1.ForcePriorNuisanceAlt(*w->pdf("gauss_prior"));
    //  hc1.ForcePriorNuisanceNull(*w->pdf("gauss_prior"));
-   // ```
+   // ~~~
    // if you wanted to use the ad hoc log-normal prior instead
-   // ```
+   // ~~~
    //  hc1.ForcePriorNuisanceAlt(*w->pdf("lognorm_prior"));
    //  hc1.ForcePriorNuisanceNull(*w->pdf("lognorm_prior"));
-   // ```
+   // ~~~
 
    // enable proof
    // proof not enabled for this test statistic
@@ -363,15 +363,15 @@ void HybridStandardForm() {
    hc2.ForcePriorNuisanceAlt(*w->pdf("py"));
    hc2.ForcePriorNuisanceNull(*w->pdf("py"));
    // if you wanted to use the ad hoc Gaussian prior instead
-   // ```
+   // ~~~
    //  hc2.ForcePriorNuisanceAlt(*w->pdf("gauss_prior"));
    //  hc2.ForcePriorNuisanceNull(*w->pdf("gauss_prior"));
-   // ```
+   // ~~~
    // if you wanted to use the ad hoc log-normal prior instead
-   // ```
+   // ~~~
    //  hc2.ForcePriorNuisanceAlt(*w->pdf("lognorm_prior"));
    //  hc2.ForcePriorNuisanceNull(*w->pdf("lognorm_prior"));
-   // ```
+   // ~~~
 
    // enable proof
    if(pc) toymcs2->SetProofConfig(pc);

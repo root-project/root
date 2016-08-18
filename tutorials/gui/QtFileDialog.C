@@ -4,14 +4,14 @@
 /// See: [https://doc.qt.io/archives/3.3/qfiledialog.html#getOpenFileName](https://doc.qt.io/archives/3.3/qfiledialog.html#getOpenFileName)
 ///
 /// To use, invoke ACLiC from the ROOT prompt:
-/// ```
+/// ~~~
 /// root [] .x QtFileDialog.C++
-/// ```
+/// ~~~
 ///
 /// To use it with no ACLiC, omit the trailing "++"
-/// ```
+/// ~~~
 /// root [] .x QtFileDialog.C
-/// ```
+/// ~~~
 ///
 /// The QtFileDialog returns TString object that contains the selected file name.
 /// returns its pointer.

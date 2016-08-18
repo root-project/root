@@ -4,9 +4,9 @@
 /// Generate small triangles randomly in the canvas.
 /// Each triangle has a unique id and a random color in the color palette
 ///
-/// ```cpp
+/// ~~~{.cpp}
 /// root > .x triangles.C
-/// ```
+/// ~~~
 ///
 /// Then click on any triangle. A message showing the triangle number
 /// and its color will be printed.

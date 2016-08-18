@@ -12,14 +12,14 @@
 ///
 /// This macro can be executed with Cling or ACLIC
 ///  - via the interpretor, do
-/// ```cpp
+/// ~~~{.cpp}
 ///    root > .x invertMatrix.C
-/// ```
+/// ~~~
 ///  - via ACLIC
-/// ```cpp
+/// ~~~{.cpp}
 ///    root > gSystem->Load("libMatrix");
 ///    root > .x invertMatrix.C+
-/// ```
+/// ~~~
 ///
 /// \macro_output
 /// \macro_code

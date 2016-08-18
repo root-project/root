@@ -11,9 +11,9 @@
 ///
 /// To execute the macro type in:
 ///
-/// ```cpp
+/// ~~~{.cpp}
 ///   root[0]: .x  mathcoreVectorCollection.C
-/// ```
+/// ~~~
 ///
 /// \macro_image
 /// \macro_output

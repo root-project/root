@@ -7,9 +7,9 @@
 /// within the Marabou project.
 ///
 /// To run this example, do:
-/// ```
+/// ~~~
 ///  root > .x clonesA_Event.C
-/// ```
+/// ~~~
 /// \macro_code
 /// \author The ROOT Team
 

@@ -9,13 +9,13 @@
 ///     - Call gStyle->SetCanvasPreferGL(kTRUE)
 ///     - Or create canvas with name, wich contains "gl".
 ///  2. create TGLParametricEquation object.
-/// ```cpp
+/// ~~~{.cpp}
 ///     TGLParametricEquation *eq = new TGLParametricEquation("name",
 ///     "some FORMULA here - x(u, v)",
 ///     "some FORMULA here - y(u, v)",
 ///     "some FORMULA here - z(u, v)",
 ///     uMin, uMax, vMin, vMax);
-/// ```
+/// ~~~
 ///     where FORMULA is the same string (mathematical expression),
 ///     as in TF2, but you should use 'u' (or 'U') instead of 'x'
 ///     and 'v' (or 'V') instead of 'y'.

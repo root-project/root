@@ -2,10 +2,10 @@
 /// \ingroup tutorial_gui
 /// This macro gives an example of how to create a vertical splitter.
 /// To run it do either:
-/// ```
+/// ~~~
 /// .x splitterVertical.C
 /// .x splitterVertical.C++
-/// ```
+/// ~~~
 ///
 /// \macro_code
 ///

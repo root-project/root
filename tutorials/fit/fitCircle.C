@@ -5,11 +5,11 @@
 /// Fit a circle through the points and draw
 /// To run the script, do, eg
 ///
-/// ```cpp
+/// ~~~{.cpp}
 ///   root > .x fitCircle.C   (10000 points by default)
 ///   root > .x fitCircle.C(100);  (with only 100 points
 ///   root > .x fitCircle.C(100000);  with ACLIC
-/// ```
+/// ~~~
 ///
 /// \macro_image
 /// \macro_output

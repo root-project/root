@@ -4,9 +4,9 @@
 /// This script can only be executed via ACliC: .x threads.C++.
 /// Before executing the script, load the Thread library with:
 ///
-/// ```cpp
+/// ~~~{.cpp}
 ///   gSystem->Load("libThread");
-/// ```
+/// ~~~
 ///
 /// This is not needed anymore due to the rootmap facility which
 /// automatically loads the needed libraries.

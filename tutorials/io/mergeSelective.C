@@ -4,9 +4,9 @@
 /// Merge only part of the content of a set of files.
 /// This macro demonstrates how to merge only a part of the content of a set
 /// of input files, specified via the interface.
-/// ```cpp
+/// ~~~{.cpp}
 ///     TFileMerger::AddObjectNames(const char *names)
-/// ```
+/// ~~~
 /// The method can be called several times to add object names, or using a single
 /// string with names separated by a blank. Directory names contained in the files
 /// to be merged are accepted.

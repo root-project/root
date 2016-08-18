@@ -3,10 +3,10 @@
 /// Echo object at mouse position.
 /// Example of macro called when a pad is redrawn
 /// one must create a TExec object in the following way
-/// ```cpp
+/// ~~~{.cpp}
 /// TExec ex("ex",".x exec1.C");
 /// ex.Draw();
-/// ```
+/// ~~~
 /// this macro prints the bin number and the bin content when one clicks
 /// on the histogram contour of any histogram in a pad
 ///

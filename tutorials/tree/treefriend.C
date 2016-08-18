@@ -11,18 +11,18 @@
 ///     in the friend Tree
 ///
 /// You can run this tutorial with:
-/// ```
+/// ~~~
 ///  root > .x treefriend.C  (interpreted via Cling)
 ///  root > .x treefriend.C+ (executed via ACLIC & the native compiler)
-/// ```
+/// ~~~
 /// or, variants like:
-/// ```
+/// ~~~
 ///  root > .L treefriend.C+
 ///  root > CreateParentTree();
 ///  root > CreateFriendTree();
 ///  root > CompareTrees();
 ///  root > DrawFriend();
-/// ```
+/// ~~~
 ///
 /// \macro_output
 /// \macro_image

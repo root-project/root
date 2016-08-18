@@ -8,15 +8,15 @@
 ///
 ///  to execute this example, do:
 ///
-/// ```cpp
+/// ~~~{.cpp}
 ///  root > .x langaus.C
-/// ```
+/// ~~~
 ///
 /// or
 ///
-/// ```cpp
+/// ~~~{.cpp}
 ///  root > .x langaus.C++
-/// ```
+/// ~~~
 ///
 /// \macro_image
 /// \macro_output
