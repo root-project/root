@@ -74,6 +74,8 @@ element type.
 
 #include "TStreamerInfoActions.h"
 
+#include <array>
+
 std::atomic<Int_t> TStreamerInfo::fgCount{0};
 
 const Int_t kMaxLen = 1024;
@@ -390,13 +392,18 @@ void TStreamerInfo::Build()
       TStreamerElement* element = 0;
       dsize = 0;
 
-      // Let's treat the unique_ptr case
+      // Save some useful variables
       const char* dmName  = dm->GetName();
       const char* dmTitle = dm->GetTitle();
       const char* dmType  = dm->GetTypeName();
       const char* dmFull  = dm->GetTrueTypeName(); // Used to be GetFullTypeName ...
       Bool_t dmIsPtr = dm->IsaPointer();
+      TDataType* dt(nullptr);
+      Int_t ndim = dm->GetArrayDim();
+      std::array<Int_t, 5> maxIndices; // 5 is the maximum supported in TStreamerElement::SetMaxIndex
+      Bool_t isStdArray(kFALSE);
 
+      // Let's treat the unique_ptr case
       bool nameChanged;
       trueTypeNameBuf = typeNameBuf = TClassEdit::GetNameForIO(dmFull, TClassEdit::EModType::kNone, &nameChanged);
       if (nameChanged) {
@@ -407,6 +414,16 @@ void TStreamerInfo::Build()
          while(typeNameBuf.back() == '*') typeNameBuf.pop_back();
          dmFull = trueTypeNameBuf.c_str();
          dmType = typeNameBuf.c_str();
+      }
+      if ((isStdArray = TClassEdit::IsStdArray(dmType))){ // We tackle the std array case
+         TClassEdit::GetStdArrayProperties(dmType,
+                                           typeNameBuf,
+                                           maxIndices,
+                                           ndim);
+         trueTypeNameBuf = typeNameBuf;
+         while(typeNameBuf.back() == '*') typeNameBuf.pop_back();
+         dmFull = dmType = typeNameBuf.c_str();
+         dt = gROOT->GetType(dmType);
       }
 
       TDataMember* dmCounter = 0;
@@ -444,7 +461,7 @@ void TStreamerInfo::Build()
             }
          }
       }
-      TDataType* dt = dm->GetDataType();
+      if (!dt && !isStdArray) dt = dm->GetDataType();
       if (dt) {
          // found a basic type
          Int_t dtype = dt->GetType();
@@ -473,6 +490,7 @@ void TStreamerInfo::Build()
                //printf("found fBits, changing dtype from %d to 15\n", dtype);
                dtype = kBits;
             }
+            // Here we treat data members such as int, float, double[4]
             element = new TStreamerBasicType(dmName, dmTitle, offset, dtype, dmFull);
          }
       } else {
@@ -509,6 +527,11 @@ void TStreamerInfo::Build()
                Error("Build", "%s, unknown type: %s %s\n", GetName(), dmFull, dmName);
                continue;
             }
+            if (isStdArray) {
+               // We do not want to rebuild the streamerinfo of an std::array<T,N> asking the dm->GetUnitSize(), but rather of T only.
+
+               dsize = clm->Size();
+            }
             if (dmIsPtr) {
                // a pointer to a class
                if (dmCounter) {
@@ -539,14 +562,17 @@ void TStreamerInfo::Build()
          // If we didn't make an element, there is nothing to do.
          continue;
       }
-      Int_t ndim = dm->GetArrayDim();
       if (!dsize) {
          dsize = dm->GetUnitSize();
       }
       for (Int_t i = 0; i < ndim; ++i) {
-         element->SetMaxIndex(i, dm->GetMaxIndex(i));
+         auto maxIndex = 0;
+         if (isStdArray) maxIndex = maxIndices[i];
+         else maxIndex = dm->GetMaxIndex(i);
+         element->SetMaxIndex(i, maxIndex);
       }
       element->SetArrayDim(ndim);
+      // If the datamember was a int[4] this is 4, if double[3][2] 3*2=6
       Int_t narr = element->GetArrayLength();
       if (!narr) {
          narr = 1;
@@ -1955,6 +1981,15 @@ void TStreamerInfo::BuildOld()
 
       TDataMember* dm = 0;
 
+      std::string typeNameBuf;
+      const char* dmType = nullptr;
+      Bool_t dmIsPtr = false;
+      Bool_t isUniquePtr = false;
+      TDataType* dt(nullptr);
+      Int_t ndim = 0 ; //dm->GetArrayDim();
+      std::array<Int_t, 5> maxIndices; // 5 is the maximum supported in TStreamerElement::SetMaxIndex
+      Bool_t isStdArray(kFALSE);
+
       // First set the offset and sizes.
       if (fClass->GetState() <= TClass::kEmulated) {
          // Note the initilization in this case are
@@ -1978,12 +2013,31 @@ void TStreamerInfo::BuildOld()
             offset = GetDataMemberOffset(dm, streamer);
             element->SetOffset(offset);
             element->Init(this);
+
+            // Treat unique pointers and std arrays
+            dmType = dm->GetTypeName();
+            dmIsPtr = dm->IsaPointer();
+            Bool_t nameChanged;
+            typeNameBuf = TClassEdit::GetNameForIO(dmType, TClassEdit::EModType::kNone, &nameChanged);
+            if (nameChanged) {
+               isUniquePtr = dmIsPtr = TClassEdit::IsUniquePtr(dmType);
+               dmType = typeNameBuf.c_str();
+            }
+            if ((isStdArray = TClassEdit::IsStdArray(dmType))){ // We tackle the std array case
+               TClassEdit::GetStdArrayProperties(dmType,
+                                                 typeNameBuf,
+                                                 maxIndices,
+                                                 ndim);
+               dmType = typeNameBuf.c_str();
+               dt = gROOT->GetType(dmType);
+            }
+
             // We have a loaded class, let's make sure that if we have a collection
             // it is also loaded.
-            TString dmClassName = TClassEdit::ShortType(dm->GetTypeName(),TClassEdit::kDropStlDefault).c_str();
+            TString dmClassName = TClassEdit::ShortType(dmType,TClassEdit::kDropStlDefault).c_str();
             dmClassName = dmClassName.Strip(TString::kTrailing, '*');
             if (dmClassName.Index("const ")==0) dmClassName.Remove(0,6);
-            TClass *elemDm = !dm->IsBasic() ? TClass::GetClass(dmClassName.Data()) : 0;
+            TClass *elemDm = ! (dt || dm->IsBasic()) ? TClass::GetClass(dmClassName.Data()) : 0;
             if (elemDm && elemDm->GetCollectionProxy()
                 && !elemDm->IsLoaded()
                 && elemDm->GetCollectionProxy()->GetCollectionType() != ROOT::kSTLvector) {
@@ -2019,26 +2073,6 @@ void TStreamerInfo::BuildOld()
       // Now let's deal with Schema evolution
       Int_t newType = -1;
       TClassRef newClass;
-
-      // at this point, we still may not have a dm
-      std::string typeNameBuf;
-      const char* dmType = nullptr;
-      Bool_t dmIsPtr = false;
-      Bool_t isUniquePtr = false;
-      if (dm) {
-         dmType = dm->GetTypeName();
-         dmIsPtr = dm->IsaPointer();
-
-         Bool_t nameChanged;
-         typeNameBuf = TClassEdit::GetNameForIO(dmType, TClassEdit::EModType::kNone, &nameChanged);
-         if (nameChanged) {
-            if (TClassEdit::IsUniquePtr(dmType)) {
-               isUniquePtr = true;
-               dmIsPtr = true;
-            }
-            dmType = typeNameBuf.c_str();
-         }
-      }
 
       if (dm && dm->IsPersistent()) {
          if (dm->GetDataType()) {
@@ -2261,7 +2295,7 @@ void TStreamerInfo::BuildOld()
                      newType = kAny;
                   }
                }
-               if ((!dmIsPtr || newType==kSTLp) && dm->GetArrayDim() > 0) {
+               if ((!dmIsPtr || newType==kSTLp) && (isStdArray ? ndim : dm->GetArrayDim()) > 0) {
                   newType += kOffsetL;
                }
             } else if (!fClass->IsLoaded()) {
