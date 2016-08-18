@@ -18,9 +18,9 @@
 ///
 /// This macro shows several ways how to use the Match/Substitute capabilities of the
 /// the TPRegexp class . It can be run as follows :
-/// ~~~
+/// ```
 ///     .x regexp.C
-/// ~~~
+/// ```
 ///
 /// \macro_output
 /// \macro_code

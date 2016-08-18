@@ -8,24 +8,24 @@
 ///   - how to browse and analyze the Tree via the TBrowser and TTreeViewer
 /// This example can be run in many different ways:
 ///   1. Using the Cling interpreter
-/// ~~~
+/// ```
 /// .x tree1.C
-/// ~~~
+/// ```
 ///   2. Using the automatic compiler interface
-/// ~~~
+/// ```
 /// .x tree1.C++
-/// ~~~
+/// ```
 ///   3. 
-/// ~~~
+/// ```
 /// .L tree1.C  or .L tree1.C++
 /// tree1()
-/// ~~~
+/// ```
 /// One can also run the write and read parts in two separate sessions.
 /// For example following one of the sessions above, one can start the session:
-/// ~~~
+/// ```
 ///   .L tree1.C
 ///   tree1r();
-/// ~~~
+/// ```
 /// \macro_code
 ///
 /// \author Rene Brun

@@ -13,10 +13,10 @@
 /// The example emulates the Geant3 step routines.
 ///
 /// to run the example, do:
-/// ~~~
+/// ```
 /// .x tree2.C   to execute with the Cling interpreter
 /// .x tree2.C++ to execute with native compiler
-/// ~~~
+/// ```
 /// \macro_code
 ///
 /// \author Rene Brun

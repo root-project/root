@@ -27,10 +27,10 @@
 /// interpreted one would not benchmark THnSparse but CINT.
 ///
 ///  Run as:
-/// ~~~ {.cpp}
+/// ```cpp
 ///  root[0] .L $ROOTSYS/tutorials/hist/sparsehist.C+
 ///  root[1] sparsehist()
-/// ~~~
+/// ```
 ///
 /// \macro_code
 ///

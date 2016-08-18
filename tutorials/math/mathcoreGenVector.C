@@ -14,9 +14,9 @@
 ///
 /// To execute the macro type in:
 ///
-/// ~~~ {.cpp}
+/// ```cpp
 /// root[0] .x  mathcoreGenVector.C
-/// ~~~
+/// ```
 ///
 /// \macro_output
 /// \macro_code

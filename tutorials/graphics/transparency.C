@@ -6,9 +6,9 @@
 /// It is done by specifying the alpha value of a given color.
 /// For instance
 ///
-/// ~~~
+/// ```
 ///    ellipse->SetFillColorAlpha(9, 0.571);
-/// ~~~
+/// ```
 ///
 /// changes the ellipse fill color to the index 9 with an alpha value of 0.571.
 /// 0. would be fully transparent (invisible) and 1. completely opaque (the default).

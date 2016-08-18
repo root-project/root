@@ -4,11 +4,11 @@
 /// Example of macro called when a mouse event occurs in a pad.
 ///
 /// Example:
-/// ~~~ {.cpp}
+/// ```cpp
 /// Root > TFile f("hsimple.root");
 /// Root > hpxpy.Draw();
 /// Root > c1.AddExec("ex2",".x exec2.C");
-/// ~~~
+/// ```
 /// When moving the mouse in the canvas, a second canvas shows the
 /// projection along X of the bin corresponding to the Y position
 /// of the mouse. The resulting histogram is fitted with a gaussian.

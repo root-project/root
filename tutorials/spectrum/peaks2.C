@@ -7,11 +7,11 @@
 /// The position of the peaks is found via TSpectrum2
 /// To execute this example, do:
 ///
-/// ~~~ {.cpp}
+/// ```cpp
 ///  root > .x peaks2.C  (generate up to 50 peaks by default)
 ///  root > .x peaks2.C(10) (generate up to 10 peaks)
 ///  root > .x peaks2.C+(200) (generate up to 200 peaks via ACLIC)
-/// ~~~
+/// ```
 ///
 /// The script will iterate generating a new histogram having
 /// between 5 and the maximun number of peaks specified.

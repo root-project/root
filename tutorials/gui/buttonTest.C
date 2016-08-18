@@ -2,10 +2,10 @@
 /// \ingroup tutorial_gui
 /// This macro gives an example of how to set/change text button attributes.
 /// To run it do either:
-/// ~~~ 
+/// ``` 
 /// .x buttonTest.C
 /// .x buttonTest.C++
-/// ~~~ 
+/// ``` 
 ///
 /// \macro_code
 ///

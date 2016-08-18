@@ -4,9 +4,9 @@
 ///
 /// to run, do:
 ///
-/// ~~~ {.cpp}
+/// ```cpp
 ///  root > .x pythia8.C
-/// ~~~
+/// ```
 ///
 /// Note that before executing this script,
 ///

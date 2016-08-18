@@ -4,14 +4,14 @@
 /// See: [https://doc.qt.io/archives/3.3/qfiledialog.html#getOpenFileNames](https://doc.qt.io/archives/3.3/qfiledialog.html#getOpenFileNames)
 ///
 /// To use, invoke ACLiC from the ROOT prompt:
-/// ~~~
+/// ```
 /// root [] .x QtMultiFileDialog.C++
-/// ~~~
+/// ```
 ///
 /// To use it with no ACLiC, omit the trailing "++"
-/// ~~~
+/// ```
 /// root [] .x QtMultiFileDialog.C
-/// ~~~
+/// ```
 ///
 /// The QtMultiFileDialog creates TList of TObjString objects and
 /// returns its pointer.

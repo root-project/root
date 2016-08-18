@@ -8,9 +8,9 @@
 /// in the TClonesArrays.
 /// The JetEvent class is in $ROOTSYS/tutorials/tree/JetEvent.h,cxx
 /// to execute the script, do
-/// ~~~
+/// ```
 /// .x jets.C
-/// ~~~
+/// ```
 ///
 /// \macro_code
 /// \author Rene Brun

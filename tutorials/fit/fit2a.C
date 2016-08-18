@@ -11,10 +11,10 @@
 ///
 /// This example can be executed via the interpreter or/and the compiler
 ///
-/// ~~~ {.cpp}
+/// ```cpp
 ///   root > .x fit2a.C
 ///   root > .x fit2a.C++
-/// ~~~
+/// ```
 ///
 /// \macro_image
 /// \macro_output
