@@ -700,22 +700,22 @@ void TMVA::MethodDNN::TrainGpu()
 
       using DataLoader_t = TDataLoader<TMVAInput_t, TCuda>;
 
+      size_t nThreads = 2;
       DataLoader_t trainingData(GetEventCollection(Types::kTraining),
                                 nTrainingSamples,
                                 net.GetBatchSize(),
                                 net.GetInputWidth(),
-                                net.GetOutputWidth());
+                                net.GetOutputWidth(), nthreads);
       DataLoader_t testData(GetEventCollection(Types::kTesting),
                             nTestSamples,
                             testNet.GetBatchSize(),
                             net.GetInputWidth(),
-                            net.GetOutputWidth());
+                            net.GetOutputWidth(), nthreads);
       DNN::TGradientDescent<TCuda> minimizer(settings.learningRate,
                                              settings.convergenceSteps,
                                              settings.testInterval);
 
       net.Print();
-      size_t nThreads = 2;
       std::vector<TNet<TCuda>> nets{};
       std::vector<TBatch<TCuda>> batches{};
       nets.reserve(nThreads);
