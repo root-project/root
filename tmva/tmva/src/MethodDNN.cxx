@@ -715,7 +715,7 @@ void TMVA::MethodDNN::TrainGpu()
                                              settings.testInterval);
 
       net.Print();
-      size_t nThreads = 1;
+      size_t nThreads = 2;
       std::vector<TNet<TCuda>> nets{};
       std::vector<TBatch<TCuda>> batches{};
       nets.reserve(nThreads);
