@@ -64,7 +64,7 @@ from datetime import datetime, date
 # for the script to work correctly.
 gTypesList = ["void", "int", "Int_t", "TF1", "string", "bool", "double", "float", "char",
     "TCanvas", "TTree", "TString", "TSeqCollection", "Double_t", "TFile", "Long64_t", "Bool_t", "TH1",
-    "RooDataSet", "RooWorkspace" , "HypoTestInverterResult" , "TVectorD" , "TArrayF"]
+    "RooDataSet", "RooWorkspace" , "HypoTestInverterResult" , "TVectorD" , "TArrayF", "UInt_t"]
 
 # -------------------------------------
 # -------- Fuction definitions---------
@@ -262,6 +262,8 @@ def readHeaderCpp(text):
     for line in lines[i:]:
         newtext += (line + "\n")
     description = description.replace("\\f$", "$")
+    description = description.replace("\\f[", "$$")
+    description = description.replace("\\f]", "$$")
     return newtext, description, author, isNotebook, isJsroot, nodraw, needsHeaderFile
 
 
@@ -320,7 +322,10 @@ def cppComments(text):
         if line.startswith("//") and not inComment:  # True if first line of comment
             inComment = True
             newtext += "# <markdowncell>\n"
-            newtext += ("# " + line[2:]+"\n")
+            if line[2:].lstrip().startswith("#"):  # Don't use .capitalize() if line starts with hash, ie it is a header
+               newtext += ("# " + line[2:]+"\n")
+            else:
+               newtext += ("# " + line[2:].lstrip().capitalize()+"\n")
         elif inComment and not line.startswith("//"):  # True if first line after comment
             inComment = False
             newtext += "# <codecell>\n"
@@ -427,7 +432,7 @@ def split(text):
             newHelpers.append("\n# <markdowncell>\n " + helperDescription + " \n# <codecell>\n%%cpp -d\n" + helper)
 
     rest = rest.rstrip("\n /")  # remove newlines and empty comments at the end of string
-
+    
     return main, newHelpers, rest
 
 
@@ -488,27 +493,28 @@ def processmain(text):
     ... }''') 
     ('TCanvas function(){\\n   content of function\\n   spanning several\\n   lines\\n   return c1\\n}', '\\n# <markdowncell> \\n# Call the main function \\n# <codecell>\\nfunction();', True , '')
     """
+
     argumentsCell = ''
 
-    argumentsre = re.compile(r'(?<=\().*?(?=\))', flags = re.DOTALL | re.MULTILINE)
-    arguments = argumentsre.search(text)
-    if len(arguments.group()) > 3:
-        print arguments.group()
-        argumentsCell = "# <markdowncell> \n Arguments are defined. \n# <codecell>\n"
-        #argumentList =  arguments.group().split(",")
-        individualArgumentre = re.compile(r'[^/\n,]*?=[^/\n,]*') #, flags = re.DOTALL) #| re.MULTILINE)
-        argumentList=individualArgumentre.findall(arguments.group())
-        for argument in argumentList: print "ARGUMENT:", argument , "\n\n\n"
-        for argument in argumentList:
-            argumentsCell += argument.strip("\n ") + ";\n"
-        argumentsCell += "# <codecell>\n"
+    if text:
+        argumentsre = re.compile(r'(?<=\().*?(?=\))', flags = re.DOTALL | re.MULTILINE)
+        arguments = argumentsre.search(text)
+
+        if len(arguments.group()) > 3:
+            argumentsCell = "# <markdowncell> \n Arguments are defined. \n# <codecell>\n"
+            individualArgumentre = re.compile(r'[^/\n,]*?=[^/\n,]*') #, flags = re.DOTALL) #| re.MULTILINE)
+            argumentList=individualArgumentre.findall(arguments.group())
+            for argument in argumentList:
+                argumentsCell += argument.strip("\n ") + ";\n"
+            argumentsCell += "# <codecell>\n"
 
     return text, argumentsCell
 
 # now define text transformers
 def removePaletteEditor(code):
-    return code.replace("img->StartPaletteEditor();", "")
-
+    code = code.replace("img->StartPaletteEditor();", "")
+    code = code.replace("Open the color editor", "")
+    return code
 def runEventExe(code):
     if "copytree" in tutName:
         return "# <codecell> \n.! $ROOTSYS/test/eventexe 1000 1 1 1 \n" + code
@@ -523,12 +529,13 @@ def roofitRemoveSpacesComments(code):
     
     def changeString(matchObject):
         matchString = matchObject.group()
+        matchString = matchString[0]  + " " + matchString[1:]
         matchString = matchString.replace("  " , "THISISASPACE")
         matchString = matchString.replace(" " , "")
         matchString = matchString.replace("THISISASPACE" , " ")
         return matchString
 
-    newcode = re.sub("#\s\s\w\s[\w-]\s\w.*", changeString , code)
+    newcode = re.sub("#\s\s?\w\s[\w-]\s\w.*", changeString , code)
     return newcode
 
 def declareNamespace(code):
@@ -549,32 +556,28 @@ def rs401dGetFiles(code):
          """#if !defined(__CINT__) || defined(__MAKECINT__)\n#include "../tutorials/roostats/NuMuToNuE_Oscillation.h"\n#include "../tutorials/roostats/NuMuToNuE_Oscillation.cxx" // so that it can be executed directly\n#else\n#include "../tutorials/roostats/NuMuToNuE_Oscillation.cxx+" // so that it can be executed directly\n#endif""" , """std::string tutDir = gROOT->GetTutorialsDir();\nTString headerDir = TString::Format("#include \\\"%s/roostats/NuMuToNuE_Oscillation.h\\\"", tutDir.c_str());\nTString impDir = TString::Format("#include \\\"%s/roostats/NuMuToNuE_Oscillation.cxx\\\"", tutDir.c_str());\ngROOT->ProcessLine(headerDir);\ngROOT->ProcessLine(impDir);""")
     return code
 
-def foamRemoveIfndef(code):
-    if tutName == "foam_demo":
-        code = code.replace("#if defined(__CINT__) && !defined(__MAKECINT__)\n{\n   std::cout << \"Using ACliC to run this macro since it uses custom classes\" << std::endl;\n   TString macroFileName = gSystem->UnixPathName(__FILE__);\n   gSystem->CompileMacro(macroFileName, \"k\");\n   foam_demo();\n}\n#else","")
-        code = code.replace("#endif", "")
-    return code
+
 
 
 def declareIncludes(code):
-    print code
-    code = re.sub(r"# <codecell>\s*#include", "# <codecell>\n%%cpp -d\n#include" , code)
-    print code
+    if tutName != "fitcont":
+        code = re.sub(r"# <codecell>\s*#include", "# <codecell>\n%%cpp -d\n#include" , code)
     return code
 
 def tree4GetFiles(code):
     if tutName == "tree4":
         code = code.replace(
-         """#include \"../test/Event.h\"""" , """std::string tutDir = gROOT->GetTutorialsDir();\nTString headerDir = TString::Format("#include \\\"%s/roostats/NuMuToNuE_Oscillation.h\\\"", tutDir.c_str());\nTString impDir = TString::Format("#include \\\"%s/roostats/NuMuToNuE_Oscillation.cxx\\\"", tutDir.c_str());\ngROOT->ProcessLine(headerDir);\ngROOT->ProcessLine(impDir);""")
+         """#include \"../test/Event.h\"""" , """# <codecell>\nTString dir = "$ROOTSYS/test/Event.h";\ngSystem->ExpandPathName(dir);\nTString includeCommand = TString::Format("#include \\\"%s\\\"" , dir.Data());\ngROOT->ProcessLine(includeCommand);""")
     return code
 
 def fixes(code):
     codeTransformers=[removePaletteEditor, runEventExe, getLibMathMore,
         roofitRemoveSpacesComments, declareNamespace, rs401dGetFiles ,
-        foamRemoveIfndef, declareIncludes]
+        declareIncludes, tree4GetFiles]
 
     for transformer in codeTransformers:
         code = transformer(code)
+
     return code
 
 def isCpp():
@@ -607,7 +610,7 @@ def mainfunction(text):
         main, helpers, rest = split(text)
         main,  argumentsCell = processmain(main)
         main = cppComments(unindenter(cppFunction(main)))  # Remove function, Unindent, and convert comments to Markdown cells
-        
+             
         if argumentsCell:
             main = argumentsCell + main
 
@@ -634,9 +637,9 @@ def mainfunction(text):
     text = fixes(text)
 
     # Add the title and header of the notebook
-    text = "# <markdowncell> \n# # %s\n%s# \n# \n# **Author:** %s  \n# <small>This notebook tutorial was automatically generated " \
-        "with [ROOTBOOK-izer (Beta)](https://github.com/root-mirror/root/blob/master/documentation/doxygen/converttonotebook.py) " \
-        "from the macro found in the ROOT repository  on %s.</small>\n# <codecell>\n%s" % (tutTitle, description, author, date, text)
+    text = "# <markdowncell> \n# # %s\n%s# \n# \n# **Author:** %s  \n# <i><small>This notebook tutorial was automatically generated " \
+        "with <a href= \"https://github.com/root-mirror/root/blob/master/documentation/doxygen/converttonotebook.py\">ROOTBOOK-izer (Beta)</a> " \
+        "from the macro found in the ROOT repository  on %s.</small></i>\n# <codecell>\n%s" % (tutTitle, description, author, date, text)
 
     # Add cell at the end of the notebook that draws all the canveses. Add a Markdown cell before explaining it.
     if isJsroot and not nodraw:
