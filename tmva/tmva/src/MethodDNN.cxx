@@ -705,12 +705,12 @@ void TMVA::MethodDNN::TrainGpu()
                                 nTrainingSamples,
                                 net.GetBatchSize(),
                                 net.GetInputWidth(),
-                                net.GetOutputWidth(), nthreads);
+                                net.GetOutputWidth(), nThreads);
       DataLoader_t testData(GetEventCollection(Types::kTesting),
                             nTestSamples,
                             testNet.GetBatchSize(),
                             net.GetInputWidth(),
-                            net.GetOutputWidth(), nthreads);
+                            net.GetOutputWidth(), nThreads);
       DNN::TGradientDescent<TCuda> minimizer(settings.learningRate,
                                              settings.convergenceSteps,
                                              settings.testInterval);
