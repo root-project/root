@@ -52,7 +52,7 @@ using namespace RooStats;
 bool useProof = false;  // flag to control whether to use Proof
 int nworkers = 0;   // number of workers (default use all available cores)
 
-/////////////////////////////////////////////////////////////////////////
+// -------------------------------------------------------
 // The actual macro
 
 void StandardTestStatDistributionDemo(const char* infile = "",
@@ -68,10 +68,9 @@ void StandardTestStatDistributionDemo(const char* infile = "",
    bool allowNegativeMu=true;
 
 
-   /////////////////////////////////////////////////////////////
+   // -------------------------------------------------------
    // First part is just to access a user-defined file
    // or create the standard example file if it doesn't exist
-   ////////////////////////////////////////////////////////////
       const char* filename = "";
       if (!strcmp(infile,"")) {
          filename = "results/example_combined_GaussExample_model.root";
@@ -105,9 +104,8 @@ void StandardTestStatDistributionDemo(const char* infile = "",
       }
 
 
-   /////////////////////////////////////////////////////////////
+   // -------------------------------------------------------
    // Now get the data and workspace
-   ////////////////////////////////////////////////////////////
 
    // get the workspace out of the file
    RooWorkspace* w = (RooWorkspace*) file->Get(workspaceName);
@@ -130,9 +128,8 @@ void StandardTestStatDistributionDemo(const char* infile = "",
    }
 
    mc->Print();
-   /////////////////////////////////////////////////////////////
+   // -------------------------------------------------------
    // Now find the upper limit based on the asymptotic results
-   ////////////////////////////////////////////////////////////
    RooRealVar* firstPOI = (RooRealVar*) mc->GetParametersOfInterest()->first();
    ProfileLikelihoodCalculator plc(*data,*mc);
    LikelihoodInterval* interval = plc.GetInterval();
@@ -146,8 +143,8 @@ void StandardTestStatDistributionDemo(const char* infile = "",
       mc->GetParametersOfInterest()->Print("v");
    }
 
-   /////////////////////////////////////////////
-   // create thte test stat sampler
+   // -------------------------------------------------------
+   // create the test stat sampler
    ProfileLikelihoodTestStat ts(*mc->GetPdf());
 
    // to avoid effects from boundary and simplify asymptotic comparison, set min=-max

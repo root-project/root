@@ -26,8 +26,6 @@
 TCanvas *timeonaxis()
 {
 
-//Author:
-
    time_t script_time;
    script_time = time(0);
    script_time = 3600*(int)(script_time/3600);
@@ -42,7 +40,7 @@ TCanvas *timeonaxis()
 
    int i;
 
-//======= Build a signal : noisy damped sine ======
+//### Build a signal : noisy damped sine 
 //        Time interval : 30 minutes
 
    gStyle->SetTitleH(0.08);
@@ -67,7 +65,7 @@ TCanvas *timeonaxis()
 // a reasonable tick interval value is chosen.
    ht->GetXaxis()->SetTimeDisplay(1);
 
-//======= Build a simple graph beginning at a different time ======
+//### Build a simple graph beginning at a different time 
 //        Time interval : 5 seconds
 
    float x[100], t[100];
@@ -89,7 +87,7 @@ TCanvas *timeonaxis()
    gt->GetXaxis()->SetTimeDisplay(1);
    gPad->Modified();
 
-//======= Build a second simple graph for a very long time interval ======
+//### Build a second simple graph for a very long time interval 
 //        Time interval : a few years
 
    float x2[10], t2[10];
@@ -114,6 +112,7 @@ TCanvas *timeonaxis()
 // One can choose a different time format than the one chosen by default
 // The time format is the same as the one of the C strftime() function
 // It's a string containing the following formats :
+//
 //    for date :
 //      %a abbreviated weekday name
 //      %b abbreviated month name

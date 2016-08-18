@@ -21,8 +21,7 @@
 #include "TMath.h"
 #include "TROOT.h"
 #include "TFrame.h"
-
-//#include "Fit/FitConfig.h"
+/*#include "Fit/FitConfig.h"*/
 
 
 TF1 *fitFcn;

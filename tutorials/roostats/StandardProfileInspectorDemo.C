@@ -48,10 +48,9 @@ void StandardProfileInspectorDemo(const char* infile = "",
                                   const char* modelConfigName = "ModelConfig",
                                   const char* dataName = "obsData") {
 
-   /////////////////////////////////////////////////////////////
+   // -------------------------------------------------------
    // First part is just to access a user-defined file
    // or create the standard example file if it doesn't exist
-   ////////////////////////////////////////////////////////////
 
       const char* filename = "";
       if (!strcmp(infile,"")) {
@@ -86,9 +85,9 @@ void StandardProfileInspectorDemo(const char* infile = "",
       }
 
 
-   /////////////////////////////////////////////////////////////
+   // -------------------------------------------------------
    // Tutorial starts here
-   ////////////////////////////////////////////////////////////
+   // -------------------------------------------------------
 
    // get the workspace out of the file
    RooWorkspace* w = (RooWorkspace*) file->Get(workspaceName);
@@ -110,7 +109,7 @@ void StandardProfileInspectorDemo(const char* infile = "",
       return;
    }
 
-   //////////////////////////////////////////////
+   // -----------------------------
    // now use the profile inspector
    ProfileInspector p;
    TList* list = p.GetListOfProfilePlots(*data,mc);

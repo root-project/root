@@ -71,10 +71,9 @@ double StandardFrequentistDiscovery(
    // for now, assume there is only one parameter of interest, and these are
    // its values:
 
-   /////////////////////////////////////////////////////////////
+   // -------------------------------------------------------
    // First part is just to access a user-defined file
    // or create the standard example file if it doesn't exist
-   ////////////////////////////////////////////////////////////
    const char* filename = "";
    if (!strcmp(infile,"")) {
       filename = "results/example_channel1_GammaExample_model.root";
@@ -108,9 +107,9 @@ double StandardFrequentistDiscovery(
    }
 
 
-   /////////////////////////////////////////////////////////////
+   // -------------------------------------------------------
    // Tutorial starts here
-   ////////////////////////////////////////////////////////////
+   // -------------------------------------------------------
 
    TStopwatch *mn_t = new TStopwatch;
    mn_t->Start();

@@ -8,6 +8,7 @@
 ///
 /// \author Olivier Couet
 
+void greyscale()
 {
    TCanvas *c = new TCanvas("grey", "Grey Scale", 500, 500);
    c->SetBorderMode(0);

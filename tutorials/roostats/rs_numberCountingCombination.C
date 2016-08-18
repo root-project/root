@@ -45,7 +45,7 @@ void rs_numberCountingCombination_expected();
 void rs_numberCountingCombination_observed();
 void rs_numberCountingCombination_observedWithTau();
 
-////////////////////////////////////////////
+// -------------------------------
 // main driver to choose one
 void rs_numberCountingCombination(int flag=1)
 {
@@ -57,7 +57,7 @@ void rs_numberCountingCombination(int flag=1)
       rs_numberCountingCombination_observedWithTau();
 }
 
-/////////////////////////////////////////////
+// -------------------------------
 void rs_numberCountingCombination_expected()
 {
 

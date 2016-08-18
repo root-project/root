@@ -103,12 +103,12 @@
 using namespace RooFit;
 using namespace RooStats;
 
-//////////////////////////////////////////////////
+//-------------------------------------------------------
 // A New Test Statistic Class for this example.
 // It simply returns the sum of the values in a particular
 // column of a dataset.
 // You can ignore this class and focus on the macro below
-//////////////////////////////////////////////////
+
 class BinCountTestStat : public TestStatistic {
 public:
   BinCountTestStat(void) : fColumnName("tmp") {}
@@ -133,9 +133,9 @@ protected:
 
 ClassImp(BinCountTestStat)
 
-//////////////////////////////////////////////////
+//-----------------------------
 // The Actual Tutorial Macro
-//////////////////////////////////////////////////
+//-----------------------------
 
 void HybridStandardForm() {
 
@@ -161,9 +161,9 @@ void HybridStandardForm() {
    TCanvas *c = new TCanvas;
    c->Divide(2,2);
 
-   ///////////////////////////////////////////////////////
+   //-----------------------------------------------------
    // P A R T   1  :  D I R E C T   I N T E G R A T I O N
-   //////////////////////////////////////////////////////
+   // ====================================================
    // Make model for prototype on/off problem
    // Pois(x | s+b) * Pois(y | tau b )
    // for Z_Gamma, use uniform prior on b.
@@ -190,9 +190,9 @@ void HybridStandardForm() {
    pc = new ProofConfig(*w, 4, "workers=4", kFALSE); // machine with 4 cores
    //  pc = new ProofConfig(*w, 2, "workers=2", kFALSE); // machine with 2 cores
 
-   /////////////////////////////////////////////////
+   //-----------------------------------------------
    // P A R T   3  :  A N A L Y T I C   R E S U L T
-   /////////////////////////////////////////////////
+   // ==============================================
    // In this special case, the integrals are known analytically
    // and they are implemented in RooStats::NumberCountingUtils
 
@@ -205,9 +205,9 @@ void HybridStandardForm() {
    std::cout << "Z_Bi significance (analytic): " << Z_Bi << std::endl;
    t.Stop();  t.Print(); t.Reset(); t.Start();
 
-   ////////////////////////////////////////////////////////////////
+   //--------------------------------------------------------------
    // P A R T   4  :  U S I N G   H Y B R I D   C A L C U L A T O R
-   ////////////////////////////////////////////////////////////////
+   // ==============================================================
    // Now we demonstrate the RooStats HybridCalculator.
    //
    // Like all RooStats calculators it needs the data and a ModelConfig
@@ -231,8 +231,8 @@ void HybridStandardForm() {
    //  data->add(*w->set("obs"));
    RooDataSet* data = w->pdf("px")->generate(*w->set("obs"),150);
 
-   //////////////////////////////////////////////////////////
    // Part 3a : Setup ModelConfigs
+   //-------------------------------------------------------
    // create the null (background-only) ModelConfig with s=0
    ModelConfig b_model("B_model", w);
    b_model.SetPdf(*w->pdf("px"));
@@ -250,8 +250,8 @@ void HybridStandardForm() {
    sb_model.SetSnapshot(*w->set("poi"));
 
 
-   //////////////////////////////////////////////////////////
    // Part 3b : Choose Test Statistic
+   //--------------------------------------------------------------
    // To make an equivalent calculation we need to use x as the test
    // statistic.  This is not a built-in test statistic in RooStats
    // so we define it above.  The new class inherits from the
@@ -260,22 +260,23 @@ void HybridStandardForm() {
 
    NumEventsTestStat eventCount(*w->pdf("px"));
 
-   //////////////////////////////////////////////////////////
    // Part 3c : Define Prior used to randomize nuisance parameters
+   //-------------------------------------------------------------
    //
    // The prior used for the hybrid calculator is the posterior
    // from the auxiliary measurement y.  The model for the aux.
    // measurement is Pois(y|tau*b), thus the likleihood function
    // is proportional to (has the form of) a Gamma distribution.
-   // if the 'original prior' \eta(b) is uniform, then from
+   // if the 'original prior' $\eta(b)$ is uniform, then from
    // Bayes's theorem we have the posterior:
-   //  \pi(b) = Pois(y|tau*b) * \eta(b)
-   // If \eta(b) is flat, then we arrive at a Gamma distribution.
+   //  $\pi(b) = Pois(y|tau*b) * \eta(b)$
+   // If $\eta(b)$ is flat, then we arrive at a Gamma distribution.
    // Since RooFit will normalize the PDF we can actually supply
    // py=Pois(y,tau*b) that will be equivalent to multiplying by a uniform.
    //
    // Alternatively, we could explicitly use a gamma distribution:
-   // w->factory("Gamma::gamma(b,sum::temp(y,1),1,0)");
+   //
+   // `w->factory("Gamma::gamma(b,sum::temp(y,1),1,0)");`
    //
    // or we can use some other ad hoc prior that do not naturally
    // follow from the known form of the auxiliary measurement.
@@ -288,7 +289,7 @@ void HybridStandardForm() {
    //
    // Ideally, the HybridCalculator would be able to inspect the full
    // model Pois(x | s+b) * Pois(y | tau b ) and be given the original
-   // prior \eta(b) to form \pi(b) = Pois(y|tau*b) * \eta(b).
+   // prior $\eta(b)$ to form $\pi(b) = Pois(y|tau*b) * \eta(b)$.
    // This is not yet implemented because in the general case
    // it is not easy to identify the terms in the PDF that correspond
    // to the auxiliary measurement.  So for now, it must be set
@@ -299,8 +300,8 @@ void HybridStandardForm() {
    // this to be auto-detected, but will leave the option open
    // to force to a different prior for the nuisance parameters.
 
-   //////////////////////////////////////////////////////////
    // Part 3d : Construct and configure the HybridCalculator
+   //-------------------------------------------------------
 
    HybridCalculator hc1(*data, sb_model, b_model);
    ToyMCSampler *toymcs1 = (ToyMCSampler*)hc1.GetTestStatSampler();
@@ -311,11 +312,15 @@ void HybridStandardForm() {
    hc1.ForcePriorNuisanceAlt(*w->pdf("py"));
    hc1.ForcePriorNuisanceNull(*w->pdf("py"));
    // if you wanted to use the ad hoc Gaussian prior instead
+   // ```
    //  hc1.ForcePriorNuisanceAlt(*w->pdf("gauss_prior"));
    //  hc1.ForcePriorNuisanceNull(*w->pdf("gauss_prior"));
+   // ```
    // if you wanted to use the ad hoc log-normal prior instead
+   // ```
    //  hc1.ForcePriorNuisanceAlt(*w->pdf("lognorm_prior"));
    //  hc1.ForcePriorNuisanceNull(*w->pdf("lognorm_prior"));
+   // ```
 
    // enable proof
    // proof not enabled for this test statistic
@@ -336,10 +341,9 @@ void HybridStandardForm() {
    p1->Draw();
 
    return; // keep the running time sort by default
-   ////////////////////////////////////////////////////////////////////////////
-   // P A R T   5  :  U S I N G   H Y B R I D   C A L C U L A T O R   W I T H
-   //                 A N   A L T E R N A T I V E   T E S T   S T A T I S T I C
-   /////////////////////////////////////////////////////////////////////////////
+   //-------------------------------------------------------------------------
+   // # P A R T   5  :  U S I N G   H Y B R I D   C A L C U L A T O R   W I T H
+   // # A N   A L T E R N A T I V E   T E S T   S T A T I S T I C
    //
    // A likelihood ratio test statistics should be 1-to-1 with the count x
    // when the value of b is fixed in the likelihood.  This is implemented
@@ -359,11 +363,15 @@ void HybridStandardForm() {
    hc2.ForcePriorNuisanceAlt(*w->pdf("py"));
    hc2.ForcePriorNuisanceNull(*w->pdf("py"));
    // if you wanted to use the ad hoc Gaussian prior instead
+   // ```
    //  hc2.ForcePriorNuisanceAlt(*w->pdf("gauss_prior"));
    //  hc2.ForcePriorNuisanceNull(*w->pdf("gauss_prior"));
+   // ```
    // if you wanted to use the ad hoc log-normal prior instead
+   // ```
    //  hc2.ForcePriorNuisanceAlt(*w->pdf("lognorm_prior"));
    //  hc2.ForcePriorNuisanceNull(*w->pdf("lognorm_prior"));
+   // ```
 
    // enable proof
    if(pc) toymcs2->SetProofConfig(pc);
@@ -384,56 +392,54 @@ void HybridStandardForm() {
 
    return; // so standard tutorial runs faster
 
-   ///////////////////////////////////////////////////////////
+   //---------------------------------------------
    // OUTPUT W/O PROOF (2.66 GHz Intel Core i7)
-   ///////////////////////////////////////////////////////////
+   // ============================================
 
-   /*
-   -----------------------------------------
-   Part 3
-   Z_Bi p-value (analytic): 0.00094165
-   Z_Bi significance (analytic): 3.10804
-   Real time 0:00:00, CP time 0.610
+   // -----------------------------------------
+   // Part 3
+   // Z_Bi p-value (analytic): 0.00094165
+   // Z_Bi significance (analytic): 3.10804
+   // Real time 0:00:00, CP time 0.610
 
-   Results HybridCalculator_result:
-   - Null p-value = 0.00103333 +/- 0.000179406
-   - Significance = 3.08048 sigma
-   - Number of S+B toys: 1000
-   - Number of B toys: 30000
-   - Test statistic evaluated on data: 150
-   - CL_b: 0.998967 +/- 0.000185496
-   - CL_s+b: 0.495 +/- 0.0158106
-   - CL_s: 0.495512 +/- 0.0158272
-   Real time 0:04:43, CP time 283.780
+   // Results HybridCalculator_result:
+   // - Null p-value = 0.00103333 +/- 0.000179406
+   // - Significance = 3.08048 sigma
+   // - Number of S+B toys: 1000
+   // - Number of B toys: 30000
+   // - Test statistic evaluated on data: 150
+   // - CL_b: 0.998967 +/- 0.000185496
+   // - CL_s+b: 0.495 +/- 0.0158106
+   // - CL_s: 0.495512 +/- 0.0158272
+   // Real time 0:04:43, CP time 283.780
 
-   */
-   /* With PROOF
-   -----------------------------------------
-   Part 5
+   // With PROOF
+   // -----------------------------------------
+   // Part 5
 
-   Results HybridCalculator_result:
-   - Null p-value = 0.00105 +/- 0.000206022
-   - Significance = 3.07571 sigma
-   - Number of S+B toys: 1000
-   - Number of B toys: 20000
-   - Test statistic evaluated on data: 10.8198
-   - CL_b: 0.99895 +/- 0.000229008
-   - CL_s+b: 0.491 +/- 0.0158088
-   - CL_s: 0.491516 +/- 0.0158258
-   Real time 0:02:22, CP time 0.990
-   */
+   // Results HybridCalculator_result:
+   // - Null p-value = 0.00105 +/- 0.000206022
+   // - Significance = 3.07571 sigma
+   // - Number of S+B toys: 1000
+   // - Number of B toys: 20000
+   // - Test statistic evaluated on data: 10.8198
+   // - CL_b: 0.99895 +/- 0.000229008
+   // - CL_s+b: 0.491 +/- 0.0158088
+   // - CL_s: 0.491516 +/- 0.0158258
+   // Real time 0:02:22, CP time 0.990
 
-   //////////////////////////////////////////
+
+   //-------------------------------------------------------
    // Comparison
-   ///////////////////////////////////////////
+   //-------------------------------------------------------
    // LEPStatToolsForLHC
    // https://plone4.fnal.gov:4430/P0/phystat/packages/0703002
    // Uses Gaussian prior
    // CL_b = 6.218476e-04, Significance = 3.228665 sigma
    //
-   //////////////////////////////////////////
+   //-------------------------------------------------------
    // Comparison
-   ///////////////////////////////////////////
+   //-------------------------------------------------------
    // Asymptotics
    // From the value of the profile likelihood ratio (5.0338)
    // The significance can be estimated using Wilks's theorem

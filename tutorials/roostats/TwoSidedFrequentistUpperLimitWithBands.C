@@ -16,12 +16,12 @@
 /// that it produces.
 ///
 /// You may want to control:
-/// ~~~ {.cpp}
+/// ```cpp
 ///   double confidenceLevel=0.95;
 ///   double additionalToysFac = 1.;
 ///   int nPointsToScan = 30;
 ///   int nToyMC = 500;
-/// ~~~
+/// ```
 ///
 /// This uses a modified version of the profile likelihood ratio as
 /// a test statistic for upper limits (eg. test stat = 0 if muhat>mu).
@@ -126,7 +126,7 @@ using namespace std;
 bool useProof = false;  // flag to control whether to use Proof
 int nworkers = 0;   // number of workers (default use all available cores)
 
-/////////////////////////////////////////////////////////////////////////
+// -------------------------------------------------------
 
 void TwoSidedFrequentistUpperLimitWithBands(const char* infile = "",
                                             const char* workspaceName = "combined",
@@ -141,10 +141,9 @@ void TwoSidedFrequentistUpperLimitWithBands(const char* infile = "",
    int nPointsToScan = 20; // number of steps in the parameter of interest
    int nToyMC = 200; // number of toys used to define the expected limit and band
 
-   /////////////////////////////////////////////////////////////
+   // -------------------------------------------------------
    // First part is just to access a user-defined file
    // or create the standard example file if it doesn't exist
-   ////////////////////////////////////////////////////////////
    const char* filename = "";
       if (!strcmp(infile,"")) {
          filename = "results/example_combined_GaussExample_model.root";
@@ -177,9 +176,8 @@ void TwoSidedFrequentistUpperLimitWithBands(const char* infile = "",
          return;
       }
 
-   /////////////////////////////////////////////////////////////
+   // -------------------------------------------------------
    // Now get the data and workspace
-   ////////////////////////////////////////////////////////////
 
    // get the workspace out of the file
    RooWorkspace* w = (RooWorkspace*) file->Get(workspaceName);
@@ -204,15 +202,14 @@ void TwoSidedFrequentistUpperLimitWithBands(const char* infile = "",
    cout << "Found data and ModelConfig:" <<endl;
    mc->Print();
 
-   /////////////////////////////////////////////////////////////
+   // -------------------------------------------------------
    // Now get the POI for convenience
    // you may want to adjust the range of your POI
-   ////////////////////////////////////////////////////////////
    RooRealVar* firstPOI = (RooRealVar*) mc->GetParametersOfInterest()->first();
-   //  firstPOI->setMin(0);
-   //  firstPOI->setMax(10);
+   /*  firstPOI->setMin(0);*/
+   /*  firstPOI->setMax(10);*/
 
-   /////////////////////////////////////////////
+   // -------------------------------------------------------
    // create and use the FeldmanCousins tool
    // to find and plot the 95% confidence interval
    // on the parameter of interest as specified
@@ -226,7 +223,7 @@ void TwoSidedFrequentistUpperLimitWithBands(const char* infile = "",
    fc.SetNBins(nPointsToScan); // set how many points per parameter of interest to scan
    fc.CreateConfBelt(true); // save the information in the belt for plotting
 
-   /////////////////////////////////////////////
+   // -------------------------------------------------------
    // Feldman-Cousins is a unified limit by definition
    // but the tool takes care of a few things for us like which values
    // of the nuisance parameters should be used to generate toys.
@@ -314,9 +311,8 @@ void TwoSidedFrequentistUpperLimitWithBands(const char* infile = "",
    histOfThresholds->Draw();
    c1->cd(2);
 
-   /////////////////////////////////////////////////////////////
+   // -------------------------------------------------------
    // Now we generate the expected bands and power-constriant
-   ////////////////////////////////////////////////////////////
 
    // First: find parameter point for mu=0, with conditional MLEs for nuisance parameters
    RooAbsReal* nll = mc->GetPdf()->createNLL(*data);

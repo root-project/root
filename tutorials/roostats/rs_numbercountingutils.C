@@ -48,7 +48,7 @@ void rs_numbercountingutils()
 {
 
    // From the root prompt, you can see the full list of functions by using tab-completion
-
+   // ```bash
    // root [0] RooStats::NumberCountingUtils::  <tab>
    // BinomialExpZ
    // BinomialWithTauExpZ
@@ -58,21 +58,22 @@ void rs_numbercountingutils()
    // BinomialWithTauExpP
    // BinomialObsP
    // BinomialWithTauObsP
+   // ```
 
    // For each of the utilities you can inspect the arguments by tab completion
-
+   // ```bash
    //root [1] NumberCountingUtils::BinomialExpZ( <tab>
    //Double_t BinomialExpZ(Double_t sExp, Double_t bExp, Double_t fractionalBUncertainty)
+   // ```
 
-   /////////////////////////////////////////////////////
+   // -------------------------------------------------
    // Here we see common usages where the experimenter
    // has a relative background uncertainty, without
    // explicit reference to the auxiliary or sideband
    // measurement
 
-   /////////////////////////////////////////////////////
+   // -------------------------------------------------------------
    // Expected p-values and significance with background uncertainty
-   ////////////////////////////////////////////////////
    double sExpected = 50;
    double bExpected = 100;
    double relativeBkgUncert = 0.1;
@@ -81,16 +82,15 @@ void rs_numbercountingutils()
    double zExp = NumberCountingUtils::BinomialExpZ(sExpected, bExpected, relativeBkgUncert);
    cout << "expected p-value ="<< pExp << "  Z value (Gaussian sigma) = "<< zExp << endl;
 
-   /////////////////////////////////////////////////////
+   // -------------------------------------------------
    // Expected p-values and significance with background uncertainty
-   ////////////////////////////////////////////////////
    double observed = 150;
    double pObs = NumberCountingUtils::BinomialObsP(observed, bExpected, relativeBkgUncert);
    double zObs = NumberCountingUtils::BinomialObsZ(observed, bExpected, relativeBkgUncert);
    cout << "observed p-value ="<< pObs << "  Z value (Gaussian sigma) = "<< zObs << endl;
 
 
-   /////////////////////////////////////////////////////
+   // ---------------------------------------------------------
    // Here we see usages where the experimenter has knowledge
    // about the properties of the auxiliary or sideband
    // measurement.  In particular, the ratio tau of background
@@ -99,22 +99,21 @@ void rs_numbercountingutils()
    // because the sideband is very constraining.
 
    // Usage:
+   // ```bash
    // root [0] RooStats::NumberCountingUtils::BinomialWithTauExpP(
    // Double_t BinomialWithTauExpP(Double_t sExp, Double_t bExp, Double_t tau)
+   // ```
 
-
-   /////////////////////////////////////////////////////
+   // --------------------------------------------------------------
    // Expected p-values and significance with background uncertainty
-   ////////////////////////////////////////////////////
    double tau = 1;
 
    double pExpWithTau = NumberCountingUtils::BinomialWithTauExpP(sExpected, bExpected, tau);
    double zExpWithTau = NumberCountingUtils::BinomialWithTauExpZ(sExpected, bExpected, tau);
    cout << "expected p-value ="<< pExpWithTau << "  Z value (Gaussian sigma) = "<< zExpWithTau << endl;
 
-   /////////////////////////////////////////////////////
+   // ---------------------------------------------------------------
    // Expected p-values and significance with background uncertainty
-   ////////////////////////////////////////////////////
    double pObsWithTau = NumberCountingUtils::BinomialWithTauObsP(observed, bExpected, tau);
    double zObsWithTau = NumberCountingUtils::BinomialWithTauObsZ(observed, bExpected, tau);
    cout << "observed p-value ="<< pObsWithTau << "  Z value (Gaussian sigma) = "<< zObsWithTau << endl;

@@ -26,9 +26,9 @@
 ///  You can also change the signal rate by changing muVal.
 ///
 ///  The script produces a lot plots, you can merge them by doing:
-/// ~~~ {.cpp}
+/// ```cpp
 ///  gs -q -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -sOutputFile=merged.pdf `ls *pdf`
-/// ~~~
+/// ```
 ///
 /// \macro_image
 /// \macro_output
@@ -66,10 +66,9 @@ void StandardHistFactoryPlotsWithCategories(const char* infile = "",
    double muVal=0;
    bool doFit=false;
 
-   /////////////////////////////////////////////////////////////
+   // -------------------------------------------------------
    // First part is just to access a user-defined file
    // or create the standard example file if it doesn't exist
-   ////////////////////////////////////////////////////////////
    const char* filename = "";
    if (!strcmp(infile,"")) {
       filename = "results/example_combined_GaussExample_model.root";
@@ -102,9 +101,9 @@ void StandardHistFactoryPlotsWithCategories(const char* infile = "",
       return;
    }
 
-   /////////////////////////////////////////////////////////////
+   // -------------------------------------------------------
    // Tutorial starts here
-   ////////////////////////////////////////////////////////////
+   // -------------------------------------------------------
 
    // get the workspace out of the file
    RooWorkspace* w = (RooWorkspace*) file->Get(workspaceName);
@@ -126,7 +125,7 @@ void StandardHistFactoryPlotsWithCategories(const char* infile = "",
       return;
    }
 
-   //////////////////////////////////////////////
+   // -------------------------------------------------------
    // now use the profile inspector
 
    RooRealVar* obs = (RooRealVar*)mc->GetObservables()->first();
@@ -141,9 +140,8 @@ void StandardHistFactoryPlotsWithCategories(const char* infile = "",
       mc->GetPdf()->fitTo(*data);
    }
 
-   ////////////////////////////////////////
-   ////////////////////////////////////////
-   ////////////////////////////////////////
+   // -------------------------------------------------------
+
 
    mc->GetNuisanceParameters()->Print("v");
    int  nPlotsMax = 1000;
@@ -300,9 +298,8 @@ void StandardHistFactoryPlotsWithCategories(const char* infile = "",
 
 
 
-   ////////////////////////////////////////
-   ////////////////////////////////////////
-   ////////////////////////////////////////
+   // -------------------------------------------------------
+
 
    // now make plots
    TCanvas* c1 = new TCanvas("c1","ProfileInspectorDemo",800,200);

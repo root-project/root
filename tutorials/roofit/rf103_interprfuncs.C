@@ -26,9 +26,9 @@ using namespace RooFit ;
 
 void rf103_interprfuncs()
 {
-   /////////////////////////////////////////////////////////
-   // G e n e r i c   i n t e r p r e t e d   p . d . f . //
-   /////////////////////////////////////////////////////////
+   // ----------------------------------------------------
+   // G e n e r i c   i n t e r p r e t e d   p . d . f . 
+   // ====================================================
 
    // Declare observable x
    RooRealVar x("x","x",-20,20) ;
@@ -58,12 +58,10 @@ void rf103_interprfuncs()
    genpdf.plotOn(xframe) ;  
 
 
-   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-   // S t a n d a r d   p . d . f   a d j u s t   w i t h   i n t e r p r e t e d   h e l p e r   f u n c t i o n //
-   //                                                                                                             //
-   // Make a gauss(x,sqrt(mean2),sigma) from a standard RooGaussian                                               //
-   //                                                                                                             //
-   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   // -----------------------------------------------------------------------------------------------------------
+   // S t a n d a r d   p . d . f   a d j u s t   w i t h   i n t e r p r e t e d   h e l p e r   f u n c t i o n
+   // ==========================================================================================================
+   // Make a gauss(x,sqrt(mean2),sigma) from a standard RooGaussian
 
 
    // C o n s t r u c t   s t a n d a r d   p d f  w i t h   f o r m u l a   r e p l a c i n g   p a r a m e t e r

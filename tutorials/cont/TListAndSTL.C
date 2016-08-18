@@ -68,11 +68,11 @@ void TListAndSTL()
    }
 
 
-   //->>>>>>> Example #1 <<<<<<<-
+   // ### Example #1
    // running the std::for_each algorithm on the list
    for_each(list1.begin(), list1.end(), SEnumFunctor());
 
-   //->>>>>>> Example #2 <<<<<<<-
+   // ### Example #2
    // we can try to find something in the container
    // using the std::find_if algorithm on the list
    string strToFind("test string #4");
