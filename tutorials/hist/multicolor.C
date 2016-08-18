@@ -2,10 +2,10 @@
 /// \ingroup tutorial_hist
 /// \notebook
 /// Use a THStack to show a 2-D hist with cells with different colors.
-/// ```cpp
+/// ~~~{.cpp}
 ///  root > .x multicolor.C
 ///  root > .x multicolor.C(1)
-/// ```
+/// ~~~
 /// \macro_image
 /// \macro_code
 ///

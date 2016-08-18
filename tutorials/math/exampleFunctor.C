@@ -5,10 +5,10 @@
 ///
 /// can be run with:
 ///
-/// ```cpp
+/// ~~~{.cpp}
 ///  root > .x exampleFunctor.C
 ///  root > .x exampleFunctor.C+ with ACLIC
-/// ```
+/// ~~~
 ///
 /// \macro_image
 /// \macro_code

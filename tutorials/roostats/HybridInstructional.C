@@ -157,10 +157,10 @@ void HybridInstructional() {
    // Use PROOF-lite on multi-core machines
    ProofConfig* pc = NULL;
    // uncomment below if you want to use PROOF
-   // ```
+   // ~~~
    // pc = new ProofConfig(*w, 4, "workers=4", kFALSE); // machine with 4 cores
    // pc = new ProofConfig(*w, 2, "workers=2", kFALSE); // machine with 2 cores
-   // ```
+   // ~~~
 
    // ----------------------------------------------------
    // P A R T   2  :  D I R E C T   I N T E G R A T I O N
@@ -321,15 +321,15 @@ void HybridInstructional() {
    hc1.ForcePriorNuisanceAlt(*w->pdf("py"));
    hc1.ForcePriorNuisanceNull(*w->pdf("py"));
    // if you wanted to use the ad hoc Gaussian prior instead
-   // ```
+   // ~~~
    //  hc1.ForcePriorNuisanceAlt(*w->pdf("gauss_prior"));
    //  hc1.ForcePriorNuisanceNull(*w->pdf("gauss_prior"));
-   // ```
+   // ~~~
    // if you wanted to use the ad hoc log-normal prior instead
-   // ```
+   // ~~~
    //  hc1.ForcePriorNuisanceAlt(*w->pdf("lognorm_prior"));
    //  hc1.ForcePriorNuisanceNull(*w->pdf("lognorm_prior"));
-   // ```
+   // ~~~
 
    // enable proof
    // NOTE: This test statistic is defined in this macro, and is not
@@ -371,15 +371,15 @@ void HybridInstructional() {
    hc2.ForcePriorNuisanceAlt(*w->pdf("py"));
    hc2.ForcePriorNuisanceNull(*w->pdf("py"));
    // if you wanted to use the ad hoc Gaussian prior instead
-   // ```
+   // ~~~
    //  hc2.ForcePriorNuisanceAlt(*w->pdf("gauss_prior"));
    //  hc2.ForcePriorNuisanceNull(*w->pdf("gauss_prior"));
-   // ```
+   // ~~~
    // if you wanted to use the ad hoc log-normal prior instead
-   // ```
+   // ~~~
    //  hc2.ForcePriorNuisanceAlt(*w->pdf("lognorm_prior"));
    //  hc2.ForcePriorNuisanceNull(*w->pdf("lognorm_prior"));
-   // ```
+   // ~~~
 
    // enable proof
    if(pc) toymcs2->SetProofConfig(pc);
@@ -478,10 +478,10 @@ void HybridInstructional() {
    hc3.ForcePriorNuisanceAlt(*w->pdf("gamma_y0"));
    hc3.ForcePriorNuisanceNull(*w->pdf("gamma_y0"));
    // if you wanted to use the ad hoc Gaussian prior instead
-   // ```cpp
+   // ~~~{.cpp}
    // hc3.ForcePriorNuisanceAlt(*w->pdf("gauss_prior_y0"));
    // hc3.ForcePriorNuisanceNull(*w->pdf("gauss_prior_y0")); 
-   // ```
+   // ~~~
 
    // choose fit-based test statistic
    toymcs3->SetTestStatistic(&profll);

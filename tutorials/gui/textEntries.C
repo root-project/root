@@ -2,10 +2,10 @@
 /// \ingroup tutorial_gui
 /// This macro gives an example of how to set/change text entry attributes.
 /// To run it do either:
-/// ```
+/// ~~~
 /// .x textEntries.C
 /// .x textEntries.C++
-/// ```
+/// ~~~
 ///
 /// \macro_code
 ///

@@ -6,9 +6,9 @@
 ///
 ///  To execute the macro type in:
 ///
-/// ```cpp
+/// ~~~{.cpp}
 /// root[0] .x  mathcoreVectorIO.C
-/// ```
+/// ~~~
 ///
 /// \macro_output
 /// \macro_code

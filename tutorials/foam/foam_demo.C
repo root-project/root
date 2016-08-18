@@ -5,10 +5,10 @@
 ///
 ///  To run this macro type from CINT command line
 ///
-/// ```cpp
+/// ~~~{.cpp}
 ///  root [0] gSystem->Load("libFoam.so")
 ///  root [1] .x foam_demo.C+
-/// ```
+/// ~~~
 ///
 /// \macro_code
 ///

@@ -54,15 +54,15 @@
 ///
 /// This macro can be executed via CINT or via ACLIC
 /// - via the interpretor, do
-/// ```cpp
+/// ~~~{.cpp}
 ///    root > .x solveLinear.C
-/// ```
+/// ~~~
 /// - via ACLIC
-/// ```cpp
+/// ~~~{.cpp}
 ///    root > gSystem->Load("libMatrix");
 ///    root > gSystem->Load("libGpad");
 ///    root > .x solveLinear.C+
-/// ```
+/// ~~~
 ///
 /// \macro_output
 /// \macro_code

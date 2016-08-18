@@ -7,10 +7,10 @@
 ///
 ///  To run  this macro you must do
 ///
-/// ```cpp
+/// ~~~{.cpp}
 /// root[0] .L  mathcoreVectorFloatIO.C+
 /// root[1] runIt();
-/// ```
+/// ~~~
 ///
 /// \macro_code
 ///

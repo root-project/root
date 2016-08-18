@@ -6,14 +6,14 @@
 /// and print out the ROOT TCanvas object either via the "can" pointer provided or the current one.
 ///
 /// To use, invoke ACLiC from the ROOT prompt:
-/// ```
+/// ~~~
 /// root [] .x QtPrintDialog.C++
-/// ```
+/// ~~~
 ///
 /// To use it with no ACLiC, omit the trailing "++"
-/// ```
+/// ~~~
 /// root [] .x QtPrintDialog.C
-/// ```
+/// ~~~
 ///
 /// The full list of the Qt classes available from Cint is defined by
 /// [by $ROOTSYS/cint/lib/qtclasses.h](http://root.bnl.gov/QtRoot/htmldoc/src/qtclasses.h.html)

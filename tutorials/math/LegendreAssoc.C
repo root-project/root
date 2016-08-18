@@ -4,9 +4,9 @@
 /// Example describing the usage of different kinds of Associate Legendre Polynomials
 /// To execute the macro type in:
 ///
-/// ```cpp
+/// ~~~{.cpp}
 /// root[0] .x LegendreAssoc.C
-/// ```
+/// ~~~
 ///
 /// It draws common graphs for first 5
 /// Associate Legendre Polynomials

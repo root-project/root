@@ -7,7 +7,7 @@
 ///
 /// Usage:
 ///
-/// ```cpp
+/// ~~~{.cpp}
 /// root>.L StandardHypoTestInvDemo.C
 /// root> StandardHypoTestInvDemo("fileName","workspace name","S+B modelconfig name","B model name","data set name",calculator type, test statistic type, use CLS,
 ///                                number of points, xmin, xmax, number of toys, use number counting)
@@ -24,7 +24,7 @@
 ///              = 4 Profile Likelihood signed ( pll = -pll if mu < mu_hat)
 ///              = 5 Max Likelihood Estimate as test statistic
 ///              = 6 Number of observed event as test statistic
-/// ```
+/// ~~~
 ///
 /// \macro_image
 /// \macro_output

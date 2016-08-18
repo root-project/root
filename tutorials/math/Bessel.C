@@ -4,9 +4,9 @@
 /// Show the different kinds of Bessel functions available in ROOT
 /// To execute the macro type in:
 ///
-/// ```cpp
+/// ~~~{.cpp}
 /// root[0] .x Bessel.C
-/// ```
+/// ~~~
 ///
 /// It will create one canvas with the representation
 /// of the  cylindrical and spherical Bessel functions

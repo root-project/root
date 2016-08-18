@@ -14,9 +14,9 @@
 ///    we observe noff events and expect tau*b events.
 /// Note the significance of tau.  In the background only case:
 ///
-/// ```cpp
+/// ~~~{.cpp}
 ///    tau ~ <expectation off> / <expectation on>
-/// ```
+/// ~~~
 ///
 /// If tau is known, this model is sufficient, but often tau is not known exactly.
 /// So one can use low values of "x" as an additional constraint for tau.
@@ -29,9 +29,9 @@
 ///   - In the bottom left we observe noffbar events and expect tau bbar events
 /// Note again we have:
 ///
-/// ```cpp
+/// ~~~{.cpp}
 ///    tau ~ <expecation off bar> / <expectation on bar>
-/// ```
+/// ~~~
 ///
 /// One can further expand the model to account for the systematic associated
 /// to assuming the distribution of "x" and "y" factorizes (eg. that
@@ -42,9 +42,9 @@
 /// The "bar" measurements typically have more events (& smaller relative errors).
 /// If we choose
 ///
-/// ```cpp
+/// ~~~{.cpp}
 /// <expectation noffbar> = tau * rho * <expectation noonbar>
-/// ```
+/// ~~~
 ///
 /// the product tau*rho will be known very precisely (~1/sqrt(bbar)) and the contour
 /// in those parameters will be narrow and have a non-trivial tau~1/rho shape.
@@ -52,7 +52,7 @@
 /// product will have an error `~1/sqrt(b))`, the contours will be more ameanable
 /// to numerical techniques.  Thus, here we choose to define:
 ///
-/// ```cpp
+/// ~~~{.cpp}
 ///    tau := <expecation off bar> / (<expectation on bar>)
 ///    rho := <expecation off> / (<expectation on> * tau)
 ///
@@ -69,7 +69,7 @@
 /// |    tau bbar   | tau b rho |
 /// |               |           |
 /// +-----------------------------> x
-/// ```
+/// ~~~
 ///
 /// Left in this way, the problem is under-constrained.  However, one may
 /// have some auxiliary measurement (usually based on Monte Carlo) to
@@ -80,24 +80,24 @@
 ///
 /// In the example, the initial values of the parameters are:
 ///
-/// ```cpp
+/// ~~~{.cpp}
 ///   - s    = 40
 ///   - b    = 100
 ///   - tau  = 5
 ///   - bbar = 1000
 ///   - rho  = 1
 ///   (sigma for rho = 20%)
-/// ```
+/// ~~~
 ///
 /// and in the toy dataset:
 ///
-/// ```cpp
+/// ~~~{.cpp}
 ///    - non = 139
 ///    - noff = 528
 ///    - nonbar = 993
 ///    - noffbar = 4906
 ///    - rhonom = 1.27824
-/// ```
+/// ~~~
 ///
 /// Note, the covariance matrix of the parameters has large off-diagonal terms.
 /// Clearly s,b are anti-correlated.  Similarly, since noffbar >> nonbar, one would
@@ -105,14 +105,14 @@
 ///
 /// This can be seen below.
 ///
-/// ```cpp
+/// ~~~{.cpp}
 ///             GLOBAL      b    bbar   rho      s     tau
 ///         b  0.96820   1.000  0.191 -0.942 -0.762 -0.209
 ///      bbar  0.91191   0.191  1.000  0.000 -0.146 -0.912
 ///       rho  0.96348  -0.942  0.000  1.000  0.718 -0.000
 ///         s  0.76250  -0.762 -0.146  0.718  1.000  0.160
 ///       tau  0.92084  -0.209 -0.912 -0.000  0.160  1.000
-/// ```
+/// ~~~
 ///
 /// Similarly, since tau*rho appears as a product, we expect rho,tau
 /// to be anti-correlated. When the error on rho is significantly

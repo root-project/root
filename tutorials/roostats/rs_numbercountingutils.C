@@ -48,7 +48,7 @@ void rs_numbercountingutils()
 {
 
    // From the root prompt, you can see the full list of functions by using tab-completion
-   // ```bash
+   // ~~~{.bash}
    // root [0] RooStats::NumberCountingUtils::  <tab>
    // BinomialExpZ
    // BinomialWithTauExpZ
@@ -58,13 +58,13 @@ void rs_numbercountingutils()
    // BinomialWithTauExpP
    // BinomialObsP
    // BinomialWithTauObsP
-   // ```
+   // ~~~
 
    // For each of the utilities you can inspect the arguments by tab completion
-   // ```bash
+   // ~~~{.bash}
    //root [1] NumberCountingUtils::BinomialExpZ( <tab>
    //Double_t BinomialExpZ(Double_t sExp, Double_t bExp, Double_t fractionalBUncertainty)
-   // ```
+   // ~~~
 
    // -------------------------------------------------
    // Here we see common usages where the experimenter
@@ -99,10 +99,10 @@ void rs_numbercountingutils()
    // because the sideband is very constraining.
 
    // Usage:
-   // ```bash
+   // ~~~{.bash}
    // root [0] RooStats::NumberCountingUtils::BinomialWithTauExpP(
    // Double_t BinomialWithTauExpP(Double_t sExp, Double_t bExp, Double_t tau)
-   // ```
+   // ~~~
 
    // --------------------------------------------------------------
    // Expected p-values and significance with background uncertainty

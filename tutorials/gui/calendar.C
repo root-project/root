@@ -2,10 +2,10 @@
 /// \ingroup tutorial_gui
 /// This macro gives an example of how to use html widget to display tabular data.
 /// To run it do either:
-/// ``` 
+/// ~~~ 
 /// .x calendar.C
 /// .x calendar.C++
-/// ``` 
+/// ~~~ 
 ///
 /// \macro_code
 ///

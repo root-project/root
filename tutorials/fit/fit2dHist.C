@@ -6,32 +6,32 @@
 ///
 /// To execute this tutorial, you can do:
 ///
-/// ```cpp
+/// ~~~{.cpp}
 /// root > .x fit2dHist.C  (executing via CINT, slow)
-/// ```
+/// ~~~
 ///
 ///   or
-/// ```cpp
+/// ~~~{.cpp}
 /// root > .x fit2dHist.C+     (executing via ACLIC , fast, with Minuit)
 /// root > .x fit2dHist.C+(2)  (executing via ACLIC , fast, with Minuit2)
-/// ```
+/// ~~~
 ///
 ///   or using the option to fit independently the 2 histos
-/// ```cpp
+/// ~~~{.cpp}
 /// root > .x fit2dHist.C+(10) (via ACLIC, fast, independent fits with Minuit)
 /// root > .x fit2dHist.C+(12) (via ACLIC, fast, independent fits with Minuit2)
-/// ```
+/// ~~~
 ///
 /// Note that you can also execute this script in batch with eg,
-/// ```cpp
+/// ~~~{.cpp}
 ///  root -b -q "fit2dHist.C+(12)"
-/// ```
+/// ~~~
 ///
 /// or execute interactively from the shell
-/// ```cpp
+/// ~~~{.cpp}
 ///  root fit2dHist.C+
 ///  root "fit2dHist.C+(12)"
-/// ```
+/// ~~~
 ///
 /// \macro_image
 /// \macro_output

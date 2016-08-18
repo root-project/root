@@ -4,41 +4,41 @@
 ///
 /// To make an event sample (of size 100) do
 ///
-/// ```cpp
+/// ~~~{.cpp}
 ///    shell> root
 ///    root [0] .L pythiaExample.C
 ///    root [1] makeEventSample(1000)
-/// ```
+/// ~~~
 ///
 /// To start the tree view on the generated tree, do
 ///
-/// ```cpp
+/// ~~~{.cpp}
 ///    shell> root
 ///    root [0] .L pythiaExample.C
 ///    root [1] showEventSample()
-/// ```
+/// ~~~
 ///
 /// The following session:
 ///
-/// ```cpp
+/// ~~~{.cpp}
 ///    shell> root
 ///    root [0] .x pythiaExample.C(500)
-/// ```
+/// ~~~
 ///
 /// will execute makeEventSample(500) and showEventSample()
 ///
 /// Alternatively, you can compile this to a program
 /// and then generate 1000 events with
 ///
-/// ```cpp
+/// ~~~{.cpp}
 ///    ./pythiaExample 1000
-/// ```
+/// ~~~
 ///
 /// To use the program to start the viewer, do
 ///
-/// ```cpp
+/// ~~~{.cpp}
 ///    ./pythiaExample -1
-/// ```
+/// ~~~
 ///
 /// NOTE 1: To run this example, you must have a version of ROOT
 /// compiled with the Pythia6 version enabled and have Pythia6 installed.
@@ -47,7 +47,7 @@
 /// is in the pythia6 subdirectory of your $HOME.  Locations
 /// that can specify this, are:
 ///
-/// ```cpp
+/// ~~~{.cpp}
 ///  Root.DynamicPath resource in your ROOT configuration file
 ///    (/etc/root/system.rootrc or ~/.rootrc).
 ///  Runtime load paths set on the executable (Using GNU ld,
@@ -57,16 +57,16 @@
 ///    etc/ld.so.conf).
 ///  For Un*x: Any directory mentioned in LD_LIBRARY_PATH
 ///  For Windows: Any directory mentioned in PATH
-/// ```
+/// ~~~
 ///
 /// NOTE 2: The example can also be run with ACLIC:
 ///
-/// ```cpp
+/// ~~~{.cpp}
 ///  root > gSystem->Load("libEG");
 ///  root > gSystem->Load("$ROOTSYS/../pythia6/libPythia6"); //change to your setup
 ///  root > gSystem->Load("libEGPythia6");
 ///  root > .x pythiaExample.C+
-/// ```
+/// ~~~
 ///
 /// \macro_code
 ///

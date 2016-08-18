@@ -515,15 +515,19 @@ def removePaletteEditor(code):
     code = code.replace("img->StartPaletteEditor();", "")
     code = code.replace("Open the color editor", "")
     return code
+
+
 def runEventExe(code):
     if "copytree" in tutName:
         return "# <codecell> \n.! $ROOTSYS/test/eventexe 1000 1 1 1 \n" + code
     return code
 
+
 def getLibMathMore(code):
     if "quasirandom" == tutName:
         return "# <codecell> \ngSystem->Load(\"libMathMore\"); \n# <codecell> \n" + code
     return code
+
 
 def roofitRemoveSpacesComments(code):
     
@@ -557,18 +561,18 @@ def rs401dGetFiles(code):
     return code
 
 
-
-
 def declareIncludes(code):
     if tutName != "fitcont":
         code = re.sub(r"# <codecell>\s*#include", "# <codecell>\n%%cpp -d\n#include" , code)
     return code
+
 
 def tree4GetFiles(code):
     if tutName == "tree4":
         code = code.replace(
          """#include \"../test/Event.h\"""" , """# <codecell>\nTString dir = "$ROOTSYS/test/Event.h";\ngSystem->ExpandPathName(dir);\nTString includeCommand = TString::Format("#include \\\"%s\\\"" , dir.Data());\ngROOT->ProcessLine(includeCommand);""")
     return code
+
 
 def fixes(code):
     codeTransformers=[removePaletteEditor, runEventExe, getLibMathMore,
@@ -579,6 +583,14 @@ def fixes(code):
         code = transformer(code)
 
     return code
+
+
+def changeMarkdown(code):
+    code = code.replace("~~~" , "```")
+    code = code.replace("{.cpp}", "cpp")
+    code = code.replace("{.bash}", "bash")
+    return code
+
 
 def isCpp():
     """
@@ -635,11 +647,14 @@ def mainfunction(text):
 
     # Perform last minute fixes to the notebook, used for specific fixes needed by some tutorials
     text = fixes(text)
+    
+    # Change to standard Markdown
+    newDescription = changeMarkdown(description)
 
     # Add the title and header of the notebook
     text = "# <markdowncell> \n# # %s\n%s# \n# \n# **Author:** %s  \n# <i><small>This notebook tutorial was automatically generated " \
         "with <a href= \"https://github.com/root-mirror/root/blob/master/documentation/doxygen/converttonotebook.py\">ROOTBOOK-izer (Beta)</a> " \
-        "from the macro found in the ROOT repository  on %s.</small></i>\n# <codecell>\n%s" % (tutTitle, description, author, date, text)
+        "from the macro found in the ROOT repository  on %s.</small></i>\n# <codecell>\n%s" % (tutTitle, newDescription, author, date, text)
 
     # Add cell at the end of the notebook that draws all the canveses. Add a Markdown cell before explaining it.
     if isJsroot and not nodraw:

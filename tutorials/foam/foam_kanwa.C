@@ -3,9 +3,9 @@
 /// \notebook -js
 /// This program can be execute from the command line as folows:
 ///
-/// ```cpp
+/// ~~~{.cpp}
 ///      root -l foam_kanwa.C
-/// ```
+/// ~~~
 ///
 /// \macro_code
 ///

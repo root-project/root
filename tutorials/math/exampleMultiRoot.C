@@ -19,15 +19,15 @@
 ///
 /// Usage:
 ///
-/// ```cpp
+/// ~~~{.cpp}
 ///  >.x exampleMultiRoot.C()
-/// ```
+/// ~~~
 ///
 /// or
 ///
-/// ```cpp
+/// ~~~{.cpp}
 /// >.x exampleMultiRoot(algoname,printlevel)
-/// ```
+/// ~~~
 ///
 /// where algoname is for an algorithm not using the derivatives:
 ///  hybridS (default) , hybrid, dnewton, broyden

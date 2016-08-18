@@ -6,9 +6,9 @@
 /// For each input file, a new directory is created in the current directory
 /// with the name of the source file.
 /// After the execution of:
-/// ```bash
+/// ~~~{.bash}
 /// root [0] .x copyFiles.C
-/// ```
+/// ~~~
 /// the file result.root will contain 4 subdirectories:
 /// "tot100.root", "hsimple.root", "hs1.root","hs2.root"
 ///

@@ -19,15 +19,15 @@
 ///
 ///  to show the bias performing 100 fits for 1000 events per "experiment"
 ///
-/// ```cpp
+/// ~~~{.cpp}
 ///  root[0]: .x TestBinomial.C+
-/// ```
+/// ~~~
 ///
 ///  to show the bias performing 100 fits for 1000 events per "experiment"
 ///
-/// ```cpp
+/// ~~~{.cpp}
 ///           .x TestBinomial.C+(100, 1000)
-/// ```
+/// ~~~
 ///
 /// \macro_image
 /// \macro_output

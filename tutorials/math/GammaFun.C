@@ -4,9 +4,9 @@
 /// Example showing the usage of the major special math functions  (gamma, beta, erf)  in ROOT
 /// To execute the macro type in:
 ///
-/// ```cpp
+/// ~~~{.cpp}
 /// root[0]: .x GammaFun.C
-/// ```
+/// ~~~
 ///
 /// It will create one canvas with the representation
 /// of the tgamma, lgamma, beta, erf and erfc functions

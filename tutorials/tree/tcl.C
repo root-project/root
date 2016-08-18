@@ -5,19 +5,19 @@
 ///
 /// The following tests can be run
 /// Interactive tests
-/// ```
+/// ~~~
 /// Root > .x tcl.C        //no-split interpreted
 /// Root > .x tcl.C(1)     //split    interpreted
 /// Root > .x tcl.C++      //no-split compiled
 /// Root > .x tcl.C++(1)   //split    compiled
-/// ```
+/// ~~~
 /// Batch tests: same as above but with no graphics
-/// ```bash
+/// ~~~{.bash}
 /// root -b -q tcl.C
 /// root -b -q tcl.C++
 /// root -b -q "tcl.C(1)"
 /// root -b -q "tcl.C++(1)"
-/// ```
+/// ~~~
 /// \macro_code
 ///
 /// \author Rene Brun
