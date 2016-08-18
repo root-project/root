@@ -30,6 +30,7 @@ extern "C" {
 #endif
 #include <string>
 #include <vector>
+#include <array>
 
 #ifndef ROOT_ESTLType
 #include "ESTLType.h"
@@ -176,6 +177,7 @@ namespace TClassEdit {
    std::string InsertStd(const char *tname);
    const char* GetUnqualifiedName(const char*name);
    inline bool IsUniquePtr(std::string_view name) {return 0 == name.find("unique_ptr<");}
+   inline bool IsStdArray(std::string_view name) {return 0 == name.find("array<");}
    inline std::string GetUniquePtrType(std::string_view name)
    {
       // Find the first template parameter
@@ -187,6 +189,10 @@ namespace TClassEdit {
    std::string GetNameForIO(const std::string& templateInstanceName,
                            TClassEdit::EModType mode = TClassEdit::kNone,
                            bool* hasChanged = nullptr);
+   bool GetStdArrayProperties(const char* typeName,
+                              std::string& typeNameBuf,
+                              std::array<int, 5>& maxIndices,
+                              int& ndim);
 
    inline char* DemangleName(const char* mangled_name, int& errorCode)
    {

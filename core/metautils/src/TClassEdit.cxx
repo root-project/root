@@ -1864,9 +1864,12 @@ class NameCleanerForIO {
    std::vector<std::unique_ptr<NameCleanerForIO>> fArgumentNodes = {};
    NameCleanerForIO* fMother;
    bool fHasChanged = false;
-   ROOT::ESTLType IsMotherSTLCont()
+   bool IsMotherSTLContOrArray()
    {
-      return fMother ? TClassEdit::IsSTLCont(fMother->fName+"<>") : ROOT::kNotSTL;
+      if (!fMother) return false;
+      auto stlType = TClassEdit::IsSTLCont(fMother->fName+"<");
+      auto isSTLContOrArray = ROOT::kNotSTL != stlType || TClassEdit::IsStdArray(fMother->fName+"<");
+      return isSTLContOrArray;
    }
 
 public:
@@ -1931,7 +1934,7 @@ public:
       }
    }
 
-   bool HasChanged() {return fHasChanged;}
+   bool HasChanged() const {return fHasChanged;}
 
    std::string ToString()
    {
@@ -1948,7 +1951,7 @@ public:
       }
 
       // Now we treat the case of the collections of unique ptrs
-      auto stlContType = IsMotherSTLCont();
+      auto stlContType = IsMotherSTLContOrArray();
       if (stlContType != ROOT::kNotSTL && TClassEdit::IsUniquePtr(fName+"<")) {
          name = fArgumentNodes.front()->ToString();
          name += "*";
@@ -1965,6 +1968,9 @@ public:
       name += name.back() == '>' ? " >" : ">"; // Respect name normalisation
       return name;
    }
+
+   const std::string& GetName() {return fName;}
+   const std::vector<std::unique_ptr<NameCleanerForIO>>* GetChildNodes() const {return &fArgumentNodes;}
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1985,6 +1991,31 @@ std::string TClassEdit::GetNameForIO(const std::string& templateInstanceName,
       *hasChanged = node.HasChanged();
       }
    return nameForIO;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// We could introduce a tuple as return type, but we be consistent with the rest
+// of the code.
+bool TClassEdit::GetStdArrayProperties(const char* typeName,
+                                       std::string& typeNameBuf,
+                                       std::array<int, 5>& maxIndices,
+                                       int& ndim)
+{
+   if (!IsStdArray(typeName)) return false;
+
+   // We have an array, it's worth continuing
+   NameCleanerForIO node(typeName);
+
+   // We now recurse updating the data according to what we find
+   auto childNodes = node.GetChildNodes();
+   for (ndim = 1;ndim <5 ; ndim++) {
+      maxIndices[ndim-1] = std::atoi(childNodes->back()->GetName().c_str());
+      typeNameBuf = childNodes->front()->GetName();
+      if (! IsStdArray(typeNameBuf+"<")) return true;
+      childNodes = childNodes->front()->GetChildNodes();
+   }
+
+   return true;
 }
 
 
