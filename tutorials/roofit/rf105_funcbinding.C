@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_roofit
-/// \notebook
+/// \notebook -js
 ///  'BASIC FUNCTIONALITY' RooFit tutorial macro #105
 ///
 ///   Demonstration of binding ROOT Math functions as RooFit functions
@@ -33,14 +33,14 @@ void rf105_funcbinding()
 
    // Bind one-dimensional TMath::Erf function as RooAbsReal function
    RooRealVar x("x","x",-3,3) ;
-   RooAbsReal* erf = bindFunction("erf",TMath::Erf,x) ;
+   RooAbsReal* errorFunc = bindFunction("erf",TMath::Erf,x) ;
 
    // Print erf definition
-   erf->Print() ;
+   errorFunc->Print() ;
 
    // Plot erf on frame 
    RooPlot* frame1 = x.frame(Title("TMath::Erf bound as RooFit function")) ;
-   erf->plotOn(frame1) ;
+   errorFunc->plotOn(frame1) ;
 
 
    // B i n d   R O O T : : M a t h : : b e t a _ p d f   C   f u n c t i o n

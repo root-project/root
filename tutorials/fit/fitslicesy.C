@@ -35,11 +35,11 @@ void fitslicesy() {
    TCanvas *c1 = new TCanvas("c1","c1",700,500);
    c1->SetFillColor(42);
    c1->Divide(2,1);
-   TPad *left = (TPad*)c1->cd(1);;
-   left->Divide(1,2);
+   TPad *leftPad = (TPad*)c1->cd(1);;
+   leftPad->Divide(1,2);
 
 // Draw 2-d original histogram
-   left->cd(1);
+   leftPad->cd(1);
    gPad->SetTopMargin(0.12);
    gPad->SetFillColor(33);
    hpxpy->Draw();
@@ -51,13 +51,13 @@ void fitslicesy() {
    hpxpy->FitSlicesY(0,7,32,20);
 
 // Show fitted "mean" for each slice
-   left->cd(2);
+   leftPad->cd(2);
    gPad->SetFillColor(33);
    TH2F *hpxpy_0 = (TH2F*)hsimpleFile->Get("hpxpy_0");
    hpxpy_0->Draw();
-   TPad *right = (TPad*)c1->cd(2);
-   right->Divide(1,2);
-   right->cd(1);
+   TPad *rightPad = (TPad*)c1->cd(2);
+   rightPad->Divide(1,2);
+   rightPad->cd(1);
    gPad->SetTopMargin(0.12);
    gPad->SetLeftMargin(0.15);
    gPad->SetFillColor(33);
@@ -65,7 +65,7 @@ void fitslicesy() {
    hpxpy_1->Draw();
 
 // Show fitted "sigma" for each slice
-   right->cd(2);
+   rightPad->cd(2);
    gPad->SetTopMargin(0.12);
    gPad->SetLeftMargin(0.15);
    gPad->SetFillColor(33);

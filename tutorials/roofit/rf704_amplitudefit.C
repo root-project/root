@@ -39,11 +39,11 @@ void rf704_amplitudefit()
    // Use RooTruthModel to obtain compiled implementation of sinh/cosh modulated decay functions
    RooRealVar tau("tau","#tau",1.5);  
    RooRealVar deltaGamma("deltaGamma","deltaGamma", 0.3);
-   RooTruthModel tm("tm","tm",t) ;
+   RooTruthModel truthModel("tm","tm",t) ;
    RooFormulaVar coshGBasis("coshGBasis","exp(-@0/ @1)*cosh(@0*@2/2)",RooArgList(t,tau,deltaGamma));
    RooFormulaVar sinhGBasis("sinhGBasis","exp(-@0/ @1)*sinh(@0*@2/2)",RooArgList(t,tau,deltaGamma));
-   RooAbsReal* coshGConv = tm.convolution(&coshGBasis,&t);
-   RooAbsReal* sinhGConv = tm.convolution(&sinhGBasis,&t);
+   RooAbsReal* coshGConv = truthModel.convolution(&coshGBasis,&t);
+   RooAbsReal* sinhGConv = truthModel.convolution(&sinhGBasis,&t);
       
    // Construct polynomial amplitudes in cos(a) 
    RooPolyVar poly1("poly1","poly1",cosa,RooArgList(RooConst(0.5),RooConst(0.2),RooConst(0.2)),0);
