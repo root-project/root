@@ -7,23 +7,23 @@
 /// Each plane directory contains 200 histograms.
 /// Note that the macro deletes the TFile object at the end!
 /// Connect the file again in read mode:
-/// ~~~{.bash}
+/// ```bash
 ///   Root [0] TFile top("top.root");
-/// ~~~
+/// ```
 /// The hierarchy can be browsed by the Root browser as shown below
-/// ~~~{.bash}
+/// ```bash
 ///   Root  TBrowser b;
-/// ~~~
+/// ```
 /// Click on the left pane on one of the plane directories.
 /// This shows the list of all histograms in this directory.
 /// Double click on one histogram to draw it (left mouse button).
 /// Select different options with the right mouse button.
 /// Instead of using the browser, you can also do:
-/// ~~~{.bash}
+/// ```bash
 ///   Root > tof->cd();
 ///   Root > plane3->cd();
 ///   Root > h3_90N->Draw();
-/// ~~~
+/// ```
 /// \macro_code
 ///
 /// \author Rene Brun

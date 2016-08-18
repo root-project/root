@@ -5,9 +5,9 @@
 ///
 /// run this macro by doing:
 ///
-/// ~~~ {.cpp}
+/// ```cpp
 /// root>.x line3Dfit.C+
-/// ~~~
+/// ```
 ///
 /// \macro_image
 /// \macro_output

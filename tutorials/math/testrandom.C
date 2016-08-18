@@ -8,7 +8,7 @@
 /// E.g. on an an Intel Xeon Quad-core Harpertown (E5410) 2.33 GHz running
 /// Linux SLC4 64 bit and compiled with gcc 3.4
 ///
-/// ~~~
+/// ```
 /// Distribution        nanoseconds/call
 ///                     TRandom  TRandom1 TRandom2 TRandom3
 /// Rndm..............    5.000  105.000    7.000   10.000
@@ -28,14 +28,14 @@
 /// GausUNURAN........   40.000  139.000   41.000   44.000
 /// PoissonUNURAN(10).   85.000  271.000   92.000  102.000
 /// PoissonUNURAN(100)   62.000  256.000   69.000   78.000
-/// ~~~
+/// ```
 ///
 /// Note that this tutorial can be executed in interpreted or compiled mode
 ///
-/// ~~~ {.cpp}
+/// ```cpp
 ///  Root > .x testrandom.C
 ///  Root > .x testrandom.C++
-/// ~~~
+/// ```
 ///
 /// \macro_output
 /// \macro_code

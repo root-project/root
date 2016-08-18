@@ -5,9 +5,9 @@
 /// taking full advantage of the precision and speed of the C99 compliant
 /// environments. To execute the macro type in:
 ///
-/// ~~~ {.cpp}
+/// ```cpp
 /// root[0] .x mathcoreSpecFunc.C
-/// ~~~
+/// ```
 ///
 /// It will create two canvases:
 ///

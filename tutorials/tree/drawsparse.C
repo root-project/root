@@ -8,9 +8,9 @@
 /// the rightmost axis.
 ///
 ///  Run as
-/// ~~~
+/// ```
 ///    .L $ROOTSYS/tutorials/tree/drawsparse.C+
-/// ~~~
+/// ```
 /// \macro_image
 /// \macro_code
 /// \author Axel Naumann

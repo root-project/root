@@ -5,13 +5,13 @@
 ///
 /// The test consists in writing/reading to/from keys or trees
 /// To execute the benchmark:
-/// ~~~
+/// ```
 /// root -b -q bill.C    or root -b -q bill.C++
-/// ~~~
+/// ```
 /// for example for N=10000, the following output is produced
 /// on an 2.7 GHz Intel Core i7 (year 2011).
 /// The names featuring a "t" are relative to trees, the faster, the better.
-/// ~~~
+/// ```
 /// billw0  : RT=  0.803 s, Cpu=  0.800 s, File size=  45608143 bytes, CX= 1
 /// billr0  : RT=  0.388 s, Cpu=  0.390 s
 /// billtw0 : RT=  0.336 s, Cpu=  0.310 s, File size=  45266881 bytes, CX= 1.00034
@@ -24,7 +24,7 @@
 /// ******************************************************************
 /// *  ROOTMARKS =1763.9   *  Root6.05/03   20150914/948
 /// ******************************************************************
-/// ~~~
+/// ```
 /// \macro_code
 /// \author Rene Brun
 

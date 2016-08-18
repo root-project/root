@@ -5,12 +5,12 @@
 /// take on disk or in memory by the various branches in a TTree.
 ///
 /// For example:
-/// ~~~{.cpp}
+/// ```cpp
 /// root [] printTreeSummary(tree);
 /// The TTree "T" takes 3764343 bytes on disk
 ///   Its branch "event" takes 3760313 bytes on disk
-/// ~~~
-/// ~~~{.cpp}
+/// ```
+/// ```cpp
 /// root [] printBranchSummary(tree->GetBranch("event"));
 /// The branch "event" takes 3760313 bytes on disk
 ///   Its sub-branch "TObject" takes 581 bytes on disk
@@ -33,7 +33,7 @@
 ///   Its sub-branch "fH" takes 10076 bytes on disk
 ///   Its sub-branch "fTriggerBits" takes 1699 bytes on disk
 ///   Its sub-branch "fIsValid" takes 366 bytes on disk
-/// ~~~
+/// ```
 /// \macro_code
 /// \author xxx
 

@@ -8,9 +8,9 @@
 /// file, if successfully parsed.
 ///
 /// To run this program do:
-/// ~~~ {.cpp}
+/// ```cpp
 /// .x SAXHandler.C
-/// ~~~
+/// ```
 ///
 /// Requires: `saxexample.xml`
 ///

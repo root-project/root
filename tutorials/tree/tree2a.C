@@ -8,9 +8,9 @@
 /// The example emulates the Geant3 step routines.
 ///
 /// to run the example, do to execute with native compiler:
-/// ~~~
+/// ```
 /// .x tree2a.C+ 
-/// ~~~
+/// ```
 ///
 /// Note that since IO is involved, ACLiC has to be invoked to create the dictionary of class Gctrak.
 /// \macro_code

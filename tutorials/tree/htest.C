@@ -4,13 +4,13 @@
 /// Save histograms in Tree branches
 ///
 /// To run this example, do
-/// ~~~{.cpp}
+/// ```cpp
 /// root > .L htest.C
 /// root > htw()
 /// root > htr1()
 /// root > htr2()
 /// root > htr3()
-/// ~~~
+/// ```
 /// \macro_image
 /// \macro_code
 /// \author Rene Brun

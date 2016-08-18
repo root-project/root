@@ -2,9 +2,9 @@
 /// \ingroup tutorial_unuran
 /// This program must be compiled and executed with Aclic as follows
 ///
-/// ~~~ {.cpp}
+/// ```cpp
 /// .x unuranFoamTest.C+
-/// ~~~
+/// ```
 ///
 /// it is an extension of tutorials foam_kanwa.C to compare
 /// generation of a 2D distribution with unuran and Foam

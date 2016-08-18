@@ -9,36 +9,36 @@
 ///
 /// The radionuclides table is loaded on demand by any call:
 ///
-/// ~~~ {.cpp}
+/// ```cpp
 ///    TGeoElementRN *TGeoElementTable::GetElementRN(Int_t atomic_number,
 ///                                                  Int_t atomic_charge,
 ///                                                  Int_t isomeric_number)
-/// ~~~
+/// ```
 ///
 /// The isomeric number is optional and the default value is 0.
 ///
 /// To create a radioactive material based on a radionuclide, one should use the
 /// constructor:
 ///
-/// ~~~ {.cpp}
+/// ```cpp
 ///    TGeoMaterial(const char *name, TGeoElement *elem, Double_t density)
-/// ~~~
+/// ```
 ///
 /// To create a radioactive mixture, one can use radionuclides as well as stable
 /// elements:
 ///
-/// ~~~ {.cpp}
+/// ```cpp
 ///    TGeoMixture(const char *name, Int_t nelements, Double_t density);
 ///    TGeoMixture::AddElement(TGeoElement *elem, Double_t weight_fraction);
-/// ~~~
+/// ```
 ///
 /// Once defined, one can retrieve the time evolution for the radioactive
 /// materials/mixtures by using one of the 2 methods:
 ///
-/// ~~~ {.cpp}
+/// ```cpp
 ///    void TGeoMaterial::FillMaterialEvolution(TObjArray *population,
 ///                                             Double_t   precision=0.001)
-/// ~~~
+/// ```
 ///
 /// To use this method, one has to provide an empty TObjArray object that will
 /// be filled with all elements coming from the decay chain of the initial
@@ -47,26 +47,26 @@
 /// The POPULATION list may contain stable elements as well as radionuclides,
 /// depending on the initial elements. To test if an element is a radionuclide:
 ///
-/// ~~~ {.cpp}
+/// ```cpp
 ///    Bool_t TGeoElement::IsRadioNuclide() const
-/// ~~~
+/// ```
 ///
 /// All radionuclides in the output population list have attached objects that
 /// represent the time evolution of their fraction of nuclei with respect to the
 /// top radionuclide in the decay chain. These objects (Bateman solutions) can be
 /// retrieved and drawn:
 ///
-/// ~~~ {.cpp}
+/// ```cpp
 ///    TGeoBatemanSol *TGeoElementRN::Ratio();
 ///    void TGeoBatemanSol::Draw();
-/// ~~~
+/// ```
 ///
 /// Another method allows to create the evolution of a given radioactive
 /// material/mixture at a given moment in time:
 ///
-/// ~~~ {.cpp}
+/// ```cpp
 ///    TGeoMaterial::DecayMaterial(Double_t time, Double_t precision=0.001)
-/// ~~~
+/// ```
 ///
 /// The method will create the mixture that result from the decay of a initial
 /// material/mixture at TIME, while all resulting elements having a fractional

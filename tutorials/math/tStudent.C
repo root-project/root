@@ -3,9 +3,9 @@
 /// \notebook
 /// Example macro describing the student t distribution
 ///
-/// ~~~ {.cpp}
+/// ```cpp
 /// root[0]: .x tStudent.C
-/// ~~~
+/// ```
 ///
 /// It draws the pdf, the cdf and then 10 quantiles of the t Student distribution
 ///

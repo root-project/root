@@ -2,10 +2,10 @@
 /// \ingroup tutorial_gui
 /// This macro gives an example for changing text button labels anytime the Start or Pause buttons are clicked.
 /// To run it do either:
-/// ~~~ 
+/// ``` 
 /// .x buttonChangelabel.C
 /// .x buttonChangelabel.C++
-/// ~~~ 
+/// ``` 
 ///
 /// \macro_code
 ///

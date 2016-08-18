@@ -3,10 +3,10 @@
 /// This macro gives an example of how to use the TGTextViewostream widget.
 /// Simply type a command in the "Command" text entry, then the output is redirected to theTGTextViewostream.
 /// To run it do either:
-/// ~~~
+/// ```
 /// .x textviewostream.C
 /// .x textviewostream.C++
-/// ~~~
+/// ```
 ///
 /// \macro_code
 ///
