@@ -32,7 +32,6 @@ TStreamerElement objects and calls the appropriate function for each
 element type.
 */
 
-#include <memory>
 #include "TStreamerInfo.h"
 #include "TFile.h"
 #include "TROOT.h"
@@ -74,6 +73,7 @@ element type.
 
 #include "TStreamerInfoActions.h"
 
+#include <memory>
 #include <array>
 
 std::atomic<Int_t> TStreamerInfo::fgCount{0};
