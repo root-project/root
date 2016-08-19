@@ -147,7 +147,7 @@ TRatioPlot::~TRatioPlot()
    if (fLowerGXaxis != 0) delete fLowerGXaxis;
    if (fUpperGYaxis != 0) delete fUpperGYaxis;
    if (fLowerGYaxis != 0) delete fLowerGYaxis;
-   if (fUpperGXaxisMirror != 0) delete fUpperGYaxisMirror;
+   if (fUpperGXaxisMirror != 0) delete fUpperGXaxisMirror;
    if (fLowerGXaxisMirror != 0) delete fLowerGXaxisMirror;
    if (fUpperGYaxisMirror != 0) delete fUpperGYaxisMirror;
    if (fLowerGYaxisMirror != 0) delete fLowerGYaxisMirror;
