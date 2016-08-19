@@ -8,7 +8,7 @@
 ///
 /// \author Rene Brun
 
-void multigraph()
+TCanvas* multigraph()
 {
    gStyle->SetOptFit();
    TCanvas *c1 = new TCanvas("c1","multigraph",700,500);
