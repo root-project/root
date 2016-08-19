@@ -1154,7 +1154,14 @@ void TRatioPlot::CreateVisualAxes()
    Double_t ticksize = fUpperGYaxis->GetTickSize()*ratio;  
    fLowerGYaxis->SetTickSize(ticksize);
 
-   
+   // hide first label of upper y axis
+
+   // @FIXME: Error in <TBufferFile::CheckByteCount>: object of class TGaxisModLab read too few bytes: 23 instead of 58
+   if (GetSeparationMargin() < 0.025) {
+      fLowerGYaxis->SetLabelAttributes(-1, -1, 0);
+   }
+
+
    // Create the axes on the other sides of the graphs 
    // This is steered by an option on the containing pad or self
    if (axistop || axisright) {
