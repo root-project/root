@@ -1867,7 +1867,7 @@ class NameCleanerForIO {
    bool IsMotherSTLContOrArray()
    {
       if (!fMother) return false;
-      auto stlType = TClassEdit::IsSTLCont(fMother->fName+"<");
+      auto stlType = TClassEdit::IsSTLCont(fMother->fName+"<>");
       auto isSTLContOrArray = ROOT::kNotSTL != stlType || TClassEdit::IsStdArray(fMother->fName+"<");
       return isSTLContOrArray;
    }
