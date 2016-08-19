@@ -1,6 +1,7 @@
 #include "TFile.h"
 #include "infoDumper.h"
 #include <array>
+#include <memory>
 namespace edm2 {
 
    class B{};
