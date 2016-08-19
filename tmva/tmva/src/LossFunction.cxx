@@ -4,7 +4,7 @@
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
- * Class  : Event                                                                 *
+ * Class  : LossFunction                                                          *
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
@@ -75,8 +75,8 @@ void TMVA::HuberLossFunctionBDT::Init(std::map<const TMVA::Event*, LossFunctionE
 ////////////////////////////////////////////////////////////////////////////////
 /// huber BDT, set the targets for a collection of events
 
-void TMVA::HuberLossFunctionBDT::SetTargets(std::map<const TMVA::Event*, LossFunctionEventInfo> evinfomap){
-   
+void TMVA::HuberLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap){
+ 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -91,5 +91,5 @@ Double_t TMVA::HuberLossFunctionBDT::Target(const LossFunctionEventInfo e){
 /// events in the terminal node
 
 Double_t TMVA::HuberLossFunctionBDT::Fit(std::vector<const LossFunctionEventInfo>& evs){
-   
+   return 1.0;   
 }
