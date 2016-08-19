@@ -72,7 +72,7 @@ namespace TMVA {
 
       // constructors
       LossFunction(){};
-      ~LossFunction(){};
+      virtual ~LossFunction(){};
 
       // abstract methods that need to be implemented
       virtual Double_t CalculateLoss(const LossFunctionEventInfo e) = 0;
@@ -83,19 +83,23 @@ namespace TMVA {
    };
 
    ///////////////////////////////////////////////////////////////////////////////////////////////
-   // Loss Function base class for boosted decision trees. Inherits from LossFunction
+   // Loss Function interface for boosted decision trees. Inherits from LossFunction
    ///////////////////////////////////////////////////////////////////////////////////////////////
    
    // The HuberLossFunctionBDT class implements the LossFunctionBDT interface
-   // while also deriving from the HuberLossFunction itself
-   // LossFunctionBDT 
+   // while also deriving from the HuberLossFunction itself.
+   // Both LossFunctionBDT and HuberLossFunction implement the LossFunction
+   // interface, HuberLossFunction providing the CalculateLoss functionality
+   // and LossFunctionBDT providing the interface for the BDT methods. 
+   // Using the virtual keyword allows both HuberLossFunction and 
+   // HuberLossFunctionBDT to implement the LossFunctionBDT interface methods
    class LossFunctionBDT : public virtual LossFunction{
 
    public:
 
       // constructors
       LossFunctionBDT(){};
-      ~LossFunctionBDT(){};
+      virtual ~LossFunctionBDT(){};
 
       // abstract methods that need to be implemented
       virtual void Init(std::map<const TMVA::Event*, LossFunctionEventInfo> evinfomap) = 0;
