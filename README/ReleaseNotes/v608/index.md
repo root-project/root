@@ -250,6 +250,8 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
   }
   ~~~
 * New class `TGaxisModLab`: a  TGaxis helper class used to store the modified labels.
+* `TPie` the format parameter set by `SetPercentFormat` was ignored.
+  (reported [here](https://sft.its.cern.ch/jira/browse/ROOT-8294))
 
 ## 3D Graphics Libraries
 
