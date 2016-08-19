@@ -2302,7 +2302,7 @@ void TGaxis::SetLabelAttributes(Int_t labNum, Double_t labAngle, Double_t labSiz
 ////////////////////////////////////////////////////////////////////////////////
 /// Change the label attributes of label number i. If needed.
 static Double_t SavedTextAngle;
-static Double_t SavedTestSize;
+static Double_t SavedTextSize;
 static Int_t    SavedTextAlign;
 static Int_t    SavedTextColor;
 static Int_t    SavedTextFont;;
@@ -2314,12 +2314,12 @@ void TGaxis::ChangeLabelAttributes(Int_t i, TLatex* t, char* c)
    TIter next(fModLabs);
    TGaxisModLab *ml;
    while ( (ml = (TGaxisModLab*)next()) ) {
+      SavedTextAngle = t->GetTextAngle();
+      SavedTextSize  = t->GetTextSize();
+      SavedTextAlign = t->GetTextAlign();
+      SavedTextColor = t->GetTextColor();
+      SavedTextFont  = t->GetTextFont();
       if (i==ml->GetLabNum()) {
-         SavedTextAngle = t->GetTextAngle();
-         SavedTestSize  = t->GetTextSize();
-         SavedTextAlign = t->GetTextAlign();
-         SavedTextColor = t->GetTextColor();
-         SavedTextFont  = t->GetTextFont();
          if (ml->GetAngle()>=0.) t->SetTextAngle(ml->GetAngle());
          if (ml->GetSize()>=0.)  t->SetTextSize(ml->GetSize());
          if (ml->GetAlign()>0)   t->SetTextAlign(ml->GetAlign());
@@ -2338,7 +2338,7 @@ void TGaxis::ChangeLabelAttributes(Int_t i, TLatex* t, char* c)
 void TGaxis::ResetLabelAttributes(TLatex* t)
 {
    t->SetTextAngle(SavedTextAngle);
-   t->SetTextSize(SavedTestSize);
+   t->SetTextSize(SavedTextSize);
    t->SetTextAlign(SavedTextAlign);
    t->SetTextColor(SavedTextColor);
    t->SetTextFont(SavedTextFont);
