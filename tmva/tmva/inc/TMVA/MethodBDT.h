@@ -55,6 +55,7 @@
 #ifndef ROOT_TMVA_Event
 #include "TMVA/Event.h"
 #endif
+#include "TMVA/LossFunction.h"
 
 namespace TMVA {
 
@@ -290,6 +291,7 @@ namespace TMVA {
       
       Bool_t fHistoricBool; //historic variable, only needed for "CompatibilityOptions" 
 
+      LossFunctionBDT* fLossFunctionBDT = new HuberLossFunctionBDT();
 
       // debugging flags
       static const Int_t               fgDebugLevel;     // debug level determining some printout/control plots etc.

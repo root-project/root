@@ -34,17 +34,10 @@
 //#include <iosfwd>
 #include <vector>
 #include <map>
-/*
-#ifndef ROOT_Rtypes
-#include "Rtypes.h"
-#endif
-#ifndef ROOT_ThreadLocalStorage
-#include "ThreadLocalStorage.h"
-#endif
+#include "TMVA/Event.h"
 #ifndef ROOT_TMVA_Types
 #include "TMVA/Types.h"
 #endif
-*/
 
 namespace TMVA {
    
@@ -56,10 +49,10 @@ namespace TMVA {
 
    public:
       LossFunctionEventInfo();
-      LossFunctionEventInfo(Double_t trueValue, Double_t predictedValue, Double_t weight){
-         this->trueValue = trueValue;
-         this->predictedValue = predictedValue;
-         this->weight = weight;
+      LossFunctionEventInfo(Double_t trueValue_, Double_t predictedValue_, Double_t weight_){
+         trueValue = trueValue_;
+         predictedValue = predictedValue_;
+         weight = weight_;
       }
       ~LossFunctionEventInfo();
 
@@ -78,8 +71,8 @@ namespace TMVA {
    public:
 
       // constructors
-      LossFunction();
-      ~LossFunction();
+      LossFunction(){};
+      ~LossFunction(){};
 
       // abstract methods that need to be implemented
       virtual Double_t CalculateLoss(const LossFunctionEventInfo e) = 0;
@@ -93,13 +86,16 @@ namespace TMVA {
    // Loss Function base class for boosted decision trees. Inherits from LossFunction
    ///////////////////////////////////////////////////////////////////////////////////////////////
    
-   class LossFunctionBDT : LossFunction {
+   // The HuberLossFunctionBDT class implements the LossFunctionBDT interface
+   // while also deriving from the HuberLossFunction itself
+   // LossFunctionBDT 
+   class LossFunctionBDT : public virtual LossFunction{
 
    public:
 
       // constructors
-      LossFunctionBDT();
-      ~LossFunctionBDT();
+      LossFunctionBDT(){};
+      ~LossFunctionBDT(){};
 
       // abstract methods that need to be implemented
       virtual void Init(std::map<const TMVA::Event*, LossFunctionEventInfo> evinfomap) = 0;
@@ -112,7 +108,7 @@ namespace TMVA {
    // Huber loss function for regression error calculations
    ///////////////////////////////////////////////////////////////////////////////////////////////
    
-   class HuberLossFunction : LossFunction{
+   class HuberLossFunction : public virtual LossFunction{
 
    public:
       HuberLossFunction();
@@ -135,19 +131,23 @@ namespace TMVA {
    // Huber loss function with boosted decision tree functionality
    ///////////////////////////////////////////////////////////////////////////////////////////////
    
-   class HuberLossFunctionBDT : HuberLossFunction, LossFunctionBDT{
+   class HuberLossFunctionBDT : public LossFunctionBDT, public HuberLossFunction{
    
    public:
       HuberLossFunctionBDT(){};
       HuberLossFunctionBDT(Double_t quantile):HuberLossFunction(quantile){};
       ~HuberLossFunctionBDT(){};
+
+      // LossFunction methods taken from HuberLossFunction
+      // Give the BDT implementation a different name though.
+      TString Name(){ return TString("Huber_Loss_Function_BDT"); };
       
       // The LossFunctionBDT methods
       void Init(std::map<const TMVA::Event*, LossFunctionEventInfo> evinfomap);
       void SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap);
       Double_t Target(const LossFunctionEventInfo e);
       Double_t Fit(std::vector<const LossFunctionEventInfo>& evs);
-      TString Name(){ return TString("Huber_Loss_Function_BDT"); };
+      
 
    private:
       // some data fields
