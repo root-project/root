@@ -1755,7 +1755,7 @@ L110:
                   if (!optionText) {
                      if (first > last)  strncpy(chtemp, " ", 256);
                      else               strncpy(chtemp, &label[first], 256);
-                     if (fNModLabs) ChangeLabelAttributes(k+1, textaxis, chtemp);
+                     if (fNModLabs) ChangeLabelAttributes(k+1, nlabels, textaxis, chtemp);
                      typolabel = chtemp;
                      if (!optionTime) typolabel.ReplaceAll("-", "#minus");
                      textaxis->PaintLatex(gPad->GetX1() + xx*(gPad->GetX2() - gPad->GetX1()),
@@ -2242,7 +2242,7 @@ void TGaxis::SetFunction(const char *funcname)
 /// fine tuning of the labels. All the attributes can be changed and even the
 /// label text itself.
 ///
-/// \param[in] labNum           Number of the abel to be change
+/// \param[in] labNum           Number of the abel to be change, negative numbers start from the end
 /// \param[in] labAngle         New angle value
 /// \param[in] labSize          New size (0 erase the label)
 /// \param[in] labAlign         New alignment value
@@ -2266,6 +2266,7 @@ void TGaxis::SetFunction(const char *funcname)
 ///    axis1->SetLabelAttributes(3,-1,0.);
 ///    axis1->SetLabelAttributes(5,30.,-1,0);
 ///    axis1->SetLabelAttributes(6,-1,-1,-1,3,-1,"6th label");
+///    axis1->SetLabelAttributes(-2,-1,-1,-1,3,-1,"2nd to last label");
 ///    axis1->Draw();
 /// }
 /// ~~~
@@ -2307,19 +2308,29 @@ static Int_t    SavedTextAlign;
 static Int_t    SavedTextColor;
 static Int_t    SavedTextFont;;
 
-void TGaxis::ChangeLabelAttributes(Int_t i, TLatex* t, char* c)
+void TGaxis::ChangeLabelAttributes(Int_t i, Int_t nlabels, TLatex* t, char* c)
 {
    if (!fModLabs) return;
 
    TIter next(fModLabs);
    TGaxisModLab *ml;
+   Int_t labNum;
    while ( (ml = (TGaxisModLab*)next()) ) {
       SavedTextAngle = t->GetTextAngle();
       SavedTextSize  = t->GetTextSize();
       SavedTextAlign = t->GetTextAlign();
       SavedTextColor = t->GetTextColor();
       SavedTextFont  = t->GetTextFont();
-      if (i==ml->GetLabNum()) {
+   
+      labNum = ml->GetLabNum();
+   
+      if (labNum < 0) {
+         labNum = nlabels + labNum + 2;
+      }
+
+
+      if (i==labNum) {
+
          if (ml->GetAngle()>=0.) t->SetTextAngle(ml->GetAngle());
          if (ml->GetSize()>=0.)  t->SetTextSize(ml->GetSize());
          if (ml->GetAlign()>0)   t->SetTextAlign(ml->GetAlign());

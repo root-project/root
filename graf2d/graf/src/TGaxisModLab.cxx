@@ -40,7 +40,7 @@ TGaxisModLab::TGaxisModLab() {
 /// Set modified label number.
 
 void TGaxisModLab::SetLabNum(Int_t l) {
-   if (l>0) fLabNum = l;
+   if (l!=0) fLabNum = l;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
