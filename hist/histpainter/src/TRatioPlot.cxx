@@ -486,6 +486,13 @@ void TRatioPlot::SetSeparationMargin(Float_t margin)
    SetPadMargins();
 }
 
+Float_t TRatioPlot::GetSeparationMargin()
+{
+   Float_t sf = fSplitFraction;
+   Float_t up = fUpBottomMargin * (1-sf);
+   Float_t down = fLowTopMargin * sf;
+   return up+down;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////

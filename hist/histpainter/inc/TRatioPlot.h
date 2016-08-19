@@ -188,6 +188,7 @@ public:
    void SetRightMargin(Float_t margin);
    
    virtual void SetSeparationMargin(Float_t);
+   virtual Float_t GetSeparationMargin();
    virtual void SetSplitFraction(Float_t sf);
    virtual void SetConfidenceLevels(Double_t cl1, Double_t cl2);
 
