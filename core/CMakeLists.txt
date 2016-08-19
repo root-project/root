@@ -86,14 +86,14 @@ install(FILES ${CMAKE_BINARY_DIR}/include/RGitCommit.h DESTINATION ${CMAKE_INSTA
 #----------------------------------------------------------------------------------------
 
 if(WIN32)
-   set(corelinklibs shell32.lib WSock32.lib Oleaut32.lib Iphlpapi.lib)
-elseif(cocoa)
-   set(corelinklibs "-framework Cocoa")
+  set(corelinklibs shell32.lib WSock32.lib Oleaut32.lib Iphlpapi.lib)
+elseif(APPLE)
+  if(cocoa)
+     set(corelinklibs "-framework Cocoa -F/System/Library/PrivateFrameworks -framework CoreSymbolication")
+  else()
+     set(corelinklibs "-F/System/Library/PrivateFrameworks -framework CoreSymbolication")
+  endif()
 endif()
-
-if(APPLE)
-  set(corelinklibs "${corelinklibs} -F /System/Library/PrivateFrameworks -framework CoreSymbolication")
-endif(APPLE)
 
 add_subdirectory(utils)
 
