@@ -5374,7 +5374,12 @@ Long64_t TH1::Merge(TCollection *li)
             }
          }
       }
-      if (allHaveLabels) {
+      //std::cout << "considering histo " << h->GetName() << "  labels - " << allHaveLabels << std::endl;
+      Bool_t histoIsEmpty = (h->fTsumw == 0 && h->GetEntries() == 0);
+      
+      // if histogram is empty it does not mutter if it has label or not 
+      if (allHaveLabels && !histoIsEmpty) {
+         if (h->fTsumw == 0 && h->GetEntries() == 0) continue;
          THashList* hlabels=h->GetXaxis()->GetLabels();
          Bool_t haveOneLabel = (hlabels != 0);
          // do here to print message only one time
@@ -5388,10 +5393,20 @@ Long64_t TH1::Merge(TCollection *li)
          if (haveOneLabel) foundLabelHist = kTRUE;
          // If histograms have labels but CanExtendAllAxes() is false
          // use merging of bin content
-         if (allHaveLabels && !CanExtendAllAxes()) {
-            allHaveLabels = kFALSE;
+         if (allHaveLabels && !CanExtendAllAxes())  {
+            // special case for this histogram when is empty
+            // and axis cannot be extended (because it is the default)
+            if ( this->fTsumw == 0 && GetEntries() == 0 ) {
+               UInt_t bitMaskX = fXaxis.CanBeAlphanumeric() & TH1::kXaxis;
+               UInt_t bitMaskY = fYaxis.CanBeAlphanumeric() & TH1::kYaxis;
+               UInt_t bitMaskZ = fZaxis.CanBeAlphanumeric() & TH1::kZaxis; 
+               SetCanExtend(bitMaskX | bitMaskY | bitMaskZ );
+            }
+            if (!CanExtendAllAxes()) { 
+               Info("Merge","Histogram %s to be merged has label but axis cannot be extended - using bin numeric mode to merge. Call TH1::SetExtendAllAxes() if want to merge using label mode",GetName());
+               allHaveLabels = kFALSE;
+            }
          }
-         // it means
          // I could add a check if histogram contains bins without a label
          // and with non-zero bin content
          // Do we want to support this ???
@@ -5411,12 +5426,6 @@ Long64_t TH1::Merge(TCollection *li)
                   allHaveLabels = kFALSE;
                }
             }
-            // else if (h == this) {
-            //    // in case of a full labels histogram set
-            //    // the kCanRebin bit otherwise labels will be lost
-            //    // Info("Merge","Histogram %s has labels but has not the kCanRebin bit set - set the bit on to not loose labels",GetName() );
-            //    // allHaveLabels = kFALSE;
-            // }
          }
       }
    }    while ( ( h = dynamic_cast<TH1*> ( next() ) ) != NULL );
@@ -5427,6 +5436,7 @@ Long64_t TH1::Merge(TCollection *li)
       return -1;
    }
 
+   //std::cout << "Merge: all have labels " << allHaveLabels << std::endl;
 
    next.Reset();
    // In the case of histogram with different limits
@@ -5574,6 +5584,7 @@ Long64_t TH1::Merge(TCollection *li)
                      // otherwise it will return zero and bin will be merged in underflow/overflow
                      // Do we want to keep this case ??
                      ix = fXaxis.FindBin(label);
+                     //std::cout << "found bin " << ix << "for label " << label << std::endl;
                      if (ix <= 0) {
                         Warning("Merge", "Histogram %s has labels but CanExtendAllAxes() is false - label %s is lost", GetName(), label);
                         continue;
