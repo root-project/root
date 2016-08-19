@@ -92,7 +92,7 @@ elseif(cocoa)
 endif()
 
 if(APPLE)
-  set(corelinklibs "${corelinklibs} -F /System/Library/PrivateFrameworks -framework CoreSymbolication")
+  set(corelinklibs "${corelinklibs}-F /System/Library/PrivateFrameworks -framework CoreSymbolication")
 endif(APPLE)
 
 add_subdirectory(utils)
