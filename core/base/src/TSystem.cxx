@@ -3537,7 +3537,23 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
         linkLibraries.Prepend(" ");
      }
    */
-   linkLibraries.Prepend(GetLibraries("","SDL"));
+   TString linkLibrariesNoQuotes(GetLibraries("","SDL"));
+   // We need to enclose the single paths in quotes to account for paths with spaces
+   TString librariesWithQuotes;
+   TString singleLibrary;
+   for (auto tokenObj : *linkLibrariesNoQuotes.Tokenize(" ")) {
+      singleLibrary = ((TObjString*)tokenObj)->GetString();
+      if (singleLibrary.BeginsWith("/") or singleLibrary.BeginsWith("\\")) {
+         singleLibrary = "\"" + singleLibrary;
+      }
+      if (singleLibrary.EndsWith(fSoExt)) {
+         singleLibrary += "\" ";
+      }
+      librariesWithQuotes += singleLibrary;
+      singleLibrary = "";
+   }
+
+   linkLibraries.Prepend(librariesWithQuotes);
 
    // ======= Generate the build command lines
    TString cmd = fMakeSharedLib;
