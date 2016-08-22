@@ -2642,9 +2642,9 @@ used for each track is the minimum of `fNpoint` and 3 (the size of the
 
 `// with fTracks[1].fNpoint==5`
 
-`fTracks[2].fPoints[0] - fTracks[1].fVertex[0]`
+`fTracks[2].fPoints[0] - fTracks[2].fVertex[0]`
 
-`fTracks[2].fPoints[1] - fTracks[1].fVertex[1]`
+`fTracks[2].fPoints[1] - fTracks[2].fVertex[1]`
 
 `// with fTracks[2].fNpoint==2`
 
@@ -2671,8 +2671,9 @@ You can use bit patterns (`&,|,<<`) or Boolean operation.
 The selection argument is used as a weight. The expression returns a
 multiplier and in case of a Boolean the multiplier is either 0 (for
 false) or 1 (for true). The first command draws `fPx` for the range
-between 0.4 and -0.4, the second command draws `fPx` for the same range,
-but adds a weight using the result of the second expression.
+between with conditions on `fBx` and `fBy`, the second command draws `fPx`
+for the same conditions, but adds a weight using the result of the second
+expression.
 
 35. **`tree->Draw("fVertex","fVertex>10")`**
 
@@ -2813,7 +2814,7 @@ the spider plots’ output: the tab “Style” defining the spider layout
 and the tab “Browse” to navigate in the tree.
 
 #### Parallel Coordinates Plots
-\index{parallel poordinates}
+\index{parallel coordinates}
 
 The Parallel Coordinates Plots are a common way of studying and
 visualizing multiple variables data sets. They were proposed by in
@@ -2981,8 +2982,8 @@ graphical editor facility provides dedicated GUI.
 
 ![Parallel Coordinates graphical editors.](pictures/para13.png)
 
-Tranparency is very useful with parallel coordinates plots. It alows to
-show cleraly the clusters.
+Transparency is very useful with parallel coordinates plots. It allows to
+show clearly the clusters.
 \index{transparency!parallel coordinates}
 
 ![Parallel Coordinates with transparency.](pictures/para14.png)
@@ -3175,7 +3176,7 @@ previous command for entries with more than 600 tracks.
 
 #### Main Differences between TEventList and TEntryList
 
-The functionality is essentialy the same: both are used to store entry
+The functionality is essentially the same: both are used to store entry
 numbers. **`TEntryList`**, however, uses considerably less memory for
 storage, and is optimized for both very high and very low selectivity of
 cuts (see **`TEntryListBlock`** class description for the details of
