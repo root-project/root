@@ -3541,16 +3541,24 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    // We need to enclose the single paths in quotes to account for paths with spaces
    TString librariesWithQuotes;
    TString singleLibrary;
+   Bool_t collectingSingleLibraryNameTokens = kFALSE;
    for (auto tokenObj : *linkLibrariesNoQuotes.Tokenize(" ")) {
       singleLibrary = ((TObjString*)tokenObj)->GetString();
-      if (singleLibrary.BeginsWith("/") or singleLibrary.BeginsWith("\\")) {
-         singleLibrary = "\"" + singleLibrary;
+      if (!AccessPathName(singleLibrary)) {
+         if (collectingSingleLibraryNameTokens) {
+            librariesWithQuotes += "\" " + singleLibrary;
+            collectingSingleLibraryNameTokens = kFALSE;
+         } else {
+            librariesWithQuotes += " " + singleLibrary;
+         }
+      } else {
+         if (collectingSingleLibraryNameTokens) {
+            librariesWithQuotes += singleLibrary + " ";
+         } else {
+            collectingSingleLibraryNameTokens = kTRUE;
+            librariesWithQuotes += "\"" + singleLibrary + " ";
+         }
       }
-      if (singleLibrary.EndsWith(fSoExt)) {
-         singleLibrary += "\" ";
-      }
-      librariesWithQuotes += singleLibrary;
-      singleLibrary = "";
    }
 
    linkLibraries.Prepend(librariesWithQuotes);
