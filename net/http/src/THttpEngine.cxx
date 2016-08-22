@@ -113,9 +113,9 @@ void THttpWSEngine::CheckModifiedFlag()
                  call->Execute(fCanv, l);
                  buf.Append(TString::Format(",\"chk\":%s", (l!=0) ? "true" : "false"));
                  buf.Append(TString::Format(",\"exec\":\"%s(%s)\"", m->GetName(), (l!=0) ? "0" : "1"));
-                 printf("Toggle %s getter %s chk: %s \n", m->GetName(), getter.Data(), (l!=0) ? "true" : "false");
+                 // printf("Toggle %s getter %s chk: %s \n", m->GetName(), getter.Data(), (l!=0) ? "true" : "false");
                } else {
-                  printf("Cannot get toggle value with getter %s \n", getter.Data());
+                 printf("Cannot get toggle value with getter %s \n", getter.Data());
                }
             }
          } else {
@@ -167,7 +167,7 @@ void THttpWSEngine::ProcessData(THttpCallArg* arg)
 
          TString exec;
          exec.Form("((%s*) %p)->%s;", fCanv->ClassName(), fCanv, cdata+4);
-         printf("Execute %s\n", exec.Data());
+         // printf("Execute %s\n", exec.Data());
 
          gROOT->ProcessLine(exec);
       }
