@@ -13,6 +13,7 @@
 // for shared_ptr
 #include <memory>
 #include "RStringView.h"
+#include <algorithm>
 
 namespace {
    static TClassEdit::TInterpreterLookupHelper *gInterpreterHelper = 0;
