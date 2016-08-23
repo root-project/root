@@ -88,6 +88,11 @@ if (CUDA_FOUND)
     ${CUDA_CUBLAS_LIBRARIES})
 endif (CUDA_FOUND)
 
+    ROOT_EXECUTABLE(testtbb tbb.cxx LIBRARIES ${Libraries} tbb)
+    TARGET_COMPILE_OPTIONS(testtbb PUBLIC "-ftree-vectorize"
+                                   PUBLIC "-msse2"
+                                   PUBLIC "-fopt-info-missed"
+                                   PUBLIC "-ftree-vectorizer-verbose=5")
 # DNN - CPU
 find_package(BLAS)
 if (BLAS_FOUND)

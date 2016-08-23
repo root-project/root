@@ -11,7 +11,7 @@
 
 /////////////////////////////////////////////////////////////////
 // Explicit instantiation of the TCuda architecture class with //
-// and without profiling.                                      //
+// for Double_t and Real_t floating point types.               //
 /////////////////////////////////////////////////////////////////
 
 #include <iostream>
@@ -28,6 +28,9 @@
 
 namespace TMVA {
 namespace DNN  {
-template class TCuda<false>;
-} // namespace TMVA
-} // namespace DNN
+
+template class TCuda<Double_t>;
+template class TCuda<Real_t>;
+
+} // namespace tmva
+} // namespace dnn

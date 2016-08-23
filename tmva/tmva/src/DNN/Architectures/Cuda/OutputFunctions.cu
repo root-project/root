@@ -16,14 +16,16 @@
 
 #include "TMVA/DNN/Architectures/Cuda.h"
 #include "TMVA/DNN/Architectures/Cuda/Device.h"
+#include "Kernels.cuh"
 
 namespace TMVA
 {
 namespace DNN
 {
 
-void TCuda::Sigmoid(TCudaMatrix & B,
-                    const TCudaMatrix & A)
+template<typename AFloat>
+void TCuda<AFloat>::Sigmoid(TCudaMatrix<AFloat> & B,
+                            const TCudaMatrix<AFloat> & A)
 {
    dim3 blockDims = TDevice::BlockDims();
    dim3 gridDims  = TDevice::GridDims(B);

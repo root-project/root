@@ -17,30 +17,32 @@
 
 #include "TMVA/DNN/Architectures/Cuda.h"
 #include "TMVA/DNN/Architectures/Cuda/Device.h"
-#include "TMVA/DNN/Architectures/Cuda/Kernels.h"
+#include "Kernels.cuh"
 
 namespace TMVA {
 namespace DNN  {
 
 //______________________________________________________________________________
-CudaDouble_t TCuda::L1Regularization(const TCudaMatrix & A)
+template<typename AFloat>
+AFloat TCuda<AFloat>::L1Regularization(const TCudaMatrix<AFloat> & A)
 {
     dim3 blockDims = TDevice::BlockDims();
     dim3 gridDims  = TDevice::GridDims(A);
     cudaStream_t s = A.GetComputeStream();
-    TCudaMatrix::ResetDeviceReturn();
+    TCudaMatrix<AFloat>::ResetDeviceReturn();
     ::TMVA::DNN::Cuda::AbsoluteSum<<<gridDims, blockDims, 0, s>>>(
-        TCudaMatrix::GetDeviceReturnPointer(),
+        TCudaMatrix<AFloat>::GetDeviceReturnPointer(),
         A.GetDataPointer(),
         (int) A.GetNrows(),
         (int) A.GetNcols());
-    return TCudaMatrix::GetDeviceReturn();
+    return TCudaMatrix<AFloat>::GetDeviceReturn();
 }
 
 //______________________________________________________________________________
-void TCuda::AddL1RegularizationGradients(TCudaMatrix & B,
-                                        const TCudaMatrix & A,
-                                        CudaDouble_t weightDecay)
+template<typename AFloat>
+void TCuda<AFloat>::AddL1RegularizationGradients(TCudaMatrix<AFloat> & B,
+                                                 const TCudaMatrix<AFloat> & A,
+                                                 AFloat weightDecay)
 {
    dim3 blockDims = TDevice::BlockDims();
    dim3 gridDims  = TDevice::GridDims(B);
@@ -54,24 +56,26 @@ void TCuda::AddL1RegularizationGradients(TCudaMatrix & B,
 }
 
 //______________________________________________________________________________
-CudaDouble_t TCuda::L2Regularization(const TCudaMatrix & A)
+template<typename AFloat>
+AFloat TCuda<AFloat>::L2Regularization(const TCudaMatrix<AFloat> & A)
 {
    dim3 blockDims = TDevice::BlockDims();
    dim3 gridDims  = TDevice::GridDims(A);
    cudaStream_t s = A.GetComputeStream();
-   TCudaMatrix::ResetDeviceReturn();
+   TCudaMatrix<AFloat>::ResetDeviceReturn();
    ::TMVA::DNN::Cuda::SquaredSum<<<gridDims, blockDims, 0, s>>>(
-       TCudaMatrix::GetDeviceReturnPointer(),
+       TCudaMatrix<AFloat>::GetDeviceReturnPointer(),
        A.GetDataPointer(),
        (int) A.GetNrows(),
        (int) A.GetNcols());
-   return TCudaMatrix::GetDeviceReturn();
+   return TCudaMatrix<AFloat>::GetDeviceReturn();
 }
 
 //______________________________________________________________________________
-void TCuda::AddL2RegularizationGradients(TCudaMatrix & B,
-                                        const TCudaMatrix & A,
-                                        CudaDouble_t weightDecay)
+template<typename AFloat>
+void TCuda<AFloat>::AddL2RegularizationGradients(TCudaMatrix<AFloat> & B,
+                                                 const TCudaMatrix<AFloat> & A,
+                                                 AFloat weightDecay)
 {
    dim3 blockDims = TDevice::BlockDims();
    dim3 gridDims  = TDevice::GridDims(B);
