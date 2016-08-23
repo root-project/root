@@ -40,12 +40,10 @@ void GammaFun() {
 
    TCanvas *c1 = new TCanvas("c1", "Gamma and related functions",800,700);
 
-   c1->SetFillColor(17);
    c1->Divide(2,2);
 
    c1->cd(1);
    gPad->SetGrid();
-   gPad->SetFrameFillColor(19);
 
    //setting the title in a label style
    TPaveLabel *p1 = new TPaveLabel(.1,.90 , (.1+.50),(.90+.10) ,"ROOT::Math::tgamma(x)", "NDC");
@@ -81,7 +79,6 @@ void GammaFun() {
 
    c1->cd(2);
    gPad->SetGrid();
-   gPad->SetFrameFillColor(19);
    TPaveLabel *p2 = new TPaveLabel(.1,.90 , (.1+.50),(.90+.10) ,"ROOT::Math::lgamma(x)", "NDC");
    p2->SetFillColor(0);
    p2->SetTextFont(22);
@@ -97,7 +94,6 @@ void GammaFun() {
 
    c1->cd(3);
    gPad->SetGrid();
-   gPad->SetFrameFillColor(19);
 
    TPaveLabel *p3 = new TPaveLabel(.1,.90 , (.1+.50),(.90+.10) ,"ROOT::Math::beta(x, y)", "NDC");
    p3->SetFillColor(0);
@@ -116,7 +112,6 @@ void GammaFun() {
 
    c1->cd(4);
    gPad->SetGrid();
-   gPad->SetFrameFillColor(19);
    TPaveLabel *p4 = new TPaveLabel(.1,.90 , (.1+.50),(.90+.10) ,"erf(x) and erfc(x)", "NDC");
    p4->SetFillColor(0);
    p4->SetTextFont(22);

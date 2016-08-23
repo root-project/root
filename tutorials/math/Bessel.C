@@ -43,14 +43,14 @@ void Bessel()
    gPad->SetFrameFillColor(19);
    TLegend *leg = new TLegend(0.75, 0.7, 0.89, 0.89);
 
-   int n = 5;//number of functions in each pad
+   int n = 5; //number of functions in each pad
    //drawing the set of Bessel J functions
    TF1* JBessel[5];
    for(int nu = 0; nu < n; nu++)
    {
       JBessel[nu]= new TF1("J_0", "ROOT::Math::cyl_bessel_j([0],x)", 0, 10);
       JBessel[nu]->SetParameters(nu, 0.0);
-      JBessel[nu]->SetTitle("");//Bessel J functions");
+      JBessel[nu]->SetTitle(""); //Bessel J functions");
       JBessel[nu]->SetLineStyle(1);
       JBessel[nu]->SetLineWidth(3);
       JBessel[nu]->SetLineColor(nu+1);
@@ -151,7 +151,7 @@ void Bessel()
    gPad->SetFrameFillColor(19);
    TLegend *leg4 = new TLegend(0.75, 0.7, 0.89, 0.89);
    //------------------------------------------------
-   //drawing sph_bessel
+   //Drawing sph_bessel
    TF1* jBessel[5];
    for(int nu = 0; nu <= 4; nu++){
       jBessel[nu]= new TF1("J_0", "ROOT::Math::sph_bessel([0],x)", 0, 10);

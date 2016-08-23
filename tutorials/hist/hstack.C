@@ -31,7 +31,6 @@ TCanvas *hstack() {
    hs->Add(h3st);
 
    TCanvas *cst = new TCanvas("cst","stacked hists",10,10,700,700);
-   cst->SetFillColor(41);
    cst->Divide(2,2);
    // in top left pad, draw the stack with defaults
    cst->cd(1);

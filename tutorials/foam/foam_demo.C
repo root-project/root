@@ -94,7 +94,7 @@ Int_t foam_demo()
    long nCalls=FoamX->GetnCalls();
    cout << "====== Initialization done, entering MC loop" << endl;
    //-----------------------------------------
-   //cout<<" About to start MC loop: ";  cin.getline(question,20);
+   /*cout<<" About to start MC loop: ";  cin.getline(question,20);*/
    Double_t *MCvect =new Double_t[kDim]; // vector generated in the MC run
    //-----------------------------------------
    TH1D  *hst_Wt = new TH1D("hst_Wt" ,  "Main weight of Foam",25,0,1.25);

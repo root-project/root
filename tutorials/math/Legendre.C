@@ -29,9 +29,7 @@ void Legendre()
    gSystem->Load("libMathMore");
 
    TCanvas *Canvas = new TCanvas("DistCanvas", "Legendre polynomials example", 10, 10, 750, 600);
-   Canvas->SetFillColor(17);
    Canvas->SetGrid();
-   Canvas->SetFrameFillColor(19);
    TLegend *leg = new TLegend(0.5, 0.7, 0.4, 0.89);
    //drawing the set of Legendre functions
    TF1* L[5];

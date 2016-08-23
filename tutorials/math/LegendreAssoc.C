@@ -38,9 +38,7 @@ void LegendreAssoc()
 
    std::cout <<"Drawing associate Legendre Polynomials.." << std::endl;
    TCanvas *Canvas = new TCanvas("DistCanvas", "Associate Legendre polynomials", 10, 10, 800, 500);
-   Canvas->SetFillColor(17);
    Canvas->Divide(2,1);
-   Canvas->SetFrameFillColor(19);
    TLegend *leg1 = new TLegend(0.5, 0.7, 0.8, 0.89);
    TLegend *leg2 = new TLegend(0.5, 0.7, 0.8, 0.89);
 

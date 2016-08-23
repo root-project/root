@@ -9,9 +9,7 @@
 /// \author Rene Brun
 
 TCanvas *hbars() {
-   cout << gSystem->DirName(__FILE__) << endl;
-
-   // Try to open first the file cernstaff.root in tutorials/tree directory
+     // Try to open first the file cernstaff.root in tutorials/tree directory
    TString filedir = gROOT->GetTutorialsDir();
    filedir += TString("/tree/");
    TString filename = "cernstaff.root";

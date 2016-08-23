@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_graphs
-/// \notebook
+/// \notebook -js
 /// This macro illustrates the use of the time mode on the axis
 /// with different time intervals and time formats.
 /// Through all this script, the time is expressed in UTC. some
@@ -36,7 +36,6 @@ TCanvas *timeonaxis()
 
    TCanvas *ct = new TCanvas("ct","Time on axis",10,10,700,900);
    ct->Divide(1,3);
-   ct->SetFillColor(28);
 
    int i;
 
@@ -54,8 +53,6 @@ TCanvas *timeonaxis()
       ht->SetBinContent(i,noise);
    }
    ct->cd(1);
-   gPad->SetFillColor(41);
-   gPad->SetFrameFillColor(33);
    ht->SetLineColor(2);
    ht->GetXaxis()->SetLabelSize(0.05);
    ht->Draw();
@@ -76,9 +73,6 @@ TCanvas *timeonaxis()
    TGraph *gt = new TGraph(100,t,x);
    gt->SetTitle("Politics");
    ct->cd(2);
-   gPad->SetFillColor(41);
-   gPad->SetFrameFillColor(33);
-   gt->SetFillColor(19);
    gt->SetLineColor(5);
    gt->SetLineWidth(2);
    gt->Draw("AL");
@@ -98,9 +92,6 @@ TCanvas *timeonaxis()
    TGraph *gt2 = new TGraph(10,t2,x2);
    gt2->SetTitle("Number of monkeys on the moon");
    ct->cd(3);
-   gPad->SetFillColor(41);
-   gPad->SetFrameFillColor(33);
-   gt2->SetFillColor(19);
    gt2->SetMarkerColor(4);
    gt2->SetMarkerStyle(29);
    gt2->SetMarkerSize(1.3);
