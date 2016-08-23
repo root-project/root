@@ -28,6 +28,7 @@
 #include "TLine.h"
 #include "TVirtualFitter.h"
 #include "TFitResult.h"
+#include "THStack.h"
 
 #define _(x) std::cout << #x;
 #define __(x) std::cout << "[" << std::string(__FILE__).substr(std::string(__FILE__).find_last_of("/\\") + 1) << ":" <<__LINE__ << "] " << x << std::endl ;
@@ -157,44 +158,13 @@ TRatioPlot::~TRatioPlot()
 
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor for two histograms 
-///
-/// \param h1 First histogram 
-/// \param h2 Second histogram 
-/// \param name Name for the object
-/// \param title Title for the object
-/// \param displayOption Steers the error calculation, as well as ratio / difference
-/// \param optH1 Drawing option for first histogram
-/// \param optH2 Drawing option for second histogram
-/// \param optGraph Drawing option the lower graph
-/// \param c1 Scaling factor for h1
-/// \param c2 Scaling factor for h2
-// @TODO: Class should work with stacks as well
-TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, const char *name /*=0*/, const char *title /*=0*/, 
+void TRatioPlot::Init(TH1* h1, TH1* h2, 
       Option_t *displayOption, Option_t *optH1, Option_t *optH2, Option_t *optGraph,
       Double_t c1, Double_t c2)
-   : TPad(name, title, 0, 0, 1, 1),
-     fH1(h1),
-     fH2(h2),
-     fGridlines() 
 {
-   gROOT->GetListOfCleanups()->Add(this);
 
-   if (!fH1 || !fH2) {
-      Warning("TRatioPlot", "Need two histograms.");
-      return;
-   }
-
-   Bool_t h1IsTH1=fH1->IsA()->InheritsFrom(TH1::Class());
-   Bool_t h2IsTH1=fH2->IsA()->InheritsFrom(TH1::Class());
-
-   if (!h1IsTH1 && !h2IsTH1) {
-      Warning("TRatioPlot", "Need two histograms deriving from TH2 or TH3.");
-      return;
-   }
-
-
+   fH1 = h1;
+   fH2 = h2;
 
    fParentPad = gPad;
 
@@ -261,6 +231,81 @@ TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, const char *name /*=0*/, const char *ti
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor for two histograms 
+///
+/// \param h1 First histogram 
+/// \param h2 Second histogram 
+/// \param name Name for the object
+/// \param title Title for the object
+/// \param displayOption Steers the error calculation, as well as ratio / difference
+/// \param optH1 Drawing option for first histogram
+/// \param optH2 Drawing option for second histogram
+/// \param optGraph Drawing option the lower graph
+/// \param c1 Scaling factor for h1
+/// \param c2 Scaling factor for h2
+// @TODO: Class should work with stacks as well
+TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, const char *name /*=0*/, const char *title /*=0*/, 
+      Option_t *displayOption, Option_t *optH1, Option_t *optH2, Option_t *optGraph,
+      Double_t c1, Double_t c2)
+   : TPad(name, title, 0, 0, 1, 1),
+     //fH1(h1),
+     //fH2(h2),
+     fGridlines() 
+{
+   gROOT->GetListOfCleanups()->Add(this);
+
+   if (!h1 || !h2) {
+      Warning("TRatioPlot", "Need two histograms.");
+      return;
+   }
+
+   Bool_t h1IsTH1=h1->IsA()->InheritsFrom(TH1::Class());
+   Bool_t h2IsTH1=h2->IsA()->InheritsFrom(TH1::Class());
+
+   if (!h1IsTH1 && !h2IsTH1) {
+      Warning("TRatioPlot", "Need two histograms deriving from TH2 or TH3.");
+      return;
+   }
+
+   fHistDrawProxy = h1;
+
+   Init(h1, h2, displayOption, optH1, optH2, optGraph, c1, c2);
+
+}
+   
+TRatioPlot::TRatioPlot(THStack* st, TH1* h2, const char *name, const char *title, 
+      Option_t *displayOption, Option_t *optH1, Option_t *optH2, Option_t *optGraph,
+      Double_t c1, Double_t c2) 
+   : TPad(name, title, 0, 0, 1, 1)
+{
+   if (!st || !h2) {
+      Warning("TRatioPlot", "Need a histogram and a stack");
+      return;
+   }
+
+
+   TList *stackHists = st->GetHists();
+
+   if (stackHists->GetSize() == 0) {
+      Warning("TRatioPlot", "Stack does not have histograms");
+      return;
+   }
+
+   TH1* tmpHist = (TH1*)stackHists->At(0)->Clone();
+   tmpHist->Reset();
+
+
+   for (int i=0;i<stackHists->GetSize();++i) {
+      tmpHist->Add((TH1*)stackHists->At(i)); 
+   }
+
+   fHistDrawProxy = st;
+
+   Init(tmpHist, h2, displayOption, optH1, optH2, optGraph, c1, c2);
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Constructor for one histogram and a fit.
 /// \param h1 The histogram 
 /// \param name Name for the object
@@ -297,6 +342,8 @@ TRatioPlot::TRatioPlot(TH1* h1, const char *name, const char *title, Option_t *d
 
    fParentPad = gPad;
    
+   fHistDrawProxy = h1;
+
    fFitResult = fitres;
 
    fDisplayMode = TRatioPlot::CalculationMode::kFitResidual;
@@ -497,6 +544,8 @@ Float_t TRatioPlot::GetSeparationMargin()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw
+// @TODO: Add Drawing option to force or unforce hiding of label.
+// @TODO: Add option to determine if upper or lower should be hidden
 void TRatioPlot::Draw(Option_t *option)
 {
 
@@ -519,15 +568,16 @@ void TRatioPlot::Draw(Option_t *option)
 
    fUpperPad->cd();
 
-   // we need to hide the original axes of the hist 
-   fH1->GetXaxis()->SetTickSize(0.);
-   fH1->GetXaxis()->SetLabelSize(0.);
-   fH1->GetXaxis()->SetTitleSize(0.);
-   fH1->GetYaxis()->SetTickSize(0.);
-   fH1->GetYaxis()->SetLabelSize(0.);
-   fH1->GetYaxis()->SetTitleSize(0.);
-
-   fH1->Draw(fOptH1);
+   if (fHistDrawProxy) {
+      if (fHistDrawProxy->InheritsFrom(TH1::Class())) {
+         ((TH1*)fHistDrawProxy)->Draw(fOptH1);
+      } else if (fHistDrawProxy->InheritsFrom(THStack::Class())) {
+         ((THStack*)fHistDrawProxy)->Draw(fOptH1);
+      } else {
+         Warning("Draw", "Draw proxy not of type TH1 or THStack, not drawing it");
+      }
+   }  
+   
    
    if (fH2 != 0) {
       fH2->Draw(fOptH2+"same");
@@ -548,18 +598,7 @@ void TRatioPlot::Draw(Option_t *option)
       fRatioGraph->Draw("A"+fOptGraph);
    
    }
-
-   TAxis *refX = GetLowerRefXaxis();
-   TAxis *refY = GetLowerRefYaxis();
-   // hide visual axis of lower pad display
-   refX->SetTickSize(0.);
-   refX->SetLabelSize(0.);
-   refX->SetTitleSize(0.);
-   refY->SetTickSize(0.);
-   refY->SetLabelSize(0.);
-   refY->SetTitleSize(0.);
-
-
+   
    // assign same axis ranges to lower pad as in upper pad
    // the visual axes will be created on paint
    SyncAxesRanges();
@@ -567,7 +606,6 @@ void TRatioPlot::Draw(Option_t *option)
    CreateGridline(); 
 
    padsav->cd();
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -648,6 +686,53 @@ TAxis* TRatioPlot::GetLowerRefYaxis()
    return GetLowerRefGraph()->GetYaxis(); 
 }
 
+TObject* TRatioPlot::GetUpperRefObject()
+{
+   TList *primlist = fUpperPad->GetListOfPrimitives();
+   TObject *refobj = 0;
+   for (Int_t i=0;i<primlist->GetSize();++i) {
+      refobj = primlist->At(i);   
+      if (refobj->InheritsFrom(TH1::Class()) || refobj->InheritsFrom(THStack::Class())) {
+         return refobj;
+      }
+   }
+
+   Error("GetUpperRefObject", "No upper ref object of TH1 or THStack type found");
+   return 0;
+}
+
+TAxis* TRatioPlot::GetUpperRefXaxis() 
+{
+   TObject *refobj = GetUpperRefObject();
+   
+   if (!refobj) return 0;
+
+   if (refobj->InheritsFrom(TH1::Class())) {
+      return ((TH1*)refobj)->GetXaxis();
+   } else if (refobj->InheritsFrom(THStack::Class())) {
+      return ((THStack*)refobj)->GetXaxis();
+   }
+
+   return 0;
+}
+
+TAxis* TRatioPlot::GetUpperRefYaxis() 
+{
+   TObject *refobj = GetUpperRefObject();
+   
+   if (!refobj) return 0;
+
+   if (refobj->InheritsFrom(TH1::Class())) {
+      return ((TH1*)refobj)->GetYaxis();
+   } else if (refobj->InheritsFrom(THStack::Class())) {
+      return ((THStack*)refobj)->GetYaxis();
+   }
+
+   return 0;
+}
+
+
+
 void TRatioPlot::CreateGridline()
 {
    
@@ -664,7 +749,6 @@ void TRatioPlot::CreateGridline()
 
    if (curr > dest) {
       // we have too many
-      //__("remove gridlines");
       for (int i=0;i<curr-dest;++i) {
          // kill the line
          delete fGridlines.at(i);
@@ -693,12 +777,6 @@ void TRatioPlot::CreateGridline()
       line = fGridlines.at(i); 
       y = fGridlinePositions[i];
 
-      //__("");
-      //var_dump(i);
-      //var_dump(first);
-      //var_dump(last);
-      //var_dump(y);
-
       line->SetX1(first);
       line->SetX2(last);
       line->SetY1(y);
@@ -719,23 +797,72 @@ void TRatioPlot::Paint(Option_t *opt) {
 /// Creates the visual axes when painting.
 void TRatioPlot::PaintModified()
 {
-      // sync y axes
-   fH1->GetYaxis()->ImportAttributes(fUpYaxis);
-   fRatioGraph->GetYaxis()->ImportAttributes(fLowYaxis);
+  
+   // this might be a problem, if the first one is not really a hist (or the like)
+   if (GetUpperRefObject()) {
+   //if (fUpperPad->GetListOfPrimitives()->GetSize() > 0) {
+      //fUpperPad->GetListOfPrimitives()->ls();
+      
+      TAxis *uprefx = GetUpperRefXaxis();
+      TAxis *uprefy = GetUpperRefYaxis();
+      
+      //TAxis *yaxis = 0;
+      //TAxis *xaxis = 0;
+      //TObject *refobj = 0;
+      //TList *primlist = fUpperPad->GetListOfPrimitives();
+      //Bool_t found = kFALSE;
 
-   fH1->GetXaxis()->SetTickSize(0.);
-   fH1->GetXaxis()->SetLabelSize(0.);
-   fH1->GetXaxis()->SetTitleSize(0.);
-   fH1->GetYaxis()->SetTickSize(0.);
-   fH1->GetYaxis()->SetLabelSize(0.);
-   fH1->GetYaxis()->SetTitleSize(0.);
-   
-   fRatioGraph->GetXaxis()->SetTickSize(0.);
-   fRatioGraph->GetXaxis()->SetLabelSize(0.);
-   fRatioGraph->GetXaxis()->SetTitleSize(0.);
-   fRatioGraph->GetYaxis()->SetTickSize(0.);
-   fRatioGraph->GetYaxis()->SetLabelSize(0.);
-   fRatioGraph->GetYaxis()->SetTitleSize(0.);
+      //for (Int_t i=0;i<primlist->GetSize();++i) {
+         //refobj = primlist->At(i);   
+         //if (refobj->InheritsFrom(TH1::Class())) {
+            ////__("TH1");
+            //xaxis = ((TH1*)refobj)->GetXaxis();     
+            //yaxis = ((TH1*)refobj)->GetYaxis();     
+            //found = kTRUE;
+            //break;
+         //} else if (refobj->InheritsFrom(THStack::Class())) {
+            ////__("THStack");
+            //xaxis = ((THStack*)refobj)->GetXaxis();
+            //yaxis = ((THStack*)refobj)->GetYaxis();
+            //found = kTRUE;
+            //break;
+         //}
+      //}
+
+
+      //if (!found) {
+         //Error("TRatioPlot", "Ref object in opper pad is neither TH1 descendant nor THStack");
+      //}
+ 
+
+      if (uprefx) {
+         //xaxis->ImportAttributes(fUpYaxis);
+         uprefx->SetTickSize(0.);
+         uprefx->SetLabelSize(0.);
+         uprefx->SetTitleSize(0.);
+      }
+
+      if (uprefy) {
+         uprefy->ImportAttributes(fUpYaxis);
+         uprefy->SetTickSize(0.);
+         uprefy->SetLabelSize(0.);
+         uprefy->SetTitleSize(0.);
+      }
+   } else {
+         Error("TRatioPlot", "Ref object in opper pad is neither TH1 descendant nor THStack");
+ 
+   }
+
+   // hide lower axes
+   TAxis *refx = GetLowerRefXaxis();
+   TAxis *refy = GetLowerRefYaxis();
+
+   refx->SetTickSize(0.);
+   refx->SetLabelSize(0.);
+   refx->SetTitleSize(0.);
+   refy->SetTickSize(0.);
+   refy->SetLabelSize(0.);
+   refy->SetTitleSize(0.);
    
    // create the visual axes
    CreateVisualAxes();
@@ -756,15 +883,11 @@ void TRatioPlot::SyncAxesRanges()
 
    // set range on computed graph, have to set it twice becaus 
    // TGraph's axis looks strange otherwise
-   fRatioGraph->GetXaxis()->SetLimits(first, last);
-   fRatioGraph->GetXaxis()->SetRangeUser(first, last);
-   
    TAxis *ref = GetLowerRefXaxis();
-
    ref->SetLimits(first, last);
    ref->SetRangeUser(first, last);
 
-   fH1->GetXaxis()->SetRangeUser(first, last);
+   GetUpperRefXaxis()->SetRangeUser(first, last);
 
 }
 
@@ -986,6 +1109,7 @@ void TRatioPlot::BuildLowerPlot()
       // Use TH1's Divide method
       TH1 *tmpHist = (TH1*)fH1->Clone();
       tmpHist->Reset();
+
       tmpHist->Divide(fH1, fH2, fC1, fC2, fDisplayOption.Data());
       fRatioGraph = new TGraphErrors(tmpHist);
    
@@ -1156,10 +1280,9 @@ void TRatioPlot::CreateVisualAxes()
 
    // hide first label of upper y axis
 
-   // @FIXME: Error in <TBufferFile::CheckByteCount>: object of class TGaxisModLab read too few bytes: 23 instead of 58
    if (GetSeparationMargin() < 0.025) {
       fLowerGYaxis->SetLabelAttributes(-1, -1, 0);
-   }
+   } 
 
 
    // Create the axes on the other sides of the graphs 
@@ -1386,17 +1509,14 @@ void TRatioPlot::RangeAxisChanged()
    //fUpperPad->SetLogy(GetLogy());
 
    // get axis ranges for upper and lower 
-   Double_t upFirst = fH1->GetXaxis()->GetBinLowEdge(fH1->GetXaxis()->GetFirst());
-   Double_t upLast  = fH1->GetXaxis()->GetBinUpEdge(fH1->GetXaxis()->GetLast());
+   TAxis *uprefx = GetUpperRefXaxis();
+   Double_t upFirst = uprefx->GetBinLowEdge(uprefx->GetFirst());
+   Double_t upLast  = uprefx->GetBinUpEdge(uprefx->GetLast());
 
-   //Double_t lowFirst = fRatioGraph->GetXaxis()->GetBinLowEdge(fRatioGraph->GetXaxis()->GetFirst());
-   //Double_t lowLast  = fRatioGraph->GetXaxis()->GetBinUpEdge(fRatioGraph->GetXaxis()->GetLast());
-   //Double_t lowFirst = fConfidenceIntervals->GetXaxis()->GetBinLowEdge(fConfidenceIntervals->GetXaxis()->GetFirst());
-   //Double_t lowLast  = fConfidenceIntervals->GetXaxis()->GetBinUpEdge(fConfidenceIntervals->GetXaxis()->GetLast());
 
-   TAxis *refX = GetLowerRefXaxis();
-   Double_t lowFirst = refX->GetBinLowEdge(refX->GetFirst());
-   Double_t lowLast = refX->GetBinUpEdge(refX->GetLast());
+   TAxis *lowrefx = GetLowerRefXaxis();
+   Double_t lowFirst = lowrefx->GetBinLowEdge(lowrefx->GetFirst());
+   Double_t lowLast = lowrefx->GetBinUpEdge(lowrefx->GetLast());
 
    Double_t globFirst = fSharedXAxis->GetBinLowEdge(fSharedXAxis->GetFirst());
    Double_t globLast = fSharedXAxis->GetBinUpEdge(fSharedXAxis->GetLast());
