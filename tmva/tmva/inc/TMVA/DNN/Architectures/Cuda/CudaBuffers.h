@@ -19,11 +19,9 @@
 #include "cuda.h"
 #include "cuda_runtime.h"
 #include <memory>
-#include "Types.h"
 
 namespace TMVA {
 namespace DNN  {
-
 
 template<typename AFloat>
 class TCudaDeviceBuffer;
