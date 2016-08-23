@@ -2060,6 +2060,8 @@ void TStreamerInfo::BuildOld()
                element->SetOffset(rd->GetThisOffset());
                element->Init(this);
                dm = rd->GetDataMember();
+               dmType = dm->GetTypeName();
+               dmIsPtr = dm->IsaPointer();
                int narr = element->GetArrayLength();
                if (!narr) {
                   narr = 1;
