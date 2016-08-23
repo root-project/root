@@ -41,7 +41,7 @@ add_definitions(-DUSE_WEBSOCKET)
 
 if(NOT MSVC)
   set(RT_LIBRARY "-lrt")
-endif(MSVC)
+endif()
 
 ROOT_GENERATE_DICTIONARY(G__HTTP *.h LINKDEF LinkDef.h)
 ROOT_GENERATE_ROOTMAP(RHTTP LINKDEF LinkDef.h DEPENDENCIES Thread Tree Hist Gpad Graf RIO XMLIO)
