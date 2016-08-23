@@ -78,10 +78,8 @@ auto testMeanSquaredErrorGradients(size_t ntests)
    Double_t maximumError = 0.0;
 
    for (size_t i = 0; i < ntests; i++) {
-/*       size_t m = rand() % 100 + 1; */
-/*       size_t n = rand() % 100 + 1; */
-      size_t m = 8; //rand() % 100 + 1;
-      size_t n = 8; //rand() % 100 + 1;
+      size_t m = rand() % 100 + 1;
+      size_t n = rand() % 100 + 1;
 
       TMatrixT<Double_t> X(m, n);
       TMatrixT<Double_t> Y(m, n);

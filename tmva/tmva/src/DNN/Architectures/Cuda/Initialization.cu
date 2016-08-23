@@ -17,6 +17,7 @@
 #include "TRandom.h"
 #include "TMatrix.h"
 #include "TMVA/DNN/Architectures/Cuda.h"
+#include "Kernels.cuh"
 
 namespace TMVA
 {
@@ -24,17 +25,17 @@ namespace DNN
 {
 
 //______________________________________________________________________________
-template<bool doProfiling>
-void TCuda<doProfiling>::InitializeGauss(TCudaMatrix & A)
+template<typename AFloat>
+void TCuda<AFloat>::InitializeGauss(TCudaMatrix<AFloat> & A)
 {
    size_t m,n;
    m = A.GetNrows();
    n = A.GetNcols();
 
    TRandom rand(time(nullptr));
-   TMatrixT<CudaDouble_t> B(m, n);
+   TMatrixT<Double_t> B(m, n);
 
-   Real_t sigma = sqrt(2.0 / ((Real_t) n));
+   Double_t sigma = sqrt(2.0 / ((Double_t) n));
 
    for (size_t i = 0; i < m; i++) {
       for (size_t j = 0; j < n; j++) {
@@ -45,17 +46,17 @@ void TCuda<doProfiling>::InitializeGauss(TCudaMatrix & A)
 }
 
 //______________________________________________________________________________
-template<bool doProfiling>
-void TCuda<doProfiling>::InitializeUniform(TCudaMatrix & A)
+template<typename AFloat>
+void TCuda<AFloat>::InitializeUniform(TCudaMatrix<AFloat> & A)
 {
    size_t m,n;
    m = A.GetNrows();
    n = A.GetNcols();
 
    TRandom rand(time(nullptr));
-   TMatrixT<CudaDouble_t> B(m, n);
+   TMatrixT<Double_t> B(m, n);
 
-   Real_t range = sqrt(2.0 / ((Real_t) n));
+   Double_t range = sqrt(2.0 / ((Double_t) n));
 
    for (size_t i = 0; i < m; i++) {
       for (size_t j = 0; j < n; j++) {
@@ -66,13 +67,13 @@ void TCuda<doProfiling>::InitializeUniform(TCudaMatrix & A)
 }
 
 //______________________________________________________________________________
-template<bool doProfiling>
-void TCuda<doProfiling>::InitializeIdentity(TCudaMatrix & A)
+template<typename AFloat>
+void TCuda<AFloat>::InitializeIdentity(TCudaMatrix<AFloat> & A)
 {
    size_t m,n;
    m = A.GetNrows();
    n = A.GetNcols();
-   TMatrixT<CudaDouble_t> B(m, n);
+   TMatrixT<Double_t> B(m, n);
 
    for (size_t i = 0; i < m; i++) {
       for (size_t j = 0; j < n ; j++) {
@@ -87,13 +88,13 @@ void TCuda<doProfiling>::InitializeIdentity(TCudaMatrix & A)
 }
 
 //______________________________________________________________________________
-template<bool doProfiling>
-void TCuda<doProfiling>::InitializeZero(TCudaMatrix & A)
+template<typename AFloat>
+void TCuda<AFloat>::InitializeZero(TCudaMatrix<AFloat> & A)
 {
    size_t m,n;
    m = A.GetNrows();
    n = A.GetNcols();
-   TMatrixT<CudaDouble_t> B(m, n);
+   TMatrixT<Double_t> B(m, n);
 
    for (size_t i = 0; i < m; i++) {
       for (size_t j = 0; j < n ; j++) {

@@ -11,16 +11,19 @@
 
 #include "TMVA/DNN/Architectures/Cuda.h"
 #include "TMVA/DNN/Architectures/Cuda/Device.h"
+#include "Kernels.cuh"
 
-////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
 // Implementation of the Dropout function for TCuda architectures. //
-////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
 
 namespace TMVA {
 namespace DNN  {
 
 //____________________________________________________________________________
-void TCuda::Dropout(TCudaMatrix &A, CudaDouble_t dropoutProbability)
+template<typename AFloat>
+void TCuda<AFloat>::Dropout(TCudaMatrix<AFloat> &A,
+                            AFloat dropoutProbability)
 {
    dim3 blockDims = TDevice::BlockDims();
    dim3 gridDims  = TDevice::GridDims(A);
@@ -30,7 +33,7 @@ void TCuda::Dropout(TCudaMatrix &A, CudaDouble_t dropoutProbability)
        (int) A.GetNrows(),
        (int) A.GetNcols(),
        dropoutProbability,
-       TCudaMatrix::GetCurandStatesPointer());
+       TCudaMatrix<AFloat>::GetCurandStatesPointer());
 }
 
 } // namespace DNN

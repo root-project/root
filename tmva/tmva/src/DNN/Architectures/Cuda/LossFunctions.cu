@@ -9,14 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
 // Implementation of the loss functions for the TCuda implementation //
-// of the low-level interface.                                      //
-//////////////////////////////////////////////////////////////////////
+// of the low-level interface.                                       //
+///////////////////////////////////////////////////////////////////////
 
 #include "TMVA/DNN/Architectures/Cuda.h"
 #include "TMVA/DNN/Architectures/Cuda/Device.h"
-#include "TMVA/DNN/Architectures/Cuda/Kernels.h"
+#include "Kernels.cuh"
 
 namespace TMVA
 {
@@ -24,26 +24,28 @@ namespace DNN
 {
 
 //____________________________________________________________________________
-CudaDouble_t TCuda::MeanSquaredError(const TCudaMatrix & Y,
-                                    const TCudaMatrix & output)
+template<typename AFloat>
+AFloat TCuda<AFloat>::MeanSquaredError(const TCudaMatrix<AFloat> & Y,
+                                       const TCudaMatrix<AFloat> & output)
 {
     dim3 blockDims = TDevice::BlockDims();
     dim3 gridDims  = TDevice::GridDims(Y);
     cudaStream_t s = Y.GetComputeStream();
-    TCudaMatrix::ResetDeviceReturn();
+    TCudaMatrix<AFloat>::ResetDeviceReturn();
     ::TMVA::DNN::Cuda::MeanSquaredError<<<gridDims, blockDims, 0, s>>>(
-        TCudaMatrix::GetDeviceReturnPointer(),
+        TCudaMatrix<AFloat>::GetDeviceReturnPointer(),
         Y.GetDataPointer(),
         output.GetDataPointer(),
         (int) Y.GetNrows(),
         (int) Y.GetNcols());
-    return TCudaMatrix::GetDeviceReturn();
+    return TCudaMatrix<AFloat>::GetDeviceReturn();
 }
 
 //____________________________________________________________________________
-void TCuda::MeanSquaredErrorGradients(TCudaMatrix & dY,
-                                    const TCudaMatrix & Y,
-                                    const TCudaMatrix & output)
+template<typename AFloat>
+void TCuda<AFloat>::MeanSquaredErrorGradients(TCudaMatrix<AFloat> & dY,
+                                              const TCudaMatrix<AFloat> & Y,
+                                              const TCudaMatrix<AFloat> & output)
 {
    dim3 blockDims = TDevice::BlockDims();
    dim3 gridDims  = TDevice::GridDims(Y);
@@ -58,26 +60,28 @@ void TCuda::MeanSquaredErrorGradients(TCudaMatrix & dY,
 }
 
 //____________________________________________________________________________
-CudaDouble_t TCuda::CrossEntropy(const TCudaMatrix & Y,
-                                const TCudaMatrix & output)
+template<typename AFloat>
+AFloat TCuda<AFloat>::CrossEntropy(const TCudaMatrix<AFloat> & Y,
+                                   const TCudaMatrix<AFloat> & output)
 {
    dim3 blockDims = TDevice::BlockDims();
    dim3 gridDims  = TDevice::GridDims(Y);
-   TCudaMatrix::ResetDeviceReturn();
+   TCudaMatrix<AFloat>::ResetDeviceReturn();
    cudaStream_t s = Y.GetComputeStream();
    ::TMVA::DNN::Cuda::CrossEntropy<<<gridDims, blockDims, 0, s>>>(
-       TCudaMatrix::GetDeviceReturnPointer(),
+       TCudaMatrix<AFloat>::GetDeviceReturnPointer(),
        Y.GetDataPointer(),
        output.GetDataPointer(),
        (int) Y.GetNrows(),
        (int) Y.GetNcols());
-   return TCudaMatrix::GetDeviceReturn();
+   return TCudaMatrix<AFloat>::GetDeviceReturn();
 }
 
 //____________________________________________________________________________
-void TCuda::CrossEntropyGradients(TCudaMatrix & dY,
-                                 const TCudaMatrix & Y,
-                                 const TCudaMatrix & output)
+template<typename AFloat>
+void TCuda<AFloat>::CrossEntropyGradients(TCudaMatrix<AFloat> & dY,
+                                          const TCudaMatrix<AFloat> & Y,
+                                          const TCudaMatrix<AFloat> & output)
 {
    dim3 blockDims = TDevice::BlockDims();
    dim3 gridDims  = TDevice::GridDims(Y);
