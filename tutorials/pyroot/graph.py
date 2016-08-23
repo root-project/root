@@ -1,5 +1,6 @@
 ## \file
 ## \ingroup tutorial_pyroot
+## \notebook
 ## A Simple Graph Example
 ##
 ## \macro_image

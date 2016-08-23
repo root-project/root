@@ -1,5 +1,6 @@
 ## \file
 ## \ingroup tutorial_pyroot
+## \notebook -js
 ##  This program creates :
 ##    - a one dimensional histogram
 ##    - a two dimensional histogram

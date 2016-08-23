@@ -1,5 +1,6 @@
 ## \file
 ## \ingroup tutorial_pyroot
+## \notebook
 ## This macro displays the Tree data structures
 ##
 ## \macro_image

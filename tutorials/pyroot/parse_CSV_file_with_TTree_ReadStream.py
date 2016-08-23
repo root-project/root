@@ -11,7 +11,7 @@
 ## This example is shipped with a data
 ## file that looks like:
 ##
-## ```cpp
+## ~~~{.cpp}
 ## Date/Time   Synchro   Capacity   Temp.Cold Head   Temp. Electrode   HV Supply Voltage   Electrode 1   Electrode 2   Electrode 3   Electrode 4
 ## # Example data to read out.  Some data have oddities that might need to
 ## # dealt with, including the 'NaN' in Electrode 4 and the empty string in Date/Time (last row)
@@ -23,7 +23,7 @@
 ## 08112010.160628   7   5.702000E-10   8.786000   24.237400   -0.009141   0   0   0   0
 ## 08112010.160633   7   5.710000E-10   9.016200   24.237200   -0.008818   0   0   0   0
 ##    7   5.710000E-10   8.903400   24.237200   -0.008818   0   0   0   0
-## ```
+## ~~~
 ##
 ## These data require some massaging, including:
 ##

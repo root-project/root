@@ -1,5 +1,6 @@
 ## \file
 ## \ingroup tutorial_pyroot
+## \notebook -js
 ## TF1 example.
 ##
 ## \macro_image
