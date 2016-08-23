@@ -48,14 +48,14 @@ auto testSum()
 
    for (auto b : loader) {
       Architecture_t::SumColumns(Sum, b.GetInput());
-      ((TMatrixT<Double_t>) b.GetInput()).Print();
       sum += Sum(0, 0);
    }
 
    Architecture_t::SumColumns(SumTotal, XArch);
    sumTotal = SumTotal(0,0);
 
-   return fabs(sumTotal - sum);
+   std::cout << sumTotal << " / " << sum << std::endl;
+   return fabs(sumTotal - sum) / sumTotal;
 }
 
 /** Test the data loader by loading identical input and output data, running it

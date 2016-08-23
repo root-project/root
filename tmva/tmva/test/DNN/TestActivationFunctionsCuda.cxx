@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id$
+// @(#)root/tmva/tmva/test/dnn $Id$
 // Author: Simon Pfreundschuh
 
 /*************************************************************************
@@ -10,8 +10,8 @@
  *************************************************************************/
 
 //////////////////////////////////////////////////////////////////////
-//  Concrete instantiation of the generic activation function test  //
-//  for the TCuda implementation.                                    //
+// Concrete instantiation of the generic activation function test   //
+// for the TCuda implementation.                                    //
 //////////////////////////////////////////////////////////////////////
 
 #include <iostream>
@@ -23,50 +23,52 @@ using namespace TMVA::DNN;
 
 int main()
 {
+    using Scalar_t = Double_t;
+
     std::cout << "Testing Activation Functions:" << std::endl;
 
     double error;
 
     // Identity.
 
-    error = testIdentity<TCuda>(10);
+    error = testIdentity<TCuda<Scalar_t>>(10);
     std::cout << "Testing identity activation:            ";
     std::cout << "maximum relative error = " << error << std::endl;
-    if (error > 1e-10)
+    if (error > 1e-5)
         return 1;
 
-    error = testIdentityDerivative<TCuda>(10);
+    error = testIdentityDerivative<TCuda<Scalar_t>>(10);
     std::cout << "Testing identity activation derivative: ";
     std::cout << "maximum relative error = " << error << std::endl;
-    if (error > 1e-10)
+    if (error > 1e-5)
         return 1;
 
     // ReLU.
 
-    error = testRelu<TCuda>(10);
+    error = testRelu<TCuda<Scalar_t>>(10);
     std::cout << "Testing ReLU activation:                ";
     std::cout << "maximum relative error = " << error << std::endl;
-    if (error > 1e-10)
+    if (error > 1e-5)
         return 1;
 
-    error = testReluDerivative<TCuda>(10);
+    error = testReluDerivative<TCuda<Scalar_t>>(10);
     std::cout << "Testing ReLU activation derivative:     ";
     std::cout << "maximum relative error = " << error << std::endl;
-    if (error > 1e-10)
+    if (error > 1e-5)
         return 1;
 
     // Sigmoid.
 
-    error = testSigmoid<TCuda>(10);
+    error = testSigmoid<TCuda<Scalar_t>>(10);
     std::cout << "Testing Sigmoid activation:             ";
     std::cout << "maximum relative error = " << error << std::endl;
-    if (error > 1e-10)
+    if (error > 1e-5)
         return 1;
 
-    error = testSigmoidDerivative<TCuda>(10);
+    error = testSigmoidDerivative<TCuda<Scalar_t>>(10);
     std::cout << "Testing Sigmoid activation derivative:  ";
     std::cout << "maximum relative error = " << error << std::endl;
-    if (error > 1e-10)
+    if (error > 1e-5)
         return 1;
     return 0;
 }

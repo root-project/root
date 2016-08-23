@@ -9,25 +9,20 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-///////////////////////////////////////////////////////////////
-// Definition of the TCuda architecture, which provides an   //
-// implementation of the low-level functionality for neural  //
-// networks for the CUDA computing architectures.            //
-///////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+// Definition of the TCuda architecture class, which provides an //
+// implementation of the low-level functionality for neural      //
+// networks for the CUDA computing architectures.                //
+///////////////////////////////////////////////////////////////////
 
 #ifndef TMVA_DNN_ARCHITECTURES_CUDA
 #define TMVA_DNN_ARCHITECTURES_CUDA
 
-#include <utility>
-
 #include "cuda.h"
-
-#include "Cuda/Types.h"
-#include "Cuda/Kernels.h"
-#include "Cuda/Buffers.h"
-#include "Cuda/DataLoader.h"
+#include "Cuda/CudaBuffers.h"
 #include "Cuda/CudaMatrix.h"
 #include "TMVA/DNN/DataLoader.h"
+#include <utility>
 
 namespace TMVA
 {
@@ -36,22 +31,21 @@ namespace DNN
 
 /** The TCuda architecture class.
  *
- * Low-level interface class for CUDA computing architecture. Contains as
- * public types the declaration of the scalar, matrix and data loader types
+ * Low-level interface class for CUDA computing architectures. Contains as
+ * public types the declaration of the scalar, matrix and buffer types
  * for this architecture as well as the remaining functions in the low-level
  * interface in the form of static members.
  */
+template<typename AFloat = Double_t>
 class TCuda
 {
 
 public:
 
-    using Scalar_t       = CudaDouble_t;
-    using Matrix_t       = TCudaMatrix;
-    using DeviceBuffer_t = TCudaDeviceBuffer;
-    using HostBuffer_t   = TCudaHostBuffer;
-    template <typename Data_t>
-    using DataLoader_t   = TCudaDataLoader<Data_t>;
+    using Scalar_t       = AFloat;
+    using Matrix_t       = TCudaMatrix<AFloat>;
+    using DeviceBuffer_t = TCudaDeviceBuffer<AFloat>;
+    using HostBuffer_t   = TCudaHostBuffer<AFloat>;
 
    //____________________________________________________________________________
    //
@@ -65,12 +59,12 @@ public:
    ///@{
    /** Matrix-multiply \p input with the transpose of \pweights and
     *  write the results into \p output. */
-   static void MultiplyTranspose(TCudaMatrix &output,
-                                 const TCudaMatrix &input,
-                                 const TCudaMatrix &weights);
+   static void MultiplyTranspose(TCudaMatrix<AFloat> &output,
+                                 const TCudaMatrix<AFloat> &input,
+                                 const TCudaMatrix<AFloat> &weights);
    /** Add the vectors biases row-wise to the matrix output */
-   static void AddRowWise(TCudaMatrix &output,
-                          const TCudaMatrix &biases);
+   static void AddRowWise(TCudaMatrix<AFloat> &output,
+                          const TCudaMatrix<AFloat> &biases);
    ///@}
 
    /** @name Backward Propagation
@@ -86,22 +80,22 @@ public:
     *  in \p df and thus produces only a valid result, if it is applied the
     *  first time after the corresponding forward propagation has been per-
     *  formed. */
-   static void Backward(TCudaMatrix & activationGradientsBackward,
-                        TCudaMatrix & weightGradients,
-                        TCudaMatrix & biasGradients,
-                        TCudaMatrix & df,
-                        const TCudaMatrix & activationGradients,
-                        const TCudaMatrix & weights,
-                        const TCudaMatrix & activationBackward);
+   static void Backward(TCudaMatrix<AFloat> & activationGradientsBackward,
+                        TCudaMatrix<AFloat> & weightGradients,
+                        TCudaMatrix<AFloat> & biasGradients,
+                        TCudaMatrix<AFloat> & df,
+                        const TCudaMatrix<AFloat> & activationGradients,
+                        const TCudaMatrix<AFloat> & weights,
+                        const TCudaMatrix<AFloat> & activationBackward);
    /** Adds a the elements in matrix B scaled by c to the elements in
     *  the matrix A. This is required for the weight update in the gradient
     *  descent step.*/
-   static void ScaleAdd(TCudaMatrix & A,
-                        const TCudaMatrix & B,
+   static void ScaleAdd(TCudaMatrix<AFloat> & A,
+                        const TCudaMatrix<AFloat> & B,
                         Scalar_t beta = 1.0);
-
-   static void Copy(TCudaMatrix & B,
-                    const TCudaMatrix & A);
+   /** Copy the elements of matrix A into matrix B. */
+   static void Copy(TCudaMatrix<AFloat> & B,
+                    const TCudaMatrix<AFloat> & A);
    ///@}
 
    //____________________________________________________________________________
@@ -116,33 +110,33 @@ public:
     * and writes the results into the result matrix.
     */
    ///@{
-   static void Identity(TCudaMatrix & B);
-   static void IdentityDerivative(TCudaMatrix & B,
-                                  const TCudaMatrix & A);
+   static void Identity(TCudaMatrix<AFloat> & B);
+   static void IdentityDerivative(TCudaMatrix<AFloat> & B,
+                                  const TCudaMatrix<AFloat> & A);
 
-   static void Relu(TCudaMatrix & B);
-   static void ReluDerivative(TCudaMatrix & B,
-                              const TCudaMatrix & A);
+   static void Relu(TCudaMatrix<AFloat> & B);
+   static void ReluDerivative(TCudaMatrix<AFloat> & B,
+                              const TCudaMatrix<AFloat> & A);
 
-   static void Sigmoid(TCudaMatrix & B);
-   static void SigmoidDerivative(TCudaMatrix & B,
-                                 const TCudaMatrix & A);
+   static void Sigmoid(TCudaMatrix<AFloat> & B);
+   static void SigmoidDerivative(TCudaMatrix<AFloat> & B,
+                                 const TCudaMatrix<AFloat> & A);
 
-   static void Tanh(TCudaMatrix & B);
-   static void TanhDerivative(TCudaMatrix & B,
-                              const TCudaMatrix & A);
+   static void Tanh(TCudaMatrix<AFloat> & B);
+   static void TanhDerivative(TCudaMatrix<AFloat> & B,
+                              const TCudaMatrix<AFloat> & A);
 
-   static void SymmetricRelu(TCudaMatrix & B);
-   static void SymmetricReluDerivative(TCudaMatrix & B,
-                                       const TCudaMatrix & A);
+   static void SymmetricRelu(TCudaMatrix<AFloat> & B);
+   static void SymmetricReluDerivative(TCudaMatrix<AFloat> & B,
+                                       const TCudaMatrix<AFloat> & A);
 
-   static void SoftSign(TCudaMatrix & B);
-   static void SoftSignDerivative(TCudaMatrix & B,
-                                  const TCudaMatrix & A);
+   static void SoftSign(TCudaMatrix<AFloat> & B);
+   static void SoftSignDerivative(TCudaMatrix<AFloat> & B,
+                                  const TCudaMatrix<AFloat> & A);
 
-   static void Gauss(TCudaMatrix & B);
-   static void GaussDerivative(TCudaMatrix & B,
-                               const TCudaMatrix & A);
+   static void Gauss(TCudaMatrix<AFloat> & B);
+   static void GaussDerivative(TCudaMatrix<AFloat> & B,
+                               const TCudaMatrix<AFloat> & A);
    ///@}
 
    //____________________________________________________________________________
@@ -159,20 +153,20 @@ public:
     */
    ///@{
 
-   static CudaDouble_t MeanSquaredError(const TCudaMatrix &Y,
-                                        const TCudaMatrix &output);
-   static void MeanSquaredErrorGradients(TCudaMatrix & dY,
-                                         const TCudaMatrix &Y,
-                                         const TCudaMatrix &output);
+   static AFloat MeanSquaredError(const TCudaMatrix<AFloat> &Y,
+                                  const TCudaMatrix<AFloat> &output);
+   static void MeanSquaredErrorGradients(TCudaMatrix<AFloat> & dY,
+                                         const TCudaMatrix<AFloat> &Y,
+                                         const TCudaMatrix<AFloat> &output);
 
     /** Sigmoid transformation is implicitly applied, thus \p output should
      *  hold the linear activations of the last layer in the net. */
-   static CudaDouble_t CrossEntropy(const TCudaMatrix &Y,
-                              const TCudaMatrix &output);
+   static AFloat CrossEntropy(const TCudaMatrix<AFloat> &Y,
+                              const TCudaMatrix<AFloat> &output);
 
-   static void CrossEntropyGradients(TCudaMatrix & dY,
-                                     const TCudaMatrix & Y,
-                                     const TCudaMatrix & output);
+   static void CrossEntropyGradients(TCudaMatrix<AFloat> & dY,
+                                     const TCudaMatrix<AFloat> & Y,
+                                     const TCudaMatrix<AFloat> & output);
    ///@}
 
    //____________________________________________________________________________
@@ -188,8 +182,8 @@ public:
     * classification.
     */
    ///@{
-   static void Sigmoid(TCudaMatrix &YHat,
-                        const TCudaMatrix & );
+   static void Sigmoid(TCudaMatrix<AFloat> &YHat,
+                       const TCudaMatrix<AFloat> & );
    ///@}
 
    //____________________________________________________________________________
@@ -206,15 +200,15 @@ public:
     */
    ///@{
 
-   static CudaDouble_t L1Regularization(const TCudaMatrix & W);
-   static void AddL1RegularizationGradients(TCudaMatrix & A,
-                                            const TCudaMatrix & W,
-                                            CudaDouble_t weightDecay);
+   static AFloat L1Regularization(const TCudaMatrix<AFloat> & W);
+   static void AddL1RegularizationGradients(TCudaMatrix<AFloat> & A,
+                                            const TCudaMatrix<AFloat> & W,
+                                            AFloat weightDecay);
 
-   static CudaDouble_t L2Regularization(const TCudaMatrix & W);
-   static void AddL2RegularizationGradients(TCudaMatrix & A,
-                                            const TCudaMatrix & W,
-                                            CudaDouble_t weightDecay);
+   static AFloat L2Regularization(const TCudaMatrix<AFloat> & W);
+   static void AddL2RegularizationGradients(TCudaMatrix<AFloat> & A,
+                                            const TCudaMatrix<AFloat> & W,
+                                            AFloat weightDecay);
    ///@}
 
    //____________________________________________________________________________
@@ -229,10 +223,10 @@ public:
     */
    ///@{
 
-   static void InitializeGauss(TCudaMatrix & A);
-   static void InitializeUniform(TCudaMatrix & A);
-   static void InitializeIdentity(TCudaMatrix & A);
-   static void InitializeZero(TCudaMatrix & A);
+   static void InitializeGauss(TCudaMatrix<AFloat> & A);
+   static void InitializeUniform(TCudaMatrix<AFloat> & A);
+   static void InitializeIdentity(TCudaMatrix<AFloat> & A);
+   static void InitializeZero(TCudaMatrix<AFloat> & A);
 
    ///@}
 
@@ -247,7 +241,7 @@ public:
 
    /** Apply dropout with activation probability \p p to the given
     *  matrix \p A and scale the result by reciprocal of \p p. */
-   static void Dropout(TCudaMatrix & A, CudaDouble_t p);
+   static void Dropout(TCudaMatrix<AFloat> & A, AFloat p);
 
    ///@}
 
@@ -266,28 +260,27 @@ public:
    /** Standard multiplication of two matrices \p A and \p B with the result being
     *  written into C.
     */
-   static void Multiply(TCudaMatrix &C,
-                        const TCudaMatrix &A,
-                        const TCudaMatrix &B);
+   static void Multiply(TCudaMatrix<AFloat> & C,
+                        const TCudaMatrix<AFloat> & A,
+                        const TCudaMatrix<AFloat> & B);
    /** Matrix multiplication of two matrices \p A and \p B^T (transposed) with the
     *  result being written into C.
     */
-   static void TransposeMultiply(TCudaMatrix &output,
-                                 const TCudaMatrix &input,
-                                 const TCudaMatrix &Weights);
+   static void TransposeMultiply(TCudaMatrix<AFloat> & output,
+                                 const TCudaMatrix<AFloat> & input,
+                                 const TCudaMatrix<AFloat> & Weights);
    /** In-place Hadamard (element-wise) product of matrices \p A and \p B
     *  with the result being written into \p A.
     */
-   static void Hadamard(TCudaMatrix &A,
-                        const TCudaMatrix &B);
+   static void Hadamard(TCudaMatrix<AFloat> & A, const TCudaMatrix<AFloat> & B);
 
    /** Sum columns of (m x n) matrixx \p A and write the results into the first
     * m elements in \p A.
     */
-   static void SumColumns(TCudaMatrix &B, const TCudaMatrix &A);
+   static void SumColumns(TCudaMatrix<AFloat> & B, const TCudaMatrix<AFloat> & A);
 
    /** Compute the sum of all elements in \p A */
-   static CudaDouble_t Sum(const TCudaMatrix &A);
+   static AFloat Sum(const TCudaMatrix<AFloat> &A);
 };
 
 } // namespace DNN

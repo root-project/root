@@ -51,18 +51,21 @@ auto testMultiplication(size_t ntests)
       CRef.Mult(ARef,BRef);
       Architecture_t::Multiply(C, A, B);
       Scalar_t error = TMVA::DNN::maximumRelativeError((TMatrixT<Scalar_t>) C, CRef);
+      std::cout << "A * B:   " << error << std::endl;
       maximumError   = std::max(error, maximumError);
 
       // A^T * B
       CRef.TMult(ATRef,BRef);
       Architecture_t::TransposeMultiply(C, AT, B);
       error = TMVA::DNN::maximumRelativeError((TMatrixT<Scalar_t>) C, CRef);
+      std::cout << "A^T * B: " << error << std::endl;
       maximumError   = std::max(error, maximumError);
 
       // A * B^T
       CRef.MultT(ARef,BTRef);
       Architecture_t::MultiplyTranspose(C, A, BT);
       error = TMVA::DNN::maximumRelativeError((TMatrixT<Scalar_t>) C, CRef);
+      std::cout << "A * B^T: " << error << std::endl;
       maximumError   = std::max(error, maximumError);
 
       // A .* B
@@ -73,6 +76,7 @@ auto testMultiplication(size_t ntests)
       }
       Architecture_t::Hadamard(A, A2);
       error = TMVA::DNN::maximumRelativeError((TMatrixT<Scalar_t>) A, ARef);
+      std::cout << "A .* B:  " << error << std::endl;
       maximumError   = std::max(error, maximumError);
    }
 

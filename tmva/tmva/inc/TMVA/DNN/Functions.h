@@ -143,7 +143,7 @@ inline void evaluate(typename Architecture_t::Matrix_t &A,
 {
     switch(f)
     {
-    case EOutputFunction::IDENTITY : break;
+    case EOutputFunction::IDENTITY : Architecture_t::Copy(A, X);
     case EOutputFunction::SIGMOID  : Architecture_t::Sigmoid(A, X);
         break;
     }

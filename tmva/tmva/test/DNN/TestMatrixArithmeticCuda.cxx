@@ -22,11 +22,19 @@ using namespace TMVA::DNN;
 
 int main()
 {
-    std::cout << "Testing CUDA Matrix Arithmetic:" << std::endl;
+    std::cout << "Testing CUDA matrix arithmetic (double):" << std::endl;
 
-    Double_t error = testMultiplication<TCuda>(10);
+    Double_t error = testMultiplication<TCuda<Double_t>>(10);
     std::cout << "Multiplication: " << "Max. rel. error: " << error << std::endl;
 
-    error = testSumColumns<TCuda>(1);
+    error = testSumColumns<TCuda<Double_t>>(1);
+    std::cout << "Column Sum:     " << "Max. rel. error: " << error << std::endl;
+
+    std::cout << "Testing CUDA matrix arithmetic (float):" << std::endl;
+
+    error = testMultiplication<TCuda<Real_t>>(10);
+    std::cout << "Multiplication: " << "Max. rel. error: " << error << std::endl;
+
+    error = testSumColumns<TCuda<Real_t>>(1);
     std::cout << "Column Sum:     " << "Max. rel. error: " << error << std::endl;
 }

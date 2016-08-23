@@ -357,13 +357,13 @@ auto TGradientDescent<Architecture_t>::TrainTBB(const Data_t & trainingData,
 //______________________________________________________________________________
 template<typename Architecture_t>
 template <typename Data_t, typename Net_t>
-    auto TGradientDescent<Architecture_t>::TrainMomentum(const Data_t & trainingData,
-                                                         size_t nTrainingSamples,
-                                                         const Data_t & testData,
-                                                         size_t nTestSamples,
-                                                         Net_t & net,
-                                                         Scalar_t momentum,
-                                                         size_t nThreads)
+auto TGradientDescent<Architecture_t>::TrainMomentum(const Data_t & trainingData,
+                                                     size_t nTrainingSamples,
+                                                     const Data_t & testData,
+                                                     size_t nTestSamples,
+                                                     Net_t & net,
+                                                     Scalar_t momentum,
+                                                     size_t nThreads)
    -> Scalar_t
 {
    // Reset iteration state.
@@ -378,18 +378,19 @@ template <typename Data_t, typename Net_t>
                                                    net.GetBatchSize(),
                                                    net.GetInputWidth(),
                                                    net.GetOutputWidth(), nThreads);
-   auto testNet = net.CreateClone(nTestSamples);
+   auto testNet = net.CreateClone(net.GetBatchSize());
    TDataLoader<Data_t, Architecture_t> testLoader(testData, nTestSamples,
                                                   testNet.GetBatchSize(),
                                                   testNet.GetInputWidth(),
                                                   net.GetOutputWidth());
+
+   net.InitializeGradients();
    std::vector<Net_t> nets{};
    nets.reserve(nThreads);
    for (size_t i = 0; i < nThreads; i++) {
        nets.push_back(net);
        for (size_t j = 0; j < net.GetDepth(); j++)
        {
-           std::cout << "copy" << std::endl;
            auto &masterLayer = net.GetLayer(j);
            auto &layer = nets.back().GetLayer(j);
            Architecture_t::Copy(layer.GetWeights(),
@@ -406,6 +407,7 @@ template <typename Data_t, typename Net_t>
    {
       fStepCount++;
 
+      // Iterate over epoch.
       size_t netIndex = 0;
       std::vector<TBatch<Architecture_t>> batches{};
       for (size_t i = 0; i < nTrainingSamples / net.GetBatchSize(); i += nThreads) {
@@ -414,26 +416,23 @@ template <typename Data_t, typename Net_t>
          for (size_t j = 0; j < nThreads; j++) {
             batches.push_back(trainLoader.GetBatch());
          }
-         StepMomentum(net, nets, batches, momentum);
+         if (momentum != 0.0) {
+            StepMomentum(net, nets, batches, momentum);
+         } else {
+            Step(net, nets, batches);
+         }
       }
 
       // Compute test error.
       if ((fStepCount % fTestInterval) == 0) {
-         end   = std::chrono::system_clock::now();
-         std::chrono::duration<double> elapsed_seconds = end - start;
-         start = std::chrono::system_clock::now();
-         double seconds = elapsed_seconds.count();
-         double nFlops  = (double) (fTestInterval * (nTrainingSamples / net.GetBatchSize()));
-                nFlops *= net.GetNFlops();
-         std::cout << "Elapsed time for " << fTestInterval << " Epochs: "
-                   << seconds << " [s] => " << nFlops * 1e-9 / seconds
-                   << " GFlop/s" << std::endl;
-         auto b = *testLoader.begin();
-         auto inputMatrix  = b.GetInput();
-         auto outputMatrix = b.GetOutput();
-
-         Scalar_t loss = testNet.Loss(inputMatrix, outputMatrix);
-         std::cout << fStepCount << ": " << loss << std::endl;
+         fTestError = 0.0;
+         for (size_t i = 0; i < nTestSamples / net.GetBatchSize(); i += nThreads) {
+            auto b = testLoader.GetBatch();
+            auto inputMatrix  = b.GetInput();
+            auto outputMatrix = b.GetOutput();
+            fTestError += testNet.Loss(inputMatrix, outputMatrix);
+         }
+         fTestError /= (Double_t) nTestSamples / net.GetBatchSize();
          converged = HasConverged();
       }
 

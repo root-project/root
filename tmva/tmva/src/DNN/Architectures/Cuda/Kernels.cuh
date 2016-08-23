@@ -14,6 +14,9 @@
 // the low-level interface.                                            //
 /////////////////////////////////////////////////////////////////////////
 
+#ifndef TMVA_DNN_ARCHITECTURES_CUDA_KERNELS
+#define TMVA_DNN_ARCHITECTURES_CUDA_KERNELS
+
 #include "TMVA/DNN/Architectures/Cuda.h"
 #include "TMVA/DNN/Architectures/Cuda/Device.h"
 #include "cuda.h"
@@ -24,7 +27,8 @@ namespace DNN  {
 namespace Cuda {
 
 //____________________________________________________________________________
-__device__ CudaDouble_t AtomicAdd(CudaDouble_t* address, CudaDouble_t val)
+template<typename AFloat>
+__device__ AFloat AtomicAdd(AFloat* address, AFloat val)
 {
    unsigned long long int* address_as_ull = (unsigned long long int*)address;
    unsigned long long int old = *address_as_ull, assumed;
@@ -38,8 +42,9 @@ __device__ CudaDouble_t AtomicAdd(CudaDouble_t* address, CudaDouble_t val)
 }
 
 //____________________________________________________________________________
-__device__ void ReduceSumVertical(CudaDouble_t *result,
-                                  CudaDouble_t * sdata,
+template<typename AFloat>
+__device__ void ReduceSumVertical(AFloat *result,
+                                  AFloat * sdata,
                                   int n)
 {
    // i,j are block row and column indices.
@@ -116,7 +121,8 @@ __device__ void ReduceSumVertical(CudaDouble_t *result,
 }
 
 //____________________________________________________________________________
-__device__ void ReduceSum(CudaDouble_t *result, CudaDouble_t * sdata)
+template<typename AFloat>
+__device__ void ReduceSum(AFloat *result, AFloat * sdata)
 {
    int tid = threadIdx.x + threadIdx.y * blockDim.x;
 
@@ -189,8 +195,9 @@ __device__ void ReduceSum(CudaDouble_t *result, CudaDouble_t * sdata)
 }
 
 //____________________________________________________________________________
-__global__ void AddRowWise(CudaDouble_t * W,
-                           const CudaDouble_t * theta,
+template<typename AFloat>
+__global__ void AddRowWise(AFloat * W,
+                           const AFloat * theta,
                            int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
@@ -202,8 +209,9 @@ __global__ void AddRowWise(CudaDouble_t * W,
 }
 
 //____________________________________________________________________________
-__global__ void Hadamard(CudaDouble_t * B,
-                         const CudaDouble_t * A,
+template<typename AFloat>
+__global__ void Hadamard(AFloat * B,
+                         const AFloat * A,
                          int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
@@ -215,7 +223,8 @@ __global__ void Hadamard(CudaDouble_t * B,
 }
 
 //____________________________________________________________________________
-__global__ void IdentityDerivative(CudaDouble_t * A,
+template<typename AFloat>
+__global__ void IdentityDerivative(AFloat * A,
                                    int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
@@ -227,7 +236,8 @@ __global__ void IdentityDerivative(CudaDouble_t * A,
 }
 
 //____________________________________________________________________________
-__global__ void Relu(CudaDouble_t * A,
+template<typename AFloat>
+__global__ void Relu(AFloat * A,
                      int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
@@ -235,27 +245,29 @@ __global__ void Relu(CudaDouble_t * A,
    int index = j * m + i;
 
    if ((i < m) && (j < n)) {
-      CudaDouble_t x = A[index];
+      AFloat x = A[index];
       A[index] = (x < 0.0) ? 0.0 : x;
    }
 }
 
 //____________________________________________________________________________
-__global__ void ReluDerivative(CudaDouble_t * B,
-                               const CudaDouble_t * A, int m, int n)
+template<typename AFloat>
+__global__ void ReluDerivative(AFloat * B,
+                               const AFloat * A, int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
    int j = blockDim.x * blockIdx.x + threadIdx.x;
    int index = j * m + i;
 
    if ((i < m) && (j < n)) {
-      CudaDouble_t x = A[index];
+      AFloat x = A[index];
       B[index] = (x < 0.0) ? 0.0 : 1.0;
    }
 }
 
 //____________________________________________________________________________
-__global__ void Sigmoid(CudaDouble_t * A,
+template<typename AFloat>
+__global__ void Sigmoid(AFloat * A,
                         int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
@@ -263,14 +275,15 @@ __global__ void Sigmoid(CudaDouble_t * A,
    int index = j * m + i;
 
    if ((i < m) && (j < n)) {
-      CudaDouble_t sig = 1.0 / (1.0 + exp(-A[index]));
+      AFloat sig = 1.0 / (1.0 + exp(-A[index]));
       A[index] = sig;
    }
 }
 
 //____________________________________________________________________________
-__global__ void Sigmoid(CudaDouble_t * B,
-                        const CudaDouble_t * A,
+template<typename AFloat>
+__global__ void Sigmoid(AFloat * B,
+                        const AFloat * A,
                         int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
@@ -278,13 +291,14 @@ __global__ void Sigmoid(CudaDouble_t * B,
    int index = j * m + i;
 
    if ((i < m) && (j < n)) {
-      CudaDouble_t sig = 1.0 / (1.0 + exp(-A[index]));
+      AFloat sig = 1.0 / (1.0 + exp(-A[index]));
       B[index] = sig;
    }
 }
 //____________________________________________________________________________
-__global__ void SigmoidDerivative(CudaDouble_t * B,
-                                  const CudaDouble_t * A,
+template<typename AFloat>
+__global__ void SigmoidDerivative(AFloat * B,
+                                  const AFloat * A,
                                   int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
@@ -292,13 +306,14 @@ __global__ void SigmoidDerivative(CudaDouble_t * B,
    int index = j * m + i;
 
    if ((i < m) && (j < n)) {
-      CudaDouble_t sig = 1.0 / (1.0 + exp(-A[index]));
+      AFloat sig = 1.0 / (1.0 + exp(-A[index]));
       B[index] = sig * (1.0 - sig);
    }
 }
 
 //____________________________________________________________________________
-__global__ void Tanh(CudaDouble_t * A,
+template<typename AFloat>
+__global__ void Tanh(AFloat * A,
                      int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
@@ -306,14 +321,15 @@ __global__ void Tanh(CudaDouble_t * A,
    int index = j * m + i;
 
    if ((i < m) && (j < n)) {
-      CudaDouble_t t = ::tanh(A[index]);
+      AFloat t = ::tanh(A[index]);
       A[index] = t;
    }
 }
 
 //____________________________________________________________________________
-__global__ void TanhDerivative(CudaDouble_t * B,
-                               const CudaDouble_t * A,
+template<typename AFloat>
+__global__ void TanhDerivative(AFloat * B,
+                               const AFloat * A,
                                int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
@@ -321,13 +337,14 @@ __global__ void TanhDerivative(CudaDouble_t * B,
    int index = j * m + i;
 
    if ((i < m) && (j < n)) {
-      CudaDouble_t t = ::tanh(A[index]);
+      AFloat t = ::tanh(A[index]);
       B[index] = 1 - t*t;
    }
 }
 
 //____________________________________________________________________________
-__global__ void SymmetricRelu(CudaDouble_t * A,
+template<typename AFloat>
+__global__ void SymmetricRelu(AFloat * A,
                               int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
@@ -340,8 +357,9 @@ __global__ void SymmetricRelu(CudaDouble_t * A,
 }
 
 //____________________________________________________________________________
-__global__ void SymmetricReluDerivative(CudaDouble_t * B,
-                                        const CudaDouble_t * A,
+template<typename AFloat>
+__global__ void SymmetricReluDerivative(AFloat * B,
+                                        const AFloat * A,
                                         int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
@@ -354,7 +372,8 @@ __global__ void SymmetricReluDerivative(CudaDouble_t * B,
 }
 
 //____________________________________________________________________________
-__global__ void SoftSign(CudaDouble_t * A,
+template<typename AFloat>
+__global__ void SoftSign(AFloat * A,
                           int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
@@ -362,14 +381,15 @@ __global__ void SoftSign(CudaDouble_t * A,
    int index = j * m + i;
 
    if ((i < m) && (j < n)) {
-      CudaDouble_t x = A[index];
+      AFloat x = A[index];
       A[index] = x / (1.0 + abs(x));
    }
 }
 
 //____________________________________________________________________________
-__global__ void SoftSignDerivative(CudaDouble_t * B,
-                                   const CudaDouble_t * A,
+template<typename AFloat>
+__global__ void SoftSignDerivative(AFloat * B,
+                                   const AFloat * A,
                                    int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
@@ -377,13 +397,14 @@ __global__ void SoftSignDerivative(CudaDouble_t * B,
    int index = j * m + i;
 
    if ((i < m) && (j < n)) {
-      CudaDouble_t x = 1.0 + fabs(A[index]);
+      AFloat x = 1.0 + fabs(A[index]);
       B[index] = 1 / (x * x);
    }
 }
 
 //____________________________________________________________________________
-__global__ void Gauss(CudaDouble_t * A,
+template<typename AFloat>
+__global__ void Gauss(AFloat * A,
                       int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
@@ -391,14 +412,15 @@ __global__ void Gauss(CudaDouble_t * A,
    int index = j * m + i;
 
    if ((i < m) && (j < n)) {
-      CudaDouble_t x = A[index];
+      AFloat x = A[index];
       A[index] = exp(- x * x);
    }
 }
 
 //____________________________________________________________________________
-__global__ void GaussDerivative(CudaDouble_t * B,
-                                const CudaDouble_t * A,
+template<typename AFloat>
+__global__ void GaussDerivative(AFloat * B,
+                                const AFloat * A,
                                 int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
@@ -406,15 +428,16 @@ __global__ void GaussDerivative(CudaDouble_t * B,
    int index = j * m + i;
 
    if ((i < m) && (j < n)) {
-      CudaDouble_t x = A[index];
+      AFloat x = A[index];
       B[index] = - 2.0 * x * exp(- x * x);
    }
 }
 
 //____________________________________________________________________________
-__global__ void MeanSquaredError(CudaDouble_t * result,
-                                 const CudaDouble_t * Y,
-                                 const CudaDouble_t * output,
+template<typename AFloat>
+__global__ void MeanSquaredError(AFloat * result,
+                                 const AFloat * Y,
+                                 const AFloat * output,
                                  int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
@@ -422,11 +445,11 @@ __global__ void MeanSquaredError(CudaDouble_t * result,
    int tid   = blockDim.x * threadIdx.y + threadIdx.x;
    int index = j * m + i;
 
-   __shared__ CudaDouble_t sdata[TDevice::BlockSize];
+   __shared__ AFloat sdata[TDevice::BlockSize];
 
    if ((i < m) && (j < n)) {
-       CudaDouble_t norm = 1 / ((CudaDouble_t) (m * n));
-       CudaDouble_t e   = Y[index] - output[index];
+       AFloat norm = 1 / ((AFloat) (m * n));
+       AFloat e   = Y[index] - output[index];
        sdata[tid] = norm * e * e;
    } else {
        sdata[tid] = 0.0;
@@ -435,8 +458,9 @@ __global__ void MeanSquaredError(CudaDouble_t * result,
 }
 
 //____________________________________________________________________________
-__global__ void SquaredSum(CudaDouble_t * result,
-                           const CudaDouble_t * A,
+template<typename AFloat>
+__global__ void SquaredSum(AFloat * result,
+                           const AFloat * A,
                            int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
@@ -444,10 +468,10 @@ __global__ void SquaredSum(CudaDouble_t * result,
    int tid   = blockDim.x * threadIdx.y + threadIdx.x;
    int index = j * m + i;
 
-   __shared__ CudaDouble_t sdata[TDevice::BlockSize];
+   __shared__ AFloat sdata[TDevice::BlockSize];
 
    if ((i < m) && (j < n)) {
-       CudaDouble_t e = A[index];
+       AFloat e = A[index];
        sdata[tid] = e * e;
    } else {
        sdata[tid] = 0.0;
@@ -456,8 +480,9 @@ __global__ void SquaredSum(CudaDouble_t * result,
 }
 
 //____________________________________________________________________________
-__global__ void AbsoluteSum(CudaDouble_t * result,
-                            const CudaDouble_t * A,
+template<typename AFloat>
+__global__ void AbsoluteSum(AFloat * result,
+                            const AFloat * A,
                             int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
@@ -465,7 +490,7 @@ __global__ void AbsoluteSum(CudaDouble_t * result,
    int tid   = blockDim.x * threadIdx.y + threadIdx.x;
    int index = j * m + i;
 
-   __shared__ CudaDouble_t sdata[TDevice::BlockSize];
+   __shared__ AFloat sdata[TDevice::BlockSize];
 
    if ((i < m) && (j < n)) {
        sdata[tid] = abs(A[index]);
@@ -476,9 +501,10 @@ __global__ void AbsoluteSum(CudaDouble_t * result,
 }
 
 //____________________________________________________________________________
-__global__ void MeanSquaredErrorGradients(CudaDouble_t * dY,
-                                          const CudaDouble_t * Y,
-                                          const CudaDouble_t * output,
+template<typename AFloat>
+__global__ void MeanSquaredErrorGradients(AFloat * dY,
+                                          const AFloat * Y,
+                                          const AFloat * output,
                                           int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
@@ -486,13 +512,14 @@ __global__ void MeanSquaredErrorGradients(CudaDouble_t * dY,
    int index = j * m + i;
 
    if ((i < m) && (j < n))
-       dY[index] = 2.0 / ((CudaDouble_t) (m * n)) * (output[index] - Y[index]);
+       dY[index] = 2.0 / ((AFloat) (m * n)) * (output[index] - Y[index]);
 }
 
 //____________________________________________________________________________
-__global__ void AddL1RegularizationGradients(CudaDouble_t * A,
-                                             const CudaDouble_t * B,
-                                             CudaDouble_t weightDecay,
+template<typename AFloat>
+__global__ void AddL1RegularizationGradients(AFloat * A,
+                                             const AFloat * B,
+                                             AFloat weightDecay,
                                              int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
@@ -500,15 +527,16 @@ __global__ void AddL1RegularizationGradients(CudaDouble_t * A,
    int index = j * m + i;
 
    if ((i < m) && (j < n)) {
-       CudaDouble_t sign = (B[index] < 0.0) ? -1.0 : 1.0;
+       AFloat sign = (B[index] < 0.0) ? -1.0 : 1.0;
        A[index] += sign * weightDecay;
    }
 }
 
 //____________________________________________________________________________
-__global__ void AddL2RegularizationGradients(CudaDouble_t * A,
-                                             const CudaDouble_t * B,
-                                             CudaDouble_t weightDecay,
+template<typename AFloat>
+__global__ void AddL2RegularizationGradients(AFloat * A,
+                                             const AFloat * B,
+                                             AFloat weightDecay,
                                              int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
@@ -521,9 +549,10 @@ __global__ void AddL2RegularizationGradients(CudaDouble_t * A,
 }
 
 //____________________________________________________________________________
-__global__ void CrossEntropy(CudaDouble_t * result,
-                             const CudaDouble_t * Y,
-                             const CudaDouble_t * output,
+template<typename AFloat>
+__global__ void CrossEntropy(AFloat * result,
+                             const AFloat * Y,
+                             const AFloat * output,
                              int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
@@ -531,12 +560,12 @@ __global__ void CrossEntropy(CudaDouble_t * result,
    int tid   = blockDim.x * threadIdx.y + threadIdx.x;
    int index = j * m + i;
 
-   __shared__ CudaDouble_t sdata[TDevice::BlockSize];
+   __shared__ AFloat sdata[TDevice::BlockSize];
 
    if ((i < m) && (j < n)) {
-       CudaDouble_t norm = 1 / ((CudaDouble_t) (m * n));
-       CudaDouble_t sig  = 1.0 / (1.0 + exp(-output[index]));
-       CudaDouble_t ce   = Y[index] * log(sig) + (1.0 - Y[index]) * log(1.0 - sig);
+       AFloat norm = 1 / ((AFloat) (m * n));
+       AFloat sig  = 1.0 / (1.0 + exp(-output[index]));
+       AFloat ce   = Y[index] * log(sig) + (1.0 - Y[index]) * log(1.0 - sig);
        sdata[tid]        = - norm * ce;
    } else {
        sdata[tid] = 0.0;
@@ -546,9 +575,10 @@ __global__ void CrossEntropy(CudaDouble_t * result,
 }
 
 //____________________________________________________________________________
-__global__ void CrossEntropyGradients(CudaDouble_t * dY,
-                                      const CudaDouble_t * Y,
-                                      const CudaDouble_t * output,
+template<typename AFloat>
+__global__ void CrossEntropyGradients(AFloat * dY,
+                                      const AFloat * Y,
+                                      const AFloat * output,
                                       int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
@@ -556,16 +586,17 @@ __global__ void CrossEntropyGradients(CudaDouble_t * dY,
    int index = j * m + i;
 
    if ((i < m) && (j < n)) {
-      CudaDouble_t norm = 1 / ((CudaDouble_t) (m * n));
-      CudaDouble_t y = Y[index];
-      CudaDouble_t sig = 1.0 / (1.0 + exp(-output[index]));
+      AFloat norm = 1 / ((AFloat) (m * n));
+      AFloat y = Y[index];
+      AFloat sig = 1.0 / (1.0 + exp(-output[index]));
       dY[index] = norm * (sig - y);
    }
 }
 
 //____________________________________________________________________________
-__global__ void ReduceMatrix(CudaDouble_t *result,
-                             const CudaDouble_t *A,
+template<typename AFloat>
+__global__ void ReduceMatrix(AFloat *result,
+                             const AFloat *A,
                              int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
@@ -573,7 +604,7 @@ __global__ void ReduceMatrix(CudaDouble_t *result,
    int tid = threadIdx.y * blockDim.x + threadIdx.x;
    int index = j * m + i;
 
-   __shared__ CudaDouble_t smem[TDevice::BlockSize];
+   __shared__ AFloat smem[TDevice::BlockSize];
    if ((i < m) && (j < n))
        smem[tid] = A[index];
    else
@@ -583,8 +614,9 @@ __global__ void ReduceMatrix(CudaDouble_t *result,
 }
 
 //____________________________________________________________________________
-__global__ void SumColumns(CudaDouble_t *B,
-                            const CudaDouble_t *A,
+template<typename AFloat>
+__global__ void SumColumns(AFloat *B,
+                            const AFloat *A,
                             int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
@@ -593,7 +625,7 @@ __global__ void SumColumns(CudaDouble_t *B,
    int blockIndex  = blockDim.x * threadIdx.y + threadIdx.x;
 
 
-   __shared__ CudaDouble_t smem[TDevice::BlockSize];
+   __shared__ AFloat smem[TDevice::BlockSize];
 
    if ((i < m) && (j < n)) {
        smem[blockIndex] = A[matrixIndex];
@@ -605,19 +637,10 @@ __global__ void SumColumns(CudaDouble_t *B,
 }
 
 //____________________________________________________________________________
-__global__ void InitializeCurandStates(unsigned long long seed,
-                                       curandState_t *state)
-{
-   int i   = blockDim.y * blockIdx.y + threadIdx.y;
-   int j   = blockDim.x * blockIdx.x + threadIdx.x;
-   int tid = i * gridDim.x + j;
-   curand_init(seed + tid, 0, tid, state + tid);
-}
-
-//____________________________________________________________________________
-__global__ void Dropout(CudaDouble_t *A,
+template<typename AFloat>
+__global__ void Dropout(AFloat *A,
                         int m, int n,
-                        CudaDouble_t dropoutProbability,
+                        AFloat dropoutProbability,
                         curandState_t *state)
 {
    int i   = blockDim.y * blockIdx.y + threadIdx.y;
@@ -636,3 +659,5 @@ __global__ void Dropout(CudaDouble_t *A,
 } // namespace Cuda
 } // namespace DNN
 } // namespace TMVA
+
+#endif

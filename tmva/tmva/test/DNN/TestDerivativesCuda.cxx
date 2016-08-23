@@ -22,14 +22,15 @@ using namespace TMVA::DNN;
 
 int main()
 {
-    double error;
+    using Scalar_t = Double_t;
+    Double_t error;
 
     //
     // Activation Functions
     //
 
     std::cout << "Activation Functions:" << std::endl;
-    error = testActivationFunctionDerivatives<TCuda>();
+    error = testActivationFunctionDerivatives<TCuda<Scalar_t>>();
     std::cout << "Total    : ";
     std::cout << "Maximum Relative Error = " << print_error(error);
     std::cout << std::endl << std::endl;
@@ -41,7 +42,7 @@ int main()
     //
 
     std::cout << "Loss Functions:" << std::endl;
-    error = testLossFunctionGradients<TCuda>();
+    error = testLossFunctionGradients<TCuda<Scalar_t>>();
     std::cout << "Total    : ";
     std::cout << "Maximum Relative Error = " << print_error(error);
     std::cout << std::endl << std::endl;
@@ -53,7 +54,7 @@ int main()
     //
 
     std::cout << "Regularization:" << std::endl;
-    error = testRegularizationGradients<TCuda>();
+    error = testRegularizationGradients<TCuda<Scalar_t>>();
     std::cout << "Total    : ";
     std::cout << "Maximum Relative Error = " << print_error(error);
     std::cout << std::endl << std::endl;
