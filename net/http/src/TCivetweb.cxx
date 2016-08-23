@@ -241,7 +241,7 @@ void websocket_ready_handler(struct mg_connection *conn, void*)
 
 //static int wscnt = 0;
 
-int websocket_data_handler(struct mg_connection *conn, int bits, char *data, size_t len, void*)
+int websocket_data_handler(struct mg_connection *conn, int, char *data, size_t len, void*)
 {
    const struct mg_request_info *request_info = mg_get_request_info(conn);
 
