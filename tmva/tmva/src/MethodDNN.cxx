@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$
-// Author: Peter Speckmayer
+// Authors: Peter Speckmayer, Aditya Sharma
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -10,7 +10,8 @@
  * Description:                                                                   *
  *      A neural network implementation                                           *
  *                                                                                *
- * Authors (alphabetical):                                                        *
+ * Authors (alphabetical):
+ *      Aditya Sharma         <adisharma075@gmail.com>  - CERN, Switzerland
  *      Peter Speckmayer      <peter.speckmayer@gmx.ch> - CERN, Switzerland       *
  *                                                                                *
  * Copyright (c) 2005-2015:                                                       *
@@ -79,9 +80,8 @@ ClassImp(TMVA::MethodDNN)
 TMVA::MethodDNN::MethodDNN( const TString& jobName,
                             const TString& methodTitle,
                             DataSetInfo& theData,
-                            const TString& theOption,
-                            TDirectory* theTargetDir )
-   : MethodBase( jobName, Types::kDNN, methodTitle, theData, theOption, theTargetDir )
+                            const TString& theOption )
+   : MethodBase( jobName, Types::kDNN, methodTitle, theData, theOption)
    , fResume (false)
 {
    // standard constructor
@@ -89,9 +89,8 @@ TMVA::MethodDNN::MethodDNN( const TString& jobName,
 
 //______________________________________________________________________________
 TMVA::MethodDNN::MethodDNN( DataSetInfo& theData,
-                            const TString& theWeightFile,
-                            TDirectory* theTargetDir )
-   : MethodBase( Types::kDNN, theData, theWeightFile, theTargetDir )
+                            const TString& theWeightFile)
+   : MethodBase( Types::kDNN, theData, theWeightFile)
    , fResume (false)
 {
    // constructor from a weight file
@@ -549,15 +548,15 @@ void TMVA::MethodDNN::Train()
    if (trainPattern.empty () || testPattern.empty ())
       return;
 
-   // create net and weights
+   // create net and weight bucket
    fNet.clear ();
-   fWeights.clear ();
+   fWeightBucket.clear ();
 
    // if "resume" from saved weights
    if (fResume)
       {
          std::cout << ".. resume" << std::endl;
-         //        std::tie (fNet, fWeights) = ReadWeights (fFileName);
+         //        std::tie (fNet, fWeightBucket) = ReadWeights (fFileName);
       }
    else // initialize weights and net
       {
@@ -601,7 +600,7 @@ void TMVA::MethodDNN::Train()
 
          // initialize weights
          fNet.initializeWeights (fWeightInitializationStrategy, 
-                                 std::back_inserter (fWeights));
+                                 std::back_inserter (fWeightBucket));
       }
 
 
@@ -637,7 +636,7 @@ void TMVA::MethodDNN::Train()
          if (ptrSettings->minimizerType () == TMVA::DNN::MinimizerType::fSteepest)
             {
                DNN::Steepest minimizer (ptrSettings->learningRate (), ptrSettings->momentum (), ptrSettings->repetitions ());
-               /*E =*/fNet.train (fWeights, trainPattern, testPattern, minimizer, *ptrSettings.get ());
+               /*E =*/fNet.train (fWeightBucket, trainPattern, testPattern, minimizer, *ptrSettings.get ());
             }
          ptrSettings.reset ();
          Log () << kINFO << Endl;
@@ -652,13 +651,13 @@ void TMVA::MethodDNN::Train()
 //_______________________________________________________________________
 Double_t TMVA::MethodDNN::GetMvaValue( Double_t* /*errLower*/, Double_t* /*errUpper*/ )
 {
-   if (fWeights.empty ())
+   if (fWeightBucket.empty ())
       return 0.0;
 
    const std::vector<Float_t>& inputValues = GetEvent ()->GetValues ();
    std::vector<double> input (inputValues.begin (), inputValues.end ());
    input.push_back (1.0); // bias node
-   std::vector<double> output = fNet.compute (input, fWeights);
+   std::vector<double> output = fNet.compute (input, fWeightBucket);
    if (output.empty ())
       return 0.0;
 
@@ -670,8 +669,8 @@ Double_t TMVA::MethodDNN::GetMvaValue( Double_t* /*errLower*/, Double_t* /*errUp
 
 const std::vector<Float_t> &TMVA::MethodDNN::GetRegressionValues() 
 {
-   assert (!fWeights.empty ());
-   if (fWeights.empty ())
+   assert (!fWeightBucket.empty ());
+   if (fWeightBucket.empty ())
       return *fRegressionReturnVal;
 
    const Event * ev = GetEvent();
@@ -679,7 +678,7 @@ const std::vector<Float_t> &TMVA::MethodDNN::GetRegressionValues()
    const std::vector<Float_t>& inputValues = ev->GetValues ();
    std::vector<double> input (inputValues.begin (), inputValues.end ());
    input.push_back (1.0); // bias node
-   std::vector<double> output = fNet.compute (input, fWeights);
+   std::vector<double> output = fNet.compute (input, fWeightBucket);
 
    if (fRegressionReturnVal == NULL) fRegressionReturnVal = new std::vector<Float_t>();
    fRegressionReturnVal->clear();
@@ -717,13 +716,13 @@ const std::vector<Float_t> &TMVA::MethodDNN::GetRegressionValues()
 
 const std::vector<Float_t> &TMVA::MethodDNN::GetMulticlassValues()
 {
-   if (fWeights.empty ())
+   if (fWeightBucket.empty ())
       return *fRegressionReturnVal;
 
    const std::vector<Float_t>& inputValues = GetEvent ()->GetValues ();
    std::vector<double> input (inputValues.begin (), inputValues.end ());
    input.push_back (1.0); // bias node
-   std::vector<double> output = fNet.compute (input, fWeights);
+   std::vector<double> output = fNet.compute (input, fWeightBucket);
 
    // check the output of the network
  
@@ -787,10 +786,10 @@ void TMVA::MethodDNN::AddWeightsXMLTo( void* parent ) const
    void* weightsxml = gTools().xmlengine().NewChild(nn, 0, "Synapses");
    gTools().xmlengine().NewAttr (weightsxml, 0, "InputSize", gTools().StringFromInt((int)fNet.inputSize ()));
    gTools().xmlengine().NewAttr (weightsxml, 0, "OutputSize", gTools().StringFromInt((int)fNet.outputSize ()));
-   gTools().xmlengine().NewAttr (weightsxml, 0, "NumberSynapses", gTools().StringFromInt((int)fWeights.size ()));
+   gTools().xmlengine().NewAttr (weightsxml, 0, "NumberSynapses", gTools().StringFromInt(((int)fWeightBucket.size ()) * BUCKET_SIZE);
    std::stringstream s("");
    s.precision( 16 );
-   for (std::vector<double>::const_iterator it = fWeights.begin (), itEnd = fWeights.end (); it != itEnd; ++it)
+   for (std::vector<double>::const_iterator it = fWeightBucket.begin (), itEnd = fWeightBucket.end (); it != itEnd; ++it)
       {
          s << std::scientific << (*it) << " ";
       }
@@ -857,11 +856,11 @@ void TMVA::MethodDNN::ReadWeightsFromXML( void* wghtnode )
 
    const char* content = gTools().GetContent (xmlWeights);
    std::stringstream sstr (content);
-   for (Int_t iWeight = 0; iWeight<numWeights; ++iWeight) 
+   for (Int_t iWeight = 0; iWeight< (numWeights / BUCKET_SIZE; ++iWeight) 
       { // synapses
          Double_t weight;
          sstr >> weight;
-         fWeights.push_back (weight);
+         fWeightBucket.push_back (weight);
       }
 }
 
