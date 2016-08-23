@@ -183,7 +183,6 @@ TNet<Architecture_t, Layer_t>::TNet(size_t batchSize,
 {
    fLayers.reserve(other.GetDepth());
    for (size_t i = 0; i < other.GetDepth(); i++) {
-      std::cout << "copying " << i << std::endl;
       AddLayer(other.GetLayer(i).GetWidth(),
                other.GetLayer(i).GetActivationFunction(),
                other.GetLayer(i).GetDropoutProbability());
@@ -362,13 +361,14 @@ auto TNet<Architecture_t, Layer_t>::GetNFlops()
                                           // derivative.
       // Backward propagation.
       flops += nb * nl;                      // Hadamard
-      flops += nlp * nl * (2.0 * nb - 1.0); // Weight gradients
+      flops += nlp * nl * (2.0 * nb - 1.0);  // Weight gradients
       flops += nl * (nb - 1);                // Bias gradients
       if (i > 0) {
          flops += nlp * nb * (2.0 * nl  - 1.0); // Previous layer gradients.
       }
       nlp = nl;
    }
+   std::cout << "Nflops: " << flops << std::endl;
    return flops;
 }
 

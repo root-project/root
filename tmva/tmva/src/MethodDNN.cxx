@@ -684,7 +684,7 @@ void TMVA::MethodDNN::TrainGpu()
    fNet.Initialize(fWeightInitialization);
    for (TTrainingSettings & settings : fTrainingSettings) {
 
-      TNet<TCuda> net(settings.batchSize, fNet);
+      TNet<TCuda<>> net(settings.batchSize, fNet);
       net.SetWeightDecay(settings.weightDecay);
       net.SetRegularization(settings.regularization);
       net.SetDropoutProbabilities(settings.dropoutProbabilities);
@@ -698,7 +698,7 @@ void TMVA::MethodDNN::TrainGpu()
             << ", repetitions = " << settings.testInterval
             << Endl;
 
-      using DataLoader_t = TDataLoader<TMVAInput_t, TCuda>;
+      using DataLoader_t = TDataLoader<TMVAInput_t, TCuda<>>;
 
       size_t nThreads = 2;
       DataLoader_t trainingData(GetEventCollection(Types::kTraining),
@@ -711,13 +711,13 @@ void TMVA::MethodDNN::TrainGpu()
                             testNet.GetBatchSize(),
                             net.GetInputWidth(),
                             net.GetOutputWidth(), nThreads);
-      DNN::TGradientDescent<TCuda> minimizer(settings.learningRate,
+      DNN::TGradientDescent<TCuda<>> minimizer(settings.learningRate,
                                              settings.convergenceSteps,
                                              settings.testInterval);
 
       net.Print();
-      std::vector<TNet<TCuda>> nets{};
-      std::vector<TBatch<TCuda>> batches{};
+      std::vector<TNet<TCuda<>>> nets{};
+      std::vector<TBatch<TCuda<>>> batches{};
       nets.reserve(nThreads);
       for (size_t i = 0; i < nThreads; i++) {
          nets.push_back(net);
@@ -725,10 +725,10 @@ void TMVA::MethodDNN::TrainGpu()
          {
             auto &masterLayer = net.GetLayer(j);
             auto &layer = nets.back().GetLayer(j);
-            TCuda::Copy(layer.GetWeights(),
-                        masterLayer.GetWeights());
-            TCuda::Copy(layer.GetBiases(),
-                        masterLayer.GetBiases());
+            TCuda<>::Copy(layer.GetWeights(),
+                          masterLayer.GetWeights());
+            TCuda<>::Copy(layer.GetBiases(),
+                          masterLayer.GetBiases());
          }
       }
 
@@ -847,8 +847,9 @@ const std::vector<Float_t> &TMVA::MethodDNN::GetRegressionValues()
 
    const Event *ev = GetEvent();
    const std::vector<Float_t>& inputValues = ev->GetValues();
-   for (size_t i = 0; i < nVariables; i++)
+   for (size_t i = 0; i < nVariables; i++) {
        X(0,i) = inputValues[i];
+   }
 
    size_t nTargets = ev->GetNTargets();
    Matrix_t YHat(1, nTargets);
@@ -859,8 +860,9 @@ const std::vector<Float_t> &TMVA::MethodDNN::GetRegressionValues()
    for (size_t i = 0; i < nTargets; i++)
        output[i] = YHat(0, i);
 
-   if (fRegressionReturnVal == NULL)
+   if (fRegressionReturnVal == NULL) {
        fRegressionReturnVal = new std::vector<Float_t>();
+   }
    fRegressionReturnVal->clear();
 
    Event * evT = new Event(*ev);
@@ -868,9 +870,9 @@ const std::vector<Float_t> &TMVA::MethodDNN::GetRegressionValues()
       evT->SetTarget(i, output[i]);
    }
 
-   const Event* evT2 = GetTransformationHandler().InverseTransform( evT );
+   const Event* evT2 = GetTransformationHandler().InverseTransform(evT);
    for (size_t i = 0; i < nTargets; ++i) {
-      fRegressionReturnVal->push_back( evT2->GetTarget(i) );
+      fRegressionReturnVal->push_back(evT2->GetTarget(i));
    }
    delete evT;
    return *fRegressionReturnVal;
