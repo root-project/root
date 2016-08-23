@@ -23,7 +23,7 @@ ROOTTEST_ADD_TEST(examples
                   MACRO create_makeproject_examples.C
                   PRECMD ${CMAKE_COMMAND} -E remove stl_example.root || :
                   OUTREF create_makeproject_examples.ref
-                  DEPENDS ${GENERATE_DICTIONARY_TEST})
+                  DEPENDS ${GENERATE_DICTIONARY_TEST} roottest-root-meta-MakeProject-stl_makeproject_test-build)
 
 ROOTTEST_ADD_TEST(stltest
                   MACRO runstltest.C
