@@ -55,7 +55,6 @@ Available options are:
 | ---------- | ------------------------------------------------------------ |
 | errprop    | uses the histogram `TH1::Divide` method, yields symmetric errors    |
 | diff       | subtracts the histograms                                     |
-| grid / nogrid | enable (default) or disable drawing of dashed lines on lower plot |
 
 Begin_Macro(source)
 ../../../tutorials/hist/ratioplot1.C
@@ -168,14 +167,6 @@ void TRatioPlot::Init(TH1* h1, TH1* h2,
       fDisplayMode = TRatioPlot::CalculationMode::kDivideGraph;
    }
 
-   if (displayOptionString.Contains("grid")) {
-      displayOptionString.ReplaceAll("grid", "");
-      fShowGridlines = kTRUE;
-   }
-   if (displayOptionString.Contains("nogrid")) {
-      displayOptionString.ReplaceAll("nogrid", "");
-      fShowGridlines = kFALSE;
-   }
    
    fDisplayOption = displayOptionString;
 
@@ -333,14 +324,6 @@ TRatioPlot::TRatioPlot(TH1* h1, const char *name, const char *title, Option_t *d
       displayOptionString.ReplaceAll("errfunc", "");
    }
 
-   if (displayOptionString.Contains("grid")) {
-      displayOptionString.ReplaceAll("grid", "");
-      fShowGridlines = kTRUE;
-   }
-   if (displayOptionString.Contains("nogrid")) {
-      displayOptionString.ReplaceAll("nogrid", "");
-      fShowGridlines = kFALSE;
-   }
    
    fDisplayOption = displayOptionString;
 
@@ -515,13 +498,27 @@ Float_t TRatioPlot::GetSeparationMargin()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Draw
+/// Draws the ratio plot to the currently active pad. Takes the following options
+///
+/// | Option     | Description                                                  |
+/// | ---------- | ------------------------------------------------------------ |
+/// | grid / nogrid | enable (default) or disable drawing of dashed lines on lower plot |
+/// 
 // @TODO: Add Drawing option to force or unforce hiding of label.
 // @TODO: Add option to determine if upper or lower should be hidden
 void TRatioPlot::Draw(Option_t *option)
 {
 
-   //__("TRatioPlot::Draw called");
+   TString drawOpt = option;
+
+   if (drawOpt.Contains("nogrid")) {
+      drawOpt.ReplaceAll("nogrid", "");
+      fShowGridlines = kFALSE;
+   } else if (drawOpt.Contains("grid")) {
+      drawOpt.ReplaceAll("grid", "");
+      fShowGridlines = kTRUE;
+   }
+   
 
    TVirtualPad *padsav = gPad;
    fParentPad = gPad;
