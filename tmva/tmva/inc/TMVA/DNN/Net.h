@@ -375,7 +375,7 @@ auto TNet<Architecture_t, Layer_t>::GetNFlops()
 //______________________________________________________________________________
 template<typename Architecture_t, typename Layer_t>
 void TNet<Architecture_t, Layer_t>::SetDropoutProbabilities(
-    const std::vector<Scalar_t> & probabilities)
+    const std::vector<Double_t> & probabilities)
 {
    for (size_t i = 0; i < fLayers.size(); i++) {
       if (i < probabilities.size()) {
