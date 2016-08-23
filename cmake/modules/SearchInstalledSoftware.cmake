@@ -339,7 +339,7 @@ if(builtin_afterimage)
     
   ExternalProject_Get_Property(AFTERIMAGE INSTALL_DIR)
   set(AFTERIMAGE_INCLUDE_DIR ${INSTALL_DIR}/include/libAfterImage)
-  set(AFTERIMAGE_LIBRARIES ${INSTALL_DIR}/lib/libAfterImage${CMAKE_STATIC_LIBRARY_SUFFIX})
+  set(AFTERIMAGE_LIBRARIES ${INSTALL_DIR}/${_LIBDIR_DEFAULT}/libAfterImage${CMAKE_STATIC_LIBRARY_SUFFIX})
 endif()
 
 #---Check for GSL library---------------------------------------------------------------
