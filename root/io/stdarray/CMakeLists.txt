@@ -12,11 +12,12 @@ ROOTTEST_ADD_TEST(modelReadDict2TFile
 #                   OUTREF modelReadDict2.ref
 #                   DEPENDS roottest-root-io-stdarray-aclicModelWrite)
 
+# The dependency is there not to compile the macros simultaneously
 ROOTTEST_ADD_TEST(modelReadDictTFile
                   MACRO  modelReadDict.C+
                   MACROARG "\"model.root\""
                   OUTREF modelReadDict.ref
-                  DEPENDS roottest-root-io-stdarray-aclicModelWrite)
+                  DEPENDS roottest-root-io-stdarray-modelReadDictTXMLFile)
 
 ROOTTEST_ADD_TEST(modelReadDictTXMLFile
                   MACRO  modelReadDict.C+
