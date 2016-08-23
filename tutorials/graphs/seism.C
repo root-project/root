@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_graphs
-/// \notebook
+/// \notebook -js
 /// Strip chart example.
 ///
 /// \macro_image
@@ -25,8 +25,6 @@ void seism() {
    gStyle->SetTimeOffset(dtime.Convert());
 
    TCanvas *c1 = new TCanvas("c1","Time on axis",10,10,1000,500);
-   c1->SetFillColor(42);
-   c1->SetFrameFillColor(33);
    c1->SetGrid();
 
    Float_t bintime = 1; //one bin = 1 second. change it to set the time scale

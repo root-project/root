@@ -665,8 +665,8 @@ int testRandom3() {
 }
 
 
-void testrandom(double /* scale */ =0.1)
+void testrandom()
 {
-  testRandom3();
-  testAll();
+   testRandom3();
+   testAll();
 }

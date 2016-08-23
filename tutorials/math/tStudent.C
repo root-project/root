@@ -26,7 +26,8 @@
 void tStudent()
 {
 
-   //gSystem->Load("libMathMore");
+   /* gSystem->Load("libMathMore");*/
+
    // this is the way to force load of MathMore in Cling
    ROOT::Math::MathMoreLibrary::Load();
 

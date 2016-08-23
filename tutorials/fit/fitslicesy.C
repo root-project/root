@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_fit
-/// \notebook
+/// \notebook -js
 /// Illustrates how to use the TH1::FitSlicesY function
 /// It uses the TH2F histogram generated in macro hsimple.C
 /// It invokes FitSlicesY and draw the fitted "mean" and "sigma"

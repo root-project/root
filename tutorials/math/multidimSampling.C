@@ -97,7 +97,7 @@ void multidimSampling() {
 
 
    const int N = 10000;
-   //const int NBin = 1000;
+   /*const int NBin = 1000;*/
    const int DIM = 4;
 
    double xmin[] = {-10,-10,-10, -10};
@@ -124,7 +124,7 @@ void multidimSampling() {
       else if (i < 2*DIM) f->SetParName(i, name.Format("sig_%d",i-2*DIM+1) );
    }
 
-   //ROOT::Math::DistSamplerOptions::SetDefaultSampler("Foam");
+   /*ROOT::Math::DistSamplerOptions::SetDefaultSampler("Foam");*/
    DistSampler * sampler = Factory::CreateDistSampler();
    if (sampler == 0) {
       Info("multidimSampling","Default sampler %s is not available try with Foam ",
