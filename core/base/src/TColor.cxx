@@ -158,7 +158,7 @@ kSpring = 820, kTeal   = 840, kAzure   =  860, kViolet = 880,  kPink   = 900
 
 Note the special role of color `kWhite` (color number 0). It is the default
 background color also. For instance in a PDF or PS files (as paper is usually white)
-it is simply not pained. To have a white color behaving like the other color the
+it is simply not painted. To have a white color behaving like the other color the
 simplest is to define an other white color not attached to the color index 0:
 
 ~~~ {.cpp}
