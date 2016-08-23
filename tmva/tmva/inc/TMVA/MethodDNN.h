@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$
-// Author: Peter Speckmayer
+// Authors: Peter Speckmayer, Aditya Sharma
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -10,7 +10,8 @@
  * Description:                                                                   *
  *      NeuralNetwork                                                             *
  *                                                                                *
- * Authors (alphabetical):                                                        *
+ * Authors (alphabetical):
+ *      Aditya Sharma         <adisharma075@gmail.com>  - CERN, Switzerland
  *      Peter Speckmayer      <peter.speckmayer@gmx.at> - CERN, Switzerland       *
  *                                                                                *
  * Copyright (c) 2005-2015:                                                       *
