@@ -1,5 +1,6 @@
 ## \file
 ## \ingroup tutorial_pyroot
+## \notebook
 ##  Draw the geometry using the x3d viewver.
 ##  Note that this viewver may also be invoked from the "View" menu in
 ##  the canvas tool bar

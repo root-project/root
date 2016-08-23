@@ -1,5 +1,6 @@
 ## \file
 ## \ingroup tutorial_pyroot
+## \notebook -js
 ## Simple example illustrating how to use the C++ interpreter
 ##
 ## \macro_image

@@ -11,7 +11,7 @@ import ROOT
 
 ROOT.SetSignalPolicy( ROOT.kSignalFast )
 
-### macro files
+## macro files
 macros = [
    'framework.py', 'hsimple.py', 'hsum.py', 'formula1.py',
    'fillrandom.py','fit1.py', 'h1draw.py', 'graph.py',
@@ -19,7 +19,7 @@ macros = [
    'geometry.py', 'na49view.py', 'file.py',
    'ntuple1.py', 'rootmarks.py' ]
 
-### note: this function is defined in tutorials/rootlogon.C
+## note: this function is defined in tutorials/rootlogon.C
 def bexec( dir, macro, bench ):
    if ROOT.gROOT.IsBatch():
       print 'Processing benchmark: %s\n' % macro
@@ -41,12 +41,12 @@ def bexec( dir, macro, bench ):
    bench.Update()
 
 
-### --------------------------------------------------------------------------
+## --------------------------------------------------------------------------
 if __name__ == '__main__':
 
    try:
     # convenience, allowing to run this file from a different directory
-      macrodir = os.path.dirname( os.path.join( os.getcwd(), __file__ ) )
+      macrodir = os.path.expandvars('$ROOTSYS/tutorials/pyroot/')
    except NameError:
       macrodir = ''      # in case of p2.2
 
