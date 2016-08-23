@@ -16,7 +16,7 @@ Test coverage check ([coveralls](https://coveralls.io/github/civetweb/civetweb))
 
 [![Coverage Status](https://coveralls.io/repos/github/civetweb/civetweb/badge.svg?branch=master)](https://coveralls.io/github/civetweb/civetweb?branch=master)
 
-Static source code analysis ([Coverity](https://scan.coverity.com/projects/5784)): 
+Static source code analysis ([Coverity](https://scan.coverity.com/projects/5784)):
 
 [![Coverity Scan Build Status](https://scan.coverity.com/projects/5784/badge.svg)](https://scan.coverity.com/projects/5784)
 
@@ -144,8 +144,8 @@ However, in August 16, 2013, the [license of Mongoose has been changed](https://
 after writing and distributing the original code this project is based on.
 The license change used to be described on the Mongoose Wikipedia page as well, but it's getting deleted there regularly.
 
-CivetWeb has been forked from the last MIT version of Mongoose. 
-Since 2013, CivetWeb has seen many improvements from various authors 
+CivetWeb has been forked from the last MIT version of Mongoose.
+Since 2013, CivetWeb has seen many improvements from various authors
 (Copyright (c) 2013-2016 the CivetWeb developers, MIT license).
 A list of authors can be found in [CREDITS.md](https://github.com/civetweb/civetweb/blob/master/CREDITS.md).
 
