@@ -30,8 +30,8 @@ auto testMinimization<TCpu<Double_t>>()
    using Net_t    = TNet<TCpu<Double_t>>;
 
    size_t nSamples  = 100000;
-   size_t nFeatures = 28;
-   size_t batchSize = 1024;
+   size_t nFeatures = 20;
+   size_t batchSize = 4096;
 
    TMatrixT<Double_t> XTrain(nSamples, nFeatures), YTrain(nSamples, 1),
     XTest(batchSize, nFeatures), YTest(batchSize, 1), W(1, nFeatures);
