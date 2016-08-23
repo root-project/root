@@ -760,12 +760,28 @@ void TRatioPlot::CreateGridline()
    
    fLowerPad->cd();
 
-   int curr = fGridlines.size();
-   int dest = fGridlinePositions.size();
+   unsigned int curr = fGridlines.size();
+   unsigned int dest = fGridlinePositions.size();
+
+   Double_t lowYFirst = fLowerPad->GetUymin();
+   Double_t lowYLast = fLowerPad->GetUymax();
+
+   double y;
+   int outofrange = 0;
+   for (unsigned int i=0;i<fGridlinePositions.size();++i) {
+      y = fGridlinePositions.at(i); 
+      
+      if (y < lowYFirst || lowYLast < y) {
+         ++outofrange;
+      }
+
+   }
+
+   dest = dest - outofrange;
 
    if (curr > dest) {
       // we have too many
-      for (int i=0;i<curr-dest;++i) {
+      for (unsigned int i=0;i<curr-dest;++i) {
          // kill the line
          delete fGridlines.at(i);
          // remove it from list
@@ -773,7 +789,7 @@ void TRatioPlot::CreateGridline()
       }
    } else if (curr < dest) {
       // we don't have enough 
-      for (int i=0;i<dest-curr;++i) {
+      for (unsigned int i=0;i<dest-curr;++i) {
          TLine *newline = new TLine(0, 0, 0, 0);
          newline->SetLineStyle(2);
          newline->Draw();
@@ -783,22 +799,32 @@ void TRatioPlot::CreateGridline()
       // nothing to do
    }
    
+
+
    Double_t first = fSharedXAxis->GetBinLowEdge(fSharedXAxis->GetFirst());
    Double_t last = fSharedXAxis->GetBinUpEdge(fSharedXAxis->GetLast());
 
 
    TLine *line;
-   double y;
-   for (int i=0;i<dest;++i) {
-      line = fGridlines.at(i); 
+   unsigned int skipped = 0;
+   for (unsigned int i=0;i<fGridlinePositions.size();++i) {
       y = fGridlinePositions[i];
+
+      
+      if (y < lowYFirst || lowYLast < y) {
+         // this is one of the ones that was out of range
+         ++skipped;
+         continue;
+      }
+
+      line = fGridlines.at(i-skipped); 
 
       line->SetX1(first);
       line->SetX2(last);
       line->SetY1(y);
       line->SetY2(y);
-
    }
+
 
    padsav->cd();
 }
@@ -1122,7 +1148,6 @@ void TRatioPlot::CreateVisualAxes()
    TVirtualPad *padsav = gPad;
    fTopPad->cd();
 
-//   __(__PRETTY_FUNCTION__ << " called");
 
    // figure out where the axis has to go.
    // Implicit assumption is, that the top pad spans the full other pads
