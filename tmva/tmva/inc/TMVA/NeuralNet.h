@@ -1,6 +1,6 @@
 /**
  * @file NeuralNet
- * @author  Peter Speckmayer
+ * @author  Peter Speckmayer, Aditya Sharma
  * @version 1.0
  *
  * @section LICENSE
