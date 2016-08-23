@@ -18,7 +18,7 @@
 #include "TMVA/DNN/Architectures/Cuda.h"
 #include "TMVA/DNN/Architectures/Cuda/Device.h"
 #include "TMVA/DNN/Architectures/Cuda/Kernels.h"
-#include "Kernels.cu"
+#include "Kernels.cuh"
 
 namespace TMVA {
 namespace DNN  {
