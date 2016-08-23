@@ -149,7 +149,7 @@ public:
    void SetRegularization(ERegularization R) {fR = R;}
    void SetLossFunction(ELossFunction J)     {fJ = J;}
    void SetWeightDecay(Scalar_t weightDecay) {fWeightDecay = weightDecay;}
-   void SetDropoutProbabilities(const std::vector<Scalar_t> & probabilities);
+   void SetDropoutProbabilities(const std::vector<Double_t> & probabilities);
 
    void Print();
 };
