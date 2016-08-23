@@ -36,7 +36,11 @@ HTTPMAP      := $(HTTPLIB:.$(SOEXT)=.rootmap)
 
 HTTPCXXFLAGS = $(HTTPINCDIR:%=-I%) $(FASTCGIINCDIR:%=-I%) $(FASTCGIFLAGS) -DUSE_WEBSOCKET
 
-HTTPLIBEXTRA += $(ZLIBLIBDIR) $(ZLIBCLILIB) -lrt
+HTTPLIBEXTRA += $(ZLIBLIBDIR) $(ZLIBCLILIB)
+
+ifneq ($(PLATFORM),win32)
+HTTPLIBEXTRA += -lrt
+endif
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(HTTPH))
