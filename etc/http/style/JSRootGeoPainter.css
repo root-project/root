@@ -204,9 +204,13 @@
 }
 
 .jsroot .geovis_this {
-    border: 1px solid green;
+    background-color: lightgreen;
 }
 
 .jsroot .geovis_daughters {
+    background-color: lightblue;
+}
+
+.jsroot .geovis_all {
     background-color: yellow;
 }
