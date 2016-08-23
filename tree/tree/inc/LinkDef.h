@@ -66,6 +66,7 @@
 #pragma link C++ class TQueryResult+;
 #pragma link C++ class TBranchSTL+;
 #pragma link C++ class TIndArray+;
+#pragma link C++ class TSimpleAnalysis+;
 
 #pragma link C++ enum TTree::ESetBranchAddressStatus;
 
