@@ -5403,7 +5403,7 @@ Long64_t TH1::Merge(TCollection *li)
                SetCanExtend(bitMaskX | bitMaskY | bitMaskZ );
             }
             if (!CanExtendAllAxes()) { 
-               Info("Merge","Histogram %s to be merged has label but axis cannot be extended - using bin numeric mode to merge. Call TH1::SetExtendAllAxes() if want to merge using label mode",GetName());
+//               Info("Merge","Histogram %s to be merged has label but axis cannot be extended - using bin numeric mode to merge. Call TH1::SetExtendAllAxes() if want to merge using label mode",GetName());
                allHaveLabels = kFALSE;
             }
          }
