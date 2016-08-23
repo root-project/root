@@ -536,9 +536,10 @@ Float_t TRatioPlot::GetSeparationMargin()
 /// | Option     | Description                                                  |
 /// | ---------- | ------------------------------------------------------------ |
 /// | grid / nogrid | enable (default) or disable drawing of dashed lines on lower plot |
+/// | hideup     | hides the first label of the upper axis if there is not enough space |
+/// | hidelow    | hides the last label of the lower axis if there is not enough space |
+/// | nohide     | does not hide a label if there is not enough space |
 /// 
-// @TODO: Add Drawing option to force or unforce hiding of label.
-// @TODO: Add option to determine if upper or lower should be hidden
 
 void TRatioPlot::Draw(Option_t *option)
 {
@@ -552,6 +553,17 @@ void TRatioPlot::Draw(Option_t *option)
       drawOpt.ReplaceAll("grid", "");
       fShowGridlines = kTRUE;
    }
+   
+   if (drawOpt.Contains("hideup")) {
+      fHideLabelMode = TRatioPlot::HideLabelMode::kHideUp;  
+   } else if (drawOpt.Contains("hidelow")) {
+      fHideLabelMode = TRatioPlot::HideLabelMode::kHideLow;   
+   } else if (drawOpt.Contains("nohide")) {
+      fHideLabelMode = TRatioPlot::HideLabelMode::kNoHide;
+   } else {
+      fHideLabelMode = TRatioPlot::HideLabelMode::kHideLow; // <- default   
+   }
+   
    
 
    TVirtualPad *padsav = gPad;
@@ -1259,7 +1271,15 @@ void TRatioPlot::CreateVisualAxes()
    // hide first label of upper y axis
 
    if (GetSeparationMargin() < 0.025) {
-      fLowerGYaxis->SetLabelAttributes(-1, -1, 0);
+      
+      if (fHideLabelMode != TRatioPlot::HideLabelMode::kNoHide) {
+         if (fHideLabelMode == TRatioPlot::HideLabelMode::kHideUp) {
+            fUpperGYaxis->SetLabelAttributes(1, -1, 0);
+         } else if (fHideLabelMode == TRatioPlot::HideLabelMode::kHideLow) {
+            fLowerGYaxis->SetLabelAttributes(-1, -1, 0);
+         }
+      }
+
    } 
 
 
