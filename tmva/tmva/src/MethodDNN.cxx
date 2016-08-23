@@ -700,7 +700,7 @@ void TMVA::MethodDNN::TrainGpu()
 
       using DataLoader_t = TDataLoader<TMVAInput_t, TCuda<>>;
 
-      size_t nThreads = 2;
+      size_t nThreads = 1;
       DataLoader_t trainingData(GetEventCollection(Types::kTraining),
                                 nTrainingSamples,
                                 net.GetBatchSize(),
