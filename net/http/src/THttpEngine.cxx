@@ -41,6 +41,8 @@ THttpEngine::~THttpEngine()
 }
 
 
+ClassImp(THttpWSEngine)
+
 //______________________________________________________________________________
 THttpWSEngine::THttpWSEngine(const char* name, const char* title) :
    TNamed(name, title),
