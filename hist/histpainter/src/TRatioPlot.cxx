@@ -58,22 +58,7 @@ Available options are:
 | grid / nogrid | enable (default) or disable drawing of dashed lines on lower plot |
 
 Begin_Macro(source)
-{
-   gStyle->SetOptStat(0);   
-   auto c1 = new TCanvas("c1", "A ratio example");
-   auto h1 = new TH1D("h1", "h1", 50, 0, 10);
-   auto h2 = new TH1D("h2", "h2", 50, 0, 10);
-   auto f1 = new TF1("f1", "exp(- x/[0] )");
-   f1->SetParameter(0, 3);
-   h1->FillRandom("f1", 1900);
-   h2->FillRandom("f1", 2000); 
-   h1->Sumw2();
-   h2->Scale(1.9 / 2.);
-   auto rp = new TRatioPlot(h1, h2, "rp", "rp", "pois", "hist", "E", "AP", 1., 1.);
-   rp->SetTicks(0, 1);
-   rp->Draw();
-   return c1;
-}
+../../../tutorials/hist/ratioplot1.C
 End_Macro
 
 
@@ -92,20 +77,7 @@ is above or below the histogram bin content.
 
 
 Begin_Macro(source)
-{
-   gStyle->SetOptStat(0);   
-   auto c1 = new TCanvas("c1", "fit residual simple"); 
-   auto h1 = new TH1D("h1", "h1", 50, -5, 5);
-   h1->FillRandom("gaus", 2000);
-   h1->Fit("gaus");
-   c1->Clear(); // Fit does not draw into correct pad
-   auto rp1 = new TRatioPlot((TH1*)h1->Clone(), "rp1", "rp1");
-   rp1->Draw();
-   rp1->GetLowYaxis()->SetTitle("ratio");
-   rp1->GetUpYaxis()->SetTitle("entries");
-   c1->Update();
-   return c1;
-}   
+../../../tutorials/ratioplot2.C   
 End_Macro
 
 ## Access to internal parts
@@ -617,22 +589,7 @@ void TRatioPlot::Draw(Option_t *option)
 /// graphs are only created then.
 ///
 /// Begin_Macro(source)
-/// {
-///    gStyle->SetOptStat(0);
-///    auto c1 = new TCanvas("c1", "fit residual simple");
-///    c1->SetLogy();
-///    auto h1 = new TH1D("h1", "h1", 50, -5, 5);
-///    h1->FillRandom("gaus", 2000);
-///    h1->Fit("gaus");
-///    h1->SetMinimum(0.001);
-///    c1->Clear();
-///    auto rp1 = new TRatioPlot(h1, "rp1", "rp1");
-///    rp1->Draw();
-///    rp1->GetLowerRefGraph()->SetMinimum(-2);
-///    rp1->GetLowerRefGraph()->SetMaximum(2);
-///    c1->Update();
-///    return c1;
-/// }
+/// ../../../tutorials/hist/ratioplot3.C
 /// End_Macro
 TGraph* TRatioPlot::GetLowerRefGraph() 
 {
@@ -1668,22 +1625,7 @@ void TRatioPlot::SetLogy(Int_t value)
 /// \param gridlines Vector of y positions for the dashes lines
 /// Can be used to override existing default lines (or disable them).
 /// Begin_Macro(source)
-/// {
-///    gStyle->SetOptStat(0);
-///    auto c1 = new TCanvas("c1", "fit residual simple");
-///    auto h1 = new TH1D("h1", "h1", 50, -5, 5);
-///    h1->FillRandom("gaus", 2000);
-///    h1->Fit("gaus");
-///    c1->Clear();
-///    auto rp1 = new TRatioPlot(h1, "rp1", "rp1");
-///    std::vector<double> lines = {-3, -2, -1, 0, 1, 2, 3};
-///    rp1->SetGridlines(lines);
-///    rp1->Draw();
-///    rp1->GetLowerRefGraph()->SetMinimum(-4);
-///    rp1->GetLowerRefGraph()->SetMaximum(4);
-///    c1->Update();
-///    return c1;
-/// }
+/// ../../../tutorials/hist/ratioplot4.C
 /// End_Macro
 void TRatioPlot::SetGridlines(std::vector<double> gridlines) 
 {
@@ -1709,19 +1651,7 @@ void TRatioPlot::SetGridlines(Double_t *gridlines, Int_t numGridlines)
 /// \param ci2 Color of the 2 sigma band
 /// Sets the color of the 1 and 2 sigma bands in the fit residual case.
 /// Begin_Macro(source)
-/// {
-///    gStyle->SetOptStat(0);
-///    auto c1 = new TCanvas("c1", "fit residual simple");
-///    auto h1 = new TH1D("h1", "h1", 50, -5, 5);
-///    h1->FillRandom("gaus", 2000);
-///    h1->Fit("gaus");
-///    c1->Clear();
-///    auto rp1 = new TRatioPlot(h1, "rp1", "rp1", "nogrid");
-///    rp1->SetConfidenceIntervalColors(kBlue, kRed);
-///    rp1->Draw();
-///    c1->Update();
-///    return c1;
-/// }
+/// ../../../tutorials/hist/ratioplot5.C
 /// End_Macro
 void TRatioPlot::SetConfidenceIntervalColors(Color_t ci1, Color_t ci2)
 {
