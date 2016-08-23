@@ -70,7 +70,7 @@ gTypesList = ["void", "int", "Int_t", "TF1", "string", "bool", "double", "float"
 # -------- Fuction definitions---------
 # -------------------------------------
 
-def unindenter(string):
+def unindenter(string, spaces = 3):
     """
     Returns string with each line unindented by 3 spaces. If line isn't indented, it stays the same.
     >>> unindenter("   foobar")
@@ -85,8 +85,8 @@ def unindenter(string):
     newstring = ''
     lines = string.splitlines()
     for line in lines:
-        if line.startswith("   "):
-            newstring += (line[3:] + "\n")
+        if line.startswith(spaces*' '):
+            newstring += (line[spaces:] + "\n")
         else:
             newstring += (line + "\n")
 
@@ -194,6 +194,31 @@ def pythonComments(text):
     return newtext
 
 
+def pythonMainFunction(text):
+    lines = text.splitlines()
+    functionContentRe = re.compile('def %s\\(.*\\):' % tutName , flags = re.DOTALL | re.MULTILINE)
+    newtext = ''
+    inMainFunction = False
+    hasMainFunction = False
+    for line in lines:
+        
+        if hasMainFunction:
+            if line.startswith("""if __name__ == "__main__":""") or line.startswith("""if __name__ == '__main__':"""):
+                break
+        match = functionContentRe.search(line)
+        if inMainFunction and not line.startswith("    ") and line != "":
+            inMainFunction = False
+        if match:
+            inMainFunction = True
+            hasMainFunction = True
+        else:
+            if inMainFunction:
+                newtext += (line[4:] + '\n')
+            else:
+                newtext += (line + '\n')
+    return newtext
+
+ 
 def readHeaderCpp(text):
     """
     Extract author and description from header, eliminate header from text. Also returns
@@ -393,7 +418,7 @@ def split(text):
     helpers = []
     main = ""
     for matchString in [match.group() for match in functionMatches]:
-        if tutName == findFunctionName(matchString):  # if the name of the funcitn is that of the macro
+        if tutName == findFunctionName(matchString):  # if the name of the function is that of the macro
             main = matchString
         else:
             helpers.append(matchString)
@@ -642,6 +667,7 @@ def mainfunction(text):
         text += ("\n# <codecell>\n" + main)
 
     if extension == "py":
+        text = pythonMainFunction(text)
         text = pythonComments(text)  # Convert comments into Markdown cells
     
 
