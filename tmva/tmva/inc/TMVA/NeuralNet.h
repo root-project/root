@@ -61,7 +61,7 @@ namespace TMVA
 
       //    double gaussDoubl (edouble mean, double sigma);
 
-      int BUCKET_SIZE = 8; // ------------------------------- Declare Bucket Size --------------------------------------------
+      const int BUCKET_SIZE = 8; // ------------------------------- Declare Bucket Size --------------------------------------------
 
       double gaussDouble (double mean, double sigma);
       double uniformDouble (double minValue, double maxValue);
@@ -267,12 +267,12 @@ namespace TMVA
 
 
 
-      template <typename ItValue, typename ItFunction>
-         void applyFunctions (ItValue itValue, ItValue itValueEnd, ItFunction itFunction);
+      template <typename ItValue, typename Fnc>
+         void applyFunctions (ItValue itValue, ItValue itValueEnd, Fnc fnc);
 
 
-      template <typename ItValue, typename ItFunction, typename ItInverseFunction, typename ItGradient>
-         void applyFunctions (ItValue itValue, ItValue itValueEnd, ItFunction itFunction, ItInverseFunction itInverseFunction, int itGradient, std::vector<double>& gradientBucket);
+      template <typename ItValue, typename Fnc, typename ItInverseFunction>
+         void applyFunctions (ItValue itValue, ItValue itValueEnd, Fnc fnc, ItInverseFunction itInverseFunction, int itGradient, std::vector<double>& gradientBucket);
 
 
 
@@ -390,7 +390,7 @@ namespace TMVA
 
 
       template <typename ItOutput, typename ItTruth, typename ItDelta, typename ItInvActFnc>
-         double sumOfSquares (ItOutput itOutputBegin, ItOutput itOutputEnd, ItTruth itTruthBegin, ItTruth /*itTruthEnd*/, int itDelta, int itDeltaEnd, std::vector<double>& deltaBucket, InvFnc invFnc, double patternWeight);
+         double sumOfSquares (ItOutput itOutputBegin, ItOutput itOutputEnd, ItTruth itTruthBegin, ItTruth /*itTruthEnd*/, int itDelta, int itDeltaEnd, std::vector<double>& deltaBucket, ItInvActFnc itInvActFnc, double patternWeight);
 
 
 
@@ -643,8 +643,6 @@ namespace TMVA
 
          std::vector<double> m_deltaBucket; ///< stores the deltas for the DNN training 
          std::vector<double> m_valueGradientBucket; ///< stores the gradients of the values (nodes)
-
-         Net::initializeGradientsDeltas(std::back_inserter (m_valueGradientBucket), std::back_inserter (m_deltaBucket)); // initialize delta and gradient buckets.
 
          std::vector<double> m_values; ///< stores the values of the nodes in this layer
          const_dropout_iterator m_itDropOut; ///< iterator to a container indicating if the corresponding node is to be dropped
@@ -1110,7 +1108,7 @@ namespace TMVA
           *
           * 
           */
-         template <typename WeightsType, typename DropProbabilities>
+         template <typename DropProbabilities>
             void dropOutWeightFactor (std::vector<double>& weightBucket,
                                       const DropProbabilities& drops, 
                                       bool inverse = false);
@@ -1151,28 +1149,32 @@ namespace TMVA
           * \param dropContainer the configuration for DNN drop-out
           */
          template <typename Iterator, typename Minimizer>
-            inline double trainCycle (Minimizer& minimizer, std::vector<double>& weightBucket, 
+            inline double trainCycle (Minimizer& minimizer, std::vector<double>& weightBucket, std::vector<double>& gradientBucket,
 			                        Iterator itPatternBegin, Iterator itPatternEnd,
                               Settings& settings,
                               DropContainer& dropContainer);
+
+    template <typename LayerContainer>
+        void forwardPattern (const LayerContainer& _layers,
+                             std::vector<LayerData>& layerData, std::vector<double>& weightBucket) const;
 
          size_t numWeights (size_t trainingStartLayer = 0) const; ///< returns the number of weights in this net
     size_t numNodes   (size_t trainingStartLayer = 0) const; ///< returns the number of nodes in this net
 
          template <typename Weights>
-            std::vector<double> compute (const std::vector<double>& input, const std::vector<double>& weightBucket) const; ///< compute the net with the given input and the given weights
+            std::vector<double> compute (const std::vector<double>& input, std::vector<double>& weightBucket) const; ///< compute the net with the given input and the given weights
 
-         template <typename Weights, typename PassThrough>
-            double operator() (PassThrough& settingsAndBatch, const Weights& weights) const; ///< execute computation of the DNN for one mini-batch (used by the minimizer); no computation of gradients
+         template <typename PassThrough>
+            double operator() (PassThrough& settingsAndBatch, std::vector<double>& weightBucket) const; ///< execute computation of the DNN for one mini-batch (used by the minimizer); no computation of gradients
 
-         template <typename Weights, typename PassThrough, typename OutContainer>
-            double operator() (PassThrough& settingsAndBatch, const Weights& weights, ModeOutput eFetch, OutContainer& outputContainer) const; ///< execute computation of the DNN for one mini-batch; helper function
+         template <typename PassThrough, typename OutContainer>
+            double operator() (PassThrough& settingsAndBatch, std::vector<double>& weightBucket, ModeOutput /*eFetch*/, OutContainer& outputContainer) const; ///< execute computation of the DNN for one mini-batch; helper function
     
-         template <typename Weights, typename Gradients, typename PassThrough>
-        double operator() (PassThrough& settingsAndBatch, Weights& weights, Gradients& gradients) const;  ///< execute computation of the DNN for one mini-batch (used by the minimizer); returns gradients as well
+         template <typename Gradients, typename PassThrough>
+        double operator() (PassThrough& settingsAndBatch, std::vector<double>& weightBucket, std::vector<double>& gradientBucket) const;  ///< execute computation of the DNN for one mini-batch (used by the minimizer); returns gradients as well
 
-         template <typename Weights, typename Gradients, typename PassThrough, typename OutContainer>
-        double operator() (PassThrough& settingsAndBatch, Weights& weights, Gradients& gradients, ModeOutput eFetch, OutContainer& outputContainer) const;
+         template <typename Gradients, typename PassThrough, typename OutContainer>
+        double operator() (PassThrough& settingsAndBatch, std::vector<double>& weightBucket, std::vector<double>& gradientBucket, ModeOutput eFetch, OutContainer& outputContainer) const;
 
 
     template <typename LayerContainer, typename DropContainer, typename ItWeight, typename ItGradient>
@@ -1185,9 +1187,7 @@ namespace TMVA
                                                               int itGradientEnd,
                                                               size_t& totalNumWeights) const;
 
-    template <typename LayerContainer>
-        void forwardPattern (const LayerContainer& _layers,
-                             std::vector<LayerData>& layerData, std::vector<double>& weightBucket) const;
+
 
 
     template <typename LayerContainer, typename LayerPatternContainer>
@@ -1195,7 +1195,7 @@ namespace TMVA
                            LayerPatternContainer& layerPatternData,
                            std::vector<double>& valuesMean,
                            std::vector<double>& valuesStdDev,
-                           size_t trainFromLayer) const;
+                           size_t trainFromLayer, std::vector<double>& weightBucket, std::vector<double>& gradientBucket) const;
     
     template <typename OutputContainer>
         void fetchOutput (const LayerData& lastLayerData, OutputContainer& outputContainer) const;
@@ -1228,7 +1228,7 @@ namespace TMVA
 			     int itWeightBegin, int itWeightEnd, 
                                      int itGradientBegin, int itGradientEnd, 
                                      size_t trainFromLayer, 
-                                     OutContainer& outputContainer, bool fetchOutput, std::vector<double>& weightBucket) const;
+                                     OutContainer& outputContainer, bool fetchOutput, std::vector<double>& weightBucket, std::vector<double>& gradientBucket) const;
 
 
     
@@ -1240,12 +1240,12 @@ namespace TMVA
           *
           * 
           */
-         template <typename Container, typename ItWeight>
+         template <typename Container>
             double errorFunction (LayerData& layerData,
                                   LayerData& nextLayerData,
                                   Container truth,
-                                  ItWeight itWeight,
-                                  ItWeight itWeightEnd,
+                                  int itWeight,
+                                  int itWeightEnd,
                                   double patternWeight,
                                   double factorWeightDecay,
                                   EnumRegularization eRegularization) const;
