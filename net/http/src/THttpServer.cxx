@@ -9,6 +9,7 @@
 #include "TImage.h"
 #include "TROOT.h"
 #include "TClass.h"
+#include "TCanvas.h"
 #include "TFolder.h"
 #include "RVersion.h"
 #include "RConfigure.h"
@@ -661,6 +662,57 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
       if (arg->fTopName.Length() > 0) topname = arg->fTopName.Data();
       fSniffer->ScanHierarchy(topname, arg->fPathName.Data(), &store);
       arg->SetJson();
+   } else
+
+   if (filename == "root.websocket") {
+      // handling of web socket
+
+      TCanvas* canv = dynamic_cast<TCanvas*> (fSniffer->FindTObjectInHierarchy(arg->fPathName.Data()));
+
+      if (canv == 0) {
+         // for the moment only TCanvas is used for web sockets
+         arg->Set404();
+      } else
+      if (strcmp(arg->GetMethod(),"WS_CONNECT")==0) {
+
+         if (canv->GetPrimitive("websocket")) {
+            // websocket already exists, ignore all other requests
+            arg->Set404();
+         }
+      } else
+      if (strcmp(arg->GetMethod(),"WS_READY")==0) {
+         THttpWSEngine* wshandle = dynamic_cast<THttpWSEngine*> (arg->TakeWSHandle());
+
+         if (gDebug>0) Info("ProcessRequest","Set WebSocket handle %p", wshandle);
+
+         if (wshandle) wshandle->AssignCanvas(canv);
+
+         // connection is established
+      } else
+      if (strcmp(arg->GetMethod(),"WS_DATA")==0) {
+         // process received data
+
+         THttpWSEngine* wshandle = dynamic_cast<THttpWSEngine*> (canv->GetPrimitive("websocket"));
+         if (wshandle) wshandle->ProcessData(arg);
+
+      } else
+      if (strcmp(arg->GetMethod(),"WS_CLOSE")==0) {
+         // connection is closed, one can remove handle
+
+         THttpWSEngine* wshandle = dynamic_cast<THttpWSEngine*> (canv->GetPrimitive("websocket"));
+
+         if (wshandle) {
+            if (gDebug>0) Info("ProcessRequest","Clear WebSocket handle");
+            wshandle->ClearHandle();
+            wshandle->AssignCanvas(0);
+            delete wshandle;
+         }
+      } else {
+         arg->Set404();
+      }
+
+      return;
+
    } else
 
    if (fSniffer->Produce(arg->fPathName.Data(), filename.Data(), arg->fQuery.Data(), bindata, bindatalen, arg->fContent)) {

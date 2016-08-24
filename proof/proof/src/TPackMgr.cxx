@@ -777,11 +777,12 @@ Int_t TPackMgr::Unpack(const char *pack, TMD5 *sum)
 /// is removed if existing.
 /// Returns 0 on success, <0 otherwise
 
-Int_t TPackMgr::Install(const char *par, Bool_t rmold)
+Int_t TPackMgr::Install(const char *parpath, Bool_t rmold)
 {
    Int_t rc = 0;
 
-   Info("Install", "installing %s ...", par);
+   Info("Install", "installing %s ...", parpath);
+   const char *par = gSystem->ExpandPathName(parpath);
 
    // Does par exists?
    if (gSystem->AccessPathName(par, kReadPermission)) {
