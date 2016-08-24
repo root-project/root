@@ -1,3 +1,13 @@
+/// \file
+/// \ingroup tutorial_hist
+/// Example that shows how you can set the colors of the confidence interval bands by using
+/// the method `TRatioPlot::SetConfidenceIntervalColors.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Paul Gessinger
+
  {
     gStyle->SetOptStat(0);
     auto c1 = new TCanvas("c1", "fit residual simple");

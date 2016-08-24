@@ -1,3 +1,15 @@
+/// \file
+/// \ingroup tutorial_hist
+/// Example creating a simple ratio plot of two histograms using the `pois` division option.
+/// Two histograms are set up and filled with random numbers. The constructor of `TRatioPlot`
+/// takes the to histograms, name and title for the object, drawing options for the histograms (`hist` and `E` in this case)
+/// and a drawing option for the output graph.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Paul Gessinger
+
 {
    gStyle->SetOptStat(0);   
    auto c1 = new TCanvas("c1", "A ratio example");
@@ -9,7 +21,7 @@
    h2->FillRandom("f1", 2000); 
    h1->Sumw2();
    h2->Scale(1.9 / 2.);
-   auto rp = new TRatioPlot(h1, h2, "rp", "rp", "pois", "hist", "E", "AP", 1., 1.);
+   auto rp = new TRatioPlot(h1, h2, "rp", "rp", "pois", "hist", "E", "AP");
    rp->SetTicks(0, 1);
    rp->Draw();
    c1->Update();

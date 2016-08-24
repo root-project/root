@@ -1,3 +1,15 @@
+/// \file
+/// \ingroup tutorial_hist
+/// Example that shows custom dashed lines on the lower plot, specified by a vector of floats. 
+///
+/// By default, dashed lines are drawn at certain points. You can either disable them, or specify
+/// where you want them to appear.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Paul Gessinger
+
  {
     gStyle->SetOptStat(0);
     auto c1 = new TCanvas("c1", "fit residual simple");
