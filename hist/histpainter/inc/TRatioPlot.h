@@ -43,23 +43,23 @@ private:
 
    // @TODO: Comment enums
    enum CalculationMode {
-      kDivideHist = 1,
-      kDivideGraph = 2,
-      kDifference = 3,
-      kFitResidual = 4,
-      kDifferenceSign = 5
+      kDivideHist = 1, ///< Use `TH1::Divide` to create the ratio.
+      kDivideGraph = 2, ///< Use `TGraphAsymmErrors::Divide` to create the ratio.
+      kDifference = 3, ///< Calculate the difference between the histograms.
+      kFitResidual = 4, ///< Calculate the fit residual between the histogram and a fit stored within it.
+      kDifferenceSign = 5 ///< Calculate the difference divided by the error.
    };
 
    enum ErrorMode {
-      kErrorSymmetric = 1,
-      kErrorAsymmetric = 2,
-      kErrorFunc = 3
+      kErrorSymmetric = 1, ///< Use the regular `TH1::GetBinError` as the error
+      kErrorAsymmetric = 2, ///< Use `TH1::GetBinErrorUp` and `TH1::GetBinErrorLow` for the error, depending on y values.
+      kErrorFunc = 3 ///< Use the square root of the function value as the error.
    };
 
    enum HideLabelMode {
-      kHideUp = 1,
-      kHideLow = 2,
-      kNoHide = 3,
+      kHideUp = 1, ///< Hide the first label of the upper y axis when there is low space.
+      kHideLow = 2, ///< Hide the last label of the lower y axis when there is low space.
+      kNoHide = 3, ///< Do not hide labels when there is low space.
    };
 
 
