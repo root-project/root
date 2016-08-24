@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TSimpleAnalysis2
-#define ROOT_TSimpleAnalysis2
+#ifndef ROOT_TSimpleAnalysis
+#define ROOT_TSimpleAnalysis
 
 /** \class TSympleAnalysis
 A TSimpleAnalysis object permit to, given an input file or through
@@ -46,7 +46,7 @@ that the user want to create.
 
 
 
-class TSimpleAnalysis2 {
+class TSimpleAnalysis {
 private:
 
    std::string fInputName;   ///< Name of the input file
@@ -72,7 +72,7 @@ public:
    ///
    /// \param[in] kFile name of the input file that has to be read
 
-   TSimpleAnalysis2(const std::string& kFile) {
+   TSimpleAnalysis(const std::string& kFile) {
       fInputName = kFile;
       in.open(kFile);
       if(!in) {
@@ -89,15 +89,13 @@ public:
    /// \param[in] name name of the tree
    /// \param[in] expressions what is showed in the histograms
 
-   TSimpleAnalysis2(const std::string& output, std::vector<std::string> inputFiles,
+   TSimpleAnalysis(const std::string& output, std::vector<std::string> inputFiles,
                  const std::string& name, std::vector<std::string> expressions) {
-      cout<<"sono entrato nel costruttore parametrico"<<endl;
       fOutputFile=output;
       fTreeName=name;
       for (std::string input: inputFiles)
          fInputFiles.push_back(input);
       for (std::string expr: expressions) {
-         cout<<expr<<endl;
          std::size_t equal=expr.find("=");
          if (equal == std::string::npos) {
             ::Error("TSimpleAnalysis",
@@ -124,15 +122,13 @@ public:
          } else {
             fCut.push_back(expr.substr(cutPos+kCutIntr.size()));
          }
-
-         cout<<expr<<endl;
       }
    }
 
    ////////////////////////////////////////////////////////////////////////////////
    /// Virtual default denstructor
 
-   virtual ~TSimpleAnalysis2(){}
+   virtual ~TSimpleAnalysis(){}
 
    ////////////////////////////////////////////////////////////////////////////////
    /// Tell us if the name of some histograms that will be created are the same
@@ -158,14 +154,9 @@ public:
    /// Return true if the input arguments create the output file correctly
 
    Bool_t Analysis() {
-      cout<<"entro nella funzione"<<endl;
-      cout<<fTreeName.c_str()<<endl;
       TChain chain(fTreeName.c_str());
-      for (const std::string& inputfile: fInputFiles) {
+      for (const std::string& inputfile: fInputFiles)
          chain.Add(inputfile.c_str());
-         cout<<inputfile.c_str()<<endl;
-      }
-      cout<<fOutputFile.c_str()<<endl;
       TFile ofile(fOutputFile.c_str(),"RECREATE");
 
       CheckHNames(fHNames);
@@ -198,14 +189,12 @@ public:
    /// param[in] numbLine number of the input file line
 
    void HandlefExpressionConfig(std::string& line, int& numbLine) {
-      std::size_t equal=line.find("="); // what if no '='
+      std::size_t equal=line.find("=");
       if (equal == std::string::npos) {
          ::Error("TSimpleAnalysis::HandlefExpressionConfig",
                  "Missing '=' in fExpressions in %s:%d",fInputName.c_str(), numbLine);
          throw 1;
       }
-      cout<<endl;
-      cout<<line<<endl;
       std::size_t cutPos=line.find(kCutIntr, equal);
       std::string substring=line.substr(0,equal);
       if (substring.empty()) {
@@ -266,11 +255,9 @@ public:
    Bool_t HandleLines(std::string& line, Int_t& readingSection, Int_t& numbLine) {
 
       if (line.empty() || line.find_first_not_of(" ") == std::string::npos) {
-         cout<<readingSection<<endl;
          if (readingSection == 0 && fCounter == 0)
             return 1;
-         readingSection++; // > kReadingFfExpressions?
-         cout<<readingSection<<endl;
+         readingSection++;
          line = SkipSubsequentEmptyLines(numbLine);
       }
 
@@ -278,14 +265,9 @@ public:
       std::size_t comment = line.find("//");
       if (comment==0)
          return 1;
-      cout<<"comment "<<comment<<endl;
-      if ((comment != 0) || (comment != std::string::npos)) {
-         cout<<line<<endl;
-         if (readingSection == 0)
+      if (((comment != 0) || (comment != std::string::npos)) && readingSection == 0)
             fCounter++;
-      }
          line = line.substr(0,comment);
-      cout<<line<<endl;
       return 0;
 
 
@@ -307,9 +289,6 @@ public:
          if (HandleLines(line,readingSection,numbLine)==1)
             continue;
          line.erase(std::remove(line.begin(),line.end(),' '),line.end());
-         cout<<line<<endl;
-
-
 
          switch (readingSection) {
          case kReadingOutput:
@@ -340,10 +319,11 @@ public:
       }
    }
 
+
    ClassDef(TSimpleAnalysis,0)
 
 };
 
-const std::string TSimpleAnalysis2::kCutIntr="if";
+const std::string TSimpleAnalysis::kCutIntr="if";
 
 #endif
