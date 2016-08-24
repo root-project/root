@@ -3,5 +3,3 @@ hadd compression setting for all ouput: 1
 hadd Source file 1: freidt_CDMeson_0000.root
 hadd Source file 2: freidt_CDMeson_0001.root
 hadd Target path: freidt_merge.root:/
-Info in <TH1I::Merge>: Histogram a10_priv to be merged has label but axis cannot be extended - using bin numeric mode to merge. Call TH1::SetExtendAllAxes() if want to merge using label mode
-Info in <TH1F::Merge>: Histogram c00_statsFlow to be merged has label but axis cannot be extended - using bin numeric mode to merge. Call TH1::SetExtendAllAxes() if want to merge using label mode
