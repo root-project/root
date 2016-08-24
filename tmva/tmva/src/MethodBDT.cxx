@@ -1407,28 +1407,12 @@ void TMVA::MethodBDT::UpdateTargetsRegression(std::vector<const TMVA::Event*>& e
 {
    for (std::vector<const TMVA::Event*>::const_iterator e=fEventSample.begin(); e!=fEventSample.end();e++) {
       if(!first){
-         fWeightedResiduals[*e].first -= fForest.back()->CheckEvent(*e,kFALSE);
+         fLossFunctionEventInfo[*e].predictedValue += fForest.back()->CheckEvent(*e,kFALSE);
       }
       
    }
    
-   fSumOfWeights = 0;
-   vector< std::pair<Double_t, Double_t> > temp;
-   for (std::vector<const TMVA::Event*>::const_iterator e=eventSample.begin(); e!=eventSample.end();e++){
-      temp.push_back(make_pair(fabs(fWeightedResiduals[*e].first),fWeightedResiduals[*e].second));
-      fSumOfWeights += (*e)->GetWeight();
-   }
-   fTransitionPoint = GetWeightedQuantile(temp,0.7,fSumOfWeights);
-
-   Int_t i=0;
-   for (std::vector<const TMVA::Event*>::const_iterator e=eventSample.begin(); e!=eventSample.end();e++) {
- 
-      if(temp[i].first<=fTransitionPoint)
-         const_cast<TMVA::Event*>(*e)->SetTarget(0,fWeightedResiduals[*e].first);
-      else
-         const_cast<TMVA::Event*>(*e)->SetTarget(0,fTransitionPoint*(fWeightedResiduals[*e].first<0?-1.0:1.0));
-      i++;
-   }
+   fLossFunctionBDT->SetTargets(eventSample, fLossFunctionEventInfo);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1478,29 +1462,23 @@ Double_t TMVA::MethodBDT::GradBoost(std::vector<const TMVA::Event*>& eventSample
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Implementation of M_TreeBoost using a Huber loss function as desribed by Friedman 1999
+/// Implementation of M_TreeBoost using any loss function as desribed by Friedman 1999
 
 Double_t TMVA::MethodBDT::GradBoostRegression(std::vector<const TMVA::Event*>& eventSample, DecisionTree *dt )
 {
-   std::map<TMVA::DecisionTreeNode*,Double_t > leaveWeights;
-   std::map<TMVA::DecisionTreeNode*,vector< std::pair<Double_t, Double_t> > > leaves;
-   UInt_t i =0;
+   // get the vector of events for each terminal so that we can calculate the constant fit value in each
+   // terminal node
+   std::map<TMVA::DecisionTreeNode*,vector< TMVA::LossFunctionEventInfo > > leaves;
    for (std::vector<const TMVA::Event*>::const_iterator e=eventSample.begin(); e!=eventSample.end();e++) {
       TMVA::DecisionTreeNode* node = dt->GetEventNode(*(*e));      
-      (leaves[node]).push_back(make_pair(fWeightedResiduals[*e].first,(*e)->GetWeight()));
-      (leaveWeights[node]) += (*e)->GetWeight();
-      i++;
+      (leaves[node]).push_back(fLossFunctionEventInfo[*e]);
    }
 
-   for (std::map<TMVA::DecisionTreeNode*,vector< std::pair<Double_t, Double_t> > >::iterator iLeave=leaves.begin();
+   // calculate the constant fit for each terminal node based upon the events in the node
+   // node (iLeave->first), vector of event information (iLeave->second)
+   for (std::map<TMVA::DecisionTreeNode*,vector< TMVA::LossFunctionEventInfo > >::iterator iLeave=leaves.begin();
         iLeave!=leaves.end();++iLeave){
-      Double_t shift=0,diff= 0;
-      Double_t ResidualMedian = GetWeightedQuantile(iLeave->second,0.5,leaveWeights[iLeave->first]);
-      for(UInt_t j=0;j<((iLeave->second).size());j++){
-         diff = (iLeave->second)[j].first-ResidualMedian;
-         shift+=1.0/((iLeave->second).size())*((diff<0)?-1.0:1.0)*TMath::Min(fTransitionPoint,fabs(diff));
-      }
-      (iLeave->first)->SetResponse(fShrinkage*(ResidualMedian+shift));          
+      (iLeave->first)->SetResponse(fShrinkage*fLossFunctionBDT->Fit(iLeave->second));          
    }
    
    UpdateTargetsRegression(*fTrainSample);
@@ -1512,25 +1490,13 @@ Double_t TMVA::MethodBDT::GradBoostRegression(std::vector<const TMVA::Event*>& e
 
 void TMVA::MethodBDT::InitGradBoost( std::vector<const TMVA::Event*>& eventSample)
 {
-   fSumOfWeights = 0;
    fSepType=NULL; //set fSepType to NULL (regression trees are used for both classification an regression)
-   std::vector<std::pair<Double_t, Double_t> > temp;
    if(DoRegression()){
       for (std::vector<const TMVA::Event*>::const_iterator e=eventSample.begin(); e!=eventSample.end();e++) {
-         fWeightedResiduals[*e]= make_pair((*e)->GetTarget(0), (*e)->GetWeight());
-         fSumOfWeights+=(*e)->GetWeight();
-         temp.push_back(make_pair(fWeightedResiduals[*e].first,fWeightedResiduals[*e].second));
-      }
-      Double_t weightedMedian = GetWeightedQuantile(temp,0.5, fSumOfWeights);
-     
-      //Store the weighted median as a first boosweight for later use
-      fBoostWeights.push_back(weightedMedian);
-      std::map<const TMVA::Event*, std::pair<Double_t, Double_t> >::iterator res = fWeightedResiduals.begin();
-      for (; res!=fWeightedResiduals.end(); ++res ) {
-         //substract the gloabl median from all residuals
-         (*res).second.first -= weightedMedian;  
+         fLossFunctionEventInfo[*e]= TMVA::LossFunctionEventInfo((*e)->GetTarget(0), 0, (*e)->GetWeight());
       }
 
+      fLossFunctionBDT->Init(fLossFunctionEventInfo, fBoostWeights);
       UpdateTargetsRegression(*fTrainSample,kTRUE);
 
       return;
