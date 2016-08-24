@@ -137,7 +137,7 @@ void TRatioPlot::Init(TH1* h1, TH1* h2,
    fH1 = h1;
    fH2 = h2;
 
-   fParentPad = gPad;
+   TVirtualPad *padsav = padsav;
 
    SetupPads();
 
@@ -315,7 +315,6 @@ TRatioPlot::TRatioPlot(TH1* h1, const char *name, const char *title, Option_t *d
       return;
    }
 
-   fParentPad = gPad;
 
    fHistDrawProxy = h1;
 
@@ -373,20 +372,6 @@ void TRatioPlot::SetupPads() {
    fUpperPad = new TPad(TString::Format("%s_%s", fName.Data(), "upper_pad"), "", 0., fSplitFraction, 1., 1.);
    fLowerPad = new TPad(TString::Format("%s_%s", fName.Data(), "lower_pad"), "", 0., 0., 1., fSplitFraction);
 
-   SetLogx(fParentPad->GetLogx());
-   SetLogy(fParentPad->GetLogy());
-
-   fUpperPad->SetLogy(GetLogy());
-   fUpperPad->SetLogx(GetLogx());
-   fLowerPad->SetLogx(GetLogx());
-
-   SetGridx(fParentPad->GetGridx());
-   SetGridy(fParentPad->GetGridy());
-
-   fUpperPad->SetGridx(GetGridx());
-   fUpperPad->SetGridy(GetGridy());
-   fLowerPad->SetGridx(GetGridx());
-   fLowerPad->SetGridy(GetGridy());
 
    SetPadMargins();
 
@@ -568,6 +553,24 @@ void TRatioPlot::Draw(Option_t *option)
 
    TVirtualPad *padsav = gPad;
    fParentPad = gPad;
+
+   SetLogx(fParentPad->GetLogx());
+   SetLogy(fParentPad->GetLogy());
+
+   fUpperPad->SetLogy(GetLogy());
+   fUpperPad->SetLogx(GetLogx());
+   fLowerPad->SetLogx(GetLogx());
+
+   SetGridx(fParentPad->GetGridx());
+   SetGridy(fParentPad->GetGridy());
+
+   fUpperPad->SetGridx(GetGridx());
+   fUpperPad->SetGridy(GetGridy());
+   fLowerPad->SetGridx(GetGridx());
+   fLowerPad->SetGridy(GetGridy());
+ 
+
+
 
    TPad::Draw(option);
 
@@ -1541,7 +1544,7 @@ void TRatioPlot::RangeAxisChanged()
       CreateVisualAxes();
       CreateGridline();
 
-      // @TODO: Fix updating, it's not working if zooming on lower axis
+      // @TODO: Updating is not working when zooming on the lower plot. Axes update, but upper hist only on resize
       fUpperPad->Modified();
       fLowerPad->Modified();
       fTopPad->Modified();
