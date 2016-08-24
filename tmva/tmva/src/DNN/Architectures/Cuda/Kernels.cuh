@@ -28,7 +28,10 @@ namespace Cuda {
 
 //____________________________________________________________________________
 template<typename AFloat>
-__device__ AFloat AtomicAdd(AFloat* address, AFloat val)
+__device__ AFloat AtomicAdd(AFloat* address, AFloat val);
+
+template<>
+__device__ double AtomicAdd(double* address, double val)
 {
    unsigned long long int* address_as_ull = (unsigned long long int*)address;
    unsigned long long int old = *address_as_ull, assumed;
@@ -39,6 +42,12 @@ __device__ AFloat AtomicAdd(AFloat* address, AFloat val)
                                            __longlong_as_double(assumed)));
    } while (assumed != old);
    return __longlong_as_double(old);
+}
+
+template<>
+__device__ float AtomicAdd(float* address, float val)
+{
+   return atomicAdd(address, val);
 }
 
 //____________________________________________________________________________

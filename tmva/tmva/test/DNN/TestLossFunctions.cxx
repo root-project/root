@@ -33,13 +33,13 @@ int main()
     error = testMeanSquaredError<TReference<double>>(10);
     std::cout << "Testing mean squared error loss:     ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
-    if (error > 1e-10)
+    if (error > 1e-3)
         return 1;
 
     error = testMeanSquaredErrorGradients<TReference<double>>(10);
     std::cout << "Testing mean squared error gradient: ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
-    if (error > 1e-10)
+    if (error > 1e-3)
         return 1;
 
     //
@@ -49,12 +49,12 @@ int main()
     error = testCrossEntropy<TReference<double>>(10);
     std::cout << "Testing cross entropy loss:          ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
-    if (error > 1e-10)
+    if (error > 1e-3)
         return 1;
 
     error = testCrossEntropyGradients<TReference<double>>(10);
     std::cout << "Testing mean squared error gradient: ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
-    if (error > 1e-10)
+    if (error > 1e-3)
         return 1;
 }

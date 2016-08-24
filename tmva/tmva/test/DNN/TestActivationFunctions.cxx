@@ -21,19 +21,20 @@ using namespace TMVA::DNN;
 
 int main()
 {
+    using Scalar_t = Double_t;
     std::cout << "Testing Activation Functions:" << std::endl;
 
-    double error;
+    Scalar_t error;
 
     // Identity.
 
-    error = testIdentity<TReference<double>>(10);
+    error = testIdentity<TReference<Scalar_t>>(10);
     std::cout << "Testing identity activation:               ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
     if (error > 1e-10)
         return 1;
 
-    error = testIdentityDerivative<TReference<double>>(10);
+    error = testIdentityDerivative<TReference<Scalar_t>>(10);
     std::cout << "Testing identity activation derivative:    ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
     if (error > 1e-10)
@@ -41,13 +42,13 @@ int main()
 
     // ReLU.
 
-    error = testRelu<TReference<double>>(10);
+    error = testRelu<TReference<Scalar_t>>(10);
     std::cout << "Testing ReLU activation:                   ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
     if (error > 1e-10)
         return 1;
 
-    error = testReluDerivative<TReference<double>>(10);
+    error = testReluDerivative<TReference<Scalar_t>>(10);
     std::cout << "Testing ReLU activation derivative:        ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
     if (error > 1e-10)
@@ -55,13 +56,13 @@ int main()
 
     // Sigmoid.
 
-    error = testSigmoid<TReference<double>>(10);
+    error = testSigmoid<TReference<Scalar_t>>(10);
     std::cout << "Testing Sigmoid activation:                ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
     if (error > 1e-10)
         return 1;
 
-    error = testSigmoidDerivative<TReference<double>>(10);
+    error = testSigmoidDerivative<TReference<Scalar_t>>(10);
     std::cout << "Testing Sigmoid activation derivative:     ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
     if (error > 1e-10)
@@ -69,13 +70,13 @@ int main()
 
     // TanH.
 
-    error = testTanh<TReference<double>>(10);
+    error = testTanh<TReference<Scalar_t>>(10);
     std::cout << "Testing TanH activation:                   ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
     if (error > 1e-10)
         return 1;
 
-    error = testTanhDerivative<TReference<double>>(10);
+    error = testTanhDerivative<TReference<Scalar_t>>(10);
     std::cout << "Testing TanH activation derivative:        ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
     if (error > 1e-10)
@@ -83,13 +84,13 @@ int main()
 
     // Symmetric ReLU.
 
-    error = testSymmetricReluDerivative<TReference<double>>(10);
+    error = testSymmetricReluDerivative<TReference<Scalar_t>>(10);
     std::cout << "Testing Symm. ReLU activation:             ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
     if (error > 1e-10)
         return 1;
 
-    error = testSymmetricReluDerivative<TReference<double>>(10);
+    error = testSymmetricReluDerivative<TReference<Scalar_t>>(10);
     std::cout << "Testing Symm. ReLU activation derivative:  ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
     if (error > 1e-10)
@@ -97,13 +98,13 @@ int main()
 
     // Soft Sign.
 
-    error = testSoftSign<TReference<double>>(10);
+    error = testSoftSign<TReference<Scalar_t>>(10);
     std::cout << "Testing Soft Sign activation:              ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
     if (error > 1e-10)
         return 1;
 
-    error = testSoftSignDerivative<TReference<double>>(10);
+    error = testSoftSignDerivative<TReference<Scalar_t>>(10);
     std::cout << "Testing Soft Sign activation derivative:   ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
     if (error > 1e-10)
@@ -111,13 +112,13 @@ int main()
 
     // Gauss.
 
-    error = testGauss<TReference<double>>(10);
+    error = testGauss<TReference<Scalar_t>>(10);
     std::cout << "Testing Gauss activation:                  ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
     if (error > 1e-10)
         return 1;
 
-    error = testGaussDerivative<TReference<double>>(10);
+    error = testGaussDerivative<TReference<Scalar_t>>(10);
     std::cout << "Testing Gauss activation derivative:       ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
     if (error > 1e-10)
