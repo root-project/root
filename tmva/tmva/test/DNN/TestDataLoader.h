@@ -54,7 +54,6 @@ auto testSum()
    Architecture_t::SumColumns(SumTotal, XArch);
    sumTotal = SumTotal(0,0);
 
-   std::cout << sumTotal << " / " << sum << std::endl;
    return fabs(sumTotal - sum) / sumTotal;
 }
 
