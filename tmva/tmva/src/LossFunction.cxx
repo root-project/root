@@ -39,6 +39,12 @@ TMVA::HuberLossFunction::HuberLossFunction(){
     fSumOfWeights = -9999;
     fQuantile = 0.7;      // the quantile value determines the bulk of the data, e.g. 0.7 defines
                           // the core as the first 70% and the tails as the last 30%
+                          
+   std::cout << "HuberLossFunction::HuberLossFunction" << std::endl;
+   std::cout << "=======================================================" << std::endl << std::endl;
+
+   std::cout << "fSumOfWeights, fTransitionPoint, fQuantile" << std::endl;
+   std::cout << fSumOfWeights << ", " << fTransitionPoint << ", " << fQuantile << std::endl;
 }
 
 TMVA::HuberLossFunction::HuberLossFunction(Double_t quantile){
@@ -46,6 +52,11 @@ TMVA::HuberLossFunction::HuberLossFunction(Double_t quantile){
     fTransitionPoint = -9999;
     fQuantile = quantile;
                           
+   std::cout << "HuberLossFunction::HuberLossFunction" << std::endl;
+   std::cout << "=======================================================" << std::endl << std::endl;
+
+   std::cout << "fSumOfWeights, fTransitionPoint, fQuantile" << std::endl;
+   std::cout << fSumOfWeights << ", " << fTransitionPoint << ", " << fQuantile << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -61,9 +72,15 @@ TMVA::HuberLossFunction::~HuberLossFunction(){
 
 void TMVA::HuberLossFunction::Init(std::vector<LossFunctionEventInfo>& evs){
 
+   std::cout << "HuberLossFunction::Init" << std::endl;
+   std::cout << "=======================================================" << std::endl << std::endl;
+
    // Calculate the residual that separates the core and the tails
    SetSumOfWeights(evs);
    SetTransitionPoint(evs);
+
+   std::cout << "fSumOfWeights, fTransitionPoint, fQuantile" << std::endl;
+   std::cout << fSumOfWeights << ", " << fTransitionPoint << ", " << fQuantile << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -82,20 +99,27 @@ Double_t TMVA::HuberLossFunction::CalculateSumOfWeights(std::vector<LossFunction
 ////////////////////////////////////////////////////////////////////////////////
 /// huber, determine the quantile for a given input
 
-Double_t TMVA::HuberLossFunction::CalculateQuantile(std::vector<LossFunctionEventInfo>& evs, Double_t whichQuantile, Double_t sumOfWeights){
-   Double_t temp = 0.0;
+Double_t TMVA::HuberLossFunction::CalculateQuantile(std::vector<LossFunctionEventInfo>& evs, Double_t whichQuantile, Double_t sumOfWeights, bool abs){
 
    // use a lambda function to tell the vector how to sort the LossFunctionEventInfo data structures
-   // (sort them in ascending order of residual magnitude)
-   std::sort(evs.begin(), evs.end(), [](LossFunctionEventInfo a, LossFunctionEventInfo b){ 
-                                        return TMath::Abs(a.trueValue-a.predictedValue) < TMath::Abs(b.trueValue-b.predictedValue); });
+   // (sort them in ascending order of residual magnitude) if abs is true
+   // otherwise sort them in ascending order of residual
+   if(abs)
+      std::sort(evs.begin(), evs.end(), [](LossFunctionEventInfo a, LossFunctionEventInfo b){ 
+                                           return TMath::Abs(a.trueValue-a.predictedValue) < TMath::Abs(b.trueValue-b.predictedValue); });
+   else
+      std::sort(evs.begin(), evs.end(), [](LossFunctionEventInfo a, LossFunctionEventInfo b){ 
+                                           return (a.trueValue-a.predictedValue) < (b.trueValue-b.predictedValue); });
    UInt_t i = 0;
+   Double_t temp = 0.0;
    while(i<evs.size() && temp <= sumOfWeights*whichQuantile){
       temp += evs[i].weight;
       i++;
    }
    if (i >= evs.size()) return 0.; // prevent uncontrolled memory access in return value calculation 
-   return TMath::Abs(evs[i].trueValue-evs[i].predictedValue);
+
+   if(abs) return TMath::Abs(evs[i].trueValue-evs[i].predictedValue);
+   else return evs[i].trueValue-evs[i].predictedValue; 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -103,7 +127,7 @@ Double_t TMVA::HuberLossFunction::CalculateQuantile(std::vector<LossFunctionEven
 /// which presumably have already been set
 
 void TMVA::HuberLossFunction::SetTransitionPoint(std::vector<LossFunctionEventInfo>& evs){
-   fTransitionPoint = CalculateQuantile(evs, fQuantile, fSumOfWeights);
+   fTransitionPoint = CalculateQuantile(evs, fQuantile, fSumOfWeights, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -138,11 +162,25 @@ Double_t TMVA::HuberLossFunction::CalculateLoss(std::vector<LossFunctionEventInf
    // return netloss/fSumOfWeights
 }
 
+
+TMVA::HuberLossFunctionBDT::HuberLossFunctionBDT()
+{
+   std::cout << "HuberLossFunctionBDT::HuberLossFunctionBDT" << std::endl;
+   std::cout << "=======================================================" << std::endl << std::endl;
+
+   std::cout << "fSumOfWeights, fTransitionPoint, fQuantile" << std::endl;
+   std::cout << fSumOfWeights << ", " << fTransitionPoint << ", " << fQuantile << std::endl;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// huber BDT, initialize the targets and prepare for the regression
 
 void TMVA::HuberLossFunctionBDT::Init(std::map<const TMVA::Event*, LossFunctionEventInfo>& evinfomap, std::vector<double>& boostWeights){
 // Should only need to run this once before building the forest
+
+   std::cout << "HuberLossFunctionBDT::Init" << std::endl;
+   std::cout << "=======================================================" << std::endl << std::endl;
+
    std::vector<LossFunctionEventInfo> evinfovec;
    for (auto &e: evinfomap){
       evinfovec.push_back(LossFunctionEventInfo(e.second.trueValue, e.second.predictedValue, e.first->GetWeight()));
@@ -150,7 +188,10 @@ void TMVA::HuberLossFunctionBDT::Init(std::map<const TMVA::Event*, LossFunctionE
 
    // Calculates fSumOfWeights and fTransitionPoint with the current residuals
    SetSumOfWeights(evinfovec);
-   Double_t weightedMedian = CalculateQuantile(evinfovec, 0.5, fSumOfWeights);
+   Double_t weightedMedian = CalculateQuantile(evinfovec, 0.5, fSumOfWeights, false);
+
+   std::cout << "fSumOfWeights, fTransitionPoint, fQuantile, weightedMedian" << std::endl;
+   std::cout << fSumOfWeights << ", " << fTransitionPoint << ", " << fQuantile << ", " << weightedMedian << std::endl;
 
    //Store the weighted median as a first boosweight for later use
    boostWeights.push_back(weightedMedian);
@@ -164,19 +205,32 @@ void TMVA::HuberLossFunctionBDT::Init(std::map<const TMVA::Event*, LossFunctionE
 /// huber BDT, set the targets for a collection of events
 
 void TMVA::HuberLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap){
-   std::vector<LossFunctionEventInfo> events;
+
+   std::cout << "HuberLossFunctionBDT::SetTargets" << std::endl;
+   std::cout << "=======================================================" << std::endl << std::endl;
+
+   std::vector<LossFunctionEventInfo> eventvec;
    for (std::vector<const TMVA::Event*>::const_iterator e=evs.begin(); e!=evs.end();e++){
-      events.push_back(LossFunctionEventInfo(evinfomap[*e].trueValue, evinfomap[*e].predictedValue, (*e)->GetWeight()));
+      eventvec.push_back(LossFunctionEventInfo(evinfomap[*e].trueValue, evinfomap[*e].predictedValue, (*e)->GetWeight()));
    }
 
    // Recalculate the residual that separates the "core" of the data and the "tails"
    // This residual is the quantile given by fQuantile, defaulted to 0.7
    // the quantile corresponding to 0.5 would be the usual median
-   SetSumOfWeights(evinfovec); // This was already set in init, but may change if there is subsampling for each tree
-   SetTransitionPoint(events);
+   SetSumOfWeights(eventvec); // This was already set in init, but may change if there is subsampling for each tree
+   SetTransitionPoint(eventvec);
 
+   std::cout << "fSumOfWeights, fTransitionPoint, fQuantile" << std::endl;
+   std::cout << fSumOfWeights << ", " << fTransitionPoint << ", " << fQuantile << std::endl;
+   std::cout << std::endl;
+
+   Int_t i=0;
+   std::cout << "i: target, weight" << std::endl;
    for (std::vector<const TMVA::Event*>::const_iterator e=evs.begin(); e!=evs.end();e++) {
          const_cast<TMVA::Event*>(*e)->SetTarget(0,Target(evinfomap[*e]));
+         if(i<=10)
+            std::cout << i << ": " << (*e)->GetTarget(0) <<", " << (*e)->GetWeight() << std::endl;
+         i++;
    }
 }
 
@@ -201,15 +255,21 @@ Double_t TMVA::HuberLossFunctionBDT::Fit(std::vector<LossFunctionEventInfo>& evs
 // So we get something between least squares (mean as fit) and absolute deviation (median as fit).
       Double_t sumOfWeights = CalculateSumOfWeights(evs);
       Double_t shift=0,diff= 0;
-      Double_t residualMedian = CalculateQuantile(evs,0.5,sumOfWeights);
+      Double_t residualMedian = CalculateQuantile(evs,0.5,sumOfWeights, false);
+      std::cout << sumOfWeights << ", " << residualMedian << ", " << evs.size() << std::endl;
+      std::cout << "   j: residual, diff, shift" << std::endl;
       for(UInt_t j=0;j<evs.size();j++){
          Double_t residual = evs[j].trueValue - evs[j].predictedValue;
          diff = residual-residualMedian;
          // if we are using weights then I'm not sure why this isn't weighted
          shift+=1.0/evs.size()*((diff<0)?-1.0:1.0)*TMath::Min(fTransitionPoint,fabs(diff));
+         if(j<=10) 
+         {
+             std::cout << "   " << j << ": " << residual << ", " << diff << ", " << shift << std::endl; 
+         }
          // I think this should be 
          // shift+=evs[j].weight/sumOfWeights*((diff<0)?-1.0:1.0)*TMath::Min(fTransitionPoint,fabs(diff));
       }
-      return residualMedian + shift;
+      return (residualMedian + shift);
 
 }
