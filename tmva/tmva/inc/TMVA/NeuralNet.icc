@@ -15,7 +15,7 @@ namespace TMVA
     namespace DNN
     {
 
-        +/*! \brief Hash initialization
+        /*! \brief Hash initialization
           *
           * 
           */
@@ -157,14 +157,14 @@ template <bool HasDropOut, typename ItSource, typename ItWeight, typename ItPrev
  *
  * 
  */
-        template <typename ItValue, typename Fnc, typename InvFnc, typename ItGradient>
-            void applyFunctions (ItValue itValue, ItValue itValueEnd, Fnc fnc, InvFnc invFnc, int itGradient, std::vector<double>& gradientBucket)
+        template <typename ItValue, typename Fnc, typename ItInverseFunction>
+            void applyFunctions (ItValue itValue, ItValue itValueEnd, Fnc fnc, ItInverseFunction itInverseFunction, int itGradient, std::vector<double>& gradientBucket)
         {
             while (itValue != itValueEnd)
             {
                 auto& value = (*itValue);
                 value = (*fnc.get ()) (value);
-                (gradientBucket[hasherFunction(itGradient) % BUCKET_SIZE]) = (*invFnc.get ()) (value);
+                (gradientBucket[hasherFunction(itGradient) % BUCKET_SIZE]) = (*itInverseFunction.get ()) (value);
         
                 ++itValue; ++itGradient;
             }
@@ -269,7 +269,7 @@ template <bool HasDropOut, typename ItSource, typename ItWeight, typename ItPrev
             double Steepest::operator() (Function& fitnessFunction, std::vector<double>& weightBucket, std::vector<double>& gradientBucket, PassThrough& passThrough) 
         {
             size_t numWeights = weightBucket.size () * BUCKET_SIZE;
-            std::vector<double> gradients (numWeights, 0.0);
+            // std::vector<double> gradients (numWeights, 0.0);
             std::vector<double> localWeightBucket (begin (weightBucket), end (weightBucket));
 
             double E = 1e10;
@@ -286,7 +286,7 @@ template <bool HasDropOut, typename ItSource, typename ItWeight, typename ItPrev
                 if (currentRepetition >= m_repetitions)
                     break;
 
-                gradients.assign (numWeights, 0.0);
+                gradientBucket.assign ((numWeights / BUCKET_SIZE), 0.0);
 
                 // --- nesterov momentum ---
                 // apply momentum before computing the new gradient
@@ -299,7 +299,7 @@ template <bool HasDropOut, typename ItSource, typename ItWeight, typename ItPrev
                     (localWeightBucket[hasherFunction(itLocWeight) % BUCKET_SIZE]) += (m_prevGradientBucket[hasherFunction(itPrevG) % BUCKET_SIZE]);
                 }
 
-                E = fitnessFunction (passThrough, localWeights, gradients); // **************************
+                E = fitnessFunction (passThrough, localWeightBucket, gradientBucket); // **************************
 //            plotGradients (gradients);
 //            plotWeights (localWeightBucket);
 
@@ -338,7 +338,7 @@ template <bool HasDropOut, typename ItSource, typename ItWeight, typename ItPrev
                 else
                 {
                     int itW = 0;
-                    std::for_each (gradientBucket.begin (), gradientBucket.end (), [&itW](double& g)
+                    std::for_each (gradientBucket.begin (), gradientBucket.end (), [&itW, &weightBucket](double& g)
                                    {
                                        weightBucket[hasherFunction(itW) % BUCKET_SIZE] += g;
                                        ++itW;
@@ -373,8 +373,8 @@ template <bool HasDropOut, typename ItSource, typename ItWeight, typename ItPrev
  *
  * 
  */
-        template <typename ItOutput, typename ItTruth, typename ItDelta, typename InvFnc>
-            double sumOfSquares (ItOutput itOutputBegin, ItOutput itOutputEnd, ItTruth itTruthBegin, ItTruth /*itTruthEnd*/, int itDelta, int itDeltaEnd, std::vector<double>& deltaBucket, InvFnc invFnc, double patternWeight) 
+        template <typename ItOutput, typename ItTruth, typename ItDelta, typename ItInvActFnc>
+            double sumOfSquares (ItOutput itOutputBegin, ItOutput itOutputEnd, ItTruth itTruthBegin, ItTruth /*itTruthEnd*/, int itDelta, int itDeltaEnd, std::vector<double>& deltaBucket, ItInvActFnc itInvActFnc, double patternWeight) 
         {
             double errorSum = 0.0;
 
@@ -388,7 +388,7 @@ template <bool HasDropOut, typename ItSource, typename ItWeight, typename ItPrev
                 double error = output - (*itTruth);
                 if (hasDeltas)
                 {
-                    (deltaBucket[hasherFunction(itTargetDelta) % BUCKET_SIZE]) = (*invFnc.get ()) (output) * error * patternWeight;
+                    (deltaBucket[hasherFunction(itDelta) % BUCKET_SIZE]) = (*itInvActFnc.get ()) (output) * error * patternWeight;
                     ++itDelta; 
                 }
                 errorSum += error*error  * patternWeight;
@@ -419,7 +419,7 @@ template <bool HasDropOut, typename ItSource, typename ItWeight, typename ItPrev
                 if (hasDeltas)
                 {
                     double delta = probability - truth;
-                    (deltaBucket[hasherFunction(itTargetDelta) % BUCKET_SIZE]) = delta*patternWeight;
+                    (deltaBucket[hasherFunction(itDelta) % BUCKET_SIZE]) = delta*patternWeight;
 //	    (deltaBucket[hasherFunction(itTargetDelta) % BUCKET_SIZE]) = (*itInvActFnc)(probability) * delta * patternWeight;
                     ++itDelta;
                 }
@@ -464,7 +464,7 @@ template <bool HasDropOut, typename ItSource, typename ItWeight, typename ItPrev
                 double truth = (*itTruth);
                 if (hasDeltas)
                 {
-                    (deltaBucket[hasherFunction(itTargetDelta) % BUCKET_SIZE]) = probability - truth;
+                    (deltaBucket[hasherFunction(itDelta) % BUCKET_SIZE]) = probability - truth;
 //	    (deltaBucket[hasherFunction(itTargetDelta) % BUCKET_SIZE]) = (*itInvActFnc)(sm) * delta * patternWeight;
                     ++itDelta; //++itInvActFnc;
                 }
@@ -645,7 +645,7 @@ template <typename LAYERDATA>
  * the weights have to be adjusted to account for the different number of active nodes
  * this function computes the factor and applies it to the weights
  */
-        template <typename WeightsType, typename DropProbabilities>
+        template <typename DropProbabilities>
             void Net::dropOutWeightFactor (std::vector<double>& weightBucket,
                                            const DropProbabilities& drops, 
                                            bool inverse)
@@ -730,8 +730,8 @@ template <typename LAYERDATA>
             const std::vector<double>& dropFractions = settings.dropFractions ();
             bool isWeightsForDrop = false;
 
-            std::vector<double>& gradientBucket;
-            std::vector<double>& deltaBucket;
+            std::vector<double> gradientBucket;
+            std::vector<double> deltaBucket;
 
             initializeGradientsDeltas(std::back_inserter (gradientBucket), std::back_inserter (deltaBucket));
 
@@ -766,7 +766,7 @@ template <typename LAYERDATA>
                 }
 
                 // execute training cycle
-                trainError = trainCycle (minimizer, weightBucket, begin (trainPattern), end (trainPattern), settings, dropContainer);
+                trainError = trainCycle (minimizer, weightBucket, gradientBucket, begin (trainPattern), end (trainPattern), settings, dropContainer);
 	    
 
 	    // ------ check if we have to execute a test ------------------
@@ -862,7 +862,7 @@ template <typename LAYERDATA>
                     settings.endTestCycle ();
 //                    testError /= weightSum;
 
-                    settings.computeResult (*this, weights);
+                    settings.computeResult (*this, weightBucket);
 
                     hasConverged = settings.hasConverged (testError);
                     if (!hasConverged && !isWeightsForDrop)
@@ -924,7 +924,7 @@ template <typename LAYERDATA>
  * \param dropContainer the data for dropping-out nodes (regularization technique)
  */
         template <typename Iterator, typename Minimizer>
-            inline double Net::trainCycle (Minimizer& minimizer, std::vector<double>& weightBucket, 
+            inline double Net::trainCycle (Minimizer& minimizer, std::vector<double>& weightBucket, std::vector<double>& gradientBucket, 
                                            Iterator itPatternBegin, Iterator itPatternEnd, Settings& settings, DropContainer& dropContainer)
         {
             double error = 0.0;
@@ -1021,7 +1021,7 @@ template <typename LAYERDATA>
  * \param weights the weight data
  */
         template <typename Weights>
-            std::vector<double> Net::compute (const std::vector<double>& input, const std::vector<double>& weightBucket) const
+            std::vector<double> Net::compute (const std::vector<double>& input, std::vector<double>& weightBucket) const
         {
             std::vector<LayerData> layerData;
             layerData.reserve (m_layers.size ()+1);
@@ -1053,42 +1053,42 @@ template <typename LAYERDATA>
         }
 
 
-        template <typename Weights, typename PassThrough>
-            double Net::operator() (PassThrough& settingsAndBatch, const std::vector<double>& weightBucket) const
+        template <typename PassThrough>
+            double Net::operator() (PassThrough& settingsAndBatch, std::vector<double>& weightBucket) const
         {
             std::vector<double> nothing; // empty gradients; no backpropagation is done, just forward
             assert (numWeights () == (weightBucket.size() * BUCKET_SIZE));
-	double error = forward_backward(m_layers, settingsAndBatch, 0, (weightBucket.size () * BUCKET_SIZE) - 1, 0, 0, 10000, nothing, false, weightBucket);
+	double error = forward_backward(m_layers, settingsAndBatch, 0, (weightBucket.size () * BUCKET_SIZE) - 1, 0, 0, 10000, nothing, false, weightBucket, nothing);
             return error;
         }
 
-        template <typename Weights, typename PassThrough, typename OutContainer>
-            double Net::operator() (PassThrough& settingsAndBatch, const std::vector<double>& weightBucket, ModeOutput /*eFetch*/, OutContainer& outputContainer) const
+        template <typename PassThrough, typename OutContainer>
+            double Net::operator() (PassThrough& settingsAndBatch, std::vector<double>& weightBucket, ModeOutput /*eFetch*/, OutContainer& outputContainer) const
         {
             std::vector<double> nothing; // empty gradients; no backpropagation is done, just forward
             assert (numWeights () == (weightBucket.size () * BUCKET_SIZE));
-	double error = forward_backward(m_layers, settingsAndBatch, 0, (weightBucket.size () * BUCKET_SIZE) - 1, 0, 0, 10000, outputContainer, true, weightBucket);
+	double error = forward_backward(m_layers, settingsAndBatch, 0, (weightBucket.size () * BUCKET_SIZE) - 1, 0, 0, 10000, outputContainer, true, weightBucket, nothing);
             return error;
         }
 
     
-        template <typename Weights, typename Gradients, typename PassThrough>
+        template <typename Gradients, typename PassThrough>
         double Net::operator() (PassThrough& settingsAndBatch, std::vector<double>& weightBucket, std::vector<double>& gradientBucket) const
         {
             std::vector<double> nothing;
             assert (numWeights () == (weightBucket.size () * BUCKET_SIZE));
             assert ((weightBucket.size () * BUCKET_SIZE) == (gradientBucket.size () * BUCKET_SIZE));
-	double error = forward_backward(m_layers, settingsAndBatch, 0, (weightBucket.size () * BUCKET_SIZE) - 1, 0, (gradientBucket.size () * BUCKET_SIZE) - 1, 0, nothing, false, weightBucket);
+	double error = forward_backward(m_layers, settingsAndBatch, 0, (weightBucket.size () * BUCKET_SIZE) - 1, 0, (gradientBucket.size () * BUCKET_SIZE) - 1, 0, nothing, false, weightBucket, gradientBucket);
             return error;
         }
 
-        template <typename Weights, typename Gradients, typename PassThrough, typename OutContainer>
+        template <typename Gradients, typename PassThrough, typename OutContainer>
         double Net::operator() (PassThrough& settingsAndBatch, std::vector<double>& weightBucket, std::vector<double>& gradientBucket, ModeOutput eFetch, OutContainer& outputContainer) const
         {
             MATH_UNUSED(eFetch);
             assert (numWeights () == weightBucket.size () * BUCKET_SIZE);
-            assert (weights.size () * BUCKET_SIZE == gradients.size () * BUCKET_SIZE);
-	double error = forward_backward(m_layers, settingsAndBatch, 0, (weightBucket.size () * BUCKET_SIZE) - 1, 0, (gradientBucket.size () * BUCKET_SIZE) - 1, 0, outputContainer, true, weightBucket);
+            assert (weightBucket.size () * BUCKET_SIZE == gradientBucket.size () * BUCKET_SIZE);
+	double error = forward_backward(m_layers, settingsAndBatch, 0, (weightBucket.size () * BUCKET_SIZE) - 1, 0, (gradientBucket.size () * BUCKET_SIZE) - 1, 0, outputContainer, true, weightBucket, gradientBucket);
             return error;
         }
 
@@ -1125,7 +1125,7 @@ template <typename LAYERDATA>
         typename Pattern::const_iterator itInputBegin;
         typename Pattern::const_iterator itInputEnd;
 
-    
+
 
         // ItWeight itGammaBegin = itWeightBegin + numWeights ();
         // ItWeight itBetaBegin = itWeightBegin + numWeights () + numNodes ();
@@ -1232,7 +1232,7 @@ template <typename LAYERDATA>
                                 LayerPatternContainer& layerPatternData,
                                 std::vector<double>& valuesMean,
                                 std::vector<double>& valuesStdDev,
-                                size_t trainFromLayer) const
+                                size_t trainFromLayer, std::vector<double>& weightBucket, std::vector<double>& gradientBucket) const
     {
         valuesMean.clear ();
         valuesStdDev.clear ();
@@ -1258,7 +1258,7 @@ template <typename LAYERDATA>
 		LayerData& currLayerData = currLayerPatternData.at (idxPattern);
                 
             
-                forward (prevLayerData, currLayerData); // feed forward
+                forward (prevLayerData, currLayerData, weightBucket); // feed forward
             }
             
             // ---------------- loop over layerDatas of pattern apply non-linearities ----------------------------
@@ -1269,7 +1269,7 @@ template <typename LAYERDATA>
                 
 		if (doTraining)
                     applyFunctions (currLayerData.valuesBegin (), currLayerData.valuesEnd (), currLayerData.activationFunction (), 
-                                    currLayerData.inverseActivationFunction (), currLayerData.valueGradientsBegin ());
+                                    currLayerData.inverseActivationFunction (), currLayerData.valueGradientsBegin (), gradientBucket);
 		else
                     applyFunctions (currLayerData.valuesBegin (), currLayerData.valuesEnd (), currLayerData.activationFunction ());
             }
@@ -1408,7 +1408,7 @@ template <typename LAYERDATA>
                                       int itWeightBegin, int itWeightEnd,
                                           int itGradientBegin, int itGradientEnd, 
                                           size_t trainFromLayer, 
-                                      OutContainer& outputContainer, bool doFetchOutput, std::vector<double>& weightBucket) const
+                                      OutContainer& outputContainer, bool doFetchOutput, std::vector<double>& weightBucket, std::vector<double>& gradientBucket) const
         {
             Settings& settings = std::get<0>(settingsAndBatch);
             Batch& batch = std::get<1>(settingsAndBatch);
@@ -1434,7 +1434,7 @@ template <typename LAYERDATA>
         // ---------------------------------- propagate forward ------------------------------------------------------------------
         std::vector<double> valuesMean;
         std::vector<double> valuesStdDev;
-        forwardBatch (_layers, layerPatternData, valuesMean, valuesStdDev, trainFromLayer);
+        forwardBatch (_layers, layerPatternData, valuesMean, valuesStdDev, trainFromLayer, weightBucket, gradientBucket);
 
         
             // ------------- fetch output ------------------
@@ -1577,7 +1577,7 @@ template <typename LAYERDATA>
  *
  * 
  */
-        template <typename Container, typename ItWeight>
+        template <typename Container>
             double Net::errorFunction (LayerData& layerData,
                                        LayerData& nextLayerData,
                                        Container truth,
