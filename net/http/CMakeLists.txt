@@ -39,8 +39,10 @@ endif()
 
 add_definitions(-DUSE_WEBSOCKET)
 
-if(NOT MSVC)
-  set(RT_LIBRARY "-lrt")
+# look for the realtime extensions library and use it if it exists
+find_library(RT_LIBRARY rt)
+if(RT_LIBRARY)
+  set(RT_LIBRARIES ${RT_LIBRARY})
 endif()
 
 ROOT_GENERATE_DICTIONARY(G__HTTP *.h LINKDEF LinkDef.h)
