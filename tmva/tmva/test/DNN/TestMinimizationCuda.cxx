@@ -24,10 +24,10 @@ using namespace TMVA::DNN;
 
 int main()
 {
-   using Scalar_t = Double_t;
+   using Scalar_t = Real_t;
    std::cout << "Testing minimization:" << std::endl;
-   Scalar_t error = testMinimization<TCuda<Double_t>>();
+   Scalar_t error = testMinimization<TCuda<Scalar_t>>();
    std::cout << "Gradient Descent: Maximum relative error = " << error << std::endl;
-   error = testMinimizationMomentum<TCuda<Double_t>>();
+   error = testMinimizationMomentum<TCuda<Scalar_t>>();
    std::cout << "Momentum:         Maximum relative error = " << error << std::endl;
 }

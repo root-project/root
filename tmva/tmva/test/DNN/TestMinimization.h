@@ -57,10 +57,10 @@ template <typename Architecture>
    net.AddLayer(1, EActivationFunction::IDENTITY);
    net.Initialize(EInitialization::GAUSS);
 
-   TGradientDescent<Architecture> minimizer(0.0001, 5, 5);
+   TGradientDescent<Architecture> minimizer(0.0001, 5, 1);
    MatrixInput_t trainingData(XTrain, YTrain);
    MatrixInput_t testData(XTest, YTest);
-   minimizer.TrainMomentum(trainingData, nSamples, testData, batchSize, net, 0.0, 1);
+   minimizer.TrainMomentum(trainingData, nSamples, testData, batchSize, net, 0.8, 1);
 
    TMatrixT<Double_t> I(nFeatures, nFeatures);
    for (size_t i = 0; i < nFeatures; i++) {

@@ -31,19 +31,19 @@ int main()
     //
 
     error = testBackpropagationWeightsLinear<TReference<double>>(1.0);
-    if (error > 1e-7)
+    if (error > 1e-3)
         return 1;
 
     error = testBackpropagationL1Regularization<TReference<double>>(1e-2);
-    if (error > 1e-7)
+    if (error > 1e-3)
         return 1;
 
     error = testBackpropagationL2Regularization<TReference<double>>(1.0);
-    if (error > 1e-7)
+    if (error > 1e-3)
         return 1;
 
     error = testBackpropagationBiasesLinear<TReference<double>>(1.0);
-    if (error > 1e-7)
+    if (error > 1e-3)
         return 1;
 
     return 0;
