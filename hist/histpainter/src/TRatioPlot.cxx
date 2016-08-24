@@ -500,6 +500,10 @@ void TRatioPlot::SetRightMargin(Float_t margin)
 /// to the relative sizes of the pads
 ///
 /// \param margin The new margin
+///
+/// Begin_Macro(source)
+/// ../../../tutorials/hist/ratioplot6.C
+/// End_Macro
 
 void TRatioPlot::SetSeparationMargin(Float_t margin)
 {
