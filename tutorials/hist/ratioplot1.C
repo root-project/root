@@ -1,5 +1,4 @@
 {
-   gROOT->SetBatch();
    gStyle->SetOptStat(0);   
    auto c1 = new TCanvas("c1", "A ratio example");
    auto h1 = new TH1D("h1", "h1", 50, 0, 10);

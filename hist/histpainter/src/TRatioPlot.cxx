@@ -71,7 +71,7 @@ The asymmetric error case uses the upper or lower error depending on whether the
 is above or below the histogram bin content.
 
 Begin_Macro(source)
-../../../tutorials/ratioplot2.C
+../../../tutorials/hist/ratioplot2.C
 End_Macro
 
 ## Access to internal parts
