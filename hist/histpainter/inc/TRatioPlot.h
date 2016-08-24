@@ -41,6 +41,7 @@ private:
    TRatioPlot& operator=(const TRatioPlot&); // Not implemented
    TRatioPlot(const TRatioPlot &hrp);
 
+   // @TODO: Comment enums
    enum CalculationMode {
       kDivideHist = 1,
       kDivideGraph = 2,
@@ -53,6 +54,12 @@ private:
       kErrorSymmetric = 1,
       kErrorAsymmetric = 2,
       kErrorFunc = 3
+   };
+
+   enum HideLabelMode {
+      kHideUp = 1,
+      kHideLow = 2,
+      kNoHide = 3,
    };
 
 
@@ -109,7 +116,7 @@ protected:
    std::vector<TLine*> fGridlines;
    std::vector<double> fGridlinePositions;
    Bool_t fShowGridlines = kTRUE;
-
+   Int_t fHideLabelMode = TRatioPlot::HideLabelMode::kHideLow;
 
    // store y axis ranges so we can trigger redraw when they change
    Double_t fUpYFirst = -1;
