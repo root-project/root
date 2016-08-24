@@ -84,10 +84,3 @@ void TGaxisModLab::SetFont(Int_t f) {
 void TGaxisModLab::SetText(TString s) {
    fLabText   = s;
 }
-
-////////////////////////////////////////////////////////////////////////////////
-/// Stream an object of class TGaxisModLab.
-
-void TGaxisModLab::Streamer(TBuffer &R__b)
-{
-}

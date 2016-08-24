@@ -47,7 +47,7 @@ public:
    Int_t    GetFont()   {return fTextFont;}
    TString  GetText()   {return fLabText;}
 
-   ClassDef(TGaxisModLab,1)  // Modified axis label
+   ClassDef(TGaxisModLab,0)  // Modified axis label
 };
 
 #endif
