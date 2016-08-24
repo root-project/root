@@ -36,15 +36,13 @@
 
 ClassImp(TRatioPlot)
 
-////////////////////////////////////////////////////////////////////////////////
-
-/** \class TRatioPlot 
+/** \class TRatioPlot
     \ingroup Hist
 Class for displaying ratios, differences and fit residuals.
 
 TRatioPlot has two constructors, one which accepts two histograms, and is responsible
 for setting up the calculation of ratios and differences. This calculation is in part
-delegated to TEfficiency. A single option can be given as a parameter, that is 
+delegated to TEfficiency. A single option can be given as a parameter, that is
 used to determine which procedure is chosen. The remaining option string is then
 passed through to the calculation, if applicable.
 
@@ -60,10 +58,8 @@ Begin_Macro(source)
 ../../../tutorials/hist/ratioplot1.C
 End_Macro
 
-
-
 A second constructor only accepts a single histogram, but expects it to have a fitted
-function. The function is used to calculate the residual between the fit and the 
+function. The function is used to calculate the residual between the fit and the
 histogram.
 
 | Option     | Description                                                  |
@@ -74,20 +70,18 @@ histogram.
 The asymmetric error case uses the upper or lower error depending on whether the function value
 is above or below the histogram bin content.
 
-
 Begin_Macro(source)
-../../../tutorials/ratioplot2.C   
+../../../tutorials/ratioplot2.C
 End_Macro
 
 ## Access to internal parts
-You can access the internal objects that are used to construct the plot via a series of 
+You can access the internal objects that are used to construct the plot via a series of
 methods. `TRatioPlot::GetUpperPad` and `TRatioPlot::GetLowerPad` can be used to draw additional
 elements on top of the existing ones.
 `TRatioPlot::GetLowerRefGraph` returns a reference to the lower pad's graph that
 is responsible for the range, which enables you to modify the range.
 
 */
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TRatioPlot default constructor
@@ -128,14 +122,14 @@ TRatioPlot::~TRatioPlot()
    if (fLowerGYaxisMirror != 0) delete fLowerGYaxisMirror;
 
    if (fUpYaxis != 0) delete fUpYaxis;
-   if (fLowYaxis != 0) delete fLowYaxis;  
+   if (fLowYaxis != 0) delete fLowYaxis;
 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Internal method that shares constructor logic
 
-void TRatioPlot::Init(TH1* h1, TH1* h2, 
+void TRatioPlot::Init(TH1* h1, TH1* h2,
       Option_t *displayOption, Option_t *optH1, Option_t *optH2, Option_t *optGraph,
       Double_t c1, Double_t c2)
 {
@@ -154,32 +148,31 @@ void TRatioPlot::Init(TH1* h1, TH1* h2,
       fDisplayMode = TRatioPlot::CalculationMode::kDivideHist;
    } else if (displayOptionString.Contains("diffsig")) {
       displayOptionString.ReplaceAll("diffsig", "");
-      fDisplayMode = TRatioPlot::CalculationMode::kDifferenceSign;   
-      
+      fDisplayMode = TRatioPlot::CalculationMode::kDifferenceSign;
+
       // determine which error style
       if (displayOptionString.Contains("errasym")) {
-         fErrorMode = TRatioPlot::ErrorMode::kErrorAsymmetric; 
+         fErrorMode = TRatioPlot::ErrorMode::kErrorAsymmetric;
          displayOptionString.ReplaceAll("errasym", "");
       }
 
       if (displayOptionString.Contains("errfunc")) {
          fErrorMode = TRatioPlot::ErrorMode::kErrorFunc;
          displayOptionString.ReplaceAll("errfunc", "");
-      } 
+      }
    } else if (displayOptionString.Contains("diff")) {
       displayOptionString.ReplaceAll("diff", "");
-      fDisplayMode = TRatioPlot::CalculationMode::kDifference;   
+      fDisplayMode = TRatioPlot::CalculationMode::kDifference;
    } else {
       fDisplayMode = TRatioPlot::CalculationMode::kDivideGraph;
    }
 
-   
    fDisplayOption = displayOptionString;
 
    TString optH1String = TString(optH1);
    TString optH2String = TString(optH2);
    TString optGraphString = TString(optGraph);
-   
+
    optH2String.ReplaceAll("same", "");
    optH2String.ReplaceAll("SAME", "");
 
@@ -200,10 +193,10 @@ void TRatioPlot::Init(TH1* h1, TH1* h2,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor for two histograms 
+/// Constructor for two histograms
 ///
-/// \param h1 First histogram 
-/// \param h2 Second histogram 
+/// \param h1 First histogram
+/// \param h2 Second histogram
 /// \param name Name for the object
 /// \param title Title for the object
 /// \param displayOption Steers the error calculation, as well as ratio / difference
@@ -213,13 +206,13 @@ void TRatioPlot::Init(TH1* h1, TH1* h2,
 /// \param c1 Scaling factor for h1
 /// \param c2 Scaling factor for h2
 
-TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, const char *name /*=0*/, const char *title /*=0*/, 
+TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, const char *name /*=0*/, const char *title /*=0*/,
       Option_t *displayOption, Option_t *optH1, Option_t *optH2, Option_t *optGraph,
       Double_t c1, Double_t c2)
    : TPad(name, title, 0, 0, 1, 1),
      //fH1(h1),
      //fH2(h2),
-     fGridlines() 
+     fGridlines()
 {
    gROOT->GetListOfCleanups()->Add(this);
 
@@ -243,7 +236,7 @@ TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, const char *name /*=0*/, const char *ti
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor which accepts a `THStack` and a histogram. Converts the 
+/// Constructor which accepts a `THStack` and a histogram. Converts the
 /// stack to a regular sum of its conatining histograms for processing.
 /// \param st The THStack object
 /// \param h2 The other histogram
@@ -256,16 +249,15 @@ TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, const char *name /*=0*/, const char *ti
 /// \param c1 Scale factor for the stack sum
 /// \param c2 Scale factor for the other histogram
 
-TRatioPlot::TRatioPlot(THStack* st, TH1* h2, const char *name, const char *title, 
+TRatioPlot::TRatioPlot(THStack* st, TH1* h2, const char *name, const char *title,
       Option_t *displayOption, Option_t *optH1, Option_t *optH2, Option_t *optGraph,
-      Double_t c1, Double_t c2) 
+      Double_t c1, Double_t c2)
    : TPad(name, title, 0, 0, 1, 1)
 {
    if (!st || !h2) {
       Warning("TRatioPlot", "Need a histogram and a stack");
       return;
    }
-
 
    TList *stackHists = st->GetHists();
 
@@ -277,9 +269,8 @@ TRatioPlot::TRatioPlot(THStack* st, TH1* h2, const char *name, const char *title
    TH1* tmpHist = (TH1*)stackHists->At(0)->Clone();
    tmpHist->Reset();
 
-
    for (int i=0;i<stackHists->GetSize();++i) {
-      tmpHist->Add((TH1*)stackHists->At(i)); 
+      tmpHist->Add((TH1*)stackHists->At(i));
    }
 
    fHistDrawProxy = st;
@@ -290,7 +281,7 @@ TRatioPlot::TRatioPlot(THStack* st, TH1* h2, const char *name, const char *title
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor for one histogram and a fit.
-/// \param h1 The histogram 
+/// \param h1 The histogram
 /// \param name Name for the object
 /// \param title Title for the object
 /// \param displayOption Steers the error calculation
@@ -298,10 +289,10 @@ TRatioPlot::TRatioPlot(THStack* st, TH1* h2, const char *name, const char *title
 /// \param optGraph Drawing option the lower graph
 
 TRatioPlot::TRatioPlot(TH1* h1, const char *name, const char *title, Option_t *displayOption, Option_t *optH1,
-         /*Option_t *fitOpt, */Option_t *optGraph, TFitResult *fitres) 
+         /*Option_t *fitOpt, */Option_t *optGraph, TFitResult *fitres)
    : TPad(name, title, 0, 0, 1, 1),
      fH1(h1),
-     fGridlines() 
+     fGridlines()
 {
    gROOT->GetListOfCleanups()->Add(this);
 
@@ -325,18 +316,18 @@ TRatioPlot::TRatioPlot(TH1* h1, const char *name, const char *title, Option_t *d
    }
 
    fParentPad = gPad;
-   
+
    fHistDrawProxy = h1;
 
    fFitResult = fitres;
 
    fDisplayMode = TRatioPlot::CalculationMode::kFitResidual;
-   
+
    TString displayOptionString = TString(displayOption);
-   
+
    // determine which error style
    if (displayOptionString.Contains("errasym")) {
-      fErrorMode = TRatioPlot::ErrorMode::kErrorAsymmetric; 
+      fErrorMode = TRatioPlot::ErrorMode::kErrorAsymmetric;
       displayOptionString.ReplaceAll("errasym", "");
    }
 
@@ -345,7 +336,6 @@ TRatioPlot::TRatioPlot(TH1* h1, const char *name, const char *title, Option_t *d
       displayOptionString.ReplaceAll("errfunc", "");
    }
 
-   
    fDisplayOption = displayOptionString;
 
    BuildLowerPlot();
@@ -356,15 +346,15 @@ TRatioPlot::TRatioPlot(TH1* h1, const char *name, const char *title, Option_t *d
    fSharedXAxis = (TAxis*)(fH1->GetXaxis()->Clone());
    fUpYaxis = (TAxis*)(fH1->GetYaxis()->Clone());
    fLowYaxis = (TAxis*)(fRatioGraph->GetYaxis()->Clone());
- 
+
    //SyncAxesRanges();
-   
+
    SetupPads();
 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// 
+/// Setup the pads.
 
 void TRatioPlot::SetupPads() {
 
@@ -398,7 +388,6 @@ void TRatioPlot::SetupPads() {
    fLowerPad->SetGridx(GetGridx());
    fLowerPad->SetGridy(GetGridy());
 
-
    SetPadMargins();
 
    // connect to the pads signal
@@ -410,7 +399,6 @@ void TRatioPlot::SetupPads() {
 
    fUpperPad->Connect("Resized()", "TRatioPlot", this, "SubPadResized()");
    fLowerPad->Connect("Resized()", "TRatioPlot", this, "SubPadResized()");
-
 
    if (fTopPad != 0) {
       delete fTopPad;
@@ -424,8 +412,6 @@ void TRatioPlot::SetupPads() {
 
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// TRatioPlot copy constructor
 
@@ -434,7 +420,6 @@ TRatioPlot::TRatioPlot(const TRatioPlot &/*hrp*/)
    Warning("TRatioPlot", "Copy constructor not yet implemented");
     return;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Browse.
@@ -447,6 +432,7 @@ void TRatioPlot::Browse(TBrowser *b)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets the top margin of the upper pad.
+///
 /// \param margin The new margin
 
 void TRatioPlot::SetUpTopMargin(Float_t margin)
@@ -457,6 +443,7 @@ void TRatioPlot::SetUpTopMargin(Float_t margin)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets the bottom margin of the upper pad.
+///
 /// \param margin The new margin
 
 void TRatioPlot::SetUpBottomMargin(Float_t margin)
@@ -467,6 +454,7 @@ void TRatioPlot::SetUpBottomMargin(Float_t margin)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets the top margin of the lower pad.
+///
 /// \param margin The new margin
 
 void TRatioPlot::SetLowTopMargin(Float_t margin)
@@ -477,6 +465,7 @@ void TRatioPlot::SetLowTopMargin(Float_t margin)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets the bottom margin of the lower pad.
+///
 /// \param margin The new margin
 
 void TRatioPlot::SetLowBottomMargin(Float_t margin)
@@ -497,6 +486,7 @@ void TRatioPlot::SetLeftMargin(Float_t margin)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets the right margin of both pads.
+///
 /// \param margin The new margin
 
 void TRatioPlot::SetRightMargin(Float_t margin)
@@ -508,6 +498,7 @@ void TRatioPlot::SetRightMargin(Float_t margin)
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets the margin that separates the two pads. The margin is split according
 /// to the relative sizes of the pads
+///
 /// \param margin The new margin
 
 void TRatioPlot::SetSeparationMargin(Float_t margin)
@@ -519,8 +510,7 @@ void TRatioPlot::SetSeparationMargin(Float_t margin)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// 
-
+/// Return the separation margin value.
 Float_t TRatioPlot::GetSeparationMargin()
 {
    Float_t sf = fSplitFraction;
@@ -528,7 +518,6 @@ Float_t TRatioPlot::GetSeparationMargin()
    Float_t down = fLowTopMargin * sf;
    return up+down;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draws the ratio plot to the currently active pad. Takes the following options
@@ -539,7 +528,6 @@ Float_t TRatioPlot::GetSeparationMargin()
 /// | hideup     | hides the first label of the upper axis if there is not enough space |
 /// | hidelow    | hides the last label of the lower axis if there is not enough space |
 /// | nohide     | does not hide a label if there is not enough space |
-/// 
 
 void TRatioPlot::Draw(Option_t *option)
 {
@@ -553,18 +541,16 @@ void TRatioPlot::Draw(Option_t *option)
       drawOpt.ReplaceAll("grid", "");
       fShowGridlines = kTRUE;
    }
-   
+
    if (drawOpt.Contains("hideup")) {
-      fHideLabelMode = TRatioPlot::HideLabelMode::kHideUp;  
+      fHideLabelMode = TRatioPlot::HideLabelMode::kHideUp;
    } else if (drawOpt.Contains("hidelow")) {
-      fHideLabelMode = TRatioPlot::HideLabelMode::kHideLow;   
+      fHideLabelMode = TRatioPlot::HideLabelMode::kHideLow;
    } else if (drawOpt.Contains("nohide")) {
       fHideLabelMode = TRatioPlot::HideLabelMode::kNoHide;
    } else {
-      fHideLabelMode = TRatioPlot::HideLabelMode::kHideLow; // <- default   
+      fHideLabelMode = TRatioPlot::HideLabelMode::kHideLow; // <- default
    }
-   
-   
 
    TVirtualPad *padsav = gPad;
    fParentPad = gPad;
@@ -580,7 +566,6 @@ void TRatioPlot::Draw(Option_t *option)
    fTopPad->SetFillStyle(0);
    fTopPad->Draw();
 
-
    fUpperPad->cd();
 
    if (fHistDrawProxy) {
@@ -591,34 +576,33 @@ void TRatioPlot::Draw(Option_t *option)
       } else {
          Warning("Draw", "Draw proxy not of type TH1 or THStack, not drawing it");
       }
-   }  
-   
-   
+   }
+
    if (fH2 != 0) {
       fH2->Draw(fOptH2+"same");
    }
 
    fLowerPad->cd();
-  
+
    fConfidenceInterval2->SetFillColor(fCi1Color);
    fConfidenceInterval1->SetFillColor(fCi2Color);
-   
+
    if (fDisplayMode == TRatioPlot::CalculationMode::kFitResidual) {
       fConfidenceInterval2->Draw("A3");
       fConfidenceInterval1->Draw("3");
       fRatioGraph->Draw(fOptGraph+"SAME");
    } else {
-     
+
       TString opt = fOptGraph;
       fRatioGraph->Draw("A"+fOptGraph);
-   
+
    }
-   
+
    // assign same axis ranges to lower pad as in upper pad
    // the visual axes will be created on paint
    SyncAxesRanges();
 
-   CreateGridline(); 
+   CreateGridline();
 
    padsav->cd();
 }
@@ -627,15 +611,15 @@ void TRatioPlot::Draw(Option_t *option)
 /// Returns the reference graph for the lower pad, which means the graph that
 /// is responsible for setting the coordinate system. It is the first graph
 /// added to the primitive list of the lower pad.
-/// This reference can be used to set the minimum and maximum of the lower pad. 
-/// Note that `TRatioPlot::Draw` needs to have been called first, since the 
+/// This reference can be used to set the minimum and maximum of the lower pad.
+/// Note that `TRatioPlot::Draw` needs to have been called first, since the
 /// graphs are only created then.
 ///
 /// Begin_Macro(source)
 /// ../../../tutorials/hist/ratioplot3.C
 /// End_Macro
 
-TGraph* TRatioPlot::GetLowerRefGraph() 
+TGraph* TRatioPlot::GetLowerRefGraph()
 {
    if (fLowerPad == 0) {
       Error(__FUNCTION__, "Lower pad has not been defined");
@@ -647,19 +631,16 @@ TGraph* TRatioPlot::GetLowerRefGraph()
       Error(__FUNCTION__, "Lower pad does not have primitives");
       return 0;
    }
-   
-   
+
    TObjLink *lnk = primlist->FirstLink();
 
    while (lnk) {
       TObject *obj = lnk->GetObject();
-      
+
       if (obj->InheritsFrom(TGraph::Class())) {
          return (TGraph*)obj;
       }
 
-
-      
       lnk = lnk->Next();
    }
 
@@ -668,25 +649,27 @@ TGraph* TRatioPlot::GetLowerRefGraph()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Shortcut for
+/// Shortcut for:
+///
 /// ~~~{.cpp}
 /// rp->GetLowerRefGraph()->GetXaxis();
 /// ~~~
 
 TAxis* TRatioPlot::GetLowerRefXaxis()
 {
-   return GetLowerRefGraph()->GetXaxis(); 
+   return GetLowerRefGraph()->GetXaxis();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Shortcut for
+/// Shortcut for:
+///
 /// ~~~{.cpp}
 /// rp->GetLowerRefGraph()->GetYaxis();
 /// ~~~
 
-TAxis* TRatioPlot::GetLowerRefYaxis() 
+TAxis* TRatioPlot::GetLowerRefYaxis()
 {
-   return GetLowerRefGraph()->GetYaxis(); 
+   return GetLowerRefGraph()->GetYaxis();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -699,7 +682,7 @@ TObject* TRatioPlot::GetUpperRefObject()
    TList *primlist = fUpperPad->GetListOfPrimitives();
    TObject *refobj = 0;
    for (Int_t i=0;i<primlist->GetSize();++i) {
-      refobj = primlist->At(i);   
+      refobj = primlist->At(i);
       if (refobj->InheritsFrom(TH1::Class()) || refobj->InheritsFrom(THStack::Class())) {
          return refobj;
       }
@@ -712,10 +695,10 @@ TObject* TRatioPlot::GetUpperRefObject()
 ////////////////////////////////////////////////////////////////////////////////
 /// Gets the x axis of the object returned by `TRatioPlot::GetUpperRefObject`.
 
-TAxis* TRatioPlot::GetUpperRefXaxis() 
+TAxis* TRatioPlot::GetUpperRefXaxis()
 {
    TObject *refobj = GetUpperRefObject();
-   
+
    if (!refobj) return 0;
 
    if (refobj->InheritsFrom(TH1::Class())) {
@@ -730,10 +713,10 @@ TAxis* TRatioPlot::GetUpperRefXaxis()
 ////////////////////////////////////////////////////////////////////////////////
 /// Gets the y axis of the object returned by `TRatioPlot::GetUpperRefObject`.
 
-TAxis* TRatioPlot::GetUpperRefYaxis() 
+TAxis* TRatioPlot::GetUpperRefYaxis()
 {
    TObject *refobj = GetUpperRefObject();
-   
+
    if (!refobj) return 0;
 
    if (refobj->InheritsFrom(TH1::Class())) {
@@ -745,19 +728,18 @@ TAxis* TRatioPlot::GetUpperRefYaxis()
    return 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-///
+/// Create a grid line
 
 void TRatioPlot::CreateGridline()
 {
-   
+
    if (!fShowGridlines) {
       return; // don't draw them
    }
-   
+
    TVirtualPad *padsav = gPad;
-   
+
    fLowerPad->cd();
 
    unsigned int curr = fGridlines.size();
@@ -769,8 +751,8 @@ void TRatioPlot::CreateGridline()
    double y;
    int outofrange = 0;
    for (unsigned int i=0;i<fGridlinePositions.size();++i) {
-      y = fGridlinePositions.at(i); 
-      
+      y = fGridlinePositions.at(i);
+
       if (y < lowYFirst || lowYLast < y) {
          ++outofrange;
       }
@@ -788,7 +770,7 @@ void TRatioPlot::CreateGridline()
          fGridlines.erase(fGridlines.begin());
       }
    } else if (curr < dest) {
-      // we don't have enough 
+      // we don't have enough
       for (unsigned int i=0;i<dest-curr;++i) {
          TLine *newline = new TLine(0, 0, 0, 0);
          newline->SetLineStyle(2);
@@ -798,26 +780,22 @@ void TRatioPlot::CreateGridline()
    } else {
       // nothing to do
    }
-   
-
 
    Double_t first = fSharedXAxis->GetBinLowEdge(fSharedXAxis->GetFirst());
    Double_t last = fSharedXAxis->GetBinUpEdge(fSharedXAxis->GetLast());
-
 
    TLine *line;
    unsigned int skipped = 0;
    for (unsigned int i=0;i<fGridlinePositions.size();++i) {
       y = fGridlinePositions[i];
 
-      
       if (y < lowYFirst || lowYLast < y) {
          // this is one of the ones that was out of range
          ++skipped;
          continue;
       }
 
-      line = fGridlines.at(i-skipped); 
+      line = fGridlines.at(i-skipped);
 
       line->SetX1(first);
       line->SetX2(last);
@@ -825,14 +803,14 @@ void TRatioPlot::CreateGridline()
       line->SetY2(y);
    }
 
-
    padsav->cd();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Does not really do anything right now, other than call super
 
-void TRatioPlot::Paint(Option_t *opt){
+void TRatioPlot::Paint(Option_t *opt)
+{
    TPad::Paint(opt);
 }
 
@@ -841,13 +819,13 @@ void TRatioPlot::Paint(Option_t *opt){
 
 void TRatioPlot::PaintModified()
 {
-  
+
    // this might be a problem, if the first one is not really a hist (or the like)
    if (GetUpperRefObject()) {
-      
+
       TAxis *uprefx = GetUpperRefXaxis();
       TAxis *uprefy = GetUpperRefYaxis();
-           
+
       if (uprefx) {
          //xaxis->ImportAttributes(fUpYaxis);
          uprefx->SetTickSize(0.);
@@ -862,8 +840,7 @@ void TRatioPlot::PaintModified()
          uprefy->SetTitleSize(0.);
       }
    } else {
-         Error("TRatioPlot", "Ref object in opper pad is neither TH1 descendant nor THStack");
- 
+      Error("TRatioPlot", "Ref object in opper pad is neither TH1 descendant nor THStack");
    }
 
    // hide lower axes
@@ -876,13 +853,13 @@ void TRatioPlot::PaintModified()
    refy->SetTickSize(0.);
    refy->SetLabelSize(0.);
    refy->SetTitleSize(0.);
-   
+
    // create the visual axes
    CreateVisualAxes();
    CreateGridline();
 
    TPad::PaintModified();
-   
+
    if (fIsUpdating) fIsUpdating = kFALSE;
 }
 
@@ -895,7 +872,7 @@ void TRatioPlot::SyncAxesRanges()
    Double_t first = fSharedXAxis->GetBinLowEdge(fSharedXAxis->GetFirst());
    Double_t last = fSharedXAxis->GetBinUpEdge(fSharedXAxis->GetLast());
 
-   // set range on computed graph, have to set it twice becaus 
+   // set range on computed graph, have to set it twice becaus
    // TGraph's axis looks strange otherwise
    TAxis *ref = GetLowerRefXaxis();
    ref->SetLimits(first, last);
@@ -920,12 +897,10 @@ void TRatioPlot::BuildLowerPlot()
    if (fConfidenceInterval1 == 0) {
       fConfidenceInterval1 = new TGraphErrors();
    }
-   
+
    if (fConfidenceInterval2 == 0) {
       fConfidenceInterval2 = new TGraphErrors();
    }
-
-
 
    static Double_t divideGridlines[] = {0.7, 1.0, 1.3};
    static Double_t diffGridlines[] = {0.0};
@@ -935,7 +910,7 @@ void TRatioPlot::BuildLowerPlot()
    // Pass divide options given in constructor
    if (fDisplayMode == TRatioPlot::CalculationMode::kDivideGraph) {
       // use TGraphAsymmErrors Divide method to create
-     
+
       SetGridlines(divideGridlines, 3);
 
       TH1 *tmpH1 = (TH1*)fH1->Clone();
@@ -965,11 +940,11 @@ void TRatioPlot::BuildLowerPlot()
    } else if (fDisplayMode == TRatioPlot::CalculationMode::kDifferenceSign) {
 
       SetGridlines(signGridlines, 3);
-      
+
       fRatioGraph = new TGraphAsymmErrors();
       Int_t ipoint = 0;
       Double_t res;
-      Double_t error;      
+      Double_t error;
 
       Double_t x;
       Double_t val;
@@ -979,7 +954,7 @@ void TRatioPlot::BuildLowerPlot()
          val = fH1->GetBinContent(i);
          val2 = fH2->GetBinContent(i);
          x = fH1->GetBinCenter(i+1);
-         
+
          if (fErrorMode == TRatioPlot::ErrorMode::kErrorAsymmetric) {
 
             Double_t errUp = fH1->GetBinErrorUp(i);
@@ -993,7 +968,6 @@ void TRatioPlot::BuildLowerPlot()
                error = errUp;
             }
 
-
          } else if (fErrorMode == TRatioPlot::ErrorMode::kErrorSymmetric) {
             error = fH1->GetBinError(i);
          } else {
@@ -1001,9 +975,7 @@ void TRatioPlot::BuildLowerPlot()
             error = 0;
          }
 
-
          if (error != 0) {
-
 
             res = (val - val2) / error;
 
@@ -1013,24 +985,23 @@ void TRatioPlot::BuildLowerPlot()
             ++ipoint;
 
          }
-      } 
+      }
 
    } else if (fDisplayMode == TRatioPlot::CalculationMode::kFitResidual) {
-      
+
       SetGridlines(signGridlines, 3);
-      
+
       TF1 *func = dynamic_cast<TF1*>(fH1->GetListOfFunctions()->At(0));
 
       fRatioGraph = new TGraphAsymmErrors();
       Int_t ipoint = 0;
 
       Double_t res;
-      Double_t error;      
+      Double_t error;
 
       std::vector<double> ci1;
       std::vector<double> ci2;
 
-      
       Double_t x_arr[fH1->GetNbinsX()];
       Double_t ci_arr1[fH1->GetNbinsX()];
       Double_t ci_arr2[fH1->GetNbinsX()];
@@ -1048,7 +1019,7 @@ void TRatioPlot::BuildLowerPlot()
          for (Int_t i=1; i<=fH1->GetNbinsX();++i) {
             ci1.push_back(ci_arr1[i-1]);
          }
-         
+
          fFitResult->GetConfidenceIntervals(fH1->GetNbinsX(), 1, 1, x_arr, ci_arr2, cl2);
          for (Int_t i=1; i<=fH1->GetNbinsX();++i) {
             ci2.push_back(ci_arr2[i-1]);
@@ -1071,9 +1042,9 @@ void TRatioPlot::BuildLowerPlot()
       for (Int_t i=0; i<=fH1->GetNbinsX();++i) {
          val = fH1->GetBinContent(i);
          x = fH1->GetBinCenter(i+1);
-          
+
          if (fErrorMode == TRatioPlot::ErrorMode::kErrorAsymmetric) {
-            
+
             Double_t errUp = fH1->GetBinErrorUp(i);
             Double_t errLow = fH1->GetBinErrorLow(i);
 
@@ -1084,7 +1055,6 @@ void TRatioPlot::BuildLowerPlot()
                // h1 < fit
                error = errUp;
             }
-
 
          } else if (fErrorMode == TRatioPlot::ErrorMode::kErrorSymmetric) {
             error = fH1->GetBinError(i);
@@ -1097,13 +1067,11 @@ void TRatioPlot::BuildLowerPlot()
             error = 0;
          }
 
-
          if (error != 0) {
-            
 
             res = (fH1->GetBinContent(i)- func->Eval(fH1->GetBinCenter(i) ) ) / error;
             //__("x="<< x << " y=" << res << " err=" << error);
-           
+
             ((TGraphAsymmErrors*)fRatioGraph)->SetPoint(ipoint, fH1->GetBinCenter(i), res);
             ((TGraphAsymmErrors*)fRatioGraph)->SetPointError(ipoint,  fH1->GetBinWidth(i)/2., fH1->GetBinWidth(i)/2., 0.5, 0.5);
 
@@ -1113,21 +1081,21 @@ void TRatioPlot::BuildLowerPlot()
             fConfidenceInterval2->SetPointError(ipoint, x, ci2[i] / error);
 
             ++ipoint;
-            
+
          }
 
       }
- 
+
    } else if (fDisplayMode == TRatioPlot::CalculationMode::kDivideHist){
       SetGridlines(divideGridlines, 3);
-      
+
       // Use TH1's Divide method
       TH1 *tmpHist = (TH1*)fH1->Clone();
       tmpHist->Reset();
 
       tmpHist->Divide(fH1, fH2, fC1, fC2, fDisplayOption.Data());
       fRatioGraph = new TGraphErrors(tmpHist);
-   
+
       delete tmpHist;
    }
 
@@ -1138,16 +1106,14 @@ void TRatioPlot::BuildLowerPlot()
    fConfidenceInterval2->SetTitle("");
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// (Re-)Creates the TGAxis objects that are used for consistent display of the 
+/// (Re-)Creates the TGAxis objects that are used for consistent display of the
 /// axes.
 
 void TRatioPlot::CreateVisualAxes()
 {
    TVirtualPad *padsav = gPad;
    fTopPad->cd();
-
 
    // figure out where the axis has to go.
    // Implicit assumption is, that the top pad spans the full other pads
@@ -1172,7 +1138,7 @@ void TRatioPlot::CreateVisualAxes()
    Float_t sf = fSplitFraction;
 
    // check if gPad has the all sides axis set
-   Bool_t mirroredAxes = fParentPad->GetFrameFillStyle() == 0 || GetFrameFillStyle() == 0; 
+   Bool_t mirroredAxes = fParentPad->GetFrameFillStyle() == 0 || GetFrameFillStyle() == 0;
    Bool_t axistop = fTickx == 1 || mirroredAxes;
    Bool_t axisright = fTicky == 1 || mirroredAxes;
 
@@ -1181,10 +1147,10 @@ void TRatioPlot::CreateVisualAxes()
    Bool_t lowlogy = fLowerPad->GetLogy();
 
    if (uplogy) {
-      
+
       upYFirst = TMath::Power(10, upYFirst);
       upYLast = TMath::Power(10, upYLast);
-         
+
       if (upYFirst <= 0 || upYLast <= 0) {
          Error(__FUNCTION__, "Cannot set upper Y axis to log scale");
       }
@@ -1200,14 +1166,12 @@ void TRatioPlot::CreateVisualAxes()
 
    }
 
-
    // this is different than in y, y already has pad coords converted, x not...
    if (logx) {
       if (first <= 0 || last <= 0) {
          Error(__FUNCTION__, "Cannot set X axis to log scale");
       }
    }
-   
 
    // determine axes options to create log axes if needed
    TString xopt = "";
@@ -1223,16 +1187,16 @@ void TRatioPlot::CreateVisualAxes()
       fUpperGXaxis->Draw();
    }
 
-   if (fUpperGYaxis == 0) { 
+   if (fUpperGYaxis == 0) {
       fUpperGYaxis = new TGaxis(0, 0, 1, 1, upYFirst, upYLast, 510, "S"+upyopt);
-      fUpperGYaxis->Draw();   
-   }   
-   
-   if (fLowerGXaxis == 0) { 
+      fUpperGYaxis->Draw();
+   }
+
+   if (fLowerGXaxis == 0) {
       fLowerGXaxis = new TGaxis(0, 0, 1, 1, first, last, 510, "+S"+xopt);
       fLowerGXaxis->Draw();
-   }   
-   
+   }
+
    if (fLowerGYaxis == 0) {
       fLowerGYaxis = new TGaxis(0, 0, 1, 1, lowYFirst, lowYLast, 510, "-S"+lowyopt);
       fLowerGYaxis->Draw();
@@ -1243,7 +1207,7 @@ void TRatioPlot::CreateVisualAxes()
    fUpperGYaxis->ImportAxisAttributes(fUpYaxis);
    fLowerGXaxis->ImportAxisAttributes(fSharedXAxis);
    fLowerGYaxis->ImportAxisAttributes(fLowYaxis);
-   
+
    // (re)set all the axes properties to what we want them
    fUpperGXaxis->SetTitle("");
 
@@ -1279,24 +1243,23 @@ void TRatioPlot::CreateVisualAxes()
    fUpperGYaxis->SetNdivisions(fUpYaxis->GetNdivisions());
    fLowerGXaxis->SetNdivisions(fSharedXAxis->GetNdivisions());
    fLowerGYaxis->SetNdivisions(fLowYaxis->GetNdivisions());
-   
+
    fUpperGXaxis->SetOption("+U"+xopt);
    fUpperGYaxis->SetOption("S"+upyopt);
    fLowerGXaxis->SetOption("+S"+xopt);
    fLowerGYaxis->SetOption("-S"+lowyopt);
- 
 
    // normalize the tick sizes. y axis ticks should be consistent
    // even if their length is different
    Double_t ratio = ( (upBM-(1-upTM))*(1-sf) ) / ( (lowBM-(1-lowTM))*sf ) ;
    fUpperGXaxis->SetLabelSize(0.);
-   Double_t ticksize = fUpperGYaxis->GetTickSize()*ratio;  
+   Double_t ticksize = fUpperGYaxis->GetTickSize()*ratio;
    fLowerGYaxis->SetTickSize(ticksize);
 
    // hide first label of upper y axis
 
    if (GetSeparationMargin() < 0.025) {
-      
+
       if (fHideLabelMode != TRatioPlot::HideLabelMode::kNoHide) {
          if (fHideLabelMode == TRatioPlot::HideLabelMode::kHideUp) {
             fUpperGYaxis->SetLabelAttributes(1, -1, 0);
@@ -1305,32 +1268,31 @@ void TRatioPlot::CreateVisualAxes()
          }
       }
 
-   } 
+   }
 
-
-   // Create the axes on the other sides of the graphs 
+   // Create the axes on the other sides of the graphs
    // This is steered by an option on the containing pad or self
    if (axistop || axisright) {
-      
+
       // only actually create them once, reuse otherwise b/c memory
       if (fUpperGXaxisMirror == 0) {
-         fUpperGXaxisMirror = (TGaxis*)fUpperGXaxis->Clone(); 
-         if (axistop) fUpperGXaxisMirror->Draw(); 
-      } 
+         fUpperGXaxisMirror = (TGaxis*)fUpperGXaxis->Clone();
+         if (axistop) fUpperGXaxisMirror->Draw();
+      }
 
-      if (fLowerGXaxisMirror == 0) { 
-         fLowerGXaxisMirror = (TGaxis*)fLowerGXaxis->Clone(); 
+      if (fLowerGXaxisMirror == 0) {
+         fLowerGXaxisMirror = (TGaxis*)fLowerGXaxis->Clone();
          if (axistop) fLowerGXaxisMirror->Draw();
       }
 
       if (fUpperGYaxisMirror == 0) {
-         fUpperGYaxisMirror = (TGaxis*)fUpperGYaxis->Clone(); 
+         fUpperGYaxisMirror = (TGaxis*)fUpperGYaxis->Clone();
          if (axisright) fUpperGYaxisMirror->Draw();
       }
-      
+
       if (fLowerGYaxisMirror == 0) {
          fLowerGYaxisMirror = (TGaxis*)fLowerGYaxis->Clone();
-         if (axisright) fLowerGYaxisMirror->Draw(); 
+         if (axisright) fLowerGYaxisMirror->Draw();
       }
 
       // import attributes from shared axes
@@ -1345,7 +1307,6 @@ void TRatioPlot::CreateVisualAxes()
       fLowerGXaxisMirror->SetTitle("");
       fLowerGYaxisMirror->SetTitle("");
 
-
       // move them about and set required positions
       fUpperGXaxisMirror->SetX1(upLM);
       fUpperGXaxisMirror->SetX2(1-upRM);
@@ -1353,9 +1314,9 @@ void TRatioPlot::CreateVisualAxes()
       fUpperGXaxisMirror->SetY2((1-upTM)*(1-sf)+sf);
       fUpperGXaxisMirror->SetWmin(first);
       fUpperGXaxisMirror->SetWmax(last);
-      
-      fUpperGYaxisMirror->SetX1(1-upRM); 
-      fUpperGYaxisMirror->SetX2(1-upRM); 
+
+      fUpperGYaxisMirror->SetX1(1-upRM);
+      fUpperGYaxisMirror->SetX2(1-upRM);
       fUpperGYaxisMirror->SetY1(upBM*(1-sf)+sf);
       fUpperGYaxisMirror->SetY2( (1-upTM)*(1-sf)+sf );
       fUpperGYaxisMirror->SetWmin(upYFirst);
@@ -1364,12 +1325,12 @@ void TRatioPlot::CreateVisualAxes()
       fLowerGXaxisMirror->SetX1(lowLM);
       fLowerGXaxisMirror->SetX2(1-lowRM);
       fLowerGXaxisMirror->SetY1((1-lowTM)*sf);
-      fLowerGXaxisMirror->SetY2((1-lowTM)*sf); 
+      fLowerGXaxisMirror->SetY2((1-lowTM)*sf);
       fLowerGXaxisMirror->SetWmin(first);
       fLowerGXaxisMirror->SetWmax(last);
-         
-      fLowerGYaxisMirror->SetX1(1-lowRM); 
-      fLowerGYaxisMirror->SetX2(1-lowRM); 
+
+      fLowerGYaxisMirror->SetX1(1-lowRM);
+      fLowerGYaxisMirror->SetX2(1-lowRM);
       fLowerGYaxisMirror->SetY1(lowBM*sf);
       fLowerGYaxisMirror->SetY2((1-lowTM)*sf);
       fLowerGYaxisMirror->SetWmin(lowYFirst);
@@ -1387,13 +1348,12 @@ void TRatioPlot::CreateVisualAxes()
       fUpperGYaxisMirror->SetNdivisions(fUpYaxis->GetNdivisions());
       fLowerGXaxisMirror->SetNdivisions(fSharedXAxis->GetNdivisions());
       fLowerGYaxisMirror->SetNdivisions(fLowYaxis->GetNdivisions());
-      
+
       fUpperGXaxisMirror->SetLabelSize(0.);
       fLowerGXaxisMirror->SetLabelSize(0.);
       fUpperGYaxisMirror->SetLabelSize(0.);
       fLowerGYaxisMirror->SetLabelSize(0.);
    }
-
 
    padsav->cd();
 
@@ -1448,7 +1408,6 @@ Bool_t TRatioPlot::SyncPadMargins()
       SetPadMargins();
    }
 
-
    Bool_t verticalChanged = kFALSE;
 
    if (fUpperPad->GetBottomMargin() != fUpBottomMargin) {
@@ -1457,20 +1416,20 @@ Bool_t TRatioPlot::SyncPadMargins()
       fUpBottomMargin = fUpperPad->GetBottomMargin();
 
    }
-   
+
    if (fLowerPad->GetTopMargin() != fLowTopMargin) {
 
       verticalChanged = kTRUE;
       fLowTopMargin = fLowerPad->GetTopMargin();
 
    }
-   
+
    if (fLowerPad->GetBottomMargin() != fLowBottomMargin) {
 
       fLowBottomMargin = fLowerPad->GetBottomMargin();
 
    }
-   
+
    if (fUpperPad->GetTopMargin() != fUpTopMargin) {
 
       fUpTopMargin = fUpperPad->GetTopMargin();
@@ -1498,14 +1457,13 @@ void TRatioPlot::RangeAxisChanged()
       // not drawn yet
       return;
    }
- 
+
    // Only run this concurrently once, in case it's called async
    if (fIsUpdating) {
       return;
    }
 
    fIsUpdating = kTRUE;
-   
 
    // find out if logx has changed
    //var_dump(GetLogx());
@@ -1514,7 +1472,6 @@ void TRatioPlot::RangeAxisChanged()
    //var_dump(fUpperPad->GetLogy());
    //var_dump(fLowerPad->GetLogx());
    //var_dump(fLowerPad->GetLogy());
-
 
    if (GetLogx()) {
       if (!fUpperPad->GetLogx() || !fLowerPad->GetLogx()) {
@@ -1531,14 +1488,13 @@ void TRatioPlot::RangeAxisChanged()
    fLowerPad->SetLogx(GetLogx());
 
    // copy logy from rp to upper pad
-   //if (GetLogy() != 
+   //if (GetLogy() !=
    //fUpperPad->SetLogy(GetLogy());
 
-   // get axis ranges for upper and lower 
+   // get axis ranges for upper and lower
    TAxis *uprefx = GetUpperRefXaxis();
    Double_t upFirst = uprefx->GetBinLowEdge(uprefx->GetFirst());
    Double_t upLast  = uprefx->GetBinUpEdge(uprefx->GetLast());
-
 
    TAxis *lowrefx = GetLowerRefXaxis();
    Double_t lowFirst = lowrefx->GetBinLowEdge(lowrefx->GetFirst());
@@ -1563,7 +1519,7 @@ void TRatioPlot::RangeAxisChanged()
    if (upChanged || lowChanged) {
       SyncAxesRanges();
       CreateVisualAxes();
-      CreateGridline();   
+      CreateGridline();
 
       // @TODO: Fix updating, it's not working if zooming on lower axis
       fUpperPad->Modified();
@@ -1577,7 +1533,7 @@ void TRatioPlot::RangeAxisChanged()
    // sync the margins in case the user has dragged one of them
    Bool_t marginsChanged = SyncPadMargins();
 
-   if (marginsChanged) { 
+   if (marginsChanged) {
       fUpperPad->Modified();
       fLowerPad->Modified();
       fTopPad->Modified();
@@ -1587,13 +1543,12 @@ void TRatioPlot::RangeAxisChanged()
    }
 
    CreateVisualAxes();
-   CreateGridline();   
+   CreateGridline();
    fIsUpdating = kFALSE;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Slot for the UnZoomed signal that was introduced to TAxis. 
+/// Slot for the UnZoomed signal that was introduced to TAxis.
 /// Unzooms both pads
 
 void TRatioPlot::UnZoomed()
@@ -1614,10 +1569,10 @@ void TRatioPlot::UnZoomed()
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot that handles common resizing of upper and lower pad.
 
-void TRatioPlot::SubPadResized() 
+void TRatioPlot::SubPadResized()
 {
 
-   if (fIsPadUpdating) {   
+   if (fIsPadUpdating) {
       return;
    }
 
@@ -1626,10 +1581,9 @@ void TRatioPlot::SubPadResized()
    Float_t upylow = fUpperPad->GetYlowNDC();
    Float_t lowylow = fLowerPad->GetYlowNDC();
    Float_t lowh = fLowerPad->GetHNDC();
-   Float_t lowyup = lowylow + lowh; 
+   Float_t lowyup = lowylow + lowh;
 
    Bool_t changed = kFALSE;
-
 
    if (upylow != fSplitFraction) {
       // up changed
@@ -1641,7 +1595,7 @@ void TRatioPlot::SubPadResized()
       SetSplitFraction(lowyup);
       changed = kTRUE;
    }
-    
+
    if (changed) {
       CreateVisualAxes();
    }
@@ -1651,14 +1605,13 @@ void TRatioPlot::SubPadResized()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/// Check if ... is drawn.
 
 Bool_t TRatioPlot::IsDrawn()
 {
    TList *siblings = fParentPad->GetListOfPrimitives();
    return siblings->FindObject(this) != 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the fraction of the parent pad, at which the to sub pads should meet
@@ -1686,8 +1639,8 @@ void TRatioPlot::SetConfidenceLevels(Double_t c1, Double_t c2)
 void TRatioPlot::SetLogx(Int_t value )
 {
    TPad::SetLogx(value);
-   fUpperPad->SetLogx(value); 
-   fLowerPad->SetLogx(value); 
+   fUpperPad->SetLogx(value);
+   fLowerPad->SetLogx(value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1702,17 +1655,19 @@ void TRatioPlot::SetLogy(Int_t value)
 ////////////////////////////////////////////////////////////////////////////////
 /// \param gridlines Vector of y positions for the dashes lines
 /// Can be used to override existing default lines (or disable them).
+///
 /// Begin_Macro(source)
 /// ../../../tutorials/hist/ratioplot4.C
 /// End_Macro
 
-void TRatioPlot::SetGridlines(std::vector<double> gridlines) 
+void TRatioPlot::SetGridlines(std::vector<double> gridlines)
 {
    fGridlinePositions = gridlines;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set where horizontal, dashed lines are drawn on the lower pad.
+///
 /// \param gridlines Double_t array of y positions for the dashed lines
 /// \param numGridlines Length of gridlines
 
@@ -1720,13 +1675,15 @@ void TRatioPlot::SetGridlines(Double_t *gridlines, Int_t numGridlines)
 {
    fGridlinePositions.clear();
    //fGridlines.resize(numGridlines);
-   
+
    for (Int_t i=0;i<numGridlines;++i) {
       fGridlinePositions.push_back(gridlines[i]);
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set the confidence interval colors.
+///
 /// \param ci1 Color of the 1 sigma band
 /// \param ci2 Color of the 2 sigma band
 /// Sets the color of the 1 and 2 sigma bands in the fit residual case.
@@ -1736,7 +1693,6 @@ void TRatioPlot::SetGridlines(Double_t *gridlines, Int_t numGridlines)
 
 void TRatioPlot::SetConfidenceIntervalColors(Color_t ci1, Color_t ci2)
 {
-   fCi1Color = ci1; 
-   fCi2Color = ci2; 
+   fCi1Color = ci1;
+   fCi2Color = ci2;
 }
-
