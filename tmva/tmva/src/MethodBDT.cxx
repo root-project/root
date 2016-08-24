@@ -164,11 +164,11 @@ TMVA::MethodBDT::MethodBDT( const TString& jobName,
    , fNTrees(0)
    , fSigToBkgFraction(0) 
    , fAdaBoostBeta(0)
-   , fTransitionPoint(0)
+//   , fTransitionPoint(0)
    , fShrinkage(0)
    , fBaggedBoost(kFALSE)
    , fBaggedGradBoost(kFALSE)
-   , fSumOfWeights(0)
+//   , fSumOfWeights(0)
    , fMinNodeEvents(0)
    , fMinNodeSize(5)
    , fMinNodeSizeS("5%")
@@ -217,11 +217,11 @@ TMVA::MethodBDT::MethodBDT( DataSetInfo& theData,
    , fNTrees(0)
    , fSigToBkgFraction(0) 
    , fAdaBoostBeta(0)
-   , fTransitionPoint(0)
+//   , fTransitionPoint(0)
    , fShrinkage(0)
    , fBaggedBoost(kFALSE)
    , fBaggedGradBoost(kFALSE)
-   , fSumOfWeights(0)
+//   , fSumOfWeights(0)
    , fMinNodeEvents(0)
    , fMinNodeSize(5)
    , fMinNodeSizeS("5%")
@@ -672,7 +672,7 @@ void TMVA::MethodBDT::Init( void )
    fUseNvars        =  UInt_t(TMath::Sqrt(GetNvar())+0.6);
    fUsePoissonNvars = kTRUE;
    fShrinkage       = 1.0;
-   fSumOfWeights    = 0.0;
+//   fSumOfWeights    = 0.0;
 
    // reference cut value to distinguish signal-like from background-like events
    SetSignalReferenceCut( 0 );
@@ -695,6 +695,7 @@ void TMVA::MethodBDT::Reset( void )
    if (fMonitorNtuple) { fMonitorNtuple->Delete(); fMonitorNtuple=NULL; }
    fVariableImportance.clear();
    fResiduals.clear();
+   fLossFunctionEventInfo.clear();
    // now done in "InitEventSample" which is called in "Train"
    // reset all previously stored/accumulated BOOST weights in the event sample
    //for (UInt_t iev=0; iev<fEventSample.size(); iev++) fEventSample[iev]->SetBoostWeight(1.);
@@ -1405,29 +1406,22 @@ void TMVA::MethodBDT::UpdateTargets(std::vector<const TMVA::Event*>& eventSample
 
 void TMVA::MethodBDT::UpdateTargetsRegression(std::vector<const TMVA::Event*>& eventSample, Bool_t first)
 {
-   for (std::vector<const TMVA::Event*>::const_iterator e=fEventSample.begin(); e!=fEventSample.end();e++) {
-      if(!first){
-         fLossFunctionEventInfo[*e].predictedValue += fForest.back()->CheckEvent(*e,kFALSE);
+   std::cout << std::endl << "!!! UpdateTargetsRegression: Tree - " << fITree << std::endl;
+   std::cout << "=======================================================" << std::endl << std::endl;
+   if(!first){
+      std::cout << "NOT FIRST. Updating predicted values/residuals..." << std::endl; 
+      std::cout << "i: residual, weight" << std::endl;
+      UInt_t i = 0;
+      for (std::vector<const TMVA::Event*>::const_iterator e=fEventSample.begin(); e!=fEventSample.end();e++) {
+         fLossFunctionEventInfo[*e].predictedValue += fForest.back()->CheckEvent(*e,kFALSE); 
+         if(i<=10)
+            std::cout << i << ": " << fLossFunctionEventInfo[*e].trueValue - fLossFunctionEventInfo[*e].predictedValue <<", " << fLossFunctionEventInfo[*e].weight << std::endl;
+         i++;
       }
-      
    }
    
+   std::cout << "Updating targets..." << std::endl;                   
    fLossFunctionBDT->SetTargets(eventSample, fLossFunctionEventInfo);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///calculates the quantile of the distribution of the first pair entries weighted with the values in the second pair entries
-
-Double_t TMVA::MethodBDT::GetWeightedQuantile(vector<  std::pair<Double_t, Double_t> > vec, const Double_t quantile, const Double_t norm){
-   Double_t temp = 0.0;
-   std::sort(vec.begin(), vec.end());
-   UInt_t i = 0;
-   while(i<vec.size() && temp <= norm*quantile){
-      temp += vec[i].second;
-      i++;
-   }
-   if (i >= vec.size()) return 0.; // prevent uncontrolled memory access in return value calculation 
-   return vec[i].first;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1466,6 +1460,9 @@ Double_t TMVA::MethodBDT::GradBoost(std::vector<const TMVA::Event*>& eventSample
 
 Double_t TMVA::MethodBDT::GradBoostRegression(std::vector<const TMVA::Event*>& eventSample, DecisionTree *dt )
 {
+   std::cout << std::endl << "!!! GradBoostRegression: Tree - " << fITree << std::endl;
+   std::cout << "=======================================================" << std::endl << std::endl;
+
    // get the vector of events for each terminal so that we can calculate the constant fit value in each
    // terminal node
    std::map<TMVA::DecisionTreeNode*,vector< TMVA::LossFunctionEventInfo > > leaves;
@@ -1476,9 +1473,17 @@ Double_t TMVA::MethodBDT::GradBoostRegression(std::vector<const TMVA::Event*>& e
 
    // calculate the constant fit for each terminal node based upon the events in the node
    // node (iLeave->first), vector of event information (iLeave->second)
+   UInt_t i = 0;
+   std::cout << "ileave: fit" << std::endl;
    for (std::map<TMVA::DecisionTreeNode*,vector< TMVA::LossFunctionEventInfo > >::iterator iLeave=leaves.begin();
         iLeave!=leaves.end();++iLeave){
-      (iLeave->first)->SetResponse(fShrinkage*fLossFunctionBDT->Fit(iLeave->second));          
+      std::cout << "i: sumOfWeights, residualMedian, evs.size()" << std::endl;
+      std::cout << i << ": ";
+      Double_t fit = fLossFunctionBDT->Fit(iLeave->second);
+      (iLeave->first)->SetResponse(fShrinkage*fit);          
+      std::cout << i << ": " << fit << std::endl;
+      std::cout << std::endl;
+      i++;
    }
    
    UpdateTargetsRegression(*fTrainSample);
@@ -1492,8 +1497,16 @@ void TMVA::MethodBDT::InitGradBoost( std::vector<const TMVA::Event*>& eventSampl
 {
    fSepType=NULL; //set fSepType to NULL (regression trees are used for both classification an regression)
    if(DoRegression()){
+      std::cout << std::endl << "!!! InitGradBoost: Tree - "  << fITree << std::endl;
+      std::cout << "=======================================================" << std::endl << std::endl;
+
+      UInt_t i = 0;
+      std::cout << "i: init residual, weight" << std::endl;
       for (std::vector<const TMVA::Event*>::const_iterator e=eventSample.begin(); e!=eventSample.end();e++) {
          fLossFunctionEventInfo[*e]= TMVA::LossFunctionEventInfo((*e)->GetTarget(0), 0, (*e)->GetWeight());
+         if(i<=10)
+            std::cout << i << ": " << fLossFunctionEventInfo[*e].trueValue - fLossFunctionEventInfo[*e].predictedValue <<", " << fLossFunctionEventInfo[*e].weight << std::endl;
+         i++;
       }
 
       fLossFunctionBDT->Init(fLossFunctionEventInfo, fBoostWeights);

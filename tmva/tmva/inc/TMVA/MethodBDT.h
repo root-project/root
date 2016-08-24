@@ -201,7 +201,6 @@ namespace TMVA {
       void UpdateTargetsRegression( std::vector<const TMVA::Event*>&,Bool_t first=kFALSE);
       Double_t GetGradBoostMVA(const TMVA::Event *e, UInt_t nTrees);
       void     GetBaggedSubSample(std::vector<const TMVA::Event*>&);
-      Double_t GetWeightedQuantile(std::vector<std::pair<Double_t, Double_t> > vec, const Double_t quantile, const Double_t SumOfWeights = 0.0);
 
       std::vector<const TMVA::Event*>       fEventSample;     // the training events
       std::vector<const TMVA::Event*>       fValidationSample;// the Validation events
@@ -215,12 +214,12 @@ namespace TMVA {
       TString                         fBoostType;       // string specifying the boost type
       Double_t                        fAdaBoostBeta;    // beta parameter for AdaBoost algorithm
       TString                         fAdaBoostR2Loss;  // loss type used in AdaBoostR2 (Linear,Quadratic or Exponential)
-      Double_t                        fTransitionPoint; // break-down point for gradient regression
+      //Double_t                        fTransitionPoint; // break-down point for gradient regression
       Double_t                        fShrinkage;       // learning rate for gradient boost;
       Bool_t                          fBaggedBoost;     // turn bagging in combination with boost on/off
       Bool_t                          fBaggedGradBoost; // turn bagging in combination with grad boost on/off
-      Double_t                        fSumOfWeights;    // sum of all event weights
-      std::map< const TMVA::Event*, std::pair<Double_t, Double_t> >       fWeightedResiduals;  // weighted regression residuals
+      //Double_t                        fSumOfWeights;    // sum of all event weights
+      //std::map< const TMVA::Event*, std::pair<Double_t, Double_t> >       fWeightedResiduals;  // weighted regression residuals
       std::map< const TMVA::Event*, LossFunctionEventInfo>                fLossFunctionEventInfo;  // map event to true value, predicted value, and weight
                                                                                                    // used by different loss functions for BDT regression
       std::map< const TMVA::Event*,std::vector<double> > fResiduals; // individual event residuals for gradient boost
