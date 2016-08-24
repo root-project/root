@@ -8,7 +8,7 @@ ROOTTEST_ADD_TEST(RunMyClass
 ROOTTEST_ADD_TEST(runclassref
                   MACRO runclassref.C
                   OUTREF classref.ref
-                  DEPENDS roottest-root-meta-tclass-RunMyClass)
+                  DEPENDS RunMyClass)
 
 ROOTTEST_ADD_TEST(runtempParse
                   MACRO runtempParse.C

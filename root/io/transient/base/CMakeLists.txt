@@ -14,4 +14,4 @@ ROOTTEST_ADD_TEST(WriteFile
 ROOTTEST_ADD_TEST(hadd_autoload
                   COMMAND hadd -f data_merge.root data1.root data2.root
                   OUTREF hadd_autoload.ref
-                  DEPENDS roottest-root-io-transient-base-WriteFile)
+                  DEPENDS WriteFile)

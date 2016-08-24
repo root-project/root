@@ -18,7 +18,7 @@ ROOTTEST_ADD_TEST(execOld
 ROOTTEST_ADD_TEST(execNew
                   MACRO execNew.cxx+
                   OUTREF execNew.ref
-                  DEPENDS roottest-root-io-transient-execOld)
+                  DEPENDS execOld)
 
 ROOTTEST_GENERATE_REFLEX_DICTIONARY( transientNoctor transientNoctor.h
                                      SELECTION transientNoctor_selection.xml

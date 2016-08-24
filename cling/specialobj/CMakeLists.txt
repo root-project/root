@@ -14,7 +14,7 @@ ROOTTEST_ADD_TEST(argtwice
 ROOTTEST_ADD_TEST(stlProxies
                   MACRO runstlProxies.C
                   OUTREF stlProxies.ref
-                  DEPENDS roottest-cling-specialobj-stlwrite 
+                  DEPENDS stlwrite
                   LABELS roottest regression cling)
 
 ROOTTEST_ADD_TEST(runf02
