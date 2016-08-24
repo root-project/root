@@ -41,7 +41,6 @@ private:
    TRatioPlot& operator=(const TRatioPlot&); // Not implemented
    TRatioPlot(const TRatioPlot &hrp);
 
-   // @TODO: Comment enums
    enum CalculationMode {
       kDivideHist = 1, ///< Use `TH1::Divide` to create the ratio.
       kDivideGraph = 2, ///< Use `TGraphAsymmErrors::Divide` to create the ratio.
@@ -65,82 +64,70 @@ private:
 
 protected:
 
-   TVirtualPad *fParentPad = 0;
-   TPad *fUpperPad = 0;
-   TPad *fLowerPad = 0;
-   TPad *fTopPad = 0;
+   TVirtualPad *fParentPad = 0; ///< Stores the pad the ratio plot was created in
+   TPad *fUpperPad = 0; ///< The pad which contains the upper plot part
+   TPad *fLowerPad = 0; ///< The pad which contains the calculated lower plot part
+   TPad *fTopPad = 0; ///< The Pad that drawn on top on the others to have consistent coordinates
 
-   TH1 *fH1 = 0;
-   TH1 *fH2 = 0;
-   TObject *fHistDrawProxy = 0;
+   TH1 *fH1 = 0; ///< Stores the primary histogram
+   TH1 *fH2 = 0; ///< Stores the secondary histogram, if there is one
+   TObject *fHistDrawProxy = 0; ///< The object which is actually drawn, this might be TH1 or THStack
 
-   Int_t fDisplayMode = 0;
-   Int_t fErrorMode = TRatioPlot::ErrorMode::kErrorSymmetric;
-   TString fDisplayOption = "";
-   TString fOptH1 = "";
-   TString fOptH2 = "";
-   TString fOptGraph = "";
-   
+   Int_t fDisplayMode = 0; ///< Stores which calculation is supposed to be performed as specified by user option
+   Int_t fErrorMode = TRatioPlot::ErrorMode::kErrorSymmetric; ///< Stores the error mode, sym, asym or func
+   TString fDisplayOption = ""; ///< Stores the option which is given in the constructor as a string
+   TString fOptH1 = ""; ///< Stores draw option for h1 given in constructor
+   TString fOptH2 = ""; ///< Stores draw option for h2 given in constructor
+   TString fOptGraph = ""; ///< Stores draw option for the lower plot graph given in constructor
 
+   Float_t fSplitFraction = 0.3; ///< Stores the fraction at which the upper and lower pads meet
 
-   Float_t fSplitFraction = 0.3;
+   TGraph *fRatioGraph = 0; ///< Stores the lower plot's graph
+   TGraphErrors *fConfidenceInterval1 = 0; ///< Stores the graph for the 1 sigma band
+   TGraphErrors *fConfidenceInterval2 = 0; ///< Stores the graph for the 2 sigma band
+   Color_t fCi1Color = kGreen; ///< Stores the color for the 1 sigma band
+   Color_t fCi2Color = kYellow; ///< Stores the color for the 2 sigma band
 
-   TGraph *fRatioGraph = 0;
-   TGraphErrors *fConfidenceInterval1 = 0;
-   TGraphErrors *fConfidenceInterval2 = 0;
-   Color_t fCi1Color = kGreen;
-   Color_t fCi2Color = kYellow;
+   Bool_t fShowConfidenceIntervals = kTRUE; ///< Stores whether to show the confidence interval bands. From Draw option
 
-   Bool_t fShowConfidenceIntervals = kTRUE;
+   Double_t fCl1 = 0.6827; ///< Stores the confidence level for the inner confidence interval band
+   Double_t fCl2 = 0.9545; ///< Stores the confidence level for the outer confidence interval band
 
-   Double_t fCl1 = 0.6827;
-   Double_t fCl2 = 0.9545;
+   Double_t fC1 = 1.; ///< Stores the scale factor for h1 (or THStack sum)
+   Double_t fC2 = 1.; ///< Stores the scale factor for h2
 
-   Double_t fC1 = 1.;
-   Double_t fC2 = 1.;
+   TFitResult *fFitResult = 0; ///< Stores the explicit fit result given in the fit residual case. Can be 0
 
-   TFitResult *fFitResult = 0;
+   TAxis *fSharedXAxis = 0; ///< X axis that stores the range for both plots
+   TGaxis *fUpperGXaxis = 0; ///< Upper graphical x axis
+   TGaxis *fLowerGXaxis = 0; ///< Lower graphical x axis
+   TGaxis *fUpperGYaxis = 0; ///< Upper graphical y axis
+   TGaxis *fLowerGYaxis = 0; ///< Lower graphical y axis
+   TGaxis *fUpperGXaxisMirror = 0; ///< Upper mirror of the x axis
+   TGaxis *fLowerGXaxisMirror = 0; ///< Lower mirror of the x axis
+   TGaxis *fUpperGYaxisMirror = 0; ///< Upper mirror of the y axis
+   TGaxis *fLowerGYaxisMirror = 0; ///< Lower mirror of the y axis
 
-   TAxis *fSharedXAxis = 0;
-   TGaxis *fUpperGXaxis = 0;
-   TGaxis *fLowerGXaxis = 0;
-   TGaxis *fUpperGYaxis = 0;
-   TGaxis *fLowerGYaxis = 0;
-   TGaxis *fUpperGXaxisMirror = 0;
-   TGaxis *fLowerGXaxisMirror = 0;
-   TGaxis *fUpperGYaxisMirror = 0;
-   TGaxis *fLowerGYaxisMirror = 0;
+   TAxis *fUpYaxis = 0; ///< Clone of the upper y axis
+   TAxis *fLowYaxis = 0; ///< Clone of the lower y axis
 
-   TAxis *fUpYaxis = 0;
-   TAxis *fLowYaxis = 0;
-
-   std::vector<TLine*> fGridlines;
-   std::vector<double> fGridlinePositions;
-   Bool_t fShowGridlines = kTRUE;
-   Int_t fHideLabelMode = TRatioPlot::HideLabelMode::kHideLow;
-
-   // store y axis ranges so we can trigger redraw when they change
-   Double_t fUpYFirst = -1;
-   Double_t fUpYLast = -1;
-   Double_t fLowYFirst = -1;
-   Double_t fLowYLast = -1;
+   std::vector<TLine*> fGridlines; ///< Keeps TLine objects for the gridlines
+   std::vector<double> fGridlinePositions; ///< Stores the y positions for the gridlines
+   Bool_t fShowGridlines = kTRUE; ///< Stores whether to show the gridlines at all
+   Int_t fHideLabelMode = TRatioPlot::HideLabelMode::kHideLow; ///< Stores which label to hide if the margin is to narrow, if at all
 
    // store margins to be able do determine
    // what has changed when user drags
-   Float_t fUpTopMargin = 0.1;
-   Float_t fUpBottomMargin = 0.05;
-   Float_t fUpBottomMarginNominal = 0.05;
+   Float_t fUpTopMargin = 0.1; ///< Stores the top margin of the upper pad
+   Float_t fUpBottomMargin = 0.05; ///< Stores the bottom margin of the upper pad
+   Float_t fLowTopMargin = 0.05; ///< Stores the top margin of the lower pad
+   Float_t fLowBottomMargin = 0.3; ///< Stores the bottom margin of the lower pad
 
-   Float_t fLowTopMargin = 0.05;
-   Float_t fLowTopMarginNominal = 0.05;
-   Float_t fLowBottomMargin = 0.3;
+   Float_t fLeftMargin = 0.1; ///< Stores the common left margin of both pads
+   Float_t fRightMargin = 0.1; ///< Stores the common right margin of both pads
 
-   Float_t fLeftMargin = 0.1;
-   Float_t fRightMargin = 0.1;
-
-   Bool_t fIsUpdating = kFALSE;
-   Bool_t fIsPadUpdating = kFALSE;
-   Bool_t fPainting = kFALSE;
+   Bool_t fIsUpdating = kFALSE; ///< Keeps track of whether its currently updating to reject other calls until done
+   Bool_t fIsPadUpdating = kFALSE; ///< Keeps track whether pads are updating during resizing
 
    virtual void SyncAxesRanges();
    virtual void SetupPads();
@@ -180,7 +167,7 @@ public:
    virtual void SubPadResized();
 
    // Getters
-   virtual TAxis *GetXaxis() { return fSharedXAxis; }   
+   virtual TAxis *GetXaxis() { return fSharedXAxis; }
    virtual TAxis *GetUpYaxis() { return fUpYaxis; }
    virtual TAxis *GetLowYaxis() { return fLowYaxis; }
 
@@ -196,8 +183,8 @@ public:
    virtual TPad * GetLowerPad() { return fLowerPad; }
    
    // Setters
-   virtual void SetFitResult(TFitResultPtr fitres) { fFitResult = fitres.Get(); }
-   virtual void SetFitResult(TFitResult *fitres) { fFitResult = fitres; }
+   virtual void SetFitResult(TFitResultPtr fitres);
+   virtual void SetFitResult(TFitResult *fitres); 
    
    // Setters for margins
    void SetUpTopMargin(Float_t margin);

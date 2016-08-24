@@ -37,7 +37,7 @@
 ClassImp(TRatioPlot)
 
 /** \class TRatioPlot
-    \ingroup Hist
+    \ingroup Histpainter
 Class for displaying ratios, differences and fit residuals.
 
 TRatioPlot has two constructors, one which accepts two histograms, and is responsible
@@ -237,7 +237,7 @@ TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, const char *name /*=0*/, const char *ti
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor which accepts a `THStack` and a histogram. Converts the
-/// stack to a regular sum of its conatining histograms for processing.
+/// stack to a regular sum of its containing histograms for processing.
 /// \param st The THStack object
 /// \param h2 The other histogram
 /// \param name The name of the object
@@ -287,6 +287,7 @@ TRatioPlot::TRatioPlot(THStack* st, TH1* h2, const char *name, const char *title
 /// \param displayOption Steers the error calculation
 /// \param optH1 Drawing option for the histogram
 /// \param optGraph Drawing option the lower graph
+/// \param fitres Explicit fit result to be used for calculation. Uses last fit if left empty
 
 TRatioPlot::TRatioPlot(TH1* h1, const char *name, const char *title, Option_t *displayOption, Option_t *optH1,
          /*Option_t *fitOpt, */Option_t *optGraph, TFitResult *fitres)
@@ -500,6 +501,7 @@ void TRatioPlot::SetSeparationMargin(Float_t margin)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the separation margin value.
+
 Float_t TRatioPlot::GetSeparationMargin()
 {
    Float_t sf = fSplitFraction;
@@ -568,8 +570,6 @@ void TRatioPlot::Draw(Option_t *option)
    fUpperPad->SetGridy(GetGridy());
    fLowerPad->SetGridx(GetGridx());
    fLowerPad->SetGridy(GetGridy());
- 
-
 
 
    TPad::Draw(option);
@@ -895,7 +895,7 @@ void TRatioPlot::SyncAxesRanges()
    Double_t first = fSharedXAxis->GetBinLowEdge(fSharedXAxis->GetFirst());
    Double_t last = fSharedXAxis->GetBinUpEdge(fSharedXAxis->GetLast());
 
-   // set range on computed graph, have to set it twice becaus
+   // set range on computed graph, have to set it twice because
    // TGraph's axis looks strange otherwise
    TAxis *ref = GetLowerRefXaxis();
    ref->SetLimits(first, last);
@@ -1228,7 +1228,7 @@ void TRatioPlot::CreateVisualAxes()
       fLowerGYaxis->Draw();
    }
 
-   // import infos from TAxes
+   // import infos from TAxis
    fUpperGXaxis->ImportAxisAttributes(fSharedXAxis);
    fUpperGYaxis->ImportAxisAttributes(fUpYaxis);
    fLowerGXaxis->ImportAxisAttributes(fSharedXAxis);
@@ -1700,7 +1700,6 @@ void TRatioPlot::SetGridlines(std::vector<double> gridlines)
 void TRatioPlot::SetGridlines(Double_t *gridlines, Int_t numGridlines)
 {
    fGridlinePositions.clear();
-   //fGridlines.resize(numGridlines);
 
    for (Int_t i=0;i<numGridlines;++i) {
       fGridlinePositions.push_back(gridlines[i]);
@@ -1721,4 +1720,28 @@ void TRatioPlot::SetConfidenceIntervalColors(Color_t ci1, Color_t ci2)
 {
    fCi1Color = ci1;
    fCi2Color = ci2;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Explicitly specify the fit result that is to be used for fit residual calculation.
+/// If it is not provided, the last fit registered in the global fitter is used.
+/// The fit result can also be specified in the constructor.
+///
+/// \param fitres The fit result coming from the fit function call
+
+void TRatioPlot::SetFitResult(TFitResultPtr fitres)
+{
+   fFitResult = fitres.Get();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Explicitly specify the fit result that is to be used for fit residual calculation.
+/// If it is not provided, the last fit registered in the global fitter is used.
+/// The fit result can also be specified in the constructor.
+///
+/// \param fitres The fit result coming from the fit function call
+
+void TRatioPlot::SetFitResult(TFitResult* fitres)
+{
+   fFitResult = fitres;
 }
