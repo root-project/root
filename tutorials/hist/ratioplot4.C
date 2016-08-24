@@ -17,7 +17,7 @@
     h1->FillRandom("gaus", 2000);
     h1->Fit("gaus");
     c1->Clear();
-    auto rp1 = new TRatioPlot(h1, "rp1", "rp1");
+    auto rp1 = new TRatioPlot(h1);
     std::vector<double> lines = {-3, -2, -1, 0, 1, 2, 3};
     rp1->SetGridlines(lines);
     rp1->Draw();

@@ -19,7 +19,7 @@
     h1->Fit("gaus");
     h1->SetMinimum(0.001);
     c1->Clear();
-    auto rp1 = new TRatioPlot(h1, "rp1", "rp1");
+    auto rp1 = new TRatioPlot(h1);
     rp1->Draw();
     rp1->GetLowerRefGraph()->SetMinimum(-2);
     rp1->GetLowerRefGraph()->SetMaximum(2);

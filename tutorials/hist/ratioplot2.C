@@ -20,7 +20,7 @@
    h1->FillRandom("gaus", 2000);
    h1->Fit("gaus");
    c1->Clear(); // Fit does not draw into correct pad
-   auto rp1 = new TRatioPlot((TH1*)h1->Clone(), "rp1", "rp1");
+   auto rp1 = new TRatioPlot(h1);
    rp1->Draw();
    rp1->GetLowYaxis()->SetTitle("ratio");
    rp1->GetUpYaxis()->SetTitle("entries");

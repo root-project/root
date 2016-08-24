@@ -15,7 +15,7 @@
     h1->FillRandom("gaus", 2000);
     h1->Fit("gaus");
     c1->Clear();
-    auto rp1 = new TRatioPlot(h1, "rp1", "rp1", "nogrid");
+    auto rp1 = new TRatioPlot(h1);
     rp1->SetConfidenceIntervalColors(kBlue, kRed);
     rp1->Draw();
     c1->Update();
