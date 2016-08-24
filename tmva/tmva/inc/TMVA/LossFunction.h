@@ -8,7 +8,7 @@
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
- *      LossFunction abstract class                                                           *
+ *      LossFunction and associated classes                                       *
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
@@ -48,13 +48,13 @@ namespace TMVA {
    class LossFunctionEventInfo{
 
    public:
-      LossFunctionEventInfo();
+      LossFunctionEventInfo(){};
       LossFunctionEventInfo(Double_t trueValue_, Double_t predictedValue_, Double_t weight_){
          trueValue = trueValue_;
          predictedValue = predictedValue_;
          weight = weight_;
       }
-      ~LossFunctionEventInfo();
+      ~LossFunctionEventInfo(){};
 
       Double_t trueValue; 
       Double_t predictedValue;
@@ -63,7 +63,8 @@ namespace TMVA {
 
 
    ///////////////////////////////////////////////////////////////////////////////////////////////
-   // Loss Function base class for general error calculations in regression/classification
+   // Loss Function interface defining base class for general error calculations in 
+   // regression/classification
    ///////////////////////////////////////////////////////////////////////////////////////////////
    
    class LossFunction {
@@ -75,8 +76,8 @@ namespace TMVA {
       virtual ~LossFunction(){};
 
       // abstract methods that need to be implemented
-      virtual Double_t CalculateLoss(const LossFunctionEventInfo e) = 0;
-      virtual Double_t CalculateLoss(std::vector<const LossFunctionEventInfo>& evs) = 0;
+      virtual Double_t CalculateLoss(LossFunctionEventInfo& e) = 0;
+      virtual Double_t CalculateLoss(std::vector<LossFunctionEventInfo>& evs) = 0;
 
       virtual TString Name() = 0;
       virtual Int_t Id() = 0;
@@ -86,13 +87,35 @@ namespace TMVA {
    // Loss Function interface for boosted decision trees. Inherits from LossFunction
    ///////////////////////////////////////////////////////////////////////////////////////////////
    
-   // The HuberLossFunctionBDT class implements the LossFunctionBDT interface
-   // while also deriving from the HuberLossFunction itself.
-   // Both LossFunctionBDT and HuberLossFunction implement the LossFunction
-   // interface, HuberLossFunction providing the CalculateLoss functionality
-   // and LossFunctionBDT providing the interface for the BDT methods. 
-   // Using the virtual keyword allows both HuberLossFunction and 
-   // HuberLossFunctionBDT to implement the LossFunctionBDT interface methods
+   /* Must inherit LossFunction with the virtual keyword so that we only have to implement
+   * the LossFunction interface once.
+   *
+   *       LossFunction
+   *      /            \
+   *SomeLossFunction  LossFunctionBDT
+   *      \            /
+   *       \          /
+   *    SomeLossFunctionBDT
+   *
+   * Without the virtual keyword the two would point to their own LossFunction objects
+   * and SomeLossFunctionBDT would have to implement the virtual functions of LossFunction twice, once
+   * for each object. See diagram below.
+   * 
+   * LossFunction  LossFunction
+   *     |             |
+   *SomeLossFunction  LossFunctionBDT
+   *      \            /
+   *       \          /
+   *     SomeLossFunctionBDT
+   *
+   * Multiple inhertiance is often frowned upon. To avoid this, We could make LossFunctionBDT separate 
+   * from LossFunction but it really is a type of loss function.
+   * We could also put LossFunction into LossFunctionBDT. In either of these scenarios, if you are doing 
+   * different regression methods and want to compare the Loss this makes it more convoluted. 
+   * I think that multiple inheritance seems justified in this case, but we could change it if it's a problem.
+   * Usually it isn't a big deal with interfaces and this results in the simplest code in this case.
+   */
+
    class LossFunctionBDT : public virtual LossFunction{
 
    public:
@@ -102,10 +125,10 @@ namespace TMVA {
       virtual ~LossFunctionBDT(){};
 
       // abstract methods that need to be implemented
-      virtual void Init(std::map<const TMVA::Event*, LossFunctionEventInfo> evinfomap) = 0;
+      virtual void Init(std::map<const TMVA::Event*, LossFunctionEventInfo>& evinfomap, std::vector<double>& boostWeights) = 0;
       virtual void SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap) = 0;
-      virtual Double_t Target(const LossFunctionEventInfo e) = 0;
-      virtual Double_t Fit(std::vector<const LossFunctionEventInfo>& evs) = 0;
+      virtual Double_t Target(LossFunctionEventInfo& e) = 0;
+      virtual Double_t Fit(std::vector<LossFunctionEventInfo>& evs) = 0;
    };
 
    ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -120,21 +143,32 @@ namespace TMVA {
       ~HuberLossFunction();
 
       // The LossFunction methods
-      Double_t CalculateLoss(const LossFunctionEventInfo e);
-      Double_t CalculateLoss(std::vector<const LossFunctionEventInfo>& evs);
+      Double_t CalculateLoss(LossFunctionEventInfo& e);
+      Double_t CalculateLoss(std::vector<LossFunctionEventInfo>& evs);
 
       // We go ahead and implement the simple ones
       TString Name(){ return TString("Huber_Loss_Function"); };
       Int_t Id(){ return 0; } ;
 
+      // Functions needed beyond the interface 
+      void Init(std::vector<LossFunctionEventInfo>& evs);
+      Double_t CalculateQuantile(std::vector<LossFunctionEventInfo>& evs, Double_t whichQuantile, Double_t sumOfWeights);
+      Double_t CalculateSumOfWeights(std::vector<LossFunctionEventInfo>& evs);
+      void SetTransitionPoint(std::vector<LossFunctionEventInfo>& evs);
+      void SetSumOfWeights(std::vector<LossFunctionEventInfo>& evs);
+
    protected:
       Double_t fQuantile;
+      Double_t fTransitionPoint;
+      Double_t fSumOfWeights;
    };
 
    ///////////////////////////////////////////////////////////////////////////////////////////////
    // Huber loss function with boosted decision tree functionality
    ///////////////////////////////////////////////////////////////////////////////////////////////
    
+   // The bdt loss function implements the LossFunctionBDT interface and inherits the HuberLossFunction
+   // functionality.
    class HuberLossFunctionBDT : public LossFunctionBDT, public HuberLossFunction{
    
    public:
@@ -147,16 +181,13 @@ namespace TMVA {
       TString Name(){ return TString("Huber_Loss_Function_BDT"); };
       
       // The LossFunctionBDT methods
-      void Init(std::map<const TMVA::Event*, LossFunctionEventInfo> evinfomap);
+      void Init(std::map<const TMVA::Event*, LossFunctionEventInfo>& evinfomap, std::vector<double>& boostWeights);
       void SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap);
-      Double_t Target(const LossFunctionEventInfo e);
-      Double_t Fit(std::vector<const LossFunctionEventInfo>& evs);
-      
+      Double_t Target(LossFunctionEventInfo& e);
+      Double_t Fit(std::vector<LossFunctionEventInfo>& evs);
 
    private:
       // some data fields
-      Double_t fSumOfWeights;
-      Double_t fTransitionPoint;
    };
 
    
