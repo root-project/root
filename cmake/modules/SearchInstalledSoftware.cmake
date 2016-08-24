@@ -326,7 +326,9 @@ if(builtin_afterimage)
       AFTERIMAGE
       DOWNLOAD_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/graf2d/asimage/src/libAfterImage AFTERIMAGE
       INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CONFIGURE_COMMAND ./configure --prefix <INSTALL_DIR> --with-ttf ${_ttf_include} --with-afterbase=no 
+      CONFIGURE_COMMAND ./configure --prefix <INSTALL_DIR>
+                        --libdir=<INSTALL_DIR>/lib 
+                        --with-ttf ${_ttf_include} --with-afterbase=no 
                         --without-svg --disable-glx ${_after_mmx} 
                         --with-builtin-ungif  --with-jpeg ${_jpeginclude} 
                         --with-png ${_pnginclude} ${_tiffinclude}
