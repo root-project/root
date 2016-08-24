@@ -91,6 +91,7 @@ protected:
    Color_t fCi1Color = kGreen;
    Color_t fCi2Color = kYellow;
 
+   Bool_t fShowConfidenceIntervals = kTRUE;
 
    Double_t fCl1 = 0.6827;
    Double_t fCl2 = 0.9545;

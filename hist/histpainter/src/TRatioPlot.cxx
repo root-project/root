@@ -528,6 +528,8 @@ Float_t TRatioPlot::GetSeparationMargin()
 /// | hideup     | hides the first label of the upper axis if there is not enough space |
 /// | hidelow    | hides the last label of the lower axis if there is not enough space |
 /// | nohide     | does not hide a label if there is not enough space |
+/// | noconfint  | does not draw the confidence interval bands in the fit residual case |
+/// | confint    | draws the confidence interval bands in the fit residual case (default) |
 
 void TRatioPlot::Draw(Option_t *option)
 {
@@ -540,6 +542,14 @@ void TRatioPlot::Draw(Option_t *option)
    } else if (drawOpt.Contains("grid")) {
       drawOpt.ReplaceAll("grid", "");
       fShowGridlines = kTRUE;
+   }
+
+   if (drawOpt.Contains("noconfint")) {
+      drawOpt.ReplaceAll("noconfint", "");
+      fShowConfidenceIntervals = kFALSE;
+   } else if (drawOpt.Contains("confint")) {
+      drawOpt.ReplaceAll("confint", "");
+      fShowConfidenceIntervals = kTRUE; // <- default
    }
 
    if (drawOpt.Contains("hideup")) {
@@ -587,10 +597,16 @@ void TRatioPlot::Draw(Option_t *option)
    fConfidenceInterval2->SetFillColor(fCi1Color);
    fConfidenceInterval1->SetFillColor(fCi2Color);
 
-   if (fDisplayMode == TRatioPlot::CalculationMode::kFitResidual) {
-      fConfidenceInterval2->Draw("A3");
-      fConfidenceInterval1->Draw("3");
-      fRatioGraph->Draw(fOptGraph+"SAME");
+   if (fDisplayMode == TRatioPlot::CalculationMode::kFitResidual) { 
+      if (fShowConfidenceIntervals) {
+         var_dump(fShowConfidenceIntervals);
+         fConfidenceInterval1->ls();
+         fConfidenceInterval2->Draw("A3");
+         fConfidenceInterval1->Draw("3");
+         fRatioGraph->Draw(fOptGraph+"SAME");
+      } else {
+         fRatioGraph->Draw("A"+fOptGraph+"SAME");
+      }
    } else {
 
       TString opt = fOptGraph;
