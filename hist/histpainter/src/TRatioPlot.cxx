@@ -645,13 +645,13 @@ void TRatioPlot::Draw(Option_t *option)
 TGraph* TRatioPlot::GetLowerRefGraph()
 {
    if (fLowerPad == 0) {
-      Error(__FUNCTION__, "Lower pad has not been defined");
+      Error("GetLowerRefGraph", "Lower pad has not been defined");
       return 0;
    }
 
    TList *primlist = fLowerPad->GetListOfPrimitives();
    if (primlist->GetSize() == 0) {
-      Error(__FUNCTION__, "Lower pad does not have primitives");
+      Error("GetLowerRefGraph", "Lower pad does not have primitives");
       return 0;
    }
 
@@ -667,7 +667,7 @@ TGraph* TRatioPlot::GetLowerRefGraph()
       lnk = lnk->Next();
    }
 
-   Error(__FUNCTION__, "Did not find graph in list");
+   Error("GetLowerRefGraph", "Did not find graph in list");
    return 0;
 }
 
@@ -863,7 +863,7 @@ void TRatioPlot::PaintModified()
          uprefy->SetTitleSize(0.);
       }
    } else {
-      Error("TRatioPlot", "Ref object in opper pad is neither TH1 descendant nor THStack");
+      Error("PaintModified", "Ref object in opper pad is neither TH1 descendant nor THStack");
    }
 
    // hide lower axes
@@ -994,7 +994,7 @@ void TRatioPlot::BuildLowerPlot()
          } else if (fErrorMode == TRatioPlot::ErrorMode::kErrorSymmetric) {
             error = fH1->GetBinError(i);
          } else {
-            Warning("TRatioPlot", "error mode is invalid");
+            Warning("BuildLowerPlot", "error mode is invalid");
             error = 0;
          }
 
@@ -1086,7 +1086,7 @@ void TRatioPlot::BuildLowerPlot()
             error = sqrt(func->Eval(x));
 
          } else {
-            Warning("TRatioPlot", "error mode is invalid");
+            Warning("BuildLowerPlot", "error mode is invalid");
             error = 0;
          }
 
@@ -1138,6 +1138,9 @@ void TRatioPlot::CreateVisualAxes()
    TVirtualPad *padsav = gPad;
    fTopPad->cd();
 
+   // this is for errors
+   TString thisfunc = "CreateVisualAxes";
+
    // figure out where the axis has to go.
    // Implicit assumption is, that the top pad spans the full other pads
    Double_t upTM = fUpperPad->GetTopMargin();
@@ -1175,7 +1178,7 @@ void TRatioPlot::CreateVisualAxes()
       upYLast = TMath::Power(10, upYLast);
 
       if (upYFirst <= 0 || upYLast <= 0) {
-         Error(__FUNCTION__, "Cannot set upper Y axis to log scale");
+         Error(thisfunc, "Cannot set upper Y axis to log scale");
       }
    }
 
@@ -1184,7 +1187,7 @@ void TRatioPlot::CreateVisualAxes()
       lowYLast = TMath::Power(10, lowYLast);
 
       if (lowYFirst <= 0 || lowYLast <= 0) {
-         Error(__FUNCTION__, "Cannot set lower Y axis to log scale");
+         Error(thisfunc, "Cannot set lower Y axis to log scale");
       }
 
    }
@@ -1192,7 +1195,7 @@ void TRatioPlot::CreateVisualAxes()
    // this is different than in y, y already has pad coords converted, x not...
    if (logx) {
       if (first <= 0 || last <= 0) {
-         Error(__FUNCTION__, "Cannot set X axis to log scale");
+         Error(thisfunc, "Cannot set X axis to log scale");
       }
    }
 
