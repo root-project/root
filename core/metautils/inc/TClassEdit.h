@@ -176,8 +176,8 @@ namespace TClassEdit {
    std::string ShortType (const char *typeDesc, int mode);
    std::string InsertStd(const char *tname);
    const char* GetUnqualifiedName(const char*name);
-   inline bool IsUniquePtr(std::string_view name) {return 0 == name.find("unique_ptr<");}
-   inline bool IsStdArray(std::string_view name) {return 0 == name.find("array<");}
+   inline bool IsUniquePtr(std::string_view name) {return 0 == name.compare(0, 11, "unique_ptr<");}
+   inline bool IsStdArray(std::string_view name) {return 0 == name.compare(0, 6, "array<");}
    inline std::string GetUniquePtrType(std::string_view name)
    {
       // Find the first template parameter
