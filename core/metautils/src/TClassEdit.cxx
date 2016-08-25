@@ -2009,7 +2009,7 @@ bool TClassEdit::GetStdArrayProperties(const char* typeName,
 
    // We now recurse updating the data according to what we find
    auto childNodes = node.GetChildNodes();
-   for (ndim = 1;ndim <5 ; ndim++) {
+   for (ndim = 1;ndim <=5 ; ndim++) {
       maxIndices[ndim-1] = std::atoi(childNodes->back()->GetName().c_str());
       typeNameBuf = childNodes->front()->GetName();
       if (! IsStdArray(typeNameBuf+"<")) return true;
