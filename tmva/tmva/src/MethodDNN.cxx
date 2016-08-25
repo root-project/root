@@ -786,7 +786,7 @@ void TMVA::MethodDNN::AddWeightsXMLTo( void* parent ) const
    void* weightsxml = gTools().xmlengine().NewChild(nn, 0, "Synapses");
    gTools().xmlengine().NewAttr (weightsxml, 0, "InputSize", gTools().StringFromInt((int)fNet.inputSize ()));
    gTools().xmlengine().NewAttr (weightsxml, 0, "OutputSize", gTools().StringFromInt((int)fNet.outputSize ()));
-   gTools().xmlengine().NewAttr (weightsxml, 0, "NumberSynapses", gTools().StringFromInt(((int)fWeightBucket.size ()) * TMVA::DNN::BUCKET_SIZE);
+   gTools().xmlengine().NewAttr (weightsxml, 0, "NumberSynapses", gTools().StringFromInt(((int)fWeightBucket.size ()) * (TMVA::DNN::BUCKET_SIZE)));
    std::stringstream s("");
    s.precision( 16 );
    for (std::vector<double>::const_iterator it = fWeightBucket.begin (), itEnd = fWeightBucket.end (); it != itEnd; ++it)
@@ -856,7 +856,7 @@ void TMVA::MethodDNN::ReadWeightsFromXML( void* wghtnode )
 
    const char* content = gTools().GetContent (xmlWeights);
    std::stringstream sstr (content);
-   for (Int_t iWeight = 0; iWeight< (numWeights / TMVA::DNN::BUCKET_SIZE; ++iWeight) 
+   for (Int_t iWeight = 0; iWeight< (numWeights / (TMVA::DNN::BUCKET_SIZE)); ++iWeight) 
       { // synapses
          Double_t weight;
          sstr >> weight;
@@ -1100,7 +1100,7 @@ void TMVA::MethodDNN::checkGradients ()
    //    net.setErrorFunction (ModeErrorFunction::SUMOFSQUARES);
 
    size_t numWeights = fNet.numWeights (inputSize);
-   std::vector<double> weights (numWeights);
+   std::vector<double> weightBucket (numWeights / TMVA::DNN::BUCKET_SIZE);
    //weights.at (0) = 1000213.2;
 
    std::vector<Pattern> pattern;
@@ -1128,26 +1128,26 @@ void TMVA::MethodDNN::checkGradients ()
    size_t largeDifferences = 0;
    for (size_t iTest = 0; iTest < 1000; ++iTest)
       {
-         TMVA::DNN::uniformDouble (weights, 0.7);
-         std::vector<double> gradients (numWeights, 0);
+         TMVA::DNN::uniformDouble (weightBucket, 0.7);
+         std::vector<double> gradientBucket (numWeights / TMVA::DNN::BUCKET_SIZE, 0);
          DNN::Batch batch (begin (pattern), end (pattern));
          DNN::DropContainer dropContainer;
          std::tuple<DNN::Settings&, DNN::Batch&, DNN::DropContainer&> settingsAndBatch (settings, batch, dropContainer);
-         double E = fNet (settingsAndBatch, weights, gradients);
-         std::vector<double> changedWeights;
-         changedWeights.assign (weights.begin (), weights.end ());
+         double E = fNet (settingsAndBatch, weightBucket, gradientBucket);
+         std::vector<double> changedWeightBucket;
+         changedWeightBucket.assign (weightBucket.begin (), weightBucket.end ());
 
-         int changeWeightPosition = TMVA::DNN::randomInt (numWeights);
-         double dEdw = gradients.at (changeWeightPosition);
+         int changeWeightPosition = TMVA::DNN::randomInt (numWeights / TMVA::DNN::BUCKET_SIZE);
+         double dEdw = gradientBucket.at (changeWeightPosition);
          while (dEdw == 0.0)
             {
-               changeWeightPosition = TMVA::DNN::randomInt (numWeights);
-               dEdw = gradients.at (changeWeightPosition);
+               changeWeightPosition = TMVA::DNN::randomInt (numWeights / TMVA::DNN::BUCKET_SIZE);
+               dEdw = gradientBucket.at (changeWeightPosition);
             }
 
          const double gamma = 0.01;
          double delta = gamma*dEdw;
-         changedWeights.at (changeWeightPosition) += delta;
+         changedWeightBucket.at (changeWeightPosition) += delta;
          if (dEdw == 0.0)
             {
                std::cout << "dEdw == 0.0 ";
@@ -1155,7 +1155,7 @@ void TMVA::MethodDNN::checkGradients ()
             }
         
          assert (dEdw != 0.0);
-         double Echanged = fNet (settingsAndBatch, changedWeights);
+         double Echanged = fNet (settingsAndBatch, changedWeightBucket);
 
          //       double difference = fabs((E-Echanged) - delta*dEdw);
          double difference = fabs ((E+delta - Echanged)/E);
@@ -1184,7 +1184,7 @@ void TMVA::MethodDNN::checkGradients ()
             }
          else
             {
-               //            for_each (begin (weights), end (weights), [](double w){ std::cout << w << ", "; });
+               //            for_each (begin (weightBucket), end (weightBucket), [](double w){ std::cout << w << ", "; });
                //            std::cout << std::endl;
                //            assert (isOk);
             }
