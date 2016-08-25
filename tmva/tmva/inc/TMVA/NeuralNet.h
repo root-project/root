@@ -52,6 +52,7 @@
 
 #include <fenv.h> // turn on or off exceptions for NaN and other numeric exceptions
 
+#include <functional>
 
 namespace TMVA
 {
@@ -62,6 +63,17 @@ namespace TMVA
       //    double gaussDoubl (edouble mean, double sigma);
 
       const int BUCKET_SIZE = 8; // ------------------------------- Declare Bucket Size --------------------------------------------
+        /*! \brief Hash initialization
+          *
+          * 
+          */
+              // std::hash<int> hasherFunction;
+
+
+          int hasherFunction(int a);
+
+        // ---------------------------------------------------------------------------------
+
 
       double gaussDouble (double mean, double sigma);
       double uniformDouble (double minValue, double maxValue);
@@ -407,7 +419,7 @@ namespace TMVA
 
 
 
-
+      template <typename EnumRegularization>
          double weightDecay (double error, int currLayerWeightIndex, int nextLayerWeightIndex, std::vector<double>& weightBucket, double factorWeightDecay, EnumRegularization eRegularization);
 
 
@@ -722,7 +734,7 @@ namespace TMVA
 
 
       template <typename LAYERDATA>
-         void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double weightDecay, EnumRegularization regularization, std::vector<double>& weightBucket, std::vector<double>& gradientBucket);
+         void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double factorWeightDecay, EnumRegularization regularization, std::vector<double>& weightBucket, std::vector<double>& gradientBucket);
 
 
 
@@ -1159,8 +1171,8 @@ namespace TMVA
          size_t numWeights (size_t trainingStartLayer = 0) const; ///< returns the number of weights in this net
     size_t numNodes   (size_t trainingStartLayer = 0) const; ///< returns the number of nodes in this net
 
-
-            std::vector<double> compute (const std::vector<double>& input, std::vector<double>& weightBucket) const; ///< compute the net with the given input and the given weights
+          template <typename Weights>
+            std::vector<double> compute (const std::vector<double>& input, Weights& weightBucket) const; ///< compute the net with the given input and the given weights
 
          template <typename PassThrough>
             double operator() (PassThrough& settingsAndBatch, std::vector<double>& weightBucket) const; ///< execute computation of the DNN for one mini-batch (used by the minimizer); no computation of gradients
@@ -1202,10 +1214,10 @@ namespace TMVA
         void fetchOutput (const std::vector<LayerData>& layerPatternData, OutputContainer& outputContainer) const;
 
 
-
+    template <typename Weights>
         std::tuple</*sumError*/double,/*sumWeights*/double> computeError (const Settings& settings,
                                                                           std::vector<LayerData>& lastLayerData,
-                                                                          Batch& batch, std::vector<double>& weightBucket) const;
+                                                                          Batch& batch, Weights& weightBucket) const;
 
     template <typename Settings>
         void backPropagate (std::vector<std::vector<LayerData>>& layerPatternData, std::vector<double>& weightBucket, std::vector<double>& gradientBucket,
