@@ -10,7 +10,7 @@
  *************************************************************************/
 
  //////////////////////////////////////////////////////////////////
- // Definition of the TCpu architecture, which provides a        //
+// Definition of the TCpu architecture, which provides a        //
  // multi-threaded CPU implementation of the low-level interface //
  // networks for Cpus using tbb                                  //
  //////////////////////////////////////////////////////////////////
@@ -18,7 +18,6 @@
 #ifndef TMVA_DNN_ARCHITECTURES_CPU
 #define TMVA_DNN_ARCHITECTURES_CPU
 
-#include "TMVA/DNN/Timings.h"
 #include "Cpu/CpuBuffer.h"
 #include "Cpu/CpuMatrix.h"
 
@@ -34,13 +33,9 @@ namespace DNN
  * for this architecture as well as the remaining functions in the low-level
  * interface in the form of static members.
  */
-template<typename AReal, bool doProfiling = false>
+template<typename AReal>
 class TCpu
 {
-
-   static TTimings fTimings;
-   static void ResetTimings(){fTimings.Reset();}
-
 public:
 
    using Scalar_t       = AReal;
@@ -284,27 +279,7 @@ public:
    /** Compute the sum of all elements in \p A */
    static Scalar_t Sum(const TCpuMatrix<Scalar_t> &A);
 
-private:
-
-   static inline void tick();
-   static inline void tock(Scalar_t &);
-
 };
-
-template <typename Real_t, bool doProfiling>
-TTimings TCpu<Real_t, doProfiling>::fTimings{};
-
-template <>
-inline void TCpu<Double_t, false>::tick() {}
-
-template <>
-inline void TCpu<Double_t, false>::tock(Scalar_t &) {}
-
-template <>
-inline void TCpu<Double_t, true>::tick() {}
-
-template <>
-inline void TCpu<Double_t, true>::tock(Scalar_t &) {}
 
 } // namespace DNN
 } // namespace TMVA

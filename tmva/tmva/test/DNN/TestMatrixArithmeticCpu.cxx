@@ -20,11 +20,27 @@ using namespace TMVA::DNN;
 
 int main()
 {
-    Double_t error = testMultiplication<TCpu<Double_t, false>>(10);
-    std::cout << "Testing matrix multiplication: Max. rel. error = " << error
-              << std::endl;
+    std::cout << "Testing CPU matrix arithmetic (double):" << std::endl;
 
-   error = testSumColumns<TCpu<Double_t, false>>(10);
-    std::cout << "Testing column sum:            Max. rel. error = " << error
-              << std::endl;
+    Double_t error = testMultiplication<TCpu<Double_t>>(10);
+    std::cout << "Multiplication: " << "Max. rel. error: " << error << std::endl;
+    if (error > 1e-3)
+        return 1;
+
+    error = testSumColumns<TCpu<Double_t>>(1);
+    std::cout << "Column Sum:     " << "Max. rel. error: " << error << std::endl;
+    if (error > 1e-3)
+        return 1;
+
+    std::cout << "Testing CPU matrix arithmetic (float):" << std::endl;
+
+    error = testMultiplication<TCpu<Real_t>>(10);
+    std::cout << "Multiplication: " << "Max. rel. error: " << error << std::endl;
+    if (error > 1e-1)
+        return 1;
+
+    error = testSumColumns<TCpu<Real_t>>(1);
+    std::cout << "Column Sum:     " << "Max. rel. error: " << error << std::endl;
+    if (error > 1e-1)
+        return 1;
 }

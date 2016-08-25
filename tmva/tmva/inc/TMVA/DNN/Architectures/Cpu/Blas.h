@@ -38,18 +38,15 @@ extern "C" void sgemv_(const char * trans, const int * m, const int * n,
                        const float * alpha,  const float * A, const int * lda,
                        const float * x, const int * incx,
                        const float * beta, float * y, const int * incy);
-
 extern "C" void dgemv_(const char * trans, const int * m, const int * n,
                        const double * alpha,  const double * A, const int * lda,
                        const double * x, const int * incx,
                        const double * beta, double * y, const int * incy);
-
 extern "C" void dgemm_(const char * transa, const char * transb,
                        const int * m, const int * n, const int * k,
                        const double * alpha, const double * A, const int * lda,
                        const double * B, const int * ldb, const double * beta,
                        double * C, const int * ldc);
-
 extern "C" void sgemm_(const char * transa, const char * transb,
                        const int * m, const int * n, const int * k,
                        const float * alpha, const float * A, const int * lda,

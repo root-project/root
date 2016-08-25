@@ -23,10 +23,10 @@ namespace TMVA
 namespace DNN
 {
 
-template<typename Real_t, bool doProfiling>
-void TCpu<Real_t, doProfiling>::MultiplyTranspose(TCpuMatrix<Real_t> &output,
-                                                  const TCpuMatrix<Real_t> &input,
-                                                  const TCpuMatrix<Real_t> &Weights)
+template<typename AFloat>
+void TCpu<AFloat>::MultiplyTranspose(TCpuMatrix<AFloat> &output,
+                                     const TCpuMatrix<AFloat> &input,
+                                     const TCpuMatrix<AFloat> &Weights)
 {
     int m = (int) input.GetNrows();
     int k = (int) input.GetNcols();
@@ -35,44 +35,44 @@ void TCpu<Real_t, doProfiling>::MultiplyTranspose(TCpuMatrix<Real_t> &output,
     char transa = 'N';
     char transb = 'T';
 
-    Real_t alpha = 1.0;
-    Real_t beta  = 0.0;
+    AFloat alpha = 1.0;
+    AFloat beta  = 0.0;
 
-    const Real_t *A = input.GetRawDataPointer();
-    const Real_t *B = Weights.GetRawDataPointer();
-          Real_t *C = output.GetRawDataPointer();
+    const AFloat *A = input.GetRawDataPointer();
+    const AFloat *B = Weights.GetRawDataPointer();
+          AFloat *C = output.GetRawDataPointer();
 
     ::TMVA::DNN::Blas::Gemm(&transa, &transb, &m, &n, &k, &alpha,
                             A, &m, B, &n, &beta, C, &m);
 }
 
-template<typename Real_t, bool doProfiling>
-void TCpu<Real_t, doProfiling>::AddRowWise(
-    TCpuMatrix<Real_t> &output,
-    const TCpuMatrix<Real_t> &biases)
+template<typename AFloat>
+void TCpu<AFloat>::AddRowWise(
+    TCpuMatrix<AFloat> &output,
+    const TCpuMatrix<AFloat> &biases)
 {
     int m = (int) output.GetNrows();
     int n = (int) output.GetNcols();
 
     int inc = 1.0;
-    Real_t alpha = 1.0;
+    AFloat alpha = 1.0;
 
-          Real_t * A = output.GetRawDataPointer();
-    const Real_t * x = TCpuMatrix<Real_t>::GetOnePointer();
-    const Real_t * y = biases.GetRawDataPointer();
+          AFloat * A = output.GetRawDataPointer();
+    const AFloat * x = TCpuMatrix<AFloat>::GetOnePointer();
+    const AFloat * y = biases.GetRawDataPointer();
 
     ::TMVA::DNN::Blas::Ger(&m, &n, &alpha, x, &inc, y, &inc, A, &m);
 }
 
-template<typename Real_t, bool doProfiling>
-void TCpu<Real_t, doProfiling>::Backward(
-    TCpuMatrix<Real_t> & activationGradientsBackward,
-    TCpuMatrix<Real_t> & weightGradients,
-    TCpuMatrix<Real_t> & biasGradients,
-    TCpuMatrix<Real_t> & df,
-    const TCpuMatrix<Real_t> & activationGradients,
-    const TCpuMatrix<Real_t> & weights,
-    const TCpuMatrix<Real_t> & activationsBackward)
+template<typename AFloat>
+void TCpu<AFloat>::Backward(
+    TCpuMatrix<AFloat> & activationGradientsBackward,
+    TCpuMatrix<AFloat> & weightGradients,
+    TCpuMatrix<AFloat> & biasGradients,
+    TCpuMatrix<AFloat> & df,
+    const TCpuMatrix<AFloat> & activationGradients,
+    const TCpuMatrix<AFloat> & weights,
+    const TCpuMatrix<AFloat> & activationsBackward)
 {
    // Compute element-wise product.
    Hadamard(df, activationGradients);

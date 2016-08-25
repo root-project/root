@@ -31,7 +31,7 @@ TCpuMatrix<AReal>::TCpuMatrix(size_t nRows, size_t nCols)
 
 //____________________________________________________________________________
 template<typename AReal>
-TCpuMatrix<AReal>::TCpuMatrix(const TMatrixT<AReal> & B)
+TCpuMatrix<AReal>::TCpuMatrix(const TMatrixT<Double_t> & B)
     : fBuffer(B.GetNoElements()), fNCols(B.GetNcols()), fNRows(B.GetNrows())
 {
    Initialize();
@@ -47,14 +47,14 @@ template<typename AReal>
 TCpuMatrix<AReal>::TCpuMatrix(const TCpuBuffer<AReal> & buffer,
                                size_t m,
                                size_t n)
-    : fBuffer(buffer), fNRows(m), fNCols(n)
+    : fBuffer(buffer), fNCols(n), fNRows(m)
 {
    Initialize();
 }
 
 //____________________________________________________________________________
 template<typename AReal>
-TCpuMatrix<AReal>::operator TMatrixT<AReal>() const
+TCpuMatrix<AReal>::operator TMatrixT<Double_t>() const
 {
    TMatrixT<AReal> B(fNRows, fNCols);
 
@@ -80,6 +80,7 @@ void TCpuMatrix<AReal>::Initialize()
 }
 
 // Explicit instantiations.
+template class TCpuMatrix<Real_t>;
 template class TCpuMatrix<Double_t>;
 
 } // namespace DNN

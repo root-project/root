@@ -23,8 +23,8 @@ namespace DNN
 {
 
 //______________________________________________________________________________
-template<typename Real_t, bool doProfiling>
-void TCpu<Real_t, doProfiling>::InitializeGauss(TCpuMatrix<Real_t> & A)
+template<typename AFloat>
+void TCpu<AFloat>::InitializeGauss(TCpuMatrix<AFloat> & A)
 {
    size_t m,n;
    m = A.GetNrows();
@@ -32,7 +32,7 @@ void TCpu<Real_t, doProfiling>::InitializeGauss(TCpuMatrix<Real_t> & A)
 
    TRandom rand(time(nullptr));
 
-   Real_t sigma = sqrt(2.0 / ((Real_t) n));
+   AFloat sigma = sqrt(2.0 / ((AFloat) n));
 
    for (size_t i = 0; i < m; i++) {
       for (size_t j = 0; j < n; j++) {
@@ -42,8 +42,8 @@ void TCpu<Real_t, doProfiling>::InitializeGauss(TCpuMatrix<Real_t> & A)
 }
 
 //______________________________________________________________________________
-template<typename Real_t, bool doProfiling>
-void TCpu<Real_t, doProfiling>::InitializeUniform(TCpuMatrix<Real_t> & A)
+template<typename AFloat>
+void TCpu<AFloat>::InitializeUniform(TCpuMatrix<AFloat> & A)
 {
    size_t m,n;
    m = A.GetNrows();
@@ -51,7 +51,7 @@ void TCpu<Real_t, doProfiling>::InitializeUniform(TCpuMatrix<Real_t> & A)
 
    TRandom rand(time(nullptr));
 
-   Real_t range = sqrt(2.0 / ((Real_t) n));
+   AFloat range = sqrt(2.0 / ((AFloat) n));
 
    for (size_t i = 0; i < m; i++) {
       for (size_t j = 0; j < n; j++) {
@@ -61,8 +61,8 @@ void TCpu<Real_t, doProfiling>::InitializeUniform(TCpuMatrix<Real_t> & A)
 }
 
 //______________________________________________________________________________
-template<typename Real_t, bool doProfiling>
-void TCpu<Real_t, doProfiling>::InitializeIdentity(TCpuMatrix<Real_t> & A)
+template<typename AFloat>
+void TCpu<AFloat>::InitializeIdentity(TCpuMatrix<AFloat> & A)
 {
    size_t m,n;
    m = A.GetNrows();
@@ -80,14 +80,14 @@ void TCpu<Real_t, doProfiling>::InitializeIdentity(TCpuMatrix<Real_t> & A)
 }
 
 //______________________________________________________________________________
-template<typename Real_t, bool doProfiling>
-void TCpu<Real_t, doProfiling>::InitializeZero(TCpuMatrix<Real_t> & A)
+template<typename AFloat>
+void TCpu<AFloat>::InitializeZero(TCpuMatrix<AFloat> & A)
 {
    size_t m,n;
    m = A.GetNrows();
    n = A.GetNcols();
 
-   for (size_t i = 0; i < m * n; i++) {
+   for (size_t i = 0; i < m; i++) {
       for (size_t j = 0; j < n ; j++) {
          A(i,j) = 0.0;
       }

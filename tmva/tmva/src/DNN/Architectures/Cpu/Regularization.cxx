@@ -23,25 +23,25 @@ namespace DNN
 {
 
 //______________________________________________________________________________
-template<typename Real_t, bool doProfiling>
-Real_t TCpu<Real_t, doProfiling>::L1Regularization(const TCpuMatrix<Real_t> &Weights)
+template<typename AFloat>
+AFloat TCpu<AFloat>::L1Regularization(const TCpuMatrix<AFloat> &Weights)
 {
-   const Real_t __restrict__ *data = Weights.GetRawDataPointer();
+   const AFloat __restrict__ *data = Weights.GetRawDataPointer();
 
    auto f = [&data](const tbb::blocked_range<size_t> & range,
-                    Real_t partialSum)
+                    AFloat partialSum)
    {
       size_t rangeBegin = range.begin();
       size_t rangeEnd   = range.end();
 
-      Real_t sum = partialSum;
+      AFloat sum = partialSum;
       for (size_t i = rangeBegin; i != rangeEnd; ++i) {
          sum += fabs(data[i]);
       }
       return sum;
    };
 
-   auto reduction = [](Real_t sum1, Real_t sum2)
+   auto reduction = [](AFloat sum1, AFloat sum2)
    {
       return sum1 + sum2;
    };
@@ -51,15 +51,15 @@ Real_t TCpu<Real_t, doProfiling>::L1Regularization(const TCpuMatrix<Real_t> &Wei
 }
 
 //______________________________________________________________________________
-template<typename Real_t, bool doProfiling>
-void TCpu<Real_t, doProfiling>::AddL1RegularizationGradients(
-    TCpuMatrix<Real_t> & B,
-    const TCpuMatrix<Real_t> & A,
-    Real_t weightDecay)
+template<typename AFloat>
+void TCpu<AFloat>::AddL1RegularizationGradients(
+    TCpuMatrix<AFloat> & B,
+    const TCpuMatrix<AFloat> & A,
+    AFloat weightDecay)
 {
 
-         Real_t __restrict__ *dataB     =  B.GetRawDataPointer();
-   const Real_t __restrict__ *dataA      = A.GetRawDataPointer();
+         AFloat __restrict__ *dataB     =  B.GetRawDataPointer();
+   const AFloat __restrict__ *dataA      = A.GetRawDataPointer();
 
    auto f = [&dataA, &dataB, weightDecay](const tbb::blocked_range<size_t> & range)
    {
@@ -67,7 +67,7 @@ void TCpu<Real_t, doProfiling>::AddL1RegularizationGradients(
       size_t rangeEnd   = range.end();
 
       for (size_t i = rangeBegin; i != rangeEnd; ++i) {
-         Real_t sign = (dataA[i] < 0.0) ? -1.0 : 1.0;
+         AFloat sign = (dataA[i] < 0.0) ? -1.0 : 1.0;
          dataB[i] += weightDecay * sign;
       }
    };
@@ -77,25 +77,25 @@ void TCpu<Real_t, doProfiling>::AddL1RegularizationGradients(
 }
 
 //______________________________________________________________________________
-template<typename Real_t, bool doProfiling>
-Real_t TCpu<Real_t, doProfiling>::L2Regularization(const TCpuMatrix<Real_t> &Weights)
+template<typename AFloat>
+AFloat TCpu<AFloat>::L2Regularization(const TCpuMatrix<AFloat> &Weights)
 {
-   const Real_t __restrict__ *data = Weights.GetRawDataPointer();
+   const AFloat __restrict__ *data = Weights.GetRawDataPointer();
 
    auto f = [&data](const tbb::blocked_range<size_t> & range,
-                    Real_t partialSum)
+                    AFloat partialSum)
    {
       size_t rangeBegin = range.begin();
       size_t rangeEnd   = range.end();
 
-      Real_t sum = partialSum;
+      AFloat sum = partialSum;
       for (size_t i = rangeBegin; i != rangeEnd; ++i) {
           sum += data[i] * data[i];
       }
       return sum;
    };
 
-   auto reduction = [](Real_t sum1, Real_t sum2)
+   auto reduction = [](AFloat sum1, AFloat sum2)
    {
       return sum1 + sum2;
    };
@@ -105,15 +105,15 @@ Real_t TCpu<Real_t, doProfiling>::L2Regularization(const TCpuMatrix<Real_t> &Wei
 }
 
 //______________________________________________________________________________
-template<typename Real_t, bool doProfiling>
-void TCpu<Real_t, doProfiling>::AddL2RegularizationGradients(
-    TCpuMatrix<Real_t> & B,
-    const TCpuMatrix<Real_t> & A,
-    Real_t weightDecay)
+template<typename AFloat>
+void TCpu<AFloat>::AddL2RegularizationGradients(
+    TCpuMatrix<AFloat> & B,
+    const TCpuMatrix<AFloat> & A,
+    AFloat weightDecay)
 {
 
-         Real_t __restrict__ *dataB     =  B.GetRawDataPointer();
-   const Real_t __restrict__ *dataA      = A.GetRawDataPointer();
+         AFloat __restrict__ *dataB     =  B.GetRawDataPointer();
+   const AFloat __restrict__ *dataA      = A.GetRawDataPointer();
 
    auto f = [&dataA, &dataB, weightDecay](const tbb::blocked_range<size_t> & range)
    {

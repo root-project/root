@@ -22,25 +22,26 @@ using namespace TMVA::DNN;
 
 int main()
 {
-    std::cout << "Testing Backpropagation:" << std::endl;
+   using Scalar_t = Double_t;
+   std::cout << "Testing Backpropagation:" << std::endl;
 
-    double error;
+   double error;
 
-    error = testBackpropagationWeightsLinear<TCpu<Double_t, false>>(1.0);
-    if (error > 1e-7)
-        return 1;
+   error = testBackpropagationWeightsLinear<TCpu<Scalar_t>>(1.0);
+   if (error > 1e-3)
+       return 1;
 
-    error = testBackpropagationL1Regularization<TCpu<Double_t, false>>(1e-2);
-    if (error > 1e-7)
-        return 1;
+   error = testBackpropagationL1Regularization<TCpu<Scalar_t>>(1e-2);
+   if (error > 1e-3)
+       return 1;
 
-    error = testBackpropagationL2Regularization<TCpu<Double_t, false>>(1.0);
-    if (error > 1e-7)
-        return 1;
+   error = testBackpropagationL2Regularization<TCpu<Scalar_t>>(1.0);
+   if (error > 1e-3)
+       return 1;
 
-    error = testBackpropagationBiasesLinear<TCpu<Double_t, false>>(1.0);
-    if (error > 1e-7)
-        return 1;
+   error = testBackpropagationBiasesLinear<TCpu<Scalar_t>>(1.0);
+   if (error > 1e-3)
+       return 1;
 
-    return 0;
+   return 0;
 }
