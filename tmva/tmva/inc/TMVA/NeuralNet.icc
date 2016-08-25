@@ -8,20 +8,12 @@
 
 #include "Math/Util.h"
 
-#include <functional>
+
 
 namespace TMVA
 {
     namespace DNN
     {
-
-        /*! \brief Hash initialization
-          *
-          * 
-          */
-               std::hash<int> hasherFunction;
-
-        // ---------------------------------------------------------------------------------
 
 
 
@@ -232,7 +224,7 @@ template <bool HasDropOut, typename ItSource, typename ItPrev, typename ItDrop>
                       ItDelta itTargetDeltaBegin, ItDelta itTargetDeltaEnd, 
                       ItTargetGradient itTargetGradientBegin, 
                       int itGradient, std::vector<double>& gradientBucket,
-                      int itWeight, std::vector<double>& weightBucket, double& weightDecay)
+                      int itWeight, std::vector<double>& weightBucket, double& factorWeightDecay)
         {
             // ! the factor weightDecay has to be already scaled by 1/n where n is the number of weights
             while (itSource != itSourceEnd)
@@ -241,7 +233,7 @@ template <bool HasDropOut, typename ItSource, typename ItPrev, typename ItDrop>
                 auto itTargetGradient = itTargetGradientBegin;
                 while (itTargetDelta != itTargetDeltaEnd)
                 {
-                    (gradientBucket[hasherFunction(itGradient) % BUCKET_SIZE]) -= + (*itTargetDelta) * (*itSource) * (*itTargetGradient) + computeRegularization<Regularization>(weightBucket[hasherFunction(itWeight) % BUCKET_SIZE],weightDecay);
+                    (gradientBucket[hasherFunction(itGradient) % BUCKET_SIZE]) -= + (*itTargetDelta) * (*itSource) * (*itTargetGradient) + computeRegularization<Regularization>(weightBucket[hasherFunction(itWeight) % BUCKET_SIZE],factorWeightDecay);
                     ++itTargetDelta; ++itTargetGradient; ++itGradient; ++itWeight;
                 }
                 ++itSource; 
@@ -485,7 +477,7 @@ template <bool HasDropOut, typename ItSource, typename ItPrev, typename ItDrop>
  *
  * 
  */
-
+        template <typename EnumRegularization>
             double weightDecay (double error, int currLayerWeightIndex, int nextLayerWeightIndex, std::vector<double>& weightBucket, double factorWeightDecay, EnumRegularization eRegularization)
         {
             if (eRegularization == EnumRegularization::L1)
@@ -1017,8 +1009,8 @@ template <typename LAYERDATA>
  * \param input the input data
  * \param weights the weight data
  */
-
-            std::vector<double> Net::compute (const std::vector<double>& input, std::vector<double>& weightBucket) const
+        template <typename Weights>
+            std::vector<double> Net::compute (const std::vector<double>& input, Weights& weightBucket) const
         {
             std::vector<LayerData> layerData;
             layerData.reserve (m_layers.size ()+1);
@@ -1309,10 +1301,10 @@ template <typename LAYERDATA>
 
 
 
-
+    template <typename Weights>
         std::tuple</*sumError*/double,/*sumWeights*/double> Net::computeError (const Settings& settings,
                                                                                std::vector<LayerData>& lastLayerData,
-                                                                               Batch& batch, std::vector<double>& weightBucket) const
+                                                                               Batch& batch, Weights& weightBucket) const
     {
         typename std::vector<LayerData>::iterator itLayerData    = lastLayerData.begin ();
 
