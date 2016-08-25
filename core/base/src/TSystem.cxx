@@ -3546,6 +3546,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       singleLibrary = ((TObjString*)tokenObj)->GetString();
       if (!AccessPathName(singleLibrary)) {
          if (collectingSingleLibraryNameTokens) {
+            librariesWithQuotes.Chop();
             librariesWithQuotes += "\" " + singleLibrary;
             collectingSingleLibraryNameTokens = kFALSE;
          } else {
