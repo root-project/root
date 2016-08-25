@@ -46,7 +46,7 @@ INCLUDEFILES += $(HTTPDEP)
 
 HTTPLIBEXTRA += $(ZLIBLIBDIR) $(ZLIBCLILIB)
 
-ifneq ($(PLATFORM),win32)
+ifeq ($(PLATFORM),linux)
 HTTPLIBEXTRA += -lrt
 endif
 
