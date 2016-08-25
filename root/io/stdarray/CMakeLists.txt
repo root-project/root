@@ -1,5 +1,9 @@
 ROOTTEST_ADD_TESTDIRS()
 
+ROOTTEST_ADD_TEST(namesAnalysis
+                  MACRO namesAnalysis.C
+                  OUTREF namesAnalysis.ref)
+
 ROOTTEST_ADD_TEST(modelReadDict2TFile
                   MACRO  modelReadDict2.C
                   MACROARG "\"model.root\""

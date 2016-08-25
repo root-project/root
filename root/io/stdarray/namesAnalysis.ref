@@ -1,0 +1,47 @@
+
+Processing /home/dpiparo/RootDevel/Root6/head/roottest/root/io/stdarray/namesAnalysis.C...
+array<int,3>:
+ - typename: int
+ - ndim: 1
+ - max index:
+  o Dim 0: 3
+  o Dim 1: 0
+  o Dim 2: 0
+  o Dim 3: 0
+  o Dim 4: 0
+array<array<T,4>,3>:
+ - typename: T
+ - ndim: 2
+ - max index:
+  o Dim 0: 3
+  o Dim 1: 4
+  o Dim 2: 0
+  o Dim 3: 0
+  o Dim 4: 0
+array<array<array<L,16>,4>,3>:
+ - typename: L
+ - ndim: 3
+ - max index:
+  o Dim 0: 3
+  o Dim 1: 4
+  o Dim 2: 16
+  o Dim 3: 0
+  o Dim 4: 0
+array<array<array<array<double,13>,16>,4>,3>:
+ - typename: double
+ - ndim: 4
+ - max index:
+  o Dim 0: 3
+  o Dim 1: 4
+  o Dim 2: 16
+  o Dim 3: 13
+  o Dim 4: 0
+array<array<array<array<array<c,18>,13>,16>,4>,3>:
+ - typename: c
+ - ndim: 5
+ - max index:
+  o Dim 0: 3
+  o Dim 1: 4
+  o Dim 2: 16
+  o Dim 3: 13
+  o Dim 4: 18
