@@ -2242,7 +2242,7 @@ void TGaxis::SetFunction(const char *funcname)
 /// fine tuning of the labels. All the attributes can be changed and even the
 /// label text itself.
 ///
-/// \param[in] labNum           Number of the abel to be change, negative numbers start from the end
+/// \param[in] labNum           Number of the label to be changed, negative numbers start from the end
 /// \param[in] labAngle         New angle value
 /// \param[in] labSize          New size (0 erase the label)
 /// \param[in] labAlign         New alignment value
@@ -2281,7 +2281,7 @@ void TGaxis::SetLabelAttributes(Int_t labNum, Double_t labAngle, Double_t labSiz
    if (!fModLabs) fModLabs = new TList();
 
    // Reset the list of modified labels.
-   if (labNum==0) {
+   if (labNum == 0) {
       delete fModLabs;
       fModLabs  = 0;
       fNModLabs = 0;
@@ -2329,7 +2329,7 @@ void TGaxis::ChangeLabelAttributes(Int_t i, Int_t nlabels, TLatex* t, char* c)
       }
 
 
-      if (i==labNum) {
+      if (i == labNum) {
 
          if (ml->GetAngle()>=0.) t->SetTextAngle(ml->GetAngle());
          if (ml->GetSize()>=0.)  t->SetTextSize(ml->GetSize());
