@@ -23,107 +23,109 @@ using namespace TMVA::DNN;
 
 int main()
 {
-    std::cout << "Testing Activation Functions:" << std::endl;
+   using Scalar_t = Double_t;
 
-    double error;
+   std::cout << "Testing Activation Functions:" << std::endl;
 
-    // Identity.
+   double error;
 
-    error = testIdentity<TCpu<Double_t,false>>(10);
-    std::cout << "Testing identity activation:            ";
-    std::cout << "maximum relative error = " << error << std::endl;
-    if (error > 1e-10)
-        return 1;
+   // Identity.
 
-    error = testIdentityDerivative<TCpu<Double_t,false>>(10);
-    std::cout << "Testing identity activation derivative: ";
-    std::cout << "maximum relative error = " << error << std::endl;
-    if (error > 1e-10)
-        return 1;
+   error = testIdentity<TCpu<Scalar_t>>(10);
+   std::cout << "Testing identity activation:            ";
+   std::cout << "maximum relative error = " << error << std::endl;
+   if (error > 1e-10)
+       return 1;
 
-    // ReLU.
+   error = testIdentityDerivative<TCpu<Scalar_t>>(10);
+   std::cout << "Testing identity activation derivative: ";
+   std::cout << "maximum relative error = " << error << std::endl;
+   if (error > 1e-10)
+       return 1;
 
-    error = testRelu<TCpu<Double_t,false>>(10);
-    std::cout << "Testing ReLU activation:                ";
-    std::cout << "maximum relative error = " << error << std::endl;
-    if (error > 1e-10)
-        return 1;
+   // ReLU.
 
-    error = testReluDerivative<TCpu<Double_t,false>>(10);
-    std::cout << "Testing ReLU activation derivative:     ";
-    std::cout << "maximum relative error = " << error << std::endl;
-    if (error > 1e-10)
-        return 1;
+   error = testRelu<TCpu<Scalar_t>>(10);
+   std::cout << "Testing ReLU activation:                ";
+   std::cout << "maximum relative error = " << error << std::endl;
+   if (error > 1e-10)
+       return 1;
 
-    // Sigmoid.
+   error = testReluDerivative<TCpu<Scalar_t>>(10);
+   std::cout << "Testing ReLU activation derivative:     ";
+   std::cout << "maximum relative error = " << error << std::endl;
+   if (error > 1e-10)
+       return 1;
 
-    error = testSigmoid<TCpu<Double_t,false>>(10);
-    std::cout << "Testing Sigmoid activation:             ";
-    std::cout << "maximum relative error = " << error << std::endl;
-    if (error > 1e-10)
-        return 1;
+   // Sigmoid.
 
-    error = testSigmoidDerivative<TCpu<Double_t,false>>(10);
-    std::cout << "Testing Sigmoid activation derivative:  ";
-    std::cout << "maximum relative error = " << error << std::endl;
-    if (error > 1e-10)
-        return 1;
+   error = testSigmoid<TCpu<Scalar_t>>(10);
+   std::cout << "Testing Sigmoid activation:             ";
+   std::cout << "maximum relative error = " << error << std::endl;
+   if (error > 1e-10)
+       return 1;
 
-    // TanH.
+   error = testSigmoidDerivative<TCpu<Scalar_t>>(10);
+   std::cout << "Testing Sigmoid activation derivative:  ";
+   std::cout << "maximum relative error = " << error << std::endl;
+   if (error > 1e-10)
+       return 1;
 
-    error = testTanh<TCpu<Double_t, false>>(10);
-    std::cout << "Testing TanH activation:                   ";
-    std::cout << "maximum relative error = " << print_error(error) << std::endl;
-    if (error > 1e-10)
-        return 1;
+   // TanH.
 
-    error = testTanhDerivative<TCpu<Double_t, false>>(10);
-    std::cout << "Testing TanH activation derivative:        ";
-    std::cout << "maximum relative error = " << print_error(error) << std::endl;
-    if (error > 1e-10)
-        return 1;
+   error = testTanh<TCpu<Scalar_t>>(10);
+   std::cout << "Testing TanH activation:                   ";
+   std::cout << "maximum relative error = " << print_error(error) << std::endl;
+   if (error > 1e-10)
+       return 1;
 
-    // Symmetric ReLU.
+   error = testTanhDerivative<TCpu<Scalar_t>>(10);
+   std::cout << "Testing TanH activation derivative:        ";
+   std::cout << "maximum relative error = " << print_error(error) << std::endl;
+   if (error > 1e-10)
+       return 1;
 
-    error = testSymmetricRelu<TCpu<Double_t, false>>(10);
-    std::cout << "Testing Symm. ReLU activation:             ";
-    std::cout << "maximum relative error = " << print_error(error) << std::endl;
-    if (error > 1e-10)
-        return 1;
+   // Symmetric ReLU.
 
-    error = testSymmetricReluDerivative<TCpu<Double_t, false>>(10);
-    std::cout << "Testing Symm. ReLU activation derivative:  ";
-    std::cout << "maximum relative error = " << print_error(error) << std::endl;
-    if (error > 1e-10)
-        return 1;
+   error = testSymmetricRelu<TCpu<Scalar_t>>(10);
+   std::cout << "Testing Symm. ReLU activation:             ";
+   std::cout << "maximum relative error = " << print_error(error) << std::endl;
+   if (error > 1e-10)
+       return 1;
 
-    // Soft Sign.
+   error = testSymmetricReluDerivative<TCpu<Scalar_t>>(10);
+   std::cout << "Testing Symm. ReLU activation derivative:  ";
+   std::cout << "maximum relative error = " << print_error(error) << std::endl;
+   if (error > 1e-10)
+       return 1;
 
-    error = testSoftSign<TCpu<Double_t, false>>(10);
-    std::cout << "Testing Soft Sign activation:              ";
-    std::cout << "maximum relative error = " << print_error(error) << std::endl;
-    if (error > 1e-10)
-        return 1;
+   // Soft Sign.
 
-    error = testSoftSignDerivative<TCpu<Double_t, false>>(10);
-    std::cout << "Testing Soft Sign activation derivative:   ";
-    std::cout << "maximum relative error = " << print_error(error) << std::endl;
-    if (error > 1e-10)
-        return 1;
+   error = testSoftSign<TCpu<Scalar_t>>(10);
+   std::cout << "Testing Soft Sign activation:              ";
+   std::cout << "maximum relative error = " << print_error(error) << std::endl;
+   if (error > 1e-10)
+       return 1;
 
-    // Gauss.
+   error = testSoftSignDerivative<TCpu<Scalar_t>>(10);
+   std::cout << "Testing Soft Sign activation derivative:   ";
+   std::cout << "maximum relative error = " << print_error(error) << std::endl;
+   if (error > 1e-10)
+       return 1;
 
-    error = testGauss<TCpu<Double_t, false>>(10);
-    std::cout << "Testing Gauss activation:                  ";
-    std::cout << "maximum relative error = " << print_error(error) << std::endl;
-    if (error > 1e-10)
-        return 1;
+   // Gauss.
 
-    error = testGaussDerivative<TCpu<Double_t, false>>(10);
-    std::cout << "Testing Gauss activation derivative:       ";
-    std::cout << "maximum relative error = " << print_error(error) << std::endl;
-    if (error > 1e-10)
-        return 1;
+   error = testGauss<TCpu<Scalar_t>>(10);
+   std::cout << "Testing Gauss activation:                  ";
+   std::cout << "maximum relative error = " << print_error(error) << std::endl;
+   if (error > 1e-10)
+       return 1;
 
-    return 0;
+   error = testGaussDerivative<TCpu<Scalar_t>>(10);
+   std::cout << "Testing Gauss activation derivative:       ";
+   std::cout << "maximum relative error = " << print_error(error) << std::endl;
+   if (error > 1e-10)
+       return 1;
+
+   return 0;
 }

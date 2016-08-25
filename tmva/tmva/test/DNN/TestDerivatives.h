@@ -47,41 +47,33 @@ template<typename Architecture, typename F, typename dF>
                          typename Architecture::Scalar_t dx)
     -> typename Architecture::Scalar_t
 {
-    using Scalar_t   = typename Architecture::Scalar_t;
-    using Matrix_t   = typename Architecture::Matrix_t;
+   using Scalar_t   = typename Architecture::Scalar_t;
+   using Matrix_t   = typename Architecture::Matrix_t;
 
-    Scalar_t maximum_error = 0.0;
+   Scalar_t maximum_error = 0.0;
 
-    for (size_t i = 0; i < 100; i++)
-    {
-        Matrix_t X(10,10), Y(10,10);
-        randomMatrix(Y);
+   for (size_t i = 0; i < 100; i++)
+   {
+      Matrix_t X(10,10), Y(10,10);
+      randomMatrix(Y);
 
-        df(X, Y);
-        Scalar_t dy = X(0,0);
+      df(X, Y);
+      Scalar_t dy = X(0,0);
 
-        copyMatrix(X, Y);
-        X(0,0) += dx;
-        f(X);
-        Scalar_t y1 = X(0,0);
-        copyMatrix(X, Y);
-        X(0,0) -= dx;
-        f(X);
-        Scalar_t y0 = X(0,0);
-        Scalar_t dy_num = (y1 - y0) / (2.0 * dx);
+      copyMatrix(X, Y);
+      X(0,0) += dx;
+      f(X);
+      Scalar_t y1 = X(0,0);
+      copyMatrix(X, Y);
+      X(0,0) -= dx;
+      f(X);
+      Scalar_t y0 = X(0,0);
+      Scalar_t dy_num = (y1 - y0) / (2.0 * dx);
+      Scalar_t error = relativeError(dy_num, dy);
+      maximum_error = std::max(maximum_error, error);
+   }
 
-        Scalar_t error = 0.0;
-        if (std::fabs(dy) > 0)
-        {
-            error = std::fabs((dy_num - dy) / dy);
-        }
-        else
-            error = dy_num - dy;
-
-        maximum_error = std::max(maximum_error, error);
-    }
-
-    return maximum_error;
+   return maximum_error;
 }
 
 /*! Test derivatives of all activation functions and return the maximum relative
@@ -91,35 +83,35 @@ template<typename Architecture>
 auto testActivationFunctionDerivatives()
     -> typename Architecture::Scalar_t
 {
-    using Scalar_t   = typename Architecture::Scalar_t;
-    using Matrix_t = typename Architecture::Matrix_t;
+   using Scalar_t   = typename Architecture::Scalar_t;
+   using Matrix_t = typename Architecture::Matrix_t;
 
-    std::vector<EActivationFunction> EActivationFunctions
-        = {EActivationFunction::IDENTITY,
-           EActivationFunction::SIGMOID,
-           EActivationFunction::TANH,
-           EActivationFunction::SOFTSIGN,
-           EActivationFunction::GAUSS};
+   std::vector<EActivationFunction> EActivationFunctions
+   = {EActivationFunction::IDENTITY,
+      EActivationFunction::SIGMOID,
+      EActivationFunction::TANH,
+      EActivationFunction::SOFTSIGN,
+      EActivationFunction::GAUSS};
 
-    Scalar_t error, maximum_error;
-    maximum_error = 0.0;
+   Scalar_t error, maximum_error;
+   maximum_error = 0.0;
 
-    for (auto & af : EActivationFunctions)
-    {
-        auto f  = [& af](Matrix_t &X){ evaluate<Architecture>(X, af);};
-        auto df = [& af](Matrix_t &X, const Matrix_t &Y)
-            {
-                evaluateDerivative<Architecture>(X, af, Y);
-            };
-        error = testDerivatives<Architecture>(f, df, 5e-6);
+   for (auto & af : EActivationFunctions)
+   {
+      auto f  = [& af](Matrix_t &X){ evaluate<Architecture>(X, af);};
+      auto df = [& af](Matrix_t &X, const Matrix_t &Y)
+      {
+         evaluateDerivative<Architecture>(X, af, Y);
+      };
+      error = testDerivatives<Architecture>(f, df, 5e-3);
 
-        std::cout << "Testing " << static_cast<int>(af) << ": ";
-        std::cout << "Maximum Relative Error = " << print_error(error) << std::endl;
+      std::cout << "Testing " << static_cast<int>(af) << ": ";
+      std::cout << "Maximum Relative Error = " << error << std::endl;
 
-        maximum_error = std::max(maximum_error, error);
-    }
+      maximum_error = std::max(maximum_error, error);
+   }
 
-    return maximum_error;
+   return maximum_error;
 }
 
 //______________________________________________________________________________
@@ -204,7 +196,7 @@ auto testLossFunctionGradients()
         error = testGradients<Architecture>(f, df, 5e-6);
 
         std::cout << "Testing " << static_cast<char>(lf) << ": ";
-        std::cout << "Maximum Relative Error = " << print_error(error) << std::endl;
+        std::cout << "Maximum Relative Error = " << error << std::endl;
 
         maximum_error = std::max(maximum_error, error);
     }
@@ -251,7 +243,7 @@ auto testRegularizationGradients()
         error = testGradients<Architecture>(f, df, 1.0);
 
         std::cout << "Testing " << static_cast<char>(r) << ": ";
-        std::cout << "Maximum Relative Error = " << print_error(error) << std::endl;
+        std::cout << "Maximum Relative Error = " << error << std::endl;
 
         maximum_error = std::max(maximum_error, error);
     }

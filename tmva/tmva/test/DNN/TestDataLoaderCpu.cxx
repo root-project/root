@@ -20,11 +20,20 @@ using namespace TMVA::DNN;
 
 int main ()
 {
-   std::cout << "Testing data loader:" << std::endl;
-   Double_t error = testIdentity<TCpu<Double_t, false>>();
-   std::cout << "Identity: " << error << std::endl;
-   error = testSum<TCpu<Double_t, false>>();
-   std::cout << "Sum     : " << error << std::endl;
+   using Scalar_t = Real_t;
 
-   return 0;
+   std::cout << "Testing data loader:" << std::endl;
+
+   Scalar_t maximumError = 0.0;
+
+   Scalar_t error = testSum<TCpu<Scalar_t>>();
+   std::cout << "Sum:      Maximum relative error = " << error << std::endl;
+   maximumError = std::max(error, maximumError);
+   error = testIdentity<TCpu<Scalar_t>>();
+   std::cout << "Identity: Maximum relative error = " << error << std::endl;
+   maximumError = std::max(error, maximumError);
+
+   if (maximumError > 1e-3) {
+      return 1;
+   }
 }

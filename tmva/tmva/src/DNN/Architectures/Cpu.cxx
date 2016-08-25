@@ -13,20 +13,20 @@
 // Explicit instantiation of the CPU architecture class. //
 ///////////////////////////////////////////////////////////
 
-#include <iostream>
 #include "TMVA/DNN/Architectures/Cpu.h"
 
-#include "Cpu/Propagation.cxx"
-#include "Cpu/Arithmetic.cxx"
 #include "Cpu/ActivationFunctions.cxx"
-#include "Cpu/OutputFunctions.cxx"
-#include "Cpu/LossFunctions.cxx"
-#include "Cpu/Regularization.cxx"
-#include "Cpu/Initialization.cxx"
+#include "Cpu/Arithmetic.cxx"
 #include "Cpu/Dropout.cxx"
+#include "Cpu/Initialization.cxx"
+#include "Cpu/LossFunctions.cxx"
+#include "Cpu/OutputFunctions.cxx"
+#include "Cpu/Propagation.cxx"
+#include "Cpu/Regularization.cxx"
 
 namespace TMVA {
 namespace DNN  {
-template class TCpu<Double_t, false>;
+template class TCpu<Double_t>;
+template class TCpu<Real_t>;
 } // namespace TMVA
 } // namespace DNN

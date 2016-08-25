@@ -21,11 +21,11 @@ namespace TMVA
 namespace DNN
 {
 
-template<typename Real_t, bool doProfiling>
-void TCpu<Real_t, doProfiling>::Sigmoid(TCpuMatrix<Real_t> & B,
-                                        const TCpuMatrix<Real_t> & A)
+template<typename AFloat>
+void TCpu<AFloat>::Sigmoid(TCpuMatrix<AFloat> & B,
+                           const TCpuMatrix<AFloat> & A)
 {
-   auto f = [](Real_t x) {return 1.0 / (1.0 + exp(-x));};
+   auto f = [](AFloat x) {return 1.0 / (1.0 + exp(-x));};
    B.MapFrom(f, A);
 }
 

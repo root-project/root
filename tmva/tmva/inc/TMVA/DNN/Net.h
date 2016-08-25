@@ -368,7 +368,6 @@ auto TNet<Architecture_t, Layer_t>::GetNFlops()
       }
       nlp = nl;
    }
-   std::cout << "Nflops: " << flops << std::endl;
    return flops;
 }
 

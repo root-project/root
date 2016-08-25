@@ -51,6 +51,8 @@
 
 #include <algorithm>
 #include <iostream>
+#include <string>
+#include <iomanip>
 
 REGISTER_METHOD(DNN)
 
@@ -417,9 +419,11 @@ void TMVA::MethodDNN::ProcessOptions()
       }
       fOutputFunction = EOutputFunction::SIGMOID;
    } else if (fAnalysisType == Types::kRegression) {
-      Log () << kWARNING << "For regression only SUMOFSQUARES is a valid "
-             << " neural net error function. Setting error function to "
-             << " SUMOFSQUARES now." << Endl;
+      if (fErrorStrategy != "SUMOFSQUARES") {
+         Log () << kWARNING << "For regression only SUMOFSQUARES is a valid "
+                << " neural net error function. Setting error function to "
+                << " SUMOFSQUARES now." << Endl;
+      }
       fNet.SetLossFunction(ELossFunction::MEANSQUAREDERROR);
       fOutputFunction = EOutputFunction::IDENTITY;
    } else if (fAnalysisType == Types::kMulticlass) {
@@ -495,10 +499,10 @@ void TMVA::MethodDNN::Train()
        TrainGpu();
        return;
    } else if (fArchitectureString == "OpenCL") {
-      TrainOpenCL();
+      Log() << kFATAL << "OpenCL backend not yes supported." << Endl;
       return;
    } else if (fArchitectureString == "CPU") {
-      TrainCpu();
+      TrainCpu<Double_t>();
       return;
    }
 
@@ -558,7 +562,7 @@ void TMVA::MethodDNN::Train()
 
    for (size_t i = 0; i < fNet.GetDepth(); i++) {
       EActivationFunction f = fNet.GetLayer(i).GetActivationFunction();
-      EnumFunction        g;
+      EnumFunction        g = EnumFunction::LINEAR;
       switch(f) {
          case EActivationFunction::IDENTITY: g = EnumFunction::LINEAR;   break;
          case EActivationFunction::RELU:     g = EnumFunction::RELU;     break;
@@ -571,7 +575,7 @@ void TMVA::MethodDNN::Train()
       if (i < fNet.GetDepth() - 1) {
          net.addLayer(Layer(fNet.GetLayer(i).GetWidth(), g));
       } else {
-         ModeOutputValues h;
+         ModeOutputValues h = ModeOutputValues::DIRECT;
          switch(fOutputFunction) {
             case EOutputFunction::IDENTITY: h = ModeOutputValues::DIRECT;  break;
             case EOutputFunction::SIGMOID:  h = ModeOutputValues::SIGMOID; break;
@@ -598,13 +602,17 @@ void TMVA::MethodDNN::Train()
           net.initializeWeights(WeightInitializationStrategy::XAVIERUNIFORM,
                                 std::back_inserter(weights));
           break;
+      default:
+          net.initializeWeights(WeightInitializationStrategy::XAVIER,
+                                std::back_inserter(weights));
+          break;
    }
 
 
    int idxSetting = 0;
    for (auto s : fTrainingSettings) {
 
-      EnumRegularization r;
+      EnumRegularization r = EnumRegularization::NONE;
       switch(s.regularization) {
          case ERegularization::NONE: r = EnumRegularization::NONE; break;
          case ERegularization::L1:   r = EnumRegularization::L1;   break;
@@ -677,10 +685,12 @@ void TMVA::MethodDNN::TrainGpu()
 
 #ifdef DNNCUDA // Included only if DNNCUDA flag is set.
 
-
    size_t nTrainingSamples = GetEventCollection(Types::kTraining).size();
    size_t nTestSamples     = GetEventCollection(Types::kTesting).size();
 
+   Log() << kINFO << "Start of neural network training on GPU." << Endl;
+
+   size_t trainingPhase = 1;
    fNet.Initialize(fWeightInitialization);
    for (TTrainingSettings & settings : fTrainingSettings) {
 
@@ -691,12 +701,9 @@ void TMVA::MethodDNN::TrainGpu()
       net.InitializeGradients();
       auto testNet = net.CreateClone(settings.batchSize);
 
-      Log() << kINFO
-            << "Training on GPU with learning rate = "
-            << settings.learningRate
-            << ", momentum = " << settings.momentum
-            << ", repetitions = " << settings.testInterval
-            << Endl;
+      Log() << kINFO << "Training phase " << trainingPhase << " of "
+            << fTrainingSettings.size() << ":" << Endl;
+      trainingPhase++;
 
       using DataLoader_t = TDataLoader<TMVAInput_t, TCuda<>>;
 
@@ -715,7 +722,6 @@ void TMVA::MethodDNN::TrainGpu()
                                              settings.convergenceSteps,
                                              settings.testInterval);
 
-      net.Print();
       std::vector<TNet<TCuda<>>> nets{};
       std::vector<TBatch<TCuda<>>> batches{};
       nets.reserve(nThreads);
@@ -739,6 +745,164 @@ void TMVA::MethodDNN::TrainGpu()
       std::chrono::time_point<std::chrono::system_clock> start, end;
       start = std::chrono::system_clock::now();
 
+      Log() << std::setw(10) << "Epoch" << " | "
+            << std::setw(12) << "Train Err."
+            << std::setw(12) << "Test  Err."
+            << std::setw(12) << "GFLOP/s"
+            << std::setw(12) << "Conv. Steps" << Endl;
+      std::string separator(62, '-');
+      Log() << separator << Endl;
+
+      while (!converged)
+      {
+         stepCount++;
+
+         // Perform minimization steps for a full epoch.
+         trainingData.Shuffle();
+         for (size_t i = 0; i < batchesInEpoch; i += nThreads) {
+             batches.clear();
+             for (size_t j = 0; j < nThreads; j++) {
+                 batches.reserve(nThreads);
+                 batches.push_back(trainingData.GetBatch());
+             }
+             if (settings.momentum > 0.0) {
+                 minimizer.StepMomentum(net, nets, batches, settings.momentum);
+             } else {
+                 minimizer.Step(net, nets, batches);
+             }
+         }
+
+         if ((stepCount % minimizer.GetTestInterval()) == 0) {
+
+            // Compute test error.
+            Double_t testError = 0.0;
+            for (auto batch : testData) {
+               auto inputMatrix  = batch.GetInput();
+               auto outputMatrix = batch.GetOutput();
+               testError += testNet.Loss(inputMatrix, outputMatrix);
+            }
+            testError /= (Double_t) (nTestSamples / settings.batchSize);
+
+            end   = std::chrono::system_clock::now();
+
+            // Compute training error.
+            Double_t trainingError = 0.0;
+            for (auto batch : trainingData) {
+               auto inputMatrix  = batch.GetInput();
+               auto outputMatrix = batch.GetOutput();
+               trainingError += net.Loss(inputMatrix, outputMatrix);
+            }
+            trainingError /= (Double_t) (nTrainingSamples / settings.batchSize);
+
+            // Compute numerical throughput.
+            std::chrono::duration<double> elapsed_seconds = end - start;
+            double seconds = elapsed_seconds.count();
+            double nFlops  = (double) (settings.testInterval * batchesInEpoch);
+            nFlops *= net.GetNFlops() * 1e-9 / seconds;
+
+            converged = minimizer.HasConverged(testError);
+            start = std::chrono::system_clock::now();
+
+            Log() << std::setw(10) << stepCount << " | "
+                  << std::setw(12) << trainingError
+                  << std::setw(12) << testError
+                  << std::setw(12) << nFlops / seconds
+                  << std::setw(12) << minimizer.GetConvergenceCount() << Endl;
+            if (converged) {
+               Log() << Endl;
+            }
+         }
+      }
+      for (size_t l = 0; l < net.GetDepth(); l++) {
+         fNet.GetLayer(l).GetWeights() = (TMatrixT<Double_t>) net.GetLayer(l).GetWeights();
+         fNet.GetLayer(l).GetBiases()  = (TMatrixT<Double_t>) net.GetLayer(l).GetBiases();
+      }
+   }
+
+#else // DNNCUDA flag not set.
+
+   Log() << kFATAL << "CUDA backend not enabled. Please make sure "
+                      "you have CUDA installed and it was successfully "
+                      "detected by CMAKE." << Endl;
+#endif // DNNCUDA
+}
+
+//______________________________________________________________________________
+template<typename AFloat>
+void TMVA::MethodDNN::TrainCpu()
+{
+
+#ifdef DNNCPU // Included only if DNNCPU flag is set.
+
+   size_t nTrainingSamples = GetEventCollection(Types::kTraining).size();
+   size_t nTestSamples     = GetEventCollection(Types::kTesting).size();
+
+   Log() << kINFO << "Start of neural network training on CPU." << Endl << Endl;
+
+   fNet.Initialize(fWeightInitialization);
+
+   size_t trainingPhase = 1;
+   for (TTrainingSettings & settings : fTrainingSettings) {
+
+      Log() << "Training phase " << trainingPhase << " of "
+            << fTrainingSettings.size() << ":" << Endl;
+      trainingPhase++;
+
+      TNet<TCpu<AFloat>> net(settings.batchSize, fNet);
+      net.SetWeightDecay(settings.weightDecay);
+      net.SetRegularization(settings.regularization);
+      net.SetDropoutProbabilities(settings.dropoutProbabilities);
+      net.InitializeGradients();
+      auto testNet = net.CreateClone(settings.batchSize);
+
+      using DataLoader_t = TDataLoader<TMVAInput_t, TCpu<AFloat>>;
+
+      size_t nThreads = 1;
+      DataLoader_t trainingData(GetEventCollection(Types::kTraining),
+                                nTrainingSamples,
+                                net.GetBatchSize(),
+                                net.GetInputWidth(),
+                                net.GetOutputWidth(), nThreads);
+      DataLoader_t testData(GetEventCollection(Types::kTesting),
+                            nTestSamples,
+                            testNet.GetBatchSize(),
+                            net.GetInputWidth(),
+                            net.GetOutputWidth(), nThreads);
+      DNN::TGradientDescent<TCpu<AFloat>> minimizer(settings.learningRate,
+                                               settings.convergenceSteps,
+                                               settings.testInterval);
+
+      std::vector<TNet<TCpu<AFloat>>>   nets{};
+      std::vector<TBatch<TCpu<AFloat>>> batches{};
+      nets.reserve(nThreads);
+      for (size_t i = 0; i < nThreads; i++) {
+         nets.push_back(net);
+         for (size_t j = 0; j < net.GetDepth(); j++)
+         {
+            auto &masterLayer = net.GetLayer(j);
+            auto &layer = nets.back().GetLayer(j);
+            TCpu<AFloat>::Copy(layer.GetWeights(),
+                          masterLayer.GetWeights());
+            TCpu<AFloat>::Copy(layer.GetBiases(),
+                          masterLayer.GetBiases());
+         }
+      }
+
+      bool   converged = false;
+      size_t stepCount = 0;
+      size_t batchesInEpoch = nTrainingSamples / net.GetBatchSize();
+
+      std::chrono::time_point<std::chrono::system_clock> start, end;
+      start = std::chrono::system_clock::now();
+
+      Log() << std::setw(10) << "Epoch" << " | "
+            << std::setw(12) << "Train Err."
+            << std::setw(12) << "Test  Err."
+            << std::setw(12) << "GFLOP/s"
+            << std::setw(12) << "Conv. Steps" << Endl;
+      std::string separator(62, '-');
+      Log() << separator << Endl;
+
       while (!converged)
       {
          stepCount++;
@@ -759,7 +923,8 @@ void TMVA::MethodDNN::TrainGpu()
 
          if ((stepCount % minimizer.GetTestInterval()) == 0) {
 
-            Double_t testError = 0.0;
+            // Compute test error.
+            AFloat testError = 0.0;
             for (auto batch : testData) {
                auto inputMatrix  = batch.GetInput();
                auto outputMatrix = batch.GetOutput();
@@ -769,8 +934,8 @@ void TMVA::MethodDNN::TrainGpu()
 
             end   = std::chrono::system_clock::now();
 
-            // Compute training and test error.
-            Double_t trainingError = 0.0;
+            // Compute training error.
+            AFloat trainingError = 0.0;
             for (auto batch : trainingData) {
                auto inputMatrix  = batch.GetInput();
                auto outputMatrix = batch.GetOutput();
@@ -778,49 +943,39 @@ void TMVA::MethodDNN::TrainGpu()
             }
             trainingError /= (Double_t) (nTrainingSamples / settings.batchSize);
 
-
-            Log() << kInfo << " Epoch " << stepCount << ": Training error = "
-                  << trainingError << " // Test Error = " << testError << Endl;
-
-            // Throughput.
-
+            // Compute numerical throughput.
             std::chrono::duration<double> elapsed_seconds = end - start;
-
-            start = std::chrono::system_clock::now();
             double seconds = elapsed_seconds.count();
             double nFlops  = (double) (settings.testInterval * batchesInEpoch);
-            nFlops *= net.GetNFlops();
-
-            Log() << kInfo << " Performance: " << nFlops * 1e-9 / seconds
-                  << " GFLOPS" << Endl;
-            // Check convergence.
+            nFlops *= net.GetNFlops() * 1e-9 / seconds;
 
             converged = minimizer.HasConverged(testError);
             start = std::chrono::system_clock::now();
+
+            Log() << std::setw(10) << stepCount << " | "
+                  << std::setw(12) << trainingError
+                  << std::setw(12) << testError
+                  << std::setw(12) << nFlops / seconds
+                  << std::setw(12) << minimizer.GetConvergenceCount() << Endl;
+            if (converged) {
+               Log() << Endl;
+            }
          }
       }
+
+
       for (size_t l = 0; l < net.GetDepth(); l++) {
-         fNet.GetLayer(l).GetWeights() = (TMatrixT<Double_t>) net.GetLayer(l).GetWeights();
-         fNet.GetLayer(l).GetBiases()  = (TMatrixT<Double_t>) net.GetLayer(l).GetBiases();
+         auto & layer = fNet.GetLayer(l);
+         layer.GetWeights() = (TMatrixT<Double_t>) net.GetLayer(l).GetWeights();
+         layer.GetBiases()  = (TMatrixT<Double_t>) net.GetLayer(l).GetBiases();
       }
    }
 
-#else // DNNCUDA flag not set.
-
-   Log() << kFATAL << "CUDA backend not enabled. Please make sure "
-                      "you have CUDA installed and it was successfully "
-                      "detected by CMAKE." << Endl;
-#endif // DNNCUDA
-}
-
-//______________________________________________________________________________
-void TMVA::MethodDNN::TrainCpu()
-{
-}
-
-//______________________________________________________________________________
-void TMVA::MethodDNN::TrainOpenCL()
-{
+#else // DNNCPU flag not set.
+   Log() << kFATAL << "Multi-core CPU backend not enabled. Please make sure "
+                      "you have a BLAS implementation  and tbb installed and"
+                      " it was successfully detected by CMAKE." << Endl;
+#endif // DNNCPU
 }
 
 //______________________________________________________________________________
