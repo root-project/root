@@ -255,13 +255,13 @@ namespace TMVA
 
 
 
-      template <typename ItSource, typename ItWeight, typename ItTarget>
+      template <typename ItSource, typename ItTarget>
          void applyWeights (ItSource itSourceBegin, ItSource itSourceEnd, int itWeight, std::vector<double>& weightBucket, ItTarget itTargetBegin, ItTarget itTargetEnd);
 
 
 
-      template <typename ItSource, typename ItWeight, typename ItPrev>
-         void applyWeightsBackwards (ItSource itCurrBegin, ItSource itCurrEnd, int itWeight, std::vector<double>& weightBucket, ItPrev itPrevBegin, ItPrev itPrevEnd);
+      template <bool HasDropOut, typename ItSource, typename ItPrev, typename ItDrop>
+          void applyWeightsBackwards (ItSource itCurrBegin, ItSource itCurrEnd, int itWeight, std::vector<double>& weightBucket, ItPrev itPrevBegin, ItPrev itPrevEnd, ItDrop itDrop);
 
 
 
@@ -271,25 +271,25 @@ namespace TMVA
          void applyFunctions (ItValue itValue, ItValue itValueEnd, Fnc fnc);
 
 
-      template <typename ItValue, typename Fnc, typename ItInverseFunction>
-         void applyFunctions (ItValue itValue, ItValue itValueEnd, Fnc fnc, ItInverseFunction itInverseFunction, int itGradient, std::vector<double>& gradientBucket);
+      template <typename ItValue, typename Fnc, typename ItInverseFunction, typename ItGradient>
+          void applyFunctions (ItValue itValue, ItValue itValueEnd, Fnc fnc, ItInverseFunction invFnc, ItGradient itGradient);
 
 
 
-      template <typename ItSource, typename ItDelta, typename ItTargetGradient, typename ItGradient>
+      template <typename ItSource, typename ItDelta, typename ItTargetGradient>
          void update (ItSource itSource, ItSource itSourceEnd, 
-                      int itTargetDeltaBegin, int itTargetDeltaEnd, std::vector<double>& deltaBucket, 
-                      int itTargetGradientBegin, 
+                      ItDelta itTargetDeltaBegin, ItDelta itTargetDeltaEnd, 
+                      ItTargetGradient itTargetGradientBegin, 
                       int itGradient, std::vector<double>& gradientBucket);
 
 
 
-      template <EnumRegularization Regularization, typename ItSource, typename ItDelta, typename ItTargetGradient, typename ItGradient, typename ItWeight>
+      template <EnumRegularization Regularization, typename ItSource, typename ItDelta, typename ItTargetGradient>
          void update (ItSource itSource, ItSource itSourceEnd, 
-                      int itTargetDeltaBegin, int itTargetDeltaEnd, std::vector<double>& deltaBucket, 
-                      int itTargetGradientBegin, 
-                      int itGradient, std::vector<double>& gradientBucket, 
-                      int itWeight, std::vector<double>& weightBucket, double weightDecay);
+                      ItDelta itTargetDeltaBegin, ItDelta itTargetDeltaEnd, 
+                      ItTargetGradient itTargetGradientBegin, 
+                      int itGradient, std::vector<double>& gradientBucket,
+                      int itWeight, std::vector<double>& weightBucket, double& weightDecay);
 
 
 
@@ -363,8 +363,8 @@ namespace TMVA
           *                    is not touched by the minimizer; This object is provided to the fitness function when
           *                    called
           */
-         template <typename Function, typename Weights, typename PassThrough>
-            double operator() (Function& fitnessFunction, std::vector<double>& weightBucket, std::vector<double>& gradientBucket, PassThrough& passThrough);
+         template <typename Function, typename PassThrough>
+            double operator() (Function& fitnessFunction, std::vector<double>& weightBucket, PassThrough& passThrough);
 
 
          double m_alpha; ///< internal parameter (learningRate)
@@ -389,25 +389,25 @@ namespace TMVA
 
 
 
-      template <typename ItOutput, typename ItTruth, typename ItDelta, typename ItInvActFnc>
-         double sumOfSquares (ItOutput itOutputBegin, ItOutput itOutputEnd, ItTruth itTruthBegin, ItTruth /*itTruthEnd*/, int itDelta, int itDeltaEnd, std::vector<double>& deltaBucket, ItInvActFnc itInvActFnc, double patternWeight);
+      template <typename ItOutput, typename ItTruth, typename ItDelta, typename InvFnc>
+          double sumOfSquares (ItOutput itOutputBegin, ItOutput itOutputEnd, ItTruth itTruthBegin, ItTruth /*itTruthEnd*/, ItDelta itDelta, ItDelta itDeltaEnd, InvFnc invFnc, double patternWeight);
 
 
 
       template <typename ItProbability, typename ItTruth, typename ItDelta, typename ItInvActFnc>
-         double crossEntropy (ItProbability itProbabilityBegin, ItProbability itProbabilityEnd, ItTruth itTruthBegin, ItTruth /*itTruthEnd*/, int itDelta, int itDeltaEnd, std::vector<double>& deltaBucket, ItInvActFnc /*itInvActFnc*/, double patternWeight);
+          double crossEntropy (ItProbability itProbabilityBegin, ItProbability itProbabilityEnd, ItTruth itTruthBegin, ItTruth /*itTruthEnd*/, ItDelta itDelta, ItDelta itDeltaEnd, ItInvActFnc /*itInvActFnc*/, double patternWeight);
 
 
 
 
       template <typename ItOutput, typename ItTruth, typename ItDelta, typename ItInvActFnc>
-         double softMaxCrossEntropy (ItOutput itProbabilityBegin, ItOutput itProbabilityEnd, ItTruth itTruthBegin, ItTruth /*itTruthEnd*/, int itDelta, int itDeltaEnd, std::vector<double>& deltaBucket, ItInvActFnc /*itInvActFnc*/, double patternWeight);
+          double softMaxCrossEntropy (ItOutput itProbabilityBegin, ItOutput itProbabilityEnd, ItTruth itTruthBegin, ItTruth /*itTruthEnd*/, ItDelta itDelta, ItDelta itDeltaEnd, ItInvActFnc /*itInvActFnc*/, double patternWeight);
 
 
 
 
 
-      template <typename ItWeight>
+
          double weightDecay (double error, int currLayerWeightIndex, int nextLayerWeightIndex, std::vector<double>& weightBucket, double factorWeightDecay, EnumRegularization eRegularization);
 
 
@@ -515,8 +515,8 @@ namespace TMVA
             : m_size (other.m_size)
             , m_itInputBegin (other.m_itInputBegin)
             , m_itInputEnd (other.m_itInputEnd)
-            , m_deltaBucket (other.m_deltaBucket)
-            , m_valueGradientBucket (other.m_valueGradientBucket)
+            , m_deltas (other.m_deltas)
+            , m_valueGradients (other.m_valueGradients)
             , m_values (other.m_values)
         , m_itDropOut (other.m_itDropOut)
         , m_hasDropOut (other.m_hasDropOut)
@@ -538,8 +538,8 @@ namespace TMVA
             : m_size (other.m_size)
             , m_itInputBegin (other.m_itInputBegin)
             , m_itInputEnd (other.m_itInputEnd)
-        , m_deltaBucket (std::move(other.m_deltaBucket))
-        , m_valueGradientBucket (std::move(other.m_valueGradientBucket))
+        , m_deltas (std::move(other.m_deltas))
+        , m_valueGradients (std::move(other.m_valueGradients))
         , m_values (std::move(other.m_values))
         , m_itDropOut (other.m_itDropOut)
         , m_hasDropOut (other.m_hasDropOut)
@@ -575,7 +575,7 @@ namespace TMVA
          void clear ()
          {
             m_values.assign (m_values.size (), 0.0);
-            m_deltaBucket.assign (m_deltaBucket.size (), 0.0);
+            m_deltas.assign (m_deltas.size (), 0.0);
          }
 
          const_iterator_type valuesBegin () const { return m_isInputLayer ? m_itInputBegin : begin (m_values); } ///< returns const iterator to the begin of the (node) values
@@ -587,24 +587,22 @@ namespace TMVA
          ModeOutputValues outputMode () const { return m_eModeOutput; } ///< returns the output mode
     container_type probabilities () const { return computeProbabilities (); } ///< computes the probabilities from the current node values and returns them 
 
-         int deltasBegin () { return m_itGradientBegin; } ///< returns iterator to the begin of the deltas (back-propagation)
-         int deltasEnd   () { return (m_deltaBucket.size() * BUCKET_SIZE + m_itGradientBegin); } ///< returns iterator to the end of the deltas (back-propagation)
+         iterator_type deltasBegin () { return begin (m_deltas); } ///< returns iterator to the begin of the deltas (back-propagation)
+         iterator_type deltasEnd   () { return end   (m_deltas); } ///< returns iterator to the end of the deltas (back-propagation)
 
-         int deltasBegin () const { return m_itGradientBegin; } ///< returns const int to the begin of the deltas (back-propagation)
-         int deltasEnd   () const { return (m_deltaBucket.size() * BUCKET_SIZE + m_itGradientBegin); } ///< returns const int to the end of the deltas (back-propagation)
+         const_iterator_type deltasBegin () const { return begin (m_deltas); } ///< returns const iterator to the begin of the deltas (back-propagation)
+         const_iterator_type deltasEnd   () const { return end   (m_deltas); } ///< returns const iterator to the end of the deltas (back-propagation)
 
-         int valueGradientsBegin () { return m_itGradientBegin; } ///< returns int to the begin of the gradients of the node values
-         int valueGradientsEnd   () { return (m_valueGradientBucket.size() * BUCKET_SIZE + m_itGradientBegin); } ///< returns int to the end of the gradients of the node values
+         iterator_type valueGradientsBegin () { return begin (m_valueGradients); } ///< returns iterator to the begin of the gradients of the node values
+         iterator_type valueGradientsEnd   () { return end   (m_valueGradients); } ///< returns iterator to the end of the gradients of the node values
 
-         int valueGradientsBegin () const { return m_itGradientBegin; } ///< returns const int to the begin of the gradients
-         int valueGradientsEnd   () const { return (m_valueGradientBucket.size() * BUCKET_SIZE + m_itGradientBegin); } ///< returns const int to the end of the gradients
+         const_iterator_type valueGradientsBegin () const { return begin (m_valueGradients); } ///< returns const iterator to the begin of the gradients
+         const_iterator_type valueGradientsEnd   () const { return end   (m_valueGradients); } ///< returns const iterator to the end of the gradients
 
          int gradientsBegin () { assert (m_hasGradients); return m_itGradientBegin; } ///< returns iterator to the begin of the gradients
          int gradientsBegin () const { assert (m_hasGradients); return m_itGradientBegin; } ///< returns const iterator to the begin of the gradients
          int weightsBegin   () const { assert (m_hasWeights); return m_itConstWeightBegin; } ///< returns const iterator to the begin of the weights for this layer
 
-         std::vector<double> getGradientBucket () { return m_valueGradientBucket; } // returns gradient bucket.
-         std::vector<double> getDeltaBucket () { return m_deltaBucket; } // returns gradient bucket.
 
          std::shared_ptr<std::function<double(double)>> activationFunction () const { return m_activationFunction; }
          std::shared_ptr<std::function<double(double)>> inverseActivationFunction () const { return m_inverseActivationFunction; }
@@ -641,8 +639,8 @@ namespace TMVA
          const_iterator_type m_itInputBegin; ///< iterator to the first of the nodes in the input node vector
          const_iterator_type m_itInputEnd;   ///< iterator to the end of the nodes in the input node vector
 
-         std::vector<double> m_deltaBucket; ///< stores the deltas for the DNN training 
-         std::vector<double> m_valueGradientBucket; ///< stores the gradients of the values (nodes)
+         std::vector<double> m_deltas; ///< stores the deltas for the DNN training 
+         std::vector<double> m_valueGradients; ///< stores the gradients of the values (nodes)
 
          std::vector<double> m_values; ///< stores the values of the nodes in this layer
          const_dropout_iterator m_itDropOut; ///< iterator to a container indicating if the corresponding node is to be dropped
@@ -724,7 +722,7 @@ namespace TMVA
 
 
       template <typename LAYERDATA>
-         void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double weightDecay, EnumRegularization regularization);
+         void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double weightDecay, EnumRegularization regularization, std::vector<double>& weightBucket, std::vector<double>& gradientBucket);
 
 
 
@@ -1149,7 +1147,7 @@ namespace TMVA
           * \param dropContainer the configuration for DNN drop-out
           */
          template <typename Iterator, typename Minimizer>
-            inline double trainCycle (Minimizer& minimizer, std::vector<double>& weightBucket, std::vector<double>& gradientBucket,
+            inline double trainCycle (Minimizer& minimizer, std::vector<double>& weightBucket,
 			                        Iterator itPatternBegin, Iterator itPatternEnd,
                               Settings& settings,
                               DropContainer& dropContainer);
@@ -1161,7 +1159,7 @@ namespace TMVA
          size_t numWeights (size_t trainingStartLayer = 0) const; ///< returns the number of weights in this net
     size_t numNodes   (size_t trainingStartLayer = 0) const; ///< returns the number of nodes in this net
 
-         template <typename Weights>
+
             std::vector<double> compute (const std::vector<double>& input, std::vector<double>& weightBucket) const; ///< compute the net with the given input and the given weights
 
          template <typename PassThrough>
@@ -1170,14 +1168,14 @@ namespace TMVA
          template <typename PassThrough, typename OutContainer>
             double operator() (PassThrough& settingsAndBatch, std::vector<double>& weightBucket, ModeOutput /*eFetch*/, OutContainer& outputContainer) const; ///< execute computation of the DNN for one mini-batch; helper function
     
-         template <typename Gradients, typename PassThrough>
+         template <typename PassThrough>
         double operator() (PassThrough& settingsAndBatch, std::vector<double>& weightBucket, std::vector<double>& gradientBucket) const;  ///< execute computation of the DNN for one mini-batch (used by the minimizer); returns gradients as well
 
-         template <typename Gradients, typename PassThrough, typename OutContainer>
+         template <typename PassThrough, typename OutContainer>
         double operator() (PassThrough& settingsAndBatch, std::vector<double>& weightBucket, std::vector<double>& gradientBucket, ModeOutput eFetch, OutContainer& outputContainer) const;
 
 
-    template <typename LayerContainer, typename DropContainer, typename ItWeight, typename ItGradient>
+    template <typename LayerContainer, typename DropContainer>
         std::vector<std::vector<LayerData>> prepareLayerData (LayerContainer& layers,
                                                               Batch& batch,
                                                               const DropContainer& dropContainer,
@@ -1195,7 +1193,7 @@ namespace TMVA
                            LayerPatternContainer& layerPatternData,
                            std::vector<double>& valuesMean,
                            std::vector<double>& valuesStdDev,
-                           size_t trainFromLayer, std::vector<double>& weightBucket, std::vector<double>& gradientBucket) const;
+                           size_t trainFromLayer, std::vector<double>& weightBucket) const;
     
     template <typename OutputContainer>
         void fetchOutput (const LayerData& lastLayerData, OutputContainer& outputContainer) const;
@@ -1204,15 +1202,13 @@ namespace TMVA
         void fetchOutput (const std::vector<LayerData>& layerPatternData, OutputContainer& outputContainer) const;
 
 
-    template <typename ItWeight>
+
         std::tuple</*sumError*/double,/*sumWeights*/double> computeError (const Settings& settings,
                                                                           std::vector<LayerData>& lastLayerData,
-                                                                          Batch& batch,
-                                                                          int itWeightBegin,
-                                                                          int itWeightEnd) const;
+                                                                          Batch& batch, std::vector<double>& weightBucket) const;
 
     template <typename Settings>
-        void backPropagate (std::vector<std::vector<LayerData>>& layerPatternData, std::vector<double>& weightBucket,
+        void backPropagate (std::vector<std::vector<LayerData>>& layerPatternData, std::vector<double>& weightBucket, std::vector<double>& gradientBucket,
                             const Settings& settings,
                             size_t trainFromLayer,
                             size_t totalNumWeights) const;
@@ -1223,7 +1219,7 @@ namespace TMVA
           *
           * 
           */
-         template <typename LayerContainer, typename PassThrough, typename ItWeight, typename ItGradient, typename OutContainer>
+         template <typename LayerContainer, typename PassThrough, typename OutContainer>
             double forward_backward (LayerContainer& layers, PassThrough& settingsAndBatch, 
 			     int itWeightBegin, int itWeightEnd, 
                                      int itGradientBegin, int itGradientEnd, 
@@ -1244,9 +1240,8 @@ namespace TMVA
             double errorFunction (LayerData& layerData,
                                   LayerData& nextLayerData,
                                   Container truth,
-                                  int itWeight,
-                                  int itWeightEnd,
                                   double patternWeight,
+                                  std::vector<double>& weightBucket,
                                   double factorWeightDecay,
                                   EnumRegularization eRegularization) const;
 
@@ -1268,8 +1263,6 @@ namespace TMVA
             void initializeWeights (WeightInitializationStrategy eInitStrategy, 
                                     OutIterator itWeight); ///< initialize the weights with the given strategy
 
-         template <typename OutIterator>
-            void initializeGradientsDeltas (OutIterator itGradient, OutIterator itDelta); ///< initialize the weights with the given strategy
 
       protected:
 
