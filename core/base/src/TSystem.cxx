@@ -3546,17 +3546,17 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       if (!AccessPathName(singleLibrary)) {
          if (collectingSingleLibraryNameTokens) {
             librariesWithQuotes.Chop();
-            librariesWithQuotes += "\" " + singleLibrary;
+            librariesWithQuotes += "\" \"" + singleLibrary + "\"";
             collectingSingleLibraryNameTokens = kFALSE;
          } else {
-            librariesWithQuotes += " " + singleLibrary;
+            librariesWithQuotes += " \"" + singleLibrary + "\"";
          }
       } else {
          if (collectingSingleLibraryNameTokens) {
             librariesWithQuotes += singleLibrary + " ";
          } else {
             collectingSingleLibraryNameTokens = kTRUE;
-            librariesWithQuotes += "\"" + singleLibrary + " ";
+            librariesWithQuotes += " \"" + singleLibrary + " ";
          }
       }
    }
