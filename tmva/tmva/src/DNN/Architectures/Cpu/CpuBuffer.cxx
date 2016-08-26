@@ -64,12 +64,52 @@ void TCpuBuffer<AReal>::CopyFrom(TCpuBuffer & other)
 template<typename AReal>
 void TCpuBuffer<AReal>::CopyTo(TCpuBuffer & other)
 {
-   //other = *this;
+   std::swap(*this->fBuffer, *other.fBuffer);
 }
 
 //______________________________________________________________________________
 template<>
-void TDataLoader<MatrixInput_t, TCpu<Double_t, false>>::CopyInput(
+void TDataLoader<MatrixInput_t, TCpu<Real_t>>::CopyInput(
+    TCpuBuffer<Real_t> & buffer,
+    IndexIterator_t sampleIterator,
+    size_t batchSize)
+{
+   const TMatrixT<Real_t> &inputMatrix  = std::get<0>(fData);
+   size_t n = inputMatrix.GetNcols();
+
+   for (size_t i = 0; i < batchSize; i++) {
+      size_t sampleIndex = *sampleIterator;
+      for (size_t j = 0; j < n; j++) {
+         size_t bufferIndex = j * batchSize + i;
+         buffer[bufferIndex] = static_cast<Real_t>(inputMatrix(sampleIndex, j));
+      }
+      sampleIterator++;
+   }
+}
+
+//______________________________________________________________________________
+template<>
+void TDataLoader<MatrixInput_t, TCpu<Real_t>>::CopyOutput(
+    TCpuBuffer<Real_t> & buffer,
+    IndexIterator_t sampleIterator,
+    size_t batchSize)
+{
+   const TMatrixT<Real_t> &outputMatrix  = std::get<1>(fData);
+   size_t n = outputMatrix.GetNcols();
+
+   for (size_t i = 0; i < batchSize; i++) {
+      size_t sampleIndex = *sampleIterator;
+      for (size_t j = 0; j < n; j++) {
+         size_t bufferIndex = j * batchSize + i;
+         buffer[bufferIndex] = static_cast<Real_t>(outputMatrix(sampleIndex, j));
+      }
+      sampleIterator++;
+   }
+}
+
+//______________________________________________________________________________
+template<>
+void TDataLoader<MatrixInput_t, TCpu<Double_t>>::CopyInput(
     TCpuBuffer<Double_t> & buffer,
     IndexIterator_t sampleIterator,
     size_t batchSize)
@@ -89,7 +129,7 @@ void TDataLoader<MatrixInput_t, TCpu<Double_t, false>>::CopyInput(
 
 //______________________________________________________________________________
 template<>
-void TDataLoader<MatrixInput_t, TCpu<Double_t, false>>::CopyOutput(
+void TDataLoader<MatrixInput_t, TCpu<Double_t>>::CopyOutput(
     TCpuBuffer<Double_t> & buffer,
     IndexIterator_t sampleIterator,
     size_t batchSize)
@@ -107,7 +147,107 @@ void TDataLoader<MatrixInput_t, TCpu<Double_t, false>>::CopyOutput(
    }
 }
 
+//______________________________________________________________________________
+template<>
+void TDataLoader<TMVAInput_t, TCpu<Double_t>>::CopyInput(
+    TCpuBuffer<Double_t> & buffer,
+    IndexIterator_t sampleIterator,
+    size_t batchSize)
+{
+   Event * event  = fData.front();
+   size_t n  = event->GetNVariables();
+
+   // Copy input variables.
+
+   for (size_t i = 0; i < batchSize; i++) {
+      size_t sampleIndex = * sampleIterator++;
+      event = fData[sampleIndex];
+      for (size_t j = 0; j < n; j++) {
+         size_t bufferIndex = j * batchSize + i;
+         buffer[bufferIndex] = event->GetValue(j);
+      }
+   }
+}
+
+//______________________________________________________________________________
+template<>
+void TDataLoader<TMVAInput_t, TCpu<Double_t>>::CopyOutput(
+    TCpuBuffer<Double_t> & buffer,
+    IndexIterator_t sampleIterator,
+    size_t batchSize)
+{
+   Event * event  = fData.front();
+   size_t n       = (event->GetNTargets() == 0) ? 1 : event->GetNTargets();
+
+   // Copy target(s).
+
+   for (size_t i = 0; i < batchSize; i++) {
+       size_t sampleIndex = * sampleIterator++;
+       event = fData[sampleIndex];
+      for (size_t j = 0; j < n; j++) {
+         // Copy output matrices.
+         size_t bufferIndex = j * batchSize + i;
+         if (event->GetNTargets() == 0) {
+            buffer[bufferIndex] = (event->GetClass() == 0) ? 1.0 : 0.0;
+         } else {
+            buffer[bufferIndex] = event->GetTarget(j);
+         }
+      }
+   }
+}
+
+//______________________________________________________________________________
+template<>
+void TDataLoader<TMVAInput_t, TCpu<Real_t>>::CopyInput(
+    TCpuBuffer<Real_t> & buffer,
+    IndexIterator_t sampleIterator,
+    size_t batchSize)
+{
+   Event * event  = fData.front();
+   size_t n  = event->GetNVariables();
+
+   // Copy input variables.
+
+   for (size_t i = 0; i < batchSize; i++) {
+      size_t sampleIndex = * sampleIterator++;
+      event = fData[sampleIndex];
+      for (size_t j = 0; j < n; j++) {
+         size_t bufferIndex = j * batchSize + i;
+         buffer[bufferIndex] = static_cast<Real_t>(event->GetValue(j);
+      }
+   }
+}
+
+//______________________________________________________________________________
+template<>
+void TDataLoader<TMVAInput_t, TCpu<Real_t>>::CopyOutput(
+    TCpuBuffer<Real_t> & buffer,
+    IndexIterator_t sampleIterator,
+    size_t batchSize)
+{
+   Event * event  = fData.front();
+   size_t n       = (event->GetNTargets() == 0) ? 1 : event->GetNTargets();
+
+   // Copy target(s).
+
+   for (size_t i = 0; i < batchSize; i++) {
+       size_t sampleIndex = * sampleIterator++;
+       event = fData[sampleIndex];
+      for (size_t j = 0; j < n; j++) {
+         // Copy output matrices.
+         size_t bufferIndex = j * batchSize + i;
+         if (event->GetNTargets() == 0) {
+            buffer[bufferIndex] = (event->GetClass() == 0) ? 1.0 : 0.0;
+         } else {
+            buffer[bufferIndex] = static_cast<Real_t>(event->GetTarget(j));
+         }
+      }
+   }
+}
+
+// Explicit instantiations.
 template class TCpuBuffer<Double_t>;
+template class TCpuBuffer<Real_t>;
 
 } // namespace DNN
 } // namespace TMVA

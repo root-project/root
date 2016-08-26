@@ -23,50 +23,50 @@ namespace DNN
 {
 
 //______________________________________________________________________________
-template<typename Real_t, bool doProfiling>
-Real_t TCpu<Real_t, doProfiling>::MeanSquaredError(const TCpuMatrix<Real_t> &Y,
-                                                   const TCpuMatrix<Real_t> &output)
+template<typename AFloat>
+AFloat TCpu<AFloat>::MeanSquaredError(const TCpuMatrix<AFloat> &Y,
+                                      const TCpuMatrix<AFloat> &output)
 {
-   const Real_t __restrict__ *dataY      = Y.GetRawDataPointer();
-   const Real_t __restrict__ *dataOutput = output.GetRawDataPointer();
+   const AFloat __restrict__ *dataY      = Y.GetRawDataPointer();
+   const AFloat __restrict__ *dataOutput = output.GetRawDataPointer();
 
    auto f = [&dataY, &dataOutput](const tbb::blocked_range<size_t> & range,
-                                  Real_t partialSum)
+                                  AFloat partialSum)
    {
       size_t rangeBegin = range.begin();
       size_t rangeEnd   = range.end();
 
-      Real_t sum = partialSum;
+      AFloat sum = partialSum;
       for (size_t i = rangeBegin; i != rangeEnd; ++i) {
-          Real_t error = dataY[i] - dataOutput[i];
+          AFloat error = dataY[i] - dataOutput[i];
           sum += error * error;
       }
 
       return sum;
    };
 
-   auto reduction = [](Real_t sum1, Real_t sum2)
+   auto reduction = [](AFloat sum1, AFloat sum2)
    {
       return sum1 + sum2;
    };
 
-   Real_t norm = 1.0 / ((Real_t) Y.GetNcols() * Y.GetNrows());
+   AFloat norm = 1.0 / ((AFloat) Y.GetNcols() * Y.GetNrows());
    tbb::blocked_range<size_t> range(0, Y.GetNElements());
    return norm * parallel_reduce(range, 0.0, f, reduction);
 }
 
 //______________________________________________________________________________
-template<typename Real_t, bool doProfiling>
-void TCpu<Real_t, doProfiling>::MeanSquaredErrorGradients(
-    TCpuMatrix<Real_t> & dY,
-    const TCpuMatrix<Real_t> & Y,
-    const TCpuMatrix<Real_t> & output)
+template<typename AFloat>
+void TCpu<AFloat>::MeanSquaredErrorGradients(
+    TCpuMatrix<AFloat> & dY,
+    const TCpuMatrix<AFloat> & Y,
+    const TCpuMatrix<AFloat> & output)
 {
 
-         Real_t __restrict__ *dataDY     = dY.GetRawDataPointer();
-   const Real_t __restrict__ *dataY      = Y.GetRawDataPointer();
-   const Real_t __restrict__ *dataOutput = output.GetRawDataPointer();
-   Real_t norm = 1.0 / ((Real_t) Y.GetNrows() * Y.GetNcols());
+         AFloat __restrict__ *dataDY     = dY.GetRawDataPointer();
+   const AFloat __restrict__ *dataY      = Y.GetRawDataPointer();
+   const AFloat __restrict__ *dataOutput = output.GetRawDataPointer();
+   AFloat norm = 1.0 / ((AFloat) Y.GetNrows() * Y.GetNcols());
 
    auto f = [&dataDY, &dataY, &dataOutput, norm](const tbb::blocked_range<size_t> & range)
    {
@@ -83,49 +83,49 @@ void TCpu<Real_t, doProfiling>::MeanSquaredErrorGradients(
 }
 
 //______________________________________________________________________________
-template<typename Real_t, bool doProfiling>
-Real_t TCpu<Real_t, doProfiling>::CrossEntropy(const TCpuMatrix<Real_t> &Y,
-                                               const TCpuMatrix<Real_t> &output)
+template<typename AFloat>
+AFloat TCpu<AFloat>::CrossEntropy(const TCpuMatrix<AFloat> &Y,
+                                               const TCpuMatrix<AFloat> &output)
 {
-   const Real_t __restrict__ *dataY      = Y.GetRawDataPointer();
-   const Real_t __restrict__ *dataOutput = output.GetRawDataPointer();
+   const AFloat __restrict__ *dataY      = Y.GetRawDataPointer();
+   const AFloat __restrict__ *dataOutput = output.GetRawDataPointer();
 
    auto f = [&dataY, &dataOutput](const tbb::blocked_range<size_t> & range,
-                                  Real_t partialSum)
+                                  AFloat partialSum)
    {
       size_t rangeBegin = range.begin();
          size_t rangeEnd   = range.end();
 
-         Real_t sum = partialSum;
+         AFloat sum = partialSum;
          for (size_t i = rangeBegin; i != rangeEnd; ++i) {
-            Real_t y   = dataY[i];
-            Real_t sig = 1.0 / (1.0 + exp(- dataOutput[i]));
+            AFloat y   = dataY[i];
+            AFloat sig = 1.0 / (1.0 + exp(- dataOutput[i]));
             sum += y * log(sig) + (1.0 - y) * log(1.0 - sig);
          }
          return sum;
    };
 
-   auto reduction = [](Real_t sum1, Real_t sum2)
+   auto reduction = [](AFloat sum1, AFloat sum2)
    {
       return sum1 + sum2;
    };
 
    tbb::blocked_range<size_t> range(0, Y.GetNElements());
-   Real_t norm = 1.0 / ((Real_t) Y.GetNcols() * Y.GetNrows());
+   AFloat norm = 1.0 / ((AFloat) Y.GetNcols() * Y.GetNrows());
    return - norm * parallel_reduce(range, 0.0, f, reduction);
 }
 
 //______________________________________________________________________________
-template<typename Real_t, bool doProfiling>
-void TCpu<Real_t, doProfiling>::CrossEntropyGradients(
-    TCpuMatrix<Real_t> & dY,
-    const TCpuMatrix<Real_t> & Y,
-    const TCpuMatrix<Real_t> & output)
+template<typename AFloat>
+void TCpu<AFloat>::CrossEntropyGradients(
+    TCpuMatrix<AFloat> & dY,
+    const TCpuMatrix<AFloat> & Y,
+    const TCpuMatrix<AFloat> & output)
 {
-         Real_t __restrict__ *dataDY     = dY.GetRawDataPointer();
-   const Real_t __restrict__ *dataY      = Y.GetRawDataPointer();
-   const Real_t __restrict__ *dataOutput = output.GetRawDataPointer();
-   Real_t norm = 1.0 / ((Real_t) Y.GetNrows() * Y.GetNcols());
+         AFloat __restrict__ *dataDY     = dY.GetRawDataPointer();
+   const AFloat __restrict__ *dataY      = Y.GetRawDataPointer();
+   const AFloat __restrict__ *dataOutput = output.GetRawDataPointer();
+   AFloat norm = 1.0 / ((AFloat) Y.GetNrows() * Y.GetNcols());
 
    auto f = [&dataDY, &dataY, &dataOutput, norm](const tbb::blocked_range<size_t> & range)
    {
@@ -133,8 +133,8 @@ void TCpu<Real_t, doProfiling>::CrossEntropyGradients(
       size_t rangeEnd   = range.end();
 
       for (size_t i = rangeBegin; i != rangeEnd; ++i) {
-         Real_t y   = dataY[i];
-         Real_t sig = 1.0 / (1.0 + exp(- dataOutput[i]));
+         AFloat y   = dataY[i];
+         AFloat sig = 1.0 / (1.0 + exp(- dataOutput[i]));
          dataDY[i] = norm * (sig - y);
       }
    };

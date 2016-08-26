@@ -20,11 +20,11 @@ namespace TMVA {
 namespace DNN  {
 
 //____________________________________________________________________________
-template<typename Real_t, bool doProfiling>
-void TCpu<Real_t, doProfiling>::Dropout(TCpuMatrix<Real_t> &A,
-                                        Real_t dropoutProbability)
+template<typename AFloat>
+void TCpu<AFloat>::Dropout(TCpuMatrix<AFloat> &A,
+                           AFloat dropoutProbability)
 {
-   Real_t __restrict__ *data = A.GetRawDataPointer();
+   AFloat __restrict__ *data = A.GetRawDataPointer();
 
    auto fRange = [&data, dropoutProbability](const tbb::blocked_range<size_t> & range)
    {
@@ -34,7 +34,7 @@ void TCpu<Real_t, doProfiling>::Dropout(TCpuMatrix<Real_t> &A,
       TRandom rand(time(nullptr) + rangeBegin);
 
       for (size_t i = rangeBegin; i != rangeEnd; ++i) {
-          Real_t r = rand.Uniform();
+          AFloat r = rand.Uniform();
           data[i] = (r > dropoutProbability) ? 0.0 : data[i] / dropoutProbability;
       }
    };

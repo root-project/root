@@ -15,6 +15,7 @@
 ////////////////////////////////////////////////////////////
 
 #include "TMVA/DNN/Architectures/Cpu.h"
+#include "TMVA/DNN/Architectures/Cpu/Blas.h"
 #include "tbb/tbb.h"
 
 namespace TMVA
@@ -23,10 +24,10 @@ namespace DNN
 {
 
 //____________________________________________________________________________
-template<typename Real_t, bool doProfiling>
-void TCpu<Real_t, doProfiling>::Multiply(TCpuMatrix<Real_t> &C,
-                                         const TCpuMatrix<Real_t> &A,
-                                         const TCpuMatrix<Real_t> &B)
+template<typename Real_t>
+void TCpu<Real_t>::Multiply(TCpuMatrix<Real_t> &C,
+                            const TCpuMatrix<Real_t> &A,
+                            const TCpuMatrix<Real_t> &B)
 {
     int m = (int) A.GetNrows();
     int k = (int) A.GetNcols();
@@ -47,8 +48,8 @@ void TCpu<Real_t, doProfiling>::Multiply(TCpuMatrix<Real_t> &C,
 }
 
 //____________________________________________________________________________
-template<typename Real_t, bool doProfiling>
-void TCpu<Real_t, doProfiling>::TransposeMultiply(TCpuMatrix<Real_t> &C,
+template<typename Real_t>
+void TCpu<Real_t>::TransposeMultiply(TCpuMatrix<Real_t> &C,
                                                   const TCpuMatrix<Real_t> &A,
                                                   const TCpuMatrix<Real_t> &B)
 {
@@ -71,8 +72,8 @@ void TCpu<Real_t, doProfiling>::TransposeMultiply(TCpuMatrix<Real_t> &C,
 }
 
 //____________________________________________________________________________
-template<typename Real_t, bool doProfiling>
-void TCpu<Real_t, doProfiling>::Hadamard(TCpuMatrix<Real_t> &B,
+template<typename Real_t>
+void TCpu<Real_t>::Hadamard(TCpuMatrix<Real_t> &B,
                                          const TCpuMatrix<Real_t> &A)
 {
    const Real_t __restrict__ *dataA      = A.GetRawDataPointer();
@@ -93,8 +94,8 @@ void TCpu<Real_t, doProfiling>::Hadamard(TCpuMatrix<Real_t> &B,
 }
 
 //____________________________________________________________________________
-template<typename Real_t, bool doProfiling>
-void TCpu<Real_t, doProfiling>::SumColumns(TCpuMatrix<Real_t> &B,
+template<typename Real_t>
+void TCpu<Real_t>::SumColumns(TCpuMatrix<Real_t> &B,
                                            const TCpuMatrix<Real_t> &A)
 {
    int m = (int) A.GetNrows();
@@ -114,10 +115,10 @@ void TCpu<Real_t, doProfiling>::SumColumns(TCpuMatrix<Real_t> &B,
 }
 
 //____________________________________________________________________________
-template<typename Real_t, bool doProfiling>
-void TCpu<Real_t, doProfiling>::ScaleAdd(TCpuMatrix<Real_t> &B,
-                                         const TCpuMatrix<Real_t> &A,
-                                         Real_t alpha)
+template<typename Real_t>
+void TCpu<Real_t>::ScaleAdd(TCpuMatrix<Real_t> &B,
+                            const TCpuMatrix<Real_t> &A,
+                            Real_t alpha)
 {
    int n = (int) (A.GetNcols() * A.GetNrows());
    int inc = 1;
@@ -129,9 +130,9 @@ void TCpu<Real_t, doProfiling>::ScaleAdd(TCpuMatrix<Real_t> &B,
 }
 
 //____________________________________________________________________________
-template<typename Real_t, bool doProfiling>
-void TCpu<Real_t, doProfiling>::Copy(TCpuMatrix<Real_t> &B,
-                                     const TCpuMatrix<Real_t> &A)
+template<typename Real_t>
+void TCpu<Real_t>::Copy(TCpuMatrix<Real_t> &B,
+                        const TCpuMatrix<Real_t> &A)
 {
    auto f = [](Real_t x) {return x;};
    B.MapFrom(f, A);

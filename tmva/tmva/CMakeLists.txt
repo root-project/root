@@ -36,12 +36,6 @@ set(headers4 TNeuron.h TSynapse.h TActivationChooser.h TActivation.h TActivation
 	     VariableTransformBase.h VariableIdentityTransform.h VariableDecorrTransform.h VariablePCATransform.h 
 	     VariableGaussTransform.h VariableNormalizeTransform.h VariableRearrangeTransform.h VariableTransform.h ROCCalc.h ROCCurve.h)
 
-set(dnn_files src/DNN/Architectures/Reference.cxx
-  src/DNN/Architectures/Reference/DataLoader.cxx)
-set(dnn_cuda_files src/DNN/Architectures/Cuda.cu
-                   src/DNN/Architectures/Cuda/CudaBuffers.cxx
-                   src/DNN/Architectures/Cuda/CudaMatrix.cu)
-
 #---Need to suffix each header name by TMVA/  -----------------
 foreach(hs headers1 headers2 headers3 headers4)
   foreach(h ${${hs}})
@@ -51,30 +45,37 @@ endforeach()
 
 ROOT_GENERATE_DICTIONARY(G__TMVA ${theaders1} ${theaders2} ${theaders3} ${theaders4}   MODULE TMVA LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
 
+SET(DNN_FILES      src/DNN/Architectures/Reference.cxx)
+SET(DNN_CUDA_FILES src/DNN/Architectures/Cuda.cu
+                   src/DNN/Architectures/Cuda/CudaBuffers.cxx
+                   src/DNN/Architectures/Cuda/CudaMatrix.cu)
+SET(DNN_CPU_FILES  src/DNN/Architectures/Cpu.cxx
+                   src/DNN/Architectures/Cpu/CpuBuffer.cxx
+                   src/DNN/Architectures/Cpu/CpuMatrix.cxx)
+
 #---Handle CUDA dependent code. -----------------
-find_package(CUDA)
-if (CUDA_FOUND)
-  cuda_add_library(dnn_cuda ${dnn_cuda_files})
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDNNCUDA")
-  set(cuda_libraries dnn_cuda ${CUDA_CUBLAS_LIBRARIES})
-else (CUDA_FOUND)
-  set(dnn_cuda_libraries)
-endif(CUDA_FOUND)
+FIND_PACKAGE(CUDA)
+IF   (CUDA_FOUND)
+  CUDA_ADD_LIBRARY(dnn_cuda ${DNN_CUDA_FILES})
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDNNCUDA")
+  SET(DNN_CUDA_LIBRARIES dnn_cuda ${CUDA_CUBLAS_LIBRARIES})
+ELSE (CUDA_FOUND)
+  SET(DNN_CUDA_LIBRARIES)
+ENDIF(CUDA_FOUND)
 
 #---Handle BLAS dependent code. -----------------
-find_package(BLAS)
-if (BLAS_FOUND)
-  set(dnn_cpu_files src/DNN/Architectures/Cpu.cxx
-    src/DNN/Architectures/Cpu/CpuBuffer.cxx
-    src/DNN/Architectures/Cpu/CpuMatrix.cxx)
-  set(dnn_cpu_libraries MathCore Matrix ${BLAS_LIBRARIES} tbb ${CMAKE_THREAD_LIBS_INIT})
-else (BLAS_FOUND)
-  set(dnn_cpu_files)
-  set(dnn_cpu_libraries)
-endif(BLAS_FOUND)
+FIND_PACKAGE(BLAS)
+IF (BLAS_FOUND AND imt)
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDNNCPU")
+  SET(DNN_CPU_LIBRARIES MathCore Matrix ${BLAS_LIBRARIES} tbb
+      ${CMAKE_THREAD_LIBS_INIT})
+ELSE (BLAS_FOUND AND imt)
+  SET(DNN_CPU_LIBRARIES)
+  SET(DNN_CPU_FILES)
+ENDIF(BLAS_FOUND AND imt)
 
-root_linker_library(TMVA *.cxx G__TMVA.cxx ${dnn_files} ${dnn_cpu_files}
-                    LIBRARIES Core Thread ${cuda_libraries} ${dnn_cpu_libraries}
+root_linker_library(TMVA *.cxx G__TMVA.cxx ${DNN_FILES} ${DNN_CPU_FILES}
+                    LIBRARIES Core Thread ${DNN_CUDA_LIBRARIES} ${DNN_CPU_LIBRARIES}
                     DEPENDENCIES RIO Hist Tree TreePlayer MLP Minuit XMLIO)
 
 install(DIRECTORY inc/TMVA/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/TMVA
@@ -84,10 +85,10 @@ install(DIRECTORY inc/TMVA/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/TMVA
 set_property(GLOBAL APPEND PROPERTY ROOT_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
 
 if(NOT gnuinstall)
-  install(DIRECTORY test DESTINATION tmva 
-  FILES_MATCHING PATTERN "*.C" 
-                 PATTERN "*.gif" 
-                 PATTERN "*.png" 
+  install(DIRECTORY test DESTINATION tmva
+  FILES_MATCHING PATTERN "*.C"
+                 PATTERN "*.gif"
+                 PATTERN "*.png"
                  PATTERN "README"
                  PATTERN "data" EXCLUDE)
 endif()

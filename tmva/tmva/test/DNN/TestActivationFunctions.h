@@ -53,7 +53,7 @@ auto testIdentity(size_t ntests)
       randomMatrix(ARef);
       Matrix_t AArch(ARef);
 
-      evaluate<Architecture>(AArch, EActivationFunction::IDENTITY);
+      evaluate<Architecture>(AArch, EActivationFunction::kIdentity);
 
       TMatrixT<Double_t> A = AArch;
       Double_t error = maximumRelativeError(A, ARef);
@@ -79,8 +79,8 @@ auto testIdentityDerivative(size_t ntests)
       randomMatrix(ARef);
       Matrix_t AArch(ARef), BArch(BRef);
 
-      evaluateDerivative<Architecture>(BArch, EActivationFunction::IDENTITY, AArch);
-      evaluateDerivative<TReference<Double_t>>(BRef, EActivationFunction::IDENTITY,
+      evaluateDerivative<Architecture>(BArch, EActivationFunction::kIdentity, AArch);
+      evaluateDerivative<TReference<Double_t>>(BRef, EActivationFunction::kIdentity,
                                                ARef);
 
       TMatrixT<Double_t> B = BArch;
@@ -112,7 +112,7 @@ auto testRelu(size_t ntests)
       randomMatrix(ARef);
       Matrix_t AArch(ARef);
 
-      evaluate<Architecture>(AArch, EActivationFunction::RELU);
+      evaluate<Architecture>(AArch, EActivationFunction::kRelu);
       applyMatrix(ARef, [](double x){return x < 0.0 ? 0.0 : x;});
 
       TMatrixT<Double_t> A = AArch;
@@ -139,7 +139,7 @@ auto testReluDerivative(size_t ntests)
       randomMatrix(ARef);
       Matrix_t AArch(ARef), BArch(BRef);
 
-      evaluateDerivative<Architecture>(BArch, EActivationFunction::RELU, AArch);
+      evaluateDerivative<Architecture>(BArch, EActivationFunction::kRelu, AArch);
       applyMatrix(ARef, [](double x){return x > 0.0 ? 1.0 : 0.0;});
 
       TMatrixT<Double_t> B = BArch;
@@ -171,7 +171,7 @@ auto testSigmoid(size_t ntests)
       randomMatrix(ARef);
       Matrix_t AArch(ARef);
 
-      evaluate<Architecture>(AArch, EActivationFunction::SIGMOID);
+      evaluate<Architecture>(AArch, EActivationFunction::kSigmoid);
       applyMatrix(ARef, [](double x){return 1.0 / (1.0 + std::exp(-x));});
 
       TMatrixT<Double_t> A = AArch;
@@ -198,7 +198,7 @@ auto testSigmoidDerivative(size_t ntests)
       randomMatrix(ARef);
       Matrix_t AArch(ARef), BArch(BRef);
 
-      evaluateDerivative<Architecture>(BArch, EActivationFunction::SIGMOID, AArch);
+      evaluateDerivative<Architecture>(BArch, EActivationFunction::kSigmoid, AArch);
       applyMatrix(ARef, [](Double_t x){
              Double_t sig = 1.0 / (1.0 + std::exp(-x));
              return sig * (1.0 - sig);
@@ -233,7 +233,7 @@ auto testTanh(size_t ntests)
       randomMatrix(ARef);
       Matrix_t AArch(ARef);
 
-      evaluate<Architecture>(AArch, EActivationFunction::TANH);
+      evaluate<Architecture>(AArch, EActivationFunction::kTanh);
       applyMatrix(ARef, [](double x){return tanh(x);});
 
       TMatrixT<Double_t> A = AArch;
@@ -260,7 +260,7 @@ auto testTanhDerivative(size_t ntests)
       randomMatrix(ARef);
       Matrix_t AArch(ARef), BArch(BRef);
 
-      evaluateDerivative<Architecture>(BArch, EActivationFunction::TANH, AArch);
+      evaluateDerivative<Architecture>(BArch, EActivationFunction::kTanh, AArch);
       applyMatrix(ARef, [](Double_t x){
              Double_t t = tanh(x);
              return 1 - t * t;
@@ -295,7 +295,7 @@ auto testSymmetricRelu(size_t ntests)
       randomMatrix(ARef);
       Matrix_t AArch(ARef);
 
-      evaluate<Architecture>(AArch, EActivationFunction::SYMMRELU);
+      evaluate<Architecture>(AArch, EActivationFunction::kSymmRelu);
       applyMatrix(ARef, [](double x){return fabs(x);});
 
       TMatrixT<Double_t> A = AArch;
@@ -322,7 +322,7 @@ auto testSymmetricReluDerivative(size_t ntests)
       randomMatrix(ARef);
       Matrix_t AArch(ARef), BArch(BRef);
 
-      evaluateDerivative<Architecture>(BArch, EActivationFunction::SYMMRELU, AArch);
+      evaluateDerivative<Architecture>(BArch, EActivationFunction::kSymmRelu, AArch);
       applyMatrix(ARef, [](Double_t x){
              return (x < 0) ? -1.0 : 1.0;
           });
@@ -356,7 +356,7 @@ auto testSoftSign(size_t ntests)
       randomMatrix(ARef);
       Matrix_t AArch(ARef);
 
-      evaluate<Architecture>(AArch, EActivationFunction::SOFTSIGN);
+      evaluate<Architecture>(AArch, EActivationFunction::kSoftSign);
       applyMatrix(ARef, [](double x){return x / (1 + fabs(x));});
 
       TMatrixT<Double_t> A = AArch;
@@ -383,7 +383,7 @@ auto testSoftSignDerivative(size_t ntests)
       randomMatrix(ARef);
       Matrix_t AArch(ARef), BArch(BRef);
 
-      evaluateDerivative<Architecture>(BArch, EActivationFunction::SOFTSIGN, AArch);
+      evaluateDerivative<Architecture>(BArch, EActivationFunction::kSoftSign, AArch);
       applyMatrix(ARef, [](Double_t x){
              Double_t y = 1 + fabs(x);
              return 1.0 / (y * y);
@@ -418,7 +418,7 @@ auto testGauss(size_t ntests)
       randomMatrix(ARef);
       Matrix_t AArch(ARef);
 
-      evaluate<Architecture>(AArch, EActivationFunction::GAUSS);
+      evaluate<Architecture>(AArch, EActivationFunction::kGauss);
       applyMatrix(ARef, [](double x){return exp(- x * x);});
 
       TMatrixT<Double_t> A = AArch;
@@ -445,7 +445,7 @@ auto testGaussDerivative(size_t ntests)
       randomMatrix(ARef);
       Matrix_t AArch(ARef), BArch(BRef);
 
-      evaluateDerivative<Architecture>(BArch, EActivationFunction::GAUSS, AArch);
+      evaluateDerivative<Architecture>(BArch, EActivationFunction::kGauss, AArch);
       applyMatrix(ARef, [](Double_t x){return -2.0 * x * exp(- x * x);});
 
       TMatrixT<Double_t> B = BArch;

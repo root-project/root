@@ -63,7 +63,10 @@
 #include "TMVA/DNN/Net.h"
 #include "TMVA/DNN/Minimizers.h"
 #include "TMVA/DNN/Architectures/Reference.h"
+
+#ifdef DNNCPU
 #include "TMVA/DNN/Architectures/Cpu.h"
+#endif
 
 #ifdef DNNCUDA
 #include "TMVA/DNN/Architectures/Cuda.h"
@@ -75,7 +78,7 @@ namespace TMVA {
 
 class MethodDNN : public MethodBase
 {
-    using Architecture_t = TCpu<Double_t>;
+    using Architecture_t = TReference<Double_t>;
     using Net_t          = TNet<Architecture_t>;
     using Matrix_t       = typename Architecture_t::Matrix_t;
 
@@ -149,9 +152,9 @@ public:
                                       TString blockDelim,
                                       TString tokenDelim);
    void Train();
-   void TrainCpu();
    void TrainGpu();
-   void TrainOpenCL();
+   template <typename AFloat>
+   void TrainCpu();
 
    virtual Double_t GetMvaValue( Double_t* err=0, Double_t* errUpper=0 );
    virtual const std::vector<Float_t>& GetRegressionValues();

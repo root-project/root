@@ -82,11 +82,11 @@ auto testBackpropagationWeightsLinear(typename Architecture::Scalar_t dx)
     using Net_t    = TNet<Architecture>;
 
 
-    Net_t net(50, 50, ELossFunction::MEANSQUAREDERROR);
+    Net_t net(50, 50, ELossFunction::kMeanSquaredError);
 
     // Random net.
     constructRandomLinearNet(net);
-    net.Initialize(EInitialization::GAUSS);
+    net.Initialize(EInitialization::kGauss);
 
     // Random training data.
     Matrix_t X(50, 50);
@@ -155,11 +155,11 @@ auto testBackpropagationL1Regularization(typename Architecture::Scalar_t dx)
    using Matrix_t = typename Architecture::Matrix_t;
    using Net_t    = TNet<Architecture>;
 
-   Net_t net(50, 50, ELossFunction::MEANSQUAREDERROR, ERegularization::L1, 0.1);
+   Net_t net(50, 50, ELossFunction::kMeanSquaredError, ERegularization::kL1, 0.1);
 
    // Random net.
    constructRandomLinearNet(net);
-   net.Initialize(EInitialization::GAUSS);
+   net.Initialize(EInitialization::kGauss);
 
    // Random training data.
    Matrix_t X(50, 50);
@@ -230,11 +230,11 @@ auto testBackpropagationL2Regularization(typename Architecture::Scalar_t dx)
    using Matrix_t = typename Architecture::Matrix_t;
    using Net_t    = TNet<Architecture>;
 
-   Net_t net(50, 50, ELossFunction::MEANSQUAREDERROR, ERegularization::L2, 0.1);
+   Net_t net(50, 50, ELossFunction::kMeanSquaredError, ERegularization::L2, 0.1);
 
    // Random net.
    constructRandomLinearNet(net);
-   net.Initialize(EInitialization::GAUSS);
+   net.Initialize(EInitialization::kGauss);
 
    // Random training data.
    Matrix_t X(50, 50);
@@ -303,11 +303,11 @@ auto testBackpropagationBiasesLinear(typename Architecture::Scalar_t dx)
    using Matrix_t = typename Architecture::Matrix_t;
 
 
-   Net_t net(50, 50, ELossFunction::MEANSQUAREDERROR);
+   Net_t net(50, 50, ELossFunction::kMeanSquaredError);
 
    // Random net.
    constructRandomLinearNet(net);
-   net.Initialize(EInitialization::GAUSS);
+   net.Initialize(EInitialization::kGauss);
 
    // Random training data.
    Matrix_t X(50, 50);
