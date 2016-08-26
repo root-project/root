@@ -11,7 +11,7 @@ if(NOT CMAKE_PROJECT_NAME STREQUAL ROOT)
   include(${ROOTSYS}/cmake/modules/StandaloneBuild.cmake)
 endif()
 
-set(headers1 Configurable.h Event.h Factory.h DataLoader.h MethodBase.h MethodCompositeBase.h
+set(headers1 Configurable.h Factory.h  MethodBase.h MethodCompositeBase.h
 	     MethodANNBase.h MethodTMlpANN.h MethodRuleFit.h MethodCuts.h MethodFisher.h
 	     MethodKNN.h MethodCFMlpANN.h MethodCFMlpANN_Utils.h MethodLikelihood.h
 	     MethodHMatrix.h MethodPDERS.h MethodBDT.h MethodDT.h MethodSVM.h MethodBayesClassifier.h
@@ -74,7 +74,9 @@ ELSE (BLAS_FOUND AND imt)
   SET(DNN_CPU_FILES)
 ENDIF(BLAS_FOUND AND imt)
 
-root_linker_library(TMVA *.cxx G__TMVA.cxx ${DNN_FILES} ${DNN_CPU_FILES}
+ROOT_GENERATE_DICTIONARY(G__TMVA ${theaders1} ${theaders2} ${theaders3} ${theaders4} ${theaders5}  MODULE TMVA LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
+
+ROOT_LINKER_LIBRARY(TMVA *.cxx G__TMVA.cxx ${DNN_FILES} ${DNN_CPU_FILES}
                     LIBRARIES Core Thread ${DNN_CUDA_LIBRARIES} ${DNN_CPU_LIBRARIES}
                     DEPENDENCIES RIO Hist Tree TreePlayer MLP Minuit XMLIO)
 
@@ -85,15 +87,15 @@ install(DIRECTORY inc/TMVA/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/TMVA
 set_property(GLOBAL APPEND PROPERTY ROOT_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
 
 if(NOT gnuinstall)
-  install(DIRECTORY test DESTINATION tmva
-  FILES_MATCHING PATTERN "*.C"
-                 PATTERN "*.gif"
-                 PATTERN "*.png"
+  install(DIRECTORY test DESTINATION tmva 
+  FILES_MATCHING PATTERN "*.C" 
+                 PATTERN "*.gif" 
+                 PATTERN "*.png" 
                  PATTERN "README"
                  PATTERN "data" EXCLUDE)
 endif()
 
-ROOT_ADD_TEST_SUBDIRECTORY(test/DNN)
+ROOT_ADD_TEST_SUBDIRECTORY(test)
 
 
 
