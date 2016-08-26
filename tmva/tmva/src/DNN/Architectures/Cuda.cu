@@ -14,9 +14,7 @@
 // for Double_t and Real_t floating point types.               //
 /////////////////////////////////////////////////////////////////
 
-#include <iostream>
-#include "TMVA/DNN/Architectures/Reference.h"
-
+#include "TMVA/DNN/Architectures/Cuda.h"
 #include "Cuda/Propagation.cu"
 #include "Cuda/Arithmetic.cu"
 #include "Cuda/ActivationFunctions.cu"
@@ -29,8 +27,8 @@
 namespace TMVA {
 namespace DNN  {
 
-template class TCuda<Double_t>;
 template class TCuda<Real_t>;
+template class TCuda<Double_t>;
 
 } // namespace tmva
 } // namespace dnn
