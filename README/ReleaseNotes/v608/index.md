@@ -253,6 +253,10 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 * New class `TGaxisModLab`: a  TGaxis helper class used to store the modified labels.
 * `TPie` the format parameter set by `SetPercentFormat` was ignored.
   (reported [here](https://sft.its.cern.ch/jira/browse/ROOT-8294))
+* Improvements in the histogram plotting option `TEXT`: In case several histograms
+  are drawn on top ot each other (using option `SAME`), the text can be shifted
+  using `SetBarOffset()`. It specifies an offset for the  text position in each
+  cell, in percentage of the bin width.
 
 ## 3D Graphics Libraries
 
