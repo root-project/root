@@ -59,6 +59,8 @@ private:
       kHideUp = 1, ///< Hide the first label of the upper y axis when there is low space.
       kHideLow = 2, ///< Hide the last label of the lower y axis when there is low space.
       kNoHide = 3, ///< Do not hide labels when there is low space.
+      kForceHideUp = 4, ///< Always hide the first label of the upper y axis
+      kForceHideLow = 5 ///< Always hide the last label of the lower y axis
    };
 
 

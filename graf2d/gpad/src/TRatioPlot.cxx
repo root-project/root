@@ -252,6 +252,7 @@ TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, Option_t *optH1, Option_t *optH2, Optio
 
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor which accepts a `THStack` and a histogram. Converts the
 /// stack to a regular sum of its containing histograms for processing.
@@ -541,7 +542,9 @@ Float_t TRatioPlot::GetSeparationMargin()
 /// | ---------- | ------------------------------------------------------------ |
 /// | grid / nogrid | enable (default) or disable drawing of dashed lines on lower plot |
 /// | hideup     | hides the first label of the upper axis if there is not enough space |
+/// | fhideup    | always hides the first label of the upper axis |
 /// | hidelow    | hides the last label of the lower axis if there is not enough space |
+/// | fhidelow   | always hides the last label of the lower axis |
 /// | nohide     | does not hide a label if there is not enough space |
 /// | noconfint  | does not draw the confidence interval bands in the fit residual case |
 /// | confint    | draws the confidence interval bands in the fit residual case (default) |
@@ -567,7 +570,11 @@ void TRatioPlot::Draw(Option_t *option)
       fShowConfidenceIntervals = kTRUE; // <- default
    }
 
-   if (drawOpt.Contains("hideup")) {
+   if (drawOpt.Contains("fhideup")) {
+      fHideLabelMode = TRatioPlot::HideLabelMode::kForceHideUp;
+   } else if (drawOpt.Contains("fhidelow")) {
+      fHideLabelMode = TRatioPlot::HideLabelMode::kForceHideLow;
+   } else if (drawOpt.Contains("hideup")) {
       fHideLabelMode = TRatioPlot::HideLabelMode::kHideUp;
    } else if (drawOpt.Contains("hidelow")) {
       fHideLabelMode = TRatioPlot::HideLabelMode::kHideLow;
@@ -1304,9 +1311,16 @@ void TRatioPlot::CreateVisualAxes()
    Double_t ticksize = fUpperGYaxis->GetTickSize()*ratio;
    fLowerGYaxis->SetTickSize(ticksize);
 
-   // hide first label of upper y axis
 
-   if (GetSeparationMargin() < 0.025) {
+   if (fHideLabelMode == TRatioPlot::HideLabelMode::kForceHideUp) {
+
+      fUpperGYaxis->SetLabelAttributes(1, -1, 0);
+
+   } else if (fHideLabelMode == TRatioPlot::HideLabelMode::kForceHideLow) {
+
+      fLowerGYaxis->SetLabelAttributes(-1, -1, 0);
+
+   } else if (GetSeparationMargin() < 0.025) {
 
       if (fHideLabelMode != TRatioPlot::HideLabelMode::kNoHide) {
          if (fHideLabelMode == TRatioPlot::HideLabelMode::kHideUp) {
