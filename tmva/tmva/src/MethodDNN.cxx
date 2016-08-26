@@ -552,6 +552,8 @@ void TMVA::MethodDNN::Train()
    fNet.clear ();
    fWeightBucket.clear ();
 
+   std::vector <int> layerWeightNumber;
+
    // if "resume" from saved weights
    if (fResume)
       {
@@ -600,7 +602,7 @@ void TMVA::MethodDNN::Train()
 
          // initialize weights
          fNet.initializeWeights (fWeightInitializationStrategy, 
-                                 std::back_inserter (fWeightBucket));
+                                 std::back_inserter (fWeightBucket), layerWeightNumber);
       }
 
 
@@ -636,7 +638,7 @@ void TMVA::MethodDNN::Train()
          if (ptrSettings->minimizerType () == TMVA::DNN::MinimizerType::fSteepest)
             {
                DNN::Steepest minimizer (ptrSettings->learningRate (), ptrSettings->momentum (), ptrSettings->repetitions ());
-               /*E =*/fNet.train (fWeightBucket, trainPattern, testPattern, minimizer, *ptrSettings.get ());
+               /*E =*/fNet.train (fWeightBucket, layerWeightNumber, trainPattern, testPattern, minimizer, *ptrSettings.get ());
             }
          ptrSettings.reset ();
          Log () << kINFO << Endl;
@@ -786,7 +788,7 @@ void TMVA::MethodDNN::AddWeightsXMLTo( void* parent ) const
    void* weightsxml = gTools().xmlengine().NewChild(nn, 0, "Synapses");
    gTools().xmlengine().NewAttr (weightsxml, 0, "InputSize", gTools().StringFromInt((int)fNet.inputSize ()));
    gTools().xmlengine().NewAttr (weightsxml, 0, "OutputSize", gTools().StringFromInt((int)fNet.outputSize ()));
-   gTools().xmlengine().NewAttr (weightsxml, 0, "NumberSynapses", gTools().StringFromInt(((int)fWeightBucket.size ()) * (TMVA::DNN::BUCKET_SIZE)));
+   gTools().xmlengine().NewAttr (weightsxml, 0, "NumberSynapses", gTools().StringFromInt((int)fNet.numWeights ()));
    std::stringstream s("");
    s.precision( 16 );
    for (std::vector<double>::const_iterator it = fWeightBucket.begin (), itEnd = fWeightBucket.end (); it != itEnd; ++it)
@@ -856,7 +858,7 @@ void TMVA::MethodDNN::ReadWeightsFromXML( void* wghtnode )
 
    const char* content = gTools().GetContent (xmlWeights);
    std::stringstream sstr (content);
-   for (Int_t iWeight = 0; iWeight< (numWeights / (TMVA::DNN::BUCKET_SIZE)); ++iWeight) 
+   for (Int_t iWeight = 0; iWeight< numWeights; ++iWeight) // *************
       { // synapses
          Double_t weight;
          sstr >> weight;
