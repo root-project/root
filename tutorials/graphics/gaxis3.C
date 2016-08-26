@@ -5,10 +5,13 @@
 /// `SetLabelAttributes` allows to do that.
 ///
 /// The first parameter of this method is the label number to be modified. If
-/// this number is negative then labels are numbered from the last one. The other
-/// parameter of this method are in order: the new angle value, the new size
-/// (0 erase the label), the new text alignment, the new label color and the new
-/// label text.
+/// this number is negative labels are numbered from the last one. The other
+/// parameters are (in order):
+///  - the new angle value,
+///  - the new size (0 erase the label),
+///  - the new text alignment,
+///  - the new label color,
+///  = the new label text.
 ///
 /// \macro_image
 /// \macro_code
