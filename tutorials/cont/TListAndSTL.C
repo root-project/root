@@ -78,12 +78,9 @@ void TListAndSTL()
    string strToFind("test string #4");
    SFind func(strToFind.c_str());
 
-
-
    TIterCategory<TList> iter_cat(&stringList);
-      TIterCategory<TList> found(
-         find_if(iter_cat.Begin(), TIterCategory<TList>::End(), func)
-      );
+   TIterCategory<TList> found
+      = find_if(iter_cat.Begin(), TIterCategory<TList>::End(), func);
 
    // Checking the result
    if (!(*found)) {
