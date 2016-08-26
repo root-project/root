@@ -139,29 +139,28 @@ protected:
 
    virtual Bool_t IsDrawn();
 
-   virtual void Init(TH1* h1, TH1* h2, Option_t *displayOption = "", Option_t *optH1 = "hist", Option_t *optH2 = "E", Option_t *optGraph = "AP", Double_t c1 = 1., Double_t c2 = 1.);
+   virtual void Init(TH1* h1, TH1* h2, Option_t *displayOption = "", Option_t *optH1 = "hist", Option_t *optH2 = "E", Option_t *optGraph = "AP");
 
 public:
 
    TRatioPlot();
    virtual ~TRatioPlot();
-   TRatioPlot(TH1* h1, TH1* h2, Option_t *optH1 = "hist", Option_t *optH2 = "E", Option_t *optGraph = "AP", Option_t *displayOption = "pois", const char *name = "RatioPlot", const char *title = "RatioPlot", Double_t c1 = 1., Double_t c2 = 1.);
+   TRatioPlot(TH1* h1, TH1* h2, Option_t *optH1 = "hist", Option_t *optH2 = "E", Option_t *optGraph = "AP", Option_t *displayOption = "pois", const char *name = "RatioPlot", const char *title = "RatioPlot", Double_t xlow = 0, Double_t ylow = 0, Double_t xup = 1, Double_t yup = 1);
 
-   TRatioPlot(THStack* st, TH1* h2, Option_t *optH1 = "hist", Option_t *optH2 = "E", Option_t *optGraph = "AP", Option_t *displayOption = "pois", const char *name = "RatioPlot", const char *title = "RatioPlot", Double_t c1 = 1., Double_t c2 = 1.);
+   TRatioPlot(THStack* st, TH1* h2, Option_t *optH1 = "hist", Option_t *optH2 = "E", Option_t *optGraph = "AP", Option_t *displayOption = "pois", const char *name = "RatioPlot", const char *title = "RatioPlot", Double_t xlow = 0, Double_t ylow = 0, Double_t xup = 1, Double_t yup = 1);
 
-   TRatioPlot(TH1* h1, Option_t *optH1 = "", Option_t *optGraph = "LX", Option_t *displayOption = "", TFitResult *fitres = 0, const char *name = "RatioPlot", const char *title = "RatioPlot");
-
+   TRatioPlot(TH1* h1, Option_t *optH1 = "", Option_t *optGraph = "LX", Option_t *displayOption = "", TFitResult *fitres = 0, const char *name = "RatioPlot", const char *title = "RatioPlot", Double_t xlow = 0, Double_t ylow = 0, Double_t xup = 1, Double_t yup = 1);
 
 
 
    virtual void Draw(Option_t *chopt="");
    virtual void Browse(TBrowser *b);
-   
+
    virtual void BuildLowerPlot();
-   
+
    virtual void Paint(Option_t *opt = "");
    virtual void PaintModified();
-   
+
    // Slots for signal receiving
    virtual void UnZoomed();
    virtual void RangeAxisChanged();
@@ -182,11 +181,11 @@ public:
 
    virtual TPad * GetUpperPad() { return fUpperPad; }
    virtual TPad * GetLowerPad() { return fLowerPad; }
-   
+
    // Setters
    virtual void SetFitResult(TFitResultPtr fitres);
    virtual void SetFitResult(TFitResult *fitres); 
-   
+
    // Setters for margins
    void SetUpTopMargin(Float_t margin);
    void SetUpBottomMargin(Float_t margin);
@@ -194,7 +193,7 @@ public:
    void SetLowBottomMargin(Float_t margin);
    void SetLeftMargin(Float_t margin);
    void SetRightMargin(Float_t margin);
-   
+
    virtual void SetSeparationMargin(Float_t);
    virtual Float_t GetSeparationMargin();
    virtual void SetSplitFraction(Float_t sf);
@@ -207,6 +206,9 @@ public:
    virtual void SetGridlines(std::vector<double> gridlines); 
 
    virtual void SetConfidenceIntervalColors(Color_t ci1 = kGreen, Color_t ci2 = kYellow);
+
+   virtual void SetC1(Double_t c1) { fC1 = c1; }
+   virtual void SetC2(Double_t c2) { fC2 = c2; }
 
    ClassDef(TRatioPlot, 1)  //A ratio of histograms
 };

@@ -48,7 +48,7 @@ passed through to the calculation, if applicable.
 
 ## Ratios and differences
 
-Available options are:
+Available options are for `displayOption`:
 | Option     | Description                                                  |
 | ---------- | ------------------------------------------------------------ |
 | divsym    | uses the histogram `TH1::Divide` method, yields symmetric errors    |
@@ -61,7 +61,7 @@ End_Macro
 
 A second constructor only accepts a single histogram, but expects it to have a fitted
 function. The function is used to calculate the residual between the fit and the
-histogram.
+histogram. The error can be steered by providing options to `displayOption`.
 
 | Option     | Description                                                  |
 | ---------- | ------------------------------------------------------------ |
@@ -85,8 +85,8 @@ is responsible for the range, which enables you to modify the range.
 ## Calculations
 The simplest case is passing two histograms without specifying any options. This defaults to using
 `TGraphAsymErrors::Divide`. The `displayOption` variable is passed through, as are the parameters
-`c1` and `c2`. If you set the `displayOption` to `divsym` the method `TH1::Divide` will be used instead,
-also receiving all the parameters. 
+`c1` and `c2`, that you can set via `TRatioPlot::SetC1` and `TRatioPlot::SetC1`. If you set the 
+`displayOption` to `divsym` the method `TH1::Divide` will be used instead, also receiving all the parameters. 
 
 Using the `displayOption` `diff` or `diffsig`, both histograms will be subtracted, and in the case of diffsig,
 the difference will be divided by the  uncertainty. `c1` and `c2` will only be used to 
@@ -150,8 +150,7 @@ TRatioPlot::~TRatioPlot()
 /// Internal method that shares constructor logic
 
 void TRatioPlot::Init(TH1* h1, TH1* h2,
-      Option_t *displayOption, Option_t *optH1, Option_t *optH2, Option_t *optGraph,
-      Double_t c1, Double_t c2)
+      Option_t *displayOption, Option_t *optH1, Option_t *optH2, Option_t *optGraph)
 {
 
    fH1 = h1;
@@ -200,8 +199,6 @@ void TRatioPlot::Init(TH1* h1, TH1* h2,
    fOptH2 = optH2String;
    fOptGraph = optGraphString;
 
-   fC1 = c1;
-   fC2 = c2;
 
    // build ratio, everything is ready
    BuildLowerPlot();
@@ -223,14 +220,15 @@ void TRatioPlot::Init(TH1* h1, TH1* h2,
 /// \param displayOption Steers the error calculation, as well as ratio / difference
 /// \param name Name for the object
 /// \param title Title for the object
-/// \param c1 Scaling factor for h1
-/// \param c2 Scaling factor for h2
+/// \param xlow Pad coordinate
+/// \param ylow Pad coordinate
+/// \param xup Pad coordinate
+/// \param yup Pad coordinate
 
 TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, Option_t *optH1, Option_t *optH2, Option_t *optGraph, 
-      Option_t *displayOption, const char *name, const char *title, Double_t c1, Double_t c2)
-   : TPad(name, title, 0, 0, 1, 1),
-     //fH1(h1),
-     //fH2(h2),
+      Option_t *displayOption, const char *name, const char *title, Double_t xlow, Double_t ylow, 
+      Double_t xup, Double_t yup)
+   : TPad(name, title, xlow, ylow, xup, yup),
      fGridlines()
 {
    gROOT->GetListOfCleanups()->Add(this);
@@ -250,7 +248,7 @@ TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, Option_t *optH1, Option_t *optH2, Optio
 
    fHistDrawProxy = h1;
 
-   Init(h1, h2, displayOption, optH1, optH2, optGraph, c1, c2);
+   Init(h1, h2, displayOption, optH1, optH2, optGraph);
 
 }
 
@@ -265,12 +263,15 @@ TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, Option_t *optH1, Option_t *optH2, Optio
 /// \param displayOption Steers the calculation of the lower plot
 /// \param name The name of the object
 /// \param title The title of the object
-/// \param c1 Scale factor for the stack sum
-/// \param c2 Scale factor for the other histogram
+/// \param xlow Pad coordinate
+/// \param ylow Pad coordinate
+/// \param xup Pad coordinate
+/// \param yup Pad coordinate
 
 TRatioPlot::TRatioPlot(THStack* st, TH1* h2, Option_t *optH1, Option_t *optH2, Option_t *optGraph, 
-      Option_t *displayOption, const char *name, const char *title, Double_t c1, Double_t c2)
-   : TPad(name, title, 0, 0, 1, 1)
+      Option_t *displayOption, const char *name, const char *title, Double_t xlow, Double_t ylow,
+      Double_t xup, Double_t yup)
+   : TPad(name, title, xlow, ylow, xup, yup)
 {
    if (!st || !h2) {
       Warning("TRatioPlot", "Need a histogram and a stack");
@@ -293,7 +294,7 @@ TRatioPlot::TRatioPlot(THStack* st, TH1* h2, Option_t *optH1, Option_t *optH2, O
 
    fHistDrawProxy = st;
 
-   Init(tmpHist, h2, displayOption, optH1, optH2, optGraph, c1, c2);
+   Init(tmpHist, h2, displayOption, optH1, optH2, optGraph);
 
 }
 
@@ -306,10 +307,15 @@ TRatioPlot::TRatioPlot(THStack* st, TH1* h2, Option_t *optH1, Option_t *optH2, O
 /// \param fitres Explicit fit result to be used for calculation. Uses last fit if left empty
 /// \param name Name for the object
 /// \param title Title for the object
+/// \param xlow Pad coordinate
+/// \param ylow Pad coordinate
+/// \param xup Pad coordinate
+/// \param yup Pad coordinate
 
 TRatioPlot::TRatioPlot(TH1* h1, Option_t *optH1, Option_t *optGraph, Option_t *displayOption,
-      TFitResult *fitres, const char *name, const char *title)
-   : TPad(name, title, 0, 0, 1, 1),
+      TFitResult *fitres, const char *name, const char *title, Double_t xlow, Double_t ylow, 
+      Double_t xup, Double_t yup)
+   : TPad(name, title, xlow, ylow, xup, yup),
      fH1(h1),
      fGridlines()
 {
