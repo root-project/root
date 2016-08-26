@@ -86,12 +86,13 @@ auto testActivationFunctionDerivatives()
    using Scalar_t   = typename Architecture::Scalar_t;
    using Matrix_t = typename Architecture::Matrix_t;
 
+   // Test only differentiable activation functions.
    std::vector<EActivationFunction> EActivationFunctions
-   = {EActivationFunction::IDENTITY,
-      EActivationFunction::SIGMOID,
-      EActivationFunction::TANH,
-      EActivationFunction::SOFTSIGN,
-      EActivationFunction::GAUSS};
+   = {EActivationFunction::kIdentity,
+      EActivationFunction::kSigmoid,
+      EActivationFunction::kTanh,
+      EActivationFunction::kSoftSign,
+      EActivationFunction::kGauss};
 
    Scalar_t error, maximum_error;
    maximum_error = 0.0;
@@ -174,8 +175,8 @@ auto testLossFunctionGradients()
     using Matrix_t = typename Architecture::Matrix_t;
 
     std::vector<ELossFunction> LossFunctions
-        = {ELossFunction::MEANSQUAREDERROR,
-           ELossFunction::CROSSENTROPY};
+        = {ELossFunction::kMeanSquaredError,
+           ELossFunction::kCrossEntropy};
 
     Scalar_t error, maximum_error;
     maximum_error = 0.0;
@@ -220,7 +221,7 @@ auto testRegularizationGradients()
     using Matrix_t = typename Architecture::Matrix_t;
 
     std::vector<ERegularization> Regularizations
-        = {ERegularization::NONE,
+        = {ERegularization::kNone,
            ERegularization::L2};
 
     Scalar_t error, maximum_error;

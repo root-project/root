@@ -23,7 +23,7 @@ void constructRandomLinearNet(TNet<AArchitecture> & net)
     int nlayers = rand() % 5 + 1;
 
     std::vector<EActivationFunction> ActivationFunctions
-    = {EActivationFunction::IDENTITY};
+    = {EActivationFunction::kIdentity};
 
     for (int i = 0; i < nlayers; i++) {
         int width = rand() % 20 + 1;

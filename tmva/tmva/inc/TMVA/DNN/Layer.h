@@ -257,7 +257,7 @@ auto TLayer<Architecture_t>::Initialize(EInitialization m)
 -> void
 {
    initialize<Architecture_t>(fWeights, m);
-   initialize<Architecture_t>(fBiases,  EInitialization::ZERO);
+   initialize<Architecture_t>(fBiases,  EInitialization::kZero);
 }
 
 //______________________________________________________________________________

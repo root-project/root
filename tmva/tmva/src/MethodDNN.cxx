@@ -190,7 +190,7 @@ auto TMVA::MethodDNN::ParseLayoutString(TString layoutString)
 
    for (; layerString != nullptr; layerString = (TObjString*) nextLayer()) {
       int numNodes = 0;
-      EActivationFunction activationFunction = EActivationFunction::TANH;
+      EActivationFunction activationFunction = EActivationFunction::kTanh;
 
       TObjArray* subStrings = layerString->GetString().Tokenize(subDelimiter);
       TIter nextToken (subStrings);
@@ -203,19 +203,19 @@ auto TMVA::MethodDNN::ParseLayoutString(TString layoutString)
          {
             TString strActFnc (token->GetString ());
             if (strActFnc == "RELU") {
-                activationFunction = DNN::EActivationFunction::RELU;
+                activationFunction = DNN::EActivationFunction::kRelu;
             } else if (strActFnc == "TANH") {
-                activationFunction = DNN::EActivationFunction::TANH;
+                activationFunction = DNN::EActivationFunction::kTanh;
             } else if (strActFnc == "SYMMRELU") {
-                activationFunction = DNN::EActivationFunction::SYMMRELU;
+                activationFunction = DNN::EActivationFunction::kSymmRelu;
             } else if (strActFnc == "SOFTSIGN") {
-                activationFunction = DNN::EActivationFunction::SOFTSIGN;
+                activationFunction = DNN::EActivationFunction::kSoftSign;
             } else if (strActFnc == "SIGMOID") {
-                activationFunction = DNN::EActivationFunction::SIGMOID;
+                activationFunction = DNN::EActivationFunction::kSigmoid;
             } else if (strActFnc == "LINEAR") {
-                activationFunction = DNN::EActivationFunction::IDENTITY;
+                activationFunction = DNN::EActivationFunction::kIdentity;
             } else if (strActFnc == "GAUSS") {
-                activationFunction = DNN::EActivationFunction::GAUSS;
+                activationFunction = DNN::EActivationFunction::kGauss;
             }
          }
          break;
@@ -402,41 +402,41 @@ void TMVA::MethodDNN::ProcessOptions()
    for ( ; itLayout != itLayoutEnd; ++itLayout) {
       fNet.AddLayer((*itLayout).first, (*itLayout).second);
    }
-   fNet.AddLayer(outputSize, EActivationFunction::IDENTITY);
+   fNet.AddLayer(outputSize, EActivationFunction::kIdentity);
 
    //
    // Loss function and output.
    //
 
-   fOutputFunction = EOutputFunction::SIGMOID;
+   fOutputFunction = EOutputFunction::kSigmoid;
    if (fAnalysisType == Types::kClassification)
    {
       if (fErrorStrategy == "SUMOFSQUARES") {
-         fNet.SetLossFunction(ELossFunction::MEANSQUAREDERROR);
+         fNet.SetLossFunction(ELossFunction::kMeanSquaredError);
       }
       if (fErrorStrategy == "CROSSENTROPY") {
-         fNet.SetLossFunction(ELossFunction::CROSSENTROPY);
+         fNet.SetLossFunction(ELossFunction::kCrossEntropy);
       }
-      fOutputFunction = EOutputFunction::SIGMOID;
+      fOutputFunction = EOutputFunction::kSigmoid;
    } else if (fAnalysisType == Types::kRegression) {
       if (fErrorStrategy != "SUMOFSQUARES") {
          Log () << kWARNING << "For regression only SUMOFSQUARES is a valid "
                 << " neural net error function. Setting error function to "
                 << " SUMOFSQUARES now." << Endl;
       }
-      fNet.SetLossFunction(ELossFunction::MEANSQUAREDERROR);
-      fOutputFunction = EOutputFunction::IDENTITY;
+      fNet.SetLossFunction(ELossFunction::kMeanSquaredError);
+      fOutputFunction = EOutputFunction::kIdentity;
    } else if (fAnalysisType == Types::kMulticlass) {
       if (fErrorStrategy == "SUMOFSQUARES") {
-         fNet.SetLossFunction(ELossFunction::MEANSQUAREDERROR);
+         fNet.SetLossFunction(ELossFunction::kMeanSquaredError);
       }
       if (fErrorStrategy == "CROSSENTROPY") {
-         fNet.SetLossFunction(ELossFunction::CROSSENTROPY);
+         fNet.SetLossFunction(ELossFunction::kCrossEntropy);
       }
       if (fErrorStrategy == "MUTUALEXCLUSIVE") {
          Log () << kFatal << "MUTUALEXCLUSIVE not yet implemented." << Endl;
       }
-      fOutputFunction = EOutputFunction::SIGMOID;
+      fOutputFunction = EOutputFunction::kSigmoid;
    }
 
    //
@@ -444,13 +444,13 @@ void TMVA::MethodDNN::ProcessOptions()
    //
 
    if (fWeightInitializationString == "XAVIER") {
-      fWeightInitialization = DNN::EInitialization::GAUSS;
+      fWeightInitialization = DNN::EInitialization::kGauss;
    }
    else if (fWeightInitializationString == "XAVIERUNIFORM") {
-      fWeightInitialization = DNN::EInitialization::UNIFORM;
+      fWeightInitialization = DNN::EInitialization::kUniform;
    }
    else {
-      fWeightInitialization = DNN::EInitialization::GAUSS;
+      fWeightInitialization = DNN::EInitialization::kGauss;
    }
 
    //
@@ -475,9 +475,9 @@ void TMVA::MethodDNN::ProcessOptions()
       TString regularization = fetchValue(block, "Regularization",
                                           TString ("NONE"));
       if (regularization == "L1") {
-         settings.regularization = DNN::ERegularization::L1;
+         settings.regularization = DNN::ERegularization::kL1;
       } else if (regularization == "L2") {
-         settings.regularization = DNN::ERegularization::L2;
+         settings.regularization = DNN::ERegularization::kL2;
       }
 
       TString strMultithreading = fetchValue(block, "Multithreading",
@@ -564,41 +564,41 @@ void TMVA::MethodDNN::Train()
       EActivationFunction f = fNet.GetLayer(i).GetActivationFunction();
       EnumFunction        g = EnumFunction::LINEAR;
       switch(f) {
-         case EActivationFunction::IDENTITY: g = EnumFunction::LINEAR;   break;
-         case EActivationFunction::RELU:     g = EnumFunction::RELU;     break;
-         case EActivationFunction::SIGMOID:  g = EnumFunction::SIGMOID;  break;
-         case EActivationFunction::TANH:     g = EnumFunction::TANH;     break;
-         case EActivationFunction::SYMMRELU: g = EnumFunction::SYMMRELU; break;
-         case EActivationFunction::SOFTSIGN: g = EnumFunction::SOFTSIGN; break;
-         case EActivationFunction::GAUSS:    g = EnumFunction::GAUSS;    break;
+         case EActivationFunction::kIdentity: g = EnumFunction::LINEAR;   break;
+         case EActivationFunction::kRelu:     g = EnumFunction::RELU;     break;
+         case EActivationFunction::kSigmoid:  g = EnumFunction::SIGMOID;  break;
+         case EActivationFunction::kTanh:     g = EnumFunction::TANH;     break;
+         case EActivationFunction::kSymmRelu: g = EnumFunction::SYMMRELU; break;
+         case EActivationFunction::kSoftSign: g = EnumFunction::SOFTSIGN; break;
+         case EActivationFunction::kGauss:    g = EnumFunction::GAUSS;    break;
       }
       if (i < fNet.GetDepth() - 1) {
          net.addLayer(Layer(fNet.GetLayer(i).GetWidth(), g));
       } else {
          ModeOutputValues h = ModeOutputValues::DIRECT;
          switch(fOutputFunction) {
-            case EOutputFunction::IDENTITY: h = ModeOutputValues::DIRECT;  break;
-            case EOutputFunction::SIGMOID:  h = ModeOutputValues::SIGMOID; break;
+            case EOutputFunction::kIdentity: h = ModeOutputValues::DIRECT;  break;
+            case EOutputFunction::kSigmoid:  h = ModeOutputValues::SIGMOID; break;
          }
          net.addLayer(Layer(fNet.GetLayer(i).GetWidth(), g, h));
       }
    }
 
    switch(fNet.GetLossFunction()) {
-      case ELossFunction::MEANSQUAREDERROR:
+      case ELossFunction::kMeanSquaredError:
          net.setErrorFunction(ModeErrorFunction::SUMOFSQUARES);
          break;
-      case ELossFunction::CROSSENTROPY:
+      case ELossFunction::kCrossEntropy:
          net.setErrorFunction(ModeErrorFunction::CROSSENTROPY);
          break;
    }
 
    switch(fWeightInitialization) {
-      case EInitialization::GAUSS:
+      case EInitialization::kGauss:
           net.initializeWeights(WeightInitializationStrategy::XAVIER,
                                 std::back_inserter(weights));
           break;
-      case EInitialization::UNIFORM:
+      case EInitialization::kUniform:
           net.initializeWeights(WeightInitializationStrategy::XAVIERUNIFORM,
                                 std::back_inserter(weights));
           break;
@@ -614,9 +614,9 @@ void TMVA::MethodDNN::Train()
 
       EnumRegularization r = EnumRegularization::NONE;
       switch(s.regularization) {
-         case ERegularization::NONE: r = EnumRegularization::NONE; break;
-         case ERegularization::L1:   r = EnumRegularization::L1;   break;
-         case ERegularization::L2:   r = EnumRegularization::L2;   break;
+         case ERegularization::kNone: r = EnumRegularization::NONE; break;
+         case ERegularization::kL1:   r = EnumRegularization::L1;   break;
+         case ERegularization::kL2:   r = EnumRegularization::L2;   break;
       }
 
       Settings * settings = new Settings(TString(), s.convergenceSteps, s.batchSize,
