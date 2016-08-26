@@ -74,9 +74,9 @@ auto testIdentity()
    DataLoader_t loader(input, 2000, 20, 100, 100);
 
    Net_t net(20, 100, ELossFunction::kMeanSquaredError);
-   net.AddLayer(100,  EActivationFunction::IDENTITY);
-   net.AddLayer(100,  EActivationFunction::IDENTITY);
-   net.Initialize(EInitialization::IDENTITY);
+   net.AddLayer(100,  EActivationFunction::kIdentity);
+   net.AddLayer(100,  EActivationFunction::kIdentity);
+   net.Initialize(EInitialization::kIdentity);
 
    Scalar_t maximumError = 0.0;
    for (auto b : loader) {

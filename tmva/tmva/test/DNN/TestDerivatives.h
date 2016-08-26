@@ -222,7 +222,7 @@ auto testRegularizationGradients()
 
     std::vector<ERegularization> Regularizations
         = {ERegularization::kNone,
-           ERegularization::L2};
+           ERegularization::kL2};
 
     Scalar_t error, maximum_error;
     maximum_error = 0.0;

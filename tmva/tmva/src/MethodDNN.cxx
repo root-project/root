@@ -1006,7 +1006,7 @@ const std::vector<Float_t> &TMVA::MethodDNN::GetRegressionValues()
        X(0,i) = inputValues[i];
    }
 
-   size_t nTargets = ev->GetNTargets();
+   size_t nTargets = std::max(1u, ev->GetNTargets());
    Matrix_t YHat(1, nTargets);
    std::vector<Float_t> output(nTargets);
    auto net = fNet.CreateClone(1);

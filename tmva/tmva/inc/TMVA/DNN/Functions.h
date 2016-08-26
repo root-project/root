@@ -144,8 +144,9 @@ inline void evaluate(typename Architecture_t::Matrix_t &A,
     switch(f)
     {
     case EOutputFunction::kIdentity : Architecture_t::Copy(A, X);
+                                      break;
     case EOutputFunction::kSigmoid  : Architecture_t::Sigmoid(A, X);
-        break;
+                                      break;
     }
 }
 
