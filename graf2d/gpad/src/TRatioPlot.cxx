@@ -37,7 +37,7 @@
 ClassImp(TRatioPlot)
 
 /** \class TRatioPlot
-    \ingroup Histpainter
+    \ingroup gpad
 Class for displaying ratios, differences and fit residuals.
 
 TRatioPlot has two constructors, one which accepts two histograms, and is responsible
