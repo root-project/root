@@ -33,7 +33,7 @@ int main()
    std::cout << "Identity: Maximum relative error = " << error << std::endl;
    maximumError = std::max(error, maximumError);
 
-   if (maximumError > 1e-6) {
+   if (maximumError > 1e-3) {
       return 1;
    }
    return 0;

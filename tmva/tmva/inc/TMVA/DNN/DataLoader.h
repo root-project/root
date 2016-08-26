@@ -9,9 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////
-// Generic data loader for neural network input data. //
-////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
+// Generic data loader for neural network input data. Provides a   //
+// high level abstraction for the transfer of training data to the //
+// device.                                                         //
+/////////////////////////////////////////////////////////////////////
 
 #ifndef TMVA_DNN_DATALOADER
 #define TMVA_DNN_DATALOADER
@@ -31,17 +33,24 @@ namespace DNN  {
 using MatrixInput_t    = std::pair<const TMatrixT<Double_t> &,
                                    const TMatrixT<Double_t> &>;
 using TMVAInput_t      = std::vector<Event*>;
+
 using IndexIterator_t = typename std::vector<size_t>::iterator;
 
-//
-// TBatch Class.
+/** TBatch
+ *
+ * Class representing training batches consisting of a matrix of input data
+ * and a matrix of output data. The input and output data can be accessed using
+ * the GetInput() and GetOutput() member functions.
+ *
+ * \tparam AArchitecture The underlying architecture.
+ */
 //______________________________________________________________________________
-template <typename Architecture_t>
+template <typename AArchitecture>
 class TBatch
 {
 private:
 
-   using Matrix_t       = typename Architecture_t::Matrix_t;
+   using Matrix_t       = typename AArchitecture::Matrix_t;
 
    Matrix_t fInputMatrix;
    Matrix_t fOutputMatrix;
@@ -54,51 +63,69 @@ public:
    TBatch & operator=(const TBatch  &) = default;
    TBatch & operator=(      TBatch &&) = default;
 
+   /** Return the matrix representing the input data. */
    Matrix_t & GetInput()  {return fInputMatrix;}
+   /** Return the matrix representing the output data. */
    Matrix_t & GetOutput() {return fOutputMatrix;}
 };
 
-//
-// TBatchIterator Class.
-//______________________________________________________________________________
+template<typename Data_t, typename AArchitecture> class TDataLoader;
 
-template<typename Data_t, typename Architecture_t> class TDataLoader;
-
-template<typename Data_t, typename Architecture_t>
+/** TBatchIterator
+ *
+ * Simple iterator class for the iterations over the training batches in
+ * a given data set represented by a TDataLoader object.
+ *
+ * \tparam AData         The input data type.
+ * \tparam AArchitecture The underlying architecture type.
+ */
+template<typename Data_t, typename AArchitecture>
 class TBatchIterator
 {
 private:
 
-   TDataLoader<Data_t, Architecture_t> & fDataLoader;
+   TDataLoader<Data_t, AArchitecture> & fDataLoader;
    size_t fBatchIndex;
 
 public:
 
-TBatchIterator(TDataLoader<Data_t, Architecture_t> & dataLoader, size_t index = 0)
+TBatchIterator(TDataLoader<Data_t, AArchitecture> & dataLoader, size_t index = 0)
 : fDataLoader(dataLoader), fBatchIndex(index)
 {
    // Nothing to do here.
 }
 
-   TBatch<Architecture_t> operator*() {return fDataLoader.GetBatch();}
+   TBatch<AArchitecture> operator*() {return fDataLoader.GetBatch();}
    TBatchIterator operator++() {fBatchIndex++; return *this;}
    bool operator!=(const TBatchIterator & other) {
       return fBatchIndex != other.fBatchIndex;
    }
 };
 
-//
-// TDataLoader Class.
-//______________________________________________________________________________
-template<typename Data_t, typename Architecture_t>
+/** TDataLoader
+ *
+ * Service class managing the streaming of the training data from the input data
+ * type to the accelerator device or the CPU. A TDataLoader object manages a number
+ * of host and device buffer pairs that are used in a round-robin manner for the
+ * transfer of batches to the device.
+ *
+ * Each TDataLoader object has an associated batch size and a number of total
+ * samples in the dataset. One epoch is the number of buffers required to transfer
+ * the complete training set. Using the begin() and end() member functions allows
+ * the user to iterate over the batches in one epoch.
+ *
+ * \tparam AData The input data type.
+ * \tparam AArchitecture The achitecture class of the underlying architecture.
+ */
+template<typename Data_t, typename AArchitecture>
 class TDataLoader
 {
 private:
 
-   using HostBuffer_t    = typename Architecture_t::HostBuffer_t;
-   using DeviceBuffer_t  = typename Architecture_t::DeviceBuffer_t;
-   using Matrix_t        = typename Architecture_t::Matrix_t;
-   using BatchIterator_t = TBatchIterator<Data_t, Architecture_t>;
+   using HostBuffer_t    = typename AArchitecture::HostBuffer_t;
+   using DeviceBuffer_t  = typename AArchitecture::DeviceBuffer_t;
+   using Matrix_t        = typename AArchitecture::Matrix_t;
+   using BatchIterator_t = TBatchIterator<Data_t, AArchitecture>;
 
    const Data_t  & fData;
 
@@ -108,11 +135,11 @@ private:
    size_t fNOutputFeatures;
    size_t fBatchIndex;
 
-   size_t fNStreams;
+   size_t fNStreams;                            ///< Number of buffer pairs.
    std::vector<DeviceBuffer_t> fDeviceBuffers;
-   std::vector<HostBuffer_t>  fHostBuffers;
+   std::vector<HostBuffer_t>   fHostBuffers;
 
-   std::vector<size_t> fSampleIndices;
+   std::vector<size_t> fSampleIndices; ///< Ordering of the samples in the epoch.
 
 public:
 
@@ -130,22 +157,29 @@ public:
     * by the architecture-spcific backend. */
    void CopyOutput(HostBuffer_t &buffer, IndexIterator_t begin, size_t batchSize);
 
-   BatchIterator_t begin() {return TBatchIterator<Data_t, Architecture_t>(*this);}
+   BatchIterator_t begin() {return TBatchIterator<Data_t, AArchitecture>(*this);}
    BatchIterator_t end()
    {
-      return TBatchIterator<Data_t, Architecture_t>(*this, fNSamples / fBatchSize);
+      return TBatchIterator<Data_t, AArchitecture>(*this, fNSamples / fBatchSize);
    }
 
+   /** Shuffle the order of the samples in the batch. The shuffling is indirect,
+    *  i.e. only the indices are shuffled. No input data is moved by this
+    * routine. */
    void Shuffle();
-   TBatch<Architecture_t> GetBatch();
+
+   /** Return the next batch from the training set. The TDataLoader object
+    *  keeps an internal counter that cycles over the batches in the training
+    *  set. */
+   TBatch<AArchitecture> GetBatch();
 
 };
 
 //
 // TBatch Class.
 //______________________________________________________________________________
-template<typename Architecture_t>
-TBatch<Architecture_t>::TBatch(Matrix_t & inputMatrix, Matrix_t & outputMatrix)
+template<typename AArchitecture>
+TBatch<AArchitecture>::TBatch(Matrix_t & inputMatrix, Matrix_t & outputMatrix)
     : fInputMatrix(inputMatrix), fOutputMatrix(outputMatrix)
 {
     // Nothing to do here.
@@ -154,8 +188,8 @@ TBatch<Architecture_t>::TBatch(Matrix_t & inputMatrix, Matrix_t & outputMatrix)
 //
 // TDataLoader Class.
 //______________________________________________________________________________
-template<typename Data_t, typename Architecture_t>
-TDataLoader<Data_t, Architecture_t>::TDataLoader(
+template<typename Data_t, typename AArchitecture>
+TDataLoader<Data_t, AArchitecture>::TDataLoader(
     const Data_t & data, size_t nSamples, size_t batchSize,
     size_t nInputFeatures, size_t nOutputFeatures, size_t nStreams)
     : fData(data), fNSamples(nSamples), fBatchSize(batchSize),
@@ -178,8 +212,9 @@ TDataLoader<Data_t, Architecture_t>::TDataLoader(
    }
 }
 
-template<typename Data_t, typename Architecture_t>
-TBatch<Architecture_t> TDataLoader<Data_t, Architecture_t>::GetBatch()
+//______________________________________________________________________________
+template<typename Data_t, typename AArchitecture>
+TBatch<AArchitecture> TDataLoader<Data_t, AArchitecture>::GetBatch()
 {
    fBatchIndex %= (fNSamples / fBatchSize); // Cycle through samples.
 
@@ -209,15 +244,17 @@ TBatch<Architecture_t> TDataLoader<Data_t, Architecture_t>::GetBatch()
    Matrix_t outputMatrix(outputDeviceBuffer, fBatchSize, fNOutputFeatures);
 
    fBatchIndex++;
-   return TBatch<Architecture_t>(inputMatrix, outputMatrix);
+   return TBatch<AArchitecture>(inputMatrix, outputMatrix);
 }
 
-template<typename Data_t, typename Architecture_t>
-void TDataLoader<Data_t, Architecture_t>::Shuffle()
+//______________________________________________________________________________
+template<typename Data_t, typename AArchitecture>
+void TDataLoader<Data_t, AArchitecture>::Shuffle()
 {
    std::random_shuffle(fSampleIndices.begin(), fSampleIndices.end());
 }
 
-}
-}
+} // namespace DNN
+} // namespace TMVA
+
 #endif

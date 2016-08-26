@@ -230,7 +230,7 @@ auto testBackpropagationL2Regularization(typename Architecture::Scalar_t dx)
    using Matrix_t = typename Architecture::Matrix_t;
    using Net_t    = TNet<Architecture>;
 
-   Net_t net(50, 50, ELossFunction::kMeanSquaredError, ERegularization::kL2, 0.1);
+   Net_t net(50, 50, ELossFunction::kMeanSquaredError, ERegularization::L2, 0.1);
 
    // Random net.
    constructRandomLinearNet(net);

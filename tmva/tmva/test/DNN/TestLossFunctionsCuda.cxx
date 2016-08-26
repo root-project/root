@@ -22,7 +22,7 @@ using namespace TMVA::DNN;
 
 int main()
 {
-    using Scalar_t = Real_t;
+    using Scalar_t = Double_t;
     std::cout << "Testing Loss Functions:" << std::endl << std::endl;
 
     double error;

@@ -74,7 +74,7 @@ public:
    TNet(size_t batchSize,
         size_t inputWidth,
         ELossFunction fJ,
-        ERegularization fR = ERegularization::NONE,
+        ERegularization fR = ERegularization::kNone,
         Scalar_t fWeightDecay = 0.0);
    /*! Create a clone that uses the same weight and biases matrices but
     *  potentially a difference batch size. */
@@ -158,7 +158,7 @@ public:
 template<typename Architecture_t, typename Layer_t>
    TNet<Architecture_t, Layer_t>::TNet()
    : fBatchSize(0), fInputWidth(0), fDummy(0,0),
-   fJ(ELossFunction::MEANSQUAREDERROR), fR(ERegularization::NONE)
+   fJ(ELossFunction::kMeanSquaredError), fR(ERegularization::kNone)
 {
    // Nothing to do here.
 }
@@ -261,8 +261,8 @@ template<typename Architecture_t, typename Layer_t>
    inline void TNet<Architecture_t, Layer_t>::InitializeGradients()
 {
    for (auto &l : fLayers) {
-      initialize<Architecture_t>(l.GetWeightGradients(), EInitialization::ZERO);
-      initialize<Architecture_t>(l.GetBiasGradients(),   EInitialization::ZERO);
+      initialize<Architecture_t>(l.GetWeightGradients(), EInitialization::kZero);
+      initialize<Architecture_t>(l.GetBiasGradients(),   EInitialization::kZero);
    }
 }
 
@@ -368,7 +368,6 @@ auto TNet<Architecture_t, Layer_t>::GetNFlops()
       }
       nlp = nl;
    }
-   std::cout << "Nflops: " << flops << std::endl;
    return flops;
 }
 

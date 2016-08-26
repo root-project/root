@@ -2941,12 +2941,20 @@ void addClassificationTests( UnitTestSuite& TMVA_test, bool full=true)
    TMVA_test.addTest(new MethodUnitTestWithROCLimits(
                          TMVA::Types::kDNN, "DNN Standard",
                          configStandard, 0.85, 0.98));
+<<<<<<< HEAD
    #ifdef DNNCPU
+=======
+   #ifdef DNNCUDA
+>>>>>>> CPU
    TMVA_test.addTest(new MethodUnitTestWithROCLimits(
                          TMVA::Types::kDNN, "DNN CPU", configCpu, 0.85, 0.98)
                      );
    #endif
+<<<<<<< HEAD
    #ifdef DNNCUDA
+=======
+   #ifdef DNNCPU
+>>>>>>> CPU
    TMVA_test.addTest(new MethodUnitTestWithROCLimits(
                          TMVA::Types::kDNN, "DNN GPU", configGpu, 0.85, 0.98)
                      );
