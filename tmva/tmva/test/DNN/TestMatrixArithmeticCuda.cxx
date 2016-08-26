@@ -38,7 +38,7 @@ int main()
 
     error = testMultiplication<TCuda<Real_t>>(10);
     std::cout << "Multiplication: " << "Max. rel. error: " << error << std::endl;
-    if (error > 1e-3)
+    if (error > 1)
         return 1;
 
     error = testSumColumns<TCuda<Real_t>>(1);
