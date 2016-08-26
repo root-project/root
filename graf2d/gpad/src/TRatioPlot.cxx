@@ -1320,16 +1320,26 @@ void TRatioPlot::CreateVisualAxes()
 
       fLowerGYaxis->SetLabelAttributes(-1, -1, 0);
 
-   } else if (GetSeparationMargin() < 0.025) {
+   } else {
+      if (GetSeparationMargin() < 0.025) {
 
-      if (fHideLabelMode != TRatioPlot::HideLabelMode::kNoHide) {
-         if (fHideLabelMode == TRatioPlot::HideLabelMode::kHideUp) {
-            fUpperGYaxis->SetLabelAttributes(1, -1, 0);
-         } else if (fHideLabelMode == TRatioPlot::HideLabelMode::kHideLow) {
-            fLowerGYaxis->SetLabelAttributes(-1, -1, 0);
+         if (fHideLabelMode != TRatioPlot::HideLabelMode::kNoHide) {
+            if (fHideLabelMode == TRatioPlot::HideLabelMode::kHideUp) {
+               fUpperGYaxis->SetLabelAttributes(1, -1, 0);
+            } else if (fHideLabelMode == TRatioPlot::HideLabelMode::kHideLow) {
+               fLowerGYaxis->SetLabelAttributes(-1, -1, 0);
+            }
          }
-      }
 
+      } else {
+         // reset
+         if (fHideLabelMode == TRatioPlot::HideLabelMode::kHideUp) {
+            fUpperGYaxis->SetLabelAttributes(0);
+         } else if (fHideLabelMode == TRatioPlot::HideLabelMode::kHideLow) {
+            fLowerGYaxis->SetLabelAttributes(0);
+         }
+
+      }
    }
 
    // Create the axes on the other sides of the graphs
