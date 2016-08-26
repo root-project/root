@@ -59,12 +59,12 @@ void fitCircle(Int_t n=10000) {
    };
 
    // wrap chi2 funciton in a function object for the fit
-   // 4 is the number of fit parameters (size of array par)
+   // 3 is the number of fit parameters (size of array par)
    ROOT::Math::Functor fcn(chi2Function,3);
    ROOT::Fit::Fitter  fitter;
 
 
-   double pStart[4] = {0,0,1};
+   double pStart[3] = {0,0,1};
    fitter.SetFCN(fcn, pStart);
    fitter.Config().ParSettings(0).SetName("x0");
    fitter.Config().ParSettings(1).SetName("y0");
