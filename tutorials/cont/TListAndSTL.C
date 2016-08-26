@@ -58,19 +58,19 @@ void TListAndSTL()
    const Int_t size(10);
 
    // Initializing TList container
-   TList list1;
+   TList stringList;
    ostringstream ss;
    for (int i = 0; i < size; ++i) {
       ss << "test string #" << i;
       TObjString *s(new TObjString(ss.str().c_str()));
-      list1.Add(s);
+      stringList.Add(s);
       ss.str("");
    }
 
 
    // ### Example #1
    // Running the std::for_each algorithm on the list
-   for_each(list1.begin(), list1.end(), SEnumFunctor());
+   for_each(stringList.begin(), stringList.end(), SEnumFunctor());
 
    // ### Example #2
    // We can try to find something in the container
@@ -80,7 +80,7 @@ void TListAndSTL()
 
 
 
-   TIterCategory<TList> iter_cat(&list1);
+   TIterCategory<TList> iter_cat(&stringList);
       TIterCategory<TList> found(
          find_if(iter_cat.Begin(), TIterCategory<TList>::End(), func)
       );
