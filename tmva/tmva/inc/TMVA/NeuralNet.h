@@ -376,7 +376,7 @@ namespace TMVA
           *                    called
           */
          template <typename Function, typename PassThrough>
-            double operator() (Function& fitnessFunction, std::vector<double>& weightBucket, PassThrough& passThrough);
+            double operator() (Function& fitnessFunction, std::vector<double>& weightBucket, PassThrough& passThrough, const size_t& numWeights, std::vector<int>& layerWeightNumber);
 
 
          double m_alpha; ///< internal parameter (learningRate)
@@ -1132,7 +1132,7 @@ namespace TMVA
           * \param settings settings used for this training run
           */
          template <typename Minimizer>
-            double train (std::vector<double>& weightBucket, 
+            double train (std::vector<double>& weightBucket, std::vector<int>& layerWeightNumber, 
                           std::vector<Pattern>& trainPattern, 
                           const std::vector<Pattern>& testPattern, 
                   Minimizer& minimizer,
@@ -1159,7 +1159,7 @@ namespace TMVA
           * \param dropContainer the configuration for DNN drop-out
           */
          template <typename Iterator, typename Minimizer>
-            inline double trainCycle (Minimizer& minimizer, std::vector<double>& weightBucket,
+            double trainCycle (Minimizer& minimizer, std::vector<double>& weightBucket, std::vector<int>& layerWeightNumber,
 			                        Iterator itPatternBegin, Iterator itPatternEnd,
                               Settings& settings,
                               DropContainer& dropContainer);
@@ -1273,7 +1273,7 @@ namespace TMVA
 
          template <typename OutIterator>
             void initializeWeights (WeightInitializationStrategy eInitStrategy, 
-                                    OutIterator itWeight); ///< initialize the weights with the given strategy
+                                    OutIterator itWeight, std::vector<int>& layerWeightNumber); ///< initialize the weights with the given strategy
 
 
       protected:
