@@ -609,7 +609,7 @@ bool test35() {
    g2.SetParameters(par.data()); 
 
    ok &=  TMath::AreEqualRel( f2.Eval(2), g2.Eval(2), 1.E-6);
-   if (!ok) {std::cout << "Error in test35 - f2 != g2 " << f2.Eval(2.) << "  " << g2.Eval(2.) << std::endl;
+   if (!ok) std::cout << "Error in test35 - f2 != g2 " << f2.Eval(2.) << "  " << g2.Eval(2.) << std::endl;
    
    return ok; 
 }
