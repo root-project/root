@@ -214,10 +214,10 @@ void TRatioPlot::Init(TH1* h1, TH1* h2,
 ///
 /// \param h1 First histogram
 /// \param h2 Second histogram
+/// \param option Steers the error calculation, as well as ratio / difference
 /// \param h1DrawOpt Drawing option for first histogram
 /// \param h2DrawOpt Drawing option for second histogram
 /// \param graphDrawOpt Drawing option the lower graph
-/// \param option Steers the error calculation, as well as ratio / difference
 /// \param name Name for the object
 /// \param title Title for the object
 /// \param xlow [0,1]  is the position of the bottom left point of the pad
@@ -260,10 +260,10 @@ TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, Option_t *option, Option_t *h1DrawOpt, 
 /// stack to a regular sum of its containing histograms for processing.
 /// \param st The THStack object
 /// \param h2 The other histogram
+/// \param option Steers the calculation of the lower plot
 /// \param h1DrawOpt Drawing option for the stack
 /// \param h2DrawOpt Drawing options for the other histogram
 /// \param graphDrawOpt Drawing option for the lower plot graph
-/// \param option Steers the calculation of the lower plot
 /// \param name The name of the object
 /// \param title The title of the object
 /// \param xlow [0,1]  is the position of the bottom left point of the pad
@@ -306,9 +306,9 @@ TRatioPlot::TRatioPlot(THStack* st, TH1* h2, Option_t *option, Option_t *h1DrawO
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor for one histogram and a fit.
 /// \param h1 The histogram
+/// \param option Steers the error calculation
 /// \param h1DrawOpt Drawing option for the histogram
 /// \param graphDrawOpt Drawing option the lower graph
-/// \param option Steers the error calculation
 /// \param fitres Explicit fit result to be used for calculation. Uses last fit if left empty
 /// \param name Name for the object
 /// \param title Title for the object
