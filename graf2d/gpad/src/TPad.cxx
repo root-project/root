@@ -2128,7 +2128,7 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
 
          // emit signal
-         //RangeChanged(); // @TODO: Whats with this?
+         RangeChanged();
       }
 
       break;
