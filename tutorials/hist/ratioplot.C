@@ -1,7 +1,9 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// Example displaying two histograms and their ratio.
+/// Example displaying two histograms and their ratio. This macro does not use the
+/// class TRatioPlot. For ROOT version >= 6.08 TRatioPlot should be used. See
+/// the other ratio plots example in this folder.
 ///
 /// \macro_image
 /// \macro_code
