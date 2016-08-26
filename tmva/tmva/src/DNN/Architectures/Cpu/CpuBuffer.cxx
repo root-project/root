@@ -213,7 +213,7 @@ void TDataLoader<TMVAInput_t, TCpu<Real_t>>::CopyInput(
       event = fData[sampleIndex];
       for (size_t j = 0; j < n; j++) {
          size_t bufferIndex = j * batchSize + i;
-         buffer[bufferIndex] = static_cast<Real_t>(event->GetValue(j));
+         buffer[bufferIndex] = static_cast<Real_t>(event->GetValue(j);
       }
    }
 }

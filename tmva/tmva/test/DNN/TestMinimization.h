@@ -50,12 +50,12 @@ template <typename Architecture>
    YTrain.Mult(XTrain, W);
    YTest.Mult(XTest, W);
 
-   Net_t net(batchSize, nFeatures, ELossFunction::MEANSQUAREDERROR);
-   net.AddLayer(64, EActivationFunction::IDENTITY);
-   net.AddLayer(64, EActivationFunction::IDENTITY);
-   net.AddLayer(64, EActivationFunction::IDENTITY);
-   net.AddLayer(1, EActivationFunction::IDENTITY);
-   net.Initialize(EInitialization::GAUSS);
+   Net_t net(batchSize, nFeatures, ELossFunction::kMeanSquaredError);
+   net.AddLayer(64, EActivationFunction::kIdentity);
+   net.AddLayer(64, EActivationFunction::kIdentity);
+   net.AddLayer(64, EActivationFunction::kIdentity);
+   net.AddLayer(1, EActivationFunction::kIdentity);
+   net.Initialize(EInitialization::kGauss);
 
    TGradientDescent<Architecture> minimizer(0.0001, 5, 1);
    MatrixInput_t trainingData(XTrain, YTrain);
@@ -96,12 +96,12 @@ template <typename Architecture>
    YTrain.Mult(XTrain, W);
    YTest.Mult(XTest, W);
 
-   Net_t net(batchSize, nFeatures, ELossFunction::MEANSQUAREDERROR);
-   net.AddLayer(64, EActivationFunction::IDENTITY);
-   net.AddLayer(64, EActivationFunction::IDENTITY);
-   net.AddLayer(64, EActivationFunction::IDENTITY);
-   net.AddLayer(1, EActivationFunction::IDENTITY);
-   net.Initialize(EInitialization::GAUSS);
+   Net_t net(batchSize, nFeatures, ELossFunction::kMeanSquaredError);
+   net.AddLayer(64, EActivationFunction::kIdentity);
+   net.AddLayer(64, EActivationFunction::kIdentity);
+   net.AddLayer(64, EActivationFunction::kIdentity);
+   net.AddLayer(1, EActivationFunction::kIdentity);
+   net.Initialize(EInitialization::kGauss);
 
    TGradientDescent<Architecture> minimizer(0.0001, 5, 5);
    MatrixInput_t trainingData(XTrain, YTrain);

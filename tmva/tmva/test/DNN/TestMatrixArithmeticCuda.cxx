@@ -26,15 +26,23 @@ int main()
 
     Double_t error = testMultiplication<TCuda<Double_t>>(10);
     std::cout << "Multiplication: " << "Max. rel. error: " << error << std::endl;
+    if (error > 1e-3)
+        return 1;
 
     error = testSumColumns<TCuda<Double_t>>(1);
     std::cout << "Column Sum:     " << "Max. rel. error: " << error << std::endl;
+    if (error > 1e-3)
+        return 1;
 
     std::cout << "Testing CUDA matrix arithmetic (float):" << std::endl;
 
     error = testMultiplication<TCuda<Real_t>>(10);
     std::cout << "Multiplication: " << "Max. rel. error: " << error << std::endl;
+    if (error > 1e-3)
+        return 1;
 
     error = testSumColumns<TCuda<Real_t>>(1);
     std::cout << "Column Sum:     " << "Max. rel. error: " << error << std::endl;
+    if (error > 1e-3)
+        return 1;
 }
