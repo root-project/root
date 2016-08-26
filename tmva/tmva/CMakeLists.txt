@@ -36,8 +36,13 @@ set(headers4 TNeuron.h TSynapse.h TActivationChooser.h TActivation.h TActivation
 	     VariableTransformBase.h VariableIdentityTransform.h VariableDecorrTransform.h VariablePCATransform.h 
 	     VariableGaussTransform.h VariableNormalizeTransform.h VariableRearrangeTransform.h VariableTransform.h ROCCalc.h ROCCurve.h)
 
+set(headers5 Event.h Results.h ResultsClassification.h ResultsRegression.h
+    ResultsMulticlass.h VariableInfo.h ClassInfo.h DataLoader.h DataSet.h
+    DataSetInfo.h DataInputHandler.h DataSetManager.h DataSetFactory.h)
+
+
 #---Need to suffix each header name by TMVA/  -----------------
-foreach(hs headers1 headers2 headers3 headers4)
+foreach(hs headers1 headers2 headers3 headers4 headers5)
   foreach(h ${${hs}})
     set(t${hs} ${t${hs}} TMVA/${h})
   endforeach()
@@ -75,7 +80,7 @@ ENDIF(BLAS_FOUND AND imt)
 ROOT_GENERATE_DICTIONARY(G__TMVA ${theaders1} ${theaders2} ${theaders3} ${theaders4} ${theaders5}  MODULE TMVA LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
 
 ROOT_LINKER_LIBRARY(TMVA *.cxx G__TMVA.cxx ${DNN_FILES} ${DNN_CPU_FILES}
-                    LIBRARIES Core Thread ${DNN_CUDA_LIBRARIES} ${DNN_CPU_LIBRARIES}
+                    LIBRARIES Core ${DNN_CUDA_LIBRARIES} ${DNN_CPU_LIBRARIES}
                     DEPENDENCIES RIO Hist Tree TreePlayer MLP Minuit XMLIO)
 
 install(DIRECTORY inc/TMVA/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/TMVA
