@@ -20,7 +20,7 @@
 
    c1->Clear();
    
-   auto rp1 = new TRatioPlot(h1, "", "L", "errfunc");
+   auto rp1 = new TRatioPlot(h1, "errfunc", "", "L");
    rp1->SetSeparationMargin(0.0);
    rp1->Draw();
    rp1->GetLowerRefGraph()->SetMinimum(-2);

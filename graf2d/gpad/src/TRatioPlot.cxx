@@ -227,8 +227,8 @@ void TRatioPlot::Init(TH1* h1, TH1* h2,
 ///                        expressed in the mother pad reference system
 /// \param yup  [0,1]  is the Y position of this point.
 
-TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, Option_t *h1DrawOpt, Option_t *h2DrawOpt, Option_t *graphDrawOpt, 
-      Option_t *option, const char *name, const char *title, Double_t xlow, Double_t ylow, 
+TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, Option_t *option, Option_t *h1DrawOpt, Option_t *h2DrawOpt, 
+      Option_t *graphDrawOpt, const char *name, const char *title, Double_t xlow, Double_t ylow, 
       Double_t xup, Double_t yup)
    : TPad(name, title, xlow, ylow, xup, yup),
      fGridlines()
@@ -273,8 +273,8 @@ TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, Option_t *h1DrawOpt, Option_t *h2DrawOp
 ///                        expressed in the mother pad reference system
 /// \param yup  [0,1]  is the Y position of this point.
 
-TRatioPlot::TRatioPlot(THStack* st, TH1* h2, Option_t *h1DrawOpt, Option_t *h2DrawOpt, Option_t *graphDrawOpt, 
-      Option_t *option, const char *name, const char *title, Double_t xlow, Double_t ylow,
+TRatioPlot::TRatioPlot(THStack* st, TH1* h2, Option_t *option, Option_t *h1DrawOpt, Option_t *h2DrawOpt, 
+      Option_t *graphDrawOpt, const char *name, const char *title, Double_t xlow, Double_t ylow,
       Double_t xup, Double_t yup)
    : TPad(name, title, xlow, ylow, xup, yup)
 {
@@ -319,7 +319,7 @@ TRatioPlot::TRatioPlot(THStack* st, TH1* h2, Option_t *h1DrawOpt, Option_t *h2Dr
 ///                        expressed in the mother pad reference system
 /// \param yup  [0,1]  is the Y position of this point.
 
-TRatioPlot::TRatioPlot(TH1* h1, Option_t *h1DrawOpt, Option_t *graphDrawOpt, Option_t *option,
+TRatioPlot::TRatioPlot(TH1* h1, Option_t *option, Option_t *h1DrawOpt, Option_t *graphDrawOpt,
       TFitResult *fitres, const char *name, const char *title, Double_t xlow, Double_t ylow, 
       Double_t xup, Double_t yup)
    : TPad(name, title, xlow, ylow, xup, yup),

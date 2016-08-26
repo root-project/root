@@ -141,17 +141,17 @@ protected:
 
    virtual Bool_t IsDrawn();
 
-   virtual void Init(TH1* h1, TH1* h2, Option_t *displayOption = "", Option_t *optH1 = "hist", Option_t *optH2 = "E", Option_t *optGraph = "AP");
+   virtual void Init(TH1* h1, TH1* h2, Option_t *option = "", Option_t *h1DrawOpt = "hist", Option_t *h2DrawOpt = "E", Option_t *graphDrawOpt = "AP");
 
 public:
 
    TRatioPlot();
    virtual ~TRatioPlot();
-   TRatioPlot(TH1* h1, TH1* h2, Option_t *optH1 = "hist", Option_t *optH2 = "E", Option_t *optGraph = "AP", Option_t *displayOption = "pois", const char *name = "RatioPlot", const char *title = "RatioPlot", Double_t xlow = 0, Double_t ylow = 0, Double_t xup = 1, Double_t yup = 1);
+   TRatioPlot(TH1* h1, TH1* h2, Option_t *option = "pois", Option_t *h1DrawOpt = "hist", Option_t *h2DrawOpt = "E", Option_t *graphDrawOpt = "AP", const char *name = "RatioPlot", const char *title = "RatioPlot", Double_t xlow = 0, Double_t ylow = 0, Double_t xup = 1, Double_t yup = 1);
 
-   TRatioPlot(THStack* st, TH1* h2, Option_t *optH1 = "hist", Option_t *optH2 = "E", Option_t *optGraph = "AP", Option_t *displayOption = "pois", const char *name = "RatioPlot", const char *title = "RatioPlot", Double_t xlow = 0, Double_t ylow = 0, Double_t xup = 1, Double_t yup = 1);
+   TRatioPlot(THStack* st, TH1* h2, Option_t *option = "pois", Option_t *h1DrawOpt = "hist", Option_t *h2DrawOpt = "E", Option_t *graphDrawOpt = "AP", const char *name = "RatioPlot", const char *title = "RatioPlot", Double_t xlow = 0, Double_t ylow = 0, Double_t xup = 1, Double_t yup = 1);
 
-   TRatioPlot(TH1* h1, Option_t *optH1 = "", Option_t *optGraph = "LX", Option_t *displayOption = "", TFitResult *fitres = 0, const char *name = "RatioPlot", const char *title = "RatioPlot", Double_t xlow = 0, Double_t ylow = 0, Double_t xup = 1, Double_t yup = 1);
+   TRatioPlot(TH1* h1, Option_t *option = "", Option_t *h1DrawOpt = "", Option_t *graphDrawOpt = "LX", TFitResult *fitres = 0, const char *name = "RatioPlot", const char *title = "RatioPlot", Double_t xlow = 0, Double_t ylow = 0, Double_t xup = 1, Double_t yup = 1);
 
 
 
