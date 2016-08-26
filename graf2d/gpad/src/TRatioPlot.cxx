@@ -48,7 +48,7 @@ passed through to the calculation, if applicable.
 
 ## Ratios and differences
 
-Available options are for `displayOption`:
+Available options are for `option`:
 | Option     | Description                                                  |
 | ---------- | ------------------------------------------------------------ |
 | divsym    | uses the histogram `TH1::Divide` method, yields symmetric errors    |
@@ -61,7 +61,7 @@ End_Macro
 
 A second constructor only accepts a single histogram, but expects it to have a fitted
 function. The function is used to calculate the residual between the fit and the
-histogram. The error can be steered by providing options to `displayOption`.
+histogram. The error can be steered by providing options to `option`.
 
 | Option     | Description                                                  |
 | ---------- | ------------------------------------------------------------ |
@@ -84,11 +84,11 @@ is responsible for the range, which enables you to modify the range.
 
 ## Calculations
 The simplest case is passing two histograms without specifying any options. This defaults to using
-`TGraphAsymErrors::Divide`. The `displayOption` variable is passed through, as are the parameters
+`TGraphAsymErrors::Divide`. The `option` variable is passed through, as are the parameters
 `c1` and `c2`, that you can set via `TRatioPlot::SetC1` and `TRatioPlot::SetC1`. If you set the 
-`displayOption` to `divsym` the method `TH1::Divide` will be used instead, also receiving all the parameters. 
+`option` to `divsym` the method `TH1::Divide` will be used instead, also receiving all the parameters. 
 
-Using the `displayOption` `diff` or `diffsig`, both histograms will be subtracted, and in the case of diffsig,
+Using the `option` `diff` or `diffsig`, both histograms will be subtracted, and in the case of diffsig,
 the difference will be divided by the  uncertainty. `c1` and `c2` will only be used to 
 scale the histograms using `TH1::Scale` prior to subtraction.
 
@@ -96,7 +96,7 @@ If the constructor which only accepts one histogram is used, the class is initia
 mode. Here, it is expected that h1 has a fit function in it's list of functions. The class calculates the 
 difference between the histogram and the fit function at each point and divides it by the uncertainty. There
 are a few option to steer which error is used (as is the case for `diffsig`). The default is to use
-the statistical uncertainty from h1 using `TH1::GetBinError`. If the `displayOption` string contains `errasym`, asymmetric
+the statistical uncertainty from h1 using `TH1::GetBinError`. If the `option` string contains `errasym`, asymmetric
 errors will be used. The type of error can be steered by `TH1::SetBinErrorOption`. The corresponding error will be used,
 depending on if the function is below or above the bin content. The third option `errfunc` uses the square root of
 the function value as the error.
@@ -150,7 +150,7 @@ TRatioPlot::~TRatioPlot()
 /// Internal method that shares constructor logic
 
 void TRatioPlot::Init(TH1* h1, TH1* h2,
-      Option_t *displayOption, Option_t *optH1, Option_t *optH2, Option_t *optGraph)
+      Option_t *option, Option_t *h1DrawOpt, Option_t *h2DrawOpt, Option_t *graphDrawOpt)
 {
 
    fH1 = h1;
@@ -160,44 +160,44 @@ void TRatioPlot::Init(TH1* h1, TH1* h2,
 
    SetupPads();
 
-   TString displayOptionString = TString(displayOption);
+   TString optionString = TString(option);
 
-   if (displayOptionString.Contains("divsym")) {
-      displayOptionString.ReplaceAll("divsym", "");
-      fDisplayMode = TRatioPlot::CalculationMode::kDivideHist;
-   } else if (displayOptionString.Contains("diffsig")) {
-      displayOptionString.ReplaceAll("diffsig", "");
-      fDisplayMode = TRatioPlot::CalculationMode::kDifferenceSign;
+   if (optionString.Contains("divsym")) {
+      optionString.ReplaceAll("divsym", "");
+      fMode = TRatioPlot::CalculationMode::kDivideHist;
+   } else if (optionString.Contains("diffsig")) {
+      optionString.ReplaceAll("diffsig", "");
+      fMode = TRatioPlot::CalculationMode::kDifferenceSign;
 
       // determine which error style
-      if (displayOptionString.Contains("errasym")) {
+      if (optionString.Contains("errasym")) {
          fErrorMode = TRatioPlot::ErrorMode::kErrorAsymmetric;
-         displayOptionString.ReplaceAll("errasym", "");
+         optionString.ReplaceAll("errasym", "");
       }
 
-      if (displayOptionString.Contains("errfunc")) {
+      if (optionString.Contains("errfunc")) {
          fErrorMode = TRatioPlot::ErrorMode::kErrorFunc;
-         displayOptionString.ReplaceAll("errfunc", "");
+         optionString.ReplaceAll("errfunc", "");
       }
-   } else if (displayOptionString.Contains("diff")) {
-      displayOptionString.ReplaceAll("diff", "");
-      fDisplayMode = TRatioPlot::CalculationMode::kDifference;
+   } else if (optionString.Contains("diff")) {
+      optionString.ReplaceAll("diff", "");
+      fMode = TRatioPlot::CalculationMode::kDifference;
    } else {
-      fDisplayMode = TRatioPlot::CalculationMode::kDivideGraph; // <- default
+      fMode = TRatioPlot::CalculationMode::kDivideGraph; // <- default
    }
 
-   fDisplayOption = displayOptionString;
+   fOption = optionString;
 
-   TString optH1String = TString(optH1);
-   TString optH2String = TString(optH2);
-   TString optGraphString = TString(optGraph);
+   TString h1DrawOptString = TString(h1DrawOpt);
+   TString h2DrawOptString = TString(h2DrawOpt);
+   TString graphDrawOptString = TString(graphDrawOpt);
 
-   optH2String.ReplaceAll("same", "");
-   optH2String.ReplaceAll("SAME", "");
+   h2DrawOptString.ReplaceAll("same", "");
+   h2DrawOptString.ReplaceAll("SAME", "");
 
-   fOptH1 = optH1String;
-   fOptH2 = optH2String;
-   fOptGraph = optGraphString;
+   fH1DrawOpt = h1DrawOptString;
+   fH2DrawOpt = h2DrawOptString;
+   fGraphDrawOpt = graphDrawOptString;
 
 
    // build ratio, everything is ready
@@ -214,10 +214,10 @@ void TRatioPlot::Init(TH1* h1, TH1* h2,
 ///
 /// \param h1 First histogram
 /// \param h2 Second histogram
-/// \param optH1 Drawing option for first histogram
-/// \param optH2 Drawing option for second histogram
-/// \param optGraph Drawing option the lower graph
-/// \param displayOption Steers the error calculation, as well as ratio / difference
+/// \param h1DrawOpt Drawing option for first histogram
+/// \param h2DrawOpt Drawing option for second histogram
+/// \param graphDrawOpt Drawing option the lower graph
+/// \param option Steers the error calculation, as well as ratio / difference
 /// \param name Name for the object
 /// \param title Title for the object
 /// \param xlow [0,1]  is the position of the bottom left point of the pad
@@ -227,8 +227,8 @@ void TRatioPlot::Init(TH1* h1, TH1* h2,
 ///                        expressed in the mother pad reference system
 /// \param yup  [0,1]  is the Y position of this point.
 
-TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, Option_t *optH1, Option_t *optH2, Option_t *optGraph, 
-      Option_t *displayOption, const char *name, const char *title, Double_t xlow, Double_t ylow, 
+TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, Option_t *h1DrawOpt, Option_t *h2DrawOpt, Option_t *graphDrawOpt, 
+      Option_t *option, const char *name, const char *title, Double_t xlow, Double_t ylow, 
       Double_t xup, Double_t yup)
    : TPad(name, title, xlow, ylow, xup, yup),
      fGridlines()
@@ -250,7 +250,7 @@ TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, Option_t *optH1, Option_t *optH2, Optio
 
    fHistDrawProxy = h1;
 
-   Init(h1, h2, displayOption, optH1, optH2, optGraph);
+   Init(h1, h2, option, h1DrawOpt, h2DrawOpt, graphDrawOpt);
 
 }
 
@@ -260,10 +260,10 @@ TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, Option_t *optH1, Option_t *optH2, Optio
 /// stack to a regular sum of its containing histograms for processing.
 /// \param st The THStack object
 /// \param h2 The other histogram
-/// \param optH1 Drawing option for the stack
-/// \param optH2 Drawing options for the other histogram
-/// \param optGraph Drawing option for the lower plot graph
-/// \param displayOption Steers the calculation of the lower plot
+/// \param h1DrawOpt Drawing option for the stack
+/// \param h2DrawOpt Drawing options for the other histogram
+/// \param graphDrawOpt Drawing option for the lower plot graph
+/// \param option Steers the calculation of the lower plot
 /// \param name The name of the object
 /// \param title The title of the object
 /// \param xlow [0,1]  is the position of the bottom left point of the pad
@@ -273,8 +273,8 @@ TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, Option_t *optH1, Option_t *optH2, Optio
 ///                        expressed in the mother pad reference system
 /// \param yup  [0,1]  is the Y position of this point.
 
-TRatioPlot::TRatioPlot(THStack* st, TH1* h2, Option_t *optH1, Option_t *optH2, Option_t *optGraph, 
-      Option_t *displayOption, const char *name, const char *title, Double_t xlow, Double_t ylow,
+TRatioPlot::TRatioPlot(THStack* st, TH1* h2, Option_t *h1DrawOpt, Option_t *h2DrawOpt, Option_t *graphDrawOpt, 
+      Option_t *option, const char *name, const char *title, Double_t xlow, Double_t ylow,
       Double_t xup, Double_t yup)
    : TPad(name, title, xlow, ylow, xup, yup)
 {
@@ -299,16 +299,16 @@ TRatioPlot::TRatioPlot(THStack* st, TH1* h2, Option_t *optH1, Option_t *optH2, O
 
    fHistDrawProxy = st;
 
-   Init(tmpHist, h2, displayOption, optH1, optH2, optGraph);
+   Init(tmpHist, h2, option, h1DrawOpt, h2DrawOpt, graphDrawOpt);
 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor for one histogram and a fit.
 /// \param h1 The histogram
-/// \param optH1 Drawing option for the histogram
-/// \param optGraph Drawing option the lower graph
-/// \param displayOption Steers the error calculation
+/// \param h1DrawOpt Drawing option for the histogram
+/// \param graphDrawOpt Drawing option the lower graph
+/// \param option Steers the error calculation
 /// \param fitres Explicit fit result to be used for calculation. Uses last fit if left empty
 /// \param name Name for the object
 /// \param title Title for the object
@@ -319,7 +319,7 @@ TRatioPlot::TRatioPlot(THStack* st, TH1* h2, Option_t *optH1, Option_t *optH2, O
 ///                        expressed in the mother pad reference system
 /// \param yup  [0,1]  is the Y position of this point.
 
-TRatioPlot::TRatioPlot(TH1* h1, Option_t *optH1, Option_t *optGraph, Option_t *displayOption,
+TRatioPlot::TRatioPlot(TH1* h1, Option_t *h1DrawOpt, Option_t *graphDrawOpt, Option_t *option,
       TFitResult *fitres, const char *name, const char *title, Double_t xlow, Double_t ylow, 
       Double_t xup, Double_t yup)
    : TPad(name, title, xlow, ylow, xup, yup),
@@ -352,27 +352,27 @@ TRatioPlot::TRatioPlot(TH1* h1, Option_t *optH1, Option_t *optGraph, Option_t *d
 
    fFitResult = fitres;
 
-   fDisplayMode = TRatioPlot::CalculationMode::kFitResidual;
+   fMode = TRatioPlot::CalculationMode::kFitResidual;
 
-   TString displayOptionString = TString(displayOption);
+   TString optionString = TString(option);
 
    // determine which error style
-   if (displayOptionString.Contains("errasym")) {
+   if (optionString.Contains("errasym")) {
       fErrorMode = TRatioPlot::ErrorMode::kErrorAsymmetric;
-      displayOptionString.ReplaceAll("errasym", "");
+      optionString.ReplaceAll("errasym", "");
    }
 
-   if (displayOptionString.Contains("errfunc")) {
+   if (optionString.Contains("errfunc")) {
       fErrorMode = TRatioPlot::ErrorMode::kErrorFunc;
-      displayOptionString.ReplaceAll("errfunc", "");
+      optionString.ReplaceAll("errfunc", "");
    }
 
-   fDisplayOption = displayOptionString;
+   fOption = optionString;
 
    BuildLowerPlot();
 
-   fOptH1 = optH1;
-   fOptGraph = optGraph;
+   fH1DrawOpt = h1DrawOpt;
+   fGraphDrawOpt = graphDrawOpt;
 
    fSharedXAxis = (TAxis*)(fH1->GetXaxis()->Clone());
    fUpYaxis = (TAxis*)(fH1->GetYaxis()->Clone());
@@ -624,16 +624,16 @@ void TRatioPlot::Draw(Option_t *option)
 
    if (fHistDrawProxy) {
       if (fHistDrawProxy->InheritsFrom(TH1::Class())) {
-         ((TH1*)fHistDrawProxy)->Draw(fOptH1);
+         ((TH1*)fHistDrawProxy)->Draw(fH1DrawOpt);
       } else if (fHistDrawProxy->InheritsFrom(THStack::Class())) {
-         ((THStack*)fHistDrawProxy)->Draw(fOptH1);
+         ((THStack*)fHistDrawProxy)->Draw(fH1DrawOpt);
       } else {
          Warning("Draw", "Draw proxy not of type TH1 or THStack, not drawing it");
       }
    }
 
    if (fH2 != 0) {
-      fH2->Draw(fOptH2+"same");
+      fH2->Draw(fH2DrawOpt+"same");
    }
 
    fLowerPad->cd();
@@ -641,18 +641,18 @@ void TRatioPlot::Draw(Option_t *option)
    fConfidenceInterval2->SetFillColor(fCi1Color);
    fConfidenceInterval1->SetFillColor(fCi2Color);
 
-   if (fDisplayMode == TRatioPlot::CalculationMode::kFitResidual) { 
+   if (fMode == TRatioPlot::CalculationMode::kFitResidual) { 
       if (fShowConfidenceIntervals) {
          fConfidenceInterval2->Draw("A3");
          fConfidenceInterval1->Draw("3");
-         fRatioGraph->Draw(fOptGraph+"SAME");
+         fRatioGraph->Draw(fGraphDrawOpt+"SAME");
       } else {
-         fRatioGraph->Draw("A"+fOptGraph+"SAME");
+         fRatioGraph->Draw("A"+fGraphDrawOpt+"SAME");
       }
    } else {
 
-      TString opt = fOptGraph;
-      fRatioGraph->Draw("A"+fOptGraph);
+      TString opt = fGraphDrawOpt;
+      fRatioGraph->Draw("A"+fGraphDrawOpt);
 
    }
 
@@ -966,7 +966,7 @@ void TRatioPlot::BuildLowerPlot()
 
    // Determine the divide mode and create the lower graph accordingly
    // Pass divide options given in constructor
-   if (fDisplayMode == TRatioPlot::CalculationMode::kDivideGraph) {
+   if (fMode == TRatioPlot::CalculationMode::kDivideGraph) {
       // use TGraphAsymErrors Divide method to create
 
       SetGridlines(divideGridlines, 3);
@@ -978,13 +978,13 @@ void TRatioPlot::BuildLowerPlot()
       tmpH2->Scale(fC2);
 
       TGraphAsymmErrors *ratioGraph = new TGraphAsymmErrors();
-      ratioGraph->Divide(tmpH1, tmpH2, fDisplayOption.Data());
+      ratioGraph->Divide(tmpH1, tmpH2, fOption.Data());
       fRatioGraph = ratioGraph;
 
       delete tmpH1;
       delete tmpH2;
 
-   } else if (fDisplayMode == TRatioPlot::CalculationMode::kDifference) {
+   } else if (fMode == TRatioPlot::CalculationMode::kDifference) {
       SetGridlines(diffGridlines, 3);
 
       TH1 *tmpHist = (TH1*)fH1->Clone();
@@ -995,7 +995,7 @@ void TRatioPlot::BuildLowerPlot()
       fRatioGraph = new TGraphErrors(tmpHist);
 
       delete tmpHist;
-   } else if (fDisplayMode == TRatioPlot::CalculationMode::kDifferenceSign) {
+   } else if (fMode == TRatioPlot::CalculationMode::kDifferenceSign) {
 
       SetGridlines(signGridlines, 3);
 
@@ -1045,7 +1045,7 @@ void TRatioPlot::BuildLowerPlot()
          }
       }
 
-   } else if (fDisplayMode == TRatioPlot::CalculationMode::kFitResidual) {
+   } else if (fMode == TRatioPlot::CalculationMode::kFitResidual) {
 
       SetGridlines(signGridlines, 3);
 
@@ -1144,14 +1144,14 @@ void TRatioPlot::BuildLowerPlot()
 
       }
 
-   } else if (fDisplayMode == TRatioPlot::CalculationMode::kDivideHist){
+   } else if (fMode == TRatioPlot::CalculationMode::kDivideHist){
       SetGridlines(divideGridlines, 3);
 
       // Use TH1's Divide method
       TH1 *tmpHist = (TH1*)fH1->Clone();
       tmpHist->Reset();
 
-      tmpHist->Divide(fH1, fH2, fC1, fC2, fDisplayOption.Data());
+      tmpHist->Divide(fH1, fH2, fC1, fC2, fOption.Data());
       fRatioGraph = new TGraphErrors(tmpHist);
 
       delete tmpHist;

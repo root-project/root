@@ -75,12 +75,12 @@ protected:
    TH1 *fH2 = 0; ///< Stores the secondary histogram, if there is one
    TObject *fHistDrawProxy = 0; ///< The object which is actually drawn, this might be TH1 or THStack
 
-   Int_t fDisplayMode = 0; ///< Stores which calculation is supposed to be performed as specified by user option
+   Int_t fMode = 0; ///< Stores which calculation is supposed to be performed as specified by user option
    Int_t fErrorMode = TRatioPlot::ErrorMode::kErrorSymmetric; ///< Stores the error mode, sym, asym or func
-   TString fDisplayOption = ""; ///< Stores the option which is given in the constructor as a string
-   TString fOptH1 = ""; ///< Stores draw option for h1 given in constructor
-   TString fOptH2 = ""; ///< Stores draw option for h2 given in constructor
-   TString fOptGraph = ""; ///< Stores draw option for the lower plot graph given in constructor
+   TString fOption = ""; ///< Stores the option which is given in the constructor as a string
+   TString fH1DrawOpt = ""; ///< Stores draw option for h1 given in constructor
+   TString fH2DrawOpt = ""; ///< Stores draw option for h2 given in constructor
+   TString fGraphDrawOpt = ""; ///< Stores draw option for the lower plot graph given in constructor
 
    Float_t fSplitFraction = 0.3; ///< Stores the fraction at which the upper and lower pads meet
 
