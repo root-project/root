@@ -220,10 +220,12 @@ void TRatioPlot::Init(TH1* h1, TH1* h2,
 /// \param displayOption Steers the error calculation, as well as ratio / difference
 /// \param name Name for the object
 /// \param title Title for the object
-/// \param xlow Pad coordinate
-/// \param ylow Pad coordinate
-/// \param xup Pad coordinate
-/// \param yup Pad coordinate
+/// \param xlow [0,1]  is the position of the bottom left point of the pad
+///             expressed  in the mother pad reference system
+/// \param ylow [0,1]  is the Y position of this point.
+/// \param xup  [0,1]  is the x position of the top right point of the pad
+///                        expressed in the mother pad reference system
+/// \param yup  [0,1]  is the Y position of this point.
 
 TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, Option_t *optH1, Option_t *optH2, Option_t *optGraph, 
       Option_t *displayOption, const char *name, const char *title, Double_t xlow, Double_t ylow, 
@@ -264,10 +266,12 @@ TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, Option_t *optH1, Option_t *optH2, Optio
 /// \param displayOption Steers the calculation of the lower plot
 /// \param name The name of the object
 /// \param title The title of the object
-/// \param xlow Pad coordinate
-/// \param ylow Pad coordinate
-/// \param xup Pad coordinate
-/// \param yup Pad coordinate
+/// \param xlow [0,1]  is the position of the bottom left point of the pad
+///             expressed  in the mother pad reference system
+/// \param ylow [0,1]  is the Y position of this point.
+/// \param xup  [0,1]  is the x position of the top right point of the pad
+///                        expressed in the mother pad reference system
+/// \param yup  [0,1]  is the Y position of this point.
 
 TRatioPlot::TRatioPlot(THStack* st, TH1* h2, Option_t *optH1, Option_t *optH2, Option_t *optGraph, 
       Option_t *displayOption, const char *name, const char *title, Double_t xlow, Double_t ylow,
@@ -308,10 +312,12 @@ TRatioPlot::TRatioPlot(THStack* st, TH1* h2, Option_t *optH1, Option_t *optH2, O
 /// \param fitres Explicit fit result to be used for calculation. Uses last fit if left empty
 /// \param name Name for the object
 /// \param title Title for the object
-/// \param xlow Pad coordinate
-/// \param ylow Pad coordinate
-/// \param xup Pad coordinate
-/// \param yup Pad coordinate
+/// \param xlow [0,1]  is the position of the bottom left point of the pad
+///             expressed  in the mother pad reference system
+/// \param ylow [0,1]  is the Y position of this point.
+/// \param xup  [0,1]  is the x position of the top right point of the pad
+///                        expressed in the mother pad reference system
+/// \param yup  [0,1]  is the Y position of this point.
 
 TRatioPlot::TRatioPlot(TH1* h1, Option_t *optH1, Option_t *optGraph, Option_t *displayOption,
       TFitResult *fitres, const char *name, const char *title, Double_t xlow, Double_t ylow, 
@@ -543,7 +549,7 @@ Float_t TRatioPlot::GetSeparationMargin()
 /// | grid / nogrid | enable (default) or disable drawing of dashed lines on lower plot |
 /// | hideup     | hides the first label of the upper axis if there is not enough space |
 /// | fhideup    | always hides the first label of the upper axis |
-/// | hidelow    | hides the last label of the lower axis if there is not enough space |
+/// | hidelow (default) | hides the last label of the lower axis if there is not enough space |
 /// | fhidelow   | always hides the last label of the lower axis |
 /// | nohide     | does not hide a label if there is not enough space |
 /// | noconfint  | does not draw the confidence interval bands in the fit residual case |
