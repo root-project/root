@@ -573,19 +573,21 @@ bool test35() {
    // test for similar pre-defined functions
    bool ok = true;
    TF1 f1("f1","cheb1(0)+cheb10(2)",-1,1);
-   std::vector<double> p(12);
-   p.assign(12,1.); p[1] = 2; p[2] = 3;
-   TF1 g1("g1",[](double *x, double *p){ return ROOT::Math::ChebyshevN(1, x[0], p ) + ROOT::Math::ChebyshevN(10,x[0],p+2 ); }, -1, 1, 12);
+   std::vector<double> p(13);
+   p.assign(13,1.); p[1] = 2; p[2] = 3;
+   TF1 g1("g1",[](double *x, double *p){ return ROOT::Math::ChebyshevN(1, x[0], p ) + ROOT::Math::ChebyshevN(10,x[0],p+2 ); }, -1, 1, 13);
    f1.SetParameters(p.data()); 
    g1.SetParameters(p.data()); 
-   ok &=  TMath::AreEqualAbs( f1.Eval(2), g1.Eval(2), 1.E-10);
+   ok &=  TMath::AreEqualRel( f1.Eval(2), g1.Eval(2), 1.E-10);
+   if (!ok) std::cout << "Error in test35 - f1 != g1 " << f1.Eval(2) << "  " << g1.Eval(2) << std::endl;
 
    TF1 f2("f2","cheb10(0)+cheb1(11)",-1,1);
-   TF1 g2("g2",[](double *x, double *p){ return ROOT::Math::ChebyshevN(10, x[0], p ) + ROOT::Math::ChebyshevN(1,x[0],p+11 ); }, -1, 1, 12);
+   TF1 g2("g2",[](double *x, double *p){ return ROOT::Math::ChebyshevN(10, x[0], p ) + ROOT::Math::ChebyshevN(1,x[0],p+11 ); }, -1, 1, 13);
    f2.SetParameters(p.data()); 
    g2.SetParameters(p.data()); 
-   
-   
+   ok &=  TMath::AreEqualRel( f2.Eval(2.), g2.Eval(2.), 1.E-10);
+   if (!ok) {std::cout << "Error in test35 - f2 != g2 " << f2.Eval(2.) << "  " << g2.Eval(2.) << std::endl;
+   }
    return ok; 
 }
 bool test36() { 
