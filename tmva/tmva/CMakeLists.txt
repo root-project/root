@@ -43,8 +43,6 @@ foreach(hs headers1 headers2 headers3 headers4)
   endforeach()
 endforeach()
 
-ROOT_GENERATE_DICTIONARY(G__TMVA ${theaders1} ${theaders2} ${theaders3} ${theaders4}   MODULE TMVA LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
-
 SET(DNN_FILES      src/DNN/Architectures/Reference.cxx)
 SET(DNN_CUDA_FILES src/DNN/Architectures/Cuda.cu
                    src/DNN/Architectures/Cuda/CudaBuffers.cxx
