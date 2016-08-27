@@ -268,12 +268,12 @@ namespace TMVA
 
 
       template <typename ItSource, typename ItTarget>
-         void applyWeights (ItSource itSourceBegin, ItSource itSourceEnd, int itWeight, std::vector<double>& weightBucket, ItTarget itTargetBegin, ItTarget itTargetEnd);
+         void applyWeights (ItSource itSourceBegin, ItSource itSourceEnd, int itWeight, std::vector<double>& weightBucket, size_t layerNumber, ItTarget itTargetBegin, ItTarget itTargetEnd);
 
 
 
-      template <bool HasDropOut, typename ItSource, typename ItPrev, typename ItDrop>
-          void applyWeightsBackwards (ItSource itCurrBegin, ItSource itCurrEnd, int itWeight, std::vector<double>& weightBucket, ItPrev itPrevBegin, ItPrev itPrevEnd, ItDrop itDrop);
+      template <typename ItSource, typename ItPrev, typename ItDrop>
+          void applyWeightsBackwards (ItSource itCurrBegin, ItSource itCurrEnd, int itWeight, std::vector<double>& weightBucket, size_t layerNumber, ItPrev itPrevBegin, ItPrev itPrevEnd, ItDrop itDrop);
 
 
 
@@ -292,7 +292,7 @@ namespace TMVA
          void update (ItSource itSource, ItSource itSourceEnd, 
                       ItDelta itTargetDeltaBegin, ItDelta itTargetDeltaEnd, 
                       ItTargetGradient itTargetGradientBegin, 
-                      int itGradient, std::vector<double>& gradientBucket);
+                      int itGradient, std::vector<double>& gradientBucket, size_t layerNumber);
 
 
 
@@ -301,7 +301,7 @@ namespace TMVA
                       ItDelta itTargetDeltaBegin, ItDelta itTargetDeltaEnd, 
                       ItTargetGradient itTargetGradientBegin, 
                       int itGradient, std::vector<double>& gradientBucket,
-                      int itWeight, std::vector<double>& weightBucket, double& weightDecay);
+                      int itWeight, std::vector<double>& weightBucket, double& factorWeightDecay, size_t layerNumber);
 
 
 
@@ -420,7 +420,7 @@ namespace TMVA
 
 
       template <typename EnumRegularization>
-         double weightDecay (double error, int currLayerWeightIndex, int nextLayerWeightIndex, std::vector<double>& weightBucket, double factorWeightDecay, EnumRegularization eRegularization);
+         double weightDecay (double error, int currLayerWeightIndex, int nextLayerWeightIndex, std::vector<double>& weightBucket, double factorWeightDecay, EnumRegularization eRegularization, size_t layerNumber);
 
 
 
@@ -726,15 +726,15 @@ namespace TMVA
 
 
       template <typename LAYERDATA>
-         void forward (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, std::vector<double>& weightBucket);
+         void forward (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, std::vector<double>& weightBucket, size_t layerNumber);
 
 
       template <typename LAYERDATA>
-         void backward (LAYERDATA& prevLayerData, LAYERDATA& currLayerData, std::vector<double>& weightBucket);
+         void backward (LAYERDATA& prevLayerData, LAYERDATA& currLayerData, std::vector<double>& weightBucket, size_t layerNumber);
 
 
       template <typename LAYERDATA>
-         void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double factorWeightDecay, EnumRegularization regularization, std::vector<double>& weightBucket, std::vector<double>& gradientBucket);
+         void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double factorWeightDecay, EnumRegularization regularization, std::vector<double>& weightBucket, std::vector<double>& gradientBucket, size_t layerNumber);
 
 
 
@@ -1255,7 +1255,7 @@ namespace TMVA
                                   double patternWeight,
                                   std::vector<double>& weightBucket,
                                   double factorWeightDecay,
-                                  EnumRegularization eRegularization) const;
+                                  EnumRegularization eRegularization, size_t layerNumber) const;
 
 
          const std::vector<Layer>& layers () const { return m_layers; } ///< returns the layers (structure)
