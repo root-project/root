@@ -11,9 +11,9 @@ MAKE_VERSION_MINOR := $(shell echo $(word 2,$(subst ., ,$(MAKE_VERSION))) | \
                               sed 's/\([0-9][0-9]*\).*/\1/')
 MAKE_VERSION_MAJOR ?= 0
 MAKE_VERSION_MINOR ?= 0
-ORDER_ := $(shell test $(MAKE_VERSION_MAJOR) -gt 3 || \
-                  test $(MAKE_VERSION_MAJOR) -eq 3 && \
-                  test $(MAKE_VERSION_MINOR) -ge 80 && echo '|')
+ORDER_ := $(shell test $(MAKE_VERSION_MAJOR) -gt 3 -o \
+                       $(MAKE_VERSION_MAJOR) -eq 3 -a \
+                       $(MAKE_VERSION_MINOR) -ge 80 && echo '|')
 
 ##### Include path/location macros (result of ./configure) #####
 
