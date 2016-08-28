@@ -220,7 +220,7 @@ namespace TMVA
 
         Settings::Settings (TString name,
                             size_t _convergenceSteps, size_t _batchSize, size_t _testRepetitions, 
-                            double _factorWeightDecay, EnumRegularization eRegularization,
+                            double _factorWeightDecay, int _bucketSize, EnumRegularization eRegularization,
                             MinimizerType _eMinimizerType, double _learningRate, 
                             double _momentum, int _repetitions, bool _useMultithreading)
             : m_timer (100, name)
@@ -244,6 +244,7 @@ namespace TMVA
             , m_minError (1e10)
             , m_useMultithreading (_useMultithreading)
             , fMonitoring (NULL)
+            , fBucketSize (_bucketSize)
         {
         }
     
