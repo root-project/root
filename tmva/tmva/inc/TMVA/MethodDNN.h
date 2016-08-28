@@ -131,6 +131,7 @@ namespace TMVA {
    private:
       TMVA::DNN::Net fNet;
       std::vector<double> fWeightBucket;
+      int fBucketSize;
 
       TString  fLayoutString;
       std::vector<std::pair<int,TMVA::DNN::EnumFunction>> fLayout;
