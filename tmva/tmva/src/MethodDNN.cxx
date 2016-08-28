@@ -428,6 +428,8 @@ void TMVA::MethodDNN::ProcessOptions()
          std::vector<double> dropConfig;
          dropConfig = fetchValue (block, "DropConfig", dropConfig);
          int dropRepetitions = fetchValue (block, "DropRepetitions", 3);
+         int bucketSize = fetchValue (block, "BucketSize", 8);
+         fBucketSize = bucketSize;
 
          TMVA::DNN::EnumRegularization eRegularization = TMVA::DNN::EnumRegularization::NONE;
          if (regularization == "L1")
@@ -451,7 +453,7 @@ void TMVA::MethodDNN::ProcessOptions()
                std::shared_ptr<TMVA::DNN::ClassificationSettings> ptrSettings = make_shared <TMVA::DNN::ClassificationSettings> (
                                                                                                                                  GetName  (),
                                                                                                                                  convergenceSteps, batchSize, 
-                                                                                                                                 testRepetitions, factorWeightDecay,
+                                                                                                                                 testRepetitions, factorWeightDecay, bucketSize,
                                                                                                                                  eRegularization, fScaleToNumEvents, TMVA::DNN::MinimizerType::fSteepest,
                                                                                                                                  learningRate, 
                                                                                                                                  momentum, repetitions, multithreading);
@@ -463,7 +465,7 @@ void TMVA::MethodDNN::ProcessOptions()
                std::shared_ptr<TMVA::DNN::Settings> ptrSettings = make_shared <TMVA::DNN::Settings> (
                                                                                                      GetName  (),
                                                                                                      convergenceSteps, batchSize, 
-                                                                                                     testRepetitions, factorWeightDecay,
+                                                                                                     testRepetitions, factorWeightDecay, bucketSize,
                                                                                                      eRegularization, TMVA::DNN::MinimizerType::fSteepest,
                                                                                                      learningRate, 
                                                                                                      momentum, repetitions, multithreading);
@@ -474,7 +476,7 @@ void TMVA::MethodDNN::ProcessOptions()
                std::shared_ptr<TMVA::DNN::Settings> ptrSettings = make_shared <TMVA::DNN::Settings> (
                                                                                                      GetName  (),
                                                                                                      convergenceSteps, batchSize, 
-                                                                                                     testRepetitions, factorWeightDecay,
+                                                                                                     testRepetitions, factorWeightDecay, bucketSize,
                                                                                                      eRegularization, TMVA::DNN::MinimizerType::fSteepest,
                                                                                                      learningRate, 
                                                                                                      momentum, repetitions, multithreading);
@@ -602,7 +604,7 @@ void TMVA::MethodDNN::Train()
 
          // initialize weights
          fNet.initializeWeights (fWeightInitializationStrategy, 
-                                 std::back_inserter (fWeightBucket), layerWeightNumber);
+                                 std::back_inserter (fWeightBucket), layerWeightNumber, fBucketSize);
       }
 
 
@@ -659,7 +661,7 @@ Double_t TMVA::MethodDNN::GetMvaValue( Double_t* /*errLower*/, Double_t* /*errUp
    const std::vector<Float_t>& inputValues = GetEvent ()->GetValues ();
    std::vector<double> input (inputValues.begin (), inputValues.end ());
    input.push_back (1.0); // bias node
-   std::vector<double> output = fNet.compute (input, fWeightBucket);
+   std::vector<double> output = fNet.compute (input, fWeightBucket, fBucketSize);
    if (output.empty ())
       return 0.0;
 
@@ -680,7 +682,7 @@ const std::vector<Float_t> &TMVA::MethodDNN::GetRegressionValues()
    const std::vector<Float_t>& inputValues = ev->GetValues ();
    std::vector<double> input (inputValues.begin (), inputValues.end ());
    input.push_back (1.0); // bias node
-   std::vector<double> output = fNet.compute (input, fWeightBucket);
+   std::vector<double> output = fNet.compute (input, fWeightBucket, fBucketSize);
 
    if (fRegressionReturnVal == NULL) fRegressionReturnVal = new std::vector<Float_t>();
    fRegressionReturnVal->clear();
@@ -724,7 +726,7 @@ const std::vector<Float_t> &TMVA::MethodDNN::GetMulticlassValues()
    const std::vector<Float_t>& inputValues = GetEvent ()->GetValues ();
    std::vector<double> input (inputValues.begin (), inputValues.end ());
    input.push_back (1.0); // bias node
-   std::vector<double> output = fNet.compute (input, fWeightBucket);
+   std::vector<double> output = fNet.compute (input, fWeightBucket, fBucketSize);
 
    // check the output of the network
  
@@ -1100,9 +1102,9 @@ void TMVA::MethodDNN::checkGradients ()
    fNet.addLayer (DNN::Layer (outputSize, DNN::EnumFunction::LINEAR, DNN::ModeOutputValues::SIGMOID)); 
    fNet.setErrorFunction (DNN::ModeErrorFunction::CROSSENTROPY);
    //    net.setErrorFunction (ModeErrorFunction::SUMOFSQUARES);
-
+   const int BUCKET_SIZE = 8;
    size_t numWeights = fNet.numWeights (inputSize);
-   std::vector<double> weightBucket (numWeights / TMVA::DNN::BUCKET_SIZE);
+   std::vector<double> weightBucket (numWeights / BUCKET_SIZE);
    //weights.at (0) = 1000213.2;
 
    std::vector<Pattern> pattern;
@@ -1122,7 +1124,7 @@ void TMVA::MethodDNN::checkGradients ()
       }
 
 
-   DNN::Settings settings (TString ("checkGradients"), /*_convergenceSteps*/ 15, /*_batchSize*/ 1, /*_testRepetitions*/ 7, /*_factorWeightDecay*/ 0, /*regularization*/ TMVA::DNN::EnumRegularization::NONE);
+   DNN::Settings settings (TString ("checkGradients"), /*_convergenceSteps*/ 15, /*_batchSize*/ 1, /*_testRepetitions*/ 7, /*_factorWeightDecay*/ 0, /*_bucketSize*/ 8, /*regularization*/ TMVA::DNN::EnumRegularization::NONE);
 
    size_t improvements = 0;
    size_t worsenings = 0;
@@ -1131,7 +1133,7 @@ void TMVA::MethodDNN::checkGradients ()
    for (size_t iTest = 0; iTest < 1000; ++iTest)
       {
          TMVA::DNN::uniformDouble (weightBucket, 0.7);
-         std::vector<double> gradientBucket (numWeights / TMVA::DNN::BUCKET_SIZE, 0);
+         std::vector<double> gradientBucket (numWeights / BUCKET_SIZE, 0);
          DNN::Batch batch (begin (pattern), end (pattern));
          DNN::DropContainer dropContainer;
          std::tuple<DNN::Settings&, DNN::Batch&, DNN::DropContainer&> settingsAndBatch (settings, batch, dropContainer);
@@ -1139,11 +1141,11 @@ void TMVA::MethodDNN::checkGradients ()
          std::vector<double> changedWeightBucket;
          changedWeightBucket.assign (weightBucket.begin (), weightBucket.end ());
 
-         int changeWeightPosition = TMVA::DNN::randomInt (numWeights / TMVA::DNN::BUCKET_SIZE);
+         int changeWeightPosition = TMVA::DNN::randomInt (numWeights / BUCKET_SIZE);
          double dEdw = gradientBucket.at (changeWeightPosition);
          while (dEdw == 0.0)
             {
-               changeWeightPosition = TMVA::DNN::randomInt (numWeights / TMVA::DNN::BUCKET_SIZE);
+               changeWeightPosition = TMVA::DNN::randomInt (numWeights / BUCKET_SIZE);
                dEdw = gradientBucket.at (changeWeightPosition);
             }
 
