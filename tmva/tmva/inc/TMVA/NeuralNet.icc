@@ -1384,7 +1384,7 @@ template <typename LAYERDATA>
                     LayerData& currLayerData = (*itCurrLayerData);
                     LayerData& prevLayerData = *(itPrevLayerData);
 
-                    backward (prevLayerData, currLayerData, weightBucket, idxLayer);
+                    backward (prevLayerData, currLayerData, weightBucket, idxLayer-1);
 
                     // the factorWeightDecay has to be scaled by 1/n where n is the number of weights (synapses)
                     // because L1 and L2 regularization
@@ -1393,7 +1393,7 @@ template <typename LAYERDATA>
                     //
                     // L1 : -factorWeightDecay*sgn(w)/numWeights
                     // L2 : -factorWeightDecay/numWeights
-                    update (prevLayerData, currLayerData, settings.factorWeightDecay ()/totalNumWeights, settings.regularization (), weightBucket, gradientBucket, idxLayer);
+                    update (prevLayerData, currLayerData, settings.factorWeightDecay ()/totalNumWeights, settings.regularization (), weightBucket, gradientBucket, idxLayer-1);
                 }
             }
         }
