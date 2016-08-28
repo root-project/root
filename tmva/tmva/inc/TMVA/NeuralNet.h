@@ -62,7 +62,7 @@ namespace TMVA
 
       //    double gaussDoubl (edouble mean, double sigma);
 
-      const int BUCKET_SIZE = 8; // ------------------------------- Declare Bucket Size --------------------------------------------
+      // const int BUCKET_SIZE = 8; // ------------------------------- Declare Bucket Size --------------------------------------------
         /*! \brief Hash initialization
           *
           * 
@@ -268,12 +268,12 @@ namespace TMVA
 
 
       template <typename ItSource, typename ItTarget>
-         void applyWeights (ItSource itSourceBegin, ItSource itSourceEnd, int itWeight, std::vector<double>& weightBucket, size_t layerNumber, ItTarget itTargetBegin, ItTarget itTargetEnd);
+         void applyWeights (ItSource itSourceBegin, ItSource itSourceEnd, int itWeight, std::vector<double>& weightBucket, size_t layerNumber, int BUCKET_SIZE, ItTarget itTargetBegin, ItTarget itTargetEnd);
 
 
 
       template <typename ItSource, typename ItPrev, typename ItDrop>
-          void applyWeightsBackwards (ItSource itCurrBegin, ItSource itCurrEnd, int itWeight, std::vector<double>& weightBucket, size_t layerNumber, ItPrev itPrevBegin, ItPrev itPrevEnd, ItDrop itDrop);
+          void applyWeightsBackwards (ItSource itCurrBegin, ItSource itCurrEnd, int itWeight, std::vector<double>& weightBucket, size_t layerNumber, int BUCKET_SIZE, ItPrev itPrevBegin, ItPrev itPrevEnd, ItDrop itDrop);
 
 
 
@@ -292,7 +292,7 @@ namespace TMVA
          void update (ItSource itSource, ItSource itSourceEnd, 
                       ItDelta itTargetDeltaBegin, ItDelta itTargetDeltaEnd, 
                       ItTargetGradient itTargetGradientBegin, 
-                      int itGradient, std::vector<double>& gradientBucket, size_t layerNumber);
+                      int itGradient, std::vector<double>& gradientBucket, size_t layerNumber, int BUCKET_SIZE);
 
 
 
@@ -301,7 +301,7 @@ namespace TMVA
                       ItDelta itTargetDeltaBegin, ItDelta itTargetDeltaEnd, 
                       ItTargetGradient itTargetGradientBegin, 
                       int itGradient, std::vector<double>& gradientBucket,
-                      int itWeight, std::vector<double>& weightBucket, double& factorWeightDecay, size_t layerNumber);
+                      int itWeight, std::vector<double>& weightBucket, double& factorWeightDecay, size_t layerNumber, int BUCKET_SIZE);
 
 
 
@@ -376,7 +376,7 @@ namespace TMVA
           *                    called
           */
          template <typename Function, typename PassThrough>
-            double operator() (Function& fitnessFunction, std::vector<double>& weightBucket, PassThrough& passThrough, const size_t& numWeights, std::vector<int>& layerWeightNumber);
+            double operator() (Function& fitnessFunction, std::vector<double>& weightBucket, PassThrough& passThrough, const size_t& numWeights, std::vector<int>& layerWeightNumber, const int& BUCKET_SIZE);
 
 
          double m_alpha; ///< internal parameter (learningRate)
@@ -420,7 +420,7 @@ namespace TMVA
 
 
       template <typename EnumRegularization>
-         double weightDecay (double error, int currLayerWeightIndex, int nextLayerWeightIndex, std::vector<double>& weightBucket, double factorWeightDecay, EnumRegularization eRegularization, size_t layerNumber);
+         double weightDecay (double error, int currLayerWeightIndex, int nextLayerWeightIndex, std::vector<double>& weightBucket, double factorWeightDecay, EnumRegularization eRegularization, size_t layerNumber, int BUCKET_SIZE);
 
 
 
@@ -726,15 +726,15 @@ namespace TMVA
 
 
       template <typename LAYERDATA>
-         void forward (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, std::vector<double>& weightBucket, size_t layerNumber);
+         void forward (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, std::vector<double>& weightBucket, size_t layerNumber, int BUCKET_SIZE);
 
 
       template <typename LAYERDATA>
-         void backward (LAYERDATA& prevLayerData, LAYERDATA& currLayerData, std::vector<double>& weightBucket, size_t layerNumber);
+         void backward (LAYERDATA& prevLayerData, LAYERDATA& currLayerData, std::vector<double>& weightBucket, size_t layerNumber, int BUCKET_SIZE);
 
 
       template <typename LAYERDATA>
-         void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double factorWeightDecay, EnumRegularization regularization, std::vector<double>& weightBucket, std::vector<double>& gradientBucket, size_t layerNumber);
+         void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double factorWeightDecay, EnumRegularization regularization, std::vector<double>& weightBucket, std::vector<double>& gradientBucket, size_t layerNumber, int BUCKET_SIZE);
 
 
 
@@ -752,7 +752,7 @@ namespace TMVA
           */
          Settings (TString name,
                    size_t _convergenceSteps = 15, size_t _batchSize = 10, size_t _testRepetitions = 7, 
-                   double _factorWeightDecay = 1e-5, TMVA::DNN::EnumRegularization _regularization = TMVA::DNN::EnumRegularization::NONE,
+                   double _factorWeightDecay = 1e-5, int _bucketSize = 8, TMVA::DNN::EnumRegularization _regularization = TMVA::DNN::EnumRegularization::NONE,
                    MinimizerType _eMinimizerType = MinimizerType::fSteepest, 
                    double _learningRate = 1e-5, double _momentum = 0.3, 
                    int _repetitions = 3,
@@ -788,6 +788,7 @@ namespace TMVA
          double momentum () const { return fMomentum; } ///< get the momentum (e.g. for SGD)
          int repetitions () const { return fRepetitions; } ///< how many steps have to be gone until the batch is changed
          MinimizerType minimizerType () const { return fMinimizerType; } ///< which minimizer shall be used (e.g. SGD)
+         int bucketSize () const { return fBucketSize; } ///< Number of Weight Buckets per Layer
 
 
 
@@ -869,6 +870,7 @@ namespace TMVA
          double fMomentum;
          int fRepetitions;
          MinimizerType fMinimizerType;
+         int fBucketSize;
 
          size_t m_convergenceCount;
          size_t m_maxConvergenceCount;
@@ -916,11 +918,11 @@ namespace TMVA
           */
          ClassificationSettings (TString name,
                                  size_t _convergenceSteps = 15, size_t _batchSize = 10, size_t _testRepetitions = 7, 
-                                 double _factorWeightDecay = 1e-5, EnumRegularization _regularization = EnumRegularization::NONE, 
+                                 double _factorWeightDecay = 1e-5, int _bucketSize = 8, EnumRegularization _regularization = EnumRegularization::NONE, 
                                  size_t _scaleToNumEvents = 0, MinimizerType _eMinimizerType = MinimizerType::fSteepest, 
                                  double _learningRate = 1e-5, double _momentum = 0.3, int _repetitions = 3,
                                  bool _useMultithreading = true)
-            : Settings (name, _convergenceSteps, _batchSize, _testRepetitions, _factorWeightDecay, 
+            : Settings (name, _convergenceSteps, _batchSize, _testRepetitions, _factorWeightDecay, _bucketSize, 
                         _regularization, _eMinimizerType, _learningRate, _momentum, _repetitions, _useMultithreading)
             , m_ams ()
             , m_sumOfSigWeights (0)
@@ -1091,6 +1093,7 @@ namespace TMVA
             : m_eErrorFunction (ModeErrorFunction::SUMOFSQUARES)
             , m_sizeInput (0)
             , m_layers ()
+            , m_bucketSize (8)
             {
             }
 
@@ -1102,6 +1105,7 @@ namespace TMVA
             : m_eErrorFunction (other.m_eErrorFunction)
             , m_sizeInput (other.m_sizeInput)
             , m_layers (other.m_layers)
+            , m_bucketSize (other.m_bucketSize)
             {
             }
 
@@ -1166,13 +1170,13 @@ namespace TMVA
 
     template <typename LayerContainer>
         void forwardPattern (const LayerContainer& _layers,
-                             std::vector<LayerData>& layerData, std::vector<double>& weightBucket) const;
+                             std::vector<LayerData>& layerData, std::vector<double>& weightBucket, int BUCKET_SIZE) const;
 
          size_t numWeights (size_t trainingStartLayer = 0) const; ///< returns the number of weights in this net
     size_t numNodes   (size_t trainingStartLayer = 0) const; ///< returns the number of nodes in this net
 
           template <typename Weights>
-            std::vector<double> compute (const std::vector<double>& input, Weights& weightBucket) const; ///< compute the net with the given input and the given weights
+            std::vector<double> compute (const std::vector<double>& input, Weights& weightBucket, int BUCKET_SIZE) const; ///< compute the net with the given input and the given weights
 
          template <typename PassThrough>
             double operator() (PassThrough& settingsAndBatch, std::vector<double>& weightBucket) const; ///< execute computation of the DNN for one mini-batch (used by the minimizer); no computation of gradients
@@ -1273,7 +1277,7 @@ namespace TMVA
 
          template <typename OutIterator>
             void initializeWeights (WeightInitializationStrategy eInitStrategy, 
-                                    OutIterator itWeight, std::vector<int>& layerWeightNumber); ///< initialize the weights with the given strategy
+                                    OutIterator itWeight, std::vector<int>& layerWeightNumber, int BUCKET_SIZE); ///< initialize the weights with the given strategy
 
 
       protected:
@@ -1287,6 +1291,7 @@ namespace TMVA
          size_t m_sizeInput; ///< input size of this DNN
          size_t m_sizeOutput; ///< outut size of this DNN
          std::vector<Layer> m_layers; ///< layer-structure-data
+         int m_bucketSize;
       };
 
 
