@@ -3518,7 +3518,7 @@ TList *TClass::GetListOfEnums(Bool_t load /* = kTRUE */)
 
    R__LOCKGUARD(gInterpreterMutex);
    if (fEnums.load()) {
-      if (load) (*fEnums).Load();
+      (*fEnums).Load();
       return fEnums.load();
    }
    if (fProperty == -1) Property();
