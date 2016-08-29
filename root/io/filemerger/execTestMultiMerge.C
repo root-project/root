@@ -68,21 +68,21 @@ int testSimpleFile(const char *filename, Long64_t entries, Int_t compSetting, Lo
 int execTestMultiMerge()
 {
    Int_t result = 0;
-   if (!result) result = testMergedFile("mfile1-4.root",1,4907);
-   if (!result) result = testMergedFile("mzfile1-4.root",206,4962);
+   if (!result) result = testMergedFile("mfile1-4.root",1,4933);
+   if (!result) result = testMergedFile("mzfile1-4.root",206,4988);
 
-   if (!result) result = testSimpleFile("hsimple.root",25000,1,414377,1);
-   if (!result) result = testSimpleFile("hsimple9.root",25000,9,431992,3);
-   if (!result) result = testSimpleFile("hsimple9x2.root",2*25000,9,851088,9);
-   if (!result) result = testSimpleFile("hsimple209.root",25000,209,394044,8);
-   if (!result) result = testSimpleFile("hsimpleK.root",5*25000,209,1917366,8);
+   if (!result) result = testSimpleFile("hsimple.root",25000,1,414397,1);
+   if (!result) result = testSimpleFile("hsimple9.root",25000,9,432015,3);
+   if (!result) result = testSimpleFile("hsimple9x2.root",2*25000,9,851108,9);
+   if (!result) result = testSimpleFile("hsimple209.root",25000,209,394053,8);
+   if (!result) result = testSimpleFile("hsimpleK.root",5*25000,209,1917387,8);
    if (lzma_version_number() < 50020010) {
       // lzma v5.2.0 produced larger files ...
       // but even older version (eg v5.0.0) produced smaller files ...
-      if (!result) result = testSimpleFile("hsimpleK202.root",5*25000,202,1938692,700);
+      if (!result) result = testSimpleFile("hsimpleK202.root",5*25000,202,1938705,700);
    } else {
-      if (!result) result = testSimpleFile("hsimpleK202.root",5*25000,202,1938692,16);
+      if (!result) result = testSimpleFile("hsimpleK202.root",5*25000,202,1938705,16);
    } 
-   if (!result) result = testSimpleFile("hsimpleF.root",5*25000,9,2108405,3);
+   if (!result) result = testSimpleFile("hsimpleF.root",5*25000,9,2108425,3);
    return result;
 }
