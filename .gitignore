@@ -125,6 +125,7 @@ AutoDict_*.cxx
 /python/ttree/test.root
 
 /root/aclic/global/idDict*
+/root/aclic/misc/temp
 /root/collection/tbits
 /root/collection/TExMap
 /root/collection/TMap
