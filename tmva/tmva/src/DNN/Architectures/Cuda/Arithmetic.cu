@@ -214,11 +214,11 @@ void TCuda<float>::ScaleAdd(TCudaMatrix<float> & B,
                             const TCudaMatrix<float> & A,
                             float alpha)
 {
-   cudaStream_t s = 0; //A.GetComputeStream();
+   cudaStream_t s = 0;
+   cublasSetStream(A.GetCublasHandle(), s);
    cublasSaxpy(A.GetCublasHandle(), A.GetNoElements(), &alpha,
                A.GetDataPointer(), 1,
                B.GetDataPointer(), 1);
-   //B.SetComputeStream(s);
 }
 
 //____________________________________________________________________________
@@ -227,11 +227,11 @@ void TCuda<double>::ScaleAdd(TCudaMatrix<double> & B,
                              const TCudaMatrix<double> & A,
                              double alpha)
 {
-   cudaStream_t s = 0; //A.GetComputeStream();
+   cudaStream_t s = 0;
+   cublasSetStream(A.GetCublasHandle(), s);
    cublasDaxpy(A.GetCublasHandle(), A.GetNoElements(), &alpha,
                A.GetDataPointer(), 1,
                B.GetDataPointer(), 1);
-   //B.SetComputeStream(s);
 }
 
 } // DNN

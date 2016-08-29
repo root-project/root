@@ -798,7 +798,7 @@ void TMVA::MethodDNN::TrainGpu()
             std::chrono::duration<double> elapsed_seconds = end - start;
             double seconds = elapsed_seconds.count();
             double nFlops  = (double) (settings.testInterval * batchesInEpoch);
-            nFlops *= net.GetNFlops() * 1e-9 / seconds;
+            nFlops *= net.GetNFlops() * 1e-9;
 
             converged = minimizer.HasConverged(testError);
             start = std::chrono::system_clock::now();
@@ -947,7 +947,7 @@ void TMVA::MethodDNN::TrainCpu()
             std::chrono::duration<double> elapsed_seconds = end - start;
             double seconds = elapsed_seconds.count();
             double nFlops  = (double) (settings.testInterval * batchesInEpoch);
-            nFlops *= net.GetNFlops() * 1e-9 / seconds;
+            nFlops *= net.GetNFlops() * 1e-9;
 
             converged = minimizer.HasConverged(testError);
             start = std::chrono::system_clock::now();

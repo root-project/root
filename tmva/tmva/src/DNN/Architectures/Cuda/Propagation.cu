@@ -22,6 +22,7 @@
 namespace TMVA {
 namespace DNN  {
 
+//____________________________________________________________________________
 template<>
 void TCuda<float>::MultiplyTranspose(TCudaMatrix<float> &output,
                                      const TCudaMatrix<float> &input,
@@ -46,6 +47,7 @@ void TCuda<float>::MultiplyTranspose(TCudaMatrix<float> &output,
    output.SetComputeStream(s);
 }
 
+//____________________________________________________________________________
 template<>
 void TCuda<double>::MultiplyTranspose(TCudaMatrix<double> &output,
                                       const TCudaMatrix<double> &input,
@@ -70,6 +72,7 @@ void TCuda<double>::MultiplyTranspose(TCudaMatrix<double> &output,
    output.SetComputeStream(s);
 }
 
+//____________________________________________________________________________
 template<typename AFloat>
 void TCuda<AFloat>::AddRowWise(TCudaMatrix<AFloat> &Weights,
                                const TCudaMatrix<AFloat> &theta)
@@ -84,6 +87,7 @@ void TCuda<AFloat>::AddRowWise(TCudaMatrix<AFloat> &Weights,
        Weights.GetNcols());
 }
 
+//____________________________________________________________________________
 template<typename AFloat>
 void TCuda<AFloat>::Backward(TCudaMatrix<AFloat> & activation_gradients_backward,
                              TCudaMatrix<AFloat> & weight_gradients,
@@ -113,6 +117,7 @@ void TCuda<AFloat>::Backward(TCudaMatrix<AFloat> & activation_gradients_backward
 
 }
 
+//____________________________________________________________________________
 template<typename AFloat>
 void TCuda<AFloat>::Copy(TCudaMatrix<AFloat> & B,
                              const TCudaMatrix<AFloat> & A)
