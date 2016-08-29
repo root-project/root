@@ -1,5 +1,59 @@
 # JSROOT changelog
 
+## Changes in 4.6.0
+1. Improvements in TGeo drawings
+   - support of large (~10M volumes) models, only most significant volumes are shown
+   - one could activate several clip planes (only with WebGL)
+   - interaction with object browser to change visibility flags or focus on selected volume
+   - support of floating browser for TGeo objects 
+   - intensive use of HTML Worker to offload computation tasks and keep interactivity   
+   - enable more details when changing camera position/zoom
+   - better and faster build of composite shapes
+2. Improvements in histograms 3D drawing
+   - all lego options: lego1..lego4, combined with 'fb', 'bb', '0' or 'z'
+   - support axis labels on lego plots
+   - support lego plots for TH1 
+3. Improvements in all 3D graphics
+   - upgrade three.js to r79
+   - use of THREE.BufferGeometry for all components
+   - significant (up to factor 10) performance improvement
+4. Implement box and hbox draw options for TH1 class
+5. Implement drawing of axes ticks on opposite side (when fTickx/y specified)  
+6. Preliminary support of candle plot (many options to be implemented)
+7. Update draw attributes (fill/line/position) when monitor objects  
+
+
+## Changes in 4.5.3
+1. Fix - position of TFrame in canvas/pad
+2. Fix - use histogram fMinimum/fMaximum when creating color palette
+3. Fix - correctly draw empty th2 bins when zmin<0 is specified  
+4. Fix - limit th2 text output size 
+5. Fix - use histogram fMinimum/fMaximum when drawing z axis in lego plot 
+6. Fix - error in TGeoCtub shape creation
+7. Fix - error in pcon/pgon shapes when Rmin===0 
+
+
+## Changes in 4.5.1
+1. Fix - correctly handle ^2..^9 in TFormula equations
+2. Fix - support TMath::Gaus in TFormula 
+3. Fix - correctly display ^2 and ^3 in SVG text output 
+4. Fix - do not show tooltips for empty TProfile bins
+5. Fix - statbox toggling was not working on subpads
+6. Fix - positioning of 3D objects in Webkit browsers in complex layouts
+7. Fix - difference in TF1 between ROOT5/6 (#54)  
+ 
+
+## Changes in 4.5.0
+1. Zooming with mouse wheel
+2. Context menus for many different objects attributes are provided
+3. Context menu for every drawn object can be activated via toolbar button 
+4. Support browsing of TTask and derived classes (#40)
+5. Apply user range for drawing TH1/TH2 histograms, also when superimposed (#44) 
+6. Implement scaling factor like x10^3 on the vertical axes 
+7. Provide shortcut buttons for each subpad
+8. Implement simple drawing for TBox, TWbox, TSliderBox classes
+
+
 ## Changes in 4.4.4
 1. Fix - toggling of statbox was not working in all situations 
 2. Fix - for mouse rect zooming use only left mouse button
@@ -31,7 +85,7 @@
 4. Fix - draw histogram bins on frame boundary
 5. Fix - use alternative color for shapes with default black color  
 6. Fix - correctly handle pcon/pgon shape with rmin==rmax on top or bottom side
-   
+  
 
 ## Changes in 4.4
 1. Fix faces orientation for all TGeo shapes. 

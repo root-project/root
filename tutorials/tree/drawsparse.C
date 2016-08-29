@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_tree
-///
+/// \notebook
 /// Convert a THnSparse to a TTree using efficient iteration through the THnSparse
 /// and draw a THnSparse using TParallelCoord.
 /// The plot will contain one line for each filled bin,
@@ -101,10 +101,6 @@ void drawsparse_draw(THnSparse* h)
 void drawsparse()
 {
    // create a THnSparse and draw it.
-
-#ifdef __CINT__
-   printf("For performance reasons we advise to run \".x drawsparse.C+\"\n");
-#endif
 
    const Int_t ndims = 8;
    Int_t bins[ndims] = {10, 10, 5, 30, 10, 4, 18, 12};

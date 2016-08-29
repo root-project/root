@@ -1726,46 +1726,58 @@ Parser::ParseCXXTypeConstructExpression(const DeclSpec &DS) {
 /// [GNU]   type-specifier-seq declarator simple-asm-expr[opt] attributes[opt]
 ///             '=' assignment-expression
 ///
-/// \param ExprOut if the condition was parsed as an expression, the parsed
-/// expression.
+/// In C++1z, a condition may in some contexts be preceded by an
+/// optional init-statement. This function will parse that too.
 ///
-/// \param DeclOut if the condition was parsed as a declaration, the parsed
-/// declaration.
+/// \param InitStmt If non-null, an init-statement is permitted, and if present
+/// will be parsed and stored here.
 ///
 /// \param Loc The location of the start of the statement that requires this
 /// condition, e.g., the "for" in a for loop.
 ///
-/// \param ConvertToBoolean Whether the condition expression should be
-/// converted to a boolean value.
-///
-/// \returns true if there was a parsing, false otherwise.
-bool Parser::ParseCXXCondition(ExprResult &ExprOut,
-                               Decl *&DeclOut,
-                               SourceLocation Loc,
-                               bool ConvertToBoolean) {
+/// \returns The parsed condition.
+Sema::ConditionResult Parser::ParseCXXCondition(StmtResult *InitStmt,
+                                                SourceLocation Loc,
+                                                Sema::ConditionKind CK) {
   if (Tok.is(tok::code_completion)) {
     Actions.CodeCompleteOrdinaryName(getCurScope(), Sema::PCC_Condition);
     cutOffParsing();
-    return true;
+    return Sema::ConditionError();
   }
 
   ParsedAttributesWithRange attrs(AttrFactory);
   MaybeParseCXX11Attributes(attrs);
 
-  if (!isCXXConditionDeclaration()) {
+  // Determine what kind of thing we have.
+  switch (isCXXConditionDeclarationOrInitStatement(InitStmt)) {
+  case ConditionOrInitStatement::Expression: {
     ProhibitAttributes(attrs);
 
     // Parse the expression.
-    ExprOut = ParseExpression(); // expression
-    DeclOut = nullptr;
-    if (ExprOut.isInvalid())
-      return true;
+    ExprResult Expr = ParseExpression(); // expression
+    if (Expr.isInvalid())
+      return Sema::ConditionError();
 
-    // If required, convert to a boolean value.
-    if (ConvertToBoolean)
-      ExprOut
-        = Actions.ActOnBooleanCondition(getCurScope(), Loc, ExprOut.get());
-    return ExprOut.isInvalid();
+    if (InitStmt && Tok.is(tok::semi)) {
+      *InitStmt = Actions.ActOnExprStmt(Expr.get());
+      ConsumeToken();
+      return ParseCXXCondition(nullptr, Loc, CK);
+    }
+
+    return Actions.ActOnCondition(getCurScope(), Loc, Expr.get(), CK);
+  }
+
+  case ConditionOrInitStatement::InitStmtDecl: {
+    SourceLocation DeclStart = Tok.getLocation(), DeclEnd;
+    DeclGroupPtrTy DG = ParseSimpleDeclaration(
+        Declarator::InitStmtContext, DeclEnd, attrs, /*RequireSemi=*/true);
+    *InitStmt = Actions.ActOnDeclStmt(DG, DeclStart, DeclEnd);
+    return ParseCXXCondition(nullptr, Loc, CK);
+  }
+
+  case ConditionOrInitStatement::ConditionDecl:
+  case ConditionOrInitStatement::Error:
+    break;
   }
 
   // type-specifier-seq
@@ -1783,7 +1795,7 @@ bool Parser::ParseCXXCondition(ExprResult &ExprOut,
     ExprResult AsmLabel(ParseSimpleAsm(&Loc));
     if (AsmLabel.isInvalid()) {
       SkipUntil(tok::semi, StopAtSemi);
-      return true;
+      return Sema::ConditionError();
     }
     DeclaratorInfo.setAsmLabel(AsmLabel.get());
     DeclaratorInfo.SetRangeEnd(Loc);
@@ -1795,8 +1807,9 @@ bool Parser::ParseCXXCondition(ExprResult &ExprOut,
   // Type-check the declaration itself.
   DeclResult Dcl = Actions.ActOnCXXConditionDeclaration(getCurScope(), 
                                                         DeclaratorInfo);
-  DeclOut = Dcl.get();
-  ExprOut = ExprError();
+  if (Dcl.isInvalid())
+    return Sema::ConditionError();
+  Decl *DeclOut = Dcl.get();
 
   // '=' assignment-expression
   // If a '==' or '+=' is found, suggest a fixit to '='.
@@ -1816,12 +1829,11 @@ bool Parser::ParseCXXCondition(ExprResult &ExprOut,
     SourceLocation LParen = ConsumeParen(), RParen = LParen;
     if (SkipUntil(tok::r_paren, StopAtSemi | StopBeforeMatch))
       RParen = ConsumeParen();
-    Diag(DeclOut ? DeclOut->getLocation() : LParen,
+    Diag(DeclOut->getLocation(),
          diag::err_expected_init_in_condition_lparen)
       << SourceRange(LParen, RParen);
   } else {
-    Diag(DeclOut ? DeclOut->getLocation() : Tok.getLocation(),
-         diag::err_expected_init_in_condition);
+    Diag(DeclOut->getLocation(), diag::err_expected_init_in_condition);
   }
 
   if (!InitExpr.isInvalid())
@@ -1830,12 +1842,8 @@ bool Parser::ParseCXXCondition(ExprResult &ExprOut,
   else
     Actions.ActOnInitializerError(DeclOut);
 
-  // FIXME: Build a reference to this declaration? Convert it to bool?
-  // (This is currently handled by Sema).
-
   Actions.FinalizeDeclaration(DeclOut);
-  
-  return false;
+  return Actions.ActOnConditionVariable(DeclOut, Loc, CK);
 }
 
 /// ParseCXXSimpleTypeSpecifier - [C++ 7.1.5.2] Simple type specifiers.

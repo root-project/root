@@ -315,8 +315,8 @@ void X86FrameLowering::emitSPUpdate(MachineBasicBlock &MBB,
 }
 
 MachineInstrBuilder X86FrameLowering::BuildStackAdjustment(
-    MachineBasicBlock &MBB, MachineBasicBlock::iterator MBBI, DebugLoc DL,
-    int64_t Offset, bool InEpilogue) const {
+    MachineBasicBlock &MBB, MachineBasicBlock::iterator MBBI,
+    const DebugLoc &DL, int64_t Offset, bool InEpilogue) const {
   assert(Offset != 0 && "zero offset stack adjustment requested");
 
   // On Atom, using LEA to adjust SP is preferred, but using it in the epilogue
@@ -411,18 +411,18 @@ int X86FrameLowering::mergeSPUpdates(MachineBasicBlock &MBB,
 }
 
 void X86FrameLowering::BuildCFI(MachineBasicBlock &MBB,
-                                MachineBasicBlock::iterator MBBI, DebugLoc DL,
-                                MCCFIInstruction CFIInst) const {
+                                MachineBasicBlock::iterator MBBI,
+                                const DebugLoc &DL,
+                                const MCCFIInstruction &CFIInst) const {
   MachineFunction &MF = *MBB.getParent();
   unsigned CFIIndex = MF.getMMI().addFrameInst(CFIInst);
   BuildMI(MBB, MBBI, DL, TII.get(TargetOpcode::CFI_INSTRUCTION))
       .addCFIIndex(CFIIndex);
 }
 
-void
-X86FrameLowering::emitCalleeSavedFrameMoves(MachineBasicBlock &MBB,
-                                            MachineBasicBlock::iterator MBBI,
-                                            DebugLoc DL) const {
+void X86FrameLowering::emitCalleeSavedFrameMoves(
+    MachineBasicBlock &MBB, MachineBasicBlock::iterator MBBI,
+    const DebugLoc &DL) const {
   MachineFunction &MF = *MBB.getParent();
   MachineFrameInfo *MFI = MF.getFrameInfo();
   MachineModuleInfo &MMI = MF.getMMI();
@@ -447,7 +447,7 @@ X86FrameLowering::emitCalleeSavedFrameMoves(MachineBasicBlock &MBB,
 MachineInstr *X86FrameLowering::emitStackProbe(MachineFunction &MF,
                                                MachineBasicBlock &MBB,
                                                MachineBasicBlock::iterator MBBI,
-                                               DebugLoc DL,
+                                               const DebugLoc &DL,
                                                bool InProlog) const {
   const X86Subtarget &STI = MF.getSubtarget<X86Subtarget>();
   if (STI.isTargetWindowsCoreCLR()) {
@@ -487,8 +487,8 @@ void X86FrameLowering::inlineStackProbe(MachineFunction &MF,
 }
 
 MachineInstr *X86FrameLowering::emitStackProbeInline(
-  MachineFunction &MF, MachineBasicBlock &MBB,
-  MachineBasicBlock::iterator MBBI, DebugLoc DL, bool InProlog) const {
+    MachineFunction &MF, MachineBasicBlock &MBB,
+    MachineBasicBlock::iterator MBBI, const DebugLoc &DL, bool InProlog) const {
   const X86Subtarget &STI = MF.getSubtarget<X86Subtarget>();
   assert(STI.is64Bit() && "different expansion needed for 32 bit");
   assert(STI.isTargetWindowsCoreCLR() && "custom expansion expects CoreCLR");
@@ -704,7 +704,7 @@ MachineInstr *X86FrameLowering::emitStackProbeInline(
 
 MachineInstr *X86FrameLowering::emitStackProbeCall(
     MachineFunction &MF, MachineBasicBlock &MBB,
-    MachineBasicBlock::iterator MBBI, DebugLoc DL, bool InProlog) const {
+    MachineBasicBlock::iterator MBBI, const DebugLoc &DL, bool InProlog) const {
   bool IsLargeCodeModel = MF.getTarget().getCodeModel() == CodeModel::Large;
 
   unsigned CallOp;
@@ -768,7 +768,7 @@ MachineInstr *X86FrameLowering::emitStackProbeCall(
 
 MachineInstr *X86FrameLowering::emitStackProbeInlineStub(
     MachineFunction &MF, MachineBasicBlock &MBB,
-    MachineBasicBlock::iterator MBBI, DebugLoc DL, bool InProlog) const {
+    MachineBasicBlock::iterator MBBI, const DebugLoc &DL, bool InProlog) const {
 
   assert(InProlog && "ChkStkStub called outside prolog!");
 
@@ -806,7 +806,7 @@ uint64_t X86FrameLowering::calculateMaxStackAlign(const MachineFunction &MF) con
 
 void X86FrameLowering::BuildStackAlignAND(MachineBasicBlock &MBB,
                                           MachineBasicBlock::iterator MBBI,
-                                          DebugLoc DL, unsigned Reg,
+                                          const DebugLoc &DL, unsigned Reg,
                                           uint64_t MaxAlign) const {
   uint64_t Val = -MaxAlign;
   unsigned AndOp = getANDriOpcode(Uses64BitFramePtr, Val);
@@ -1281,7 +1281,7 @@ void X86FrameLowering::emitPrologue(MachineFunction &MF,
   }
 
   while (MBBI != MBB.end() && MBBI->getFlag(MachineInstr::FrameSetup)) {
-    const MachineInstr *FrameInstr = &*MBBI;
+    const MachineInstr &FrameInstr = *MBBI;
     ++MBBI;
 
     if (NeedsWinCFI) {
@@ -1433,11 +1433,10 @@ static bool isFuncletReturnInstr(MachineInstr *MI) {
 unsigned
 X86FrameLowering::getPSPSlotOffsetFromSP(const MachineFunction &MF) const {
   const WinEHFuncInfo &Info = *MF.getWinEHFuncInfo();
-  // getFrameIndexReferenceFromSP has an out ref parameter for the stack
-  // pointer register; pass a dummy that we ignore
   unsigned SPReg;
-  int Offset = getFrameIndexReferenceFromSP(MF, Info.PSPSymFrameIdx, SPReg);
-  assert(Offset >= 0);
+  int Offset = getFrameIndexReferencePreferSP(MF, Info.PSPSymFrameIdx, SPReg,
+                                              /*IgnoreSPUpdates*/ true);
+  assert(Offset >= 0 && SPReg == TRI->getStackRegister());
   return static_cast<unsigned>(Offset);
 }
 
@@ -1721,58 +1720,61 @@ int X86FrameLowering::getFrameIndexReference(const MachineFunction &MF, int FI,
   return Offset + FPDelta;
 }
 
-// Simplified from getFrameIndexReference keeping only StackPointer cases
-int X86FrameLowering::getFrameIndexReferenceFromSP(const MachineFunction &MF,
-                                                   int FI,
-                                                   unsigned &FrameReg) const {
+int
+X86FrameLowering::getFrameIndexReferencePreferSP(const MachineFunction &MF,
+                                                 int FI, unsigned &FrameReg,
+                                                 bool IgnoreSPUpdates) const {
+
   const MachineFrameInfo *MFI = MF.getFrameInfo();
   // Does not include any dynamic realign.
   const uint64_t StackSize = MFI->getStackSize();
-  {
-#ifndef NDEBUG
-    // LLVM arranges the stack as follows:
-    //   ...
-    //   ARG2
-    //   ARG1
-    //   RETADDR
-    //   PUSH RBP   <-- RBP points here
-    //   PUSH CSRs
-    //   ~~~~~~~    <-- possible stack realignment (non-win64)
-    //   ...
-    //   STACK OBJECTS
-    //   ...        <-- RSP after prologue points here
-    //   ~~~~~~~    <-- possible stack realignment (win64)
-    //
-    // if (hasVarSizedObjects()):
-    //   ...        <-- "base pointer" (ESI/RBX) points here
-    //   DYNAMIC ALLOCAS
-    //   ...        <-- RSP points here
-    //
-    // Case 1: In the simple case of no stack realignment and no dynamic
-    // allocas, both "fixed" stack objects (arguments and CSRs) are addressable
-    // with fixed offsets from RSP.
-    //
-    // Case 2: In the case of stack realignment with no dynamic allocas, fixed
-    // stack objects are addressed with RBP and regular stack objects with RSP.
-    //
-    // Case 3: In the case of dynamic allocas and stack realignment, RSP is used
-    // to address stack arguments for outgoing calls and nothing else. The "base
-    // pointer" points to local variables, and RBP points to fixed objects.
-    //
-    // In cases 2 and 3, we can only answer for non-fixed stack objects, and the
-    // answer we give is relative to the SP after the prologue, and not the
-    // SP in the middle of the function.
+  // LLVM arranges the stack as follows:
+  //   ...
+  //   ARG2
+  //   ARG1
+  //   RETADDR
+  //   PUSH RBP   <-- RBP points here
+  //   PUSH CSRs
+  //   ~~~~~~~    <-- possible stack realignment (non-win64)
+  //   ...
+  //   STACK OBJECTS
+  //   ...        <-- RSP after prologue points here
+  //   ~~~~~~~    <-- possible stack realignment (win64)
+  //
+  // if (hasVarSizedObjects()):
+  //   ...        <-- "base pointer" (ESI/RBX) points here
+  //   DYNAMIC ALLOCAS
+  //   ...        <-- RSP points here
+  //
+  // Case 1: In the simple case of no stack realignment and no dynamic
+  // allocas, both "fixed" stack objects (arguments and CSRs) are addressable
+  // with fixed offsets from RSP.
+  //
+  // Case 2: In the case of stack realignment with no dynamic allocas, fixed
+  // stack objects are addressed with RBP and regular stack objects with RSP.
+  //
+  // Case 3: In the case of dynamic allocas and stack realignment, RSP is used
+  // to address stack arguments for outgoing calls and nothing else. The "base
+  // pointer" points to local variables, and RBP points to fixed objects.
+  //
+  // In cases 2 and 3, we can only answer for non-fixed stack objects, and the
+  // answer we give is relative to the SP after the prologue, and not the
+  // SP in the middle of the function.
 
-    assert((!MFI->isFixedObjectIndex(FI) || !TRI->needsStackRealignment(MF) ||
-            STI.isTargetWin64()) &&
-           "offset from fixed object to SP is not static");
+  if (MFI->isFixedObjectIndex(FI) && TRI->needsStackRealignment(MF) &&
+      !STI.isTargetWin64())
+    return getFrameIndexReference(MF, FI, FrameReg);
 
-    // We don't handle tail calls, and shouldn't be seeing them either.
-    int TailCallReturnAddrDelta =
-        MF.getInfo<X86MachineFunctionInfo>()->getTCReturnAddrDelta();
-    assert(!(TailCallReturnAddrDelta < 0) && "we don't handle this case!");
-#endif
-  }
+  // If !hasReservedCallFrame the function might have SP adjustement in the
+  // body.  So, even though the offset is statically known, it depends on where
+  // we are in the function.
+  const TargetFrameLowering *TFI = MF.getSubtarget().getFrameLowering();
+  if (!IgnoreSPUpdates && !TFI->hasReservedCallFrame(MF))
+    return getFrameIndexReference(MF, FI, FrameReg);
+
+  // We don't handle tail calls, and shouldn't be seeing them either.
+  assert(MF.getInfo<X86MachineFunctionInfo>()->getTCReturnAddrDelta() >= 0 &&
+         "we don't handle this case!");
 
   // Fill in FrameReg output argument.
   FrameReg = TRI->getStackRegister();
@@ -1891,17 +1893,29 @@ bool X86FrameLowering::spillCalleeSavedRegisters(
     if (!X86::GR64RegClass.contains(Reg) && !X86::GR32RegClass.contains(Reg))
       continue;
 
-    bool isLiveIn = MF.getRegInfo().isLiveIn(Reg);
+    const MachineRegisterInfo &MRI = MF.getRegInfo();
+    bool isLiveIn = MRI.isLiveIn(Reg);
     if (!isLiveIn)
       MBB.addLiveIn(Reg);
+
+    // Decide whether we can add a kill flag to the use.
+    bool CanKill = !isLiveIn;
+    // Check if any subregister is live-in
+    if (CanKill) {
+      for (MCRegAliasIterator AReg(Reg, TRI, false); AReg.isValid(); ++AReg) {
+        if (MRI.isLiveIn(*AReg)) {
+          CanKill = false;
+          break;
+        }
+      }
+    }
 
     // Do not set a kill flag on values that are also marked as live-in. This
     // happens with the @llvm-returnaddress intrinsic and with arguments
     // passed in callee saved registers.
     // Omitting the kill flags is conservatively correct even if the live-in
     // is not used after all.
-    bool isKill = !isLiveIn;
-    BuildMI(MBB, MI, DL, TII.get(Opc)).addReg(Reg, getKillRegState(isKill))
+    BuildMI(MBB, MI, DL, TII.get(Opc)).addReg(Reg, getKillRegState(CanKill))
       .setMIFlag(MachineInstr::FrameSetup);
   }
 
@@ -2296,6 +2310,28 @@ void X86FrameLowering::adjustForSegmentedStacks(
 #endif
 }
 
+/// Lookup an ERTS parameter in the !hipe.literals named metadata node.
+/// HiPE provides Erlang Runtime System-internal parameters, such as PCB offsets
+/// to fields it needs, through a named metadata node "hipe.literals" containing
+/// name-value pairs.
+static unsigned getHiPELiteral(
+    NamedMDNode *HiPELiteralsMD, const StringRef LiteralName) {
+  for (int i = 0, e = HiPELiteralsMD->getNumOperands(); i != e; ++i) {
+    MDNode *Node = HiPELiteralsMD->getOperand(i);
+    if (Node->getNumOperands() != 2) continue;
+    MDString *NodeName = dyn_cast<MDString>(Node->getOperand(0));
+    ValueAsMetadata *NodeVal = dyn_cast<ValueAsMetadata>(Node->getOperand(1));
+    if (!NodeName || !NodeVal) continue;
+    ConstantInt *ValConst = dyn_cast_or_null<ConstantInt>(NodeVal->getValue());
+    if (ValConst && NodeName->getString() == LiteralName) {
+      return ValConst->getZExtValue();
+    }
+  }
+
+  report_fatal_error("HiPE literal " + LiteralName
+                     + " required but not provided");
+}
+
 /// Erlang programs may need a special prologue to handle the stack size they
 /// might need at runtime. That is because Erlang/OTP does not implement a C
 /// stack but uses a custom implementation of hybrid stack/heap architecture.
@@ -2321,7 +2357,14 @@ void X86FrameLowering::adjustForHiPEPrologue(
   assert(&(*MF.begin()) == &PrologueMBB && "Shrink-wrapping not supported yet");
 
   // HiPE-specific values
-  const unsigned HipeLeafWords = 24;
+  NamedMDNode *HiPELiteralsMD = MF.getMMI().getModule()
+    ->getNamedMetadata("hipe.literals");
+  if (!HiPELiteralsMD)
+    report_fatal_error(
+        "Can't generate HiPE prologue without runtime parameters");
+  const unsigned HipeLeafWords
+    = getHiPELiteral(HiPELiteralsMD,
+                     Is64Bit ? "AMD64_LEAF_WORDS" : "X86_LEAF_WORDS");
   const unsigned CCRegisteredArgs = Is64Bit ? 6 : 5;
   const unsigned Guaranteed = HipeLeafWords * SlotSize;
   unsigned CallerStkArity = MF.getFunction()->arg_size() > CCRegisteredArgs ?
@@ -2393,20 +2436,19 @@ void X86FrameLowering::adjustForHiPEPrologue(
 
     unsigned ScratchReg, SPReg, PReg, SPLimitOffset;
     unsigned LEAop, CMPop, CALLop;
+    SPLimitOffset = getHiPELiteral(HiPELiteralsMD, "P_NSP_LIMIT");
     if (Is64Bit) {
       SPReg = X86::RSP;
       PReg  = X86::RBP;
       LEAop = X86::LEA64r;
       CMPop = X86::CMP64rm;
       CALLop = X86::CALL64pcrel32;
-      SPLimitOffset = 0x90;
     } else {
       SPReg = X86::ESP;
       PReg  = X86::EBP;
       LEAop = X86::LEA32r;
       CMPop = X86::CMP32rm;
       CALLop = X86::CALLpcrel32;
-      SPLimitOffset = 0x4c;
     }
 
     ScratchReg = GetScratchRegister(Is64Bit, IsLP64, MF, true);
@@ -2441,7 +2483,9 @@ void X86FrameLowering::adjustForHiPEPrologue(
 }
 
 bool X86FrameLowering::adjustStackWithPops(MachineBasicBlock &MBB,
-    MachineBasicBlock::iterator MBBI, DebugLoc DL, int Offset) const {
+                                           MachineBasicBlock::iterator MBBI,
+                                           const DebugLoc &DL,
+                                           int Offset) const {
 
   if (Offset <= 0)
     return false;
@@ -2662,7 +2706,7 @@ bool X86FrameLowering::enableShrinkWrapping(const MachineFunction &MF) const {
 
 MachineBasicBlock::iterator X86FrameLowering::restoreWin32EHStackPointers(
     MachineBasicBlock &MBB, MachineBasicBlock::iterator MBBI,
-    DebugLoc DL, bool RestoreSP) const {
+    const DebugLoc &DL, bool RestoreSP) const {
   assert(STI.isTargetWindowsMSVC() && "funclets only supported in MSVC env");
   assert(STI.isTargetWin32() && "EBP/ESI restoration only required on win32");
   assert(STI.is32Bit() && !Uses64BitFramePtr &&
@@ -2826,6 +2870,8 @@ void X86FrameLowering::orderFrameObjects(
   // Count the number of uses for each object.
   for (auto &MBB : MF) {
     for (auto &MI : MBB) {
+      if (MI.isDebugValue())
+        continue;
       for (const MachineOperand &MO : MI.operands()) {
         // Check to see if it's a local stack symbol.
         if (!MO.isFI())

@@ -128,6 +128,7 @@ void ASTStmtWriter::VisitAttributedStmt(AttributedStmt *S) {
 
 void ASTStmtWriter::VisitIfStmt(IfStmt *S) {
   VisitStmt(S);
+  Record.push_back(S->isConstexpr());
   Record.AddDeclRef(S->getConditionVariable());
   Record.AddStmt(S->getCond());
   Record.AddStmt(S->getThen());
@@ -749,31 +750,29 @@ void ASTStmtWriter::VisitDesignatedInitExpr(DesignatedInitExpr *E) {
     Record.AddStmt(E->getSubExpr(I));
   Record.AddSourceLocation(E->getEqualOrColonLoc());
   Record.push_back(E->usesGNUSyntax());
-  for (DesignatedInitExpr::designators_iterator D = E->designators_begin(),
-                                             DEnd = E->designators_end();
-       D != DEnd; ++D) {
-    if (D->isFieldDesignator()) {
-      if (FieldDecl *Field = D->getField()) {
+  for (const DesignatedInitExpr::Designator &D : E->designators()) {
+    if (D.isFieldDesignator()) {
+      if (FieldDecl *Field = D.getField()) {
         Record.push_back(serialization::DESIG_FIELD_DECL);
         Record.AddDeclRef(Field);
       } else {
         Record.push_back(serialization::DESIG_FIELD_NAME);
-        Record.AddIdentifierRef(D->getFieldName());
+        Record.AddIdentifierRef(D.getFieldName());
       }
-      Record.AddSourceLocation(D->getDotLoc());
-      Record.AddSourceLocation(D->getFieldLoc());
-    } else if (D->isArrayDesignator()) {
+      Record.AddSourceLocation(D.getDotLoc());
+      Record.AddSourceLocation(D.getFieldLoc());
+    } else if (D.isArrayDesignator()) {
       Record.push_back(serialization::DESIG_ARRAY);
-      Record.push_back(D->getFirstExprIndex());
-      Record.AddSourceLocation(D->getLBracketLoc());
-      Record.AddSourceLocation(D->getRBracketLoc());
+      Record.push_back(D.getFirstExprIndex());
+      Record.AddSourceLocation(D.getLBracketLoc());
+      Record.AddSourceLocation(D.getRBracketLoc());
     } else {
-      assert(D->isArrayRangeDesignator() && "Unknown designator");
+      assert(D.isArrayRangeDesignator() && "Unknown designator");
       Record.push_back(serialization::DESIG_ARRAY_RANGE);
-      Record.push_back(D->getFirstExprIndex());
-      Record.AddSourceLocation(D->getLBracketLoc());
-      Record.AddSourceLocation(D->getEllipsisLoc());
-      Record.AddSourceLocation(D->getRBracketLoc());
+      Record.push_back(D.getFirstExprIndex());
+      Record.AddSourceLocation(D.getLBracketLoc());
+      Record.AddSourceLocation(D.getEllipsisLoc());
+      Record.AddSourceLocation(D.getRBracketLoc());
     }
   }
   Code = serialization::EXPR_DESIGNATED_INIT;
@@ -1219,6 +1218,15 @@ void ASTStmtWriter::VisitCXXConstructExpr(CXXConstructExpr *E) {
   Code = serialization::EXPR_CXX_CONSTRUCT;
 }
 
+void ASTStmtWriter::VisitCXXInheritedCtorInitExpr(CXXInheritedCtorInitExpr *E) {
+  VisitExpr(E);
+  Record.AddDeclRef(E->getConstructor());
+  Record.AddSourceLocation(E->getLocation());
+  Record.push_back(E->constructsVBase());
+  Record.push_back(E->inheritedFromVBase());
+  Code = serialization::EXPR_CXX_INHERITED_CTOR_INIT;
+}
+
 void ASTStmtWriter::VisitCXXTemporaryObjectExpr(CXXTemporaryObjectExpr *E) {
   VisitCXXConstructExpr(E);
   Record.AddTypeSourceInfo(E->getTypeSourceInfo());
@@ -1430,7 +1438,8 @@ void ASTStmtWriter::VisitExprWithCleanups(ExprWithCleanups *E) {
   Record.push_back(E->getNumObjects());
   for (unsigned i = 0, e = E->getNumObjects(); i != e; ++i)
     Record.AddDeclRef(E->getObject(i));
-  
+
+  Record.push_back(E->cleanupsHaveSideEffects());
   Record.AddStmt(E->getSubExpr());
   Code = serialization::EXPR_EXPR_WITH_CLEANUPS;
 }
@@ -2170,6 +2179,10 @@ void ASTStmtWriter::VisitOMPLoopDirective(OMPLoopDirective *D) {
     Record.AddStmt(D->getNextUpperBound());
     Record.AddStmt(D->getNumIterations());
   }
+  if (isOpenMPLoopBoundSharingDirective(D->getDirectiveKind())) {
+    Record.AddStmt(D->getPrevLowerBoundVariable());
+    Record.AddStmt(D->getPrevUpperBoundVariable());
+  }
   for (auto I : D->counters()) {
     Record.AddStmt(I);
   }
@@ -2415,6 +2428,24 @@ void ASTStmtWriter::VisitOMPTargetUpdateDirective(OMPTargetUpdateDirective *D) {
   Record.push_back(D->getNumClauses());
   VisitOMPExecutableDirective(D);
   Code = serialization::STMT_OMP_TARGET_UPDATE_DIRECTIVE;
+}
+
+void ASTStmtWriter::VisitOMPDistributeParallelForDirective(
+    OMPDistributeParallelForDirective *D) {
+  VisitOMPLoopDirective(D);
+  Code = serialization::STMT_OMP_DISTRIBUTE_PARALLEL_FOR_DIRECTIVE;
+}
+
+void ASTStmtWriter::VisitOMPDistributeParallelForSimdDirective(
+    OMPDistributeParallelForSimdDirective *D) {
+  VisitOMPLoopDirective(D);
+  Code = serialization::STMT_OMP_DISTRIBUTE_PARALLEL_FOR_SIMD_DIRECTIVE;
+}
+
+void ASTStmtWriter::VisitOMPDistributeSimdDirective(
+    OMPDistributeSimdDirective *D) {
+  VisitOMPLoopDirective(D);
+  Code = serialization::STMT_OMP_DISTRIBUTE_SIMD_DIRECTIVE;
 }
 
 //===----------------------------------------------------------------------===//

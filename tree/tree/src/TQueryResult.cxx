@@ -190,19 +190,18 @@ void TQueryResult::SaveSelector(const char *selector)
    // If the selector is in a precompiled shared lib (e.g. in a PAR)
    // we just save the name
    TString selname = gSystem->BaseName(selec);
+   fSelecImp->SetName(selname);
    Int_t idx = selname.Index(".");
    if (idx < 0) {
       // Notify
       if (gDebug > 0)
          Info("SaveSelector", "precompiled selector: just save the name");
-      fSelecImp->SetName(selname);
       fSelecImp->SetTitle(selname);
-      fSelecHdr->SetName(selname);
-      fSelecHdr->SetTitle(selname);
    } else {
       // We locate the file and save it in compressed form
       if (idx > -1)
          selname.Remove(idx);
+      fSelecImp->SetTitle(selname);
 
       // Locate the implementation file
       char *selc = gSystem->Which(TROOT::GetMacroPath(), selec, kReadPermission);
@@ -216,7 +215,6 @@ void TQueryResult::SaveSelector(const char *selector)
       // Fill the TMacro instance
       fSelecImp->ReadFile(selc);
       fSelecImp->SetName(gSystem->BaseName(selc));
-      fSelecImp->SetTitle(selname);
 
       // Locate the included header file
       char *p = (char *) strrchr(selc,'.');

@@ -86,9 +86,8 @@ ClassImp(TMVA::MethodBoost)
    TMVA::MethodBoost::MethodBoost( const TString& jobName,
                                    const TString& methodTitle,
                                    DataSetInfo& theData,
-                                   const TString& theOption,
-                                   TDirectory* theTargetDir ) :
-   TMVA::MethodCompositeBase( jobName, Types::kBoost, methodTitle, theData, theOption, theTargetDir )
+                                   const TString& theOption ) :
+   TMVA::MethodCompositeBase( jobName, Types::kBoost, methodTitle, theData, theOption)
    , fBoostNum(0)
    , fDetailedMonitoring(kFALSE)
    , fAdaBoostBeta(0)
@@ -110,9 +109,8 @@ ClassImp(TMVA::MethodBoost)
 ////////////////////////////////////////////////////////////////////////////////
 
 TMVA::MethodBoost::MethodBoost( DataSetInfo& dsi,
-                                const TString& theWeightFile,
-                                TDirectory* theTargetDir )
-   : TMVA::MethodCompositeBase( Types::kBoost, dsi, theWeightFile, theTargetDir )
+                                const TString& theWeightFile)
+   : TMVA::MethodCompositeBase( Types::kBoost, dsi, theWeightFile)
    , fBoostNum(0)
    , fDetailedMonitoring(kFALSE)
    , fAdaBoostBeta(0)
@@ -419,13 +417,16 @@ void TMVA::MethodBoost::Train()
 
 
       // creating the directory of the classifier
-      if (fMonitorBoostedMethod) {
-         methodDir=MethodBaseDir()->GetDirectory(dirName=Form("%s_B%04i",fBoostedMethodName.Data(),fCurrentMethodIdx));
-         if (methodDir==0) {
-            methodDir=BaseDir()->mkdir(dirName,dirTitle=Form("Directory Boosted %s #%04i", fBoostedMethodName.Data(),fCurrentMethodIdx));
-         }
-         fCurrentMethod->SetMethodDir(methodDir);
-         fCurrentMethod->BaseDir()->cd();
+      if(!IsSilentFile())
+      {
+        if (fMonitorBoostedMethod) {
+            methodDir=GetFile()->GetDirectory(dirName=Form("%s_B%04i",fBoostedMethodName.Data(),fCurrentMethodIdx));
+            if (methodDir==0) {
+                methodDir=BaseDir()->mkdir(dirName,dirTitle=Form("Directory Boosted %s #%04i", fBoostedMethodName.Data(),fCurrentMethodIdx));
+            }
+            fCurrentMethod->SetMethodDir(methodDir);
+            fCurrentMethod->BaseDir()->cd();
+        }
       }
 
       // training
@@ -437,13 +438,13 @@ void TMVA::MethodBoost::Train()
       if (fBoostType=="Bagging") Bagging();  // you want also to train the first classifier on a bagged sample
       SingleTrain();
       TMVA::MsgLogger::EnableOutput();
-      fCurrentMethod->WriteMonitoringHistosToFile();
+      if(!IsSilentFile())fCurrentMethod->WriteMonitoringHistosToFile();
       
       // calculate MVA values of current method for all events in training sample
       // (used later on to get 'misclassified events' etc for the boosting
       CalcMVAValues();
 
-      if (fCurrentMethodIdx==0 && fMonitorBoostedMethod) CreateMVAHistorgrams();
+      if(!IsSilentFile()) if (fCurrentMethodIdx==0 && fMonitorBoostedMethod) CreateMVAHistorgrams();
       
       // get ROC integral and overlap integral for single method on
       // training sample if fMethodWeightType == "ByROC" or the user
@@ -663,7 +664,16 @@ void TMVA::MethodBoost::SingleTrain()
 {
    Data()->SetCurrentType(Types::kTraining);
    MethodBase* meth = dynamic_cast<MethodBase*>(GetLastMethod());
-   if (meth) meth->TrainMethod();
+   if (meth){
+       meth->SetSilentFile(IsSilentFile());
+       if(IsModelPersistence()){
+           TString _fFileDir= DataInfo().GetName();
+           _fFileDir+="/"+gConfig().GetIONames().fWeightFileDir;
+           meth->SetWeightFileDir(_fFileDir);
+       }
+       meth->SetModelPersistence(IsModelPersistence());
+       meth->TrainMethod();
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -819,11 +829,14 @@ void TMVA::MethodBoost::FindMVACut(MethodBase *method)
 
    
    Log() << kDEBUG << "(old step) Setting method cut to " <<method->GetSignalReferenceCut()<< Endl;
-   
-   // mvaS ->Delete();  
-   // mvaB ->Delete();
-   // mvaSC->Delete();
-   // mvaBC->Delete();
+
+   if(IsSilentFile())
+   {
+        mvaS ->Delete();  
+        mvaB ->Delete();
+        mvaSC->Delete();
+        mvaBC->Delete();
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -884,15 +897,18 @@ Double_t TMVA::MethodBoost::AdaBoost(MethodBase* method, Bool_t discreteAdaBoost
       v = fMVAvalues->at(ievt);
       w = ev->GetWeight();
       sumAll += w;
-      if (fMonitorBoostedMethod) {
-         if (sig) {
-            fBTrainSigMVAHist[fCurrentMethodIdx]->Fill(v,w);
-            fTrainSigMVAHist[fCurrentMethodIdx]->Fill(v,ev->GetOriginalWeight());
-         }
-         else {
-            fBTrainBgdMVAHist[fCurrentMethodIdx]->Fill(v,w);
-            fTrainBgdMVAHist[fCurrentMethodIdx]->Fill(v,ev->GetOriginalWeight());
-         }
+      if(!IsSilentFile())
+      {
+        if (fMonitorBoostedMethod) {
+            if (sig) {
+                fBTrainSigMVAHist[fCurrentMethodIdx]->Fill(v,w);
+                fTrainSigMVAHist[fCurrentMethodIdx]->Fill(v,ev->GetOriginalWeight());
+            }
+            else {
+                fBTrainBgdMVAHist[fCurrentMethodIdx]->Fill(v,w);
+                fTrainBgdMVAHist[fCurrentMethodIdx]->Fill(v,ev->GetOriginalWeight());
+            }
+        }
       }
       
       if (discreteAdaBoost){
@@ -1316,7 +1332,7 @@ void TMVA::MethodBoost::MonitorBoost( Types::EBoostStage stage , UInt_t methodIn
       }
    }else{
       if (methodIndex < 3){
-         Log() << kINFO << "No detailed boost monitoring for " 
+         Log() << kDEBUG << "No detailed boost monitoring for " 
                << GetCurrentMethod(methodIndex)->GetMethodName() 
                << " yet available " << Endl;
       }

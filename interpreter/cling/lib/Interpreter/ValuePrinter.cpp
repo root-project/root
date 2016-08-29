@@ -175,7 +175,10 @@ static std::string printQualType(clang::ASTContext& Ctx, clang::QualType QT) {
 
 template<typename T>
 static std::string executePrintValue(const Value &V, const T &val) {
-  std::stringstream printValueSS;
+  // don't use std::stringstream, since it doesn't prepend '0x'
+  // in front of hexadecimal values when streaming pointer values
+  std::string strval;
+  llvm::raw_string_ostream printValueSS(strval);
   printValueSS << "cling::printValue(";
   printValueSS << getTypeString(V);
   printValueSS << (const void *) &val;
@@ -280,7 +283,7 @@ static std::string printEnumValue(const Value &V) {
   const clang::EnumType *EnumTy = Ty.getNonReferenceType()->getAs<clang::EnumType>();
   assert(EnumTy && "ValuePrinter.cpp: ERROR, printEnumValue invoked for a non enum type.");
   clang::EnumDecl *ED = EnumTy->getDecl();
-  uint64_t value = *(const uint64_t *) &V;
+  uint64_t value = V.getULL();
   bool IsFirst = true;
   llvm::APSInt ValAsAPSInt = C.MakeIntValue(value, Ty);
   for (clang::EnumDecl::enumerator_iterator I = ED->enumerator_begin(),

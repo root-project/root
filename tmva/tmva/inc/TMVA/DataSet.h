@@ -44,6 +44,9 @@
 #ifndef ROOT_TObject
 #include "TObject.h"
 #endif
+#ifndef ROOT_TNamed
+#include "TNamed.h"
+#endif
 #ifndef ROOT_TString
 #include "TString.h"
 #endif
@@ -77,10 +80,10 @@ namespace TMVA {
    class MsgLogger;
    class Results;
 
-   class DataSet {
+   class DataSet :public TNamed {
 
    public:
-
+      DataSet();
       DataSet(const DataSetInfo&);
       virtual ~DataSet();
 
@@ -154,35 +157,33 @@ namespace TMVA {
    private:
 
       // data members
-      DataSet();
       void DestroyCollection( Types::ETreeType type, Bool_t deleteEvents );
 
-      const DataSetInfo&         fdsi;                //! datasetinfo that created this dataset
+      const DataSetInfo         *fdsi;                       //-> datasetinfo that created this dataset
 
-      std::vector<Event*>::iterator        fEvtCollIt;
-      std::vector< std::vector<Event*>*  > fEventCollection; //! list of events for training/testing/...
+      std::vector< std::vector<Event*>  > fEventCollection;  // list of events for training/testing/...
 
-      std::vector< std::map< TString, Results* > > fResults;         //!  [train/test/...][method-identifier]
+      std::vector< std::map< TString, Results* > > fResults; //!  [train/test/...][method-identifier]
 
       mutable UInt_t             fCurrentTreeIdx;
       mutable Long64_t           fCurrentEventIdx;
 
       // event sampling
-      std::vector<Char_t>        fSampling;                    // random or importance sampling (not all events are taken) !! Bool_t are stored ( no std::vector<bool> taken for speed (performance) issues )
+      std::vector<Char_t>        fSampling;                   // random or importance sampling (not all events are taken) !! Bool_t are stored ( no std::vector<bool> taken for speed (performance) issues )
       std::vector<Int_t>         fSamplingNEvents;            // number of events which should be sampled
-      std::vector<Float_t>       fSamplingWeight;              // weight change factor [weight is indicating if sampling is random (1.0) or importance (<1.0)] 
-      mutable std::vector< std::vector< std::pair< Float_t, Long64_t >* > > fSamplingEventList;  // weights and indices for sampling
-      mutable std::vector< std::vector< std::pair< Float_t, Long64_t >* > > fSamplingSelected;   // selected events
-      TRandom3                   *fSamplingRandom;             // random generator for sampling
+      std::vector<Float_t>       fSamplingWeight;             // weight change factor [weight is indicating if sampling is random (1.0) or importance (<1.0)] 
+      mutable std::vector< std::vector< std::pair< Float_t, Long64_t > > > fSamplingEventList;  // weights and indices for sampling
+      mutable std::vector< std::vector< std::pair< Float_t, Long64_t > > > fSamplingSelected;   // selected events
+      TRandom3                   *fSamplingRandom;             //-> random generator for sampling
 
 
       // further things
-      std::vector< std::vector<Long64_t> > fClassEvents;       //! number of events of class 0,1,2,... in training[0] 
+      std::vector< std::vector<Long64_t> > fClassEvents;       // number of events of class 0,1,2,... in training[0] 
                                                                // and testing[1] (+validation, trainingoriginal)
 
       Bool_t                     fHasNegativeEventWeights;     // true if at least one signal or bkg event has negative weight
 
-      mutable MsgLogger*         fLogger;   // message logger
+      mutable MsgLogger*         fLogger;                      //-> message logger
       MsgLogger& Log() const { return *fLogger; }
       std::vector<Char_t>        fBlockBelongToTraining;       // when dividing the dataset to blocks, sets whether 
                                                                // the certain block is in the Training set or else 
@@ -192,6 +193,9 @@ namespace TMVA {
 
       void  ApplyTrainingBlockDivision();
       void  ApplyTrainingSetDivision();
+   public:
+       
+       ClassDef(DataSet,1);
    };
 }
 
@@ -234,7 +238,7 @@ inline Long64_t TMVA::DataSet::GetNEvents(Types::ETreeType type) const
 //_______________________________________________________________________
 inline const std::vector<TMVA::Event*>& TMVA::DataSet::GetEventCollection( TMVA::Types::ETreeType type ) const
 {
-   return *(fEventCollection.at(TreeIndex(type)));
+   return fEventCollection.at(TreeIndex(type));
 }
 
 

@@ -196,7 +196,7 @@ public:
 
 private:
   /// Certain options suppress the 'no input files' warning.
-  bool SuppressMissingInputWarning : 1;
+  unsigned SuppressMissingInputWarning : 1;
 
   std::list<std::string> TempFiles;
   std::list<std::string> ResultFiles;
@@ -248,7 +248,7 @@ public:
   void setCheckInputsExist(bool Value) { CheckInputsExist = Value; }
 
   const std::string &getTitle() { return DriverTitle; }
-  void setTitle(std::string Value) { DriverTitle = Value; }
+  void setTitle(std::string Value) { DriverTitle = std::move(Value); }
 
   /// \brief Get the path to the main clang executable.
   const char *getClangProgramPath() const {
@@ -274,6 +274,11 @@ public:
   /// @}
   /// @name Primary Functionality
   /// @{
+
+  /// CreateOffloadingDeviceToolChains - create all the toolchains required to
+  /// support offloading devices given the programming models specified in the
+  /// current compilation. Also, update the host tool chain kind accordingly.
+  void CreateOffloadingDeviceToolChains(Compilation &C, InputList &Inputs);
 
   /// BuildCompilation - Construct a compilation object for a command
   /// line argument vector.

@@ -2647,7 +2647,7 @@ clang::RecordDecl *ROOT::TMetaUtils::GetUnderlyingRecordDecl(clang::QualType typ
    const clang::Type *rawtype = ROOT::TMetaUtils::GetUnderlyingType(type);
 
    if (rawtype->isFundamentalType() || rawtype->isEnumeralType()) {
-      // not an ojbect.
+      // not an object.
       return 0;
    }
    return rawtype->getAsCXXRecordDecl();
@@ -3198,6 +3198,7 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
                                 0/*Searchpath*/, 0/*RelPath*/,
                                 0/*RequestingModule*/, 0/*SuggestedModule*/,
                                 false /*SkipCache*/,
+                                false /*BuildSystemModule*/,
                                 false /*OpenFile*/, true /*CacheFailures*/);
       if (FEhdr) break;
       headerFID = sourceManager.getFileID(includeLoc);
@@ -3727,9 +3728,10 @@ static void KeepNParams(clang::QualType& normalizedType,
    // becomes true when a parameter has a value equal to its default
    for (int formal = 0, inst = 0; formal != nArgs; ++formal, ++inst) {
       const NamedDecl* tParPtr = tPars.getParam(formal);
-      if (!tParPtr) Error("KeepNParams",
-                          "The parameter number %s is null.\n",
-                          formal);
+      if (!tParPtr) {
+         Error("KeepNParams", "The parameter number %s is null.\n", formal);
+         continue;
+      }
 
       // Stop if the normalized TemplateSpecializationType has less arguments than
       // the one index is pointing at.
@@ -3903,6 +3905,64 @@ void ROOT::TMetaUtils::GetNormalizedName(std::string &norm_name,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+std::pair<std::string,clang::QualType>
+ROOT::TMetaUtils::GetNameTypeForIO(const clang::QualType& thisType,
+                                   const cling::Interpreter &interpreter,
+                                   const TNormalizedCtxt &normCtxt,
+                                   TClassEdit::EModType mode)
+{
+   std::string thisTypeName;
+   GetNormalizedName(thisTypeName, thisType, interpreter, normCtxt );
+   bool hasChanged;
+   auto thisTypeNameForIO = TClassEdit::GetNameForIO(thisTypeName, mode, &hasChanged);
+   if (!hasChanged) return std::make_pair(thisTypeName,thisType);
+
+   if (hasChanged && ROOT::TMetaUtils::GetErrorIgnoreLevel() <= ROOT::TMetaUtils::kNote) {
+      ROOT::TMetaUtils::Info("ROOT::TMetaUtils::GetTypeForIO", 
+        "Name changed from %s to %s\n", thisTypeName.c_str(), thisTypeNameForIO.c_str());
+   }
+
+   auto& lookupHelper = interpreter.getLookupHelper();
+
+   const clang::Type* typePtrForIO;
+   lookupHelper.findScope(thisTypeNameForIO,
+                          cling::LookupHelper::DiagSetting::NoDiagnostics,
+                          &typePtrForIO);
+
+   // This should never happen
+   if (!typePtrForIO) {
+      ROOT::TMetaUtils::Fatal("ROOT::TMetaUtils::GetTypeForIO",
+                              "Type not found: %s.",thisTypeNameForIO.c_str());
+   }
+
+   clang::QualType typeForIO(typePtrForIO,0);
+
+   // Check if this is a class. Indeed it could well be a POD
+   if (!typeForIO->isRecordType()) {
+      return std::make_pair(thisTypeNameForIO,typeForIO);
+   }
+
+   auto thisDeclForIO = typeForIO->getAsCXXRecordDecl();
+   if (!thisDeclForIO) {
+      ROOT::TMetaUtils::Error("ROOT::TMetaUtils::GetTypeForIO",
+       "The type for IO corresponding to %s is %s and it could not be found in the AST as class.\n", thisTypeName.c_str(), thisTypeNameForIO.c_str());
+      return std::make_pair(thisTypeName,thisType);
+   }
+
+   return std::make_pair(thisTypeNameForIO,typeForIO);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+clang::QualType ROOT::TMetaUtils::GetTypeForIO(const clang::QualType& thisType,
+                                               const cling::Interpreter &interpreter,
+                                               const TNormalizedCtxt &normCtxt,
+                                               TClassEdit::EModType mode)
+{
+   return GetNameTypeForIO(thisType, interpreter, normCtxt, mode).second;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 std::string ROOT::TMetaUtils::GetROOTIncludeDir(bool rootbuild)
 {
@@ -3976,7 +4036,7 @@ clang::Module* ROOT::TMetaUtils::declareModuleMap(clang::CompilerInstance* CI,
                                     const clang::DirectoryEntry *>>(),
                                  0 /*SearchPath*/, 0 /*RelativePath*/,
                                  0 /*RequestingModule*/, 0 /*SuggestedModule*/,
-                                 false /*SkipCache*/,
+                                 false /*SkipCache*/, false /*BuildSystemModule*/,
                                  false /*OpenFile*/, true /*CacheFailures*/);
       if (!hdrFileEntry) {
          std::cerr << "TMetaUtils::declareModuleMap: "

@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_fit
+/// \notebook
 /// Fitting a 2-D histogram
 /// This tutorial illustrates :
 ///  - how to create a 2-d function
@@ -9,7 +10,7 @@
 ///
 /// This example can be executed via the interpreter or ACLIC
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 ///   root > .x fit2.C
 ///   root > .x fit2.C++
 /// ~~~

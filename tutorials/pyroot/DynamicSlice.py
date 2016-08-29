@@ -1,5 +1,6 @@
 ## \file
 ## \ingroup tutorial_pyroot
+## \notebook
 ## Example of function called when a mouse event occurs in a pad.
 ## When moving the mouse in the canvas, a second canvas shows the
 ## projection along X of the bin corresponding to the Y position

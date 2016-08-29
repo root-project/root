@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_math
+/// \notebook
 /// Example to use chi2 test for comparing two histograms
 /// One unweighted histogram is compared with a weighted histogram.
 /// The normalized residuals are retrieved and plotted in a simple graph.
@@ -126,30 +127,25 @@ TCanvas * chi2test(Float_t w=0)
 
    //create Canvas
    TCanvas *c1 = new TCanvas("c1","Chistat Plot",10,10,700,600);
-   c1->SetFillColor(33);
    c1->Divide(2,2);
 
    // Draw Histogramms and Graphs
    c1->cd(1);
-   gPad->SetFrameFillColor(21);
    h1->SetMarkerColor(4);
    h1->SetMarkerStyle(20);
 
    h1->Draw("E");
 
    c1->cd(2);
-   gPad->SetFrameFillColor(21);
    h2->Draw("");
    h2->SetMarkerColor(4);
    h2->SetMarkerStyle(20);
 
    c1->cd(3);
-   gPad->SetFrameFillColor(21);
    gPad->SetGridy();
    resgr->Draw("APL");
 
    c1->cd(4);
-   gPad->SetFrameFillColor(21);
    qqplot->Draw("AP");
 
    c1->cd(0);

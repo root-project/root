@@ -306,6 +306,8 @@ public: // Public Interface
    virtual void   SetTempLevel(int val) const;
    virtual int    UnloadFile(const char* path) const;
 
+   void               CodeComplete(const std::string&, size_t&,
+                                   std::vector<std::string>&);
    TInterpreterValue *CreateTemporary();
    void               RegisterTemporary(const TInterpreterValue& value);
    void               RegisterTemporary(const cling::Value& value);

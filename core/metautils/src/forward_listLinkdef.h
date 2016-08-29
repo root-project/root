@@ -1,8 +1,5 @@
 #include <forward_list>
 #include <string>
-#ifndef __hpux
-using namespace std;
-#endif
 
 #pragma create TClass forward_list<int>;
 #pragma create TClass forward_list<long>;
@@ -12,4 +9,3 @@ using namespace std;
 #pragma create TClass forward_list<char*>;
 #pragma create TClass forward_list<string>;
 
-//

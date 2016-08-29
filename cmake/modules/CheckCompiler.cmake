@@ -1,7 +1,6 @@
 #---------------------------------------------------------------------------------------------------
 #  CheckCompiler.cmake
 #---------------------------------------------------------------------------------------------------
-include (CheckCXXSourceCompiles)
 
 #---Enable FORTRAN (unfortunatelly is not not possible in all cases)-------------------------------
 if(fortran)
@@ -53,15 +52,6 @@ if (CMAKE_COMPILER_IS_GNUCXX)
   endif()
   message(STATUS "Found GCC. Major version ${GCC_MAJOR}, minor version ${GCC_MINOR}")
   set(COMPILER_VERSION gcc${GCC_MAJOR}${GCC_MINOR}${GCC_PATCH})
-  CHECK_CXX_SOURCE_COMPILES("
-    #include <string>
-    #if _GLIBCXX_USE_CXX11_ABI
-    #error \"cling does not support GCC 5 ABI.\"
-    #endif
-    int main() {}" CXX_SUPPORTS_OLD_ABI)
-  if(NOT CXX_SUPPORTS_OLD_ABI)
-     message(FATAL_ERROR "Found GCC compiler with new ABI. Cling does not support the GCC 5 ABI yet")
-  endif()
 else()
   set(GCC_MAJOR 0)
   set(GCC_MINOR 0)
@@ -140,7 +130,8 @@ if(cxxmodules)
     file(COPY ${CMAKE_SOURCE_DIR}/build/unix/module.modulemap DESTINATION ${ROOT_INCLUDE_DIR})
 
     # This var is useful when we want to compile things without cxxmodules.
-    set(ROOT_CXXMODULES_FLAGS " -fmodules -fmodule-map-file=${CMAKE_BINARY_DIR}/include/module.modulemap -fmodules-cache-path=${CMAKE_BINARY_DIR}/include/pcms/")
+    set(ROOT_CXXMODULES_CXXFLAGS "-fmodules -fcxx-modules -Xclang -fmodules-local-submodule-visibility -fmodules-cache-path=${CMAKE_BINARY_DIR}/include/pcms/")
+    set(ROOT_CXXMODULES_CFLAGS "-fmodules -fmodules-cache-path=${CMAKE_BINARY_DIR}/include/pcms/")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ROOT_CXXMODULES_FLAGS}")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CXXMODULES_FLAGS}")
   else()

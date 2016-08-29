@@ -9,7 +9,7 @@
 
 #include "cling/Interpreter/LookupHelper.h"
 
-#include "TransactionUnloader.h"
+#include "DeclUnloader.h"
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Utils/AST.h"
 
@@ -23,10 +23,6 @@
 #include "clang/Sema/Sema.h"
 #include "clang/Sema/Template.h"
 #include "clang/Sema/TemplateDeduction.h"
-
-#if defined(_MSC_VER) && (_MSC_VER <= 1800)
-#define constexpr const
-#endif
 
 using namespace clang;
 
@@ -51,8 +47,7 @@ namespace clang {
     SourceLocation OldPrevTokLocation;
     unsigned short OldParenCount, OldBracketCount, OldBraceCount;
     unsigned OldTemplateParameterDepth;
-    decltype(P->getActions().InNonInstantiationSFINAEContext)
-       OldInNonInstantiationSFINAEContext;
+    bool OldInNonInstantiationSFINAEContext;
 
   public:
     ParserStateRAII(Parser& p)
@@ -705,16 +700,14 @@ namespace cling {
                         TheDecl = TD->getDefinition();
                         if (TheDecl->isInvalidDecl()) {
                           // if the decl is invalid try to clean up
-                          TransactionUnloader U(&S, /*CodeGenerator*/0);
-                          U.UnloadDecl(TheDecl);
+                          UnloadDecl(&S, TheDecl);
                           *setResultType = nullptr;
                           return 0;
                         }
                       } else {
                         // NOTE: We cannot instantiate the scope: not a valid decl.
                         // Need to rollback transaction.
-                        TransactionUnloader U(&S, /*CodeGenerator*/0);
-                        U.UnloadDecl(TD);
+                        UnloadDecl(&S, TD);
                         *setResultType = nullptr;
                         return 0;
                       }
@@ -914,8 +907,7 @@ namespace cling {
     }
     if (scopeDecl->isInvalidDecl()) {
       // if the decl is invalid try to clean up
-      TransactionUnloader U(&S, /*CodeGenerator*/0);
-      U.UnloadDecl(const_cast<Decl*>(scopeDecl));
+      UnloadDecl(&S, const_cast<Decl*>(scopeDecl));
       return 0;
     }
 
@@ -963,8 +955,7 @@ namespace cling {
     }
     if (scopeDecl->isInvalidDecl()) {
       // if the decl is invalid try to clean up
-      TransactionUnloader U(&S, /*CodeGenerator*/0);
-      U.UnloadDecl(const_cast<Decl*>(scopeDecl));
+      UnloadDecl(&S, const_cast<Decl*>(scopeDecl));
       return 0;
     }
     //
@@ -972,7 +963,6 @@ namespace cling {
     //  a scope spec, and a decl context.
     //
     NestedNameSpecifier* classNNS = 0;
-    const TagDecl *tdecl = nullptr;
     if (isa<NamespaceDecl>(scopeDecl)) {
       return foundDC;
     }
@@ -984,7 +974,6 @@ namespace cling {
         //const Type* T = Context.getRecordType(RD).getTypePtr();
         const Type* T = Context.getTypeDeclType(RD).getTypePtr();
         classNNS = NestedNameSpecifier::Create(Context, 0, false, T);
-        tdecl = RD;
         // We pass a 'random' but valid source range.
         CXXScopeSpec SS;
         SS.MakeTrivial(Context, classNNS, scopeDecl->getSourceRange());
@@ -1167,8 +1156,7 @@ namespace cling {
                                             true /*recursive instantiation*/);
           if (TheDecl->isInvalidDecl()) {
             // if the decl is invalid try to clean up
-            TransactionUnloader U(&S, /*CodeGenerator*/0);
-            U.UnloadDecl(const_cast<FunctionDecl*>(TheDecl));
+            UnloadDecl(&S, const_cast<FunctionDecl*>(TheDecl));
             return 0;
           }
        }
@@ -1724,8 +1712,7 @@ namespace cling {
                                             true /*recursive instantiation*/);
           if (fdecl->isInvalidDecl()) {
             // if the decl is invalid try to clean up
-            TransactionUnloader U(&S, /*CodeGenerator*/0);
-            U.UnloadDecl(fdecl);
+            UnloadDecl(&S, fdecl);
             return 0;
           }
           return fdecl;

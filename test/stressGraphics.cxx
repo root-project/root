@@ -177,10 +177,6 @@ char      gLine[80];
 
 int main(int argc, char *argv[])
 {
-   gROOT->SetBatch();
-   TApplication theApp("App", &argc, argv);
-   gBenchmark = new TBenchmark();
-
    TString opt;
    Int_t verbose = 0;
    if (argc > 1) verbose = atoi(argv[1]);
@@ -199,6 +195,10 @@ int main(int argc, char *argv[])
       printf("  -h : Print usage\n");
       return 0;
    }
+
+   gROOT->SetBatch();
+   TApplication theApp("App", &argc, argv);
+   gBenchmark = new TBenchmark();
 
    if (opt.Contains("-r")) {
       gOptionR = kTRUE;

@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_graphs
+/// \notebook
 /// This example compares what the system time function gmtime and localtime give
 /// with what gives TGaxis. It can be used as referenced test to check if TGaxis
 /// is working properly.
@@ -40,7 +41,7 @@ TString stime(time_t* t, bool utc = false, bool display_time_zone = true) {
 }
 
 
-TCanvas * timeonaxis3() {
+TCanvas *timeonaxis3() {
    double f = 1.8;
 
    TCanvas* c = new TCanvas;

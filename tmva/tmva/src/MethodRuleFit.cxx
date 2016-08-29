@@ -67,9 +67,8 @@ ClassImp(TMVA::MethodRuleFit)
    TMVA::MethodRuleFit::MethodRuleFit( const TString& jobName,
                                        const TString& methodTitle,
                                        DataSetInfo& theData, 
-                                       const TString& theOption,
-                                       TDirectory* theTargetDir ) :
-   MethodBase( jobName, Types::kRuleFit, methodTitle, theData, theOption, theTargetDir )
+                                       const TString& theOption) :
+   MethodBase( jobName, Types::kRuleFit, methodTitle, theData, theOption)
    , fSignalFraction(0)
    , fNTImportance(0)
    , fNTCoefficient(0)
@@ -115,9 +114,8 @@ ClassImp(TMVA::MethodRuleFit)
 /// constructor from weight file
 
 TMVA::MethodRuleFit::MethodRuleFit( DataSetInfo& theData,
-                                    const TString& theWeightFile,
-                                    TDirectory* theTargetDir ) :
-   MethodBase( Types::kRuleFit, theData, theWeightFile, theTargetDir )
+                                    const TString& theWeightFile) :
+   MethodBase( Types::kRuleFit, theData, theWeightFile)
    , fSignalFraction(0)
    , fNTImportance(0)
    , fNTCoefficient(0)
@@ -442,7 +440,7 @@ void TMVA::MethodRuleFit::Train( void )
    TMVA::DecisionTreeNode::fgIsTraining=true;
    // training of rules
 
-   InitMonitorNtuple();
+  if(!IsSilentFile()) InitMonitorNtuple();
 
    // fill the STL Vector with the event sample
    this->InitEventSample();
@@ -496,30 +494,33 @@ void TMVA::MethodRuleFit::TrainTMVARuleFit( void )
    // Output results and fill monitor ntuple
    fRuleFit.GetRuleEnsemblePtr()->Print();
    //
-   Log() << kDEBUG << "Filling rule ntuple" << Endl;
-   UInt_t nrules = fRuleFit.GetRuleEnsemble().GetRulesConst().size();
-   const Rule *rule;
-   for (UInt_t i=0; i<nrules; i++ ) {
-      rule            = fRuleFit.GetRuleEnsemble().GetRulesConst(i);
-      fNTImportance   = rule->GetRelImportance();
-      fNTSupport      = rule->GetSupport();
-      fNTCoefficient  = rule->GetCoefficient();
-      fNTType         = (rule->IsSignalRule() ? 1:-1 );
-      fNTNvars        = rule->GetRuleCut()->GetNvars();
-      fNTNcuts        = rule->GetRuleCut()->GetNcuts();
-      fNTPtag         = fRuleFit.GetRuleEnsemble().GetRulePTag(i); // should be identical with support
-      fNTPss          = fRuleFit.GetRuleEnsemble().GetRulePSS(i);
-      fNTPsb          = fRuleFit.GetRuleEnsemble().GetRulePSB(i);
-      fNTPbs          = fRuleFit.GetRuleEnsemble().GetRulePBS(i);
-      fNTPbb          = fRuleFit.GetRuleEnsemble().GetRulePBB(i);
-      fNTSSB          = rule->GetSSB();
-      fMonitorNtuple->Fill();
+   if(!IsSilentFile())
+    {
+        Log() << kDEBUG << "Filling rule ntuple" << Endl;
+        UInt_t nrules = fRuleFit.GetRuleEnsemble().GetRulesConst().size();
+        const Rule *rule;
+        for (UInt_t i=0; i<nrules; i++ ) {
+            rule            = fRuleFit.GetRuleEnsemble().GetRulesConst(i);
+            fNTImportance   = rule->GetRelImportance();
+            fNTSupport      = rule->GetSupport();
+            fNTCoefficient  = rule->GetCoefficient();
+            fNTType         = (rule->IsSignalRule() ? 1:-1 );
+            fNTNvars        = rule->GetRuleCut()->GetNvars();
+            fNTNcuts        = rule->GetRuleCut()->GetNcuts();
+            fNTPtag         = fRuleFit.GetRuleEnsemble().GetRulePTag(i); // should be identical with support
+            fNTPss          = fRuleFit.GetRuleEnsemble().GetRulePSS(i);
+            fNTPsb          = fRuleFit.GetRuleEnsemble().GetRulePSB(i);
+            fNTPbs          = fRuleFit.GetRuleEnsemble().GetRulePBS(i);
+            fNTPbb          = fRuleFit.GetRuleEnsemble().GetRulePBB(i);
+            fNTSSB          = rule->GetSSB();
+            fMonitorNtuple->Fill();
+        }
+        
+        fRuleFit.MakeVisHists();        
+        fRuleFit.MakeDebugHists();
    }
    Log() << kDEBUG << "Training done" << Endl;
 
-   fRuleFit.MakeVisHists();
-
-   fRuleFit.MakeDebugHists();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -558,7 +559,7 @@ void TMVA::MethodRuleFit::TrainJFRuleFit( void )
    // Output results and fill monitor ntuple
    fRuleFit.GetRuleEnsemblePtr()->Print();
    //
-   fRuleFit.MakeVisHists();
+   if(!IsSilentFile())fRuleFit.MakeVisHists();
 
    delete rfAPI;
 

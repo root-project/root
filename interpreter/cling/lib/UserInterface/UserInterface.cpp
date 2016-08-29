@@ -12,6 +12,7 @@
 #include "cling/UserInterface/CompilationException.h"
 #include "cling/Interpreter/Exception.h"
 #include "cling/MetaProcessor/MetaProcessor.h"
+#include "textinput/Callbacks.h"
 #include "textinput/TextInput.h"
 #include "textinput/StreamReader.h"
 #include "textinput/TerminalDisplay.h"
@@ -85,9 +86,32 @@ namespace {
 #endif
 }
 
+namespace {
+  ///\brief Class that specialises the textinput TabCompletion to allow Cling
+  /// to code complete through its own textinput mechanism which is part of the
+  /// UserInterface.
+  ///
+  class UITabCompletion : public textinput::TabCompletion {
+    const cling::Interpreter& m_ParentInterpreter;
+  
+  public:
+    UITabCompletion(const cling::Interpreter& Parent) :
+                    m_ParentInterpreter(Parent) {}
+    ~UITabCompletion() {}
+
+    bool Complete(textinput::Text& Line /*in+out*/,
+                  size_t& Cursor /*in+out*/,
+                  textinput::EditorRange& R /*out*/,
+                  std::vector<std::string>& Completions /*out*/) override {
+      m_ParentInterpreter.codeComplete(Line.GetText(), Cursor, Completions);
+      return true;
+    }
+  };
+}
+
 namespace cling {
   // Declared in CompilationException.h; vtable pinned here.
-  CompilationException::~CompilationException() throw() {}
+  CompilationException::~CompilationException() noexcept {}
 
   UserInterface::UserInterface(Interpreter& interp) {
     // We need stream that doesn't close its file descriptor, thus we are not
@@ -117,6 +141,12 @@ namespace cling {
     std::unique_ptr<StreamReader> R(StreamReader::Create());
     std::unique_ptr<TerminalDisplay> D(TerminalDisplay::Create());
     TextInput TI(*R, *D, histfilePath.empty() ? 0 : histfilePath.c_str());
+
+    // Inform text input about the code complete consumer
+    // TextInput owns the TabCompletion.
+    UITabCompletion* Completion =
+                      new UITabCompletion(m_MetaProcessor->getInterpreter());
+    TI.SetCompletion(Completion);
 
     TI.SetPrompt("[cling]$ ");
     std::string line;

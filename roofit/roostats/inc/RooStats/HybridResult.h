@@ -28,9 +28,9 @@ namespace RooStats {
 
      Class encapsulating the result of the HybridCalculatorOriginal.
      This class is a fresh rewrite in RooStats of
-     RooStatsCms/LimitResults developped by D. Piparo and G. Schott
+     RooStatsCms/LimitResults developed by D. Piparo and G. Schott
      New contributions to this class have been written by Matthias Wolf (error estimation)
-     
+
      The objects of this class store and access with lightweight methods the
      information calculated by LimitResults through a Lent calculation using
      MC toy experiments.
@@ -43,14 +43,14 @@ namespace RooStats {
 
    public:
 
-      /// Default constructor 
+      /// Default constructor
       explicit HybridResult(const char *name = 0);
 
       /// Constructor for HybridResult
       HybridResult(const char *name,
-		   const std::vector<double>& testStat_sb_vals,
-                   const std::vector<double>& testStat_b_vals, 
-		   bool sumLargerValues=true);
+         const std::vector<double>& testStat_sb_vals,
+                   const std::vector<double>& testStat_b_vals,
+         bool sumLargerValues=true);
 
 
       /// Destructor of HybridResult
@@ -81,11 +81,11 @@ namespace RooStats {
 
       /// The error on the "confidence level" of the null hypothesis
       Double_t CLbError() const;
-      
+
       /// The error on the "confidence level" of the alternative hypothesis
       Double_t CLsplusbError() const;
-      
-      /// The error on the ratio CLs+b/CLb
+
+      /// The error on the ratio \f$CL_{s+b}/CL_{b}\f$
       Double_t CLsError() const;
 
    private:
@@ -97,7 +97,7 @@ namespace RooStats {
       mutable bool fComputationsNulDoneFlag; // flag if the fNullPValue computation have been already done or not (ie need to be refreshed)
       mutable bool fComputationsAltDoneFlag; // flag if the fAlternatePValue computation have been already done or not (ie need to be refreshed)
       bool fSumLargerValues; // p-value for velues of testStat >= testStat_data (or testStat <= testStat_data)
- 
+
    protected:
 
       ClassDef(HybridResult,1)  // Class containing the results of the HybridCalculator

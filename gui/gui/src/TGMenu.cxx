@@ -971,6 +971,8 @@ TGPopupMenu::TGPopupMenu(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options)
 
 TGPopupMenu::~TGPopupMenu()
 {
+   gClient->UnregisterPopup(this);
+
    if (fEntryList) fEntryList->Delete();
    delete fEntryList;
    delete fDelay;

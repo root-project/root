@@ -709,6 +709,13 @@ int X86TTIImpl::getCastInstrCost(unsigned Opcode, Type *Dst, Type *Src) {
   };
 
   static const TypeConversionCostTblEntry SSE41ConversionTbl[] = {
+    { ISD::ZERO_EXTEND, MVT::v4i64, MVT::v4i32,   2 },
+    { ISD::SIGN_EXTEND, MVT::v4i64, MVT::v4i32,   2 },
+    { ISD::ZERO_EXTEND, MVT::v4i64, MVT::v4i16,   2 },
+    { ISD::SIGN_EXTEND, MVT::v4i64, MVT::v4i16,   2 },
+    { ISD::ZERO_EXTEND, MVT::v4i64, MVT::v4i8,    2 },
+    { ISD::SIGN_EXTEND, MVT::v4i64, MVT::v4i8,    2 },
+
     { ISD::ZERO_EXTEND, MVT::v16i32, MVT::v16i16, 4 },
     { ISD::SIGN_EXTEND, MVT::v16i32, MVT::v16i16, 4 },
     { ISD::ZERO_EXTEND, MVT::v8i32,  MVT::v8i16,  2 },
@@ -758,6 +765,13 @@ int X86TTIImpl::getCastInstrCost(unsigned Opcode, Type *Dst, Type *Src) {
     { ISD::SINT_TO_FP, MVT::v4f32, MVT::v4i32, 15 },
     { ISD::SINT_TO_FP, MVT::v4f32, MVT::v8i16, 15 },
     { ISD::SINT_TO_FP, MVT::v4f32, MVT::v16i8, 8 },
+
+    { ISD::ZERO_EXTEND, MVT::v4i64, MVT::v4i32,   3 },
+    { ISD::SIGN_EXTEND, MVT::v4i64, MVT::v4i32,   5 },
+    { ISD::ZERO_EXTEND, MVT::v4i64, MVT::v4i16,   3 },
+    { ISD::SIGN_EXTEND, MVT::v4i64, MVT::v4i16,  10 },
+    { ISD::ZERO_EXTEND, MVT::v4i64, MVT::v4i8,    4 },
+    { ISD::SIGN_EXTEND, MVT::v4i64, MVT::v4i8,    8 },
 
     { ISD::ZERO_EXTEND, MVT::v16i32, MVT::v16i16, 6 },
     { ISD::SIGN_EXTEND, MVT::v16i32, MVT::v16i16, 8 },
@@ -933,6 +947,38 @@ int X86TTIImpl::getIntrinsicInstrCost(Intrinsic::ID IID, Type *RetTy,
     { ISD::BITREVERSE, MVT::i16,     3 },
     { ISD::BITREVERSE, MVT::i8,      3 }
   };
+  static const CostTblEntry AVX2CostTbl[] = {
+    { ISD::BITREVERSE, MVT::v4i64,   5 },
+    { ISD::BITREVERSE, MVT::v8i32,   5 },
+    { ISD::BITREVERSE, MVT::v16i16,  5 },
+    { ISD::BITREVERSE, MVT::v32i8,   5 },
+    { ISD::BSWAP,      MVT::v4i64,   1 },
+    { ISD::BSWAP,      MVT::v8i32,   1 },
+    { ISD::BSWAP,      MVT::v16i16,  1 }
+  };
+  static const CostTblEntry AVX1CostTbl[] = {
+    { ISD::BITREVERSE, MVT::v4i64,  10 },
+    { ISD::BITREVERSE, MVT::v8i32,  10 },
+    { ISD::BITREVERSE, MVT::v16i16, 10 },
+    { ISD::BITREVERSE, MVT::v32i8,  10 },
+    { ISD::BSWAP,      MVT::v4i64,   4 },
+    { ISD::BSWAP,      MVT::v8i32,   4 },
+    { ISD::BSWAP,      MVT::v16i16,  4 }
+  };
+  static const CostTblEntry SSSE3CostTbl[] = {
+    { ISD::BITREVERSE, MVT::v2i64,   5 },
+    { ISD::BITREVERSE, MVT::v4i32,   5 },
+    { ISD::BITREVERSE, MVT::v8i16,   5 },
+    { ISD::BITREVERSE, MVT::v16i8,   5 },
+    { ISD::BSWAP,      MVT::v2i64,   1 },
+    { ISD::BSWAP,      MVT::v4i32,   1 },
+    { ISD::BSWAP,      MVT::v8i16,   1 }
+  };
+  static const CostTblEntry SSE2CostTbl[] = {
+    { ISD::BSWAP,      MVT::v2i64,   7 },
+    { ISD::BSWAP,      MVT::v4i32,   7 },
+    { ISD::BSWAP,      MVT::v8i16,   7 }
+  };
 
   unsigned ISD = ISD::DELETED_NODE;
   switch (IID) {
@@ -940,6 +986,9 @@ int X86TTIImpl::getIntrinsicInstrCost(Intrinsic::ID IID, Type *RetTy,
     break;
   case Intrinsic::bitreverse:
     ISD = ISD::BITREVERSE;
+    break;
+  case Intrinsic::bswap:
+    ISD = ISD::BSWAP;
     break;
   }
 
@@ -950,6 +999,22 @@ int X86TTIImpl::getIntrinsicInstrCost(Intrinsic::ID IID, Type *RetTy,
   // Attempt to lookup cost.
   if (ST->hasXOP())
     if (const auto *Entry = CostTableLookup(XOPCostTbl, ISD, MTy))
+      return LT.first * Entry->Cost;
+
+  if (ST->hasAVX2())
+    if (const auto *Entry = CostTableLookup(AVX2CostTbl, ISD, MTy))
+      return LT.first * Entry->Cost;
+
+  if (ST->hasAVX())
+    if (const auto *Entry = CostTableLookup(AVX1CostTbl, ISD, MTy))
+      return LT.first * Entry->Cost;
+
+  if (ST->hasSSSE3())
+    if (const auto *Entry = CostTableLookup(SSSE3CostTbl, ISD, MTy))
+      return LT.first * Entry->Cost;
+
+  if (ST->hasSSE2())
+    if (const auto *Entry = CostTableLookup(SSE2CostTbl, ISD, MTy))
       return LT.first * Entry->Cost;
 
   return BaseT::getIntrinsicInstrCost(IID, RetTy, Tys, FMF);

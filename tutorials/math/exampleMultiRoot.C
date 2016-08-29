@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_math
+/// \notebook -nodraw
 /// Example of using multiroot finder based on GSL algorithm.
 /// Find the root of Rosenbrock system of equations:
 /// \f[
@@ -18,13 +19,13 @@
 ///
 /// Usage:
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 ///  >.x exampleMultiRoot.C()
 /// ~~~
 ///
 /// or
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 /// >.x exampleMultiRoot(algoname,printlevel)
 /// ~~~
 ///
@@ -54,10 +55,11 @@ void exampleMultiRoot(const char * algo = 0, int printlevel = 1) {
 
 #ifndef R__HAS_MATHMORE
    Error("exampleMultiRoot","libMathMore is not available - cannot run this tutorial");
-#else
+   return;
+#endif
 
    ROOT::Math::MultiRootFinder r(algo);
-    //defining the function
+   //defining the function
    // use Rosenbrock functions
    TF2 * f1 = new TF2("f1","[0]*(1-x)+[1]*y");
    TF2 * f2 = new TF2("f2","[0]*(y-x*x)");
@@ -73,6 +75,5 @@ void exampleMultiRoot(const char * algo = 0, int printlevel = 1) {
    // starting point
    double x0[2]={-1,-1};
    r.Solve(x0);
-#endif
 }
 

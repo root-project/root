@@ -12,25 +12,36 @@
 
 namespace clang {
   class CodeGenerator;
-  class CompilerInstance;
   class Decl;
+  class DeclUnloader;
   class Sema;
 }
 
 namespace cling {
 
+  class IncrementalExecutor;
+  class Interpreter;
   class Transaction;
 
   ///\brief A simple eraser class that removes already created AST Nodes.
   ///
   class TransactionUnloader {
   private:
+    cling::Interpreter* m_Interp;
     clang::Sema* m_Sema;
     clang::CodeGenerator* m_CodeGen;
+    cling::IncrementalExecutor* m_Exe;
+
+    bool unloadDeclarations(Transaction* T, clang::DeclUnloader& DeclU);
+    bool unloadDeserializedDeclarations(Transaction* T,
+                                        clang::DeclUnloader& DeclU);
+    bool unloadFromPreprocessor(Transaction* T, clang::DeclUnloader& DeclU);
 
   public:
-    TransactionUnloader(clang::Sema* S, clang::CodeGenerator* CG);
-    ~TransactionUnloader();
+    TransactionUnloader(cling::Interpreter* I, clang::Sema* Sema,
+                        clang::CodeGenerator* CG,
+                        cling::IncrementalExecutor* Exe):
+      m_Interp(I), m_Sema(Sema), m_CodeGen(CG), m_Exe(Exe) {}
 
     ///\brief Rolls back given transaction from the AST.
     ///
@@ -54,6 +65,10 @@ namespace cling {
     ///\returns true on success
     ///
     bool UnloadDecl(clang::Decl* D);
+
+    ///\brief Get the IncrementalExecutor from which transactions should be
+    /// unloaded.
+    cling::IncrementalExecutor* getExecutor() const { return m_Exe; }
   };
 } // end namespace cling
 

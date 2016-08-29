@@ -261,7 +261,7 @@ void TMVA::PDF::BuildPDF( const TH1* hist )
       Log() << kFATAL << "Number of entries <= 0 (" << hist->GetEntries() << " in histogram: " << hist->GetTitle() << Endl;
 
    if (fInterpolMethod == PDF::kKDE) {
-      Log() << "Create "
+     Log()<< kDEBUG << "Create "
             << ((fKDEiter == KDEKernel::kNonadaptiveKDE) ? "nonadaptive " :
                 (fKDEiter == KDEKernel::kAdaptiveKDE)    ? "adaptive "    : "??? ")
             << ((fKDEtype == KDEKernel::kGauss)          ? "Gauss "       : "??? ")
@@ -612,15 +612,15 @@ void TMVA::PDF::ValidatePDF( TH1* originalHist ) const
       }
    }
 
-   Log() << "Validation result for PDF \"" << originalHist->GetTitle() << "\"" << ": " << Endl;
-   Log() << Form( "    chi2/ndof(!=0) = %.1f/%i = %.2f (Prob = %.2f)",
+   Log() << kDEBUG << "Validation result for PDF \"" << originalHist->GetTitle() << "\"" << ": " << Endl;
+   Log() << kDEBUG << Form( "    chi2/ndof(!=0) = %.1f/%i = %.2f (Prob = %.2f)",
                   chi2, ndof, chi2/ndof, TMath::Prob( chi2, ndof ) ) << Endl;
    if ((1.0 - TMath::Prob( chi2, ndof )) > 0.9999994) {
-      Log() << kWARNING << "Comparison of the original histogram \"" << originalHist->GetTitle() << "\"" << Endl;
-      Log() << kWARNING << "with the corresponding PDF gave a chi2/ndof of " << chi2/ndof << "," << Endl;
-      Log() << kWARNING << "which corresponds to a deviation of more than 5 sigma! Please check!" << Endl;
+      Log() << kDEBUG << "Comparison of the original histogram \"" << originalHist->GetTitle() << "\"" << Endl;
+      Log() << kDEBUG << "with the corresponding PDF gave a chi2/ndof of " << chi2/ndof << "," << Endl;
+      Log() << kDEBUG << "which corresponds to a deviation of more than 5 sigma! Please check!" << Endl;
    }
-   Log() << Form( "    #bins-found(#expected-bins) deviating > [1,2,3,6] sigmas: " \
+   Log() << kDEBUG << Form( "    #bins-found(#expected-bins) deviating > [1,2,3,6] sigmas: " \
                   "[%i(%i),%i(%i),%i(%i),%i(%i)]",
                   nc1, Int_t(TMath::Prob(1.0,1)*ndof), nc2, Int_t(TMath::Prob(4.0,1)*ndof),
                   nc3, Int_t(TMath::Prob(9.0,1)*ndof), nc6, Int_t(TMath::Prob(36.0,1)*ndof) ) << Endl;

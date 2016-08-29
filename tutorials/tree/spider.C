@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_tree
+/// \notebook
 /// TSpider example
 /// \macro_code
 ///
@@ -18,9 +19,9 @@ void spider() {
    }
    TNtuple* ntuple = (TNtuple*)f->Get("ntuple");
    TString varexp = "px:py:pz:random:sin(px):log(px/py):log(pz)";
-   TString select = "px>0 && py>0 && pz>0";
+   TString selection = "px>0 && py>0 && pz>0";
    TString options = "average";
-   TSpider *spider = new TSpider(ntuple,varexp.Data(),select.Data(),options.Data());
+   TSpider *spider = new TSpider(ntuple,varexp.Data(),selection.Data(),options.Data());
    spider->Draw();
    c1->ToggleEditor();
    c1->Selected(c1,spider,1);

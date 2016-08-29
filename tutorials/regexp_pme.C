@@ -1,11 +1,14 @@
-//-------------------------------------------------------------------------------------------
-//
-// class TPMERegexp - API similar to PME - PCRE Made Easy
-// Tries to be as close as possible to PERL syntax and functionality.
-//
-// Extension of TPRegexp class, see also macro 'regexp.C'.
-//
-//-------------------------------------------------------------------------------------------
+/// \file
+/// \ingroup Tutorials
+/// Class TPMERegexp - API similar to PME - PCRE Made Easy
+/// Tries to be as close as possible to PERL syntax and functionality.
+///
+/// Extension of TPRegexp class, see also macro 'regexp.C'.
+///
+/// \macro_output
+/// \macro_code
+///
+/// \author Eddy Offermann
 
 void regexp_pme()
 {

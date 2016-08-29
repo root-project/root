@@ -47,7 +47,8 @@ void MipsSEDAGToDAGISel::addDSPCtrlRegOperands(bool IsDef, MachineInstr &MI,
                                                MachineFunction &MF) {
   MachineInstrBuilder MIB(MF, &MI);
   unsigned Mask = MI.getOperand(1).getImm();
-  unsigned Flag = IsDef ? RegState::ImplicitDefine : RegState::Implicit;
+  unsigned Flag =
+      IsDef ? RegState::ImplicitDefine : RegState::Implicit | RegState::Undef;
 
   if (Mask & 1)
     MIB.addReg(Mips::DSPPos, Flag);
@@ -162,7 +163,7 @@ void MipsSEDAGToDAGISel::initGlobalBaseReg(MachineFunction &MF) {
     return;
   }
 
-  if (MF.getTarget().getRelocationModel() == Reloc::Static) {
+  if (!MF.getTarget().isPositionIndependent()) {
     // Set global register to __gnu_local_gp.
     //
     // lui   $v0, %hi(__gnu_local_gp)
@@ -237,8 +238,8 @@ void MipsSEDAGToDAGISel::processFunctionAfterISel(MachineFunction &MF) {
 }
 
 void MipsSEDAGToDAGISel::selectAddESubE(unsigned MOp, SDValue InFlag,
-                                           SDValue CmpLHS, SDLoc DL,
-                                           SDNode *Node) const {
+                                        SDValue CmpLHS, const SDLoc &DL,
+                                        SDNode *Node) const {
   unsigned Opc = InFlag.getOpcode(); (void)Opc;
 
   assert(((Opc == ISD::ADDC || Opc == ISD::ADDE) ||
@@ -330,7 +331,7 @@ bool MipsSEDAGToDAGISel::selectAddrRegImm(SDValue Addr, SDValue &Base,
     return true;
   }
 
-  if (TM.getRelocationModel() != Reloc::PIC_) {
+  if (!TM.isPositionIndependent()) {
     if ((Addr.getOpcode() == ISD::TargetExternalSymbol ||
         Addr.getOpcode() == ISD::TargetGlobalAddress))
       return false;
@@ -367,18 +368,6 @@ bool MipsSEDAGToDAGISel::selectAddrRegImm(SDValue Addr, SDValue &Base,
 
 /// ComplexPattern used on MipsInstrInfo
 /// Used on Mips Load/Store instructions
-bool MipsSEDAGToDAGISel::selectAddrRegReg(SDValue Addr, SDValue &Base,
-                                          SDValue &Offset) const {
-  // Operand is a result from an ADD.
-  if (Addr.getOpcode() == ISD::ADD) {
-    Base = Addr.getOperand(0);
-    Offset = Addr.getOperand(1);
-    return true;
-  }
-
-  return false;
-}
-
 bool MipsSEDAGToDAGISel::selectAddrDefault(SDValue Addr, SDValue &Base,
                                            SDValue &Offset) const {
   Base = Addr;

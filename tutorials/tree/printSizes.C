@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_tree
-///
+/// \notebook -nodraw
 /// This macro can be used to get aggregate information on the size
 /// take on disk or in memory by the various branches in a TTree.
 ///
@@ -46,6 +46,9 @@
 
 Long64_t GetTotalSize(TBranch * b, bool ondisk, bool inclusive);
 Long64_t GetBasketSize(TBranch * b, bool ondisk, bool inclusive);
+
+void printSizes() {
+}
 
 Long64_t GetBasketSize(TObjArray * branches, bool ondisk, bool inclusive) {
    Long64_t result = 0;
@@ -166,4 +169,3 @@ void printTreeSummary(TTree *t)
    }
 }
 
-void printSizes() {}

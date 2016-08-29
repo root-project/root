@@ -11,8 +11,8 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 // The set of methods to work with the plain matrix / vector
-// "derived" from  http://wwwinfo.cern.ch/asdoc/shortwrupsdir/f110/top.html
-// "derived" from  http://wwwinfo.cern.ch/asdoc/shortwrupsdir/f112/top.html
+// "derived" from  https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f110/top.html
+// "derived" from  https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html
 //
 // Revision 1.7  2006/05/21 18:05:26  brun
 // Fix more coding conventions violations
@@ -33,12 +33,12 @@
 //
 // Revision 1.3  2003/04/03 17:39:39  fine
 // Make merge with ROOT 3.05.03 and add TR package
-//122
+//
 // Revision 1.2  2003/02/04 23:35:20  fine
 // Clean up
 //
 // Revision 1.1  2002/04/15 20:23:39  fine
-// NEw naming schema for RootKErnel classes and a set of classes to back geometry OO
+// New naming schema for RootKErnel classes and a set of classes to back geometry OO
 //
 // Revision 1.2  2001/05/29 19:08:08  brun
 // New version of some STAR classes from Valery.
@@ -52,7 +52,7 @@
 // Revision 1.1.1.1  2000/05/16 17:00:48  rdm
 // Initial import of ROOT into CVS
 //
-////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
 #include <assert.h>
 #include "TCernLib.h"
@@ -66,7 +66,7 @@ ClassImp(TCL)
     /* Local variables */                                \
     int l, m, n, ia, ic, ib, ja, jb, iia, iib, ioa, iob; \
                                                          \
-    /* Parameter adjuTments */                          \
+    /* Parameter adjustments */                          \
     --a;  --b;  --c;                                     \
     /* Function Body */                                  \
 /*                      MXMAD MXMAD1 MXMAD2 MXMAD3 MXMPY MXMPY1 MXMPY2 MXMPY3 MXMUB MXMUB1 MXMUB2 MXMUB3 */ \
@@ -154,43 +154,47 @@ double *TCL::mxmad_0_(int n_, const double *a, const double *b, double *c, int i
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Matrix Multiplication
+///
 /// CERN PROGLIB# F110    MXMLRT          .VERSION KERNFOR  2.00  720707
 /// ORIG. 01/01/64 RKB
-///BEGIN_HTML <!--
+///
+/// See original documentation of CERNLIB package
+/// [F110](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f110/top.html)
+///
+/// -- ENTRY MXMLRT
+/// -- C = A(I,J) X B(J,J) X A*(J,I)
+/// -- A* TANDS FOR A-TRANSPOSED
+///             mxmlrt (A,B,C,NI,NJ)     IS EQUIVALENT TO
+///             CALL MXMPY (A,B,X,NI,NJ,NJ)
+///             CALL MXMPY1 (X,A,C,NI,NJ,NI)
+///
+///        OR   CALL MXMPY1 (B,A,Y,NJ,NJ,NI)
+///             CALL MXMPY (A,Y,C,NI,NJ,NI)
+///
+///
+/// --                C = A*(I,J) X B(J,J) X A(J,I)
+///
+///        CALL MXMLTR (A,B,C,NI,NJ)     IS EQUIVALENT TO
+///             CALL MXMPY2 (A,B,X,NI,NJ,NJ)
+///             CALL MXMPY (X,A,C,NI,NJ,NI)
+///
+///        OR   CALL MXMPY (B,A,Y,NJ,NJ,NI)
+///             CALL MXMPY2 (A,Y,C,NI,NJ,NI)
 
 float *TCL::mxmlrt_0_(int n__, const float *a, const float *b, float *c, int ni,int nj)
 {
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f110/top.html">F110</A>
- <!--*/
- // -->END_HTML
-
-
-// --      ENTRY MXMLRT */
-// --                C = A(I,J) X B(J,J) X A*(J,I) */
-// --                A* TANDS FOR A-TRANSPOSED */
-//             mxmlrt (A,B,C,NI,NJ)     IS EQUIVALENT TO */
-//             CALL MXMPY (A,B,X,NI,NJ,NJ) */
-//             CALL MXMPY1 (X,A,C,NI,NJ,NI) */
-
-/*        OR   CALL MXMPY1 (B,A,Y,NJ,NJ,NI) */
-/*             CALL MXMPY (A,Y,C,NI,NJ,NI) */
-
-
-// --                C = A*(I,J) X B(J,J) X A(J,I)
-
-//        CALL MXMLTR (A,B,C,NI,NJ)     IS EQUIVALENT TO
-//             CALL MXMPY2 (A,B,X,NI,NJ,NJ)
-//             CALL MXMPY (X,A,C,NI,NJ,NI)
-
-//        OR   CALL MXMPY (B,A,Y,NJ,NJ,NI)
-//             CALL MXMPY2 (A,Y,C,NI,NJ,NI)
    TCL_MXMLRT( n__, a, b, c,  ni,nj)
    return c;
 } /* mxmlrt_ */
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Matrix Multiplication (double precision)
+///
+/// CERN PROGLIB# F110    MXMLRT          .VERSION KERNFOR  2.00  720707
+/// ORIG. 01/01/64 RKB
+///
+/// See original documentation of CERNLIB package
+/// [F110](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f110/top.html)
 
 double *TCL::mxmlrt_0_(int n__, const double *a, const double *b, double *c, int ni,int nj)
 {
@@ -215,36 +219,31 @@ double *TCL::mxmlrt_0_(int n__, const double *a, const double *b, double *c, int
     for (int l = 1; l <= i; ++l,ia += j,++ib) b[ib] = a[ia]; }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Matrix Transposition
 ///
-///  Matrix Transposition
 /// CERN PROGLIB# F110    MXTRP           .VERSION KERNFOR  1.0   650809
 /// ORIG. 01/01/64 RKB
-///BEGIN_HTML <!--
+///
+/// See original documentation of CERNLIB package
+/// [F110](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f110/top.html)
 
 float *TCL::mxtrp(const float *a, float *b, int i, int j)
 {
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f110/top.html">F110</A>
- <!--*/
- // -->END_HTML
-
    TCL_MXTRP(a, b, i, j)
    return b;
 } /* mxtrp */
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Matrix Transposition (double precision)
+/// Matrix Transposition (double precision)
+///
 /// CERN PROGLIB# F110    MXTRP           .VERSION KERNFOR  1.0   650809
 /// ORIG. 01/01/64 RKB
-///BEGIN_HTML <!--
+///
+/// See original documentation of CERNLIB package
+/// [F110](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f110/top.html)
 
 double *TCL::mxtrp(const double *a, double *b, int i, int j)
 {
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f110/top.html">F110</A>
- <!--*/
- // -->END_HTML
-
    TCL_MXTRP(a, b, i, j)
    return b;
 
@@ -281,40 +280,34 @@ double *TCL::mxtrp(const double *a, double *b, int i, int j)
    }                                    \
    s++;
 
-
 ////////////////////////////////////////////////////////////////////////////////
-///
 /// Symmetric Multiplication of Rectangular Matrices
+///
 /// CERN PROGLIB# F112    TRAAT           .VERSION KERNFOR  4.15  861204
-/// ORIG. 18/12/74 WH */
+/// ORIG. 18/12/74 WH
 /// traat.F -- translated by f2c (version 19970219).
 ///
-///BEGIN_HTML <!--
+/// See original documentation of CERNLIB package
+/// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
 
 float *TCL::traat(const float *a, float *s, int m, int n)
 {
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f112/top.html">F112</A>
- <!--*/
- // -->END_HTML
    TCL_TRAAT(a, s, m, n)
    return s;
 } /* traat_ */
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Symmetric Multiplication of Rectangular Matrices
+/// Symmetric Multiplication of Rectangular Matrices
+///
 /// CERN PROGLIB# F112    TRAAT           .VERSION KERNFOR  4.15  861204
-/// ORIG. 18/12/74 WH */
+/// ORIG. 18/12/74 WH
 /// traat.F -- translated by f2c (version 19970219).
 ///
-///BEGIN_HTML <!--
+/// See original documentation of CERNLIB package
+/// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
 
 double *TCL::traat(const double *a, double *s, int m, int n)
 {
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f112/top.html">F112</A>
- <!--*/
- // -->END_HTML
    TCL_TRAAT(a, s, m, n)
    return s;
 } /* traat_ */
@@ -346,34 +339,32 @@ double *TCL::traat(const double *a, double *s, int m, int n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Triangular - Rectangular Multiplication
+///
 /// CERN PROGLIB# F112    TRAL            .VERSION KERNFOR  4.15  861204
 /// ORIG. 18/12/74 WH
 /// tral.F -- translated by f2c (version 19970219).
-///BEGIN_HTML <!--
+///
+/// See original documentation of CERNLIB package
+/// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
 
 float *TCL::tral(const float *a, const float *u, float *b, int m, int n)
 {
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f112/top.html">F112</A>
- <!--*/
- // -->END_HTML
    TCL_TRAL(a, u, b, m,  n)
    return b;
 } /* tral_ */
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Triangular - Rectangular Multiplication
+///
 /// tral.F -- translated by f2c (version 19970219).
-/// CERN PROGLIB# F112    TRAL            .VERSION KERNFOR  4.15  861204 */
-/// ORIG. 18/12/74 WH */
-///BEGIN_HTML <!--
+/// CERN PROGLIB# F112    TRAL            .VERSION KERNFOR  4.15  861204
+/// ORIG. 18/12/74 WH
+///
+/// See original documentation of CERNLIB package
+/// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
 
 double *TCL::tral(const double *a, const double *u, double *b, int m, int n)
 {
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f112/top.html">F112</A>
- <!--*/
- // -->END_HTML
    TCL_TRAL(a, u, b, m,  n)
    return b;
 } /* tral_ */
@@ -405,34 +396,32 @@ double *TCL::tral(const double *a, const double *u, double *b, int m, int n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Triangular - Rectangular Multiplication
+///
 /// CERN PROGLIB# F112    TRALT           .VERSION KERNFOR  4.15  861204
 /// ORIG. 18/12/74 WH
 /// tralt.F -- translated by f2c (version 19970219).
-///BEGIN_HTML <!--
+///
+/// See original documentation of CERNLIB package
+/// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
 
 float *TCL::tralt(const float *a, const float *u, float *b, int m, int n)
 {
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f112/top.html">F112</A>
- <!--*/
- // -->END_HTML
    TCL_TRALT(a, u, b, m, n)
    return b;
 } /* tralt_ */
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Triangular - Rectangular Multiplication
+///
 /// CERN PROGLIB# F112    TRALT           .VERSION KERNFOR  4.15  861204
 /// ORIG. 18/12/74 WH
 /// tralt.F -- translated by f2c (version 19970219).
-///BEGIN_HTML <!--
+///
+/// See original documentation of CERNLIB package
+/// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
 
 double *TCL::tralt(const double *a, const double *u, double *b, int m, int n)
 {
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f112/top.html">F112</A>
- <!--*/
- // -->END_HTML
    TCL_TRALT(a, u, b, m, n)
    return b;
 } /* tralt_ */
@@ -470,40 +459,37 @@ double *TCL::tralt(const double *a, const double *u, double *b, int m, int n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Symmetric - Rectangular Multiplication
-/// CERN PROGLIB# F112    TRAS            .VERSION KERNFOR  4.15  861204 */
-/// ORIG. 18/12/74 WH */
+///
+/// CERN PROGLIB# F112    TRAS            .VERSION KERNFOR  4.15  861204
+/// ORIG. 18/12/74 WH
 /// tras.F -- translated by f2c (version 19970219).
-///BEGIN_HTML <!--
+///
+/// See original documentation of CERNLIB package
+/// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
 
 float *TCL::tras(const float *a, const float *s, float *b, int m, int n)
 {
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f112/top.html">F112</A>
- <!--*/
- // -->END_HTML
    TCL_TRAS(a, s, b, m, n)
    return b;
 } /* tras_ */
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Symmetric - Rectangular Multiplication
-/// CERN PROGLIB# F112    TRAS            .VERSION KERNFOR  4.15  861204 */
-/// ORIG. 18/12/74 WH */
+///
+/// CERN PROGLIB# F112    TRAS            .VERSION KERNFOR  4.15  861204
+/// ORIG. 18/12/74 WH
 /// tras.F -- translated by f2c (version 19970219).
-///BEGIN_HTML <!--
+///
+/// See original documentation of CERNLIB package
+/// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
 
 double *TCL::tras(const double *a, const double *s, double *b, int m, int n)
 {
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f112/top.html">F112</A>
- <!--*/
- // -->END_HTML
    TCL_TRAS(a, s, b, m, n)
    return b;
 } /* tras_ */
 
 #undef TCL_TRAS
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -543,51 +529,48 @@ double *TCL::tras(const double *a, const double *s, double *b, int m, int n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Transformation of Symmetric Matrix
-/// CERN PROGLIB# F112    TRASAT          .VERSION KERNFOR  4.15  861204 */
-/// ORIG. 18/12/74 WH */
+///
+/// CERN PROGLIB# F112    TRASAT          .VERSION KERNFOR  4.15  861204
+/// ORIG. 18/12/74 WH
 /// trasat.F -- translated by f2c (version 19970219).
-///BEGIN_HTML <!--
+///
+/// See original documentation of CERNLIB package
+/// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
 
 float *TCL::trasat(const float *a, const float *s, float *r__, int m, int n)
 {
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f112/top.html">F112</A>
- <!--*/
- // -->END_HTML
    TCL_TRASAT(a, s, r__, m, n)
    return r__;
 } /* trasat_ */
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Transformation of Symmetric Matrix
-/// CERN PROGLIB# F112    TRASAT          .VERSION KERNFOR  4.15  861204 */
-/// ORIG. 18/12/74 WH */
+///
+/// CERN PROGLIB# F112    TRASAT          .VERSION KERNFOR  4.15  861204
+/// ORIG. 18/12/74 WH
 /// trasat.F -- translated by f2c (version 19970219).
-///BEGIN_HTML <!--
+///
+/// See original documentation of CERNLIB package
+/// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
 
 double *TCL::trasat(const double *a, const double *s, double *r__, int m, int n)
 {
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f112/top.html">F112</A>
- <!--*/
- // -->END_HTML
    TCL_TRASAT(a, s, r__, m, n)
    return r__;
 } /* trasat_ */
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Transformation of Symmetric Matrix
-/// CERN PROGLIB# F112    TRASAT          .VERSION KERNFOR  4.15  861204 */
-/// ORIG. 18/12/74 WH */
+///
+/// CERN PROGLIB# F112    TRASAT          .VERSION KERNFOR  4.15  861204
+/// ORIG. 18/12/74 WH
 /// trasat.F -- translated by f2c (version 19970219).
-///BEGIN_HTML <!--
+///
+/// See original documentation of CERNLIB package
+/// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
 
 float *TCL::trasat(const double *a, const float *s, float *r__, int m, int n)
 {
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f112/top.html">F112</A>
- <!--*/
- // -->END_HTML
    TCL_TRASAT(a, s, r__, m, n)
    return r__;
 } /* trasat_ */
@@ -596,22 +579,20 @@ float *TCL::trasat(const double *a, const float *s, float *r__, int m, int n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// trata.F -- translated by f2c (version 19970219).
-/// CERN PROGLIB# F112    TRATA           .VERSION KERNFOR  4.15  861204 */
-/// ORIG. 18/12/74 WH */
-///BEGIN_HTML <!--
+///
+/// CERN PROGLIB# F112    TRATA           .VERSION KERNFOR  4.15  861204
+/// ORIG. 18/12/74 WH
+///
+/// See original documentation of CERNLIB package
+/// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
 
 float *TCL::trata(const float *a, float *r__, int m, int n)
 {
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f112/top.html">F112</A>
- <!--*/
- // -->END_HTML
-
    /* Local variables */
    int i__, j, ia, mn, ir, iat;
    double sum;
 
-   /* Parameter adjuTments */
+   /* Parameter adjustments */
    --r__;    --a;
 
    /* Function Body */
@@ -636,23 +617,22 @@ float *TCL::trata(const float *a, float *r__, int m, int n)
    return r__;
 } /* trata_ */
 
-//____________________________________________________________
-// trats.F -- translated by f2c (version 19970219).
+////////////////////////////////////////////////////////////////////////////////
+/// trats.F -- translated by f2c (version 19970219).
+///
+/// CERN PROGLIB# F112    TRATS           .VERSION KERNFOR  4.15  861204
+/// ORIG. 18/12/74 WH
+///
+/// See original documentation of CERNLIB package
+/// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
+
 float *TCL::trats(const float *a, const float *s, float *b, int m, int n)
 {
- //BEGIN_HTML <!--
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f112/top.html">F112</A>
- <!--*/
- // -->END_HTML
    /* Local variables */
    int inds, i__, j, k, ia, ib, is;
    double sum;
 
-   /* CERN PROGLIB# F112    TRATS           .VERSION KERNFOR  4.15  861204 */
-   /* ORIG. 18/12/74 WH */
-
-   /* Parameter adjuTments */
+   /* Parameter adjustments */
    --b;    --s;    --a;
 
    /* Function Body */
@@ -684,26 +664,24 @@ float *TCL::trats(const float *a, const float *s, float *b, int m, int n)
    return b;
 } /* trats_ */
 
-//____________________________________________________________
-// tratsa.F -- translated by f2c (version 19970219).
-/* Subroutine */float *TCL::tratsa(const float *a, const float *s, float *r__, int m, int n)
-{
- //BEGIN_HTML <!--
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f112/top.html">F112</A>
- <!--*/
- // -->END_HTML
 
+////////////////////////////////////////////////////////////////////////////////
+/// tratsa.F -- translated by f2c (version 19970219).
+///
+/// CERN PROGLIB# F112    TRATSA          .VERSION KERNFOR  4.15  861204
+/// ORIG. 18/12/74 WH
+///
+/// See original documentation of CERNLIB package
+/// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
+
+float *TCL::tratsa(const float *a, const float *s, float *r__, int m, int n)
+{
    /* Local variables */
    int imax, i__, j, k;
    int ia, ir, is, iaa, ind;
    double sum;
 
-   /* CERN PROGLIB# F112    TRATSA          .VERSION KERNFOR  4.15  861204 */
-   /* ORIG. 18/12/74 WH */
-
-
-   /* Parameter adjuTments */
+   /* Parameter adjustments */
    --r__;    --s;    --a;
 
    /* Function Body */
@@ -743,27 +721,24 @@ float *TCL::trats(const float *a, const float *s, float *b, int m, int n)
    return r__;
 } /* tratsa_ */
 
-//____________________________________________________________
-// trchlu.F -- translated by f2c (version 19970219).
+////////////////////////////////////////////////////////////////////////////////
+/// trchlu.F -- translated by f2c (version 19970219).
+///
+/// CERN PROGLIB# F112    TRCHLU          .VERSION KERNFOR  4.16  870601
+/// ORIG. 18/12/74 W.HART
+///
+/// See original documentation of CERNLIB package
+/// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
+
 float *TCL::trchlu(const float *a, float *b, int n)
 {
- //BEGIN_HTML <!--
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f112/top.html">F112</A>
- <!--*/
- // -->END_HTML
    /* Local variables */
    int ipiv, kpiv, i__, j;
    double r__, dc;
    int id, kd;
    double sum;
 
-
-   /* CERN PROGLIB# F112    TRCHLU          .VERSION KERNFOR  4.16  870601 */
-   /* ORIG. 18/12/74 W.HART */
-
-
-   /* Parameter adjuTments */
+   /* Parameter adjustments */
    --b;    --a;
 
    /* Function Body */
@@ -806,15 +781,17 @@ L42:
    return b;
 } /* trchlu_ */
 
-//____________________________________________________________
-// trchul.F -- translated by f2c (version 19970219).
-/* Subroutine */float *TCL::trchul(const float *a, float *b, int n)
+////////////////////////////////////////////////////////////////////////////////
+/// trchul.F -- translated by f2c (version 19970219).
+///
+/// CERN PROGLIB# F112    TRCHUL          .VERSION KERNFOR  4.16  870601
+/// ORIG. 18/12/74 WH
+///
+/// See original documentation of CERNLIB package
+/// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
+
+float *TCL::trchul(const float *a, float *b, int n)
 {
- //BEGIN_HTML <!--
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f112/top.html">F112</A>
- <!--*/
- // -->END_HTML
    /* Local variables */
    int ipiv, kpiv, i__;
    double r__;
@@ -823,12 +800,7 @@ L42:
    int id, kd;
    double sum;
 
-
-   /* CERN PROGLIB# F112    TRCHUL          .VERSION KERNFOR  4.16  870601 */
-   /* ORIG. 18/12/74 WH */
-
-
-   /* Parameter adjuTments */
+   /* Parameter adjustments */
    --b;    --a;
 
    /* Function Body */
@@ -875,24 +847,21 @@ L42:
 
 ////////////////////////////////////////////////////////////////////////////////
 /// trinv.F -- translated by f2c (version 19970219).
-/// CERN PROGLIB# F112    TRINV           .VERSION KERNFOR  4.15  861204 */
-/// ORIG. 18/12/74 WH */
-///BEGIN_HTML <!--
+///
+/// CERN PROGLIB# F112    TRINV           .VERSION KERNFOR  4.15  861204
+/// ORIG. 18/12/74 WH
+///
+/// See original documentation of CERNLIB package
+/// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
 
-/* Subroutine */float *TCL::trinv(const float *t, float *s, int n)
+float *TCL::trinv(const float *t, float *s, int n)
 {
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f112/top.html">F112</A>
- <!--*/
- // -->END_HTML
-
    int lhor, ipiv, lver, j;
    double sum = 0;
    double r__ = 0;
    int mx, ndTep, ind;
 
-
-   /* Parameter adjuTments */
+   /* Parameter adjustments */
    --s;    --t;
 
    /* Function Body */
@@ -934,23 +903,21 @@ L42:
    return s;
 } /* trinv_ */
 
-//____________________________________________________________
-// trla.F -- translated by f2c (version 19970219).
-/* Subroutine */float *TCL::trla(const float *u, const float *a, float *b, int m, int n)
+////////////////////////////////////////////////////////////////////////////////
+/// trla.F -- translated by f2c (version 19970219).
+///
+/// CERN PROGLIB# F112    TRLA            .VERSION KERNFOR  4.15  861204
+/// ORIG. 18/12/74 WH
+///
+/// See original documentation of CERNLIB package
+/// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
+
+float *TCL::trla(const float *u, const float *a, float *b, int m, int n)
 {
    int ipiv, ia, ib, iu;
    double sum;
 
-   /* CERN PROGLIB# F112    TRLA            .VERSION KERNFOR  4.15  861204 */
-   /* ORIG. 18/12/74 WH */
- //BEGIN_HTML <!--
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f112/top.html">F112</A>
- <!--*/
- // -->END_HTML
-
-
-   /* Parameter adjuTments */
+   /* Parameter adjustments */
    --b;    --a;    --u;
 
    /* Function Body */
@@ -981,23 +948,20 @@ L42:
 } /* trla_ */
 
 ////////////////////////////////////////////////////////////////////////////////
+/// trlta.F -- translated by f2c (version 19970219).
+///
+/// CERN PROGLIB# F112    TRLTA           .VERSION KERNFOR  4.15  861204
+/// ORIG. 18/12/74 WH
+///
+/// See original documentation of CERNLIB package
+/// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
 
-/* trlta.F -- translated by f2c (version 19970219).
-// Subroutine */float *TCL::trlta(const float *u, const float *a, float *b, int m, int n)
+float *TCL::trlta(const float *u, const float *a, float *b, int m, int n)
 {
    int ipiv, mxpn, i__, nTep, ia, ib, iu, mx;
    double sum;
 
-   /* CERN PROGLIB# F112    TRLTA           .VERSION KERNFOR  4.15  861204 */
-   /* ORIG. 18/12/74 WH */
- //BEGIN_HTML <!--
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f112/top.html">F112</A>
- <!--*/
- // -->END_HTML
-
-
-   /* Parameter adjuTments */
+   /* Parameter adjustments */
    --b;    --a;    --u;
 
    /* Function Body */
@@ -1036,19 +1000,18 @@ L42:
 
 ////////////////////////////////////////////////////////////////////////////////
 /// trpck.F -- translated by f2c (version 19970219).
-/// CERN PROGLIB# F112    TRPCK           .VERSION KERNFOR  2.08  741218 */
-/// ORIG. 18/12/74 WH */
-///BEGIN_HTML <!--
+///
+/// CERN PROGLIB# F112    TRPCK           .VERSION KERNFOR  2.08  741218
+/// ORIG. 18/12/74 WH
+///
+/// See original documentation of CERNLIB package
+/// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
 
 float *TCL::trpck(const float *s, float *u, int n)
 {
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f112/top.html">F112</A>
- <!--*/
- // -->END_HTML
    int i__, ia, ind, ipiv;
 
-   /* Parameter adjuTments */
+   /* Parameter adjustments */
    --u;    --s;
 
    /* Function Body */
@@ -1072,22 +1035,20 @@ float *TCL::trpck(const float *s, float *u, int n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// trqsq.F -- translated by f2c (version 19970219).
-/// CERN PROGLIB# F112    TRQSQ           .VERSION KERNFOR  4.15  861204 */
-/// ORIG. 18/12/74 WH */
-///BEGIN_HTML <!--
+///
+/// CERN PROGLIB# F112    TRQSQ           .VERSION KERNFOR  4.15  861204
+/// ORIG. 18/12/74 WH
+///
+/// See original documentation of CERNLIB package
+/// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
 
 float *TCL::trqsq(const float *q, const float *s, float *r__, int m)
 {
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f112/top.html">F112</A>
- <!--*/
- // -->END_HTML
-
    int indq, inds, imax, i__, j, k, l;
    int iq, ir, is, iqq;
    double sum;
 
-   /* Parameter adjuTments */
+   /* Parameter adjustments */
    --r__;    --s;    --q;
 
    /* Function Body */
@@ -1140,21 +1101,20 @@ float *TCL::trqsq(const float *q, const float *s, float *r__, int m)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// trsa.F -- translated by f2c (version 19970219).
-/// CERN PROGLIB# F112    TRSA            .VERSION KERNFOR  4.15  861204 */
-/// ORIG. 18/12/74 WH */
-///BEGIN_HTML <!--
+///
+/// CERN PROGLIB# F112    TRSA            .VERSION KERNFOR  4.15  861204
+/// ORIG. 18/12/74 WH
+///
+/// See original documentation of CERNLIB package
+/// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
 
 float *TCL::trsa(const float *s, const float *a, float *b, int m, int n)
 {
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f112/top.html">F112</A>
- <!--*/
- // -->END_HTML
    /* Local variables */
    int inds, i__, j, k, ia, ib, is;
    double sum;
 
-   /* Parameter adjuTments */
+   /* Parameter adjustments */
    --b;    --a;    --s;
 
    /* Function Body */
@@ -1190,17 +1150,15 @@ float *TCL::trsa(const float *s, const float *a, float *b, int m, int n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// trsinv.F -- translated by f2c (version 19970219).
+///
 /// CERN PROGLIB# F112    TRSINV          .VERSION KERNFOR  2.08  741218
-/// ORIG. 18/12/74 WH */
-///BEGIN_HTML <!--
+/// ORIG. 18/12/74 WH
+///
+/// See original documentation of CERNLIB package
+/// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
 
-/* Subroutine */float *TCL::trsinv(const float *g, float *gi, int n)
+float *TCL::trsinv(const float *g, float *gi, int n)
 {
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f112/top.html">F112</A>
- <!--*/
- // -->END_HTML
-
    /* Function Body */
    trchlu(g, gi, n);
    trinv(gi, gi, n);
@@ -1209,22 +1167,20 @@ float *TCL::trsa(const float *s, const float *a, float *b, int m, int n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// trsmlu.F -- translated by f2c (version 19970219).
-/// CERN PROGLIB# F112    TRSMLU          .VERSION KERNFOR  4.15  861204 */
-/// ORIG. 18/12/74 WH */
-///BEGIN_HTML <!--
+///
+/// CERN PROGLIB# F112    TRSMLU          .VERSION KERNFOR  4.15  861204
+/// ORIG. 18/12/74 WH
+///
+/// See original documentation of CERNLIB package
+/// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
 
-/* Subroutine */float *TCL::trsmlu(const float *u, float *s, int n)
+float *TCL::trsmlu(const float *u, float *s, int n)
 {
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f112/top.html">F112</A>
- <!--*/
- // -->END_HTML
-
    /* Local variables */
    int lhor, lver, i__, k, l, ind;
    double sum;
 
-   /* Parameter adjuTments */
+   /* Parameter adjustments */
    --s;    --u;
 
    /* Function Body */
@@ -1246,22 +1202,20 @@ float *TCL::trsa(const float *s, const float *a, float *b, int m, int n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// trsmul.F -- translated by f2c (version 19970219).
-/// CERN PROGLIB# F112    TRSMUL          .VERSION KERNFOR  4.15  861204 */
-/// ORIG. 18/12/74 WH */
-///BEGIN_HTML <!--
+///
+/// CERN PROGLIB# F112    TRSMUL          .VERSION KERNFOR  4.15  861204
+/// ORIG. 18/12/74 WH
+///
+/// See original documentation of CERNLIB package
+/// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
 
-/* Subroutine */float *TCL::trsmul(const float *g, float *gi, int n)
+float *TCL::trsmul(const float *g, float *gi, int n)
 {
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f112/top.html">F112</A>
- <!--*/
- // -->END_HTML
-
    /* Local variables */
    int lhor, lver, lpiv, i__, j, k, ind;
    double sum;
 
-   /* Parameter adjuTments */
+   /* Parameter adjustments */
    --gi;    --g;
 
    /* Function Body */
@@ -1284,21 +1238,18 @@ float *TCL::trsa(const float *s, const float *a, float *b, int m, int n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// trupck.F -- translated by f2c (version 19970219).
+///
 /// CERN PROGLIB# F112    TRUPCK          .VERSION KERNFOR  2.08  741218
 /// ORIG. 18/12/74 WH
-///BEGIN_HTML <!--
+///
+/// See original documentation of CERNLIB package
+/// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
 
 float *TCL::trupck(const float *u, float *s, int m)
 {
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f112/top.html">F112</A>
- <!--*/
- // -->END_HTML
-
-
    int i__, im, is, iu, iv, ih, m2;
 
-   /* Parameter adjuTments */
+   /* Parameter adjustments */
    --s;    --u;
 
    /* Function Body */
@@ -1336,26 +1287,22 @@ float *TCL::trupck(const float *u, float *s, int m)
 } /* trupck_ */
 
 ////////////////////////////////////////////////////////////////////////////////
+/// trsat.F -- translated by f2c (version 19970219).
+///
+/// CERN PROGLIB# F112    TRSAT           .VERSION KERNFOR  4.15  861204
+/// ORIG. 18/12/74 WH
+///
+/// See original documentation of CERNLIB package
+/// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
 
-/* trsat.F -- translated by f2c (version 19970219).
-// Subroutine */ float *TCL::trsat(const float *s, const float *a, float *b, int m, int n)
+float *TCL::trsat(const float *s, const float *a, float *b, int m, int n)
 {
- //BEGIN_HTML <!--
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f112/top.html">F112</A>
- <!--*/
- // -->END_HTML
 
    /* Local variables */
    int inds, i__, j, k, ia, ib, is;
    double sum;
 
-
-   /* CERN PROGLIB# F112    TRSAT           .VERSION KERNFOR  4.15  861204 */
-   /* ORIG. 18/12/74 WH */
-
-
-   /* Parameter adjuTments */
+   /* Parameter adjustments */
    --b;    --a;    --s;
 
    /* Function Body */
@@ -1391,26 +1338,23 @@ float *TCL::trupck(const float *u, float *s, int m)
 
 // ------  double
 
-//____________________________________________________________
-// trata.F -- translated by f2c (version 19970219).
+////////////////////////////////////////////////////////////////////////////////
+/// trata.F -- translated by f2c (version 19970219).
+///
+/// CERN PROGLIB# F112    TRATA           .VERSION KERNFOR  4.15  861204
+/// ORIG. 18/12/74 WH
+///
+/// See original documentation of CERNLIB package
+/// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
+
 double *TCL::trata(const double *a, double *r__, int m, int n)
 {
- //BEGIN_HTML <!--
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f112/top.html">F112</A>
- <!--*/
- // -->END_HTML
 
    /* Local variables */
    int i__, j, ia, mn, ir, iat;
    double sum;
 
-
-   /* CERN PROGLIB# F112    TRATA           .VERSION KERNFOR  4.15  861204 */
-   /* ORIG. 18/12/74 WH */
-
-
-   /* Parameter adjuTments */
+   /* Parameter adjustments */
    --r__;    --a;
 
    /* Function Body */
@@ -1437,24 +1381,22 @@ double *TCL::trata(const double *a, double *r__, int m, int n)
    return 0;
 } /* trata_ */
 
-//____________________________________________________________
-// trats.F -- translated by f2c (version 19970219).
+////////////////////////////////////////////////////////////////////////////////
+/// trats.F -- translated by f2c (version 19970219).
+///
+/// CERN PROGLIB# F112    TRATS           .VERSION KERNFOR  4.15  861204
+/// ORIG. 18/12/74 WH
+///
+/// See original documentation of CERNLIB package
+/// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
+
 double *TCL::trats(const double *a, const double *s, double *b, int m, int n)
 {
- //BEGIN_HTML <!--
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f112/top.html">F112</A>
- <!--*/
- // -->END_HTML
    /* Local variables */
    int inds, i__, j, k, ia, ib, is;
    double sum;
 
-
-   /* CERN PROGLIB# F112    TRATS           .VERSION KERNFOR  4.15  861204 */
-   /* ORIG. 18/12/74 WH */
-
-   /* Parameter adjuTments */
+   /* Parameter adjustments */
    --b;    --s;    --a;
 
    /* Function Body */
@@ -1487,25 +1429,23 @@ double *TCL::trats(const double *a, const double *s, double *b, int m, int n)
    return 0;
 } /* trats_ */
 
-//____________________________________________________________
-// tratsa.F -- translated by f2c (version 19970219).
-/* Subroutine */double *TCL::tratsa(const double *a, const double *s, double *r__, int m, int n)
+////////////////////////////////////////////////////////////////////////////////
+/// tratsa.F -- translated by f2c (version 19970219).
+///
+/// CERN PROGLIB# F112    TRATSA          .VERSION KERNFOR  4.15  861204
+/// ORIG. 18/12/74 WH
+///
+/// See original documentation of CERNLIB package
+/// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
+
+double *TCL::tratsa(const double *a, const double *s, double *r__, int m, int n)
 {
- //BEGIN_HTML <!--
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f112/top.html">F112</A>
- <!--*/
- // -->END_HTML
    /* Local variables */
    int imax, i__, j, k;
    int ia, ir, is, iaa, ind;
    double sum;
 
-   /* CERN PROGLIB# F112    TRATSA          .VERSION KERNFOR  4.15  861204 */
-   /* ORIG. 18/12/74 WH */
-
-
-   /* Parameter adjuTments */
+   /* Parameter adjustments */
    --r__;    --s;    --a;
 
    /* Function Body */
@@ -1547,26 +1487,22 @@ double *TCL::trats(const double *a, const double *s, double *b, int m, int n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// trchlu.F -- translated by f2c (version 19970219).
-///BEGIN_HTML <!--
+///
+/// CERN PROGLIB# F112    TRCHLU          .VERSION KERNFOR  4.16  870601
+/// ORIG. 18/12/74 W.HART
+///
+/// See original documentation of CERNLIB package
+/// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
 
 double *TCL::trchlu(const double *a, double *b, int n)
 {
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f112/top.html">F112</A>
- <!--*/
- // -->END_HTML
    /* Local variables */
    int ipiv, kpiv, i__, j;
    double r__, dc;
    int id, kd;
    double sum;
 
-
-   /* CERN PROGLIB# F112    TRCHLU          .VERSION KERNFOR  4.16  870601 */
-   /* ORIG. 18/12/74 W.HART */
-
-
-   /* Parameter adjuTments */
+   /* Parameter adjustments */
    --b;    --a;
 
    /* Function Body */
@@ -1609,15 +1545,17 @@ L42:
    return 0;
 } /* trchlu_ */
 
-//____________________________________________________________
-// trchul.F -- translated by f2c (version 19970219).
+////////////////////////////////////////////////////////////////////////////////
+/// trchul.F -- translated by f2c (version 19970219).
+///
+/// CERN PROGLIB# F112    TRCHUL          .VERSION KERNFOR  4.16  870601
+/// ORIG. 18/12/74 WH
+///
+/// See original documentation of CERNLIB package
+/// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
+
 double *TCL::trchul(const double *a, double *b, int n)
 {
- //BEGIN_HTML <!--
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f112/top.html">F112</A>
- <!--*/
- // -->END_HTML
    /* Local variables */
    int ipiv, kpiv, i__;
    double r__;
@@ -1626,12 +1564,7 @@ double *TCL::trchul(const double *a, double *b, int n)
    int id, kd;
    double sum;
 
-
-   /* CERN PROGLIB# F112    TRCHUL          .VERSION KERNFOR  4.16  870601 */
-   /* ORIG. 18/12/74 WH */
-
-
-   /* Parameter adjuTments */
+   /* Parameter adjustments */
    --b;    --a;
 
    /* Function Body */
@@ -1677,23 +1610,21 @@ L42:
 
 ////////////////////////////////////////////////////////////////////////////////
 /// trinv.F -- translated by f2c (version 19970219).
-/// CERN PROGLIB# F112    TRINV           .VERSION KERNFOR  4.15  861204 */
-/// ORIG. 18/12/74 WH */
 ///
-///BEGIN_HTML <!--
+/// CERN PROGLIB# F112    TRINV           .VERSION KERNFOR  4.15  861204
+/// ORIG. 18/12/74 WH
+///
+/// See original documentation of CERNLIB package
+/// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
 
 double *TCL::trinv(const double *t, double *s, int n)
 {
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f112/top.html">F112</A>
- <!--*/
- // -->END_HTML
    int lhor, ipiv, lver,  j;
    double r__;
    int mx, ndTep, ind;
    double sum;
 
-   /* Parameter adjuTments */
+   /* Parameter adjustments */
    --s;    --t;
 
    /* Function Body */
@@ -1735,23 +1666,20 @@ double *TCL::trinv(const double *t, double *s, int n)
 } /* trinv_ */
 
 ////////////////////////////////////////////////////////////////////////////////
-///
 /// trla.F -- translated by f2c (version 19970219).
-/// CERN PROGLIB# F112    TRLA            .VERSION KERNFOR  4.15  861204 */
-/// ORIG. 18/12/74 WH */
 ///
-///BEGIN_HTML <!--
+/// CERN PROGLIB# F112    TRLA            .VERSION KERNFOR  4.15  861204
+/// ORIG. 18/12/74 WH
+///
+/// See original documentation of CERNLIB package
+/// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
 
-/* Subroutine */double *TCL::trla(const double *u, const double *a, double *b, int m, int n)
+double *TCL::trla(const double *u, const double *a, double *b, int m, int n)
 {
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f112/top.html">F112</A>
- <!--*/
- // -->END_HTML
    int ipiv, ia, ib, iu;
    double sum;
 
-   /* Parameter adjuTments */
+   /* Parameter adjustments */
    --b;    --a;    --u;
 
    /* Function Body */
@@ -1782,21 +1710,19 @@ double *TCL::trinv(const double *t, double *s, int n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// trlta.F -- translated by f2c (version 19970219).
+///
 /// CERN PROGLIB# F112    TRLTA           .VERSION KERNFOR  4.15  861204
 /// ORIG. 18/12/74 WH
-///BEGIN_HTML <!--
+///
+/// See original documentation of CERNLIB package
+/// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
 
 double *TCL::trlta(const double *u, const double *a, double *b, int m, int n)
 {
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f112/top.html">F112</A>
- <!--*/
- // -->END_HTML
-
    int ipiv, mxpn, i__, nTep, ia, ib, iu, mx;
    double sum;
 
-   /* Parameter adjuTments */
+   /* Parameter adjustments */
    --b;    --a;    --u;
 
    /* Function Body */
@@ -1834,19 +1760,18 @@ double *TCL::trlta(const double *u, const double *a, double *b, int m, int n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// trpck.F -- translated by f2c (version 19970219).
-/// CERN PROGLIB# F112    TRPCK           .VERSION KERNFOR  2.08  741218 */
-/// ORIG. 18/12/74 WH */
-///BEGIN_HTML <!--
+///
+/// CERN PROGLIB# F112    TRPCK           .VERSION KERNFOR  2.08  741218
+/// ORIG. 18/12/74 WH
+///
+/// See original documentation of CERNLIB package
+/// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
 
-/* Subroutine */double *TCL::trpck(const double *s, double *u, int n)
+double *TCL::trpck(const double *s, double *u, int n)
 {
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f112/top.html">F112</A>
- <!--*/
- // -->END_HTML
    int i__, ia, ind, ipiv;
 
-   /* Parameter adjuTments */
+   /* Parameter adjustments */
    --u;    --s;
 
    /* Function Body */
@@ -1869,22 +1794,20 @@ double *TCL::trlta(const double *u, const double *a, double *b, int m, int n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// trqsq.F -- translated by f2c (version 19970219).
-/// CERN PROGLIB# F112    TRQSQ           .VERSION KERNFOR  4.15  861204 */
-/// ORIG. 18/12/74 WH */
-///BEGIN_HTML <!--
+///
+/// CERN PROGLIB# F112    TRQSQ           .VERSION KERNFOR  4.15  861204
+/// ORIG. 18/12/74 WH
+///
+/// See original documentation of CERNLIB package
+/// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
 
 double *TCL::trqsq(const double *q, const double *s, double *r__, int m)
 {
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f112/top.html">F112</A>
- <!--*/
- // -->END_HTML
-
    int indq, inds, imax, i__, j, k, l;
    int iq, ir, is, iqq;
    double sum;
 
-   /* Parameter adjuTments */
+   /* Parameter adjustments */
    --r__;    --s;    --q;
 
    /* Function Body */
@@ -1936,21 +1859,20 @@ double *TCL::trqsq(const double *q, const double *s, double *r__, int m)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// trsa.F -- translated by f2c (version 19970219).
-/// CERN PROGLIB# F112    TRSA            .VERSION KERNFOR  4.15  861204 */
-/// ORIG. 18/12/74 WH */
-///BEGIN_HTML <!--
+///
+/// CERN PROGLIB# F112    TRSA            .VERSION KERNFOR  4.15  861204
+/// ORIG. 18/12/74 WH
+///
+/// See original documentation of CERNLIB package
+/// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
 
 double *TCL::trsa(const double *s, const double *a, double *b, int m, int n)
 {
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f112/top.html">F112</A>
- <!--*/
- // -->END_HTML
    /* Local variables */
    int inds, i__, j, k, ia, ib, is;
    double sum;
 
-   /* Parameter adjuTments */
+   /* Parameter adjustments */
    --b;    --a;    --s;
 
    /* Function Body */
@@ -1985,16 +1907,15 @@ double *TCL::trsa(const double *s, const double *a, double *b, int m, int n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// trsinv.F -- translated by f2c (version 19970219).
+///
 /// CERN PROGLIB# F112    TRSINV          .VERSION KERNFOR  2.08  741218
-/// ORIG. 18/12/74 WH */
-///BEGIN_HTML <!--
+/// ORIG. 18/12/74 WH
+///
+/// See original documentation of CERNLIB package
+/// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
 
-/* Subroutine */double *TCL::trsinv(const double *g, double *gi, int n)
+double *TCL::trsinv(const double *g, double *gi, int n)
 {
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f112/top.html">F112</A>
- <!--*/
- // -->END_HTML
 
    /* Function Body */
    trchlu(g, gi, n);
@@ -2006,22 +1927,21 @@ double *TCL::trsa(const double *s, const double *a, double *b, int m, int n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// trsmlu.F -- translated by f2c (version 19970219).
-/// CERN PROGLIB# F112    TRSMLU          .VERSION KERNFOR  4.15  861204 */
-/// ORIG. 18/12/74 WH */
-///BEGIN_HTML <!--
+///
+/// CERN PROGLIB# F112    TRSMLU          .VERSION KERNFOR  4.15  861204
+/// ORIG. 18/12/74 WH
+///
+/// See original documentation of CERNLIB package
+/// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
 
-/* Subroutine */double *TCL::trsmlu(const double *u, double *s, int n)
+double *TCL::trsmlu(const double *u, double *s, int n)
 {
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f112/top.html">F112</A>
- <!--*/
- // -->END_HTML
 
    /* Local variables */
    int lhor, lver, i__, k, l, ind;
    double sum;
 
-   /* Parameter adjuTments */
+   /* Parameter adjustments */
    --s;    --u;
 
    /* Function Body */
@@ -2043,22 +1963,21 @@ double *TCL::trsa(const double *s, const double *a, double *b, int m, int n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// trsmul.F -- translated by f2c (version 19970219).
-/// CERN PROGLIB# F112    TRSMUL          .VERSION KERNFOR  4.15  861204 */
-/// ORIG. 18/12/74 WH */
-///BEGIN_HTML <!--
+///
+/// CERN PROGLIB# F112    TRSMUL          .VERSION KERNFOR  4.15  861204
+/// ORIG. 18/12/74 WH
+///
+/// See original documentation of CERNLIB package
+/// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
 
-/* Subroutine */double *TCL::trsmul(const double *g, double *gi, int n)
+double *TCL::trsmul(const double *g, double *gi, int n)
 {
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f112/top.html">F112</A>
- <!--*/
- // -->END_HTML
 
    /* Local variables */
    int lhor, lver, lpiv, i__, j, k, ind;
    double sum;
 
-   /* Parameter adjuTments */
+   /* Parameter adjustments */
    --gi;    --g;
 
    /* Function Body */
@@ -2081,21 +2000,18 @@ double *TCL::trsa(const double *s, const double *a, double *b, int m, int n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// trupck.F -- translated by f2c (version 19970219).
+///
 /// CERN PROGLIB# F112    TRUPCK          .VERSION KERNFOR  2.08  741218
 /// ORIG. 18/12/74 WH
-///BEGIN_HTML <!--
+///
+/// See original documentation of CERNLIB package
+/// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
 
-/* Subroutine */double *TCL::trupck(const double *u, double *s, int m)
+double *TCL::trupck(const double *u, double *s, int m)
 {
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f112/top.html">F112</A>
- <!--*/
- // -->END_HTML
-
-
    int i__, im, is, iu, iv, ih, m2;
 
-   /* Parameter adjuTments */
+   /* Parameter adjustments */
    --s;    --u;
 
    /* Function Body */
@@ -2133,22 +2049,20 @@ double *TCL::trsa(const double *s, const double *a, double *b, int m, int n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// trsat.F -- translated by f2c (version 19970219)
+///
 /// CERN PROGLIB# F112    TRSAT           .VERSION KERNFOR  4.15  861204
 /// ORIG. 18/12/74 WH
-///BEGIN_HTML <!--
+///
+/// See original documentation of CERNLIB package
+/// [F112](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f112/top.html)
 
 double *TCL::trsat(const double *s, const double *a, double *b, int m, int n)
 {
- /* -->
-  <b>see original documentation of CERNLIB package</b> <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/f112/top.html">F112</A>
- <!--*/
- // -->END_HTML
-
    /* Local variables */
    int inds, i__, j, k, ia, ib, is;
    double sum;
 
-   /* Parameter adjuTments */
+   /* Parameter adjustments */
    --b;    --a;    --s;
 
    /* Function Body */
@@ -2210,6 +2124,7 @@ float *TCL::trsequ(float *smx, int m, float *b, int n)
    delete [] mem;
    return b;
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Linear Equations, Matrix Inversion
 /// trsequ solves the matrix equation
@@ -2237,4 +2152,3 @@ double *TCL::trsequ(double *smx, int m, double *b, int n)
    delete [] mem;
    return b;
 }
-

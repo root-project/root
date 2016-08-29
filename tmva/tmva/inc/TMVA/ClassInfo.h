@@ -54,7 +54,7 @@ namespace TMVA {
    
    class MsgLogger;
 
-   class ClassInfo {
+   class ClassInfo :public TNamed{
 
    public:
       
@@ -62,14 +62,12 @@ namespace TMVA {
       ~ClassInfo();
 
       // setters
-      void               SetName  ( const TString& name   ) { fName = name; }
       void               SetWeight( const TString& weight ) { fWeight = weight; }
       void               SetCut   ( const TCut&    cut    ) { fCut = cut; }
       void               SetNumber( const UInt_t   index  ) { fNumber = index; }
       void               SetCorrelationMatrix( TMatrixD *matrix ) { fCorrMatrix = matrix; }
 
       // getters
-      const TString&     GetName()              const { return fName; }
       const TString&     GetWeight()            const { return fWeight; }
       const TCut&        GetCut()               const { return fCut; }
       UInt_t             GetNumber()            const { return fNumber; }
@@ -77,15 +75,18 @@ namespace TMVA {
 
    private:
 
-      TString            fName;             //! name of the class
-      TString            fWeight;           //! the input formula string that is the weight for the class
-      TCut               fCut;              //! pretraining cut for the class
-      UInt_t             fNumber;           //! index in of this class in vectors
+      TString            fWeight;           // the input formula string that is the weight for the class
+      TCut               fCut;              // pretraining cut for the class
+      UInt_t             fNumber;           // index in of this class in vectors
 
-      TMatrixD*          fCorrMatrix;       //! Correlation matrix for this class
+      TMatrixD*          fCorrMatrix;       // Correlation matrix for this class
 
       mutable MsgLogger* fLogger;   // message logger
       MsgLogger& Log() const { return *fLogger; }
+   public:
+       
+       ClassDef(ClassInfo,1);
+      
    };
 }
 

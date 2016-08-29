@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_roostats
+/// \notebook
 ///  This example is a generalization of the on/off problem.
 ///
 ///  This example is a generalization of the on/off problem.
@@ -13,7 +14,7 @@
 ///    we observe noff events and expect tau*b events.
 /// Note the significance of tau.  In the background only case:
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 ///    tau ~ <expectation off> / <expectation on>
 /// ~~~
 ///
@@ -28,7 +29,7 @@
 ///   - In the bottom left we observe noffbar events and expect tau bbar events
 /// Note again we have:
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 ///    tau ~ <expecation off bar> / <expectation on bar>
 /// ~~~
 ///
@@ -41,7 +42,7 @@
 /// The "bar" measurements typically have more events (& smaller relative errors).
 /// If we choose
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 /// <expectation noffbar> = tau * rho * <expectation noonbar>
 /// ~~~
 ///
@@ -51,7 +52,7 @@
 /// product will have an error `~1/sqrt(b))`, the contours will be more ameanable
 /// to numerical techniques.  Thus, here we choose to define:
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 ///    tau := <expecation off bar> / (<expectation on bar>)
 ///    rho := <expecation off> / (<expectation on> * tau)
 ///
@@ -79,7 +80,7 @@
 ///
 /// In the example, the initial values of the parameters are:
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 ///   - s    = 40
 ///   - b    = 100
 ///   - tau  = 5
@@ -90,7 +91,7 @@
 ///
 /// and in the toy dataset:
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 ///    - non = 139
 ///    - noff = 528
 ///    - nonbar = 993
@@ -104,7 +105,7 @@
 ///
 /// This can be seen below.
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 ///             GLOBAL      b    bbar   rho      s     tau
 ///         b  0.96820   1.000  0.191 -0.942 -0.762 -0.209
 ///      bbar  0.91191   0.191  1.000  0.000 -0.146 -0.912
@@ -166,188 +167,188 @@ using namespace RooStats;
 
 void FourBinInstructional(bool doBayesian=false, bool doFeldmanCousins=false, bool doMCMC=false){
 
-  // let's time this challenging example
-  TStopwatch t;
-  t.Start();
+   // let's time this challenging example
+   TStopwatch t;
+   t.Start();
 
-  // set RooFit random seed for reproducible results
-  RooRandom::randomGenerator()->SetSeed(4357);
+   // set RooFit random seed for reproducible results
+   RooRandom::randomGenerator()->SetSeed(4357);
 
-  // make model
-  RooWorkspace* wspace = new RooWorkspace("wspace");
-  wspace->factory("Poisson::on(non[0,1000], sum::splusb(s[40,0,100],b[100,0,300]))");
-  wspace->factory("Poisson::off(noff[0,5000], prod::taub(b,tau[5,3,7],rho[1,0,2]))");
-  wspace->factory("Poisson::onbar(nonbar[0,10000], bbar[1000,500,2000])");
-  wspace->factory("Poisson::offbar(noffbar[0,1000000], prod::lambdaoffbar(bbar, tau))");
-  wspace->factory("Gaussian::mcCons(rhonom[1.,0,2], rho, sigma[.2])");
-  wspace->factory("PROD::model(on,off,onbar,offbar,mcCons)");
-  wspace->defineSet("obs","non,noff,nonbar,noffbar,rhonom");
+   // make model
+   RooWorkspace* wspace = new RooWorkspace("wspace");
+   wspace->factory("Poisson::on(non[0,1000], sum::splusb(s[40,0,100],b[100,0,300]))");
+   wspace->factory("Poisson::off(noff[0,5000], prod::taub(b,tau[5,3,7],rho[1,0,2]))");
+   wspace->factory("Poisson::onbar(nonbar[0,10000], bbar[1000,500,2000])");
+   wspace->factory("Poisson::offbar(noffbar[0,1000000], prod::lambdaoffbar(bbar, tau))");
+   wspace->factory("Gaussian::mcCons(rhonom[1.,0,2], rho, sigma[.2])");
+   wspace->factory("PROD::model(on,off,onbar,offbar,mcCons)");
+   wspace->defineSet("obs","non,noff,nonbar,noffbar,rhonom");
 
-  wspace->factory("Uniform::prior_poi({s})");
-  wspace->factory("Uniform::prior_nuis({b,bbar,tau, rho})");
-  wspace->factory("PROD::prior(prior_poi,prior_nuis)");
+   wspace->factory("Uniform::prior_poi({s})");
+   wspace->factory("Uniform::prior_nuis({b,bbar,tau, rho})");
+   wspace->factory("PROD::prior(prior_poi,prior_nuis)");
 
-  ///////////////////////////////////////////
-  // Control some interesting variations
-  // define parameers of interest
-  // for 1-d plots
-  wspace->defineSet("poi","s");
-  wspace->defineSet("nuis","b,tau,rho,bbar");
-  // for 2-d plots to inspect correlations:
-  //  wspace->defineSet("poi","s,rho");
+   // ----------------------------------
+   // Control some interesting variations
+   // define parameers of interest
+   // for 1-d plots
+   wspace->defineSet("poi","s");
+   wspace->defineSet("nuis","b,tau,rho,bbar");
+   // for 2-d plots to inspect correlations:
+   //  wspace->defineSet("poi","s,rho");
 
-  // test simpler cases where parameters are known.
-  //  wspace->var("tau")->setConstant();
-  //  wspace->var("rho")->setConstant();
-  //  wspace->var("b")->setConstant();
-  //  wspace->var("bbar")->setConstant();
+   // test simpler cases where parameters are known.
+   //  wspace->var("tau")->setConstant();
+   //  wspace->var("rho")->setConstant();
+   //  wspace->var("b")->setConstant();
+   //  wspace->var("bbar")->setConstant();
 
-  // inspect workspace
-  //  wspace->Print();
+   // inspect workspace
+   //  wspace->Print();
 
-  ////////////////////////////////////////////////////////////
-  // Generate toy data
-  // generate toy data assuming current value of the parameters
-  // import into workspace.
-  // add Verbose() to see how it's being generated
-  RooDataSet* data =   wspace->pdf("model")->generate(*wspace->set("obs"),1);
-  //  data->Print("v");
-  wspace->import(*data);
+   // ----------------------------------------------------------
+   // Generate toy data
+   // generate toy data assuming current value of the parameters
+   // import into workspace.
+   // add Verbose() to see how it's being generated
+   RooDataSet* data =   wspace->pdf("model")->generate(*wspace->set("obs"),1);
+   //  data->Print("v");
+   wspace->import(*data);
 
-  /////////////////////////////////////////////////////
-  // Now the statistical tests
-  // model config
-  ModelConfig* modelConfig = new ModelConfig("FourBins");
-  modelConfig->SetWorkspace(*wspace);
-  modelConfig->SetPdf(*wspace->pdf("model"));
-  modelConfig->SetPriorPdf(*wspace->pdf("prior"));
-  modelConfig->SetParametersOfInterest(*wspace->set("poi"));
-  modelConfig->SetNuisanceParameters(*wspace->set("nuis"));
-  wspace->import(*modelConfig);
-  wspace->writeToFile("FourBin.root");
+   // ----------------------------------
+   // Now the statistical tests
+   // model config
+   ModelConfig* modelConfig = new ModelConfig("FourBins");
+   modelConfig->SetWorkspace(*wspace);
+   modelConfig->SetPdf(*wspace->pdf("model"));
+   modelConfig->SetPriorPdf(*wspace->pdf("prior"));
+   modelConfig->SetParametersOfInterest(*wspace->set("poi"));
+   modelConfig->SetNuisanceParameters(*wspace->set("nuis"));
+   wspace->import(*modelConfig);
+   wspace->writeToFile("FourBin.root");
 
-  //////////////////////////////////////////////////
-  // If you want to see the covariance matrix uncomment
-  //  wspace->pdf("model")->fitTo(*data);
+   // -------------------------------------------------
+   // If you want to see the covariance matrix uncomment
+   //  wspace->pdf("model")->fitTo(*data);
 
-  // use ProfileLikelihood
-  ProfileLikelihoodCalculator plc(*data, *modelConfig);
-  plc.SetConfidenceLevel(0.95);
-  LikelihoodInterval* plInt = plc.GetInterval();
-  RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
-  RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
-  plInt->LowerLimit( *wspace->var("s") ); // get ugly print out of the way. Fix.
-  RooMsgService::instance().setGlobalKillBelow(msglevel);
+   // use ProfileLikelihood
+   ProfileLikelihoodCalculator plc(*data, *modelConfig);
+   plc.SetConfidenceLevel(0.95);
+   LikelihoodInterval* plInt = plc.GetInterval();
+   RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
+   RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
+   plInt->LowerLimit( *wspace->var("s") ); // get ugly print out of the way. Fix.
+   RooMsgService::instance().setGlobalKillBelow(msglevel);
 
-  // use FeldmaCousins (takes ~20 min)
-  FeldmanCousins fc(*data, *modelConfig);
-  fc.SetConfidenceLevel(0.95);
-  //number counting: dataset always has 1 entry with N events observed
-  fc.FluctuateNumDataEntries(false);
-  fc.UseAdaptiveSampling(true);
-  fc.SetNBins(40);
-  PointSetInterval* fcInt = NULL;
-  if(doFeldmanCousins){ // takes 7 minutes
-    fcInt = (PointSetInterval*) fc.GetInterval(); // fix cast
-  }
-
-
-  // use BayesianCalculator (only 1-d parameter of interest, slow for this problem)
-  BayesianCalculator bc(*data, *modelConfig);
-  bc.SetConfidenceLevel(0.95);
-  SimpleInterval* bInt = NULL;
-  if(doBayesian && wspace->set("poi")->getSize() == 1)   {
-    bInt = bc.GetInterval();
-  } else{
-    cout << "Bayesian Calc. only supports on parameter of interest" << endl;
-  }
+   // use FeldmaCousins (takes ~20 min)
+   FeldmanCousins fc(*data, *modelConfig);
+   fc.SetConfidenceLevel(0.95);
+   //number counting: dataset always has 1 entry with N events observed
+   fc.FluctuateNumDataEntries(false);
+   fc.UseAdaptiveSampling(true);
+   fc.SetNBins(40);
+   PointSetInterval* fcInt = NULL;
+   if(doFeldmanCousins){ // takes 7 minutes
+      fcInt = (PointSetInterval*) fc.GetInterval(); // fix cast
+   }
 
 
-  // use MCMCCalculator  (takes about 1 min)
-  // Want an efficient proposal function, so derive it from covariance
-  // matrix of fit
-  RooFitResult* fit = wspace->pdf("model")->fitTo(*data,Save());
-  ProposalHelper ph;
-  ph.SetVariables((RooArgSet&)fit->floatParsFinal());
-  ph.SetCovMatrix(fit->covarianceMatrix());
-  ph.SetUpdateProposalParameters(kTRUE); // auto-create mean vars and add mappings
-  ph.SetCacheSize(100);
-  ProposalFunction* pf = ph.GetProposalFunction();
+   // use BayesianCalculator (only 1-d parameter of interest, slow for this problem)
+   BayesianCalculator bc(*data, *modelConfig);
+   bc.SetConfidenceLevel(0.95);
+   SimpleInterval* bInt = NULL;
+   if(doBayesian && wspace->set("poi")->getSize() == 1)   {
+      bInt = bc.GetInterval();
+   } else{
+      cout << "Bayesian Calc. only supports on parameter of interest" << endl;
+   }
 
-  MCMCCalculator mc(*data, *modelConfig);
-  mc.SetConfidenceLevel(0.95);
-  mc.SetProposalFunction(*pf);
-  mc.SetNumBurnInSteps(500); // first N steps to be ignored as burn-in
-  mc.SetNumIters(50000);
-  mc.SetLeftSideTailFraction(0.5); // make a central interval
-  MCMCInterval* mcInt = NULL;
-  if(doMCMC)
-    mcInt = mc.GetInterval();
 
-  //////////////////////////////////////
-  // Make some  plots
-  TCanvas* c1 = (TCanvas*) gROOT->Get("c1");
-  if(!c1)
-    c1 = new TCanvas("c1");
+   // use MCMCCalculator  (takes about 1 min)
+   // Want an efficient proposal function, so derive it from covariance
+   // matrix of fit
+   RooFitResult* fit = wspace->pdf("model")->fitTo(*data,Save());
+   ProposalHelper ph;
+   ph.SetVariables((RooArgSet&)fit->floatParsFinal());
+   ph.SetCovMatrix(fit->covarianceMatrix());
+   ph.SetUpdateProposalParameters(kTRUE); // auto-create mean vars and add mappings
+   ph.SetCacheSize(100);
+   ProposalFunction* pf = ph.GetProposalFunction();
 
-  if(doBayesian && doMCMC){
-    c1->Divide(3);
-    c1->cd(1);
-  }
-  else if (doBayesian || doMCMC){
-    c1->Divide(2);
-    c1->cd(1);
-  }
+   MCMCCalculator mc(*data, *modelConfig);
+   mc.SetConfidenceLevel(0.95);
+   mc.SetProposalFunction(*pf);
+   mc.SetNumBurnInSteps(500); // first N steps to be ignored as burn-in
+   mc.SetNumIters(50000);
+   mc.SetLeftSideTailFraction(0.5); // make a central interval
+   MCMCInterval* mcInt = NULL;
+   if(doMCMC)
+      mcInt = mc.GetInterval();
 
-  LikelihoodIntervalPlot* lrplot = new LikelihoodIntervalPlot(plInt);
-  lrplot->Draw();
+   // ----------------------------------
+   // Make some  plots
+   TCanvas* c1 = (TCanvas*) gROOT->Get("c1");
+   if(!c1)
+      c1 = new TCanvas("c1");
 
-  if(doBayesian && wspace->set("poi")->getSize() == 1)   {
-    c1->cd(2);
-    // the plot takes a long time and print lots of error
-    // using a scan it is better
-    bc.SetScanOfPosterior(20);
-    RooPlot* bplot = bc.GetPosteriorPlot();
-    bplot->Draw();
-  }
+   if(doBayesian && doMCMC){
+      c1->Divide(3);
+      c1->cd(1);
+   }
+   else if (doBayesian || doMCMC){
+      c1->Divide(2);
+      c1->cd(1);
+   }
 
-  if(doMCMC){
-    if(doBayesian && wspace->set("poi")->getSize() == 1)
-      c1->cd(3);
-    else
+   LikelihoodIntervalPlot* lrplot = new LikelihoodIntervalPlot(plInt);
+   lrplot->Draw();
+
+   if(doBayesian && wspace->set("poi")->getSize() == 1)   {
       c1->cd(2);
-    MCMCIntervalPlot mcPlot(*mcInt);
-    mcPlot.Draw();
-  }
+      // the plot takes a long time and print lots of error
+      // using a scan it is better
+      bc.SetScanOfPosterior(20);
+      RooPlot* bplot = bc.GetPosteriorPlot();
+      bplot->Draw();
+   }
 
-  ////////////////////////////////////
-  // querry intervals
-  cout << "Profile Likelihood interval on s = [" <<
-    plInt->LowerLimit( *wspace->var("s") ) << ", " <<
-    plInt->UpperLimit( *wspace->var("s") ) << "]" << endl;
-  //Profile Likelihood interval on s = [12.1902, 88.6871]
+   if(doMCMC){
+      if(doBayesian && wspace->set("poi")->getSize() == 1)
+         c1->cd(3);
+      else
+         c1->cd(2);
+      MCMCIntervalPlot mcPlot(*mcInt);
+      mcPlot.Draw();
+   }
+
+   // ----------------------------------
+   // querry intervals
+   cout << "Profile Likelihood interval on s = [" <<
+      plInt->LowerLimit( *wspace->var("s") ) << ", " <<
+      plInt->UpperLimit( *wspace->var("s") ) << "]" << endl;
+   //Profile Likelihood interval on s = [12.1902, 88.6871]
 
 
-  if(doBayesian && wspace->set("poi")->getSize() == 1)   {
-    cout << "Bayesian interval on s = [" <<
-      bInt->LowerLimit( ) << ", " <<
-      bInt->UpperLimit( ) << "]" << endl;
-  }
+   if(doBayesian && wspace->set("poi")->getSize() == 1)   {
+      cout << "Bayesian interval on s = [" <<
+         bInt->LowerLimit( ) << ", " <<
+         bInt->UpperLimit( ) << "]" << endl;
+   }
 
-  if(doFeldmanCousins){
-    cout << "Feldman Cousins interval on s = [" <<
-      fcInt->LowerLimit( *wspace->var("s") ) << ", " <<
-      fcInt->UpperLimit( *wspace->var("s") ) << "]" << endl;
-    //Feldman Cousins interval on s = [18.75 +/- 2.45, 83.75 +/- 2.45]
-  }
+   if(doFeldmanCousins){
+      cout << "Feldman Cousins interval on s = [" <<
+         fcInt->LowerLimit( *wspace->var("s") ) << ", " <<
+         fcInt->UpperLimit( *wspace->var("s") ) << "]" << endl;
+      //Feldman Cousins interval on s = [18.75 +/- 2.45, 83.75 +/- 2.45]
+   }
 
-  if(doMCMC){
-    cout << "MCMC interval on s = [" <<
-      mcInt->LowerLimit(*wspace->var("s") ) << ", " <<
-      mcInt->UpperLimit(*wspace->var("s") ) << "]" << endl;
-    //MCMC interval on s = [15.7628, 84.7266]
+   if(doMCMC){
+      cout << "MCMC interval on s = [" <<
+         mcInt->LowerLimit(*wspace->var("s") ) << ", " <<
+         mcInt->UpperLimit(*wspace->var("s") ) << "]" << endl;
+      //MCMC interval on s = [15.7628, 84.7266]
 
-  }
+   }
 
-  t.Print();
+   t.Print();
 }

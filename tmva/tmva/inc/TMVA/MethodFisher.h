@@ -62,12 +62,10 @@ namespace TMVA {
       MethodFisher( const TString& jobName,
                     const TString& methodTitle,
                     DataSetInfo& dsi,
-                    const TString& theOption = "Fisher",
-                    TDirectory* theTargetDir = 0 );
+                    const TString& theOption = "Fisher");
 
       MethodFisher( DataSetInfo& dsi,
-                    const TString& theWeightFile,
-                    TDirectory* theTargetDir = NULL );
+                    const TString& theWeightFile);
 
       virtual ~MethodFisher( void );
 

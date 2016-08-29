@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_fit
+/// \notebook -nodraw
 /// example of fitting a 3D function
 /// Typical multidimensional parametric regression where the predictor
 /// depends on 3 variables

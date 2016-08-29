@@ -98,12 +98,10 @@ namespace TMVA {
       MethodMLP( const TString& jobName,
                  const TString&  methodTitle,
                  DataSetInfo& theData,
-                 const TString& theOption,
-                 TDirectory* theTargetDir = 0 );
+                 const TString& theOption );
 
       MethodMLP( DataSetInfo& theData,
-                 const TString& theWeightFile,
-                 TDirectory* theTargetDir = 0 );
+                 const TString& theWeightFile );
 
       virtual ~MethodMLP();
 

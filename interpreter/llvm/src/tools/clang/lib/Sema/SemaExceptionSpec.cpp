@@ -110,11 +110,17 @@ bool Sema::CheckSpecifiedExceptionType(QualType &T, SourceRange Range) {
   //   A type denoted in an exception-specification shall not denote a
   //   pointer or reference to an incomplete type, other than (cv) void* or a
   //   pointer or reference to a class currently being defined.
+  // In Microsoft mode, downgrade this to a warning.
+  unsigned DiagID = diag::err_incomplete_in_exception_spec;
+  bool ReturnValueOnError = true;
+  if (getLangOpts().MicrosoftExt) {
+    DiagID = diag::ext_incomplete_in_exception_spec;
+    ReturnValueOnError = false;
+  }
   if (!(PointeeT->isRecordType() &&
         PointeeT->getAs<RecordType>()->isBeingDefined()) &&
-      RequireCompleteType(Range.getBegin(), PointeeT,
-                          diag::err_incomplete_in_exception_spec, Kind, Range))
-    return true;
+      RequireCompleteType(Range.getBegin(), PointeeT, DiagID, Kind, Range))
+    return ReturnValueOnError;
 
   return false;
 }
@@ -994,6 +1000,10 @@ CanThrowResult Sema::canThrow(const Expr *E) {
       return CT;
     return mergeCanThrow(CT, canSubExprsThrow(*this, E));
   }
+
+  case Expr::CXXInheritedCtorInitExprClass:
+    return canCalleeThrow(*this, E,
+                          cast<CXXInheritedCtorInitExpr>(E)->getConstructor());
 
   case Expr::LambdaExprClass: {
     const LambdaExpr *Lambda = cast<LambdaExpr>(E);

@@ -1100,6 +1100,13 @@ bool Parser::isValidAfterTypeSpecifier(bool CouldBeBitfield) {
   // FIXME: we should emit semantic diagnostic when declaration
   // attribute is in type attribute position.
   case tok::kw___attribute:     // struct foo __attribute__((used)) x;
+  case tok::annot_pragma_pack:  // struct foo {...} _Pragma(pack(pop));
+  // struct foo {...} _Pragma(section(...));
+  case tok::annot_pragma_ms_pragma:
+  // struct foo {...} _Pragma(vtordisp(pop));
+  case tok::annot_pragma_ms_vtordisp:
+  // struct foo {...} _Pragma(pointers_to_members(...));
+  case tok::annot_pragma_ms_pointers_to_members:
     return true;
   case tok::colon:
     return CouldBeBitfield;     // enum E { ... }   :         2;
@@ -3413,10 +3420,11 @@ Parser::tryParseExceptionSpecification(bool Delayed,
     NoexceptExpr = ParseConstantExpression();
     T.consumeClose();
     // The argument must be contextually convertible to bool. We use
-    // ActOnBooleanCondition for this purpose.
+    // CheckBooleanCondition for this purpose.
+    // FIXME: Add a proper Sema entry point for this.
     if (!NoexceptExpr.isInvalid()) {
-      NoexceptExpr = Actions.ActOnBooleanCondition(getCurScope(), KeywordLoc,
-                                                   NoexceptExpr.get());
+      NoexceptExpr =
+          Actions.CheckBooleanCondition(KeywordLoc, NoexceptExpr.get());
       NoexceptRange = SourceRange(KeywordLoc, T.getCloseLocation());
     } else {
       NoexceptType = EST_None;
@@ -3763,6 +3771,23 @@ void Parser::ParseCXX11AttributeSpecifier(ParsedAttributes &attrs,
   ConsumeBracket();
   ConsumeBracket();
 
+  SourceLocation CommonScopeLoc;
+  IdentifierInfo *CommonScopeName = nullptr;
+  if (Tok.is(tok::kw_using)) {
+    Diag(Tok.getLocation(), getLangOpts().CPlusPlus1z
+                                ? diag::warn_cxx14_compat_using_attribute_ns
+                                : diag::ext_using_attribute_ns);
+    ConsumeToken();
+
+    CommonScopeName = TryParseCXX11AttributeIdentifier(CommonScopeLoc);
+    if (!CommonScopeName) {
+      Diag(Tok.getLocation(), diag::err_expected) << tok::identifier;
+      SkipUntil(tok::r_square, tok::colon, StopBeforeMatch);
+    }
+    if (!TryConsumeToken(tok::colon) && CommonScopeName)
+      Diag(Tok.getLocation(), diag::err_expected) << tok::colon;
+  }
+
   llvm::SmallDenseMap<IdentifierInfo*, SourceLocation, 4> SeenAttrs;
 
   while (Tok.isNot(tok::r_square)) {
@@ -3788,6 +3813,16 @@ void Parser::ParseCXX11AttributeSpecifier(ParsedAttributes &attrs,
         Diag(Tok.getLocation(), diag::err_expected) << tok::identifier;
         SkipUntil(tok::r_square, tok::comma, StopAtSemi | StopBeforeMatch);
         continue;
+      }
+    }
+
+    if (CommonScopeName) {
+      if (ScopeName) {
+        Diag(ScopeLoc, diag::err_using_attribute_ns_conflict)
+            << SourceRange(CommonScopeLoc);
+      } else {
+        ScopeName = CommonScopeName;
+        ScopeLoc = CommonScopeLoc;
       }
     }
 

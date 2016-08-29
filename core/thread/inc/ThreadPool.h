@@ -22,15 +22,15 @@
 class ThreadPool: public TPool<ThreadPool> {
 public:
    explicit ThreadPool(){
-      this->initTBB->initialize();
+      fInitTBB.initialize();
    }
 
    explicit ThreadPool(size_t nThreads){
-      this->initTBB->initialize(nThreads);
+      fInitTBB.initialize(nThreads);
    }
 
    ~ThreadPool() {
-      this->initTBB->terminate();
+      fInitTBB.terminate();
    }
 
 
@@ -48,8 +48,7 @@ public:
    using TPool<ThreadPool>::Reduce;
 
 private:
-   tbb::task_scheduler_init *initTBB = new tbb::task_scheduler_init(tbb::task_scheduler_init::deferred);
-
+    tbb::task_scheduler_init fInitTBB{tbb::task_scheduler_init::deferred};
 };
 
 /************ TEMPLATE METHODS IMPLEMENTATION ******************/

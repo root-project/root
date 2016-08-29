@@ -59,7 +59,11 @@ INCLUDEFILES += $(CLINGDEP)
 # include dir for picking up RuntimeUniverse.h etc - need to
 # 1) copy relevant headers to include/
 # 2) rely on TCling to addIncludePath instead of using CLING_..._INCL below
-CLINGLLVMCXXFLAGS = $(patsubst -O%,,$(shell $(LLVMCONFIG) --cxxflags))
+# -fvisibility=hidden renders libCore unusable.
+# Filter out warning flags.
+CLINGLLVMCXXFLAGS = $(filter-out -fvisibility-inlines-hidden,$(filter-out -fvisibility=hidden,\
+                    $(filter-out -W%,\
+                    $(patsubst -O%,,$(shell $(LLVMCONFIG) --cxxflags)))))
 # -ffunction-sections breaks the debugger on some platforms ... and does not help libCling at all.
 CLINGCXXFLAGS += -I$(CLINGDIR)/include $(filter-out -ffunction-sections,$(CLINGLLVMCXXFLAGS)) -fno-strict-aliasing
 
@@ -85,7 +89,7 @@ endif
 CLINGLIBEXTRA = $(CLINGLDFLAGSEXTRA) -L$(shell $(LLVMCONFIG) --libdir) \
 	$(addprefix -lclang,\
 		Frontend Serialization Driver CodeGen Parse Sema Analysis AST Edit Lex Basic) \
-	$(shell $(LLVMCONFIG) --libs bitwriter orcjit mcjit native option ipo instrumentation objcarcopts profiledata)\
+	$(shell $(LLVMCONFIG) --libs bitwriter coverage orcjit mcjit native option ipo instrumentation objcarcopts profiledata)\
 	$(shell $(LLVMCONFIG) --ldflags) $(shell $(LLVMCONFIG) --system-libs)
 
 ifneq (,$(filter $(ARCH),win32gcc win64gcc))
@@ -135,7 +139,7 @@ $(call stripsrc,$(CLINGDIR)/%.o): $(CLINGDIR)/%.cpp $(LLVMDEP)
 
 $(CLINGCOMPDH): FORCE $(LLVMDEP)
 	@mkdir -p $(dir $@)
-	@echo '#define LLVM_CXX "$(CXX) $(OPT) $(CLINGCXXFLAGSNOI)"' > $@_tmp
+	@echo '#define CLING_CXX_PATH "$(CXX) $(OPT) $(CLINGCXXFLAGSNOI)"' > $@_tmp
 	@diff -q $@_tmp $@ > /dev/null 2>&1 || mv $@_tmp $@
 	@rm -f $@_tmp
 
@@ -147,7 +151,7 @@ CLINGLDEXPSYM := -Wl,-E
 endif
 $(CLINGEXE): $(CLINGO) $(CLINGEXEO) $(LTEXTINPUTO)
 	$(RSYNC) --exclude '.svn' $(CLINGDIR) $(LLVMDIRO)/tools
-	@cd $(LLVMDIRS)/tools && ln -sf ../../../cling # yikes
+	#@cd $(LLVMDIRS)/tools && ln -sf ../../../cling # yikes
 	@mkdir -p $(dir $@)
 	$(LD) $(CLINGLDEXPSYM) -o $@ $(CLINGO) $(CLINGEXEO) $(LTEXTINPUTO) $(CLINGLIBEXTRA) 
 endif
@@ -155,7 +159,7 @@ endif
 ##### extra rules ######
 ifneq ($(LLVMDEV),)
 $(CLINGO)   : CLINGCXXFLAGS += '-DCLING_INCLUDE_PATHS="$(CLINGDIR)/include:$(shell pwd)/$(LLVMDIRO)/include:$(shell pwd)/$(LLVMDIRO)/tools/clang/include:$(LLVMDIRS)/include:$(LLVMDIRS)/tools/clang/include"'
-$(CLINGEXEO): CLINGCXXFLAGS += -fexceptions -I$(TEXTINPUTDIRS)
+$(CLINGEXEO): CLINGCXXFLAGS += -fexceptions -I$(TEXTINPUTDIRS) -I$(LLVMDIRO)/include
 else
 endif
 

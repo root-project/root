@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_math
+/// \notebook
 /// Example of Chebyshev polynomials
 /// using new TFormula pre-defined definitions of chebyshev polynomials
 ///

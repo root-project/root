@@ -1,8 +1,8 @@
-/// @file JSRootCore.js
-/// Core methods of JavaScript ROOT
+/** @file JSRootCore.js
+ * Core methods of JavaScript ROOT */
 
-/// @namespace JSROOT
-/// Holder of all JSROOT functions and classes
+/** @namespace JSROOT
+  * Holder of all JSROOT functions and classes */
 
 (function( factory ) {
    if ( typeof define === "function" && define.amd ) {
@@ -20,9 +20,10 @@
             'rawinflate'           : dir+'rawinflate'+ext,
             'MathJax'              : 'https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG&amp;delayStartupUntil=configured',
             'saveSvgAsPng'         : dir+'saveSvgAsPng'+ext,
-            'threejs'              : dir+'three'+ext,
+            'dat.gui'              : dir+'dat.gui.min',
+            'threejs'              : dir+'three',
             'threejs_all'          : dir+'three.extra'+ext,
-//            'JSRootCore'           : dir+'JSRootCore'+ext,
+            'JSRootCore'           : dir+'JSRootCore'+ext,
             'JSRootMath'           : dir+'JSRootMath'+ext,
             'JSRootInterface'      : dir+'JSRootInterface'+ext,
             'JSRootIOEvolution'    : dir+'JSRootIOEvolution'+ext,
@@ -31,6 +32,7 @@
             'JSRootPainter.jquery' : dir+'JSRootPainter.jquery'+ext,
             'JSRoot3DPainter'      : dir+'JSRoot3DPainter'+ext,
             'ThreeCSG'             : dir+'ThreeCSG'+ext,
+            'JSRootGeoBase'        : dir+'JSRootGeoBase'+ext,
             'JSRootGeoPainter'     : dir+'JSRootGeoPainter'+ext
          };
 
@@ -44,11 +46,6 @@
          if (requirejs.defined(module) || (cfg_paths && (module in cfg_paths)))
             delete paths[module];
 
-      // add mapping if script loaded as bower module 'jsroot'
-//      if (cfg_paths  && ('jsroot' in cfg_paths))
-//           requirejs.config({ map : { "*": { "JSRootCore": "jsroot" } } });
-
-
       // configure all dependencies
       requirejs.config({
         paths: paths,
@@ -56,6 +53,7 @@
          'jqueryui-mousewheel': { deps: ['jquery-ui'] },
          'jqueryui-touch-punch': { deps: ['jquery-ui'] },
          'threejs_all': { deps: [ 'threejs'] },
+         'ThreeCSG' : { deps: [ 'threejs'] },
          'MathJax': {
              exports: 'MathJax',
              init: function () {
@@ -94,7 +92,7 @@
    }
 } (function(JSROOT) {
 
-   JSROOT.version = "4.4.4 20/04/2016";
+   JSROOT.version = "4.6.0 22/08/2016";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -137,7 +135,7 @@
 
    // default draw styles, can be changed after loading of JSRootCore.js
    JSROOT.gStyle = {
-         Tooltip : 2, // 0 - off, 1-default, 2-advanced (experimental)
+         Tooltip : 1, // 0 - off, 1 - on
          ContextMenu : true,
          Zooming : true,
          MoveResize : true,   // enable move and resize of elements like statbox, title, pave, colz
@@ -157,8 +155,11 @@
          Palette : 57,
          MathJax : 0,  // 0 - never, 1 - only for complex cases, 2 - always
          ProgressBox : true,  // show progress box
-         Embed3DinSVG : 2,  // 0 - no embed, 1 - overlay over SVG (IE), 2 - embed into SVG (works only with Firefox and Chrome)
-         NoWebGL : false // if true, WebGL will be disabled
+         Embed3DinSVG : 2,  // 0 - no embed, only 3D plot, 1 - overlay over SVG (IE/WebKit), 2 - embed into SVG (only Firefox)
+         NoWebGL : false, // if true, WebGL will be disabled,
+         EndErrorSize : 2, // size in pixels of end error for E1 draw options
+         GeoGradPerSegm : 6, // amount of grads per segment in TGeo spherical shapes like tube
+         GeoCompressComp : true // if one should compress faces after creation of composite shape
       };
 
    JSROOT.BIT = function(n) { return 1 << (n); }
@@ -202,51 +203,64 @@
          console.log(value);
    }
 
+   // extract reference, coded inside string
+   // check already should be done, that string starts from "$ref:"
+   JSROOT.JSONR_unref_str = function(value, dy) {
+      // if ((value.length > 5) && (value.indexOf("$ref:") === 0))
+      var i = parseInt(value.substr(5));
+      return (!isNaN(i) && (i >= 0) && (i < dy.length)) ? dy[i] : value;
+   }
+
+   // replace all references inside object
+   // object should not be null
    // This is part of the JSON-R code, found on
    // https://github.com/graniteds/jsonr
    // Only unref part was used, arrays are not accounted as objects
-   // Should be used to reintroduce objects references, produced by TBufferJSON
-   JSROOT.JSONR_unref = function(value, dy) {
-      var c, i, k, ks;
-      if (!dy) dy = [];
+   JSROOT.JSONR_unref_obj = function(value, dy) {
+      var i, fld, proto = Object.prototype.toString.apply(value);
 
-      switch (typeof value) {
-      case 'string':
-          if ((value.length > 5) && (value.substr(0, 5) == "$ref:")) {
-             c = parseInt(value.substr(5));
-             if (!isNaN(c) && (c < dy.length)) {
-                value = dy[c];
-             }
+      if (proto === '[object Array]') {
+          for (i = 0; i < value.length; ++i) {
+             fld = value[i];
+             if (typeof fld === 'string') {
+                if ((fld.length > 5) && (fld.indexOf("$ref:") === 0))
+                   value[i] = this.JSONR_unref_str(fld, dy);
+             } else
+             if ((typeof fld === 'object') && (fld !== null))
+                this.JSONR_unref_obj(fld, dy);
           }
-          break;
-
-      case 'object':
-         if (value !== null) {
-
-            if (Object.prototype.toString.apply(value) === '[object Array]') {
-               for (i = 0; i < value.length; ++i) {
-                  value[i] = this.JSONR_unref(value[i], dy);
-               }
-            } else {
-
-               // account only objects in ref table
-               if (dy.indexOf(value) === -1) {
-                  dy.push(value);
-               }
-
-               // add methods to all objects, where _typename is specified
-               if ('_typename' in value) this.addMethods(value);
-
-               ks = Object.keys(value);
-               for (i = 0; i < ks.length; ++i) {
-                  k = ks[i];
-                  value[k] = this.JSONR_unref(value[k], dy);
-               }
-            }
-         }
-         break;
+          return;
       }
 
+      // if object in the table, return it
+      if (dy.indexOf(value) >= 0) return;
+
+      // add object to object map
+      dy.push(value);
+
+      // add methods to all objects, where _typename is specified
+      if ('_typename' in value) this.addMethods(value);
+
+      var ks = Object.keys(value);
+      for (var k = 0; k < ks.length; ++k) {
+         i = ks[k];
+         fld = value[i];
+
+         if (typeof fld === 'string') {
+            if ((fld.length > 5) && (fld.indexOf("$ref:") === 0))
+               value[i] = this.JSONR_unref_str(fld, dy);
+         } else
+         if ((typeof fld === 'object') && (fld !== null))
+            this.JSONR_unref_obj(fld, dy);
+      }
+
+      return value;
+   }
+
+   /// Should be used to reintroduce objects references, produced by TBufferJSON
+   JSROOT.JSONR_unref = function(value) {
+      if ((typeof value === 'object') && (value !== null))
+         this.JSONR_unref_obj(value, []);
       return value;
    }
 
@@ -254,7 +268,7 @@
 
    // This is simple replacement of jQuery.extend method
    // Just copy (not clone) all fields from source to the target object
-   JSROOT.extend = function(tgt, src, map, deep_copy) {
+   JSROOT.extend = function(tgt, src) {
       if ((src === null) || (typeof src !== 'object')) return src;
       if ((tgt === null) || (typeof tgt !== 'object')) tgt = {};
 
@@ -265,11 +279,11 @@
    }
 
    // Make deep clone of the object, including all sub-objects
-   JSROOT.clone = function(src, map) {
+   JSROOT.clone = function(src, map, nofunc) {
       if (src === null) return null;
 
       if (!map) {
-         map = { obj:[], clones:[] };
+         map = { obj:[], clones:[], nofunc: nofunc };
       } else {
          var i = map.obj.indexOf(src);
          if (i>=0) return map.clones[i];
@@ -283,7 +297,10 @@
          map.obj.push(src);
          map.clones.push(tgt);
          for (var i = 0; i < src.length; ++i)
-            tgt.push(JSROOT.clone(src[i], map));
+            if (typeof src[i] === 'object')
+               tgt.push(JSROOT.clone(src[i], map));
+            else
+               tgt.push(src[i]);
 
          return tgt;
       }
@@ -307,6 +324,7 @@
          if (typeof src[k] === 'object')
             tgt[k] = JSROOT.clone(src[k], map);
          else
+         if (!map.nofunc || (typeof src[k]!=='function'))
             tgt[k] = src[k];
       }
 
@@ -316,7 +334,7 @@
    // method can be used to delete all functions from objects
    // only such objects can be cloned when transfer to Worker
    JSROOT.clear_func = function(src, map) {
-      if (src === null) return;
+      if (src === null) return src;
 
       var proto = Object.prototype.toString.apply(src);
 
@@ -324,14 +342,14 @@
          for (var n=0;n<src.length;n++)
             if (typeof src[n] === 'object')
                JSROOT.clear_func(src[n], map);
-         return;
+         return src;
       }
 
-      if ((proto.indexOf('[object ') == 0) && (proto.indexOf('Array]') == proto.length-6)) return;
+      if ((proto.indexOf('[object ') == 0) && (proto.indexOf('Array]') == proto.length-6)) return src;
 
       if (!map) map = [];
       var nomap = (map.length == 0);
-      if ('__clean_func__' in src) return;
+      if ('__clean_func__' in src) return src;
 
       map.push(src);
       src['__clean_func__'] = true;
@@ -346,6 +364,8 @@
       if (nomap)
          for (var n=0;n<map.length;++n)
             delete map[n]['__clean_func__'];
+
+      return src;
    }
 
 
@@ -356,6 +376,7 @@
       return obj;
    }
 
+   /** @memberOf JSROOT */
    JSROOT.GetUrlOption = function(opt, url, dflt) {
       // analyzes document.URL and extracts options after '?' mark
       // following options supported ?opt1&opt2=3
@@ -446,16 +467,19 @@
 
    JSROOT.findFunction = function(name) {
       if (typeof name === 'function') return name;
-      var func = window[name];
-      if (typeof func == 'function') return func;
-      var separ = name.lastIndexOf(".");
-      if (separ<0) return null;
-      var namespace = name.slice(0, separ);
-      name = name.slice(separ+1);
-      if (namespace=="JSROOT") func = this[name]; else
-      if (namespace=="JSROOT.Painter") { if ('Painter' in this) func = this['Painter'][name]; } else
-      if (window[namespace]) func = window[namespace][name];
-      return (typeof func == 'function') ? func : null;
+      if (typeof window[name] == 'function') return window[name];
+      if ((typeof name !== 'string') || (name.indexOf(".") < 0)) return null;
+
+      var names = name.split('.'), elem = window;
+      for (var n=0;n<names.length;++n) {
+         if ((n==0) && (names[0]==='JSROOT'))
+            elem = this;
+         else
+            elem = elem[names[n]];
+         if (!elem) return null;
+      }
+
+      return (typeof elem == 'function') ? elem : null;
    }
 
    JSROOT.CallBack = function(func, arg1, arg2) {
@@ -630,6 +654,27 @@
          isbower = true;
          filename = filename.slice(3);
       }
+
+      var font_suffix = filename.indexOf('.typeface.json');
+      if (font_suffix > 0) {
+         var fontid = 'threejs_font_' + filename.slice(filename.lastIndexOf('/')+1, font_suffix);
+         if (typeof JSROOT[fontid] !== 'undefined') return completeLoad();
+
+         if ((typeof THREE === 'undefined') || (typeof THREE.FontLoader === 'undefined')) {
+            console.log('fail to load',filename,'no (proper) three.js found');
+            return completeLoad();
+         }
+
+         JSROOT.progress("loading " + filename + " ...");
+
+         var loader = new THREE.FontLoader();
+         loader.load( filename, function ( response ) {
+            JSROOT[fontid] = response;
+            completeLoad();
+         } );
+         return;
+      }
+
       var isstyle = filename.indexOf('.css') > 0;
 
       if (isstyle) {
@@ -700,25 +745,27 @@
    JSROOT.AssertPrerequisites = function(kind, callback, debugout) {
       // one could specify kind of requirements
       // 'io' for I/O functionality (default)
-      // '2d' for 2d graphic
+      // '2d' for basic 2d graphic (TCanvas, TH1)
+      // 'more2d' for extra 2d graphic (TH2, TGraph)
       // 'jq' jQuery and jQuery-ui
       // 'jq2d' jQuery-dependend part of 2d graphic
-      // '3d' for 3d graphic
+      // '3d' for histograms 3d graphic
+      // 'geom' for geometry drawing support
       // 'simple' for basic user interface
       // 'load:' list of user-specific scripts at the end of kind string
 
       var jsroot = JSROOT;
 
-      if (!('doing_assert' in jsroot)) jsroot.doing_assert = [];
+      if (jsroot.doing_assert === undefined) jsroot.doing_assert = [];
+      if (jsroot.ready_modules === undefined) jsroot.ready_modules = [];
 
-
-      if ((typeof kind != 'string') || (kind == ''))
+      if ((typeof kind !== 'string') || (kind == ''))
          return jsroot.CallBack(callback);
 
-      if (kind=='__next__') {
+      if (kind === '__next__') {
          if (jsroot.doing_assert.length==0) return;
          var req = jsroot.doing_assert[0];
-         if ('running' in req) return;
+         if (req.running) return;
          kind = req._kind;
          callback = req._callback;
          debugout = req._debug;
@@ -727,17 +774,16 @@
          if (jsroot.doing_assert.length > 1) return;
       }
 
-      jsroot.doing_assert[0]['running'] = true;
+      jsroot.doing_assert[0].running = true;
 
       if (kind.charAt(kind.length-1)!=";") kind+=";";
 
-      var ext = jsroot.source_min ? ".min" : "";
-
-      var need_jquery = false, use_bower = (JSROOT.bower_dir.length>0);
-
-      // file names should be separated with ';'
-      var mainfiles = "", extrafiles = ""; // scripts for direct loadin
-      var modules = [];  // modules used for require.js
+      var ext = jsroot.source_min ? ".min" : "",
+          need_jquery = false,
+          use_bower = (jsroot.bower_dir.length > 0),
+          mainfiles = "",
+          extrafiles = "", // scripts for direct loadin
+          modules = [];  // modules used for require.js
 
       if (kind.indexOf('io;')>=0) {
          mainfiles += "$$$scripts/rawinflate" + ext + ".js;" +
@@ -746,13 +792,13 @@
       }
 
       if (kind.indexOf('2d;')>=0) {
-         if (!('_test_d3_' in jsroot)) {
+         if (jsroot._test_d3_ === undefined) {
             if (typeof d3 != 'undefined') {
-               jsroot.console('Reuse existing d3.js ' + d3.version + ", required 3.4.10", debugout);
-               jsroot['_test_d3_'] = 1;
+               jsroot.console('Reuse existing d3.js ' + d3.version + ", required 3.5.9", debugout);
+               jsroot._test_d3_ = 1;
             } else {
                mainfiles += use_bower ? '###d3/d3.min.js;' : '$$$scripts/d3.v3.min.js;';
-               jsroot['_test_d3_'] = 2;
+               jsroot._test_d3_ = 2;
             }
          }
          modules.push('JSRootPainter');
@@ -784,18 +830,23 @@
       }
 
       if ((kind.indexOf("3d;")>=0) || (kind.indexOf("geom;")>=0)) {
-         if (use_bower)
+         if (use_bower) {
            mainfiles += "###threejs/build/three.min.js;" +
-                        "###threejs/examples/js/utils/FontUtils.js;" +
                         "###threejs/examples/js/renderers/Projector.js;" +
                         "###threejs/examples/js/renderers/CanvasRenderer.js;" +
-                        "###threejs/examples/js/geometries/TextGeometry.js;" +
                         "###threejs/examples/js/controls/OrbitControls.js;" +
                         "###threejs/examples/js/controls/TransformControls.js;" +
-                        "###threejs/examples/fonts/helvetiker_regular.typeface.js";
-         else
-            mainfiles += "$$$scripts/three" + ext + ".js;" +
+                        "###threejs/examples/js/shaders/CopyShader.js;" +
+                        "###threejs/examples/js/postprocessing/EffectComposer.js;" +
+                        "###threejs/examples/js/postprocessing/MaskPass.js;" +
+                        "###threejs/examples/js/postprocessing/RenderPass.js;" +
+                        "###threejs/examples/js/postprocessing/ShaderPass.js;" +
+                        "###threejs/examples/js/shaders/SSAOShader.js;"
+           extrafiles += "###threejs/examples/fonts/helvetiker_regular.typeface.json;";
+         } else {
+            mainfiles += "$$$scripts/three.js;" +
                          "$$$scripts/three.extra" + ext + ".js;";
+         }
          modules.push("threejs_all");
          mainfiles += "$$$scripts/JSRoot3DPainter" + ext + ".js;";
          modules.push('JSRoot3DPainter');
@@ -803,9 +854,11 @@
 
       if (kind.indexOf("geom;")>=0) {
          mainfiles += "$$$scripts/ThreeCSG" + ext + ".js;" +
-                      "$$$scripts/JSRootGeoPainter" + ext + ".js;";
+                      "$$$scripts/JSRootGeoBase" + ext + ".js;" +
+                      "$$$scripts/JSRootGeoPainter" + ext + ".js;" +
+                      "$$$scripts/dat.gui.min.js;";
          extrafiles += "$$$style/JSRootGeoPainter" + ext + ".css;";
-         modules.push('ThreeCSG', 'JSRootGeoPainter');
+         modules.push('ThreeCSG', 'JSRootGeoBase', 'JSRootGeoPainter', 'dat.gui');
       }
 
       if (kind.indexOf("mathjax;")>=0) {
@@ -813,7 +866,7 @@
             mainfiles += (use_bower ? "###MathJax/MathJax.js" : "https://cdn.mathjax.org/mathjax/latest/MathJax.js") +
                          "?config=TeX-AMS-MML_SVG," + jsroot.source_dir + "scripts/mathjax_config.js;";
          }
-         if (JSROOT.gStyle.MathJax == 0) JSROOT.gStyle.MathJax = 1;
+         if (jsroot.gStyle.MathJax == 0) jsroot.gStyle.MathJax = 1;
          modules.push('MathJax');
       }
 
@@ -824,7 +877,7 @@
          modules.push('JSRootInterface');
       }
 
-      if (need_jquery && (JSROOT.load_jquery==null)) {
+      if (need_jquery && !jsroot.load_jquery) {
          var has_jq = (typeof jQuery != 'undefined'), lst_jq = "";
 
          if (has_jq)
@@ -838,7 +891,7 @@
             extrafiles += '$$$style/jquery-ui' + ext + '.css;';
          }
 
-         if (JSROOT.touches) {
+         if (jsroot.touches) {
             lst_jq += use_bower ? '###jqueryui-touch-punch/jquery.ui.touch-punch.min.js;' : '$$$scripts/touch-punch.min.js;';
             modules.push('jqueryui-touch-punch');
          }
@@ -853,13 +906,26 @@
       if (pos<0) pos = kind.indexOf("load:");
       if (pos>=0) extrafiles += kind.slice(pos+5);
 
+
       function load_callback() {
          var req = jsroot.doing_assert.shift();
+         for (var n=0;n<req.modules.length;++n)
+            jsroot.ready_modules.push(req.modules[n]);
          jsroot.CallBack(req._callback);
          jsroot.AssertPrerequisites('__next__');
       }
 
-      if ((typeof define === "function") && define.amd && (modules.length>0)) {
+      // check if modules already loaded
+      for (var n=modules.length-1;n>=0;--n)
+         if (jsroot.ready_modules.indexOf(modules[n])>=0)
+            modules.splice(n,1);
+
+      // no modules means no main files
+      if (modules.length===0) mainfiles = "";
+
+      jsroot.doing_assert[0].modules = modules;
+
+      if ((modules.length>0) && (typeof define === "function") && define.amd) {
          jsroot.console("loading " + JSON.stringify(modules) + " with require.js", debugout);
          require(modules, function() {
             jsroot.loadScript(extrafiles, load_callback, debugout);
@@ -1057,7 +1123,60 @@
                                   fTitle: "", fTitleOffset: 1, fTitleSize: 0.035,
                                   fWmax: 100, fWmin: 0 });
             break;
-
+         case 'TAttPad':
+            JSROOT.extend(obj, { fLeftMargin: 0.1, fRightMargin: 0.1, fBottomMargin: 0.1, fTopMargin: 0.1,
+                                 fXfile: 2, fYfile: 2, fAfile: 1, fXstat: 0.99, fYstat: 0.99, fAstat: 2,
+                                 fFrameFillColor: 0, fFrameLineColor: 1, fFrameFillStyle: 1001,
+                                 fFrameLineStyle: 1, fFrameLineWidth: 1, fFrameBorderSize: 1,
+                                 fFrameBorderMode: 0 });
+            break;
+         case 'TPad':
+            JSROOT.Create("TObject", obj);
+            JSROOT.Create("TAttLine", obj);
+            JSROOT.Create("TAttFill", obj);
+            JSROOT.Create("TAttPad", obj);
+            JSROOT.extend(obj, { fX1: 0, fY1: 0, fX2: 1, fY2: 1, fXtoAbsPixelk: 1, fXtoPixelk: 1,
+                                 fXtoPixel: 1, fYtoAbsPixelk: 1, fYtoPixelk: 1, fYtoPixel: 1,
+                                 fUtoAbsPixelk: 1, fUtoPixelk: 1, fUtoPixel: 1, fVtoAbsPixelk: 1,
+                                 fVtoPixelk: 1, fVtoPixel: 1, fAbsPixeltoXk: 1, fPixeltoXk: 1,
+                                 fPixeltoX: 1, fAbsPixeltoYk: 1, fPixeltoYk: 1, fPixeltoY: 1,
+                                 fXlowNDC: 0, fYlowNDC: 0, fXUpNDC: 0, fYUpNDC: 0, fWNDC: 1, fHNDC: 1,
+                                 fAbsXlowNDC: 0, fAbsYlowNDC: 0, fAbsWNDC: 1, fAbsHNDC: 1,
+                                 fUxmin: 0, fUymin: 0, fUxmax: 0, fUymax: 0, fTheta: 30, fPhi: 30, fAspectRatio: 0,
+                                 fNumber: 0, fTickx: 0, fTicky: 0, fLogx: 0, fLogy: 0, fLogz: 0,
+                                 fPadPaint: 0, fCrosshair: 0, fCrosshairPos: 0, fBorderSize: 2,
+                                 fBorderMode: 0, fModified: false, fGridx: false, fGridy: false,
+                                 fAbsCoord: false, fEditable: true, fFixedAspectRatio: false,
+                                 fPrimitives: JSROOT.Create("TList"), fExecs: null,
+                                 fName: "pad", fTitle: "canvas" });
+            break;
+         case 'TAttCanvas':
+            JSROOT.extend(obj, { fXBetween: 2, fYBetween: 2, fTitleFromTop: 1.2,
+                                 fXdate: 0.2, fYdate: 0.3, fAdate: 1 });
+            break;
+         case 'TCanvas':
+            JSROOT.Create("TPad", obj);
+            JSROOT.extend(obj, { fDoubleBuffer: 0, fRetained: true, fXsizeUser: 0,
+                                 fYsizeUser: 0, fXsizeReal: 20, fYsizeReal: 10,
+                                 fWindowTopX: 0, fWindowTopY: 0, fWindowWidth: 0, fWindowHeight: 0,
+                                 fCw: 800, fCh : 500, fCatt: JSROOT.Create("TAttCanvas"),
+                                 kMoveOpaque: true, kResizeOpaque: true, fHighLightColor: 5,
+                                 fBatch: true, kShowEventStatus: false, kAutoExec: true, kMenuBar: true });
+            break;
+         case 'TGeoVolume':
+            JSROOT.Create("TNamed", obj);
+            JSROOT.Create("TAttLine", obj);
+            JSROOT.Create("TAttFill", obj);
+            JSROOT.extend(obj, { fGeoAtt:0, fFinder: null, fMedium: null, fNodes: null, fNtotal: 0, fNumber: 0, fRefCount: 0, fShape: null, fVoxels: null });
+            break;
+         case 'TGeoNode':
+            JSROOT.Create("TNamed", obj);
+            JSROOT.extend(obj, { fGeoAtt:0, fMother: null, fNovlp: 0, fNumber: 0, fOverlaps: null, fVolume: null });
+            break;
+         case 'TGeoNodeMatrix':
+            JSROOT.Create("TGeoNode", obj);
+            JSROOT.extend(obj, { fMatrix: null });
+            break;
       }
 
       obj._typename = typename;
@@ -1127,14 +1246,19 @@
    JSROOT.getMethods = function(typename, obj) {
       var m = JSROOT.methodsCache[typename];
 
-      if (m !== undefined) return m;
+      var has_methods = (m!==undefined);
 
-      m = {};
+      if (!has_methods) m = {};
 
-      if ((typename=="TObject") || (typename=="TNamed") || ((obj!==undefined) && ('fBits' in obj))) {
-         m.TestBit = function (f) { return (this.fBits & f) != 0; };
-         m.InvertBit = function (f) { this.fBits = this.fBits ^ (f & 0xffffff); };
-      }
+      // Due to binary I/O such TObject methods may not be set for derived classes
+      // Therefore when methods requested for given object, check also that basic methods are there
+      if ((typename=="TObject") || (typename=="TNamed") || (obj && (obj.fBits!==undefined)))
+         if (m.TestBit === undefined) {
+            m.TestBit = function (f) { return (this.fBits & f) != 0; };
+            m.InvertBit = function (f) { this.fBits = this.fBits ^ (f & 0xffffff); };
+         }
+
+      if (has_methods) return m;
 
       if ((typename === 'TList') || (typename === 'THashList')) {
          m.Clear = function() {
@@ -1175,6 +1299,7 @@
             if (! ('_func' in this) || (this._title !== this.fTitle)) {
 
               var _func = this.fTitle;
+              if (_func === "gaus") _func = "gaus(0)";
 
               if ('formulas' in this)
                  for (var i=0;i<this.formulas.length;++i)
@@ -1186,6 +1311,7 @@
               if (typeof JSROOT.Math == 'object') {
                  this._math = JSROOT.Math;
                  _func = _func.replace('TMath::Prob(', 'this._math.Prob(');
+                 _func = _func.replace('TMath::Gaus(', 'this._math.Gaus(');
                  _func = _func.replace('gaus(', 'this._math.gaus(this, x, ');
                  _func = _func.replace('gausn(', 'this._math.gausn(this, x, ');
                  _func = _func.replace('expo(', 'this._math.expo(this, x, ');
@@ -1195,14 +1321,17 @@
               _func = _func.replace('pi', 'Math.PI');
               for (var i=0;i<this.fNpar;++i)
                  while(_func.indexOf('['+i+']') != -1)
-                    _func = _func.replace('['+i+']', this.GetParValue(i));
+                    _func = _func.replace('['+i+']', '('+this.GetParValue(i)+')');
               _func = _func.replace(/\b(sin)\b/gi, 'Math.sin');
               _func = _func.replace(/\b(cos)\b/gi, 'Math.cos');
               _func = _func.replace(/\b(tan)\b/gi, 'Math.tan');
               _func = _func.replace(/\b(exp)\b/gi, 'Math.exp');
+              for (var n=2;n<10;++n)
+                 _func = _func.replace('x^'+n, 'Math.pow(x,'+n+')');
 
-               this._func = new Function("x", "return " + _func).bind(this);
-               this._title = this.fTitle;
+              this._func = new Function("x", "return " + _func).bind(this);
+
+              this._title = this.fTitle;
             }
 
             return this._func(x);
@@ -1325,6 +1454,14 @@
          };
       }
 
+      if (typename == "TAxis") {
+         m.GetBinLowEdge = function(bin) {
+            if (this.fNbins <= 0) return 0;
+            if ((this.fXbins.length > 0) && (bin > 0) && (bin <= this.fNbins)) return this.fXbins[bin-1];
+            return this.fXmin + (bin-1) * (this.fXmax - this.fXmin) / this.fNbins;
+         }
+      }
+
       JSROOT.methodsCache[typename] = m;
       return m;
    };
@@ -1434,14 +1571,6 @@
       }
 
       var src = JSROOT.source_fullpath;
-
-//      if (JSROOT.source_min) {
-//         if ( typeof define === "function" && define.amd ) {
-            // all references are done with 'JSRootCore' name,
-            // define it directly, otherwise it will be loaded once again
-//            define('JSRootCore', [], JSROOT);
-//         }
-//      }
 
       if (JSROOT.GetUrlOption('gui', src) !== null)
          return window_on_load( function() { JSROOT.BuildSimpleGUI(); } );

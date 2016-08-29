@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_image
+/// \notebook
 /// Importing an image and manipulating it.
 ///
 /// \image html image_galaxy_image.png

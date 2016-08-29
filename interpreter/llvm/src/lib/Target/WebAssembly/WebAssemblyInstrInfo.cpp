@@ -34,8 +34,8 @@ WebAssemblyInstrInfo::WebAssemblyInstrInfo(const WebAssemblySubtarget &STI)
       RI(STI.getTargetTriple()) {}
 
 bool WebAssemblyInstrInfo::isReallyTriviallyReMaterializable(
-    const MachineInstr *MI, AliasAnalysis *AA) const {
-  switch (MI->getOpcode()) {
+    const MachineInstr &MI, AliasAnalysis *AA) const {
+  switch (MI.getOpcode()) {
   case WebAssembly::CONST_I32:
   case WebAssembly::CONST_I64:
   case WebAssembly::CONST_F32:
@@ -50,7 +50,7 @@ bool WebAssemblyInstrInfo::isReallyTriviallyReMaterializable(
 
 void WebAssemblyInstrInfo::copyPhysReg(MachineBasicBlock &MBB,
                                        MachineBasicBlock::iterator I,
-                                       DebugLoc DL, unsigned DestReg,
+                                       const DebugLoc &DL, unsigned DestReg,
                                        unsigned SrcReg, bool KillSrc) const {
   // This method is called by post-RA expansion, which expects only pregs to
   // exist. However we need to handle both here.
@@ -77,14 +77,14 @@ void WebAssemblyInstrInfo::copyPhysReg(MachineBasicBlock &MBB,
 }
 
 MachineInstr *
-WebAssemblyInstrInfo::commuteInstructionImpl(MachineInstr *MI, bool NewMI,
+WebAssemblyInstrInfo::commuteInstructionImpl(MachineInstr &MI, bool NewMI,
                                              unsigned OpIdx1,
                                              unsigned OpIdx2) const {
   // If the operands are stackified, we can't reorder them.
   WebAssemblyFunctionInfo &MFI =
-      *MI->getParent()->getParent()->getInfo<WebAssemblyFunctionInfo>();
-  if (MFI.isVRegStackified(MI->getOperand(OpIdx1).getReg()) ||
-      MFI.isVRegStackified(MI->getOperand(OpIdx2).getReg()))
+      *MI.getParent()->getParent()->getInfo<WebAssemblyFunctionInfo>();
+  if (MFI.isVRegStackified(MI.getOperand(OpIdx1).getReg()) ||
+      MFI.isVRegStackified(MI.getOperand(OpIdx2).getReg()))
     return nullptr;
 
   // Otherwise use the default implementation.
@@ -165,7 +165,7 @@ unsigned WebAssemblyInstrInfo::InsertBranch(MachineBasicBlock &MBB,
                                             MachineBasicBlock *TBB,
                                             MachineBasicBlock *FBB,
                                             ArrayRef<MachineOperand> Cond,
-                                            DebugLoc DL) const {
+                                            const DebugLoc &DL) const {
   if (Cond.empty()) {
     if (!TBB)
       return 0;

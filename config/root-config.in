@@ -205,17 +205,24 @@ linuxicc)
    ;;
 linuxppcgcc)
    # PPC Linux with gcc
-   auxcflags="${cxxversionflag} -Wno-deprecated-declarations -fsigned-char -I/usr/X11/include"
+   auxcflags="${cxxversionflag} -Wno-deprecated-declarations -m32 -fsigned-char"
+   auxldflags="-m32"
    auxlibs="-lm -ldl -rdynamic"
    ;;
 linuxppc64gcc)
-   # PPC64 (64 bit mode) Linux with gcc 3.x
+   # PPC64/PPC64LE (64 bit mode) Linux with gcc
    auxcflags="${cxxversionflag} -Wno-deprecated-declarations -m64 -fsigned-char"
    auxldflags="-m64"
    auxlibs="-lm -ldl -rdynamic"
    ;;
-ppc64le)
-   # PPC64 (64 bit mode) little endian
+linuxs390gcc)
+   # s390 (31 bit mode) Linux with gcc
+   auxcflags="${cxxversionflag} -Wno-deprecated-declarations -m31 -fsigned-char"
+   auxldflags="-m31"
+   auxlibs="-lm -ldl -rdynamic"
+   ;;
+linuxs390xgcc)
+   # s390x (64 bit mode) Linux with gcc
    auxcflags="${cxxversionflag} -Wno-deprecated-declarations -m64 -fsigned-char"
    auxldflags="-m64"
    auxlibs="-lm -ldl -rdynamic"

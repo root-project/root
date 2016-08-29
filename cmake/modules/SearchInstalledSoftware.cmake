@@ -38,6 +38,16 @@ if(builtin_zlib)
   set(ZLIB_LIBRARY "" CACHE PATH "" FORCE)
 endif()
 
+#---Check for Unuran ------------------------------------------------------------------
+if(NOT builtin_unuran)
+  message(STATUS "Looking for Unuran")
+  find_Package(Unuran)
+  if(NOT UNURAN_FOUND)
+    message(STATUS "Unuran not found. Switching on builtin_unuran option")
+    set(builtin_unuran ON CACHE BOOL "" FORCE)
+  endif()
+endif()
+
 #---Check for Freetype---------------------------------------------------------------
 if(NOT builtin_freetype)
   message(STATUS "Looking for Freetype")
@@ -316,7 +326,9 @@ if(builtin_afterimage)
       AFTERIMAGE
       DOWNLOAD_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/graf2d/asimage/src/libAfterImage AFTERIMAGE
       INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CONFIGURE_COMMAND ./configure --prefix <INSTALL_DIR> --with-ttf ${_ttf_include} --with-afterbase=no 
+      CONFIGURE_COMMAND ./configure --prefix <INSTALL_DIR>
+                        --libdir=<INSTALL_DIR>/lib 
+                        --with-ttf ${_ttf_include} --with-afterbase=no 
                         --without-svg --disable-glx ${_after_mmx} 
                         --with-builtin-ungif  --with-jpeg ${_jpeginclude} 
                         --with-png ${_pnginclude} ${_tiffinclude}
@@ -437,6 +449,16 @@ if(opengl)
       message(STATUS "OpenGL (with GLU) not found. Switching off opengl option")
       set(opengl OFF CACHE BOOL "" FORCE)
     endif()
+  endif()
+endif()
+
+#---Check for gl2ps ------------------------------------------------------------------
+if(NOT builtin_gl2ps)
+  message(STATUS "Looking for gl2ps")
+  find_Package(gl2ps)
+  if(NOT GL2PS_FOUND)
+    message(STATUS "gl2ps not found. Switching on builtin_gl2ps option")
+    set(builtin_gl2ps ON CACHE BOOL "" FORCE)
   endif()
 endif()
 
@@ -562,15 +584,29 @@ if(ssl OR builtin_openssl)
 endif()
 
 #---Check for Castor-------------------------------------------------------------------
-if(castor OR rfio)
+if(castor)
   message(STATUS "Looking for Castor")
   find_package(Castor)
   if(NOT CASTOR_FOUND)
     if(fail-on-missing)
       message(FATAL_ERROR "Castor libraries not found and they are required (castor option enabled)")
     else()
-      message(STATUS "Castor not found. Switching off castor/rfio option")
+      message(STATUS "Castor not found. Switching off castor option")
       set(castor OFF CACHE BOOL "" FORCE)
+    endif()
+  endif()
+endif()
+
+#---Check for RFIO-------------------------------------------------------------------
+if(rfio)
+  message(STATUS "Looking for RFIO")
+  find_package(Castor)
+  find_package(DPM)
+  if(NOT CASTOR_FOUND AND NOT DPM_FOUND)
+    if(fail-on-missing)
+      message(FATAL_ERROR "Castor or DPM libraries not found and one of them is required (rfio option enabled)")
+    else()
+      message(STATUS "Castor or DPM not found. Switching off rfio option")
       set(rfio OFF CACHE BOOL "" FORCE)
     endif()
   endif()

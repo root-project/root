@@ -138,16 +138,6 @@ AArch64TargetLowering::AArch64TargetLowering(const TargetMachine &TM,
   setOperationAction(ISD::XOR, MVT::i32, Custom);
   setOperationAction(ISD::XOR, MVT::i64, Custom);
 
-  // Custom lowering hooks are needed for OR
-  // to fold it into CCMP.
-  setOperationAction(ISD::OR, MVT::i32, Custom);
-  setOperationAction(ISD::OR, MVT::i64, Custom);
-
-  // Custom lowering hooks are needed for AND
-  // to fold it into CCMP.
-  setOperationAction(ISD::AND, MVT::i32, Custom);
-  setOperationAction(ISD::AND, MVT::i64, Custom);
-
   // Virtually no operation on f128 is legal, but LLVM can't expand them when
   // there's a valid register class, so we need custom operations in most cases.
   setOperationAction(ISD::FABS, MVT::f128, Expand);
@@ -517,7 +507,11 @@ AArch64TargetLowering::AArch64TargetLowering(const TargetMachine &TM,
   MaskAndBranchFoldingIsLegal = true;
   EnableExtLdPromotion = true;
 
+  // Set required alignment.
   setMinFunctionAlignment(2);
+  // Set preferred alignments.
+  setPrefFunctionAlignment(STI.getPrefFunctionAlignment());
+  setPrefLoopAlignment(STI.getPrefLoopAlignment());
 
   setHasExtractBitsInsn(true);
 
@@ -966,7 +960,7 @@ const char *AArch64TargetLowering::getTargetNodeName(unsigned Opcode) const {
 }
 
 MachineBasicBlock *
-AArch64TargetLowering::EmitF128CSEL(MachineInstr *MI,
+AArch64TargetLowering::EmitF128CSEL(MachineInstr &MI,
                                     MachineBasicBlock *MBB) const {
   // We materialise the F128CSEL pseudo-instruction as some control flow and a
   // phi node:
@@ -983,14 +977,14 @@ AArch64TargetLowering::EmitF128CSEL(MachineInstr *MI,
   MachineFunction *MF = MBB->getParent();
   const TargetInstrInfo *TII = Subtarget->getInstrInfo();
   const BasicBlock *LLVM_BB = MBB->getBasicBlock();
-  DebugLoc DL = MI->getDebugLoc();
+  DebugLoc DL = MI.getDebugLoc();
   MachineFunction::iterator It = ++MBB->getIterator();
 
-  unsigned DestReg = MI->getOperand(0).getReg();
-  unsigned IfTrueReg = MI->getOperand(1).getReg();
-  unsigned IfFalseReg = MI->getOperand(2).getReg();
-  unsigned CondCode = MI->getOperand(3).getImm();
-  bool NZCVKilled = MI->getOperand(4).isKill();
+  unsigned DestReg = MI.getOperand(0).getReg();
+  unsigned IfTrueReg = MI.getOperand(1).getReg();
+  unsigned IfFalseReg = MI.getOperand(2).getReg();
+  unsigned CondCode = MI.getOperand(3).getImm();
+  bool NZCVKilled = MI.getOperand(4).isKill();
 
   MachineBasicBlock *TrueBB = MF->CreateMachineBasicBlock(LLVM_BB);
   MachineBasicBlock *EndBB = MF->CreateMachineBasicBlock(LLVM_BB);
@@ -1021,17 +1015,16 @@ AArch64TargetLowering::EmitF128CSEL(MachineInstr *MI,
       .addReg(IfFalseReg)
       .addMBB(MBB);
 
-  MI->eraseFromParent();
+  MI.eraseFromParent();
   return EndBB;
 }
 
-MachineBasicBlock *
-AArch64TargetLowering::EmitInstrWithCustomInserter(MachineInstr *MI,
-                                                 MachineBasicBlock *BB) const {
-  switch (MI->getOpcode()) {
+MachineBasicBlock *AArch64TargetLowering::EmitInstrWithCustomInserter(
+    MachineInstr &MI, MachineBasicBlock *BB) const {
+  switch (MI.getOpcode()) {
   default:
 #ifndef NDEBUG
-    MI->dump();
+    MI.dump();
 #endif
     llvm_unreachable("Unexpected instruction for custom inserter!");
 
@@ -1210,7 +1203,7 @@ static bool isLegalArithImmed(uint64_t C) {
 }
 
 static SDValue emitComparison(SDValue LHS, SDValue RHS, ISD::CondCode CC,
-                              SDLoc dl, SelectionDAG &DAG) {
+                              const SDLoc &dl, SelectionDAG &DAG) {
   EVT VT = LHS.getValueType();
 
   if (VT.isFloatingPoint()) {
@@ -1303,7 +1296,7 @@ static SDValue emitConditionalComparison(SDValue LHS, SDValue RHS,
                                          ISD::CondCode CC, SDValue CCOp,
                                          AArch64CC::CondCode Predicate,
                                          AArch64CC::CondCode OutCC,
-                                         SDLoc DL, SelectionDAG &DAG) {
+                                         const SDLoc &DL, SelectionDAG &DAG) {
   unsigned Opcode = 0;
   if (LHS.getValueType().isFloatingPoint()) {
     assert(LHS.getValueType() != MVT::f128);
@@ -1510,7 +1503,8 @@ static SDValue emitConjunctionDisjunctionTree(SelectionDAG &DAG, SDValue Val,
 /// @}
 
 static SDValue getAArch64Cmp(SDValue LHS, SDValue RHS, ISD::CondCode CC,
-                             SDValue &AArch64cc, SelectionDAG &DAG, SDLoc dl) {
+                             SDValue &AArch64cc, SelectionDAG &DAG,
+                             const SDLoc &dl) {
   if (ConstantSDNode *RHSC = dyn_cast<ConstantSDNode>(RHS.getNode())) {
     EVT VT = RHS.getValueType();
     uint64_t C = RHSC->getZExtValue();
@@ -1616,27 +1610,6 @@ static SDValue getAArch64Cmp(SDValue LHS, SDValue RHS, ISD::CondCode CC,
   }
   AArch64cc = DAG.getConstant(AArch64CC, dl, MVT_CC);
   return Cmp;
-}
-
-// Attempt to form conditional compare sequences for and/or trees
-// with setcc leafs.
-static SDValue tryLowerToAArch64Cmp(SDValue Op, SelectionDAG &DAG) {
-  SDValue LHS = Op.getOperand(0);
-  SDValue RHS = Op.getOperand(1);
-  if ((LHS.getOpcode() != ISD::SETCC) || (RHS.getOpcode() != ISD::SETCC))
-    return Op;
-
-  bool CanNegate;
-  if (!isConjunctionDisjunctionTree(Op, CanNegate))
-    return SDValue();
-
-  EVT VT = Op.getValueType();
-  SDLoc DL(Op);
-  SDValue TVal = DAG.getConstant(1, DL, VT);
-  SDValue FVal = DAG.getConstant(0, DL, VT);
-  SDValue CCVal;
-  SDValue Cmp = getAArch64Cmp(Op, FVal, ISD::SETEQ, CCVal, DAG, DL);
-  return DAG.getNode(AArch64ISD::CSEL, DL, VT, FVal, TVal, CCVal, Cmp);
 }
 
 static std::pair<SDValue, SDValue>
@@ -1758,18 +1731,6 @@ SDValue AArch64TargetLowering::LowerF128Call(SDValue Op, SelectionDAG &DAG,
                                              RTLIB::Libcall Call) const {
   SmallVector<SDValue, 2> Ops(Op->op_begin(), Op->op_end());
   return makeLibCall(DAG, Call, MVT::f128, Ops, false, SDLoc(Op)).first;
-}
-
-SDValue AArch64TargetLowering::LowerAND(SDValue Op, SelectionDAG &DAG) const {
-  if (Op.getValueType().isVector())
-    return LowerVectorAND(Op, DAG);
-  return tryLowerToAArch64Cmp(Op, DAG);
-}
-
-SDValue AArch64TargetLowering::LowerOR(SDValue Op, SelectionDAG &DAG) const {
-  if (Op.getValueType().isVector())
-    return LowerVectorOR(Op, DAG);
-  return tryLowerToAArch64Cmp(Op, DAG);
 }
 
 static SDValue LowerXOR(SDValue Op, SelectionDAG &DAG) {
@@ -2104,7 +2065,7 @@ SDValue AArch64TargetLowering::LowerFSINCOS(SDValue Op,
   StructType *RetTy = StructType::get(ArgTy, ArgTy, nullptr);
   TargetLowering::CallLoweringInfo CLI(DAG);
   CLI.setDebugLoc(dl).setChain(DAG.getEntryNode())
-    .setCallee(CallingConv::Fast, RetTy, Callee, std::move(Args), 0);
+    .setCallee(CallingConv::Fast, RetTy, Callee, std::move(Args));
 
   std::pair<SDValue, SDValue> CallResult = LowerCallTo(CLI);
   return CallResult.first;
@@ -2425,9 +2386,9 @@ SDValue AArch64TargetLowering::LowerOperation(SDValue Op,
   case ISD::FCOPYSIGN:
     return LowerFCOPYSIGN(Op, DAG);
   case ISD::AND:
-    return LowerAND(Op, DAG);
+    return LowerVectorAND(Op, DAG);
   case ISD::OR:
-    return LowerOR(Op, DAG);
+    return LowerVectorOR(Op, DAG);
   case ISD::XOR:
     return LowerXOR(Op, DAG);
   case ISD::PREFETCH:
@@ -2475,8 +2436,8 @@ CCAssignFn *AArch64TargetLowering::CCAssignFnForCall(CallingConv::ID CC,
 
 SDValue AArch64TargetLowering::LowerFormalArguments(
     SDValue Chain, CallingConv::ID CallConv, bool isVarArg,
-    const SmallVectorImpl<ISD::InputArg> &Ins, SDLoc DL, SelectionDAG &DAG,
-    SmallVectorImpl<SDValue> &InVals) const {
+    const SmallVectorImpl<ISD::InputArg> &Ins, const SDLoc &DL,
+    SelectionDAG &DAG, SmallVectorImpl<SDValue> &InVals) const {
   MachineFunction &MF = DAG.getMachineFunction();
   MachineFrameInfo *MFI = MF.getFrameInfo();
 
@@ -2673,7 +2634,8 @@ SDValue AArch64TargetLowering::LowerFormalArguments(
 }
 
 void AArch64TargetLowering::saveVarArgRegisters(CCState &CCInfo,
-                                                SelectionDAG &DAG, SDLoc DL,
+                                                SelectionDAG &DAG,
+                                                const SDLoc &DL,
                                                 SDValue &Chain) const {
   MachineFunction &MF = DAG.getMachineFunction();
   MachineFrameInfo *MFI = MF.getFrameInfo();
@@ -2750,8 +2712,8 @@ void AArch64TargetLowering::saveVarArgRegisters(CCState &CCInfo,
 /// appropriate copies out of appropriate physical registers.
 SDValue AArch64TargetLowering::LowerCallResult(
     SDValue Chain, SDValue InFlag, CallingConv::ID CallConv, bool isVarArg,
-    const SmallVectorImpl<ISD::InputArg> &Ins, SDLoc DL, SelectionDAG &DAG,
-    SmallVectorImpl<SDValue> &InVals, bool isThisReturn,
+    const SmallVectorImpl<ISD::InputArg> &Ins, const SDLoc &DL,
+    SelectionDAG &DAG, SmallVectorImpl<SDValue> &InVals, bool isThisReturn,
     SDValue ThisVal) const {
   CCAssignFn *RetCC = CallConv == CallingConv::WebKit_JS
                           ? RetCC_AArch64_WebKit_JS
@@ -3327,7 +3289,7 @@ AArch64TargetLowering::LowerReturn(SDValue Chain, CallingConv::ID CallConv,
                                    bool isVarArg,
                                    const SmallVectorImpl<ISD::OutputArg> &Outs,
                                    const SmallVectorImpl<SDValue> &OutVals,
-                                   SDLoc DL, SelectionDAG &DAG) const {
+                                   const SDLoc &DL, SelectionDAG &DAG) const {
   CCAssignFn *RetCC = CallConv == CallingConv::WebKit_JS
                           ? RetCC_AArch64_WebKit_JS
                           : RetCC_AArch64_AAPCS;
@@ -3522,18 +3484,16 @@ AArch64TargetLowering::LowerDarwinGlobalTLSAddress(SDValue Op,
 ///  Therefore, a pseudo-instruction (TLSDESC_CALLSEQ) is used to represent the
 ///  above sequence, and expanded really late in the compilation flow, to ensure
 ///  the sequence is produced as per above.
-SDValue AArch64TargetLowering::LowerELFTLSDescCallSeq(SDValue SymAddr, SDLoc DL,
+SDValue AArch64TargetLowering::LowerELFTLSDescCallSeq(SDValue SymAddr,
+                                                      const SDLoc &DL,
                                                       SelectionDAG &DAG) const {
   EVT PtrVT = getPointerTy(DAG.getDataLayout());
 
   SDValue Chain = DAG.getEntryNode();
   SDVTList NodeTys = DAG.getVTList(MVT::Other, MVT::Glue);
 
-  SmallVector<SDValue, 2> Ops;
-  Ops.push_back(Chain);
-  Ops.push_back(SymAddr);
-
-  Chain = DAG.getNode(AArch64ISD::TLSDESC_CALLSEQ, DL, NodeTys, Ops);
+  Chain =
+      DAG.getNode(AArch64ISD::TLSDESC_CALLSEQ, DL, NodeTys, {Chain, SymAddr});
   SDValue Glue = Chain.getValue(1);
 
   return DAG.getCopyFromReg(Chain, DL, AArch64::X0, PtrVT, Glue);
@@ -3963,7 +3923,7 @@ SDValue AArch64TargetLowering::LowerSETCC(SDValue Op, SelectionDAG &DAG) const {
 
 SDValue AArch64TargetLowering::LowerSELECT_CC(ISD::CondCode CC, SDValue LHS,
                                               SDValue RHS, SDValue TVal,
-                                              SDValue FVal, SDLoc dl,
+                                              SDValue FVal, const SDLoc &dl,
                                               SelectionDAG &DAG) const {
   // Handle f128 first, because it will result in a comparison of some RTLIB
   // call result against zero.
@@ -5154,7 +5114,7 @@ SDValue AArch64TargetLowering::ReconstructShuffle(SDValue Op,
     ShuffleOps[i] = Sources[i].ShuffleVec;
 
   SDValue Shuffle = DAG.getVectorShuffle(ShuffleVT, dl, ShuffleOps[0],
-                                         ShuffleOps[1], &Mask[0]);
+                                         ShuffleOps[1], Mask);
   return DAG.getNode(ISD::BITCAST, dl, VT, Shuffle);
 }
 
@@ -5440,7 +5400,7 @@ static SDValue tryFormConcatFromShuffle(SDValue Op, SelectionDAG &DAG) {
 /// the specified operations to build the shuffle.
 static SDValue GeneratePerfectShuffle(unsigned PFEntry, SDValue LHS,
                                       SDValue RHS, SelectionDAG &DAG,
-                                      SDLoc dl) {
+                                      const SDLoc &dl) {
   unsigned OpNum = (PFEntry >> 26) & 0x0F;
   unsigned LHSID = (PFEntry >> 13) & ((1 << 13) - 1);
   unsigned RHSID = (PFEntry >> 0) & ((1 << 13) - 1);
@@ -5631,8 +5591,7 @@ SDValue AArch64TargetLowering::LowerVECTOR_SHUFFLE(SDValue Op,
   SDValue V1 = Op.getOperand(0);
   SDValue V2 = Op.getOperand(1);
 
-  if (ShuffleVectorSDNode::isSplatMask(&ShuffleMask[0],
-                                       V1.getValueType().getSimpleVT())) {
+  if (SVN->isSplat()) {
     int Lane = SVN->getSplatIndex();
     // If this is undef splat, generate it via "just" vdup, if possible.
     if (Lane == -1)
@@ -6712,7 +6671,7 @@ SDValue AArch64TargetLowering::LowerVectorSRA_SRL_SHL(SDValue Op,
 
 static SDValue EmitVectorComparison(SDValue LHS, SDValue RHS,
                                     AArch64CC::CondCode CC, bool NoNans, EVT VT,
-                                    SDLoc dl, SelectionDAG &DAG) {
+                                    const SDLoc &dl, SelectionDAG &DAG) {
   EVT SrcVT = LHS.getValueType();
   assert(VT.getSizeInBits() == SrcVT.getSizeInBits() &&
          "function only supposed to emit natural comparisons");
@@ -8926,9 +8885,10 @@ static SDValue performPostLD1Combine(SDNode *N,
                                            LoadSDN->getMemOperand());
 
     // Update the uses.
-    SmallVector<SDValue, 2> NewResults;
-    NewResults.push_back(SDValue(LD, 0));             // The result of load
-    NewResults.push_back(SDValue(UpdN.getNode(), 2)); // Chain
+    SDValue NewResults[] = {
+        SDValue(LD, 0),            // The result of load
+        SDValue(UpdN.getNode(), 2) // Chain
+    };
     DCI.CombineTo(LD, NewResults);
     DCI.CombineTo(N, SDValue(UpdN.getNode(), 0));     // Dup/Inserted Result
     DCI.CombineTo(User, SDValue(UpdN.getNode(), 1));  // Write back register
@@ -9468,14 +9428,13 @@ bool checkValueWidth(SDValue V, unsigned width, ISD::LoadExtType &ExtType) {
 // isEquivalentMaskless() is the code for testing if the AND can be removed
 // factored out of the DAG recognition as the DAG can take several forms.
 
-static
-bool isEquivalentMaskless(unsigned CC, unsigned width,
-                          ISD::LoadExtType ExtType, signed AddConstant,
-                          signed CompConstant) {
+static bool isEquivalentMaskless(unsigned CC, unsigned width,
+                                 ISD::LoadExtType ExtType, int AddConstant,
+                                 int CompConstant) {
   // By being careful about our equations and only writing the in term
   // symbolic values and well known constants (0, 1, -1, MaxUInt) we can
   // make them generally applicable to all bit widths.
-  signed MaxUInt = (1 << width);
+  int MaxUInt = (1 << width);
 
   // For the purposes of these comparisons sign extending the type is
   // equivalent to zero extending the add and displacing it by half the integer
@@ -9859,7 +9818,7 @@ static SDValue performSelectCombine(SDNode *N,
 
   // Now duplicate the comparison mask we want across all other lanes.
   SmallVector<int, 8> DUPMask(CCVT.getVectorNumElements(), 0);
-  SDValue Mask = DAG.getVectorShuffle(CCVT, DL, SetCC, SetCC, DUPMask.data());
+  SDValue Mask = DAG.getVectorShuffle(CCVT, DL, SetCC, SetCC, DUPMask);
   Mask = DAG.getNode(ISD::BITCAST, DL,
                      ResVT.changeVectorElementTypeToInteger(), Mask);
 

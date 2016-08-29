@@ -85,9 +85,8 @@ ClassImp(TMVA::MethodMLP)
 TMVA::MethodMLP::MethodMLP( const TString& jobName,
                             const TString& methodTitle,
                             DataSetInfo& theData,
-                            const TString& theOption,
-                            TDirectory* theTargetDir )
-   : MethodANNBase( jobName, Types::kMLP, methodTitle, theData, theOption, theTargetDir ),
+                            const TString& theOption)
+   : MethodANNBase( jobName, Types::kMLP, methodTitle, theData, theOption),
      fUseRegulator(false), fCalculateErrors(false),
      fPrior(0.0), fPriorDev(0), fUpdateLimit(0),
      fTrainingMethod(kBFGS), fTrainMethodS("BFGS"),
@@ -109,9 +108,8 @@ TMVA::MethodMLP::MethodMLP( const TString& jobName,
 /// constructor from a weight file
 
 TMVA::MethodMLP::MethodMLP( DataSetInfo& theData,
-                            const TString& theWeightFile,
-                            TDirectory* theTargetDir )
-   : MethodANNBase( Types::kMLP, theData, theWeightFile, theTargetDir ),
+                            const TString& theWeightFile)
+   : MethodANNBase( Types::kMLP, theData, theWeightFile),
      fUseRegulator(false), fCalculateErrors(false),
      fPrior(0.0), fPriorDev(0), fUpdateLimit(0),
      fTrainingMethod(kBFGS), fTrainMethodS("BFGS"),
@@ -438,8 +436,9 @@ void TMVA::MethodMLP::Train(Int_t nEpochs)
    }
    Log() << kDEBUG << "reinitalize learning rates" << Endl;
    InitializeLearningRates();
+   Log() << kHEADER;
    PrintMessage("Training Network");
-
+   Log() << Endl;
    Int_t nEvents=GetNEvents();
    Int_t nSynapses=fSynapses->GetEntriesFast();
    if (nSynapses>nEvents)
@@ -478,11 +477,14 @@ void TMVA::MethodMLP::BFGSMinimize( Int_t nEpochs )
 
    // create histograms for overtraining monitoring
    Int_t nbinTest = Int_t(nEpochs/fTestRate);
-   fEstimatorHistTrain = new TH1F( "estimatorHistTrain", "training estimator",
+   if(!IsSilentFile())
+   {
+       fEstimatorHistTrain = new TH1F( "estimatorHistTrain", "training estimator",
                                    nbinTest, Int_t(fTestRate/2), nbinTest*fTestRate+Int_t(fTestRate/2) );
-   fEstimatorHistTest  = new TH1F( "estimatorHistTest", "test estimator",
+       fEstimatorHistTest  = new TH1F( "estimatorHistTest", "test estimator",
                                    nbinTest, Int_t(fTestRate/2), nbinTest*fTestRate+Int_t(fTestRate/2) );
-
+   }
+   
    Int_t nSynapses = fSynapses->GetEntriesFast();
    Int_t nWeights  = nSynapses;
 
@@ -596,9 +598,11 @@ void TMVA::MethodMLP::BFGSMinimize( Int_t nEpochs )
          //testE  = CalculateEstimator( Types::kTesting,  i ) - fPrior/Float_t(GetNEvents()); // estimator for test sample //zjh
          trainE = CalculateEstimator( Types::kTraining, i ) ; // estimator for training sample  //zjh
          testE  = CalculateEstimator( Types::kTesting,  i ) ; // estimator for test sample //zjh
-         fEstimatorHistTrain->Fill( i+1, trainE );
-         fEstimatorHistTest ->Fill( i+1, testE );
-
+         if(!IsSilentFile()) //saved to see in TMVAGui, no needed without file
+         {
+            fEstimatorHistTrain->Fill( i+1, trainE );
+            fEstimatorHistTest ->Fill( i+1, testE );
+         }
          Bool_t success = kFALSE;
          if ((testE < GetCurrentValue()) || (GetCurrentValue()<1e-100)) {
             success = kTRUE;
@@ -1021,11 +1025,13 @@ void TMVA::MethodMLP::BackPropagationMinimize(Int_t nEpochs)
 
    // create histograms for overtraining monitoring
    Int_t nbinTest = Int_t(nEpochs/fTestRate);
-   fEstimatorHistTrain = new TH1F( "estimatorHistTrain", "training estimator",
-                                   nbinTest, Int_t(fTestRate/2), nbinTest*fTestRate+Int_t(fTestRate/2) );
-   fEstimatorHistTest  = new TH1F( "estimatorHistTest", "test estimator",
-                                   nbinTest, Int_t(fTestRate/2), nbinTest*fTestRate+Int_t(fTestRate/2) );
-
+   if(!IsSilentFile())
+   {
+        fEstimatorHistTrain = new TH1F( "estimatorHistTrain", "training estimator",
+                                        nbinTest, Int_t(fTestRate/2), nbinTest*fTestRate+Int_t(fTestRate/2) );
+        fEstimatorHistTest  = new TH1F( "estimatorHistTest", "test estimator",
+                                        nbinTest, Int_t(fTestRate/2), nbinTest*fTestRate+Int_t(fTestRate/2) );
+   }
    if(fSamplingTraining || fSamplingTesting)
       Data()->InitSampling(1.0,1.0,fRandomSeed); // initialize sampling to initialize the random generator with the given seed
 
@@ -1068,9 +1074,11 @@ void TMVA::MethodMLP::BackPropagationMinimize(Int_t nEpochs)
       if ((i+1)%fTestRate == 0) {
          trainE = CalculateEstimator( Types::kTraining, i ); // estimator for training sample
          testE  = CalculateEstimator( Types::kTesting,  i );  // estimator for test samplea
-         fEstimatorHistTrain->Fill( i+1, trainE );
-         fEstimatorHistTest ->Fill( i+1, testE );
-
+         if(!IsSilentFile())
+         {
+            fEstimatorHistTrain->Fill( i+1, trainE );
+            fEstimatorHistTest ->Fill( i+1, testE );
+         }
          Bool_t success = kFALSE;
          if ((testE < GetCurrentValue()) || (GetCurrentValue()<1e-100)) {
             success = kTRUE;

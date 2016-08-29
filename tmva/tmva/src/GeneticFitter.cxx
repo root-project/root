@@ -103,7 +103,7 @@ void TMVA::GeneticFitter::SetParameters(  Int_t cycles,
 
 Double_t TMVA::GeneticFitter::Run( std::vector<Double_t>& pars )
 {
-   Log() << kINFO << "<GeneticFitter> Optimisation, please be patient "
+   Log() << kHEADER << "<GeneticFitter> Optimisation, please be patient "
          << "... (inaccurate progress timing for GA)" << Endl;
 
    GetFitterTarget().ProgressNotifier( "GA", "init" );

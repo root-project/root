@@ -9,6 +9,7 @@
 /// political reality as of that time.
 ///
 /// \macro_code
+/// \macro_image(nobatch)
 ///
 /// \author Olivier Couet
 
@@ -72,6 +73,5 @@ void th2polyUSA()
    for (i=0; i<nx; i++) p->Fill(states[i], pop[i]);
 
    gStyle->SetOptStat(11);
-   gStyle->SetPalette(1);
    p->Draw("legogl");
 }

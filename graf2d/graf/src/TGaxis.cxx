@@ -17,6 +17,7 @@
 #include "Riostream.h"
 #include "TROOT.h"
 #include "TGaxis.h"
+#include "TGaxisModLab.h"
 #include "TVirtualPad.h"
 #include "TVirtualX.h"
 #include "TLine.h"
@@ -26,6 +27,7 @@
 #include "TAxis.h"
 #include "THashList.h"
 #include "TObjString.h"
+#include "TObject.h"
 #include "TMath.h"
 #include "THLimitsFinder.h"
 #include "TColor.h"
@@ -451,6 +453,8 @@ TGaxis::TGaxis(): TLine(), TAttText(11,0,1,62,0.040)
    fFunction    = 0;
    fAxis        = 0;
    fNdiv        = 0;
+   fNModLabs    = 0;
+   fModLabs     = 0;
    fWmin        = 0.;
    fWmax        = 0.;
 }
@@ -467,6 +471,8 @@ TGaxis::TGaxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
    fWmin        = wmin;
    fWmax        = wmax;
    fNdiv        = ndiv;
+   fNModLabs    = 0;
+   fModLabs     = 0;
    fGridLength  = gridlength;
    fLabelOffset = 0.005;
    fLabelSize   = 0.040;
@@ -504,6 +510,8 @@ TGaxis::TGaxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
    }
    fFunctionName= funcname;
    fNdiv        = ndiv;
+   fNModLabs    = 0;
+   fModLabs     = 0;
    fGridLength  = gridlength;
    fLabelOffset = 0.005;
    fLabelSize   = 0.040;
@@ -536,13 +544,15 @@ TGaxis::TGaxis(const TGaxis& ax) :
   fNdiv(ax.fNdiv),
   fLabelColor(ax.fLabelColor),
   fLabelFont(ax.fLabelFont),
+  fNModLabs(ax.fNModLabs),
   fChopt(ax.fChopt),
   fName(ax.fName),
   fTitle(ax.fTitle),
   fTimeFormat(ax.fTimeFormat),
   fFunctionName(ax.fFunctionName),
   fFunction(ax.fFunction),
-  fAxis(ax.fAxis)
+  fAxis(ax.fAxis),
+  fModLabs(ax.fModLabs)
 {
 }
 
@@ -564,6 +574,7 @@ TGaxis& TGaxis::operator=(const TGaxis& ax)
       fTitleOffset=ax.fTitleOffset;
       fTitleSize=ax.fTitleSize;
       fNdiv=ax.fNdiv;
+      fModLabs=ax.fModLabs;
       fLabelColor=ax.fLabelColor;
       fLabelFont=ax.fLabelFont;
       fChopt=ax.fChopt;
@@ -573,6 +584,7 @@ TGaxis& TGaxis::operator=(const TGaxis& ax)
       fFunctionName=ax.fFunctionName;
       fFunction=ax.fFunction;
       fAxis=ax.fAxis;
+      fNModLabs=ax.fNModLabs;
    }
    return *this;
 }
@@ -1743,13 +1755,15 @@ L110:
                   if (!optionText) {
                      if (first > last)  strncpy(chtemp, " ", 256);
                      else               strncpy(chtemp, &label[first], 256);
+                     if (fNModLabs) ChangeLabelAttributes(k+1, nlabels, textaxis, chtemp);
                      typolabel = chtemp;
                      if (!optionTime) typolabel.ReplaceAll("-", "#minus");
                      textaxis->PaintLatex(gPad->GetX1() + xx*(gPad->GetX2() - gPad->GetX1()),
                            gPad->GetY1() + yy*(gPad->GetY2() - gPad->GetY1()),
-                           0,
+                           textaxis->GetTextAngle(),
                            textaxis->GetTextSize(),
                            typolabel.Data());
+                     if (fNModLabs) ResetLabelAttributes(textaxis);
                   }
                   else  {
                      if (optionText == 1) textaxis->PaintLatex(gPad->GetX1() + xx*(gPad->GetX2() - gPad->GetX1()),
@@ -2221,6 +2235,124 @@ void TGaxis::SetFunction(const char *funcname)
       fWmin = fFunction->GetXmin();
       fWmax = fFunction->GetXmax();
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Define new text attributes for the label number "labNum". It allows to do a
+/// fine tuning of the labels. All the attributes can be changed and even the
+/// label text itself.
+///
+/// \param[in] labNum           Number of the label to be changed, negative numbers start from the end
+/// \param[in] labAngle         New angle value
+/// \param[in] labSize          New size (0 erase the label)
+/// \param[in] labAlign         New alignment value
+/// \param[in] labColor         New label color
+/// \param[in] labText          New label text
+///
+/// If an attribute should not be changed just give the value
+/// "-1".The following macro gives an example:
+///
+/// ~~~ {.cpp}
+/// {
+///    c1 = new TCanvas("c1","Examples of Gaxis",10,10,900,500);
+///    c1->Range(-6,-0.1,6,0.1);
+///    TGaxis *axis1 = new TGaxis(-5.5,0.,5.5,0.,0.0,100,510,"");
+///    axis1->SetName("axis1");
+///    axis1->SetTitle("Axis Title");
+///    axis1->SetTitleSize(0.05);
+///    axis1->SetTitleColor(kBlue);
+///    axis1->SetTitleFont(42);
+///    axis1->SetLabelAttributes(1,-1,-1,-1,2);
+///    axis1->SetLabelAttributes(3,-1,0.);
+///    axis1->SetLabelAttributes(5,30.,-1,0);
+///    axis1->SetLabelAttributes(6,-1,-1,-1,3,-1,"6th label");
+///    axis1->SetLabelAttributes(-2,-1,-1,-1,3,-1,"2nd to last label");
+///    axis1->Draw();
+/// }
+/// ~~~
+///
+/// If labnum=0 the list of modified labels is reset.
+
+void TGaxis::SetLabelAttributes(Int_t labNum, Double_t labAngle, Double_t labSize,
+                                Int_t labAlign, Int_t labColor, Int_t labFont,
+                                TString labText)
+{
+   fNModLabs++;
+   if (!fModLabs) fModLabs = new TList();
+
+   // Reset the list of modified labels.
+   if (labNum == 0) {
+      delete fModLabs;
+      fModLabs  = 0;
+      fNModLabs = 0;
+      return;
+   }
+
+   TGaxisModLab *ml = new TGaxisModLab();
+   ml->SetLabNum(labNum);
+   ml->SetAngle(labAngle);
+   ml->SetSize(labSize);
+   ml->SetAlign(labAlign);
+   ml->SetColor(labColor);
+   ml->SetFont(labFont);
+   ml->SetText(labText);
+
+   fModLabs->Add((TObject*)ml);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Change the label attributes of label number i. If needed.
+static Double_t SavedTextAngle;
+static Double_t SavedTextSize;
+static Int_t    SavedTextAlign;
+static Int_t    SavedTextColor;
+static Int_t    SavedTextFont;;
+
+void TGaxis::ChangeLabelAttributes(Int_t i, Int_t nlabels, TLatex* t, char* c)
+{
+   if (!fModLabs) return;
+
+   TIter next(fModLabs);
+   TGaxisModLab *ml;
+   Int_t labNum;
+   while ( (ml = (TGaxisModLab*)next()) ) {
+      SavedTextAngle = t->GetTextAngle();
+      SavedTextSize  = t->GetTextSize();
+      SavedTextAlign = t->GetTextAlign();
+      SavedTextColor = t->GetTextColor();
+      SavedTextFont  = t->GetTextFont();
+   
+      labNum = ml->GetLabNum();
+   
+      if (labNum < 0) {
+         labNum = nlabels + labNum + 2;
+      }
+
+
+      if (i == labNum) {
+
+         if (ml->GetAngle()>=0.) t->SetTextAngle(ml->GetAngle());
+         if (ml->GetSize()>=0.)  t->SetTextSize(ml->GetSize());
+         if (ml->GetAlign()>0)   t->SetTextAlign(ml->GetAlign());
+         if (ml->GetColor()>=0)  t->SetTextColor(ml->GetColor());
+         if (ml->GetFont()>0)    t->SetTextFont(ml->GetFont());
+         if (!(ml->GetText().IsNull())) strncpy(c, (ml->GetText()).Data(), 256);
+         return;
+      }
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Reset the label attributes to the value they have before the last call to
+/// ChangeLabelAttributes.
+
+void TGaxis::ResetLabelAttributes(TLatex* t)
+{
+   t->SetTextAngle(SavedTextAngle);
+   t->SetTextSize(SavedTextSize);
+   t->SetTextAlign(SavedTextAlign);
+   t->SetTextColor(SavedTextColor);
+   t->SetTextFont(SavedTextFont);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

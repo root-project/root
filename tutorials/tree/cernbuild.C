@@ -1,12 +1,12 @@
 /// \file
 /// \ingroup tutorial_tree
-///
+/// \notebook -nodraw
 /// Read data (CERN staff) from an ascii file and create a root file with a Tree.
 /// See also a variant in staff.C
 /// \macro_code
 /// \author Rene Brun
 
-TFile *cernbuild(Int_t get=0, Int_t print=1) {
+TFile *cernbuild(Int_t getFile=0, Int_t print=1) {
 
    Int_t           Category;
    UInt_t          Flag;
@@ -23,14 +23,14 @@ TFile *cernbuild(Int_t get=0, Int_t print=1) {
    //The input file cern.dat is a copy of the CERN staff data base
    //from 1988
    TString filename = "cernstaff.root";
-   TString dir = gSystem->UnixPathName(__FILE__);
-   dir.ReplaceAll("cernbuild.C","");
+   TString dir = gROOT->GetTutorialsDir();
+   dir.Append("/tree/");
    dir.ReplaceAll("/./","/");
    FILE *fp = fopen(Form("%scernstaff.dat",dir.Data()),"r");
 
    TFile *hfile = 0;
-   if (get) {
-      // if the argument get =1 return the file "cernstaff.root"
+   if (getFile) {
+      // if the argument getFile =1 return the file "cernstaff.root"
       // if the file does not exist, it is created
       if (!gSystem->AccessPathName(dir+"cernstaff.root",kFileExists)) {
          hfile = TFile::Open(dir+"cernstaff.root"); //in $ROOTSYS/tutorials/tree
@@ -72,7 +72,7 @@ TFile *cernbuild(Int_t get=0, Int_t print=1) {
 
    fclose(fp);
    delete hfile;
-   if (get) {
+   if (getFile) {
       //we come here when the script is executed outside $ROOTSYS/tutorials/tree
       hfile = TFile::Open(filename);
       return hfile;

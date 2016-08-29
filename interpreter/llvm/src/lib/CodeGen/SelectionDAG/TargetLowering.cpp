@@ -14,7 +14,6 @@
 #include "llvm/Target/TargetLowering.h"
 #include "llvm/ADT/BitVector.h"
 #include "llvm/ADT/STLExtras.h"
-#include "llvm/CodeGen/Analysis.h"
 #include "llvm/CodeGen/CallingConvLower.h"
 #include "llvm/CodeGen/MachineFrameInfo.h"
 #include "llvm/CodeGen/MachineFunction.h"
@@ -42,6 +41,10 @@ TargetLowering::TargetLowering(const TargetMachine &tm)
 
 const char *TargetLowering::getTargetNodeName(unsigned Opcode) const {
   return nullptr;
+}
+
+bool TargetLowering::isPositionIndependent() const {
+  return getTargetMachine().isPositionIndependent();
 }
 
 /// Check whether a given call node is in tail position within its function. If
@@ -111,11 +114,9 @@ void TargetLowering::ArgListEntry::setAttributes(ImmutableCallSite *CS,
 /// Generate a libcall taking the given operands as arguments and returning a
 /// result of type RetVT.
 std::pair<SDValue, SDValue>
-TargetLowering::makeLibCall(SelectionDAG &DAG,
-                            RTLIB::Libcall LC, EVT RetVT,
-                            ArrayRef<SDValue> Ops,
-                            bool isSigned, SDLoc dl,
-                            bool doesNotReturn,
+TargetLowering::makeLibCall(SelectionDAG &DAG, RTLIB::Libcall LC, EVT RetVT,
+                            ArrayRef<SDValue> Ops, bool isSigned,
+                            const SDLoc &dl, bool doesNotReturn,
                             bool isReturnValueUsed) const {
   TargetLowering::ArgListTy Args;
   Args.reserve(Ops.size());
@@ -138,7 +139,7 @@ TargetLowering::makeLibCall(SelectionDAG &DAG,
   TargetLowering::CallLoweringInfo CLI(DAG);
   bool signExtend = shouldSignExtendTypeInLibCall(RetVT, isSigned);
   CLI.setDebugLoc(dl).setChain(DAG.getEntryNode())
-    .setCallee(getLibcallCallingConv(LC), RetTy, Callee, std::move(Args), 0)
+    .setCallee(getLibcallCallingConv(LC), RetTy, Callee, std::move(Args))
     .setNoReturn(doesNotReturn).setDiscardResult(!isReturnValueUsed)
     .setSExtResult(signExtend).setZExtResult(!signExtend);
   return LowerCallTo(CLI);
@@ -149,7 +150,7 @@ TargetLowering::makeLibCall(SelectionDAG &DAG,
 void TargetLowering::softenSetCCOperands(SelectionDAG &DAG, EVT VT,
                                          SDValue &NewLHS, SDValue &NewRHS,
                                          ISD::CondCode &CCCode,
-                                         SDLoc dl) const {
+                                         const SDLoc &dl) const {
   assert((VT == MVT::f32 || VT == MVT::f64 || VT == MVT::f128 || VT == MVT::ppcf128)
          && "Unsupported setcc type!");
 
@@ -279,7 +280,7 @@ void TargetLowering::softenSetCCOperands(SelectionDAG &DAG, EVT VT,
 /// returned value is a member of the MachineJumpTableInfo::JTEntryKind enum.
 unsigned TargetLowering::getJumpTableEncoding() const {
   // In non-pic modes, just use the address of a block.
-  if (getTargetMachine().getRelocationModel() != Reloc::PIC_)
+  if (!isPositionIndependent())
     return MachineJumpTableInfo::EK_BlockAddress;
 
   // In PIC mode, if the target supports a GPRel32 directive, use it.
@@ -313,17 +314,20 @@ TargetLowering::getPICJumpTableRelocBaseExpr(const MachineFunction *MF,
 
 bool
 TargetLowering::isOffsetFoldingLegal(const GlobalAddressSDNode *GA) const {
-  // Assume that everything is safe in static mode.
-  if (getTargetMachine().getRelocationModel() == Reloc::Static)
-    return true;
+  const TargetMachine &TM = getTargetMachine();
+  const GlobalValue *GV = GA->getGlobal();
 
-  // In dynamic-no-pic mode, assume that known defined values are safe.
-  if (getTargetMachine().getRelocationModel() == Reloc::DynamicNoPIC &&
-      GA && GA->getGlobal()->isStrongDefinitionForLinker())
-    return true;
+  // If the address is not even local to this DSO we will have to load it from
+  // a got and then add the offset.
+  if (!TM.shouldAssumeDSOLocal(*GV->getParent(), GV))
+    return false;
 
-  // Otherwise assume nothing is safe.
-  return false;
+  // If the code is position independent we will have to add a base register.
+  if (isPositionIndependent())
+    return false;
+
+  // Otherwise we can do it.
+  return true;
 }
 
 //===----------------------------------------------------------------------===//
@@ -370,11 +374,10 @@ bool TargetLowering::TargetLoweringOpt::ShrinkDemandedConstant(SDValue Op,
 /// Convert x+y to (VT)((SmallVT)x+(SmallVT)y) if the casts are free.
 /// This uses isZExtFree and ZERO_EXTEND for the widening cast, but it could be
 /// generalized for targets with other types of implicit widening casts.
-bool
-TargetLowering::TargetLoweringOpt::ShrinkDemandedOp(SDValue Op,
-                                                    unsigned BitWidth,
-                                                    const APInt &Demanded,
-                                                    SDLoc dl) {
+bool TargetLowering::TargetLoweringOpt::ShrinkDemandedOp(SDValue Op,
+                                                         unsigned BitWidth,
+                                                         const APInt &Demanded,
+                                                         const SDLoc &dl) {
   assert(Op.getNumOperands() == 2 &&
          "ShrinkDemandedOp only supports binary operators!");
   assert(Op.getNode()->getNumValues() == 1 &&
@@ -1278,7 +1281,7 @@ bool TargetLowering::isExtendedTrueVal(const ConstantSDNode *N, EVT VT,
 SDValue TargetLowering::simplifySetCCWithAnd(EVT VT, SDValue N0, SDValue N1,
                                              ISD::CondCode Cond,
                                              DAGCombinerInfo &DCI,
-                                             SDLoc DL) const {
+                                             const SDLoc &DL) const {
   // Match these patterns in any of their permutations:
   // (X & Y) == Y
   // (X & Y) != Y
@@ -1336,10 +1339,10 @@ SDValue TargetLowering::simplifySetCCWithAnd(EVT VT, SDValue N0, SDValue N1,
 
 /// Try to simplify a setcc built with the specified operands and cc. If it is
 /// unable to simplify it, return a null SDValue.
-SDValue
-TargetLowering::SimplifySetCC(EVT VT, SDValue N0, SDValue N1,
-                              ISD::CondCode Cond, bool foldBooleans,
-                              DAGCombinerInfo &DCI, SDLoc dl) const {
+SDValue TargetLowering::SimplifySetCC(EVT VT, SDValue N0, SDValue N1,
+                                      ISD::CondCode Cond, bool foldBooleans,
+                                      DAGCombinerInfo &DCI,
+                                      const SDLoc &dl) const {
   SelectionDAG &DAG = DCI.DAG;
 
   // These setcc operations always fold.
@@ -2782,7 +2785,7 @@ void TargetLowering::ComputeConstraintToUse(AsmOperandInfo &OpInfo,
 /// \brief Given an exact SDIV by a constant, create a multiplication
 /// with the multiplicative inverse of the constant.
 static SDValue BuildExactSDIV(const TargetLowering &TLI, SDValue Op1, APInt d,
-                              SDLoc dl, SelectionDAG &DAG,
+                              const SDLoc &dl, SelectionDAG &DAG,
                               std::vector<SDNode *> &Created) {
   assert(d != 0 && "Division by zero!");
 
@@ -3554,7 +3557,7 @@ SDValue TargetLowering::LowerToTLSEmulatedModel(const GlobalAddressSDNode *GA,
 
   TargetLowering::CallLoweringInfo CLI(DAG);
   CLI.setDebugLoc(dl).setChain(DAG.getEntryNode());
-  CLI.setCallee(CallingConv::C, VoidPtrType, EmuTlsGetAddr, std::move(Args), 0);
+  CLI.setCallee(CallingConv::C, VoidPtrType, EmuTlsGetAddr, std::move(Args));
   std::pair<SDValue, SDValue> CallResult = LowerCallTo(CLI);
 
   // TLSADDR will be codegen'ed as call. Inform MFI that function has calls.

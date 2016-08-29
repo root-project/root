@@ -53,9 +53,8 @@ ClassImp(MethodPyRandomForest)
 MethodPyRandomForest::MethodPyRandomForest(const TString &jobName,
       const TString &methodTitle,
       DataSetInfo &dsi,
-      const TString &theOption,
-      TDirectory *theTargetDir) :
-   PyMethodBase(jobName, Types::kPyRandomForest, methodTitle, dsi, theOption, theTargetDir),
+      const TString &theOption) :
+   PyMethodBase(jobName, Types::kPyRandomForest, methodTitle, dsi, theOption),
    n_estimators(10),
    criterion("gini"),
    max_depth("None"),
@@ -75,8 +74,8 @@ MethodPyRandomForest::MethodPyRandomForest(const TString &jobName,
 }
 
 //_______________________________________________________________________
-MethodPyRandomForest::MethodPyRandomForest(DataSetInfo &theData, const TString &theWeightFile, TDirectory *theTargetDir)
-   : PyMethodBase(Types::kPyRandomForest, theData, theWeightFile, theTargetDir),
+MethodPyRandomForest::MethodPyRandomForest(DataSetInfo &theData, const TString &theWeightFile)
+   : PyMethodBase(Types::kPyRandomForest, theData, theWeightFile),
      n_estimators(10),
      criterion("gini"),
      max_depth("None"),
@@ -361,12 +360,14 @@ void MethodPyRandomForest::Train()
       Log() << kFATAL << "Can't create classifier object from RandomForestClassifier" << Endl;
       Log() << Endl;  
    }
-   
-   TString path = GetWeightFileDir() + "/PyRFModel.PyData";
-   Log() << Endl;
-   Log() << gTools().Color("bold") << "--- Saving State File In:" << gTools().Color("reset") << path << Endl;
-   Log() << Endl;
-   Serialize(path,fClassifier);
+   if (IsModelPersistence())
+   {
+        TString path = GetWeightFileDir() + "/PyRFModel.PyData";
+        Log() << Endl;
+        Log() << gTools().Color("bold") << "--- Saving State File In:" << gTools().Color("reset") << path << Endl;
+        Log() << Endl;
+        Serialize(path,fClassifier);
+   }
 }
 
 //_______________________________________________________________________
@@ -382,7 +383,7 @@ Double_t MethodPyRandomForest::GetMvaValue(Double_t *errLower, Double_t *errUppe
    // cannot determine error
    NoErrorCalc(errLower, errUpper);
 
-   if (!fClassifier) ReadModelFromFile();
+   if (IsModelPersistence()) ReadModelFromFile();
 
    Double_t mvaValue;
    const TMVA::Event *e = Data()->GetEvent();

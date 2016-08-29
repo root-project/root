@@ -184,7 +184,7 @@ public:
 
     // Delete the instructions backwards, as it has a reduced likelihood of
     // having to update as many def-use and use-def chains.
-    for (auto *Inst : make_range(Unused.rbegin(), Unused.rend())) {
+    for (auto *Inst : reverse(Unused)) {
       if (!Inst->use_empty())
         Inst->replaceAllUsesWith(UndefValue::get(Inst->getType()));
       Inst->eraseFromParent();
@@ -608,7 +608,7 @@ public:
       return fail("multiple exit blocks");
 
     // LAA will check that we only have a single exiting block.
-    LAI = &LAA->getInfo(L, ValueToValueMap());
+    LAI = &LAA->getInfo(L);
 
     // Currently, we only distribute to isolate the part of the loop with
     // dependence cycles to enable partial vectorization.
@@ -693,7 +693,7 @@ public:
     }
 
     // Don't distribute the loop if we need too many SCEV run-time checks.
-    const SCEVUnionPredicate &Pred = LAI->PSE.getUnionPredicate();
+    const SCEVUnionPredicate &Pred = LAI->getPSE().getUnionPredicate();
     if (Pred.getComplexity() > (IsForced.getValueOr(false)
                                     ? PragmaDistributeSCEVCheckThreshold
                                     : DistributeSCEVCheckThreshold))
@@ -722,7 +722,7 @@ public:
       DEBUG(LAI->getRuntimePointerChecking()->printChecks(dbgs(), Checks));
       LoopVersioning LVer(*LAI, L, LI, DT, SE, false);
       LVer.setAliasChecks(std::move(Checks));
-      LVer.setSCEVChecks(LAI->PSE.getUnionPredicate());
+      LVer.setSCEVChecks(LAI->getPSE().getUnionPredicate());
       LVer.versionLoop(DefsUsedOutside);
       LVer.annotateLoopWithNoAlias();
     }
@@ -765,8 +765,9 @@ public:
     // With Rpass-analysis report why.  This is on by default if distribution
     // was requested explicitly.
     emitOptimizationRemarkAnalysis(
-        Ctx, Forced ? DiagnosticInfo::AlwaysPrint : LDIST_NAME, *F,
-        L->getStartLoc(), Twine("loop not distributed: ") + Message);
+        Ctx, Forced ? DiagnosticInfoOptimizationRemarkAnalysis::AlwaysPrint
+                    : LDIST_NAME,
+        *F, L->getStartLoc(), Twine("loop not distributed: ") + Message);
 
     // Also issue a warning if distribution was requested explicitly but it
     // failed.

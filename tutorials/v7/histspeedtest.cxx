@@ -1,3 +1,11 @@
+/// \file
+/// \ingroup tutorial_v7
+///
+/// \macro_code
+///
+/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+/// \author Axel Naumann <axel@cern.ch>
+
 #include "TRandom3.h"
 #include <vector>
 #include <chrono>

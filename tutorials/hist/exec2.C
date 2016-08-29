@@ -4,7 +4,7 @@
 /// Example of macro called when a mouse event occurs in a pad.
 ///
 /// Example:
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 /// Root > TFile f("hsimple.root");
 /// Root > hpxpy.Draw();
 /// Root > c1.AddExec("ex2",".x exec2.C");

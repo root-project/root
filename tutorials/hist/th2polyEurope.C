@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_hist
+/// \notebook -js
 /// This tutorial illustrates how to create an histogram with polygonal
 /// bins (TH2Poly), fill it and draw it. The initial data are stored
 /// in TMultiGraphs. They represent the european countries.
@@ -135,7 +136,6 @@ void th2polyEurope(Int_t npoints=500000)
    for (i=0; i<nbins; i++) p->SetBinContent(i+1, scale*p->GetBinContent(i+1));
 
    gStyle->SetOptStat(1111);
-   gStyle->SetPalette(1);
    p->Draw("COLZ");
 
    TCanvas *c1 = new TCanvas("c1", "c1",W+10,0,W-20,H);

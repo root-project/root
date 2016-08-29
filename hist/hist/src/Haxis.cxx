@@ -153,6 +153,7 @@ Float_t TH1::GetTitleSize( Option_t *axis) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the number of divisions to draw an axis.
+///
 ///  ndiv      : Number of divisions.
 ///
 ///       n = N1 + 100*N2 + 10000*N3
@@ -179,6 +180,7 @@ void TH1::SetNdivisions(Int_t n, Option_t *axis)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set color to draw the axis line and tick marks.
+///
 /// axis specifies which axis ("x","y","z"), default = "x"
 /// if axis="xyz" set all 3 axes
 
@@ -217,6 +219,7 @@ void TH1::SetAxisRange(Axis_t xmin, Axis_t xmax, Option_t *axis)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set axis labels color.
+///
 /// axis specifies which axis ("x","y","z"), default = "x"
 /// if axis="xyz" set all 3 axes
 
@@ -233,10 +236,12 @@ void TH1::SetLabelColor(Color_t color, Option_t *axis)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set font number used to draw axis labels.
+///
 /// font  : Text font code = 10*fontnumber + precision
 ///         Font numbers must be between 1 and 14
 ///         precision = 1 fast hardware fonts (steps in the size)
 ///         precision = 2 scalable and rotatable hardware fonts
+///
 /// The default font number is 62.
 /// axis specifies which axis ("x","y","z"), default = "x"
 /// if axis="xyz" set all 3 axes
@@ -254,6 +259,7 @@ void TH1::SetLabelFont(Style_t font, Option_t *axis)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set offset between axis and axis' labels.
+///
 /// The offset is expressed as a percent of the pad height.
 /// axis specifies which axis ("x","y","z"), default = "x"
 /// if axis="xyz" set all 3 axes
@@ -271,6 +277,7 @@ void TH1::SetLabelOffset(Float_t offset, Option_t *axis)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set size of axis' labels.
+///
 /// The size is expressed as a percent of the pad height.
 /// axis specifies which axis ("x","y","z"), default = "x"
 /// if axis="xyz" set all 3 axes
@@ -288,6 +295,7 @@ void TH1::SetLabelSize(Float_t size, Option_t *axis)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the axis' tick marks length.
+///
 /// axis specifies which axis ("x","y","z"), default = "x"
 /// if axis="xyz" set all 3 axes
 
@@ -303,10 +311,11 @@ void TH1::SetTickLength(Float_t length, Option_t *axis)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// The the axis' title font.
-/// if axis =="x"  set the X axis title font
-/// if axis =="y"  set the Y axis title font
-/// if axis =="z"  set the Z axis title font
+/// Set the axis' title font.
+///
+///  - if axis =="x"  set the X axis title font
+///  - if axis =="y"  set the Y axis title font
+///  - if axis =="z"  set the Z axis title font
 /// any other value of axis will set the pad title font
 ///
 /// if axis="xyz" set all 3 axes
@@ -325,9 +334,10 @@ void TH1::SetTitleFont(Style_t font, Option_t *axis)
 ////////////////////////////////////////////////////////////////////////////////
 /// Specify a parameter offset to control the distance between the axis
 /// and the axis' title.
-/// offset = 1 means : use the default distance
-/// offset = 1.2 means: the distance will be 1.2*(default distance)
-/// offset = 0.8 means: the distance will be 0.8*(default distance)
+///
+///  - offset = 1 means : use the default distance
+///  - offset = 1.2 means: the distance will be 1.2*(default distance)
+///  - offset = 0.8 means: the distance will be 0.8*(default distance)
 ///
 /// axis specifies which axis ("x","y","z"), default = "x"
 /// if axis="xyz" set all 3 axes
@@ -344,10 +354,11 @@ void TH1::SetTitleOffset(Float_t offset, Option_t *axis)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// The the axis' title size.
-/// if axis = "x" set the X axis title size
-/// if axis = "y" set the Y axis title size
-/// if axis = "z" set the Z axis title size
+/// Set the axis' title size.
+///
+///  - if axis = "x" set the X axis title size
+///  - if axis = "y" set the Y axis title size
+///  - if axis = "z" set the Z axis title size
 ///
 /// if axis ="xyz" set all 3 axes
 

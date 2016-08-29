@@ -72,7 +72,8 @@ namespace TMVA {
       // setters
       void     SetValue( std::vector<Float_t>& value, Int_t ievt );
       void     Resize( Int_t entries )  { fMultiClassValues.resize( entries ); }
-      void     Clear()                  { fMultiClassValues.clear(); }
+      using TObject::Clear;
+      virtual void     Clear(Option_t *)  { fMultiClassValues.clear(); }
 
       // getters
       Long64_t GetSize() const        { return fMultiClassValues.size(); }
@@ -92,13 +93,17 @@ namespace TMVA {
 
    private:
 
-      mutable std::vector<std::vector< Float_t> >  fMultiClassValues;        //! mva values (Results)
-      mutable MsgLogger* fLogger;                     //! message logger
+      mutable std::vector<std::vector< Float_t> >  fMultiClassValues;        // mva values (Results)
+      mutable MsgLogger* fLogger;                     // message logger
       MsgLogger& Log() const { return *fLogger; }
       UInt_t fClassToOptimize;
       std::vector<Float_t> fAchievableEff;
       std::vector<Float_t> fAchievablePur;
       std::vector<std::vector<Double_t> > fBestCuts;
+   protected:
+       
+       ClassDef(ResultsMulticlass,2);
+
    }; 
 
 }

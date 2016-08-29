@@ -1,18 +1,4 @@
-cmake_minimum_required(VERSION 2.8.8)
-
-# FIXME: It may be removed when we use 2.8.12.
-if(CMAKE_VERSION VERSION_LESS 2.8.12)
-  # Invalidate a couple of keywords.
-  set(cmake_2_8_12_INTERFACE)
-  set(cmake_2_8_12_PRIVATE)
-else()
-  # Use ${cmake_2_8_12_KEYWORD} intead of KEYWORD in target_link_libraries().
-  set(cmake_2_8_12_INTERFACE INTERFACE)
-  set(cmake_2_8_12_PRIVATE PRIVATE)
-  if(POLICY CMP0022)
-    cmake_policy(SET CMP0022 NEW) # automatic when 2.8.12 is required
-  endif()
-endif()
+cmake_minimum_required(VERSION 3.4.3)
 
 # If we are not building as a part of LLVM, build Cling as an
 # standalone project, using LLVM as an external library:
@@ -290,7 +276,7 @@ macro(add_cling_library name)
   llvm_add_library(${name} ${ARG_ENABLE_SHARED} ${ARG_UNPARSED_ARGUMENTS} ${srcs})
 
   if(TARGET ${name})
-    target_link_libraries(${name} ${cmake_2_8_12_INTERFACE} ${LLVM_COMMON_LIBS})
+    target_link_libraries(${name} ${INTERFACE} ${LLVM_COMMON_LIBS})
 
     if (NOT LLVM_INSTALL_TOOLCHAIN_ONLY OR ${name} STREQUAL "libcling")
       install(TARGETS ${name}
@@ -327,10 +313,15 @@ endmacro(add_cling_executable)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 if(DEFINED ROOT_BINARY_DIR)
-  # Building as part of ROOT.
-  # this is needed when building Cling as part of ROOT:
+  # Building as part of ROOT (CMake)
   include_directories(BEFORE
     ${CMAKE_CURRENT_BINARY_DIR}/../llvm/src/tools/clang/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/../llvm/src/tools/clang/include
+    )
+elseif(DEFINED ROOT_CLASSIC)
+  # Building as part of ROOT (classic)
+  include_directories(BEFORE
+    ${CMAKE_CURRENT_BINARY_DIR}/../llvm/obj/tools/clang/include
     ${CMAKE_CURRENT_SOURCE_DIR}/../llvm/src/tools/clang/include
     )
 else()
@@ -340,11 +331,6 @@ else()
     ${CMAKE_CURRENT_SOURCE_DIR}/../clang/include
     )
 endif()
-
-include_directories(BEFORE
-  ${CMAKE_CURRENT_BINARY_DIR}/include
-  ${CMAKE_CURRENT_SOURCE_DIR}/include
-  )
 
 include_directories(BEFORE
   ${CMAKE_CURRENT_BINARY_DIR}/include
@@ -370,13 +356,31 @@ if (NOT LLVM_INSTALL_TOOLCHAIN_ONLY)
     )
 endif()
 
-add_definitions( -D_GNU_SOURCE
-  -DCLING_VERSION=${CLING_VERSION}
-  -DCLING_INCLUDE_PATHS="${CMAKE_INSTALL_PREFIX}/include:${CMAKE_CURRENT_SOURCE_DIR}/include:${CMAKE_CURRENT_SOURCE_DIR}/../clang/include:${CMAKE_CURRENT_SOURCE_DIR}/../../include" )
+add_definitions( -D_GNU_SOURCE -DCLING_VERSION=${CLING_VERSION})
 
 option(CLING_INCLUDE_TESTS
        "Generate build targets for the Cling unit tests."
        ${LLVM_INCLUDE_TESTS})
+
+#Allow user to prepend to list via cmake -DCLING_INCLUDE_PATHS=
+set(cling_include_deflt "\
+${CMAKE_INSTALL_PREFIX}/include:${CMAKE_CURRENT_SOURCE_DIR}/include:\
+${CMAKE_CURRENT_SOURCE_DIR}/../clang/include:\
+${CMAKE_CURRENT_SOURCE_DIR}/../../include"
+)
+
+if(NOT CLING_INCLUDE_PATHS)
+ set(CLING_INCLUDE_PATHS "${cling_include_deflt}")
+else()
+ set(CLING_INCLUDE_PATHS "${CLING_INCLUDE_PATHS}:${cling_include_deflt}")
+endif()
+
+# All targets below may depend on all tablegen'd files.
+get_property(CLANG_TABLEGEN_TARGETS GLOBAL PROPERTY CLANG_TABLEGEN_TARGETS)
+list(APPEND LLVM_COMMON_DEPENDS ${CLANG_TABLEGEN_TARGETS})
+
+# And llvm-intrinsics.
+list(APPEND LLVM_COMMON_DEPENDS intrinsics_gen)
 
 add_subdirectory(lib)
 add_subdirectory(tools)
@@ -436,6 +440,9 @@ if (CLING_BUILT_STANDALONE OR CMAKE_VERSION VERSION_EQUAL 3 OR
   install(FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/ClingConfig.cmake
     DESTINATION lib${LLVM_LIBDIR_SUFFIX}/cmake/cling)
+
+  install(DIRECTORY tools/Jupyter/kernel DESTINATION share/cling/Jupyter)
+
 
   # Also copy ClingConfig.cmake to the build directory so that dependent projects
   # can build against a build directory of Cling more easily.

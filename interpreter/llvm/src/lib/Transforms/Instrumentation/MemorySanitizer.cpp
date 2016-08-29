@@ -317,6 +317,9 @@ class MemorySanitizer : public FunctionPass {
         TrackOrigins(std::max(TrackOrigins, (int)ClTrackOrigins)),
         WarningFn(nullptr) {}
   const char *getPassName() const override { return "MemorySanitizer"; }
+  void getAnalysisUsage(AnalysisUsage &AU) const override {
+    AU.addRequired<TargetLibraryInfoWrapperPass>();
+  }
   bool runOnFunction(Function &F) override;
   bool doInitialization(Module &M) override;
   static char ID;  // Pass identification, replacement for typeid.
@@ -384,9 +387,13 @@ class MemorySanitizer : public FunctionPass {
 } // anonymous namespace
 
 char MemorySanitizer::ID = 0;
-INITIALIZE_PASS(MemorySanitizer, "msan",
-                "MemorySanitizer: detects uninitialized reads.",
-                false, false)
+INITIALIZE_PASS_BEGIN(
+    MemorySanitizer, "msan",
+    "MemorySanitizer: detects uninitialized reads.", false, false)
+INITIALIZE_PASS_DEPENDENCY(TargetLibraryInfoWrapperPass)
+INITIALIZE_PASS_END(
+    MemorySanitizer, "msan",
+    "MemorySanitizer: detects uninitialized reads.", false, false)
 
 FunctionPass *llvm::createMemorySanitizerPass(int TrackOrigins) {
   return new MemorySanitizer(TrackOrigins);
@@ -603,7 +610,7 @@ CreateVarArgHelper(Function &Func, MemorySanitizer &Msan,
 
 unsigned TypeSizeToSizeIndex(unsigned TypeSize) {
   if (TypeSize <= 8) return 0;
-  return Log2_32_Ceil(TypeSize / 8);
+  return Log2_32_Ceil((TypeSize + 7) / 8);
 }
 
 /// This class does all the work for a given function. Store and Load
@@ -618,6 +625,7 @@ struct MemorySanitizerVisitor : public InstVisitor<MemorySanitizerVisitor> {
   SmallVector<PHINode *, 16> ShadowPHINodes, OriginPHINodes;
   ValueMap<Value*, Value*> ShadowMap, OriginMap;
   std::unique_ptr<VarArgHelper> VAHelper;
+  const TargetLibraryInfo *TLI;
 
   // The following flags disable parts of MSan instrumentation based on
   // blacklist contents and command-line options.
@@ -635,7 +643,7 @@ struct MemorySanitizerVisitor : public InstVisitor<MemorySanitizerVisitor> {
       : Shadow(S), Origin(O), OrigIns(I) { }
   };
   SmallVector<ShadowOriginAndInsertPoint, 16> InstrumentationList;
-  SmallVector<Instruction*, 16> StoreList;
+  SmallVector<StoreInst *, 16> StoreList;
 
   MemorySanitizerVisitor(Function &F, MemorySanitizer &MS)
       : F(F), MS(MS), VAHelper(CreateVarArgHelper(F, MS, *this)) {
@@ -647,6 +655,7 @@ struct MemorySanitizerVisitor : public InstVisitor<MemorySanitizerVisitor> {
     // FIXME: Consider using SpecialCaseList to specify a list of functions that
     // must always return fully initialized values. For now, we hardcode "main".
     CheckReturnValue = SanitizeFunction && (F.getName() == "main");
+    TLI = &MS.getAnalysis<TargetLibraryInfoWrapperPass>().getTLI();
 
     DEBUG(if (!InsertChecks)
           dbgs() << "MemorySanitizer is not inserting checks into '"
@@ -743,26 +752,26 @@ struct MemorySanitizerVisitor : public InstVisitor<MemorySanitizerVisitor> {
   }
 
   void materializeStores(bool InstrumentWithCalls) {
-    for (auto Inst : StoreList) {
-      StoreInst &SI = *dyn_cast<StoreInst>(Inst);
-
-      IRBuilder<> IRB(&SI);
-      Value *Val = SI.getValueOperand();
-      Value *Addr = SI.getPointerOperand();
-      Value *Shadow = SI.isAtomic() ? getCleanShadow(Val) : getShadow(Val);
+    for (StoreInst *SI : StoreList) {
+      IRBuilder<> IRB(SI);
+      Value *Val = SI->getValueOperand();
+      Value *Addr = SI->getPointerOperand();
+      Value *Shadow = SI->isAtomic() ? getCleanShadow(Val) : getShadow(Val);
       Value *ShadowPtr = getShadowPtr(Addr, Shadow->getType(), IRB);
 
       StoreInst *NewSI =
-          IRB.CreateAlignedStore(Shadow, ShadowPtr, SI.getAlignment());
+          IRB.CreateAlignedStore(Shadow, ShadowPtr, SI->getAlignment());
       DEBUG(dbgs() << "  STORE: " << *NewSI << "\n");
       (void)NewSI;
 
-      if (ClCheckAccessAddress) insertShadowCheck(Addr, &SI);
+      if (ClCheckAccessAddress)
+        insertShadowCheck(Addr, SI);
 
-      if (SI.isAtomic()) SI.setOrdering(addReleaseOrdering(SI.getOrdering()));
+      if (SI->isAtomic())
+        SI->setOrdering(addReleaseOrdering(SI->getOrdering()));
 
-      if (MS.TrackOrigins && !SI.isAtomic())
-        storeOrigin(IRB, Addr, Shadow, getOrigin(Val), SI.getAlignment(),
+      if (MS.TrackOrigins && !SI->isAtomic())
+        storeOrigin(IRB, Addr, Shadow, getOrigin(Val), SI->getAlignment(),
                     InstrumentWithCalls);
     }
   }
@@ -2529,6 +2538,8 @@ struct MemorySanitizerVisitor : public InstVisitor<MemorySanitizerVisitor> {
                                                  AttributeSet::FunctionIndex,
                                                  B));
       }
+
+      maybeMarkSanitizerLibraryCallNoBuiltin(Call, TLI);
     }
     IRBuilder<> IRB(&I);
 

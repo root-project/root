@@ -1,6 +1,6 @@
 
 #---Define the way we want to build and what of llvm/clang/cling------------------------------------
-set(LLVM_ENABLE_WARNINGS OFF CACHE BOOL "")
+set(LLVM_ENABLE_WARNINGS ON CACHE BOOL "")
 set(LLVM_INCLUDE_TESTS OFF CACHE BOOL "")
 set(LLVM_INCLUDE_EXAMPLES OFF CACHE BOOL "")
 set(LLVM_BUILD_TOOLS OFF CACHE BOOL "")
@@ -10,15 +10,19 @@ set(LLVM_FORCE_USE_OLD_TOOLCHAIN ON CACHE BOOL "")
 # mechanism.
 set(LLVM_ENABLE_THREADS OFF CACHE BOOL "")
 if(cxx14)
-  set(LLVM_ENABLE_CXX1Y ON CACHE BOOL "")
+  set(LLVM_ENABLE_CXX1Y ON CACHE BOOL "" FORCE)
 endif()
 
 set(CMAKE_REQUIRED_QUIET 1)  # Make the configuration of LLVM quiet
 
 if(ROOT_ARCHITECTURE MATCHES linuxarm64)
   set(ROOT_CLING_TARGET "AArch64")
+elseif(ROOT_ARCHITECTURE MATCHES linuxarm)
+  set(ROOT_CLING_TARGET "ARM")
 elseif(ROOT_ARCHITECTURE MATCHES linuxppc64gcc)
   set(ROOT_CLING_TARGET "PowerPC")
+elseif(ROOT_ARCHITECTURE MATCHES linuxs390)
+  set(ROOT_CLING_TARGET "SystemZ")
 elseif(ROOT_ARCHITECTURE MATCHES linux)
   set(ROOT_CLING_TARGET "X86")
 elseif(ROOT_ARCHITECTURE MATCHES macosx)
@@ -40,16 +44,16 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${INTERP_ADDITIONAL_FLAGS}")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${INTERP_ADDITIONAL_FLAGS}")
 
 #---Do not transform warnings in errors-------------------------------------------------------------
-string(REPLACE "-Werror" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-string(REPLACE "-Wshadow" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+string(REPLACE "-Werror " "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+string(REPLACE "-Wshadow " "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 
 #---Build LLVM/Clang with symbol visibility=hidden--------------------------------------------------
 ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -fvisibility=hidden)
 
 #--- FIXME: Do not build LLVM/Clang with modules until next LLVM upgrade----------------------------
 if(cxxmodules)
-  string(REPLACE "${ROOT_CXXMODULES_FLAGS}" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-  string(REPLACE "${ROOT_CXXMODULES_FLAGS}" "" CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
+  string(REPLACE "${ROOT_CXXMODULES_CXXFLAGS}" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+  string(REPLACE "${ROOT_CXXMODULES_CFLAGS}" "" CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
 endif(cxxmodules)
 
 #---Build type--------------------------------------------------------------------------------------
@@ -66,6 +70,7 @@ else()
   endif()
 endif()
 set(CMAKE_BUILD_TYPE ${LLVM_BUILD_TYPE})
+set(BUILD_SHARED_LIBS "NO")
 #--- Do not build cling as part of llvm.
 set(LLVM_NOCLING "YES")
 

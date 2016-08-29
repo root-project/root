@@ -34,20 +34,18 @@ private:
 
   bool replaceUsesWithZeroReg(MachineRegisterInfo *MRI, const MachineInstr&);
 
-  std::pair<SDNode*, SDNode*> selectMULT(SDNode *N, unsigned Opc, SDLoc dl,
-                                         EVT Ty, bool HasLo, bool HasHi);
+  std::pair<SDNode *, SDNode *> selectMULT(SDNode *N, unsigned Opc,
+                                           const SDLoc &dl, EVT Ty, bool HasLo,
+                                           bool HasHi);
 
-  void selectAddESubE(unsigned MOp, SDValue InFlag, SDValue CmpLHS, SDLoc DL,
-                      SDNode *Node) const;
+  void selectAddESubE(unsigned MOp, SDValue InFlag, SDValue CmpLHS,
+                      const SDLoc &DL, SDNode *Node) const;
 
   bool selectAddrFrameIndex(SDValue Addr, SDValue &Base, SDValue &Offset) const;
   bool selectAddrFrameIndexOffset(SDValue Addr, SDValue &Base, SDValue &Offset,
                                   unsigned OffsetBits) const;
 
   bool selectAddrRegImm(SDValue Addr, SDValue &Base,
-                        SDValue &Offset) const override;
-
-  bool selectAddrRegReg(SDValue Addr, SDValue &Base,
                         SDValue &Offset) const override;
 
   bool selectAddrDefault(SDValue Addr, SDValue &Base,

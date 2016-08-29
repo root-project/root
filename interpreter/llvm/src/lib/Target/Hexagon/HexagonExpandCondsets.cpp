@@ -616,7 +616,7 @@ MachineInstr *HexagonExpandCondsets::genCondTfrFor(MachineOperand &SrcOp,
       bool PredSense, bool ReadUndef, bool ImpUse) {
   MachineInstr *MI = SrcOp.getParent();
   MachineBasicBlock &B = *At->getParent();
-  DebugLoc DL = MI->getDebugLoc();
+  const DebugLoc &DL = MI->getDebugLoc();
 
   // Don't avoid identity copies here (i.e. if the source and the destination
   // are the same registers). It is actually better to generate them here,
@@ -823,7 +823,7 @@ bool HexagonExpandCondsets::canMoveMemTo(MachineInstr *TheI, MachineInstr *ToI,
   bool IsLoad = TheI->mayLoad(), IsStore = TheI->mayStore();
   if (!IsLoad && !IsStore)
     return true;
-  if (HII->areMemAccessesTriviallyDisjoint(TheI, ToI))
+  if (HII->areMemAccessesTriviallyDisjoint(*TheI, *ToI))
     return true;
   if (TheI->hasUnmodeledSideEffects())
     return false;

@@ -414,7 +414,7 @@ namespace cling {
         // Build Arg1 DeclContext* DC
         QualType DCTy = m_Context->getTypeDeclType(m_DeclContextDecl);
         Inits.push_back(utils::Synthesize::CStyleCastPtrExpr(m_Sema, DCTy,
-                                                     (uint64_t)m_CurDeclContext)
+                                                     (uintptr_t)m_CurDeclContext)
                         );
         // Build Arg2 llvm::StringRef
         // Get the type of the type without specifiers
@@ -618,7 +618,7 @@ namespace cling {
     // Build Arg1
     QualType DCTy = m_Context->getTypeDeclType(m_DeclContextDecl);
     Expr* Arg1 = utils::Synthesize::CStyleCastPtrExpr(m_Sema, DCTy,
-                                                    (uint64_t)m_CurDeclContext);
+                                                    (uintptr_t)m_CurDeclContext);
     CallArgs.push_back(Arg1);
 
     // Build the call
@@ -787,7 +787,7 @@ namespace cling {
     Sema::InstantiatingTemplate Inst(*m_Sema, m_NoSLoc, m_EvalDecl);
     // Before instantiation we need the canonical type
     TemplateArgument Arg(InstTy.getCanonicalType());
-    TemplateArgumentList TemplateArgs(TemplateArgumentList::OnStack, &Arg, 1U);
+    TemplateArgumentList TemplateArgs(TemplateArgumentList::OnStack, Arg);
 
     // Substitute the declaration of the templated function, with the
     // specified template argument

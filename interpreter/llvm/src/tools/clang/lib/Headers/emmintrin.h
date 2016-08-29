@@ -505,6 +505,16 @@ _mm_loadu_pd(double const *__dp)
   return ((struct __loadu_pd*)__dp)->__v;
 }
 
+static __inline__ __m128i __DEFAULT_FN_ATTRS
+_mm_loadu_si64(void const *__a)
+{
+  struct __loadu_si64 {
+    long long __v;
+  } __attribute__((__packed__, __may_alias__));
+  long long __u = ((struct __loadu_si64*)__a)->__v;
+  return (__m128i){__u, 0L};
+}
+
 static __inline__ __m128d __DEFAULT_FN_ATTRS
 _mm_load_sd(double const *__dp)
 {
@@ -1089,27 +1099,26 @@ _mm_xor_si128(__m128i __a, __m128i __b)
 ///    An immediate value specifying the number of bytes to left-shift
 ///    operand a.
 /// \returns A 128-bit integer vector containing the left-shifted value.
-#define _mm_slli_si128(a, imm) __extension__ ({                                \
-  ((char)(imm)&0xF0) ? _mm_setzero_si128() :                                   \
-                     (__m128i)__builtin_shufflevector(                         \
-                                                 (__v16qi)_mm_setzero_si128(), \
-                                                 (__v16qi)(__m128i)(a),        \
-                                                 16 - (char)(imm),             \
-                                                 17 - (char)(imm),             \
-                                                 18 - (char)(imm),             \
-                                                 19 - (char)(imm),             \
-                                                 20 - (char)(imm),             \
-                                                 21 - (char)(imm),             \
-                                                 22 - (char)(imm),             \
-                                                 23 - (char)(imm),             \
-                                                 24 - (char)(imm),             \
-                                                 25 - (char)(imm),             \
-                                                 26 - (char)(imm),             \
-                                                 27 - (char)(imm),             \
-                                                 28 - (char)(imm),             \
-                                                 29 - (char)(imm),             \
-                                                 30 - (char)(imm),             \
-                                                 31 - (char)(imm)); })
+#define _mm_slli_si128(a, imm) __extension__ ({                              \
+  (__m128i)__builtin_shufflevector(                                          \
+                                 (__v16qi)_mm_setzero_si128(),               \
+                                 (__v16qi)(__m128i)(a),                      \
+                                 ((char)(imm)&0xF0) ?  0 : 16 - (char)(imm), \
+                                 ((char)(imm)&0xF0) ?  1 : 17 - (char)(imm), \
+                                 ((char)(imm)&0xF0) ?  2 : 18 - (char)(imm), \
+                                 ((char)(imm)&0xF0) ?  3 : 19 - (char)(imm), \
+                                 ((char)(imm)&0xF0) ?  4 : 20 - (char)(imm), \
+                                 ((char)(imm)&0xF0) ?  5 : 21 - (char)(imm), \
+                                 ((char)(imm)&0xF0) ?  6 : 22 - (char)(imm), \
+                                 ((char)(imm)&0xF0) ?  7 : 23 - (char)(imm), \
+                                 ((char)(imm)&0xF0) ?  8 : 24 - (char)(imm), \
+                                 ((char)(imm)&0xF0) ?  9 : 25 - (char)(imm), \
+                                 ((char)(imm)&0xF0) ? 10 : 26 - (char)(imm), \
+                                 ((char)(imm)&0xF0) ? 11 : 27 - (char)(imm), \
+                                 ((char)(imm)&0xF0) ? 12 : 28 - (char)(imm), \
+                                 ((char)(imm)&0xF0) ? 13 : 29 - (char)(imm), \
+                                 ((char)(imm)&0xF0) ? 14 : 30 - (char)(imm), \
+                                 ((char)(imm)&0xF0) ? 15 : 31 - (char)(imm)); })
 
 #define _mm_bslli_si128(a, imm) \
   _mm_slli_si128((a), (imm))
@@ -1325,27 +1334,26 @@ _mm_sra_epi32(__m128i __a, __m128i __count)
 ///    An immediate value specifying the number of bytes to right-shift operand
 ///    a.
 /// \returns A 128-bit integer vector containing the right-shifted value.
-#define _mm_srli_si128(a, imm) __extension__ ({                                \
-  ((char)(imm)&0xF0) ? _mm_setzero_si128() :                                   \
-                     (__m128i)__builtin_shufflevector(                         \
-                                                 (__v16qi)(__m128i)(a),        \
-                                                 (__v16qi)_mm_setzero_si128(), \
-                                                 (char)(imm) + 0,              \
-                                                 (char)(imm) + 1,              \
-                                                 (char)(imm) + 2,              \
-                                                 (char)(imm) + 3,              \
-                                                 (char)(imm) + 4,              \
-                                                 (char)(imm) + 5,              \
-                                                 (char)(imm) + 6,              \
-                                                 (char)(imm) + 7,              \
-                                                 (char)(imm) + 8,              \
-                                                 (char)(imm) + 9,              \
-                                                 (char)(imm) + 10,             \
-                                                 (char)(imm) + 11,             \
-                                                 (char)(imm) + 12,             \
-                                                 (char)(imm) + 13,             \
-                                                 (char)(imm) + 14,             \
-                                                 (char)(imm) + 15); })
+#define _mm_srli_si128(a, imm) __extension__ ({                              \
+  (__m128i)__builtin_shufflevector(                                          \
+                                 (__v16qi)(__m128i)(a),                      \
+                                 (__v16qi)_mm_setzero_si128(),               \
+                                 ((char)(imm)&0xF0) ? 16 : (char)(imm) + 0,  \
+                                 ((char)(imm)&0xF0) ? 17 : (char)(imm) + 1,  \
+                                 ((char)(imm)&0xF0) ? 18 : (char)(imm) + 2,  \
+                                 ((char)(imm)&0xF0) ? 19 : (char)(imm) + 3,  \
+                                 ((char)(imm)&0xF0) ? 20 : (char)(imm) + 4,  \
+                                 ((char)(imm)&0xF0) ? 21 : (char)(imm) + 5,  \
+                                 ((char)(imm)&0xF0) ? 22 : (char)(imm) + 6,  \
+                                 ((char)(imm)&0xF0) ? 23 : (char)(imm) + 7,  \
+                                 ((char)(imm)&0xF0) ? 24 : (char)(imm) + 8,  \
+                                 ((char)(imm)&0xF0) ? 25 : (char)(imm) + 9,  \
+                                 ((char)(imm)&0xF0) ? 26 : (char)(imm) + 10, \
+                                 ((char)(imm)&0xF0) ? 27 : (char)(imm) + 11, \
+                                 ((char)(imm)&0xF0) ? 28 : (char)(imm) + 12, \
+                                 ((char)(imm)&0xF0) ? 29 : (char)(imm) + 13, \
+                                 ((char)(imm)&0xF0) ? 30 : (char)(imm) + 14, \
+                                 ((char)(imm)&0xF0) ? 31 : (char)(imm) + 15); })
 
 #define _mm_bsrli_si128(a, imm) \
   _mm_srli_si128((a), (imm))
@@ -2210,13 +2218,13 @@ _mm_storel_epi64(__m128i *__p, __m128i __a)
 static __inline__ void __DEFAULT_FN_ATTRS
 _mm_stream_pd(double *__p, __m128d __a)
 {
-  __builtin_ia32_movntpd(__p, (__v2df)__a);
+  __builtin_nontemporal_store((__v2df)__a, (__v2df*)__p);
 }
 
 static __inline__ void __DEFAULT_FN_ATTRS
 _mm_stream_si128(__m128i *__p, __m128i __a)
 {
-  __builtin_ia32_movntdq(__p, (__v2di)__a);
+  __builtin_nontemporal_store((__v2di)__a, (__v2di*)__p);
 }
 
 static __inline__ void __DEFAULT_FN_ATTRS
@@ -2292,25 +2300,25 @@ _mm_movemask_epi8(__m128i __a)
 
 #define _mm_shuffle_epi32(a, imm) __extension__ ({ \
   (__m128i)__builtin_shufflevector((__v4si)(__m128i)(a), \
-                                   (__v4si)_mm_setzero_si128(), \
-                                   (imm) & 0x3, ((imm) & 0xc) >> 2, \
-                                   ((imm) & 0x30) >> 4, ((imm) & 0xc0) >> 6); })
+                                   (__v4si)_mm_undefined_si128(), \
+                                   ((imm) >> 0) & 0x3, ((imm) >> 2) & 0x3, \
+                                   ((imm) >> 4) & 0x3, ((imm) >> 6) & 0x3); })
 
 #define _mm_shufflelo_epi16(a, imm) __extension__ ({ \
   (__m128i)__builtin_shufflevector((__v8hi)(__m128i)(a), \
-                                   (__v8hi)_mm_setzero_si128(), \
-                                   (imm) & 0x3, ((imm) & 0xc) >> 2, \
-                                   ((imm) & 0x30) >> 4, ((imm) & 0xc0) >> 6, \
+                                   (__v8hi)_mm_undefined_si128(), \
+                                   ((imm) >> 0) & 0x3, ((imm) >> 2) & 0x3, \
+                                   ((imm) >> 4) & 0x3, ((imm) >> 6) & 0x3, \
                                    4, 5, 6, 7); })
 
 #define _mm_shufflehi_epi16(a, imm) __extension__ ({ \
   (__m128i)__builtin_shufflevector((__v8hi)(__m128i)(a), \
-                                   (__v8hi)_mm_setzero_si128(), \
+                                   (__v8hi)_mm_undefined_si128(), \
                                    0, 1, 2, 3, \
-                                   4 + (((imm) & 0x03) >> 0), \
-                                   4 + (((imm) & 0x0c) >> 2), \
-                                   4 + (((imm) & 0x30) >> 4), \
-                                   4 + (((imm) & 0xc0) >> 6)); })
+                                   4 + (((imm) >> 0) & 0x3), \
+                                   4 + (((imm) >> 2) & 0x3), \
+                                   4 + (((imm) >> 4) & 0x3), \
+                                   4 + (((imm) >> 6) & 0x3)); })
 
 static __inline__ __m128i __DEFAULT_FN_ATTRS
 _mm_unpackhi_epi8(__m128i __a, __m128i __b)
@@ -2398,7 +2406,8 @@ _mm_movemask_pd(__m128d __a)
 
 #define _mm_shuffle_pd(a, b, i) __extension__ ({ \
   (__m128d)__builtin_shufflevector((__v2df)(__m128d)(a), (__v2df)(__m128d)(b), \
-                                   (i) & 1, (((i) & 2) >> 1) + 2); })
+                                   0 + (((i) >> 0) & 0x1), \
+                                   2 + (((i) >> 1) & 0x1)); })
 
 static __inline__ __m128 __DEFAULT_FN_ATTRS
 _mm_castpd_ps(__m128d __a)

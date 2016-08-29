@@ -2080,7 +2080,7 @@ _mm_stream_pi(__m64 *__p, __m64 __a)
 static __inline__ void __DEFAULT_FN_ATTRS
 _mm_stream_ps(float *__p, __m128 __a)
 {
-  __builtin_ia32_movntps(__p, (__v4sf)__a);
+  __builtin_nontemporal_store((__v4sf)__a, (__v4sf*)__p);
 }
 
 /// \brief Forces strong memory ordering (serialization) between store
@@ -2496,9 +2496,10 @@ _mm_setcsr(unsigned int __i)
 /// \returns A 128-bit vector of [4 x float] containing the shuffled values.
 #define _mm_shuffle_ps(a, b, mask) __extension__ ({ \
   (__m128)__builtin_shufflevector((__v4sf)(__m128)(a), (__v4sf)(__m128)(b), \
-                                  (mask) & 0x3, ((mask) & 0xc) >> 2, \
-                                  (((mask) & 0x30) >> 4) + 4, \
-                                  (((mask) & 0xc0) >> 6) + 4); })
+                                  0 + (((mask) >> 0) & 0x3), \
+                                  0 + (((mask) >> 2) & 0x3), \
+                                  4 + (((mask) >> 4) & 0x3), \
+                                  4 + (((mask) >> 6) & 0x3)); })
 
 /// \brief Unpacks the high-order (index 2,3) values from two 128-bit vectors of
 ///    [4 x float] and interleaves them into a 128-bit vector of [4 x
@@ -2821,9 +2822,7 @@ _mm_movemask_ps(__m128 __a)
 }
 
 
-#ifdef _MSC_VER
-#define _MM_ALIGN16 __declspec(align(16))
-#endif
+#define _MM_ALIGN16 __attribute__((aligned(16)))
 
 #define _MM_SHUFFLE(z, y, x, w) (((z) << 6) | ((y) << 4) | ((x) << 2) | (w))
 

@@ -50,8 +50,7 @@ Bool_t MethodC50::IsModuleLoaded = ROOT::R::TRInterface::Instance().Require("C50
 MethodC50::MethodC50(const TString &jobName,
                      const TString &methodTitle,
                      DataSetInfo &dsi,
-                     const TString &theOption,
-                     TDirectory *theTargetDir) : RMethodBase(jobName, Types::kC50, methodTitle, dsi, theOption, theTargetDir),
+                     const TString &theOption) : RMethodBase(jobName, Types::kC50, methodTitle, dsi, theOption),
    fNTrials(1),
    fRules(kFALSE),
    fMvaCounter(0),
@@ -77,13 +76,11 @@ MethodC50::MethodC50(const TString &jobName,
    fControlEarlyStopping = kTRUE;
 
    ListOfVariables = DataInfo().GetListOfVariables();
-// default extension for weight files
-   SetWeightFileDir(gConfig().GetIONames().fWeightFileDir);
 }
 
 //_______________________________________________________________________
-MethodC50::MethodC50(DataSetInfo &theData, const TString &theWeightFile, TDirectory *theTargetDir)
-   : RMethodBase(Types::kC50, theData, theWeightFile, theTargetDir),
+MethodC50::MethodC50(DataSetInfo &theData, const TString &theWeightFile)
+   : RMethodBase(Types::kC50, theData, theWeightFile),
      fNTrials(1),
      fRules(kFALSE),
      fMvaCounter(0),
@@ -105,8 +102,6 @@ MethodC50::MethodC50(DataSetInfo &theData, const TString &theWeightFile, TDirect
    fControlSample = 0;
    r["sample.int(4096, size = 1) - 1L"] >> fControlSeed;
    fControlEarlyStopping = kTRUE;
-// default extension for weight files
-   SetWeightFileDir(gConfig().GetIONames().fWeightFileDir);
 }
 
 
@@ -146,12 +141,15 @@ void MethodC50::Train()
                     ROOT::R::Label["weights"] = fWeightTrain, \
                     ROOT::R::Label["control"] = fModelControl);
    fModel = new ROOT::R::TRObject(Model);
-   TString path = GetWeightFileDir() + "/C50Model.RData";
-   Log() << Endl;
-   Log() << gTools().Color("bold") << "--- Saving State File In:" << gTools().Color("reset") << path << Endl;
-   Log() << Endl;
-   r["C50Model"] << Model;
-   r << "save(C50Model,file='" + path + "')";
+   if (IsModelPersistence())  
+   {
+        TString path = GetWeightFileDir() + "/C50Model.RData";
+        Log() << Endl;
+        Log() << gTools().Color("bold") << "--- Saving State File In:" << gTools().Color("reset") << path << Endl;
+        Log() << Endl;
+        r["C50Model"] << Model;
+        r << "save(C50Model,file='" + path + "')";
+   }
 }
 
 //_______________________________________________________________________
@@ -235,9 +233,8 @@ Double_t MethodC50::GetMvaValue(Double_t *errLower, Double_t *errUpper)
       fDfEvent[DataInfo().GetListOfVariables()[i].Data()] = ev->GetValues()[i];
    }
    //if using persistence model
-   if (!fModel) {
-      ReadStateFromFile();
-   }
+   if (IsModelPersistence())  ReadStateFromFile();
+   
    TVectorD result = predict(*fModel, fDfEvent, ROOT::R::Label["type"] = "prob");
    mvaValue = result[1]; //returning signal prob
    return mvaValue;
@@ -285,9 +282,7 @@ std::vector<Double_t> MethodC50::GetMvaValues(Long64_t firstEvt, Long64_t lastEv
       evtData[DataInfo().GetListOfVariables()[i].Data()] = inputData[i];
    }
    //if using persistence model
-   if (!fModel) {
-      ReadModelFromFile();
-   }
+   if (IsModelPersistence())  ReadModelFromFile();
 
    std::vector<Double_t> mvaValues(nEvents);
    ROOT::R::TRObject result = predict(*fModel, evtData, ROOT::R::Label["type"] = "prob");

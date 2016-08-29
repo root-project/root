@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_graphics
+/// \notebook
 /// An example how to display PS, EPS, PDF files in canvas.
 /// To load a PS file in a TCanvas, the ghostscript program needs to be install.
 /// - On most unix systems it is installed by default.
@@ -31,7 +32,9 @@ void psview()
    gROOT->SetBatch(1);
 
    // create a PostScript file
-   gROOT->Macro("feynman.C");
+   TString dir = gROOT->GetTutorialsDir();
+   dir.Append("/graphics/feynman.C");
+   gROOT->Macro(dir);
    gPad->Print("feynman.eps");
 
    // back to graphics mode

@@ -12,6 +12,14 @@
 
 #include <exception>
 
+#ifndef CLING_NOEXCEPT
+# if defined(_MSC_VER) && (_MSC_VER < 1900)
+#  define CLING_NOEXCEPT
+# else
+#  define CLING_NOEXCEPT noexcept
+# endif
+#endif
+
 namespace clang {
   class Sema;
   class Expr;
@@ -23,9 +31,9 @@ namespace cling {
   ///
   class InterpreterException : public std::exception {
   public:
-    virtual ~InterpreterException() noexcept;
+    virtual ~InterpreterException() CLING_NOEXCEPT;
 
-    virtual const char* what() const noexcept;
+    virtual const char* what() const CLING_NOEXCEPT;
     virtual void diagnose() const {}
   };
 
@@ -42,9 +50,9 @@ namespace cling {
     DerefType m_Type;
   public:
     InvalidDerefException(clang::Sema* S, clang::Expr* E, DerefType type);
-    virtual ~InvalidDerefException();
+    virtual ~InvalidDerefException() CLING_NOEXCEPT;
 
-    const char* what() const noexcept override;
+    const char* what() const CLING_NOEXCEPT override;
     void diagnose() const override;
   };
 } // end namespace cling

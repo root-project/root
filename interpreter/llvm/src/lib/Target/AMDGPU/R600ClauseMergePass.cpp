@@ -171,7 +171,9 @@ bool R600ClauseMergePass::runOnMachineFunction(MachineFunction &MF) {
   if (skipFunction(*MF.getFunction()))
     return false;
 
-  TII = static_cast<const R600InstrInfo *>(MF.getSubtarget().getInstrInfo());
+  const R600Subtarget &ST = MF.getSubtarget<R600Subtarget>();
+  TII = ST.getInstrInfo();
+
   for (MachineFunction::iterator BB = MF.begin(), BB_E = MF.end();
                                                   BB != BB_E; ++BB) {
     MachineBasicBlock &MBB = *BB;
@@ -179,7 +181,7 @@ bool R600ClauseMergePass::runOnMachineFunction(MachineFunction &MF) {
     MachineBasicBlock::iterator LatestCFAlu = E;
     while (I != E) {
       MachineInstr *MI = I++;
-      if ((!TII->canBeConsideredALU(MI) && !isCFAlu(MI)) ||
+      if ((!TII->canBeConsideredALU(*MI) && !isCFAlu(MI)) ||
           TII->mustBeLastInClause(MI->getOpcode()))
         LatestCFAlu = E;
       if (!isCFAlu(MI))

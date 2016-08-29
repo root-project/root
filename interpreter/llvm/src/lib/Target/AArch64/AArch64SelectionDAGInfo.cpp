@@ -17,7 +17,7 @@ using namespace llvm;
 #define DEBUG_TYPE "aarch64-selectiondag-info"
 
 SDValue AArch64SelectionDAGInfo::EmitTargetCodeForMemset(
-    SelectionDAG &DAG, SDLoc dl, SDValue Chain, SDValue Dst, SDValue Src,
+    SelectionDAG &DAG, const SDLoc &dl, SDValue Chain, SDValue Dst, SDValue Src,
     SDValue Size, unsigned Align, bool isVolatile,
     MachinePointerInfo DstPtrInfo) const {
   // Check to see if there is a specialized entry-point for memory zeroing.
@@ -44,7 +44,7 @@ SDValue AArch64SelectionDAGInfo::EmitTargetCodeForMemset(
     TargetLowering::CallLoweringInfo CLI(DAG);
     CLI.setDebugLoc(dl).setChain(Chain)
       .setCallee(CallingConv::C, Type::getVoidTy(*DAG.getContext()),
-                 DAG.getExternalSymbol(bzeroEntry, IntPtr), std::move(Args), 0)
+                 DAG.getExternalSymbol(bzeroEntry, IntPtr), std::move(Args))
       .setDiscardResult();
     std::pair<SDValue, SDValue> CallResult = TLI.LowerCallTo(CLI);
     return CallResult.second;

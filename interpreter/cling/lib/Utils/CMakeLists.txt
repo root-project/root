@@ -5,17 +5,22 @@
 # of Illinois Open Source License or the GNU Lesser General Public License. See
 # LICENSE.TXT for details.
 #------------------------------------------------------------------------------
+set( LLVM_LINK_COMPONENTS
+  support
+)
 
-add_cling_library(clingUtils
+add_cling_library(clingUtils OBJECT
   AST.cpp
+  Paths.cpp
+  SourceNormalization.cpp
   Validation.cpp
 
   LINK_LIBS
-  clangCodeGen
+  clangSema
+  clangAST
+  clangLex
   clangBasic
-  )
-
-add_dependencies(clingUtils clangBasic clangCodeGen)
+)
 
 if ( MSVC )
   set_target_properties(clingUtils PROPERTIES

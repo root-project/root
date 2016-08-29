@@ -12,34 +12,13 @@
 
 
 find_path(POSTGRESQL_INCLUDE_DIR libpq-fe.h
-   PATHS ${POSTGRESQL_DIR}/include $ENV{POSTGRESQL_DIR}/include
-   "/usr/include/pgsql/"
-   "/usr/local/include/pgsql/"
-   "/usr/include/postgresql/"
-   "/usr/local/include/pgsql/server"
-   "/usr/local/include/postgresql/server"
-   "/usr/local/include/postgresql/*/server"
-   "/usr/local/pgsql/postgresql/server"
-   "/usr/local/pgsql/postgresql/*/server"
-   "/usr/local/*/include/"
-   "/usr/local/*/include/postgresql/"
-   "/usr/local/*/include/postgresql/server"
-   "/usr/include/server"
-   "/usr/include/pgsql/server"
-   "/usr/include/postgresql/server"
-   "/usr/include/postgresql/*/server"
+   HINTS ${POSTGRESQL_DIR}/include $ENV{POSTGRESQL_DIR}/include
+   PATH_SUFFIXES pgsql pgsql/server postgresql postgresql/server
 )
 
 find_library(POSTGRESQL_LIBRARY NAMES pq
-    PATHS ${POSTGRESQL_DIR}/lib $ENV{POSTGRESQL_DIR}/lib
-    "/usr/lib/"
-    "/usr/lib64/"
-    "/usr/local/lib/"
-    "/usr/local/lib64/"
-    "/usr/lib/*/"
-    "/usr/local/*/"
-    "/usr/lib/posgresql/"
-    "/usr/lib64/posgresql/"
+    HINTS ${POSTGRESQL_DIR}/lib $ENV{POSTGRESQL_DIR}/lib
+    PATH_SUFFIXES pgsql posgresql
 )
 
 if(POSTGRESQL_LIBRARY)
@@ -51,4 +30,3 @@ find_package_handle_standard_args(PostgreSQL DEFAULT_MSG
                                   POSTGRESQL_INCLUDE_DIR POSTGRESQL_LIBRARY)
 
 mark_as_advanced(POSTGRESQL_INCLUDE_DIR POSTGRESQL_LIBRARY)
-

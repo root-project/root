@@ -12,11 +12,9 @@
 // Create a "child" interpreter and use gCling as its "parent".
 
 #include "cling/Interpreter/Interpreter.h"
+#include "cling/MetaProcessor/MetaProcessor.h"
+#include "llvm/Support/raw_ostream.h"
 
-#include <cstdio>
-
-const char* argV[1] = {"cling"};
-cling::Interpreter ChildInterp(*gCling, 1, argV);
 
 //Declare something in the parent interpreter
 .rawInput 1
@@ -25,14 +23,24 @@ int foo(){ return 42; }
 // OR
 //gCling->declare("void foo(){ llvm::outs() << \"foo(void)\\n\"; }");
 
+const char* argV[1] = {"cling"};
+using namespace cling;
+Interpreter::CompilationResult compRes = Interpreter::kSuccess;
+Interpreter ChildInterp(*gCling, 1, argV);
+MetaProcessor ChildMP(ChildInterp, llvm::errs());
+
 // Also declare something in the Child Interpreter
-ChildInterp.declare("void foo(int i){ printf(\"foo(int) = %d\\n\", i); }");
-
-//Then execute it from the child interpreter
-ChildInterp.echo("foo()");
-//CHECK:(int) 42
-
-//Check if function overloading works
-ChildInterp.execute("foo(1)");
-//CHECK:foo(int) = 1
+// Then execute it from the child interpreter
+// And check if function overloading works.
+// All needs to happen in one statement, or else the contract
+// that the parent is not modified during the child's lifetime
+// is violated.
+ChildMP.process(".rawInput 1\n"
+                "void foo(int i){ printf(\"foo(int) = %d\\n\", i); }\n"
+                ".rawInput 0\n"
+                "foo()\n" //CHECK: (int) 42
+                "foo(1)",
+                compRes, nullptr
+); //CHECK: foo(int) = 1
+compRes // CHECK: cling::Interpreter::CompilationResult::kSuccess
 .q

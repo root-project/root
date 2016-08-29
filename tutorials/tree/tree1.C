@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_tree
+/// \notebook -nodraw
 /// This example is a variant of hsimple.C but using a TTree instead
 /// of a TNtuple. It shows:
 ///   - how to fill a Tree with a few simple variables.

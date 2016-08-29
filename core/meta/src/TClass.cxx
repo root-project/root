@@ -1586,9 +1586,9 @@ TClass::~TClass()
 
    delete fPersistentRef.load();
 
-   if (fBase)
-      fBase->Delete();
-   delete fBase;   fBase=0;
+   if (fBase.load())
+      (*fBase).Delete();
+   delete fBase.load(); fBase = 0;
 
    if (fData)
       fData->Delete();
@@ -2200,7 +2200,7 @@ Bool_t TClass::CanSplitBaseAllow()
    // we can find out.
    if (!HasDataMemberInfo()) return kTRUE;
 
-   TObjLink *lnk = GetListOfBases() ? fBase->FirstLink() : 0;
+   TObjLink *lnk = GetListOfBases() ? fBase.load()->FirstLink() : 0;
 
    // Look at inheritance tree
    while (lnk) {
@@ -2595,7 +2595,7 @@ TClass *TClass::GetBaseClass(const TClass *cl)
 
    if (!HasDataMemberInfo()) return 0;
 
-   TObjLink *lnk = GetListOfBases() ? fBase->FirstLink() : 0;
+   TObjLink *lnk = GetListOfBases() ? fBase.load()->FirstLink() : 0;
 
    // otherwise look at inheritance tree
    while (lnk) {
@@ -2624,7 +2624,7 @@ Int_t TClass::GetBaseClassOffsetRecurse(const TClass *cl)
    // check if class name itself is equal to classname
    if (cl == this) return 0;
 
-   if (!fBase) {
+   if (!fBase.load()) {
       if (fCanLoadClassInfo) LoadClassInfo();
       // If the information was not provided by the root pcm files and
       // if we can not find the ClassInfo, we have to fall back to the
@@ -2671,7 +2671,7 @@ Int_t TClass::GetBaseClassOffsetRecurse(const TClass *cl)
    TBaseClass *inh;
    TObjLink *lnk = 0;
    if (fBase==0) lnk = GetListOfBases()->FirstLink();
-   else lnk = fBase->FirstLink();
+   else lnk = fBase.load()->FirstLink();
 
    // otherwise look at inheritance tree
    while (lnk) {
@@ -3963,8 +3963,8 @@ void TClass::ResetCaches()
    delete fAllPubData; fAllPubData = 0;
 
    if (fBase)
-      fBase->Delete();
-   delete fBase; fBase = 0;
+      (*fBase).Delete();
+   delete fBase.load(); fBase = 0;
 
    if (fRealData)
       fRealData->Delete();
@@ -5448,6 +5448,14 @@ void TClass::LoadClassInfo() const
    // as this thread return early since the work was done.
    if (!fCanLoadClassInfo) return;
 
+   // If class info already loaded then do nothing.  This can happen if the
+   // class was registered by a dictionary, but the info came from reading
+   // the pch.
+   // Note: This check avoids using AutoParse for classes in the pch!
+   if (fClassInfo) {
+      return;
+   }
+
    gInterpreter->AutoParse(GetName());
    if (!fClassInfo) gInterpreter->SetClassInfo(const_cast<TClass*>(this));   // sets fClassInfo pointer
    if (!gInterpreter->IsAutoParsingSuspended()) {
@@ -5571,7 +5579,9 @@ void TClass::PostLoadCheck()
    {
       SetClassVersion(-1);
    }
-   else if (IsLoaded() && HasDataMemberInfo() && fStreamerInfo && (!IsForeign()||fClassVersion>1) )
+   // Note: We are careful to check the class version first because checking
+   //       for foreign can trigger an AutoParse.
+   else if (IsLoaded() && HasDataMemberInfo() && fStreamerInfo && ((fClassVersion > 1) || !IsForeign()))
    {
       R__LOCKGUARD(gInterpreterMutex);
 
@@ -6832,7 +6842,21 @@ void TClass::RemoveStreamerInfo(Int_t slot)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return true if we have access to a default constructor.
+/// Return true if we have access to a constructor useable for I/O.  This is
+/// typically the default constructor but can also be a constructor specifically
+/// marked for I/O (for example a constructor taking a TRootIOCtor* as an
+/// argument).  In other words, if this routine returns true, TClass::New is
+/// guarantee to succeed.
+/// To know if the class described by this TClass has a default constructor
+/// (public or not), use
+/// \code{.cpp}
+///     cl->GetProperty() & kClassHasDefaultCtor
+/// \code
+/// To know if the class described by this TClass has a public default
+/// constructor use:
+/// \code{.cpp}
+///    gInterpreter->ClassInfo_HasDefaultConstructor(aClass->GetClassInfo());
+/// \code
 
 Bool_t TClass::HasDefaultConstructor() const
 {

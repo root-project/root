@@ -10,14 +10,12 @@
 
 /*****************************************************************************
  * Project: RooStats
- * Package: RooFit/RooStats  
+ * Package: RooFit/RooStats
  * @(#)root/roofit/roostats:$Id$
- * Authors:                     
+ * Authors:
  *   Kyle Cranmer, Lorenzo Moneta, Gregory Schott, Wouter Verkerke, Sven Kreiss
  *
  *****************************************************************************/
-
-
 
 #include "RooStats/HypoTestResult.h"
 #include "RooStats/SamplingDistribution.h"
@@ -36,11 +34,10 @@ ClassImp(RooStats::HypoTestResult) ;
 using namespace RooStats;
 using namespace std;
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-HypoTestResult::HypoTestResult(const char* name) : 
+HypoTestResult::HypoTestResult(const char* name) :
    TNamed(name,name),
    fNullPValue(NaN), fAlternatePValue(NaN),
    fNullPValueError(0), fAlternatePValueError(0),
@@ -52,7 +49,6 @@ HypoTestResult::HypoTestResult(const char* name) :
    fBackgroundIsAlt(kFALSE)
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Alternate constructor
@@ -87,7 +83,6 @@ HypoTestResult::HypoTestResult(const HypoTestResult& other) :
    this->Append( &other );
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
@@ -95,22 +90,22 @@ HypoTestResult::~HypoTestResult()
 {
    if( fNullDistr ) delete fNullDistr;
    if( fAltDistr ) delete fAltDistr;
-   
+
    if( fNullDetailedOutput ) delete fNullDetailedOutput;
    if( fAltDetailedOutput ) delete fAltDetailedOutput;
-   
+
    if( fAllTestStatisticsData ) delete fAllTestStatisticsData;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// assignment operator
 
-HypoTestResult & HypoTestResult::operator=(const HypoTestResult& other) { 
+HypoTestResult & HypoTestResult::operator=(const HypoTestResult& other) {
    if (this == &other) return *this;
    SetName(other.GetName());
    SetTitle(other.GetTitle());
-   fNullPValue = other.fNullPValue; 
-   fAlternatePValue = other.fAlternatePValue; 
+   fNullPValue = other.fNullPValue;
+   fAlternatePValue = other.fAlternatePValue;
    fNullPValueError = other.fNullPValueError;
    fAlternatePValueError = other.fAlternatePValueError;
    fTestStatisticData = other.fTestStatisticData;
@@ -128,15 +123,15 @@ HypoTestResult & HypoTestResult::operator=(const HypoTestResult& other) {
 
    this->Append( &other );
 
-   return *this; 
+   return *this;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Add additional toy-MC experiments to the current results.
+/// Use the data test statistics of the added object if it is not already
+/// set (otherwise, ignore the new one).
 
 void HypoTestResult::Append(const HypoTestResult* other) {
-   // Add additional toy-MC experiments to the current results.
-   // Use the data test statistics of the added object if it is not already
-   // set (otherwise, ignore the new one).
-
    if(fNullDistr)
       fNullDistr->Add(other->GetNullDistribution());
    else
@@ -146,8 +141,8 @@ void HypoTestResult::Append(const HypoTestResult* other) {
       fAltDistr->Add(other->GetAltDistribution());
    else
       if(other->GetAltDistribution()) fAltDistr = new SamplingDistribution( *other->GetAltDistribution() );
-      
-   
+
+
    if( fNullDetailedOutput ) {
       if( other->GetNullDetailedOutput() ) fNullDetailedOutput->append( *other->GetNullDetailedOutput() );
    }else{
@@ -173,19 +168,20 @@ void HypoTestResult::Append(const HypoTestResult* other) {
    UpdatePValue(fAltDistr, fAlternatePValue, fAlternatePValueError, kFALSE);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
 void HypoTestResult::SetAltDistribution(SamplingDistribution *alt) {
    fAltDistr = alt;
    UpdatePValue(fAltDistr, fAlternatePValue, fAlternatePValueError, kFALSE);
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void HypoTestResult::SetNullDistribution(SamplingDistribution *null) {
    fNullDistr = null;
    UpdatePValue(fNullDistr, fNullPValue, fNullPValueError, kTRUE);
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void HypoTestResult::SetTestStatisticData(const Double_t tsd) {
@@ -194,15 +190,16 @@ void HypoTestResult::SetTestStatisticData(const Double_t tsd) {
    UpdatePValue(fNullDistr, fNullPValue, fNullPValueError, kTRUE);
    UpdatePValue(fAltDistr, fAlternatePValue, fAlternatePValueError, kFALSE);
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void HypoTestResult::SetAllTestStatisticsData(const RooArgList* tsd) {
-   if (fAllTestStatisticsData) { 
-      delete fAllTestStatisticsData; 
-      fAllTestStatisticsData = 0; 
+   if (fAllTestStatisticsData) {
+      delete fAllTestStatisticsData;
+      fAllTestStatisticsData = 0;
    }
    if (tsd) fAllTestStatisticsData = (const RooArgList*)tsd->snapshot();
-   
+
    if( fAllTestStatisticsData  &&  fAllTestStatisticsData->getSize() > 0 ) {
       RooRealVar* firstTS = (RooRealVar*)fAllTestStatisticsData->at(0);
       if( firstTS ) SetTestStatisticData( firstTS->getVal() );
@@ -224,14 +221,16 @@ Bool_t HypoTestResult::HasTestStatisticData(void) const {
    return !IsNaN(fTestStatisticData);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t HypoTestResult::NullPValueError() const {
-   // compute error on Null pvalue 
-   return fNullPValueError; 
+   // compute error on Null pvalue
+   return fNullPValueError;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// compute CLb error
-/// Clb =  1 - NullPValue() 
+/// compute \f$CL_{b}\f$ error
+/// \f$CL_{b}\f$ = 1 - NullPValue()
 /// must use opposite condition that routine above
 
 Double_t HypoTestResult::CLbError() const {
@@ -252,12 +251,12 @@ Double_t HypoTestResult::SignificanceError() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns an estimate of the error on CLs through combination of the
-/// errors on CLb and CLsplusb:
-/// BEGIN_LATEX
-/// #sigma_{CL_s} = CL_s
-/// #sqrt{#left( #frac{#sigma_{CL_{s+b}}}{CL_{s+b}} #right)^2 + #left( #frac{#sigma_{CL_{b}}}{CL_{b}} #right)^2}
-/// END_LATEX
+/// Returns an estimate of the error on \f$CL_{s}\f$ through combination of the
+/// errors on \f$CL_{b}\f$ and \f$CL_{s+b}\f$:
+/// \f[
+/// \sigma_{CL_s} = CL_s
+/// \sqrt{\left( \frac{\sigma_{CL_{s+b}}}{CL_{s+b}} \right)^2 + \left( \frac{\sigma_{CL_{b}}}{CL_{b}} \right)^2}
+/// \f]
 
 Double_t HypoTestResult::CLsError() const {
    if(!fAltDistr || !fNullDistr) return 0.0;
@@ -274,9 +273,6 @@ Double_t HypoTestResult::CLsError() const {
    return TMath::Sqrt(cl_sb_err2 + cl_b_err2 * pow(CLs(),2))/CLb();
 }
 
-
-
-// private
 ////////////////////////////////////////////////////////////////////////////////
 /// updates the pvalue if sufficient data is available
 
@@ -285,12 +281,12 @@ void HypoTestResult::UpdatePValue(const SamplingDistribution* distr, Double_t &p
    if(!distr) return;
 
    /* Got to be careful for discrete distributions:
-    * To get the right behaviour for limits, the p-value must 
+    * To get the right behaviour for limits, the p-value must
     * include the value of fTestStatistic both for Alt and Null cases
     */
    if(fPValueIsRightTail) {
       pvalue = distr->IntegralAndError(perror, fTestStatisticData, RooNumber::infinity(), kTRUE,
-                                       kTRUE , kTRUE );   // always closed interval [ fTestStatistic, inf ] 
+                                       kTRUE , kTRUE );   // always closed interval [ fTestStatistic, inf ]
 
    }else{
       pvalue = distr->IntegralAndError(perror, -RooNumber::infinity(), fTestStatisticData, kTRUE,
@@ -298,16 +294,17 @@ void HypoTestResult::UpdatePValue(const SamplingDistribution* distr, Double_t &p
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Print out some information about the results
+/// Note: use Alt/Null labels for the hypotheses here as the Null
+/// might be the s+b hypothesis.
+
 void HypoTestResult::Print(Option_t * ) const
 {
-   // Print out some information about the results
-   // Note: use Alt/Null labels for the hypotheses here as the Null
-   // might be the s+b hypothesis.
-   
    bool fromToys = (fAltDistr || fNullDistr);
-   
+
    std::cout << std::endl << "Results " << GetName() << ": " << endl;
-   std::cout << " - Null p-value = " << NullPValue(); 
+   std::cout << " - Null p-value = " << NullPValue();
    if (fromToys) std::cout << " +/- " << NullPValueError();
    std::cout << std::endl;
    std::cout << " - Significance = " << Significance();
@@ -317,7 +314,7 @@ void HypoTestResult::Print(Option_t * ) const
       std::cout << " - Number of Alt toys: " << fAltDistr->GetSize() << std::endl;
    if(fNullDistr)
       std::cout << " - Number of Null toys: " << fNullDistr->GetSize() << std::endl;
-   
+
    if (HasTestStatisticData() ) std::cout << " - Test statistic evaluated on data: " << fTestStatisticData << std::endl;
    std::cout << " - CL_b: " << CLb();
    if (fromToys) std::cout << " +/- " << CLbError();
@@ -328,7 +325,7 @@ void HypoTestResult::Print(Option_t * ) const
    std::cout << " - CL_s: " << CLs();
    if (fromToys) std::cout << " +/- " << CLsError();
    std::cout << std::endl;
-   
+
    return;
 }
 

@@ -24,10 +24,13 @@ using namespace llvm::opt;
 
 Compilation::Compilation(const Driver &D, const ToolChain &_DefaultToolChain,
                          InputArgList *_Args, DerivedArgList *_TranslatedArgs)
-    : TheDriver(D), DefaultToolChain(_DefaultToolChain),
-      CudaHostToolChain(&DefaultToolChain), CudaDeviceToolChain(nullptr),
+    : TheDriver(D), DefaultToolChain(_DefaultToolChain), ActiveOffloadMask(0u),
       Args(_Args), TranslatedArgs(_TranslatedArgs), Redirects(nullptr),
-      ForDiagnostics(false) {}
+      ForDiagnostics(false) {
+  // The offloading host toolchain is the default tool chain.
+  OrderedOffloadingToolchains.insert(
+      std::make_pair(Action::OFK_Host, &DefaultToolChain));
+}
 
 Compilation::~Compilation() {
   delete TranslatedArgs;
@@ -42,6 +45,7 @@ Compilation::~Compilation() {
 
   // Free redirections of stdout/stderr.
   if (Redirects) {
+    delete Redirects[0];
     delete Redirects[1];
     delete Redirects[2];
     delete [] Redirects;
@@ -209,4 +213,8 @@ void Compilation::initCompilationForDiagnostics() {
 
 StringRef Compilation::getSysRoot() const {
   return getDriver().SysRoot;
+}
+
+void Compilation::Redirect(const StringRef** Redirects) {
+  this->Redirects = Redirects;
 }

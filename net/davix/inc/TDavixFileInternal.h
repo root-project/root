@@ -98,7 +98,8 @@ private:
 
    void enableGridMode();
 
-   void setS3Auth(const std::string & key, const std::string & token);
+   void setS3Auth(const std::string & secret, const std::string & access,
+                  const std::string & region, const std::string & token);
 
    void parseConfig();
 

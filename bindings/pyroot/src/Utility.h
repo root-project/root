@@ -75,6 +75,13 @@ namespace PyROOT {
 
    } // namespace Utility
 
+   class PyGILRAII {
+      PyGILState_STATE m_GILState;
+   public:
+      PyGILRAII():m_GILState(PyGILState_Ensure()){}
+      ~PyGILRAII(){PyGILState_Release(m_GILState);}
+   };
+
 } // namespace PyROOT
 
 #endif // !PYROOT_UTILITY_H

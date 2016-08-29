@@ -13,8 +13,8 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/LTO/LTOCodeGenerator.h"
+#include "llvm/LTO/UpdateCompilerUsed.h"
 
-#include "UpdateCompilerUsed.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/Analysis/Passes.h"
@@ -119,15 +119,13 @@ void LTOCodeGenerator::initializeLTOPasses() {
   initializeArgPromotionPass(R);
   initializeJumpThreadingPass(R);
   initializeSROALegacyPassPass(R);
-  initializeSROA_DTPass(R);
-  initializeSROA_SSAUpPass(R);
   initializePostOrderFunctionAttrsLegacyPassPass(R);
-  initializeReversePostOrderFunctionAttrsPass(R);
+  initializeReversePostOrderFunctionAttrsLegacyPassPass(R);
   initializeGlobalsAAWrapperPassPass(R);
   initializeLICMPass(R);
-  initializeMergedLoadStoreMotionPass(R);
+  initializeMergedLoadStoreMotionLegacyPassPass(R);
   initializeGVNLegacyPassPass(R);
-  initializeMemCpyOptPass(R);
+  initializeMemCpyOptLegacyPassPass(R);
   initializeDCELegacyPassPass(R);
   initializeCFGSimplifyPassPass(R);
 }
@@ -457,7 +455,7 @@ void LTOCodeGenerator::applyScopeRestrictions() {
 
   // Update the llvm.compiler_used globals to force preserving libcalls and
   // symbols referenced from asm
-  UpdateCompilerUsed(*MergedModule, *TargetMach, AsmUndefinedRefs);
+  updateCompilerUsed(*MergedModule, *TargetMach, AsmUndefinedRefs);
 
   internalizeModule(*MergedModule, mustPreserveGV);
 

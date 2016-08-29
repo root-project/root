@@ -74,7 +74,7 @@ Preprocessor::Preprocessor(IntrusiveRefCntPtr<PreprocessorOptions> PPOpts,
       IncrementalProcessing(false), TUKind(TUKind), CodeComplete(nullptr),
       CodeCompletionFile(nullptr), CodeCompletionOffset(0),
       LastTokenWasAt(false), ModuleImportExpectsIdentifier(false),
-      CodeCompletionReached(0), MainFileDir(nullptr),
+      CodeCompletionReached(0), CodeCompletionII(nullptr), MainFileDir(nullptr),
       SkipMainFilePreamble(0, true), CurPPLexer(nullptr), CurDirLookup(nullptr),
       CurLexerKind(CLK_Lexer), CurSubmodule(nullptr), Callbacks(nullptr),
       CurSubmoduleState(&NullSubmoduleState), MacroArgCache(nullptr),
@@ -780,6 +780,9 @@ void Preprocessor::Lex(Token &Result) {
       break;
     }
   } while (!ReturnedToken);
+
+  if (Result.is(tok::code_completion))
+      setCodeCompletionIdentifierInfo(Result.getIdentifierInfo());
 
   LastTokenWasAt = Result.is(tok::at);
 }

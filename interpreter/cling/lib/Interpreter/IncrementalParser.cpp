@@ -21,7 +21,6 @@
 #include "ValueExtractionSynthesizer.h"
 #include "TransactionPool.h"
 #include "ASTTransformer.h"
-#include "TransactionUnloader.h"
 #include "ValuePrinterSynthesizer.h"
 #include "cling/Interpreter/CIFactory.h"
 #include "cling/Interpreter/Interpreter.h"
@@ -83,7 +82,7 @@ namespace {
 # define CLING_CXXABIV -1 // intentionally invalid macro name
 # define CLING_CXXABIS "-1" // intentionally invalid macro name
     llvm::errs()
-      << "Warning in cling::CIFactory::createCI():\n  "
+      << "Warning in cling::IncrementalParser::CheckABICompatibility():\n  "
       "C++ ABI check not implemented for this standard library\n";
     return;
 #endif
@@ -101,7 +100,7 @@ namespace {
     }
     else {
       llvm::errs()
-        << "Warning in cling::CIFactory::createCI():\n  "
+        << "Warning in cling::IncrementalParser::CheckABICompatibility():\n  "
         "Possible C++ standard library mismatch, compiled with Visual Studio v"
         << VSVersion << ".0,\n"
         "but this version of Visual Studio was not found in your system's registry.\n";
@@ -125,7 +124,9 @@ namespace {
   if (!II)
     return;
   const clang::DefMacroDirective* MD
-    = llvm::dyn_cast<clang::DefMacroDirective>(PP.getLocalMacroDirective(II));
+    = llvm::dyn_cast_or_null<clang::DefMacroDirective>(
+                                                   PP.getLocalMacroDirective(II)
+                                                      );
   if (!MD)
     return;
   const clang::MacroInfo* MI = MD->getMacroInfo();
@@ -159,26 +160,20 @@ namespace {
 } // unnamed namespace
 
 namespace cling {
-  IncrementalParser::IncrementalParser(Interpreter* interp,
-                                       int argc, const char* const *argv,
-                                       const char* llvmdir, bool isChildInterpreter):
-    m_Interpreter(interp), m_Consumer(0), m_ModuleNo(0) {
+  IncrementalParser::IncrementalParser(Interpreter* interp, const char* llvmdir):
+    m_Interpreter(interp),
+    m_CI(CIFactory::createCI("", interp->getOptions(), llvmdir)),
+    m_Consumer(nullptr), m_ModuleNo(0) {
+    assert(m_CI.get() && "CompilerInstance is (null)!");
 
-    CompilerInstance* CI = CIFactory::createCI("", argc, argv, llvmdir);
-    assert(CI && "CompilerInstance is (null)!");
-
-    m_Consumer = dyn_cast<DeclCollector>(&CI->getSema().getASTConsumer());
+    m_Consumer = dyn_cast<DeclCollector>(&m_CI->getSema().getASTConsumer());
     assert(m_Consumer && "Expected ChainedConsumer!");
 
-    m_CI.reset(CI);
-
-    if (CI->getFrontendOpts().ProgramAction != clang::frontend::ParseSyntaxOnly){
-      m_CodeGen.reset(CreateLLVMCodeGen(CI->getDiagnostics(), "cling-module-0",
-                                        CI->getHeaderSearchOpts(),
-                                        CI->getPreprocessorOpts(),
-                                        CI->getCodeGenOpts(),
-                                        *m_Interpreter->getLLVMContext()
-                                        ));
+    if (m_CI->getFrontendOpts().ProgramAction != frontend::ParseSyntaxOnly) {
+      m_CodeGen.reset(CreateLLVMCodeGen(
+          m_CI->getDiagnostics(), "cling-module-0", m_CI->getHeaderSearchOpts(),
+          m_CI->getPreprocessorOpts(), m_CI->getCodeGenOpts(),
+          *m_Interpreter->getLLVMContext()));
       m_Consumer->setContext(this, m_CodeGen.get());
     } else {
       m_Consumer->setContext(this, 0);
@@ -353,7 +348,7 @@ namespace cling {
     return ParseResultTransaction(T, ParseResult);
   }
 
-  void IncrementalParser::commitTransaction(ParseResultTransaction PRT) {
+  void IncrementalParser::commitTransaction(ParseResultTransaction& PRT) {
     Transaction* T = PRT.getPointer();
     if (!T) {
       if (PRT.getInt() != kSuccess) {
@@ -393,7 +388,9 @@ namespace cling {
       Diags.Reset(/*soft=*/true);
       Diags.getClient()->clear();
 
-      rollbackTransaction(T);
+      PRT.setPointer(nullptr);
+      PRT.setInt(kFailed);
+      m_Interpreter->unload(*T);
 
       if (MustStartNewModule) {
         // Create a new module.
@@ -419,13 +416,15 @@ namespace cling {
 
       for (Transaction::const_nested_iterator I = T->nested_begin(),
             E = T->nested_end(); I != E; ++I)
-        if ((*I)->getState() != Transaction::kCommitted)
-          commitTransaction(ParseResultTransaction(*I, PR));
+        if ((*I)->getState() != Transaction::kCommitted) {
+          ParseResultTransaction PRT(*I, PR);
+          commitTransaction(PRT);
+        }
     }
 
     // If there was an error coming from the transformers.
     if (T->getIssuedDiags() == Transaction::kErrors) {
-      rollbackTransaction(T);
+      m_Interpreter->unload(*T);
       return;
     }
 
@@ -458,7 +457,7 @@ namespace cling {
             >= Interpreter::kExeFirstError) {
           // Roll back on error in initializers
           //assert(0 && "Error on inits.");
-          rollbackTransaction(T);
+          m_Interpreter->unload(*T);
           T->setState(Transaction::kRolledBackWithErrors);
           return;
         }
@@ -516,6 +515,7 @@ namespace cling {
     // trigger emission of weak symbols by providing use.
     ParseResultTransaction PRT = endTransaction(deserT);
     commitTransaction(PRT);
+    deserT = PRT.getPointer();
 
     // This llvm::Module is done; finalize it and pass it to the execution
     // engine.
@@ -538,7 +538,9 @@ namespace cling {
       // Reset the module builder to clean up global initializers, c'tors, d'tors
       getCodeGenerator()->HandleTranslationUnit(Context);
       FileName = OldName;
-      commitTransaction(endTransaction(deserT));
+      auto PRT = endTransaction(deserT);
+      commitTransaction(PRT);
+      deserT = PRT.getPointer();
 
       std::unique_ptr<llvm::Module> M(getCodeGenerator()->ReleaseModule());
 
@@ -570,46 +572,25 @@ namespace cling {
     // Transform IR
     bool success = true;
     if (!success)
-      rollbackTransaction(T);
+      m_Interpreter->unload(*T);
     if (m_BackendPasses && T->getModule())
       m_BackendPasses->runOnModule(*T->getModule());
     return success;
   }
 
-  void IncrementalParser::rollbackTransaction(Transaction* T) {
-    assert(T && "Must have value");
-    // We can revert the most recent transaction or a nested transaction of a
-    // transaction that is not in the middle of the transaction collection
-    // (i.e. at the end or not yet added to the collection at all).
-    assert(!T->getTopmostParent()->getNext() &&
-           "Can not revert previous transactions");
-    assert((T->getState() != Transaction::kRolledBack ||
-            T->getState() != Transaction::kRolledBackWithErrors) &&
-           "Transaction already rolled back.");
-    if (m_Interpreter->getOptions().ErrorOut)
-      return;
-
-    if (InterpreterCallbacks* callbacks = m_Interpreter->getCallbacks())
-      callbacks->TransactionRollback(*T);
-
-    TransactionUnloader U(&getCI()->getSema(), m_CodeGen.get());
-
-    if (!T->getParent()) {
+  void IncrementalParser::deregisterTransaction(Transaction& T) {
+    if (Transaction* Parent = T.getParent()) {
+      Parent->removeNestedTransaction(&T);
+      T.setParent(0);
+    } else {
       // Remove from the queue
-      assert(T == m_Transactions.back() && "Out of order transaction removal");
+      assert(&T == m_Transactions.back() && "Out of order transaction removal");
       m_Transactions.pop_back();
       if (!m_Transactions.empty())
         m_Transactions.back()->setNext(0);
     }
 
-    if (U.RevertTransaction(T))
-      T->setState(Transaction::kRolledBack);
-    else
-      T->setState(Transaction::kRolledBackWithErrors);
-
-    // Keep T alive: someone else might have grabbed that T and needs to detect
-    // that it's bad.
-    //m_TransactionPool->releaseTransaction(T);
+    m_TransactionPool->releaseTransaction(&T);
   }
 
   std::vector<const Transaction*> IncrementalParser::getAllTransactions() {
@@ -675,14 +656,6 @@ namespace cling {
     return PRT;
   }
 
-  IncrementalParser::ParseResultTransaction
-  IncrementalParser::Parse(llvm::StringRef input,
-                           const CompilationOptions& Opts) {
-    Transaction* CurT = beginTransaction(Opts);
-    ParseInternal(input);
-    return endTransaction(CurT);
-  }
-
   // Add the input to the memory buffer, parse it, and add it to the AST.
   IncrementalParser::EParseResult
   IncrementalParser::ParseInternal(llvm::StringRef input) {
@@ -728,10 +701,28 @@ namespace cling {
     SourceLocation NewLoc = getLastMemoryBufferEndLoc().getLocWithOffset(1);
 
     llvm::MemoryBuffer* MBNonOwn = MB.get();
-    // Create FileID for the current buffer
-    FileID FID = SM.createFileID(std::move(MB), SrcMgr::C_User,
+
+    // Create FileID for the current buffer.
+    FileID FID;
+    if (CO.CodeCompletionOffset == -1)
+    {
+      FID = SM.createFileID(std::move(MB), SrcMgr::C_User,
                                  /*LoadedID*/0,
                                  /*LoadedOffset*/0, NewLoc);
+    } else {
+      // Create FileEntry and FileID for the current buffer.
+      // Enabling the completion point only works on FileEntries.
+      const clang::FileEntry* FE
+        = SM.getFileManager().getVirtualFile("vfile for " + source_name.str(),
+                                             InputSize, 0 /* mod time*/);
+      SM.overrideFileContents(FE, std::move(MB));
+      FID = SM.createFileID(FE, NewLoc, SrcMgr::C_User);
+
+      // The completion point is set one a 1-based line/column numbering.
+      // It relies on the implementation to account for the wrapper extra line.
+      PP.SetCodeCompletionPoint(FE, 1/* start point 1-based line*/,
+                                CO.CodeCompletionOffset+1/* 1-based column*/);
+    }
 
     m_MemoryBuffers.push_back(std::make_pair(MBNonOwn, FID));
 
@@ -781,6 +772,19 @@ namespace cling {
       if (ADecl)
         m_Consumer->HandleTopLevelDecl(ADecl.get());
     };
+
+    if (CO.CodeCompletionOffset != -1) {
+      assert((int)SM.getFileOffset(PP.getCodeCompletionLoc())
+             == CO.CodeCompletionOffset
+             && "Completion point wrongly set!");
+      assert(PP.isCodeCompletionReached()
+             && "Code completion set but not reached!");
+
+      // Let's ignore this transaction:
+      m_Consumer->getTransaction()->setIssuedDiags(Transaction::kErrors);
+
+      return kSuccess;
+    }
 
 #ifdef LLVM_ON_WIN32
     // Microsoft-specific:

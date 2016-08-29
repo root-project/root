@@ -40,9 +40,9 @@ The following people have contributed to this new version:
 
 <a name="core-libs"></a>
 
-## general
+## General
 
-* Remove many instance of new warnings issued by gcc 6.1
+* Remove many instances of new warnings issued by gcc 6.1
 * Significant update of the valgrind suppression file to hide intentional lack
 of delete of some entities at the end of the process.
 * Resolved several memory leaks.
@@ -84,13 +84,20 @@ Add a new mode for `TClass::SetCanSplit` (2) which indicates that this class and
 
 ### Dictionaries
 
+* Genreflex and rootcling cannot generate capability files anymore.
 * Fix ROOT-7760: Fully allow the usage of the dylib extension on OSx.
 * Fix ROOT-7879: Prevent LinkDef files to be listed in a rootmap file and use (as the user actually expects) the header files #included in the linkdef file, if any, as the top level headers.
 * Add the *noIncludePaths* switch both for rootcling and genreflex to allow to loose track of the include paths in input to the dictionary generator.
 * Fix handling of template parameter pack in the forward declaration printer. [ROOT-8096]
+* Do not autoparse headers for classes in the pch.
+* Avoid autoparse on IsForeign() if possible.
+* Check for new-style empty pcm with key named "EMPTY" created since commit 90047b0cba6fd295f5c5722749a0d043fbc11ea5.
+* Do not insert macro definition of __ROOTCLING__ into the pch.
 
 ### Interpreter Library
 
+* llvm / clang have been updated to r274612.
+* The GCC5 ABI is now supported [ROOT-7947].
 * Exceptions are now caught in the interactive ROOT session, instead of terminating ROOT.
 * A ValuePrinter for tuple and pair has been added to visualise the content of these entities at the prompt.
 * When interpreting dereferences of invalid pointers, cling will now complain (throw, actually) instead of crash.
@@ -106,6 +113,8 @@ Add a new mode for `TClass::SetCanSplit` (2) which indicates that this class and
 
 ## I/O Libraries
 
+* Support I/O of std::unique_ptrs and STL collections thereof.
+* Support I/O of std::array.
 * Custom streamers need to #include TBuffer.h explicitly (see [section Core Libraries](#core-libs))
 * Check and flag short reads as errors in the xroot plugins. This fixes [ROOT-3341].
 * Added support for AWS temporary security credentials to TS3WebFile by allowing the security token to be given.
@@ -140,6 +149,8 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 ## Math Libraries
 
 * Improve thread safety of TMinuit constructor [ROOT-8217]
+* Vc has ben removed from the ROOT sources. If the option 'vc' is enabled, the package will be searched (by default),
+  alternatively the source tarfile can be downloded and build with the option 'builtin_vc'.
 
 ## RooFit Libraries
 
@@ -212,16 +223,47 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 * New optional parameter "option" in TPad::BuildLegend to set the TLegend option (Georg Troska).
 * TCandle: a new candle plot painter class. It is now used in THistPainter and THStack
   to paint candle plots (Georg Troska).
-* Fix two issues with the fill patterns in `TTextDump` (reported [here](https://sft.its.cern.ch/jira/browse/ROOT-8206)):
+* Fix two issues with the fill patterns in `TTeXDump` (reported [here](https://sft.its.cern.ch/jira/browse/ROOT-8206)):
     - The pattern number 3 was not implemented.
     - Filled area drawn with pattern where surrounded by a solid line.
+* Support custom line styles in `TTeXDump` as requested [here](https://sft.its.cern.ch/jira/browse/ROOT-8215)
 * `TColor::GetFreeColorIndex()` allows to make sure the new color is created with an
   unused color index.
+* In `TLegend::SetHeader` the new option `C` allows to center the title.
+* New method `SetLabelAttributes` in `TGaxis` allowing to a fine tuning of
+  individual labels attributes. All the attributes can be changed and even the
+  label text itself. Example:
+  ~~~ {.cpp}
+  {
+     c1 = new TCanvas("c1","Examples of Gaxis",10,10,900,500);
+     c1->Range(-6,-0.1,6,0.1);
+     TGaxis *axis1 = new TGaxis(-5.5,0.,5.5,0.,0.0,100,510,"");
+     axis1->SetName("axis1");
+     axis1->SetTitle("Axis Title");
+     axis1->SetTitleSize(0.05);
+     axis1->SetTitleColor(kBlue);
+     axis1->SetTitleFont(42);
+     axis1->SetLabelAttributes(1,-1,-1,-1,2);
+     axis1->SetLabelAttributes(3,-1,0.);
+     axis1->SetLabelAttributes(5,30.,-1,0);
+     axis1->SetLabelAttributes(6,-1,-1,-1,3,-1,"6th label");
+     axis1->Draw();
+  }
+  ~~~
+* New class `TGaxisModLab`: a  TGaxis helper class used to store the modified labels.
+* `TPie` the format parameter set by `SetPercentFormat` was ignored.
+  (reported [here](https://sft.its.cern.ch/jira/browse/ROOT-8294))
+* Improvements in the histogram plotting option `TEXT`: In case several histograms
+  are drawn on top ot each other (using option `SAME`), the text can be shifted
+  using `SetBarOffset()`. It specifies an offset for the  text position in each
+  cell, in percentage of the bin width.
 
 ## 3D Graphics Libraries
 
 * When painting a `TH3` as 3D boxes, `TMarker3DBox` ignored the max and min values
   specified by `SetMaximum()` and `SetMinimum()`.
+* In `TMarker3DBox` when a box marker has a size equal to zero it is not painted.
+  Painting it produced a dot with the X11 backend.
 
 ## New histogram drawing options
 
@@ -306,9 +348,26 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 ## Class Reference Guide
 
 ## Build, Configuration and Testing Infrastructure
-* Added new 'builtin_vc' option to bundle a version of Vc within ROOT.
+- Added new 'builtin_vc' option to bundle a version of Vc within ROOT.
   The default is OFF, however if the Vc package is not found in the system the option is switched to
   ON if the option 'vc' option is ON.
-
+- Many improvements (provided by Mattias Ellert):
+   - Build RFIO using dpm libraries if castor libraries are not available
+   - Add missing glib header path in GFAL module for version > 2
+   - Search also for globus libraries wouthout the flavour in the name
+   - Add missing io/hdfs/CMakeLists.txt
+   - net/globusauth has no installed headers - remove ROOT_INSTALL_HEADERS()
+   - Add missing pieces to the cmake config that are built by configure: bin/pq2, bin/rootd, bin/xpdtest, initd and xinitd start-up scripts
+   - Only link to libgfortranbegin.a when it is provided by the compiler
+   - Don't remove -Wall without also removing -Werror=*
+   - Don't overwrite the initial value of CMAKE_Fortran_FLAGS. Inconsistent case variant of CMAKE_Fortran_FLAGS
+   - Use the same sonames in cmake as in configure
+   - Allow building for ppc64 as well as ppc64le
+   - Add build instructions for 32 bit ARM
+   - Add build instructions for System Z (s390 and s390x)
+   - Make sure that the roots wrapper can be executed
+   - Move gl2ps.h to its own subdir
+- Added 'builtin-unuran' option (provided by Mattias Ellert)
+- Added 'builtin-gl2ps' option (provided by Mattias Ellert)
 
 

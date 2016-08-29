@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_tree
+/// \notebook
 /// Illustrates how to use Tree friends:
 ///   - create a simple TTree
 ///   - Copy a subset of this TTree to a new TTree

@@ -880,6 +880,13 @@ void Parser::ParseAvailabilityAttribute(IdentifierInfo &Availability,
     return;
   }
   IdentifierLoc *Platform = ParseIdentifierLoc();
+  // Canonicalize platform name from "macosx" to "macos".
+  if (Platform->Ident && Platform->Ident->getName() == "macosx")
+    Platform->Ident = PP.getIdentifierInfo("macos");
+  // Canonicalize platform name from "macosx_app_extension" to
+  // "macos_app_extension".
+  if (Platform->Ident && Platform->Ident->getName() == "macosx_app_extension")
+    Platform->Ident = PP.getIdentifierInfo("macos_app_extension");
 
   // Parse the ',' following the platform name.
   if (ExpectAndConsume(tok::comma)) {
@@ -2068,7 +2075,8 @@ Decl *Parser::ParseDeclarationAfterDeclaratorAndAttributes(
       if (Init.isInvalid()) {
         SmallVector<tok::TokenKind, 2> StopTokens;
         StopTokens.push_back(tok::comma);
-        if (D.getContext() == Declarator::ForContext)
+        if (D.getContext() == Declarator::ForContext ||
+            D.getContext() == Declarator::InitStmtContext)
           StopTokens.push_back(tok::r_paren);
         SkipUntil(StopTokens, StopAtSemi | StopBeforeMatch);
         Actions.ActOnInitializerError(ThisDecl);
@@ -3451,6 +3459,22 @@ void Parser::ParseDeclarationSpecifiers(DeclSpec &DS,
 
     case tok::annot_decltype:
       ParseDecltypeSpecifier(DS);
+      continue;
+
+    case tok::annot_pragma_pack:
+      HandlePragmaPack();
+      continue;
+
+    case tok::annot_pragma_ms_pragma:
+      HandlePragmaMSPragma();
+      continue;
+
+    case tok::annot_pragma_ms_vtordisp:
+      HandlePragmaMSVtorDisp();
+      continue;
+
+    case tok::annot_pragma_ms_pointers_to_members:
+      HandlePragmaMSPointersToMembers();
       continue;
 
     case tok::kw___underlying_type:

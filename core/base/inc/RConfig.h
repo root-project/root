@@ -209,6 +209,19 @@
 #   define NEED_SIGJMP
 #endif
 
+#if defined(linux) && defined(__s390__)
+#   define R__LINUX
+#   define R__UNIX
+#   define NEED_SIGJMP
+#endif
+
+#if defined(linux) && defined(__s390x__)
+#   define R__LINUX
+#   define R__UNIX
+#   define R__B64
+#   define NEED_SIGJMP
+#endif
+
 #if defined(__MACH__) && defined(__i386__) && !defined(__APPLE__)
 #   define R__HURD
 #   define f2cFortran   /* cfortran.h does not know HURD - sigh */
@@ -437,7 +450,7 @@
 
 /*---- deprecation -----------------------------------------------------------*/
 
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(__GNUC__) || defined(__clang__) || defined(__INTEL_COMPILER)
 #   define R__DEPRECATED(REASON) __attribute__((deprecated(REASON)))
 #elif defined(_MSC_VER)
 #   define R__DEPRECATED(REASON) __declspec(deprecated(REASON))

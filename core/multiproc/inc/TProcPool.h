@@ -12,32 +12,31 @@
 #ifndef ROOT_TProcPool
 #define ROOT_TProcPool
 
-#include "TMPClient.h"
-#include "MPSendRecv.h"
-#include "TPoolWorker.h"
-#include "PoolUtils.h"
 #include "MPCode.h"
-#include "TPoolProcessor.h"
-#include "TTreeReader.h"
-#include "TFileCollection.h"
+#include "MPSendRecv.h"
+#include "PoolUtils.h"
 #include "TChain.h"
 #include "TChainElement.h"
-#include "THashList.h"
+#include "TError.h"
+#include "TFileCollection.h"
 #include "TFileInfo.h"
-#include <vector>
-#include <string>
-#include <initializer_list>
-#include <type_traits> //std::result_of, std::enable_if
-#include <numeric> //std::iota
-#include <algorithm> //std::generate
-#include <functional> //std::reference_wrapper
-#include <iostream>
+#include "THashList.h"
+#include "TMPClient.h"
 #include "TPool.h"
+#include "TPoolProcessor.h"
+#include "TPoolWorker.h"
+#include "TTreeReader.h"
+#include <algorithm> //std::generate
+#include <numeric> //std::iota
+#include <string>
+#include <type_traits> //std::result_of, std::enable_if
+#include <functional> //std::reference_wrapper
+#include <vector>
 
 class TProcPool : public TPool<TProcPool>, private TMPClient {
 public:
    explicit TProcPool(unsigned nWorkers = 0); //default number of workers is the number of processors
-   ~TProcPool() {}
+   ~TProcPool() = default;
    //it doesn't make sense for a TProcPool to be copied
    TProcPool(const TProcPool &) = delete;
    TProcPool &operator=(const TProcPool &) = delete;
@@ -117,7 +116,7 @@ auto TProcPool::Map(F func, unsigned nTimes) -> std::vector<typename std::result
    SetNWorkers(oldNWorkers);
    if (!ok)
    {
-      std::cerr << "[E][C] Could not fork. Aborting operation\n";
+      Error("TProcPool::Map", "[E][C] Could not fork. Aborting operation.");
       return std::vector<retType>();
    }
 
@@ -160,7 +159,7 @@ auto TProcPool::Map(F func, std::vector<T> &args) -> std::vector<typename std::r
    SetNWorkers(oldNWorkers);
    if (!ok)
    {
-      std::cerr << "[E][C] Could not fork. Aborting operation\n";
+      Error("TProcPool::Map", "[E][C] Could not fork. Aborting operation.");
       return std::vector<retType>();
    }
 
@@ -207,7 +206,7 @@ auto TProcPool::ProcTree(const std::vector<std::string>& fileNames, F procFunc, 
    TPoolProcessor<F> worker(procFunc, fileNames, treeName, nWorkers, nToProcess);
    bool ok = Fork(worker);
    if(!ok) {
-      std::cerr << "[E][C] Could not fork. Aborting operation\n";
+      Error("TProcPool::ProcTree", "[E][C] Could not fork. Aborting operation.");
       return nullptr;
    }
 
@@ -220,7 +219,7 @@ auto TProcPool::ProcTree(const std::vector<std::string>& fileNames, F procFunc, 
       std::iota(args.begin(), args.end(), 0);
       fNProcessed = Broadcast(PoolCode::kProcRange, args);
       if(fNProcessed < nWorkers)
-         std::cerr << "[E][C] There was an error while sending tasks to workers. Some entries might not be processed.\n";
+         Error("TProcPool::ProcTree", "[E][C] There was an error while sending tasks to workers. Some entries might not be processed.");
    } else {
       //file granularity. each worker processes one whole file as a single task
       fTaskType = ETask::kProcByFile;
@@ -229,7 +228,7 @@ auto TProcPool::ProcTree(const std::vector<std::string>& fileNames, F procFunc, 
       std::iota(args.begin(), args.end(), 0);
       fNProcessed = Broadcast(PoolCode::kProcFile, args);
       if(fNProcessed < nWorkers)
-         std::cerr << "[E][C] There was an error while sending tasks to workers. Some entries might not be processed.\n";
+         Error("TProcPool::ProcTree", "[E][C] There was an error while sending tasks to workers. Some entries might not be processed.");
    }
 
    //collect results, distribute new tasks
@@ -294,7 +293,7 @@ auto TProcPool::ProcTree(TTree& tree, F procFunc, ULong64_t nToProcess) -> typen
    TPoolProcessor<F> worker(procFunc, &tree, nWorkers, nToProcess);
    bool ok = Fork(worker);
    if(!ok) {
-      std::cerr << "[E][C] Could not fork. Aborting operation\n";
+      Error("TProcPool::ProcTree", "[E][C] Could not fork. Aborting operation.");
       return nullptr;
    }
 
@@ -307,7 +306,7 @@ auto TProcPool::ProcTree(TTree& tree, F procFunc, ULong64_t nToProcess) -> typen
    std::iota(args.begin(), args.end(), 0);
    fNProcessed = Broadcast(PoolCode::kProcTree, args);
    if(fNProcessed < nWorkers)
-      std::cerr << "[E][C] There was an error while sending tasks to workers. Some entries might not be processed.\n";
+      Error("TProcPool::ProcTree", "[E][C] There was an error while sending tasks to workers. Some entries might not be processed.");
 
    //collect results, distribute new tasks
    std::vector<TObject*> reslist;
@@ -322,29 +321,6 @@ auto TProcPool::ProcTree(TTree& tree, F procFunc, ULong64_t nToProcess) -> typen
    fTaskType = ETask::kNoTask;
    return static_cast<retType>(res);
 }
-
-//////////////////////////////////////////////////////////////////////////
-/// Listen for messages sent by the workers and call the appropriate handler function.
-/// TProcPool::HandlePoolCode is called on messages with a code < 1000 and
-/// TMPClient::HandleMPCode is called on messages with a code >= 1000.
-template<class T>
-void TProcPool::Collect(std::vector<T> &reslist)
-{
-   TMonitor &mon = GetMonitor();
-   mon.ActivateAll();
-   while (mon.GetActive() > 0) {
-      TSocket *s = mon.Select();
-      MPCodeBufPair msg = MPRecv(s);
-      if (msg.first == MPCode::kRecvError) {
-         std::cerr << "[E][C] Lost connection to a worker\n";
-         Remove(s);
-      } else if (msg.first < 1000)
-         HandlePoolCode(msg, s, reslist);
-      else
-         HandleMPCode(msg, s);
-   }
-}
-
 
 //////////////////////////////////////////////////////////////////////////
 /// Handle message and reply to the worker
@@ -363,13 +339,35 @@ void TProcPool::HandlePoolCode(MPCodeBufPair &msg, TSocket *s, std::vector<T> &r
       MPSend(s, MPCode::kShutdownOrder);
    } else if(code == PoolCode::kProcError) {
       const char *str = ReadBuffer<const char*>(msg.second.get());
-      std::cerr << "[E][C] a worker encountered an error: " << str << "\n"
-                << "Continuing execution ignoring these entries.\n";
+      Error("TProcPool::HandlePoolCode", "[E][C] a worker encountered an error: %s\n"
+                                         "Continuing execution ignoring these entries.", str);
       ReplyToIdle(s);
       delete [] str;
    } else {
       // UNKNOWN CODE
-      std::cerr << "[W][C] unknown code received from server. code=" << code << "\n";
+      Error("TProcPool::HandlePoolCode", "[W][C] unknown code received from server. code=%d", code);
+   }
+}
+
+//////////////////////////////////////////////////////////////////////////
+/// Listen for messages sent by the workers and call the appropriate handler function.
+/// TProcPool::HandlePoolCode is called on messages with a code < 1000 and
+/// TMPClient::HandleMPCode is called on messages with a code >= 1000.
+template<class T>
+void TProcPool::Collect(std::vector<T> &reslist)
+{
+   TMonitor &mon = GetMonitor();
+   mon.ActivateAll();
+   while (mon.GetActive() > 0) {
+      TSocket *s = mon.Select();
+      MPCodeBufPair msg = MPRecv(s);
+      if (msg.first == MPCode::kRecvError) {
+         Error("TProcPool::Collect", "[E][C] Lost connection to a worker");
+         Remove(s);
+      } else if (msg.first < 1000)
+         HandlePoolCode(msg, s, reslist);
+      else
+         HandleMPCode(msg, s);
    }
 }
 

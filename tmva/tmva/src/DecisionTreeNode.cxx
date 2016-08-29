@@ -40,6 +40,7 @@
 #include <exception>
 #include <iomanip>
 #include <limits>
+#include <sstream>
 
 #include "TMVA/Types.h"
 #include "TMVA/MsgLogger.h"
@@ -188,7 +189,9 @@ void TMVA::DecisionTreeNode::SetPurity( void )
    }
    else {
       Log() << kINFO << "Zero events in purity calcuation , return purity=0.5" << Endl;
-      this->Print(Log());
+      std::ostringstream oss;
+      this->Print(oss);
+      Log() <<oss.str();
       fPurity = 0.5;
    }
    return;

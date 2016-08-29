@@ -78,6 +78,14 @@ directory structure will be created.  Additionally, the following special
 
 * "%h" expands out to the hostname of the machine running the program.
 
+* "%Nm" expands out to the instrumented binary's signature. When this pattern
+  is specified, the runtime creates a pool of N raw profiles which are used for
+  on-line profile merging. The runtime takes care of selecting a raw profile
+  from the pool, locking it, and updating it before the program exits.  If N is
+  not specified (i.e the pattern is "%m"), it's assumed that ``N = 1``. N must
+  be between 1 and 9. The merge pool specifier can only occur once per filename
+  pattern.
+
 .. code-block:: console
 
     # Step 2: Run the program.
@@ -103,7 +111,7 @@ generate a line-oriented report:
     # Step 3(b): Create a line-oriented coverage report.
     % llvm-cov show ./foo -instr-profile=foo.profdata
 
-To demangle any C++ identifiers in the ouput, use:
+To demangle any C++ identifiers in the output, use:
 
 .. code-block:: console
 
@@ -115,7 +123,7 @@ distinct views for ``foo<int>(...)`` and ``foo<float>(...)``.  If
 ``-show-line-counts-or-regions`` is enabled, ``llvm-cov`` displays sub-line
 region counts (even in macro expansions):
 
-.. code-block:: cpp
+.. code-block:: none
 
        20|    1|#define BAR(x) ((x) || (x))
                                ^20     ^2

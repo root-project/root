@@ -153,7 +153,9 @@ class RooCFunction4Ref : public TObject {
   ClassDef(RooCFunction4Ref,1) // Persistable reference to C function pointer
 } ;
 
-
+// Define static member
+template<class VO, class VI1, class VI2, class VI3, class VI4>
+RooCFunction4Map<VO,VI1,VI2,VI3,VI4>* RooCFunction4Ref<VO,VI1,VI2,VI3,VI4>::_fmap = 0;
 
 template<class VO, class VI1, class VI2, class VI3, class VI4>
 void RooCFunction4Ref<VO,VI1,VI2,VI3,VI4>::Streamer(TBuffer &R__b)

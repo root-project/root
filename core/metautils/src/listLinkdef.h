@@ -1,8 +1,5 @@
 #include <list>
 #include <string>
-#ifndef __hpux
-using namespace std;
-#endif
 
 #pragma create TClass list<int>;
 #pragma create TClass list<long>;
@@ -12,4 +9,3 @@ using namespace std;
 #pragma create TClass list<char*>;
 #pragma create TClass list<string>;
 
-//

@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_fit
+/// \notebook -js
 /// Perform a fit to a set of data with binomial errors
 /// like those derived from the division of two histograms.
 /// Three different fits are performed and compared:
@@ -18,13 +19,13 @@
 ///
 ///  to show the bias performing 100 fits for 1000 events per "experiment"
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 ///  root[0]: .x TestBinomial.C+
 /// ~~~
 ///
 ///  to show the bias performing 100 fits for 1000 events per "experiment"
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 ///           .x TestBinomial.C+(100, 1000)
 /// ~~~
 ///
@@ -48,7 +49,7 @@
 #include <cassert>
 #include <iostream>
 
-void TestBinomial(int nloop = 100, int nevts = 100, bool plot=false, bool debug = false, int seed = 111)
+void TestBinomial(int nloop = 100, int nevts = 100, bool plot = false, bool debug = false, int seed = 111)
 {
    gStyle->SetMarkerStyle(20);
    gStyle->SetLineWidth(2.0);
@@ -100,14 +101,14 @@ void TestBinomial(int nloop = 100, int nevts = 100, bool plot=false, bool debug 
    // First try: use a single set of parameters.
    // For each try, we need to find the overall normalization
 
-   Double_t norm = 0.80;
+   Double_t normalization = 0.80;
    Double_t threshold = 25.0;
    Double_t width = 5.0;
 
-   fM2D->SetParameter(0, norm);
+   fM2D->SetParameter(0, normalization);
    fM2D->SetParameter(1, threshold);
    fM2D->SetParameter(2, width);
-   fM2N->SetParameter(0, norm);
+   fM2N->SetParameter(0, normalization);
    fM2N->SetParameter(1, threshold);
    fM2N->SetParameter(2, width);
    Double_t integralN = fM2N->Integral(xmin, xmax);
@@ -239,7 +240,7 @@ void TestBinomial(int nloop = 100, int nevts = 100, bool plot=false, bool debug 
        }
 
        TH1D* h = dynamic_cast<TH1D*>(hbiasNorm[fit]);
-       h->Fill((fnorm-norm)/enorm);
+       h->Fill((fnorm-normalization)/enorm);
        h = dynamic_cast<TH1D*>(hbiasThreshold[fit]);
        h->Fill((fthreshold-threshold)/ethreshold);
        h = dynamic_cast<TH1D*>(hbiasWidth[fit]);

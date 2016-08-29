@@ -924,8 +924,8 @@ void SelectionDAG::allnodes_clear() {
 #endif
 }
 
-SDNode *SelectionDAG::GetBinarySDNode(unsigned Opcode, SDLoc DL, SDVTList VTs,
-                                      SDValue N1, SDValue N2,
+SDNode *SelectionDAG::GetBinarySDNode(unsigned Opcode, const SDLoc &DL,
+                                      SDVTList VTs, SDValue N1, SDValue N2,
                                       const SDNodeFlags *Flags) {
   SDValue Ops[] = {N1, N2};
 
@@ -963,7 +963,7 @@ SDNode *SelectionDAG::FindNodeOrInsertPos(const FoldingSetNodeID &ID,
 }
 
 SDNode *SelectionDAG::FindNodeOrInsertPos(const FoldingSetNodeID &ID,
-                                          SDLoc DL, void *&InsertPos) {
+                                          const SDLoc &DL, void *&InsertPos) {
   SDNode *N = CSEMap.FindNodeOrInsertPos(ID, InsertPos);
   if (N) {
     switch (N->getOpcode()) {
@@ -1008,25 +1008,25 @@ void SelectionDAG::clear() {
   DbgInfo->clear();
 }
 
-SDValue SelectionDAG::getAnyExtOrTrunc(SDValue Op, SDLoc DL, EVT VT) {
+SDValue SelectionDAG::getAnyExtOrTrunc(SDValue Op, const SDLoc &DL, EVT VT) {
   return VT.bitsGT(Op.getValueType()) ?
     getNode(ISD::ANY_EXTEND, DL, VT, Op) :
     getNode(ISD::TRUNCATE, DL, VT, Op);
 }
 
-SDValue SelectionDAG::getSExtOrTrunc(SDValue Op, SDLoc DL, EVT VT) {
+SDValue SelectionDAG::getSExtOrTrunc(SDValue Op, const SDLoc &DL, EVT VT) {
   return VT.bitsGT(Op.getValueType()) ?
     getNode(ISD::SIGN_EXTEND, DL, VT, Op) :
     getNode(ISD::TRUNCATE, DL, VT, Op);
 }
 
-SDValue SelectionDAG::getZExtOrTrunc(SDValue Op, SDLoc DL, EVT VT) {
+SDValue SelectionDAG::getZExtOrTrunc(SDValue Op, const SDLoc &DL, EVT VT) {
   return VT.bitsGT(Op.getValueType()) ?
     getNode(ISD::ZERO_EXTEND, DL, VT, Op) :
     getNode(ISD::TRUNCATE, DL, VT, Op);
 }
 
-SDValue SelectionDAG::getBoolExtOrTrunc(SDValue Op, SDLoc SL, EVT VT,
+SDValue SelectionDAG::getBoolExtOrTrunc(SDValue Op, const SDLoc &SL, EVT VT,
                                         EVT OpVT) {
   if (VT.bitsLE(Op.getValueType()))
     return getNode(ISD::TRUNCATE, SL, VT, Op);
@@ -1035,7 +1035,7 @@ SDValue SelectionDAG::getBoolExtOrTrunc(SDValue Op, SDLoc SL, EVT VT,
   return getNode(TLI->getExtendForContent(BType), SL, VT, Op);
 }
 
-SDValue SelectionDAG::getZeroExtendInReg(SDValue Op, SDLoc DL, EVT VT) {
+SDValue SelectionDAG::getZeroExtendInReg(SDValue Op, const SDLoc &DL, EVT VT) {
   assert(!VT.isVector() &&
          "getZeroExtendInReg should use the vector element type instead of "
          "the vector type!");
@@ -1047,7 +1047,8 @@ SDValue SelectionDAG::getZeroExtendInReg(SDValue Op, SDLoc DL, EVT VT) {
                  getConstant(Imm, DL, Op.getValueType()));
 }
 
-SDValue SelectionDAG::getAnyExtendVectorInReg(SDValue Op, SDLoc DL, EVT VT) {
+SDValue SelectionDAG::getAnyExtendVectorInReg(SDValue Op, const SDLoc &DL,
+                                              EVT VT) {
   assert(VT.isVector() && "This DAG node is restricted to vector types.");
   assert(VT.getSizeInBits() == Op.getValueType().getSizeInBits() &&
          "The sizes of the input and result must match in order to perform the "
@@ -1057,7 +1058,8 @@ SDValue SelectionDAG::getAnyExtendVectorInReg(SDValue Op, SDLoc DL, EVT VT) {
   return getNode(ISD::ANY_EXTEND_VECTOR_INREG, DL, VT, Op);
 }
 
-SDValue SelectionDAG::getSignExtendVectorInReg(SDValue Op, SDLoc DL, EVT VT) {
+SDValue SelectionDAG::getSignExtendVectorInReg(SDValue Op, const SDLoc &DL,
+                                               EVT VT) {
   assert(VT.isVector() && "This DAG node is restricted to vector types.");
   assert(VT.getSizeInBits() == Op.getValueType().getSizeInBits() &&
          "The sizes of the input and result must match in order to perform the "
@@ -1067,7 +1069,8 @@ SDValue SelectionDAG::getSignExtendVectorInReg(SDValue Op, SDLoc DL, EVT VT) {
   return getNode(ISD::SIGN_EXTEND_VECTOR_INREG, DL, VT, Op);
 }
 
-SDValue SelectionDAG::getZeroExtendVectorInReg(SDValue Op, SDLoc DL, EVT VT) {
+SDValue SelectionDAG::getZeroExtendVectorInReg(SDValue Op, const SDLoc &DL,
+                                               EVT VT) {
   assert(VT.isVector() && "This DAG node is restricted to vector types.");
   assert(VT.getSizeInBits() == Op.getValueType().getSizeInBits() &&
          "The sizes of the input and result must match in order to perform the "
@@ -1079,14 +1082,14 @@ SDValue SelectionDAG::getZeroExtendVectorInReg(SDValue Op, SDLoc DL, EVT VT) {
 
 /// getNOT - Create a bitwise NOT operation as (XOR Val, -1).
 ///
-SDValue SelectionDAG::getNOT(SDLoc DL, SDValue Val, EVT VT) {
+SDValue SelectionDAG::getNOT(const SDLoc &DL, SDValue Val, EVT VT) {
   EVT EltVT = VT.getScalarType();
   SDValue NegOne =
     getConstant(APInt::getAllOnesValue(EltVT.getSizeInBits()), DL, VT);
   return getNode(ISD::XOR, DL, VT, Val, NegOne);
 }
 
-SDValue SelectionDAG::getLogicalNOT(SDLoc DL, SDValue Val, EVT VT) {
+SDValue SelectionDAG::getLogicalNOT(const SDLoc &DL, SDValue Val, EVT VT) {
   EVT EltVT = VT.getScalarType();
   SDValue TrueValue;
   switch (TLI->getBooleanContents(VT)) {
@@ -1102,8 +1105,8 @@ SDValue SelectionDAG::getLogicalNOT(SDLoc DL, SDValue Val, EVT VT) {
   return getNode(ISD::XOR, DL, VT, Val, TrueValue);
 }
 
-SDValue SelectionDAG::getConstant(uint64_t Val, SDLoc DL, EVT VT, bool isT,
-                                  bool isO) {
+SDValue SelectionDAG::getConstant(uint64_t Val, const SDLoc &DL, EVT VT,
+                                  bool isT, bool isO) {
   EVT EltVT = VT.getScalarType();
   assert((EltVT.getSizeInBits() >= 64 ||
          (uint64_t)((int64_t)Val >> EltVT.getSizeInBits()) + 1 < 2) &&
@@ -1111,13 +1114,13 @@ SDValue SelectionDAG::getConstant(uint64_t Val, SDLoc DL, EVT VT, bool isT,
   return getConstant(APInt(EltVT.getSizeInBits(), Val), DL, VT, isT, isO);
 }
 
-SDValue SelectionDAG::getConstant(const APInt &Val, SDLoc DL, EVT VT, bool isT,
-                                  bool isO) {
+SDValue SelectionDAG::getConstant(const APInt &Val, const SDLoc &DL, EVT VT,
+                                  bool isT, bool isO) {
   return getConstant(*ConstantInt::get(*Context, Val), DL, VT, isT, isO);
 }
 
-SDValue SelectionDAG::getConstant(const ConstantInt &Val, SDLoc DL, EVT VT,
-                                  bool isT, bool isO) {
+SDValue SelectionDAG::getConstant(const ConstantInt &Val, const SDLoc &DL,
+                                  EVT VT, bool isT, bool isO) {
   assert(VT.isInteger() && "Cannot create FP integer constant!");
 
   EVT EltVT = VT.getScalarType();
@@ -1206,17 +1209,18 @@ SDValue SelectionDAG::getConstant(const ConstantInt &Val, SDLoc DL, EVT VT,
   return Result;
 }
 
-SDValue SelectionDAG::getIntPtrConstant(uint64_t Val, SDLoc DL, bool isTarget) {
+SDValue SelectionDAG::getIntPtrConstant(uint64_t Val, const SDLoc &DL,
+                                        bool isTarget) {
   return getConstant(Val, DL, TLI->getPointerTy(getDataLayout()), isTarget);
 }
 
-SDValue SelectionDAG::getConstantFP(const APFloat& V, SDLoc DL, EVT VT,
+SDValue SelectionDAG::getConstantFP(const APFloat &V, const SDLoc &DL, EVT VT,
                                     bool isTarget) {
   return getConstantFP(*ConstantFP::get(*getContext(), V), DL, VT, isTarget);
 }
 
-SDValue SelectionDAG::getConstantFP(const ConstantFP& V, SDLoc DL, EVT VT,
-                                    bool isTarget){
+SDValue SelectionDAG::getConstantFP(const ConstantFP &V, const SDLoc &DL,
+                                    EVT VT, bool isTarget) {
   assert(VT.isFloatingPoint() && "Cannot create integer FP constant!");
 
   EVT EltVT = VT.getScalarType();
@@ -1246,7 +1250,7 @@ SDValue SelectionDAG::getConstantFP(const ConstantFP& V, SDLoc DL, EVT VT,
   return Result;
 }
 
-SDValue SelectionDAG::getConstantFP(double Val, SDLoc DL, EVT VT,
+SDValue SelectionDAG::getConstantFP(double Val, const SDLoc &DL, EVT VT,
                                     bool isTarget) {
   EVT EltVT = VT.getScalarType();
   if (EltVT == MVT::f32)
@@ -1264,9 +1268,8 @@ SDValue SelectionDAG::getConstantFP(double Val, SDLoc DL, EVT VT,
     llvm_unreachable("Unsupported type in getConstantFP");
 }
 
-SDValue SelectionDAG::getGlobalAddress(const GlobalValue *GV, SDLoc DL,
-                                       EVT VT, int64_t Offset,
-                                       bool isTargetGA,
+SDValue SelectionDAG::getGlobalAddress(const GlobalValue *GV, const SDLoc &DL,
+                                       EVT VT, int64_t Offset, bool isTargetGA,
                                        unsigned char TargetFlags) {
   assert((TargetFlags == 0 || isTargetGA) &&
          "Cannot set target flags on target-independent globals");
@@ -1475,13 +1478,15 @@ SDValue SelectionDAG::getCondCode(ISD::CondCode Cond) {
 // commuteShuffle - swaps the values of N1 and N2, and swaps all indices in
 // the shuffle mask M that point at N1 to point at N2, and indices that point
 // N2 to point at N1.
-static void commuteShuffle(SDValue &N1, SDValue &N2, SmallVectorImpl<int> &M) {
+static void commuteShuffle(SDValue &N1, SDValue &N2, MutableArrayRef<int> M) {
   std::swap(N1, N2);
   ShuffleVectorSDNode::commuteMask(M);
 }
 
-SDValue SelectionDAG::getVectorShuffle(EVT VT, SDLoc dl, SDValue N1,
-                                       SDValue N2, const int *Mask) {
+SDValue SelectionDAG::getVectorShuffle(EVT VT, const SDLoc &dl, SDValue N1,
+                                       SDValue N2, ArrayRef<int> Mask) {
+  assert(VT.getVectorNumElements() == Mask.size() &&
+           "Must have the same number of vector elements as mask elements!");
   assert(VT == N1.getValueType() && VT == N2.getValueType() &&
          "Invalid VECTOR_SHUFFLE");
 
@@ -1491,18 +1496,18 @@ SDValue SelectionDAG::getVectorShuffle(EVT VT, SDLoc dl, SDValue N1,
 
   // Validate that all indices in Mask are within the range of the elements
   // input to the shuffle.
-  unsigned NElts = VT.getVectorNumElements();
-  SmallVector<int, 8> MaskVec;
-  for (unsigned i = 0; i != NElts; ++i) {
-    assert(Mask[i] < (int)(NElts * 2) && "Index out of range");
-    MaskVec.push_back(Mask[i]);
-  }
+  int NElts = Mask.size();
+  assert(all_of(Mask, [&](int M) { return M < (NElts * 2); }) &&
+         "Index out of range");
+
+  // Copy the mask so we can do any needed cleanup.
+  SmallVector<int, 8> MaskVec(Mask.begin(), Mask.end());
 
   // Canonicalize shuffle v, v -> v, undef
   if (N1 == N2) {
     N2 = getUNDEF(VT);
-    for (unsigned i = 0; i != NElts; ++i)
-      if (MaskVec[i] >= (int)NElts) MaskVec[i] -= NElts;
+    for (int i = 0; i != NElts; ++i)
+      if (MaskVec[i] >= NElts) MaskVec[i] -= NElts;
   }
 
   // Canonicalize shuffle undef, v -> v, undef.  Commute the shuffle mask.
@@ -1517,8 +1522,8 @@ SDValue SelectionDAG::getVectorShuffle(EVT VT, SDLoc dl, SDValue N1,
     if (!Splat)
       return;
 
-    for (int i = 0; i < (int)NElts; ++i) {
-      if (MaskVec[i] < Offset || MaskVec[i] >= (Offset + (int)NElts))
+    for (int i = 0; i < NElts; ++i) {
+      if (MaskVec[i] < Offset || MaskVec[i] >= (Offset + NElts))
         continue;
 
       // If this input comes from undef, mark it as such.
@@ -1541,8 +1546,8 @@ SDValue SelectionDAG::getVectorShuffle(EVT VT, SDLoc dl, SDValue N1,
   // Canonicalize all index into rhs, -> shuffle rhs, undef
   bool AllLHS = true, AllRHS = true;
   bool N2Undef = N2.isUndef();
-  for (unsigned i = 0; i != NElts; ++i) {
-    if (MaskVec[i] >= (int)NElts) {
+  for (int i = 0; i != NElts; ++i) {
+    if (MaskVec[i] >= NElts) {
       if (N2Undef)
         MaskVec[i] = -1;
       else
@@ -1567,8 +1572,8 @@ SDValue SelectionDAG::getVectorShuffle(EVT VT, SDLoc dl, SDValue N1,
 
   // If Identity shuffle return that node.
   bool Identity = true, AllSame = true;
-  for (unsigned i = 0; i != NElts; ++i) {
-    if (MaskVec[i] >= 0 && MaskVec[i] != (int)i) Identity = false;
+  for (int i = 0; i != NElts; ++i) {
+    if (MaskVec[i] >= 0 && MaskVec[i] != i) Identity = false;
     if (MaskVec[i] != MaskVec[0]) AllSame = false;
   }
   if (Identity && NElts)
@@ -1624,7 +1629,7 @@ SDValue SelectionDAG::getVectorShuffle(EVT VT, SDLoc dl, SDValue N1,
   FoldingSetNodeID ID;
   SDValue Ops[2] = { N1, N2 };
   AddNodeIDNode(ID, ISD::VECTOR_SHUFFLE, getVTList(VT), Ops);
-  for (unsigned i = 0; i != NElts; ++i)
+  for (int i = 0; i != NElts; ++i)
     ID.AddInteger(MaskVec[i]);
 
   void* IP = nullptr;
@@ -1635,7 +1640,7 @@ SDValue SelectionDAG::getVectorShuffle(EVT VT, SDLoc dl, SDValue N1,
   // SDNode doesn't have access to it.  This memory will be "leaked" when
   // the node is deallocated, but recovered when the NodeAllocator is released.
   int *MaskAlloc = OperandAllocator.Allocate<int>(NElts);
-  memcpy(MaskAlloc, &MaskVec[0], NElts * sizeof(int));
+  std::copy(MaskVec.begin(), MaskVec.end(), MaskAlloc);
 
   auto *N = newSDNode<ShuffleVectorSDNode>(VT, dl.getIROrder(),
                                            dl.getDebugLoc(), MaskAlloc);
@@ -1653,13 +1658,12 @@ SDValue SelectionDAG::getCommutedVectorShuffle(const ShuffleVectorSDNode &SV) {
 
   SDValue Op0 = SV.getOperand(0);
   SDValue Op1 = SV.getOperand(1);
-  return getVectorShuffle(VT, SDLoc(&SV), Op1, Op0, &MaskVec[0]);
+  return getVectorShuffle(VT, SDLoc(&SV), Op1, Op0, MaskVec);
 }
 
-SDValue SelectionDAG::getConvertRndSat(EVT VT, SDLoc dl,
-                                       SDValue Val, SDValue DTy,
-                                       SDValue STy, SDValue Rnd, SDValue Sat,
-                                       ISD::CvtCode Code) {
+SDValue SelectionDAG::getConvertRndSat(EVT VT, const SDLoc &dl, SDValue Val,
+                                       SDValue DTy, SDValue STy, SDValue Rnd,
+                                       SDValue Sat, ISD::CvtCode Code) {
   // If the src and dest types are the same and the conversion is between
   // integer types of the same sign or two floats, no conversion is necessary.
   if (DTy == STy &&
@@ -1710,7 +1714,8 @@ SDValue SelectionDAG::getRegisterMask(const uint32_t *RegMask) {
   return SDValue(N, 0);
 }
 
-SDValue SelectionDAG::getEHLabel(SDLoc dl, SDValue Root, MCSymbol *Label) {
+SDValue SelectionDAG::getEHLabel(const SDLoc &dl, SDValue Root,
+                                 MCSymbol *Label) {
   FoldingSetNodeID ID;
   SDValue Ops[] = { Root };
   AddNodeIDNode(ID, ISD::EH_LABEL, getVTList(MVT::Other), Ops);
@@ -1791,7 +1796,7 @@ SDValue SelectionDAG::getBitcast(EVT VT, SDValue V) {
 }
 
 /// getAddrSpaceCast - Return an AddrSpaceCastSDNode.
-SDValue SelectionDAG::getAddrSpaceCast(SDLoc dl, EVT VT, SDValue Ptr,
+SDValue SelectionDAG::getAddrSpaceCast(const SDLoc &dl, EVT VT, SDValue Ptr,
                                        unsigned SrcAS, unsigned DestAS) {
   SDValue Ops[] = {Ptr};
   FoldingSetNodeID ID;
@@ -1901,8 +1906,8 @@ SDValue SelectionDAG::CreateStackTemporary(EVT VT1, EVT VT2) {
   return getFrameIndex(FrameIdx, TLI->getPointerTy(getDataLayout()));
 }
 
-SDValue SelectionDAG::FoldSetCC(EVT VT, SDValue N1,
-                                SDValue N2, ISD::CondCode Cond, SDLoc dl) {
+SDValue SelectionDAG::FoldSetCC(EVT VT, SDValue N1, SDValue N2,
+                                ISD::CondCode Cond, const SDLoc &dl) {
   // These setcc operations always fold.
   switch (Cond) {
   default: break;
@@ -2865,7 +2870,8 @@ bool SelectionDAG::haveNoCommonBitsSet(SDValue A, SDValue B) const {
   return (AZero | BZero).isAllOnesValue();
 }
 
-static SDValue FoldCONCAT_VECTORS(SDLoc DL, EVT VT, ArrayRef<SDValue> Ops,
+static SDValue FoldCONCAT_VECTORS(const SDLoc &DL, EVT VT,
+                                  ArrayRef<SDValue> Ops,
                                   llvm::SelectionDAG &DAG) {
   if (Ops.size() == 1)
     return Ops[0];
@@ -2905,7 +2911,7 @@ static SDValue FoldCONCAT_VECTORS(SDLoc DL, EVT VT, ArrayRef<SDValue> Ops,
 
 /// getNode - Gets or creates the specified node.
 ///
-SDValue SelectionDAG::getNode(unsigned Opcode, SDLoc DL, EVT VT) {
+SDValue SelectionDAG::getNode(unsigned Opcode, const SDLoc &DL, EVT VT) {
   FoldingSetNodeID ID;
   AddNodeIDNode(ID, Opcode, getVTList(VT), None);
   void *IP = nullptr;
@@ -2920,8 +2926,8 @@ SDValue SelectionDAG::getNode(unsigned Opcode, SDLoc DL, EVT VT) {
   return SDValue(N, 0);
 }
 
-SDValue SelectionDAG::getNode(unsigned Opcode, SDLoc DL,
-                              EVT VT, SDValue Operand) {
+SDValue SelectionDAG::getNode(unsigned Opcode, const SDLoc &DL, EVT VT,
+                              SDValue Operand) {
   // Constant fold unary operations with an integer constant operand. Even
   // opaque constant will be folded, because the folding of unary operations
   // doesn't create new constants with different values. Nevertheless, the
@@ -3288,8 +3294,8 @@ static std::pair<APInt, bool> FoldValue(unsigned Opcode, const APInt &C1,
   return std::make_pair(APInt(1, 0), false);
 }
 
-SDValue SelectionDAG::FoldConstantArithmetic(unsigned Opcode, SDLoc DL, EVT VT,
-                                             const ConstantSDNode *Cst1,
+SDValue SelectionDAG::FoldConstantArithmetic(unsigned Opcode, const SDLoc &DL,
+                                             EVT VT, const ConstantSDNode *Cst1,
                                              const ConstantSDNode *Cst2) {
   if (Cst1->isOpaque() || Cst2->isOpaque())
     return SDValue();
@@ -3321,8 +3327,9 @@ SDValue SelectionDAG::FoldSymbolOffset(unsigned Opcode, EVT VT,
                           GA->getOffset() + uint64_t(Offset));
 }
 
-SDValue SelectionDAG::FoldConstantArithmetic(unsigned Opcode, SDLoc DL, EVT VT,
-                                             SDNode *Cst1, SDNode *Cst2) {
+SDValue SelectionDAG::FoldConstantArithmetic(unsigned Opcode, const SDLoc &DL,
+                                             EVT VT, SDNode *Cst1,
+                                             SDNode *Cst2) {
   // If the opcode is a target-specific ISD node, there's nothing we can
   // do here and the operand rules may not line up with the below, so
   // bail early.
@@ -3389,8 +3396,8 @@ SDValue SelectionDAG::FoldConstantArithmetic(unsigned Opcode, SDLoc DL, EVT VT,
   return getBuildVector(VT, SDLoc(), Outputs);
 }
 
-SDValue SelectionDAG::FoldConstantVectorArithmetic(unsigned Opcode, SDLoc DL,
-                                                   EVT VT,
+SDValue SelectionDAG::FoldConstantVectorArithmetic(unsigned Opcode,
+                                                   const SDLoc &DL, EVT VT,
                                                    ArrayRef<SDValue> Ops,
                                                    const SDNodeFlags *Flags) {
   // If the opcode is a target-specific ISD node, there's nothing we can
@@ -3480,8 +3487,9 @@ SDValue SelectionDAG::FoldConstantVectorArithmetic(unsigned Opcode, SDLoc DL,
   return getBuildVector(VT, DL, ScalarResults);
 }
 
-SDValue SelectionDAG::getNode(unsigned Opcode, SDLoc DL, EVT VT, SDValue N1,
-                              SDValue N2, const SDNodeFlags *Flags) {
+SDValue SelectionDAG::getNode(unsigned Opcode, const SDLoc &DL, EVT VT,
+                              SDValue N1, SDValue N2,
+                              const SDNodeFlags *Flags) {
   ConstantSDNode *N1C = dyn_cast<ConstantSDNode>(N1);
   ConstantSDNode *N2C = dyn_cast<ConstantSDNode>(N2);
   ConstantFPSDNode *N1CFP = dyn_cast<ConstantFPSDNode>(N1);
@@ -3954,7 +3962,7 @@ SDValue SelectionDAG::getNode(unsigned Opcode, SDLoc DL, EVT VT, SDValue N1,
   return SDValue(N, 0);
 }
 
-SDValue SelectionDAG::getNode(unsigned Opcode, SDLoc DL, EVT VT,
+SDValue SelectionDAG::getNode(unsigned Opcode, const SDLoc &DL, EVT VT,
                               SDValue N1, SDValue N2, SDValue N3) {
   // Perform various simplifications.
   switch (Opcode) {
@@ -4055,16 +4063,15 @@ SDValue SelectionDAG::getNode(unsigned Opcode, SDLoc DL, EVT VT,
   return SDValue(N, 0);
 }
 
-SDValue SelectionDAG::getNode(unsigned Opcode, SDLoc DL, EVT VT,
-                              SDValue N1, SDValue N2, SDValue N3,
-                              SDValue N4) {
+SDValue SelectionDAG::getNode(unsigned Opcode, const SDLoc &DL, EVT VT,
+                              SDValue N1, SDValue N2, SDValue N3, SDValue N4) {
   SDValue Ops[] = { N1, N2, N3, N4 };
   return getNode(Opcode, DL, VT, Ops);
 }
 
-SDValue SelectionDAG::getNode(unsigned Opcode, SDLoc DL, EVT VT,
-                              SDValue N1, SDValue N2, SDValue N3,
-                              SDValue N4, SDValue N5) {
+SDValue SelectionDAG::getNode(unsigned Opcode, const SDLoc &DL, EVT VT,
+                              SDValue N1, SDValue N2, SDValue N3, SDValue N4,
+                              SDValue N5) {
   SDValue Ops[] = { N1, N2, N3, N4, N5 };
   return getNode(Opcode, DL, VT, Ops);
 }
@@ -4094,7 +4101,7 @@ SDValue SelectionDAG::getStackArgumentTokenFactor(SDValue Chain) {
 /// getMemsetValue - Vectorized representation of the memset value
 /// operand.
 static SDValue getMemsetValue(SDValue Value, EVT VT, SelectionDAG &DAG,
-                              SDLoc dl) {
+                              const SDLoc &dl) {
   assert(!Value.isUndef());
 
   unsigned NumBits = VT.getScalarType().getSizeInBits();
@@ -4132,7 +4139,7 @@ static SDValue getMemsetValue(SDValue Value, EVT VT, SelectionDAG &DAG,
 /// getMemsetStringVal - Similar to getMemsetValue. Except this is only
 /// used when a memcpy is turned into a memset when the source is a constant
 /// string ptr.
-static SDValue getMemsetStringVal(EVT VT, SDLoc dl, SelectionDAG &DAG,
+static SDValue getMemsetStringVal(EVT VT, const SDLoc &dl, SelectionDAG &DAG,
                                   const TargetLowering &TLI, StringRef Str) {
   // Handle vector with all elements zero.
   if (Str.empty()) {
@@ -4174,7 +4181,7 @@ static SDValue getMemsetStringVal(EVT VT, SDLoc dl, SelectionDAG &DAG,
 }
 
 SDValue SelectionDAG::getMemBasePlusOffset(SDValue Base, unsigned Offset,
-                                           SDLoc DL) {
+                                           const SDLoc &DL) {
   EVT VT = Base.getValueType();
   return getNode(ISD::ADD, DL, VT, Base, getConstant(Offset, DL, VT));
 }
@@ -4313,11 +4320,10 @@ static bool shouldLowerMemFuncForSize(const MachineFunction &MF) {
   return MF.getFunction()->optForSize();
 }
 
-static SDValue getMemcpyLoadsAndStores(SelectionDAG &DAG, SDLoc dl,
-                                       SDValue Chain, SDValue Dst,
-                                       SDValue Src, uint64_t Size,
-                                       unsigned Align, bool isVol,
-                                       bool AlwaysInline,
+static SDValue getMemcpyLoadsAndStores(SelectionDAG &DAG, const SDLoc &dl,
+                                       SDValue Chain, SDValue Dst, SDValue Src,
+                                       uint64_t Size, unsigned Align,
+                                       bool isVol, bool AlwaysInline,
                                        MachinePointerInfo DstPtrInfo,
                                        MachinePointerInfo SrcPtrInfo) {
   // Turn a memcpy of undef to nop.
@@ -4432,11 +4438,10 @@ static SDValue getMemcpyLoadsAndStores(SelectionDAG &DAG, SDLoc dl,
   return DAG.getNode(ISD::TokenFactor, dl, MVT::Other, OutChains);
 }
 
-static SDValue getMemmoveLoadsAndStores(SelectionDAG &DAG, SDLoc dl,
-                                        SDValue Chain, SDValue Dst,
-                                        SDValue Src, uint64_t Size,
-                                        unsigned Align,  bool isVol,
-                                        bool AlwaysInline,
+static SDValue getMemmoveLoadsAndStores(SelectionDAG &DAG, const SDLoc &dl,
+                                        SDValue Chain, SDValue Dst, SDValue Src,
+                                        uint64_t Size, unsigned Align,
+                                        bool isVol, bool AlwaysInline,
                                         MachinePointerInfo DstPtrInfo,
                                         MachinePointerInfo SrcPtrInfo) {
   // Turn a memmove of undef to nop.
@@ -4531,10 +4536,9 @@ static SDValue getMemmoveLoadsAndStores(SelectionDAG &DAG, SDLoc dl,
 /// The function tries to replace 'llvm.memset' intrinsic with several store
 /// operations and value calculation code. This is usually profitable for small
 /// memory size.
-static SDValue getMemsetStores(SelectionDAG &DAG, SDLoc dl,
-                               SDValue Chain, SDValue Dst,
-                               SDValue Src, uint64_t Size,
-                               unsigned Align, bool isVol,
+static SDValue getMemsetStores(SelectionDAG &DAG, const SDLoc &dl,
+                               SDValue Chain, SDValue Dst, SDValue Src,
+                               uint64_t Size, unsigned Align, bool isVol,
                                MachinePointerInfo DstPtrInfo) {
   // Turn a memset of undef to nop.
   if (Src.isUndef())
@@ -4625,10 +4629,10 @@ static void checkAddrSpaceIsValidForLibcall(const TargetLowering *TLI,
   }
 }
 
-SDValue SelectionDAG::getMemcpy(SDValue Chain, SDLoc dl, SDValue Dst,
-                                SDValue Src, SDValue Size,
-                                unsigned Align, bool isVol, bool AlwaysInline,
-                                bool isTailCall, MachinePointerInfo DstPtrInfo,
+SDValue SelectionDAG::getMemcpy(SDValue Chain, const SDLoc &dl, SDValue Dst,
+                                SDValue Src, SDValue Size, unsigned Align,
+                                bool isVol, bool AlwaysInline, bool isTailCall,
+                                MachinePointerInfo DstPtrInfo,
                                 MachinePointerInfo SrcPtrInfo) {
   assert(Align && "The SDAG layer expects explicit alignment and reserves 0");
 
@@ -4690,7 +4694,7 @@ SDValue SelectionDAG::getMemcpy(SDValue Chain, SDLoc dl, SDValue Dst,
                  Dst.getValueType().getTypeForEVT(*getContext()),
                  getExternalSymbol(TLI->getLibcallName(RTLIB::MEMCPY),
                                    TLI->getPointerTy(getDataLayout())),
-                 std::move(Args), 0)
+                 std::move(Args))
       .setDiscardResult()
       .setTailCall(isTailCall);
 
@@ -4698,9 +4702,9 @@ SDValue SelectionDAG::getMemcpy(SDValue Chain, SDLoc dl, SDValue Dst,
   return CallResult.second;
 }
 
-SDValue SelectionDAG::getMemmove(SDValue Chain, SDLoc dl, SDValue Dst,
-                                 SDValue Src, SDValue Size,
-                                 unsigned Align, bool isVol, bool isTailCall,
+SDValue SelectionDAG::getMemmove(SDValue Chain, const SDLoc &dl, SDValue Dst,
+                                 SDValue Src, SDValue Size, unsigned Align,
+                                 bool isVol, bool isTailCall,
                                  MachinePointerInfo DstPtrInfo,
                                  MachinePointerInfo SrcPtrInfo) {
   assert(Align && "The SDAG layer expects explicit alignment and reserves 0");
@@ -4751,7 +4755,7 @@ SDValue SelectionDAG::getMemmove(SDValue Chain, SDLoc dl, SDValue Dst,
                  Dst.getValueType().getTypeForEVT(*getContext()),
                  getExternalSymbol(TLI->getLibcallName(RTLIB::MEMMOVE),
                                    TLI->getPointerTy(getDataLayout())),
-                 std::move(Args), 0)
+                 std::move(Args))
       .setDiscardResult()
       .setTailCall(isTailCall);
 
@@ -4759,9 +4763,9 @@ SDValue SelectionDAG::getMemmove(SDValue Chain, SDLoc dl, SDValue Dst,
   return CallResult.second;
 }
 
-SDValue SelectionDAG::getMemset(SDValue Chain, SDLoc dl, SDValue Dst,
-                                SDValue Src, SDValue Size,
-                                unsigned Align, bool isVol, bool isTailCall,
+SDValue SelectionDAG::getMemset(SDValue Chain, const SDLoc &dl, SDValue Dst,
+                                SDValue Src, SDValue Size, unsigned Align,
+                                bool isVol, bool isTailCall,
                                 MachinePointerInfo DstPtrInfo) {
   assert(Align && "The SDAG layer expects explicit alignment and reserves 0");
 
@@ -4813,7 +4817,7 @@ SDValue SelectionDAG::getMemset(SDValue Chain, SDLoc dl, SDValue Dst,
                  Dst.getValueType().getTypeForEVT(*getContext()),
                  getExternalSymbol(TLI->getLibcallName(RTLIB::MEMSET),
                                    TLI->getPointerTy(getDataLayout())),
-                 std::move(Args), 0)
+                 std::move(Args))
       .setDiscardResult()
       .setTailCall(isTailCall);
 
@@ -4821,7 +4825,7 @@ SDValue SelectionDAG::getMemset(SDValue Chain, SDLoc dl, SDValue Dst,
   return CallResult.second;
 }
 
-SDValue SelectionDAG::getAtomic(unsigned Opcode, SDLoc dl, EVT MemVT,
+SDValue SelectionDAG::getAtomic(unsigned Opcode, const SDLoc &dl, EVT MemVT,
                                 SDVTList VTList, ArrayRef<SDValue> Ops,
                                 MachineMemOperand *MMO,
                                 AtomicOrdering SuccessOrdering,
@@ -4847,17 +4851,16 @@ SDValue SelectionDAG::getAtomic(unsigned Opcode, SDLoc dl, EVT MemVT,
   return SDValue(N, 0);
 }
 
-SDValue SelectionDAG::getAtomic(unsigned Opcode, SDLoc dl, EVT MemVT,
+SDValue SelectionDAG::getAtomic(unsigned Opcode, const SDLoc &dl, EVT MemVT,
                                 SDVTList VTList, ArrayRef<SDValue> Ops,
-                                MachineMemOperand *MMO,
-                                AtomicOrdering Ordering,
+                                MachineMemOperand *MMO, AtomicOrdering Ordering,
                                 SynchronizationScope SynchScope) {
   return getAtomic(Opcode, dl, MemVT, VTList, Ops, MMO, Ordering,
                    Ordering, SynchScope);
 }
 
 SDValue SelectionDAG::getAtomicCmpSwap(
-    unsigned Opcode, SDLoc dl, EVT MemVT, SDVTList VTs, SDValue Chain,
+    unsigned Opcode, const SDLoc &dl, EVT MemVT, SDVTList VTs, SDValue Chain,
     SDValue Ptr, SDValue Cmp, SDValue Swp, MachinePointerInfo PtrInfo,
     unsigned Alignment, AtomicOrdering SuccessOrdering,
     AtomicOrdering FailureOrdering, SynchronizationScope SynchScope) {
@@ -4883,9 +4886,9 @@ SDValue SelectionDAG::getAtomicCmpSwap(
                           SuccessOrdering, FailureOrdering, SynchScope);
 }
 
-SDValue SelectionDAG::getAtomicCmpSwap(unsigned Opcode, SDLoc dl, EVT MemVT,
-                                       SDVTList VTs, SDValue Chain, SDValue Ptr,
-                                       SDValue Cmp, SDValue Swp,
+SDValue SelectionDAG::getAtomicCmpSwap(unsigned Opcode, const SDLoc &dl,
+                                       EVT MemVT, SDVTList VTs, SDValue Chain,
+                                       SDValue Ptr, SDValue Cmp, SDValue Swp,
                                        MachineMemOperand *MMO,
                                        AtomicOrdering SuccessOrdering,
                                        AtomicOrdering FailureOrdering,
@@ -4899,11 +4902,9 @@ SDValue SelectionDAG::getAtomicCmpSwap(unsigned Opcode, SDLoc dl, EVT MemVT,
                    SuccessOrdering, FailureOrdering, SynchScope);
 }
 
-SDValue SelectionDAG::getAtomic(unsigned Opcode, SDLoc dl, EVT MemVT,
-                                SDValue Chain,
-                                SDValue Ptr, SDValue Val,
-                                const Value* PtrVal,
-                                unsigned Alignment,
+SDValue SelectionDAG::getAtomic(unsigned Opcode, const SDLoc &dl, EVT MemVT,
+                                SDValue Chain, SDValue Ptr, SDValue Val,
+                                const Value *PtrVal, unsigned Alignment,
                                 AtomicOrdering Ordering,
                                 SynchronizationScope SynchScope) {
   if (Alignment == 0)  // Ensure that codegen never sees alignment 0
@@ -4930,11 +4931,9 @@ SDValue SelectionDAG::getAtomic(unsigned Opcode, SDLoc dl, EVT MemVT,
                    Ordering, SynchScope);
 }
 
-SDValue SelectionDAG::getAtomic(unsigned Opcode, SDLoc dl, EVT MemVT,
-                                SDValue Chain,
-                                SDValue Ptr, SDValue Val,
-                                MachineMemOperand *MMO,
-                                AtomicOrdering Ordering,
+SDValue SelectionDAG::getAtomic(unsigned Opcode, const SDLoc &dl, EVT MemVT,
+                                SDValue Chain, SDValue Ptr, SDValue Val,
+                                MachineMemOperand *MMO, AtomicOrdering Ordering,
                                 SynchronizationScope SynchScope) {
   assert((Opcode == ISD::ATOMIC_LOAD_ADD ||
           Opcode == ISD::ATOMIC_LOAD_SUB ||
@@ -4958,11 +4957,9 @@ SDValue SelectionDAG::getAtomic(unsigned Opcode, SDLoc dl, EVT MemVT,
   return getAtomic(Opcode, dl, MemVT, VTs, Ops, MMO, Ordering, SynchScope);
 }
 
-SDValue SelectionDAG::getAtomic(unsigned Opcode, SDLoc dl, EVT MemVT,
-                                EVT VT, SDValue Chain,
-                                SDValue Ptr,
-                                MachineMemOperand *MMO,
-                                AtomicOrdering Ordering,
+SDValue SelectionDAG::getAtomic(unsigned Opcode, const SDLoc &dl, EVT MemVT,
+                                EVT VT, SDValue Chain, SDValue Ptr,
+                                MachineMemOperand *MMO, AtomicOrdering Ordering,
                                 SynchronizationScope SynchScope) {
   assert(Opcode == ISD::ATOMIC_LOAD && "Invalid Atomic Op");
 
@@ -4972,7 +4969,7 @@ SDValue SelectionDAG::getAtomic(unsigned Opcode, SDLoc dl, EVT MemVT,
 }
 
 /// getMergeValues - Create a MERGE_VALUES node from the given operands.
-SDValue SelectionDAG::getMergeValues(ArrayRef<SDValue> Ops, SDLoc dl) {
+SDValue SelectionDAG::getMergeValues(ArrayRef<SDValue> Ops, const SDLoc &dl) {
   if (Ops.size() == 1)
     return Ops[0];
 
@@ -4983,12 +4980,10 @@ SDValue SelectionDAG::getMergeValues(ArrayRef<SDValue> Ops, SDLoc dl) {
   return getNode(ISD::MERGE_VALUES, dl, getVTList(VTs), Ops);
 }
 
-SDValue
-SelectionDAG::getMemIntrinsicNode(unsigned Opcode, SDLoc dl, SDVTList VTList,
-                                  ArrayRef<SDValue> Ops,
-                                  EVT MemVT, MachinePointerInfo PtrInfo,
-                                  unsigned Align, bool Vol,
-                                  bool ReadMem, bool WriteMem, unsigned Size) {
+SDValue SelectionDAG::getMemIntrinsicNode(
+    unsigned Opcode, const SDLoc &dl, SDVTList VTList, ArrayRef<SDValue> Ops,
+    EVT MemVT, MachinePointerInfo PtrInfo, unsigned Align, bool Vol,
+    bool ReadMem, bool WriteMem, unsigned Size) {
   if (Align == 0)  // Ensure that codegen never sees alignment 0
     Align = getEVTAlignment(MemVT);
 
@@ -5008,10 +5003,10 @@ SelectionDAG::getMemIntrinsicNode(unsigned Opcode, SDLoc dl, SDVTList VTList,
   return getMemIntrinsicNode(Opcode, dl, VTList, Ops, MemVT, MMO);
 }
 
-SDValue
-SelectionDAG::getMemIntrinsicNode(unsigned Opcode, SDLoc dl, SDVTList VTList,
-                                  ArrayRef<SDValue> Ops, EVT MemVT,
-                                  MachineMemOperand *MMO) {
+SDValue SelectionDAG::getMemIntrinsicNode(unsigned Opcode, const SDLoc &dl,
+                                          SDVTList VTList,
+                                          ArrayRef<SDValue> Ops, EVT MemVT,
+                                          MachineMemOperand *MMO) {
   assert((Opcode == ISD::INTRINSIC_VOID ||
           Opcode == ISD::INTRINSIC_W_CHAIN ||
           Opcode == ISD::PREFETCH ||
@@ -5084,15 +5079,13 @@ static MachinePointerInfo InferPointerInfo(SelectionDAG &DAG, SDValue Ptr,
   return MachinePointerInfo();
 }
 
-
-SDValue
-SelectionDAG::getLoad(ISD::MemIndexedMode AM, ISD::LoadExtType ExtType,
-                      EVT VT, SDLoc dl, SDValue Chain,
-                      SDValue Ptr, SDValue Offset,
-                      MachinePointerInfo PtrInfo, EVT MemVT,
-                      bool isVolatile, bool isNonTemporal, bool isInvariant,
-                      unsigned Alignment, const AAMDNodes &AAInfo,
-                      const MDNode *Ranges) {
+SDValue SelectionDAG::getLoad(ISD::MemIndexedMode AM, ISD::LoadExtType ExtType,
+                              EVT VT, const SDLoc &dl, SDValue Chain,
+                              SDValue Ptr, SDValue Offset,
+                              MachinePointerInfo PtrInfo, EVT MemVT,
+                              bool isVolatile, bool isNonTemporal,
+                              bool isInvariant, unsigned Alignment,
+                              const AAMDNodes &AAInfo, const MDNode *Ranges) {
   assert(Chain.getValueType() == MVT::Other &&
         "Invalid chain type");
   if (Alignment == 0)  // Ensure that codegen never sees alignment 0
@@ -5118,11 +5111,10 @@ SelectionDAG::getLoad(ISD::MemIndexedMode AM, ISD::LoadExtType ExtType,
   return getLoad(AM, ExtType, VT, dl, Chain, Ptr, Offset, MemVT, MMO);
 }
 
-SDValue
-SelectionDAG::getLoad(ISD::MemIndexedMode AM, ISD::LoadExtType ExtType,
-                      EVT VT, SDLoc dl, SDValue Chain,
-                      SDValue Ptr, SDValue Offset, EVT MemVT,
-                      MachineMemOperand *MMO) {
+SDValue SelectionDAG::getLoad(ISD::MemIndexedMode AM, ISD::LoadExtType ExtType,
+                              EVT VT, const SDLoc &dl, SDValue Chain,
+                              SDValue Ptr, SDValue Offset, EVT MemVT,
+                              MachineMemOperand *MMO) {
   if (VT == MemVT) {
     ExtType = ISD::NON_EXTLOAD;
   } else if (ExtType == ISD::NON_EXTLOAD) {
@@ -5167,29 +5159,26 @@ SelectionDAG::getLoad(ISD::MemIndexedMode AM, ISD::LoadExtType ExtType,
   return SDValue(N, 0);
 }
 
-SDValue SelectionDAG::getLoad(EVT VT, SDLoc dl,
-                              SDValue Chain, SDValue Ptr,
-                              MachinePointerInfo PtrInfo,
+SDValue SelectionDAG::getLoad(EVT VT, const SDLoc &dl, SDValue Chain,
+                              SDValue Ptr, MachinePointerInfo PtrInfo,
                               bool isVolatile, bool isNonTemporal,
                               bool isInvariant, unsigned Alignment,
-                              const AAMDNodes &AAInfo,
-                              const MDNode *Ranges) {
+                              const AAMDNodes &AAInfo, const MDNode *Ranges) {
   SDValue Undef = getUNDEF(Ptr.getValueType());
   return getLoad(ISD::UNINDEXED, ISD::NON_EXTLOAD, VT, dl, Chain, Ptr, Undef,
                  PtrInfo, VT, isVolatile, isNonTemporal, isInvariant, Alignment,
                  AAInfo, Ranges);
 }
 
-SDValue SelectionDAG::getLoad(EVT VT, SDLoc dl,
-                              SDValue Chain, SDValue Ptr,
-                              MachineMemOperand *MMO) {
+SDValue SelectionDAG::getLoad(EVT VT, const SDLoc &dl, SDValue Chain,
+                              SDValue Ptr, MachineMemOperand *MMO) {
   SDValue Undef = getUNDEF(Ptr.getValueType());
   return getLoad(ISD::UNINDEXED, ISD::NON_EXTLOAD, VT, dl, Chain, Ptr, Undef,
                  VT, MMO);
 }
 
-SDValue SelectionDAG::getExtLoad(ISD::LoadExtType ExtType, SDLoc dl, EVT VT,
-                                 SDValue Chain, SDValue Ptr,
+SDValue SelectionDAG::getExtLoad(ISD::LoadExtType ExtType, const SDLoc &dl,
+                                 EVT VT, SDValue Chain, SDValue Ptr,
                                  MachinePointerInfo PtrInfo, EVT MemVT,
                                  bool isVolatile, bool isNonTemporal,
                                  bool isInvariant, unsigned Alignment,
@@ -5200,18 +5189,17 @@ SDValue SelectionDAG::getExtLoad(ISD::LoadExtType ExtType, SDLoc dl, EVT VT,
                  Alignment, AAInfo);
 }
 
-
-SDValue SelectionDAG::getExtLoad(ISD::LoadExtType ExtType, SDLoc dl, EVT VT,
-                                 SDValue Chain, SDValue Ptr, EVT MemVT,
+SDValue SelectionDAG::getExtLoad(ISD::LoadExtType ExtType, const SDLoc &dl,
+                                 EVT VT, SDValue Chain, SDValue Ptr, EVT MemVT,
                                  MachineMemOperand *MMO) {
   SDValue Undef = getUNDEF(Ptr.getValueType());
   return getLoad(ISD::UNINDEXED, ExtType, VT, dl, Chain, Ptr, Undef,
                  MemVT, MMO);
 }
 
-SDValue
-SelectionDAG::getIndexedLoad(SDValue OrigLoad, SDLoc dl, SDValue Base,
-                             SDValue Offset, ISD::MemIndexedMode AM) {
+SDValue SelectionDAG::getIndexedLoad(SDValue OrigLoad, const SDLoc &dl,
+                                     SDValue Base, SDValue Offset,
+                                     ISD::MemIndexedMode AM) {
   LoadSDNode *LD = cast<LoadSDNode>(OrigLoad);
   assert(LD->getOffset().isUndef() && "Load is already a indexed load!");
   return getLoad(AM, LD->getExtensionType(), OrigLoad.getValueType(), dl,
@@ -5220,7 +5208,7 @@ SelectionDAG::getIndexedLoad(SDValue OrigLoad, SDLoc dl, SDValue Base,
                  false, LD->getAlignment());
 }
 
-SDValue SelectionDAG::getStore(SDValue Chain, SDLoc dl, SDValue Val,
+SDValue SelectionDAG::getStore(SDValue Chain, const SDLoc &dl, SDValue Val,
                                SDValue Ptr, MachinePointerInfo PtrInfo,
                                bool isVolatile, bool isNonTemporal,
                                unsigned Alignment, const AAMDNodes &AAInfo) {
@@ -5246,7 +5234,7 @@ SDValue SelectionDAG::getStore(SDValue Chain, SDLoc dl, SDValue Val,
   return getStore(Chain, dl, Val, Ptr, MMO);
 }
 
-SDValue SelectionDAG::getStore(SDValue Chain, SDLoc dl, SDValue Val,
+SDValue SelectionDAG::getStore(SDValue Chain, const SDLoc &dl, SDValue Val,
                                SDValue Ptr, MachineMemOperand *MMO) {
   assert(Chain.getValueType() == MVT::Other &&
         "Invalid chain type");
@@ -5274,10 +5262,10 @@ SDValue SelectionDAG::getStore(SDValue Chain, SDLoc dl, SDValue Val,
   return SDValue(N, 0);
 }
 
-SDValue SelectionDAG::getTruncStore(SDValue Chain, SDLoc dl, SDValue Val,
+SDValue SelectionDAG::getTruncStore(SDValue Chain, const SDLoc &dl, SDValue Val,
                                     SDValue Ptr, MachinePointerInfo PtrInfo,
-                                    EVT SVT,bool isVolatile, bool isNonTemporal,
-                                    unsigned Alignment,
+                                    EVT SVT, bool isVolatile,
+                                    bool isNonTemporal, unsigned Alignment,
                                     const AAMDNodes &AAInfo) {
   assert(Chain.getValueType() == MVT::Other &&
         "Invalid chain type");
@@ -5301,7 +5289,7 @@ SDValue SelectionDAG::getTruncStore(SDValue Chain, SDLoc dl, SDValue Val,
   return getTruncStore(Chain, dl, Val, Ptr, SVT, MMO);
 }
 
-SDValue SelectionDAG::getTruncStore(SDValue Chain, SDLoc dl, SDValue Val,
+SDValue SelectionDAG::getTruncStore(SDValue Chain, const SDLoc &dl, SDValue Val,
                                     SDValue Ptr, EVT SVT,
                                     MachineMemOperand *MMO) {
   EVT VT = Val.getValueType();
@@ -5344,9 +5332,9 @@ SDValue SelectionDAG::getTruncStore(SDValue Chain, SDLoc dl, SDValue Val,
   return SDValue(N, 0);
 }
 
-SDValue
-SelectionDAG::getIndexedStore(SDValue OrigStore, SDLoc dl, SDValue Base,
-                              SDValue Offset, ISD::MemIndexedMode AM) {
+SDValue SelectionDAG::getIndexedStore(SDValue OrigStore, const SDLoc &dl,
+                                      SDValue Base, SDValue Offset,
+                                      ISD::MemIndexedMode AM) {
   StoreSDNode *ST = cast<StoreSDNode>(OrigStore);
   assert(ST->getOffset().isUndef() && "Store is already a indexed store!");
   SDVTList VTs = getVTList(Base.getValueType(), MVT::Other);
@@ -5370,10 +5358,10 @@ SelectionDAG::getIndexedStore(SDValue OrigStore, SDLoc dl, SDValue Base,
   return SDValue(N, 0);
 }
 
-SDValue
-SelectionDAG::getMaskedLoad(EVT VT, SDLoc dl, SDValue Chain,
-                            SDValue Ptr, SDValue Mask, SDValue Src0, EVT MemVT,
-                            MachineMemOperand *MMO, ISD::LoadExtType ExtTy) {
+SDValue SelectionDAG::getMaskedLoad(EVT VT, const SDLoc &dl, SDValue Chain,
+                                    SDValue Ptr, SDValue Mask, SDValue Src0,
+                                    EVT MemVT, MachineMemOperand *MMO,
+                                    ISD::LoadExtType ExtTy) {
 
   SDVTList VTs = getVTList(VT, MVT::Other);
   SDValue Ops[] = { Chain, Ptr, Mask, Src0 };
@@ -5399,9 +5387,10 @@ SelectionDAG::getMaskedLoad(EVT VT, SDLoc dl, SDValue Chain,
   return SDValue(N, 0);
 }
 
-SDValue SelectionDAG::getMaskedStore(SDValue Chain, SDLoc dl, SDValue Val,
-                                     SDValue Ptr, SDValue Mask, EVT MemVT,
-                                     MachineMemOperand *MMO, bool isTrunc) {
+SDValue SelectionDAG::getMaskedStore(SDValue Chain, const SDLoc &dl,
+                                     SDValue Val, SDValue Ptr, SDValue Mask,
+                                     EVT MemVT, MachineMemOperand *MMO,
+                                     bool isTrunc) {
   assert(Chain.getValueType() == MVT::Other &&
         "Invalid chain type");
   EVT VT = Val.getValueType();
@@ -5427,10 +5416,9 @@ SDValue SelectionDAG::getMaskedStore(SDValue Chain, SDLoc dl, SDValue Val,
   return SDValue(N, 0);
 }
 
-SDValue
-SelectionDAG::getMaskedGather(SDVTList VTs, EVT VT, SDLoc dl,
-                              ArrayRef<SDValue> Ops,
-                              MachineMemOperand *MMO) {
+SDValue SelectionDAG::getMaskedGather(SDVTList VTs, EVT VT, const SDLoc &dl,
+                                      ArrayRef<SDValue> Ops,
+                                      MachineMemOperand *MMO) {
   assert(Ops.size() == 5 && "Incompatible number of operands");
 
   FoldingSetNodeID ID;
@@ -5465,7 +5453,7 @@ SelectionDAG::getMaskedGather(SDVTList VTs, EVT VT, SDLoc dl,
   return SDValue(N, 0);
 }
 
-SDValue SelectionDAG::getMaskedScatter(SDVTList VTs, EVT VT, SDLoc dl,
+SDValue SelectionDAG::getMaskedScatter(SDVTList VTs, EVT VT, const SDLoc &dl,
                                        ArrayRef<SDValue> Ops,
                                        MachineMemOperand *MMO) {
   assert(Ops.size() == 5 && "Incompatible number of operands");
@@ -5498,15 +5486,13 @@ SDValue SelectionDAG::getMaskedScatter(SDVTList VTs, EVT VT, SDLoc dl,
   return SDValue(N, 0);
 }
 
-SDValue SelectionDAG::getVAArg(EVT VT, SDLoc dl,
-                               SDValue Chain, SDValue Ptr,
-                               SDValue SV,
-                               unsigned Align) {
+SDValue SelectionDAG::getVAArg(EVT VT, const SDLoc &dl, SDValue Chain,
+                               SDValue Ptr, SDValue SV, unsigned Align) {
   SDValue Ops[] = { Chain, Ptr, SV, getTargetConstant(Align, dl, MVT::i32) };
   return getNode(ISD::VAARG, dl, getVTList(VT, MVT::Other), Ops);
 }
 
-SDValue SelectionDAG::getNode(unsigned Opcode, SDLoc DL, EVT VT,
+SDValue SelectionDAG::getNode(unsigned Opcode, const SDLoc &DL, EVT VT,
                               ArrayRef<SDUse> Ops) {
   switch (Ops.size()) {
   case 0: return getNode(Opcode, DL, VT);
@@ -5522,7 +5508,7 @@ SDValue SelectionDAG::getNode(unsigned Opcode, SDLoc DL, EVT VT,
   return getNode(Opcode, DL, VT, NewOps);
 }
 
-SDValue SelectionDAG::getNode(unsigned Opcode, SDLoc DL, EVT VT,
+SDValue SelectionDAG::getNode(unsigned Opcode, const SDLoc &DL, EVT VT,
                               ArrayRef<SDValue> Ops, const SDNodeFlags *Flags) {
   unsigned NumOps = Ops.size();
   switch (NumOps) {
@@ -5584,12 +5570,12 @@ SDValue SelectionDAG::getNode(unsigned Opcode, SDLoc DL, EVT VT,
   return SDValue(N, 0);
 }
 
-SDValue SelectionDAG::getNode(unsigned Opcode, SDLoc DL,
+SDValue SelectionDAG::getNode(unsigned Opcode, const SDLoc &DL,
                               ArrayRef<EVT> ResultTys, ArrayRef<SDValue> Ops) {
   return getNode(Opcode, DL, getVTList(ResultTys), Ops);
 }
 
-SDValue SelectionDAG::getNode(unsigned Opcode, SDLoc DL, SDVTList VTList,
+SDValue SelectionDAG::getNode(unsigned Opcode, const SDLoc &DL, SDVTList VTList,
                               ArrayRef<SDValue> Ops) {
   if (VTList.NumVTs == 1)
     return getNode(Opcode, DL, VTList.VTs[0], Ops);
@@ -5637,38 +5623,38 @@ SDValue SelectionDAG::getNode(unsigned Opcode, SDLoc DL, SDVTList VTList,
   return SDValue(N, 0);
 }
 
-SDValue SelectionDAG::getNode(unsigned Opcode, SDLoc DL, SDVTList VTList) {
+SDValue SelectionDAG::getNode(unsigned Opcode, const SDLoc &DL,
+                              SDVTList VTList) {
   return getNode(Opcode, DL, VTList, None);
 }
 
-SDValue SelectionDAG::getNode(unsigned Opcode, SDLoc DL, SDVTList VTList,
+SDValue SelectionDAG::getNode(unsigned Opcode, const SDLoc &DL, SDVTList VTList,
                               SDValue N1) {
   SDValue Ops[] = { N1 };
   return getNode(Opcode, DL, VTList, Ops);
 }
 
-SDValue SelectionDAG::getNode(unsigned Opcode, SDLoc DL, SDVTList VTList,
+SDValue SelectionDAG::getNode(unsigned Opcode, const SDLoc &DL, SDVTList VTList,
                               SDValue N1, SDValue N2) {
   SDValue Ops[] = { N1, N2 };
   return getNode(Opcode, DL, VTList, Ops);
 }
 
-SDValue SelectionDAG::getNode(unsigned Opcode, SDLoc DL, SDVTList VTList,
+SDValue SelectionDAG::getNode(unsigned Opcode, const SDLoc &DL, SDVTList VTList,
                               SDValue N1, SDValue N2, SDValue N3) {
   SDValue Ops[] = { N1, N2, N3 };
   return getNode(Opcode, DL, VTList, Ops);
 }
 
-SDValue SelectionDAG::getNode(unsigned Opcode, SDLoc DL, SDVTList VTList,
-                              SDValue N1, SDValue N2, SDValue N3,
-                              SDValue N4) {
+SDValue SelectionDAG::getNode(unsigned Opcode, const SDLoc &DL, SDVTList VTList,
+                              SDValue N1, SDValue N2, SDValue N3, SDValue N4) {
   SDValue Ops[] = { N1, N2, N3, N4 };
   return getNode(Opcode, DL, VTList, Ops);
 }
 
-SDValue SelectionDAG::getNode(unsigned Opcode, SDLoc DL, SDVTList VTList,
-                              SDValue N1, SDValue N2, SDValue N3,
-                              SDValue N4, SDValue N5) {
+SDValue SelectionDAG::getNode(unsigned Opcode, const SDLoc &DL, SDVTList VTList,
+                              SDValue N1, SDValue N2, SDValue N3, SDValue N4,
+                              SDValue N5) {
   SDValue Ops[] = { N1, N2, N3, N4, N5 };
   return getNode(Opcode, DL, VTList, Ops);
 }
@@ -5993,7 +5979,7 @@ SDNode *SelectionDAG::SelectNodeTo(SDNode *N, unsigned MachineOpc,
 /// probability having other instructions associated with that line.
 ///
 /// For IROrder, we keep the smaller of the two
-SDNode *SelectionDAG::UpdadeSDLocOnMergedSDNode(SDNode *N, SDLoc OLoc) {
+SDNode *SelectionDAG::UpdadeSDLocOnMergedSDNode(SDNode *N, const SDLoc &OLoc) {
   DebugLoc NLoc = N->getDebugLoc();
   if (NLoc && OptLevel == CodeGenOpt::None && OLoc.getDebugLoc() != NLoc) {
     N->setDebugLoc(DebugLoc());
@@ -6079,126 +6065,117 @@ SDNode *SelectionDAG::MorphNodeTo(SDNode *N, unsigned Opc,
 /// Note that getMachineNode returns the resultant node.  If there is already a
 /// node of the specified opcode and operands, it returns that node instead of
 /// the current one.
-MachineSDNode *
-SelectionDAG::getMachineNode(unsigned Opcode, SDLoc dl, EVT VT) {
+MachineSDNode *SelectionDAG::getMachineNode(unsigned Opcode, const SDLoc &dl,
+                                            EVT VT) {
   SDVTList VTs = getVTList(VT);
   return getMachineNode(Opcode, dl, VTs, None);
 }
 
-MachineSDNode *
-SelectionDAG::getMachineNode(unsigned Opcode, SDLoc dl, EVT VT, SDValue Op1) {
+MachineSDNode *SelectionDAG::getMachineNode(unsigned Opcode, const SDLoc &dl,
+                                            EVT VT, SDValue Op1) {
   SDVTList VTs = getVTList(VT);
   SDValue Ops[] = { Op1 };
   return getMachineNode(Opcode, dl, VTs, Ops);
 }
 
-MachineSDNode *
-SelectionDAG::getMachineNode(unsigned Opcode, SDLoc dl, EVT VT,
-                             SDValue Op1, SDValue Op2) {
+MachineSDNode *SelectionDAG::getMachineNode(unsigned Opcode, const SDLoc &dl,
+                                            EVT VT, SDValue Op1, SDValue Op2) {
   SDVTList VTs = getVTList(VT);
   SDValue Ops[] = { Op1, Op2 };
   return getMachineNode(Opcode, dl, VTs, Ops);
 }
 
-MachineSDNode *
-SelectionDAG::getMachineNode(unsigned Opcode, SDLoc dl, EVT VT,
-                             SDValue Op1, SDValue Op2, SDValue Op3) {
+MachineSDNode *SelectionDAG::getMachineNode(unsigned Opcode, const SDLoc &dl,
+                                            EVT VT, SDValue Op1, SDValue Op2,
+                                            SDValue Op3) {
   SDVTList VTs = getVTList(VT);
   SDValue Ops[] = { Op1, Op2, Op3 };
   return getMachineNode(Opcode, dl, VTs, Ops);
 }
 
-MachineSDNode *
-SelectionDAG::getMachineNode(unsigned Opcode, SDLoc dl, EVT VT,
-                             ArrayRef<SDValue> Ops) {
+MachineSDNode *SelectionDAG::getMachineNode(unsigned Opcode, const SDLoc &dl,
+                                            EVT VT, ArrayRef<SDValue> Ops) {
   SDVTList VTs = getVTList(VT);
   return getMachineNode(Opcode, dl, VTs, Ops);
 }
 
-MachineSDNode *
-SelectionDAG::getMachineNode(unsigned Opcode, SDLoc dl, EVT VT1, EVT VT2) {
+MachineSDNode *SelectionDAG::getMachineNode(unsigned Opcode, const SDLoc &dl,
+                                            EVT VT1, EVT VT2) {
   SDVTList VTs = getVTList(VT1, VT2);
   return getMachineNode(Opcode, dl, VTs, None);
 }
 
-MachineSDNode *
-SelectionDAG::getMachineNode(unsigned Opcode, SDLoc dl,
-                             EVT VT1, EVT VT2, SDValue Op1) {
+MachineSDNode *SelectionDAG::getMachineNode(unsigned Opcode, const SDLoc &dl,
+                                            EVT VT1, EVT VT2, SDValue Op1) {
   SDVTList VTs = getVTList(VT1, VT2);
   SDValue Ops[] = { Op1 };
   return getMachineNode(Opcode, dl, VTs, Ops);
 }
 
-MachineSDNode *
-SelectionDAG::getMachineNode(unsigned Opcode, SDLoc dl,
-                             EVT VT1, EVT VT2, SDValue Op1, SDValue Op2) {
+MachineSDNode *SelectionDAG::getMachineNode(unsigned Opcode, const SDLoc &dl,
+                                            EVT VT1, EVT VT2, SDValue Op1,
+                                            SDValue Op2) {
   SDVTList VTs = getVTList(VT1, VT2);
   SDValue Ops[] = { Op1, Op2 };
   return getMachineNode(Opcode, dl, VTs, Ops);
 }
 
-MachineSDNode *
-SelectionDAG::getMachineNode(unsigned Opcode, SDLoc dl,
-                             EVT VT1, EVT VT2, SDValue Op1,
-                             SDValue Op2, SDValue Op3) {
+MachineSDNode *SelectionDAG::getMachineNode(unsigned Opcode, const SDLoc &dl,
+                                            EVT VT1, EVT VT2, SDValue Op1,
+                                            SDValue Op2, SDValue Op3) {
   SDVTList VTs = getVTList(VT1, VT2);
   SDValue Ops[] = { Op1, Op2, Op3 };
   return getMachineNode(Opcode, dl, VTs, Ops);
 }
 
-MachineSDNode *
-SelectionDAG::getMachineNode(unsigned Opcode, SDLoc dl,
-                             EVT VT1, EVT VT2,
-                             ArrayRef<SDValue> Ops) {
+MachineSDNode *SelectionDAG::getMachineNode(unsigned Opcode, const SDLoc &dl,
+                                            EVT VT1, EVT VT2,
+                                            ArrayRef<SDValue> Ops) {
   SDVTList VTs = getVTList(VT1, VT2);
   return getMachineNode(Opcode, dl, VTs, Ops);
 }
 
-MachineSDNode *
-SelectionDAG::getMachineNode(unsigned Opcode, SDLoc dl,
-                             EVT VT1, EVT VT2, EVT VT3,
-                             SDValue Op1, SDValue Op2) {
+MachineSDNode *SelectionDAG::getMachineNode(unsigned Opcode, const SDLoc &dl,
+                                            EVT VT1, EVT VT2, EVT VT3,
+                                            SDValue Op1, SDValue Op2) {
   SDVTList VTs = getVTList(VT1, VT2, VT3);
   SDValue Ops[] = { Op1, Op2 };
   return getMachineNode(Opcode, dl, VTs, Ops);
 }
 
-MachineSDNode *
-SelectionDAG::getMachineNode(unsigned Opcode, SDLoc dl,
-                             EVT VT1, EVT VT2, EVT VT3,
-                             SDValue Op1, SDValue Op2, SDValue Op3) {
+MachineSDNode *SelectionDAG::getMachineNode(unsigned Opcode, const SDLoc &dl,
+                                            EVT VT1, EVT VT2, EVT VT3,
+                                            SDValue Op1, SDValue Op2,
+                                            SDValue Op3) {
   SDVTList VTs = getVTList(VT1, VT2, VT3);
   SDValue Ops[] = { Op1, Op2, Op3 };
   return getMachineNode(Opcode, dl, VTs, Ops);
 }
 
-MachineSDNode *
-SelectionDAG::getMachineNode(unsigned Opcode, SDLoc dl,
-                             EVT VT1, EVT VT2, EVT VT3,
-                             ArrayRef<SDValue> Ops) {
+MachineSDNode *SelectionDAG::getMachineNode(unsigned Opcode, const SDLoc &dl,
+                                            EVT VT1, EVT VT2, EVT VT3,
+                                            ArrayRef<SDValue> Ops) {
   SDVTList VTs = getVTList(VT1, VT2, VT3);
   return getMachineNode(Opcode, dl, VTs, Ops);
 }
 
-MachineSDNode *
-SelectionDAG::getMachineNode(unsigned Opcode, SDLoc dl, EVT VT1,
-                             EVT VT2, EVT VT3, EVT VT4,
-                             ArrayRef<SDValue> Ops) {
+MachineSDNode *SelectionDAG::getMachineNode(unsigned Opcode, const SDLoc &dl,
+                                            EVT VT1, EVT VT2, EVT VT3, EVT VT4,
+                                            ArrayRef<SDValue> Ops) {
   SDVTList VTs = getVTList(VT1, VT2, VT3, VT4);
   return getMachineNode(Opcode, dl, VTs, Ops);
 }
 
-MachineSDNode *
-SelectionDAG::getMachineNode(unsigned Opcode, SDLoc dl,
-                             ArrayRef<EVT> ResultTys,
-                             ArrayRef<SDValue> Ops) {
+MachineSDNode *SelectionDAG::getMachineNode(unsigned Opcode, const SDLoc &dl,
+                                            ArrayRef<EVT> ResultTys,
+                                            ArrayRef<SDValue> Ops) {
   SDVTList VTs = getVTList(ResultTys);
   return getMachineNode(Opcode, dl, VTs, Ops);
 }
 
-MachineSDNode *
-SelectionDAG::getMachineNode(unsigned Opcode, SDLoc DL, SDVTList VTs,
-                             ArrayRef<SDValue> Ops) {
+MachineSDNode *SelectionDAG::getMachineNode(unsigned Opcode, const SDLoc &DL,
+                                            SDVTList VTs,
+                                            ArrayRef<SDValue> Ops) {
   bool DoCSE = VTs.VTs[VTs.NumVTs-1] != MVT::Glue;
   MachineSDNode *N;
   void *IP = nullptr;
@@ -6225,9 +6202,8 @@ SelectionDAG::getMachineNode(unsigned Opcode, SDLoc DL, SDVTList VTs,
 
 /// getTargetExtractSubreg - A convenience function for creating
 /// TargetOpcode::EXTRACT_SUBREG nodes.
-SDValue
-SelectionDAG::getTargetExtractSubreg(int SRIdx, SDLoc DL, EVT VT,
-                                     SDValue Operand) {
+SDValue SelectionDAG::getTargetExtractSubreg(int SRIdx, const SDLoc &DL, EVT VT,
+                                             SDValue Operand) {
   SDValue SRIdxVal = getTargetConstant(SRIdx, DL, MVT::i32);
   SDNode *Subreg = getMachineNode(TargetOpcode::EXTRACT_SUBREG, DL,
                                   VT, Operand, SRIdxVal);
@@ -6236,9 +6212,8 @@ SelectionDAG::getTargetExtractSubreg(int SRIdx, SDLoc DL, EVT VT,
 
 /// getTargetInsertSubreg - A convenience function for creating
 /// TargetOpcode::INSERT_SUBREG nodes.
-SDValue
-SelectionDAG::getTargetInsertSubreg(int SRIdx, SDLoc DL, EVT VT,
-                                    SDValue Operand, SDValue Subreg) {
+SDValue SelectionDAG::getTargetInsertSubreg(int SRIdx, const SDLoc &DL, EVT VT,
+                                            SDValue Operand, SDValue Subreg) {
   SDValue SRIdxVal = getTargetConstant(SRIdx, DL, MVT::i32);
   SDNode *Result = getMachineNode(TargetOpcode::INSERT_SUBREG, DL,
                                   VT, Operand, Subreg, SRIdxVal);
@@ -6268,7 +6243,7 @@ SDNode *SelectionDAG::getNodeIfExists(unsigned Opcode, SDVTList VTList,
 /// SDNode
 SDDbgValue *SelectionDAG::getDbgValue(MDNode *Var, MDNode *Expr, SDNode *N,
                                       unsigned R, bool IsIndirect, uint64_t Off,
-                                      DebugLoc DL, unsigned O) {
+                                      const DebugLoc &DL, unsigned O) {
   assert(cast<DILocalVariable>(Var)->isValidLocationForIntrinsic(DL) &&
          "Expected inlined-at fields to agree");
   return new (DbgInfo->getAlloc())
@@ -6278,7 +6253,7 @@ SDDbgValue *SelectionDAG::getDbgValue(MDNode *Var, MDNode *Expr, SDNode *N,
 /// Constant
 SDDbgValue *SelectionDAG::getConstantDbgValue(MDNode *Var, MDNode *Expr,
                                               const Value *C, uint64_t Off,
-                                              DebugLoc DL, unsigned O) {
+                                              const DebugLoc &DL, unsigned O) {
   assert(cast<DILocalVariable>(Var)->isValidLocationForIntrinsic(DL) &&
          "Expected inlined-at fields to agree");
   return new (DbgInfo->getAlloc()) SDDbgValue(Var, Expr, C, Off, DL, O);
@@ -6287,7 +6262,8 @@ SDDbgValue *SelectionDAG::getConstantDbgValue(MDNode *Var, MDNode *Expr,
 /// FrameIndex
 SDDbgValue *SelectionDAG::getFrameIndexDbgValue(MDNode *Var, MDNode *Expr,
                                                 unsigned FI, uint64_t Off,
-                                                DebugLoc DL, unsigned O) {
+                                                const DebugLoc &DL,
+                                                unsigned O) {
   assert(cast<DILocalVariable>(Var)->isValidLocationForIntrinsic(DL) &&
          "Expected inlined-at fields to agree");
   return new (DbgInfo->getAlloc()) SDDbgValue(Var, Expr, FI, Off, DL, O);
@@ -6359,6 +6335,9 @@ void SelectionDAG::ReplaceAllUsesWith(SDValue FromN, SDValue To) {
     AddModifiedNodeToCSEMaps(User);
   }
 
+  // Preserve Debug Values
+  TransferDbgValues(FromN, To);
+
   // If we just RAUW'd the root, take note.
   if (FromN == getRoot())
     setRoot(To);
@@ -6381,6 +6360,13 @@ void SelectionDAG::ReplaceAllUsesWith(SDNode *From, SDNode *To) {
   // Handle the trivial case.
   if (From == To)
     return;
+
+  // Preserve Debug Info. Only do this if there's a use.
+  for (unsigned i = 0, e = From->getNumValues(); i != e; ++i)
+    if (From->hasAnyUseOfValue(i)) {
+      assert((i < To->getNumValues()) && "Invalid To location");
+      TransferDbgValues(SDValue(From, i), SDValue(To, i));
+    }
 
   // Iterate over just the existing users of From. See the comments in
   // the ReplaceAllUsesWith above.
@@ -6420,6 +6406,10 @@ void SelectionDAG::ReplaceAllUsesWith(SDNode *From, SDNode *To) {
 void SelectionDAG::ReplaceAllUsesWith(SDNode *From, const SDValue *To) {
   if (From->getNumValues() == 1)  // Handle the simple case efficiently.
     return ReplaceAllUsesWith(SDValue(From, 0), To[0]);
+
+  // Preserve Debug Info.
+  for (unsigned i = 0, e = From->getNumValues(); i != e; ++i)
+    TransferDbgValues(SDValue(From, i), *To);
 
   // Iterate over just the existing users of From. See the comments in
   // the ReplaceAllUsesWith above.
@@ -6464,6 +6454,9 @@ void SelectionDAG::ReplaceAllUsesOfValueWith(SDValue From, SDValue To){
     ReplaceAllUsesWith(From, To);
     return;
   }
+
+  // Preserve Debug Info.
+  TransferDbgValues(From, To);
 
   // Iterate over just the existing users of From. See the comments in
   // the ReplaceAllUsesWith above.
@@ -6538,6 +6531,8 @@ void SelectionDAG::ReplaceAllUsesOfValuesWith(const SDValue *From,
   // Handle the simple, trivial case efficiently.
   if (Num == 1)
     return ReplaceAllUsesOfValueWith(*From, *To);
+
+  TransferDbgValues(*From, *To);
 
   // Read up all the uses and make records of them. This helps
   // processing new uses that are introduced during the
@@ -6687,28 +6682,26 @@ void SelectionDAG::AddDbgValue(SDDbgValue *DB, SDNode *SD, bool isParameter) {
   DbgInfo->add(DB, SD, isParameter);
 }
 
-/// TransferDbgValues - Transfer SDDbgValues.
+/// TransferDbgValues - Transfer SDDbgValues. Called in replace nodes.
 void SelectionDAG::TransferDbgValues(SDValue From, SDValue To) {
   if (From == To || !From.getNode()->getHasDebugValue())
     return;
   SDNode *FromNode = From.getNode();
   SDNode *ToNode = To.getNode();
   ArrayRef<SDDbgValue *> DVs = GetDbgValues(FromNode);
-  SmallVector<SDDbgValue *, 2> ClonedDVs;
   for (ArrayRef<SDDbgValue *>::iterator I = DVs.begin(), E = DVs.end();
        I != E; ++I) {
     SDDbgValue *Dbg = *I;
-    if (Dbg->getKind() == SDDbgValue::SDNODE) {
+    // Only add Dbgvalues attached to same ResNo.
+    if (Dbg->getKind() == SDDbgValue::SDNODE &&
+        Dbg->getResNo() == From.getResNo()) {
       SDDbgValue *Clone =
           getDbgValue(Dbg->getVariable(), Dbg->getExpression(), ToNode,
                       To.getResNo(), Dbg->isIndirect(), Dbg->getOffset(),
                       Dbg->getDebugLoc(), Dbg->getOrder());
-      ClonedDVs.push_back(Clone);
+      AddDbgValue(Clone, ToNode, false);
     }
   }
-  for (SmallVectorImpl<SDDbgValue *>::iterator I = ClonedDVs.begin(),
-         E = ClonedDVs.end(); I != E; ++I)
-    AddDbgValue(*I, ToNode, false);
 }
 
 //===----------------------------------------------------------------------===//
@@ -6744,20 +6737,22 @@ HandleSDNode::~HandleSDNode() {
 }
 
 GlobalAddressSDNode::GlobalAddressSDNode(unsigned Opc, unsigned Order,
-                                         DebugLoc DL, const GlobalValue *GA,
-                                         EVT VT, int64_t o, unsigned char TF)
-  : SDNode(Opc, Order, DL, getSDVTList(VT)), Offset(o), TargetFlags(TF) {
+                                         const DebugLoc &DL,
+                                         const GlobalValue *GA, EVT VT,
+                                         int64_t o, unsigned char TF)
+    : SDNode(Opc, Order, DL, getSDVTList(VT)), Offset(o), TargetFlags(TF) {
   TheGlobal = GA;
 }
 
-AddrSpaceCastSDNode::AddrSpaceCastSDNode(unsigned Order, DebugLoc dl, EVT VT,
-                                         unsigned SrcAS, unsigned DestAS)
+AddrSpaceCastSDNode::AddrSpaceCastSDNode(unsigned Order, const DebugLoc &dl,
+                                         EVT VT, unsigned SrcAS,
+                                         unsigned DestAS)
     : SDNode(ISD::ADDRSPACECAST, Order, dl, getSDVTList(VT)),
       SrcAddrSpace(SrcAS), DestAddrSpace(DestAS) {}
 
-MemSDNode::MemSDNode(unsigned Opc, unsigned Order, DebugLoc dl, SDVTList VTs,
-                     EVT memvt, MachineMemOperand *mmo)
- : SDNode(Opc, Order, dl, VTs), MemoryVT(memvt), MMO(mmo) {
+MemSDNode::MemSDNode(unsigned Opc, unsigned Order, const DebugLoc &dl,
+                     SDVTList VTs, EVT memvt, MachineMemOperand *mmo)
+    : SDNode(Opc, Order, dl, VTs), MemoryVT(memvt), MMO(mmo) {
   SubclassData = encodeMemSDNodeFlags(0, ISD::UNINDEXED, MMO->isVolatile(),
                                       MMO->isNonTemporal(), MMO->isInvariant());
   assert(isVolatile() == MMO->isVolatile() && "Volatile encoding error!");

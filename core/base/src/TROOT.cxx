@@ -421,6 +421,7 @@ namespace Internal {
    void EnableImplicitMT(UInt_t numthreads)
    {
 #ifdef R__USE_IMT
+      EnableThreadSafety();
       static void (*sym)(UInt_t) = (void(*)(UInt_t))Internal::GetSymInLibThread("ROOT_TImplicitMT_EnableImplicitMT");
       if (sym)
          sym(numthreads);

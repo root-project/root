@@ -1429,9 +1429,8 @@ DEF_TRAVERSE_DECL(ObjCMethodDecl, {
   if (D->getReturnTypeSourceInfo()) {
     TRY_TO(TraverseTypeLoc(D->getReturnTypeSourceInfo()->getTypeLoc()));
   }
-  for (ObjCMethodDecl::param_iterator I = D->param_begin(), E = D->param_end();
-       I != E; ++I) {
-    TRY_TO(TraverseDecl(*I));
+  for (ParmVarDecl *Parameter : D->parameters()) {
+    TRY_TO(TraverseDecl(Parameter));
   }
   if (D->isThisDeclarationADefinition()) {
     TRY_TO(TraverseStmt(D->getBody()));
@@ -1466,6 +1465,8 @@ DEF_TRAVERSE_DECL(UsingDirectiveDecl, {
 })
 
 DEF_TRAVERSE_DECL(UsingShadowDecl, {})
+
+DEF_TRAVERSE_DECL(ConstructorUsingShadowDecl, {})
 
 DEF_TRAVERSE_DECL(OMPThreadPrivateDecl, {
   for (auto *I : D->varlists()) {
@@ -1832,10 +1833,9 @@ bool RecursiveASTVisitor<Derived>::TraverseFunctionHelper(FunctionDecl *D) {
     // if the traverser is visiting implicit code. Parameter variable
     // declarations do not have valid TypeSourceInfo, so to visit them
     // we need to traverse the declarations explicitly.
-    for (FunctionDecl::param_const_iterator I = D->param_begin(),
-                                            E = D->param_end();
-         I != E; ++I)
-      TRY_TO(TraverseDecl(*I));
+    for (ParmVarDecl *Parameter : D->parameters()) {
+      TRY_TO(TraverseDecl(Parameter));
+    }
   }
 
   if (CXXConstructorDecl *Ctor = dyn_cast<CXXConstructorDecl>(D)) {
@@ -2268,6 +2268,7 @@ DEF_TRAVERSE_STMT(CXXDefaultArgExpr, {})
 DEF_TRAVERSE_STMT(CXXDefaultInitExpr, {})
 DEF_TRAVERSE_STMT(CXXDeleteExpr, {})
 DEF_TRAVERSE_STMT(ExprWithCleanups, {})
+DEF_TRAVERSE_STMT(CXXInheritedCtorInitExpr, {})
 DEF_TRAVERSE_STMT(CXXNullPtrLiteralExpr, {})
 DEF_TRAVERSE_STMT(CXXStdInitializerListExpr, {})
 DEF_TRAVERSE_STMT(CXXPseudoDestructorExpr, {
@@ -2512,6 +2513,15 @@ DEF_TRAVERSE_STMT(OMPTaskLoopSimdDirective,
                   { TRY_TO(TraverseOMPExecutableDirective(S)); })
 
 DEF_TRAVERSE_STMT(OMPDistributeDirective,
+                  { TRY_TO(TraverseOMPExecutableDirective(S)); })
+
+DEF_TRAVERSE_STMT(OMPDistributeParallelForDirective,
+                  { TRY_TO(TraverseOMPExecutableDirective(S)); })
+
+DEF_TRAVERSE_STMT(OMPDistributeParallelForSimdDirective,
+                  { TRY_TO(TraverseOMPExecutableDirective(S)); })
+
+DEF_TRAVERSE_STMT(OMPDistributeSimdDirective,
                   { TRY_TO(TraverseOMPExecutableDirective(S)); })
 
 // OpenMP clauses.

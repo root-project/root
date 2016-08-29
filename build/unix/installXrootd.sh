@@ -44,10 +44,11 @@ printhelp()
         echo "                 full local path to source tarball"
         echo "   -v <version>, --version=<version>"
         echo "                 version in the form x.j.w[-hash-or-tag] ;"
-        echo "                 current default 3.2.7"
+        echo "                 current default 4.3.0"
         echo "   --xrdopts=<opts-to-xrootd>"
-        echo "                 additional configuration options to xrootd"
-        echo "                 (see xrootd web site)"
+        echo "                 additional configuration options to xrootd; pass one switch per each"
+        echo "                 additional option, i.e. --xrdopts=\"add-opt-1\" --xrdopts=\"add-opt-2\""
+        echo "                 (see xrootd web site for available options)"
         echo "   --no-vers-subdir install in <installdir> instead of <installdir>/xrootd-<version>"
         echo "                 (or <installdir>/<version-root><version>, see --vers-subdir"
         echo "   --vers-subdir[=<version-root>]"
@@ -133,7 +134,7 @@ for i in $@ ; do
          version=*)  VERS="$oarg" ;;
          vers-subdir) VSUBDIR="xrootd-" ;;
          vers-subdir=*) VSUBDIR="$oarg" ;;
-         xrdopts=*)  XRDOPTS="$oarg" ;;
+         xrdopts=*)  XRDOPTS="$XRDOPTS $oarg" ;;
          keep)       KEEP="yes" ;;
          bzip2)      UNZIP="bunzip2" ; TUNZIP="xjf" ;;
       esac

@@ -39,10 +39,10 @@
          NativeArray : true // when true, native arrays like Int32Array or Float64Array are used
    };
 
-   JSROOT.fUserStreamers = null; // map of user-streamer function like func(buf,obj,prop,streamerinfo)
+// map of user-streamer function like func(buf,obj)
+   JSROOT.fUserStreamers = {};
 
    JSROOT.addUserStreamer = function(type, user_streamer) {
-      if (JSROOT.fUserStreamers == null) JSROOT.fUserStreamers = {};
       JSROOT.fUserStreamers[type] = user_streamer;
    }
 
@@ -250,6 +250,7 @@
             for (var i = 0; i < n; ++i)
                array[i] = this.ntoi1();
             break;
+         case JSROOT.IO.kBool:
          case JSROOT.IO.kUChar:
             array = JSROOT.IO.NativeArray ? new Uint8Array(n) : new Array(n);
             for (var i = 0; i < n; ++i)
@@ -270,8 +271,11 @@
    }
 
    JSROOT.IO.GetArrayKind = function(type_name) {
-      if (type_name.length < 7) return -1;
-      if (type_name.indexOf("TArray")!=0) return -1;
+      // returns type of array
+      // 0 - if TString (or equivalent)
+      // -1 - if any other kind
+      if ((type_name === "TString") || (JSROOT.fUserStreamers[type_name] === 'TString')) return 0;
+      if ((type_name.length < 7) || (type_name.indexOf("TArray")!==0)) return -1;
       if (type_name.length == 7)
          switch (type_name.charAt(6)) {
             case 'I': return JSROOT.IO.kInt;
@@ -417,6 +421,7 @@
       var streamer = this.fFile.GetStreamer(classname);
 
       if (streamer !== null) {
+
          var ver = this.ReadVersion();
 
          for (var n = 0; n < streamer.length; ++n)
@@ -424,6 +429,7 @@
 
          this.CheckBytecount(ver, classname);
          // methods will be assigned by last entry in the streamer
+
       }
       else if (classname == 'TQObject') {
          // skip TQObject
@@ -433,6 +439,8 @@
          JSROOT.addMethods(obj);
       } else {
          // just skip bytes belonging to not-recognized object
+         // console.warn('skip object ', classname);
+
          var ver = this.ReadVersion();
          this.CheckBytecount(ver);
          JSROOT.addMethods(obj);
@@ -1167,6 +1175,9 @@
       lst._typename = "TStreamerInfoList";
 
       this.fStreamerInfos = lst;
+
+      if (typeof JSROOT.addStreamerInfos === 'function')
+         JSROOT.addStreamerInfos(lst);
    }
 
 
@@ -1309,7 +1320,7 @@
       var methods = JSROOT.getMethods(clname);
       if (methods !== null)
          for (var key in methods)
-            if (typeof methods[key] === 'function')
+            if ((typeof methods[key] === 'function') || (key.indexOf("_")==0))
                streamer.push({
                  name: key,
                  method: methods[key],
@@ -1325,6 +1336,14 @@
 
       var streamer = this.fStreamers[clname];
       if (streamer !== undefined) return streamer;
+
+      // check element in streamer infos, one can have special cases
+      var s_i = null;
+      if (this.fStreamerInfos)
+         for (var i=0; i < this.fStreamerInfos.arr.length; ++i)
+            if (this.fStreamerInfos.arr[i].fName == clname)  {
+               s_i = this.fStreamerInfos.arr[i]; break;
+            }
 
       if (clname == 'TQObject' || clname == "TBasket") {
          // these are special cases, which are handled separately
@@ -1381,7 +1400,7 @@
             list.arr = new Array();
             var ver = buf.last_read_version;
             if (ver > 2)
-               buf.buf.ClassStreamer(list, "TObject");
+               buf.ClassStreamer(list, "TObject");
             if (ver > 1)
                list.name = buf.ReadTString();
             var s = buf.ReadTString();
@@ -1442,7 +1461,7 @@
          return this.AddMethods(clname, streamer);
       }
 
-      if (clname == 'TObjArray') {
+      if (clname == 'TObjArray')  {
          streamer.push({ func : function(buf, list) {
             list._typename = "TObjArray";
             list.name = "";
@@ -1478,6 +1497,17 @@
                marker.fName = buf.ReadTString();
             else
                marker.fName = "TPolyMarker3D";
+         }});
+         return this.AddMethods(clname, streamer);
+      }
+
+      if ((clname == 'TObjString') && !s_i) {
+         // special case when TObjString was stored inside streamer infos,
+         // than streamer cannot be normally generated
+         streamer.push({ func : function(buf, obj) {
+            obj._typename = "TObjString";
+            buf.ClassStreamer(obj, "TObject");
+            obj.fString = buf.ReadTString();
          }});
          return this.AddMethods(clname, streamer);
       }
@@ -1585,14 +1615,9 @@
          return this.AddMethods(clname, streamer);
       }
 
-      var s_i = null;
-      if (this.fStreamerInfos)
-         for (var i=0; i < this.fStreamerInfos.arr.length; ++i)
-            if (this.fStreamerInfos.arr[i].fName == clname)  {
-               s_i = this.fStreamerInfos.arr[i]; break;
-            }
       if (s_i == null) {
          delete this.fStreamers[clname];
+         // console.warn('did not find streamer for ', clname);
          return null;
       }
 
@@ -1630,6 +1655,7 @@
             case JSROOT.IO.kAnyP:
             case JSROOT.IO.kObjectP:
                member.func = function(buf,obj) { obj[this.name] = buf.ReadObjectAny(); }; break;
+            case JSROOT.IO.kOffsetL+JSROOT.IO.kBool:
             case JSROOT.IO.kOffsetL+JSROOT.IO.kInt:
             case JSROOT.IO.kOffsetL+JSROOT.IO.kDouble:
             case JSROOT.IO.kOffsetL+JSROOT.IO.kShort:
@@ -1678,6 +1704,7 @@
                   };
                }
                break;
+            case JSROOT.IO.kOffsetP+JSROOT.IO.kBool:
             case JSROOT.IO.kOffsetP+JSROOT.IO.kInt:
             case JSROOT.IO.kOffsetP+JSROOT.IO.kDouble:
             case JSROOT.IO.kOffsetP+JSROOT.IO.kUChar:
@@ -1714,6 +1741,9 @@
                   member.func = function(buf, obj) {
                      obj[this.name] = buf.ReadFastArray(buf.ntou4(), this.arrkind);
                   };
+               } else
+               if (arrkind === 0) {
+                  member.func = function(buf,obj) { obj[this.name] = buf.ReadTString(); };
                } else {
                   member.classname = classname;
                   member.func = function(buf, obj) {
@@ -1739,6 +1769,13 @@
                      for (var k=0;k<this.arrlength;++k)
                         obj[this.name].push(buf.ReadFastArray(buf.ntou4(), this.arrkind));
                   };
+               } else
+               if (arrkind === 0) {
+                  member.func = function(buf, obj) {
+                     obj[this.name] = [];
+                     for (var k=0;k<this.arrlength;++k)
+                        obj[this.name].push(buf.ReadTString());
+                  }
                } else {
                   member.classname = classname;
                   member.func = function(buf, obj) {
@@ -1790,6 +1827,12 @@
                      for (var i = 0; i < cnt; ++i )
                         res[i] = buf.ReadTString();
                   } else
+                  if (this.typename == "TList*") {
+                     var cnt = obj[this.cntname];
+                     res = new Array(cnt);
+                     for (var i = 0; i < cnt; ++i)
+                        res[i] = buf.ClassStreamer({}, "TList");
+                  } else
                   if (this.typename == "vector<double>") res = buf.ReadFastArray(buf.ntoi4(),JSROOT.IO.kDouble); else
                   if (this.typename == "vector<int>") res = buf.ReadFastArray(buf.ntoi4(),JSROOT.IO.kInt); else
                   if (this.typename == "vector<float>") res = buf.ReadFastArray(buf.ntoi4(),JSROOT.IO.kFloat); else
@@ -1820,8 +1863,10 @@
                   member.func = JSROOT.fUserStreamers[element.fTypeName];
 
                if (typeof member.func !== 'function') {
-                  alert('failed to provide function for ' + element.fName + ' (' + element.fTypeName + ')  typ = ' + element.fType);
+                  JSROOT.console('fail to provide function for ' + element.fName + ' (' + element.fTypeName + ')  typ = ' + element.fType);
                   member.func = function(buf,obj) {};  // do nothing, fix in the future
+               } else {
+                  member.element = element; // one can use element in the custom function
                }
          }
 

@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_tree
-///
+/// \notebook -nodraw
 /// Copy a subset of a Tree to a new Tree, one branch in a separate file
 ///
 /// One branch of the new Tree is written to a separate file
@@ -14,8 +14,12 @@ void copytree2() {
    gSystem->Load("$ROOTSYS/test/libEvent");
 
    //Get old file, old tree and set top branch address
-   TFile *oldfile = new TFile("$ROOTSYS/test/Event.root");
-   TTree *oldtree = (TTree*)oldfile->Get("T");
+   TFile *oldfile;
+   TString dir = "$ROOTSYS/test/Event.root";
+   gSystem->ExpandPathName(dir);
+   if (!gSystem->AccessPathName(dir))
+       {oldfile = new TFile("$ROOTSYS/test/Event.root");}
+   else {oldfile = new TFile("./Event.root");}   TTree *oldtree = (TTree*)oldfile->Get("T");
    Event *event   = new Event();
    oldtree->SetBranchAddress("event",&event);
    oldtree->SetBranchStatus("*",0);

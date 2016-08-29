@@ -56,7 +56,7 @@ namespace BidirMMapPipe_impl {
 	    static unsigned s_pagesize; ///< system page size (run-time determined)
 	    /// mmap variety that works on this system
 	    static MMapVariety s_mmapworks;
-	
+
 	    /// convenience typedef
 	    typedef BidirMMapPipeException Exception;
 
@@ -257,7 +257,7 @@ namespace BidirMMapPipe_impl {
  *
  * Technicalities:
  * - there is a pool of mmapped pages, half the pages are allocated to the
- *   parent process, half to the child 
+ *   parent process, half to the child
  * - when one side has accumulated enough data (or a flush forces dirty pages
  *   out to the other end), it sends these pages to the other end by writing a
  *   byte containing the page number into the pipe
@@ -315,11 +315,11 @@ namespace BidirMMapPipe_impl {
  *     }
  *     // send shutdown request acknowledged
  *     pipe << "" << BidirMMapPipe::flush;
- *     
+ *
  *     pipe.close();
  *     return 0;
  * }
- *  
+ *
  * BidirMMapPipe* spawnChild(int (*childexec)(BidirMMapPipe&))
  * {
  *     BidirMMapPipe *p = new BidirMMapPipe();
@@ -330,7 +330,7 @@ namespace BidirMMapPipe_impl {
  *     }
  *     return p;
  * }
- *  
+ *
  * int main()
  * {
  *     std::cout << "[PARENT]: simple challenge-response test, one child:" <<
@@ -421,6 +421,18 @@ class BidirMMapPipe {
 	 * closes this end of pipe
 	 */
 	~BidirMMapPipe();
+
+	/** @brief return the current setting of the debug flag
+	 *
+	 * @returns an integer with the debug Setting
+	 */
+	static int debugflag() { return s_debugflag; }
+
+	/** @brief set the debug flags
+	 *
+	 * @param flag 	debug flags (if zero, no messages are printed)
+	 */
+	static void setDebugflag(int flag) { s_debugflag = flag; }
 
 	/** @brief read from pipe
 	 *
@@ -585,7 +597,7 @@ class BidirMMapPipe {
          *     pipe.close();
          *     return 0;
          * }
-         * 
+         *
 	 * // function to spawn a child
          * BidirMMapPipe* spawnChild(int (*childexec)(BidirMMapPipe&))
          * {
@@ -597,7 +609,7 @@ class BidirMMapPipe {
          *     }
          *     return p;
          * }
-         * 
+         *
          * int main()
          * {
          *     typedef BidirMMapPipe::PollEntry PollEntry;
@@ -747,7 +759,7 @@ class BidirMMapPipe {
 	STREAMOP(short); ///< C++ style stream operators for short
 	STREAMOP(int); ///< C++ style stream operators for int
 	STREAMOP(long); ///< C++ style stream operators for long
-	STREAMOP(long long); ///< C++ style stream operators for long long 
+	STREAMOP(long long); ///< C++ style stream operators for long long
 	STREAMOP(unsigned char); ///< C++ style stream operators for unsigned char
 	STREAMOP(unsigned short); ///< C++ style stream operators for unsigned short
 	STREAMOP(unsigned int); ///< C++ style stream operators for unsigned int
@@ -813,7 +825,7 @@ class BidirMMapPipe {
 
 	/** @brief I/O manipulator support
 	 *
-	 * @param f manipulator
+	 * @param manip manipulator
 	 * @returns pipe with manipulator applied
 	 *
 	 * example:
@@ -826,7 +838,7 @@ class BidirMMapPipe {
 
 	/** @brief I/O manipulator support
 	 *
-	 * @param f manipulator
+	 * @param manip manipulator
 	 * @returns pipe with manipulator applied
 	 *
 	 * example:
@@ -852,7 +864,7 @@ class BidirMMapPipe {
 	friend class BidirMMapPipe_impl::Page;
 	/// convenience typedef for Page
 	typedef BidirMMapPipe_impl::Page Page;
-	
+
 	/// tuning constants
 	enum {
 	    // TotPages = 16 will give 32k buffers at 4k page size for both
@@ -875,6 +887,8 @@ class BidirMMapPipe {
 	static BidirMMapPipe_impl::PagePool* s_pagepool;
 	/// page pool reference counter
 	static unsigned s_pagepoolrefcnt;
+	/// debug flag
+	static int s_debugflag;
 
 	/// return page pool
 	static BidirMMapPipe_impl::PagePool& pagepool();

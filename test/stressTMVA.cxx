@@ -1821,7 +1821,7 @@ void utVariableInfo::_testConstructor2()
    test_(_varinfoC2->GetExpression()  == "");
    //  test_(_varinfoC2->GetInternalName() == );
    //  test_(_varinfoC2->GetLabel()
-   test_(_varinfoC2->GetTitle()   == "");
+   test_(_varinfoC2->GetTitle()   == TString(""));
    test_(_varinfoC2->GetUnit()    == "");
    test_(_varinfoC2->GetVarType() == '\0');
 

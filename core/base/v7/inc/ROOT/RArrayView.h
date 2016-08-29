@@ -1,4 +1,4 @@
-/// \file RArrayView.h
+/// \file ROOT/RArrayView.h
 /// \ingroup Base StdExt ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-09-06

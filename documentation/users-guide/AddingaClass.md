@@ -381,7 +381,7 @@ order:
 ``` {.cpp}
 MyClass(UserClass1*);
 MyClass(UserClass2*);
-MyClass(TRootIoCtor*);
+MyClass(TRootIOCtor*);
 MyClass();   // Or a constructor with all its arguments defaulted.
 ```
 
@@ -803,8 +803,8 @@ access, but not for virtual function resolution.
 If you use the '`namespace`' flag, it is recommended to add also:
 
 ``` {.cpp}
-#pragma link nestedclass;
-#pragma link nestedtypedef;
+#pragma link C++ nestedclass;
+#pragma link C++ nestedtypedef;
 ```
 
 The behavior of '`class`', '`struct`' and '`namespace`' flag are

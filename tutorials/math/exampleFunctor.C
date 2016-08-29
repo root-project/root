@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_math
+/// \notebook
 /// Tutorial illustrating how creating a TF1 class using functor or class member functions
 ///
 /// can be run with:
@@ -58,8 +59,9 @@ void exampleFunctor() {
 
    // in order to work with interpreter the function object must be created and lived all time for all time
    // of the TF1. In compiled mode, the function object can be passed by value (recommended) and there
-   // is also no need to specify the type of the function class. Example is as follow:
-   // TF1 * f2 = new TF1("f2",MyDerivFunc(f1), xmin, xmax,0); // only for C++ compiled mode
+   // is also no need to specify the type of the function class. Example is as follows:
+   //
+   // `TF1 * f2 = new TF1("f2",MyDerivFunc(f1), xmin, xmax,0); // only for C++ compiled mode`
 
    MyDerivFunc * deriv = new MyDerivFunc(f1);
    TF1 * f2 = new TF1("f2",deriv, xmin, xmax, 0);
@@ -74,7 +76,8 @@ void exampleFunctor() {
    // in order to work with interpreter the function object must be created and lived all time for all time
    // of the TF1. In compiled mode there is no need to specify the type of the function class and the name
    // of the member function
-   // TF1 * f3 = new TF1("f3",intg,&MyIntegFunc::Integral,xmin,xmax, 0); // only for C++ compiled mode
+   //
+   // `TF1 * f3 = new TF1("f3",intg,&MyIntegFunc::Integral,xmin,xmax, 0); // only for C++ compiled mode`
 
    MyIntegFunc * intg = new MyIntegFunc(f1);
    TF1 * f3 = new TF1("f3",intg,&MyIntegFunc::Integral, xmin, xmax, 0);

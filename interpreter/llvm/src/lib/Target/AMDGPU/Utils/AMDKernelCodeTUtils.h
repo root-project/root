@@ -17,21 +17,22 @@
 namespace llvm {
 
 class MCAsmLexer;
+class MCAsmParser;
 class raw_ostream;
 class StringRef;
 
-void printAmdKernelCodeField(const amd_kernel_code_t& C,
+void printAmdKernelCodeField(const amd_kernel_code_t &C,
   int FldIndex,
-  raw_ostream& OS);
+  raw_ostream &OS);
 
-void dumpAmdKernelCode(const amd_kernel_code_t* C,
-  raw_ostream& OS,
-  const char* tab);
+void dumpAmdKernelCode(const amd_kernel_code_t *C,
+  raw_ostream &OS,
+  const char *tab);
 
 bool parseAmdKernelCodeField(StringRef ID,
-  MCAsmLexer& Lexer,
-  amd_kernel_code_t& C,
-  raw_ostream& Err);
+  MCAsmParser &Parser,
+  amd_kernel_code_t &C,
+  raw_ostream &Err);
 
 }
 

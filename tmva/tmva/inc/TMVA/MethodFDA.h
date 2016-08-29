@@ -68,12 +68,10 @@ namespace TMVA {
       MethodFDA( const TString& jobName,
                  const TString& methodTitle,
                  DataSetInfo& theData,
-                 const TString& theOption = "",
-                 TDirectory* theTargetDir = 0 );
+                 const TString& theOption = "");
 
       MethodFDA( DataSetInfo& theData,
-                 const TString& theWeightFile,
-                 TDirectory* theTargetDir = NULL );
+                 const TString& theWeightFile);
 
       virtual ~MethodFDA( void );
 

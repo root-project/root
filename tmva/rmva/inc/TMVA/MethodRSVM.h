@@ -39,12 +39,10 @@ namespace TMVA {
       MethodRSVM(const TString &jobName,
                  const TString &methodTitle,
                  DataSetInfo &theData,
-                 const TString &theOption = "",
-                 TDirectory *theTargetDir = NULL);
+                 const TString &theOption = "");
 
       MethodRSVM(DataSetInfo &dsi,
-                 const TString &theWeightFile,
-                 TDirectory *theTargetDir = NULL);
+                 const TString &theWeightFile);
 
 
       ~MethodRSVM(void);

@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_io
+/// \notebook -nodraw
 /// Example of script showing how to create a ROOT file with subdirectories.
 /// The script scans a given directory tree and recreates the same structure in the ROOT file.
 /// All source files of type .h,cxx,c,dat,py are imported as TMacro objects.
@@ -53,6 +54,7 @@ void importdir(const char *dirname) {
 }
 void importCode() {
    TFile *f = new TFile("code.root","recreate");
-   importdir("../tutorials"); //change the directory as you like
+   TString dir = gROOT->GetTutorialsDir();
+   importdir(dir); //change the directory as you like
    delete f;
 }

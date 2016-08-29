@@ -22,6 +22,7 @@
 #include "llvm/MC/MCELFObjectWriter.h"
 #include "llvm/MC/MCFixupKindInfo.h"
 #include "llvm/MC/MCInstrInfo.h"
+#include "llvm/MC/MCObjectWriter.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/TargetRegistry.h"
 
@@ -416,12 +417,12 @@ public:
     uint32_t Offset = Fixup.getOffset();
     unsigned NumBytes = getFixupKindNumBytes(Kind);
     assert(Offset + NumBytes <= DataSize && "Invalid fixup offset!");
-    char* InstAddr = Data + Offset;
+    char *InstAddr = Data + Offset;
 
     Value = adjustFixupValue(Kind, FixupValue);
     if(!Value)
       return;
-    signed sValue = (signed)Value;
+    int sValue = (int)Value;
 
     switch((unsigned)Kind) {
       default:
