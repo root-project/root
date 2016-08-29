@@ -91,7 +91,7 @@ TMVA::OptimizeConfigParameters::OptimizeConfigParameters(MethodBase * const meth
 
 TMVA::OptimizeConfigParameters::~OptimizeConfigParameters() 
 {
-   GetMethod()->BaseDir()->cd();
+   if(!GetMethod()->IsSilentFile()) GetMethod()->BaseDir()->cd();
    Int_t n=Int_t(fFOMvsIter.size());
    Float_t *x = new Float_t[n];
    Float_t *y = new Float_t[n];
@@ -110,8 +110,8 @@ TMVA::OptimizeConfigParameters::~OptimizeConfigParameters()
    h->SetYTitle(fFOMType);
    TGraph *gFOMvsIter = new TGraph(n,x,y);
    gFOMvsIter->SetName((TString(GetMethod()->GetName())+"_FOMvsIter").Data());
-   gFOMvsIter->Write();
-   h->Write();
+   if(!GetMethod()->IsSilentFile()) gFOMvsIter->Write();
+   if(!GetMethod()->IsSilentFile()) h->Write();
 
    delete [] x;
    delete [] y;
@@ -210,7 +210,7 @@ void TMVA::OptimizeConfigParameters::optimizeScan()
       GetMethod()->Reset();
       GetMethod()->SetTuneParameters(currentParameters);
       // now do the training for the current parameters:
-      GetMethod()->BaseDir()->cd();
+      if(!GetMethod()->IsSilentFile()) GetMethod()->BaseDir()->cd();
       if (i==0) GetMethod()->GetTransformationHandler().CalcTransformations(
                                                                             GetMethod()->Data()->GetEventCollection());
       Event::SetIsTraining(kTRUE);
@@ -316,7 +316,7 @@ Double_t TMVA::OptimizeConfigParameters::EstimatorFunction( std::vector<Double_t
       }
       GetMethod()->Reset();
       GetMethod()->SetTuneParameters(currentParameters);
-      GetMethod()->BaseDir()->cd();
+      if(!GetMethod()->IsSilentFile()) GetMethod()->BaseDir()->cd();
       
       if (fNotDoneYet){
          GetMethod()->GetTransformationHandler().
