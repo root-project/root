@@ -3486,11 +3486,11 @@ TList *TClass::GetListOfBases()
 ////////////////////////////////////////////////////////////////////////////////
 /// Return list containing the TEnums of a class.
 
-TList *TClass::GetListOfEnums(Bool_t load /* = kTRUE */)
+TList *TClass::GetListOfEnums(Bool_t requestListLoading /* = kTRUE */)
 {
    auto temp = fEnums.load();
    if (temp) {
-      if (load) {
+      if (requestListLoading) {
          if (fProperty == -1) Property();
          if (! ((kIsClass | kIsStruct | kIsUnion) & fProperty) ) {
             R__LOCKGUARD2(gROOTMutex);
@@ -3500,7 +3500,7 @@ TList *TClass::GetListOfEnums(Bool_t load /* = kTRUE */)
       return temp;
    }
 
-   if (!load) {
+   if (!requestListLoading) {
       if (fProperty == -1) Property();
       if (! ((kIsClass | kIsStruct | kIsUnion) & fProperty) ) {
          R__LOCKGUARD(gInterpreterMutex);
