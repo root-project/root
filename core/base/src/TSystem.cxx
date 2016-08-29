@@ -3002,7 +3002,8 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          sub.Remove(0,3); // Remove ' -I'
          AssignAndDelete( sub, ConcatFileName( WorkingDirectory(), sub ) );
          sub.Prepend(" -I\"");
-         sub.Append("\"");
+         sub.Chop(); // Remove trailing space (i.e between the -Is ...
+         sub.Append("\" ");
          includes.Replace(pos,len,sub);
          pos = rel_inc.Index(includes,&len);
       }
