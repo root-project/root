@@ -69,14 +69,20 @@ sys::TimeValue ArchiveMemberHeader::getLastModified() const {
 
 unsigned ArchiveMemberHeader::getUID() const {
   unsigned Ret;
-  if (StringRef(UID, sizeof(UID)).rtrim(' ').getAsInteger(10, Ret))
+  StringRef User = StringRef(UID, sizeof(UID)).rtrim(' ');
+  if (User.empty())
+    return 0;
+  if (User.getAsInteger(10, Ret))
     llvm_unreachable("UID time not a decimal number.");
   return Ret;
 }
 
 unsigned ArchiveMemberHeader::getGID() const {
   unsigned Ret;
-  if (StringRef(GID, sizeof(GID)).rtrim(' ').getAsInteger(10, Ret))
+  StringRef Group = StringRef(GID, sizeof(GID)).rtrim(' ');
+  if (Group.empty())
+    return 0;
+  if (Group.getAsInteger(10, Ret))
     llvm_unreachable("GID time not a decimal number.");
   return Ret;
 }
@@ -263,11 +269,11 @@ Archive::Child::getAsBinary(LLVMContext *Context) const {
   return BinaryOrErr.takeError();
 }
 
-ErrorOr<std::unique_ptr<Archive>> Archive::create(MemoryBufferRef Source) {
-  std::error_code EC;
-  std::unique_ptr<Archive> Ret(new Archive(Source, EC));
-  if (EC)
-    return EC;
+Expected<std::unique_ptr<Archive>> Archive::create(MemoryBufferRef Source) {
+  Error Err;
+  std::unique_ptr<Archive> Ret(new Archive(Source, Err));
+  if (Err)
+    return std::move(Err);
   return std::move(Ret);
 }
 
@@ -276,8 +282,9 @@ void Archive::setFirstRegular(const Child &C) {
   FirstRegularStartOfFile = C.StartOfFile;
 }
 
-Archive::Archive(MemoryBufferRef Source, std::error_code &ec)
+Archive::Archive(MemoryBufferRef Source, Error &Err)
     : Binary(Binary::ID_Archive, Source) {
+  ErrorAsOutParameter ErrAsOutParam(Err);
   StringRef Buffer = Data.getBuffer();
   // Check for sufficient magic.
   if (Buffer.startswith(ThinMagic)) {
@@ -285,25 +292,34 @@ Archive::Archive(MemoryBufferRef Source, std::error_code &ec)
   } else if (Buffer.startswith(Magic)) {
     IsThin = false;
   } else {
-    ec = object_error::invalid_file_type;
+    Err = make_error<GenericBinaryError>("File too small to be an archive",
+                                         object_error::invalid_file_type);
     return;
   }
 
   // Get the special members.
   child_iterator I = child_begin(false);
-  if ((ec = I->getError()))
+  std::error_code ec;
+  if ((ec = I->getError())) {
+    Err = errorCodeToError(ec);
     return;
+  }
   child_iterator E = child_end();
 
+  // This is at least a valid empty archive. Since an empty archive is the
+  // same in all formats, just claim it to be gnu to make sure Format is
+  // initialized.
+  Format = K_GNU;
+
   if (I == E) {
-    ec = std::error_code();
+    Err = Error::success();
     return;
   }
   const Child *C = &**I;
 
   auto Increment = [&]() {
     ++I;
-    if ((ec = I->getError()))
+    if ((Err = errorCodeToError(I->getError())))
       return true;
     C = &**I;
     return false;
@@ -330,8 +346,11 @@ Archive::Archive(MemoryBufferRef Source, std::error_code &ec)
   //  seem to create the third member if there's no member whose filename
   //  exceeds 15 characters. So the third member is optional.
 
-  if (Name == "__.SYMDEF") {
-    Format = K_BSD;
+  if (Name == "__.SYMDEF" || Name == "__.SYMDEF_64") {
+    if (Name == "__.SYMDEF")
+      Format = K_BSD;
+    else // Name == "__.SYMDEF_64"
+      Format = K_DARWIN64;
     // We know that the symbol table is not an external file, so we just assert
     // there is no error.
     SymbolTable = *C->getBuffer();
@@ -339,7 +358,7 @@ Archive::Archive(MemoryBufferRef Source, std::error_code &ec)
       return;
     setFirstRegular(*C);
 
-    ec = std::error_code();
+    Err = Error::success();
     return;
   }
 
@@ -348,10 +367,20 @@ Archive::Archive(MemoryBufferRef Source, std::error_code &ec)
     // We know this is BSD, so getName will work since there is no string table.
     ErrorOr<StringRef> NameOrErr = C->getName();
     ec = NameOrErr.getError();
-    if (ec)
+    if (ec) {
+      Err = errorCodeToError(ec);
       return;
+    }
     Name = NameOrErr.get();
     if (Name == "__.SYMDEF SORTED" || Name == "__.SYMDEF") {
+      // We know that the symbol table is not an external file, so we just
+      // assert there is no error.
+      SymbolTable = *C->getBuffer();
+      if (Increment())
+        return;
+    }
+    else if (Name == "__.SYMDEF_64 SORTED" || Name == "__.SYMDEF_64") {
+      Format = K_DARWIN64;
       // We know that the symbol table is not an external file, so we just
       // assert there is no error.
       SymbolTable = *C->getBuffer();
@@ -378,7 +407,7 @@ Archive::Archive(MemoryBufferRef Source, std::error_code &ec)
     if (Increment())
       return;
     if (I == E) {
-      ec = std::error_code();
+      Err = Error::success();
       return;
     }
     Name = C->getRawName();
@@ -392,19 +421,19 @@ Archive::Archive(MemoryBufferRef Source, std::error_code &ec)
     if (Increment())
       return;
     setFirstRegular(*C);
-    ec = std::error_code();
+    Err = Error::success();
     return;
   }
 
   if (Name[0] != '/') {
     Format = has64SymTable ? K_MIPS64 : K_GNU;
     setFirstRegular(*C);
-    ec = std::error_code();
+    Err = Error::success();
     return;
   }
 
   if (Name != "/") {
-    ec = object_error::parse_failed;
+    Err = errorCodeToError(object_error::parse_failed);
     return;
   }
 
@@ -418,7 +447,7 @@ Archive::Archive(MemoryBufferRef Source, std::error_code &ec)
 
   if (I == E) {
     setFirstRegular(*C);
-    ec = std::error_code();
+    Err = Error::success();
     return;
   }
 
@@ -433,7 +462,7 @@ Archive::Archive(MemoryBufferRef Source, std::error_code &ec)
   }
 
   setFirstRegular(*C);
-  ec = std::error_code();
+  Err = Error::success();
 }
 
 Archive::child_iterator Archive::child_begin(bool SkipInternal) const {
@@ -462,7 +491,7 @@ StringRef Archive::Symbol::getName() const {
 ErrorOr<Archive::Child> Archive::Symbol::getMember() const {
   const char *Buf = Parent->getSymbolTable().begin();
   const char *Offsets = Buf;
-  if (Parent->kind() == K_MIPS64)
+  if (Parent->kind() == K_MIPS64 || Parent->kind() == K_DARWIN64)
     Offsets += sizeof(uint64_t);
   else
     Offsets += sizeof(uint32_t);
@@ -479,6 +508,14 @@ ErrorOr<Archive::Child> Archive::Symbol::getMember() const {
     // the archive of the member that defines the symbol.  Which is what
     // is needed here.
     Offset = read32le(Offsets + SymbolIndex * 8 + 4);
+  } else if (Parent->kind() == K_DARWIN64) {
+    // The SymbolIndex is an index into the ranlib_64 structs that start at
+    // Offsets (the first uint64_t is the number of bytes of the ranlib_64
+    // structs).  The ranlib_64 structs are a pair of uint64_t's the first
+    // being a string table offset and the second being the offset into
+    // the archive of the member that defines the symbol.  Which is what
+    // is needed here.
+    Offset = read64le(Offsets + SymbolIndex * 16 + 8);
   } else {
     // Skip offsets.
     uint32_t MemberCount = read32le(Buf);
@@ -578,6 +615,22 @@ Archive::symbol_iterator Archive::symbol_begin() const {
     // Skip the byte count of the string table.
     buf += sizeof(uint32_t);
     buf += ran_strx;
+  } else if (kind() == K_DARWIN64) {
+    // The __.SYMDEF_64 or "__.SYMDEF_64 SORTED" member starts with a uint64_t
+    // which is the number of bytes of ranlib_64 structs that follow.  The
+    // ranlib_64 structs are a pair of uint64_t's the first being a string
+    // table offset and the second being the offset into the archive of the
+    // member that define the symbol. After that the next uint64_t is the byte
+    // count of the string table followed by the string table.
+    uint64_t ranlib_count = 0;
+    ranlib_count = read64le(buf) / 16;
+    const char *ranlibs = buf + 8;
+    uint64_t ran_strx = 0;
+    ran_strx = read64le(ranlibs);
+    buf += sizeof(uint64_t) + (ranlib_count * (2 * (sizeof(uint64_t))));
+    // Skip the byte count of the string table.
+    buf += sizeof(uint64_t);
+    buf += ran_strx;
   } else {
     uint32_t member_count = 0;
     uint32_t symbol_count = 0;
@@ -604,6 +657,8 @@ uint32_t Archive::getNumberOfSymbols() const {
     return read64be(buf);
   if (kind() == K_BSD)
     return read32le(buf) / 8;
+  if (kind() == K_DARWIN64)
+    return read64le(buf) / 16;
   uint32_t member_count = 0;
   member_count = read32le(buf);
   buf += 4 + (member_count * 4); // Skip offsets.

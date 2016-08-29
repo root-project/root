@@ -30,10 +30,6 @@ INCLUDEFILES += $(FTGLDEP)
 
 FTGLINC		 := -I$(MODDIRI)
 
-ifeq ($(MACOSX_MINOR),3)
-FTGLLIBEXTRA += -lz
-endif
-
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 

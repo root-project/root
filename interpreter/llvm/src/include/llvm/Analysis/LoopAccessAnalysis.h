@@ -513,21 +513,58 @@ class LoopAccessInfo {
 public:
   LoopAccessInfo(Loop *L, ScalarEvolution *SE, const DataLayout &DL,
                  const TargetLibraryInfo *TLI, AliasAnalysis *AA,
-                 DominatorTree *DT, LoopInfo *LI,
-                 const ValueToValueMap &Strides);
+                 DominatorTree *DT, LoopInfo *LI);
+
+  // FIXME:
+  // Hack for MSVC 2013 which sems like it can't synthesize this even 
+  // with default keyword:
+  // LoopAccessInfo(LoopAccessInfo &&LAI) = default;
+  LoopAccessInfo(LoopAccessInfo &&LAI)
+      : PSE(std::move(LAI.PSE)), PtrRtChecking(std::move(LAI.PtrRtChecking)),
+        DepChecker(std::move(LAI.DepChecker)), TheLoop(LAI.TheLoop), DL(LAI.DL),
+        TLI(LAI.TLI), AA(LAI.AA), DT(LAI.DT), LI(LAI.LI),
+        NumLoads(LAI.NumLoads), NumStores(LAI.NumStores),
+        MaxSafeDepDistBytes(LAI.MaxSafeDepDistBytes), CanVecMem(LAI.CanVecMem),
+        StoreToLoopInvariantAddress(LAI.StoreToLoopInvariantAddress),
+        Report(std::move(LAI.Report)),
+        SymbolicStrides(std::move(LAI.SymbolicStrides)),
+        StrideSet(std::move(LAI.StrideSet)) {}
+  // LoopAccessInfo &operator=(LoopAccessInfo &&LAI) = default;
+  LoopAccessInfo &operator=(LoopAccessInfo &&LAI) {
+    assert(this != &LAI);
+
+    PSE = std::move(LAI.PSE);
+    PtrRtChecking = std::move(LAI.PtrRtChecking);
+    DepChecker = std::move(LAI.DepChecker);
+    TheLoop = LAI.TheLoop;
+    DL = LAI.DL;
+    TLI = LAI.TLI;
+    AA = LAI.AA;
+    DT = LAI.DT;
+    LI = LAI.LI;
+    NumLoads = LAI.NumLoads;
+    NumStores = LAI.NumStores;
+    MaxSafeDepDistBytes = LAI.MaxSafeDepDistBytes;
+    CanVecMem = LAI.CanVecMem;
+    StoreToLoopInvariantAddress = LAI.StoreToLoopInvariantAddress;
+    Report = std::move(LAI.Report);
+    SymbolicStrides = std::move(LAI.SymbolicStrides);
+    StrideSet = std::move(LAI.StrideSet);
+    return *this;
+  }
 
   /// Return true we can analyze the memory accesses in the loop and there are
   /// no memory dependence cycles.
   bool canVectorizeMemory() const { return CanVecMem; }
 
   const RuntimePointerChecking *getRuntimePointerChecking() const {
-    return &PtrRtChecking;
+    return PtrRtChecking.get();
   }
 
   /// \brief Number of memchecks required to prove independence of otherwise
   /// may-alias pointers.
   unsigned getNumRuntimePointerChecks() const {
-    return PtrRtChecking.getNumberOfChecks();
+    return PtrRtChecking->getNumberOfChecks();
   }
 
   /// Return true if the block BB needs to be predicated in order for the loop
@@ -566,22 +603,24 @@ public:
 
   /// \brief the Memory Dependence Checker which can determine the
   /// loop-independent and loop-carried dependences between memory accesses.
-  const MemoryDepChecker &getDepChecker() const { return DepChecker; }
+  const MemoryDepChecker &getDepChecker() const { return *DepChecker; }
 
   /// \brief Return the list of instructions that use \p Ptr to read or write
   /// memory.
   SmallVector<Instruction *, 4> getInstructionsForAccess(Value *Ptr,
                                                          bool isWrite) const {
-    return DepChecker.getInstructionsForAccess(Ptr, isWrite);
+    return DepChecker->getInstructionsForAccess(Ptr, isWrite);
   }
+
+  /// \brief If an access has a symbolic strides, this maps the pointer value to
+  /// the stride symbol.
+  const ValueToValueMap &getSymbolicStrides() const { return SymbolicStrides; }
+
+  /// \brief Pointer has a symbolic stride.
+  bool hasStride(Value *V) const { return StrideSet.count(V); }
 
   /// \brief Print the information about the memory accesses in the loop.
   void print(raw_ostream &OS, unsigned Depth = 0) const;
-
-  /// \brief Used to ensure that if the analysis was run with speculating the
-  /// value of symbolic strides, the client queries it with the same assumption.
-  /// Only used in DEBUG build but we don't want NDEBUG-dependent ABI.
-  unsigned NumSymbolicStrides;
 
   /// \brief Checks existence of store to invariant address inside loop.
   /// If the loop has any store to invariant address, then it returns true,
@@ -595,11 +634,11 @@ public:
   /// should be re-written (and therefore simplified) according to PSE.
   /// A user of LoopAccessAnalysis will need to emit the runtime checks
   /// associated with this predicate.
-  PredicatedScalarEvolution PSE;
+  const PredicatedScalarEvolution &getPSE() const { return *PSE; }
 
 private:
-  /// \brief Analyze the loop.  Substitute symbolic strides using Strides.
-  void analyzeLoop(const ValueToValueMap &Strides);
+  /// \brief Analyze the loop.
+  void analyzeLoop();
 
   /// \brief Check if the structure of the loop allows it to be analyzed by this
   /// pass.
@@ -607,16 +646,24 @@ private:
 
   void emitAnalysis(LoopAccessReport &Message);
 
+  /// \brief Collect memory access with loop invariant strides.
+  ///
+  /// Looks for accesses like "a[i * StrideA]" where "StrideA" is loop
+  /// invariant.
+  void collectStridedAccess(Value *LoadOrStoreInst);
+
+  std::unique_ptr<PredicatedScalarEvolution> PSE;
+
   /// We need to check that all of the pointers in this list are disjoint
-  /// at runtime.
-  RuntimePointerChecking PtrRtChecking;
+  /// at runtime. Using std::unique_ptr to make using move ctor simpler.
+  std::unique_ptr<RuntimePointerChecking> PtrRtChecking;
 
   /// \brief the Memory Dependence Checker which can determine the
   /// loop-independent and loop-carried dependences between memory accesses.
-  MemoryDepChecker DepChecker;
+  std::unique_ptr<MemoryDepChecker> DepChecker;
 
   Loop *TheLoop;
-  const DataLayout &DL;
+  const DataLayout *DL;
   const TargetLibraryInfo *TLI;
   AliasAnalysis *AA;
   DominatorTree *DT;
@@ -637,6 +684,13 @@ private:
   /// \brief The diagnostics report generated for the analysis.  E.g. why we
   /// couldn't analyze the loop.
   Optional<LoopAccessReport> Report;
+
+  /// \brief If an access has a symbolic strides, this maps the pointer value to
+  /// the stride symbol.
+  ValueToValueMap SymbolicStrides;
+
+  /// \brief Set of symbolic strides values.
+  SmallPtrSet<Value *, 8> StrideSet;
 };
 
 Value *stripIntegerCast(Value *V);
@@ -695,11 +749,8 @@ public:
 
   /// \brief Query the result of the loop access information for the loop \p L.
   ///
-  /// If the client speculates (and then issues run-time checks) for the values
-  /// of symbolic strides, \p Strides provides the mapping (see
-  /// replaceSymbolicStrideSCEV).  If there is no cached result available run
-  /// the analysis.
-  const LoopAccessInfo &getInfo(Loop *L, const ValueToValueMap &Strides);
+  /// If there is no cached result available run the analysis.
+  const LoopAccessInfo &getInfo(Loop *L);
 
   void releaseMemory() override {
     // Invalidate the cache when the pass is freed.
@@ -719,6 +770,28 @@ private:
   AliasAnalysis *AA;
   DominatorTree *DT;
   LoopInfo *LI;
+};
+
+/// \brief LoopAccessInfoAnalysis
+class LoopAccessInfoAnalysis
+    : public AnalysisInfoMixin<LoopAccessInfoAnalysis> {
+  friend AnalysisInfoMixin<LoopAccessInfoAnalysis>;
+  static char PassID;
+
+public:
+  typedef LoopAccessInfo Result;
+  Result run(Loop &, AnalysisManager<Loop> &);
+  static StringRef name() { return "LoopAccessInfoAnalysis"; }
+};
+
+/// \brief Printer pass for the \c LoopAccessInfo results.
+class LoopAccessInfoPrinterPass
+    : public PassInfoMixin<LoopAccessInfoPrinterPass> {
+  raw_ostream &OS;
+
+public:
+  explicit LoopAccessInfoPrinterPass(raw_ostream &OS) : OS(OS) {}
+  PreservedAnalyses run(Loop &L, AnalysisManager<Loop> &AM);
 };
 
 inline Instruction *MemoryDepChecker::Dependence::getSource(

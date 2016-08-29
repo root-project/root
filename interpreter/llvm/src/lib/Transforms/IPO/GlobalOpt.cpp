@@ -1942,8 +1942,7 @@ static bool processInternalGlobal(
 static bool
 processGlobal(GlobalValue &GV, TargetLibraryInfo *TLI,
               function_ref<DominatorTree &(Function &)> LookupDomTree) {
-  // Do more involved optimizations if the global is internal.
-  if (!GV.hasLocalLinkage())
+  if (GV.getName().startswith("llvm."))
     return false;
 
   GlobalStatus GS;
@@ -1952,11 +1951,19 @@ processGlobal(GlobalValue &GV, TargetLibraryInfo *TLI,
     return false;
 
   bool Changed = false;
-  if (!GS.IsCompared && !GV.hasUnnamedAddr()) {
-    GV.setUnnamedAddr(true);
-    NumUnnamed++;
-    Changed = true;
+  if (!GS.IsCompared && !GV.hasGlobalUnnamedAddr()) {
+    auto NewUnnamedAddr = GV.hasLocalLinkage() ? GlobalValue::UnnamedAddr::Global
+                                               : GlobalValue::UnnamedAddr::Local;
+    if (NewUnnamedAddr != GV.getUnnamedAddr()) {
+      GV.setUnnamedAddr(NewUnnamedAddr);
+      NumUnnamed++;
+      Changed = true;
+    }
   }
+
+  // Do more involved optimizations if the global is internal.
+  if (!GV.hasLocalLinkage())
+    return Changed;
 
   auto *GVar = dyn_cast<GlobalVariable>(&GV);
   if (!GVar)
@@ -2167,10 +2174,8 @@ static bool EvaluateStaticConstructor(Function *F, const DataLayout &DL,
     DEBUG(dbgs() << "FULLY EVALUATED GLOBAL CTOR FUNCTION '"
           << F->getName() << "' to " << Eval.getMutatedMemory().size()
           << " stores.\n");
-    for (DenseMap<Constant*, Constant*>::const_iterator I =
-           Eval.getMutatedMemory().begin(), E = Eval.getMutatedMemory().end();
-         I != E; ++I)
-      CommitValueTo(I->second, I->first);
+    for (const auto &I : Eval.getMutatedMemory())
+      CommitValueTo(I.second, I.first);
     for (GlobalVariable *GV : Eval.getInvariants())
       GV->setConstant(true);
   }

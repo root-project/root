@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_unfold
+/// \notebook
 /// Test program for the classes TUnfold and related
 ///
 ///  1. Generate Monte Carlo and Data events
@@ -37,7 +38,7 @@
 ///          - the star indicates the final choice of tau
 ///      6. the L curve
 ///
-///  Version 17.0, updated for using the classes TUnfoldDensity, TUnfoldBinning
+/// Version 17.0, updated for using the classes TUnfoldDensity, TUnfoldBinning
 ///
 ///  History:
 ///   - Version 16.1, parallel to changes in TUnfold
@@ -126,13 +127,14 @@ Double_t bw_func(Double_t *x,Double_t *par) {
 }
 
 
-// generate an event
-// output:
+// Generate an event
+//
+// Output:
 //  negative mass: background event
 //  positive mass: signal event
 Double_t GenerateEvent(Double_t bgr, // relative fraction of background
                        Double_t mass, // peak position
-                       Double_t gamma) // peak width
+                       Double_t gamma /* peak width*/  )
 {
   Double_t t;
   if(rnd->Rndm()>bgr) {
@@ -164,8 +166,10 @@ Double_t GenerateEvent(Double_t bgr, // relative fraction of background
 }
 
 // smear the event to detector level
+//
 // input:
 //   mass on generator level (mTrue>0 !)
+//
 // output:
 //   mass on detector level
 Double_t DetectorEvent(Double_t mTrue) {
@@ -184,227 +188,227 @@ Double_t DetectorEvent(Double_t mTrue) {
 
 int testUnfold1()
 {
-  // switch on histogram errors
-  TH1::SetDefaultSumw2();
+   // switch on histogram errors
+   TH1::SetDefaultSumw2();
 
-  // show fit result
-  gStyle->SetOptFit(1111);
+   // show fit result
+   gStyle->SetOptFit(1111);
 
-  // random generator
-  rnd=new TRandom3();
+   // random generator
+   rnd=new TRandom3();
 
-  // data and MC luminosity, cross-section
-  Double_t const luminosityData=100000;
-  Double_t const luminosityMC=1000000;
-  Double_t const crossSection=1.0;
+   // data and MC luminosity, cross-section
+   Double_t const luminosityData=100000;
+   Double_t const luminosityMC=1000000;
+   Double_t const crossSection=1.0;
 
-  Int_t const nDet=250;
-  Int_t const nGen=100;
-  Double_t const xminDet=0.0;
-  Double_t const xmaxDet=10.0;
-  Double_t const xminGen=0.0;
-  Double_t const xmaxGen=10.0;
+   Int_t const nDet=250;
+   Int_t const nGen=100;
+   Double_t const xminDet=0.0;
+   Double_t const xmaxDet=10.0;
+   Double_t const xminGen=0.0;
+   Double_t const xmaxGen=10.0;
 
-  //============================================
-  // generate MC distribution
-  //
-  TH1D *histMgenMC=new TH1D("MgenMC",";mass(gen)",nGen,xminGen,xmaxGen);
-  TH1D *histMdetMC=new TH1D("MdetMC",";mass(det)",nDet,xminDet,xmaxDet);
-  TH2D *histMdetGenMC=new TH2D("MdetgenMC",";mass(det);mass(gen)",
+//----------------------------------------------------
+   // generate MC distribution
+   //
+   TH1D *histMgenMC=new TH1D("MgenMC",";mass(gen)",nGen,xminGen,xmaxGen);
+   TH1D *histMdetMC=new TH1D("MdetMC",";mass(det)",nDet,xminDet,xmaxDet);
+   TH2D *histMdetGenMC=new TH2D("MdetgenMC",";mass(det);mass(gen)",
                                nDet,xminDet,xmaxDet,nGen,xminGen,xmaxGen);
-  Int_t neventMC=rnd->Poisson(luminosityMC*crossSection);
-  for(Int_t i=0;i<neventMC;i++) {
-    Double_t mGen=GenerateEvent(0.3, // relative fraction of background
+   Int_t neventMC=rnd->Poisson(luminosityMC*crossSection);
+   for(Int_t i=0;i<neventMC;i++) {
+      Double_t mGen=GenerateEvent(0.3, // relative fraction of background
                                 4.0, // peak position in MC
                                 0.2); // peak width in MC
-    Double_t mDet=DetectorEvent(TMath::Abs(mGen));
-    // the generated mass is negative for background
-    // and positive for signal
-    // so it will be filled in the underflow bin
-    // this is very convenient for the unfolding:
-    // the unfolded result will contain the number of background
-    // events in the underflow bin
+      Double_t mDet=DetectorEvent(TMath::Abs(mGen));
+       // the generated mass is negative for background
+       // and positive for signal
+       // so it will be filled in the underflow bin
+       // this is very convenient for the unfolding:
+       // the unfolded result will contain the number of background
+       // events in the underflow bin
 
-    // generated MC distribution (for comparison only)
-    histMgenMC->Fill(mGen,luminosityData/luminosityMC);
-    // reconstructed MC distribution (for comparison only)
-    histMdetMC->Fill(mDet,luminosityData/luminosityMC);
+       // generated MC distribution (for comparison only)
+       histMgenMC->Fill(mGen,luminosityData/luminosityMC);
+       // reconstructed MC distribution (for comparison only)
+       histMdetMC->Fill(mDet,luminosityData/luminosityMC);
 
-    // matrix describing how the generator input migrates to the
-    // reconstructed level. Unfolding input.
-    // NOTE on underflow/overflow bins:
-    //  (1) the detector level under/overflow bins are used for
-    //       normalisation ("efficiency" correction)
-    //       in our toy example, these bins are populated from tails
-    //       of the initial MC distribution.
-    //  (2) the generator level underflow/overflow bins are
-    //       unfolded. In this example:
-    //       underflow bin: background events reconstructed in the detector
-    //       overflow bin: signal events generated at masses > xmaxDet
-    // for the unfolded result these bins will be filled
-    //  -> the background normalisation will be contained in the underflow bin
-    histMdetGenMC->Fill(mDet,mGen,luminosityData/luminosityMC);
-  }
+       // matrix describing how the generator input migrates to the
+       // reconstructed level. Unfolding input.
+       // NOTE on underflow/overflow bins:
+       //  (1) the detector level under/overflow bins are used for
+       //       normalisation ("efficiency" correction)
+       //       in our toy example, these bins are populated from tails
+       //       of the initial MC distribution.
+       //  (2) the generator level underflow/overflow bins are
+       //       unfolded. In this example:
+       //       underflow bin: background events reconstructed in the detector
+       //       overflow bin: signal events generated at masses > xmaxDet
+       // for the unfolded result these bins will be filled
+       //  -> the background normalisation will be contained in the underflow bin
+       histMdetGenMC->Fill(mDet,mGen,luminosityData/luminosityMC);
+   }
 
-  //============================================
-  // generate alternative MC
-  // this will be used to derive a systematic error due to MC
-  // parameter uncertainties
-  TH2D *histMdetGenSysMC=new TH2D("MdetgenSysMC",";mass(det);mass(gen)",
+//----------------------------------------------------
+   // generate alternative MC
+   // this will be used to derive a systematic error due to MC
+   // parameter uncertainties
+   TH2D *histMdetGenSysMC=new TH2D("MdetgenSysMC",";mass(det);mass(gen)",
                                   nDet,xminDet,xmaxDet,nGen,xminGen,xmaxGen);
-  neventMC=rnd->Poisson(luminosityMC*crossSection);
-  for(Int_t i=0;i<neventMC;i++) {
-    Double_t mGen=GenerateEvent
-       (0.5, // relative fraction of background
-        3.6, // peak position in MC with systematic shift
-        0.15); // peak width in MC
-    Double_t mDet=DetectorEvent(TMath::Abs(mGen));
-    histMdetGenSysMC->Fill(mDet,mGen,luminosityData/luminosityMC);
-  }
+   neventMC=rnd->Poisson(luminosityMC*crossSection);
+   for(Int_t i=0;i<neventMC;i++) {
+      Double_t mGen=GenerateEvent
+         (0.5, // relative fraction of background
+          3.6, // peak position in MC with systematic shift
+          0.15); // peak width in MC
+      Double_t mDet=DetectorEvent(TMath::Abs(mGen));
+      histMdetGenSysMC->Fill(mDet,mGen,luminosityData/luminosityMC);
+   }
 
-  //============================================
-  // generate data distribution
-  //
-  TH1D *histMgenData=new TH1D("MgenData",";mass(gen)",nGen,xminGen,xmaxGen);
-  TH1D *histMdetData=new TH1D("MdetData",";mass(det)",nDet,xminDet,xmaxDet);
-  Int_t neventData=rnd->Poisson(luminosityData*crossSection);
-  for(Int_t i=0;i<neventData;i++) {
-    Double_t mGen=GenerateEvent(0.4, // relative fraction of background
-                                3.8, // peak position in data
-                                0.15); // peak width in data
-    Double_t mDet=DetectorEvent(TMath::Abs(mGen));
-    // generated data mass for comparison plots
-    // for real data, we do not have this histogram
-    histMgenData->Fill(mGen);
+//----------------------------------------------------
+   // generate data distribution
+   //
+   TH1D *histMgenData=new TH1D("MgenData",";mass(gen)",nGen,xminGen,xmaxGen);
+   TH1D *histMdetData=new TH1D("MdetData",";mass(det)",nDet,xminDet,xmaxDet);
+   Int_t neventData=rnd->Poisson(luminosityData*crossSection);
+   for(Int_t i=0;i<neventData;i++) {
+      Double_t mGen=GenerateEvent(0.4, // relative fraction of background
+                                  3.8, // peak position in data
+                                  0.15); // peak width in data
+      Double_t mDet=DetectorEvent(TMath::Abs(mGen));
+      // generated data mass for comparison plots
+      // for real data, we do not have this histogram
+      histMgenData->Fill(mGen);
 
-    // reconstructed mass, unfolding input
-    histMdetData->Fill(mDet);
-  }
+      // reconstructed mass, unfolding input
+      histMdetData->Fill(mDet);
+   }
 
-  //=========================================================================
-  // divide by bin withd to get density distributions
-  TH1D *histDensityGenData=new TH1D("DensityGenData",";mass(gen)",
+   //----------------------------------------------------
+   // divide by bin withd to get density distributions
+   TH1D *histDensityGenData=new TH1D("DensityGenData",";mass(gen)",
                                     nGen,xminGen,xmaxGen);
-  TH1D *histDensityGenMC=new TH1D("DensityGenMC",";mass(gen)",
+   TH1D *histDensityGenMC=new TH1D("DensityGenMC",";mass(gen)",
                                     nGen,xminGen,xmaxGen);
-  for(Int_t i=1;i<=nGen;i++) {
-     histDensityGenData->SetBinContent(i,histMgenData->GetBinContent(i)/
+   for(Int_t i=1;i<=nGen;i++) {
+      histDensityGenData->SetBinContent(i,histMgenData->GetBinContent(i)/
                                        histMgenData->GetBinWidth(i));
-     histDensityGenMC->SetBinContent(i,histMgenMC->GetBinContent(i)/
+      histDensityGenMC->SetBinContent(i,histMgenMC->GetBinContent(i)/
                                        histMgenMC->GetBinWidth(i));
-  }
+   }
 
-  //=========================================================================
-  // set up the unfolding
-  // define migration matrix
-  TUnfoldDensity unfold(histMdetGenMC,TUnfold::kHistMapOutputVert);
+   //----------------------------------------------------
+   // set up the unfolding
+   // define migration matrix
+   TUnfoldDensity unfold(histMdetGenMC,TUnfold::kHistMapOutputVert);
 
-  // define input and bias scame
-  // do not use the bias, because MC peak may be at the wrong place
-  // watch out for error codes returned by the SetInput method
-  // errors larger or equal 10000 are fatal:
-  // the data points specified as input are not sufficient to constrain the
-  // unfolding process
-  if(unfold.SetInput(histMdetData)>=10000) {
-    std::cout<<"Unfolding result may be wrong\n";
-  }
+   // define input and bias scame
+   // do not use the bias, because MC peak may be at the wrong place
+   // watch out for error codes returned by the SetInput method
+   // errors larger or equal 10000 are fatal:
+   // the data points specified as input are not sufficient to constrain the
+   // unfolding process
+   if(unfold.SetInput(histMdetData)>=10000) {
+      std::cout<<"Unfolding result may be wrong\n";
+   }
 
-  //========================================================================
-  // the unfolding is done here
-  //
-  // scan L curve and find best point
-  Int_t nScan=30;
-  // use automatic L-curve scan: start with taumin=taumax=0.0
-  Double_t tauMin=0.0;
-  Double_t tauMax=0.0;
-  Int_t iBest;
-  TSpline *logTauX,*logTauY;
-  TGraph *lCurve;
+   //----------------------------------------------------
+   // the unfolding is done here
+   //
+   // scan L curve and find best point
+   Int_t nScan=30;
+   // use automatic L-curve scan: start with taumin=taumax=0.0
+   Double_t tauMin=0.0;
+   Double_t tauMax=0.0;
+   Int_t iBest;
+   TSpline *logTauX,*logTauY;
+   TGraph *lCurve;
 
-  // if required, report Info messages (for debugging the L-curve scan)
+   // if required, report Info messages (for debugging the L-curve scan)
 #ifdef VERBOSE_LCURVE_SCAN
-  Int_t oldinfo=gErrorIgnoreLevel;
-  gErrorIgnoreLevel=kInfo;
+   Int_t oldinfo=gErrorIgnoreLevel;
+   gErrorIgnoreLevel=kInfo;
 #endif
-  // this method scans the parameter tau and finds the kink in the L curve
-  // finally, the unfolding is done for the best choice of tau
-  iBest=unfold.ScanLcurve(nScan,tauMin,tauMax,&lCurve,&logTauX,&logTauY);
+   // this method scans the parameter tau and finds the kink in the L curve
+   // finally, the unfolding is done for the best choice of tau
+   iBest=unfold.ScanLcurve(nScan,tauMin,tauMax,&lCurve,&logTauX,&logTauY);
 
-  // if required, switch to previous log-level
+   // if required, switch to previous log-level
 #ifdef VERBOSE_LCURVE_SCAN
-  gErrorIgnoreLevel=oldinfo;
+   gErrorIgnoreLevel=oldinfo;
 #endif
 
-  //==========================================================================
-  // define a correlated systematic error
-  // for example, assume there is a 10% correlated error for all reconstructed
-  // masses larger than 7
-  Double_t SYS_ERROR1_MSTART=6;
-  Double_t SYS_ERROR1_SIZE=0.1;
-  TH2D *histMdetGenSys1=new TH2D("Mdetgensys1",";mass(det);mass(gen)",
+   //-------------------------------------------------------
+   // define a correlated systematic error
+   // for example, assume there is a 10% correlated error for all reconstructed
+   // masses larger than 7
+   Double_t SYS_ERROR1_MSTART=6;
+   Double_t SYS_ERROR1_SIZE=0.1;
+   TH2D *histMdetGenSys1=new TH2D("Mdetgensys1",";mass(det);mass(gen)",
                                  nDet,xminDet,xmaxDet,nGen,xminGen,xmaxGen);
-  for(Int_t i=0;i<=nDet+1;i++) {
-     if(histMdetData->GetBinCenter(i)>=SYS_ERROR1_MSTART) {
-        for(Int_t j=0;j<=nGen+1;j++) {
-           histMdetGenSys1->SetBinContent(i,j,SYS_ERROR1_SIZE);
-        }
-     }
-  }
-  unfold.AddSysError(histMdetGenSysMC,"SYSERROR_MC",TUnfold::kHistMapOutputVert,
+   for(Int_t i=0;i<=nDet+1;i++) {
+      if(histMdetData->GetBinCenter(i)>=SYS_ERROR1_MSTART) {
+         for(Int_t j=0;j<=nGen+1;j++) {
+            histMdetGenSys1->SetBinContent(i,j,SYS_ERROR1_SIZE);
+         }
+      }
+   }
+   unfold.AddSysError(histMdetGenSysMC,"SYSERROR_MC",TUnfold::kHistMapOutputVert,
                      TUnfoldSys::kSysErrModeMatrix);
-  unfold.AddSysError(histMdetGenSys1,"SYSERROR1",TUnfold::kHistMapOutputVert,
+   unfold.AddSysError(histMdetGenSys1,"SYSERROR1",TUnfold::kHistMapOutputVert,
                      TUnfoldSys::kSysErrModeRelative);
 
-  //==========================================================================
-  // print some results
-  //
-  std::cout<<"tau="<<unfold.GetTau()<<"\n";
-  std::cout<<"chi**2="<<unfold.GetChi2A()<<"+"<<unfold.GetChi2L()
-           <<" / "<<unfold.GetNdf()<<"\n";
-  std::cout<<"chi**2(sys)="<<unfold.GetChi2Sys()<<"\n";
+   //-------------------------------------------------------
+   // print some results
+   //
+   std::cout<<"tau="<<unfold.GetTau()<<"\n";
+   std::cout<<"chi**2="<<unfold.GetChi2A()<<"+"<<unfold.GetChi2L()
+            <<" / "<<unfold.GetNdf()<<"\n";
+   std::cout<<"chi**2(sys)="<<unfold.GetChi2Sys()<<"\n";
 
 
-  //==========================================================================
-  // create graphs with one point to visualize the best choice of tau
-  //
-  Double_t t[1],x[1],y[1];
-  logTauX->GetKnot(iBest,t[0],x[0]);
-  logTauY->GetKnot(iBest,t[0],y[0]);
-  TGraph *bestLcurve=new TGraph(1,x,y);
-  TGraph *bestLogTauLogChi2=new TGraph(1,t,x);
+   //-------------------------------------------------------
+   // create graphs with one point to visualize the best choice of tau
+   //
+   Double_t t[1],x[1],y[1];
+   logTauX->GetKnot(iBest,t[0],x[0]);
+   logTauY->GetKnot(iBest,t[0],y[0]);
+   TGraph *bestLcurve=new TGraph(1,x,y);
+   TGraph *bestLogTauLogChi2=new TGraph(1,t,x);
 
-  //==========================================================================
-  // retreive results into histograms
+   //-------------------------------------------------------
+   // retreive results into histograms
 
-  // get unfolded distribution
-  TH1 *histMunfold=unfold.GetOutput("Unfolded");
+   // get unfolded distribution
+   TH1 *histMunfold=unfold.GetOutput("Unfolded");
 
-  // get unfolding result, folded back
-  TH1 *histMdetFold=unfold.GetFoldedOutput("FoldedBack");
+   // get unfolding result, folded back
+   TH1 *histMdetFold=unfold.GetFoldedOutput("FoldedBack");
 
-  // get error matrix (input distribution [stat] errors only)
-  // TH2D *histEmatData=unfold.GetEmatrix("EmatData");
+   // get error matrix (input distribution [stat] errors only)
+   // TH2D *histEmatData=unfold.GetEmatrix("EmatData");
 
-  // get total error matrix:
-  //   migration matrix uncorrelated and correlated systematic errors
-  //   added in quadrature to the data statistical errors
-  TH2 *histEmatTotal=unfold.GetEmatrixTotal("EmatTotal");
+   // get total error matrix:
+   //   migration matrix uncorrelated and correlated systematic errors
+   //   added in quadrature to the data statistical errors
+   TH2 *histEmatTotal=unfold.GetEmatrixTotal("EmatTotal");
 
-  // create data histogram with the total errors
-  TH1D *histTotalError=
-     new TH1D("TotalError",";mass(gen)",nGen,xminGen,xmaxGen);
-  for(Int_t bin=1;bin<=nGen;bin++) {
-    histTotalError->SetBinContent(bin,histMunfold->GetBinContent(bin));
-    histTotalError->SetBinError
-       (bin,TMath::Sqrt(histEmatTotal->GetBinContent(bin,bin)));
-  }
+   // create data histogram with the total errors
+   TH1D *histTotalError=
+      new TH1D("TotalError",";mass(gen)",nGen,xminGen,xmaxGen);
+   for(Int_t bin=1;bin<=nGen;bin++) {
+      histTotalError->SetBinContent(bin,histMunfold->GetBinContent(bin));
+      histTotalError->SetBinError
+          (bin,TMath::Sqrt(histEmatTotal->GetBinContent(bin,bin)));
+   }
 
-  // get global correlation coefficients
-  // for this calculation one has to specify whether the
-  // underflow/overflow bins are included or not
-  // default: include all bins
-  // here: exclude underflow and overflow bins
-  TH1 *histRhoi=unfold.GetRhoItotal("rho_I",
+   // get global correlation coefficients
+   // for this calculation one has to specify whether the
+   // underflow/overflow bins are included or not
+   // default: include all bins
+   // here: exclude underflow and overflow bins
+   TH1 *histRhoi=unfold.GetRhoItotal("rho_I",
                                     0, // use default title
                                     0, // all distributions
                                     "*[UO]", // discard underflow and overflow bins on all axes
@@ -412,81 +416,81 @@ int testUnfold1()
                                     &gHistInvEMatrix // store inverse of error matrix
                                     );
 
-  //======================================================================
-  // fit Breit-Wigner shape to unfolded data, using the full error matrix
-  // here we use a "user" chi**2 function to take into account
-  // the full covariance matrix
+//-------------------------------------------------------------------------------
+   // fit Breit-Wigner shape to unfolded data, using the full error matrix
+   // here we use a "user" chi**2 function to take into account
+   // the full covariance matrix
 
-  gFitter=TVirtualFitter::Fitter(histMunfold);
-  gFitter->SetFCN(chisquare_corr);
+   gFitter=TVirtualFitter::Fitter(histMunfold);
+   gFitter->SetFCN(chisquare_corr);
 
-  TF1 *bw=new TF1("bw",bw_func,xminGen,xmaxGen,3);
-  bw->SetParameter(0,1000.);
-  bw->SetParameter(1,3.8);
-  bw->SetParameter(2,0.2);
+   TF1 *bw=new TF1("bw",bw_func,xminGen,xmaxGen,3);
+   bw->SetParameter(0,1000.);
+   bw->SetParameter(1,3.8);
+   bw->SetParameter(2,0.2);
 
-  // for (wrong!) fitting without correlations, drop the option "U"
-  // here.
-  histMunfold->Fit(bw,"UE");
+   // for (wrong!) fitting without correlations, drop the option "U"
+   // here.
+   histMunfold->Fit(bw,"UE");
 
-  //=====================================================================
-  // plot some histograms
-  TCanvas output;
-  output.Divide(3,2);
+//----------------------------------------------------------------------------
+   // plot some histograms
+   TCanvas output;
+   output.Divide(3,2);
 
-  // Show the matrix which connects input and output
-  // There are overflow bins at the bottom, not shown in the plot
-  // These contain the background shape.
-  // The overflow bins to the left and right contain
-  // events which are not reconstructed. These are necessary for proper MC
-  // normalisation
-  output.cd(1);
-  histMdetGenMC->Draw("BOX");
+   // Show the matrix which connects input and output
+   // There are overflow bins at the bottom, not shown in the plot
+   // These contain the background shape.
+   // The overflow bins to the left and right contain
+   // events which are not reconstructed. These are necessary for proper MC
+   // normalisation
+   output.cd(1);
+   histMdetGenMC->Draw("BOX");
 
-  // draw generator-level distribution:
-  //   data (red) [for real data this is not available]
-  //   MC input (black) [with completely wrong peak position and shape]
-  //   unfolded data (blue)
-  output.cd(2);
-  histTotalError->SetLineColor(kBlue);
-  histTotalError->Draw("E");
-  histMunfold->SetLineColor(kGreen);
-  histMunfold->Draw("SAME E1");
-  histDensityGenData->SetLineColor(kRed);
-  histDensityGenData->Draw("SAME");
-  histDensityGenMC->Draw("SAME HIST");
+   // draw generator-level distribution:
+   //   data (red) [for real data this is not available]
+   //   MC input (black) [with completely wrong peak position and shape]
+   //   unfolded data (blue)
+   output.cd(2);
+   histTotalError->SetLineColor(kBlue);
+   histTotalError->Draw("E");
+   histMunfold->SetLineColor(kGreen);
+   histMunfold->Draw("SAME E1");
+   histDensityGenData->SetLineColor(kRed);
+   histDensityGenData->Draw("SAME");
+   histDensityGenMC->Draw("SAME HIST"); 
 
-  // show detector level distributions
-  //    data (red)
-  //    MC (black) [with completely wrong peak position and shape]
-  //    unfolded data (blue)
-  output.cd(3);
-  histMdetFold->SetLineColor(kBlue);
-  histMdetFold->Draw();
-  histMdetMC->Draw("SAME HIST");
+   // show detector level distributions
+   //    data (red)
+   //    MC (black) [with completely wrong peak position and shape]
+   //    unfolded data (blue)
+   output.cd(3);
+   histMdetFold->SetLineColor(kBlue);
+   histMdetFold->Draw();
+   histMdetMC->Draw("SAME HIST"); 
 
-  TH1 *histInput=unfold.GetInput("Minput",";mass(det)");
+   TH1 *histInput=unfold.GetInput("Minput",";mass(det)"); 
 
-  histInput->SetLineColor(kRed);
-  histInput->Draw("SAME");
+   histInput->SetLineColor(kRed);
+   histInput->Draw("SAME");
 
-  // show correlation coefficients
-  output.cd(4);
-  histRhoi->Draw();
+   // show correlation coefficients
+   output.cd(4);
+   histRhoi->Draw();
 
-  // show tau as a function of chi**2
-  output.cd(5);
-  logTauX->Draw();
-  bestLogTauLogChi2->SetMarkerColor(kRed);
-  bestLogTauLogChi2->Draw("*");
+   // show tau as a function of chi**2
+   output.cd(5);
+   logTauX->Draw();
+   bestLogTauLogChi2->SetMarkerColor(kRed);
+   bestLogTauLogChi2->Draw("*");
 
-  // show the L curve
-  output.cd(6);
-  lCurve->Draw("AL");
-  bestLcurve->SetMarkerColor(kRed);
-  bestLcurve->Draw("*");
+   // show the L curve
+   output.cd(6);
+   lCurve->Draw("AL");
+   bestLcurve->SetMarkerColor(kRed);
+   bestLcurve->Draw("*");
 
-  output.SaveAs("testUnfold1.ps");
+   output.SaveAs("testUnfold1.ps");
 
-  return 0;
+   return 0;
 }

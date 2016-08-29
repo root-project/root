@@ -4,7 +4,7 @@
 /// This script can only be executed via ACliC: .x threads.C++.
 /// Before executing the script, load the Thread library with:
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 ///   gSystem->Load("libThread");
 /// ~~~
 ///
@@ -35,10 +35,6 @@ void *handle(void *ptr)
 
 void threads()
 {
-#ifdef __CINT__
-   printf("This script can only be executed via ACliC: .x threads.C++\n");
-   return;
-#endif
 
    gDebug = 1;
 

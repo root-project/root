@@ -1385,7 +1385,7 @@ It is also possible to use `TEXTnn` in order to draw the text with
 the angle `nn` (`0 < nn < 90`).
 
 For 2D histograms the text is plotted in the center of each non empty cells.
-It is possible to plot empty cells by calling gStyle->SetHistMinimumZero().
+It is possible to plot empty cells by calling `gStyle->SetHistMinimumZero()`.
 For 1D histogram the text is plotted at a y position equal to the bin content.
 
 For 2D histograms when the option "E" (errors) is combined with the option
@@ -1400,7 +1400,7 @@ Begin_Macro(source)
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
-        htext1->Fill(px,0.1);
+      htext1->Fill(px,0.1);
       htext2->Fill(px,5*py,0.1);
    }
    gStyle->SetPaintTextFormat("4.1f m");
@@ -1411,6 +1411,38 @@ Begin_Macro(source)
    htext1->Draw();
    htext1->Draw("HIST TEXT0 SAME");
    return c01;
+}
+End_Macro
+
+\since **ROOT version 6.07/07:**
+In case several histograms are drawn on top ot each other (using option `SAME`),
+the text can be shifted using `SetBarOffset()`. It specifies an offset for the
+text position in each cell, in percentage of the bin width.
+
+Begin_Macro(source)
+{
+   TCanvas *c03 = new TCanvas("c03","c03",700,400);
+   gStyle->SetOptStat(0);
+   TH2F *htext3 = new TH2F("htext3","Several 2D histograms drawn with option TEXT",10,-4,4,10,-20,20);
+   TH2F *htext4 = new TH2F("htext4","htext4",10,-4,4,10,-20,20);
+   TH2F *htext5 = new TH2F("htext5","htext5",10,-4,4,10,-20,20);
+   Float_t px, py;
+   for (Int_t i = 0; i < 25000; i++) {
+      gRandom->Rannor(px,py);
+      htext3->Fill(4*px,20*py,0.1);
+      htext4->Fill(4*px,20*py,0.5);
+      htext5->Fill(4*px,20*py,1.0);
+   }
+   //gStyle->SetPaintTextFormat("4.1f m");
+   htext4->SetMarkerSize(1.8);
+   htext5->SetMarkerSize(1.8);
+   htext5->SetMarkerColor(kRed);
+   htext3->Draw("COL");
+   htext4->SetBarOffset(0.2);
+   htext4->Draw("TEXT SAME");
+   htext5->SetBarOffset(-0.2);
+   htext5->Draw("TEXT SAME");
+   return c03;
 }
 End_Macro
 
@@ -2785,6 +2817,7 @@ THistPainter::~THistPainter()
 Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
 {
 
+   Double_t defaultLabelSize = 0.04; // See TAttAxis.h for source of this value
 
    const Int_t big = 9999;
    const Int_t kMaxDiff = 7;
@@ -2829,7 +2862,7 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
    dsame = kFALSE;
    if (doption.Contains("same")) dsame = kTRUE;
 
-   dyaxis = Int_t(2*(puymin-puymax)*fYaxis->GetLabelSize());
+   dyaxis = Int_t(2*(puymin-puymax)*TMath::Max(Double_t(fYaxis->GetLabelSize()), defaultLabelSize));
    if (doption.Contains("y+")) {
       xyaxis = puxmax + Int_t((puxmax-puxmin)*fYaxis->GetLabelOffset());
       if (px <= xyaxis+dyaxis && px >= xyaxis && py >puymax && py < puymin) {
@@ -2850,7 +2883,7 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
       }
    }
 
-   dxaxis = Int_t((puymin-puymax)*fXaxis->GetLabelSize());
+   dxaxis = Int_t((puymin-puymax)*TMath::Max(Double_t(fXaxis->GetLabelSize()), defaultLabelSize));
    if (doption.Contains("x+")) {
       yxaxis = puymax - Int_t((puymin-puymax)*fXaxis->GetLabelOffset());
       if (py >= yxaxis-dxaxis && py <= yxaxis && px <puxmax && px > puxmin) {
@@ -9022,7 +9055,8 @@ void THistPainter::PaintText(Option_t *)
             } else {
                snprintf(value,50,format,z);
             }
-            text.PaintLatex(x,y,angle,0.02*fH->GetMarkerSize(),value);
+            text.PaintLatex(x,y+fH->GetBarOffset()*fYaxis->GetBinWidth(j),
+                            angle,0.02*fH->GetMarkerSize(),value);
          }
       }
    }

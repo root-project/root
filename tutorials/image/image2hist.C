@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_image
+/// \notebook
 /// Create a 2-D histogram from an image.
 ///
 /// \macro_image

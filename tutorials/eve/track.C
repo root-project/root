@@ -4,7 +4,7 @@
 /// field configurations.
 /// Needs to be run in compiled mode.
 /// root
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 ///   .L track.C+
 ///   track(3, kTRUE)
 /// ~~~
@@ -23,14 +23,6 @@
 ///
 /// \author Alja Mrak-Tadel
 
-#if defined(__CINT__) && !defined(__MAKECINT__)
-{
-   Info("track.C",
-        "Has to be run in compiled mode, esp. if you want to pass parameters.");
-   gSystem->CompileMacro("track.C");
-   track();
-}
-#else
 
 #include "TEveTrackPropagator.h"
 #include "TEveTrack.h"
@@ -172,10 +164,6 @@ TEveTrack* make_track(TEveTrackPropagator* prop, Int_t sign)
 
 void track(Int_t mode = 1, Bool_t isRungeKutta = kTRUE)
 {
-#if defined (__CINT__)
-   Error("track.C", "Must be run in compiled mode!");
-   return;
-#endif
 
    gSystem->IgnoreSignal(kSigSegmentationViolation, true);
    TEveManager::Create();

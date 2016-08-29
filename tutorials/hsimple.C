@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup Tutorials
+/// \notebook
 ///  This program creates :
 ///    - a one dimensional histogram
 ///    - a two dimensional histogram
@@ -30,15 +31,14 @@
 #include <TBenchmark.h>
 #include <TInterpreter.h>
 
-TFile *hsimple(Int_t get=0)
+TFile *hsimple(Int_t getFile=0)
 {
    TString filename = "hsimple.root";
-   TString dir = gSystem->UnixPathName(__FILE__);
-   dir.ReplaceAll("hsimple.C","");
+   TString dir = gROOT->GetTutorialsDir();
    dir.ReplaceAll("/./","/");
    TFile *hfile = 0;
-   if (get) {
-      // if the argument get =1 return the file "hsimple.root"
+   if (getFile) {
+      // if the argument getFile =1 return the file "hsimple.root"
       // if the file does not exist, it is created
       TString fullPath = dir+"hsimple.root";
       if (!gSystem->AccessPathName(fullPath,kFileExists)) {
@@ -78,13 +78,13 @@ TFile *hsimple(Int_t get=0)
 
 
    // Fill histograms randomly
-   TRandom3 random;
+   TRandom3 randomNum;
    Float_t px, py, pz;
    const Int_t kUPDATE = 1000;
    for (Int_t i = 0; i < 25000; i++) {
-      random.Rannor(px,py);
+      randomNum.Rannor(px,py);
       pz = px*px + py*py;
-      Float_t rnd = random.Rndm(1);
+      Float_t rnd = randomNum.Rndm(1);
       hpx->Fill(px);
       hpxpy->Fill(px,py);
       hprof->Fill(px,pz);
@@ -106,6 +106,6 @@ TFile *hsimple(Int_t get=0)
    c1->Modified();
    return hfile;
 
-// Note that the file is automatically close when application terminates
-// or when the file destructor is called.
+   // Note that the file is automatically close when application terminates
+   // or when the file destructor is called.
 }

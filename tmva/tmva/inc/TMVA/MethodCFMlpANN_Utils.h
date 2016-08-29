@@ -99,11 +99,11 @@ namespace TMVA {
 
    protected:
 
-      static Int_t             fg_100;          // constant
-      static Int_t             fg_0;            // constant
+      Int_t             fg_100;          // constant
+      Int_t             fg_0;            // constant
       static const Int_t       fg_max_nVar_;    // static maximum number of input variables
       static const Int_t       fg_max_nNodes_;  // maximum number of nodes per variable
-      static Int_t             fg_999;          // constant
+      Int_t             fg_999;          // constant
       static const char* const fg_MethodName;   // method name for print
 
       Double_t W_ref(const Double_t wNN[], Int_t a_1, Int_t a_2, Int_t a_3) const {

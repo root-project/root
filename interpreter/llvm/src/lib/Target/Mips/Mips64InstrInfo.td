@@ -82,7 +82,7 @@ let usesCustomInserter = 1 in {
 }
 
 /// Pseudo instructions for loading and storing accumulator registers.
-let isPseudo = 1, isCodeGenOnly = 1 in {
+let isPseudo = 1, isCodeGenOnly = 1, hasNoSchedulingInfo = 1 in {
   def LOAD_ACC128  : Load<"", ACC128>;
   def STORE_ACC128 : Store<"", ACC128>;
 }
@@ -92,8 +92,8 @@ let isPseudo = 1, isCodeGenOnly = 1 in {
 //===----------------------------------------------------------------------===//
 let DecoderNamespace = "Mips64" in {
 /// Arithmetic Instructions (ALU Immediate)
-def DADDi   : ArithLogicI<"daddi", simm16_64, GPR64Opnd>, ADDI_FM<0x18>,
-              ISA_MIPS3_NOT_32R6_64R6;
+def DADDi   : ArithLogicI<"daddi", simm16_64, GPR64Opnd, II_DADDI>,
+              ADDI_FM<0x18>, ISA_MIPS3_NOT_32R6_64R6;
 let AdditionalPredicates = [NotInMicroMips] in {
   def DADDiu : StdMMR6Rel, ArithLogicI<"daddiu", simm16_64, GPR64Opnd,
                                        II_DADDIU, immSExt16, add>,
@@ -137,44 +137,42 @@ def NOR64  : LogicNOR<"nor", GPR64Opnd>, ADD_FM<0, 0x27>;
 
 /// Shift Instructions
 let AdditionalPredicates = [NotInMicroMips] in {
-  def DSLL : shift_rotate_imm<"dsll", uimm6, GPR64Opnd, II_DSLL, shl, immZExt6>,
-               SRA_FM<0x38, 0>, ISA_MIPS3;
-}
-def DSRL   : shift_rotate_imm<"dsrl", uimm6, GPR64Opnd, II_DSRL, srl, immZExt6>,
+  def DSLL : StdMMR6Rel, shift_rotate_imm<"dsll", uimm6, GPR64Opnd, II_DSLL,
+                                          shl, immZExt6>,
+             SRA_FM<0x38, 0>, ISA_MIPS3;
+  def DSRL : StdMMR6Rel, shift_rotate_imm<"dsrl", uimm6, GPR64Opnd, II_DSRL,
+                                          srl, immZExt6>,
              SRA_FM<0x3a, 0>, ISA_MIPS3;
-let AdditionalPredicates = [NotInMicroMips] in {
-  def DSRA : shift_rotate_imm<"dsra", uimm6, GPR64Opnd, II_DSRA, sra, immZExt6>,
+  def DSRA : StdMMR6Rel, shift_rotate_imm<"dsra", uimm6, GPR64Opnd, II_DSRA,
+                                          sra, immZExt6>,
              SRA_FM<0x3b, 0>, ISA_MIPS3;
-}
-let AdditionalPredicates = [NotInMicroMips] in {
-  def DSLLV  : shift_rotate_reg<"dsllv", GPR64Opnd, II_DSLLV, shl>,
-             SRLV_FM<0x14, 0>, ISA_MIPS3;
-}
-def DSRLV  : shift_rotate_reg<"dsrlv", GPR64Opnd, II_DSRLV, srl>,
-             SRLV_FM<0x16, 0>, ISA_MIPS3;
-let AdditionalPredicates = [NotInMicroMips] in {
-  def DSRAV  : shift_rotate_reg<"dsrav", GPR64Opnd, II_DSRAV, sra>,
+  def DSLLV  : StdMMR6Rel, shift_rotate_reg<"dsllv", GPR64Opnd, II_DSLLV, shl>,
+               SRLV_FM<0x14, 0>, ISA_MIPS3;
+  def DSRAV  : StdMMR6Rel, shift_rotate_reg<"dsrav", GPR64Opnd, II_DSRAV, sra>,
                SRLV_FM<0x17, 0>, ISA_MIPS3;
-}
-let AdditionalPredicates = [NotInMicroMips] in {
-  def DSLL32 : shift_rotate_imm<"dsll32", uimm5, GPR64Opnd, II_DSLL32>,
+  def DSRLV  : StdMMR6Rel, shift_rotate_reg<"dsrlv", GPR64Opnd, II_DSRLV, srl>,
+               SRLV_FM<0x16, 0>, ISA_MIPS3;
+  def DSLL32 : StdMMR6Rel, shift_rotate_imm<"dsll32", uimm5, GPR64Opnd,
+                                            II_DSLL32>,
                SRA_FM<0x3c, 0>, ISA_MIPS3;
-}
-def DSRL32 : shift_rotate_imm<"dsrl32", uimm5, GPR64Opnd, II_DSRL32>,
-             SRA_FM<0x3e, 0>, ISA_MIPS3;
-let AdditionalPredicates = [NotInMicroMips] in {
-  def DSRA32 : shift_rotate_imm<"dsra32", uimm5, GPR64Opnd, II_DSRA32>,
+  def DSRL32 : StdMMR6Rel, shift_rotate_imm<"dsrl32", uimm5, GPR64Opnd,
+                                            II_DSRL32>,
+               SRA_FM<0x3e, 0>, ISA_MIPS3;
+  def DSRA32 : StdMMR6Rel, shift_rotate_imm<"dsra32", uimm5, GPR64Opnd,
+               II_DSRA32>,
                SRA_FM<0x3f, 0>, ISA_MIPS3;
-}
 
 // Rotate Instructions
-def DROTR  : shift_rotate_imm<"drotr", uimm6, GPR64Opnd, II_DROTR, rotr,
-                              immZExt6>,
-             SRA_FM<0x3a, 1>, ISA_MIPS64R2;
-def DROTRV : shift_rotate_reg<"drotrv", GPR64Opnd, II_DROTRV, rotr>,
-             SRLV_FM<0x16, 1>, ISA_MIPS64R2;
-def DROTR32 : shift_rotate_imm<"drotr32", uimm5, GPR64Opnd, II_DROTR32>,
-              SRA_FM<0x3e, 1>, ISA_MIPS64R2;
+  def DROTR  : StdMMR6Rel, shift_rotate_imm<"drotr", uimm6, GPR64Opnd, II_DROTR,
+                                            rotr, immZExt6>,
+               SRA_FM<0x3a, 1>, ISA_MIPS64R2;
+  def DROTRV : StdMMR6Rel, shift_rotate_reg<"drotrv", GPR64Opnd, II_DROTRV,
+                                            rotr>,
+               SRLV_FM<0x16, 1>, ISA_MIPS64R2;
+  def DROTR32 : StdMMR6Rel, shift_rotate_imm<"drotr32", uimm5, GPR64Opnd,
+                                             II_DROTR32>,
+                SRA_FM<0x3e, 1>, ISA_MIPS64R2;
+}
 
 /// Load and Store Instructions
 ///  aligned
@@ -189,9 +187,16 @@ def SH64  : Store<"sh", GPR64Opnd, truncstorei16, II_SH>, LW_FM<0x29>;
 def SW64  : Store<"sw", GPR64Opnd, truncstorei32, II_SW>, LW_FM<0x2b>;
 }
 
-def LWu   : Load<"lwu", GPR64Opnd, zextloadi32, II_LWU>, LW_FM<0x27>, ISA_MIPS3;
-def LD    : Load<"ld", GPR64Opnd, load, II_LD>, LW_FM<0x37>, ISA_MIPS3;
-def SD    : Store<"sd", GPR64Opnd, store, II_SD>, LW_FM<0x3f>, ISA_MIPS3;
+let AdditionalPredicates = [NotInMicroMips] in {
+  def LWu : StdMMR6Rel, MMRel, Load<"lwu", GPR64Opnd, zextloadi32, II_LWU>,
+            LW_FM<0x27>, ISA_MIPS3;
+  def LD  : StdMMR6Rel, LoadMemory<"ld", GPR64Opnd, mem_simm16, load, II_LD>,
+            LW_FM<0x37>, ISA_MIPS3;
+  def SD  : StdMMR6Rel, StoreMemory<"sd", GPR64Opnd, mem_simm16, store, II_SD>,
+            LW_FM<0x3f>, ISA_MIPS3;
+}
+
+
 
 /// load/store left/right
 let isCodeGenOnly = 1 in {
@@ -211,8 +216,19 @@ def SDR   : StoreLeftRight<"sdr", MipsSDR, GPR64Opnd, II_SDR>, LW_FM<0x2d>,
             ISA_MIPS3_NOT_32R6_64R6;
 
 /// Load-linked, Store-conditional
-def LLD : LLBase<"lld", GPR64Opnd>, LW_FM<0x34>, ISA_MIPS3_NOT_32R6_64R6;
+let AdditionalPredicates = [NotInMicroMips] in {
+  def LLD : StdMMR6Rel, LLBase<"lld", GPR64Opnd, mem_simm16>, LW_FM<0x34>,
+            ISA_MIPS3_NOT_32R6_64R6;
+}
 def SCD : SCBase<"scd", GPR64Opnd>, LW_FM<0x3c>, ISA_MIPS3_NOT_32R6_64R6;
+
+let AdditionalPredicates = [NotInMicroMips],
+    DecoderNamespace = "Mips32_64_PTR64" in {
+def LL64 : LLBase<"ll", GPR32Opnd>, LW_FM<0x30>, PTR_64,
+           ISA_MIPS2_NOT_32R6_64R6;
+def SC64 : SCBase<"sc", GPR32Opnd>, LW_FM<0x38>, PTR_64,
+           ISA_MIPS2_NOT_32R6_64R6;
+}
 
 /// Jump and Branch Instructions
 let isCodeGenOnly = 1 in {
@@ -276,11 +292,13 @@ def SEH64 : SignExtInReg<"seh", i16, GPR64Opnd, II_SEH>, SEB_FM<0x18, 0x20>,
 }
 
 /// Count Leading
-def DCLZ : CountLeading0<"dclz", GPR64Opnd>, CLO_FM<0x24>, ISA_MIPS64_NOT_64R6;
-def DCLO : CountLeading1<"dclo", GPR64Opnd>, CLO_FM<0x25>, ISA_MIPS64_NOT_64R6;
+let AdditionalPredicates = [NotInMicroMips] in {
+  def DCLZ : StdMMR6Rel, CountLeading0<"dclz", GPR64Opnd>, CLO_FM<0x24>,
+             ISA_MIPS64_NOT_64R6;
+  def DCLO : StdMMR6Rel, CountLeading1<"dclo", GPR64Opnd>, CLO_FM<0x25>,
+             ISA_MIPS64_NOT_64R6;
 
 /// Double Word Swap Bytes/HalfWords
-let AdditionalPredicates = [NotInMicroMips] in {
   def DSBH : SubwordSwap<"dsbh", GPR64Opnd>, SEB_FM<2, 0x24>, ISA_MIPS64R2;
   def DSHD : SubwordSwap<"dshd", GPR64Opnd>, SEB_FM<5, 0x24>, ISA_MIPS64R2;
 }
@@ -294,17 +312,19 @@ let AdditionalPredicates = [NotInMicroMips] in {
   // The 'pos + size' constraints are enforced by the code that lowers into
   // MipsISD::Ext.
   def DEXT : ExtBase<"dext", GPR64Opnd, uimm5_report_uimm6, uimm5_plus1,
-                     immZExt5, immZExt5Plus1, MipsExt>, EXT_FM<3>;
+                     immZExt5, immZExt5Plus1, MipsExt>, EXT_FM<3>,
+                     ISA_MIPS64R2;
   def DEXTM : ExtBase<"dextm", GPR64Opnd, uimm5, uimm5_plus33, immZExt5,
-                      immZExt5Plus33, MipsExt>, EXT_FM<1>;
+                      immZExt5Plus33, MipsExt>, EXT_FM<1>, ISA_MIPS64R2;
   def DEXTU : ExtBase<"dextu", GPR64Opnd, uimm5_plus32, uimm5_plus1,
-                      immZExt5Plus32, immZExt5Plus1, MipsExt>, EXT_FM<2>;
+                      immZExt5Plus32, immZExt5Plus1, MipsExt>, EXT_FM<2>,
+                      ISA_MIPS64R2;
   def DINS : InsBase<"dins", GPR64Opnd, uimm6, uimm5_inssize_plus1, MipsIns>,
-             EXT_FM<7>;
+             EXT_FM<7>, ISA_MIPS64R2;
   def DINSU : InsBase<"dinsu", GPR64Opnd, uimm5_plus32, uimm5_inssize_plus1>,
-              EXT_FM<6>;
+              EXT_FM<6>, ISA_MIPS64R2;
   def DINSM : InsBase<"dinsm", GPR64Opnd, uimm5, uimm5_inssize_plus1>,
-              EXT_FM<5>;
+              EXT_FM<5>, ISA_MIPS64R2;
 }
 
 let isCodeGenOnly = 1, rs = 0, shamt = 0 in {
@@ -460,10 +480,14 @@ def DMTC2_OCTEON : MFC2OP<"dmtc2", GPR64Opnd>, MFC2OP_FM<0x12, 5>, ASE_CNMIPS;
 
 /// Move between CPU and coprocessor registers
 let DecoderNamespace = "Mips64", Predicates = [HasMips64] in {
-def DMFC0 : MFC3OP<"dmfc0", GPR64Opnd, COP0Opnd>, MFC3OP_FM<0x10, 1>, ISA_MIPS3;
-def DMTC0 : MTC3OP<"dmtc0", COP0Opnd, GPR64Opnd>, MFC3OP_FM<0x10, 5>, ISA_MIPS3;
-def DMFC2 : MFC3OP<"dmfc2", GPR64Opnd, COP2Opnd>, MFC3OP_FM<0x12, 1>, ISA_MIPS3;
-def DMTC2 : MTC3OP<"dmtc2", COP2Opnd, GPR64Opnd>, MFC3OP_FM<0x12, 5>, ISA_MIPS3;
+def DMFC0 : MFC3OP<"dmfc0", GPR64Opnd, COP0Opnd, II_DMFC0>, MFC3OP_FM<0x10, 1>,
+            ISA_MIPS3;
+def DMTC0 : MTC3OP<"dmtc0", COP0Opnd, GPR64Opnd, II_DMTC0>, MFC3OP_FM<0x10, 5>,
+            ISA_MIPS3;
+def DMFC2 : MFC3OP<"dmfc2", GPR64Opnd, COP2Opnd, II_DMFC2>, MFC3OP_FM<0x12, 1>,
+            ISA_MIPS3;
+def DMTC2 : MTC3OP<"dmtc2", COP2Opnd, GPR64Opnd, II_DMTC2>, MFC3OP_FM<0x12, 5>,
+            ISA_MIPS3;
 }
 
 //===----------------------------------------------------------------------===//
@@ -553,8 +577,10 @@ def : MipsPat<(srl GPR64:$rt, (i32 (trunc GPR64:$rs))),
               (DSRLV GPR64:$rt, (EXTRACT_SUBREG GPR64:$rs, sub_32))>;
 def : MipsPat<(sra GPR64:$rt, (i32 (trunc GPR64:$rs))),
               (DSRAV GPR64:$rt, (EXTRACT_SUBREG GPR64:$rs, sub_32))>;
-def : MipsPat<(rotr GPR64:$rt, (i32 (trunc GPR64:$rs))),
-              (DROTRV GPR64:$rt, (EXTRACT_SUBREG GPR64:$rs, sub_32))>;
+let AdditionalPredicates = [NotInMicroMips] in {
+  def : MipsPat<(rotr GPR64:$rt, (i32 (trunc GPR64:$rs))),
+                (DROTRV GPR64:$rt, (EXTRACT_SUBREG GPR64:$rs, sub_32))>;
+}
 
 // 32-to-64-bit extension
 def : MipsPat<(i64 (anyext GPR32:$src)),
@@ -665,12 +691,12 @@ let AdditionalPredicates = [NotInMicroMips] in {
 def : MipsInstAlias<"dsra $rd, $rt, $rs",
                     (DSRAV GPR64Opnd:$rd, GPR64Opnd:$rt, GPR32Opnd:$rs), 0>,
                     ISA_MIPS3;
-def : MipsInstAlias<"dsrl $rd, $rt, $rs",
-                    (DSRLV GPR64Opnd:$rd, GPR64Opnd:$rt, GPR32Opnd:$rs), 0>,
-                    ISA_MIPS3;
+let AdditionalPredicates = [NotInMicroMips] in {
+  def : MipsInstAlias<"dsrl $rd, $rt, $rs",
+                      (DSRLV GPR64Opnd:$rd, GPR64Opnd:$rt, GPR32Opnd:$rs), 0>,
+                      ISA_MIPS3;
 
 // Two operand (implicit 0 selector) versions:
-let AdditionalPredicates = [NotInMicroMips] in {
   def : MipsInstAlias<"dmtc0 $rt, $rd",
                       (DMTC0 COP0Opnd:$rd, GPR64Opnd:$rt, 0), 0>;
   def : MipsInstAlias<"dmfc0 $rt, $rd",

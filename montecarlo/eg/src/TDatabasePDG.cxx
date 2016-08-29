@@ -49,7 +49,14 @@ See TParticle    for the description of a dynamic particle particle.
 
 ClassImp(TDatabasePDG)
 
-TDatabasePDG*  TDatabasePDG::fgInstance = 0;
+////////////////////////////////////////////////////////////////////////////////
+/// Static function holding the instance.
+
+TDatabasePDG** GetInstancePtr()
+{
+   static TDatabasePDG* fgInstance = nullptr;
+   return &fgInstance;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create PDG database. Initialization of the DB has to be done via explicit
@@ -60,10 +67,11 @@ TDatabasePDG::TDatabasePDG(): TNamed("PDGDB","The PDG particle data base")
    fParticleList  = 0;
    fPdgMap        = 0;
    fListOfClasses = 0;
-   if (fgInstance) {
+   auto fgInstance = GetInstancePtr();
+   if (*fgInstance != nullptr) {
       Warning("TDatabasePDG", "object already instantiated");
    } else {
-      fgInstance = this;
+      *fgInstance = this;
       gROOT->GetListOfSpecials()->Add(this);
    }
 }
@@ -84,15 +92,21 @@ TDatabasePDG::~TDatabasePDG()
       delete fListOfClasses;
    }
    gROOT->GetListOfSpecials()->Remove(this);
-   fgInstance = 0;
+   auto fgInstance = GetInstancePtr();
+   *fgInstance = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///static function
 
-TDatabasePDG*  TDatabasePDG::Instance()
+TDatabasePDG* TDatabasePDG::Instance()
 {
-   return (fgInstance) ? (TDatabasePDG*) fgInstance : new TDatabasePDG();
+   auto fgInstance = GetInstancePtr();
+   if (*fgInstance == nullptr) {
+      // Constructor creates a new instance, inits fgInstance.
+      new TDatabasePDG();
+   }
+   return *fgInstance;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

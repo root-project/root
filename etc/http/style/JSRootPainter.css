@@ -47,6 +47,11 @@
     color: blue;
 }
 
+.jsroot .h_line {
+   height: 18px;
+   display: block;
+}
+
 .jsroot .h_item {
     cursor: pointer;
 }
@@ -420,13 +425,23 @@
     overflow: hidden;
     width: 100%;
     height: calc(100% - 26px);
+    background: white;
 }
 
 .jsroot-flex-resizable-helper {
     border: 2px dotted #00F;
 }
 
-
+/* stylesheet for floating browser */
+.jsroot .float_browser {
+    position: absolute;
+    bottom: 35px;
+    top: 5px;
+    width: 300px;
+    background: #E6E6FA;
+    padding: 5px;
+    overflow: auto;
+}
 
 /*--------------------------------------------------
   progress message

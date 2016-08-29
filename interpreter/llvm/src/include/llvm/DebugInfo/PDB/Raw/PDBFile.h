@@ -82,11 +82,17 @@ public:
   uint32_t getStreamByteSize(uint32_t StreamIndex) const override;
   ArrayRef<support::ulittle32_t>
   getStreamBlockList(uint32_t StreamIndex) const override;
+  size_t getFileSize() const;
 
   ArrayRef<uint8_t> getBlockData(uint32_t BlockIndex,
                                  uint32_t NumBytes) const override;
   Error setBlockData(uint32_t BlockIndex, uint32_t Offset,
                      ArrayRef<uint8_t> Data) const override;
+
+  ArrayRef<support::ulittle32_t> getStreamSizes() const { return StreamSizes; }
+  ArrayRef<ArrayRef<support::ulittle32_t>> getStreamMap() const {
+    return StreamMap;
+  }
 
   ArrayRef<support::ulittle32_t> getDirectoryBlockArray() const;
 
@@ -109,10 +115,17 @@ public:
   Expected<SymbolStream &> getPDBSymbolStream();
   Expected<NameHashTable &> getStringTable();
 
+  Error setSuperBlock(const SuperBlock *Block);
+  void setStreamSizes(ArrayRef<support::ulittle32_t> Sizes);
+  void setStreamMap(ArrayRef<support::ulittle32_t> Directory,
+                    std::vector<ArrayRef<support::ulittle32_t>> &Streams);
+  Error commit();
+
 private:
   std::unique_ptr<codeview::StreamInterface> Buffer;
   const PDBFile::SuperBlock *SB;
   ArrayRef<support::ulittle32_t> StreamSizes;
+  ArrayRef<support::ulittle32_t> DirectoryBlocks;
   std::vector<ArrayRef<support::ulittle32_t>> StreamMap;
 
   std::unique_ptr<InfoStream> Info;

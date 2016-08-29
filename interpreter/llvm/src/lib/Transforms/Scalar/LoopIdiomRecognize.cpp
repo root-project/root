@@ -150,17 +150,9 @@ INITIALIZE_PASS_END(LoopIdiomRecognize, "loop-idiom", "Recognize loop idioms",
 
 Pass *llvm::createLoopIdiomPass() { return new LoopIdiomRecognize(); }
 
-/// deleteDeadInstruction - Delete this instruction.  Before we do, go through
-/// and zero out all the operands of this instruction.  If any of them become
-/// dead, delete them and the computation tree that feeds them.
-///
-static void deleteDeadInstruction(Instruction *I,
-                                  const TargetLibraryInfo *TLI) {
-  SmallVector<Value *, 16> Operands(I->value_op_begin(), I->value_op_end());
+static void deleteDeadInstruction(Instruction *I) {
   I->replaceAllUsesWith(UndefValue::get(I->getType()));
   I->eraseFromParent();
-  for (Value *Op : Operands)
-    RecursivelyDeleteTriviallyDeadInstructions(Op, TLI);
 }
 
 //===----------------------------------------------------------------------===//
@@ -674,9 +666,9 @@ mayLoopAccessLocation(Value *Ptr, ModRefInfo Access, Loop *L,
 
   for (Loop::block_iterator BI = L->block_begin(), E = L->block_end(); BI != E;
        ++BI)
-    for (BasicBlock::iterator I = (*BI)->begin(), E = (*BI)->end(); I != E; ++I)
-      if (IgnoredStores.count(&*I) == 0 &&
-          (AA.getModRefInfo(&*I, StoreLoc) & Access))
+    for (Instruction &I : **BI)
+      if (IgnoredStores.count(&I) == 0 &&
+          (AA.getModRefInfo(&I, StoreLoc) & Access))
         return true;
 
   return false;
@@ -777,7 +769,7 @@ bool LoopIdiomRecognize::processLoopStridedStore(
     GlobalVariable *GV = new GlobalVariable(*M, PatternValue->getType(), true,
                                             GlobalValue::PrivateLinkage,
                                             PatternValue, ".memset_pattern");
-    GV->setUnnamedAddr(true); // Ok to merge these.
+    GV->setUnnamedAddr(GlobalValue::UnnamedAddr::Global); // Ok to merge these.
     GV->setAlignment(16);
     Value *PatternPtr = ConstantExpr::getBitCast(GV, Int8PtrTy);
     NewCall = Builder.CreateCall(MSP, {BasePtr, PatternPtr, NumBytes});
@@ -790,7 +782,7 @@ bool LoopIdiomRecognize::processLoopStridedStore(
   // Okay, the memset has been formed.  Zap the original store and anything that
   // feeds into it.
   for (auto *I : Stores)
-    deleteDeadInstruction(I, TLI);
+    deleteDeadInstruction(I);
   ++NumMemSet;
   return true;
 }
@@ -899,7 +891,7 @@ bool LoopIdiomRecognize::processLoopStoreOfLoopLoad(StoreInst *SI,
 
   // Okay, the memcpy has been formed.  Zap the original store and anything that
   // feeds into it.
-  deleteDeadInstruction(SI, TLI);
+  deleteDeadInstruction(SI);
   ++NumMemCpy;
   return true;
 }
@@ -1123,7 +1115,7 @@ bool LoopIdiomRecognize::recognizePopcount() {
 }
 
 static CallInst *createPopcntIntrinsic(IRBuilder<> &IRBuilder, Value *Val,
-                                       DebugLoc DL) {
+                                       const DebugLoc &DL) {
   Value *Ops[] = {Val};
   Type *Tys[] = {Val->getType()};
 

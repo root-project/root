@@ -1,6 +1,8 @@
 /// \file
 /// \ingroup tutorial_graphs
+/// \notebook
 /// Create and draw a polar graph.
+///
 /// \macro_image
 /// \macro_code
 ///
@@ -19,8 +21,8 @@ void graphpolar()
 
    Double_t x[1000];
    Double_t y[1000];
-   Double_t x1[20];
-   Double_t y1[20];
+   Double_t xval1[20];
+   Double_t yval1[20];
 
    TF1 * fplot = new TF1("fplot","cos(2*x)*cos(20*x)",xmin,xmax);
 
@@ -37,11 +39,11 @@ void graphpolar()
    grP->Draw("AFL");
 
    for (Int_t ipt = 0; ipt < 20; ipt++){
-      x1[ipt] = x[1000/20*ipt];
-      y1[ipt] = y[1000/20*ipt];
+      xval1[ipt] = x[1000/20*ipt];
+      yval1[ipt] = y[1000/20*ipt];
    }
 
-   TGraphPolar * grP1 = new TGraphPolar(20,x1,y1);
+   TGraphPolar * grP1 = new TGraphPolar(20,xval1,yval1);
    grP1->SetMarkerStyle(29);
    grP1->SetMarkerSize(2);
    grP1->SetMarkerColor(4);

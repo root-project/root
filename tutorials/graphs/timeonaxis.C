@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_graphs
+/// \notebook -js
 /// This macro illustrates the use of the time mode on the axis
 /// with different time intervals and time formats.
 /// Through all this script, the time is expressed in UTC. some
@@ -25,8 +26,6 @@
 TCanvas *timeonaxis()
 {
 
-//Author:
-
    time_t script_time;
    script_time = time(0);
    script_time = 3600*(int)(script_time/3600);
@@ -37,11 +36,10 @@ TCanvas *timeonaxis()
 
    TCanvas *ct = new TCanvas("ct","Time on axis",10,10,700,900);
    ct->Divide(1,3);
-   ct->SetFillColor(28);
 
    int i;
 
-//======= Build a signal : noisy damped sine ======
+//### Build a signal : noisy damped sine 
 //        Time interval : 30 minutes
 
    gStyle->SetTitleH(0.08);
@@ -55,8 +53,6 @@ TCanvas *timeonaxis()
       ht->SetBinContent(i,noise);
    }
    ct->cd(1);
-   gPad->SetFillColor(41);
-   gPad->SetFrameFillColor(33);
    ht->SetLineColor(2);
    ht->GetXaxis()->SetLabelSize(0.05);
    ht->Draw();
@@ -66,7 +62,7 @@ TCanvas *timeonaxis()
 // a reasonable tick interval value is chosen.
    ht->GetXaxis()->SetTimeDisplay(1);
 
-//======= Build a simple graph beginning at a different time ======
+//### Build a simple graph beginning at a different time 
 //        Time interval : 5 seconds
 
    float x[100], t[100];
@@ -77,9 +73,6 @@ TCanvas *timeonaxis()
    TGraph *gt = new TGraph(100,t,x);
    gt->SetTitle("Politics");
    ct->cd(2);
-   gPad->SetFillColor(41);
-   gPad->SetFrameFillColor(33);
-   gt->SetFillColor(19);
    gt->SetLineColor(5);
    gt->SetLineWidth(2);
    gt->Draw("AL");
@@ -88,7 +81,7 @@ TCanvas *timeonaxis()
    gt->GetXaxis()->SetTimeDisplay(1);
    gPad->Modified();
 
-//======= Build a second simple graph for a very long time interval ======
+//### Build a second simple graph for a very long time interval 
 //        Time interval : a few years
 
    float x2[10], t2[10];
@@ -99,9 +92,6 @@ TCanvas *timeonaxis()
    TGraph *gt2 = new TGraph(10,t2,x2);
    gt2->SetTitle("Number of monkeys on the moon");
    ct->cd(3);
-   gPad->SetFillColor(41);
-   gPad->SetFrameFillColor(33);
-   gt2->SetFillColor(19);
    gt2->SetMarkerColor(4);
    gt2->SetMarkerStyle(29);
    gt2->SetMarkerSize(1.3);
@@ -113,6 +103,7 @@ TCanvas *timeonaxis()
 // One can choose a different time format than the one chosen by default
 // The time format is the same as the one of the C strftime() function
 // It's a string containing the following formats :
+//
 //    for date :
 //      %a abbreviated weekday name
 //      %b abbreviated month name

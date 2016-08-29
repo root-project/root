@@ -60,6 +60,8 @@ namespace llvm {
 
       CMOV,         // ARM conditional move instructions.
 
+      SSAT,         // Signed saturation
+
       BCC_i64,
 
       SRL_FLAG,     // V,Flag = srl_flag X -> srl X, 1 + save carry out.
@@ -163,6 +165,7 @@ namespace llvm {
 
       UMLAL,        // 64bit Unsigned Accumulate Multiply
       SMLAL,        // 64bit Signed Accumulate Multiply
+      UMAAL,        // 64-bit Unsigned Accumulate Accumulate Multiply
 
       // Operands of the standard BUILD_VECTOR node are not legalized, which
       // is fine if BUILD_VECTORs are always lowered to shuffles or other
@@ -250,10 +253,10 @@ namespace llvm {
                            EVT VT) const override;
 
     MachineBasicBlock *
-      EmitInstrWithCustomInserter(MachineInstr *MI,
-                                  MachineBasicBlock *MBB) const override;
+    EmitInstrWithCustomInserter(MachineInstr &MI,
+                                MachineBasicBlock *MBB) const override;
 
-    void AdjustInstrPostInstrSelection(MachineInstr *MI,
+    void AdjustInstrPostInstrSelection(MachineInstr &MI,
                                        SDNode *Node) const override;
 
     SDValue PerformCMOVCombine(SDNode *N, SelectionDAG &DAG) const;
@@ -503,23 +506,22 @@ namespace llvm {
     std::pair<SDValue, SDValue> getARMXALUOOp(SDValue Op, SelectionDAG &DAG, SDValue &ARMcc) const;
 
     typedef SmallVector<std::pair<unsigned, SDValue>, 8> RegsToPassVector;
-    void PassF64ArgInRegs(SDLoc dl, SelectionDAG &DAG,
-                          SDValue Chain, SDValue &Arg,
-                          RegsToPassVector &RegsToPass,
+    void PassF64ArgInRegs(const SDLoc &dl, SelectionDAG &DAG, SDValue Chain,
+                          SDValue &Arg, RegsToPassVector &RegsToPass,
                           CCValAssign &VA, CCValAssign &NextVA,
                           SDValue &StackPtr,
                           SmallVectorImpl<SDValue> &MemOpChains,
                           ISD::ArgFlagsTy Flags) const;
     SDValue GetF64FormalArgument(CCValAssign &VA, CCValAssign &NextVA,
                                  SDValue &Root, SelectionDAG &DAG,
-                                 SDLoc dl) const;
+                                 const SDLoc &dl) const;
 
     CallingConv::ID getEffectiveCallingConv(CallingConv::ID CC,
                                             bool isVarArg) const;
     CCAssignFn *CCAssignFnForNode(CallingConv::ID CC, bool Return,
                                   bool isVarArg) const;
     SDValue LowerMemOpCallTo(SDValue Chain, SDValue StackPtr, SDValue Arg,
-                             SDLoc dl, SelectionDAG &DAG,
+                             const SDLoc &dl, SelectionDAG &DAG,
                              const CCValAssign &VA,
                              ISD::ArgFlagsTy Flags) const;
     SDValue LowerEH_SJLJ_SETJMP(SDValue Op, SelectionDAG &DAG) const;
@@ -588,9 +590,9 @@ namespace llvm {
     SDValue LowerCallResult(SDValue Chain, SDValue InFlag,
                             CallingConv::ID CallConv, bool isVarArg,
                             const SmallVectorImpl<ISD::InputArg> &Ins,
-                            SDLoc dl, SelectionDAG &DAG,
-                            SmallVectorImpl<SDValue> &InVals,
-                            bool isThisReturn, SDValue ThisVal) const;
+                            const SDLoc &dl, SelectionDAG &DAG,
+                            SmallVectorImpl<SDValue> &InVals, bool isThisReturn,
+                            SDValue ThisVal) const;
 
     bool supportSplitCSR(MachineFunction *MF) const override {
       return MF->getFunction()->getCallingConv() == CallingConv::CXX_FAST_TLS &&
@@ -602,23 +604,19 @@ namespace llvm {
       const SmallVectorImpl<MachineBasicBlock *> &Exits) const override;
 
     SDValue
-      LowerFormalArguments(SDValue Chain,
-                           CallingConv::ID CallConv, bool isVarArg,
-                           const SmallVectorImpl<ISD::InputArg> &Ins,
-                           SDLoc dl, SelectionDAG &DAG,
-                           SmallVectorImpl<SDValue> &InVals) const override;
+    LowerFormalArguments(SDValue Chain, CallingConv::ID CallConv, bool isVarArg,
+                         const SmallVectorImpl<ISD::InputArg> &Ins,
+                         const SDLoc &dl, SelectionDAG &DAG,
+                         SmallVectorImpl<SDValue> &InVals) const override;
 
-    int StoreByValRegs(CCState &CCInfo, SelectionDAG &DAG,
-                       SDLoc dl, SDValue &Chain,
-                       const Value *OrigArg,
-                       unsigned InRegsParamRecordIdx,
-                       int ArgOffset,
+    int StoreByValRegs(CCState &CCInfo, SelectionDAG &DAG, const SDLoc &dl,
+                       SDValue &Chain, const Value *OrigArg,
+                       unsigned InRegsParamRecordIdx, int ArgOffset,
                        unsigned ArgSize) const;
 
     void VarArgStyleRegisters(CCState &CCInfo, SelectionDAG &DAG,
-                              SDLoc dl, SDValue &Chain,
-                              unsigned ArgOffset,
-                              unsigned TotalArgRegsSaveSize,
+                              const SDLoc &dl, SDValue &Chain,
+                              unsigned ArgOffset, unsigned TotalArgRegsSaveSize,
                               bool ForceMutable = false) const;
 
     SDValue
@@ -646,42 +644,39 @@ namespace llvm {
                         const SmallVectorImpl<ISD::OutputArg> &Outs,
                         LLVMContext &Context) const override;
 
-    SDValue
-      LowerReturn(SDValue Chain,
-                  CallingConv::ID CallConv, bool isVarArg,
-                  const SmallVectorImpl<ISD::OutputArg> &Outs,
-                  const SmallVectorImpl<SDValue> &OutVals,
-                  SDLoc dl, SelectionDAG &DAG) const override;
+    SDValue LowerReturn(SDValue Chain, CallingConv::ID CallConv, bool isVarArg,
+                        const SmallVectorImpl<ISD::OutputArg> &Outs,
+                        const SmallVectorImpl<SDValue> &OutVals,
+                        const SDLoc &dl, SelectionDAG &DAG) const override;
 
     bool isUsedByReturnOnly(SDNode *N, SDValue &Chain) const override;
 
     bool mayBeEmittedAsTailCall(CallInst *CI) const override;
 
-    SDValue getCMOV(SDLoc dl, EVT VT, SDValue FalseVal, SDValue TrueVal,
+    SDValue getCMOV(const SDLoc &dl, EVT VT, SDValue FalseVal, SDValue TrueVal,
                     SDValue ARMcc, SDValue CCR, SDValue Cmp,
                     SelectionDAG &DAG) const;
     SDValue getARMCmp(SDValue LHS, SDValue RHS, ISD::CondCode CC,
-                      SDValue &ARMcc, SelectionDAG &DAG, SDLoc dl) const;
-    SDValue getVFPCmp(SDValue LHS, SDValue RHS,
-                      SelectionDAG &DAG, SDLoc dl) const;
+                      SDValue &ARMcc, SelectionDAG &DAG, const SDLoc &dl) const;
+    SDValue getVFPCmp(SDValue LHS, SDValue RHS, SelectionDAG &DAG,
+                      const SDLoc &dl) const;
     SDValue duplicateCmp(SDValue Cmp, SelectionDAG &DAG) const;
 
     SDValue OptimizeVFPBrcond(SDValue Op, SelectionDAG &DAG) const;
 
-    void SetupEntryBlockForSjLj(MachineInstr *MI,
-                                MachineBasicBlock *MBB,
+    void SetupEntryBlockForSjLj(MachineInstr &MI, MachineBasicBlock *MBB,
                                 MachineBasicBlock *DispatchBB, int FI) const;
 
-    void EmitSjLjDispatchBlock(MachineInstr *MI, MachineBasicBlock *MBB) const;
+    void EmitSjLjDispatchBlock(MachineInstr &MI, MachineBasicBlock *MBB) const;
 
-    bool RemapAddSubWithFlags(MachineInstr *MI, MachineBasicBlock *BB) const;
+    bool RemapAddSubWithFlags(MachineInstr &MI, MachineBasicBlock *BB) const;
 
-    MachineBasicBlock *EmitStructByval(MachineInstr *MI,
+    MachineBasicBlock *EmitStructByval(MachineInstr &MI,
                                        MachineBasicBlock *MBB) const;
 
-    MachineBasicBlock *EmitLowered__chkstk(MachineInstr *MI,
+    MachineBasicBlock *EmitLowered__chkstk(MachineInstr &MI,
                                            MachineBasicBlock *MBB) const;
-    MachineBasicBlock *EmitLowered__dbzchk(MachineInstr *MI,
+    MachineBasicBlock *EmitLowered__dbzchk(MachineInstr &MI,
                                            MachineBasicBlock *MBB) const;
   };
 

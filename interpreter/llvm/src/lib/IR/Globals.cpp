@@ -51,7 +51,7 @@ Value *GlobalValue::handleOperandChangeImpl(Value *From, Value *To) {
 /// create a GlobalValue) from the GlobalValue Src to this one.
 void GlobalValue::copyAttributesFrom(const GlobalValue *Src) {
   setVisibility(Src->getVisibility());
-  setUnnamedAddr(Src->hasUnnamedAddr());
+  setUnnamedAddr(Src->getUnnamedAddr());
   setDLLStorageClass(Src->getDLLStorageClass());
 }
 
@@ -96,7 +96,6 @@ void GlobalObject::copyAttributesFrom(const GlobalValue *Src) {
   if (const auto *GV = dyn_cast<GlobalObject>(Src)) {
     setAlignment(GV->getAlignment());
     setSection(GV->getSection());
-    setComdat(const_cast<GlobalObject *>(GV)->getComdat());
   }
 }
 

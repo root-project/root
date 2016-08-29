@@ -1240,8 +1240,9 @@ HTML_EXTRA_STYLESHEET  = ROOT.css
 # files will be copied as-is; there are no commands or markers available.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-HTML_EXTRA_FILES       = rootlogo_s.gif
-
+HTML_EXTRA_FILES       =  ./rootlogo_s.gif \
+                          ./notebook.gif
+			
 # The HTML_COLORSTYLE_HUE tag controls the color of the HTML output. Doxygen
 # will adjust the colors in the stylesheet and background images according to
 # this color. Hue is specified as an angle on a color-wheel, see

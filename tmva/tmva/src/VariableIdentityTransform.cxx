@@ -65,7 +65,7 @@ Bool_t TMVA::VariableIdentityTransform::PrepareTransformation (const std::vector
 
    if (!IsEnabled() || IsCreated()) return kTRUE;
 
-   Log() << kINFO << "Preparing the Identity transformation..." << Endl;
+   Log() << kDEBUG << "Preparing the Identity transformation..." << Endl;
 
    if( fGet.size() < events[0]->GetNVariables() )
       Log() << kFATAL << "Identity transform does not allow for a selection of input variables. Please remove the variable selection option and put only 'I'." << Endl;

@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_fit
+/// \notebook
 /// Fitting a TGraph2D
 ///
 /// \macro_image
@@ -76,7 +77,6 @@ TCanvas* graph2dfit()
       h3->Fill(f2->Eval(x,y)-z);
    }
 
-   gStyle->SetPalette(1);
    c->cd(1);
    f2->SetTitle("Original function with Graph2D points on top");
    f2->SetMaximum(zmax);

@@ -60,6 +60,12 @@ class ReadOnly<int argNo> : IntrinsicProperty {
   int ArgNo = argNo;
 }
 
+// WriteOnly - The intrinsic does not read memory through the specified
+// argument pointer.
+class WriteOnly<int argNo> : IntrinsicProperty {
+  int ArgNo = argNo;
+}
+
 // ReadNone - The specified argument pointer is not dereferenced by the
 // intrinsic.
 class ReadNone<int argNo> : IntrinsicProperty {
@@ -349,7 +355,7 @@ def int_memcpy  : Intrinsic<[],
                              [llvm_anyptr_ty, llvm_anyptr_ty, llvm_anyint_ty,
                               llvm_i32_ty, llvm_i1_ty],
                             [IntrArgMemOnly, NoCapture<0>, NoCapture<1>,
-                             ReadOnly<1>]>;
+                             WriteOnly<0>, ReadOnly<1>]>;
 def int_memmove : Intrinsic<[],
                             [llvm_anyptr_ty, llvm_anyptr_ty, llvm_anyint_ty,
                              llvm_i32_ty, llvm_i1_ty],
@@ -358,7 +364,7 @@ def int_memmove : Intrinsic<[],
 def int_memset  : Intrinsic<[],
                             [llvm_anyptr_ty, llvm_i8_ty, llvm_anyint_ty,
                              llvm_i32_ty, llvm_i1_ty],
-                            [IntrArgMemOnly, NoCapture<0>]>;
+                            [IntrArgMemOnly, NoCapture<0>, WriteOnly<0>]>;
 
 let IntrProperties = [IntrNoMem] in {
   def int_fma  : Intrinsic<[llvm_anyfloat_ty],
@@ -641,13 +647,14 @@ def int_clear_cache : Intrinsic<[], [llvm_ptr_ty, llvm_ptr_ty],
 
 //===-------------------------- Masked Intrinsics -------------------------===//
 //
-def int_masked_store : Intrinsic<[], [llvm_anyvector_ty, LLVMPointerTo<0>,
+def int_masked_store : Intrinsic<[], [llvm_anyvector_ty,
+                                      LLVMAnyPointerType<LLVMMatchType<0>>,
                                       llvm_i32_ty,
                                       LLVMVectorSameWidth<0, llvm_i1_ty>],
                                  [IntrArgMemOnly]>;
 
 def int_masked_load  : Intrinsic<[llvm_anyvector_ty],
-                                 [LLVMPointerTo<0>, llvm_i32_ty,
+                                 [LLVMAnyPointerType<LLVMMatchType<0>>, llvm_i32_ty,
                                   LLVMVectorSameWidth<0, llvm_i1_ty>, LLVMMatchType<0>],
                                  [IntrReadMem, IntrArgMemOnly]>;
 
@@ -663,9 +670,14 @@ def int_masked_scatter: Intrinsic<[],
                                    LLVMVectorSameWidth<0, llvm_i1_ty>],
                                   [IntrArgMemOnly]>;
 
-// Intrinsics to support bit sets.
-def int_bitset_test : Intrinsic<[llvm_i1_ty], [llvm_ptr_ty, llvm_metadata_ty],
-                                [IntrNoMem]>;
+// Test whether a pointer is associated with a type metadata identifier.
+def int_type_test : Intrinsic<[llvm_i1_ty], [llvm_ptr_ty, llvm_metadata_ty],
+                              [IntrNoMem]>;
+
+// Safely loads a function pointer from a virtual table pointer using type metadata.
+def int_type_checked_load : Intrinsic<[llvm_ptr_ty, llvm_i1_ty],
+                                      [llvm_ptr_ty, llvm_i32_ty, llvm_metadata_ty],
+                                      [IntrNoMem]>;
 
 def int_load_relative: Intrinsic<[llvm_ptr_ty], [llvm_ptr_ty, llvm_anyint_ty],
                                  [IntrReadMem, IntrArgMemOnly]>;

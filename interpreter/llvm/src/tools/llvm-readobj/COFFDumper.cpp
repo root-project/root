@@ -113,10 +113,6 @@ private:
                            uint32_t RelocOffset, uint32_t Offset,
                            StringRef *RelocSym = nullptr);
 
-  void printRelocatedField(StringRef Label, const coff_section *Sec,
-                           StringRef SectionContents, const ulittle32_t *Field,
-                           StringRef *RelocSym = nullptr);
-
   void printBinaryBlockWithRelocs(StringRef Label, const SectionRef &Sec,
                                   StringRef SectionContents, StringRef Block);
 
@@ -262,18 +258,6 @@ void COFFDumper::printRelocatedField(StringRef Label, const coff_section *Sec,
     W.printSymbolOffset(Label, Symbol, Offset);
   else
     W.printHex(Label, RelocOffset);
-}
-
-void COFFDumper::printRelocatedField(StringRef Label, const coff_section *Sec,
-                                     StringRef SectionContents,
-                                     const ulittle32_t *Field,
-                                     StringRef *RelocSym) {
-  StringRef SymStorage;
-  StringRef &Symbol = RelocSym ? *RelocSym : SymStorage;
-  if (!resolveSymbolName(Sec, SectionContents, Field, Symbol))
-    W.printSymbolOffset(Label, Symbol, *Field);
-  else
-    W.printHex(Label, *Field);
 }
 
 void COFFDumper::printBinaryBlockWithRelocs(StringRef Label,
@@ -1108,9 +1092,9 @@ void COFFDumper::printCodeViewTypeSection(StringRef SectionName,
   if (Magic != COFF::DEBUG_SECTION_MAGIC)
     return error(object_error::parse_failed);
 
-  if (!CVTD.dump({Data.bytes_begin(), Data.bytes_end()})) {
+  if (auto EC = CVTD.dump({Data.bytes_begin(), Data.bytes_end()})) {
     W.flush();
-    error(object_error::parse_failed);
+    error(llvm::errorToErrorCode(std::move(EC)));
   }
 }
 
@@ -1555,8 +1539,8 @@ void llvm::dumpCodeViewMergedTypes(
     Buf.append(Record.begin(), Record.end());
   });
   CVTypeDumper CVTD(&Writer, opts::CodeViewSubsectionBytes);
-  if (!CVTD.dump({Buf.str().bytes_begin(), Buf.str().bytes_end()})) {
+  if (auto EC = CVTD.dump({Buf.str().bytes_begin(), Buf.str().bytes_end()})) {
     Writer.flush();
-    error(object_error::parse_failed);
+    error(llvm::errorToErrorCode(std::move(EC)));
   }
 }

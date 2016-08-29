@@ -296,9 +296,11 @@ void PruningFunctionCloner::CloneBlock(const BasicBlock *BB,
         if (Value *MappedV = VMap.lookup(V))
           V = MappedV;
 
-        VMap[&*II] = V;
-        delete NewInst;
-        continue;
+        if (!NewInst->mayHaveSideEffects()) {
+          VMap[&*II] = V;
+          delete NewInst;
+          continue;
+        }
       }
     }
 
@@ -517,10 +519,9 @@ void llvm::CloneAndPruneIntoFromInst(Function *NewFunc, const Function *OldFunc,
       // entries.
       BasicBlock::iterator I = NewBB->begin();
       for (; (PN = dyn_cast<PHINode>(I)); ++I) {
-        for (std::map<BasicBlock*, unsigned>::iterator PCI =PredCount.begin(),
-             E = PredCount.end(); PCI != E; ++PCI) {
-          BasicBlock *Pred     = PCI->first;
-          for (unsigned NumToRemove = PCI->second; NumToRemove; --NumToRemove)
+        for (const auto &PCI : PredCount) {
+          BasicBlock *Pred = PCI.first;
+          for (unsigned NumToRemove = PCI.second; NumToRemove; --NumToRemove)
             PN->removeIncomingValue(Pred, false);
         }
       }
@@ -688,11 +689,17 @@ Loop *llvm::cloneLoopWithPreheader(BasicBlock *Before, BasicBlock *LoopDomBB,
     // Update LoopInfo.
     NewLoop->addBasicBlockToLoop(NewBB, *LI);
 
-    // Update DominatorTree.
-    BasicBlock *IDomBB = DT->getNode(BB)->getIDom()->getBlock();
-    DT->addNewBlock(NewBB, cast<BasicBlock>(VMap[IDomBB]));
+    // Add DominatorTree node. After seeing all blocks, update to correct IDom.
+    DT->addNewBlock(NewBB, NewPH);
 
     Blocks.push_back(NewBB);
+  }
+
+  for (BasicBlock *BB : OrigLoop->getBlocks()) {
+    // Update DominatorTree.
+    BasicBlock *IDomBB = DT->getNode(BB)->getIDom()->getBlock();
+    DT->changeImmediateDominator(cast<BasicBlock>(VMap[BB]),
+                                 cast<BasicBlock>(VMap[IDomBB]));
   }
 
   // Move them physically from the end of the block list.

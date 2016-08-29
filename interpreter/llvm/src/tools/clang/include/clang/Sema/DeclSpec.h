@@ -1155,10 +1155,10 @@ struct DeclaratorChunk {
     unsigned TypeQuals : 5;
 
     /// True if this dimension included the 'static' keyword.
-    bool hasStatic : 1;
+    unsigned hasStatic : 1;
 
     /// True if this dimension was [*].  In this case, NumElts is null.
-    bool isStar : 1;
+    unsigned isStar : 1;
 
     /// This is the size of the array, or null if [] or [*] was specified.
     /// Since the parser is multi-purpose, and we don't want to impose a root
@@ -1632,6 +1632,7 @@ public:
     MemberContext,       // Struct/Union field.
     BlockContext,        // Declaration within a block in a function.
     ForContext,          // Declaration within first part of a for loop.
+    InitStmtContext,     // Declaration within optional init stmt of if/switch.
     ConditionContext,    // Condition declaration in a C++ if/switch/while/for.
     TemplateParamContext,// Within a template parameter list.
     CXXNewContext,       // C++ new-expression.
@@ -1663,10 +1664,10 @@ private:
   SmallVector<DeclaratorChunk, 8> DeclTypeInfo;
 
   /// InvalidType - Set by Sema::GetTypeForDeclarator().
-  bool InvalidType : 1;
+  unsigned InvalidType : 1;
 
   /// GroupingParens - Set by Parser::ParseParenDeclarator().
-  bool GroupingParens : 1;
+  unsigned GroupingParens : 1;
 
   /// FunctionDefinition - Is this Declarator for a function or member 
   /// definition and, if so, what kind?
@@ -1675,7 +1676,7 @@ private:
   unsigned FunctionDefinition : 2;
 
   /// \brief Is this Declarator a redeclaration?
-  bool Redeclaration : 1;
+  unsigned Redeclaration : 1;
 
   /// Attrs - Attributes.
   ParsedAttributes Attrs;
@@ -1810,6 +1811,7 @@ public:
     case MemberContext:
     case BlockContext:
     case ForContext:
+    case InitStmtContext:
     case ConditionContext:
       return false;
 
@@ -1844,6 +1846,7 @@ public:
     case MemberContext:
     case BlockContext:
     case ForContext:
+    case InitStmtContext:
     case ConditionContext:
     case PrototypeContext:
     case LambdaExprParameterContext:
@@ -1877,6 +1880,7 @@ public:
     case MemberContext:
     case BlockContext:
     case ForContext:
+    case InitStmtContext:
     case ConditionContext:
     case PrototypeContext:
     case LambdaExprParameterContext:
@@ -1921,6 +1925,7 @@ public:
     case FileContext:
     case BlockContext:
     case ForContext:
+    case InitStmtContext:
       return true;
 
     case ConditionContext:
@@ -2119,9 +2124,10 @@ public:
     case FileContext:
     case MemberContext:
     case BlockContext:
+    case ForContext:
+    case InitStmtContext:
       return true;
 
-    case ForContext:
     case ConditionContext:
     case KNRTypeListContext:
     case TypeNameContext:

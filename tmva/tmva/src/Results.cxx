@@ -40,6 +40,8 @@ namespace TMVA {
    class DataSetInfo;
 }
 
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
@@ -52,6 +54,17 @@ TMVA::Results::Results( const DataSetInfo* dsi, TString resultsName )
 {
    fStorage->SetOwner();
 }
+
+TMVA::Results::Results( ) 
+: fTreeType(Types::kTraining),
+fDsi(0),
+fStorage( new TList() ),
+fHistAlias( new std::map<TString, TObject*> ),
+fLogger( new MsgLogger("Results", kINFO))
+{
+    fStorage->SetOwner();
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
@@ -136,7 +149,7 @@ TGraph* TMVA::Results::GetGraph(const TString & alias) const
 ////////////////////////////////////////////////////////////////////////////////
 /// delete all stored histograms
 
-void TMVA::Results::Delete()
+void TMVA::Results::Delete(Option_t *)
 {
    fStorage->Delete();
    fHistAlias->clear();

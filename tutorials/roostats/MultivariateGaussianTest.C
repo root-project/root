@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_roostats
+/// \notebook
 /// Comparison of MCMC and PLC in a multi-variate gaussian problem
 ///
 /// This tutorial produces an N-dimensional multivariate Gaussian
@@ -94,18 +95,17 @@ void MultivariateGaussianTest(Int_t dim = 4, Int_t nPOI = 2)
    // now make the multivariate Gaussian
    RooMultiVarGaussian mvg("mvg", "mvg", xVec, muVec, cov);
 
-   ///////////////////////////////////////////
+   // --------------------
    // make a toy dataset
    RooDataSet* data = mvg.generate(xVec, 100);
 
-   ///////////////////////////////////////////////
    // now create the model config for this problem
    RooWorkspace* w = new RooWorkspace("MVG");
    ModelConfig modelConfig(w);
    modelConfig.SetPdf(mvg);
    modelConfig.SetParametersOfInterest(poi);
 
-   ///////////////////////////////////////////
+   // -------------------------------------------------------
    // Setup calculators
 
    // MCMC
@@ -136,7 +136,6 @@ void MultivariateGaussianTest(Int_t dim = 4, Int_t nPOI = 2)
    LikelihoodInterval* plInt = (LikelihoodInterval*)plc.GetInterval();
 
 
-   ///////////////////////////////////////////
    // make some plots
    MCMCIntervalPlot mcPlot(*mcInt);
 

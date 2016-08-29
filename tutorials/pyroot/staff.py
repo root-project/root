@@ -1,5 +1,6 @@
 ## \file
 ## \ingroup tutorial_pyroot
+## \notebook -nodraw
 ## example of macro to read data from an ascii file and
 ## create a root file with a Tree.
 ##
@@ -12,9 +13,10 @@
 ## \author Wim Lavrijsen
 
 import re, array, os
-from ROOT import *
+import ROOT
+from ROOT import TFile, TTree, gROOT, AddressOf
 
-### a C/C++ structure is required, to allow memory based access
+## A C/C++ structure is required, to allow memory based access
 gROOT.ProcessLine(
 "struct staff_t {\
    Int_t           Category;\
@@ -30,41 +32,41 @@ gROOT.ProcessLine(
    Char_t          Nation[3];\
 };" );
 
-### function to read in data from ASCII file and fill the ROOT tree
-def fillTree():
+## Function to read in data from ASCII file and fill the ROOT tree
+def staff():
 
-   staff = staff_t()
+    staff = ROOT.staff_t()
 
- # The input file cern.dat is a copy of the CERN staff data base
- # from 1988
+    # The input file cern.dat is a copy of the CERN staff data base
+    # from 1988
 
-   f = TFile( 'staff.root', 'RECREATE' )
-   tree = TTree( 'T', 'staff data from ascii file' )
-   tree.Branch( 'staff', staff, 'Category/I:Flag:Age:Service:Children:Grade:Step:Hrweek:Cost' )
-   tree.Branch( 'Divisions', AddressOf( staff, 'Division' ), 'Division/C' )
-   tree.Branch( 'Nation', AddressOf( staff, 'Nation' ), 'Nation/C' )
+    f = TFile( 'staff.root', 'RECREATE' )
+    tree = TTree( 'T', 'staff data from ascii file' )
+    tree.Branch( 'staff', staff, 'Category/I:Flag:Age:Service:Children:Grade:Step:Hrweek:Cost' )
+    tree.Branch( 'Divisions', AddressOf( staff, 'Division' ), 'Division/C' )
+    tree.Branch( 'Nation', AddressOf( staff, 'Nation' ), 'Nation/C' )
 
- # note that the branches Division and Nation cannot be on the first branch
-   fname = os.path.join(os.path.dirname(__file__),'../tree/cernstaff.dat')
-   for line in open(fname).readlines():
-      t = filter( lambda x: x, re.split( '\s+', line ) )
-      staff.Category = int(t[0])             # assign as integers
-      staff.Flag     = int(t[1])
-      staff.Age      = int(t[2])
-      staff.Service  = int(t[3])
-      staff.Children = int(t[4])
-      staff.Grade    = int(t[5])
-      staff.Step     = int(t[6])
-      staff.Hrweek   = int(t[7])
-      staff.Cost     = int(t[8])
-      staff.Division = t[9]                  # assign as strings
-      staff.Nation   = t[10]
+    # note that the branches Division and Nation cannot be on the first branch
+    fname = os.path.expandvars('$ROOTSYS/tutorials/tree/cernstaff.dat')
+    for line in open(fname).readlines():
+        t = filter( lambda x: x, re.split( '\s+', line ) )
+        staff.Category = int(t[0])             # assign as integers
+        staff.Flag     = int(t[1])
+        staff.Age      = int(t[2])
+        staff.Service  = int(t[3])
+        staff.Children = int(t[4])
+        staff.Grade    = int(t[5])
+        staff.Step     = int(t[6])
+        staff.Hrweek   = int(t[7])
+        staff.Cost     = int(t[8])
+        staff.Division = t[9]                  # assign as strings
+        staff.Nation   = t[10]
 
-      tree.Fill()
+        tree.Fill()
 
-   tree.Print()
-   tree.Write()
+    tree.Print()
+    tree.Write()
 
 #### run fill function if invoked on CLI
 if __name__ == '__main__':
-   fillTree()
+   staff()

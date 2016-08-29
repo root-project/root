@@ -59,9 +59,8 @@ ClassImp(TMVA::MethodLD)
    TMVA::MethodLD::MethodLD( const TString& jobName,
                              const TString& methodTitle,
                              DataSetInfo& dsi,
-                             const TString& theOption,
-                             TDirectory* theTargetDir ) :
-   MethodBase( jobName, Types::kLD, methodTitle, dsi, theOption, theTargetDir ),
+                             const TString& theOption ) :
+   MethodBase( jobName, Types::kLD, methodTitle, dsi, theOption),
    fNRegOut   ( 0 ),
    fSumMatx   ( 0 ),
    fSumValMatx( 0 ),
@@ -73,8 +72,8 @@ ClassImp(TMVA::MethodLD)
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor from weight file
 
-TMVA::MethodLD::MethodLD( DataSetInfo& theData, const TString& theWeightFile, TDirectory* theTargetDir )
-   : MethodBase( Types::kLD, theData, theWeightFile, theTargetDir ),
+TMVA::MethodLD::MethodLD( DataSetInfo& theData, const TString& theWeightFile)
+   : MethodBase( Types::kLD, theData, theWeightFile),
      fNRegOut   ( 0 ),
      fSumMatx   ( 0 ),
      fSumValMatx( 0 ),
@@ -476,7 +475,7 @@ void TMVA::MethodLD::ProcessOptions()
 
 void TMVA::MethodLD::PrintCoefficients( void ) 
 {
-   Log() << kINFO << "Results for LD coefficients:" << Endl;
+   Log() << kHEADER << "Results for LD coefficients:" << Endl;
 
    if (GetTransformationHandler().GetTransformationList().GetSize() != 0) {
       Log() << kINFO << "NOTE: The coefficients must be applied to TRANFORMED variables" << Endl;

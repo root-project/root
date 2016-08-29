@@ -641,8 +641,8 @@ void CastOperation::CheckDynamicCast() {
     // If we're dynamic_casting from a prvalue to an rvalue reference, we need
     // to materialize the prvalue before we bind the reference to it.
     if (SrcExpr.get()->isRValue())
-      SrcExpr = new (Self.Context) MaterializeTemporaryExpr(
-          SrcType, SrcExpr.get(), /*IsLValueReference*/false);
+      SrcExpr = Self.CreateMaterializeTemporaryExpr(
+          SrcType, SrcExpr.get(), /*IsLValueReference*/ false);
     SrcPointee = SrcType;
   }
 
@@ -1314,16 +1314,13 @@ TryStaticDowncast(Sema &Self, CanQualType SrcType, CanQualType DestType,
     }
     std::string PathDisplayStr;
     std::set<unsigned> DisplayedPaths;
-    for (CXXBasePaths::paths_iterator PI = Paths.begin(), PE = Paths.end();
-         PI != PE; ++PI) {
-      if (DisplayedPaths.insert(PI->back().SubobjectNumber).second) {
+    for (clang::CXXBasePath &Path : Paths) {
+      if (DisplayedPaths.insert(Path.back().SubobjectNumber).second) {
         // We haven't displayed a path to this particular base
         // class subobject yet.
         PathDisplayStr += "\n    ";
-        for (CXXBasePath::const_reverse_iterator EI = PI->rbegin(),
-                                                 EE = PI->rend();
-             EI != EE; ++EI)
-          PathDisplayStr += EI->Base->getType().getAsString() + " -> ";
+        for (CXXBasePathElement &PE : llvm::reverse(Path))
+          PathDisplayStr += PE.Base->getType().getAsString() + " -> ";
         PathDisplayStr += QualType(DestType).getAsString();
       }
     }
@@ -1649,8 +1646,8 @@ static TryCastResult TryConstCast(Sema &Self, ExprResult &SrcExpr,
   if (NeedToMaterializeTemporary)
     // This is a const_cast from a class prvalue to an rvalue reference type.
     // Materialize a temporary to store the result of the conversion.
-    SrcExpr = new (Self.Context) MaterializeTemporaryExpr(
-        SrcType, SrcExpr.get(), /*IsLValueReference*/ false);
+    SrcExpr = Self.CreateMaterializeTemporaryExpr(SrcType, SrcExpr.get(),
+                                                  /*IsLValueReference*/ false);
 
   return TC_Success;
 }

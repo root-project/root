@@ -17,6 +17,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/Analysis/ConstantFolding.h"
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringMap.h"
@@ -80,7 +81,7 @@ Constant *FoldBitCast(Constant *C, Type *DestTy, const DataLayout &DL) {
 
     // Now that we know that the input value is a vector of integers, just shift
     // and insert them into our result.
-    unsigned BitShift = DL.getTypeAllocSizeInBits(SrcEltTy);
+    unsigned BitShift = DL.getTypeSizeInBits(SrcEltTy);
     APInt Result(IT->getBitWidth(), 0);
     for (unsigned i = 0; i != NumSrcElts; ++i) {
       Constant *Element;
@@ -564,7 +565,7 @@ Constant *llvm::ConstantFoldLoadFromConstPtr(Constant *C, Type *Ty,
   // directly if string length is small enough.
   StringRef Str;
   if (getConstantStringInfo(CE, Str) && !Str.empty()) {
-    unsigned StrLen = Str.size();
+    size_t StrLen = Str.size();
     unsigned NumBits = Ty->getPrimitiveSizeInBits();
     // Replace load with immediate integer if the result is an integer or fp
     // value.
@@ -573,15 +574,13 @@ Constant *llvm::ConstantFoldLoadFromConstPtr(Constant *C, Type *Ty,
       APInt StrVal(NumBits, 0);
       APInt SingleChar(NumBits, 0);
       if (DL.isLittleEndian()) {
-        for (signed i = StrLen-1; i >= 0; i--) {
-          SingleChar = (uint64_t) Str[i] &
-            std::numeric_limits<unsigned char>::max();
+        for (unsigned char C : reverse(Str.bytes())) {
+          SingleChar = static_cast<uint64_t>(C);
           StrVal = (StrVal << 8) | SingleChar;
         }
       } else {
-        for (unsigned i = 0; i < StrLen; i++) {
-          SingleChar = (uint64_t) Str[i] &
-            std::numeric_limits<unsigned char>::max();
+        for (unsigned char C : Str.bytes()) {
+          SingleChar = static_cast<uint64_t>(C);
           StrVal = (StrVal << 8) | SingleChar;
         }
         // Append NULL at the end.

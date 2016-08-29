@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_hist
+/// \notebook
 /// Fill a 1-D histogram from a parametric function.
 ///
 /// \macro_image
@@ -9,10 +10,9 @@
 
 void fillrandom() {
    TCanvas *c1 = new TCanvas("c1","The FillRandom example",200,10,700,900);
-   c1->SetFillColor(18);
 
-   auto pad1 = new TPad("pad1","The pad with the function",0.05,0.50,0.95,0.95,21);
-   auto pad2 = new TPad("pad2","The pad with the histogram",0.05,0.05,0.95,0.45,21);
+   auto pad1 = new TPad("pad1","The pad with the function",0.05,0.50,0.95,0.95);
+   auto pad2 = new TPad("pad2","The pad with the histogram",0.05,0.05,0.95,0.45);
    pad1->Draw();
    pad2->Draw();
    pad1->cd();
@@ -27,14 +27,12 @@ void fillrandom() {
    sqroot->SetParameters(10,4,1,20);
    pad1->SetGridx();
    pad1->SetGridy();
-   pad1->GetFrame()->SetFillColor(42);
    pad1->GetFrame()->SetBorderMode(-1);
    pad1->GetFrame()->SetBorderSize(5);
    sqroot->SetLineColor(4);
    sqroot->SetLineWidth(6);
    sqroot->Draw();
    auto lfunction = new TPaveLabel(5,39,9.8,46,"The sqroot function");
-   lfunction->SetFillColor(41);
    lfunction->Draw();
    c1->Update();
 
@@ -43,7 +41,6 @@ void fillrandom() {
    // and fill it following the distribution in function sqroot.
    //
    pad2->cd();
-   pad2->GetFrame()->SetFillColor(42);
    pad2->GetFrame()->SetBorderMode(-1);
    pad2->GetFrame()->SetBorderSize(5);
    auto h1f = new TH1F("h1f","Test random numbers",200,0,10);

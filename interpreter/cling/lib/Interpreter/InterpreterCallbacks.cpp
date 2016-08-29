@@ -12,6 +12,7 @@
 #include "cling/Interpreter/Interpreter.h"
 
 #include "clang/AST/ASTContext.h"
+#include "clang/Sema/CodeCompleteConsumer.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Sema/Sema.h"

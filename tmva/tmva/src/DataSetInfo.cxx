@@ -60,6 +60,7 @@
 #include "TMVA/Types.h"
 #include "TMVA/VariableInfo.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
@@ -123,11 +124,16 @@ TMVA::ClassInfo* TMVA::DataSetInfo::AddClass( const TString& className )
    ClassInfo* theClass = GetClassInfo(className);
    if (theClass) return theClass;
 
+ 
    fClasses.push_back( new ClassInfo(className) );
    fClasses.back()->SetNumber(fClasses.size()-1);
 
-   Log() << kINFO << Form("Dataset[%s] : ",fName.Data()) << "Added class \"" << className << "\"\t with internal class number " 
-         << fClasses.back()->GetNumber() << Endl;
+   //Log() << kHEADER << Endl;
+
+   Log() << kHEADER << Form("[%s] : ",fName.Data()) << "Added class \"" << className << "\""<< Endl;
+ 
+   Log() << kDEBUG <<"\t with internal class number " << fClasses.back()->GetNumber() << Endl;
+ 
 
    if (className == "Signal") fSignalClass = fClasses.size()-1;  // store the signal class index ( for comparison reasons )
 
@@ -385,7 +391,9 @@ std::vector<TString> TMVA::DataSetInfo::GetListOfVariables() const
 
 void TMVA::DataSetInfo::PrintCorrelationMatrix( const TString& className )
 {
-   Log() << kINFO << Form("Dataset[%s] : ",fName.Data()) << "Correlation matrix (" << className << "):" << Endl;
+
+   Log() << kHEADER //<< Form("Dataset[%s] : ",fName.Data()) 
+	 << "Correlation matrix (" << className << "):" << Endl;
    gTools().FormattedOutput( *CorrelationMatrix( className ), GetListOfVariables(), Log() );
 }
 

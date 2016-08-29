@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_math
+/// \notebook
 /// Tutorial illustrating the use of TMath::GammaDist and TMath::LogNormal
 ///
 /// \macro_image

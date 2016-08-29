@@ -1,12 +1,13 @@
 /// \file
 /// \ingroup tutorial_tree
-///
+/// \notebook
 /// Playing with a Tree containing variables of type character
 /// \macro_image
 /// \macro_code
 /// \author Rene Brun
 void cernstaff () {
-   TString dir = gSystem->DirName(__FILE__);
+   TString dir = gROOT->GetTutorialsDir();
+   dir.Append("/tree/cernstaff.C");
    if (gSystem->AccessPathName("cernstaff.root")) {
       gROOT->SetMacroPath(dir);
       gROOT->ProcessLine(".x cernbuild.C");

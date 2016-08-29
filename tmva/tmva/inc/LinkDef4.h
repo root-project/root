@@ -39,4 +39,7 @@
 #pragma link C++ class TMVA::ROCCalc+;
 #pragma link C++ class TMVA::ROCCurve+;
 
+#pragma link C++ function TMVA::CreateVariableTransform;
+#pragma link C++ function TMVA::DataLoaderCopy;
+
 #endif

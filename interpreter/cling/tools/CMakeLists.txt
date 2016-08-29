@@ -10,6 +10,6 @@
 if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../lib/UserInterface/textinput
    OR CLING_INCLUDE_TESTS)
   add_subdirectory(driver)
+  add_subdirectory(Jupyter)
+  add_subdirectory(libcling)
 endif()
-add_subdirectory(Jupyter)
-

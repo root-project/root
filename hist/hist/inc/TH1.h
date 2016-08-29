@@ -97,6 +97,8 @@ public:
       kAllAxes = kXaxis | kYaxis | kZaxis
    };
 
+   friend class TH1Merger;
+
 protected:
     Int_t         fNcells;          ///< number of bins(1D), cells (2D) +U/Overflows
     TAxis         fXaxis;           ///< X axis descriptor
@@ -149,6 +151,8 @@ protected:
    virtual void     SavePrimitiveHelp(std::ostream &out, const char *hname, Option_t *option = "");
    static Bool_t    RecomputeAxisLimits(TAxis& destAxis, const TAxis& anAxis);
    static Bool_t    SameLimitsAndNBins(const TAxis& axis1, const TAxis& axis2);
+   Bool_t   IsEmpty() const { return fTsumw == 0 && GetEntries() == 0; } //need to use GetEntries() in case of buffer histograms
+
 
    virtual Double_t DoIntegral(Int_t ix1, Int_t ix2, Int_t iy1, Int_t iy2, Int_t iz1, Int_t iz2, Double_t & err,
                                Option_t * opt, Bool_t doerr = kFALSE) const;

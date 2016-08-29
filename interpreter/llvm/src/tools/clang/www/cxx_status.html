@@ -623,7 +623,7 @@ as the draft C++1z standard evolves.</p>
     <tr>
       <td>New specification for inheriting constructors (<a href="cxx_dr_status.html#1941">DR1941</a> et al)</td>
       <td><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0136r1.html">P0136R1</a></td>
-      <td class="none" align="center">No</td>
+      <td class="svn" align="center">SVN <a href="#p0136">(9)</a></td>
     </tr>
     <!-- Jacksonville papers -->
     <tr>
@@ -671,6 +671,62 @@ as the draft C++1z standard evolves.</p>
       <td><a href="http://wg21.link/p0245r1">P0245R1</a></td>
       <td class="full" align="center">Yes</td>
     </tr>
+    <!-- Oulu papers -->
+    <tr>
+      <td>Using attribute namespaces without repetition</td>
+      <td><a href="http://wg21.link/p0028r4">P0028R4</a></td>
+      <td class="svn" align="center">SVN</td>
+    </tr>
+    <tr>
+      <td>Dynamic memory allocation for over-aligned data</td>
+      <td><a href="http://wg21.link/p0035r4">P0035R4</a></td>
+      <td class="none" align="center">No</td>
+    </tr>
+    <tr>
+      <td>Template argument deduction for class templates</td>
+      <td><a href="http://wg21.link/p0091r3">P0091R3</a></td>
+      <td class="none" align="center">No</td>
+    </tr>
+    <tr>
+      <td>Non-type template parameters with <tt>auto</tt> type</td>
+      <td><a href="http://wg21.link/p0127r2">P0127R2</a></td>
+      <td class="none" align="center">No</td>
+    </tr>
+    <tr>
+      <td>Guaranteed copy elision</td>
+      <td><a href="http://wg21.link/p0135r1">P0135R1</a></td>
+      <td class="none" align="center">No</td>
+    </tr>
+    <tr>
+      <td>Stricter expression evaluation order (chapter 8 alternative)</td>
+      <td><a href="http://wg21.link/p0145r3">P0145R3</a></td>
+      <td class="none" align="center">No</td>
+    </tr>
+    <tr>
+      <td>Requirement to ignore unknown attributes</td>
+      <td><a href="http://wg21.link/p0283r2">P0283R2</a></td>
+      <td class="full" align="center">Yes</td>
+    </tr>
+    <tr>
+      <td><tt>constexpr</tt> <em>if-statement</em>s</td>
+      <td><a href="http://wg21.link/p0292r2">P0292R2</a></td>
+      <td class="svn" align="center">SVN</td>
+    </tr>
+    <tr>
+      <td>Inline variables</td>
+      <td><a href="http://wg21.link/p0386r2">P0386R2</a></td>
+      <td class="svn" align="center">SVN</td>
+    </tr>
+    <tr>
+      <td>Structured bindings</td>
+      <td><a href="http://wg21.link/p0217r3">P0217R3</a></td>
+      <td class="none" align="center">No</td>
+    </tr>
+    <tr>
+      <td>Separate variable and condition for <tt>if</tt> and <tt>switch</tt></td>
+      <td><a href="http://wg21.link/p0305r1">P0305R1</a></td>
+      <td class="none" align="center">No</td>
+    </tr>
 </table>
 
 <p>
@@ -678,6 +734,9 @@ as the draft C++1z standard evolves.</p>
 all language versions that allow type deduction from <tt>auto</tt>
 (per the request of the C++ committee).
 In Clang 3.7, a warning is emitted for all cases that would change meaning.
+</span><br>
+<span id="p0136">(9): This is the resolution to a Defect Report, so is applied
+to all language versions supporting inheriting constructors.
 </span>
 </p>
 

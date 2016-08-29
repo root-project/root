@@ -270,13 +270,29 @@ bool TClingCallbacks::LookupObject(clang::TagDecl* Tag) {
    // Clang needs Tag's complete definition. Can we parse it?
    if (fIsAutoloadingRecursively || fIsAutoParsingSuspended) return false;
 
+   Sema &SemaR = m_Interpreter->getSema();
+
+   SourceLocation Loc = Tag->getLocation();
+   if (SemaR.getSourceManager().isInSystemHeader(Loc)) {
+      // We will not help the system headers, sorry.
+      return false;
+   }
+
+   for (auto ReRD: Tag->redecls()) {
+      // Don't autoparse a TagDecl while we are parsing its definition!
+      if (ReRD->isBeingDefined())
+         return false;
+   }
+
+
    if (RecordDecl* RD = dyn_cast<RecordDecl>(Tag)) {
-      Sema &SemaR = m_Interpreter->getSema();
       ASTContext& C = SemaR.getASTContext();
       Preprocessor &PP = SemaR.getPreprocessor();
       Parser& P = const_cast<Parser&>(m_Interpreter->getParser());
       Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
       Parser::ParserCurTokRestoreRAII savedCurToken(P);
+      Sema::DelayedInfoRAII semaInfoRAII(SemaR);
+
       // After we have saved the token reset the current one to something which
       // is safe (semi colon usually means empty decl)
       Token& Tok = const_cast<Token&>(P.getCurToken());

@@ -1,34 +1,12 @@
 /// \file
 /// \ingroup tutorial_io
+/// \notebook
 /// Macro demonstrating the merging of containers.
 /// \macro_code
 ///
 /// \author The Root Team
 
 TFile *f;
-
-TSeqCollection *GetCollection();
-
-void testMergeCont()
-{
-   TString tutdir = gROOT->GetTutorialsDir();
-   gROOT->LoadMacro(tutdir+"/hsimple.C");
-   TList *list = (TList *)GetCollection();
-   TList *inputs = new TList();
-   for (Int_t i=0; i<10; i++) {
-      inputs->AddAt(GetCollection(),0);
-      list->Merge(inputs);
-      inputs->Delete();
-      f->Close();
-   }
-   delete inputs;
-   TH1F *hpx = (TH1F*)(((TList*)list->At(1))->At(0));
-   printf("============================================\n");
-   printf("Total  hpx: %d entries\n", (int)hpx->GetEntries());
-   hpx->Draw();
-   list->Delete();
-   delete list;
-}
 
 
 TSeqCollection *GetCollection()
@@ -57,4 +35,25 @@ TSeqCollection *GetCollection()
    l0->Add(hprof);
    l0->Add(l01);
    return l0;
+}
+
+void testMergeCont()
+{
+   TString tutdir = gROOT->GetTutorialsDir();
+   gROOT->LoadMacro(tutdir+"/hsimple.C");
+   TList *list1 = (TList *)GetCollection();
+   TList *inputs = new TList();
+   for (Int_t i=0; i<10; i++) {
+      inputs->AddAt(GetCollection(),0);
+      list1->Merge(inputs);
+      inputs->Delete();
+      f->Close();
+   }
+   delete inputs;
+   TH1F *hpx = (TH1F*)(((TList*)list1->At(1))->At(0));
+   printf("============================================\n");
+   printf("Total  hpx: %d entries\n", (int)hpx->GetEntries());
+   hpx->Draw();
+   list1->Delete();
+   delete list1;
 }

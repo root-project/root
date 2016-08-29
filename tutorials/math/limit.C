@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_math
+/// \notebooks
 /// This program demonstrates the computation of 95 % C.L. limits.
 /// It uses a set of randomly created histograms.
 ///
@@ -31,15 +32,15 @@ void limit() {
    c1->SetFillColor(42);
 
    // Create some histograms
-   TH1D* background = new TH1D("background","The expected background",30,-4,4);
-   TH1D* signal     = new TH1D("signal","the expected signal",30,-4,4);
-   TH1D* data       = new TH1D("data","some fake data points",30,-4,4);
-   background->SetFillColor(48);
-   signal->SetFillColor(41);
-   data->SetMarkerStyle(21);
-   data->SetMarkerColor(kBlue);
-   background->Sumw2(); // needed for stat uncertainty
-   signal->Sumw2(); // needed for stat uncertainty
+   TH1D* backgroundHist = new TH1D("background","The expected background",30,-4,4);
+   TH1D* signalHist     = new TH1D("signal","the expected signal",30,-4,4);
+   TH1D* dataHist       = new TH1D("data","some fake data points",30,-4,4);
+   backgroundHist->SetFillColor(48);
+   signalHist->SetFillColor(41);
+   dataHist->SetMarkerStyle(21);
+   dataHist->SetMarkerColor(kBlue);
+   backgroundHist->Sumw2(); // needed for stat uncertainty
+   signalHist->Sumw2(); // needed for stat uncertainty
 
    // Fill histograms randomly
    TRandom2 r;
@@ -47,18 +48,18 @@ void limit() {
    for (Int_t i = 0; i < 25000; i++) {
       bg  = r.Gaus(0,1);
       sig = r.Gaus(1,.2);
-      background->Fill(bg,0.02);
-      signal->Fill(sig,0.001);
+      backgroundHist->Fill(bg,0.02);
+      signalHist->Fill(sig,0.001);
    }
    for (Int_t i = 0; i < 500; i++) {
       dt = r.Gaus(0,1);
-      data->Fill(dt);
+      dataHist->Fill(dt);
    }
    THStack *hs = new THStack("hs","Signal and background compared to data...");
-   hs->Add(background);
-   hs->Add(signal);
+   hs->Add(backgroundHist);
+   hs->Add(signalHist);
    hs->Draw("hist");
-   data->Draw("PE1,Same");
+   dataHist->Draw("PE1,Same");
    c1->Modified();
    c1->Update();
    c1->GetFrame()->SetFillColor(21);
@@ -70,7 +71,7 @@ void limit() {
 
    // Compute the limits
    cout << "Computing limits... " << endl;
-   TLimitDataSource* mydatasource = new TLimitDataSource(signal,background,data);
+   TLimitDataSource* mydatasource = new TLimitDataSource(signalHist,backgroundHist,dataHist);
    TConfidenceLevel *myconfidence = TLimit::ComputeLimit(mydatasource,50000);
    cout << "CLs    : "   << myconfidence->CLs()  << endl;
    cout << "CLsb   : "   << myconfidence->CLsb() << endl;
@@ -103,7 +104,7 @@ void limit() {
    errors[0]=0;    // error source 1: 0%
    errors[1]=0.01; // error source 2: 1%
    TLimitDataSource* mynewdatasource  = new TLimitDataSource();
-   mynewdatasource->AddChannel(signal,background,data,&errors,&errorb,names);
+   mynewdatasource->AddChannel(signalHist,backgroundHist,dataHist,&errors,&errorb,names);
    TConfidenceLevel *mynewconfidence = TLimit::ComputeLimit(mynewdatasource,50000,true);
    cout << "CLs    : " << mynewconfidence->CLs()  << endl;
    cout << "CLsb   : " << mynewconfidence->CLsb() << endl;

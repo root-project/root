@@ -1,23 +1,22 @@
-
-// This file demonstrates how THtml can document sources.
-// BEGIN_HTML <!--
-/* -->
-<p>See the <a href=http://root.cern.ch/root/doc/RootDoc.html">Users Guide</a>
-chapter <a href="ftp://root.cern.ch/root/doc/chapter28.pdf">Automatic HTML Documentation</a>,
-and <a href="http://root.cern.ch/root/html/THtml.html">THtml's class documentation</a>.
-There's also a version of this file in HTML, i.e. the output of THtmlDemo::Convert(),
-at <a href="http://root.cern.ch/root/html/examples/htmlex.C.html">
-http://root.cern.ch/root/html/examples/htmlex.C.html</a></p>
-
-<p>To see this demo script in action start up ROOT and run
-<pre>   root [0] .x $(ROOTSYS)/tutorials/htmlex.C+</pre>
-and check the output in ./htmldoc.</p>
-
-<p>O, and of course we can put HTML code into comments, too:</p>
-  <img src="http://root.cern.ch/root/images/twiki-rootlogo.jpg"/>
-<p>Actually, all of this documentation is already HTML!</p>
-<!-- */
-// --> END_HTML
+/// \file
+/// \ingroup Tutorials
+/// This file demonstrates how THtml can document sources.
+///
+/// See the [Users Guide](https://root.cern.ch/root/htmldoc/guides/users-guide/ROOTUsersGuide.html)
+/// chapter [Automatic HTML Documentation](https://root.cern.ch/root/htmldoc/guides/users-guide/ROOTUsersGuideChapters/HTMLDoc.pdf),
+/// and [THtml's class documentation](https://root.cern.ch/doc/master/classTHtml.html).
+///
+/// To see this demo script in action start up ROOT and run
+/// ~~~{.cpp}
+///   root [0] .x $(ROOTSYS)/tutorials/htmlex.C+
+/// ~~~
+/// and check the output in `./htmldoc`.
+///
+/// and of course we can put HTML code into comments, too.
+///
+/// \macro_code
+///
+/// \author Axel Naumann
 
 #include "THtml.h"
 

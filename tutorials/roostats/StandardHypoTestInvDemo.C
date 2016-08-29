@@ -1,12 +1,13 @@
 /// \file
 /// \ingroup tutorial_roostats
+/// \notebook
 /// Standard tutorial macro for performing an inverted  hypothesis test for computing an interval
 ///
 /// This macro will perform a scan of the p-values for computing the interval or limit
 ///
 /// Usage:
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 /// root>.L StandardHypoTestInvDemo.C
 /// root> StandardHypoTestInvDemo("fileName","workspace name","S+B modelconfig name","B model name","data set name",calculator type, test statistic type, use CLS,
 ///                                number of points, xmin, xmax, number of toys, use number counting)

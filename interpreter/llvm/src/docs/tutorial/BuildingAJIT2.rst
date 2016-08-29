@@ -28,13 +28,13 @@ Optimizing Modules using the IRTransformLayer
 In `Chapter 4 <LangImpl4.html>`_ of the "Implementing a language with LLVM"
 tutorial series the llvm *FunctionPassManager* is introduced as a means for
 optimizing LLVM IR. Interested readers may read that chapter for details, but
-in short, to optimize a Module we create an llvm::FunctionPassManager
+in short: to optimize a Module we create an llvm::FunctionPassManager
 instance, configure it with a set of optimizations, then run the PassManager on
 a Module to mutate it into a (hopefully) more optimized but semantically
 equivalent form. In the original tutorial series the FunctionPassManager was
-created outside the KaleidoscopeJIT, and modules were optimized before being
+created outside the KaleidoscopeJIT and modules were optimized before being
 added to it. In this Chapter we will make optimization a phase of our JIT
-instead. For now, this will provide us a motivation to learn more about ORC
+instead. For now this will provide us a motivation to learn more about ORC
 layers, but in the long term making optimization part of our JIT will yield an
 important benefit: When we begin lazily compiling code (i.e. deferring
 compilation of each function until the first time it's run), having
@@ -286,7 +286,7 @@ these choices will have different performance characteristics: Doing work
 eagerly means the JIT takes longer up-front, but proceeds smoothly once this is
 done. Deferring work allows the JIT to get up-and-running quickly, but will
 force the JIT to pause and wait whenever some code or data is needed that hasn't
-already been procesed.
+already been processed.
 
 Our current REPL is eager: Each function definition is optimized and compiled as
 soon as it's typed in. If we were to make the transform layer lazy (but not

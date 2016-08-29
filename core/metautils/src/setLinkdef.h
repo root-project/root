@@ -1,8 +1,5 @@
 #include <set>
 #include <string>
-#ifndef __hpux
-using namespace std;
-#endif
 
 #pragma create TClass set<int>;
 #pragma create TClass set<long>;

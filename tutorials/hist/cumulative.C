@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_hist
+/// \notebook -js
 /// Illustrate use of the TH1::GetCumulative method.
 ///
 /// \macro_image
@@ -15,7 +16,7 @@
 #include "TCanvas.h"
 #include "TRandom.h"
 
-TCanvas* cumulative()
+TCanvas *cumulative()
 {
    TH1* h = new TH1D("h", "h", 100, -5., 5.);
    gRandom->SetSeed();

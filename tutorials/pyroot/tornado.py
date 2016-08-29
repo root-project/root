@@ -1,6 +1,7 @@
 ## \file
 ## \ingroup tutorial_pyroot
 ## Tornado example.
+## \notebook
 ##
 ## \macro_image
 ## \macro_code

@@ -13,7 +13,6 @@ TEveBoxSet* boxset(Float_t x=0, Float_t y=0, Float_t z=0,
    TEveManager::Create();
 
    TRandom r(0);
-   gStyle->SetPalette(1, 0);
 
    TEveRGBAPalette* pal = new TEveRGBAPalette(0, 130);
 
@@ -114,7 +113,6 @@ TEveBoxSet* boxset_freebox(Int_t num=100, Bool_t registerSet=kTRUE)
    TEveManager::Create();
 
    TRandom r(0);
-   gStyle->SetPalette(1, 0);
 
    TEveRGBAPalette* pal = new TEveRGBAPalette(0, 130);
 

@@ -40,7 +40,8 @@ private:
   void printU8ImmDecOperand(const MCInst *MI, unsigned OpNo, raw_ostream &O);
   void printU16ImmDecOperand(const MCInst *MI, unsigned OpNo, raw_ostream &O);
   void printU32ImmOperand(const MCInst *MI, unsigned OpNo, raw_ostream &O);
-  void printNamedBit(const MCInst* MI, unsigned OpNo, raw_ostream& O, const char* BitName);
+  void printNamedBit(const MCInst* MI, unsigned OpNo, raw_ostream& O,
+                     StringRef BitName);
   void printOffen(const MCInst *MI, unsigned OpNo, raw_ostream &O);
   void printIdxen(const MCInst *MI, unsigned OpNo, raw_ostream &O);
   void printAddr64(const MCInst *MI, unsigned OpNo, raw_ostream &O);
@@ -64,7 +65,8 @@ private:
   void printImmediate32(uint32_t I, raw_ostream &O);
   void printImmediate64(uint64_t I, raw_ostream &O);
   void printOperand(const MCInst *MI, unsigned OpNo, raw_ostream &O);
-  void printOperandAndMods(const MCInst *MI, unsigned OpNo, raw_ostream &O);
+  void printOperandAndFPInputMods(const MCInst *MI, unsigned OpNo, raw_ostream &O);
+  void printOperandAndIntInputMods(const MCInst *MI, unsigned OpNo, raw_ostream &O);
   void printDPPCtrl(const MCInst *MI, unsigned OpNo, raw_ostream &O);
   void printRowMask(const MCInst *MI, unsigned OpNo, raw_ostream &O);
   void printBankMask(const MCInst *MI, unsigned OpNo, raw_ostream &O);
@@ -78,6 +80,8 @@ private:
   void printMemOperand(const MCInst *MI, unsigned OpNo, raw_ostream &O);
   static void printIfSet(const MCInst *MI, unsigned OpNo, raw_ostream &O,
                          StringRef Asm, StringRef Default = "");
+  static void printIfSet(const MCInst *MI, unsigned OpNo,
+                         raw_ostream &O, char Asm);
   static void printAbs(const MCInst *MI, unsigned OpNo, raw_ostream &O);
   static void printClamp(const MCInst *MI, unsigned OpNo, raw_ostream &O);
   static void printClampSI(const MCInst *MI, unsigned OpNo, raw_ostream &O);

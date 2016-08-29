@@ -65,7 +65,7 @@ def _convert_subprocess_cmd(cmd):
         else:
             return cmd.split()
     else:
-        return [cmd]
+        return shlex.split(cmd, posix=True, comments=True)
 
 
 def _perror(e):
@@ -76,10 +76,11 @@ def _perror(e):
     sys.exit(e.returncode)
 
 
-def exec_subprocess_call(cmd, cwd):
+def exec_subprocess_call(cmd, cwd, showCMD=False):
+    if showCMD: print(cmd)
     cmd = _convert_subprocess_cmd(cmd)
     try:
-        subprocess.check_call(cmd, cwd=cwd, shell=True,
+        subprocess.check_call(cmd, cwd=cwd, shell=False,
                               stdin=subprocess.PIPE, stdout=None, stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as e:
         _perror(e)
@@ -87,8 +88,9 @@ def exec_subprocess_call(cmd, cwd):
 
 def exec_subprocess_check_output(cmd, cwd):
     cmd = _convert_subprocess_cmd(cmd)
+    out = ''
     try:
-        out = subprocess.check_output(cmd, cwd=cwd, shell=True,
+        out = subprocess.check_output(cmd, cwd=cwd, shell=False,
                                       stdin=subprocess.PIPE, stderr=subprocess.STDOUT).decode('utf-8')
     except subprocess.CalledProcessError as e:
         _perror(e)
@@ -119,7 +121,7 @@ def box_draw(msg):
     spaces_no = 80 - len(msg) - 4
     spacer = ' ' * spaces_no
 
-    if OS != 'Windows':
+    if OS == 'Linux':
         print('''
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │ %s%s │
@@ -130,30 +132,35 @@ def box_draw(msg):
 | %s%s|
 +-----------------------------------------------------------------------------+''' % (msg, spacer))
 
+# Make sure git log is invoked without a pager
+GIT_LOG='git --no-pager log '
 
-def wget(url, out_dir):
+def pip_install(package):
+    # Needs brew install python. We should only install if we need the
+    # functionality
+    import pip
+    pip.main(['install', '--ignore-installed', '--prefix', os.path.join(workdir, 'pip'), '--upgrade', package])
+
+
+def wget(url, out_dir, rename_file=None, retries=3):
     file_name = url.split('/')[-1]
     print("  HTTP request sent, awaiting response ... ")
     u = urlopen(url)
-    if u.code == 200:
-        print("  Connected to %s [200 OK]" % (url))
-    else:
+    if u.code != 200 or retries == 0:
         exit()
+    else:
+        print("  Connected to %s [200 OK]" % (url))
 
     try:
-        if sys.version_info < (3, 0):
-            # Python 2.x
-            meta = u.info()
-            file_size = int(meta.getheaders("Content-Length")[0])
+        file_size = u.headers.get('Content-Length')
+        if file_size:
+            file_size = int(file_size)
         else:
-            # Python 3.x
-            file_size = int(u.getheader("Content-Length"))
-    except (IndexError, TypeError) as e:
-        # IndexError is generated in Python 2
-        # TypeError is generated in Python 3
-        print('  Error due to broken pipe: ', e)
+            raise Exception
+    except Exception:
+        print('  Error due to broken pipe')
         print('  Retrying ...')
-        wget(url, out_dir)
+        wget(url, out_dir, retries-1)
 
     else:
         print("  Downloading: %s Bytes: %s" % (file_name, file_size))
@@ -174,6 +181,11 @@ def wget(url, out_dir):
             status += chr(8) * (len(status) + 1)
             print(status, end=' ')
         f.close()
+        if rename_file:
+            ffrom = os.path.join(out_dir, file_name)
+            fto = os.path.join(out_dir, rename_file)
+            print('Moving file: ' + ffrom + ' -> ' + fto)
+            os.rename(ffrom, fto)
         print()
 
 
@@ -182,7 +194,7 @@ def fetch_llvm(llvm_revision):
     print('Last known good LLVM revision is: ' + llvm_revision)
     print('Current working directory is: ' + workdir + '\n')
 
-    if "github.com" in LLVM_GIT_URL and args['create_dev_env'] is None:
+    if "github.com" in LLVM_GIT_URL and args['create_dev_env'] is None and args['use_wget']:
         _, _, _, user, repo = LLVM_GIT_URL.split('/')
         print('Fetching LLVM ...')
         wget(url='https://github.com/%s/%s' % (user, repo.replace('.git', '')) +
@@ -203,30 +215,78 @@ def fetch_llvm(llvm_revision):
         print()
         return
 
+    def checkout():
+        if LLVM_BRANCH:
+            exec_subprocess_call('git checkout %s' % LLVM_BRANCH, srcdir)
+        else:
+            exec_subprocess_call('git checkout cling-patches-r%s' % llvm_revision, srcdir)
+    
     def get_fresh_llvm():
-        exec_subprocess_call('git clone %s %s' % (LLVM_GIT_URL, srcdir), workdir)
+        if LLVM_BRANCH:
+            exec_subprocess_call('git clone --depth=10 --branch %s %s %s'
+                                 % (LLVM_BRANCH, LLVM_GIT_URL, srcdir), workdir)
+        else:
+            exec_subprocess_call('git clone %s %s' % (LLVM_GIT_URL, srcdir), workdir)
 
-        exec_subprocess_call('git checkout cling-patches-r%s' % llvm_revision, srcdir)
+        checkout()
 
     def update_old_llvm():
         exec_subprocess_call('git stash', srcdir)
 
-        exec_subprocess_call('git clean -f -x -d', srcdir)
+        # exec_subprocess_call('git clean -f -x -d', srcdir)
 
-        exec_subprocess_call('git fetch --tags', srcdir)
+        checkout()
 
-        exec_subprocess_call('git checkout cling-patches-r%s' % llvm_revision, srcdir)
-
-        exec_subprocess_call('git pull origin refs/tags/cling-patches-r%s' % (llvm_revision), srcdir)
+        if LLVM_BRANCH:
+            exec_subprocess_call('git pull origin %s' % LLVM_BRANCH, srcdir)
+        else:
+            exec_subprocess_call('git fetch --tags', srcdir)
+            exec_subprocess_call('git pull origin refs/tags/cling-patches-r%s'
+                                 % llvm_revision, srcdir)
 
     if os.path.isdir(srcdir):
         update_old_llvm()
     else:
         get_fresh_llvm()
 
+# TODO Refactor all fetch_ functions to use this class will remove a lot of dup
+class RepoCache(object):
+    def __init__(self, url, rootDir, depth=10):
+        self.__url = url
+        self.__depth = depth
+        self.__projDir = rootDir
+        self.__workDir = os.path.join(rootDir, url.split('/')[-1])
+    def fetch(self, branch):
+        if os.path.isdir(self.__workDir):
+            exec_subprocess_call('git stash', self.__workDir)
+            exec_subprocess_call('git clean -f -x -d', self.__workDir)
+            exec_subprocess_call('git fetch --tags', self.__workDir)
+        else:
+            exec_subprocess_call('git clone %s' % self.__url, self.__projDir)
+
+        exec_subprocess_call('git checkout %s' % branch, self.__workDir)
+
+def should_fetch_libcpp(llvm_revision):
+    stdlib = args.get('stdlib')
+    if stdlib.startswith('libc++'):
+        # -stdlib=libc++,release_39 means build libc++,release_39
+        # otherwise use sytem provided
+        # we return the revision and caller should know what to do with it
+        # set the arg to 'libc++' so that can be used as a test
+        args['stdlib'] = 'libc++'
+        return stdlib[7:]
+    return False
+
+def fetch_libcpp(llvm_revision, libcpp_tag):
+    if libcpp_tag:
+        # TODO make sure this tag has common ancestor with llvm_revision
+        projdir = os.path.join(srcdir, 'projects')
+        RepoCache('https://github.com/llvm-mirror/libcxx', projdir).fetch(libcpp_tag)
+        RepoCache('https://github.com/llvm-mirror/libcxxabi', projdir).fetch(libcpp_tag)
+    return True
 
 def fetch_clang(llvm_revision):
-    if "github.com" in CLANG_GIT_URL and args['create_dev_env'] is None:
+    if "github.com" in CLANG_GIT_URL and args['create_dev_env'] is None and args['use_wget']:
         _, _, _, user, repo = CLANG_GIT_URL.split('/')
         print('Fetching Clang ...')
         wget(url='https://github.com/%s/%s' % (user, repo.replace('.git', '')) +
@@ -248,24 +308,39 @@ def fetch_clang(llvm_revision):
         print()
         return
 
-    def get_fresh_clang():
-        exec_subprocess_call('git clone %s' % CLANG_GIT_URL, os.path.join(srcdir, 'tools'))
+    toolsdir = os.path.join(srcdir, 'tools')
+    clangdir = os.path.join(toolsdir, 'clang')
+    def checkout():
+       if CLANG_BRANCH:
+           exec_subprocess_call('git checkout %s' % CLANG_BRANCH, clangdir)
+       else:
+           exec_subprocess_call('git checkout cling-patches-r%s' % llvm_revision, clangdir)
 
-        exec_subprocess_call('git checkout cling-patches-r%s' % llvm_revision, os.path.join(srcdir, 'tools', 'clang'))
+    def get_fresh_clang():
+        if CLANG_BRANCH:
+            exec_subprocess_call('git clone --depth=10 --branch %s %s'
+                                 % (CLANG_BRANCH, CLANG_GIT_URL), toolsdir)
+        else:
+            exec_subprocess_call('git clone %s' % CLANG_GIT_URL, toolsdir)
+
+        checkout()
 
     def update_old_clang():
-        exec_subprocess_call('git stash', os.path.join(srcdir, 'tools', 'clang'))
+        exec_subprocess_call('git stash', clangdir)
 
-        exec_subprocess_call('git clean -f -x -d', os.path.join(srcdir, 'tools', 'clang'))
+        # exec_subprocess_call('git clean -f -x -d', clangdir)
 
-        exec_subprocess_call('git fetch --tags', os.path.join(srcdir, 'tools', 'clang'))
+        exec_subprocess_call('git fetch --tags', clangdir)
 
-        exec_subprocess_call('git checkout cling-patches-r%s' % llvm_revision, os.path.join(srcdir, 'tools', 'clang'))
+        checkout()
+        if CLANG_BRANCH:
+            exec_subprocess_call('git pull origin %s' % CLANG_BRANCH, clangdir)
+        else:
+            exec_subprocess_call('git fetch --tags', clangdir)
+            exec_subprocess_call('git pull origin refs/tags/cling-patches-r%s' % llvm_revision,
+                                  clangdir)
 
-        exec_subprocess_call('git pull origin refs/tags/cling-patches-r%s' % llvm_revision,
-                             os.path.join(srcdir, 'tools', 'clang'))
-
-    if os.path.isdir(os.path.join(srcdir, 'tools', 'clang')):
+    if os.path.isdir(clangdir):
         update_old_clang()
     else:
         get_fresh_clang()
@@ -273,7 +348,11 @@ def fetch_clang(llvm_revision):
 
 def fetch_cling(arg):
     def get_fresh_cling():
-        exec_subprocess_call('git clone %s' % CLING_GIT_URL, os.path.join(srcdir, 'tools'))
+        if CLING_BRANCH:
+            exec_subprocess_call('git clone --depth=10 --branch %s %s'
+                                 % (CLING_BRANCH, CLING_GIT_URL), os.path.join(srcdir, 'tools'))
+        else:
+            exec_subprocess_call('git clone %s' % CLING_GIT_URL, os.path.join(srcdir, 'tools'))
 
         # if arg == 'last-stable':
         #    checkout_branch = exec_subprocess_check_output('git describe --match v* --abbrev=0 --tags | head -n 1',
@@ -287,9 +366,9 @@ def fetch_cling(arg):
         exec_subprocess_call('git checkout %s' % checkout_branch, CLING_SRC_DIR)
 
     def update_old_cling():
-        exec_subprocess_call('git stash', CLING_SRC_DIR)
+        # exec_subprocess_call('git stash', CLING_SRC_DIR)
 
-        exec_subprocess_call('git clean -f -x -d', CLING_SRC_DIR)
+        # exec_subprocess_call('git clean -f -x -d', CLING_SRC_DIR)
 
         exec_subprocess_call('git fetch --tags', CLING_SRC_DIR)
 
@@ -319,7 +398,7 @@ def set_version():
     VERSION = open(os.path.join(CLING_SRC_DIR, 'VERSION'), 'r').readline().strip()
 
     # If development release, then add revision to the version
-    REVISION = exec_subprocess_check_output('git log -n 1 --pretty=format:%H', CLING_SRC_DIR).strip()
+    REVISION = exec_subprocess_check_output(GIT_LOG + ' -n 1 --pretty=format:%H', CLING_SRC_DIR).strip()
 
     if '~dev' in VERSION:
         VERSION = VERSION + '-' + REVISION[:7]
@@ -357,14 +436,38 @@ def set_vars():
     print('SHLIBEXT: ' + SHLIBEXT)
     print('CLANG_VERSION: ' + CLANG_VERSION)
 
+class Build(object):
+    def __init__(self, target=None):
+        super(Build, self).__init__()
+        self.buildType = 'Debug' if args.get('create_dev_env') else 'Release'
+        self.win32 = platform.system() == 'Windows'
+        self.cores = multiprocessing.cpu_count()
+        # Travis CI, GCC crashes if more than 4 cores used.
+        if os.environ.get('TRAVIS_OS_NAME', None):
+            self.cores = min(self.cores, 4)
+        if target:
+            self.make(target)
 
-def compile(arg):
-    global prefix
+    def config(self, configFlags=''):
+        box_draw('Configure Cling with CMake ' + configFlags)
+        exec_subprocess_call('%s %s' % (CMAKE, configFlags), LLVM_OBJ_ROOT, True)
+
+    def make(self, targets, flags=''):
+        box_draw('Building %s (using %d cores)' % (targets, self.cores))
+        if self.win32:
+            flags += ' --config %s' % self.buildType
+            for target in targets.split():
+                exec_subprocess_call('%s --build . --target %s %s'
+                                     % (CMAKE, target, flags), LLVM_OBJ_ROOT)
+        else:
+            if args['verbose']: flags += ' VERBOSE=1'
+            exec_subprocess_call('make -j%d %s %s' % (self.cores, targets, flags),
+                                 LLVM_OBJ_ROOT)
+
+def compile(arg, build_libcpp):
+    global prefix, EXTRA_CMAKE_FLAGS
     prefix = arg
     PYTHON = sys.executable
-
-    # GCC crashes if more than 4 cores are used. Temporary fix for Travis CI.
-    cores = 4 if multiprocessing.cpu_count() > 4 else multiprocessing.cpu_count()
 
     # Cleanup previous installation directory if any
     if os.path.isdir(prefix):
@@ -373,77 +476,123 @@ def compile(arg):
 
     # Cleanup previous build directory if exists
     if os.path.isdir(os.path.join(workdir, 'builddir')):
-        print("Remove directory: " + os.path.join(workdir, 'builddir'))
-        shutil.rmtree(os.path.join(workdir, 'builddir'))
-
-    os.makedirs(os.path.join(workdir, 'builddir'))
-
-    if platform.system() == 'Windows':
-        CMAKE = os.path.join(TMP_PREFIX, 'bin', 'cmake', 'bin', 'cmake.exe')
-
-        if args['create_dev_env'] == 'debug':
-            box_draw("Configure Cling with CMake and generate Visual Studio 11 project files")
-            exec_subprocess_call('%s -G "Visual Studio 11" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=%s ..\%s' % (
-                CMAKE, TMP_PREFIX, os.path.basename(srcdir)), LLVM_OBJ_ROOT)
-
-            box_draw("Building Cling (using %s cores)" % (cores))
-            exec_subprocess_call('%s --build . --target clang --config Debug' % (CMAKE), LLVM_OBJ_ROOT)
-
-            exec_subprocess_call('%s --build . --target cling --config Debug' % (CMAKE), LLVM_OBJ_ROOT)
-
-        else:
-            box_draw("Configure Cling with CMake and generate Visual Studio 11 project files")
-            exec_subprocess_call(
-                '%s -G "Visual Studio 11" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=%s ..\%s' % (
-                    CMAKE, TMP_PREFIX, os.path.basename(srcdir)), LLVM_OBJ_ROOT)
-
-            box_draw("Building Cling (using %s cores)" % (cores))
-            exec_subprocess_call('%s --build . --target clang --config Release' % (CMAKE), LLVM_OBJ_ROOT)
-
-            exec_subprocess_call('%s --build . --target cling --config Release' % (CMAKE), LLVM_OBJ_ROOT)
-
-            box_draw("Install compiled binaries to prefix (using %s cores)" % (cores))
-            exec_subprocess_call('%s --build . --target INSTALL --config Release' % (CMAKE), LLVM_OBJ_ROOT)
-
+        print("Using previous build directory: " + os.path.join(workdir, 'builddir'))
     else:
-        box_draw("Configure Cling with GNU Make")
+        print("Creating build directory: " + os.path.join(workdir, 'builddir'))
+        os.makedirs(os.path.join(workdir, 'builddir'))
 
-        if args['create_dev_env'] == 'debug':
-            exec_subprocess_call(
-                '%s/configure --disable-compiler-version-checks --with-python=%s --enable-targets=host --prefix=%s --enable-cxx11' % (
-                    srcdir, PYTHON, TMP_PREFIX), LLVM_OBJ_ROOT)
+    ### FIX: Target isn't being set properly on Travis OS X
+    ### Either because ccache or maybe the virtualization environment
+    if TRAVIS_BUILD_DIR and OS == 'Darwin':
+        triple = exec_subprocess_check_output('sh %s/cmake/config.guess' % srcdir, srcdir)
+        if triple:
+            EXTRA_CMAKE_FLAGS = ' -DLLVM_HOST_TRIPLE="%s" ' % triple.rstrip() + EXTRA_CMAKE_FLAGS
 
+    build = Build()
+    cmake_config_flags = (srcdir + ' -DCMAKE_BUILD_TYPE={0} -DCMAKE_INSTALL_PREFIX={1} '
+                          .format(build.buildType, TMP_PREFIX) + ' -DLLVM_TARGETS_TO_BUILD=host ' +
+                          EXTRA_CMAKE_FLAGS)
+
+    libcxx = ''
+    stdlib = args.get('stdlib')
+    if stdlib:
+        libcxx = ' -DLLVM_ENABLE_LIBCXX=%s' % ('ON' if stdlib == 'libc++' else 'OFF')
+
+    # Don't pollute the CCACHE_LOGFILE with CMake config
+    CCACHE_LOGFILE = os.environ.get('CCACHE_LOGFILE', None)
+    if CCACHE_LOGFILE:
+        del os.environ['CCACHE_LOGFILE']
+
+    if libcpp:
+        # configure and build libc++
+        build.config(cmake_config_flags)
+        build.make('cxx')
+
+        ''' ###TODO: This could easily be useful in Build class
+        Only use case is here right now'''
+
+        if build.win32:
+            incFlag = '/I'
+            linkFlags = '/LIBPATH:%s ' % os.path.join(LLVM_OBJ_ROOT, 'lib')
+            linkFlags += os.path.join(LLVM_OBJ_ROOT, 'lib', 'libc++'+SHLIBEXT)
         else:
-            exec_subprocess_call(
-                '%s/configure --disable-compiler-version-checks --with-python=%s --enable-targets=host --prefix=%s --enable-optimized=yes --enable-cxx11' % (
-                    srcdir, PYTHON, TMP_PREFIX), LLVM_OBJ_ROOT)
+            incFlag = '-I'
+            linkFlags = '-L%s ' % os.path.join(LLVM_OBJ_ROOT, 'lib')
+            linkFlags += os.path.join(LLVM_OBJ_ROOT, 'lib', 'libc++'+SHLIBEXT)
+            if OS == 'Linux':
+                linkFlags += ' -lm'
+                ### Fix clang-3.5 compiling clang-3.9
+                if args['compiler'] == 'clang++-3.5':
+                    cmake_config_flags += ' -DCMAKE_CXX_FLAGS_RELEASE="-O0 -DNDEBUG" '
 
-        box_draw("Building Cling (using %s cores)" % (cores))
-        exec_subprocess_call('make -j%s' % (cores), LLVM_OBJ_ROOT)
+        # Force LLVM, clang, and cling to use headers & link to 'local' libc++
+        cmake_config_flags += ' -DCMAKE_SHARED_LINKER_FLAGS="%s"' % linkFlags
+        cmake_config_flags += ' -DCMAKE_EXE_LINKER_FLAGS="%s"' % linkFlags
+        cmake_config_flags += ' -DCMAKE_CXX_FLAGS="%s %s" ' % (incFlag,
+                            os.path.join(LLVM_OBJ_ROOT, 'include', 'c++', 'v1'))
 
-        box_draw("Install compiled binaries to prefix (using %s cores)" % (cores))
-        exec_subprocess_call('make install -j%s prefix=%s' % (cores, TMP_PREFIX), LLVM_OBJ_ROOT)
+        # Don't build libcxx and libcxxabi again with linker flags above
+        # OS X allows a lib to link to -itself- which inf-loops dyld at runtime
+        projdir = os.path.join(srcdir, 'projects')
+        shutil.rmtree(os.path.join(projdir, 'libcxx'))
+        shutil.rmtree(os.path.join(projdir, 'libcxxabi'))
 
+    # configure cling
+    build.config(cmake_config_flags + libcxx)
+
+    # Start the logging, we currently don't log libcpp being built above
+    if CCACHE_LOGFILE:
+        os.environ['CCACHE_LOGFILE'] = CCACHE_LOGFILE
+
+    build.make('clang cling' if CLING_BRANCH else 'cling')
+
+    if not CLING_BRANCH:
+        box_draw("Install compiled binaries to prefix (using %d cores)" % build.cores)
+        if build.win32:
+            build.make('INSTALL')
+        else:
+            build.make('install', 'prefix=%s' % TMP_PREFIX)
+
+    if TRAVIS_BUILD_DIR:
+        ### Run cling once, dumping the include paths, helps debug issues
+        try:
+            subprocess.check_call(os.path.join(workdir, 'builddir', 'bin', 'cling')
+                                  + ' -v ".I"', shell=True)
+        except Exception as e:
+            print(e)
+
+def build_dist_list(file_dict, include=[], ignore=[]):
+    for key, value in file_dict.items():
+        if isinstance(value, dict):
+                build_dist_list(value, include, ignore)
+        else:
+            if key == 'IGNORE':
+                ignore.extend(value)
+            else:
+                include.extend(value)
+
+    return include, ignore
 
 def install_prefix():
     set_vars()
+
     box_draw("Filtering Cling's libraries and binaries")
 
-    for line in fileinput.input(os.path.join(CLING_SRC_DIR, 'tools', 'packaging', 'dist-files.mk'), inplace=True):
-        if '@EXEEXT@' in line:
-            print(line.replace('@EXEEXT@', EXEEXT), end=' ')
-        elif '@SHLIBEXT@' in line:
-            print(line.replace('@SHLIBEXT@', SHLIBEXT), end=' ')
-        elif '@CLANG_VERSION@' in line:
-            print(line.replace('@CLANG_VERSION@', CLANG_VERSION), end=' ')
-        else:
-            print(line, end=' ')
+    dist_files = json.loads(
+        open(os.path.join(CPT_SRC_DIR, 'dist-files.json')).read()
+    )
 
-    dist_files = open(os.path.join(CLING_SRC_DIR, 'tools', 'packaging', 'dist-files.mk'), 'r').read()
+    dist_files['BIN'] = [binary.replace('@EXEEXT@', EXEEXT) for binary in dist_files['BIN']]
+    dist_files['CLANG']['LIB'] = [header.replace('@CLANG_VERSION@', CLANG_VERSION) for header in dist_files['CLANG']['LIB']]
+
+    included, ignored = build_dist_list(dist_files)
+
     for root, dirs, files in os.walk(TMP_PREFIX):
         for file in files:
             f = os.path.join(root, file).replace(TMP_PREFIX, '')
-            if f.lstrip(os.sep).replace(os.sep, '/') + ' ' in dist_files:
+            if OS == 'Windows':
+                f = f.replace('\\', '/')
+            if any(map(lambda x: re.search(x, f), included)):
                 print("Filter: " + f)
                 if not os.path.isdir(os.path.join(prefix, os.path.dirname(f))):
                     os.makedirs(os.path.join(prefix, os.path.dirname(f)))
@@ -452,9 +601,7 @@ def install_prefix():
 
 def test_cling():
     box_draw("Run Cling test suite")
-    if platform.system() != 'Windows':
-        exec_subprocess_call('make test', os.path.join(workdir, 'builddir', 'tools', 'cling'))
-
+    build = Build('check-cling')
 
 def tarball():
     box_draw("Compress binaries into a bzip2 tarball")
@@ -463,13 +610,22 @@ def tarball():
     tar.add(prefix, arcname=os.path.basename(prefix))
     tar.close()
 
-
+gInCleanup = False
 def cleanup():
-    print("\n")
+    global gInCleanup
+    if gInCleanup:
+        print('Failure in cleanup lead to recursion\n')
+        return 
+
+    gInCleanup = True
+    print('\n')
+    if args['skip_cleanup']:
+        box_draw("Skipping cleanup")
+        return
+
     box_draw("Clean up")
     if os.path.isdir(os.path.join(workdir, 'builddir')):
-        print("Remove directory: " + os.path.join(workdir, 'builddir'))
-        shutil.rmtree(os.path.join(workdir, 'builddir'))
+        print("Skipping build directory: " + os.path.join(workdir, 'builddir'))
 
     if os.path.isdir(prefix):
         print("Remove directory: " + prefix)
@@ -510,6 +666,7 @@ def cleanup():
         if os.path.isdir(os.path.join(workdir, 'Install')):
             print('Remove directory: ' + os.path.join(workdir, 'Install'))
             shutil.rmtree(os.path.join(workdir, 'Install'))
+    gInCleanup = False
 
 
 ###############################################################################
@@ -526,6 +683,12 @@ def check_ubuntu(pkg):
     elif pkg == "python":
         if float(platform.python_version()[:3]) < 2.7:
             print(pkg.ljust(20) + '[OUTDATED VERSION (<2.7)]'.ljust(30))
+        else:
+            print(pkg.ljust(20) + '[OK]'.ljust(30))
+    elif pkg == "cmake":
+        CMAKE = os.environ.get('CMAKE', 'cmake')
+        if exec_subprocess_check_output('{cmake} --version'.format(cmake=CMAKE), '/').strip().split('\n')[0].split()[-1] < '3.4.3':
+            print(pkg.ljust(20) + '[OUTDATED VERSION (<3.4.3)]'.ljust(30))
         else:
             print(pkg.ljust(20) + '[OK]'.ljust(30))
     elif pkg == "SSL":
@@ -739,7 +902,7 @@ cling (%s-1) unstable; urgency=low
 
     if '~dev' in VERSION:
         TAG = str(float(VERSION[:VERSION.find('~')]) - 0.1)
-        template = exec_subprocess_check_output('git log v' + TAG + '...HEAD --format="  * %s" | fmt -s', CLING_SRC_DIR)
+        template = exec_subprocess_check_output(GIT_LOG + ' v' + TAG + '...HEAD --format="  * %s" | fmt -s', CLING_SRC_DIR)
 
         f = open(os.path.join(prefix, 'debian', 'changelog'), 'a+')
         f.write(template)
@@ -764,7 +927,7 @@ cling (%s-1) unstable; urgency=low
             f.write('cling (' + TAG + '-1) unstable; urgency=low\n')
             f.close()
             STABLE_FLAG = '1'
-            template = exec_subprocess_check_output('git log v' + CMP + '...v' + TAG + '--format="  * %s" | fmt -s',
+            template = exec_subprocess_check_output(GIT_LOG + ' v' + CMP + '...v' + TAG + '--format="  * %s" | fmt -s',
                                                     CLING_SRC_DIR)
 
             f = open(os.path.join(prefix, 'debian', 'changelog'), 'a+')
@@ -780,7 +943,7 @@ cling (%s-1) unstable; urgency=low
     f.write('\nOld Changelog:\n')
     f.close()
 
-    template = exec_subprocess_check_output('git log v0.1 --format="  * %s%n -- %an <%ae>  %cD%n"', CLING_SRC_DIR)
+    template = exec_subprocess_check_output(GIT_LOG + ' v0.1 --format="  * %s%n -- %an <%ae>  %cD%n"', CLING_SRC_DIR)
 
     f = open(os.path.join(prefix, 'debian', 'changelog'), 'a+')
     f.write(template.encode('utf-8'))
@@ -800,6 +963,12 @@ def check_redhat(pkg):
             print(pkg.ljust(20) + '[UNSUPPORTED VERSION (Python 3)]'.ljust(30))
         elif float(platform.python_version()[:3]) < 2.7:
             print(pkg.ljust(20) + '[OUTDATED VERSION (<2.7)]'.ljust(30))
+        else:
+            print(pkg.ljust(20) + '[OK]'.ljust(30))
+    elif pkg == "cmake":
+        CMAKE = os.environ.get('CMAKE', 'cmake')
+        if exec_subprocess_check_output('{cmake} --version'.format(cmake=CMAKE), '/').strip().split('\n')[0].split()[-1] < '3.4.3':
+            print(pkg.ljust(20) + '[OUTDATED VERSION (<3.4.3)]'.ljust(30))
         else:
             print(pkg.ljust(20) + '[OK]'.ljust(30))
     elif pkg == "SSL":
@@ -939,9 +1108,9 @@ rm -rf %{buildroot}
 ###############################################################################
 
 def check_win(pkg):
-    # Check for Microsoft Visual Studio 11.0
+    # Check for Microsoft Visual Studio 14.0
     if pkg == "msvc":
-        if exec_subprocess_check_output('REG QUERY HKEY_CLASSES_ROOT\VisualStudio.DTE.11.0', 'C:\\').find(
+        if exec_subprocess_check_output('REG QUERY HKEY_CLASSES_ROOT\VisualStudio.DTE.14.0', 'C:\\').find(
                 'ERROR') == -1:
             print(pkg.ljust(20) + '[OK]'.ljust(30))
         else:
@@ -975,14 +1144,16 @@ def check_win(pkg):
             print(pkg.ljust(20) + '[OK]'.ljust(30))
 
 
+def is_os_64bit():
+    return platform.machine().endswith('64')
+
 def get_win_dep():
     box_draw("Download NSIS compiler")
-    html = urlopen('http://sourceforge.net/p/nsis/code/HEAD/tree/NSIS/tags/').read().decode('utf-8')
-    NSIS_VERSION = html[html.rfind('<a href="v'):html.find('>', html.rfind('<a href="v'))].strip('<a href="v').strip(
-        '"')
-    NSIS_VERSION = NSIS_VERSION[:1] + '.' + NSIS_VERSION[1:]
+    html = urlopen('https://sourceforge.net/p/nsis/code/6780/log/?path=/NSIS/tags').read().decode('utf-8')
+    pin = '<p>Tagging for release'
+    NSIS_VERSION = html[html.find(pin):html.find('</div>', html.find(pin))].strip(pin + ' ')
     print('Latest version of NSIS is: ' + NSIS_VERSION)
-    wget(url="http://sourceforge.net/projects/nsis/files/NSIS%%203%%20Pre-release/%s/nsis-%s.zip" % (
+    wget(url="https://sourceforge.net/projects/nsis/files/NSIS%%203/%s/nsis-%s.zip" % (
         NSIS_VERSION, NSIS_VERSION),
          out_dir=TMP_PREFIX)
     print('Extracting: ' + os.path.join(TMP_PREFIX, 'nsis-%s.zip' % (NSIS_VERSION)))
@@ -992,18 +1163,30 @@ def get_win_dep():
     os.rename(os.path.join(TMP_PREFIX, 'bin', 'nsis-%s' % (NSIS_VERSION)), os.path.join(TMP_PREFIX, 'bin', 'nsis'))
 
     box_draw("Download CMake for Windows")
-    html = urlopen('http://www.cmake.org/cmake/resources/software.html').read().decode('utf-8')
-    CMAKE_VERSION = html[html.find('Latest Release ('): html.find(')', html.find('Latest Release ('))].strip(
-        'Latest Release (')
-    print('Latest stable version of CMake is: ' + CMAKE_VERSION)
-    wget(url='http://www.cmake.org/files/v%s/cmake-%s-win32-x86.zip' % (CMAKE_VERSION[:3], CMAKE_VERSION),
-         out_dir=TMP_PREFIX)
-    print('Extracting: ' + os.path.join(TMP_PREFIX, 'cmake-%s-win32-x86.zip' % (CMAKE_VERSION)))
-    zip = zipfile.ZipFile(os.path.join(TMP_PREFIX, 'cmake-%s-win32-x86.zip' % (CMAKE_VERSION)))
-    zip.extractall(os.path.join(TMP_PREFIX, 'bin'))
-    print('Remove file: ' + os.path.join(TMP_PREFIX, 'cmake-%s-win32-x86.zip' % (CMAKE_VERSION)))
-    os.rename(os.path.join(TMP_PREFIX, 'bin', 'cmake-%s-win32-x86' % (CMAKE_VERSION)),
-              os.path.join(TMP_PREFIX, 'bin', 'cmake'))
+
+    print('Downloading nightly release of cmake')
+
+    if is_os_64bit():
+        wget(url='https://cmake.org/files/dev/cmake-3.6.20160801-g62452-win64-x64.zip',
+             out_dir=TMP_PREFIX, rename_file='cmake-3.6.20160801-g62452.zip')
+    else:
+        wget(url='https://cmake.org/files/dev/cmake-3.6.20160801-g62452-win32-x86.zip',
+             out_dir=TMP_PREFIX, rename_file='cmake-3.6.20160801-g62452.zip')
+
+    zip_file = os.path.join(TMP_PREFIX, 'cmake-3.6.20160801-g62452.zip')
+    print('Extracting: ' + zip_file)
+    zip = zipfile.ZipFile(zip_file)
+    tmp_bin_dir = os.path.join(TMP_PREFIX, 'bin')
+    zip.extractall(tmp_bin_dir)
+    print('Remove file: ' + os.path.join(TMP_PREFIX, 'cmake-3.6.20160801-g62452.zip'))
+
+    if is_os_64bit():
+        os.rename(os.path.join(tmp_bin_dir, 'cmake-3.6.20160801-g62452-win64-x64'),
+                  os.path.join(TMP_PREFIX, 'bin', 'cmake'))
+    else:
+        os.rename(os.path.join(tmp_bin_dir, 'cmake-3.6.20160801-g62452-win32-x86'),
+                  os.path.join(TMP_PREFIX, 'bin', 'cmake'))
+    print()
 
 
 def make_nsi():
@@ -1055,7 +1238,7 @@ InstallDir "C:\\Cling\\cling-${VERSION}"
 !define MUI_HEADERIMAGE
 
 ; Theme
-!define MUI_ICON "%s\\tools\\packaging\\LLVM.ico"
+!define MUI_ICON "%s\\LLVM.ico"
 !define MUI_UNICON "%s\\Contrib\\Graphics\\Icons\\orange-uninstall.ico"
 
 !insertmacro MUI_PAGE_WELCOME
@@ -1092,7 +1275,7 @@ Section "MainFiles"
        VERSION,
        os.path.basename(prefix) + '-setup.exe',
        VIProductVersion.replace('v', ''),
-       CLING_SRC_DIR,
+       CPT_SRC_DIR,
        NSIS,
        os.path.join(CLING_SRC_DIR, 'LICENSE.TXT'))
 
@@ -1270,6 +1453,12 @@ def check_mac(pkg):
             print(pkg.ljust(20) + '[OUTDATED VERSION (<2.7)]'.ljust(30))
         else:
             print(pkg.ljust(20) + '[OK]'.ljust(30))
+    elif pkg == "cmake":
+        CMAKE = os.environ.get('CMAKE', 'cmake')
+        if exec_subprocess_check_output('{cmake} --version'.format(cmake=CMAKE), '/').strip().split('\n')[0].split()[-1] < '3.4.3':
+            print(pkg.ljust(20) + '[OUTDATED VERSION (<3.4.3)]'.ljust(30))
+        else:
+            print(pkg.ljust(20) + '[OK]'.ljust(30))
     elif pkg == "SSL":
         if sys.version_info < (3, 0):
             # Python 2.x
@@ -1285,14 +1474,14 @@ def check_mac(pkg):
     elif exec_subprocess_check_output("type -p %s" % (pkg), '/').strip() == '':
         print(pkg.ljust(20) + '[NOT INSTALLED]'.ljust(30))
     else:
-        if pkg == "g++":
-            if float(exec_subprocess_check_output('g++ -dumpversion', '/')[:3].strip()) <= 4.7:
-                print(pkg.ljust(20) + '[UNSUPPORTED VERSION (<4.7)]'.ljust(30))
+        if pkg == "clang++":
+            if float(exec_subprocess_check_output('clang++ -dumpversion', '/')[:3].strip()) <= 4.1:
+                print(pkg.ljust(20) + '[UNSUPPORTED VERSION (<4.1)]'.ljust(30))
             else:
                 print(pkg.ljust(20) + '[OK]'.ljust(30))
-        elif pkg == "gcc":
-            if float(exec_subprocess_check_output('gcc -dumpversion', '/')[:3].strip()) <= 4.7:
-                print(pkg.ljust(20) + '[UNSUPPORTED VERSION (<4.7)]'.ljust(30))
+        elif pkg == "clang":
+            if float(exec_subprocess_check_output('clang -dumpversion', '/')[:3].strip()) <= 4.1:
+                print(pkg.ljust(20) + '[UNSUPPORTED VERSION (<4.1)]'.ljust(30))
             else:
                 print(pkg.ljust(20) + '[OK]'.ljust(30))
         else:
@@ -1302,12 +1491,15 @@ def check_mac(pkg):
 def make_dmg():
     box_draw("Building Apple Disk Image")
     APP_NAME = 'Cling'
-    DMG_BACKGROUND_IMG = 'Background.png'
-    APP_EXE = '%s.app/Contents/MacOS/%s' % (APP_NAME, APP_NAME)
+    DMG_BACKGROUND_IMG = 'graphic.png'
+    APP_EXE = '%s.app/Contents/MacOS/bin/%s' % (APP_NAME, APP_NAME.lower())
     VOL_NAME = "%s-%s" % (APP_NAME.lower(), VERSION)
     DMG_TMP = "%s-temp.dmg" % (VOL_NAME)
     DMG_FINAL = "%s.dmg" % (VOL_NAME)
     STAGING_DIR = os.path.join(workdir, 'Install')
+
+    pip_install('pyobjc-core')
+    pip_install('dmgbuild')
 
     if os.path.isdir(STAGING_DIR):
         print("Remove directory: " + STAGING_DIR)
@@ -1317,81 +1509,105 @@ def make_dmg():
         print("Remove directory: " + os.path.join(workdir, '%s.app' % (APP_NAME)))
         shutil.rmtree(os.path.join(workdir, '%s.app' % (APP_NAME)))
 
-    if os.path.isdir(os.path.join(workdir, DMG_TMP)):
-        print("Remove directory: " + os.path.join(workdir, DMG_TMP))
-        shutil.rmtree(os.path.join(workdir, DMG_TMP))
+    if os.path.isfile(os.path.join(workdir, DMG_TMP)):
+        print("Remove file: " + os.path.join(workdir, DMG_TMP))
+        os.remove(os.path.join(workdir, DMG_TMP))
 
-    if os.path.isdir(os.path.join(workdir, DMG_FINAL)):
-        print("Remove directory: " + os.path.join(workdir, DMG_FINAL))
-        shutil.rmtree(os.path.join(workdir, DMG_FINAL))
+    if os.path.isfile(os.path.join(workdir, DMG_FINAL)):
+        print("Remove file: " + os.path.join(workdir, DMG_FINAL))
+        os.remove(os.path.join(workdir, DMG_FINAL))
+
+
+    if os.path.isdir(os.path.join(workdir, '%s.app' % (APP_NAME))):
+        print("Remove directory:", os.path.join(workdir, '%s.app' % (APP_NAME)))
+        shutil.rmtree(os.path.join(workdir, '%s.app' % (APP_NAME)))
 
     print('Create directory: ' + os.path.join(workdir, '%s.app' % (APP_NAME)))
     os.makedirs(os.path.join(workdir, '%s.app' % (APP_NAME)))
 
-    print('Populate directory: ' + os.path.join(workdir, '%s.app/Contents/Resources' % (APP_NAME)))
-    shutil.copytree(prefix, os.path.join(workdir, '%s.app/Contents/Resources' % (APP_NAME)))
+    print('Populate directory: ' + os.path.join(workdir, '%s.app' % (APP_NAME), 'Contents', 'MacOS'))
+    shutil.copytree(
+        prefix,
+        os.path.join(workdir, '%s.app'%(APP_NAME), 'Contents', 'MacOS')
+    )
+
+    os.makedirs(os.path.join(workdir, '%s.app'% (APP_NAME), 'Contents', 'Resources'))
+    shutil.copyfile(
+        os.path.join(CPT_SRC_DIR, 'LLVM.icns'),
+        os.path.join(workdir, '%s.app'% (APP_NAME), 'Contents', 'Resources', 'LLVM.icns')
+    )
+
+
+    print('Configuring Info.plist file')
+    plist_path = os.path.join(workdir, '%s.app'% (APP_NAME), 'Contents', 'Info.plist')
+    f = open(plist_path, 'w')
+    plist_xml = '''
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleGetInfoString</key>
+  <string>Copyright © 2007-2014 by the Authors; Developed by The ROOT Team, CERN and Fermilab</string>
+  <key>CFBundleExecutable</key>
+  <string>bin/cling</string>
+  <key>CFBundleIdentifier</key>
+  <string>ch.cern.root.cling</string>
+  <key>CFBundleName</key>
+  <string>Cling</string>
+  <key>CFBundleIconFile</key>
+  <string>LLVM</string>
+  <key>CFBundleShortVersionString</key>
+  <string>{version}</string>
+  <key>CFBundleInfoDictionaryVersion</key>
+  <string>6.0</string>
+  <key>CFBundlePackageType</key>
+  <string>APPL</string>
+  <key>CFBundleSignature</key>
+  <string>llvm</string>
+  <key>IFMajorVersion</key>
+  <integer>{major}</integer>
+  <key>IFMinorVersion</key>
+  <integer>{minor}</integer>
+
+</dict>
+</plist>
+'''.format(
+        version=VERSION,
+        major=VERSION.split('.')[0],
+        minor=VERSION.split('.')[1]
+    ).strip()
+
+    f.write(plist_xml)
+    f.close()
+
 
     print('Copy APP Bundle to staging area: ' + STAGING_DIR)
     shutil.copytree(os.path.join(workdir, '%s.app' % (APP_NAME)), STAGING_DIR)
 
-    print('Stripping file: ' + APP_EXE.lower())
-    exec_subprocess_call('strip -u -r %s' % (APP_EXE.lower()), workdir)
+    print('Stripping file: ' + APP_EXE)
+    exec_subprocess_call('strip -u -r %s' % os.path.join(workdir, APP_EXE), workdir)
 
     DU = exec_subprocess_check_output("du -sh %s" % (STAGING_DIR), workdir)
     SIZE = str(float(DU[:DU.find('M')].strip()) + 1.0)
     print('Estimated size of application bundle: ' + SIZE + 'MB')
 
-    print('Building temporary Apple Disk Image')
     exec_subprocess_call(
-        'hdiutil create -srcfolder %s -volname %s -fs HFS+ -fsargs "-c c=64,a=16,e=16" -format UDRW -size %sM %s' % (
-            STAGING_DIR, VOL_NAME, SIZE, DMG_TMP), workdir)
+        '{dmgbuild} -s {settings} -D app={app} -D size={size}M "{volname}" {dmg}'.format(
+            dmgbuild=os.path.join(workdir, 'pip', 'bin', 'dmgbuild'),
+            settings=os.path.join(CPT_SRC_DIR, 'settings.py'),
+            app=os.path.join(workdir, '%s.app' % (APP_NAME)),
+            dmg=DMG_FINAL,
+            volname=VOL_NAME,
+            size=SIZE
+        ),
+        workdir
+    )
 
-    print('Created Apple Disk Image: ' + DMG_TMP)
-    DEVICE = exec_subprocess_check_output(
-        "hdiutil attach -readwrite -noverify -noautoopen %s | egrep '^/dev/' | sed 1q | awk '{print $1}'" % (DMG_TMP),
-        workdir)
-
-    print('Wating for device to unmount...')
-    time.sleep(5)
-
-    # print 'Create directory: ' + '/Volumes/%s/.background'%(VOL_NAME)
-    # os.makedirs('/Volumes/%s/.background'%(VOL_NAME))
-    # shutil.copy(os.path.join(workdir,DMG_BACKGROUND_IMG), '/Volumes/%s/.background/'%(VOL_NAME))
-
-    ascript = '''
-tell application "Finder"
-  tell disk "%s"
-        open
-        set current view of container window to icon view
-        set toolbar visible of container window to false
-        set statusbar visible of container window to false
-        set the bounds of container window to {400, 100, 920, 440}
-        set viewOptions to the icon view options of container window
-        set arrangement of viewOptions to not arranged
-        set icon size of viewOptions to 72
-        set background picture of viewOptions to file ".background:%s"
-        set position of item "%s.app" of container window to {160, 205}
-        set position of item "Applications" of container window to {360, 205}
-        close
-        open
-        update without registering application
-        delay 2
-  end tell
-end tell
-''' % (VOL_NAME, DMG_BACKGROUND_IMG, APP_NAME)
-    ascript = ascript.strip()
-
-    print('Executing AppleScript...')
-    exec_subprocess_call("echo %s | osascript" % (ascript), workdir)
-
-    print('Performing sync...')
-    exec_subprocess_call("sync", workdir)
-
-    print('Detach device: ' + DEVICE)
-    exec_subprocess_call('hdiutil detach %s' % (DEVICE), CLING_SRC_DIR)
-
-    print("Creating compressed Apple Disk Image...")
-    exec_subprocess_call('hdiutil convert %s -format UDZO -imagekey zlib-level=9 -o %s' % (DMG_TMP, DMG_FINAL), workdir)
+    print('Syncing disk')
+    exec_subprocess_call(
+        'sync',
+        workdir
+    )
 
     print('Done')
 
@@ -1404,7 +1620,9 @@ parser = argparse.ArgumentParser(description='Cling Packaging Tool')
 parser.add_argument('-c', '--check-requirements', help='Check if packages required by the script are installed',
                     action='store_true')
 parser.add_argument('--current-dev',
-                    help='Package the latest development snapshot in one of these formats: tar | deb | nsis | rpm | dmg | pkg')
+                    help=('--current-dev:<tar | deb | nsis | rpm | dmg | pkg> will package the latest development snapshot in the given format'
+                          + '\n--current-dev:branch:<branch> will build <branch> on llvm, clang, and cling'
+                          + '\n--current-dev:branches:<a,b,c> will build branch <a> on llvm, <b> on clang, and <c> on cling'))
 parser.add_argument('--last-stable',
                     help='Package the last stable snapshot in one of these formats: tar | deb | nsis | rpm | dmg | pkg')
 parser.add_argument('--tarball-tag', help='Package the snapshot of a given tag in a tarball (.tar.bz2)')
@@ -1422,16 +1640,27 @@ parser.add_argument('--with-cling-url', action='store', help='Specify an alterna
                     default='https://github.com/vgvassilev/cling.git')
 
 parser.add_argument('--no-test', help='Do not run test suite of Cling', action='store_true')
+parser.add_argument('--skip-cleanup', help='Do not clean up after a build', action='store_true')
+parser.add_argument('--use-wget', help='Do not use Git to fetch sources', action='store_true')
 parser.add_argument('--create-dev-env', help='Set up a release/debug environment')
 
 if platform.system() != 'Windows':
     parser.add_argument('--with-workdir', action='store', help='Specify an alternate working directory for CPT',
-                        default=os.path.expanduser(os.path.join('~', 'ec', 'build')))
+                        default=os.path.expanduser(os.path.join('~', 'ci', 'build')))
 else:
     parser.add_argument('--with-workdir', action='store', help='Specify an alternate working directory for CPT',
-                        default='C:\\ec\\build\\')
+                        default='C:\\ci\\build\\')
 
 parser.add_argument('--make-proper', help='Internal option to support calls from build system')
+parser.add_argument('--verbose', help='Tell CMake to build with verbosity', action='store_true')
+parser.add_argument('--with-cmake-flags', help='Additional CMake configuration flags', default='')
+parser.add_argument('--stdlib', help=('C++ Library to use, stdlibc++ or libc++.'
+                                     '  To build a spcific llvm <tag> of libc++ with cling '
+                                     'specify libc++,<tag>'),
+                    default='')
+parser.add_argument('--compiler', help='The compiler being used to make cling (for heuristics only)',
+                    default='')
+
 
 args = vars(parser.parse_args())
 
@@ -1497,16 +1726,39 @@ os.makedirs(TMP_PREFIX)
 
 srcdir = os.path.join(workdir, 'cling-src')
 CLING_SRC_DIR = os.path.join(srcdir, 'tools', 'cling')
+CPT_SRC_DIR = os.path.join(CLING_SRC_DIR, 'tools', 'packaging')
 LLVM_OBJ_ROOT = os.path.join(workdir, 'builddir')
 prefix = ''
 LLVM_GIT_URL = args['with_llvm_url']
 CLANG_GIT_URL = args['with_clang_url']
 CLING_GIT_URL = args['with_cling_url']
+EXTRA_CMAKE_FLAGS = args.get('with_cmake_flags')
+CMAKE = os.environ.get('CMAKE', None)
+if not CMAKE:
+    if platform.system() == 'Windows':
+        CMAKE = os.path.join(TMP_PREFIX, 'bin', 'cmake', 'bin', 'cmake.exe')
+    else:
+        CMAKE = 'cmake'
+
+# logic is too confusing supporting both at the same time
+if args.get('stdlib') and EXTRA_CMAKE_FLAGS.find('-DLLVM_ENABLE_LIBCXX=') != -1:
+    print('use of --stdlib cannot be combined with -DLLVM_ENABLE_LIBCXX')
+    parser.print_help()
+    raise SystemExit
+
+CLING_BRANCH = CLANG_BRANCH = LLVM_BRANCH = None
+if args['current_dev'].startswith('branch:'):
+  CLING_BRANCH = CLANG_BRANCH = LLVM_BRANCH = args['current_dev'][7:]
+elif args['current_dev'].startswith('branches:'):
+  CLING_BRANCH, CLANG_BRANCH, LLVM_BRANCH = args['current_dev'][9:].split(',')
+
 # llvm_revision = urlopen(
 #    "https://raw.githubusercontent.com/vgvassilev/cling/master/LastKnownGoodLLVMSVNRevision.txt").readline().strip().decode(
 #   'utf-8')
 VERSION = ''
 REVISION = ''
+# Travis needs some special behaviour
+TRAVIS_BUILD_DIR = os.environ.get('TRAVIS_BUILD_DIR', None)
 
 print('Cling Packaging Tool (CPT)')
 print('Arguments vector: ' + str(sys.argv))
@@ -1517,6 +1769,10 @@ print('Distribution: ' + DIST)
 print('Release: ' + RELEASE)
 print('Revision: ' + REV)
 print('Architecture: ' + platform.machine())
+if args['compiler']:
+  cInfo = None
+  cInfo = exec_subprocess_check_output(args['compiler'] + ' --version', srcdir).decode('utf-8')
+  print("Compiler: '%s' : %s" % (args['compiler'], cInfo.split('\n',1)[0] if cInfo else ''))
 
 if len(sys.argv) == 1:
     print("Error: no options passed")
@@ -1526,6 +1782,7 @@ if args['check_requirements']:
     box_draw('Check availability of required softwares')
     if DIST == 'Ubuntu':
         check_ubuntu('git')
+        check_ubuntu('cmake')
         check_ubuntu('gcc')
         check_ubuntu('g++')
         check_ubuntu('debhelper')
@@ -1547,7 +1804,7 @@ Do you want to continue? [yes/no]: ''').lower()
                                  stdin=subprocess.PIPE,
                                  stdout=None,
                                  stderr=subprocess.STDOUT).communicate('yes'.encode('utf-8'))
-                subprocess.Popen(['sudo apt-get install git g++ debhelper devscripts gnupg python'],
+                subprocess.Popen(['sudo apt-get install git cmake gcc g++ debhelper devscripts gnupg python'],
                                  shell=True,
                                  stdin=subprocess.PIPE,
                                  stdout=None,
@@ -1557,7 +1814,7 @@ Do you want to continue? [yes/no]: ''').lower()
                 print('''
 Install/update the required packages by:
   sudo apt-get update
-  sudo apt-get install git g++ debhelper devscripts gnupg python
+  sudo apt-get install git cmake gcc g++ debhelper devscripts gnupg python
 ''')
                 break
             else:
@@ -1568,7 +1825,7 @@ Install/update the required packages by:
         check_win('git')
         check_win('python')
         check_win('SSL')
-        # Check Windows registry for keys that prove an MS Visual Studio 11.0 installation
+        # Check Windows registry for keys that prove an MS Visual Studio 14.0 installation
         check_win('msvc')
         print('''
 Refer to the documentation of CPT for information on setting up your Windows environment.
@@ -1576,6 +1833,7 @@ Refer to the documentation of CPT for information on setting up your Windows env
 ''')
     elif DIST == 'Fedora' or DIST == 'Scientific Linux CERN SLC':
         check_redhat('git')
+        check_redhat('cmake')
         check_redhat('gcc')
         check_redhat('gcc-c++')
         check_redhat('rpm-build')
@@ -1590,7 +1848,7 @@ Do you want to continue? [yes/no]: ''').lower()
         while True:
             if choice in yes:
                 # Need to communicate values to the shell. Do not use exec_subprocess_call()
-                subprocess.Popen(['sudo yum install git gcc gcc-c++ rpm-build python'],
+                subprocess.Popen(['sudo yum install git cmake gcc gcc-c++ rpm-build python'],
                                  shell=True,
                                  stdin=subprocess.PIPE,
                                  stdout=None,
@@ -1599,7 +1857,7 @@ Do you want to continue? [yes/no]: ''').lower()
             elif choice in no:
                 print('''
 Install/update the required packages by:
-  sudo yum install git gcc gcc-c++ rpm-build python
+  sudo yum install git cmake gcc gcc-c++ rpm-build python
 ''')
                 break
             else:
@@ -1608,8 +1866,9 @@ Install/update the required packages by:
 
     if DIST == 'MacOSX':
         check_mac('git')
-        check_mac('gcc')
-        check_mac('g++')
+        check_mac('cmake')
+        check_mac('clang')
+        check_mac('clang++')
         check_mac('python')
         check_mac('SSL')
         yes = {'yes', 'y', 'ye', ''}
@@ -1626,7 +1885,7 @@ Do you want to continue? [yes/no]: ''').lower()
                                  stdin=subprocess.PIPE,
                                  stdout=None,
                                  stderr=subprocess.STDOUT).communicate('yes'.encode('utf-8'))
-                subprocess.Popen(['sudo port install git g++ python'],
+                subprocess.Popen(['sudo port install git clang++ python'],
                                  shell=True,
                                  stdin=subprocess.PIPE,
                                  stdout=None,
@@ -1636,7 +1895,7 @@ Do you want to continue? [yes/no]: ''').lower()
                 print('''
 Install/update the required packages by:
   sudo port -v selfupdate
-  sudo port install git g++ python
+  sudo port install git clang++ python
 ''')
                 break
             else:
@@ -1649,18 +1908,33 @@ if args['current_dev']:
         'utf-8')
     fetch_llvm(llvm_revision)
     fetch_clang(llvm_revision)
-    fetch_cling('master')
+    libcpp = should_fetch_libcpp(llvm_revision)
+    if libcpp: fetch_libcpp(llvm_revision, libcpp)
+
+    # Travis has already cloned the repo out, so don;t do it again
+    # Particularly important for building a pull-request
+    if TRAVIS_BUILD_DIR:
+        clingDir = os.path.join(srcdir, 'tools', 'cling')
+        os.rename(TRAVIS_BUILD_DIR, clingDir)
+        TRAVIS_BUILD_DIR = clingDir
+        # Check validity and show some info
+        box_draw("Using Travis clone, last 5 commits:")
+        exec_subprocess_call(GIT_LOG + ' -5 --pretty=format:"%h <%ae> %<(60,trunc)%s"', TRAVIS_BUILD_DIR)
+        print('\n')
+    else:
+        fetch_cling(CLING_BRANCH if CLING_BRANCH else 'master')
+
     set_version()
     if args['current_dev'] == 'tar':
         if OS == 'Windows':
             get_win_dep()
-            compile(os.path.join(workdir, 'cling-win-' + platform.machine().lower() + '-' + VERSION))
+            compile(os.path.join(workdir, 'cling-win-' + platform.machine().lower() + '-' + VERSION), libcpp)
         else:
             if DIST == 'Scientific Linux CERN SLC':
-                compile(os.path.join(workdir, 'cling-SLC-' + REV + '-' + platform.machine().lower() + '-' + VERSION))
+                compile(os.path.join(workdir, 'cling-SLC-' + REV + '-' + platform.machine().lower() + '-' + VERSION), libcpp)
             else:
                 compile(os.path.join(workdir,
-                                     'cling-' + DIST + '-' + REV + '-' + platform.machine().lower() + '-' + VERSION))
+                                     'cling-' + DIST + '-' + REV + '-' + platform.machine().lower() + '-' + VERSION), libcpp)
         install_prefix()
         if not args['no_test']:
             test_cling()
@@ -1668,7 +1942,7 @@ if args['current_dev']:
         cleanup()
 
     elif args['current_dev'] == 'deb' or (args['current_dev'] == 'pkg' and DIST == 'Ubuntu'):
-        compile(os.path.join(workdir, 'cling-' + VERSION))
+        compile(os.path.join(workdir, 'cling-' + VERSION), libcpp)
         install_prefix()
         if not args['no_test']:
             test_cling()
@@ -1677,7 +1951,7 @@ if args['current_dev']:
         cleanup()
 
     elif args['current_dev'] == 'rpm' or (args['current_dev'] == 'pkg' and platform.dist()[0] == 'redhat'):
-        compile(os.path.join(workdir, 'cling-' + VERSION.replace('-' + REVISION[:7], '')))
+        compile(os.path.join(workdir, 'cling-' + VERSION.replace('-' + REVISION[:7], '')), libcpp)
         install_prefix()
         if not args['no_test']:
             test_cling()
@@ -1687,7 +1961,7 @@ if args['current_dev']:
 
     elif args['current_dev'] == 'nsis' or (args['current_dev'] == 'pkg' and OS == 'Windows'):
         get_win_dep()
-        compile(os.path.join(workdir, 'cling-' + RELEASE + '-' + platform.machine().lower() + '-' + VERSION))
+        compile(os.path.join(workdir, 'cling-' + RELEASE + '-' + platform.machine().lower() + '-' + VERSION), libcpp)
         install_prefix()
         if not args['no_test']:
             test_cling()
@@ -1696,11 +1970,17 @@ if args['current_dev']:
         cleanup()
 
     elif args['current_dev'] == 'dmg' or (args['current_dev'] == 'pkg' and OS == 'Darwin'):
-        compile(os.path.join(workdir, 'cling-' + DIST + '-' + REV + '-' + platform.machine().lower() + '-' + VERSION))
+        compile(os.path.join(workdir, 'cling-' + DIST + '-' + REV + '-' + platform.machine().lower() + '-' + VERSION), libcpp)
         install_prefix()
         if not args['no_test']:
             test_cling()
         make_dmg()
+        cleanup()
+    elif args['current_dev'].startswith('branch'):
+        compile(os.path.join(workdir, 'cling-' + VERSION.replace('-' + REVISION[:7], '')), libcpp)
+        #install_prefix()
+        if not args['no_test']:
+            test_cling()
         cleanup()
 
 if args['last_stable']:
@@ -1712,6 +1992,7 @@ if args['last_stable']:
 
     # FIXME
     assert tag[0] is "v"
+    assert CLING_BRANCH == None
 
     llvm_revision = urlopen(
         'https://raw.githubusercontent.com/vgvassilev/cling/%s/LastKnownGoodLLVMSVNRevision.txt' % tag
@@ -1719,6 +2000,8 @@ if args['last_stable']:
 
     fetch_llvm(llvm_revision)
     fetch_clang(llvm_revision)
+    libcpp = should_fetch_libcpp(llvm_revision)
+    if libcpp: fetch_libcpp(llvm_revision, libcpp)
 
     print("Last stable Cling release detected: ", tag)
     fetch_cling(tag)
@@ -1727,13 +2010,13 @@ if args['last_stable']:
         set_version()
         if OS == 'Windows':
             get_win_dep()
-            compile(os.path.join(workdir, 'cling-win-' + platform.machine().lower() + '-' + VERSION))
+            compile(os.path.join(workdir, 'cling-win-' + platform.machine().lower() + '-' + VERSION), libcpp)
         else:
             if DIST == 'Scientific Linux CERN SLC':
-                compile(os.path.join(workdir, 'cling-SLC-' + REV + '-' + platform.machine().lower() + '-' + VERSION))
+                compile(os.path.join(workdir, 'cling-SLC-' + REV + '-' + platform.machine().lower() + '-' + VERSION), libcpp)
             else:
                 compile(os.path.join(workdir,
-                                     'cling-' + DIST + '-' + REV + '-' + platform.machine().lower() + '-' + VERSION))
+                                     'cling-' + DIST + '-' + REV + '-' + platform.machine().lower() + '-' + VERSION), libcpp)
         install_prefix()
         if not args['no_test']:
             test_cling()
@@ -1742,7 +2025,7 @@ if args['last_stable']:
 
     elif args['last_stable'] == 'deb' or (args['last_stable'] == 'pkg' and DIST == 'Ubuntu'):
         set_version()
-        compile(os.path.join(workdir, 'cling-' + VERSION))
+        compile(os.path.join(workdir, 'cling-' + VERSION), libcpp)
         install_prefix()
         if not args['no_test']:
             test_cling()
@@ -1752,7 +2035,7 @@ if args['last_stable']:
 
     elif args['last_stable'] == 'rpm' or (args['last_stable'] == 'pkg' and platform.dist()[0] == 'redhat'):
         set_version()
-        compile(os.path.join(workdir, 'cling-' + VERSION))
+        compile(os.path.join(workdir, 'cling-' + VERSION), libcpp)
         install_prefix()
         if not args['no_test']:
             test_cling()
@@ -1763,7 +2046,7 @@ if args['last_stable']:
     elif args['last_stable'] == 'nsis' or (args['last_stable'] == 'pkg' and OS == 'Windows'):
         set_version()
         get_win_dep()
-        compile(os.path.join(workdir, 'cling-' + DIST + '-' + REV + '-' + platform.machine() + '-' + VERSION))
+        compile(os.path.join(workdir, 'cling-' + DIST + '-' + REV + '-' + platform.machine() + '-' + VERSION), libcpp)
         install_prefix()
         if not args['no_test']:
             test_cling()
@@ -1773,7 +2056,7 @@ if args['last_stable']:
 
     elif args['last_stable'] == 'dmg' or (args['last_stable'] == 'pkg' and OS == 'Darwin'):
         set_version()
-        compile(os.path.join(workdir, 'cling-' + DIST + '-' + REV + '-' + platform.machine().lower() + '-' + VERSION))
+        compile(os.path.join(workdir, 'cling-' + DIST + '-' + REV + '-' + platform.machine().lower() + '-' + VERSION), libcpp)
         install_prefix()
         if not args['no_test']:
             test_cling()
@@ -1788,6 +2071,9 @@ if args['tarball_tag']:
     fetch_llvm(llvm_revision)
     fetch_clang(llvm_revision)
     fetch_cling(args['tarball_tag'])
+    libcpp = should_fetch_libcpp(llvm_revision)
+    if libcpp: fetch_libcpp(llvm_revision, libcpp)
+
     set_version()
 
     if OS == 'Windows':
@@ -1795,10 +2081,10 @@ if args['tarball_tag']:
         compile(os.path.join(workdir, 'cling-win-' + platform.machine().lower() + '-' + VERSION))
     else:
         if DIST == 'Scientific Linux CERN SLC':
-            compile(os.path.join(workdir, 'cling-SLC-' + REV + '-' + platform.machine().lower() + '-' + VERSION))
+            compile(os.path.join(workdir, 'cling-SLC-' + REV + '-' + platform.machine().lower() + '-' + VERSION), libcpp)
         else:
             compile(
-                os.path.join(workdir, 'cling-' + DIST + '-' + REV + '-' + platform.machine().lower() + '-' + VERSION))
+                os.path.join(workdir, 'cling-' + DIST + '-' + REV + '-' + platform.machine().lower() + '-' + VERSION), libcpp)
 
     install_prefix()
     if not args['no_test']:
@@ -1814,8 +2100,11 @@ if args['deb_tag']:
     fetch_llvm(llvm_revision)
     fetch_clang(llvm_revision)
     fetch_cling(args['deb_tag'])
+    libcpp = should_fetch_libcpp(llvm_revision)
+    if libcpp: fetch_libcpp(llvm_revision, libcpp)
+
     set_version()
-    compile(os.path.join(workdir, 'cling-' + VERSION))
+    compile(os.path.join(workdir, 'cling-' + VERSION), libcpp)
     install_prefix()
     if not args['no_test']:
         test_cling()
@@ -1831,8 +2120,11 @@ if args['rpm_tag']:
     fetch_llvm(llvm_revision)
     fetch_clang(llvm_revision)
     fetch_cling(args['rpm_tag'])
+    libcpp = should_fetch_libcpp(llvm_revision)
+    if libcpp: fetch_libcpp(llvm_revision, libcpp)
+
     set_version()
-    compile(os.path.join(workdir, 'cling-' + VERSION))
+    compile(os.path.join(workdir, 'cling-' + VERSION), libcpp)
     install_prefix()
     if not args['no_test']:
         test_cling()
@@ -1846,11 +2138,12 @@ if args['nsis_tag']:
             'nsis_tag']).readline().strip().decode(
         'utf-8')
     fetch_llvm(llvm_revision)
+    libcpp = fetch_libcpp(llvm_revision)
     fetch_clang(llvm_revision)
     fetch_cling(args['nsis_tag'])
     set_version()
     get_win_dep()
-    compile(os.path.join(workdir, 'cling-' + DIST + '-' + REV + '-' + platform.machine() + '-' + VERSION))
+    compile(os.path.join(workdir, 'cling-' + DIST + '-' + REV + '-' + platform.machine() + '-' + VERSION), libcpp)
     install_prefix()
     if not args['no_test']:
         test_cling()
@@ -1866,8 +2159,11 @@ if args['dmg_tag']:
     fetch_llvm(llvm_revision)
     fetch_clang(llvm_revision)
     fetch_cling(args['dmg_tag'])
+    libcpp = should_fetch_libcpp(llvm_revision)
+    if libcpp: fetch_libcpp(llvm_revision, libcpp)
+
     set_version()
-    compile(os.path.join(workdir, 'cling-' + DIST + '-' + REV + '-' + platform.machine().lower() + '-' + VERSION))
+    compile(os.path.join(workdir, 'cling-' + DIST + '-' + REV + '-' + platform.machine().lower() + '-' + VERSION), libcpp)
     install_prefix()
     if not args['no_test']:
         test_cling()
@@ -1881,16 +2177,19 @@ if args['create_dev_env']:
     fetch_llvm(llvm_revision)
     fetch_clang(llvm_revision)
     fetch_cling('master')
+    libcpp = should_fetch_libcpp(llvm_revision)
+    if libcpp: fetch_libcpp(llvm_revision, libcpp)
+
     set_version()
     if OS == 'Windows':
         get_win_dep()
-        compile(os.path.join(workdir, 'cling-win-' + platform.machine().lower() + '-' + VERSION))
+        compile(os.path.join(workdir, 'cling-win-' + platform.machine().lower() + '-' + VERSION), libcpp)
     else:
         if DIST == 'Scientific Linux CERN SLC':
-            compile(os.path.join(workdir, 'cling-SLC-' + REV + '-' + platform.machine().lower() + '-' + VERSION))
+            compile(os.path.join(workdir, 'cling-SLC-' + REV + '-' + platform.machine().lower() + '-' + VERSION), libcpp)
         else:
             compile(
-                os.path.join(workdir, 'cling-' + DIST + '-' + REV + '-' + platform.machine().lower() + '-' + VERSION))
+                os.path.join(workdir, 'cling-' + DIST + '-' + REV + '-' + platform.machine().lower() + '-' + VERSION), libcpp)
     install_prefix()
     if not args['no_test']:
         test_cling()

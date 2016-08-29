@@ -34,6 +34,8 @@
 #include "TImage.h"
 #include "TBrowser.h"
 #include "TRemoteObject.h"
+#include "TKey.h"
+#include "TKeyMapFile.h"
 #include "TVirtualPad.h"
 #include "Getline.h"
 #include <time.h>
@@ -1015,12 +1017,12 @@ void TGFileBrowser::Clicked(TGListTreeItem *item, Int_t btn, Int_t x, Int_t y)
        gSystem->AccessPathName(fullpath.Data()))) {
       if (obj->InheritsFrom("TKey") && (obj->IsA() != TClass::Class())) {
          Chdir(item);
-         const char *clname = (const char *)gROOT->ProcessLine(TString::Format("((TKey *)0x%lx)->GetClassName();", (ULong_t)obj));
+         const char *clname = ((TKey *)obj)->GetClassName();
          if (clname && strcmp(clname, "TGeoManager")) {
             TClass *cl = TClass::GetClass(clname);
-            TString name = (const char *)gROOT->ProcessLine(TString::Format("((TKey *)0x%lx)->GetName();", (ULong_t)obj));
+            TString name = ((TKey *)obj)->GetName();
             name += ";";
-            name += (Short_t)gROOT->ProcessLine(TString::Format("((TKey *)0x%lx)->GetCycle();", (ULong_t)obj));
+            name += ((TKey *)obj)->GetCycle();
             void *add = gDirectory->FindObjectAny((char *) name.Data());
             if (add && cl->IsTObject()) {
                obj = (TObject*)add;
@@ -1240,12 +1242,12 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
       }
       else if (obj->InheritsFrom("TKey") && (obj->IsA() != TClass::Class())) {
          Chdir(item);
-         const char *clname = (const char *)gROOT->ProcessLine(TString::Format("((TKey *)0x%lx)->GetClassName();", (ULong_t)obj));
+         const char *clname = ((TKey *)obj)->GetClassName();
          if (clname) {
             TClass *cl = TClass::GetClass(clname);
-            TString name = (const char *)gROOT->ProcessLine(TString::Format("((TKey *)0x%lx)->GetName();", (ULong_t)obj));
+            TString name = ((TKey *)obj)->GetName();
             name += ";";
-            name += (Short_t)gROOT->ProcessLine(TString::Format("((TKey *)0x%lx)->GetCycle();", (ULong_t)obj));
+            name += ((TKey *)obj)->GetCycle();
             void *add = gDirectory->FindObjectAny((char *) name.Data());
             if (add && cl->IsTObject()) {
                obj = (TObject*)add;
@@ -1598,10 +1600,10 @@ void TGFileBrowser::GetObjPicture(const TGPicture **pic, TObject *obj)
          clname = objClass->GetName();
    }
    else if (obj->InheritsFrom("TKey")) {
-      clname = (char *)gROOT->ProcessLine(TString::Format("((TKey *)0x%lx)->GetClassName();", (ULong_t)obj));
+      clname = ((TKey *)obj)->GetClassName();
    }
    else if (obj->InheritsFrom("TKeyMapFile")) {
-      clname = (char *)gROOT->ProcessLine(TString::Format("((TKeyMapFile *)0x%lx)->GetTitle();", (ULong_t)obj));
+      clname = ((TKeyMapFile *)obj)->GetTitle();
    }
    else if (obj->InheritsFrom("TRemoteObject")) {
       // special case for remote object: get real object class

@@ -82,7 +82,7 @@ namespace {
 # define CLING_CXXABIV -1 // intentionally invalid macro name
 # define CLING_CXXABIS "-1" // intentionally invalid macro name
     llvm::errs()
-      << "Warning in cling::CIFactory::createCI():\n  "
+      << "Warning in cling::IncrementalParser::CheckABICompatibility():\n  "
       "C++ ABI check not implemented for this standard library\n";
     return;
 #endif
@@ -100,7 +100,7 @@ namespace {
     }
     else {
       llvm::errs()
-        << "Warning in cling::CIFactory::createCI():\n  "
+        << "Warning in cling::IncrementalParser::CheckABICompatibility():\n  "
         "Possible C++ standard library mismatch, compiled with Visual Studio v"
         << VSVersion << ".0,\n"
         "but this version of Visual Studio was not found in your system's registry.\n";
@@ -124,7 +124,9 @@ namespace {
   if (!II)
     return;
   const clang::DefMacroDirective* MD
-    = llvm::dyn_cast<clang::DefMacroDirective>(PP.getLocalMacroDirective(II));
+    = llvm::dyn_cast_or_null<clang::DefMacroDirective>(
+                                                   PP.getLocalMacroDirective(II)
+                                                      );
   if (!MD)
     return;
   const clang::MacroInfo* MI = MD->getMacroInfo();
@@ -158,26 +160,20 @@ namespace {
 } // unnamed namespace
 
 namespace cling {
-  IncrementalParser::IncrementalParser(Interpreter* interp,
-                                       int argc, const char* const *argv,
-                                       const char* llvmdir, bool isChildInterpreter):
-    m_Interpreter(interp), m_Consumer(0), m_ModuleNo(0) {
+  IncrementalParser::IncrementalParser(Interpreter* interp, const char* llvmdir):
+    m_Interpreter(interp),
+    m_CI(CIFactory::createCI("", interp->getOptions(), llvmdir)),
+    m_Consumer(nullptr), m_ModuleNo(0) {
+    assert(m_CI.get() && "CompilerInstance is (null)!");
 
-    CompilerInstance* CI = CIFactory::createCI("", argc, argv, llvmdir);
-    assert(CI && "CompilerInstance is (null)!");
-
-    m_Consumer = dyn_cast<DeclCollector>(&CI->getSema().getASTConsumer());
+    m_Consumer = dyn_cast<DeclCollector>(&m_CI->getSema().getASTConsumer());
     assert(m_Consumer && "Expected ChainedConsumer!");
 
-    m_CI.reset(CI);
-
-    if (CI->getFrontendOpts().ProgramAction != clang::frontend::ParseSyntaxOnly){
-      m_CodeGen.reset(CreateLLVMCodeGen(CI->getDiagnostics(), "cling-module-0",
-                                        CI->getHeaderSearchOpts(),
-                                        CI->getPreprocessorOpts(),
-                                        CI->getCodeGenOpts(),
-                                        *m_Interpreter->getLLVMContext()
-                                        ));
+    if (m_CI->getFrontendOpts().ProgramAction != frontend::ParseSyntaxOnly) {
+      m_CodeGen.reset(CreateLLVMCodeGen(
+          m_CI->getDiagnostics(), "cling-module-0", m_CI->getHeaderSearchOpts(),
+          m_CI->getPreprocessorOpts(), m_CI->getCodeGenOpts(),
+          *m_Interpreter->getLLVMContext()));
       m_Consumer->setContext(this, m_CodeGen.get());
     } else {
       m_Consumer->setContext(this, 0);
@@ -660,14 +656,6 @@ namespace cling {
     return PRT;
   }
 
-  IncrementalParser::ParseResultTransaction
-  IncrementalParser::Parse(llvm::StringRef input,
-                           const CompilationOptions& Opts) {
-    Transaction* CurT = beginTransaction(Opts);
-    ParseInternal(input);
-    return endTransaction(CurT);
-  }
-
   // Add the input to the memory buffer, parse it, and add it to the AST.
   IncrementalParser::EParseResult
   IncrementalParser::ParseInternal(llvm::StringRef input) {
@@ -713,10 +701,28 @@ namespace cling {
     SourceLocation NewLoc = getLastMemoryBufferEndLoc().getLocWithOffset(1);
 
     llvm::MemoryBuffer* MBNonOwn = MB.get();
-    // Create FileID for the current buffer
-    FileID FID = SM.createFileID(std::move(MB), SrcMgr::C_User,
+
+    // Create FileID for the current buffer.
+    FileID FID;
+    if (CO.CodeCompletionOffset == -1)
+    {
+      FID = SM.createFileID(std::move(MB), SrcMgr::C_User,
                                  /*LoadedID*/0,
                                  /*LoadedOffset*/0, NewLoc);
+    } else {
+      // Create FileEntry and FileID for the current buffer.
+      // Enabling the completion point only works on FileEntries.
+      const clang::FileEntry* FE
+        = SM.getFileManager().getVirtualFile("vfile for " + source_name.str(),
+                                             InputSize, 0 /* mod time*/);
+      SM.overrideFileContents(FE, std::move(MB));
+      FID = SM.createFileID(FE, NewLoc, SrcMgr::C_User);
+
+      // The completion point is set one a 1-based line/column numbering.
+      // It relies on the implementation to account for the wrapper extra line.
+      PP.SetCodeCompletionPoint(FE, 1/* start point 1-based line*/,
+                                CO.CodeCompletionOffset+1/* 1-based column*/);
+    }
 
     m_MemoryBuffers.push_back(std::make_pair(MBNonOwn, FID));
 
@@ -766,6 +772,19 @@ namespace cling {
       if (ADecl)
         m_Consumer->HandleTopLevelDecl(ADecl.get());
     };
+
+    if (CO.CodeCompletionOffset != -1) {
+      assert((int)SM.getFileOffset(PP.getCodeCompletionLoc())
+             == CO.CodeCompletionOffset
+             && "Completion point wrongly set!");
+      assert(PP.isCodeCompletionReached()
+             && "Code completion set but not reached!");
+
+      // Let's ignore this transaction:
+      m_Consumer->getTransaction()->setIssuedDiags(Transaction::kErrors);
+
+      return kSuccess;
+    }
 
 #ifdef LLVM_ON_WIN32
     // Microsoft-specific:

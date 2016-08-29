@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_tree
+/// \notebook -nodraw
 /// Create a plot of the data in cernstaff.root
-/// 
 /// To create cernstaff.root, execute tutorial $ROOTSYS/tutorials/tree/cernbuild.C
 /// \macro_image
 /// \macro_code

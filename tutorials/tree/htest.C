@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_tree
-///
+/// \notebook
 /// Save histograms in Tree branches
 ///
 /// To run this example, do

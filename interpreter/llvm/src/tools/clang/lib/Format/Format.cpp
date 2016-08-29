@@ -314,6 +314,8 @@ template <> struct MappingTraits<FormatStyle> {
     IO.mapOptional("IndentWidth", Style.IndentWidth);
     IO.mapOptional("IndentWrappedFunctionNames",
                    Style.IndentWrappedFunctionNames);
+    IO.mapOptional("JavaScriptQuotes", Style.JavaScriptQuotes);
+    IO.mapOptional("JavaScriptWrapImports", Style.JavaScriptWrapImports);
     IO.mapOptional("KeepEmptyLinesAtTheStartOfBlocks",
                    Style.KeepEmptyLinesAtTheStartOfBlocks);
     IO.mapOptional("MacroBlockBegin", Style.MacroBlockBegin);
@@ -353,7 +355,6 @@ template <> struct MappingTraits<FormatStyle> {
     IO.mapOptional("Standard", Style.Standard);
     IO.mapOptional("TabWidth", Style.TabWidth);
     IO.mapOptional("UseTab", Style.UseTab);
-    IO.mapOptional("JavaScriptQuotes", Style.JavaScriptQuotes);
   }
 };
 
@@ -531,6 +532,8 @@ FormatStyle getLLVMStyle() {
   LLVMStyle.IndentCaseLabels = false;
   LLVMStyle.IndentWrappedFunctionNames = false;
   LLVMStyle.IndentWidth = 2;
+  LLVMStyle.JavaScriptQuotes = FormatStyle::JSQS_Leave;
+  LLVMStyle.JavaScriptWrapImports = true;
   LLVMStyle.TabWidth = 8;
   LLVMStyle.MaxEmptyLinesToKeep = 1;
   LLVMStyle.KeepEmptyLinesAtTheStartOfBlocks = true;
@@ -609,10 +612,12 @@ FormatStyle getGoogleStyle(FormatStyle::LanguageKind Language) {
     GoogleStyle.AllowShortFunctionsOnASingleLine = FormatStyle::SFS_Inline;
     GoogleStyle.AlwaysBreakBeforeMultilineStrings = false;
     GoogleStyle.BreakBeforeTernaryOperators = false;
-    GoogleStyle.CommentPragmas = "@(export|return|see|visibility) ";
+    GoogleStyle.CommentPragmas = "@(export|requirecss|return|see|visibility) ";
     GoogleStyle.MaxEmptyLinesToKeep = 3;
+    GoogleStyle.NamespaceIndentation = FormatStyle::NI_All;
     GoogleStyle.SpacesInContainerLiterals = false;
     GoogleStyle.JavaScriptQuotes = FormatStyle::JSQS_Single;
+    GoogleStyle.JavaScriptWrapImports = false;
   } else if (Language == FormatStyle::LK_Proto) {
     GoogleStyle.AllowShortFunctionsOnASingleLine = FormatStyle::SFS_None;
     GoogleStyle.SpacesInContainerLiterals = false;
@@ -1457,7 +1462,7 @@ bool checkAndConsumeDirectiveWithName(Lexer &Lex, StringRef Name, Token &Tok) {
 
 unsigned getOffsetAfterHeaderGuardsAndComments(StringRef FileName,
                                                StringRef Code,
-                                               FormatStyle Style) {
+                                               const FormatStyle &Style) {
   std::unique_ptr<Environment> Env =
       Environment::CreateVirtualEnvironment(Code, FileName, /*Ranges=*/{});
   const SourceManager &SourceMgr = Env->getSourceManager();
@@ -1481,7 +1486,6 @@ unsigned getOffsetAfterHeaderGuardsAndComments(StringRef FileName,
 // code.
 // FIXME: do not insert headers into conditional #include blocks, e.g. #includes
 // surrounded by compile condition "#if...".
-// FIXME: do not insert existing headers.
 // FIXME: insert empty lines between newly created blocks.
 tooling::Replacements
 fixCppIncludeInsertions(StringRef Code, const tooling::Replacements &Replaces,
@@ -1528,10 +1532,12 @@ fixCppIncludeInsertions(StringRef Code, const tooling::Replacements &Replaces,
   TrimmedCode.split(Lines, '\n');
   unsigned Offset = MinInsertOffset;
   unsigned NextLineOffset;
+  std::set<StringRef> ExistingIncludes;
   for (auto Line : Lines) {
     NextLineOffset = std::min(Code.size(), Offset + Line.size() + 1);
     if (IncludeRegex.match(Line, &Matches)) {
       StringRef IncludeName = Matches[2];
+      ExistingIncludes.insert(IncludeName);
       int Category = Categories.getIncludePriority(
           IncludeName, /*CheckMainHeader=*/FirstIncludeOffset < 0);
       CategoryEndOffsets[Category] = NextLineOffset;
@@ -1567,6 +1573,11 @@ fixCppIncludeInsertions(StringRef Code, const tooling::Replacements &Replaces,
                       "'#include ...'");
     (void)Matched;
     auto IncludeName = Matches[2];
+    if (ExistingIncludes.find(IncludeName) != ExistingIncludes.end()) {
+      DEBUG(llvm::dbgs() << "Skip adding existing include : " << IncludeName
+                         << "\n");
+      continue;
+    }
     int Category =
         Categories.getIncludePriority(IncludeName, /*CheckMainHeader=*/true);
     Offset = CategoryEndOffsets[Category];

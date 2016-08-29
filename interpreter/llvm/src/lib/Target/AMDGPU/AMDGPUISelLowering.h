@@ -66,18 +66,21 @@ protected:
   SDValue LowerSIGN_EXTEND_INREG(SDValue Op, SelectionDAG &DAG) const;
 
 protected:
+  bool shouldCombineMemoryType(EVT VT) const;
+  SDValue performLoadCombine(SDNode *N, DAGCombinerInfo &DCI) const;
   SDValue performStoreCombine(SDNode *N, DAGCombinerInfo &DCI) const;
   SDValue performAndCombine(SDNode *N, DAGCombinerInfo &DCI) const;
   SDValue performShlCombine(SDNode *N, DAGCombinerInfo &DCI) const;
   SDValue performSraCombine(SDNode *N, DAGCombinerInfo &DCI) const;
   SDValue performSrlCombine(SDNode *N, DAGCombinerInfo &DCI) const;
   SDValue performMulCombine(SDNode *N, DAGCombinerInfo &DCI) const;
-  SDValue performCtlzCombine(SDLoc SL, SDValue Cond, SDValue LHS, SDValue RHS,
-                             DAGCombinerInfo &DCI) const;
+  SDValue performCtlzCombine(const SDLoc &SL, SDValue Cond, SDValue LHS,
+                             SDValue RHS, DAGCombinerInfo &DCI) const;
   SDValue performSelectCombine(SDNode *N, DAGCombinerInfo &DCI) const;
 
   static EVT getEquivalentMemType(LLVMContext &Context, EVT VT);
   static EVT getEquivalentLoadRegType(LLVMContext &Context, EVT VT);
+  static EVT getEquivalentBitType(LLVMContext &Context, EVT VT);
 
   virtual SDValue LowerGlobalAddress(AMDGPUMachineFunction *MFI, SDValue Op,
                                      SelectionDAG &DAG) const;
@@ -116,7 +119,7 @@ protected:
                      const SmallVectorImpl<ISD::OutputArg> &Outs) const;
 
 public:
-  AMDGPUTargetLowering(TargetMachine &TM, const AMDGPUSubtarget &STI);
+  AMDGPUTargetLowering(const TargetMachine &TM, const AMDGPUSubtarget &STI);
 
   bool isFAbsFree(EVT VT) const override;
   bool isFNegFree(EVT VT) const override;
@@ -138,7 +141,7 @@ public:
                              ISD::LoadExtType ExtType,
                              EVT ExtVT) const override;
 
-  bool isLoadBitCastBeneficial(EVT, EVT) const override;
+  bool isLoadBitCastBeneficial(EVT, EVT) const final;
 
   bool storeOfVectorConstantIsCheap(EVT MemVT,
                                     unsigned NumElem,
@@ -147,11 +150,10 @@ public:
   bool isCheapToSpeculateCttz() const override;
   bool isCheapToSpeculateCtlz() const override;
 
-  SDValue LowerReturn(SDValue Chain, CallingConv::ID CallConv,
-                      bool isVarArg,
+  SDValue LowerReturn(SDValue Chain, CallingConv::ID CallConv, bool isVarArg,
                       const SmallVectorImpl<ISD::OutputArg> &Outs,
-                      const SmallVectorImpl<SDValue> &OutVals,
-                      SDLoc DL, SelectionDAG &DAG) const override;
+                      const SmallVectorImpl<SDValue> &OutVals, const SDLoc &DL,
+                      SelectionDAG &DAG) const override;
   SDValue LowerCall(CallLoweringInfo &CLI,
                     SmallVectorImpl<SDValue> &InVals) const override;
 
@@ -164,14 +166,9 @@ public:
                           SmallVectorImpl<SDValue> &Results,
                           SelectionDAG &DAG) const override;
 
-  SDValue CombineFMinMaxLegacy(SDLoc DL,
-                               EVT VT,
-                               SDValue LHS,
-                               SDValue RHS,
-                               SDValue True,
-                               SDValue False,
-                               SDValue CC,
-                               DAGCombinerInfo &DCI) const;
+  SDValue CombineFMinMaxLegacy(const SDLoc &DL, EVT VT, SDValue LHS,
+                               SDValue RHS, SDValue True, SDValue False,
+                               SDValue CC, DAGCombinerInfo &DCI) const;
 
   const char* getTargetNodeName(unsigned Opcode) const override;
 
@@ -207,8 +204,9 @@ public:
                                        unsigned Reg, EVT VT) const;
 
   enum ImplicitParameter {
-    GRID_DIM,
-    GRID_OFFSET
+    FIRST_IMPLICIT,
+    GRID_DIM = FIRST_IMPLICIT,
+    GRID_OFFSET,
   };
 
   /// \brief Helper function that returns the byte offset of the given
@@ -224,9 +222,10 @@ enum NodeType : unsigned {
   FIRST_NUMBER = ISD::BUILTIN_OP_END,
   CALL,        // Function call based on a single integer
   UMUL,        // 32bit unsigned multiplication
-  RET_FLAG,
   BRANCH_COND,
   // End AMDIL ISD Opcodes
+  ENDPGM,
+  RETURN,
   DWORDADDR,
   FRACT,
   CLAMP,
@@ -303,6 +302,7 @@ enum NodeType : unsigned {
   INTERP_MOV,
   INTERP_P1,
   INTERP_P2,
+  PC_ADD_REL_OFFSET,
   FIRST_MEM_OPCODE_NUMBER = ISD::FIRST_TARGET_MEMORY_OPCODE,
   STORE_MSKOR,
   LOAD_CONSTANT,

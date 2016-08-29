@@ -764,6 +764,12 @@ public:
     return Visit(DIE->getExpr());
   }
 
+  llvm::Constant *VisitExprWithCleanups(ExprWithCleanups *E) {
+    if (!E->cleanupsHaveSideEffects())
+      return Visit(E->getSubExpr());
+    return nullptr;
+  }
+
   llvm::Constant *VisitMaterializeTemporaryExpr(MaterializeTemporaryExpr *E) {
     return Visit(E->GetTemporaryExpr());
   }
@@ -1314,8 +1320,14 @@ llvm::Constant *CodeGenModule::EmitConstantValue(const APValue &Value,
 
       // Convert to the appropriate type; this could be an lvalue for
       // an integer.
-      if (isa<llvm::PointerType>(DestTy))
+      if (isa<llvm::PointerType>(DestTy)) {
+        // Convert the integer to a pointer-sized integer before converting it
+        // to a pointer.
+        C = llvm::ConstantExpr::getIntegerCast(
+            C, getDataLayout().getIntPtrType(DestTy),
+            /*isSigned=*/false);
         return llvm::ConstantExpr::getIntToPtr(C, DestTy);
+      }
 
       // If the types don't match this should only be a truncate.
       if (C->getType() != DestTy)

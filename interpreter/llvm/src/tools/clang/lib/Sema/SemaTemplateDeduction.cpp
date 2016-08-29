@@ -103,12 +103,12 @@ DeduceTemplateArgumentsByTypeMatch(Sema &S,
                                    bool PartialOrdering = false);
 
 static Sema::TemplateDeductionResult
-DeduceTemplateArguments(Sema &S,
-                        TemplateParameterList *TemplateParams,
+DeduceTemplateArguments(Sema &S, TemplateParameterList *TemplateParams,
                         const TemplateArgument *Params, unsigned NumParams,
                         const TemplateArgument *Args, unsigned NumArgs,
                         TemplateDeductionInfo &Info,
-                        SmallVectorImpl<DeducedTemplateArgument> &Deduced);
+                        SmallVectorImpl<DeducedTemplateArgument> &Deduced,
+                        bool NumberOfArgumentsMustMatch);
 
 /// \brief If the given expression is of a form that permits the deduction
 /// of a non-type template parameter, return the declaration of that
@@ -286,13 +286,10 @@ checkDeducedTemplateArguments(ASTContext &Context,
 
 /// \brief Deduce the value of the given non-type template parameter
 /// from the given constant.
-static Sema::TemplateDeductionResult
-DeduceNonTypeTemplateArgument(Sema &S,
-                              NonTypeTemplateParmDecl *NTTP,
-                              llvm::APSInt Value, QualType ValueType,
-                              bool DeducedFromArrayBound,
-                              TemplateDeductionInfo &Info,
-                    SmallVectorImpl<DeducedTemplateArgument> &Deduced) {
+static Sema::TemplateDeductionResult DeduceNonTypeTemplateArgument(
+    Sema &S, NonTypeTemplateParmDecl *NTTP, const llvm::APSInt &Value,
+    QualType ValueType, bool DeducedFromArrayBound, TemplateDeductionInfo &Info,
+    SmallVectorImpl<DeducedTemplateArgument> &Deduced) {
   assert(NTTP->getDepth() == 0 &&
          "Cannot deduce non-type template argument with depth > 0");
 
@@ -456,10 +453,10 @@ DeduceTemplateArguments(Sema &S,
     // Perform template argument deduction on each template
     // argument. Ignore any missing/extra arguments, since they could be
     // filled in by default arguments.
-    return DeduceTemplateArguments(S, TemplateParams,
-                                   Param->getArgs(), Param->getNumArgs(),
-                                   SpecArg->getArgs(), SpecArg->getNumArgs(),
-                                   Info, Deduced);
+    return DeduceTemplateArguments(S, TemplateParams, Param->getArgs(),
+                                   Param->getNumArgs(), SpecArg->getArgs(),
+                                   SpecArg->getNumArgs(), Info, Deduced,
+                                   /*NumberOfArgumentsMustMatch=*/false);
   }
 
   // If the argument type is a class template specialization, we
@@ -490,11 +487,10 @@ DeduceTemplateArguments(Sema &S,
     return Result;
 
   // Perform template argument deduction for the template arguments.
-  return DeduceTemplateArguments(S, TemplateParams,
-                                 Param->getArgs(), Param->getNumArgs(),
-                                 SpecArg->getTemplateArgs().data(),
-                                 SpecArg->getTemplateArgs().size(),
-                                 Info, Deduced);
+  return DeduceTemplateArguments(
+      S, TemplateParams, Param->getArgs(), Param->getNumArgs(),
+      SpecArg->getTemplateArgs().data(), SpecArg->getTemplateArgs().size(),
+      Info, Deduced, /*NumberOfArgumentsMustMatch=*/true);
 }
 
 /// \brief Determines whether the given type is an opaque type that
@@ -1464,6 +1460,7 @@ DeduceTemplateArgumentsByTypeMatch(Sema &S,
       SmallVector<const RecordType *, 8> ToVisit;
       ToVisit.push_back(RecordT);
       bool Successful = false;
+      SmallVector<DeducedTemplateArgument, 8> SuccessfulDeduced;
       while (!ToVisit.empty()) {
         // Retrieve the next class in the inheritance hierarchy.
         const RecordType *NextT = ToVisit.pop_back_val();
@@ -1484,14 +1481,20 @@ DeduceTemplateArgumentsByTypeMatch(Sema &S,
           // note that we had some success. Otherwise, ignore any deductions
           // from this base class.
           if (BaseResult == Sema::TDK_Success) {
+            // If we've already seen some success, then deduction fails due to
+            // an ambiguity (temp.deduct.call p5).
+            if (Successful)
+              return Sema::TDK_MiscellaneousDeductionFailure;
+
             Successful = true;
-            DeducedOrig.clear();
-            DeducedOrig.append(Deduced.begin(), Deduced.end());
+            std::swap(SuccessfulDeduced, Deduced);
+
             Info.Param = BaseInfo.Param;
             Info.FirstArg = BaseInfo.FirstArg;
             Info.SecondArg = BaseInfo.SecondArg;
-          } else
-            Deduced = DeducedOrig;
+          }
+
+          Deduced = DeducedOrig;
         }
 
         // Visit base classes
@@ -1503,8 +1506,10 @@ DeduceTemplateArgumentsByTypeMatch(Sema &S,
         }
       }
 
-      if (Successful)
+      if (Successful) {
+        std::swap(SuccessfulDeduced, Deduced);
         return Sema::TDK_Success;
+      }
 
       return Result;
     }
@@ -1828,12 +1833,12 @@ static bool hasPackExpansionBeforeEnd(const TemplateArgument *Args,
 }
 
 static Sema::TemplateDeductionResult
-DeduceTemplateArguments(Sema &S,
-                        TemplateParameterList *TemplateParams,
+DeduceTemplateArguments(Sema &S, TemplateParameterList *TemplateParams,
                         const TemplateArgument *Params, unsigned NumParams,
                         const TemplateArgument *Args, unsigned NumArgs,
                         TemplateDeductionInfo &Info,
-                        SmallVectorImpl<DeducedTemplateArgument> &Deduced) {
+                        SmallVectorImpl<DeducedTemplateArgument> &Deduced,
+                        bool NumberOfArgumentsMustMatch) {
   // C++0x [temp.deduct.type]p9:
   //   If the template argument list of P contains a pack expansion that is not
   //   the last template argument, the entire template argument list is a
@@ -1853,7 +1858,8 @@ DeduceTemplateArguments(Sema &S,
 
       // Check whether we have enough arguments.
       if (!hasTemplateArgumentForDeduction(Args, ArgIdx, NumArgs))
-        return Sema::TDK_Success;
+        return NumberOfArgumentsMustMatch ? Sema::TDK_TooFewArguments
+                                          : Sema::TDK_Success;
 
       if (Args[ArgIdx].isPackExpansion()) {
         // FIXME: We follow the logic of C++0x [temp.deduct.type]p22 here,
@@ -1924,7 +1930,7 @@ DeduceTemplateArguments(Sema &S,
   return DeduceTemplateArguments(S, TemplateParams,
                                  ParamList.data(), ParamList.size(),
                                  ArgList.data(), ArgList.size(),
-                                 Info, Deduced);
+                                 Info, Deduced, false);
 }
 
 /// \brief Determine whether two template arguments are the same.
@@ -2078,8 +2084,7 @@ ConvertDeducedTemplateArgument(Sema &S, NamedDecl *Param,
           dyn_cast<NonTypeTemplateParmDecl>(Param)) {
     NTTPType = NTTP->getType();
     if (NTTPType->isDependentType()) {
-      TemplateArgumentList TemplateArgs(TemplateArgumentList::OnStack,
-                                        Output.data(), Output.size());
+      TemplateArgumentList TemplateArgs(TemplateArgumentList::OnStack, Output);
       NTTPType = S.SubstType(NTTPType,
                              MultiLevelTemplateArgumentList(TemplateArgs),
                              NTTP->getLocation(),
@@ -2139,8 +2144,7 @@ ConvertDeducedTemplateArgument(Sema &S, NamedDecl *Param,
       if (Inst.isInvalid())
         return true;
 
-      TemplateArgumentList TemplateArgs(TemplateArgumentList::OnStack,
-                                        Output.data(), Output.size());
+      TemplateArgumentList TemplateArgs(TemplateArgumentList::OnStack, Output);
       if (!S.SubstDecl(TTP, S.CurContext,
                        MultiLevelTemplateArgumentList(TemplateArgs)))
         return true;
@@ -2188,16 +2192,14 @@ FinishTemplateArgumentDeduction(Sema &S,
                                        Builder)) {
       Info.Param = makeTemplateParameter(Param);
       // FIXME: These template arguments are temporary. Free them!
-      Info.reset(TemplateArgumentList::CreateCopy(S.Context, Builder.data(),
-                                                  Builder.size()));
+      Info.reset(TemplateArgumentList::CreateCopy(S.Context, Builder));
       return Sema::TDK_SubstitutionFailure;
     }
   }
 
   // Form the template argument list from the deduced template arguments.
   TemplateArgumentList *DeducedArgumentList
-    = TemplateArgumentList::CreateCopy(S.Context, Builder.data(),
-                                       Builder.size());
+    = TemplateArgumentList::CreateCopy(S.Context, Builder);
 
   Info.reset(DeducedArgumentList);
 
@@ -2329,15 +2331,14 @@ static Sema::TemplateDeductionResult FinishTemplateArgumentDeduction(
                                        Info, false, Builder)) {
       Info.Param = makeTemplateParameter(Param);
       // FIXME: These template arguments are temporary. Free them!
-      Info.reset(TemplateArgumentList::CreateCopy(S.Context, Builder.data(),
-                                                  Builder.size()));
+      Info.reset(TemplateArgumentList::CreateCopy(S.Context, Builder));
       return Sema::TDK_SubstitutionFailure;
     }
   }
 
   // Form the template argument list from the deduced template arguments.
   TemplateArgumentList *DeducedArgumentList = TemplateArgumentList::CreateCopy(
-      S.Context, Builder.data(), Builder.size());
+      S.Context, Builder);
 
   Info.reset(DeducedArgumentList);
 
@@ -2483,7 +2484,7 @@ Sema::SubstituteExplicitTemplateArguments(
   if (ExplicitTemplateArgs.size() == 0) {
     // No arguments to substitute; just copy over the parameter types and
     // fill in the function type.
-    for (auto P : Function->params())
+    for (auto P : Function->parameters())
       ParamTypes.push_back(P->getType());
 
     if (FunctionType)
@@ -2528,7 +2529,7 @@ Sema::SubstituteExplicitTemplateArguments(
   // Form the template argument list from the explicitly-specified
   // template arguments.
   TemplateArgumentList *ExplicitArgumentList
-    = TemplateArgumentList::CreateCopy(Context, Builder.data(), Builder.size());
+    = TemplateArgumentList::CreateCopy(Context, Builder);
   Info.reset(ExplicitArgumentList);
 
   // Template argument deduction and the final substitution should be
@@ -2566,8 +2567,7 @@ Sema::SubstituteExplicitTemplateArguments(
   // return type, substitute it after the arguments to ensure we substitute
   // in lexical order.
   if (Proto->hasTrailingReturn()) {
-    if (SubstParmTypes(Function->getLocation(),
-                       Function->param_begin(), Function->getNumParams(),
+    if (SubstParmTypes(Function->getLocation(), Function->parameters(),
                        Proto->getExtParameterInfosOrNull(),
                        MultiLevelTemplateArgumentList(*ExplicitArgumentList),
                        ParamTypes, /*params*/ nullptr, ExtParamInfos))
@@ -2604,8 +2604,7 @@ Sema::SubstituteExplicitTemplateArguments(
   // Instantiate the types of each of the function parameters given the
   // explicitly-specified template arguments if we didn't do so earlier.
   if (!Proto->hasTrailingReturn() &&
-      SubstParmTypes(Function->getLocation(),
-                     Function->param_begin(), Function->getNumParams(),
+      SubstParmTypes(Function->getLocation(), Function->parameters(),
                      Proto->getExtParameterInfosOrNull(),
                      MultiLevelTemplateArgumentList(*ExplicitArgumentList),
                      ParamTypes, /*params*/ nullptr, ExtParamInfos))
@@ -2813,8 +2812,7 @@ Sema::FinishTemplateArgumentDeduction(FunctionTemplateDecl *FunctionTemplate,
                                          true, Builder)) {
         Info.Param = makeTemplateParameter(Param);
         // FIXME: These template arguments are temporary. Free them!
-        Info.reset(TemplateArgumentList::CreateCopy(Context, Builder.data(),
-                                                    Builder.size()));
+        Info.reset(TemplateArgumentList::CreateCopy(Context, Builder));
         return TDK_SubstitutionFailure;
       }
 
@@ -2850,8 +2848,7 @@ Sema::FinishTemplateArgumentDeduction(FunctionTemplateDecl *FunctionTemplate,
                                            Builder)) {
           Info.Param = makeTemplateParameter(Param);
           // FIXME: These template arguments are temporary. Free them!
-          Info.reset(TemplateArgumentList::CreateCopy(Context, Builder.data(),
-                                                      Builder.size()));
+          Info.reset(TemplateArgumentList::CreateCopy(Context, Builder));
           return TDK_SubstitutionFailure;
         }
       }
@@ -2871,8 +2868,7 @@ Sema::FinishTemplateArgumentDeduction(FunctionTemplateDecl *FunctionTemplate,
     if (DefArg.getArgument().isNull()) {
       Info.Param = makeTemplateParameter(
                          const_cast<NamedDecl *>(TemplateParams->getParam(I)));
-      Info.reset(TemplateArgumentList::CreateCopy(Context, Builder.data(),
-                                                  Builder.size()));
+      Info.reset(TemplateArgumentList::CreateCopy(Context, Builder));
       if (PartialOverloading) break;
 
       return HasDefaultArg ? TDK_SubstitutionFailure : TDK_Incomplete;
@@ -2888,8 +2884,7 @@ Sema::FinishTemplateArgumentDeduction(FunctionTemplateDecl *FunctionTemplate,
       Info.Param = makeTemplateParameter(
                          const_cast<NamedDecl *>(TemplateParams->getParam(I)));
       // FIXME: These template arguments are temporary. Free them!
-      Info.reset(TemplateArgumentList::CreateCopy(Context, Builder.data(),
-                                                  Builder.size()));
+      Info.reset(TemplateArgumentList::CreateCopy(Context, Builder));
       return TDK_SubstitutionFailure;
     }
 
@@ -2898,7 +2893,7 @@ Sema::FinishTemplateArgumentDeduction(FunctionTemplateDecl *FunctionTemplate,
 
   // Form the template argument list from the deduced template arguments.
   TemplateArgumentList *DeducedArgumentList
-    = TemplateArgumentList::CreateCopy(Context, Builder.data(), Builder.size());
+    = TemplateArgumentList::CreateCopy(Context, Builder);
   Info.reset(DeducedArgumentList);
 
   // Substitute the deduced template arguments into the function template

@@ -87,7 +87,7 @@ Sema::Sema(Preprocessor &pp, ASTContext &ctxt, ASTConsumer &consumer,
     ConstSegStack(nullptr), CodeSegStack(nullptr), CurInitSeg(nullptr),
     VisContext(nullptr),
     IsBuildingRecoveryCallExpr(false),
-    ExprNeedsCleanups(false), LateTemplateParser(nullptr),
+    Cleanup{}, LateTemplateParser(nullptr),
     LateTemplateParserCleanup(nullptr),
     OpaqueParser(nullptr), IdResolver(pp), StdInitializerList(nullptr),
     CXXTypeInfoDecl(nullptr), MSVCGuidDecl(nullptr),
@@ -123,7 +123,8 @@ Sema::Sema(Preprocessor &pp, ASTContext &ctxt, ASTConsumer &consumer,
   // Tell diagnostics how to render things from the AST library.
   Diags.SetArgToStringFn(&FormatASTNodeDiagnosticArgument, &Context);
 
-  ExprEvalContexts.emplace_back(PotentiallyEvaluated, 0, false, nullptr, false);
+  ExprEvalContexts.emplace_back(PotentiallyEvaluated, 0, CleanupInfo{}, nullptr,
+                                false);
 
   FunctionScopes.push_back(new FunctionScopeInfo(Diags));
 
@@ -464,7 +465,8 @@ static bool ShouldRemoveFromUnused(Sema *SemaRef, const DeclaratorDecl *D) {
   return false;
 }
 
-/// Obtains a sorted list of functions that are undefined but ODR-used.
+/// Obtains a sorted list of functions and variables that are undefined but
+/// ODR-used.
 void Sema::getUndefinedButUsed(
     SmallVectorImpl<std::pair<NamedDecl *, SourceLocation> > &Undefined) {
   for (const auto &UndefinedUse : UndefinedButUsed) {
@@ -483,9 +485,10 @@ void Sema::getUndefinedButUsed(
           !FD->getMostRecentDecl()->isInlined())
         continue;
     } else {
-      if (cast<VarDecl>(ND)->hasDefinition() != VarDecl::DeclarationOnly)
+      auto *VD = cast<VarDecl>(ND);
+      if (VD->hasDefinition() != VarDecl::DeclarationOnly)
         continue;
-      if (ND->isExternallyVisible())
+      if (VD->isExternallyVisible() && !VD->getMostRecentDecl()->isInline())
         continue;
     }
 
@@ -517,10 +520,16 @@ static void checkUndefinedButUsed(Sema &S) {
     if (!ND->isExternallyVisible()) {
       S.Diag(ND->getLocation(), diag::warn_undefined_internal)
         << isa<VarDecl>(ND) << ND;
-    } else {
-      assert(cast<FunctionDecl>(ND)->getMostRecentDecl()->isInlined() &&
+    } else if (auto *FD = dyn_cast<FunctionDecl>(ND)) {
+      (void)FD;
+      assert(FD->getMostRecentDecl()->isInlined() &&
              "used object requires definition but isn't inline or internal?");
+      // FIXME: This is ill-formed; we should reject.
       S.Diag(ND->getLocation(), diag::warn_undefined_inline) << ND;
+    } else {
+      assert(cast<VarDecl>(ND)->getMostRecentDecl()->isInline() &&
+             "used var requires definition but isn't inline or internal?");
+      S.Diag(ND->getLocation(), diag::err_undefined_inline_var) << ND;
     }
     if (I->second.isValid())
       S.Diag(I->second, diag::note_used_here);
@@ -881,7 +890,7 @@ void Sema::ActOnEndOfTranslationUnit() {
   }
 
   if (!Diags.isIgnored(diag::warn_mismatched_delete_new, SourceLocation())) {
-    if (ExternalSource)
+    if (ExternalSource && !PP.isIncrementalProcessingEnabled())
       ExternalSource->ReadMismatchingDeleteExpressions(DeleteExprs);
     for (const auto &DeletedFieldInfo : DeleteExprs) {
       for (const auto &DeleteExprLoc : DeletedFieldInfo.second) {
@@ -889,6 +898,7 @@ void Sema::ActOnEndOfTranslationUnit() {
                                   DeleteExprLoc.second);
       }
     }
+    DeleteExprs.clear();
   }
 
   // Check we've noticed that we're no longer parsing the initializer for every

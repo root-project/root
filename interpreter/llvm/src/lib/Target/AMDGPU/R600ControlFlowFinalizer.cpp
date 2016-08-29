@@ -39,14 +39,14 @@ struct CFStack {
     FIRST_NON_WQM_PUSH_W_FULL_ENTRY = 3
   };
 
-  const AMDGPUSubtarget *ST;
+  const R600Subtarget *ST;
   std::vector<StackItem> BranchStack;
   std::vector<StackItem> LoopStack;
   unsigned MaxStackSize;
   unsigned CurrentEntries;
   unsigned CurrentSubEntries;
 
-  CFStack(const AMDGPUSubtarget *st, CallingConv::ID cc) : ST(st),
+  CFStack(const R600Subtarget *st, CallingConv::ID cc) : ST(st),
       // We need to reserve a stack entry for CALL_FS in vertex shaders.
       MaxStackSize(cc == CallingConv::AMDGPU_VS ? 1 : 0),
       CurrentEntries(0), CurrentSubEntries(0) { }
@@ -119,7 +119,7 @@ unsigned CFStack::getSubEntrySize(CFStack::StackItem Item) {
     return 0;
   case CFStack::FIRST_NON_WQM_PUSH:
   assert(!ST->hasCaymanISA());
-  if (ST->getGeneration() <= AMDGPUSubtarget::R700) {
+  if (ST->getGeneration() <= R600Subtarget::R700) {
     // +1 For the push operation.
     // +2 Extra space required.
     return 3;
@@ -132,7 +132,7 @@ unsigned CFStack::getSubEntrySize(CFStack::StackItem Item) {
     return 2;
   }
   case CFStack::FIRST_NON_WQM_PUSH_W_FULL_ENTRY:
-    assert(ST->getGeneration() >= AMDGPUSubtarget::EVERGREEN);
+    assert(ST->getGeneration() >= R600Subtarget::EVERGREEN);
     // +1 For the push operation.
     // +1 Extra space required.
     return 2;
@@ -159,7 +159,7 @@ void CFStack::pushBranch(unsigned Opcode, bool isWQM) {
                                              // See comment in
                                              // CFStack::getSubEntrySize()
       else if (CurrentEntries > 0 &&
-               ST->getGeneration() > AMDGPUSubtarget::EVERGREEN &&
+               ST->getGeneration() > R600Subtarget::EVERGREEN &&
                !ST->hasCaymanISA() &&
                !branchStackContains(CFStack::FIRST_NON_WQM_PUSH_W_FULL_ENTRY))
         Item = CFStack::FIRST_NON_WQM_PUSH_W_FULL_ENTRY;
@@ -220,7 +220,7 @@ private:
   const R600InstrInfo *TII;
   const R600RegisterInfo *TRI;
   unsigned MaxFetchInst;
-  const AMDGPUSubtarget *ST;
+  const R600Subtarget *ST;
 
   bool IsTrivialInst(MachineInstr *MI) const {
     switch (MI->getOpcode()) {
@@ -234,7 +234,7 @@ private:
 
   const MCInstrDesc &getHWInstrDesc(ControlFlowInstruction CFI) const {
     unsigned Opcode = 0;
-    bool isEg = (ST->getGeneration() >= AMDGPUSubtarget::EVERGREEN);
+    bool isEg = (ST->getGeneration() >= R600Subtarget::EVERGREEN);
     switch (CFI) {
     case CF_TC:
       Opcode = isEg ? AMDGPU::CF_TC_EG : AMDGPU::CF_TC_R600;
@@ -318,15 +318,15 @@ private:
     MachineBasicBlock::iterator ClauseHead = I;
     std::vector<MachineInstr *> ClauseContent;
     unsigned AluInstCount = 0;
-    bool IsTex = TII->usesTextureCache(ClauseHead);
+    bool IsTex = TII->usesTextureCache(*ClauseHead);
     std::set<unsigned> DstRegs;
     for (MachineBasicBlock::iterator E = MBB.end(); I != E; ++I) {
       if (IsTrivialInst(I))
         continue;
       if (AluInstCount >= MaxFetchInst)
         break;
-      if ((IsTex && !TII->usesTextureCache(I)) ||
-          (!IsTex && !TII->usesVertexCache(I)))
+      if ((IsTex && !TII->usesTextureCache(*I)) ||
+          (!IsTex && !TII->usesVertexCache(*I)))
         break;
       if (!isCompatibleWithClause(I, DstRegs))
         break;
@@ -347,8 +347,8 @@ private:
       AMDGPU::ALU_LITERAL_Z,
       AMDGPU::ALU_LITERAL_W
     };
-    const SmallVector<std::pair<MachineOperand *, int64_t>, 3 > Srcs =
-        TII->getSrcs(MI);
+    const SmallVector<std::pair<MachineOperand *, int64_t>, 3> Srcs =
+        TII->getSrcs(*MI);
     for (const auto &Src:Srcs) {
       if (Src.first->getReg() != AMDGPU::ALU_LITERAL_X)
         continue;
@@ -491,10 +491,11 @@ public:
       : MachineFunctionPass(ID), TII(nullptr), TRI(nullptr), ST(nullptr) {}
 
   bool runOnMachineFunction(MachineFunction &MF) override {
-    ST = &MF.getSubtarget<AMDGPUSubtarget>();
+    ST = &MF.getSubtarget<R600Subtarget>();
     MaxFetchInst = ST->getTexVTXClauseSize();
-    TII = static_cast<const R600InstrInfo *>(ST->getInstrInfo());
-    TRI = static_cast<const R600RegisterInfo *>(ST->getRegisterInfo());
+    TII = ST->getInstrInfo();
+    TRI = ST->getRegisterInfo();
+
     R600MachineFunctionInfo *MFI = MF.getInfo<R600MachineFunctionInfo>();
 
     CFStack CFStack(ST, MF.getFunction()->getCallingConv());
@@ -515,7 +516,7 @@ public:
 
       for (MachineBasicBlock::iterator I = MBB.begin(), E = MBB.end();
           I != E;) {
-        if (TII->usesTextureCache(I) || TII->usesVertexCache(I)) {
+        if (TII->usesTextureCache(*I) || TII->usesVertexCache(*I)) {
           DEBUG(dbgs() << CfCount << ":"; I->dump(););
           FetchClauses.push_back(MakeFetchClause(MBB, I));
           CfCount++;

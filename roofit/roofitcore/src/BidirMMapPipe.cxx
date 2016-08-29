@@ -417,7 +417,7 @@ namespace BidirMMapPipe_impl {
 	    } else {
 		assert(Unknown == s_mmapworks || Anonymous == s_mmapworks);
 		s_mmapworks = Anonymous;
-		if (!msgprinted) {
+		if (BidirMMapPipe::debugflag() && !msgprinted) {
 		    std::cerr << "   INFO: In " << __func__ << " (" <<
 			__FILE__ << ", line " << __LINE__ <<
 			"): anonymous mmapping works, excellent!" <<
@@ -447,7 +447,7 @@ namespace BidirMMapPipe_impl {
 	    }
 	    if (-1 == ::close(fd))
 		throw Exception("close /dev/zero", errno);
-	    if (!msgprinted) {
+	    if (BidirMMapPipe::debugflag() && !msgprinted) {
 		std::cerr << "   INFO: In " << __func__ << " (" << __FILE__ <<
 		    ", line " << __LINE__ << "): mmapping /dev/zero works, "
 		    "very good!" << std::endl;
@@ -494,7 +494,7 @@ namespace BidirMMapPipe_impl {
 		::munmap(retVal, len);
 		throw Exception("close", errsv);
 	    }
-	    if (!msgprinted) {
+	    if (BidirMMapPipe::debugflag() && !msgprinted) {
 		std::cerr << "   INFO: In " << __func__ << " (" << __FILE__ <<
 		    ", line " << __LINE__ << "): mmapping temporary files "
 		    "works, good!" << std::endl;
@@ -507,7 +507,7 @@ namespace BidirMMapPipe_impl {
 	    // work for what we want to use it), so use a normal buffer of
 	    // memory instead, and collect data in that buffer - this needs an
 	    // additional write/read to/from the pipe(s), but there you go...
-	    if (!msgprinted) {
+	    if (BidirMMapPipe::debugflag() && !msgprinted) {
 		std::cerr << "WARNING: In " << __func__ << " (" << __FILE__ <<
 		    ", line " << __LINE__ << "): anonymous mmapping of "
 		    "shared buffers failed, falling back to read/write on "
@@ -685,6 +685,7 @@ pthread_mutex_t BidirMMapPipe::s_openpipesmutex = PTHREAD_MUTEX_INITIALIZER;
 std::list<BidirMMapPipe*> BidirMMapPipe::s_openpipes;
 BidirMMapPipe_impl::PagePool* BidirMMapPipe::s_pagepool = 0;
 unsigned BidirMMapPipe::s_pagepoolrefcnt = 0;
+int BidirMMapPipe::s_debugflag = 0;
 
 BidirMMapPipe_impl::PagePool& BidirMMapPipe::pagepool()
 {

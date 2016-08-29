@@ -29,7 +29,9 @@ namespace llvm {
       MH_MAGIC_64 = 0xFEEDFACFu,
       MH_CIGAM_64 = 0xCFFAEDFEu,
       FAT_MAGIC   = 0xCAFEBABEu,
-      FAT_CIGAM   = 0xBEBAFECAu
+      FAT_CIGAM   = 0xBEBAFECAu,
+      FAT_MAGIC_64 = 0xCAFEBABFu,
+      FAT_CIGAM_64 = 0xBFBAFECAu
     };
 
     enum HeaderFileType {
@@ -891,6 +893,15 @@ namespace llvm {
       uint32_t align;
     };
 
+    struct fat_arch_64 {
+      uint32_t cputype;
+      uint32_t cpusubtype;
+      uint64_t offset;
+      uint64_t size;
+      uint32_t align;
+      uint32_t reserved;
+    };
+
     // Structs from <mach-o/reloc.h>
     struct relocation_info {
       int32_t r_address;
@@ -948,6 +959,28 @@ namespace llvm {
     };
 
     // Byte order swapping functions for MachO structs
+
+    inline void swapStruct(fat_header &mh) {
+      sys::swapByteOrder(mh.magic);
+      sys::swapByteOrder(mh.nfat_arch);
+    }
+
+    inline void swapStruct(fat_arch &mh) {
+      sys::swapByteOrder(mh.cputype);
+      sys::swapByteOrder(mh.cpusubtype);
+      sys::swapByteOrder(mh.offset);
+      sys::swapByteOrder(mh.size);
+      sys::swapByteOrder(mh.align);
+    }
+
+    inline void swapStruct(fat_arch_64 &mh) {
+      sys::swapByteOrder(mh.cputype);
+      sys::swapByteOrder(mh.cpusubtype);
+      sys::swapByteOrder(mh.offset);
+      sys::swapByteOrder(mh.size);
+      sys::swapByteOrder(mh.align);
+      sys::swapByteOrder(mh.reserved);
+    }
 
     inline void swapStruct(mach_header &mh) {
       sys::swapByteOrder(mh.magic);

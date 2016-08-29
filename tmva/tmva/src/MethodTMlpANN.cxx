@@ -94,9 +94,8 @@ ClassImp(TMVA::MethodTMlpANN)
    TMVA::MethodTMlpANN::MethodTMlpANN( const TString& jobName,
                                        const TString& methodTitle,
                                        DataSetInfo& theData,
-                                       const TString& theOption,
-                                       TDirectory* theTargetDir) :
-   TMVA::MethodBase( jobName, Types::kTMlpANN, methodTitle, theData, theOption, theTargetDir ),
+                                       const TString& theOption) :
+   TMVA::MethodBase( jobName, Types::kTMlpANN, methodTitle, theData, theOption),
    fMLP(0),
    fLocalTrainingTree(0),
    fNcycles(100),
@@ -109,9 +108,8 @@ ClassImp(TMVA::MethodTMlpANN)
 /// constructor from weight file
 
 TMVA::MethodTMlpANN::MethodTMlpANN( DataSetInfo& theData,
-                                    const TString& theWeightFile,
-                                    TDirectory* theTargetDir ) :
-   TMVA::MethodBase( Types::kTMlpANN, theData, theWeightFile, theTargetDir ),
+                                    const TString& theWeightFile) :
+   TMVA::MethodBase( Types::kTMlpANN, theData, theWeightFile),
    fMLP(0),
    fLocalTrainingTree(0),
    fNcycles(100),
@@ -308,7 +306,7 @@ void TMVA::MethodTMlpANN::Train( void )
    TString testList  = TString("!(") + trainList + ")";
 
    // print the requirements
-   Log() << kINFO << "Requirement for training   events: \"" << trainList << "\"" << Endl;
+   Log() << kHEADER << "Requirement for training   events: \"" << trainList << "\"" << Endl;
    Log() << kINFO << "Requirement for validation events: \"" << testList << "\"" << Endl;
 
    // localTrainingTree->Print();
@@ -341,7 +339,7 @@ void TMVA::MethodTMlpANN::Train( void )
    fMLP->SetLearningMethod( learningMethod );
 
    // train NN
-   fMLP->Train(fNcycles, "text,update=50" );
+   fMLP->Train(fNcycles, "" ); //"text,update=50" );
 
    // write weights to File;
    // this is not nice, but fMLP gets deleted at the end of Train()

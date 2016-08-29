@@ -40,7 +40,7 @@ The following people have contributed to this new version:
 
 <a name="core-libs"></a>
 
-## general
+## General
 
 * Remove many instances of new warnings issued by gcc 6.1
 * Significant update of the valgrind suppression file to hide intentional lack
@@ -84,6 +84,7 @@ Add a new mode for `TClass::SetCanSplit` (2) which indicates that this class and
 
 ### Dictionaries
 
+* Genreflex and rootcling cannot generate capability files anymore.
 * Fix ROOT-7760: Fully allow the usage of the dylib extension on OSx.
 * Fix ROOT-7879: Prevent LinkDef files to be listed in a rootmap file and use (as the user actually expects) the header files #included in the linkdef file, if any, as the top level headers.
 * Add the *noIncludePaths* switch both for rootcling and genreflex to allow to loose track of the include paths in input to the dictionary generator.
@@ -95,7 +96,7 @@ Add a new mode for `TClass::SetCanSplit` (2) which indicates that this class and
 
 ### Interpreter Library
 
-* llvm / clang have been updated to r272382.
+* llvm / clang have been updated to r274612.
 * The GCC5 ABI is now supported [ROOT-7947].
 * Exceptions are now caught in the interactive ROOT session, instead of terminating ROOT.
 * A ValuePrinter for tuple and pair has been added to visualise the content of these entities at the prompt.
@@ -112,6 +113,8 @@ Add a new mode for `TClass::SetCanSplit` (2) which indicates that this class and
 
 ## I/O Libraries
 
+* Support I/O of std::unique_ptrs and STL collections thereof.
+* Support I/O of std::array.
 * Custom streamers need to #include TBuffer.h explicitly (see [section Core Libraries](#core-libs))
 * Check and flag short reads as errors in the xroot plugins. This fixes [ROOT-3341].
 * Added support for AWS temporary security credentials to TS3WebFile by allowing the security token to be given.
@@ -226,11 +229,41 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 * Support custom line styles in `TTeXDump` as requested [here](https://sft.its.cern.ch/jira/browse/ROOT-8215)
 * `TColor::GetFreeColorIndex()` allows to make sure the new color is created with an
   unused color index.
+* In `TLegend::SetHeader` the new option `C` allows to center the title.
+* New method `SetLabelAttributes` in `TGaxis` allowing to a fine tuning of
+  individual labels attributes. All the attributes can be changed and even the
+  label text itself. Example:
+  ~~~ {.cpp}
+  {
+     c1 = new TCanvas("c1","Examples of Gaxis",10,10,900,500);
+     c1->Range(-6,-0.1,6,0.1);
+     TGaxis *axis1 = new TGaxis(-5.5,0.,5.5,0.,0.0,100,510,"");
+     axis1->SetName("axis1");
+     axis1->SetTitle("Axis Title");
+     axis1->SetTitleSize(0.05);
+     axis1->SetTitleColor(kBlue);
+     axis1->SetTitleFont(42);
+     axis1->SetLabelAttributes(1,-1,-1,-1,2);
+     axis1->SetLabelAttributes(3,-1,0.);
+     axis1->SetLabelAttributes(5,30.,-1,0);
+     axis1->SetLabelAttributes(6,-1,-1,-1,3,-1,"6th label");
+     axis1->Draw();
+  }
+  ~~~
+* New class `TGaxisModLab`: a  TGaxis helper class used to store the modified labels.
+* `TPie` the format parameter set by `SetPercentFormat` was ignored.
+  (reported [here](https://sft.its.cern.ch/jira/browse/ROOT-8294))
+* Improvements in the histogram plotting option `TEXT`: In case several histograms
+  are drawn on top ot each other (using option `SAME`), the text can be shifted
+  using `SetBarOffset()`. It specifies an offset for the  text position in each
+  cell, in percentage of the bin width.
 
 ## 3D Graphics Libraries
 
 * When painting a `TH3` as 3D boxes, `TMarker3DBox` ignored the max and min values
   specified by `SetMaximum()` and `SetMinimum()`.
+* In `TMarker3DBox` when a box marker has a size equal to zero it is not painted.
+  Painting it produced a dot with the X11 backend.
 
 ## New histogram drawing options
 

@@ -244,6 +244,9 @@ namespace ROOT {
          */
          void  Execute(const TString &code);
 
+         // "unhide" TObject::Execute methods.
+         using TObject::Execute;
+
          /**
          Method to eval R code and you get the result in a  TRObject
          \param code R code

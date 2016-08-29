@@ -47,8 +47,13 @@ TCandle::TCandle()
    fBoxDown       = 0.;
    fWhiskerUp     = 0.;
    fWhiskerDown   = 0.;
+   fLogX          = 0;
+   fLogY          = 0;
+   fDismiss       = 0;
+   fProj          = 0;
+   fOption        = kNoOption;
    fNDatapoints   = 0;
-   fDismiss = 0;
+   fDatapoints    = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -73,7 +78,8 @@ TCandle::TCandle(const Double_t candlePos, const Double_t candleWidth, TH1D *pro
    fProj          = proj;
    fDismiss       = 0;
    fOption        = kNoOption;
-
+   fLogX          = 0;
+   fLogY          = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -356,7 +362,7 @@ void TCandle::Paint(Option_t *)
          Double_t scaledBinContent = fProj->GetBinContent(bin)/myScale;
          if (scaledBinContent >0 && scaledBinContent < 1) scaledBinContent = 1; //Outliers have a typical bincontent between 0 and 1, when scaling they would disappear
             for (int j=0; j < (int)scaledBinContent; j++) {
-               if (nOutliers > maxOutliers) break;
+               if (nOutliers >= maxOutliers) break;
                if (IsOption(kPointsAllScat)) { //Draw outliers and "all" values scattered
                   outliersX[nOutliers] = fPosCandleAxis - fCandleWidth/2. + fCandleWidth*random.Rndm();
                   outliersY[nOutliers] = fProj->GetBinLowEdge(bin) + fProj->GetBinWidth(bin)*random.Rndm();

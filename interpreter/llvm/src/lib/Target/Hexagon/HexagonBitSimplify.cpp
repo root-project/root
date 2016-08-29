@@ -158,8 +158,6 @@ namespace {
     static void getInstrUses(const MachineInstr &MI, RegisterSet &Uses);
     static bool isEqual(const BitTracker::RegisterCell &RC1, uint16_t B1,
         const BitTracker::RegisterCell &RC2, uint16_t B2, uint16_t W);
-    static bool isConst(const BitTracker::RegisterCell &RC, uint16_t B,
-        uint16_t W);
     static bool isZero(const BitTracker::RegisterCell &RC, uint16_t B,
         uint16_t W);
     static bool getConst(const BitTracker::RegisterCell &RC, uint16_t B,
@@ -282,17 +280,6 @@ bool HexagonBitSimplify::isEqual(const BitTracker::RegisterCell &RC1,
   }
   return true;
 }
-
-
-bool HexagonBitSimplify::isConst(const BitTracker::RegisterCell &RC,
-      uint16_t B, uint16_t W) {
-  assert(B < RC.width() && B+W <= RC.width());
-  for (uint16_t i = B; i < B+W; ++i)
-    if (!RC[i].num())
-      return false;
-  return true;
-}
-
 
 bool HexagonBitSimplify::isZero(const BitTracker::RegisterCell &RC,
       uint16_t B, uint16_t W) {
@@ -1302,7 +1289,7 @@ bool RedundantInstrElimination::processBlock(MachineBasicBlock &B,
         continue;
 
       // If found, replace the instruction with a COPY.
-      DebugLoc DL = MI->getDebugLoc();
+      const DebugLoc &DL = MI->getDebugLoc();
       const TargetRegisterClass *FRC = HBS::getFinalVRegClass(RD, MRI);
       unsigned NewR = MRI.createVirtualRegister(FRC);
       BuildMI(B, At, DL, HII.get(TargetOpcode::COPY), NewR)

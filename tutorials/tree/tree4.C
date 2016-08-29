@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_tree
+/// \notebook -nodraw
 /// This example writes a tree with objects of the class Event.
 /// It is a simplified version of $ROOTSYS/test/MainEvent.cxx to
 /// write the tree, and $ROOTSYS/test/eventb.C

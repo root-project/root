@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_graphs
+/// \notebook
 /// Example of TGraphTime showing how the class could be used to visualize
 /// a set of particles with their time stamp in a MonteCarlo program.
 ///

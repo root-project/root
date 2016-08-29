@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_tree
-///
+/// \notebook
 /// TTreeReader simplest example.
 ///
 /// Read data from hsimple.root (written by hsimple.C)

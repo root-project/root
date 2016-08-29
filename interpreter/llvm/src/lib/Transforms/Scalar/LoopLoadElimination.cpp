@@ -119,12 +119,17 @@ bool doesStoreDominatesAllLatches(BasicBlock *StoreBlock, Loop *L,
                      });
 }
 
+/// \brief Return true if the load is not executed on all paths in the loop.
+static bool isLoadConditional(LoadInst *Load, Loop *L) {
+  return Load->getParent() != L->getHeader();
+}
+
 /// \brief The per-loop class that does most of the work.
 class LoadEliminationForLoop {
 public:
   LoadEliminationForLoop(Loop *L, LoopInfo *LI, const LoopAccessInfo &LAI,
                          DominatorTree *DT)
-      : L(L), LI(LI), LAI(LAI), DT(DT), PSE(LAI.PSE) {}
+      : L(L), LI(LI), LAI(LAI), DT(DT), PSE(LAI.getPSE()) {}
 
   /// \brief Look through the loop-carried and loop-independent dependences in
   /// this loop and find store->load dependences.
@@ -450,6 +455,12 @@ public:
       if (!doesStoreDominatesAllLatches(Cand.Store->getParent(), L, DT))
         continue;
 
+      // If the load is conditional we can't hoist its 0-iteration instance to
+      // the preheader because that would make it unconditional.  Thus we would
+      // access a memory location that the original loop did not access.
+      if (isLoadConditional(Cand.Load, L))
+        continue;
+
       // Check whether the SCEV difference is the same as the induction step,
       // thus we load the value in the next iteration.
       if (!Cand.isDependenceDistanceOfOne(PSE, L))
@@ -475,13 +486,13 @@ public:
       return false;
     }
 
-    if (LAI.PSE.getUnionPredicate().getComplexity() >
+    if (LAI.getPSE().getUnionPredicate().getComplexity() >
         LoadElimSCEVCheckThreshold) {
       DEBUG(dbgs() << "Too many SCEV run-time checks needed.\n");
       return false;
     }
 
-    if (!Checks.empty() || !LAI.PSE.getUnionPredicate().isAlwaysTrue()) {
+    if (!Checks.empty() || !LAI.getPSE().getUnionPredicate().isAlwaysTrue()) {
       if (L->getHeader()->getParent()->optForSize()) {
         DEBUG(dbgs() << "Versioning is needed but not allowed when optimizing "
                         "for size.\n");
@@ -493,7 +504,7 @@ public:
 
       LoopVersioning LV(LAI, L, LI, DT, PSE.getSE(), false);
       LV.setAliasChecks(std::move(Checks));
-      LV.setSCEVChecks(LAI.PSE.getUnionPredicate());
+      LV.setSCEVChecks(LAI.getPSE().getUnionPredicate());
       LV.versionLoop();
     }
 
@@ -552,7 +563,7 @@ public:
     // Now walk the identified inner loops.
     bool Changed = false;
     for (Loop *L : Worklist) {
-      const LoopAccessInfo &LAI = LAA->getInfo(L, ValueToValueMap());
+      const LoopAccessInfo &LAI = LAA->getInfo(L);
       // The actual work is performed by LoadEliminationForLoop.
       LoadEliminationForLoop LEL(L, LI, LAI, DT);
       Changed |= LEL.processLoop();

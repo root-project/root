@@ -1,8 +1,9 @@
 /// \file
 /// \ingroup tutorial_math
+/// \notebook
 /// Example macro describing the student t distribution
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 /// root[0]: .x tStudent.C
 /// ~~~
 ///
@@ -25,7 +26,8 @@
 void tStudent()
 {
 
-   //gSystem->Load("libMathMore");
+   /* gSystem->Load("libMathMore");*/
+
    // this is the way to force load of MathMore in Cling
    ROOT::Math::MathMoreLibrary::Load();
 

@@ -54,6 +54,7 @@ public:
 /// descriptor for the file.
 class FileEntry {
   const char *Name;           // Name of the file.
+  std::string RealPathName;   // Real path to the file; could be empty.
   off_t Size;                 // File size in bytes.
   time_t ModTime;             // Modification time of file.
   const DirectoryEntry *Dir;  // Directory file lives in.
@@ -85,6 +86,7 @@ public:
   }
 
   const char *getName() const { return Name; }
+  StringRef tryGetRealPathName() const { return RealPathName; }
   bool isOpen() const { return (bool)File; }
   bool isValid() const { return IsValid; }
   off_t getSize() const { return Size; }

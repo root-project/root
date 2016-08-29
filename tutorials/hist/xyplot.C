@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_hist
+/// \notebook
 /// Example showing how to produce a plot with an orthogonal axis system
 /// centered at (0,0).
 ///
@@ -8,7 +9,7 @@
 ///
 /// \author Olivier Couet
 
-void xyplot ()
+void xyplot()
 {
    TCanvas *c = new TCanvas("c","XY plot",200,10,700,500);
 
@@ -17,6 +18,7 @@ void xyplot ()
    c->SetFrameLineColor(kWhite);
    c->SetFrameBorderMode(0);
 
+   // Define and draw a curve the frame
    const Int_t n = 4;
    Double_t x[n] = {-1, -3, -9, 3};
    Double_t y[n] = {-1000,  900,  300, 300};
@@ -37,20 +39,28 @@ void xyplot ()
 
    gPad->Update();
 
-   // Draw orthogonal axis system centered at (0,0)
+   // Draw orthogonal axis system centered at (0,0).
+   // Draw the Y axis. Note the 4th label is erased with SetLabelAttributes
    TGaxis *yaxis = new TGaxis(0, gPad->GetUymin(),
                               0, gPad->GetUymax(),
                               gPad->GetUymin(),gPad->GetUymax(),6,"+LN");
+   yaxis->SetLabelAttributes(4,-1,0.);
    yaxis->Draw();
+
+   // Draw the Y-axis title.
    TLatex *ytitle = new TLatex(-0.5,gPad->GetUymax(),"Y axis");
    ytitle->Draw();
    ytitle->SetTextSize(0.03);
    ytitle->SetTextAngle(90.);
    ytitle->SetTextAlign(31);
+
+   // Draw the X axis
    TGaxis *xaxis = new TGaxis(gPad->GetUxmin(), 0,
                               gPad->GetUxmax(), 0,
                               gPad->GetUxmin(),gPad->GetUxmax(),510,"+L");
    xaxis->Draw();
+
+   // Draw the X axis title.
    TLatex *xtitle = new TLatex(gPad->GetUxmax(),-200.,"X axis");
    xtitle->Draw();
    xtitle->SetTextAlign(31);

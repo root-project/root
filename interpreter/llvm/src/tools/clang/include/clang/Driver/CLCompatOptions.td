@@ -77,6 +77,8 @@ def _SLASH_GR : CLFlag<"GR">, HelpText<"Enable emission of RTTI data">;
 def _SLASH_GR_ : CLFlag<"GR-">, HelpText<"Disable emission of RTTI data">;
 def _SLASH_GF_ : CLFlag<"GF-">, HelpText<"Disable string pooling">,
   Alias<fwritable_strings>;
+def _SLASH_GS : CLFlag<"GS">, HelpText<"Enable buffer security check">;
+def _SLASH_GS_ : CLFlag<"GS-">, HelpText<"Disable buffer security check">;
 def _SLASH_Gs : CLJoined<"Gs">, HelpText<"Set stack probe size">,
   Alias<mstack_probe_size>;
 def _SLASH_Gy : CLFlag<"Gy">, HelpText<"Put each function in its own section">,
@@ -118,6 +120,8 @@ def _SLASH_Qvec_ : CLFlag<"Qvec-">,
 def _SLASH_showIncludes : CLFlag<"showIncludes">,
   HelpText<"Print info about included files to stderr">,
   Alias<show_includes>;
+def _SLASH_std : CLCompileJoined<"std:">,
+  HelpText<"Language standard to compile for">;
 def _SLASH_U : CLJoinedOrSeparate<"U">, HelpText<"Undefine macro">,
   MetaVarName<"<macro>">, Alias<U>;
 def _SLASH_W0 : CLFlag<"W0">, HelpText<"Disable all warnings">, Alias<w>;
@@ -287,10 +291,8 @@ def _SLASH_Fd : CLIgnoredJoined<"Fd">;
 def _SLASH_FC : CLIgnoredFlag<"FC">;
 def _SLASH_FS : CLIgnoredFlag<"FS">, HelpText<"Force synchronous PDB writes">;
 def _SLASH_GF : CLIgnoredFlag<"GF">;
-def _SLASH_GS_ : CLIgnoredFlag<"GS-">;
 def _SLASH_kernel_ : CLIgnoredFlag<"kernel-">;
 def _SLASH_nologo : CLIgnoredFlag<"nologo">;
-def _SLASH_Ob1 : CLIgnoredFlag<"Ob1">;
 def _SLASH_Og : CLIgnoredFlag<"Og">;
 def _SLASH_openmp_ : CLIgnoredFlag<"openmp-">;
 def _SLASH_RTC : CLIgnoredJoined<"RTC">;
@@ -329,7 +331,6 @@ def _SLASH_GL : CLFlag<"GL">;
 def _SLASH_GL_ : CLFlag<"GL-">;
 def _SLASH_Gm : CLFlag<"Gm">;
 def _SLASH_Gm_ : CLFlag<"Gm-">;
-def _SLASH_GS : CLFlag<"GS">;
 def _SLASH_GT : CLFlag<"GT">;
 def _SLASH_Guard : CLJoined<"guard:">;
 def _SLASH_GZ : CLFlag<"GZ">;

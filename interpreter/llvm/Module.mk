@@ -75,13 +75,6 @@ FORCELLVMTARGET := FORCELLVMTARGET
 FORCENEXTLLVM := $(shell rm -f $(LLVMDIRO)/llvmrev.txt)
 endif
 
-# FIXME: Disable modules for LLVM until next LLVM upgrade.
-#ifeq ($(CXXMODULES),yes)
-# Copy the modulemap in $ROOTSYS/include first.
-#CXXFLAGS := $(filter-out $(ROOT_CXXMODULES_FLAGS),$(CXXFLAGS))
-#CFLAGS   := $(filter-out $(ROOT_CXXMODULES_FLAGS),$(CFLAGS))
-#endif
-
 ##### local rules #####
 .PHONY: all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME) FORCELLVMTARGET
 
@@ -182,10 +175,12 @@ $(LLVMDEPO): $(LLVMDEPS)
 		echo "*** Configuring LLVM in $(dir $@) ..."; \
 		mkdir -p $(dir $@) && \
 		cd $(dir $@)  && \
+		unset LDFLAGS && \
 		cmake $(LLVM_CXX_VERSION) \
 		$$LLVM_HOST \
 		$$LLVM_TARGET \
 		-DCMAKE_INSTALL_PREFIX=$(ROOT_OBJDIR)/$(LLVMDIRI) \
+		-DROOT_CLASSIC=ON \
 		-DLLVM_BUILD_DOCS=OFF \
 		-DLLVM_BUILD_TESTS=OFF \
 		-DLLVM_ENABLE_WARNINGS=ON \
@@ -193,7 +188,7 @@ $(LLVMDEPO): $(LLVMDEPS)
 		-DLLVM_INCLUDE_EXAMPLES=OFF \
 		-DLLVM_FORCE_USE_OLD_TOOLCHAIN=ON \
                 -DLLVM_ENABLE_THREADS=OFF \
-		-DLLVM_NOCLING=ON \
+		-DLLVM_NOCLING=YES \
 		-DCLANG_ENABLE_STATIC_ANALYZER=OFF \
 		-DCLANG_ENABLE_ARCMT=OFF \
 		-DCLANG_ENABLE_COMPILER=OFF \

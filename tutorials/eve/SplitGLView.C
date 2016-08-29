@@ -1428,12 +1428,6 @@ void SplitGLView::UpdateSummary()
    }
 }
 
-// Linkdef
-#ifdef __CINT__
-
-#pragma link C++ class SplitGLView;
-
-#endif
 
 #ifdef __CINT__
 void SplitGLView()

@@ -435,7 +435,6 @@ void CodeGenFunction::EmitMCountInstrumentation() {
 // includes the argument name, its type, the address and access qualifiers used.
 static void GenOpenCLArgMetadata(const FunctionDecl *FD, llvm::Function *Fn,
                                  CodeGenModule &CGM, llvm::LLVMContext &Context,
-                                 SmallVector<llvm::Metadata *, 5> &kernelMDArgs,
                                  CGBuilderTy &Builder, ASTContext &ASTCtx) {
   // Create MDNodes that represent the kernel arg metadata.
   // Each MDNode is a list in the form of "key", N number of values which is
@@ -445,28 +444,21 @@ static void GenOpenCLArgMetadata(const FunctionDecl *FD, llvm::Function *Fn,
 
   // MDNode for the kernel argument address space qualifiers.
   SmallVector<llvm::Metadata *, 8> addressQuals;
-  addressQuals.push_back(llvm::MDString::get(Context, "kernel_arg_addr_space"));
 
   // MDNode for the kernel argument access qualifiers (images only).
   SmallVector<llvm::Metadata *, 8> accessQuals;
-  accessQuals.push_back(llvm::MDString::get(Context, "kernel_arg_access_qual"));
 
   // MDNode for the kernel argument type names.
   SmallVector<llvm::Metadata *, 8> argTypeNames;
-  argTypeNames.push_back(llvm::MDString::get(Context, "kernel_arg_type"));
 
   // MDNode for the kernel argument base type names.
   SmallVector<llvm::Metadata *, 8> argBaseTypeNames;
-  argBaseTypeNames.push_back(
-      llvm::MDString::get(Context, "kernel_arg_base_type"));
 
   // MDNode for the kernel argument type qualifiers.
   SmallVector<llvm::Metadata *, 8> argTypeQuals;
-  argTypeQuals.push_back(llvm::MDString::get(Context, "kernel_arg_type_qual"));
 
   // MDNode for the kernel argument names.
   SmallVector<llvm::Metadata *, 8> argNames;
-  argNames.push_back(llvm::MDString::get(Context, "kernel_arg_name"));
 
   for (unsigned i = 0, e = FD->getNumParams(); i != e; ++i) {
     const ParmVarDecl *parm = FD->getParamDecl(i);
@@ -577,13 +569,19 @@ static void GenOpenCLArgMetadata(const FunctionDecl *FD, llvm::Function *Fn,
     argNames.push_back(llvm::MDString::get(Context, parm->getName()));
   }
 
-  kernelMDArgs.push_back(llvm::MDNode::get(Context, addressQuals));
-  kernelMDArgs.push_back(llvm::MDNode::get(Context, accessQuals));
-  kernelMDArgs.push_back(llvm::MDNode::get(Context, argTypeNames));
-  kernelMDArgs.push_back(llvm::MDNode::get(Context, argBaseTypeNames));
-  kernelMDArgs.push_back(llvm::MDNode::get(Context, argTypeQuals));
+  Fn->setMetadata("kernel_arg_addr_space",
+                  llvm::MDNode::get(Context, addressQuals));
+  Fn->setMetadata("kernel_arg_access_qual",
+                  llvm::MDNode::get(Context, accessQuals));
+  Fn->setMetadata("kernel_arg_type",
+                  llvm::MDNode::get(Context, argTypeNames));
+  Fn->setMetadata("kernel_arg_base_type",
+                  llvm::MDNode::get(Context, argBaseTypeNames));
+  Fn->setMetadata("kernel_arg_type_qual",
+                  llvm::MDNode::get(Context, argTypeQuals));
   if (CGM.getCodeGenOpts().EmitOpenCLArgMetadata)
-    kernelMDArgs.push_back(llvm::MDNode::get(Context, argNames));
+    Fn->setMetadata("kernel_arg_name",
+                    llvm::MDNode::get(Context, argNames));
 }
 
 void CodeGenFunction::EmitOpenCLKernelMetadata(const FunctionDecl *FD,
@@ -594,11 +592,7 @@ void CodeGenFunction::EmitOpenCLKernelMetadata(const FunctionDecl *FD,
 
   llvm::LLVMContext &Context = getLLVMContext();
 
-  SmallVector<llvm::Metadata *, 5> kernelMDArgs;
-  kernelMDArgs.push_back(llvm::ConstantAsMetadata::get(Fn));
-
-  GenOpenCLArgMetadata(FD, Fn, CGM, Context, kernelMDArgs, Builder,
-                       getContext());
+  GenOpenCLArgMetadata(FD, Fn, CGM, Context, Builder, getContext());
 
   if (const VecTypeHintAttr *A = FD->getAttr<VecTypeHintAttr>()) {
     QualType hintQTy = A->getTypeHint();
@@ -607,37 +601,29 @@ void CodeGenFunction::EmitOpenCLKernelMetadata(const FunctionDecl *FD,
         hintQTy->isSignedIntegerType() ||
         (hintEltQTy && hintEltQTy->getElementType()->isSignedIntegerType());
     llvm::Metadata *attrMDArgs[] = {
-        llvm::MDString::get(Context, "vec_type_hint"),
         llvm::ConstantAsMetadata::get(llvm::UndefValue::get(
             CGM.getTypes().ConvertType(A->getTypeHint()))),
         llvm::ConstantAsMetadata::get(llvm::ConstantInt::get(
             llvm::IntegerType::get(Context, 32),
             llvm::APInt(32, (uint64_t)(isSignedInteger ? 1 : 0))))};
-    kernelMDArgs.push_back(llvm::MDNode::get(Context, attrMDArgs));
+    Fn->setMetadata("vec_type_hint", llvm::MDNode::get(Context, attrMDArgs));
   }
 
   if (const WorkGroupSizeHintAttr *A = FD->getAttr<WorkGroupSizeHintAttr>()) {
     llvm::Metadata *attrMDArgs[] = {
-        llvm::MDString::get(Context, "work_group_size_hint"),
         llvm::ConstantAsMetadata::get(Builder.getInt32(A->getXDim())),
         llvm::ConstantAsMetadata::get(Builder.getInt32(A->getYDim())),
         llvm::ConstantAsMetadata::get(Builder.getInt32(A->getZDim()))};
-    kernelMDArgs.push_back(llvm::MDNode::get(Context, attrMDArgs));
+    Fn->setMetadata("work_group_size_hint", llvm::MDNode::get(Context, attrMDArgs));
   }
 
   if (const ReqdWorkGroupSizeAttr *A = FD->getAttr<ReqdWorkGroupSizeAttr>()) {
     llvm::Metadata *attrMDArgs[] = {
-        llvm::MDString::get(Context, "reqd_work_group_size"),
         llvm::ConstantAsMetadata::get(Builder.getInt32(A->getXDim())),
         llvm::ConstantAsMetadata::get(Builder.getInt32(A->getYDim())),
         llvm::ConstantAsMetadata::get(Builder.getInt32(A->getZDim()))};
-    kernelMDArgs.push_back(llvm::MDNode::get(Context, attrMDArgs));
+    Fn->setMetadata("reqd_work_group_size", llvm::MDNode::get(Context, attrMDArgs));
   }
-
-  llvm::MDNode *kernelMDNode = llvm::MDNode::get(Context, kernelMDArgs);
-  llvm::NamedMDNode *OpenCLKernelMetadata =
-    CGM.getModule().getOrInsertNamedMetadata("opencl.kernels");
-  OpenCLKernelMetadata->addOperand(kernelMDNode);
 }
 
 /// Determine whether the function F ends with a return stmt.
@@ -700,14 +686,20 @@ void CodeGenFunction::StartFunction(GlobalDecl GD,
 
   // Pass inline keyword to optimizer if it appears explicitly on any
   // declaration. Also, in the case of -fno-inline attach NoInline
-  // attribute to all function that are not marked AlwaysInline.
+  // attribute to all functions that are not marked AlwaysInline, or
+  // to all functions that are not marked inline or implicitly inline
+  // in the case of -finline-hint-functions.
   if (const FunctionDecl *FD = dyn_cast_or_null<FunctionDecl>(D)) {
-    if (!CGM.getCodeGenOpts().NoInline) {
+    const CodeGenOptions& CodeGenOpts = CGM.getCodeGenOpts();
+    if (!CodeGenOpts.NoInline) {
       for (auto RI : FD->redecls())
         if (RI->isInlineSpecified()) {
           Fn->addFnAttr(llvm::Attribute::InlineHint);
           break;
         }
+      if (CodeGenOpts.getInlining() == CodeGenOptions::OnlyHintInlining &&
+          !FD->isInlined() && !Fn->hasFnAttribute(llvm::Attribute::InlineHint))
+        Fn->addFnAttr(llvm::Attribute::NoInline);
     } else if (!FD->hasAttr<AlwaysInlineAttr>())
       Fn->addFnAttr(llvm::Attribute::NoInline);
     if (CGM.getLangOpts().OpenMP && FD->hasAttr<OMPDeclareSimdDeclAttr>())
@@ -936,18 +928,11 @@ static void TryMarkNoThrow(llvm::Function *F) {
   F->setDoesNotThrow();
 }
 
-void CodeGenFunction::GenerateCode(GlobalDecl GD, llvm::Function *Fn,
-                                   const CGFunctionInfo &FnInfo) {
+QualType CodeGenFunction::BuildFunctionArgList(GlobalDecl GD,
+                                               FunctionArgList &Args) {
   const FunctionDecl *FD = cast<FunctionDecl>(GD.getDecl());
-
-  // Check if we should generate debug info for this function.
-  if (FD->hasAttr<NoDebugAttr>())
-    DebugInfo = nullptr; // disable debug info indefinitely for this function
-
-  FunctionArgList Args;
   QualType ResTy = FD->getReturnType();
 
-  CurGD = GD;
   const CXXMethodDecl *MD = dyn_cast<CXXMethodDecl>(FD);
   if (MD && MD->isInstance()) {
     if (CGM.getCXXABI().HasThisReturn(GD))
@@ -957,21 +942,47 @@ void CodeGenFunction::GenerateCode(GlobalDecl GD, llvm::Function *Fn,
     CGM.getCXXABI().buildThisParam(*this, Args);
   }
 
-  for (auto *Param : FD->params()) {
-    Args.push_back(Param);
-    if (!Param->hasAttr<PassObjectSizeAttr>())
-      continue;
+  // The base version of an inheriting constructor whose constructed base is a
+  // virtual base is not passed any arguments (because it doesn't actually call
+  // the inherited constructor).
+  bool PassedParams = true;
+  if (const CXXConstructorDecl *CD = dyn_cast<CXXConstructorDecl>(FD))
+    if (auto Inherited = CD->getInheritedConstructor())
+      PassedParams =
+          getTypes().inheritingCtorHasParams(Inherited, GD.getCtorType());
 
-    IdentifierInfo *NoID = nullptr;
-    auto *Implicit = ImplicitParamDecl::Create(
-        getContext(), Param->getDeclContext(), Param->getLocation(), NoID,
-        getContext().getSizeType());
-    SizeArguments[Param] = Implicit;
-    Args.push_back(Implicit);
+  if (PassedParams) {
+    for (auto *Param : FD->parameters()) {
+      Args.push_back(Param);
+      if (!Param->hasAttr<PassObjectSizeAttr>())
+        continue;
+
+      IdentifierInfo *NoID = nullptr;
+      auto *Implicit = ImplicitParamDecl::Create(
+          getContext(), Param->getDeclContext(), Param->getLocation(), NoID,
+          getContext().getSizeType());
+      SizeArguments[Param] = Implicit;
+      Args.push_back(Implicit);
+    }
   }
 
   if (MD && (isa<CXXConstructorDecl>(MD) || isa<CXXDestructorDecl>(MD)))
     CGM.getCXXABI().addImplicitStructorParams(*this, ResTy, Args);
+
+  return ResTy;
+}
+
+void CodeGenFunction::GenerateCode(GlobalDecl GD, llvm::Function *Fn,
+                                   const CGFunctionInfo &FnInfo) {
+  const FunctionDecl *FD = cast<FunctionDecl>(GD.getDecl());
+  CurGD = GD;
+
+  FunctionArgList Args;
+  QualType ResTy = BuildFunctionArgList(GD, Args);
+
+  // Check if we should generate debug info for this function.
+  if (FD->hasAttr<NoDebugAttr>())
+    DebugInfo = nullptr; // disable debug info indefinitely for this function
 
   SourceRange BodyRange;
   if (Stmt *Body = FD->getBody()) BodyRange = Body->getSourceRange();
@@ -1115,9 +1126,10 @@ bool CodeGenFunction::containsBreak(const Stmt *S) {
 /// to a constant, or if it does but contains a label, return false.  If it
 /// constant folds return true and set the boolean result in Result.
 bool CodeGenFunction::ConstantFoldsToSimpleInteger(const Expr *Cond,
-                                                   bool &ResultBool) {
+                                                   bool &ResultBool,
+                                                   bool AllowLabels) {
   llvm::APSInt ResultInt;
-  if (!ConstantFoldsToSimpleInteger(Cond, ResultInt))
+  if (!ConstantFoldsToSimpleInteger(Cond, ResultInt, AllowLabels))
     return false;
 
   ResultBool = ResultInt.getBoolValue();
@@ -1127,15 +1139,16 @@ bool CodeGenFunction::ConstantFoldsToSimpleInteger(const Expr *Cond,
 /// ConstantFoldsToSimpleInteger - If the specified expression does not fold
 /// to a constant, or if it does but contains a label, return false.  If it
 /// constant folds return true and set the folded value.
-bool CodeGenFunction::
-ConstantFoldsToSimpleInteger(const Expr *Cond, llvm::APSInt &ResultInt) {
+bool CodeGenFunction::ConstantFoldsToSimpleInteger(const Expr *Cond,
+                                                   llvm::APSInt &ResultInt,
+                                                   bool AllowLabels) {
   // FIXME: Rename and handle conversion of other evaluatable things
   // to bool.
   llvm::APSInt Int;
   if (!Cond->EvaluateAsInt(Int, getContext()))
     return false;  // Not foldable, not integer or not fully evaluatable.
 
-  if (CodeGenFunction::ContainsLabel(Cond))
+  if (!AllowLabels && CodeGenFunction::ContainsLabel(Cond))
     return false;  // Contains a label.
 
   ResultInt = Int;

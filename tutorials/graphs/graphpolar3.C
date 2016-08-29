@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_graphs
+/// \notebook
 /// Create and draw a polar graph with PI axis using a TF1.
 ///
 /// \macro_image

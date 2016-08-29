@@ -9,6 +9,10 @@
 set(LLVM_REQUIRES_EH true)
 set(LLVM_REQUIRES_RTTI true)
 
+set( LLVM_LINK_COMPONENTS
+  support
+)
+
 if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/textinput)
   set(TEXTINPUTSRC ${CMAKE_SOURCE_DIR}/core/textinput/src/)
   include_directories(${TEXTINPUTSRC})
@@ -30,11 +34,14 @@ add_cling_library(clingUserInterface
   ${TEXTINPUTSRC}textinput/TerminalDisplayWin.cpp
   ${TEXTINPUTSRC}textinput/TextInput.cpp
   ${TEXTINPUTSRC}textinput/TextInputContext.cpp
+
+  LINK_LIBS
+  clingMetaProcessor
+  clingInterpreter
 )
 
-add_dependencies(clingUserInterface clangBasic)
-
 IF(MSVC)
+  add_definitions(-UUNICODE -U_UNICODE)
   # windows.h doesn't compile with /Za
   get_target_property(NON_ANSI_COMPILE_FLAGS clingUserInterface COMPILE_FLAGS)
   if(${NON_ANSI_COMPILE_FLAGS})
@@ -47,7 +54,3 @@ IF(MSVC)
   set_target_properties(clingUserInterface PROPERTIES
     COMPILE_FLAGS ${NON_ANSI_COMPILE_FLAGS})
 ENDIF()
-
-#add_subdirectory(textinput)
-#add_dependencies(clangDriver ClangAttrList ClangDiagnosticDriver
-#                 ClangDriverOptions ClangCC1Options ClangCC1AsOptions)

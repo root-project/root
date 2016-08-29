@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_multicore
-/// Parallel fill of a histogram
+/// Parallel fill of a histogram.
 /// This tutorial shows how a histogram can be filled in parallel
 /// with a multithreaded approach. The difference with the multiprocess case,
 /// see mp201, is that here we cannot count on the copy-on-write mechanism, but
@@ -11,6 +11,7 @@
 ///
 /// \macro_image
 /// \macro_code
+///
 /// \author Danilo Piparo
 
 const UInt_t poolSize = 4U;

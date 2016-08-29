@@ -120,6 +120,10 @@ CodeGenSchedModels::CodeGenSchedModels(RecordKeeper &RK,
   // (For per-operand resources mapped to itinerary classes).
   collectProcItinRW();
 
+  // Find UnsupportedFeatures records for each processor.
+  // (For per-operand resources mapped to itinerary classes).
+  collectProcUnsupportedFeatures();
+
   // Infer new SchedClasses from SchedVariant.
   inferSchedClasses();
 
@@ -829,6 +833,15 @@ void CodeGenSchedModels::collectProcItinRW() {
   }
 }
 
+// Gather the unsupported features for processor models.
+void CodeGenSchedModels::collectProcUnsupportedFeatures() {
+  for (CodeGenProcModel &ProcModel : ProcModels) {
+    for (Record *Pred : ProcModel.ModelDef->getValueAsListOfDefs("UnsupportedFeatures")) {
+       ProcModel.UnsupportedFeaturesDefs.push_back(Pred);
+    }
+  }
+}
+
 /// Infer new classes from existing classes. In the process, this may create new
 /// SchedWrites from sequences of existing SchedWrites.
 void CodeGenSchedModels::inferSchedClasses() {
@@ -1429,6 +1442,9 @@ void CodeGenSchedModels::verifyProcResourceGroups(CodeGenProcModel &PM) {
 
 // Collect and sort WriteRes, ReadAdvance, and ProcResources.
 void CodeGenSchedModels::collectProcResources() {
+  ProcResourceDefs = Records.getAllDerivedDefinitions("ProcResourceUnits");
+  ProcResGroups = Records.getAllDerivedDefinitions("ProcResGroup");
+
   // Add any subtarget-specific SchedReadWrites that are directly associated
   // with processor resources. Refer to the parent SchedClass's ProcIndices to
   // determine which processors they apply to.
@@ -1523,6 +1539,9 @@ void CodeGenSchedModels::collectProcResources() {
       dbgs() << '\n');
     verifyProcResourceGroups(PM);
   }
+
+  ProcResourceDefs.clear();
+  ProcResGroups.clear();
 }
 
 void CodeGenSchedModels::checkCompleteness() {
@@ -1533,6 +1552,8 @@ void CodeGenSchedModels::checkCompleteness() {
       continue;
     for (const CodeGenInstruction *Inst : Target.getInstructionsByEnumValue()) {
       if (Inst->hasNoSchedulingInfo)
+        continue;
+      if (ProcModel.isUnsupported(*Inst))
         continue;
       unsigned SCIdx = getSchedClassIdx(*Inst);
       if (!SCIdx) {
@@ -1569,7 +1590,10 @@ void CodeGenSchedModels::checkCompleteness() {
       << "- Consider setting 'CompleteModel = 0' while developing new models.\n"
       << "- Pseudo instructions can be marked with 'hasNoSchedulingInfo = 1'.\n"
       << "- Instructions should usually have Sched<[...]> as a superclass, "
-         "you may temporarily use an empty list.\n\n";
+         "you may temporarily use an empty list.\n"
+      << "- Instructions related to unsupported features can be excluded with "
+         "list<Predicate> UnsupportedFeatures = [HasA,..,HasY]; in the "
+         "processor model.\n\n";
     PrintFatalError("Incomplete schedule model");
   }
 }
@@ -1652,8 +1676,8 @@ Record *CodeGenSchedModels::findProcResUnits(Record *ProcResKind,
     return ProcResKind;
 
   Record *ProcUnitDef = nullptr;
-  RecVec ProcResourceDefs =
-    Records.getAllDerivedDefinitions("ProcResourceUnits");
+  assert(!ProcResourceDefs.empty());
+  assert(!ProcResGroups.empty());
 
   for (RecIter RI = ProcResourceDefs.begin(), RE = ProcResourceDefs.end();
        RI != RE; ++RI) {
@@ -1668,7 +1692,6 @@ Record *CodeGenSchedModels::findProcResUnits(Record *ProcResKind,
       ProcUnitDef = *RI;
     }
   }
-  RecVec ProcResGroups = Records.getAllDerivedDefinitions("ProcResGroup");
   for (RecIter RI = ProcResGroups.begin(), RE = ProcResGroups.end();
        RI != RE; ++RI) {
 
@@ -1749,6 +1772,16 @@ unsigned CodeGenProcModel::getProcResourceIdx(Record *PRDef) const {
                     "the ProcResources list for " + ModelName);
   // Idx=0 is reserved for invalid.
   return 1 + (PRPos - ProcResourceDefs.begin());
+}
+
+bool CodeGenProcModel::isUnsupported(const CodeGenInstruction &Inst) const {
+  for (const Record *TheDef : UnsupportedFeaturesDefs) {
+    for (const Record *PredDef : Inst.TheDef->getValueAsListOfDefs("Predicates")) {
+      if (TheDef->getName() == PredDef->getName())
+        return true;
+    }
+  }
+  return false;
 }
 
 #ifndef NDEBUG

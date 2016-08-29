@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_fit
+/// \notebook -js
 /// Example of fit where the model is histogram + function
 ///
 /// \macro_image

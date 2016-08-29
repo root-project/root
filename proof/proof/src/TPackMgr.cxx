@@ -777,11 +777,12 @@ Int_t TPackMgr::Unpack(const char *pack, TMD5 *sum)
 /// is removed if existing.
 /// Returns 0 on success, <0 otherwise
 
-Int_t TPackMgr::Install(const char *par, Bool_t rmold)
+Int_t TPackMgr::Install(const char *parpath, Bool_t rmold)
 {
    Int_t rc = 0;
 
-   Info("Install", "installing %s ...", par);
+   Info("Install", "installing %s ...", parpath);
+   const char *par = gSystem->ExpandPathName(parpath);
 
    // Does par exists?
    if (gSystem->AccessPathName(par, kReadPermission)) {
@@ -848,6 +849,7 @@ Int_t TPackMgr::Install(const char *par, Bool_t rmold)
          if (*sums != *md5) install = kTRUE;
       }
    }
+   if (sums) delete sums;
 
    // Install if required
    if (install) {
@@ -858,7 +860,6 @@ Int_t TPackMgr::Install(const char *par, Bool_t rmold)
    }
    md5d = TMD5::FileChecksum(dest);
 
-   if (sums) delete sums;
    if (md5 && *md5 != *md5d)
       Warning("Install", "checksums do not match:\n\tdownloaded:\t%s\n\texpected:\t%s",
                          md5d->AsString(), md5->AsString());

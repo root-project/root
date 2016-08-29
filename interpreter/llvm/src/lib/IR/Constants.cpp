@@ -2331,8 +2331,8 @@ const char *ConstantDataSequential::getElementPointer(unsigned Elt) const {
 
 /// Return true if the array is empty or all zeros.
 static bool isAllZeros(StringRef Arr) {
-  for (StringRef::iterator I = Arr.begin(), E = Arr.end(); I != E; ++I)
-    if (*I != 0)
+  for (char I : Arr)
+    if (I != 0)
       return false;
   return true;
 }
@@ -2496,11 +2496,6 @@ Constant *ConstantDataVector::get(LLVMContext &Context, ArrayRef<uint16_t> Elts)
   return getImpl(StringRef(const_cast<char *>(Data), Elts.size()*2), Ty);
 }
 Constant *ConstantDataVector::get(LLVMContext &Context, ArrayRef<uint32_t> Elts){
-  Type *Ty = VectorType::get(Type::getInt32Ty(Context), Elts.size());
-  const char *Data = reinterpret_cast<const char *>(Elts.data());
-  return getImpl(StringRef(const_cast<char *>(Data), Elts.size()*4), Ty);
-}
-Constant *ConstantDataVector::get(LLVMContext &Context, ArrayRef<int32_t> Elts){
   Type *Ty = VectorType::get(Type::getInt32Ty(Context), Elts.size());
   const char *Data = reinterpret_cast<const char *>(Elts.data());
   return getImpl(StringRef(const_cast<char *>(Data), Elts.size()*4), Ty);

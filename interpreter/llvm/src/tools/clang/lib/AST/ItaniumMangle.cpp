@@ -274,63 +274,34 @@ class CXXNameMangler {
   // built and to be able to provide backwards compatibility ("dual abi").
   // For more information see docs/ItaniumMangleAbiTags.rst.
   typedef SmallVector<StringRef, 4> AbiTagList;
-  typedef llvm::SmallSetVector<StringRef, 4> AbiTagSet;
 
   // State to gather all implicit and explicit tags used in a mangled name.
   // Must always have an instance of this while emitting any name to keep
   // track.
   class AbiTagState final {
-    //! All abi tags used implicitly or explicitly
-    AbiTagSet UsedAbiTags;
-    //! All explicit abi tags (i.e. not from namespace)
-    AbiTagSet EmittedAbiTags;
-
-    AbiTagState *&LinkHead;
-    AbiTagState *Parent = nullptr;
-
-    bool LinkActive = false;
-
   public:
     explicit AbiTagState(AbiTagState *&Head) : LinkHead(Head) {
       Parent = LinkHead;
       LinkHead = this;
-      LinkActive = true;
     }
 
-    // no copy, no move
+    // No copy, no move.
     AbiTagState(const AbiTagState &) = delete;
     AbiTagState &operator=(const AbiTagState &) = delete;
 
     ~AbiTagState() { pop(); }
 
-    void pop() {
-      if (!LinkActive)
-        return;
-
-      assert(LinkHead == this &&
-             "abi tag link head must point to us on destruction");
-      LinkActive = false;
-      if (Parent) {
-        Parent->UsedAbiTags.insert(UsedAbiTags.begin(), UsedAbiTags.end());
-        Parent->EmittedAbiTags.insert(EmittedAbiTags.begin(),
-                                      EmittedAbiTags.end());
-      }
-      LinkHead = Parent;
-    }
-
     void write(raw_ostream &Out, const NamedDecl *ND,
                const AbiTagList *AdditionalAbiTags) {
       ND = cast<NamedDecl>(ND->getCanonicalDecl());
-
       if (!isa<FunctionDecl>(ND) && !isa<VarDecl>(ND)) {
         assert(
             !AdditionalAbiTags &&
             "only function and variables need a list of additional abi tags");
         if (const auto *NS = dyn_cast<NamespaceDecl>(ND)) {
           if (const auto *AbiTag = NS->getAttr<AbiTagAttr>()) {
-            for (const auto &Tag : AbiTag->tags()) {
-              UsedAbiTags.insert(Tag);
-            }
+            UsedAbiTags.insert(UsedAbiTags.end(), AbiTag->tags().begin(),
+                               AbiTag->tags().end());
           }
           // Don't emit abi tags for namespaces.
           return;
@@ -339,42 +310,66 @@ class CXXNameMangler {
 
       AbiTagList TagList;
       if (const auto *AbiTag = ND->getAttr<AbiTagAttr>()) {
-        for (const auto &Tag : AbiTag->tags()) {
-          UsedAbiTags.insert(Tag);
-          // AbiTag->tags() is sorted and has no duplicates
-          TagList.push_back(Tag);
-        }
+        UsedAbiTags.insert(UsedAbiTags.end(), AbiTag->tags().begin(),
+                           AbiTag->tags().end());
+        TagList.insert(TagList.end(), AbiTag->tags().begin(),
+                       AbiTag->tags().end());
       }
 
       if (AdditionalAbiTags) {
-        for (const auto &Tag : *AdditionalAbiTags) {
-          UsedAbiTags.insert(Tag);
-          if (std::find(TagList.begin(), TagList.end(), Tag) == TagList.end()) {
-            // don't insert duplicates
-            TagList.push_back(Tag);
-          }
-        }
-        // AbiTag->tags() are already sorted; only add if we had additional tags
-        std::sort(TagList.begin(), TagList.end());
+        UsedAbiTags.insert(UsedAbiTags.end(), AdditionalAbiTags->begin(),
+                           AdditionalAbiTags->end());
+        TagList.insert(TagList.end(), AdditionalAbiTags->begin(),
+                       AdditionalAbiTags->end());
       }
+
+      std::sort(TagList.begin(), TagList.end());
+      TagList.erase(std::unique(TagList.begin(), TagList.end()), TagList.end());
 
       writeSortedUniqueAbiTags(Out, TagList);
     }
 
-    const AbiTagSet &getUsedAbiTags() const { return UsedAbiTags; }
-    void setUsedAbiTags(const AbiTagSet &AbiTags) {
+    const AbiTagList &getUsedAbiTags() const { return UsedAbiTags; }
+    void setUsedAbiTags(const AbiTagList &AbiTags) {
       UsedAbiTags = AbiTags;
     }
 
-    const AbiTagSet &getEmittedAbiTags() const {
+    const AbiTagList &getEmittedAbiTags() const {
       return EmittedAbiTags;
     }
 
+    const AbiTagList &getSortedUniqueUsedAbiTags() {
+      std::sort(UsedAbiTags.begin(), UsedAbiTags.end());
+      UsedAbiTags.erase(std::unique(UsedAbiTags.begin(), UsedAbiTags.end()),
+                        UsedAbiTags.end());
+      return UsedAbiTags;
+    }
+
   private:
-    template <typename TagList>
-    void writeSortedUniqueAbiTags(raw_ostream &Out, TagList const &AbiTags) {
+    //! All abi tags used implicitly or explicitly.
+    AbiTagList UsedAbiTags;
+    //! All explicit abi tags (i.e. not from namespace).
+    AbiTagList EmittedAbiTags;
+
+    AbiTagState *&LinkHead;
+    AbiTagState *Parent = nullptr;
+
+    void pop() {
+      assert(LinkHead == this &&
+             "abi tag link head must point to us on destruction");
+      if (Parent) {
+        Parent->UsedAbiTags.insert(Parent->UsedAbiTags.end(),
+                                   UsedAbiTags.begin(), UsedAbiTags.end());
+        Parent->EmittedAbiTags.insert(Parent->EmittedAbiTags.end(),
+                                      EmittedAbiTags.begin(),
+                                      EmittedAbiTags.end());
+      }
+      LinkHead = Parent;
+    }
+
+    void writeSortedUniqueAbiTags(raw_ostream &Out, const AbiTagList &AbiTags) {
       for (const auto &Tag : AbiTags) {
-        EmittedAbiTags.insert(Tag);
+        EmittedAbiTags.push_back(Tag);
         Out << "B";
         Out << Tag.size();
         Out << Tag;
@@ -451,7 +446,6 @@ private:
   bool mangleSubstitution(TemplateName Template);
   bool mangleSubstitution(uintptr_t Ptr);
 
-  void mangleExistingSubstitution(QualType type);
   void mangleExistingSubstitution(TemplateName name);
 
   bool mangleStandardSubstitution(const NamedDecl *ND);
@@ -547,7 +541,7 @@ private:
   void mangleCastExpression(const Expr *E, StringRef CastEncoding);
   void mangleInitListElements(const InitListExpr *InitList);
   void mangleExpression(const Expr *E, unsigned Arity = UnknownArity);
-  void mangleCXXCtorType(CXXCtorType T);
+  void mangleCXXCtorType(CXXCtorType T, const CXXRecordDecl *InheritedFrom);
   void mangleCXXDtorType(CXXDtorType T);
 
   void mangleTemplateArgs(const TemplateArgumentLoc *TemplateArgs,
@@ -564,8 +558,10 @@ private:
   void writeAbiTags(const NamedDecl *ND,
                     const AbiTagList *AdditionalAbiTags);
 
-  AbiTagSet makeFunctionReturnTypeTags(const FunctionDecl *FD);
-  AbiTagSet makeVariableTypeTags(const VarDecl *VD);
+  // Returns sorted unique list of ABI tags.
+  AbiTagList makeFunctionReturnTypeTags(const FunctionDecl *FD);
+  // Returns sorted unique list of ABI tags.
+  AbiTagList makeVariableTypeTags(const VarDecl *VD);
 };
 
 }
@@ -653,7 +649,7 @@ void CXXNameMangler::mangleFunctionEncoding(const FunctionDecl *FD) {
     return;
   }
 
-  AbiTagSet ReturnTypeAbiTags = makeFunctionReturnTypeTags(FD);
+  AbiTagList ReturnTypeAbiTags = makeFunctionReturnTypeTags(FD);
   if (ReturnTypeAbiTags.empty()) {
     // There are no tags for return type, the simplest case.
     mangleName(FD);
@@ -661,29 +657,34 @@ void CXXNameMangler::mangleFunctionEncoding(const FunctionDecl *FD) {
     return;
   }
 
-  // Mangle function encoding to temporary buffer.
+  // Mangle function name and encoding to temporary buffer.
+  // We have to output name and encoding to the same mangler to get the same
+  // substitution as it will be in final mangling.
   SmallString<256> FunctionEncodingBuf;
   llvm::raw_svector_ostream FunctionEncodingStream(FunctionEncodingBuf);
   CXXNameMangler FunctionEncodingMangler(*this, FunctionEncodingStream);
+  // Output name of the function.
+  FunctionEncodingMangler.disableDerivedAbiTags();
+  FunctionEncodingMangler.mangleNameWithAbiTags(FD, nullptr);
+
+  // Remember length of the function name in the buffer.
+  size_t EncodingPositionStart = FunctionEncodingStream.str().size();
   FunctionEncodingMangler.mangleFunctionEncodingBareType(FD);
 
-  // Mangle function name to null stream to collect tags.
-  llvm::raw_null_ostream NullOutStream;
-  CXXNameMangler FunctionNameMangler(*this, NullOutStream);
-  FunctionNameMangler.disableDerivedAbiTags();
-  FunctionNameMangler.mangleNameWithAbiTags(FD, nullptr);
-
-  // Get tags from return type that are not present in function name or encoding
-  AbiTagList AdditionalAbiTags;
-  for (const auto &Tag : ReturnTypeAbiTags) {
-    if (!FunctionEncodingMangler.AbiTagsRoot.getUsedAbiTags().count(Tag) &&
-        !FunctionNameMangler.AbiTagsRoot.getUsedAbiTags().count(Tag))
-      AdditionalAbiTags.push_back(Tag);
-  }
+  // Get tags from return type that are not present in function name or
+  // encoding.
+  const AbiTagList &UsedAbiTags =
+      FunctionEncodingMangler.AbiTagsRoot.getSortedUniqueUsedAbiTags();
+  AbiTagList AdditionalAbiTags(ReturnTypeAbiTags.size());
+  AdditionalAbiTags.erase(
+      std::set_difference(ReturnTypeAbiTags.begin(), ReturnTypeAbiTags.end(),
+                          UsedAbiTags.begin(), UsedAbiTags.end(),
+                          AdditionalAbiTags.begin()),
+      AdditionalAbiTags.end());
 
   // Output name with implicit tags and function encoding from temporary buffer.
   mangleNameWithAbiTags(FD, &AdditionalAbiTags);
-  Out << FunctionEncodingStream.str();
+  Out << FunctionEncodingStream.str().substr(EncodingPositionStart);
 }
 
 void CXXNameMangler::mangleFunctionEncodingBareType(const FunctionDecl *FD) {
@@ -705,6 +706,12 @@ void CXXNameMangler::mangleFunctionEncodingBareType(const FunctionDecl *FD) {
     Out << 'E';
     FunctionTypeDepth.pop(Saved);
   }
+
+  // When mangling an inheriting constructor, the bare function type used is
+  // that of the inherited constructor.
+  if (auto *CD = dyn_cast<CXXConstructorDecl>(FD))
+    if (auto Inherited = CD->getInheritedConstructor())
+      FD = Inherited.getConstructor();
 
   // Whether the mangling of a function type includes the return type depends on
   // the context and the nature of the function. The rules for deciding whether
@@ -766,7 +773,7 @@ static bool isStdNamespace(const DeclContext *DC) {
 static const TemplateDecl *
 isTemplate(const NamedDecl *ND, const TemplateArgumentList *&TemplateArgs) {
   // Check if we have a function template.
-  if (const FunctionDecl *FD = dyn_cast<FunctionDecl>(ND)){
+  if (const FunctionDecl *FD = dyn_cast<FunctionDecl>(ND)) {
     if (const TemplateDecl *TD = FD->getPrimaryTemplate()) {
       TemplateArgs = FD->getTemplateSpecializationArgs();
       return TD;
@@ -793,7 +800,7 @@ isTemplate(const NamedDecl *ND, const TemplateArgumentList *&TemplateArgs) {
 void CXXNameMangler::mangleName(const NamedDecl *ND) {
   if (const VarDecl *VD = dyn_cast<VarDecl>(ND)) {
     // Variables should have implicit tags from its type.
-    AbiTagSet VariableTypeAbiTags = makeVariableTypeTags(VD);
+    AbiTagList VariableTypeAbiTags = makeVariableTypeTags(VD);
     if (VariableTypeAbiTags.empty()) {
       // Simple case no variable type tags.
       mangleNameWithAbiTags(VD, nullptr);
@@ -807,11 +814,14 @@ void CXXNameMangler::mangleName(const NamedDecl *ND) {
     VariableNameMangler.mangleNameWithAbiTags(VD, nullptr);
 
     // Get tags from variable type that are not present in its name.
-    AbiTagList AdditionalAbiTags;
-    for (const auto &Tag : VariableTypeAbiTags) {
-     if (!VariableNameMangler.AbiTagsRoot.getUsedAbiTags().count(Tag))
-        AdditionalAbiTags.push_back(Tag);
-    }
+    const AbiTagList &UsedAbiTags =
+        VariableNameMangler.AbiTagsRoot.getSortedUniqueUsedAbiTags();
+    AbiTagList AdditionalAbiTags(VariableTypeAbiTags.size());
+    AdditionalAbiTags.erase(
+        std::set_difference(VariableTypeAbiTags.begin(),
+                            VariableTypeAbiTags.end(), UsedAbiTags.begin(),
+                            UsedAbiTags.end(), AdditionalAbiTags.begin()),
+        AdditionalAbiTags.end());
 
     // Output name with implicit tags.
     mangleNameWithAbiTags(VD, &AdditionalAbiTags);
@@ -1127,7 +1137,7 @@ void CXXNameMangler::mangleUnresolvedPrefix(NestedNameSpecifier *qualifier,
       Out << "sr";
 
     mangleSourceName(qualifier->getAsIdentifier());
-    // an Identifier has no type information, so we can't emit abi tags for it
+    // An Identifier has no type information, so we can't emit abi tags for it.
     break;
   }
 
@@ -1233,7 +1243,7 @@ void CXXNameMangler::mangleUnqualifiedName(const NamedDecl *ND,
       assert(FD->getIdentifier() && "Data member name isn't an identifier!");
 
       mangleSourceName(FD->getIdentifier());
-      // Not emitting abi tags: internal name anyway
+      // Not emitting abi tags: internal name anyway.
       break;
     }
 
@@ -1255,7 +1265,7 @@ void CXXNameMangler::mangleUnqualifiedName(const NamedDecl *ND,
              "Typedef was not named!");
       mangleSourceName(D->getDeclName().getAsIdentifierInfo());
       assert(!AdditionalAbiTags && "Type cannot have additional abi tags");
-      // explicit abi tags are still possible; take from underlying type, not
+      // Explicit abi tags are still possible; take from underlying type, not
       // from typedef.
       writeAbiTags(TD, nullptr);
       break;
@@ -1305,17 +1315,33 @@ void CXXNameMangler::mangleUnqualifiedName(const NamedDecl *ND,
   case DeclarationName::ObjCMultiArgSelector:
     llvm_unreachable("Can't mangle Objective-C selector names here!");
 
-  case DeclarationName::CXXConstructorName:
+  case DeclarationName::CXXConstructorName: {
+    const CXXRecordDecl *InheritedFrom = nullptr;
+    const TemplateArgumentList *InheritedTemplateArgs = nullptr;
+    if (auto Inherited =
+            cast<CXXConstructorDecl>(ND)->getInheritedConstructor()) {
+      InheritedFrom = Inherited.getConstructor()->getParent();
+      InheritedTemplateArgs =
+          Inherited.getConstructor()->getTemplateSpecializationArgs();
+    }
+
     if (ND == Structor)
       // If the named decl is the C++ constructor we're mangling, use the type
       // we were given.
-      mangleCXXCtorType(static_cast<CXXCtorType>(StructorType));
+      mangleCXXCtorType(static_cast<CXXCtorType>(StructorType), InheritedFrom);
     else
       // Otherwise, use the complete constructor name. This is relevant if a
       // class with a constructor is declared within a constructor.
-      mangleCXXCtorType(Ctor_Complete);
+      mangleCXXCtorType(Ctor_Complete, InheritedFrom);
+
+    // FIXME: The template arguments are part of the enclosing prefix or
+    // nested-name, but it's more convenient to mangle them here.
+    if (InheritedTemplateArgs)
+      mangleTemplateArgs(*InheritedTemplateArgs);
+
     writeAbiTags(ND, AdditionalAbiTags);
     break;
+  }
 
   case DeclarationName::CXXDestructorName:
     if (ND == Structor)
@@ -2416,7 +2442,7 @@ StringRef CXXNameMangler::getCallingConvQualifierName(CallingConv CC) {
   case CC_AAPCS_VFP:
   case CC_IntelOclBicc:
   case CC_SpirFunction:
-  case CC_SpirKernel:
+  case CC_OpenCLKernel:
   case CC_PreserveMost:
   case CC_PreserveAll:
     // FIXME: we should be mangling all of the above.
@@ -3185,6 +3211,7 @@ recurse:
   case Expr::MSPropertySubscriptExprClass:
   case Expr::TypoExprClass:  // This should no longer exist in the AST by now.
   case Expr::OMPArraySectionExprClass:
+  case Expr::CXXInheritedCtorInitExprClass:
     llvm_unreachable("unexpected statement kind");
 
   // FIXME: invent manglings for all these.
@@ -3966,25 +3993,33 @@ void CXXNameMangler::mangleFunctionParam(const ParmVarDecl *parm) {
   Out << '_';
 }
 
-void CXXNameMangler::mangleCXXCtorType(CXXCtorType T) {
+void CXXNameMangler::mangleCXXCtorType(CXXCtorType T,
+                                       const CXXRecordDecl *InheritedFrom) {
   // <ctor-dtor-name> ::= C1  # complete object constructor
   //                  ::= C2  # base object constructor
+  //                  ::= CI1 <type> # complete inheriting constructor
+  //                  ::= CI2 <type> # base inheriting constructor
   //
   // In addition, C5 is a comdat name with C1 and C2 in it.
+  Out << 'C';
+  if (InheritedFrom)
+    Out << 'I';
   switch (T) {
   case Ctor_Complete:
-    Out << "C1";
+    Out << '1';
     break;
   case Ctor_Base:
-    Out << "C2";
+    Out << '2';
     break;
   case Ctor_Comdat:
-    Out << "C5";
+    Out << '5';
     break;
   case Ctor_DefaultClosure:
   case Ctor_CopyingClosure:
     llvm_unreachable("closure constructors don't exist for the Itanium ABI!");
   }
+  if (InheritedFrom)
+    mangleName(InheritedFrom);
 }
 
 void CXXNameMangler::mangleCXXDtorType(CXXDtorType T) {
@@ -4150,12 +4185,6 @@ void CXXNameMangler::mangleSeqID(unsigned SeqID) {
     Out.write(I.base(), I - BufferRef.rbegin());
   }
   Out << '_';
-}
-
-void CXXNameMangler::mangleExistingSubstitution(QualType type) {
-  bool result = mangleSubstitution(type);
-  assert(result && "no existing substitution for type");
-  (void) result;
 }
 
 void CXXNameMangler::mangleExistingSubstitution(TemplateName tname) {
@@ -4371,11 +4400,11 @@ void CXXNameMangler::addSubstitution(uintptr_t Ptr) {
   Substitutions[Ptr] = SeqID++;
 }
 
-CXXNameMangler::AbiTagSet
+CXXNameMangler::AbiTagList
 CXXNameMangler::makeFunctionReturnTypeTags(const FunctionDecl *FD) {
   // When derived abi tags are disabled there is no need to make any list.
   if (DisableDerivedAbiTags)
-    return AbiTagSet();
+    return AbiTagList();
 
   llvm::raw_null_ostream NullOutStream;
   CXXNameMangler TrackReturnTypeTags(*this, NullOutStream);
@@ -4387,14 +4416,14 @@ CXXNameMangler::makeFunctionReturnTypeTags(const FunctionDecl *FD) {
   TrackReturnTypeTags.mangleType(Proto->getReturnType());
   TrackReturnTypeTags.FunctionTypeDepth.leaveResultType();
 
-  return TrackReturnTypeTags.AbiTagsRoot.getUsedAbiTags();
+  return TrackReturnTypeTags.AbiTagsRoot.getSortedUniqueUsedAbiTags();
 }
 
-CXXNameMangler::AbiTagSet
+CXXNameMangler::AbiTagList
 CXXNameMangler::makeVariableTypeTags(const VarDecl *VD) {
   // When derived abi tags are disabled there is no need to make any list.
   if (DisableDerivedAbiTags)
-    return AbiTagSet();
+    return AbiTagList();
 
   llvm::raw_null_ostream NullOutStream;
   CXXNameMangler TrackVariableType(*this, NullOutStream);
@@ -4402,7 +4431,7 @@ CXXNameMangler::makeVariableTypeTags(const VarDecl *VD) {
 
   TrackVariableType.mangleType(VD->getType());
 
-  return TrackVariableType.AbiTagsRoot.getUsedAbiTags();
+  return TrackVariableType.AbiTagsRoot.getSortedUniqueUsedAbiTags();
 }
 
 bool CXXNameMangler::shouldHaveAbiTags(ItaniumMangleContextImpl &C,

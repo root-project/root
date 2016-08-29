@@ -107,9 +107,8 @@ ClassImp(TMVA::MethodPDERS)
    TMVA::MethodPDERS::MethodPDERS( const TString& jobName,
                                    const TString& methodTitle,
                                    DataSetInfo& theData,
-                                   const TString& theOption,
-                                   TDirectory* theTargetDir ) :
-   MethodBase( jobName, Types::kPDERS, methodTitle, theData, theOption, theTargetDir ),
+                                   const TString& theOption) :
+   MethodBase( jobName, Types::kPDERS, methodTitle, theData, theOption),
    fFcnCall(0),
    fVRangeMode(kAdaptive),
    fKernelEstimator(kBox),
@@ -138,9 +137,8 @@ ClassImp(TMVA::MethodPDERS)
 /// construct MethodPDERS through from file
 
 TMVA::MethodPDERS::MethodPDERS( DataSetInfo& theData,
-                                const TString& theWeightFile,
-                                TDirectory* theTargetDir ) :
-   MethodBase( Types::kPDERS, theData, theWeightFile, theTargetDir ),
+                                const TString& theWeightFile) :
+   MethodBase( Types::kPDERS, theData, theWeightFile),
    fFcnCall(0),
    fVRangeMode(kAdaptive),
    fKernelEstimator(kBox),
@@ -611,7 +609,7 @@ void TMVA::MethodPDERS::GetSample( const Event& e,
          fHelpVolume = volume;
 
          UpdateThis(); // necessary update of static pointer
-         RootFinder rootFinder( &IGetVolumeContentForRoot, 0.01, 50, 200, 10 );
+         RootFinder rootFinder( this, 0.01, 50, 200, 10 );
          Double_t scale = rootFinder.Root( (fNEventsMin + fNEventsMax)/2.0 );
 
          volume->ScaleInterval( scale );

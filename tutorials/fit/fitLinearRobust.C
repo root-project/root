@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_fit
+/// \notebook -js
 /// This tutorial shows how the least trimmed squares regression,
 /// included in the TLinearFitter class, can be used for fitting
 /// in cases when the data contains outliers.
@@ -52,7 +53,6 @@ void fitLinearRobust()
    ffit1->SetLineColor(kBlue);
    ffit2->SetLineColor(kRed);
    TCanvas *myc = new TCanvas("myc", "Linear and robust linear fitting");
-   myc->SetFillColor(42);
    myc->SetGrid();
    grr->Draw("ap");
    //first, let's try to see the result sof ordinary least-squares fit:
@@ -73,7 +73,6 @@ void fitLinearRobust()
    TLegend *leg = new TLegend(0.6, 0.8, 0.89, 0.89);
    leg->AddEntry(ffit1, "Ordinary least squares", "l");
    leg->AddEntry(ffit2, "LTS regression", "l");
-   leg->SetFillColor(42);
    leg->Draw();
 
    delete [] x;

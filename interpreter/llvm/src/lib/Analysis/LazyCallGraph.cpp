@@ -14,6 +14,7 @@
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/PassManager.h"
 #include "llvm/Support/Debug.h"
+#include "llvm/Support/GraphWriter.h"
 #include "llvm/Support/raw_ostream.h"
 
 using namespace llvm;
@@ -119,6 +120,14 @@ void LazyCallGraph::Node::removeEdgeInternal(Function &Target) {
   EdgeIndexMap.erase(IndexMapI);
 }
 
+raw_ostream &llvm::operator<<(raw_ostream &OS, const LazyCallGraph::Node &N) {
+  return OS << N.F.getName();
+}
+
+void LazyCallGraph::Node::dump() const {
+  dbgs() << *this << '\n';
+}
+
 LazyCallGraph::LazyCallGraph(Module &M) : NextDFSNumber(0) {
   DEBUG(dbgs() << "Building CG for module: " << M.getModuleIdentifier()
                << "\n");
@@ -172,6 +181,28 @@ LazyCallGraph &LazyCallGraph::operator=(LazyCallGraph &&G) {
   return *this;
 }
 
+raw_ostream &llvm::operator<<(raw_ostream &OS, const LazyCallGraph::SCC &C) {
+  OS << '(';
+  int i = 0;
+  for (LazyCallGraph::Node &N : C) {
+    if (i > 0)
+      OS << ", ";
+    // Elide the inner elements if there are too many.
+    if (i > 8) {
+      OS << "..., " << *C.Nodes.back();
+      break;
+    }
+    OS << N;
+    ++i;
+  }
+  OS << ')';
+  return OS;
+}
+
+void LazyCallGraph::SCC::dump() const {
+  dbgs() << *this << '\n';
+}
+
 #ifndef NDEBUG
 void LazyCallGraph::SCC::verify() {
   assert(OuterRefSCC && "Can't have a null RefSCC!");
@@ -192,6 +223,29 @@ void LazyCallGraph::SCC::verify() {
 #endif
 
 LazyCallGraph::RefSCC::RefSCC(LazyCallGraph &G) : G(&G) {}
+
+raw_ostream &llvm::operator<<(raw_ostream &OS,
+                              const LazyCallGraph::RefSCC &RC) {
+  OS << '[';
+  int i = 0;
+  for (LazyCallGraph::SCC &C : RC) {
+    if (i > 0)
+      OS << ", ";
+    // Elide the inner elements if there are too many.
+    if (i > 4) {
+      OS << "..., " << *RC.SCCs.back();
+      break;
+    }
+    OS << C;
+    ++i;
+  }
+  OS << ']';
+  return OS;
+}
+
+void LazyCallGraph::RefSCC::dump() const {
+  dbgs() << *this << '\n';
+}
 
 #ifndef NDEBUG
 void LazyCallGraph::RefSCC::verify() {
@@ -1542,6 +1596,37 @@ PreservedAnalyses LazyCallGraphPrinterPass::run(Module &M,
 
   for (LazyCallGraph::RefSCC &C : G.postorder_ref_sccs())
     printRefSCC(OS, C);
+
+  return PreservedAnalyses::all();
+}
+
+LazyCallGraphDOTPrinterPass::LazyCallGraphDOTPrinterPass(raw_ostream &OS)
+    : OS(OS) {}
+
+static void printNodeDOT(raw_ostream &OS, LazyCallGraph::Node &N) {
+  std::string Name = "\"" + DOT::EscapeString(N.getFunction().getName()) + "\"";
+
+  for (const LazyCallGraph::Edge &E : N) {
+    OS << "  " << Name << " -> \""
+       << DOT::EscapeString(E.getFunction().getName()) << "\"";
+    if (!E.isCall()) // It is a ref edge.
+      OS << " [style=dashed,label=\"ref\"]";
+    OS << ";\n";
+  }
+
+  OS << "\n";
+}
+
+PreservedAnalyses LazyCallGraphDOTPrinterPass::run(Module &M,
+                                                   ModuleAnalysisManager &AM) {
+  LazyCallGraph &G = AM.getResult<LazyCallGraphAnalysis>(M);
+
+  OS << "digraph \"" << DOT::EscapeString(M.getModuleIdentifier()) << "\" {\n";
+
+  for (Function &F : M)
+    printNodeDOT(OS, G.get(F));
+
+  OS << "}\n";
 
   return PreservedAnalyses::all();
 }

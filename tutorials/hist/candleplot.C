@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_hist
+/// \notebook
 /// Example of candle plot with 2-D histograms.
 ///
 /// \macro_image
@@ -10,7 +11,7 @@
 void candleplot() {
 
    gStyle->SetTimeOffset(0);
-   TRandom *rand = new TRandom();
+   TRandom *randnum = new TRandom();
    TDatime *dateBegin = new TDatime(2010,1,1,0,0,0);
    TDatime *dateEnd = new TDatime(2011,1,1,0,0,0);
 
@@ -24,8 +25,8 @@ void candleplot() {
    float Rand;
    for (int i = dateBegin->Convert(); i < dateEnd->Convert(); i+=86400*30) {
       for (int j = 0; j < 1000; j++) {
-         Rand = rand->Gaus(500+sin(i/10000000.)*100,50); h1->Fill(i,Rand);
-         Rand = rand->Gaus(500+sin(i/11000000.)*100,70); h2->Fill(i,Rand);
+         Rand = randnum->Gaus(500+sin(i/10000000.)*100,50); h1->Fill(i,Rand);
+         Rand = randnum->Gaus(500+sin(i/11000000.)*100,70); h2->Fill(i,Rand);
       }
    }
 
@@ -41,5 +42,5 @@ void candleplot() {
    h1->Draw("candle2");
    h2->Draw("candle3 same");
 
-   gPad->BuildLegend(0.6,0.7,0.7,0.8,"","f");
+   gPad->BuildLegend(0.6,0.7,0.7,0.8);
 }

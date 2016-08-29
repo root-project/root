@@ -53,9 +53,16 @@ A Graph is a graphics object made of two arrays X and Y with npoints each.
 The TGraph painting is performed thanks to the TGraphPainter
 class. All details about the various painting options are given in this class.
 
-*Note:* Unlike histogram or tree (or even TGraph2D), TGraph objects
- are not automatically attached to the current TFile, in order to keep the
- management and size of the TGraph has small as possible.
+#### Notes
+
+  - Unlike histogram or tree (or even TGraph2D), TGraph objects
+    are not automatically attached to the current TFile, in order to keep the
+    management and size of the TGraph as small as possible.
+  - The TGraph constructors do not have the TGraph title and name as parameters.
+    A TGraph has the default title and name "Graph". To change the default title
+    and name `SetTitle` and `SetName` should be called on the TGraph after its creation.
+    TGraph was a light weight object to start with, like TPolyline or TPolyMarker.
+    That’s why it did not have any title and name parameters in the constructors.
 
 The picture below gives an example:
 Begin_Macro(source)
@@ -363,10 +370,10 @@ TGraph::TGraph(const TF1 *f, Option_t *option)
 ////////////////////////////////////////////////////////////////////////////////
 /// Graph constructor reading input from filename.
 /// filename is assumed to contain at least two columns of numbers.
-/// the string format is by default "%lg %lg".
+/// the string format is by default "%%lg %%lg".
 /// this is a standard c formatting for scanf. If columns of numbers should be
 /// skipped, a "%*lg" or "%*s" for each column can be added,
-/// e.g. "%lg %*lg %lg" would read x-values from the first and y-values from
+/// e.g. "%%lg %%*lg %%lg" would read x-values from the first and y-values from
 /// the third column.
 /// For files separated by a specific delimiter different from ' ' and '\t' (e.g. ';' in csv files)
 /// you can avoid using %*s to bypass this delimiter by explicitly specify the "option" argument,
@@ -842,9 +849,9 @@ void TGraph::DrawPanel()
 ///  -if spline==0 and option="" a linear interpolation between the two points
 ///   close to x is computed. If x is outside the graph range, a linear
 ///   extrapolation is computed.
-///   If the points are sorted in X a binary search is used (significatly faster)
+///   If the points are sorted in X a binary search is used (significantly faster)
 ///   One needs to set the bit  TGraph::SetBit(TGraph::kIsSortedX) before calling
-///   TGraph::Eval to indicate that the graph is sorted in X. 
+///   TGraph::Eval to indicate that the graph is sorted in X.
 ///  -if spline==0 and option="S" a TSpline3 object is created using this graph
 ///   and the interpolated value from the spline is returned.
 ///   the internally created spline is deleted on return.
@@ -861,7 +868,7 @@ Double_t TGraph::Eval(Double_t x, TSpline *spline, Option_t *option) const
    if (fNpoints == 0) return 0;
    if (fNpoints == 1) return fY[0];
 
-   if (option) { 
+   if (option) {
       TString opt = option;
       opt.ToLower();
       // create a TSpline every time when using option "s" and no spline pointer is given
@@ -876,7 +883,7 @@ Double_t TGraph::Eval(Double_t x, TSpline *spline, Option_t *option) const
             xsort[i] = fX[ indxsort[i] ];
             ysort[i] = fY[ indxsort[i] ];
          }
-            
+
          // spline interpolation creating a new spline
          TSpline3 s("", &xsort[0], &ysort[0], fNpoints);
          Double_t result = s.Eval(x);
@@ -891,18 +898,18 @@ Double_t TGraph::Eval(Double_t x, TSpline *spline, Option_t *option) const
    Int_t low  = -1;
    Int_t up  = -1;
    if (TestBit(TGraph::kIsSortedX) ) {
-      low = TMath::BinarySearch(fNpoints, fX, x);      
+      low = TMath::BinarySearch(fNpoints, fX, x);
       if (low == -1)  {
          // use first two points for doing an extrapolation
          low = 0;
       }
       if (fX[low] == x) return fY[low];
-      if (low == fNpoints-1) low--; // for extrapolating 
-      up = low+1;               
+      if (low == fNpoints-1) low--; // for extrapolating
+      up = low+1;
    }
    else {
       // case TGraph is not sorted
-   
+
    // find neighbours simply looping  all points
    // and find also the 2 adjacent points: (low2 < low < x < up < up2 )
    // needed in case x is outside the graph ascissa interval
@@ -927,7 +934,7 @@ Double_t TGraph::Eval(Double_t x, TSpline *spline, Option_t *option) const
       // treat cases when x is outside graph min max abscissa
       if (up == -1)  {
          up  = low;
-         low = low2;         
+         low = low2;
       }
       if (low == -1) {
          low = up;
@@ -936,7 +943,7 @@ Double_t TGraph::Eval(Double_t x, TSpline *spline, Option_t *option) const
    }
    // do now the linear interpolation
    assert(low != -1 && up != -1);
-   
+
    if (fX[low] == fX[up]) return fY[low];
    Double_t yn = fY[up] + (x - fX[up]) * (fY[low] - fY[up]) / (fX[low] - fX[up]);
    return yn;
@@ -1100,7 +1107,7 @@ TFitResultPtr TGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_
 /// or TGraphAsymmErrors::Fit ot TGraphBentErrors::Fit
 /// See the discussion below on error calculation.
 ///
-/// ## Linear fitting:
+/// ### Linear fitting:
 ///   When the fitting function is linear (contains the "++" sign) or the fitting
 ///   function is a polynomial, a linear fitter is initialised.
 ///   To create a linear function, use the following syntax: linear parts
@@ -1111,7 +1118,7 @@ TFitResultPtr TGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_
 ///   Going via the linear fitter for functions, linear in parameters, gives a
 ///   considerable advantage in speed.
 ///
-/// ## Setting initial conditions:
+/// ### Setting initial conditions:
 ///
 ///   Parameters must be initialized before invoking the Fit function.
 ///   The setting of the parameter initial values is automatic for the
@@ -1131,14 +1138,14 @@ TFitResultPtr TGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_
 ///   Parameter 4 has boundaries [-10,-4] with initial value -8.
 ///   Parameter 5 is fixed to 100.
 ///
-/// ## Fit range:
+/// ### Fit range:
 ///
 ///   The fit range can be specified in two ways:
 ///     - specify rxmax > rxmin (default is rxmin=rxmax=0)
 ///     - specify the option "R". In this case, the function will be taken
 ///       instead of the full graph range.
 ///
-/// ## Changing the fitting function:
+/// ### Changing the fitting function:
 ///
 ///   By default a chi2 fitting function is used for fitting a TGraph.
 ///   The function is implemented in FitUtil::EvaluateChi2.
@@ -1152,7 +1159,7 @@ TFitResultPtr TGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_
 ///                                 Double_t *u, Int_t flag);
 ///
 ///
-/// ## TGraphErrors fit:
+/// ### TGraphErrors fit:
 ///
 ///   In case of a TGraphErrors object, when x errors are present, the error along x,
 ///   is projected along the y-direction by calculating the function at the points x-exlow and
@@ -1223,7 +1230,7 @@ TFitResultPtr TGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_
 ///      Double_t err0 = myfunc->GetParError(0);  //error on first parameter
 ///
 ///
-/// ## Access to the fit status
+/// ### Access to the fit status
 ///  The status of the fit can be obtained converting the TFitResultPtr to an integer
 ///  independently if the fit option "S" is used or not:
 ///
@@ -1246,7 +1253,7 @@ TFitResultPtr TGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_
 ///  If other minimizers are used see their specific documentation for the status code
 ///  returned. For example in the case of Fumili, for the status returned see TFumili::Minimize.
 ///
-/// ## Associated functions:
+/// ### Associated functions:
 ///   One or more object (typically a TF1*) can be added to the list
 ///   of functions (fFunctions) associated with each graph.
 ///   When TGraph::Fit is invoked, the fitted function is added to this list.
@@ -1261,7 +1268,7 @@ TFitResultPtr TGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_
 ///       Double_t par0 = myfunc->GetParameter(0); //value of 1st parameter
 ///       Double_t err0 = myfunc->GetParError(0);  //error on first parameter
 ///
-/// ## Fit Statistics
+/// ### Fit Statistics
 ///   You can change the statistics box to display the fit parameters with
 ///   the TStyle::SetOptFit(mode) method. This mode has four digits.
 ///   mode = pcev  (default = 0111)
@@ -2218,7 +2225,7 @@ void TGraph::Sort(Bool_t (*greaterfunc)(const TGraph*, Int_t, Int_t) /*=TGraph::
    // set the bit in case of an ascending =sort in X
    if (greaterfunc == TGraph::CompareX && ascending  && low == 0 && high == -1111)
       SetBit(TGraph::kIsSortedX);
-   
+
    if (high == -1111) high = GetN() - 1;
    //  Termination condition
    if (high <= low) return;

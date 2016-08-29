@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_roostats
+/// \notebook
 /// OneSidedFrequentistUpperLimitWithBands
 ///
 /// This is a standard demo that can be used with any ROOT file
@@ -15,7 +16,7 @@
 ///
 /// The first ~100 lines define a new test statistic, then the main macro starts.
 /// You may want to control:
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 ///   double confidenceLevel=0.95;
 ///   int nPointsToScan = 30;
 ///   int nToyMC = 200;
@@ -61,7 +62,7 @@
 /// Note, if you have a boundary on the parameter of interest (eg. cross-section)
 /// the threshold on the one-sided test statistic starts off very small because we
 /// are only including downward fluctuations.  You can see the threshold in these printouts:
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 /// [#0] PROGRESS:Generation -- generated toys: 500 / 999
 /// NeymanConstruction: Prog: 12/50 total MC = 39 this test stat = 0
 ///  SigXsecOverSM=0.69 alpha_syst1=0.136515 alpha_syst3=0.425415 beta_syst2=1.08496 [-1e+30, 0.011215]  in interval = 1
@@ -127,7 +128,7 @@ using namespace RooStats;
 bool useProof = false;  // flag to control whether to use Proof
 int nworkers = 0;   // number of workers (default use all available cores)
 
-/////////////////////////////////////////////////////////////////////////
+// -------------------------------------------------------
 // The actual macro
 
 void OneSidedFrequentistUpperLimitWithBands(const char* infile = "",
@@ -136,21 +137,14 @@ void OneSidedFrequentistUpperLimitWithBands(const char* infile = "",
                                             const char* dataName = "obsData") {
 
 
-#ifdef __CINT__
-  cout << "DO NOT RUN WITH CINT: we are using a custom test statistic ";
-  cout << "which requires that this tutorial must be compiled ";
-  cout << "with ACLIC" << endl;
-  return;
-#endif
 
-  double confidenceLevel=0.95;
-  int nPointsToScan = 20;
-  int nToyMC = 200;
+   double confidenceLevel=0.95;
+   int nPointsToScan = 20;
+   int nToyMC = 200;
 
-  /////////////////////////////////////////////////////////////
-  // First part is just to access a user-defined file
-  // or create the standard example file if it doesn't exist
-  ////////////////////////////////////////////////////////////
+   // -------------------------------------------------------
+   // First part is just to access a user-defined file
+   // or create the standard example file if it doesn't exist
    const char* filename = "";
    if (!strcmp(infile,"")) {
       filename = "results/example_combined_GaussExample_model.root";
@@ -184,347 +178,345 @@ void OneSidedFrequentistUpperLimitWithBands(const char* infile = "",
    }
 
 
-  /////////////////////////////////////////////////////////////
-  // Now get the data and workspace
-  ////////////////////////////////////////////////////////////
+   // -------------------------------------------------------
+   // Now get the data and workspace
 
-  // get the workspace out of the file
-  RooWorkspace* w = (RooWorkspace*) file->Get(workspaceName);
-  if(!w){
-    cout <<"workspace not found" << endl;
-    return;
-  }
+   // get the workspace out of the file
+   RooWorkspace* w = (RooWorkspace*) file->Get(workspaceName);
+   if(!w){
+      cout <<"workspace not found" << endl;
+      return;
+   }
 
-  // get the modelConfig out of the file
-  ModelConfig* mc = (ModelConfig*) w->obj(modelConfigName);
+   // get the modelConfig out of the file
+   ModelConfig* mc = (ModelConfig*) w->obj(modelConfigName);
 
-  // get the modelConfig out of the file
-  RooAbsData* data = w->data(dataName);
+   // get the modelConfig out of the file
+   RooAbsData* data = w->data(dataName);
 
-  // make sure ingredients are found
-  if(!data || !mc){
-    w->Print();
-    cout << "data or ModelConfig was not found" <<endl;
-    return;
-  }
+   // make sure ingredients are found
+   if(!data || !mc){
+      w->Print();
+      cout << "data or ModelConfig was not found" <<endl;
+      return;
+   }
 
-  /////////////////////////////////////////////////////////////
-  // Now get the POI for convenience
-  // you may want to adjust the range of your POI
-  ////////////////////////////////////////////////////////////
-  RooRealVar* firstPOI = (RooRealVar*) mc->GetParametersOfInterest()->first();
-  //  firstPOI->setMin(0);
-  //  firstPOI->setMax(10);
+   // -------------------------------------------------------
+   // Now get the POI for convenience
+   // you may want to adjust the range of your POI
+   
+   RooRealVar* firstPOI = (RooRealVar*) mc->GetParametersOfInterest()->first();
+   /*  firstPOI->setMin(0);*/
+   /*  firstPOI->setMax(10);*/
 
-  /////////////////////////////////////////////
-  // create and use the FeldmanCousins tool
-  // to find and plot the 95% confidence interval
-  // on the parameter of interest as specified
-  // in the model config
-  // REMEMBER, we will change the test statistic
-  // so this is NOT a Feldman-Cousins interval
-  FeldmanCousins fc(*data,*mc);
-  fc.SetConfidenceLevel(confidenceLevel);
-  //  fc.AdditionalNToysFactor(0.25); // degrade/improve sampling that defines confidence belt
-  //  fc.UseAdaptiveSampling(true); // speed it up a bit, don't use for expectd limits
-  fc.SetNBins(nPointsToScan); // set how many points per parameter of interest to scan
-  fc.CreateConfBelt(true); // save the information in the belt for plotting
+   // --------------------------------------------
+   // Create and use the FeldmanCousins tool
+   // to find and plot the 95% confidence interval
+   // on the parameter of interest as specified
+   // in the model config
+   // REMEMBER, we will change the test statistic
+   // so this is NOT a Feldman-Cousins interval
+   FeldmanCousins fc(*data,*mc);
+   fc.SetConfidenceLevel(confidenceLevel);
+   /*  fc.AdditionalNToysFactor(0.25); // degrade/improve sampling that defines confidence belt*/
+   /*  fc.UseAdaptiveSampling(true); // speed it up a bit, don't use for expectd limits*/
+   fc.SetNBins(nPointsToScan); // set how many points per parameter of interest to scan
+   fc.CreateConfBelt(true); // save the information in the belt for plotting
 
-  /////////////////////////////////////////////
-  // Feldman-Cousins is a unified limit by definition
-  // but the tool takes care of a few things for us like which values
-  // of the nuisance parameters should be used to generate toys.
-  // so let's just change the test statistic and realize this is
-  // no longer "Feldman-Cousins" but is a fully frequentist Neyman-Construction.
-  //  ProfileLikelihoodTestStatModified onesided(*mc->GetPdf());
-  //  fc.GetTestStatSampler()->SetTestStatistic(&onesided);
-  // ((ToyMCSampler*) fc.GetTestStatSampler())->SetGenerateBinned(true);
-  ToyMCSampler*  toymcsampler = (ToyMCSampler*) fc.GetTestStatSampler();
-  ProfileLikelihoodTestStat* testStat = dynamic_cast<ProfileLikelihoodTestStat*>(toymcsampler->GetTestStatistic());
-  testStat->SetOneSided(true);
+   // -------------------------------------------------------
+   // Feldman-Cousins is a unified limit by definition
+   // but the tool takes care of a few things for us like which values
+   // of the nuisance parameters should be used to generate toys.
+   // so let's just change the test statistic and realize this is
+   // no longer "Feldman-Cousins" but is a fully frequentist Neyman-Construction.
+   /*  ProfileLikelihoodTestStatModified onesided(*mc->GetPdf());*/
+   /*  fc.GetTestStatSampler()->SetTestStatistic(&onesided);*/
+   /* ((ToyMCSampler*) fc.GetTestStatSampler())->SetGenerateBinned(true); */
+   ToyMCSampler*  toymcsampler = (ToyMCSampler*) fc.GetTestStatSampler();
+   ProfileLikelihoodTestStat* testStat = dynamic_cast<ProfileLikelihoodTestStat*>(toymcsampler->GetTestStatistic());
+   testStat->SetOneSided(true);
 
-  // Since this tool needs to throw toy MC the PDF needs to be
-  // extended or the tool needs to know how many entries in a dataset
-  // per pseudo experiment.
-  // In the 'number counting form' where the entries in the dataset
-  // are counts, and not values of discriminating variables, the
-  // datasets typically only have one entry and the PDF is not
-  // extended.
-  if(!mc->GetPdf()->canBeExtended()){
-    if(data->numEntries()==1)
-      fc.FluctuateNumDataEntries(false);
-    else
-      cout <<"Not sure what to do about this model" <<endl;
-  }
-
-  // We can use PROOF to speed things along in parallel
-  // However, the test statistic has to be installed on the workers
-  // so either turn off PROOF or include the modified test statistic
-  // in your $ROOTSYS/roofit/roostats/inc directory,
-  // add the additional line to the LinkDef.h file,
-  // and recompile root.
-  if (useProof) {
-     ProofConfig pc(*w, nworkers, "", false);
-     toymcsampler->SetProofConfig(&pc); // enable proof
-  }
-
-  if(mc->GetGlobalObservables()){
-     cout << "will use global observables for unconditional ensemble"<<endl;
-     mc->GetGlobalObservables()->Print();
-     toymcsampler->SetGlobalObservables(*mc->GetGlobalObservables());
-  }
-
-
-  // Now get the interval
-  PointSetInterval* interval = fc.GetInterval();
-  ConfidenceBelt* belt = fc.GetConfidenceBelt();
-
-  // print out the iterval on the first Parameter of Interest
-  cout << "\n95% interval on " <<firstPOI->GetName()<<" is : ["<<
-    interval->LowerLimit(*firstPOI) << ", "<<
-    interval->UpperLimit(*firstPOI) <<"] "<<endl;
-
-  // get observed UL and value of test statistic evaluated there
-  RooArgSet tmpPOI(*firstPOI);
-  double observedUL = interval->UpperLimit(*firstPOI);
-  firstPOI->setVal(observedUL);
-  double obsTSatObsUL = fc.GetTestStatSampler()->EvaluateTestStatistic(*data,tmpPOI);
-
-
-  // Ask the calculator which points were scanned
-  RooDataSet* parameterScan = (RooDataSet*) fc.GetPointsToScan();
-  RooArgSet* tmpPoint;
-
-  // make a histogram of parameter vs. threshold
-  TH1F* histOfThresholds = new TH1F("histOfThresholds","",
-                                    parameterScan->numEntries(),
-                                    firstPOI->getMin(),
-                                    firstPOI->getMax());
-  histOfThresholds->GetXaxis()->SetTitle(firstPOI->GetName());
-  histOfThresholds->GetYaxis()->SetTitle("Threshold");
-
-  // loop through the points that were tested and ask confidence belt
-  // what the upper/lower thresholds were.
-  // For FeldmanCousins, the lower cut off is always 0
-  for(Int_t i=0; i<parameterScan->numEntries(); ++i){
-    tmpPoint = (RooArgSet*) parameterScan->get(i)->clone("temp");
-    //cout <<"get threshold"<<endl;
-    double arMax = belt->GetAcceptanceRegionMax(*tmpPoint);
-    double poiVal = tmpPoint->getRealValue(firstPOI->GetName()) ;
-    histOfThresholds->Fill(poiVal,arMax);
-  }
-  TCanvas* c1 = new TCanvas();
-  c1->Divide(2);
-  c1->cd(1);
-  histOfThresholds->SetMinimum(0);
-  histOfThresholds->Draw();
-  c1->cd(2);
-
-  /////////////////////////////////////////////////////////////
-  // Now we generate the expected bands and power-constriant
-  ////////////////////////////////////////////////////////////
-
-  // First: find parameter point for mu=0, with conditional MLEs for nuisance parameters
-  RooAbsReal* nll = mc->GetPdf()->createNLL(*data);
-  RooAbsReal* profile = nll->createProfile(*mc->GetParametersOfInterest());
-  firstPOI->setVal(0.);
-  profile->getVal(); // this will do fit and set nuisance parameters to profiled values
-  RooArgSet* poiAndNuisance = new RooArgSet();
-  if(mc->GetNuisanceParameters())
-    poiAndNuisance->add(*mc->GetNuisanceParameters());
-  poiAndNuisance->add(*mc->GetParametersOfInterest());
-  w->saveSnapshot("paramsToGenerateData",*poiAndNuisance);
-  RooArgSet* paramsToGenerateData = (RooArgSet*) poiAndNuisance->snapshot();
-  cout << "\nWill use these parameter points to generate pseudo data for bkg only" << endl;
-  paramsToGenerateData->Print("v");
-
-
-  RooArgSet unconditionalObs;
-  unconditionalObs.add(*mc->GetObservables());
-  unconditionalObs.add(*mc->GetGlobalObservables()); // comment this out for the original conditional ensemble
-
-  double CLb=0;
-  double CLbinclusive=0;
-
-  // Now we generate background only and find distribution of upper limits
-  TH1F* histOfUL = new TH1F("histOfUL","",100,0,firstPOI->getMax());
-  histOfUL->GetXaxis()->SetTitle("Upper Limit (background only)");
-  histOfUL->GetYaxis()->SetTitle("Entries");
-  for(int imc=0; imc<nToyMC; ++imc){
-
-    // set parameters back to values for generating pseudo data
-    //    cout << "\n get current nuis, set vals, print again" << endl;
-    w->loadSnapshot("paramsToGenerateData");
-    //    poiAndNuisance->Print("v");
-
-    RooDataSet* toyData = 0;
-    // now generate a toy dataset
-    if(!mc->GetPdf()->canBeExtended()){
+   // Since this tool needs to throw toy MC the PDF needs to be
+   // extended or the tool needs to know how many entries in a dataset
+   // per pseudo experiment.
+   // In the 'number counting form' where the entries in the dataset
+   // are counts, and not values of discriminating variables, the
+   // datasets typically only have one entry and the PDF is not
+   // extended.
+   if(!mc->GetPdf()->canBeExtended()){
       if(data->numEntries()==1)
-         toyData = mc->GetPdf()->generate(*mc->GetObservables(),1);
+         fc.FluctuateNumDataEntries(false);
       else
          cout <<"Not sure what to do about this model" <<endl;
-    } else{
-       //      cout << "generating extended dataset"<<endl;
-       toyData = mc->GetPdf()->generate(*mc->GetObservables(),Extended());
-    }
+   }
 
-    // generate global observables
-    // need to be careful for simpdf
-    //    RooDataSet* globalData = mc->GetPdf()->generate(*mc->GetGlobalObservables(),1);
+   // We can use PROOF to speed things along in parallel
+   // However, the test statistic has to be installed on the workers
+   // so either turn off PROOF or include the modified test statistic
+   // in your `$ROOTSYS/roofit/roostats/inc` directory,
+   // add the additional line to the LinkDef.h file,
+   // and recompile root.
+   if (useProof) {
+      ProofConfig pc(*w, nworkers, "", false);
+      toymcsampler->SetProofConfig(&pc); // enable proof
+   }
 
-    RooSimultaneous* simPdf = dynamic_cast<RooSimultaneous*>(mc->GetPdf());
-    if(!simPdf){
-      RooDataSet *one = mc->GetPdf()->generate(*mc->GetGlobalObservables(), 1);
-      const RooArgSet *values = one->get();
-      RooArgSet *allVars = mc->GetPdf()->getVariables();
-      *allVars = *values;
-      delete allVars;
-      delete values;
-      delete one;
-    } else {
-
-      //try fix for sim pdf
-      TIterator* iter = simPdf->indexCat().typeIterator() ;
-      RooCatType* tt = NULL;
-      while((tt=(RooCatType*) iter->Next())) {
-
-         // Get pdf associated with state from simpdf
-         RooAbsPdf* pdftmp = simPdf->getPdf(tt->GetName()) ;
-
-         // Generate only global variables defined by the pdf associated with this state
-         RooArgSet* globtmp = pdftmp->getObservables(*mc->GetGlobalObservables()) ;
-         RooDataSet* tmp = pdftmp->generate(*globtmp,1) ;
-
-         // Transfer values to output placeholder
-         *globtmp = *tmp->get(0) ;
-
-         // Cleanup
-         delete globtmp ;
-         delete tmp ;
-      }
-    }
-
-    //    globalData->Print("v");
-    //    unconditionalObs = *globalData->get();
-    //    mc->GetGlobalObservables()->Print("v");
-    //    delete globalData;
-    //    cout << "toy data = " << endl;
-    //    toyData->get()->Print("v");
-
-    // get test stat at observed UL in observed data
-    firstPOI->setVal(observedUL);
-    double toyTSatObsUL = fc.GetTestStatSampler()->EvaluateTestStatistic(*toyData,tmpPOI);
-    //    toyData->get()->Print("v");
-    //    cout <<"obsTSatObsUL " <<obsTSatObsUL << "toyTS " << toyTSatObsUL << endl;
-    if(obsTSatObsUL < toyTSatObsUL) // not sure about <= part yet
-      CLb+= (1.)/nToyMC;
-    if(obsTSatObsUL <= toyTSatObsUL) // not sure about <= part yet
-      CLbinclusive+= (1.)/nToyMC;
+   if(mc->GetGlobalObservables()){
+      cout << "will use global observables for unconditional ensemble"<<endl;
+      mc->GetGlobalObservables()->Print();
+      toymcsampler->SetGlobalObservables(*mc->GetGlobalObservables());
+   }
 
 
-    // loop over points in belt to find upper limit for this toy data
-    double thisUL = 0;
-    for(Int_t i=0; i<parameterScan->numEntries(); ++i){
+   // Now get the interval
+   PointSetInterval* interval = fc.GetInterval();
+   ConfidenceBelt* belt = fc.GetConfidenceBelt();
+
+   // print out the iterval on the first Parameter of Interest
+   cout << "\n95% interval on " <<firstPOI->GetName()<<" is : ["<<
+      interval->LowerLimit(*firstPOI) << ", "<<
+      interval->UpperLimit(*firstPOI) <<"] "<<endl;
+
+   // get observed UL and value of test statistic evaluated there
+   RooArgSet tmpPOI(*firstPOI);
+   double observedUL = interval->UpperLimit(*firstPOI);
+   firstPOI->setVal(observedUL);
+   double obsTSatObsUL = fc.GetTestStatSampler()->EvaluateTestStatistic(*data,tmpPOI);
+
+
+   // Ask the calculator which points were scanned
+   RooDataSet* parameterScan = (RooDataSet*) fc.GetPointsToScan();
+   RooArgSet* tmpPoint;
+
+   // make a histogram of parameter vs. threshold
+   TH1F* histOfThresholds = new TH1F("histOfThresholds","",
+                                       parameterScan->numEntries(),
+                                       firstPOI->getMin(),
+                                       firstPOI->getMax());
+   histOfThresholds->GetXaxis()->SetTitle(firstPOI->GetName());
+   histOfThresholds->GetYaxis()->SetTitle("Threshold");
+
+   // loop through the points that were tested and ask confidence belt
+   // what the upper/lower thresholds were.
+   // For FeldmanCousins, the lower cut off is always 0
+   for(Int_t i=0; i<parameterScan->numEntries(); ++i){
       tmpPoint = (RooArgSet*) parameterScan->get(i)->clone("temp");
+      //cout <<"get threshold"<<endl;
       double arMax = belt->GetAcceptanceRegionMax(*tmpPoint);
-      firstPOI->setVal( tmpPoint->getRealValue(firstPOI->GetName()) );
-      //   double thisTS = profile->getVal();
-      double thisTS = fc.GetTestStatSampler()->EvaluateTestStatistic(*toyData,tmpPOI);
+      double poiVal = tmpPoint->getRealValue(firstPOI->GetName()) ;
+      histOfThresholds->Fill(poiVal,arMax);
+   }
+   TCanvas* c1 = new TCanvas();
+   c1->Divide(2);
+   c1->cd(1);
+   histOfThresholds->SetMinimum(0);
+   histOfThresholds->Draw();
+   c1->cd(2);
 
-      //   cout << "poi = " << firstPOI->getVal()
-      // << " max is " << arMax << " this profile = " << thisTS << endl;
-      //      cout << "thisTS = " << thisTS<<endl;
-      if(thisTS<=arMax){
-         thisUL = firstPOI->getVal();
+   // -------------------------------------------------------
+   // Now we generate the expected bands and power-constriant
+
+   // First: find parameter point for mu=0, with conditional MLEs for nuisance parameters
+   RooAbsReal* nll = mc->GetPdf()->createNLL(*data);
+   RooAbsReal* profile = nll->createProfile(*mc->GetParametersOfInterest());
+   firstPOI->setVal(0.);
+   profile->getVal(); // this will do fit and set nuisance parameters to profiled values
+   RooArgSet* poiAndNuisance = new RooArgSet();
+   if(mc->GetNuisanceParameters())
+      poiAndNuisance->add(*mc->GetNuisanceParameters());
+   poiAndNuisance->add(*mc->GetParametersOfInterest());
+   w->saveSnapshot("paramsToGenerateData",*poiAndNuisance);
+   RooArgSet* paramsToGenerateData = (RooArgSet*) poiAndNuisance->snapshot();
+   cout << "\nWill use these parameter points to generate pseudo data for bkg only" << endl;
+   paramsToGenerateData->Print("v");
+
+
+   RooArgSet unconditionalObs;
+   unconditionalObs.add(*mc->GetObservables());
+   unconditionalObs.add(*mc->GetGlobalObservables()); // comment this out for the original conditional ensemble
+
+   double CLb=0;
+   double CLbinclusive=0;
+
+   // Now we generate background only and find distribution of upper limits
+   TH1F* histOfUL = new TH1F("histOfUL","",100,0,firstPOI->getMax());
+   histOfUL->GetXaxis()->SetTitle("Upper Limit (background only)");
+   histOfUL->GetYaxis()->SetTitle("Entries");
+   for(int imc=0; imc<nToyMC; ++imc){
+
+      // set parameters back to values for generating pseudo data
+      //    cout << "\n get current nuis, set vals, print again" << endl;
+      w->loadSnapshot("paramsToGenerateData");
+      //    poiAndNuisance->Print("v");
+
+      RooDataSet* toyData = 0;
+      // now generate a toy dataset
+      if(!mc->GetPdf()->canBeExtended()){
+         if(data->numEntries()==1)
+            toyData = mc->GetPdf()->generate(*mc->GetObservables(),1);
+         else
+            cout <<"Not sure what to do about this model" <<endl;
       } else{
-         break;
+         //      cout << "generating extended dataset"<<endl;
+         toyData = mc->GetPdf()->generate(*mc->GetObservables(),Extended());
       }
-    }
 
+      // generate global observables
+      // need to be careful for simpdf
+      //    RooDataSet* globalData = mc->GetPdf()->generate(*mc->GetGlobalObservables(),1);
 
+      RooSimultaneous* simPdf = dynamic_cast<RooSimultaneous*>(mc->GetPdf());
+      if(!simPdf){
+         RooDataSet *one = mc->GetPdf()->generate(*mc->GetGlobalObservables(), 1);
+         const RooArgSet *values = one->get();
+         RooArgSet *allVars = mc->GetPdf()->getVariables();
+         *allVars = *values;
+         delete allVars;
+         delete values;
+         delete one;
+      } else {
 
-    /*
-    // loop over points in belt to find upper limit for this toy data
-    double thisUL = 0;
-    for(Int_t i=0; i<histOfThresholds->GetNbinsX(); ++i){
-      tmpPoint = (RooArgSet*) parameterScan->get(i)->clone("temp");
-      cout <<"----------------  "<<i<<endl;
-      tmpPoint->Print("v");
-      cout << "from hist " << histOfThresholds->GetBinCenter(i+1) <<endl;
-      double arMax = histOfThresholds->GetBinContent(i+1);
-      // cout << " threhold from Hist = aMax " << arMax<<endl;
-      // double arMax2 = belt->GetAcceptanceRegionMax(*tmpPoint);
-      // cout << "from scan arMax2 = "<< arMax2 << endl; // not the same due to TH1F not TH1D
-      // cout << "scan - hist" << arMax2-arMax << endl;
-      firstPOI->setVal( histOfThresholds->GetBinCenter(i+1));
-      //   double thisTS = profile->getVal();
-      double thisTS = fc.GetTestStatSampler()->EvaluateTestStatistic(*toyData,tmpPOI);
+         //try fix for sim pdf
+         TIterator* iter = simPdf->indexCat().typeIterator() ;
+         RooCatType* tt = NULL;
+         while((tt=(RooCatType*) iter->Next())) {
 
-      //   cout << "poi = " << firstPOI->getVal()
-      // << " max is " << arMax << " this profile = " << thisTS << endl;
-      //      cout << "thisTS = " << thisTS<<endl;
+            // Get pdf associated with state from simpdf
+            RooAbsPdf* pdftmp = simPdf->getPdf(tt->GetName()) ;
 
-      // NOTE: need to add a small epsilon term for single precision vs. double precision
-      if(thisTS<=arMax + 1e-7){
-         thisUL = firstPOI->getVal();
-      } else{
-         break;
+            // Generate only global variables defined by the pdf associated with this state
+            RooArgSet* globtmp = pdftmp->getObservables(*mc->GetGlobalObservables()) ;
+            RooDataSet* tmp = pdftmp->generate(*globtmp,1) ;
+
+            // Transfer values to output placeholder
+            *globtmp = *tmp->get(0) ;
+
+            // Cleanup
+            delete globtmp ;
+            delete tmp ;
+         }
       }
-    }
-    */
 
-    histOfUL->Fill(thisUL);
+      //    globalData->Print("v");
+      //    unconditionalObs = *globalData->get();
+      //    mc->GetGlobalObservables()->Print("v");
+      //    delete globalData;
+      //    cout << "toy data = " << endl;
+      //    toyData->get()->Print("v");
 
-    // for few events, data is often the same, and UL is often the same
-    //    cout << "thisUL = " << thisUL<<endl;
+      // get test stat at observed UL in observed data
+      firstPOI->setVal(observedUL);
+      double toyTSatObsUL = fc.GetTestStatSampler()->EvaluateTestStatistic(*toyData,tmpPOI);
+      //    toyData->get()->Print("v");
+      //    cout <<"obsTSatObsUL " <<obsTSatObsUL << "toyTS " << toyTSatObsUL << endl;
+      if(obsTSatObsUL < toyTSatObsUL) // not sure about <= part yet
+         CLb+= (1.)/nToyMC;
+      if(obsTSatObsUL <= toyTSatObsUL) // not sure about <= part yet
+         CLbinclusive+= (1.)/nToyMC;
 
-    delete toyData;
-  }
-  histOfUL->Draw();
-  c1->SaveAs("one-sided_upper_limit_output.pdf");
 
-  // if you want to see a plot of the sampling distribution for a particular scan point:
-  /*
-  SamplingDistPlot sampPlot;
-  int indexInScan = 0;
-  tmpPoint = (RooArgSet*) parameterScan->get(indexInScan)->clone("temp");
-  firstPOI->setVal( tmpPoint->getRealValue(firstPOI->GetName()) );
-  toymcsampler->SetParametersForTestStat(tmpPOI);
-  SamplingDistribution* samp = toymcsampler->GetSamplingDistribution(*tmpPoint);
-  sampPlot.AddSamplingDistribution(samp);
-  sampPlot.Draw();
-   */
+      // loop over points in belt to find upper limit for this toy data
+      double thisUL = 0;
+      for(Int_t i=0; i<parameterScan->numEntries(); ++i){
+         tmpPoint = (RooArgSet*) parameterScan->get(i)->clone("temp");
+         double arMax = belt->GetAcceptanceRegionMax(*tmpPoint);
+         firstPOI->setVal( tmpPoint->getRealValue(firstPOI->GetName()) );
+         //   double thisTS = profile->getVal();
+         double thisTS = fc.GetTestStatSampler()->EvaluateTestStatistic(*toyData,tmpPOI);
 
-  // Now find bands and power constraint
-  Double_t* bins = histOfUL->GetIntegral();
-  TH1F* cumulative = (TH1F*) histOfUL->Clone("cumulative");
-  cumulative->SetContent(bins);
-  double band2sigDown, band1sigDown, bandMedian, band1sigUp,band2sigUp;
-  for(int i=1; i<=cumulative->GetNbinsX(); ++i){
-    if(bins[i]<RooStats::SignificanceToPValue(2))
-      band2sigDown=cumulative->GetBinCenter(i);
-    if(bins[i]<RooStats::SignificanceToPValue(1))
-      band1sigDown=cumulative->GetBinCenter(i);
-    if(bins[i]<0.5)
-      bandMedian=cumulative->GetBinCenter(i);
-    if(bins[i]<RooStats::SignificanceToPValue(-1))
-      band1sigUp=cumulative->GetBinCenter(i);
-    if(bins[i]<RooStats::SignificanceToPValue(-2))
-      band2sigUp=cumulative->GetBinCenter(i);
-  }
-  cout << "-2 sigma  band " << band2sigDown << endl;
-  cout << "-1 sigma  band " << band1sigDown << " [Power Constriant)]" << endl;
-  cout << "median of band " << bandMedian << endl;
-  cout << "+1 sigma  band " << band1sigUp << endl;
-  cout << "+2 sigma  band " << band2sigUp << endl;
+         //   cout << "poi = " << firstPOI->getVal()
+         // << " max is " << arMax << " this profile = " << thisTS << endl;
+         //      cout << "thisTS = " << thisTS<<endl;
+         if(thisTS<=arMax){
+            thisUL = firstPOI->getVal();
+         } else{
+            break;
+         }
+      }
 
-  // print out the iterval on the first Parameter of Interest
-  cout << "\nobserved 95% upper-limit "<< interval->UpperLimit(*firstPOI) <<endl;
-  cout << "CLb strict [P(toy>obs|0)] for observed 95% upper-limit "<< CLb <<endl;
-  cout << "CLb inclusive [P(toy>=obs|0)] for observed 95% upper-limit "<< CLbinclusive <<endl;
 
-  delete profile;
-  delete nll;
+
+      /*
+      // loop over points in belt to find upper limit for this toy data
+      double thisUL = 0;
+      for(Int_t i=0; i<histOfThresholds->GetNbinsX(); ++i){
+         tmpPoint = (RooArgSet*) parameterScan->get(i)->clone("temp");
+         cout <<"----------------  "<<i<<endl;
+         tmpPoint->Print("v");
+         cout << "from hist " << histOfThresholds->GetBinCenter(i+1) <<endl;
+         double arMax = histOfThresholds->GetBinContent(i+1);
+         // cout << " threhold from Hist = aMax " << arMax<<endl;
+         // double arMax2 = belt->GetAcceptanceRegionMax(*tmpPoint);
+         // cout << "from scan arMax2 = "<< arMax2 << endl; // not the same due to TH1F not TH1D
+         // cout << "scan - hist" << arMax2-arMax << endl;
+         firstPOI->setVal( histOfThresholds->GetBinCenter(i+1));
+         //   double thisTS = profile->getVal();
+         double thisTS = fc.GetTestStatSampler()->EvaluateTestStatistic(*toyData,tmpPOI);
+
+         //   cout << "poi = " << firstPOI->getVal()
+         // << " max is " << arMax << " this profile = " << thisTS << endl;
+         //      cout << "thisTS = " << thisTS<<endl;
+
+         // NOTE: need to add a small epsilon term for single precision vs. double precision
+         if(thisTS<=arMax + 1e-7){
+            thisUL = firstPOI->getVal();
+         } else{
+            break;
+         }
+      }
+      */
+
+      histOfUL->Fill(thisUL);
+
+      // for few events, data is often the same, and UL is often the same
+      //    cout << "thisUL = " << thisUL<<endl;
+
+      delete toyData;
+   }
+   histOfUL->Draw();
+   c1->SaveAs("one-sided_upper_limit_output.pdf");
+
+   // if you want to see a plot of the sampling distribution for a particular scan point:
+   /*
+   SamplingDistPlot sampPlot;
+   int indexInScan = 0;
+   tmpPoint = (RooArgSet*) parameterScan->get(indexInScan)->clone("temp");
+   firstPOI->setVal( tmpPoint->getRealValue(firstPOI->GetName()) );
+   toymcsampler->SetParametersForTestStat(tmpPOI);
+   SamplingDistribution* samp = toymcsampler->GetSamplingDistribution(*tmpPoint);
+   sampPlot.AddSamplingDistribution(samp);
+   sampPlot.Draw();
+      */
+
+   // Now find bands and power constraint
+   Double_t* bins = histOfUL->GetIntegral();
+   TH1F* cumulative = (TH1F*) histOfUL->Clone("cumulative");
+   cumulative->SetContent(bins);
+   double band2sigDown, band1sigDown, bandMedian, band1sigUp,band2sigUp;
+   for(int i=1; i<=cumulative->GetNbinsX(); ++i){
+      if(bins[i]<RooStats::SignificanceToPValue(2))
+         band2sigDown=cumulative->GetBinCenter(i);
+      if(bins[i]<RooStats::SignificanceToPValue(1))
+         band1sigDown=cumulative->GetBinCenter(i);
+      if(bins[i]<0.5)
+         bandMedian=cumulative->GetBinCenter(i);
+      if(bins[i]<RooStats::SignificanceToPValue(-1))
+         band1sigUp=cumulative->GetBinCenter(i);
+      if(bins[i]<RooStats::SignificanceToPValue(-2))
+         band2sigUp=cumulative->GetBinCenter(i);
+   }
+   cout << "-2 sigma  band " << band2sigDown << endl;
+   cout << "-1 sigma  band " << band1sigDown << " [Power Constriant)]" << endl;
+   cout << "median of band " << bandMedian << endl;
+   cout << "+1 sigma  band " << band1sigUp << endl;
+   cout << "+2 sigma  band " << band2sigUp << endl;
+
+   // print out the iterval on the first Parameter of Interest
+   cout << "\nobserved 95% upper-limit "<< interval->UpperLimit(*firstPOI) <<endl;
+   cout << "CLb strict [P(toy>obs|0)] for observed 95% upper-limit "<< CLb <<endl;
+   cout << "CLb inclusive [P(toy>=obs|0)] for observed 95% upper-limit "<< CLbinclusive <<endl;
+
+   delete profile;
+   delete nll;
 
 }

@@ -25,10 +25,12 @@
 
 class TF1;
 class TAxis;
+class TLatex;
 
 class TGaxis : public TLine, public TAttText {
 
 protected:
+
    Double_t   fWmin;                ///< Lowest value on the axis
    Double_t   fWmax;                ///< Highest value on the axis
    Float_t    fGridLength;          ///< Length of the grid in NDC
@@ -40,6 +42,7 @@ protected:
    Int_t      fNdiv;                ///< Number of divisions
    Int_t      fLabelColor;          ///< Color for labels
    Int_t      fLabelFont;           ///< Font for labels
+   Int_t      fNModLabs;            ///< Number of modified labels
    TString    fChopt;               ///< Axis options
    TString    fName;                ///< Axis name
    TString    fTitle;               ///< Axis title
@@ -47,6 +50,7 @@ protected:
    TString    fFunctionName;        ///< Name of mapping function pointed by fFunction
    TF1       *fFunction;            ///<! Pointer to function computing axis values
    TAxis     *fAxis;                ///<! Pointer to original TAxis axis (if any)
+   TList     *fModLabs;             ///<  List of modified labels.
 
    static Int_t fgMaxDigits;        ///<! Number of digits above which the 10>N notation is used
    static Float_t fXAxisExpXOffset; ///<! Exponent X offset for the X axis
@@ -72,6 +76,7 @@ public:
                                     ,Double_t &BinLow, Double_t &BinHigh, Int_t &nbins, Double_t &BinWidth);
    virtual void        CenterLabels(Bool_t center=kTRUE);
    virtual void        CenterTitle(Bool_t center=kTRUE);
+   void                ChangeLabelAttributes(Int_t i, Int_t nlabels, TLatex* t, char* c);
    virtual void        DrawAxis(Double_t xmin,Double_t ymin,Double_t xmax,Double_t ymax,
                                 Double_t wmin,Double_t wmax,Int_t ndiv=510, Option_t *chopt="",
                                 Double_t gridlength = 0);
@@ -99,6 +104,7 @@ public:
                                  Double_t gridlength = 0, Bool_t drawGridOnly = kFALSE);
    virtual void        Rotate(Double_t X,  Double_t Y,  Double_t CFI, Double_t SFI
                              ,Double_t XT, Double_t YT, Double_t &U,   Double_t &V);
+   void                ResetLabelAttributes(TLatex* t);
    virtual void        SavePrimitive(std::ostream &out, Option_t *option = "");
    void                SetFunction(const char *funcname="");
    void                SetOption(Option_t *option="");
@@ -106,6 +112,10 @@ public:
    void                SetLabelFont(Int_t labelfont) {fLabelFont = labelfont;} // *MENU*
    void                SetLabelOffset(Float_t labeloffset) {fLabelOffset = labeloffset;} // *MENU*
    void                SetLabelSize(Float_t labelsize) {fLabelSize = labelsize;} // *MENU*
+   void                SetLabelAttributes(Int_t labNum=0, Double_t labAngle = -1.,
+                                          Double_t labSize = -1., Int_t labAlign = -1,
+                                          Int_t labColor = -1 , Int_t labFont = -1,
+                                          TString labText = ""); // *MENU*
    static void         SetMaxDigits(Int_t maxd=5);
    virtual void        SetName(const char *name); // *MENU*
    virtual void        SetNdivisions(Int_t ndiv) {fNdiv = ndiv;} // *MENU*
@@ -126,9 +136,7 @@ public:
    void                SetWmax(Double_t wmax) {fWmax = wmax;}
    static void         SetExponentOffset(Float_t xoff=0., Float_t yoff=0., Option_t *axis="xy");
 
-   ClassDef(TGaxis,5)  //Graphics axis
+   ClassDef(TGaxis,6)  //Graphics axis
 };
 
 #endif
-
-

@@ -4,7 +4,7 @@
 /// Exactly like $ROOTSYS/test/guitest.cxx but using the new signal and slots communication mechanism.
 /// It is now possible to run this entire test program in the interpreter.
 /// Do either:
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 /// .x guitest.C
 /// .x guitest.C++
 /// ~~~

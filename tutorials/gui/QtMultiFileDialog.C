@@ -33,7 +33,6 @@
 ///
 /// \author Valeri Fine   23/03/2006
 
-#ifndef __CINT__
 #  include <QApplication>
 #  include <QStyle>
 #  include <QFileDialog>
@@ -42,15 +41,9 @@
 #  include "TObjString.h"
 #  include "TList.h"
 #  include <string>
-#endif
+
 TList *QtMultiFileDialog(const char *style="") {
 
-#ifdef __CINT__
-   // Load the qt cint dictionary.
-   // One is recommended to do that at once somewhere.
-   // For example from one's custom rootlogon.C script
-   gSystem->Load("$ROOTSYS/cint/cint/include/qtcint");
-#endif
    QStyle *saveStyle =  0;
    if (!QString(style).isEmpty()) {
       saveStyle = QApplication::style();

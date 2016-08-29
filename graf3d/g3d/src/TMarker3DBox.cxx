@@ -337,6 +337,7 @@ void TMarker3DBox::PaintH3(TH1 *h, Option_t *option)
             if (w < wmin) continue;
             if (w > wmax) w = wmax;
             scale = (w-wmin)/(wmax-wmin);
+            if (scale == 0) continue;
             m3.SetPosition(0.5*(xmin+xmax),0.5*(ymin+ymax),0.5*(zmin+zmax));
             m3.SetSize(scale*(xmax-xmin),scale*(ymax-ymin),scale*(zmax-zmin));
             m3.Paint(option);

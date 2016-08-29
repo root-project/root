@@ -24,6 +24,7 @@
 #include <OpenGL/gl.h>
 
 #include "ROOTOpenGLView.h"
+#include "CocoaConstants.h"
 #include "TMacOSXSystem.h"
 #include "CocoaPrivate.h"
 #include "QuartzWindow.h"
@@ -982,6 +983,7 @@ void TGCocoa::SelectInput(Window_t windowID, UInt_t eventMask)
 void TGCocoa::ReparentChild(Window_t wid, Window_t pid, Int_t x, Int_t y)
 {
    //Reparent view.
+   using namespace Details;
 
    assert(!fPimpl->IsRootWindow(wid) && "ReparentChild, can not re-parent root window");
 
@@ -997,9 +999,9 @@ void TGCocoa::ReparentChild(Window_t wid, Window_t pid, Int_t x, Int_t y)
       NSRect frame = view.frame;
       frame.origin = NSPoint();
 
-      NSUInteger styleMask = NSClosableWindowMask | NSMiniaturizableWindowMask | NSResizableWindowMask;
+      NSUInteger styleMask = kClosableWindowMask | kMiniaturizableWindowMask | kResizableWindowMask;
       if (!view.fOverrideRedirect)
-         styleMask |= NSTitledWindowMask;
+         styleMask |= kTitledWindowMask;
 
       QuartzWindow * const newTopLevel = [[QuartzWindow alloc] initWithContentRect : frame
                                                                          styleMask : styleMask
@@ -1529,23 +1531,25 @@ void TGCocoa::ShapeCombineMask(Window_t windowID, Int_t /*x*/, Int_t /*y*/, Pixm
 void TGCocoa::SetMWMHints(Window_t wid, UInt_t value, UInt_t funcs, UInt_t /*input*/)
 {
    // Sets decoration style.
+   using namespace Details;
+
    assert(!fPimpl->IsRootWindow(wid) && "SetMWMHints, called for 'root' window");
 
    QuartzWindow * const qw = fPimpl->GetWindow(wid).fQuartzWindow;
    NSUInteger newMask = 0;
 
-   if ([qw styleMask] & NSTitledWindowMask) {//Do not modify this.
-      newMask |= NSTitledWindowMask;
-      newMask |= NSClosableWindowMask;
+   if ([qw styleMask] & kTitledWindowMask) {//Do not modify this.
+      newMask |= kTitledWindowMask;
+      newMask |= kClosableWindowMask;
    }
 
    if (value & kMWMFuncAll) {
-      newMask |= NSMiniaturizableWindowMask | NSResizableWindowMask;
+      newMask |= kMiniaturizableWindowMask | kResizableWindowMask;
    } else {
       if (value & kMWMDecorMinimize)
-         newMask |= NSMiniaturizableWindowMask;
+         newMask |= kMiniaturizableWindowMask;
       if (funcs & kMWMFuncResize)
-         newMask |= NSResizableWindowMask;
+         newMask |= kResizableWindowMask;
    }
 
    [qw setStyleMask : newMask];
@@ -1578,10 +1582,11 @@ void TGCocoa::SetWMSize(Window_t /*wid*/, UInt_t /*w*/, UInt_t /*h*/)
 //______________________________________________________________________________
 void TGCocoa::SetWMSizeHints(Window_t wid, UInt_t wMin, UInt_t hMin, UInt_t wMax, UInt_t hMax, UInt_t /*wInc*/, UInt_t /*hInc*/)
 {
-   //
+   using namespace Details;
+
    assert(!fPimpl->IsRootWindow(wid) && "SetWMSizeHints, called for root window");
 
-   const NSUInteger styleMask = NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask | NSResizableWindowMask;
+   const NSUInteger styleMask = kTitledWindowMask | kClosableWindowMask | kMiniaturizableWindowMask | kResizableWindowMask;
    const NSRect minRect = [NSWindow frameRectForContentRect : NSMakeRect(0., 0., wMin, hMin) styleMask : styleMask];
    const NSRect maxRect = [NSWindow frameRectForContentRect : NSMakeRect(0., 0., wMax, hMax) styleMask : styleMask];
 
@@ -3312,6 +3317,8 @@ void TGCocoa::CreateOpenGLContext(Int_t /*wid*/)
 //______________________________________________________________________________
 Bool_t TGCocoa::MakeOpenGLContextCurrent(Handle_t ctxID, Window_t windowID)
 {
+   using namespace Details;
+
    assert(ctxID > 0 && "MakeOpenGLContextCurrent, invalid context id");
 
    NSOpenGLContext * const glContext = fPimpl->GetGLContextForHandle(ctxID);
@@ -3360,8 +3367,8 @@ Bool_t TGCocoa::MakeOpenGLContextCurrent(Handle_t ctxID, Window_t windowID)
          viewFrame.size.width = width;
          viewFrame.size.height = height;
 
-         const NSUInteger styleMask = NSTitledWindowMask | NSClosableWindowMask |
-                                      NSMiniaturizableWindowMask | NSResizableWindowMask;
+         const NSUInteger styleMask = kTitledWindowMask | kClosableWindowMask |
+                                      kMiniaturizableWindowMask | kResizableWindowMask;
 
          //NOTE: defer parameter is 'NO', otherwise this trick will not help.
          fakeWindow = [[QuartzWindow alloc] initWithContentRect : viewFrame styleMask : styleMask

@@ -60,6 +60,7 @@ enum Kind {
   kw_hidden,
   kw_protected,
   kw_unnamed_addr,
+  kw_local_unnamed_addr,
   kw_externally_initialized,
   kw_extern_weak,
   kw_external,
@@ -204,6 +205,7 @@ enum Kind {
   kw_swifterror,
   kw_swiftself,
   kw_uwtable,
+  kw_writeonly,
   kw_zeroext,
 
   kw_type,

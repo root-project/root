@@ -79,9 +79,8 @@ ClassImp(TMVA::MethodDNN)
 TMVA::MethodDNN::MethodDNN( const TString& jobName,
                             const TString& methodTitle,
                             DataSetInfo& theData,
-                            const TString& theOption,
-                            TDirectory* theTargetDir )
-   : MethodBase( jobName, Types::kDNN, methodTitle, theData, theOption, theTargetDir )
+                            const TString& theOption )
+   : MethodBase( jobName, Types::kDNN, methodTitle, theData, theOption)
    , fResume (false)
 {
    // standard constructor
@@ -89,9 +88,8 @@ TMVA::MethodDNN::MethodDNN( const TString& jobName,
 
 //______________________________________________________________________________
 TMVA::MethodDNN::MethodDNN( DataSetInfo& theData,
-                            const TString& theWeightFile,
-                            TDirectory* theTargetDir )
-   : MethodBase( Types::kDNN, theData, theWeightFile, theTargetDir )
+                            const TString& theWeightFile)
+   : MethodBase( Types::kDNN, theData, theWeightFile)
    , fResume (false)
 {
    // constructor from a weight file

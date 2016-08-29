@@ -1,5 +1,6 @@
 ## \file
 ## \ingroup tutorial_pyroot
+## \notebook -nodraw
 ## Geometry
 ##
 ## \macro_code
@@ -11,7 +12,7 @@ import ROOT
 
 try:
  # convenience, allowing to run this file from a different directory
-   macrodir = os.path.dirname( os.path.join( os.getcwd(), __file__ ) )
+   macrodir = os.path.expandvars("$ROOTSYS/tutorials/pyroot/")
 except NameError:
    macrodir = ''         # in case of p2.2
 

@@ -82,6 +82,8 @@ def NormalVar : SubsetSubject<Var,
                                 S->getKind() != Decl::ImplicitParam &&
                                 S->getKind() != Decl::ParmVar &&
                                 S->getKind() != Decl::NonTypeTemplateParm}]>;
+def NonParmVar : SubsetSubject<Var,
+                               [{S->getKind() != Decl::ParmVar}]>;
 def NonBitField : SubsetSubject<Field,
                                 [{!S->isBitField()}]>;
 
@@ -240,6 +242,7 @@ def Borland : LangOpt<"Borland">;
 def CUDA : LangOpt<"CUDA">;
 def COnly : LangOpt<"CPlusPlus", 1>;
 def OpenCL : LangOpt<"OpenCL">;
+def RenderScript : LangOpt<"RenderScript">;
 
 // Defines targets for target-specific attributes. The list of strings should
 // specify architectures for which the target applies, based off the ArchType
@@ -474,11 +477,11 @@ def Availability : InheritableAttr {
     return llvm::StringSwitch<llvm::StringRef>(Platform)
              .Case("android", "Android")
              .Case("ios", "iOS")
-             .Case("macosx", "OS X")
+             .Case("macos", "macOS")
              .Case("tvos", "tvOS")
              .Case("watchos", "watchOS")
              .Case("ios_app_extension", "iOS (App Extension)")
-             .Case("macosx_app_extension", "OS X (App Extension)")
+             .Case("macos_app_extension", "macOS (App Extension)")
              .Case("tvos_app_extension", "tvOS (App Extension)")
              .Case("watchos_app_extension", "watchOS (App Extension)")
              .Default(llvm::StringRef());
@@ -728,10 +731,11 @@ def OpenCLNoSVM : Attr {
   let ASTNode = 0;
 }
 
-def Kernel : Attr {
+def RenderScriptKernel : Attr {
   let Spellings = [GNU<"kernel">];
   let Subjects = SubjectList<[Function]>;
-  let Documentation = [Undocumented];
+  let Documentation = [RenderScriptKernelAttributeDocs];
+  let LangOpts = [RenderScript];
 }
 
 def Deprecated : InheritableAttr {
@@ -992,8 +996,8 @@ def NoCommon : InheritableAttr {
 
 def NoDebug : InheritableAttr {
   let Spellings = [GCC<"nodebug">];
-  let Subjects = SubjectList<[FunctionLike, ObjCMethod, GlobalVar], WarnDiag,
-                              "ExpectedFunctionGlobalVarMethodOrProperty">;
+  let Subjects = SubjectList<[FunctionLike, ObjCMethod, NonParmVar], WarnDiag,
+                              "ExpectedVariableOrFunction">;
   let Documentation = [NoDebugDocs];
 }
 
@@ -2184,6 +2188,7 @@ def LoopHint : Attr {
   /// interleave_count: interleaves 'Value' loop interations.
   /// unroll: fully unroll loop if State == Enable.
   /// unroll_count: unrolls loop 'Value' times.
+  /// distribute: attempt to distribute loop if State == Enable
 
   /// #pragma unroll <argument> directive
   /// <no arg>: fully unrolls loop.
@@ -2196,9 +2201,9 @@ def LoopHint : Attr {
   /// State of the loop optimization specified by the spelling.
   let Args = [EnumArgument<"Option", "OptionType",
                           ["vectorize", "vectorize_width", "interleave", "interleave_count",
-                           "unroll", "unroll_count"],
+                           "unroll", "unroll_count", "distribute"],
                           ["Vectorize", "VectorizeWidth", "Interleave", "InterleaveCount",
-                           "Unroll", "UnrollCount"]>,
+                           "Unroll", "UnrollCount", "Distribute"]>,
               EnumArgument<"State", "LoopHintState",
                            ["enable", "disable", "numeric", "assume_safety", "full"],
                            ["Enable", "Disable", "Numeric", "AssumeSafety", "Full"]>,
@@ -2213,6 +2218,7 @@ def LoopHint : Attr {
     case InterleaveCount: return "interleave_count";
     case Unroll: return "unroll";
     case UnrollCount: return "unroll_count";
+    case Distribute: return "distribute";
     }
     llvm_unreachable("Unhandled LoopHint option.");
   }

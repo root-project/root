@@ -1,12 +1,13 @@
 /// \file
 /// \ingroup tutorial_math
+/// \notebook -nodraw
 /// Macro illustrating automatic dictionary generation and I/O with Lorentz Vectors of floats
 /// The dictionary for LorentzVector of float is not in the libMathCore, therefore
 /// is generated when parsed the file with CINT.
 ///
 ///  To run  this macro you must do
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 /// root[0] .L  mathcoreVectorFloatIO.C+
 /// root[1] runIt();
 /// ~~~
@@ -99,7 +100,7 @@ void runIt() {
 #if defined(__CINT__) && !defined(__MAKECINT__)
    gSystem->Load("libMathCore");
    gSystem->Load("libPhysics");
-   using namespace ROOT::Math;
+   using namespace ROOT::Math ;
 
    cout << "This tutorial can run only using ACliC, you must run it by doing: " << endl;
    cout << "\t  .L tutorials/math/mathcoreVectorFloatIO.C+" << endl;
@@ -114,7 +115,7 @@ void mathcoreVectorFloatIO() {
 #if defined(__CINT__) && !defined(__MAKECINT__)
    gSystem->Load("libMathCore");
    gSystem->Load("libPhysics");
-   using namespace ROOT::Math;
+   using namespace ROOT::Math ;
 
    cout << "This tutorial can run only using ACliC, you must run it by doing: " << endl;
    cout << "\t  .L tutorials/math/mathcoreVectorFloatIO.C+" << endl;

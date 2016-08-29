@@ -21,9 +21,12 @@
 namespace llvm {
 
 class SITargetLowering final : public AMDGPUTargetLowering {
-  SDValue LowerParameter(SelectionDAG &DAG, EVT VT, EVT MemVT, SDLoc DL,
+  SDValue LowerParameterPtr(SelectionDAG &DAG, const SDLoc &SL, SDValue Chain,
+                            unsigned Offset) const;
+  SDValue LowerParameter(SelectionDAG &DAG, EVT VT, EVT MemVT, const SDLoc &SL,
                          SDValue Chain, unsigned Offset, bool Signed) const;
-
+  SDValue LowerGlobalAddress(AMDGPUMachineFunction *MFI, SDValue Op,
+                             SelectionDAG &DAG) const override;
   SDValue lowerImplicitZextParam(SelectionDAG &DAG, SDValue Op,
                                  MVT VT, unsigned Offset) const;
 
@@ -45,6 +48,7 @@ class SITargetLowering final : public AMDGPUTargetLowering {
 
   SDValue getSegmentAperture(unsigned AS, SelectionDAG &DAG) const;
   SDValue lowerADDRSPACECAST(SDValue Op, SelectionDAG &DAG) const;
+  SDValue lowerTRAP(SDValue Op, SelectionDAG &DAG) const;
 
   void adjustWritemask(MachineSDNode *&N, SelectionDAG &DAG) const;
 
@@ -66,8 +70,12 @@ class SITargetLowering final : public AMDGPUTargetLowering {
   bool isLegalMUBUFAddressingMode(const AddrMode &AM) const;
 
   bool isCFIntrinsic(const SDNode *Intr) const;
+
+  void createDebuggerPrologueStackObjects(MachineFunction &MF) const;
 public:
-  SITargetLowering(TargetMachine &tm, const AMDGPUSubtarget &STI);
+  SITargetLowering(const TargetMachine &tm, const SISubtarget &STI);
+
+  const SISubtarget *getSubtarget() const;
 
   bool getTgtMemIntrinsic(IntrinsicInfo &, const CallInst &,
                           unsigned IntrinsicID) const override;
@@ -99,24 +107,25 @@ public:
 
   bool isTypeDesirableForOp(unsigned Op, EVT VT) const override;
 
+  bool isOffsetFoldingLegal(const GlobalAddressSDNode *GA) const override;
+
   SDValue LowerFormalArguments(SDValue Chain, CallingConv::ID CallConv,
                                bool isVarArg,
                                const SmallVectorImpl<ISD::InputArg> &Ins,
-                               SDLoc DL, SelectionDAG &DAG,
+                               const SDLoc &DL, SelectionDAG &DAG,
                                SmallVectorImpl<SDValue> &InVals) const override;
 
-  SDValue LowerReturn(SDValue Chain,
-                      CallingConv::ID CallConv,
-                      bool isVarArg,
+  SDValue LowerReturn(SDValue Chain, CallingConv::ID CallConv, bool isVarArg,
                       const SmallVectorImpl<ISD::OutputArg> &Outs,
-                      const SmallVectorImpl<SDValue> &OutVals,
-                      SDLoc DL, SelectionDAG &DAG) const override;
+                      const SmallVectorImpl<SDValue> &OutVals, const SDLoc &DL,
+                      SelectionDAG &DAG) const override;
 
   unsigned getRegisterByName(const char* RegName, EVT VT,
                              SelectionDAG &DAG) const override;
 
-  MachineBasicBlock * EmitInstrWithCustomInserter(MachineInstr * MI,
-                                      MachineBasicBlock * BB) const override;
+  MachineBasicBlock *
+  EmitInstrWithCustomInserter(MachineInstr &MI,
+                              MachineBasicBlock *BB) const override;
   bool enableAggressiveFMAFusion(EVT VT) const override;
   EVT getSetCCResultType(const DataLayout &DL, LLVMContext &Context,
                          EVT VT) const override;
@@ -125,7 +134,7 @@ public:
   SDValue LowerOperation(SDValue Op, SelectionDAG &DAG) const override;
   SDValue PerformDAGCombine(SDNode *N, DAGCombinerInfo &DCI) const override;
   SDNode *PostISelFolding(MachineSDNode *N, SelectionDAG &DAG) const override;
-  void AdjustInstrPostInstrSelection(MachineInstr *MI,
+  void AdjustInstrPostInstrSelection(MachineInstr &MI,
                                      SDNode *Node) const override;
 
   int32_t analyzeImmediate(const SDNode *N) const;
@@ -133,17 +142,16 @@ public:
                                unsigned Reg, EVT VT) const override;
   void legalizeTargetIndependentNode(SDNode *Node, SelectionDAG &DAG) const;
 
-  MachineSDNode *wrapAddr64Rsrc(SelectionDAG &DAG, SDLoc DL, SDValue Ptr) const;
-  MachineSDNode *buildRSRC(SelectionDAG &DAG,
-                           SDLoc DL,
-                           SDValue Ptr,
-                           uint32_t RsrcDword1,
-                           uint64_t RsrcDword2And3) const;
+  MachineSDNode *wrapAddr64Rsrc(SelectionDAG &DAG, const SDLoc &DL,
+                                SDValue Ptr) const;
+  MachineSDNode *buildRSRC(SelectionDAG &DAG, const SDLoc &DL, SDValue Ptr,
+                           uint32_t RsrcDword1, uint64_t RsrcDword2And3) const;
   std::pair<unsigned, const TargetRegisterClass *>
   getRegForInlineAsmConstraint(const TargetRegisterInfo *TRI,
                                StringRef Constraint, MVT VT) const override;
   ConstraintType getConstraintType(StringRef Constraint) const override;
-  SDValue copyToM0(SelectionDAG &DAG, SDValue Chain, SDLoc DL, SDValue V) const;
+  SDValue copyToM0(SelectionDAG &DAG, SDValue Chain, const SDLoc &DL,
+                   SDValue V) const;
 };
 
 } // End namespace llvm

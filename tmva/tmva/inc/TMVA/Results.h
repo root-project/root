@@ -60,12 +60,13 @@ namespace TMVA {
    class DataSet;
    class MsgLogger;
 
-   class Results {
+   class Results:public TObject {
 
    public:
 
-      Results( const DataSetInfo* dsi, TString resultsName  );
-      virtual ~Results();
+       Results( const DataSetInfo* dsi, TString resultsName  );
+       Results();
+       virtual ~Results();
 
       // setters
       void                Store( TObject* obj, const char* alias=0 );
@@ -85,17 +86,22 @@ namespace TMVA {
       Bool_t              DoesExist(const TString & alias) const;
 
       // delete all stored data
-      void Delete();
+//       using TObject::Delete;
+      virtual void Delete(Option_t *option="");
 
       virtual const std::vector< Float_t >&  operator [] ( Int_t ievt ) const = 0;
 
    private:
-      Types::ETreeType             fTreeType;    //! tree type for this result 
-      const DataSetInfo*           fDsi;         //! a pointer to the datasetinfo-object
-      TList*                       fStorage;     //! stores all the result-histograms
-      std::map<TString, TObject*>* fHistAlias;   //! internal map for quick access to stored histograms
+      Types::ETreeType             fTreeType;    // tree type for this result 
+      const DataSetInfo*           fDsi;         // a pointer to the datasetinfo-object
+      TList*                       fStorage;     // stores all the result-histograms
+      std::map<TString, TObject*>* fHistAlias;   // internal map for quick access to stored histograms
       mutable MsgLogger*           fLogger;   // message logger
       MsgLogger& Log() const { return *fLogger; }    
+   public:
+       
+       ClassDef(Results,1);
+       
    };
 }
 

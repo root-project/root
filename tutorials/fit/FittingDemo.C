@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_fit
+/// \notebook -js
 /// Example for fitting signal/background.
 /// This example can be executed with:
 ///

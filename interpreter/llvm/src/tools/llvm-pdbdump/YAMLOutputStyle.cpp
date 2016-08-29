@@ -13,125 +13,65 @@
 #include "llvm-pdbdump.h"
 
 #include "llvm/DebugInfo/PDB/Raw/PDBFile.h"
+#include "llvm/DebugInfo/PDB/Raw/RawConstants.h"
 
 using namespace llvm;
 using namespace llvm::pdb;
 
 YAMLOutputStyle::YAMLOutputStyle(PDBFile &File) : File(File), Out(outs()) {}
 
+Error YAMLOutputStyle::dump() {
+  if (auto EC = dumpFileHeaders())
+    return EC;
+
+  if (auto EC = dumpStreamMetadata())
+    return EC;
+
+  if (auto EC = dumpStreamDirectory())
+    return EC;
+
+  flush();
+  return Error::success();
+}
+
 Error YAMLOutputStyle::dumpFileHeaders() {
-  if (!opts::DumpHeaders)
-    return Error::success();
-
   yaml::MsfHeaders Headers;
-  Headers.BlockCount = File.getBlockCount();
-  Headers.BlockMapIndex = File.getBlockMapIndex();
-  Headers.BlockMapOffset = File.getBlockMapOffset();
-  Headers.BlockSize = File.getBlockSize();
+  Obj.Headers.SuperBlock.NumBlocks = File.getBlockCount();
+  Obj.Headers.SuperBlock.BlockMapAddr = File.getBlockMapIndex();
+  Obj.Headers.BlockMapOffset = File.getBlockMapOffset();
+  Obj.Headers.SuperBlock.BlockSize = File.getBlockSize();
   auto Blocks = File.getDirectoryBlockArray();
-  Headers.DirectoryBlocks.assign(Blocks.begin(), Blocks.end());
-  Headers.NumDirectoryBlocks = File.getNumDirectoryBlocks();
-  Headers.NumDirectoryBytes = File.getNumDirectoryBytes();
-  Headers.NumStreams = File.getNumStreams();
-  Headers.Unknown0 = File.getUnknown0();
-  Headers.Unknown1 = File.getUnknown1();
-
-  Obj.Headers.emplace(Headers);
+  Obj.Headers.DirectoryBlocks.assign(Blocks.begin(), Blocks.end());
+  Obj.Headers.NumDirectoryBlocks = File.getNumDirectoryBlocks();
+  Obj.Headers.SuperBlock.NumDirectoryBytes = File.getNumDirectoryBytes();
+  Obj.Headers.NumStreams =
+      opts::pdb2yaml::StreamMetadata ? File.getNumStreams() : 0;
+  Obj.Headers.SuperBlock.Unknown0 = File.getUnknown0();
+  Obj.Headers.SuperBlock.Unknown1 = File.getUnknown1();
+  Obj.Headers.FileSize = File.getFileSize();
 
   return Error::success();
 }
 
-Error YAMLOutputStyle::dumpStreamSummary() {
-  if (!opts::DumpStreamSummary)
+Error YAMLOutputStyle::dumpStreamMetadata() {
+  if (!opts::pdb2yaml::StreamMetadata)
     return Error::success();
 
-  std::vector<yaml::StreamSizeEntry> Sizes;
-  for (uint32_t I = 0; I < File.getNumStreams(); ++I) {
-    yaml::StreamSizeEntry Entry;
-    Entry.Size = File.getStreamByteSize(I);
-    Sizes.push_back(Entry);
+  Obj.StreamSizes = File.getStreamSizes();
+  return Error::success();
+}
+
+Error YAMLOutputStyle::dumpStreamDirectory() {
+  if (!opts::pdb2yaml::StreamDirectory)
+    return Error::success();
+
+  auto StreamMap = File.getStreamMap();
+  Obj.StreamMap.emplace();
+  for (auto &Stream : StreamMap) {
+    pdb::yaml::StreamBlockList BlockList;
+    BlockList.Blocks = Stream;
+    Obj.StreamMap->push_back(BlockList);
   }
-  Obj.StreamSizes.emplace(Sizes);
-  return Error::success();
-}
-
-Error YAMLOutputStyle::dumpStreamBlocks() {
-  if (!opts::DumpStreamBlocks)
-    return Error::success();
-
-  std::vector<yaml::StreamMapEntry> Blocks;
-  for (uint32_t I = 0; I < File.getNumStreams(); ++I) {
-    yaml::StreamMapEntry Entry;
-    auto BlockList = File.getStreamBlockList(I);
-    Entry.Blocks.assign(BlockList.begin(), BlockList.end());
-    Blocks.push_back(Entry);
-  }
-  Obj.StreamMap.emplace(Blocks);
-
-  return Error::success();
-}
-
-Error YAMLOutputStyle::dumpStreamData() {
-  uint32_t StreamCount = File.getNumStreams();
-  StringRef DumpStreamStr = opts::DumpStreamDataIdx;
-  uint32_t DumpStreamNum;
-  if (DumpStreamStr.getAsInteger(/*Radix=*/0U, DumpStreamNum) ||
-      DumpStreamNum >= StreamCount)
-    return Error::success();
-
-  return Error::success();
-}
-
-Error YAMLOutputStyle::dumpInfoStream() {
-  if (!opts::DumpHeaders)
-    return Error::success();
-  return Error::success();
-}
-
-Error YAMLOutputStyle::dumpNamedStream() {
-  if (opts::DumpStreamDataName.empty())
-    return Error::success();
-
-  return Error::success();
-}
-
-Error YAMLOutputStyle::dumpTpiStream(uint32_t StreamIdx) {
-  return Error::success();
-}
-
-Error YAMLOutputStyle::dumpDbiStream() { return Error::success(); }
-
-Error YAMLOutputStyle::dumpSectionContribs() {
-  if (!opts::DumpSectionContribs)
-    return Error::success();
-
-  return Error::success();
-}
-
-Error YAMLOutputStyle::dumpSectionMap() {
-  if (!opts::DumpSectionMap)
-    return Error::success();
-
-  return Error::success();
-}
-
-Error YAMLOutputStyle::dumpPublicsStream() {
-  if (!opts::DumpPublics)
-    return Error::success();
-
-  return Error::success();
-}
-
-Error YAMLOutputStyle::dumpSectionHeaders() {
-  if (!opts::DumpSectionHeaders)
-    return Error::success();
-
-  return Error::success();
-}
-
-Error YAMLOutputStyle::dumpFpoStream() {
-  if (!opts::DumpFpo)
-    return Error::success();
 
   return Error::success();
 }

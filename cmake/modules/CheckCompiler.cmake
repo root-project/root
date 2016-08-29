@@ -130,7 +130,8 @@ if(cxxmodules)
     file(COPY ${CMAKE_SOURCE_DIR}/build/unix/module.modulemap DESTINATION ${ROOT_INCLUDE_DIR})
 
     # This var is useful when we want to compile things without cxxmodules.
-    set(ROOT_CXXMODULES_FLAGS " -fmodules -fmodule-map-file=${CMAKE_BINARY_DIR}/include/module.modulemap -fmodules-cache-path=${CMAKE_BINARY_DIR}/include/pcms/")
+    set(ROOT_CXXMODULES_CXXFLAGS "-fmodules -fcxx-modules -Xclang -fmodules-local-submodule-visibility -fmodules-cache-path=${CMAKE_BINARY_DIR}/include/pcms/")
+    set(ROOT_CXXMODULES_CFLAGS "-fmodules -fmodules-cache-path=${CMAKE_BINARY_DIR}/include/pcms/")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ROOT_CXXMODULES_FLAGS}")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CXXMODULES_FLAGS}")
   else()

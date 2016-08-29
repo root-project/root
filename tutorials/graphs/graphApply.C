@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_graphs
+/// \notebook
 /// A macro to demonstrate the functionality of TGraph::Apply() method.
 /// TGraph::Apply applies a function `f` to all the data TGraph points.
 /// `f` may be a 1-D function TF1 or 2-d function TF2.
@@ -11,6 +12,7 @@
 ///
 /// \author Miro Helbich
 
+void graphApply()
 {
    const Int_t npoints=3;
    Double_t xaxis[npoints] = {1.,2.,3.};

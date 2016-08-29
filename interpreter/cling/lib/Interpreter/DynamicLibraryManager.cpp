@@ -26,7 +26,11 @@
 #include <Windows.h>
 #include <shlobj.h>
 #else
-#include <limits.h> /* PATH_MAX */
+#ifdef __APPLE__
+ #include <sys/syslimits.h> // PATH_MAX
+#else
+ #include <limits.h> // PATH_MAX
+#endif
 #include <dlfcn.h>
 #endif
 
@@ -75,21 +79,25 @@ namespace {
       FILE *pf = popen(cmd.c_str (), "r");
       std::string result = "";
       std::string sys_path = "";
-      char buffer[128];
+      char buffer[1024];
       while (!feof(pf)) {
-        if (fgets(buffer, 128, pf) != NULL)
+        if (fgets(buffer, sizeof(buffer), pf) != NULL)
           result += buffer;
       }
       pclose(pf);
-      std::size_t from
-        = result.find("search path=", result.find("(LD_LIBRARY_PATH)"));
-      std::size_t to = result.find("(system search path)");
-      if (from != std::string::npos && to != std::string::npos) {
-        from += 12;
-        sys_path = result.substr(from, to-from);
-        sys_path.erase(std::remove_if(sys_path.begin(), sys_path.end(), isspace),
-                       sys_path.end());
-        sys_path += ':';
+
+      const std::size_t nPos = std::string::npos;
+      const std::size_t LD = result.find("(LD_LIBRARY_PATH)");
+      std::size_t from = result.find("search path=", LD == nPos ? 0 : LD);
+      if (from != nPos) {
+        const std::size_t to = result.find("(system search path)", from);
+        if (to != nPos) {
+          from += 12;
+          sys_path = result.substr(from, to-from);
+          sys_path.erase(std::remove_if(sys_path.begin(), sys_path.end(),
+                                        isspace), sys_path.end());
+          sys_path += ':';
+        }
       }
       static const char PathSeparator = ':';
       const char* at = sys_path.c_str();
@@ -323,10 +331,14 @@ namespace cling {
 
   DynamicLibraryManager::LoadLibResult
   DynamicLibraryManager::loadLibrary(const std::string& libStem,
-                                     bool permanent) {
-    std::string canonicalLoadedLib = lookupLibrary(libStem);
-    if (canonicalLoadedLib.empty())
-      return kLoadLibNotFound;
+                                     bool permanent, bool resolved) {
+    std::string       lResolved;
+    const std::string &canonicalLoadedLib = resolved ? libStem : lResolved;
+    if (!resolved) {
+      lResolved = lookupLibrary(libStem);
+      if (lResolved.empty())
+        return kLoadLibNotFound;
+    }
 
     if (m_LoadedLibraries.find(canonicalLoadedLib) != m_LoadedLibraries.end())
       return kLoadLibAlreadyLoaded;
@@ -370,8 +382,10 @@ namespace cling {
     DyLibHandle dyLibHandle = 0;
     for (DyLibs::const_iterator I = m_DyLibs.begin(), E = m_DyLibs.end();
          I != E; ++I) {
-      if (I->second == canonicalLoadedLib)
+      if (I->second == canonicalLoadedLib) {
         dyLibHandle = I->first;
+        break;
+      }
     }
 
     std::string errMsg;
