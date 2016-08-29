@@ -3484,7 +3484,21 @@ TList *TClass::GetListOfBases()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return list containing the TEnums of a class.
+/// Return a list containing the TEnums of a class.
+///
+/// The list returned is safe to use from multiple thread without explicitly
+/// taking the ROOT global lock.
+///
+/// In the case the TClass represents a namespace, the returned list will
+/// implicit take the ROOT global lock upon any access (see TListOfEnumsWithLock)
+///
+/// In the case the TClass represents a class or struct and requestListLoading
+/// is true, the list is immutable (and thus safe to access from multiple thread
+/// without taking the global lock at all).
+///
+/// In the case the TClass represents a class or struct and requestListLoading
+/// is false, the list is mutable and thus we return a TListOfEnumsWithLock
+/// which will implicit take the ROOT global lock upon any access.
 
 TList *TClass::GetListOfEnums(Bool_t requestListLoading /* = kTRUE */)
 {
@@ -3502,18 +3516,12 @@ TList *TClass::GetListOfEnums(Bool_t requestListLoading /* = kTRUE */)
 
    if (!requestListLoading) {
       if (fProperty == -1) Property();
-      if (! ((kIsClass | kIsStruct | kIsUnion) & fProperty) ) {
-         R__LOCKGUARD(gInterpreterMutex);
-         if (fEnums.load()) {
-            return fEnums.load();
-         }
-         //namespaces can have enums added to them
-         fEnums = new TListOfEnumsWithLock(this);
-         return fEnums;
+      R__LOCKGUARD(gInterpreterMutex);
+      if (fEnums.load()) {
+         return fEnums.load();
       }
-      // no one is supposed to modify the returned results
-      static TListOfEnums s_list;
-      return &s_list;
+      fEnums = new TListOfEnumsWithLock(this);
+      return fEnums;
    }
 
    R__LOCKGUARD(gInterpreterMutex);
