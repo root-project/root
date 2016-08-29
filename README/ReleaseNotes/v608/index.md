@@ -257,7 +257,7 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
    hpx->GetXaxis()->ChangeLabel(5,-1,-1,-1,kRed,-1,"Zero");
   ~~~
 
-* New class `TGaxisModLab`: a  TGaxis helper class used to store the modified labels.
+* New class `TAxisModLab`: a  TGaxis helper class used to store the modified labels.
 * `TPie` the format parameter set by `SetPercentFormat` was ignored.
   (reported [here](https://sft.its.cern.ch/jira/browse/ROOT-8294))
 * Improvements in the histogram plotting option `TEXT`: In case several histograms
