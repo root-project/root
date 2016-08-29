@@ -2,7 +2,7 @@
 /// \ingroup tutorial_graphics
 /// \notebook
 /// Example illustrating how to modify individual labels of a TGaxis. The method
-/// `SetLabelAttributes` allows to do that.
+/// `ChangeLabel` allows to do that.
 ///
 /// The first parameter of this method is the label number to be modified. If
 /// this number is negative labels are numbered from the last one. The other
@@ -30,19 +30,19 @@ void gaxis3() {
    axis->SetTitleFont(42);
 
    // Change the  1st label color to red.
-   axis->SetLabelAttributes(1,-1,-1,-1,2);
+   axis->ChangeLabel(1,-1,-1,-1,2);
 
    // Erase the 3rd label
-   axis->SetLabelAttributes(3,-1,0.);
+   axis->ChangeLabel(3,-1,0.);
 
    // 5th label is drawn with an angle of 30 degrees
-   axis->SetLabelAttributes(5,30.,-1,0);
+   axis->ChangeLabel(5,30.,-1,0);
 
    // Change the text of the 6th label.
-   axis->SetLabelAttributes(6,-1,-1,-1,3,-1,"6th label");
+   axis->ChangeLabel(6,-1,-1,-1,3,-1,"6th label");
 
    // Change the text of the 2nd label to the end.
-   axis->SetLabelAttributes(-2,-1,-1,-1,3,-1,"2nd to last label");
+   axis->ChangeLabel(-2,-1,-1,-1,3,-1,"2nd to last label");
 
    axis->Draw();
 }

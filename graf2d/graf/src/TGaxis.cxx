@@ -2262,18 +2262,18 @@ void TGaxis::SetFunction(const char *funcname)
 ///    axis1->SetTitleSize(0.05);
 ///    axis1->SetTitleColor(kBlue);
 ///    axis1->SetTitleFont(42);
-///    axis1->SetLabelAttributes(1,-1,-1,-1,2);
-///    axis1->SetLabelAttributes(3,-1,0.);
-///    axis1->SetLabelAttributes(5,30.,-1,0);
-///    axis1->SetLabelAttributes(6,-1,-1,-1,3,-1,"6th label");
-///    axis1->SetLabelAttributes(-2,-1,-1,-1,3,-1,"2nd to last label");
+///    axis1->ChangeLabel(1,-1,-1,-1,2);
+///    axis1->ChangeLabel(3,-1,0.);
+///    axis1->ChangeLabel(5,30.,-1,0);
+///    axis1->ChangeLabel(6,-1,-1,-1,3,-1,"6th label");
+///    axis1->ChangeLabel(-2,-1,-1,-1,3,-1,"2nd to last label");
 ///    axis1->Draw();
 /// }
 /// ~~~
 ///
 /// If labnum=0 the list of modified labels is reset.
 
-void TGaxis::SetLabelAttributes(Int_t labNum, Double_t labAngle, Double_t labSize,
+void TGaxis::ChangeLabel(Int_t labNum, Double_t labAngle, Double_t labSize,
                                 Int_t labAlign, Int_t labColor, Int_t labFont,
                                 TString labText)
 {
@@ -2321,16 +2321,9 @@ void TGaxis::ChangeLabelAttributes(Int_t i, Int_t nlabels, TLatex* t, char* c)
       SavedTextAlign = t->GetTextAlign();
       SavedTextColor = t->GetTextColor();
       SavedTextFont  = t->GetTextFont();
-   
       labNum = ml->GetLabNum();
-   
-      if (labNum < 0) {
-         labNum = nlabels + labNum + 2;
-      }
-
-
+      if (labNum < 0) labNum = nlabels + labNum + 2;
       if (i == labNum) {
-
          if (ml->GetAngle()>=0.) t->SetTextAngle(ml->GetAngle());
          if (ml->GetSize()>=0.)  t->SetTextSize(ml->GetSize());
          if (ml->GetAlign()>0)   t->SetTextAlign(ml->GetAlign());
