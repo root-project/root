@@ -163,9 +163,9 @@ namespace TMVA {
 
       void PrepareTrainingAndTestTree( int foldNumber, Types::ETreeType tt );
 
-      void MakeKFoldDataSet(int numberFolds);
-      void ValidationKFoldSet();
-      std::vector<TTree*> SplitSets(TTree * oldTree, int seedNum, int numFolds);
+      void PrepareFoldDataSet( UInt_t foldNumber, Types::ETreeType tt);
+      void MakeKFoldDataSet(UInt_t numberFolds, bool validationSet=false);
+      std::vector<std::vector<TMVA::Event*>> SplitSets(std::vector<TMVA::Event*>& oldSet, int seedNum, int numFolds);
 
       const DataSetInfo& GetDefaultDataSetInfo(){ return DefaultDataSetInfo(); }
  
@@ -206,16 +206,20 @@ namespace TMVA {
       std::vector<TTree*>                       fTrainAssignTree; // for each class: tmp tree if user wants to assign the events directly
       std::vector<TTree*>                       fTestAssignTree;  // for each class: tmp tree if user wants to assign the events directly
 
-      std::vector<TTree*>                       fTrainSigTree;
-      std::vector<TTree*>                       fTrainBkgTree;
-      std::vector<TTree*>                       fTestSigTree;
-      std::vector<TTree*>                       fTestBkgTree;
+      std::vector<std::vector<TMVA::Event*>>          fTrainSigEvents;
+      std::vector<std::vector<TMVA::Event*>>          fTrainBkgEvents;
+      std::vector<std::vector<TMVA::Event*>>          fValidSigEvents;
+      std::vector<std::vector<TMVA::Event*>>          fValidBkgEvents;
+      std::vector<std::vector<TMVA::Event*>>          fTestSigEvents;
+      std::vector<std::vector<TMVA::Event*>>          fTestBkgEvents;
 
       Int_t                                     fATreeType;          // type of event (=classIndex)
       Float_t                                   fATreeWeight;        // weight of the event
       std::vector<Float_t>                      fATreeEvent;         // event variables
       
       Types::EAnalysisType                      fAnalysisType;    // the training type
+
+      Bool_t                                    fMakeFoldDataSet;
 
    protected:
 
