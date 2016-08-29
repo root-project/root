@@ -230,7 +230,7 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 * `TColor::GetFreeColorIndex()` allows to make sure the new color is created with an
   unused color index.
 * In `TLegend::SetHeader` the new option `C` allows to center the title.
-* New method `SetLabelAttributes` in `TGaxis` allowing to a fine tuning of
+* New method `ChangeLabel` in `TGaxis` and `TAxis`allowing to a fine tuning of
   individual labels attributes. All the attributes can be changed and even the
   label text itself. Example:
   ~~~ {.cpp}
@@ -243,13 +243,20 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
      axis1->SetTitleSize(0.05);
      axis1->SetTitleColor(kBlue);
      axis1->SetTitleFont(42);
-     axis1->SetLabelAttributes(1,-1,-1,-1,2);
-     axis1->SetLabelAttributes(3,-1,0.);
-     axis1->SetLabelAttributes(5,30.,-1,0);
-     axis1->SetLabelAttributes(6,-1,-1,-1,3,-1,"6th label");
+     axis1->ChangeLabel(1,-1,-1,-1,2);
+     axis1->ChangeLabel(3,-1,0.);
+     axis1->ChangeLabel(5,30.,-1,0);
+     axis1->ChangeLabel(6,-1,-1,-1,3,-1,"6th label");
      axis1->Draw();
   }
   ~~~
+  Being available in `TAxis`, this method allow to change a label on and histogram
+  plot like:
+  ~~~ {.cpp}
+   hpx->Draw();
+   hpx->GetXaxis()->ChangeLabel(5,-1,-1,-1,kRed,-1,"Zero");
+  ~~~
+
 * New class `TGaxisModLab`: a  TGaxis helper class used to store the modified labels.
 * `TPie` the format parameter set by `SetPercentFormat` was ignored.
   (reported [here](https://sft.its.cern.ch/jira/browse/ROOT-8294))

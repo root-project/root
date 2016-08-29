@@ -15,6 +15,8 @@
 #include "TStyle.h"
 #include "TError.h"
 #include "THashList.h"
+#include "TList.h"
+#include "TAxisModLab.h"
 #include "TH1.h"
 #include "TObjString.h"
 #include "TDatime.h"
@@ -51,6 +53,7 @@ TAxis::TAxis(): TNamed(), TAttAxis()
    fLast    = 0;
    fParent  = 0;
    fLabels  = 0;
+   fModLabs = 0;
    fBits2   = 0;
    fTimeDisplay = 0;
 }
@@ -62,6 +65,7 @@ TAxis::TAxis(Int_t nbins,Double_t xlow,Double_t xup): TNamed(), TAttAxis()
 {
    fParent  = 0;
    fLabels  = 0;
+   fModLabs = 0;
    Set(nbins,xlow,xup);
 }
 
@@ -72,6 +76,7 @@ TAxis::TAxis(Int_t nbins,const Double_t *xbins): TNamed(), TAttAxis()
 {
    fParent  = 0;
    fLabels  = 0;
+   fModLabs = 0;
    Set(nbins,xbins);
 }
 
@@ -85,12 +90,17 @@ TAxis::~TAxis()
       delete fLabels;
       fLabels = 0;
    }
+   if (fModLabs) {
+      fModLabs->Delete();
+      delete fModLabs;
+      fModLabs = 0;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
 
-TAxis::TAxis(const TAxis &axis) : TNamed(axis), TAttAxis(axis), fLabels(0)
+TAxis::TAxis(const TAxis &axis) : TNamed(axis), TAttAxis(axis), fLabels(0), fModLabs(0)
 {
    axis.Copy(*this);
 }
@@ -227,6 +237,11 @@ void TAxis::Copy(TObject &obj) const
          axis.fLabels->Add(copyLabel);
          copyLabel->SetUniqueID(label->GetUniqueID());
       }
+   }
+   if (axis.fModLabs) {
+      axis.fModLabs->Delete();
+      delete axis.fModLabs;
+      axis.fModLabs = 0;
    }
 }
 
@@ -821,6 +836,47 @@ void TAxis::SetBinLabel(Int_t bin, const char *label)
       SetAlphanumeric(kTRUE);
       SetCanExtend(kTRUE);
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Define new text attributes for the label number "labNum". It allows to do a
+/// fine tuning of the labels. All the attributes can be changed and even the
+/// label text itself.
+///
+/// \param[in] labNum           Number of the label to be changed, negative numbers start from the end
+/// \param[in] labAngle         New angle value
+/// \param[in] labSize          New size (0 erase the label)
+/// \param[in] labAlign         New alignment value
+/// \param[in] labColor         New label color
+/// \param[in] labText          New label text
+///
+/// If an attribute should not be changed just give the value "-1".
+///
+/// If labnum=0 the list of modified labels is reset.
+
+void TAxis::ChangeLabel(Int_t labNum, Double_t labAngle, Double_t labSize,
+                               Int_t labAlign, Int_t labColor, Int_t labFont,
+                               TString labText)
+{
+   if (!fModLabs) fModLabs = new TList();
+
+   // Reset the list of modified labels.
+   if (labNum == 0) {
+      delete fModLabs;
+      fModLabs  = 0;
+      return;
+   }
+
+   TAxisModLab *ml = new TAxisModLab();
+   ml->SetLabNum(labNum);
+   ml->SetAngle(labAngle);
+   ml->SetSize(labSize);
+   ml->SetAlign(labAlign);
+   ml->SetColor(labColor);
+   ml->SetFont(labFont);
+   ml->SetText(labText);
+
+   fModLabs->Add((TObject*)ml);
 }
 
 

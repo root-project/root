@@ -17,7 +17,7 @@
 #include "Riostream.h"
 #include "TROOT.h"
 #include "TGaxis.h"
-#include "TGaxisModLab.h"
+#include "TAxisModLab.h"
 #include "TVirtualPad.h"
 #include "TVirtualX.h"
 #include "TLine.h"
@@ -841,6 +841,8 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
          optionText = 1;
          ndiv = fAxis->GetLast()-fAxis->GetFirst()+1;
       }
+      fModLabs = fAxis->GetModifiedLabels();
+      if (fModLabs) fNModLabs = fModLabs->GetSize();
    }
    if (ndiv < 0) {
       Error(where, "Invalid number of divisions: %d",ndiv);
@@ -2288,7 +2290,7 @@ void TGaxis::ChangeLabel(Int_t labNum, Double_t labAngle, Double_t labSize,
       return;
    }
 
-   TGaxisModLab *ml = new TGaxisModLab();
+   TAxisModLab *ml = new TAxisModLab();
    ml->SetLabNum(labNum);
    ml->SetAngle(labAngle);
    ml->SetSize(labSize);
@@ -2313,9 +2315,9 @@ void TGaxis::ChangeLabelAttributes(Int_t i, Int_t nlabels, TLatex* t, char* c)
    if (!fModLabs) return;
 
    TIter next(fModLabs);
-   TGaxisModLab *ml;
+   TAxisModLab *ml;
    Int_t labNum;
-   while ( (ml = (TGaxisModLab*)next()) ) {
+   while ( (ml = (TAxisModLab*)next()) ) {
       SavedTextAngle = t->GetTextAngle();
       SavedTextSize  = t->GetTextSize();
       SavedTextAlign = t->GetTextAlign();
