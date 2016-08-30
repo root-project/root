@@ -34,6 +34,7 @@
 #include "TClass.h"
 #include "TTimeStamp.h"
 #include "TSystem.h"
+#include "TTimeStamp.h"
 
 Int_t TGaxis::fgMaxDigits = 5;
 Float_t TGaxis::fXAxisExpXOffset = 0.; //Exponent X offset for the X axis
@@ -326,7 +327,7 @@ attributes for a given label. A fine tuning of the labels can be done. All the
 attributes can be changed as well as the text label itself.
 
 When plotting an histogram or a graph the labels can be changed like in the
-following example which shows a way to produce \f$\pi\f$-axis
+following example which shows a way to produce \f$\pi\f$-axis :
 
 Begin_Macro(source)
 {
@@ -915,28 +916,17 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
          TString stringtimeoffset = fTimeFormat(idF+2,lnF);
          Int_t year, mm, dd, hh, mi, ss;
          if (sscanf(stringtimeoffset.Data(), "%d-%d-%d %d:%d:%d", &year, &mm, &dd, &hh, &mi, &ss) == 6) {
-           struct tm tp;
+            //Get time offset in seconds since EPOCH:
+            struct tm tp;
             tp.tm_year   = year-1900;
             tp.tm_mon    = mm-1;
             tp.tm_mday   = dd;
             tp.tm_hour   = hh;
             tp.tm_min    = mi;
             tp.tm_sec    = ss;
-            tp.tm_isdst  = -1; //automatic determination of daylight saving time
-            TString tz   = (TString)gSystem->Getenv("TZ"); //save timezone
-            Bool_t isUTC = kFALSE;
-            if (gSystem->Getenv("TZ") && tz.Length()==0) isUTC=kTRUE;
-            gSystem->Setenv("TZ", "UTC"); //sets timezone to UTC
-            tzset();
-            timeoffset  = mktime(&tp);
-            //restore TZ
-            if (tz.Length()) {
-               gSystem->Setenv("TZ", tz.Data());
-            } else {
-               if (isUTC) gSystem->Setenv("TZ", "");
-               else       gSystem->Unsetenv("TZ");
-            }
-            tzset();
+            tp.tm_isdst  = 0; //no DST for UTC (and forced to 0 in MktimeFromUTC function)
+            timeoffset = TTimeStamp::MktimeFromUTC(&tp);
+
             // Add the time offset's decimal part if it is there
             Int_t ids   = stringtimeoffset.Index("s");
             if (ids >= 0) {

@@ -35,7 +35,7 @@ TString stime(time_t* t, bool utc = false, bool display_time_zone = true) {
    if (utc) tt = gmtime(t);
    else     tt = localtime(t);
    char buf[256];
-   if (display_time_zone) strftime(buf, sizeof(buf), "%H:%M:%S %Z", tt);
+   if (display_time_zone) strftime(buf, sizeof(buf), "%Y-%m-%d  %H:%M:%S %Z", tt);
    else                   strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", tt);
    return TString(buf);
 }
@@ -49,7 +49,7 @@ TCanvas *timeonaxis3() {
    TLatex* tex1 = new TLatex;
    tex1->SetNDC();
    tex1->SetTextFont(102);
-   tex1->SetTextSize(0.07*f);
+   tex1->SetTextSize(0.055*f);
 
    TLatex* tex3 = new TLatex;
    tex3->SetNDC();

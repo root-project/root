@@ -256,14 +256,17 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
    hpx->Draw();
    hpx->GetXaxis()->ChangeLabel(5,-1,-1,-1,kRed,-1,"Zero");
   ~~~
-
-* New class `TAxisModLab`: a  TGaxis helper class used to store the modified labels.
+* New class `TAxisModLab`: a  TAxis helper class used to store the modified labels.
 * `TPie` the format parameter set by `SetPercentFormat` was ignored.
   (reported [here](https://sft.its.cern.ch/jira/browse/ROOT-8294))
 * Improvements in the histogram plotting option `TEXT`: In case several histograms
   are drawn on top ot each other (using option `SAME`), the text can be shifted
   using `SetBarOffset()`. It specifies an offset for the  text position in each
   cell, in percentage of the bin width.
+* `TGaxis::PaintAxis()` might caused a correctness problem in multithreaded
+   context when handling optionTime with `%F`. This was reported
+   [here](https://sft.its.cern.ch/jira/browse/ROOT-8309). The fixed was suggested
+   by Philippe Gras (philippe.gras@cea.fr).
 
 ## 3D Graphics Libraries
 
