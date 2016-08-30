@@ -978,7 +978,7 @@ void TBufferJSON::JsonStreamCollection(TCollection *col, const TClass *)
          sopt.Append("\"");
       }
 
-      JsonWriteObject(obj, obj->IsA());
+      WriteObjectAny(obj, TObject::Class());
 
       first = kFALSE;
    }
