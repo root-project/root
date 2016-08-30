@@ -1,24 +1,28 @@
-// @(#)root/tmva $Id: TMVAClassificationCategory.C,v 1.36 2009-04-14 13:08:13 andreas.hoecker Exp $
-/**********************************************************************************
- * Project   : TMVA - a Root-integrated toolkit for multivariate data analysis    *
- * Package   : TMVA                                                               *
- * Root Macro: TMVAClassificationCategory                                         *
- *                                                                                *
- * This macro provides examples for the training and testing of the               *
- * TMVA classifiers in categorisation mode.                                       *
- *                                                                                *
- * As input data is used a toy-MC sample consisting of four Gaussian-distributed  *
- * and linearly correlated input variables with category (eta) dependent          *
- * properties.                                                                    *
- *                                                                                *
- * For this example, only Fisher and Likelihood are used. Run via:                *
- *                                                                                *
- *    root -l TMVAClassificationCategory.C                                        *
- *                                                                                *
- * The output file "TMVA.root" can be analysed with the use of dedicated          *
- * macros (simply say: root -l <macro.C>), which can be conveniently              *
- * invoked through a GUI that will appear at the end of the run of this macro.    *
- **********************************************************************************/
+/// \file
+/// \ingroup tutorial_tmva
+/// \notebook -nodraw
+/// This macro provides examples for the training and testing of the
+/// TMVA classifiers in categorisation mode.
+/// - Project   : TMVA - a Root-integrated toolkit for multivariate data analysis
+/// - Package   : TMVA
+/// - Root Macro: TMVAClassificationCategory
+///
+/// As input data is used a toy-MC sample consisting of four Gaussian-distributed
+/// and linearly correlated input variables with category (eta) dependent
+/// properties.
+///
+/// For this example, only Fisher and Likelihood are used. Run via:
+///
+///     root -l TMVAClassificationCategory.C
+///
+/// The output file "TMVA.root" can be analysed with the use of dedicated
+/// macros (simply say: root -l <macro.C>), which can be conveniently
+/// invoked through a GUI that will appear at the end of the run of this macro.
+///                                                                              
+/// \macro_output
+/// \macro_code 
+/// \author Andreas Hoecker
+
 
 #include <cstdlib>
 #include <iostream>
@@ -100,15 +104,15 @@ void TMVAClassificationCategory()
       exit(1);
    }
 
-   TTree *signal     = (TTree*)input->Get("TreeS");
+   TTree *signal1     = (TTree*)input->Get("TreeS");
    TTree *background = (TTree*)input->Get("TreeB");
 
-   /// Global event weights per tree (see below for setting event-wise weights)
+   // Global event weights per tree (see below for setting event-wise weights)
    Double_t signalWeight     = 1.0;
    Double_t backgroundWeight = 1.0;
 
-   /// You can add an arbitrary number of signal or background trees
-   dataloader->AddSignalTree    ( signal,     signalWeight     );
+   // You can add an arbitrary number of signal or background trees
+   dataloader->AddSignalTree    ( signal1,     signalWeight     );
    dataloader->AddBackgroundTree( background, backgroundWeight );
 
    // Apply additional cuts on the signal and background samples (can be different)
@@ -119,7 +123,7 @@ void TMVAClassificationCategory()
    dataloader->PrepareTrainingAndTestTree( mycuts, mycutb,
                                         "nTrain_Signal=0:nTrain_Background=0:SplitMode=Random:NormMode=NumEvents:!V" );
 
-   // ---- Book MVA methods
+   // Book MVA methods
 
    // Fisher discriminant
    factory->BookMethod( dataloader, TMVA::Types::kFisher, "Fisher", "!H:!V:Fisher" );
@@ -128,7 +132,7 @@ void TMVAClassificationCategory()
    factory->BookMethod( dataloader, TMVA::Types::kLikelihood, "Likelihood",
                         "!H:!V:TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=20:NSmoothBkg[0]=20:NSmoothBkg[1]=10:NSmooth=1:NAvEvtPerBin=50" ); 
 
-   // --- Categorised classifier
+   // Categorised classifier
    TMVA::MethodCategory* mcat = 0;
 
    // The variable sets
@@ -149,15 +153,15 @@ void TMVAClassificationCategory()
    mcat->AddMethod( "abs(eta)>1.3", theCat2Vars, TMVA::Types::kLikelihood,
                     "Category_Likelihood_2","!H:!V:TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=20:NSmoothBkg[0]=20:NSmoothBkg[1]=10:NSmooth=1:NAvEvtPerBin=50" );
 
-   // ---- Now you can tell the factory to train, test, and evaluate the MVAs
+   // Now you can tell the factory to train, test, and evaluate the MVAs
 
    // Train MVAs using the set of training events
    factory->TrainAllMethods();
 
-   // ---- Evaluate all MVAs using the set of test events
+   // Evaluate all MVAs using the set of test events
    factory->TestAllMethods();
 
-   // ----- Evaluate and compare performance of all configured MVAs
+   // Evaluate and compare performance of all configured MVAs
    factory->EvaluateAllMethods();
 
    // --------------------------------------------------------------
