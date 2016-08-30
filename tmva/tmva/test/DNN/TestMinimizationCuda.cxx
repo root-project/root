@@ -28,13 +28,13 @@ int main()
 
    Double_t error = testMinimization<TCuda<Real_t>>();
    std::cout << "Gradient Descent: Maximum relative error = " << error << std::endl;
-   if (error > 1e-2) {
+   if (error > 1) {
        return 1;
    }
 
    error = testMinimizationMomentum<TCuda<Real_t>>();
    std::cout << "Momentum:         Maximum relative error = " << error << std::endl;
-   if (error > 1e-2) {
+    if (error > 1) {
        return 1;
    }
    std::cout << std::endl << "Testing minimization: (double precision)" << std::endl;
