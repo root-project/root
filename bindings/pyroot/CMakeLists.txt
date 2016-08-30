@@ -6,6 +6,7 @@ include_directories(${PYTHON_INCLUDE_DIRS})
 ROOT_GENERATE_DICTIONARY(G__PyROOT *.h MODULE PyROOT LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
 
 ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -fno-strict-aliasing)
+ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-parentheses-equality)
 
 if(WIN32)
   set(ROOTULIBS -include:_G__cpp_setupG__Net
