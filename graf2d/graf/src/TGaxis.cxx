@@ -66,6 +66,7 @@ or an instance. For instance to draw an extra scale on a plot.
 - [Labels' position on tick marks](#GA08)
 - [Labels' format](#GA09)
 - [Alphanumeric labels](#GA10)
+- [Changing axis labels](#GA10a)
 - [Number of divisions optimisation](#GA11)
 - [Maximum Number of Digits for the axis labels](#GA12)
 - [Optional grid](#GA13)
@@ -317,6 +318,29 @@ End_Macro
 Because the alphanumeric labels are usually longer that the numeric labels, their
 size is by default equal to `0.66666 * the_numeric_labels_size`.
 
+## <a name="GA10a"></a> Changing axis labels
+\since **ROOT version 6.07/07:**
+
+After an axis has been created, TGaxis::ChangeLabel allows to define new text
+attributes for a given label. A fine tuning of the labels can be done. All the
+attributes can be changed as well as the text label itself.
+
+When plotting an histogram or a graph the labels can be changed like in the
+following example which shows a way to produce \f$\pi\f$-axis
+
+Begin_Macro(source)
+{
+   Double_t pi = TMath::Pi();
+   TF1*   f = new TF1("f","TMath::Cos(x/TMath::Pi())", -pi, pi);
+   TH1*   h = f->GetHistogram();
+   TAxis* a = h->GetXaxis();
+   a->SetNdivisions(-502);
+   a->ChangeLabel(1,-1,-1,-1,-1,-1,"-#pi");
+   a->ChangeLabel(-1,-1,-1,-1,-1,-1,"#pi");
+   f->Draw();
+}
+End_Macro
+
 ## <a name="GA11"></a> Number of divisions optimisation
 
 By default the number of divisions on axis is optimised to show a coherent
@@ -383,7 +407,7 @@ The format is set with `SetTimeFormat()`.
 The `TGaxis` minimum (`wmin`) and maximum (`wmax`) values
 are considered as two time values in seconds.
 The time axis will be spread around the time offset value (set with
-`SetTimeOffset()`). Actually it will go from `TimeOffset+wmin`to
+`SetTimeOffset()`). Actually it will go from `TimeOffset+wmin` to
 `TimeOffset+wmax`
 
 Usually time axis are created automatically via histograms, but one may also
@@ -841,9 +865,14 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
          optionText = 1;
          ndiv = fAxis->GetLast()-fAxis->GetFirst()+1;
       }
-      fModLabs = fAxis->GetModifiedLabels();
-      if (fModLabs) fNModLabs = fModLabs->GetSize();
-      else          fNModLabs = 0;
+      TList *ml = fAxis->GetModifiedLabels();
+      if (ml) {
+         fModLabs = ml;
+         fNModLabs = fModLabs->GetSize();
+      } else {
+         fModLabs  = 0;
+         fNModLabs = 0;
+      }
    }
    if (ndiv < 0) {
       Error(where, "Invalid number of divisions: %d",ndiv);
@@ -2255,7 +2284,7 @@ void TGaxis::SetFunction(const char *funcname)
 /// If an attribute should not be changed just give the value
 /// "-1".The following macro gives an example:
 ///
-/// ~~~ {.cpp}
+/// Begin_Macro(source)
 /// {
 ///    c1 = new TCanvas("c1","Examples of Gaxis",10,10,900,500);
 ///    c1->Range(-6,-0.1,6,0.1);
@@ -2272,7 +2301,7 @@ void TGaxis::SetFunction(const char *funcname)
 ///    axis1->ChangeLabel(-2,-1,-1,-1,3,-1,"2nd to last label");
 ///    axis1->Draw();
 /// }
-/// ~~~
+/// End_Macro
 ///
 /// If labnum=0 the list of modified labels is reset.
 
