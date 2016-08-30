@@ -682,6 +682,12 @@ void TRootSniffer::ScanObjectProperties(TRootSnifferScanRec &rec, TObject *obj)
 
    TClass* cl = obj ? obj->IsA() : 0;
 
+   if (cl && cl->InheritsFrom(TLeaf::Class())) {
+      rec.SetField("_more", "false");
+      rec.SetField("_can_draw", "false");
+      return;
+   }
+
    const char* pos = strstr(cl ? cl->GetTitle() : "", "*SNIFF*");
    if (pos==0) return;
 
