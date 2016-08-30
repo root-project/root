@@ -186,7 +186,17 @@ TString TBufferJSON::ConvertToJSON(const TObject *obj, Int_t compact, const char
 {
    // converts object, inherited from TObject class, to JSON string
 
-   return ConvertToJSON(obj, (obj ? obj->IsA() : 0), compact, member_name);
+   TClass *clActual = 0;
+   void *ptr = (void *) obj;
+
+   if (obj!=0) {
+      clActual = TObject::Class()->GetActualClass(obj);
+      if (!clActual) clActual = TObject::Class(); else
+      if (clActual != TObject::Class())
+         ptr = (void *) ((Long_t) obj - clActual->GetBaseClassOffset(TObject::Class()));
+   }
+
+   return ConvertToJSON(ptr, clActual, compact, member_name);
 }
 
 //______________________________________________________________________________
