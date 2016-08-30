@@ -90,6 +90,16 @@ a 'using namespace std;' has been applied to and with:
 #include <vector>
 #include <memory>
 
+#ifdef WIN32
+#include <io.h>
+#include "Windows4Root.h"
+#include <Psapi.h>
+#define RTLD_DEFAULT ((void *)::GetModuleHandle(NULL))
+#define dlsym(library, function_name) ::GetProcAddress((HMODULE)library, function_name)
+#else
+#include <dlfcn.h>
+#endif
+
 #include "TListOfDataMembers.h"
 #include "TListOfFunctions.h"
 #include "TListOfFunctionTemplates.h"
@@ -3520,7 +3530,13 @@ TList *TClass::GetListOfEnums(Bool_t requestListLoading /* = kTRUE */)
       if (fEnums.load()) {
          return fEnums.load();
       }
-      fEnums = new TListOfEnumsWithLock(this);
+
+      static bool fromRootCling = dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym");
+
+      if (fromRootCling) // rootcling is single thread (this save some space in the rootpcm).
+         fEnums = new TListOfEnums(this);
+      else
+         fEnums = new TListOfEnumsWithLock(this);
       return fEnums;
    }
 
