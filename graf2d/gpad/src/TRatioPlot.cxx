@@ -1264,10 +1264,10 @@ void TRatioPlot::CreateVisualAxes()
    }
 
    // import infos from TAxis
-   fUpperGXaxis->ImportAxisAttributes(fSharedXAxis);
-   fUpperGYaxis->ImportAxisAttributes(fUpYaxis);
-   fLowerGXaxis->ImportAxisAttributes(fSharedXAxis);
-   fLowerGYaxis->ImportAxisAttributes(fLowYaxis);
+   ImportAxisAttributes(fUpperGXaxis, fSharedXAxis);
+   ImportAxisAttributes(fUpperGYaxis, fUpYaxis);
+   ImportAxisAttributes(fLowerGXaxis, fSharedXAxis);
+   ImportAxisAttributes(fLowerGYaxis, fLowYaxis);
 
    // (re)set all the axes properties to what we want them
    fUpperGXaxis->SetTitle("");
@@ -1374,10 +1374,10 @@ void TRatioPlot::CreateVisualAxes()
       }
 
       // import attributes from shared axes
-      fUpperGXaxisMirror->ImportAxisAttributes(fSharedXAxis);
-      fUpperGYaxisMirror->ImportAxisAttributes(fUpYaxis);
-      fLowerGXaxisMirror->ImportAxisAttributes(fSharedXAxis);
-      fLowerGYaxisMirror->ImportAxisAttributes(fLowYaxis);
+      ImportAxisAttributes(fUpperGXaxisMirror, fSharedXAxis);
+      ImportAxisAttributes(fUpperGYaxisMirror, fUpYaxis);
+      ImportAxisAttributes(fLowerGXaxisMirror, fSharedXAxis);
+      ImportAxisAttributes(fLowerGYaxisMirror, fLowYaxis);
 
       // remove titles
       fUpperGXaxisMirror->SetTitle("");
@@ -1796,4 +1796,32 @@ void TRatioPlot::SetFitResult(TFitResultPtr fitres)
 void TRatioPlot::SetFitResult(TFitResult* fitres)
 {
    fFitResult = fitres;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Internal method to import TAxis attributes to a TGaxis. Copied from
+/// `TGaxis::ImportAxisAttributes`
+
+void TRatioPlot::ImportAxisAttributes(TGaxis *gaxis, TAxis *axis)
+{
+   gaxis->SetLineColor(axis->GetAxisColor());
+   gaxis->SetTextColor(axis->GetTitleColor());
+   gaxis->SetTextFont(axis->GetTitleFont());
+   gaxis->SetLabelColor(axis->GetLabelColor());
+   gaxis->SetLabelFont(axis->GetLabelFont());
+   gaxis->SetLabelSize(axis->GetLabelSize());
+   gaxis->SetLabelOffset(axis->GetLabelOffset());
+   gaxis->SetTickSize(axis->GetTickLength());
+   gaxis->SetTitle(axis->GetTitle());
+   gaxis->SetTitleOffset(axis->GetTitleOffset());
+   gaxis->SetTitleSize(axis->GetTitleSize());
+   gaxis->SetBit(TAxis::kCenterTitle,   axis->TestBit(TAxis::kCenterTitle));
+   gaxis->SetBit(TAxis::kCenterLabels,  axis->TestBit(TAxis::kCenterLabels));
+   gaxis->SetBit(TAxis::kRotateTitle,   axis->TestBit(TAxis::kRotateTitle));
+   gaxis->SetBit(TAxis::kNoExponent,    axis->TestBit(TAxis::kNoExponent));
+   gaxis->SetBit(TAxis::kTickPlus,      axis->TestBit(TAxis::kTickPlus));
+   gaxis->SetBit(TAxis::kTickMinus,     axis->TestBit(TAxis::kTickMinus));
+   gaxis->SetBit(TAxis::kMoreLogLabels, axis->TestBit(TAxis::kMoreLogLabels));
+   if (axis->GetDecimals())      gaxis->SetBit(TAxis::kDecimals); //the bit is in TAxis::fAxis2
+   gaxis->SetTimeFormat(axis->GetTimeFormat());
 }

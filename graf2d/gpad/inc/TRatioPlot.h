@@ -138,6 +138,7 @@ protected:
    virtual void SetPadMargins();
    virtual void CreateGridline();
 
+   virtual void ImportAxisAttributes(TGaxis* gaxis, TAxis* axis);
 
    virtual Bool_t IsDrawn();
 
