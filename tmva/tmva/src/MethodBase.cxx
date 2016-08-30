@@ -197,8 +197,6 @@ TMVA::MethodBase::MethodBase( const TString& jobName,
    fSetupCompleted            (kFALSE)
 {
    SetTestvarName();
-   fLogger->SetSource(GetName());
-   
 //    // default extension for weight files
 }
 
@@ -259,7 +257,6 @@ TMVA::MethodBase::MethodBase( Types::EMVA methodType,
    fSplTrainRefB              ( 0 ),
    fSetupCompleted            (kFALSE)
 {
-   fLogger->SetSource(GetName());
 //    // constructor used for Testing + Application of the MVA,
 //    // only (no training), using given WeightFiles
 }
@@ -566,29 +563,25 @@ void TMVA::MethodBase::TrainMethod()
    GetTransformationHandler().CalcTransformations(Data()->GetEventCollection());
 
    // call training of derived MVA
-   Log() << kDEBUG //<<Form("\tDataset[%s] : ",DataInfo().GetName())
-	 << "Begin training" << Endl;
+   Log() << kINFO <<Form("Dataset[%s] : ",DataInfo().GetName())<< "Begin training" << Endl;
    Long64_t nEvents = Data()->GetNEvents();
    Timer traintimer( nEvents, GetName(), kTRUE );
    Train();
-   Log() << kDEBUG //<<Form("Dataset[%s] : ",DataInfo().GetName() 
-	 << "\tEnd of training                                              " << Endl;
+   Log() << kINFO <<Form("Dataset[%s] : ",DataInfo().GetName())<< "End of training                                              " << Endl;
    SetTrainTime(traintimer.ElapsedSeconds());
-   Log() << kINFO //<<Form("Dataset[%s] : ",DataInfo().GetName())
-	 << "Elapsed time for training with " << nEvents <<  " events: "
+   Log() << kINFO <<Form("Dataset[%s] : ",DataInfo().GetName())<< "Elapsed time for training with " << nEvents <<  " events: "
          << traintimer.GetElapsedTime() << "         " << Endl;
 
-   Log() << kDEBUG //<<Form("Dataset[%s] : ",DataInfo().GetName())
-	 << "\tCreate MVA output for ";
+   Log() << kINFO <<Form("Dataset[%s] : ",DataInfo().GetName())<< "Create MVA output for ";
 
    // create PDFs for the signal and background MVA distributions (if required)
    if (DoMulticlass()) {
-      Log() <<Form("[%s] : ",DataInfo().GetName())<< "Multiclass classification on training sample" << Endl;
+      Log() <<Form("Dataset[%s] : ",DataInfo().GetName())<< "Multiclass classification on training sample" << Endl;
       AddMulticlassOutput(Types::kTraining);
    }
    else if (!DoRegression()) {
 
-      Log() <<Form("[%s] : ",DataInfo().GetName())<< "classification on training sample" << Endl;
+      Log() <<Form("Dataset[%s] : ",DataInfo().GetName())<< "classification on training sample" << Endl;
       AddClassifierOutput(Types::kTraining);
       if (HasMVAPdfs()) {
          CreateMVAPdfs();
@@ -656,7 +649,8 @@ void TMVA::MethodBase::AddRegressionOutput(Types::ETreeType type)
 
    // use timer
    Timer timer( nEvents, GetName(), kTRUE );
-   Log() << kINFO <<Form("Dataset[%s] : ",DataInfo().GetName()) << "Evaluation of " << GetMethodName() << " on "
+
+   Log() << kINFO <<Form("Dataset[%s] : ",DataInfo().GetName())<< "Evaluation of " << GetMethodName() << " on "
          << (type==Types::kTraining?"training":"testing") << " sample" << Endl;
 
    regRes->Resize( nEvents );
@@ -667,8 +661,7 @@ void TMVA::MethodBase::AddRegressionOutput(Types::ETreeType type)
       timer.DrawProgressBar( ievt );
    }
 
-   Log() << kINFO <<Form("Dataset[%s] : ",DataInfo().GetName())
-	 << "Elapsed time for evaluation of " << nEvents <<  " events: "
+   Log() << kINFO <<Form("Dataset[%s] : ",DataInfo().GetName())<< "Elapsed time for evaluation of " << nEvents <<  " events: "
          << timer.GetElapsedTime() << "       " << Endl;
 
    // store time used for testing
@@ -708,8 +701,7 @@ void TMVA::MethodBase::AddMulticlassOutput(Types::ETreeType type)
       timer.DrawProgressBar( ievt );
    }
 
-   Log() << kINFO <<Form("Dataset[%s] : ",DataInfo().GetName())
-	 << "Elapsed time for evaluation of " << nEvents <<  " events: "
+   Log() << kINFO <<Form("Dataset[%s] : ",DataInfo().GetName())<< "Elapsed time for evaluation of " << nEvents <<  " events: "
          << timer.GetElapsedTime() << "       " << Endl;
 
    // store time used for testing
@@ -798,15 +790,18 @@ std::vector<Double_t> TMVA::MethodBase::GetMvaValues(Long64_t firstEvt, Long64_t
 
    // use timer
    Timer timer( nEvents, GetName(), kTRUE );
-  
-   if (logProgress)
-   Log() << kHEADER<<Form("[%s] : ",DataInfo().GetName())<< "Evaluation of " << GetMethodName() << " on "
-  	   << (Data()->GetCurrentType()==Types::kTraining?"training":"testing") << " sample (" << nEvents << " events)" << Endl;
+   if (logProgress) 
+      Log() << kINFO<<Form("Dataset[%s] : ",DataInfo().GetName())<< "Evaluation of " << GetMethodName() << " on "
+            << (Data()->GetCurrentType()==Types::kTraining?"training":"testing") << " sample (" << nEvents << " events)" << Endl;
 
 
    for (Int_t ievt=firstEvt; ievt<lastEvt; ievt++) {
       Data()->SetCurrentEvent(ievt);
-      values[ievt] = GetMvaValue();
+      if (Data()->GetCurrentType() == Types::kTraining) {
+         values[ievt] = 0.0;
+      } else {
+         values[ievt] = GetMvaValue();
+      }
 
       // print progress
       if (logProgress) {
@@ -816,8 +811,7 @@ std::vector<Double_t> TMVA::MethodBase::GetMvaValues(Long64_t firstEvt, Long64_t
       }
    }
    if (logProgress) {
-     Log() << kINFO //<<Form("Dataset[%s] : ",DataInfo().GetName())
-	     << "Elapsed time for evaluation of " << nEvents <<  " events: "
+       Log() << kINFO <<Form("Dataset[%s] : ",DataInfo().GetName())<< "Elapsed time for evaluation of " << nEvents <<  " events: "
          << timer.GetElapsedTime() << "       " << Endl;
    }
    
@@ -839,7 +833,7 @@ void TMVA::MethodBase::AddClassifierOutputProb( Types::ETreeType type )
    // use timer
    Timer timer( nEvents, GetName(), kTRUE );
 
-   Log() << kINFO <<Form("Dataset[%s] : ",DataInfo().GetName()) << "Evaluation of " << GetMethodName() << " on "
+   Log() << kINFO <<Form("Dataset[%s] : ",DataInfo().GetName())<< "Evaluation of " << GetMethodName() << " on "
          << (type==Types::kTraining?"training":"testing") << " sample" << Endl;
 
    mvaProb->Resize( nEvents );
@@ -856,8 +850,7 @@ void TMVA::MethodBase::AddClassifierOutputProb( Types::ETreeType type )
       if (ievt%modulo == 0) timer.DrawProgressBar( ievt );
    }
 
-   Log() << kDEBUG <<Form("Dataset[%s] : ",DataInfo().GetName())
-	 << "Elapsed time for evaluation of " << nEvents <<  " events: "
+   Log() << kINFO <<Form("Dataset[%s] : ",DataInfo().GetName())<< "Elapsed time for evaluation of " << nEvents <<  " events: "
          << timer.GetElapsedTime() << "       " << Endl;
 }
 
@@ -1064,11 +1057,10 @@ void TMVA::MethodBase::TestClassification()
    mva_eff_b->Sumw2();
 
    // fill the histograms
-  
    ResultsClassification* mvaProb = dynamic_cast<ResultsClassification*>
       (Data()->GetResults( TString("prob_")+GetMethodName(), Types::kTesting, Types::kMaxAnalysisType ) );
 
-   Log() << kHEADER <<Form("[%s] : ",DataInfo().GetName())<< "Loop over test events and fill histograms with classifier response..." << Endl << Endl;
+   Log() << kINFO <<Form("Dataset[%s] : ",DataInfo().GetName())<< "Loop over test events and fill histograms with classifier response..." << Endl;
    if (mvaProb) Log() << kINFO << "Also filling probability and rarity histograms (on request)..." << Endl;
    std::vector<Bool_t>* mvaResTypes = mvaRes->GetValueVectorTypes();
 
@@ -1270,8 +1262,7 @@ void TMVA::MethodBase::WriteStateToFile() const
 
    // writing xml file
    TString xmlfname( tfname ); xmlfname.ReplaceAll( ".txt", ".xml" );
-   Log() << kINFO //<<Form("Dataset[%s] : ",DataInfo().GetName())
-	 << "Creating xml weight file: "
+   Log() << kINFO <<Form("Dataset[%s] : ",DataInfo().GetName())<< "Creating weight file in xml format: "
          << gTools().Color("lightblue") << xmlfname << gTools().Color("reset") << Endl;
    void* doc      = gTools().xmlengine().NewDoc();
    void* rootnode = gTools().AddChild(0,"MethodSetup", "", true);
@@ -1291,8 +1282,7 @@ void TMVA::MethodBase::ReadStateFromFile()
 
    TString tfname(GetWeightFileName());
 
-   Log() << kDEBUG //<<Form("Dataset[%s] : ",DataInfo().GetName())
-	 << "Reading weight file: "
+   Log() << kINFO <<Form("Dataset[%s] : ",DataInfo().GetName())<< "Reading weight file: "
          << gTools().Color("lightblue") << tfname << gTools().Color("reset") << Endl;
 
    if (tfname.EndsWith(".xml") ) {
@@ -1353,8 +1343,7 @@ void TMVA::MethodBase::ReadStateFromXML( void* methodNode )
 
    // update logger
    Log().SetSource( GetName() );
-   Log() << kDEBUG//<<Form("Dataset[%s] : ",DataInfo().GetName()) 
-	 << "Read method \"" << GetMethodName() << "\" of type \"" << GetMethodTypeName() << "\"" << Endl;
+   Log() << kINFO<<Form("Dataset[%s] : ",DataInfo().GetName()) << "Read method \"" << GetMethodName() << "\" of type \"" << GetMethodTypeName() << "\"" << Endl;
 
    // after the method name is read, the testvar can be set
    SetTestvarName();
@@ -1388,15 +1377,14 @@ void TMVA::MethodBase::ReadStateFromXML( void* methodNode )
                TString s;
                gTools().ReadAttr( antypeNode, "value", s);
                fTMVATrainingVersion = TString(s(s.Index("[")+1,s.Index("]")-s.Index("[")-1)).Atoi();
-               Log() << kDEBUG <<Form("[%s] : ",DataInfo().GetName()) << "MVA method was trained with TMVA Version: " << GetTrainingTMVAVersionString() << Endl;
+               Log() << kINFO<<Form("Dataset[%s] : ",DataInfo().GetName()) << "MVA method was trained with TMVA Version: " << GetTrainingTMVAVersionString() << Endl;
             }
 
             if (name == "ROOT Release" || name == "ROOT") {
                TString s;
                gTools().ReadAttr( antypeNode, "value", s);
                fROOTTrainingVersion = TString(s(s.Index("[")+1,s.Index("]")-s.Index("[")-1)).Atoi();
-               Log() << kDEBUG //<<Form("Dataset[%s] : ",DataInfo().GetName())
-		     << "MVA method was trained with ROOT Version: " << GetTrainingROOTVersionString() << Endl;
+               Log() << kINFO <<Form("Dataset[%s] : ",DataInfo().GetName())<< "MVA method was trained with ROOT Version: " << GetTrainingROOTVersionString() << Endl;
             }
             antypeNode = gTools().GetNextChild(antypeNode);
          }
@@ -2601,7 +2589,7 @@ Double_t TMVA::MethodBase::GetSeparation( PDF* pdfS, PDF* pdfB ) const
    if (!pdfB) pdfB = fSplB;
 
    if (!fSplS || !fSplB) {
-      Log()<<kDEBUG<<Form("[%s] : ",DataInfo().GetName())<< "could not calculate the separation, distributions"
+      Log()<<kWARNING<<Form("Dataset[%s] : ",DataInfo().GetName())<< "could not calculate the separation, distributions"
            << " fSplS or fSplB are not yet filled" << Endl;
       return 0;
    }else{
@@ -2808,8 +2796,7 @@ void TMVA::MethodBase::MakeClass( const TString& theClassFileName ) const
    TString className = TString("Read") + GetMethodName();
 
    TString tfname( classFileName );
-   Log() << kINFO //<<Form("Dataset[%s] : ",DataInfo().GetName())
-	 << "Creating standalone class: "
+   Log() << kINFO <<Form("Dataset[%s] : ",DataInfo().GetName())<< "Creating standalone response class: "
          << gTools().Color("lightblue") << classFileName << gTools().Color("reset") << Endl;
 
    std::ofstream fout( classFileName );
