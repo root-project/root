@@ -1,11 +1,15 @@
-/**********************************************************************************
- * Project   : TMVA - a Root-integrated toolkit for multivariate data analysis    *
- * Package   : TMVA                                                               *
- * Root Macro: TMVAMulticlass                                                     *
- *                                                                                *
- * This macro provides a simple example for the training and testing of the TMVA  *
- * multiclass classification                                                      *
- **********************************************************************************/
+/// \file
+/// \ingroup tutorial_tmva
+/// \notebook -nodraw
+/// This macro provides a simple example for the training and testing of the TMVA
+/// multiclass classification
+/// - Project   : TMVA - a Root-integrated toolkit for multivariate data analysis
+/// - Package   : TMVA
+/// - Root Macro: TMVAMulticlass
+///                                                                              
+/// \macro_output
+/// \macro_code
+/// \author Andreas Hoecker
 
 #include <cstdlib>
 #include <iostream>
@@ -34,15 +38,16 @@ void TMVAMulticlass( TString myMethodList = "" )
    TMVA::Tools::Instance();
 
    // to get access to the GUI and all tmva macros
-   // TString tmva_dir(TString(gRootDir) + "/tmva");
-   // if(gSystem->Getenv("TMVASYS"))
-   //    tmva_dir = TString(gSystem->Getenv("TMVASYS"));
-   // gROOT->SetMacroPath(tmva_dir + "/test/:" + gROOT->GetMacroPath() );
-   // gROOT->ProcessLine(".L TMVAMultiClassGui.C");
+   //
+   //     TString tmva_dir(TString(gRootDir) + "/tmva");
+   //     if(gSystem->Getenv("TMVASYS"))
+   //        tmva_dir = TString(gSystem->Getenv("TMVASYS"));
+   //     gROOT->SetMacroPath(tmva_dir + "/test/:" + gROOT->GetMacroPath() );
+   //     gROOT->ProcessLine(".L TMVAMultiClassGui.C");
 
    
    //---------------------------------------------------------------
-   // default MVA methods to be trained + tested
+   // Default MVA methods to be trained + tested
    std::map<std::string,int> Use;
    Use["MLP"]             = 1;
    Use["BDTG"]            = 1;
@@ -92,7 +97,7 @@ void TMVAMulticlass( TString myMethodList = "" )
    }
    else {
       std::cout << "Creating testdata...." << std::endl;
-      gROOT->ProcessLine(".L createData.C");
+      gROOT->ProcessLine(".L /Users/Pau/root/tutorials/tmva/createData.C");
       gROOT->ProcessLine("create_MultipleBackground(2000)");
       std::cout << " created tmva_example_multiple_background.root for tests of the multiclass features"<<std::endl;
       input = TFile::Open( fname );
@@ -102,13 +107,13 @@ void TMVAMulticlass( TString myMethodList = "" )
       exit(1);
    }
 
-   TTree *signal      = (TTree*)input->Get("TreeS");
+   TTree *signalTree  = (TTree*)input->Get("TreeS");
    TTree *background0 = (TTree*)input->Get("TreeB0");
    TTree *background1 = (TTree*)input->Get("TreeB1");
    TTree *background2 = (TTree*)input->Get("TreeB2");
    
    gROOT->cd( outfileName+TString(":/") );
-   dataloader->AddTree    (signal,"Signal");
+   dataloader->AddTree    (signalTree,"Signal");
    dataloader->AddTree    (background0,"bg0");
    dataloader->AddTree    (background1,"bg1");
    dataloader->AddTree    (background2,"bg2");
@@ -124,13 +129,13 @@ void TMVAMulticlass( TString myMethodList = "" )
    if (Use["PDEFoam"]) // PDE-Foam approach
       factory->BookMethod( dataloader,  TMVA::Types::kPDEFoam, "PDEFoam", "!H:!V:TailCut=0.001:VolFrac=0.0666:nActiveCells=500:nSampl=2000:nBin=5:Nmin=100:Kernel=None:Compress=T" );
    
-  // Train MVAs using the set of training events
+   // Train MVAs using the set of training events
    factory->TrainAllMethods();
 
-   // ---- Evaluate all MVAs using the set of test events
+   // Evaluate all MVAs using the set of test events
    factory->TestAllMethods();
 
-   // ----- Evaluate and compare performance of all configured MVAs
+   // Evaluate and compare performance of all configured MVAs
    factory->EvaluateAllMethods();
 
    // --------------------------------------------------------------
