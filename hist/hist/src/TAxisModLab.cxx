@@ -20,7 +20,7 @@ ClassImp(TAxisModLab)
 /** \class TAxisModLab
 \ingroup BasicGraphics
 
-TGaxis helper class used to store the modified labels.
+TAxis helper class used to store the modified labels.
 */
 
 ////////////////////////////////////////////////////////////////////////////////
