@@ -843,6 +843,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
       }
       fModLabs = fAxis->GetModifiedLabels();
       if (fModLabs) fNModLabs = fModLabs->GetSize();
+      else          fNModLabs = 0;
    }
    if (ndiv < 0) {
       Error(where, "Invalid number of divisions: %d",ndiv);
