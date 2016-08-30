@@ -238,6 +238,7 @@ template <typename Data_t, typename Net_t>
    {
       fStepCount++;
 
+      trainLoader.Shuffle();
       std::vector<TBatch<Architecture_t>> batches{};
       for (size_t i = 0; i < nTrainingSamples / net.GetBatchSize(); i += nThreads) {
          batches.clear();
@@ -329,6 +330,7 @@ auto TGradientDescent<Architecture_t>::TrainMomentum(const Data_t & trainingData
    {
       fStepCount++;
 
+      trainLoader.Shuffle();
       // Iterate over epoch.
       std::vector<TBatch<Architecture_t>> batches{};
       for (size_t i = 0; i < nTrainingSamples / net.GetBatchSize(); i += nThreads) {
