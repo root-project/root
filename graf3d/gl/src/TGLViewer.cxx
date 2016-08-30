@@ -1068,6 +1068,13 @@ TImage* TGLViewer::GetPictureUsingFBO(Int_t w, Int_t h,Float_t pixel_object_scal
     delete [] xx;
     delete fbo;
 
+    if (pixel_object_scale != 0)
+    {
+        fRnrCtx->SetRenderScale(old_scale);
+    }
+
+    SetViewport(old_vp);
+
     return image;
 }
 
