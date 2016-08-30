@@ -1320,29 +1320,29 @@ void TRatioPlot::CreateVisualAxes()
 
    if (fHideLabelMode == TRatioPlot::HideLabelMode::kForceHideUp) {
 
-      fUpperGYaxis->SetLabelAttributes(1, -1, 0);
+      fUpperGYaxis->ChangeLabel(1, -1, 0);
 
    } else if (fHideLabelMode == TRatioPlot::HideLabelMode::kForceHideLow) {
 
-      fLowerGYaxis->SetLabelAttributes(-1, -1, 0);
+      fLowerGYaxis->ChangeLabel(-1, -1, 0);
 
    } else {
       if (GetSeparationMargin() < 0.025) {
 
          if (fHideLabelMode != TRatioPlot::HideLabelMode::kNoHide) {
             if (fHideLabelMode == TRatioPlot::HideLabelMode::kHideUp) {
-               fUpperGYaxis->SetLabelAttributes(1, -1, 0);
+               fUpperGYaxis->ChangeLabel(1, -1, 0);
             } else if (fHideLabelMode == TRatioPlot::HideLabelMode::kHideLow) {
-               fLowerGYaxis->SetLabelAttributes(-1, -1, 0);
+               fLowerGYaxis->ChangeLabel(-1, -1, 0);
             }
          }
 
       } else {
          // reset
          if (fHideLabelMode == TRatioPlot::HideLabelMode::kHideUp) {
-            fUpperGYaxis->SetLabelAttributes(0);
+            fUpperGYaxis->ChangeLabel(0);
          } else if (fHideLabelMode == TRatioPlot::HideLabelMode::kHideLow) {
-            fLowerGYaxis->SetLabelAttributes(0);
+            fLowerGYaxis->ChangeLabel(0);
          }
 
       }
