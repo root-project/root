@@ -446,7 +446,7 @@ def split(text):
                         if comment in ("//", "// "):
                             helperDescription += "\n\n"  # Two newlines to create hard break in Markdown
                         else:
-                            helperDescription += comment[2:]
+                            helperDescription += (comment[2:] + "\n")
                             rest = rest.replace(comment, "")
                     break
                 else:   # If no comments are found create generic description
@@ -457,7 +457,7 @@ def split(text):
             newHelpers.append("\n# <markdowncell>\n " + helperDescription + " \n# <codecell>\n%%cpp -d\n" + helper)
 
     rest = rest.rstrip("\n /")  # remove newlines and empty comments at the end of string
-    
+
     return main, newHelpers, rest
 
 
@@ -599,10 +599,13 @@ def tree4GetFiles(code):
     return code
 
 
+def disableDrawProgressBar(code):
+    code = code.replace(":DrawProgressBar",":!DrawProgressBar")
+    return code
 def fixes(code):
     codeTransformers=[removePaletteEditor, runEventExe, getLibMathMore,
         roofitRemoveSpacesComments, declareNamespace, rs401dGetFiles ,
-        declareIncludes, tree4GetFiles]
+        declareIncludes, tree4GetFiles, disableDrawProgressBar]
 
     for transformer in codeTransformers:
         code = transformer(code)
@@ -626,7 +629,8 @@ def isCpp():
 
 def findTimeout():
    listLongtutorials = ["OneSidedFrequentistUpperLimitWithBands", "StandardBayesianNumericalDemo",
-   "TwoSidedFrequentistUpperLimitWithBands" , "HybridStandardForm", "rs401d_FeldmanCousins"]
+   "TwoSidedFrequentistUpperLimitWithBands" , "HybridStandardForm", "rs401d_FeldmanCousins",
+   "TMVAMultipleBackgroundExample", "TMVARegression"]
    if tutName in listLongtutorials:
       return 300
    else:
