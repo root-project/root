@@ -104,7 +104,7 @@ void TMVAClassificationCategory()
       exit(1);
    }
 
-   TTree *signal1     = (TTree*)input->Get("TreeS");
+   TTree *signalTree     = (TTree*)input->Get("TreeS");
    TTree *background = (TTree*)input->Get("TreeB");
 
    // Global event weights per tree (see below for setting event-wise weights)
@@ -112,7 +112,7 @@ void TMVAClassificationCategory()
    Double_t backgroundWeight = 1.0;
 
    // You can add an arbitrary number of signal or background trees
-   dataloader->AddSignalTree    ( signal1,     signalWeight     );
+   dataloader->AddSignalTree    ( signalTree,     signalWeight     );
    dataloader->AddBackgroundTree( background, backgroundWeight );
 
    // Apply additional cuts on the signal and background samples (can be different)

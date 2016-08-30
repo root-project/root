@@ -97,7 +97,8 @@ void TMVAMulticlass( TString myMethodList = "" )
    }
    else {
       std::cout << "Creating testdata...." << std::endl;
-      gROOT->ProcessLine(".L /Users/Pau/root/tutorials/tmva/createData.C");
+      TString createDataMacro = TString(gROOT->GetTutorialsDir()) + "/tmva/createData.C";
+      gROOT->ProcessLine(TString::Format(".L %s",createDataMacro.Data()));
       gROOT->ProcessLine("create_MultipleBackground(2000)");
       std::cout << " created tmva_example_multiple_background.root for tests of the multiclass features"<<std::endl;
       input = TFile::Open( fname );
