@@ -554,7 +554,7 @@ char *TRint::GetPrompt()
 
 const char *TRint::SetPrompt(const char *newPrompt)
 {
-   TString op = fDefaultPrompt;
+   static TString op = fDefaultPrompt;
 
    if (newPrompt && strlen(newPrompt) <= 55)
       fDefaultPrompt = newPrompt;

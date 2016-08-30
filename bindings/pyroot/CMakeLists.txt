@@ -5,9 +5,7 @@ include_directories(${PYTHON_INCLUDE_DIRS})
 
 ROOT_GENERATE_DICTIONARY(G__PyROOT *.h MODULE PyROOT LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
 
-if(GCC_MAJOR EQUAL 4)
-  add_definitions(-fno-strict-aliasing)
-endif()
+ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -fno-strict-aliasing)
 
 if(WIN32)
   set(ROOTULIBS -include:_G__cpp_setupG__Net
