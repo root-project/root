@@ -2921,6 +2921,36 @@ void addClassificationTests( UnitTestSuite& TMVA_test, bool full=true)
                                                                 "!H:!V:NTrees=400:nEventsMin=200:MaxDepth=3:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=10:PruneMethod=NoPruning:VarTransform=Decorrelate" , 0.88, 0.98) );
    if (full) TMVA_test.addTest(new MethodUnitTestWithROCLimits( TMVA::Types::kRuleFit, "RuleFit",
                                                                 "H:!V:RuleFitModule=RFTMVA:Model=ModRuleLinear:MinImp=0.001:RuleMinDist=0.001:NTrees=20:fEventsMin=0.01:fEventsMax=0.5:GDTau=-1.0:GDTauPrec=0.01:GDStep=0.01:GDNSteps=10000:GDErrScale=1.02" , 0.88, 0.98) );
+
+   TString config = "!H:V:VarTransform=N:ErrorStrategy=CROSSENTROPY"
+      ":WeightInitialization=XAVIER"
+      ":Layout=LINEAR|64,LINEAR|64,LINEAR|64,LINEAR"
+      ":TrainingStrategy=LearningRate=0.1,Momentum=0.9, ConvergenceSteps=20,"
+      "BatchSize=256,Regularization=None,TestRepetitions=5, Multithreading=True"
+      "|LearningRate=0.01,Momentum=0.5,ConvergenceSteps=20,BatchSize=256,"
+      "Regularization=None,TestRepetitions=5, Multithreading=True"
+      "|LearningRate=0.003,Momentum=0.5,ConvergenceSteps=20,BatchSize=256,"
+      "Regularization=None,TestRepetitions=5, Multithreading=True"
+      "|LearningRate=0.001,Momentum=0.0,ConvergenceSteps=20,BatchSize=256,"
+      "Regularization=None,TestRepetitions=5, Multithreading=True";
+   TString configStandard = "Architecture=STANDARD:" + config;
+   TString configCpu      = "Architecture=CPU:" + config;
+   TString configGpu      = "Architecture=GPU:" + config;
+
+
+   TMVA_test.addTest(new MethodUnitTestWithROCLimits(
+                         TMVA::Types::kDNN, "DNN Standard",
+                         configStandard, 0.85, 0.98));
+   #ifdef DNNCPU
+   TMVA_test.addTest(new MethodUnitTestWithROCLimits(
+                         TMVA::Types::kDNN, "DNN CPU", configCpu, 0.85, 0.98)
+                     );
+   #endif
+   #ifdef DNNCUDA
+   TMVA_test.addTest(new MethodUnitTestWithROCLimits(
+                         TMVA::Types::kDNN, "DNN GPU", configGpu, 0.85, 0.98)
+                     );
+   #endif
 }
 
 void addRegressionTests( UnitTestSuite& TMVA_test, bool full=true)
