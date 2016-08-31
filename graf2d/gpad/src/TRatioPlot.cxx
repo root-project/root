@@ -152,8 +152,6 @@ void TRatioPlot::Init(TH1* h1, TH1* h2,Option_t *option)
    fH1 = h1;
    fH2 = h2;
 
-   TVirtualPad *padsav = padsav;
-
    SetupPads();
 
    TString optionString = TString(option);
@@ -986,14 +984,12 @@ void TRatioPlot::BuildLowerPlot()
       Double_t res;
       Double_t error;
 
-      Double_t x;
       Double_t val;
       Double_t val2;
 
       for (Int_t i=0; i<=fH1->GetNbinsX();++i) {
          val = fH1->GetBinContent(i);
          val2 = fH2->GetBinContent(i);
-         x = fH1->GetBinCenter(i+1);
 
          if (fErrorMode == TRatioPlot::ErrorMode::kErrorAsymmetric) {
 
