@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_hist
-///
+/// \notebook
 /// Example showing a fit residual plot, where the separation margin has been set to 0.
 /// The last label of the lower plot's y axis is hidden automatically.
 ///
@@ -19,7 +19,7 @@
    h1->Sumw2();
 
    c1->Clear();
-   
+
    auto rp1 = new TRatioPlot(h1, "errfunc");
    rp1->SetGraphDrawOpt("L");
    rp1->SetSeparationMargin(0.0);
