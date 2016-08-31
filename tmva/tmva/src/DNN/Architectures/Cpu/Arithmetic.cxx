@@ -76,8 +76,8 @@ template<typename Real_t>
 void TCpu<Real_t>::Hadamard(TCpuMatrix<Real_t> &B,
                                          const TCpuMatrix<Real_t> &A)
 {
-   const Real_t __restrict__ *dataA      = A.GetRawDataPointer();
-         Real_t __restrict__ *dataB      = B.GetRawDataPointer();
+   const Real_t *dataA      = A.GetRawDataPointer();
+         Real_t *dataB      = B.GetRawDataPointer();
 
    auto f = [&dataA, &dataB](const tbb::blocked_range<size_t> & range)
    {

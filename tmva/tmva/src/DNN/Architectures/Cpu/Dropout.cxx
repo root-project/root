@@ -24,7 +24,7 @@ template<typename AFloat>
 void TCpu<AFloat>::Dropout(TCpuMatrix<AFloat> &A,
                            AFloat dropoutProbability)
 {
-   AFloat __restrict__ *data = A.GetRawDataPointer();
+   AFloat *data = A.GetRawDataPointer();
 
    auto fRange = [&data, dropoutProbability](const tbb::blocked_range<size_t> & range)
    {
