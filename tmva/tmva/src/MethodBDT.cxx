@@ -395,6 +395,13 @@ void TMVA::MethodBDT::DeclareOptions()
       fSepTypeS = "GiniIndex";
    }
 
+   DeclareOptionRef(fRegressionLossFunctionBDTGS = "Huber", "RegressionLossFunctionBDTG", "Loss function for BDTG regression.");
+   AddPreDefVal(TString("Huber"));
+   AddPreDefVal(TString("AbsoluteDeviation"));
+   AddPreDefVal(TString("LeastSquares"));
+
+   DeclareOptionRef(fHuberQuantile = 0.7, "HuberQuantile", "In the Huber loss function this is the quantile that separates the core from the tails in the residuals distribution.");
+
    DeclareOptionRef(fDoBoostMonitor=kFALSE,"DoBoostMonitor","Create control plot with ROC integral vs tree number");
 
    DeclareOptionRef(fUseFisherCuts=kFALSE, "UseFisherCuts", "Use multivariate splits using the Fisher criterion");
@@ -463,6 +470,20 @@ void TMVA::MethodBDT::ProcessOptions()
    else {
       Log() << kINFO << GetOptions() << Endl;
       Log() << kFATAL << "<ProcessOptions> unknown Separation Index option " << fSepTypeS << " called" << Endl;
+   }
+
+   if(!(fHuberQuantile > 0.0 && fHuberQuantile < 1.0)){
+      Log() << kINFO << GetOptions() << Endl;
+      Log() << kFATAL << "<ProcessOptions> Huber Quantile must be in range (0,1]. Value given, " << fHuberQuantile << ", does not match this criteria" << Endl;
+   }
+
+   fRegressionLossFunctionBDTGS.ToLower();
+   if      (fRegressionLossFunctionBDTGS == "huber")                  fRegressionLossFunctionBDTG = new HuberLossFunctionBDT(fHuberQuantile);
+   else if (fRegressionLossFunctionBDTGS == "leastsquares")           fRegressionLossFunctionBDTG = new LeastSquaresLossFunctionBDT();
+   else if (fRegressionLossFunctionBDTGS == "absolutedeviation")      fRegressionLossFunctionBDTG = new AbsoluteDeviationLossFunctionBDT();
+   else {
+      Log() << kINFO << GetOptions() << Endl;
+      Log() << kFATAL << "<ProcessOptions> unknown Regression Loss Function BDT option " << fRegressionLossFunctionBDTGS << " called" << Endl;
    }
 
    fPruneMethodS.ToLower();
@@ -1431,7 +1452,7 @@ void TMVA::MethodBDT::UpdateTargetsRegression(std::vector<const TMVA::Event*>& e
    }
    
    std::cout << "Updating targets..." << std::endl;                   
-   fLossFunctionBDT->SetTargets(eventSample, fLossFunctionEventInfo);
+   fRegressionLossFunctionBDTG->SetTargets(eventSample, fLossFunctionEventInfo);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1489,7 +1510,7 @@ Double_t TMVA::MethodBDT::GradBoostRegression(std::vector<const TMVA::Event*>& e
         iLeave!=leaves.end();++iLeave){
       std::cout << "i: sumOfWeights, residualMedian, evs.size()" << std::endl;
       std::cout << i << ": ";
-      Double_t fit = fLossFunctionBDT->Fit(iLeave->second);
+      Double_t fit = fRegressionLossFunctionBDTG->Fit(iLeave->second);
       (iLeave->first)->SetResponse(fShrinkage*fit);          
       std::cout << i << ": " << fit << std::endl;
       std::cout << std::endl;
@@ -1519,7 +1540,7 @@ void TMVA::MethodBDT::InitGradBoost( std::vector<const TMVA::Event*>& eventSampl
          i++;
       }
 
-      fLossFunctionBDT->Init(fLossFunctionEventInfo, fBoostWeights);
+      fRegressionLossFunctionBDTG->Init(fLossFunctionEventInfo, fBoostWeights);
       UpdateTargetsRegression(*fTrainSample,kTRUE);
 
       return;

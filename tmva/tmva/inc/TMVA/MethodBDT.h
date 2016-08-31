@@ -292,7 +292,10 @@ namespace TMVA {
       
       Bool_t fHistoricBool; //historic variable, only needed for "CompatibilityOptions" 
 
-      LossFunctionBDT* fLossFunctionBDT = new HuberLossFunctionBDT();
+      TString                         fRegressionLossFunctionBDTGS;       // the option string determining the loss function for BDT regression
+      Double_t                        fHuberQuantile;                     // the option string determining the quantile for the Huber Loss Function
+                                                                          // in BDT regression.
+      LossFunctionBDT* fRegressionLossFunctionBDTG;
 
       // debugging flags
       static const Int_t               fgDebugLevel;     // debug level determining some printout/control plots etc.
