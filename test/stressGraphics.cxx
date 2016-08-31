@@ -1809,7 +1809,7 @@ void ratioplot()
    rh1->Sumw2();
    rh2->Scale(1.9 / 2.);
    TRatioPlot *rp = new TRatioPlot(rh1, rh2);
-   rp->SetTicks(0, 1);
+   C->SetTicks(0, 1);
    rp->Draw();
 
    TestReport1(C, "Ratio plot");
