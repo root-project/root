@@ -159,16 +159,26 @@ TXMLFile* TBufferXML::XmlFile()
 TString TBufferXML::ConvertToXML(const TObject* obj, Bool_t GenericLayout, Bool_t UseNamespaces)
 {
    // converts object, inherited from TObject class, to XML string
-   // fmt contains configuration of XML layout. See TXMLSetup class for detatils
+   // fmt contains configuration of XML layout. See TXMLSetup class for details
 
-   return ConvertToXML(obj, obj ? obj->IsA() : 0, GenericLayout, UseNamespaces);
+   TClass *clActual = 0;
+   void *ptr = (void *) obj;
+
+   if (obj!=0) {
+      clActual = TObject::Class()->GetActualClass(obj);
+      if (!clActual) clActual = TObject::Class(); else
+      if (clActual != TObject::Class())
+         ptr = (void *) ((Long_t) obj - clActual->GetBaseClassOffset(TObject::Class()));
+   }
+
+   return ConvertToXML(ptr, clActual, GenericLayout, UseNamespaces);
 }
 
 //______________________________________________________________________________
 TString TBufferXML::ConvertToXML(const void* obj, const TClass* cl, Bool_t GenericLayout, Bool_t UseNamespaces)
 {
    // converts any type of object to XML string
-   // fmt contains configuration of XML layout. See TXMLSetup class for detatils
+   // fmt contains configuration of XML layout. See TXMLSetup class for details
 
    TXMLEngine xml;
 
@@ -1282,9 +1292,9 @@ void TBufferXML::PerformPostProcessing()
          } else return; // can not be something else
          fXML->ShiftToNext(node);
       }
-      
+
       TString str;
-      
+
       if (GetIOVersion()<3) {
          if (nodeuchar==0) return;
          if (nodecharstar!=0)
@@ -1297,7 +1307,7 @@ void TBufferXML::PerformPostProcessing()
             str = fXML->GetAttr(nodestring, xmlio::v);
 	 fXML->UnlinkFreeNode(nodestring);
       }
-      
+
       fXML->NewAttr(elemnode, 0, "str", str);
    } else
    if (elem->GetType()==TStreamerInfo::kTObject) {
@@ -1365,7 +1375,7 @@ void TBufferXML::PerformPreProcessing(const TStreamerElement* elem, XMLNodePoint
       if (!fXML->HasAttr(elemnode,"str")) return;
       TString str = fXML->GetAttr(elemnode, "str");
       fXML->FreeAttr(elemnode, "str");
-      
+
       if (GetIOVersion()<3) {
          Int_t len = str.Length();
          XMLNodePointer_t ucharnode = fXML->NewChild(elemnode, 0, xmlio::UChar,0);
