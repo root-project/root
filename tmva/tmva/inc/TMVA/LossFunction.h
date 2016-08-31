@@ -77,7 +77,8 @@ namespace TMVA {
 
       // abstract methods that need to be implemented
       virtual Double_t CalculateLoss(LossFunctionEventInfo& e) = 0;
-      virtual Double_t CalculateLoss(std::vector<LossFunctionEventInfo>& evs) = 0;
+      virtual Double_t CalculateNetLoss(std::vector<LossFunctionEventInfo>& evs) = 0;
+      virtual Double_t CalculateMeanLoss(std::vector<LossFunctionEventInfo>& evs) = 0;
 
       virtual TString Name() = 0;
       virtual Int_t Id() = 0;
@@ -144,7 +145,8 @@ namespace TMVA {
 
       // The LossFunction methods
       Double_t CalculateLoss(LossFunctionEventInfo& e);
-      Double_t CalculateLoss(std::vector<LossFunctionEventInfo>& evs);
+      Double_t CalculateNetLoss(std::vector<LossFunctionEventInfo>& evs);
+      Double_t CalculateMeanLoss(std::vector<LossFunctionEventInfo>& evs);
 
       // We go ahead and implement the simple ones
       TString Name(){ return TString("Huber_Loss_Function"); };
@@ -190,7 +192,91 @@ namespace TMVA {
       // some data fields
    };
 
+   ///////////////////////////////////////////////////////////////////////////////////////////////
+   // LeastSquares loss function for regression error calculations
+   ///////////////////////////////////////////////////////////////////////////////////////////////
    
+   class LeastSquaresLossFunction : public virtual LossFunction{
+
+   public:
+      LeastSquaresLossFunction(){};
+      ~LeastSquaresLossFunction(){};
+
+      // The LossFunction methods
+      Double_t CalculateLoss(LossFunctionEventInfo& e);
+      Double_t CalculateNetLoss(std::vector<LossFunctionEventInfo>& evs);
+      Double_t CalculateMeanLoss(std::vector<LossFunctionEventInfo>& evs);
+
+      // We go ahead and implement the simple ones
+      TString Name(){ return TString("Least_Squares_Loss_Function"); };
+      Int_t Id(){ return 1; } ;
+   };
+
+   ///////////////////////////////////////////////////////////////////////////////////////////////
+   // Least Squares loss function with boosted decision tree functionality
+   ///////////////////////////////////////////////////////////////////////////////////////////////
+   
+   // The bdt loss function implements the LossFunctionBDT interface and inherits the LeastSquaresLossFunction
+   // functionality.
+   class LeastSquaresLossFunctionBDT : public LossFunctionBDT, public LeastSquaresLossFunction{
+   
+   public:
+      LeastSquaresLossFunctionBDT(){};
+      ~LeastSquaresLossFunctionBDT(){};
+
+      // LossFunction methods taken from LeastSquaresLossFunction
+      // Give the BDT implementation a different name though.
+      TString Name(){ return TString("Least_Squares_Loss_Function_BDT"); };
+      
+      // The LossFunctionBDT methods
+      void Init(std::map<const TMVA::Event*, LossFunctionEventInfo>& evinfomap, std::vector<double>& boostWeights);
+      void SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap);
+      Double_t Target(LossFunctionEventInfo& e);
+      Double_t Fit(std::vector<LossFunctionEventInfo>& evs);
+   };
+
+   ///////////////////////////////////////////////////////////////////////////////////////////////
+   // Absolute Deviation loss function for regression error calculations
+   ///////////////////////////////////////////////////////////////////////////////////////////////
+   
+   class AbsoluteDeviationLossFunction : public virtual LossFunction{
+
+   public:
+      AbsoluteDeviationLossFunction(){};
+      ~AbsoluteDeviationLossFunction(){};
+
+      // The LossFunction methods
+      Double_t CalculateLoss(LossFunctionEventInfo& e);
+      Double_t CalculateNetLoss(std::vector<LossFunctionEventInfo>& evs);
+      Double_t CalculateMeanLoss(std::vector<LossFunctionEventInfo>& evs);
+
+      // We go ahead and implement the simple ones
+      TString Name(){ return TString("Absolute_Deviation_Loss_Function"); };
+      Int_t Id(){ return 2; } ;
+   };
+
+   ///////////////////////////////////////////////////////////////////////////////////////////////
+   // Absolute Deviation loss function with boosted decision tree functionality
+   ///////////////////////////////////////////////////////////////////////////////////////////////
+   
+   // The bdt loss function implements the LossFunctionBDT interface and inherits the AbsoluteDeviationLossFunction
+   // functionality.
+   class AbsoluteDeviationLossFunctionBDT : public LossFunctionBDT, public AbsoluteDeviationLossFunction{
+   
+   public:
+      AbsoluteDeviationLossFunctionBDT(){};
+      ~AbsoluteDeviationLossFunctionBDT(){};
+
+      // LossFunction methods taken from AbsoluteDeviationLossFunction
+      // Give the BDT implementation a different name though.
+      TString Name(){ return TString("Absolute_Deviation_Loss_Function_BDT"); };
+      
+      // The LossFunctionBDT methods
+      void Init(std::map<const TMVA::Event*, LossFunctionEventInfo>& evinfomap, std::vector<double>& boostWeights);
+      void SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap);
+      Double_t Target(LossFunctionEventInfo& e);
+      Double_t Fit(std::vector<LossFunctionEventInfo>& evs);
+   };
 }
 
 #endif
