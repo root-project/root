@@ -210,6 +210,13 @@ set(returncode_1 fit/fit2a.C fit/graph2dfit.C
                  hist/ContourList.C
                  hist/hstack.C
                  hist/hbars.C
+                 hist/ratioplot.C
+                 hist/ratioplot1.C
+                 hist/ratioplot2.C
+                 hist/ratioplot3.C
+                 hist/ratioplot4.C
+                 hist/ratioplot5.C
+                 hist/ratioplot6.C
                  hist/h2proj.C
                  hist/th2polyBoxes.C
                  hist/statsEditing.C
