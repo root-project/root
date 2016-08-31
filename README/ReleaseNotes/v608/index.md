@@ -274,6 +274,17 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
   specified by `SetMaximum()` and `SetMinimum()`.
 * In `TMarker3DBox` when a box marker has a size equal to zero it is not painted.
   Painting it produced a dot with the X11 backend.
+* New class `TRatioPlot` implemented by Paul Gessinger <hello@paulgessinger.com>.
+  Class for displaying ratios, differences and fit residuals.
+
+  `TRatioPlot` has two constructors, one which accepts two histograms, and is responsible
+  for setting up the calculation of ratios and differences. This calculation is in part
+  delegated to `TEfficiency`. A single option can be given as a parameter, that is
+  used to determine which procedure is chosen. The remaining option string is then
+  passed through to the calculation, if applicable.
+
+  Several examples illustrate how to use this class. See:
+  `$ROOTSYS/tutorials/hist/ratioplot?.C`
 
 ## New histogram drawing options
 
