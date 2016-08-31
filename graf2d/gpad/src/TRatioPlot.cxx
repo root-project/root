@@ -9,30 +9,74 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <iostream>
-#include "TROOT.h"
-#include "TClassRef.h"
-#include "TVirtualPad.h"
 #include "TRatioPlot.h"
-#include "TBrowser.h"
-#include "TH1.h"
-#include "TF1.h"
-#include "TPad.h"
-#include "TString.h"
-#include "TGraphAsymmErrors.h"
-#include "TGraphErrors.h"
-#include "TGaxis.h"
-#include "TCanvas.h"
-#include "TFrame.h"
-#include "TMath.h"
-#include "TLine.h"
-#include "TVirtualFitter.h"
-#include "TFitResult.h"
-#include "THStack.h"
 
-#define _(x) std::cout << #x;
-#define __(x) std::cout << "[" << std::string(__FILE__).substr(std::string(__FILE__).find_last_of("/\\") + 1) << ":" <<__LINE__ << "] " << x << std::endl ;
-#define var_dump(v) __(#v << "=" << (v));
+#ifndef ROOT_TROOT
+#include "TROOT.h"
+#endif 
+
+#ifndef ROOT_TClassRef
+#include "TClassRef.h"
+#endif 
+
+#ifndef ROOT_TVirtualPad
+#include "TVirtualPad.h"
+#endif 
+
+#ifndef ROOT_TBrowser
+#include "TBrowser.h"
+#endif 
+
+#ifndef ROOT_TH1
+#include "TH1.h"
+#endif 
+
+#ifndef ROOT_TF1
+#include "TF1.h"
+#endif 
+
+#ifndef ROOT_TPad
+#include "TPad.h"
+#endif 
+
+#ifndef ROOT_TString
+#include "TString.h"
+#endif
+
+#ifndef ROOT_TMath
+#include "TMath.h"
+#endif
+
+#ifndef ROOT_TGraphAsymmErrors
+#include "TGraphAsymmErrors.h"
+#endif 
+
+#ifndef ROOT_TGraphErrors
+#include "TGraphErrors.h"
+#endif 
+
+#ifndef ROOT_TGaxis
+#include "TGaxis.h"
+#endif 
+
+#ifndef ROOT_TLine
+#include "TLine.h"
+#endif
+
+#ifndef ROOT_TVirtualFitter
+#include "TVirtualFitter.h"
+#endif
+
+#ifndef ROOT_TFitResult
+#include "TFitResult.h"
+#endif
+
+#ifndef ROOT_THStack
+#include "THStack.h"
+#endif
+
+#include <iostream>
+
 
 /** \class TRatioPlot
     \ingroup gpad
@@ -203,11 +247,6 @@ void TRatioPlot::Init(TH1* h1, TH1* h2,Option_t *option)
 /// \param h1 First histogram
 /// \param h2 Second histogram
 /// \param option Steers the error calculation, as well as ratio / difference
-/// \param h1DrawOpt Drawing option for first histogram
-/// \param h2DrawOpt Drawing option for second histogram
-/// \param graphDrawOpt Drawing option the lower graph
-/// \param name Name for the object
-/// \param title Title for the object
 
 TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, Option_t *option)
    : fGridlines()
@@ -240,11 +279,6 @@ TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, Option_t *option)
 /// \param st The THStack object
 /// \param h2 The other histogram
 /// \param option Steers the calculation of the lower plot
-/// \param h1DrawOpt Drawing option for the stack
-/// \param h2DrawOpt Drawing options for the other histogram
-/// \param graphDrawOpt Drawing option for the lower plot graph
-/// \param name The name of the object
-/// \param title The title of the object
 
 TRatioPlot::TRatioPlot(THStack* st, TH1* h2, Option_t *option)
 {
@@ -277,11 +311,7 @@ TRatioPlot::TRatioPlot(THStack* st, TH1* h2, Option_t *option)
 /// Constructor for one histogram and a fit.
 /// \param h1 The histogram
 /// \param option Steers the error calculation
-/// \param h1DrawOpt Drawing option for the histogram
-/// \param graphDrawOpt Drawing option the lower graph
 /// \param fitres Explicit fit result to be used for calculation. Uses last fit if left empty
-/// \param name Name for the object
-/// \param title Title for the object
 
 TRatioPlot::TRatioPlot(TH1* h1, Option_t *option, TFitResult *fitres)
    : fH1(h1),

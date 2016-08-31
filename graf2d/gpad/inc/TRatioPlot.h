@@ -21,9 +21,17 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class TObject;
+#ifndef ROOT_TObject
+#include "TObject.h"
+#endif
+
+#ifndef ROOT_TString
+#include "TString.h"
+#endif
+
 class TH1;
 class TPad;
+class TVirtualPad;
 class TGraphAsymmErrors;
 class TGraphErrors;
 class TGraph;
