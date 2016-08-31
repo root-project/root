@@ -35,6 +35,7 @@ set(LLVM_TARGETS_TO_BUILD ${ROOT_CLING_TARGET} CACHE STRING "Semicolon-separated
 
 #---Protect against warnings clang/gcc would fire----------------------------------------------------
 ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-comment)
+ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-misleading-indentation)
 ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-missing-field-initializers)
 if(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
   ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-conditional-uninitialized)
