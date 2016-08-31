@@ -26,7 +26,7 @@ namespace DNN
 template<typename AFloat>
 AFloat TCpu<AFloat>::L1Regularization(const TCpuMatrix<AFloat> &Weights)
 {
-   const AFloat __restrict__ *data = Weights.GetRawDataPointer();
+   const AFloat  *data = Weights.GetRawDataPointer();
 
    auto f = [&data](const tbb::blocked_range<size_t> & range,
                     AFloat partialSum)
@@ -58,8 +58,8 @@ void TCpu<AFloat>::AddL1RegularizationGradients(
     AFloat weightDecay)
 {
 
-         AFloat __restrict__ *dataB     =  B.GetRawDataPointer();
-   const AFloat __restrict__ *dataA      = A.GetRawDataPointer();
+         AFloat  *dataB     =  B.GetRawDataPointer();
+   const AFloat  *dataA      = A.GetRawDataPointer();
 
    auto f = [&dataA, &dataB, weightDecay](const tbb::blocked_range<size_t> & range)
    {
@@ -80,7 +80,7 @@ void TCpu<AFloat>::AddL1RegularizationGradients(
 template<typename AFloat>
 AFloat TCpu<AFloat>::L2Regularization(const TCpuMatrix<AFloat> &Weights)
 {
-   const AFloat __restrict__ *data = Weights.GetRawDataPointer();
+   const AFloat  *data = Weights.GetRawDataPointer();
 
    auto f = [&data](const tbb::blocked_range<size_t> & range,
                     AFloat partialSum)
@@ -112,8 +112,8 @@ void TCpu<AFloat>::AddL2RegularizationGradients(
     AFloat weightDecay)
 {
 
-         AFloat __restrict__ *dataB     =  B.GetRawDataPointer();
-   const AFloat __restrict__ *dataA      = A.GetRawDataPointer();
+         AFloat  *dataB     =  B.GetRawDataPointer();
+   const AFloat  *dataA      = A.GetRawDataPointer();
 
    auto f = [&dataA, &dataB, weightDecay](const tbb::blocked_range<size_t> & range)
    {

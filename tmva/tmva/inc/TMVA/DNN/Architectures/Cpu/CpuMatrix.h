@@ -114,7 +114,7 @@ template<typename AFloat>
 template<typename Function_t>
 inline void TCpuMatrix<AFloat>::Map(Function_t &f)
 {
-   AFloat __restrict__ *data = GetRawDataPointer();
+   AFloat  *data = GetRawDataPointer();
 
    auto fRange = [data, &f](const tbb::blocked_range<size_t> & range)
    {
@@ -134,8 +134,8 @@ template<typename AFloat>
 template<typename Function_t>
 inline void TCpuMatrix<AFloat>::MapFrom(Function_t &f, const TCpuMatrix &A)
 {
-         AFloat __restrict__ *dataB = GetRawDataPointer();
-   const AFloat __restrict__ *dataA = A.GetRawDataPointer();
+         AFloat  *dataB = GetRawDataPointer();
+   const AFloat  *dataA = A.GetRawDataPointer();
 
    auto fRange = [&dataB, &dataA, &f](const tbb::blocked_range<size_t> & range)
    {

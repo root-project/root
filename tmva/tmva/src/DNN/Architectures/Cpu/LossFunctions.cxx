@@ -27,8 +27,8 @@ template<typename AFloat>
 AFloat TCpu<AFloat>::MeanSquaredError(const TCpuMatrix<AFloat> &Y,
                                       const TCpuMatrix<AFloat> &output)
 {
-   const AFloat __restrict__ *dataY      = Y.GetRawDataPointer();
-   const AFloat __restrict__ *dataOutput = output.GetRawDataPointer();
+   const AFloat  *dataY      = Y.GetRawDataPointer();
+   const AFloat  *dataOutput = output.GetRawDataPointer();
 
    auto f = [&dataY, &dataOutput](const tbb::blocked_range<size_t> & range,
                                   AFloat partialSum)
@@ -63,9 +63,9 @@ void TCpu<AFloat>::MeanSquaredErrorGradients(
     const TCpuMatrix<AFloat> & output)
 {
 
-         AFloat __restrict__ *dataDY     = dY.GetRawDataPointer();
-   const AFloat __restrict__ *dataY      = Y.GetRawDataPointer();
-   const AFloat __restrict__ *dataOutput = output.GetRawDataPointer();
+         AFloat  *dataDY     = dY.GetRawDataPointer();
+   const AFloat  *dataY      = Y.GetRawDataPointer();
+   const AFloat  *dataOutput = output.GetRawDataPointer();
    AFloat norm = 1.0 / ((AFloat) Y.GetNrows() * Y.GetNcols());
 
    auto f = [&dataDY, &dataY, &dataOutput, norm](const tbb::blocked_range<size_t> & range)
@@ -87,8 +87,8 @@ template<typename AFloat>
 AFloat TCpu<AFloat>::CrossEntropy(const TCpuMatrix<AFloat> &Y,
                                                const TCpuMatrix<AFloat> &output)
 {
-   const AFloat __restrict__ *dataY      = Y.GetRawDataPointer();
-   const AFloat __restrict__ *dataOutput = output.GetRawDataPointer();
+   const AFloat  *dataY      = Y.GetRawDataPointer();
+   const AFloat  *dataOutput = output.GetRawDataPointer();
 
    auto f = [&dataY, &dataOutput](const tbb::blocked_range<size_t> & range,
                                   AFloat partialSum)
@@ -122,9 +122,9 @@ void TCpu<AFloat>::CrossEntropyGradients(
     const TCpuMatrix<AFloat> & Y,
     const TCpuMatrix<AFloat> & output)
 {
-         AFloat __restrict__ *dataDY     = dY.GetRawDataPointer();
-   const AFloat __restrict__ *dataY      = Y.GetRawDataPointer();
-   const AFloat __restrict__ *dataOutput = output.GetRawDataPointer();
+         AFloat  *dataDY     = dY.GetRawDataPointer();
+   const AFloat  *dataY      = Y.GetRawDataPointer();
+   const AFloat  *dataOutput = output.GetRawDataPointer();
    AFloat norm = 1.0 / ((AFloat) Y.GetNrows() * Y.GetNcols());
 
    auto f = [&dataDY, &dataY, &dataOutput, norm](const tbb::blocked_range<size_t> & range)
