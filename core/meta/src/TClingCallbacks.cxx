@@ -551,9 +551,9 @@ bool TClingCallbacks::tryResolveAtRuntimeInternal(LookupResult &R, Scope *S) {
    clang::DeclContext* WrapperDC = S->getEntity();
    clang::FunctionDecl* Wrapper = nullptr;
    while (true) {
-      if (WrapperDC == TU)
+      if (!WrapperDC || WrapperDC == TU)
          return false;
-      Wrapper = dyn_cast<FunctionDecl>(Wrapper);
+      Wrapper = dyn_cast<FunctionDecl>(WrapperDC);
       if (Wrapper && utils::Analyze::IsWrapper(Wrapper))
           break;
       WrapperDC = WrapperDC->getParent();
