@@ -2638,6 +2638,15 @@ static void R__WriteDependencyFile(const TString &build_loc, const TString &depf
          }
       }
    }
+   {
+      // Add dependency on rootcling.
+      char *rootCling = gSystem->Which(gSystem->Getenv("PATH"),"rootcling");
+      if (rootCling) {
+         R__AddPath(adddictdep,rootCling);
+         adddictdep += " ";
+         delete [] rootCling;
+      }
+   }
    adddictdep += " >> \""+depfilename+"\"";
 
    TString addversiondep( "echo ");
