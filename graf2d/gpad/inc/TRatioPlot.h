@@ -138,6 +138,7 @@ protected:
    virtual Bool_t SyncPadMargins();
    void SetPadMargins();
    void CreateGridline();
+   void BuildLowerPlot();
 
    void ImportAxisAttributes(TGaxis* gaxis, TAxis* axis);
 
@@ -162,7 +163,6 @@ public:
    virtual void Draw(Option_t *chopt="");
    virtual void Browse(TBrowser *b);
 
-   virtual void BuildLowerPlot();
 
    virtual void Paint(Option_t *opt = "");
 

@@ -1674,13 +1674,13 @@ void TRatioPlot::SetSplitFraction(Float_t sf) {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets the confidence levels used to calculate the bands in the fit residual
-/// case. Defaults to 1 and 2 sigma. You have to call TRatioPlot::BuildLowerPlot
-/// to rebuild the bands.
+/// case. Defaults to 1 and 2 sigma. 
 
 void TRatioPlot::SetConfidenceLevels(Double_t c1, Double_t c2)
 {
    fCl1 = c1;
    fCl2 = c2;
+   BuildLowerPlot();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
