@@ -551,7 +551,7 @@ void TRatioPlot::SetSeparationMargin(Float_t margin)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the separation margin value.
 
-Float_t TRatioPlot::GetSeparationMargin()
+Float_t TRatioPlot::GetSeparationMargin() const
 {
    Float_t sf = fSplitFraction;
    Float_t up = fUpBottomMargin * (1-sf);
@@ -696,7 +696,7 @@ void TRatioPlot::Draw(Option_t *option)
 /// ../../../tutorials/hist/ratioplot3.C
 /// End_Macro
 
-TGraph* TRatioPlot::GetLowerRefGraph()
+TGraph* TRatioPlot::GetLowerRefGraph() const
 {
    if (fLowerPad == 0) {
       Error("GetLowerRefGraph", "Lower pad has not been defined");
@@ -732,7 +732,7 @@ TGraph* TRatioPlot::GetLowerRefGraph()
 /// rp->GetLowerRefGraph()->GetXaxis();
 /// ~~~
 
-TAxis* TRatioPlot::GetLowerRefXaxis()
+TAxis* TRatioPlot::GetLowerRefXaxis() const
 {
    return GetLowerRefGraph()->GetXaxis();
 }
@@ -744,7 +744,7 @@ TAxis* TRatioPlot::GetLowerRefXaxis()
 /// rp->GetLowerRefGraph()->GetYaxis();
 /// ~~~
 
-TAxis* TRatioPlot::GetLowerRefYaxis()
+TAxis* TRatioPlot::GetLowerRefYaxis() const
 {
    return GetLowerRefGraph()->GetYaxis();
 }
@@ -754,7 +754,7 @@ TAxis* TRatioPlot::GetLowerRefYaxis()
 /// in the upper pads list of primitives.
 /// Note that it returns a `TObject`, so you need to test and cast it to use it.
 
-TObject* TRatioPlot::GetUpperRefObject()
+TObject* TRatioPlot::GetUpperRefObject() const
 {
    TList *primlist = fUpperPad->GetListOfPrimitives();
    TObject *refobj = 0;
@@ -772,7 +772,7 @@ TObject* TRatioPlot::GetUpperRefObject()
 ////////////////////////////////////////////////////////////////////////////////
 /// Gets the x axis of the object returned by `TRatioPlot::GetUpperRefObject`.
 
-TAxis* TRatioPlot::GetUpperRefXaxis()
+TAxis* TRatioPlot::GetUpperRefXaxis() const
 {
    TObject *refobj = GetUpperRefObject();
 
@@ -790,7 +790,7 @@ TAxis* TRatioPlot::GetUpperRefXaxis()
 ////////////////////////////////////////////////////////////////////////////////
 /// Gets the y axis of the object returned by `TRatioPlot::GetUpperRefObject`.
 
-TAxis* TRatioPlot::GetUpperRefYaxis()
+TAxis* TRatioPlot::GetUpperRefYaxis() const
 {
    TObject *refobj = GetUpperRefObject();
 

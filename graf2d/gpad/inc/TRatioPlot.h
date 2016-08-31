@@ -180,20 +180,20 @@ public:
    void SubPadResized();
 
    // Getters
-   TAxis *GetXaxis() { return fSharedXAxis; }
-   TAxis *GetUpYaxis() { return fUpYaxis; }
-   TAxis *GetLowYaxis() { return fLowYaxis; }
+   TAxis *GetXaxis() const { return fSharedXAxis; }
+   TAxis *GetUpYaxis() const { return fUpYaxis; }
+   TAxis *GetLowYaxis() const { return fLowYaxis; }
 
-   virtual TGraph *GetLowerRefGraph();
-   TAxis *GetLowerRefXaxis();
-   TAxis *GetLowerRefYaxis();
+   virtual TGraph *GetLowerRefGraph() const;
+   TAxis *GetLowerRefXaxis() const;
+   TAxis *GetLowerRefYaxis() const;
 
-   virtual TObject *GetUpperRefObject();
-   TAxis *GetUpperRefXaxis();
-   TAxis *GetUpperRefYaxis();
+   virtual TObject *GetUpperRefObject() const;
+   TAxis *GetUpperRefXaxis() const;
+   TAxis *GetUpperRefYaxis() const;
 
-   TPad * GetUpperPad() { return fUpperPad; }
-   TPad * GetLowerPad() { return fLowerPad; }
+   TPad * GetUpperPad() const { return fUpperPad; }
+   TPad * GetLowerPad() const { return fLowerPad; }
 
    // Setters
    void SetFitResult(TFitResultPtr fitres);
@@ -207,7 +207,7 @@ public:
    void SetRightMargin(Float_t margin);
 
    void SetSeparationMargin(Float_t);
-   Float_t GetSeparationMargin();
+   Float_t GetSeparationMargin() const;
    void SetSplitFraction(Float_t sf);
    void SetConfidenceLevels(Double_t cl1, Double_t cl2);
 
