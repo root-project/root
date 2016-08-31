@@ -630,7 +630,7 @@ def isCpp():
 def findTimeout():
    listLongtutorials = ["OneSidedFrequentistUpperLimitWithBands", "StandardBayesianNumericalDemo",
    "TwoSidedFrequentistUpperLimitWithBands" , "HybridStandardForm", "rs401d_FeldmanCousins",
-   "TMVAMultipleBackgroundExample", "TMVARegression"]
+   "TMVAMultipleBackgroundExample", "TMVARegression", "TMVAClassification"]
    if tutName in listLongtutorials:
       return 300
    else:
@@ -753,7 +753,7 @@ def mainfunction(text):
     if r != 0:
         sys.stderr.write("NOTEBOOK_CONVERSION_WARNING: Nbconvert failed for notebook %s with return code %s\n" %(outname,r))
     if isJsroot:
-        subprocess.call(["jupyter", "trust",  os.path.join(outdir + outnameconverted)])
+        subprocess.call(["jupyter", "trust",  os.path.join(outdir, outnameconverted)])
     if r == 0:  # Only remove notebook without output if nbconvert succeedes 
         os.remove(outPathName)
 
