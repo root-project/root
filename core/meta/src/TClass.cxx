@@ -3519,6 +3519,11 @@ TList *TClass::GetListOfEnums(Bool_t requestListLoading /* = kTRUE */)
          if (! ((kIsClass | kIsStruct | kIsUnion) & fProperty) ) {
             R__LOCKGUARD2(gROOTMutex);
             temp->Load();
+         } else if ( temp->IsA() == TListOfEnumsWithLock::Class() ) {
+            // We have a class for which the list was not loaded fully at
+            // first use.
+            R__LOCKGUARD2(gROOTMutex);
+            temp->Load();
          }
       }
       return temp;
