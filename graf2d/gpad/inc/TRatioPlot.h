@@ -1,8 +1,8 @@
-// @(#)root/hist:$Id$
-// Author: Rene Brun   10/12/2001
+// @(#)root/gpad:$Id$
+// Author: Paul Gessinger   25/08/2016
 
 /*************************************************************************
- * Copyright (C) 1995-2001, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2016, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *

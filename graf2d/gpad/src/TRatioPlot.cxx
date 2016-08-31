@@ -1,8 +1,8 @@
-// @(#)root/hist:$Id$
-// Author: Rene Brun   10/12/2001
+// @(#)root/gpad:$Id$
+// Author: Paul Gessinger   25/08/2016
 
 /*************************************************************************
- * Copyright (C) 1995-2001, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2016, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -33,8 +33,6 @@
 #define _(x) std::cout << #x;
 #define __(x) std::cout << "[" << std::string(__FILE__).substr(std::string(__FILE__).find_last_of("/\\") + 1) << ":" <<__LINE__ << "] " << x << std::endl ;
 #define var_dump(v) __(#v << "=" << (v));
-
-ClassImp(TRatioPlot)
 
 /** \class TRatioPlot
     \ingroup gpad
