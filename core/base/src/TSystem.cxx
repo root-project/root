@@ -2872,7 +2872,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          return kFALSE;
       }
    }
-   { // Remove multiple '/' characters, rootcint treats them as comments.
+   { // Remove multiple '/' characters, rootcling treats them as comments.
       Ssiz_t pos = 0;
       while ((pos = library.Index("//", 2, pos, TString::kExact)) != kNPOS) {
          library.Remove(pos, 1);
@@ -3309,7 +3309,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    TString dict = libname + "_ACLiC_dict";
 
    // the file name end up in the file produced
-   // by rootcint as a variable name so all character need to be valid!
+   // by rootcling as a variable name so all character need to be valid!
    static const int maxforbidden = 27;
    static const char *forbidden_chars[maxforbidden] =
       { "+","-","*","/","&","%","|","^",">","<",
@@ -3465,7 +3465,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    }
    rcling.Append(filename_fullpath).Append("\" \"").Append(linkdef).Append("\"");;
 
-   // ======= Run rootcint
+   // ======= Run rootcling
    if (withInfo) {
       if (verboseLevel>3) {
          ::Info("ACLiC","creating the dictionary files");
