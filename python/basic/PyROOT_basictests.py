@@ -184,7 +184,7 @@ class Basic4ArgumentPassingTestCase( MyTestCase ):
    def test5TStringByValueCompiled( self ):
       """Test passing a TString by value through a compiled function"""
 
-      gROOT.LoadMacro( 'ArgumentPassingCompiled.C+g' )
+      gROOT.LoadMacro( 'ArgumentPassingCompiled.C++' )
 
       f = ROOT.CompiledTest.StringValueArguments
 
