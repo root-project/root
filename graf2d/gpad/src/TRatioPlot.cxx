@@ -146,8 +146,7 @@ TRatioPlot::~TRatioPlot()
 ////////////////////////////////////////////////////////////////////////////////
 /// Internal method that shares constructor logic
 
-void TRatioPlot::Init(TH1* h1, TH1* h2,
-      Option_t *option, Option_t *h1DrawOpt, Option_t *h2DrawOpt, Option_t *graphDrawOpt)
+void TRatioPlot::Init(TH1* h1, TH1* h2,Option_t *option)
 {
 
    fH1 = h1;
@@ -185,16 +184,10 @@ void TRatioPlot::Init(TH1* h1, TH1* h2,
 
    fOption = optionString;
 
-   TString h1DrawOptString = TString(h1DrawOpt);
-   TString h2DrawOptString = TString(h2DrawOpt);
-   TString graphDrawOptString = TString(graphDrawOpt);
 
-   h2DrawOptString.ReplaceAll("same", "");
-   h2DrawOptString.ReplaceAll("SAME", "");
-
-   fH1DrawOpt = h1DrawOptString;
-   fH2DrawOpt = h2DrawOptString;
-   fGraphDrawOpt = graphDrawOptString;
+   fH1DrawOpt = "hist";
+   fH2DrawOpt = "E";
+   fGraphDrawOpt = "AP";
 
 
    // build ratio, everything is ready
@@ -218,8 +211,7 @@ void TRatioPlot::Init(TH1* h1, TH1* h2,
 /// \param name Name for the object
 /// \param title Title for the object
 
-TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, Option_t *option, Option_t *h1DrawOpt, Option_t *h2DrawOpt, 
-      Option_t *graphDrawOpt)
+TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, Option_t *option)
    : fGridlines()
 {
    gROOT->GetListOfCleanups()->Add(this);
@@ -239,7 +231,7 @@ TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, Option_t *option, Option_t *h1DrawOpt, 
 
    fHistDrawProxy = h1;
 
-   Init(h1, h2, option, h1DrawOpt, h2DrawOpt, graphDrawOpt);
+   Init(h1, h2, option);
 
 }
 
@@ -256,8 +248,7 @@ TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, Option_t *option, Option_t *h1DrawOpt, 
 /// \param name The name of the object
 /// \param title The title of the object
 
-TRatioPlot::TRatioPlot(THStack* st, TH1* h2, Option_t *option, Option_t *h1DrawOpt, Option_t *h2DrawOpt, 
-      Option_t *graphDrawOpt)
+TRatioPlot::TRatioPlot(THStack* st, TH1* h2, Option_t *option)
 {
    if (!st || !h2) {
       Warning("TRatioPlot", "Need a histogram and a stack");
@@ -280,7 +271,7 @@ TRatioPlot::TRatioPlot(THStack* st, TH1* h2, Option_t *option, Option_t *h1DrawO
 
    fHistDrawProxy = st;
 
-   Init(tmpHist, h2, option, h1DrawOpt, h2DrawOpt, graphDrawOpt);
+   Init(tmpHist, h2, option);
 
 }
 
@@ -294,7 +285,7 @@ TRatioPlot::TRatioPlot(THStack* st, TH1* h2, Option_t *option, Option_t *h1DrawO
 /// \param name Name for the object
 /// \param title Title for the object
 
-TRatioPlot::TRatioPlot(TH1* h1, Option_t *option, Option_t *h1DrawOpt, Option_t *graphDrawOpt, TFitResult *fitres)
+TRatioPlot::TRatioPlot(TH1* h1, Option_t *option, TFitResult *fitres)
    : fH1(h1),
      fGridlines()
 {
@@ -343,8 +334,7 @@ TRatioPlot::TRatioPlot(TH1* h1, Option_t *option, Option_t *h1DrawOpt, Option_t 
 
    BuildLowerPlot();
 
-   fH1DrawOpt = h1DrawOpt;
-   fGraphDrawOpt = graphDrawOpt;
+   fGraphDrawOpt = "LX"; // <- default
 
    fSharedXAxis = (TAxis*)(fH1->GetXaxis()->Clone());
    fUpYaxis = (TAxis*)(fH1->GetYaxis()->Clone());
@@ -354,6 +344,34 @@ TRatioPlot::TRatioPlot(TH1* h1, Option_t *option, Option_t *h1DrawOpt, Option_t 
 
    SetupPads();
 
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the drawing option for h1
+
+void TRatioPlot::SetH1DrawOpt(Option_t *opt)
+{
+   fH1DrawOpt = opt;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the drawing option for h2
+
+void TRatioPlot::SetH2DrawOpt(Option_t *opt)
+{
+   TString optString = TString(opt);
+   optString.ReplaceAll("same", "");
+   optString.ReplaceAll("SAME", "");
+
+   fH2DrawOpt = optString;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the drawing option for the lower graph
+
+void TRatioPlot::SetGraphDrawOpt(Option_t *opt)
+{
+   fGraphDrawOpt = opt;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

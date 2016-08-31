@@ -143,19 +143,21 @@ protected:
 
    Bool_t IsDrawn();
 
-   virtual void Init(TH1* h1, TH1* h2, Option_t *option = "", Option_t *h1DrawOpt = "hist", Option_t *h2DrawOpt = "E", Option_t *graphDrawOpt = "AP");
+   virtual void Init(TH1* h1, TH1* h2, Option_t *option = "");
 
 public:
 
    TRatioPlot();
    virtual ~TRatioPlot();
-   TRatioPlot(TH1* h1, TH1* h2, Option_t *option = "pois", Option_t *h1DrawOpt = "hist", Option_t *h2DrawOpt = "E", Option_t *graphDrawOpt = "AP");
+   TRatioPlot(TH1* h1, TH1* h2, Option_t *option = "pois");
 
-   TRatioPlot(THStack* st, TH1* h2, Option_t *option = "pois", Option_t *h1DrawOpt = "hist", Option_t *h2DrawOpt = "E", Option_t *graphDrawOpt = "AP");
+   TRatioPlot(THStack* st, TH1* h2, Option_t *option = "pois");
 
-   TRatioPlot(TH1* h1, Option_t *option = "", Option_t *h1DrawOpt = "", Option_t *graphDrawOpt = "LX", TFitResult *fitres = 0);
+   TRatioPlot(TH1* h1, Option_t *option = "", TFitResult *fitres = 0);
 
-
+   void SetH1DrawOpt(Option_t *opt);
+   void SetH2DrawOpt(Option_t *opt);
+   void SetGraphDrawOpt(Option_t *opt);
 
    virtual void Draw(Option_t *chopt="");
    virtual void Browse(TBrowser *b);
