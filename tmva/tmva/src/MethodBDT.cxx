@@ -472,9 +472,9 @@ void TMVA::MethodBDT::ProcessOptions()
       Log() << kFATAL << "<ProcessOptions> unknown Separation Index option " << fSepTypeS << " called" << Endl;
    }
 
-   if(!(fHuberQuantile > 0.0 && fHuberQuantile < 1.0)){
+   if(!(fHuberQuantile >= 0.0 && fHuberQuantile <= 1.0)){
       Log() << kINFO << GetOptions() << Endl;
-      Log() << kFATAL << "<ProcessOptions> Huber Quantile must be in range (0,1]. Value given, " << fHuberQuantile << ", does not match this criteria" << Endl;
+      Log() << kFATAL << "<ProcessOptions> Huber Quantile must be in range [0,1]. Value given, " << fHuberQuantile << ", does not match this criteria" << Endl;
    }
 
    fRegressionLossFunctionBDTGS.ToLower();

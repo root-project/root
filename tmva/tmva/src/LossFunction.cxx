@@ -119,12 +119,14 @@ Double_t TMVA::HuberLossFunction::CalculateQuantile(std::vector<LossFunctionEven
                                            return (a.trueValue-a.predictedValue) < (b.trueValue-b.predictedValue); });
    UInt_t i = 0;
    Double_t temp = 0.0;
-   while(i<evs.size() && temp <= sumOfWeights*whichQuantile){
+   while(i<evs.size()-1 && temp <= sumOfWeights*whichQuantile){
       temp += evs[i].weight;
       i++;
    }
-   if (i >= evs.size()) return 0.; // prevent uncontrolled memory access in return value calculation 
+   // edge cases
+   if(whichQuantile == 0) i=0;             // assume 0th quantile to mean the 0th entry in the ordered series
 
+   // usual returns
    if(abs) return TMath::Abs(evs[i].trueValue-evs[i].predictedValue);
    else return evs[i].trueValue-evs[i].predictedValue; 
 }
