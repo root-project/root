@@ -64,7 +64,7 @@
 #include <TPaveText.h>
 #include <TPaveStats.h>
 #include <TPaveLabel.h>
-#include <TRatioPLot.h>
+#include <TRatioPlot.h>
 #include <TGaxis.h>
 #include <TGraph.h>
 #include <TGraphErrors.h>
