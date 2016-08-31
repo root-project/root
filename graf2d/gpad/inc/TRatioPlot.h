@@ -35,7 +35,7 @@
 class TBrowser;
 class TFileMergeInfo;
 
-class TRatioPlot : public TPad {
+class TRatioPlot : public TObject {
 
 private:
    TRatioPlot& operator=(const TRatioPlot&); // Not implemented
@@ -148,11 +148,11 @@ public:
 
    TRatioPlot();
    virtual ~TRatioPlot();
-   TRatioPlot(TH1* h1, TH1* h2, Option_t *option = "pois", Option_t *h1DrawOpt = "hist", Option_t *h2DrawOpt = "E", Option_t *graphDrawOpt = "AP", const char *name = "RatioPlot", const char *title = "RatioPlot", Double_t xlow = 0, Double_t ylow = 0, Double_t xup = 1, Double_t yup = 1);
+   TRatioPlot(TH1* h1, TH1* h2, Option_t *option = "pois", Option_t *h1DrawOpt = "hist", Option_t *h2DrawOpt = "E", Option_t *graphDrawOpt = "AP");
 
-   TRatioPlot(THStack* st, TH1* h2, Option_t *option = "pois", Option_t *h1DrawOpt = "hist", Option_t *h2DrawOpt = "E", Option_t *graphDrawOpt = "AP", const char *name = "RatioPlot", const char *title = "RatioPlot", Double_t xlow = 0, Double_t ylow = 0, Double_t xup = 1, Double_t yup = 1);
+   TRatioPlot(THStack* st, TH1* h2, Option_t *option = "pois", Option_t *h1DrawOpt = "hist", Option_t *h2DrawOpt = "E", Option_t *graphDrawOpt = "AP");
 
-   TRatioPlot(TH1* h1, Option_t *option = "", Option_t *h1DrawOpt = "", Option_t *graphDrawOpt = "LX", TFitResult *fitres = 0, const char *name = "RatioPlot", const char *title = "RatioPlot", Double_t xlow = 0, Double_t ylow = 0, Double_t xup = 1, Double_t yup = 1);
+   TRatioPlot(TH1* h1, Option_t *option = "", Option_t *h1DrawOpt = "", Option_t *graphDrawOpt = "LX", TFitResult *fitres = 0);
 
 
 
@@ -162,7 +162,6 @@ public:
    virtual void BuildLowerPlot();
 
    virtual void Paint(Option_t *opt = "");
-   virtual void PaintModified();
 
    // Slots for signal receiving
    virtual void UnZoomed();
@@ -201,9 +200,6 @@ public:
    virtual Float_t GetSeparationMargin();
    virtual void SetSplitFraction(Float_t sf);
    virtual void SetConfidenceLevels(Double_t cl1, Double_t cl2);
-
-   virtual void SetLogx(Int_t value = 1); // *TOGGLE*
-   virtual void SetLogy(Int_t value = 1); // *TOGGLE*
 
    virtual void SetGridlines(Double_t *gridlines, Int_t numGridlines); 
    virtual void SetGridlines(std::vector<double> gridlines); 

@@ -23,7 +23,7 @@
    h1->Sumw2();
    h2->Scale(1.9 / 2.);
    auto rp = new TRatioPlot(h1, h2);
-   rp->SetTicks(0, 1);
+   c1->SetTicks(0, 1);
    rp->Draw();
    c1->Update();
    return c1;

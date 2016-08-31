@@ -105,7 +105,6 @@ the function value as the error.
 /// TRatioPlot default constructor
 
 TRatioPlot::TRatioPlot()
-   : TPad()
 {
 }
 
@@ -218,18 +217,10 @@ void TRatioPlot::Init(TH1* h1, TH1* h2,
 /// \param graphDrawOpt Drawing option the lower graph
 /// \param name Name for the object
 /// \param title Title for the object
-/// \param xlow [0,1]  is the position of the bottom left point of the pad
-///             expressed  in the mother pad reference system
-/// \param ylow [0,1]  is the Y position of this point.
-/// \param xup  [0,1]  is the x position of the top right point of the pad
-///                        expressed in the mother pad reference system
-/// \param yup  [0,1]  is the Y position of this point.
 
 TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, Option_t *option, Option_t *h1DrawOpt, Option_t *h2DrawOpt, 
-      Option_t *graphDrawOpt, const char *name, const char *title, Double_t xlow, Double_t ylow, 
-      Double_t xup, Double_t yup)
-   : TPad(name, title, xlow, ylow, xup, yup),
-     fGridlines()
+      Option_t *graphDrawOpt)
+   : fGridlines()
 {
    gROOT->GetListOfCleanups()->Add(this);
 
@@ -264,17 +255,9 @@ TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, Option_t *option, Option_t *h1DrawOpt, 
 /// \param graphDrawOpt Drawing option for the lower plot graph
 /// \param name The name of the object
 /// \param title The title of the object
-/// \param xlow [0,1]  is the position of the bottom left point of the pad
-///             expressed  in the mother pad reference system
-/// \param ylow [0,1]  is the Y position of this point.
-/// \param xup  [0,1]  is the x position of the top right point of the pad
-///                        expressed in the mother pad reference system
-/// \param yup  [0,1]  is the Y position of this point.
 
 TRatioPlot::TRatioPlot(THStack* st, TH1* h2, Option_t *option, Option_t *h1DrawOpt, Option_t *h2DrawOpt, 
-      Option_t *graphDrawOpt, const char *name, const char *title, Double_t xlow, Double_t ylow,
-      Double_t xup, Double_t yup)
-   : TPad(name, title, xlow, ylow, xup, yup)
+      Option_t *graphDrawOpt)
 {
    if (!st || !h2) {
       Warning("TRatioPlot", "Need a histogram and a stack");
@@ -310,18 +293,9 @@ TRatioPlot::TRatioPlot(THStack* st, TH1* h2, Option_t *option, Option_t *h1DrawO
 /// \param fitres Explicit fit result to be used for calculation. Uses last fit if left empty
 /// \param name Name for the object
 /// \param title Title for the object
-/// \param xlow [0,1]  is the position of the bottom left point of the pad
-///             expressed  in the mother pad reference system
-/// \param ylow [0,1]  is the Y position of this point.
-/// \param xup  [0,1]  is the x position of the top right point of the pad
-///                        expressed in the mother pad reference system
-/// \param yup  [0,1]  is the Y position of this point.
 
-TRatioPlot::TRatioPlot(TH1* h1, Option_t *option, Option_t *h1DrawOpt, Option_t *graphDrawOpt,
-      TFitResult *fitres, const char *name, const char *title, Double_t xlow, Double_t ylow, 
-      Double_t xup, Double_t yup)
-   : TPad(name, title, xlow, ylow, xup, yup),
-     fH1(h1),
+TRatioPlot::TRatioPlot(TH1* h1, Option_t *option, Option_t *h1DrawOpt, Option_t *graphDrawOpt, TFitResult *fitres)
+   : fH1(h1),
      fGridlines()
 {
    gROOT->GetListOfCleanups()->Add(this);
@@ -399,8 +373,8 @@ void TRatioPlot::SetupPads() {
       fLowerPad = 0;
    }
 
-   fUpperPad = new TPad(TString::Format("%s_%s", fName.Data(), "upper_pad"), "", 0., fSplitFraction, 1., 1.);
-   fLowerPad = new TPad(TString::Format("%s_%s", fName.Data(), "lower_pad"), "", 0., 0., 1., fSplitFraction);
+   fUpperPad = new TPad("upper_pad", "", 0., fSplitFraction, 1., 1.);
+   fLowerPad = new TPad("lower_pad", "", 0., 0., 1., fSplitFraction);
 
 
    SetPadMargins();
@@ -421,7 +395,7 @@ void TRatioPlot::SetupPads() {
    }
 
    Double_t margin = 0;
-   fTopPad = new TPad(TString::Format("%s_%s", fName.Data(), "top_pad"), "", margin, margin, 1-margin, 1-margin);
+   fTopPad = new TPad("top_pad", "", margin, margin, 1-margin, 1-margin);
 
    fTopPad->SetBit(kCannotPick);
 
@@ -591,26 +565,26 @@ void TRatioPlot::Draw(Option_t *option)
    TVirtualPad *padsav = gPad;
    fParentPad = gPad;
 
-   SetLogx(fParentPad->GetLogx());
-   SetLogy(fParentPad->GetLogy());
+   //SetLogx(fParentPad->GetLogx());
+   //SetLogy(fParentPad->GetLogy());
 
-   fUpperPad->SetLogy(GetLogy());
-   fUpperPad->SetLogx(GetLogx());
-   fLowerPad->SetLogx(GetLogx());
+   fUpperPad->SetLogy(fParentPad->GetLogy());
+   fUpperPad->SetLogx(fParentPad->GetLogx());
+   fLowerPad->SetLogx(fParentPad->GetLogx());
 
-   SetGridx(fParentPad->GetGridx());
-   SetGridy(fParentPad->GetGridy());
+   //SetGridx(fParentPad->GetGridx());
+   //SetGridy(fParentPad->GetGridy());
 
-   fUpperPad->SetGridx(GetGridx());
-   fUpperPad->SetGridy(GetGridy());
-   fLowerPad->SetGridx(GetGridx());
-   fLowerPad->SetGridy(GetGridy());
+   fUpperPad->SetGridx(fParentPad->GetGridx());
+   fUpperPad->SetGridy(fParentPad->GetGridy());
+   fLowerPad->SetGridx(fParentPad->GetGridx());
+   fLowerPad->SetGridy(fParentPad->GetGridy());
 
 
-   TPad::Draw(option);
+   //TPad::Draw(option);
 
    // we are a TPad
-   cd();
+   //cd();
 
    fUpperPad->Draw();
    fLowerPad->Draw();
@@ -661,6 +635,7 @@ void TRatioPlot::Draw(Option_t *option)
    CreateGridline();
 
    padsav->cd();
+   AppendPad();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -863,19 +838,10 @@ void TRatioPlot::CreateGridline()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Does not really do anything right now, other than call super
-
-void TRatioPlot::Paint(Option_t *opt)
-{
-   TPad::Paint(opt);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Creates the visual axes when painting.
 
-void TRatioPlot::PaintModified()
+void TRatioPlot::Paint(Option_t * /*opt*/)
 {
-
    // this might be a problem, if the first one is not really a hist (or the like)
    if (GetUpperRefObject()) {
 
@@ -914,7 +880,7 @@ void TRatioPlot::PaintModified()
    CreateVisualAxes();
    CreateGridline();
 
-   TPad::PaintModified();
+   //TPad::PaintModified();
 
    if (fIsUpdating) fIsUpdating = kFALSE;
 }
@@ -1197,9 +1163,9 @@ void TRatioPlot::CreateVisualAxes()
    Float_t sf = fSplitFraction;
 
    // check if gPad has the all sides axis set
-   Bool_t mirroredAxes = fParentPad->GetFrameFillStyle() == 0 || GetFrameFillStyle() == 0;
-   Bool_t axistop = fTickx == 1 || mirroredAxes;
-   Bool_t axisright = fTicky == 1 || mirroredAxes;
+   Bool_t mirroredAxes = fParentPad->GetFrameFillStyle() == 0;
+   Bool_t axistop = fParentPad->GetTickx() == 1 || mirroredAxes;
+   Bool_t axisright = fParentPad->GetTicky() == 1 || mirroredAxes;
 
    Bool_t logx = fUpperPad->GetLogx() || fLowerPad->GetLogx();
    Bool_t uplogy = fUpperPad->GetLogy();
@@ -1549,19 +1515,19 @@ void TRatioPlot::RangeAxisChanged()
    //var_dump(fLowerPad->GetLogx());
    //var_dump(fLowerPad->GetLogy());
 
-   if (GetLogx()) {
+   if (fParentPad->GetLogx()) {
       if (!fUpperPad->GetLogx() || !fLowerPad->GetLogx()) {
-         SetLogx(kFALSE);
+         fParentPad->SetLogx(kFALSE);
       }
    } else {
       if (fUpperPad->GetLogx() || fLowerPad->GetLogx()) {
-         SetLogx(kTRUE);
+         fParentPad->SetLogx(kTRUE);
       }
    }
 
    // set log to pad
-   fUpperPad->SetLogx(GetLogx());
-   fLowerPad->SetLogx(GetLogx());
+   fUpperPad->SetLogx(fParentPad->GetLogx());
+   fLowerPad->SetLogx(fParentPad->GetLogx());
 
    // copy logy from rp to upper pad
    //if (GetLogy() !=
@@ -1601,9 +1567,7 @@ void TRatioPlot::RangeAxisChanged()
       fUpperPad->Modified();
       fLowerPad->Modified();
       fTopPad->Modified();
-      Modified();
-      fCanvas->Modified();
-      fCanvas->Update();
+      fParentPad->Modified();
    }
 
    // sync the margins in case the user has dragged one of them
@@ -1613,9 +1577,7 @@ void TRatioPlot::RangeAxisChanged()
       fUpperPad->Modified();
       fLowerPad->Modified();
       fTopPad->Modified();
-      Modified();
-      fCanvas->Modified();
-      fCanvas->Update();
+      fParentPad->Modified();
    }
 
    CreateVisualAxes();
@@ -1637,9 +1599,7 @@ void TRatioPlot::UnZoomed()
    fUpperPad->Modified();
    fLowerPad->Modified();
    fTopPad->Modified();
-   Modified();
-   fCanvas->Modified();
-   fCanvas->Update();
+   fParentPad->Modified();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1707,25 +1667,6 @@ void TRatioPlot::SetConfidenceLevels(Double_t c1, Double_t c2)
 {
    fCl1 = c1;
    fCl2 = c2;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set logx for both of the pads
-
-void TRatioPlot::SetLogx(Int_t value )
-{
-   TPad::SetLogx(value);
-   fUpperPad->SetLogx(value);
-   fLowerPad->SetLogx(value);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Sets logy for the upper pad.
-
-void TRatioPlot::SetLogy(Int_t value)
-{
-   TPad::SetLogy(value);
-   fUpperPad->SetLogy(value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
