@@ -21,17 +21,18 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TH1.h"
-#include "TPad.h"
-#include "TGraphAsymmErrors.h"
-#include "TGraphErrors.h"
-#include "TGraph.h"
-#include "TAxis.h"
-#include "TGaxis.h"
-#include "TH1F.h"
-#include "TFitResultPtr.h"
-#include "THStack.h"
-
+class TObject;
+class TH1;
+class TPad;
+class TGraphAsymmErrors;
+class TGraphErrors;
+class TGraph;
+class TAxis;
+class TGaxis;
+class TLine;
+class TFitResultPtr;
+class TFitResult;
+class THStack;
 class TBrowser;
 class TFileMergeInfo;
 
@@ -135,12 +136,12 @@ protected:
    virtual void SetupPads();
    virtual void CreateVisualAxes();
    virtual Bool_t SyncPadMargins();
-   virtual void SetPadMargins();
-   virtual void CreateGridline();
+   void SetPadMargins();
+   void CreateGridline();
 
-   virtual void ImportAxisAttributes(TGaxis* gaxis, TAxis* axis);
+   void ImportAxisAttributes(TGaxis* gaxis, TAxis* axis);
 
-   virtual Bool_t IsDrawn();
+   Bool_t IsDrawn();
 
    virtual void Init(TH1* h1, TH1* h2, Option_t *option = "", Option_t *h1DrawOpt = "hist", Option_t *h2DrawOpt = "E", Option_t *graphDrawOpt = "AP");
 
@@ -164,29 +165,29 @@ public:
    virtual void Paint(Option_t *opt = "");
 
    // Slots for signal receiving
-   virtual void UnZoomed();
-   virtual void RangeAxisChanged();
-   virtual void SubPadResized();
+   void UnZoomed();
+   void RangeAxisChanged();
+   void SubPadResized();
 
    // Getters
-   virtual TAxis *GetXaxis() { return fSharedXAxis; }
-   virtual TAxis *GetUpYaxis() { return fUpYaxis; }
-   virtual TAxis *GetLowYaxis() { return fLowYaxis; }
+   TAxis *GetXaxis() { return fSharedXAxis; }
+   TAxis *GetUpYaxis() { return fUpYaxis; }
+   TAxis *GetLowYaxis() { return fLowYaxis; }
 
    virtual TGraph *GetLowerRefGraph();
-   virtual TAxis *GetLowerRefXaxis();
-   virtual TAxis *GetLowerRefYaxis();
+   TAxis *GetLowerRefXaxis();
+   TAxis *GetLowerRefYaxis();
 
    virtual TObject *GetUpperRefObject();
-   virtual TAxis *GetUpperRefXaxis();
-   virtual TAxis *GetUpperRefYaxis();
+   TAxis *GetUpperRefXaxis();
+   TAxis *GetUpperRefYaxis();
 
-   virtual TPad * GetUpperPad() { return fUpperPad; }
-   virtual TPad * GetLowerPad() { return fLowerPad; }
+   TPad * GetUpperPad() { return fUpperPad; }
+   TPad * GetLowerPad() { return fLowerPad; }
 
    // Setters
-   virtual void SetFitResult(TFitResultPtr fitres);
-   virtual void SetFitResult(TFitResult *fitres); 
+   void SetFitResult(TFitResultPtr fitres);
+   void SetFitResult(TFitResult *fitres); 
 
    // Setters for margins
    void SetUpTopMargin(Float_t margin);
@@ -196,18 +197,18 @@ public:
    void SetLeftMargin(Float_t margin);
    void SetRightMargin(Float_t margin);
 
-   virtual void SetSeparationMargin(Float_t);
-   virtual Float_t GetSeparationMargin();
-   virtual void SetSplitFraction(Float_t sf);
-   virtual void SetConfidenceLevels(Double_t cl1, Double_t cl2);
+   void SetSeparationMargin(Float_t);
+   Float_t GetSeparationMargin();
+   void SetSplitFraction(Float_t sf);
+   void SetConfidenceLevels(Double_t cl1, Double_t cl2);
 
    virtual void SetGridlines(Double_t *gridlines, Int_t numGridlines); 
    virtual void SetGridlines(std::vector<double> gridlines); 
 
-   virtual void SetConfidenceIntervalColors(Color_t ci1 = kGreen, Color_t ci2 = kYellow);
+   void SetConfidenceIntervalColors(Color_t ci1 = kGreen, Color_t ci2 = kYellow);
 
-   virtual void SetC1(Double_t c1) { fC1 = c1; }
-   virtual void SetC2(Double_t c2) { fC2 = c2; }
+   void SetC1(Double_t c1) { fC1 = c1; }
+   void SetC2(Double_t c2) { fC2 = c2; }
 
    ClassDef(TRatioPlot, 1)  //A ratio of histograms
 };
