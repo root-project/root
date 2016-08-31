@@ -863,7 +863,6 @@ void TMVA::Factory::TrainAllMethods()
 	  // first print some information about the default dataset
 	  if(!IsSilentFile()) WriteDataInformation(mva->fDataSetInfo);
 
-	  
 	  if (mva->Data()->GetNTrainingEvents() < MinNoTrainingEvents) {
 	    Log() << kWARNING << "Method " << mva->GetMethodName()
 		  << " not trained (training tree has less entries ["
