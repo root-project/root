@@ -189,7 +189,6 @@ public:
 
    // Setters
    void SetFitResult(TFitResultPtr fitres);
-   void SetFitResult(TFitResult *fitres); 
 
    // Setters for margins
    void SetUpTopMargin(Float_t margin);

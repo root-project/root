@@ -1740,18 +1740,6 @@ void TRatioPlot::SetFitResult(TFitResultPtr fitres)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Explicitly specify the fit result that is to be used for fit residual calculation.
-/// If it is not provided, the last fit registered in the global fitter is used.
-/// The fit result can also be specified in the constructor.
-///
-/// \param fitres The fit result coming from the fit function call
-
-void TRatioPlot::SetFitResult(TFitResult* fitres)
-{
-   fFitResult = fitres;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Internal method to import TAxis attributes to a TGaxis. Copied from
 /// `TGaxis::ImportAxisAttributes`
 
