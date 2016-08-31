@@ -633,26 +633,44 @@ void TPolyMarker3D::Streamer(TBuffer &b)
    UInt_t R__s, R__c;
    if (b.IsReading()) {
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
+      if (R__v > 2) b.ClassBegin(TPolyMarker3D::IsA());
+      if (R__v > 2) b.ClassMember("TObject");
       TObject::Streamer(b);
+      if (R__v > 2) b.ClassMember("TAttMarker");
       TAttMarker::Streamer(b);
+      if (R__v > 2) b.ClassMember("fN","Int_t");
       b >> fN;
       if (fN) {
+         if (R__v > 2) b.ClassMember("fP","Float_t", kDimension*fN);
          fP = new Float_t[kDimension*fN];
          b.ReadFastArray(fP,kDimension*fN);
       }
       fLastPoint = fN-1;
+      if (R__v > 2) b.ClassMember("fOption","TString");
       fOption.Streamer(b);
+      if (R__v > 2) b.ClassMember("fName","TString");
       if (R__v > 1) fName.Streamer(b);
+      if (R__v > 2) b.ClassEnd(TPolyMarker3D::IsA());
       b.CheckByteCount(R__s, R__c, TPolyMarker3D::IsA());
    } else {
       R__c = b.WriteVersion(TPolyMarker3D::IsA(), kTRUE);
+      b.ClassBegin(TPolyMarker3D::IsA());
+      b.ClassMember("TObject");
       TObject::Streamer(b);
+      b.ClassMember("TAttMarker");
       TAttMarker::Streamer(b);
+      b.ClassMember("fN","Int_t");
       Int_t size = Size();
       b << size;
-      if (size) b.WriteFastArray(fP, kDimension*size);
+      if (size) {
+         b.ClassMember("fP","Float_t", kDimension*size);
+         b.WriteFastArray(fP, kDimension*size);
+      }
+      b.ClassMember("fOption","TString");
       fOption.Streamer(b);
+      b.ClassMember("fName","TString");
       fName.Streamer(b);
+      b.ClassEnd(TPolyMarker3D::IsA());
       b.SetByteCount(R__c, kTRUE);
    }
 }

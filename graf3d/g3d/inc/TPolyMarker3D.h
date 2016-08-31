@@ -47,7 +47,7 @@ protected:
    TString          fName;         //Name of polymarker
 
    TPolyMarker3D& operator=(const TPolyMarker3D&);
-   
+
 public:
    TPolyMarker3D();
    TPolyMarker3D(Int_t n, Marker_t marker=1, Option_t *option="");
@@ -82,7 +82,7 @@ public:
 
    static  void      PaintH3(TH1 *h, Option_t *option);
 
-   ClassDef(TPolyMarker3D,2);  //An array of 3-D points with the same marker
+   ClassDef(TPolyMarker3D,3);  //An array of 3-D points with the same marker
 };
 
 #endif
