@@ -179,6 +179,28 @@ bool TClingCallbacks::FileNotFound(llvm::StringRef FileName,
    return false;
 }
 
+
+static bool topmostDCIsFunction(Scope* S) {
+   if (!S)
+      return false;
+
+   DeclContext* DC = S->getEntity();
+   // For DeclContext-less scopes like if (dyn_expr) {}
+   // Find the DC enclosing S.
+   while (!DC) {
+      S = S->getParent();
+      DC = S->getEntity();
+   }
+
+   // DynamicLookup only happens inside topmost functions:
+   clang::DeclContext* MaybeTU = DC;
+   while (MaybeTU && !isa<TranslationUnitDecl>(MaybeTU)) {
+      DC = MaybeTU;
+      MaybeTU = MaybeTU->getParent();
+   }
+   return isa<FunctionDecl>(DC);
+}
+
 // On a failed lookup we have to try to more things before issuing an error.
 // The symbol might need to be loaded by ROOT's autoloading mechanism or
 // it might be a ROOT special object.
@@ -194,6 +216,12 @@ bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
 
    if (tryAutoParseInternal(R.getLookupName().getAsString(), R, S))
       return true; // happiness.
+
+   // The remaining lookup routines only work on global scope functions
+   // ("macros"), not in classes, namespaces etc - anything that looks like
+   // it has seen any trace of software development.
+   if (!topmostDCIsFunction(S))
+      return false;
 
    // If the autoload wasn't successful try ROOT specials.
    if (tryFindROOTSpecialInternal(R, S))
