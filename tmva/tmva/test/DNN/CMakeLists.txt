@@ -86,7 +86,7 @@ if (BLAS_FOUND AND imt)
 
   # DNN - Minimization CPU
   ROOT_EXECUTABLE(testMinimizationCpu TestMinimizationCpu.cxx
-    LIBRARIES ${Libraries} ${BLAS_openblas_LIBRARY} tbb)
+    LIBRARIES ${Libraries} ${BLAS_openblas_LIBRARY} ${TBB_LIBRARIES} )
   ROOT_ADD_TEST(TMVA-DNN-Minimization-Cpu COMMAND testMinimizationCpu)
 
 endif (BLAS_FOUND AND imt)
