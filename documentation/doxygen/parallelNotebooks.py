@@ -7,39 +7,35 @@ try:
 
     outDir = os.environ["DOXYGEN_NOTEBOOK_PATH_PARALLEL"]
 
-    inputs = subprocess.check_output(["grep",  "-r",  "-l", "/// \\\\notebook\|## \\\\notebook",  
-             os.path.expandvars("$DOXYGEN_SOURCE_DIRECTORY/tutorials")]).split()
+    inputs = [input.replace("../../tutorials/", "") for input in subprocess.check_output(["grep",  "-r",  "-l", "/// \\\\notebook\|## \\\\notebook", os.path.expandvars("$DOXYGEN_SOURCE_DIRECTORY/tutorials")]).split()]
 
     dependenciesgraph = dagger.dagger()
 
     for element in inputs:
         dependenciesgraph.add(element)
 
-    def root(tutName):
-        return os.path.expandvars("$ROOTSYS/tutorials/")+tutName
-
-    dependenciesgraph.add(root("math/testUnfold5d.C"),[root("math/testUnfold5c.C")])
-    dependenciesgraph.add(root("math/testUnfold5c.C"),[root("math/testUnfold5b.C")])
-    dependenciesgraph.add(root("math/testUnfold5b.C"),[root("math/testUnfold5a.C")])
-    dependenciesgraph.add(root("xml/xmlreadfile.C"),[root("xml/xmlnewfile.C")])
-    dependenciesgraph.add(root("roofit/rf503_wspaceread.C"),[root("roofit/rf502_wspacewrite.C")])
-    dependenciesgraph.add(root("io/readCode.C"),[root("io/importCode.C")])
-    dependenciesgraph.add(root("fit/fit1.C"),[root("hist/fillrandom.C")])
-    dependenciesgraph.add(root("fit/myfit.C"),[root("fit/fitslicesy.C")])
-    dependenciesgraph.add(root("foam/foam_demopers.C"),[root("foam/foam_demo.C")])
-    dependenciesgraph.add(root("tree/staff.C"),[root("tree/cernbuild.C")])
-    dependenciesgraph.add(root("tree/cernstaff.C"),[root("tree/cernbuild.C")])
-    dependenciesgraph.add(root("hist/hbars.C"),[root("tree/cernbuild.C")])
-    dependenciesgraph.add(root("pyroot/ntuple1.py"),[root("pyroot/hsimple.py")])
-    dependenciesgraph.add(root("pyroot/h1draw.py"),[root("pyroot/hsimple.py")])
-    dependenciesgraph.add(root("pyroot/fit1.py"),[root("pyroot/fillrandom.py")])
-    dependenciesgraph.add(root("tmva/TMVAClassificationApplication.C"),[root("tmva/TMVAClassification.C")])
-    dependenciesgraph.add(root("tmva/TMVAClassificationCategory.C"),[root("tmva/TMVAClassification.C")])
-    dependenciesgraph.add(root("tmva/TMVAClassificationCategoryApplication.C"),[root("tmva/TMVAClassificationCategor")])
-    dependenciesgraph.add(root("tmva/TMVAMulticlass.C"),[root("tmva/TMVAMultipleBackgroundExample.C")])
-    dependenciesgraph.add(root("tmva/TMVAMulticlassApplication.C"),[root("tmva/TMVAMulticlass.C")])
-    dependenciesgraph.add(root("tmva/TMVARegressionApplication.C"),[root("tmva/TMVARegression.C")])
-
+    dependenciesgraph.add("math/testUnfold5d.C",["math/testUnfold5c.C"])
+    dependenciesgraph.add("math/testUnfold5c.C",["math/testUnfold5b.C"])
+    dependenciesgraph.add("math/testUnfold5b.C",["math/testUnfold5a.C"])
+    dependenciesgraph.add("xml/xmlreadfile.C",["xml/xmlnewfile.C"])
+    dependenciesgraph.add("roofit/rf503_wspaceread.C",["roofit/rf502_wspacewrite.C"])
+    dependenciesgraph.add("io/readCode.C",["io/importCode.C"])
+    dependenciesgraph.add("fit/fit1.C",["hist/fillrandom.C"])
+    dependenciesgraph.add("fit/myfit.C",["fit/fitslicesy.C"])
+    dependenciesgraph.add("foam/foam_demopers.C",["foam/foam_demo.C"])
+    dependenciesgraph.add("tree/staff.C",["tree/cernbuild.C"])
+    dependenciesgraph.add("tree/cernstaff.C",["tree/cernbuild.C"])
+    dependenciesgraph.add("hist/hbars.C",["tree/cernbuild.C"])
+    dependenciesgraph.add("pyroot/ntuple1.py",["pyroot/hsimple.py"])
+    dependenciesgraph.add("pyroot/h1draw.py",["pyroot/hsimple.py"])
+    dependenciesgraph.add("pyroot/fit1.py",["pyroot/fillrandom.py"])
+    dependenciesgraph.add("tmva/TMVAClassificationApplication.C",["tmva/TMVAClassification.C"])
+    dependenciesgraph.add("tmva/TMVAClassificationCategory.C",["tmva/TMVAClassification.C"])
+    dependenciesgraph.add("tmva/TMVAClassificationCategoryApplication.C",["tmva/TMVAClassificationCategory.C"])
+    dependenciesgraph.add("tmva/TMVAMulticlass.C",["tmva/TMVAMultipleBackgroundExample.C"])
+    dependenciesgraph.add("tmva/TMVAMulticlassApplication.C",["tmva/TMVAMulticlass.C"])
+    dependenciesgraph.add("tmva/TMVARegressionApplication.C",["tmva/TMVARegression.C"])
+ 
     for node in dependenciesgraph.nodes:
         dependenciesgraph.stale(node)
 
@@ -59,7 +55,8 @@ try:
         print i
 
     def processInput(inputFile):
-        subprocess.call(['python', './converttonotebook.py', inputFile, outDir])
+        subprocess.call(['python', './converttonotebook.py', os.path.join(os.environ["DOXYGEN_SOURCE_DIRECTORY"], “tutorials”, inputFile), outDir])
+ 
     num_cores = multiprocessing.cpu_count()
 
     def parallel(input):
