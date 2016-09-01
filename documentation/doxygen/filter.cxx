@@ -8,7 +8,7 @@
 ///
 /// ### `Begin_Macro` and `End_Macro`
 /// The two tags where used the THtml version to generate images from ROOT code.
-/// The genererated picture is inlined exactly at the place where the macro is
+/// The generated picture is inlined exactly at the place where the macro is
 /// defined. The Macro can be defined in two way:
 ///  - by direct in-lining of the the C++ code
 ///  - by a reference to a C++ file
@@ -23,6 +23,7 @@
 /// ~~~ {.cpp}
 /// \file
 /// \ingroup tutorial_hist
+/// \notebook
 /// Getting Contours From TH2D.
 ///
 /// #### Image produced by `.x ContourList.C`
@@ -39,7 +40,7 @@
 /// \authors  Josh de Bever, Olivier Couet
 /// ~~~
 ///
-/// This example shows that three new directives have been implemented:
+/// This example shows that four new directives have been implemented:
 ///
 ///  1. `\macro_image`
 ///  The images produced by this macro are shown. A caption can be added to document
@@ -51,6 +52,9 @@
 ///  3. `\macro_output`
 ///  The output produced by this macro is shown. A caption can be added:
 ///  `\macro_output This the macro output`
+///
+///  4. `\notebook`
+///    To generate the corresponding jupyter notebook.
 ///
 /// Note that the doxygen directive `\authors` or `\author` must be the last one
 /// of the macro header.
