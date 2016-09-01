@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_hist
+/// \notebook
 /// Example of a fit residual plot.
 ///
 /// Creates a histogram filled with random numbers from a gaussian distribution
