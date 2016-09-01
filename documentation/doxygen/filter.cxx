@@ -303,7 +303,7 @@ void FilterTutorial()
       if (gLineString.find("\\notebook") != string::npos) {
          ExecuteCommand(StringFormat("python converttonotebook.py %s %s/notebooks/",
                                           gFileName.c_str(), gOutDir.c_str()));
-         
+
          if (gPython){
              gLineString = "## ";
          }
@@ -311,7 +311,7 @@ void FilterTutorial()
              gLineString = "/// ";
          }
          gLineString += StringFormat( "\\htmlonly <a href=\"http://nbviewer.jupyter.org/url/root.cern.ch/doc/master/notebooks/%s.nbconvert.ipynb\" target=\"_blank\"><img src= notebook.gif alt=\"View in nbviewer\" style=\"height:1em\" ></a> <a href=\"https://cern.ch/swanserver/cgi-bin/go?projurl=https://root.cern.ch/doc/master/notebooks/%s.nbconvert.ipynb\" target=\"_blank\"><img src=\"http://swanserver.web.cern.ch/swanserver/images/badge_swan_white_150.png\"  alt=\"Open in SWAN\" style=\"height:1em\" ></a> \\endhtmlonly \n", gMacroName.c_str() , gMacroName.c_str());
-         
+
       }
       // \macro_output found
       if (gLineString.find("\\macro_output") != string::npos) {
@@ -347,38 +347,21 @@ void GetClassName()
    int i1 = 0;
    int i2 = 0;
 
-   FILE *f = fopen(gFileName.c_str(),"r");
-
    // File header.
    if (gHeader) {
-      while (fgets(gLine,255,f)) {
-         gLineString = gLine;
-         if (gLineString.find("ClassDef") != string::npos) {
-            i1         = gLineString.find("(")+1;
-            i2         = gLineString.find(",")-1;
-            gClassName = gLineString.substr(i1,i2-i1+1);
-            fclose(f);
-            return;
-         }
-      }
+      i1         = gFileName.find_last_of("/")+1;
+      i2         = gFileName.find(".h")-1;
+      gClassName = gFileName.substr(i1,i2-i1+1);
    }
 
    // Source file.
    if (gSource) {
-      while (fgets(gLine,255,f)) {
-         gLineString = gLine;
-         if (gLineString.find("ClassImp") != string::npos ||
-             gLineString.find("NamespaceImp") != string::npos) {
-            i1         = gLineString.find("(")+1;
-            i2         = gLineString.find(")")-1;
-            gClassName = gLineString.substr(i1,i2-i1+1);
-            fclose(f);
-            return;
-         }
-      }
+      i1         = gFileName.find_last_of("/")+1;
+      i2         = gFileName.find(".cxx")-1;
+      gClassName = gFileName.substr(i1,i2-i1+1);
    }
 
-   fclose(f);
+   return;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
