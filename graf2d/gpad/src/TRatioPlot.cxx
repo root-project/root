@@ -85,9 +85,19 @@ TRatioPlot has two constructors, one which accepts two histograms, and is respon
 for setting up the calculation of ratios and differences. This calculation is in part
 delegated to `TEfficiency`. A single option can be given as a parameter, that is
 used to determine which procedure is chosen. The remaining option string is then
-passed through to the calculation, if applicable.
+passed through to the calculation, if applicable. The other constructor uses a
+fitted histogram to calculate the fit residual and plot it with the histogram
+and the fit function.
 
 ## Ratios and differences
+The simplest case is passing two histograms without specifying any options. This defaults to using
+`TGraphAsymErrors::Divide`. The `option` variable is passed through, as are the parameters
+`c1` and `c2`, that you can set via `TRatioPlot::SetC1` and `TRatioPlot::SetC1`. If you set the
+`option` to `divsym` the method `TH1::Divide` will be used instead, also receiving all the parameters.
+
+Using the `option` `diff` or `diffsig`, both histograms will be subtracted, and in the case of diffsig,
+the difference will be divided by the  uncertainty. `c1` and `c2` will only be used to
+scale the histograms using `TH1::Scale` prior to subtraction.
 
 Available options are for `option`:
 | Option     | Description                                                  |
@@ -100,41 +110,10 @@ Begin_Macro(source)
 ../../../tutorials/hist/ratioplot1.C
 End_Macro
 
+## Fit residuals
 A second constructor only accepts a single histogram, but expects it to have a fitted
 function. The function is used to calculate the residual between the fit and the
-histogram. The error can be steered by providing options to `option`.
-
-| Option     | Description                                                  |
-| ---------- | ------------------------------------------------------------ |
-| errasym    | Uses calculated asymmetric errors from `TH1::GetBinErrorUp`/`TH1::GetBinErrorLow`. Note that you need to set `TH1::SetBinErrorOption` first |
-| errfunc    | Uses \f$ \sqrt{f(x)} \f$ as the error |
-
-The asymmetric error case uses the upper or lower error depending on whether the function value
-is above or below the histogram bin content.
-
-Begin_Macro(source)
-../../../tutorials/hist/ratioplot2.C
-End_Macro
-
-## Access to internal parts
-You can access the internal objects that are used to construct the plot via a series of
-methods. `TRatioPlot::GetUpperPad` and `TRatioPlot::GetLowerPad` can be used to draw additional
-elements on top of the existing ones.
-`TRatioPlot::GetLowerRefGraph` returns a reference to the lower pad's graph that
-is responsible for the range, which enables you to modify the range.
-
-## Calculations
-The simplest case is passing two histograms without specifying any options. This defaults to using
-`TGraphAsymErrors::Divide`. The `option` variable is passed through, as are the parameters
-`c1` and `c2`, that you can set via `TRatioPlot::SetC1` and `TRatioPlot::SetC1`. If you set the
-`option` to `divsym` the method `TH1::Divide` will be used instead, also receiving all the parameters.
-
-Using the `option` `diff` or `diffsig`, both histograms will be subtracted, and in the case of diffsig,
-the difference will be divided by the  uncertainty. `c1` and `c2` will only be used to
-scale the histograms using `TH1::Scale` prior to subtraction.
-
-If the constructor which only accepts one histogram is used, the class is initialized in the fit residual
-mode. Here, it is expected that h1 has a fit function in it's list of functions. The class calculates the
+histogram. Here, it is expected that h1 has a fit function in it's list of functions. The class calculates the
 difference between the histogram and the fit function at each point and divides it by the uncertainty. There
 are a few option to steer which error is used (as is the case for `diffsig`). The default is to use
 the statistical uncertainty from h1 using `TH1::GetBinError`. If the `option` string contains `errasym`, asymmetric
@@ -142,6 +121,29 @@ errors will be used. The type of error can be steered by `TH1::SetBinErrorOption
 depending on if the function is below or above the bin content. The third option `errfunc` uses the square root of
 the function value as the error.
 
+
+Begin_Macro(source)
+../../../tutorials/hist/ratioplot2.C
+End_Macro
+
+## Error options for difference divided by uncertainty and fit residual
+The uncertainty that is used in the calculation can be steered by providing 
+options to the `option` argument.
+
+| Option     | Description                                                  |
+| ---------- | ------------------------------------------------------------ |
+| errasym    | Uses calculated asymmetric errors from `TH1::GetBinErrorUp`/`TH1::GetBinErrorLow`. Note that you need to set `TH1::SetBinErrorOption` first |
+| errfunc    | Uses \f$ \sqrt{f(x)} \f$ as the error |
+
+The asymmetric error case uses the upper or lower error depending on the relative size
+of the bin contents, or the bin content and the function value.
+
+## Access to internal parts
+You can access the internal objects that are used to construct the plot via a series of
+methods. `TRatioPlot::GetUpperPad` and `TRatioPlot::GetLowerPad` can be used to draw additional
+elements on top of the existing ones.
+`TRatioPlot::GetLowerRefGraph` returns a reference to the lower pad's graph that
+is responsible for the range, which enables you to modify the range.
 */
 
 ////////////////////////////////////////////////////////////////////////////////
