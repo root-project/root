@@ -583,14 +583,14 @@ void TPolyMarker3D::SetPolyMarker(Int_t n, Float_t *p, Marker_t marker, Option_t
    fN = n;
    if (fP) delete [] fP;
    fP = new Float_t [3*fN];
-   for (Int_t i = 0; i < fN; i++) {
-      if (p) {
+   if (p) {
+      for (Int_t i = 0; i < fN; i++) {
          fP[3*i]   = p[3*i];
          fP[3*i+1] = p[3*i+1];
          fP[3*i+2] = p[3*i+2];
-      } else {
-         memset(fP,0,kDimension*fN*sizeof(Float_t));
       }
+   } else {
+      memset(fP,0,kDimension*fN*sizeof(Float_t));
    }
    fLastPoint = fN-1;
 }
@@ -613,14 +613,14 @@ void TPolyMarker3D::SetPolyMarker(Int_t n, Double_t *p, Marker_t marker, Option_
    fN = n;
    if (fP) delete [] fP;
    fP = new Float_t [3*fN];
-   for (Int_t i = 0; i < fN; i++) {
-      if (p) {
+   if (p) {
+      for (Int_t i = 0; i < fN; i++) {
          fP[3*i]   = (Float_t) p[3*i];
          fP[3*i+1] = (Float_t) p[3*i+1];
          fP[3*i+2] = (Float_t) p[3*i+2];
-      } else {
-         memset(fP,0,kDimension*fN*sizeof(Float_t));
       }
+   } else {
+      memset(fP,0,kDimension*fN*sizeof(Float_t));
    }
    fLastPoint = fN-1;
 }
