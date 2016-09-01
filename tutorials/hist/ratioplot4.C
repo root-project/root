@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_hist
-/// \notebook -js
+/// \notebook
 /// Example that shows custom dashed lines on the lower plot, specified by a vector of floats.
 ///
 /// By default, dashed lines are drawn at certain points. You can either disable them, or specify
@@ -11,7 +11,7 @@
 ///
 /// \author Paul Gessinger
 
- {
+void ratioplot4()  {
     gStyle->SetOptStat(0);
     auto c1 = new TCanvas("c1", "fit residual simple");
     auto h1 = new TH1D("h1", "h1", 50, -5, 5);
@@ -25,5 +25,4 @@
     rp1->GetLowerRefGraph()->SetMinimum(-4);
     rp1->GetLowerRefGraph()->SetMaximum(4);
     c1->Update();
-    return c1;
  }

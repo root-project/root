@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_hist
-/// \notebook -js
+/// \notebook
 /// Example of a fit residual plot.
 ///
 /// Creates a histogram filled with random numbers from a gaussian distribution
@@ -14,7 +14,7 @@
 ///
 /// \author Paul Gessinger
 
-{
+void ratioplot2() {
    gStyle->SetOptStat(0);
    auto c1 = new TCanvas("c1", "fit residual simple");
    auto h1 = new TH1D("h1", "h1", 50, -5, 5);
@@ -26,5 +26,4 @@
    rp1->GetLowYaxis()->SetTitle("ratio");
    rp1->GetUpYaxis()->SetTitle("entries");
    c1->Update();
-   return c1;
 }

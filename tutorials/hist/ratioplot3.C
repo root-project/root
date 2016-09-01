@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_hist
-/// \notebook -js
+/// \notebook
 /// Example which shows how you can get the graph of the lower plot and set the y axis range for it.
 ///
 /// Since the lower plot is not created until `TRatioPlot::Draw` is called, you can only use the method
@@ -11,7 +11,7 @@
 ///
 /// \author Paul Gessinger
 
- {
+void ratioplot3()  {
     gStyle->SetOptStat(0);
     auto c1 = new TCanvas("c1", "fit residual simple");
     c1->SetLogy();
@@ -25,5 +25,4 @@
     rp1->GetLowerRefGraph()->SetMinimum(-2);
     rp1->GetLowerRefGraph()->SetMaximum(2);
     c1->Update();
-    return c1;
  }

@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_hist
-/// \notebook -js
+/// \notebook
 /// Example that shows how you can set the colors of the confidence interval bands by using
 /// the method `TRatioPlot::SetConfidenceIntervalColors.
 ///
@@ -9,7 +9,7 @@
 ///
 /// \author Paul Gessinger
 
- {
+void ratioplot5()  {
     gStyle->SetOptStat(0);
     auto c1 = new TCanvas("c1", "fit residual simple");
     auto h1 = new TH1D("h1", "h1", 50, -5, 5);
@@ -20,5 +20,4 @@
     rp1->SetConfidenceIntervalColors(kBlue, kRed);
     rp1->Draw();
     c1->Update();
-    return c1;
  }

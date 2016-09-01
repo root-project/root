@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_hist
-/// \notebook -js
+/// \notebook
 /// Example showing a fit residual plot, where the separation margin has been set to 0.
 /// The last label of the lower plot's y axis is hidden automatically.
 ///
@@ -9,7 +9,7 @@
 ///
 /// \author Paul Gessinger
 
-{
+void ratioplot6() {
    gStyle->SetOptStat(0);
    auto c1 = new TCanvas("c1", "fit residual simple");
    gPad->SetFrameFillStyle(0);
@@ -27,5 +27,4 @@
    rp1->GetLowerRefGraph()->SetMinimum(-2);
    rp1->GetLowerRefGraph()->SetMaximum(2);
    c1->Update();
-   return c1;
 }
