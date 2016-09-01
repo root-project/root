@@ -13,31 +13,31 @@
 
 #ifndef ROOT_TROOT
 #include "TROOT.h"
-#endif 
+#endif
 
 #ifndef ROOT_TClassRef
 #include "TClassRef.h"
-#endif 
+#endif
 
 #ifndef ROOT_TVirtualPad
 #include "TVirtualPad.h"
-#endif 
+#endif
 
 #ifndef ROOT_TBrowser
 #include "TBrowser.h"
-#endif 
+#endif
 
 #ifndef ROOT_TH1
 #include "TH1.h"
-#endif 
+#endif
 
 #ifndef ROOT_TF1
 #include "TF1.h"
-#endif 
+#endif
 
 #ifndef ROOT_TPad
 #include "TPad.h"
-#endif 
+#endif
 
 #ifndef ROOT_TString
 #include "TString.h"
@@ -49,15 +49,15 @@
 
 #ifndef ROOT_TGraphAsymmErrors
 #include "TGraphAsymmErrors.h"
-#endif 
+#endif
 
 #ifndef ROOT_TGraphErrors
 #include "TGraphErrors.h"
-#endif 
+#endif
 
 #ifndef ROOT_TGaxis
 #include "TGaxis.h"
-#endif 
+#endif
 
 #ifndef ROOT_TLine
 #include "TLine.h"
@@ -77,6 +77,7 @@
 
 #include <iostream>
 
+ClassImp(TRatioPlot)
 
 /** \class TRatioPlot
     \ingroup gpad
@@ -127,15 +128,15 @@ is responsible for the range, which enables you to modify the range.
 ## Calculations
 The simplest case is passing two histograms without specifying any options. This defaults to using
 `TGraphAsymErrors::Divide`. The `option` variable is passed through, as are the parameters
-`c1` and `c2`, that you can set via `TRatioPlot::SetC1` and `TRatioPlot::SetC1`. If you set the 
-`option` to `divsym` the method `TH1::Divide` will be used instead, also receiving all the parameters. 
+`c1` and `c2`, that you can set via `TRatioPlot::SetC1` and `TRatioPlot::SetC1`. If you set the
+`option` to `divsym` the method `TH1::Divide` will be used instead, also receiving all the parameters.
 
 Using the `option` `diff` or `diffsig`, both histograms will be subtracted, and in the case of diffsig,
-the difference will be divided by the  uncertainty. `c1` and `c2` will only be used to 
+the difference will be divided by the  uncertainty. `c1` and `c2` will only be used to
 scale the histograms using `TH1::Scale` prior to subtraction.
 
 If the constructor which only accepts one histogram is used, the class is initialized in the fit residual
-mode. Here, it is expected that h1 has a fit function in it's list of functions. The class calculates the 
+mode. Here, it is expected that h1 has a fit function in it's list of functions. The class calculates the
 difference between the histogram and the fit function at each point and divides it by the uncertainty. There
 are a few option to steer which error is used (as is the case for `diffsig`). The default is to use
 the statistical uncertainty from h1 using `TH1::GetBinError`. If the `option` string contains `errasym`, asymmetric
@@ -659,7 +660,7 @@ void TRatioPlot::Draw(Option_t *option)
    fConfidenceInterval2->SetFillColor(fCi1Color);
    fConfidenceInterval1->SetFillColor(fCi2Color);
 
-   if (fMode == TRatioPlot::CalculationMode::kFitResidual) { 
+   if (fMode == TRatioPlot::CalculationMode::kFitResidual) {
       if (fShowConfidenceIntervals) {
          fConfidenceInterval2->Draw("A3");
          fConfidenceInterval1->Draw("3");
@@ -1704,7 +1705,7 @@ void TRatioPlot::SetSplitFraction(Float_t sf) {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets the confidence levels used to calculate the bands in the fit residual
-/// case. Defaults to 1 and 2 sigma. 
+/// case. Defaults to 1 and 2 sigma.
 
 void TRatioPlot::SetConfidenceLevels(Double_t c1, Double_t c2)
 {
