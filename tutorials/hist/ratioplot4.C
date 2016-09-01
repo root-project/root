@@ -1,6 +1,5 @@
 /// \file
 /// \ingroup tutorial_hist
-/// \notebook
 /// Example that shows custom dashed lines on the lower plot, specified by a vector of floats.
 ///
 /// By default, dashed lines are drawn at certain points. You can either disable them, or specify
