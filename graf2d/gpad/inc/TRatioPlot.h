@@ -90,6 +90,7 @@ protected:
    TString fH1DrawOpt = ""; ///< Stores draw option for h1 given in constructor
    TString fH2DrawOpt = ""; ///< Stores draw option for h2 given in constructor
    TString fGraphDrawOpt = ""; ///< Stores draw option for the lower plot graph given in constructor
+   TString fFitDrawOpt = ""; ///< Stores draw option for the fit function in the fit residual case
 
    Float_t fSplitFraction = 0.3; ///< Stores the fraction at which the upper and lower pads meet
 
@@ -167,6 +168,7 @@ public:
    void SetH1DrawOpt(Option_t *opt);
    void SetH2DrawOpt(Option_t *opt);
    void SetGraphDrawOpt(Option_t *opt);
+   void SetFitDrawOpt(Option_t *opt);
 
    virtual void Draw(Option_t *chopt="");
    virtual void Browse(TBrowser *b);

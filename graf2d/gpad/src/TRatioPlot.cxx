@@ -363,6 +363,12 @@ TRatioPlot::TRatioPlot(TH1* h1, Option_t *option, TFitResult *fitres)
 
    BuildLowerPlot();
 
+   // emulate option behavioud of TH1
+   if (fH1->GetSumw2N() > 0) {
+      fH1DrawOpt = "E";
+   } else {
+      fH1DrawOpt = "hist";
+   }
    fGraphDrawOpt = "LX"; // <- default
 
    fSharedXAxis = (TAxis*)(fH1->GetXaxis()->Clone());
@@ -401,6 +407,14 @@ void TRatioPlot::SetH2DrawOpt(Option_t *opt)
 void TRatioPlot::SetGraphDrawOpt(Option_t *opt)
 {
    fGraphDrawOpt = opt;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the drawing option for the fit in the fit residual case
+
+void TRatioPlot::SetFitDrawOpt(Option_t *opt)
+{
+   fFitDrawOpt = opt;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -641,26 +655,18 @@ void TRatioPlot::Draw(Option_t *option)
 
    fUpperPad->cd();
 
-   if (fHistDrawProxy) {
-      if (fHistDrawProxy->InheritsFrom(TH1::Class())) {
-         ((TH1*)fHistDrawProxy)->Draw(fH1DrawOpt);
-      } else if (fHistDrawProxy->InheritsFrom(THStack::Class())) {
-         ((THStack*)fHistDrawProxy)->Draw(fH1DrawOpt);
-      } else {
-         Warning("Draw", "Draw proxy not of type TH1 or THStack, not drawing it");
-      }
-   }
-
-   if (fH2 != 0) {
-      fH2->Draw(fH2DrawOpt+"same");
-   }
-
-   fLowerPad->cd();
 
    fConfidenceInterval2->SetFillColor(fCi1Color);
    fConfidenceInterval1->SetFillColor(fCi2Color);
 
    if (fMode == TRatioPlot::CalculationMode::kFitResidual) {
+      TF1 *func = dynamic_cast<TF1*>(fH1->GetListOfFunctions()->At(0));
+
+      fH1->Draw("A"+fH1DrawOpt);
+      func->Draw(fFitDrawOpt+"same");
+
+      fLowerPad->cd();
+
       if (fShowConfidenceIntervals) {
          fConfidenceInterval2->Draw("A3");
          fConfidenceInterval1->Draw("3");
@@ -669,6 +675,20 @@ void TRatioPlot::Draw(Option_t *option)
          fRatioGraph->Draw("A"+fGraphDrawOpt+"SAME");
       }
    } else {
+
+      if (fHistDrawProxy) {
+         if (fHistDrawProxy->InheritsFrom(TH1::Class())) {
+            ((TH1*)fHistDrawProxy)->Draw("A"+fH1DrawOpt);
+         } else if (fHistDrawProxy->InheritsFrom(THStack::Class())) {
+            ((THStack*)fHistDrawProxy)->Draw("A"+fH1DrawOpt);
+         } else {
+            Warning("Draw", "Draw proxy not of type TH1 or THStack, not drawing it");
+         }
+      }
+
+      fH2->Draw("A"+fH2DrawOpt+"same");
+
+      fLowerPad->cd();
 
       TString opt = fGraphDrawOpt;
       fRatioGraph->Draw("A"+fGraphDrawOpt);
@@ -889,29 +909,6 @@ void TRatioPlot::CreateGridline()
 
 void TRatioPlot::Paint(Option_t * /*opt*/)
 {
-   // this might be a problem, if the first one is not really a hist (or the like)
-   if (GetUpperRefObject()) {
-
-      TAxis *uprefx = GetUpperRefXaxis();
-      TAxis *uprefy = GetUpperRefYaxis();
-
-      if (uprefx) {
-         //xaxis->ImportAttributes(fUpYaxis);
-         uprefx->SetTickSize(0.);
-         uprefx->SetLabelSize(0.);
-         uprefx->SetTitleSize(0.);
-      }
-
-      if (uprefy) {
-         uprefy->ImportAttributes(fUpYaxis);
-         uprefy->SetTickSize(0.);
-         uprefy->SetLabelSize(0.);
-         uprefy->SetTitleSize(0.);
-      }
-   } else {
-      Error("PaintModified", "Ref object in opper pad is neither TH1 descendant nor THStack");
-   }
-
    // hide lower axes
    TAxis *refx = GetLowerRefXaxis();
    TAxis *refy = GetLowerRefYaxis();
@@ -926,8 +923,6 @@ void TRatioPlot::Paint(Option_t * /*opt*/)
    // create the visual axes
    CreateVisualAxes();
    CreateGridline();
-
-   //TPad::PaintModified();
 
    if (fIsUpdating) fIsUpdating = kFALSE;
 }
