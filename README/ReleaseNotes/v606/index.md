@@ -731,6 +731,8 @@ Released on September 1, 2016
 *   [[ROOT-8270](https://sft.its.cern.ch/jira/browse/ROOT-8270)] - C++14
 *   [[ROOT-8293](https://sft.its.cern.ch/jira/browse/ROOT-8293)] - CMake does not find Castor libraries
 *   [[ROOT-8328](https://sft.its.cern.ch/jira/browse/ROOT-8328)] - patches used by art
+*   [[ROOT-8307](https://sft.its.cern.ch/jira/browse/ROOT-8307)] - Crash when leaving ROOT from GUI menu item.
+*   [[ROOT-8332](https://sft.its.cern.ch/jira/browse/ROOT-8332)] - support linked libraries paths with spaces in aclic
 
 
 ## HEAD of the v6-06-00-patches branch
