@@ -77,8 +77,6 @@
 
 #include <iostream>
 
-ClassImp(TRatioPlot)
-
 /** \class TRatioPlot
     \ingroup gpad
 Class for displaying ratios, differences and fit residuals.
