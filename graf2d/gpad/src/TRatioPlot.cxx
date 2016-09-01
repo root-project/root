@@ -465,7 +465,7 @@ void TRatioPlot::SetupPads() {
 ////////////////////////////////////////////////////////////////////////////////
 /// TRatioPlot copy constructor
 
-TRatioPlot::TRatioPlot(const TRatioPlot &/*hrp*/)
+TRatioPlot::TRatioPlot(const TRatioPlot &/*hrp*/) : TObject()
 {
    Warning("TRatioPlot", "Copy constructor not yet implemented");
     return;
