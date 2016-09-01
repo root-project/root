@@ -55,8 +55,11 @@ try:
         print i
 
     def processInput(inputFile):
-        subprocess.call(['python', './converttonotebook.py', os.path.join(os.environ["DOXYGEN_SOURCE_DIRECTORY"], “tutorials”, inputFile), outDir])
- 
+        subprocess.call(['python', 
+                         './converttonotebook.py', 
+                         os.path.join(os.environ['DOXYGEN_SOURCE_DIRECTORY'], 'tutorials', inputFile), 
+                         outDir])
+
     num_cores = multiprocessing.cpu_count()
 
     def parallel(input):
@@ -66,4 +69,5 @@ try:
         parallel(input)
 
 except:
+    print 'Parallel notebooks converter failed!!'
     pass
