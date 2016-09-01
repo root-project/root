@@ -712,9 +712,9 @@ Released on July 6, 2016
 *   [[ROOT-8226](https://sft.its.cern.ch/jira/browse/ROOT-8226)] - CMake 3.5.2: circular dependency libMathMore
 *   [[ROOT-8231](https://sft.its.cern.ch/jira/browse/ROOT-8231)] - _GLIBCXX_USE_CXX11_ABI=0 should be propagated into root-config --cflags
 
-## HEAD of the v6-06-00-patches branch
 
-Changes will be part of the future 6.06/08
+## Release 6.06/08
+Released on September 1, 2016
 
 ### Core
 
@@ -724,4 +724,15 @@ Changes will be part of the future 6.06/08
 
 * Resolved issues with inconsistent handling of the 'gaus' function in TFormula [[ROT-8105]]
 
+## Bugs fixed in this release
 
+*   [[ROOT-8105](https://sft.its.cern.ch/jira/browse/ROOT-8105)] - TFormula does not always handle 'gaus' correctly.
+*   [[ROOT-8239](https://sft.its.cern.ch/jira/browse/ROOT-8239)] - "python: free(): invalid next size (fast)" in PyROOT 6.06.02 and patches
+*   [[ROOT-8270](https://sft.its.cern.ch/jira/browse/ROOT-8270)] - C++14
+*   [[ROOT-8293](https://sft.its.cern.ch/jira/browse/ROOT-8293)] - CMake does not find Castor libraries
+*   [[ROOT-8328](https://sft.its.cern.ch/jira/browse/ROOT-8328)] - patches used by art
+
+
+## HEAD of the v6-06-00-patches branch
+
+Changes will be part of the future 6.06/10
