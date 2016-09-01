@@ -3,9 +3,17 @@
 
 #include "TObject.h"
 
+#include <map>
+
+class First;
+class Second;
+
 class TestObj : public TObject {
 protected:
 	Double_t lStorage;
+
+   std::map<int,First*>  fFirst;
+   std::map<int,Second*> fSecond; //!
 public:
 	TestObj();
 	virtual ~TestObj() {};
