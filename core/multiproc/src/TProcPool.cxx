@@ -9,6 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include "TEnv.h"
 #include "TProcPool.h"
 #include "TPoolPlayer.h"
 
@@ -95,7 +96,6 @@ TProcPool::TProcPool(unsigned nWorkers) : TMPClient(nWorkers)
 
 //////////////////////////////////////////////////////////////////////////
 /// TSelector-based tree processing: memory resident tree
-
 TList* TProcPool::ProcTree(TTree& tree, TSelector& selector, ULong64_t nToProcess)
 {
    //prepare environment
@@ -131,7 +131,7 @@ TList* TProcPool::ProcTree(TTree& tree, TSelector& selector, ULong64_t nToProces
 
    PoolUtils::ReduceObjects<TObject *> redfunc;
    auto outList = static_cast<TList*>(redfunc(outLists));
-   
+
    TList *selList = selector.GetOutputList();
    for(auto obj : *outList) {
       selList->Add(obj);
@@ -149,7 +149,6 @@ TList* TProcPool::ProcTree(TTree& tree, TSelector& selector, ULong64_t nToProces
 
 //////////////////////////////////////////////////////////////////////////
 /// TSelector-based tree processing: dataset as a vector of files
-
 TList* TProcPool::ProcTree(const std::vector<std::string>& fileNames, TSelector& selector, const std::string& treeName, ULong64_t nToProcess)
 {
 
@@ -166,7 +165,10 @@ TList* TProcPool::ProcTree(const std::vector<std::string>& fileNames, TSelector&
       return nullptr;
    }
 
-   if(fileNames.size() < nWorkers) {
+   Int_t procByFile = gEnv->GetValue("MultiProc.TestProcByFile", 0);
+
+   if(procByFile){
+     if(fileNames.size() < nWorkers) {
       //TTree entry granularity. For each file, we divide entries equally between workers
       fTaskType = ETask::kProcByRange;
       //Tell workers to start processing entries
@@ -176,15 +178,27 @@ TList* TProcPool::ProcTree(const std::vector<std::string>& fileNames, TSelector&
       fNProcessed = Broadcast(PoolCode::kProcRange, args);
       if(fNProcessed < nWorkers)
          std::cerr << "[E][C] There was an error while sending tasks to workers. Some entries might not be processed.\n";
-   } else {
-      //file granularity. each worker processes one whole file as a single task
-      fTaskType = ETask::kProcByFile;
-      fNToProcess = fileNames.size();
-      std::vector<unsigned> args(nWorkers);
-      std::iota(args.begin(), args.end(), 0);
-      fNProcessed = Broadcast(PoolCode::kProcFile, args);
-      if(fNProcessed < nWorkers)
-         std::cerr << "[E][C] There was an error while sending tasks to workers. Some entries might not be processed.\n";
+     } else {
+        //file granularity. each worker processes one whole file as a single task
+        fTaskType = ETask::kProcByFile;
+        fNToProcess = fileNames.size();
+        std::vector<unsigned> args(nWorkers);
+        std::iota(args.begin(), args.end(), 0);
+        fNProcessed = Broadcast(PoolCode::kProcFile, args);
+        if(fNProcessed < nWorkers)
+           std::cerr << "[E][C] There was an error while sending tasks to workers. Some entries might not be processed.\n";
+     }
+   }
+   else{
+     //TTree entry granularity. For each file, we divide entries equally between workers
+     fTaskType = ETask::kProcByRange;
+     //Tell workers to start processing entries
+     fNToProcess = nWorkers*fileNames.size(); //this is the total number of ranges that will be processed by all workers cumulatively
+     std::vector<unsigned> args(nWorkers);
+     std::iota(args.begin(), args.end(), 0);
+     fNProcessed = Broadcast(PoolCode::kProcRange, args);
+     if(fNProcessed < nWorkers)
+       std::cerr << "[E][C] There was an error while sending tasks to workers. Some entries might not be processed.\n";
    }
 
    // collect results, distribute new tasks
@@ -196,7 +210,7 @@ TList* TProcPool::ProcTree(const std::vector<std::string>& fileNames, TSelector&
 
    PoolUtils::ReduceObjects<TObject *> redfunc;
    auto outList = static_cast<TList*>(redfunc(outLists));
-   
+
    TList *selList = selector.GetOutputList();
    for(auto obj : *outList) {
       selList->Add(obj);
@@ -211,6 +225,7 @@ TList* TProcPool::ProcTree(const std::vector<std::string>& fileNames, TSelector&
    fTaskType = ETask::kNoTask;
    return outList;
 
+}
 
 //////////////////////////////////////////////////////////////////////////
 /// TSelector-based tree processing: dataset as a TFileCollection

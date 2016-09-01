@@ -35,6 +35,7 @@ void TPoolPlayer::ProcDataSet(unsigned int code, MPCodeBufPair& msg)
    //(we actually don't need the parameter if code == kProcTree)
    unsigned fileN = 0;
    unsigned nProcessed = 0;
+
    if (code == PoolCode::kProcRange) {
       //retrieve the total number of entries ranges processed so far by TPool
       nProcessed = ReadBuffer<unsigned>(msg.second.get());
@@ -72,6 +73,8 @@ void TPoolPlayer::ProcDataSet(unsigned int code, MPCodeBufPair& msg)
       //and this worker must take the rangeN-th range
       unsigned nEntries = tree->GetEntries();
       unsigned nBunch = nEntries / fNWorkers;
+      if(nEntries % fNWorkers)
+        nBunch++;
       unsigned rangeN = nProcessed % fNWorkers;
       start = rangeN*nBunch + 1;
       if(rangeN < (fNWorkers-1))
