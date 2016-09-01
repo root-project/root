@@ -127,10 +127,9 @@ ROOT_ADD_TEST(test-stresshistogram-interpreted COMMAND ${ROOT_root_CMD} -b -q -l
               FAILREGEX "FAILED|Error in" DEPENDS test-stresshistogram)
 
 #--stressGUI---------------------------------------------------------------------------------------
-ROOT_EXECUTABLE(stressGUI stressGUI.cxx LIBRARIES Gui Recorder GuiHtml ASImageGui)
-#---Cannot run GUI test in batch mode--------------------
-#configure_file(stressGUI.ref stressGUI.ref COPYONLY)
-#ROOT_ADD_TEST(test-stressgui COMMAND stressGUI -ref FAILREGEX "FAILED|Error in")
+if(ROOT_asimage_FOUND)
+  ROOT_EXECUTABLE(stressGUI stressGUI.cxx LIBRARIES Gui Recorder GuiHtml ASImageGui)
+endif()
 
 #--stressSpectrum----------------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressSpectrum stressSpectrum.cxx LIBRARIES Hist Spectrum Gpad)
