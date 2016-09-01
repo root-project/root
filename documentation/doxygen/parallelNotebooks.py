@@ -7,7 +7,8 @@ try:
 
     outDir = os.environ["DOXYGEN_NOTEBOOK_PATH_PARALLEL"]
 
-    inputs = subprocess.check_output(["grep",  "-r",  "-l", "/// \\\\notebook\|## \\\\notebook",  os.path.expandvars("$ROOTSYS/tutorials")]).split()
+    inputs = subprocess.check_output(["grep",  "-r",  "-l", "/// \\\\notebook\|## \\\\notebook",  
+             os.path.expandvars("$DOXYGEN_SOURCE_DIRECTORY/tutorials")]).split()
 
     dependenciesgraph = dagger.dagger()
 
@@ -29,7 +30,7 @@ try:
     dependenciesgraph.add(root("tree/staff.C"),[root("tree/cernbuild.C")])
     dependenciesgraph.add(root("tree/cernstaff.C"),[root("tree/cernbuild.C")])
     dependenciesgraph.add(root("hist/hbars.C"),[root("tree/cernbuild.C")])
-    dependenciesgraph.add(root("pyroot/ntuple.py"),[root("pyroot/hsimple.py")])
+    dependenciesgraph.add(root("pyroot/ntuple1.py"),[root("pyroot/hsimple.py")])
     dependenciesgraph.add(root("pyroot/h1draw.py"),[root("pyroot/hsimple.py")])
     dependenciesgraph.add(root("pyroot/fit1.py"),[root("pyroot/fillrandom.py")])
     dependenciesgraph.add(root("tmva/TMVAClassificationApplication.C"),[root("tmva/TMVAClassification.C")])
