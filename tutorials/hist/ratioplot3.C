@@ -18,6 +18,8 @@ void ratioplot3()  {
     h1->FillRandom("gaus", 2000);
     h1->Fit("gaus");
     h1->SetMinimum(0.001);
+    h1->GetXaxis()->SetTitle("x");
+    h1->GetYaxis()->SetTitle("y");
     c1->Clear();
     auto rp1 = new TRatioPlot(h1);
     rp1->Draw();

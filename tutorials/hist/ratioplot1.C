@@ -21,6 +21,8 @@ void ratioplot1() {
    h2->FillRandom("f1", 2000);
    h1->Sumw2();
    h2->Scale(1.9 / 2.);
+   h1->GetXaxis()->SetTitle("x");
+   h1->GetYaxis()->SetTitle("y");
    auto rp = new TRatioPlot(h1, h2);
    c1->SetTicks(0, 1);
    rp->Draw();

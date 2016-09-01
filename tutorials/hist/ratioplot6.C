@@ -16,6 +16,8 @@ void ratioplot6() {
    h1->FillRandom("gaus", 5000);
    TFitResultPtr fitres = h1->Fit("gaus", "S");
    h1->Sumw2();
+   h1->GetXaxis()->SetTitle("x");
+   h1->GetYaxis()->SetTitle("y");
 
    c1->Clear();
 

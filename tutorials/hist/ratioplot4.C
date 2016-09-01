@@ -16,6 +16,8 @@ void ratioplot4()  {
     auto h1 = new TH1D("h1", "h1", 50, -5, 5);
     h1->FillRandom("gaus", 2000);
     h1->Fit("gaus");
+    h1->GetXaxis()->SetTitle("x");
+    h1->GetYaxis()->SetTitle("y");
     c1->Clear();
     auto rp1 = new TRatioPlot(h1);
     std::vector<double> lines = {-3, -2, -1, 0, 1, 2, 3};
