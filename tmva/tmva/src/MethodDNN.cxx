@@ -659,20 +659,20 @@ void TMVA::MethodDNN::Train()
    size_t weightIndex = 0;
    for (size_t l = 0; l < fNet.GetDepth(); l++) {
       auto & layerWeights = fNet.GetLayer(l).GetWeights();
-      for (size_t j = 0; j < layerWeights.GetNcols(); j++) {
-         for (size_t i = 0; i < layerWeights.GetNrows(); i++) {
+      for (Int_t j = 0; j < layerWeights.GetNcols(); j++) {
+         for (Int_t i = 0; i < layerWeights.GetNrows(); i++) {
             layerWeights(i,j) = weights[weightIndex];
             weightIndex++;
          }
       }
       auto & layerBiases = fNet.GetLayer(l).GetBiases();
       if (l == 0) {
-         for (size_t i = 0; i < layerBiases.GetNrows(); i++) {
+         for (Int_t i = 0; i < layerBiases.GetNrows(); i++) {
             layerBiases(i,0) = weights[weightIndex];
             weightIndex++;
          }
       } else {
-         for (size_t i = 0; i < layerBiases.GetNrows(); i++) {
+         for (Int_t i = 0; i < layerBiases.GetNrows(); i++) {
             layerBiases(i,0) = 0.0;
          }
       }
