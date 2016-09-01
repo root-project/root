@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_hist
 /// Example that shows how you can set the colors of the confidence interval bands by using
-/// the method `TRatioPlot::SetConfidenceIntervalColors.
+/// the method `TRatioPlot::SetConfidenceIntervalColors`.
 ///
 /// \macro_image
 /// \macro_code
