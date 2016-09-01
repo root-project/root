@@ -736,29 +736,6 @@ TGraph* TRatioPlot::GetLowerRefGraph() const
    return 0;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Shortcut for:
-///
-/// ~~~{.cpp}
-/// rp->GetLowerRefGraph()->GetXaxis();
-/// ~~~
-
-TAxis* TRatioPlot::GetLowerRefXaxis() const
-{
-   return GetLowerRefGraph()->GetXaxis();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Shortcut for:
-///
-/// ~~~{.cpp}
-/// rp->GetLowerRefGraph()->GetYaxis();
-/// ~~~
-
-TAxis* TRatioPlot::GetLowerRefYaxis() const
-{
-   return GetLowerRefGraph()->GetYaxis();
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the reference object. Its the first TH1 or THStack type object
@@ -1688,8 +1665,10 @@ void TRatioPlot::SetConfidenceLevels(Double_t c1, Double_t c2)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \param gridlines Vector of y positions for the dashes lines
+/// Set where horizontal, dashed lines are drawn on the lower pad.
 /// Can be used to override existing default lines (or disable them).
+///
+/// \param gridlines Vector of y positions for the dashes lines
 ///
 /// Begin_Macro(source)
 /// ../../../tutorials/hist/ratioplot4.C
@@ -1702,6 +1681,7 @@ void TRatioPlot::SetGridlines(std::vector<double> gridlines)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set where horizontal, dashed lines are drawn on the lower pad.
+/// Can be used to override existing default lines (or disable them).
 ///
 /// \param gridlines Double_t array of y positions for the dashed lines
 /// \param numGridlines Length of gridlines
@@ -1729,18 +1709,6 @@ void TRatioPlot::SetConfidenceIntervalColors(Color_t ci1, Color_t ci2)
 {
    fCi1Color = ci1;
    fCi2Color = ci2;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Explicitly specify the fit result that is to be used for fit residual calculation.
-/// If it is not provided, the last fit registered in the global fitter is used.
-/// The fit result can also be specified in the constructor.
-///
-/// \param fitres The fit result coming from the fit function call
-
-void TRatioPlot::SetFitResult(TFitResultPtr fitres)
-{
-   fFitResult = fitres.Get();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

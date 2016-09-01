@@ -29,12 +29,15 @@
 #include "TString.h"
 #endif
 
+#ifndef ROOT_TGraph
+#include "TGraph.h"
+#endif
+
 class TH1;
 class TPad;
 class TVirtualPad;
 class TGraphAsymmErrors;
 class TGraphErrors;
-class TGraph;
 class TAxis;
 class TGaxis;
 class TLine;
@@ -187,8 +190,24 @@ public:
    TAxis *GetLowYaxis() const { return fLowYaxis; }
 
    virtual TGraph *GetLowerRefGraph() const;
-   TAxis *GetLowerRefXaxis() const;
-   TAxis *GetLowerRefYaxis() const;
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Shortcut for:
+   ///
+   /// ~~~{.cpp}
+   /// rp->GetLowerRefGraph()->GetXaxis();
+   /// ~~~
+
+   TAxis *GetLowerRefXaxis() const { return GetLowerRefGraph()->GetXaxis(); }
+   
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Shortcut for:
+   ///
+   /// ~~~{.cpp}
+   /// rp->GetLowerRefGraph()->GetYaxis();
+   /// ~~~
+   
+   TAxis *GetLowerRefYaxis() const { return GetLowerRefGraph()->GetYaxis(); }
 
    virtual TObject *GetUpperRefObject() const;
    TAxis *GetUpperRefXaxis() const;
@@ -198,7 +217,15 @@ public:
    TPad * GetLowerPad() const { return fLowerPad; }
 
    // Setters
-   void SetFitResult(TFitResultPtr fitres);
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Explicitly specify the fit result that is to be used for fit residual calculation.
+   /// If it is not provided, the last fit registered in the global fitter is used.
+   /// The fit result can also be specified in the constructor.
+   ///
+   /// \param fitres The fit result coming from the fit function call
+
+   void SetFitResult(TFitResultPtr fitres) { fFitResult = fitres.Get(); }
 
    // Setters for margins
    void SetUpTopMargin(Float_t margin);
