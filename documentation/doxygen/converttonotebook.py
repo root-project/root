@@ -7,11 +7,20 @@
 # tweaked slightly to ensure full functionality. Please do not hesistate to email the author
 # with any questions or with examples that do not work.
 #
+# HELP IT DOESN'T WORK: Two possible solutions: 
+#     1. Check that all the types returned by the tutorial are in the gTypesList. If they aren't,
+#        simply add them.
+#     2. If the tutorial takes a long time to execute (more than 90 seconds), add the name of the
+#        tutorial to the list of long tutorials listLongTutorials, in the fucntion findTimeout.
+#
 # REQUIREMENTS: This script needs jupyter to be properly installed, as it uses the python
 # package nbformat and calls the shell commands `jupyter nbconvert` and `jupyter trust`. The
 # rest of the packages used should be included in a standard installation of python. The script
 # is intended to be run on a UNIX based system.
 #
+#
+# FUNCTIONING:
+# -----------
 # The converttonotebook script creates Jupyter notebooks from raw C++ or python files.
 # Particulary, it is indicated to convert the ROOT tutorials found in the ROOT
 # repository.
@@ -22,10 +31,10 @@
 # Indeed the script takes two arguments, the path to the macro and the path to the directory
 # where the notebooks will be created
 #
-# The script's general funcitoning is as follows. The macro to be converted is imported as a string.
-# A sereis of modifications are made to this sring, for instacne delimiting where markdown and
-# code cells are. Then, this string is converted into ipynb format using a function in the
-# nbconvert package. Finally, the notebook is executed and output.
+# The script's general functioning is as follows. The macro to be converted is imported as a string.
+# A series of modifications are made to this string, for instance delimiting where markdown and
+# code cells begin and end. Then, this string is converted into ipynb format using a function
+# in the nbconvert package. Finally, the notebook is executed and output.
 #
 # For converting python tutorials it is fairly straightforward. It extracts the decription and
 # author information from the header and then removes it. It also converts any comment at the
@@ -33,14 +42,14 @@
 #
 # For C++ files the process is slightly more complex. The script separates the functions from the
 # main code. The main function is identified as it has the smae name as the macro file. The other
-# functions are considered functions. The main function is "extracted"and presented as main code.
+# functions are considered functions. The main function is "extracted" and presented as main code.
 # The helper functions are placed in their own code cell with the %%cpp -d magic to enable function
 # defintion. Finally, as with Python macros, relevant information is extracted from the header, and
 # newline comments are converted into Markdown cells (unless they are in helper functions).
 #
 # The script creates an .ipynb version of the macro,  with the full output included.
 # The files are named:
-#     <macro>.C.nbconvert.ipynb
+#     <macro>.<C or py>.nbconvert.ipynb
 #
 # It is called by filter.cxx, which in turn is called by doxygen when processing any file
 # in the ROOT repository. filter.cxx only calls convertonotebook.py when the string \notebook
@@ -332,7 +341,7 @@ def cppComments(text):
     >>> cppComments('''// This is a
     ... // multiline comment
     ... void function(){}''') 
-    '# <markdowncell>\\n#  This is a\\n#  multiline comment\\n# <codecell>\\nvoid function(){}\\n'
+    '# <markdowncell>\\n# This is a\\n#  multiline comment\\n# <codecell>\\nvoid function(){}\\n'
     >>> cppComments('''void function(){
     ...    int variable = 5 // Comment not in cell
     ...    // Comment also not in cell
@@ -367,7 +376,7 @@ def split(text):
     """
     Splits the text string into main, helpers, and rest. main is the main function,
     i.e. the function tha thas the same name as the macro file. Helpers is a list of
-    strings, each a helper function, i.e. any other function that is not the main funciton.
+    strings, each a helper function, i.e. any other function that is not the main function.
     Finally, rest is a string containing any top-level code outside of any function.
     Comments immediately prior to a helper cell are converted into markdown cell,
     added to the helper, and removed from rest.
@@ -404,7 +413,7 @@ def split(text):
     ...    helper function
     ...    content spans lines
     ... }''')
-    ('void tutorial(){\\n   content of tutorial\\n}', ['\\n# <markdowncell>\\n  This is a multiline description of the helper function \\n# <codecell>\\n%%cpp -d\\nvoid helper(arguments = values){\\n   helper function\\n   content spans lines\\n}'], '')
+    ('void tutorial(){\\n   content of tutorial\\n}', ['\\n# <markdowncell>\\n  This is a multiline\\n description of the\\n helper function\\n \\n# <codecell>\\n%%cpp -d\\nvoid helper(arguments = values){\\n   helper function\\n   content spans lines\\n}'], '')
     """
     functionReString="("
     for cpptype in gTypesList:
@@ -423,7 +432,7 @@ def split(text):
         else:
             helpers.append(matchString)
 
-    # Create rest by replacing the main and helper funcitons with blank strings
+    # Create rest by replacing the main and helper functions with blank strings
     rest = text.replace(main, "")
 
     for helper in helpers:
@@ -463,7 +472,7 @@ def split(text):
 
 def findFunctionName(text):
     """
-    Takes a string representation of a C++ funciton as an input,
+    Takes a string representation of a C++ function as an input,
     finds and returns the name of the function
     >>> findFunctionName('void functionName(arguments = values){}')
     'functionName'
@@ -503,20 +512,30 @@ def processmain(text):
     ...    spanning several
     ...    lines
     ... }''')
-    ('void function(){\\n   content of function\\n   spanning several\\n   lines\\n}', '', False)
+    ('void function(){\\n   content of function\\n   spanning several\\n   lines\\n}', '')
     >>> processmain('''void function(arguments = values){
     ...    content of function
     ...    spanning several
     ...    lines
     ... }''')
-    ('void function(arguments = values){\\n   content of function\\n   spanning several\\n   lines\\n}', '\\n# <markdowncell> \\n# Call the main function \\n# <codecell>\\nfunction();', True)
+    ('void function(arguments = values){\\n   content of function\\n   spanning several\\n   lines\\n}', '# <markdowncell> \\n Arguments are defined. \\n# <codecell>\\narguments = values;\\n# <codecell>\\n')
+    >>> processmain('''void function(argument1 = value1, //comment 1
+    ...                              argument2 = value2 /*comment 2*/ ,
+    ...                              argument3 = value3, 
+    ...                              argument4 = value4)
+    ... {
+    ...    content of function
+    ...    spanning several
+    ...    lines
+    ... }''')
+    ('void function(argument1 = value1, //comment 1\\n                             argument2 = value2 /*comment 2*/ ,\\n                             argument3 = value3, \\n                             argument4 = value4)\\n{\\n   content of function\\n   spanning several\\n   lines\\n}', '# <markdowncell> \\n Arguments are defined. \\n# <codecell>\\nargument1 = value1;\\nargument2 = value2;\\nargument3 = value3;\\nargument4 = value4;\\n# <codecell>\\n')
     >>> processmain('''TCanvas function(){
     ...    content of function
     ...    spanning several 
     ...    lines
     ...    return c1
     ... }''') 
-    ('TCanvas function(){\\n   content of function\\n   spanning several\\n   lines\\n   return c1\\n}', '\\n# <markdowncell> \\n# Call the main function \\n# <codecell>\\nfunction();', True , '')
+    ('TCanvas function(){\\n   content of function\\n   spanning several \\n   lines\\n   return c1\\n}', '')
     """
 
     argumentsCell = ''
@@ -628,10 +647,10 @@ def isCpp():
 
 
 def findTimeout():
-   listLongtutorials = ["OneSidedFrequentistUpperLimitWithBands", "StandardBayesianNumericalDemo",
+   listLongTutorials = ["OneSidedFrequentistUpperLimitWithBands", "StandardBayesianNumericalDemo",
    "TwoSidedFrequentistUpperLimitWithBands" , "HybridStandardForm", "rs401d_FeldmanCousins",
    "TMVAMultipleBackgroundExample", "TMVARegression", "TMVAClassification"]
-   if tutName in listLongtutorials:
+   if tutName in listLongTutorials:
       return 300
    else:
       return 90
