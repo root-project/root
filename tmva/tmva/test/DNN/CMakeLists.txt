@@ -54,39 +54,41 @@ endif (CUDA_FOUND)
 find_package(BLAS)
 if (BLAS_FOUND AND imt)
 
+  SET(DNN_CPU_LIBRARIES ${TBB_LIBRARIES} ${BLAS_LIBRARIES})
+
   # DNN - Arithmetic Functions CPU
   ROOT_EXECUTABLE(testArithmeticCpu TestMatrixArithmeticCpu.cxx
-    LIBRARIES ${Libraries})
+    LIBRARIES ${Libraries} ${DNN_CPU_LIBRARIES})
   ROOT_ADD_TEST(TMVA-DNN-Arithmetic-Cpu COMMAND testArithmeticCpu)
 
   # DNN - Activation Functions CPU
   ROOT_EXECUTABLE(testActivationFunctionsCpu TestActivationFunctionsCpu.cxx
-    LIBRARIES ${Libraries})
+    LIBRARIES ${Libraries} ${DNN_CPU_LIBRARIES})
   ROOT_ADD_TEST(TMVA-DNN-Activation-Functions-Cpu COMMAND testActivationFunctionsCpu)
 
   # DNN - Loss Functions CPU
   ROOT_EXECUTABLE(testLossFunctionsCpu TestLossFunctionsCpu.cxx
-    LIBRARIES ${Libraries})
+    LIBRARIES ${Libraries} ${DNN_CPU_LIBRARIES})
   ROOT_ADD_TEST(TMVA-DNN-Loss-Functions-Cpu COMMAND testLossFunctionsCpu)
 
   # DNN - Derivatives CPU
   ROOT_EXECUTABLE(testDerivativesCpu TestDerivativesCpu.cxx
-    LIBRARIES ${Libraries})
+    LIBRARIES ${Libraries} ${DNN_CPU_LIBRARIES})
   ROOT_ADD_TEST(TMVA-DNN-Derivatives-Cpu COMMAND testDerivativesCpu)
 
   # DNN - Backpropagation CPU
   ROOT_EXECUTABLE(testBackpropagationCpu TestBackpropagationCpu.cxx
-    LIBRARIES ${Libraries})
+    LIBRARIES ${Libraries} ${DNN_CPU_LIBRARIES})
   ROOT_ADD_TEST(TMVA-DNN-Backpropagation-Cpu COMMAND testBackpropagationCpu)
 
   # DNN - DataLoader CPU
   ROOT_EXECUTABLE(testDataLoaderCpu TestDataLoaderCpu.cxx
-    LIBRARIES ${Libraries})
+    LIBRARIES ${Libraries} ${DNN_CPU_LIBRARIES})
   ROOT_ADD_TEST(TMVA-DNN-Data-Loader-Cpu COMMAND testDataLoaderCpu)
 
   # DNN - Minimization CPU
   ROOT_EXECUTABLE(testMinimizationCpu TestMinimizationCpu.cxx
-    LIBRARIES ${Libraries} ${BLAS_openblas_LIBRARY} tbb)
+    LIBRARIES ${Libraries} ${DNN_CPU_LIBRARIES})
   ROOT_ADD_TEST(TMVA-DNN-Minimization-Cpu COMMAND testMinimizationCpu)
 
 endif (BLAS_FOUND AND imt)
