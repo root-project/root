@@ -626,26 +626,16 @@ void TRatioPlot::Draw(Option_t *option)
    TVirtualPad *padsav = gPad;
    fParentPad = gPad;
 
-   //SetLogx(fParentPad->GetLogx());
-   //SetLogy(fParentPad->GetLogy());
-
    fUpperPad->SetLogy(fParentPad->GetLogy());
    fUpperPad->SetLogx(fParentPad->GetLogx());
    fLowerPad->SetLogx(fParentPad->GetLogx());
-
-   //SetGridx(fParentPad->GetGridx());
-   //SetGridy(fParentPad->GetGridy());
 
    fUpperPad->SetGridx(fParentPad->GetGridx());
    fUpperPad->SetGridy(fParentPad->GetGridy());
    fLowerPad->SetGridx(fParentPad->GetGridx());
    fLowerPad->SetGridy(fParentPad->GetGridy());
 
-
-   //TPad::Draw(option);
-
    // we are a TPad
-   //cd();
 
    fUpperPad->Draw();
    fLowerPad->Draw();
@@ -1534,10 +1524,9 @@ Bool_t TRatioPlot::SyncPadMargins()
 void TRatioPlot::RangeAxisChanged()
 {
    // check if rp is already drawn.
-   TList *siblings = fParentPad->GetListOfPrimitives();
-   if (siblings->FindObject(this) == 0) {
+   if (!IsDrawn()) {
       // not drawn yet
-      return;
+       return;
    }
 
    // Only run this concurrently once, in case it's called async
@@ -1548,13 +1537,6 @@ void TRatioPlot::RangeAxisChanged()
    fIsUpdating = kTRUE;
 
    // find out if logx has changed
-   //var_dump(GetLogx());
-   //var_dump(GetLogy());
-   //var_dump(fUpperPad->GetLogx());
-   //var_dump(fUpperPad->GetLogy());
-   //var_dump(fLowerPad->GetLogx());
-   //var_dump(fLowerPad->GetLogy());
-
    if (fParentPad->GetLogx()) {
       if (!fUpperPad->GetLogx() || !fLowerPad->GetLogx()) {
          fParentPad->SetLogx(kFALSE);
@@ -1568,10 +1550,6 @@ void TRatioPlot::RangeAxisChanged()
    // set log to pad
    fUpperPad->SetLogx(fParentPad->GetLogx());
    fLowerPad->SetLogx(fParentPad->GetLogx());
-
-   // copy logy from rp to upper pad
-   //if (GetLogy() !=
-   //fUpperPad->SetLogy(GetLogy());
 
    // get axis ranges for upper and lower
    TAxis *uprefx = GetUpperRefXaxis();
