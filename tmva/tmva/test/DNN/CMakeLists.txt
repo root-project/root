@@ -10,7 +10,7 @@ set(Libraries Core MathCore Matrix TMVA)
 include_directories(${ROOT_INCLUDE_DIRS})
 
 #--- CUDA tests. ---------------------------
-find_package(CUDA)
+find_package(CUDA QUIET)
 if (CUDA_FOUND)
 
   SET(DNN_CUDA_LIBRARIES dnn_cuda ${CUDA_CUBLAS_LIBRARIES})
@@ -51,7 +51,7 @@ if (CUDA_FOUND)
 endif (CUDA_FOUND)
 
 #--- CPU tests. ----------------------------
-find_package(BLAS)
+find_package(BLAS QUIET)
 if (BLAS_FOUND AND imt)
 
   # DNN - Arithmetic Functions CPU

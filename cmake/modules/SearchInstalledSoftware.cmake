@@ -1203,6 +1203,15 @@ if(vc OR builtin_vc)
   endif()
 endif()
 
+
+#---Check for CUDA and BLAS ---------------------------------------------------------
+if(tmva)
+  message(STATUS "Looking for CUDA eventually needed by TMVA")
+  find_package(CUDA QUIET)
+  message(STATUS "Looking for BLAS eventually needed by TMVA")
+  find_package(BLAS QUIET)
+endif()
+
 #---Report non implemented options---------------------------------------------------
 foreach(opt afs glite sapdb srp)
   if(${opt})

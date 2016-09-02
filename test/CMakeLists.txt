@@ -144,15 +144,13 @@ ROOT_ADD_TEST(test-stressvector-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${
               FAILREGEX "FAILED|Error in" DEPENDS test-stressvector)
 
 #--stressTMVA--------------------------------------------------------------------------------------
-FIND_PACKAGE(CUDA)
-if (CUDA_FOUND)
+if(CUDA_FOUND)
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDNNCUDA")
-endif (CUDA_FOUND)
+endif()
 
-FIND_PACKAGE(BLAS)
-if (BLAS_FOUND AND imt)
+if(BLAS_FOUND AND imt)
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDNNCPU")
-endif (BLAS_FOUND AND imt)
+endif()
 
 if(ROOT_tmva_FOUND)
   ROOT_EXECUTABLE(stressTMVA stressTMVA.cxx LIBRARIES TMVA)
