@@ -24,7 +24,7 @@ void ratioplot2() {
    c1->Clear(); // Fit does not draw into correct pad
    auto rp1 = new TRatioPlot(h1);
    rp1->Draw();
-   rp1->GetLowYaxis()->SetTitle("ratio");
-   rp1->GetUpYaxis()->SetTitle("entries");
+   rp1->GetLowerRefYaxis()->SetTitle("ratio");
+   rp1->GetUpperRefYaxis()->SetTitle("entries");
    c1->Update();
 }

@@ -653,11 +653,11 @@ void TRatioPlot::Draw(Option_t *option)
       fLowerPad->cd();
 
       if (fShowConfidenceIntervals) {
-         fConfidenceInterval2->Draw("A3");
+         fConfidenceInterval2->Draw("IA3");
          fConfidenceInterval1->Draw("3");
          fRatioGraph->Draw(fGraphDrawOpt+"SAME");
       } else {
-         fRatioGraph->Draw("A"+fGraphDrawOpt+"SAME");
+         fRatioGraph->Draw("IA"+fGraphDrawOpt+"SAME");
       }
    } else {
 
@@ -676,7 +676,7 @@ void TRatioPlot::Draw(Option_t *option)
       fLowerPad->cd();
 
       TString opt = fGraphDrawOpt;
-      fRatioGraph->Draw("A"+fGraphDrawOpt);
+      fRatioGraph->Draw("IA"+fGraphDrawOpt);
 
    }
 
@@ -871,17 +871,6 @@ void TRatioPlot::CreateGridline()
 
 void TRatioPlot::Paint(Option_t * /*opt*/)
 {
-   // hide lower axes
-   TAxis *refx = GetLowerRefXaxis();
-   TAxis *refy = GetLowerRefYaxis();
-
-   refx->SetTickSize(0.);
-   refx->SetLabelSize(0.);
-   refx->SetTitleSize(0.);
-   refy->SetTickSize(0.);
-   refy->SetLabelSize(0.);
-   refy->SetTitleSize(0.);
-
    // create the visual axes
    CreateVisualAxes();
    CreateGridline();
@@ -1230,10 +1219,13 @@ void TRatioPlot::CreateVisualAxes()
    }
 
    // import infos from TAxis
-   ImportAxisAttributes(fUpperGXaxis, fSharedXAxis);
-   ImportAxisAttributes(fUpperGYaxis, fUpYaxis);
-   ImportAxisAttributes(fLowerGXaxis, fSharedXAxis);
-   ImportAxisAttributes(fLowerGYaxis, fLowYaxis);
+   ImportAxisAttributes(fUpperGXaxis, GetUpperRefXaxis());
+   ImportAxisAttributes(fUpperGYaxis, GetUpperRefYaxis());
+   ImportAxisAttributes(fLowerGXaxis, GetLowerRefXaxis());
+   ImportAxisAttributes(fLowerGYaxis, GetLowerRefYaxis());
+
+   // lower x axis needs to get title from upper x
+   fLowerGXaxis->SetTitle(fUpperGXaxis->GetTitle());
 
    // (re)set all the axes properties to what we want them
    fUpperGXaxis->SetTitle("");
@@ -1340,10 +1332,11 @@ void TRatioPlot::CreateVisualAxes()
       }
 
       // import attributes from shared axes
-      ImportAxisAttributes(fUpperGXaxisMirror, fSharedXAxis);
-      ImportAxisAttributes(fUpperGYaxisMirror, fUpYaxis);
-      ImportAxisAttributes(fLowerGXaxisMirror, fSharedXAxis);
-      ImportAxisAttributes(fLowerGYaxisMirror, fLowYaxis);
+      ImportAxisAttributes(fUpperGXaxisMirror, GetUpperRefXaxis());
+      ImportAxisAttributes(fUpperGYaxisMirror, GetUpperRefYaxis());
+      ImportAxisAttributes(fLowerGXaxisMirror, GetLowerRefXaxis());
+      ImportAxisAttributes(fLowerGYaxisMirror, GetLowerRefYaxis());
+
 
       // remove titles
       fUpperGXaxisMirror->SetTitle("");
