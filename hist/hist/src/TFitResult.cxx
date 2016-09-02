@@ -87,8 +87,7 @@ TMatrixDSym TFitResult::GetCorrelationMatrix()  const
 /// Print the TFitResult.
 
 std::string cling::printValue(const TFitResult* val) {
-   std::string buf;
-   std::stringstream outs(buf);
+   std::stringstream outs;
    val->ROOT::Fit::FitResult::Print(outs, false /*doCovMat*/);
-   return buf;
+   return outs.str();
 }
