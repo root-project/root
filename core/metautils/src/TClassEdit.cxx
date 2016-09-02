@@ -1574,7 +1574,7 @@ static void ResolveTypedefImpl(const char *tname,
                cursor += 5;
                end_of_type = cursor+1;
                prevScope = end_of_type;
-               if (tname[next+5] == ',' || tname[next+5] == '>' || tname[next+5] == '[') {
+               if ((next+5)==len || tname[next+5] == ',' || tname[next+5] == '>' || tname[next+5] == '[') {
                   break;
                }
             } else if (next!=len && tname[next] != '*' && tname[next] != '&') {
