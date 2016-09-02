@@ -285,6 +285,7 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 
   Several examples illustrate how to use this class. See:
   `$ROOTSYS/tutorials/hist/ratioplot?.C`
+* New option "I" allowing to draw TGraph with invisible axis (used by `TRatioPlot`);
 
 ## New histogram drawing options
 
