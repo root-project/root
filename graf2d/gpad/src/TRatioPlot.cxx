@@ -434,8 +434,13 @@ void TRatioPlot::SetupPads() {
       fLowerPad = 0;
    }
 
-   fUpperPad = new TPad("upper_pad", "", 0., fSplitFraction, 1., 1.);
-   fLowerPad = new TPad("lower_pad", "", 0., 0., 1., fSplitFraction);
+   double pm = fInsetWidth;
+   double width = gPad->GetWNDC();
+   double height = gPad->GetHNDC();
+   double f = height/width;
+
+   fUpperPad = new TPad("upper_pad", "", pm*f, fSplitFraction, 1.-pm*f, 1.-pm);
+   fLowerPad = new TPad("lower_pad", "", pm*f, pm, 1.-pm*f, fSplitFraction);
 
 
    SetPadMargins();
@@ -455,8 +460,7 @@ void TRatioPlot::SetupPads() {
       fTopPad = 0;
    }
 
-   Double_t margin = 0;
-   fTopPad = new TPad("top_pad", "", margin, margin, 1-margin, 1-margin);
+   fTopPad = new TPad("top_pad", "", pm*f, pm, 1-pm*f, 1-pm);
 
    fTopPad->SetBit(kCannotPick);
 
@@ -1647,10 +1651,42 @@ Bool_t TRatioPlot::IsDrawn()
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the fraction of the parent pad, at which the to sub pads should meet
 
-void TRatioPlot::SetSplitFraction(Float_t sf) {
+void TRatioPlot::SetSplitFraction(Float_t sf) 
+{
+   if (fParentPad == 0) {
+      Warning("SetSplitFraction", "Can only be used after TRatioPlot has been drawn.");
+      return;
+   }
+   
    fSplitFraction = sf;
-   fUpperPad->SetPad(0., fSplitFraction, 1., 1.);
-   fLowerPad->SetPad(0., 0., 1., fSplitFraction);
+   double pm = fInsetWidth;
+   double width = fParentPad->GetWNDC();
+   double height = fParentPad->GetHNDC();
+   double f = height/width;
+
+   fUpperPad->SetPad(pm*f, fSplitFraction, 1.-pm*f, 1.-pm);
+   fLowerPad->SetPad(pm*f, pm, 1.-pm*f, fSplitFraction);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the inset on the outer sides of all the pads. It's used to make the outer
+/// pad draggable.
+
+void TRatioPlot::SetInsetWidth(Double_t width)
+{
+   if (fParentPad == 0) {
+      Warning("SetInsetWidth", "Can only be used after TRatioPlot has been drawn.");
+      return;
+   }
+   
+   fInsetWidth = width;
+   SetSplitFraction(fSplitFraction);
+   
+   double pm = fInsetWidth;
+   double w = fParentPad->GetWNDC();
+   double h = fParentPad->GetHNDC();
+   double f = h/w;
+   fTopPad->SetPad(pm*f, pm, 1-pm*f, 1-pm);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

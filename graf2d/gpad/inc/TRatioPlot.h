@@ -141,6 +141,8 @@ protected:
    Float_t fLeftMargin = 0.1; ///< Stores the common left margin of both pads
    Float_t fRightMargin = 0.1; ///< Stores the common right margin of both pads
 
+   Float_t fInsetWidth = 0.0025;
+
    Bool_t fIsUpdating = kFALSE; ///< Keeps track of whether its currently updating to reject other calls until done
    Bool_t fIsPadUpdating = kFALSE; ///< Keeps track whether pads are updating during resizing
 
@@ -172,6 +174,8 @@ public:
    void SetH2DrawOpt(Option_t *opt);
    void SetGraphDrawOpt(Option_t *opt);
    void SetFitDrawOpt(Option_t *opt);
+   
+   void SetInsetWidth(Double_t width);
 
    virtual void Draw(Option_t *chopt="");
    virtual void Browse(TBrowser *b);
