@@ -127,7 +127,7 @@ Begin_Macro(source)
 End_Macro
 
 ## Error options for difference divided by uncertainty and fit residual
-The uncertainty that is used in the calculation can be steered by providing 
+The uncertainty that is used in the calculation can be steered by providing
 options to the `option` argument.
 
 | Option     | Description                                                  |
@@ -1642,13 +1642,13 @@ Bool_t TRatioPlot::IsDrawn()
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the fraction of the parent pad, at which the to sub pads should meet
 
-void TRatioPlot::SetSplitFraction(Float_t sf) 
+void TRatioPlot::SetSplitFraction(Float_t sf)
 {
    if (fParentPad == 0) {
       Warning("SetSplitFraction", "Can only be used after TRatioPlot has been drawn.");
       return;
    }
-   
+
    fSplitFraction = sf;
    double pm = fInsetWidth;
    double width = fParentPad->GetWNDC();
@@ -1669,10 +1669,10 @@ void TRatioPlot::SetInsetWidth(Double_t width)
       Warning("SetInsetWidth", "Can only be used after TRatioPlot has been drawn.");
       return;
    }
-   
+
    fInsetWidth = width;
    SetSplitFraction(fSplitFraction);
-   
+
    double pm = fInsetWidth;
    double w = fParentPad->GetWNDC();
    double h = fParentPad->GetHNDC();

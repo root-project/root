@@ -174,7 +174,7 @@ public:
    void SetH2DrawOpt(Option_t *opt);
    void SetGraphDrawOpt(Option_t *opt);
    void SetFitDrawOpt(Option_t *opt);
-   
+
    void SetInsetWidth(Double_t width);
 
    virtual void Draw(Option_t *chopt="");
@@ -203,14 +203,14 @@ public:
    /// ~~~
 
    TAxis *GetLowerRefXaxis() const { return GetLowerRefGraph()->GetXaxis(); }
-   
+
    ////////////////////////////////////////////////////////////////////////////////
    /// Shortcut for:
    ///
    /// ~~~{.cpp}
    /// rp->GetLowerRefGraph()->GetYaxis();
    /// ~~~
-   
+
    TAxis *GetLowerRefYaxis() const { return GetLowerRefGraph()->GetYaxis(); }
 
    virtual TObject *GetUpperRefObject() const;
@@ -244,8 +244,8 @@ public:
    void SetSplitFraction(Float_t sf);
    void SetConfidenceLevels(Double_t cl1, Double_t cl2);
 
-   virtual void SetGridlines(Double_t *gridlines, Int_t numGridlines); 
-   virtual void SetGridlines(std::vector<double> gridlines); 
+   virtual void SetGridlines(Double_t *gridlines, Int_t numGridlines);
+   virtual void SetGridlines(std::vector<double> gridlines);
 
    void SetConfidenceIntervalColors(Color_t ci1 = kGreen, Color_t ci2 = kYellow);
 
