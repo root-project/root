@@ -26,3 +26,9 @@ ROOTTEST_ADD_TEST(runf02
 ROOTTEST_ADD_TEST(reread
                   MACRO reread.C
                   LABELS roottest regression cling)
+
+ROOTTEST_ADD_TEST(unhappy
+                  MACRO unhappy.C
+                  ERRREF unhappy.eref
+                  PASSRC 1
+                  LABELS roottest regression cling)
