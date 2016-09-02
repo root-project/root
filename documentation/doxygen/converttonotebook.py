@@ -649,7 +649,7 @@ def isCpp():
 def findTimeout():
    listLongTutorials = ["OneSidedFrequentistUpperLimitWithBands", "StandardBayesianNumericalDemo",
    "TwoSidedFrequentistUpperLimitWithBands" , "HybridStandardForm", "rs401d_FeldmanCousins",
-   "TMVAMultipleBackgroundExample", "TMVARegression", "TMVAClassification"]
+   "TMVAMultipleBackgroundExample", "TMVARegression", "TMVAClassification", "StandardHypoTestDemo"]
    if tutName in listLongTutorials:
       return 300
    else:
