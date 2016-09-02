@@ -106,5 +106,7 @@ TFitResultPtr & TFitResultPtr::operator=(const TFitResultPtr& rhs)
 /// Print the TFitResultPtr by printing its TFitResult.
 
 std::string cling::printValue(const TFitResultPtr* val) {
-   return *val ? printValue(val->Get()) : "<nullptr TFitResult>";
+   if (TFitResult* fr = val->Get())
+      return printValue(fr);
+   return "<nullptr TFitResult>";
 }
