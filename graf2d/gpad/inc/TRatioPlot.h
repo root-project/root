@@ -50,8 +50,8 @@ class TFileMergeInfo;
 class TRatioPlot : public TObject {
 
 private:
-   TRatioPlot& operator=(const TRatioPlot&); // Not implemented
-   TRatioPlot(const TRatioPlot &hrp);
+   TRatioPlot& operator=(const TRatioPlot&) = delete; // Not implemented
+   TRatioPlot(const TRatioPlot &hrp) = delete;
 
    enum CalculationMode {
       kDivideHist = 1, ///< Use `TH1::Divide` to create the ratio.

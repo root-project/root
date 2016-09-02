@@ -467,15 +467,6 @@ void TRatioPlot::SetupPads() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TRatioPlot copy constructor
-
-TRatioPlot::TRatioPlot(const TRatioPlot &/*hrp*/) : TObject()
-{
-   Warning("TRatioPlot", "Copy constructor not yet implemented");
-    return;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Browse.
 
 void TRatioPlot::Browse(TBrowser *b)
