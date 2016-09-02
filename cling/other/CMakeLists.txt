@@ -39,3 +39,8 @@ ROOTTEST_ADD_TEST(assertBaseMembers
 ROOTTEST_ADD_TEST(assertRedirect
                   MACRO assertRedirect.C
                   LABELS roottest regression cling)
+
+ROOTTEST_ADD_TEST(execValuePrint
+                  MACRO execValuePrint.C
+                  OUTREF execValuePrint.ref
+                  LABELS roottest regression cling)
