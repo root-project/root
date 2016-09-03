@@ -46,6 +46,18 @@ else()
   set(ZLIB_HEADERS ${ZipOldHeaders})
   set(ZLIB_SRCS ${ZipOldSource} ${CMAKE_CURRENT_SOURCE_DIR}/src/Compression.cxx ${CMAKE_CURRENT_SOURCE_DIR}/src/RZip.cxx)
 endif()
+if(brotli)
+  ROOT_ADD_CXX_FLAG(CMAKE_C_FLAGS -DBROTLI)
+endif()
+if(zopfli)
+  ROOT_ADD_CXX_FLAG(CMAKE_C_FLAGS -DZOPFLI)
+endif()
+if(lz4)
+  ROOT_ADD_CXX_FLAG(CMAKE_C_FLAGS -DLZ4)
+endif()
+if(lzo)
+  ROOT_ADD_CXX_FLAG(CMAKE_C_FLAGS -DLZO)
+endif()
 
 # Define all the header files which should be installed when
 # doing a "make install"

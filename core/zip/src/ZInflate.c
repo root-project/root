@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+
 #ifdef WIN32
 #define __STDC__ 1
 #endif
@@ -287,6 +288,42 @@ int R__Inflate_dynamic OF((uch**, long*, uch**, long*, ulg*, unsigned*, uch* , u
 int R__Inflate_block OF((int *, uch**, long*, uch**, long*, ulg*, unsigned*, uch* , unsigned*, unsigned*));
 int R__Inflate OF((uch**, long*, uch**, long*));
 int R__Inflate_free OF((void));
+#ifdef LZO
+extern int R__unzipLZO(uch* ibufptr, long ibufsz, uch* obufptr, long* obufsz, uch method);
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+int R__unzipLZO(uch* ibufptr, long ibufsz, uch* obufptr, long* obufsz, uch method) {
+  fprintf(stderr,
+      "R__unzipLZO: ROOT built without LZO\n");
+  return -1;
+}
+#pragma GCC diagnostic pop
+#endif
+#ifdef LZ4
+extern int R__unzipLZ4(uch* ibufptr, long ibufsz, uch* obufptr, long* obufsz, uch method);
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+int R__unzipLZ4(uch* ibufptr, long ibufsz, uch* obufptr, long* obufsz, uch method){
+  fprintf(stderr,
+      "R__unzipLZ4: ROOT built without LZ4\n");
+  return -1;
+}
+#pragma GCC diagnostic pop
+#endif
+#ifdef BROTLI
+extern int R__unzipBROTLI(uch* ibufptr, long ibufsz, uch* obufptr, size_t* obufsz);
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+int R__unzipBROTLI(uch* ibufptr, long ibufsz, uch* obufptr, size_t* obufsz) {
+  fprintf(stderr,
+      "R__unzipBROTLI: ROOT built without BROTLI\n");
+  return -1;
+}
+#pragma GCC diagnostic pop
+#endif
 
 /* Tables for deflate from PKZIP's appnote.txt. */
 static const unsigned border[] = {    /* Order of the bit length code lengths */
@@ -1130,10 +1167,33 @@ int R__unzip_header(int *srcsize, uch *src, int *tgtsize)
   /*   C H E C K   H E A D E R   */
   if (!(src[0] == 'Z' && src[1] == 'L' && src[2] == Z_DEFLATED) &&
       !(src[0] == 'C' && src[1] == 'S' && src[2] == Z_DEFLATED) &&
-      !(src[0] == 'X' && src[1] == 'Z' && src[2] == 0)) {
+      !(src[0] == 'X' && src[1] == 'Z' && src[2] == 0) &&
+      !(src[0] == 'L' && src[1] == 'Z') &&
+      !(src[0] == 'L' && src[1] == '4') &&
+      !(src[0] == 'B' && src[1] == 'R') &&
+      !(src[0] == 'Z' && src[1] == 'P')) {
     fprintf(stderr, "Error R__unzip_header: error in header\n");
     return 1;
   }
+#ifndef LZO
+  if (src[0] == 'L' && src[1] == 'Z') {
+    fprintf(stderr, "Error R__unzip_header: ROOT built without LZO\n");
+    return 2;
+  }
+#endif
+#ifndef LZ4
+  if (src[0] == 'L' && src[1] == '4') {
+    fprintf(stderr, "Error R__unzip_header: ROOT built without LZ4\n");
+    return 2;
+  }
+#endif
+/// ZOPFLI is decompressed with zlib, no check needed
+#ifndef BROTLI
+  if (src[0] == 'B' && src[1] == 'R') {
+    fprintf(stderr, "Error R__unzip_header: ROOT built without BROTLI\n");
+    return 2;
+  }
+#endif
 
   *srcsize = HDRSIZE + ((long)src[3] | ((long)src[4] << 8) | ((long)src[5] << 16));
   *tgtsize = (long)src[6] | ((long)src[7] << 8) | ((long)src[8] << 16);
@@ -1159,10 +1219,33 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
   /*   C H E C K   H E A D E R   */
   if (!(src[0] == 'Z' && src[1] == 'L' && src[2] == Z_DEFLATED) &&
       !(src[0] == 'C' && src[1] == 'S' && src[2] == Z_DEFLATED) &&
-      !(src[0] == 'X' && src[1] == 'Z' && src[2] == 0)) {
-    fprintf(stderr,"Error R__unzip: error in header\n");
+      !(src[0] == 'X' && src[1] == 'Z' && src[2] == 0) &&
+      !(src[0] == 'L' && src[1] == 'Z') &&
+      !(src[0] == 'L' && src[1] == '4') &&
+      !(src[0] == 'B' && src[1] == 'R') &&
+      !(src[0] == 'Z' && src[1] == 'P')) {
+    fprintf(stderr, "Error R__unzip: error in header\n");
     return;
   }
+#ifndef LZO
+  if (src[0] == 'L' && src[1] == 'Z') {
+    fprintf(stderr, "Error R__unzip: ROOT built without LZO\n");
+    return;
+  }
+#endif
+#ifndef LZ4
+  if (src[0] == 'L' && src[1] == '4') {
+    fprintf(stderr, "Error R__unzip: ROOT built without LZ4\n");
+    return;
+  }
+#endif
+/// ZOPFLI is decompressed with zlib, no check needed
+#ifndef BROTLI
+  if (src[0] == 'B' && src[1] == 'R') {
+    fprintf(stderr, "Error R__unzip: ROOT built without BROTLI\n");
+    return;
+  }
+#endif
 
   ibufptr = src + HDRSIZE;
   ibufcnt = (long)src[3] | ((long)src[4] << 8) | ((long)src[5] << 16);
@@ -1182,8 +1265,80 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
 
   /*   D E C O M P R E S S   D A T A  */
 
+  /// uncompressed data
+  if ((src[0] == 'L' && src[1] == 'Z' && src[2] == 0) ||
+      (src[0] == 'Z' && src[1] == 'P' && src[2] == 0) ||
+      (src[0] == 'B' && src[1] == 'R' && src[2] == 0)) {
+    if (ibufcnt < 4) {
+      fprintf(stderr, "R__unzip: failure with uncompressed data\n");
+      return;
+    }
+    ///* initialise liblzo */
+    //if (!R__lzo_init()) {
+    //  fprintf(stderr, "R__unzip: failure with uncompressed data\n");
+    //  return;
+    //}
+    //{
+    //  /* check adler32 checksum */
+    //  uch *p = ibufptr + (ibufcnt - 4);
+    //  unsigned long adler = ((unsigned long) p[0]) | ((unsigned long) p[1] << 8) |
+    //    ((unsigned long) p[2] << 16) | ((unsigned long) p[3] << 24);
+    //  if (adler != lzo_adler32(lzo_adler32(0, NULL, 0), ibufptr, ibufcnt - 4)) {
+    //    /* corrupt compressed data */
+    //    fprintf(stderr, "R__unzip: failure with uncompressed data\n");
+    //    return;
+    //  }
+    //}
+    if (obufcnt != ibufcnt - 4) {
+      fprintf(stderr, "R__unzip: failure with uncompressed data\n");
+      return;
+    }
+    if (ibufptr != obufptr)
+      memmove(obufptr, ibufptr, ibufcnt - 4);
+    if (isize == obufcnt) *irep = obufcnt;
+    return;
+  }
+
+  if (src[0] == 'L' && src[1] == 'Z') {
+    /*fprintf(stdout,"LZO decompression");*/ /*TODO: use some output level magic here*/
+    if (R__unzipLZO(ibufptr, ibufcnt, obufptr, &obufcnt, src[2])) 
+    {
+      fprintf(stderr, "R__unzip: failure to decompress with liblzo\n");
+      return;
+    }
+    if (isize == obufcnt) *irep = obufcnt;
+    return;
+  }
+  if (src[0] == 'B' && src[1] == 'R') {
+    size_t obufcnt_sizet = obufcnt;
+    if (R__unzipBROTLI(ibufptr, ibufcnt, obufptr, &obufcnt_sizet)) {
+      fprintf(stderr, "R__unzip: failure to decompress with brotli\n");
+      return;
+    }
+    obufcnt = obufcnt_sizet;
+    if (isize == obufcnt) *irep = obufcnt;
+    return;
+  }
+  if (src[0] == 'L' && src[1] == '4') {
+    int unzip_status;
+    unzip_status = R__unzipLZ4(
+          ibufptr, ibufcnt, obufptr, &obufcnt, src[2]);
+    if (unzip_status) {
+      fprintf(stderr, "R__unzip: failure to decompress with liblz4\n");
+      if (-1 == unzip_status) fprintf(stderr, "R__unzipLZ4: no input data\n");
+      if (-2 == unzip_status) fprintf(stderr, "R__unzipLZ4: failed checksum\n");
+      if (-3 == unzip_status) fprintf(stderr, "R__unzipLZ4: data wasn't compressed but has wrong size\n");
+      if (-4 == unzip_status) fprintf(stderr, "R__unzipLZ4: decompressed less than expected (internal lz4)\n");
+      if (-5 == unzip_status) fprintf(stderr, "R__unzipLZ4: decompressed less than expected (external lz4)\n");
+      if (-6 == unzip_status) fprintf(stderr, "R__unzipLZ4: unknown compression method\n");
+      return;
+    }
+    if (isize == obufcnt) *irep = obufcnt;
+    return;
+  }
   /* New zlib format */
-  if (src[0] == 'Z' && src[1] == 'L') {
+  if ((src[0] == 'Z' && src[1] == 'L') ||
+      (src[0] == 'Z' && src[1] == 'P')) {
     z_stream stream; /* decompression stream */
     int err = 0;
 

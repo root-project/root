@@ -16,6 +16,50 @@
 #include "Compression.h"
 #include "RConfigure.h"
 #include "ZipLZMA.h"
+#ifdef LZO
+extern void R__zipLZO(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep) ;
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+void R__zipLZO(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep) {
+  R__error("ROOT built without LZO support");
+  return ;
+}
+#pragma GCC diagnostic pop
+#endif
+#ifdef LZ4
+extern void R__zipLZ4(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep) ;
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+void R__zipLZ4(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep) {
+  R__error("ROOT built without LZ4 support");
+  return ;
+}
+#pragma GCC diagnostic pop
+#endif
+#ifdef ZOPFLI
+extern void R__zipZOPFLI(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep) ;
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+void R__zipZOPFLI(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep) {
+  R__error("ROOT built without ZOPFLI support");
+  return ;
+}
+#pragma GCC diagnostic pop
+#endif
+#ifdef BROTLI
+extern void R__zipBROTLI(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep) ;
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+void R__zipBROTLI(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep) {
+  R__error("ROOT built without BROTLI support");
+  return ;
+}
+#pragma GCC diagnostic pop
+#endif
 
 #include <stdio.h>
 #include <assert.h>
@@ -288,11 +332,17 @@ struct bits_internal_state {
    and when R__zipMultipleAlgorithm is called with its last argument set to 0.
    R__ZipMode = 1 : ZLIB compression algorithm is used (default)
    R__ZipMode = 2 : LZMA compression algorithm is used
+   R__ZipMode = 4 : LZO compression algorithm is used
+   R__ZipMode = 5 : LZ4 compression algorithm is used
+   R__ZipMode = 6 : ZOPFLI compression algorithm is used
+   R__ZipMode = 7 : BROTLI compression algorithm is used
    R__ZipMode = 0 or 3 : a very old compression algorithm is used
    (the very old algorithm is supported for backward compatibility)
    The LZMA algorithm requires the external XZ package be installed when linking
    is done. LZMA typically has significantly higher compression factors, but takes
    more CPU time and memory resources while compressing.
+
+TODO: add comments for lzo,lz4,zopfli,brotli
 */
 enum ECompressionAlgorithm R__ZipMode = 1;
 
@@ -567,6 +617,10 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
      /*                      1 = zlib */
      /*                      2 = lzma */
      /*                      3 = old */
+     /*                      4 = lzo */
+     /*                      5 = lz4 */
+     /*                      6 = zopfli (zlib) */
+     /*                      7 = brotli */
 {
   int err;
   int method   = Z_DEFLATED;
@@ -580,9 +634,26 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
     compressionAlgorithm = R__ZipMode;
   }
 
+  R__error("calling some compression");
   // The LZMA compression algorithm from the XZ package
   if (compressionAlgorithm == kLZMA) {
     R__zipLZMA(cxlevel, srcsize, src, tgtsize, tgt, irep);
+    return;
+  } else if (compressionAlgorithm == 4) {
+    // The LZO compression algorithm
+    R__zipLZO(cxlevel, srcsize, src, tgtsize, tgt, irep);
+    return;
+  } else if (compressionAlgorithm == 5) {
+    // The LZ4 compression algorithm
+    R__zipLZ4(cxlevel, srcsize, src, tgtsize, tgt, irep);
+    return;
+  } else if (compressionAlgorithm == 6) {
+    // The ZOPFLI compression algorithm
+    R__zipZOPFLI(cxlevel, srcsize, src, tgtsize, tgt, irep);
+    return;
+  } else if (compressionAlgorithm == 7) {
+    // The BROTLI compression algorithm
+    R__zipBROTLI(cxlevel, srcsize, src, tgtsize, tgt, irep);
     return;
   }
 

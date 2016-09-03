@@ -31,6 +31,28 @@ if(cocoa)
 endif()
 add_subdirectory(zip)
 add_subdirectory(lzma)
+if(lzo)
+  add_subdirectory(lzo)
+  set(lzo_objects $<TARGET_OBJECTS:Lzo>)
+  set(lzo_library ${LZO_LIBRARIES})
+endif()
+if(brotli)
+  add_subdirectory(brotli)
+  set(brotli_objects $<TARGET_OBJECTS:Brotli>)
+endif()
+if(zopfli)
+  add_subdirectory(zopfli)
+  set(zopfli_objects $<TARGET_OBJECTS:Zopfli>)
+  set(zopfli_library ${ZOPFLI_LIBRARIES})
+endif()
+if(lz4)
+  add_subdirectory(lz4)
+  set(lz4_objects $<TARGET_OBJECTS:Lz4>)
+  if (NOT builtin_lz4)
+    # builtin lz4 is statically linked
+    set(lz4_library ${LZ4_LIBRARIES})
+  endif()
+endif()
 add_subdirectory(base)
 
 set(objectlibs $<TARGET_OBJECTS:Base>
@@ -43,6 +65,10 @@ set(objectlibs $<TARGET_OBJECTS:Base>
                $<TARGET_OBJECTS:TextInput>
                ${macosx_objects}
                ${unix_objects}
+               ${lzo_objects}
+               ${zopfli_objects}
+               ${brotli_objects}
+               ${lz4_objects}
                ${winnt_objects})
 
 #---Generation of RGitCommit.h-----------------------------------------------------------
@@ -101,7 +127,7 @@ add_subdirectory(utils)
 ROOT_LINKER_LIBRARY(Core
                     $<TARGET_OBJECTS:BaseTROOT>
                     ${objectlibs}
-                    LIBRARIES ${PCRE_LIBRARIES} ${LZMA_LIBRARIES} ${ZLIB_LIBRARY}
+                    LIBRARIES ${PCRE_LIBRARIES} ${lzo_library} ${zopfli_library} ${lz4_library} ${LZMA_LIBRARIES} ${ZLIB_LIBRARY}
                               ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${corelinklibs} )
 
 if(cling)
