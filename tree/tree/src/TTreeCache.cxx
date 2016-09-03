@@ -628,31 +628,45 @@ Int_t TTreeCache::DropBranch(const char *bname, Bool_t subbranches /*= kFALSE*/)
 /**
  * Enable / disable the miss cache.
  */
-void TTreeCache::SetOptimizeMisses(bool opt)
-{
-   if (opt && !fMissCache) {ResetMissCache();}
+void TTreeCache::SetOptimizeMisses(bool opt) {
+
+   if (opt && !fMissCache) {
+      ResetMissCache();
+   }
    fOptimizeMisses = opt;
 }
 
 /**
  * Reset all the training
  */
-void TTreeCache::ResetMissCache()
-{
+void TTreeCache::ResetMissCache() {
+
    fLastMiss = -1;
    fFirstMiss = -1;
    // For the most part, we keep the allocated memory around to prevent memory churn.
-   if (!fMissBranches) {fMissBranches.reset(new std::vector<TBranch*>());}
-   else {fMissBranches->clear();}
-   if (!fMissCache) {fMissCache.reset(new std::vector<char>());}
-   else {fMissCache->clear();}
-   if (!fEntries) {fEntries.reset(new std::vector<std::pair<uint64_t, uint32_t>>());}
-   else {fEntries->clear();}
-   if (!fEntryOffsets) {fEntryOffsets.reset(new std::vector<size_t>());}
-   else {fEntryOffsets->clear();}
+   if (!fMissBranches) {
+      fMissBranches.reset(new std::vector<TBranch*>());
+   } else {
+      fMissBranches->clear();
+   }
+   if (!fMissCache) {
+      fMissCache.reset(new std::vector<char>());
+   } else {
+      fMissCache->clear();
+   }
+   if (!fEntries) {
+      fEntries.reset(new std::vector<std::pair<ULong64_t, UInt_t>>());
+   } else {
+      fEntries->clear();
+   }
+   if (!fEntryOffsets) {
+      fEntryOffsets.reset(new std::vector<size_t>());
+   } else {
+      fEntryOffsets->clear();
+   }
 }
 
-std::pair<uint64_t, uint32_t> TTreeCache::FindBranchBasket(TBranch &b) {
+std::pair<ULong64_t, UInt_t> TTreeCache::FindBranchBasket(TBranch &b) {
    if (b.GetDirectory() == 0) {
       //printf("Branch at %p has no valid directory.\n", &b);
       return std::make_pair(0, 0);
@@ -687,14 +701,14 @@ std::pair<uint64_t, uint32_t> TTreeCache::FindBranchBasket(TBranch &b) {
 
    // Check to see if there's already a copy of this basket in memory.  If so, don't fetch it
    if ((basketOffset < blistsize) &&
-           b.GetListOfBaskets()->UncheckedAt(basketOffset))
-   {
+           b.GetListOfBaskets()->UncheckedAt(basketOffset)) {
+
        //printf("Basket is already in memory.\n");
        return std::make_pair(0, 0);
    }
 
-   int64_t pos = b.GetBasketSeek(basketOffset);
-   int32_t len = lbaskets[basketOffset];
+   Long64_t pos = b.GetBasketSeek(basketOffset);
+   Int_t len = lbaskets[basketOffset];
    if (pos <= 0 || len <= 0) {
       /*printf("Basket returned was invalid (basketOffset=%ld, pos=%ld, len=%d).\n", basketOffset, pos, len);
       for (int idx=0; idx<blistsize; idx++) {
@@ -712,8 +726,10 @@ std::pair<uint64_t, uint32_t> TTreeCache::FindBranchBasket(TBranch &b) {
 }
 
 
-TBranch *TTreeCache::CalculateMissEntries(int64_t pos, int len, bool all) {
-   if ((pos < 0) || (len < 0)) {return nullptr;} // TODO: unlikely
+TBranch *TTreeCache::CalculateMissEntries(Long64_t pos, int len, bool all) {
+   if ((pos < 0) || (len < 0)) {  // TODO: unlikely
+      return nullptr;
+   }
    int count = all ? (fTree->GetListOfLeaves())->GetEntriesFast() : fMissBranches->size();
    fEntries->reserve(count);
    fEntries->clear();
@@ -722,9 +738,11 @@ TBranch *TTreeCache::CalculateMissEntries(int64_t pos, int len, bool all) {
    //printf("Will search %d branches for basket at %ld.\n", count, pos);
    for (int i=0; i<count; i++) {
       TBranch *b = all ? static_cast<TBranch*>(static_cast<TLeaf*>((fTree->GetListOfLeaves())->UncheckedAt(i))->GetBranch()) : (*fMissBranches)[i];
-      std::pair<uint64_t, uint32_t> iopos = FindBranchBasket(*b);
-      if (iopos.second == 0) {continue;} // Error indicator
-      if (iopos.first == static_cast<uint64_t>(pos) && iopos.second == static_cast<uint32_t>(len)) {
+      std::pair<ULong64_t, UInt_t> iopos = FindBranchBasket(*b);
+      if (iopos.second == 0) {  // Error indicator
+         continue;
+      }
+      if (iopos.first == static_cast<ULong64_t>(pos) && iopos.second == static_cast<UInt_t>(len)) {
          found_request = true;
          resultBranch = b;
          // Note that we continue to iterate; fills up the rest of the entries in the cache.
@@ -751,8 +769,8 @@ TBranch *TTreeCache::CalculateMissEntries(int64_t pos, int len, bool all) {
  * seen misses.  If it turns out the (pos, len) isn't in the list of branches, we treat this
  * as if it was the first miss.
  */
-bool TTreeCache::ProcessMiss(int64_t pos, int len)
-{
+bool TTreeCache::ProcessMiss(Long64_t pos, int len) {
+
    bool firstMiss = false;
    if (fFirstMiss == -1) {
       fFirstMiss = fEntryCurrent;
@@ -778,7 +796,7 @@ bool TTreeCache::ProcessMiss(int64_t pos, int len)
    fMissBranches->push_back(b);
 
    // OK, sort the entries
-   std::sort(fEntries->begin(), fEntries->end(), [](const std::pair<uint64_t, uint32_t> &_a, const std::pair<uint64_t, uint32_t> &_b) {
+   std::sort(fEntries->begin(), fEntries->end(), [](const std::pair<ULong64_t, UInt_t> &_a, const std::pair<ULong64_t, UInt_t> &_b) {
       return _a.first < _b.first;
    });
    // Calculate the buffer offsets.  The data corresponding to read at fEntries[i]
@@ -789,7 +807,7 @@ bool TTreeCache::ProcessMiss(int64_t pos, int len)
    std::vector<Long64_t> positions; positions.reserve(fEntries->size());
    std::vector<Int_t> lengths; lengths.reserve(fEntries->size());
    int idx = 0;
-   uint64_t cumulative = 0;
+   ULong64_t cumulative = 0;
    for (const auto &iopos : *fEntries) {
          positions.push_back(iopos.first);
          lengths.push_back(iopos.second);
@@ -805,15 +823,19 @@ bool TTreeCache::ProcessMiss(int64_t pos, int len)
    return true;
 }
 
-bool TTreeCache::CheckMissCache(char *buf, int64_t pos, int len)
-{
-   if (!fOptimizeMisses) {return false;}
-   if ((pos < 0) || (len < 0)) {return false;}
+bool TTreeCache::CheckMissCache(char *buf, Long64_t pos, int len) {
+
+   if (!fOptimizeMisses) {
+      return false;
+   }
+   if ((pos < 0) || (len < 0)) {
+      return false;
+   }
 
    //printf("Checking the miss cache for offset=%ld, length=%d\n", pos, len);
 
    // First, binary search to see if the desired basket is already cached.
-   auto iter = std::lower_bound(fEntries->begin(), fEntries->end(), std::make_pair(static_cast<uint64_t>(pos), static_cast<uint32_t>(len)), [](const std::pair<uint64_t, uint32_t> &_a, const std::pair<uint64_t, uint32_t> &_b) {
+   auto iter = std::lower_bound(fEntries->begin(), fEntries->end(), std::make_pair(static_cast<ULong64_t>(pos), static_cast<UInt_t>(len)), [](const std::pair<ULong64_t, UInt_t> &_a, const std::pair<ULong64_t, UInt_t> &_b) {
       return _a.first < _b.first;
    });
    if (iter != fEntries->end()) {
@@ -837,7 +859,7 @@ bool TTreeCache::CheckMissCache(char *buf, int64_t pos, int len)
 
    // OK, we updated the cache with as much information as possible.  Seach again for
    // the entry we want.  TODO: ProcessMiss could return an offset.
-   iter = std::lower_bound(fEntries->begin(), fEntries->end(), std::make_pair(pos, len), [](const std::pair<uint64_t, uint32_t> &_a, const std::pair<uint64_t, uint32_t> &_b) {
+   iter = std::lower_bound(fEntries->begin(), fEntries->end(), std::make_pair(pos, len), [](const std::pair<ULong64_t, UInt_t> &_a, const std::pair<ULong64_t, UInt_t> &_b) {
       return _a.first < _b.first;
    });
    if (iter != fEntries->end()) {
@@ -859,8 +881,8 @@ bool TTreeCache::CheckMissCache(char *buf, int64_t pos, int len)
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill the cache buffer with the branches in the cache.
 
-Bool_t TTreeCache::FillBuffer()
-{
+Bool_t TTreeCache::FillBuffer() {
+
    if (fNbranches <= 0) return kFALSE;
    TTree *tree = ((TBranch*)fBranches->UncheckedAt(0))->GetTree();
    Long64_t entry = tree->GetReadEntry();

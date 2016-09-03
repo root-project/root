@@ -69,13 +69,13 @@ protected:
    // These members hold cached data for missed branches when miss optimization
    // is enabled.  Pointers are only initialized if the miss cache is enabled.
    bool            fOptimizeMisses {false}; //! true if we should optimize cache misses.
-   int64_t         fFirstMiss {-1}; //! set to the event # of the first miss.
-   int64_t         fLastMiss  {-1}; //! set to the event # of the last miss.
+   Long64_t        fFirstMiss {-1}; //! set to the event # of the first miss.
+   Long64_t        fLastMiss  {-1}; //! set to the event # of the last miss.
    std::unique_ptr<std::vector<TBranch*>> fMissBranches; //! list of branches that we read on misses.
    std::unique_ptr<std::vector<char>> fMissCache; //! Cache contents for misses
    // TODO: there's a 1-1 correspondence between an element in fEntries and an element in fEntryOffsets
    // Instead of munging std::pairs, put this into a simple struct.
-   std::unique_ptr<std::vector<std::pair<uint64_t, uint32_t>>> fEntries;  //! Buffers in the miss cache.
+   std::unique_ptr<std::vector<std::pair<ULong64_t, UInt_t>>> fEntries;  //! Buffers in the miss cache.
    std::unique_ptr<std::vector<size_t>> fEntryOffsets;  //! Map from (offset, pos) in fEntries to memory location in fMissCache
 
 private:
@@ -89,12 +89,12 @@ private:
    // The miss cache is more CPU-intensive than the rest of the TTreeCache code;
    // for local work (i.e., laptop with SSD), this CPU cost may outweight the
    // benefit.
-   bool CheckMissCache(char *buf, int64_t pos, int len);  // Check the miss cache for a particular buffer, fetching if deemed necessary.
+   bool CheckMissCache(char *buf, Long64_t pos, int len);  // Check the miss cache for a particular buffer, fetching if deemed necessary.
    bool FillMissCache();  // Fill the miss cache from the current set of active branches.
    bool CalculateMissCache();  // Calculate the appropriate miss cache to fetch; helper function for FillMissCache
-   std::pair<uint64_t, uint32_t> FindBranchBasket(TBranch &);  // Given a branch, determine the location of its basket for the current entry.
-   TBranch* CalculateMissEntries(int64_t, int, bool);   // Given an file read, try to determine the corresponding branch.
-   bool ProcessMiss(int64_t pos, int len);   // Given a file read not in the miss cache, handle (possibly) loading the data.
+   std::pair<ULong64_t, UInt_t> FindBranchBasket(TBranch &);  // Given a branch, determine the location of its basket for the current entry.
+   TBranch* CalculateMissEntries(Long64_t, int, bool);   // Given an file read, try to determine the corresponding branch.
+   bool ProcessMiss(Long64_t pos, int len);   // Given a file read not in the miss cache, handle (possibly) loading the data.
 
 public:
 
