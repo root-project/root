@@ -73,8 +73,7 @@ void TPoolPlayer::ProcDataSet(unsigned int code, MPCodeBufPair& msg)
       //and this worker must take the rangeN-th range
       unsigned nEntries = tree->GetEntries();
       unsigned nBunch = nEntries / fNWorkers;
-      if(nEntries % fNWorkers)
-        nBunch++;
+      if(nEntries % fNWorkers) nBunch++;
       unsigned rangeN = nProcessed % fNWorkers;
       start = rangeN*nBunch + 1;
       if(rangeN < (fNWorkers-1))

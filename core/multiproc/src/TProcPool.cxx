@@ -107,7 +107,7 @@ TList* TProcPool::ProcTree(TTree& tree, TSelector& selector, ULong64_t nToProces
    TPoolPlayer worker(selector, &tree, nWorkers, nToProcess/nWorkers);
    bool ok = Fork(worker);
    if(!ok) {
-      std::cerr << "[E][C] Could not fork. Aborting operation\n";
+      Error("TProcPool::ProcTree", "[E][C] Could not fork. Aborting operation");
       return nullptr;
    }
 
@@ -119,8 +119,9 @@ TList* TProcPool::ProcTree(TTree& tree, TSelector& selector, ULong64_t nToProces
    std::vector<unsigned> args(nWorkers);
    std::iota(args.begin(), args.end(), 0);
    fNProcessed = Broadcast(PoolCode::kProcTree, args);
-   if(fNProcessed < nWorkers)
-      std::cerr << "[E][C] There was an error while sending tasks to workers. Some entries might not be processed.\n";
+   if (fNProcessed < nWorkers)
+      Error("TProcPool::ProcTree", "[E][C] There was an error while sending tasks to workers."
+                                   " Some entries might not be processed.");
 
    //collect results, distribute new tasks
    std::vector<TObject*> outLists;
@@ -160,45 +161,47 @@ TList* TProcPool::ProcTree(const std::vector<std::string>& fileNames, TSelector&
    //fork
    TPoolPlayer worker(selector, fileNames, treeName, nWorkers, nToProcess);
    bool ok = Fork(worker);
-   if(!ok) {
-      std::cerr << "[E][C] Could not fork. Aborting operation\n";
+   if (!ok) {
+      Error("TProcPool::ProcTree", "[E][C] Could not fork. Aborting operation");
       return nullptr;
    }
 
    Int_t procByFile = gEnv->GetValue("MultiProc.TestProcByFile", 0);
 
-   if(procByFile){
-     if(fileNames.size() < nWorkers) {
-      //TTree entry granularity. For each file, we divide entries equally between workers
+   if (procByFile) {
+      if (fileNames.size() < nWorkers) {
+         // TTree entry granularity: for each file, we divide entries equally between workers
+         fTaskType = ETask::kProcByRange;
+         // Tell workers to start processing entries
+         fNToProcess = nWorkers*fileNames.size(); //this is the total number of ranges that will be processed by all workers cumulatively
+         std::vector<unsigned> args(nWorkers);
+         std::iota(args.begin(), args.end(), 0);
+         fNProcessed = Broadcast(PoolCode::kProcRange, args);
+         if (fNProcessed < nWorkers)
+            Error("TProcPool::ProcTree", "[E][C] There was an error while sending tasks to workers."
+                                         " Some entries might not be processed");
+      } else {
+         // File granularity: each worker processes one whole file as a single task
+         fTaskType = ETask::kProcByFile;
+         fNToProcess = fileNames.size();
+         std::vector<unsigned> args(nWorkers);
+         std::iota(args.begin(), args.end(), 0);
+         fNProcessed = Broadcast(PoolCode::kProcFile, args);
+         if (fNProcessed < nWorkers)
+            Error("TProcPool::ProcTree", "[E][C] There was an error while sending tasks to workers."
+                                         " Some entries might not be processed.");
+      }
+   } else {
+      // TTree entry granularity: for each file, we divide entries equally between workers
       fTaskType = ETask::kProcByRange;
-      //Tell workers to start processing entries
+      // Tell workers to start processing entries
       fNToProcess = nWorkers*fileNames.size(); //this is the total number of ranges that will be processed by all workers cumulatively
       std::vector<unsigned> args(nWorkers);
       std::iota(args.begin(), args.end(), 0);
       fNProcessed = Broadcast(PoolCode::kProcRange, args);
-      if(fNProcessed < nWorkers)
-         std::cerr << "[E][C] There was an error while sending tasks to workers. Some entries might not be processed.\n";
-     } else {
-        //file granularity. each worker processes one whole file as a single task
-        fTaskType = ETask::kProcByFile;
-        fNToProcess = fileNames.size();
-        std::vector<unsigned> args(nWorkers);
-        std::iota(args.begin(), args.end(), 0);
-        fNProcessed = Broadcast(PoolCode::kProcFile, args);
-        if(fNProcessed < nWorkers)
-           std::cerr << "[E][C] There was an error while sending tasks to workers. Some entries might not be processed.\n";
-     }
-   }
-   else{
-     //TTree entry granularity. For each file, we divide entries equally between workers
-     fTaskType = ETask::kProcByRange;
-     //Tell workers to start processing entries
-     fNToProcess = nWorkers*fileNames.size(); //this is the total number of ranges that will be processed by all workers cumulatively
-     std::vector<unsigned> args(nWorkers);
-     std::iota(args.begin(), args.end(), 0);
-     fNProcessed = Broadcast(PoolCode::kProcRange, args);
-     if(fNProcessed < nWorkers)
-       std::cerr << "[E][C] There was an error while sending tasks to workers. Some entries might not be processed.\n";
+      if (fNProcessed < nWorkers)
+         Error("TProcPool::ProcTree", "[E][C] There was an error while sending tasks to workers."
+                                      " Some entries might not be processed.");
    }
 
    // collect results, distribute new tasks
