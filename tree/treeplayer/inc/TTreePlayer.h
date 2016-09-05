@@ -56,8 +56,7 @@ protected:
    TSelectorDraw *fSelector;        //! Pointer to current selector
    TSelector     *fSelectorFromFile;//! Pointer to a user defined selector created by this TTreePlayer object
    TClass        *fSelectorClass;   //! Pointer to the actual class of the TSelectorFromFile
-   TList         *fInput;           //! input list to the TSelectorDraw
-   TList         *fInputList;       //! input list to the selector used by Process
+   TList         *fInput;           //! input list to the selector
    TList         *fFormulaList;     //! Pointer to a list of coordinated list TTreeFormula (used by Scan and Query)
    TSelector     *fSelectorUpdate;  //! Set to the selector address when it's entry list needs to be updated by the UpdateFormulaLeaves function
 
@@ -82,7 +81,6 @@ public:
                          Option_t *goption ,Long64_t nentries, Long64_t firstentry);
    virtual Int_t     GetDimension() const {return fDimension;}
    TH1              *GetHistogram() const {return fHistogram;}
-   TList            *GetInputList();
    virtual Long64_t  GetEntries(const char *selection);
    virtual Long64_t  GetEntriesToProcess(Long64_t firstentry, Long64_t nentries) const;
    virtual Int_t     GetNfill() const {return fSelector->GetNfill();}

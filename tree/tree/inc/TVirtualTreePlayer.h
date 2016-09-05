@@ -60,7 +60,6 @@ public:
                               ,Long64_t nentries, Long64_t firstentry) = 0;
    virtual Int_t          GetDimension() const = 0;
    virtual TH1           *GetHistogram() const = 0;
-   virtual TList         *GetInputList() = 0;
    virtual Int_t          GetNfill() const = 0;
    virtual Long64_t       GetEntries(const char *) = 0;
    virtual Long64_t       GetSelectedRows() const = 0;

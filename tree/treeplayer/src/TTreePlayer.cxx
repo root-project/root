@@ -112,7 +112,6 @@ TTreePlayer::TTreePlayer()
    fInput->Add(new TNamed("varexp",""));
    fInput->Add(new TNamed("selection",""));
    fSelector->SetInputList(fInput);
-   fInputList        = 0;
    gROOT->GetListOfCleanups()->Add(this);
    TClass::GetClass("TRef")->AdoptReferenceProxy(new TRefProxy());
    TClass::GetClass("TRefArray")->AdoptReferenceProxy(new TRefArrayProxy());
@@ -128,10 +127,6 @@ TTreePlayer::~TTreePlayer()
    DeleteSelectorFromFile();
    fInput->Delete();
    delete fInput;
-   if (fInputList) {
-      fInputList->Delete();
-      delete fInputList;
-   }
    gROOT->GetListOfCleanups()->Remove(this);
 }
 
@@ -2119,16 +2114,6 @@ TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Op
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get (and create, the first time) the input list used by the selector in Process
-
-TList *TTreePlayer::GetInputList()
-{
-   if (!fInputList) fInputList = new TList();
-   return fInputList;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Process this tree executing the TSelector code in the specified filename.
 /// The return value is -1 in case of error and TSelector::GetStatus() in
 /// in case of success.
@@ -2236,9 +2221,6 @@ Long64_t TTreePlayer::Process(const char *filename,Option_t *option, Long64_t ne
 Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nentries, Long64_t firstentry)
 {
    nentries = GetEntriesToProcess(firstentry, nentries);
-
-   // Take into account the input list
-   selector->SetInputList(fInputList);
 
    TDirectory::TContext ctxt;
 
