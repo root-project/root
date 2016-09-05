@@ -48,7 +48,7 @@ def getParams():
    #print (', '.join(cxxflags))
    cxxflagsNoW = [flag for flag in cxxflags if (flag[0:2] != '-W' and flag[0:3] != '-wd' and \
                                                 flag[0:2] != '-x' and flag[0:3] != '-ax' and \
-                                                flag[0:2] != '-O' and flag[0:5] != '-arch') \ 
+                                                flag[0:2] != '-O' and flag[0:5] != '-arch') \
                                                 or flag[0:4] == '-Wno']
    #print (', '.join(cxxflagsNoW))
 
