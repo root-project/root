@@ -9,7 +9,7 @@
 ///
 /// \author Olivier Couet
 
-void ratioplot( ) {
+void ratioplotOld( ) {
    // Define two gaussian histograms. Note the X and Y title are defined
    // at booking time using the convention "Hist_title ; X_title ; Y_title"
    TH1F *h1 = new TH1F("h1", "Two gaussian plots and their ratio;x title; h1 and h2 gaussian histograms", 100, -5, 5);
