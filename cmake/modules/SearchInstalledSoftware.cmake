@@ -1129,23 +1129,24 @@ if(imt)
       set(builtin_tbb ON CACHE BOOL "" FORCE)
     endif()
   endif()
-  if(builtin_tbb)
-    set(tbb_version 44_20160128)
-    ExternalProject_Add(
-      TBB
-      URL ${repository_tarfiles}/tbb${tbb_version}oss_src.tgz
-      INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CONFIGURE_COMMAND ""
-      BUILD_COMMAND make CPLUS=${CMAKE_CXX_COMPILER} CONLY=${CMAKE_C_COMPILER}
-      INSTALL_COMMAND ${CMAKE_COMMAND} -Dinstall_dir=<INSTALL_DIR> -Dsource_dir=<SOURCE_DIR>
-                                       -P ${CMAKE_SOURCE_DIR}/cmake/scripts/InstallTBB.cmake
-      INSTALL_COMMAND ""
-      BUILD_IN_SOURCE 1
-      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
-    )
-    set(TBB_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include)
-    set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX})
-  endif()
+endif()  
+if(builtin_tbb)
+  set(tbb_version 44_20160128)
+  ExternalProject_Add(
+    TBB
+    URL ${repository_tarfiles}/tbb${tbb_version}oss_src.tgz
+    INSTALL_DIR ${CMAKE_BINARY_DIR}
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND make CPLUS=${CMAKE_CXX_COMPILER} CONLY=${CMAKE_C_COMPILER}
+    INSTALL_COMMAND ${CMAKE_COMMAND} -Dinstall_dir=<INSTALL_DIR> -Dsource_dir=<SOURCE_DIR>
+                                      -P ${CMAKE_SOURCE_DIR}/cmake/scripts/InstallTBB.cmake
+    INSTALL_COMMAND ""
+    BUILD_IN_SOURCE 1
+    LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
+  )
+  set(TBB_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include)
+  set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX})
+  install(FILES ${CMAKE_BINARY_DIR}/lib/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX} DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
 endif()
 
 #---Check for OCC--------------------------------------------------------------------
