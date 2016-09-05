@@ -75,6 +75,7 @@
 #include "TVirtualMonitoring.h"
 #include "TTreeCache.h"
 #include "TStyle.h"
+#include "TText.h"
 
 #include "HFitInterface.h"
 #include "Foption.h"
@@ -436,6 +437,21 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
    //   if (gPad) gPad->Clear();
    //   return 0;
    //}
+   if (drawflag) {
+      if (gPad) {
+         if (!opt.Contains("same")) {
+            gPad->DrawFrame(-1.,-1.,1.,1.);
+            TText *text_empty = new TText(0.,0.,"Empty");
+            text_empty->SetTextAlign(22);
+            text_empty->SetTextFont(42);
+            text_empty->SetTextSize(0.1);
+            text_empty->SetTextColor(1);
+            text_empty->Draw();
+         }
+      } else {
+         Warning("DrawSelect", "The selected TTree subset is empty.");
+      }
+   }
 
    //*-*- 1-D distribution
    if (fDimension == 1) {
