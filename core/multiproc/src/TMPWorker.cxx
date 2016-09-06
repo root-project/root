@@ -60,7 +60,7 @@ TMPWorker::TMPWorker()
             fTreeCache(0), fTreeCacheIsLearning(kFALSE),
             fUseTreeCache(kTRUE), fCacheSize(-1)
 {
-  Int_t uc = gEnv->GetValue("MultiProc.UseTreeCache", 1);
+  Int_t uc = gEnv->GetValue("MultiProc.UseTreeCache", 0);
   if (uc != 1) fUseTreeCache = kFALSE;
   fCacheSize = gEnv->GetValue("MultiProc.CacheSize", -1);
 }
@@ -74,7 +74,7 @@ TMPWorker::TMPWorker(const std::vector<std::string>& fileNames,
             fTreeCache(0), fTreeCacheIsLearning(kFALSE),
             fUseTreeCache(kTRUE), fCacheSize(-1)
 {
-   Int_t uc = gEnv->GetValue("MultiProc.UseTreeCache", 1);
+   Int_t uc = gEnv->GetValue("MultiProc.UseTreeCache", 0);
    if (uc != 1) fUseTreeCache = kFALSE;
    fCacheSize = gEnv->GetValue("MultiProc.CacheSize", -1);
 }
@@ -86,7 +86,7 @@ TMPWorker::TMPWorker(TTree *tree, unsigned nWorkers, ULong64_t maxEntries)
             fTreeCache(0), fTreeCacheIsLearning(kFALSE),
             fUseTreeCache(kTRUE), fCacheSize(-1)
 {
-   Int_t uc = gEnv->GetValue("MultiProc.UseTreeCache", 1);
+   Int_t uc = gEnv->GetValue("MultiProc.UseTreeCache", 0);
    if (uc != 1) fUseTreeCache = kFALSE;
    fCacheSize = gEnv->GetValue("MultiProc.CacheSize", -1);
 }
