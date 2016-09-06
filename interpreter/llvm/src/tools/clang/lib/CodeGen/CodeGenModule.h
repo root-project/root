@@ -320,6 +320,10 @@ private:
     DeferredDeclsToEmit.emplace_back(GV, GD);
   }
 
+  /// Enables unloading of emitted symbols that need to become deferred.
+  llvm::StringMap<GlobalDecl> EmittedDeferredDecls;
+
+
   /// List of alias we have emitted. Used to make sure that what they point to
   /// is defined once we get to the end of the of the translation unit.
   std::vector<GlobalDecl> Aliases;
