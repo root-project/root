@@ -1440,13 +1440,13 @@ void TMVA::MethodBDT::UpdateTargetsRegression(std::vector<const TMVA::Event*>& e
    std::cout << std::endl << "!!! UpdateTargetsRegression: Tree - " << fITree << std::endl;
    std::cout << "=======================================================" << std::endl << std::endl;
    if(!first){
-      std::cout << "NOT FIRST. Updating predicted values/residuals..." << std::endl; 
-      std::cout << "i: residual, weight" << std::endl;
+      std::cout << "NOT FIRST. Updating predicted values" << std::endl; 
+      std::cout << "i: trueValue, predictedValue, residual" << std::endl;
       UInt_t i = 0;
       for (std::vector<const TMVA::Event*>::const_iterator e=fEventSample.begin(); e!=fEventSample.end();e++) {
          fLossFunctionEventInfo[*e].predictedValue += fForest.back()->CheckEvent(*e,kFALSE); 
-         if(i<=10)
-            std::cout << i << ": " << fLossFunctionEventInfo[*e].trueValue - fLossFunctionEventInfo[*e].predictedValue <<", " << fLossFunctionEventInfo[*e].weight << std::endl;
+         if(i<=100)
+            std::cout << i << ": " << fLossFunctionEventInfo[*e].trueValue << ", " << fLossFunctionEventInfo[*e].predictedValue << ", " << fLossFunctionEventInfo[*e].trueValue - fLossFunctionEventInfo[*e].predictedValue  << std::endl;
          i++;
       }
    }
@@ -1505,14 +1505,12 @@ Double_t TMVA::MethodBDT::GradBoostRegression(std::vector<const TMVA::Event*>& e
    // calculate the constant fit for each terminal node based upon the events in the node
    // node (iLeave->first), vector of event information (iLeave->second)
    UInt_t i = 0;
-   std::cout << "ileave: fit" << std::endl;
+   std::cout << "ileave: fit, evs.size()" << std::endl;
    for (std::map<TMVA::DecisionTreeNode*,vector< TMVA::LossFunctionEventInfo > >::iterator iLeave=leaves.begin();
         iLeave!=leaves.end();++iLeave){
-      std::cout << "i: sumOfWeights, residualMedian, evs.size()" << std::endl;
-      std::cout << i << ": ";
       Double_t fit = fRegressionLossFunctionBDTG->Fit(iLeave->second);
       (iLeave->first)->SetResponse(fShrinkage*fit);          
-      std::cout << i << ": " << fit << std::endl;
+      std::cout << i << ": " << fit << ", " << iLeave->second.size() << std::endl;
       std::cout << std::endl;
       i++;
    }
@@ -1526,21 +1524,31 @@ Double_t TMVA::MethodBDT::GradBoostRegression(std::vector<const TMVA::Event*>& e
 
 void TMVA::MethodBDT::InitGradBoost( std::vector<const TMVA::Event*>& eventSample)
 {
+   // Should get rid of this line. It's just for debugging.
+   std::sort(eventSample.begin(), eventSample.end(), [](const TMVA::Event* a, const TMVA::Event* b){
+                                        return (a->GetTarget(0) < b->GetTarget(0)); });
    fSepType=NULL; //set fSepType to NULL (regression trees are used for both classification an regression)
    if(DoRegression()){
       std::cout << std::endl << "!!! InitGradBoost: Tree - "  << fITree << std::endl;
       std::cout << "=======================================================" << std::endl << std::endl;
 
       UInt_t i = 0;
-      std::cout << "i: init residual, weight" << std::endl;
+      std::cout << "i: init trueValue, predictedValue, residual" << std::endl;
       for (std::vector<const TMVA::Event*>::const_iterator e=eventSample.begin(); e!=eventSample.end();e++) {
          fLossFunctionEventInfo[*e]= TMVA::LossFunctionEventInfo((*e)->GetTarget(0), 0, (*e)->GetWeight());
-         if(i<=10)
-            std::cout << i << ": " << fLossFunctionEventInfo[*e].trueValue - fLossFunctionEventInfo[*e].predictedValue <<", " << fLossFunctionEventInfo[*e].weight << std::endl;
+         if(i<=100)
+            std::cout << i << ": " << fLossFunctionEventInfo[*e].trueValue << ", " << fLossFunctionEventInfo[*e].predictedValue << ", " << fLossFunctionEventInfo[*e].trueValue - fLossFunctionEventInfo[*e].predictedValue  << std::endl;
          i++;
       }
 
       fRegressionLossFunctionBDTG->Init(fLossFunctionEventInfo, fBoostWeights);
+      i = 0;
+      std::cout << "i: post init trueValue, predictedValue, residual" << std::endl;
+      for (std::vector<const TMVA::Event*>::const_iterator e=eventSample.begin(); e!=eventSample.end();e++) {
+         if(i<=100)
+            std::cout << i << ": " << fLossFunctionEventInfo[*e].trueValue << ", " << fLossFunctionEventInfo[*e].predictedValue << ", " << fLossFunctionEventInfo[*e].trueValue - fLossFunctionEventInfo[*e].predictedValue  << std::endl;
+         i++;
+      }
       UpdateTargetsRegression(*fTrainSample,kTRUE);
 
       return;

@@ -953,6 +953,8 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
    Double_t  nTotS, nTotB;
    Int_t     nTotS_unWeighted, nTotB_unWeighted; 
    UInt_t nevents = eventSample.size();
+   std::cout << "depth: nevents for node" << std::endl;
+   std::cout << node->GetDepth() << ": " << nevents << std::endl;
 
 
    // the +1 comes from the fact that I treat later on the Fisher output as an 
@@ -1139,7 +1141,10 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
   
    nTotS=0; nTotB=0;
    nTotS_unWeighted=0; nTotB_unWeighted=0;   
+   std::cout << "list events in node..." << std::endl;
+   std::cout << "    i: target" << std::endl;
    for (UInt_t iev=0; iev<nevents; iev++) {
+      std::cout << "    " << iev << ": " << eventSample[iev]->GetTarget(0) << std::endl;
 
       Double_t eventWeight =  eventSample[iev]->GetWeight(); 
       if (eventSample[iev]->GetClass() == fSigClass) {
@@ -1180,6 +1185,7 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
          }
       }
    }   
+   std::cout << std::endl;
    // now turn the "histogram" into a cumulative distribution
    for (UInt_t ivar=0; ivar < cNvars; ivar++) {
       if (useVariable[ivar]) {
@@ -1263,12 +1269,16 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
    //now you have found the best separation cut for each variable, now compare the variables
    for (UInt_t ivar=0; ivar < cNvars; ivar++) {
       if (useVariable[ivar] ) {
+      std::cout << "depth: sepGain, var, cutValue" << std::endl;
+      std::cout << node->GetDepth() << ": " << separationGain[ivar] << ", " << ivar << ", " << cutValues[ivar][cutIndex[ivar]] << std::endl;
          if (separationGainTotal < separationGain[ivar]) {
             separationGainTotal = separationGain[ivar];
             mxVar = ivar;
          }
       }
    }
+   std::cout << std::endl << "depth: best separationGain, best var, best varval" << std::endl;
+   std::cout << node->GetDepth() << ": " << separationGainTotal << ", " << mxVar << ", " << cutValues[mxVar][cutIndex[mxVar]] << std::endl << std::endl;
 
    if (mxVar >= 0) {    
       if (DoRegression()) {
