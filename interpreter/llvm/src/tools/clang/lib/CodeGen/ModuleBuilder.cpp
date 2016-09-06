@@ -270,7 +270,7 @@ namespace clang {
     }
 
     void forgetGlobal(llvm::GlobalValue* GV) {
-      for(auto I = Builder->ConstantStringMap.begin(),
+      for (auto I = Builder->ConstantStringMap.begin(),
             E = Builder->ConstantStringMap.end(); I != E; ++I) {
         if (I->second == GV) {
           Builder->ConstantStringMap.erase(I);
@@ -278,7 +278,7 @@ namespace clang {
         }
       }
 
-      for(auto I = Builder->DeferredDeclsToEmit.begin(),
+      for (auto I = Builder->DeferredDeclsToEmit.begin(),
              E = Builder->DeferredDeclsToEmit.end(); I != E; ++I) {
          if (I->GV == GV) {
           Builder->DeferredDeclsToEmit.erase(I);
