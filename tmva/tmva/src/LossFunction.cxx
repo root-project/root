@@ -270,11 +270,11 @@ void TMVA::HuberLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs
    std::cout << std::endl;
 
    Int_t i=0;
-   std::cout << "i: target, weight" << std::endl;
+   std::cout << "i: trueValue, predictedValue, target, weight" << std::endl;
    for (std::vector<const TMVA::Event*>::const_iterator e=evs.begin(); e!=evs.end();e++) {
          const_cast<TMVA::Event*>(*e)->SetTarget(0,Target(evinfomap[*e]));
          if(i<=10)
-            std::cout << i << ": " << (*e)->GetTarget(0) <<", " << (*e)->GetWeight() << std::endl;
+            std::cout << i << ": " << evinfomap[*e].trueValue << ", " << evinfomap[*e].predictedValue << (*e)->GetTarget(0) <<", " << (*e)->GetWeight() << std::endl;
          i++;
    }
 }
@@ -284,6 +284,7 @@ void TMVA::HuberLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs
 
 Double_t TMVA::HuberLossFunctionBDT::Target(LossFunctionEventInfo& e){
     Double_t residual = e.trueValue - e.predictedValue;
+    // The weight/target relationships are taken care of in the tmva decision tree operations so we don't need to worry about that here
     if(TMath::Abs(residual) <= fTransitionPoint) return residual;
     else return fTransitionPoint*(residual<0?-1.0:1.0);
 }
@@ -385,8 +386,7 @@ void TMVA::LeastSquaresLossFunctionBDT::Init(std::map<const TMVA::Event*, LossFu
       evinfovec.push_back(LossFunctionEventInfo(e.second.trueValue, e.second.predictedValue, e.first->GetWeight()));
    }
 
-   // Add this back in after checking the baseline BDTLib comparison
-   // Calculates fSumOfWeights and fTransitionPoint with the current residuals
+   // Initial prediction for least squares is the weighted mean
    Double_t weightedMean = Fit(evinfovec);
 
    std::cout << "weightedMean" << std::endl;
@@ -414,11 +414,11 @@ void TMVA::LeastSquaresLossFunctionBDT::SetTargets(std::vector<const TMVA::Event
    }
 
    Int_t i=0;
-   std::cout << "i: target, weight" << std::endl;
+   std::cout << "i: trueValue, predictedValue, target" << std::endl;
    for (std::vector<const TMVA::Event*>::const_iterator e=evs.begin(); e!=evs.end();e++) {
          const_cast<TMVA::Event*>(*e)->SetTarget(0,Target(evinfomap[*e]));
-         if(i<=10)
-            std::cout << i << ": " << (*e)->GetTarget(0) <<", " << (*e)->GetWeight() << std::endl;
+         if(i<=100)
+            std::cout << i << ": " << evinfomap[*e].trueValue << ", " << evinfomap[*e].predictedValue << ", " << (*e)->GetTarget(0) << std::endl;
          i++;
    }
 }
@@ -428,7 +428,9 @@ void TMVA::LeastSquaresLossFunctionBDT::SetTargets(std::vector<const TMVA::Event
 
 Double_t TMVA::LeastSquaresLossFunctionBDT::Target(LossFunctionEventInfo& e){
     Double_t residual = e.trueValue - e.predictedValue;
-    return e.weight*residual;
+    // The weight/target relationships are taken care of in the tmva decision tree operations. We don't need to worry about that here
+    // and we return the residual instead of the weight*residual.
+    return residual;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -439,18 +441,20 @@ Double_t TMVA::LeastSquaresLossFunctionBDT::Fit(std::vector<LossFunctionEventInf
 // The fit in the terminal node for least squares is the weighted average of the residuals.
    Double_t sumOfWeights = 0;
    Double_t weightedResidualSum = 0;
-   std::cout << "i: residual, weightedResidualSum" << std::endl;
+   std::cout << "i: trueValue, predictedValue, residual" << std::endl;
    for(UInt_t j=0;j<evs.size();j++){
       sumOfWeights += evs[j].weight;
       Double_t residual = evs[j].trueValue - evs[j].predictedValue;
       weightedResidualSum += evs[j].weight*residual;
-      if(j<=10) 
+      if(j<=100) 
       {
-          std::cout << "   " << j << ": " << residual << ", " << weightedResidualSum << std::endl; 
+          std::cout << "   " << j << ": " << evs[j].trueValue << ", " << evs[j].predictedValue << ", " << residual << std::endl; 
       }
    }
+   Double_t weightedMean = weightedResidualSum/sumOfWeights;
+
    // return the weighted mean
-   return weightedResidualSum/sumOfWeights;
+   return weightedMean;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -540,11 +544,11 @@ void TMVA::AbsoluteDeviationLossFunctionBDT::SetTargets(std::vector<const TMVA::
    }
 
    Int_t i=0;
-   std::cout << "i: target, weight" << std::endl;
+   std::cout << "i: trueValue, predictedValue, target, weight" << std::endl;
    for (std::vector<const TMVA::Event*>::const_iterator e=evs.begin(); e!=evs.end();e++) {
          const_cast<TMVA::Event*>(*e)->SetTarget(0,Target(evinfomap[*e]));
          if(i<=10)
-            std::cout << i << ": " << (*e)->GetTarget(0) <<", " << (*e)->GetWeight() << std::endl;
+            std::cout << i << ": " << evinfomap[*e].trueValue << ", " << evinfomap[*e].predictedValue << (*e)->GetTarget(0) <<", " << (*e)->GetWeight() << std::endl;
          i++;
    }
 }
@@ -555,6 +559,7 @@ void TMVA::AbsoluteDeviationLossFunctionBDT::SetTargets(std::vector<const TMVA::
 Double_t TMVA::AbsoluteDeviationLossFunctionBDT::Target(LossFunctionEventInfo& e){
 // The target is the sign of the residual.
     Double_t residual = e.trueValue - e.predictedValue;
+    // The weight/target relationships are taken care of in the tmva decision tree operations so we don't need to worry about that here
     return (residual<0?-1.0:1.0);
 }
 
