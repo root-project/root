@@ -827,8 +827,8 @@ void TRatioPlot::CreateGridline()
          // kill the line
          delete fGridlines.at(i);
          // remove it from list
-         fGridlines.erase(fGridlines.begin());
       }
+      fGridlines.erase(fGridlines.begin(), fGridlines.begin()+(curr-dest));
    } else if (curr < dest) {
       // we don't have enough
       for (unsigned int i=0;i<dest-curr;++i) {
@@ -864,6 +864,20 @@ void TRatioPlot::CreateGridline()
    }
 
    padsav->cd();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Clears the TLines that are created to draw the dashed lines in the lower plot.
+/// They will be recreated on Paint.
+
+void TRatioPlot::ClearCreatedGridlines()
+{
+   for (unsigned int i=0;i<fGridlines.size();++i) {
+      // kill the line
+      delete fGridlines.at(i);
+      // remove it from list
+   } 
+   fGridlines.erase(fGridlines.begin(), fGridlines.end());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
