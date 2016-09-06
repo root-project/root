@@ -285,6 +285,31 @@ namespace clang {
           break;
         }
       }
+
+      if (GV->isWeakForLinker() && !GV->isDeclaration()) {
+        auto IEmittedDeferredDecl
+          = Builder->EmittedDeferredDecls.find(GV->getName());
+        if (IEmittedDeferredDecl != Builder->EmittedDeferredDecls.end()) {
+          Builder->DeferredDecls[GV->getName()] = IEmittedDeferredDecl->second;
+          Builder->EmittedDeferredDecls.erase(IEmittedDeferredDecl);
+        }
+      }
+    }
+
+    void forgetDecl(const GlobalDecl& GD) {
+      StringRef MangledName = Builder->getMangledName(GD);
+      auto IEmittedDeferredDecl
+        = Builder->EmittedDeferredDecls.find(MangledName);
+      if (IEmittedDeferredDecl != Builder->EmittedDeferredDecls.end()) {
+        assert(IEmittedDeferredDecl->getValue() == GD
+               && "Removing wrong EmittedDeferredDecl");
+        Builder->EmittedDeferredDecls.erase(IEmittedDeferredDecl);
+      } else {
+        auto IDeferredDecl = Builder->DeferredDecls.find(MangledName);
+        if (IDeferredDecl != Builder->DeferredDecls.end()) {
+          Builder->DeferredDecls.erase(IDeferredDecl);
+        }
+      }
     }
 
     void Initialize(ASTContext &Context) override {
@@ -487,6 +512,10 @@ void CodeGenerator::print(llvm::raw_ostream& out) {
 
 void CodeGenerator::forgetGlobal(llvm::GlobalValue* GV) {
   static_cast<CodeGeneratorImpl*>(this)->forgetGlobal(GV);
+}
+
+void CodeGenerator::forgetDecl(const GlobalDecl& GD) {
+  static_cast<CodeGeneratorImpl*>(this)->forgetDecl(GD);
 }
 
 
