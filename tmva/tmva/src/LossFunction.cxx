@@ -29,6 +29,7 @@
  **********************************************************************************/
 
 #include "TMVA/LossFunction.h"
+#include "TMVA/MsgLogger.h"
 #include <iostream>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -106,6 +107,7 @@ Double_t TMVA::HuberLossFunction::CalculateQuantile(std::vector<LossFunctionEven
       i++;
    }
    // edge cases
+   // Output warning for low return values
    if(whichQuantile == 0) i=0;             // assume 0th quantile to mean the 0th entry in the ordered series
 
    // usual returns
@@ -119,6 +121,26 @@ Double_t TMVA::HuberLossFunction::CalculateQuantile(std::vector<LossFunctionEven
 
 void TMVA::HuberLossFunction::SetTransitionPoint(std::vector<LossFunctionEventInfo>& evs){
    fTransitionPoint = CalculateQuantile(evs, fQuantile, fSumOfWeights, true);
+  
+   // if the transition point corresponding to the quantile is 0 then the loss function will not function
+   // the quantile was chosen too low. Let's use the first nonzero residual as the transition point instead.
+   if(fTransitionPoint == 0){
+      // evs should already be sorted according to the magnitude of the residuals, since CalculateQuantile does this
+      for(UInt_t i=0; i<evs.size(); i++){
+         Double_t residual = TMath::Abs(evs[i].trueValue - evs[i].predictedValue);
+         if(residual != 0){ 
+            fTransitionPoint = residual;
+            break;
+         }
+      }
+   }
+
+   // Let the user know that the transition point is zero and the loss function won't work properly
+   if(fTransitionPoint == 0){
+      //std::cout << "The residual transition point for the Huber loss function corresponding to quantile, " << fQuantile << ", is zero." 
+      //<< " This implies that all of the residuals are zero and the events have been predicted perfectly. Perhaps the regression is too complex" 
+      //<< " for the amount of data." << std::endl;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
