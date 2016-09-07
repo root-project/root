@@ -21,6 +21,6 @@ elif (args.inputFile=='' and args.output!='' and args.root!=[] and args.ntupla!=
 	for k,l in enumerate(args.histoName):
 		expr[k]=l
 	a = ROOT.TSimpleAnalysis(args.output, inputfile, args.ntupla, expr)
-	a.Analyze()
+	a.Run()
 else:
 	print "Invalid argument set"
