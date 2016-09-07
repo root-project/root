@@ -6580,7 +6580,12 @@ void TTree::OptimizeBaskets(ULong64_t maxMemory, Float_t minComp, Option_t *opti
          if (bsize < 0) bsize = bmax;
          if (bsize > bmax) bsize = bmax;
          UInt_t newBsize = UInt_t(bsize);
-         newBsize = newBsize - newBsize%512;
+         if (pass) { // only on the second pass so that it doesn't interfere with scaling
+            if (branch->GetBasket(0) != 0) {
+               newBsize = newBsize + (branch->GetBasket(0)->GetNevBuf() * sizeof(Int_t) * 2); // make room for meta dat
+            }
+            newBsize = newBsize - newBsize%512 + 512; // rounds up
+         }
          if (newBsize < sizeOfOneEntry) newBsize = sizeOfOneEntry;
          if (newBsize < bmin) newBsize = bmin;
          if (newBsize > 10000000) newBsize = bmax;
