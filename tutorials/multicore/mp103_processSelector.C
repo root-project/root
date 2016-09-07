@@ -10,7 +10,7 @@ const char *fh1[] = {"http://root.cern.ch/files/h1/dstarmb.root",
                      "http://root.cern.ch/files/h1/dstarp1b.root",
                      "http://root.cern.ch/files/h1/dstarp2.root"};
 
-int processSelector(){
+int mp103_processSelector(){
   // MacOSX may generate connection to WindowServer errors
   gROOT->SetBatch(kTRUE);
 
@@ -20,7 +20,7 @@ int processSelector(){
   TSelector *sel = TSelector::GetSelector(selectorPath);
 
   TFile *fp = TFile::Open(fh1[0]);
-	TTree *tree = (TTree *) fp->Get("h42");
+  TTree *tree = (TTree *) fp->Get("h42");
 
   TProcPool pool(3);
 
