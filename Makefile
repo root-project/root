@@ -597,8 +597,14 @@ ALLHDRS :=
 ifeq ($(CXXMODULES),yes)
 # Copy the modulemap in $ROOTSYS/include first.
 ALLHDRS  := include/module.modulemap
-ROOT_CXXMODULES_CXXFLAGS =  -fmodules -fcxx-modules -Xclang -fmodules-local-submodule-visibility -fmodules-cache-path=$(ROOT_OBJDIR)/include/pcms/
+ROOT_CXXMODULES_CXXFLAGS =  -fmodules -fcxx-modules -fmodules-cache-path=$(ROOT_OBJDIR)/include/pcms/
 ROOT_CXXMODULES_CFLAGS =  -fmodules -fmodules-cache-path=$(ROOT_OBJDIR)/include/pcms/
+# FIXME: OSX doesn't support -fmodules-local-submodule-visibility because its
+# Frameworks' modulemaps predate the flag.
+ifneq ($(PLATFORM),macosx)
+ROOT_CXXMODULES_CXXFLAGS += -Xclang -fmodules-local-submodule-visibility
+endif # not macos
+
 CXXFLAGS += $(ROOT_CXXMODULES_CXXFLAGS)
 CFLAGS   += $(ROOT_CXXMODULES_CFLAGS)
 endif

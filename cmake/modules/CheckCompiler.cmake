@@ -128,15 +128,18 @@ if(cxxmodules)
   set(CMAKE_REQUIRED_FLAGS ${OLD_CMAKE_REQUIRED_FLAGS})
   if(CXX_SUPPORTS_MODULES)
     file(COPY ${CMAKE_SOURCE_DIR}/build/unix/module.modulemap DESTINATION ${ROOT_INCLUDE_DIR})
-
     # This var is useful when we want to compile things without cxxmodules.
-    set(ROOT_CXXMODULES_CXXFLAGS "-fmodules -fcxx-modules -Xclang -fmodules-local-submodule-visibility -fmodules-cache-path=${CMAKE_BINARY_DIR}/include/pcms/")
+    set(ROOT_CXXMODULES_CXXFLAGS "-fmodules -fcxx-modules -fmodules-cache-path=${CMAKE_BINARY_DIR}/include/pcms/")
+    if(NOT APPLE)
+      set(ROOT_CXXMODULES_CXXFLAGS "${ROOT_CXXMODULES_CXXFLAGS} -Xclang -fmodules-local-submodule-visibility")
+    endif(NOT APPLE)
     set(ROOT_CXXMODULES_CFLAGS "-fmodules -fmodules-cache-path=${CMAKE_BINARY_DIR}/include/pcms/")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ROOT_CXXMODULES_CFLAGS}")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CXXMODULES_CXXFLAGS}")
   else()
     message(FATAL_ERROR "cxxmodules is not supported by this compiler")
   endif()
+
 endif(cxxmodules)
 
 #---Need to locate thead libraries and options to set properly some compilation flags----------------
