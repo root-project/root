@@ -802,7 +802,6 @@ void TRatioPlot::CreateGridline()
 
    fLowerPad->cd();
 
-   unsigned int curr = fGridlines.size();
    unsigned int dest = fGridlinePositions.size();
 
    Double_t lowYFirst = fLowerPad->GetUymin();
@@ -821,25 +820,21 @@ void TRatioPlot::CreateGridline()
 
    dest = dest - outofrange;
 
-   if (curr > dest) {
-      // we have too many
-      for (unsigned int i=0;i<curr-dest;++i) {
-         // kill the line
-         delete fGridlines.at(i);
-         // remove it from list
-      }
-      fGridlines.erase(fGridlines.begin(), fGridlines.begin()+(curr-dest));
-   } else if (curr < dest) {
-      // we don't have enough
-      for (unsigned int i=0;i<dest-curr;++i) {
-         TLine *newline = new TLine(0, 0, 0, 0);
-         newline->SetLineStyle(2);
-         newline->Draw();
-         fGridlines.push_back(newline);
-      }
-   } else {
-      // nothing to do
+   // clear all
+   for (unsigned int i=0;i<fGridlines.size();++i) {
+      delete fGridlines.at(i);
    }
+
+   fGridlines.erase(fGridlines.begin(), fGridlines.end());
+
+   for (unsigned int i=0;i<dest;++i) {
+      TLine *newline = new TLine(0, 0, 0, 0);
+      newline->SetLineStyle(2);
+      newline->Draw();
+      fGridlines.push_back(newline);
+   }
+
+
 
    Double_t first = fSharedXAxis->GetBinLowEdge(fSharedXAxis->GetFirst());
    Double_t last = fSharedXAxis->GetBinUpEdge(fSharedXAxis->GetLast());
@@ -866,19 +861,6 @@ void TRatioPlot::CreateGridline()
    padsav->cd();
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Clears the TLines that are created to draw the dashed lines in the lower plot.
-/// They will be recreated on Paint.
-
-void TRatioPlot::ClearCreatedGridlines()
-{
-   for (unsigned int i=0;i<fGridlines.size();++i) {
-      // kill the line
-      delete fGridlines.at(i);
-      // remove it from list
-   } 
-   fGridlines.erase(fGridlines.begin(), fGridlines.end());
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Creates the visual axes when painting.
