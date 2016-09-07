@@ -65,10 +65,13 @@ string(REPLACE "-Wshadow " "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 #---Build LLVM/Clang with symbol visibility=hidden--------------------------------------------------
 ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -fvisibility=hidden)
 
-#--- FIXME: Do not build LLVM/Clang with modules until next LLVM upgrade----------------------------
+#--- Build LLVM/Clang with modules -----------------------------------------------------------------
 if(cxxmodules)
-  string(REPLACE "${ROOT_CXXMODULES_CXXFLAGS}" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-  string(REPLACE "${ROOT_CXXMODULES_CFLAGS}" "" CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
+  # FIXME: We cannot build LLVM/clang with modules on with libstdc++, yet.
+  if(NOT libcxx)
+    string(REPLACE "${ROOT_CXXMODULES_CXXFLAGS}" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+    string(REPLACE "${ROOT_CXXMODULES_CFLAGS}" "" CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
+  endif(NOT libcxx)
 endif(cxxmodules)
 
 #---Build type--------------------------------------------------------------------------------------
