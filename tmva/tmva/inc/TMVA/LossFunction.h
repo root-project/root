@@ -149,7 +149,7 @@ namespace TMVA {
       Double_t CalculateMeanLoss(std::vector<LossFunctionEventInfo>& evs);
 
       // We go ahead and implement the simple ones
-      TString Name(){ return TString("Huber_Loss_Function"); };
+      TString Name(){ return TString("Huber"); };
       Int_t Id(){ return 0; } ;
 
       // Functions needed beyond the interface 
@@ -177,10 +177,6 @@ namespace TMVA {
       HuberLossFunctionBDT();
       HuberLossFunctionBDT(Double_t quantile):HuberLossFunction(quantile){};
       ~HuberLossFunctionBDT(){};
-
-      // LossFunction methods taken from HuberLossFunction
-      // Give the BDT implementation a different name though.
-      TString Name(){ return TString("Huber_Loss_Function_BDT"); };
       
       // The LossFunctionBDT methods
       void Init(std::map<const TMVA::Event*, LossFunctionEventInfo>& evinfomap, std::vector<double>& boostWeights);
@@ -208,7 +204,7 @@ namespace TMVA {
       Double_t CalculateMeanLoss(std::vector<LossFunctionEventInfo>& evs);
 
       // We go ahead and implement the simple ones
-      TString Name(){ return TString("Least_Squares_Loss_Function"); };
+      TString Name(){ return TString("LeastSquares"); };
       Int_t Id(){ return 1; } ;
    };
 
@@ -223,10 +219,6 @@ namespace TMVA {
    public:
       LeastSquaresLossFunctionBDT(){};
       ~LeastSquaresLossFunctionBDT(){};
-
-      // LossFunction methods taken from LeastSquaresLossFunction
-      // Give the BDT implementation a different name though.
-      TString Name(){ return TString("Least_Squares_Loss_Function_BDT"); };
       
       // The LossFunctionBDT methods
       void Init(std::map<const TMVA::Event*, LossFunctionEventInfo>& evinfomap, std::vector<double>& boostWeights);
@@ -251,7 +243,7 @@ namespace TMVA {
       Double_t CalculateMeanLoss(std::vector<LossFunctionEventInfo>& evs);
 
       // We go ahead and implement the simple ones
-      TString Name(){ return TString("Absolute_Deviation_Loss_Function"); };
+      TString Name(){ return TString("AbsoluteDeviation"); };
       Int_t Id(){ return 2; } ;
    };
 
@@ -266,10 +258,6 @@ namespace TMVA {
    public:
       AbsoluteDeviationLossFunctionBDT(){};
       ~AbsoluteDeviationLossFunctionBDT(){};
-
-      // LossFunction methods taken from AbsoluteDeviationLossFunction
-      // Give the BDT implementation a different name though.
-      TString Name(){ return TString("Absolute_Deviation_Loss_Function_BDT"); };
       
       // The LossFunctionBDT methods
       void Init(std::map<const TMVA::Event*, LossFunctionEventInfo>& evinfomap, std::vector<double>& boostWeights);

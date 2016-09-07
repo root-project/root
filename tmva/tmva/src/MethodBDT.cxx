@@ -1142,6 +1142,9 @@ void TMVA::MethodBDT::Train()
                              << "use \"!Normalise\""
                              << Endl;
 
+   if(DoRegression()) 
+      Log() << kINFO << "Regression Loss Function: "<< fRegressionLossFunctionBDTG->Name() << Endl;
+
    Log() << kINFO << "Training "<< fNTrees << " Decision Trees ... patience please" << Endl;
 
    Log() << kDEBUG << "Training with maximal depth = " <<fMaxDepth 
