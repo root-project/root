@@ -262,7 +262,7 @@ bool TSimpleAnalysis::HandleInputFileNameConfig(const std::string& line)
 ////////////////////////////////////////////////////////////////////////////////
 /// Skip subsequent empty lines read from fIn and returns the next not empty line.
 ///
-/// param[in] numbLine number of the input file line
+/// param[in] numbLine - number of the input file line
 
 std::string TSimpleAnalysis::GetLine(int& numbLine)
 {
@@ -342,7 +342,7 @@ bool TSimpleAnalysis::Configure()
 /// Function that allows to create the TSimpleAnalysis object and execute its
 /// Configure and Analyze functions.
 ///
-/// param[in] configurationFile name of the input file used to create the TSimpleAnalysis object
+/// param[in] configurationFile - name of the input file used to create the TSimpleAnalysis object
 
 bool RunSimpleAnalysis (const char* configurationFile) {
    TSimpleAnalysis obj(configurationFile);
