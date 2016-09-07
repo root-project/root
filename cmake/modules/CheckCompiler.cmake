@@ -139,7 +139,6 @@ if(cxxmodules)
   else()
     message(FATAL_ERROR "cxxmodules is not supported by this compiler")
   endif()
-
 endif(cxxmodules)
 
 #---Need to locate thead libraries and options to set properly some compilation flags----------------
