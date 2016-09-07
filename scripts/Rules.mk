@@ -337,26 +337,6 @@ ObjSuf   = o
 
 ifeq ($(PYTHON),)
    export PYTHON := python
-   ifeq ($(ARCH),macosx64)
-      MACOS_MAJOR = $(shell sw_vers | sed -n 's/ProductVersion:[ \t]*//p' | cut -d . -f 1)
-      MACOS_MINOR = $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
-      ifeq ($(MACOS_MAJOR),10)
-         ifneq ($(subst $(MACOSX_MINOR),,12345),12345)
-            export PYTHON := python64
-         endif
-      endif
-   endif
-   ifeq ($(ARCH),macosx)
-      MACOS_MAJOR = $(shell sw_vers | sed -n 's/ProductVersion:[ \t]*//p' | cut -d . -f 1)
-      MACOS_MINOR = $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
-      ifeq ($(MACOS_MAJOR),10)
-         ifneq ($(subst $(MACOSX_MINOR),,12345),12345)
-            export PYTHON := python
-         else
-            export PYTHON := arch -i386 python2.6
-         endif
-      endif
-   endif
 endif
 ifeq ($(HAS_PYTHON),)
    export HAS_PYTHON := $(shell root-config --has-python)
@@ -548,29 +528,13 @@ endif
 ifeq ($(MACOSX_MINOR),)
   export MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
 endif
-ifeq ($(subst $(MACOSX_MINOR),,123),123)
 UNDEFOPT      = dynamic_lookup
 LD           ?= c++
 LD           := MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) $(LD)
-else
-ifeq ($(MACOSX_MINOR),3)
-UNDEFOPT      = dynamic_lookup
-LD           ?= c++
-LD           := MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) $(LD)
-CXXFLAGS     += -Wno-long-double
-else
-UNDEFOPT      = suppress
-LD           ?= c++
-CXXFLAGS     += -Wno-long-double
-endif
-endif
 LDFLAGS       = -m32
 SOFLAGS       = -m32 -dynamiclib -single_module -undefined $(UNDEFOPT)
 DllSuf        = so
-LibSuf        = dylib
-ifeq ($(subst $(MACOSX_MINOR),,01234),01234)
 LibSuf        = so
-endif
 endif
 
 
@@ -587,27 +551,13 @@ endif
 ifeq ($(MACOSX_MINOR),)
   export MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
 endif
-ifeq ($(subst $(MACOSX_MINOR),,123),123)
 UNDEFOPT      = dynamic_lookup
 LD           ?= c++
 LD           := MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) $(LD)
-else
-ifeq ($(MACOSX_MINOR),3)
-UNDEFOPT      = dynamic_lookup
-LD           ?= c++
-LD           := MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) $(LD)
-else
-UNDEFOPT      = suppress
-LD           ?= g++
-endif
-endif
 LDFLAGS       = -m64 -Wl,-rpath,@loader_path/. -Wl,-rpath,$(ROOTSYS)/lib
 SOFLAGS       = -m64 -dynamiclib -single_module -undefined $(UNDEFOPT)
 DllSuf        = so
-LibSuf        = dylib
-ifeq ($(subst $(MACOSX_MINOR),,01234),01234)
 LibSuf        = so
-endif
 endif
 
 ifeq ($(ARCH),macosxicc)
@@ -624,27 +574,13 @@ endif
 ifeq ($(MACOSX_MINOR),)
   export MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
 endif
-ifeq ($(subst $(MACOSX_MINOR),,123),123)
 UNDEFOPT      = dynamic_lookup
 LD           ?= icpc
 LD           := MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) $(LD)
-else
-ifeq ($(MACOSX_MINOR),3)
-UNDEFOPT      = dynamic_lookup
-LD           ?= icpc
-LD           := MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) $(LD)
-else
-UNDEFOPT      = suppress
-LD           ?= icpc
-endif
-endif
 LDFLAGS       =
 SOFLAGS       = -dynamiclib -single_module -undefined $(UNDEFOPT)
 DllSuf        = so
-LibSuf        = dylib
-ifeq ($(subst $(MACOSX_MINOR),,01234),01234)
 LibSuf        = so
-endif
 endif
 
 ifneq ($(ARCH:solaris%=%),$(ARCH))

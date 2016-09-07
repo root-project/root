@@ -94,11 +94,6 @@ ifeq ($(ARCH),aix5)
 else
 ifeq ($(PLATFORM),macosx)
 		$(CMDECHO) $(LD) $(SOFLAGS) $(EVENTO) $(OutPutOpt) $(EVENTLIB)
-ifneq ($(subst $(MACOSX_MINOR),,1234),1234)
-# We need to make both the .dylib and the .so for 10.1-10.4
-		$(CMDECHO) $(LD) -bundle -undefined $(UNDEFOPT) -Wl,-x $(LDFLAGS) $^ \
-		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
-endif
 else
 ifeq ($(ARCH),win32)
 		$(CMDECHO) bindexplib $* $^ > $*.def

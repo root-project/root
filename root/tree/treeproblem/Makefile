@@ -42,11 +42,6 @@ ifeq ($(ARCH),aix5)
 else
 ifeq ($(PLATFORM),macosx)
 	$(CMDECHO) $(LD) $(SOFLAGS) Foo.$(ObjSuf) FooDict.$(ObjSuf) $(OutPutOpt)  $(subst .$(DllSuf),.$(LibSuf),$@)
-ifneq ($(subst $(MACOSX_MINOR),,1234),1234)
-# We need to make both the .dylib and the .so for 10.1-10.4
-	$(CMDECHO) $(LD) -bundle -undefined  $(UNDEFOPT) -Wl,-x $(LDFLAGS)  Foo.$(ObjSuf) FooDict.$(ObjSuf)  \
-                   $(OutPutOpt) $@
-endif
 else
 ifeq ($(PLATFORM),win32)
 	$(CMDECHO) bindexplib Foo Foo.$(ObjSuf) FooDict.$(ObjSuf) > Foo.def
