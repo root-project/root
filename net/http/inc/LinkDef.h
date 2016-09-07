@@ -9,8 +9,6 @@
 #pragma link C++ class TFastCgi;
 #pragma link C++ class TCivetweb;
 
-#pragma link C++ class TBufferJSON;
-
 #pragma link C++ class THttpCallArg;
 #pragma link C++ class THttpServer;
 #pragma link C++ class TRootSniffer;
