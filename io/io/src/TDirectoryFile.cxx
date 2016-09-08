@@ -1452,9 +1452,7 @@ Int_t TDirectoryFile::SaveObjectAs(const TObject *obj, const char *filename, Opt
    }
    Int_t nbytes = 0;
    if ((fname.Length()>5) && (fname(fname.Length()-5,5) == TString(".json"))) {
-      Int_t compact = 0;
-      if (option && (*option >= '0') && (*option <='3')) compact = TString(option,1).Atoi();
-      nbytes = TBufferJSON::ExportToFile(fname, obj, compact);
+      nbytes = TBufferJSON::ExportToFile(fname, obj, option);
    } else {
       TFile *local = TFile::Open(fname.Data(),"recreate");
       if (!local) return 0;
