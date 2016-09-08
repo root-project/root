@@ -37,7 +37,6 @@
 #include <string>
 #include <string.h>
 #include <locale.h>
-#include <fstream>
 
 #include "Compression.h"
 
@@ -61,6 +60,7 @@
 #include "TStreamer.h"
 #include "TStreamerInfoActions.h"
 #include "RVersion.h"
+#include "Riostream.h"
 #include "TClonesArray.h"
 #include "TVirtualMutex.h"
 #include "TInterpreter.h"
