@@ -237,7 +237,7 @@ TObject *TDirectory::CloneObject(const TObject *obj, Bool_t autoadd /* = kTRUE *
    // Clone an object.
    // This function is called when the directory is not a TDirectoryFile.
    // This version has to load the I/O package, hence via CINT
-   // 
+   //
    // If autoadd is true and if the object class has a
    // DirectoryAutoAdd function, it will be called at the end of the
    // function with the parameter gDirector.  This usually means that
@@ -249,7 +249,7 @@ TObject *TDirectory::CloneObject(const TObject *obj, Bool_t autoadd /* = kTRUE *
      Fatal("CloneObject","Failed to create new object");
      return 0;
    }
-   
+
    Int_t baseOffset = obj->IsA()->GetBaseClassOffset(TObject::Class());
    if (baseOffset==-1) {
       // cl does not inherit from TObject.
@@ -294,7 +294,7 @@ TObject *TDirectory::CloneObject(const TObject *obj, Bool_t autoadd /* = kTRUE *
 TDirectory *&TDirectory::CurrentDirectory()
 {
    // Return the current directory for the current thread.
-   
+
    static TDirectory *currentDirectory = 0;
    if (!gThreadTsd)
       return currentDirectory;
@@ -630,7 +630,7 @@ TObject *TDirectory::FindObjectAny(const char *aname) const
    //object may be already in the list of objects in memory
    TObject *obj =  fList->FindObject(aname);
    if (obj) return obj;
-   
+
    //try with subdirectories
    TIter next(fList);
    while( (obj = next()) ) {
@@ -1011,7 +1011,7 @@ void TDirectory::RecursiveRemove(TObject *obj)
 
    fList->RecursiveRemove(obj);
 }
- 
+
 //______________________________________________________________________________
 TObject *TDirectory::Remove(TObject* obj)
 {
@@ -1056,8 +1056,13 @@ Int_t TDirectory::SaveObjectAs(const TObject *obj, const char *filename, Option_
       fname.Form("%s.root",obj->GetName());
    }
    TString cmd;
-   cmd.Form("TFile::Open(\"%s\",\"recreate\");",fname.Data());
-   {
+   if ((fname.Length()>5) && (fname(fname.Length()-5,5) == TString(".json"))) {
+      Int_t compact = 0;
+      if (option && (*option >= '0') && (*option <='3')) compact = TString(option,1).Atoi();
+      cmd.Form("TBufferJSON::ExportToFile(\"%s\",(TObject*) %s, %d);", fname.Data(), TString::LLtoa((Long_t)obj, 10).Data(), compact);
+      nbytes = gROOT->ProcessLine(cmd);
+   } else {
+      cmd.Form("TFile::Open(\"%s\",\"recreate\");",fname.Data());
       TContext ctxt(0); // The TFile::Open will change the current directory.
       TDirectory *local = (TDirectory*)gROOT->ProcessLine(cmd);
       if (!local) return 0;
