@@ -206,10 +206,13 @@ bool TSimpleAnalysis::Run()
    if (TFile::Open(fTreeName.c_str())) {
       fInputFiles.insert(fInputFiles.begin(), fTreeName);
       fTreeName.clear();
-      fTreeName = ExtractTreeName(fInputFiles[0]);
-      if (fTreeName.empty())
-         return false;
    }
+   // If fTreeName is empty we try to find the name of the tree through reading
+   // of the first input file
+   if (fTreeName.empty())
+      fTreeName = ExtractTreeName(fInputFiles[0]);
+   if (fTreeName.empty())  // No tree name found
+      return false;
    gErrorIgnoreLevel = oldLevel;
 
    // Do the chain of the fInputFiles
