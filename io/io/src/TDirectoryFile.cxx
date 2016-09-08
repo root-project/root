@@ -28,6 +28,7 @@ End_Macro
 #include "TDirectoryFile.h"
 #include "TFile.h"
 #include "TBufferFile.h"
+#include "TBufferJSON.h"
 #include "TMapFile.h"
 #include "TClassTable.h"
 #include "TInterpreter.h"
@@ -1490,11 +1491,18 @@ Int_t TDirectoryFile::SaveObjectAs(const TObject *obj, const char *filename, Opt
    if (!filename || !filename[0]) {
       fname.Form("%s.root",obj->GetName());
    }
-   TFile *local = TFile::Open(fname.Data(),"recreate");
-   if (!local) return 0;
-   Int_t nbytes = obj->Write();
-   delete local;
-   if (dirsav) dirsav->cd();
+   Int_t nbytes = 0;
+   if ((fname.Length()>5) && (fname(fname.Length()-5,5) == TString(".json"))) {
+      Int_t compact = 0;
+      if (option && (*option >= '0') && (*option <='3')) compact = TString(option,1).Atoi();
+      nbytes = TBufferJSON::ExportToFile(fname, obj, compact);
+   } else {
+      TFile *local = TFile::Open(fname.Data(),"recreate");
+      if (!local) return 0;
+      nbytes = obj->Write();
+      delete local;
+      if (dirsav) dirsav->cd();
+   }
    TString opt = option;
    opt.ToLower();
    if (!opt.Contains("q")) {
