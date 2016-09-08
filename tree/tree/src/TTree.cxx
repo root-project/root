@@ -6582,9 +6582,10 @@ void TTree::OptimizeBaskets(ULong64_t maxMemory, Float_t minComp, Option_t *opti
          UInt_t newBsize = UInt_t(bsize);
          if (pass) { // only on the second pass so that it doesn't interfere with scaling
             if (branch->GetBasket(0) != 0) {
-               newBsize = newBsize + (branch->GetBasket(0)->GetNevBuf() * sizeof(Int_t) * 2); // make room for meta dat
+               newBsize = newBsize + (branch->GetBasket(0)->GetNevBuf() * sizeof(Int_t) * 2); // make room for meta data
             }
-            newBsize = newBsize - newBsize%512 + 512; // rounds up
+            // rounds up, increases basket size to ensure all entries fit into single basket as intended
+            newBsize = newBsize - newBsize%512 + 512;
          }
          if (newBsize < sizeOfOneEntry) newBsize = sizeOfOneEntry;
          if (newBsize < bmin) newBsize = bmin;
