@@ -1106,7 +1106,7 @@ Int_t TDirectory::SaveObjectAs(const TObject *obj, const char *filename, Option_
       fname.Form("%s.root",obj->GetName());
    }
    TString cmd;
-   if ((fname.Length()>5) && (fname(fname.Length()-5,5) == TString(".json"))) {
+   if (fname.Index(".json") > 0) {
       cmd.Form("TBufferJSON::ExportToFile(\"%s\",(TObject*) %s, \"%s\");", fname.Data(), TString::LLtoa((Long_t)obj, 10).Data(), (option ? option : ""));
       nbytes = gROOT->ProcessLine(cmd);
    } else {
