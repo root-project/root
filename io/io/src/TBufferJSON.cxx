@@ -290,9 +290,12 @@ TString TBufferJSON::ConvertToJSON(const void *ptr, TDataMember *member,
 /// Returns size of the produce file
 /// Used in TObject::SaveAs()
 
-Int_t TBufferJSON::ExportToFile(const char* filename, const TObject *obj, Int_t compact)
+Int_t TBufferJSON::ExportToFile(const char* filename, const TObject *obj, const char* option)
 {
    if (!obj || !filename || (*filename==0)) return 0;
+
+   Int_t compact = 0;
+   if (option && (*option >= '0') && (*option <='3')) compact = TString(option,1).Atoi();
 
    TString json = TBufferJSON::ConvertToJSON(obj, compact);
 
@@ -307,9 +310,12 @@ Int_t TBufferJSON::ExportToFile(const char* filename, const TObject *obj, Int_t 
 /// Convert object into JSON and store in text file
 /// Returns size of the produce file
 
-Int_t TBufferJSON::ExportToFile(const char* filename, const void *obj, const TClass *cl, Int_t compact)
+Int_t TBufferJSON::ExportToFile(const char* filename, const void *obj, const TClass *cl, const char* option)
 {
    if (!obj || !cl || !filename || (*filename==0)) return 0;
+
+   Int_t compact = 0;
+   if (option && (*option >= '0') && (*option <='3')) compact = TString(option,1).Atoi();
 
    TString json = TBufferJSON::ConvertToJSON(obj, cl, compact);
 
