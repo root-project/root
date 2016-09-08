@@ -71,9 +71,9 @@ TObject::TObject() : fBits(kNotDeleted) //Need to leave FUniqueID unset
    // (see TEnv) the object is added to the global TObjectTable for
    // bookkeeping.
 
-   if (TStorage::FilledByObjectAlloc(&fUniqueID)) 
+   if (TStorage::FilledByObjectAlloc(&fUniqueID))
       fBits |= kIsOnHeap;
-   
+
    fUniqueID = 0;
 
    if (fgObjectStat) TObjectTable::AddObj(this);
@@ -548,7 +548,7 @@ void TObject::ls(Option_t *option) const
 
    TROOT::IndentLevel();
    cout <<"OBJ: " << IsA()->GetName() << "\t" << GetName() << "\t" << GetTitle() << " : ";
-   cout << Int_t(TestBit(kCanDelete));  
+   cout << Int_t(TestBit(kCanDelete));
    if (option && strstr(option,"noaddr")==0) {
       cout <<" at: "<< this ;
    }
@@ -651,6 +651,12 @@ void TObject::SaveAs(const char *filename, Option_t *option) const
    //==============Save object as a XML file================================
    if (filename && strstr(filename,".xml")) {
       if (gDirectory) gDirectory->SaveObjectAs(this,filename,"");
+      return;
+   }
+
+   //==============Save object as a JSON file================================
+   if (filename && strstr(filename,".json")) {
+      if (gDirectory) gDirectory->SaveObjectAs(this,filename,option);
       return;
    }
 
@@ -962,11 +968,11 @@ void TObject::Obsolete(const char *method, const char *asOfVers, const char *rem
 {
    // Use this method to declare a method obsolete. Specify as of which version
    // the method is obsolete and as from which version it will be removed.
-   
+
    const char *classname = "UnknownClass";
    if (TROOT::Initialized())
       classname = ClassName();
-   
+
    ::Obsolete(Form("%s::%s", classname, method), asOfVers, removedFromVers);
 }
 
