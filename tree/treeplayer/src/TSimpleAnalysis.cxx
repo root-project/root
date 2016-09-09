@@ -203,9 +203,12 @@ bool TSimpleAnalysis::Run()
    gErrorIgnoreLevel = kFatal;
    // Disambiguate tree name from first input file:
    // just try to open it, if that works it's an input file.
-   if (TFile::Open(fTreeName.c_str())) {
-      fInputFiles.insert(fInputFiles.begin(), fTreeName);
-      fTreeName.clear();
+   if (!fTreeName.empty()) {
+      if (TFile* probe = TFile::Open(fTreeName.c_str())) {
+         fInputFiles.insert(fInputFiles.begin(), fTreeName);
+         fTreeName.clear();
+         delete probe;
+      }
    }
    // If fTreeName is empty we try to find the name of the tree through reading
    // of the first input file
@@ -239,6 +242,7 @@ bool TSimpleAnalysis::Run()
       const std::string& expr = histo.second.first;
       const std::string& histoName = histo.first;
       const std::string& cut = histo.second.second;
+
       chain.Draw((expr + ">>" + histoName).c_str(), cut.c_str(), "goff");
       TH1F *ptrHisto = (TH1F*)gDirectory->Get(histoName.c_str());
       if (!ptrHisto)
