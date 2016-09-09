@@ -20,6 +20,10 @@
 #include "TAttText.h"
 #endif
 
+#ifndef ROOT_TString
+#include "TString.h"
+#endif
+
 class TAxisModLab : public TObject, public TAttText {
 
 private:
