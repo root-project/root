@@ -1727,7 +1727,7 @@ public:
   friend class ASTRecordWriter;
   friend class ASTReader;
   friend class ASTWriter;
-  friend class DeclUnloader;
+  friend class ::cling::DeclUnloader;
 };
 
 /// \brief Represents a static or instance method of a struct/union/class.
