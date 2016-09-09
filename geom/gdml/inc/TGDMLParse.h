@@ -121,9 +121,6 @@ public:
    }
 
    virtual ~TGDMLParse() { //destructor
-
-      for (size_t i = 0; i < fformvec.size(); i++)
-         if (fformvec[i] != NULL) delete fformvec[i];
    }
 
    static TGeoVolume* StartGDML(const char* filename) {
@@ -205,7 +202,7 @@ private:
    typedef std::map<std::string, std::string> ReflectionsMap;
    typedef std::map<std::string, std::string> ReflVolMap;
    typedef std::map<std::string, double> FracMap;
-   typedef std::vector<TFormula*> FormVec;
+   typedef std::map<std::string, double> ConstMap;
 
    PosMap fposmap;                //!Map containing position names and the TGeoTranslation for it
    RotMap frotmap;                //!Map containing rotation names and the TGeoRotation for it
@@ -221,7 +218,7 @@ private:
    ReflSolidMap freflsolidmap;    //!Map containing reflection names and the TGDMLRefl for it - containing refl matrix
    ReflVolMap freflvolmap;        //!Map containing reflected volume names and the solid ref for it
    FileMap ffilemap;              //!Map containing files parsed during entire parsing, with their world volume name
-   FormVec fformvec;              //!Vector containing constant functions for GDML constant definitions
+   ConstMap fconsts;               //!Map containing values of constants declared in the file
 
    ClassDef(TGDMLParse, 0)    //imports GDML using DOM and binds it to ROOT
 };
