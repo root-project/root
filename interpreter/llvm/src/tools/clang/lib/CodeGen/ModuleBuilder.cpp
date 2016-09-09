@@ -287,29 +287,47 @@ namespace clang {
         }
       }
 
-      if (GV->isWeakForLinker() && !GV->isDeclaration()) {
-        auto IEmittedDeferredDecl
-          = Builder->EmittedDeferredDecls.find(GV->getName());
-        if (IEmittedDeferredDecl != Builder->EmittedDeferredDecls.end()) {
-          Builder->DeferredDecls[GV->getName()] = IEmittedDeferredDecl->second;
-          Builder->EmittedDeferredDecls.erase(IEmittedDeferredDecl);
+      if (GV->isWeakForLinker()) {
+        if (!GV->isDeclaration()) {
+          // This is a definition. If if was emitted as deferred, move it
+          // back into deferred state.
+          auto IEmittedDeferredDecl
+            = Builder->EmittedDeferredDecls.find(GV);
+          if (IEmittedDeferredDecl != Builder->EmittedDeferredDecls.end()) {
+            // Use the name of the original GV, not that of our definition
+            // that's soon to be erased.
+            Builder->DeferredDecls[IEmittedDeferredDecl->second.first]
+              = IEmittedDeferredDecl->second.second;
+            Builder->EmittedDeferredDecls.erase(IEmittedDeferredDecl);
+          }
+        } else {
+          // might be an entry in the deferred decls, if so: remove!
+          auto IDeferredDecl = Builder->DeferredDecls.find(GV->getName());
+          if (IDeferredDecl != Builder->DeferredDecls.end()) {
+            // yes, pointer comparison.
+            if (IDeferredDecl->first.data() == GV->getName().data())
+              Builder->DeferredDecls.erase(IDeferredDecl);
+          }
         }
       }
     }
 
     void forgetDecl(const GlobalDecl& GD) {
-      StringRef MangledName = Builder->getMangledName(GD);
-      auto IEmittedDeferredDecl
-        = Builder->EmittedDeferredDecls.find(MangledName);
-      if (IEmittedDeferredDecl != Builder->EmittedDeferredDecls.end()) {
-        assert(IEmittedDeferredDecl->getValue() == GD
-               && "Removing wrong EmittedDeferredDecl");
-        Builder->EmittedDeferredDecls.erase(IEmittedDeferredDecl);
+      if (const auto VD = dyn_cast<VarDecl>(GD.getDecl())) {
+        if (!VD->isWeak() || !VD->isThisDeclarationADefinition())
+          return;
+      } else if (const auto FD = dyn_cast<FunctionDecl>(GD.getDecl())) {
+        if (!FD->isWeak() || !FD->isThisDeclarationADefinition())
+          return;
       } else {
-        auto IDeferredDecl = Builder->DeferredDecls.find(MangledName);
-        if (IDeferredDecl != Builder->DeferredDecls.end()) {
+        return;
+      }
+      // It's a weak, defined var or function decl.
+      StringRef MangledName = Builder->getMangledName(GD);
+      auto IDeferredDecl = Builder->DeferredDecls.find(MangledName);
+      if (IDeferredDecl != Builder->DeferredDecls.end()) {
+        if (IDeferredDecl->second == GD)
           Builder->DeferredDecls.erase(IDeferredDecl);
-        }
       }
     }
 
