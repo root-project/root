@@ -151,6 +151,7 @@ namespace clang {
              && "Newly created module should not have weakRefRefs");
       Builder->WeakRefReferences.swap(OldBuilder->WeakRefReferences);
 
+      Builder->EmittedDeferredDecls.swap(OldBuilder->EmittedDeferredDecls);
 
       return M.get();
     }
