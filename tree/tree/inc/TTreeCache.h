@@ -71,12 +71,30 @@ protected:
    bool            fOptimizeMisses {false}; //! true if we should optimize cache misses.
    Long64_t        fFirstMiss {-1}; //! set to the event # of the first miss.
    Long64_t        fLastMiss  {-1}; //! set to the event # of the last miss.
-   std::unique_ptr<std::vector<TBranch*>> fMissBranches; //! list of branches that we read on misses.
-   std::unique_ptr<std::vector<char>> fMissCache; //! Cache contents for misses
-   // TODO: there's a 1-1 correspondence between an element in fEntries and an element in fEntryOffsets
-   // Instead of munging std::pairs, put this into a simple struct.
-   std::unique_ptr<std::vector<std::pair<ULong64_t, UInt_t>>> fEntries;  //! Buffers in the miss cache.
-   std::unique_ptr<std::vector<size_t>> fEntryOffsets;  //! Map from (offset, pos) in fEntries to memory location in fMissCache
+
+   struct IOPos {
+      IOPos(ULong64_t pos, UInt_t len) : fPos(pos), fLen(len) {}
+
+      ULong64_t fPos{0};  //! Position in file of cache entry.
+      UInt_t fLen{0};  //! Length of cache entry.
+   };
+   struct MissCache {
+      struct Entry {
+         Entry(IOPos io) : fIO(io) {}
+
+         IOPos fIO;
+         ULong64_t fIndex{0};  //! Location in fData corresponding to this entry.
+         friend bool operator< (const Entry &a, const Entry &b) {
+           return a.fIO.fPos < b.fIO.fPos;
+         }
+      };
+      std::vector<Entry> fEntries;  //! Description of buffers in the miss cache.
+      std::vector<TBranch*> fBranches;  //! list of branches that we read on misses.
+      std::vector<char> fData;  //! Actual data in the cache.
+
+      void clear() {fEntries.clear(); fBranches.clear(); fData.clear();}
+   };
+   std::unique_ptr<MissCache> fMissCache;  //! Cache contents for misses
 
 private:
    TTreeCache(const TTreeCache &);            //this class cannot be copied
@@ -92,7 +110,7 @@ private:
    bool CheckMissCache(char *buf, Long64_t pos, int len);  // Check the miss cache for a particular buffer, fetching if deemed necessary.
    bool FillMissCache();  // Fill the miss cache from the current set of active branches.
    bool CalculateMissCache();  // Calculate the appropriate miss cache to fetch; helper function for FillMissCache
-   std::pair<ULong64_t, UInt_t> FindBranchBasket(TBranch &);  // Given a branch, determine the location of its basket for the current entry.
+   IOPos FindBranchBasket(TBranch &);  // Given a branch, determine the location of its basket for the current entry.
    TBranch* CalculateMissEntries(Long64_t, int, bool);   // Given an file read, try to determine the corresponding branch.
    bool ProcessMiss(Long64_t pos, int len);   // Given a file read not in the miss cache, handle (possibly) loading the data.
 

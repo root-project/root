@@ -254,6 +254,19 @@ of effective system reads for a given file with a code like
 #include "TMath.h"
 #include <limits.h>
 
+// TODO: Copied from TBranch.cxx
+#if (__GNUC__ >= 3) || defined(__INTEL_COMPILER)
+#if !defined(R__unlikely)
+  #define R__unlikely(expr) __builtin_expect(!!(expr), 0)
+#endif
+#if !defined(R__likely)
+  #define R__likely(expr) __builtin_expect(!!(expr), 1)
+#endif
+#else
+  #define R__unlikely(expr) expr
+  #define R__likely(expr) expr
+#endif
+
 Int_t TTreeCache::fgLearnEntries = 100;
 
 ClassImp(TTreeCache);
@@ -625,6 +638,10 @@ Int_t TTreeCache::DropBranch(const char *bname, Bool_t subbranches /*= kFALSE*/)
    return res;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+//// Start of methods for the miss cache.
+///////////////////////////////////////////////////////////////////////////////
+
 /**
  * Enable / disable the miss cache.
  */
@@ -643,52 +660,36 @@ void TTreeCache::ResetMissCache() {
 
    fLastMiss = -1;
    fFirstMiss = -1;
-   // For the most part, we keep the allocated memory around to prevent memory churn.
-   if (!fMissBranches) {
-      fMissBranches.reset(new std::vector<TBranch*>());
-   } else {
-      fMissBranches->clear();
-   }
+
    if (!fMissCache) {
-      fMissCache.reset(new std::vector<char>());
-   } else {
-      fMissCache->clear();
+      fMissCache.reset(new MissCache());
    }
-   if (!fEntries) {
-      fEntries.reset(new std::vector<std::pair<ULong64_t, UInt_t>>());
-   } else {
-      fEntries->clear();
-   }
-   if (!fEntryOffsets) {
-      fEntryOffsets.reset(new std::vector<size_t>());
-   } else {
-      fEntryOffsets->clear();
-   }
+   fMissCache->clear();
 }
 
-std::pair<ULong64_t, UInt_t> TTreeCache::FindBranchBasket(TBranch &b) {
-   if (b.GetDirectory() == 0) {
+TTreeCache::IOPos TTreeCache::FindBranchBasket(TBranch &b) {
+   if (R__unlikely(b.GetDirectory() == 0)) {
       //printf("Branch at %p has no valid directory.\n", &b);
-      return std::make_pair(0, 0);
+      return IOPos{0, 0};
    }
-   if (b.GetDirectory()->GetFile() != fFile) {
+   if (R__unlikely(b.GetDirectory()->GetFile() != fFile)) {
       //printf("Branch at %p is in wrong file (branch file %p, my file %p).\n", &b, b.GetDirectory()->GetFile(), fFile);
-      return std::make_pair(0, 0);
+      return IOPos{0, 0};
    }
 
    //printf("Trying to find a basket for branch %p\n", &b);
    // Pull in metadata about branch; make sure it is valid
    Int_t *lbaskets   = b.GetBasketBytes();
    Long64_t *entries = b.GetBasketEntry();
-   if (!lbaskets || !entries) {
+   if (R__unlikely(!lbaskets || !entries)) {
       //printf("No baskets or entries.\n");
-      return std::make_pair(0, 0);
+      return IOPos{0, 0};
    }
    //Int_t blistsize = b.GetListOfBaskets()->GetSize();
    Int_t blistsize = b.GetWriteBasket();
-   if (blistsize <= 0) {
+   if (R__unlikely(blistsize <= 0)) {
       //printf("Basket list is size 0.\n");
-      return std::make_pair(0, 0);
+      return IOPos{0, 0};
    }
 
    // Search for the basket that contains the event of interest.  Unlike the primary cache, we
@@ -696,7 +697,7 @@ std::pair<ULong64_t, UInt_t> TTreeCache::FindBranchBasket(TBranch &b) {
    Long64_t basketOffset = TMath::BinarySearch(blistsize, entries, fTree->GetReadEntry());
    if (basketOffset < 0) { // No entry found.
       //printf("No entry offset found for entry %ld\n", fTree->GetReadEntry());
-      return std::make_pair(0, 0);
+      return IOPos{0, 0};
    }
 
    // Check to see if there's already a copy of this basket in memory.  If so, don't fetch it
@@ -704,56 +705,59 @@ std::pair<ULong64_t, UInt_t> TTreeCache::FindBranchBasket(TBranch &b) {
            b.GetListOfBaskets()->UncheckedAt(basketOffset)) {
 
        //printf("Basket is already in memory.\n");
-       return std::make_pair(0, 0);
+       return IOPos{0, 0};
    }
 
    Long64_t pos = b.GetBasketSeek(basketOffset);
    Int_t len = lbaskets[basketOffset];
-   if (pos <= 0 || len <= 0) {
+   if (R__unlikely(pos <= 0 || len <= 0)) {
       /*printf("Basket returned was invalid (basketOffset=%ld, pos=%ld, len=%d).\n", basketOffset, pos, len);
       for (int idx=0; idx<blistsize; idx++) {
          printf("Basket entry %d, first event %d, pos %ld\n", idx, entries[idx], b.GetBasketSeek(idx));
       }*/
-      return std::make_pair(0, 0);
+      return IOPos{0, 0};
     } // Sanity check
    // Do not cache a basket if it is bigger than the cache size!
-   if (len > fBufferSizeMin) {
+   if (R__unlikely(len > fBufferSizeMin)) {
       //printf("Basket size is greater than the cache size.\n");
-      return std::make_pair(0, 0);
+      return IOPos{0, 0};
    }
 
-   return std::make_pair(pos, len);
+   return IOPos{static_cast<ULong64_t>(pos), static_cast<UInt_t>(len)};
 }
 
 
-TBranch *TTreeCache::CalculateMissEntries(Long64_t pos, int len, bool all) {
-   if ((pos < 0) || (len < 0)) {  // TODO: unlikely
+TBranch *TTreeCache::CalculateMissEntries(Long64_t pos_in, int len_in, bool all) {
+   if (R__unlikely((pos_in < 0) || (len_in < 0))) {
       return nullptr;
    }
-   int count = all ? (fTree->GetListOfLeaves())->GetEntriesFast() : fMissBranches->size();
-   fEntries->reserve(count);
-   fEntries->clear();
+   auto pos = static_cast<ULong64_t>(pos_in);
+   auto len = static_cast<UInt_t>(len_in);
+
+   int count = all ? (fTree->GetListOfLeaves())->GetEntriesFast() : fMissCache->fBranches.size();
+   fMissCache->fEntries.reserve(count);
+   fMissCache->fEntries.clear();
    bool found_request = false;
    TBranch *resultBranch = nullptr;
    //printf("Will search %d branches for basket at %ld.\n", count, pos);
    for (int i=0; i<count; i++) {
-      TBranch *b = all ? static_cast<TBranch*>(static_cast<TLeaf*>((fTree->GetListOfLeaves())->UncheckedAt(i))->GetBranch()) : (*fMissBranches)[i];
-      std::pair<ULong64_t, UInt_t> iopos = FindBranchBasket(*b);
-      if (iopos.second == 0) {  // Error indicator
+      TBranch *b = all ? static_cast<TBranch*>(static_cast<TLeaf*>((fTree->GetListOfLeaves())->UncheckedAt(i))->GetBranch()) : fMissCache->fBranches[i];
+      IOPos iopos = FindBranchBasket(*b);
+      if (iopos.fLen == 0) {  // Error indicator
          continue;
       }
-      if (iopos.first == static_cast<ULong64_t>(pos) && iopos.second == static_cast<UInt_t>(len)) {
+      if (iopos.fPos == pos && iopos.fLen == len) {
          found_request = true;
          resultBranch = b;
          // Note that we continue to iterate; fills up the rest of the entries in the cache.
       }
       // At this point, we are ready to push back a new offset
-      fEntries->emplace_back(std::move(iopos));
+      fMissCache->fEntries.emplace_back(std::move(iopos));
    }
-   if (!found_request) {
+   if (R__unlikely(!found_request)) {
       // We have gone through all the branches in this file and the requested basket
       // doesn't appear to be in any of them.  Likely a logic error / bug.
-      fEntries->clear();
+      fMissCache->fEntries.clear();
    }
    return resultBranch;
 }
@@ -788,36 +792,30 @@ bool TTreeCache::ProcessMiss(Long64_t pos, int len) {
          //printf("ProcessMiss: pos %ld does not appear to correspond to a buffer in this file.\n", pos);
          // We have gone through all the branches in this file and the requested basket
          // doesn't appear to be in any of them.  Likely a logic error / bug.
-         fEntries->clear();
+         fMissCache->fEntries.clear();
          return false;
       }
    }
    // TODO: this should be a set.
-   fMissBranches->push_back(b);
+   fMissCache->fBranches.push_back(b);
 
    // OK, sort the entries
-   std::sort(fEntries->begin(), fEntries->end(), [](const std::pair<ULong64_t, UInt_t> &_a, const std::pair<ULong64_t, UInt_t> &_b) {
-      return _a.first < _b.first;
-   });
-   // Calculate the buffer offsets.  The data corresponding to read at fEntries[i]
-   // is at offset fEntryOffsets[i] in the fMissCache.
-   fEntryOffsets->reserve(fEntries->size());
+   std::sort(fMissCache->fEntries.begin(), fMissCache->fEntries.end());
 
    // Now, fetch the buffer.
-   std::vector<Long64_t> positions; positions.reserve(fEntries->size());
-   std::vector<Int_t> lengths; lengths.reserve(fEntries->size());
-   int idx = 0;
+   std::vector<Long64_t> positions; positions.reserve(fMissCache->fEntries.size());
+   std::vector<Int_t> lengths; lengths.reserve(fMissCache->fEntries.size());
    ULong64_t cumulative = 0;
-   for (const auto &iopos : *fEntries) {
-         positions.push_back(iopos.first);
-         lengths.push_back(iopos.second);
-         (*fEntryOffsets)[idx++] = cumulative;
-         cumulative += iopos.second;
+   for (auto &mcentry : fMissCache->fEntries) {
+         positions.push_back(mcentry.fIO.fPos);
+         lengths.push_back(mcentry.fIO.fLen);
+         mcentry.fIndex = cumulative;
+         cumulative += mcentry.fIO.fLen;
    }
-   fMissCache->reserve(cumulative);
+   fMissCache->fData.reserve(cumulative);
    //printf("Reading %lu bytes into miss cache for %lu entries.\n", cumulative, fEntries->size());
-   fNMissReadPref += fEntries->size();
-   fFile->ReadBuffers(&((*fMissCache)[0]), &positions[0], &lengths[0], fEntries->size());
+   fNMissReadPref += fMissCache->fEntries.size();
+   fFile->ReadBuffers(&(fMissCache->fData[0]), &positions[0], &lengths[0], fMissCache->fEntries.size());
    fFirstMiss = fLastMiss = fEntryCurrent;
 
    return true;
@@ -828,21 +826,23 @@ bool TTreeCache::CheckMissCache(char *buf, Long64_t pos, int len) {
    if (!fOptimizeMisses) {
       return false;
    }
-   if ((pos < 0) || (len < 0)) {
+   if (R__unlikely((pos < 0) || (len < 0))) {
       return false;
    }
 
    //printf("Checking the miss cache for offset=%ld, length=%d\n", pos, len);
 
    // First, binary search to see if the desired basket is already cached.
-   auto iter = std::lower_bound(fEntries->begin(), fEntries->end(), std::make_pair(static_cast<ULong64_t>(pos), static_cast<UInt_t>(len)), [](const std::pair<ULong64_t, UInt_t> &_a, const std::pair<ULong64_t, UInt_t> &_b) {
-      return _a.first < _b.first;
-   });
-   if (iter != fEntries->end()) {
-      // TODO: What if there is a length mismatch?
-      auto buffer_entry_in_cache = iter - fEntries->begin();
-      auto offset = (*fEntryOffsets)[buffer_entry_in_cache];
-      memcpy(buf, &((*fMissCache)[offset]), len);
+   MissCache::Entry mcentry{IOPos{static_cast<ULong64_t>(pos), static_cast<UInt_t>(len)}};
+   auto iter = std::lower_bound(fMissCache->fEntries.begin(), fMissCache->fEntries.end(), mcentry);
+
+   if (iter != fMissCache->fEntries.end()) {
+      if (static_cast<UInt_t>(len) > iter->fIO.fLen) {
+         fNMissReadMiss++;
+         return false;
+      }
+      auto offset = iter->fIndex;
+      memcpy(buf, &(fMissCache->fData[offset]), len);
       //printf("Returning data from pos=%ld in miss cache.\n", offset);
       fNMissReadOk++;
       return true;
@@ -858,15 +858,13 @@ bool TTreeCache::CheckMissCache(char *buf, Long64_t pos, int len) {
    }
 
    // OK, we updated the cache with as much information as possible.  Seach again for
-   // the entry we want.  TODO: ProcessMiss could return an offset.
-   iter = std::lower_bound(fEntries->begin(), fEntries->end(), std::make_pair(pos, len), [](const std::pair<ULong64_t, UInt_t> &_a, const std::pair<ULong64_t, UInt_t> &_b) {
-      return _a.first < _b.first;
-   });
-   if (iter != fEntries->end()) {
-      auto buffer_entry_in_cache = iter - fEntries->begin();
-      auto offset = (*fEntryOffsets)[buffer_entry_in_cache];
+   // the entry we want.
+   iter = std::lower_bound(fMissCache->fEntries.begin(), fMissCache->fEntries.end(), mcentry);
+
+   if (iter != fMissCache->fEntries.end()) {
+      auto offset = iter->fIndex;
       //printf("Expecting data at offset %ld in miss cache.\n", offset);
-      memcpy(buf, &((*fMissCache)[offset]), len);
+      memcpy(buf, &(fMissCache->fData[offset]), len);
       fNMissReadOk++;
       return true;
    }
@@ -876,6 +874,10 @@ bool TTreeCache::CheckMissCache(char *buf, Long64_t pos, int len) {
    fNMissReadMiss++;
    return false;
 }
+
+///////////////////////////////////////////////////////////////////////////////
+//// End of methods for miss cache.
+///////////////////////////////////////////////////////////////////////////////
 
 
 ////////////////////////////////////////////////////////////////////////////////
