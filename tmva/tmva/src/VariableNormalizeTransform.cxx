@@ -87,7 +87,7 @@ Bool_t TMVA::VariableNormalizeTransform::PrepareTransformation (const std::vecto
 {
    if (!IsEnabled() || IsCreated()) return kTRUE;
 
-   Log() << kINFO << "Preparing the transformation." << Endl;
+   Log() << kDEBUG << "\tPreparing the transformation." << Endl;
 
    Initialize();
 

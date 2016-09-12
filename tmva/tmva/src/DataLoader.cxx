@@ -285,7 +285,7 @@ void TMVA::DataLoader::AddTree( TTree* tree, const TString& className, Double_t 
    if( fAnalysisType == Types::kNoAnalysisType && DefaultDataSetInfo().GetNClasses() > 2 )
       fAnalysisType = Types::kMulticlass;
 
-   Log() << kINFO << "Add Tree " << tree->GetName() << " of type " << className 
+   Log() << kINFO<< "Add Tree " << tree->GetName() << " of type " << className 
          << " with " << tree->GetEntries() << " events" << Endl;
    DataInput().AddTree( tree, className, weight, cut, tt );
 }
@@ -537,7 +537,7 @@ void TMVA::DataLoader::PrepareTrainingAndTestTree( TCut sigcut, TCut bkgcut, con
    // if event-wise data assignment, add local trees to dataset first
    SetInputTreesFromEventAssignTrees();
 
-   Log() << kINFO << "Preparing trees for training and testing..." << Endl;
+   //Log() << kINFO <<"Preparing trees for training and testing..."<<  Endl;
    AddCut( sigcut, "Signal"  );
    AddCut( bkgcut, "Background" );
 

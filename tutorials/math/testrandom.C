@@ -32,7 +32,7 @@
 ///
 /// Note that this tutorial can be executed in interpreted or compiled mode
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 ///  Root > .x testrandom.C
 ///  Root > .x testrandom.C++
 /// ~~~
@@ -665,8 +665,8 @@ int testRandom3() {
 }
 
 
-void testrandom(double /* scale */ =0.1)
+void testrandom()
 {
-  testRandom3();
-  testAll();
+   testRandom3();
+   testAll();
 }

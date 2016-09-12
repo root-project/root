@@ -5,7 +5,7 @@
 ///
 ///  To run this macro type from CINT command line
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 ///  root [0] gSystem->Load("libFoam.so")
 ///  root [1] .x foam_demo.C+
 /// ~~~
@@ -14,14 +14,6 @@
 ///
 /// \author Stascek Jadach
 
-#if defined(__CINT__) && !defined(__MAKECINT__)
-{
-   std::cout << "Using ACliC to run this macro since it uses custom classes" << std::endl;
-   TString macroFileName = gSystem->UnixPathName(__FILE__);
-   gSystem->CompileMacro(macroFileName, "k");
-   foam_demo();
-}
-#else
 
 #include "Riostream.h"
 #include "TFile.h"
@@ -68,7 +60,7 @@ Int_t foam_demo()
    TFile RootFile("foam_demo.root","RECREATE","histograms");
    long   loop;
    Double_t MCresult,MCerror,MCwt;
-   //=========================================================
+   //-----------------------------------------
    long NevTot   =     50000;   // Total MC statistics
    Int_t  kDim   =         2;   // total dimension
    Int_t  nCells   =     500;   // Number of Cells
@@ -78,12 +70,12 @@ Int_t foam_demo()
    Int_t  OptDrive =       2;   // (D=2) Option, type of Drive =0,1,2 for TrueVol,Sigma,WtMax
    Int_t  EvPerBin =      25;   // Maximum events (equiv.) per bin in buid-up
    Int_t  Chat     =       1;   // Chat level
-   //=========================================================
+   //-----------------------------------------
    TRandom *PseRan   = new TRandom3();  // Create random number generator
    TFoam   *FoamX    = new TFoam("FoamX");   // Create Simulator
    TFoamIntegrand    *rho= new TFDISTR();
    PseRan->SetSeed(4357);
-   //=========================================================
+   //-----------------------------------------
    cout<<"*****   Demonstration Program for Foam version "<<FoamX->GetVersion()<<"    *****"<<endl;
    FoamX->SetkDim(        kDim);      // Mandatory!!!
    FoamX->SetnCells(      nCells);    // optional
@@ -93,21 +85,21 @@ Int_t foam_demo()
    FoamX->SetOptDrive(    OptDrive);  // optional
    FoamX->SetEvPerBin(    EvPerBin);  // optional
    FoamX->SetChat(        Chat);      // optional
-   //===============================
+   //-----------------------------------------
    FoamX->SetRho(rho);
    FoamX->SetPseRan(PseRan);
    FoamX->Initialize(); // Initialize simulator
    FoamX->Write("FoamX");     // Writing Foam on the disk, TESTING PERSISTENCY!!!
-   //===============================
+   //-----------------------------------------
    long nCalls=FoamX->GetnCalls();
    cout << "====== Initialization done, entering MC loop" << endl;
-   //======================================================================
-   //cout<<" About to start MC loop: ";  cin.getline(question,20);
+   //-----------------------------------------
+   /*cout<<" About to start MC loop: ";  cin.getline(question,20);*/
    Double_t *MCvect =new Double_t[kDim]; // vector generated in the MC run
-   //======================================================================
+   //-----------------------------------------
    TH1D  *hst_Wt = new TH1D("hst_Wt" ,  "Main weight of Foam",25,0,1.25);
    hst_Wt->Sumw2();
-   //======================================================================
+   //-----------------------------------------
    for(loop=0; loop<NevTot; loop++){
    /*===============================*/
       FoamX->MakeEvent();           // generate MC event
@@ -124,8 +116,9 @@ Int_t foam_demo()
          cout<<"   loop= "<<loop<<endl;
       }
    }
-   //======================================================================
-   //======================================================================
+
+   //-----------------------------------------
+
    cout << "====== Events generated, entering Finalize" << endl;
 
    hst_Wt->Print("all");
@@ -151,7 +144,6 @@ Int_t foam_demo()
    cout << "***** End of Demonstration Program  *****" << endl;
 
    return 0;
-} // end of Demo
+} 
 
-#endif
 

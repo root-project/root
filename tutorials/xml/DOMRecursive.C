@@ -7,7 +7,7 @@
 /// This example will parse any xml file.
 ///
 /// To run this program
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 /// .x DOMRecursive.C+
 /// ~~~
 ///

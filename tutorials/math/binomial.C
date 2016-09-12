@@ -4,7 +4,7 @@
 /// tutorial illustrating the use of TMath::Binomial
 /// can be run with:
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 /// root > .x binomial.C
 /// root > .x binomial.C+ with ACLIC
 /// ~~~

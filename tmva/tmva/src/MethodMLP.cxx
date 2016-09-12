@@ -436,8 +436,9 @@ void TMVA::MethodMLP::Train(Int_t nEpochs)
    }
    Log() << kDEBUG << "reinitalize learning rates" << Endl;
    InitializeLearningRates();
+   Log() << kHEADER;
    PrintMessage("Training Network");
-
+   Log() << Endl;
    Int_t nEvents=GetNEvents();
    Int_t nSynapses=fSynapses->GetEntriesFast();
    if (nSynapses>nEvents)

@@ -28,9 +28,9 @@ using namespace RooFit ;
 
 void rf708_bphysics()
 {
-   ////////////////////////////////////////////////////
-   // B - D e c a y   w i t h   m i x i n g          //
-   ////////////////////////////////////////////////////
+   // -------------------------------------
+   // B - D e c a y   w i t h   m i x i n g
+   // =====================================
 
    // C o n s t r u c t   p d f 
    // -------------------------
@@ -54,10 +54,10 @@ void rf708_bphysics()
    tagFlav.defineType("B0bar",-1) ;
 
    // Use delta function resolution model
-   RooTruthModel tm("tm","truth model",dt) ;
+   RooTruthModel truthModel("tm","truth model",dt) ;
 
    // Construct Bdecay with mixing
-   RooBMixDecay bmix("bmix","decay",dt,mixState,tagFlav,tau,dm,w,dw,tm,RooBMixDecay::DoubleSided) ;
+   RooBMixDecay bmix("bmix","decay",dt,mixState,tagFlav,tau,dm,w,dw,truthModel,RooBMixDecay::DoubleSided) ;
 
 
 
@@ -102,9 +102,9 @@ void rf708_bphysics()
 
 
 
-   ///////////////////////////////////////////////////////
-   // B - D e c a y   w i t h   C P   v i o l a t i o n //
-   ///////////////////////////////////////////////////////
+   // -------------------------------------------------
+   // B - D e c a y   w i t h   C P   v i o l a t i o n
+   // =================================================
 
    // C o n s t r u c t   p d f 
    // -------------------------
@@ -116,7 +116,7 @@ void rf708_bphysics()
    RooRealVar effR("effR","B0/B0bar reco efficiency ratio",1) ;
 
    // Construct Bdecay with CP violation
-   RooBCPEffDecay bcp("bcp","bcp", dt, tagFlav, tau, dm, w, CPeigen, absLambda, argLambda, effR, dw, tm, RooBCPEffDecay::DoubleSided) ;
+   RooBCPEffDecay bcp("bcp","bcp", dt, tagFlav, tau, dm, w, CPeigen, absLambda, argLambda, effR, dw, truthModel, RooBCPEffDecay::DoubleSided) ;
          
 
 
@@ -156,9 +156,9 @@ void rf708_bphysics()
 
 
 
-   //////////////////////////////////////////////////////////////////////////////////
-   // G e n e r i c   B   d e c a y  w i t h    u s e r   c o e f f i c i e n t s  //
-   //////////////////////////////////////////////////////////////////////////////////
+   // ---------------------------------------------------------------------------
+   // G e n e r i c   B   d e c a y  w i t h    u s e r   c o e f f i c i e n t s
+   // ===========================================================================
 
    // C o n s t r u c t   p d f 
    // -------------------------
@@ -178,7 +178,7 @@ void rf708_bphysics()
    RooFormulaVar fsinh("fsinh","fsinh","@0",RooArgList(Adel));
    
    // Construct generic B decay pdf using above user coefficients
-   RooBDecay bcpg("bcpg","bcpg",dt,tau,DG,RooConst(1),fsinh,fcos,fsin,dm,tm,RooBDecay::DoubleSided);
+   RooBDecay bcpg("bcpg","bcpg",dt,tau,DG,RooConst(1),fsinh,fcos,fsin,dm,truthModel,RooBDecay::DoubleSided);
    
    
    

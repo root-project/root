@@ -69,10 +69,9 @@ void StandardProfileLikelihoodDemo(const char* infile = "",
       bool doHypoTest = optPL.doHypoTest;
       double nullParamValue = optPL.nullValue; 
 
-   /////////////////////////////////////////////////////////////
+   // -------------------------------------------------------
    // First part is just to access a user-defined file
    // or create the standard example file if it doesn't exist
-   ////////////////////////////////////////////////////////////
       const char* filename = "";
       if (!strcmp(infile,"")) {
          filename = "results/example_combined_GaussExample_model.root";
@@ -105,9 +104,9 @@ void StandardProfileLikelihoodDemo(const char* infile = "",
          return;
       }
 
-   /////////////////////////////////////////////////////////////
+   // -------------------------------------------------------
    // Tutorial starts here
-   ////////////////////////////////////////////////////////////
+   // -------------------------------------------------------
 
    // get the workspace out of the file
    RooWorkspace* w = (RooWorkspace*) file->Get(workspaceName);
@@ -129,7 +128,7 @@ void StandardProfileLikelihoodDemo(const char* infile = "",
       return;
    }
 
-   /////////////////////////////////////////////
+   // ---------------------------------------------
    // create and use the ProfileLikelihoodCalculator
    // to find and plot the 95% confidence interval
    // on the parameter of interest as specified

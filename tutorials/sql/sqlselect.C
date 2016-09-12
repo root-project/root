@@ -1,8 +1,7 @@
-#ifndef __CINT__
 #include <TSQLServer.h>
 #include <TSQLResult.h>
 #include <TSQLRow.h>
-#endif
+
 
 void sqlselect()
 {

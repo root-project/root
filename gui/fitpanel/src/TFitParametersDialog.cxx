@@ -28,6 +28,7 @@
 #include "TGNumberEntry.h"
 #include "TGTripleSlider.h"
 #include "TVirtualPad.h"
+#include "TMath.h"
 
 #include <limits>
 
@@ -82,10 +83,15 @@ TFitParametersDialog::TFitParametersDialog(const TGWindow *p,
       fFunc->GetParLimits(i, fPmin[i], fPmax[i]);
       fPval[i] = fFunc->GetParameter(i);
       fPerr[i] = fFunc->GetParError(i);
-      if (TMath::Abs(fPval[i]) > 1E-16)
-         fPstp[i] = 0.3*TMath::Abs(fPval[i]);
-      else
-         fPstp[i] = 0.1;
+      if (fPerr[i] > 1E-16)
+         fPstp[i] = TMath::Power(10, TMath::Floor(TMath::Log10(fPerr[i])));
+      else { 
+         if (TMath::Abs(fPval[i]) > 1.)
+            // if error is zero use as step approx 10% of current value
+            fPstp[i] = TMath::Power(10, TMath::Floor(TMath::Log10(fPval[i])) - 1);
+         else
+            fPstp[i] = 0.1;
+      }
    }
    fParNam = new TGTextEntry*[fNP];
    fParFix = new TGCheckButton*[fNP];
@@ -301,7 +307,7 @@ TFitParametersDialog::TFitParametersDialog(const TGWindow *p,
    f3->AddFrame(fCancel, new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX,2,2,5,5));
    fCancel->SetToolTipText("Close this dialog with no parameter changes");
    fCancel->Connect("Clicked()", "TFitParametersDialog", this, "DoCancel()");
-   *fRetCode = kFPDNoneBounded; // default setting
+   *fRetCode = kFPDNoChange; // default setting
 
    MapSubwindows();
    Resize(GetDefaultSize());
@@ -317,13 +323,19 @@ TFitParametersDialog::TFitParametersDialog(const TGWindow *p,
          fParSld[i]->UnmapWindow();
       } else {
          if (fPmin[i]*fPmax[i] == 0 && fPmin[i] >= fPmax[i]) { //init
-            if (!fPval[i]) {
-               fParMin[i]->SetNumber(-10);
-               fParMax[i]->SetNumber(10);
-            } else {
-               fParMin[i]->SetNumber(-3*TMath::Abs(fPval[i]));
-               fParMax[i]->SetNumber(3*TMath::Abs(fPval[i]));
-            }
+            // round again the values on the percent level
+            Double_t u = TMath::Power(10, TMath::Floor(TMath::Log10(TMath::Abs(fPval[i])) )-2 );
+            Double_t roundVal = int(fPval[i]/ u) * u; 
+            // set min at +/- 100 step size 
+            fParMin[i]->SetNumber( roundVal - 100* fPstp[i]); 
+            fParMax[i]->SetNumber( roundVal + 100* fPstp[i]); 
+            // if (!fPval[i]) {
+            //    fParMin[i]->SetNumber(-10);
+            //    fParMax[i]->SetNumber(10);
+            // } else {
+            //    fParMin[i]->SetNumber(-3*TMath::Abs(fPval[i]));
+            //    fParMax[i]->SetNumber(3*TMath::Abs(fPval[i]));
+            // }
          }
          fParSld[i]->SetRange(fParMin[i]->GetNumber(), fParMax[i]->GetNumber());
          fParSld[i]->SetPosition(fParMin[i]->GetNumber(), fParMax[i]->GetNumber());
@@ -375,8 +387,10 @@ void TFitParametersDialog::CloseWindow()
       new TGMsgBox(fClient->GetRoot(), GetMainFrame(),
                    "Parameters Have Been Changed", txt, kMBIconExclamation,
                    kMBYes | kMBNo | kMBCancel, &ret);
-      if (ret == kMBYes)
+      if (ret == kMBYes) {
          SetParameters();
+         *fRetCode = kFPDChange;
+      }
       else if (ret == kMBNo)
          DoReset();
       else return;
@@ -393,10 +407,10 @@ void TFitParametersDialog::DoCancel()
 {
    if (fHasChanges)
       DoReset();
-   for (Int_t i = 0; i < fNP; i++ ) {
-      if (fParBnd[i]->GetState() == kButtonDown)
-         *fRetCode = kFPDBounded;
-   }
+   // for (Int_t i = 0; i < fNP; i++ ) {
+   //    if (fParBnd[i]->GetState() == kButtonDown)
+   //       *fRetCode = kFPDBounded;
+   // }
    CloseWindow();
 }
 
@@ -459,7 +473,6 @@ void TFitParametersDialog::DoParBound(Bool_t on)
       DrawFunction();
    else if ((fApply->GetState() == kButtonDisabled) && fHasChanges)
       fApply->SetState(kButtonUp);
-   *fRetCode = kFPDBounded;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -591,11 +604,16 @@ void TFitParametersDialog::SetParameters()
 
 void TFitParametersDialog::DoOK()
 {
-   if (fHasChanges)
+   if (fHasChanges) 
       DrawFunction();
 
    SetParameters();
 
+   // we want here to confirm the parameters settings so
+   // it is like having changed them
+   *fRetCode = kFPDChange;
+
+   
    CloseWindow();
 }
 
@@ -687,7 +705,7 @@ void TFitParametersDialog::DoReset()
                                 this, "DoSlider()");
             fParBnd[i]->SetEnabled(kTRUE);
             fParBnd[i]->Connect("Toggled(Bool_t)", "TFitParametersDialog",
-                                this, "DoParBound()");
+                                this, "DoParBound(Bool_t)");
          }
       }
       fParVal[i]->SetNumber(fPval[i]);
@@ -702,7 +720,7 @@ void TFitParametersDialog::DoReset()
    else if ((fApply->GetState() == kButtonDisabled) && fHasChanges)
       fApply->SetState(kButtonUp);
    fHasChanges = kFALSE;
-   *fRetCode = kFPDBounded;
+   *fRetCode = kFPDNoChange;
    fReset->SetState(kButtonDisabled);
 }
 

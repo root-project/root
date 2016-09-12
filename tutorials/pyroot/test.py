@@ -1,5 +1,6 @@
 ## \file
 ## \ingroup tutorial_pyroot
+## \notebook -nodraw
 ##
 ## \macro_code
 ##

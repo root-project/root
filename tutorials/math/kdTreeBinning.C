@@ -91,7 +91,6 @@ void kdTreeBinning() {
       z[i] = (Double_t) h2pol->GetBinContent(h2pol->FindBin(smp[i], smp[DATASZ + i]));
 
    TGraph2D *g = new TGraph2D(DATASZ, smp, &smp[DATASZ], &z[0]);
-   gStyle->SetPalette(1);
    g->SetMarkerStyle(20);
 
    c1->cd(3);

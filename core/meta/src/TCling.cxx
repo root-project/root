@@ -1889,7 +1889,7 @@ static int HandleInterpreterException(cling::MetaProcessor* metaProcessor,
    }
    catch (cling::InvalidDerefException& ex)
    {
-      Info("Handle", "%s.\n%s", ex.what(), "Execution of your code was aborted.");
+      Error("HandleInterpreterException", "%s.\n%s", ex.what(), "Execution of your code was aborted.");
       ex.diagnose();
    }
    return 0;
@@ -3435,16 +3435,16 @@ void TCling::CreateListOfBaseClasses(TClass *cl) const
    TClingClassInfo *tci = (TClingClassInfo *)cl->GetClassInfo();
    if (!tci) return;
    TClingBaseClassInfo t(fInterpreter, tci);
-   // This is put here since TClingBaseClassInfo can trigger a
-   // TClass::ResetCaches, which deallocates cl->fBase
-   cl->fBase = new TList;
+   TList *listOfBase = new TList;
    while (t.Next()) {
       // if name cannot be obtained no use to put in list
       if (t.IsValid() && t.Name()) {
          TClingBaseClassInfo *a = new TClingBaseClassInfo(t);
-         cl->fBase->Add(new TBaseClass((BaseClassInfo_t *)a, cl));
+         listOfBase->Add(new TBaseClass((BaseClassInfo_t *)a, cl));
       }
    }
+   // Now that is complete, publish it.
+   cl->fBase = listOfBase;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

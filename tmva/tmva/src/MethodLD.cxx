@@ -475,7 +475,7 @@ void TMVA::MethodLD::ProcessOptions()
 
 void TMVA::MethodLD::PrintCoefficients( void ) 
 {
-   Log() << kINFO << "Results for LD coefficients:" << Endl;
+   Log() << kHEADER << "Results for LD coefficients:" << Endl;
 
    if (GetTransformationHandler().GetTransformationList().GetSize() != 0) {
       Log() << kINFO << "NOTE: The coefficients must be applied to TRANFORMED variables" << Endl;

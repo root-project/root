@@ -2927,6 +2927,7 @@ int FinalizeStreamerInfoWriting(cling::Interpreter &interp, bool writeEmptyRootP
                            "#include \"TBaseClass.h\"\n"
                            "#include \"TListOfDataMembers.h\"\n"
                            "#include \"TListOfEnums.h\"\n"
+                           "#include \"TListOfEnumsWithLock.h\"\n"
                            "#include \"TDataMember.h\"\n"
                            "#include \"TEnum.h\"\n"
                            "#include \"TEnumConstant.h\"\n"

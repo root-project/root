@@ -185,10 +185,12 @@ if (LLVM_COMPILER_IS_GCC_COMPATIBLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-strict-aliasing")
   endif ()
 
-  check_cxx_compiler_flag("-Werror -Wnested-anon-types" CXX_SUPPORTS_NO_NESTED_ANON_TYPES_FLAG)
-  if( CXX_SUPPORTS_NO_NESTED_ANON_TYPES_FLAG )
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-nested-anon-types" )
-  endif()
+  foreach (check_flag "-Wno-nested-anon-types" "-Wno-covered-switch-default" "-Wno-unused-local-typedef")
+    check_cxx_compiler_flag(${check_flag} CXX_SUPPORTS_SOME_FLAG)
+    if (CXX_SUPPORTS_SOME_FLAG)
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${check_flag}")
+    endif ()
+  endforeach ()
 endif ()
 
 string(REPLACE "-fvisibility=hidden" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
@@ -356,13 +358,48 @@ if (NOT LLVM_INSTALL_TOOLCHAIN_ONLY)
     )
 endif()
 
-add_definitions( -D_GNU_SOURCE
-  -DCLING_VERSION=${CLING_VERSION}
-  -DCLING_INCLUDE_PATHS="${CMAKE_INSTALL_PREFIX}/include:${CMAKE_CURRENT_SOURCE_DIR}/include:${CMAKE_CURRENT_SOURCE_DIR}/../clang/include:${CMAKE_CURRENT_SOURCE_DIR}/../../include" )
+add_definitions( -D_GNU_SOURCE -DCLING_VERSION=${CLING_VERSION})
 
 option(CLING_INCLUDE_TESTS
        "Generate build targets for the Cling unit tests."
        ${LLVM_INCLUDE_TESTS})
+
+if (NOT WIN32)
+  set(cling_path_delim ":")
+else()
+  set(cling_path_delim ";")
+endif()
+
+#Allow user to prepend to list via cmake -DCLING_INCLUDE_PATHS=
+if(DEFINED ROOT_BINARY_DIR)
+  set(cling_include_deflt "\
+${CMAKE_INSTALL_PREFIX}/include${cling_path_delim}${CMAKE_CURRENT_SOURCE_DIR}/include${cling_path_delim}\
+${CMAKE_CURRENT_BINARY_DIR}/../llvm/src/tools/clang/include${cling_path_delim}\
+${CMAKE_CURRENT_SOURCE_DIR}/../llvm/src/tools/clang/include${cling_path_delim}\
+${CMAKE_CURRENT_BINARY_DIR}/../llvm/src/include${cling_path_delim}\
+${CMAKE_CURRENT_SOURCE_DIR}/../llvm/src/include"
+  )
+else()
+  set(cling_include_deflt "\
+${CMAKE_INSTALL_PREFIX}/include${cling_path_delim}\
+${CMAKE_CURRENT_SOURCE_DIR}/include${cling_path_delim}\
+${CMAKE_CURRENT_SOURCE_DIR}/../clang/include${cling_path_delim}\
+${CMAKE_CURRENT_SOURCE_DIR}/../../include"
+  )
+endif()
+
+if (WIN32)
+ set(cling_include_deflt "${cling_include_deflt}${cling_path_delim}\
+${CMAKE_BINARY_DIR}/include${cling_path_delim}\
+${CMAKE_BINARY_DIR}/tools/clang/include"
+)
+endif()
+
+if(NOT CLING_INCLUDE_PATHS)
+ set(CLING_INCLUDE_PATHS "${cling_include_deflt}")
+else()
+ set(CLING_INCLUDE_PATHS "${CLING_INCLUDE_PATHS}${cling_path_delim}${cling_include_deflt}")
+endif()
 
 # All targets below may depend on all tablegen'd files.
 get_property(CLANG_TABLEGEN_TARGETS GLOBAL PROPERTY CLANG_TABLEGEN_TARGETS)

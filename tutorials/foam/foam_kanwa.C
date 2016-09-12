@@ -3,7 +3,7 @@
 /// \notebook -js
 /// This program can be execute from the command line as folows:
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 ///      root -l foam_kanwa.C
 /// ~~~
 ///
@@ -33,7 +33,7 @@ Double_t Camel2(Int_t nDim, Double_t *Xarg){
    Dist +=exp(-(sqr(x-1./3) +sqr(y-1./3))/GamSq)/GamSq/TMath::Pi();
    Dist +=exp(-(sqr(x-2./3) +sqr(y-2./3))/GamSq)/GamSq/TMath::Pi();
    return 0.5*Dist;
-}// Camel2
+}
 //_____________________________________________________________________________
 
 Int_t foam_kanwa(){
@@ -79,5 +79,4 @@ Int_t foam_kanwa(){
    cout<<"--- kanwa ended ---"<<endl;
 
    return 0;
-}//kanwa
-
+}

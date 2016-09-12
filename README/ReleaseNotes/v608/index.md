@@ -114,6 +114,7 @@ Add a new mode for `TClass::SetCanSplit` (2) which indicates that this class and
 ## I/O Libraries
 
 * Support I/O of std::unique_ptrs and STL collections thereof.
+* Support I/O of std::array.
 * Custom streamers need to #include TBuffer.h explicitly (see [section Core Libraries](#core-libs))
 * Check and flag short reads as errors in the xroot plugins. This fixes [ROOT-3341].
 * Added support for AWS temporary security credentials to TS3WebFile by allowing the security token to be given.
@@ -229,6 +230,43 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 * `TColor::GetFreeColorIndex()` allows to make sure the new color is created with an
   unused color index.
 * In `TLegend::SetHeader` the new option `C` allows to center the title.
+* New method `ChangeLabel` in `TGaxis` and `TAxis`allowing to a fine tuning of
+  individual labels attributes. All the attributes can be changed and even the
+  label text itself. Example:
+  ~~~ {.cpp}
+  {
+     c1 = new TCanvas("c1","Examples of Gaxis",10,10,900,500);
+     c1->Range(-6,-0.1,6,0.1);
+     TGaxis *axis1 = new TGaxis(-5.5,0.,5.5,0.,0.0,100,510,"");
+     axis1->SetName("axis1");
+     axis1->SetTitle("Axis Title");
+     axis1->SetTitleSize(0.05);
+     axis1->SetTitleColor(kBlue);
+     axis1->SetTitleFont(42);
+     axis1->ChangeLabel(1,-1,-1,-1,2);
+     axis1->ChangeLabel(3,-1,0.);
+     axis1->ChangeLabel(5,30.,-1,0);
+     axis1->ChangeLabel(6,-1,-1,-1,3,-1,"6th label");
+     axis1->Draw();
+  }
+  ~~~
+  Being available in `TAxis`, this method allow to change a label on and histogram
+  plot like:
+  ~~~ {.cpp}
+   hpx->Draw();
+   hpx->GetXaxis()->ChangeLabel(5,-1,-1,-1,kRed,-1,"Zero");
+  ~~~
+* New class `TAxisModLab`: a  TAxis helper class used to store the modified labels.
+* `TPie` the format parameter set by `SetPercentFormat` was ignored.
+  (reported [here](https://sft.its.cern.ch/jira/browse/ROOT-8294))
+* Improvements in the histogram plotting option `TEXT`: In case several histograms
+  are drawn on top ot each other (using option `SAME`), the text can be shifted
+  using `SetBarOffset()`. It specifies an offset for the  text position in each
+  cell, in percentage of the bin width.
+* `TGaxis::PaintAxis()` might caused a correctness problem in multithreaded
+   context when handling optionTime with `%F`. This was reported
+   [here](https://sft.its.cern.ch/jira/browse/ROOT-8309). The fixed was suggested
+   by Philippe Gras (philippe.gras@cea.fr).
 
 ## 3D Graphics Libraries
 
@@ -236,6 +274,18 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
   specified by `SetMaximum()` and `SetMinimum()`.
 * In `TMarker3DBox` when a box marker has a size equal to zero it is not painted.
   Painting it produced a dot with the X11 backend.
+* New class `TRatioPlot` implemented by Paul Gessinger <hello@paulgessinger.com>.
+  Class for displaying ratios, differences and fit residuals.
+
+  `TRatioPlot` has two constructors, one which accepts two histograms, and is responsible
+  for setting up the calculation of ratios and differences. This calculation is in part
+  delegated to `TEfficiency`. A single option can be given as a parameter, that is
+  used to determine which procedure is chosen. The remaining option string is then
+  passed through to the calculation, if applicable.
+
+  Several examples illustrate how to use this class. See:
+  `$ROOTSYS/tutorials/hist/ratioplot?.C`
+* New option "I" allowing to draw TGraph with invisible axis (used by `TRatioPlot`);
 
 ## New histogram drawing options
 

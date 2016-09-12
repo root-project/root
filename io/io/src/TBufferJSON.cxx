@@ -185,7 +185,17 @@ TBufferJSON::~TBufferJSON()
 
 TString TBufferJSON::ConvertToJSON(const TObject *obj, Int_t compact, const char *member_name)
 {
-   return ConvertToJSON(obj, (obj ? obj->IsA() : 0), compact, member_name);
+   TClass *clActual = 0;
+   void *ptr = (void *) obj;
+
+   if (obj!=0) {
+      clActual = TObject::Class()->GetActualClass(obj);
+      if (!clActual) clActual = TObject::Class(); else
+      if (clActual != TObject::Class())
+         ptr = (void *) ((Long_t) obj - clActual->GetBaseClassOffset(TObject::Class()));
+   }
+
+   return ConvertToJSON(ptr, clActual, compact, member_name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -978,7 +988,7 @@ void TBufferJSON::JsonStreamCollection(TCollection *col, const TClass *)
          sopt.Append("\"");
       }
 
-      JsonWriteObject(obj, obj->IsA());
+      WriteObjectAny(obj, TObject::Class());
 
       first = kFALSE;
    }

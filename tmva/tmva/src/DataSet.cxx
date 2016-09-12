@@ -765,7 +765,8 @@ TTree* TMVA::DataSet::GetTree( Types::ETreeType type )
       tree->Fill();
    }
 
-   Log() << kINFO << Form("Dataset[%s] : ",fdsi->GetName()) << "Created tree '" << tree->GetName() << "' with " << tree->GetEntries() << " events" << Endl;
+   Log() << kHEADER //<< Form("[%s] : ",fdsi.GetName()) 
+	 << "Created tree '" << tree->GetName() << "' with " << tree->GetEntries() << " events" << Endl << Endl;
 
    SetCurrentType(savedType);
 

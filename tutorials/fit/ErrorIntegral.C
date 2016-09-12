@@ -8,7 +8,7 @@
 ///
 /// run the macro doing:
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 ///  .x ErrorIntegral.C
 /// ~~~
 ///

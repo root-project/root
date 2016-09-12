@@ -10840,7 +10840,13 @@ ExprResult Sema::CreateBuiltinBinOp(SourceLocation OpLoc,
             ASTContext& C = getASTContext();
             TypeSourceInfo* TrivialTSI
               = C.getTrivialTypeSourceInfo(VD->getType());
-            DeduceAutoType(TrivialTSI, RHSExpr, ResTy);
+            if (DeduceAutoType(TrivialTSI, RHSExpr, ResTy) != DAR_Succeeded) {
+               Diag(VD->getLocation(), diag::err_auto_var_requires_init)
+                  << VD->getDeclName() << VD->getType();
+               VD->setInvalidDecl();
+
+               return ExprError();
+            }
             VD->setTypeSourceInfo(C.getTrivialTypeSourceInfo(ResTy));
             VD->setType(ResTy);
             VD->setInit(RHSExpr);

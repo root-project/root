@@ -28,14 +28,34 @@ endif()
 #---Check for Zlib ------------------------------------------------------------------
 if(NOT builtin_zlib)
   message(STATUS "Looking for ZLib")
-  find_Package(ZLIB)
+  find_package(ZLIB)
   if(NOT ZLIB_FOUND)
     message(STATUS "Zlib not found. Switching on builtin_zlib option")
     set(builtin_zlib ON CACHE BOOL "" FORCE)
    endif()
 endif()
 if(builtin_zlib)
-  set(ZLIB_LIBRARY "" CACHE PATH "" FORCE)
+  message(STATUS "Building zlib included in ROOT itself")
+  set(zlib_sources
+    ${CMAKE_SOURCE_DIR}/core/zip/src/adler32.c
+    ${CMAKE_SOURCE_DIR}/core/zip/src/compress.c
+    ${CMAKE_SOURCE_DIR}/core/zip/src/crc32.c
+    ${CMAKE_SOURCE_DIR}/core/zip/src/deflate.c
+    ${CMAKE_SOURCE_DIR}/core/zip/src/gzclose.c
+    ${CMAKE_SOURCE_DIR}/core/zip/src/gzlib.c
+    ${CMAKE_SOURCE_DIR}/core/zip/src/gzread.c
+    ${CMAKE_SOURCE_DIR}/core/zip/src/gzwrite.c
+    ${CMAKE_SOURCE_DIR}/core/zip/src/infback.c
+    ${CMAKE_SOURCE_DIR}/core/zip/src/inffast.c
+    ${CMAKE_SOURCE_DIR}/core/zip/src/inflate.c
+    ${CMAKE_SOURCE_DIR}/core/zip/src/inftrees.c
+    ${CMAKE_SOURCE_DIR}/core/zip/src/trees.c
+    ${CMAKE_SOURCE_DIR}/core/zip/src/uncompr.c
+    ${CMAKE_SOURCE_DIR}/core/zip/src/zutil.c)
+  add_library(ZLIB STATIC ${zlib_sources})
+  set_target_properties(ZLIB PROPERTIES COMPILE_FLAGS "-fPIC -I${CMAKE_SOURCE_DIR}/core/zip/inc")
+  set(ZLIB_LIBRARY " " CACHE PATH "" FORCE)
+  set(ZLIB_LIBRARIES ZLIB)
 endif()
 
 #---Check for Unuran ------------------------------------------------------------------
@@ -304,9 +324,13 @@ if(builtin_afterimage)
     message(STATUS "Building AfterImage library included in ROOT itself")
     if(JPEG_FOUND)
       set(_jpeginclude --with-jpeg-includes=${JPEG_INCLUDE_DIR})
+    else()
+      set(_jpeginclude --with-builtin-jpeg)
     endif()
     if(PNG_FOUND)
       set(_pnginclude  --with-png-includes=${PNG_PNG_INCLUDE_DIR})
+    else()
+       set(_pnginclude  --with-builtin-png)
     endif()
     if(TIFF_FOUND)
       set(_tiffinclude --with-tiff-includes=${TIFF_INCLUDE_DIR})
@@ -326,7 +350,9 @@ if(builtin_afterimage)
       AFTERIMAGE
       DOWNLOAD_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/graf2d/asimage/src/libAfterImage AFTERIMAGE
       INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CONFIGURE_COMMAND ./configure --prefix <INSTALL_DIR> --with-ttf ${_ttf_include} --with-afterbase=no 
+      CONFIGURE_COMMAND ./configure --prefix <INSTALL_DIR>
+                        --libdir=<INSTALL_DIR>/lib 
+                        --with-ttf ${_ttf_include} --with-afterbase=no 
                         --without-svg --disable-glx ${_after_mmx} 
                         --with-builtin-ungif  --with-jpeg ${_jpeginclude} 
                         --with-png ${_pnginclude} ${_tiffinclude}
@@ -807,10 +833,16 @@ if(xrootd)
     message(STATUS "Looking for XROOTD")
     find_package(XROOTD)
     if(NOT XROOTD_FOUND)
-      message(STATUS "XROOTD not found. Set environment variable XRDSYS to point to your XROOTD installation")
-      message(STATUS "                  Alternatively, you can also enable the option 'builtin_xrootd' to build XROOTD  internally'")
-      message(STATUS "                  For the time being switching OFF 'xrootd' option")
-      set(xrootd OFF CACHE BOOL "" FORCE)
+      if(fail-on-missing)
+        message(FATAL_ERROR "XROOTD not found. Set environment variable XRDSYS to point to your XROOTD installation, "
+                            "or inlcude the installation of XROOTD in the CMAKE_PREFIX_PATH. "
+                            "Alternatively, you can also enable the option 'builtin_xrootd' to build XROOTD internally")
+      else()
+        message(STATUS "XROOTD not found. Set environment variable XRDSYS to point to your XROOTD installation")
+        message(STATUS "                  Alternatively, you can also enable the option 'builtin_xrootd' to build XROOTD internally")
+        message(STATUS "                  For the time being switching OFF 'xrootd' option")
+        set(xrootd OFF CACHE BOOL "" FORCE)
+      endif()
     else()
       set(xrootd_versionnum ${xrdversnum})  # variable used internally
     endif()
@@ -1127,23 +1159,24 @@ if(imt)
       set(builtin_tbb ON CACHE BOOL "" FORCE)
     endif()
   endif()
-  if(builtin_tbb)
-    set(tbb_version 44_20160128)
-    ExternalProject_Add(
-      TBB
-      URL ${repository_tarfiles}/tbb${tbb_version}oss_src.tgz
-      INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CONFIGURE_COMMAND ""
-      BUILD_COMMAND make CPLUS=${CMAKE_CXX_COMPILER} CONLY=${CMAKE_C_COMPILER}
-      INSTALL_COMMAND ${CMAKE_COMMAND} -Dinstall_dir=<INSTALL_DIR> -Dsource_dir=<SOURCE_DIR>
-                                       -P ${CMAKE_SOURCE_DIR}/cmake/scripts/InstallTBB.cmake
-      INSTALL_COMMAND ""
-      BUILD_IN_SOURCE 1
-      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
-    )
-    set(TBB_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include)
-    set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX})
-  endif()
+endif()  
+if(builtin_tbb)
+  set(tbb_version 44_20160128)
+  ExternalProject_Add(
+    TBB
+    URL ${repository_tarfiles}/tbb${tbb_version}oss_src.tgz
+    INSTALL_DIR ${CMAKE_BINARY_DIR}
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND make CPLUS=${CMAKE_CXX_COMPILER} CONLY=${CMAKE_C_COMPILER}
+    INSTALL_COMMAND ${CMAKE_COMMAND} -Dinstall_dir=<INSTALL_DIR> -Dsource_dir=<SOURCE_DIR>
+                                      -P ${CMAKE_SOURCE_DIR}/cmake/scripts/InstallTBB.cmake
+    INSTALL_COMMAND ""
+    BUILD_IN_SOURCE 1
+    LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
+  )
+  set(TBB_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include)
+  set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX})
+  install(FILES ${CMAKE_BINARY_DIR}/lib/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX} DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
 endif()
 
 #---Check for OCC--------------------------------------------------------------------
@@ -1199,6 +1232,15 @@ if(vc OR builtin_vc)
     set(Vc_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}Vc${CMAKE_STATIC_LIBRARY_SUFFIX})
     set(vc ON CACHE BOOL "" FORCE)
   endif()
+endif()
+
+
+#---Check for CUDA and BLAS ---------------------------------------------------------
+if(tmva)
+  message(STATUS "Looking for CUDA eventually needed by TMVA")
+  find_package(CUDA QUIET)
+  message(STATUS "Looking for BLAS eventually needed by TMVA")
+  find_package(BLAS QUIET)
 endif()
 
 #---Report non implemented options---------------------------------------------------

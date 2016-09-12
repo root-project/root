@@ -34,7 +34,8 @@ Int_t mp101_fillNtuples()
    // No nuisance for batch execution
    gROOT->SetBatch();
 
-   // Perform the operation sequentially ---------------------------------------
+   //---------------------------------------
+   // Perform the operation sequentially 
 
    // Create a random generator and and Ntuple to hold the numbers
    TRandom3 rndm(1);
@@ -44,7 +45,8 @@ Int_t mp101_fillNtuples()
    randomNumbers.Write();
    ofile.Close();
 
-   // We now go MP! ------------------------------------------------------------
+   //---------------------------------------
+   // We now go MP!
 
    // We define our work item
    auto workItem = [](UInt_t workerID) {

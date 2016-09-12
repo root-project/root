@@ -83,13 +83,16 @@ namespace Math {
       }
 
 
-
       double operator() (){
          return fEngine();
       }
 
-      unsigned int Integer() {
+      uint64_t Integer() {
          return fEngine.IntRndm();
+      }
+
+      static uint64_t MaxInt()  {
+         return Engine::Max();
       }
 
       Engine & Rng() {
@@ -230,6 +233,7 @@ namespace Math {
 
 #include "Math/MixMaxEngine.h"
 #include "Math/MersenneTwisterEngine.h"
+#include "Math/StdRandomEngines.h"
 
 namespace ROOT {
 namespace Math {
@@ -238,7 +242,8 @@ namespace Math {
 
    typedef   Random<ROOT::Math::MixMaxEngine>            RandomMixMax;
    typedef   Random<ROOT::Math::MersenneTwisterEngine>   RandomMT19937;
-
+   typedef   Random<ROOT::Math::StdEngine<std::mt19937_64>> RandomStdMT64;
+   typedef   Random<ROOT::Math::StdEngine<std::ranlux48>> RandomStdRanlux48;
 
 } // namespace Math
 } // namespace ROOT

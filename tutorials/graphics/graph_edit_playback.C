@@ -3,7 +3,7 @@
 /// This macro plays a recorded ROOT session showing how to perform various
 /// interactive graphical editing operations. The initial graphics setup
 /// was created using the following root commands:
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 ///     TRecorder *t = new TRecorder();
 ///     t->Start("graphedit_playback.root");
 ///     gStyle->SetPalette(1);

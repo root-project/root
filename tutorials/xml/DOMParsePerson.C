@@ -8,7 +8,7 @@
 /// A DTD validation will be run on this example.
 ///
 /// To run this program
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 /// .x DOMParsePerson.C+
 /// ~~~
 ///

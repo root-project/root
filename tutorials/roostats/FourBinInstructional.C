@@ -14,7 +14,7 @@
 ///    we observe noff events and expect tau*b events.
 /// Note the significance of tau.  In the background only case:
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 ///    tau ~ <expectation off> / <expectation on>
 /// ~~~
 ///
@@ -29,7 +29,7 @@
 ///   - In the bottom left we observe noffbar events and expect tau bbar events
 /// Note again we have:
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 ///    tau ~ <expecation off bar> / <expectation on bar>
 /// ~~~
 ///
@@ -42,7 +42,7 @@
 /// The "bar" measurements typically have more events (& smaller relative errors).
 /// If we choose
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 /// <expectation noffbar> = tau * rho * <expectation noonbar>
 /// ~~~
 ///
@@ -52,7 +52,7 @@
 /// product will have an error `~1/sqrt(b))`, the contours will be more ameanable
 /// to numerical techniques.  Thus, here we choose to define:
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 ///    tau := <expecation off bar> / (<expectation on bar>)
 ///    rho := <expecation off> / (<expectation on> * tau)
 ///
@@ -80,7 +80,7 @@
 ///
 /// In the example, the initial values of the parameters are:
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 ///   - s    = 40
 ///   - b    = 100
 ///   - tau  = 5
@@ -91,7 +91,7 @@
 ///
 /// and in the toy dataset:
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 ///    - non = 139
 ///    - noff = 528
 ///    - nonbar = 993
@@ -105,7 +105,7 @@
 ///
 /// This can be seen below.
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 ///             GLOBAL      b    bbar   rho      s     tau
 ///         b  0.96820   1.000  0.191 -0.942 -0.762 -0.209
 ///      bbar  0.91191   0.191  1.000  0.000 -0.146 -0.912
@@ -188,7 +188,7 @@ void FourBinInstructional(bool doBayesian=false, bool doFeldmanCousins=false, bo
    wspace->factory("Uniform::prior_nuis({b,bbar,tau, rho})");
    wspace->factory("PROD::prior(prior_poi,prior_nuis)");
 
-   ///////////////////////////////////////////
+   // ----------------------------------
    // Control some interesting variations
    // define parameers of interest
    // for 1-d plots
@@ -206,7 +206,7 @@ void FourBinInstructional(bool doBayesian=false, bool doFeldmanCousins=false, bo
    // inspect workspace
    //  wspace->Print();
 
-   ////////////////////////////////////////////////////////////
+   // ----------------------------------------------------------
    // Generate toy data
    // generate toy data assuming current value of the parameters
    // import into workspace.
@@ -215,7 +215,7 @@ void FourBinInstructional(bool doBayesian=false, bool doFeldmanCousins=false, bo
    //  data->Print("v");
    wspace->import(*data);
 
-   /////////////////////////////////////////////////////
+   // ----------------------------------
    // Now the statistical tests
    // model config
    ModelConfig* modelConfig = new ModelConfig("FourBins");
@@ -227,7 +227,7 @@ void FourBinInstructional(bool doBayesian=false, bool doFeldmanCousins=false, bo
    wspace->import(*modelConfig);
    wspace->writeToFile("FourBin.root");
 
-   //////////////////////////////////////////////////
+   // -------------------------------------------------
    // If you want to see the covariance matrix uncomment
    //  wspace->pdf("model")->fitTo(*data);
 
@@ -285,7 +285,7 @@ void FourBinInstructional(bool doBayesian=false, bool doFeldmanCousins=false, bo
    if(doMCMC)
       mcInt = mc.GetInterval();
 
-   //////////////////////////////////////
+   // ----------------------------------
    // Make some  plots
    TCanvas* c1 = (TCanvas*) gROOT->Get("c1");
    if(!c1)
@@ -321,7 +321,7 @@ void FourBinInstructional(bool doBayesian=false, bool doFeldmanCousins=false, bo
       mcPlot.Draw();
    }
 
-   ////////////////////////////////////
+   // ----------------------------------
    // querry intervals
    cout << "Profile Likelihood interval on s = [" <<
       plInt->LowerLimit( *wspace->var("s") ) << ", " <<

@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_io
-/// \notebook
+/// \notebook -nodraw
 /// Merge only part of the content of a set of files.
 /// This macro demonstrates how to merge only a part of the content of a set
 /// of input files, specified via the interface.

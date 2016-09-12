@@ -14,7 +14,7 @@
 ///
 /// To execute the macro type in:
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 /// root[0] .x  mathcoreGenVector.C
 /// ~~~
 ///
@@ -879,10 +879,6 @@ int testRotation() {
 
 void mathcoreGenVector() {
 
-   #ifdef __CINT__
-   gSystem->Load("libMathCore");
-   using namespace ROOT::Math ;
-   #endif
 
    testVector3D();
    testPoint3D();

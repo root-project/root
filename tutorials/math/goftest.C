@@ -218,12 +218,12 @@ void goftest() {
 
    // a) User input PDF 
    ROOT::Math::Functor1D f(&landau);
-   double min = 3*TMath::MinElement(nEvents3, sample3);
-   double max = 3*TMath::MaxElement(nEvents3, sample3);
-   ROOT::Math::GoFTest* goftest_3a = new ROOT::Math::GoFTest(nEvents3, sample3, f,  ROOT::Math::GoFTest::kPDF, min,max);  // need to specify am interval
+   double minimum = 3*TMath::MinElement(nEvents3, sample3);
+   double maximum = 3*TMath::MaxElement(nEvents3, sample3);
+   ROOT::Math::GoFTest* goftest_3a = new ROOT::Math::GoFTest(nEvents3, sample3, f,  ROOT::Math::GoFTest::kPDF, minimum,maximum);  // need to specify am interval
    // b) User input CDF 
    ROOT::Math::Functor1D fI(&TMath::LandauI);
-   ROOT::Math::GoFTest* goftest_3b = new ROOT::Math::GoFTest(nEvents3, sample3, fI, ROOT::Math::GoFTest::kCDF,min,max);
+   ROOT::Math::GoFTest* goftest_3b = new ROOT::Math::GoFTest(nEvents3, sample3, fI, ROOT::Math::GoFTest::kCDF,minimum,maximum);
 
 
    // Returning the p-value for the Anderson-Darling test statistic 

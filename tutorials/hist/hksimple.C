@@ -27,7 +27,6 @@ void hksimple()
 {
 // Create a new canvas.
    c1 = new TCanvas("c1","Dynamic Filling Example",200,10,600,900);
-   c1->SetFillColor(42);
 
 // Create a normal histogram and two TH1K histograms
    TH1 *hpx[3];
@@ -38,7 +37,6 @@ void hksimple()
    Int_t j;
    for (j=0;j<3;j++) {
       c1->cd(j+1);
-      gPad->SetFrameFillColor(33);
       hpx[j]->SetFillColor(48);
       hpx[j]->Draw();
    }

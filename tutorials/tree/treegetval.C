@@ -19,7 +19,7 @@
 /// with GetVal with a length corresponding to the parameter `fEstimate`.
 /// By default fEstimate=1000000 and can be modified
 /// via TTree::SetEstimate. To keep in memory all the results use:
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 ///   tree->SetEstimate(-1);
 /// ~~~
 /// SetEstimate should be called if the expected number of selected rows

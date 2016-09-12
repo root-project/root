@@ -158,7 +158,7 @@ void rs401d_FeldmanCousins(bool doFeldmanCousins=false, bool doMCMC = true)
    RooMsgService::instance().setStreamStatus(2,kFALSE);
 
 
-   //////////////////////////////////////////////
+   // --------------------------------------
    // n events in data to data, simply sum of sig+bkg
    Int_t nEventsData = bkgNorm.getVal()+sigNorm.getVal();
    cout << "generate toy data with nEvents = " << nEventsData << endl;
@@ -168,7 +168,7 @@ void rs401d_FeldmanCousins(bool doFeldmanCousins=false, bool doMCMC = true)
    // create a toy dataset
    RooDataSet* data = model.generate(RooArgSet(E), nEventsData);
 
-   /////////////////////////////////////////////
+   // --------------------------------------
    // make some plots
    TCanvas* dataCanvas = new TCanvas("dataCanvas");
    dataCanvas->Divide(2,2);
@@ -206,8 +206,8 @@ void rs401d_FeldmanCousins(bool doFeldmanCousins=false, bool doMCMC = true)
 
 
 
-   //////////////////////////////////////////////////////////
-   //////// show use of Feldman-Cousins utility in RooStats
+   // --------------------------------------------------------------
+   // show use of Feldman-Cousins utility in RooStats
    // set the distribution creator, which encodes the test statistic
    RooArgSet parameters(deltaMSq, sinSq2theta);
    RooWorkspace* w = new RooWorkspace();
@@ -228,15 +228,15 @@ void rs401d_FeldmanCousins(bool doFeldmanCousins=false, bool doMCMC = true)
       interval = fc.GetInterval();
 
 
-   ///////////////////////////////////////////////////////////////////
-   ///////// show use of ProfileLikeihoodCalculator utility in RooStats
+   // ---------------------------------------------------------
+   // show use of ProfileLikeihoodCalculator utility in RooStats
    RooStats::ProfileLikelihoodCalculator plc(*data, modelConfig);
    plc.SetTestSize(.1);
 
    ConfInterval* plcInterval = plc.GetInterval();
 
-   ///////////////////////////////////////////////////////////////////
-   ///////// show use of MCMCCalculator utility in RooStats
+   // --------------------------------------------
+   // show use of MCMCCalculator utility in RooStats
    MCMCInterval* mcInt = NULL;
 
    if (doMCMC) {
@@ -260,7 +260,7 @@ void rs401d_FeldmanCousins(bool doFeldmanCousins=false, bool doMCMC = true)
          mcmcWatch.Stop();
          mcmcWatch.Print();
    }
-   ////////////////////////////////////////////
+   // -------------------------------
    // make plot of resulting interval
 
    dataCanvas->cd(4);

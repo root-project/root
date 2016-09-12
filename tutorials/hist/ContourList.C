@@ -63,7 +63,6 @@ TCanvas *ContourList(){
       }
    }
 
-   gStyle->SetPalette(1);
    gStyle->SetOptStat(0);
    gStyle->SetTitleW(0.99);
    gStyle->SetTitleH(0.08);

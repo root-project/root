@@ -75,6 +75,8 @@ while ! [ "x$1" = "x" ]; do
     case $1 in
         -Wno*) echo "$1" >> $cppflags.tmp ;;
         -W*) ;;
+        -x*) ;;
+        -ax*) ;;
         *) echo "$1" >> $cppflags.tmp ;;
     esac
     shift

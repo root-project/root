@@ -65,10 +65,9 @@ void StandardBayesianMCMCDemo(const char* infile = "",
                               const char* modelConfigName = "ModelConfig",
                               const char* dataName = "obsData"){
 
-   /////////////////////////////////////////////////////////////
+   // -------------------------------------------------------
    // First part is just to access a user-defined file
    // or create the standard example file if it doesn't exist
-   ////////////////////////////////////////////////////////////
 
 
 
@@ -106,9 +105,9 @@ void StandardBayesianMCMCDemo(const char* infile = "",
 
 
 
-   /////////////////////////////////////////////////////////////
+   // -------------------------------------------------------
    // Tutorial starts here
-   ////////////////////////////////////////////////////////////
+   // -------------------------------------------------------
 
    // get the workspace out of the file
    RooWorkspace* w = (RooWorkspace*) file->Get(workspaceName);
@@ -146,7 +145,7 @@ void StandardBayesianMCMCDemo(const char* infile = "",
 
    // this proposal function seems fairly robust
    SequentialProposal sp(0.1);
-   /////////////////////////////////////////////
+   // -------------------------------------------------------
    // create and use the MCMCCalculator
    // to find and plot the 95% credible interval
    // on the parameter of interest as specified

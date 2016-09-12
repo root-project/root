@@ -84,6 +84,7 @@ public:
 
   void print(llvm::raw_ostream& out);
   void forgetGlobal(llvm::GlobalValue* GV);
+  void forgetDecl(const GlobalDecl& GD);
   llvm::Module* StartModule(const std::string& ModuleName,
                             llvm::LLVMContext& C,
                             const CodeGenOptions& CGO);

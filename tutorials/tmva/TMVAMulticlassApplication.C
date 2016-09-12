@@ -1,11 +1,16 @@
-/**********************************************************************************
- * Project   : TMVA - a Root-integrated toolkit for multivariate data analysis    *
- * Package   : TMVA                                                               *
- * Root Macro: TMVAMulticlassApplication                                          *
- *                                                                                *
- * This macro provides a simple example on how to use the trained multiclass      *
- * classifiers within an analysis module                                          *
- **********************************************************************************/
+/// \file
+/// \ingroup tutorial_tmva
+/// \notebook -nodraw
+/// This macro provides a simple example on how to use the trained multiclass
+/// classifiers within an analysis module
+/// - Project   : TMVA - a Root-integrated toolkit for multivariate data analysis
+/// - Package   : TMVA
+/// - Root Macro: TMVAMulticlassApplication
+///                                                                              
+/// \macro_output
+/// \macro_code
+/// \author Andreas Hoecker
+
 
 #include <cstdlib>
 #include <iostream>
@@ -32,7 +37,7 @@ void TMVAMulticlassApplication( TString myMethodList = "" )
    TMVA::Tools::Instance();
    
    //---------------------------------------------------------------
-   // default MVA methods to be trained + tested
+   // Default MVA methods to be trained + tested
    std::map<std::string,int> Use;
    Use["MLP"]             = 1;
    Use["BDTG"]            = 1;

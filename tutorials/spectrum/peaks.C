@@ -12,7 +12,7 @@
 ///
 /// To execute this example, do:
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 ///  root > .x peaks.C  (generate 10 peaks by default)
 ///  root > .x peaks.C++ (use the compiler)
 ///  root > .x peaks.C++(30) (generates 30 peaks)
@@ -21,7 +21,7 @@
 /// To execute only the first part of the script (without fitting)
 /// specify a negative value for the number of peaks, eg
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 ///  root > .x peaks.C(-20)
 /// ~~~
 ///

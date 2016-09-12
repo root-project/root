@@ -183,7 +183,7 @@ TMVA::Factory::Factory( TString jobName, TFile* theTargetFile, TString theOption
    else if( analysisType == "multiclass" )     fAnalysisType = Types::kMulticlass;
    else if( analysisType == "auto" )           fAnalysisType = Types::kNoAnalysisType;
 
-   Greetings();
+//   Greetings();
 }
 
 
@@ -365,10 +365,11 @@ TMVA::MethodBase* TMVA::Factory::BookMethod( TMVA::DataLoader *loader, TString t
 		  << Endl;
 	  }
    } 
+   
 
-   Log() << kINFO << "Booking method: " << gTools().Color("bold") << methodTitle 
-         << gTools().Color("reset")<<" DataSet Name: "<<gTools().Color("bold")<<loader->GetName()
-	 << gTools().Color("reset") << Endl;
+     Log() << kHEADER << "Booking method: " << gTools().Color("bold") << methodTitle 
+     // << gTools().Color("reset")<<" DataSet Name: "<<gTools().Color("bold")<<loader->GetName()
+	   << gTools().Color("reset") << Endl << Endl;
 
    // interpret option string with respect to a request for boosting (i.e., BostNum > 0)
    Int_t    boostNum = 0;
@@ -394,7 +395,7 @@ TMVA::MethodBase* TMVA::Factory::BookMethod( TMVA::DataLoader *loader, TString t
    }
    else {
       // boosted classifier, requires a specific definition, making it transparent for the user
-      Log() << "Boost Number is " << boostNum << " > 0: train boosted classifier" << Endl;
+     Log() << kDEBUG <<"Boost Number is " << boostNum << " > 0: train boosted classifier" << Endl;
       im = ClassifierFactory::Instance().Create( std::string("Boost"),
                                                  fJobName,
                                                  methodTitle,
@@ -561,8 +562,8 @@ void TMVA::Factory::WriteDataInformation(DataSetInfo&     fDataSetInfo)
       trfs.push_back(new TMVA::TransformationHandler(fDataSetInfo, "Factory"));
       TString trfS = (*trfsDefIt);
 
-      Log() << kINFO << Endl;
-      Log() << kINFO << "current transformation string: '" << trfS.Data() << "'" << Endl;
+      //Log() << kINFO << Endl;
+      Log() << kDEBUG << "current transformation string: '" << trfS.Data() << "'" << Endl;
       TMVA::CreateVariableTransforms( trfS, 
                                                   fDataSetInfo,
                                                   *(trfs.back()),
@@ -830,8 +831,8 @@ void TMVA::Factory::TrainAllMethods()
    }
 
    // here the training starts
-   Log() << kINFO << " " << Endl;
-   Log() << kINFO << "Train all methods for " 
+   //Log() << kINFO << " " << Endl;
+   Log() << kDEBUG << "Train all methods for " 
          << (fAnalysisType == Types::kRegression ? "Regression" : 
              (fAnalysisType == Types::kMulticlass ? "Multiclass" : "Classification") ) << " ..." << Endl;
      
@@ -871,17 +872,17 @@ void TMVA::Factory::TrainAllMethods()
 	    continue;
 	  }
 
-	  Log() << kINFO << "Train method: " << mva->GetMethodName() << " for "
+	  Log() << kHEADER << "Train method: " << mva->GetMethodName() << " for "
 		<< (fAnalysisType == Types::kRegression ? "Regression" :
-		    (fAnalysisType == Types::kMulticlass ? "Multiclass classification" : "Classification")) << Endl;
+		    (fAnalysisType == Types::kMulticlass ? "Multiclass classification" : "Classification")) << Endl << Endl;
           mva->TrainMethod();
-          Log() << kINFO << "Training finished" << Endl;
+          Log() << kHEADER << "Training finished" << Endl << Endl;
       }
 
       if (fAnalysisType != Types::kRegression) {
 
 	  // variable ranking
-	  Log() << Endl;
+	  //Log() << Endl;
 	  Log() << kINFO << "Ranking input variables (method specific)..." << Endl;
 	  for (itrMethod = methods->begin(); itrMethod != methods->end(); itrMethod++) {
 	    MethodBase* mva = dynamic_cast<MethodBase*>(*itrMethod);
@@ -899,11 +900,12 @@ void TMVA::Factory::TrainAllMethods()
       // delete all methods and recreate them from weight file - this ensures that the application
       // of the methods (in TMVAClassificationApplication) is consistent with the results obtained
       // in the testing
-      Log() << Endl;
+      //Log() << Endl;
       if (fModelPersistence) {
 
-	  Log() << kINFO << "=== Destroy and recreate all methods via weight files for testing ===" << Endl << Endl;
-	  if(!IsSilentFile()) RootBaseDir()->cd();
+      Log() << kHEADER << "=== Destroy and recreate all methods via weight files for testing ===" << Endl << Endl;
+
+      if(!IsSilentFile())RootBaseDir()->cd();
 
 	  // iterate through all booked methods
 	  for (UInt_t i=0; i<methods->size(); i++) {
@@ -954,7 +956,7 @@ void TMVA::Factory::TrainAllMethods()
 
 void TMVA::Factory::TestAllMethods()
 {
-   Log() << kINFO << "Test all methods..." << Endl;
+   Log() << kDEBUG << "Test all methods..." << Endl;
 
    // don't do anything if no method booked
    if (fMethodsMap.empty()) {
@@ -974,9 +976,9 @@ void TMVA::Factory::TestAllMethods()
 	  MethodBase* mva = dynamic_cast<MethodBase*>(*itrMethod);
 	  if(mva==0) continue;
 	  Types::EAnalysisType analysisType = mva->GetAnalysisType();
-	  Log() << kINFO << "Test method: " << mva->GetMethodName() << " for "
+	  Log() << kHEADER << "Test method: " << mva->GetMethodName() << " for "
 		<< (analysisType == Types::kRegression ? "Regression" :
-		    (analysisType == Types::kMulticlass ? "Multiclass classification" : "Classification")) << " performance" << Endl;
+		    (analysisType == Types::kMulticlass ? "Multiclass classification" : "Classification")) << " performance" << Endl << Endl;
 	  mva->AddOutput( Types::kTesting, analysisType );
       }
    }
@@ -1055,7 +1057,7 @@ void TMVA::Factory::EvaluateAllVariables(DataLoader *loader, TString options )
 
 void TMVA::Factory::EvaluateAllMethods( void )
 {
-   Log() << kINFO << "Evaluate all methods..." << Endl;
+   Log() << kDEBUG << "Evaluate all methods..." << Endl;
 
    // don't do anything if no method booked
    if (fMethodsMap.empty()) {
@@ -1159,7 +1161,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
 	    nmeth_used[0]++;
 	    if(!IsSilentFile()) 
 	    {
-		Log() << kINFO << "Write evaluation histograms to file" << Endl;
+		Log() << kDEBUG << "\tWrite evaluation histograms to file" << Endl;
 		theMethod->WriteEvaluationHistosToFile(Types::kTesting);
 		theMethod->WriteEvaluationHistosToFile(Types::kTraining);
 	    }
@@ -1169,7 +1171,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
 	    Log() << kINFO << "Evaluate multiclass classification method: " << theMethod->GetMethodName() << Endl;
 	    if(!IsSilentFile()) 
 	    {
-		Log() << kINFO << "Write evaluation histograms to file" << Endl;
+		Log() << kDEBUG << "\tWrite evaluation histograms to file" << Endl;
 		theMethod->WriteEvaluationHistosToFile(Types::kTesting);
 		theMethod->WriteEvaluationHistosToFile(Types::kTraining);
 	    }
@@ -1181,7 +1183,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
 	  } 
 	  else {
 	    
-	    Log() << kINFO << "Evaluate classifier: " << theMethod->GetMethodName() << Endl;
+	    Log() << kHEADER << "Evaluate classifier: " << theMethod->GetMethodName() << Endl << Endl;
 	    isel = (theMethod->GetMethodTypeName().Contains("Variable")) ? 1 : 0;
 	  
 	    // perform the evaluation
@@ -1211,7 +1213,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
 
 	    if(!IsSilentFile()) 
 	    {
-              Log() << kINFO << "Write evaluation histograms to file" << Endl;
+              Log() << kDEBUG << "\tWrite evaluation histograms to file" << Endl;
 	      theMethod->WriteEvaluationHistosToFile(Types::kTesting);
 	      theMethod->WriteEvaluationHistosToFile(Types::kTraining);
 	    }
@@ -1484,7 +1486,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
 	  Log() << kINFO << " Indicated by \"_T\" are the corresponding \"truncated\" quantities ob-" << Endl;
 	  Log() << kINFO << " tained when removing events deviating more than 2sigma from average.)" << Endl;
 	  Log() << kINFO << hLine << Endl;
-	  Log() << kINFO << "DataSet Name:        MVA Method:        <Bias>   <Bias_T>    RMS    RMS_T  |  MutInf MutInf_T" << Endl;
+	  //Log() << kINFO << "DataSet Name:        MVA Method:        <Bias>   <Bias_T>    RMS    RMS_T  |  MutInf MutInf_T" << Endl;
 	  Log() << kINFO << hLine << Endl;
 
 	  for (Int_t i=0; i<nmeth_used[0]; i++) {
@@ -1492,12 +1494,12 @@ void TMVA::Factory::EvaluateAllMethods( void )
 	    if(theMethod==0) continue;
 
 	    Log() << kINFO << Form("%-20s %-15s:%#9.3g%#9.3g%#9.3g%#9.3g  |  %#5.3f  %#5.3f",
-				    theMethod->fDataSetInfo.GetName(), 
-				    (const char*)mname[0][i], 
-				    biastest[0][i], biastestT[0][i], 
-				    rmstest[0][i], rmstestT[0][i], 
-				    minftest[0][i], minftestT[0][i] )
-		  << Endl;
+	    			    theMethod->fDataSetInfo.GetName(), 
+	    			    (const char*)mname[0][i], 
+	    			    biastest[0][i], biastestT[0][i], 
+	    			    rmstest[0][i], rmstestT[0][i], 
+	    			    minftest[0][i], minftestT[0][i] )
+	    	  << Endl;
 	  }
 	  Log() << kINFO << hLine << Endl;
 	  Log() << kINFO << Endl;
@@ -1511,12 +1513,12 @@ void TMVA::Factory::EvaluateAllMethods( void )
 	    MethodBase* theMethod = dynamic_cast<MethodBase*>((*methods)[i]);
 	    if(theMethod==0) continue;
 	    Log() << kINFO << Form("%-20s %-15s:%#9.3g%#9.3g%#9.3g%#9.3g  |  %#5.3f  %#5.3f",
-				    theMethod->fDataSetInfo.GetName(), 
-				    (const char*)mname[0][i], 
-				    biastrain[0][i], biastrainT[0][i], 
-				    rmstrain[0][i], rmstrainT[0][i], 
-				    minftrain[0][i], minftrainT[0][i] )
-		  << Endl;
+	    			    theMethod->fDataSetInfo.GetName(), 
+	    			    (const char*)mname[0][i], 
+	    			    biastrain[0][i], biastrainT[0][i], 
+	    			    rmstrain[0][i], rmstrainT[0][i], 
+	    			    minftrain[0][i], minftrainT[0][i] )
+	    	  << Endl;
 	  }
 	  Log() << kINFO << hLine << Endl;
 	  Log() << kINFO << Endl;
@@ -1551,15 +1553,18 @@ void TMVA::Factory::EvaluateAllMethods( void )
       else {
 	    if(fROC)
 	    {
-                Log().EnableOutput();
-	        gConfig().SetSilent(kFALSE);
-	        Log() << Endl;
+        Log().EnableOutput();
+	    gConfig().SetSilent(kFALSE);
+	    Log() << Endl;
 		TString hLine = "-------------------------------------------------------------------------------------------------------------------";
 		Log() << kINFO << "Evaluation results ranked by best signal efficiency and purity (area)" << Endl;
 		Log() << kINFO << hLine << Endl;
-		Log() << kINFO << "DataSet              MVA              Signal efficiency at bkg eff.(error):                | Sepa-    Signifi- "   << Endl;
-		Log() << kINFO << "Name:                Method:          @B=0.01    @B=0.10    @B=0.30    ROC-integ    ROCCurve| ration:  cance:   "   << Endl;
-		Log() << kINFO << hLine << Endl;
+		Log() << kINFO << "DataSet       MVA                       "   << Endl;
+        Log() << kINFO << "Name:         Method:          ROC-integ"   << Endl;
+        
+// 		Log() << kDEBUG << "DataSet              MVA              Signal efficiency at bkg eff.(error):                | Sepa-    Signifi- "   << Endl;
+// 		Log() << kDEBUG << "Name:                Method:          @B=0.01    @B=0.10    @B=0.30    ROC-integ    ROCCurve| ration:  cance:   "   << Endl;
+		Log() << kDEBUG << hLine << Endl;
 		for (Int_t k=0; k<2; k++) {
 		  if (k == 1 && nmeth_used[k] > 0) {
 		      Log() << kINFO << hLine << Endl;
@@ -1582,24 +1587,32 @@ void TMVA::Factory::EvaluateAllMethods( void )
 		      
 		        if (sep[k][i] < 0 || sig[k][i] < 0) {
 			  // cannot compute separation/significance -> no MVA (usually for Cuts)
-			  
-			  Log() << kINFO << Form("%-20s %-15s: %#1.3f(%02i)  %#1.3f(%02i)  %#1.3f(%02i)    %#1.3f       %#1.3f | --       --",
+			     Log() << kINFO << Form("%-13s %-15s: %#1.3f", 
 						  itrMap->first.Data(), 
 						  (const char*)mname[k][i], 
-						  eff01[k][i], Int_t(1000*eff01err[k][i]), 
-						  eff10[k][i], Int_t(1000*eff10err[k][i]), 
-						  eff30[k][i], Int_t(1000*eff30err[k][i]), 
-						  effArea[k][i],fROCalcValue) << Endl;
+						  effArea[k][i]) << Endl;
+			  
+//               Log() << kDEBUG << Form("%-20s %-15s: %#1.3f(%02i)  %#1.3f(%02i)  %#1.3f(%02i)    %#1.3f       %#1.3f | --       --",
+// 			  			  itrMap->first.Data(), 
+// 			  			  (const char*)mname[k][i], 
+// 			  			  eff01[k][i], Int_t(1000*eff01err[k][i]), 
+// 			  			  eff10[k][i], Int_t(1000*eff10err[k][i]), 
+// 			  			  eff30[k][i], Int_t(1000*eff30err[k][i]), 
+// 			  			  effArea[k][i],fROCalcValue) << Endl;
 			}
 			else {
-			  Log() << kINFO << Form("%-20s %-15s: %#1.3f(%02i)  %#1.3f(%02i)  %#1.3f(%02i)    %#1.3f       %#1.3f | %#1.3f    %#1.3f",
+			     Log() << kINFO << Form("%-13s %-15s: %#1.3f", 
 						  itrMap->first.Data(), 
 						  (const char*)mname[k][i], 
-						  eff01[k][i], Int_t(1000*eff01err[k][i]), 
-						  eff10[k][i], Int_t(1000*eff10err[k][i]), 
-						  eff30[k][i], Int_t(1000*eff30err[k][i]), 
-						  effArea[k][i],fROCalcValue, 
-						  sep[k][i], sig[k][i]) << Endl;
+						  fROCalcValue) << Endl;
+//    			  Log() << kDEBUG << Form("%-20s %-15s: %#1.3f(%02i)  %#1.3f(%02i)  %#1.3f(%02i)    %#1.3f       %#1.3f | %#1.3f    %#1.3f",
+// 			  			  itrMap->first.Data(), 
+// 			  			  (const char*)mname[k][i], 
+// 			  			  eff01[k][i], Int_t(1000*eff01err[k][i]), 
+// 			  			  eff10[k][i], Int_t(1000*eff10err[k][i]), 
+// 			  			  eff30[k][i], Int_t(1000*eff30err[k][i]), 
+// 			  			  effArea[k][i],fROCalcValue, 
+// 			  			  sep[k][i], sig[k][i]) << Endl;
 			}
 			if (fROCCurve) delete fROCCurve;
 		  }
@@ -1631,6 +1644,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
 		}
 		Log() << kINFO << hLine << Endl;
 		Log() << kINFO << Endl; 
+		
 		if (gTools().CheckForSilentOption( GetOptions() )) Log().InhibitOutput();
 	    }//end fROC
 	  }
@@ -2038,11 +2052,14 @@ TH1F* TMVA::Factory::GetImportance(const int nbits,std::vector<Double_t> importa
   return vih1;
 }
 
-float TMVA::Factory::CrossValidate(DataLoader * loader, Types::EMVA theMethod, TString methodTitle, const char *theOption, bool optParams, int NumFolds, bool remakeDataSet, float * rocIntegrals)
+TMVA::CrossValidationResult TMVA::Factory::CrossValidate(DataLoader * loader, Types::EMVA theMethod, TString methodTitle, const char *theOption, bool optParams, int NumFolds, bool remakeDataSet, float * rocIntegrals)
 {
-
-   //bool optParams = true;
-
+   Bool_t mstatus=fModelPersistence;
+   Bool_t sstatus=fSilentFile;
+   fModelPersistence=kTRUE;
+   fSilentFile=kTRUE;
+   
+   TMVA::CrossValidationResult fResults;
    if(remakeDataSet){
       //loader->ValidationKFoldSet();
       loader->MakeKFoldDataSet(NumFolds);
@@ -2096,20 +2113,20 @@ float TMVA::Factory::CrossValidate(DataLoader * loader, Types::EMVA theMethod, T
             optionsString += it->second;
             if(it!=--foldParameters.at(t).end()){ optionsString += ":"; }
          }
-         parameterPerformance.push_back(CrossValidate(loader, theMethod, methodTitle, optionsString, false, false));
+         auto result=CrossValidate(loader, theMethod, methodTitle, optionsString, false, false);
+         parameterPerformance.push_back(result.GetROCAverage());
       }
    }
 
-   std::vector<float> ROCs;
 
    if(!optParams){
     
-      for(Int_t j=0; j<NumFolds; ++j){
+      for(Int_t fold=0; fold<NumFolds; ++fold){
          TString foldTitle = methodTitle;
          foldTitle += "_fold";
-         foldTitle += j+1;
+         foldTitle += fold+1;
       
-         loader->PrepareTrainingAndTestTree(j, TMVA::Types::kTesting);
+         loader->PrepareTrainingAndTestTree(fold, TMVA::Types::kTesting);
       
          TMVA::DataLoader * seedloader = new TMVA::DataLoader(foldTitle);
       
@@ -2124,31 +2141,27 @@ float TMVA::Factory::CrossValidate(DataLoader * loader, Types::EMVA theMethod, T
          TrainAllMethods();
          TestAllMethods();
          EvaluateAllMethods();
-      
-         ROCs.push_back(GetROCIntegral(seedloader->GetName(), methodTitle));
-      
+         fResults.SetROCValue(fold,GetROCIntegral(seedloader->GetName(), methodTitle));
+         auto  gr=GetROCCurve(seedloader->GetName(), methodTitle, true);
+         
+         gr->SetLineColor(fold+1);
+         gr->SetLineWidth(2);
+         gr->SetTitle(seedloader->GetName());
+        
+         fResults.GetROCCurves()->Add(gr);
+         
          TMVA::MethodBase * smethod = dynamic_cast<TMVA::MethodBase*>(fMethodsMap[seedloader->GetName()][0][0]);
          TMVA::ResultsClassification * sresults = (TMVA::ResultsClassification*)smethod->Data()->GetResults(smethod->GetMethodName(), Types::kTesting, Types::kClassification);
          sresults->Clear("");
          sresults->Delete();
-         delete sresults;
-         fgTargetFile->cd();
-         fgTargetFile->Delete(seedloader->GetName());
-         fgTargetFile->Delete(Form("%s;1",seedloader->GetName()));
-         fgTargetFile->Flush();
-         gSystem->Exec(Form("rm -rf %s", seedloader->GetName()));
-      
+         delete sresults;      
          this->DeleteAllMethods();
       
          fMethodsMap.clear();
       }
    }
   
-   float sumFOM = 0.0;
-
-   for(UInt_t k=0; k<ROCs.size(); ++k){
-      sumFOM += ROCs.at(k);
-   }
+   auto rocvalues=fResults.GetROCValues();
 
    if(optParams){
       for(UInt_t t=0; t<parameterPerformance.size(); ++t){
@@ -2156,13 +2169,14 @@ float TMVA::Factory::CrossValidate(DataLoader * loader, Types::EMVA theMethod, T
       }
    }
    else{
-      for(UInt_t l=0; l<ROCs.size(); ++l){
-         if (rocIntegrals) rocIntegrals[l] = ROCs.at(l);
-         std::cout << "Fold " << l+1 << " ROCIntegral: " << ROCs.at(l) << std::endl;
+      for(UInt_t l=0; l<rocvalues.size(); ++l){
+         if (rocIntegrals) rocIntegrals[l] = rocvalues[l];
+         std::cout << "Fold " << l+1 << " ROCIntegral: " << rocvalues[l] << std::endl;
       }
-      std::cout << "Average ROCIntegral: " << sumFOM/(double)NumFolds << std::endl;
+      std::cout << "Average ROCIntegral: " << fResults.GetROCAverage() << std::endl;
    }
+   fModelPersistence=mstatus;
+   fSilentFile=sstatus;
 
-   return sumFOM/(double)NumFolds;
-  
+  return fResults;
 }

@@ -235,7 +235,7 @@ void TMVA::MethodKNN::MakeKNN()
 
 void TMVA::MethodKNN::Train()
 {
-   Log() << kINFO << "<Train> start..." << Endl;
+   Log() << kHEADER << "<Train> start..." << Endl;
 
    if (IsNormalised()) {
       Log() << kINFO << "Input events are normalized - setting ScaleFrac to 0" << Endl;

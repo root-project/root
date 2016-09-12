@@ -8,6 +8,7 @@
 ///
 /// \author  Olivier Couet
 
+void manyaxis()
 {
    c1 = new TCanvas("c1","Examples of Gaxis",10,10,700,500);
 

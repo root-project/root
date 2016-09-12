@@ -52,10 +52,9 @@ void StandardFeldmanCousinsDemo(const char* infile = "",
                                 const char* modelConfigName = "ModelConfig",
                                 const char* dataName = "obsData"){
 
-   /////////////////////////////////////////////////////////////
+   // -------------------------------------------------------
    // First part is just to access a user-defined file
    // or create the standard example file if it doesn't exist
-   ////////////////////////////////////////////////////////////
    const char* filename = "";
    if (!strcmp(infile,"")) {
       filename = "results/example_combined_GaussExample_model.root";
@@ -89,9 +88,9 @@ void StandardFeldmanCousinsDemo(const char* infile = "",
    }
 
 
-   /////////////////////////////////////////////////////////////
+   // -------------------------------------------------------
    // Tutorial starts here
-   ////////////////////////////////////////////////////////////
+   // -------------------------------------------------------
 
    // get the workspace out of the file
    RooWorkspace* w = (RooWorkspace*) file->Get(workspaceName);
@@ -113,7 +112,7 @@ void StandardFeldmanCousinsDemo(const char* infile = "",
       return;
    }
 
-   /////////////////////////////////////////////
+   // -------------------------------------------------------
    // create and use the FeldmanCousins tool
    // to find and plot the 95% confidence interval
    // on the parameter of interest as specified
@@ -155,7 +154,7 @@ void StandardFeldmanCousinsDemo(const char* infile = "",
       interval->LowerLimit(*firstPOI) << ", "<<
       interval->UpperLimit(*firstPOI) <<"] "<<endl;
 
-   //////////////////////////////////////////////
+   // ---------------------------------------------
    // No nice plots yet, so plot the belt by hand
 
    // Ask the calculator which points were scanned

@@ -19,6 +19,7 @@
 
 
 #pragma link C++ class TAxis-;
+#pragma link C++ class TAxisModLab+;
 #pragma link C++ class TBinomialEfficiencyFitter+;
 #pragma link C++ class TFormula-;
 #pragma link C++ class ROOT::v5::TFormula-;

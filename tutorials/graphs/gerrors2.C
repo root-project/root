@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_graphs
-/// \notebook
+/// \notebook -js
 /// Draw two graphs with error bars
 ///
 /// \macro_image
@@ -10,17 +10,15 @@
 
 void gerrors2() {
    TCanvas *c1 = new TCanvas("c1","gerrors2",200,10,700,500);
-   c1->SetFillColor(42);
    c1->SetGrid();
 
-      // draw a frame to define the range
+   // draw a frame to define the range
    TH1F *hr = c1->DrawFrame(-0.4,0,1.2,12);
    hr->SetXTitle("X title");
    hr->SetYTitle("Y title");
-   c1->GetFrame()->SetFillColor(21);
    c1->GetFrame()->SetBorderSize(12);
 
-      // create first graph
+   // create first graph
    const Int_t n1 = 10;
    Double_t xval1[]  = {-0.22, 0.05, 0.25, 0.35, 0.5, 0.61,0.7,0.85,0.89,0.95};
    Double_t yval1[]  = {1,2.9,5.6,7.4,9,9.6,8.7,6.3,4.5,1};
@@ -31,7 +29,7 @@ void gerrors2() {
    gr1->SetMarkerStyle(21);
    gr1->Draw("LP");
 
-      // create second graph
+   // create second graph
    const Int_t n2 = 10;
    Float_t xval2[]  = {-0.28, 0.005, 0.19, 0.29, 0.45, 0.56,0.65,0.80,0.90,1.01};
    Float_t yval2[]  = {0.82,3.86,7,9,10,10.55,9.64,7.26,5.42,2};

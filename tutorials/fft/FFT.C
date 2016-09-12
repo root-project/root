@@ -47,7 +47,8 @@
 
 void FFT()
 {
-   //********* Histograms ********//
+   // Histograms
+   // =========
    //prepare the canvas for drawing
    TCanvas *myc = new TCanvas("myc", "Fast Fourier Transform", 800, 600);
    myc->SetFillColor(45);
@@ -153,7 +154,8 @@ void FFT()
    delete fft_back;
    fft_back=0;
 
-//********* Data array - same transform ********//
+// Data array - same transform
+// ===========================
 
    //Allocate an array big enough to hold the transform output
    //Transform output in 1d contains, for a transform of size N,
@@ -169,12 +171,12 @@ void FFT()
 
    //Make our own TVirtualFFT object (using option "K")
    //Third parameter (option) consists of 3 parts:
-   //-transform type:
+   //- transform type:
    // real input/complex output in our case
-   //-transform flag:
+   //- transform flag:
    // the amount of time spent in planning
    // the transform (see TVirtualFFT class description)
-   //-to create a new TVirtualFFT object (option "K") or use the global (default)
+   //- to create a new TVirtualFFT object (option "K") or use the global (default)
    Int_t n_size = n+1;
    TVirtualFFT *fft_own = TVirtualFFT::FFT(1, &n_size, "R2C ES K");
    if (!fft_own) return;

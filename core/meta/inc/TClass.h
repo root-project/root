@@ -179,7 +179,7 @@ private:
    mutable TObjArray  *fStreamerInfo;           //Array of TVirtualStreamerInfo
    mutable ConvSIMap_t fConversionStreamerInfo; //Array of the streamer infos derived from another class.
    TList              *fRealData;        //linked list for persistent members including base classes
-   TList              *fBase;            //linked list for base classes
+   std::atomic<TList*> fBase;            //linked list for base classes
    TListOfDataMembers *fData;            //linked list for data members
 
    std::atomic<TListOfEnums*> fEnums;        //linked list for the enums

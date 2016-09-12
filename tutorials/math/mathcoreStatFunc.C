@@ -5,7 +5,7 @@
 /// The macro shows four of them with
 /// respect to their two variables. In order to run the macro type:
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 ///   root [0] .x mathcoreStatFunc.C
 /// ~~~
 ///

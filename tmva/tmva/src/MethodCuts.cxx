@@ -507,7 +507,7 @@ void TMVA::MethodCuts::PrintCuts( Double_t effS ) const
 
    for (UInt_t i=0; i<maxLine; i++) Log() << "-";
    Log() << Endl;
-   Log() << kINFO << "Cut values for requested signal efficiency: " << trueEffS << Endl;
+   Log() << kHEADER << "Cut values for requested signal efficiency: " << trueEffS << Endl;
    Log() << kINFO << "Corresponding background efficiency       : " << fEffBvsSLocal->GetBinContent( ibin ) << Endl;
    if (GetTransformationHandler().GetNumOfTransformations() == 1) {
       Log() << kINFO << "Transformation applied to input variables : \"" 
@@ -1229,10 +1229,10 @@ void  TMVA::MethodCuts::ReadWeightsFromStream( std::istream& istr )
 
    // print some information
    if (fFitMethod == kUseMonteCarlo) {
-      Log() << kINFO << "Read cuts optimised using sample of MC events" << Endl;
+      Log() << kWARNING << "Read cuts optimised using sample of MC events" << Endl;
    }
    else if (fFitMethod == kUseMonteCarloEvents) {
-      Log() << kINFO << "Read cuts optimised using sample of MC events" << Endl;
+      Log() << kWARNING << "Read cuts optimised using sample of MC events" << Endl;
    }
    else if (fFitMethod == kUseGeneticAlgorithm) {
       Log() << kINFO << "Read cuts optimised using Genetic Algorithm" << Endl;

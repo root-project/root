@@ -69,7 +69,7 @@ public:
 
 protected:
    virtual Int_t     Read(const char *name) { return TKey::Read(name); }
-   void              StoreObject(const void* obj, const TClass* cl);
+   void              StoreObject(const void* obj, const TClass* cl, Bool_t check_tobj = kFALSE);
    void              StoreKeyAttributes();
    TXMLEngine*       XMLEngine();
 

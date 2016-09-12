@@ -8,11 +8,11 @@
 ///   More details on the various functions or parameters for these functions
 ///   can be obtained in an interactive ROOT session with:
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 ///    Root > TMinuit *minuit = new TMinuit(10);
 /// ~~~
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 ///    Root > minuit->mnhelp("*")  to see the list of possible keywords
 ///    Root > minuit->mnhelp("SET") explains most parameters
 /// ~~~

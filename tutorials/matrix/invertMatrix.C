@@ -12,11 +12,11 @@
 ///
 /// This macro can be executed with Cling or ACLIC
 ///  - via the interpretor, do
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 ///    root > .x invertMatrix.C
 /// ~~~
 ///  - via ACLIC
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 ///    root > gSystem->Load("libMatrix");
 ///    root > .x invertMatrix.C+
 /// ~~~
@@ -48,21 +48,21 @@ void invertMatrix(Int_t msize=6)
 
    TMatrixD H_square = THilbertMatrixD(msize,msize);
 
-   //  1. InvertFast(Double_t *det=0)
-   //   It is identical to Invert() for sizes > 6 x 6 but for smaller sizes, the
-   //   inversion is performed according to Cramer's rule by explicitly calculating
-   //   all Jacobi's sub-determinants . For instance for a 6 x 6 matrix this means:
-   //    # of 5 x 5 determinant : 36
-   //    # of 4 x 4 determinant : 75
-   //    # of 3 x 3 determinant : 80
-   //    # of 2 x 2 determinant : 45    (see TMatrixD/FCramerInv.cxx)
+   // ### 1. InvertFast(Double_t *det=0)
+   // It is identical to Invert() for sizes > 6 x 6 but for smaller sizes, the
+   // inversion is performed according to Cramer's rule by explicitly calculating
+   // all Jacobi's sub-determinants . For instance for a 6 x 6 matrix this means:
+   // \# of 5 x 5 determinant : 36
+   // \# of 4 x 4 determinant : 75
+   // \# of 3 x 3 determinant : 80
+   // \# of 2 x 2 determinant : 45    (see TMatrixD/FCramerInv.cxx)
    //
-   //    The only "quality" control in this process is to check whether the 6 x 6
-   //    determinant is unequal 0 . But speed gains are significant compared to Invert() ,
-   //    up to an order of magnitude for sizes <= 4 x 4
+   // The only "quality" control in this process is to check whether the 6 x 6
+   // determinant is unequal 0 . But speed gains are significant compared to Invert() ,
+   // up to an order of magnitude for sizes <= 4 x 4
    //
-   //    The inversion is done "in place", so the original matrix will be overwritten
-   //    If a pointer to a Double_t is supplied the determinant is calculated
+   // The inversion is done "in place", so the original matrix will be overwritten
+   // If a pointer to a Double_t is supplied the determinant is calculated
    //
 
    std::cout << "1. Use .InvertFast(&det)" <<std::endl;
@@ -82,28 +82,28 @@ void invertMatrix(Int_t msize=6)
    std::cout << "  Maximum off-diagonal = " << U1_max_offdiag << std::endl;
    std::cout << "  Determinant          = " << det1 << std::endl;
 
-   // 2. Invert(Double_t *det=0)
-   //   Again the inversion is performed in place .
-   //   It consists out of a sequence of calls to the decomposition classes . For instance
-   //   for the general dense matrix TMatrixD the LU decomposition is invoked:
-   //    - The matrix is decomposed using a scheme according to Crout which involves
-   //      "implicit partial pivoting", see for instance Num. Recip. (we have also available
-   //      a decomposition scheme that does not the scaling and is therefore even slightly
-   //      faster but less stable)
-   //      With each decomposition, a tolerance has to be specified . If this tolerance
-   //      requirement is not met, the matrix is regarded as being singular. The value
-   //      passed to this decomposition, is the data member fTol of the matrix . Its
-   //      default value is DBL_EPSILON, which is defined as the smallest number so that
-   //      1+DBL_EPSILON > 1
-   //    - The last step is a standard forward/backward substitution .
+   // ### 2. Invert(Double_t *det=0)
+   // Again the inversion is performed in place .
+   // It consists out of a sequence of calls to the decomposition classes . For instance
+   // for the general dense matrix TMatrixD the LU decomposition is invoked:
+   // - The matrix is decomposed using a scheme according to Crout which involves
+   //   "implicit partial pivoting", see for instance Num. Recip. (we have also available
+   //    a decomposition scheme that does not the scaling and is therefore even slightly
+   //    faster but less stable)
+   //    With each decomposition, a tolerance has to be specified . If this tolerance
+   //    requirement is not met, the matrix is regarded as being singular. The value
+   //    passed to this decomposition, is the data member fTol of the matrix . Its
+   //    default value is DBL_EPSILON, which is defined as the smallest number so that
+   //    1+DBL_EPSILON > 1
+   // - The last step is a standard forward/backward substitution .
    //
-   //   It is important to realize that both InvertFast() and Invert() are "one-shot" deals , speed
-   //   comes at a price . If something goes wrong because the matrix is (near) singular, you have
-   //   overwritten your original matrix and  no factorization is available anymore to get more
-   //   information like condition number or change the tolerance number .
+   // It is important to realize that both InvertFast() and Invert() are "one-shot" deals , speed
+   // comes at a price . If something goes wrong because the matrix is (near) singular, you have
+   // overwritten your original matrix and  no factorization is available anymore to get more
+   // information like condition number or change the tolerance number .
    //
-   //   All other calls in the matrix classes involving inversion like the ones with the "smart"
-   //   constructors (kInverted,kInvMult...) use this inversion method .
+   // All other calls in the matrix classes involving inversion like the ones with the "smart"
+   // constructors (kInverted,kInvMult...) use this inversion method .
    //
 
    std::cout << "2. Use .Invert(&det)" << std::endl;
@@ -118,13 +118,13 @@ void invertMatrix(Int_t msize=6)
    std::cout << "  Maximum off-diagonal = " << U2_max_offdiag << std::endl;
    std::cout << "  Determinant          = " << det2 << std::endl;
 
-   // 3. Inversion through LU decomposition
-   //   The (default) algorithms used are similar to 2. (Not identical because in 2, the whole
-   //   calculation is done "in-place". Here the original matrix is copied (so more memory
-   //   management => slower) and several operations can be performed without having to repeat
-   //   the decomposition step .
-   //   Inverting a matrix is nothing else than solving a set of equations where the rhs is given
-   //   by the unit matrix, so the steps to take are identical to those solving a linear equation :
+   // ### 3. Inversion through LU decomposition
+   // The (default) algorithms used are similar to 2. (Not identical because in 2, the whole
+   // calculation is done "in-place". Here the original matrix is copied (so more memory
+   // management => slower) and several operations can be performed without having to repeat
+   // the decomposition step .
+   // Inverting a matrix is nothing else than solving a set of equations where the rhs is given
+   // by the unit matrix, so the steps to take are identical to those solving a linear equation :
    //
 
    std::cout << "3. Use TDecompLU" << std::endl;
@@ -149,9 +149,9 @@ void invertMatrix(Int_t msize=6)
    std::cout << "  Maximum off-diagonal = " << U3_max_offdiag << std::endl;
    std::cout << "  Determinant          = " << det3 << std::endl;
 
-   // 4. Inversion through SVD decomposition
-   //   For SVD and QRH, the (n x m) matrix does only have to fulfill n >=m . In case n > m
-   //   a pseudo-inverse is calculated
+   // ### 4. Inversion through SVD decomposition
+   // For SVD and QRH, the (n x m) matrix does only have to fulfill n >=m . In case n > m
+   // a pseudo-inverse is calculated
    std::cout << "4. Use TDecompSVD on non-square matrix" << std::endl;
 
    TMatrixD H_nsquare = THilbertMatrixD(msize,msize-1);

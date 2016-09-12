@@ -20,7 +20,7 @@ void fitLinear2()
 {
    Int_t n=100;
    Int_t i;
-   TRandom rand1;
+   TRandom randNum;
    TLinearFitter *lf=new TLinearFitter(5);
 
    //The predefined "hypN" functions are the fastest to fit
@@ -32,13 +32,13 @@ void fitLinear2()
 
    //Create the points and put them into the fitter
    for (i=0; i<n; i++){
-      x[0 + i*5] = rand1.Uniform(-10, 10);
-      x[1 + i*5] = rand1.Uniform(-10, 10);
-      x[2 + i*5] = rand1.Uniform(-10, 10);
-      x[3 + i*5] = rand1.Uniform(-10, 10);
-      x[4 + i*5] = rand1.Uniform(-10, 10);
+      x[0 + i*5] = randNum.Uniform(-10, 10);
+      x[1 + i*5] = randNum.Uniform(-10, 10);
+      x[2 + i*5] = randNum.Uniform(-10, 10);
+      x[3 + i*5] = randNum.Uniform(-10, 10);
+      x[4 + i*5] = randNum.Uniform(-10, 10);
       e[i] = 0.01;
-      y[i] = 4*x[0+i*5] + x[1+i*5] + 2*x[2+i*5] + 3*x[3+i*5] + 0.2*x[4+i*5]  + rand1.Gaus()*e[i];
+      y[i] = 4*x[0+i*5] + x[1+i*5] + 2*x[2+i*5] + 3*x[3+i*5] + 0.2*x[4+i*5]  + randNum.Gaus()*e[i];
    }
 
    //To avoid copying the data into the fitter, the following function can be used:
@@ -61,13 +61,13 @@ void fitLinear2()
 
    //Now suppose you want to add some more points and see if the parameters will change
    for (i=n; i<n*2; i++) {
-      x[0+i*5] = rand1.Uniform(-10, 10);
-      x[1+i*5] = rand1.Uniform(-10, 10);
-      x[2+i*5] = rand1.Uniform(-10, 10);
-      x[3+i*5] = rand1.Uniform(-10, 10);
-      x[4+i*5] = rand1.Uniform(-10, 10);
+      x[0+i*5] = randNum.Uniform(-10, 10);
+      x[1+i*5] = randNum.Uniform(-10, 10);
+      x[2+i*5] = randNum.Uniform(-10, 10);
+      x[3+i*5] = randNum.Uniform(-10, 10);
+      x[4+i*5] = randNum.Uniform(-10, 10);
       e[i] = 0.01;
-      y[i] = 4*x[0+i*5] + x[1+i*5] + 2*x[2+i*5] + 3*x[3+i*5] + 0.2*x[4+i*5]  + rand1.Gaus()*e[i];
+      y[i] = 4*x[0+i*5] + x[1+i*5] + 2*x[2+i*5] + 3*x[3+i*5] + 0.2*x[4+i*5]  + randNum.Gaus()*e[i];
    }
 
    //Assign the data the same way as before

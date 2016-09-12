@@ -7,8 +7,6 @@
 ///
 /// \author Matevz Tadel
 
-#ifndef __CINT__
-
 #include <TEveManager.h>
 #include <TEvePointSet.h>
 #include <TEveRGBAPalette.h>
@@ -16,7 +14,6 @@
 #include <TRandom.h>
 #include <TMath.h>
 
-#endif
 
 TEvePointSet* pointset(Int_t npoints = 512, TEveElement* parent=0)
 {

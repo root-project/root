@@ -10,7 +10,7 @@
 ///
 /// This example can be executed via the interpreter or ACLIC
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 ///   root > .x fit2.C
 ///   root > .x fit2.C++
 /// ~~~

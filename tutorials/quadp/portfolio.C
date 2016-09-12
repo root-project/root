@@ -4,13 +4,13 @@
 /// This macro shows in detail the use of the quadratic programming package quadp .
 /// Running this macro :
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 ///     .x portfolio.C+
 /// ~~~
 ///
 /// or
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 /// gSystem->Load("libQuadp");
 /// .L portFolio.C+; portfolio()
 /// ~~~
@@ -27,11 +27,11 @@
 /// the unknowns, that can not be done by Minuit/Fumili . Well, we have in addition
 /// the following boundary conditions on \f$ x \f$:
 ///
-/// \f[
+///  \f[
 ///          A x =  b \\
 ///  clo \le  C x \le cup \\
 ///  xlo \le    x \le xup
-/// \f]  where A and C are arbitrary matrices and the rest are vectors
+///  \f]  where A and C are arbitrary matrices and the rest are vectors
 ///
 /// Not all these constraints have to be defined . Our example will only use \f$ xlo \f$,
 /// \f$ A \f$ and \f$ b \f$
@@ -74,10 +74,10 @@
 ///
 /// The expected value of the utility function is :
 ///
-/// \f[
+///  \f[
 /// E(u(x)) = Int (1-exp(-k*x) N(x) dx \\
 ///         = 1-exp(-k (r^T x - 0.5 k x^T Covar x) ) \\
-/// \f]
+///  \f]
 ///
 /// Its value is maximised by maximising \f$ r^T x -0.5 k x^T Covar x \f$
 /// under the condition \f$ sum (x_i) = 1 \f$, meaning we want all our money invested and
@@ -180,21 +180,13 @@ TArrayF &StockReturn(TFile *f,const TString &name,Int_t sDay,Int_t eDay)
     b_date->GetEntry(i);
     b_closeAdj->GetEntry(i);
     if (data->fDate >= sDay && data->fDate <= eDay)
-#ifdef __CINT__
-      closeAdj.AddAt(data->fCloseAdj/100. , i );
-#else
       closeAdj[i] = data->fCloseAdj/100.;
-#endif
   }
 
   TArrayF *r = new TArrayF(nrEntries-1);
   for (Int_t i = 1; i < nrEntries; i++)
 //    (*r)[i-1] = closeAdj[i]-closeAdj[i-1];
-#ifdef __CINT__
-    r->AddAt(closeAdj[i]/closeAdj[i-1],1);
-#else
     (*r)[i-1] = closeAdj[i]/closeAdj[i-1];
-#endif
 
   return *r;
 }
@@ -289,7 +281,7 @@ TVectorD OptimalInvest(Double_t riskFactor,TVectorD r,TMatrixDSym Covar)
 }
 #endif
 
-//---------------------------------------------------------------------------
+ //---------------------------------------------------------------------------
 void portfolio()
 {
    const Int_t sDay = 20000809;

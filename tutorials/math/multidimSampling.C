@@ -95,15 +95,9 @@ using namespace ROOT::Math;
 
 void multidimSampling() {
 
-#ifdef __CINT__
-   std::cout << "DO NOT RUN WITH CINT:" << std::endl;
-   std::cout << "we are using a custom function which requires" << std::endl;
-   std::cout << "that this tutorial must be compiled with ACLIC" << std::endl;
-  return;
-#endif
 
    const int N = 10000;
-   //const int NBin = 1000;
+   /*const int NBin = 1000;*/
    const int DIM = 4;
 
    double xmin[] = {-10,-10,-10, -10};
@@ -130,7 +124,7 @@ void multidimSampling() {
       else if (i < 2*DIM) f->SetParName(i, name.Format("sig_%d",i-2*DIM+1) );
    }
 
-   //ROOT::Math::DistSamplerOptions::SetDefaultSampler("Foam");
+   /*ROOT::Math::DistSamplerOptions::SetDefaultSampler("Foam");*/
    DistSampler * sampler = Factory::CreateDistSampler();
    if (sampler == 0) {
       Info("multidimSampling","Default sampler %s is not available try with Foam ",

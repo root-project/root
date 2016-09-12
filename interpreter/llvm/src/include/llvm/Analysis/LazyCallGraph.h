@@ -972,6 +972,11 @@ public:
 
   PreservedAnalyses run(Module &M, ModuleAnalysisManager &AM);
 };
+
+// Declare llvm::op<<.
+raw_ostream &operator<<(raw_ostream &OS, const LazyCallGraph::Node &N);
+raw_ostream &operator<<(raw_ostream &OS, const LazyCallGraph::SCC &C);
+raw_ostream &operator<<(raw_ostream &OS, const LazyCallGraph::RefSCC &RC);
 }
 
 #endif

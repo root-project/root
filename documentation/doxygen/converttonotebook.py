@@ -7,11 +7,20 @@
 # tweaked slightly to ensure full functionality. Please do not hesistate to email the author
 # with any questions or with examples that do not work.
 #
+# HELP IT DOESN'T WORK: Two possible solutions: 
+#     1. Check that all the types returned by the tutorial are in the gTypesList. If they aren't,
+#        simply add them.
+#     2. If the tutorial takes a long time to execute (more than 90 seconds), add the name of the
+#        tutorial to the list of long tutorials listLongTutorials, in the fucntion findTimeout.
+#
 # REQUIREMENTS: This script needs jupyter to be properly installed, as it uses the python
 # package nbformat and calls the shell commands `jupyter nbconvert` and `jupyter trust`. The
 # rest of the packages used should be included in a standard installation of python. The script
 # is intended to be run on a UNIX based system.
 #
+#
+# FUNCTIONING:
+# -----------
 # The converttonotebook script creates Jupyter notebooks from raw C++ or python files.
 # Particulary, it is indicated to convert the ROOT tutorials found in the ROOT
 # repository.
@@ -22,10 +31,10 @@
 # Indeed the script takes two arguments, the path to the macro and the path to the directory
 # where the notebooks will be created
 #
-# The script's general funcitoning is as follows. The macro to be converted is imported as a string.
-# A sereis of modifications are made to this sring, for instacne delimiting where markdown and
-# code cells are. Then, this string is converted into ipynb format using a function in the
-# nbconvert package. Finally, the notebook is executed and output.
+# The script's general functioning is as follows. The macro to be converted is imported as a string.
+# A series of modifications are made to this string, for instance delimiting where markdown and
+# code cells begin and end. Then, this string is converted into ipynb format using a function
+# in the nbconvert package. Finally, the notebook is executed and output.
 #
 # For converting python tutorials it is fairly straightforward. It extracts the decription and
 # author information from the header and then removes it. It also converts any comment at the
@@ -33,14 +42,14 @@
 #
 # For C++ files the process is slightly more complex. The script separates the functions from the
 # main code. The main function is identified as it has the smae name as the macro file. The other
-# functions are considered functions. The main function is "extracted"and presented as main code.
+# functions are considered functions. The main function is "extracted" and presented as main code.
 # The helper functions are placed in their own code cell with the %%cpp -d magic to enable function
 # defintion. Finally, as with Python macros, relevant information is extracted from the header, and
 # newline comments are converted into Markdown cells (unless they are in helper functions).
 #
 # The script creates an .ipynb version of the macro,  with the full output included.
 # The files are named:
-#     <macro>.C.nbconvert.ipynb
+#     <macro>.<C or py>.nbconvert.ipynb
 #
 # It is called by filter.cxx, which in turn is called by doxygen when processing any file
 # in the ROOT repository. filter.cxx only calls convertonotebook.py when the string \notebook
@@ -64,13 +73,13 @@ from datetime import datetime, date
 # for the script to work correctly.
 gTypesList = ["void", "int", "Int_t", "TF1", "string", "bool", "double", "float", "char",
     "TCanvas", "TTree", "TString", "TSeqCollection", "Double_t", "TFile", "Long64_t", "Bool_t", "TH1",
-    "RooDataSet", "RooWorkspace" , "HypoTestInverterResult" , "TVectorD" , "TArrayF"]
+    "RooDataSet", "RooWorkspace" , "HypoTestInverterResult" , "TVectorD" , "TArrayF", "UInt_t"]
 
 # -------------------------------------
 # -------- Fuction definitions---------
 # -------------------------------------
 
-def unindenter(string):
+def unindenter(string, spaces = 3):
     """
     Returns string with each line unindented by 3 spaces. If line isn't indented, it stays the same.
     >>> unindenter("   foobar")
@@ -85,8 +94,8 @@ def unindenter(string):
     newstring = ''
     lines = string.splitlines()
     for line in lines:
-        if line.startswith("   "):
-            newstring += (line[3:] + "\n")
+        if line.startswith(spaces*' '):
+            newstring += (line[spaces:] + "\n")
         else:
             newstring += (line + "\n")
 
@@ -194,6 +203,31 @@ def pythonComments(text):
     return newtext
 
 
+def pythonMainFunction(text):
+    lines = text.splitlines()
+    functionContentRe = re.compile('def %s\\(.*\\):' % tutName , flags = re.DOTALL | re.MULTILINE)
+    newtext = ''
+    inMainFunction = False
+    hasMainFunction = False
+    for line in lines:
+        
+        if hasMainFunction:
+            if line.startswith("""if __name__ == "__main__":""") or line.startswith("""if __name__ == '__main__':"""):
+                break
+        match = functionContentRe.search(line)
+        if inMainFunction and not line.startswith("    ") and line != "":
+            inMainFunction = False
+        if match:
+            inMainFunction = True
+            hasMainFunction = True
+        else:
+            if inMainFunction:
+                newtext += (line[4:] + '\n')
+            else:
+                newtext += (line + '\n')
+    return newtext
+
+ 
 def readHeaderCpp(text):
     """
     Extract author and description from header, eliminate header from text. Also returns
@@ -261,7 +295,9 @@ def readHeaderCpp(text):
     newtext = ''
     for line in lines[i:]:
         newtext += (line + "\n")
-
+    description = description.replace("\\f$", "$")
+    description = description.replace("\\f[", "$$")
+    description = description.replace("\\f]", "$$")
     return newtext, description, author, isNotebook, isJsroot, nodraw, needsHeaderFile
 
 
@@ -305,7 +341,7 @@ def cppComments(text):
     >>> cppComments('''// This is a
     ... // multiline comment
     ... void function(){}''') 
-    '# <markdowncell>\\n#  This is a\\n#  multiline comment\\n# <codecell>\\nvoid function(){}\\n'
+    '# <markdowncell>\\n# This is a\\n#  multiline comment\\n# <codecell>\\nvoid function(){}\\n'
     >>> cppComments('''void function(){
     ...    int variable = 5 // Comment not in cell
     ...    // Comment also not in cell
@@ -320,7 +356,10 @@ def cppComments(text):
         if line.startswith("//") and not inComment:  # True if first line of comment
             inComment = True
             newtext += "# <markdowncell>\n"
-            newtext += ("# " + line[2:]+"\n")
+            if line[2:].lstrip().startswith("#"):  # Don't use .capitalize() if line starts with hash, ie it is a header
+               newtext += ("# " + line[2:]+"\n")
+            else:
+               newtext += ("# " + line[2:].lstrip().capitalize()+"\n")
         elif inComment and not line.startswith("//"):  # True if first line after comment
             inComment = False
             newtext += "# <codecell>\n"
@@ -337,7 +376,7 @@ def split(text):
     """
     Splits the text string into main, helpers, and rest. main is the main function,
     i.e. the function tha thas the same name as the macro file. Helpers is a list of
-    strings, each a helper function, i.e. any other function that is not the main funciton.
+    strings, each a helper function, i.e. any other function that is not the main function.
     Finally, rest is a string containing any top-level code outside of any function.
     Comments immediately prior to a helper cell are converted into markdown cell,
     added to the helper, and removed from rest.
@@ -374,7 +413,7 @@ def split(text):
     ...    helper function
     ...    content spans lines
     ... }''')
-    ('void tutorial(){\\n   content of tutorial\\n}', ['\\n# <markdowncell>\\n  This is a multiline description of the helper function \\n# <codecell>\\n%%cpp -d\\nvoid helper(arguments = values){\\n   helper function\\n   content spans lines\\n}'], '')
+    ('void tutorial(){\\n   content of tutorial\\n}', ['\\n# <markdowncell>\\n  This is a multiline\\n description of the\\n helper function\\n \\n# <codecell>\\n%%cpp -d\\nvoid helper(arguments = values){\\n   helper function\\n   content spans lines\\n}'], '')
     """
     functionReString="("
     for cpptype in gTypesList:
@@ -388,12 +427,12 @@ def split(text):
     helpers = []
     main = ""
     for matchString in [match.group() for match in functionMatches]:
-        if tutName == findFunctionName(matchString):  # if the name of the funcitn is that of the macro
+        if tutName == findFunctionName(matchString):  # if the name of the function is that of the macro
             main = matchString
         else:
             helpers.append(matchString)
 
-    # Create rest by replacing the main and helper funcitons with blank strings
+    # Create rest by replacing the main and helper functions with blank strings
     rest = text.replace(main, "")
 
     for helper in helpers:
@@ -416,7 +455,7 @@ def split(text):
                         if comment in ("//", "// "):
                             helperDescription += "\n\n"  # Two newlines to create hard break in Markdown
                         else:
-                            helperDescription += comment[2:]
+                            helperDescription += (comment[2:] + "\n")
                             rest = rest.replace(comment, "")
                     break
                 else:   # If no comments are found create generic description
@@ -433,7 +472,7 @@ def split(text):
 
 def findFunctionName(text):
     """
-    Takes a string representation of a C++ funciton as an input,
+    Takes a string representation of a C++ function as an input,
     finds and returns the name of the function
     >>> findFunctionName('void functionName(arguments = values){}')
     'functionName'
@@ -473,65 +512,78 @@ def processmain(text):
     ...    spanning several
     ...    lines
     ... }''')
-    ('void function(){\\n   content of function\\n   spanning several\\n   lines\\n}', '', False)
+    ('void function(){\\n   content of function\\n   spanning several\\n   lines\\n}', '')
     >>> processmain('''void function(arguments = values){
     ...    content of function
     ...    spanning several
     ...    lines
     ... }''')
-    ('void function(arguments = values){\\n   content of function\\n   spanning several\\n   lines\\n}', '\\n# <markdowncell> \\n# Call the main function \\n# <codecell>\\nfunction();', True)
+    ('void function(arguments = values){\\n   content of function\\n   spanning several\\n   lines\\n}', '# <markdowncell> \\n Arguments are defined. \\n# <codecell>\\narguments = values;\\n# <codecell>\\n')
+    >>> processmain('''void function(argument1 = value1, //comment 1
+    ...                              argument2 = value2 /*comment 2*/ ,
+    ...                              argument3 = value3, 
+    ...                              argument4 = value4)
+    ... {
+    ...    content of function
+    ...    spanning several
+    ...    lines
+    ... }''')
+    ('void function(argument1 = value1, //comment 1\\n                             argument2 = value2 /*comment 2*/ ,\\n                             argument3 = value3, \\n                             argument4 = value4)\\n{\\n   content of function\\n   spanning several\\n   lines\\n}', '# <markdowncell> \\n Arguments are defined. \\n# <codecell>\\nargument1 = value1;\\nargument2 = value2;\\nargument3 = value3;\\nargument4 = value4;\\n# <codecell>\\n')
     >>> processmain('''TCanvas function(){
     ...    content of function
     ...    spanning several 
     ...    lines
     ...    return c1
     ... }''') 
-    ('TCanvas function(){\\n   content of function\\n   spanning several\\n   lines\\n   return c1\\n}', '\\n# <markdowncell> \\n# Call the main function \\n# <codecell>\\nfunction();', True , '')
+    ('TCanvas function(){\\n   content of function\\n   spanning several \\n   lines\\n   return c1\\n}', '')
     """
-    callMainFunction = ''
+
     argumentsCell = ''
-    keepFunction = False
 
-    argumentesre = re.compile(r'(?<=\().*?(?=\))', flags = re.DOTALL | re.MULTILINE)
-    arguments = argumentesre.search(text)
-    if len(arguments.group()) > 3:
-        argumentsCell = "# <markdowncell> \n Arguments are defined. \n# <codecell>\n"
-        argumentList =  arguments.group().split(",")
-        for argument in argumentList:
-            argumentsCell += argument.strip() + ";\n"
-        argumentsCell += "# <codecell>\n"
+    if text:
+        argumentsre = re.compile(r'(?<=\().*?(?=\))', flags = re.DOTALL | re.MULTILINE)
+        arguments = argumentsre.search(text)
 
-    if text.startswith("TCanvas"):
-        keepfunction = True
-        functionname = findFunctionName(text)
-        callMainFunction = "\n# <markdowncell> \n# Call the main function \n# <codecell>\n%s();" % functionname
+        if len(arguments.group()) > 3:
+            argumentsCell = "# <markdowncell> \n Arguments are defined. \n# <codecell>\n"
+            individualArgumentre = re.compile(r'[^/\n,]*?=[^/\n,]*') #, flags = re.DOTALL) #| re.MULTILINE)
+            argumentList=individualArgumentre.findall(arguments.group())
+            for argument in argumentList:
+                argumentsCell += argument.strip("\n ") + ";\n"
+            argumentsCell += "# <codecell>\n"
 
-    return text, callMainFunction, keepFunction, argumentsCell
+    return text, argumentsCell
 
 # now define text transformers
 def removePaletteEditor(code):
-    return code.replace("img->StartPaletteEditor();", "")
+    code = code.replace("img->StartPaletteEditor();", "")
+    code = code.replace("Open the color editor", "")
+    return code
+
 
 def runEventExe(code):
     if "copytree" in tutName:
         return "# <codecell> \n.! $ROOTSYS/test/eventexe 1000 1 1 1 \n" + code
     return code
 
+
 def getLibMathMore(code):
     if "quasirandom" == tutName:
         return "# <codecell> \ngSystem->Load(\"libMathMore\"); \n# <codecell> \n" + code
     return code
 
+
 def roofitRemoveSpacesComments(code):
     
     def changeString(matchObject):
         matchString = matchObject.group()
+        matchString = matchString[0]  + " " + matchString[1:]
         matchString = matchString.replace("  " , "THISISASPACE")
         matchString = matchString.replace(" " , "")
         matchString = matchString.replace("THISISASPACE" , " ")
         return matchString
 
-    newcode = re.sub("#\s\s\w\s[\w-]\s\w.*", changeString , code)
+    newcode = re.sub("#\s\s?\w\s[\w-]\s\w.*", changeString , code)
     return newcode
 
 def declareNamespace(code):
@@ -552,19 +604,40 @@ def rs401dGetFiles(code):
          """#if !defined(__CINT__) || defined(__MAKECINT__)\n#include "../tutorials/roostats/NuMuToNuE_Oscillation.h"\n#include "../tutorials/roostats/NuMuToNuE_Oscillation.cxx" // so that it can be executed directly\n#else\n#include "../tutorials/roostats/NuMuToNuE_Oscillation.cxx+" // so that it can be executed directly\n#endif""" , """std::string tutDir = gROOT->GetTutorialsDir();\nTString headerDir = TString::Format("#include \\\"%s/roostats/NuMuToNuE_Oscillation.h\\\"", tutDir.c_str());\nTString impDir = TString::Format("#include \\\"%s/roostats/NuMuToNuE_Oscillation.cxx\\\"", tutDir.c_str());\ngROOT->ProcessLine(headerDir);\ngROOT->ProcessLine(impDir);""")
     return code
 
-def foamRemoveIfndef(code):
-    if tutName == "foam_demo":
-        code = code.replace("#if defined(__CINT__) && !defined(__MAKECINT__)\n{\n   std::cout << \"Using ACliC to run this macro since it uses custom classes\" << std::endl;\n   TString macroFileName = gSystem->UnixPathName(__FILE__);\n   gSystem->CompileMacro(macroFileName, \"k\");\n   foam_demo();\n}\n#else","")
-        code = code.replace("#endif", "")
+
+def declareIncludes(code):
+    if tutName != "fitcont":
+        code = re.sub(r"# <codecell>\s*#include", "# <codecell>\n%%cpp -d\n#include" , code)
     return code
 
+
+def tree4GetFiles(code):
+    if tutName == "tree4":
+        code = code.replace(
+         """#include \"../test/Event.h\"""" , """# <codecell>\nTString dir = "$ROOTSYS/test/Event.h";\ngSystem->ExpandPathName(dir);\nTString includeCommand = TString::Format("#include \\\"%s\\\"" , dir.Data());\ngROOT->ProcessLine(includeCommand);""")
+    return code
+
+
+def disableDrawProgressBar(code):
+    code = code.replace(":DrawProgressBar",":!DrawProgressBar")
+    return code
 def fixes(code):
     codeTransformers=[removePaletteEditor, runEventExe, getLibMathMore,
-        roofitRemoveSpacesComments, declareNamespace, rs401dGetFiles ,foamRemoveIfndef]
+        roofitRemoveSpacesComments, declareNamespace, rs401dGetFiles ,
+        declareIncludes, tree4GetFiles, disableDrawProgressBar]
 
     for transformer in codeTransformers:
         code = transformer(code)
+
     return code
+
+
+def changeMarkdown(code):
+    code = code.replace("~~~" , "```")
+    code = code.replace("{.cpp}", "cpp")
+    code = code.replace("{.bash}", "bash")
+    return code
+
 
 def isCpp():
     """
@@ -574,9 +647,10 @@ def isCpp():
 
 
 def findTimeout():
-   listLongtutorials = ["OneSidedFrequentistUpperLimitWithBands", "StandardBayesianNumericalDemo",
-   "TwoSidedFrequentistUpperLimitWithBands" , "HybridStandardForm", "rs401d_FeldmanCousins"]
-   if tutName in listLongtutorials:
+   listLongTutorials = ["OneSidedFrequentistUpperLimitWithBands", "StandardBayesianNumericalDemo",
+   "TwoSidedFrequentistUpperLimitWithBands" , "HybridStandardForm", "rs401d_FeldmanCousins",
+   "TMVAMultipleBackgroundExample", "TMVARegression", "TMVAClassification", "StandardHypoTestDemo"]
+   if tutName in listLongTutorials:
       return 300
    else:
       return 90
@@ -594,10 +668,9 @@ def mainfunction(text):
     # Modify text from macros to suit a notebook
     if isCpp():
         main, helpers, rest = split(text)
-        main, callMainFunction, keepfunction, argumentsCell = processmain(main)
-        if not keepfunction:
-            main = cppComments(unindenter(cppFunction(main)))  # Remove function, Unindent, and convert comments to Markdown cells
-        
+        main,  argumentsCell = processmain(main)
+        main = cppComments(unindenter(cppFunction(main)))  # Remove function, Unindent, and convert comments to Markdown cells
+             
         if argumentsCell:
             main = argumentsCell + main
 
@@ -609,30 +682,28 @@ def mainfunction(text):
             text = "# <markdowncell>\n# The header file must be copied to the current directory\n# <codecell>\n.!cp %s%s.h .\n# <codecell>\n" % (tutRelativePath, tutName)
             text += rest
         else:
-            text = rest
+            text = "# <codecell>\n" + rest
 
         for helper in helpers:
             text += helper
 
-        if keepfunction:
-            text += "\n# <markdowncell>\n# The main function is defined\n# <codecell>\n%%cpp -d\n"
-        else:
-            text += "\n# <codecell>\n"
-        text += main
-        if callMainFunction:
-            text += callMainFunction
+        text += ("\n# <codecell>\n" + main)
 
     if extension == "py":
+        text = pythonMainFunction(text)
         text = pythonComments(text)  # Convert comments into Markdown cells
     
 
     # Perform last minute fixes to the notebook, used for specific fixes needed by some tutorials
     text = fixes(text)
+    
+    # Change to standard Markdown
+    newDescription = changeMarkdown(description)
 
     # Add the title and header of the notebook
-    text = "# <markdowncell> \n# # %s\n%s# \n# \n# **Author:** %s  \n# <small>This notebook tutorial " \
-        "was automatically generated from the macro found in the ROOT repository " \
-        "on %s.</small>\n# <codecell>\n%s" % (tutTitle, description, author, date, text)
+    text = "# <markdowncell> \n# # %s\n%s# \n# \n# **Author:** %s  \n# <i><small>This notebook tutorial was automatically generated " \
+        "with <a href= \"https://github.com/root-mirror/root/blob/master/documentation/doxygen/converttonotebook.py\">ROOTBOOK-izer (Beta)</a> " \
+        "from the macro found in the ROOT repository  on %s.</small></i>\n# <codecell>\n%s" % (tutTitle, newDescription, author, date, text)
 
     # Add cell at the end of the notebook that draws all the canveses. Add a Markdown cell before explaining it.
     if isJsroot and not nodraw:
@@ -701,8 +772,9 @@ def mainfunction(text):
     if r != 0:
         sys.stderr.write("NOTEBOOK_CONVERSION_WARNING: Nbconvert failed for notebook %s with return code %s\n" %(outname,r))
     if isJsroot:
-        subprocess.call(["jupyter", "trust",  os.path.join(outdir + outnameconverted)])
-    os.remove(outPathName)
+        subprocess.call(["jupyter", "trust",  os.path.join(outdir, outnameconverted)])
+    if r == 0:  # Only remove notebook without output if nbconvert succeedes 
+        os.remove(outPathName)
 
 
 if __name__ == "__main__":

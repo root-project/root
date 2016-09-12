@@ -6,7 +6,7 @@
 ///
 ///  To execute the macro type in:
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 /// root[0] .x  mathcoreVectorIO.C
 /// ~~~
 ///
@@ -160,16 +160,7 @@ void read() {
 }
 
 void mathcoreVectorIO() {
-#if defined(__CINT__) && !defined(__MAKECINT__)
-   gSystem->Load("libMathCore");
-   gSystem->Load("libPhysics");
-    // in CINT need to do that after having loading the library
-   using namespace ROOT::Math;
-
-   cout << "This tutorial can run only using ACliC, compiling it by doing: " << endl;
-   cout << "\t  .x tutorials/math/mathcoreVectorCollection.C+" << endl;
-   return;
-#endif
+   
    int nEvents = 100000;
    write(nEvents);
    read();

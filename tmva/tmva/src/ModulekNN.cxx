@@ -467,7 +467,7 @@ TMVA::kNN::Node<TMVA::kNN::Event>* TMVA::kNN::ModulekNN::Optimize(const UInt_t o
       return 0;
    }
 
-   Log() << kINFO << "Optimizing tree for " << fDimn << " variables with " << size << " values" << Endl;
+   Log() << kHEADER << "Optimizing tree for " << fDimn << " variables with " << size << " values" << Endl;
 
    std::vector<Node<Event> *> pvec, cvec;
 

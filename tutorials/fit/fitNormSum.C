@@ -60,7 +60,7 @@ void fitNormSum()
    for (int i = 2; i < f_sum->GetNpar(); ++i)
       f_sum->SetParName(i,fnorm_exp_cb->GetParName(i) );
 
-   //GENERATE HISTOGRAM TO FIT ..............................................................
+   // GENERATE HISTOGRAM TO FIT ..............................................................
    TStopwatch w;
    w.Start();
    TH1D *h_sum = new TH1D("h_ExpCB", "Exponential Bkg + CrystalBall function", NBins, -5., 5.);

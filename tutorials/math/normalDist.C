@@ -8,14 +8,12 @@
 ///
 /// \author Anna Kreshuk
 
-#ifndef __CINT__
 #include "Math/DistFunc.h"
 #include "TF1.h"
 #include "TCanvas.h"
 #include "TSystem.h"
 #include "TLegend.h"
 #include "TAxis.h"
-#endif
 
 void normalDist() {
 

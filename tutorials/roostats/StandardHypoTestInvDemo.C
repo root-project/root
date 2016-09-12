@@ -7,7 +7,7 @@
 ///
 /// Usage:
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 /// root>.L StandardHypoTestInvDemo.C
 /// root> StandardHypoTestInvDemo("fileName","workspace name","S+B modelconfig name","B model name","data set name",calculator type, test statistic type, use CLS,
 ///                                number of points, xmin, xmax, number of toys, use number counting)

@@ -210,7 +210,7 @@ void TMVA::MethodFDA::CreateFormula()
 
    Log() << "User-defined formula string       : \"" << fFormulaStringP << "\"" << Endl;
    Log() << "TFormula-compatible formula string: \"" << fFormulaStringT << "\"" << Endl;
-   Log() << "Creating and compiling formula" << Endl;
+   Log() << kDEBUG << "Creating and compiling formula" << Endl;
 
    // create TF1
    if (fFormula) delete fFormula;
@@ -412,7 +412,7 @@ void TMVA::MethodFDA::Train( void )
 void TMVA::MethodFDA::PrintResults( const TString& fitter, std::vector<Double_t>& pars, const Double_t estimator ) const
 {
    Log() << kINFO;
-   Log() << "Results for parameter fit using \"" << fitter << "\" fitter:" << Endl;
+   Log() << kHEADER << "Results for parameter fit using \"" << fitter << "\" fitter:" << Endl;
    std::vector<TString>  parNames;
    for (UInt_t ipar=0; ipar<pars.size(); ipar++) parNames.push_back( Form("Par(%i)",ipar ) );
    gTools().FormattedOutput( pars, parNames, "Parameter" , "Fit result", Log(), "%g" );   

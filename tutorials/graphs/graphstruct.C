@@ -10,7 +10,7 @@
 ///
 /// \author Olivier Couet
 
-void graphstruct()
+TCanvas* graphstruct()
 {
    TGraphStruct *gs = new TGraphStruct();
 

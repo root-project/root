@@ -634,6 +634,7 @@ void TMVA::RuleFitParams::MakeGDPath()
    Log() << kINFO << "Fitting model..." << Endl;
    // start loop with timer
    Timer timer( fGDNPathSteps, "RuleFit" );
+   Log() << kWARNING;
    while (!done) {
       // Make gradient vector (eq 44, ref 1)
       if (isVerbose) t0 = clock();
@@ -679,12 +680,12 @@ void TMVA::RuleFitParams::MakeGDPath()
          if (fNTRisk>=rprev) {
             if (fNTRisk>rprev) {
                nbadrisk++;
-               Log() << kWARNING << "Risk(i+1)>=Risk(i) in path" << Endl;
+               Log() << "Risk(i+1)>=Risk(i) in path" << Endl;
                riskFlat=(nbadrisk>3);
                if (riskFlat) {
                   Log() << kWARNING << "Chaotic behaviour of risk evolution" << Endl;
-                  Log() << kWARNING << "--- STOPPING MINIMISATION ---" << Endl;
-                  Log() << kWARNING << "This may be OK if minimum is already found" << Endl;
+                  Log() << "--- STOPPING MINIMISATION ---" << Endl;
+                  Log() << "This may be OK if minimum is already found" << Endl;
                }
             }
          }
@@ -782,6 +783,7 @@ void TMVA::RuleFitParams::MakeGDPath()
       }
       done = (found);
    }
+   Log() << Endl;
    Log() << kINFO << "Minimisation elapsed time : " << timer.GetElapsedTime() << "                      " << Endl;
    Log() << kINFO << "----------------------------------------------------------------"  << Endl;
    Log() << kINFO << "Found minimum at step " << indMin+1 << " with error = " << errmin << Endl;
@@ -806,7 +808,7 @@ void TMVA::RuleFitParams::MakeGDPath()
    // check if early minima - might be an indication of too large stepsize
    if ( Double_t(indMin)/Double_t(nprescan+fGDNPathSteps) < 0.05 ) {
       Log() << kWARNING << "Reached minimum early in the search" << Endl;
-      Log() << kWARNING << "Check results and maybe decrease GDStep size" << Endl;
+      Log() << "Check results and maybe decrease GDStep size" << Endl;
    }
    //
    // quick check of the sign of the slope for the last npreg points

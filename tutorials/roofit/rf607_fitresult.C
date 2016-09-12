@@ -88,7 +88,6 @@ void rf607_fitresult()
 
    // Construct 2D color plot of correlation matrix
    gStyle->SetOptStat(0) ;
-   gStyle->SetPalette(1) ;
    TH2* hcorr = r->correlationHist() ;
 
 
