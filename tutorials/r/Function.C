@@ -11,33 +11,30 @@
 using namespace ROOT::R;
 void Function()
 {
-  TRInterface &r = TRInterface::Instance();
-  r.SetVerbose(1);
-  ////////////////////////////////////////
-  //defining functions to be used from R//
-  ////////////////////////////////////////
-  TRFunctionImport c("c");
-  TRFunctionImport list("list");
-  TRFunctionImport asformula("as.formula");
-  TRFunctionImport nls("nls");
-  TRFunctionImport confint("confint");
-  TRFunctionImport summary("summary");
-  TRFunctionImport print("print");
-  TRFunctionImport plot("plot");
-  TRFunctionImport lines("lines");
-  TRFunctionImport devnew("dev.new");
-  TRFunctionImport devoff("dev.off");
-  TRFunctionImport devcur("dev.cur");
-  TRFunctionImport min("min");
-  TRFunctionImport max("max");
-  TRFunctionImport seq("seq");
-  TRFunctionImport predict("predict");
+   TRInterface &r = TRInterface::Instance();
+   r.SetVerbose(1);
 
-  r<<"options(device='pdf')";
+   // Defining functions to be used from R
+   TRFunctionImport c("c");
+   TRFunctionImport list("list");
+   TRFunctionImport asformula("as.formula");
+   TRFunctionImport nls("nls");
+   TRFunctionImport confint("confint");
+   TRFunctionImport summary("summary");
+   TRFunctionImport print("print");
+   TRFunctionImport plot("plot");
+   TRFunctionImport lines("lines");
+   TRFunctionImport devnew("dev.new");
+   TRFunctionImport devoff("dev.off");
+   TRFunctionImport devcur("dev.cur");
+   TRFunctionImport min("min");
+   TRFunctionImport max("max");
+   TRFunctionImport seq("seq");
+   TRFunctionImport predict("predict");
 
-  ////////////////////////
-  //doing the procedure //
-  ////////////////////////
+   r<<"options(device='pdf')";
+
+   // doing the procedure
    TRObject xdata = c(-2,-1.64,-1.33,-0.7,0,0.45,1.2,1.64,2.32,2.9);
    TRObject ydata = c(0.699369,0.700462,0.695354,1.03905,1.97389,2.41143,1.91091,0.919576,-0.730975,-1.42001);
 
@@ -51,13 +48,12 @@ void Function()
 
    print(confint(fit));
 
-   if(!gROOT->IsBatch())
-   {
-        devnew("Fitting Regression");
-        plot(xdata,ydata);
+   if (!gROOT->IsBatch()) {
+      devnew("Fitting Regression");
+      plot(xdata,ydata);
 
-        TRObject xgrid=seq(min(xdata),max(xdata),Label["len"]=10);
-        lines(xgrid,predict(fit,xgrid),Label["col"] = "green");
-        devoff(Label["which"] = devcur() );
+      TRObject xgrid=seq(min(xdata),max(xdata),Label["len"]=10);
+      lines(xgrid,predict(fit,xgrid),Label["col"] = "green");
+      devoff(Label["which"] = devcur() );
    }
 }

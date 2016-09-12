@@ -46,7 +46,7 @@ TCanvas *SimpleFitting(){
    gr2->SetMarkerSize(1);
    mg->Add(gr2);
    //passing data to Rfot fitting
-     ROOT::R::TRInterface &r=ROOT::R::TRInterface::Instance();
+   ROOT::R::TRInterface &r=ROOT::R::TRInterface::Instance();
    r["x"]<<TVectorD(n, x1);
    r["y"]<<TVectorD(n, y1);
    //creating a R data frame
