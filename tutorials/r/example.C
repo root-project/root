@@ -1,3 +1,13 @@
+/// \file
+/// \ingroup tutorial_r
+/// \notebook
+/// Simple example on how to use ROOT-R interface.
+///
+/// \macro_code
+///
+/// \author
+
+
 #include "TMath.h"
 #include "Math/PdfFunc.h"
 #include "TMatrixD.h"
@@ -5,7 +15,6 @@
 #include <array>
 #include <vector>
 #include "TRInterface.h"
-// simple example on how to use ROOT-R interface
 
 void example() {
     ROOT::R::TRInterface &r = ROOT::R::TRInterface::Instance();

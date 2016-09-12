@@ -1,8 +1,14 @@
-//More Information for R interpolation in 
-//http://stat.ethz.ch/R-manual/R-patched/library/stats/html/approxfun.html
-//Author: Omar Zapata
-//NOTE: this example illustrates an interpolation with random points given from ROOT
-//and procedures made in R's environment.
+/// \file
+/// \ingroup tutorial_r
+/// \notebook
+/// More Information for R interpolation in
+/// http://stat.ethz.ch/R-manual/R-patched/library/stats/html/approxfun.html
+/// NOTE: this example illustrates an interpolation with random points given from ROOT
+/// and procedures made in R's environment.
+///
+/// \macro_code
+///
+/// \author Omar Zapata
 
 #include<TRInterface.h>
 #include<TRandom.h>
@@ -10,7 +16,7 @@
 
 void Interpolation()
 {
-   ROOT::R::TRInterface &r=ROOT::R::TRInterface::Instance();  
+   ROOT::R::TRInterface &r=ROOT::R::TRInterface::Instance();
 //Creating points
    TRandom rg;
    std::vector<Double_t> x(10),y(10);
@@ -34,7 +40,7 @@ void Interpolation()
 //plotting the points
       r<<"plot(x, y, main = 'approx(.) and approxfun(.)')";
 
-//The function "approx" returns a list with components x and y 
+//The function "approx" returns a list with components x and y
 //containing n coordinates which interpolate the given data points according to the method (and rule) desired.
       r<<"points(approx(x, y), col = 2, pch = '*')";
       r<<"points(approx(x, y, method = 'constant'), col = 4, pch = '*')";
@@ -44,8 +50,8 @@ void Interpolation()
       r << "print(approx(x,y,n=20))";
    }
 
-//The function "approxfun" returns a function performing (linear or constant) 
-//interpolation of the given data. 
+//The function "approxfun" returns a function performing (linear or constant)
+//interpolation of the given data.
 //For a given set of x values, this function will return the corresponding interpolated values.
       r<<"f <- approxfun(x, y)";
 //using approxfun with const method

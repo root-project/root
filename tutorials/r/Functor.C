@@ -1,10 +1,17 @@
-//Example to create class Functor
-//Author: Omar Zapata
+/// \file
+/// \ingroup tutorial_r
+/// \notebook
+/// Example to create class Functor
+///
+/// \macro_code
+///
+/// \author Omar Zapata
+
 #include<TRInterface.h>
 #include<TMath.h>
- 
+
 typedef Double_t (*Function)(Double_t);
- 
+
 //Functor class with the function inside
 class MyFunctor{
 public:
@@ -39,17 +46,17 @@ ROOTR_MODULE(MyFunctorModule) {
     .method( "getStatus", &MyFunctor::getStatus)
     ;
 }
- 
+
 void Functor()
 {
    ROOT::R::TRInterface &r=ROOT::R::TRInterface::Instance();
    //////////////////////////////////////////////////////////
    //Creating functor with deafult function TMath::BesselY1//
-   // and status false from R's environment                //             
+   // and status false from R's environment                //
    //////////////////////////////////////////////////////////
    //Loading module into R's enviornment
    r["MyFunctorModule"]<<LOAD_ROOTR_MODULE(MyFunctorModule);
-   
+
    //creating a class variable from module
    r<<"MyFunctor <- MyFunctorModule$MyFunctor";
    //creating a MyFunctor's object
@@ -57,11 +64,11 @@ void Functor()
 
    //printing status
    r<<"print(u$getStatus())";
-   
+
    //printing values from Functor and Function
    r<<"print(sprintf('value in R = %f',u$doEval( 1 )))";
    std::cout<<"value in ROOT = "<<TMath::BesselY1(1)<<std::endl;
-   
+
    ////////////////////////////////////////////////////////////
    //creating a MyFunctor's object and passing objects to R's //
    //enviornment, the status should be true because it is not   //

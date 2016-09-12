@@ -1,8 +1,15 @@
-//Create an exponential fitting
-//The idea is to create a set of numbers x,y with  the function x^3 and some noise from ROOT,
-//fit the function to get the exponent (which must be near 3) and plot the points with noise,
-//the known function and the fitted function
-//Author: Omar Zapata
+/// \file
+/// \ingroup tutorial_r
+/// \notebook
+/// Create an exponential fitting
+/// The idea is to create a set of numbers x,y with  the function x^3 and some noise from ROOT,
+/// fit the function to get the exponent (which must be near 3) and plot the points with noise,
+/// the known function and the fitted function
+///
+/// \macro_code
+///
+/// \author Omar Zapata
+
 #include<TRInterface.h>
 #include<TRandom.h>
 
@@ -71,7 +78,7 @@ TCanvas *SimpleFitting(){
    TString fmsg;
    fmsg.Form(" \"Green\"  Fitted function with power=%.4lf",power);
    pt->AddText(fmsg);
-   pt->Draw();   
+   pt->Draw();
    c1->Update();
    return c1;
 }
