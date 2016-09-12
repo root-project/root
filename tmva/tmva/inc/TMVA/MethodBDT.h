@@ -270,6 +270,8 @@ namespace TMVA {
       
       Bool_t                           fDoPreselection;  // do or do not perform automatic pre-selection of 100% eff. cuts
 
+      Bool_t                           fSkipNormalization; // true for skipping normalization at initialization of trees
+
       std::vector<Double_t>            fVariableImportance; // the relative importance of the different variables
 
 

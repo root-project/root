@@ -202,6 +202,7 @@ TMVA::MethodBDT::MethodBDT( const TString& jobName,
    , fCtb_ss(0)
    , fCbb(0)
    , fDoPreselection(kFALSE)
+   , fSkipNormalization(kFALSE)
    , fHistoricBool(kFALSE) 
 {
    fMonitorNtuple = NULL;
@@ -255,6 +256,7 @@ TMVA::MethodBDT::MethodBDT( DataSetInfo& theData,
    , fCtb_ss(0)
    , fCbb(0)
    , fDoPreselection(kFALSE)
+   , fSkipNormalization(kFALSE)
    , fHistoricBool(kFALSE) 
 {
    fMonitorNtuple = NULL;
@@ -312,7 +314,10 @@ Bool_t TMVA::MethodBDT::HasAnalysisType( Types::EAnalysisType type, UInt_t numbe
 ///                         DecreaseBoostWeight     Boost ev. with neg. weight with 1/boostweight instead of boostweight
 ///                         PairNegWeightsGlobal    Pair ev. with neg. and pos. weights in traning sample and "annihilate" them 
 /// MaxDepth         maximum depth of the decision tree allowed before further splitting is stopped
+/// SkipNormalization	    Skip normalization at initialization, to keep expectation value of BDT output
+///			    according to the fraction of events
 
+ 
 void TMVA::MethodBDT::DeclareOptions()
 {
    DeclareOptionRef(fNTrees, "NTrees", "Number of trees in the forest");
@@ -411,7 +416,9 @@ void TMVA::MethodBDT::DeclareOptions()
 
    DeclareOptionRef(fFValidationEvents=0.5, "PruningValFraction", "Fraction of events to use for optimizing automatic pruning.");
 
-   // deprecated options, still kept for the moment:
+   DeclareOptionRef(fSkipNormalization=kFALSE, "SkipNormalization", "Skip normalization at initialization, to keep expectation value of BDT output according to the fraction of events");
+
+    // deprecated options, still kept for the moment:
    DeclareOptionRef(fMinNodeEvents=0, "nEventsMin", "deprecated: Use MinNodeSize (in % of training events) instead");
 
    DeclareOptionRef(fBaggedGradBoost=kFALSE, "UseBaggedGrad","deprecated: Use *UseBaggedBoost* instead:  Use only a random subsample of all events for growing the trees in each iteration.");
@@ -814,7 +821,7 @@ void TMVA::MethodBDT::InitEventSample( void )
       if (fPairNegWeightsGlobal) PreProcessNegativeEventWeights();
    }
 
-   if (!DoRegression()){
+   if (!DoRegression() && !fSkipNormalization){
       Log() << kDEBUG << "\t<InitEventSample> For classification trees, "<< Endl;
       Log() << kDEBUG << " \tthe effective number of backgrounds is scaled to match "<<Endl;
       Log() << kDEBUG << " \tthe signal. Otherwise the first boosting step would do 'just that'!"<<Endl;
