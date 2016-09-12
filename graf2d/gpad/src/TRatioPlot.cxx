@@ -91,7 +91,7 @@ and the fit function.
 
 ## Ratios and differences
 The simplest case is passing two histograms without specifying any options. This defaults to using
-`TGraphAsymErrors::Divide`. The `option` variable is passed through, as are the parameters
+`TGraphAsymmErrors::Divide`. The `option` variable is passed through, as are the parameters
 `c1` and `c2`, that you can set via `TRatioPlot::SetC1` and `TRatioPlot::SetC1`. If you set the
 `option` to `divsym` the method `TH1::Divide` will be used instead, also receiving all the parameters.
 
@@ -920,7 +920,7 @@ void TRatioPlot::BuildLowerPlot()
    // Determine the divide mode and create the lower graph accordingly
    // Pass divide options given in constructor
    if (fMode == TRatioPlot::CalculationMode::kDivideGraph) {
-      // use TGraphAsymErrors Divide method to create
+      // use TGraphAsymmErrors Divide method to create
 
       SetGridlines(divideGridlines, 3);
 
