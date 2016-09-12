@@ -2016,11 +2016,11 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
          size_t unnamedMacroOpenCurly;
          {
             std::string code;
-            std::string line;
+            std::string codeline;
             std::ifstream in(fname);
             while (in) {
-               std::getline(in, line);
-               code += line + "\n";
+               std::getline(in, codeline);
+               code += codeline + "\n";
             }
             unnamedMacroOpenCurly
               = cling::utils::isUnnamedMacro(code, fInterpreter->getCI()->getLangOpts());
