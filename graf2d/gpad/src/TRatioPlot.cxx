@@ -647,6 +647,12 @@ void TRatioPlot::Draw(Option_t *option)
    if (fMode == TRatioPlot::CalculationMode::kFitResidual) {
       TF1 *func = dynamic_cast<TF1*>(fH1->GetListOfFunctions()->At(0));
 
+      if (func == 0) {
+         // this is checked in constructor and should thus not occur
+         Error("BuildLowerPlot", "h1 does not have a fit function");
+         return;
+      }
+
       fH1->Draw("A"+fH1DrawOpt);
       func->Draw(fFitDrawOpt+"same");
 
@@ -1002,6 +1008,12 @@ void TRatioPlot::BuildLowerPlot()
 
       TF1 *func = dynamic_cast<TF1*>(fH1->GetListOfFunctions()->At(0));
 
+      if (func == 0) {
+         // this is checked in constructor and should thus not occur
+         Error("BuildLowerPlot", "h1 does not have a fit function");
+         return;
+      }
+
       fRatioGraph = new TGraphAsymmErrors();
       Int_t ipoint = 0;
 
@@ -1012,8 +1024,11 @@ void TRatioPlot::BuildLowerPlot()
       std::vector<double> ci2;
 
       Double_t x_arr[fH1->GetNbinsX()];
+      std::fill_n(x_arr, fH1->GetNbinsX(), 0);
       Double_t ci_arr1[fH1->GetNbinsX()];
+      std::fill_n(ci_arr1, fH1->GetNbinsX(), 0);
       Double_t ci_arr2[fH1->GetNbinsX()];
+      std::fill_n(ci_arr2, fH1->GetNbinsX(), 0);
       for (Int_t i=0; i<fH1->GetNbinsX();++i) {
          x_arr[i] = fH1->GetBinCenter(i+1);
       }
@@ -1106,10 +1121,20 @@ void TRatioPlot::BuildLowerPlot()
       fRatioGraph = new TGraphErrors(tmpHist);
 
       delete tmpHist;
+   } else {
+      // this should not occur
+      Error("BuildLowerPlot", "Invalid fMode value");
+      return;
    }
 
    // need to set back to "" since recreation. we don't ever want
    // title on lower graph
+
+   if (fRatioGraph == 0) {
+      Error("BuildLowerPlot", "Error creating lower graph");
+      return;
+   }
+
    fRatioGraph->SetTitle("");
    fConfidenceInterval1->SetTitle("");
    fConfidenceInterval2->SetTitle("");
