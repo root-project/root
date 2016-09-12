@@ -1304,6 +1304,32 @@ const char* TBranch::GetIconName() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Read as many events as possible into the given buffer, using zero-copy
+/// mechanisms.
+///
+/// Returns -1 in case of a failure.  On success, returns a (non-zero) number of
+/// events of the type held by this branch currently in the buffer.
+///
+/// On success, the caller should be able to access the contents of buf as
+///
+/// static_cast<T*>(buf)
+///
+/// where T is the type stored on this branch.  The array's length is the return
+/// value of this function.
+///
+/// NOTES:
+/// - This interface is meant to be used by higher-level, type-safe wrappers, not
+///   by end-users.
+/// - This only returns events 
+/// 
+/*
+Int_t TBranch::GetEntryFast(TBuffer &buf)
+{
+   return -1;
+}
+*/
+
+////////////////////////////////////////////////////////////////////////////////
 /// Read all leaves of entry and return total number of bytes read.
 ///
 /// The input argument "entry" is the entry number in the current tree.

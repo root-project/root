@@ -183,6 +183,15 @@ void TLeafI::ReadBasket(TBuffer &b)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Read leaf elements from Basket input buffer.
+/*
+bool TLeafI::ReadFast(Int_t *&data, Int_t &count)
+{
+   return false;
+}
+*/
+
+////////////////////////////////////////////////////////////////////////////////
 /// Read leaf elements from Basket input buffer and export buffer to
 /// TClonesArray objects.
 
