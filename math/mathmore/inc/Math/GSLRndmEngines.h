@@ -40,6 +40,7 @@ namespace Math {
 
 
    class GSLRngWrapper;
+   class GSLMCIntegrator; 
 
    //_________________________________________________________________
    /**
@@ -62,6 +63,8 @@ namespace Math {
       @ingroup Random
    */
    class GSLRandomEngine {
+
+      friend class GSLMCIntegrator;
 
    public:
 
@@ -122,6 +125,14 @@ namespace Math {
           an error message is printed and zero is returned
       */
       unsigned int RndmInt(unsigned int max) const;
+      /**
+          Generate an integer number between [0,max-integer] (including 0 and max-1)
+          if max is larger than available range of algorithm
+          an error message is printed and zero is returned
+      */ 
+      unsigned int IntRndm() const {
+         return RndmInt(std::numeric_limits<unsigned int>::max());
+      }
 
       /**
          Generate an array of random numbers.
@@ -287,6 +298,12 @@ namespace Math {
          fRng = r;
       }
 
+      /// internal method to return the engine
+      /// Used by class like GSLMCIntegrator to set the engine
+      GSLRngWrapper * Engine() {
+         return fRng; 
+      }
+      
    private:
 
       GSLRngWrapper * fRng;                // pointer to GSL generator wrapper (managed by the class)
