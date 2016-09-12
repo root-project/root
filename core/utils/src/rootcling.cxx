@@ -3929,7 +3929,7 @@ int RootCling(int argc,
    bool multiDict = false;
    bool writeEmptyRootPCM = false;
    bool selSyntaxOnly = false;
-   bool noIncludePaths = buildingROOT;
+   bool noIncludePaths = false;
 
    // Collect the diagnostic pragmas linked to the usage of -W
    // Workaround for ROOT-5656
