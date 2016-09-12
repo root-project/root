@@ -23,19 +23,6 @@
 #include "TTimeStamp.h"
 #include "RZip.h"
 
-// TODO: Copied from TBranch.cxx
-#if (__GNUC__ >= 3) || defined(__INTEL_COMPILER)
-#if !defined(R__unlikely)
-  #define R__unlikely(expr) __builtin_expect(!!(expr), 0)
-#endif
-#if !defined(R__likely)
-  #define R__likely(expr) __builtin_expect(!!(expr), 1)
-#endif
-#else
-  #define R__unlikely(expr) expr
-  #define R__likely(expr) expr
-#endif
-
 const UInt_t kDisplacementMask = 0xFF000000;  // In the streamer the two highest bytes of
                                               // the fEntryOffset are used to stored displacement.
 
