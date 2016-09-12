@@ -66,7 +66,11 @@ branches are often accessed together.  For example, this will greatly speed
 up an analysis where the results of a trigger are read out for every branch,
 but the majority of event collections are read only when the trigger results
 pass a set of filters.  NOTE - when this mode is enabled, the memory dedicated
-to the cache will up to double in the case of cache miss.
+to the cache will up to double in the case of cache miss.  Additionally, on
+the first miss of an event, we must iterate through all the "active branches"
+for the miss cache and find the correct basket.  This can be potentially a
+CPU-expensive operation compared to, e.g., the latency of a SSD.  This is why
+the miss cache is currently disabled by default.
 
 ## WHY DO WE NEED the TreeCache when doing data analysis?
 
@@ -638,13 +642,16 @@ Int_t TTreeCache::DropBranch(const char *bname, Bool_t subbranches /*= kFALSE*/)
    return res;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-//// Start of methods for the miss cache.
-///////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+/// Start of methods for the miss cache.
+////////////////////////////////////////////////////////////////////////////////
 
-/**
- * Enable / disable the miss cache.
- */
+////////////////////////////////////////////////////////////////////////////////
+/// Enable / disable the miss cache.
+///
+/// The first time this is called on a TTreeCache object, the corresponding
+/// data structures will be allocated.  Subsequent enable / disables will
+/// simply turn the functionality on/off.
 void TTreeCache::SetOptimizeMisses(bool opt) {
 
    if (opt && !fMissCache) {
@@ -653,9 +660,11 @@ void TTreeCache::SetOptimizeMisses(bool opt) {
    fOptimizeMisses = opt;
 }
 
-/**
- * Reset all the training
- */
+////////////////////////////////////////////////////////////////////////////////
+/// Reset all the miss cache training.
+///
+/// The contents of the miss cache will be emptied as well as the list of
+/// branches used.
 void TTreeCache::ResetMissCache() {
 
    fLastMiss = -1;
@@ -667,6 +676,13 @@ void TTreeCache::ResetMissCache() {
    fMissCache->clear();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// For the event currently being fetched into the miss cache, find the IO
+/// (offset / length tuple) to pull in the current basket for a given branch.
+///
+/// Returns:
+/// - IOPos describing the IO operation necessary for the basket on this branch
+/// - On failure, IOPos.length will be set to 0.
 TTreeCache::IOPos TTreeCache::FindBranchBasket(TBranch &b) {
    if (R__unlikely(b.GetDirectory() == 0)) {
       //printf("Branch at %p has no valid directory.\n", &b);
@@ -726,7 +742,20 @@ TTreeCache::IOPos TTreeCache::FindBranchBasket(TBranch &b) {
    return IOPos{static_cast<ULong64_t>(pos), static_cast<UInt_t>(len)};
 }
 
-
+////////////////////////////////////////////////////////////////////////////////
+/// Given a particular IO description (offset / length) representing a 'miss' of
+/// the TTreeCache's primary cache, calculate all the corresponding IO that
+/// should be performed.
+///
+/// `all` indicates that this function should search the set of _all_ branches
+/// in this TTree.  When set to false, we only search through branches that
+/// have previously incurred a miss.
+///
+/// Returns:
+/// - TBranch pointer corresponding to the basket that will be retrieved by
+///   this IO operation.
+/// - If no corresponding branch could be found (or an error occurs), this
+///   returns nullptr.
 TBranch *TTreeCache::CalculateMissEntries(Long64_t pos_in, int len_in, bool all) {
    if (R__unlikely((pos_in < 0) || (len_in < 0))) {
       return nullptr;
@@ -763,16 +792,20 @@ TBranch *TTreeCache::CalculateMissEntries(Long64_t pos_in, int len_in, bool all)
 }
 
 
-/**
- * Process a cache miss; (pos, len) isn't in the buffer.
- *
- * The first time we have a miss, we buffer as many baskets we can (up to the maximum
- * size of the TTreeCache) in memory from all branches that are not in the prefetch list.
- * 
- * Subsequent times, we fetch all the buffers corresponding to branches that had previously
- * seen misses.  If it turns out the (pos, len) isn't in the list of branches, we treat this
- * as if it was the first miss.
- */
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Process a cache miss; (pos, len) isn't in the buffer.
+///
+/// The first time we have a miss, we buffer as many baskets we can (up to the
+/// maximum size of the TTreeCache) in memory from all branches that are not in
+/// the prefetch list.
+/// 
+/// Subsequent times, we fetch all the buffers corresponding to branches that
+/// had previously seen misses.  If it turns out the (pos, len) isn't in the
+/// list of branches, we treat this as if it was the first miss.
+///
+/// Returns true if we were able to pull the data into the miss cache.
+///
 bool TTreeCache::ProcessMiss(Long64_t pos, int len) {
 
    bool firstMiss = false;
@@ -821,6 +854,13 @@ bool TTreeCache::ProcessMiss(Long64_t pos, int len) {
    return true;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Given an IO operation (pos, len) that was a cache miss in the primary TTC,
+/// try the operation again with the miss cache.
+///
+/// Returns true if the IO operation was successful and the contents of buf
+/// were populated with the requested data.
+///
 bool TTreeCache::CheckMissCache(char *buf, Long64_t pos, int len) {
 
    if (!fOptimizeMisses) {
@@ -875,9 +915,9 @@ bool TTreeCache::CheckMissCache(char *buf, Long64_t pos, int len) {
    return false;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-//// End of methods for miss cache.
-///////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+/// End of methods for miss cache.
+////////////////////////////////////////////////////////////////////////////////
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1219,10 +1259,10 @@ Double_t TTreeCache::GetEfficiency() const
    return ((Double_t)fNReadOk / (Double_t)fNReadPref);
 }
 
-/**
- * The total efficiency of the 'miss cache' - defined as the ratio
- * of blocks found in the cache versus the number of blocks prefetched
- */
+////////////////////////////////////////////////////////////////////////////////
+/// The total efficiency of the 'miss cache' - defined as the ratio
+/// of blocks found in the cache versus the number of blocks prefetched
+
 double TTreeCache::GetMissEfficiency() const
 {
    if ( !fNMissReadPref ) {return 0;}
@@ -1241,10 +1281,10 @@ Double_t TTreeCache::GetEfficiencyRel() const
    return ((Double_t)fNReadOk / (Double_t)(fNReadOk + fNReadMiss));
 }
 
-/**
- * Relative efficiency of the 'miss cache' - ratio of the reads found in cache
- * to the number of reads so far.
- */
+////////////////////////////////////////////////////////////////////////////////
+/// Relative efficiency of the 'miss cache' - ratio of the reads found in cache
+/// to the number of reads so far.
+
 double TTreeCache::GetMissEfficiencyRel() const
 {
    if (!fNMissReadOk && !fNMissReadMiss) {return 0;}
