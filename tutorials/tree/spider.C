@@ -1,10 +1,12 @@
 /// \file
 /// \ingroup tutorial_tree
 /// \notebook
-/// TSpider example
+/// TSpider example.
+///
 /// \macro_code
 ///
 /// \author Bastien Dallapiazza
+
 #include "TFile.h"
 #include "TCanvas.h"
 #include "TNtuple.h"
