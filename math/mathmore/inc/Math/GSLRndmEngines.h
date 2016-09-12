@@ -124,14 +124,14 @@ namespace Math {
           if max is larger than available range of algorithm
           an error message is printed and zero is returned
       */
-      unsigned int RndmInt(unsigned int max) const;
+      unsigned long RndmInt(unsigned long max) const;
       /**
-          Generate an integer number between [0,max-integer] (including 0 and max-1)
+          Generate an integer number between [0,max_generator-1] (including 0 and max-1)
           if max is larger than available range of algorithm
           an error message is printed and zero is returned
       */ 
-      unsigned int IntRndm() const {
-         return RndmInt(std::numeric_limits<unsigned int>::max());
+      unsigned long IntRndm() const {
+         return RndmInt(MaxInt());   // max return the largest value the generator can give +1
       }
 
       /**
@@ -160,6 +160,18 @@ namespace Math {
          return the state size of generator
       */
       unsigned int Size() const;
+
+      /**
+         return the minimum integer a generator can handle
+         typically this value is 0
+       */
+      unsigned long MinInt() const; 
+
+      /**
+         return the maximum integer +1 a generator can handle
+
+       */
+      unsigned long MaxInt() const; 
 
       /**
           set the random generator seed
