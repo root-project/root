@@ -3929,7 +3929,7 @@ int RootCling(int argc,
    bool multiDict = false;
    bool writeEmptyRootPCM = false;
    bool selSyntaxOnly = false;
-   bool noIncludePaths = false;
+   bool noIncludePaths = buildingROOT;
 
    // Collect the diagnostic pragmas linked to the usage of -W
    // Workaround for ROOT-5656
@@ -4293,9 +4293,11 @@ int RootCling(int argc,
    // Until the module are actually enabled in ROOT, we need to register
    // the 'current' directory to make it relocatable (i.e. have a way
    // to find the headers).
-   string incCurDir = "-I";
-   incCurDir += currentDirectory;
-   pcmArgs.push_back(incCurDir);
+   if (!buildingROOT){
+      string incCurDir = "-I";
+      incCurDir += currentDirectory;
+      pcmArgs.push_back(incCurDir);
+   }
 
    TModuleGenerator modGen(interp.getCI(),
                            inlineInputHeader,
