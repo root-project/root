@@ -125,18 +125,17 @@ public:
    virtual Int_t        DropBranch(const char *branch, Bool_t subbranches = kFALSE);
    virtual void         Disable() {fEnabled = kFALSE;}
    virtual void         Enable() {fEnabled = kTRUE;}
-   void                 SetOptimizeMisses(bool opt);
    bool                 GetOptimizeMisses() const {return fOptimizeMisses;}
    const TObjArray     *GetCachedBranches() const { return fBranches; }
    EPrefillType         GetConfiguredPrefillType() const;
    Double_t             GetEfficiency() const;
    Double_t             GetEfficiencyRel() const;
-   double               GetMissEfficiency() const;
-   double               GetMissEfficiencyRel() const;
    virtual Int_t        GetEntryMin() const {return fEntryMin;}
    virtual Int_t        GetEntryMax() const {return fEntryMax;}
    static Int_t         GetLearnEntries();
    virtual EPrefillType GetLearnPrefill() const {return fPrefillType;}
+   double               GetMissEfficiency() const;
+   double               GetMissEfficiencyRel() const;
    TTree               *GetTree() const {return fTree;}
    Bool_t               IsAutoCreated() const {return fAutoCreated;}
    virtual Bool_t       IsEnabled() const {return fEnabled;}
@@ -157,6 +156,7 @@ public:
    virtual void         SetFile(TFile *file, TFile::ECacheAction action=TFile::kDisconnect);
    virtual void         SetLearnPrefill(EPrefillType type = kNoPrefill);
    static void          SetLearnEntries(Int_t n = 10);
+   void                 SetOptimizeMisses(bool opt);
    void                 StartLearningPhase();
    virtual void         StopLearningPhase();
    virtual void         UpdateBranches(TTree *tree);
