@@ -39,9 +39,9 @@
 #include "TTreeCacheUnzip.h"
 #include "TVirtualMutex.h"
 #include "TVirtualPad.h"
-#include "TRegexp.h"
 
 #include <atomic>
+#include <regex>
 #include <cstddef>
 #include <string.h>
 #include <stdio.h>
@@ -270,9 +270,7 @@ void TBranch::Init(const char* name, const char* leaflist, Int_t compress)
 {
    // Initialization routine called from the constructor.  This should NOT be made virtual.
 
-   Ssiz_t matchlength;
-   TRegexp reg("^[a-zA-Z_][a-zA-Z0-9_]*$");
-   if (0!=reg.Index(name,&matchlength)) {
+   if (!std::regex_match(name,std::regex("([a-zA-Z_][a-zA-Z0-9_]*)"))) {
       Warning("TBranch","Branch name is not an allowed c++ variable name. This can lead to problems in MakeClass");
    }
    if (TString(name).BeginsWith("b_")) {
