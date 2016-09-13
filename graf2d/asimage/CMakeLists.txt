@@ -8,8 +8,6 @@ if(cocoa)  # Not needed to locate PNG, JPG, TIFF libraries
 endif()
 
 #---Build ASImage/ASImageGui libraries---------------------------------------
-include_directories(${CMAKE_SOURCE_DIR}/hist/hist/inc)  # This is to avoid a circular dependency graf <--> hist
-
 include_directories(${FREETYPE_INCLUDE_DIRS} ${AFTERIMAGE_INCLUDE_DIR} ${X11_INCLUDE_DIR})
 
 ROOT_GENERATE_DICTIONARY(G__ASImage TASImage.h TASImagePlugin.h TASPluginGS.h MODULE ASImage LINKDEF LinkDef.h  OPTIONS "-writeEmptyRootPCM")

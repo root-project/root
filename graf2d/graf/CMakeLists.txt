@@ -5,8 +5,6 @@
 
 set(libname Graf)
 
-include_directories(${CMAKE_SOURCE_DIR}/hist/hist/inc)  # This is to avoid a circular dependency graf <--> hist
-
 ROOT_GENERATE_DICTIONARY(G__${libname} MODULE ${libname} *.h LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
 
 
