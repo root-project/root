@@ -17,7 +17,7 @@
 #include "Riostream.h"
 #include "TROOT.h"
 #include "TGaxis.h"
-#include "TGaxisModLab.h"
+#include "TAxisModLab.h"
 #include "TVirtualPad.h"
 #include "TVirtualX.h"
 #include "TLine.h"
@@ -34,6 +34,7 @@
 #include "TClass.h"
 #include "TTimeStamp.h"
 #include "TSystem.h"
+#include "TTimeStamp.h"
 
 Int_t TGaxis::fgMaxDigits = 5;
 Float_t TGaxis::fXAxisExpXOffset = 0.; //Exponent X offset for the X axis
@@ -66,6 +67,7 @@ or an instance. For instance to draw an extra scale on a plot.
 - [Labels' position on tick marks](#GA08)
 - [Labels' format](#GA09)
 - [Alphanumeric labels](#GA10)
+- [Changing axis labels](#GA10a)
 - [Number of divisions optimisation](#GA11)
 - [Maximum Number of Digits for the axis labels](#GA12)
 - [Optional grid](#GA13)
@@ -317,6 +319,29 @@ End_Macro
 Because the alphanumeric labels are usually longer that the numeric labels, their
 size is by default equal to `0.66666 * the_numeric_labels_size`.
 
+## <a name="GA10a"></a> Changing axis labels
+\since **ROOT version 6.07/07:**
+
+After an axis has been created, TGaxis::ChangeLabel allows to define new text
+attributes for a given label. A fine tuning of the labels can be done. All the
+attributes can be changed as well as the text label itself.
+
+When plotting an histogram or a graph the labels can be changed like in the
+following example which shows a way to produce \f$\pi\f$-axis :
+
+Begin_Macro(source)
+{
+   Double_t pi = TMath::Pi();
+   TF1*   f = new TF1("f","TMath::Cos(x/TMath::Pi())", -pi, pi);
+   TH1*   h = f->GetHistogram();
+   TAxis* a = h->GetXaxis();
+   a->SetNdivisions(-502);
+   a->ChangeLabel(1,-1,-1,-1,-1,-1,"-#pi");
+   a->ChangeLabel(-1,-1,-1,-1,-1,-1,"#pi");
+   f->Draw();
+}
+End_Macro
+
 ## <a name="GA11"></a> Number of divisions optimisation
 
 By default the number of divisions on axis is optimised to show a coherent
@@ -383,7 +408,7 @@ The format is set with `SetTimeFormat()`.
 The `TGaxis` minimum (`wmin`) and maximum (`wmax`) values
 are considered as two time values in seconds.
 The time axis will be spread around the time offset value (set with
-`SetTimeOffset()`). Actually it will go from `TimeOffset+wmin`to
+`SetTimeOffset()`). Actually it will go from `TimeOffset+wmin` to
 `TimeOffset+wmax`
 
 Usually time axis are created automatically via histograms, but one may also
@@ -841,6 +866,14 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
          optionText = 1;
          ndiv = fAxis->GetLast()-fAxis->GetFirst()+1;
       }
+      TList *ml = fAxis->GetModifiedLabels();
+      if (ml) {
+         fModLabs = ml;
+         fNModLabs = fModLabs->GetSize();
+      } else {
+         fModLabs  = 0;
+         fNModLabs = 0;
+      }
    }
    if (ndiv < 0) {
       Error(where, "Invalid number of divisions: %d",ndiv);
@@ -883,28 +916,17 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
          TString stringtimeoffset = fTimeFormat(idF+2,lnF);
          Int_t year, mm, dd, hh, mi, ss;
          if (sscanf(stringtimeoffset.Data(), "%d-%d-%d %d:%d:%d", &year, &mm, &dd, &hh, &mi, &ss) == 6) {
-           struct tm tp;
+            //Get time offset in seconds since EPOCH:
+            struct tm tp;
             tp.tm_year   = year-1900;
             tp.tm_mon    = mm-1;
             tp.tm_mday   = dd;
             tp.tm_hour   = hh;
             tp.tm_min    = mi;
             tp.tm_sec    = ss;
-            tp.tm_isdst  = -1; //automatic determination of daylight saving time
-            TString tz   = (TString)gSystem->Getenv("TZ"); //save timezone
-            Bool_t isUTC = kFALSE;
-            if (gSystem->Getenv("TZ") && tz.Length()==0) isUTC=kTRUE;
-            gSystem->Setenv("TZ", "UTC"); //sets timezone to UTC
-            tzset();
-            timeoffset  = mktime(&tp);
-            //restore TZ
-            if (tz.Length()) {
-               gSystem->Setenv("TZ", tz.Data());
-            } else {
-               if (isUTC) gSystem->Setenv("TZ", "");
-               else       gSystem->Unsetenv("TZ");
-            }
-            tzset();
+            tp.tm_isdst  = 0; //no DST for UTC (and forced to 0 in MktimeFromUTC function)
+            timeoffset = TTimeStamp::MktimeFromUTC(&tp);
+
             // Add the time offset's decimal part if it is there
             Int_t ids   = stringtimeoffset.Index("s");
             if (ids >= 0) {
@@ -2252,7 +2274,7 @@ void TGaxis::SetFunction(const char *funcname)
 /// If an attribute should not be changed just give the value
 /// "-1".The following macro gives an example:
 ///
-/// ~~~ {.cpp}
+/// Begin_Macro(source)
 /// {
 ///    c1 = new TCanvas("c1","Examples of Gaxis",10,10,900,500);
 ///    c1->Range(-6,-0.1,6,0.1);
@@ -2262,18 +2284,18 @@ void TGaxis::SetFunction(const char *funcname)
 ///    axis1->SetTitleSize(0.05);
 ///    axis1->SetTitleColor(kBlue);
 ///    axis1->SetTitleFont(42);
-///    axis1->SetLabelAttributes(1,-1,-1,-1,2);
-///    axis1->SetLabelAttributes(3,-1,0.);
-///    axis1->SetLabelAttributes(5,30.,-1,0);
-///    axis1->SetLabelAttributes(6,-1,-1,-1,3,-1,"6th label");
-///    axis1->SetLabelAttributes(-2,-1,-1,-1,3,-1,"2nd to last label");
+///    axis1->ChangeLabel(1,-1,-1,-1,2);
+///    axis1->ChangeLabel(3,-1,0.);
+///    axis1->ChangeLabel(5,30.,-1,0);
+///    axis1->ChangeLabel(6,-1,-1,-1,3,-1,"6th label");
+///    axis1->ChangeLabel(-2,-1,-1,-1,3,-1,"2nd to last label");
 ///    axis1->Draw();
 /// }
-/// ~~~
+/// End_Macro
 ///
 /// If labnum=0 the list of modified labels is reset.
 
-void TGaxis::SetLabelAttributes(Int_t labNum, Double_t labAngle, Double_t labSize,
+void TGaxis::ChangeLabel(Int_t labNum, Double_t labAngle, Double_t labSize,
                                 Int_t labAlign, Int_t labColor, Int_t labFont,
                                 TString labText)
 {
@@ -2288,7 +2310,7 @@ void TGaxis::SetLabelAttributes(Int_t labNum, Double_t labAngle, Double_t labSiz
       return;
    }
 
-   TGaxisModLab *ml = new TGaxisModLab();
+   TAxisModLab *ml = new TAxisModLab();
    ml->SetLabNum(labNum);
    ml->SetAngle(labAngle);
    ml->SetSize(labSize);
@@ -2313,24 +2335,17 @@ void TGaxis::ChangeLabelAttributes(Int_t i, Int_t nlabels, TLatex* t, char* c)
    if (!fModLabs) return;
 
    TIter next(fModLabs);
-   TGaxisModLab *ml;
+   TAxisModLab *ml;
    Int_t labNum;
-   while ( (ml = (TGaxisModLab*)next()) ) {
+   while ( (ml = (TAxisModLab*)next()) ) {
       SavedTextAngle = t->GetTextAngle();
       SavedTextSize  = t->GetTextSize();
       SavedTextAlign = t->GetTextAlign();
       SavedTextColor = t->GetTextColor();
       SavedTextFont  = t->GetTextFont();
-   
       labNum = ml->GetLabNum();
-   
-      if (labNum < 0) {
-         labNum = nlabels + labNum + 2;
-      }
-
-
+      if (labNum < 0) labNum = nlabels + labNum + 2;
       if (i == labNum) {
-
          if (ml->GetAngle()>=0.) t->SetTextAngle(ml->GetAngle());
          if (ml->GetSize()>=0.)  t->SetTextSize(ml->GetSize());
          if (ml->GetAlign()>0)   t->SetTextAlign(ml->GetAlign());

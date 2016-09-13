@@ -243,6 +243,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   if(CMAKE_PROJECT_NAME STREQUAL ROOT)
     set(includedirs -I${CMAKE_SOURCE_DIR}
                     -I${CMAKE_BINARY_DIR}/include)
+    set(excludepaths ${CMAKE_SOURCE_DIR})
   elseif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
     set(includedirs -I${CMAKE_CURRENT_SOURCE_DIR}/inc)
   endif()
@@ -330,9 +331,15 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     endif()
   endif()
 
+  #---build the path exclusion switches----------------------
+  set(excludepathsargs "")
+  foreach(excludepath ${excludepaths})
+    set(excludepathsargs ${excludepathsargs} -excludePath ${excludepath})
+  endforeach()
+
   #---call rootcint------------------------------------------
   add_custom_command(OUTPUT ${dictionary}.cxx ${pcm_name} ${rootmap_name}
-                     COMMAND ${command} -f  ${dictionary}.cxx ${newargs} ${rootmapargs}
+                     COMMAND ${command} -f  ${dictionary}.cxx ${newargs} ${excludepathsargs} ${rootmapargs}
                                         ${ARG_OPTIONS} ${definitions} ${includedirs} ${rheaderfiles} ${_linkdef}
                      IMPLICIT_DEPENDS CXX ${_linkdef} ${headerfiles}
                      DEPENDS ${headerfiles} ${_linkdef} ${ROOTCINTDEP})

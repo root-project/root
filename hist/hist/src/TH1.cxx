@@ -461,6 +461,7 @@ When using the options 2 or 3 above, the labels are automatically
  See the member functions of these classes for the list of options.
 
 #### Giving titles to the X, Y and Z axis
+
 ~~~ {.cpp}
        h->GetXaxis()->SetTitle("X axis title");
        h->GetYaxis()->SetTitle("Y axis title");
@@ -4880,7 +4881,7 @@ void TH1::LabelsInflate(Option_t *ax)
       bin = GetBin(binx,biny,binz);
 
       // underflow and overflow will be cleaned up because their meaning has been altered
-      if (hold->IsBinUnderflow(ibin) || hold->IsBinOverflow(ibin)) continue; 
+      if (hold->IsBinUnderflow(ibin) || hold->IsBinOverflow(ibin)) continue;
       else {
          AddBinContent(bin, hold->RetrieveBinContent(ibin));
          if (errors) fSumw2.fArray[bin] += hold->fSumw2.fArray[ibin];
@@ -5316,7 +5317,7 @@ Long64_t TH1::Merge(TCollection *li)
     TH1Merger merger(*this,*li);
     Bool_t ret =  merger();
 
-    return (ret) ? GetEntries() : -1; 
+    return (ret) ? GetEntries() : -1;
 }
 
 
@@ -8141,8 +8142,8 @@ Double_t TH1::GetBinError(Int_t bin) const
 Double_t TH1::GetBinErrorLow(Int_t bin) const
 {
    if (fBinStatErrOpt == kNormal) return GetBinError(bin);
-   // in case of weighted histogram check if it is really weighted 
-   if (fSumw2.fN && fTsumw != fTsumw2) return GetBinError(bin); 
+   // in case of weighted histogram check if it is really weighted
+   if (fSumw2.fN && fTsumw != fTsumw2) return GetBinError(bin);
 
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
@@ -8172,8 +8173,8 @@ Double_t TH1::GetBinErrorLow(Int_t bin) const
 Double_t TH1::GetBinErrorUp(Int_t bin) const
 {
    if (fBinStatErrOpt == kNormal) return GetBinError(bin);
-   // in case of weighted histogram check if it is really weighted 
-   if (fSumw2.fN && fTsumw != fTsumw2) return GetBinError(bin); 
+   // in case of weighted histogram check if it is really weighted
+   if (fSumw2.fN && fTsumw != fTsumw2) return GetBinError(bin);
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
    if (fBuffer) ((TH1*)this)->BufferEmpty();

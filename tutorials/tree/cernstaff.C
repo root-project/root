@@ -2,9 +2,12 @@
 /// \ingroup tutorial_tree
 /// \notebook
 /// Playing with a Tree containing variables of type character
+///
 /// \macro_image
 /// \macro_code
+///
 /// \author Rene Brun
+
 void cernstaff () {
    TString dir = gROOT->GetTutorialsDir();
    dir.Append("/tree/cernstaff.C");

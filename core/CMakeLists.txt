@@ -101,7 +101,7 @@ add_subdirectory(utils)
 ROOT_LINKER_LIBRARY(Core
                     $<TARGET_OBJECTS:BaseTROOT>
                     ${objectlibs}
-                    LIBRARIES ${PCRE_LIBRARIES} ${LZMA_LIBRARIES} ${ZLIB_LIBRARY}
+                    LIBRARIES ${PCRE_LIBRARIES} ${LZMA_LIBRARIES} ${ZLIB_LIBRARIES}
                               ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${corelinklibs} )
 
 if(cling)

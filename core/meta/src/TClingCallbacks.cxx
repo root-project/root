@@ -179,6 +179,28 @@ bool TClingCallbacks::FileNotFound(llvm::StringRef FileName,
    return false;
 }
 
+
+static bool topmostDCIsFunction(Scope* S) {
+   if (!S)
+      return false;
+
+   DeclContext* DC = S->getEntity();
+   // For DeclContext-less scopes like if (dyn_expr) {}
+   // Find the DC enclosing S.
+   while (!DC) {
+      S = S->getParent();
+      DC = S->getEntity();
+   }
+
+   // DynamicLookup only happens inside topmost functions:
+   clang::DeclContext* MaybeTU = DC;
+   while (MaybeTU && !isa<TranslationUnitDecl>(MaybeTU)) {
+      DC = MaybeTU;
+      MaybeTU = MaybeTU->getParent();
+   }
+   return isa<FunctionDecl>(DC);
+}
+
 // On a failed lookup we have to try to more things before issuing an error.
 // The symbol might need to be loaded by ROOT's autoloading mechanism or
 // it might be a ROOT special object.
@@ -194,6 +216,12 @@ bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
 
    if (tryAutoParseInternal(R.getLookupName().getAsString(), R, S))
       return true; // happiness.
+
+   // The remaining lookup routines only work on global scope functions
+   // ("macros"), not in classes, namespaces etc - anything that looks like
+   // it has seen any trace of software development.
+   if (!topmostDCIsFunction(S))
+      return false;
 
    // If the autoload wasn't successful try ROOT specials.
    if (tryFindROOTSpecialInternal(R, S))
@@ -544,28 +572,43 @@ bool TClingCallbacks::tryResolveAtRuntimeInternal(LookupResult &R, Scope *S) {
    SourceLocation Loc = R.getNameLoc();
    Sema& SemaRef = R.getSema();
    ASTContext& C = SemaRef.getASTContext();
-   DeclContext* DC = C.getTranslationUnitDecl();
-   assert(DC && "Must not be null.");
-   VarDecl* Result = VarDecl::Create(C, DC, Loc, Loc, II, C.DependentTy,
+   DeclContext* TU = C.getTranslationUnitDecl();
+   assert(TU && "Must not be null.");
+
+   // DynamicLookup only happens inside wrapper functions:
+   clang::DeclContext* WrapperDC = S->getEntity();
+   clang::FunctionDecl* Wrapper = nullptr;
+   while (true) {
+      if (!WrapperDC || WrapperDC == TU)
+         return false;
+      Wrapper = dyn_cast<FunctionDecl>(WrapperDC);
+      if (Wrapper && utils::Analyze::IsWrapper(Wrapper))
+          break;
+      WrapperDC = WrapperDC->getParent();
+   }
+
+   VarDecl* Result = VarDecl::Create(C, TU, Loc, Loc, II, C.DependentTy,
                                      /*TypeSourceInfo*/0, SC_None);
+
+   if (!Result) {
+      // We cannot handle the situation. Give up
+      return false;
+   }
 
    // Annotate the decl to give a hint in cling. FIXME: Current implementation
    // is a gross hack, because TClingCallbacks shouldn't know about
    // EvaluateTSynthesizer at all!
 
    SourceRange invalidRange;
-   Result->addAttr(new (C) AnnotateAttr(invalidRange, C, "__ResolveAtRuntime", 0));
-   if (Result) {
-      // Here we have the scope but we cannot do Sema::PushDeclContext, because
-      // on pop it will try to go one level up, which we don't want.
-      Sema::ContextRAII pushedDC(SemaRef, DC);
-      R.addDecl(Result);
-      //SemaRef.PushOnScopeChains(Result, SemaRef.TUScope, /*Add to ctx*/true);
-      // Say that we can handle the situation. Clang should try to recover
-      return true;
-   }
-   // We cannot handle the situation. Give up
-   return false;
+   Wrapper->addAttr(new (C) AnnotateAttr(invalidRange, C, "__ResolveAtRuntime", 0));
+
+   // Here we have the scope but we cannot do Sema::PushDeclContext, because
+   // on pop it will try to go one level up, which we don't want.
+   Sema::ContextRAII pushedDC(SemaRef, TU);
+   R.addDecl(Result);
+   //SemaRef.PushOnScopeChains(Result, SemaRef.TUScope, /*Add to ctx*/true);
+   // Say that we can handle the situation. Clang should try to recover
+   return true;
 }
 
 bool TClingCallbacks::shouldResolveAtRuntime(LookupResult& R, Scope* S) {

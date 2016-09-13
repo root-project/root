@@ -227,7 +227,8 @@ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
                          REGEX proofd.rc.d EXCLUDE
                          REGEX rootd.xinetd EXCLUDE
                          REGEX proofd.xinetd EXCLUDE
-                         REGEX root.mimes EXCLUDE)
+                         REGEX root.mimes EXCLUDE
+                         REGEX cmake EXCLUDE )
   install(DIRECTORY fonts/  DESTINATION ${CMAKE_INSTALL_FONTDIR})
   install(DIRECTORY icons/  DESTINATION ${CMAKE_INSTALL_ICONDIR})
   install(DIRECTORY macros/ DESTINATION ${CMAKE_INSTALL_MACRODIR})

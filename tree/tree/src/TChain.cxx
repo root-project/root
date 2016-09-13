@@ -1236,11 +1236,11 @@ Int_t TChain::LoadBaskets(Long64_t /*maxmemory*/)
 /// The input argument entry is the entry serial number in the whole chain.
 ///
 /// In case of error, LoadTree returns a negative number:
-///   1. The chain is empty.
-///   2. The requested entry number of less than zero or too large for the chain.
+///   * -1: The chain is empty.
+///   * -2: The requested entry number is less than zero or too large for the chain.
 ///       or too large for the large TTree.
-///   3. The file corresponding to the entry could not be correctly open
-///   4. The TChainElement corresponding to the entry is missing or
+///   * -3: The file corresponding to the entry could not be correctly open
+///   * -4: The TChainElement corresponding to the entry is missing or
 ///       the TTree is missing from the file.
 ///
 /// Note: This is the only routine which sets the value of fTree to

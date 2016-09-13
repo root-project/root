@@ -139,6 +139,7 @@ bool TMPClient::Fork(TMPWorker &server)
    } else {
       //CHILD/WORKER
       fIsParent = false;
+      close(sockets[0]); //we don't need this
 
       //override signal handler (make the servers exit on SIGINT)
       TSeqCollection *signalHandlers = gSystem->GetListOfSignalHandlers();
@@ -159,7 +160,20 @@ bool TMPClient::Fork(TMPWorker &server)
          }
       }
       close(0);
-
+      if (fMon.GetListOfActives()) {
+         while (fMon.GetListOfActives()->GetSize() > 0) {
+            TSocket *s = (TSocket *) fMon.GetListOfActives()->First();
+            fMon.Remove(s);
+            delete s;
+         }
+      }
+      if (fMon.GetListOfDeActives()) {
+         while (fMon.GetListOfDeActives()->GetSize() > 0) {
+            TSocket *s = (TSocket *) fMon.GetListOfDeActives()->First();
+            fMon.Remove(s);
+            delete s;
+         }
+      }
       //disable graphics
       //these instructions were copied from TApplication::MakeBatch
       gROOT->SetBatch();

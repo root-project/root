@@ -1,3 +1,13 @@
+/// \file
+/// \ingroup tutorial_tree
+/// \notebook -nodraw
+/// Script illustrating the use of the TParalleCoord class
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author  Bastien Dallapiazza
+
 #include "TFile.h"
 #include "TCanvas.h"
 #include "TStyle.h"
@@ -6,9 +16,6 @@
 #include "TParallelCoord.h"
 #include "TParallelCoordVar.h"
 #include "TParallelCoordRange.h"
-
-// script illustrating the use of the TParalleCoord class
-//Author: Bastien Dallapiazza
 
 Double_t r1,r2,r3,r4,r5,r6,r7,r8,r9;
 Double_t dr = 3.5;

@@ -7,8 +7,11 @@
 /// to store the results of the last maxEntries events.
 /// for more info, see TTree::SetCircular.
 /// Circular trees must be memory resident.
+///
 /// \macro_code
+///
 /// \author Rene Brun
+
 void circular() {
    auto T = new TTree("T","test circular buffers");
    TRandom r;

@@ -3,7 +3,9 @@
 /// \notebook -nodraw
 /// Read data (CERN staff) from an ascii file and create a root file with a Tree.
 /// See also a variant in staff.C
+///
 /// \macro_code
+///
 /// \author Rene Brun
 
 TFile *cernbuild(Int_t getFile=0, Int_t print=1) {

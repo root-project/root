@@ -19,7 +19,6 @@ MULTIPROCDO     := $(MULTIPROCDS:.cxx=.o)
 MULTIPROCDH     := $(MULTIPROCDS:.cxx=.h)
 
 MULTIPROCH      := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
-
 MULTIPROCS      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 MULTIPROCO      := $(call stripsrc,$(MULTIPROCS:.cxx=.o))
 

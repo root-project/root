@@ -34,8 +34,10 @@
 ///   Its sub-branch "fTriggerBits" takes 1699 bytes on disk
 ///   Its sub-branch "fIsValid" takes 366 bytes on disk
 /// ~~~
+///
 /// \macro_code
-/// \author xxx
+///
+/// \author
 
 #include "TTree.h"
 #include "TBranch.h"

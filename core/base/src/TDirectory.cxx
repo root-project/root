@@ -1106,8 +1106,11 @@ Int_t TDirectory::SaveObjectAs(const TObject *obj, const char *filename, Option_
       fname.Form("%s.root",obj->GetName());
    }
    TString cmd;
-   cmd.Form("TFile::Open(\"%s\",\"recreate\");",fname.Data());
-   {
+   if (fname.Index(".json") > 0) {
+      cmd.Form("TBufferJSON::ExportToFile(\"%s\",(TObject*) %s, \"%s\");", fname.Data(), TString::LLtoa((Long_t)obj, 10).Data(), (option ? option : ""));
+      nbytes = gROOT->ProcessLine(cmd);
+   } else {
+      cmd.Form("TFile::Open(\"%s\",\"recreate\");",fname.Data());
       TContext ctxt; // The TFile::Open will change the current directory.
       TDirectory *local = (TDirectory*)gROOT->ProcessLine(cmd);
       if (!local) return 0;

@@ -192,10 +192,11 @@ namespace cling {
 
     PP.getDiagnostics().setSuppressAllDiagnostics(OldSuppressAllDiagnostics);
 
-    if (complete) {
-      const TagDecl *result = dyn_cast<TagDecl>(complete);
+    if (!complete)
+      return 0;
+    if (const TagDecl *result = dyn_cast<TagDecl>(complete))
       return result->getDefinition();
-    } else return 0;
+    return 0;
   }
 
   ///\brief Look for a tag decl based on its name
@@ -387,9 +388,9 @@ namespace cling {
                                 quickTypeName.size()-6);
       innerConst = true;
     }
-    constexpr int pointerType = 0;
-    constexpr int lrefType = 1;
-    constexpr int rrefType = 2;
+
+    enum PointerType { kPointerType, kLRefType, kRRefType, };
+
     if (quickTypeName.endswith("const")) {
       if (quickTypeName.size() < 6) return true;
       auto c = quickTypeName[quickTypeName.size()-6];
@@ -402,16 +403,16 @@ namespace cling {
                                        quickTypeName.size() - 5);
       }
     }
-    std::vector<int> ptrref;
+    std::vector<PointerType> ptrref;
     for(auto c = quickTypeName.end()-1; c != quickTypeName.begin(); --c) {
-      if (*c == '*')  ptrref.push_back(pointerType);
+      if (*c == '*')  ptrref.push_back(kPointerType);
       else if (*c == '&') {
         if (*(c-1)== '&') {
           --c;
-          ptrref.push_back(rrefType);
+          ptrref.push_back(kRRefType);
 
         } else
-          ptrref.push_back(lrefType);
+          ptrref.push_back(kLRefType);
       }
       else break;
     }
@@ -442,14 +443,14 @@ namespace cling {
 
       for(auto t : ptrref) {
         switch (t) {
-          case pointerType :
+          case kPointerType :
             quickFind = Context.getPointerType(quickFind);
             break;
-          case rrefType :
-            quickFind = Context.getRValueReferenceType(quickFind);
-            break;
-          case lrefType :
+          case kLRefType :
             quickFind = Context.getLValueReferenceType(quickFind);
+            break;
+          case kRRefType :
+            quickFind = Context.getRValueReferenceType(quickFind);
             break;
         }
       }
@@ -1697,12 +1698,12 @@ namespace cling {
         SourceLocation loc;
         sema::TemplateDeductionInfo Info(loc);
         FunctionDecl *fdecl = 0;
-        Sema::TemplateDeductionResult Result
+        Sema::TemplateDeductionResult TemplDedResult
           = S.DeduceTemplateArguments(MethodTmpl,
                     const_cast<TemplateArgumentListInfo*>(ExplicitTemplateArgs),
                                       fdecl,
                                       Info);
-        if (Result) {
+        if (TemplDedResult != Sema::TDK_Success) {
           // Deduction failure.
           return 0;
         } else {

@@ -1,11 +1,15 @@
-//
-// macro driving the analysis
-//
-//  can specify file name and type
-//
-// type == 0 : normal
-// type =  1 : use AClic to compile selector
-// type =  2 : use a fill list and then process the fill list
+/// \file
+/// \ingroup tutorial_tree
+/// \notebook -nodraw
+/// Macro driving the analysis can specify file name and type
+///
+/// .- type == 0 : normal
+///  - type =  1 : use AClic to compile selector
+///  - type =  2 : use a fill list and then process the fill list///
+///
+/// \macro_code
+///
+/// \author
 
 //----------------------------------------
 

@@ -2126,6 +2126,7 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          // Reset pad parameters and recompute conversion coefficients
          ResizePad();
 
+
          // emit signal
          RangeChanged();
       }
@@ -4106,6 +4107,15 @@ TPad *TPad::Pick(Int_t px, Int_t py, TObjLink *&pickobj)
       if (!button->IsEditable()) pickobj = 0;
    }
 
+   if (TestBit(kCannotPick)) {
+
+      if (picked == this) {
+         // cannot pick pad itself!
+         picked = 0;
+      }
+
+   }
+
    gPad = padsav;
    return picked;
 }
@@ -4985,6 +4995,7 @@ void TPad::ResizePad(Option_t *option)
             fPixmapID = GetPainter()->CreateDrawable(w, h);
          } else {
             if (gVirtualX->ResizePixmap(fPixmapID, w, h)) {
+               Resized();
                Modified(kTRUE);
             }
          }
@@ -5324,6 +5335,7 @@ void TPad::SetLogx(Int_t value)
    fLogx = value;
    delete fView; fView=0;
    Modified();
+   RangeAxisChanged();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -5337,6 +5349,7 @@ void TPad::SetLogy(Int_t value)
    fLogy = value;
    delete fView; fView=0;
    Modified();
+   RangeAxisChanged();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -5347,6 +5360,7 @@ void TPad::SetLogz(Int_t value)
    fLogz = value;
    delete fView; fView=0;
    Modified();
+   RangeAxisChanged();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

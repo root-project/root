@@ -46,6 +46,9 @@ public:
    static TString   ConvertToJSON(const void *obj, const TClass *cl, Int_t compact = 0, const char *member_name = 0);
    static TString   ConvertToJSON(const void *obj, TDataMember *member, Int_t compact = 0, Int_t arraylen = -1);
 
+   static Int_t     ExportToFile(const char* filename, const TObject *obj, const char* option = 0);
+   static Int_t     ExportToFile(const char* filename, const void *obj, const TClass *cl, const char* option = 0);
+
    // suppress class writing/reading
 
    virtual TClass  *ReadClass(const TClass *cl = 0, UInt_t *objTag = 0);
@@ -466,5 +469,3 @@ protected:
 };
 
 #endif
-
-

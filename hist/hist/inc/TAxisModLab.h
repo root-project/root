@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TGaxisModLab
-#define ROOT_TGaxisModLab
+#ifndef ROOT_TAxisModLab
+#define ROOT_TAxisModLab
 
 #ifndef ROOT_TAttText
 #include "TObject.h"
@@ -20,7 +20,11 @@
 #include "TAttText.h"
 #endif
 
-class TGaxisModLab : public TObject, public TAttText {
+#ifndef ROOT_TString
+#include "TString.h"
+#endif
+
+class TAxisModLab : public TObject, public TAttText {
 
 private:
 
@@ -29,7 +33,7 @@ private:
 
 public:
 
-   TGaxisModLab();
+   TAxisModLab();
 
    void SetLabNum(Int_t n = 0);
    void SetAngle(Double_t a = -1.);
@@ -47,7 +51,7 @@ public:
    Int_t    GetFont()   {return fTextFont;}
    TString  GetText()   {return fLabText;}
 
-   ClassDef(TGaxisModLab,0)  // Modified axis label
+   ClassDef(TAxisModLab,0)  // Modified axis label
 };
 
 #endif

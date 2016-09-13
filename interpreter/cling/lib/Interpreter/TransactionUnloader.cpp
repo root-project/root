@@ -17,6 +17,7 @@
 
 #include "clang/AST/Decl.h"
 #include "clang/AST/DependentDiagnostic.h"
+#include "clang/CodeGen/ModuleBuilder.h"
 #include "clang/Sema/Sema.h"
 
 using namespace clang;
@@ -96,11 +97,30 @@ namespace cling {
   }
 
   bool TransactionUnloader::RevertTransaction(Transaction* T) {
-    DeclUnloader DeclU(m_Sema, m_CodeGen, T);
 
-    bool Successful = unloadDeclarations(T, DeclU);
-    Successful = unloadFromPreprocessor(T, DeclU) && Successful;
+    bool Successful = true;
+    if (getExecutor() && T->getModule()) {
+      Successful = getExecutor()->unloadFromJIT(T->getModule(),
+                                                T->getExeUnloadHandle())
+        && Successful;
+
+      // Cleanup the module from unused global values.
+      // if (T->getModule()) {
+      //   llvm::ModulePass* globalDCE = llvm::createGlobalDCEPass();
+      //   globalDCE->runOnModule(*T->getModule());
+      // }
+
+      Successful = unloadModule(T->getModule()) && Successful;
+    }
+
+    // Clean up the pending instantiations
+    m_Sema->PendingInstantiations.clear();
+    m_Sema->PendingLocalImplicitInstantiations.clear();
+
+    DeclUnloader DeclU(m_Sema, m_CodeGen, T);
+    Successful = unloadDeclarations(T, DeclU) && Successful;
     Successful = unloadDeserializedDeclarations(T, DeclU) && Successful;
+    Successful = unloadFromPreprocessor(T, DeclU) && Successful;
 
 #ifndef NDEBUG
     //FIXME: Move the nested transaction marker out of the decl lists and
@@ -109,21 +129,6 @@ namespace cling {
     //if (T->getCompilationOpts().CodeGenerationForModule)
     //  assert (!DeclSize && "No parsed decls must happen in parse for module");
 #endif
-
-    // Clean up the pending instantiations
-    m_Sema->PendingInstantiations.clear();
-    m_Sema->PendingLocalImplicitInstantiations.clear();
-
-    // Cleanup the module from unused global values.
-    // if (T->getModule()) {
-    //   llvm::ModulePass* globalDCE = llvm::createGlobalDCEPass();
-    //   globalDCE->runOnModule(*T->getModule());
-    // }
-
-    if (getExecutor() && T->getModule())
-      Successful = getExecutor()->unloadFromJIT(T->getModule(),
-                                                T->getExeUnloadHandle())
-        && Successful;
 
     if (Successful)
       T->setState(Transaction::kRolledBack);
@@ -135,6 +140,14 @@ namespace cling {
 
   bool TransactionUnloader::UnloadDecl(Decl* D) {
     return cling::UnloadDecl(m_Sema, m_CodeGen, D);
+  }
+
+  bool TransactionUnloader::unloadModule(llvm::Module* M) {
+    for (auto& Func: M->functions())
+      m_CodeGen->forgetGlobal(&Func);
+    for (auto& Glob: M->globals())
+      m_CodeGen->forgetGlobal(&Glob);
+    return true;
   }
 } // end namespace cling
 

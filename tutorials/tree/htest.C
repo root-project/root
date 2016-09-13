@@ -11,8 +11,10 @@
 /// root > htr2()
 /// root > htr3()
 /// ~~~
+///
 /// \macro_image
 /// \macro_code
+///
 /// \author Rene Brun
 
 void htw() {

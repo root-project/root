@@ -1889,7 +1889,7 @@ static int HandleInterpreterException(cling::MetaProcessor* metaProcessor,
    }
    catch (cling::InvalidDerefException& ex)
    {
-      Info("Handle", "%s.\n%s", ex.what(), "Execution of your code was aborted.");
+      Error("HandleInterpreterException", "%s.\n%s", ex.what(), "Execution of your code was aborted.");
       ex.diagnose();
    }
    return 0;
@@ -2016,11 +2016,11 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
          size_t unnamedMacroOpenCurly;
          {
             std::string code;
-            std::string line;
+            std::string codeline;
             std::ifstream in(fname);
             while (in) {
-               std::getline(in, line);
-               code += line + "\n";
+               std::getline(in, codeline);
+               code += codeline + "\n";
             }
             unnamedMacroOpenCurly
               = cling::utils::isUnnamedMacro(code, fInterpreter->getCI()->getLangOpts());

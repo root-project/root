@@ -91,6 +91,7 @@ Graphs can be drawn with the following options:
 | Option   | Description                                                       |
 |----------|-------------------------------------------------------------------|
 | "A"      | Axis are drawn around the graph |
+| "I"      | Combine with option 'A' it draws invisible axis |
 | "L"      | A simple polyline is drawn |
 | "F"      | A fill area is drawn ('CF' draw a smoothed fill area) |
 | "C"      | A smooth Curve is drawn |
@@ -914,9 +915,9 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
    if (theGraph->InheritsFrom("TGraphPolar"))
       gPad->PushSelectableObject(theGraph);
 
-   Int_t optionLine , optionAxis , optionCurve, optionStar , optionMark;
-   Int_t optionBar  , optionR    , optionOne  , optionE;
-   Int_t optionFill , optionZ    , optionCurveFill;
+   Int_t optionLine , optionAxis , optionCurve    , optionStar , optionMark;
+   Int_t optionBar  , optionR    , optionOne      , optionE;
+   Int_t optionFill , optionZ    , optionCurveFill, optionIAxis;
    Int_t i, npt, nloop;
    Int_t drawtype=0;
    Double_t xlow, xhigh, ylow, yhigh;
@@ -934,15 +935,16 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
    opt.ToUpper();
    opt.ReplaceAll("SAME","");
 
-   if (opt.Contains("L")) optionLine = 1;  else optionLine = 0;
-   if (opt.Contains("A")) optionAxis = 1;  else optionAxis = 0;
-   if (opt.Contains("C")) optionCurve= 1;  else optionCurve= 0;
-   if (opt.Contains("*")) optionStar = 1;  else optionStar = 0;
-   if (opt.Contains("P")) optionMark = 1;  else optionMark = 0;
-   if (opt.Contains("B")) optionBar  = 1;  else optionBar  = 0;
-   if (opt.Contains("R")) optionR    = 1;  else optionR    = 0;
-   if (opt.Contains("1")) optionOne  = 1;  else optionOne  = 0;
-   if (opt.Contains("F")) optionFill = 1;  else optionFill = 0;
+   if (opt.Contains("L")) optionLine  = 1;  else optionLine  = 0;
+   if (opt.Contains("A")) optionAxis  = 1;  else optionAxis  = 0;
+   if (opt.Contains("C")) optionCurve = 1;  else optionCurve = 0;
+   if (opt.Contains("*")) optionStar  = 1;  else optionStar  = 0;
+   if (opt.Contains("P")) optionMark  = 1;  else optionMark  = 0;
+   if (opt.Contains("B")) optionBar   = 1;  else optionBar   = 0;
+   if (opt.Contains("R")) optionR     = 1;  else optionR     = 0;
+   if (opt.Contains("1")) optionOne   = 1;  else optionOne   = 0;
+   if (opt.Contains("F")) optionFill  = 1;  else optionFill  = 0;
+   if (opt.Contains("I")) optionIAxis = 1;  else optionIAxis = 0;
    if (opt.Contains("2") || opt.Contains("3") ||
       opt.Contains("4") || opt.Contains("5")) optionE = 1;  else optionE = 0;
    optionZ    = 0;
@@ -1019,6 +1021,7 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
       char chopth[8] = " ";
       if (strstr(chopt,"x+")) strncat(chopth, "x+",2);
       if (strstr(chopt,"y+")) strncat(chopth, "y+",2);
+      if (optionIAxis) strncat(chopth, "A",1);
       if (!theGraph->GetHistogram()) {
          // the graph is created with at least as many bins as there are
          // points to permit zooming on the full range.

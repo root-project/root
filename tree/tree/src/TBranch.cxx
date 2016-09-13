@@ -39,6 +39,7 @@
 #include "TTreeCacheUnzip.h"
 #include "TVirtualMutex.h"
 #include "TVirtualPad.h"
+#include "TRegexp.h"
 
 #include <atomic>
 #include <cstddef>
@@ -46,18 +47,6 @@
 #include <stdio.h>
 
 Int_t TBranch::fgCount = 0;
-
-#if (__GNUC__ >= 3) || defined(__INTEL_COMPILER)
-#if !defined(R__unlikely)
-  #define R__unlikely(expr) __builtin_expect(!!(expr), 0)
-#endif
-#if !defined(R__likely)
-  #define R__likely(expr) __builtin_expect(!!(expr), 1)
-#endif
-#else
-  #define R__unlikely(expr) expr
-  #define R__likely(expr) expr
-#endif
 
 /** \class TBranch
 \ingroup tree
@@ -280,6 +269,15 @@ TBranch::TBranch(TBranch *parent, const char* name, void* address, const char* l
 void TBranch::Init(const char* name, const char* leaflist, Int_t compress)
 {
    // Initialization routine called from the constructor.  This should NOT be made virtual.
+
+   Ssiz_t matchlength;
+   TRegexp reg("^[a-zA-Z_][a-zA-Z0-9_]*$");
+   if (0!=reg.Index(name,&matchlength)) {
+      Warning("TBranch","Branch name is not an allowed c++ variable name. This can lead to problems in MakeClass");
+   }
+   if (TString(name).BeginsWith("b_")) {
+      Warning("TBranch","Branch name begins with 'b_'. This may lead to confusion or problems in MakeClass");
+   }
 
    SetBit(TBranch::kDoNotUseBufferMap);
    if ((compress == -1) && fTree->GetDirectory()) {

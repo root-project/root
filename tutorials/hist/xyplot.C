@@ -44,7 +44,7 @@ void xyplot()
    TGaxis *yaxis = new TGaxis(0, gPad->GetUymin(),
                               0, gPad->GetUymax(),
                               gPad->GetUymin(),gPad->GetUymax(),6,"+LN");
-   yaxis->SetLabelAttributes(4,-1,0.);
+   yaxis->ChangeLabel(4,-1,0.);
    yaxis->Draw();
 
    // Draw the Y-axis title.

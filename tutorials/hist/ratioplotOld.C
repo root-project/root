@@ -1,14 +1,15 @@
 /// \file
 /// \ingroup tutorial_hist
-/// \notebook
-/// Example displaying two histograms and their ratio.
+/// Example displaying two histograms and their ratio. This macro does not use the
+/// class TRatioPlot. For ROOT version >= 6.08 TRatioPlot should be used. See
+/// the other ratio plots examples in this folder.
 ///
 /// \macro_image
 /// \macro_code
 ///
 /// \author Olivier Couet
 
-void ratioplot( ) {
+void ratioplotOld( ) {
    // Define two gaussian histograms. Note the X and Y title are defined
    // at booking time using the convention "Hist_title ; X_title ; Y_title"
    TH1F *h1 = new TH1F("h1", "Two gaussian plots and their ratio;x title; h1 and h2 gaussian histograms", 100, -5, 5);

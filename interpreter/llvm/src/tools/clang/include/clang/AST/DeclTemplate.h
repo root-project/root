@@ -1441,11 +1441,7 @@ public:
   bool hasDefaultArgument() const { return DefaultArgument.isSet(); }
 
   /// \brief Retrieve the default argument, if any.
-  const TemplateArgumentLoc &getDefaultArgument() const {
-    static const TemplateArgumentLoc None;
-    return DefaultArgument.isSet() ? *DefaultArgument.get() : None;
-  }
-
+  const TemplateArgumentLoc &getDefaultArgument() const;
   /// \brief Retrieve the location of the default argument, if any.
   SourceLocation getDefaultArgumentLoc() const;
 

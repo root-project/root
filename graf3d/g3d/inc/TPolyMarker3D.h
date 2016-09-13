@@ -82,7 +82,7 @@ public:
 
    static  void      PaintH3(TH1 *h, Option_t *option);
 
-   ClassDef(TPolyMarker3D,2);  //An array of 3-D points with the same marker
+   ClassDef(TPolyMarker3D,3);  //An array of 3-D points with the same marker
 };
 
 #endif
