@@ -258,19 +258,6 @@ of effective system reads for a given file with a code like
 #include "TMath.h"
 #include <limits.h>
 
-// TODO: Copied from TBranch.cxx
-#if (__GNUC__ >= 3) || defined(__INTEL_COMPILER)
-#if !defined(R__unlikely)
-  #define R__unlikely(expr) __builtin_expect(!!(expr), 0)
-#endif
-#if !defined(R__likely)
-  #define R__likely(expr) __builtin_expect(!!(expr), 1)
-#endif
-#else
-  #define R__unlikely(expr) expr
-  #define R__likely(expr) expr
-#endif
-
 Int_t TTreeCache::fgLearnEntries = 100;
 
 ClassImp(TTreeCache);
