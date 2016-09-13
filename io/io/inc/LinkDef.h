@@ -15,6 +15,7 @@
 #pragma link off all functions;
 
 #pragma link C++ class TBufferFile;
+#pragma link C++ class TBufferJSON;
 #pragma link C++ class TDirectoryFile-;
 #pragma link C++ class TFile-;
 #pragma link C++ class TFileCacheRead+;

@@ -898,12 +898,43 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
             return true;
          }
 
-         const std::string& name_value = selected->GetAttributeName();
+         // Replace on the fly the type if the type for IO is different for example
+         // in presence of unique_ptr<T> or collections thereof.
+         // The following lines are very delicate: we need to preserve the special
+         // ROOT opaque typedefs.
+         auto req_type = selected->GetRequestedType();
+         clang::QualType thisType(req_type, 0);
+         std::string attr_name = selected->GetAttributeName().c_str();
+         if (llvm::isa<clang::ClassTemplateSpecializationDecl>(recordDecl)) {
+            if (!req_type) {
+               thisType = recordDecl->getASTContext().getTypeDeclType(recordDecl);
+            }
+            auto nameTypeForIO = ROOT::TMetaUtils::GetNameTypeForIO(thisType, fInterpreter, fNormCtxt);
+            auto typeForIO = nameTypeForIO.second;
+            // It could be that we have in hands a type which is not a class, e.g.
+            // in presence of unique_ptr<T> we got a T with T=double.
+            if (!typeForIO->isRecordType()) return true;
+            if (typeForIO.getTypePtr() != thisType.getTypePtr()){
+               if (auto recordDeclForIO = typeForIO->getAsCXXRecordDecl()) {
+                  auto canRecordDeclForIO = recordDeclForIO->getCanonicalDecl();
+                  if (!fselectedRecordDecls.insert(canRecordDeclForIO).second) return true;
+                  auto canRecordDecl = recordDecl->getCanonicalDecl();
+                  fDeclSelRuleMap.erase(fDeclSelRuleMap.find(canRecordDecl));
+                  fDeclSelRuleMap[recordDeclForIO]=selected;
+                  recordDecl = recordDeclForIO;
+                  thisType = typeForIO;
+                  attr_name = nameTypeForIO.first;
+               }
+            }
+         }
+         if (!thisType.isNull()) {
+            req_type = thisType.getTypePtr();
+         }
          if (selected->HasAttributeName()) {
             ROOT::TMetaUtils::AnnotatedRecordDecl annRecDecl(selected->GetIndex(),
-                                                            selected->GetRequestedType(),
+                                                            req_type,
                                                             recordDecl,
-                                                            name_value.c_str(),
+                                                            attr_name.c_str(),
                                                             selected->RequestStreamerInfo(),
                                                             selected->RequestNoStreamer(),
                                                             selected->RequestNoInputOperator(),

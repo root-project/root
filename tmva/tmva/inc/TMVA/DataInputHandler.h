@@ -56,12 +56,13 @@ namespace TMVA {
 
    class MsgLogger;
    
-   class TreeInfo {
+   class TreeInfo:public TObject {
 
    public:
 
-   TreeInfo( TTree* tr, const TString& className, Double_t weight=1.0, Types::ETreeType tt = Types::kMaxTreeType, Bool_t own=kFALSE ) 
+      TreeInfo( TTree* tr, const TString& className, Double_t weight=1.0, Types::ETreeType tt = Types::kMaxTreeType, Bool_t own=kFALSE ) 
       : fTree(tr), fClassName(className), fWeight(weight), fTreeType(tt), fOwner(own) {}
+      TreeInfo():fTree(0),fClassName(""),fWeight(1.0), fTreeType(Types::kMaxTreeType), fOwner(kFALSE) {}
       ~TreeInfo() { if (fOwner) delete fTree; }
 
       TTree*           GetTree()      const { return fTree; }
@@ -72,14 +73,16 @@ namespace TMVA {
 
    private:
 
-      TTree*           fTree;     //! pointer to the tree
-      TString          fClassName;//! name of the class the tree belongs to
-      Double_t         fWeight;   //! weight for the tree
-      Types::ETreeType fTreeType; //! tree is for training/testing/both
-      Bool_t           fOwner;    //! true if created from file
+      TTree*           fTree;     // pointer to the tree
+      TString          fClassName;// name of the class the tree belongs to
+      Double_t         fWeight;   // weight for the tree
+      Types::ETreeType fTreeType; // tree is for training/testing/both
+      Bool_t           fOwner;    // true if created from file
+   protected:
+       ClassDef(TreeInfo,1);      
    };
 
-   class DataInputHandler {
+   class DataInputHandler :public TObject {
 
    public:
 
@@ -130,10 +133,12 @@ namespace TMVA {
 
       TTree * ReadInputTree( const TString& dataFile );
       
-      mutable std::map< TString, std::vector<TreeInfo> > fInputTrees;        //! list of input trees per class (classname is given as first parameter in the map)
-      std::map< std::string, Bool_t   >                  fExplicitTrainTest; //! if set to true the user has specified training and testing data explicitly
-      mutable MsgLogger*                                 fLogger;   // message logger
+      mutable std::map< TString, std::vector<TreeInfo> > fInputTrees;        // list of input trees per class (classname is given as first parameter in the map)
+      std::map< std::string, Bool_t   >                  fExplicitTrainTest; // if set to true the user has specified training and testing data explicitly
+      mutable MsgLogger*                                 fLogger;            // message logger
       MsgLogger& Log() const { return *fLogger; }
+   protected:
+       ClassDef(DataInputHandler,1);
    };
 }
 

@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_math
+/// \notebook
 /// Tutorial illustrating the new statistical distributions functions (pdf, cdf and quantile)
 ///
 /// \macro_image
@@ -7,14 +8,12 @@
 ///
 /// \author Anna Kreshuk
 
-#ifndef __CINT__
 #include "Math/DistFunc.h"
 #include "TF1.h"
 #include "TCanvas.h"
 #include "TSystem.h"
 #include "TLegend.h"
 #include "TAxis.h"
-#endif
 
 void normalDist() {
 

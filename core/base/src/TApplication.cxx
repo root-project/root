@@ -81,6 +81,12 @@ static void CallEndOfProcessCleanups()
 {
    // Insure that the files, canvases and sockets are closed.
 
+   // If we get here, the tear down has started.  We have no way to know what
+   // has or has not yet been done.  In particular on Ubuntu, this was called
+   // after the function static in TSystem.cxx has been destructed.  So we
+   // set gROOT in its end-of-life mode which prevents executing code, like
+   // autoloading libraries (!) that is pointless ...
+   gROOT->SetBit(kInvalidObject);
    gROOT->EndOfProcessCleanups();
 }
 

@@ -13,12 +13,6 @@ if(root7)
 endif()
 ROOT_GLOB_SOURCES(sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/src src/*.cxx ${root7src})
 
-include_directories(${CMAKE_SOURCE_DIR}/graf3d/g3d/inc)
-include_directories(${CMAKE_SOURCE_DIR}/gui/gui/inc)
-include_directories(${CMAKE_SOURCE_DIR}/io/io/inc)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../textinput/src)
-include_directories(${CMAKE_SOURCE_DIR})
-
 ROOT_GENERATE_DICTIONARY(G__Core
                          ${Base_dict_headers}
                          ${Base_v7_dict_headers}

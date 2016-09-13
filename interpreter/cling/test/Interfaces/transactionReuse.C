@@ -6,7 +6,7 @@
 // LICENSE.TXT for details.
 //------------------------------------------------------------------------------
 
-// RUN: cat %s | %cling -fno-rtti | FileCheck %s
+// RUN: cat %s | %built_cling -fno-rtti | FileCheck %s
 
 // This test makes sure the interpreter doesn't create many useless empty
 // transactions.
@@ -19,8 +19,6 @@
 #include "clang/AST/Decl.h"
 
 #include <stdio.h>
-
-.rawInput 1
 
 using namespace cling;
 
@@ -35,8 +33,6 @@ void generateNestedTransaction(int depth) {
   } // this will cause every even transaction to be reused.
   generateNestedTransaction(--depth);
 }
-
-.rawInput 0
 
 generateNestedTransaction(5);
 const cling::Transaction* T = gCling->getFirstTransaction();

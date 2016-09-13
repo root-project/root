@@ -473,7 +473,8 @@ Cppyy::TCppObject_t Cppyy::CallO( TCppMethod_t method,
       TCppObject_t self, void* args, TCppType_t result_type )
 {
    TClassRef& cr = type_from_handle( result_type );
-   void* obj = malloc( cr->Size() );
+   size_t s = gInterpreter->ClassInfo_Size(cr->GetClassInfo());
+   void* obj = malloc( s );
    if ( FastCall( method, args, self, obj ) )
       return (TCppObject_t)obj;
    return (TCppObject_t)0;

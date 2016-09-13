@@ -1,6 +1,6 @@
 
 #---Define the way we want to build and what of llvm/clang/cling------------------------------------
-set(LLVM_ENABLE_WARNINGS ON CACHE BOOL "")
+set(LLVM_ENABLE_WARNINGS OFF CACHE BOOL "")
 set(LLVM_INCLUDE_TESTS OFF CACHE BOOL "")
 set(LLVM_INCLUDE_EXAMPLES OFF CACHE BOOL "")
 set(LLVM_BUILD_TOOLS OFF CACHE BOOL "")
@@ -34,26 +34,46 @@ endif()
 set(LLVM_TARGETS_TO_BUILD ${ROOT_CLING_TARGET} CACHE STRING "Semicolon-separated list of targets to build, or \"all\".")
 
 #---Protect against warnings clang/gcc would fire----------------------------------------------------
-set(INTERP_COMMON_ADDITIONAL_FLAGS "-Wno-comment -Wno-unused-parameter")
-if(CMAKE_COMPILER_IS_GNUCXX)
-   set(INTERP_ADDITIONAL_FLAGS "${INTERP_COMMON_ADDITIONAL_FLAGS} -Wno-maybe-uninitialized -Wno-unused-but-set-variable -Wno-missing-field-initializers")
-elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
-   set(INTERP_ADDITIONAL_FLAGS "${INTERP_COMMON_ADDITIONAL_FLAGS} -Wno-conditional-uninitialized -Wno-parentheses-equality -Wno-unused-private-field")
+ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-comment)
+ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-misleading-indentation)
+ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-missing-field-initializers)
+if(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
+  ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-conditional-uninitialized)
+  ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-unused-private-field)
+  ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-unused-local-typedef)
+  ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-parentheses-equality)
+  ROOT_ADD_C_FLAG(INTERP_ADDITIONAL_C_FLAGS -Wno-parentheses-equality)
 endif()
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${INTERP_ADDITIONAL_FLAGS}")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${INTERP_ADDITIONAL_FLAGS}")
+if(APPLE)
+  ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-deprecated-declarations)
+endif()
+ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-overloaded-virtual)
+ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-maybe-uninitialized)
+ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-unused-parameter)
+ROOT_ADD_C_FLAG(INTERP_ADDITIONAL_C_FLAGS -Wno-unused-parameter)
+ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-unused-variable)
+ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-unused-but-set-variable)
+ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-unused-function)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${INTERP_ADDITIONAL_CXX_FLAGS}")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${INTERP_ADDITIONAL_C_FLAGS}")
 
 #---Do not transform warnings in errors-------------------------------------------------------------
 string(REPLACE "-Werror " "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 string(REPLACE "-Wshadow " "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 
 #---Build LLVM/Clang with symbol visibility=hidden--------------------------------------------------
-ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -fvisibility=hidden)
+if(NOT CLING_INCLUDE_TESTS)
+  ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -fvisibility=hidden)
+endif()
 
-#--- FIXME: Do not build LLVM/Clang with modules until next LLVM upgrade----------------------------
+#--- Build LLVM/Clang with modules -----------------------------------------------------------------
 if(cxxmodules)
-  string(REPLACE "${ROOT_CXXMODULES_FLAGS}" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-  string(REPLACE "${ROOT_CXXMODULES_FLAGS}" "" CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
+  # FIXME: We cannot build LLVM/clang with modules on with libstdc++, yet.
+  if(NOT libcxx)
+    string(REPLACE "${ROOT_CXXMODULES_CXXFLAGS}" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+    string(REPLACE "${ROOT_CXXMODULES_CFLAGS}" "" CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
+  endif(NOT libcxx)
 endif(cxxmodules)
 
 #---Build type--------------------------------------------------------------------------------------

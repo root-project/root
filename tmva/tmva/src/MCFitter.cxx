@@ -86,7 +86,7 @@ void TMVA::MCFitter::SetParameters( Int_t samples )
 
 Double_t TMVA::MCFitter::Run( std::vector<Double_t>& pars )
 {
-   Log() << kINFO << "<MCFitter> Sampling, please be patient ..." << Endl;
+   Log() << kHEADER << "<MCFitter> Sampling, please be patient ..." << Endl;
    
    // sanity check
    if ((Int_t)pars.size() != GetNpars())

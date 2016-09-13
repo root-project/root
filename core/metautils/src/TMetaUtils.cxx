@@ -3905,6 +3905,64 @@ void ROOT::TMetaUtils::GetNormalizedName(std::string &norm_name,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+std::pair<std::string,clang::QualType>
+ROOT::TMetaUtils::GetNameTypeForIO(const clang::QualType& thisType,
+                                   const cling::Interpreter &interpreter,
+                                   const TNormalizedCtxt &normCtxt,
+                                   TClassEdit::EModType mode)
+{
+   std::string thisTypeName;
+   GetNormalizedName(thisTypeName, thisType, interpreter, normCtxt );
+   bool hasChanged;
+   auto thisTypeNameForIO = TClassEdit::GetNameForIO(thisTypeName, mode, &hasChanged);
+   if (!hasChanged) return std::make_pair(thisTypeName,thisType);
+
+   if (hasChanged && ROOT::TMetaUtils::GetErrorIgnoreLevel() <= ROOT::TMetaUtils::kNote) {
+      ROOT::TMetaUtils::Info("ROOT::TMetaUtils::GetTypeForIO", 
+        "Name changed from %s to %s\n", thisTypeName.c_str(), thisTypeNameForIO.c_str());
+   }
+
+   auto& lookupHelper = interpreter.getLookupHelper();
+
+   const clang::Type* typePtrForIO;
+   lookupHelper.findScope(thisTypeNameForIO,
+                          cling::LookupHelper::DiagSetting::NoDiagnostics,
+                          &typePtrForIO);
+
+   // This should never happen
+   if (!typePtrForIO) {
+      ROOT::TMetaUtils::Fatal("ROOT::TMetaUtils::GetTypeForIO",
+                              "Type not found: %s.",thisTypeNameForIO.c_str());
+   }
+
+   clang::QualType typeForIO(typePtrForIO,0);
+
+   // Check if this is a class. Indeed it could well be a POD
+   if (!typeForIO->isRecordType()) {
+      return std::make_pair(thisTypeNameForIO,typeForIO);
+   }
+
+   auto thisDeclForIO = typeForIO->getAsCXXRecordDecl();
+   if (!thisDeclForIO) {
+      ROOT::TMetaUtils::Error("ROOT::TMetaUtils::GetTypeForIO",
+       "The type for IO corresponding to %s is %s and it could not be found in the AST as class.\n", thisTypeName.c_str(), thisTypeNameForIO.c_str());
+      return std::make_pair(thisTypeName,thisType);
+   }
+
+   return std::make_pair(thisTypeNameForIO,typeForIO);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+clang::QualType ROOT::TMetaUtils::GetTypeForIO(const clang::QualType& thisType,
+                                               const cling::Interpreter &interpreter,
+                                               const TNormalizedCtxt &normCtxt,
+                                               TClassEdit::EModType mode)
+{
+   return GetNameTypeForIO(thisType, interpreter, normCtxt, mode).second;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 std::string ROOT::TMetaUtils::GetROOTIncludeDir(bool rootbuild)
 {

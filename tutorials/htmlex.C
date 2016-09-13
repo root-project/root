@@ -7,7 +7,7 @@
 /// and [THtml's class documentation](https://root.cern.ch/doc/master/classTHtml.html).
 ///
 /// To see this demo script in action start up ROOT and run
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 ///   root [0] .x $(ROOTSYS)/tutorials/htmlex.C+
 /// ~~~
 /// and check the output in `./htmldoc`.

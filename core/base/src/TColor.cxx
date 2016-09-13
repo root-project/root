@@ -133,6 +133,7 @@ Each color chip is identified by a mnemonic (e.g. kYellow) and a number.
 The keywords, kRed, kBlue, kYellow, kPink, etc are defined in the header file
 Rtypes.h that is included in all ROOT other header files. It is better
 to use these keywords in user code instead of hardcoded color numbers, e.g.:
+
 ~~~ {.cpp}
    myObject.SetFillColor(kRed);
    myObject.SetFillColor(kYellow-10);
@@ -146,6 +147,24 @@ Begin_Macro(source)
    return w->GetCanvas();
 }
 End_Macro
+
+The complete list of predefined color names is the following:
+
+~~~ {.cpp}
+kWhite  = 0,   kBlack  = 1,   kGray    = 920,  kRed    = 632,  kGreen  = 416,
+kBlue   = 600, kYellow = 400, kMagenta = 616,  kCyan   = 432,  kOrange = 800,
+kSpring = 820, kTeal   = 840, kAzure   =  860, kViolet = 880,  kPink   = 900
+~~~
+
+Note the special role of color `kWhite` (color number 0). It is the default
+background color also. For instance in a PDF or PS files (as paper is usually white)
+it is simply not painted. To have a white color behaving like the other color the
+simplest is to define an other white color not attached to the color index 0:
+
+~~~ {.cpp}
+   Int_t ci = TColor::GetFreeColorIndex();
+   TColor *color = new TColor(ci, 1., 1., 1.);
+~~~
 
 ## <a name="C03"></a> Bright and dark colors
 The dark and bright color are used to give 3-D effects when drawing various
@@ -896,7 +915,7 @@ A new color can be created transparent the following way:
 ~~~
 
 An example of transparency usage with parallel coordinates can be found
-in `$ROOTSYS/tutorials/tree/parallelcoordtrans.C`.
+in parallelcoordtrans.C.
 
 To ease the creation of a transparent color the static method
 `GetColorTransparent(Int_t color, Float_t a)` is provided.

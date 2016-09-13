@@ -35,8 +35,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TObject
-#include "TObject.h"
+#ifndef ROOT_TNamed
+#include "TNamed.h"
 #endif
 #ifndef ROOT_TList
 #include "TList.h"
@@ -48,7 +48,7 @@
 
 namespace TMVA {
 
-   class Configurable : public TObject {
+   class Configurable : public TNamed {
 
    public:
 
@@ -64,10 +64,9 @@ namespace TMVA {
       // print list of defined options
       void PrintOptions() const;
 
-      virtual const char* GetName()      const { return GetConfigName(); }
-      const char* GetConfigName()        const { return fConfigName; }
+      const char* GetConfigName()        const { return GetName(); }
       const char* GetConfigDescription() const { return fConfigDescription; }
-      void SetConfigName       ( const char* n ) { fConfigName        = TString(n); }
+      void SetConfigName       ( const char* n ) { SetName(n); }
       void SetConfigDescription( const char* d ) { fConfigDescription = TString(d); }
 
       // Declare option and bind it to a variable
@@ -113,14 +112,13 @@ namespace TMVA {
       // splits the option string at ':' and fills the list 'loo' with the primitive strings
       void SplitOptions(const TString& theOpt, TList& loo) const;
 
-      TString     fOptions;                          //! options string
-      Bool_t      fLooseOptionCheckingEnabled;       //! checker for option string
+      TString     fOptions;                          // options string
+      Bool_t      fLooseOptionCheckingEnabled;       // checker for option string
 
       // classes and method related to easy and flexible option parsing
       OptionBase* fLastDeclaredOption;  //! last declared option
-      TList       fListOfOptions;       //! option list
+      TList       fListOfOptions;       // option list
 
-      TString     fConfigName;          // the name of this configurable
       TString     fConfigDescription;   // description of this configurable
       TString     fReferenceFile;       // reference file for options writing
 
@@ -132,17 +130,18 @@ namespace TMVA {
       // set message type
       void SetMsgType( EMsgType t ) { fLogger->SetMinType(t); }
 
-
+   protected:
+      mutable MsgLogger* fLogger;                     // message logger
+      
    private:
 
-      mutable MsgLogger* fLogger;                     //! message logger
 
       template <class T>
          void AssignOpt( const TString& name, T& valAssign ) const;
       
    public:
 
-      ClassDef(Configurable,0);  // Virtual base class for all TMVA method
+      ClassDef(Configurable,1);  // Virtual base class for all TMVA method
 
    };
 } // namespace TMVA

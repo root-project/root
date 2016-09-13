@@ -303,6 +303,7 @@ public:
    virtual void      RedrawAxis(Option_t *option="");
    virtual void      ResetView3D(TObject *view=0){fPadView3D=view;}
    virtual void      ResizePad(Option_t *option="");
+   virtual void      Resized() { Emit("Resized()"); } // *SIGNAL*
    virtual void      SaveAs(const char *filename="",Option_t *option="") const; // *MENU*
    virtual void      SetBorderMode(Short_t bordermode) {fBorderMode = bordermode; Modified();} // *MENU*
    virtual void      SetBorderSize(Short_t bordersize) {fBorderSize = bordersize; Modified();} // *MENU*

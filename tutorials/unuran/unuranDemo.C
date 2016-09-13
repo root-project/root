@@ -11,7 +11,7 @@
 ///
 /// To execute the macro type in:
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 /// root[0]: gSystem->Load("libMathCore");
 /// root[0]: gSystem->Load("libUnuran");
 /// root[0]: .x  unuranDemo.C+
@@ -42,10 +42,8 @@
 #include "TApplication.h"
 #include "TCanvas.h"
 
-#ifndef __CINT__  // need to exclude to avoid CINT re-defining them
 #include "Math/ProbFunc.h"
 #include "Math/DistFunc.h"
-#endif
 
 #include <iostream>
 #include <cassert>

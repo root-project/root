@@ -26,6 +26,7 @@
 #include <numpy/arrayobject.h>
 
 #include <fstream>
+#include <wchar.h>
 
 using namespace TMVA;
 
@@ -185,15 +186,15 @@ void PyMethodBase::PySetProgramName(TString name)
    Py_SetProgramName((wchar_t *)name.Data());
    #endif
 }
+
+size_t mystrlen(const char* s) { return strlen(s); }
+size_t mystrlen(const wchar_t* s) { return wcslen(s); }
+
 //_______________________________________________________________________
 TString PyMethodBase::Py_GetProgramName()
 {
-   #if PY_MAJOR_VERSION < 3 
-   return ::Py_GetProgramName();
-   #else
-   return (char*)::Py_GetProgramName();
-   #endif
-  
+auto progName = ::Py_GetProgramName();
+return std::string(progName, progName + mystrlen(progName));  
 }
 //_______________________________________________________________________
 int  PyMethodBase::PyIsInitialized()

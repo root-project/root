@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_io
+/// \notebook -js
 /// Tutorial illustrating use and precision of the Double32_t data type
 /// You must run this tutorial with ACLIC: a dictionary will be automatically
 /// created.
@@ -8,6 +9,7 @@
 /// ~~~
 /// The following cases are supported for streaming a Double32_t type
 /// depending on the range declaration in the comment field of the data member:
+///
 /// Case | Declaration
 /// -----|------------
 ///  A   | Double32_t     fNormal;

@@ -1,10 +1,11 @@
 /// \file
 /// \ingroup tutorial_math
+/// \notebook -nodraw
 /// Example on the  usage of the adaptive 1D integration algorithm of MathMore
 /// it calculates the numerically cumulative integral of a distribution (like in this case the BreitWigner)
 /// to execute the macro type it (you need to compile with AClic)
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 /// root[0] .x mathmoreIntegration.C+
 /// ~~~
 ///
@@ -25,7 +26,7 @@
 #include "TCanvas.h"
 #include "TLegend.h"
 
-//#include "TLabel.h"
+/*#include "TLabel.h"*/
 #include "Math/Functor.h"
 #include "Math/WrappedFunction.h"
 #include "Math/IFunction.h"
@@ -194,12 +195,6 @@ void  DrawCumulative(double x1, double x2, int n = 100){
 
 void mathmoreIntegration(double a = -2, double b = 2)
 {
-#if defined(__CINT__) && !defined(__MAKECINT__)
-  cout << "WARNING: This tutorial can run only using ACliC, you must run it by doing: " << endl;
-  cout << "\t .x $ROOTSYS/tutorials/math/mathmoreIntegration.C+" << endl;
-  return;
-#endif
-
    DrawCumulative(a, b);
    testIntegPerf(a, b);
 }

@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_tree
+/// \notebook -nodraw
 ///  Read data from an ascii file and create a root file with an histogram and an ntuple.
 ///  See a variant of this macro in basic2.C.
 ///
@@ -11,8 +12,8 @@
 void basic() {
 // read file $ROOTSYS/tutorials/tree/basic.dat
 // this file has 3 columns of float data
-   TString dir = gSystem->UnixPathName(__FILE__);
-   dir.ReplaceAll("basic.C","");
+   TString dir = gROOT->GetTutorialsDir();
+   dir.Append("/tree/");
    dir.ReplaceAll("/./","/");
    ifstream in;
    in.open(Form("%sbasic.dat",dir.Data()));

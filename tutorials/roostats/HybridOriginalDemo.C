@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_roostats
+/// \notebook -js
 /// Example on how to use the HybridCalculatorOriginal class
 ///
 /// With this example, you should get: CL_sb = 0.130 and CL_b = 0.946
@@ -20,11 +21,6 @@
 #include "RooDataSet.h"
 #include "RooExtendPdf.h"
 #include "RooConstVar.h"
-
-#ifndef __CINT__  // problem including this file with CINT
-#include "RooGlobalFunc.h"
-#endif
-
 #include "RooStats/HybridCalculatorOriginal.h"
 #include "RooStats/HybridResult.h"
 #include "RooStats/HybridPlot.h"

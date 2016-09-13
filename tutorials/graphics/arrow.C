@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_graphics
+/// \notebook -js
 /// Draw arrows.
 ///
 /// \macro_image

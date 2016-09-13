@@ -437,11 +437,15 @@ namespace ROOT {
          Method to print the dataframe in stdout or a column given the label
          \param label nomber of the column to print
          */
-         void Print(TString label = "")
+         void Print(const char* label = "")
          {
             TRFunctionImport print("print");
-            if (label == "") print(df);
-            else print(df[label.Data()]);
+            if (label && !label[0]) {
+               // label is ""
+               print(df);
+            } else {
+               print(df[label]);
+            }
          }
          ClassDef(TRDataFrame, 0) //
       };

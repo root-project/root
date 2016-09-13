@@ -915,6 +915,7 @@ public:
 
       if (tok.isNot(clang::tok::semi)) {
          Error("Error: missing ; at end of rule", tok, false);
+         delete options;
          return;
       }
 

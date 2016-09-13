@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_hist
+/// \notebook
 /// Example of bar charts with 1-d histograms.
 ///
 /// \macro_image
@@ -8,11 +9,9 @@
 /// \author Rene Brun
 
 TCanvas *hbars() {
-   cout << gSystem->DirName(__FILE__) << endl;
-
-   // Try to open first the file cernstaff.root in tutorials/tree directory
-   TString filedir = gSystem->DirName(__FILE__);
-   filedir += TString("/../tree/");
+     // Try to open first the file cernstaff.root in tutorials/tree directory
+   TString filedir = gROOT->GetTutorialsDir();
+   filedir += TString("/tree/");
    TString filename = "cernstaff.root";
    bool fileNotFound = gSystem->AccessPathName(filename); // note opposite return code
 

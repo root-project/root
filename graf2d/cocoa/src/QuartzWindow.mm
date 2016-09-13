@@ -28,6 +28,7 @@
 #include <Availability.h>
 
 #include "ROOTOpenGLView.h"
+#include "CocoaConstants.h"
 #include "QuartzWindow.h"
 #include "QuartzPixmap.h"
 #include "QuartzUtils.h"
@@ -51,14 +52,16 @@ namespace X11 {
 QuartzWindow *CreateTopLevelWindow(Int_t x, Int_t y, UInt_t w, UInt_t h, UInt_t /*border*/, Int_t depth,
                                    UInt_t clss, void */*visual*/, SetWindowAttributes_t *attr, UInt_t)
 {
+   using namespace Details;
+
    NSRect winRect = {};
    winRect.origin.x = GlobalXROOTToCocoa(x);
    winRect.origin.y = GlobalYROOTToCocoa(y + h);
    winRect.size.width = w;
    winRect.size.height = h;
 
-   const NSUInteger styleMask = NSTitledWindowMask | NSClosableWindowMask |
-                                NSMiniaturizableWindowMask | NSResizableWindowMask;
+   const NSUInteger styleMask = kTitledWindowMask | kClosableWindowMask |
+                                kMiniaturizableWindowMask | kResizableWindowMask;
 
    QuartzWindow * const newWindow = [[QuartzWindow alloc] initWithContentRect : winRect
                                                                     styleMask : styleMask
@@ -653,7 +656,7 @@ void SetWindowAttributes(const SetWindowAttributes_t *attr, NSObject<X11Window> 
       //TODO: Must be checked yet, if I understand this correctly!
       if ([(NSObject *)window isKindOfClass : [QuartzWindow class]]) {
          QuartzWindow * const qw = (QuartzWindow *)window;
-         [qw setStyleMask : NSBorderlessWindowMask];
+         [qw setStyleMask : Details::kBorderlessWindowMask];
          [qw setAlphaValue : 0.95];
       }
 
@@ -1045,6 +1048,7 @@ void UnlockFocus(NSView<X11Window> *view)
 namespace Quartz = ROOT::Quartz;
 namespace Util = ROOT::MacOSX::Util;
 namespace X11 = ROOT::MacOSX::X11;
+namespace Details = ROOT::MacOSX::Details;
 
 #ifdef DEBUG_ROOT_COCOA
 
@@ -1165,10 +1169,12 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (id) initWithGLView : (ROOTOpenGLView *) glView
 {
+   using namespace Details;
+
    assert(glView != nil && "-initWithGLView, parameter 'glView' is nil");
 
-   const NSUInteger styleMask = NSTitledWindowMask | NSClosableWindowMask |
-                                NSMiniaturizableWindowMask | NSResizableWindowMask;
+   const NSUInteger styleMask = kTitledWindowMask | kClosableWindowMask |
+                                kMiniaturizableWindowMask | kResizableWindowMask;
 
    NSRect contentRect = glView.frame;
    contentRect.origin = NSPoint();
@@ -1602,7 +1608,7 @@ void print_mask_info(ULong_t mask)
    if (!fContentView)
       return;
 
-   if (theEvent.type == NSLeftMouseDown || theEvent.type == NSRightMouseDown) {
+   if (theEvent.type == Details::kLeftMouseDown || theEvent.type == Details::kRightMouseDown) {
       bool generateFakeRelease = false;
 
       const NSPoint windowPoint = [theEvent locationInWindow];
@@ -1624,7 +1630,7 @@ void print_mask_info(ULong_t mask)
       TGCocoa * const vx = static_cast<TGCocoa *>(gVirtualX);
       if (vx->GetEventTranslator()->HasPointerGrab() && generateFakeRelease) {
           vx->GetEventTranslator()->GenerateButtonReleaseEvent(fContentView, theEvent,
-                                                               theEvent.type == NSLeftMouseDown ?
+                                                               theEvent.type == Details::kLeftMouseDown ?
                                                                kButton1 : kButton3);
          //Yes, ignore this event completely (this means, you are not able to immediately start
          //resizing a window, if some popup is open. Actually, this is more or less

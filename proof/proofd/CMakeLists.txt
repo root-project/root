@@ -11,6 +11,8 @@ add_definitions(${XROOTD_CFLAGS})
 # Uncomment if not the case (G Ganis, 18/5/2016)
 # ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-undefined-bool-conversion)
 
+ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-nonnull-compare)
+
 if(WIN32)
   ROOT_LINKER_LIBRARY(XrdProofd XProofProtUtils.cxx LIBRARIES ${XROOTD_LIBRARIES})
 else()

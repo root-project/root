@@ -79,13 +79,6 @@ TProof *getProof(const char *url = "proof://localhost:40000", Int_t nwrks = -1, 
                  const char *opt = "ask", Bool_t dyn = kFALSE, Bool_t tutords = kFALSE)
 {
 
-#ifdef __CINT__
-   Printf("getProof: this script can only be executed via ACliC:");
-   Printf("getProof:      root [] .x <path>/getProof.C+");
-   Printf("getProof: or   root [] .L <path>/getProof.C+");
-   Printf("getProof:      root [] getProof(...)");
-   return;
-#endif
 
    TProof *p = 0;
 

@@ -126,6 +126,9 @@ private:
    static TClonesArray *fgTracks;
    static TH1F         *fgHist;
 
+   Event(const Event&) = delete;
+   Event &operator=(const Event&) = delete;
+
 public:
    Event();
    virtual ~Event();

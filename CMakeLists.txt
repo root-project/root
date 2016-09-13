@@ -149,11 +149,6 @@ get_property(__clingetcpch GLOBAL PROPERTY CLINGETCPCH)
 
 
 string(REGEX REPLACE "[ ]-" ";-" CMAKE_CXX_FLAGS_SEPARATE ${CMAKE_CXX_FLAGS})
-if(cxxmodules)
-  # rootcling doesn't know what to do with these flags.
-  # FIXME: Disable until until somebody teaches it.
-  string(REPLACE "${ROOT_CXXMODULES_FLAGS}" "" CMAKE_CXX_FLAGS_SEPARATE ${CMAKE_CXX_FLAGS_SEPARATE})
-endif(cxxmodules)
 add_custom_command(OUTPUT etc/dictpch/allLinkDefs.h
                           etc/dictpch/allHeaders.h
                           etc/dictpch/allCppflags.txt
@@ -227,7 +222,8 @@ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
                          REGEX proofd.rc.d EXCLUDE
                          REGEX rootd.xinetd EXCLUDE
                          REGEX proofd.xinetd EXCLUDE
-                         REGEX root.mimes EXCLUDE)
+                         REGEX root.mimes EXCLUDE
+                         REGEX cmake EXCLUDE )
   install(DIRECTORY fonts/  DESTINATION ${CMAKE_INSTALL_FONTDIR})
   install(DIRECTORY icons/  DESTINATION ${CMAKE_INSTALL_ICONDIR})
   install(DIRECTORY macros/ DESTINATION ${CMAKE_INSTALL_MACRODIR})

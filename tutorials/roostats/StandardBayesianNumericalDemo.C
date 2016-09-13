@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_roostats
+/// \notebook -js
 /// Standard demo of the numerical Bayesian calculator
 ///
 /// This is a standard demo that can be used with any ROOT file
@@ -73,13 +74,12 @@ void StandardBayesianNumericalDemo(const char* infile = "",
    int intervalType = optBayes.intervalType;
    int  maxPOI =  optBayes.maxPOI;
    double  nSigmaNuisance = optBayes.nSigmaNuisance;
-   
 
 
-  /////////////////////////////////////////////////////////////
-  // First part is just to access a user-defined file
-  // or create the standard example file if it doesn't exist
-  ////////////////////////////////////////////////////////////
+
+   // -------------------------------------------------------
+   // First part is just to access a user-defined file
+   // or create the standard example file if it doesn't exist
 
    const char* filename = "";
    if (!strcmp(infile,"")) {
@@ -114,118 +114,118 @@ void StandardBayesianNumericalDemo(const char* infile = "",
    }
 
 
-  /////////////////////////////////////////////////////////////
-  // Tutorial starts here
-  ////////////////////////////////////////////////////////////
+   // -------------------------------------------------------
+   // Tutorial starts here
+   // -------------------------------------------------------
 
-  // get the workspace out of the file
-  RooWorkspace* w = (RooWorkspace*) file->Get(workspaceName);
-  if(!w){
-    cout <<"workspace not found" << endl;
-    return;
-  }
+   // get the workspace out of the file
+   RooWorkspace* w = (RooWorkspace*) file->Get(workspaceName);
+   if(!w){
+      cout <<"workspace not found" << endl;
+      return;
+   }
 
-  // get the modelConfig out of the file
-  ModelConfig* mc = (ModelConfig*) w->obj(modelConfigName);
+   // get the modelConfig out of the file
+   ModelConfig* mc = (ModelConfig*) w->obj(modelConfigName);
 
-  // get the modelConfig out of the file
-  RooAbsData* data = w->data(dataName);
+   // get the modelConfig out of the file
+   RooAbsData* data = w->data(dataName);
 
-  // make sure ingredients are found
-  if(!data || !mc){
-    w->Print();
-    cout << "data or ModelConfig was not found" <<endl;
-    return;
-  }
+   // make sure ingredients are found
+   if(!data || !mc){
+      w->Print();
+      cout << "data or ModelConfig was not found" <<endl;
+      return;
+   }
 
-  /////////////////////////////////////////////
-  // create and use the BayesianCalculator
-  // to find and plot the 95% credible interval
-  // on the parameter of interest as specified
-  // in the model config
+   // ------------------------------------------
+   // create and use the BayesianCalculator
+   // to find and plot the 95% credible interval
+   // on the parameter of interest as specified
+   // in the model config
 
-  // before we do that, we must specify our prior
-  // it belongs in the model config, but it may not have
-  // been specified
-  RooUniform prior("prior","",*mc->GetParametersOfInterest());
-  w->import(prior);
-  mc->SetPriorPdf(*w->pdf("prior"));
+   // before we do that, we must specify our prior
+   // it belongs in the model config, but it may not have
+   // been specified
+   RooUniform prior("prior","",*mc->GetParametersOfInterest());
+   w->import(prior);
+   mc->SetPriorPdf(*w->pdf("prior"));
 
-  // do without systematics
-  //mc->SetNuisanceParameters(RooArgSet() );
-  if (nSigmaNuisance > 0) {
-     RooAbsPdf * pdf = mc->GetPdf();
-     assert(pdf);
-     RooFitResult * res = pdf->fitTo(*data, Save(true), Minimizer(ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str()), Hesse(true),
-                                     PrintLevel(ROOT::Math::MinimizerOptions::DefaultPrintLevel()-1) );
+   // do without systematics
+   //mc->SetNuisanceParameters(RooArgSet() );
+   if (nSigmaNuisance > 0) {
+      RooAbsPdf * pdf = mc->GetPdf();
+      assert(pdf);
+      RooFitResult * res = pdf->fitTo(*data, Save(true), Minimizer(ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str()), Hesse(true),
+                                       PrintLevel(ROOT::Math::MinimizerOptions::DefaultPrintLevel()-1) );
 
-     res->Print();
-     RooArgList nuisPar(*mc->GetNuisanceParameters());
-     for (int i = 0; i < nuisPar.getSize(); ++i) {
-        RooRealVar * v = dynamic_cast<RooRealVar*> (&nuisPar[i] );
-        assert( v);
-        v->setMin( TMath::Max( v->getMin(), v->getVal() - nSigmaNuisance * v->getError() ) );
-        v->setMax( TMath::Min( v->getMax(), v->getVal() + nSigmaNuisance * v->getError() ) );
-        std::cout << "setting interval for nuisance  " << v->GetName() << " : [ " << v->getMin() << " , " << v->getMax() << " ]" << std::endl;
-     }
-  }
-
-
-  BayesianCalculator bayesianCalc(*data,*mc);
-  bayesianCalc.SetConfidenceLevel(confLevel); // 95% interval
-
-  // default of the calculator is central interval.  here use shortest , central or upper limit depending on input
-  // doing a shortest interval might require a longer time since it requires a scan of the posterior function
-  if (intervalType == 0)  bayesianCalc.SetShortestInterval(); // for shortest interval
-  if (intervalType == 1)  bayesianCalc.SetLeftSideTailFraction(0.5); // for central interval
-  if (intervalType == 2)  bayesianCalc.SetLeftSideTailFraction(0.); // for upper limit
-
-  if (!integrationType.IsNull() ) {
-     bayesianCalc.SetIntegrationType(integrationType); // set integrationType
-     bayesianCalc.SetNumIters(nToys); // set number of ietrations (i.e. number of toys for MC integrations)
-  }
-
-  // in case of toyMC make a nnuisance pdf
-  if (integrationType.Contains("TOYMC") ) {
-    RooAbsPdf * nuisPdf = RooStats::MakeNuisancePdf(*mc, "nuisance_pdf");
-    cout << "using TOYMC integration: make nuisance pdf from the model " << std::endl;
-    nuisPdf->Print();
-    bayesianCalc.ForceNuisancePdf(*nuisPdf);
-    scanPosterior = true; // for ToyMC the posterior is scanned anyway so used given points
-  }
-
-  // compute interval by scanning the posterior function
-  if (scanPosterior)
-     bayesianCalc.SetScanOfPosterior(nScanPoints);
-
-  RooRealVar* poi = (RooRealVar*) mc->GetParametersOfInterest()->first();
-  if (maxPOI != -999 &&  maxPOI > poi->getMin())
-    poi->setMax(maxPOI);
+      res->Print();
+      RooArgList nuisPar(*mc->GetNuisanceParameters());
+      for (int i = 0; i < nuisPar.getSize(); ++i) {
+         RooRealVar * v = dynamic_cast<RooRealVar*> (&nuisPar[i] );
+         assert( v);
+         v->setMin( TMath::Max( v->getMin(), v->getVal() - nSigmaNuisance * v->getError() ) );
+         v->setMax( TMath::Min( v->getMax(), v->getVal() + nSigmaNuisance * v->getError() ) );
+         std::cout << "setting interval for nuisance  " << v->GetName() << " : [ " << v->getMin() << " , " << v->getMax() << " ]" << std::endl;
+      }
+   }
 
 
-  SimpleInterval* interval = bayesianCalc.GetInterval();
+   BayesianCalculator bayesianCalc(*data,*mc);
+   bayesianCalc.SetConfidenceLevel(confLevel); // 95% interval
 
-  // print out the iterval on the first Parameter of Interest
-  cout << "\n>>>> RESULT : " << confLevel*100 << "% interval on " << poi->GetName()<<" is : ["<<
-    interval->LowerLimit() << ", "<<
-    interval->UpperLimit() <<"] "<<endl;
+   // default of the calculator is central interval.  here use shortest , central or upper limit depending on input
+   // doing a shortest interval might require a longer time since it requires a scan of the posterior function
+   if (intervalType == 0)  bayesianCalc.SetShortestInterval(); // for shortest interval
+   if (intervalType == 1)  bayesianCalc.SetLeftSideTailFraction(0.5); // for central interval
+   if (intervalType == 2)  bayesianCalc.SetLeftSideTailFraction(0.); // for upper limit
+
+   if (!integrationType.IsNull() ) {
+      bayesianCalc.SetIntegrationType(integrationType); // set integrationType
+      bayesianCalc.SetNumIters(nToys); // set number of ietrations (i.e. number of toys for MC integrations)
+   }
+
+   // in case of toyMC make a nnuisance pdf
+   if (integrationType.Contains("TOYMC") ) {
+      RooAbsPdf * nuisPdf = RooStats::MakeNuisancePdf(*mc, "nuisance_pdf");
+      cout << "using TOYMC integration: make nuisance pdf from the model " << std::endl;
+      nuisPdf->Print();
+      bayesianCalc.ForceNuisancePdf(*nuisPdf);
+      scanPosterior = true; // for ToyMC the posterior is scanned anyway so used given points
+   }
+
+   // compute interval by scanning the posterior function
+   if (scanPosterior)
+      bayesianCalc.SetScanOfPosterior(nScanPoints);
+
+   RooRealVar* poi = (RooRealVar*) mc->GetParametersOfInterest()->first();
+   if (maxPOI != -999 &&  maxPOI > poi->getMin())
+      poi->setMax(maxPOI);
 
 
-  // make a plot
-  // since plotting may take a long time (it requires evaluating
-  // the posterior in many points) this command will speed up
-  // by reducing the number of points to plot - do 50
+   SimpleInterval* interval = bayesianCalc.GetInterval();
 
-  // ignore errors of PDF if is zero
-  RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::Ignore) ;
+   // print out the iterval on the first Parameter of Interest
+   cout << "\n>>>> RESULT : " << confLevel*100 << "% interval on " << poi->GetName()<<" is : ["<<
+      interval->LowerLimit() << ", "<<
+      interval->UpperLimit() <<"] "<<endl;
 
-  
-  cout << "\nDrawing plot of posterior function....." << endl;
 
-  // always plot using numer of scan points
-  bayesianCalc.SetScanOfPosterior(nScanPoints);
+   // make a plot
+   // since plotting may take a long time (it requires evaluating
+   // the posterior in many points) this command will speed up
+   // by reducing the number of points to plot - do 50
 
-  RooPlot * plot = bayesianCalc.GetPosteriorPlot();
-  plot->Draw();
+   // ignore errors of PDF if is zero
+   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::Ignore) ;
+
+
+   cout << "\nDrawing plot of posterior function....." << endl;
+
+   // always plot using numer of scan points
+   bayesianCalc.SetScanOfPosterior(nScanPoints);
+
+   RooPlot * plot = bayesianCalc.GetPosteriorPlot();
+   plot->Draw();
 
 }

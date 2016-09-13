@@ -90,6 +90,16 @@ a 'using namespace std;' has been applied to and with:
 #include <vector>
 #include <memory>
 
+#ifdef WIN32
+#include <io.h>
+#include "Windows4Root.h"
+#include <Psapi.h>
+#define RTLD_DEFAULT ((void *)::GetModuleHandle(NULL))
+#define dlsym(library, function_name) ::GetProcAddress((HMODULE)library, function_name)
+#else
+#include <dlfcn.h>
+#endif
+
 #include "TListOfDataMembers.h"
 #include "TListOfFunctions.h"
 #include "TListOfFunctionTemplates.h"
@@ -1586,9 +1596,9 @@ TClass::~TClass()
 
    delete fPersistentRef.load();
 
-   if (fBase)
-      fBase->Delete();
-   delete fBase;   fBase=0;
+   if (fBase.load())
+      (*fBase).Delete();
+   delete fBase.load(); fBase = 0;
 
    if (fData)
       fData->Delete();
@@ -2200,7 +2210,7 @@ Bool_t TClass::CanSplitBaseAllow()
    // we can find out.
    if (!HasDataMemberInfo()) return kTRUE;
 
-   TObjLink *lnk = GetListOfBases() ? fBase->FirstLink() : 0;
+   TObjLink *lnk = GetListOfBases() ? fBase.load()->FirstLink() : 0;
 
    // Look at inheritance tree
    while (lnk) {
@@ -2595,7 +2605,7 @@ TClass *TClass::GetBaseClass(const TClass *cl)
 
    if (!HasDataMemberInfo()) return 0;
 
-   TObjLink *lnk = GetListOfBases() ? fBase->FirstLink() : 0;
+   TObjLink *lnk = GetListOfBases() ? fBase.load()->FirstLink() : 0;
 
    // otherwise look at inheritance tree
    while (lnk) {
@@ -2624,7 +2634,7 @@ Int_t TClass::GetBaseClassOffsetRecurse(const TClass *cl)
    // check if class name itself is equal to classname
    if (cl == this) return 0;
 
-   if (!fBase) {
+   if (!fBase.load()) {
       if (fCanLoadClassInfo) LoadClassInfo();
       // If the information was not provided by the root pcm files and
       // if we can not find the ClassInfo, we have to fall back to the
@@ -2671,7 +2681,7 @@ Int_t TClass::GetBaseClassOffsetRecurse(const TClass *cl)
    TBaseClass *inh;
    TObjLink *lnk = 0;
    if (fBase==0) lnk = GetListOfBases()->FirstLink();
-   else lnk = fBase->FirstLink();
+   else lnk = fBase.load()->FirstLink();
 
    // otherwise look at inheritance tree
    while (lnk) {
@@ -3484,15 +3494,34 @@ TList *TClass::GetListOfBases()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return list containing the TEnums of a class.
+/// Return a list containing the TEnums of a class.
+///
+/// The list returned is safe to use from multiple thread without explicitly
+/// taking the ROOT global lock.
+///
+/// In the case the TClass represents a namespace, the returned list will
+/// implicit take the ROOT global lock upon any access (see TListOfEnumsWithLock)
+///
+/// In the case the TClass represents a class or struct and requestListLoading
+/// is true, the list is immutable (and thus safe to access from multiple thread
+/// without taking the global lock at all).
+///
+/// In the case the TClass represents a class or struct and requestListLoading
+/// is false, the list is mutable and thus we return a TListOfEnumsWithLock
+/// which will implicit take the ROOT global lock upon any access.
 
-TList *TClass::GetListOfEnums(Bool_t load /* = kTRUE */)
+TList *TClass::GetListOfEnums(Bool_t requestListLoading /* = kTRUE */)
 {
    auto temp = fEnums.load();
    if (temp) {
-      if (load) {
+      if (requestListLoading) {
          if (fProperty == -1) Property();
          if (! ((kIsClass | kIsStruct | kIsUnion) & fProperty) ) {
+            R__LOCKGUARD2(gROOTMutex);
+            temp->Load();
+         } else if ( temp->IsA() == TListOfEnumsWithLock::Class() ) {
+            // We have a class for which the list was not loaded fully at
+            // first use.
             R__LOCKGUARD2(gROOTMutex);
             temp->Load();
          }
@@ -3500,25 +3529,25 @@ TList *TClass::GetListOfEnums(Bool_t load /* = kTRUE */)
       return temp;
    }
 
-   if (!load) {
+   if (!requestListLoading) {
       if (fProperty == -1) Property();
-      if (! ((kIsClass | kIsStruct | kIsUnion) & fProperty) ) {
-         R__LOCKGUARD(gInterpreterMutex);
-         if (fEnums.load()) {
-            return fEnums.load();
-         }
-         //namespaces can have enums added to them
-         fEnums = new TListOfEnumsWithLock(this);
-         return fEnums;
+      R__LOCKGUARD(gInterpreterMutex);
+      if (fEnums.load()) {
+         return fEnums.load();
       }
-      // no one is supposed to modify the returned results
-      static TListOfEnums s_list;
-      return &s_list;
+
+      static bool fromRootCling = dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym");
+
+      if (fromRootCling) // rootcling is single thread (this save some space in the rootpcm).
+         fEnums = new TListOfEnums(this);
+      else
+         fEnums = new TListOfEnumsWithLock(this);
+      return fEnums;
    }
 
    R__LOCKGUARD(gInterpreterMutex);
    if (fEnums.load()) {
-      if (load) (*fEnums).Load();
+      (*fEnums).Load();
       return fEnums.load();
    }
    if (fProperty == -1) Property();
@@ -3963,8 +3992,8 @@ void TClass::ResetCaches()
    delete fAllPubData; fAllPubData = 0;
 
    if (fBase)
-      fBase->Delete();
-   delete fBase; fBase = 0;
+      (*fBase).Delete();
+   delete fBase.load(); fBase = 0;
 
    if (fRealData)
       fRealData->Delete();

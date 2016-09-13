@@ -99,6 +99,7 @@ clang/LLVM technology.
 #include "cling/Interpreter/Transaction.h"
 #include "cling/MetaProcessor/MetaProcessor.h"
 #include "cling/Utils/AST.h"
+#include "cling/Utils/SourceNormalization.h"
 #include "cling/Interpreter/Exception.h"
 
 #include "llvm/IR/GlobalValue.h"
@@ -1769,6 +1770,8 @@ void TCling::RegisterModule(const char* modulename,
 #endif
 
       if (!hasHeaderParsingOnDemand){
+         SuspendAutoParsing autoParseRaii(this);
+
          const cling::Transaction* watermark = fInterpreter->getLastTransaction();
          cling::Interpreter::CompilationResult compRes = fInterpreter->parseForModule(code.Data());
          if (isACLiC) {
@@ -1886,7 +1889,7 @@ static int HandleInterpreterException(cling::MetaProcessor* metaProcessor,
    }
    catch (cling::InvalidDerefException& ex)
    {
-      Info("Handle", "%s.\n%s", ex.what(), "Execution of your code was aborted.");
+      Error("HandleInterpreterException", "%s.\n%s", ex.what(), "Execution of your code was aborted.");
       ex.diagnose();
    }
    return 0;
@@ -2010,28 +2013,24 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
          }
       } else {
          // not ACLiC
-         bool unnamedMacro = false;
+         size_t unnamedMacroOpenCurly;
          {
-            std::string line;
+            std::string code;
+            std::string codeline;
             std::ifstream in(fname);
-            static const char whitespace[] = " \t\r\n";
             while (in) {
-               std::getline(in, line);
-               std::string::size_type posNonWS = line.find_first_not_of(whitespace);
-               if (posNonWS == std::string::npos) continue;
-               if (line[posNonWS] == '/' && line[posNonWS + 1] == '/')
-                  // Too bad, we only suppose C++ comments here.
-                  continue;
-               unnamedMacro = (line[posNonWS] == '{');
-               break;
+               std::getline(in, codeline);
+               code += codeline + "\n";
             }
+            unnamedMacroOpenCurly
+              = cling::utils::isUnnamedMacro(code, fInterpreter->getCI()->getLangOpts());
          }
 
          fCurExecutingMacros.push_back(fname);
          cling::MetaProcessor::MaybeRedirectOutputRAII RAII(fMetaProcessor);
-         if (unnamedMacro) {
+         if (unnamedMacroOpenCurly != std::string::npos) {
             compRes = fMetaProcessor->readInputFromFile(fname.Data(), &result,
-                                                        true /*ignoreOutmostBlock*/);
+                                                        unnamedMacroOpenCurly);
          } else {
             // No DynLookup for .x, .L of named macros.
             fInterpreter->enableDynamicLookup(false);
@@ -3436,16 +3435,16 @@ void TCling::CreateListOfBaseClasses(TClass *cl) const
    TClingClassInfo *tci = (TClingClassInfo *)cl->GetClassInfo();
    if (!tci) return;
    TClingBaseClassInfo t(fInterpreter, tci);
-   // This is put here since TClingBaseClassInfo can trigger a
-   // TClass::ResetCaches, which deallocates cl->fBase
-   cl->fBase = new TList;
+   TList *listOfBase = new TList;
    while (t.Next()) {
       // if name cannot be obtained no use to put in list
       if (t.IsValid() && t.Name()) {
          TClingBaseClassInfo *a = new TClingBaseClassInfo(t);
-         cl->fBase->Add(new TBaseClass((BaseClassInfo_t *)a, cl));
+         listOfBase->Add(new TBaseClass((BaseClassInfo_t *)a, cl));
       }
    }
+   // Now that is complete, publish it.
+   cl->fBase = listOfBase;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -5280,7 +5279,9 @@ UInt_t TCling::AutoParseImplRecurse(const char *cls, bool topLevel)
          TString templateName(autoparseKeys[0]);
          auto tokens = templateName.Tokenize("::");
          clang::NamedDecl* previousScopeAsNamedDecl = nullptr;
-         clang::DeclContext* previousScopeAsContext = nullptr;
+         clang::DeclContext* previousScopeAsContext = fInterpreter->getCI()->getASTContext().getTranslationUnitDecl();
+         if (TClassEdit::IsStdClass(cls))
+             previousScopeAsContext = fInterpreter->getSema().getStdNamespace();
          for (auto const scopeObj : *tokens){
             auto scopeName = ((TObjString*) scopeObj)->String().Data();
             previousScopeAsNamedDecl = cling::utils::Lookup::Named(&fInterpreter->getSema(), scopeName, previousScopeAsContext);
@@ -5291,9 +5292,11 @@ UInt_t TCling::AutoParseImplRecurse(const char *cls, bool topLevel)
          }
          delete tokens;
          // Now, let's check if the last scope, the template, has a definition, i.e. it's not a fwd decl
-         if (auto templateDecl = llvm::dyn_cast_or_null<clang::ClassTemplateDecl>(previousScopeAsNamedDecl)) {
-            if (auto templatedDecl = templateDecl->getTemplatedDecl()) {
-               skipFirstEntry = nullptr != templatedDecl->getDefinition();
+         if ((clang::NamedDecl*)-1 != previousScopeAsNamedDecl) {
+            if (auto templateDecl = llvm::dyn_cast_or_null<clang::ClassTemplateDecl>(previousScopeAsNamedDecl)) {
+               if (auto templatedDecl = templateDecl->getTemplatedDecl()) {
+                  skipFirstEntry = nullptr != templatedDecl->getDefinition();
+               }
             }
          }
 

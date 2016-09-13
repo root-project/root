@@ -300,32 +300,6 @@ void SelectionRules::SetDeep(bool deep)
            AddClassSelectionRule(csr);
        }
     }
-//    fIsDeep = deep;
-//    if (fIsDeep) {
-//       long count = 0;
-//       if (!fClassSelectionRules.empty()) {
-//          count = fClassSelectionRules.rbegin()->GetIndex() + 1;
-//       }
-//       ClassSelectionRule csr(count++, fInterp);
-//       csr.SetAttributeValue("pattern", "*");
-//       csr.SetSelected(BaseSelectionRule::kYes);
-//       AddClassSelectionRule(csr);
-//
-//       ClassSelectionRule csr2(count++, fInterp);
-//       csr2.SetAttributeValue("pattern", "*::*");
-//       csr2.SetSelected(BaseSelectionRule::kYes);
-//       AddClassSelectionRule(csr2);
-//
-//
-//       // Should I disable the built-in (automatically generated) structs/classes?
-//       ClassSelectionRule csr3(count++, fInterp);
-//       csr3.SetAttributeValue("pattern", "__va_*"); // <built-in>
-//       csr3.SetSelected(BaseSelectionRule::kNo);
-//       AddClassSelectionRule(csr3);
-      //HasFileNameRule = true;
-
-      //SetSelectionXMLFile(true);
-//    }
 }
 
 const ClassSelectionRule *SelectionRules::IsDeclSelected(const clang::RecordDecl *D) const

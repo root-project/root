@@ -139,7 +139,7 @@ $(call stripsrc,$(CLINGDIR)/%.o): $(CLINGDIR)/%.cpp $(LLVMDEP)
 
 $(CLINGCOMPDH): FORCE $(LLVMDEP)
 	@mkdir -p $(dir $@)
-	@echo '#define LLVM_CXX "$(CXX) $(OPT) $(CLINGCXXFLAGSNOI)"' > $@_tmp
+	@echo '#define CLING_CXX_PATH "$(CXX) $(OPT) $(CLINGCXXFLAGSNOI)"' > $@_tmp
 	@diff -q $@_tmp $@ > /dev/null 2>&1 || mv $@_tmp $@
 	@rm -f $@_tmp
 
@@ -159,7 +159,7 @@ endif
 ##### extra rules ######
 ifneq ($(LLVMDEV),)
 $(CLINGO)   : CLINGCXXFLAGS += '-DCLING_INCLUDE_PATHS="$(CLINGDIR)/include:$(shell pwd)/$(LLVMDIRO)/include:$(shell pwd)/$(LLVMDIRO)/tools/clang/include:$(LLVMDIRS)/include:$(LLVMDIRS)/tools/clang/include"'
-$(CLINGEXEO): CLINGCXXFLAGS += -fexceptions -I$(TEXTINPUTDIRS)
+$(CLINGEXEO): CLINGCXXFLAGS += -fexceptions -I$(TEXTINPUTDIRS) -I$(LLVMDIRO)/include
 else
 endif
 

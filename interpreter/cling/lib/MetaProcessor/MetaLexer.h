@@ -55,6 +55,7 @@ namespace cling {
       kind = tok::unknown;
       bufStart = Pos;
       value = ~0U;
+      length = 0;
     }
     tok::TokenKind getKind() const { return kind; }
     void setKind(tok::TokenKind K) { kind = K; }
@@ -79,7 +80,6 @@ namespace cling {
   class MetaLexer {
   protected:
     const char* bufferStart;
-    const char* bufferEnd;
     const char* curPos;
   public:
     MetaLexer(const char* bufStart)

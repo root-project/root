@@ -65,7 +65,8 @@ namespace TMVA {
       kWARNING = 4,
       kERROR   = 5,
       kFATAL   = 6,
-      kSILENT  = 7
+      kSILENT  = 7,
+      kHEADER  = 8
    };
 
    enum HistType { kMVAType = 0, kProbaType = 1, kRarityType = 2, kCompareType = 3 };

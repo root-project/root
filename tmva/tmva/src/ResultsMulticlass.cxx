@@ -42,6 +42,7 @@
 #include <limits>
 #include <vector>
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
@@ -165,8 +166,8 @@ void  TMVA::ResultsMulticlass::CreateMulticlassHistos( TString prefix, Int_t nbi
       histos.push_back(std::vector<TH1F*>(0));
       for (UInt_t jCls = 0; jCls < dsi->GetNClasses(); jCls++) {
          TString name(Form("%s_%s_prob_for_%s",prefix.Data(),
-                           dsi->GetClassInfo( jCls )->GetName().Data(),
-                           dsi->GetClassInfo( iCls )->GetName().Data()));
+                           dsi->GetClassInfo( jCls )->GetName(),
+                           dsi->GetClassInfo( iCls )->GetName()));
          histos.at(iCls).push_back(new TH1F(name,name,nbins,xmin,xmax));
       }
    }

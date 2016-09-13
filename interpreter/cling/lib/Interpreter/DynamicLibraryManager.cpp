@@ -26,7 +26,11 @@
 #include <Windows.h>
 #include <shlobj.h>
 #else
-#include <limits.h> /* PATH_MAX */
+#ifdef __APPLE__
+ #include <sys/syslimits.h> // PATH_MAX
+#else
+ #include <limits.h> // PATH_MAX
+#endif
 #include <dlfcn.h>
 #endif
 
@@ -75,21 +79,25 @@ namespace {
       FILE *pf = popen(cmd.c_str (), "r");
       std::string result = "";
       std::string sys_path = "";
-      char buffer[128];
+      char buffer[1024];
       while (!feof(pf)) {
-        if (fgets(buffer, 128, pf) != NULL)
+        if (fgets(buffer, sizeof(buffer), pf) != NULL)
           result += buffer;
       }
       pclose(pf);
-      std::size_t from
-        = result.find("search path=", result.find("(LD_LIBRARY_PATH)"));
-      std::size_t to = result.find("(system search path)");
-      if (from != std::string::npos && to != std::string::npos) {
-        from += 12;
-        sys_path = result.substr(from, to-from);
-        sys_path.erase(std::remove_if(sys_path.begin(), sys_path.end(), isspace),
-                       sys_path.end());
-        sys_path += ':';
+
+      const std::size_t nPos = std::string::npos;
+      const std::size_t LD = result.find("(LD_LIBRARY_PATH)");
+      std::size_t from = result.find("search path=", LD == nPos ? 0 : LD);
+      if (from != nPos) {
+        const std::size_t to = result.find("(system search path)", from);
+        if (to != nPos) {
+          from += 12;
+          sys_path = result.substr(from, to-from);
+          sys_path.erase(std::remove_if(sys_path.begin(), sys_path.end(),
+                                        isspace), sys_path.end());
+          sys_path += ':';
+        }
       }
       static const char PathSeparator = ':';
       const char* at = sys_path.c_str();
@@ -321,12 +329,39 @@ namespace cling {
     return "";
   }
 
+#if defined(LLVM_ON_WIN32)
+  static void GetLastErrorAsString(const char* Prefix, std::string& ErrStr) {
+    if (const DWORD Err = ::GetLastError()) {
+      llvm::raw_string_ostream Strm(ErrStr);
+      Strm << Prefix << ": returned " << Err;
+
+      LPTSTR Message = nullptr;
+      const DWORD Size = ::FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                nullptr, Err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                (LPTSTR)&Message, 0, nullptr);
+
+      if (Size && Message) {
+        Strm << " (" << Message << ')';
+        ::LocalFree(Message);
+        Strm.flush();
+        while (ErrStr.back() == '\n')
+          ErrStr.pop_back();
+      }
+    }
+  }
+#endif
+
   DynamicLibraryManager::LoadLibResult
   DynamicLibraryManager::loadLibrary(const std::string& libStem,
-                                     bool permanent) {
-    std::string canonicalLoadedLib = lookupLibrary(libStem);
-    if (canonicalLoadedLib.empty())
-      return kLoadLibNotFound;
+                                     bool permanent, bool resolved) {
+    std::string       lResolved;
+    const std::string &canonicalLoadedLib = resolved ? libStem : lResolved;
+    if (!resolved) {
+      lResolved = lookupLibrary(libStem);
+      if (lResolved.empty())
+        return kLoadLibNotFound;
+    }
 
     if (m_LoadedLibraries.find(canonicalLoadedLib) != m_LoadedLibraries.end())
       return kLoadLibAlreadyLoaded;
@@ -336,8 +371,8 @@ namespace cling {
 #if defined(LLVM_ON_WIN32)
     HMODULE dyLibHandle = LoadLibraryEx(canonicalLoadedLib.c_str(), NULL,
                                         DONT_RESOLVE_DLL_REFERENCES);
-    errMsg = "LoadLibraryEx: GetLastError() returned ";
-    errMsg += GetLastError();
+    if (!dyLibHandle)
+      GetLastErrorAsString("LoadLibraryEx", errMsg);
 #else
     const void* dyLibHandle = dlopen(canonicalLoadedLib.c_str(),
                                      RTLD_LAZY|RTLD_GLOBAL);
@@ -379,15 +414,19 @@ namespace cling {
     std::string errMsg;
     // TODO: !permanent case
 #if defined(LLVM_ON_WIN32)
-    FreeLibrary((HMODULE)dyLibHandle);
-    errMsg = "UnoadLibraryEx: GetLastError() returned ";
-    errMsg += GetLastError();
+    if (FreeLibrary((HMODULE)dyLibHandle) == 0)
+      GetLastErrorAsString("FreeLibrary", errMsg);
 #else
     dlclose(const_cast<void*>(dyLibHandle));
     if (const char* DyLibError = dlerror()) {
       errMsg = DyLibError;
     }
 #endif
+    if (!errMsg.empty()) {
+      llvm::errs() << "cling::DynamicLibraryManager::unloadLibrary(): "
+                   << errMsg << '\n';
+    }
+
     if (InterpreterCallbacks* C = getCallbacks())
       C->LibraryUnloaded(dyLibHandle, canonicalLoadedLib);
 

@@ -7,19 +7,18 @@
 //------------------------------------------------------------------------------
 
 // RUN: clang -shared %S/address_lib.c -olibaddress_lib%shlibext
-// RUN: cat %s | %cling -L. -fno-rtti | FileCheck %s
+// RUN: cat %s | %built_cling -L. -fno-rtti | FileCheck %s
 extern "C" int printf(const char*,...);
 
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Utils/AST.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/GlobalDecl.h"
-.rawInput
+
 const char* comp(void* A, void* B) {
   if (A == B) { return "equal"; }
   else { printf("[%p %p] ", A, B); return "DIFFER!"; }
 }
-.rawInput
 
 bool fromJIT = false;
 clang::Sema& sema = gCling->getSema();

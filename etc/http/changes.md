@@ -1,5 +1,38 @@
 # JSROOT changelog
 
+## Changes in 4.6.0
+1. Improvements in TGeo drawings
+   - support of large (~10M volumes) models, only most significant volumes are shown
+   - one could activate several clip planes (only with WebGL)
+   - interaction with object browser to change visibility flags or focus on selected volume
+   - support of floating browser for TGeo objects 
+   - intensive use of HTML Worker to offload computation tasks and keep interactivity   
+   - enable more details when changing camera position/zoom
+   - better and faster build of composite shapes
+2. Improvements in histograms 3D drawing
+   - all lego options: lego1..lego4, combined with 'fb', 'bb', '0' or 'z'
+   - support axis labels on lego plots
+   - support lego plots for TH1 
+3. Improvements in all 3D graphics
+   - upgrade three.js to r79
+   - use of THREE.BufferGeometry for all components
+   - significant (up to factor 10) performance improvement
+4. Implement box and hbox draw options for TH1 class
+5. Implement drawing of axes ticks on opposite side (when fTickx/y specified)  
+6. Preliminary support of candle plot (many options to be implemented)
+7. Update draw attributes (fill/line/position) when monitor objects  
+
+
+## Changes in 4.5.3
+1. Fix - position of TFrame in canvas/pad
+2. Fix - use histogram fMinimum/fMaximum when creating color palette
+3. Fix - correctly draw empty th2 bins when zmin<0 is specified  
+4. Fix - limit th2 text output size 
+5. Fix - use histogram fMinimum/fMaximum when drawing z axis in lego plot 
+6. Fix - error in TGeoCtub shape creation
+7. Fix - error in pcon/pgon shapes when Rmin===0 
+
+
 ## Changes in 4.5.1
 1. Fix - correctly handle ^2..^9 in TFormula equations
 2. Fix - support TMath::Gaus in TFormula 

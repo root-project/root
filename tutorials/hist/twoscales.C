@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_hist
+/// \notebook
 /// Example of macro illustrating how to superimpose two histograms
 /// with different scales in the "same" pad.
 ///

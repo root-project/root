@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_roostats
+/// \notebook
 /// 'Bayesian Calculator' RooStats tutorial macro #701
 ///
 /// This tutorial shows an example of using the BayesianCalculator class

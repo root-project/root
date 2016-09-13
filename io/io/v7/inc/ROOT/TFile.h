@@ -137,21 +137,12 @@ public:
   /// \throws TDirectoryTypeMismatch if the object stored under this name is of
   ///   a type different from `T`.
   template<class T>
-  std::unique_ptr <T> Read(std::string_view name) {
+  std::unique_ptr<T> Read(std::string_view name) {
     // FIXME: need separate collections for a TDirectory's key/value and registered objects. Here, we want to emit a read and must look through the key/values without attaching an object to the TDirectory.
-    if (const Internal::TDirectoryEntryPtrBase *dep = Find(name.to_string())) {
-      // FIXME: implement upcast!
       // FIXME: do not register read object in TDirectory
       // FIXME: implement actual read
-      if (auto depT = dynamic_cast<const Internal::TDirectoryEntryPtr <T> *>(dep)) {
         //FIXME: for now, copy out of whatever the TDirectory manages.
-        return std::make_unique<T>(*depT->GetPointer());
-      }
-      // FIXME: add expected versus actual type name as c'tor args
-      throw TDirectoryTypeMismatch(name.to_string());
-    }
-    throw TDirectoryUnknownKey(name.to_string());
-    return std::unique_ptr<T>(); // never happens
+    return std::make_unique<T>(*Get<T>(name));
   }
 
 
@@ -169,8 +160,8 @@ public:
 
   /// Write an object that is already lifetime managed by this TFileImplBase.
   void Write(std::string_view name) {
-    const Internal::TDirectoryEntryPtrBase *dep = Find(name.to_string());
-    WriteMemoryWithType(name, dep->GetObjectAddr(), dep->GetType());
+    auto dep = Find(name.to_string());
+    WriteMemoryWithType(name, dep.GetPointer().get(), dep.GetType());
   }
 
   /// Hand over lifetime management of an object to this TFileImplBase, and

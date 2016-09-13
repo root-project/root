@@ -46,22 +46,26 @@ using std::endl;
 
 #include "TMVA/Types.h"
 
-//TMVA::DataSetManager* TMVA::DataSetManager::fgDSManager = 0; // DSMTEST removed
-//TMVA::DataSetManager& TMVA::DataSetManager::Instance() { return *fgDSManager; }      // DSMTEST removed
-// void TMVA::DataSetManager::CreateInstance( DataInputHandler& dataInput ) { fgDSManager = new DataSetManager(dataInput); } // DSMTEST removed
-
-// void TMVA::DataSetManager::DestroyInstance() { if (fgDSManager) { delete fgDSManager; fgDSManager=0; } } // DSMTEST removed
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
 TMVA::DataSetManager::DataSetManager( DataInputHandler& dataInput )
    : fDatasetFactory(0),
-     fDataInput(dataInput),
+     fDataInput(&dataInput),
      fDataSetInfoCollection(),
      fLogger( new MsgLogger("DataSetManager", kINFO) )
 {
 }
+
+TMVA::DataSetManager::DataSetManager( )
+: fDatasetFactory(0),
+fDataInput(0),
+fDataSetInfoCollection(),
+fLogger( new MsgLogger("DataSetManager", kINFO) )
+{
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
@@ -81,10 +85,11 @@ TMVA::DataSet* TMVA::DataSetManager::CreateDataSet( const TString& dsiName )
 {
    DataSetInfo* dsi = GetDataSetInfo( dsiName );
    if (!dsi) Log() << kFATAL << "DataSetInfo object '" << dsiName << "' not found" << Endl;
-
+   if (!fDataInput ) Log() << kFATAL << "DataInputHandler object 'fDataInput' not found" << Endl;
+   
    // factory to create dataset from datasetinfo and datainput
    if(!fDatasetFactory) { fDatasetFactory =new  DataSetFactory(); }
-   return fDatasetFactory->CreateDataSet( *dsi, fDataInput );
+   return fDatasetFactory->CreateDataSet( *dsi, *fDataInput );
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -9,9 +9,9 @@
 
 #include "cling/UserInterface/UserInterface.h"
 
-#include "cling/UserInterface/CompilationException.h"
 #include "cling/Interpreter/Exception.h"
 #include "cling/MetaProcessor/MetaProcessor.h"
+#include "textinput/Callbacks.h"
 #include "textinput/TextInput.h"
 #include "textinput/StreamReader.h"
 #include "textinput/TerminalDisplay.h"
@@ -49,14 +49,7 @@
 #include <memory>
 
 namespace {
-  // Handle fatal llvm errors by throwing an exception.
-  // Yes, throwing exceptions in error handlers is bad.
-  // Doing nothing is pretty terrible, too.
-  void exceptionErrorHandler(void * /*user_data*/,
-                             const std::string& reason,
-                             bool /*gen_crash_diag*/) {
-    throw cling::CompilationException(reason);
-  }
+
 #if defined(LLVM_ON_UNIX)
   static void GetUserHomeDirectory(llvm::SmallVectorImpl<char>& str) {
     str.clear();
@@ -90,25 +83,25 @@ namespace {
   /// to code complete through its own textinput mechanism which is part of the
   /// UserInterface.
   ///
-  class TabCompletion : public textinput::TabCompletion {
-    const Interpreter& m_ParentInterpreter;
+  class UITabCompletion : public textinput::TabCompletion {
+    const cling::Interpreter& m_ParentInterpreter;
   
   public:
-    TabCompletion(const Interpreter& Parent) : m_ParentInterpreter(Parent) {}
-    ~TabCompletion() {}
+    UITabCompletion(const cling::Interpreter& Parent) :
+                    m_ParentInterpreter(Parent) {}
+    ~UITabCompletion() {}
 
     bool Complete(textinput::Text& Line /*in+out*/,
-                size_t& Cursor /*in+out*/,
-                textinput::EditorRange& R /*out*/,
-                std::vector<std::string>& Completions /*out*/) override {
-      m_ParentInterpreter->codeComplete(Line.GetText(), Cursor, Completions);
+                  size_t& Cursor /*in+out*/,
+                  textinput::EditorRange& R /*out*/,
+                  std::vector<std::string>& Completions /*out*/) override {
+      m_ParentInterpreter.codeComplete(Line.GetText(), Cursor, Completions);
+      return true;
     }
   };
 }
 
 namespace cling {
-  // Declared in CompilationException.h; vtable pinned here.
-  CompilationException::~CompilationException() throw() {}
 
   UserInterface::UserInterface(Interpreter& interp) {
     // We need stream that doesn't close its file descriptor, thus we are not
@@ -116,7 +109,7 @@ namespace cling {
     // the results in pipes (Savannah #99234).
     static llvm::raw_fd_ostream m_MPOuts (STDOUT_FILENO, /*ShouldClose*/false);
     m_MetaProcessor.reset(new MetaProcessor(interp, m_MPOuts));
-    llvm::install_fatal_error_handler(&exceptionErrorHandler);
+    llvm::install_fatal_error_handler(&CompilationException::throwingHandler);
   }
 
   UserInterface::~UserInterface() {}
@@ -141,8 +134,8 @@ namespace cling {
 
     // Inform text input about the code complete consumer
     // TextInput owns the TabCompletion.
-    TabCompletion* Completion =
-                  new cling::TabCompletion(m_MetaProcessor->getInterpreter());
+    UITabCompletion* Completion =
+                      new UITabCompletion(m_MetaProcessor->getInterpreter());
     TI.SetCompletion(Completion);
 
     TI.SetPrompt("[cling]$ ");

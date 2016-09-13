@@ -1,6 +1,6 @@
-/// \notebook
 /// \file
 /// \ingroup tutorial_graphs
+/// \notebook -js
 /// Bent error bars
 ///
 /// \macro_image

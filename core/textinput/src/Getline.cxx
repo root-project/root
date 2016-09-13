@@ -98,6 +98,11 @@ namespace {
                     EditorRange& r /*out*/,
                     std::vector<std::string>& completions /*out*/) {
          gInterpreter->CodeComplete(line.GetText(), cursor, completions);
+         // FIXME: handle single completion by completing "line"
+         // FIXME: adjust r's update range, for now:
+         // redraw whole line, incl prompt
+         r.fEdit.Extend(Range::AllWithPrompt());
+         r.fDisplay.Extend(Range::AllWithPrompt());
          return true;
       }
    };

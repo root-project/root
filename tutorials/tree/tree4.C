@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_tree
+/// \notebook -nodraw
 /// This example writes a tree with objects of the class Event.
 /// It is a simplified version of $ROOTSYS/test/MainEvent.cxx to
 /// write the tree, and $ROOTSYS/test/eventb.C
@@ -26,7 +27,7 @@
 /// This example can be run in many different ways:
 ///  - way1 using the Cling interpreter:
 /// ~~~
-/// .x tree4.C    
+/// .x tree4.C
 /// ~~~
 ///  - way2 using the Cling interpreter:
 /// ~~~
@@ -47,6 +48,7 @@
 /// \macro_code
 ///
 /// \author Rene Brun
+
 #include "TFile.h"
 #include "TTree.h"
 #include "TBrowser.h"

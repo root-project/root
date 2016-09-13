@@ -1,13 +1,17 @@
 /// \file
 /// \ingroup tutorial_tree
-///
+/// \notebook
 /// Use of transparency with ||-Coord.
+///
 /// It displays the same data set twice. The first time without transparency and
 /// the second time with transparency. On the second plot, several clusters
 /// appear.
-/// ## Images without and with transparency
+///
+/// ### Images without and with transparency
+///
 /// \macro_image
 /// \macro_code
+///
 /// \author Olivier Couet
 
 #include "TFile.h"

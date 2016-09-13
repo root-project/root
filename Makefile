@@ -509,7 +509,6 @@ MAKEDISTSRC   := $(ROOT_SRCDIR)/build/unix/makedistsrc.sh
 MAKEVERSION   := $(ROOT_SRCDIR)/build/unix/makeversion.sh
 MAKECOMPDATA  := $(ROOT_SRCDIR)/build/unix/compiledata.sh
 MAKECHANGELOG := $(ROOT_SRCDIR)/build/unix/makechangelog.sh
-MAKEHTML      := $(ROOT_SRCDIR)/build/unix/makehtml.sh
 MAKELOGHTML   := $(ROOT_SRCDIR)/build/unix/makeloghtml.sh
 MAKEPLUGINS   := $(ROOT_SRCDIR)/build/unix/makeplugins-ios.sh
 MAKERELNOTES  := $(ROOT_SRCDIR)/build/unix/makereleasenotes.sh
@@ -598,9 +597,16 @@ ALLHDRS :=
 ifeq ($(CXXMODULES),yes)
 # Copy the modulemap in $ROOTSYS/include first.
 ALLHDRS  := include/module.modulemap
-ROOT_CXXMODULES_FLAGS = -fmodules -fmodule-map-file=$(ROOT_OBJDIR)/include/module.modulemap -fmodules-cache-path=$(ROOT_OBJDIR)/include/pcms/
-CXXFLAGS += $(ROOT_CXXMODULES_FLAGS)
-CFLAGS   += $(ROOT_CXXMODULES_FLAGS)
+ROOT_CXXMODULES_CXXFLAGS =  -fmodules -fcxx-modules -fmodules-cache-path=$(ROOT_OBJDIR)/include/pcms/
+ROOT_CXXMODULES_CFLAGS =  -fmodules -fmodules-cache-path=$(ROOT_OBJDIR)/include/pcms/
+# FIXME: OSX doesn't support -fmodules-local-submodule-visibility because its
+# Frameworks' modulemaps predate the flag.
+ifneq ($(PLATFORM),macosx)
+ROOT_CXXMODULES_CXXFLAGS += -Xclang -fmodules-local-submodule-visibility
+endif # not macos
+
+CXXFLAGS += $(ROOT_CXXMODULES_CXXFLAGS)
+CFLAGS   += $(ROOT_CXXMODULES_CFLAGS)
 endif
 
 
@@ -1126,16 +1132,11 @@ plugins-ios: $(ROOTEXE)
 	@$(MAKEPLUGINS)
 
 changelog:
-	@$(MAKECHANGELOG)
+	@$(MAKECHANGELOG) $(ROOT_SRCDIR)
 
 releasenotes:
 	@$(MAKERELNOTES)
 ROOTCLING_CXXFLAGS := $(CXXFLAGS)
-# rootcling doesn't know what to do with these flags.
-# FIXME: Disable until until somebody teaches it.
-ifeq ($(CXXMODULES),yes)
-ROOTCLING_CXXFLAGS := $(filter-out $(ROOT_CXXMODULES_FLAGS),$(CXXFLAGS))
-endif
 
 $(ROOTPCH): $(MAKEPCH) $(ROOTCLINGSTAGE1DEP) $(ALLHDRS) $(CLINGETCPCH) $(ORDER_) $(ALLLIBS)
 	@$(MAKEPCHINPUT) $(ROOT_SRCDIR) "$(MODULES)" $(CLINGETCPCH) -- $(ROOTCLING_CXXFLAGS)
@@ -1157,7 +1158,7 @@ ifneq ($(USECONFIG),FALSE)
 	fi
 endif
 	@$(MAKELOGHTML)
-	@$(MAKEHTML)
+	@$(MAKE) -C $(ROOT_SRCDIR)/documentation/doxygen
 else
 html:
 	@echo "Error: Generating the html doc requires to enable the asimage component when running configure." && exit 1

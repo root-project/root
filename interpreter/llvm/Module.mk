@@ -75,13 +75,6 @@ FORCELLVMTARGET := FORCELLVMTARGET
 FORCENEXTLLVM := $(shell rm -f $(LLVMDIRO)/llvmrev.txt)
 endif
 
-# FIXME: Disable modules for LLVM until next LLVM upgrade.
-#ifeq ($(CXXMODULES),yes)
-# Copy the modulemap in $ROOTSYS/include first.
-#CXXFLAGS := $(filter-out $(ROOT_CXXMODULES_FLAGS),$(CXXFLAGS))
-#CFLAGS   := $(filter-out $(ROOT_CXXMODULES_FLAGS),$(CFLAGS))
-#endif
-
 ##### local rules #####
 .PHONY: all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME) FORCELLVMTARGET
 

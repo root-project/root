@@ -252,7 +252,7 @@ namespace clang {
     ///
     void CollectFilesToUncache(SourceLocation Loc);
 
-    constexpr static bool isDefinition(void*) { return false; }
+    LLVM_CONSTEXPR static bool isDefinition(void*) { return false; }
     static bool isDefinition(TagDecl* R);
 
     static void resetDefinitionData(void*) {

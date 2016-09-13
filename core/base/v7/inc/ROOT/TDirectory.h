@@ -67,10 +67,8 @@ public:
 
 class TDirectory {
   /// The directory content is a hashed map of name =>
-  /// `Internal::TDirectoryEntryPtr`.
-  using ContentMap_t
-    = std::unordered_map<std::string,
-                         std::unique_ptr<Internal::TDirectoryEntryPtrBase>>;
+  /// `Internal::TDirectoryEntry`.
+  using ContentMap_t = std::unordered_map<std::string, Internal::TDirectoryEntry>;
 
   /// The `TDirectory`'s content.
   ContentMap_t fContent;
@@ -79,10 +77,8 @@ class TDirectory {
   struct ToContentType {
     using decaytype = typename std::decay<T>::type;
     using type = typename std::enable_if<
-      !std::is_function<decaytype>::value
-    && !std::is_pointer<decaytype>::value
-    && !std::is_member_object_pointer<decaytype>::value
-    && !std::is_member_function_pointer<decaytype>::value
+       !std::is_pointer<decaytype>::value
+    && !std::is_member_pointer<decaytype>::value
     && !std::is_void<decaytype>::value,
     decaytype>::type;
   };
@@ -96,47 +92,49 @@ public:
   /// \param name  - Key of the object.
   /// \param args  - arguments to be passed to the constructor of `T`
   template <class T, class... ARGS>
-  std::weak_ptr<T> Create(const std::string& name, ARGS... args) {
-    auto ptr = std::make_shared<ToContentType_t<T>>(std::forward<ARGS...>(args...));
+  std::shared_ptr<ToContentType_t<T>> Create(const std::string& name, ARGS&&... args) {
+    auto ptr = std::make_shared<ToContentType_t<T>>(std::forward<ARGS>(args)...);
     Add(name, ptr);
     return ptr;
   }
 
-  /// Find the TDirectoryEntryPtrBase associated to the name. Returns nullptr if
+  /// Find the TDirectoryEntry associated to the name. Returns empty TDirectoryEntry if
   /// nothing is found.
-  const Internal::TDirectoryEntryPtrBase* Find(const std::string& name) const {
+  Internal::TDirectoryEntry Find(const std::string& name) const {
     auto idx = fContent.find(name);
     if (idx == fContent.end())
       return nullptr;
-    return idx->second.get();
+    return idx->second;
   }
 
   /**
   Status of the call to Find<T>(name).
   */
-  enum EFindStatus {
+  enum class EFindStatus {
     kValidValue,      ///< Value known for this key name and type
     kValidValueBase,  ///< Value known for this key name and base type
     kKeyNameNotFound, ///< No key is known for this name
     kTypeMismatch     ///< The provided type does not match the value's type.
   };
 
-  /// Find the TDirectoryEntryPtr<T> associated with the name.
-  /// \returns `nullptr` in `first` if nothing is found, or if the type does not
+  /// Find the TDirectoryEntry associated with the name.
+  /// \returns empty TDirectoryEntry in `first` if nothing is found, or if the type does not
   ///    match the expected type. `second` contains the reason.
-  /// \note returns `TDirectoryEntryPtrBase` instead of
-  ///    `TDirectoryEntryPtrBase<T>` to make this interface usable also passing
-  ///    a base. I.e. Find<Base>("name") can return TDirectoryEntryPtr<Derived>.
+  /// \note if `second` is kValidValue, then static_pointer_cast<`T`>(`first`.GetPointer())
+  ///    is shared_ptr<`T`> to initially stored object
+  /// \note if `second` is kValidValueBase, then `first`.CastPointer<`T`>()
+  ///    is a valid cast to base class `T` of the stored object
   template <class T>
-  std::pair<const Internal::TDirectoryEntryPtrBase*, EFindStatus>
+  std::pair<Internal::TDirectoryEntry, EFindStatus>
   Find(const std::string& name) const {
     auto idx = fContent.find(name);
     if (idx == fContent.end())
-      return std::make_pair(nullptr, kKeyNameNotFound);
-    // FIXME: implement upcast
-    if (idx->second->GetTypeInfo() == typeid(ToContentType_t<T>))
-      return std::make_pair(idx->second.get(), kValidValue);
-    return std::make_pair(nullptr, kTypeMismatch);
+      return {nullptr, EFindStatus::kKeyNameNotFound};
+    if (idx->second.GetTypeInfo() == typeid(ToContentType_t<T>))
+      return {idx->second, EFindStatus::kValidValue};
+    if (idx->second.CastPointer<ToContentType_t<T>>())
+      return {idx->second, EFindStatus::kValidValueBase};
+    return {nullptr, EFindStatus::kTypeMismatch};
   }
 
 
@@ -148,35 +146,37 @@ public:
   /// \throws TDirectoryTypeMismatch if the object stored under this name is of
   ///   a type that is not a derived type of `T`.
   template <class T>
-  std::shared_ptr<T> Get(const std::string& name) {
-    ContentMap_t::iterator idx = fContent.find(name);
-    if (idx != fContent.end()) {
-      // FIXME: implement upcast!
-      if (auto dep
-        = dynamic_cast<Internal::TDirectoryEntryPtr<T>*>(idx->second.get())) {
-        return dep->GetPointer();
-      }
+  std::shared_ptr<ToContentType_t<T>> Get(const std::string& name) {
+    const auto& pair = Find<T>(name);
+    const Internal::TDirectoryEntry& entry = pair.first;
+    EFindStatus status = pair.second;
+    switch (status) {
+    case EFindStatus::kValidValue:
+      return std::static_pointer_cast<ToContentType_t<T>>(entry.GetPointer());
+    case EFindStatus::kValidValueBase:
+      return entry.CastPointer<ToContentType_t<T>>();
+    case EFindStatus::kTypeMismatch:
       // FIXME: add expected versus actual type name as c'tor args
       throw TDirectoryTypeMismatch(name);
+    case EFindStatus::kKeyNameNotFound:
+      throw TDirectoryUnknownKey(name);
     }
-    throw TDirectoryUnknownKey(name);
-    return std::shared_ptr<T>(); // never happens
+    return nullptr; // never happens
   }
 
   /// Add an existing object (rather a `shared_ptr` to it) to the TDirectory.
   /// The TDirectory will have shared ownership.
   template <class T>
   void Add(const std::string& name, const std::shared_ptr<T>& ptr) {
-    auto uptr = std::make_unique<Internal::TDirectoryEntryPtr<ToContentType_t<T>>>(ptr);
-    std::unique_ptr<Internal::TDirectoryEntryPtrBase> baseUPtr{std::move(uptr)};
-
-    ContentMap_t::iterator idx = fContent.find(name);
+    Internal::TDirectoryEntry entry(ptr);
+    // FIXME: CXX17: insert_or_assign
+    auto idx = fContent.find(name);
     if (idx != fContent.end()) {
       R__LOG_HERE(ELogLevel::kWarning, "CORE")
-        << "Replacing object with name " << name;
-      idx->second.swap(baseUPtr);
+        << "Replacing object with name \"" << name << "\"" << std::endl;
+      idx->second.swap(entry);
     } else {
-      fContent[name].swap(baseUPtr);
+      fContent[name].swap(entry);
     }
   }
 

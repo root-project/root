@@ -44,6 +44,11 @@ TProtoClass::TProtoClass(TClass* cl):
       fOffsetStreamer=0;
       return;
    }
+   TListOfEnums *enums = dynamic_cast<TListOfEnums*>(fEnums);
+   if (enums && !enums->fIsLoaded) {
+      // Make sure all the enum information is loaded
+      enums->Load();
+   }
    // initialize list of data members (fData)
    TList * dataMembers = cl->GetListOfDataMembers();
    if (dataMembers && dataMembers->GetSize() > 0) {

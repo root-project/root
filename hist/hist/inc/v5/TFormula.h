@@ -19,8 +19,8 @@
 //                                                                      //
 // TFormula                                                             //
 //                                                                      //
-// The old formula base class  f(x,y,z,par)                                 //
-// mantained for backward compatibility and TTree usage                  //
+// The old formula base class  f(x,y,z,par)                             //
+// mantained for backward compatibility and TTree usage                 //
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_TNamed
@@ -67,7 +67,7 @@ protected:
    Short_t fOldAction;        // temporary variable used during optimization
 };
 
-      
+
 class TFormula : public TNamed {
 
 protected:
@@ -280,5 +280,5 @@ public:
    } // end namespace v5
 
 } // end namespace ROOT
-      
+
 #endif

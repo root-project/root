@@ -36,7 +36,6 @@ namespace clang {
 namespace cling {
   class BackendPasses;
   class CompilationOptions;
-  class CIFactory;
   class DeclCollector;
   class ExecutionContext;
   class Interpreter;
@@ -101,8 +100,7 @@ namespace cling {
     };
     typedef llvm::PointerIntPair<Transaction*, 2, EParseResult>
       ParseResultTransaction;
-    IncrementalParser(Interpreter* interp, int argc, const char* const *argv,
-                      const char* llvmdir, bool isChildInterpreter);
+    IncrementalParser(Interpreter* interp, const char* llvmdir);
     ~IncrementalParser();
 
     void Initialize(llvm::SmallVectorImpl<ParseResultTransaction>& result,
@@ -191,18 +189,6 @@ namespace cling {
     ///\returns the declarations that were compiled.
     ///
     ParseResultTransaction Compile(llvm::StringRef input, const CompilationOptions& Opts);
-
-    ///\brief Parses the given input without calling the custom consumers and
-    /// code generation.
-    ///
-    /// I.e changes to the decls in the transaction commiting it will cause
-    /// different executable code.
-    ///
-    ///\param[in] input - The code to parse.
-    ///\param[in] Opts - The compilation options to use.
-    ///\returns The transaction corresponding to the input.
-    ///
-    ParseResultTransaction Parse(llvm::StringRef input, const CompilationOptions& Opts);
 
     void printTransactionStructure() const;
 

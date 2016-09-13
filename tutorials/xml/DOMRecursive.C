@@ -1,12 +1,13 @@
 /// \file
 /// \ingroup tutorial_xml
+/// \notebook -nodraw
 /// ROOT implementation of a XML DOM Parser
 ///
 /// This is an example of how Dom Parser walks the DOM tree recursively.
 /// This example will parse any xml file.
 ///
 /// To run this program
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 /// .x DOMRecursive.C+
 /// ~~~
 ///
@@ -53,9 +54,9 @@ void ParseContext(TXMLNode *node)
 void DOMRecursive()
 {
   TDOMParser *domParser = new TDOMParser();
-  TString dir = gSystem->DirName(__FILE__);
+  TString dir = gROOT->GetTutorialsDir();
   domParser->SetValidate(false); // do not validate with DTD
-  domParser->ParseFile(dir+"/person.xml");
+  domParser->ParseFile(dir+"/xml/person.xml");
 
   TXMLNode *node = domParser->GetXMLDocument()->GetRootNode();
 

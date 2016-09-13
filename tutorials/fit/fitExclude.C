@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_fit
+/// \notebook -js
 /// Illustrates how to fit excluding points in a given range.
 ///
 /// \macro_image

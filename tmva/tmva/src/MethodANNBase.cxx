@@ -292,8 +292,9 @@ void TMVA::MethodANNBase::BuildNetwork( std::vector<Int_t>* layout, std::vector<
    else if (fEstimatorS == "CE")    fEstimator = kCE;      //zjh
    else Log()<<kWARNING<<"fEstimator="<<fEstimator<<"\tfEstimatorS="<<fEstimatorS<<Endl;
    if (fEstimator!=kMSE && fEstimator!=kCE) Log()<<kWARNING<<"Estimator type unspecified \t"<<Endl; //zjh
+   
 
-   Log() << kINFO << "Building Network" << Endl;
+   Log() << kHEADER << "Building Network. " << Endl;
 
    DeleteNetwork();
    InitANNBase();
@@ -439,7 +440,7 @@ void TMVA::MethodANNBase::AddPreLinks(TNeuron* neuron, TObjArray* prevLayer)
 
 void TMVA::MethodANNBase::InitWeights()
 {
-   PrintMessage("Initializing weights");
+  PrintMessage("Initializing weights");
    
    // init synapse weights
    Int_t numSynapses = fSynapses->GetEntriesFast();

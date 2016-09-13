@@ -55,23 +55,6 @@ static const char *R__GetDeclSourceFileName(const clang::Decl* D)
    }
 }
 
-#if MATCH_ON_INSTANTIATION_LOCATION
-static const char *R__GetDeclSourceFileName(const clang::ClassTemplateSpecializationDecl *tmpltDecl)
-{
-   clang::SourceLocation SL = tmpltDecl->getPointOfInstantiation();
-   clang::ASTContext& ctx = tmpltDecl->getASTContext();
-   clang::SourceManager& SM = ctx.getSourceManager();
-
-   if (SL.isValid() && SL.isFileID()) {
-      clang::PresumedLoc PLoc = SM.getPresumedLoc(SL);
-      return PLoc.getFilename();
-   }
-   else {
-      return "invalid";
-   }
-}
-#endif
-
 static bool R__match_filename(const char *srcname,const char *filename)
 {
    if (srcname==0) {
@@ -102,8 +85,6 @@ static bool R__match_filename(const char *srcname,const char *filename)
 #endif
    return false;
 }
-
-const clang::CXXRecordDecl *R__ScopeSearch(const char *name, const cling::Interpreter &gInterp, const clang::Type** resultType = 0);
 
 BaseSelectionRule::BaseSelectionRule(long index, BaseSelectionRule::ESelect sel, const std::string& attributeName, const std::string& attributeValue, cling::Interpreter &interp, const char* selFileName, long lineno)
    : fIndex(index),fLineNumber(lineno),fSelFileName(selFileName),fIsSelected(sel),fMatchFound(false),fCXXRecordDecl(0),fRequestedType(0),fInterp(&interp)
@@ -275,22 +256,6 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
            (R__match_filename(file_name_value.c_str(),file_name))) ||
            (fHasFilePatternAttribute && CheckPattern(file_name, file_pattern_value, fFileSubPatterns, isLinkdef)));
 
-#if MATCH_ON_INSTANTIATION_LOCATION
-      if (!hasFileMatch) {
-         const clang::ClassTemplateSpecializationDecl *tmpltDecl =
-            llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(decl);
-         // Try the instantiation point.
-         if (tmpltDecl) {
-            file_name = R__GetDeclSourceFileName(tmpltDecl);
-            hasFileMatch = ((HasAttributeFileName() &&
-                             //FIXME It would be much better to cache the rule stat result and compare to the clang::FileEntry
-                             (R__match_filename(file_name_value.c_str(),file_name)))
-                            ||
-                            (HasAttributeFilePattern() &&
-                             CheckPattern(file_name, file_pattern_value, fFileSubPatterns, isLinkdef)));
-         }
-      }
-#endif
       if (hasFileMatch) {
          // Reject utility classes defined in ClassImp
          // when using a file based rule
@@ -400,7 +365,7 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
  * split in "this", "pat*rn", i.e. the star could be escaped.
  */
 
-void BaseSelectionRule::ProcessPattern(const std::string& pattern, std::list<std::string>& out)
+void BaseSelectionRule::ProcessPattern(const std::string& pattern, std::list<std::string>& out) const
 {
    std::string temp = pattern;
    std::string split;
@@ -468,21 +433,14 @@ void BaseSelectionRule::ProcessPattern(const std::string& pattern, std::list<std
    }
 }
 
-bool BaseSelectionRule::BeginsWithStar(const std::string& pattern) {
-   return pattern.at(0) == '*';
-}
-
-bool BaseSelectionRule::EndsWithStar(const std::string& pattern) {
-   return pattern.at(pattern.length()-1) == '*';
-}
-
 /*
  * This method checks if the given test string is matched against the pattern
  */
 
-bool BaseSelectionRule::CheckPattern(const std::string& test, const std::string& pattern, const std::list<std::string>& patterns_list, bool isLinkdef)
+bool BaseSelectionRule::CheckPattern(const std::string& test, const std::string& pattern, const std::list<std::string>& patterns_list, bool isLinkdef) const
 {
-   if (pattern.size() == 1 && pattern == "*" /* && patterns_list.back().size() == 0 */) {
+   bool begin = pattern.front() == '*';
+   if (pattern.size() == 1 && begin) {
       // We have the simple pattern '*', it matches everything by definition!
       return true;
    }
@@ -490,8 +448,7 @@ bool BaseSelectionRule::CheckPattern(const std::string& test, const std::string&
    std::list<std::string>::const_iterator it = patterns_list.begin();
    size_t pos1, pos2, pos3;
    pos1= pos2= pos3= std::string::npos;
-   bool begin = BeginsWithStar(pattern);
-   bool end = EndsWithStar(pattern);
+   bool end = pattern.back() == '*';
 
    // we first check if the last sub-pattern is contained in the test string
    const std::string& last = patterns_list.back();

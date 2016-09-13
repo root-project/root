@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_graphs
-///
+/// \notebook
 /// Hint: Spherical waves
 ///
 /// \macro_image
@@ -53,7 +53,7 @@ Double_t result( Double_t *x, Double_t *par)
 }
 
 
-//_________________________________________________________________
+//_____________________________________________________________
 void waves( Double_t d = 3, Double_t lambda = 1, Double_t amp = 10)
 {
    TCanvas *c1 = new TCanvas("waves", "A double slit experiment",

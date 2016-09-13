@@ -388,6 +388,17 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
   return true;
 }
 
+/// \brief Detrmine wheter two template names are the same
+static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
+                                     const TemplateName &Name1,
+                                     const TemplateName &Name2) {
+  return Context.IsStructurallyEquivalent(
+         Name1.getAsTemplateDecl()->getCanonicalDecl(),
+         Name2.getAsTemplateDecl()->getCanonicalDecl())
+         && (Name1.getAsTemplateDecl()->getNameAsString()
+             == Name2.getAsTemplateDecl()->getNameAsString());
+}
+
 /// \brief Determine whether two template arguments are equivalent.
 static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
                                      const TemplateArgument &Arg1,

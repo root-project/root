@@ -199,7 +199,6 @@ inline float fast_asinf(float x){
     // Restore Sign
     return details::spORuint32(res,sign_mask);
 
-    return( z );
 }
 
 //------------------------------------------------------------------------------

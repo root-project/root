@@ -247,57 +247,6 @@ be used by the Transform() member function, the *= or
 
 ClassImp(TLorentzVector)
 
-TLorentzVector::TLorentzVector()
-               : fP(), fE(0.0) {}
-
-TLorentzVector::TLorentzVector(Double_t x, Double_t y, Double_t z, Double_t t)
-               : fP(x,y,z), fE(t) {}
-
-TLorentzVector::TLorentzVector(const Double_t * x0)
-               : fP(x0), fE(x0[3]) {}
-
-TLorentzVector::TLorentzVector(const Float_t * x0)
-               : fP(x0), fE(x0[3]) {}
-
-TLorentzVector::TLorentzVector(const TVector3 & p, Double_t e)
-               : fP(p), fE(e) {}
-
-TLorentzVector::TLorentzVector(const TLorentzVector & p) : TObject(p)
-               , fP(p.Vect()), fE(p.T()) {}
-
-TLorentzVector::~TLorentzVector()  {}
-
-Double_t TLorentzVector::operator () (int i) const
-{
-   //dereferencing operator const
-   switch(i) {
-      case kX:
-      case kY:
-      case kZ:
-         return fP(i);
-      case kT:
-         return fE;
-      default:
-         Error("operator()()", "bad index (%d) returning 0",i);
-   }
-   return 0.;
-}
-
-Double_t & TLorentzVector::operator () (int i)
-{
-   //dereferencing operator
-   switch(i) {
-      case kX:
-      case kY:
-      case kZ:
-         return fP(i);
-      case kT:
-         return fE;
-      default:
-         Error("operator()()", "bad index (%d) returning &fE",i);
-   }
-   return fE;
-}
 
 void TLorentzVector::Boost(Double_t bx, Double_t by, Double_t bz)
 {

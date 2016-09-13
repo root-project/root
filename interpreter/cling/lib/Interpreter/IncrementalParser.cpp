@@ -56,7 +56,9 @@
 #ifdef _MSC_VER
   #define WIN32_LEAN_AND_MEAN
   #define NOGDI
-  #define NOMINMAX
+  #ifndef NOMINMAX
+    #define NOMINMAX
+  #endif
   #include <Windows.h>
   #include <sstream>
   #define popen _popen
@@ -82,7 +84,7 @@ namespace {
 # define CLING_CXXABIV -1 // intentionally invalid macro name
 # define CLING_CXXABIS "-1" // intentionally invalid macro name
     llvm::errs()
-      << "Warning in cling::CIFactory::createCI():\n  "
+      << "Warning in cling::IncrementalParser::CheckABICompatibility():\n  "
       "C++ ABI check not implemented for this standard library\n";
     return;
 #endif
@@ -100,7 +102,7 @@ namespace {
     }
     else {
       llvm::errs()
-        << "Warning in cling::CIFactory::createCI():\n  "
+        << "Warning in cling::IncrementalParser::CheckABICompatibility():\n  "
         "Possible C++ standard library mismatch, compiled with Visual Studio v"
         << VSVersion << ".0,\n"
         "but this version of Visual Studio was not found in your system's registry.\n";
@@ -124,7 +126,9 @@ namespace {
   if (!II)
     return;
   const clang::DefMacroDirective* MD
-    = llvm::dyn_cast<clang::DefMacroDirective>(PP.getLocalMacroDirective(II));
+    = llvm::dyn_cast_or_null<clang::DefMacroDirective>(
+                                                   PP.getLocalMacroDirective(II)
+                                                      );
   if (!MD)
     return;
   const clang::MacroInfo* MI = MD->getMacroInfo();
@@ -158,26 +162,20 @@ namespace {
 } // unnamed namespace
 
 namespace cling {
-  IncrementalParser::IncrementalParser(Interpreter* interp,
-                                       int argc, const char* const *argv,
-                                       const char* llvmdir, bool isChildInterpreter):
-    m_Interpreter(interp), m_Consumer(0), m_ModuleNo(0) {
+  IncrementalParser::IncrementalParser(Interpreter* interp, const char* llvmdir):
+    m_Interpreter(interp),
+    m_CI(CIFactory::createCI("", interp->getOptions(), llvmdir)),
+    m_Consumer(nullptr), m_ModuleNo(0) {
+    assert(m_CI.get() && "CompilerInstance is (null)!");
 
-    CompilerInstance* CI = CIFactory::createCI("", argc, argv, llvmdir);
-    assert(CI && "CompilerInstance is (null)!");
-
-    m_Consumer = dyn_cast<DeclCollector>(&CI->getSema().getASTConsumer());
+    m_Consumer = dyn_cast<DeclCollector>(&m_CI->getSema().getASTConsumer());
     assert(m_Consumer && "Expected ChainedConsumer!");
 
-    m_CI.reset(CI);
-
-    if (CI->getFrontendOpts().ProgramAction != clang::frontend::ParseSyntaxOnly){
-      m_CodeGen.reset(CreateLLVMCodeGen(CI->getDiagnostics(), "cling-module-0",
-                                        CI->getHeaderSearchOpts(),
-                                        CI->getPreprocessorOpts(),
-                                        CI->getCodeGenOpts(),
-                                        *m_Interpreter->getLLVMContext()
-                                        ));
+    if (m_CI->getFrontendOpts().ProgramAction != frontend::ParseSyntaxOnly) {
+      m_CodeGen.reset(CreateLLVMCodeGen(
+          m_CI->getDiagnostics(), "cling-module-0", m_CI->getHeaderSearchOpts(),
+          m_CI->getPreprocessorOpts(), m_CI->getCodeGenOpts(),
+          *m_Interpreter->getLLVMContext()));
       m_Consumer->setContext(this, m_CodeGen.get());
     } else {
       m_Consumer->setContext(this, 0);
@@ -189,7 +187,7 @@ namespace cling {
   void
   IncrementalParser::Initialize(llvm::SmallVectorImpl<ParseResultTransaction>&
                                 result, bool isChildInterpreter) {
-    m_TransactionPool.reset(new TransactionPool(getCI()->getSema()));
+    m_TransactionPool.reset(new TransactionPool);
     if (hasCodeGenerator()) {
       getCodeGenerator()->Initialize(getCI()->getASTContext());
       m_BackendPasses.reset(new BackendPasses(getCI()->getCodeGenOpts(),
@@ -263,17 +261,16 @@ namespace cling {
   }
 
   IncrementalParser::~IncrementalParser() {
-    const Transaction* T = getFirstTransaction();
-    const Transaction* nextT = 0;
+    Transaction* T = const_cast<Transaction*>(getFirstTransaction());
     while (T) {
       assert((T->getState() == Transaction::kCommitted
               || T->getState() == Transaction::kRolledBackWithErrors
               || T->getState() == Transaction::kNumStates // reset from the pool
               || T->getState() == Transaction::kRolledBack)
              && "Not committed?");
-      nextT = T->getNext();
-      delete T;
-      T = nextT;
+      const Transaction* nextT = T->getNext();
+      m_TransactionPool->releaseTransaction(T, false);
+      T = const_cast<Transaction*>(nextT);
     }
   }
 
@@ -289,7 +286,7 @@ namespace cling {
   Transaction* IncrementalParser::beginTransaction(const CompilationOptions&
                                                    Opts) {
     Transaction* OldCurT = m_Consumer->getTransaction();
-    Transaction* NewCurT = m_TransactionPool->takeTransaction();
+    Transaction* NewCurT = m_TransactionPool->takeTransaction(m_CI->getSema());
     NewCurT->setCompilationOpts(Opts);
     // If we are in the middle of transaction and we see another begin
     // transaction - it must be nested transaction.
@@ -575,14 +572,17 @@ namespace cling {
   bool IncrementalParser::transformTransactionIR(Transaction* T) {
     // Transform IR
     bool success = true;
-    if (!success)
-      m_Interpreter->unload(*T);
+    //if (!success)
+    //  m_Interpreter->unload(*T);
     if (m_BackendPasses && T->getModule())
       m_BackendPasses->runOnModule(*T->getModule());
     return success;
   }
 
   void IncrementalParser::deregisterTransaction(Transaction& T) {
+    if (&T == m_Consumer->getTransaction())
+      m_Consumer->setTransaction(T.getParent());
+
     if (Transaction* Parent = T.getParent()) {
       Parent->removeNestedTransaction(&T);
       T.setParent(0);
@@ -658,14 +658,6 @@ namespace cling {
     commitTransaction(PRT);
 
     return PRT;
-  }
-
-  IncrementalParser::ParseResultTransaction
-  IncrementalParser::Parse(llvm::StringRef input,
-                           const CompilationOptions& Opts) {
-    Transaction* CurT = beginTransaction(Opts);
-    ParseInternal(input);
-    return endTransaction(CurT);
   }
 
   // Add the input to the memory buffer, parse it, and add it to the AST.
@@ -786,11 +778,15 @@ namespace cling {
     };
 
     if (CO.CodeCompletionOffset != -1) {
-      SourceLocation completionLoc = PP.getCodeCompletionLoc();
-      assert ((int)SM.getFileOffset(completionLoc) == CO.CodeCompletionOffset
-              && "Completion point wrongly set!");
+      assert((int)SM.getFileOffset(PP.getCodeCompletionLoc())
+             == CO.CodeCompletionOffset
+             && "Completion point wrongly set!");
       assert(PP.isCodeCompletionReached()
              && "Code completion set but not reached!");
+
+      // Let's ignore this transaction:
+      m_Consumer->getTransaction()->setIssuedDiags(Transaction::kErrors);
+
       return kSuccess;
     }
 

@@ -1,5 +1,7 @@
 /// \file
 /// \ingroup tutorial_fit
+/// \notebook -js
+/// Test generation of random numbers distributed according to a function defined by the user
 ///
 /// \macro_image
 /// \macro_output
@@ -10,7 +12,6 @@
 void qa2() {
    //Fill a 1-D histogram from a parametric function
    TCanvas *c1 = new TCanvas("c1","The FillRandom example",0,0,700,500);
-   c1->SetFillColor(18);
 
    gBenchmark->Start("fillrandom");
    //
@@ -34,9 +35,6 @@ void qa2() {
 
    c1->SetGridx();
    c1->SetGridy();
-   c1->GetFrame()->SetFillColor(42);
-   c1->GetFrame()->SetBorderMode(-1);
-   c1->GetFrame()->SetBorderSize(5);
 
    h1f->SetDirectory(0);
 

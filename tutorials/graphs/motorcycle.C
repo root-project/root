@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_graphs
+/// \notebook
 /// Macro to test scatterplot smoothers: ksmooth, lowess, supsmu
 /// as described in:
 ///
@@ -42,8 +43,8 @@ void DrawSmooth(Int_t pad, const char *title, const char *xt, const char *yt)
 void motorcycle()
 {
 // data taken from R library MASS: mcycle.txt
-   TString dir = gSystem->UnixPathName(__FILE__);
-   dir.ReplaceAll("motorcycle.C","");
+   TString dir = gROOT->GetTutorialsDir();
+   dir.Append("/graphs/");
    dir.ReplaceAll("/./","/");
 
 // read file and add to fit object

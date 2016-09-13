@@ -49,6 +49,8 @@
 #include <stdexcept>
 #include <set>
 
+bool advanced;
+
 ClassImp(TMVA::VariableTransformBase)
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -245,9 +247,8 @@ void TMVA::VariableTransformBase::SelectInput( const TString& _inputVariables, B
          fGet.assign( fPut.begin(), fPut.end() );
       }
    }
-
-
-   Log() << kINFO << "Transformation, Variable selection : " << Endl;
+  
+   Log() << kHEADER << "Transformation, Variable selection : " << Endl;
 
    // choose the new dsi for output if present, if not, take the common one
    const DataSetInfo* outputDsiPtr = (fDsiOutput? &(*fDsiOutput) : &fDsi );
@@ -294,13 +295,12 @@ void TMVA::VariableTransformBase::SelectInput( const TString& _inputVariables, B
          outputLabel = outputDsiPtr->GetSpectatorInfo( outputIdx ).GetLabel();
          outputTypeString = "spectator";
       }
-
-
-      Log() << kINFO << "Input : " << inputTypeString.Data() << " '" << inputLabel.Data() << "' (index=" << inputIdx << ").   <---> "
-            <<          "Output : " << outputTypeString.Data() << " '" << outputLabel.Data() << "' (index=" << outputIdx << ")." << Endl;
+      Log() << kINFO << "Input : " << inputTypeString.Data() << " '" << inputLabel.Data() << "'" << " <---> " << "Output : " << outputTypeString.Data() << " '" << outputLabel.Data() << "'" << Endl;
+      Log() << kDEBUG << "\t(index=" << inputIdx << ")." << "\t(index=" << outputIdx << ")." << Endl;
 
       ++itPut;
    }
+   //   Log() << kINFO << Endl;
 }
 
 

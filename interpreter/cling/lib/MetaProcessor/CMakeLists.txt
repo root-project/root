@@ -6,7 +6,12 @@
 # LICENSE.TXT for details.
 #------------------------------------------------------------------------------
 
-add_cling_library(clingMetaProcessor
+set( LLVM_LINK_COMPONENTS
+  core
+  support
+)
+
+add_cling_library(clingMetaProcessor OBJECT
   Display.cpp
   InputValidator.cpp
   MetaLexer.cpp
@@ -15,11 +20,12 @@ add_cling_library(clingMetaProcessor
   MetaSema.cpp
 
   LINK_LIBS
+  clangLex
+  clangAST
   clangBasic
-  LLVMCore
-  )
 
-add_dependencies(clingMetaProcessor clangBasic LLVMCore)
+  clingInterpreter
+)
 
 if ( MSVC )
   set_target_properties(clingMetaProcessor PROPERTIES

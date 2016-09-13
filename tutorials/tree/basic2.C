@@ -1,15 +1,17 @@
 /// \file
 /// \ingroup tutorial_tree
-///
+/// \notebook -js
 /// Create can ntuple reading data from an ascii file.
 /// This macro is a variant of basic.C
+///
 /// \macro_image
 /// \macro_code
+///
 /// \author Rene Brun
 
 void basic2() {
-   TString dir = gSystem->UnixPathName(__FILE__);
-   dir.ReplaceAll("basic2.C","");
+   TString dir = gROOT->GetTutorialsDir();
+   dir.Append("/tree/");
    dir.ReplaceAll("/./","/");
 
    TFile *f = new TFile("basic2.root","RECREATE");

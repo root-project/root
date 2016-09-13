@@ -1,9 +1,10 @@
 /// \file
 /// \ingroup tutorial_math
+/// \notebook
 /// Example describing the usage of different kinds of Associate Legendre Polynomials
 /// To execute the macro type in:
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 /// root[0] .x LegendreAssoc.C
 /// ~~~
 ///
@@ -18,12 +19,6 @@
 ///
 /// \author Magdalena Slawinska
 
-#if defined(__CINT__) && !defined(__MAKECINT__)
-{
-   gSystem->CompileMacro("LegendreAssoc.C", "k");
-   LegendreAssoc();
-}
-#else
 
 #include "TMath.h"
 #include "TF1.h"
@@ -43,13 +38,11 @@ void LegendreAssoc()
 
    std::cout <<"Drawing associate Legendre Polynomials.." << std::endl;
    TCanvas *Canvas = new TCanvas("DistCanvas", "Associate Legendre polynomials", 10, 10, 800, 500);
-   Canvas->SetFillColor(17);
    Canvas->Divide(2,1);
-   Canvas->SetFrameFillColor(19);
    TLegend *leg1 = new TLegend(0.5, 0.7, 0.8, 0.89);
    TLegend *leg2 = new TLegend(0.5, 0.7, 0.8, 0.89);
 
-   //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+   //-------------------------------------------
    //drawing the set of Legendre functions
    TF1* L[5];
 
@@ -115,6 +108,4 @@ void LegendreAssoc()
       std::cout <<"Integral [-1,1] for Associated Legendre Polynomial of Degree " << nu << "\t = \t" << integral[nu] <<  std::endl;
    }
 }
-
-#endif
 

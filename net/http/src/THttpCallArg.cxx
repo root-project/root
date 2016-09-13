@@ -5,6 +5,7 @@
 
 #include <string.h>
 #include "RZip.h"
+#include "TNamed.h"
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -30,6 +31,7 @@ THttpCallArg::THttpCallArg() :
    fQuery(),
    fPostData(0),
    fPostDataLength(0),
+   fWSHandle(0),
    fContentType(),
    fRequestHeader(),
    fHeader(),
@@ -48,6 +50,11 @@ THttpCallArg::~THttpCallArg()
    if (fPostData) {
       free(fPostData);
       fPostData = 0;
+   }
+
+   if (fWSHandle) {
+      delete fWSHandle;
+      fWSHandle = 0;
    }
 
    if (fBinData) {
@@ -142,6 +149,26 @@ void THttpCallArg::SetPostData(void *data, Long_t length)
    if (data!=0) *(((char*) data) + length) = 0;
    fPostData = data;
    fPostDataLength = length;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// assign websocket handle with HTTP call
+
+void THttpCallArg::SetWSHandle(TNamed* handle)
+{
+   if (fWSHandle) delete fWSHandle;
+   fWSHandle = handle;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// takeout websocket handle with HTTP call
+/// can be done only once
+
+TNamed* THttpCallArg::TakeWSHandle()
+{
+   TNamed* res = fWSHandle;
+   fWSHandle = 0;
+   return res;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -436,14 +436,16 @@ void TMVA::MethodMLP::Train(Int_t nEpochs)
    }
    Log() << kDEBUG << "reinitalize learning rates" << Endl;
    InitializeLearningRates();
+   Log() << kHEADER;
    PrintMessage("Training Network");
-
+   Log() << Endl;
+   
    fIPyMaxIter = nEpochs;
    if (fInteractive && fInteractive->NotInitialized()){
      std::vector<TString> titles = {"Error on training set", "Error on test set"};
      fInteractive->Init(titles);
    }
-
+   
    Int_t nEvents=GetNEvents();
    Int_t nSynapses=fSynapses->GetEntriesFast();
    if (nSynapses>nEvents)

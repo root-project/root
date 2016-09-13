@@ -50,18 +50,6 @@ A Branch for the case of an object.
 
 ClassImp(TBranchElement)
 
-#if (__GNUC__ >= 3) || defined(__INTEL_COMPILER)
-#if !defined(R__unlikely)
-#define R__unlikely(expr) __builtin_expect(!!(expr), 0)
-#endif
-#if !defined(R__likely)
-#define R__likely(expr) __builtin_expect(!!(expr), 1)
-#endif
-#else
-#define R__unlikely(expr) expr
-#define R__likely(expr) expr
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////
 
 namespace {

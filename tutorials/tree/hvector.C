@@ -1,9 +1,11 @@
 /// \file
 /// \ingroup tutorial_tree
-///
+/// \notebook
 /// Write and read STL vectors in a tree.
+///
 /// \macro_image
 /// \macro_code
+///
 /// \author The ROOT Team
 
 #include <vector>
