@@ -577,54 +577,6 @@ void TMVA::MethodDNN::Train()
          case EActivationFunction::kSoftSign: g = EnumFunction::SOFTSIGN; break;
          case EActivationFunction::kGauss:    g = EnumFunction::GAUSS;    break;
       }
-<<<<<<< HEAD
-
-
-   // loop through settings 
-   // and create "settings" and minimizer 
-   int idxSetting = 0;
-   for (auto itSettings = std::begin (fSettings), itSettingsEnd = std::end (fSettings); itSettings != itSettingsEnd; ++itSettings, ++idxSetting)
-      {
-         std::shared_ptr<TMVA::DNN::Settings> ptrSettings = *itSettings;
-         ptrSettings->setMonitoring (fMonitoring);
-         Log() << kINFO
-               << "Training with learning rate = " << ptrSettings->learningRate ()
-               << ", momentum = " << ptrSettings->momentum ()
-               << ", repetitions = " << ptrSettings->repetitions ()
-               << Endl;
-
-         ptrSettings->setProgressLimits ((idxSetting)*100.0/(fSettings.size ()), (idxSetting+1)*100.0/(fSettings.size ()));
-
-         const std::vector<double>& dropConfig = ptrSettings->dropFractions ();
-         if (!dropConfig.empty ())
-            {
-               Log () << kINFO << "Drop configuration" << Endl
-                      << "    drop repetitions = " << ptrSettings->dropRepetitions () << Endl;
-            }
-         int idx = 0;
-         for (auto f : dropConfig)
-            {
-               Log () << kINFO << "    Layer " << idx << " = " << f << Endl;
-               ++idx;
-            }
-         Log () << kINFO << Endl;
-        
-         if (fInteractive) fNet.SetIpythonInteractive(fInteractive, &fExitFromTraining, &fIPyMaxIter, &fIPyCurrentIter);
-
-         if (ptrSettings->minimizerType () == TMVA::DNN::MinimizerType::fSteepest)
-            {
-               DNN::Steepest minimizer (ptrSettings->learningRate (), ptrSettings->momentum (), ptrSettings->repetitions ());
-               /*E =*/fNet.train (fWeights, trainPattern, testPattern, minimizer, *ptrSettings.get ());
-            }
-         ptrSettings.reset ();
-         Log () << kINFO << Endl;
-      }
-   fMonitoring = 0;
-   if (!fExitFromTraining) fIPyMaxIter = fIPyCurrentIter;
-   ExitFromTraining();
-}
-
-=======
       if (i < fNet.GetDepth() - 1) {
          net.addLayer(Layer(fNet.GetLayer(i).GetWidth(), g));
       } else {
@@ -636,7 +588,6 @@ void TMVA::MethodDNN::Train()
          net.addLayer(Layer(fNet.GetLayer(i).GetWidth(), g, h));
       }
    }
->>>>>>> master
 
    switch(fNet.GetLossFunction()) {
       case ELossFunction::kMeanSquaredError:
@@ -731,6 +682,8 @@ void TMVA::MethodDNN::Train()
          }
       }
    }
+   if (!fExitFromTraining) fIPyMaxIter = fIPyCurrentIter;
+   ExitFromTraining();
 }
 
 //______________________________________________________________________________
