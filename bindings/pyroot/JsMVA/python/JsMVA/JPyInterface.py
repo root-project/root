@@ -2,7 +2,7 @@
 ## @package JsMVA.JPyInterface
 # JPyInterface is responsible for adding the drawing methods to TMVA
 # and for creating the JavaScript outputs from objects.
-#  @authors  Attila Bagoly <battila93@gmail.com>
+# @author  Attila Bagoly <battila93@gmail.com>
 
 
 from IPython.core.display import display, HTML
@@ -11,6 +11,7 @@ import ROOT
 import DataLoader
 import Factory
 import types
+import OutputTransformer
 
 
 ## Function inserter class
@@ -142,6 +143,7 @@ class functions:
     # from DataLoader and Factory modules
     @staticmethod
     def register():
+        from JupyROOT.utils import transformers
         functions.__register(ROOT.TMVA.DataLoader, DataLoader, *functions.__getMethods(DataLoader, "Draw"))
         functions.__register(ROOT.TMVA.Factory,    Factory,    *functions.__getMethods(Factory,    "Draw"))
         functions.__changeMethod(ROOT.TMVA.Factory,    Factory,    *functions.__getMethods(Factory,    "Change"))
@@ -149,6 +151,10 @@ class functions:
         for key in functions.ThreadedFunctions:
             for func in functions.ThreadedFunctions[key]:
                 setattr(getattr(getattr(ROOT.TMVA, key), func), "_threaded", True)
+        functions.__register(ROOT.TMVA.Factory, Factory, "BookDNN")
+        outputTransformer = OutputTransformer.transformTMVAOutputToHTML()
+        transformers.append(outputTransformer.transform)
+        JsDraw.InitJsMVA()
 
     ## This function will remove all functions which name contains "Draw" from TMVA.DataLoader and TMVA.Factory
     # if the function was inserted from DataLoader and Factory modules
@@ -157,11 +163,29 @@ class functions:
         functions.__register(ROOT.TMVA.DataLoader, DataLoader, *functions.__getMethods(DataLoader, "Draw"))
         functions.__register(ROOT.TMVA.Factory,    Factory,    *functions.__getMethods(Factory,    "Draw"))
 
+    ## This function captures objects which are declared in noteboko cell. It's used to capture factory and data loader objects.
+    # @param args classes
+    @staticmethod
+    def captureObjects(*args):
+        ip = get_ipython()
+        vList = [ip.user_ns[key] for key in ip.user_ns]
+        res = {}
+        for ttype in args:
+            res[ttype.__name__] = [ttype]
+        for var in vList:
+            for ttype in args:
+                if type(var) == ttype and isinstance(var, ttype):
+                    res[ttype.__name__].append(var)
+        return res
+
 
 ## Class for creating the output scripts and inserting them to cell output
 class JsDraw:
     ## String containing the link to JavaScript files
     __jsMVASourceDir = "https://rawgit.com/qati/GSOC16/master/src/js"
+
+    ## String containing the link to CSS files
+    __jsMVACSSDir = "https://rawgit.com/qati/GSOC16/master/src/css"
 
     ## Drawing are sizes
     jsCanvasWidth   = 800
@@ -174,13 +198,19 @@ class JsDraw:
     __jsCode = Template("""
 <div id="$divid" style="width: ${width}px; height:${height}px"></div>
 <script>
+    require(['JsMVA'],function(jsmva){
+        jsmva.$funcName('$divid','$dat');
+    });
+</script>
+""")
+
+    ## Template containing requirejs configuration with JsMVA location
+    __jsCodeRequireJSConfig = Template("""
+<script type="text/javascript">
     require.config({
         paths: {
             'JsMVA':'$PATH/JsMVA.min'
         }
-    });
-    require(['JsMVA'],function(jsmva){
-        jsmva.$funcName('$divid','$dat');
     });
 </script>
 """)
@@ -193,6 +223,19 @@ var script = document.getElementById("dataInserterScript");
 script.parentElement.parentElement.remove();
 });
 </script>""")
+    __jsCodeForDataInsertNoRemove = Template("""<script>
+require(['JsMVA'],function(jsmva){
+jsmva.$funcName('$divid', '$dat');
+});
+</script>""")
+
+    ## Inserts requirejs config script
+    @staticmethod
+    def InitJsMVA():
+        display(HTML(JsDraw.__jsCodeRequireJSConfig.substitute({
+            'PATH': JsDraw.__jsMVASourceDir
+        })))
+        JsDraw.InsertCSS("TMVAHTMLOutput.min.css")
 
     ## Inserts the draw area and drawing JavaScript to output
     # @param obj ROOT object (will be converted to JSON) or JSON string containing the data to be drawed
@@ -204,31 +247,43 @@ script.parentElement.parentElement.remove();
             dat = obj
         else:
             dat = ROOT.TBufferJSON.ConvertToJSON(obj)
-            dat = str(dat).replace("\n","")
+            dat = str(dat).replace("\n", "")
         JsDraw.__divUID += 1
         display(HTML(JsDraw.__jsCode.substitute({
             'funcName': jsDrawMethod,
             'divid':'jstmva_'+str(JsDraw.__divUID),
             'dat': dat,
-            'PATH': JsDraw.__jsMVASourceDir,
             'width': JsDraw.jsCanvasWidth,
             'height': JsDraw.jsCanvasHeight
          })))
 
+    ## Inserts CSS file
+    # @param cssName The CSS file name. File must be in jsMVACSSDir!
+    @staticmethod
+    def InsertCSS(cssName):
+        display(HTML('<link rel="stylesheet" href="' + JsDraw.__jsMVACSSDir + '/' +cssName+ '"></link>'))
+
     ## Inserts the data inserter JavaScript code to output
     # @param obj ROOT object (will be converted to JSON) or JSON string containing the data to be inserted
     # @param dataInserterMethod the JsMVA JavaScrip object method name to be used for inserting the new data
-    # @param objIsJSON obj is ROOT object or JSON
+    # @param objIsJSON obj is ROOT object or JSON, default is False
+    # @param divID custom id, it will be sent to dataInserterMethod, default is JsDraw.__divUID
     @staticmethod
-    def InsertData(obj, dataInserterMethod="updateTrainingTestingErrors", objIsJSON=False):
+    def InsertData(obj, dataInserterMethod="updateTrainingTestingErrors", objIsJSON=False, divID=""):
         if objIsJSON:
             dat = obj
         else:
             dat = ROOT.TBufferJSON.ConvertToJSON(obj)
             dat = str(dat).replace("\n", "")
-        display(HTML(JsDraw.__jsCodeForDataInsert.substitute({
+        if len(divID)>1:
+            divid = divID
+            jsCode = JsDraw.__jsCodeForDataInsertNoRemove
+        else:
+            divid = str(JsDraw.__divUID)
+            jsCode = JsDraw.__jsCodeForDataInsert
+        display(HTML(jsCode.substitute({
             'funcName': dataInserterMethod,
-            'divid': 'jstmva_'+str(JsDraw.__divUID),
+            'divid': 'jstmva_'+divid,
             'dat': dat
         })))
 

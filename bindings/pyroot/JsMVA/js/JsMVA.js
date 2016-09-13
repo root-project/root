@@ -21,10 +21,10 @@
     require.config({
         paths: {
             'd3': JSROOT_source_dir+'d3.v3.min',
-            'JsRootCore': JSROOT_source_dir+'JSRootCore',
+            'JsRootCore': JSROOT_source_dir+'JSRootCore.min',
             'nn': url+'NeuralNetwork.min',
             'dtree': url+'DecisionTree.min',
-            'IChart': url+'IChart'
+            'NetworkDesigner': url+'NetworkDesigner.min'
         }
     });
 
@@ -37,6 +37,11 @@
     JsMVA.drawTH2 = function(divid, dat_json){
         var obj = JSROOT.parse(dat_json);
         JSROOT.draw(divid, obj, "colz;PAL50;text");
+    };
+
+    JsMVA.drawDNNMap = function(divid, dat_json){
+        var obj = JSROOT.parse(dat_json);
+        JSROOT.draw(divid, obj, "colz;PAL50");
     };
 
     JsMVA.draw = function(divid, dat_json){
@@ -68,7 +73,7 @@
                 .attr("height", "50px")
                 .style({"position":"absolute", "top": "8px", "right": "8px"});
             var attr = {
-                "pos": {"x": 150, "y": 10},
+                "pos": {"x": 150, "y": 0},
                 "rect": {"width": 10, "height":10},
                 "dy": 20,
                 "padding": 10
@@ -117,6 +122,35 @@
         var obj = JSROOT.parse(dat_json);
         JSROOT.redraw(divid, obj);
         drawLabel(divid, obj);
+    };
+
+    JsMVA.NetworkDesigner = function(divid, dat_json){
+      require(['NetworkDesigner'], function (nd) {
+         nd.draw(divid);
+      });
+    };
+
+    JsMVA.outputShowCorrelationMatrix = function(divid){
+        require(['jquery', 'jquery-ui'], function($){
+            var th2 = JSROOT.parse($("#"+divid).html());
+            if (!$("#dialog_"+divid).length || $("#dialog_"+divid).length < 1) {
+                $("#" + divid).parent().append("<div id='dialog_" + divid + "' title='" + th2.fTitle + "' style='width: 600px; height: 340px; z-index: 99;'></div>");
+                JSROOT.draw("dialog_" + divid, th2, "colz;PAL50;text");
+            }
+            $("#dialog_" + divid).dialog({
+                autoOpen: true,
+                width: 600,
+                show: {
+                    effect: "blind",
+                    duration: 1000
+                },
+                hide: {
+                    effect: "explode",
+                    duration: 500
+                }
+            });
+
+        });
     };
 
     return JsMVA;
