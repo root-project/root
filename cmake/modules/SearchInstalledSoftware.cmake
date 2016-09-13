@@ -1237,9 +1237,9 @@ endif()
 
 #---Check for CUDA and BLAS ---------------------------------------------------------
 if(tmva)
-  message(STATUS "Looking for CUDA eventually needed by TMVA")
+  message(STATUS "Looking for CUDA for optional parts of TMVA")
   find_package(CUDA QUIET)
-  message(STATUS "Looking for BLAS eventually needed by TMVA")
+  message(STATUS "Looking for BLAS for optional parts of TMVA")
   find_package(BLAS QUIET)
 endif()
 
