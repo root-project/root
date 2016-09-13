@@ -41,7 +41,6 @@
 #include "TVirtualPad.h"
 
 #include <atomic>
-#include <regex>
 #include <cstddef>
 #include <string.h>
 #include <stdio.h>
@@ -269,13 +268,6 @@ TBranch::TBranch(TBranch *parent, const char* name, void* address, const char* l
 void TBranch::Init(const char* name, const char* leaflist, Int_t compress)
 {
    // Initialization routine called from the constructor.  This should NOT be made virtual.
-
-   if (!std::regex_match(name,std::regex("([a-zA-Z_][a-zA-Z0-9_]*)"))) {
-      Warning("TBranch","Branch name is not an allowed c++ variable name. This can lead to problems in MakeClass");
-   }
-   if (TString(name).BeginsWith("b_")) {
-      Warning("TBranch","Branch name begins with 'b_'. This may lead to confusion or problems in MakeClass");
-   }
 
    SetBit(TBranch::kDoNotUseBufferMap);
    if ((compress == -1) && fTree->GetDirectory()) {
