@@ -67,6 +67,7 @@ static void InitCaptureImpl(int &savedStdStream, int *pipeHandle, int FILENO)
       return;
    }
    long flags_stdout = fcntl(pipeHandle[0], F_GETFL);
+   if (flags_stdout == -1) return;
    flags_stdout |= O_NONBLOCK;
    fcntl(pipeHandle[0], F_SETFL, flags_stdout);
    fcntl(pipeHandle[0], F_SETPIPE_SZ, MAX_PIPE_SIZE);
