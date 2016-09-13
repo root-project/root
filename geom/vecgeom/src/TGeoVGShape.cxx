@@ -114,14 +114,15 @@ vecgeom::cxx::VUnplacedVolume* TGeoVGShape::Convert(TGeoShape const *const shape
    // THE TUBE
    if (shape->IsA() == TGeoTube::Class()) {
       TGeoTube const *const tube = static_cast<TGeoTube const *>(shape);
-      unplaced_volume = new UnplacedTube(tube->GetRmin(), tube->GetRmax(), tube->GetDz(), 0., kTwoPi);
+      unplaced_volume            = new GenericUnplacedTube(tube->GetRmin(), tube->GetRmax(), tube->GetDz(), 0., kTwoPi);
    }
 
    // THE TUBESEG
    if (shape->IsA() == TGeoTubeSeg::Class()) {
       TGeoTubeSeg const *const tube = static_cast<TGeoTubeSeg const *>(shape);
-      unplaced_volume = new UnplacedTube(tube->GetRmin(), tube->GetRmax(), tube->GetDz(), kDegToRad * tube->GetPhi1(),
-                                         kDegToRad * (tube->GetPhi2() - tube->GetPhi1()));
+      unplaced_volume =
+          new GenericUnplacedTube(tube->GetRmin(), tube->GetRmax(), tube->GetDz(), kDegToRad * tube->GetPhi1(),
+                                  kDegToRad * (tube->GetPhi2() - tube->GetPhi1()));
    }
 
    // THE CONESEG
@@ -265,7 +266,7 @@ vecgeom::cxx::VUnplacedVolume* TGeoVGShape::Convert(TGeoShape const *const shape
       TGeoEltu const *const p = static_cast<TGeoEltu const *>(shape);
       // Create the corresponding unplaced tube, with:
       //   rmin=0, rmax=A, dz=dz, which is scaled with (1., A/B, 1.)
-      UnplacedTube *tubeUnplaced = new UnplacedTube(0, p->GetA(), p->GetDZ(), 0, kTwoPi);
+      GenericUnplacedTube *tubeUnplaced = new GenericUnplacedTube(0, p->GetA(), p->GetDZ(), 0, kTwoPi);
       unplaced_volume = new UnplacedScaledShape(tubeUnplaced, 1., p->GetB() / p->GetA(), 1.);
    }
 
