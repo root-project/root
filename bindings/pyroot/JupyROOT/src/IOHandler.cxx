@@ -14,10 +14,10 @@ private:
    bool fCapturing = false;
    std::string fStdoutpipe;
    std::string fStderrpipe;
-   int fStdout_pipe[2];
-   int fStderr_pipe[2];
-   int fSaved_stderr;
-   int fSaved_stdout;
+   int fStdout_pipe[2] = {0,0};
+   int fStderr_pipe[2] = {0,0};
+   int fSaved_stderr = 0;
+   int fSaved_stdout = 0;
 public:
    JupyROOTExecutorHandler();
    void Poll();
