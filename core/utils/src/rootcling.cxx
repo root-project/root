@@ -96,6 +96,9 @@ const char *rootClingHelp =
    " -noIncludePaths\tDo not store the headers' directories in the dictionary.  \n"
    "  Instead, rely on the environment variable $ROOT_INCLUDE_PATH at runtime.  \n"
    "                                                                            \n"
+   " -excludePath\Specify a path to be excluded from the include paths specified\n"
+   "  for building this dictionary.                                             \n"
+   "                                                                            \n"
    " --lib-list-prefix\t Specify libraries needed by the header files parsed.   \n"
    "  This feature is used by ACliC (the automatic library generator).          \n"
    "  Rootcling will read the content of xxx.in for a list of rootmap files (see\n"
@@ -3921,6 +3924,7 @@ int RootCling(int argc,
    std::string sharedLibraryPathName;
    std::vector<std::string> rootmapLibNames;
    std::string rootmapFileName;
+   std::vector<std::string> excludePaths;
 
    bool inlineInputHeader = false;
    bool interpreteronly = false;
@@ -3996,6 +4000,12 @@ int RootCling(int argc,
             continue;
          }
 
+         if (strcmp("-excludePath", argv[ic]) == 0 && (ic + 1) < argc) {
+            // Path to be excluded from the ones rememberd by the dictionary
+            excludePaths.push_back(argv[ic + 1]);
+            ic += 2;
+            continue;
+         }
          if (strcmp("+P", argv[ic]) == 0 ||
                strcmp("+V", argv[ic]) == 0 ||
                strcmp("+STUB", argv[ic]) == 0) {
@@ -4065,8 +4075,18 @@ int RootCling(int argc,
    std::vector<std::string> pcmArgs;
    for (size_t parg = 0, n = clingArgs.size(); parg < n; ++parg) {
       auto thisArg = clingArgs[parg];
+      auto isInclude = ROOT::TMetaUtils::BeginsWith(thisArg,"-I");
       if (thisArg == "-c" ||
-          (noIncludePaths && ROOT::TMetaUtils::BeginsWith(thisArg,"-I"))) continue;
+          (noIncludePaths && isInclude)) continue;
+      // We now check if the include directories are not excluded
+      if (isInclude) {
+         unsigned int offset = 2; // -I is two characters. Now account for spaces
+         char c = thisArg[offset];
+         while (c == ' ') c = thisArg[++offset];
+         auto excludePathsEnd = excludePaths.end();
+         auto excludePathPos = std::find(excludePaths.begin(), excludePathsEnd, &thisArg[offset]);
+         if (excludePathsEnd != excludePathPos) continue;
+      }
       pcmArgs.push_back(thisArg);
    }
 
