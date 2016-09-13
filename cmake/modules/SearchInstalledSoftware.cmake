@@ -1185,7 +1185,7 @@ if(builtin_tbb)
   )
   set(TBB_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include)
   set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX})
-  install(FILES ${CMAKE_BINARY_DIR}/lib/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX} DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
+  install(DIRECTORY ${CMAKE_BINARY_DIR}/lib/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries FILES_MATCHING PATTERN "libtbb*")
 endif()
 
 #---Check for OCC--------------------------------------------------------------------
