@@ -144,6 +144,8 @@ methods. `TRatioPlot::GetUpperPad` and `TRatioPlot::GetLowerPad` can be used to 
 elements on top of the existing ones.
 `TRatioPlot::GetLowerRefGraph` returns a reference to the lower pad's graph that
 is responsible for the range, which enables you to modify the range.
+
+\image html gpad_ratioplot.png
 */
 
 ////////////////////////////////////////////////////////////////////////////////
