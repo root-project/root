@@ -1,11 +1,16 @@
-void mlpHiggs(Int_t ntrain=100) {
-// Example of a Multi Layer Perceptron
-// For a LEP search for invisible Higgs boson, a neural network
-// was used to separate the signal from the background passing
-// some selection cuts. Here is a simplified version of this network,
-// taking into account only WW events.
-//Author: Christophe Delaere
+/// \file
+/// \ingroup tutorial_mlp
+/// Example of a Multi Layer Perceptron
+/// For a LEP search for invisible Higgs boson, a neural network
+/// was used to separate the signal from the background passing
+/// some selection cuts. Here is a simplified version of this network,
+/// taking into account only WW events.
+///
+/// \macro_code
+///
+/// \author Christophe Delaere
 
+void mlpHiggs(Int_t ntrain=100) {
    if (!gROOT->GetClass("TMultiLayerPerceptron")) {
       gSystem->Load("libMLP");
    }
@@ -61,7 +66,7 @@ void mlpHiggs(Int_t ntrain=100) {
       background->GetEntry(i);
       simu->Fill();
    }
-   // Build and train the NN ptsumf is used as a weight since we are primarly
+   // Build and train the NN ptsumf is used as a weight since we are primarily
    // interested  by high pt events.
    // The datasets used here are the same as the default ones.
    TMultiLayerPerceptron *mlp =
