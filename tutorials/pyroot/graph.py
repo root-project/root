@@ -9,6 +9,7 @@
 ##
 ## \author Wim Lavrijsen
 
+from __future__ import print_function
 from ROOT import TCanvas, TGraph
 from ROOT import gROOT
 from math import sin
@@ -26,7 +27,7 @@ x, y = array( 'd' ), array( 'd' )
 for i in range( n ):
    x.append( 0.1*i )
    y.append( 10*sin( x[i]+0.2 ) )
-   print ' i %i %f %f ' % (i,x[i],y[i])
+   print(' i %i %f %f ' % (i,x[i],y[i]))
 
 gr = TGraph( n, x, y )
 gr.SetLineColor( 2 )
