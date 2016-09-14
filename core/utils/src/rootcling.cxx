@@ -4084,7 +4084,10 @@ int RootCling(int argc,
          char c = thisArg[offset];
          while (c == ' ') c = thisArg[++offset];
          auto excludePathsEnd = excludePaths.end();
-         auto excludePathPos = std::find(excludePaths.begin(), excludePathsEnd, &thisArg[offset]);
+         auto excludePathPos = std::find_if(excludePaths.begin(),
+                                            excludePathsEnd,
+                                            [&](const std::string& path){
+                                               return ROOT::TMetaUtils::BeginsWith(&thisArg[offset], path);});
          if (excludePathsEnd != excludePathPos) continue;
       }
       pcmArgs.push_back(thisArg);
