@@ -199,16 +199,19 @@ static std::string ExtractTreeName(std::string& firstInputFile)
 bool TSimpleAnalysis::Run()
 {
    // Silence possible error message from TFile constructor if this is a tree name.
-   int oldLevel = gErrorIgnoreLevel;
-   gErrorIgnoreLevel = kFatal;
    // Disambiguate tree name from first input file:
    // just try to open it, if that works it's an input file.
    if (!fTreeName.empty()) {
+      int oldLevel = gErrorIgnoreLevel;
+      gErrorIgnoreLevel = kFatal;
       if (TFile* probe = TFile::Open(fTreeName.c_str())) {
-         fInputFiles.insert(fInputFiles.begin(), fTreeName);
-         fTreeName.clear();
+         if (!probe->IsZombie()) {
+            fInputFiles.insert(fInputFiles.begin(), fTreeName);
+            fTreeName.clear();
+         }
          delete probe;
       }
+      gErrorIgnoreLevel = oldLevel;
    }
    // If fTreeName is empty we try to find the name of the tree through reading
    // of the first input file
@@ -216,7 +219,6 @@ bool TSimpleAnalysis::Run()
       fTreeName = ExtractTreeName(fInputFiles[0]);
    if (fTreeName.empty())  // No tree name found
       return false;
-   gErrorIgnoreLevel = oldLevel;
 
    // Do the chain of the fInputFiles
    TChain chain(fTreeName.c_str());
