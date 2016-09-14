@@ -1,5 +1,17 @@
 /**
- * Created by Attila Bagoly <battila93@gmail.com> on 5/14/16.
+ * This is the JsMVA object, the JavaScript part of JPyInterface module. This is a bridge,
+ * python code always produce an output, where one of this module's function will be called. These function calls
+ * will redirect the date for specific visualization scripts.
+ * It uses the following libraries:
+ *                                - JsROOT
+ *                                - d3js
+ *                                - jquery
+ * It uses the following submodules:
+ *                                - NeuralNetwork
+ *                                - DecisionTree
+ *                                - NetworkDesigner
+ * Author: Attila Bagoly <battila93@gmail.com>
+ * Created: 5/14/16
  */
 
 (function(factory){

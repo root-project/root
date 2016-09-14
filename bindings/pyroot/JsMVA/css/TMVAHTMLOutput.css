@@ -1,3 +1,9 @@
+/**
+ * This file contains the CSS for the HTML formatted output.
+ * Author: Attila Bagoly <battila93@gmail.com>
+ * Created: 8/25/16
+ */
+
 .tmva_output_table {
     width: 100%;
     border-collapse: collapse;
