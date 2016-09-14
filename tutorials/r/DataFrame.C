@@ -6,35 +6,24 @@
 ///
 /// \author
 
-#include<TRInterface.h>
-
-using namespace ROOT::R;
 void DataFrame()
 {
    // Creating variables
    TVectorD v1(3);
-   std::vector<Double_t> v2(3);
+   std::vector<Double_t> v2 {0.101, 0.202, 0.303};
    std::array<Int_t,3>  v3{ {1,2,3} };
-   std::list<std::string> names;
+   std::list<std::string> names {"v1", "v2", "v3"};
 
    // Assigning values
    v1[0]=1;
    v1[1]=2;
    v1[2]=3;
 
-   v2[0]=0.101;
-   v2[1]=0.202;
-   v2[2]=0.303;
-
-   names.push_back("v1");
-   names.push_back("v2");
-   names.push_back("v3");
-
-   TRInterface &r=TRInterface::Instance();
+   auto &r = ROOT::R::TRInterface::Instance();
 
    // Creating dataframe object with its labels
 
-   TRDataFrame  df1(Label["var1"]=v1,Label["var2"]=v2,Label["var3"]=v3,Label["strings"]=names);
+   ROOT::R::TRDataFrame  df1(Label["var1"]=v1,Label["var2"]=v2,Label["var3"]=v3,Label["strings"]=names);
 
    // Passing dataframe to R's environment
 
@@ -55,7 +44,7 @@ void DataFrame()
 
    // Getting dataframe from R's environment
 
-   TRDataFrame df2;
+   ROOT::R::TRDataFrame df2;
 
    r<<"df2<-data.frame(v1=c(0.1,0.2,0.3),v2=c(3,2,1))";
    r["df2"]>>df2;

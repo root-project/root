@@ -6,12 +6,10 @@
 ///
 /// \author
 
-#include<TRInterface.h>
-
 using namespace ROOT::R;
 void Function()
 {
-   TRInterface &r = TRInterface::Instance();
+   auto &r = ROOT::R::TRInterface::Instance();
    r.SetVerbose(1);
 
    // Defining functions to be used from R
