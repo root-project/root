@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 ## @package JsMVA.DataLoader
+# @author Attila Bagoly <battila93@gmail.com>
 # DataLoader module with the functions to be inserted to TMVA::DataLoader class and helper functions
-# @authors Attila Bagoly <battila93@gmail.com>
 
 
 from ROOT import TH1F, TMVA, TBufferJSON
@@ -46,7 +46,6 @@ def GetInputVariableHist(dl, className, variableName, numBin, processTrfs=""):
             transformed = trf.CalcTransformations(inputEvents, 1)
         else:
             tmp = trf.CalcTransformations(transformed, 1)
-            del transformed
             transformed = tmp
 
     if transformed!=0:
@@ -54,7 +53,6 @@ def GetInputVariableHist(dl, className, variableName, numBin, processTrfs=""):
             if event.GetClass() != clsn:
                 continue
             h.Fill(event.GetValue(ivar))
-        del transformed
     else:
         for event in inputEvents:
             if event.GetClass() != clsn:
@@ -129,6 +127,8 @@ def DrawInputVariable(dl, variableName, numBin=100, processTrfs=[]):
     JPyInterface.JsDraw.Draw(c)
 
 ## Rewrite TMVA::DataLoader::PrepareTrainingAndTestTree
+# @param *args positional parameters
+# @param **kwargs named parameters: this will be transformed to option string
 def ChangeCallOriginalPrepareTrainingAndTestTree(*args, **kwargs):
     if len(kwargs)==0:
         originalFunction, args = JPyInterface.functions.ProcessParameters(0, *args, **kwargs)

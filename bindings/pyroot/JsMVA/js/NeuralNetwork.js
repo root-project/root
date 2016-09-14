@@ -1,5 +1,14 @@
 /**
- * Created by Attila Bagoly <battila93@gmail.com> on 6/9/16.
+ * This submodule is responsible for creating visualization for simple neural networks and deep neural networks.
+ * Simple neural networks are created with d3js, and HTML5 canvas element is used for visualization of deep neural networks.
+ * Interactions supported (non deep networks):
+ *          - Mouseover (node, weight): focusing
+ *          - Zooming and grab and move supported
+ *          - Reset: double click
+ * Interactions supported (deep networks):
+ *          - Zooming and grab and move supported
+ * Author: Attila Bagoly <battila93@gmail.com>
+ * Created:  6/9/16
  */
 
 (function(factory){

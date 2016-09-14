@@ -1,19 +1,24 @@
 # -*- coding: utf-8 -*-
 ## @package JsMVA.FormatedOutput
-# @author Attila Bagoly <battila93@gmail.com>
+#  @author Attila Bagoly <battila93@gmail.com>
 # This class will transform the TMVA original output to HTML formated output.
 
-import JPyInterface
 import DataLoader
-from ROOT import TMVA
 import cgi
 import re
 
+## The output transformer class. This class contains all the methods which are used to transform the C++ style output
+# to HTML formatted output.
 class transformTMVAOutputToHTML:
 
+    ## Constructor
+    # @param self object pointer
     def __init__(self):
         self.__eventsUID = 0
 
+    # Transform one line of C++ output string to HTML.
+    # @param self object pointer
+    # @param line line to transform
     def __processGroupContentLine(self, line):
         if re.match(r"^\s*:?\s*-*\s*$", line)!=None:
             return ""
@@ -35,9 +40,17 @@ class transformTMVAOutputToHTML:
             line = lre.group(1)+":"+"<b>"+lre.group(2)+"</b>"
         return "<td"+outFlag+">"+str(line)+"</td>"
 
+    ## Checks if a line is empty.
+    # @param self object pointer
+    # @param line line to check
     def __isEmpty(self, line):
         return re.match(r"^\s*:?\s*-*$", line)!=None
 
+    ## Transforms all data set specific content.
+    # @param self object pointer
+    # @param firstLine first line which mach with header
+    # @param startIndex it defines where we are in self.lines array
+    # @param maxlen defines how many iterations we can do from startIndex
     def __transformDatasetSpecificContent(self, firstLine, startIndex, maxlen):
         tmp_str = ""
         count = 0
@@ -65,6 +78,11 @@ class transformTMVAOutputToHTML:
         rstr += "</tbody></table>"
         return (count, rstr)
 
+    ## It transforms number of events related contents.
+    # @param self object pointer
+    # @param firstLine first line which mach with header
+    # @param startIndex it defines where we are in self.lines array
+    # @param maxlen defines how many iterations we can do from startIndex
     def __transformNumEvtSpecificContent(self, firstLine, startIndex, maxlen):
         tmp_str = ""
         count = 0
@@ -102,6 +120,11 @@ class transformTMVAOutputToHTML:
         rstr += "</table>"
         return (count, rstr)
 
+    ## Transform Variable related informations to table.
+    # @param self object pointer
+    # @param headerMatch re.match object for the first line
+    # @param startIndex it defines where we are in self.lines array
+    # @param maxlen defines how many iterations we can do from startIndex
     def __transformVariableMeanSpecificContent(self, headerMatch, startIndex, maxlen):
         count = 0
         table = [[]]
@@ -131,30 +154,12 @@ class transformTMVAOutputToHTML:
         rstr += "</table>"
         return (count, rstr)
 
-    def __transformLittleTables(self, firstLine, startIndex, maxlen):
-        count = 0
-        table =[]
-        table.append(firstLine.split(":"))
-        for l in xrange(1, maxlen):
-            nextline  = self.lines[startIndex+l]
-            if self.__isEmpty(nextline):
-                count += 1
-                continue
-            LittleTable = re.match(r"([^:].)*:([^:].)*:([^:].):([^:].)", nextline, re.I)
-            if LittleTable:
-                count += 1
-                table.append(nextline.split(":"))
-            else:
-                break
-        rstr = "<table>"
-        for i in xrange(0, len(table)):
-            rstr += "<tr>"
-            for j in xrange(1, len(table[i])):
-                rstr += "<td>" + table[i][j] + "</td>"
-            rstr += "</tr>"
-        rstr += "</table>"
-        return (count, rstr)
-
+    ## This function creates a correlation matrix from python matrix.
+    # @param self object pointer
+    # @param title first part of the title of histogram
+    # @param className Signal/Background: it will be on title
+    # @param varNames array with variable names
+    # @param matrix the correlation matrix
     def __correlationMatrix(self, title, className, varNames, matrix):
         id = "jsmva_outputtansformer_events_"+str(self.__eventsUID)+"_onclick"
         self.__eventsUID += 1
@@ -164,6 +169,9 @@ class transformTMVAOutputToHTML:
         rstr += self.__processGroupContentLine("<a onclick=\""+jsCall+"\" class='tmva_output_corrmat_link'>" + title + " (" + className + ")</a>")
         return rstr
 
+    ## This function add different flag based on the line formation. It add's a specific class for each output type.
+    # @param self object pointer
+    # @param line current line
     def addClassForOutputFlag(self, line):
         if self.__currentType==None:
             self.__outputFlagClass = ""
@@ -193,6 +201,9 @@ class transformTMVAOutputToHTML:
         else:
             self.__outputFlagClass = ""
 
+    ## This function can transform one group of output. The group has only one header.
+    # @param self object pointer
+    # @param firstLine the header line, it defines the start
     def __transformOneGroup(self, firstLine):
         tmp_str = ""
         processed_lines = 0
@@ -290,6 +301,11 @@ class transformTMVAOutputToHTML:
         self.out += "<tbody"+tbodyclass+"><tr><td rowspan='" + str(processed_lines + 1) + "' class='tmva_output_header"+extraHeaderClass+"'>" + self.__currentHeaderName + "</td>"
         self.out += tmp_str + "</tbody>"
 
+    ## This is the main function, it will be registered as transformer function to JupyROOT, it will run every time
+    # when some ROOT function produces output. It get's the C++ style output and it returns it in HTML version.
+    # @param self object pointer
+    # @param output the content of C++ output stream
+    # @param error the content of C++ error stream
     def transform(self, output, error):
         self.err = ""
         if str(error).find(", time left:")==-1:

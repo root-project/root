@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 ## @package JsMVA.Factory
+#  @author  Attila Bagoly <battila93@gmail.com>
 # Factory module with the functions to be inserted to TMVA::Factory class and helper functions and classes
-#  @authors  Attila Bagoly <battila93@gmail.com>
 
 
 import ROOT
@@ -14,6 +14,82 @@ from ipywidgets import widgets
 from threading import Thread
 import time
 from string import Template
+
+
+# This class contains the necessary HTML, JavaScript, CSS codes (templates)
+# for the new Factory methods. Some parts of these variables will be replaced and the new string will be the cell output.
+class __HTMLJSCSSTemplates:
+    # stop button
+    button = """
+     <script type="text/javascript">
+     require(["jquery"], function(jQ){
+         jQ("input.stopTrainingButton").on("click", function(){
+             IPython.notebook.kernel.interrupt();
+             jQ(this).css({
+                 "background-color": "rgba(200, 0, 0, 0.8)",
+                 "color": "#fff",
+                 "box-shadow": "0 3px 5px rgba(0, 0, 0, 0.3)",
+             });
+         });
+     });
+     </script>
+     <style type="text/css">
+     input.stopTrainingButton {
+         background-color: #fff;
+         border: 1px solid #ccc;
+         width: 100%;
+         font-size: 16px;
+         font-weight: bold;
+         padding: 6px 12px;
+         cursor: pointer;
+         border-radius: 6px;
+         color: #333;
+     }
+     input.stopTrainingButton:hover {
+         background-color: rgba(204, 204, 204, 0.4);
+     }
+     </style>
+     <input type="button" value="Stop" class="stopTrainingButton" />
+     """
+    # progress bar
+    inc = Template("""
+     <script type="text/javascript" id="progressBarScriptInc">
+     require(["jquery"], function(jQ){
+         jQ("#jsmva_bar_$id").css("width", $progress + "%");
+         jQ("#jsmva_label_$id").text($progress + '%');
+         jQ("#progressBarScriptInc").parent().parent().remove();
+     });
+     </script>
+     """)
+    progress_bar = Template("""
+     <style>
+     #jsmva_progress_$id {
+         position: relative;
+         float: left;
+         height: 30px;
+         width: 100%;
+         background-color: #f5f5f5;
+         border-radius: 3px;
+         box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.1);
+     }
+     #jsmva_bar_$id {
+         position: absolute;
+         width: 1%;
+         height: 100%;
+         background-color: #337ab7;
+     }
+     #jsmva_label_$id {
+         text-align: center;
+         line-height: 30px;
+         color: white;
+     }
+     </style>
+     <div id="jsmva_progress_$id">
+       <div id="jsmva_bar_$id">
+         <div id="jsmva_label_$id">0%</div>
+       </div>
+     </div>
+     """)
 
 
 ## Getting method object from factory
@@ -38,6 +114,7 @@ def GetMethodObject(fac, datasetName, methodName):
 
 ## Reads deep neural network weights from file and returns it in JSON format
 # @param xml_file path to DNN weight file
+# @param returnObj if Fakse it will return a JSON string, if True it will return the JSON object itself
 def GetDeepNetwork(xml_file, returnObj=False):
     tree = ElementTree()
     tree.parse(xml_file)
@@ -110,6 +187,8 @@ def GetNetwork(xml_file):
 class TreeReader:
 
     ## Standard Constructor
+    # @param self object pointer
+    # @oaran fileName path to XML file
     def __init__(self, fileName):
         self.__xmltree = ElementTree()
         self.__xmltree.parse(fileName)
@@ -227,6 +306,7 @@ def DrawProbabilityDistribution(fac, datasetName, methodName):
 # @param datasetName the dataset name
 # @param methodName we want to see the cut efficiencies of this method
 def DrawCutEfficiencies(fac, datasetName, methodName):
+    #reading histograms
     method = GetMethodObject(fac, datasetName, methodName)
     if method==0:
         return
@@ -251,6 +331,7 @@ def DrawCutEfficiencies(fac, datasetName, methodName):
     sSig    = ROOT.TH1F(ssigname, ssigname, nbins, low, high)
     effpurS = ROOT.TH1F(epname, epname, nbins, low, high)
 
+    # formating the style of histograms
     #chop off useless stuff
     sigE.SetTitle( "Cut efficiencies for "+methodName+" classifier")
 
@@ -327,6 +408,7 @@ def DrawCutEfficiencies(fac, datasetName, methodName):
 
     effpurS.Draw( "sameaxis" )
 
+    #Adding labels and other informations to plots.
 
     legend1 = ROOT.TLegend( c.GetLeftMargin(), 1 - c.GetTopMargin(),
                                      c.GetLeftMargin() + 0.4, 1 - c.GetTopMargin() + 0.12 )
@@ -441,80 +523,18 @@ def DrawDecisionTree(fac, datasetName, methodName):
     display(container)
 
 ## Rewrite function for TMVA::Factory::TrainAllMethods. This function provides interactive training.
+# The training will be started on separated thread. The main thread will periodically check for updates and will create
+# the JS output which will update the plots and progress bars. The main thread must contain `while True`, because, if not
+# it will cause crash (output will be flushed by tornado IOLoop (runs on main thread), but the output streams are
+# C++ atomic types)
 # @param fac the factory object pointer
 def ChangeTrainAllMethods(fac):
     clear_output()
     #stop button
-    button = """
-    <script type="text/javascript">
-    require(["jquery"], function(jQ){
-        jQ("input.stopTrainingButton").on("click", function(){
-            IPython.notebook.kernel.interrupt();
-            jQ(this).css({
-                "background-color": "rgba(200, 0, 0, 0.8)",
-                "color": "#fff",
-                "box-shadow": "0 3px 5px rgba(0, 0, 0, 0.3)",
-            });
-        });
-    });
-    </script>
-    <style type="text/css">
-    input.stopTrainingButton {
-        background-color: #fff;
-        border: 1px solid #ccc;
-        width: 100%;
-        font-size: 16px;
-        font-weight: bold;
-        padding: 6px 12px;
-        cursor: pointer;
-        border-radius: 6px;
-        color: #333;
-    }
-    input.stopTrainingButton:hover {
-        background-color: rgba(204, 204, 204, 0.4);
-    }
-    </style>
-    <input type="button" value="Stop" class="stopTrainingButton" />
-    """
+    button = __HTMLJSCSSTemplates.button
     #progress bar
-    inc = Template("""
-    <script type="text/javascript" id="progressBarScriptInc">
-    require(["jquery"], function(jQ){
-        jQ("#jsmva_bar_$id").css("width", $progress + "%");
-        jQ("#jsmva_label_$id").text($progress + '%');
-        jQ("#progressBarScriptInc").parent().parent().remove();
-    });
-    </script>
-    """)
-    progress_bar = Template("""
-    <style>
-    #jsmva_progress_$id {
-        position: relative;
-        float: left;
-        height: 30px;
-        width: 100%;
-        background-color: #f5f5f5;
-        border-radius: 3px;
-        box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.1);
-    }
-    #jsmva_bar_$id {
-        position: absolute;
-        width: 1%;
-        height: 100%;
-        background-color: #337ab7;
-    }
-    #jsmva_label_$id {
-        text-align: center;
-        line-height: 30px;
-        color: white;
-    }
-    </style>
-    <div id="jsmva_progress_$id">
-      <div id="jsmva_bar_$id">
-        <div id="jsmva_label_$id">0%</div>
-      </div>
-    </div>
-    """)
+    inc = __HTMLJSCSSTemplates.inc
+    progress_bar = __HTMLJSCSSTemplates.progress_bar
     progress_bar_idx = 0
 
     def exit_supported(mn):
@@ -594,6 +614,8 @@ def ChangeTrainAllMethods(fac):
     return
 
 ## Rewrite the constructor of TMVA::Factory
+# @param *args positional parameters
+# @param **kwargs named parameters: this will be transformed to option string
 def ChangeCallOriginal__init__(*args,  **kwargs):
     hasColor = False
     args = list(args)
@@ -619,6 +641,8 @@ def ChangeCallOriginal__init__(*args,  **kwargs):
     return originalFunction(*args)
 
 ## Rewrite TMVA::Factory::BookMethod
+# @param *args positional parameters
+# @param **kwargs named parameters: this will be transformed to option string
 def ChangeCallOriginalBookMethod(*args,  **kwargs):
     compositeOpts = False
     composite = False
@@ -642,6 +666,8 @@ def ChangeCallOriginalBookMethod(*args,  **kwargs):
     return originalFunction(*args)
 
 ## Rewrite the constructor of TMVA::Factory::EvaluateImportance
+# @param *args positional parameters
+# @param **kwargs named parameters: this will be transformed to option string
 def ChangeCallOriginalEvaluateImportance(*args,  **kwargs):
     if len(kwargs) == 0:
         originalFunction, args = JPyInterface.functions.ProcessParameters(0, *args, **kwargs)
@@ -653,6 +679,8 @@ def ChangeCallOriginalEvaluateImportance(*args,  **kwargs):
     return hist
 
 ## Rewrite the constructor of TMVA::Factory::CrossValidate
+# @param *args positional parameters
+# @param **kwargs named parameters: this will be transformed to option string
 def ChangeCallOriginalCrossValidate(*args,  **kwargs):
     if len(kwargs) == 0:
         originalFunction, args = JPyInterface.functions.ProcessParameters(0, *args, **kwargs)
@@ -688,6 +716,9 @@ def ChangeCallOriginalCrossValidate(*args,  **kwargs):
 __BookDNNHelper = None
 
 ## Graphical interface for booking DNN
+# @param self object pointer
+# @param loader the DataLoader object
+# @param title classifier title
 def BookDNN(self, loader, title="DNN"):
     global __BookDNNHelper
     def __bookDNN(optString):
@@ -698,7 +729,10 @@ def BookDNN(self, loader, title="DNN"):
     JPyInterface.JsDraw.InsertCSS("NetworkDesigner.min.css")
     JPyInterface.JsDraw.Draw("", "NetworkDesigner", True)
 
-##
+## This function gets the classifier information and weights in JSON formats, and the selected layers and it will create
+# the weight heat map.
+# @param net DNN in JSON format
+# @param selectedLayers the selected layers
 def CreateWeightHist(net, selectedLayers):
     weightStartIndex = 0
     numberOfWeights = 0
@@ -741,9 +775,11 @@ def CreateWeightHist(net, selectedLayers):
     th2.SetLabelOffset(0.011)
     clear_output()
     JPyInterface.JsDraw.Draw(th2, 'drawDNNMap')
-    pass
 
-## Show DNN weights in a heat map
+## Show DNN weights in a heat map. It will produce an ipywidget element, where the layers can be selected.
+# @param fac object pointer
+# @oaram datasetName name of current dataset
+# @param methodName DNN's name
 def DrawDNNWeights(fac, datasetName, methodName="DNN"):
     m = GetMethodObject(fac, datasetName, methodName)
     if m == None:

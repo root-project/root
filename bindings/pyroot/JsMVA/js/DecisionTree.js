@@ -1,5 +1,17 @@
 /**
- * Created by Attila Bagoly <battila93@gmail.com> on 6/11/16.
+ * This is submodule produces visualizations for decision trees. The visualization is interactive, and it is made
+ * with d3js.
+ * Interactions supported:
+ *    - Mouseover (node, weight): showing decision path
+ *    - Zooming and grab and move supported
+ *    - Reset zoomed tree: double click
+ *    - Expand all closed subtrees, turn off zoom: button in the bottom of the picture
+ *    - Click on node:
+ *                    * hiding subtree, if node children are hidden the node will have a green border
+ *                    * rescaling: bigger nodes, bigger texts
+ *                    * click again to show the subtree
+ * Author: Attila Bagoly <battila93@gmail.com>
+ * Created:  6/11/16
  */
 
 

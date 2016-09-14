@@ -1,5 +1,15 @@
 /**
- * Created by qati on 8/3/2016.
+ * This is the Deep Neural Network Designer: it produces an interactive interface, where we can build easily the
+ * deep network. This script can transform the graphical representation of the network to an option string.
+ * By using IPython JavaScript API, this script is able to communicate with the python kernel and book the method,
+ * and print out the kernel response.
+ * Used libraries/plugins:
+ *               - jquery
+ *               - jquery-ui
+ *               - jquery.connections
+ *               - jquery-timing
+ * Author: Attila Bagoly <battila93@gmail.com>
+ * Created: 8/3/2016
  */
 
 (function (factory) {
