@@ -296,9 +296,9 @@ bool TSimpleAnalysis::Configure()
    int numbLine = 0;
 
    // Error if the input file does not exist
-   fIn.open(fInputName);
+   fIn.open(fConfigFile);
    if (!fIn) {
-      ::Error("TSimpleAnalysis", "File %s not found", fInputName.c_str());
+      ::Error("TSimpleAnalysis", "File %s not found", fConfigFile.c_str());
       return false;
    }
 
@@ -340,7 +340,7 @@ bool TSimpleAnalysis::Configure()
       // Report any errors if occour during the configuration proceedings
       if (!errMessage.empty()) {
          ::Error("TSimpleAnalysis::Configure", "%s in %s:%d", errMessage.c_str(),
-                 fInputName.c_str(), numbLine);
+                 fConfigFile.c_str(), numbLine);
          return false;
       }
    }  // while (!fIn.eof())

@@ -33,7 +33,7 @@
 class TSimpleAnalysis {
 
 private:
-   std::string              fInputName; ///< Name of the input file
+   std::string              fConfigFile; ///< Name of the configuration file
    std::vector<std::string> fInputFiles; ///< .root input files
    std::string              fOutputFile; ///< Output file in which are stored the histograms
    std::string              fTreeName; ///< Name of the input tree
@@ -57,7 +57,7 @@ private:
 
 
 public:
-   TSimpleAnalysis(const std::string& file): fInputName (file) {}
+   TSimpleAnalysis(const std::string& file): fConfigFile (file) {}
    TSimpleAnalysis(const std::string& output, const std::vector<std::string>& inputFiles,
                    const std::vector<std::string>& expressions, const std::string& treeName);
    bool Run();
