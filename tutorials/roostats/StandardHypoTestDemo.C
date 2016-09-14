@@ -60,14 +60,14 @@
 using namespace RooFit;
 using namespace RooStats;
 
-struct HypoTestOptions { 
+struct HypoTestOptions {
 
    bool noSystematics = false;              // force all systematics to be off (i.e. set all nuisance parameters as constat
   double nToysRatio = 4;                   // ratio Ntoys Null/ntoys ALT
   double poiValue = -1;                    // change poi snapshot value for S+B model (needed for expected p0 values)
 int  printLevel=0;
 bool generateBinned = false;             // for binned generation
-   bool useProof = false;                // use Proof 
+   bool useProof = false;                // use Proof
    bool enableDetailedOutput = false;    // for detailed output
 
 };
@@ -91,9 +91,9 @@ void StandardHypoTestDemo(const char* infile = "",
    double poiValue = optHT.poiValue;                    // change poi snapshot value for S+B model (needed for expected p0 values)
    int  printLevel = optHT.printLevel;
    bool generateBinned = optHT.generateBinned;             // for binned generation
-   bool useProof = optHT.useProof;                // use Proof 
+   bool useProof = optHT.useProof;                // use Proof
    bool enableDetOutput = optHT.enableDetailedOutput;
-   
+
 
   // Other Parameter to pass in tutorial
   // apart from standard for filename, ws, modelconfig and data
@@ -111,11 +111,11 @@ void StandardHypoTestDemo(const char* infile = "",
 
   // useNumberCounting:  set to true when using number counting events
 
-  // nuisPriorName:   name of prior for the nnuisance. This is often expressed as constraint term in the global model
+  // nuisPriorName:   name of prior for the nuisance. This is often expressed as constraint term in the global model
   // It is needed only when using the HybridCalculator (type=1)
   // If not given by default the prior pdf from ModelConfig is used.
 
-  // extra options are available as global paramwters of the macro. They major ones are:
+  // extra options are available as global parameters of the macro. They major ones are:
 
   // generateBinned       generate binned data sets for toys (default is false) - be careful not to activate with
   // a too large (>=3) number of observables
@@ -274,7 +274,7 @@ void StandardHypoTestDemo(const char* infile = "",
    if (enableDetOutput) {
       slrts->EnableDetailedOutput();
       profll->EnableDetailedOutput();
-      ropl->EnableDetailedOutput(); 
+      ropl->EnableDetailedOutput();
    }
 
 
@@ -290,7 +290,7 @@ void StandardHypoTestDemo(const char* infile = "",
    else if (calcType == 1) hypoCalc= new  HybridCalculator(*data, *sbModel, *bModel);
    else if (calcType == 2) hypoCalc= new  AsymptoticCalculator(*data, *sbModel, *bModel);
 
-   if (calcType == 0) { 
+   if (calcType == 0) {
        ((FrequentistCalculator*)hypoCalc)->SetToys(ntoys, ntoys/nToysRatio);
        if (enableDetOutput) ((FrequentistCalculator*) hypoCalc)->StoreFitInfo(true);
    }
@@ -325,7 +325,7 @@ void StandardHypoTestDemo(const char* infile = "",
                Info("StandardHypoTestDemo","No nuisance pdf given - try to use %s that is defined as a prior pdf in the B model",nuisPdf->GetName());
             }
             else {
-               Error("StandardHypoTestDemo","Cannnot run Hybrid calculator because no prior on the nuisance parameter is specified or can be derived");
+               Error("StandardHypoTestDemo","Cannot run Hybrid calculator because no prior on the nuisance parameter is specified or can be derived");
                return;
             }
          }
@@ -454,7 +454,7 @@ void StandardHypoTestDemo(const char* infile = "",
       Info("StandardHypoTestDemo","Detailed output will be written in output result file");
    }
 
-   
+
    if (htr != NULL && writeResult) {
 
       // write to a file the results
@@ -465,11 +465,11 @@ void StandardHypoTestDemo(const char* infile = "",
       TString name = infile;
       name.Replace(0, name.Last('/')+1, "");
       resultFileName += name;
-      
+
       TFile * fileOut = new TFile(resultFileName,"RECREATE");
       htr->Write();
       Info("StandardHypoTestDemo","HypoTestResult has been written in the file %s",resultFileName.Data());
-      
+
       fileOut->Close();
    }
 

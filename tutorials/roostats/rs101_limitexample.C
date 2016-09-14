@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_roostats
-/// \notebook 
+/// \notebook
 /// 'Limit Example' RooStats tutorial macro #101
 /// This tutorial shows an example of creating a simple
 /// model for a number counting experiment with uncertainty
@@ -75,8 +75,8 @@ void rs101_limitexample()
    RooRealVar* b = wspace->var("b"); // get the background and set it to a constant.  Uncertainty included in ratioBkgEff
    b->setConstant();
 
-   RooRealVar* ratioSigEff = wspace->var("ratioSigEff"); // get uncertaint parameter to constrain
-   RooRealVar* ratioBkgEff = wspace->var("ratioBkgEff"); // get uncertaint parameter to constrain
+   RooRealVar* ratioSigEff = wspace->var("ratioSigEff"); // get uncertain parameter to constrain
+   RooRealVar* ratioBkgEff = wspace->var("ratioBkgEff"); // get uncertain parameter to constrain
    RooArgSet constrainedParams(*ratioSigEff, *ratioBkgEff); // need to constrain these in the fit (should change default behavior)
 
    RooRealVar * gSigEff = wspace->var("gSigEff");     // global observables for signal efficiency
@@ -201,7 +201,7 @@ void rs101_limitexample()
    chain->SetMarkerStyle(6);
    chain->SetMarkerColor(kRed);
 
-   chain->Draw("s:ratioSigEff:ratioBkgEff","nll_MarkovChain_local_","box"); // 3-d box proporional to posterior
+   chain->Draw("s:ratioSigEff:ratioBkgEff","nll_MarkovChain_local_","box"); // 3-d box proportional to posterior
 
    // the points used in the profile construction
    RooDataSet * parScanData = (RooDataSet*) fc.GetPointsToScan();

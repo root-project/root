@@ -124,8 +124,8 @@ void rs401d_FeldmanCousins(bool doFeldmanCousins=false, bool doMCMC = true)
                                        LPrime,EPrime,deltaMSq);
    RooAbsReal* intProbToOscInExp = PnmuTonePrime.createIntegral(RooArgSet(EPrime,LPrime));
 
-   // Getting the flux is a bit tricky.  It is more celear to include a cross section term that is not
-   // explicitly refered to in the text, eg.
+   // Getting the flux is a bit tricky.  It is more clear to include a cross section term that is not
+   // explicitly referred to in the text, eg.
    // number events in bin = flux * cross-section for nu_e interaction in E bin * average prob nu_mu osc. to nu_e in bin
    // let maxEventsInBin = flux * cross-section for nu_e interaction in E bin
    // maxEventsInBin * 1% chance per bin =  100 events / bin

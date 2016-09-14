@@ -7,7 +7,7 @@
 /// with background uncertainty.
 ///
 /// NOTE: This example is like HybridInstructional, but the model is more clearly
-/// generalizable to an analysis with shapes.  There is a lot of flexability
+/// generalizable to an analysis with shapes.  There is a lot of flexibility
 /// for how one models a problem in RooFit/RooStats.  Models come in a few
 /// common forms:
 ///   - standard form: extended PDF of some discriminating variable m:
@@ -55,20 +55,20 @@
 /// More background on this 'prototype problem' can be found in the
 /// following papers:
 ///
-/// Evaluation of three methods for calculating statistical significance
-/// when incorporating a systematic uncertainty into a test of the
-/// background-only hypothesis for a Poisson process
-/// Authors: Robert D. Cousins, James T. Linnemann, Jordan Tucker
-/// http://arxiv.org/abs/physics/0702156
-/// NIM  A 595 (2008) 480--501
+///  - Evaluation of three methods for calculating statistical significance
+///    when incorporating a systematic uncertainty into a test of the
+///    background-only hypothesis for a Poisson process
+///    Authors: Robert D. Cousins, James T. Linnemann, Jordan Tucker
+///    http://arxiv.org/abs/physics/0702156
+///    NIM  A 595 (2008) 480--501
 ///
-/// Statistical Challenges for Searches for New Physics at the LHC
-/// Authors: Kyle Cranmer
-/// http://arxiv.org/abs/physics/0511028
+///  - Statistical Challenges for Searches for New Physics at the LHC
+///    Author: Kyle Cranmer
+///    http://arxiv.org/abs/physics/0511028
 ///
-///  Measures of Significance in HEP and Astrophysics
-///  Authors: J. T. Linnemann
-///  http://arxiv.org/abs/physics/0312059
+///  - Measures of Significance in HEP and Astrophysics
+///    Author: J. T. Linnemann
+///    http://arxiv.org/abs/physics/0312059
 ///
 /// \macro_image
 /// \macro_output
@@ -170,10 +170,10 @@ void HybridStandardForm() {
    RooWorkspace* w = new RooWorkspace("w");
 
 
-   // replace the pdf in 'number couting form'
+   // replace the pdf in 'number counting form'
    //w->factory("Poisson::px(x[150,0,500],sum::splusb(s[0,0,100],b[100,0,300]))");
    // with one in standard form.  Now x is encoded in event count
-   w->factory("Uniform::f(m[0,1])");//m is a dummy discriminanting variable
+   w->factory("Uniform::f(m[0,1])");//m is a dummy discriminating variable
    w->factory("ExtendPdf::px(f,sum::splusb(s[0,0,100],b[100,0,300]))");
    w->factory("Poisson::py(y[100,0,500],prod::taub(tau[1.],b))");
    w->factory("PROD::model(px,py)");
@@ -265,7 +265,7 @@ void HybridStandardForm() {
    //
    // The prior used for the hybrid calculator is the posterior
    // from the auxiliary measurement y.  The model for the aux.
-   // measurement is Pois(y|tau*b), thus the likleihood function
+   // measurement is Pois(y|tau*b), thus the likelihood function
    // is proportional to (has the form of) a Gamma distribution.
    // if the 'original prior' $\eta(b)$ is uniform, then from
    // Bayes's theorem we have the posterior:
@@ -280,7 +280,7 @@ void HybridStandardForm() {
    //
    // or we can use some other ad hoc prior that do not naturally
    // follow from the known form of the auxiliary measurement.
-   // The common choice is the equivlaent Gaussian:
+   // The common choice is the equivalent Gaussian:
    w->factory("Gaussian::gauss_prior(b,y, expr::sqrty('sqrt(y)',y))");
    // this corresponds to the "Z_N" calculation.
    //
@@ -440,7 +440,7 @@ void HybridStandardForm() {
    //-------------------------------------------------------
    // Comparison
    //-------------------------------------------------------
-   // Asymptotics
+   // Asymptotic
    // From the value of the profile likelihood ratio (5.0338)
    // The significance can be estimated using Wilks's theorem
    // significance = sqrt(2*profileLR) = 3.1729 sigma

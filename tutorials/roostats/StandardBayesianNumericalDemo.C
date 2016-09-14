@@ -43,9 +43,9 @@ using namespace RooFit;
 using namespace RooStats;
 
 
-struct BayesianNumericalOptions { 
+struct BayesianNumericalOptions {
 
-   double confLevel = 0.95 ;  // interval CL 
+   double confLevel = 0.95 ;  // interval CL
    TString integrationType = "";  // integration Type (default is adaptive (numerical integration)
                                      // possible values are "TOYMC" (toy MC integration, work when nuisances have a constraints pdf)
                                    //  "VEGAS" , "MISER", or "PLAIN"  (these are all possible MC integration)
@@ -65,12 +65,12 @@ void StandardBayesianNumericalDemo(const char* infile = "",
                                    const char* modelConfigName = "ModelConfig",
                                    const char* dataName = "obsData") {
 
-   // option definitions 
-   double confLevel = optBayes.confLevel; 
+   // option definitions
+   double confLevel = optBayes.confLevel;
    TString integrationType = optBayes.integrationType;
-   int nToys = optBayes.nToys; 
-   bool scanPosterior = optBayes.scanPosterior; 
-   int nScanPoints = optBayes.nScanPoints; 
+   int nToys = optBayes.nToys;
+   bool scanPosterior = optBayes.scanPosterior;
+   int nScanPoints = optBayes.nScanPoints;
    int intervalType = optBayes.intervalType;
    int  maxPOI =  optBayes.maxPOI;
    double  nSigmaNuisance = optBayes.nSigmaNuisance;
@@ -182,10 +182,10 @@ void StandardBayesianNumericalDemo(const char* infile = "",
 
    if (!integrationType.IsNull() ) {
       bayesianCalc.SetIntegrationType(integrationType); // set integrationType
-      bayesianCalc.SetNumIters(nToys); // set number of ietrations (i.e. number of toys for MC integrations)
+      bayesianCalc.SetNumIters(nToys); // set number of iterations (i.e. number of toys for MC integrations)
    }
 
-   // in case of toyMC make a nnuisance pdf
+   // in case of toyMC make a nuisance pdf
    if (integrationType.Contains("TOYMC") ) {
       RooAbsPdf * nuisPdf = RooStats::MakeNuisancePdf(*mc, "nuisance_pdf");
       cout << "using TOYMC integration: make nuisance pdf from the model " << std::endl;
@@ -205,7 +205,7 @@ void StandardBayesianNumericalDemo(const char* infile = "",
 
    SimpleInterval* interval = bayesianCalc.GetInterval();
 
-   // print out the iterval on the first Parameter of Interest
+   // print out the interval on the first Parameter of Interest
    cout << "\n>>>> RESULT : " << confLevel*100 << "% interval on " << poi->GetName()<<" is : ["<<
       interval->LowerLimit() << ", "<<
       interval->UpperLimit() <<"] "<<endl;

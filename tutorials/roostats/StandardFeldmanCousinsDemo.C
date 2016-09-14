@@ -19,7 +19,7 @@
 ///
 /// The FeldmanCousins tools is a classical frequentist calculation
 /// based on the Neyman Construction.  The test statistic can be
-/// generalized for nuisance parameters by using the profile likeihood ratio.
+/// generalized for nuisance parameters by using the profile likelihood ratio.
 /// But unlike the ProfileLikelihoodCalculator, this tool explicitly
 /// builds the sampling distribution of the test statistic via toy Monte Carlo.
 ///
@@ -148,7 +148,7 @@ void StandardFeldmanCousinsDemo(const char* infile = "",
    PointSetInterval* interval = fc.GetInterval();
    ConfidenceBelt* belt = fc.GetConfidenceBelt();
 
-   // print out the iterval on the first Parameter of Interest
+   // print out the interval on the first Parameter of Interest
    RooRealVar* firstPOI = (RooRealVar*) mc->GetParametersOfInterest()->first();
    cout << "\n95% interval on " <<firstPOI->GetName()<<" is : ["<<
       interval->LowerLimit(*firstPOI) << ", "<<
