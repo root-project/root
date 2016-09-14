@@ -54,7 +54,8 @@
 ///  `\macro_output This the macro output`
 ///
 ///  4. `\notebook`
-///    To generate the corresponding jupyter notebook.
+///    To generate the corresponding jupyter notebook. In case the tutorial does
+///    not generate any graphics output, the option `-nodraw` should be added.
 ///
 /// Note that the doxygen directive `\authors` or `\author` must be the last one
 /// of the macro header.
