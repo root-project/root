@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 ## @package JsMVA.JPyInterface
+#  @author  Attila Bagoly <battila93@gmail.com>
 # JPyInterface is responsible for adding the drawing methods to TMVA
 # and for creating the JavaScript outputs from objects.
-# @author  Attila Bagoly <battila93@gmail.com>
 
 
 from IPython.core.display import display, HTML
