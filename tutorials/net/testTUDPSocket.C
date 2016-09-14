@@ -1,11 +1,17 @@
+/// \file
+/// \ingroup tutorial_net
+/// As test echo server use udpserver.c in the same directory.
+/// To compile it do:
+///
+///         clang udpserver.c -o udpserver
+///
+/// \macro_code
+///
+/// \author
+
 #include "TUDPSocket.h"
 #include "TString.h"
 
-//
-// As test echo server use udpserver.c in the same directory.
-// To compile it do:
-//    clang udpserver.c -o udpserver
-//
 
 // int createTServerSocket(){
 //    printf("testTSocket: Creating TSocket\n");

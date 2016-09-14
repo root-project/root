@@ -1,3 +1,10 @@
+/// \file
+/// \ingroup tutorial_net
+///
+/// \macro_code
+///
+/// \author
+
 #include "TBenchmark.h"
 #include "TList.h"
 #include "TInetAddress.h"
@@ -46,7 +53,7 @@ void ConnectToServer(const TInetAddress *hostb, Int_t port)
    if (idx == 0) {
       // Create the histogram
       hpx = new TH1F("hpx","This is the px distribution",100,-4,4);
-      hpx->SetFillColor(48);  // set nice fillcolor
+      hpx->SetFillColor(48);  // set nice fill-color
    } else {
       hpx = new TH2F("hpxpy","py vs px",40,-4,4,40,-4,4);
    }

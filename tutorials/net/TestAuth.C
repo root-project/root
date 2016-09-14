@@ -1,108 +1,114 @@
-///////////////////////////////////////////////////////////////////////////////
-//
-//  Macro test authentication methods stand alone
-//
-//  See $ROOTSYS/README/README.AUTH for additional details
-//
-//   Syntax:
-//
-//  .x TestAuth.C(<port>,"<user>","<krb5_princ>","<globus_det>")
-//
-//     <port>          = rootd port (default 1094)
-//     <user>          = login user name for the test
-//                       (default from getpwuid)
-//     <krb5_princ>    = Principal to be used for Krb5 authentication
-//                       in the form user@THE.REA.LM
-//                       ( default: <running_user@Default_Realm with
-//                                  Default_realm taken from /etc/krb5.conf
-//                                  or the $KRB5_CONFIG file )
-//     <globus_det>    = details for the globus authentication
-//                       ( default: ad:certificates cd:$HOME/.globus
-//                                  cf:usercert.pem kf:userkey.pem )
-//
-//  MAKE SURE that rootd is running
-//
-//  Example of successful output:
-//
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// +                                                                          +
-// +                         TestAuth.C                                       +
-// +                                                                          +
-// +                Test of authentication methods                            +
-// +                                                                          +
-// +   Syntax:                                                                +
-// +                                                                          +
-// + .x TestAuth.C(<port>,"<user>","<krb5_princ>","<globus_det>")             +
-// +                                                                          +
-// +     <port>          = rootd port (default 1094)                          +
-// +     <user>          = login user name for the test                       +
-// +                      (default from getpwuid)                             +
-// +     <krb5_princ>    = Principal to be used for Krb5 authentication       +
-// +                       in the form user@THE.REA.LM                        +
-// +                      ( default: <running_user@Default_Realm with         +
-// +                                 Default_realm taken from /etc/krb5.conf  +
-// +                                 or the $KRB5_CONFIG file )               +
-// +     <globus_det>    = details for the globus authentication              +
-// +                      ( default ad:certificates cd:$HOME/.globus          +
-// +                                cf:usercert.pem kf:userkey.pem )          +
-// +                                                                          +
-// +                 >>> MAKE SURE that rootd is running <<<                  +
-// +                                                                          +
-// +             See $ROOTSYS/README/README.AUTH for additional details       +
-// +                                                                          +
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// +                                                                          +
-// +   Basic test parameters:                                                 +
-// +                                                                          +
-// +   Local User is          : ganis
-// +   Authentication Details : pt:0 ru:1 us:ganis
-// +   Current directory is   : /home/ganis/local/root/root/tutorials
-// +   TFTP string            : root://localhost:1094
-// +   Krb5 Details           : pt:0 ru:1 us:ganis@PCEPSFT43.CERN.CH
-// +                                                                          +
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// +                                                                          +
-// +   Testing UsrPwd ...                                                     +
-// ganis@localhost password:
-// +                                                                          +
-// +   Testing SRP ...                                                        +
-// ganis@localhost SRP password:
-// +                                                                          +
-// +   Testing Krb5 ...                                                       +
-// Password for ganis@PCEPSFT43.CERN.CH:
-// +                                                                          +
-// +   Testing Globus ...                                                     +
-// Local Globus Certificates (    )
-// Enter <key>:<new value> to change:
-// Your identity: /O=Grid/OU=GlobusTest/OU=simpleCA-arthux.cern.ch/OU=cern.ch/CN=ganis
-// Enter GRID pass phrase for this identity:
-// Creating proxy ............................ Done
-// Your proxy is valid until: Fri Oct 31 09:33:04 2003
-// +                                                                          +
-// +   Testing SSH ...                                                        +
-// ganis@localhost's password:
-// +                                                                          +
-// +   Testing UidGid ...                                                     +
-// +                                                                          +
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// +                                                                          +
-// +   Result of the tests:                                                   +
-// +                                                                          +
-// +   Method: 0 (UsrPwd): successful! (reuse: successful!)                   +
-// +   Method: 1    (SRP): successful! (reuse: successful!)                   +
-// +   Method: 2   (Krb5): successful! (reuse: successful!)                   +
-// +   Method: 3 (Globus): successful! (reuse: successful!)                   +
-// +   Method: 4    (SSH): successful! (reuse: successful!)                   +
-// +   Method: 5 (UidGid): successful!                                        +
-// +                                                                          +
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//
-///////////////////////////////////////////////////////////////////////////////
-//
+/// \file
+/// \ingroup tutorial_net
+///  Macro test authentication methods stand alone
+///
+///  See `$ROOTSYS/README/README.AUTH` for additional details
+///
+///   Syntax:
+///
+/// ~~~ {.cpp}
+///  .x TestAuth.C(<port>,"<user>","<krb5_princ>","<globus_det>")
+///
+///     <port>          = rootd port (default 1094)
+///     <user>          = login user name for the test
+///                       (default from getpwuid)
+///     <krb5_princ>    = Principal to be used for Krb5 authentication
+///                       in the form user@THE.REA.LM
+///                       ( default: <running_user@Default_Realm with
+///                                  Default_realm taken from /etc/krb5.conf
+///                                  or the $KRB5_CONFIG file )
+///     <globus_det>    = details for the globus authentication
+///                       ( default: ad:certificates cd:$HOME/.globus
+///                                  cf:usercert.pem kf:userkey.pem )
+/// ~~~
+///
+///  MAKE SURE that rootd is running
+///
+///  Example of successful output:
+///
+/// ~~~ {.cpp}
+/// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+/// +                                                                          +
+/// +                         TestAuth.C                                       +
+/// +                                                                          +
+/// +                Test of authentication methods                            +
+/// +                                                                          +
+/// +   Syntax:                                                                +
+/// +                                                                          +
+/// + .x TestAuth.C(<port>,"<user>","<krb5_princ>","<globus_det>")             +
+/// +                                                                          +
+/// +     <port>          = rootd port (default 1094)                          +
+/// +     <user>          = login user name for the test                       +
+/// +                      (default from getpwuid)                             +
+/// +     <krb5_princ>    = Principal to be used for Krb5 authentication       +
+/// +                       in the form user@THE.REA.LM                        +
+/// +                      ( default: <running_user@Default_Realm with         +
+/// +                                 Default_realm taken from /etc/krb5.conf  +
+/// +                                 or the $KRB5_CONFIG file )               +
+/// +     <globus_det>    = details for the globus authentication              +
+/// +                      ( default ad:certificates cd:$HOME/.globus          +
+/// +                                cf:usercert.pem kf:userkey.pem )          +
+/// +                                                                          +
+/// +                 >>> MAKE SURE that rootd is running <<<                  +
+/// +                                                                          +
+/// +             See $ROOTSYS/README/README.AUTH for additional details       +
+/// +                                                                          +
+/// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+///
+/// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+/// +                                                                          +
+/// +   Basic test parameters:                                                 +
+/// +                                                                          +
+/// +   Local User is          : ganis
+/// +   Authentication Details : pt:0 ru:1 us:ganis
+/// +   Current directory is   : /home/ganis/local/root/root/tutorials
+/// +   TFTP string            : root://localhost:1094
+/// +   Krb5 Details           : pt:0 ru:1 us:ganis@PCEPSFT43.CERN.CH
+/// +                                                                          +
+/// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+/// +                                                                          +
+/// +   Testing UsrPwd ...                                                     +
+/// ganis@localhost password:
+/// +                                                                          +
+/// +   Testing SRP ...                                                        +
+/// ganis@localhost SRP password:
+/// +                                                                          +
+/// +   Testing Krb5 ...                                                       +
+/// Password for ganis@PCEPSFT43.CERN.CH:
+/// +                                                                          +
+/// +   Testing Globus ...                                                     +
+/// Local Globus Certificates (    )
+/// Enter <key>:<new value> to change:
+/// Your identity: /O=Grid/OU=GlobusTest/OU=simpleCA-arthux.cern.ch/OU=cern.ch/CN=ganis
+/// Enter GRID pass phrase for this identity:
+/// Creating proxy ............................ Done
+/// Your proxy is valid until: Fri Oct 31 09:33:04 2003
+/// +                                                                          +
+/// +   Testing SSH ...                                                        +
+/// ganis@localhost's password:
+/// +                                                                          +
+/// +   Testing UidGid ...                                                     +
+/// +                                                                          +
+/// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+///
+/// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+/// +                                                                          +
+/// +   Result of the tests:                                                   +
+/// +                                                                          +
+/// +   Method: 0 (UsrPwd): successful! (reuse: successful!)                   +
+/// +   Method: 1    (SRP): successful! (reuse: successful!)                   +
+/// +   Method: 2   (Krb5): successful! (reuse: successful!)                   +
+/// +   Method: 3 (Globus): successful! (reuse: successful!)                   +
+/// +   Method: 4    (SSH): successful! (reuse: successful!)                   +
+/// +   Method: 5 (UidGid): successful!                                        +
+/// +                                                                          +
+/// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+/// ~~~
+///
+/// \macro_code
+///
+/// \author
+
 int TestAuth(int port = 1094, char *user = "", char *krb5  = "", char *globus  = "")
 {
    //
@@ -185,7 +191,7 @@ int TestAuth(int port = 1094, char *user = "", char *krb5  = "", char *globus  =
 // Details
    TString Details = TString("pt:0 ru:1 us:") + User;
 
-// Testing availibilities
+// Testing availabilities
    char *p;
 
 //   TString HaveSRP = "@srpdir@";
@@ -271,7 +277,7 @@ int TestAuth(int port = 1094, char *user = "", char *krb5  = "", char *globus  =
    printf("+                                                                             +\n");
    printf("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
 
-// Read local <RootAuthrc> now to avoid to be later superseeded
+// Read local <RootAuthrc> now to avoid to be later superseded
    TAuthenticate::ReadRootAuthrc();
    if (lDebug > 0)
       TAuthenticate::Show();
