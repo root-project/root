@@ -8,6 +8,7 @@
 
 void DataFrame()
 {
+   using namespace ROOT::R;
    // Creating variables
    TVectorD v1(3);
    std::vector<Double_t> v2 {0.101, 0.202, 0.303};
@@ -19,11 +20,11 @@ void DataFrame()
    v1[1]=2;
    v1[2]=3;
 
-   auto &r = ROOT::R::TRInterface::Instance();
+   auto &r = TRInterface::Instance();
 
    // Creating dataframe object with its labels
 
-   ROOT::R::TRDataFrame  df1(Label["var1"]=v1,Label["var2"]=v2,Label["var3"]=v3,Label["strings"]=names);
+   TRDataFrame  df1(Label["var1"]=v1,Label["var2"]=v2,Label["var3"]=v3,Label["strings"]=names);
 
    // Passing dataframe to R's environment
 
@@ -44,7 +45,7 @@ void DataFrame()
 
    // Getting dataframe from R's environment
 
-   ROOT::R::TRDataFrame df2;
+   TRDataFrame df2;
 
    r<<"df2<-data.frame(v1=c(0.1,0.2,0.3),v2=c(3,2,1))";
    r["df2"]>>df2;
