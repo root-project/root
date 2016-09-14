@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_r
-/// \notebook
+/// \notebook -nodraw
 /// Example based  in
 /// http://root.cern.ch/root/html/tutorials/fit/NumericalMinimization.C.html
 /// http://stat.ethz.ch/R-manual/R-devel/library/stats/html/optim.html

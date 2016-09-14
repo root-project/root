@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_r
-/// \notebook
+/// \notebook -nodraw
 /// Example based  in
 /// http://cran.r-project.org/web/packages/DEoptim/DEoptim.pdf
 /// Please install the R package DEoptim before run this example.

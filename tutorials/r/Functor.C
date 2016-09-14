@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_r
-/// \notebook
+/// \notebook -nodraw
 /// Example to create class Functor
 ///
 /// \macro_code

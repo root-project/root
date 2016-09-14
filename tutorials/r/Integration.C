@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_r
-/// \notebook
+/// \notebook -nodraw
 /// Numerical integration using R passing the function from ROOT
 ///
 /// \macro_code

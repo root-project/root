@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_r
-/// \notebook
+/// \notebook -nodraw
 /// More Information for R interpolation in
 /// http://stat.ethz.ch/R-manual/R-patched/library/stats/html/approxfun.html
 /// NOTE: this example illustrates an interpolation with random points given from ROOT

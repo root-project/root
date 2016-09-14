@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_r
-/// \notebook
+/// \notebook -nodraw
 /// Simple example on how to use ROOT-R interface.
 ///
 /// \macro_code
