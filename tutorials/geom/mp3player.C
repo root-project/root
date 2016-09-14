@@ -2,8 +2,6 @@
 /// \ingroup tutorial_geom
 /// Drawing a mp3 type music player, using ROOT geometry class.
 ///
-/// Name: mp3player.C
-/// Author: Eun Young Kim, Dept. of Physics, Univ. of Seoul
 /// Reviewed by Sunman Kim (sunman98@hanmail.net)
 /// Supervisor: Prof. Inkyu Park (icpark@physics.uos.ac.kr)
 ///
@@ -15,7 +13,7 @@
 /// \macro_image
 /// \macro_code
 ///
-/// \author Eun Young Kim
+/// \author Eun Young Kim, Dept. of Physics, Univ. of Seoul
 
 #include "TCanvas.h"
 #include "TPaveText.h"
