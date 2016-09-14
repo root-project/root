@@ -1073,20 +1073,6 @@ TCling::TCling(const char *name, const char *title)
       // clingArgsStorage.push_back("-Xclang");
       // clingArgsStorage.push_back("-fmodules");
 
-      std::string include;
-#ifndef ROOTINCDIR
-      if (const char* rootsys = gSystem->Getenv("ROOTSYS")) {
-         include = rootsys;
-         include += "/include";
-      } else {
-        ::Fatal("TCling::TCling", "ROOTSYS not set!");
-        exit(1);
-      }
-#else // ROOTINCDIR
-      include = ROOTINCDIR;
-#endif // ROOTINCDIR
-      clingArgsStorage.push_back("-I");
-      clingArgsStorage.push_back(include);
       clingArgsStorage.push_back("-Wno-undefined-inline");
       clingArgsStorage.push_back("-fsigned-char");
    }
@@ -1125,7 +1111,7 @@ TCling::TCling(const char *name, const char *title)
       // TCling::AddIncludePath(".");
 
       // Add the root include directory and etc/ to list searched by default.
-      TCling::AddIncludePath(ROOT::TMetaUtils::GetROOTIncludeDir(false).c_str());
+      //TCling::AddIncludePath(ROOT::TMetaUtils::GetROOTIncludeDir(false).c_str());
    }
 
    // Don't check whether modules' files exist.
