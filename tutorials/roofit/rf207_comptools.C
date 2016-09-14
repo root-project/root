@@ -7,7 +7,7 @@
 ///
 /// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke 
+/// \author 07/2008 - Wouter Verkerke
 
 
 #include "RooRealVar.h"
@@ -28,7 +28,7 @@ using namespace RooFit ;
 void rf207_comptools()
 {
 
-   // S e t u p   c o m p o s i t e    p d f,   d a t a s e t 
+   // S e t u p   c o m p o s i t e    p d f,   d a t a s e t
    // --------------------------------------------------------
 
    // Declare observable x
@@ -37,14 +37,14 @@ void rf207_comptools()
    // Create two Gaussian PDFs g1(x,mean1,sigma) anf g2(x,mean2,sigma) and their parameters
    RooRealVar mean("mean","mean of gaussians",5) ;
    RooRealVar sigma("sigma","width of gaussians",0.5) ;
-   RooGaussian sig("sig","Signal component 1",x,mean,sigma) ;  
+   RooGaussian sig("sig","Signal component 1",x,mean,sigma) ;
 
-   // Build Chebychev polynomial p.d.f.  
+   // Build Chebychev polynomial p.d.f.
    RooRealVar a0("a0","a0",0.5,0.,1.) ;
    RooRealVar a1("a1","a1",-0.2,0.,1.) ;
    RooChebychev bkg1("bkg1","Background 1",x,RooArgSet(a0,a1)) ;
 
-   // Build expontential pdf
+   // Build exponential pdf
    RooRealVar alpha("alpha","alpha",-1) ;
    RooExponential bkg2("bkg2","Background 2",x,alpha) ;
 
@@ -52,7 +52,7 @@ void rf207_comptools()
    RooRealVar bkg1frac("bkg1frac","fraction of component 1 in background",0.2,0.,1.) ;
    RooAddPdf bkg("bkg","Signal",RooArgList(bkg1,bkg2),bkg1frac) ;
 
-   // Sum the composite signal and background 
+   // Sum the composite signal and background
    RooRealVar bkgfrac("bkgfrac","fraction of background",0.5,0.,1.) ;
    RooAddPdf  model("model","g1+g2+a",RooArgList(bkg,sig),bkgfrac) ;
 
@@ -111,7 +111,7 @@ void rf207_comptools()
 
    // Create a second Gaussian
    RooRealVar sigma2("sigma2","width of gaussians",1) ;
-   RooGaussian sig2("sig2","Signal component 1",x,mean,sigma2) ;  
+   RooGaussian sig2("sig2","Signal component 1",x,mean,sigma2) ;
 
    // Create a sum of the original Gaussian plus the new second Gaussian
    RooRealVar sig1frac("sig1frac","fraction of component 1 in signal",0.8,0.,1.) ;
@@ -126,7 +126,7 @@ void rf207_comptools()
    // Build a clone of the input pdf according to the above customization
    // instructions. Each node that requires modified is clone so that the
    // original pdf remained untouched. The name of each cloned node is that
-   // of the original node suffixed by the name of the customizer object  
+   // of the original node suffixed by the name of the customizer object
    //
    // The returned head node own all nodes that were cloned as part of
    // the build process so when cust_clone is deleted so will all other

@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_roofit
+/// \ingroup tutorial_;;;;
 /// \notebook
 ///  'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #315
 ///
@@ -8,7 +8,7 @@
 /// \macro_image
 /// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke 
+/// \author 07/2008 - Wouter Verkerke
 
 
 #include "RooRealVar.h"
@@ -46,7 +46,7 @@ void rf315_projectpdf()
 
    // Create gaussx(x,f(y),sx)
    RooRealVar sigmax("sigmax","width of gaussian",0.5) ;
-   RooGaussian gaussx("gaussx","Gaussian in x with shifting mean in y",x,fy,sigmax) ;  
+   RooGaussian gaussx("gaussx","Gaussian in x with shifting mean in y",x,fy,sigmax) ;
 
    // Create gaussy(y,0,2)
    RooGaussian gaussy("gaussy","Gaussian in y",y,RooConst(0),RooConst(2)) ;
@@ -56,7 +56,7 @@ void rf315_projectpdf()
 
 
 
-   // M a r g i n a l i z e   m ( x , y )   t o   m ( x ) 
+   // M a r g i n a l i z e   m ( x , y )   t o   m ( x )
    // ----------------------------------------------------
 
    // modelx(x) = Int model(x,y) dy

@@ -10,7 +10,7 @@
 /// \macro_image
 /// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke 
+/// \author 07/2008 - Wouter Verkerke
 
 
 #include "RooRealVar.h"
@@ -44,9 +44,9 @@ void rf303_conditional()
    RooRealVar a1("a1","a1",-0.5,-1,1) ;
    RooPolyVar fy("fy","fy",y,RooArgSet(a0,a1)) ;
 
-   // Creat gauss(x,f(y),s)
+   // Create gauss(x,f(y),s)
    RooRealVar sigma("sigma","width of gaussian",0.5,0.1,2.0) ;
-   RooGaussian model("model","Gaussian with shifting mean",x,fy,sigma) ;  
+   RooGaussian model("model","Gaussian with shifting mean",x,fy,sigma) ;
 
 
    // Obtain fake external experimental dataset with values for x and y
@@ -54,7 +54,7 @@ void rf303_conditional()
 
 
 
-   // G e n e r a t e   d a t a   f r o m   c o n d i t i o n a l   p . d . f   m o d e l ( x | y )  
+   // G e n e r a t e   d a t a   f r o m   c o n d i t i o n a l   p . d . f   m o d e l ( x | y )
    // ---------------------------------------------------------------------------------------------
 
    // Make subset of experimental data with only y values
@@ -79,7 +79,7 @@ void rf303_conditional()
    // Plot x distribution of data and projection of model on x = 1/Ndata sum(data(y_i)) model(x;y_i)
    RooPlot* xframe = x.frame() ;
    expDataXY->plotOn(xframe) ;
-   model.plotOn(xframe,ProjWData(*expDataY)) ; 
+   model.plotOn(xframe,ProjWData(*expDataY)) ;
 
 
    // Speed up (and approximate) projection by using binned clone of data for projection
@@ -102,7 +102,7 @@ void rf303_conditional()
 
 
 
-RooDataSet* makeFakeDataXY() 
+RooDataSet* makeFakeDataXY()
 {
    RooRealVar x("x","x",-10,10) ;
    RooRealVar y("y","y",-10,10) ;
@@ -118,7 +118,7 @@ RooDataSet* makeFakeDataXY()
       y = tmpy ;
       d->add(coord) ;
       }
-      
+
    }
 
    return d ;

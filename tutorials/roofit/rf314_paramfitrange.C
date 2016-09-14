@@ -3,7 +3,7 @@
 /// \notebook -js
 ///  'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #314
 ///
-///  Working with parameterized ranges in a fit. This an example of a
+///  Working with parametrized ranges in a fit. This an example of a
 ///  fit with an acceptance that changes per-event
 ///
 ///   pdf = exp(-t/tau) with t[tmin,5]
@@ -13,7 +13,7 @@
 /// \macro_image
 /// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke 
+/// \author 07/2008 - Wouter Verkerke
 
 
 #include "RooRealVar.h"
@@ -32,14 +32,14 @@ using namespace RooFit ;
 void rf314_paramfitrange()
 {
 
-   // D e f i n e   o b s e r v a b l e s   a n d   d e c a y   p d f 
+   // D e f i n e   o b s e r v a b l e s   a n d   d e c a y   p d f
    // ---------------------------------------------------------------
 
    // Declare observables
    RooRealVar t("t","t",0,5) ;
    RooRealVar tmin("tmin","tmin",0,0,5) ;
 
-   // Make parameterized range in t : [tmin,5]
+   // Make parametrized range in t : [tmin,5]
    t.setRange(tmin,RooConst(t.getMax())) ;
 
    // Make pdf
@@ -48,7 +48,7 @@ void rf314_paramfitrange()
 
 
 
-   // C r e a t e   i n p u t   d a t a 
+   // C r e a t e   i n p u t   d a t a
    // ------------------------------------
 
    // Generate complete dataset without acceptance cuts (for reference)
@@ -69,7 +69,7 @@ void rf314_paramfitrange()
 
 
 
-   // P l o t   f i t t e d   p d f   o n   f u l l   a n d   a c c e p t e d   d a t a 
+   // P l o t   f i t t e d   p d f   o n   f u l l   a n d   a c c e p t e d   d a t a
    // ---------------------------------------------------------------------------------
 
    // Make plot frame, add datasets and overlay model

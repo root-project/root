@@ -12,7 +12,7 @@
 ///
 /// ~~~ {.cpp}
 ///          root>.x rf104_classfactory.C // run interpreted to generate code
-///          root>.L MyPdfV3.cxx+         // Compile and load created classs
+///          root>.L MyPdfV3.cxx+         // Compile and load created class
 ///          root>.x rf104_classfactory.C+ // run compiled code
 /// ~~~
 ///
@@ -76,7 +76,7 @@ void rf104_classfactory()
    // Compile MyPdfV3 class (only when running in CINT)
    gROOT->ProcessLineSync(".x MyPdfV3.cxx+") ;
 
-   // Creat instance of MyPdfV3 class
+   // Create instance of MyPdfV3 class
    RooRealVar a("a","a",1) ;
    RooRealVar b("b","b",2,-10,10) ;
    RooRealVar y("y","y",-10,10);

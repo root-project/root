@@ -3,13 +3,13 @@
 /// \notebook -js
 ///  'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #313
 ///
-///  Working with parameterized ranges to define non-rectangular regions
+///  Working with parametrized ranges to define non-rectangular regions
 ///  for fitting and integration
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke 
+/// \author 07/2008 - Wouter Verkerke
 
 
 #include "RooRealVar.h"
@@ -27,7 +27,7 @@ using namespace RooFit ;
 void rf313_paramranges()
 {
 
-   // C r e a t e   3 D   p d f 
+   // C r e a t e   3 D   p d f
    // -------------------------
 
    // Define observable (x,y,z)
@@ -44,26 +44,26 @@ void rf313_paramranges()
 
 
 
-   // D e f i n e d   n o n - r e c t a n g u l a r   r e g i o n   R   i n   ( x , y , z ) 
+   // D e f i n e d   n o n - r e c t a n g u l a r   r e g i o n   R   i n   ( x , y , z )
    // -------------------------------------------------------------------------------------
 
    //
    // R = Z[0 - 0.1*Y^2] * Y[0.1*X - 0.9*X] * X[0 - 10]
    //
 
-   // Construct range parameterized in "R" in y [ 0.1*x, 0.9*x ]
+   // Construct range parametrized in "R" in y [ 0.1*x, 0.9*x ]
    RooFormulaVar ylo("ylo","0.1*x",x) ;
    RooFormulaVar yhi("yhi","0.9*x",x) ;
    y.setRange("R",ylo,yhi) ;
 
-   // Construct parameterized ranged "R" in z [ 0, 0.1*y^2 ]
+   // Construct parametrized ranged "R" in z [ 0, 0.1*y^2 ]
    RooFormulaVar zlo("zlo","0.0*y",y) ;
    RooFormulaVar zhi("zhi","0.1*y*y",y) ;
    z.setRange("R",zlo,zhi) ;
 
 
 
-   // C a l c u l a t e   i n t e g r a l   o f   n o r m a l i z e d   p d f   i n   R 
+   // C a l c u l a t e   i n t e g r a l   o f   n o r m a l i z e d   p d f   i n   R
    // ----------------------------------------------------------------------------------
 
    // Create integral over normalized pdf model over x,y,z in "R" region
