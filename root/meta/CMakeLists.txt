@@ -1,3 +1,7 @@
+
+ROOTTEST_ADD_TEST(countIncludePaths
+                  MACRO countIncludePaths.C)
+
 #ROOT-6752
 ROOTTEST_GENERATE_REFLEX_DICTIONARY(expressiveErrorMessages expressiveErrorMessages.h SELECTION expressiveErrorMessages_selection.xml)
 
