@@ -585,7 +585,7 @@ if '__IPYTHON__' in __builtins__ and __IPYTHON__:
    from IPython import get_ipython
    import sys, os
    pathToThisFile = os.path.dirname(os.path.abspath(__file__))
-   sys.path.append(os.path.expanduser(os.path.join(pathToThisFile,"JsMVA/python")))
+   sys.path.append(os.path.expanduser(pathToThisFile))
    ip = get_ipython()
    if hasattr(ip,"kernel"):
       import JupyROOT

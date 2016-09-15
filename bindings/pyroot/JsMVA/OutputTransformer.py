@@ -29,7 +29,8 @@ class transformTMVAOutputToHTML:
             line = "Booking method: <b>" + line.split(":")[1].replace("\033[1m", "").replace("[0m", "")+"</b>"
         if line.find("time")!=-1:
             lr = line.split(":")
-            line = "<b>" + lr[0] + " : <b style='color:rgb(0,0,179)'>" +  lr[1].replace("\033[1;31m", "").replace("[0m", "") +"</b></b>"
+            if len(lr)==2:
+                line = "<b>" + lr[0] + " : <b style='color:rgb(0,0,179)'>" +  lr[1].replace("\033[1;31m", "").replace("[0m", "") +"</b></b>"
         outFlag = self.__outputFlagClass
         if line.find("\033[0;36m")!=-1:
             line = "<b style='color:#006666'>" + line.replace("\033[0;36m", "").replace("[0m", "") + "</b>"
