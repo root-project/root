@@ -668,7 +668,7 @@ bool RScanner::VisitNamespaceDecl(clang::NamespaceDecl* N)
       return true;
 
    // in case it is implicit we don't create a builder
-   if(N && N->isImplicit()){
+   if(N && N->isImplicit() || !N){
       return true;
    }
 
