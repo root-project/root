@@ -16,7 +16,7 @@
 
 namespace ROOT {
 
-   /** 
+   /**
     * \class ROOT::TSpinMutex
     * \brief A spin mutex class which respects the STL interface for mutexes.
     * \ingroup Multicore
@@ -28,7 +28,7 @@ namespace ROOT {
     * ROOT::TSpinMutex m;
     * std::condition_variable cv;
     * bool ready = false;
-    * 
+    *
     * void worker_thread()
     * {
     *    // Wait until main() sends data
