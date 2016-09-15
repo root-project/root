@@ -15,7 +15,28 @@
 #include <atomic>
 
 namespace ROOT {
-   /// A spin mutex class which respects the STL interface.
+
+   /** 
+    * \class ROOT::TSpinMutex
+    * \brief A spin mutex class which respects the STL interface for mutexes.
+    * \ingroup Multicore
+    * This class allows to acquire spin locks also in combination with templates in the STL such as
+    * <a href="http://en.cppreference.com/w/cpp/thread/unique_lock">std::unique_lock</a> or
+    * <a href="http://en.cppreference.com/w/cpp/thread/condition_variable_any">std::condition_variable_any</a>.
+    * For example:
+    * ~~~{.cpp}
+    * ROOT::TSpinMutex m;
+    * std::condition_variable cv;
+    * bool ready = false;
+    * 
+    * void worker_thread()
+    * {
+    *    // Wait until main() sends data
+    *    std::unique_lock<ROOT::TSpinMutex> lk(m);
+    *    cv.wait(lk, []{return ready;});
+    * [...]
+    * ~~~{.cpp}
+    */
    class TSpinMutex {
 
    private:
