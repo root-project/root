@@ -393,7 +393,9 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
    - Add build instructions for System Z (s390 and s390x)
    - Make sure that the roots wrapper can be executed
    - Move gl2ps.h to its own subdir
-- Added 'builtin-unuran' option (provided by Mattias Ellert)
-- Added 'builtin-gl2ps' option (provided by Mattias Ellert)
+- Added new 'builtin-unuran' option (provided by Mattias Ellert)
+- Added new 'builtin-gl2ps' option (provided by Mattias Ellert)
+- Added new 'macos_native' option (only for MacOS) to disable looking for binaries, libraires and headers for dependent 
+  packages at locations other than native MacOS installations. Needed when wanting to ignore packages from Fink, Brew or Ports. 
 
 
