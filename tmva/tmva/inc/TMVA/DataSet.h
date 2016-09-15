@@ -114,7 +114,7 @@ namespace TMVA {
       void      SetCurrentType ( Types::ETreeType type ) const { fCurrentTreeIdx = TreeIndex(type); }
       Types::ETreeType GetCurrentType() const;
 
-      void                       SetEventCollection( std::vector<Event*>*, Types::ETreeType );
+      void                       SetEventCollection( std::vector<Event*>*, Types::ETreeType, Bool_t deleteEvents = true );
       const std::vector<Event*>& GetEventCollection( Types::ETreeType type = Types::kMaxTreeType ) const;
       const TTree*               GetEventCollectionAsTree();
 
