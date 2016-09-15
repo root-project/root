@@ -2,10 +2,10 @@
 # CMakeLists.txt file for building ROOT core/thread package
 ############################################################################
 
-set(headers TCondition.h TConditionImp.h TMutex.h TMutexImp.h
-            TRWLock.h TSemaphore.h TThread.h TThreadFactory.h
-            TThreadImp.h TAtomicCount.h ROOT/TThreadedObject.h
-            TPool.h TThreadPool.h ThreadPool.h ThreadLocalStorage.h)
+set(headers TAtomicCount.h TCondition.h TConditionImp.h TMutex.h TMutexImp.h
+            TPool.h TRWLock.h TSemaphore.h TThread.h TThreadFactory.h
+            TThreadImp.h ROOT/TThreadedObject.h TThreadPool.h
+            ThreadLocalStorage.h TSpinMutex.h ThreadPool.h)
 if(NOT WIN32)
   set(headers ${headers} TPosixCondition.h TPosixMutex.h
                          TPosixThread.h TPosixThreadFactory.h PosixThreadInc.h)

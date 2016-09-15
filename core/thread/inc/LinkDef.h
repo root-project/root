@@ -18,6 +18,7 @@
 #pragma link C++ class TConditionImp;
 #pragma link C++ class TCondition;
 #pragma link C++ class TMutex;
+#pragma link C++ class ROOT::TSpinMutex;
 #pragma link C++ class TMutexImp;
 #ifndef _WIN32
 #pragma link C++ class TPosixCondition;
