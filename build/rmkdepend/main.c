@@ -753,8 +753,6 @@ char *line,
       printf(" "); /* we need this to update the time stamp! */
       fflush(fdout);
    }
-   if (fdin) fclose(fdin);
-   /* don't mess with stdout: if (fdout) fclose(fdout); */
 }
 
 void fatalerr(char *msg, ...)
