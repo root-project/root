@@ -719,6 +719,7 @@ Released on September 1, 2016
 ### Core
 
 * Prevent race condition in the creation of the list of base classes (but avoiding to publish the list too early)
+* Avoid spurrious error about duplicated STL or namespace dictionary.
 
 ### Hist
 
