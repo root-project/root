@@ -4,7 +4,7 @@ namespace ROOT {
    /// A spin mutex class which respects the STL interface.
    class TSpinMutex {
    public:
-      constexpr TSpinMutex() noexcept {}
+      TSpinMutex() noexcept {}
       TSpinMutex(const TSpinMutex&) = delete;
       TSpinMutex( TSpinMutex && ) = delete;
       ~TSpinMutex(){}
