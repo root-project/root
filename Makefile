@@ -1137,6 +1137,11 @@ changelog:
 releasenotes:
 	@$(MAKERELNOTES)
 ROOTCLING_CXXFLAGS := $(CXXFLAGS)
+# rootcling doesn't know what to do with these flags.
+# FIXME: Disable until until somebody teaches it.
+ifeq ($(CXXMODULES),yes)
+ROOTCLING_CXXFLAGS := $(filter-out $(ROOT_CXXMODULES_CXXFLAGS),$(CXXFLAGS))
+endif
 
 $(ROOTPCH): $(MAKEPCH) $(ROOTCLINGSTAGE1DEP) $(ALLHDRS) $(CLINGETCPCH) $(ORDER_) $(ALLLIBS)
 	@$(MAKEPCHINPUT) $(ROOT_SRCDIR) "$(MODULES)" $(CLINGETCPCH) -- $(ROOTCLING_CXXFLAGS)
