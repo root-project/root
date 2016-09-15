@@ -1137,8 +1137,11 @@ changelog:
 releasenotes:
 	@$(MAKERELNOTES)
 ROOTCLING_CXXFLAGS := $(CXXFLAGS)
-# rootcling doesn't know what to do with these flags.
-# FIXME: Disable until until somebody teaches it.
+# rootcling uses our internal version of clang. Passing the modules flags here
+# would allow rootcling to find module files built by the external compiler
+# (eg. $CXX or $CC). This, in turn, would cause problems if we are using
+# different clang version (even different commit revision) as the modules files
+# are not guaranteed to be compatible among clang revisions.
 ifeq ($(CXXMODULES),yes)
 ROOTCLING_CXXFLAGS := $(filter-out $(ROOT_CXXMODULES_CXXFLAGS),$(CXXFLAGS))
 endif
