@@ -168,7 +168,7 @@ static std::string ExtractTreeName(std::string& firstInputFile)
 
    // Loop over all the keys inside the first input file
    for (TObject* keyAsObj : *inputFile->GetListOfKeys()) {
-      TKey* key = dynamic_cast<TKey*>(keyAsObj);
+      TKey* key = static_cast<TKey*>(keyAsObj);
       TClass* clObj = TClass::GetClass(key->GetClassName());
       if (!clObj)
          continue;
