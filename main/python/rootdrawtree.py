@@ -3,10 +3,11 @@
 # ROOT command line tools: rootdrawtree
 # Author: Luca Giommi
 # Mail: luca.giommi2@studio.unibo.it
-# Date: 08/09/16
+# Date: 15/09/16
 
-import ROOT
+import sys
 import argparse
+import ROOT
 import textwrap
 from sys import stderr
 
@@ -36,9 +37,11 @@ parser.add_argument('-i', '--input', default=[], nargs='*', dest='inputFiles', h
 parser.add_argument('-t', '--tree', default='', action='store', dest='tree', help='Name of the tree')
 parser.add_argument('-hs', '--histo', default=[], nargs='*', dest='histoExpr', help='Expressions to build the histograms in the form "NAME = EXPRESSION if CUT"')
 args = parser.parse_args()
+sys.argv = []
 
 if (args.configFile != '' and (args.output != '' or args.inputFiles != [] or args.histoExpr != [] or args.tree != '')):
 	stderr.write("Error: both configuration file and options are provided \n")
+	exit(1)
 if (args.configFile != ''):
 	a = ROOT.TSimpleAnalysis(args.configFile)
 	a.Configure()
