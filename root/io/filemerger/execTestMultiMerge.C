@@ -2,7 +2,9 @@
 
 extern "C" uint32_t lzma_version_number(void);
 
-int testMergedFile(const char *filename, Int_t compSetting, Long64_t fileSize)
+constexpr bool kIs32bits = sizeof(long) == 4;
+
+int testMergedFile(const char *filename, Int_t compSetting, Long64_t fileSize, UInt_t tolerance = 0)
 {
    TFile *file = TFile::Open(filename);
    if (file == nullptr || file->IsZombie()) {
@@ -21,8 +23,9 @@ int testMergedFile(const char *filename, Int_t compSetting, Long64_t fileSize)
       Error("execTestMultiMerge","Compression level of %s should have been %d but is %d\n",file->GetName(), 206, file->GetCompressionSettings() );
       return 3;
    }
-   if (file->GetSize() != fileSize) {
-      Error("execTestMultiMerge","Disk size of %s should have been %lld but is %lld\n",file->GetName(), fileSize, file->GetSize() );
+
+   if (abs(file->GetSize()-fileSize) > tolerance) {
+      Error("execTestMultiMerge","Disk size of %s should have been %lld but is %lld (tolerance %u bytes)\n",file->GetName(), fileSize, file->GetSize(), tolerance );
       return 4;
    }
 
@@ -68,7 +71,7 @@ int testSimpleFile(const char *filename, Long64_t entries, Int_t compSetting, Lo
 int execTestMultiMerge()
 {
    Int_t result = 0;
-   if (!result) result = testMergedFile("mfile1-4.root",1,4933);
+   if (!result) result = testMergedFile("mfile1-4.root",1,4933, kIs32bits ? 2 : 0);
    if (!result) result = testMergedFile("mzfile1-4.root",206,4988);
 
    if (!result) result = testSimpleFile("hsimple.root",25000,1,414397,1);
