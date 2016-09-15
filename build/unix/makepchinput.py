@@ -253,6 +253,7 @@ def isDirForPCH(dirName):
                            "math/fumili",
                            "math/mlp",
                            "math/quadp",
+                           "math/rtools"
                            "math/splot",
                            "math/unuran",
                            "math/vdt",
