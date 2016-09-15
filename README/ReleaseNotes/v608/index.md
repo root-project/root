@@ -4,7 +4,7 @@
 
 ## Introduction
 
-ROOT version 6.08/00 is scheduled for release in May, 2016.
+ROOT version 6.08/00 is scheduled for release in October, 2016.
 
 For more information, see:
 
@@ -72,6 +72,7 @@ Other improvements, which may cause compilation errors in third party code:
 Also:
   * `TPluginManager` was made thread-safe [ROOT-7927].
   * On MacOSX, backtraces are now generated without external tools [ROOT-6667].
+  * The set of include paths considered by the interpreter has been reduced to the bare minimum.
 
 ### Containers
 
@@ -81,9 +82,9 @@ Also:
 
 Add a new mode for `TClass::SetCanSplit` (2) which indicates that this class and any derived class should not be split.  This included a rework the mechanism checking the base classes.  Instead of using `InheritsFrom`, which lead in some cases, including the case where the class derived from an STL collection, to spurrious autoparsing (to look at the base class of the collection!), we use a custom walk through the tree of base classes that checks their value of `fCanSplit`.  This also has the side-effect of allowing the extension of the concept 'base class that prevent its derived class from being split' to any user class.  This fixes [ROOT-7972].
 
-
 ### Dictionaries
 
+* Add the -excludePath option to rootcling to forbid dictionaries to remember include paths expressed in the command line invocation.
 * Genreflex and rootcling cannot generate capability files anymore.
 * Fix ROOT-7760: Fully allow the usage of the dylib extension on OSx.
 * Fix ROOT-7879: Prevent LinkDef files to be listed in a rootmap file and use (as the user actually expects) the header files #included in the linkdef file, if any, as the top level headers.
@@ -103,13 +104,15 @@ Add a new mode for `TClass::SetCanSplit` (2) which indicates that this class and
 * When interpreting dereferences of invalid pointers, cling will now complain (throw, actually) instead of crash.
 * Resolve memory hoarding in some case of looking up functions [ROOT-8145]
 
-## Parallelisation
+## Parallelism
 
 * Three methods have been added to manage implicit multi-threading in ROOT: `ROOT::EnableImplicitMT(numthreads)`, `ROOT::DisableImplicitMT` and `ROOT::IsImplicitMTEnabled`. They can be used to enable, disable and check the status of the global implicit multi-threading in ROOT, respectively.
 * Even if the default reduce function specified in the invocation of the `MapReduce` method of `TProcPool` returns a pointer to a `TObject`, the return value of `MapReduce` is properly casted to the type returned by the map function.
 * Add a new class named `TThreadedObject` which helps making objects thread private and merging them.
 * Add tutorial showing how to fill randomly histograms using the `TProcPool` class.
 * Add tutorial showing how to fill randomly histograms from multiple threads.
+* Add the ROOT::TSPinMutex class, a spin mutex compliant with C++11 requirements.
+*
 
 ## I/O Libraries
 
@@ -119,7 +122,6 @@ Add a new mode for `TClass::SetCanSplit` (2) which indicates that this class and
 * Check and flag short reads as errors in the xroot plugins. This fixes [ROOT-3341].
 * Added support for AWS temporary security credentials to TS3WebFile by allowing the security token to be given.
 * Resolve an issue when space is freed in a large `ROOT` file and a TDirectory is updated and stored the lower (less than 2GB) freed portion of the file [ROOT-8055].
-
 
 ## TTree Libraries
 
@@ -365,7 +367,9 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 
 ## Tutorials
 * New tutorial `treegetval.C` illustrating how to retrieve  `TTree` variables in arrays.
-
+* Add script to automatically translate tutorials into notebooks
+   * Embed it into the documentation generation
+   * Make the notebooks available at https://root.cern/doc/master/group__Tutorials.html
 
 ## Class Reference Guide
 
