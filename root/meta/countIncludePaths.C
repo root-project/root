@@ -13,6 +13,10 @@ int countIncludePaths()
       gSystem->Load(lib);
 
    std::string includePath(gSystem->GetIncludePath());
+
+   // Exclude from the test the builds with R as external package
+   if (std::string::npos != includePath.find("RInside/include")) return 0;
+
    // At most 8
    auto nPaths = countSubstring(includePath, "-I");
    if (nPaths>8){
