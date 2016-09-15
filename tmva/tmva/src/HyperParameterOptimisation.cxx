@@ -25,7 +25,7 @@ TMVA::HyperParameterOptimisationResult::~HyperParameterOptimisationResult()
     if(fROCCurves) delete fROCCurves;
 }
 
-TMultiGraph *TMVA::HyperParameterOptimisationResult::GetROCCurves(Bool_t fLegend)
+TMultiGraph *TMVA::HyperParameterOptimisationResult::GetROCCurves(Bool_t /* fLegend */)
 {
 
   return fROCCurves;
