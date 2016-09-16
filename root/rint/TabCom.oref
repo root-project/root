@@ -4,7 +4,6 @@ TObjArrayIter
 TObjString
 TObject
 TObjectRefSpy
-TObjectSet
 TObjectSpy
 TObjectTable
 
