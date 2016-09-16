@@ -1,5 +1,5 @@
 void checkEnum(){
-   ns = TClass::GetClass("myNamespace");
+   TClass* ns = TClass::GetClass("myNamespace");
    if (!ns) {
       std::cerr << "Namespace not found!!!\n";
       return ;
