@@ -1527,12 +1527,15 @@ Long64_t TChain::LoadTree(Long64_t entry)
                fNotify->Notify();
             }
 
-            return LoadTree(entry);
+            Long64_t loadResult = LoadTree(entry);
+            element->SetLoadResult(loadResult);
+            return loadResult;
          } else {
             treeReadEntry = fReadEntry = -2;
          }
       }
    }
+
 
    if (!fTree) {
       // The Error message already issued.  However if we reach here
@@ -1540,6 +1543,9 @@ Long64_t TChain::LoadTree(Long64_t entry)
       //
       // Force a reload of the tree next time.
       fTreeNumber = -1;
+
+      element->SetLoadResult(returnCode);
+
       return returnCode;
    }
    // ----- End of modifications by MvL
@@ -1559,7 +1565,8 @@ Long64_t TChain::LoadTree(Long64_t entry)
    // they use the correct read entry number).
 
    // Change the new current tree to the new entry.
-   fTree->LoadTree(treeReadEntry);
+   Long64_t loadResult = fTree->LoadTree(treeReadEntry);
+   element->SetLoadResult(loadResult);
 
    // Change the chain friends to the new entry.
    if (fFriends) {
