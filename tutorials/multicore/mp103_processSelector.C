@@ -20,14 +20,25 @@ int mp103_processSelector(){
   std::cout << "selector used is: "<< selectorPath<<"\n";
   TSelector *sel = TSelector::GetSelector(selectorPath);
 
+// The following code generates a crash when Davix is used for HTTP
+// Davix does not seem fork-safe; the problem has been reported to the
+// Davix developers. For the time being we disable this part.
+// To repoduce the problem, uncomment the next line.
+//
+// #define __reproduce_davix
+#if defined(__reproduce_davix)
   TFile *fp = TFile::Open(fh1[0]);
   TTree *tree = (TTree *) fp->Get("h42");
+#endif
 
   TProcPool pool(3);
 
+  TList* out = 0;
+#if defined(__reproduce_davix)
   //TProcPool::Process with a single tree
-  TList* out = pool.ProcTree(*tree, *sel);;
+  out = pool.ProcTree(*tree, *sel);;
   sel->GetOutputList()->Delete();
+#endif
 
   //TProcPool::Process with single file name and tree name
   //Note: we have less files than workers here
