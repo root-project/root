@@ -20,6 +20,7 @@ The following people have contributed to this new version:
  Olivier Couet, CERN/SFT,\
  Gerri Ganis, CERN/SFT,\
  Andrei Gheata, CERN/SFT,\
+ Luca Giommi, CERN/SFT,\
  Christopher Jones, Fermilab, CMS,\
  Wim Lavrijsen, LBNL, PyRoot,\
  Sergey Linev, GSI, http,\
@@ -126,6 +127,7 @@ Add a new mode for `TClass::SetCanSplit` (2) which indicates that this class and
 
 ## TTree Libraries
 
+* TChains can now be histogrammed without any C++ code, using the command line too rootdrawtree. It is based on the new class TSimpleAnalysis.
 * Do not automatically setup read cache during TTree::Fill(). This fixes [ROOT-8031].
 * Make sure the option "PARA" in TTRe::Draw is used with at least tow variables [ROOT-8196].
 * The with `goff` option one can use as many variables as needed. There no more
