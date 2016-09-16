@@ -23,9 +23,8 @@ void TPoolPlayer::HandleInput(MPCodeBufPair& msg)
       MPSend(GetSocket(), PoolCode::kProcResult, fSelector.GetOutputList());
    }else {
       //unknown code received
-      std::string reply = "S" + std::to_string(GetPid());
-      reply += ": unknown code received: " + std::to_string(code);
-      MPSend(GetSocket(), MPCode::kError, reply.data());
+      std::string errmsg = "unknown code received: " + std::to_string(code);
+      SendError(errmsg);
    }
 }
 
@@ -50,6 +49,8 @@ void TPoolPlayer::ProcDataSet(unsigned int code, MPCodeBufPair& msg)
    fFile = OpenFile(fFileNames[fileN]);
    if (fFile == nullptr) {
       //errors are handled inside OpenFile
+      std::string errmsg = "unable to open file " + fFileNames[fileN];
+      SendError(errmsg);
       return;
    }
 
@@ -58,6 +59,8 @@ void TPoolPlayer::ProcDataSet(unsigned int code, MPCodeBufPair& msg)
    fTree = RetrieveTree(fFile);
    if (fTree == nullptr) {
       //errors are handled inside RetrieveTree
+      std::string errmsg = "unable to retrieve tree from open file " + fFileNames[fileN];
+      SendError(errmsg);
       return;
    }
    TTree *tree = fTree;
@@ -151,9 +154,18 @@ void TPoolPlayer::ProcTree(MPCodeBufPair& msg)
    CloseFile(); // May not be needed
    if (fTree->GetCurrentFile()) {
       // We need to reopen the file locally (TODO: to understand and fix this)
-      fFile = TFile::Open(fTree->GetCurrentFile()->GetName());
-      tree = (TTree *) fFile->Get(fTree->GetName());
-      fTree = tree;
+      if ((fFile = TFile::Open(fTree->GetCurrentFile()->GetName())) && !fFile->IsZombie()) {
+         if (!(tree = (TTree *) fFile->Get(fTree->GetName()))) {
+            std::string errmsg = "unable to retrieve tree from open file " +
+                                 std::string(fTree->GetCurrentFile()->GetName());
+            SendError(errmsg);
+         }
+         fTree = tree;
+      } else {
+         //errors are handled inside OpenFile
+         std::string errmsg = "unable to open file " + std::string(fTree->GetCurrentFile()->GetName());
+         SendError(errmsg);
+      }
    }
 
    // Setup the cache, if required
