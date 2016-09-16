@@ -1,5 +1,5 @@
 
-Processing /home/axel/build/root/github/roottest/cling/other/execValuePrint.C...
+Processing execValuePrint.C...
 (TObject &) Name: TObject Title: Basic ROOT object
 (TNamed &) Name: a Title: b
 (TH1F &) Name:  Title:  NbinsX: 1
