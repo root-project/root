@@ -10,6 +10,8 @@
 /// In reality this function is usually not known, and the data comes e.g.
 /// from measurements.
 ///
+/// \macro_image
+/// \macro_output
 /// \macro_code
 ///
 /// \author Axel Naumann, 2005-02-02
