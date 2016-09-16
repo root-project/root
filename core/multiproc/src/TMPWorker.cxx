@@ -60,9 +60,7 @@ TMPWorker::TMPWorker()
             fTreeCache(0), fTreeCacheIsLearning(kFALSE),
             fUseTreeCache(kTRUE), fCacheSize(-1)
 {
-  Int_t uc = gEnv->GetValue("MultiProc.UseTreeCache", 0);
-  if (uc != 1) fUseTreeCache = kFALSE;
-  fCacheSize = gEnv->GetValue("MultiProc.CacheSize", -1);
+   Setup();
 }
 
 TMPWorker::TMPWorker(const std::vector<std::string>& fileNames,
@@ -74,9 +72,7 @@ TMPWorker::TMPWorker(const std::vector<std::string>& fileNames,
             fTreeCache(0), fTreeCacheIsLearning(kFALSE),
             fUseTreeCache(kTRUE), fCacheSize(-1)
 {
-   Int_t uc = gEnv->GetValue("MultiProc.UseTreeCache", 0);
-   if (uc != 1) fUseTreeCache = kFALSE;
-   fCacheSize = gEnv->GetValue("MultiProc.CacheSize", -1);
+   Setup();
 }
 
 TMPWorker::TMPWorker(TTree *tree, unsigned nWorkers, ULong64_t maxEntries)
@@ -86,15 +82,22 @@ TMPWorker::TMPWorker(TTree *tree, unsigned nWorkers, ULong64_t maxEntries)
             fTreeCache(0), fTreeCacheIsLearning(kFALSE),
             fUseTreeCache(kTRUE), fCacheSize(-1)
 {
-   Int_t uc = gEnv->GetValue("MultiProc.UseTreeCache", 0);
-   if (uc != 1) fUseTreeCache = kFALSE;
-   fCacheSize = gEnv->GetValue("MultiProc.CacheSize", -1);
+   Setup();
 }
 
 TMPWorker::~TMPWorker()
 {
    // Properly close the open file, if any
    CloseFile();
+}
+
+//////////////////////////////////////////////////////////////////////////
+/// Auxilliary method for common initializations
+void TMPWorker::Setup()
+{
+  Int_t uc = gEnv->GetValue("MultiProc.UseTreeCache", 0);
+  if (uc != 1) fUseTreeCache = kFALSE;
+  fCacheSize = gEnv->GetValue("MultiProc.CacheSize", -1);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -110,6 +113,7 @@ void TMPWorker::Init(int fd, unsigned workerN)
    fS.reset(new TSocket(fd, "MPsock")); //TSocket's constructor with this signature seems much faster than TSocket(int fd)
    fPid = getpid();
    fNWorker = workerN;
+   fId = "W" + std::to_string(GetNWorker()) + "|P" + std::to_string(GetPid());
 }
 
 
@@ -142,7 +146,7 @@ void TMPWorker::HandleInput(MPCodeBufPair &msg)
 {
    unsigned code = msg.first;
 
-   std::string reply = "S" + std::to_string(fNWorker);
+   std::string reply = fId;
    if (code == MPCode::kMessage) {
       //general message, ignore it
       reply += ": ok";
@@ -183,10 +187,10 @@ TFile *TMPWorker::OpenFile(const std::string& fileName)
 
    TFile *fp = TFile::Open(fileName.c_str());
    if (fp == nullptr || fp->IsZombie()) {
-      std::string reply = "S" + std::to_string(GetNWorker());
-      reply.append(": could not open file ");
-      reply.append(fileName);
-      MPSend(GetSocket(), PoolCode::kProcError, reply.data());
+      std::stringstream ss;
+      ss << "could not open file " << fileName;
+      std::string errmsg = ss.str();
+      SendError(errmsg, PoolCode::kProcError);
       return nullptr;
    }
 
@@ -216,11 +220,10 @@ TTree *TMPWorker::RetrieveTree(TFile *fp)
       tree = static_cast<TTree*>(fp->Get(fTreeName.c_str()));
    }
    if (tree == nullptr) {
-      std::string reply = "S" + std::to_string(GetNWorker());
       std::stringstream ss;
-      ss << ": cannot find tree with name " << fTreeName << " in file " << fp->GetName();
-      reply.append(ss.str());
-      MPSend(GetSocket(), PoolCode::kProcError, reply.data());
+      ss << "cannot find tree with name " << fTreeName << " in file " << fp->GetName();
+      std::string errmsg = ss.str();
+      SendError(errmsg, PoolCode::kProcError);
       return nullptr;
    }
 
@@ -256,4 +259,14 @@ void TMPWorker::SetupTreeCache(TTree *tree)
       // Disable the cache
       tree->SetCacheSize(0);
    }
+}
+
+
+//////////////////////////////////////////////////////////////////////////
+/// Error sender
+
+void TMPWorker::SendError(const std::string& errmsg, unsigned int errcode)
+{
+   std::string reply = fId + ": " + errmsg;
+   MPSend(GetSocket(), errcode, reply.data());
 }

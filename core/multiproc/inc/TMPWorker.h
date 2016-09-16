@@ -47,6 +47,7 @@ public:
    unsigned GetNWorker() const { return fNWorker; }
 
 protected:
+   std::string fId; ///< identifier string in the form W<nwrk>|P<proc id>
    std::vector<std::string> fFileNames; ///< the files to be processed by all workers
    std::string fTreeName; ///< the name of the tree to be processed
    TTree *fTree; ///< pointer to the tree to be processed. It is only used if the tree is directly passed to TProcPool::Process as argument
@@ -58,6 +59,8 @@ protected:
    void   CloseFile();
    TFile *OpenFile(const std::string& fileName);
    TTree *RetrieveTree(TFile *fp);
+   void   SendError(const std::string& errmsg, unsigned int code = MPCode::kError);
+   void   Setup();
    void   SetupTreeCache(TTree *tree);
 
 private:
@@ -66,6 +69,7 @@ private:
    std::unique_ptr<TSocket> fS; ///< This worker's socket. The unique_ptr makes sure resources are released.
    pid_t fPid; ///< the PID of the process in which this worker is running
    unsigned fNWorker; ///< the ordinal number of this worker (0 to nWorkers-1)
+
 
    // TTree cache handling
    TTreeCache *fTreeCache;    // instance of the tree cache for the tree
