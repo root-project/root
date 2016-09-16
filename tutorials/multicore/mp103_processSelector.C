@@ -1,3 +1,14 @@
+/// \file
+/// \ingroup tutorial_multicore
+/// \notebook -nodraw
+/// Illustrate the usage of the multiproc TSelector interfaces with the h1 analysis
+/// example.
+///
+/// \macro_code
+///
+/// \author Anda Chelba
+/// \author Gerardo Ganis
+
 #include "TString.h"
 #include "TROOT.h"
 #include "TTree.h"
