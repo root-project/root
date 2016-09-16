@@ -3,6 +3,7 @@
 #include "TF3.h"
 #include "TFormula.h"
 #include "TGraph.h"
+#include "TMath.h"
 #include "Math/ChebyshevPol.h"
 
 #include <limits>
@@ -425,7 +426,8 @@ bool test25() {
    TF1 t1("t1","(x<190)?(-18.7813+(((2.49368+(10.3321/(x^0.881126)))*exp(-((x^-1.66603)/0.074916)))-(-17.5757*exp(-((x^-1464.26)/-7.94004e+06))))):(1.09984+(0.394544*exp(-(x/562.407))))");
    double x = 2;
    double y =(x<190)?(-18.7813+(((2.49368+(10.3321/(std::pow(x,0.881126))))*exp(-((std::pow(x,-1.66603))/0.074916)))-(-17.5757*exp(-((std::pow(x,-1464.26))/-7.94004e+06))))):(1.09984+(0.394544*exp(-(x/562.407))));
-   ret = (t1.Eval(2) == y );
+   // this fails on 32 bits - put a tolerance
+   ret = TMath::AreEqualAbs(t1.Eval(2) , y , 1.E-8);
    if (!ret)  std::cout << "Error in test25 - t1 != y " << t1.Eval(2.) << "  " <<  y << std::endl;
    ok &= ret; 
 
