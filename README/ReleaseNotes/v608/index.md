@@ -112,7 +112,8 @@ Add a new mode for `TClass::SetCanSplit` (2) which indicates that this class and
 * Add tutorial showing how to fill randomly histograms using the `TProcPool` class.
 * Add tutorial showing how to fill randomly histograms from multiple threads.
 * Add the ROOT::TSPinMutex class, a spin mutex compliant with C++11 requirements.
-*
+* Add a new Implicit Multi-Threading (IMT) use case, incarnated in method TTreeProcessor::Process. TTProcessor::Process allows to process the entries of a TTree in parallel. The user provides a function that receives one parameter, a TTreeReader, that can be used to iterate over a subrange of entries. Each subrange corresponds to a cluster in the TTree and is processed by a task, which can potentially be run in parallel with other tasks.
+* Add a new implementation of a RW lock, ROOT::TRWSpinLock, which is based on a ROOT::TSPinMutex. TRWSpinLock tries to make faster the scenario when readers come and go but there is no writer, while still preventing starvation of writers.
 
 ## I/O Libraries
 
