@@ -1253,11 +1253,20 @@ endif()
 
 
 #---Check for CUDA and BLAS ---------------------------------------------------------
-if(tmva)
+if(tmva AND cuda)
   message(STATUS "Looking for CUDA for optional parts of TMVA")
   find_package(CUDA QUIET)
   message(STATUS "Looking for BLAS for optional parts of TMVA")
   find_package(BLAS QUIET)
+  if(NOT CUDA_FOUND)
+    if(fail-on-missing)
+      message(FATAL_ERROR "CUDA not found. Ensure that the installation of CUDA is in the CMAKE_PREFIX_PATH")
+    else()
+      message(STATUS "CUDA not found. Ensure that the installation of CUDA is in the CMAKE_PREFIX_PATH")
+      message(STATUS "                For the time being switching OFF 'cuda' option")
+      set(cuda OFF CACHE BOOL "" FORCE)
+    endif()
+  endif()
 endif()
 
 #---Report non implemented options---------------------------------------------------

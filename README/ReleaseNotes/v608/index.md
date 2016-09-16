@@ -400,5 +400,6 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 - Added new 'builtin-gl2ps' option (provided by Mattias Ellert)
 - Added new 'macos_native' option (only for MacOS) to disable looking for binaries, libraires and headers for dependent 
   packages at locations other than native MacOS installations. Needed when wanting to ignore packages from Fink, Brew or Ports. 
+- Added new 'cuda' option to enable looking for CUDA in the system.
 
 
