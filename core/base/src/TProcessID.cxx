@@ -68,8 +68,17 @@ static inline ULong_t Void_Hash(const void *ptr)
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
 
-TProcessID::TProcessID() : fLock(ATOMIC_FLAG_INIT)
+TProcessID::TProcessID()
 {
+   // MSVC doesn't support fSpinLock=ATOMIC_FLAG_INIT; in the class definition
+   // and Apple LLVM version 7.3.0 (clang-703.0.31) warns about:
+   // fLock(ATOMIC_FLAG_INIT)
+   // ^~~~~~~~~~~~~~~~
+   //    c++/v1/atomic:1779:26: note: expanded from macro 'ATOMIC_FLAG_INIT'
+   //  #define ATOMIC_FLAG_INIT {false}
+   // So reset the flag instead.
+   std::atomic_flag_clear( &fLock );
+
    fCount = 0;
    fObjects = 0;
 }
