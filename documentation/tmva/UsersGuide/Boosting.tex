@@ -1,0 +1,146 @@
+\subsection{Boosted classifiers}\index{Boosted}
+\label{sec:boosted}
+
+Since generalised boosting is not yet available for regression in TMVA, we 
+restrict the following discussion to classification applications.
+A boosted\index{Boosting} classifier is a combination of a
+collection of classifiers of the same type trained on the same sample
+but with different events weights.\footnote{The Boost method is at the
+  moment only applicable to classification problems.} The response of
+the final classifier is a weighted response of each individual
+classifier in the collection. The boosted classifier is potentially
+more powerful and more stable with respect to statistical fluctuations
+in the training sample.  The latter is particularly the case for
+bagging as ``boost'' algorithm (\cf Sec.~\ref{sec:bagging}, page~\pageref{sec:bagging}).
+
+The following sections do not apply to decision trees. We refer to
+Sec.~\ref{sec:bdt} (page~\pageref{sec:bdt}) for a description of boosted 
+decision trees. In the current version of TMVA only the AdaBoost and Bagging 
+algorithms are implemented for the boost of arbitrary classifiers.  The boost
+algorithms are described in detail in Sec.~\ref{sec:boost} on page
+\pageref{sec:boost}.
+
+\subsubsection{Booking options}
+
+To book a boosted classifier, one needs to add the booster options to
+the regular classifier's option string. The minimal option required is
+the number of boost iterations \code{Boost_Num}, which must be
+set to a value larger than zero.  Once the Factory detects a
+\code{Boost_Num>0} in the option string it books a boosted classifier
+and passes all boost options (recognised by the prefix \code{Boost_}) to
+the Boost method and the other options to the boosted classifier.
+%The alternative and more explicit booking method is to book a
+%MethodBoost first, and then to book the specific classifier to it:
+\begin{codeexample}
+\begin{tmvacode}
+factory->BookMethod( TMVA::Types::kLikelihood, "BoostedLikelihood",
+       "Boost_Num=10:Boost_Type=Bagging:Spline=2:NSmooth=5:NAvEvtPerBin=50" );
+\end{tmvacode}
+\caption[.]{\codeexampleCaptionSize Booking of the boosted classifier: 
+         the first argument is the predefined enumerator, the 
+         second argument is a user-defined string identifier, and the third 
+         argument is the configuration options string. All options with the 
+         prefix \code{Boost_} (in this example the first two options) are 
+         passed on to the boost method, the other options are provided to the 
+         regular classifier (which in this case is Likelihood). Individual 
+         options are separated by a ':'. See Sec.~\ref{sec:usingtmva:booking} 
+         for more information on the booking. 
+}
+\end{codeexample}
+
+The boost configuration options are given in Option 
+Table~\ref{opt:mva::boost}.
+
+\begin{option}[!t]
+\input optiontables/MVA__Boost.tex
+\caption[.]{\optionCaptionSize Boosting configuration options. These
+  options can be simply added to a simple classifier's option string
+  or used to form the option string of an explicitly booked boosted
+  classifier.}
+\label{opt:mva::boost}
+\end{option}
+
+The options most relevant for the boost process are the number of boost
+iterations, \code{Boost_Num}, and the choice of the boost algorithm,
+\code{Boost_Type}.  In case of \code{Boost_Type=AdaBoost}, the option
+\code{Boost_Num} describes the maximum number of boosts. The algorithm
+is iterated until an error rate of 0.5 is reached or until
+\code{Boost_Num} iterations occurred. If the algorithm terminates after
+to few iterations, the number might be extended by decreasing the
+$\beta$ variable (option \code{Boost_AdaBoostBeta}).  Within the
+AdaBoost algorithm a decision must be made how to classify an event, a
+task usually done by the user. For some classifiers it is straightforward to
+set a cut on the MVA response to define signal-like events. For the others, 
+the MVA cut is chosen that the error rate is minimised. The option \code{Boost_RecalculateMVACut} 
+determines whether this cut should be recomputed for every boosting iteration.
+In case of Bagging as boosting algorithm the number of boosting
+iterations always reaches \code{Boost_Num}.
+
+By default boosted classifiers are combined as a weighted average with 
+weights computed from the misclassification error (option
+\code{Boost_MethodWeightType=ByError}). It is also possible to use
+the arithmetic average instead (\code{Boost_MethodWeightType=Average}).
+
+\subsubsection{Boostable classifiers}
+
+The boosting process was originally introduced for  simple classifiers.  
+The most commonly boosted classifier is the decision tree (DT -- \cf Sec.~\ref{sec:bdt}, 
+page~\pageref{sec:bdt}). Decision trees need to be boosted a few hundred
+times to effectively stabilise the BDT response and achieve optimal 
+performance. 
+
+Another simple classifier in the TMVA package is the Fisher
+discriminant~(\cf Sec.~\ref{sec:fisher}, page~\pageref{sec:fisher} -- which is equivalent
+to the linear discriminant described in Sec.~\ref{sec:ld}). Because the output 
+of a Fisher discriminant represents a linear combination of the input variables, 
+a linear combination of different Fisher discriminants is again a Fisher 
+discriminant. Hence linear boosting cannot improve the performance. It is
+nevertheless possible to effectively boost a linear discriminant by applying
+the linear combination not on the discriminant's output, but on the actual
+classification results provided.\footnote
+{
+   Note that in the TMVA standard example, which uses linearly correlated, 
+   Gaussian-distributed input variables for signal and background, a
+   single Fisher discriminant already provides the theoretically maximum 
+   separation power. Hence on this example, no further gain can be
+   expected by boosting, no matter what ``tricks'' are applied.
+} 
+This corresponds to a ``non-linear'' transformation of the
+Fisher discriminant output according to a step function. The Boost 
+method in TMVA also features a fully non-linear transformation that is 
+directly applied to the classifier response value. Overall, the following
+transformations are available:
+\begin{itemize}
+\item{\em linear:} no transformation is applied to the MVA output,
+\item{\em step:}   the output is $-1$ below the step
+                   and $+1$ above (default setting),
+\item{\em log:}    logarithmic transformation of the output.
+\end{itemize}
+
+The macro \code{Boost.C} (residing in the \code{macros} (\code{test}) directory 
+for the sourceforge (ROOT) version of TMVA) provides examples for the use of 
+these transformations to boost a Fisher discriminant. We point out that the 
+performance of a boosted classifier strongly depends on its characteristics
+as well as on the nature of the input data. A careful adjustment of options is required
+if AdaBoost is applied to an arbitrary classifier, since otherwise it might even 
+lead to a worse performance than for the unboosted method.
+
+\subsubsection{Monitoring tools}
+
+The current GUI provides figures to monitor the boosting process. Plotted are 
+the boost weights, the classifier weights in the boost ensemble, the classifier 
+error rates, and the classifier error rates using unboosted event weights.
+In addition, when the option \code{Boost_MonitorMethod=T} is set,
+monitoring histograms are created for each classifier in the boost ensemble. 
+The histograms generated during the boosting process provide useful insight 
+into the behaviour of the boosted classifiers and help to adjust to the optimal 
+number of boost iterations. These histograms are saved in a separate folder
+in the output file, within the folder of {\tt MethodBoost/<Title>/}.
+Besides the specific classifier monitoring histograms, this
+folder also contains the MVA response of the classifier for the training
+and testing samples.
+
+\subsubsection{Variable ranking}
+
+The present boosted classifier implementation does not provide a ranking of 
+the input variables.

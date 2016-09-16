@@ -1,0 +1,763 @@
+\section{Probability Density Functions -- the {\em PDF} Class}
+\label{sec:PDF}
+
+Several methods and functionalities in TMVA require the estimation of probability densities
+(PDE)\index{PDE} of one or more correlated variables. One may distinguish three conceptually different 
+approaches to PDEs: $(i)$ parametric approximation, where the training data are fitted with 
+a user-defined parametric function, $(ii)$ nonparametric approximation, where the data 
+are fitted piecewise using simple standard functions, such as a polynomial or a Gaussian, and
+$(iii)$ nearest-neighbour estimation, where the average of the training data in the 
+vicinity of a test event determines the PDF\index{PDF}\index{Probability Density Function}. 
+
+All multidimensional PDEs used in TMVA are based on nearest-neighbour estimation with 
+however quite varying implementations. They are described in Secs.~\ref{sec:pders}, 
+\ref{sec:pdefoam} and \ref{sec:knn}. 
+
+One-dimensional PDFs in TMVA are estimated by means 
+of nonparametric approximation, because parametric functions cannot be generalised to 
+a-priori unknown problems. The training data can be in form of binned histograms, or 
+unbinned data points (or ``quasi-unbinned'' data, \ie, histograms with very narrow 
+bins). In the first case, the bin centres are interpolated with polynomial
+spline curves, while in the latter case one attributes a kernel function
+to each event such that the PDF is represented by the sum over all kernels. Beside a faithful
+representation of the training data, it is important that statistical fluctuations 
+are smoothed out as much as possible without destroying significant information. In 
+practise, where the true PDFs are unknown, a compromise determines which information
+is regarded significant and which is not. Likelihood methods crucially depend on a 
+good-quality PDF representation. Since the PDFs are strongly problem dependent, the 
+default configuration settings in TMVA will almost never be optimal. The user is 
+therefore advised to scrutinise the agreement between training data and PDFs via the 
+available plotting macros, and to optimise the settings. 
+
+In TMVA, all PDFs are derived from the \code{PDF} class, which is instantiated via the command
+(usually hidden in the MVA methods for normal TMVA usage):
+\begin{codeexample}
+\begin{tmvacode}
+   PDF* pdf = new PDF( "<options>", "Suffix", defaultPDF );
+   pdf->BuildPDF( SourceHistogram );
+   double p = pdf->GetVal( x );
+\end{tmvacode}
+\caption[.]{\codeexampleCaptionSize Creating and using a PDF class object.
+         The first argument is the configuration options string. Individual options are 
+         separated by a ':'. The second optional argument is the suffix appended to the 
+         options used in the option string. The suffix is added to the option names 
+         given in the Option Table~\ref{opt:pdf} in order to distinguish variables and types. 
+         The third (optional) object is a PDF from which default option settings are read. The 
+         histogram specified in the second line is a TH1* object from which the PDF is built.
+         The third line shows how to retrieve the PDF value at a given test value \code{'x'}.
+}
+\end{codeexample}
+Its configuration options are given in Option Table~\ref{opt:pdf}.
+\begin{option}[tp]
+\begin{optiontableLong2}
+PDFInterpol       & KDE, \hspace{1cm} Spline0, 
+                    \hspace{1cm}Spline1, \hspace{1cm}Spline2*, \hspace{1cm}Spline3, \hspace{1cm}Spline5 
+                                 & The method of interpolating the reference histograms: either by
+                                   using the unbinned kernel density estimator (KDE), or by various degrees
+                                   of spline functions (note that currently the KDE characteristics 
+                                   cannot be changed individually but apply to all variables that 
+                                   select KDE) \\
+NSmooth           & 0            & Number of smoothing iterations for the input histograms;
+                                   if set, \code{MinNSmooth} and \code{MaxNSmooth} are ignored\\
+MinNSmooth        & -1           & Minimum number of smoothing iteration for the input histograms;
+                                   for bins with least relative error (see text) \\
+MaxNSmooth        & -1           & Maximum number of smoothing iteration for the input histograms;
+                                   for bins with most relative error (see text) \\
+Nbins             & 0            & Number of bins used to build the reference histogram;
+                                   if set to value $>0$, \code{NAvEvtPerBin} is ignored\\
+NAvEvtPerBin      & 50           & Average number of events per bin in the reference histogram (see text) \\
+KDEtype           & Gauss*       & KDE kernel type (currently only Gauss) \\
+KDEiter           & Nonadaptive*, Adaptive
+                                 & Non-adaptive or adaptive number of iterations (see text) \\
+KDEFineFactor     & 1            & Fine-tuning factor for the adaptive KDE \\
+KDEborder         & None*, Renorm, Mirror
+                                 & Method for correcting histogram boundary/border effects \\
+CheckHist         & False        & Sanity comparison of derived high-binned interpolated PDF histogram 
+                                   versus the original PDF function
+\end{optiontableLong2}
+\caption[.]{\optionCaptionSize 
+     Configuration options for class: {\em PDF}. Values given are defaults. If predefined 
+     categories exist, the default category is marked by a '$\star$'. In case a suffix is defined 
+     for the PDF, it is added in the end of the option name. For example for PDF 
+     with suffix \code{MVAPdf} the number of smoothing iterations is given by the 
+     option \code{NSmoothMVAPdf}
+     (see Option Table~\ref{opt:mva::likelihood} on page~\pageref{opt:mva::likelihood} for a concrete
+     use of the PDF options in a MVA method).     
+}
+\label{opt:pdf}
+\end{option}
+
+\subsection{Nonparametric PDF fitting using spline functions
+                \index{Splines}
+                \index{PDF parameterisation!with splines}}
+
+Polynomial splines of various orders are fitted to one-dimensional (1D) binned histograms 
+according to the following procedure.
+
+\begin{enumerate}
+\item	The number of bins of the \code{TH1} object representing the distribution of the 
+      input variable is driven by the options \code{NAvEvtPerBin} or \code{Nbins} (\cf
+      Option Table~\ref{opt:pdf}). Setting \code{Nbins} enforces a fixed number 
+		of bins, while \code{NAvEvtPerBin} defines an average number of entries required 
+ 		per bin. The upper and lower bounds of the histogram coincide with the limits found 
+      in the data (or they are $[-1,1]$ if the input variables are normalised).
+
+\item	The histogram is smoothed\index{Histogram smoothing} adaptively between \code{MinNSmooth} 
+      and \code{MaxNSmooth} times, using \code{TH1::Smooth(.)} -- an implementation of 
+      the 353QH-twice algorithm~\cite{353qh}. The appropriate number of smoothing 
+      iterations is derived with the aim to preserve statistically significant structures,
+      while smoothing out fluctuations. Bins with the largest (smallest) relative statistical 
+      error are maximally (minimally) smoothed. All other bins are smoothed between \code{MaxNSmooth} 
+      and \code{MinNSmooth} times according to a linear function of their relative 
+      errors. During the smoothing process a histogram with the suffix \code{NSmooth} is 
+      created for each variable, where the number of smoothing iterations applied to each 
+      bin is stored.
+
+\item	The smoothed \code{TH1} object is internally cloned and the requested polynomial splines
+      are used to interpolate adjacent bins. All spline classes are derived from ROOT's 
+      \code{TSpline} class. Available are: polynomials of degree 0 (the original smoothed 
+      histogram is kept), which is used for discrete variables; degree 1 (linear), 
+      2 (quadratic), 3 (cubic) and degree 5. Splines\index{Splines} of degree two or more 
+      render the PDF continuous and differentiable in all points excluding the interval 
+      borders. In case of a likelihood analysis, this ensures the same property for the 
+		likelihood ratio~(\ref{eq:RLik}). Since cubic (and higher) splines equalise
+		the first and second derivatives at the spline transitions, the 
+		resulting curves, although mathematically smooth, can wiggle in
+		quite unexpected ways. Furthermore, there is no local control of 
+		the spline: moving one control point (bin) causes the entire curve 
+		to change, not just the part near the control point. To ensure 
+		a safe interpolation, quadratic splines are used by default.
+		
+\item To speed up the numerical access to the probability densities,
+		the spline functions are stored into a finely binned ($10^4$ bins)
+		histogram, where adjacent bins are interpolated by a linear
+		function. Only after this step, the PDF is normalised according
+		to Eq.~(\ref{eq:pdfNorm}).
+
+\end{enumerate}
+
+\subsection{Nonparametric PDF parameterisation using kernel density estimators
+                \index{Kernel density estimators (KDE)}
+                \index{PDF parameterisation!with kernel density estimators}}
+
+Another type of nonparametric approximation of a 1D PDF are kernel density
+estimators (KDE). As opposed to splines, KDEs are obtained from unbinned data. The idea 
+of the approach is to estimate the shape of a PDF by the sum over {\em smeared} 
+training events. One then finds for a PDF $p(x)$ of a variable $x$~\cite{scott}
+%
+\beq
+\label{eq:PDF:KDEf0}
+   p(x)=\frac{1}{N\, h} \sum_{i=1}^{N}K\!\left( \frac{x-x_i}{h} \right)
+       =\frac{1}{N} \sum_{i=1}^{N}K_h\!\left( x-x_i \right)\,,
+\eeq
+%
+where $N$ is the number of training events, $K_h(t)=K(t/h)/h$ is the kernel 
+function, and $h$ is the {\em bandwidth} of the kernel (also termed the {\em smoothing 
+parameter}). Currently, only a Gaussian form of $K$ is implemented in TMVA, where the 
+exact form of the kernel function is of minor relevance for the quality of the shape 
+estimation. More important is the choice of the bandwidth. 
+
+The KDE smoothing can be applied in either non-adaptive (NA) or adaptive form (A), 
+the choice of which is controlled by the option \code{KDEiter}. In the 
+non-adaptive case the bandwidth $h_{\rm NA}$ is kept constant for the entire training sample. 
+As optimal bandwidth can be taken the one that minimises the {\em asymptotic mean integrated 
+square error} (AMISE). For the case of a Gaussian kernel function this leads to~\cite{scott}
+%
+\beq
+   h_{\rm NA}=\left(\frac{4}{3}\right)^{\!\!\!1/5} \!\!\!\sigma_x N^{-1/5}\,,
+\eeq
+%
+where $\sigma_x$ is the RMS of the variable $x$.
+
+The so-called {\em sample point adaptive} method uses as input the result of the non-adaptive 
+KDE, but also takes into account the local event density. The adaptive bandwidth $h_{\rm A}$
+then becomes a function of~$p(x)$~\cite{scott}
+%
+\beq
+\label{eq:PDF:KDEhx}
+   h_{\rm A}(x) = \frac{h_{\rm NA}}{\sqrt{p(x)}}\,.
+\eeq
+%
+The adaptive approach improves the shape estimation in regions with low event density. However, in regions with high event density it can give rise to ``over-smoothing'' of fine 
+structures such as narrow peaks. The degree of smoothing can be tuned by multiplying the 
+bandwidth~$h_{\rm A}(x)$ with the user-specified factor \code{KDEFineFactor}. 
+
+For practical reasons, the KDE implementation in TMVA differs somewhat from the procedure 
+described above. Instead of unbinned training data a finely-binned histogram is used as 
+input, which allows to significantly speed up the algorithm. The calculation of the optimal
+bandwidth~$h_{\rm NA}$ is performed in the dedicated class \code{KDEKernel}. If the algorithm 
+is run in the adaptive mode, the non-adaptive step is also performed because its output feeds
+the computation of $h_{\rm A}(x)$ for the adaptive part. Subsequently, a smoothed high-binned 
+histogram estimating the PDF shape is created by looping over the bins of the input histogram 
+and summing up the corresponding kernel functions, using $h_{\rm NA}$ ($h_{\rm A}(x)$) in 
+case of the non-adaptive (adaptive) mode. This output histogram is returned to the \code{PDF}
+class.
+
+Both the non-adaptive and the adaptive methods can suffer from the so-called {\em boundary 
+problem} at the histogram boundaries. It occurs for instance if the original distribution is non-zero below a physical 
+boundary value and zero above. This property cannot be reproduced by the KDE procedure. 
+In general, the stronger the discontinuity the more acute is the boundary problem. TMVA 
+provides three options under the term \code{KDEborder} that allow to treat boundary 
+problems. 
+\begin{itemize}
+
+\item \code{KDEborder=None} \\
+      No boundary treatment is performed. The consequence is that 
+      close to the boundary the KDE result will be inaccurate: below the boundary it will 
+      underestimate the PDF while it will not drop to zero above. In TMVA the PDF resulting from 
+      KDE is a (finely-binned) histogram, with bounds equal to the minimum and the maximum 
+      values of the input distribution. Hence, the boundary value will be at the edge of the PDF 
+      (histogram), and a drop of the PDF due to the proximity of the boundary can be observed
+      (while the artificial enhancement beyond the boundary will fall outside of the histogram). 
+      In other words, for training events that are close to the boundary some fraction of the 
+      probability ``flows'' outside the histogram ({\em probability leakage}). As a consequence, 
+      the integral of the kernel function inside the histogram borders is smaller than one.
+
+\item \code{KDEborder=Renorm} \\
+      The probability leakage is compensated by renormalising the 
+      kernel function such that the integral inside the histogram borders is equal to one.
+
+\item \code{KDEborder=Mirror} \\
+      The original distribution is ``mirrored'' around the boundary. The same procedure is 
+      applied to the mirrored events and each 
+      of them is smeared by a kernel function and its contribution {\em inside the histogram's (PDF) 
+      boundaries} is added to the PDF. The mirror copy compensates the probability 
+      leakage completely.
+
+\end{itemize}
+
+\section{Optimisation and Fitting}\index{Fitting}
+\label{sec:fitting}
+
+Several MVA methods (notably cut optimisation and FDA) require general purpose
+parameter fitting to optimise the value of an estimator. For example, an estimator 
+could be the sum of the deviations of classifier outputs from 1 for signal events 
+and 0 for background events, and the parameters are adjusted so that this sum is as
+small as possible. Since the various fitting problems call for dedicated solutions, 
+TMVA has a fitter base class, used by the MVA methods, from which all concrete fitters 
+inherit. The consequence of this is that the user can choose whatever fitter is
+deemed suitable and can configure it through the option string of the MVA method.
+At present, four fitters are implemented and described below: Monte Carlo sampling, 
+Minuit minimisation, a Genetic Algorithm, Simulated Annealing.
+They are selected via the configuration option of the corresponding MVA method for
+which the fitter is invoked (see Option Table~\ref{opt:fitter}). Combinations 
+of MC and GA with Minuit are available for the FDA method by setting the \code{Converger}
+option, as described in Option Table~\ref{opt:mva::fda}.
+\begin{option}[t]
+\begin{optiontableDescr}
+FitMethod         & MC, MINUIT, GA, SA      & Fitter method   \\
+Converger         & None*, MINUIT           & Converger which can be combined with MC or GA
+                                              (currently only used for FDA) to improve 
+                                              finding local minima
+\end{optiontableDescr}
+\caption[.]{\optionCaptionSize Configuration options for the choice of a fitter.
+         The abbreviations stand for Monte Carlo sampling, Minuit, Genetic 
+         Algorithm, Simulated Annealing. By setting a Converger (only Minuit is
+         currently available) combined use of Monte Carlo sampling and 
+         Minuit, and of Genetic Algorithm and Minuit is possible.
+         The \code{FitMethod} option can be used in any MVA method that requires fitting. 
+         The option \code{Converger} is currently only implemented in FDA.
+         The default fitter depends on the MVA method.
+         The fitters and their specific options are described below.}
+\label{opt:fitter}
+\end{option}
+
+\subsection{Monte Carlo sampling\index{Monte Carlo sampling}}
+\label{sec:MCsampling}
+
+The simplest and most straightforward, albeit inefficient fitting method is to randomly 
+sample the fit parameters and to choose the set of parameters that optimises the estimator. 
+The priors
+used for the sampling are uniform or Gaussian within the parameter limits. The specific 
+configuration options for the MC sampling are given in Option Table~\ref{opt:fitter_mc}. 
+
+For fitting problems
+with few local minima out of which one is a global minimum the performance can be enhanced
+by setting the parameter \code{Sigma} to a positive value. The newly generated parameters
+are then not any more independent of the parameters of the previous samples. The random 
+generator will throw random values according to a Gaussian probability density 
+with the mean given by the currently known best value for that particular parameter and 
+the width in units of the interval size given by the option \code{Sigma}.
+Points which are created out of the parameter's interval are mapped back 
+into the interval.
+% ======= input option table ==========================================
+\begin{option}[t]
+\input optiontables/Fitter_MC.tex
+\caption[.]{\optionCaptionSize 
+     Configuration options reference for fitting method: {\em Monte Carlo sampling (MC)}.
+}
+\label{opt:fitter_mc}
+\end{option}
+% =====================================================================
+
+\subsection{Minuit minimisation}\index{Minuit!fitter}\index{Minuit!minimisation}
+\label{sec:minuit}
+
+Minuit is the standard multivariate minimisation package used in HEP~\cite{Minuit}.
+Its purpose is to find the minimum of a multi-parameter estimator function 
+and to analyse the shape of the function around the minimum (error analysis). The 
+principal application of the TMVA fitters is simple minimisation, while the shape
+of the minimum is irrelevant in most cases. The use of Minuit is therefore not 
+necessarily the most efficient solution, but because it is a very robust tool we 
+have included it here. Minuit searches the solution along the direction of the gradient 
+until a minimum or an boundary is reached (MIGRAD algorithm). It 
+does not attempt to find the global minimum but is satisfied with local minima.
+If during the error analysis with MINOS, the minimum smaller values than the local 
+minimum might be obtained. In particular, the use of MINOS may as a side effect of 
+an improved error analysis uncover a convergence in a local minimum, in which case 
+MIGRAD minimisation is invoked once again. If multiple local and/or global 
+solutions exist, it might be preferable to use any of the other fitters which are 
+specifically designed for this type of problem. 
+
+The configuration options for Minuit are given in Option Table~\ref{opt:fitter_minuit}.
+% ======= input option table ==========================================
+\begin{option}[t]
+\input optiontables/Fitter_Minuit.tex
+\caption[.]{\optionCaptionSize 
+     Configuration options reference for fitting method: {\em Minuit}. More information 
+     on the Minuit parameters can be found here: \url{http://root.cern.ch/root/html/TMinuit.html}.
+}
+\label{opt:fitter_minuit}
+\end{option}
+% =====================================================================
+
+\subsection{Genetic Algorithm}\index{Genetic Algorithm}
+\label{sec:geneticAlgorithm}
+
+A Genetic Algorithm is a technique to find approximate solutions to optimisation or 
+search problems. The problem is modelled by a group 
+({\em population}) of abstract representations ({\em genomes}) of possible solutions 
+({\em individuals}). By applying means similar to processes found in biological 
+evolution the individuals of the population should evolve towards an optimal 
+solution of the problem. Processes which are usually modelled in evolutionary 
+algorithms --- of which Genetic Algorithms are a subtype --- are inheritance, mutation 
+and ``sexual recombination'' (also termed {\em crossover}). 
+
+Apart from the abstract representation of the solution domain, a {\em fitness}\index{Fitness} 
+function must be defined. Its purpose is the evaluation of the goodness of an 
+individual. The fitness function is problem dependent. It either returns a value 
+representing the individual's goodness or it compares two individuals and indicates 
+which of them performs better. 
+
+The Genetic Algorithm proceeds as follows:
+\begin{itemize}
+
+\item {\em Initialisation}: A starting population is created. Its size depends 
+      on the problem to be solved. Each individual belonging to the population is 
+      created by randomly setting the parameters of the abstract 
+      representation (variables), thus producing a point in the 
+      solution domain of the initial problem.
+
+\item {\em Evaluation}: Each individual is evaluated using the fitness function. 
+
+\item {\em Selection}: Individuals are kept or discarded as a function of their 
+      fitness. Several selection procedures are possible. The simplest one is to 
+      separate out the worst performing fraction of the population. Another possibility 
+      is to decide on the individual's survival by assigning probabilities that 
+      depend on the individual's performance compared to the others. 
+
+\item {\em Reproduction}: The surviving individuals are copied, mutated and 
+      crossed-over until the initial population size is reached again. 
+
+\item {\em Termination}: The evaluation, selection and reproduction steps are 
+      repeated until a maximum number of cycles is reached or an individual 
+      satisfies a maximum-fitness criterion. The best individual is selected 
+      and taken as solution to the problem. 
+
+\end{itemize}
+% ======= input option table ==========================================
+\begin{option}[t]
+\input optiontables/Fitter_GA.tex
+\caption[.]{\optionCaptionSize 
+     Configuration options reference for fitting method: {\em Genetic Algorithm (GA)}.
+}
+\label{opt:fitter_ga}
+\end{option}
+% =====================================================================
+The TMVA Genetic Algorithm provides controls that are set through configuration options 
+(\cf\  Table~\ref{opt:fitter_ga}). 
+The parameter \code{PopSize} determines the number of individuals 
+created at each generation of the Genetic Algorithm. At 
+the initialisation, all parameters of all individuals are chosen randomly.  
+The individuals are evaluated in terms of their fitness, and each individual 
+giving an improvement is immediately stored.
+
+Individuals with a good fitness are selected to engender the next generation. 
+The new individuals are created by crossover and mutated afterwards. Mutation 
+changes some values of some parameters of some individuals randomly following
+a Gaussian distribution function. The width of the Gaussian can be altered
+by the parameter \code{SC\_factor}. The current width is multiplied by this factor 
+when within the last \code{SC\_steps} generations more than \code{SC\_rate} 
+improvements have been obtained. If there were \code{SC\_rate} improvements 
+the width remains unchanged. Were there, on the other hand, less than 
+\code{SC\_rate} improvements, the width is divided by \code{SC\_factor}. 
+This allows to influence the speed of searching through the solution domain.
+
+The cycle of evaluating the fitness of the individuals of a generation and 
+producing a new generation is repeated until the improvement of the fitness 
+within the last \code{Steps} has been less than \code{ConvCrit}.
+The minimisation is then considered to have converged. The whole cycle 
+from initialisation over fitness evaluation, selection, reproduction and 
+determining the improvement is repeated \code{Cycles} times, before the Genetic 
+Algorithm has finished.
+
+\subsubsection*{Guidelines for optimising the GA}
+
+\code{PopSize} is the most important value for enhancing the quality of the results.
+This value is by default set to 300, but can be increased to 1000 or more only limited
+by the resources available. The calculation time of the GA should increase with O(\code{PopSize}).
+
+\code{Steps} is set by default to 40. This value can be increased moderately to about 60. 
+Time consumption increases non linearly but at least with O(\code{Steps}). 
+
+\code{Cycles} is set by default to 3. In this case, the GA is called three times independently
+from each other. With \code{SaveBestCycle} and \code{SaveBestGen} it is possible to set
+the number of best results which shall be stored each cycle of even each generation. 
+These stored results are reused in the last cycle. That way the last cycle is not
+independent from the others, but incorporates their best results. The number of 
+cycles can be increased moderately to about 10. The time consumption of GA rises
+with about O(\code{Cycles}).
+
+\subsection{Simulated Annealing} \index{Simulated Annealing}
+\label{sec:simAnnealing}
+
+Simulated Annealing also aims at solving a minimisation problem with several 
+discrete or continuous, local or global minima. The algorithm is inspired by 
+the process of of annealing which occur in condensed matter physics. When 
+first heating and then slowly cooling down a metal (``annealing'') its atoms move 
+towards a state of lowest energy, while for sudden cooling the atoms tend to freeze in 
+intermediate states higher energy. For infinitesimal annealing activity the system will 
+always converge in its global energy minimum (see, \eg, Ref.~\cite{VanLaarhovenEA}).
+This physical principle can be converted into an algorithm to achieve slow, but 
+correct convergence of an optimisation problem with multiple solutions. Recovery 
+out of local minima is achieved by assigning the probability~\cite{MetropolisEA} 
+\beq
+       p(\Delta E) \propto \exp\left(-\frac{\Delta E}{T}\right)\,,
+\eeq
+to a perturbation of the parameters leading to a shift $\Delta E$ 
+in the energy of the system. The probability of such perturbations to occur 
+decreases with the size of a positive energy coefficient of the perturbation,
+and increases with the ambient temperature ($T$).
+
+\subsubsection*{Guidelines for optimising SA}
+
+The TMVA implementation of Simulated Annealing includes various different adaptive 
+adjustments of the perturbation and temperature gradients. The adjustment procedure 
+is chosen by setting \code{KernelTemp} to one of the following values.
+\begin{itemize}
+
+\item {\sf\bfseries\small Increasing Adaptive Approach } (\code{IncAdaptive}). 
+      The algorithm seeks local minima and explores their neighbourhood, while                
+      changing the ambient temperature depending on the number of failures            
+      in the previous steps. The performance can be improved by increasing            
+      the number of iteration steps (\code{MaxCalls}), or by adjusting the               
+      minimal temperature (\code{MinTemp}). Manual adjustments of the             
+      speed of the temperature increase (\code{TempScale} and \code{AdaptiveSpeed})  
+      for individual data sets might also improve the performance. 
+
+      %Summary: increase \code{MaxCalls}; adjust \code{MinTemp}; adjust \code{TempScale}; adjust \code{AdaptiveSpeed}.
+
+\item {\sf\bfseries\small Decreasing Adaptive Approach} (\code{DecAdaptive}). 
+      The algorithm calculates the initial temperature (based on the effectiveness 
+      of large steps) and defines a multiplier to ensure that the minimal temperature is reached  
+      in the requested number of iteration steps. The performance can be improved 
+      by adjusting the minimal temperature (\code{MinTemp}) and by increasing 
+      number of steps (\code{MaxCalls}).
+
+\item {\sf\bfseries\small Other Kernels.} 
+     Several other procedures to calculate the temperature change are also implemented.
+     Each of them starts with the maximum temperature (\code{MaxTemp})
+     and decreases while changing the temperature according to : 
+     \beqns
+     {\rm Temperature}^{(k)} = \left\{
+     \begin{array}{ll}
+       {\tt Sqrt}: & \frac{{\tt InitialTemp}}{\sqrt{k+2}} \cdot {\tt TempScale} \\[0.25cm]
+       {\tt Log}:  & \frac{{\tt InitialTemp}}{\ln(k+2)} \cdot {\tt TempScale} \\[0.25cm]
+       {\tt Homo}: & \frac{{\tt InitialTemp}}{k+2} \cdot {\tt TempScale} \\[0.25cm]
+       {\tt Sin}:  & \frac{\sin(k/{\tt TempScale}) + 1}{k+1} 
+                      \cdot {\tt InitialTemp + \e} \\[0.25cm]
+       {\tt Geo}:  & {\tt CurrentTemp} \cdot {\tt TempScale }
+      \end{array}
+      \right.
+      \eeqns
+      Their performances can be improved by adjusting the initial
+      temperature \code{InitialTemp}\\ (= ${\rm
+        Temperature}^{(k=0)}$), the number of iteration steps
+      (\code{MaxCalls}), and the multiplier that scales the
+      temperature decrease (\code{TempScale}).
+     % increase \code{MaxCalls}; adjust   \code{InitialTemp}; adjust   \code{TempScale}; 
+     % adjust   \code{KernelTemp}.
+
+\end{itemize}
+The configuration options for the Simulated Annealing fitter are given in 
+Option Table~\ref{opt:fitter_sa}.
+
+% ======= input option table ==========================================
+\begin{option}[t]
+\input optiontables/Fitter_SA.tex
+\caption[.]{\optionCaptionSize 
+     Configuration options reference for fitting method: {\em Simulated Annealing (SA)}.
+}
+\label{opt:fitter_sa}
+\end{option}
+% =====================================================================
+
+\subsection{Combined fitters}
+           \index{Monte Carlo sampling!combination with Minuit}
+           \index{Genetic Algorithm!combination with Minuit}
+           \index{Minuit!combination with MC or GA}
+\label{sec:converger}
+
+For MVA methods such as FDA, where parameters of a discrimination function
+are adjusted to achieve optimal classification performance (\cf\  Sec.~\ref{sec:fda}), 
+the user can choose to 
+combine Minuit parameter fitting with Monte Carlo sampling or a Genetic Algorithm.
+While the strength of Minuit is the speedy detection of a nearby local minimum, 
+it might not find a better global minimum. If several local minima exist
+Minuit will find different solutions depending on the start values for the fit 
+parameters. When combining Minuit with Monte Carlo sampling or a Genetic Algorithm, 
+Minuit uses starting values generated by these methods. The subsequent fits then 
+converge in local minima. Such a combination is usually more efficient than the
+uncontrolled sampling used in Monte Carlo techniques. When combined with a Genetic
+Algorithm the user can benefit from the advantages of both methods: the 
+Genetic Algorithm to roughly locate the global minimum, and Minuit to find an
+accurate solution for it (for an example see the FDA method).
+
+The configuration options for the combined fit methods are the inclusive sum of all 
+the individual fitter options. It is recommended to use Minuit in  batch mode 
+(option \code{SetBatch}) and without MINOS (option \code{!UseMinos}) to prevent 
+TMVA from flooding the output with Minuit messages which cannot be turned off, and 
+to speed up the individual fits. It is however important to note that the combination of 
+MIGRAD and MINOS together is less susceptible to getting caught in local minima.
+
+
+\section{Boosting and Bagging}
+\label{sec:boost}
+
+Boosting\index{Boosting} is a way of enhancing the classification and regression
+performance (and increasing the stability with respect to statistical fluctuations
+in the training sample) of typically weak MVA methods by sequentially applying an
+MVA algorithm to reweighted ({\em boosted}) versions of the training data and then 
+taking a weighted majority vote of the sequence of MVA algorithms thus produced. 
+It has been introduced to classification techniques in the early '90s~\cite{Boosting} 
+and in many cases this simple strategy results in dramatic performance increases.
+
+Although one may argue that {\em bagging} (\cf\  Sec.~\ref{sec:bagging}) is not
+a genuine boosting algorithm, we include it in the same context and typically when 
+discussing boosting we also refer to bagging.  The most commonly boosted 
+methods are decision trees. However, as described in Sec.~\ref{sec:boosted} on
+page~\pageref{sec:boosted}, any MVA method may be boosted with TMVA. Hence, although
+the following discussion refers to decision trees, it also applies to other methods. 
+(Note however that ``Gradient Boost'' is only available for decision trees).
+
+\subsection{Adaptive Boost (AdaBoost)}\index{Boosting!Adaptive Boost}
+\label{sec:adaboost}
+
+The most popular boosting algorithm is the so-called {\em  AdaBoost} 
+(adaptive boost)\index{AdaBoost}\index{Adaptive boost}~\cite{AdaBoost}. 
+In a {\em classification problem}, events that were misclassified during the
+training of a decision tree are given a higher event weight in the training of
+the following tree.  Starting with the original event weights 
+when training the first decision tree, the subsequent tree is trained 
+using a modified event sample where the weights of previously
+misclassified events are multiplied by a common {\em boost weight}
+$\alpha$. The boost weight is derived from the misclassification rate,
+${\rm err}$, of the previous tree\footnote 
+{ 
+   By construction, the error rate is ${\rm err}\le0.5$ as the same 
+   training events used to classify the output nodes of the previous
+   tree are used for the calculation of the error rate.  
+}, 
+\beq
+\label{eq:boost}
+   \alpha = \frac{1-{\rm err}}{{\rm err}}\,.  
+\eeq 
+The weights of the entire event sample are then renormalised such that the 
+sum of weights remains constant.  
+ 
+We define the result of an individual classifier as $h({\bf x})$, 
+with (${\bf x}$ being the tuple of input variables) encoded for signal 
+and background as $h({\bf x}) = +1\ \mbox{and }-1$, respectively. 
+The boosted event classification $\yBoost(\bf{x})$ is then given by 
+\beq
+\label{eq:adaboost}
+  \yBoost({\bf x}) = \frac{1}{N_{\rm collection }} \cdot {\sum_{i}^{N_{\rm collection}}} 
+                     \ln(\alpha_i)\cdot h_i({\bf x})\:,
+\eeq
+where the sum is over all classifiers in the collection. Small (large)
+values for $\yBoost({\bf x})$ indicate a background-like (signal-like)
+event. Equation~(\ref{eq:adaboost}) represents the standard boosting algorithm.
+
+AdaBoost performs best on weak classifiers, meaning small indivdidual
+decision trees with a tree depth of often as small 2 or 3, that have very little
+discrimination power by themselves.  Given such small trees,
+they are much less prone to overtraining compared to simple decision
+trees and as an ensemble outperform them typically by far. The performance is
+often further enhanced by forcing a ``slow learing'' and allowing a larger number
+of boost steps instead. The learning rate of the AdaBoost algorithm is controled
+by a parameter $\beta$ giving as an exponent to the boost weight $\alpha \rightarrow \alpha^\beta$,
+which can be modified using the configuration option string of the MVA method to 
+be boosted (see Option Tables~\ref{opt:mva::bdt_1} and \ref{opt:mva::bdt_2} 
+on pages~\pageref{opt:mva::bdt_1} and \pageref{opt:mva::bdt_1} for 
+boosted decision trees, and Option Table~\ref{opt:mva::boost} for general
+classifier boosting~\ref{sec:boosted}).
+
+
+For {\em regression trees}, the AdaBoost algorithm needs to be modified. TMVA uses 
+here the so-called AdaBoost.R2 algorithm~\cite{AdaBoostR2}\index{AdaBoost.R2}. The 
+idea is similar to AdaBoost albeit with a redefined loss per event to account for
+the deviation of the estimated target value from the true one. Moreover, as there 
+are no longer correctly and wrongly classified events, all events need to be 
+reweighted depending on their individual {\em loss}, which -- for event $k$ --
+is given  by
+\beqn
+   Linear: & L(k) = \frac{|y(k) - {\hat y(k)}|}{\max\limits_{{\rm events}\ k^\prime} 
+                                  (|y(k^\prime) - {\hat y(k^\prime}|) }\:, \\
+   Square: & L(k) = \left[ \frac{|y(k) - {\hat y(k)}|}{\max\limits_{{\rm events}\ k^\prime} 
+                                  (|y(k^\prime) - {\hat y(k^\prime}|) } \right]^2\,, \\
+   Exponential : & L(k) = 1 - \exp \left[ -\, \frac{|y(k) - {\hat y(k)}|}{\max\limits_{{\rm events}\ k^\prime} 
+                                  (|y(k^\prime) - {\hat y(k^\prime}|) }\right]\,.
+\eeqn
+
+\newcommand{\Lave}{{\ensuremath \langle L\rangle}\xspace}
+The average loss of the classifier $y^{(i)}$ over the whole training sample,
+$\Lave^{(i)} = \sum_{{\rm events}\:\:k^\prime} w(k^\prime)L^{(i)}(k^\prime)$, can be 
+considered to be the analogon to the error fraction in classification. Given 
+$\Lave$, one computes the quantity $ \beta_{(i)} = \Lave^{(i)}/(1-\Lave^{(i)})$, which is used in
+the boosting of the events, and for the combination of the regression methods  
+belonging to the boosted collection. The boosting weight, $w^{(i+1)}(k)$, for event~$k$ 
+and boost step $i+1$ thus reads
+\beqn
+   w^{(i+1)}(k) = w^{(i)}(k) \cdot \beta_{(i)}^{1-L^{(i)}(k)}\:.
+\eeqn
+The sum of the event weights is again renormalised to reproduce the original 
+overall number of events. The final regressor, $\yBoost$, uses the weighted 
+median, $\tilde y_{(i)}$, where $(i)$ is chosen so that it is the minimal $(i)$ 
+that satisfies the inequality
+\beq
+\label{eq:adaboostr2}
+  \sum_{t\in {\rm sorted\ collection}\atop t\leq i}\!\!\!\! \ln\frac{1}{\beta_{(t)}}
+  \geq \: \frac{1}{2}\!\sum_{t}^{N_{\rm collection}}\!\!\!\!\ln\frac{1}{\beta_{(t)}}  
+\eeq
+
+\subsection{Gradient Boost}\index{Boosting!Gradient Boost}
+\label{sec:gradientboost}
+
+The idea of function estimation through boosting can be understood by
+considering a simple additive expansion approach. The function
+$F(\mathbf{x})$ under consideration is assumed to be a weighted sum of
+parametrised base functions $f(x;a_m)$, so-called ``weak
+learners''. From a technical point of view any TMVA classifier could
+act as a weak learner in this approach, but decision trees benefit most
+from boosting and are currently the only classifier that implements
+GradientBoost (a generalisation may be included in future releases).
+Thus each base function in this expansion corresponds to a
+decision tree
+\beq
+   F(\mathbf{x};P)=\sum_{m=0}^{M}\beta_mf(x;a_m); \hspace{0.5cm} 
+   P\in \{\beta_m;a_m\}_0^M\:.
+\eeq
+The boosting procedure is now employed to adjust the parameters $P$
+such that the deviation between the model response $F(\mathbf{x})$ and
+the true value $y$ obtained from the training sample is minimised. The
+deviation is measured by the so-called \textit{loss-function}
+$L(F,y)$, a popular choice being squared error loss
+$L(F,y)=(F(\mathbf{x})-y)^2$. It can be shown that the loss
+function fully determines the boosting procedure.
+
+The most popular boosting method, AdaBoost, is based on exponential
+loss, $L(F,y)=e^{-F(\mathbf{x})y}$, which leads to the well known
+reweighting algorithm described in
+Sec.~\ref{sec:adaboost}. Exponential loss has the shortcoming that it
+lacks robustness in presence of outliers or mislabelled data
+points. The performance of AdaBoost therefore is expected to degrade
+in noisy settings.
+
+The \textit{GradientBoost} algorithm attempts to cure this weakness by allowing 
+for other, potentially more robust, loss functions without giving up on the 
+good out-of-the-box performance of AdaBoost. The current TMVA implementation 
+of GradientBoost uses the binomial log-likelihood loss
+\beq
+   L(F,y)=\ln\left(1+e^{-2F(\mathbf{x})y}\right)\:,
+\eeq
+for classification. As the boosting algorithm corresponding to this
+loss function cannot be obtained in a straightforward manner, one has
+to resort to a steepest-descent approach to do the minimisation. This
+is done by calculating the current gradient of the loss function and
+then growing a regression tree whose leaf values are adjusted to match
+the mean value of the gradient in each region defined by the tree
+structure. Iterating this procedure yields the desired set of
+decision trees which minimises the loss function. Note that
+GradientBoost can be adapted to any loss
+function as long as the calculation of the gradient is feasible.
+
+Just like AdaBoost, GradientBoost works best on weak classifiers,
+meaning small indivdidual decision trees with a depth of often just 2
+to 4. Given such small trees, they are much less prone to overtraining
+compared to simple decision trees.  Its robustness can be enhanced by
+reducing the learning rate of the algorithm through the
+\code{Shrinkage} parameter (\cf\ Option Table~\ref{opt:mva::bdt_1} on
+page~\pageref{opt:mva::bdt_1}), which controls the weight of the
+individual trees. A small shrinkage (0.1--0.3) demands more trees to
+be grown but can significantly improve the accuracy of the prediction
+in difficult settings.
+
+In certain settings GradientBoost may also benefit
+from the introduction of a bagging-like resampling procedure using
+random subsamples of the training events for growing the trees. This
+is called \textit{stochastic gradient boosting} and can be enabled by
+selecting the \code{UseBaggedGrad} option. The sample fraction used
+in each iteration can be controlled through the parameter
+\code{BaggingSampleFraction}, where typically the best results are obtained
+for values between 0.5 and 0.8.
+
+For regression tasks, GradientBoost employs the Huber loss 
+function~\cite{Huber}\index{Huber loss function}, which features the robustness of 
+least-absolute-deviation loss for error distributions with broad tails, while maintaining 
+the high efficiency of least-squares loss for normally distributed errors. For 
+moderately broad tails, it should surpass both least-squares and least-absolute-deviation 
+loss.
+\beq
+   L(F,y)=\left\{\begin{array}{cc}
+                   \frac{1}{2}\left(y-F(\mathbf{x})\right)^2&\vert y-F\vert \leq\delta\,,\\[0.2cm]
+		   \delta (\vert y-F\vert - \delta/2)&\vert y-F\vert >\delta\,.
+                  \end{array}\right .
+\eeq
+All GradientBoost options for classification described above can be also applied
+for regression tasks, but tests have shown that stochastic gradient boosting
+may not perform very well for regression problems.
+
+\subsection{Bagging}
+\label{sec:bagging}
+
+The term {\em Bagging}\index{Bagging}\index{Resampling} denotes a resampling 
+technique where a classifier is repeatedly trained using resampled training
+events such that the combined classifier represents an average of 
+the individual classifiers. A priori, bagging does not aim at enhancing a
+weak classifier in the way adaptive or gradient boosting does, and is 
+thus not a ``boosting'' algorithm in a strict sense. Instead it effectively 
+smears over statistical representations of the training data and is hence 
+suited to stabilise the response of a classifier. In this context it is 
+often accompanied also by a significant performance increase compared to 
+the individual classifier.
+
+Resampling includes the possibility of replacement, which means that the 
+same event is allowed to be (randomly) picked several times from the parent
+sample. This is equivalent to regarding the training sample as being a
+representation of the probability density distribution of the parent
+sample: indeed, if one draws an event out of the parent sample, it is more
+likely to draw an event from a region of phase-space that has a high
+probability density, as the original data sample will have more
+events in that region. If a selected event is kept in the original
+sample (that is when the same event can be selected several times),
+the parent sample remains unchanged so that the randomly extracted
+samples will have the same parent distribution, albeit statistically
+fluctuated.  Training several classifiers with different resampled
+training data, and combining them into a collection, results in an
+averaged classifier that, just as for boosting, is more stable with
+respect to statistical fluctuations in the training sample. 
+
+Technically, resampling is implemented by applying random Poisson 
+weights to each event of the parent sample. 
+
+
