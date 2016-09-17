@@ -1242,6 +1242,8 @@ Int_t TChain::LoadBaskets(Long64_t /*maxmemory*/)
 ///   * -3: The file corresponding to the entry could not be correctly open
 ///   * -4: The TChainElement corresponding to the entry is missing or
 ///       the TTree is missing from the file.
+///   * -5: Internal error, please report the circunstance when this happen
+///       as a ROOT issue.
 ///
 /// Note: This is the only routine which sets the value of fTree to
 ///       a non-zero pointer.
@@ -1518,6 +1520,11 @@ Long64_t TChain::LoadTree(Long64_t entry)
       // Below we must test >= in case the tree has no entries.
       if (entry >= fTreeOffset[fTreeNumber+1]) {
          if ((fTreeNumber < (fNtrees - 1)) && (entry < fTreeOffset[fTreeNumber+2])) {
+            // The request entry is not in the tree 'fTreeNumber' we will need
+            // to look further.
+
+            // Before moving on, let's record the result.
+            element->SetLoadResult(returnCode);
 
             // Before trying to read the file file/tree, notify the user
             // that we have switched trees if requested; the user might need
@@ -1527,9 +1534,8 @@ Long64_t TChain::LoadTree(Long64_t entry)
                fNotify->Notify();
             }
 
-            Long64_t loadResult = LoadTree(entry);
-            element->SetLoadResult(loadResult);
-            return loadResult;
+            // Load the next TTree.
+            return LoadTree(entry);
          } else {
             treeReadEntry = fReadEntry = -2;
          }
@@ -1545,7 +1551,6 @@ Long64_t TChain::LoadTree(Long64_t entry)
       fTreeNumber = -1;
 
       element->SetLoadResult(returnCode);
-
       return returnCode;
    }
    // ----- End of modifications by MvL
@@ -1566,7 +1571,15 @@ Long64_t TChain::LoadTree(Long64_t entry)
 
    // Change the new current tree to the new entry.
    Long64_t loadResult = fTree->LoadTree(treeReadEntry);
-   element->SetLoadResult(loadResult);
+   if (loadResult == treeReadEntry) {
+      element->SetLoadResult(0);
+   } else {
+      // This is likely to be an internal error, if treeReadEntry was not in range
+      // (or intentionally -2 for TChain::GetEntries) then something happened
+      // that is very odd/surprising.
+      element->SetLoadResult(-5);
+   }
+
 
    // Change the chain friends to the new entry.
    if (fFriends) {
