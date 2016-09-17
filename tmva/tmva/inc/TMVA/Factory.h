@@ -66,9 +66,6 @@
 #ifndef ROOT_TMVA_DataSet
 #include "TMVA/DataSet.h"
 #endif
-#ifndef ROOT_TMVA_CrossValidation
-#include "TMVA/CrossValidation.h"
-#endif
 
 class TFile;
 class TTree;

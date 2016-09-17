@@ -17,10 +17,6 @@
 #include "TCanvas.h"
 #endif
 
-#ifndef ROOT_TMVA_Factory
-#include<TMVA/Factory.h>
-#endif
-
 #ifndef ROOT_TMVA_DataLoader
 #include<TMVA/DataLoader.h>
 #endif
