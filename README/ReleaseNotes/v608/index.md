@@ -120,6 +120,7 @@ Add a new mode for `TClass::SetCanSplit` (2) which indicates that this class and
 
 * Support I/O of std::unique_ptrs and STL collections thereof.
 * Support I/O of std::array.
+* Support I/O of std::tuple. The dictionary for those is never auto generated and thus requires explicit request of the dictionary for each std::tuple class template instantiation used, like most other class templates.
 * Custom streamers need to #include TBuffer.h explicitly (see [section Core Libraries](#core-libs))
 * Check and flag short reads as errors in the xroot plugins. This fixes [ROOT-3341].
 * Added support for AWS temporary security credentials to TS3WebFile by allowing the security token to be given.
