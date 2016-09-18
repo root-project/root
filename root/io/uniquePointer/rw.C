@@ -1,6 +1,6 @@
 #include "classes.h"
 
-void printHistoInfo(TH1F* h, const char* meta) {
+void printHistoInfo(TH1* h, const char* meta) {
    cout << "[" << meta << "]"<< " Histogram "
         << h->GetName() << " information:\n"
         << " - Entries: " << h->GetEntries() << endl
@@ -13,7 +13,9 @@ void w(const char* filename) {
    cout << "Writing " << filename << endl;
 
    TH1F meansPtr ("meansPtr","meansPtr",64, -4, 4);
+   TH1F meansBaseUPtr ("meansBaseUPtr","meansBaseUPtr",64, -4, 4);
    TH1F meansUPtr ("meansUPtr","meansUPtr",64, -4, 4);
+   TH1F meansFixedUPtr ("meansFixedUPtr","meansFixedUPtr",64, -4, 4);
    TH1F meansUPtr1 ("meansUPtr1","meansUPtr1",64, -4, 4);
    TH1F meansUPtr2 ("meansUPtr2","meansUPtr2",64, -4, 4);
    TH1F meansUPtr3 ("meansUPtr3","meansUPtr3",64, -4, 4);   
@@ -22,7 +24,9 @@ void w(const char* filename) {
    auto a = new A("RowWise");
 
    printHistoInfo(a->GetHPtr(), "Write Row-wise");
+   printHistoInfo(a->GetHBaseUPtr(), "Write Row-wise");
    printHistoInfo(a->GetHUPtr(), "Write Row-wise");
+   printHistoInfo(a->GetHFixedUPtr(), "Write Row-wise");
 
    f->WriteObject(a, "theAInstance");
 
@@ -35,7 +39,9 @@ void w(const char* filename) {
       for (auto i : ROOT::TSeqI(50)) {
          b->Randomize();
          meansPtr.Fill(b->GetHPtr()->GetMean());
+         meansBaseUPtr.Fill(b->GetHBaseUPtr()->GetMean());
          meansUPtr.Fill(b->GetHUPtr()->GetMean());
+         meansFixedUPtr.Fill(b->GetHFixedUPtr()->GetMean());
          meansUPtr1.Fill(b->GetHUPtrAt(0)->GetMean());
          meansUPtr2.Fill(b->GetHUPtrAt(1)->GetMean());
          meansUPtr3.Fill(b->GetHUPtrAt(2)->GetMean());
@@ -43,7 +49,9 @@ void w(const char* filename) {
          t.Fill();
       }
       printHistoInfo(&meansPtr, "Write Column-wise");
+      printHistoInfo(&meansBaseUPtr, "Write Column-wise");
       printHistoInfo(&meansUPtr, "Write Column-wise");
+      printHistoInfo(&meansFixedUPtr, "Write Column-wise");
       printHistoInfo(&meansUPtr1, "Write Column-wise 1");
       printHistoInfo(&meansUPtr2, "Write Column-wise 2");
       printHistoInfo(&meansUPtr3, "Write Column-wise 3");      
@@ -58,7 +66,9 @@ void r(const char* filename) {
    cout << "Reading " << filename << endl;
 
    TH1F meansPtr ("meansPtr","meansPtr",64, -4, 4);
+   TH1F meansBaseUPtr ("meansBaseUPtr","meansBaseUPtr",64, -4, 4);
    TH1F meansUPtr ("meansUPtr","meansUPtr",64, -4, 4);
+   TH1F meansFixedUPtr ("meansFixedUPtr","meansFixedUPtr",64, -4, 4);
    TH1F meansUPtr1 ("meansUPtr1","meansUPtr1",64, -4, 4);
    TH1F meansUPtr2 ("meansUPtr2","meansUPtr2",64, -4, 4);
    TH1F meansUPtr3 ("meansUPtr3","meansUPtr3",64, -4, 4);
@@ -66,7 +76,9 @@ void r(const char* filename) {
    std::unique_ptr<TFile> f (TFile::Open(filename));
    auto a = (A*) f->Get("theAInstance");
    printHistoInfo(a->GetHPtr(), "Read Row-wise");
+   printHistoInfo(a->GetHBaseUPtr(), "Read Row-wise");
    printHistoInfo(a->GetHUPtr(), "Read Row-wise");
+   printHistoInfo(a->GetHFixedUPtr(), "Read Row-wise");
    for (auto i : {0,1,2}) {
       printHistoInfo(a->GetHUPtrAt(i),(std::string("Read Row-wise ")+std::to_string(i)).c_str());
    }
@@ -78,8 +90,12 @@ void r(const char* filename) {
       while (tr.Next()) {
          auto mean = myA->GetHPtr()->GetMean();
          meansPtr.Fill(mean);
+         mean = myA->GetHBaseUPtr()->GetMean();
+         meansBaseUPtr.Fill(mean);
          mean = myA->GetHUPtr()->GetMean();
          meansUPtr.Fill(mean);
+         mean = myA->GetHFixedUPtr()->GetMean();
+         meansFixedUPtr.Fill(mean);
          mean = myA->GetHUPtrAt(0)->GetMean();
          meansUPtr1.Fill(mean);
          mean = myA->GetHUPtrAt(1)->GetMean();

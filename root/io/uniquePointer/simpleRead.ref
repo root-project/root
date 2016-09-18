@@ -1,11 +1,19 @@
 
-Processing /home/dpiparo/RootDevel/Root6/head/roottest/root/io/uniquePointer/rw.C(0)...
+Processing /Users/pcanal/root_working/roottest/root/io/uniquePointer/rw.C(0)...
 Reading out.root
 [Read Row-wise] Histogram RowWise information:
  - Entries: 5000
  - Mean: 0.801612
  - STD Deviation: 0.600387
-[Read Row-wise] Histogram RowWise_unique information:
+[Read Row-wise] Histogram RowWise_base information:
+ - Entries: 5000
+ - Mean: 0.801612
+ - STD Deviation: 0.600387
+[Read Row-wise] Histogram RowWise_var information:
+ - Entries: 5000
+ - Mean: 0.801612
+ - STD Deviation: 0.600387
+[Read Row-wise] Histogram RowWise_fixed information:
  - Entries: 5000
  - Mean: 0.801612
  - STD Deviation: 0.600387

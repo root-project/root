@@ -1,11 +1,19 @@
 
-Processing /home/dpiparo/RootDevel/Root6/head/roottest/root/io/uniquePointer/rw.C...
+Processing /Users/pcanal/root_working/roottest/root/io/uniquePointer/rw.C...
 Writing out.root
 [Write Row-wise] Histogram RowWise information:
  - Entries: 5000
  - Mean: 0.801612
  - STD Deviation: 0.600387
-[Write Row-wise] Histogram RowWise_unique information:
+[Write Row-wise] Histogram RowWise_base information:
+ - Entries: 5000
+ - Mean: 0.801612
+ - STD Deviation: 0.600387
+[Write Row-wise] Histogram RowWise_var information:
+ - Entries: 5000
+ - Mean: 0.801612
+ - STD Deviation: 0.600387
+[Write Row-wise] Histogram RowWise_fixed information:
  - Entries: 5000
  - Mean: 0.801612
  - STD Deviation: 0.600387
@@ -13,10 +21,18 @@ Writing out.root
  - Entries: 50
  - Mean: 0.60323
  - STD Deviation: 0.0619348
+[Write Column-wise] Histogram meansBaseUPtr information:
+ - Entries: 50
+ - Mean: 0.801612
+ - STD Deviation: 3.16101e-08
 [Write Column-wise] Histogram meansUPtr information:
  - Entries: 50
  - Mean: 0.60323
  - STD Deviation: 0.0619348
+[Write Column-wise] Histogram meansFixedUPtr information:
+ - Entries: 50
+ - Mean: 0.801612
+ - STD Deviation: 3.16101e-08
 [Write Column-wise 1] Histogram meansUPtr1 information:
  - Entries: 50
  - Mean: 0.60323
@@ -34,7 +50,15 @@ Reading out.root
  - Entries: 5000
  - Mean: 0.801612
  - STD Deviation: 0.600387
-[Read Row-wise] Histogram RowWise_unique information:
+[Read Row-wise] Histogram RowWise_base information:
+ - Entries: 5000
+ - Mean: 0.801612
+ - STD Deviation: 0.600387
+[Read Row-wise] Histogram RowWise_var information:
+ - Entries: 5000
+ - Mean: 0.801612
+ - STD Deviation: 0.600387
+[Read Row-wise] Histogram RowWise_fixed information:
  - Entries: 5000
  - Mean: 0.801612
  - STD Deviation: 0.600387
