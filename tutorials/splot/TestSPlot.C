@@ -14,6 +14,7 @@
 ///
 /// NOTE: This script requires a data file `$ROOTSYS/tutorials/splot/TestSPlot_toyMC.dat`.
 ///
+/// \notebook -js
 /// \macro_image
 /// \macro_output
 /// \macro_code
