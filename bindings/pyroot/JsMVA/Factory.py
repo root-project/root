@@ -678,40 +678,6 @@ def ChangeCallOriginalEvaluateImportance(*args,  **kwargs):
     JPyInterface.JsDraw.Draw(hist)
     return hist
 
-## Rewrite the constructor of TMVA::Factory::CrossValidate
-# @param *args positional parameters
-# @param **kwargs named parameters: this will be transformed to option string
-def ChangeCallOriginalCrossValidate(*args,  **kwargs):
-    if len(kwargs) == 0:
-        originalFunction, args = JPyInterface.functions.ProcessParameters(0, *args, **kwargs)
-        return originalFunction(*args)
-    optParams = False
-    NumFolds  = 5
-    remakeDataSet = True
-    rocIntegrals = None
-    if "optParams" in kwargs:
-        optParams = kwargs["optParams"]
-        del kwargs["optParams"]
-    if "NumFolds" in kwargs:
-        NumFolds = kwargs["NumFolds"]
-        del kwargs["NumFolds"]
-    if "remakeDataSet" in kwargs:
-        remakeDataSet = kwargs["remakeDataSet"]
-        del kwargs["remakeDataSet"]
-    if "rocIntegrals" in kwargs:
-        rocIntegrals = kwargs["rocIntegrals"]
-        del kwargs["rocIntegrals"]
-    args, kwargs = JPyInterface.functions.ConvertSpecKwargsToArgs(["DataLoader", "Method", "MethodTitle"], *args, **kwargs)
-    originalFunction, args = JPyInterface.functions.ProcessParameters(4, *args, **kwargs)
-    args = list(args)
-    args.append(optParams)
-    args.append(NumFolds)
-    args.append(remakeDataSet)
-    if rocIntegrals!=None and rocIntegrals!=0:
-        args.append(rocIntegrals)
-    args = tuple(args)
-    return originalFunction(*args)
-
 ## Background booking method for BookDNN
 __BookDNNHelper = None
 

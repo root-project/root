@@ -29,6 +29,8 @@ class JsMVAMagic(Magics):
            functions.register()
         elif args.arg == 'off':
            functions.unregister()
+        elif args.arg == "noOutput":
+           functions.register(True)   
 
 
 ## Function for registering the magic class
