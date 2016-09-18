@@ -14,7 +14,7 @@ void Function()
 
    // Defining functions to be used from R
    TRFunctionImport c("c");
-   TRFunctionImport list("list");
+   TRFunctionImport rlist("list");
    TRFunctionImport asformula("as.formula");
    TRFunctionImport nls("nls");
    TRFunctionImport confint("confint");
@@ -25,8 +25,8 @@ void Function()
    TRFunctionImport devnew("dev.new");
    TRFunctionImport devoff("dev.off");
    TRFunctionImport devcur("dev.cur");
-   TRFunctionImport min("min");
-   TRFunctionImport max("max");
+   TRFunctionImport rmin("min");
+   TRFunctionImport rmax("max");
    TRFunctionImport seq("seq");
    TRFunctionImport predict("predict");
 
@@ -41,7 +41,7 @@ void Function()
    data["ydata"]=ydata;
 
    // fit = nls(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=1,p2=0.2))
-   TRObject fit = nls(asformula("ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata)"),Label["data"]=data, Label["start"]=list(Label["p1"]=1,Label["p2"]=0.2));
+   TRObject fit = nls(asformula("ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata)"),Label["data"]=data, Label["start"]=rlist(Label["p1"]=1,Label["p2"]=0.2));
    print(summary(fit));
 
    print(confint(fit));
@@ -50,7 +50,7 @@ void Function()
       devnew("Fitting Regression");
       plot(xdata,ydata);
 
-      TRObject xgrid=seq(min(xdata),max(xdata),Label["len"]=10);
+      TRObject xgrid=seq(rmin(xdata),rmax(xdata),Label["len"]=10);
       lines(xgrid,predict(fit,xgrid),Label["col"] = "green");
       devoff(Label["which"] = devcur() );
    }
