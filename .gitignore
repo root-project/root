@@ -571,6 +571,9 @@ AutoDict_*.cxx
 /root/io/treeproblem/file.root
 /root/io/treeproblem/FooDict*
 
+# /root/io/tuple
+/root/io/tuple/tuple.root
+
 # /root/io/vararyobj/
 /root/io/vararyobj/*.root
 
