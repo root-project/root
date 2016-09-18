@@ -63,7 +63,7 @@ ROOTTEST_ADD_TEST(unsupportedClasses
                   COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/unsupportedClasses.h
                           --select=${CMAKE_CURRENT_SOURCE_DIR}/unsupportedClasses_selection.xml -I ${CMAKE_CURRENT_SOURCE_DIR}
                   ERRREF  unsupportedClasses.eref
-                  PASSRC 5)
+                  PASSRC 4)
 
 # These 3 tests will fail because a pragma once will be found in the inlined header
 ROOTTEST_ADD_TEST(pragmaOnce1
