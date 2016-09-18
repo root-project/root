@@ -409,7 +409,6 @@ void TStreamerInfo::Build()
       if (nameChanged) {
          if (TClassEdit::IsUniquePtr(dmFull)) {
             dmIsPtr = true;
-            dmTitle = "->";
          }
          while(typeNameBuf.back() == '*') typeNameBuf.pop_back();
          dmFull = trueTypeNameBuf.c_str();
