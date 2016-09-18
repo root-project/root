@@ -2827,6 +2827,102 @@ bool MethodUnitTestWithComplexData::create_data(const char* filename, int nmax)
    dataFile->Close();
    return true;
 }
+
+
+
+//Author: Attila Bagoly <battila93@gmail.com>
+
+#ifndef UTIPythonInteractive_H
+#define UTIPythonInteractive_H
+
+#include <vector>
+#include "TMVA/MethodBase.h"
+
+/**
+Unit test for TMVA::IPythonInteractive located in TMVA/MethodBase.h
+*/
+class utIPythonInteractive : public UnitTesting::UnitTest{
+public:
+  utIPythonInteractive();
+  void run();
+private:
+  void testInit();
+  void testMethods();
+  
+  TMVA::IPythonInteractive * ipyi;
+  std::vector<TString> titles;
+  std::vector<Double_t> xvec;
+  std::vector<Double_t> y1vec, y2vec;
+  int N;
+};
+
+#endif
+
+
+#include <random>
+#include "TGraph.h"
+#include "TMultiGraph.h"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+///// Standard constructor
+utIPythonInteractive::utIPythonInteractive() : UnitTesting::UnitTest("IPythonInteractive", __FILE__)
+{
+  N = 1000;
+  titles.push_back("Training Error");
+  titles.push_back("Testing Error");
+  std::uniform_real_distribution<double> unif(0, 1);
+  std::default_random_engine re;
+  for(int i=0;i<N;i++){
+    xvec.push_back(i);
+    y1vec.push_back(unif(re));
+    y2vec.push_back(unif(re));
+  }
+  
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+///// Run tests
+void utIPythonInteractive::run()
+{
+  testInit();
+  testMethods();
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+///// Testing creating IPythonInteractive object and initialization.
+void utIPythonInteractive::testInit()
+{
+  ipyi = new TMVA::IPythonInteractive();
+  test_(ipyi->Get() != NULL);
+  
+  ipyi->Init(titles);
+  test_(!ipyi->NotInitialized());
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+///// Adding datas to IPythonInteractive and testing if it got all of them correctly.
+void utIPythonInteractive::testMethods()
+{
+  for(int i=0;i<N;i++){
+    ipyi->AddPoint(xvec[i], y1vec[i], y2vec[i]);
+    TList * graphs = ipyi->Get()->GetListOfFunctions();
+    TIter next(graphs);
+    int j=0;
+  	TObject *obj;
+    while ((obj = (TObject*)next())){
+      TGraph * gr = dynamic_cast<TGraph*>(obj);
+      test_(gr->GetN()==(i+1));
+      Double_t x, y;
+      test_(gr->GetPoint(i, x, y)!=-1);
+      test_(x==xvec[i]);
+      test_(j==0 ? y1vec[i] : y2vec[i]);
+      j++;
+	  }
+  }
+}
+
+
+
 // including file stressTMVA.cxx
 // Authors: Christoph Rosemann, Eckhard von Toerne   July 2010
 // TMVA unit tests
@@ -3053,6 +3149,8 @@ int main(int argc, char **argv)
    addRegressionTests(TMVA_test, full);
    addDataInputTests(TMVA_test, full);
    addComplexClassificationTests(TMVA_test, full);
+   
+   TMVA_test.addTest(new utIPythonInteractive);
 
    // run all
    ROOT::EnableThreadSafety();
