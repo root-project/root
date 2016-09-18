@@ -93,14 +93,12 @@ namespace TMVA {
    class MethodBoost;
    class DataSetInfo;
 
-   //////////////////////////////////////////////////////////////////////////
-   //                                                                      //
-   // IPythonInteractive                                                   //
-   //                                                                      //
-   // Helper class for tracking errors during the training                 //
-   // in Jupyter notebook. This class is needed by JsMVA                   //
-   //                                                                      //
-   //////////////////////////////////////////////////////////////////////////
+   /** \class IPythonInteractive 
+This class is needed by JsMVA, and it's a helper class for tracking errors during the training in Jupyter notebook.   
+It’s only initialized in Jupyter notebook context. In initialization we specify some title, 
+and a TGraph will be created for every title. We can add new data points easily to all TGraphs. 
+These graphs are added to a TMultiGraph, and during an interactive training we get this TMultiGraph object and plot it with JsROOT.
+*/
    class IPythonInteractive {
    public:
        IPythonInteractive();

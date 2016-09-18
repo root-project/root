@@ -161,7 +161,9 @@ TMVA::IPythonInteractive::~IPythonInteractive()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// creating error graphs with specific names and adding them to multigraph
+/// This function gets some title and it creates a TGraph for every title. 
+/// It also sets up the style for every TGraph. All graphs are added to a single TMultiGrah.
+///  \param[in] graphTtitles vector of titles
 void TMVA::IPythonInteractive::Init(std::vector<TString>& graphTitles)
 {
   if (fNumGraphs!=0){
@@ -181,8 +183,12 @@ void TMVA::IPythonInteractive::Init(std::vector<TString>& graphTitles)
   }
   return;
 }
+
 ////////////////////////////////////////////////////////////////////////////////
-/// inserting points to graphs
+/// This function is used only in 2 TGraph case, and it will add new data points to graphs.
+/// \param[in] x the x coordinate
+/// \param[in] y1 the y coordinate for the first TGraph
+/// \param[in] y2 the y coordinate for the second TGraph
 void TMVA::IPythonInteractive::AddPoint(Double_t x, Double_t y1, Double_t y2)
 {
    fGraphs[0]->Set(fIndex+1);
@@ -194,7 +200,9 @@ void TMVA::IPythonInteractive::AddPoint(Double_t x, Double_t y1, Double_t y2)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// inserting points to graphs
+/// This function can add data points to as many TGraps as we have.
+/// \param[in] dat vector of data points. The dat[0] contains the x coordinate,
+///            dat[1] contains the y coordinate for first TGraph, dat[2] for second, ...
 void TMVA::IPythonInteractive::AddPoint(std::vector<Double_t>& dat)
 {
   for(Int_t i=0; i<fNumGraphs;i++){
