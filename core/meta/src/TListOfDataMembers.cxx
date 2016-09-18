@@ -28,6 +28,8 @@ unloaded data member.
 #include "TEnumConstant.h"
 #include "TClassEdit.h"
 
+#include <sstream>
+
 const unsigned int idsSize=19;
 
 ClassImp(TListOfDataMembers)
@@ -439,7 +441,7 @@ void TListOfDataMembers::Load()
    // Treat the complex<float>, complex<double> in a special way, i.e. replacing
    // the datamembers with the ones of _root_std_complex<T>
    bool skipChecks = false;
-   if (fClass){
+   if (fClass) {
       auto complexType = TClassEdit::GetComplexType(fClass->GetName());
       switch(complexType) {
          case TClassEdit::EComplexType::kNone:
@@ -470,6 +472,39 @@ void TListOfDataMembers::Load()
             info = TClass::GetClass("_root_std_complex<long>")->GetClassInfo();
             break;
          }
+      }
+      if (strncmp(fClass->GetName(),"tuple<",strlen("tuple<"))==0) {
+
+         TClassEdit::TSplitType tupleContent(fClass->GetName());
+         auto iter = tupleContent.fElements.begin();
+         ++iter; // Skip the template name (tuple)
+
+         std::string alternateName = "TEmulatedTuple";
+         alternateName.append( fClass->GetName()+ 5 );
+
+         std::ostringstream alternateTuple;
+         alternateTuple << "template <class... Types> struct TEmulatedTuple;\n";
+         alternateTuple << "template <> struct " << alternateName << " {\n";
+
+         unsigned int nMember = 0;
+         auto theEnd = tupleContent.fElements.end() - 1; // skip the 'stars'.
+         while (iter != theEnd) {
+            alternateTuple << "   " << *iter << " _" << nMember << ";\n";
+            ++iter;
+            ++nMember;
+         }
+         alternateTuple << "};";
+         if (!gCling->Declare(alternateTuple.str().c_str())) {
+            Error("Load","Could not declare %s",alternateName.c_str());
+            return;
+         }
+         auto tupleCl = TClass::GetClass( alternateName.c_str() );
+         if (!tupleCl) {
+            Error("Load","Could not find the TClass for %s",alternateName.c_str());
+            return;
+         }
+         skipChecks = true;
+         info = tupleCl->GetClassInfo();
       }
    }
 

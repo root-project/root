@@ -3693,7 +3693,6 @@ bool IsSupportedClassName(const char* name)
 {
    static const std::vector<std::string> uclNamePrfxes {
       "array<",
-      "tuple<",
       "chrono:",
       "ratio<",
       "unique_ptr<",
@@ -3705,7 +3704,7 @@ bool IsSupportedClassName(const char* name)
    auto pos = find_if(uclNamePrfxes.begin(),
                       uclNamePrfxes.end(),
                       [&](const std::string& str){return ROOT::TMetaUtils::BeginsWith(name,str);});
-    return uclNamePrfxes.end() == pos;
+   return uclNamePrfxes.end() == pos;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
