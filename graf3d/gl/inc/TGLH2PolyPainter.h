@@ -42,7 +42,7 @@ private:
    //Draw caps for a bin.
    typedef std::list<Rgl::Pad::Tesselation_t>::const_iterator CIter_t;
    void         DrawCaps()const;
-   void         DrawCap(CIter_t cap, Int_t bin)const;
+   void         DrawCap(CIter_t cap, Int_t bin, bool bottomCap)const;
    //
    Bool_t       CacheGeometry();
    Bool_t       BuildTesselation(Rgl::Pad::Tesselator & tess, const TGraph *g, Double_t z);
