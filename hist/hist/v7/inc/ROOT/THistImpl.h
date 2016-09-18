@@ -23,6 +23,8 @@
 #include "ROOT/THistBinIter.h"
 #include "ROOT/THistUtils.h"
 
+class TRootIOCtor;
+
 namespace ROOT {
 namespace Experimental {
 
@@ -384,6 +386,7 @@ private:
   std::tuple<AXISCONFIG...> fAxes; ///< The histogram's axes
 
 public:
+  THistImpl(TRootIOCtor*);
   THistImpl(AXISCONFIG... axisArgs);
   THistImpl(std::string_view title, AXISCONFIG... axisArgs);
 
@@ -555,6 +558,10 @@ public:
   /// \}
 };
 
+template <class DATA, class... AXISCONFIG>
+THistImpl<DATA, AXISCONFIG...>::THistImpl(TRootIOCtor *)
+{
+}
 
 template <class DATA, class... AXISCONFIG>
 THistImpl<DATA, AXISCONFIG...>::
