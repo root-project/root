@@ -473,39 +473,6 @@ void TListOfDataMembers::Load()
             break;
          }
       }
-      if (strncmp(fClass->GetName(),"tuple<",strlen("tuple<"))==0) {
-
-         TClassEdit::TSplitType tupleContent(fClass->GetName());
-         auto iter = tupleContent.fElements.begin();
-         ++iter; // Skip the template name (tuple)
-
-         std::string alternateName = "TEmulatedTuple";
-         alternateName.append( fClass->GetName()+ 5 );
-
-         std::ostringstream alternateTuple;
-         alternateTuple << "template <class... Types> struct TEmulatedTuple;\n";
-         alternateTuple << "template <> struct " << alternateName << " {\n";
-
-         unsigned int nMember = 0;
-         auto theEnd = tupleContent.fElements.end() - 1; // skip the 'stars'.
-         while (iter != theEnd) {
-            alternateTuple << "   " << *iter << " _" << nMember << ";\n";
-            ++iter;
-            ++nMember;
-         }
-         alternateTuple << "};";
-         if (!gCling->Declare(alternateTuple.str().c_str())) {
-            Error("Load","Could not declare %s",alternateName.c_str());
-            return;
-         }
-         auto tupleCl = TClass::GetClass( alternateName.c_str() );
-         if (!tupleCl) {
-            Error("Load","Could not find the TClass for %s",alternateName.c_str());
-            return;
-         }
-         skipChecks = true;
-         info = tupleCl->GetClassInfo();
-      }
    }
 
    // Now we follow the ordinary pattern

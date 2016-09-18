@@ -3190,6 +3190,39 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
    delete TClinginfo;
    cl->fClassInfo = 0;
    std::string name(cl->GetName());
+
+   // Handle the special case of 'tuple' where we ignore the real implementation
+   // details and just overlay a 'simpler'/'simplistic' version that is easy
+   // for the I/O to understand and handle.
+   if (strncmp(cl->GetName(),"tuple<",strlen("tuple<"))==0) {
+
+      TClassEdit::TSplitType tupleContent(cl->GetName());
+      auto iter = tupleContent.fElements.begin();
+      ++iter; // Skip the template name (tuple)
+
+      std::string alternateName = "TEmulatedTuple";
+      alternateName.append( cl->GetName()+ 5 );
+
+      std::ostringstream alternateTuple;
+      alternateTuple << "template <class... Types> struct TEmulatedTuple;\n";
+      alternateTuple << "template <> struct " << alternateName << " {\n";
+
+      unsigned int nMember = 0;
+      auto theEnd = tupleContent.fElements.end() - 1; // skip the 'stars'.
+      while (iter != theEnd) {
+         alternateTuple << "   " << *iter << " _" << nMember << ";\n";
+         ++iter;
+         ++nMember;
+      }
+      alternateTuple << "};";
+      if (!gCling->Declare(alternateTuple.str().c_str())) {
+         Error("Load","Could not declare %s",alternateName.c_str());
+         return;
+      }
+
+      name = alternateName;
+   }
+
    TClingClassInfo* info = new TClingClassInfo(fInterpreter, name.c_str());
    if (!info->IsValid()) {
       if (cl->fState != TClass::kHasTClassInit) {
