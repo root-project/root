@@ -142,7 +142,7 @@ class functions:
     ## This function will register all functions which name contains "Draw" to TMVA.DataLoader and TMVA.Factory
     # from DataLoader and Factory modules
     @staticmethod
-    def register():
+    def register(noOutput=False):
         from JupyROOT.utils import transformers
         functions.__register(ROOT.TMVA.DataLoader, DataLoader, *functions.__getMethods(DataLoader, "Draw"))
         functions.__register(ROOT.TMVA.Factory,    Factory,    *functions.__getMethods(Factory,    "Draw"))
@@ -152,10 +152,14 @@ class functions:
             for func in functions.ThreadedFunctions[key]:
                 setattr(getattr(getattr(ROOT.TMVA, key), func), "_threaded", True)
         functions.__register(ROOT.TMVA.Factory, Factory, "BookDNN")
-        outputTransformer = OutputTransformer.transformTMVAOutputToHTML()
-        transformers.append(outputTransformer.transform)
-        JsDraw.InitJsMVA()
-
+        if not noOutput:
+            outputTransformer = OutputTransformer.transformTMVAOutputToHTML()
+            transformers.append(outputTransformer.transform)
+            JsDraw.InitJsMVA()
+        else:
+            def noOutputFunc(out, err):
+                return ("", "", "html")
+            transformers.append(noOutputFunc)
     ## This function will remove all functions which name contains "Draw" from TMVA.DataLoader and TMVA.Factory
     # if the function was inserted from DataLoader and Factory modules
     @staticmethod
