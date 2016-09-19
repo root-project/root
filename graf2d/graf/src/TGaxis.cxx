@@ -1637,7 +1637,7 @@ L110:
 
             if (flexe && !optionText && nexe)  {
                snprintf(label,256,"#times10^{%d}", nexe);
-               if (x0 != x1) { xfactor = x1-x0+0.1*charheight; yfactor = 0; }
+               if (x0 != x1) { xfactor = axis_length+0.1*charheight; yfactor = 0; }
                else          { xfactor = y1-y0+0.1*charheight; yfactor = 0; }
                Rotate (xfactor,yfactor,cosphi,sinphi,x0,y0,xx,yy);
                textaxis->SetTextAlign(11);
