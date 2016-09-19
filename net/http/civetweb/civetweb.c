@@ -127,7 +127,11 @@ mg_static_assert(sizeof(void *) >= sizeof(int), "data type size check");
 #include <fcntl.h>
 #endif /* !_WIN32_WCE */
 
-#ifdef __MACH__
+#ifdef __APPLE__
+#include <AvailabilityMacros.h>
+#endif
+
+#if defined(__APPLE__) && !defined(MAC_OS_X_VERSION_10_12)
 
 #define CLOCK_MONOTONIC (1)
 #define CLOCK_REALTIME (2)
