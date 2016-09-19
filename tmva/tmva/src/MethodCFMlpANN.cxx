@@ -305,6 +305,8 @@ void TMVA::MethodCFMlpANN::Train( void )
 #endif  
 
    delete [] nodes;
+
+   ExitFromTraining();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -439,6 +439,13 @@ void TMVA::MethodMLP::Train(Int_t nEpochs)
    Log() << kHEADER;
    PrintMessage("Training Network");
    Log() << Endl;
+   
+   fIPyMaxIter = nEpochs;
+   if (fInteractive && fInteractive->NotInitialized()){
+     std::vector<TString> titles = {"Error on training set", "Error on test set"};
+     fInteractive->Init(titles);
+   }
+   
    Int_t nEvents=GetNEvents();
    Int_t nSynapses=fSynapses->GetEntriesFast();
    if (nSynapses>nEvents)
@@ -466,6 +473,7 @@ void TMVA::MethodMLP::Train(Int_t nEpochs)
          fInvHessian.ResizeTo(numSynapses,numSynapses);
          GetApproxInvHessian( fInvHessian ,false);
       }
+    ExitFromTraining();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -517,6 +525,9 @@ void TMVA::MethodMLP::BFGSMinimize( Int_t nEpochs )
 
    // start training cycles (epochs)
    for (Int_t i = 0; i < nEpochs; i++) {
+
+     if (fExitFromTraining) break;
+     fIPyCurrentIter = i;
       if (Float_t(i)/nEpochs < fSamplingEpoch) {
          if ((i+1)%fTestRate == 0 || (i == 0)) {
             if (fSamplingTraining) {
@@ -598,6 +609,7 @@ void TMVA::MethodMLP::BFGSMinimize( Int_t nEpochs )
          //testE  = CalculateEstimator( Types::kTesting,  i ) - fPrior/Float_t(GetNEvents()); // estimator for test sample //zjh
          trainE = CalculateEstimator( Types::kTraining, i ) ; // estimator for training sample  //zjh
          testE  = CalculateEstimator( Types::kTesting,  i ) ; // estimator for test sample //zjh
+         if (fInteractive) fInteractive->AddPoint(i+1, trainE, testE);
          if(!IsSilentFile()) //saved to see in TMVAGui, no needed without file
          {
             fEstimatorHistTrain->Fill( i+1, trainE );
@@ -1045,6 +1057,8 @@ void TMVA::MethodMLP::BackPropagationMinimize(Int_t nEpochs)
    // start training cycles (epochs)
    for (Int_t i = 0; i < nEpochs; i++) {
 
+     if (fExitFromTraining) break;
+     fIPyCurrentIter = i;
       if (Float_t(i)/nEpochs < fSamplingEpoch) {
          if ((i+1)%fTestRate == 0 || (i == 0)) {
             if (fSamplingTraining) {
@@ -1074,6 +1088,7 @@ void TMVA::MethodMLP::BackPropagationMinimize(Int_t nEpochs)
       if ((i+1)%fTestRate == 0) {
          trainE = CalculateEstimator( Types::kTraining, i ); // estimator for training sample
          testE  = CalculateEstimator( Types::kTesting,  i );  // estimator for test samplea
+         if (fInteractive) fInteractive->AddPoint(i+1, trainE, testE);
          if(!IsSilentFile())
          {
             fEstimatorHistTrain->Fill( i+1, trainE );

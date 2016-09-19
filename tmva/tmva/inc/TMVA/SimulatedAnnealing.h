@@ -73,6 +73,11 @@ namespace TMVA {
                        TString  kernelTemperatureS, Double_t temperatureScale, Double_t adaptiveSpeed, 
                        Double_t temperatureAdaptiveStep, Bool_t useDefaultScale, Bool_t useDefaultTemperature );
 
+      //setting up helper variables for JsMVA
+      void SetIPythonInteractive(bool* ExitFromTraining, UInt_t *fIPyCurrentIter_){
+        fExitFromTraining = ExitFromTraining;
+        fIPyCurrentIter = fIPyCurrentIter_;
+      }
 
    private:
 
@@ -117,6 +122,10 @@ namespace TMVA {
       MsgLogger& Log() const { return *fLogger; }
 
       Double_t fProgress;
+
+      // variables for JsMVA
+      UInt_t *fIPyCurrentIter = nullptr;
+      bool * fExitFromTraining = nullptr;
 
       ClassDef(SimulatedAnnealing,0);  // Base class for Simulated Annealing fitting
    };
