@@ -35,13 +35,6 @@ def compareNotebooks(inNBName,outNBName):
     if areDifferent: print "\n"
     return areDifferent
 
-def addEtcToEnvironment(inNBDirName):
-    """Add the etc directory of root to the environment under the name of
-    JUPYTER_PATH in order to pick up the kernel specs.
-    """
-    os.environ["JUPYTER_PATH"] =  os.path.join(inNBDirName, "ipythondir/kernels")
-    os.environ["IPYTHONDIR"] = os.path.join(inNBDirName, "ipythondir")
-
 def getInterpreterName():
     """Find if the 'jupyter' executable is available on the platform. If
     yes, return its name else return 'ipython'
@@ -52,7 +45,6 @@ def getInterpreterName():
     return "jupyter" if ret == 0 else "ipython"
 
 def canReproduceNotebook(inNBName):
-    addEtcToEnvironment(os.path.dirname(inNBName))
     outNBName = inNBName.replace(nbExtension,"_out"+nbExtension)
     interpName = getInterpreterName()
     convCmd = convCmdTmpl %(interpName, inNBName, outNBName)
