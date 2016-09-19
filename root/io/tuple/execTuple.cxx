@@ -101,5 +101,5 @@ int read(const char *filename = "tuple.root")
 int execTuple()
 {
    write();
-   return read();
+   return read() + read("tuple.macos.root");
 }
