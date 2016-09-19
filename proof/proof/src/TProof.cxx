@@ -1363,7 +1363,7 @@ Int_t TProof::AddWorkers(TList *workerList)
       // Remove worker from the list of workers terminated gracefully
       dummysi->SetOrdinal(fullord);
       TSlaveInfo *rmsi = (TSlaveInfo *)fTerminatedSlaveInfos->Remove(dummysi);
-      if (rmsi) SafeDelete(rmsi);
+      SafeDelete(rmsi);
 
       // Create worker server
       TString wn(worker->GetNodeName());
