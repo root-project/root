@@ -1381,7 +1381,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                      if (k==-3) {
                         // Error message already issued
                         err = 1;
-                     } if (k==-2) {
+                     } else if (k==-2) {
                         err = 31;
                         chaine_error = ctemp;
                      } else if ( k >= 0 ) {
