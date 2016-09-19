@@ -36,6 +36,9 @@
 #include "TFormula.h"
 
 #include "TMVA/ClassifierFactory.h"
+#include "TMVA/IMethod.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/MethodBase.h"
 #include "TMVA/MethodDNN.h"
 #include "TMVA/Timer.h"
 #include "TMVA/Types.h"
