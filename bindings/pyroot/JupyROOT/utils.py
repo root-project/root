@@ -224,6 +224,8 @@ def invokeAclic(cell):
     else:
         processCppCode(".L %s+" %fileName)
 
+transformers = []
+
 class StreamCapture(object):
     def __init__(self, ip=get_ipython()):
         # For the registration
@@ -284,8 +286,17 @@ class StreamCapture(object):
         sys.stderr = self.nbErrStream
 
         # Print for the notebook
-        self.nbOutStream.write(self.ioHandler.GetStdout())
-        self.nbErrStream.write(self.ioHandler.GetStderr())
+        out = self.ioHandler.GetStdout()
+        err = self.ioHandler.GetStderr()
+        if not transformers:
+            self.nbOutStream.write(out)
+            self.nbErrStream.write(err)
+        else:
+            for t in transformers:
+                (out, err, otype) = t(out, err)
+                if otype == 'html':
+                    IPython.display.display(HTML(out))
+                    IPython.display.display(HTML(err))
         return 0
 
     def register(self):
