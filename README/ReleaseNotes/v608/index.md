@@ -273,6 +273,9 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
    context when handling optionTime with `%F`. This was reported
    [here](https://sft.its.cern.ch/jira/browse/ROOT-8309). The fixed was suggested
    by Philippe Gras (philippe.gras@cea.fr).
+* `TGaxis::PaintAxis()` misplaced the `x10` at the end of the axis for non vertical
+   or horizontal axis
+   [here](https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=22363).
 
 ## 3D Graphics Libraries
 
@@ -399,8 +402,8 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
    - Move gl2ps.h to its own subdir
 - Added new 'builtin-unuran' option (provided by Mattias Ellert)
 - Added new 'builtin-gl2ps' option (provided by Mattias Ellert)
-- Added new 'macos_native' option (only for MacOS) to disable looking for binaries, libraires and headers for dependent 
-  packages at locations other than native MacOS installations. Needed when wanting to ignore packages from Fink, Brew or Ports. 
+- Added new 'macos_native' option (only for MacOS) to disable looking for binaries, libraires and headers for dependent
+  packages at locations other than native MacOS installations. Needed when wanting to ignore packages from Fink, Brew or Ports.
 - Added new 'cuda' option to enable looking for CUDA in the system.
 
 
