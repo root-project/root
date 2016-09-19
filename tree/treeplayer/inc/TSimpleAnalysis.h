@@ -38,9 +38,10 @@ private:
    std::string              fOutputFile; ///< Output file in which are stored the histograms
    std::string              fTreeName; ///< Name of the input tree
    std::ifstream            fIn; ///< Stream for the input file
-   std::map<std::string, std::pair<std::string, std::string>> fHists; ///< contains
-   //in the first part the names of the histograms written in the output file, in the
+
+   //The map contains in the first part the names of the histograms written in the output file, in the
    //second part the pair of what is shown in the histograms and the cut applied on the variables
+   std::map<std::string, std::pair<std::string, std::string>> fHists;
 
    //The elements of the enumeration refer to the different types of elements
    //that are in the input file

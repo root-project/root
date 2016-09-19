@@ -13,6 +13,7 @@
 
 #include "TFile.h"
 #include "TChain.h"
+#include "TChainElement.h"
 #include "TH1.h"
 #include "TError.h"
 #include "TKey.h"
@@ -193,6 +194,23 @@ static std::string ExtractTreeName(std::string& firstInputFile)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns true if there are no errors in TChain::LoadTree()
+
+static bool checkChainLoadResult(TChain& chain, int& errValue, std::string& errFile)
+{
+   TObjArray *fileElements = chain.GetListOfFiles();
+   TIter next(fileElements);
+   while (TChainElement* chEl = (TChainElement*)next()) {
+      if (chEl->GetLoadResult() < 0) {
+         errValue = chEl->GetLoadResult();
+         errFile = chEl->GetTitle();
+         return false;
+      }
+   }
+   return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Execute all the TChain::Draw() as configured and stores the output histograms.
 /// Returns true if the analysis succeeds.
 
@@ -225,19 +243,21 @@ bool TSimpleAnalysis::Run()
    for (const std::string& inputfile: fInputFiles)
       chain.Add(inputfile.c_str());
 
-   // Sanity check that we can open the first file
-   int errValue = chain.LoadTree(0);
-   if (errValue < 0) {
-      ::Error("TSimpleAnalysis::Analyze",
-              "The chain is not correctly set up, chain.LoadTree(0) returns %d", errValue);
+   TFile ofile(fOutputFile.c_str(), "RECREATE");
+   if (ofile.IsZombie()) {
+      ::Error("TSimpleAnalysis::Run", "Impossible to create %s", fOutputFile.c_str());
       return false;
    }
 
-   TFile ofile(fOutputFile.c_str(), "RECREATE");
-   if (ofile.IsZombie()) {
-      ::Error("TSimpleAnalysis::Analyze", "Impossible to create %s", fOutputFile.c_str());
-      return false;
-   }
+   // Possible return values of TChain::LoadTree()
+   static const char* errors[] {
+      "all good", // 0
+         "empty chain", // -1
+         "invalid entry number", // -2
+         "cannot open the file", // -3
+         "missing tree", // -4
+         "internal error" // -5
+         };
 
    // Save the histograms into the output file
    for (const auto &histo : fHists) {
@@ -249,6 +269,15 @@ bool TSimpleAnalysis::Run()
       TH1F *ptrHisto = (TH1F*)gDirectory->Get(histoName.c_str());
       if (!ptrHisto)
          return false;
+
+      int errValue;
+      std::string errFile;
+      if (!checkChainLoadResult(chain, errValue, errFile)) {
+         ::Error("TSimpleAnalysis::Run",
+                 "Load failure in file %s: %s", errFile.c_str(), errors[-errValue]);
+         delete ptrHisto;
+         return false;
+      }
       ptrHisto->Write();
    }
    return true;
