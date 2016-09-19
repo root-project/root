@@ -64,6 +64,7 @@ bool tester(unsigned int component, double value, double expected)
 
 void write(const char *filename = "tuple.root")
 {
+   Printf("Writing %s",filename);
    TFile f(filename,"RECREATE");
 
    tuple<short, double, ShortClass, char, long> data;
@@ -78,6 +79,7 @@ void write(const char *filename = "tuple.root")
 
 int read(const char *filename = "tuple.root")
 {
+   Printf("Reading %s",filename);
    TFile f(filename,"READ");
    tuple<short, double, ShortClass, char, long> *data{nullptr};
 
