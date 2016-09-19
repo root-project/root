@@ -971,3 +971,8 @@ D: Enhancement of the CANDLE drawing option
 N: Paul Gessinger
 E: hello@paulgessinger.com
 D: TRatioPlot class
+
+N: Pau Miquel Mir
+E: paumm2006@yahoo.es
+D: Conversion of ROOT tutorials to Jupyter notebooks
+
