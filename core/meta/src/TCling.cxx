@@ -3172,6 +3172,99 @@ void TCling::UpdateListOfTypes()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Check in what order the member of a tuple are layout.
+enum class ETupleOrdering {
+   kAscending,
+   kDescending,
+   kUnexpected
+};
+
+struct AlternateTupleIntDoubleAsc
+{
+   Int_t    _0;
+   Double_t _1;
+};
+
+struct AlternateTupleIntDoubleDes
+{
+   Double_t _1;
+   Int_t    _0;
+};
+
+static ETupleOrdering IsTupleAscending()
+{
+   std::tuple<int,double> value;
+   AlternateTupleIntDoubleAsc asc;
+   AlternateTupleIntDoubleDes des;
+
+   size_t offset0 = ((char*)&(std::get<0>(value))) - ((char*)&value);
+   size_t offset1 = ((char*)&(std::get<1>(value))) - ((char*)&value);
+
+   size_t ascOffset0 = ((char*)&(asc._0)) - ((char*)&asc);
+   size_t ascOffset1 = ((char*)&(asc._1)) - ((char*)&asc);
+
+   size_t desOffset0 = ((char*)&(des._0)) - ((char*)&des);
+   size_t desOffset1 = ((char*)&(des._1)) - ((char*)&des);
+
+   if (offset0 == ascOffset0 && offset1 == ascOffset1) {
+      return ETupleOrdering::kAscending;
+   } else if (offset0 == desOffset0 && offset1 == desOffset1) {
+      return ETupleOrdering::kDescending;
+   } else {
+      return ETupleOrdering::kUnexpected;
+   }
+}
+
+std::string AtlernateTuple(const char *classname)
+{
+   TClassEdit::TSplitType tupleContent(classname);
+   std::string alternateName = "TEmulatedTuple";
+   alternateName.append( classname + 5 );
+
+   std::ostringstream alternateTuple;
+   alternateTuple << "template <class... Types> struct TEmulatedTuple;\n";
+   alternateTuple << "template <> struct " << alternateName << " {\n";
+
+   // This could also be a compile time choice ...
+   switch(IsTupleAscending()) {
+      case ETupleOrdering::kAscending: {
+         unsigned int nMember = 0;
+         auto iter = tupleContent.fElements.begin() + 1; // Skip the template name (tuple)
+         auto theEnd = tupleContent.fElements.end() - 1; // skip the 'stars'.
+         while (iter != theEnd) {
+            alternateTuple << "   " << *iter << " _" << nMember << ";\n";
+            ++iter;
+            ++nMember;
+         }
+         break;
+      }
+      case ETupleOrdering::kDescending: {
+         unsigned int nMember = tupleContent.fElements.size() - 3;
+         auto iter = tupleContent.fElements.rbegin() + 1; // Skip the template name (tuple)
+         auto theEnd = tupleContent.fElements.rend() - 1; // skip the 'stars'.
+         while (iter != theEnd) {
+            alternateTuple << "   " << *iter << " _" << nMember << ";\n";
+            ++iter;
+            --nMember;
+         }
+         break;
+      }
+      case ETupleOrdering::kUnexpected: {
+         Fatal("TCling::SetClassInfo::AtlernateTuple",
+               "Layout of std::tuple on this platform is unexpected.");
+         break;
+      }
+   }
+
+   alternateTuple << "};";
+   if (!gCling->Declare(alternateTuple.str().c_str())) {
+      Error("Load","Could not declare %s",alternateName.c_str());
+      return "";
+   }
+   return alternateName;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set pointer to the TClingClassInfo in TClass.
 /// If 'reload' is true, (attempt to) generate a new ClassInfo even if we
 /// already have one.
@@ -3196,31 +3289,8 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
    // for the I/O to understand and handle.
    if (strncmp(cl->GetName(),"tuple<",strlen("tuple<"))==0) {
 
-      TClassEdit::TSplitType tupleContent(cl->GetName());
-      auto iter = tupleContent.fElements.begin();
-      ++iter; // Skip the template name (tuple)
+      name = AtlernateTuple(cl->GetName());
 
-      std::string alternateName = "TEmulatedTuple";
-      alternateName.append( cl->GetName()+ 5 );
-
-      std::ostringstream alternateTuple;
-      alternateTuple << "template <class... Types> struct TEmulatedTuple;\n";
-      alternateTuple << "template <> struct " << alternateName << " {\n";
-
-      unsigned int nMember = 0;
-      auto theEnd = tupleContent.fElements.end() - 1; // skip the 'stars'.
-      while (iter != theEnd) {
-         alternateTuple << "   " << *iter << " _" << nMember << ";\n";
-         ++iter;
-         ++nMember;
-      }
-      alternateTuple << "};";
-      if (!gCling->Declare(alternateTuple.str().c_str())) {
-         Error("Load","Could not declare %s",alternateName.c_str());
-         return;
-      }
-
-      name = alternateName;
    }
 
    TClingClassInfo* info = new TClingClassInfo(fInterpreter, name.c_str());
