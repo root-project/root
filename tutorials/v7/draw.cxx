@@ -17,35 +17,26 @@
 
 #include "Rtypes.h"
 
-R__LOAD_LIBRARY(libGpad)
+R__LOAD_LIBRARY(libGpad);
 
 #include "ROOT/THist.h"
 #include "ROOT/Canvas.h"
 #include "ROOT/TDirectory.h"
-#include <iostream>
 
-void example() {
+void draw() {
   using namespace ROOT;
 
-  Experimental::TAxisConfig xaxis("x", 100, 0., 1.);
+  Experimental::TAxisConfig xaxis("x", 10, 0., 1.);
   Experimental::TAxisConfig yaxis("y", {0., 1., 2., 3.,10.});
   auto pHist = std::make_shared<Experimental::TH2D>(xaxis, yaxis);
 
   pHist->Fill({0.01, 1.02});
+  pHist->Fill({0.54, 3.02});
+  pHist->Fill({0.98, 1.02});
+  pHist->Fill({1.90, 1.02});
+  pHist->Fill({0.75,-0.02});
   Experimental::TDirectory::Heap().Add("hist", pHist);
 
-  auto canvas = Experimental::TCanvas::Create("MyCanvas");
+  auto canvas = Experimental::TCanvas::Create("Canvas Title");
   canvas->Draw(pHist);
-}
-
-void draw() {
-  example();
-
-  // And the event loop (?) will call (yes, copying the weak_ptr)
-  for (std::weak_ptr<ROOT::Experimental::TCanvas> wcanv:
-         ROOT::Experimental::TCanvas::GetCanvases()) {
-    if (auto canv = wcanv.lock()) {
-      canv->Paint();
-    }
-  }
 }
