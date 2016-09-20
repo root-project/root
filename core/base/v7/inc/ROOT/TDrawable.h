@@ -17,6 +17,8 @@
 
 namespace ROOT {
 namespace Experimental {
+class TCanvas;
+
 namespace Internal {
 
 /** \class TDrawable
@@ -28,7 +30,7 @@ public:
   virtual ~TDrawable();
 
   /// Paint the object
-  virtual void Paint() = 0;
+  virtual void Paint(TCanvas& onCanv) = 0;
 };
 
 } // namespace Internal
