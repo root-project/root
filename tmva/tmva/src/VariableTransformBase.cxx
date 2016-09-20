@@ -474,6 +474,7 @@ void TMVA::VariableTransformBase::CalcNorm( const std::vector<const Event*>& eve
 
    TVectorD x2( nvars+ntgts ); x2 *= 0;
    TVectorD x0( nvars+ntgts ); x0 *= 0;   
+   TVectorD v0( nvars+ntgts ); v0 *= 0;
 
    Double_t sumOfWeights = 0;
    for (UInt_t ievt=0; ievt<nevts; ievt++) {
@@ -536,6 +537,34 @@ void TMVA::VariableTransformBase::CalcNorm( const std::vector<const Event*>& eve
       }
       Targets().at(itgt).SetRMS( TMath::Sqrt( x2(nvars+itgt)/sumOfWeights - mean*mean) );
    }
+   // calculate variance
+   for (UInt_t ievt=0; ievt<nevts; ievt++) {
+      const Event* ev = events[ievt];
+      Double_t weight = ev->GetWeight();
+      for (UInt_t ivar=0; ivar<nvars; ivar++) {
+         Double_t x = ev->GetValue(ivar);
+         Double_t mean = Variables().at(ivar).GetMean();
+         v0(ivar) += weight*(x-mean)*(x-mean);
+      }
+      for (UInt_t itgt=0; itgt<ntgts; itgt++) {
+         Double_t x = ev->GetTarget(itgt);
+         Double_t mean = Targets().at(itgt).GetMean();
+         v0(nvars+itgt) += weight*(x-mean)*(x-mean);
+      }
+
+   }
+
+   // set variance
+   for (UInt_t ivar=0; ivar<nvars; ivar++) {
+      Double_t variance = v0(ivar)/sumOfWeights;
+      Variables().at(ivar).SetVariance( variance );
+      Log() << kINFO << "Variable " << Variables().at(ivar).GetExpression() <<" variance = " << variance << Endl;
+   }
+   for (UInt_t itgt=0; itgt<ntgts; itgt++) {
+      Double_t variance = v0(nvars+itgt)/sumOfWeights;
+      Targets().at(itgt).SetVariance( variance );
+      Log() << kINFO << "Target " << Targets().at(itgt).GetExpression() <<" variance = " << variance << Endl;
+   }   
 
    Log() << kVERBOSE << "Set minNorm/maxNorm for variables to: " << Endl;
    Log() << std::setprecision(3);
