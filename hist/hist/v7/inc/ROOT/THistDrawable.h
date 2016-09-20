@@ -21,12 +21,18 @@
 
 #include <memory>
 
+class TH1;
+
 namespace ROOT {
 namespace Experimental {
 
 template<int DIMENSIONS, class PRECISION,
   template <int D_, class P_, template <class P__> class STORAGE> class... STAT>
 class THist;
+
+namespace Detail {
+template <int DIMENSIONS> class THistImplPrecisionAgnosticBase;
+}
 
 namespace Internal {
 
@@ -48,33 +54,52 @@ public:
   }
 
   /// Paint a THist. All we need is access to its GetBinContent()
-  virtual void Paint(TDrawable& obj, THistDrawOptions<DIMENSION> opts) = 0;
+  virtual void Paint(TDrawable& obj, THistDrawOptions<DIMENSION> opts,
+                     TCanvas& canv) = 0;
 };
 
 extern template class THistPainterBase<1>;
 extern template class THistPainterBase<2>;
 extern template class THistPainterBase<3>;
 
-template<int DIMENSIONS, class PRECISION,
-  template <int D_, class P_, template <class P__> class STORAGE> class... STAT>
-class THistDrawable final: public TDrawable {
-public:
-  using Hist_t = THist<DIMENSIONS, PRECISION, STAT...>;
-private:
-  std::weak_ptr<Hist_t> fHist;
-  THistDrawOptions<DIMENSIONS> fOpts;
+class THistDrawableBase: public TDrawable {
+protected:
+  std::unique_ptr<TH1> fOldHist;
 
 public:
-  THistDrawable(std::weak_ptr<Hist_t> hist,
-                THistDrawOptions<DIMENSIONS> opts): fHist(hist), fOpts(opts) {}
+  TH1* GetOldHist() const { return fOldHist.get(); }
+
+  virtual ~THistDrawableBase() = default;
+};
+
+template <int DIMENSIONS>
+class THistDrawable final: public THistDrawableBase {
+public:
+  using HistImpl_t = Detail::THistImplPrecisionAgnosticBase<DIMENSIONS>;
+
+private:
+  std::weak_ptr<HistImpl_t> fHistImpl;
+  THistDrawOptions<DIMENSIONS> fOpts;
+
+  bool UpdateOldHist();
+public:
+   template<class HIST>
+   THistDrawable(const std::shared_ptr<HIST>& hist, THistDrawOptions<DIMENSIONS> opts):
+      fHistImpl(std::shared_ptr<HistImpl_t>(hist, hist->GetImpl())),
+      fOpts(opts) {}
 
   ~THistDrawable() = default;
 
   /// Paint the histogram
-  void Paint() final {
-    THistPainterBase<DIMENSIONS>::GetPainter()->Paint(*this, fOpts);
+  void Paint(TCanvas& canv) final {
+    if (UpdateOldHist())
+      THistPainterBase<DIMENSIONS>::GetPainter()->Paint(*this, fOpts, canv);
   }
 };
+
+extern template class THistDrawable<1>;
+extern template class THistDrawable<2>;
+extern template class THistDrawable<3>;
 
 } // namespace Internal
 } // namespace Experimental
