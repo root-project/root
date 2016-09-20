@@ -32,6 +32,8 @@
 #include "Math/AdaptiveIntegratorMultiDim.h"
 #include "Math/IFunctionfwd.h"
 #include "Math/GSLMCIntegrator.h"
+#include "Math/Random.h"
+#include "Math/GSLRndmEngines.h"
 
 
 // for graphical comparison of performance
@@ -182,6 +184,10 @@ std::vector<double> integral_MC(unsigned int dim, double* a, double* b, double* 
   ROOT::Math::GSLMCIntegrator ig2(ROOT::Math::MCIntegration::kMISER);
 
   ig2.SetFunction(funptr);
+
+  // test using a different generator
+  ROOT::Math::Random<ROOT::Math::GSLRngCMRG> r; 
+  ig2.SetGenerator(r.Rng() ); 
 
 
   //par.min_calls = 4*dim;

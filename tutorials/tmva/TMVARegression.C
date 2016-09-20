@@ -1,27 +1,30 @@
-// @(#)root/tmva $Id$
-/**********************************************************************************
- * Project   : TMVA - a Root-integrated toolkit for multivariate data analysis    *
- * Package   : TMVA                                                               *
- * Root Macro: TMVARegression                                                     *
- *                                                                                *
- * This macro provides examples for the training and testing of the               *
- * TMVA classifiers.                                                              *
- *                                                                                *
- * As input data is used a toy-MC sample consisting of four Gaussian-distributed  *
- * and linearly correlated input variables.                                       *
- *                                                                                *
- * The methods to be used can be switched on and off by means of booleans, or     *
- * via the prompt command, for example:                                           *
- *                                                                                *
- *    root -l TMVARegression.C\(\"LD,MLP\"\)                                      *
- *                                                                                *
- * (note that the backslashes are mandatory)                                      *
- * If no method given, a default set is used.                                     *
- *                                                                                *
- * The output file "TMVAReg.root" can be analysed with the use of dedicated       *
- * macros (simply say: root -l <macro.C>), which can be conveniently              *
- * invoked through a GUI that will appear at the end of the run of this macro.    *
- **********************************************************************************/
+/// \file
+/// \ingroup tutorial_tmva
+/// \notebook -nodraw
+/// This macro provides examples for the training and testing of the 
+/// TMVA classifiers.
+/// 
+/// As input data is used a toy-MC sample consisting of four Gaussian-distributed
+/// and linearly correlated input variables.
+/// 
+/// The methods to be used can be switched on and off by means of booleans, or 
+/// via the prompt command, for example:
+///
+///     root -l TMVARegression.C\(\"LD,MLP\"\)
+/// 
+/// (note that the backslashes are mandatory)
+/// If no method given, a default set is used.
+/// 
+/// The output file "TMVAReg.root" can be analysed with the use of dedicated
+/// macros (simply say: root -l <macro.C>), which can be conveniently
+/// invoked through a GUI that will appear at the end of the run of this macro.
+/// - Project   : TMVA - a Root-integrated toolkit for multivariate data analysis
+/// - Package   : TMVA
+/// - Root Macro: TMVARegression
+///                                                                              
+/// \macro_output
+/// \macro_code
+/// \author Andreas Hoecker
 
 #include <cstdlib>
 #include <iostream> 
@@ -52,7 +55,7 @@ void TMVARegression( TString myMethodList = "" )
 
    // methods to be processed can be given as an argument; use format:
    //
-   // mylinux~> root -l TMVARegression.C\(\"myMethod1,myMethod2,myMethod3\"\)
+   //     mylinux~> root -l TMVARegression.C\(\"myMethod1,myMethod2,myMethod3\"\)
    //
 
    //---------------------------------------------------------------
@@ -64,28 +67,28 @@ void TMVARegression( TString myMethodList = "" )
    // Default MVA methods to be trained + tested
    std::map<std::string,int> Use;
 
-   // --- Mutidimensional likelihood and Nearest-Neighbour methods
+   // Mutidimensional likelihood and Nearest-Neighbour methods
    Use["PDERS"]           = 0;
    Use["PDEFoam"]         = 1; 
    Use["KNN"]             = 1;
    // 
-   // --- Linear Discriminant Analysis
+   // Linear Discriminant Analysis
    Use["LD"]		        = 1;
    // 
-   // --- Function Discriminant analysis
+   // Function Discriminant analysis
    Use["FDA_GA"]          = 1;
    Use["FDA_MC"]          = 0;
    Use["FDA_MT"]          = 0;
    Use["FDA_GAMT"]        = 0;
    // 
-   // --- Neural Network
+   // Neural Network
    Use["MLP"]             = 1; 
    Use["DNN"]             = 0; 
    // 
-   // --- Support Vector Machine 
+   // Support Vector Machine 
    Use["SVM"]             = 0;
    // 
-   // --- Boosted Decision Trees
+   // Boosted Decision Trees
    Use["BDT"]             = 0;
    Use["BDTG"]            = 1;
    // ---------------------------------------------------------------
@@ -113,7 +116,7 @@ void TMVARegression( TString myMethodList = "" )
 
    // --------------------------------------------------------------------------------------------------
 
-   // --- Here the preparation phase begins
+   // Here the preparation phase begins
 
    // Create a new root output file
    TString outfileName( "TMVAReg.root" );
@@ -136,8 +139,9 @@ void TMVARegression( TString myMethodList = "" )
    TMVA::DataLoader *dataloader=new TMVA::DataLoader("dataset");
    // If you wish to modify default settings 
    // (please check "src/Config.h" to see all available global options)
-   //    (TMVA::gConfig().GetVariablePlotting()).fTimesRMS = 8.0;
-   //    (TMVA::gConfig().GetIONames()).fWeightFileDir = "myWeightDirectory";
+   //
+   //     (TMVA::gConfig().GetVariablePlotting()).fTimesRMS = 8.0;
+   //     (TMVA::gConfig().GetIONames()).fWeightFileDir = "myWeightDirectory";
 
    // Define the input variables that shall be used for the MVA training
    // note that you may also use variable expressions, such as: "3*var1/var2*abs(var3)"
@@ -155,7 +159,7 @@ void TMVARegression( TString myMethodList = "" )
    dataloader->AddTarget( "fvalue" ); 
 
    // It is also possible to declare additional targets for multi-dimensional regression, ie:
-   // -- factory->AddTarget( "fvalue2" );
+   //     factory->AddTarget( "fvalue2" );
    // BUT: this is currently ONLY implemented for MLP
 
    // Read training and test data (see TMVAClassification for reading ASCII files)
@@ -175,7 +179,7 @@ void TMVARegression( TString myMethodList = "" )
    }
    std::cout << "--- TMVARegression           : Using input file: " << input->GetName() << std::endl;
 
-   // --- Register the regression tree
+   // Register the regression tree
 
    TTree *regTree = (TTree*)input->Get("TreeR");
 
@@ -195,16 +199,18 @@ void TMVARegression( TString myMethodList = "" )
    // tell the DataLoader to use all remaining events in the trees after training for testing:
    dataloader->PrepareTrainingAndTestTree( mycut, 
                                          "nTrain_Regression=1000:nTest_Regression=0:SplitMode=Random:NormMode=NumEvents:!V" );
-   // dataloader->PrepareTrainingAndTestTree( mycut, 
-   //                                      "nTrain_Regression=0:nTest_Regression=0:SplitMode=Random:NormMode=NumEvents:!V" );
+   //
+   //     dataloader->PrepareTrainingAndTestTree( mycut, 
+   //            "nTrain_Regression=0:nTest_Regression=0:SplitMode=Random:NormMode=NumEvents:!V" );
 
    // If no numbers of events are given, half of the events in the tree are used 
    // for training, and the other half for testing:
-   //    dataloader->PrepareTrainingAndTestTree( mycut, "SplitMode=random:!V" );  
-
-   // ---- Book MVA methods
    //
-   // please lookup the various method configuration options in the corresponding cxx files, eg:
+   //     dataloader->PrepareTrainingAndTestTree( mycut, "SplitMode=random:!V" );  
+
+   // Book MVA methods
+   //
+   // Please lookup the various method configuration options in the corresponding cxx files, eg:
    // src/MethoCuts.cxx, etc, or here: http://tmva.sourceforge.net/optionRef.html
    // it is possible to preset ranges in the option string in which the cut optimisation should be done:
    // "...:CutRangeMin[2]=-1:CutRangeMax[2]=1"...", where [2] is the third input variable
@@ -214,6 +220,7 @@ void TMVARegression( TString myMethodList = "" )
       factory->BookMethod( dataloader,  TMVA::Types::kPDERS, "PDERS", 
                            "!H:!V:NormTree=T:VolumeRangeMode=Adaptive:KernelEstimator=Gauss:GaussSigma=0.3:NEventsMin=40:NEventsMax=60:VarTransform=None" );
    // And the options strings for the MinMax and RMS methods, respectively:
+   //
    //      "!H:!V:VolumeRangeMode=MinMax:DeltaFrac=0.2:KernelEstimator=Gauss:GaussSigma=0.3" );   
    //      "!H:!V:VolumeRangeMode=RMS:DeltaFrac=3:KernelEstimator=Gauss:GaussSigma=0.3" );   
 
@@ -254,13 +261,15 @@ void TMVARegression( TString myMethodList = "" )
 
    if (Use["DNN"])
    {
-//       TString layoutString ("Layout=TANH|(N+100)*2,LINEAR");
-//       TString layoutString ("Layout=SOFTSIGN|100,SOFTSIGN|50,SOFTSIGN|20,LINEAR");
-//       TString layoutString ("Layout=RELU|300,RELU|100,RELU|30,RELU|10,LINEAR");
-//       TString layoutString ("Layout=SOFTSIGN|50,SOFTSIGN|30,SOFTSIGN|20,SOFTSIGN|10,LINEAR");
-//       TString layoutString ("Layout=TANH|50,TANH|30,TANH|20,TANH|10,LINEAR");
-//       TString layoutString ("Layout=SOFTSIGN|50,SOFTSIGN|20,LINEAR");
-//       TString layoutString ("Layout=TANH|100,TANH|30,LINEAR");
+   /*
+       TString layoutString ("Layout=TANH|(N+100)*2,LINEAR");
+       TString layoutString ("Layout=SOFTSIGN|100,SOFTSIGN|50,SOFTSIGN|20,LINEAR");
+       TString layoutString ("Layout=RELU|300,RELU|100,RELU|30,RELU|10,LINEAR");
+       TString layoutString ("Layout=SOFTSIGN|50,SOFTSIGN|30,SOFTSIGN|20,SOFTSIGN|10,LINEAR");
+       TString layoutString ("Layout=TANH|50,TANH|30,TANH|20,TANH|10,LINEAR");
+       TString layoutString ("Layout=SOFTSIGN|50,SOFTSIGN|20,LINEAR");
+       TString layoutString ("Layout=TANH|100,TANH|30,LINEAR");
+    */
        TString layoutString ("Layout=TANH|100,LINEAR");
 
        TString training0 ("LearningRate=1e-5,Momentum=0.5,Repetitions=1,ConvergenceSteps=500,BatchSize=50,TestRepetitions=7,WeightDecay=0.01,Regularization=NONE,DropConfig=0.5+0.5+0.5+0.5,DropRepetitions=2");
@@ -272,10 +281,10 @@ void TMVARegression( TString myMethodList = "" )
        trainingStrategyString += training0 + "|" + training1 + "|" + training2 + "|" + training3;
 
        
-//       TString trainingStrategyString ("TrainingStrategy=LearningRate=1e-1,Momentum=0.3,Repetitions=3,ConvergenceSteps=20,BatchSize=30,TestRepetitions=7,WeightDecay=0.0,L1=false,DropFraction=0.0,DropRepetitions=5");
+ //       TString trainingStrategyString ("TrainingStrategy=LearningRate=1e-1,Momentum=0.3,Repetitions=3,ConvergenceSteps=20,BatchSize=30,TestRepetitions=7,WeightDecay=0.0,L1=false,DropFraction=0.0,DropRepetitions=5");
 
        TString nnOptions ("!H:V:ErrorStrategy=SUMOFSQUARES:VarTransform=G:WeightInitialization=XAVIERUNIFORM");
-//       TString nnOptions ("!H:V:VarTransform=Normalize:ErrorStrategy=CHECKGRADIENTS");
+ //       TString nnOptions ("!H:V:VarTransform=Normalize:ErrorStrategy=CHECKGRADIENTS");
        nnOptions.Append (":"); nnOptions.Append (layoutString);
        nnOptions.Append (":"); nnOptions.Append (trainingStrategyString);
 
@@ -298,15 +307,15 @@ void TMVARegression( TString myMethodList = "" )
                            "!H:!V:NTrees=2000::BoostType=Grad:Shrinkage=0.1:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=20:MaxDepth=3:MaxDepth=4" );
    // --------------------------------------------------------------------------------------------------
 
-   // ---- Now you can tell the factory to train, test, and evaluate the MVAs
+   // Now you can tell the factory to train, test, and evaluate the MVAs
 
    // Train MVAs using the set of training events
    factory->TrainAllMethods();
 
-   // ---- Evaluate all MVAs using the set of test events
+   // Evaluate all MVAs using the set of test events
    factory->TestAllMethods();
 
-   // ----- Evaluate and compare performance of all configured MVAs
+   // Evaluate and compare performance of all configured MVAs
    factory->EvaluateAllMethods();    
 
    // --------------------------------------------------------------

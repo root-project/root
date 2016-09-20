@@ -117,4 +117,16 @@ public:
 #define R__LOCKGUARD_IMT2(mutex) { }
 #endif
 
+#ifdef R__USE_IMT
+#define R__RWLOCK_ACQUIRE_READ(rwlock)  if (ROOT::IsParTreeProcessingEnabled()) rwlock.ReadLock();
+#define R__RWLOCK_RELEASE_READ(rwlock)  if (ROOT::IsParTreeProcessingEnabled()) rwlock.ReadUnLock();
+#define R__RWLOCK_ACQUIRE_WRITE(rwlock) if (ROOT::IsParTreeProcessingEnabled()) rwlock.WriteLock();
+#define R__RWLOCK_RELEASE_WRITE(rwlock) if (ROOT::IsParTreeProcessingEnabled()) rwlock.WriteUnLock();
+#else
+#define R__RWLOCK_ACQUIRE_READ(rwlock)  { }
+#define R__RWLOCK_RELEASE_READ(rwlock)  { }
+#define R__RWLOCK_ACQUIRE_WRITE(rwlock) { }
+#define R__RWLOCK_RELEASE_WRITE(rwlock) { }
+#endif
+
 #endif

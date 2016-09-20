@@ -1,3 +1,26 @@
+/// \file
+/// \ingroup tutorial_net
+/// This script shows how to make a simple iterative server that
+/// can accept connections while handling currently open connections.
+/// Compare this script to hserv.C that blocks on accept.
+/// In this script a server socket is created and added to a monitor.
+/// A monitor object is used to monitor connection requests on
+/// the server socket. After accepting the connection
+/// the new socket is added to the monitor and immediately ready
+/// for use. Once two connections are accepted the server socket
+/// is removed from the monitor and closed. The monitor continues
+/// monitoring the sockets.
+///
+/// To run this demo do the following:
+///   - Open three windows
+///   - Start ROOT in all three windows
+///   - Execute in the first window: .x hserv2.C
+///   - Execute in the second and third windows: .x hclient.C
+///
+/// \macro_code
+///
+/// \author Fons Rademakers
+
 #include "TMessage.h"
 #include "TBenchmark.h"
 #include "TSocket.h"
@@ -296,24 +319,6 @@ struct ParallelFileMerger : public TObject
 };
 
 void parallelMergeServer(bool cache = false) {
-   // This script shows how to make a simple iterative server that
-   // can accept connections while handling currently open connections.
-   // Compare this script to hserv.C that blocks on accept.
-   // In this script a server socket is created and added to a monitor.
-   // A monitor object is used to monitor connection requests on
-   // the server socket. After accepting the connection
-   // the new socket is added to the monitor and immediately ready
-   // for use. Once two connections are accepted the server socket
-   // is removed from the monitor and closed. The monitor continues
-   // monitoring the sockets.
-   //
-   // To run this demo do the following:
-   //   - Open three windows
-   //   - Start ROOT in all three windows
-   //   - Execute in the first window: .x hserv2.C
-   //   - Execute in the second and third windows: .x hclient.C
-   //Author: Fons Rademakers
-
    // Open a server socket looking for connections on a named service or
    // on a specified port.
    //TServerSocket *ss = new TServerSocket("rootserv", kTRUE);

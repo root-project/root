@@ -1,4 +1,10 @@
-// TUriTest.C - rudimentary TUri test macro - Gerhard E. Bruckner 2007-10-18
+/// \file
+/// \ingroup tutorial_net
+/// Rudimentary TUri test macro.
+///
+/// \macro_code
+///
+/// \author Gerhard E. Bruckner 2007-10-18
 
 #include <TUri.h>
 

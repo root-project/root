@@ -43,3 +43,23 @@ const enumName constVar = (enumName) 1 // k2 is invisible!
 // ROOT-8036: check that library symbols do not override interpreter symbols
 int step = 10 // CHECK: (int) 10
 step // CHECK: (int) 10
+
+gCling->process("#ifdef __UNDEFINED__\n42\n#endif")
+//CHECK: (cling::Interpreter::CompilationResult) (cling::Interpreter::CompilationResult::kSuccess) : (unsigned int) 0
+
+// ROOT-8300
+struct B { static void *fgStaticVar; B(){ printf("B::B()\n"); } };
+B b; // CHECK: B::B()
+
+// ROOT-7857
+template <class T> void tfunc(T) {}
+struct ROOT7857{
+  void func() { tfunc((ROOT7857*)0); }
+};
+ROOT7857* root7857;
+
+// ROOT-5248
+class MyClass;
+extern MyClass* my;
+class MyClass {public: MyClass* getMyClass() {return 0;}} cl;
+MyClass* my = cl.getMyClass();

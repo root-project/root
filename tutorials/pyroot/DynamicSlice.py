@@ -117,7 +117,7 @@ if __name__ == '__main__':
    hpxpy  = TH2F( 'hpxpy', 'py vs px', 40, -4, 4, 40, -4, 4 )
    hpxpy.SetStats( 0 )
    x, y = Double( 0.1 ), Double( 0.101 )
-   for i in xrange( 50000 ):
+   for i in range( 50000 ):
      gRandom.Rannor( x, y )
      hpxpy.Fill( x, y )
    hpxpy.Draw( 'COL' )

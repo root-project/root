@@ -30,7 +30,7 @@
 /// Note again we have:
 ///
 /// ~~~{.cpp}
-///    tau ~ <expecation off bar> / <expectation on bar>
+///    tau ~ <expectation off bar> / <expectation on bar>
 /// ~~~
 ///
 /// One can further expand the model to account for the systematic associated
@@ -49,12 +49,12 @@
 /// the product tau*rho will be known very precisely (~1/sqrt(bbar)) and the contour
 /// in those parameters will be narrow and have a non-trivial tau~1/rho shape.
 /// However, if we choose to put rho on the non/noff measurements (where the
-/// product will have an error `~1/sqrt(b))`, the contours will be more ameanable
+/// product will have an error `~1/sqrt(b))`, the contours will be more amenable
 /// to numerical techniques.  Thus, here we choose to define:
 ///
 /// ~~~{.cpp}
-///    tau := <expecation off bar> / (<expectation on bar>)
-///    rho := <expecation off> / (<expectation on> * tau)
+///    tau := <expectation off bar> / (<expectation on bar>)
+///    rho := <expectation off> / (<expectation on> * tau)
 ///
 /// ^ y
 /// |

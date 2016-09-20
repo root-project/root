@@ -3,7 +3,7 @@
 /// Creates and runs a simple iterator plugin connected to TGeoPainter iterator.
 ///
 /// It demonstrates the possibility to dynamically change the color of drawn
-/// volumes acording some arbitrary criteria *WITHOUT* changing the color of the
+/// volumes according some arbitrary criteria *WITHOUT* changing the color of the
 /// same volume drawn on branches that do not match the criteria.
 ///
 /// ~~~{.cpp}

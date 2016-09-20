@@ -256,9 +256,8 @@ void TMVA::DataSet::AddEvent(Event * ev, Types::ETreeType type)
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets the event collection (by DataSetFactory)
 
-void TMVA::DataSet::SetEventCollection(std::vector<TMVA::Event*>* events, Types::ETreeType type) 
+void TMVA::DataSet::SetEventCollection(std::vector<TMVA::Event*>* events, Types::ETreeType type, Bool_t deleteEvents) 
 {
-   Bool_t deleteEvents = true;
    DestroyCollection(type,deleteEvents);
 
    const Int_t t = TreeIndex(type);

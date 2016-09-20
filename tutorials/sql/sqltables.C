@@ -1,9 +1,14 @@
-// This is an example illustrating how the TSQLFile class can be used.
-// Histogram, list of TBox and clones array of TBox objects are stored
-// to TSQLFile and read back.
-// Except for the specific TSQLFile configuration, the TSQLFile functionality
-// is absolutely similar to a normal root TFile
-// Author: S.Linev
+/// \file
+/// \ingroup tutorial_sql
+/// This is an example illustrating how the TSQLFile class can be used.
+/// Histogram, list of TBox and clones array of TBox objects are stored
+/// to TSQLFile and read back.
+/// Except for the specific TSQLFile configuration, the TSQLFile functionality
+/// is absolutely similar to a normal root TFile
+///
+/// \macro_code
+///
+/// \author Sergey Linev
 
 // example configuration for MySQL 4.1
 const char* dbname = "mysql://host.domain/test";
@@ -30,7 +35,7 @@ void tables_write()
    if (f->IsZombie()) { delete f; return; }
 
    // you can change configuration only until first object
-   // is writen to TSQLFile
+   // is written to TSQLFile
    f->SetUseSuffixes(kFALSE);
    f->SetArrayLimit(1000);
    f->SetUseIndexes(1);
@@ -52,7 +57,7 @@ void tables_write()
    }
    arr->Write("list",TObject::kSingleKey);
 
-   // clones array is also strored as single key
+   // clones array is also stored as single key
    TClonesArray clones("TBox",10);
    for(int n=0;n<10;n++)
        new (clones[n]) TBox(n*10,n*100,n*20,n*200);

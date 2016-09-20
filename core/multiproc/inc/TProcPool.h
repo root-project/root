@@ -25,6 +25,7 @@
 #include "TPool.h"
 #include "TPoolProcessor.h"
 #include "TPoolWorker.h"
+#include "TSelector.h"
 #include "TTreeReader.h"
 #include <algorithm> //std::generate
 #include <numeric> //std::iota
@@ -53,12 +54,18 @@ public:
    using TPool<TProcPool>::Map;
 
    // ProcTree
-   // this version requires that procFunc returns a ptr to TObject or inheriting classes and takes a TTreeReader& (both enforced at compile-time)
+   // these versions requires that procFunc returns a ptr to TObject or inheriting classes and takes a TTreeReader& (both enforced at compile-time)
    template<class F> auto ProcTree(const std::vector<std::string>& fileNames, F procFunc, const std::string& treeName = "", ULong64_t nToProcess = 0) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
    template<class F> auto ProcTree(const std::string& fileName, F procFunc, const std::string& treeName = "", ULong64_t nToProcess = 0) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
    template<class F> auto ProcTree(TFileCollection& files, F procFunc, const std::string& treeName = "", ULong64_t nToProcess = 0) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
    template<class F> auto ProcTree(TChain& files, F procFunc, const std::string& treeName = "", ULong64_t nToProcess = 0) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
    template<class F> auto ProcTree(TTree& tree, F procFunc, ULong64_t nToProcess = 0) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
+   // these versions require a TSelector
+   TList* ProcTree(const std::vector<std::string>& fileNames, TSelector& selector, const std::string& treeName = "", ULong64_t nToProcess = 0);
+   TList* ProcTree(const std::string &fileName, TSelector& selector, const std::string& treeName = "", ULong64_t nToProcess = 0);
+   TList* ProcTree(TFileCollection& files, TSelector& selector, const std::string& treeName = "", ULong64_t nToProcess = 0);
+   TList* ProcTree(TChain& files, TSelector& selector, const std::string& treeName = "", ULong64_t nToProcess = 0);
+   TList* ProcTree(TTree& tree, TSelector& selector, ULong64_t nToProcess = 0);
 
    void SetNWorkers(unsigned n) { TMPClient::SetNWorkers(n); }
    unsigned GetNWorkers() const { return TMPClient::GetNWorkers(); }
@@ -70,6 +77,7 @@ private:
    template<class T> void Collect(std::vector<T> &reslist);
    template<class T> void HandlePoolCode(MPCodeBufPair &msg, TSocket *sender, std::vector<T> &reslist);
 
+   void FixLists(std::vector<TObject*> &lists);
    void Reset();
    void ReplyToFuncResult(TSocket *s);
    void ReplyToIdle(TSocket *s);
@@ -260,7 +268,7 @@ auto TProcPool::ProcTree(TFileCollection& files, F procFunc, const std::string& 
    std::vector<std::string> fileNames(files.GetNFiles());
    unsigned count = 0;
    for(auto f : *static_cast<THashList*>(files.GetList()))
-      fileNames[count++] = static_cast<TFileInfo*>(f)->GetCurrentUrl()->GetFile();
+      fileNames[count++] = static_cast<TFileInfo*>(f)->GetCurrentUrl()->GetUrl();
 
    return ProcTree(fileNames, procFunc, treeName, nToProcess);
 }

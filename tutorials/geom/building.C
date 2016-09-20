@@ -2,7 +2,6 @@
 /// \ingroup tutorial_geom
 /// Drawing a building where Dept. of Physics is, using ROOT geometry class.
 ///
-/// Author: Hyung Ju Lee (laccalus@nate.com), Dept. of Physics, Univ. of Seoul
 /// Reviewed by Sunman Kim (sunman98@hanmail.net)
 /// Supervisor: Prof. Inkyu Park (icpark@physics.uos.ac.kr)
 ///
@@ -13,7 +12,7 @@
 ///
 /// \macro_code
 ///
-/// \author Hyung Ju Leea
+/// \author Hyung Ju Lee (laccalus@nate.com), Dept. of Physics, Univ. of Seoul
 
 #include "TGeoManager.h"
 

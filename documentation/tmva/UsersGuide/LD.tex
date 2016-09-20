@@ -1,0 +1,100 @@
+\subsection{Linear discriminant analysis (LD)}\index{Linear Discriminant}\index{LD}
+\label{sec:ld}
+
+The linear discriminant analysis provides data classification using a linear model, 
+where \textit{linear} refers to the discriminant function $y(\mathbf{x})$ being 
+linear in the parameters $\mathbf{\beta}$
+\beq
+	y(\mathbf{x})=\mathbf{x}^\top\beta + \beta_0\;,
+\eeq
+where $\beta_0$ (denoted the {\em bias}) is adjusted so that $y(\mathbf{x})\geq0$ 
+for signal and $y(\mathbf{x})<0$ for background. It can be shown that this is equivalent 
+to the Fisher discriminant, which seeks to maximise the ratio of between-class 
+variance to within-class variance by projecting the data onto a linear subspace.
+
+\subsubsection{Booking options}
+
+The LD is booked via the command:
+\begin{codeexample}
+\begin{tmvacode}
+factory->BookMethod( Types::kLD, "LD" );
+\end{tmvacode}
+\caption[.]{\codeexampleCaptionSize Booking of the linear discriminant: the first argument is 
+		   a predefined enumerator, the second argument is a user-defined 
+	   	string identifier. No method-specific options are available.
+        See Sec.~\ref{sec:usingtmva:booking} for more information on the booking.}
+\end{codeexample}
+
+No specific options are defined for this method beyond those shared with all the other 
+methods (\cf Option Table~\ref{opt:mva::methodbase} on page~\pageref{opt:mva::methodbase}).
+
+\subsubsection{Description and implementation}
+
+Assuming that there are $m+1$ parameters $\beta_0, \cdots ,\beta_m$ to be estimated using 
+a training set comprised of $n$ events, the defining equation for $\mathbf{\beta}$ is
+\beq
+	Y=X\mathbf{\beta}\;,
+\eeq
+where we have absorbed $\beta_0$ into the vector $\beta$ and introduced the matrices
+\beq
+	Y=\left( \begin{array}{c}
+	y_1\\
+	y_2\\
+	\vdots\\
+	y_n \end{array} \right) \mbox{  and  } X=\left( \begin{array}{cccc}
+							1 & x_{11} & \cdots & x_{1m} \\
+							1 & x_{21} & \cdots & x_{2m} \\
+							\vdots & \vdots & \ddots & \vdots \\
+							1 & x_{n1} & \cdots & x_{nm} \end{array} \right)\;,
+\eeq
+where the constant column in $X$ represents the bias $\beta_0$ and $Y$ is composed of 
+the target values with $y_i=1$ if the $i$th event belongs to the signal class and $y_i=0$ 
+if the $i$th event belongs to the background class. Applying the method of least squares, 
+we now obtain the {\em normal equations} for the classification problem, given by
+\beq
+	X^TX\beta=X^TY \Longleftrightarrow \beta=(X^TX)^{-1}X^TY\;.
+\eeq
+The transformation $(X^TX)^{-1}X^T$ is known as the \textit{Moore-Penrose pseudo inverse} 
+of $X$ and can be regarded as a generalisation of the matrix inverse to non-square 
+matrices. It requires that the matrix $X$ has full rank.
+
+If weighted events are used, this is simply taken into account by introducing a diagonal
+weight matrix $W$ and modifying the normal equations as follows:
+\beq
+	\beta=(X^TWX)^{-1}X^TWY\;.
+\eeq
+Considering two events $\mathbf{x}_1$ and $\mathbf{x}_2$ on the decision boundary, we 
+have $y(\mathbf{x}_1)=y(\mathbf{x}_2)=0$ and hence $(\mathbf{x}_1-\mathbf{x}_2)^T\beta=0$. 
+Thus we see that the LD can be geometrically interpreted as determining the decision 
+boundary by finding an orthogonal vector $\beta$.
+
+\subsubsection{Variable ranking}
+
+The present implementation of LD provides a ranking of the input variables based on the 
+coefficients of the variables in the linear combination that forms the decision boundary. 
+The order of importance of the discriminating variables is assumed to agree with the 
+order of the absolute values of the coefficients.
+
+\subsubsection{Regression with LD}
+
+It is straightforward to apply the LD algorithm to linear regression by replacing the 
+binary targets $y_i \in {0,1}$ in the training data with the measured values of the 
+function which is to be estimated. The resulting function $y(\mathbf{x})$ is then 
+the best estimate for the data obtained by least-squares regression.
+
+\subsubsection{Performance}
+
+The LD is optimal for Gaussian distributed variables with linear correlations (\cf the 
+standard toy example that comes with TMVA) and can be competitive with likelihood and 
+nonlinear discriminants in certain cases. No discrimination is achieved when a variable 
+has the same sample mean for signal and background, but the LD can often benefit from 
+suitable transformations of the input variables. For example, if a variable 
+$x \in [-1,1]$ has a signal distribution of the form $x^2$ and a uniform background 
+distribution, their mean value is zero in both cases, leading to no separation. The 
+simple transformation $x \rightarrow |x|$ renders this variable powerful for the use 
+with LD.
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "TMVAUsersGuide"
+%%% End: 

@@ -1,0 +1,135 @@
+\subsection{Function discriminant analysis (FDA)}\index{Function Discriminant Analysis}\index{FDA}
+\label{sec:fda}
+
+The common goal of all TMVA discriminators is to determine an optimal separating
+function in the multivariate space of all input variables. The Fisher 
+discriminant solves this analytically for the linear case, while artificial neural
+networks, support vector machines or boosted decision trees provide nonlinear 
+approximations with -- in principle -- arbitrary precision if enough training 
+statistics is available and the chosen architecture is flexible enough. 
+
+The function discriminant analysis (FDA) provides an intermediate solution to the 
+problem with the aim to solve relatively simple or partially nonlinear problems. 
+The user provides the desired function with adjustable parameters via the configuration 
+option string, and FDA fits the parameters to it, requiring the function value to be as 
+close as possible to the real value (to 1 for signal and 0 for background in classification).
+Its advantage over the more involved and automatic nonlinear discriminators is the simplicity 
+and transparency of the discrimination expression. A shortcoming is that FDA will underperform 
+for involved problems with complicated, phase space dependent nonlinear correlations.
+
+\subsubsection{Booking options}
+
+FDA is booked via the command:
+\begin{codeexample}
+\begin{tmvacode}
+factory->BookMethod( Types::kFDA, "FDA", "<options>" );
+\end{tmvacode}
+\caption[.]{\codeexampleCaptionSize Booking of the FDA classifier: the first argument is 
+		   a predefined enumerator, the second argument is a user-defined 
+		   string identifier, and the third argument is the configuration options string.
+         Individual options are separated by a ':'. 
+         See Sec.~\ref{sec:usingtmva:booking} for more information on the booking.}
+\end{codeexample}
+
+The configuration options for the FDA classifier are listed in Option Table~\ref{opt:mva::fda}
+(see also Sec.~\ref{sec:fitting}).
+
+% ======= input option table ==========================================
+\begin{option}[t]
+\input optiontables/MVA__FDA.tex
+\caption[.]{\optionCaptionSize 
+     Configuration options reference for MVA method: {\em FDA}.
+     Values given are defaults. If predefined categories exist, the default category 
+     is marked by a '$\star$'. The options in Option Table~\ref{opt:mva::methodbase} on 
+     page~\pageref{opt:mva::methodbase} can also be configured.     
+     The input variables In the discriminator expression are denoted 
+     \code{x0}, \code{x1}, \dots (until $\Nvar-1$), where the 
+     number follows the order in which the variables have been 
+     registered with the Factory; coefficients to be determined 
+     by the fit must be denoted \code{(0)}, \code{(1)}, \dots (the 
+     number of coefficients is free) in the formula; allowed is  
+     any functional expression that can be interpreted by a ROOT 
+     \href{http://root.cern.ch/root/html/TFormula.html}{TFormula}. 
+     See Code Example~\ref{ce:fdaexample} for an example expression.
+     The limits for the fit parameters (coefficients) defined in the 
+     formula expression are given with the syntax:  "\code{(-1,3);(2,10);...}", 
+     where the first interval corresponds to parameter \code{(0)}.
+     The converger allows to use (presently only) Minuit 
+     fitting in addition to Monte Carlo sampling or a Genetic Algorithm. More
+     details on this combination are given in Sec.~\ref{sec:converger}. The 
+     various fitters are configured using the options given in Tables~\ref{opt:fitter_mc}, 
+     \ref{opt:fitter_minuit}, \ref{opt:fitter_ga} and \ref{opt:fitter_sa}, for MC, Minuit, GA and SA, 
+     respectively.
+}
+\label{opt:mva::fda}
+\end{option}
+% =====================================================================
+
+A typical option string could look as follows:
+\begin{codeexample}
+\begin{tmvacode}
+"Formula=(0)+(1)*x0+(2)*x1+(3)*x2+(4)*x3:\ 
+ ParRanges=(-1,1);(-10,10);(-10,10);(-10,10);(-10,10):\ 
+ FitMethod=MINUIT:\
+ ErrorLevel=1:PrintLevel=-1:FitStrategy=2:UseImprove:UseMinos:SetBatch"
+\end{tmvacode}
+\caption[.]{\codeexampleCaptionSize FDA booking option example simulating a linear Fisher
+            discriminant (\cf\  Sec.~\ref{sec:fisher}). The 
+            top line gives the discriminator expression, where the $xi$ denote the 
+            input variables and the $(j)$ denote the coefficients to be determined by the 
+            fit. Allowed are all standard functions and expressions, including the functions 
+            belonging to the ROOT \href{http://root.cern.ch/root/html/TMath.html}{TMath} library.
+            The second line determines the limits for the fit parameters, where the 
+            numbers of intervals given must correspond to the number of fit parameters defined.
+            The third line defines the fitter to be used (here Minuit), and the last line 
+            is the fitter configuration. }
+\label{ce:fdaexample}
+\end{codeexample}
+
+\subsubsection{Description and implementation}
+
+The parsing of the discriminator function employs ROOT's  
+\href{http://root.cern.ch/root/html/TFormula.html}{TFormula} class, which requires that the 
+expression complies with its rules (which are the same as those that apply for the 
+\code{TTree::Draw} command). For simple formula with a single global fit solution, Minuit will 
+be the most efficient fitter. However, if the problem is complicated, highly nonlinear, and/or 
+has a non-unique solution space, more involved fitting algorithms may be required. In that 
+case the Genetic Algorithm combined or not with a Minuit converger should lead to the 
+best results. After fit convergence, FDA prints the fit results (parameters and estimator 
+value) as well as the discriminator expression used on standard output. The smaller the 
+estimator value, the better the solution found. The normalised estimator is given by 
+\beq
+\begin{array}{lrcl}
+\mbox{\em For classification:} &
+      {\cal E} &=& \frac{1}{\WS}\sum_{i=1}^{\NS} \left(F({\bf x}_i)-1\right)^2w_i +
+                 \frac{1}{\WB}\sum_{i=1}^{\NB} F^2({\bf x}_i) w_i\;, \\[0.3cm]
+\mbox{\em For regression:} &
+      {\cal E} &=& \frac{1}{W}\sum_{i=1}^{N} \left(F({\bf x}_i)-{\bf t}_i\right)^2w_i\;,
+
+\end{array}
+\eeq
+where for classification the first (second) sum is over the signal (background) 
+training events, and for regression it is over all training events, 
+$F({\bf x}_i)$ is the discriminator function, ${\bf x}_i$ is the tuple of the 
+$\Nvar$ input variables for event $i$, $w_i$ is the event weight, ${\bf t}_i$ the 
+tuple of training regression targets,  $\WSB$ is the sum of all signal (background) 
+weights in the training sample, and $W$ the sum over all training weights.
+
+\subsubsection{Variable ranking}
+
+The present implementation of FDA does not provide a ranking 
+of the input variables.
+
+\subsubsection{Performance}
+
+The FDA performance depends on the complexity and fidelity of the user-defined
+discriminator function. As a general rule, it should be able to reproduce the 
+discrimination power of any linear discriminant analysis. To reach into the nonlinear 
+domain, it is useful to inspect the correlation profiles of the input variables, and 
+add quadratic and higher polynomial terms between variables as necessary. Comparison
+with more involved nonlinear classifiers can be used as a guide.
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "TMVAUsersGuide"
+%%% End: 

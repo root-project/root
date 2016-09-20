@@ -1,0 +1,16 @@
+\begin{optiontableAuto}
+       NegWeightTreatment  &  \mc{1}{c}{--}  &  InverseBoostNegWeights  &  InverseBoostNegWeights, IgnoreNegWeightsInTraining, PairNegWeightsGlobal, Pray  &  How to treat events with negative weights in the BDT training (particular the boosting) : IgnoreInTraining;  Boost With inverse boostweight; Pair events with negative and positive weights in traning sample and *annihilate* them (experimental!) \\
+%                      Css  &  \mc{1}{c}{--}  &                1  &  \mc{1}{l}{--}  &  AdaCost: cost of true signal selected signal \\
+%                   Cts\_sb  &  \mc{1}{c}{--}  &                1  &  \mc{1}{l}{--}  &  AdaCost: cost of true signal selected bkg \\
+%                   Ctb\_ss  &  \mc{1}{c}{--}  &                1  &  \mc{1}{l}{--}  &  AdaCost: cost of true bkg    selected signal \\
+%                      Cbb  &  \mc{1}{c}{--}  &                1  &  \mc{1}{l}{--}  &  AdaCost: cost of true bkg    selected bkg  \\
+          NodePurityLimit  &  \mc{1}{c}{--}  &              0.5  &  \mc{1}{l}{--}  &  In boosting/pruning, nodes with purity $>$ NodePurityLimit are signal; background otherwise. \\
+           SeparationType  &  \mc{1}{c}{--}  &        GiniIndex  &  CrossEntropy, GiniIndex, GiniIndexWithLaplace, MisClassificationError, SDivSqrtSPlusB, RegressionVariance  &  Separation criterion for node splitting \\
+           DoBoostMonitor  &  \mc{1}{c}{--}  &            False  &  \mc{1}{l}{--}  &  Create control plot with ROC integral vs tree number \\
+            UseFisherCuts  &  \mc{1}{c}{--}  &            False  &  \mc{1}{l}{--}  &  Use multivariate splits using the Fisher criterion \\
+      MinLinCorrForFisher  &  \mc{1}{c}{--}  &              0.8  &  \mc{1}{l}{--}  &  The minimum linear correlation between two variables demanded for use in Fisher criterion in node splitting \\
+         UseExclusiveVars  &  \mc{1}{c}{--}  &            False  &  \mc{1}{l}{--}  &  Variables already used in fisher criterion are not anymore analysed individually for node splitting \\
+           DoPreselection  &  \mc{1}{c}{--}  &            False  &  \mc{1}{l}{--}  &  and and apply automatic pre-selection for 100\% efficient signal (bkg) cuts prior to training \\
+            RenormByClass  &  \mc{1}{c}{--}  &            False  &  \mc{1}{l}{--}  &  Individually re-normalize each event class to the original size after boosting \\
+         SigToBkgFraction  &  \mc{1}{c}{--}  &                1  &  \mc{1}{l}{--}  &  Sig to Bkg ratio used in Training (similar to NodePurityLimit, which cannot be used in real adaboost 
+\end{optiontableAuto}

@@ -39,6 +39,7 @@ namespace llvm {
 
 namespace cling {
   class IncrementalExecutor;
+  class TransactionPool;
 
   ///\brief Contains information about the consumed input at once.
   ///
@@ -184,15 +185,12 @@ namespace cling {
     ///
     clang::FileID m_BufferFID;
 
-  public:
-
-    Transaction(clang::Sema& S);
-    Transaction(const CompilationOptions& Opts, clang::Sema& S);
+    /// TransactionPool needs direct access to m_State as setState asserts
+    friend class TransactionPool;
 
     void Initialize(clang::Sema& S);
 
-    ~Transaction();
-
+  public:
     enum State {
       kCollecting,
       kCompleted,
@@ -207,6 +205,10 @@ namespace cling {
       kWarnings,
       kNone
     };
+
+    Transaction(clang::Sema& S);
+    Transaction(const CompilationOptions& Opts, clang::Sema& S);
+    ~Transaction();
 
     /// \{
     /// \name Iteration
@@ -511,7 +513,6 @@ namespace cling {
 
     void printStructureBrief(size_t nindent = 0) const;
 
-    friend class TransactionPool;
   private:
     bool comesFromASTReader(clang::DeclGroupRef DGR) const;
   };

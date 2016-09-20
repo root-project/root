@@ -20,7 +20,7 @@ void TestNonCentral(){
    w.factory("NonCentralChiSquare::nccc(x,kk,lambda)");
    ((RooNonCentralChiSquare*)w.pdf("nccc"))->SetForceSum(true);
 
-   // a normal "central" chi-square for comparision when lambda->0
+   // a normal "central" chi-square for comparison when lambda->0
    w.factory("ChiSquarePdf::cs(x,k)");
 
    //w.var("kk")->setVal(4.); // test a large kk

@@ -14,10 +14,10 @@ private:
    bool fCapturing = false;
    std::string fStdoutpipe;
    std::string fStderrpipe;
-   int fStdout_pipe[2];
-   int fStderr_pipe[2];
-   int fSaved_stderr;
-   int fSaved_stdout;
+   int fStdout_pipe[2] = {0,0};
+   int fStderr_pipe[2] = {0,0};
+   int fSaved_stderr = 0;
+   int fSaved_stdout = 0;
 public:
    JupyROOTExecutorHandler();
    void Poll();
@@ -67,6 +67,7 @@ static void InitCaptureImpl(int &savedStdStream, int *pipeHandle, int FILENO)
       return;
    }
    long flags_stdout = fcntl(pipeHandle[0], F_GETFL);
+   if (flags_stdout == -1) return;
    flags_stdout |= O_NONBLOCK;
    fcntl(pipeHandle[0], F_SETFL, flags_stdout);
    fcntl(pipeHandle[0], F_SETPIPE_SZ, MAX_PIPE_SIZE);

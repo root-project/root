@@ -35,20 +35,20 @@
 /// More background on this 'prototype problem' can be found in the
 /// following papers:
 ///
-/// Evaluation of three methods for calculating statistical significance
-/// when incorporating a systematic uncertainty into a test of the
-/// background-only hypothesis for a Poisson process
-/// Authors: Robert D. Cousins, James T. Linnemann, Jordan Tucker
-/// http://arxiv.org/abs/physics/0702156
-/// NIM  A 595 (2008) 480--501
+///  - Evaluation of three methods for calculating statistical significance
+///    when incorporating a systematic uncertainty into a test of the
+///    background-only hypothesis for a Poisson process
+///    Authors: Robert D. Cousins, James T. Linnemann, Jordan Tucker
+///    http://arxiv.org/abs/physics/0702156
+///    NIM  A 595 (2008) 480--501
 ///
-/// Statistical Challenges for Searches for New Physics at the LHC
-/// Authors: Kyle Cranmer
-/// http://arxiv.org/abs/physics/0511028
+///  - Statistical Challenges for Searches for New Physics at the LHC
+///    Author: Kyle Cranmer
+///    http://arxiv.org/abs/physics/0511028
 ///
-///  Measures of Significance in HEP and Astrophysics
-///  Authors: J. T. Linnemann
-///  http://arxiv.org/abs/physics/0312059
+///  - Measures of Significance in HEP and Astrophysics
+///    Authors J. T. Linnemann
+///    http://arxiv.org/abs/physics/0312059
 ///
 /// \macro_image
 /// \macro_output
@@ -276,7 +276,7 @@ void HybridInstructional() {
    //
    // The prior used for the hybrid calculator is the posterior
    // from the auxiliary measurement y.  The model for the aux.
-   // measurement is Pois(y|tau*b), thus the likleihood function
+   // measurement is Pois(y|tau*b), thus the likelihood function
    // is proportional to (has the form of) a Gamma distribution.
    // if the 'original prior' $\eta(b)$ is uniform, then from
    // Bayes's theorem we have the posterior:
@@ -351,7 +351,7 @@ void HybridInstructional() {
    p1->Draw();
 
    // -------------------------------------------------------------------------
-   // # P A R T   5  :  U S I N G   H Y B R I D   C A L C U L A T O R  
+   // # P A R T   5  :  U S I N G   H Y B R I D   C A L C U L A T O R
    // # W I T H   A N   A L T E R N A T I V E   T E S T   S T A T I S T I C
    //
    // A likelihood ratio test statistics should be 1-to-1 with the count x
@@ -480,7 +480,7 @@ void HybridInstructional() {
    // if you wanted to use the ad hoc Gaussian prior instead
    // ~~~{.cpp}
    // hc3.ForcePriorNuisanceAlt(*w->pdf("gauss_prior_y0"));
-   // hc3.ForcePriorNuisanceNull(*w->pdf("gauss_prior_y0")); 
+   // hc3.ForcePriorNuisanceNull(*w->pdf("gauss_prior_y0"));
    // ~~~
 
    // choose fit-based test statistic
@@ -606,7 +606,7 @@ void HybridInstructional() {
    // ----------------------------------
    // Comparison
    // ----------------------------------
-   // Asymptotics
+   // Asymptotic
    // From the value of the profile likelihood ratio (5.0338)
    // The significance can be estimated using Wilks's theorem
    // significance = sqrt(2*profileLR) = 3.1729 sigma

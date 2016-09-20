@@ -41,8 +41,8 @@
 
 #include <ctime>
 #include <cstdio>
-
 #include <memory>
+#include <sstream>
 
 #ifndef _MSC_VER
 #include <unistd.h>
@@ -63,7 +63,6 @@
 # endif
 # include <Windows.h>
 # include <direct.h>
-# include <sstream>
 # define popen _popen
 # define pclose _pclose
 # define getcwd_func _getcwd
@@ -201,6 +200,7 @@ static bool getWindowsSDKDir(std::string &path) {
   return false;
 }
 
+#if LLVM_MSC_PREREQ(1900)
 // Find the most recent version of Universal CRT or Windows 10 SDK.
 // vcvarsqueryregistry.bat from Visual Studio 2015 sorts entries in the include
 // directory by name and uses the last one of the list.
@@ -240,123 +240,155 @@ static bool getUniversalCRTSdkDir(std::string &Path,
   Path = sPath;
   return getWindows10SDKVersion(Path, UCRTVersion);
 }
+#endif
+
+static void logSearch(const char* Name, const std::string& Value,
+                      const char* Found = nullptr) {
+  if (Found)
+    llvm::errs() << "Found " << Name << " '" << Value << "' that matches "
+                 << Found << " version\n";
+  else
+    llvm::errs() << Name << " '" << Value << "' not found.\n";
+}
+
+static void trimString(const char* Value, const char* SubStr,
+  std::string& Out) {
+  const char* End = ::strstr(Value, SubStr);
+  Out = End ? std::string(Value, End) : Value;
+}
+
+static bool getVSRegistryString(const char* Product, int VSVersion,
+                                std::string& Path, const char* Verbose) {
+  std::stringstream Key;
+  Key << "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\" << Product << "\\"
+      << VSVersion << ".0";
+  char IDEInstallDir[1024];
+  if (!getSystemRegistryString(Key.str().c_str(), "InstallDir",
+                               IDEInstallDir, sizeof(IDEInstallDir) - 1)
+      || IDEInstallDir[0] == 0) {
+    if (Verbose)
+      logSearch("Registry", Key.str());
+    return false;
+  }
+
+  trimString(IDEInstallDir, "\\Common7\\IDE", Path);
+  if (Verbose)
+    logSearch("Registry", Key.str(), Verbose);
+  return true;
+}
+
+static bool getVSEnvironmentString(int VSVersion, std::string& Path,
+                                   const char* Verbose) {
+  std::stringstream Key;
+  Key << "VS" << VSVersion * 10 << "COMNTOOLS";
+  const char* Tools = ::getenv(Key.str().c_str());
+  if (!Tools) {
+    if (Verbose)
+      logSearch("Environment", Key.str());
+    return false;
+  }
+
+  trimString(Tools, "\\Common7\\Tools", Path);
+  if (Verbose)
+    logSearch("Environment", Key.str(), Verbose);
+  return true;
+}
+
+static bool getVisualStudioVer(int VSVersion, std::string& Path,
+                               const char* Verbose) {
+  if (getVSRegistryString("VisualStudio", VSVersion, Path, Verbose))
+    return true;
+
+  if (getVSRegistryString("VCExpress", VSVersion, Path, Verbose))
+    return true;
+
+  if (getVSEnvironmentString(VSVersion, Path, Verbose))
+    return true;
+
+  return false;
+}
 
   // Get Visual Studio installation directory.
-static bool getVisualStudioDir(std::string &path) {
-  // First check the environment variables that vsvars32.bat sets.
-  const char* vcinstalldir = getenv("VCINSTALLDIR");
-  if (vcinstalldir) {
-    char *p = const_cast<char *>(strstr(vcinstalldir, "\\VC"));
-    if (p)
-      *p = '\0';
-    path = vcinstalldir;
+static bool getVisualStudioDir(std::string& Path, bool Verbose) {
+
+#if (_MSC_VER >= 1900)
+  const int VSVersion = 14;
+#else
+  const int VSVersion = (_MSC_VER / 100) - 6;
+#endif
+
+  // Try for the version compiled with first
+  if (getVisualStudioVer(VSVersion, Path, Verbose ? "compiled" : nullptr))
     return true;
-  }
-  int VSVersion = (_MSC_VER / 100) - 6;
-  std::stringstream keyName;
-  keyName << "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\VisualStudio\\" << VSVersion << ".0";
-  char vsIDEInstallDir[256];
-  char vsExpressIDEInstallDir[256];
-  // Then try the windows registry.
-  bool hasVCDir = getSystemRegistryString(keyName.str().c_str(),
-    "InstallDir", vsIDEInstallDir, sizeof(vsIDEInstallDir) - 1);
-  keyName.str(std::string());
-  keyName << "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\VCExpress\\" << VSVersion << ".0";
-  bool hasVCExpressDir = getSystemRegistryString(keyName.str().c_str(),
-    "InstallDir", vsExpressIDEInstallDir, sizeof(vsExpressIDEInstallDir) - 1);
-    // If we have both vc80 and vc90, pick version we were compiled with.
-  if (hasVCDir && vsIDEInstallDir[0]) {
-    char *p = (char*)strstr(vsIDEInstallDir, "\\Common7\\IDE");
-    if (p)
-      *p = '\0';
-    path = vsIDEInstallDir;
+
+  // Check the environment variables that vsvars32.bat sets.
+  // We don't do this first so we can run from other VSStudio shells properly
+  if (const char* VCInstall = ::getenv("VCINSTALLDIR")) {
+    trimString(VCInstall, "\\VC", Path);
+    if (Verbose)
+      llvm::errs() << "Using VCINSTALLDIR '" << VCInstall << "'\n";
     return true;
   }
 
-  if (hasVCExpressDir && vsExpressIDEInstallDir[0]) {
-    char *p = (char*)strstr(vsExpressIDEInstallDir, "\\Common7\\IDE");
-    if (p)
-      *p = '\0';
-    path = vsExpressIDEInstallDir;
-    return true;
-  }
-
-  // Try the environment.
-  const char *vs140comntools = getenv("VS140COMNTOOLS");
-  const char *vs120comntools = getenv("VS120COMNTOOLS");
-  const char *vs110comntools = getenv("VS110COMNTOOLS");
-  const char *vs100comntools = getenv("VS100COMNTOOLS");
-  const char *vs90comntools = getenv("VS90COMNTOOLS");
-  const char *vs80comntools = getenv("VS80COMNTOOLS");
-  const char *vscomntools = NULL;
-
-  // Try to find the version that we were compiled with
-  if(false) {}
-  #if (_MSC_VER >= 1900)  // VC140
-  else if (vs140comntools) {
-	  vscomntools = vs140comntools;
-  }
-  #elif (_MSC_VER >= 1800)  // VC120
-  else if(vs120comntools) {
-    vscomntools = vs120comntools;
-  }
-  #elif (_MSC_VER >= 1700)  // VC110
-  else if(vs110comntools) {
-    vscomntools = vs110comntools;
-  }
-  #elif (_MSC_VER >= 1600)  // VC100
-  else if(vs100comntools) {
-    vscomntools = vs100comntools;
-  }
-  #elif (_MSC_VER == 1500) // VC80
-  else if(vs90comntools) {
-    vscomntools = vs90comntools;
-  }
-  #elif (_MSC_VER == 1400) // VC80
-  else if(vs80comntools) {
-    vscomntools = vs80comntools;
-  }
-  #endif
-  // Otherwise find any version we can
-  else if (vs140comntools)
-	  vscomntools = vs140comntools;
-  else if (vs120comntools)
-    vscomntools = vs120comntools;
-  else if (vs110comntools)
-    vscomntools = vs110comntools;
-  else if (vs100comntools)
-    vscomntools = vs100comntools;
-  else if (vs90comntools)
-    vscomntools = vs90comntools;
-  else if (vs80comntools)
-    vscomntools = vs80comntools;
-
-  if (vscomntools && *vscomntools) {
-    const char *p = strstr(vscomntools, "\\Common7\\Tools");
-    path = p ? std::string(vscomntools, p) : vscomntools;
-    return true;
+  // Try for any other version we can get
+  const int Versions[] = { 14, 12, 11, 10, 9, 8, 0 };
+  for (unsigned i = 0; Versions[i]; ++i) {
+    if (Versions[i] != VSVersion && getVisualStudioVer(Versions[i], Path,
+                                                 Verbose ? "highest" : nullptr))
+      return true;
   }
   return false;
 }
 
 #elif defined(__APPLE__)
 
+#include <CoreFoundation/CFBase.h> // For MAC_OS_X_VERSION_X_X macros
+
+// gcc on Mac can only include CoreServices.h up to 10.9 SDK, which means
+// we cannot use Gestalt to get the running OS version when >= 10.10
+#if defined(__clang__) || !defined(MAC_OS_X_VERSION_10_10)
 #include <dlfcn.h> // dlopen to avoid linking with CoreServices
 #include <CoreServices/CoreServices.h>
-#include <sstream>
+#else
+#define CLING_SWVERS_PARSE_ONLY 1
+#endif
 
-static bool getISysRootVersion(const std::string& SDKs, int major,
-                               int minor, std::string& sysRoot) {
+
+static bool getISysRootVersion(const std::string& SDKs, int Major,
+                               int Minor, std::string& SysRoot,
+                               const char* Verbose) {
   std::ostringstream os;
-  os << SDKs << "MacOSX" << major << "." << minor << ".sdk";
+  os << SDKs << "MacOSX" << Major << "." << Minor << ".sdk";
 
   std::string SDKv = os.str();
   if (llvm::sys::fs::is_directory(SDKv)) {
-    sysRoot.swap(SDKv);
+    SysRoot.swap(SDKv);
+    if (Verbose) {
+      llvm::errs() << "SDK version matching " << Major << "." << Minor
+                   << " found, this does " << Verbose << "\n";
+    }
     return true;
   }
 
+  if (Verbose)
+    llvm::errs() << "SDK version matching " << Major << "." << Minor
+                 << " not found, this would " << Verbose << "\n";
+
   return false;
+}
+
+static std::string ReadSingleLine(const char* Cmd) {
+  if (FILE* PF = ::popen(Cmd, "r")) {
+    char Buf[1024];
+    char* BufPtr = ::fgets(Buf, sizeof(Buf), PF);
+    ::pclose(PF);
+    if (BufPtr && Buf[0]) {
+      const llvm::StringRef Result(Buf);
+      assert(Result[Result.size()-1] == '\n' && "Single line too large");
+      return Result.trim().str();
+    }
+  }
+  return "";
 }
 
 static bool getISysRoot(std::string& sysRoot, bool Verbose) {
@@ -371,18 +403,9 @@ static bool getISysRoot(std::string& sysRoot, bool Verbose) {
   // Is XCode installed where it usually is?
   if (!fs::is_directory(SDKs)) {
     // Nope, use xcode-select -p to get the path
-    if (FILE *pf = ::popen("xcode-select -p", "r")) {
-      SDKs.clear();
-      char buffer[512];
-      while (fgets(buffer, sizeof(buffer), pf) && buffer[0])
-        SDKs.append(buffer);
-
-      // remove trailing \n
-      while (!SDKs.empty() && SDKs.back() == '\n')
-        SDKs.resize(SDKs.size() - 1);
-      ::pclose(pf);
-    } else // Nothing more we can do
-      return false;
+    SDKs = ReadSingleLine("xcode-select -p");
+    if (SDKs.empty())
+      return false;  // Nothing more we can do
   }
 
   SDKs.append("/Platforms/MacOSX.platform/Developer/SDKs/");
@@ -393,37 +416,51 @@ static bool getISysRoot(std::string& sysRoot, bool Verbose) {
   // Try to get the SDK for whatever version of OS X is currently running
   // Seems to make more sense to get the currently running SDK so headers
   // and any loaded libraries will match.
+
+  int32_t majorVers = -1, minorVers = -1;
+#ifndef CLING_SWVERS_PARSE_ONLY
+ #pragma clang diagnostic push
+ #pragma clang diagnostic ignored "-Wdeprecated-declarations"
   if (void *core = dlopen(
           "/System/Library/Frameworks/CoreServices.framework/CoreServices",
           RTLD_LAZY)) {
-    // Gestalt is a deprecated API (funnily enough clang is smart enough
-    // to know we're using it).
-    // Alternatives to NSProcessInfo and avoid linking to objc & Foundation:
-    //  sw_vers | grep ProductVersion | awk '{print $2}' => 10.10.5
-    //  kCFCoreFoundationVersionNumber symbol in CoreFoundation => 368.31
-    SInt32 majorVersion = -1, minorVersion = -1;
     typedef ::OSErr (*GestaltProc)(::OSType, ::SInt32 *);
     if (GestaltProc Gestalt = (GestaltProc)dlsym(core, "Gestalt")) {
-      Gestalt(gestaltSystemVersionMajor, &majorVersion);
-      Gestalt(gestaltSystemVersionMinor, &minorVersion);
+      if (Gestalt(gestaltSystemVersionMajor, &majorVers) == ::noErr) {
+        if (Gestalt(gestaltSystemVersionMinor, &minorVers) != ::noErr)
+          minorVers = -1;
+      } else
+        majorVers = -1;
     }
     ::dlclose(core);
+  }
+ #pragma clang diagnostic pop
+#endif
 
-    if (majorVersion != -1 && minorVersion != -1) {
-      if (getISysRootVersion(SDKs, majorVersion, minorVersion, sysRoot))
-        return true;
-    
-      if (Verbose)
-        llvm::errs() << "SDK version matching current OSX not found\n";
+  if (majorVers == -1 || minorVers == -1) {
+    const std::string SWVers = ReadSingleLine("sw_vers | grep ProductVersion"
+                                              " | awk '{print $2}'");
+    if (!SWVers.empty()) {
+      if (::sscanf(SWVers.c_str(), "%d.%d", &majorVers, &minorVers) != 2) {
+        majorVers = -1;
+        minorVers = -1;
+      }
     }
   }
 
+  if (majorVers != -1 && minorVers != -1) {
+    if (getISysRootVersion(SDKs, majorVers, minorVers, sysRoot,
+            Verbose ? "match the version of OS X running"
+                    : nullptr)) {
+      return true;
+    }
+  }
+
+
 #define GET_ISYSROOT_VER(maj, min) \
-  if (getISysRootVersion(SDKs, maj, min, sysRoot)) \
-    return true; \
-  if (Verbose) \
-    llvm::errs() << "SDK version matching " << maj << "." << min \
-                 << " not found (this is what cling was compiled with)\n";
+  if (getISysRootVersion(SDKs, maj, min, sysRoot, Verbose ? \
+                 "match what cling was compiled with" : nullptr)) \
+    return true;
 
   // Try to get the SDK for whatever cling was compiled with
   #if defined(MAC_OS_X_VERSION_10_11)
@@ -584,41 +621,57 @@ namespace {
       const bool Verbose = opts.Verbose;
 #ifdef _MSC_VER
       // Honor %INCLUDE%. It should know essential search paths with vcvarsall.bat.
-      if (const char *cl_include_dir = getenv("INCLUDE")) {
+      if (const char* Includes = getenv("INCLUDE")) {
         SmallVector<StringRef, 8> Dirs;
-        StringRef(cl_include_dir).split(Dirs, ";");
-        for (SmallVectorImpl<StringRef>::iterator I = Dirs.begin(), E = Dirs.end();
-             I != E; ++I) {
-          StringRef d = *I;
-          if (d.size() == 0)
-            continue;
-          sArguments.addArgument("-I", d);
-        }
+        utils::SplitPaths(Includes, Dirs, utils::kAllowNonExistant,
+                          ";", Verbose);
+        for (const llvm::StringRef& Path : Dirs)
+          sArguments.addArgument("-I", Path.str());
       }
-      std::string VSDir;
-      std::string WindowsSDKDir;
 
       // When built with access to the proper Windows APIs, try to actually find
       // the correct include paths first.
-      if (getVisualStudioDir(VSDir)) {
+      std::string VSDir;
+      if (getVisualStudioDir(VSDir, Verbose)) {
         if (!opts.NoCXXInc) {
-          sArguments.addArgument("-I", VSDir + "\\VC\\include");
+          const std::string VSIncl = VSDir + "\\VC\\include";
+          if (Verbose)
+            llvm::errs() << "Adding VisualStudio SDK: '" << VSIncl << "'\n";
+          sArguments.addArgument("-I", std::move(VSIncl));
         }
         if (!opts.NoBuiltinInc) {
+          std::string WindowsSDKDir;
           if (getWindowsSDKDir(WindowsSDKDir)) {
-            sArguments.addArgument("-I", WindowsSDKDir + "\\include");
+            if (WindowsSDKDir.back() != '\\')
+              WindowsSDKDir += '\\';
+            WindowsSDKDir += "include";
+            if (Verbose)
+              llvm::errs() << "Adding Windows SDK: '" << WindowsSDKDir << "'\n";
+            sArguments.addArgument("-I", std::move(WindowsSDKDir));
           }
           else {
-            sArguments.addArgument("-I", VSDir + "\\VC\\PlatformSDK\\Include");
+            VSDir.append("\\VC\\PlatformSDK\\Include");
+            if (Verbose)
+              llvm::errs() << "Adding Platform SDK: '" << VSDir << "'\n";
+            sArguments.addArgument("-I", std::move(VSDir));
           }
         }
       }
+
+#if LLVM_MSC_PREREQ(1900)
       std::string UniversalCRTSdkPath;
       std::string UCRTVersion;
-
-      if (getUniversalCRTSdkDir(UniversalCRTSdkPath, UCRTVersion))
-          sArguments.addArgument("-I",
-                  UniversalCRTSdkPath + "\\Include\\" + UCRTVersion + "\\ucrt");
+      if (getUniversalCRTSdkDir(UniversalCRTSdkPath, UCRTVersion)) {
+        if (UniversalCRTSdkPath.back() != '\\')
+          UniversalCRTSdkPath += '\\';
+        UniversalCRTSdkPath += "Include\\" + UCRTVersion + "\\ucrt";
+        if (Verbose) {
+          llvm::errs() << "Adding UniversalCRT SDK: '"
+                       << UniversalCRTSdkPath << "'\n";
+        }
+        sArguments.addArgument("-I", std::move(UniversalCRTSdkPath));
+      }
+#endif
 
 #else // _MSC_VER
 
@@ -935,7 +988,11 @@ namespace {
 #ifdef CLING_INCLUDE_PATHS
     if (HOpts.Verbose)
       llvm::errs() << "  \"" CLING_INCLUDE_PATHS "\"\n";
-    utils::AddIncludePaths(CLING_INCLUDE_PATHS, HOpts);
+  #ifndef _WIN32
+    utils::AddIncludePaths(CLING_INCLUDE_PATHS, HOpts, ":");
+  #else
+    utils::AddIncludePaths(CLING_INCLUDE_PATHS, HOpts, ";");
+  #endif
 #endif
     llvm::SmallString<512> P(ClingBin);
     if (!P.empty()) {

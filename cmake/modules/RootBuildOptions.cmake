@@ -93,6 +93,7 @@ ROOT_BUILD_OPTION(ccache OFF "Enable ccache usage for speeding up builds")
 ROOT_BUILD_OPTION(chirp ON "Chirp support (Condor remote I/O), requires libchirp_client")
 ROOT_BUILD_OPTION(cling ON "Enable new CLING C++ interpreter")
 ROOT_BUILD_OPTION(cocoa OFF "Use native Cocoa/Quartz graphics backend (MacOS X only)")
+ROOT_BUILD_OPTION(cuda OFF "Use CUDA if it is found in the system")
 ROOT_BUILD_OPTION(davix ON "DavIx library for HTTP/WEBDAV access")
 ROOT_BUILD_OPTION(dcache ON "dCache support, requires libdcap from DESY")
 ROOT_BUILD_OPTION(exceptions ON "Turn on compiler exception handling capability")
@@ -116,6 +117,7 @@ ROOT_BUILD_OPTION(imt OFF "Implicit multi-threading support")
 ROOT_BUILD_OPTION(jemalloc OFF "Using the jemalloc allocator")
 ROOT_BUILD_OPTION(krb5 ON "Kerberos5 support, requires Kerberos libs")
 ROOT_BUILD_OPTION(ldap ON "LDAP support, requires (Open)LDAP libs")
+ROOT_BUILD_OPTION(macos_native OFF "Disable looking for libraries, includes and binaries in locations other than a native installation (MacOS only)")
 ROOT_BUILD_OPTION(mathmore ON "Build the new libMathMore extended math library, requires GSL (vers. >= 1.8)")
 ROOT_BUILD_OPTION(memstat ON "A memory statistics utility, helps to detect memory leaks")
 ROOT_BUILD_OPTION(minuit2 OFF "Build the new libMinuit2 minimizer library")
@@ -242,5 +244,18 @@ elseif(APPLE)
 else()
   set(CMAKE_SKIP_INSTALL_RPATH TRUE)           # skip the full RPATH for the install tree
 endif()
+
+#---deal with the DCMAKE_IGNORE_PATH------------------------------------------------------------
+if(macos_native)
+  if(APPLE)
+    set(CMAKE_IGNORE_PATH)
+    foreach(_prefix /sw /opt/local /usr/local) # Fink installs in /sw, and MacPort in /opt/local and Brew in /usr/local
+      list(APPEND CMAKE_IGNORE_PATH ${_prefix}/bin ${_prefix}/include ${_prefix}/lib)
+    endforeach()
+  else()
+    message(STATUS "Option 'macos_native' is only for MacOS systems. Ignoring it.")
+  endif()
+endif()
+
 
 

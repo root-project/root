@@ -65,6 +65,7 @@ namespace Math {
 
    class GSLMCIntegrationWorkspace;
    class GSLMonteFunctionWrapper;
+   class GSLRandomEngine;
    class GSLRngWrapper;
 
 
@@ -230,7 +231,7 @@ public:
       /**
        set random number generator
       */
-      void SetGenerator(GSLRngWrapper* r);
+      void SetGenerator(GSLRandomEngine & r);
 
       /**
        set integration method
@@ -327,6 +328,7 @@ public:
       double fResult;
       double fError;
       int fStatus;
+      bool fExtGen;   // flag indicating if class uses an external generator provided by the user
 
 
       GSLMCIntegrationWorkspace * fWorkspace;

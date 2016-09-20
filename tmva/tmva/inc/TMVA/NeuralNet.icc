@@ -1102,7 +1102,8 @@ template <typename LAYERDATA>
         
         
         // ----------- create layer data -------------------------------------------------------
-        assert (_layers.back ().numNodes () == outputSize ());
+        //LM- This assert not needed anymore (outputsize is actually numNodes+1)
+        //assert (_layers.back ().numNodes () == outputSize ());
         totalNumWeights = 0;
         size_t totalNumNodes = 0;
         std::vector<std::vector<LayerData>> layerPatternData;

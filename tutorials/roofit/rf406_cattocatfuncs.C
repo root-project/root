@@ -7,7 +7,7 @@
 ///
 /// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke 
+/// \author 07/2008 - Wouter Verkerke
 
 
 #include "RooRealVar.h"
@@ -50,7 +50,7 @@ void rf406_cattocatfuncs()
 
 
 
-   // C r e a t e   a   c a t - > c a t   m  a p p i n g   c a t e g o r y 
+   // C r e a t e   a   c a t - > c a t   m  a p p i n g   c a t e g o r y
    // ---------------------------------------------------------------------
 
    // A RooMappedCategory is category->category mapping function based on string expression
@@ -65,13 +65,13 @@ void rf406_cattocatfuncs()
    // Enter a wilcard expression mapping
    tcatType.map("NetTagger*","Neural Network") ;
 
-   // Make a table of the mapped category state multiplicit in data
+   // Make a table of the mapped category state multiplicity in data
    Roo1DTable* mtable = data->table(tcatType) ;
    mtable->Print("v") ;
 
 
 
-   // C r e a t e   a   c a t   X   c a t   p r o d u c t   c a t e g o r y 
+   // C r e a t e   a   c a t   X   c a t   p r o d u c t   c a t e g o r y
    // ----------------------------------------------------------------------
 
    // A SUPER-category is 'product' of _lvalue_ categories. The state names of a super

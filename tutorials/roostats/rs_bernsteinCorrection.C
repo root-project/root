@@ -125,10 +125,10 @@ void rs_bernsteinCorrection(){
    // the first is for n-1 vs. n degree polynomial corrections
    // the second is for n vs. n+1 degree polynomial corrections
    // Here we choose n to be the one chosen by the tolerance
-   // critereon above, eg. n = "degree" in the code.
+   // criterion above, eg. n = "degree" in the code.
    // Setting this to true is takes about 10 min.
    bool checkSamplingDist = true;
-   int numToyMC = 20;  // increse this value for sensible results
+   int numToyMC = 20;  // increase this value for sensible results
 
    TCanvas* c1 = new TCanvas();
    if(checkSamplingDist) {

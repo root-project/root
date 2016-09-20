@@ -1,3 +1,25 @@
+/// \file
+/// \ingroup tutorial_net
+/// Client program which creates and fills a histogram. Every 1000 fills
+/// the histogram is send to the server which displays the histogram.
+///
+/// To run this demo do the following:
+///   - Open three windows
+///   - Start ROOT in all three windows
+///   - Execute in the first window: .x hserv.C (or hserv2.C)
+///   - Execute in the second and third windows: .x hclient.C
+/// If you want to run the hserv.C on a different host, just change
+/// "localhost" in the TSocket ctor below to the desired hostname.
+///
+/// The script argument "evol" can be used when using a modified version
+/// of the script where the clients and server are on systems with
+/// different versions of ROOT. When evol is set to kTRUE the socket will
+/// support automatic schema evolution between the client and the server.
+///
+/// \macro_code
+///
+/// \author Fons Rademakers
+
 #include "TBenchmark.h"
 #include "TList.h"
 #include "TInetAddress.h"
@@ -46,7 +68,7 @@ void ConnectToServer(const TInetAddress *hostb, Int_t port)
    if (idx == 0) {
       // Create the histogram
       hpx = new TH1F("hpx","This is the px distribution",100,-4,4);
-      hpx->SetFillColor(48);  // set nice fillcolor
+      hpx->SetFillColor(48);  // set nice fill-color
    } else {
       hpx = new TH2F("hpxpy","py vs px",40,-4,4,40,-4,4);
    }
@@ -114,24 +136,6 @@ void UpdateBonjourRecords(TList *records)
 
 void hclientbonj(Bool_t evol=kFALSE)
 {
-   // Client program which creates and fills a histogram. Every 1000 fills
-   // the histogram is send to the server which displays the histogram.
-   //
-   // To run this demo do the following:
-   //   - Open three windows
-   //   - Start ROOT in all three windows
-   //   - Execute in the first window: .x hserv.C (or hserv2.C)
-   //   - Execute in the second and third windows: .x hclient.C
-   // If you want to run the hserv.C on a different host, just change
-   // "localhost" in the TSocket ctor below to the desired hostname.
-   //
-   // The script argument "evol" can be used when using a modified version
-   // of the script where the clients and server are on systems with
-   // different versions of ROOT. When evol is set to kTRUE the socket will
-   // support automatic schema evolution between the client and the server.
-   //
-   //Author: Fons Rademakers
-
    gEvo = evol;
 
    gBenchmark->Start("hclient");

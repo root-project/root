@@ -3,6 +3,7 @@
 #include "TF3.h"
 #include "TFormula.h"
 #include "TGraph.h"
+#include "TMath.h"
 #include "Math/ChebyshevPol.h"
 
 // test of tformula neeeded to be run
@@ -247,28 +248,28 @@ bool test12() {
    return ok;
 }
 
-bool test13()  {
+bool test13() {
    // test GetExpFormula
    TFormula f("f","[2] + [0]*x + [1]*x*x");
    f.SetParameters(1,2,3);
    return (f.GetExpFormula() == TString("[p2]+[p0]*x+[p1]*x*x"));
 }
 
-bool test14()  {
+bool test14() {
    // test GetExpFormula
    TFormula f("f","[2] + [0]*x + [1]*x*x");
    f.SetParameters(1,2,3);
    return (f.GetExpFormula("P") == TString("3+1*x+2*x*x"));
 }
 
-bool test15()  {
+bool test15() {
    // test GetExpFormula
    TFormula f("f","[2] + [0]*x + [1]*x*x");
    f.SetParameters(1,2,3);
    return (f.GetExpFormula("CLING") == TString("p[2]+p[0]*x[0]+p[1]*x[0]*x[0] ")); // need an extra white space
 }
 
-bool test16()  {
+bool test16() {
    // test GetExpFormula
    TFormula f("f","[2] + [0]*x + [1]*x*x");
    f.SetParameters(1,2,3);
@@ -382,37 +383,53 @@ bool test25() {
    bool ok = true;
    TF1 f1("f1","x^-2.5");
    ok &= (f1.Eval(3.) == TMath::Power(3,-2.5));
+   if (!ok) std::cout << "Error in test25 - f != x^-2.5 " << f1.Eval(3.) << "  " << TMath::Power(3,-2.5) << std::endl;
 
    TF1 f2("f2","x^+2.5");
    //TF1 f3("f3","std::pow(x,2.5)");  // this needed to be fixed
    TF1 f3("f3","TMath::Power(x,2.5)");
-   ok &= (f2.Eval(3.) == f3.Eval(3));
+   bool ret = (f2.Eval(3.) == f3.Eval(3));
+   if (!ret) std::cout << "Error in test25 - f2 != f3 " << f2.Eval(3.) << "  " << f3.Eval(3.) << std::endl;
+   ok &= ret;
 
    //cms test
    TF1 t1("t1","(x<190)?(-18.7813+(((2.49368+(10.3321/(x^0.881126)))*exp(-((x^-1.66603)/0.074916)))-(-17.5757*exp(-((x^-1464.26)/-7.94004e+06))))):(1.09984+(0.394544*exp(-(x/562.407))))");
    double x = 2;
    double y =(x<190)?(-18.7813+(((2.49368+(10.3321/(std::pow(x,0.881126))))*exp(-((std::pow(x,-1.66603))/0.074916)))-(-17.5757*exp(-((std::pow(x,-1464.26))/-7.94004e+06))))):(1.09984+(0.394544*exp(-(x/562.407))));
-   ok &= (t1.Eval(2) == y);
+   // this fails on 32 bits - put a tolerance
+   ret = TMath::AreEqualAbs(t1.Eval(2), y, 1.E-8);
+   if (!ret) std::cout << "Error in test25 - t1 != y " << t1.Eval(2.) << "  " << y << std::endl;
+   ok &= ret;
 
    // tests with scientific notations
    auto ff = new TFormula("ff","x+2.e-2^1.2e-1");
-   ok &= (ff->Eval(1.) == (1. + std::pow(2.e-2,1.2e-1)));
+   ret = (ff->Eval(1.) == (1. + std::pow(2.e-2,1.2e-1)));
+   if (!ret) std::cout << "Error in test25 - ff != expr " << ff->Eval(1.) << "  " << (1. + std::pow(2.e-2,1.2e-1)) << std::endl;
+   ok &= ret;
 
    ff = new TFormula("ff","x^-1.2e1");
-   ok &= (ff->Eval(1.5) == std::pow(1.5,-1.2e1)) ;
+   ret = (ff->Eval(1.5) == std::pow(1.5,-1.2e1));
+   if (!ret) std::cout << "Error in test25 - ff(1.5) != pow " << ff->Eval(1.5) << "  " << std::pow(1.5,-1.2e1) << std::endl;
+   ok &= ret;
 
    ff = new TFormula("ff","1.5e2^x");
-   ok &= (ff->Eval(2) == std::pow(1.5e2,2));
+   ret = (ff->Eval(2) == std::pow(1.5e2,2));
+   if (!ret) std::cout << "Error in test25 - ff(2) != pow " << ff->Eval(2) << "  " << std::pow(1.5e2,2) << std::endl;
+   ok &= ret;
 
    ff = new TFormula("ff","1.5e2^x^-1.1e-2");
-   ok &= (ff->Eval(2.) == std::pow(1.5e2, std::pow(2,-1.1e-2)));
+   ret = (ff->Eval(2.) == std::pow(1.5e2, std::pow(2,-1.1e-2)));
+   if (!ret) std::cout << "Error in test25 - ff(2) != pow^pow " << ff->Eval(2.) << "  " << std::pow(1.5e2, std::pow(2,-1.1e-2)) << std::endl;
+   ok &= ret;
 
    // test same prelacements
    ff = new TFormula("ff","pol10(3)+pol2");
    std::vector<double> p = {1,2,3,4,5,6,7,8,9,10,11,12,13,14};
    ff->SetParameters(p.data());
    double sum = 0; for (auto &a : p) { sum+= a;}
-   ok &= (ff->Eval(1.) == sum);
+   ret = (ff->Eval(1.) == sum);
+   if (!ret) std::cout << "Error in test25 - ff(1) != sum " << ff->Eval(1.) << "  " << sum << std::endl;
+   ok &= ret;
 
    return ok;
 }
@@ -591,7 +608,7 @@ bool test36() {
    return ok;
 }
 
-void PrintError(int itest)  {
+void PrintError(int itest) {
    Error("TFormula test","test%d FAILED ",itest);
    failedTests.push_back(itest);
 }

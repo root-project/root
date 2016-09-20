@@ -49,7 +49,7 @@ using namespace RooFit;
 using namespace RooStats;
 
 struct BayesianMCMCOptions {
-   
+
    double confLevel = 0.95;
    int intervalType = 2;          // type of interval (0 is shortest, 1 central, 2 upper limit)
    double   maxPOI = -999;        // force different values of POI for doing the scan (default is given value)
@@ -58,7 +58,7 @@ struct BayesianMCMCOptions {
    int numBurnInSteps = 100;      // number of burn in steps to be ignored
 };
 
-BayesianMCMCOptions optMCMC; 
+BayesianMCMCOptions optMCMC;
 
 void StandardBayesianMCMCDemo(const char* infile = "",
                               const char* workspaceName = "combined",
@@ -194,11 +194,11 @@ void StandardBayesianMCMCDemo(const char* infile = "",
       plot.DrawChainScatter(*firstPOI,*nuis);
    }
 
-   // print out the iterval on the first Parameter of Interest
+   // print out the interval on the first Parameter of Interest
       cout << "\n>>>> RESULT : " << optMCMC.confLevel*100 <<  "% interval on " <<firstPOI->GetName()<<" is : ["<<
       interval->LowerLimit(*firstPOI) << ", "<<
       interval->UpperLimit(*firstPOI) <<"] "<<endl;
 
 
-      gPad = c1; 
+      gPad = c1;
 }

@@ -13,7 +13,7 @@
 /// \macro_image
 /// \macro_output
 /// \macro_code
-/// \author 04/2009 - Wouter Verkerke 
+/// \author 04/2009 - Wouter Verkerke
 
 
 #include "RooRealVar.h"
@@ -39,10 +39,10 @@ void rf509_wsinteractive()
    // ------------------------------------------------
 
    // Create a workspace named 'w'
-   // With CINT w could exports its contents to 
+   // With CINT w could exports its contents to
    // a same-name C++ namespace in CINT 'namespace w'.
-   // but this does not work anymore in CLING. 
-   // so this tutorial is an example on how to 
+   // but this does not work anymore in CLING.
+   // so this tutorial is an example on how to
    // change the code
    RooWorkspace* w1 = new RooWorkspace("w",kTRUE) ;
 
@@ -52,11 +52,11 @@ void rf509_wsinteractive()
    // Print workspace contents
    w1->Print() ;
 
-   // this does not work anymore with CLING 
-   // use normal workspace functionality 
+   // this does not work anymore with CLING
+   // use normal workspace functionality
 
-   
-   // U s e   w o r k s p a c e   c o n t e n t s   
+
+   // U s e   w o r k s p a c e   c o n t e n t s
    // ----------------------------------------------
 
 
@@ -78,7 +78,7 @@ void rf509_wsinteractive()
    RooPlot* frame = x->frame() ;
    d->plotOn(frame) ;
 
-   // OLD syntax to ommit x::
+   // OLD syntax to omit x::
    // NB: The 'w::' prefix can be omitted if namespace w is imported in local namespace
    // in the usual C++ way
    //
@@ -86,7 +86,7 @@ void rf509_wsinteractive()
    // model.plotOn(frame) ;
    // model.plotOn(frame,Components(bkg),LineStyle(kDashed)) ;
 
-   // new correct syntax 
+   // new correct syntax
    RooAbsPdf *bkg = w1->pdf("bkg");
    model->plotOn(frame);
    model->plotOn(frame,Components(*bkg),LineStyle(kDashed)) ;
@@ -114,10 +114,10 @@ void fillWorkspace(RooWorkspace& w)
    RooRealVar sigma1("sigma1","width of gaussians",0.5) ;
    RooRealVar sigma2("sigma2","width of gaussians",1) ;
 
-   RooGaussian sig1("sig1","Signal component 1",x,mean,sigma1) ;  
-   RooGaussian sig2("sig2","Signal component 2",x,mean,sigma2) ;  
-   
-   // Build Chebychev polynomial p.d.f.  
+   RooGaussian sig1("sig1","Signal component 1",x,mean,sigma1) ;
+   RooGaussian sig2("sig2","Signal component 2",x,mean,sigma2) ;
+
+   // Build Chebychev polynomial p.d.f.
    RooRealVar a0("a0","a0",0.5,0.,1.) ;
    RooRealVar a1("a1","a1",-0.2,0.,1.) ;
    RooChebychev bkg("bkg","Background",x,RooArgSet(a0,a1)) ;
@@ -126,7 +126,7 @@ void fillWorkspace(RooWorkspace& w)
    RooRealVar sig1frac("sig1frac","fraction of component 1 in signal",0.8,0.,1.) ;
    RooAddPdf sig("sig","Signal",RooArgList(sig1,sig2),sig1frac) ;
 
-   // Sum the composite signal and background 
+   // Sum the composite signal and background
    RooRealVar bkgfrac("bkgfrac","fraction of background",0.5,0.,1.) ;
    RooAddPdf  model("model","g1+g2+a",RooArgList(bkg,sig),bkgfrac) ;
 

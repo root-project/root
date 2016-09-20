@@ -5,6 +5,8 @@
 
 set(libname Tree)
 
+include_directories(${TBB_INCLUDE_DIRS})
+
 ROOT_GENERATE_DICTIONARY(G__${libname} *.h MODULE ${libname} LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
 #ROOT_GENERATE_DICTIONARY(ManualTree TTree.h  LINKDEF LinkDef2.h)
 

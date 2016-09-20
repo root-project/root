@@ -36,6 +36,12 @@ static bool &GetIMTFlag()
    return enabled;
 }
 
+static bool &GetPTPFlag()
+{
+   static bool enabled = false;
+   return enabled;
+}
+
 extern "C" void ROOT_TImplicitMT_EnableImplicitMT(UInt_t numthreads)
 {
    if (!GetIMTFlag()) {
@@ -69,3 +75,12 @@ extern "C" bool ROOT_TImplicitMT_IsImplicitMTEnabled()
    return GetIMTFlag();
 };
 
+extern "C" void ROOT_TImplicitMT_EnableParTreeProcessing()
+{
+   GetPTPFlag() = true;
+};
+
+extern "C" bool ROOT_TImplicitMT_IsParTreeProcessingEnabled()
+{
+   return GetPTPFlag();
+};

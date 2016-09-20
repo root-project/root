@@ -1,0 +1,33 @@
+
+1)
+
+
+der Path der im svn co example gegeben wir existiert nicht. es gibt KEIN
+
+hvoss@hvlhcb01:~/TMVA$ svn list https://root.cern.ch/svn/root/branches/dev/tmvapatches
+v5-26-00-patches/
+hvoss@hvlhcb01:~/TMVA$ svn list https://root.cern.ch/svn/root/branches/dev/tmvapatches/v5-26-00-patches
+tmva/
+hvoss@hvlhcb01:~/TMVA$ svn list https://root.cern.ch/svn/root/branches/dev/tmvapatches/v5-26-00-patches/tmva
+Makefile
+Makefile.arch
+Module.mk
+doc/
+inc/
+src/
+test/
+
+das eine Versions nummer mit TMVA Version hat !! Es gibt nur ROOT Versionsnummern und
+darunter ein tmva subdirectory.
+
+   SCHADE eigentlich !!
+   --------------------
+   sollen/koennen wir das aendern? Wenn ja, wie ?
+
+
+2) Was mache ich mit der arXiv und CERN-Report Nummer im updated UsersGuide ?
+
+3) Kann irgendjemand der weis wie's implementiert ist, die "NumEvent" "EqualNumEvents" Geschichte und wie das gehandhabt wird (i.e. relative etc..) so formulieren dass man das versteht?
+
+
+

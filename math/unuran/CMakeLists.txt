@@ -50,8 +50,8 @@ endif()
 
 #---We need to disable some warnings-------------------------------------------------------------------
 string(REPLACE -Wall "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
-if(${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
-  add_definitions(-Wno-parentheses-equality)
+if(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
+  ROOT_ADD_C_FLAG(CMAKE_C_FLAGS -Wno-parentheses-equality)
 endif()
 
 include_directories(BEFORE ${UNR_UNTARDIR} ${UNR_UNTARDIR}/src ${UNR_UNTARDIR}/src/utils)

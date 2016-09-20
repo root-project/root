@@ -27,7 +27,7 @@
 /// This example can be run in many different ways:
 ///  - way1 using the Cling interpreter:
 /// ~~~
-/// .x tree4.C    
+/// .x tree4.C
 /// ~~~
 ///  - way2 using the Cling interpreter:
 /// ~~~
@@ -48,6 +48,7 @@
 /// \macro_code
 ///
 /// \author Rene Brun
+
 #include "TFile.h"
 #include "TTree.h"
 #include "TBrowser.h"

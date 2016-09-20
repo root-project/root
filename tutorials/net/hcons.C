@@ -1,11 +1,16 @@
-{
-   // Histogram consumer script. Create a canvas and 3 pads. Connect
-   // to memory mapped file "hsimple.map", that was created by hprod.C.
-   // It reads the histograms from shared memory and displays them
-   // in the pads (sleeping for 0.1 seconds before starting a new read-out
-   // cycle). This script runs in an infinite loop, so use ctrl-c to stop it.
-   //Author: Fons Rademakers
+/// \file
+/// \ingroup tutorial_net
+/// Histogram consumer script. Create a canvas and 3 pads. Connect
+/// to memory mapped file "hsimple.map", that was created by hprod.C.
+/// It reads the histograms from shared memory and displays them
+/// in the pads (sleeping for 0.1 seconds before starting a new read-out
+/// cycle). This script runs in an infinite loop, so use ctrl-c to stop it.
+///
+/// \macro_code
+///
+/// \author Fons Rademakers
 
+{
    gROOT->Reset();
 
    // Create a new canvas and 3 pads

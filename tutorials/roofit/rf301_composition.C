@@ -11,7 +11,7 @@
 /// \macro_image
 /// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke 
+/// \author 07/2008 - Wouter Verkerke
 
 
 #include "RooRealVar.h"
@@ -40,12 +40,12 @@ void rf301_composition()
    RooRealVar a1("a1","a1",-0.5,-1,1) ;
    RooPolyVar fy("fy","fy",y,RooArgSet(a0,a1)) ;
 
-   // Creat gauss(x,f(y),s)
+   // Create gauss(x,f(y),s)
    RooRealVar sigma("sigma","width of gaussian",0.5) ;
-   RooGaussian model("model","Gaussian with shifting mean",x,fy,sigma) ;  
+   RooGaussian model("model","Gaussian with shifting mean",x,fy,sigma) ;
 
 
-   // S a m p l e   d a t a ,   p l o t   d a t a   a n d   p d f   o n   x   a n d   y 
+   // S a m p l e   d a t a ,   p l o t   d a t a   a n d   p d f   o n   x   a n d   y
    // ---------------------------------------------------------------------------------
 
    // Generate 10000 events in x and y from model
@@ -54,12 +54,12 @@ void rf301_composition()
    // Plot x distribution of data and projection of model on x = Int(dy) model(x,y)
    RooPlot* xframe = x.frame() ;
    data->plotOn(xframe) ;
-   model.plotOn(xframe) ; 
+   model.plotOn(xframe) ;
 
    // Plot x distribution of data and projection of model on y = Int(dx) model(x,y)
    RooPlot* yframe = y.frame() ;
    data->plotOn(yframe) ;
-   model.plotOn(yframe) ; 
+   model.plotOn(yframe) ;
 
    // Make two-dimensional plot in x vs y
    TH1* hh_model = model.createHistogram("hh_model",x,Binning(50),YVar(y,Binning(50))) ;

@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <stdexcept>
+#include <cassert>
 
 #include "TMultiGraph.h"
 #include "TH2Poly.h"
@@ -308,28 +309,29 @@ void TGLH2PolyPainter::DrawExtrusion(const TMultiGraph *mg, Double_t zMin, Doubl
 
 void TGLH2PolyPainter::DrawCaps()const
 {
-   glNormal3d(0., 0., 1.);
-
    Int_t binIndex = 0;
    const TList *bins = static_cast<TH2Poly *>(fHist)->GetBins();
    CIter_t cap = fCaps.begin();
 
-   if(!bins->FirstLink())
-      throw 1;
+   assert(bins->FirstLink());
 
    //Very ugly iteration statement. Number of caps is equal to number of links (in a list
    //of bins including nested links in multigraphs. But this is not obvious from the code here,
    //so, I've added check cap != fCaps.end() to make it more or less clear.
+
    for (TObjLink *link = bins->FirstLink(); link && cap != fCaps.end(); link = link->Next()) {
       TH2PolyBin *polyBin = static_cast<TH2PolyBin *>(link->GetObject());
       if (dynamic_cast<TGraph *>(polyBin->GetPolygon())) {
-         DrawCap(cap, binIndex);
+         DrawCap(cap, binIndex, false/*top cap*/);
+         DrawCap(cap, binIndex, true/*bottom cap*/);
          ++cap;
       } else if (TMultiGraph *mg = dynamic_cast<TMultiGraph *>(polyBin->GetPolygon())) {
          const TList *gs = mg->GetListOfGraphs();
          TObjLink *graphLink = gs->FirstLink();
-         for (; graphLink && cap != fCaps.end(); graphLink = graphLink->Next(), ++cap)
-            DrawCap(cap, binIndex);
+         for (; graphLink && cap != fCaps.end(); graphLink = graphLink->Next(), ++cap) {
+            DrawCap(cap, binIndex, false/*top cap*/);
+            DrawCap(cap, binIndex, true/*bottom cap*/);
+         }
       }
 
       ++binIndex;
@@ -339,7 +341,7 @@ void TGLH2PolyPainter::DrawCaps()const
 ////////////////////////////////////////////////////////////////////////////////
 ///Draw a cap on top of a bin.
 
-void TGLH2PolyPainter::DrawCap(CIter_t cap, Int_t binIndex)const
+void TGLH2PolyPainter::DrawCap(CIter_t cap, Int_t binIndex, bool bottomCap)const
 {
    const Int_t binID = fSelectionBase + binIndex;
    if (fSelectionPass) {
@@ -351,18 +353,37 @@ void TGLH2PolyPainter::DrawCap(CIter_t cap, Int_t binIndex)const
          glMaterialfv(GL_FRONT, GL_EMISSION, Rgl::gOrangeEmission);
    }
 
+   glNormal3d(0., 0., bottomCap ? -1. : 1.);
+
+   if (bottomCap)
+      glFrontFace(GL_CW);
+
    const Rgl::Pad::Tesselation_t &t = *cap;
    typedef std::list<Rgl::Pad::MeshPatch_t>::const_iterator CMIter_t;
-   for (CMIter_t p = t.begin(); p != t.end(); ++p) {
-      const std::vector<Double_t> &vs = p->fPatch;
-      glBegin(GLenum(p->fPatchType));
-      for (UInt_t i = 0; i < vs.size(); i += 3)
-         glVertex3dv(&vs[i]);
-      glEnd();
+   if (bottomCap) {
+       for (CMIter_t p = t.begin(); p != t.end(); ++p) {
+          const std::vector<Double_t> &vs = p->fPatch;
+          glBegin(GLenum(p->fPatchType));
+          for (UInt_t i = 0; i < vs.size(); i += 3)
+             glVertex3d(vs[i], vs[i + 1], fZMin);
+          glEnd();
+       }
+   } else {
+      for (CMIter_t p = t.begin(); p != t.end(); ++p) {
+         const std::vector<Double_t> &vs = p->fPatch;
+         glBegin(GLenum(p->fPatchType));
+         for (UInt_t i = 0; i < vs.size(); i += 3)
+            glVertex3dv(&vs[i]);
+         glEnd();
+      }
    }
+
 
    if (!fHighColor && !fSelectionPass && fSelectedPart == binID)
       glMaterialfv(GL_FRONT, GL_EMISSION, Rgl::gNullEmission);
+
+   if (bottomCap) // Restore the counter-clockwise orientation:
+      glFrontFace(GL_CCW);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -548,7 +569,7 @@ void TGLH2PolyPainter::SetBinColor(Int_t binIndex)const
       c->GetRGB(diffColor[0], diffColor[1], diffColor[2]);
 
    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffColor);
-   const Float_t specColor[] = {1.f, 1.f, 1.f, 1.f};
+   const Float_t specColor[] = {0.2f, 0.2f, 0.2f, 0.2f};
    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, specColor);
    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 70.f);
 }

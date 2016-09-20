@@ -114,20 +114,20 @@ namespace Math {
    }
 
 
-   unsigned int GSLRandomEngine::RndmInt(unsigned int max) const {
+   unsigned long GSLRandomEngine::RndmInt(unsigned long max) const {
       // generate a random integer number between 0  and MAX
       return gsl_rng_uniform_int( fRng->Rng(), max );
    }
 
-//    int GSLRandomEngine::GetMin() {
-//       // return minimum integer value used in RndmInt
-//       return gsl_rng_min( fRng->Rng() );
-//    }
+   unsigned long GSLRandomEngine::MinInt() const {
+      // return minimum integer value used in RndmInt
+      return gsl_rng_min( fRng->Rng() );
+   }
 
-//    int GSLRandomEngine::GetMax() {
-//       // return maximum integr value used in RndmInt
-//       return gsl_rng_max( fRng->Rng() );
-//    }
+   unsigned long GSLRandomEngine::MaxInt() const {
+      // return maximum integr value used in RndmInt
+      return gsl_rng_max( fRng->Rng() );
+   }
 
    void GSLRandomEngine::RandomArray(double * begin, double * end )  const {
       // generate array of randoms betweeen 0 and 1. 0 is excluded

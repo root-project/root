@@ -8,7 +8,7 @@
 /// \macro_image
 /// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke 
+/// \author 07/2008 - Wouter Verkerke
 
 
 #include "RooRealVar.h"
@@ -35,19 +35,19 @@ void rf205_compplot()
    RooRealVar mean("mean","mean of gaussians",5) ;
    RooRealVar sigma1("sigma1","width of gaussians",0.5) ;
    RooRealVar sigma2("sigma2","width of gaussians",1) ;
-   RooGaussian sig1("sig1","Signal component 1",x,mean,sigma1) ;  
-   RooGaussian sig2("sig2","Signal component 2",x,mean,sigma2) ;  
+   RooGaussian sig1("sig1","Signal component 1",x,mean,sigma1) ;
+   RooGaussian sig2("sig2","Signal component 2",x,mean,sigma2) ;
 
    // Sum the signal components into a composite signal p.d.f.
    RooRealVar sig1frac("sig1frac","fraction of component 1 in signal",0.8,0.,1.) ;
    RooAddPdf sig("sig","Signal",RooArgList(sig1,sig2),sig1frac) ;
 
-   // Build Chebychev polynomial p.d.f.  
+   // Build Chebychev polynomial p.d.f.
    RooRealVar a0("a0","a0",0.5,0.,1.) ;
    RooRealVar a1("a1","a1",-0.2,0.,1.) ;
    RooChebychev bkg1("bkg1","Background 1",x,RooArgSet(a0,a1)) ;
 
-   // Build expontential pdf
+   // Build exponential pdf
    RooRealVar alpha("alpha","alpha",-1) ;
    RooExponential bkg2("bkg2","Background 2",x,alpha) ;
 
@@ -55,13 +55,13 @@ void rf205_compplot()
    RooRealVar bkg1frac("sig1frac","fraction of component 1 in background",0.2,0.,1.) ;
    RooAddPdf bkg("bkg","Signal",RooArgList(bkg1,bkg2),sig1frac) ;
 
-   // Sum the composite signal and background 
+   // Sum the composite signal and background
    RooRealVar bkgfrac("bkgfrac","fraction of background",0.5,0.,1.) ;
    RooAddPdf  model("model","g1+g2+a",RooArgList(bkg,sig),bkgfrac) ;
 
 
 
-   // S e t u p   b a s i c   p l o t   w i t h   d a t a   a n d   f u l l   p d f 
+   // S e t u p   b a s i c   p l o t   w i t h   d a t a   a n d   f u l l   p d f
    // ------------------------------------------------------------------------------
 
    // Generate a data sample of 1000 events in x from model
@@ -76,7 +76,7 @@ void rf205_compplot()
    RooPlot* xframe2 = (RooPlot*) xframe->Clone("xframe2") ;
 
 
-   // M a k e   c o m p o n e n t   b y   o b j e c t   r e f e r e n c e 
+   // M a k e   c o m p o n e n t   b y   o b j e c t   r e f e r e n c e
    // --------------------------------------------------------------------
 
    // Plot single background component specified by object reference
@@ -92,7 +92,7 @@ void rf205_compplot()
 
 
 
-   // M a k e   c o m p o n e n t   b y   n a m e  /   r e g e x p  
+   // M a k e   c o m p o n e n t   b y   n a m e  /   r e g e x p
    // ------------------------------------------------------------
 
    // Plot single background component specified by name

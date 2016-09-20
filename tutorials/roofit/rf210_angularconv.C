@@ -4,7 +4,7 @@
 ///  'ADDITION AND CONVOLUTION' RooFit tutorial macro #210
 ///
 ///  Convolution in cyclical angular observables theta, and
-///  construction of p.d.f in terms of trasnformed angular
+///  construction of p.d.f in terms of transformed angular
 ///  coordinates, e.g. cos(theta), where the convolution
 ///  is performed in theta rather than cos(theta)
 ///
@@ -16,7 +16,7 @@
 /// \macro_image
 /// \macro_output
 /// \macro_code
-/// \author 04/2009 - Wouter Verkerke 
+/// \author 04/2009 - Wouter Verkerke
 
 
 #include "RooRealVar.h"
@@ -35,11 +35,11 @@ using namespace RooFit ;
 
 void rf210_angularconv()
 {
-   // S e t u p   c o m p o n e n t   p d f s 
+   // S e t u p   c o m p o n e n t   p d f s
    // ---------------------------------------
 
    // Define angle psi
-   RooRealVar psi("psi","psi",0,3.14159268) ;  
+   RooRealVar psi("psi","psi",0,3.14159268) ;
 
    // Define physics p.d.f T(psi)
    RooGenericPdf Tpsi("Tpsi","1+sin(2*@0)",psi) ;
@@ -58,7 +58,7 @@ void rf210_angularconv()
 
 
 
-   // C o n s t r u c t   c o n v o l u t i o n   p d f  i n   p s i 
+   // C o n s t r u c t   c o n v o l u t i o n   p d f  i n   p s i
    // --------------------------------------------------------------
 
    // Define convoluted p.d.f. as function of psi: M=[T(x)R](psi) = M(psi)
@@ -69,7 +69,7 @@ void rf210_angularconv()
 
 
 
-   // S a m p l e ,   f i t   a n d   p l o t   c o n v o l u t e d   p d f  ( p s i )  
+   // S a m p l e ,   f i t   a n d   p l o t   c o n v o l u t e d   p d f  ( p s i )
    // --------------------------------------------------------------------------------
 
    // Generate some events in observable psi
@@ -88,7 +88,7 @@ void rf210_angularconv()
 
 
 
-   // C o n s t r u c t   c o n v o l u t i o n   p d f   i n   c o s ( p s i ) 
+   // C o n s t r u c t   c o n v o l u t i o n   p d f   i n   c o s ( p s i )
    // --------------------------------------------------------------------------
 
 
@@ -102,7 +102,7 @@ void rf210_angularconv()
    Mcpsi.setBufferFraction(0) ;
 
 
-   // S a m p l e ,   f i t   a n d   p l o t   c o n v o l u t e d   p d f  ( c o s p s i )  
+   // S a m p l e ,   f i t   a n d   p l o t   c o n v o l u t e d   p d f  ( c o s p s i )
    // --------------------------------------------------------------------------------
 
    // Generate some events

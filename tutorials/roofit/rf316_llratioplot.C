@@ -3,13 +3,13 @@
 /// \notebook -js
 ///  'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #316
 ///
-///  Using the likelihood ratio techique to construct a signal enhanced
+///  Using the likelihood ratio technique to construct a signal enhanced
 ///  one-dimensional projection of a multi-dimensional p.d.f.
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke 
+/// \author 07/2008 - Wouter Verkerke
 
 
 #include "RooRealVar.h"
@@ -28,7 +28,7 @@ using namespace RooFit ;
 void rf316_llratioplot()
 {
 
-   // C r e a t e   3 D   p d f   a n d   d a t a 
+   // C r e a t e   3 D   p d f   a n d   d a t a
    // -------------------------------------------
 
    // Create observables
@@ -36,13 +36,13 @@ void rf316_llratioplot()
    RooRealVar y("y","y",-5,5) ;
    RooRealVar z("z","z",-5,5) ;
 
-   // Create signal pdf gauss(x)*gauss(y)*gauss(z) 
+   // Create signal pdf gauss(x)*gauss(y)*gauss(z)
    RooGaussian gx("gx","gx",x,RooConst(0),RooConst(1)) ;
    RooGaussian gy("gy","gy",y,RooConst(0),RooConst(1)) ;
    RooGaussian gz("gz","gz",z,RooConst(0),RooConst(1)) ;
    RooProdPdf sig("sig","sig",RooArgSet(gx,gy,gz)) ;
 
-   // Create background pdf poly(x)*poly(y)*poly(z) 
+   // Create background pdf poly(x)*poly(y)*poly(z)
    RooPolynomial px("px","px",x,RooArgSet(RooConst(-0.1),RooConst(0.004))) ;
    RooPolynomial py("py","py",y,RooArgSet(RooConst(0.1),RooConst(-0.004))) ;
    RooPolynomial pz("pz","pz",z) ;
@@ -74,12 +74,12 @@ void rf316_llratioplot()
    RooAbsPdf* sigyz = sig.createProjection(x) ;
    RooAbsPdf* totyz = model.createProjection(x) ;
 
-   // Construct the log of the signal / signal+background probability 
+   // Construct the log of the signal / signal+background probability
    RooFormulaVar llratio_func("llratio","log10(@0)-log10(@1)",RooArgList(*sigyz,*totyz)) ;
 
 
 
-   // P l o t   d a t a   w i t h   a   L L r a t i o   c u t 
+   // P l o t   d a t a   w i t h   a   L L r a t i o   c u t
    // -------------------------------------------------------
 
    // Calculate the llratio value for each event in the dataset
@@ -96,7 +96,7 @@ void rf316_llratioplot()
 
 
 
-   // M a k e   M C   p r o j e c t i o n   o f   p d f   w i t h   s a m e   L L r a t i o   c u t 
+   // M a k e   M C   p r o j e c t i o n   o f   p d f   w i t h   s a m e   L L r a t i o   c u t
    // ---------------------------------------------------------------------------------------------
 
    // Generate large number of events for MC integration of pdf projection
@@ -105,7 +105,7 @@ void rf316_llratioplot()
    // Calculate LL ratio for each generated event and select MC events with llratio)0.7
    mcprojData->addColumn(llratio_func) ;
    RooDataSet* mcprojDataSel = (RooDataSet*) mcprojData->reduce(Cut("llratio>0.7")) ;
-      
+
    // Project model on x, integrating projected observables (y,z) with Monte Carlo technique
    // on set of events with the same llratio cut as was applied to data
    model.plotOn(frame2,ProjWData(*mcprojDataSel)) ;
@@ -118,5 +118,5 @@ void rf316_llratioplot()
    c->cd(2) ; gPad->SetLeftMargin(0.15) ; frame2->GetYaxis()->SetTitleOffset(1.4) ; frame2->Draw() ;
 
 
-  
+
 }

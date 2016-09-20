@@ -1,3 +1,10 @@
+/// \file
+/// \ingroup tutorial_net
+///
+/// \macro_code
+///
+/// \author
+
 void LDAPExample()
 {
    gSystem->Load("libRLDAP.so");

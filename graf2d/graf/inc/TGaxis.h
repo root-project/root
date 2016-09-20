@@ -112,7 +112,7 @@ public:
    void                SetLabelFont(Int_t labelfont) {fLabelFont = labelfont;} // *MENU*
    void                SetLabelOffset(Float_t labeloffset) {fLabelOffset = labeloffset;} // *MENU*
    void                SetLabelSize(Float_t labelsize) {fLabelSize = labelsize;} // *MENU*
-   void                SetLabelAttributes(Int_t labNum=0, Double_t labAngle = -1.,
+   void                ChangeLabel(Int_t labNum=0, Double_t labAngle = -1.,
                                           Double_t labSize = -1., Int_t labAlign = -1,
                                           Int_t labColor = -1 , Int_t labFont = -1,
                                           TString labText = ""); // *MENU*

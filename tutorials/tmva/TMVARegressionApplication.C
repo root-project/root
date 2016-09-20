@@ -1,11 +1,16 @@
-/**********************************************************************************
- * Project   : TMVA - a Root-integrated toolkit for multivariate data analysis    *
- * Package   : TMVA                                                               *
- * Exectuable: TMVARegressionApplication                                          *
- *                                                                                *
- * This macro provides a simple example on how to use the trained regression MVAs *
- * within an analysis module                                                      *
- **********************************************************************************/
+/// \file
+/// \ingroup tutorial_tmva
+/// \notebook -nodraw
+/// This macro provides a simple example on how to use the trained regression MVAs
+/// within an analysis module
+///
+///  - Project   : TMVA - a Root-integrated toolkit for multivariate data analysis
+///  - Package   : TMVA
+///  - Exectuable: TMVARegressionApplication
+///
+/// \macro_output
+/// \macro_code
+/// \author Andreas Hoecker
 
 #include <cstdlib>
 #include <vector>

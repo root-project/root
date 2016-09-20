@@ -101,7 +101,7 @@
 /// \macro_output
 /// \macro_code
 ///
-/// \author Author: Kyle Cranmer, Contributions from Haichen Wang and Daniel Whiteson
+/// \authors Kyle Cranmer Haichen Wang Daniel Whiteson
 
 #include "TFile.h"
 #include "TROOT.h"
@@ -204,7 +204,7 @@ void OneSidedFrequentistUpperLimitWithBands(const char* infile = "",
    // -------------------------------------------------------
    // Now get the POI for convenience
    // you may want to adjust the range of your POI
-   
+
    RooRealVar* firstPOI = (RooRealVar*) mc->GetParametersOfInterest()->first();
    /*  firstPOI->setMin(0);*/
    /*  firstPOI->setMax(10);*/
@@ -219,7 +219,7 @@ void OneSidedFrequentistUpperLimitWithBands(const char* infile = "",
    FeldmanCousins fc(*data,*mc);
    fc.SetConfidenceLevel(confidenceLevel);
    /*  fc.AdditionalNToysFactor(0.25); // degrade/improve sampling that defines confidence belt*/
-   /*  fc.UseAdaptiveSampling(true); // speed it up a bit, don't use for expectd limits*/
+   /*  fc.UseAdaptiveSampling(true); // speed it up a bit, don't use for expected limits*/
    fc.SetNBins(nPointsToScan); // set how many points per parameter of interest to scan
    fc.CreateConfBelt(true); // save the information in the belt for plotting
 
@@ -272,7 +272,7 @@ void OneSidedFrequentistUpperLimitWithBands(const char* infile = "",
    PointSetInterval* interval = fc.GetInterval();
    ConfidenceBelt* belt = fc.GetConfidenceBelt();
 
-   // print out the iterval on the first Parameter of Interest
+   // print out the interval on the first Parameter of Interest
    cout << "\n95% interval on " <<firstPOI->GetName()<<" is : ["<<
       interval->LowerLimit(*firstPOI) << ", "<<
       interval->UpperLimit(*firstPOI) <<"] "<<endl;
@@ -314,7 +314,7 @@ void OneSidedFrequentistUpperLimitWithBands(const char* infile = "",
    c1->cd(2);
 
    // -------------------------------------------------------
-   // Now we generate the expected bands and power-constriant
+   // Now we generate the expected bands and power-constraint
 
    // First: find parameter point for mu=0, with conditional MLEs for nuisance parameters
    RooAbsReal* nll = mc->GetPdf()->createNLL(*data);
@@ -506,12 +506,12 @@ void OneSidedFrequentistUpperLimitWithBands(const char* infile = "",
          band2sigUp=cumulative->GetBinCenter(i);
    }
    cout << "-2 sigma  band " << band2sigDown << endl;
-   cout << "-1 sigma  band " << band1sigDown << " [Power Constriant)]" << endl;
+   cout << "-1 sigma  band " << band1sigDown << " [Power Constraint)]" << endl;
    cout << "median of band " << bandMedian << endl;
    cout << "+1 sigma  band " << band1sigUp << endl;
    cout << "+2 sigma  band " << band2sigUp << endl;
 
-   // print out the iterval on the first Parameter of Interest
+   // print out the interval on the first Parameter of Interest
    cout << "\nobserved 95% upper-limit "<< interval->UpperLimit(*firstPOI) <<endl;
    cout << "CLb strict [P(toy>obs|0)] for observed 95% upper-limit "<< CLb <<endl;
    cout << "CLb inclusive [P(toy>=obs|0)] for observed 95% upper-limit "<< CLbinclusive <<endl;

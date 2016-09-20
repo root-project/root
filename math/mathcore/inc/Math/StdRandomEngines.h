@@ -34,24 +34,34 @@ namespace ROOT {
       public:
 
          typedef  StdRandomEngine BaseType; 
+         typedef  typename Generator::result_type result_t; 
          
-         StdEngine() : fGen() { }
+         StdEngine() : fGen() {
+            fCONS = 1./fGen.max(); 
+         }
 
-         void SetSeed(unsigned int seed) { fGen.seed(seed);}
+         
+         void SetSeed(result_t seed) { fGen.seed(seed);}
          
          double Rndm() {
-            const double kCONS = 4.6566128730774E-10; // (1/pow(2,31)
-            unsigned int rndm = fGen(); // generate integer number 
-            if (rndm != 0) return  kCONS*rndm;
+            result_t rndm = fGen(); // generate integer number according to the type 
+            if (rndm != 0) return  fCONS*rndm;
             return Rndm();
          }
 
-         unsigned int operator() () {
-            return fGen(); 
+         result_t IntRndm() {
+            return fGen();
+         }
+         
+         double operator() () {
+            return Rndm(); 
          }
 
+         static uint64_t MaxInt() { return Generator::max(); }
+
       private:
-         Generator fGen; 
+         Generator fGen;
+         double fCONS;   //! cached value of maximum integer value generated
       };
       
 
