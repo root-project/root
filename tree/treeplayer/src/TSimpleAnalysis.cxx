@@ -17,6 +17,10 @@
 #include "TH1.h"
 #include "TError.h"
 #include "TKey.h"
+#ifdef R__USE_IMT
+#include "ThreadPool.h"
+#endif
+#include "TROOT.h"
 
 #include <string>
 #include <fstream>
@@ -196,9 +200,9 @@ static std::string ExtractTreeName(std::string& firstInputFile)
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns true if there are no errors in TChain::LoadTree()
 
-static bool checkChainLoadResult(TChain& chain, int& errValue, std::string& errFile)
+static bool checkChainLoadResult(TChain* chain, int& errValue, std::string& errFile)
 {
-   TObjArray *fileElements = chain.GetListOfFiles();
+   TObjArray *fileElements = chain->GetListOfFiles();
    TIter next(fileElements);
    while (TChainElement* chEl = (TChainElement*)next()) {
       if (chEl->GetLoadResult() < 0) {
@@ -238,11 +242,6 @@ bool TSimpleAnalysis::Run()
    if (fTreeName.empty())  // No tree name found
       return false;
 
-   // Do the chain of the fInputFiles
-   TChain chain(fTreeName.c_str());
-   for (const std::string& inputfile: fInputFiles)
-      chain.Add(inputfile.c_str());
-
    TFile ofile(fOutputFile.c_str(), "RECREATE");
    if (ofile.IsZombie()) {
       ::Error("TSimpleAnalysis::Run", "Impossible to create %s", fOutputFile.c_str());
@@ -259,29 +258,81 @@ bool TSimpleAnalysis::Run()
          "internal error" // -5
          };
 
-   // Save the histograms into the output file
-   for (const auto &histo : fHists) {
-      const std::string& expr = histo.second.first;
-      const std::string& histoName = histo.first;
-      const std::string& cut = histo.second.second;
-
-      chain.Draw((expr + ">>" + histoName).c_str(), cut.c_str(), "goff");
-      TH1F *ptrHisto = (TH1F*)gDirectory->Get(histoName.c_str());
-      if (!ptrHisto)
-         return false;
-
-      int errValue;
-      std::string errFile;
-      if (!checkChainLoadResult(chain, errValue, errFile)) {
-         ::Error("TSimpleAnalysis::Run",
-                 "Load failure in file %s: %s", errFile.c_str(), errors[-errValue]);
-         delete ptrHisto;
-         return false;
+   auto generateHisto = [&](const std::pair<TChain*, TDirectory*>& job){
+      TChain* chain = job.first;
+      TDirectory* taskDir = job.second;
+      taskDir->cd();
+      std::vector<TH1F *> vPtrHisto;
+      for (const auto &histo : fHists) {
+         const std::string& expr = histo.second.first;
+         const std::string& histoName = histo.first;
+         const std::string& cut = histo.second.second;
+         chain->Draw((expr + ">>" + histoName).c_str(), cut.c_str(), "goff");
+         TH1F *ptrHisto = (TH1F*)taskDir->Get(histoName.c_str());
+         if (!ptrHisto)
+            continue;
+         int errValue;
+         std::string errFile;
+         if (!checkChainLoadResult(chain, errValue, errFile)) {
+            ::Error("TSimpleAnalysis::Run",
+                    "Load failure in file %s: %s", errFile.c_str(), errors[-errValue]);
+            return std::vector<TH1F *>();
+         }
+         vPtrHisto.emplace_back(ptrHisto);
       }
-      ptrHisto->Write();
+      return vPtrHisto;
+   };
+
+#if 1
+
+   ROOT::EnableThreadSafety();
+   ThreadPool pool(8);
+
+   // Do the chain of the fInputFiles
+   std::vector<std::pair<TChain*, TDirectory*>> vChains;
+   TChain *ch;
+   for (size_t i = 0; i < fInputFiles.size(); ++i){
+      const std::string& inputfile = fInputFiles[i];
+      ch = new TChain(fTreeName.c_str());
+      ch->Add(inputfile.c_str());
+      TDirectory* taskDir = gROOT->mkdir(TString::Format("TSimpleAnalysis_taskDir_%d", (int)i));
+      vChains.emplace_back(std::make_pair(ch, taskDir));
+   }
+
+   auto vFileswHists = pool.Map(generateHisto, vChains);
+   if (vFileswHists[0].empty())
+      return false;
+
+   std::vector<TH1F *> vPtrHisto{vFileswHists[0]};
+
+   ofile.cd();
+   for (unsigned j = 0; j < fHists.size(); j++){
+      for (unsigned i = 1; i < vFileswHists.size(); i++){
+         if (!vFileswHists[i][j])
+            return false;
+         vPtrHisto[j]->Add(vFileswHists[i][j]);
+      }
+      vPtrHisto[j]->Write();
    }
    return true;
 }
+
+#else
+
+// Do the chain of the fInputFiles
+TChain* chain = new TChain(fTreeName.c_str());
+for (const std::string& inputfile: fInputFiles)
+   chain->Add(inputfile.c_str());
+
+auto vHisto = generateHisto({chain,gDirectory});
+if (vHisto.empty())
+   return false;
+for (auto histo: vHisto)
+   histo->Write();
+
+return true;
+}
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns false if not a tree name, otherwise sets the name of the tree.
