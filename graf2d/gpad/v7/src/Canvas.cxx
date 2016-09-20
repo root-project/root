@@ -16,43 +16,85 @@
 #include "ROOT/Canvas.h"
 
 #include "ROOT/TDrawable.h"
+#include "TCanvas.h"
+#include "TROOT.h"
+
+#include "ROOT/TLogger.h"
 
 #include <memory>
 
-void ROOT::Experimental::TCanvas::Paint() {
-  for (auto&& drw: fPrimitives) {
-    drw->Paint();
-  }
+namespace {
+static
+std::vector<std::shared_ptr<ROOT::Experimental::TCanvas>>& GetHeldCanvases() {
+  static std::vector<std::shared_ptr<ROOT::Experimental::TCanvas>> sCanvases;
+  return sCanvases;
+}
+
 }
 
 namespace ROOT {
 namespace Experimental {
 namespace Internal {
-class TCanvasSharedPtrMaker: public ROOT::Experimental::TCanvas {
+
+class TV5CanvasAdaptor: public TObject {
+  ROOT::Experimental::TCanvas& fNewCanv;
+  ::TCanvas* fOldCanv; // ROOT owns them.
+
 public:
-  TCanvasSharedPtrMaker() {}
+  /// Construct an old TCanvas, append TV5CanvasAdaptor to its primitives.
+  /// That way, TV5CanvasAdaptor::Paint() is called when the TCanvas paints its
+  /// primitives, and TV5CanvasAdaptor::Paint() can forward to
+  /// Experimental::TCanvas::Paint().
+  TV5CanvasAdaptor(ROOT::Experimental::TCanvas& canv):
+    fNewCanv(canv),
+    fOldCanv(new ::TCanvas())
+  {
+    fOldCanv->SetTitle(canv.GetTitle().c_str());
+    AppendPad();
+  }
+
+  ~TV5CanvasAdaptor() {
+    // Make sure static destruction hasn't already destroyed the old TCanvases.
+    if (gROOT && gROOT->GetListOfCanvases() && !gROOT->GetListOfCanvases()->IsEmpty())
+      fOldCanv->RecursiveRemove(this);
+  }
+
+  void Paint(Option_t */*option*/="") override {
+    R__DEBUG_HERE("GPad") << "AXEL DEBUG CanvasAdaptor::Paint\n";
+    fNewCanv.Paint();
+  }
 };
 }
 }
 }
 
-namespace {
-static
-std::vector<std::weak_ptr<ROOT::Experimental::TCanvas>>& GetHeldCanvases() {
-  static std::vector<std::weak_ptr<ROOT::Experimental::TCanvas>> sCanvases;
-  return sCanvases;
-}
-};
-
-const std::vector<std::weak_ptr<ROOT::Experimental::TCanvas>> &
+const std::vector<std::shared_ptr<ROOT::Experimental::TCanvas>> &
 ROOT::Experimental::TCanvas::GetCanvases() {
   return GetHeldCanvases();
 }
 
-ROOT::Experimental::TCanvasPtr ROOT::Experimental::TCanvas::Create(
-   std::experimental::string_view /*name*/) {
-  // TODO: name registration (TDirectory?)
-  auto pCanvas = std::make_shared<Internal::TCanvasSharedPtrMaker>();
-  GetHeldCanvases().emplace_back(pCanvas);
-  return ROOT::Experimental::TCanvasPtr(pCanvas);
+
+ROOT::Experimental::TCanvas::TCanvas() {
+  fAdaptor = std::make_unique<Internal::TV5CanvasAdaptor>(*this);
+  R__DEBUG_HERE("GPad") <<"AXEL DEBUG Canvas\n";
 }
+ROOT::Experimental::TCanvas::~TCanvas() //= default;
+{
+  R__DEBUG_HERE("GPad")<<"AXEL DEBUG ~Canvas\n";
+}
+
+void ROOT::Experimental::TCanvas::Paint() {
+  for (auto&& drw: fPrimitives) {
+    drw->Paint(*this);
+  }
+}
+
+std::shared_ptr<ROOT::Experimental::TCanvas>
+ROOT::Experimental::TCanvas::Create(const std::string& title) {
+  auto pCanvas = std::make_shared<TCanvas>();
+  pCanvas->SetTitle(title);
+  GetHeldCanvases().emplace_back(pCanvas);
+  return pCanvas;
+}
+
+// TODO: removal from GetHeldCanvases().
