@@ -345,7 +345,7 @@ std::unique_ptr <Internal::TDrawable>
 GetDrawable(std::shared_ptr<THist<DIMENSIONS, PRECISION, STAT...>> hist,
             THistDrawOptions<DIMENSIONS> opts = {})
 {
-  return std::make_unique<Internal::THistDrawable<DIMENSIONS, PRECISION, STAT...>>(hist, opts);
+  return std::make_unique<Internal::THistDrawable<DIMENSIONS>>(hist, opts);
 }
 
 /// Interface to graphics taking a shared_ptr<THist>.
@@ -355,7 +355,7 @@ std::unique_ptr <Internal::TDrawable>
 GetDrawable(std::unique_ptr<THist<DIMENSIONS, PRECISION, STAT...>> hist,
             THistDrawOptions<DIMENSIONS> opts = {})
 {
-  return std::make_unique<Internal::THistDrawable<DIMENSIONS, PRECISION, STAT...>>(hist, opts);
+  return std::make_unique<Internal::THistDrawable<DIMENSIONS>>(hist, opts);
 }
 
 } // namespace Experimental

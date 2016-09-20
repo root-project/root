@@ -17,6 +17,7 @@
 
 #include <experimental/string_view>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "ROOT/TDrawable.h"
@@ -26,9 +27,8 @@ namespace Experimental {
 
 namespace Internal {
 class TCanvasSharedPtrMaker;
+class TV5CanvasAdaptor;
 }
-
-class TCanvasPtr;
 
 /** \class ROOT::Experimental::TCanvas
   Graphic container for `TDrawable`-s.
@@ -36,17 +36,31 @@ class TCanvasPtr;
   */
 
 class TCanvas {
-  std::vector <std::unique_ptr<Internal::TDrawable>> fPrimitives;
+  /// Content of the pad.
+  std::vector<std::unique_ptr<Internal::TDrawable>> fPrimitives;
 
-  /// We need to keep track of canvases; please use Create()
-  TCanvas() = default;
+  /// Title of the canvas.
+  std::string fTitle;
 
-  /// Private class used to construct a shared_ptr.
-  friend class Internal::TCanvasSharedPtrMaker;
+  /// Adaptor for painting an old canvas.
+  std::unique_ptr<Internal::TV5CanvasAdaptor> fAdaptor;
+
+  /// Disable copy construction for now.
+  TCanvas(const TCanvas&) = delete;
+
+  /// Disable assignment for now.
+  TCanvas& operator=(const TCanvas&) = delete;
 
 public:
-  static TCanvasPtr Create();
-  static TCanvasPtr Create(std::experimental::string_view name);
+  static std::shared_ptr<TCanvas> Create(const std::string& title);
+
+  /// Create a temporary Canvas; for long-lived ones please use Create().
+  TCanvas();
+
+  /// Default destructor.
+  ///
+  /// Outline the implementation in sources.
+  ~TCanvas();
 
   /// Add a something to be painted. The pad claims shared ownership.
   template<class T>
@@ -62,39 +76,17 @@ public:
     fPrimitives.emplace_back(GetDrawable(what, options));
   }
 
+  /// Paint the canvas elements ("primitives").
   void Paint();
 
-  static const std::vector <std::weak_ptr<TCanvas>> &GetCanvases();
+  /// Get the canvas's title.
+  const std::string& GetTitle() const { return fTitle; }
+
+  /// Set the canvas's title.
+  void SetTitle(const std::string& title) { fTitle = title; }
+
+  static const std::vector<std::shared_ptr<TCanvas>> &GetCanvases();
 };
-
-
-/**
- \class TCanvasPtr
- Points to a TCanvas. Canvases are resources managed by ROOT; access is
- restricted to TCanvasPtr.
- */
-
-class TCanvasPtr {
-private:
-  std::shared_ptr<TCanvas> fCanvas;
-
-  /// Constructed by Create etc.
-  TCanvasPtr(std::shared_ptr<TCanvas>&& canvas): fCanvas(std::move(canvas)) {}
-
-  friend class TCanvas;
-
-public:
-  /// Dereference the file pointer, giving access to the TCanvas object.
-  TCanvas* operator ->() { return fCanvas.get(); }
-
-  /// Dereference the file pointer, giving access to the TCanvas object.
-  /// const overload.
-  const TCanvas* operator ->() const { return fCanvas.get(); }
-
-  /// Check the validity of the file pointer.
-  operator bool() const { return fCanvas.get(); }
-};
-
 
 } // namespace Experimental
 } // namespace ROOT
