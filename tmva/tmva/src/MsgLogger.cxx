@@ -29,20 +29,21 @@
 
 // Local include(s):
 #include "TMVA/MsgLogger.h"
+
 #include "TMVA/Config.h"
-
-#include "Riostream.h"
-
-// STL include(s):
-#include <iomanip>
-
-#include <cstdlib>
-
-#include <assert.h>
-
-#include <memory>
+#include "TMVA/Types.h"
 
 // ROOT include(s):
+#include "Riostream.h"
+#include "Rtypes.h"
+#include "TObject.h"
+
+// STL include(s):
+#include <assert.h>
+#include <cstdlib>
+#include <iomanip>
+#include <memory>
+
 
 ClassImp(TMVA::MsgLogger)
 

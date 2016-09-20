@@ -106,9 +106,18 @@
 
 #include "TMVA/MethodLikelihood.h"
 
-#include <iomanip>
-#include <vector>
-#include <cstdlib>
+#include "TMVA/Configurable.h"
+#include "TMVA/ClassifierFactory.h"
+#include "TMVA/DataSet.h"
+#include "TMVA/DataSetInfo.h"
+#include "TMVA/IMethod.h"
+#include "TMVA/MethodBase.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/PDF.h"
+#include "TMVA/Ranking.h"
+#include "TMVA/Tools.h"
+#include "TMVA/Types.h"
+#include "TMVA/VariableInfo.h"
 
 #include "TMatrixD.h"
 #include "TVector.h"
@@ -120,17 +129,9 @@
 #include "TClass.h"
 #include "Riostream.h"
 
-#include "TMVA/Configurable.h"
-#include "TMVA/ClassifierFactory.h"
-#include "TMVA/DataSet.h"
-#include "TMVA/DataSetInfo.h"
-#include "TMVA/MethodBase.h"
-#include "TMVA/MsgLogger.h"
-#include "TMVA/PDF.h"
-#include "TMVA/Ranking.h"
-#include "TMVA/Tools.h"
-#include "TMVA/Types.h"
-#include "TMVA/VariableInfo.h"
+#include <iomanip>
+#include <vector>
+#include <cstdlib>
 
 REGISTER_METHOD(Likelihood)
 

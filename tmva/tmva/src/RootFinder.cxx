@@ -26,11 +26,13 @@
  **********************************************************************************/
 
 #include "TMVA/RootFinder.h"
+
 #include "TMVA/MethodBase.h"
 #include "TMVA/MsgLogger.h"
 #include "TMVA/Types.h"
 
 #include "TMath.h"
+#include "TObject.h"
 
 ClassImp(TMVA::RootFinder)
 

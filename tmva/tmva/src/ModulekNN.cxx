@@ -25,19 +25,18 @@
 
 #include "TMVA/ModulekNN.h"
 
-// C++
+#include "TMVA/MsgLogger.h"
+#include "TMVA/Types.h"
+
+#include "ThreadLocalStorage.h"
+#include "TMath.h"
+#include "TRandom3.h"
+
 #include <assert.h>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <algorithm>
-
-#include "TMath.h"
-#include "TRandom3.h"
-
-// TMVA
-#include "TMVA/MsgLogger.h"
-#include "TMVA/Types.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// default constructor

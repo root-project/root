@@ -37,24 +37,9 @@
 //
 //_______________________________________________________________________
 
-#include <vector>
-#include <cstdlib>
-#include <stdexcept>
-#if __cplusplus > 199711L
-#include <atomic>
-#endif
-
-#include "TString.h"
-#include "TTree.h"
-#include "TDirectory.h"
-#include "Riostream.h"
-#include "TRandom3.h"
-#include "TH2F.h"
-#include "TH1.h"
-#include "TMath.h"
+#include "TMVA/MethodBase.h"
 
 #include "TMVA/DataSetInfo.h"
-#include "TMVA/MethodBase.h"
 #include "TMVA/MethodANNBase.h"
 #include "TMVA/MsgLogger.h"
 #include "TMVA/TNeuron.h"
@@ -66,6 +51,24 @@
 #include "TMVA/TNeuronInputChooser.h"
 #include "TMVA/Ranking.h"
 #include "TMVA/Version.h"
+
+#include "TString.h"
+#include "TTree.h"
+#include "TDirectory.h"
+#include "Riostream.h"
+#include "TRandom3.h"
+#include "TH2F.h"
+#include "TH1.h"
+#include "TMath.h"
+#include "TMatrixT.h"
+
+#include <vector>
+#include <cstdlib>
+#include <stdexcept>
+#if __cplusplus > 199711L
+#include <atomic>
+#endif
+
 
 using std::vector;
 

@@ -29,15 +29,15 @@
 //                                                                      
 //_______________________________________________________________________
 
-#include <iostream>
+#include "TMVA/TActivationSigmoid.h"
+
+#include "TMVA/TActivation.h"
 
 #include "TFormula.h"
-#include "TString.h"
 #include "TMath.h"
+#include "TString.h"
 
-#ifndef ROOT_TMVA_TActivationSigmoid
-#include "TMVA/TActivationSigmoid.h"
-#endif
+#include <iostream>
 
 static const Int_t  UNINITIALIZED = -1;
 

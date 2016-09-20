@@ -42,15 +42,8 @@
 // SMO Platt's SVM classifier with Keerthi & Shavade improvements
 //_______________________________________________________________________
 
-#include "Riostream.h"
-#include "TFile.h"
-#include "TVectorD.h"
-#include "TMath.h"
-
-#include "TMVA/ClassifierFactory.h"
-#ifndef ROOT_TMVA_MethodSVM
 #include "TMVA/MethodSVM.h"
-#endif
+
 #ifndef ROOT_TMVA_Tools
 #include "TMVA/Tools.h"
 #endif
@@ -70,15 +63,24 @@
 #include "TMVA/SVKernelFunction.h"
 #endif
 
+#include "TMVA/ClassifierFactory.h"
 #include "TMVA/DataSet.h"
 #include "TMVA/DataSetInfo.h"
 #include "TMVA/Event.h"
+#include "TMVA/IMethod.h"
 #include "TMVA/MethodBase.h"
 #include "TMVA/MsgLogger.h"
 #include "TMVA/Types.h"
 #include "TMVA/Interval.h"
 #include "TMVA/OptimizeConfigParameters.h"
+#include "TMVA/Results.h"
 #include "TMVA/ResultsClassification.h"
+#include "TMVA/VariableInfo.h"
+
+#include "Riostream.h"
+#include "TFile.h"
+#include "TVectorD.h"
+#include "TMath.h"
 
 #include <string>
 

@@ -30,9 +30,10 @@
 #include "TMVA/MsgLogger.h"
 #include "TMVA/Types.h"
 
+#include "TGraph.h"
 #include "TH1.h"
 #include "TH2.h"
-#include "TGraph.h"
+#include "TList.h"
 
 #include <vector>
 

@@ -69,35 +69,15 @@
    End_Html */
 //_______________________________________________________________________
 
-#include <iomanip>
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <cstdlib>
-#include <algorithm>
-#include <limits>
-
-#include "TROOT.h"
-#include "TSystem.h"
-#include "TObjString.h"
-#include "TQObject.h"
-#include "TSpline.h"
-#include "TMatrix.h"
-#include "TMath.h"
-#include "TH1F.h"
-#include "TH2F.h"
-#include "TFile.h"
-#include "TKey.h"
-#include "TGraph.h"
-#include "Riostream.h"
-#include "TXMLEngine.h"
+#include "TMVA/MethodBase.h"
 
 #include "TMVA/Config.h"
+#include "TMVA/Configurable.h"
 #include "TMVA/DataSetInfo.h"
 #include "TMVA/DataSet.h"
 #include "TMVA/Factory.h"
+#include "TMVA/IMethod.h"
 #include "TMVA/MsgLogger.h"
-#include "TMVA/MethodBase.h"
 #include "TMVA/PDF.h"
 #include "TMVA/Ranking.h"
 #include "TMVA/Factory.h"
@@ -120,6 +100,30 @@
 #include "TMVA/VariablePCATransform.h"
 #include "TMVA/VariableTransform.h"
 #include "TMVA/Version.h"
+
+#include "TROOT.h"
+#include "TSystem.h"
+#include "TObjString.h"
+#include "TQObject.h"
+#include "TSpline.h"
+#include "TMatrix.h"
+#include "TMath.h"
+#include "TH1F.h"
+#include "TH2F.h"
+#include "TFile.h"
+#include "TKey.h"
+#include "TGraph.h"
+#include "Riostream.h"
+#include "TXMLEngine.h"
+
+#include <iomanip>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <cstdlib>
+#include <algorithm>
+#include <limits>
+
 
 ClassImp(TMVA::MethodBase)
 

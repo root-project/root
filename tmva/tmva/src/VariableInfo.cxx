@@ -26,13 +26,15 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  **********************************************************************************/
 
-#include <sstream>
-#include <iomanip>
-
 #include "TMVA/VariableInfo.h"
+
 #include "TMVA/Tools.h"
 
 #include "TMath.h"
+#include "TNamed.h"
+
+#include <iomanip>
+#include <sstream>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor

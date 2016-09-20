@@ -30,8 +30,10 @@
 #include "TMVA/MsgLogger.h"
 #include "TMVA/SVEvent.h"
 #include "TMVA/Types.h"
+#include "TMVA/VariableTransformBase.h"
 
 #include "Rtypes.h"
+#include "TString.h"
 
 #include <iostream>
 

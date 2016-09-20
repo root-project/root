@@ -38,16 +38,8 @@
 
 #include "TMVA/MethodCompositeBase.h"
 
-#include <algorithm>
-#include <iomanip>
-#include <vector>
-
-#include "Riostream.h"
-#include "TRandom3.h"
-#include "TMath.h"
-#include "TObjString.h"
-
 #include "TMVA/ClassifierFactory.h"
+#include "TMVA/DataSetInfo.h"
 #include "TMVA/Factory.h"
 #include "TMVA/IMethod.h"
 #include "TMVA/MethodBase.h"
@@ -56,6 +48,16 @@
 #include "TMVA/Tools.h"
 #include "TMVA/Types.h"
 #include "TMVA/Config.h"
+
+#include "Riostream.h"
+#include "TRandom3.h"
+#include "TMath.h"
+#include "TObjString.h"
+
+#include <algorithm>
+#include <iomanip>
+#include <vector>
+
 
 using std::vector;
 

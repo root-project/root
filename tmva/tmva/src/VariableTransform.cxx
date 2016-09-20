@@ -34,7 +34,6 @@
 #include "TMVA/VariableGaussTransform.h"
 #include "TMVA/VariableNormalizeTransform.h"
 
-
 #include "TMVA/Config.h"
 #include "TMVA/DataSetInfo.h"
 #include "TMVA/MsgLogger.h"
@@ -46,9 +45,11 @@
 #include "TMVA/TransformationHandler.h"
 #include "TMVA/MsgLogger.h"
 
-#include "TMath.h"
 #include "TH1.h"
 #include "TH2.h"
+#include "THashTable.h"
+#include "TList.h"
+#include "TMath.h"
 #include "TProfile.h"
 #include "TVectorD.h"
 

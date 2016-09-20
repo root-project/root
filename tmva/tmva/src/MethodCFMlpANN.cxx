@@ -63,24 +63,28 @@
 // End_Html
 //_______________________________________________________________________
 
-#include <string>
-#include <cstdlib>
-#include <iostream>
+#include "TMVA/MethodCFMlpANN.h"
+
+#include "TMVA/ClassifierFactory.h"
+#include "TMVA/DataSet.h"
+#include "TMVA/DataSetInfo.h"
+#include "TMVA/IMethod.h"
+#include "TMVA/MethodBase.h"
+#include "TMVA/MethodCFMlpANN_def.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/Tools.h"
+#include "TMVA/Types.h"
 
 #include "TMatrix.h"
 #include "TObjString.h"
 #include "Riostream.h"
 #include "TMath.h"
 
-#include "TMVA/ClassifierFactory.h"
-#include "TMVA/DataSet.h"
-#include "TMVA/DataSetInfo.h"
-#include "TMVA/MethodBase.h"
-#include "TMVA/MethodCFMlpANN.h"
-#include "TMVA/MethodCFMlpANN_def.h"
-#include "TMVA/MsgLogger.h"
-#include "TMVA/Tools.h"
-#include "TMVA/Types.h"
+#include <cstdlib>
+#include <iostream>
+#include <string>
+
+
 
 REGISTER_METHOD(CFMlpANN)
 

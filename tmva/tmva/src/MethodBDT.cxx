@@ -106,17 +106,6 @@
 
 #include "TMVA/MethodBDT.h"
 
-#include <algorithm>
-
-#include <math.h>
-#include <fstream>
-
-#include "Riostream.h"
-#include "TRandom3.h"
-#include "TMath.h"
-#include "TObjString.h"
-#include "TGraph.h"
-
 #include "TMVA/BDTEventWrapper.h"
 #include "TMVA/BinarySearchTree.h"
 #include "TMVA/ClassifierFactory.h"
@@ -126,6 +115,7 @@
 #include "TMVA/GiniIndex.h"
 #include "TMVA/GiniIndexWithLaplace.h"
 #include "TMVA/Interval.h"
+#include "TMVA/IMethod.h"
 #include "TMVA/LogInterval.h"
 #include "TMVA/MethodBase.h"
 #include "TMVA/MisClassificationError.h"
@@ -141,7 +131,18 @@
 #include "TMVA/Tools.h"
 #include "TMVA/Types.h"
 
+#include "Riostream.h"
+#include "TDirectory.h"
+#include "TRandom3.h"
+#include "TMath.h"
 #include "TMatrixTSym.h"
+#include "TObjString.h"
+#include "TGraph.h"
+
+#include <algorithm>
+#include <fstream>
+#include <math.h>
+
 
 using std::vector;
 using std::make_pair;

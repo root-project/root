@@ -30,13 +30,17 @@
 // ... description of bayesian classifiers ...
 //_______________________________________________________________________
 
-#include "TMVA/ClassifierFactory.h"
-#include "TMVA/MethodBase.h"
 #include "TMVA/MethodBayesClassifier.h"
+
+#include "TMVA/ClassifierFactory.h"
+#include "TMVA/IMethod.h"
+#include "TMVA/MethodBase.h"
 #include "TMVA/MsgLogger.h"
 #include "TMVA/Tools.h"
 #include "TMVA/Types.h"
+
 #include "Riostream.h"
+#include "TString.h"
 
 REGISTER_METHOD(BayesClassifier)
 

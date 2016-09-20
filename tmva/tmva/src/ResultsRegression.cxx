@@ -30,6 +30,7 @@
 #include "TMVA/DataSet.h"
 #include "TMVA/DataSetInfo.h"
 #include "TMVA/MsgLogger.h"
+#include "TMVA/Results.h"
 #include "TMVA/Types.h"
 #include "TMVA/VariableInfo.h"
 

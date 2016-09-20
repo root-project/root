@@ -22,17 +22,10 @@
 
 #include "TMVA/OptimizeConfigParameters.h"
 
-#include <limits>
-#include <cstdlib>
-#include "TMath.h"
-#include "TGraph.h"
-#include "TH1.h"
-#include "TH2.h"
-#include "TDirectory.h"
-
 #include "TMVA/DataSet.h"
 #include "TMVA/DataSetInfo.h"
 #include "TMVA/Event.h"
+#include "TMVA/IFitterTarget.h"
 #include "TMVA/FitterBase.h"
 #include "TMVA/GeneticFitter.h"
 #include "TMVA/IMethod.h"
@@ -44,6 +37,16 @@
 #include "TMVA/PDF.h"
 #include "TMVA/Tools.h"
 #include "TMVA/Types.h"
+
+#include "TDirectory.h"
+#include "TGraph.h"
+#include "TH1.h"
+#include "TH2.h"
+#include "TMath.h"
+
+#include <cstdlib>
+#include <limits>
+
 
 ClassImp(TMVA::OptimizeConfigParameters)
    
