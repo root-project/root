@@ -26,21 +26,15 @@ void TCpu<AFloat>::Dropout(TCpuMatrix<AFloat> &A,
 {
    AFloat *data = A.GetRawDataPointer();
 
-   auto fRange = [&data, dropoutProbability](const tbb::blocked_range<size_t> & range)
+   auto f = [&data, dropoutProbability](UInt_t workerID)
    {
-      size_t rangeBegin = range.begin();
-      size_t rangeEnd   = range.end();
-
-      TRandom rand(time(nullptr) + rangeBegin);
-
-      for (size_t i = rangeBegin; i != rangeEnd; ++i) {
-          AFloat r = rand.Uniform();
-          data[i] = (r > dropoutProbability) ? 0.0 : data[i] / dropoutProbability;
-      }
+      TRandom rand(time(nullptr) + workerID);
+      AFloat r = rand.Uniform();
+      data[workerID] = (r > dropoutProbability) ? 0.0 : data[workerID] / dropoutProbability;
+      return 0;
    };
 
-   tbb::blocked_range<size_t> range(0, A.GetNElements());
-   parallel_for(range, fRange);
+   A.GetThreadPool().Map(f, ROOT::TSeqI(A.GetNElements()));
 }
 
 } // namespace DNN

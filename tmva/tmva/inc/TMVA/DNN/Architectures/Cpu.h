@@ -10,9 +10,9 @@
  *************************************************************************/
 
  //////////////////////////////////////////////////////////////////
-// Definition of the TCpu architecture, which provides a        //
+// Definition of the TCpu architecture, which provides a         //
  // multi-threaded CPU implementation of the low-level interface //
- // networks for Cpus using tbb                                  //
+ // networks for Cpus using BLAS and Roots ThreadPool            //
  //////////////////////////////////////////////////////////////////
 
 #ifndef TMVA_DNN_ARCHITECTURES_CPU

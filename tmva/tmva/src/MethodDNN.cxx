@@ -984,8 +984,8 @@ void TMVA::MethodDNN::TrainCpu()
 
 #else // DNNCPU flag not set.
    Log() << kFATAL << "Multi-core CPU backend not enabled. Please make sure "
-                      "you have a BLAS implementation  and tbb installed and"
-                      " it was successfully detected by CMAKE." << Endl;
+                      "you have a BLAS implementation and it was successfully "
+                      "detected by CMake as well that the imt CMake flag is set." << Endl;
 #endif // DNNCPU
 }
 
