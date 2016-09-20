@@ -109,6 +109,7 @@
 #include "TMVA/BDTEventWrapper.h"
 #include "TMVA/BinarySearchTree.h"
 #include "TMVA/ClassifierFactory.h"
+#include "TMVA/Configurable.h"
 #include "TMVA/CrossEntropy.h"
 #include "TMVA/DecisionTree.h"
 #include "TMVA/DataSet.h"

@@ -93,6 +93,7 @@
 #include "TMVA/BinarySearchTree.h"
 #include "TMVA/ClassifierFactory.h"
 #include "TMVA/Config.h"
+#include "TMVA/Configurable.h"
 #include "TMVA/DataSet.h"
 #include "TMVA/DataSetInfo.h"
 #include "TMVA/Event.h"
