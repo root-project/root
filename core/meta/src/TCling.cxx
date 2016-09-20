@@ -3225,6 +3225,7 @@ std::string AtlernateTuple(const char *classname)
    alternateName.append( classname + 5 );
 
    std::ostringstream alternateTuple;
+   alternateTuple << "namespace ROOT { namespace Internal {\n";
    alternateTuple << "template <class... Types> struct TEmulatedTuple;\n";
    alternateTuple << "template <> struct " << alternateName << " {\n";
 
@@ -3259,11 +3260,13 @@ std::string AtlernateTuple(const char *classname)
       }
    }
 
-   alternateTuple << "};";
+   alternateTuple << "};\n";
+   alternateTuple << "}}\n";
    if (!gCling->Declare(alternateTuple.str().c_str())) {
       Error("Load","Could not declare %s",alternateName.c_str());
       return "";
    }
+   alternateName = "ROOT::Internal::" + alternateName;
    return alternateName;
 }
 
