@@ -74,11 +74,11 @@ int execTestMultiMerge()
    result += testMergedFile("mfile1-4.root",1,4933, kIs32bits ? 2 : 0);
    result += testMergedFile("mzfile1-4.root",206,4988, kIs32bits ? 2 : 0);
 
-   result += testSimpleFile("hsimple.root",25000,1,414397, kIs32bits ? 8 : 1);
+   result += testSimpleFile("hsimple.root",25000,1,414397, kIs32bits ? 10 : 8);
    result += testSimpleFile("hsimple9.root",25000,9,432015,3);
    result += testSimpleFile("hsimple9x2.root",2*25000,9,851108,9);
    result += testSimpleFile("hsimple209.root",25000,209,394053,8);
-   result += testSimpleFile("hsimpleK.root",5*25000,209,1917387,8);
+   result += testSimpleFile("hsimpleK.root",5*25000,209,1917387,16);
    if (lzma_version_number() < 50020010) {
       // lzma v5.2.0 produced larger files ...
       // but even older version (eg v5.0.0) produced smaller files ...
@@ -86,6 +86,6 @@ int execTestMultiMerge()
    } else {
       result += testSimpleFile("hsimpleK202.root",5*25000,202,1938705,16);
    } 
-   result += testSimpleFile("hsimpleF.root",5*25000,9,2108425,3);
+   result += testSimpleFile("hsimpleF.root",5*25000,9,2108425,5);
    return result;
 }
