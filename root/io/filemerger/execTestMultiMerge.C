@@ -45,22 +45,22 @@ int testSimpleFile(const char *filename, Long64_t entries, Int_t compSetting, Lo
    //file->ls();
    if (file->GetCompressionSettings() != compSetting) {
       Error("testSimpleFile","Compression level of %s should have been %d but is %d\n",file->GetName(), 206, file->GetCompressionSettings() );
-      return 3;
+      return 100;
    }
    if (abs(file->GetSize()-fileSize) > tolerance) {
       Error("testSimpleFile","Disk size of %s should have been %lld but is %lld (tolerance %u bytes)\n",file->GetName(), fileSize, file->GetSize(), tolerance);
-      return 4;
+      return 1000;
    }
 
    TTree *ntuple;
    file->GetObject("ntuple",ntuple);
    if (ntuple == 0) {
       Error("testSimpleFile", "Could not retrieve ntuple from %s.",file->GetName());
-      return 2;
+      return 10;
    }
    if (ntuple->GetEntries() != entries) {
       Error("testSimpleFile","Number of entries in ntuple in %s should have been %lld but is %lld\n",file->GetName(), entries, ntuple->GetEntries());
-      return 4;
+      return 10000;
    }
    delete file;
 
@@ -71,21 +71,21 @@ int testSimpleFile(const char *filename, Long64_t entries, Int_t compSetting, Lo
 int execTestMultiMerge()
 {
    Int_t result = 0;
-   if (!result) result = testMergedFile("mfile1-4.root",1,4933, kIs32bits ? 2 : 0);
-   if (!result) result = testMergedFile("mzfile1-4.root",206,4988, kIs32bits ? 2 : 0);
+   result += testMergedFile("mfile1-4.root",1,4933, kIs32bits ? 2 : 0);
+   result += testMergedFile("mzfile1-4.root",206,4988, kIs32bits ? 2 : 0);
 
-   if (!result) result = testSimpleFile("hsimple.root",25000,1,414397, kIs32bits ? 8 : 1);
-   if (!result) result = testSimpleFile("hsimple9.root",25000,9,432015,3);
-   if (!result) result = testSimpleFile("hsimple9x2.root",2*25000,9,851108,9);
-   if (!result) result = testSimpleFile("hsimple209.root",25000,209,394053,8);
-   if (!result) result = testSimpleFile("hsimpleK.root",5*25000,209,1917387,8);
+   result += testSimpleFile("hsimple.root",25000,1,414397, kIs32bits ? 8 : 1);
+   result += testSimpleFile("hsimple9.root",25000,9,432015,3);
+   result += testSimpleFile("hsimple9x2.root",2*25000,9,851108,9);
+   result += testSimpleFile("hsimple209.root",25000,209,394053,8);
+   result += testSimpleFile("hsimpleK.root",5*25000,209,1917387,8);
    if (lzma_version_number() < 50020010) {
       // lzma v5.2.0 produced larger files ...
       // but even older version (eg v5.0.0) produced smaller files ...
-      if (!result) result = testSimpleFile("hsimpleK202.root",5*25000,202,1938705,700);
+      result += testSimpleFile("hsimpleK202.root",5*25000,202,1938705,700);
    } else {
-      if (!result) result = testSimpleFile("hsimpleK202.root",5*25000,202,1938705,16);
+      result += testSimpleFile("hsimpleK202.root",5*25000,202,1938705,16);
    } 
-   if (!result) result = testSimpleFile("hsimpleF.root",5*25000,9,2108425,3);
+   result += testSimpleFile("hsimpleF.root",5*25000,9,2108425,3);
    return result;
 }
