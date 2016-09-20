@@ -4,9 +4,16 @@ void printHistoInfo(TH1* h, const char* meta) {
    cout << "[" << meta << "]"<< " Histogram "
         << h->GetName() << " information:\n"
         << " - Entries: " << h->GetEntries() << endl
-        << " - Mean: " << h->GetMean() << endl
-        << " - STD Deviation: " << h->GetRMS() << endl;
-
+        << " - Mean: " << h->GetMean() << endl;
+   double rms = h->GetRMS();
+   if (rms < 1e-6) {
+      std::streamsize p = cout.precision();
+      cout << setprecision(1);
+      cout << " - STD Deviation: " << rms << endl;
+      cout << setprecision(p);
+   } else {
+      cout << " - STD Deviation: " << rms << endl;
+   }
 }
 
 void w(const char* filename) {

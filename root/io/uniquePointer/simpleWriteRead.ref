@@ -24,7 +24,7 @@ Writing out.root
 [Write Column-wise] Histogram meansBaseUPtr information:
  - Entries: 50
  - Mean: 0.801612
- - STD Deviation: 3.16101e-08
+ - STD Deviation: 3e-08
 [Write Column-wise] Histogram meansUPtr information:
  - Entries: 50
  - Mean: 0.60323
@@ -32,7 +32,7 @@ Writing out.root
 [Write Column-wise] Histogram meansFixedUPtr information:
  - Entries: 50
  - Mean: 0.801612
- - STD Deviation: 3.16101e-08
+ - STD Deviation: 3e-08
 [Write Column-wise 1] Histogram meansUPtr1 information:
  - Entries: 50
  - Mean: 0.60323
