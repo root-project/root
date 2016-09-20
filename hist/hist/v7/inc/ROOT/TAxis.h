@@ -915,6 +915,11 @@ public:
     return fIrr->GetNBins();
   }
 
+  /// Get the lower axis limit.
+  double GetFrom() const { return GetBinFrom(1); }
+  /// Get the upper axis limit.
+  double GetTo() const { return GetBinTo(GetNBins() - 2); }
+
   /// Get the bin center of bin index `i`. Forwards to the underlying axis.
   double GetBinCenter(int i) const noexcept {
     if (fEqui)
