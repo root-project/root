@@ -1519,8 +1519,8 @@ module "TMVA" {
   umbrella "TMVA"
   module * { export * }
 
-  # FIXME: Remove headers which depend on cuda or tbb since they are not well
-  # protected in the cases where tbb or cuda are not present on the system.
+  // FIXME: Remove headers which depend on cuda or tbb since they are not well
+  // protected in the cases where tbb or cuda are not present on the system.
   exclude header "TMVA/DNN/Architectures/cuda.h"
   exclude header "TMVA/DNN/Architectures/Cuda/CudaBuffers.h"
   exclude header "TMVA/DNN/Architectures/Cuda/CudaMatrix.h"
