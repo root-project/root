@@ -79,6 +79,9 @@ namespace ROOT {
    void EnableImplicitMT(UInt_t numthreads = 0);
    void DisableImplicitMT();
    Bool_t IsImplicitMTEnabled();
+   // Manage parallel tree processing
+   void EnableParTreeProcessing();
+   Bool_t IsParTreeProcessingEnabled();
 }
 
 class TROOT : public TDirectory {

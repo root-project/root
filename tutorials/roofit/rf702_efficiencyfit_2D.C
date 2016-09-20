@@ -30,14 +30,14 @@ using namespace RooFit ;
 
 void rf702_efficiencyfit_2D(Bool_t flat=kFALSE)
 {
-   // C o n s t r u c t   e f f i c i e n c y   f u n c t i o n   e ( x , y ) 
+   // C o n s t r u c t   e f f i c i e n c y   f u n c t i o n   e ( x , y )
    // -----------------------------------------------------------------------
 
    // Declare variables x,mean,sigma with associated name, title, initial value and allowed range
    RooRealVar x("x","x",-10,10) ;
    RooRealVar y("y","y",-10,10) ;
 
-   // Efficiency function eff(x;a,b) 
+   // Efficiency function eff(x;a,b)
    RooRealVar ax("ax","ay",0.6,0,1) ;
    RooRealVar bx("bx","by",5) ;
    RooRealVar cx("cx","cy",-1,-10,10) ;
@@ -46,7 +46,7 @@ void rf702_efficiencyfit_2D(Bool_t flat=kFALSE)
    RooRealVar by("by","by",5) ;
    RooRealVar cy("cy","cy",-1,-10,10) ;
 
-   RooFormulaVar effFunc("effFunc","((1-ax)+ax*cos((x-cx)/bx))*((1-ay)+ay*cos((y-cy)/by))",RooArgList(ax,bx,cx,x,ay,by,cy,y)) ; 
+   RooFormulaVar effFunc("effFunc","((1-ax)+ax*cos((x-cx)/bx))*((1-ay)+ay*cos((y-cy)/by))",RooArgList(ax,bx,cx,x,ay,by,cy,y)) ;
 
    // Acceptance state cut (1 or 0)
    RooCategory cut("cut","cutr") ;
@@ -55,7 +55,7 @@ void rf702_efficiencyfit_2D(Bool_t flat=kFALSE)
 
 
 
-   // C o n s t r u c t   c o n d i t i o n a l    e f f i c i e n c y   p d f   E ( c u t | x , y ) 
+   // C o n s t r u c t   c o n d i t i o n a l    e f f i c i e n c y   p d f   E ( c u t | x , y )
    // ---------------------------------------------------------------------------------------------
 
    // Construct efficiency p.d.f eff(cut|x)
@@ -63,10 +63,10 @@ void rf702_efficiencyfit_2D(Bool_t flat=kFALSE)
 
 
 
-   // G e n e r a t e   d a t a   ( x , y , c u t )   f r o m   a   t o y   m o d e l 
+   // G e n e r a t e   d a t a   ( x , y , c u t )   f r o m   a   t o y   m o d e l
    // -------------------------------------------------------------------------------
 
-   // Construct global shape p.d.f shape(x) and product model(x,cut) = eff(cut|x)*shape(x) 
+   // Construct global shape p.d.f shape(x) and product model(x,cut) = eff(cut|x)*shape(x)
    // (These are _only_ needed to generate some toy MC here to be used later)
    RooPolynomial shapePdfX("shapePdfX","shapePdfX",x,RooConst(flat?0:-0.095)) ;
    RooPolynomial shapePdfY("shapePdfY","shapePdfY",y,RooConst(flat?0:+0.095)) ;
@@ -78,7 +78,7 @@ void rf702_efficiencyfit_2D(Bool_t flat=kFALSE)
 
 
 
-   // F i t   c o n d i t i o n a l   e f f i c i e n c y   p d f   t o   d a t a 
+   // F i t   c o n d i t i o n a l   e f f i c i e n c y   p d f   t o   d a t a
    // --------------------------------------------------------------------------
 
    // Fit conditional efficiency p.d.f to data
@@ -86,7 +86,7 @@ void rf702_efficiencyfit_2D(Bool_t flat=kFALSE)
 
 
 
-   // P l o t   f i t t e d ,   d a t a   e f f i c i e n c y  
+   // P l o t   f i t t e d ,   d a t a   e f f i c i e n c y
    // --------------------------------------------------------
 
    // Make 2D histograms of all data, selected data and efficiency function
@@ -94,7 +94,7 @@ void rf702_efficiencyfit_2D(Bool_t flat=kFALSE)
    TH1* hh_data_sel = data->createHistogram("hh_data_sel",x,Binning(8),YVar(y,Binning(8)),Cut("cut==cut::accept")) ;
    TH1* hh_eff      = effFunc.createHistogram("hh_eff",x,Binning(50),YVar(y,Binning(50))) ;
 
-   // Some adjustsment for good visualization
+   // Some adjustment for good visualization
    hh_data_all->SetMinimum(0) ;
    hh_data_sel->SetMinimum(0) ;
    hh_eff->SetMinimum(0) ;
@@ -111,5 +111,5 @@ void rf702_efficiencyfit_2D(Bool_t flat=kFALSE)
 
    return ;
 
- 
+
 }

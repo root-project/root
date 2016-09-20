@@ -56,6 +56,11 @@ protected:
   TAxisBase &operator=(TAxisBase &&) = default;
   ///\}
 
+  /// Default construct a TAxisBase (for use by derived classes for I/O)
+  TAxisBase() : fCanGrow(false)
+  {
+  }
+
   /// Given rawbin (<0 for underflow, >= GetNBinsNoOver() for overflow), determine the
   /// actual bin number taking into account how over/underflow should be
   /// handled.
@@ -503,6 +508,8 @@ private:
   std::vector<double> fBinBorders;
 
 public:
+  TAxisIrregular() = default;
+
   /// Construct a TAxisIrregular from a vector of bin borders.
   /// \note The bin borders must be sorted in increasing order!
   explicit TAxisIrregular(const std::vector<double> &binborders):

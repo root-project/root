@@ -1,0 +1,194 @@
+\subsection{Rectangular cut optimisation\index{Rectangular cuts}\index{Rectangular cut optimisation}\index{Cut optimisation}}
+\label{sec:cuts}
+
+The simplest and most common classifier for selecting signal events from
+a mixed sample of signal and background events is the application of an ensemble
+of rectangular cuts\index{Cuts} on discriminating variables. Unlike 
+all other classifiers in TMVA, the cut classifier only returns a binary 
+response (signal {\em or} background)\index{Binary split}.\footnote
+{
+   Note that cut optimisation is not a {\em multivariate} analyser 
+   method but a sequence of univariate ones, because no combination of 
+   the variables is achieved. Neither
+   does a cut on one variable depend on the value of another variable
+   (like it is the case for Decision Trees), nor can a, say, background-like
+   value of one variable in a signal event be counterweighed by signal-like
+   values of the other variables (like it is the case for the likelihood method).
+}
+The optimisation of cuts performed by TMVA maximises the background rejection
+at given signal efficiency, and scans over the full range of the 
+latter quantity. Dedicated analysis optimisation for which, \eg, the signal 
+{\em significance} is maximised requires the expected signal and background
+yields to be known before applying the cuts. This is not the case for a 
+multi-purpose discrimination and hence not used by TMVA.
+However, the cut ensemble leading to maximum significance corresponds to 
+a particular working point on the efficiency curve, and can hence be easily
+derived after the cut optimisation scan has converged.\footnote
+{\label{ftn:cutcomp}
+  Assuming a large enough number of events so that Gaussian statistics is applicable, the
+  significance for a signal is given by $\Signif=\eS \NS/\sqrt{\eS \NS + \eB(\eS) \NS}$,
+  where $\e_{\!S(B)}$ and $N_{\!S(B)}$ are the signal and background efficiencies for 
+  a cut ensemble and the event yields before applying the cuts, respectively. 
+  The background efficiency $\eB$
+  is expressed as a function of $\eS$ using the TMVA evaluation curve obtained form 
+  the test data sample. The maximum significance is then found at the root of the 
+  derivative
+  \beq
+     \frac{d\Signif}{d\eS} 
+       = \NS\frac{2\eB(\eS)\NB + \eS\left(\NS-\frac{d\eB(\eS)}{d\eS}\NB\right)}
+                 {2\left(\eS \NS + \eB(\eS)\NB\right)^{3/2}} = 0\,,
+  \eeq
+  which depends on the problem.
+}
+
+TMVA cut optimisation is performed with the use of multivariate parameter fitters 
+interfaced by the class \code{FitterBase} (\cf\  Sec.~\ref{sec:fitting}). Any 
+fitter implementation can be used, where however because of the peculiar, non-unique 
+solution space only Monte Carlo sampling, Genetic Algorithm, and Simulated Annealing 
+show satisfying results. Attempts to use Minuit (SIMPLEX or MIGRAD) have not shown 
+satisfactory results\index{Minuit!cut optimisation}, with frequently failing fits.
+
+The training events are sorted in {\em binary trees}\index{Binary search trees} 
+prior to the optimisation, which significantly reduces the computing time required 
+to determine the number of events passing a given cut ensemble (\cf\  
+Sec.~\ref{sec:binaryTrees}).
+
+\subsubsection{Booking options}
+
+The rectangular cut optimisation is booked through the Factory via the command:
+\begin{codeexample}
+\begin{tmvacode}
+factory->BookMethod( Types::kCuts, "Cuts", "<options>" );
+\end{tmvacode}
+\caption[.]{\codeexampleCaptionSize Booking of the cut optimisation classifier: the 
+         first argument is a predefined enumerator, the second argument is a 
+         user-defined string identifier, and the third argument is the configuration 
+         options string. Individual options are separated by a ':'. 
+         See Sec.~\ref{sec:usingtmva:booking} for more information on the booking.}
+\end{codeexample}
+
+The configuration options for the various cut optimisation techniques 
+are given in Option Table~\ref{opt:mva::cuts}.
+
+% ======= input option table ==========================================
+\begin{option}[t]
+\input optiontables/MVA__Cuts.tex
+\caption[.]{\optionCaptionSize 
+     Configuration options reference for MVA method: {\em Cuts}.
+     Values given are defaults. If predefined categories exist, the default category is marked by a '$\star$'. 
+     The options in Option Table~\ref{opt:mva::methodbase} on page~\pageref{opt:mva::methodbase} can also be configured.     
+}
+\label{opt:mva::cuts}
+\end{option}
+% =====================================================================
+
+\subsubsection{Description and implementation}
+
+The cut optimisation analysis proceeds by first building binary search trees for 
+signal and background. For each variable, statistical properties like mean, 
+root-mean-squared (RMS), variable ranges are computed to guide the search 
+for optimal cuts. Cut optimisation requires an estimator that quantifies the goodness
+of a given cut ensemble. Maximising this estimator minimises (maximises)
+the background efficiency, $\eB$ (background rejection, $\rB=1-\eB$) for 
+each signal efficiency $\eS$. 
+
+All optimisation methods (fitters) act on the assumption
+that one minimum and one maximum requirement on each variable is sufficient 
+to optimally discriminate signal from background (\ie, the signal is clustered).
+If this is not the case, the variables must be transformed prior to the cut 
+optimisation to make them compliant with this assumption.
+
+For a given cut ensemble the signal and background efficiencies 
+are derived by counting the training events that pass the cuts and dividing
+the numbers found by the original sample sizes.
+The resulting efficiencies are therefore rational numbers that may exhibit
+visible discontinuities when the number of training events is small and an
+efficiency is either very small or very large. Another way to compute efficiencies
+is to parameterise the probability density functions of all input variables
+and thus to achieve continuous efficiencies for any cut value. Note however
+that this method expects the input variables to be uncorrelated! Non-vanishing
+correlations would lead to incorrect efficiency estimates and hence to underperforming
+cuts. The two methods are chosen with the option \code{EffMethod} set to \code{EffSel}
+and \code{EffPDF}, respectively.
+
+\subsubsection*{Monte Carlo sampling\index{Monte Carlo sampling}}
+
+Each generated cut sample (\cf\  Sec.~\ref{sec:MCsampling}) corresponds to a 
+point in the $(\eS,\rB)$ plane. The $\eS$ dimension is (finely) binned
+and a cut sample is retained if its $\rB$ value is larger than the value already
+contained in that bin. This way a reasonably smooth efficiency curve can be obtained
+if the number of input variables is not too large (the required number of MC samples
+grows with powers of $2\Nvar$). 
+
+Prior information on the variable distributions can be used to reduce the 
+number of cuts that need to be sampled. For example, if a discriminating variable 
+follows Gaussian distributions for signal and background, with equal width but 
+a larger mean value for the background distribution, there is no useful minimum
+requirement (other than $-\infty$) so that a single maximum requirement is 
+sufficient for this variable. To instruct TMVA to remove obsolete requirements,
+the option \code{VarProp[i]} must be used, where \code{[i]} indicates the counter 
+of the variable (following the order in which they have been registered with the 
+Factory, beginning with 0) must be set to either \code{FMax} or \code{FMin}.
+TMVA is capable of automatically detecting which of the requirements should be 
+removed. Use the option \code{VarProp[i]=FSmart} (where again \code{[i]} must
+be replaced by the appropriate variable counter, beginning with 0). Note that in 
+many realistic use cases the mean values between signal and background of a 
+variable are indeed distinct, but the background can have large tails. In such a 
+case, the removal of a requirement is inappropriate, and would lead to 
+underperforming cuts.
+
+\subsubsection*{Genetic Algorithm\index{Genetic Algorithm}}
+
+Genetic Algorithm (\cf\  Sec.~\ref{sec:geneticAlgorithm}) is a technique to 
+find approximate solutions to optimisation or search problems. Apart from the 
+abstract representation of the solution domain, 
+a {\em fitness}\index{Fitness! for cut optimisation} 
+function must be defined. In cut optimisation, the fitness of a rectangular cut 
+is given by good background rejection combined with high signal efficiency. 
+
+At the initialization step, all parameters of all individuals (cut ensembles) 
+are chosen randomly. The individuals are evaluated in terms of their background 
+rejection and signal efficiency. Each cut ensemble giving an improvement 
+in the background rejection for a specific signal efficiency bin is immediately 
+stored. Each individual's fitness is assessed, where the fitness is 
+largely determined by the difference of the best found background rejection 
+for a particular bin of signal efficiency and the value produced by the 
+current individual. The same individual that has at one generation a very 
+good fitness will have only average fitness at the following generation. This 
+forces the algorithm to focus on the region where the potential of improvement 
+is the highest. 
+Individuals with a good fitness are selected to produce the next generation. 
+The new individuals are created by crossover and mutated afterwards. Mutation 
+changes some values of some parameters of some individuals randomly following
+a Gaussian distribution function, etc. This process can be controlled with the 
+parameters listed in Option Table~\ref{opt:fitter_ga}, page~\pageref{opt:fitter_ga}.
+
+\subsubsection*{Simulated Annealing\index{Simulated Annealing}}
+
+Cut optimisation using Simulated Annealing works similarly as for the Genetic 
+Algorithm and achieves comparable performance. The same fitness 
+function is used to estimator the goodness of a given cut ensemble. Details 
+on the algorithm and the configuration options can be found in 
+Sec.~\ref{sec:simAnnealing} on page~\pageref{sec:simAnnealing}.
+
+\subsubsection{Variable ranking}
+
+The present implementation of Cuts does not provide a ranking of 
+the input variables.
+
+\subsubsection{Performance}
+
+The Genetic Algorithm currently provides the best cut optimisation convergence. 
+However, it is found that with rising number of discriminating input variables the 
+goodness of the solution found (and hence the smoothness of the background-rejections 
+versus signal efficiency plot) deteriorates quickly. Rectangular cut optimisation
+should therefore be reduced to the variables that have the largest discriminating
+power. 
+
+If variables with excellent signal from background separation exist, applying cuts
+can be quite competitive with more involved classifiers. Cuts are known to underperform
+in presence of strong nonlinear correlations and/or if several weakly discriminating 
+variables are used. In the latter case, a true multivariate combination of the information
+will be rewarding.
+
+

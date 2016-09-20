@@ -8,7 +8,7 @@
 /// \macro_image
 /// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke 
+/// \author 07/2008 - Wouter Verkerke
 
 
 #include "RooRealVar.h"
@@ -23,7 +23,7 @@ using namespace RooFit ;
 
 void rf606_nllerrorhandling()
 {
-   // C r e a t e   m o d e l  a n d   d a t a s e t 
+   // C r e a t e   m o d e l  a n d   d a t a s e t
    // ----------------------------------------------
 
    // Observable
@@ -41,7 +41,7 @@ void rf606_nllerrorhandling()
 
 
 
-   // P l o t   m o d e l   a n d   d a t a 
+   // P l o t   m o d e l   a n d   d a t a
    // --------------------------------------
 
    RooPlot* frame1 = m.frame(Bins(40),Title("Argus model and data")) ;
@@ -50,7 +50,7 @@ void rf606_nllerrorhandling()
 
 
 
-   // F i t   m o d e l   t o   d a t a 
+   // F i t   m o d e l   t o   d a t a
    // ---------------------------------
 
    // The ARGUS background shape has a sharp kinematic cutoff at m=m0
@@ -65,13 +65,13 @@ void rf606_nllerrorhandling()
 
    argus.fitTo(*data,PrintEvalErrors(10)) ;
 
-   // Peform another fit. In this configuration only the number of errors per
-   // likelihood evaluation is shown, if it is greater than zero. The 
+   // Perform another fit. In this configuration only the number of errors per
+   // likelihood evaluation is shown, if it is greater than zero. The
    // EvalErrorWall(kFALSE) arguments disables the default error handling strategy
    // and will cause the actual (problematic) value of the likelihood to be passed
-   // to MINUIT. 
-   // 
-   // NB: Use of this option is NOT recommended as default strategt as broken -log(L) values
+   // to MINUIT.
+   //
+   // NB: Use of this option is NOT recommended as default strategy as broken -log(L) values
    // can often be lower than 'good' ones because offending events are removed.
    // This may effectively create a false minimum in problem areas. This is clearly
    // illustrated in the second plot
@@ -81,7 +81,7 @@ void rf606_nllerrorhandling()
 
 
 
-   // P l o t   l i k e l i h o o d   a s   f u n c t i o n   o f   m 0 
+   // P l o t   l i k e l i h o o d   a s   f u n c t i o n   o f   m 0
    // ------------------------------------------------------------------
 
    // Construct likelihood function of model and data

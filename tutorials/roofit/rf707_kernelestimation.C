@@ -8,7 +8,7 @@
 /// \macro_image
 /// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke 
+/// \author 07/2008 - Wouter Verkerke
 
 
 #include "RooRealVar.h"
@@ -28,7 +28,7 @@ using namespace RooFit ;
 
 void rf707_kernelestimation()
 {
-   // C r e a t e   l o w   s t a t s   1 - D   d a t a s e t 
+   // C r e a t e   l o w   s t a t s   1 - D   d a t a s e t
    // -------------------------------------------------------
 
    // Create a toy pdf for sampling
@@ -61,21 +61,21 @@ void rf707_kernelestimation()
    // Plot kernel estimation pdfs with and without mirroring over data
    RooPlot* frame = x.frame(Title("Adaptive kernel estimation pdf with and w/o mirroring"),Bins(20)) ;
    data1->plotOn(frame) ;
-   kest1.plotOn(frame) ;    
-   kest2.plotOn(frame,LineStyle(kDashed),LineColor(kRed)) ;    
+   kest1.plotOn(frame) ;
+   kest2.plotOn(frame,LineStyle(kDashed),LineColor(kRed)) ;
 
 
    // Plot kernel estimation pdfs with regular and increased bandwidth
    RooPlot* frame2 = x.frame(Title("Adaptive kernel estimation pdf with regular, increased bandwidth")) ;
-   kest1.plotOn(frame2) ;    
-   kest3.plotOn(frame2,LineColor(kMagenta)) ;    
+   kest1.plotOn(frame2) ;
+   kest3.plotOn(frame2,LineColor(kMagenta)) ;
 
 
 
-   // C r e a t e   l o w   s t a t s   2 - D   d a t a s e t 
+   // C r e a t e   l o w   s t a t s   2 - D   d a t a s e t
    // -------------------------------------------------------
 
-   // Construct a 2D toy pdf for sampleing
+   // Construct a 2D toy pdf for sampling
    RooRealVar y("y","y",0,20) ;
    RooPolynomial py("py","py",y,RooArgList(RooConst(0.01),RooConst(0.01),RooConst(-0.0004))) ;
    RooProdPdf pxy("pxy","pxy",RooArgSet(p,py)) ;
@@ -86,7 +86,7 @@ void rf707_kernelestimation()
    // C r e a t e   2 - D   k e r n e l   e s t i m a t i o n   p d f
    // ---------------------------------------------------------------
 
-   // Create 2D adaptive kernel estimation pdf with mirroring 
+   // Create 2D adaptive kernel estimation pdf with mirroring
    RooNDKeysPdf kest4("kest4","kest4",RooArgSet(x,y),*data2,"am") ;
 
    // Create 2D adaptive kernel estimation pdf with mirroring and double bandwidth
@@ -100,7 +100,7 @@ void rf707_kernelestimation()
    TH1* hh_pdf2 = kest5.createHistogram("hh_pdf2",x,Binning(25),YVar(y,Binning(25))) ;
    hh_pdf->SetLineColor(kBlue) ;
    hh_pdf2->SetLineColor(kMagenta) ;
-   
+
 
 
    TCanvas* c = new TCanvas("rf707_kernelestimation","rf707_kernelestimation",800,800) ;

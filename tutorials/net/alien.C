@@ -1,5 +1,11 @@
-//Example of use of the TAlien class (an implementation of TGrid)
-//Author: Andreas Peters
+/// \file
+/// \ingroup tutorial_net
+/// \notebook -nodraw
+/// Example of use of the TAlien class (an implementation of TGrid)
+///
+/// \macro_code
+///
+/// \author Andreas Peters
 
 void alien()
 {
@@ -58,4 +64,3 @@ void alien()
 
    delete alien;
 }
-

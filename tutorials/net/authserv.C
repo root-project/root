@@ -1,26 +1,31 @@
-//--------------------------------------------------
-#include "TPServerSocket.h"
+/// \file
+/// \ingroup tutorial_net
+/// This macro should be run together with authclient.C to test
+/// authentication between two remote ROOT sessions.
+/// Run first the authserv.C within a ROOT session on the server
+/// machine, eg. "srv.machi.ne":
+///
+///          root[] .x authserv.C(3000)
+///
+/// authserv accepts as argument the port where it starts listening
+/// (default 3000).
+/// You can then run authclient.c in a ROOT session on the client
+/// machine:
+///
+///          root[] .x authclient.C("srv.machi.ne:3000")
+///
+/// and you should get prompted for the credentials, if the case.
+/// To start a parallel socket of size, for example, 5, enter the
+/// size as second argument, ie
+///
+///          root[] .x authclient.C("srv.machi.ne:3000",5)
+///
+///
+/// \macro_code
+///
+/// \author
 
-//
-// This macro should be run together with authclient.C to test
-// authentication between two remote ROOT sessions.
-// Run first the authserv.C within a ROOT session on the server
-// machine, eg. "srv.machi.ne":
-//
-//          root[] .x authserv.C(3000)
-//
-// authserv accepts as argument the port wher it starts listening
-// (default 3000).
-// You can then run authclient.c in a ROOT session on the client
-// machine:
-//          root[] .x authclient.C("srv.machi.ne:3000")
-//
-// and you should get prompted for the credentials, if the case.
-// To start a parallel socket of size, for example, 5, enter the
-// size as second argument, ie
-//
-//          root[] .x authclient.C("srv.machi.ne:3000",5)
-//
+#include "TPServerSocket.h"
 
 int authserv(int po = 3000)
 {
@@ -49,5 +54,4 @@ int authserv(int po = 3000)
    if (s) delete s;
    if (ss) delete ss;
 }
-//--------------------------------------------------
 

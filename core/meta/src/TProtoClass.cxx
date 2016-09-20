@@ -44,6 +44,11 @@ TProtoClass::TProtoClass(TClass* cl):
       fOffsetStreamer=0;
       return;
    }
+   TListOfEnums *enums = dynamic_cast<TListOfEnums*>(fEnums);
+   if (enums && !enums->fIsLoaded) {
+      // Make sure all the enum information is loaded
+      enums->Load();
+   }
    // initialize list of data members (fData)
    TList * dataMembers = cl->GetListOfDataMembers();
    if (dataMembers && dataMembers->GetSize() > 0) {
@@ -202,8 +207,21 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
    if (cl->fRealData || cl->fBase || cl->fData || cl->fEnums.load()
        || cl->fSizeof != -1 || cl->fCanSplit >= 0
        || cl->fProperty != (-1) ) {
-      if (cl->fProperty & kIsNamespace){
-         if (gDebug>0) Info("FillTClass", "Returning w/o doing anything. %s is a namespace.",cl->GetName());
+
+      if (cl->GetCollectionType() != ROOT::kNotSTL) {
+         // We are in the case of collection, duplicate dictionary are allowed
+         // (and even somewhat excepted since they can be auto asked for).
+         // They do not always have a TProtoClass for them.  In particular
+         // the one that are pre-generated in the ROOT build (in what was once
+         // called the cintdlls) do not have a pcms, neither does vector<string>
+         // which is part of libCore proper.
+         if (gDebug > 0)
+            Info("FillTClass", "Returning w/o doing anything. %s is a STL collection.",cl->GetName());
+         return kTRUE;
+      }
+      if (cl->Property() & kIsNamespace) {
+         if (gDebug > 0)
+            Info("FillTClass", "Returning w/o doing anything. %s is a namespace.",cl->GetName());
          return kTRUE;
       }
       Error("FillTClass", "TClass %s already initialized!", cl->GetName());

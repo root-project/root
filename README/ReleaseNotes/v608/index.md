@@ -4,7 +4,7 @@
 
 ## Introduction
 
-ROOT version 6.08/00 is scheduled for release in May, 2016.
+ROOT version 6.08/00 is scheduled for release in October, 2016.
 
 For more information, see:
 
@@ -20,6 +20,7 @@ The following people have contributed to this new version:
  Olivier Couet, CERN/SFT,\
  Gerri Ganis, CERN/SFT,\
  Andrei Gheata, CERN/SFT,\
+ Luca Giommi, CERN/SFT,\
  Christopher Jones, Fermilab, CMS,\
  Wim Lavrijsen, LBNL, PyRoot,\
  Sergey Linev, GSI, http,\
@@ -72,6 +73,7 @@ Other improvements, which may cause compilation errors in third party code:
 Also:
   * `TPluginManager` was made thread-safe [ROOT-7927].
   * On MacOSX, backtraces are now generated without external tools [ROOT-6667].
+  * The set of include paths considered by the interpreter has been reduced to the bare minimum.
 
 ### Containers
 
@@ -81,9 +83,9 @@ Also:
 
 Add a new mode for `TClass::SetCanSplit` (2) which indicates that this class and any derived class should not be split.  This included a rework the mechanism checking the base classes.  Instead of using `InheritsFrom`, which lead in some cases, including the case where the class derived from an STL collection, to spurrious autoparsing (to look at the base class of the collection!), we use a custom walk through the tree of base classes that checks their value of `fCanSplit`.  This also has the side-effect of allowing the extension of the concept 'base class that prevent its derived class from being split' to any user class.  This fixes [ROOT-7972].
 
-
 ### Dictionaries
 
+* Add the -excludePath option to rootcling to forbid dictionaries to remember include paths expressed in the command line invocation.
 * Genreflex and rootcling cannot generate capability files anymore.
 * Fix ROOT-7760: Fully allow the usage of the dylib extension on OSx.
 * Fix ROOT-7879: Prevent LinkDef files to be listed in a rootmap file and use (as the user actually expects) the header files #included in the linkdef file, if any, as the top level headers.
@@ -103,26 +105,30 @@ Add a new mode for `TClass::SetCanSplit` (2) which indicates that this class and
 * When interpreting dereferences of invalid pointers, cling will now complain (throw, actually) instead of crash.
 * Resolve memory hoarding in some case of looking up functions [ROOT-8145]
 
-## Parallelisation
+## Parallelism
 
 * Three methods have been added to manage implicit multi-threading in ROOT: `ROOT::EnableImplicitMT(numthreads)`, `ROOT::DisableImplicitMT` and `ROOT::IsImplicitMTEnabled`. They can be used to enable, disable and check the status of the global implicit multi-threading in ROOT, respectively.
 * Even if the default reduce function specified in the invocation of the `MapReduce` method of `TProcPool` returns a pointer to a `TObject`, the return value of `MapReduce` is properly casted to the type returned by the map function.
 * Add a new class named `TThreadedObject` which helps making objects thread private and merging them.
 * Add tutorial showing how to fill randomly histograms using the `TProcPool` class.
 * Add tutorial showing how to fill randomly histograms from multiple threads.
+* Add the ROOT::TSPinMutex class, a spin mutex compliant with C++11 requirements.
+* Add a new Implicit Multi-Threading (IMT) use case, incarnated in method TTreeProcessor::Process. TTProcessor::Process allows to process the entries of a TTree in parallel. The user provides a function that receives one parameter, a TTreeReader, that can be used to iterate over a subrange of entries. Each subrange corresponds to a cluster in the TTree and is processed by a task, which can potentially be run in parallel with other tasks.
+* Add a new implementation of a RW lock, ROOT::TRWSpinLock, which is based on a ROOT::TSPinMutex. TRWSpinLock tries to make faster the scenario when readers come and go but there is no writer, while still preventing starvation of writers.
 
 ## I/O Libraries
 
 * Support I/O of std::unique_ptrs and STL collections thereof.
 * Support I/O of std::array.
+* Support I/O of std::tuple. The dictionary for those is never auto generated and thus requires explicit request of the dictionary for each std::tuple class template instantiation used, like most other class templates.
 * Custom streamers need to #include TBuffer.h explicitly (see [section Core Libraries](#core-libs))
 * Check and flag short reads as errors in the xroot plugins. This fixes [ROOT-3341].
 * Added support for AWS temporary security credentials to TS3WebFile by allowing the security token to be given.
 * Resolve an issue when space is freed in a large `ROOT` file and a TDirectory is updated and stored the lower (less than 2GB) freed portion of the file [ROOT-8055].
 
-
 ## TTree Libraries
 
+* TChains can now be histogrammed without any C++ code, using the command line too rootdrawtree. It is based on the new class TSimpleAnalysis.
 * Do not automatically setup read cache during TTree::Fill(). This fixes [ROOT-8031].
 * Make sure the option "PARA" in TTRe::Draw is used with at least tow variables [ROOT-8196].
 * The with `goff` option one can use as many variables as needed. There no more
@@ -230,7 +236,7 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 * `TColor::GetFreeColorIndex()` allows to make sure the new color is created with an
   unused color index.
 * In `TLegend::SetHeader` the new option `C` allows to center the title.
-* New method `SetLabelAttributes` in `TGaxis` allowing to a fine tuning of
+* New method `ChangeLabel` in `TGaxis` and `TAxis`allowing to a fine tuning of
   individual labels attributes. All the attributes can be changed and even the
   label text itself. Example:
   ~~~ {.cpp}
@@ -243,20 +249,33 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
      axis1->SetTitleSize(0.05);
      axis1->SetTitleColor(kBlue);
      axis1->SetTitleFont(42);
-     axis1->SetLabelAttributes(1,-1,-1,-1,2);
-     axis1->SetLabelAttributes(3,-1,0.);
-     axis1->SetLabelAttributes(5,30.,-1,0);
-     axis1->SetLabelAttributes(6,-1,-1,-1,3,-1,"6th label");
+     axis1->ChangeLabel(1,-1,-1,-1,2);
+     axis1->ChangeLabel(3,-1,0.);
+     axis1->ChangeLabel(5,30.,-1,0);
+     axis1->ChangeLabel(6,-1,-1,-1,3,-1,"6th label");
      axis1->Draw();
   }
   ~~~
-* New class `TGaxisModLab`: a  TGaxis helper class used to store the modified labels.
+  Being available in `TAxis`, this method allow to change a label on and histogram
+  plot like:
+  ~~~ {.cpp}
+   hpx->Draw();
+   hpx->GetXaxis()->ChangeLabel(5,-1,-1,-1,kRed,-1,"Zero");
+  ~~~
+* New class `TAxisModLab`: a  TAxis helper class used to store the modified labels.
 * `TPie` the format parameter set by `SetPercentFormat` was ignored.
   (reported [here](https://sft.its.cern.ch/jira/browse/ROOT-8294))
 * Improvements in the histogram plotting option `TEXT`: In case several histograms
   are drawn on top ot each other (using option `SAME`), the text can be shifted
   using `SetBarOffset()`. It specifies an offset for the  text position in each
   cell, in percentage of the bin width.
+* `TGaxis::PaintAxis()` might caused a correctness problem in multithreaded
+   context when handling optionTime with `%F`. This was reported
+   [here](https://sft.its.cern.ch/jira/browse/ROOT-8309). The fixed was suggested
+   by Philippe Gras (philippe.gras@cea.fr).
+* `TGaxis::PaintAxis()` misplaced the `x10` at the end of the axis for non vertical
+   or horizontal axis
+   [here](https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=22363).
 
 ## 3D Graphics Libraries
 
@@ -264,6 +283,18 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
   specified by `SetMaximum()` and `SetMinimum()`.
 * In `TMarker3DBox` when a box marker has a size equal to zero it is not painted.
   Painting it produced a dot with the X11 backend.
+* New class `TRatioPlot` implemented by Paul Gessinger <hello@paulgessinger.com>.
+  Class for displaying ratios, differences and fit residuals.
+
+  `TRatioPlot` has two constructors, one which accepts two histograms, and is responsible
+  for setting up the calculation of ratios and differences. This calculation is in part
+  delegated to `TEfficiency`. A single option can be given as a parameter, that is
+  used to determine which procedure is chosen. The remaining option string is then
+  passed through to the calculation, if applicable.
+
+  Several examples illustrate how to use this class. See:
+  `$ROOTSYS/tutorials/hist/ratioplot?.C`
+* New option "I" allowing to draw TGraph with invisible axis (used by `TRatioPlot`);
 
 ## New histogram drawing options
 
@@ -343,7 +374,9 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 
 ## Tutorials
 * New tutorial `treegetval.C` illustrating how to retrieve  `TTree` variables in arrays.
-
+* Add script to automatically translate tutorials into notebooks
+   * Embed it into the documentation generation
+   * Make the notebooks available at https://root.cern/doc/master/group__Tutorials.html
 
 ## Class Reference Guide
 
@@ -367,7 +400,10 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
    - Add build instructions for System Z (s390 and s390x)
    - Make sure that the roots wrapper can be executed
    - Move gl2ps.h to its own subdir
-- Added 'builtin-unuran' option (provided by Mattias Ellert)
-- Added 'builtin-gl2ps' option (provided by Mattias Ellert)
+- Added new 'builtin-unuran' option (provided by Mattias Ellert)
+- Added new 'builtin-gl2ps' option (provided by Mattias Ellert)
+- Added new 'macos_native' option (only for MacOS) to disable looking for binaries, libraires and headers for dependent
+  packages at locations other than native MacOS installations. Needed when wanting to ignore packages from Fink, Brew or Ports.
+- Added new 'cuda' option to enable looking for CUDA in the system.
 
 

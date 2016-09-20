@@ -164,11 +164,11 @@ TMVA::MethodBDT::MethodBDT( const TString& jobName,
    , fNTrees(0)
    , fSigToBkgFraction(0) 
    , fAdaBoostBeta(0)
-   , fTransitionPoint(0)
+//   , fTransitionPoint(0)
    , fShrinkage(0)
    , fBaggedBoost(kFALSE)
    , fBaggedGradBoost(kFALSE)
-   , fSumOfWeights(0)
+//   , fSumOfWeights(0)
    , fMinNodeEvents(0)
    , fMinNodeSize(5)
    , fMinNodeSizeS("5%")
@@ -202,6 +202,7 @@ TMVA::MethodBDT::MethodBDT( const TString& jobName,
    , fCtb_ss(0)
    , fCbb(0)
    , fDoPreselection(kFALSE)
+   , fSkipNormalization(kFALSE)
    , fHistoricBool(kFALSE) 
 {
    fMonitorNtuple = NULL;
@@ -217,11 +218,11 @@ TMVA::MethodBDT::MethodBDT( DataSetInfo& theData,
    , fNTrees(0)
    , fSigToBkgFraction(0) 
    , fAdaBoostBeta(0)
-   , fTransitionPoint(0)
+//   , fTransitionPoint(0)
    , fShrinkage(0)
    , fBaggedBoost(kFALSE)
    , fBaggedGradBoost(kFALSE)
-   , fSumOfWeights(0)
+//   , fSumOfWeights(0)
    , fMinNodeEvents(0)
    , fMinNodeSize(5)
    , fMinNodeSizeS("5%")
@@ -255,6 +256,7 @@ TMVA::MethodBDT::MethodBDT( DataSetInfo& theData,
    , fCtb_ss(0)
    , fCbb(0)
    , fDoPreselection(kFALSE)
+   , fSkipNormalization(kFALSE)
    , fHistoricBool(kFALSE) 
 {
    fMonitorNtuple = NULL;
@@ -312,7 +314,10 @@ Bool_t TMVA::MethodBDT::HasAnalysisType( Types::EAnalysisType type, UInt_t numbe
 ///                         DecreaseBoostWeight     Boost ev. with neg. weight with 1/boostweight instead of boostweight
 ///                         PairNegWeightsGlobal    Pair ev. with neg. and pos. weights in traning sample and "annihilate" them 
 /// MaxDepth         maximum depth of the decision tree allowed before further splitting is stopped
+/// SkipNormalization	    Skip normalization at initialization, to keep expectation value of BDT output
+///			    according to the fraction of events
 
+ 
 void TMVA::MethodBDT::DeclareOptions()
 {
    DeclareOptionRef(fNTrees, "NTrees", "Number of trees in the forest");
@@ -390,6 +395,13 @@ void TMVA::MethodBDT::DeclareOptions()
       fSepTypeS = "GiniIndex";
    }
 
+   DeclareOptionRef(fRegressionLossFunctionBDTGS = "Huber", "RegressionLossFunctionBDTG", "Loss function for BDTG regression.");
+   AddPreDefVal(TString("Huber"));
+   AddPreDefVal(TString("AbsoluteDeviation"));
+   AddPreDefVal(TString("LeastSquares"));
+
+   DeclareOptionRef(fHuberQuantile = 0.7, "HuberQuantile", "In the Huber loss function this is the quantile that separates the core from the tails in the residuals distribution.");
+
    DeclareOptionRef(fDoBoostMonitor=kFALSE,"DoBoostMonitor","Create control plot with ROC integral vs tree number");
 
    DeclareOptionRef(fUseFisherCuts=kFALSE, "UseFisherCuts", "Use multivariate splits using the Fisher criterion");
@@ -411,7 +423,9 @@ void TMVA::MethodBDT::DeclareOptions()
 
    DeclareOptionRef(fFValidationEvents=0.5, "PruningValFraction", "Fraction of events to use for optimizing automatic pruning.");
 
-   // deprecated options, still kept for the moment:
+   DeclareOptionRef(fSkipNormalization=kFALSE, "SkipNormalization", "Skip normalization at initialization, to keep expectation value of BDT output according to the fraction of events");
+
+    // deprecated options, still kept for the moment:
    DeclareOptionRef(fMinNodeEvents=0, "nEventsMin", "deprecated: Use MinNodeSize (in % of training events) instead");
 
    DeclareOptionRef(fBaggedGradBoost=kFALSE, "UseBaggedGrad","deprecated: Use *UseBaggedBoost* instead:  Use only a random subsample of all events for growing the trees in each iteration.");
@@ -456,6 +470,20 @@ void TMVA::MethodBDT::ProcessOptions()
    else {
       Log() << kINFO << GetOptions() << Endl;
       Log() << kFATAL << "<ProcessOptions> unknown Separation Index option " << fSepTypeS << " called" << Endl;
+   }
+
+   if(!(fHuberQuantile >= 0.0 && fHuberQuantile <= 1.0)){
+      Log() << kINFO << GetOptions() << Endl;
+      Log() << kFATAL << "<ProcessOptions> Huber Quantile must be in range [0,1]. Value given, " << fHuberQuantile << ", does not match this criteria" << Endl;
+   }
+
+   fRegressionLossFunctionBDTGS.ToLower();
+   if      (fRegressionLossFunctionBDTGS == "huber")                  fRegressionLossFunctionBDTG = new HuberLossFunctionBDT(fHuberQuantile);
+   else if (fRegressionLossFunctionBDTGS == "leastsquares")           fRegressionLossFunctionBDTG = new LeastSquaresLossFunctionBDT();
+   else if (fRegressionLossFunctionBDTGS == "absolutedeviation")      fRegressionLossFunctionBDTG = new AbsoluteDeviationLossFunctionBDT();
+   else {
+      Log() << kINFO << GetOptions() << Endl;
+      Log() << kFATAL << "<ProcessOptions> unknown Regression Loss Function BDT option " << fRegressionLossFunctionBDTGS << " called" << Endl;
    }
 
    fPruneMethodS.ToLower();
@@ -675,7 +703,7 @@ void TMVA::MethodBDT::Init( void )
    fUseNvars        =  UInt_t(TMath::Sqrt(GetNvar())+0.6);
    fUsePoissonNvars = kTRUE;
    fShrinkage       = 1.0;
-   fSumOfWeights    = 0.0;
+//   fSumOfWeights    = 0.0;
 
    // reference cut value to distinguish signal-like from background-like events
    SetSignalReferenceCut( 0 );
@@ -698,6 +726,7 @@ void TMVA::MethodBDT::Reset( void )
    if (fMonitorNtuple) { fMonitorNtuple->Delete(); fMonitorNtuple=NULL; }
    fVariableImportance.clear();
    fResiduals.clear();
+   fLossFunctionEventInfo.clear();
    // now done in "InitEventSample" which is called in "Train"
    // reset all previously stored/accumulated BOOST weights in the event sample
    //for (UInt_t iev=0; iev<fEventSample.size(); iev++) fEventSample[iev]->SetBoostWeight(1.);
@@ -814,7 +843,7 @@ void TMVA::MethodBDT::InitEventSample( void )
       if (fPairNegWeightsGlobal) PreProcessNegativeEventWeights();
    }
 
-   if (!DoRegression()){
+   if (!DoRegression() && !fSkipNormalization){
       Log() << kDEBUG << "\t<InitEventSample> For classification trees, "<< Endl;
       Log() << kDEBUG << " \tthe effective number of backgrounds is scaled to match "<<Endl;
       Log() << kDEBUG << " \tthe signal. Otherwise the first boosting step would do 'just that'!"<<Endl;
@@ -1116,12 +1145,21 @@ void TMVA::MethodBDT::Train()
       fNTrees = 1;
    }
 
+   if (fInteractive && fInteractive->NotInitialized()){
+     std::vector<TString> titles = {"Boost weight", "Error Fraction"};
+     fInteractive->Init(titles);
+   }
+   fIPyMaxIter = fNTrees;
+
    // HHV (it's been here since looong but I really don't know why we cannot handle
    // normalized variables in BDTs...  todo
    if (IsNormalised()) Log() << kFATAL << "\"Normalise\" option cannot be used with BDT; "
                              << "please remove the option from the configuration string, or "
                              << "use \"!Normalise\""
                              << Endl;
+
+   if(DoRegression()) 
+      Log() << kINFO << "Regression Loss Function: "<< fRegressionLossFunctionBDTG->Name() << Endl;
 
    Log() << kINFO << "Training "<< fNTrees << " Decision Trees ... patience please" << Endl;
 
@@ -1220,6 +1258,8 @@ void TMVA::MethodBDT::Train()
    Bool_t continueBoost=kTRUE;
    //for (int itree=0; itree<fNTrees; itree++) {
    while (itree < fNTrees && continueBoost){
+     if (fExitFromTraining) break;
+     fIPyCurrentIter = itree;
       timer.DrawProgressBar( itree );
       // Results* results = Data()->GetResults(GetMethodName(), Types::kTraining, GetAnalysisType());
       // TH1 *hxx = new TH1F(Form("swdist%d",itree),Form("swdist%d",itree),10000,0,15);
@@ -1310,7 +1350,10 @@ void TMVA::MethodBDT::Train()
          nNodesAfterPruning = fForest.back()->GetNNodes();
          nNodesAfterPruningCount += nNodesAfterPruning;
          nodesAfterPruningVsTree->SetBinContent(itree+1,nNodesAfterPruning);
-         
+
+         if (fInteractive){
+           fInteractive->AddPoint(itree, fBoostWeight, fErrorFraction);
+         }
          fITree = itree;
          fMonitorNtuple->Fill();
          if (fDoBoostMonitor){
@@ -1353,6 +1396,8 @@ void TMVA::MethodBDT::Train()
    fEventSample.clear();
    fValidationSample.clear();
 
+   if (!fExitFromTraining) fIPyMaxIter = fIPyCurrentIter;
+   ExitFromTraining();
 }
 
 
@@ -1408,45 +1453,13 @@ void TMVA::MethodBDT::UpdateTargets(std::vector<const TMVA::Event*>& eventSample
 
 void TMVA::MethodBDT::UpdateTargetsRegression(std::vector<const TMVA::Event*>& eventSample, Bool_t first)
 {
-   for (std::vector<const TMVA::Event*>::const_iterator e=fEventSample.begin(); e!=fEventSample.end();e++) {
-      if(!first){
-         fWeightedResiduals[*e].first -= fForest.back()->CheckEvent(*e,kFALSE);
+   if(!first){
+      for (std::vector<const TMVA::Event*>::const_iterator e=fEventSample.begin(); e!=fEventSample.end();e++) {
+         fLossFunctionEventInfo[*e].predictedValue += fForest.back()->CheckEvent(*e,kFALSE); 
       }
-      
    }
    
-   fSumOfWeights = 0;
-   vector< std::pair<Double_t, Double_t> > temp;
-   for (std::vector<const TMVA::Event*>::const_iterator e=eventSample.begin(); e!=eventSample.end();e++){
-      temp.push_back(make_pair(fabs(fWeightedResiduals[*e].first),fWeightedResiduals[*e].second));
-      fSumOfWeights += (*e)->GetWeight();
-   }
-   fTransitionPoint = GetWeightedQuantile(temp,0.7,fSumOfWeights);
-
-   Int_t i=0;
-   for (std::vector<const TMVA::Event*>::const_iterator e=eventSample.begin(); e!=eventSample.end();e++) {
- 
-      if(temp[i].first<=fTransitionPoint)
-         const_cast<TMVA::Event*>(*e)->SetTarget(0,fWeightedResiduals[*e].first);
-      else
-         const_cast<TMVA::Event*>(*e)->SetTarget(0,fTransitionPoint*(fWeightedResiduals[*e].first<0?-1.0:1.0));
-      i++;
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///calculates the quantile of the distribution of the first pair entries weighted with the values in the second pair entries
-
-Double_t TMVA::MethodBDT::GetWeightedQuantile(vector<  std::pair<Double_t, Double_t> > vec, const Double_t quantile, const Double_t norm){
-   Double_t temp = 0.0;
-   std::sort(vec.begin(), vec.end());
-   UInt_t i = 0;
-   while(i<vec.size() && temp <= norm*quantile){
-      temp += vec[i].second;
-      i++;
-   }
-   if (i >= vec.size()) return 0.; // prevent uncontrolled memory access in return value calculation 
-   return vec[i].first;
+   fRegressionLossFunctionBDTG->SetTargets(eventSample, fLossFunctionEventInfo);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1481,29 +1494,24 @@ Double_t TMVA::MethodBDT::GradBoost(std::vector<const TMVA::Event*>& eventSample
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Implementation of M_TreeBoost using a Huber loss function as desribed by Friedman 1999
+/// Implementation of M_TreeBoost using any loss function as desribed by Friedman 1999
 
 Double_t TMVA::MethodBDT::GradBoostRegression(std::vector<const TMVA::Event*>& eventSample, DecisionTree *dt )
 {
-   std::map<TMVA::DecisionTreeNode*,Double_t > leaveWeights;
-   std::map<TMVA::DecisionTreeNode*,vector< std::pair<Double_t, Double_t> > > leaves;
-   UInt_t i =0;
+   // get the vector of events for each terminal so that we can calculate the constant fit value in each
+   // terminal node
+   std::map<TMVA::DecisionTreeNode*,vector< TMVA::LossFunctionEventInfo > > leaves;
    for (std::vector<const TMVA::Event*>::const_iterator e=eventSample.begin(); e!=eventSample.end();e++) {
       TMVA::DecisionTreeNode* node = dt->GetEventNode(*(*e));      
-      (leaves[node]).push_back(make_pair(fWeightedResiduals[*e].first,(*e)->GetWeight()));
-      (leaveWeights[node]) += (*e)->GetWeight();
-      i++;
+      (leaves[node]).push_back(fLossFunctionEventInfo[*e]);
    }
 
-   for (std::map<TMVA::DecisionTreeNode*,vector< std::pair<Double_t, Double_t> > >::iterator iLeave=leaves.begin();
+   // calculate the constant fit for each terminal node based upon the events in the node
+   // node (iLeave->first), vector of event information (iLeave->second)
+   for (std::map<TMVA::DecisionTreeNode*,vector< TMVA::LossFunctionEventInfo > >::iterator iLeave=leaves.begin();
         iLeave!=leaves.end();++iLeave){
-      Double_t shift=0,diff= 0;
-      Double_t ResidualMedian = GetWeightedQuantile(iLeave->second,0.5,leaveWeights[iLeave->first]);
-      for(UInt_t j=0;j<((iLeave->second).size());j++){
-         diff = (iLeave->second)[j].first-ResidualMedian;
-         shift+=1.0/((iLeave->second).size())*((diff<0)?-1.0:1.0)*TMath::Min(fTransitionPoint,fabs(diff));
-      }
-      (iLeave->first)->SetResponse(fShrinkage*(ResidualMedian+shift));          
+      Double_t fit = fRegressionLossFunctionBDTG->Fit(iLeave->second);
+      (iLeave->first)->SetResponse(fShrinkage*fit);          
    }
    
    UpdateTargetsRegression(*fTrainSample);
@@ -1515,27 +1523,17 @@ Double_t TMVA::MethodBDT::GradBoostRegression(std::vector<const TMVA::Event*>& e
 
 void TMVA::MethodBDT::InitGradBoost( std::vector<const TMVA::Event*>& eventSample)
 {
-   fSumOfWeights = 0;
+   // Should get rid of this line. It's just for debugging.
+   //std::sort(eventSample.begin(), eventSample.end(), [](const TMVA::Event* a, const TMVA::Event* b){
+   //                                     return (a->GetTarget(0) < b->GetTarget(0)); });
    fSepType=NULL; //set fSepType to NULL (regression trees are used for both classification an regression)
-   std::vector<std::pair<Double_t, Double_t> > temp;
    if(DoRegression()){
       for (std::vector<const TMVA::Event*>::const_iterator e=eventSample.begin(); e!=eventSample.end();e++) {
-         fWeightedResiduals[*e]= make_pair((*e)->GetTarget(0), (*e)->GetWeight());
-         fSumOfWeights+=(*e)->GetWeight();
-         temp.push_back(make_pair(fWeightedResiduals[*e].first,fWeightedResiduals[*e].second));
-      }
-      Double_t weightedMedian = GetWeightedQuantile(temp,0.5, fSumOfWeights);
-     
-      //Store the weighted median as a first boosweight for later use
-      fBoostWeights.push_back(weightedMedian);
-      std::map<const TMVA::Event*, std::pair<Double_t, Double_t> >::iterator res = fWeightedResiduals.begin();
-      for (; res!=fWeightedResiduals.end(); ++res ) {
-         //substract the gloabl median from all residuals
-         (*res).second.first -= weightedMedian;  
+         fLossFunctionEventInfo[*e]= TMVA::LossFunctionEventInfo((*e)->GetTarget(0), 0, (*e)->GetWeight());
       }
 
+      fRegressionLossFunctionBDTG->Init(fLossFunctionEventInfo, fBoostWeights);
       UpdateTargetsRegression(*fTrainSample,kTRUE);
-
       return;
    }
    else if(DoMulticlass()){

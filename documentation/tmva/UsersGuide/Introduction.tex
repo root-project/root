@@ -1,0 +1,158 @@
+\section{Introduction}
+\label{sec:introduction}
+
+The Toolkit for Multivariate Analysis (TMVA) provides a ROOT-integrated~\cite{ROOT} 
+environment for the processing, parallel evaluation and application of multivariate 
+classification and -- since TMVA version 4 -- multivariate regression techniques.\footnote
+{
+   A classification problem corresponds in more general terms to a 
+   {\em discretised regression} problem. A regression is the 
+   process that estimates the parameter values of a function, which
+   predicts the value of a response variable (or vector)
+   in terms of the values of other variables (the {\em input} variables). 
+   A typical regression problem in High-Energy Physics is for example the estimation of
+   the energy of a (hadronic) calorimeter cluster from the cluster's electromagnetic 
+   cell energies. The user provides a single dataset that contains the input variables 
+   and one or more target variables. The interface to defining the input and target variables,
+   the booking of the multivariate methods, their training and testing is very similar to 
+   the syntax in classification problems. Communication between the user and TMVA proceeds
+   conveniently via the Factory and Reader classes. Due to their similarity, classification 
+   and regression are introduced together in this Users Guide. Where necessary, 
+   differences are pointed out.
+}
+All multivariate techniques in TMVA belong to the family of ``supervised learnning'' algorithms.
+They make use of training events, for which the desired output is known, to determine 
+the mapping function that either discribes a decision boundary (classification)
+or an approximation of the underlying functional behaviour defining the target value (regression).
+The mapping function can contain various degrees of approximations and may be a single global 
+function, or a set of local models. 
+TMVA is specifically designed for the needs of high-energy physics (HEP) applications, 
+but should not be restricted to these. The package includes:
+\begin{itemize}
+
+\item Rectangular cut optimisation (binary splits, Sec.~\ref{sec:cuts}).
+
+\item Projective likelihood estimation (Sec.~\ref{sec:likelihood}).
+
+\item Multi-dimensional likelihood estimation (PDE range-search -- Sec.~\ref{sec:pders}, 
+      PDE-Foam -- Sec.~\ref{sec:pdefoam}, and k-NN -- Sec.~\ref{sec:knn}).
+
+\item Linear and nonlinear discriminant analysis 
+      (H-Matrix -- Sec.~\ref{sec:hmatrix}, Fisher -- Sec.~\ref{sec:fisher}, 
+      LD -- Sec.~\ref{sec:ld}, FDA -- Sec.~\ref{sec:fda}).
+
+\item Artificial neural networks (three different
+      multilayer perceptron implementations -- Sec.~\ref{sec:ann}).
+
+\item Support vector machine (Sec.~\ref{sec:SVM}).
+
+\item Boosted/bagged decision trees (Sec.~\ref{sec:bdt}).
+
+\item Predictive learning via rule ensembles (RuleFit, Sec.~\ref{sec:rulefit}).
+
+\item A generic boost classifier allowing one to boost any of the above 
+      classifiers (Sec.~\ref{sec:combine}).
+
+\item A generic category classifier allowing one to split the training data into 
+      disjoint categories with independent MVAs.
+
+\end{itemize}
+
+The software package consists of abstract, object-oriented implementations in C++/ROOT for 
+each of these multivariate analysis (MVA) techniques, as well as auxiliary tools such as 
+parameter fitting and transformations. It provides training, testing and performance evaluation 
+algorithms and visualisation scripts. Detailed descriptions of all the TMVA methods and 
+their options for classification and (where available) regression tasks are given in 
+Sec.~\ref{sec:tmvaClassifiers}. Their training and testing is 
+performed with the use of user-supplied data sets in form of ROOT trees or text files, where
+each event can have an individual weight. The true sample composition (for event classification) 
+or target value (for regression) in these data sets must be supplied for each event. 
+Preselection requirements and transformations 
+can be applied to input data. TMVA supports the use of variable combinations and 
+formulas with a functionality similar to the one available for the \code{Draw} command of a ROOT tree.
+
+TMVA works in transparent factory mode to provide an objective performance comparison 
+between the MVA methods: all methods see the same training and test data, and are 
+evaluated following the same prescriptions within the same execution job. A {\em Factory} 
+class organises the interaction between the user and the TMVA analysis steps. It performs 
+preanalysis and preprocessing of the training data to assess basic properties of the 
+discriminating variables used as inputs to the classifiers. The linear correlation 
+coefficients of the input variables are calculated and displayed. For regression, also 
+nonlinear correlation measures are given, such as the correlation ratio and mutual 
+information between input variables and output target. A preliminary 
+ranking is derived, which is later superseded by algorithm-specific variable rankings. 
+For classification problems, the variables can be linearly transformed (individually 
+for each MVA method) into a non-correlated variable space, projected upon their principle 
+components, or transformed into a normalised Gaussian shape. Transformations can also 
+be arbitrarily concatenated.
+
+To compare the signal-efficiency and background-rejection performance of the classifiers, 
+or the average variance between regression target and estimation, the analysis job prints --
+among other criteria -- tabulated results for some benchmark values (see 
+Sec.~\ref{sec:usingtmva:evaluation}). Moreover, a variety of graphical evaluation information
+acquired during the training, testing and evaluation phases is stored in a ROOT output 
+file. These results can be displayed using macros, which are conveniently executed 
+via graphical user interfaces (each one for classification and regression) 
+that come with the TMVA distribution (see Sec.~\ref{sec:rootmacros}).
+
+The TMVA training job runs alternatively as a ROOT script, as a standalone executable, or 
+as a python script via the PyROOT interface. Each MVA method trained in one of these 
+applications writes its configuration and training results in a result (``weight'') file, 
+which in the default configuration has human readable XML format.
+
+A light-weight {\em Reader} class is provided, which reads and interprets the 
+weight files (interfaced by the corresponding method), and which can 
+be included in any C++ executable, ROOT macro, or python analysis job
+(see Sec.~\ref{sec:usingtmva:reader}).
+
+For standalone use of the trained MVA method, TMVA also generates lightweight C++ response 
+classes (not available for all methods), which contain the encoded information from the 
+weight files so that these are not required anymore. These classes do not depend on TMVA 
+or ROOT, neither on any other external library (see Sec.~\ref{sec:usingtmva:standaloneClasses}).
+
+We have put emphasis on the clarity and functionality of the Factory and Reader interfaces 
+to the user applications, which will hardly exceed a few lines of code. All MVA methods
+run with reasonable default configurations and should have satisfying performance for 
+average applications. {\em We stress however that, to solve a concrete problem, all 
+methods require at least some specific tuning to deploy their maximum classification or 
+regression capabilities.} Individual optimisation and customisation of the classifiers is 
+achieved via configuration strings when booking a method.
+
+This manual introduces the TMVA Factory and Reader interfaces, and describes design and 
+implementation of the MVA methods. It is not the aim here to provide a general introduction 
+to MVA techniques. Other excellent reviews exist on this subject (see, \eg, 
+Refs.~\cite{FriedmanBook,WebbBook,KunchevaBook}). The document begins with a quick TMVA 
+start reference in Sec.~\ref{sec:quickstart}, and provides a more complete introduction 
+to the TMVA design and its functionality for both, classification and regression analyses
+in Sec.~\ref{sec:usingtmva}. Data preprocessing such as the transformation of input variables 
+and event sorting are discussed in Sec.~\ref{sec:dataPreprocessing}. In Sec.~\ref{sec:PDF}, 
+we describe the techniques used to estimate probability density functions from the training
+data. Section~\ref{sec:fitting} introduces optimisation and fitting tools commonly used by 
+the methods. All the TMVA methods including their configurations and tuning options are 
+described in Secs.~\ref{sec:cuts}--\ref{sec:rulefit}. Guidance on which MVA method to use 
+for varying problems and input conditions is given in Sec.~\ref{sec:whatMVAshouldIuse}. 
+An overall summary of the implementation status of all TMVA methods is provided in 
+Sec.~\ref{sec:classifierSummary}.
+
+\subsubsection*{Copyrights and credits}
+\addcontentsline{toc}{subsection}{Copyrights and credits}
+
+\begin{details}
+TMVA is an open source product. Redistribution and use of TMVA in source and binary forms, 
+with or without modification, are permitted according to the terms listed in the 
+BSD license\index{License}.\footnote
+{
+  For the BSD l
+icense, see \urlsm{http://tmva.sourceforge.net/LICENSE}. 
+}
+Several similar combined multivariate analysis (``machine learning'') packages exist 
+with rising importance in most fields of science and industry. In the HEP
+community the package {\em StatPatternRecognition}~\cite{narsky,MVAreferences} 
+is in use (for classification problems only). The idea of parallel training and 
+evaluation of MVA-based classification in HEP has been pioneered by the {\em Cornelius} 
+package, developed by the Tagging Group of the BABAR Collaboration~\cite{Cornelius}. 
+See further credits and acknowledgments on page~\pageref{sec:Acknowledgments}.
+\end{details}
+
+\vfill
+\pagebreak

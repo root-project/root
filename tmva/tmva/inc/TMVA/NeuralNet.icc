@@ -8,6 +8,7 @@
 
 #include "Math/Util.h"
 
+#include "MethodBase.h"
 
 namespace TMVA
 {
@@ -707,6 +708,9 @@ template <typename LAYERDATA>
 //        std::cout << "START TRAINING" << std::endl;
             settings.startTrainCycle ();
 
+            // JsMVA progress bar maximum (100%)
+            if (fIPyMaxIter) *fIPyMaxIter = 100;
+
             settings.pads (4);
             settings.create ("trainErrors", 100, 0, 100, 100, 0,1);
             settings.create ("testErrors", 100, 0, 100, 100, 0,1);
@@ -872,6 +876,12 @@ template <typename LAYERDATA>
                 settings.plot ("testErrors", "C", 1, kMagenta);
 
 
+                // setup error plots and progress bar variables for JsMVA
+                if (fInteractive){
+                  fInteractive->AddPoint(cycleCount, trainError, testError);
+                  if (*fExitFromTraining) break;
+                  *fIPyCurrentIter = 100*(double)settings.maxConvergenceCount () /(double)settings.convergenceSteps ();
+                }
 
                 if (hasConverged)
                     break;
@@ -1102,7 +1112,8 @@ template <typename LAYERDATA>
         
         
         // ----------- create layer data -------------------------------------------------------
-        assert (_layers.back ().numNodes () == outputSize ());
+        //LM- This assert not needed anymore (outputsize is actually numNodes+1)
+        //assert (_layers.back ().numNodes () == outputSize ());
         totalNumWeights = 0;
         size_t totalNumNodes = 0;
         std::vector<std::vector<LayerData>> layerPatternData;

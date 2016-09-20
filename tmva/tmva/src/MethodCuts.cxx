@@ -692,6 +692,8 @@ void  TMVA::MethodCuts::Train( void )
          Log() << kFATAL << "Wrong fit method: " << fFitMethod << Endl;
       }
 
+      if (fInteractive) fitter->SetIPythonInteractive(&fExitFromTraining, &fIPyMaxIter, &fIPyCurrentIter);
+
       fitter->CheckForUnusedOptions();
 
       // perform the fit
@@ -711,11 +713,14 @@ void  TMVA::MethodCuts::Train( void )
       // timing of MC
       Int_t nsamples = Int_t(0.5*nevents*(nevents - 1));
       Timer timer( nsamples, GetName() ); 
+      fIPyMaxIter = nsamples;
 
       Log() << kINFO << "Running full event scan: " << Endl;
       for (Int_t ievt1=0; ievt1<nevents; ievt1++) {
          for (Int_t ievt2=ievt1+1; ievt2<nevents; ievt2++) {
 
+           fIPyCurrentIter = ic;
+           if (fExitFromTraining) break;
             EstimatorFunction( ievt1, ievt2 );
 
             // what's the time please?
@@ -738,6 +743,7 @@ void  TMVA::MethodCuts::Train( void )
 
       // timing of MC
       Timer timer( nsamples, GetName() ); 
+      fIPyMaxIter = nsamples;
 
       // random generator
       TRandom3*rnd = new TRandom3( seed );
@@ -746,6 +752,8 @@ void  TMVA::MethodCuts::Train( void )
       std::vector<Double_t> pars( 2*GetNvar() );
       
       for (Int_t itoy=0; itoy<nsamples; itoy++) {
+        fIPyCurrentIter = ic;
+        if (fExitFromTraining) break;
 
          for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
             
@@ -814,6 +822,9 @@ void  TMVA::MethodCuts::Train( void )
    // if not, then the wrong bin is taken in some cases.
    Double_t epsilon = 0.0001;
    for (Double_t eff=0.1; eff<0.95; eff += 0.1) PrintCuts( eff+epsilon );
+
+   if (!fExitFromTraining) fIPyMaxIter = fIPyCurrentIter;
+   ExitFromTraining();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

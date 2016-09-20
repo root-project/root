@@ -47,9 +47,9 @@ def staff():
     tree.Branch( 'Nation', AddressOf( staff, 'Nation' ), 'Nation/C' )
 
     # note that the branches Division and Nation cannot be on the first branch
-    fname = os.path.expandvars('$ROOTSYS/tutorials/tree/cernstaff.dat')
+    fname = os.path.join(ROOT.gROOT.GetTutorialsDir(), 'tree', 'cernstaff.dat')
     for line in open(fname).readlines():
-        t = filter( lambda x: x, re.split( '\s+', line ) )
+        t = list(filter( lambda x: x, re.split( '\s+', line ) ) )
         staff.Category = int(t[0])             # assign as integers
         staff.Flag     = int(t[1])
         staff.Age      = int(t[2])

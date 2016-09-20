@@ -5,7 +5,9 @@
 ///
 /// \macro_image
 /// \macro_code
+///
 /// \author Rene Brun
+
 #include "TCanvas.h"
 #include "TFile.h"
 #include "TNtuple.h"

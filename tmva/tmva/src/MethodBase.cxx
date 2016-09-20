@@ -137,6 +137,83 @@ const Int_t    NBIN_HIST_HIGH = 10000;
 #pragma warning ( disable : 4355 )
 #endif
 
+
+#include "TGraph.h"
+#include "TMultiGraph.h"
+
+////////////////////////////////////////////////////////////////////////////////
+/// standard constructur
+TMVA::IPythonInteractive::IPythonInteractive() : fMultiGraph(new TMultiGraph())
+{
+   fNumGraphs = 0;
+   fIndex = 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// standard destructor
+TMVA::IPythonInteractive::~IPythonInteractive()
+{
+   if (fMultiGraph){
+      delete fMultiGraph;
+      fMultiGraph = nullptr;
+   }
+   return;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// This function gets some title and it creates a TGraph for every title. 
+/// It also sets up the style for every TGraph. All graphs are added to a single TMultiGrah.
+///  \param[in] graphTtitles vector of titles
+void TMVA::IPythonInteractive::Init(std::vector<TString>& graphTitles)
+{
+  if (fNumGraphs!=0){
+    std::cerr << kERROR << "IPythonInteractive::Init: already initialized..." << std::endl;
+    return;
+  }
+  Int_t color = 2;
+  for(auto& title : graphTitles){
+    fGraphs.push_back( new TGraph() );
+    fGraphs.back()->SetTitle(title);
+    fGraphs.back()->SetName(title);
+    fGraphs.back()->SetFillColor(color);
+    fGraphs.back()->SetMarkerColor(color);
+    fMultiGraph->Add(fGraphs.back());
+    color      += 2;
+    fNumGraphs += 1;
+  }
+  return;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// This function is used only in 2 TGraph case, and it will add new data points to graphs.
+/// \param[in] x the x coordinate
+/// \param[in] y1 the y coordinate for the first TGraph
+/// \param[in] y2 the y coordinate for the second TGraph
+void TMVA::IPythonInteractive::AddPoint(Double_t x, Double_t y1, Double_t y2)
+{
+   fGraphs[0]->Set(fIndex+1);
+   fGraphs[1]->Set(fIndex+1);
+   fGraphs[0]->SetPoint(fIndex, x, y1);
+   fGraphs[1]->SetPoint(fIndex, x, y2);
+   fIndex++;
+   return;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// This function can add data points to as many TGraps as we have.
+/// \param[in] dat vector of data points. The dat[0] contains the x coordinate,
+///            dat[1] contains the y coordinate for first TGraph, dat[2] for second, ...
+void TMVA::IPythonInteractive::AddPoint(std::vector<Double_t>& dat)
+{
+  for(Int_t i=0; i<fNumGraphs;i++){
+    fGraphs[i]->Set(fIndex+1);
+    fGraphs[i]->SetPoint(fIndex, dat[0], dat[i+1]);
+  }
+   fIndex++;
+   return;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// standard constructur
 

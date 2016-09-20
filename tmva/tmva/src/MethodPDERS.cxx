@@ -360,6 +360,7 @@ void TMVA::MethodPDERS::Train( void )
    SetVolumeElement();
 
    fInitializedVolumeEle = kTRUE;
+   ExitFromTraining();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

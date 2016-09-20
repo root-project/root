@@ -117,7 +117,7 @@ void AddModel(RooWorkspace* wks){
    RooRealVar a1("a1","a1",-0.17596,-1,1) ;
    RooRealVar a2("a2","a2",0.018437,-1,1) ;
    RooRealVar a3("a3","a3",0.02,-1,1) ;
-   RooChebychev qcdModel("qcdModel","A  Polynomail for QCD",invMass,RooArgList(a0,a1,a2)) ;
+   RooChebychev qcdModel("qcdModel","A  Polynomial for QCD",invMass,RooArgList(a0,a1,a2)) ;
 
    // let's assume this shape is known, but the normalization is not
    a0.setConstant();
@@ -208,7 +208,7 @@ void DoHypothesisTest(RooWorkspace* wks){
    HypoTestResult* htr = plc.GetHypoTest();
    cout << "-------------------------------------------------" << endl;
    cout << "The p-value for the null is " << htr->NullPValue() << endl;
-   cout << "Corresponding to a signifcance of " << htr->Significance() << endl;
+   cout << "Corresponding to a significance of " << htr->Significance() << endl;
    cout << "-------------------------------------------------\n\n" << endl;
 
 

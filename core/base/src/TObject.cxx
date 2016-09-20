@@ -655,6 +655,12 @@ void TObject::SaveAs(const char *filename, Option_t *option) const
       return;
    }
 
+   //==============Save object as a JSON file================================
+   if (filename && strstr(filename,".json")) {
+      if (gDirectory) gDirectory->SaveObjectAs(this,filename,option);
+      return;
+   }
+
    //==============Save object as a C, ROOT independant, file===================
    if (filename && strstr(filename,".cc")) {
       char *fname = 0;

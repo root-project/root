@@ -23,7 +23,7 @@
 ///  1. TestJeffreysPriorDemo -- validates Poisson mean case 1/sqrt(mu)
 ///  2. TestJeffreysGaussMean -- validates Gaussian mean case
 ///  3. TestJeffreysGaussSigma -- validates Gaussian sigma case 1/sigma
-///  4. TestJeffreysGaussMeanAndSigma -- demonstraites 2-d example
+///  4. TestJeffreysGaussMeanAndSigma -- demonstrates 2-d example
 ///
 /// \macro_image
 /// \macro_output
@@ -123,7 +123,7 @@ void TestJeffreysGaussMean(){
 void TestJeffreysGaussSigma(){
    // this one is VERY sensitive
    // if the Gaussian is narrow ~ range(x)/nbins(x) then the peak isn't resolved
-   //   and you get really bizzare shapes
+   //   and you get really bizarre shapes
    // if the Gaussian is too wide range(x) ~ sigma then PDF gets renormalized
    //   and the PDF falls off too fast at high sigma
    RooWorkspace w("w");
@@ -171,7 +171,7 @@ void TestJeffreysGaussSigma(){
 void TestJeffreysGaussMeanAndSigma(){
    // this one is VERY sensitive
    // if the Gaussian is narrow ~ range(x)/nbins(x) then the peak isn't resolved
-   //   and you get really bizzare shapes
+   //   and you get really bizarre shapes
    // if the Gaussian is too wide range(x) ~ sigma then PDF gets renormalized
    //   and the PDF falls off too fast at high sigma
    RooWorkspace w("w");

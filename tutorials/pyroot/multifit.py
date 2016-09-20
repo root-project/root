@@ -36,7 +36,7 @@ np = len(x)
 h = TH1F( 'h', 'Example of several fits in subranges', np, 85, 134 )
 h.SetMaximum( 7 )
 
-for i in xrange(np):
+for i in range(np):
    h.SetBinContent( i+1, x[i] )
 
 par = array( 'd', 9*[0.] )

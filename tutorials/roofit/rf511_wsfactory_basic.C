@@ -8,7 +8,7 @@
 ///
 /// \macro_output
 /// \macro_code
-/// \author 04/2009 - Wouter Verkerke 
+/// \author 04/2009 - Wouter Verkerke
 
 
 
@@ -29,7 +29,7 @@ void rf511_wsfactory_basic(Bool_t compact=kFALSE)
 {
    RooWorkspace* w = new RooWorkspace("w") ;
 
-   // C r e a t i n g   a n d   a d d i n g   b a s i c  p . d . f . s 
+   // C r e a t i n g   a n d   a d d i n g   b a s i c  p . d . f . s
    // ----------------------------------------------------------------
 
 
@@ -51,8 +51,8 @@ void rf511_wsfactory_basic(Bool_t compact=kFALSE)
 
    } else {
 
-      // Use object factory to build p.d.f. of tutorial rs502_wspacewrite but 
-      //  - Contracted to a single line recursive expression, 
+      // Use object factory to build p.d.f. of tutorial rs502_wspacewrite but
+      //  - Contracted to a single line recursive expression,
       //  - Omitting explicit names for components that are not referred to explicitly later
 
       w->factory("SUM::model(bkgfrac[0.5,0.,1.]*Chebychev::bkg(x[-10,10],{a0[0.5,0.,1],a1[-0.2,0.,1.]}),"
@@ -67,13 +67,13 @@ void rf511_wsfactory_basic(Bool_t compact=kFALSE)
    //
    // Double_t --> converted to RooConst(...)
    // {a,b,c} --> converted to RooArgSet() or RooArgList() depending on required ctor arg
-   // dataset name --> convered to RooAbsData reference for any dataset residing in the workspace
+   // dataset name --> converted to RooAbsData reference for any dataset residing in the workspace
    // enum --> Any enum label that belongs to an enum defined in the (base) class
 
 
    // Make a dummy dataset p.d.f. 'model' and import it in the workspace
    RooDataSet* data = w->pdf("model")->generate(*w->var("x"),1000) ;
-   w->import(*data,Rename("data")) ;   
+   w->import(*data,Rename("data")) ;
 
    // Construct a KEYS p.d.f. passing a dataset name and an enum type defining the
    // mirroring strategy

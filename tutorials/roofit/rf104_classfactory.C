@@ -10,14 +10,16 @@
 ///        therefore it cannot be compiled in one step by ACliC.
 ///        To run this macro compiled with ACliC do
 ///
+/// ~~~ {.cpp}
 ///          root>.x rf104_classfactory.C // run interpreted to generate code
-///          root>.L MyPdfV3.cxx+         // Compile and load created classs
+///          root>.L MyPdfV3.cxx+         // Compile and load created class
 ///          root>.x rf104_classfactory.C+ // run compiled code
+/// ~~~
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke 
+/// \author 07/2008 - Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"
@@ -38,7 +40,7 @@ void rf104_classfactory()
    // --------------------------------------------------
 
    // Write skeleton p.d.f class with variable x,a,b
-   // To use this class, 
+   // To use this class,
    //    - Edit the file MyPdfV1.cxx and implement the evaluate() method in terms of x,a and b
    //    - Compile and link class with '.x MyPdfV1.cxx+'
    //
@@ -48,8 +50,8 @@ void rf104_classfactory()
    // W i t h   a d d e d   i n i t i a l   v a l u e   e x p r e s s i o n
    // ---------------------------------------------------------------------
 
-   // Write skeleton p.d.f class with variable x,a,b and given formula expression 
-   // To use this class, 
+   // Write skeleton p.d.f class with variable x,a,b and given formula expression
+   // To use this class,
    //    - Compile and link class with '.x MyPdfV2.cxx+'
    //
    RooClassFactory::makePdf("MyPdfV2","x,A,B","","A*fabs(x)+pow(x-B,2)") ;
@@ -60,7 +62,7 @@ void rf104_classfactory()
 
    // Write skeleton p.d.f class with variable x,a,b, given formula expression _and_
    // given expression for analytical integral over x
-   // To use this class, 
+   // To use this class,
    //    - Compile and link class with '.x MyPdfV3.cxx+'
    //
    RooClassFactory::makePdf("MyPdfV3","x,A,B","","A*fabs(x)+pow(x-B,2)",kTRUE,kFALSE,
@@ -68,13 +70,13 @@ void rf104_classfactory()
 
 
 
-   // U s e   i n s t a n c e   o f   c r e a t e d   c l a s s 
+   // U s e   i n s t a n c e   o f   c r e a t e d   c l a s s
    // ---------------------------------------------------------
 
    // Compile MyPdfV3 class (only when running in CINT)
    gROOT->ProcessLineSync(".x MyPdfV3.cxx+") ;
 
-   // Creat instance of MyPdfV3 class
+   // Create instance of MyPdfV3 class
    RooRealVar a("a","a",1) ;
    RooRealVar b("b","b",2,-10,10) ;
    RooRealVar y("y","y",-10,10);
@@ -110,7 +112,7 @@ void rf104_classfactory()
    // Make a plot of the data and the p.d.f overlaid
    RooPlot* frame2 = x.frame(Title("Compiled version of pdf of rf103")) ;
    data2->plotOn(frame2) ;
-   genpdf->plotOn(frame2) ;  
+   genpdf->plotOn(frame2) ;
 
    // Draw all frames on a canvas
    TCanvas* c = new TCanvas("rf104_classfactory","rf104_classfactory",800,400) ;

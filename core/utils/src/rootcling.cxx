@@ -96,6 +96,9 @@ const char *rootClingHelp =
    " -noIncludePaths\tDo not store the headers' directories in the dictionary.  \n"
    "  Instead, rely on the environment variable $ROOT_INCLUDE_PATH at runtime.  \n"
    "                                                                            \n"
+   " -excludePath\tSpecify a path to be excluded from the include paths         \n"
+   "  specified for building this dictionary.                                   \n"
+   "                                                                            \n"
    " --lib-list-prefix\t Specify libraries needed by the header files parsed.   \n"
    "  This feature is used by ACliC (the automatic library generator).          \n"
    "  Rootcling will read the content of xxx.in for a list of rootmap files (see\n"
@@ -2921,6 +2924,7 @@ int FinalizeStreamerInfoWriting(cling::Interpreter &interp, bool writeEmptyRootP
                            "#include \"TBaseClass.h\"\n"
                            "#include \"TListOfDataMembers.h\"\n"
                            "#include \"TListOfEnums.h\"\n"
+                           "#include \"TListOfEnumsWithLock.h\"\n"
                            "#include \"TDataMember.h\"\n"
                            "#include \"TEnum.h\"\n"
                            "#include \"TEnumConstant.h\"\n"
@@ -3683,7 +3687,6 @@ bool IsSupportedClassName(const char* name)
 {
    static const std::vector<std::string> uclNamePrfxes {
       "array<",
-      "tuple<",
       "chrono:",
       "ratio<",
       "unique_ptr<",
@@ -3695,7 +3698,7 @@ bool IsSupportedClassName(const char* name)
    auto pos = find_if(uclNamePrfxes.begin(),
                       uclNamePrfxes.end(),
                       [&](const std::string& str){return ROOT::TMetaUtils::BeginsWith(name,str);});
-    return uclNamePrfxes.end() == pos;
+   return uclNamePrfxes.end() == pos;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3909,6 +3912,7 @@ int RootCling(int argc,
    std::string sharedLibraryPathName;
    std::vector<std::string> rootmapLibNames;
    std::string rootmapFileName;
+   std::vector<std::string> excludePaths;
 
    bool inlineInputHeader = false;
    bool interpreteronly = false;
@@ -3984,6 +3988,12 @@ int RootCling(int argc,
             continue;
          }
 
+         if (strcmp("-excludePath", argv[ic]) == 0 && (ic + 1) < argc) {
+            // Path to be excluded from the ones rememberd by the dictionary
+            excludePaths.push_back(argv[ic + 1]);
+            ic += 2;
+            continue;
+         }
          if (strcmp("+P", argv[ic]) == 0 ||
                strcmp("+V", argv[ic]) == 0 ||
                strcmp("+STUB", argv[ic]) == 0) {
@@ -4057,8 +4067,21 @@ int RootCling(int argc,
    std::vector<std::string> pcmArgs;
    for (size_t parg = 0, n = clingArgs.size(); parg < n; ++parg) {
       auto thisArg = clingArgs[parg];
+      auto isInclude = ROOT::TMetaUtils::BeginsWith(thisArg,"-I");
       if (thisArg == "-c" ||
-          (noIncludePaths && ROOT::TMetaUtils::BeginsWith(thisArg,"-I"))) continue;
+          (noIncludePaths && isInclude)) continue;
+      // We now check if the include directories are not excluded
+      if (isInclude) {
+         unsigned int offset = 2; // -I is two characters. Now account for spaces
+         char c = thisArg[offset];
+         while (c == ' ') c = thisArg[++offset];
+         auto excludePathsEnd = excludePaths.end();
+         auto excludePathPos = std::find_if(excludePaths.begin(),
+                                            excludePathsEnd,
+                                            [&](const std::string& path){
+                                               return ROOT::TMetaUtils::BeginsWith(&thisArg[offset], path);});
+         if (excludePathsEnd != excludePathPos) continue;
+      }
       pcmArgs.push_back(thisArg);
    }
 
@@ -4281,9 +4304,11 @@ int RootCling(int argc,
    // Until the module are actually enabled in ROOT, we need to register
    // the 'current' directory to make it relocatable (i.e. have a way
    // to find the headers).
-   string incCurDir = "-I";
-   incCurDir += currentDirectory;
-   pcmArgs.push_back(incCurDir);
+   if (!buildingROOT){
+      string incCurDir = "-I";
+      incCurDir += currentDirectory;
+      pcmArgs.push_back(incCurDir);
+   }
 
    TModuleGenerator modGen(interp.getCI(),
                            inlineInputHeader,

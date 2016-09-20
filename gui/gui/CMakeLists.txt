@@ -33,7 +33,6 @@ set(headers3 TRootGuiFactory.h TRootApplication.h TRootCanvas.h
              TRootBrowser.h TGSplitFrame.h TGShapedFrame.h TGEventHandler.h
              TGTextViewStream.h)
 
-include_directories(${CMAKE_SOURCE_DIR}/)
 ROOT_GENERATE_DICTIONARY(G__Gui ${headers1} ${headers2} ${headers3} MODULE ${libname} LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
 
 

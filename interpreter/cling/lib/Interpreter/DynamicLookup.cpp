@@ -109,7 +109,44 @@ namespace {
 
       return false;
     }
-   };
+  };
+
+  class DynScopeDeclVisitor:
+    public DeclVisitor<DynScopeDeclVisitor, bool> {
+  private:
+    cling::EvaluateTSynthesizer& m_EvalTSynth;
+
+  public:
+    DynScopeDeclVisitor(cling::EvaluateTSynthesizer& evalTSynth):
+      m_EvalTSynth(evalTSynth) {}
+
+    bool VisitFunctionDecl(FunctionDecl* FD) {
+      if (Stmt* Body = FD->getBody()) {
+        cling::ASTNodeInfo Replacement = m_EvalTSynth.Visit(Body);
+        if (Replacement.hasErrorOccurred()) {
+          FD->setBody(nullptr);
+          return true;
+        }
+
+        if (Replacement.isForReplacement()) {
+          // FIXME: support multiple Stmt Replacement!
+          FD->setBody(Replacement.getAsSingleNode());
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    bool VisitDecl(Decl* D) {
+      bool Replaced = false;
+      if (auto DC = dyn_cast<DeclContext>(D)) {
+        for (auto C: DC->decls())
+          Replaced |= Visit(C);
+      }
+      return Replaced;
+    }
+  };
 } // end anonymous namespace
 
 namespace cling {
@@ -356,16 +393,15 @@ namespace cling {
 
   ASTNodeInfo EvaluateTSynthesizer::VisitDeclStmt(DeclStmt* Node) {
     // Visit all the children, which are the contents of the DeclGroupRef
-    for (Stmt::child_iterator
-           I = Node->child_begin(), E = Node->child_end(); I != E; ++I) {
-      if (*I) {
-        Expr* E = cast_or_null<Expr>(*I);
-        if (!E || !IsArtificiallyDependent(E))
+    if (VarDecl* CuredDecl = dyn_cast<VarDecl>(Node->getSingleDecl())) {
+      //FIXME: don't assume there is only one decl.
+      assert(Node->isSingleDecl() && "There is more that one decl in stmt");
+      for (Stmt::child_iterator
+             I = Node->child_begin(), E = Node->child_end(); I != E; ++I) {
+        Expr* InitExpr = cast_or_null<Expr>(*I);
+        if (!InitExpr || !IsArtificiallyDependent(InitExpr))
           continue;
-        //FIXME: don't assume there is only one decl.
-        assert(Node->isSingleDecl() && "There is more that one decl in stmt");
-        VarDecl* CuredDecl = cast_or_null<VarDecl>(Node->getSingleDecl());
-        assert(CuredDecl && "Not a variable declaration!");
+
         QualType CuredDeclTy = CuredDecl->getType();
         if (isa<AutoType>(CuredDeclTy)) {
           ASTNodeInfo result(Node, false);
@@ -410,7 +446,7 @@ namespace cling {
         //                                       "MyClass"
         //                                       Interpreter* Interp)
         // Build Arg0 DynamicExprInfo
-        Inits.push_back(BuildDynamicExprInfo(E));
+        Inits.push_back(BuildDynamicExprInfo(InitExpr));
         // Build Arg1 DeclContext* DC
         QualType DCTy = m_Context->getTypeDeclType(m_DeclContextDecl);
         Inits.push_back(utils::Synthesize::CStyleCastPtrExpr(m_Sema, DCTy,
@@ -512,10 +548,20 @@ namespace cling {
 
         // Restore Sema's original DeclContext
         m_Sema->CurContext = OldDC;
+        // FIXME: this only works if this is the only Decl in the DeclGroup...
         return NewNode;
       }
     }
-    return ASTNodeInfo(Node, 0);
+
+    // Recurse over Decls; they might need transformations, too; e.g. in
+    // void wrapper() { struct X {  void f() { ++dynScope; } }; }
+    bool HaveReplacement = false;
+    DynScopeDeclVisitor DSDV(*this);
+    // DynScopeDeclVisitor always changes the Decls in-place, no need to pick up
+    // new ones.
+    for (auto DGI: Node->getDeclGroup())
+      HaveReplacement |= DSDV.Visit(DGI);
+    return ASTNodeInfo(Node, HaveReplacement);
   }
 
   ASTNodeInfo EvaluateTSynthesizer::VisitCXXDeleteExpr(CXXDeleteExpr* Node) {
@@ -845,53 +891,12 @@ namespace cling {
 
   // end EvalBuilder
 
-  // Helpers
-
-
-  // Class extracting recursively every decl defined somewhere.
-  class DeclVisitor : public RecursiveASTVisitor<DeclVisitor> {
-  private:
-    bool m_ShouldVisitSubTree;
-  public:
-    DeclVisitor() : m_ShouldVisitSubTree(false) {}
-
-    bool getShouldVisitSubTree() const { return m_ShouldVisitSubTree; }
-
-    bool isCandidate(Decl* D) {
-      // FIXME: Here we should have our custom attribute.
-      if (AnnotateAttr* A = D->getAttr<AnnotateAttr>())
-        if (A->getAnnotation().equals("__ResolveAtRuntime"))
-          return true;
-
-      return false;
-    }
-
-    bool VisitDeclStmt(DeclStmt* DS) {
-      DeclGroupRef DGR = DS->getDeclGroup();
-      for (DeclGroupRef::const_iterator I = DGR.begin(),
-             E = DGR.end(); I != E; ++I) {
-        if (isCandidate(*I)) {
-          m_ShouldVisitSubTree = true;
-          return false; // returning false will abort the in-depth traversal.
-        }
-      }
-      return true;
-    }
-
-    // In cases when there is no decl stmt, like dep->Call();
-    bool VisitDeclRefExpr(DeclRefExpr* DRE) {
-      if (isCandidate(DRE->getDecl())) {
-        m_ShouldVisitSubTree = true;
-        return false; // returning false will abort the in-depth traversal.
-      }
-      return true;
-    }
-  };
-
-  bool EvaluateTSynthesizer::ShouldVisit(Decl* D) {
-    DeclVisitor Visitor;
-    Visitor.TraverseStmt(D->getBody());
-    return Visitor.getShouldVisitSubTree();
+  bool EvaluateTSynthesizer::ShouldVisit(FunctionDecl* D) {
+    // FIXME: Here we should have our custom attribute.
+    if (AnnotateAttr* A = D->getAttr<AnnotateAttr>())
+      if (A->getAnnotation().equals("__ResolveAtRuntime"))
+        return true;
+    return false;
   }
 
   bool EvaluateTSynthesizer::IsArtificiallyDependent(Expr* Node) {

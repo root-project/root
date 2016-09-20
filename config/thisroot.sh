@@ -28,7 +28,12 @@ if [ -n "${ROOTSYS}" ] ; then
    old_rootsys=${ROOTSYS}
 fi
 
-if [ "x${BASH_ARGV[0]}" = "x" ]; then
+SOURCE=${BASH_ARGV[0]}
+if [ "x$SOURCE" = "x" ]; then
+    SOURCE=${(%):-%N} # for zsh
+fi
+
+if [ "x${SOURCE}" = "x" ]; then
     if [ -f bin/thisroot.sh ]; then
         ROOTSYS="$PWD"; export ROOTSYS
     elif [ -f ./thisroot.sh ]; then
@@ -40,7 +45,7 @@ if [ "x${BASH_ARGV[0]}" = "x" ]; then
     fi
 else
     # get param to "."
-    thisroot=$(dirname ${BASH_ARGV[0]})
+    thisroot=$(dirname ${SOURCE})
     ROOTSYS=$(cd ${thisroot}/.. > /dev/null;pwd); export ROOTSYS
 fi
 

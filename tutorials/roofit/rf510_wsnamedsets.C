@@ -9,7 +9,7 @@
 /// \macro_image
 /// \macro_output
 /// \macro_code
-/// \author  04/2009 - Wouter Verkerke 
+/// \author  04/2009 - Wouter Verkerke
 
 
 #include "RooRealVar.h"
@@ -47,7 +47,7 @@ void rf510_wsnamedsets()
 
    // Fit model to data
    model->fitTo(*data) ;
-   
+
    // Plot fitted model and data on frame of first (only) observable
    RooPlot* frame = ((RooRealVar*)w->set("observables")->first())->frame() ;
    data->plotOn(frame) ;
@@ -76,7 +76,7 @@ void rf510_wsnamedsets()
 
 
 
-void fillWorkspace(RooWorkspace& w) 
+void fillWorkspace(RooWorkspace& w)
 {
    // C r e a t e   m o d e l
    // -----------------------
@@ -89,10 +89,10 @@ void fillWorkspace(RooWorkspace& w)
    RooRealVar sigma1("sigma1","width of gaussians",0.5) ;
    RooRealVar sigma2("sigma2","width of gaussians",1) ;
 
-   RooGaussian sig1("sig1","Signal component 1",x,mean,sigma1) ;  
-   RooGaussian sig2("sig2","Signal component 2",x,mean,sigma2) ;  
-   
-   // Build Chebychev polynomial p.d.f.  
+   RooGaussian sig1("sig1","Signal component 1",x,mean,sigma1) ;
+   RooGaussian sig2("sig2","Signal component 2",x,mean,sigma2) ;
+
+   // Build Chebychev polynomial p.d.f.
    RooRealVar a0("a0","a0",0.5,0.,1.) ;
    RooRealVar a1("a1","a1",-0.2,0.,1.) ;
    RooChebychev bkg("bkg","Background",x,RooArgSet(a0,a1)) ;
@@ -101,7 +101,7 @@ void fillWorkspace(RooWorkspace& w)
    RooRealVar sig1frac("sig1frac","fraction of component 1 in signal",0.8,0.,1.) ;
    RooAddPdf sig("sig","Signal",RooArgList(sig1,sig2),sig1frac) ;
 
-   // Sum the composite signal and background 
+   // Sum the composite signal and background
    RooRealVar bkgfrac("bkgfrac","fraction of background",0.5,0.,1.) ;
    RooAddPdf  model("model","g1+g2+a",RooArgList(bkg,sig),bkgfrac) ;
 
@@ -115,7 +115,7 @@ void fillWorkspace(RooWorkspace& w)
 
    // Define named sets "parameters" and "observables", which list which variables should be considered
    // parameters and observables by the users convention
-   // 
+   //
    // Variables appearing in sets _must_ live in the workspace already, or the autoImport flag
    // of defineSet must be set to import them on the fly. Named sets contain only references
    // to the original variables, therefore the value of observables in named sets already
@@ -134,27 +134,27 @@ void fillWorkspace(RooWorkspace& w)
    // a given set of variables in the workspace. The values can be stored and reloaded
    // into the workspace variable objects using the loadSnapshot() and saveSnapshot()
    // methods. A snapshot saves the value of each variable, any errors that are stored
-   // with it as well as the 'Constant' flag that is used in fits to determine if a 
+   // with it as well as the 'Constant' flag that is used in fits to determine if a
    // parameter is kept fixed or not.
 
    // Do a dummy fit to a (supposedly) reference dataset here and store the results
    // of that fit into a snapshot
    RooDataSet* refData = model.generate(x,10000) ;
    model.fitTo(*refData,PrintLevel(-1)) ;
-   
+
    // The kTRUE flag imports the values of the objects in (*params) into the workspace
    // If not set, the present values of the workspace parameters objects are stored
    w.saveSnapshot("reference_fit",*params,kTRUE) ;
 
-   // Make another fit with the signal componentforced to zero
+   // Make another fit with the signal component forced to zero
    // and save those parameters too
 
    bkgfrac.setVal(1) ;
    bkgfrac.setConstant(kTRUE) ;
    bkgfrac.removeError() ;
-   model.fitTo(*refData,PrintLevel(-1)) ;  
-   
+   model.fitTo(*refData,PrintLevel(-1)) ;
+
    w.saveSnapshot("reference_fit_bkgonly",*params,kTRUE) ;
-   
+
 
 }

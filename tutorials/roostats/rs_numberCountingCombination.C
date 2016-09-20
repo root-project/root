@@ -118,13 +118,13 @@ void rs_numberCountingCombination_expected()
    assert(htr != 0);
    cout << "-------------------------------------------------" << endl;
    cout << "The p-value for the null is " << htr->NullPValue() << endl;
-   cout << "Corresponding to a signifcance of " << htr->Significance() << endl;
+   cout << "Corresponding to a significance of " << htr->Significance() << endl;
    cout << "-------------------------------------------------\n\n" << endl;
 
    /* expected case should return:
       -------------------------------------------------
       The p-value for the null is 0.015294
-      Corresponding to a signifcance of 2.16239
+      Corresponding to a significance of 2.16239
       -------------------------------------------------
    */
 
@@ -156,7 +156,7 @@ void rs_numberCountingCombination_expected()
    // Step 10b, Ask if masterSignal=0 is in the interval.
    // Note, this is equivalent to the question of a 2-sigma hypothesis test:
    // "is the parameter point masterSignal=0 inside the 95% confidence interval?"
-   // Since the signficance of the Hypothesis test was > 2-sigma it should not be:
+   // Since the significance of the Hypothesis test was > 2-sigma it should not be:
    // eg. we exclude masterSignal=0 at 95% confidence.
    paramsOfInterest->setRealValue("masterSignal",0.);
    cout << "-------------------------------------------------" << endl;
@@ -218,7 +218,7 @@ void rs_numberCountingCombination_expected()
    --------
    RooDataSet::ExpectedNumberCountingData(x_0,y_0,x_1,y_1)
 
-   embedded precalculated expensive components
+   embedded pre-calculated expensive components
    -------------------------------------------
    */
 
@@ -288,13 +288,13 @@ void rs_numberCountingCombination_observed()
    HypoTestResult* htr = plc.GetHypoTest();
    cout << "-------------------------------------------------" << endl;
    cout << "The p-value for the null is " << htr->NullPValue() << endl;
-   cout << "Corresponding to a signifcance of " << htr->Significance() << endl;
+   cout << "Corresponding to a significance of " << htr->Significance() << endl;
    cout << "-------------------------------------------------\n\n" << endl;
 
    /* observed case should return:
       -------------------------------------------------
       The p-value for the null is 0.0351669
-      Corresponding to a signifcance of 1.80975
+      Corresponding to a significance of 1.80975
       -------------------------------------------------
    */
 
@@ -382,13 +382,13 @@ void rs_numberCountingCombination_observedWithTau()
    HypoTestResult* htr = plc.GetHypoTest();
    cout << "-------------------------------------------------" << endl;
    cout << "The p-value for the null is " << htr->NullPValue() << endl;
-   cout << "Corresponding to a signifcance of " << htr->Significance() << endl;
+   cout << "Corresponding to a significance of " << htr->Significance() << endl;
    cout << "-------------------------------------------------\n\n" << endl;
 
    /* observed case should return:
       -------------------------------------------------
       The p-value for the null is 0.0352035
-      Corresponding to a signifcance of 1.80928
+      Corresponding to a significance of 1.80928
       -------------------------------------------------
    */
 

@@ -46,7 +46,7 @@ void rs701_BayesianCalculator(bool useBkg = true, double confLevel = 0.90)
   RooDataSet data("data","",RooArgSet(*(w->var("x")),*(w->var("n"))),"n");
   data.add(RooArgSet(*(w->var("x"))),w->var("n")->getVal());
 
-  // to suppress messgaes when pdf goes to zero
+  // to suppress messages when pdf goes to zero
   RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL) ;
 
   RooArgSet * nuisPar = 0;

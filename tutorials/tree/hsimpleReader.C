@@ -4,7 +4,9 @@
 /// TTreeReader simplest example.
 ///
 /// Read data from hsimple.root (written by hsimple.C)
+///
 /// \macro_code
+///
 /// \author Anders Eie, 2013
 
 #include "TFile.h"

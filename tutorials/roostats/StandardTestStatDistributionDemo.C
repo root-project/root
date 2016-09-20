@@ -8,7 +8,7 @@
 /// specify the value of the parameter of interest that will be used for evaluating
 /// the test statistic and the value of the parameters used for generating the toy data.
 /// In this case, it uses the upper-limit estimated from the ProfileLikleihoodCalculator,
-/// which assumes the asymptotic chi-square distribution for -2 log profile likleihood ratio.
+/// which assumes the asymptotic chi-square distribution for -2 log profile likelihood ratio.
 /// Thus, the script is handy for checking to see if the asymptotic approximations are valid.
 /// To aid, that comparison, the script overlays a chi-square distribution as well.
 /// The most common parameter of interest is a parameter proportional to the signal rate,

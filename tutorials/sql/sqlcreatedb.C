@@ -1,7 +1,13 @@
+/// \file
+/// \ingroup tutorial_sql
+/// Create a runcatalog table in a MySQL test database.
+///
+/// \macro_code
+///
+/// \author Sergey Linev
+
 void sqlcreatedb()
 {
-   // Create a runcatalog table in a MySQL test database.
-
    // read in runcatalog table definition
    FILE *fp = fopen("runcatalog.sql", "r");
    const char sql[4096];

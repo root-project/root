@@ -97,9 +97,11 @@ namespace
       return 0; // end of function should never be reached. This is here to silence the compiler
    }
 
-   Bool_t RegisteredMethod = TMVA::ClassifierFactory::Instance(). 
-                          Register("Plugins", CreateMethodPlugins);                         
-   Bool_t AddedTypeMapping = TMVA::Types::Instance().AddTypeMapping(TMVA::Types::kPlugins, "Plugins"); 
-
+   struct registration { 
+      registration() { 
+         TMVA::ClassifierFactory::Instance().Register("Plugins", CreateMethodPlugins);
+         TMVA::Types::Instance().AddTypeMapping(TMVA::Types::kPlugins, "Plugins"); 
+      } 
+   } instance;
 }
 

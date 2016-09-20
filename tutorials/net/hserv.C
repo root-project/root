@@ -1,15 +1,20 @@
-void hserv() {
-   // Server program which waits for two clients to connect. It then monitors
-   // the sockets and displays the objects it receives. To see how to
-   // make a non-blocking server see the script hserv2.C.
-   //
-   // To run this demo do the following:
-   //   - Open three windows
-   //   - Start ROOT in all three windows
-   //   - Execute in the first window: .x hserv.C
-   //   - Execute in the second and third windows: .x hclient.C
-   //Author: Fons Rademakers
+/// \file
+/// \ingroup tutorial_net
+/// Server program which waits for two clients to connect. It then monitors
+/// the sockets and displays the objects it receives. To see how to
+/// make a non-blocking server see the script hserv2.C.
+///
+/// To run this demo do the following:
+///   - Open three windows
+///   - Start ROOT in all three windows
+///   - Execute in the first window: .x hserv.C
+///   - Execute in the second and third windows: .x hclient.C
+///
+/// \macro_code
+///
+/// \author Fons Rademakers
 
+void hserv() {
    // Open a server socket looking for connections on a named service or
    // on a specified port.
    //TServerSocket *ss = new TServerSocket("rootserv", kTRUE);

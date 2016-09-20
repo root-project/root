@@ -51,7 +51,7 @@ void rs801_HypoTestInverterOriginal()
    myhc.SetNumberOfToys(1000);
    myhc.UseNuisance(false);
 
-   // run the hypothesis-test invertion
+   // run the hypothesis-test inversion
    HypoTestInverterOriginal myInverter(myhc,r);
    myInverter.SetTestSize(0.10);
    myInverter.UseCLs(true);

@@ -73,4 +73,7 @@ private:
    ClassDef(TFitResult, 0);  // Class holding the result of the fit
 };
 
+namespace cling {
+   std::string printValue(const TFitResult* val);
+}
 #endif

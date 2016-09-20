@@ -194,7 +194,7 @@ void IntervalExamples()
    data->statOn(frame);
    frame->Draw();
 
-   // plot the profile likeihood
+   // plot the profile likelihood
    canvas->cd(2);
    LikelihoodIntervalPlot plot(plInt);
    plot.Draw();

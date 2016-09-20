@@ -1575,8 +1575,10 @@ void THtml::CreateListOfClasses(const char* filter)
       const char *cname = 0;
       if (i < 0) cname = "TObject";
       else cname = gClassTable->Next();
+      if (!cname)
+         continue;
 
-      if (i >= 0 && cname && !strcmp(cname, "TObject")) {
+      if (i >= 0 && !strcmp(cname, "TObject")) {
          // skip the second iteration on TObject
          continue;
       }

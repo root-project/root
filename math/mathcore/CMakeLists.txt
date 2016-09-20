@@ -2,8 +2,6 @@
 # CMakeLists.txt file for building ROOT io/io package
 ############################################################################
 
-include_directories(${CMAKE_SOURCE_DIR}/hist/hist/inc)  # Explicit to avoid circular dependencies mathcore <--> hist :-(
-
 set(MATHCORE_HEADERS TRandom.h
   TRandom1.h TRandom2.h TRandom3.h TKDTree.h TKDTreeBinning.h TStatistic.h
   Math/IParamFunction.h Math/IFunction.h Math/ParamFunctor.h Math/Functor.h
@@ -23,6 +21,9 @@ ROOT_GENERATE_DICTIONARY(G__MathCore   TComplex.h TMath.h ${MATHCORE_HEADERS} Fi
 
 add_definitions(-DUSE_ROOT_ERROR )
 ROOT_ADD_C_FLAG(_flags -Wno-strict-overflow)  # Avoid what it seems a compiler false positive warning
+ROOT_ADD_C_FLAG(_flags -Wno-maybe-uninitialized)  # Avoid what it seems a compiler false positive warning
+ROOT_ADD_C_FLAG(_flags -Wno-parentheses-equality)
+
 set_source_files_properties(src/triangle.c COMPILE_FLAGS "${_flags}")
 
 ROOT_LINKER_LIBRARY(MathCore *.cxx *.c G__MathCore.cxx LIBRARIES ${CMAKE_THREAD_LIBS_INIT} DEPENDENCIES Core)

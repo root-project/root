@@ -286,10 +286,8 @@ foreach(t ${tutorials})
   string(REPLACE "/" "-" tname ${tname})
 
    # These tests on ARM64 need much more than 20 minutes - increase the timeout
-   if (${tname} STREQUAL "tmva-TMVAClassification" OR
-       ${tname} STREQUAL "tmva-TMVARegression" OR
-       ${tname} STREQUAL "tmva-TMVAMulticlass")
-     set(thisTestTimeout 3600) # 1h
+   if(ROOT_ARCHITECTURE MATCHES arm64)
+     set(thisTestTimeout 2400) # 40m
    else()
      set(thisTestTimeout 1200) # 20m
    endif()

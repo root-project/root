@@ -70,3 +70,86 @@ TCanvas* TMVA::CrossValidationResult::Draw(const TString name) const
     c->Draw();
     return c;
 }
+
+//CrossValidation class stuff                                                                                                                                                        
+// ClassImp(TMVA::CrossValidation)//serialization is not support yet in so many class TMVA                                                                                           
+
+TMVA::CrossValidation::CrossValidation():Configurable( ),
+					 fDataLoader(0)
+{
+  fClassifier=new TMVA::Factory("CrossValidation","!V:Silent:Color:DrawProgressBar:AnalysisType=Classification");
+}
+
+
+TMVA::CrossValidation::CrossValidation(TMVA::DataLoader *loader):Configurable(),
+								 fDataLoader(loader)
+{
+  fClassifier=new TMVA::Factory("CrossValidation","!V:Silent:Color:DrawProgressBar:AnalysisType=Classification");
+}
+
+TMVA::CrossValidation::~CrossValidation()
+{
+  if(fClassifier) delete fClassifier;
+}
+
+TMVA::CrossValidationResult* TMVA::CrossValidation::CrossValidate( TString theMethodName, TString methodTitle, TString theOption, int NumFolds)
+{
+  
+  CrossValidationResult * result = new CrossValidationResult();
+
+  fDataLoader->MakeKFoldDataSet(NumFolds);
+
+  for(Int_t i = 0; i < NumFolds; ++i){
+
+    TString foldTitle = methodTitle;
+    foldTitle += "_fold";
+    foldTitle += i+1;
+
+    fDataLoader->PrepareFoldDataSet(i, TMVA::Types::kTesting);
+
+    fClassifier->BookMethod(fDataLoader, theMethodName, methodTitle, theOption);
+
+    TMVA::MethodBase * smethod = dynamic_cast<TMVA::MethodBase*>(fClassifier->fMethodsMap[fDataLoader->GetName()][0][0]);
+
+    Event::SetIsTraining(kTRUE);
+    smethod->TrainMethod();
+
+    Event::SetIsTraining(kFALSE);
+    smethod->AddOutput(Types::kTesting, smethod->GetAnalysisType());
+    smethod->TestClassification();
+
+    result->SetROCValue(i,fClassifier->GetROCIntegral(fDataLoader->GetName(), methodTitle));
+    auto  gr=fClassifier->GetROCCurve(fDataLoader->GetName(), methodTitle, true);
+    gr->SetLineColor(i+1);
+    gr->SetLineWidth(2);
+    gr->SetTitle(fDataLoader->GetName());
+        
+    result->GetROCCurves()->Add(gr);
+
+    result->fSigs.push_back(smethod->GetSignificance());
+    result->fSeps.push_back(smethod->GetSeparation());
+    Double_t err;
+    result->fEff01s.push_back(smethod->GetEfficiency("Efficienct:0.01",Types::kTesting, err));
+    result->fEff10s.push_back(smethod->GetEfficiency("Efficienct:0.10",Types::kTesting,err));
+    result->fEff30s.push_back(smethod->GetEfficiency("Efficienct:0.30",Types::kTesting,err));
+    result->fEffAreas.push_back(smethod->GetEfficiency(""             ,Types::kTesting,err));
+    result->fTrainEff01s.push_back(smethod->GetTrainingEfficiency("Efficienct:0.01"));
+    result->fTrainEff10s.push_back(smethod->GetTrainingEfficiency("Efficienct:0.10"));
+    result->fTrainEff30s.push_back(smethod->GetTrainingEfficiency("Efficienct:0.30"));
+
+    smethod->Data()->DeleteResults(smethod->GetMethodName(), Types::kTesting, Types::kClassification);
+    smethod->Data()->DeleteResults(smethod->GetMethodName(), Types::kTraining, Types::kClassification);
+
+    fClassifier->DeleteAllMethods();
+
+    fClassifier->fMethodsMap.clear();
+
+  }
+  
+  for(int r = 0; r < NumFolds; ++r){
+    result->fROCAVG += result->fROCs.at(r);
+  }
+  result->fROCAVG /= NumFolds;
+
+  return result;
+}

@@ -210,7 +210,7 @@ bool CloseStreamerInfoROOTFile(bool writeEmptyRootPCM)
 
       for (auto dmObj : *dms) {
          auto dm = (TDataMember *) dmObj;
-         if (!dm->IsPersistent()) continue;
+         if (!dm->IsPersistent() || cl->GetClassVersion()==0) continue;
          if (IsUnsupportedUniquePointer(normName.c_str(), dm)) return false;
          // We need this for the collections of T automatically selected by rootcling
          if (!dm->GetDataType() && dm->IsSTLContainer()) {

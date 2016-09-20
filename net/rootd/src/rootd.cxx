@@ -1822,7 +1822,7 @@ void RootdAccess(const char *buf)
 {
    char buffer[kMAXPATHLEN];
    char path[kMAXPATHLEN];
-   int mode;
+   int mode = F_OK; // if not told otherwise, check for file access.
 
    int nw = 0;
    if (buf)

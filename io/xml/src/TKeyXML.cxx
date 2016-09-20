@@ -66,7 +66,7 @@ TKeyXML::TKeyXML(TDirectory* mother, Long64_t keyid, const TObject* obj, const c
 
    fDatime.Set();
 
-   StoreObject((void*)obj, obj ? obj->IsA() : 0);
+   StoreObject(obj, 0, kTRUE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -91,7 +91,7 @@ TKeyXML::TKeyXML(TDirectory* mother, Long64_t keyid, const void* obj, const TCla
 
    fDatime.Set();
 
-   StoreObject(obj, cl);
+   StoreObject(obj, cl, kFALSE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -177,11 +177,19 @@ void TKeyXML::StoreKeyAttributes()
 ////////////////////////////////////////////////////////////////////////////////
 ///  convert object to xml structure and keep this structure in key
 
-void TKeyXML::StoreObject(const void* obj, const TClass* cl)
+void TKeyXML::StoreObject(const void* obj, const TClass* cl, Bool_t check_tobj)
 {
    TXMLFile* f = (TXMLFile*) GetFile();
    TXMLEngine* xml = XMLEngine();
    if ((f==0) || (xml==0) || (fKeyNode==0)) return;
+
+   if (obj && check_tobj) {
+      TClass* actual = TObject::Class()->GetActualClass((TObject*) obj);
+      if (!actual) actual = TObject::Class(); else
+      if (actual != TObject::Class())
+         obj = (void *) ((Long_t) obj - actual->GetBaseClassOffset(TObject::Class()));
+      cl = actual;
+   }
 
    StoreKeyAttributes();
 
@@ -232,7 +240,7 @@ void TKeyXML::UpdateObject(TObject* obj)
 
    xml->FreeAllAttr(fKeyNode);
 
-   StoreObject(obj, obj->IsA());
+   StoreObject(obj, 0, kTRUE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

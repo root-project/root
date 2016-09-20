@@ -1236,12 +1236,14 @@ Int_t TChain::LoadBaskets(Long64_t /*maxmemory*/)
 /// The input argument entry is the entry serial number in the whole chain.
 ///
 /// In case of error, LoadTree returns a negative number:
-///   1. The chain is empty.
-///   2. The requested entry number of less than zero or too large for the chain.
+///   * -1: The chain is empty.
+///   * -2: The requested entry number is less than zero or too large for the chain.
 ///       or too large for the large TTree.
-///   3. The file corresponding to the entry could not be correctly open
-///   4. The TChainElement corresponding to the entry is missing or
+///   * -3: The file corresponding to the entry could not be correctly open
+///   * -4: The TChainElement corresponding to the entry is missing or
 ///       the TTree is missing from the file.
+///   * -5: Internal error, please report the circunstance when this happen
+///       as a ROOT issue.
 ///
 /// Note: This is the only routine which sets the value of fTree to
 ///       a non-zero pointer.
@@ -1518,6 +1520,11 @@ Long64_t TChain::LoadTree(Long64_t entry)
       // Below we must test >= in case the tree has no entries.
       if (entry >= fTreeOffset[fTreeNumber+1]) {
          if ((fTreeNumber < (fNtrees - 1)) && (entry < fTreeOffset[fTreeNumber+2])) {
+            // The request entry is not in the tree 'fTreeNumber' we will need
+            // to look further.
+
+            // Before moving on, let's record the result.
+            element->SetLoadResult(returnCode);
 
             // Before trying to read the file file/tree, notify the user
             // that we have switched trees if requested; the user might need
@@ -1527,6 +1534,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
                fNotify->Notify();
             }
 
+            // Load the next TTree.
             return LoadTree(entry);
          } else {
             treeReadEntry = fReadEntry = -2;
@@ -1534,12 +1542,15 @@ Long64_t TChain::LoadTree(Long64_t entry)
       }
    }
 
+
    if (!fTree) {
       // The Error message already issued.  However if we reach here
       // we need to make sure that we do not use fTree.
       //
       // Force a reload of the tree next time.
       fTreeNumber = -1;
+
+      element->SetLoadResult(returnCode);
       return returnCode;
    }
    // ----- End of modifications by MvL
@@ -1559,7 +1570,16 @@ Long64_t TChain::LoadTree(Long64_t entry)
    // they use the correct read entry number).
 
    // Change the new current tree to the new entry.
-   fTree->LoadTree(treeReadEntry);
+   Long64_t loadResult = fTree->LoadTree(treeReadEntry);
+   if (loadResult == treeReadEntry) {
+      element->SetLoadResult(0);
+   } else {
+      // This is likely to be an internal error, if treeReadEntry was not in range
+      // (or intentionally -2 for TChain::GetEntries) then something happened
+      // that is very odd/surprising.
+      element->SetLoadResult(-5);
+   }
+
 
    // Change the chain friends to the new entry.
    if (fFriends) {

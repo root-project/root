@@ -726,6 +726,8 @@ void THStack::Paint(Option_t *option)
       padsav->cd();
       return;
    }
+   Bool_t lnoaxis = kFALSE;
+   if (opt.Contains("a")) lnoaxis = kTRUE;
 
    // compute the min/max of each axis
    TH1 *h;
@@ -913,7 +915,7 @@ void THStack::Paint(Option_t *option)
          lnk = (TObjOptLink*)lnk->Prev();
       }
    }
-   if (!lsame) fHistogram->Paint("axissame");
+   if (!lsame && !lnoaxis) fHistogram->Paint("axissame");
 }
 
 ////////////////////////////////////////////////////////////////////////////////

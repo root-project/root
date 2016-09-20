@@ -671,8 +671,6 @@ ROOT::TMetaUtils::TNormalizedCtxtImpl::TNormalizedCtxtImpl(const cling::LookupHe
 
 using TNCtxtFullQual = ROOT::TMetaUtils::TNormalizedCtxtImpl;
 TNCtxtFullQual::TemplPtrIntMap_t TNCtxtFullQual::fTemplatePtrArgsToKeepMap=TNCtxtFullQual::TemplPtrIntMap_t{};
-// Initialisation of the atomic flag used to build a lightweight spinlock
-// std::atomic_flag TNCtxtFullQual::fCanAccessNargsToKeep = ATOMIC_FLAG_INIT;
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -458,6 +458,37 @@ namespace Internal {
 #endif
    }
 
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Globally enables the parallel tree processing, which is a case of
+   /// implicit multi-threading in ROOT.
+   void EnableParTreeProcessing()
+   {
+#ifdef R__USE_IMT
+      if (!IsImplicitMTEnabled())
+         EnableImplicitMT();
+      static void (*sym)() = (void(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_EnableParTreeProcessing");
+      if (sym)
+         sym();
+#else
+      ::Warning("EnableParTreeProcessing", "Cannot enable parallel tree processing, please build ROOT with -Dimt=ON");
+#endif
+   }
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Returns true if parallel tree processing is enabled.
+   Bool_t IsParTreeProcessingEnabled()
+   {
+#ifdef R__USE_IMT
+      static Bool_t (*sym)() = (Bool_t(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_IsParTreeProcessingEnabled");
+      if (sym)
+         return sym();
+      else
+         return kFALSE;
+#else
+      return kFALSE;
+#endif
+   }
+
 }
 
 TROOT *ROOT::Internal::gROOTLocal = ROOT::GetROOT();

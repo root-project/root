@@ -33,7 +33,7 @@ ClassImp(TGraphAsymmErrors)
 
 /** \class TGraphAsymmErrors
     \ingroup Hist
-TGraph with assymetric error bars.
+TGraph with asymmetric error bars.
 
 The TGraphAsymmErrors painting is performed thanks to the TGraphPainter
 class. All details about the various painting options are given in this class.
@@ -42,7 +42,7 @@ The picture below gives an example:
 
 Begin_Macro(source)
 {
-   c1 = new TCanvas("c1","A Simple Graph with assymetric error bars",200,10,700,500);
+   c1 = new TCanvas("c1","A Simple Graph with asymmetric error bars",200,10,700,500);
    c1->SetFillColor(42);
    c1->SetGrid();
    c1->GetFrame()->SetFillColor(21);
@@ -280,20 +280,20 @@ TGraphAsymmErrors::TGraphAsymmErrors(const TH1* pass, const TH1* total, Option_t
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// GraphAsymErrors constructor reading input from filename
+/// TGraphAsymmErrors constructor reading input from filename
 /// filename is assumed to contain at least 2 columns of numbers
 ///
-/// convention for format (default="%lg %lg %lg %lg %lg %lg)
-///  format = "%lg %lg"         read only 2 first columns into X, Y
-///  format = "%lg %lg %lg %lg"     read only 4 first columns into X, Y,  ELY, EHY
-///  format = "%lg %lg %lg %lg %lg %lg" read only 6 first columns into X, Y, EXL, EYH, EYL, EHY
+/// convention for format (default=`"%lg %lg %lg %lg %lg %lg"`)
+///  - format = `"%lg %lg"`         read only 2 first columns into X, Y
+///  - format = `"%lg %lg %lg %lg"`     read only 4 first columns into X, Y,  ELY, EHY
+///  - format = `"%lg %lg %lg %lg %lg %lg"` read only 6 first columns into X, Y, EXL, EYH, EYL, EHY
 ///
-/// For files separated by a specific delimiter different from ' ' and '\t' (e.g. ';' in csv files)
-/// you can avoid using %*s to bypass this delimiter by explicitly specify the "option" argument,
-/// e.g. option=" \t,;" for columns of figures separated by any of these characters (' ', '\t', ',', ';')
-/// used once (e.g. "1;1") or in a combined way (" 1;,;;  1").
+/// For files separated by a specific delimiter different from `' '` and `'\t'` (e.g. `';'` in csv files)
+/// you can avoid using `%*s` to bypass this delimiter by explicitly specify the `"option" argument,
+/// e.g. `option=" \t,;"` for columns of figures separated by any of these characters `(' ', '\t', ',', ';')`
+/// used once `(e.g. "1;1")` or in a combined way `(" 1;,;;  1")`.
 /// Note in that case, the instantiation is about 2 times slower.
-/// In case a delimiter is specified, the format "%lg %lg %lg" will read X,Y,EX.
+/// In case a delimiter is specified, the format `"%lg %lg %lg"` will read X,Y,EX.
 
 TGraphAsymmErrors::TGraphAsymmErrors(const char *filename, const char *format, Option_t *option)
    : TGraph(100)
@@ -440,11 +440,10 @@ TGraphAsymmErrors::~TGraphAsymmErrors()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// apply a function to all data points
-/// y = f(x,y)
+/// Apply a function to all data points `y = f(x,y)`
 ///
-/// Errors are calculated as eyh = f(x,y+eyh)-f(x,y) and
-/// eyl = f(x,y)-f(x,y-eyl)
+/// Errors are calculated as `eyh = f(x,y+eyh)-f(x,y)` and
+/// `eyl = f(x,y)-f(x,y-eyl)`
 ///
 /// Special treatment has to be applied for the functions where the
 /// role of "up" and "down" is reversed.
@@ -488,7 +487,7 @@ void TGraphAsymmErrors::Apply(TF1 *f)
 ////////////////////////////////////////////////////////////////////////////////
 ///This function is only kept for backward compatibility.
 ///You should rather use the Divide method.
-///It calls Divide(pass,total,"cl=0.683 b(1,1) mode") which is equivalent to the
+///It calls `Divide(pass,total,"cl=0.683 b(1,1) mode")` which is equivalent to the
 ///former BayesDivide method.
 
 void TGraphAsymmErrors::BayesDivide(const TH1* pass, const TH1* total, Option_t *)
@@ -501,8 +500,7 @@ void TGraphAsymmErrors::BayesDivide(const TH1* pass, const TH1* total, Option_t 
 ///
 /// This method serves two purposes:
 ///
-/// 1) calculating efficiencies:
-/// ----------------------------
+/// ### 1) calculating efficiencies:
 ///
 /// The assumption is that the entries in "pass" are a subset of those in
 /// "total". That is, we create an "efficiency" graph, where each entry is
@@ -521,8 +519,7 @@ void TGraphAsymmErrors::BayesDivide(const TH1* pass, const TH1* total, Option_t 
 /// If the denominator becomes 0 or pass > total, the corresponding bin is
 /// skipped.
 ///
-/// 2) calculating ratios of two Poisson means (option 'pois'):
-/// --------------------------------------------------------------
+/// ### 2) calculating ratios of two Poisson means (option 'pois'):
 ///
 /// The two histograms are interpreted as independent Poisson processes and the ratio
 /// \f[
@@ -568,7 +565,7 @@ void TGraphAsymmErrors::BayesDivide(const TH1* pass, const TH1* total, Option_t 
 /// confidence interval oscillates significantly according to the total number of
 /// events and the true efficiency. In order to decrease the impact of this
 /// oscillation on the actual coverage probability a couple of approximations and
-/// methodes has been developped. For a detailed discussion, please have a look at
+/// methodes has been developed. For a detailed discussion, please have a look at
 /// this statistical paper:
 /// http://www-stat.wharton.upenn.edu/~tcai/paper/Binomial-StatSci.pdf
 
@@ -870,7 +867,7 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
          else {
 
             if (bEffective && !bPoissonRatio) {
-               // tw/tw2 renormalize the weights
+               // tw/tw2 re-normalize the weights
                double norm = tw/tw2;  // case of tw2 = 0 is treated above
                aa =  pw * norm + alpha;
                bb =  (tw - pw) * norm + beta;
@@ -940,12 +937,14 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
         }
       }
       //Set the point center and its errors
-      SetPoint(npoint,pass->GetBinCenter(b),eff);
-      SetPointError(npoint,
-      pass->GetBinCenter(b)-pass->GetBinLowEdge(b),
-      pass->GetBinLowEdge(b)-pass->GetBinCenter(b)+pass->GetBinWidth(b),
-      eff-low,upper-eff);
-      npoint++;//we have added a point to the graph
+      if (TMath::Finite(eff)) {
+         SetPoint(npoint,pass->GetBinCenter(b),eff);
+         SetPointError(npoint,
+         pass->GetBinCenter(b)-pass->GetBinLowEdge(b),
+         pass->GetBinLowEdge(b)-pass->GetBinCenter(b)+pass->GetBinWidth(b),
+         eff-low,upper-eff);
+         npoint++;//we have added a point to the graph
+      }
    }
 
    Set(npoint);//tell the graph how many points we've really added
