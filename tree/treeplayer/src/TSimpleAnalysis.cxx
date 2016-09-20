@@ -215,15 +215,15 @@ static bool checkChainLoadResult(TChain* chain, int& errValue, std::string& errF
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Execute all the TChain::Draw() as configured and stores the output histograms.
-/// Returns true if the analysis succeeds.
+/// Disambiguate tree name from first input file and set up fTreeName if it is
+/// empty
 
-bool TSimpleAnalysis::Run()
+bool TSimpleAnalysis::SetTreeName()
 {
-   // Silence possible error message from TFile constructor if this is a tree name.
    // Disambiguate tree name from first input file:
    // just try to open it, if that works it's an input file.
    if (!fTreeName.empty()) {
+      // Silence possible error message from TFile constructor if this is a tree name.
       int oldLevel = gErrorIgnoreLevel;
       gErrorIgnoreLevel = kFatal;
       if (TFile* probe = TFile::Open(fTreeName.c_str())) {
@@ -241,7 +241,17 @@ bool TSimpleAnalysis::Run()
       fTreeName = ExtractTreeName(fInputFiles[0]);
    if (fTreeName.empty())  // No tree name found
       return false;
+   return true;
+}
 
+////////////////////////////////////////////////////////////////////////////////
+/// Execute all the TChain::Draw() as configured and stores the output histograms.
+/// Returns true if the analysis succeeds.
+
+bool TSimpleAnalysis::Run()
+{
+   if (!SetTreeName())
+      return false;
    TFile ofile(fOutputFile.c_str(), "RECREATE");
    if (ofile.IsZombie()) {
       ::Error("TSimpleAnalysis::Run", "Impossible to create %s", fOutputFile.c_str());

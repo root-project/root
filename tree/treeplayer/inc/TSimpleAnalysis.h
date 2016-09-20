@@ -55,6 +55,7 @@ private:
    std::string HandleExpressionConfig(const std::string& line);
    std::string GetLine(int& numbLine);
    bool HandleInputFileNameConfig(const std::string& line);
+   bool SetTreeName();
 
 
 public:
