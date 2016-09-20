@@ -129,13 +129,13 @@ TMVA::CrossValidationResult* TMVA::CrossValidation::CrossValidate( TString theMe
     result->fSigs.push_back(smethod->GetSignificance());
     result->fSeps.push_back(smethod->GetSeparation());
     Double_t err;
-    result->fEff01s.push_back(smethod->GetEfficiency("Efficienct:0.01",Types::kTesting, err));
-    result->fEff10s.push_back(smethod->GetEfficiency("Efficienct:0.10",Types::kTesting,err));
-    result->fEff30s.push_back(smethod->GetEfficiency("Efficienct:0.30",Types::kTesting,err));
+    result->fEff01s.push_back(smethod->GetEfficiency("Efficiency:0.01",Types::kTesting, err));
+    result->fEff10s.push_back(smethod->GetEfficiency("Efficiency:0.10",Types::kTesting,err));
+    result->fEff30s.push_back(smethod->GetEfficiency("Efficiency:0.30",Types::kTesting,err));
     result->fEffAreas.push_back(smethod->GetEfficiency(""             ,Types::kTesting,err));
-    result->fTrainEff01s.push_back(smethod->GetTrainingEfficiency("Efficienct:0.01"));
-    result->fTrainEff10s.push_back(smethod->GetTrainingEfficiency("Efficienct:0.10"));
-    result->fTrainEff30s.push_back(smethod->GetTrainingEfficiency("Efficienct:0.30"));
+    result->fTrainEff01s.push_back(smethod->GetTrainingEfficiency("Efficiency:0.01"));
+    result->fTrainEff10s.push_back(smethod->GetTrainingEfficiency("Efficiency:0.10"));
+    result->fTrainEff30s.push_back(smethod->GetTrainingEfficiency("Efficiency:0.30"));
 
     smethod->Data()->DeleteResults(smethod->GetMethodName(), Types::kTesting, Types::kClassification);
     smethod->Data()->DeleteResults(smethod->GetMethodName(), Types::kTraining, Types::kClassification);
