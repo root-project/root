@@ -321,7 +321,31 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
   This has been implemented by Jeromy Tompkins <Tompkins@nscl.msu.edu>
 
 ## Geometry Libraries
+  A new module geom/vecgeom was introduced to give transparent access to VecGeom 
+  solid primitives. VecGeom is a high performance geometry package (link) providing 
+  SIMD vectorization for the CPU-intensive geometry algorithms used for geometry
+  navigation. The module creates a new library libConverterVG.so depending on the
+  VecGeom main library and loaded using the ROOT plug-in mechanism.
 
+  The main functionality provided by the new vecgeom module is to make a conversion 
+  in memory of all the shapes in a loaded TGeo geometry into a special adapter
+  shape TGeoVGShape, redirecting all navigation calls to the corresponding VecGeom 
+  solid. The library loading and geometry conversion can be done with a single call 
+  `TVirtualGeoConverter::Instance()->ConvertGeometry()`
+  
+
+  After the conversion is done, all existing TGeo functionality is available as for
+  a native geometry, only that most of the converted solids provide better navigation 
+  performance, despite the overhead introduced by the new adapter shape.
+
+  Prerequisites: installation of VecGeom. 
+  The installation instructions are available at <http://geant.web.cern.ch/content/installation>
+  Due to the fact that VecGeom provides for the moment static libraries 
+  and depends on ROOT, is is advised to compile first ROOT without VecGeom support, 
+  then compile VecGeom against this ROOT version, then re-configure ROOT to enable 
+  VecGeom and Vc support, using the flags -Dvc=ON -Dvecgeom=on
+  
+  This has been implemented by Mihaela Gheata <Mihaela.Gheata@cern.ch>
 
 ## Database Libraries
 
