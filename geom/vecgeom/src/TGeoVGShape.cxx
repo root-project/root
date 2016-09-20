@@ -194,7 +194,7 @@ vecgeom::cxx::VUnplacedVolume* TGeoVGShape::Convert(TGeoShape const *const shape
          unplaced_volume = new UnplacedOrb(p->GetRmax());
       } else {
          unplaced_volume = new UnplacedSphere(p->GetRmin(), p->GetRmax(), p->GetPhi1() * kDegToRad,
-                                             (p->GetPhi2() - p->GetPhi1()) * kDegToRad, p->GetTheta1(),
+                                             (p->GetPhi2() - p->GetPhi1()) * kDegToRad, p->GetTheta1() * kDegToRad,
                                            (p->GetTheta2() - p->GetTheta1()) * kDegToRad);
       }
    }
