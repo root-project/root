@@ -76,9 +76,8 @@ ROOT::Experimental::TCanvas::GetCanvases() {
 ROOT::Experimental::TCanvas::TCanvas() {
   fAdaptor = std::make_unique<Internal::TV5CanvasAdaptor>(*this);
 }
-ROOT::Experimental::TCanvas::~TCanvas() //= default;
-{
-}
+
+ROOT::Experimental::TCanvas::~TCanvas() = default;
 
 void ROOT::Experimental::TCanvas::Paint() {
   for (auto&& drw: fPrimitives) {
