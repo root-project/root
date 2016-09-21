@@ -895,6 +895,8 @@ class TAxisView {
   const TAxisIrregular *fIrr = nullptr;
 
 public:
+  TAxisView() = default;
+
   /// Construct a view on a `TAxisEquidistant`, `TAxisGrow` or `TAxisLabel`.
   TAxisView(const TAxisEquidistant &equi): fEqui(&equi) { }
 
