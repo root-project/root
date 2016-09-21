@@ -4677,7 +4677,7 @@ void TProofServ::ProcessNext(TString *slb)
 
    // Remove aborted queries from the list
    if (fPlayer->GetExitStatus() == TVirtualProofPlayer::kAborted) {
-      if (pqr) SafeDelete(pqr);
+      SafeDelete(pqr);
       if (fQMgr) fQMgr->RemoveQuery(pq);
    } else {
       // Keep in memory only light infor about a query
@@ -6527,7 +6527,7 @@ void TProofServ::HandleSubmerger(TMessage *mess)
                      deleteplayer = kFALSE;
                   }
 
-                  if (t) SafeDelete(t);
+                  SafeDelete(t);
 
                }
 
