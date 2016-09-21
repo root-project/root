@@ -274,7 +274,9 @@ bool TSimpleAnalysis::Run()
       TChain* chain = job.first;
       TDirectory* taskDir = job.second;
       taskDir->cd();
-      std::vector<TH1F *> vPtrHisto;
+      std::vector<TH1F *> vPtrHisto(fHists.size());
+      // Index for a  correct set up of vPtrHisto
+      int i = 0;
       for (const auto &histo : fHists) {
          const std::string& expr = histo.second.first;
          const std::string& histoName = histo.first;
@@ -286,24 +288,33 @@ bool TSimpleAnalysis::Run()
          if (!CheckChainLoadResult(chain))
             return std::vector<TH1F *>();
 
-         vPtrHisto.emplace_back(ptrHisto);
+         vPtrHisto[i] = ptrHisto;
+         ++i;
       }
       return vPtrHisto;
    };
 
 #if 0
+   // The MT version is currently disabled because reading emulated objects
+   // triggers a lock for every object read. This in turn increases the run
+   // time way beyond the serial case.
+
 
    ROOT::EnableThreadSafety();
    ThreadPool pool(8);
 
    // Do the chain of the fInputFiles
    std::vector<std::pair<TChain*, TDirectory*>> vChains;
-   TChain *ch;
    for (size_t i = 0; i < fInputFiles.size(); ++i){
       const std::string& inputfile = fInputFiles[i];
+      TChain *ch;
       ch = new TChain(fTreeName.c_str());
       ch->Add(inputfile.c_str());
+
+      // Create task-specific TDirectory, so avoid parallel tasks to interfere
+      // in gDirectory with histogram registration.
       TDirectory* taskDir = gROOT->mkdir(TString::Format("TSimpleAnalysis_taskDir_%d", (int)i));
+
       vChains.emplace_back(std::make_pair(ch, taskDir));
    }
 
@@ -316,6 +327,8 @@ bool TSimpleAnalysis::Run()
          return false;
    }
 
+   // Merge the results. Initialize the result with the first task's results,
+   // then add the other tasks.
    std::vector<TH1F *> vPtrHisto{vFileswHists[0]};
 
    ofile.cd();
@@ -334,26 +347,26 @@ bool TSimpleAnalysis::Run()
          vPtrHisto[j]->Write();
    }
    return true;
-}
 
 #else
 
-// Do the chain of the fInputFiles
-TChain* chain = new TChain(fTreeName.c_str());
-for (const std::string& inputfile: fInputFiles)
-   chain->Add(inputfile.c_str());
+   // Do the chain of the fInputFiles
+   TChain* chain = new TChain(fTreeName.c_str());
+   for (const std::string& inputfile: fInputFiles)
+      chain->Add(inputfile.c_str());
 
-auto vHisto = generateHisto({chain, gDirectory});
-if (vHisto.empty())
-   return false;
-for (auto histo: vHisto) {
-   if (histo)
-   histo->Write();
- }
+   auto vHisto = generateHisto({chain, gDirectory});
+   if (vHisto.empty())
+      return false;
+   ofile.cd();
+   for (auto histo: vHisto) {
+      if (histo)
+         histo->Write();
+   }
+   return true;
 
-return true;
-}
 #endif
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns false if not a tree name, otherwise sets the name of the tree.
