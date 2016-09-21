@@ -93,7 +93,7 @@ public:
   void SetTitle(const std::string& title) { fTitle = title; }
 
   /// Get the elements contained in the canvas.
-  const Primitives_t& GetPrimitives();
+  const Primitives_t& GetPrimitives() { return fPrimitives; }
 
 
   static const std::vector<std::shared_ptr<TCanvas>> &GetCanvases();
