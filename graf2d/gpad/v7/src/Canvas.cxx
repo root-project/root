@@ -60,7 +60,6 @@ public:
   }
 
   void Paint(Option_t */*option*/="") override {
-    R__DEBUG_HERE("GPad") << "AXEL DEBUG CanvasAdaptor::Paint\n";
     fNewCanv.Paint();
   }
 };
@@ -76,11 +75,9 @@ ROOT::Experimental::TCanvas::GetCanvases() {
 
 ROOT::Experimental::TCanvas::TCanvas() {
   fAdaptor = std::make_unique<Internal::TV5CanvasAdaptor>(*this);
-  R__DEBUG_HERE("GPad") <<"AXEL DEBUG Canvas\n";
 }
 ROOT::Experimental::TCanvas::~TCanvas() //= default;
 {
-  R__DEBUG_HERE("GPad")<<"AXEL DEBUG ~Canvas\n";
 }
 
 void ROOT::Experimental::TCanvas::Paint() {
