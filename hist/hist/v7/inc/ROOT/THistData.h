@@ -396,10 +396,15 @@ public:
   THistBinStat(DATA& data, int index):
     BASES(data, index)... {}
 
+  /// Whether this provides storage for uncertainties, or whether uncertainties
+  /// are determined as poisson uncertainty of the content.
+  static constexpr bool HasBinUncertainty() {
+    return fgHaveUncertainty<AllYourBaseAreBelongToUs>;
+  }
   /// Calculate the bin content's uncertainty for the given bin, using base class information,
   /// i.e. forwarding to a base's `GetUncertaintyImpl()`.
   template <bool B = true,
-    class = typename std::enable_if<B && fgHaveUncertainty<AllYourBaseAreBelongToUs>>::type>
+    class = typename std::enable_if<B && HasBinUncertainty()>::type>
   double GetUncertainty() const {
     return this->GetUncertaintyImpl();
   }
@@ -407,7 +412,7 @@ public:
   /// statistics on the absolute bin content. Only available if no base provides
   /// this functionality. Requires GetContent().
   template <bool B = true,
-    class = typename std::enable_if<B && !fgHaveUncertainty<AllYourBaseAreBelongToUs>>::type>
+    class = typename std::enable_if<B && !HasBinUncertainty()>::type>
   double GetUncertainty(...) const {
     auto content = this->GetContent();
     return std::sqrt(std::fabs(content));
@@ -483,16 +488,22 @@ public:
     (void)trigger_base_fill{ (STAT<DIMENSIONS, PRECISION, STORAGE>::Fill(x, binidx, weight), 0)... };
   }
 
+  /// Whether this provides storage for uncertainties, or whether uncertainties
+  /// are determined as poisson uncertainty of the content.
+  static constexpr bool HasBinUncertainty() {
+    return fgHaveUncertainty<AllYourBaseAreBelongToUs>;
+  }
+
   /// Calculate the bin content's uncertainty for the given bin, using base class information,
   /// i.e. forwarding to a base's `GetBinUncertaintyImpl(binidx)`.
-  template <bool B = true, class = typename std::enable_if<B && fgHaveUncertainty<AllYourBaseAreBelongToUs>>::type>
+  template <bool B = true, class = typename std::enable_if<B && HasBinUncertainty()>::type>
   double GetBinUncertainty(int binidx) const {
     return this->GetBinUncertaintyImpl(binidx);
   }
   /// Calculate the bin content's uncertainty for the given bin, using Poisson
   /// statistics on the absolute bin content. Only available if no base provides
   /// this functionality. Requires GetContent().
-  template <bool B = true, class = typename std::enable_if<B && !fgHaveUncertainty<AllYourBaseAreBelongToUs>>::type>
+  template <bool B = true, class = typename std::enable_if<B && !HasBinUncertainty()>::type>
   double GetBinUncertainty(int binidx, ...) const {
     auto content = this->GetBinContent(binidx);
     return std::sqrt(std::fabs(content));

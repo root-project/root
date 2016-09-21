@@ -103,6 +103,10 @@ public:
   /// several kinds of uncertainty, same number of entries for lower and upper.
   virtual double GetBinUncertainty(int binidx) const = 0;
 
+  /// Whether this histogram's statistics provide storage for uncertainties, or
+  /// whether uncertainties are determined as poisson uncertainty of the content.
+  virtual bool HasBinUncertainty() const = 0;
+
   /// The bin content, cast to double.
   virtual double GetBinContentAsDouble(int binidx) const = 0;
 
@@ -526,6 +530,11 @@ public:
     return this->GetBinUncertainty(bin);
   }
 
+  /// Whether this histogram's statistics provide storage for uncertainties, or
+  /// whether uncertainties are determined as poisson uncertainty of the content.
+  bool HasBinUncertainty() const final {
+    return this->GetStat().HasBinUncertainty();
+  }
 
   /// Get the begin() and end() for each axis.
   ///
