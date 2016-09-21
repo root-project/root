@@ -100,5 +100,7 @@ public:
 
    TGeoShape            *GetShape() const { return fShape; }
    vecgeom::cxx::VPlacedVolume *GetVGShape() const { return fVGShape; }
+   
+   ClassDef(TGeoVGShape, 0) // Adapter for a VecGeom shape
 };
 #endif
