@@ -961,7 +961,7 @@ TOptionListItem::TOptionListItem(TDataMember *d, Long_t val, Long_t valmask,
       fOptName = name;
    }
 
-   if(label) {
+   if (label) {
       fOptLabel = label;
    }
 }
