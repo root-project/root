@@ -69,7 +69,11 @@ protected:
 public:
   TH1* GetOldHist() const { return fOldHist.get(); }
 
-  virtual ~THistDrawableBase() = default;
+   THistDrawableBase();
+   THistDrawableBase(THistDrawableBase&&);
+   virtual ~THistDrawableBase();
+
+   THistDrawableBase& operator=(THistDrawableBase&&);
 };
 
 template <int DIMENSIONS>
@@ -87,8 +91,6 @@ public:
    THistDrawable(const std::shared_ptr<HIST>& hist, THistDrawOptions<DIMENSIONS> opts):
       fHistImpl(std::shared_ptr<HistImpl_t>(hist, hist->GetImpl())),
       fOpts(opts) {}
-
-  ~THistDrawable() = default;
 
   /// Paint the histogram
   void Paint(TCanvas& canv) final {

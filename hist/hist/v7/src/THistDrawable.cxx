@@ -37,6 +37,15 @@ THistPainterBase<DIMENSION>::~THistPainterBase() { fgPainter = nullptr; }
 template <int DIMENSION>
 THistPainterBase<DIMENSION>* THistPainterBase<DIMENSION>::fgPainter = nullptr;
 
+
+Internal::THistDrawableBase::THistDrawableBase() = default;
+Internal::THistDrawableBase::THistDrawableBase(THistDrawableBase&&) = default;
+Internal::THistDrawableBase::~THistDrawableBase() = default;
+
+Internal::THistDrawableBase&
+Internal::THistDrawableBase::operator=(THistDrawableBase&&) = default;
+
+
 template <int DIMENSIONS>
 bool
 THistDrawable<DIMENSIONS>::UpdateOldHist() {
