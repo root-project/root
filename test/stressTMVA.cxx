@@ -2867,6 +2867,7 @@ private:
 ///// Standard constructor
 utIPythonInteractive::utIPythonInteractive() : UnitTesting::UnitTest("IPythonInteractive", __FILE__)
 {
+  ipyi = nullptr;
   N = 1000;
   titles.push_back("Training Error");
   titles.push_back("Testing Error");
@@ -2911,6 +2912,8 @@ void utIPythonInteractive::testMethods()
   	TObject *obj;
     while ((obj = (TObject*)next())){
       TGraph * gr = dynamic_cast<TGraph*>(obj);
+      test_(gr!=nullptr);
+      if (gr==nullptr) continue;
       test_(gr->GetN()==(i+1));
       Double_t x, y;
       test_(gr->GetPoint(i, x, y)!=-1);
