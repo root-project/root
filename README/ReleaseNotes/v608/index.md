@@ -33,9 +33,11 @@ The following people have contributed to this new version:
  Paul Russo, Fermilab,\
  Enric Tejedor Saavedra, CERN/SFT,\
  Liza Sakellari, CERN/SFT,\
+ Alex Saperstein, ANL,\
  Manuel Tobias Schiller, CERN/LHCb,\
  David Smith, CERN/IT,\
  Matevz Tadel, UCSD/CMS, Eve,\
+ Peter van Gemmeren, ANL, ATLAS,\
  Vassil Vassilev, Fermilab/CMS,\
  Wouter Verkerke, NIKHEF/Atlas, RooFit
 
@@ -134,6 +136,7 @@ Add a new mode for `TClass::SetCanSplit` (2) which indicates that this class and
 * The with `goff` option one can use as many variables as needed. There no more
   limitation, like with the options `para`and `candle`.
 * Fix detection of errors that appears in nested TTreeFormula [ROOT-8218]
+* Better basket size optimization by taking into account meta data and rounding up to next 512 bytes, ensuring a complete cluster fits into a single basket.
 
 ### Fast Cloning
 
