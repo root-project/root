@@ -2751,11 +2751,11 @@ TEfficiency& TEfficiency::operator+=(const TEfficiency& rhs)
       return *this;
    }
 
-   if (rhs.fTotalHistogram == 0 && rhs.fTotalHistogram == 0 ) {
+   if (rhs.fTotalHistogram == 0 && rhs.fPassedHistogram == 0 ) {
       Warning("operator+=","no operation: adding an empty object");
       return *this;
    }
-   else  if (rhs.fTotalHistogram == 0  || rhs.fTotalHistogram == 0 ) {
+   else  if (rhs.fTotalHistogram == 0  || rhs.fPassedHistogram == 0 ) {
       Fatal("operator+=","Adding a non consistent TEfficiency object which has not a total or a passed histogram ");
       return *this;
    }
