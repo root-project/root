@@ -36,8 +36,12 @@ class TV5CanvasAdaptor;
   */
 
 class TCanvas {
+public:
+  using Primitives_t = std::vector<std::unique_ptr<Internal::TDrawable>>;
+
+private:
   /// Content of the pad.
-  std::vector<std::unique_ptr<Internal::TDrawable>> fPrimitives;
+  Primitives_t fPrimitives;
 
   /// Title of the canvas.
   std::string fTitle;
@@ -76,6 +80,9 @@ public:
     fPrimitives.emplace_back(GetDrawable(what, options));
   }
 
+  /// Remove an object from the list of primitives.
+  //TODO: void Wipe();
+
   /// Paint the canvas elements ("primitives").
   void Paint();
 
@@ -84,6 +91,10 @@ public:
 
   /// Set the canvas's title.
   void SetTitle(const std::string& title) { fTitle = title; }
+
+  /// Get the elements contained in the canvas.
+  const Primitives_t& GetPrimitives();
+
 
   static const std::vector<std::shared_ptr<TCanvas>> &GetCanvases();
 };
