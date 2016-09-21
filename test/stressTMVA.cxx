@@ -2918,7 +2918,7 @@ void utIPythonInteractive::testMethods()
       Double_t x, y;
       test_(gr->GetPoint(i, x, y)!=-1);
       test_(x==xvec[i]);
-      test_(j==0 ? y1vec[i] : y2vec[i]);
+      test_(j==0 ? y==y1vec[i] : y==y2vec[i]);
       j++;
 	  }
   }
