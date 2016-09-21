@@ -84,7 +84,7 @@ public:
   virtual int GetNBins() const noexcept = 0;
 
   /// Get the histogram title.
-  std::string_view GetTitle() const { return fTitle; }
+  const std::string& GetTitle() const { return fTitle; }
 
   /// Given the coordinate `x`, determine the index of the bin.
   virtual int GetBinIndex(const CoordArray_t& x) const = 0;
