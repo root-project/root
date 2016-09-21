@@ -252,6 +252,7 @@ bool TSimpleAnalysis::Run()
 {
    if (!SetTreeName())
       return false;
+
    TFile ofile(fOutputFile.c_str(), "RECREATE");
    if (ofile.IsZombie()) {
       ::Error("TSimpleAnalysis::Run", "Impossible to create %s", fOutputFile.c_str());
@@ -268,7 +269,7 @@ bool TSimpleAnalysis::Run()
          "internal error" // -5
          };
 
-   auto generateHisto = [&](const std::pair<TChain*, TDirectory*>& job){
+   auto generateHisto = [&](const std::pair<TChain*, TDirectory*>& job) {
       TChain* chain = job.first;
       TDirectory* taskDir = job.second;
       taskDir->cd();
@@ -277,10 +278,9 @@ bool TSimpleAnalysis::Run()
          const std::string& expr = histo.second.first;
          const std::string& histoName = histo.first;
          const std::string& cut = histo.second.second;
+
          chain->Draw((expr + ">>" + histoName).c_str(), cut.c_str(), "goff");
          TH1F *ptrHisto = (TH1F*)taskDir->Get(histoName.c_str());
-         if (!ptrHisto)
-            continue;
          int errValue;
          std::string errFile;
          if (!checkChainLoadResult(chain, errValue, errFile)) {
@@ -293,7 +293,7 @@ bool TSimpleAnalysis::Run()
       return vPtrHisto;
    };
 
-#if 1
+#if 0
 
    ROOT::EnableThreadSafety();
    ThreadPool pool(8);
@@ -310,19 +310,30 @@ bool TSimpleAnalysis::Run()
    }
 
    auto vFileswHists = pool.Map(generateHisto, vChains);
-   if (vFileswHists[0].empty())
-      return false;
+
+   // If a file does not exist, one of the vFileswHists
+   // will be a vector of length 0. Detect that.
+   for (auto&& histsOfJob: vFileswHists) {
+      if (histsOfJob.empty())
+         return false;
+   }
 
    std::vector<TH1F *> vPtrHisto{vFileswHists[0]};
 
    ofile.cd();
-   for (unsigned j = 0; j < fHists.size(); j++){
-      for (unsigned i = 1; i < vFileswHists.size(); i++){
-         if (!vFileswHists[i][j])
-            return false;
-         vPtrHisto[j]->Add(vFileswHists[i][j]);
+   for (unsigned j = 0; j < fHists.size(); j++) {
+      for (unsigned i = 1; i < vFileswHists.size(); i++) {
+         if (!vFileswHists[i][j]) {
+            // ignore that sum histogram:
+            delete vPtrHisto[j];
+            vPtrHisto[j] = nullptr;
+            continue;
+         }
+         if (vPtrHisto[j])
+            vPtrHisto[j]->Add(vFileswHists[i][j]);
       }
-      vPtrHisto[j]->Write();
+      if (vPtrHisto[j])
+         vPtrHisto[j]->Write();
    }
    return true;
 }
@@ -334,11 +345,13 @@ TChain* chain = new TChain(fTreeName.c_str());
 for (const std::string& inputfile: fInputFiles)
    chain->Add(inputfile.c_str());
 
-auto vHisto = generateHisto({chain,gDirectory});
+auto vHisto = generateHisto({chain, gDirectory});
 if (vHisto.empty())
    return false;
-for (auto histo: vHisto)
+for (auto histo: vHisto) {
+   if (histo)
    histo->Write();
+ }
 
 return true;
 }
