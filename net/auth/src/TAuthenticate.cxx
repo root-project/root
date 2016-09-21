@@ -842,8 +842,7 @@ negotia:
    }
 
    // Cleanup timer
-   if (alarm)
-      SafeDelete(alarm);
+   SafeDelete(alarm);
 
    return rc;
 
