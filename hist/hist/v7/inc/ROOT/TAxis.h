@@ -903,6 +903,10 @@ public:
   /// Construct a view on a `TAxisIrregular`.
   TAxisView(const TAxisIrregular &irr): fIrr(&irr) { }
 
+  const std::string& GetTitle() const {
+    return fEqui ? fEqui->GetTitle() : fIrr->GetTitle();
+  }
+
   /// Find the bin containing coordinate `x`. Forwards to the underlying axis.
   int FindBin(double x) const noexcept {
     if (fEqui)
@@ -942,6 +946,11 @@ public:
       return fEqui->GetBinTo(i);
     return fIrr->GetBinTo(i);
   }
+
+  /// Get the axis as a TAxisEquidistant; returns nullptr if it's a TAxisIrregular.
+  const TAxisEquidistant* GetAsEquidistant() const {  return fEqui; }
+  /// Get the axis as a TAxisIrregular; returns nullptr if it's a TAxisEquidistant.
+  const TAxisIrregular* GetAsIrregular() const {  return fIrr; }
 };
 
 ///\name Axis Compatibility
