@@ -374,30 +374,8 @@ namespace TMVA
          double m_beta;  ///< internal parameter (momentum)
          std::vector<double> m_prevGradients; ///< vector remembers the gradients of the previous step
 
-
-
-         
-         
-         /* typedef std::smart_ptr<std::vector<double> > VecPtr; */
-         /* typedef std::vector<VecPtr> VecPool; */
-         /* VecPool m_local; */
-         /* VecPool m_localInUse; */
-         /* std::mutex m_vec_mutex; */
-
-
-         /* VecPtr getVec () */
-         /* { */
-         /*     std::lock_guard<std::mutex> lock (m_vec_mutex); */
-             
-         /* } */
-
-         /* void releaseVec (VecPtr vecPtr) */
-         /* { */
-         /*     std::lock_guard<std::mutex> lock (m_vec_mutex); */
-         /*     VecPool::iterator it = m_localInUse.find (vecPtr); */
-         /*     m_local.push_back (*it); */
-         /*     m_localInUse.erase (it); */
-         /* } */
+         std::vector<double> m_localWeights; ///< local weights for reuse in thread. 
+         std::vector<double> m_localGradients; ///< local gradients for reuse in thread. 
       };
 
 
