@@ -15,6 +15,8 @@
 #ifndef ROOT7_TDrawable
 #define ROOT7_TDrawable
 
+#include <memory>
+
 namespace ROOT {
 namespace Experimental {
 class TCanvas;
@@ -31,6 +33,79 @@ public:
 
   /// Paint the object
   virtual void Paint(TCanvas& onCanv) = 0;
+};
+
+/// \class TAnyPtr
+/// Models a shared pointer or a unique pointer.
+
+template <class T>
+class TUniWeakPtr {
+   union {
+      std::unique_ptr<T> fUnique;
+      std::weak_ptr<T> fWeak;
+   };
+   bool fIsWeak; ///< fUnique or fWeak?
+
+public:
+   /// \class Accessor
+   /// Gives transparent access to the shared or unique pointer.
+   /// Locks if needed.
+   class Accessor {
+      union {
+         std::shared_ptr<T> fShared;
+         T* fRaw;
+      };
+      bool fIsShared;  ///< fRaw or fShared?
+
+   public:
+      Accessor(const TUniWeakPtr& uniweak):
+         fIsShared(uniweak.fIsWeak) {
+         if (fIsShared)
+            fShared = uniweak.fWeak.lock();
+         else
+            fRaw = uniweak.fUnique.get();
+      }
+
+      Accessor(Accessor&& rhs): fIsShared(rhs.fIsShared) {
+         if (fIsShared)
+            fShared.swap(rhs.fShared);
+         else
+            fRaw = rhs.fRaw;
+      }
+
+      T* operator->() const { return fIsShared ? fRaw : fShared.get(); }
+      T& operator*() const { return *operator->(); }
+      operator bool() const { return fIsShared ? (bool)fRaw : (bool)fShared; }
+
+      ~Accessor() {
+         if (fIsShared)
+            fShared.~shared_ptr<T>();
+      }
+   };
+
+   TUniWeakPtr(const std::shared_ptr<T>& ptr): fWeak(ptr), fIsWeak(true) {}
+   TUniWeakPtr(std::unique_ptr<T>&& ptr): fUnique(ptr), fIsWeak(false) {}
+   TUniWeakPtr(TUniWeakPtr&& rhs): fIsWeak(rhs.fIsWeak) {
+      if (fIsWeak)
+         fWeak.swap(rhs.fWeak);
+      else
+         fUnique.swap(rhs.fUnique);
+   }
+
+   ~TUniWeakPtr() {
+      if (fIsWeak)
+         fWeak.~weak_ptr<T>();
+      else
+         fUnique.~unique_ptr<T>();
+   }
+
+   Accessor Get() const { return Accessor(*this); }
+   void Reset() {
+      if (fIsWeak)
+         fWeak.reset();
+      else
+         fUnique.reset();
+   }
 };
 
 } // namespace Internal
