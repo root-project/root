@@ -34,6 +34,7 @@
 #include "TMVA/MethodKNN.h"
 
 #include "TMVA/ClassifierFactory.h"
+#include "TMVA/Configurable.h"
 #include "TMVA/DataSetInfo.h"
 #include "TMVA/Event.h"
 #include "TMVA/LDA.h"

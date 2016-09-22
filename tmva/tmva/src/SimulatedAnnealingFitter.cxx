@@ -33,6 +33,7 @@
 
 #include "TMVA/SimulatedAnnealingFitter.h"
 
+#include "TMVA/Configurable.h"
 #include "TMVA/FitterBase.h"
 #include "TMVA/Interval.h"
 #include "TMVA/MsgLogger.h"

@@ -36,6 +36,8 @@
 
 
 #include "TMVA/MCFitter.h"
+
+#include "TMVA/Configurable.h"
 #include "TMVA/FitterBase.h"
 #include "TMVA/GeneticRange.h"
 #include "TMVA/Interval.h"

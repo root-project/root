@@ -10,17 +10,19 @@
  *      Virtual base class for all MVA method based on python                     *
  *                                                                                *
  **********************************************************************************/
+#include<TMVA/PyMethodBase.h>
 
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #pragma GCC diagnostic ignored "-Wunused-function"
 #include <Python.h>
 
-#include<TMVA/PyMethodBase.h>
-#include<TApplication.h>
-
+#include "TMVA/DataSet.h"
+#include "TMVA/DataSetInfo.h"
+#include "TMVA/MsgLogger.h"
 #include "TMVA/Results.h"
 #include "TMVA/Timer.h"
 
+#include<TApplication.h>
 
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>

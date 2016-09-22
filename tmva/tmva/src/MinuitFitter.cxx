@@ -29,6 +29,7 @@
 
 #include "TMVA/MinuitFitter.h"
 
+#include "TMVA/Configurable.h"
 #include "TMVA/FitterBase.h"
 #include "TMVA/IFitterTarget.h"
 #include "TMVA/Interval.h"

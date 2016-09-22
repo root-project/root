@@ -105,6 +105,7 @@
 #include "TMVA/MethodFisher.h"
 
 #include "TMVA/ClassifierFactory.h"
+#include "TMVA/Configurable.h"
 #include "TMVA/DataSet.h"
 #include "TMVA/DataSetInfo.h"
 #include "TMVA/Event.h"

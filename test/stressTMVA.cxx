@@ -67,6 +67,9 @@ Regression_BDTG2 [4/4]...........................................OK
 // Author: Christoph Rosemann   Dec. 2009
 // TMVA unit tests
 
+#include "TMVA/IMethod.h"
+#include "TMVA/Types.h"
+
 #include <string>
 #include <iostream>
 #include <cassert>

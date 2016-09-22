@@ -39,6 +39,7 @@
 
 #include "TMVA/MethodBase.h"
 
+#include "TMVA/Configurable.h"
 #include "TMVA/DataSetInfo.h"
 #include "TMVA/MethodANNBase.h"
 #include "TMVA/MsgLogger.h"

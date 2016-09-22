@@ -93,6 +93,7 @@
 #include "TMVA/BinarySearchTree.h"
 #include "TMVA/CCPruner.h"
 #include "TMVA/ClassifierFactory.h"
+#include "TMVA/Configurable.h"
 #include "TMVA/CrossEntropy.h"
 #include "TMVA/DataSet.h"
 #include "TMVA/DecisionTree.h"

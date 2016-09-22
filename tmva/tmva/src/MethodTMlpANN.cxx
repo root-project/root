@@ -50,6 +50,7 @@
 #include "TMVA/MethodTMlpANN.h"
 
 #include "TMVA/Config.h"
+#include "TMVA/Configurable.h"
 #include "TMVA/DataSet.h"
 #include "TMVA/DataSetInfo.h"
 #include "TMVA/IMethod.h"

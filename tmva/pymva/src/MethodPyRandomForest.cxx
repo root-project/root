@@ -16,32 +16,36 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  *                                                                                *
  **********************************************************************************/
+#include "TMVA/MethodPyRandomForest.h"
+
 #include <Python.h>
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
 
 #pragma GCC diagnostic ignored "-Wunused-parameter"
-#include <iomanip>
-#include <fstream>
 
-#include "TMath.h"
+#include "TMVA/Configurable.h"
+#include "TMVA/ClassifierFactory.h"
+#include "TMVA/Config.h"
+#include "TMVA/DataSet.h"
+#include "TMVA/Event.h"
+#include "TMVA/IMethod.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/PDF.h"
+#include "TMVA/Ranking.h"
+#include "TMVA/Results.h"
+#include "TMVA/Tools.h"
+#include "TMVA/Types.h"
+#include "TMVA/VariableTransformBase.h"
+
 #include "Riostream.h"
+#include "TMath.h"
 #include "TMatrix.h"
 #include "TMatrixD.h"
 #include "TVectorD.h"
 
-#include "TMVA/VariableTransformBase.h"
-#include "TMVA/MethodPyRandomForest.h"
-#include "TMVA/Tools.h"
-#include "TMVA/Ranking.h"
-#include "TMVA/Types.h"
-#include "TMVA/Config.h"
-#include "TMVA/PDF.h"
-#include "TMVA/ClassifierFactory.h"
-
-#include "TMVA/Results.h"
-
-
+#include <iomanip>
+#include <fstream>
 
 using namespace TMVA;
 
