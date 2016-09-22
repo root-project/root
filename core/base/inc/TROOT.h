@@ -69,6 +69,14 @@ namespace Internal {
    class TROOTAllocator;
 
    TROOT *GetROOT2();
+
+   // Manage parallel branch processing
+   void EnableParBranchProcessing();
+   Bool_t IsParBranchProcessingEnabled();
+      
+   // Manage parallel tree processing
+   void EnableParTreeProcessing();
+   Bool_t IsParTreeProcessingEnabled();
 } } // End ROOT::Internal
 
 namespace ROOT {
@@ -79,9 +87,6 @@ namespace ROOT {
    void EnableImplicitMT(UInt_t numthreads = 0);
    void DisableImplicitMT();
    Bool_t IsImplicitMTEnabled();
-   // Manage parallel tree processing
-   void EnableParTreeProcessing();
-   Bool_t IsParTreeProcessingEnabled();
 }
 
 class TROOT : public TDirectory {

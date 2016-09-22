@@ -5238,6 +5238,9 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
    if (ROOT::IsImplicitMTEnabled() && fIMTEnabled) {
       if (fSortedBranches.empty()) InitializeSortedBranches();
 
+      if (!ROOT::Internal::IsParBranchProcessingEnabled())
+         ROOT::Internal::EnableParBranchProcessing();
+
       Int_t errnb = 0;
       std::atomic<Int_t> pos(0);
       std::atomic<Int_t> nbpar(0);

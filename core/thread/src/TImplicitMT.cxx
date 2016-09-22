@@ -36,6 +36,12 @@ static bool &GetIMTFlag()
    return enabled;
 }
 
+static bool &GetPBPFlag()
+{
+   static bool enabled = false;
+   return enabled;
+}
+
 static bool &GetPTPFlag()
 {
    static bool enabled = false;
@@ -73,6 +79,16 @@ extern "C" void ROOT_TImplicitMT_DisableImplicitMT()
 extern "C" bool ROOT_TImplicitMT_IsImplicitMTEnabled()
 {
    return GetIMTFlag();
+};
+
+extern "C" void ROOT_TImplicitMT_EnableParBranchProcessing()
+{
+   GetPBPFlag() = true;
+};
+
+extern "C" bool ROOT_TImplicitMT_IsParBranchProcessingEnabled()
+{
+   return GetPBPFlag();
 };
 
 extern "C" void ROOT_TImplicitMT_EnableParTreeProcessing()

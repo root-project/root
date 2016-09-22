@@ -384,6 +384,68 @@ namespace Internal {
       return nullptr;
    }
 
+   //////////////////////////////////////////////////////////////////////////////
+   /// Globally enables the parallel branch processing, which is a case of
+   /// implicit multi-threading in ROOT.
+   void EnableParBranchProcessing()
+   {
+#ifdef R__USE_IMT
+      if (!IsImplicitMTEnabled())
+         EnableImplicitMT();
+      static void (*sym)() = (void(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_EnableParBranchProcessing");
+      if (sym)
+         sym();
+#else
+      ::Warning("EnableParBranchProcessing", "Cannot enable parallel branch processing, please build ROOT with -Dimt=ON");
+#endif
+   }
+
+   //////////////////////////////////////////////////////////////////////////////
+   /// Returns true if parallel branch processing is enabled.
+   Bool_t IsParBranchProcessingEnabled()
+   {
+#ifdef R__USE_IMT
+      static Bool_t (*sym)() = (Bool_t(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_IsParBranchProcessingEnabled");
+      if (sym)
+         return sym();
+      else
+         return kFALSE;
+#else
+      return kFALSE;
+#endif
+   }
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Globally enables the parallel tree processing, which is a case of
+   /// implicit multi-threading in ROOT.
+   void EnableParTreeProcessing()
+   {
+#ifdef R__USE_IMT
+      if (!IsImplicitMTEnabled())
+         EnableImplicitMT();
+      static void (*sym)() = (void(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_EnableParTreeProcessing");
+      if (sym)
+         sym();
+#else
+      ::Warning("EnableParTreeProcessing", "Cannot enable parallel tree processing, please build ROOT with -Dimt=ON");
+#endif
+   }
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Returns true if parallel tree processing is enabled.
+   Bool_t IsParTreeProcessingEnabled()
+   {
+#ifdef R__USE_IMT
+      static Bool_t (*sym)() = (Bool_t(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_IsParTreeProcessingEnabled");
+      if (sym)
+         return sym();
+      else
+         return kFALSE;
+#else
+      return kFALSE;
+#endif
+   }
+
 } // end of Internal sub namespace
 // back to ROOT namespace
 
@@ -449,37 +511,6 @@ namespace Internal {
    {
 #ifdef R__USE_IMT
       static Bool_t (*sym)() = (Bool_t(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_IsImplicitMTEnabled");
-      if (sym)
-         return sym();
-      else
-         return kFALSE;
-#else
-      return kFALSE;
-#endif
-   }
-
-   ////////////////////////////////////////////////////////////////////////////////
-   /// Globally enables the parallel tree processing, which is a case of
-   /// implicit multi-threading in ROOT.
-   void EnableParTreeProcessing()
-   {
-#ifdef R__USE_IMT
-      if (!IsImplicitMTEnabled())
-         EnableImplicitMT();
-      static void (*sym)() = (void(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_EnableParTreeProcessing");
-      if (sym)
-         sym();
-#else
-      ::Warning("EnableParTreeProcessing", "Cannot enable parallel tree processing, please build ROOT with -Dimt=ON");
-#endif
-   }
-
-   ////////////////////////////////////////////////////////////////////////////////
-   /// Returns true if parallel tree processing is enabled.
-   Bool_t IsParTreeProcessingEnabled()
-   {
-#ifdef R__USE_IMT
-      static Bool_t (*sym)() = (Bool_t(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_IsParTreeProcessingEnabled");
       if (sym)
          return sym();
       else
