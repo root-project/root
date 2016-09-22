@@ -27,17 +27,18 @@
 // Fitter using a Genetic Algorithm
 //_______________________________________________________________________
 
-#include <iostream>
-
 #include "TMVA/GeneticFitter.h"
 #include "TMVA/GeneticAlgorithm.h"
 #include "TMVA/Interval.h"
+#include "TMVA/FitterBase.h"
 #include "TMVA/MsgLogger.h"
 #include "TMVA/Timer.h"
 #include "TMVA/Types.h"
 
 #include "Rtypes.h"
 #include "TString.h"
+
+#include <iostream>
 
 ClassImp(TMVA::GeneticFitter)
 

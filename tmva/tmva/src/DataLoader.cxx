@@ -45,6 +45,7 @@
 
 #include <string.h>
 
+#include "TMVA/Configurable.h"
 #include "TMVA/DataLoader.h"
 #include "TMVA/Config.h"
 #include "TMVA/Tools.h"
@@ -58,6 +59,7 @@
 #include "TMVA/MethodBoost.h"
 #include "TMVA/MethodCategory.h"
 
+#include "TMVA/VariableInfo.h"
 #include "TMVA/VariableIdentityTransform.h"
 #include "TMVA/VariableDecorrTransform.h"
 #include "TMVA/VariablePCATransform.h"
@@ -67,6 +69,7 @@
 #include "TMVA/ResultsClassification.h"
 #include "TMVA/ResultsRegression.h"
 #include "TMVA/ResultsMulticlass.h"
+#include "TMVA/Types.h"
 
 
 ClassImp(TMVA::DataLoader)

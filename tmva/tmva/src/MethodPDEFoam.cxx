@@ -52,10 +52,6 @@
 
 #include "TMVA/MethodPDEFoam.h"
 
-#include "TMath.h"
-#include "TH1F.h"
-#include "TFile.h"
-
 #include "TMVA/ClassifierFactory.h"
 #include "TMVA/Config.h"
 #include "TMVA/CrossEntropy.h"
@@ -64,6 +60,7 @@
 #include "TMVA/Event.h"
 #include "TMVA/GiniIndex.h"
 #include "TMVA/GiniIndexWithLaplace.h"
+#include "TMVA/IMethod.h"
 #include "TMVA/MisClassificationError.h"
 #include "TMVA/MethodBase.h"
 #include "TMVA/MsgLogger.h"
@@ -73,6 +70,10 @@
 #include "TMVA/Tools.h"
 #include "TMVA/Types.h"
 #include "TMVA/VariableInfo.h"
+
+#include "TMath.h"
+#include "TH1F.h"
+#include "TFile.h"
 
 REGISTER_METHOD(PDEFoam)
 

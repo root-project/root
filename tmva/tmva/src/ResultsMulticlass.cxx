@@ -34,6 +34,7 @@
 #include "TMVA/GeneticAlgorithm.h"
 #include "TMVA/GeneticFitter.h"
 #include "TMVA/MsgLogger.h"
+#include "TMVA/Results.h"
 #include "TMVA/Tools.h"
 #include "TMVA/Types.h"
 

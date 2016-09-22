@@ -102,6 +102,9 @@ set(CLANG_ENABLE_ARCMT OFF CACHE BOOL "")
 set(CLANG_ENABLE_COMPILER OFF CACHE BOOL "")
 set(CLANG_ENABLE_FORMAT OFF CACHE BOOL "")
 
+#---Remove the inherited include_directories()
+set_directory_properties(PROPERTIES INCLUDE_DIRECTORIES "")
+
 #---Add the sub-directory excluding all the targets from all-----------------------------------------
 if(CMAKE_GENERATOR MATCHES "Xcode")
   add_subdirectory(llvm/src)

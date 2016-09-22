@@ -8,6 +8,8 @@
 ///
 /// Try it (in compiled mode!) with:   `root mandelbrot.C+`
 ///
+/// \macro_image
+///
 /// ### Details
 ///
 ///    when a mouse event occurs the myexec() function is called (by

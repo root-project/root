@@ -35,8 +35,9 @@
 
 #include "TMVA/PDEFoamKernelTrivial.h"
 
-#include "TMVA/PDEFoam.h"
 #include "TMVA/MsgLogger.h"
+#include "TMVA/PDEFoam.h"
+#include "TMVA/PDEFoamKernelBase.h"
 #include "TMVA/Types.h"
 
 #include "Rtypes.h"

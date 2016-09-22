@@ -1808,12 +1808,15 @@ void TPostScript::Initialize()
          case 100 :
             width  = (11.*2.54)-2.*rpxmin;
             heigth = (8.5*2.54)-2.*rpymin;
+            break;
          case 200 :
             width  = (14.*2.54)-2.*rpxmin;
             heigth = (8.5*2.54)-2.*rpymin;
+            break;
          case 300 :
             width  = (17.*2.54)-2.*rpxmin;
             heigth = (11.*2.54)-2.*rpymin;
+            break;
          default  :
             width  = 29.7-2.*rpxmin;
             heigth = 21-2.*rpymin;
@@ -1837,12 +1840,15 @@ void TPostScript::Initialize()
          case 100 :
             width  = (8.5*2.54)-2.*rpxmin;
             heigth = (11.*2.54)-2.*rpymin;
+            break;
          case 200 :
             width  = (8.5*2.54)-2.*rpxmin;
             heigth = (14.*2.54)-2.*rpymin;
+            break;
          case 300 :
             width  = (11.*2.54)-2.*rpxmin;
             heigth = (17.*2.54)-2.*rpymin;
+            break;
          default  :
             width  = (21.0-2*rpxmin);
             heigth = (29.7-2.*rpymin);
@@ -1857,12 +1863,15 @@ void TPostScript::Initialize()
          case 100 :
             width  = (11.*2.54)-2.*rpxmin;
             heigth = (8.5*2.54)-2.*rpymin;
+            break;
          case 200 :
             width  = (14.*2.54)-2.*rpxmin;
             heigth = (8.5*2.54)-2.*rpymin;
+            break;
          case 300 :
             width  = (17.*2.54)-2.*rpxmin;
             heigth = (11.*2.54)-2.*rpymin;
+            break;
          default  :
             width  = (29.7-2*rpxmin);
             heigth = (21-2.*rpymin);

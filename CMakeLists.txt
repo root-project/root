@@ -184,10 +184,10 @@ install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/dictpch DESTINATION ${CMAKE_INSTALL_SY
 
 #---CXX MODULES-----------------------------------------------------------------------------------
 if(cxxmodules)
-  add_custom_target(copymodulemap ALL DEPENDS build/unix/module.modulemap)
-  add_custom_command(TARGET copymodulemap PRE_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/build/unix/module.modulemap ${CMAKE_BINARY_DIR}/include/module.modulemap
-  )
+  add_custom_target(copymodulemap
+                    DEPENDS build/unix/module.modulemap
+                    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/build/unix/module.modulemap ${CMAKE_BINARY_DIR}/include/module.modulemap
+                    )
 endif(cxxmodules)
 
 #---hsimple.root---------(use the executable for clearer dependencies and proper return code)---

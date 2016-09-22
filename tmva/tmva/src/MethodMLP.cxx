@@ -42,23 +42,15 @@
 
 #include "TMVA/MethodMLP.h"
 
-#include <vector>
-#include <cmath>
-
-#include "TString.h"
-#include "TTree.h"
-#include "Riostream.h"
-#include "TFitter.h"
-#include "TMatrixD.h"
-#include "TMath.h"
-#include "TFile.h"
-
 #include "TMVA/Config.h"
+#include "TMVA/ConvergenceTest.h"
 #include "TMVA/ClassifierFactory.h"
 #include "TMVA/DataSet.h"
 #include "TMVA/DataSetInfo.h"
 #include "TMVA/FitterBase.h"
 #include "TMVA/GeneticFitter.h"
+#include "TMVA/IFitterTarget.h"
+#include "TMVA/IMethod.h"
 #include "TMVA/Interval.h"
 #include "TMVA/MethodANNBase.h"
 #include "TMVA/MsgLogger.h"
@@ -67,6 +59,18 @@
 #include "TMVA/Timer.h"
 #include "TMVA/Tools.h"
 #include "TMVA/Types.h"
+
+#include "TH1.h"
+#include "TString.h"
+#include "TTree.h"
+#include "Riostream.h"
+#include "TFitter.h"
+#include "TMatrixD.h"
+#include "TMath.h"
+#include "TFile.h"
+
+#include <cmath>
+#include <vector>
 
 #ifdef MethodMLP_UseMinuit__
 TMVA::MethodMLP* TMVA::MethodMLP::fgThis = 0;

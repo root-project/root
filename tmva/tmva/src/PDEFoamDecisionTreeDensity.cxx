@@ -40,20 +40,19 @@
 // added, which returns all events in a given TMVA::Volume.
 // _____________________________________________________________________
 
-#include <limits>
-
-#ifndef ROOT_TMVA_PDEFoamDecisionTreeDensity
 #include "TMVA/PDEFoamDecisionTreeDensity.h"
-#endif
 
 #include "TMVA/BinarySearchTree.h"
 #include "TMVA/MethodPDERS.h"
 #include "TMVA/MsgLogger.h"
+#include "TMVA/PDEFoamDensityBase.h"
 #include "TMVA/Types.h"
 #include "TMVA/Volume.h"
 
 #include "RtypesCore.h"
 #include "TH1D.h"
+
+#include <limits>
 
 ClassImp(TMVA::PDEFoamDecisionTreeDensity)
 

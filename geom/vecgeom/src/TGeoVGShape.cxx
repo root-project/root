@@ -1,4 +1,12 @@
-#include "TGeoVGShape.h"
+// Author: Mihaela Gheata   30/03/16
+/*************************************************************************
+ * Copyright (C) 1995-2016, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 ////////////////////////////////////////////////////////////////////////////
 //                                                                        //
 // TGeoVGShape - bridge class for using a VecGeom solid as TGeoShape.             //
@@ -194,7 +202,7 @@ vecgeom::cxx::VUnplacedVolume* TGeoVGShape::Convert(TGeoShape const *const shape
          unplaced_volume = new UnplacedOrb(p->GetRmax());
       } else {
          unplaced_volume = new UnplacedSphere(p->GetRmin(), p->GetRmax(), p->GetPhi1() * kDegToRad,
-                                             (p->GetPhi2() - p->GetPhi1()) * kDegToRad, p->GetTheta1(),
+                                             (p->GetPhi2() - p->GetPhi1()) * kDegToRad, p->GetTheta1() * kDegToRad,
                                            (p->GetTheta2() - p->GetTheta1()) * kDegToRad);
       }
    }

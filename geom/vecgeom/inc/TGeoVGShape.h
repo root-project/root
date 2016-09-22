@@ -1,3 +1,13 @@
+// Author: Mihaela Gheata   30/03/16
+
+/*************************************************************************
+ * Copyright (C) 1995-2016, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #ifndef ROOT_TGeoVGShape
 #define ROOT_TGeoVGShape
 
@@ -7,7 +17,7 @@
 
 ////////////////////////////////////////////////////////////////////////////
 //                                                                        //
-// TGeoVGShape - bridge class for using a VecGeom solid as TGeoShape.             //
+// TGeoVGShape - bridge class for using a VecGeom solid as TGeoShape.     //
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
@@ -90,6 +100,7 @@ public:
 
    TGeoShape            *GetShape() const { return fShape; }
    vecgeom::cxx::VPlacedVolume *GetVGShape() const { return fVGShape; }
-//   ClassDef(TGeoVGShape, 1)         // Bridge class for VecGeom-based shapes
+   
+   ClassDef(TGeoVGShape, 0) // Adapter for a VecGeom shape
 };
 #endif

@@ -43,6 +43,7 @@
 #include "TMVA/MsgLogger.h"
 
 #include "Rtypes.h"
+#include "TObject.h"
 
 ClassImp(TMVA::PDEFoamKernelBase)
 

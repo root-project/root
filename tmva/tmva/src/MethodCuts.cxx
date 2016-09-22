@@ -90,28 +90,20 @@
 
 #include "TMVA/MethodCuts.h"
 
-#include <iostream>
-#include <cstdlib>
-
-#include "Riostream.h"
-#include "TH1F.h"
-#include "TObjString.h"
-#include "TDirectory.h"
-#include "TMath.h"
-#include "TGraph.h"
-#include "TSpline.h"
-#include "TRandom3.h"
-
 #include "TMVA/BinarySearchTree.h"
 #include "TMVA/ClassifierFactory.h"
 #include "TMVA/Config.h"
+#include "TMVA/Configurable.h"
 #include "TMVA/DataSet.h"
 #include "TMVA/DataSetInfo.h"
-#include "TMVA/GeneticFitter.h"
 #include "TMVA/Event.h"
+#include "TMVA/IFitterTarget.h"
+#include "TMVA/IMethod.h"
+#include "TMVA/GeneticFitter.h"
 #include "TMVA/Interval.h"
 #include "TMVA/FitterBase.h"
 #include "TMVA/MCFitter.h"
+#include "TMVA/MethodBase.h"
 #include "TMVA/MethodFDA.h"
 #include "TMVA/MinuitFitter.h"
 #include "TMVA/MsgLogger.h"
@@ -124,6 +116,18 @@
 #include "TMVA/Types.h"
 #include "TMVA/TSpline1.h"
 #include "TMVA/VariableTransformBase.h"
+
+#include "Riostream.h"
+#include "TH1F.h"
+#include "TObjString.h"
+#include "TDirectory.h"
+#include "TMath.h"
+#include "TGraph.h"
+#include "TSpline.h"
+#include "TRandom3.h"
+
+#include <cstdlib>
+#include <iostream>
 
 using std::atof;
 
