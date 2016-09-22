@@ -60,6 +60,8 @@ hpxpy=px:py    #second histogram
 
 # End of the configuration file
 ```
+It is possible to use the script rootdrawtree that allows to use the class
+just in command line through the bash shell.
 */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -264,12 +266,14 @@ bool TSimpleAnalysis::Run()
    if (!SetTreeName())
       return false;
 
+   // Create the output file and check if it fails
    TFile ofile(fOutputFile.c_str(), "RECREATE");
    if (ofile.IsZombie()) {
       ::Error("TSimpleAnalysis::Run", "Impossible to create %s", fOutputFile.c_str());
       return false;
    }
 
+   // Store the histograms into a vector
    auto generateHisto = [&](const std::pair<TChain*, TDirectory*>& job) {
       TChain* chain = job.first;
       TDirectory* taskDir = job.second;
@@ -277,6 +281,8 @@ bool TSimpleAnalysis::Run()
       std::vector<TH1F *> vPtrHisto(fHists.size());
       // Index for a  correct set up of vPtrHisto
       int i = 0;
+
+      // Loop over all the histograms
       for (const auto &histo : fHists) {
          const std::string& expr = histo.second.first;
          const std::string& histoName = histo.first;
@@ -285,6 +291,7 @@ bool TSimpleAnalysis::Run()
          chain->Draw((expr + ">>" + histoName).c_str(), cut.c_str(), "goff");
          TH1F *ptrHisto = (TH1F*)taskDir->Get(histoName.c_str());
 
+         // Check if there are errors inside the chain
          if (!CheckChainLoadResult(chain))
             return std::vector<TH1F *>();
 
@@ -330,7 +337,6 @@ bool TSimpleAnalysis::Run()
    // Merge the results. Initialize the result with the first task's results,
    // then add the other tasks.
    std::vector<TH1F *> vPtrHisto{vFileswHists[0]};
-
    ofile.cd();
    for (unsigned j = 0; j < fHists.size(); j++) {
       for (unsigned i = 1; i < vFileswHists.size(); i++) {
@@ -355,10 +361,12 @@ bool TSimpleAnalysis::Run()
    for (const std::string& inputfile: fInputFiles)
       chain->Add(inputfile.c_str());
 
+   // Generate histograms
    auto vHisto = generateHisto({chain, gDirectory});
    if (vHisto.empty())
       return false;
    ofile.cd();
+   // Store the histograms
    for (auto histo: vHisto) {
       if (histo)
          histo->Write();
