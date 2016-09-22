@@ -1527,6 +1527,15 @@ module "TMVA" {
   exclude header "TMVA/DNN/Architectures/Cuda/Device.h"
   exclude header "TMVA/DNN/Architectures/Cpu.h"
   exclude header "TMVA/DNN/Architectures/Cpu/CpuMatrix.h"
+
+  // FIXME: Optional PyMVA gets installed in $ROOTSYS/TMVA. PyMVA* depend on
+  // numpy, whose -I path gets passed only when building the related to PyMVA
+  // sources. I.e. we cannot generate this module implicitly if it included
+  // PyMVA, because we don't have always the relevant -I passed to the compiler.
+  exclude header "TMVA/PyMethodBase.h"
+  exclude header "TMVA/MethodPyAdaBoost.h"
+  exclude header "TMVA/MethodPyGTB.h"
+  exclude header "TMVA/MethodPyRandomForest.h"
 }
 module "TMacOSXSystem.h" { header "TMacOSXSystem.h" export * }
 module "TMacro.h" { header "TMacro.h" export * }
