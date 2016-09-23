@@ -21,6 +21,7 @@
 #include "TError.h"
 #include "TThread.h"
 
+#include <atomic>
 #include "tbb/task_scheduler_init.h"
 
 
@@ -36,16 +37,16 @@ static bool &GetImplicitMTFlag()
    return enabled;
 }
 
-static bool &GetParBranchProcessingFlag()
+static std::atomic_int &GetParBranchProcessingCount()
 {
-   static bool enabled = false;
-   return enabled;
+   static std::atomic_int count(0);
+   return count;
 }
 
-static bool &GetParTreeProcessingFlag()
+static std::atomic_int &GetParTreeProcessingCount()
 {
-   static bool enabled = false;
-   return enabled;
+   static std::atomic_int count(0);
+   return count;
 }
 
 extern "C" void ROOT_TImplicitMT_EnableImplicitMT(UInt_t numthreads)
@@ -83,20 +84,30 @@ extern "C" bool ROOT_TImplicitMT_IsImplicitMTEnabled()
 
 extern "C" void ROOT_TImplicitMT_EnableParBranchProcessing()
 {
-   GetParBranchProcessingFlag() = true;
+   ++GetParBranchProcessingCount();
+};
+
+extern "C" void ROOT_TImplicitMT_DisableParBranchProcessing()
+{
+   --GetParBranchProcessingCount();
 };
 
 extern "C" bool ROOT_TImplicitMT_IsParBranchProcessingEnabled()
 {
-   return GetParBranchProcessingFlag();
+   return GetParBranchProcessingCount() > 0;
 };
 
 extern "C" void ROOT_TImplicitMT_EnableParTreeProcessing()
 {
-   GetParTreeProcessingFlag() = true;
+   ++GetParTreeProcessingCount();
+};
+
+extern "C" void ROOT_TImplicitMT_DisableParTreeProcessing()
+{
+   --GetParTreeProcessingCount();
 };
 
 extern "C" bool ROOT_TImplicitMT_IsParTreeProcessingEnabled()
 {
-   return GetParTreeProcessingFlag();
+   return GetParTreeProcessingCount() > 0;
 };

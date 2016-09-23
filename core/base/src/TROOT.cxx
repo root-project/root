@@ -404,6 +404,20 @@ namespace Internal {
    }
 
    //////////////////////////////////////////////////////////////////////////////
+   /// Globally disables the IMT use case of parallel branch processing,
+   /// deactivating the corresponding locks.
+   void DisableParBranchProcessing()
+   {
+#ifdef R__USE_IMT
+      static void (*sym)() = (void(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_DisableParBranchProcessing");
+      if (sym)
+         sym();
+#else
+      ::Warning("DisableParBranchProcessing", "Cannot disable parallel branch processing, please build ROOT with -Dimt=ON");
+#endif
+   }
+
+   //////////////////////////////////////////////////////////////////////////////
    /// Returns true if parallel branch processing is enabled.
    Bool_t IsParBranchProcessingEnabled()
    {
@@ -435,6 +449,20 @@ namespace Internal {
          sym();
 #else
       ::Warning("EnableParTreeProcessing", "Cannot enable parallel tree processing, please build ROOT with -Dimt=ON");
+#endif
+   }
+
+   //////////////////////////////////////////////////////////////////////////////
+   /// Globally disables the IMT use case of parallel branch processing,
+   /// deactivating the corresponding locks.
+   void DisableParTreeProcessing()
+   {
+#ifdef R__USE_IMT
+      static void (*sym)() = (void(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_DisableParTreeProcessing");
+      if (sym)
+         sym();
+#else
+      ::Warning("DisableParTreeProcessing", "Cannot disable parallel tree processing, please build ROOT with -Dimt=ON");
 #endif
    }
 

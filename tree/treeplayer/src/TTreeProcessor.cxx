@@ -50,8 +50,8 @@ using namespace ROOT;
 /// \param[in] func User-defined function that processes a subrange of entries
 void TTreeProcessor::Process(std::function<void(TTreeReader&)> func)
 {
-   // Make sure this IMT use-case is enabled
-   Internal::EnableParTreeProcessing();
+   // Enable this IMT use case (activate its locks)
+   Internal::ParTreeProcessingRAII ptpRAII;
 
    auto clusterIter = treeView->GetClusterIterator();
    Long64_t start = 0, end = 0;

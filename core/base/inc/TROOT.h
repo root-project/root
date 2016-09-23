@@ -72,11 +72,23 @@ namespace Internal {
 
    // Manage parallel branch processing
    void EnableParBranchProcessing();
+   void DisableParBranchProcessing();
    Bool_t IsParBranchProcessingEnabled();
+   class ParBranchProcessingRAII {
+   public:
+      ParBranchProcessingRAII()  { EnableParBranchProcessing();  }
+      ~ParBranchProcessingRAII() { DisableParBranchProcessing(); }
+   };
       
    // Manage parallel tree processing
    void EnableParTreeProcessing();
+   void DisableParTreeProcessing();
    Bool_t IsParTreeProcessingEnabled();
+   class ParTreeProcessingRAII {
+   public:
+      ParTreeProcessingRAII()  { EnableParTreeProcessing();  }
+      ~ParTreeProcessingRAII() { DisableParTreeProcessing(); }
+   };
 } } // End ROOT::Internal
 
 namespace ROOT {
