@@ -82,7 +82,7 @@ public:
   using HistImpl_t = Detail::THistImplPrecisionAgnosticBase<DIMENSIONS>;
 
 private:
-  std::weak_ptr<HistImpl_t> fHistImpl;
+  TUniWeakPtr<HistImpl_t> fHistImpl;
   THistDrawOptions<DIMENSIONS> fOpts;
 
   bool UpdateOldHist();

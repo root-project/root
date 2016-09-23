@@ -49,7 +49,7 @@ Internal::THistDrawableBase::operator=(THistDrawableBase&&) = default;
 template <int DIMENSIONS>
 bool
 THistDrawable<DIMENSIONS>::UpdateOldHist() {
-  auto implBase = fHistImpl.lock();
+  auto implBase = fHistImpl.Get();
   if (!implBase) {
     fOldHist.reset();
     return false;
