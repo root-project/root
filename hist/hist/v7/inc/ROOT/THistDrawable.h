@@ -92,6 +92,11 @@ public:
       fHistImpl(std::shared_ptr<HistImpl_t>(hist, hist->GetImpl())),
       fOpts(opts) {}
 
+   template<class HIST>
+   THistDrawable(const std::unique_ptr<HIST>&& hist, THistDrawOptions<DIMENSIONS> opts):
+      fHistImpl(std::move(hist->TakeImpl())),
+      fOpts(opts) {}
+
   /// Paint the histogram
   void Paint(TCanvas& canv) final {
     if (UpdateOldHist())
