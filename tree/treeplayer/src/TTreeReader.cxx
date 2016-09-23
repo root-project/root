@@ -308,7 +308,7 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
 
       Int_t currentTreeNumInChain = fTree->GetTreeNumber();
       if (treeNumInChain != currentTreeNumInChain) {
-            fDirector->SetTree(fTree->GetTree());
+         fDirector->SetTree(fTree->GetTree());
       }
    }
    else {
