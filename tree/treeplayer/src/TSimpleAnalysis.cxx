@@ -420,7 +420,7 @@ bool TSimpleAnalysis::Configure()
    // Error if the input file does not exist
    fIn.open(fConfigFile);
    if (!fIn) {
-      ::Error("TSimpleAnalysis", "File %s not found", fConfigFile.c_str());
+      ::Error("TSimpleAnalysis::Configure", "File %s not found", fConfigFile.c_str());
       return false;
    }
 
