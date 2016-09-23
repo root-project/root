@@ -30,19 +30,19 @@ static tbb::task_scheduler_init &GetScheduler()
    return scheduler;
 }
 
-static bool &GetIMTFlag()
+static bool &GetImplicitMTFlag()
 {
    static bool enabled = false;
    return enabled;
 }
 
-static bool &GetPBPFlag()
+static bool &GetParBranchProcessingFlag()
 {
    static bool enabled = false;
    return enabled;
 }
 
-static bool &GetPTPFlag()
+static bool &GetParTreeProcessingFlag()
 {
    static bool enabled = false;
    return enabled;
@@ -50,7 +50,7 @@ static bool &GetPTPFlag()
 
 extern "C" void ROOT_TImplicitMT_EnableImplicitMT(UInt_t numthreads)
 {
-   if (!GetIMTFlag()) {
+   if (!GetImplicitMTFlag()) {
       if (!GetScheduler().is_active()) {
          TThread::Initialize();
 
@@ -59,7 +59,7 @@ extern "C" void ROOT_TImplicitMT_EnableImplicitMT(UInt_t numthreads)
 
          GetScheduler().initialize(numthreads);
       }
-      GetIMTFlag() = true;
+      GetImplicitMTFlag() = true;
    }
    else {
       ::Warning("ROOT_TImplicitMT_EnableImplicitMT", "Implicit multi-threading is already enabled");
@@ -68,8 +68,8 @@ extern "C" void ROOT_TImplicitMT_EnableImplicitMT(UInt_t numthreads)
 
 extern "C" void ROOT_TImplicitMT_DisableImplicitMT()
 {
-   if (GetIMTFlag()) {
-      GetIMTFlag() = false;
+   if (GetImplicitMTFlag()) {
+      GetImplicitMTFlag() = false;
    }
    else {
       ::Warning("ROOT_TImplicitMT_DisableImplicitMT", "Implicit multi-threading is already disabled");
@@ -78,25 +78,25 @@ extern "C" void ROOT_TImplicitMT_DisableImplicitMT()
 
 extern "C" bool ROOT_TImplicitMT_IsImplicitMTEnabled()
 {
-   return GetIMTFlag();
+   return GetImplicitMTFlag();
 };
 
 extern "C" void ROOT_TImplicitMT_EnableParBranchProcessing()
 {
-   GetPBPFlag() = true;
+   GetParBranchProcessingFlag() = true;
 };
 
 extern "C" bool ROOT_TImplicitMT_IsParBranchProcessingEnabled()
 {
-   return GetPBPFlag();
+   return GetParBranchProcessingFlag();
 };
 
 extern "C" void ROOT_TImplicitMT_EnableParTreeProcessing()
 {
-   GetPTPFlag() = true;
+   GetParTreeProcessingFlag() = true;
 };
 
 extern "C" bool ROOT_TImplicitMT_IsParTreeProcessingEnabled()
 {
-   return GetPTPFlag();
+   return GetParTreeProcessingFlag();
 };

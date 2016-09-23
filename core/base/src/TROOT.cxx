@@ -386,7 +386,10 @@ namespace Internal {
 
    //////////////////////////////////////////////////////////////////////////////
    /// Globally enables the parallel branch processing, which is a case of
-   /// implicit multi-threading in ROOT.
+   /// implicit multi-threading (IMT) in ROOT, activating the required locks.
+   /// This IMT use case, implemented in TTree::GetEntry, spawns a task for
+   /// each branch of the tree. Therefore, a task takes care of the reading,
+   /// decompression and deserialisation of a given branch.
    void EnableParBranchProcessing()
    {
 #ifdef R__USE_IMT
@@ -417,7 +420,11 @@ namespace Internal {
 
    ////////////////////////////////////////////////////////////////////////////////
    /// Globally enables the parallel tree processing, which is a case of
-   /// implicit multi-threading in ROOT.
+   /// implicit multi-threading in ROOT, activating the required locks.
+   /// This IMT use case, implemented in TTreeProcessor::Process, receives a user
+   /// function and applies it to subranges of the tree, which correspond to its
+   /// clusters. Hence, for every cluster, a task is spawned to potentially
+   /// process it in parallel with the other clusters.
    void EnableParTreeProcessing()
    {
 #ifdef R__USE_IMT
