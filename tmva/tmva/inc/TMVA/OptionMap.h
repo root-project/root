@@ -44,15 +44,15 @@ namespace TMVA {
        {
        protected:
            TString fName;
-           std::map<const TString,TString> fOptMap; //
+           std::map<TString,TString> fOptMap; //
            TMVA::MsgLogger fLogger;                 //!
            class Binding
            {
            private:
-               std::map<const TString,TString> &fInternalMap;
+               std::map<TString,TString> &fInternalMap;
                TString fInternalKey;
            public:
-               Binding(std::map<const TString,TString>  &fmap,TString key):fInternalMap(fmap),fInternalKey(key){}
+               Binding(std::map<TString,TString>  &fmap,TString key):fInternalMap(fmap),fInternalKey(key){}
                Binding(const Binding &obj):fInternalMap(obj.fInternalMap)  
                {
                    fInternalKey  = obj.fInternalKey;
@@ -149,7 +149,7 @@ namespace TMVA {
                }
            }
 
-           template<class T> T GetValue(const TString key)
+           template<class T> T GetValue(const TString & key)
            {
                T result;
                fBinder.ParseValue(fOptMap[key],result,kFALSE);
@@ -157,7 +157,7 @@ namespace TMVA {
            }
            
            
-           template<class T> T GetValue(const TString key) const
+           template<class T> T GetValue(const TString & key) const
            {
                T result;
                std::stringstream oss;
