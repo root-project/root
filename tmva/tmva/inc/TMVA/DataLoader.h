@@ -60,6 +60,7 @@ namespace TMVA {
    class DataSetInfo;
    class DataSetManager;
    class VariableTransformBase;
+   class VarTransformHandler;
 
    class DataLoader : public Configurable {
       friend class Factory;
@@ -85,6 +86,8 @@ namespace TMVA {
 
       DataSetInfo& AddDataSet( DataSetInfo& );
       DataSetInfo& AddDataSet( const TString&  );
+      DataSetInfo& GetDataSetInfo();
+      DataLoader* VarTransform(TString trafoDefinition);
 
       // special case: signal/background
 
@@ -177,11 +180,11 @@ namespace TMVA {
       //Copy method use in VI and CV DEPRECATED: you can just call Clone  DataLoader *dl2=(DataLoader *)dl1->Clone("dl2")
       DataLoader* MakeCopy(TString name);
       friend void DataLoaderCopy(TMVA::DataLoader* des, TMVA::DataLoader* src);      
+      DataInputHandler&        DataInput() { return *fDataInputHandler; }
  
    private:
 
  
-      DataInputHandler&        DataInput() { return *fDataInputHandler; }
       DataSetInfo&             DefaultDataSetInfo();
       void                     SetInputTreesFromEventAssignTrees();
 
