@@ -5,6 +5,7 @@
 #ifndef ROOT_TMVA_CrossValidation
 #define ROOT_TMVA_CrossValidation
 
+
 #ifndef ROOT_TString
 #include "TString.h"
 #endif
@@ -13,26 +14,49 @@
 #include "TMultiGraph.h"
 #endif
 
-#ifndef ROOT_TCanvas
-#include "TCanvas.h"
+#ifndef ROOT_TMVA_IMethod
+#include "TMVA/IMethod.h"
+#endif
+#ifndef ROOT_TMVA_Configurable
+#include "TMVA/Configurable.h"
+#endif
+#ifndef ROOT_TMVA_Types
+#include "TMVA/Types.h"
+#endif
+#ifndef ROOT_TMVA_DataSet
+#include "TMVA/DataSet.h"
+#endif
+#ifndef ROOT_TMVA_Event
+#include "TMVA/Event.h"
+#endif
+#ifndef ROOT_TMVA_Results
+#include<TMVA/Results.h>
+#endif
+
+#ifndef ROOT_TMVA_Factory
+#include<TMVA/Factory.h>
 #endif
 
 #ifndef ROOT_TMVA_DataLoader
 #include<TMVA/DataLoader.h>
 #endif
 
-namespace TMVA {
+#ifndef ROOT_TMVA_OptionMap
+#include<TMVA/OptionMap.h>
+#endif
 
-  class Factory;
-  class DataLoader;
+#ifndef ROOT_TMVA_Algorithm
+#include<TMVA/Algorithm.h>
+#endif
+
+namespace TMVA {
 
    class CrossValidationResult
    {
      friend class CrossValidation;
    private:
-       std::map<UInt_t,Float_t>        fROCs;       //!
-       std::shared_ptr<TMultiGraph>    fROCCurves;  //!
-       Float_t              fROCAVG;
+       std::map<UInt_t,Float_t>        fROCs;
+       std::shared_ptr<TMultiGraph>    fROCCurves;
 
        std::vector<Double_t> fSigs;
        std::vector<Double_t> fSeps;
@@ -42,21 +66,22 @@ namespace TMVA {
        std::vector<Double_t> fEffAreas;
        std::vector<Double_t> fTrainEff01s;
        std::vector<Double_t> fTrainEff10s;
-       std::vector<Double_t> fTrainEff30s;
+       std::vector<Double_t> fTrainEff30s;       
+       
    public:
        CrossValidationResult();
        CrossValidationResult(const CrossValidationResult &);
-       ~CrossValidationResult();
+       ~CrossValidationResult(){fROCCurves=nullptr;}
        
-       void SetROCValue(UInt_t fold,Float_t rocint);
        
        std::map<UInt_t,Float_t> GetROCValues(){return fROCs;}
        Float_t GetROCAverage() const;
-       std::shared_ptr<TMultiGraph> &GetROCCurves();
+       TMultiGraph *GetROCCurves(Bool_t fLegend=kTRUE);
        void Print() const ;
        
        TCanvas* Draw(const TString name="CrossValidation") const;
-
+       
+       
        std::vector<Double_t> GetSigValues(){return fSigs;}
        std::vector<Double_t> GetSepValues(){return fSeps;}
        std::vector<Double_t> GetEff01Values(){return fEff01s;}
@@ -66,29 +91,29 @@ namespace TMVA {
        std::vector<Double_t> GetTrainEff01Values(){return fTrainEff01s;}
        std::vector<Double_t> GetTrainEff10Values(){return fTrainEff10s;}
        std::vector<Double_t> GetTrainEff30Values(){return fTrainEff30s;}
-
-       //        ClassDef(CrossValidationResult,0);
+       
    };
-
-   class CrossValidation : public Configurable {
+   
+    
+   class CrossValidation : public Algorithm {
+       UInt_t                 fNumFolds;     //!
+       CrossValidationResult  fResults;      //!
+       Bool_t                 fFoldStatus;   //
    public:
-
-     CrossValidation();
-     CrossValidation(DataLoader *loader);
-     ~CrossValidation();
-
-     CrossValidationResult* CrossValidate( TString theMethodName, TString methodTitle, TString theOption = "", int NumFolds = 5);
-     CrossValidationResult* CrossValidate( Types::EMVA theMethod,  TString methodTitle, TString theOption = "" );
-
-     inline void SetDataLoader(DataLoader *loader){fDataLoader=loader;}
-     inline DataLoader *GetDataLoader(){return fDataLoader;}
-
+        explicit CrossValidation(DataLoader *loader);
+       ~CrossValidation();
+       
+       void SetNumFolds(UInt_t i);//{fNumFolds=i;}
+       UInt_t GetNumFolds(){return fNumFolds;}
+       
+       virtual void Evaluate();
+//        void EvaluateFold(UInt_t fold);//used in ParallelExecution
+       
+       const CrossValidationResult& GetResults() const {return fResults;}//I need to think about this which is the best way to get the results
+                     
    private:
-     Factory    *fClassifier;
-     DataLoader *fDataLoader;
-
-   public:
-     //        ClassDef(CrossValidation,1);
+       std::unique_ptr<Factory>     fClassifier; //!
+       ClassDef(CrossValidation,0);
    };
 } 
 

@@ -228,9 +228,8 @@ namespace TMVA {
 
    protected:
 
-      ClassDef(DataLoader,2);
+      ClassDef(DataLoader,3);
    };
-   //utility function to copy dataloaders DEPRECATED: you can just call Clone  DataLoader *dl2=(DataLoader *)dl1->Clone("dl2")
    void DataLoaderCopy(TMVA::DataLoader* des, TMVA::DataLoader* src);
 } // namespace TMVA
 
