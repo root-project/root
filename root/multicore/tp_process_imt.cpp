@@ -79,12 +79,11 @@ int main(int argc, char** argv) {
 
      auto start = myReader.GetCurrentEntry();
 
-     double maxPt;
+     double maxPt = -1.;
      while(myReader.Next()) {
         auto evtNum (*eventNumRV);
 
         auto tracks = *tracksRV;
-        maxPt = -1.;
         for (auto&& track : tracks){
            auto pt = track.Pt();
            if (pt>maxPt) maxPt = pt;
