@@ -159,8 +159,7 @@ public:
    Bool_t IsChain() const { return TestBit(kBitIsChain); }
 
    Bool_t Next() { return SetEntry(GetCurrentEntry() + 1) == kEntryValid; }
-   EEntryStatus SetEntry(Long64_t entry) { return SetEntryBase(entry, kFALSE); }
-   EEntryStatus SetLocalEntry(Long64_t entry) { return SetEntryBase(entry, kTRUE); }
+   EEntryStatus SetEntry(Long64_t entry);
    void SetLastEntry(Long64_t entry) { fLastEntry = entry; }
    EEntryStatus SetEntriesRange(Long64_t first, Long64_t last);
 
@@ -184,8 +183,6 @@ protected:
 
    void RegisterValueReader(ROOT::Internal::TTreeReaderValueBase* reader);
    void DeregisterValueReader(ROOT::Internal::TTreeReaderValueBase* reader);
-
-   EEntryStatus SetEntryBase(Long64_t entry, Bool_t local);
 
 private:
 
