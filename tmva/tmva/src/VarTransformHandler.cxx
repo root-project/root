@@ -1,3 +1,18 @@
+#include "TMVA/VarTransformHandler.h"
+
+#include "TMVA/ClassifierFactory.h"
+#include "TMVA/DataLoader.h"
+#include "TMVA/Event.h"
+#include "TMVA/DataInputHandler.h"
+#include "TMVA/DataSet.h"
+#include "TMVA/DataSetInfo.h"
+#include "TMVA/MethodBase.h"
+#include "TMVA/MethodDNN.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/Tools.h"
+#include "TMVA/Types.h"
+#include "TMVA/VariableInfo.h"
+
 #include "TMath.h"
 #include "TVectorD.h"
 #include "TFile.h"
@@ -5,29 +20,15 @@
 #include "TMatrix.h"
 #include "TMatrixTSparse.h"
 #include "TMatrixDSparsefwd.h"
-#include <TCanvas.h>
+#include "TCanvas.h"
 #include "TGraph.h"
 #include "TStyle.h"
 #include "TLegend.h"
 #include "TH2.h"
 
-#include "TMVA/VarTransformHandler.h"
-#include "TMVA/DataSet.h"
-#include "TMVA/DataSetInfo.h"
-#include "TMVA/Event.h"
-#include "TMVA/Tools.h"
-#include "TMVA/Types.h"
-#include "TMVA/MethodBase.h"
-#include "TMVA/MethodDNN.h"
-#include "TMVA/MsgLogger.h"
-#include "TMVA/DataLoader.h"
-#include "TMVA/ClassifierFactory.h"
-#include "TMVA/DataInputHandler.h"
-
-
-#include <vector>
-#include <iomanip>
 #include <algorithm>
+#include <iomanip>
+#include <vector>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor

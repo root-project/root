@@ -9,11 +9,15 @@
 * For the list of contributors see $ROOTSYS/README/CREDITS.             *
 *************************************************************************/
 
+#include "v5/TFormulaPrimitive.h"
+
+#include "TMath.h"
+#include "TNamed.h"
+#include "TObjArray.h"
+#include "TVirtualMutex.h"
+
 #include <math.h>
 
-#include "v5/TFormulaPrimitive.h"
-#include "TMath.h"
-#include "TVirtualMutex.h"
 #ifdef WIN32
 #pragma optimize("",off)
 #endif

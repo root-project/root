@@ -1,18 +1,32 @@
 // @(#)root/tmva $Id$
 // Author: Omar Zapata and Sergei Gleyzer
 
-#include <iostream>
-
 #include "TMVA/VariableImportance.h"
+
+#include "TMVA/Config.h"
+#include "TMVA/DataSetInfo.h"
+#include "TMVA/Envelope.h"
+#include "TMVA/Factory.h"
+#include "TMVA/OptionMap.h"
 #include "TMVA/MethodBase.h"
-#include "TSystem.h"
+#include "TMVA/MethodCategory.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/Types.h"
+#include "TMVA/VarTransformHandler.h"
+
 #include "TAxis.h"
-#include "TCanvas.h"
 #include "TGraph.h"
-#include <memory>
+#include "TCanvas.h"
+#include "TH1.h"
+#include "TRandom3.h"
+#include "TStyle.h"
+#include "TSystem.h"
+
 #include <bitset>
+#include <iostream>
+#include <memory>
 #include <utility>
-#include <TStyle.h>
+
 
 //number of bits for bitset
 #define NBITS          32

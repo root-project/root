@@ -1,16 +1,22 @@
 // @(#)root/tmva $Id$
 // Author: Omar Zapata
 
-#include <iostream>
-
 #include "TMVA/Envelope.h"
+
+#include "TMVA/Configurable.h"
+#include "TMVA/DataLoader.h"
 #include "TMVA/MethodBase.h"
+#include "TMVA/OptionMap.h"
 #include "TMVA/ResultsClassification.h"
-#include "TSystem.h"
+#include "TMVA/Types.h"
+
 #include "TAxis.h"
 #include "TCanvas.h"
+#include "TFile.h"
 #include "TGraph.h"
-#include "TMVA/DataLoader.h"
+#include "TSystem.h"
+
+#include <iostream>
 
 using namespace TMVA;
 
