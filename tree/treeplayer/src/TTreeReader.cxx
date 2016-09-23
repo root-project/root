@@ -267,7 +267,7 @@ TTreeReader::EEntryStatus TTreeReader::SetEntriesRange(Long64_t first, Long64_t 
       fLastEntry = last;
    else
       fLastEntry = -1;
-   return SetLocalEntry(first);
+   return SetEntry(first);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
