@@ -120,7 +120,7 @@ void TMVA::CrossValidation::Evaluate()
     
         gr->SetLineColor(i+1);
         gr->SetLineWidth(2);
-        gr->SetTitle(fDataLoader->GetName());
+        gr->SetTitle(foldTitle.Data());
     
         fResults.fROCCurves->Add(gr);
     
