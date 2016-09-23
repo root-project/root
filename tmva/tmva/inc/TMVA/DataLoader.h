@@ -54,7 +54,7 @@ class TH2;
 namespace TMVA {
 
    class IMethod;
-   class Algorithm;
+   class Envelope;
    class MethodBase;
    class DataInputHandler;
    class DataSetInfo;
@@ -63,7 +63,7 @@ namespace TMVA {
 
    class DataLoader : public Configurable {
       friend class Factory;
-      friend class Algorithm;
+      friend class Envelope;
    public:
 
        DataLoader( TString thedlName="default");

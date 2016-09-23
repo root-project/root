@@ -30,8 +30,8 @@
 #include<TMVA/OptionMap.h>
 #endif
 
-#ifndef ROOT_TMVA_Algorithm
-#include<TMVA/Algorithm.h>
+#ifndef ROOT_TMVA_Envelope
+#include<TMVA/Envelope.h>
 #endif
 
 namespace TMVA {
@@ -56,7 +56,7 @@ namespace TMVA {
    };
    
     
-   class VariableImportance : public Algorithm {
+   class VariableImportance : public Envelope {
    private:
        UInt_t                    fNumFolds;
        VariableImportanceResult  fResults;

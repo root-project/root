@@ -13,7 +13,7 @@
 #pragma link C++ class TMVA::kNN::Event+;
 #pragma link C++ class TMVA::Factory+;
 
-#pragma link C++ class TMVA::Algorithm+;
+#pragma link C++ class TMVA::Envelope+;
 #pragma link C++ class TMVA::OptionMap+;
 #pragma link C++ class TMVA::VariableImportance+;
 #pragma link C++ class TMVA::CrossValidation+;

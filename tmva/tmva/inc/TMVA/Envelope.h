@@ -8,8 +8,8 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-#ifndef ROOT_TMVA_Algorithm
-#define ROOT_TMVA_Algorithm
+#ifndef ROOT_TMVA_Envelope
+#define ROOT_TMVA_Envelope
 
 #include <sstream>
 #include<iostream>
@@ -47,12 +47,12 @@
 namespace TMVA {    
     
        /**
-        *      \class Algorithm
+        *      \class Envelope
         *         Base class for all machine learning algorithms
         *      \ingroup TMVA
         */
       
-      class Algorithm:public Configurable
+      class Envelope:public Configurable
       {
       protected:
           OptionMap                    fMethod;           //Booked method information
@@ -62,8 +62,8 @@ namespace TMVA {
           Bool_t                       fVerbose;          //flag for extra information
           
           /**
-           Constructor for the initialization of Algorithms,
-           differents Algorithms may needs differents constructors then
+           Constructor for the initialization of Envelopes,
+           differents Envelopes may needs differents constructors then
            this is a generic one protected.
            \param name the name algorithm.
            \param dataloader TMVA::DataLoader object with the data.
@@ -71,13 +71,13 @@ namespace TMVA {
            \param options extra options for the algorithm.
           */
 
-          Algorithm(const TString &name,DataLoader *dataloader=nullptr,TFile *file=nullptr,const TString options="");
+          Envelope(const TString &name,DataLoader *dataloader=nullptr,TFile *file=nullptr,const TString options="");
           
       public:
           /**
            Default destructor
            */
-          ~Algorithm();
+          ~Envelope();
           
           /**
             Method to book the machine learning method to perform the algorithm.
@@ -176,7 +176,7 @@ namespace TMVA {
             \return TMVA::DataSetManager pointer.
           */
           DataSetManager*          GetDataLoaderDataSetManager(){return fDataLoader->fDataSetManager;}
-          ClassDef(Algorithm,0);
+          ClassDef(Envelope,0);
           
       };
 }

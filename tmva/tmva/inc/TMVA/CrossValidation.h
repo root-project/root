@@ -45,8 +45,8 @@
 #include<TMVA/OptionMap.h>
 #endif
 
-#ifndef ROOT_TMVA_Algorithm
-#include<TMVA/Algorithm.h>
+#ifndef ROOT_TMVA_Envelope
+#include<TMVA/Envelope.h>
 #endif
 
 namespace TMVA {
@@ -95,7 +95,7 @@ namespace TMVA {
    };
    
     
-   class CrossValidation : public Algorithm {
+   class CrossValidation : public Envelope {
        UInt_t                 fNumFolds;     //!
        CrossValidationResult  fResults;      //!
        Bool_t                 fFoldStatus;   //
