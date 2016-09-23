@@ -66,19 +66,47 @@ public:
   /// Outline the implementation in sources.
   ~TCanvas();
 
-  /// Add a something to be painted. The pad claims shared ownership.
+  /// Add something to be painted. The pad claims shared ownership.
   template<class T>
-  void Draw(std::shared_ptr <T> what) {
+  void Draw(const std::shared_ptr<T>& what) {
     // Requires GetDrawable(what, options) to be known!
     fPrimitives.emplace_back(GetDrawable(what));
   }
 
-  /// Add a something to be painted, with options. The pad claims shared ownership.
+  /// Add something to be painted, with options. The pad claims shared ownership.
   template<class T, class OPTIONS>
-  void Draw(std::shared_ptr <T> what, const OPTIONS &options) {
+  void Draw(const std::shared_ptr<T>& what, const OPTIONS &options) {
     // Requires GetDrawable(what, options) to be known!
     fPrimitives.emplace_back(GetDrawable(what, options));
   }
+
+  /// Add something to be painted. The pad claims ownership.
+  template<class T>
+  void Draw(std::unique_ptr<T>&& what) {
+    // Requires GetDrawable(what, options) to be known!
+    fPrimitives.emplace_back(GetDrawable(std::move(what)));
+  }
+
+  /// Add something to be painted, with options. The pad claims ownership.
+  template<class T, class OPTIONS>
+  void Draw(std::unique_ptr<T>&& what, const OPTIONS &options) {
+    // Requires GetDrawable(what, options) to be known!
+    fPrimitives.emplace_back(GetDrawable(std::move(what), options));
+  }
+
+   /// Add a copy of something to be painted.
+   template<class T>
+   void Draw(const T& what) {
+     // Requires GetDrawable(what, options) to be known!
+     fPrimitives.emplace_back(GetDrawable(std::make_unique<T>(what)));
+   }
+
+   /// Add a copy of something to be painted, with options. The pad claims ownership.
+   template<class T, class OPTIONS>
+   void Draw(const T& what, const OPTIONS &options) {
+     // Requires GetDrawable(what, options) to be known!
+     fPrimitives.emplace_back(GetDrawable(std::make_unique<T>(what), options));
+   }
 
   /// Remove an object from the list of primitives.
   //TODO: void Wipe();
