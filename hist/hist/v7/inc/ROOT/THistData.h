@@ -386,11 +386,6 @@ private:
   /// Fall-back case for check whether `double T::GetBinUncertaintyImpl(int)` can be called.
   template <class T>
   static char HaveUncertainty(...);
-  /// Store whether `double T::GetBinUncertaintyImpl(int)` can be called.
-  template <class T>
-  static constexpr const bool fgHaveUncertainty
-    = sizeof(HaveUncertainty<T>(nullptr)) == sizeof(double);
-  struct AllYourBaseAreBelongToUs: public BASES... {};
 
 public:
   THistBinStat(DATA& data, int index):
@@ -399,7 +394,8 @@ public:
   /// Whether this provides storage for uncertainties, or whether uncertainties
   /// are determined as poisson uncertainty of the content.
   static constexpr bool HasBinUncertainty() {
-    return fgHaveUncertainty<AllYourBaseAreBelongToUs>;
+    struct AllYourBaseAreBelongToUs: public BASES... {};
+    return sizeof(HaveUncertainty<AllYourBaseAreBelongToUs>(nullptr)) == sizeof(double);
   }
   /// Calculate the bin content's uncertainty for the given bin, using base class information,
   /// i.e. forwarding to a base's `GetUncertaintyImpl()`.
@@ -434,11 +430,6 @@ private:
   /// Fall-back case for check whether `double T::GetBinUncertaintyImpl(int)` can be called.
   template <class T>
   static char HaveUncertainty(...);
-  /// Store whether `double T::GetBinUncertaintyImpl(int)` can be called.
-  template <class T>
-  static constexpr const bool fgHaveUncertainty
-    = sizeof(HaveUncertainty<T>(nullptr)) == sizeof(double);
-  struct AllYourBaseAreBelongToUs: public STAT<DIMENSIONS, PRECISION, STORAGE>... {};
 
 public:
   /// Matching THist
@@ -491,7 +482,8 @@ public:
   /// Whether this provides storage for uncertainties, or whether uncertainties
   /// are determined as poisson uncertainty of the content.
   static constexpr bool HasBinUncertainty() {
-    return fgHaveUncertainty<AllYourBaseAreBelongToUs>;
+    struct AllYourBaseAreBelongToUs: public STAT<DIMENSIONS, PRECISION, STORAGE>... {};
+    return sizeof(HaveUncertainty<AllYourBaseAreBelongToUs>(nullptr)) == sizeof(double);
   }
 
   /// Calculate the bin content's uncertainty for the given bin, using base class information,
