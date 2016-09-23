@@ -5261,7 +5261,7 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
             if (gDebug > 0) {
                std::stringstream ss;
                ss << std::this_thread::get_id();
-               Info("GetEntry", "[IMT] Thread %lu", std::stoul(ss.str()));
+               Info("GetEntry", "[IMT] Thread %s", ss.str().c_str());
                Info("GetEntry", "[IMT] Running task for branch #%d: %s", j, branch->GetName());
             }
 
