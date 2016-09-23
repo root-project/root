@@ -286,7 +286,7 @@ Long64_t TTreeReader::GetCurrentEntry() const {
 /// Load an entry into the tree, return the status of the read.
 /// For chains, entry is the global (i.e. not tree-local) entry number.
 
-TTreeReader::EEntryStatus TTreeReader::SetEntry(Long64_t entry)
+TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local)
 {
    if (!fTree) {
       fEntryStatus = kEntryNoTree;
@@ -295,21 +295,25 @@ TTreeReader::EEntryStatus TTreeReader::SetEntry(Long64_t entry)
 
    TTree* prevTree = fDirector->GetTree();
 
-   Long64_t localEntry;
-   Int_t treeNumInChain = fTree->GetTreeNumber();
+   Long64_t loadResult;
+   if (!local){
+      Int_t treeNumInChain = fTree->GetTreeNumber();
 
-   localEntry = fTree->LoadTree(entry);
+      loadResult = fTree->LoadTree(entry);
 
-   if (localEntry == -2) {
-      fEntryStatus = kEntryNotFound;
-      return fEntryStatus;
+      if (loadResult == -2) {
+         fEntryStatus = kEntryNotFound;
+         return fEntryStatus;
+      }
+
+      Int_t currentTreeNumInChain = fTree->GetTreeNumber();
+      if (treeNumInChain != currentTreeNumInChain) {
+         fDirector->SetTree(fTree->GetTree());
+      }
    }
-
-   Int_t currentTreeNumInChain = fTree->GetTreeNumber();
-   if (treeNumInChain != currentTreeNumInChain) {
-      fDirector->SetTree(fTree->GetTree());
+   else {
+      loadResult = entry;
    }
-
    if (!prevTree || fDirector->GetReadEntry() == -1 || !fProxiesSet) {
       // Tell readers we now have a tree
       for (std::deque<ROOT::Internal::TTreeReaderValueBase*>::const_iterator
@@ -324,11 +328,11 @@ TTreeReader::EEntryStatus TTreeReader::SetEntry(Long64_t entry)
       // If at least one proxy was there and no error occurred, we assume the proxies to be set.
       fProxiesSet = !fValues.empty();
    }
-   if (fLastEntry >= 0 && localEntry >= fLastEntry) {
+   if (fLastEntry >= 0 && loadResult >= fLastEntry) {
       fEntryStatus = kEntryLast;
       return fEntryStatus;
    }
-   fDirector->SetReadEntry(localEntry);
+   fDirector->SetReadEntry(loadResult);
    fEntryStatus = kEntryValid;
    return fEntryStatus;
 }
