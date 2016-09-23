@@ -42,8 +42,10 @@
 #include "TMath.h"
 #include "TObjString.h"
 #include "TRandom3.h"
+#include "TSystem.h"
 
 #include <string.h>
+#include <iomanip>
 
 #include "TMVA/Configurable.h"
 #include "TMVA/DataLoader.h"
@@ -58,6 +60,7 @@
 #include "TMVA/DataSetInfo.h"
 #include "TMVA/MethodBoost.h"
 #include "TMVA/MethodCategory.h"
+#include "TMVA/VarTransformHandler.h"
 
 #include "TMVA/VariableInfo.h"
 #include "TMVA/VariableIdentityTransform.h"
@@ -73,6 +76,7 @@
 #include "TMVA/ResultsMulticlass.h"
 #include "TMVA/Types.h"
 
+#include "TMVA/Types.h"
 
 ClassImp(TMVA::DataLoader)
 
