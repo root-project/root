@@ -21,10 +21,13 @@
  **********************************************************************************/
 #ifndef ROOT_TMVA_ROCCurve
 #define ROOT_TMVA_ROCCurve
-#include <vector>
-#include <sstream>
-#include <iostream>
+
+#include "Rtypes.h"
+
 #include <iomanip>
+#include <iostream>
+#include <sstream>
+#include <vector>
 
 class TList;
 class TTree;
