@@ -79,7 +79,7 @@ public:
 
       ~Accessor() {
          if (fIsShared)
-            fShared.~shared_ptr<T>();
+            fShared.~shared_ptr();
       }
    };
 
@@ -94,9 +94,9 @@ public:
 
    ~TUniWeakPtr() {
       if (fIsWeak)
-         fWeak.~weak_ptr<T>();
+         fWeak.~weak_ptr();
       else
-         fUnique.~unique_ptr<T>();
+         fUnique.~unique_ptr();
    }
 
    Accessor Get() const { return Accessor(*this); }
