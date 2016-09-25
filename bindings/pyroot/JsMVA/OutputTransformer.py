@@ -311,7 +311,7 @@ class transformTMVAOutputToHTML:
         self.err = ""
         if str(error).find(", time left:")==-1:
             self.err = error
-        self.out = "<table class='tmva_output_table'>"
+        self.out = ""
         self.lines = output.splitlines()
         self.iterLines = iter(xrange(len(self.lines)))
         for self.lineIndex in self.iterLines:
@@ -357,5 +357,7 @@ class transformTMVAOutputToHTML:
                     self.out += "<tr><td>"+lines[ii]+"</td></tr>"
             else:
                 self.out += line
-        self.out += "</table>"
+        if len(self.out) < 1 and len(self.err) < 1:
+            return ("", "", "")
+        self.out = "<table class='tmva_output_table'>" + self.out + "</table>"
         return (self.out, self.err, "html")
