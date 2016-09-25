@@ -180,6 +180,7 @@ void TMVA::IPythonInteractive::Init(std::vector<TString>& graphTitles)
     fGraphs.back()->SetTitle(title);
     fGraphs.back()->SetName(title);
     fGraphs.back()->SetFillColor(color);
+    fGraphs.back()->SetLineColor(color);
     fGraphs.back()->SetMarkerColor(color);
     fMultiGraph->Add(fGraphs.back());
     color      += 2;

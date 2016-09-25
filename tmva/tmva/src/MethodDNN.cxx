@@ -566,6 +566,8 @@ void TMVA::MethodDNN::Train()
    TMVA::DNN::Net      net;
    std::vector<double> weights;
 
+   net.SetIpythonInteractive(fInteractive, &fExitFromTraining, &fIPyMaxIter, &fIPyCurrentIter);
+
    net.setInputSize(fNet.GetInputWidth() + 1);
    net.setOutputSize(fNet.GetOutputWidth() + 1);
 
