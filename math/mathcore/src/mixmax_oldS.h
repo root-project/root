@@ -17,13 +17,13 @@
 #define N _N
 #endif
 
-#ifndef __LP64__
+//#ifndef __LP64__
 typedef uint64_t myuint;
 //#warning but no problem,  'myuint' is 'uint64_t'
-#else
-typedef unsigned long long int myuint;
+//#else
+//typedef unsigned long long int myuint;
 //#warning but no problem,  'myuint' is 'unsigned long long int'
-#endif
+//#endif
 
 struct rng_state_st
 {
