@@ -1,15 +1,32 @@
-#ifndef ROOT_TList
+/**********************************************************************************
+ * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
+ * Package: TMVA                                                                  *
+ * Class  : Interval                                                              *
+ * Web    : http://tmva.sourceforge.net                                           *
+ *                                                                                *
+ * Description:                                                                   *
+ *          Extension of the Interval to "logarithmic" invarvals                  *
+ *                                                                                *
+ *                                                                                *
+ *                                                                                *
+ * Authors (alphabetical):                                                        *
+ *      Abhinav Moudgil                                                           *
+ *                                                                                *
+ * Copyright (c) 2005:                                                            *
+ *      CERN, Switzerland                                                         *
+ *                                                                                *
+ * Redistribution and use in source and binary forms, with or without             *
+ * modification, are permitted according to the terms listed in LICENSE           *
+ * (http://tmva.sourceforge.net/LICENSE)                                          *
+ **********************************************************************************/
+
+#ifndef ROOT_TMVA_VarTransformHandler
+#define ROOT_TMVA_VarTransformHandler
+
 #include "TList.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_TMVA_Types
 #include "TMVA/Types.h"
-#endif
-#ifndef ROOT_TMVA_DataSetInfo
 #include "TMVA/DataSetInfo.h"
-#endif
 
 class TTree;
 class TFile;
@@ -44,3 +61,5 @@ namespace TMVA {
       void                          CopyDataLoader(TMVA::DataLoader* des, TMVA::DataLoader* src);
    };
 }
+
+#endif
