@@ -20,7 +20,7 @@
 #include <string>
 #include <vector>
 
-#include "ROOT/TDrawable.h"
+#include "ROOT/TDrawable.hxx"
 
 namespace ROOT {
 namespace Experimental {

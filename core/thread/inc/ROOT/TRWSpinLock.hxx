@@ -14,7 +14,7 @@
 #define ROOT_TRWSpinLock
 
 #ifndef ROOT_TSpinMutex
-#include "TSpinMutex.h"
+#include "TSpinMutex.hxx"
 #endif
 
 #include <atomic>

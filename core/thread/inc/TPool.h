@@ -13,7 +13,7 @@
 #define ROOT_TPOOL
 
 #include "TCollection.h"
-#include "ROOT/TSeq.h"
+#include "ROOT/TSeq.hxx"
 
 
 template<class subc>

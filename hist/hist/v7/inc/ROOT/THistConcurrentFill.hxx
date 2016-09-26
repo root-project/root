@@ -15,8 +15,8 @@
 #ifndef ROOT7_THistConcurrentFill
 #define ROOT7_THistConcurrentFill
 
-#include "ROOT/RArrayView.h"
-#include "ROOT/THistBufferedFill.h"
+#include "ROOT/RArrayView.hxx"
+#include "ROOT/THistBufferedFill.hxx"
 
 #include <mutex>
 

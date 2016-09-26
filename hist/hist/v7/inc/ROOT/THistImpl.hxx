@@ -16,12 +16,12 @@
 #define ROOT7_THistImpl
 
 #include <cctype>
-#include "ROOT/RArrayView.h"
-#include "ROOT/RTupleApply.h"
+#include "ROOT/RArrayView.hxx"
+#include "ROOT/RTupleApply.hxx"
 
-#include "ROOT/TAxis.h"
-#include "ROOT/THistBinIter.h"
-#include "ROOT/THistUtils.h"
+#include "ROOT/TAxis.hxx"
+#include "ROOT/THistBinIter.hxx"
+#include "ROOT/THistUtils.hxx"
 
 class TRootIOCtor;
 

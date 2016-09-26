@@ -31,7 +31,7 @@ namespace std {
 }
 
 #else
-# include "ROOT/rhysd_array_view.h"
+# include "ROOT/rhysd_array_view.hxx"
 #endif
 
 #endif

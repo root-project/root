@@ -29,7 +29,7 @@
 #endif
 
 #ifndef ROOT_TThreadedObject
-#include "ROOT/TThreadedObject.h"
+#include "ROOT/TThreadedObject.hxx"
 #endif
 
 #ifndef ROOT_TError

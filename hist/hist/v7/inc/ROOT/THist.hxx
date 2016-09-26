@@ -15,13 +15,13 @@
 #ifndef ROOT7_THist
 #define ROOT7_THist
 
-#include "ROOT/RArrayView.h"
-#include "ROOT/TAxis.h"
-#include "ROOT/TDrawable.h"
-#include "ROOT/THistBinIter.h"
-#include "ROOT/THistDrawable.h"
-#include "ROOT/THistImpl.h"
-#include "ROOT/THistData.h"
+#include "ROOT/RArrayView.hxx"
+#include "ROOT/TAxis.hxx"
+#include "ROOT/TDrawable.hxx"
+#include "ROOT/THistBinIter.hxx"
+#include "ROOT/THistDrawable.hxx"
+#include "ROOT/THistImpl.hxx"
+#include "ROOT/THistData.hxx"
 #include <initializer_list>
 
 namespace ROOT {

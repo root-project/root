@@ -12,9 +12,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/THistDrawable.h"
+#include "ROOT/THistDrawable.hxx"
 
-#include "ROOT/THistImpl.h"
+#include "ROOT/THistImpl.hxx"
 
 #include "TH1.h"
 #include "TH2.h"

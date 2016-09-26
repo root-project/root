@@ -12,7 +12,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/TFile.h"
+#include "ROOT/TFile.hxx"
 #include "TFile.h"
 
 #include <memory>

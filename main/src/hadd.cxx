@@ -79,7 +79,7 @@
 #include "Riostream.h"
 #include "TClass.h"
 #include "TSystem.h"
-#include "ROOT/StringConv.h"
+#include "ROOT/StringConv.hxx"
 #include <stdlib.h>
 #include <climits>
 

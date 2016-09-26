@@ -12,9 +12,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//#include "ROOT/THistPainter.h" see ROOT/THistDrawable.h
+//#include "ROOT/THistPainter.hxx" see ROOT/THistDrawable.h
 
-#include "ROOT/THistDrawable.h"
+#include "ROOT/THistDrawable.hxx"
 #include "TH1.h"
 
 #include <iostream>

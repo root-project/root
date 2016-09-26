@@ -15,7 +15,7 @@
 #ifndef ROOT7_TFile
 #define ROOT7_TFile
 
-#include "ROOT/TDirectory.h"
+#include "ROOT/TDirectory.hxx"
 
 #include "TClass.h"
 

@@ -15,7 +15,7 @@
 #ifndef ROOT7_THistBinIter
 #define ROOT7_THistBinIter
 
-#include <ROOT/TIndexIter.h>
+#include "ROOT/TIndexIter.hxx"
 
 namespace ROOT {
 namespace Experimental {

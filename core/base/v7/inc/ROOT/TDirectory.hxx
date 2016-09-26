@@ -15,8 +15,8 @@
 #ifndef ROOT7_TDirectory
 #define ROOT7_TDirectory
 
-#include "ROOT/TLogger.h"
-#include "ROOT/TDirectoryEntry.h"
+#include "ROOT/TLogger.hxx"
+#include "ROOT/TDirectoryEntry.hxx"
 
 #include <iterator>
 #include <memory>

@@ -15,7 +15,7 @@
 #ifndef ROOT7_THistView
 #define ROOT7_THistView
 
-#include "ROOT/THist.h"
+#include "ROOT/THist.hxx"
 
 namespace ROOT {
 namespace Experimental {

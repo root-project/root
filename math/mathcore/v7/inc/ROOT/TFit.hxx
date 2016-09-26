@@ -20,7 +20,7 @@
 
 #include "ROOT/RArrayView.h"
 
-#include "ROOT/THist.h"
+#include "ROOT/THist.hxx"
 
 namespace ROOT {
 namespace Experimental {

@@ -19,9 +19,9 @@
 
 R__LOAD_LIBRARY(libGpad);
 
-#include "ROOT/THist.h"
-#include "ROOT/Canvas.h"
-#include "ROOT/TDirectory.h"
+#include "ROOT/THist.hxx"
+#include "ROOT/Canvas.hxx"
+#include "ROOT/TDirectory.hxx"
 
 void draw() {
   using namespace ROOT;

@@ -391,7 +391,7 @@ End_Macro
 #include "TBranchSTL.h"
 #include "TSchemaRuleSet.h"
 #include "TFileMergeInfo.h"
-#include "ROOT/StringConv.h"
+#include "ROOT/StringConv.hxx"
 
 #include <chrono>
 #include <cstddef>

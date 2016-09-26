@@ -15,9 +15,9 @@
 #ifndef ROOT7_THistDrawable
 #define ROOT7_THistDrawable
 
-#include "ROOT/TDrawable.h"
-#include "ROOT/THistDrawOptions.h"
-#include "ROOT/TLogger.h"
+#include "ROOT/TDrawable.hxx"
+#include "ROOT/THistDrawOptions.hxx"
+#include "ROOT/TLogger.hxx"
 
 #include <memory>
 

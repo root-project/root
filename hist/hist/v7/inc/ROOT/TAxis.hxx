@@ -22,7 +22,7 @@
 #include <vector>
 
 #include "RStringView.h"
-#include "ROOT/TLogger.h"
+#include "ROOT/TLogger.hxx"
 
 namespace ROOT {
 namespace Experimental {

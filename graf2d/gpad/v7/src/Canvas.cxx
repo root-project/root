@@ -13,13 +13,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/Canvas.h"
+#include "ROOT/Canvas.hxx"
 
-#include "ROOT/TDrawable.h"
+#include "ROOT/TDrawable.hxx"
 #include "TCanvas.h"
 #include "TROOT.h"
 
-#include "ROOT/TLogger.h"
+#include "ROOT/TLogger.hxx"
 
 #include <memory>
 

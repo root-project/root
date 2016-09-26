@@ -24,7 +24,7 @@ objects.
 */
 
 #include "TROOT.h"
-#include "ROOT/TTreeProcessor.h"
+#include "ROOT/TTreeProcessor.hxx"
 
 #include "tbb/task.h"
 #include "tbb/task_group.h"

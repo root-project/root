@@ -17,8 +17,8 @@
 
 #include <cmath>
 #include <vector>
-#include "ROOT/RArrayView.h"
-#include "ROOT/THistUtils.h"
+#include "ROOT/RArrayView.hxx"
+#include "ROOT/THistUtils.hxx"
 
 namespace ROOT {
 namespace Experimental {

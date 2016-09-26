@@ -20,7 +20,7 @@
 #ifdef R__HAS_STD_APPLY
 # include <tuple>
 #else
-# include "ROOT/impl_tuple_apply.h"
+# include "ROOT/impl_tuple_apply.hxx"
 #endif
 
 

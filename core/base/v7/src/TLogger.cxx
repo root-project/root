@@ -12,7 +12,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/TLogger.h"
+#include "ROOT/TLogger.hxx"
 #include <iostream>
 
 // pin vtable
