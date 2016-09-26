@@ -214,7 +214,7 @@ $(CINTDLLDIRDLLSTL)/G__cpp_complex.cxx: $(CINTDLLDIRL)/dll_stl/cmplx.h $(CINTCPP
 	   -V -c-1 -A -Z0 $(CINTDLLDIRL)/dll_stl/cmplx.h
 	touch $@
 
-ifeq ($(subst $(MACOSX_MINOR),,1234),1234)
+ifeq ($(PLATFORM),macosx)
 # MACOSX_MINOR > 4
 $(CINTDLLDIRL)/G__c_posix.c: MACOSX_UNIX03 = -D__DARWIN_UNIX03
 endif

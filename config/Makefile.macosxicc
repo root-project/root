@@ -80,7 +80,6 @@ LDFLAGS      += $(EXTRA_LDFLAGS)
 
 FORCELINK     = no
 
-ifeq ($(subst $(MACOSX_MINOR),,1234),1234)
 ifeq ($(USECONFIG),FALSE)
 SOFLAGS       = -dynamiclib -single_module -Wl,-dead_strip_dylibs \
                 -install_name @rpath/
@@ -88,17 +87,7 @@ else
 SOFLAGS       = -dynamiclib -single_module -Wl,-dead_strip_dylibs \
                 -install_name $(LIBDIR)/
 endif
-else
-ifeq ($(subst $(MACOSX_MINOR),,123),123)
-SOFLAGS       = -dynamiclib -single_module \
-                -undefined dynamic_lookup -install_name $(LIBDIR)/
-endif
-endif
-ifeq ($(subst $(MACOSX_MINOR),,1234),1234)
 SOEXT         = so
-else
-SOEXT         = dylib
-endif
 
 # System libraries:
 SYSLIBS       = -lm $(OSTHREADLIBDIR) \
@@ -139,13 +128,6 @@ INSTALL      := /bin/cp -pPR
 INSTALLDATA  := /bin/cp -pPR
 
 # Extras
-ifeq ($(MACOSX_MINOR),7)
-MACOSX_SSL_DEPRECATED = yes
-endif
-ifeq ($(MACOSX_MINOR),8)
-MACOSX_SSL_DEPRECATED = yes
-MACOSX_ODBC_DEPRECATED = yes
-endif
 ifeq ($(MACOSX_MINOR),9)
 MACOSX_SSL_DEPRECATED = yes
 MACOSX_ODBC_DEPRECATED = yes
@@ -154,6 +136,22 @@ MACOSX_KRB5_DEPRECATED = yes
 MACOSX_TMPNAM_DEPRECATED = yes
 endif
 ifeq ($(MACOSX_MINOR),10)
+MACOSX_SSL_DEPRECATED = yes
+MACOSX_ODBC_DEPRECATED = yes
+MACOSX_GLU_DEPRECATED = yes
+MACOSX_KRB5_DEPRECATED = yes
+MACOSX_TMPNAM_DEPRECATED = yes
+MACOSX_LDAP_DEPRECATED = yes
+endif
+ifeq ($(MACOSX_MINOR),11)
+MACOSX_SSL_DEPRECATED = yes
+MACOSX_ODBC_DEPRECATED = yes
+MACOSX_GLU_DEPRECATED = yes
+MACOSX_KRB5_DEPRECATED = yes
+MACOSX_TMPNAM_DEPRECATED = yes
+MACOSX_LDAP_DEPRECATED = yes
+endif
+ifeq ($(MACOSX_MINOR),12)
 MACOSX_SSL_DEPRECATED = yes
 MACOSX_ODBC_DEPRECATED = yes
 MACOSX_GLU_DEPRECATED = yes

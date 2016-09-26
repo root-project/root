@@ -370,16 +370,8 @@ CXXFLAGS      = $(OPT2) -pipe -Wall -W -Woverloaded-virtual
 LD            = g++
 LDFLAGS       = $(OPT2) -mmacosx-version-min=$(MACOSXTARGET)
 EXPLLINKLIBS  = $(ROOTLIBS) $(ROOTGLIBS)
-# The SOFLAGS will be used to create the .dylib,
-# the .so will be created separately
-ifeq ($(subst $(MACOSX_MINOR),,1234),1234)
 DllSuf        = so
-else
-DllSuf        = dylib
-endif
-ifneq ($(subst $(MACOSX_MINOR),,12),12)
 LD            = g++
-endif
 SOFLAGS       = -dynamiclib -single_module -install_name $(CURDIR)/
 endif
 
@@ -393,13 +385,7 @@ CXXFLAGS      = $(OPT) -fPIC -wd1476
 LD            = icpc
 LDFLAGS       = $(OPT2) -mmacosx-version-min=$(MACOSXTARGET)
 EXPLLINKLIBS  = $(ROOTLIBS) $(ROOTGLIBS)
-# The SOFLAGS will be used to create the .dylib,
-# the .so will be created separately
-ifeq ($(subst $(MACOSX_MINOR),,1234),1234)
 DllSuf        = so
-else
-DllSuf        = dylib
-endif
 SOFLAGS       = -dynamiclib -single_module -install_name $(CURDIR)/
 endif
 
@@ -411,13 +397,7 @@ CXXFLAGS      = $(OPT2) -pipe -Wall -W -Woverloaded-virtual
 LD            = g++
 LDFLAGS       = $(OPT2) -mmacosx-version-min=$(MACOSXTARGET)
 EXPLLINKLIBS  = $(ROOTLIBS) $(ROOTGLIBS)
-# The SOFLAGS will be used to create the .dylib,
-# the .so will be created separately
-ifeq ($(subst $(MACOSX_MINOR),,1234),1234)
 DllSuf        = so
-else
-DllSuf        = dylib
-endif
 SOFLAGS       = -dynamiclib -single_module -install_name $(CURDIR)/
 endif
 

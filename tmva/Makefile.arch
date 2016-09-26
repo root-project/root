@@ -440,17 +440,9 @@ MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
 CXX           = c++
 CXXFLAGS      = -O2 -pipe -Wall -W -Woverloaded-virtual -Wshadow
 LDFLAGS       = -O2 -bind_at_load
-# The SOFLAGS will be used to create the .dylib,
-# the .so will be created separately
-DllSuf        = dylib
-ifeq ($(subst $(MACOSX_MINOR),,12),12)
-UNDEFOPT      = dynamic_lookup
+DllSuf        = so
 LD            = MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) c++
-else
-UNDEFOPT      = suppress
-LD            = c++
-endif
-SOFLAGS       = -dynamiclib -single_module -undefined $(UNDEFOPT)
+SOFLAGS       = -dynamiclib -single_module -undefined dynamic_lookup
 endif
 
 ifeq ($(ARCH),macosxicc)
@@ -459,17 +451,9 @@ MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
 CXX           = c++
 CXXFLAGS      = -O2 -pipe -Wall -W -Woverloaded-virtual -Wshadow
 LDFLAGS       = -O2 -bind_at_load
-# The SOFLAGS will be used to create the .dylib,
-# the .so will be created separately
-DllSuf        = dylib
-ifeq ($(subst $(MACOSX_MINOR),,12),12)
-UNDEFOPT      = dynamic_lookup
+DllSuf        = so
 LD            = MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) c++
-else
-UNDEFOPT      = suppress
-LD            = c++
-endif
-SOFLAGS       = -dynamiclib -single_module -undefined $(UNDEFOPT)
+SOFLAGS       = -dynamiclib -single_module -undefined dynamic_lookup
 endif
 
 ifeq ($(ARCH),macosx64)
@@ -478,13 +462,9 @@ MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
 CXX           = c++
 CXXFLAGS      = -m64 -O2 -pipe -Wall -W -Woverloaded-virtual -Wshadow
 LDFLAGS       = -m64 -O2 -bind_at_load
-# The SOFLAGS will be used to create the .dylib,
-# the .so will be created separately
-DllSuf        = dylib
-ifeq ($(subst $(MACOSX_MINOR),,12),12)
+DllSuf        = so
 LD            = MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) c++
 SOFLAGS       = -m64 -dynamiclib -single_module -undefined dynamic_lookup
-endif
 endif
 
 ifeq ($(ARCH),macosxxlc)
@@ -493,22 +473,9 @@ MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
 CXX           = xlC
 CXXFLAGS      = -O
 LDFLAGS       = -O -Wl,-bind_at_load
-# The SOFLAGS will be used to create the .dylib,
-# the .so will be created separately
-DllSuf        = dylib
-ifeq ($(MACOSX_MINOR),4)
-UNDEFOPT      = dynamic_lookup
+DllSuf        = so
 LD            = MACOSX_DEPLOYMENT_TARGET=10.4 xlC
-else
-ifeq ($(MACOSX_MINOR),3)
-UNDEFOPT      = dynamic_lookup
-LD            = MACOSX_DEPLOYMENT_TARGET=10.3 xlC
-else
-UNDEFOPT      = suppress
-LD            = xlC
-endif
-endif
-SOFLAGS       = -qmkshrobj -single_module -undefined $(UNDEFOPT)
+SOFLAGS       = -qmkshrobj -single_module -undefined dynamic_lookup
 endif
 
 ifeq ($(ARCH),win32)

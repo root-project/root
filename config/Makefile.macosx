@@ -20,22 +20,7 @@ endif
 # MacOS X version
 MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
 MACOSX_CPU   := $(shell uname -p)
-FINK_DIR     := $(shell which fink 2>&1 | sed -ne "s/\/bin\/fink//p")
 
-# Compiler:
-# From "Apple clang version ... (based on LLVM 3.0svn)"
-# i.e. OSX 10.7 we will take clang as default
-APPLE_CLANG  := $(shell clang -v 2>&1 | sed -n "s/.*based on LLVM //p" | cut -d . -f 1)
-ifeq ($(APPLE_CLANG),)
-# if OSX > 9 always use clang
-ifeq ($(subst $(MACOSX_MINOR),,123456789),123456789)
-APPLE_CLANG  := 3
-else
-APPLE_CLANG  := 1
-endif
-endif
-
-ifeq ($(subst $(APPLE_CLANG),,12),12)
 CXX           = clang++
 CC            = clang
 ifeq ($(CXX11),yes)
@@ -44,47 +29,46 @@ endif
 ifeq ($(CXX14),yes)
 CXX11FLAGS    = -std=c++1y
 endif
+ifeq ($(LIBCXX),yes)
+CXX11FLAGS   += -stdlib=libc++
+CXX11LDFLAGS  = -stdlib=libc++
 else
-CXX           = g++
-CC            = gcc
+CXX11FLAGS   += -stdlib=libstdc++
+CXX11LDFLAGS  = -stdlib=libstdc++
 endif
+
 CXXFLAGS      = -m32 -pipe -Wshadow -W -Wall -Woverloaded-virtual \
-                -fsigned-char -fno-common $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS) \
+                -fsigned-char -fno-common $(EXTRA_CXXFLAGS) \
                 $(TARGETFLAGS) $(CXX11FLAGS) $(USERCONF_CXXFLAGS)
 CFLAGS        = -m32 -pipe -Wshadow -W -Wall -fsigned-char -fno-common \
-                $(EXTRA_CFLAGS) $(FINK_CFLAGS) $(TARGETFLAGS) $(USERCONF_CFLAGS)
+                $(EXTRA_CFLAGS) $(TARGETFLAGS) $(USERCONF_CFLAGS)
 CINTCXXFLAGS  = -m32 -pipe -W -Wall -Woverloaded-virtual \
-                -fsigned-char -fno-common $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS) \
+                -fsigned-char -fno-common $(EXTRA_CXXFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL \
                 -DG__STD_EXCEPTION $(TARGETFLAGS) $(CXX11FLAGS) $(USERCONF_CXXFLAGS)
 CINTCFLAGS    = -m32 -pipe -W -Wall -fsigned-char -fno-common \
-                $(EXTRA_CFLAGS) $(FINK_CFLAGS) \
+                $(EXTRA_CFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL \
                 -DG__STD_EXCEPTION $(TARGETFLAGS) $(USERCONF_CFLAGS)
 COMPILER      = gnu
 
 # Linker:
-ifeq ($(subst $(APPLE_CLANG),,12),12)
 LD            = clang++
-else
-LD            = g++
-endif
 LDFLAGS       = $(OPT) -m32 -mmacosx-version-min=$(MACOSXVERS)
+F77LDFLAGS   := $(LDFLAGS)
+LDFLAGS      += $(CXX11LDFLAGS)
 LDFLAGS      += $(EXTRA_LDFLAGS)
 
-FORCELINK     = yes
-NEEDFINK      = yes
+FORCELINK     = no
 
-ifeq ($(subst $(MACOSX_MINOR),,1234),1234)
-# this is set for 64 but not for 32  bit
+# needed for 10.12, won't harm for earlier
 CXXFLAGS     += -D__DARWIN_UNIX03=1
 CFLAGS       += -D__DARWIN_UNIX03=1
 CINTCXXFLAGS += -D__DARWIN_UNIX03=1
 CINTCFLAGS   += -D__DARWIN_UNIX03=1
-endif
-ifeq ($(subst $(MACOSX_MINOR),,1234),1234)
+
 ifeq ($(USECONFIG),FALSE)
 SOFLAGS       = -dynamiclib -single_module -Wl,-dead_strip_dylibs \
                 -install_name @rpath/
@@ -92,45 +76,13 @@ else
 SOFLAGS       = -dynamiclib -single_module -Wl,-dead_strip_dylibs \
                 -install_name $(LIBDIR)/
 endif
-FORCELINK     = no
-NEEDFINK      = no
-else
-ifeq ($(subst $(MACOSX_MINOR),,123),123)
-SOFLAGS       = -dynamiclib -single_module \
-                -undefined dynamic_lookup -install_name $(LIBDIR)/
-FORCELINK     = no
-NEEDFINK      = no
-else
-ifeq ($(MACOSX_MINOR),3)
-SOFLAGS       = -dynamiclib -single_module \
-                -undefined dynamic_lookup -install_name $(LIBDIR)/
-LDFLAGS      += -bind_at_load
-CXXFLAGS     += -Wno-long-double
-CFLAGS       += -Wno-long-double
-CINTCXXFLAGS += -Wno-long-double
-CINTCFLAGS   += -Wno-long-double
-else
-SOFLAGS       = -dynamiclib -single_module \
-                -undefined suppress -install_name $(LIBDIR)/
-LDFLAGS      += -bind_at_load
-CXXFLAGS     += -Wno-long-double
-CFLAGS       += -Wno-long-double
-CINTCXXFLAGS += -Wno-long-double
-CINTCFLAGS   += -Wno-long-double
-endif
-endif
-endif
-ifeq ($(subst $(MACOSX_MINOR),,1234),1234)
 SOEXT         = so
-else
-SOEXT         = dylib
-endif
 
 # System libraries:
-SYSLIBS       = -lm $(FINK_LDFLAGS) $(OSTHREADLIBDIR) \
+SYSLIBS       = -lm $(OSTHREADLIBDIR) \
                 $(OSTHREADLIB) -ldl $(ALLOCLIBDIR) $(ALLOCLIB)
 XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lXext -lX11
-CILIBS        = -lm $(FINK_LDFLAGS) -ldl
+CILIBS        = -lm -ldl
 
 # Fortran:
 F77ORG        = gfortran
@@ -146,19 +98,6 @@ INSTALL      := /bin/cp -pPR
 INSTALLDATA  := /bin/cp -pPR
 
 # Extras
-ifeq ($(NEEDFINK),yes)
-FINK_CXXFLAGS := $(shell [ -d $(FINK_DIR)/include ] && echo -I$(FINK_DIR)/include)
-FINK_CFLAGS   := $(shell [ -d $(FINK_DIR)/include ] && echo -I$(FINK_DIR)/include)
-FINK_LDFLAGS  := $(shell [ -d $(FINK_DIR)/lib ] && echo -L$(FINK_DIR)/lib)
-endif
-
-ifeq ($(MACOSX_MINOR),7)
-MACOSX_SSL_DEPRECATED = yes
-endif
-ifeq ($(MACOSX_MINOR),8)
-MACOSX_SSL_DEPRECATED = yes
-MACOSX_ODBC_DEPRECATED = yes
-endif
 ifeq ($(MACOSX_MINOR),9)
 MACOSX_SSL_DEPRECATED = yes
 MACOSX_ODBC_DEPRECATED = yes
@@ -175,6 +114,14 @@ MACOSX_TMPNAM_DEPRECATED = yes
 MACOSX_LDAP_DEPRECATED = yes
 endif
 ifeq ($(MACOSX_MINOR),11)
+MACOSX_SSL_DEPRECATED = yes
+MACOSX_ODBC_DEPRECATED = yes
+MACOSX_GLU_DEPRECATED = yes
+MACOSX_KRB5_DEPRECATED = yes
+MACOSX_TMPNAM_DEPRECATED = yes
+MACOSX_LDAP_DEPRECATED = yes
+endif
+ifeq ($(MACOSX_MINOR),12)
 MACOSX_SSL_DEPRECATED = yes
 MACOSX_ODBC_DEPRECATED = yes
 MACOSX_GLU_DEPRECATED = yes
