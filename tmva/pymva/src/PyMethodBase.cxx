@@ -10,11 +10,11 @@
  *      Virtual base class for all MVA method based on python                     *
  *                                                                                *
  **********************************************************************************/
+#include <Python.h>    // Needs to be included first to avoid redefinition of _POSIX_C_SOURCE
 #include<TMVA/PyMethodBase.h>
 
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #pragma GCC diagnostic ignored "-Wunused-function"
-#include <Python.h>
 
 #include "TMVA/DataSet.h"
 #include "TMVA/DataSetInfo.h"
