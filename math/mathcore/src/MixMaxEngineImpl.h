@@ -1,3 +1,9 @@
+
+
+#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+
 #ifndef ROOT_Math_MixMaxEngineImpl
 #define ROOT_Math_MixMaxEngineImpl
 

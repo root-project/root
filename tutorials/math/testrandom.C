@@ -65,12 +65,13 @@ void testAll() {
   TRandom *r3 = new TRandom3();
   TRandom *r4 = new TRandomMixMax();
   TRandom *r5 = new TRandomMixMax256();
-  TRandom *r6 = new TRandomMT64();
-  TRandom *r7 = new TRandomRanlux48();
+  TRandom *r6 = new TRandomMixMax17();
+  TRandom *r7 = new TRandomMT64();
+  TRandom *r8 = new TRandomRanlux48();
 
   TStopwatch sw;
   printf("Distribution            nanoseconds/call\n");
-  printf("                    TRandom  TRandom1 TRandom2 TRandom3 MixMax240 MixMax256_2 MT_64 Ranlux48\n");
+  printf("                    TRandom  TRandom1 TRandom2 TRandom3 MixMax240 MixMax256_2 MixMax17 MT_64 Ranlux48\n");
 
   sw.Start();
   for (i=0;i<N;i++) {
@@ -115,6 +116,12 @@ void testAll() {
   sw.Start();
   for (i=0;i<N;i++) {
      x = r7->Rndm(i);
+  }
+  printf(" %8.3f",sw.CpuTime()*cpn);
+
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = r8->Rndm(i);
   }
   printf(" %8.3f",sw.CpuTime()*cpn);
 

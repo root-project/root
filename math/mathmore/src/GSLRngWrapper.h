@@ -97,7 +97,6 @@ public:
       if (fRngType == 0) SetDefaultType();
       if (fRng != 0 && fOwn) Free();
       fRng = gsl_rng_alloc( fRngType );
-      printf("allocated the gsl_rng object \n");
     }
 
     void Free() {

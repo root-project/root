@@ -30,7 +30,6 @@ namespace ROOT {
 
          
          GSLRngROOTWrapper() {
-            printf("constructing the ROOT GSL wrapper engine -size = %d\n",Size());
             fEngine = nullptr;
             fFirst = false; 
          }
