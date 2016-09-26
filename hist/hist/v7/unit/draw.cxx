@@ -10,7 +10,7 @@ TEST(DrawTest, OneD) {
    auto h = std::make_shared<TH1D>(xaxis);
    TCanvas canv;
    canv.Draw(h);
-   EXPECT_EQ(canv.GetPrimitives().size(), 1);
+   EXPECT_EQ(canv.GetPrimitives().size(), 1ul);
 }
 
 TEST(DrawTest, TwoD) {
@@ -19,7 +19,7 @@ TEST(DrawTest, TwoD) {
    auto h = std::make_shared<TH2I>(xaxis, yaxis);
    TCanvas canv;
    canv.Draw(h);
-   EXPECT_EQ(canv.GetPrimitives().size(), 1);
+   EXPECT_EQ(canv.GetPrimitives().size(), 1ul);
 }
 
 TEST(DrawTest, ThreeD) {
@@ -29,5 +29,5 @@ TEST(DrawTest, ThreeD) {
    auto h = std::make_shared<TH3F>(xaxis, yaxis, zaxis);
    TCanvas canv;
    canv.Draw(h);
-   EXPECT_EQ(canv.GetPrimitives().size(), 1);
+   EXPECT_EQ(canv.GetPrimitives().size(), 1ul);
 }
