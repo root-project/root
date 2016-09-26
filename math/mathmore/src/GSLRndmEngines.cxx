@@ -42,6 +42,8 @@
 
 #include "Math/GSLRndmEngines.h"
 #include "GSLRngWrapper.h"
+// for wrapping in GSL ROOT engines 
+#include "GSLRngROOTWrapper.h"
 
 extern double gsl_ran_gaussian_acr(  const gsl_rng * r, const double sigma);
 
@@ -56,7 +58,7 @@ namespace Math {
 
   // default constructor (need to call set type later)
    GSLRandomEngine::GSLRandomEngine() :
-      fRng(0 ),
+      fRng(nullptr),
       fCurTime(0)
   { }
 
@@ -428,8 +430,16 @@ namespace Math {
    }
 
 
-
-
+   // for extra engines based on ROOT
+   GSLRngMixMax::GSLRngMixMax() : GSLRandomEngine()
+   {
+      SetType(new GSLRngWrapper(gsl_rng_mixmax) );
+      Initialize();      
+   }
+   GSLRngMixMax::~GSLRngMixMax() {
+      // we need to explicitly delete the ROOT wrapper class
+      GSLMixMaxWrapper::Free(Engine()->Rng()->state);
+   }
 
 } // namespace Math
 } // namespace ROOT

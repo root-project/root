@@ -56,7 +56,7 @@ public:
                      // Gets the current array of seeds.
    static   void     GetTableSeeds(UInt_t* seeds, Int_t index);
                      // Gets back seed values stored in the table, given the index.
-   virtual  Double_t Rndm(Int_t i=0);
+   virtual  Double_t Rndm( );
    virtual  void     RndmArray(Int_t size, Float_t *vect);
    virtual  void     RndmArray(Int_t size, Double_t *vect);
    virtual  void     SetSeed2(UInt_t seed, Int_t lux=3);
@@ -64,7 +64,7 @@ public:
    virtual  void     SetSeeds(const UInt_t * seeds, Int_t lux=3);
                      // Sets the state of the algorithm according to the zero terminated
                      // array of seeds. Only the first seed is used.
-   virtual  void     SetSeed(UInt_t seed);
+   virtual  void     SetSeed(ULong_t seed);
 
    ClassDef(TRandom1,1)  //Ranlux Random number generators with periodicity > 10**14
 };

@@ -35,10 +35,10 @@ protected:
 public:
    TRandom2(UInt_t seed=1);
    virtual ~TRandom2();
-   virtual  Double_t Rndm(Int_t i=0);
+   virtual  Double_t Rndm( );
    virtual  void     RndmArray(Int_t n, Float_t *array);
    virtual  void     RndmArray(Int_t n, Double_t *array);
-   virtual  void     SetSeed(UInt_t seed=0);
+   virtual  void     SetSeed(ULong_t seed=0);
 
    ClassDef(TRandom2,1)  //Random number generator with periodicity of 10**26
 };

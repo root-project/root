@@ -1,43 +1,16 @@
-/*
- *  mixmax.c
- *  A Pseudo-Random Number Generator
- *
- *  Created by Konstantin Savvidy.
- *
- *  The code is released under GNU Lesser General Public License v3
- *
- *	G.K.Savvidy and N.G.Ter-Arutyunian,
- *  On the Monte Carlo simulation of physical systems,
- *	J.Comput.Phys. 97, 566 (1991);
- *  Preprint EPI-865-16-86, Yerevan, Jan. 1986
- *
- *  K.Savvidy
- *  The MIXMAX random number generator
- *  Comp. Phys. Commun. 196 (2015), pp 161–165
- *  http://dx.doi.org/10.1016/j.cpc.2015.06.003
- *
- */
-
 #include <stdio.h>
 #include <stdint.h>
 
 #ifndef MIXMAX_H_
 #define MIXMAX_H_
 
-#define USE_INLINE_ASM
-
-//#ifdef __cplusplus
-//extern "C" {
-//#endif
+// #ifdef __cplusplus
+// extern "C" {
+// #endif
 	
 #ifndef _N
-#define N 240
-/* The currently recommended generator is the three-parameter MIXMAX with
-N=240, s=487013230256099140, m=2^51+1
-
-   Other newly recommended N are N=8, 17 and 240, 
-   as well as the ordinary MIXMAX with N=256 and s=487013230256099064
-
+#define N 256 
+/* The currently recommended N are 3150, 1260, 508, 256, 240, 88
    Since the algorithm is linear in N, the cost per number is almost independent of N.
  */
 #else
@@ -66,8 +39,7 @@ int  rng_get_N(void); // get the N programmatically, useful for checking the val
 
 rng_state_t  *rng_alloc();                 /* allocate the state */
 int           rng_free(rng_state_t* X);    /* free memory occupied by the state */
-rng_state_t  *rng_copy(myuint *Y);         /* init from vector, takes the vector Y, 
-                                               returns pointer to the newly allocated and initialized state */
+rng_state_t  *rng_copy(myuint *Y);         /* init from vector, takes the vector Y, returns pointer to the newly allocated and initialized state */
 void read_state(rng_state_t* X, const char filename[] );
 void print_state(rng_state_t* X);
     int iterate(rng_state_t* X);
@@ -113,10 +85,11 @@ void branch_inplace( rng_state_t* Xin, myID_t* ID ); // almost the same as apply
 #define BITS  61
 
 /* magic with Mersenne Numbers */
-
+    
 #define M61   2305843009213693951ULL
 
     myuint modadd(myuint foo, myuint bar);
+    myuint mod128(__uint128_t s);
 //myuint modmulM61(myuint s, myuint a);
     myuint fmodmulM61(myuint cum, myuint s, myuint a);
 
@@ -125,68 +98,36 @@ void branch_inplace( rng_state_t* Xin, myID_t* ID ); // almost the same as apply
 #define MOD_REM(k) ((k) % MERSBASE )  // latest Intel CPU is supposed to do this in one CPU cycle, but on my machines it seems to be 20% slower than the best tricks
 #define MOD_MERSENNE(k) MOD_PAYNE(k)
 
-//#define INV_MERSBASE (0x1p-61)
-#define INV_MERSBASE (0.4336808689942017736029811203479766845703E-18)
-//const double INV_MERSBASE=(0.4336808689942017736029811203479766845703E-18); // gives "duplicate symbol" error
-    
-// the charpoly is irreducible for the combinations of N and SPECIAL
+#define INV_MERSBASE (0x1p-61)
+
+
+// the charpoly is irreducible for the combinations of N and SPECIAL and has maximal period for N=508, 256, half period for 1260, and 1/12 period for 3150
 
 #if (N==256)
-#define SPECIALMUL 0
-#define SPECIAL 487013230256099064 // s=487013230256099064, m=1 -- good old MIXMAX
-#define MOD_MULSPEC(k) fmodmulM61( 0, SPECIAL , (k) )
-    
-#elif (N==8)
-#define SPECIALMUL 53 // m=2^53+1
-#define SPECIAL 0
-    
-#elif (N==17)
-#define SPECIALMUL 36 // m=2^36+1, other valid possibilities are m=2^13+1, m=2^19+1, m=2^24+1
-#define SPECIAL 0
-    
-#elif (N==40)
-#define SPECIALMUL 42 // m=2^42+1
-#define SPECIAL 0
+#define SPECIAL -1
+#define MOD_MULSPEC(k) (MERSBASE-(k))
 
-#elif (N==60)
-#define SPECIALMUL 52 // m=2^52+1
-#define SPECIAL 0
+#elif (N==3150)
+#define SPECIAL -11
+#define MOD_MULSPEC(k) (( ( ( 6*(MERSBASE-(k) )) % MERSBASE) + ( ( 5*(MERSBASE-(k) )) % MERSBASE) ) % MERSBASE )
 
-#elif (N==96)
-#define SPECIALMUL 55 // m=2^55+1
+#elif (N==1000 || N==1051 || N==44)
 #define SPECIAL 0
-    
-#elif (N==120)
-#define SPECIALMUL 51   // m=2^51+1 and a SPECIAL=+1 (!!!)
+#define MOD_MULSPEC(k) (0)
+
+#elif (N==88 || N==40)
 #define SPECIAL 1
 #define MOD_MULSPEC(k) (k)
 
-#elif (N==240)
-#define SPECIALMUL 51   // m=2^51+1 and a SPECIAL=487013230256099140
-#define SPECIAL 487013230256099140ULL
-#define MOD_MULSPEC(k) fmodmulM61( 0, SPECIAL , (k) )
-    
-#elif (N==44851)
-#define SPECIALMUL 0
-#define SPECIAL -3
-#define MOD_MULSPEC(k) MOD_MERSENNE(3*(MERSBASE-(k)))
-
-
 #else
-#warning Not a verified N, you are on your own!
-#define SPECIALMUL 58
-#define SPECIAL 0
-    
-#endif // list of interesting N for modulus M61 ends here
+#define SPECIAL -1
+#define MOD_MULSPEC(k)  (MERSBASE-(k) )
 
+#endif // list of interesting N for modulus M61 ends here
 
 #ifndef __MIXMAX_C // c++ can put code into header files, why cant we? (with the inline declaration, should be safe from duplicate-symbol error)
 	
 #define get_next(X) GET_BY_MACRO(X)
-#define get_next_float(X) get_next_float_BY_MACRO(X)
-
-#endif // __MIXMAX_C
-    
 
 inline 	myuint GET_BY_MACRO(rng_state_t* X) {
     int i;
@@ -201,24 +142,28 @@ inline 	myuint GET_BY_MACRO(rng_state_t* X) {
         return X->V[1];
     }
 }
+    
+#define get_next_float(X) get_next_float_BY_MACRO(X)
+
 	
 inline double get_next_float_BY_MACRO(rng_state_t* X){
-    /* cast to signed int trick suggested by Andrzej Görlich     */
-    int64_t Z=(int64_t)GET_BY_MACRO(X);
+        int64_t Z=(int64_t)get_next(X);
+#ifdef __SSE__
+#warning using SSE inline assemly for int64 -> double conversion, not really necessary in GCC-5 or better
     double F;
-#if defined(__GNUC__) && (__GNUC__ < 5) && (!defined(__ICC)) && defined(__x86_64__) && defined(__SSE2_MATH__) && defined(USE_INLINE_ASM)
-//#warning Using the inline assembler
-/* using SSE inline assemly to zero the xmm register, just before int64 -> double conversion,
-   not really necessary in GCC-5 or better, but huge penalty on earlier compilers 
- */
-   __asm__  __volatile__("pxor %0, %0; "
-                        :"=x"(F)
-                        );
+        __asm__ ("pxor %0, %0;"
+                 "cvtsi2sdq %1, %0;"
+                 :"=x"(F)
+                 :"r"(Z)
+                 );
+       return F*INV_MERSBASE;
+#else
+       return Z*INV_MERSBASE;
 #endif
-    F=Z;
-    return F*INV_MERSBASE;
-}
+    }
 
+#endif // __MIXMAX_C
+	
 
 // ERROR CODES - exit() is called with these
 #define ARRAY_INDEX_OUT_OF_BOUNDS   0xFF01
@@ -234,7 +179,6 @@ inline double get_next_float_BY_MACRO(rng_state_t* X){
 //#define HOOKUP_GSL 1
 
 #ifdef HOOKUP_GSL // if you need to use mixmax through GSL, pass -DHOOKUP_GSL=1 to the compiler
-#ifndef __MIXMAX_C
 
 #include <gsl/gsl_rng.h>
 unsigned long gsl_get_next(void *vstate);
@@ -266,9 +210,9 @@ void seed_for_gsl(void *vstate, unsigned long seed){
     seed_spbox(X,(myuint)seed);
 }
 
-const gsl_rng_type *gsl_rng_mixmax = &mixmax_type;
+const gsl_rng_type *gsl_rng_ran3 = &mixmax_type;
 
 
 #endif // HOOKUP_GSL
-#endif // not inside __MIXMAX_C
+
 #endif // closing MIXMAX_H_

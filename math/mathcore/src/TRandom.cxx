@@ -509,7 +509,7 @@ void TRandom::ReadRandom(const char *filename)
 ///  (the lower random bits are correlated) and therefore should NOT be
 ///  used in any statistical study).
 
-Double_t TRandom::Rndm(Int_t)
+Double_t TRandom::Rndm( )
 {
 #ifdef OLD_TRANDOM_IMPL
    const Double_t kCONS = 4.6566128730774E-10;
@@ -565,7 +565,7 @@ void TRandom::RndmArray(Int_t n, Float_t *array)
 /// the seed is generated using a 128 bit UUID. This results in different seeds
 /// and then random sequence for every SetSeed(0) call.
 
-void TRandom::SetSeed(UInt_t seed)
+void TRandom::SetSeed(ULong_t seed)
 {
    if( seed==0 ) {
       TUUID u;

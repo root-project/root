@@ -45,6 +45,7 @@
 #include <TRandom1.h>
 #include <TRandom2.h>
 #include <TRandom3.h>
+#include <TRandomGen.h>
 #include <TStopwatch.h>
 #include <TF1.h>
 #include <TUnuran.h>
@@ -62,10 +63,14 @@ void testAll() {
   TRandom *r1 = new TRandom1();
   TRandom *r2 = new TRandom2();
   TRandom *r3 = new TRandom3();
+  TRandom *r4 = new TRandomMixMax();
+  TRandom *r5 = new TRandomMixMax256();
+  TRandom *r6 = new TRandomMT64();
+  TRandom *r7 = new TRandomRanlux48();
 
   TStopwatch sw;
   printf("Distribution            nanoseconds/call\n");
-  printf("                    TRandom  TRandom1 TRandom2 TRandom3\n");
+  printf("                    TRandom  TRandom1 TRandom2 TRandom3 MixMax240 MixMax256_2 MT_64 Ranlux48\n");
 
   sw.Start();
   for (i=0;i<N;i++) {
@@ -86,8 +91,36 @@ void testAll() {
   for (i=0;i<N;i++) {
      x = r3->Rndm(i);
   }
-  printf(" %8.3f\n",sw.CpuTime()*cpn);
+  printf(" %8.3f",sw.CpuTime()*cpn);
+  // new random generators
 
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = r4->Rndm(i);
+  }
+  printf(" %8.3f",sw.CpuTime()*cpn);
+
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = r5->Rndm(i);
+  }
+  printf(" %8.3f",sw.CpuTime()*cpn);
+
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = r6->Rndm(i);
+  }
+  printf(" %8.3f",sw.CpuTime()*cpn);
+
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = r7->Rndm(i);
+  }
+  printf(" %8.3f",sw.CpuTime()*cpn);
+
+  printf("\n\n");
+
+  
   const int NR = 1000;
   double rn[NR];
   sw.Start();

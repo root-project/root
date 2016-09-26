@@ -142,7 +142,7 @@ bool test1() {
    std::cout << "\nTesting MT vs MIXMAX " << std::endl;
 
    Random<MersenneTwisterEngine> rmt;
-   Random<MixMaxEngine> rmx;
+   Random<MixMaxEngine240> rmx;
    ret &= testUniform(rmx, rmt);
    ret &= testGauss(rmx, rmt);
    return ret; 
@@ -152,12 +152,40 @@ bool test2() {
 
    bool ret = true; 
 
-   std::cout << "\nTesting MIXMAX vs MIXMAX" << std::endl;
+   std::cout << "\nTesting MIXMAX240 vs MIXMAX256" << std::endl;
 
-   // this test fails if first elemet is 0 is present !
+   Random<MixMaxEngine240> rmx1(1111);
+   Random<MixMaxEngine<256,2>> rmx2(2222);
+
+   ret &= testUniform(rmx1, rmx2);
+   ret &= testGauss(rmx1, rmx2);
+   return ret; 
+}
+
+bool test3() {
+
+   bool ret = true; 
+
+   std::cout << "\nTesting MIXMAX240 vs MIXMAX17" << std::endl;
+
    
-   Random<MixMaxEngine> rmx1(1111);
-   Random<MixMaxEngine> rmx2(2222);
+   Random<MixMaxEngine240> rmx1(1111);
+   Random<MixMaxEngine<17,0>> rmx2(2222);
+
+   ret &= testUniform(rmx1, rmx2);
+   ret &= testGauss(rmx1, rmx2);
+   return ret; 
+}
+
+bool test4() {
+
+   bool ret = true; 
+
+   std::cout << "\nTesting MIXMAX240 vs MIXMAX240 using different seeds" << std::endl;
+
+   
+   Random<MixMaxEngine240> rmx1(1111);
+   Random<MixMaxEngine240> rmx2(2222);
 
    ret &= testUniform(rmx1, rmx2);
    ret &= testGauss(rmx1, rmx2);
@@ -167,20 +195,14 @@ bool test2() {
 
 bool testMathRandom() {
 
-   // mixmax decimation
-   // test fails without decimation
-#ifdef USE_MIXMAX_DECIMATION   
-   std::cout << "Info:: Remove MIXMAX decimation " << std::endl;
-   MixMaxEngine::SetSkipNumber(0);
-   MixMaxEngine::SetFirstReturnElement(1);
-#endif   
-
    
    bool ret = true;
    std::cout << "testing generating " << NR << " numbers " << std::endl;
 
    ret &= test1(); 
    ret &= test2(); 
+   ret &= test3(); 
+   ret &= test4(); 
 
    if (!ret) Error("testMathRandom","Test Failed");
    else

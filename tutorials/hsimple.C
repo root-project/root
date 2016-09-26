@@ -84,7 +84,7 @@ TFile *hsimple(Int_t getFile=0)
    for (Int_t i = 0; i < 25000; i++) {
       randomNum.Rannor(px,py);
       pz = px*px + py*py;
-      Float_t rnd = randomNum.Rndm(1);
+      Float_t rnd = randomNum.Rndm();
       hpx->Fill(px);
       hpxpy->Fill(px,py);
       hprof->Fill(px,pz);
