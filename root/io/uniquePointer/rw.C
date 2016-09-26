@@ -7,10 +7,10 @@ void printHistoInfo(TH1* h, const char* meta) {
         << " - Mean: " << h->GetMean() << endl;
    double rms = h->GetRMS();
    if (rms < 1e-6) {
-      std::streamsize p = cout.precision();
-      cout << setprecision(1);
-      cout << " - STD Deviation: " << rms << endl;
-      cout << setprecision(p);
+      //std::streamsize p = cout.precision();
+      //cout << setprecision(1);
+      cout << " - STD Deviation: " << "less than 1e-6" << endl;
+      //cout << setprecision(p);
    } else {
       cout << " - STD Deviation: " << rms << endl;
    }
