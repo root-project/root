@@ -14,7 +14,7 @@
 #include "TTree.h"
 #include "TH1F.h"
 #include "TTreeReader.h"
-#include "ROOT/TProcessExecutor.h"
+#include "ROOT/TProcessExecutor.hxx"
 
 const char *fh1[] = {"http://root.cern.ch/files/h1/dstarmb.root",
                      "http://root.cern.ch/files/h1/dstarp1a.root",
@@ -42,7 +42,7 @@ int mp103_processSelector(){
   TTree *tree = (TTree *) fp->Get("h42");
 #endif
 
-  ROOT:TProcessExecutor pool(3);
+  ROOT::TProcessExecutor pool(3);
 
   TList* out = 0;
 #if defined(__reproduce_davix)
