@@ -98,12 +98,24 @@ add_custom_command(OUTPUT ${stamp_file}
                    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/icons ${CMAKE_BINARY_DIR}/icons
                    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/fonts ${CMAKE_BINARY_DIR}/fonts
                    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/macros ${CMAKE_BINARY_DIR}/macros
-                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/tutorials ${CMAKE_BINARY_DIR}/tutorials
                    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/LICENSE ${CMAKE_BINARY_DIR}/LICENSE
                    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/README ${CMAKE_BINARY_DIR}/README
                    COMMAND ${CMAKE_COMMAND} -E touch ${stamp_file}
-                   COMMENT "Moving directories such as etc, icons, fonts, etc. to build area")
-add_custom_target(move_headers DEPENDS ${stamp_file}
+                   COMMENT "Copying directories such as etc, icons, fonts, etc. to build area")
+
+#---Copy the the tutorials to the build area, with dependency---------------------------------
+file(GLOB_RECURSE tutorial_files RELATIVE ${CMAKE_SOURCE_DIR}/tutorials tutorials/*)
+set(tutorial_files_builddir "")
+foreach(tutorial_file ${tutorial_files})
+  # Works, but triggers re-config for every change in tutorials/
+  #configure_file(${CMAKE_SOURCE_DIR}/tutorials/${tutorial_file} ${CMAKE_BINARY_DIR}/tutorials/${tutorial_file} COPYONLY)
+  add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/tutorials/${tutorial_file}
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/tutorials/${tutorial_file} ${CMAKE_BINARY_DIR}/tutorials/${tutorial_file}
+    DEPENDS ${CMAKE_SOURCE_DIR}/tutorials/${tutorial_file})
+  set(tutorial_files_builddir "${CMAKE_BINARY_DIR}/tutorials/${tutorial_file};${tutorial_files_builddir}")
+endforeach()
+
+add_custom_target(move_headers DEPENDS ${stamp_file} ${tutorial_files_builddir}
                                COMMAND ${CMAKE_COMMAND} -DPREFIX=${CMAKE_BINARY_DIR}
                                                         -DCOMPONENTS="headers"
                                                         -P ${CMAKE_SOURCE_DIR}/cmake/scripts/local_install.cmake)
