@@ -9,6 +9,7 @@
 /// \macro_code
 ///
 /// \author Danilo Piparo
+/// \date January 2016
 
 // Some useful constants and functions
 

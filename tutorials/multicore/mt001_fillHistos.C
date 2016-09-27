@@ -6,6 +6,7 @@
 /// \macro_code
 ///
 /// \author Danilo Piparo
+/// \date January 2016
 
 // Total amount of numbers
 const UInt_t nNumbers = 20000000U;

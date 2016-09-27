@@ -10,6 +10,7 @@
 /// \macro_code
 ///
 /// \author Danilo Piparo
+/// \date January 2016
 
 Int_t mt102_readNtuplesFillHistosAndFit()
 {
