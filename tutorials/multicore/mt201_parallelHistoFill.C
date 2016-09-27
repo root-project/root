@@ -21,7 +21,7 @@ Int_t mt201_parallelHistoFill()
 {
    TH1::AddDirectory(false);
 
-   // The concrete histogram instances are concretely created in each thread
+   // The concrete histogram instances are created in each thread
    // lazily, i.e. only if a method is invoked.
    auto ts_h = ROOT::MakeThreaded<TH1F>("myHist", "Filled in parallel", 128, -8, 8);
 
