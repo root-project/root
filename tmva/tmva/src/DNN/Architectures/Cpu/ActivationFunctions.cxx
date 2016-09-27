@@ -11,7 +11,7 @@
 
  ///////////////////////////////////////////////////////////////////
  // Implementation of the activation functions for multi-threaded //
- // CPU architectures using Roots ThreadPool and BLAS.            //
+ // CPU architectures using Roots TThreadExecutor and BLAS.            //
  ///////////////////////////////////////////////////////////////////
 
 #include "TMVA/DNN/Architectures/Cpu.h"

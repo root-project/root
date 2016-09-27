@@ -3,9 +3,9 @@
 ############################################################################
 
 set(headers TAtomicCount.h TCondition.h TConditionImp.h TMutex.h TMutexImp.h
-            TPool.h TRWLock.h ROOT/TRWSpinLock.hxx TSemaphore.h TThread.h TThreadFactory.h
+            ROOT/TExecutor.hxx TRWLock.h ROOT/TRWSpinLock.hxx TSemaphore.h TThread.h TThreadFactory.h
             TThreadImp.h ROOT/TThreadedObject.hxx TThreadPool.h
-            ThreadLocalStorage.h ROOT/TSpinMutex.hxx ThreadPool.h)
+            ThreadLocalStorage.h ROOT/TSpinMutex.hxx ROOT/TThreadExecutor.hxx)
 if(NOT WIN32)
   set(headers ${headers} TPosixCondition.h TPosixMutex.h
                          TPosixThread.h TPosixThreadFactory.h PosixThreadInc.h)

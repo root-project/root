@@ -12,13 +12,8 @@
 #ifndef ROOT_TThreadedObject
 #define ROOT_TThreadedObject
 
-#ifndef ROOT_TList
 #include "TList.h"
-#endif
-
-#ifndef ROOT_TError
 #include "TError.h"
-#endif
 
 #include <functional>
 #include <map>

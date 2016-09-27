@@ -85,7 +85,7 @@ void TCpu<Real_t>::Hadamard(TCpuMatrix<Real_t> &B,
       return 0;
    };
 
-   B.GetThreadPool().Map(f, ROOT::TSeqI(B.GetNElements()));
+   B.GetThreadExecutor().Map(f, ROOT::TSeqI(B.GetNElements()));
 }
 
 //____________________________________________________________________________

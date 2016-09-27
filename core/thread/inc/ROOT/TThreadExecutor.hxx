@@ -9,27 +9,29 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_THREADPOOL
-#define ROOT_THREADPOOL
+#ifndef ROOT_TThreadExecutor
+#define ROOT_TThreadExecutor
 
 // exclude in case ROOT does not have IMT support
 #ifdef R__USE_IMT
 
+#include "ROOT/TExecutor.hxx"
 #include "tbb/tbb.h"
-#include "TPool.h"
 #include <numeric>
 
-class ThreadPool: public TPool<ThreadPool> {
+namespace ROOT {
+
+class TThreadExecutor: public TExecutor<TThreadExecutor> {
 public:
-   explicit ThreadPool(){
+   explicit TThreadExecutor(){
       fInitTBB.initialize();
    }
 
-   explicit ThreadPool(size_t nThreads){
+   explicit TThreadExecutor(size_t nThreads){
       fInitTBB.initialize(nThreads);
    }
 
-   ~ThreadPool() {
+   ~TThreadExecutor() {
       fInitTBB.terminate();
    }
 
@@ -42,10 +44,10 @@ public:
    template<class F, class T, class Cond = noReferenceCond<F, T>>
    auto Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>;
    // / \endcond
-   using TPool<ThreadPool>::Map;
+   using TExecutor<TThreadExecutor>::Map;
 
    template<class T, class BINARYOP> auto Reduce(const std::vector<T> &objs, BINARYOP redfunc) -> decltype(redfunc(objs.front(), objs.front()));
-   using TPool<ThreadPool>::Reduce;
+   using TExecutor<TThreadExecutor>::Reduce;
 
 private:
     tbb::task_scheduler_init fInitTBB{tbb::task_scheduler_init::deferred};
@@ -59,7 +61,7 @@ private:
 /// Functions that take more than zero arguments can be executed (with
 /// fixed arguments) by wrapping them in a lambda or with std::bind.
 template<class F, class Cond>
-auto ThreadPool::Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>
+auto TThreadExecutor::Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>
 {
    using retType = decltype(func());
    std::vector<retType> reslist(nTimes);
@@ -72,7 +74,7 @@ auto ThreadPool::Map(F func, unsigned nTimes) -> std::vector<typename std::resul
 }
 
 template<class F, class INTEGER, class Cond>
-auto ThreadPool::Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>
+auto TThreadExecutor::Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>
 {
    unsigned start = *args.begin();
    unsigned end = *args.end();
@@ -92,7 +94,7 @@ auto ThreadPool::Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename s
 // actual implementation of the Map method. all other calls with arguments eventually
 // call this one
 template<class F, class T, class Cond>
-auto ThreadPool::Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>
+auto TThreadExecutor::Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>
 {
    // //check whether func is callable
    using retType = decltype(func(args.front()));
@@ -110,7 +112,7 @@ auto ThreadPool::Map(F func, std::vector<T> &args) -> std::vector<typename std::
 // /// \endcond
 
 template<class T, class BINARYOP>
-auto ThreadPool::Reduce(const std::vector<T> &objs, BINARYOP redfunc) -> decltype(redfunc(objs.front(), objs.front()))
+auto TThreadExecutor::Reduce(const std::vector<T> &objs, BINARYOP redfunc) -> decltype(redfunc(objs.front(), objs.front()))
 {
    // check we can apply reduce to objs
    static_assert(std::is_same<decltype(redfunc(objs.front(), objs.front())), T>::value, "redfunc does not have the correct signature");
@@ -119,6 +121,8 @@ auto ThreadPool::Reduce(const std::vector<T> &objs, BINARYOP redfunc) -> decltyp
                               return std::accumulate(range.begin(), range.end(), init, redfunc);
                               }, redfunc);
 }
+
+} // namespace ROOT
 
 #endif   // R__USE_IMT
 #endif

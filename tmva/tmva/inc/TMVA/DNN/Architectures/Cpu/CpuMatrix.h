@@ -21,7 +21,7 @@
 #include <vector>
 
 #include "TMatrix.h"
-#include "ThreadPool.h"
+#include "ROOT/TThreadExecutor.hxx"
 #include "CpuBuffer.h"
 
 namespace TMVA
@@ -47,7 +47,7 @@ class TCpuMatrix
 {
 private:
 
-   static ThreadPool          fPool;
+   static ROOT::TThreadExecutor fPool;
    static std::vector<AFloat> fOnes;  ///< Vector filled with ones used for BLAS calls.
 
    TCpuBuffer<AFloat> fBuffer; ///< The buffer holding the matrix elements
@@ -81,7 +81,7 @@ public:
    operator TMatrixT<Double_t>() const;
 
    /** Map the given function over the matrix elements. Executed in parallel
-    *  using ThreadPool. */
+    *  using TThreadExecutor. */
    template <typename Function_t>
    void Map(Function_t &f);
 
@@ -103,7 +103,7 @@ public:
    AFloat *       GetRawDataPointer()        {return fBuffer;}
    const AFloat * GetRawDataPointer()  const {return fBuffer;}
 
-   ThreadPool & GetThreadPool() const {return fPool;}
+   ROOT::TThreadExecutor & GetThreadExecutor() const {return fPool;}
 
 private:
 

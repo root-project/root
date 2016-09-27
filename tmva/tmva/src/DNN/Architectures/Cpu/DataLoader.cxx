@@ -107,7 +107,7 @@ inline void TCpuDataLoader<Data_t, Real_t>::CopyData(size_t batchIndex)
 
    size_t end   = std::min(batchIndex + fBufferSize, fNBatches);
    size_t start = batchIndex;
-   ThreadPool pool{};
+   ROOT::TThreadExecutor pool{};
    pool.Map(copy, ROOT::TSeqI(start, end));
 }
 

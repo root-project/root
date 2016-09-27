@@ -11,7 +11,7 @@
 
  /////////////////////////////////////////////////////////////////////
  // Implementation of the loss functions for the multi-threaded CPU //
- // implementation using Roots ThreadPool and BLAS.                 //
+ // implementation using Roots TThreadExecutor and BLAS.                 //
  /////////////////////////////////////////////////////////////////////
 
 #include "TMVA/DNN/Architectures/Reference.h"
@@ -43,8 +43,8 @@ AFloat TCpu<AFloat>::MeanSquaredError(const TCpuMatrix<AFloat> &Y,
       return sum1 + sum2;
    };
 
-   Y.GetThreadPool().Map(f, ROOT::TSeqI(Y.GetNElements()));
-   return norm * Y.GetThreadPool().Reduce(temp, reduction);
+   Y.GetThreadExecutor().Map(f, ROOT::TSeqI(Y.GetNElements()));
+   return norm * Y.GetThreadExecutor().Reduce(temp, reduction);
 }
 
 //______________________________________________________________________________
@@ -66,7 +66,7 @@ void TCpu<AFloat>::MeanSquaredErrorGradients(
       return 0;
    };
 
-   Y.GetThreadPool().Map(f, ROOT::TSeqI(Y.GetNElements()));
+   Y.GetThreadExecutor().Map(f, ROOT::TSeqI(Y.GetNElements()));
 }
 
 //______________________________________________________________________________
@@ -92,8 +92,8 @@ AFloat TCpu<AFloat>::CrossEntropy(const TCpuMatrix<AFloat> &Y,
       return sum1 + sum2;
    };
 
-   Y.GetThreadPool().Map(f, ROOT::TSeqI(Y.GetNElements()));
-   return norm * Y.GetThreadPool().Reduce(temp, reduction);
+   Y.GetThreadExecutor().Map(f, ROOT::TSeqI(Y.GetNElements()));
+   return norm * Y.GetThreadExecutor().Reduce(temp, reduction);
 }
 
 //______________________________________________________________________________
@@ -116,7 +116,7 @@ void TCpu<AFloat>::CrossEntropyGradients(
       return 0;
    };
 
-   Y.GetThreadPool().Map(f, ROOT::TSeqI(Y.GetNElements()));
+   Y.GetThreadExecutor().Map(f, ROOT::TSeqI(Y.GetNElements()));
 }
 
 } // namespace DNN

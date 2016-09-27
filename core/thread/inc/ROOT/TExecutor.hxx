@@ -9,18 +9,19 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TPOOL
-#define ROOT_TPOOL
+#ifndef ROOT_TExecutor
+#define ROOT_TExecutor
 
 #include "TCollection.h"
 #include "ROOT/TSeq.hxx"
 
+namespace ROOT {
 
 template<class subc>
-class TPool {
+class TExecutor {
 public:
-   explicit TPool() = default;
-   explicit TPool(size_t /* nThreads */ ){};
+   explicit TExecutor() = default;
+   explicit TExecutor(size_t /* nThreads */ ){};
 
    template< class F, class... T>
    using noReferenceCond = typename std::enable_if<"Function can't return a reference" && !(std::is_reference<typename std::result_of<F(T...)>::type>::value)>::type;
@@ -46,7 +47,7 @@ public:
    // // MapReduce
    // // the late return types also check at compile-time whether redfunc is compatible with func,
    // // other than checking that func is compatible with the type of arguments.
-   // // a static_assert check in TPool<subc>::Reduce is used to check that redfunc is compatible with the type returned by func
+   // // a static_assert check in TExecutor<subc>::Reduce is used to check that redfunc is compatible with the type returned by func
    template<class F, class R, class Cond = noReferenceCond<F>>
    auto MapReduce(F func, unsigned nTimes, R redfunc) -> typename std::result_of<F()>::type;
    template<class F, class INTEGER, class R, class Cond = noReferenceCond<F, INTEGER>>
@@ -75,7 +76,7 @@ private:
 /// Functions that take more than zero arguments can be executed (with
 /// fixed arguments) by wrapping them in a lambda or with std::bind.
 template<class subc> template<class F, class Cond>
-auto TPool<subc>::Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>
+auto TExecutor<subc>::Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>
 {
    return Derived().Map(func, nTimes);
 }
@@ -91,13 +92,13 @@ auto TPool<subc>::Map(F func, unsigned nTimes) -> std::vector<typename std::resu
 // tell doxygen to ignore this (\endcond closes the statement)
 /// \cond
 template<class subc> template<class F, class INTEGER, class Cond>
-auto TPool<subc>::Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>
+auto TExecutor<subc>::Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>
 {
   return Derived().Map(func, args);
 }
 
 template<class subc> template<class F, class T, class Cond>
-auto TPool<subc>::Map(F func, std::initializer_list<T> args) -> std::vector<typename std::result_of<F(T)>::type>
+auto TExecutor<subc>::Map(F func, std::initializer_list<T> args) -> std::vector<typename std::result_of<F(T)>::type>
 {
    std::vector<T> vargs(std::move(args));
    const auto &reslist = Map(func, vargs);
@@ -108,7 +109,7 @@ auto TPool<subc>::Map(F func, std::initializer_list<T> args) -> std::vector<type
 // call this one
 
 template<class subc> template<class F, class T, class Cond>
-auto TPool<subc>::Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>
+auto TExecutor<subc>::Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>
 {
    return Derived().Map(func, args);
 }
@@ -120,7 +121,7 @@ auto TPool<subc>::Map(F func, std::vector<T> &args) -> std::vector<typename std:
 // /// "squash" the vector returned by Map into a single object by merging,
 // /// adding, mixing the elements of the vector.
 template<class subc> template<class F, class R, class Cond>
-auto TPool<subc>::MapReduce(F func, unsigned nTimes, R redfunc) -> typename std::result_of<F()>::type
+auto TExecutor<subc>::MapReduce(F func, unsigned nTimes, R redfunc) -> typename std::result_of<F()>::type
 {
    return Reduce(Map(func, nTimes), redfunc);
 }
@@ -134,19 +135,19 @@ auto TPool<subc>::MapReduce(F func, unsigned nTimes, R redfunc) -> typename std:
 
 /// \cond doxygen should ignore these methods
 template<class subc> template<class F, class INTEGER, class R, class Cond>
-auto TPool<subc>::MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc) -> typename std::result_of<F(INTEGER)>::type
+auto TExecutor<subc>::MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc) -> typename std::result_of<F(INTEGER)>::type
 {
   return Reduce(Map(func, args), redfunc);
 }
 
 template<class subc> template<class F, class T, class R, class Cond>
-auto TPool<subc>::MapReduce(F func, std::initializer_list<T> args, R redfunc) -> typename std::result_of<F(T)>::type
+auto TExecutor<subc>::MapReduce(F func, std::initializer_list<T> args, R redfunc) -> typename std::result_of<F(T)>::type
 {
    return Reduce(Map(func, args), redfunc);
 }
 
 template<class subc> template<class F, class T, class R, class Cond>
-auto TPool<subc>::MapReduce(F func, std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type
+auto TExecutor<subc>::MapReduce(F func, std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type
 {
    return Reduce(Derived().Map(func, args), redfunc);
 }
@@ -155,7 +156,7 @@ auto TPool<subc>::MapReduce(F func, std::vector<T> &args, R redfunc) -> typename
 
 /// Check that redfunc has the right signature and call it on objs
 template<class subc> template<class T, class BINARYOP>
-auto TPool<subc>::Reduce(const std::vector<T> &objs, BINARYOP redfunc) -> decltype(redfunc(objs.front(), objs.front()))
+auto TExecutor<subc>::Reduce(const std::vector<T> &objs, BINARYOP redfunc) -> decltype(redfunc(objs.front(), objs.front()))
 {
    // check we can apply reduce to objs
    static_assert(std::is_same<decltype(redfunc(objs.front(), objs.front())), T>::value, "redfunc does not have the correct signature");
@@ -163,11 +164,13 @@ auto TPool<subc>::Reduce(const std::vector<T> &objs, BINARYOP redfunc) -> declty
 }
 
 template<class subc> template<class T, class R>
-auto TPool<subc>::Reduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs))
+auto TExecutor<subc>::Reduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs))
 {
    // check we can apply reduce to objs
    static_assert(std::is_same<decltype(redfunc(objs)), T>::value, "redfunc does not have the correct signature");
    return redfunc(objs);
+}
+
 }
 
 #endif

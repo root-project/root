@@ -110,9 +110,9 @@ Add a new mode for `TClass::SetCanSplit` (2) which indicates that this class and
 ## Parallelism
 
 * Three methods have been added to manage implicit multi-threading in ROOT: `ROOT::EnableImplicitMT(numthreads)`, `ROOT::DisableImplicitMT` and `ROOT::IsImplicitMTEnabled`. They can be used to enable, disable and check the status of the global implicit multi-threading in ROOT, respectively.
-* Even if the default reduce function specified in the invocation of the `MapReduce` method of `TProcPool` returns a pointer to a `TObject`, the return value of `MapReduce` is properly casted to the type returned by the map function.
+* Even if the default reduce function specified in the invocation of the `MapReduce` method of `TProcessExecutor` returns a pointer to a `TObject`, the return value of `MapReduce` is properly casted to the type returned by the map function.
 * Add a new class named `TThreadedObject` which helps making objects thread private and merging them.
-* Add tutorial showing how to fill randomly histograms using the `TProcPool` class.
+* Add tutorial showing how to fill randomly histograms using the `TProcessExecutor` class.
 * Add tutorial showing how to fill randomly histograms from multiple threads.
 * Add the ROOT::TSPinMutex class, a spin mutex compliant with C++11 requirements.
 * Add a new Implicit Multi-Threading (IMT) use case, incarnated in method TTreeProcessor::Process. TTProcessor::Process allows to process the entries of a TTree in parallel. The user provides a function that receives one parameter, a TTreeReader, that can be used to iterate over a subrange of entries. Each subrange corresponds to a cluster in the TTree and is processed by a task, which can potentially be run in parallel with other tasks.

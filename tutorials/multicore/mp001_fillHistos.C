@@ -33,7 +33,7 @@ Int_t mp001_fillHistos()
    };
 
    // Create the pool of workers
-   TProcPool workers(nWorkers);
+   ROOT::TProcessExecutor workers(nWorkers);
 
    // Fill the pool with work
    workers.Map(workItem, ROOT::TSeqI(nWorkers));

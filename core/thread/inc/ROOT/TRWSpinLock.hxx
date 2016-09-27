@@ -13,9 +13,7 @@
 #ifndef ROOT_TRWSpinLock
 #define ROOT_TRWSpinLock
 
-#ifndef ROOT_TSpinMutex
 #include "TSpinMutex.hxx"
-#endif
 
 #include <atomic>
 #include <condition_variable>

@@ -14,7 +14,7 @@
 #include "TTree.h"
 #include "TH1F.h"
 #include "TTreeReader.h"
-#include "TProcPool.h"
+#include "ROOT/TProcessExecutor.h"
 
 const char *fh1[] = {"http://root.cern.ch/files/h1/dstarmb.root",
                      "http://root.cern.ch/files/h1/dstarp1a.root",
@@ -42,16 +42,16 @@ int mp103_processSelector(){
   TTree *tree = (TTree *) fp->Get("h42");
 #endif
 
-  TProcPool pool(3);
+  ROOT:TProcessExecutor pool(3);
 
   TList* out = 0;
 #if defined(__reproduce_davix)
-  //TProcPool::Process with a single tree
+  //TProcessExecutor::Process with a single tree
   out = pool.ProcTree(*tree, *sel);;
   sel->GetOutputList()->Delete();
 #endif
 
-  //TProcPool::Process with single file name and tree name
+  //TProcessExecutor::Process with single file name and tree name
   //Note: we have less files than workers here
   out = pool.ProcTree(fh1[0], *sel, "h1");
   sel->GetOutputList()->Delete();
@@ -64,12 +64,12 @@ int mp103_processSelector(){
      fc.Add(new TFileInfo(fh1[i]));
   }
 
-  //TProcPool::Process with vector of files and tree name
+  //TProcessExecutor::Process with vector of files and tree name
   //Note: we have more files than workers here (different behaviour)
   out = pool.ProcTree(files, *sel, "h1");
   sel->GetOutputList()->Delete();
 
-  //TProcPool::Process with TFileCollection, no tree name
+  //TProcessExecutor::Process with TFileCollection, no tree name
   out = pool.ProcTree(fc, *sel);
   sel->GetOutputList()->Delete();
 

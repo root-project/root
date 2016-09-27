@@ -32,7 +32,7 @@ Int_t mtbb001_fillHistos()
    };
 
    // Create the pool of threads
-   ThreadPool pool(nThreads);
+   TThreadExecutor pool(nThreads);
 
    // Fill the pool with work
    pool.Map(workItem, ROOT::TSeqI(nThreads));

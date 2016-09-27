@@ -58,7 +58,7 @@ Int_t mtbb101_fillNtuples()
    };
 
    // Create the pool of workers
-   ThreadPool pool(nThreads);
+   TThreadExecutor pool(nThreads);
 
    // Fill the pool with work
    pool.Map(workItem, ROOT::TSeqI(nThreads));

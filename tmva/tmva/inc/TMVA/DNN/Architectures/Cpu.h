@@ -12,7 +12,7 @@
  //////////////////////////////////////////////////////////////////
 // Definition of the TCpu architecture, which provides a         //
  // multi-threaded CPU implementation of the low-level interface //
- // networks for Cpus using BLAS and Roots ThreadPool            //
+ // networks for Cpus using BLAS and Roots TThreadExecutor            //
  //////////////////////////////////////////////////////////////////
 
 #ifndef TMVA_DNN_ARCHITECTURES_CPU

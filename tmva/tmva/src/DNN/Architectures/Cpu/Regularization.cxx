@@ -11,7 +11,7 @@
 
 ///////////////////////////////////////////////////////////////////////
 // Implementation of the regularization functionals and gradients    //
-// for the multi-threaded CPU implementation using Roots ThreadPool. //
+// for the multi-threaded CPU implementation using Roots TThreadExecutor. //
 ///////////////////////////////////////////////////////////////////////
 
 #include "TMVA/DNN/Architectures/Reference.h"
@@ -39,8 +39,8 @@ AFloat TCpu<AFloat>::L1Regularization(const TCpuMatrix<AFloat> &Weights)
       return sum1 + sum2;
    };
 
-   Weights.GetThreadPool().Map(f, ROOT::TSeqI(Weights.GetNElements()));
-   return Weights.GetThreadPool().Reduce(temp, reduction);
+   Weights.GetThreadExecutor().Map(f, ROOT::TSeqI(Weights.GetNElements()));
+   return Weights.GetThreadExecutor().Reduce(temp, reduction);
 }
 
 //______________________________________________________________________________
@@ -60,7 +60,7 @@ void TCpu<AFloat>::AddL1RegularizationGradients(
       return 0;
    };
 
-   B.GetThreadPool().Map(f, ROOT::TSeqI(B.GetNElements()));
+   B.GetThreadExecutor().Map(f, ROOT::TSeqI(B.GetNElements()));
 }
 
 //______________________________________________________________________________
@@ -81,8 +81,8 @@ AFloat TCpu<AFloat>::L2Regularization(const TCpuMatrix<AFloat> &Weights)
       return sum1 + sum2;
    };
 
-   Weights.GetThreadPool().Map(f, ROOT::TSeqI(Weights.GetNElements()));
-   return Weights.GetThreadPool().Reduce(temp, reduction);
+   Weights.GetThreadExecutor().Map(f, ROOT::TSeqI(Weights.GetNElements()));
+   return Weights.GetThreadExecutor().Reduce(temp, reduction);
 }
 
 //______________________________________________________________________________
@@ -101,7 +101,7 @@ void TCpu<AFloat>::AddL2RegularizationGradients(
       return 0;
    };
 
-   B.GetThreadPool().Map(f, ROOT::TSeqI(B.GetNElements()));
+   B.GetThreadExecutor().Map(f, ROOT::TSeqI(B.GetNElements()));
 }
 
 } // namespace DNN

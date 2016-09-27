@@ -10,17 +10,17 @@
  *************************************************************************/
 
 #include "TEnv.h"
-#include "TProcPool.h"
+#include "ROOT/TProcessExecutor.hxx"
 #include "TPoolPlayer.h"
 
 //////////////////////////////////////////////////////////////////////////
 ///
-/// \class TProcPool
+/// \class TProcessExecutor
 /// \brief This class provides a simple interface to execute the same task
 /// multiple times in parallel, possibly with different arguments every
 /// time. This mimics the behaviour of python's pool.Map method.
 ///
-/// ###TProcPool::Map
+/// ###TProcessExecutor::Map
 /// The two possible usages of the Map method are:\n
 /// * Map(F func, unsigned nTimes): func is executed nTimes with no arguments
 /// * Map(F func, T& args): func is executed on each element of the collection of arguments args
@@ -30,9 +30,9 @@
 /// or set via SetNWorkers. It defaults to the number of cores.\n
 /// A collection containing the result of each execution is returned.\n
 /// **Note:** the user is responsible for the deletion of any object that might
-/// be created upon execution of func, returned objects included: TProcPool never
+/// be created upon execution of func, returned objects included: TProcessExecutor never
 /// deletes what it returns, it simply forgets it.\n
-/// **Note:** that the usage of TProcPool::Map is indicated only when the task to be
+/// **Note:** that the usage of TProcessExecutor::Map is indicated only when the task to be
 /// executed takes more than a few seconds, otherwise the overhead introduced
 /// by Map will outrun the benefits of parallel execution on most machines.
 ///
@@ -47,7 +47,7 @@
 /// a standard container (vector, list, deque), an initializer list
 /// or a pointer to a TCollection (TList*, TObjArray*, ...).
 /// \endparblock
-/// **Note:** the version of TProcPool::Map that takes a TCollection* as argument incurs
+/// **Note:** the version of TProcessExecutor::Map that takes a TCollection* as argument incurs
 /// in the overhead of copying data from the TCollection to an STL container. Only
 /// use it when absolutely necessary.\n
 /// **Note:** in cases where the function to be executed takes more than
@@ -66,11 +66,11 @@
 /// #### Examples:
 ///
 /// ~~~{.cpp}
-/// root[] TProcPool pool; auto hists = pool.Map(CreateHisto, 10);
-/// root[] TProcPool pool(2); auto squares = pool.Map([](int a) { return a*a; }, {1,2,3});
+/// root[] TProcessExecutor pool; auto hists = pool.Map(CreateHisto, 10);
+/// root[] TProcessExecutor pool(2); auto squares = pool.Map([](int a) { return a*a; }, {1,2,3});
 /// ~~~
 ///
-/// ###TProcPool::MapReduce
+/// ###TProcessExecutor::MapReduce
 /// This set of methods behaves exactly like Map, but takes an additional
 /// function as a third argument. This function is applied to the set of
 /// objects returned by the corresponding Map execution to "squash" them
@@ -78,25 +78,25 @@
 ///
 /// ####Examples:
 /// ~~~{.cpp}
-/// root[] TProcPool pool; auto ten = pool.MapReduce([]() { return 1; }, 10, [](std::vector<int> v) { return std::accumulate(v.begin(), v.end(), 0); })
-/// root[] TProcPool pool; auto hist = pool.MapReduce(CreateAndFillHists, 10, PoolUtils::ReduceObjects);
+/// root[] TProcessExecutor pool; auto ten = pool.MapReduce([]() { return 1; }, 10, [](std::vector<int> v) { return std::accumulate(v.begin(), v.end(), 0); })
+/// root[] TProcessExecutor pool; auto hist = pool.MapReduce(CreateAndFillHists, 10, PoolUtils::ReduceObjects);
 /// ~~~
 ///
 //////////////////////////////////////////////////////////////////////////
 
-
+namespace ROOT {
 //////////////////////////////////////////////////////////////////////////
 /// Class constructor.
 /// nWorkers is the number of times this ROOT session will be forked, i.e.
 /// the number of workers that will be spawned.
-TProcPool::TProcPool(unsigned nWorkers) : TMPClient(nWorkers)
+TProcessExecutor::TProcessExecutor(unsigned nWorkers) : TMPClient(nWorkers)
 {
    Reset();
 }
 
 //////////////////////////////////////////////////////////////////////////
 /// TSelector-based tree processing: memory resident tree
-TList* TProcPool::ProcTree(TTree& tree, TSelector& selector, ULong64_t nToProcess)
+TList* TProcessExecutor::ProcTree(TTree& tree, TSelector& selector, ULong64_t nToProcess)
 {
    //prepare environment
    Reset();
@@ -107,7 +107,7 @@ TList* TProcPool::ProcTree(TTree& tree, TSelector& selector, ULong64_t nToProces
    TPoolPlayer worker(selector, &tree, nWorkers, nToProcess/nWorkers);
    bool ok = Fork(worker);
    if(!ok) {
-      Error("TProcPool::ProcTree", "[E][C] Could not fork. Aborting operation");
+      Error("TProcessExecutor::ProcTree", "[E][C] Could not fork. Aborting operation");
       return nullptr;
    }
 
@@ -120,7 +120,7 @@ TList* TProcPool::ProcTree(TTree& tree, TSelector& selector, ULong64_t nToProces
    std::iota(args.begin(), args.end(), 0);
    fNProcessed = Broadcast(PoolCode::kProcTree, args);
    if (fNProcessed < nWorkers)
-      Error("TProcPool::ProcTree", "[E][C] There was an error while sending tasks to workers."
+      Error("TProcessExecutor::ProcTree", "[E][C] There was an error while sending tasks to workers."
                                    " Some entries might not be processed.");
 
    //collect results, distribute new tasks
@@ -150,7 +150,7 @@ TList* TProcPool::ProcTree(TTree& tree, TSelector& selector, ULong64_t nToProces
 
 //////////////////////////////////////////////////////////////////////////
 /// TSelector-based tree processing: dataset as a vector of files
-TList* TProcPool::ProcTree(const std::vector<std::string>& fileNames, TSelector& selector, const std::string& treeName, ULong64_t nToProcess)
+TList* TProcessExecutor::ProcTree(const std::vector<std::string>& fileNames, TSelector& selector, const std::string& treeName, ULong64_t nToProcess)
 {
 
    //prepare environment
@@ -162,7 +162,7 @@ TList* TProcPool::ProcTree(const std::vector<std::string>& fileNames, TSelector&
    TPoolPlayer worker(selector, fileNames, treeName, nWorkers, nToProcess);
    bool ok = Fork(worker);
    if (!ok) {
-      Error("TProcPool::ProcTree", "[E][C] Could not fork. Aborting operation");
+      Error("TProcessExecutor::ProcTree", "[E][C] Could not fork. Aborting operation");
       return nullptr;
    }
 
@@ -178,7 +178,7 @@ TList* TProcPool::ProcTree(const std::vector<std::string>& fileNames, TSelector&
          std::iota(args.begin(), args.end(), 0);
          fNProcessed = Broadcast(PoolCode::kProcRange, args);
          if (fNProcessed < nWorkers)
-            Error("TProcPool::ProcTree", "[E][C] There was an error while sending tasks to workers."
+            Error("TProcessExecutor::ProcTree", "[E][C] There was an error while sending tasks to workers."
                                          " Some entries might not be processed");
       } else {
          // File granularity: each worker processes one whole file as a single task
@@ -188,7 +188,7 @@ TList* TProcPool::ProcTree(const std::vector<std::string>& fileNames, TSelector&
          std::iota(args.begin(), args.end(), 0);
          fNProcessed = Broadcast(PoolCode::kProcFile, args);
          if (fNProcessed < nWorkers)
-            Error("TProcPool::ProcTree", "[E][C] There was an error while sending tasks to workers."
+            Error("TProcessExecutor::ProcTree", "[E][C] There was an error while sending tasks to workers."
                                          " Some entries might not be processed.");
       }
    } else {
@@ -200,7 +200,7 @@ TList* TProcPool::ProcTree(const std::vector<std::string>& fileNames, TSelector&
       std::iota(args.begin(), args.end(), 0);
       fNProcessed = Broadcast(PoolCode::kProcRange, args);
       if (fNProcessed < nWorkers)
-         Error("TProcPool::ProcTree", "[E][C] There was an error while sending tasks to workers."
+         Error("TProcessExecutor::ProcTree", "[E][C] There was an error while sending tasks to workers."
                                       " Some entries might not be processed.");
    }
 
@@ -232,7 +232,7 @@ TList* TProcPool::ProcTree(const std::vector<std::string>& fileNames, TSelector&
 
 //////////////////////////////////////////////////////////////////////////
 /// TSelector-based tree processing: dataset as a TFileCollection
-TList* TProcPool::ProcTree(TFileCollection& files, TSelector& selector, const std::string& treeName, ULong64_t nToProcess)
+TList* TProcessExecutor::ProcTree(TFileCollection& files, TSelector& selector, const std::string& treeName, ULong64_t nToProcess)
 {
    std::vector<std::string> fileNames(files.GetNFiles());
    unsigned count = 0;
@@ -245,7 +245,7 @@ TList* TProcPool::ProcTree(TFileCollection& files, TSelector& selector, const st
 
 //////////////////////////////////////////////////////////////////////////
 /// TSelector-based tree processing: dataset as a TChain
-TList* TProcPool::ProcTree(TChain& files, TSelector& selector, const std::string& treeName, ULong64_t nToProcess)
+TList* TProcessExecutor::ProcTree(TChain& files, TSelector& selector, const std::string& treeName, ULong64_t nToProcess)
 {
    TObjArray* filelist = files.GetListOfFiles();
    std::vector<std::string> fileNames(filelist->GetEntries());
@@ -258,14 +258,14 @@ TList* TProcPool::ProcTree(TChain& files, TSelector& selector, const std::string
 
 //////////////////////////////////////////////////////////////////////////
 /// TSelector-based tree processing: dataset as a single file
-TList* TProcPool::ProcTree(const std::string& fileName, TSelector& selector, const std::string& treeName, ULong64_t nToProcess)
+TList* TProcessExecutor::ProcTree(const std::string& fileName, TSelector& selector, const std::string& treeName, ULong64_t nToProcess)
 {
    std::vector<std::string> singleFileName(1, fileName);
    return ProcTree(singleFileName, selector, treeName, nToProcess);
 }
 
 /// Fix list of lists before merging (to avoid errors about duplicated objects)
-void TProcPool::FixLists(std::vector<TObject*> &lists) {
+void TProcessExecutor::FixLists(std::vector<TObject*> &lists) {
 
    // The first element must be a TList instead of a TSelector List, to avoid duplicate problems with merging
    TList *firstlist = new TList;
@@ -280,8 +280,8 @@ void TProcPool::FixLists(std::vector<TObject*> &lists) {
 }
 
 //////////////////////////////////////////////////////////////////////////
-/// Reset TProcPool's state.
-void TProcPool::Reset()
+/// Reset TProcessExecutor's state.
+void TProcessExecutor::Reset()
 {
    fNProcessed = 0;
    fNToProcess = 0;
@@ -293,7 +293,7 @@ void TProcPool::Reset()
 /// Reply to a worker who just sent a result.
 /// If another argument to process exists, tell the worker. Otherwise
 /// send a shutdown order.
-void TProcPool::ReplyToFuncResult(TSocket *s)
+void TProcessExecutor::ReplyToFuncResult(TSocket *s)
 {
    if (fNProcessed < fNToProcess) {
       //this cannot be a "greedy worker" task
@@ -311,7 +311,7 @@ void TProcPool::ReplyToFuncResult(TSocket *s)
 /// Reply to a worker who is idle.
 /// If another argument to process exists, tell the worker. Otherwise
 /// ask for a result
-void TProcPool::ReplyToIdle(TSocket *s)
+void TProcessExecutor::ReplyToIdle(TSocket *s)
 {
    if (fNProcessed < fNToProcess) {
       //we are executing a "greedy worker" task
@@ -327,3 +327,5 @@ void TProcPool::ReplyToIdle(TSocket *s)
    } else
       MPSend(s, PoolCode::kSendResult);
 }
+
+} // namespace ROOT

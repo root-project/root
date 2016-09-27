@@ -16,7 +16,7 @@ Int_t mtbb201_parallelHistoFill()
 {
    ROOT::EnableThreadSafety();
    TH1::AddDirectory(false);
-   ThreadPool pool(poolSize);
+   TThreadExecutor pool(poolSize);
    auto fillRandomHisto = [](int seed = 0) {
       TRandom3 rndm(seed);
       auto h = new TH1F("myHist", "Filled in parallel", 128, -8, 8);

@@ -18,7 +18,7 @@
 #include "TError.h"
 #include "TKey.h"
 #ifdef R__USE_IMT
-#include "ThreadPool.h"
+#include "ROOT/TThreadExecutor.hxx"
 #endif
 #include "TROOT.h"
 
@@ -308,7 +308,7 @@ bool TSimpleAnalysis::Run()
 
 
    ROOT::EnableThreadSafety();
-   ThreadPool pool(8);
+   ROOT::TThreadExecutor pool(8);
 
    // Do the chain of the fInputFiles
    std::vector<std::pair<TChain*, TDirectory*>> vChains;
