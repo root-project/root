@@ -7,7 +7,7 @@
 #include <string>
 #include "TH1F.h"
 #include "TRandom.h"
-#include "ROOT/TSeq.h"
+#include "ROOT/TSeq.hxx"
 
 class A{
 public:

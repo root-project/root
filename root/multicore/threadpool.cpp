@@ -1,5 +1,5 @@
 #include "TH1F.h"
-#include "ThreadPool.h"
+#include "ROOT/TThreadExecutor.hxx"
 #include <vector>
 #include <numeric> //accumulate
 
@@ -24,7 +24,7 @@ TObject *rootF(TObject *o)
 }
 
 int PoolTest() {
-   ThreadPool pool;
+   ROOT::TThreadExecutor pool;
    fClass c;
    auto boundF = std::bind(f, 1);
 

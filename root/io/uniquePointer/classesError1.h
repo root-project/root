@@ -6,7 +6,7 @@
 #include <vector>
 #include "TH1F.h"
 #include "TRandom.h"
-#include "ROOT/TSeq.h"
+#include "ROOT/TSeq.hxx"
 
 template<typename T>
 using deleted_unique_ptr = std::unique_ptr<T,std::function<void(T*)>>;
