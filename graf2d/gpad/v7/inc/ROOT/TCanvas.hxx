@@ -1,4 +1,4 @@
-/// \file ROOT/Canvas.h
+/// \file ROOT/TCanvas.h
 /// \ingroup Gpad ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-07-08
@@ -58,7 +58,7 @@ private:
 public:
   static std::shared_ptr<TCanvas> Create(const std::string& title);
 
-  /// Create a temporary Canvas; for long-lived ones please use Create().
+  /// Create a temporary TCanvas; for long-lived ones please use Create().
   TCanvas();
 
   /// Default destructor.

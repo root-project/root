@@ -20,7 +20,7 @@
 R__LOAD_LIBRARY(libGpad);
 
 #include "ROOT/THist.hxx"
-#include "ROOT/Canvas.hxx"
+#include "ROOT/TCanvas.hxx"
 #include "ROOT/TDirectory.hxx"
 
 void draw() {
