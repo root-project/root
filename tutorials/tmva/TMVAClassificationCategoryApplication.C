@@ -1,14 +1,14 @@
 /// \file
 /// \ingroup tutorial_tmva
 /// \notebook -nodraw
-/// This macro provides a simple example on how to use the trained classifiers 
-/// (with categories) within an analysis module  
+/// This macro provides a simple example on how to use the trained classifiers
+/// (with categories) within an analysis module
 /// - Project   : TMVA - a Root-integrated toolkit for multivariate data analysis
-/// - Package   : TMVA                                                           
-/// - Exectuable: TMVAClassificationCategoryApplication                          
-///                                                                              
+/// - Package   : TMVA
+/// - Exectuable: TMVAClassificationCategoryApplication
+///
 /// \macro_output
-/// \macro_code 
+/// \macro_code
 /// \author Andreas Hoecker
 
 
@@ -40,7 +40,7 @@ void TMVAClassificationCategoryApplication()
    // ---------------------------------------------------------------
    // default MVA methods to be trained + tested
    std::map<std::string,int> Use;
-   // 
+   //
    Use["LikelihoodCat"] = 1;
    Use["FisherCat"]     = 1;
    // ---------------------------------------------------------------
@@ -50,7 +50,7 @@ void TMVAClassificationCategoryApplication()
 
    //  Create the Reader object
 
-   TMVA::Reader *reader = new TMVA::Reader( "!Color:!Silent" );    
+   TMVA::Reader *reader = new TMVA::Reader( "!Color:!Silent" );
 
    // Create a set of variables and spectators and declare them to the reader
    // - the variable names MUST corresponds in name and type to those given in the weight file(s) used
@@ -68,7 +68,7 @@ void TMVAClassificationCategoryApplication()
       if (it->second) {
          TString methodName = it->first + " method";
          TString weightfile = "dataset/weights/TMVAClassificationCategory_" + TString(it->first) + ".weights.xml";
-         reader->BookMVA( methodName, weightfile ); 
+         reader->BookMVA( methodName, weightfile );
       }
    }
 
@@ -126,7 +126,7 @@ void TMVAClassificationCategoryApplication()
       for (std::map<std::string,int>::iterator it = Use.begin(); it != Use.end(); it++) {
          if (!it->second) continue;
          TString methodName = it->first + " method";
-         hist[it->first]->Fill( reader->EvaluateMVA( methodName ) );         
+         hist[it->first]->Fill( reader->EvaluateMVA( methodName ) );
       }
 
    }

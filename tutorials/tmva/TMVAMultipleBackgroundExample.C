@@ -2,15 +2,14 @@
 /// \ingroup tutorial_tmva
 /// \notebook -nodraw
 /// This example shows the training of signal with three different backgrounds
-/// Then in the application a tree is created with all signal and background 
+/// Then in the application a tree is created with all signal and background
 /// events where the true class ID and the three classifier outputs are added
-/// finally with the application tree, the significance is maximized with the 
+/// finally with the application tree, the significance is maximized with the
 /// help of the TMVA genetic algrorithm.
 /// - Project   : TMVA - a Root-integrated toolkit for multivariate data analysis
 /// - Package   : TMVA
 /// - Exectuable: TMVAGAexample
-/// 
-///                                                                              
+///
 /// \macro_output
 /// \macro_code
 /// \author Andreas Hoecker
@@ -74,7 +73,7 @@ void Training(){
    // ____________
    TMVA::Factory *factory = new TMVA::Factory( "TMVAMultiBkg0", outputFile, factoryOptions );
    TMVA::DataLoader *dataloader=new TMVA::DataLoader("datasetBkg0");
-   
+
    dataloader->AddVariable( "var1", "Variable 1", "", 'F' );
    dataloader->AddVariable( "var2", "Variable 2", "", 'F' );
    dataloader->AddVariable( "var3", "Variable 3", "units", 'F' );
@@ -99,7 +98,7 @@ void Training(){
    factory->EvaluateAllMethods();
 
    outputFile->Close();
-   
+
    delete factory;
    delete dataloader;
 
@@ -174,7 +173,7 @@ void Training(){
 
    delete factory;
    delete dataloader;
-   
+
 }
 
 
@@ -197,7 +196,7 @@ void ApplicationCreateCombinedTree(){
    Float_t var3, var4;
    Int_t   classID = 0;
    Float_t weight = 1.f;
-   
+
    Float_t classifier0, classifier1, classifier2;
 
    outputTree->Branch("classID", &classID, "classID/I");
@@ -291,7 +290,7 @@ void ApplicationCreateCombinedTree(){
 	 }
 
 	 theTree->GetEntry(ievt);
-      
+
 	 // get the classifiers for each of the signal/background classifications
 	 classifier0 = reader0->EvaluateMVA( method );
 	 classifier1 = reader1->EvaluateMVA( method );
@@ -316,13 +315,13 @@ void ApplicationCreateCombinedTree(){
    outputFile->Close();
 
    std::cout << "--- Created root file: \"" << outfileName.Data() << "\" containing the MVA output histograms" << std::endl;
-  
+
    delete reader0;
    delete reader1;
    delete reader2;
-    
+
    std::cout << "==> Application of readers is done! combined tree created" << std::endl << std::endl;
-   
+
 }
 
 
@@ -347,13 +346,13 @@ public:
       weightsSignal = hSignal->Integral();
 
    }
-       
+
    // the output of this function will be minimized
    Double_t EstimatorFunction( std::vector<Double_t> & factors ){
 
       TString cutsAndWeightTruePositive  = Form("weight*((classID==0) && cls0>%f && cls1>%f && cls2>%f )",factors.at(0), factors.at(1), factors.at(2));
       TString cutsAndWeightFalsePositive = Form("weight*((classID >0) && cls0>%f && cls1>%f && cls2>%f )",factors.at(0), factors.at(1), factors.at(2));
-	  
+
       // Entry$/Entries$ just draws something reasonable. Could in principle anything
       Float_t nTP = chain->Draw("Entry$/Entries$>>htp",cutsAndWeightTruePositive,"goff");
       Float_t nFP = chain->Draw("Entry$/Entries$>>hfp",cutsAndWeightFalsePositive,"goff");
@@ -364,14 +363,14 @@ public:
       efficiency = 0;
       if( weightsSignal > 0 )
 	 efficiency = weightsTruePositive/weightsSignal;
-	  
+
       purity = 0;
       if( weightsTruePositive+weightsFalsePositive > 0 )
 	 purity = weightsTruePositive/(weightsTruePositive+weightsFalsePositive);
 
       Float_t effTimesPur = efficiency*purity;
 
-      Float_t toMinimize = std::numeric_limits<float>::max(); // set to the highest existing number 
+      Float_t toMinimize = std::numeric_limits<float>::max(); // set to the highest existing number
       if( effTimesPur > 0 ) // if larger than 0, take 1/x. This is the value to minimize
 	 toMinimize = 1./(effTimesPur); // we want to minimize 1/efficiency*purity
 
@@ -420,9 +419,9 @@ private:
 // ----------------------------------------------------------------------------------------------
 //
 void MaximizeSignificance(){
-       
+
         // define all the parameters by their minimum and maximum value
-        // in this example 3 parameters (=cuts on the classifiers) are defined. 
+        // in this example 3 parameters (=cuts on the classifiers) are defined.
         vector<Interval*> ranges;
         ranges.push_back( new Interval(-1,1) ); // for some classifiers (especially LD) the ranges have to be taken larger
         ranges.push_back( new Interval(-1,1) );
@@ -441,7 +440,7 @@ void MaximizeSignificance(){
         // prepare the genetic algorithm with an initial population size of 20
         // mind: big population sizes will help in searching the domain space of the solution
         // but you have to weight this out to the number of generations
-        // the extreme case of 1 generation and populationsize n is equal to 
+        // the extreme case of 1 generation and populationsize n is equal to
         // a Monte Carlo calculation with n tries
 
         const TString name( "multipleBackgroundGA" );
@@ -462,7 +461,7 @@ void MaximizeSignificance(){
 	   n++;
 	}
 
-	
+
 }
 
 
@@ -499,5 +498,5 @@ void TMVAMultipleBackgroundExample()
 }
 
 int main( int argc, char** argv ) {
-   TMVAMultipleBackgroundExample(); 
+   TMVAMultipleBackgroundExample();
 }
