@@ -27,7 +27,7 @@
   #error "You should not define __MIXMAX_C. Please #include mixmax.h"
 #endif
 
-#define __MIXMAX_C  // do NOT define it in your own program, just include mixmax.h
+#define __MIXMAX_C
 
 #include "mixmax.h"
 
