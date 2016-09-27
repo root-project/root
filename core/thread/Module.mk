@@ -24,7 +24,7 @@ THREADH      := $(MODDIRI)/TCondition.h $(MODDIRI)/TConditionImp.h \
                 $(MODDIRI)/TThread.h $(MODDIRI)/TThreadFactory.h \
                 $(MODDIRI)/TThreadImp.h $(MODDIRI)/TAtomicCount.h \
                 $(MODDIRI)/TThreadPool.h $(MODDIRI)/ThreadLocalStorage.h \
-                $(MODDIRI)/ROOT/TThreadedObject.h $(MODDIRI)/ROOT/TSpinMutex.h
+                $(MODDIRI)/ROOT/TThreadedObject.hxx $(MODDIRI)/ROOT/TSpinMutex.hxx
 ifneq ($(ARCH),win32)
 THREADH      += $(MODDIRI)/TPosixCondition.h $(MODDIRI)/TPosixMutex.h \
                 $(MODDIRI)/TPosixThread.h $(MODDIRI)/TPosixThreadFactory.h \
