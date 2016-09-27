@@ -3330,7 +3330,7 @@ void TH1::FillRandom(const char *fname, Int_t ntimes)
 
    //   --------------Start main loop ntimes
    for (loop=0;loop<ntimes;loop++) {
-      r1 = gRandom->Rndm(loop);
+      r1 = gRandom->Rndm();
       ibin = TMath::BinarySearch(nbinsx,&integral[0],r1);
       //binx = 1 + ibin;
       //x    = xAxis->GetBinCenter(binx); //this is not OK when SetBuffer is used

@@ -52,7 +52,7 @@ public:
    virtual  void     SetSeed(ULong_t seed=0);
    virtual  Double_t Rndm();
    // keep for backward compatibility
-   virtual  Double_t Rndm(Int_t ) { return Rndm(); }
+   //virtual  Double_t Rndm(Int_t ) { return Rndm(); }
    virtual  void     RndmArray(Int_t n, Float_t *array);
    virtual  void     RndmArray(Int_t n, Double_t *array);
    virtual  void     Sphere(Double_t &x, Double_t &y, Double_t &z, Double_t r);
