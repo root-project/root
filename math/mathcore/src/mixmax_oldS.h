@@ -1,13 +1,10 @@
-#include <stdio.h>
-#include <stdint.h>
-
 #ifndef MIXMAX_H_
 #define MIXMAX_H_
 
 // #ifdef __cplusplus
 // extern "C" {
 // #endif
-	
+
 #ifndef _N
 #define N 256 
 /* The currently recommended N are 3150, 1260, 508, 256, 240, 88

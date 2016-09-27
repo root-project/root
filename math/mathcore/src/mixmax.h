@@ -18,9 +18,6 @@
  *
  */
 
-#include <stdio.h>
-#include <stdint.h>
-
 #ifndef MIXMAX_H_
 #define MIXMAX_H_
 
@@ -29,7 +26,7 @@
 //#ifdef __cplusplus
 //extern "C" {
 //#endif
-	
+
 #ifndef _N
 #define N 240
 /* The currently recommended generator is the three-parameter MIXMAX with

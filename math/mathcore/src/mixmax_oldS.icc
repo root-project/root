@@ -11,12 +11,11 @@
  *	Preprint EPI-867(18)-86, Yerevan Jun.1986;
  */
 
+#ifdef __MIXMAX_C
+  #error "You should not define __MIXMAX_C. Please #include mixmax.h"
+#endif
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-
-#define __MIXMAX_C  // do NOT define it in your own program, just include mixmax.h
+#define __MIXMAX_C
 
 #include "mixmax_oldS.h"
 
