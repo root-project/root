@@ -69,7 +69,7 @@ THREADLIB    := $(LPATH)/libThread.$(SOEXT)
 THREADMAP    := $(THREADLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(THREADH) $(THREADH_EXT))
+ALLHDRS      += $(patsubst $(MODDIRI)/%,include/%,$(THREADH) $(THREADH_EXT))
 ALLLIBS      += $(THREADLIB)
 ALLMAPS      += $(THREADMAP)
 
@@ -85,6 +85,10 @@ INCLUDEFILES += $(THREADDEP)
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
 include/%.h:    $(THREADDIRI)/%.h
+		cp $< $@
+
+include/%.hxx:  $(THREADDIRI)/%.hxx
+		mkdir -p include/ROOT
 		cp $< $@
 
 $(THREADLIB):   $(THREADO) $(THREADDO) $(THREADIMTO) \

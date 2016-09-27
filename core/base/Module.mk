@@ -38,7 +38,7 @@ BASEO        := $(call stripsrc,$(BASES:.cxx=.o))
 BASEDEP      := $(BASEO:.o=.d) $(ROOTAO:.o=.d)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(BASEH))
+ALLHDRS     += $(patsubst $(MODDIRI)/%,include/%,$(BASEH))
 
 # include all dependency files
 INCLUDEFILES += $(BASEDEP)
@@ -46,7 +46,10 @@ INCLUDEFILES += $(BASEDEP)
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
-include/%.h:    $(BASEDIRI)/%.h
+include/%.h:	$(BASEDIRI)/%.h
+		cp $< $@
+
+include/%.hxx:	$(BASEDIRI)/%.hxx
 		mkdir -p include/ROOT
 		cp $< $@
 
