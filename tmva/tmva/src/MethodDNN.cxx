@@ -75,8 +75,10 @@ TMVA::MethodDNN::MethodDNN(const TString& jobName,
                            const TString& methodTitle,
                            DataSetInfo& theData,
                            const TString& theOption)
-   : MethodBase( jobName, Types::kDNN, methodTitle, theData, theOption)
-   , fResume (false)
+   : MethodBase( jobName, Types::kDNN, methodTitle, theData, theOption),
+     fWeightInitialization(), fOutputFunction(), fLayoutString(), fErrorStrategy(),
+     fTrainingStrategyString(), fWeightInitializationString(), fArchitectureString(),
+     fTrainingSettings(), fResume(false), fSettings()
 {
    // standard constructor
 }
@@ -84,7 +86,10 @@ TMVA::MethodDNN::MethodDNN(const TString& jobName,
 //______________________________________________________________________________
 TMVA::MethodDNN::MethodDNN(DataSetInfo& theData,
                            const TString& theWeightFile)
-   : MethodBase( Types::kDNN, theData, theWeightFile), fResume (false)
+    : MethodBase( Types::kDNN, theData, theWeightFile),
+     fWeightInitialization(), fOutputFunction(), fLayoutString(), fErrorStrategy(),
+     fTrainingStrategyString(), fWeightInitializationString(), fArchitectureString(),
+     fTrainingSettings(), fResume(false), fSettings()
 {
    // constructor from a weight file
 }
@@ -1069,9 +1074,9 @@ void TMVA::MethodDNN::AddWeightsXMLTo( void* parent ) const
    for (Int_t i = 0; i < depth; i++) {
       const auto& layer = fNet.GetLayer(i);
       auto layerxml = gTools().xmlengine().NewChild(nn, 0, "Layer");
-      char activationFunction = static_cast<char>(layer.GetActivationFunction());
+      int activationFunction = static_cast<int>(layer.GetActivationFunction());
       gTools().xmlengine().NewAttr(layerxml, 0, "ActivationFunction",
-                                   TString (activationFunction));
+                                   TString::Itoa(activationFunction, 10));
       WriteMatrixXML(layerxml, "Weights", layer.GetWeights());
       WriteMatrixXML(layerxml, "Biases",  layer.GetBiases());
    }
@@ -1108,7 +1113,7 @@ void TMVA::MethodDNN::ReadWeightsFromXML(void* rootXML)
 
       // Read activation function.
       gTools().ReadAttr(layerXML, "ActivationFunction", fString);
-      f = static_cast<EActivationFunction>(fString(0));
+      f = static_cast<EActivationFunction>(fString.Atoi());
 
       // Read number of neurons.
       size_t width;
