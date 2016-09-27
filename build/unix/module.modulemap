@@ -2044,7 +2044,6 @@ module "config.h" { header "config.h" export * }
 module "mmalloc.h" { header "mmalloc.h" export * }
 module "mmconfig.h" { header "mmconfig.h" export * }
 module "mmprivate.h" { header "mmprivate.h" export * }
-module "module.modulemap" { header "module.modulemap" export * }
 module "pq2actions.h" { header "pq2actions.h" export * }
 module "pq2ping.h" { header "pq2ping.h" export * }
 module "pq2wrappers.h" { header "pq2wrappers.h" export * }
