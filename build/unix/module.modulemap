@@ -1514,7 +1514,7 @@ module "TMD5.h" { header "TMD5.h" export * }
 module "TMLPAnalyzer.h" { header "TMLPAnalyzer.h" export * }
 module "TMPClient.h" { header "TMPClient.h" export * }
 module "TMPWorker.h" { header "TMPWorker.h" export * }
-module "TMVA" {
+/*module "TMVA" {
   requires cplusplus
   umbrella "TMVA"
   module * { export * }
@@ -1536,7 +1536,7 @@ module "TMVA" {
   exclude header "TMVA/MethodPyAdaBoost.h"
   exclude header "TMVA/MethodPyGTB.h"
   exclude header "TMVA/MethodPyRandomForest.h"
-}
+}*/
 module "TMacOSXSystem.h" { header "TMacOSXSystem.h" export * }
 module "TMacro.h" { header "TMacro.h" export * }
 module "TMakeProject.h" { header "TMakeProject.h" export * }
