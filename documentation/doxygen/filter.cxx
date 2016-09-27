@@ -56,6 +56,9 @@
 ///  4. `\notebook`
 ///    To generate the corresponding jupyter notebook. In case the tutorial does
 ///    not generate any graphics output, the option `-nodraw` should be added.
+///
+/// Note that the doxygen directive `\authors` or `\author` must be the last one
+/// of the macro header.
 
 #include <unistd.h>
 #include <stdio.h>
@@ -97,7 +100,6 @@ bool   gHeader;        // True if the input file is a header
 bool   gSource;        // True if the input file is a source file
 bool   gPython;        // True if the input file is a Python script.
 bool   gImageSource;   // True the source of the current macro should be shown
-bool   gInTutHeader;   // True if parsing a tutorial header
 int    gInMacro;       // >0 if parsing a macro in a class documentation.
 int    gImageID;       // Image Identifier.
 int    gMacroID;       // Macro identifier in class documentation.
@@ -115,7 +117,6 @@ int main(int argc, char *argv[])
    gSource        = false;
    gPython        = false;
    gImageSource   = false;
-   gInTutHeader   = false;
    gInMacro       = 0;
    gImageID       = 0;
    gMacroID       = 0;
@@ -261,12 +262,11 @@ void FilterTutorial()
    FILE *m = 0;
 
    // Extract the macro name
-   int i1       = gFileName.rfind('/')+1;
-   int i2       = gFileName.rfind('C');
-   gMacroName   = gFileName.substr(i1,i2-i1+1);
-   gImageName   = StringFormat("%s.png", gMacroName.c_str()); // Image name
-   gOutputName  = StringFormat("%s.out", gMacroName.c_str()); // output name
-   gInTutHeader = true; // all tutorials should have an header.
+   int i1      = gFileName.rfind('/')+1;
+   int i2      = gFileName.rfind('C');
+   gMacroName  = gFileName.substr(i1,i2-i1+1);
+   gImageName  = StringFormat("%s.png", gMacroName.c_str()); // Image name
+   gOutputName = StringFormat("%s.out", gMacroName.c_str()); // output name
 
    // Parse the source and generate the image if needed
    while (fgets(gLine,255,f)) {
@@ -326,11 +326,10 @@ void FilterTutorial()
          ReplaceAll(gLineString, "\\macro_output", StringFormat("\\include %s",gOutputName.c_str()));
       }
 
-      // If the line does not start with "///" the header is finished.
-      if (!BeginsWith(gLineString, "///") && gInTutHeader) {
-          gInTutHeader = false;
-         if (gPython) printf("%s",StringFormat("## \\cond \n%s\n",gLineString.c_str()).c_str());
-         else         printf("%s",StringFormat("/// \\cond \n%s\n",gLineString.c_str()).c_str());
+      // \author is the last comment line.
+      if (gLineString.find("\\author")  != string::npos) {
+         if (gPython) printf("%s",StringFormat("%s \n## \\cond \n",gLineString.c_str()).c_str());
+         else         printf("%s",StringFormat("%s \n/// \\cond \n",gLineString.c_str()).c_str());
          if (gShowTutSource == 1) gShowTutSource = 2;
       } else {
          printf("%s",gLineString.c_str());
