@@ -8,7 +8,7 @@ set(libname TreePlayer)
 # TBranchProxyTemplate.h is only used by selectors, to verify that the selector
 # source matches the ROOT interface. It should not end up in the dictionary nor
 # in the PCH.
-ROOT_GLOB_HEADERS(dictHeaders inc/*.h inc/ROOT/*.h)
+ROOT_GLOB_HEADERS(dictHeaders inc/*.h inc/ROOT/*.hxx)
 list(REMOVE_ITEM dictHeaders ${CMAKE_SOURCE_DIR}/tree/treeplayer/inc/TBranchProxyTemplate.h)
 
 ROOT_GLOB_SOURCES(sources src/*.cxx)

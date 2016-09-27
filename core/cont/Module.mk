@@ -16,7 +16,7 @@ CONTDIRI     := $(CONTDIR)/inc
 CONTL        := $(MODDIRI)/LinkDef.h
 
 CONTH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
-CONTH        += $(wildcard $(MODDIRI)/ROOT/*.h)
+CONTH        += $(wildcard $(MODDIRI)/ROOT/*.hxx)
 CONTS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 CONTO        := $(call stripsrc,$(CONTS:.cxx=.o))
 
