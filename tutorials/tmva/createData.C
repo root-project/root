@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_tmva
-/// Pplot the variables.
+/// Plot the variables.
 ///
 /// \macro_code
 /// \author Andreas Hoecker
