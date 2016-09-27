@@ -190,6 +190,15 @@ void TMVA::IPythonInteractive::Init(std::vector<TString>& graphTitles)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// This function sets the point number to 0 for all graphs.
+void TMVA::IPythonInteractive::ClearGraphs()
+{
+   for(Int_t i=0; i<fNumGraphs; i++){
+      fGraphs[i]->Set(0);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// This function is used only in 2 TGraph case, and it will add new data points to graphs.
 /// \param[in] x the x coordinate
 /// \param[in] y1 the y coordinate for the first TGraph

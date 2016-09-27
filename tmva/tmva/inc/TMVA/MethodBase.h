@@ -104,6 +104,7 @@ These graphs are added to a TMultiGraph, and during an interactive training we g
        IPythonInteractive();
        ~IPythonInteractive();
        void Init(std::vector<TString>& graphTitles);
+       void ClearGraphs();
        void AddPoint(Double_t x, Double_t y1, Double_t y2);
        void AddPoint(std::vector<Double_t>& dat);
        inline TMultiGraph* Get() {return fMultiGraph;}

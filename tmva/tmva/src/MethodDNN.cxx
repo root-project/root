@@ -504,23 +504,29 @@ void TMVA::MethodDNN::ProcessOptions()
 //______________________________________________________________________________
 void TMVA::MethodDNN::Train()
 {
+   if (fInteractive && fInteractive->NotInitialized()){
+      std::vector<TString> titles = {"Error on training set", "Error on test set"};
+      fInteractive->Init(titles);
+      // JsMVA progress bar maximum (100%)
+      fIPyMaxIter = 100;
+   }
+
    if (fArchitectureString == "GPU") {
        TrainGpu();
+       if (!fExitFromTraining) fIPyMaxIter = fIPyCurrentIter;
+       ExitFromTraining();
        return;
    } else if (fArchitectureString == "OpenCL") {
       Log() << kFATAL << "OpenCL backend not yes supported." << Endl;
       return;
    } else if (fArchitectureString == "CPU") {
       TrainCpu<Double_t>();
+      if (!fExitFromTraining) fIPyMaxIter = fIPyCurrentIter;
+      ExitFromTraining();
       return;
    }
 
    Log() << kINFO << "Using Standard Implementation.";
-
-   if (fInteractive && fInteractive->NotInitialized()){
-      std::vector<TString> titles = {"Error on training set", "Error on test set"};
-      fInteractive->Init(titles);
-   }
 
    std::vector<Pattern> trainPattern;
    std::vector<Pattern> testPattern;
@@ -712,6 +718,10 @@ void TMVA::MethodDNN::TrainGpu()
    fNet.Initialize(fWeightInitialization);
    for (TTrainingSettings & settings : fTrainingSettings) {
 
+      if (fInteractive){
+         fInteractive->ClearGraphs();
+      }
+
       TNet<TCuda<>> net(settings.batchSize, fNet);
       net.SetWeightDecay(settings.weightDecay);
       net.SetRegularization(settings.regularization);
@@ -812,6 +822,12 @@ void TMVA::MethodDNN::TrainGpu()
             }
             trainingError /= (Double_t) (nTrainingSamples / settings.batchSize);
 
+	    if (fInteractive){
+               fInteractive->AddPoint(stepCount, trainingError, testError);
+               fIPyCurrentIter = 100*(double)minimizer.GetConvergenceCount() /(double)settings.convergenceSteps;
+               if (fExitFromTraining) break;
+            }
+
             // Compute numerical throughput.
             std::chrono::duration<double> elapsed_seconds = end - start;
             double seconds = elapsed_seconds.count();
@@ -861,6 +877,10 @@ void TMVA::MethodDNN::TrainCpu()
 
    size_t trainingPhase = 1;
    for (TTrainingSettings & settings : fTrainingSettings) {
+
+      if (fInteractive){
+         fInteractive->ClearGraphs();
+      }
 
       Log() << "Training phase " << trainingPhase << " of "
             << fTrainingSettings.size() << ":" << Endl;
@@ -960,6 +980,12 @@ void TMVA::MethodDNN::TrainCpu()
                trainingError += net.Loss(inputMatrix, outputMatrix);
             }
             trainingError /= (Double_t) (nTrainingSamples / settings.batchSize);
+
+	    if (fInteractive){
+               fInteractive->AddPoint(stepCount, trainingError, testError);
+               fIPyCurrentIter = 100*(double)minimizer.GetConvergenceCount() /(double)settings.convergenceSteps;
+               if (fExitFromTraining) break;
+            }
 
             // Compute numerical throughput.
             std::chrono::duration<double> elapsed_seconds = end - start;
