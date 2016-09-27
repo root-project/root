@@ -93,7 +93,7 @@ public:
       fOpts(opts) {}
 
    template<class HIST>
-   THistDrawable(const std::unique_ptr<HIST>&& hist, THistDrawOptions<DIMENSIONS> opts):
+   THistDrawable(std::unique_ptr<HIST>&& hist, THistDrawOptions<DIMENSIONS> opts):
       fHistImpl(std::move(hist->TakeImpl())),
       fOpts(opts) {}
 
