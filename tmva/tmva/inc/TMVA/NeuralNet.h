@@ -39,7 +39,6 @@
 #include <thread>
 #include <future>
 #include <type_traits>
-#include <mutex>
 
 #include "Pattern.h"
 #include "Monitoring.h"
