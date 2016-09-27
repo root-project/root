@@ -36,6 +36,7 @@ public:
    TRandom2(UInt_t seed=1);
    virtual ~TRandom2();
    virtual  Double_t Rndm( );
+   using TRandom::Rndm;
    virtual  void     RndmArray(Int_t n, Float_t *array);
    virtual  void     RndmArray(Int_t n, Double_t *array);
    virtual  void     SetSeed(ULong_t seed=0);

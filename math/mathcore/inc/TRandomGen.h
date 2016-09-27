@@ -41,6 +41,7 @@ public:
       SetTitle(TString::Format("Random number generator: %s",fEngine.Name().c_str() ));
    }
    virtual ~TRandomGen() {}
+   using TRandom::Rndm; 
    virtual  Double_t Rndm( ) { return fEngine(); }
    virtual  void     RndmArray(Int_t n, Float_t *array) {
       for (int i = 0; i < n; ++i) array[i] = fEngine(); 

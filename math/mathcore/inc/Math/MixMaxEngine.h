@@ -86,7 +86,11 @@ namespace ROOT {
          typedef  TRandomEngine BaseType;
 
          // this should be changed for WINDOWS
+#ifndef __LP64__
          typedef uint64_t StateInt_t;
+#else
+         typedef unsigned long long StateInt_t;
+#endif
          typedef uint64_t result_t;
 
 

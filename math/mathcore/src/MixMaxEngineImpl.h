@@ -8,8 +8,15 @@
 #define ROOT_Math_MixMaxEngineImpl
 
 
-namespace {
-
+#if (_N==17)
+namespace mixmax_17 {
+#elif (_N==240)
+namespace mixmax_240 {
+#elif (_N==256)
+namespace mixmax_256 {
+#else
+namespace { 
+#endif
 
 #if (_N==256)
 #include "mixmax_oldS.icc"
@@ -24,6 +31,16 @@ namespace {
 
 #include "Math/MixMaxEngine.h"
 
+
+#if (_N==17)
+using namespace mixmax_17;
+#elif (_N==240)
+using namespace mixmax_240;
+#elif (_N==256)
+using namespace mixmax_256;
+#endif
+
+
 namespace ROOT {
    namespace Math { 
 
@@ -32,8 +49,8 @@ class MixMaxEngineImpl<_N> {
    rng_state_t * fRngState;
 public:
 
-   typedef uint64_t StateInt_t; 
-   typedef uint64_t result_t; 
+   typedef MixMaxEngine<_N,0>::StateInt_t StateInt_t; 
+   typedef MixMaxEngine<_N,0>::result_t result_t; 
    
    MixMaxEngineImpl(uint64_t seed) {
       fRngState = rng_alloc();

@@ -56,6 +56,7 @@ public:
                      // Gets the current array of seeds.
    static   void     GetTableSeeds(UInt_t* seeds, Int_t index);
                      // Gets back seed values stored in the table, given the index.
+   using TRandom::Rndm;
    virtual  Double_t Rndm( );
    virtual  void     RndmArray(Int_t size, Float_t *vect);
    virtual  void     RndmArray(Int_t size, Double_t *vect);
