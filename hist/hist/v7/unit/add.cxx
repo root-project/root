@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 
-#include "ROOT/THist.h"
+#include "ROOT/THist.hxx"
 
 // Test "x + 0 = x"
 TEST(HistAddTest, AddEmptyHist) {

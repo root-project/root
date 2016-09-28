@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
-#include <ROOT/THist.h>
-#include <ROOT/THistBinIter.h>
+#include "ROOT/THist.hxx"
+#include "ROOT/THistBinIter.hxx"
 #include <cmath>
 
 using namespace ROOT::Experimental;
