@@ -688,9 +688,10 @@ void THtml::TFileSysDir::Recurse(TFileSysDB* db, const char* path)
             subdir->Recurse(db, entryPath);
          } else {
             int delen = strlen(direntry);
-            // only .cxx and .h are taken
+            // only .cxx and .h, .hxx are taken
             if (strcmp(direntry + delen - 4, ".cxx")
-                && strcmp(direntry + delen - 2, ".h"))
+                && strcmp(direntry + delen - 2, ".h")
+                && strcmp(direntry + delen - 4, ".hxx"))
                continue;
             TFileSysEntry* entry = new TFileSysEntry(direntry, this);
             db->GetEntries().Add(entry);
