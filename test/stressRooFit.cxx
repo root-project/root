@@ -357,7 +357,7 @@ Int_t stressRooFit()
    Bool_t doDump      = kFALSE ;
    Bool_t doTreeStore = kFALSE ;
 
-   string refFileName = "http://root.cern.ch/files/stressRooFit_v534_ref.root" ;
+   string refFileName = "http://root.cern.ch/files/stressRooFit_v608_ref.root" ;
    return stressRooFit(refFileName.c_str(),doWrite,doVerbose,oneTest,dryRun,doDump,doTreeStore);
 }
 
