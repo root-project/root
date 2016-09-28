@@ -10,7 +10,7 @@ TEST(DrawTest, OneD) {
    auto h = std::make_shared<TH1D>(xaxis);
    TCanvas canv;
    canv.Draw(h);
-   EXPECT_EQ(canv.GetPrimitives().size(), 1ul);
+   EXPECT_EQ(canv.GetPrimitives().size(), 1u);
 }
 
 TEST(DrawTest, TwoD) {
@@ -19,7 +19,10 @@ TEST(DrawTest, TwoD) {
    auto h = std::make_shared<TH2I>(xaxis, yaxis);
    TCanvas canv;
    canv.Draw(h);
-   EXPECT_EQ(canv.GetPrimitives().size(), 1ul);
+   // No THist copt c'tor:
+   //canv.Draw(TH2F(xaxis, yaxis));
+   canv.Draw(std::move(std::make_unique<TH2C>(xaxis, yaxis)));
+   EXPECT_EQ(canv.GetPrimitives().size(), 2u);
 }
 
 TEST(DrawTest, ThreeD) {
@@ -29,5 +32,5 @@ TEST(DrawTest, ThreeD) {
    auto h = std::make_shared<TH3F>(xaxis, yaxis, zaxis);
    TCanvas canv;
    canv.Draw(h);
-   EXPECT_EQ(canv.GetPrimitives().size(), 1ul);
+   EXPECT_EQ(canv.GetPrimitives().size(), 1u);
 }
