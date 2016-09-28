@@ -40,5 +40,5 @@ doxygen: filter
 	rm -rf files c1* *.ps *.png *.svg *.pdf *.root *.xpm *.out *.dat
 
 clean:
-	rm -r $(DOXYGEN_OUTPUT_DIRECTORY) filter htmlfooter.html
+	rm -r $(DOXYGEN_OUTPUT_DIRECTORY) filter htmlfooter.html dataset*
 
