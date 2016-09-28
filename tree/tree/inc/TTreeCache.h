@@ -68,7 +68,7 @@ protected:
 
    // These members hold cached data for missed branches when miss optimization
    // is enabled.  Pointers are only initialized if the miss cache is enabled.
-   bool            fOptimizeMisses {false}; //! true if we should optimize cache misses.
+   Bool_t          fOptimizeMisses {kFALSE}; //! true if we should optimize cache misses.
    Long64_t        fFirstMiss {-1}; //! set to the event # of the first miss.
    Long64_t        fLastMiss  {-1}; //! set to the event # of the last miss.
 
@@ -92,7 +92,7 @@ protected:
       std::vector<TBranch*> fBranches;  //! list of branches that we read on misses.
       std::vector<char> fData;  //! Actual data in the cache.
 
-      void clear() {fEntries.clear(); fBranches.clear(); fData.clear();}
+      void clear() { fEntries.clear(); fBranches.clear(); fData.clear(); }
    };
    std::unique_ptr<MissCache> fMissCache;  //! Cache contents for misses
 
@@ -107,12 +107,12 @@ private:
    // The miss cache is more CPU-intensive than the rest of the TTreeCache code;
    // for local work (i.e., laptop with SSD), this CPU cost may outweight the
    // benefit.
-   bool CheckMissCache(char *buf, Long64_t pos, int len);  // Check the miss cache for a particular buffer, fetching if deemed necessary.
-   bool FillMissCache();  // Fill the miss cache from the current set of active branches.
-   bool CalculateMissCache();  // Calculate the appropriate miss cache to fetch; helper function for FillMissCache
+   Bool_t CheckMissCache(char *buf, Long64_t pos, int len);  // Check the miss cache for a particular buffer, fetching if deemed necessary.
+   Bool_t FillMissCache();  // Fill the miss cache from the current set of active branches.
+   Bool_t CalculateMissCache();  // Calculate the appropriate miss cache to fetch; helper function for FillMissCache
    IOPos FindBranchBasket(TBranch &);  // Given a branch, determine the location of its basket for the current entry.
    TBranch* CalculateMissEntries(Long64_t, int, bool);   // Given an file read, try to determine the corresponding branch.
-   bool ProcessMiss(Long64_t pos, int len);   // Given a file read not in the miss cache, handle (possibly) loading the data.
+   Bool_t ProcessMiss(Long64_t pos, int len);   // Given a file read not in the miss cache, handle (possibly) loading the data.
 
 public:
 
@@ -125,7 +125,7 @@ public:
    virtual Int_t        DropBranch(const char *branch, Bool_t subbranches = kFALSE);
    virtual void         Disable() {fEnabled = kFALSE;}
    virtual void         Enable() {fEnabled = kTRUE;}
-   bool                 GetOptimizeMisses() const {return fOptimizeMisses;}
+   Bool_t               GetOptimizeMisses() const { return fOptimizeMisses; }
    const TObjArray     *GetCachedBranches() const { return fBranches; }
    EPrefillType         GetConfiguredPrefillType() const;
    Double_t             GetEfficiency() const;
@@ -134,8 +134,8 @@ public:
    virtual Int_t        GetEntryMax() const {return fEntryMax;}
    static Int_t         GetLearnEntries();
    virtual EPrefillType GetLearnPrefill() const {return fPrefillType;}
-   double               GetMissEfficiency() const;
-   double               GetMissEfficiencyRel() const;
+   Double_t             GetMissEfficiency() const;
+   Double_t             GetMissEfficiencyRel() const;
    TTree               *GetTree() const {return fTree;}
    Bool_t               IsAutoCreated() const {return fAutoCreated;}
    virtual Bool_t       IsEnabled() const {return fEnabled;}
@@ -156,7 +156,7 @@ public:
    virtual void         SetFile(TFile *file, TFile::ECacheAction action=TFile::kDisconnect);
    virtual void         SetLearnPrefill(EPrefillType type = kNoPrefill);
    static void          SetLearnEntries(Int_t n = 10);
-   void                 SetOptimizeMisses(bool opt);
+   void                 SetOptimizeMisses(Bool_t opt);
    void                 StartLearningPhase();
    virtual void         StopLearningPhase();
    virtual void         UpdateBranches(TTree *tree);
