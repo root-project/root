@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include <ROOT/TAxis.h>
+#include "ROOT/TAxis.hxx"
 
 using namespace ROOT::Experimental;
 
