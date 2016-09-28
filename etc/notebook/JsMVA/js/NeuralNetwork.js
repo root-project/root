@@ -283,7 +283,8 @@
     };
 
     NeuralNetwork.draw = function (divid, netobj) {
-        if ("layers" in netobj && "synapses" in netobj) return NeuralNetwork.drawDeepNetwork(divid, netobj);
+        if ("layers" in netobj && "synapses" in netobj) return NeuralNetwork.drawDeepNetwork(divid, netobj, true);
+        if ("layers" in netobj && "Biases" in netobj["layers"][0]) return NeuralNetwork.drawDeepNetwork(divid, netobj);
 
         var svg, net;
 
@@ -339,6 +340,59 @@
 
     var transformDeepNetObject = function(deepnet){
         vars = deepnet["variables"];
+        var layers = deepnet["layers"];
+        var layout = {
+            layer_0: {
+                nneurons: vars.length+1
+            }
+        };
+        var nodes = Number(layers[0]["Weights"]["row"]);
+        for(var j=0;j<vars.length;j++){
+            layout["layer_0"]["neuron_"+j]={
+                nsynapses: nodes,
+                weights: layers[0]["Weights"]["data"].slice(j*nodes, (j+1)*nodes)
+            }
+        }
+        layout["layer_0"]["neuron_"+vars.length] = {
+            nsynapses: Number(layers[0]["Weights"]["row"]),
+            weights: layers[0]["Biases"]["data"]
+        };
+        vars.push("Bias node");
+        for(var i=0; i<(layers.length-1);i++){
+            layout["layer_"+(i+1)] = {
+                nneurons: Number(layers[i]["Weights"]["row"])+1
+            };
+            var cnodes = Number(layers[i]["Weights"]["row"]);
+            nodes = Number(layers[i+1]["Weights"]["row"]);
+            for(var j=0; j<cnodes; j++){
+                layout["layer_"+(i+1)]["neuron_"+j] = {
+                    nsynapses: nodes,
+                    weights: layers[i+1]["Weights"]["data"].slice(j*nodes, (j+1)*nodes)
+                }
+            }
+            layout["layer_"+(i+1)]["neuron_"+cnodes] = {
+                nsynapses: Number(layers[i]["Weights"]["row"]),
+                weights: layers[i+1]["Biases"]["data"]
+            }
+        }
+        layout["layer_"+(i+1)] = {
+            nneurons: Number(layers[i]["Weights"]["row"])
+        };
+        for(var j=0; j<Number(layers[i]["Weights"]["row"]);j++){
+            layout["layer_"+(i+1)]["neuron_"+j] = {
+                nsynapses: 0
+            }
+        }
+        layout["nlayers"] = i+2;
+        var net = {
+            variables: vars,
+            layout: layout
+        };
+        return net;
+    };
+
+    var transformDeepNetObjectOld = function(deepnet){
+        vars = deepnet["variables"];
         vars.push("Bias node");
         var layers = deepnet["layers"];
         var synapses = deepnet["synapses"]["synapses"];
@@ -360,7 +414,7 @@
                 nneurons: Number(layers[i]["Nodes"])
             };
             nodes = Number(layers[i+1]["Nodes"]);
-            for(var j=0; j<Number(layers[i]["Nodes"]);j++){
+            for(var j=0; j<=Number(layers[i]["Nodes"]);j++){
                 layout["layer_"+(i+1)]["neuron_"+j] = {
                     nsynapses: nodes,
                     weights: synapses.slice(j*nodes, (j+1)*nodes)
@@ -426,7 +480,6 @@
         for(var i=0;i<num_layers;i++){
             layers[i] = getNeuronsAttr(net, num_layers, i);
         }
-
         for(i=0;i<num_layers;i++) {
             drawDeepNetSynapses(context, net, layers[i], i, layers[i + 1]);
             drawDeepNetNeurons(context, layers[i], i==0 ? net["variables"] : undefined);
@@ -453,14 +506,18 @@
     };
 
 
-    NeuralNetwork.drawDeepNetwork = function (divid, netobj) {
+    NeuralNetwork.drawDeepNetwork = function (divid, netobj, oldStructure=false) {
         var div = d3.select("#"+divid);
         canvas = {
             width:  Number(div.property("style")["width"].replace("px","")),
             height: Number(div.property("style")["height"].replace("px",""))
         };
 
-        net = transformDeepNetObject(netobj);
+        if (oldStructure){
+            net = transformDeepNetObjectOld(netobj);
+        } else {
+            net = transformDeepNetObject(netobj);
+        }
 
         scaleSynapsisPos.range(style["synapse"]["deepNet_width_range"]);
         scaleSynapsisNeg.range(style["synapse"]["deepNet_width_range"]);
@@ -481,7 +538,6 @@
 
         drawDeepNetwork(context, net);
         drawDNNLabels(context);
-
     };
 
     Object.seal(NeuralNetwork);
