@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
-#include "ROOT/THist.h"
-#include "ROOT/Canvas.h"
+#include "ROOT/THist.hxx"
+#include "ROOT/TCanvas.hxx"
 
 using namespace ROOT::Experimental;
 
