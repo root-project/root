@@ -74,20 +74,20 @@ namespace Internal {
    void EnableParBranchProcessing();
    void DisableParBranchProcessing();
    Bool_t IsParBranchProcessingEnabled();
-   class ParBranchProcessingRAII {
+   class TParBranchProcessingRAII {
    public:
-      ParBranchProcessingRAII()  { EnableParBranchProcessing();  }
-      ~ParBranchProcessingRAII() { DisableParBranchProcessing(); }
+      TParBranchProcessingRAII()  { EnableParBranchProcessing();  }
+      ~TParBranchProcessingRAII() { DisableParBranchProcessing(); }
    };
       
    // Manage parallel tree processing
    void EnableParTreeProcessing();
    void DisableParTreeProcessing();
    Bool_t IsParTreeProcessingEnabled();
-   class ParTreeProcessingRAII {
+   class TParTreeProcessingRAII {
    public:
-      ParTreeProcessingRAII()  { EnableParTreeProcessing();  }
-      ~ParTreeProcessingRAII() { DisableParTreeProcessing(); }
+      TParTreeProcessingRAII()  { EnableParTreeProcessing();  }
+      ~TParTreeProcessingRAII() { DisableParTreeProcessing(); }
    };
 } } // End ROOT::Internal
 

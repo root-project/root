@@ -51,7 +51,7 @@ using namespace ROOT;
 void TTreeProcessor::Process(std::function<void(TTreeReader&)> func)
 {
    // Enable this IMT use case (activate its locks)
-   Internal::ParTreeProcessingRAII ptpRAII;
+   Internal::TParTreeProcessingRAII ptpRAII;
 
    auto clusterIter = treeView->GetClusterIterator();
    Long64_t start = 0, end = 0;
