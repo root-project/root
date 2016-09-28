@@ -12,7 +12,13 @@
 list(APPEND CASTOR_FIND_COMPONENTS shift rfio common client ns)
 list(REMOVE_DUPLICATES CASTOR_FIND_COMPONENTS)
 
-set(locations ${CASTOR_DIR} $ENV{CASTOR_DIR} /cern/pro /cern/new /cern/old /opt/shift)
+set(locations
+    ${CASTOR} $ENV{CASTOR}
+    ${CASTOR_DIR} $ENV{CASTOR_DIR}
+    /cern/pro
+    /cern/new
+    /cern/old
+    /opt/shift)
 
 find_path(CASTOR_INCLUDE_DIR rfio_api.h HINTS ${locations} PATH_SUFFIXES include include/shift)
 
