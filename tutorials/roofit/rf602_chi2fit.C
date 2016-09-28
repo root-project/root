@@ -17,7 +17,6 @@
 #include "RooChebychev.h"
 #include "RooAddPdf.h"
 #include "RooChi2Var.h"
-#include "RooMinuit.h"
 #include "TCanvas.h"
 #include "TAxis.h"
 #include "RooPlot.h"

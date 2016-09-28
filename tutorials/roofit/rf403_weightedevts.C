@@ -20,7 +20,7 @@
 #include "RooGenericPdf.h"
 #include "RooPolynomial.h"
 #include "RooChi2Var.h"
-#include "RooMinuit.h"
+#include "RooMinimizer.h"
 #include "TCanvas.h"
 #include "TAxis.h"
 #include "RooPlot.h"
@@ -144,7 +144,7 @@ void rf403_weightedevts()
    // data using sum-of-weights-squared errors does give correct error
    // estimates
    RooChi2Var chi2("chi2","chi2",p2,*binnedData,DataError(RooAbsData::SumW2)) ;
-   RooMinuit m(chi2) ;
+   RooMinimizer m(chi2) ;
    m.migrad() ;
    m.hesse() ;
 

@@ -16,7 +16,7 @@
 #include "RooGaussian.h"
 #include "RooConstVar.h"
 #include "RooAddPdf.h"
-#include "RooMinuit.h"
+#include "RooMinimizer.h"
 #include "TCanvas.h"
 #include "TAxis.h"
 #include "RooPlot.h"
@@ -54,7 +54,7 @@ void rf605_profilell()
    RooAbsReal* nll = model.createNLL(*data,NumCPU(2)) ;
 
    // Minimize likelihood w.r.t all parameters before making plots
-   RooMinuit(*nll).migrad() ;
+   RooMinimizer(*nll).migrad() ;
 
    // Plot likelihood scan frac 
    RooPlot* frame1 = frac.frame(Bins(10),Range(0.01,0.95),Title("LL and profileLL in frac")) ;
