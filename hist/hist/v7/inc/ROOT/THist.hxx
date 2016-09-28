@@ -345,7 +345,7 @@ void Add(THist<DIMENSIONS, PRECISION_TO, STAT_TO...> &to,
 template<int DIMENSIONS, class PRECISION,
          template <int D_, class P_, template <class P__> class S_> class... STAT>
 std::unique_ptr <Internal::TDrawable>
-GetDrawable(std::shared_ptr<THist<DIMENSIONS, PRECISION, STAT...>> hist,
+GetDrawable(const std::shared_ptr<THist<DIMENSIONS, PRECISION, STAT...>>& hist,
             THistDrawOptions<DIMENSIONS> opts = {})
 {
   return std::make_unique<Internal::THistDrawable<DIMENSIONS>>(hist, opts);
@@ -355,10 +355,10 @@ GetDrawable(std::shared_ptr<THist<DIMENSIONS, PRECISION, STAT...>> hist,
 template<int DIMENSIONS, class PRECISION,
          template <int D_, class P_, template <class P__> class S_> class... STAT>
 std::unique_ptr <Internal::TDrawable>
-GetDrawable(std::unique_ptr<THist<DIMENSIONS, PRECISION, STAT...>> hist,
+GetDrawable(std::unique_ptr<THist<DIMENSIONS, PRECISION, STAT...>>&& hist,
             THistDrawOptions<DIMENSIONS> opts = {})
 {
-  return std::make_unique<Internal::THistDrawable<DIMENSIONS>>(hist, opts);
+  return std::make_unique<Internal::THistDrawable<DIMENSIONS>>(std::move(hist), opts);
 }
 
 } // namespace Experimental
