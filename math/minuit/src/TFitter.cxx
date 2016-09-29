@@ -546,8 +546,11 @@ void TFitter::ReleaseParameter(Int_t ipar)
 void TFitter::SetFCN(void *fcn)
 {
    if (fCovar)  {delete [] fCovar; fCovar = 0;}
-   TVirtualFitter::SetFCN(fcn);
-   fMinuit->SetFCN(fcn);
+
+   Error("SetFCN", "Not used anymore.");
+
+   //TVirtualFitter::SetFCN(fcn);
+   //fMinuit->SetFCN(fcn);
 
 }
 

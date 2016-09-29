@@ -39,7 +39,6 @@ class before issuing a new fit to avoid deleting this information.
 
 
 #include "TMethodCall.h"
-#include "TInterpreter.h"
 
 #include "Math/Util.h"
 
@@ -769,12 +768,8 @@ void InteractiveFCNm2(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_
 void TBackCompFitter::SetFCN(void *fcn)
 {
    if (!fcn) return;
+   Error("SetFCN", "Not used anymore.");
 
-   const char *funcname = gCling->Getp2f2funcname(fcn);
-   if (funcname) {
-      fMethodCall = new TMethodCall();
-      fMethodCall->InitWithPrototype(funcname,"Int_t&,Double_t*,Double_t&,Double_t*,Int_t");
-   }
    fFCN = InteractiveFCNm2;
    // set the static instance (required by InteractiveFCNm)
    TVirtualFitter::SetFitter(this);

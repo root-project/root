@@ -340,7 +340,6 @@ into account the non-linearities much more precisely.
 #include "TError.h"
 #include "TPluginManager.h"
 #include "TClass.h"
-#include "TInterpreter.h"
 
 TMinuit *gMinuit;
 
@@ -958,11 +957,8 @@ void TMinuit::SetFCN(void *fcn)
 {
    if (!fcn) return;
 
-   const char *funcname = gCling->Getp2f2funcname(fcn);
-   if (funcname) {
-      fMethodCall = new TMethodCall();
-      fMethodCall->InitWithPrototype(funcname,"Int_t&,Double_t*,Double_t&,Double_t*,Int_t");
-   }
+   Error("SetFCN", "Not used anymore.");
+
    fFCN = InteractiveFCNm;
    gMinuit = this; //required by InteractiveFCNm
 }

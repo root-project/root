@@ -62,8 +62,8 @@ Bool_t                                       TMVA::MsgLogger::fgInhibitOutput = 
 const std::map<TMVA::EMsgType, std::string>* TMVA::MsgLogger::fgTypeMap  = 0;
 const std::map<TMVA::EMsgType, std::string>* TMVA::MsgLogger::fgColorMap = 0;
 #endif
-static std::auto_ptr<const std::map<TMVA::EMsgType, std::string> > gOwnTypeMap;
-static std::auto_ptr<const std::map<TMVA::EMsgType, std::string> > gOwnColorMap;
+static std::unique_ptr<const std::map<TMVA::EMsgType, std::string> > gOwnTypeMap;
+static std::unique_ptr<const std::map<TMVA::EMsgType, std::string> > gOwnColorMap;
  
 
 void   TMVA::MsgLogger::InhibitOutput() { fgInhibitOutput = kTRUE;  }

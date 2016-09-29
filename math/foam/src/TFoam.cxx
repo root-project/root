@@ -1092,14 +1092,16 @@ void TFoam::ResetRho(TFoamIntegrand *fun)
 /// Note that persistency for FOAM object will not work in the case of such
 /// a distribution.
 
-void TFoam::SetRhoInt( void * fun)
+void TFoam::SetRhoInt( void * /*fun*/)
 {
-
+   Error("SetRhoInt", "Not used anymore.");
+   /*
    const char *namefcn = gCling->Getp2f2funcname(fun); //name of integrand function
    if(namefcn) {
       fMethodCall=new TMethodCall();
       fMethodCall->InitWithPrototype(namefcn, "Int_t, Double_t *");
    }
+   */
    fRho=0;
 }
 

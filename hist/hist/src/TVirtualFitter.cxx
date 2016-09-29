@@ -19,7 +19,6 @@
 #include "TVirtualFitter.h"
 #include "TPluginManager.h"
 #include "TEnv.h"
-#include "TInterpreter.h"
 #include "Math/MinimizerOptions.h"
 #include "ThreadLocalStorage.h"
 
@@ -319,12 +318,8 @@ void TVirtualFitter::SetFCN(void *fcn)
 {
    if (!fcn) return;
 
-   const char *funcname = gCling->Getp2f2funcname(fcn);
-   if (funcname) {
-      delete fMethodCall;
-      fMethodCall = new TMethodCall();
-      fMethodCall->InitWithPrototype(funcname,"Int_t&,Double_t*,Double_t&,Double_t*,Int_t");
-   }
+   Error("SetFCN", "Not used anymore.");
+
    fFCN = InteractiveFCN;
 }
 

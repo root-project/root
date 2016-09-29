@@ -3650,7 +3650,7 @@ Int_t PT_AdminFunc(void *, RunTimes &tt)
       return -1;
    }
    // Reference checksum
-   std::auto_ptr<TMD5> testMacroMd5(testMacro.Checksum());
+   std::unique_ptr<TMD5> testMacroMd5(testMacro.Checksum());
    if (!testMacroMd5.get()) {
       // MD5 sum not calculated
       printf("\n >>> Test failure: could not calculate the md5 sum of the test macro\n");
@@ -3719,7 +3719,7 @@ Int_t PT_AdminFunc(void *, RunTimes &tt)
       macroMore.GetListOfLines()->Remove(macroMore.GetListOfLines()->First());
       os = (TObjString *) macroMore.GetListOfLines()->First();
    }
-   std::auto_ptr<TMD5> testMoreMd5(macroMore.Checksum());
+   std::unique_ptr<TMD5> testMoreMd5(macroMore.Checksum());
    if (!testMoreMd5.get()) {
       // MD5 sum not calculated
       printf("\n >>> Test failure: could not calculate the md5 sum of the 'more' result\n");

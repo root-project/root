@@ -864,7 +864,7 @@ Bool_t TGLViewer::SavePictureUsingBB(const TString &fileName)
    glReadPixels(0, 0, fViewport.Width(), fViewport.Height(),
                 GL_BGRA, GL_UNSIGNED_BYTE, xx);
 
-   std::auto_ptr<TImage> image(TImage::Create());
+   std::unique_ptr<TImage> image(TImage::Create());
    image->FromGLBuffer(xx, fViewport.Width(), fViewport.Height());
    image->WriteImage(fileName);
 
@@ -956,7 +956,7 @@ Bool_t TGLViewer::SavePictureUsingFBO(const TString &fileName, Int_t w, Int_t h,
    glReadPixels(0, 0, fViewport.Width(), fViewport.Height(),
                 GL_BGRA, GL_UNSIGNED_BYTE, xx);
 
-   std::auto_ptr<TImage> image(TImage::Create());
+   std::unique_ptr<TImage> image(TImage::Create());
    image->FromGLBuffer(xx, fViewport.Width(), fViewport.Height());
    image->WriteImage(fileName);
 

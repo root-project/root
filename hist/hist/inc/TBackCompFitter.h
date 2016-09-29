@@ -100,7 +100,8 @@ public:
 
    virtual void      SetFCN(void (*fcn)(Int_t &, Double_t *, Double_t &f, Double_t *, Int_t) );
    // this for CINT (interactive functions)
-   virtual void      SetFCN(void * );
+   virtual void      SetFCN(void * )
+      R__DEPRECATED(6,10, "CINT remnant; not used anymore");
    // for using interpreted function passed by the user
    virtual void SetMethodCall(TMethodCall * m) { fMethodCall = m; }
 

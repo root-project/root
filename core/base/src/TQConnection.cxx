@@ -464,9 +464,12 @@ TQConnection::TQConnection(TClass *cl, void *receiver, const char *method_name)
    fReceiver = receiver;      // fReceiver is pointer to receiver
 
    if (!cl) {
+      Error("SetFCN", "Not used anymore.");
+      /*
       funcname = gCling->Getp2f2funcname(fReceiver);
       if (!funcname)
          Warning("TQConnection", "%s cannot be compiled", method_name);
+      */
    }
 
    if (cl) fClassName = cl->GetName();
