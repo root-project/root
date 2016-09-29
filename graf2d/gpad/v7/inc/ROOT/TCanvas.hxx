@@ -66,6 +66,7 @@ public:
   /// Outline the implementation in sources.
   ~TCanvas();
 
+  // TODO: Draw() should return the Drawable&.
   /// Add something to be painted.
   /// The pad observes what's lifetime through a weak pointer.
   template<class T>
