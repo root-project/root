@@ -30,6 +30,8 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/TrailingObjects.h"
 
+namespace cling { class DeclUnloader; }
+
 namespace clang {
 struct ASTTemplateArgumentListInfo;
 class CXXTemporary;

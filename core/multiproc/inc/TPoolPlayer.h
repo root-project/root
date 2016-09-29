@@ -43,7 +43,7 @@ class TPoolPlayer : public TMPWorker {
    TSelector &fSelector; ///< pointer to the selector to be used to process the tree. It is null if we are not using a TSelector.
    std::vector<std::string> fFileNames; ///< the files to be processed by all workers
    std::string fTreeName; ///< the name of the tree to be processed
-   TTree *fTree; ///< tree to be processed. It is only used if the tree is directly passed to TProcPool::Process as argument
+   TTree *fTree; ///< tree to be processed. It is only used if the tree is directly passed to TProcessExecutor::Process as argument
    unsigned fNWorkers; ///< the number of workers spawned
    ULong64_t fMaxNEntries; ///< the maximum number of entries to be processed by this worker
    ULong64_t fProcessedEntries; ///< the number of entries processed by this worker so far

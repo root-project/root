@@ -97,7 +97,6 @@ public:
       if (fRngType == 0) SetDefaultType();
       if (fRng != 0 && fOwn) Free();
       fRng = gsl_rng_alloc( fRngType );
-      //std::cout << " allocate   " << fRng <<  std::endl;
     }
 
     void Free() {

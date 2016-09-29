@@ -146,6 +146,8 @@ namespace TMVA {
 
       // classification information
       Int_t              GetClassNameMaxLength() const;
+      Int_t              GetVariableNameMaxLength() const;
+      Int_t              GetTargetNameMaxLength() const;
       ClassInfo*         GetClassInfo( Int_t clNum ) const;
       ClassInfo*         GetClassInfo( const TString& name ) const;
       void               PrintClasses() const;

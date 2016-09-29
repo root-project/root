@@ -14,6 +14,7 @@ from ipywidgets import widgets
 from threading import Thread
 import time
 from string import Template
+import numpy as np
 
 
 # This class contains the necessary HTML, JavaScript, CSS codes (templates)
@@ -112,10 +113,11 @@ def GetMethodObject(fac, datasetName, methodName):
         return None
     return (method[0])
 
-## Reads deep neural network weights from file and returns it in JSON format
+## Reads deep neural network weights from file and returns it in JSON format. READER FOR OLD XML STRUCTURE OF DNN.
+# IT WILL BE REMOVED IN THE FUTURE.
 # @param xml_file path to DNN weight file
-# @param returnObj if Fakse it will return a JSON string, if True it will return the JSON object itself
-def GetDeepNetwork(xml_file, returnObj=False):
+# @param returnObj if False it will return a JSON string, if True it will return the JSON object itself
+def GetDeepNetworkOld(xml_file, returnObj=False):
     tree = ElementTree()
     tree.parse(xml_file)
     roottree = tree.getroot()
@@ -144,6 +146,50 @@ def GetDeepNetwork(xml_file, returnObj=False):
         if len(tmp)>1:
             synapses["synapses"].append(tmp)
     network["synapses"] = synapses
+    if returnObj:
+        return network
+    return json.dumps(network)
+
+## Reads deep neural network weights from file and returns it in JSON format.
+# @param xml_file path to DNN weight file
+# @param returnObj if False it will return a JSON string, if True it will return the JSON object itself
+def GetDeepNetwork(xml_file, returnObj=False):
+    tree = ElementTree()
+    tree.parse(xml_file)
+    roottree = tree.getroot()
+    network  = {}
+    network["variables"] = []
+    for v in roottree.find("Variables"):
+        network["variables"].append(v.get('Title'))
+    layers = []
+    for lyr in roottree.find("Weights"):
+        weights = lyr.find("Weights")
+        biases = lyr.find("Biases")
+        wd = []
+        for i in weights.text.split(" "):
+            tmp = i.replace("\n", "")
+            if len(tmp)>=1:
+                wd.append(float(tmp))
+        bd = []
+        for i in biases.text.split(" "):
+            tmp = i.replace("\n", "")
+            if len(tmp)>=1:
+                bd.append(float(tmp))
+        layer = {
+            "ActivationFunction": lyr.get("ActivationFunction"),
+            "Weights": {
+                "row": int(weights.get("rows")),
+                "cols": int(weights.get("cols")),
+                "data": wd
+            },
+            "Biases": {
+                "row": int(biases.get("rows")),
+                "cols": int(biases.get("cols")),
+                "data": bd
+            }
+        }
+        layers.append(layer)
+    network["layers"] = layers
     if returnObj:
         return network
     return json.dumps(network)
@@ -483,8 +529,11 @@ def DrawNeuralNetwork(fac, datasetName, methodName):
     m = GetMethodObject(fac, datasetName, methodName)
     if m==None:
         return None
-    if (methodName=="DNN"):
-        net = GetDeepNetwork(str(m.GetWeightFileName()))
+    if m.GetMethodType() == ROOT.TMVA.Types.kDNN:
+        try:
+            net = GetDeepNetwork(str(m.GetWeightFileName()))
+        except AttributeError:
+            net = GetDeepNetworkOld(str(m.GetWeightFileName()))
     else:
         net = GetNetwork(str(m.GetWeightFileName()))
     JPyInterface.JsDraw.Draw(net, "drawNeuralNetwork", True)
@@ -522,6 +571,22 @@ def DrawDecisionTree(fac, datasetName, methodName):
     container = widgets.HBox([label,treeSelector, drawTree])
     display(container)
 
+## This function puts the main thread to sleep until data points for tracking plots appear.
+# @param m Method object
+# @param sleep_time default sleeping time
+def GotoSleepUntilTrackingReady(m, sleep_time):
+    sleep_index = 1
+    while m.GetCurrentIter() == 0 and not m.TrainingEnded():
+        time.sleep(sleep_time * sleep_index)
+        grs = m.GetInteractiveTrainingError().GetListOfGraphs()
+        if grs and len(grs) > 1 and grs[0].GetN() > 1:
+            break
+        if sleep_index < 120:
+            sleep_index += 1
+    if sleep_index > 2:
+        sleep_time = float(sleep_time * sleep_index / 2)
+    return sleep_time
+
 ## Rewrite function for TMVA::Factory::TrainAllMethods. This function provides interactive training.
 # The training will be started on separated thread. The main thread will periodically check for updates and will create
 # the JS output which will update the plots and progress bars. The main thread must contain `while True`, because, if not
@@ -536,29 +601,26 @@ def ChangeTrainAllMethods(fac):
     inc = __HTMLJSCSSTemplates.inc
     progress_bar = __HTMLJSCSSTemplates.progress_bar
     progress_bar_idx = 0
-
-    def exit_supported(mn):
-        name = str(mn)
-        es = ["SVM", "Cuts", "Boost", "BDT"]
-        for e in es:
-            if name.find(e) != -1:
-                return True
-        return False
-
-    wait_times = {"MLP": 0.5, "DNN": 1, "BDT": 0.5}
+    TTypes = ROOT.TMVA.Types
+    error_plot_supported = [int(TTypes.kMLP), int(TTypes.kDNN), int(TTypes.kBDT)]
+    exit_button_supported = [int(TTypes.kSVM), int(TTypes.kCuts), int(TTypes.kBoost), int(TTypes.kBDT)]
 
     for methodMapElement in fac.fMethodsMap:
+        sleep_time = 0.5
         display(HTML("<center><h1>Dataset: "+str(methodMapElement[0])+"</h1></center>"))
         for m in methodMapElement[1]:
+            m.GetMethodType._threaded = True
             m.GetName._threaded = True
+            method_type = int(m.GetMethodType())
             name = str(m.GetName())
             display(HTML("<h2><b>Train method: "+name+"</b></h2>"))
             m.InitIPythonInteractive()
             t = Thread(target=ROOT.TMVA.MethodBase.TrainMethod, args=[m])
             t.start()
-            if name in wait_times:
+            if method_type in error_plot_supported:
+                time.sleep(sleep_time)
+                sleep_time = GotoSleepUntilTrackingReady(m, sleep_time)
                 display(HTML(button))
-                time.sleep(wait_times[name])
                 if m.GetMaxIter() != 0:
                     display(HTML(progress_bar.substitute({"id": progress_bar_idx})))
                     display(HTML(inc.substitute({"id": progress_bar_idx, "progress": 100 * m.GetCurrentIter() / m.GetMaxIter()})))
@@ -571,19 +633,19 @@ def ChangeTrainAllMethods(fac):
                                 "id": progress_bar_idx,
                                 "progress": 100 * m.GetCurrentIter() / m.GetMaxIter()
                             })))
-                        time.sleep(0.5)
+                        time.sleep(sleep_time)
                 except KeyboardInterrupt:
                     m.ExitFromTraining()
             else:
-                if exit_supported(name):
+                if method_type in exit_button_supported:
                     display(HTML(button))
-                time.sleep(0.5)
+                time.sleep(sleep_time)
                 if m.GetMaxIter()!=0:
                     display(HTML(progress_bar.substitute({"id": progress_bar_idx})))
                     display(HTML(inc.substitute({"id": progress_bar_idx, "progress": 100*m.GetCurrentIter()/m.GetMaxIter()})))
                 else:
                     display(HTML("<b>Training...</b>"))
-                if exit_supported(name):
+                if method_type in exit_button_supported:
                     try:
                         while not m.TrainingEnded():
                             if m.GetMaxIter()!=0:
@@ -591,7 +653,7 @@ def ChangeTrainAllMethods(fac):
                                     "id": progress_bar_idx,
                                     "progress": 100 * m.GetCurrentIter() / m.GetMaxIter()
                                 })))
-                            time.sleep(0.5)
+                            time.sleep(sleep_time)
                     except KeyboardInterrupt:
                         m.ExitFromTraining()
                 else:
@@ -601,7 +663,7 @@ def ChangeTrainAllMethods(fac):
                                 "id": progress_bar_idx,
                                 "progress": 100 * m.GetCurrentIter() / m.GetMaxIter()
                             })))
-                        time.sleep(0.5)
+                        time.sleep(sleep_time)
             if m.GetMaxIter() != 0:
                 display(HTML(inc.substitute({
                     "id": progress_bar_idx,
@@ -700,37 +762,30 @@ def BookDNN(self, loader, title="DNN"):
 # @param net DNN in JSON format
 # @param selectedLayers the selected layers
 def CreateWeightHist(net, selectedLayers):
-    weightStartIndex = 0
-    numberOfWeights = 0
     firstLayer=int(selectedLayers.split("->")[0])
-    for i in xrange(firstLayer):
-        n1=int(net["layers"][i-1]["Nodes"])
-        n2=int(net["layers"][i]["Nodes"])
-        weightStartIndex += int(n1*n2)
-    n1 = 1
-    n2 = 1
-    if firstLayer>0:
-        n1 = int(net["layers"][firstLayer-1]["Nodes"])
-        n2 = int(net["layers"][firstLayer]["Nodes"])
-    else:
-        n2 = int(net["layers"][firstLayer]["Nodes"])
-    numberOfWeights = n1*n2
-    m = ROOT.TMatrixD(n1, n2)
+    weights = net["layers"][firstLayer]["Weights"]
+    n1 = int(weights["row"])
+    n2 = int(weights["cols"])
+    tmatrix = np.reshape(weights["data"], (n1, n2))
+    m = ROOT.TMatrixD(n1, n2+1)
     for i in xrange(n1):
         for j in xrange(n2):
-            idx = j+n2*i
-            if idx>numberOfWeights:
-                print("Something is wrong...")
-                continue
-            m[i][j] = float(net["synapses"]["synapses"][weightStartIndex+idx])
+            m[i][j]  = tmatrix[i][j]
+    bvec = net["layers"][firstLayer]["Biases"]["data"]
+    if n1!=len(bvec):
+        print("Something wrong.. Number of bias weights not equal with the neuron number ("+str(n1)+"!="+str(len(bvec))+")")
+        return
+    for i in xrange(n1):
+        m[i][n2] = bvec[i]
     th2 = ROOT.TH2D(m)
     th2.SetTitle("Weight map for DNN")
     for i in xrange(n2):
         th2.GetXaxis().SetBinLabel(i + 1, str(i))
+    th2.GetXaxis().SetBinLabel(n2+1, "B")
     for i in xrange(n1):
         th2.GetYaxis().SetBinLabel(i + 1, str(i))
-    th2.GetXaxis().SetTitle("Layer: "+str(firstLayer+1))
-    th2.GetYaxis().SetTitle("Layer: "+str(firstLayer))
+    th2.GetXaxis().SetTitle("Layer: "+str(firstLayer))
+    th2.GetYaxis().SetTitle("Layer: "+str(firstLayer+1))
     th2.SetStats(0)
     th2.SetMarkerSize(1.5)
     th2.SetMarkerColor(0)
@@ -750,7 +805,10 @@ def DrawDNNWeights(fac, datasetName, methodName="DNN"):
     m = GetMethodObject(fac, datasetName, methodName)
     if m == None:
         return None
-    net = GetDeepNetwork(str(m.GetWeightFileName()), True)
+    try:
+        net = GetDeepNetwork(str(m.GetWeightFileName()), True)
+    except AttributeError:
+        print("STANDARD architecture not supported! If you want to use this function you must use CPU or GPU architecture")
     numOfLayers = len(net["layers"])
     options = []
     vals=[]

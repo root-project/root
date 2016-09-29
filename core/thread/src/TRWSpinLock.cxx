@@ -26,7 +26,7 @@ possibility to claim the lock and wait for only the remaining readers,
 thus preventing starvation.
 */
 
-#include "ROOT/TRWSpinLock.h"
+#include "ROOT/TRWSpinLock.hxx"
 
 using namespace ROOT;
 

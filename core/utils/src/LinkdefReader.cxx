@@ -218,7 +218,7 @@ bool LinkdefReader::AddRule(const std::string& ruletype,
                   fSelectionRules->AddClassSelectionRule(csr2);
                }
             }
-         } else if (identifier == "typedef" || identifier == "typedef"){
+         } else if (identifier == "typedefs" || identifier == "typedef") {
             // Silently ignore
          } else {
             ROOT::TMetaUtils::Warning("Unimplemented pragma statement: %s\n",identifier.c_str());

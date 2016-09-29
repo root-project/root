@@ -357,7 +357,7 @@ void TRandom1::GetTableSeeds(UInt_t* seeds, Int_t index)
 ////////////////////////////////////////////////////////////////////////////////
 ///return a random number in ]0,1]
 
-Double_t TRandom1::Rndm(Int_t)
+Double_t TRandom1::Rndm( )
 {
    float next_random;
    float uni;
@@ -616,7 +616,7 @@ void TRandom1::SetSeed2(UInt_t seed, int lux)
    fCount24 = 0;
 }
 
-void TRandom1::SetSeed(UInt_t seed)
+void TRandom1::SetSeed(ULong_t seed)
 {
    // Set RanLux seed using default luxury level
    SetSeed2(seed);

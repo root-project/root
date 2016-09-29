@@ -1,4 +1,11 @@
-// plot the variables
+/// \file
+/// \ingroup tutorial_tmva
+/// Plot the variables.
+///
+/// \macro_code
+/// \author Andreas Hoecker
+
+
 #include "TROOT.h"
 #include "TMath.h"
 #include "TTree.h"
@@ -14,7 +21,7 @@
 #include "TBranch.h"
 #include <vector>
 
-void plot( TString fname = "data.root", TString var0="var0", TString var1="var1" ) 
+void plot( TString fname = "data.root", TString var0="var0", TString var1="var1" )
 {
    TFile* dataFile = TFile::Open( fname );
 
@@ -36,7 +43,7 @@ void plot( TString fname = "data.root", TString var0="var0", TString var1="var1"
    TMVAStyle->SetPadLeftMargin(0.15);
    TMVAStyle->SetPadGridX(0);
    TMVAStyle->SetPadGridY(0);
-   
+
    TMVAStyle->SetOptTitle(0);
    TMVAStyle->SetTitleW(.4);
    TMVAStyle->SetTitleH(.10);
@@ -80,10 +87,10 @@ void plot( TString fname = "data.root", TString var0="var0", TString var1="var1"
 
    // and plot
    frameS->Draw();
-   frameB->Draw( "same" );  
+   frameB->Draw( "same" );
 
-   // Draw legend               
-   TLegend *legend = new TLegend( 1 - c->GetRightMargin() - 0.32, 1 - c->GetTopMargin() - 0.12, 
+   // Draw legend
+   TLegend *legend = new TLegend( 1 - c->GetRightMargin() - 0.32, 1 - c->GetTopMargin() - 0.12,
                                   1 - c->GetRightMargin(), 1 - c->GetTopMargin() );
    legend->SetFillStyle( 1 );
    legend->AddEntry(frameS,"Signal","p");
@@ -101,7 +108,7 @@ TMatrixD* produceSqrtMat( const TMatrixD& covMat )
    TMatrixD* sqrtMat = new TMatrixD( size, size );
 
    for (Int_t i=0; i< size; i++) {
-      
+
       sum = 0;
       for (Int_t j=0;j< i; j++) sum += (*sqrtMat)(i,j) * (*sqrtMat)(i,j);
 
@@ -119,13 +126,13 @@ TMatrixD* produceSqrtMat( const TMatrixD& covMat )
    return sqrtMat;
 }
 
-void getGaussRnd( TArrayD& v, const TMatrixD& sqrtMat, TRandom& R ) 
+void getGaussRnd( TArrayD& v, const TMatrixD& sqrtMat, TRandom& R )
 {
    // generate "size" correlated Gaussian random numbers
 
    // sanity check
    const Int_t size = sqrtMat.GetNrows();
-   if (size != v.GetSize()) 
+   if (size != v.GetSize())
       cout << "<getGaussRnd> too short input vector: " << size << " " << v.GetSize() << endl;
 
    Double_t* tmpVec = new Double_t[size];
@@ -157,21 +164,21 @@ void create_lin_Nvar_withFriend(Int_t N = 2000)
    TFile* dataFile = TFile::Open( "data.root", "RECREATE" );
 
    // create signal and background trees
-   TTree* treeS = new TTree( "TreeS", "TreeS", 1 );   
-   TTree* treeB = new TTree( "TreeB", "TreeB", 1 );   
+   TTree* treeS = new TTree( "TreeS", "TreeS", 1 );
+   TTree* treeB = new TTree( "TreeB", "TreeB", 1 );
    for (Int_t ivar=0; ivar<nvar-nvar2; ivar++) {
      cout << "Creating branch var" << ivar+1 << " in signal tree" << endl;
       treeS->Branch( TString(Form( "var%i", ivar+1 )).Data(), &xvar[ivar], TString(Form( "var%i/F", ivar+1 )).Data() );
       treeB->Branch( TString(Form( "var%i", ivar+1 )).Data(), &xvar[ivar], TString(Form( "var%i/F", ivar+1 )).Data() );
    }
-   TTree* treeSF = new TTree( "TreeSF", "TreeS", 1 );   
-   TTree* treeBF = new TTree( "TreeBF", "TreeB", 1 );   
+   TTree* treeSF = new TTree( "TreeSF", "TreeS", 1 );
+   TTree* treeBF = new TTree( "TreeBF", "TreeB", 1 );
    for (Int_t ivar=nvar-nvar2; ivar<nvar; ivar++) {
       treeSF->Branch( TString(Form( "var%i", ivar+1 )).Data(), &xvar[ivar], TString(Form( "var%i/F", ivar+1 )).Data() );
       treeBF->Branch( TString(Form( "var%i", ivar+1 )).Data(), &xvar[ivar], TString(Form( "var%i/F", ivar+1 )).Data() );
    }
 
-      
+
    TRandom R( 100 );
    Float_t xS[nvar] = {  0.2,  0.3,  0.5,  0.9 };
    Float_t xB[nvar] = { -0.2, -0.3, -0.5, -0.6 };
@@ -226,7 +233,7 @@ void create_lin_Nvar_withFriend(Int_t N = 2000)
          getGaussRnd( *v, *m, R );
 
          for (Int_t ivar=0; ivar<nvar; ivar++) xvar[ivar] = (*v)[ivar] + x[ivar];
-         
+
          tree->Fill();
          treeF->Fill();
       }
@@ -262,7 +269,7 @@ TTree* makeTree_lin_Nvar( TString treeName, TString treeTitle, Float_t* x, Float
    for (Int_t ivar=0; ivar<nvar; ivar++) {
       tree->Branch( TString(Form( "var%i", ivar+1 )).Data(), &xvar[ivar], TString(Form( "var%i/F", ivar+1 )).Data() );
    }
-      
+
    TRandom R( 100 );
    TArrayD* v = new TArrayD( nvar );
    Float_t rho[20];
@@ -295,7 +302,7 @@ TTree* makeTree_lin_Nvar( TString treeName, TString treeTitle, Float_t* x, Float
       getGaussRnd( *v, *sqrtMat, R );
 
       for (Int_t ivar=0; ivar<nvar; ivar++) xvar[ivar] = (*v)[ivar] + x[ivar];
-         
+
       tree->Fill();
    }
 
@@ -314,13 +321,13 @@ TTree* makeTree_circ(TString treeName, TString treeTitle, Int_t nvar = 2, Int_t 
 {
    Int_t Nn = 0;
    Float_t xvar[nvar]; //variable array size does not work in interactive mode
- 
+
    // create signal and background trees
-   TTree* tree = new TTree( treeName, treeTitle, 1 );   
+   TTree* tree = new TTree( treeName, treeTitle, 1 );
    for (Int_t ivar=0; ivar<nvar; ivar++) {
       tree->Branch( TString(Form( "var%i", ivar+1 )).Data(), &xvar[ivar], TString(Form( "var%i/F", ivar+1 )).Data() );
    }
-      
+
    TRandom R( 100 );
    //Float_t phimin = -30, phimax = 130;
    Float_t phimin = -70, phimax = 130;
@@ -332,13 +339,13 @@ TTree* makeTree_circ(TString treeName, TString treeTitle, Int_t nvar = 2, Int_t 
 
    // event loop
    for (Int_t i=0; i<N; i++) {
-      Double_t r1=R.Rndm(),r2=R.Rndm(), r3; 
+      Double_t r1=R.Rndm(),r2=R.Rndm(), r3;
       r3= r1>r2? r1 :r2;
       Float_t phi;
       if (distort) phi = r3*(phimax - phimin) + phimin;
       else  phi = R.Rndm()*(phimax - phimin) + phimin;
       phi += R.Gaus()*phisig;
-      
+
       Float_t r = radius;
       r += R.Gaus()*rsig;
 
@@ -347,7 +354,7 @@ TTree* makeTree_circ(TString treeName, TString treeTitle, Int_t nvar = 2, Int_t 
 
       for( Int_t j = 2; j<nvar; ++j )
 	 xvar[j] = dfn*R.Rndm()+fnmin;
-         
+
       tree->Fill();
    }
 
@@ -358,8 +365,8 @@ TTree* makeTree_circ(TString treeName, TString treeTitle, Int_t nvar = 2, Int_t 
 
       for( Int_t j = 2; j<nvar; ++j )
 	 xvar[j] = dfn*R.Rndm()+fnmin;
-         
-         
+
+
       tree->Fill();
    }
 
@@ -375,7 +382,7 @@ TTree* makeTree_circ(TString treeName, TString treeTitle, Int_t nvar = 2, Int_t 
 void create_lin_Nvar_2(Int_t N = 50000)
 {
    const int nvar = 4;
-   
+
    // output flie
    TFile* dataFile = TFile::Open( "data.root", "RECREATE" );
 
@@ -398,7 +405,7 @@ void create_lin_Nvar_2(Int_t N = 50000)
    cout << "created data file: " << dataFile->GetName() << endl;
 }
 
-	
+
 
 
 // create the data
@@ -411,13 +418,13 @@ void create_lin_Nvar(Int_t N = 50000)
    TFile* dataFile = TFile::Open( "data.root", "RECREATE" );
 
    // create signal and background trees
-   TTree* treeS = new TTree( "TreeS", "TreeS", 1 );   
-   TTree* treeB = new TTree( "TreeB", "TreeB", 1 );   
+   TTree* treeS = new TTree( "TreeS", "TreeS", 1 );
+   TTree* treeB = new TTree( "TreeB", "TreeB", 1 );
    for (Int_t ivar=0; ivar<nvar; ivar++) {
       treeS->Branch( TString(Form( "var%i", ivar+1 )).Data(), &xvar[ivar], TString(Form( "var%i/F", ivar+1 )).Data() );
       treeB->Branch( TString(Form( "var%i", ivar+1 )).Data(), &xvar[ivar], TString(Form( "var%i/F", ivar+1 )).Data() );
    }
-      
+
    TRandom R( 100 );
    Float_t xS[nvar] = {  0.2,  0.3,  0.5,  0.9 };
    Float_t xB[nvar] = { -0.2, -0.3, -0.5, -0.6 };
@@ -470,7 +477,7 @@ void create_lin_Nvar(Int_t N = 50000)
          getGaussRnd( *v, *m, R );
 
          for (Int_t ivar=0; ivar<nvar; ivar++) xvar[ivar] = (*v)[ivar] + x[ivar];
-         
+
          tree->Fill();
       }
    }
@@ -488,7 +495,7 @@ void create_lin_Nvar(Int_t N = 50000)
 
 // create the category data
 // type = 1 (offset) or 2 (variable = -99)
-void create_lin_Nvar_categories(Int_t N = 10000, Int_t type = 2)  
+void create_lin_Nvar_categories(Int_t N = 10000, Int_t type = 2)
 {
    const Int_t nvar = 4;
    Float_t xvar[nvar];
@@ -498,8 +505,8 @@ void create_lin_Nvar_categories(Int_t N = 10000, Int_t type = 2)
    TFile* dataFile = TFile::Open( "data.root", "RECREATE" );
 
    // create signal and background trees
-   TTree* treeS = new TTree( "TreeS", "TreeS", 1 );   
-   TTree* treeB = new TTree( "TreeB", "TreeB", 1 );   
+   TTree* treeS = new TTree( "TreeS", "TreeS", 1 );
+   TTree* treeB = new TTree( "TreeB", "TreeB", 1 );
    for (Int_t ivar=0; ivar<nvar; ivar++) {
       treeS->Branch( TString(Form( "var%i", ivar+1 )).Data(), &xvar[ivar], TString(Form( "var%i/F", ivar+1 )).Data() );
       treeB->Branch( TString(Form( "var%i", ivar+1 )).Data(), &xvar[ivar], TString(Form( "var%i/F", ivar+1 )).Data() );
@@ -508,7 +515,7 @@ void create_lin_Nvar_categories(Int_t N = 10000, Int_t type = 2)
    // add category variable
    treeS->Branch( "eta", &eta, "eta/F" );
    treeB->Branch( "eta", &eta, "eta/F" );
-      
+
    TRandom R( 100 );
    Float_t xS[nvar] = {  0.2,  0.3,  0.5,  0.9 };
    Float_t xB[nvar] = { -0.2, -0.3, -0.5, -0.6 };
@@ -597,7 +604,7 @@ void create_lin_Nvar_weighted(Int_t N = 10000, int WeightedSignal=0, int Weighte
    Float_t xvar[nvar];
    Float_t weight;
 
-   
+
    cout << endl << endl << endl;
    cout << "please use .L createData.C++ if you want to run this MC geneation" <<endl;
    cout << "otherwise you will wait for ages!!! " << endl;
@@ -608,19 +615,19 @@ void create_lin_Nvar_weighted(Int_t N = 10000, int WeightedSignal=0, int Weighte
    TString fileName;
    if (BackgroundContamination) fileName = Form("linCorGauss%d_weighted+background.root",seed);
    else                         fileName = Form("linCorGauss%d_weighted.root",seed);
-   
+
    TFile* dataFile = TFile::Open( fileName.Data(), "RECREATE" );
 
    // create signal and background trees
-   TTree* treeS = new TTree( "TreeS", "TreeS", 1 );   
-   TTree* treeB = new TTree( "TreeB", "TreeB", 1 );   
+   TTree* treeS = new TTree( "TreeS", "TreeS", 1 );
+   TTree* treeB = new TTree( "TreeB", "TreeB", 1 );
    for (Int_t ivar=0; ivar<nvar; ivar++) {
       treeS->Branch( TString(Form( "var%i", ivar+1 )).Data(), &xvar[ivar], TString(Form( "var%i/F", ivar+1 )).Data() );
       treeB->Branch( TString(Form( "var%i", ivar+1 )).Data(), &xvar[ivar], TString(Form( "var%i/F", ivar+1 )).Data() );
    }
    if (WeightedSignal||BackgroundContamination>0||1) treeS->Branch( "weight", &weight,"weight/F" );
    if (WeightedBkg)    treeB->Branch( "weight", &weight,"weight/F" );
-      
+
    TRandom R( seed );
    Float_t xS[nvar] = {  0.2,  0.3,  0.4,  0.8 };
    Float_t xB[nvar] = { -0.2, -0.3, -0.4, -0.5 };
@@ -673,7 +680,7 @@ void create_lin_Nvar_weighted(Int_t N = 10000, int WeightedSignal=0, int Weighte
 
          for (Int_t ivar=0; ivar<nvar; ivar++) xvar[ivar] = (*v)[ivar] + x[ivar];
          //         for (Int_t ivar=0; ivar<nvar; ivar++) xvar[ivar] = R.Uniform()*10.-5.;
-         
+
          //         weight = 0.5 / (TMath::Gaus( (xvar[nvar-1]-x[nvar-1]), 0, 1.1) );
          // weight = TMath::Gaus(0.675,0,1) / (TMath::Gaus( (xvar[nvar-1]-x[nvar-1]), 0, 1.) );
          weight = 0.8 / (TMath::Gaus( ((*v)[nvar-1]), 0, 1.09) );
@@ -699,7 +706,7 @@ void create_lin_Nvar_weighted(Int_t N = 10000, int WeightedSignal=0, int Weighte
    }
 
 
-   if (BackgroundContamination > 0){  // add "background contamination" in the Signal (which later is again "subtracted" with 
+   if (BackgroundContamination > 0){  // add "background contamination" in the Signal (which later is again "subtracted" with
             // using (statistically indepentent) background events with negative weight)
       Float_t*  x=xB;
       TMatrixD* m = sqrtMatB;
@@ -712,7 +719,7 @@ void create_lin_Nvar_weighted(Int_t N = 10000, int WeightedSignal=0, int Weighte
          // add weights
          if (i%2) weight = 1;
          else weight = -1;
-         
+
          tree->Fill();
       }
    }
@@ -726,7 +733,7 @@ void create_lin_Nvar_weighted(Int_t N = 10000, int WeightedSignal=0, int Weighte
    treeS->Show(0);
    treeB->Show(1);
 
-   TH1F *h[4];   
+   TH1F *h[4];
    TH1F *hw[4];
    for (Int_t  i=0;i<4;i++){
       char buffer[5];
@@ -771,8 +778,8 @@ void create_lin_Nvar_Arr(Int_t N = 1000)
    TFile* dataFile = TFile::Open( "data.root", "RECREATE" );
 
    // create signal and background trees
-   TTree* treeS = new TTree( "TreeS", "TreeS", 1 );   
-   TTree* treeB = new TTree( "TreeB", "TreeB", 1 );   
+   TTree* treeS = new TTree( "TreeS", "TreeS", 1 );
+   TTree* treeB = new TTree( "TreeB", "TreeB", 1 );
    for (Int_t ivar=0; ivar<nvar; ivar++) {
       xvar[ivar] = new std::vector<float>();
       treeS->Branch( TString(Form( "var%i", ivar+1 )).Data(), "vector<float>", &xvar[ivar], 64000, 1 );
@@ -872,8 +879,8 @@ void create_lin_Nvar_double()
    TFile* dataFile = TFile::Open( "data.root", "RECREATE" );
 
    // create signal and background trees
-   TTree* treeS = new TTree( "TreeS", "TreeS", 1 );   
-   TTree* treeB = new TTree( "TreeB", "TreeB", 1 );   
+   TTree* treeS = new TTree( "TreeS", "TreeS", 1 );
+   TTree* treeB = new TTree( "TreeB", "TreeB", 1 );
    for (Int_t ivar=0; ivar<nvar; ivar++) {
       if (ivar<2) {
          treeS->Branch( TString(Form( "var%i", ivar+1 )).Data(), &xvarD[ivar], TString(Form( "var%i/D", ivar+1 )).Data() );
@@ -884,7 +891,7 @@ void create_lin_Nvar_double()
          treeB->Branch( TString(Form( "var%i", ivar+1 )).Data(), &xvarF[ivar], TString(Form( "var%i/F", ivar+1 )).Data() );
       }
    }
-      
+
    TRandom R( 100 );
    Double_t xS[nvar] = {  0.2,  0.3,  0.5,  0.6 };
    Double_t xB[nvar] = { -0.2, -0.3, -0.5, -0.6 };
@@ -941,7 +948,7 @@ void create_lin_Nvar_double()
             if (ivar<2) xvarD[ivar] = xvar[ivar];
             else        xvarF[ivar] = xvar[ivar];
          }
-         
+
          tree->Fill();
       }
    }
@@ -971,8 +978,8 @@ void create_lin_Nvar_discrete()
    TFile* dataFile = TFile::Open( "data.root", "RECREATE" );
 
    // create signal and background trees
-   TTree* treeS = new TTree( "TreeS", "TreeS", 1 );   
-   TTree* treeB = new TTree( "TreeB", "TreeB", 1 );   
+   TTree* treeS = new TTree( "TreeS", "TreeS", 1 );
+   TTree* treeB = new TTree( "TreeB", "TreeB", 1 );
    for (Int_t ivar=0; ivar<nvar-2; ivar++) {
       treeS->Branch( TString(Form( "var%i", ivar+1 )).Data(), &xvar[ivar], TString(Form( "var%i/F", ivar+1 )).Data() );
       treeB->Branch( TString(Form( "var%i", ivar+1 )).Data(), &xvar[ivar], TString(Form( "var%i/F", ivar+1 )).Data() );
@@ -981,7 +988,7 @@ void create_lin_Nvar_discrete()
       treeS->Branch( TString(Form( "var%i", ivar+nvar-2+1 )).Data(), &xvarI[ivar], TString(Form( "var%i/I", ivar+nvar-2+1 )).Data() );
       treeB->Branch( TString(Form( "var%i", ivar+nvar-2+1 )).Data(), &xvarI[ivar], TString(Form( "var%i/I", ivar+nvar-2+1 )).Data() );
    }
-      
+
    TRandom R( 100 );
    Float_t xS[nvar] = {  0.2,  0.3,  1,  2 };
    Float_t xB[nvar] = { -0.2, -0.3,  0,  0 };
@@ -1039,7 +1046,7 @@ void create_lin_Nvar_discrete()
 
          xvarI[0] =  TMath::Nint(xvar[nvar-2]);
          xvarI[1] =  TMath::Nint(xvar[nvar-1]);
-         
+
          tree->Fill();
       }
    }
@@ -1068,13 +1075,13 @@ void create_ManyVars()
    TFile* dataFile = TFile::Open( "data.root", "RECREATE" );
 
    // create signal and background trees
-   TTree* treeS = new TTree( "TreeS", "TreeS", 1 );   
-   TTree* treeB = new TTree( "TreeB", "TreeB", 1 );   
+   TTree* treeS = new TTree( "TreeS", "TreeS", 1 );
+   TTree* treeB = new TTree( "TreeB", "TreeB", 1 );
    for (Int_t ivar=0; ivar<nvar; ivar++) {
       treeS->Branch( TString(Form( "var%i", ivar )).Data(), &xvar[ivar], TString(Form( "var%i/F", ivar )).Data() );
       treeB->Branch( TString(Form( "var%i", ivar )).Data(), &xvar[ivar], TString(Form( "var%i/F", ivar )).Data() );
    }
-      
+
    Float_t xS[nvar];
    Float_t xB[nvar];
    Float_t dx[nvar];
@@ -1110,7 +1117,7 @@ void create_ManyVars()
    // loop over species
    for (Int_t itype=0; itype<2; itype++) {
 
-      Float_t* x = (itype == 0) ? xS : xB; 
+      Float_t* x = (itype == 0) ? xS : xB;
 
       // event loop
       TTree* tree = (itype == 0) ? treeS : treeB;
@@ -1121,7 +1128,7 @@ void create_ManyVars()
             if (ivar == 1500 && itype!=10) xvar[ivar] = 1;
             else                           xvar[ivar] = x[ivar] + R.Gaus()*dx[ivar];
          }
-         
+
          tree->Fill();
       }
    }
@@ -1149,13 +1156,13 @@ void create_lin_NvarObsolete()
    TFile* dataFile = TFile::Open( "data.root", "RECREATE" );
 
    // create signal and background trees
-   TTree* treeS = new TTree( "TreeS", "TreeS", 1 );   
-   TTree* treeB = new TTree( "TreeB", "TreeB", 1 );   
+   TTree* treeS = new TTree( "TreeS", "TreeS", 1 );
+   TTree* treeB = new TTree( "TreeB", "TreeB", 1 );
    for (Int_t ivar=0; ivar<nvar; ivar++) {
       treeS->Branch( TString(Form( "var%i", ivar )).Data(), &xvar[ivar], TString(Form( "var%i/F", ivar )).Data() );
       treeB->Branch( TString(Form( "var%i", ivar )).Data(), &xvar[ivar], TString(Form( "var%i/F", ivar )).Data() );
    }
-      
+
    TRandom R( 100 );
    Float_t xS[nvar] = {  0.5,  0.5,  0.0,  0.0,  0.0,  0.0 };
    Float_t xB[nvar] = { -0.5, -0.5, -0.0, -0.0, -0.0, -0.0 };
@@ -1209,7 +1216,7 @@ void create_lin_NvarObsolete()
          getGaussRnd( *v, *m, R );
 
          for (Int_t ivar=0; ivar<nvar; ivar++) xvar[ivar] = (*v)[ivar] + x[ivar];
-         
+
          tree->Fill();
       }
    }
@@ -1238,15 +1245,15 @@ void create_lin(Int_t N = 2000)
    TFile* dataFile = TFile::Open( "data.root", "RECREATE" );
 
    // create signal and background trees
-   TTree* treeS = new TTree( "TreeS", "TreeS", 1 );   
-   TTree* treeB = new TTree( "TreeB", "TreeB", 1 );   
+   TTree* treeS = new TTree( "TreeS", "TreeS", 1 );
+   TTree* treeB = new TTree( "TreeB", "TreeB", 1 );
    for (Int_t ivar=0; ivar<nvar; ivar++) {
       treeS->Branch( TString(Form( "var%i", ivar )).Data(), &xvar[ivar], TString(Form( "var%i/D", ivar )).Data() );
       treeB->Branch( TString(Form( "var%i", ivar )).Data(), &xvar[ivar], TString(Form( "var%i/D", ivar )).Data() );
    }
    treeS->Branch( "weight", &weight, "weight/F" );
    treeB->Branch( "weight", &weight, "weight/F" );
-      
+
    TRandom R( 100 );
    Float_t xS[nvar] = {  0.0,  0.0 };
    Float_t xB[nvar] = { -0.0, -0.0 };
@@ -1297,7 +1304,7 @@ void create_lin(Int_t N = 2000)
          // add weights
          if (itype == 0) weight = 1.0; // this is the signal weight
          else            weight = 2.0; // this is the background weight
-         
+
          tree->Fill();
       }
    }
@@ -1340,12 +1347,12 @@ void create_fullcirc(Int_t nmax  = 20000,  Bool_t distort=false)
       Float_t xout = xvar[0]*xvar[0]+xvar[1]*xvar[1];
       if (nsig<10) cout << "xout = " << xout<<endl;
       if (xout < 0.3  || (xout >0.3 && xout<0.5 && R.Rndm() > xout)) {
-         if (distort && xvar[0] < 0 && R.Rndm()>0.1) continue; 
+         if (distort && xvar[0] < 0 && R.Rndm()>0.1) continue;
          treeS->Fill();
          nsig++;
       }
       else {
-         if (distort && xvar[0] > 0 && R.Rndm()>0.1) continue; 
+         if (distort && xvar[0] > 0 && R.Rndm()>0.1) continue;
          treeB->Fill();
          nbgd++;
       }
@@ -1353,8 +1360,8 @@ void create_fullcirc(Int_t nmax  = 20000,  Bool_t distort=false)
 
    dataFile->Write();
    dataFile->Close();
-   
-} 
+
+}
 
 // create the data
 void create_circ(Int_t N  = 6000, Bool_t distort = false)
@@ -1367,8 +1374,8 @@ void create_circ(Int_t N  = 6000, Bool_t distort = false)
    TFile* dataFile = TFile::Open( "data.root", "RECREATE" );
 
    // create signal and background trees
-   TTree* treeS = new TTree( "TreeS", "TreeS", 1 );   
-   TTree* treeB = new TTree( "TreeB", "TreeB", 1 );   
+   TTree* treeS = new TTree( "TreeS", "TreeS", 1 );
+   TTree* treeB = new TTree( "TreeB", "TreeB", 1 );
    for (Int_t ivar=0; ivar<nvar; ivar++) {
       treeS->Branch( TString(Form( "var%i", ivar )).Data(), &xvar[ivar], TString(Form( "var%i/F", ivar )).Data() );
       treeB->Branch( TString(Form( "var%i", ivar )).Data(), &xvar[ivar], TString(Form( "var%i/F", ivar )).Data() );
@@ -1380,7 +1387,7 @@ void create_circ(Int_t N  = 6000, Bool_t distort = false)
 //    }
 //    treeB->SetName ( "TreeB" );
 //    treeB->SetTitle( "TreeB" );
-      
+
    TRandom R( 100 );
    //Float_t phimin = -30, phimax = 130;
    Float_t phimin = -70, phimax = 130;
@@ -1397,20 +1404,20 @@ void create_circ(Int_t N  = 6000, Bool_t distort = false)
       // event loop
       TTree* tree = (itype==0) ? treeS : treeB;
       for (Int_t i=0; i<N; i++) {
-	 Double_t r1=R.Rndm(),r2=R.Rndm(), r3; 
+	 Double_t r1=R.Rndm(),r2=R.Rndm(), r3;
 	 if (itype==0) r3= r1>r2? r1 :r2;
 	 else r3= r2;
 	 Float_t phi;
 	 if (distort) phi = r3*(phimax - phimin) + phimin;
 	 else  phi = R.Rndm()*(phimax - phimin) + phimin;
          phi += R.Gaus()*phisig;
-      
+
          Float_t r = (itype==0) ? rS : rB;
          r += R.Gaus()*rsig;
 
          xvar[0] = r*cos(TMath::DegToRad()*phi);
          xvar[1] = r*sin(TMath::DegToRad()*phi);
-         
+
          tree->Fill();
       }
 
@@ -1418,7 +1425,7 @@ void create_circ(Int_t N  = 6000, Bool_t distort = false)
 
          xvar[0] = dfn*R.Rndm()+fnmin;
          xvar[1] = dfn*R.Rndm()+fnmin;
-         
+
          tree->Fill();
       }
    }
@@ -1446,8 +1453,8 @@ void create_schachbrett(Int_t nEvents = 20000) {
    TFile* dataFile = TFile::Open( "data.root", "RECREATE" );
 
    // create signal and background trees
-   TTree* treeS = new TTree( "TreeS", "TreeS", 1 );   
-   TTree* treeB = new TTree( "TreeB", "TreeB", 1 );   
+   TTree* treeS = new TTree( "TreeS", "TreeS", 1 );
+   TTree* treeB = new TTree( "TreeB", "TreeB", 1 );
    for (Int_t ivar=0; ivar<nvar; ivar++) {
       treeS->Branch( TString(Form( "var%i", ivar )).Data(), &xvar[ivar], TString(Form( "var%i/F", ivar )).Data() );
       treeB->Branch( TString(Form( "var%i", ivar )).Data(), &xvar[ivar], TString(Form( "var%i/F", ivar )).Data() );
@@ -1505,8 +1512,8 @@ void create_schachbrett_5D(Int_t nEvents = 200000) {
    TFile* dataFile = TFile::Open( "data.root", "RECREATE" );
 
    // create signal and background trees
-   TTree* treeS = new TTree( "TreeS", "TreeS", 1 );   
-   TTree* treeB = new TTree( "TreeB", "TreeB", 1 );   
+   TTree* treeS = new TTree( "TreeS", "TreeS", 1 );
+   TTree* treeB = new TTree( "TreeB", "TreeB", 1 );
    for (Int_t ivar=0; ivar<nvar; ivar++) {
       treeS->Branch( TString(Form( "var%i", ivar )).Data(), &xvar[ivar], TString(Form( "var%i/F", ivar )).Data() );
       treeB->Branch( TString(Form( "var%i", ivar )).Data(), &xvar[ivar], TString(Form( "var%i/F", ivar )).Data() );
@@ -1532,7 +1539,7 @@ void create_schachbrett_5D(Int_t nEvents = 200000) {
                for (idx[3]=-m_nDim; idx[3] <=  m_nDim; idx[3]++){
                   itype[4]=1;
                   for (idx[4]=-m_nDim; idx[4] <=  m_nDim; idx[4]++){
-                     Int_t type   = itype[0]; 
+                     Int_t type   = itype[0];
                      for (Int_t i=0;i<nvar;i++){
                         xvar[i]=m_rand->Gaus(Double_t(idx[i]),sigma);
                         if (i>0) type *= itype[i];
@@ -1551,7 +1558,7 @@ void create_schachbrett_5D(Int_t nEvents = 200000) {
          itype[0] *= -1;
       }
    }
-            
+
    // write trees
    treeS->Write();
    treeB->Write();
@@ -1576,8 +1583,8 @@ void create_schachbrett_4D(Int_t nEvents = 200000) {
    TFile* dataFile = TFile::Open( "data.root", "RECREATE" );
 
    // create signal and background trees
-   TTree* treeS = new TTree( "TreeS", "TreeS", 1 );   
-   TTree* treeB = new TTree( "TreeB", "TreeB", 1 );   
+   TTree* treeS = new TTree( "TreeS", "TreeS", 1 );
+   TTree* treeB = new TTree( "TreeB", "TreeB", 1 );
    for (Int_t ivar=0; ivar<nvar; ivar++) {
       treeS->Branch( TString(Form( "var%i", ivar )).Data(), &xvar[ivar], TString(Form( "var%i/F", ivar )).Data() );
       treeB->Branch( TString(Form( "var%i", ivar )).Data(), &xvar[ivar], TString(Form( "var%i/F", ivar )).Data() );
@@ -1601,7 +1608,7 @@ void create_schachbrett_4D(Int_t nEvents = 200000) {
             for (idx[2]=-m_nDim; idx[2] <=  m_nDim; idx[2]++){
                itype[3]=1;
                for (idx[3]=-m_nDim; idx[3] <=  m_nDim; idx[3]++){
-                  Int_t type   = itype[0]; 
+                  Int_t type   = itype[0];
                   for (Int_t i=0;i<nvar;i++){
                      xvar[i]=m_rand->Gaus(Double_t(idx[i]),sigma);
                      if (i>0) type *= itype[i];
@@ -1643,8 +1650,8 @@ void create_schachbrett_3D(Int_t nEvents = 20000) {
    TFile* dataFile = TFile::Open( "data.root", "RECREATE" );
 
    // create signal and background trees
-   TTree* treeS = new TTree( "TreeS", "TreeS", 1 );   
-   TTree* treeB = new TTree( "TreeB", "TreeB", 1 );   
+   TTree* treeS = new TTree( "TreeS", "TreeS", 1 );
+   TTree* treeB = new TTree( "TreeB", "TreeB", 1 );
    for (Int_t ivar=0; ivar<nvar; ivar++) {
       treeS->Branch( TString(Form( "var%i", ivar )).Data(), &xvar[ivar], TString(Form( "var%i/F", ivar )).Data() );
       treeB->Branch( TString(Form( "var%i", ivar )).Data(), &xvar[ivar], TString(Form( "var%i/F", ivar )).Data() );
@@ -1666,7 +1673,7 @@ void create_schachbrett_3D(Int_t nEvents = 20000) {
          for (idx[1]=-m_nDim; idx[1] <=  m_nDim; idx[1]++){
             itype[2]=1;
             for (idx[2]=-m_nDim; idx[2] <=  m_nDim; idx[2]++){
-               Int_t type   = itype[0]; 
+               Int_t type   = itype[0];
                for (Int_t i=0;i<nvar;i++){
                   xvar[i]=m_rand->Gaus(Double_t(idx[i]),sigma);
                   if (i>0) type *= itype[i];
@@ -1706,8 +1713,8 @@ void create_schachbrett_2D(Int_t nEvents = 100000, Int_t nbumps=2) {
    TFile* dataFile = TFile::Open( "data.root", "RECREATE" );
 
    // create signal and background trees
-   TTree* treeS = new TTree( "TreeS", "TreeS", 1 );   
-   TTree* treeB = new TTree( "TreeB", "TreeB", 1 );   
+   TTree* treeS = new TTree( "TreeS", "TreeS", 1 );
+   TTree* treeB = new TTree( "TreeB", "TreeB", 1 );
    for (Int_t ivar=0; ivar<nvar; ivar++) {
       treeS->Branch( TString(Form( "var%i", ivar )).Data(), &xvar[ivar], TString(Form( "var%i/F", ivar )).Data() );
       treeB->Branch( TString(Form( "var%i", ivar )).Data(), &xvar[ivar], TString(Form( "var%i/F", ivar )).Data() );
@@ -1727,7 +1734,7 @@ void create_schachbrett_2D(Int_t nEvents = 100000, Int_t nbumps=2) {
       for (idx[0]=-m_nDim; idx[0] <=  m_nDim; idx[0]++){
          itype[1]=1;
          for (idx[1]=-m_nDim; idx[1] <=  m_nDim; idx[1]++){
-            Int_t type   = itype[0]; 
+            Int_t type   = itype[0];
             for (Int_t i=0;i<nvar;i++){
                xvar[i]=m_rand->Gaus(Double_t(idx[i]),sigma);
                if (i>0) type *= itype[i];
@@ -1740,7 +1747,7 @@ void create_schachbrett_2D(Int_t nEvents = 100000, Int_t nbumps=2) {
          itype[0] *= -1;
       }
    }
-   
+
    // write trees
    treeS->Write();
    treeB->Write();
@@ -1758,9 +1765,9 @@ void create_schachbrett_2D(Int_t nEvents = 100000, Int_t nbumps=2) {
 
 
 void create_3Bumps(Int_t nEvents = 5000) {
-   // signal is clustered around (1,0) and (-1,0) where one is two times(1,0) 
+   // signal is clustered around (1,0) and (-1,0) where one is two times(1,0)
    // bkg                        (0,0)
-   
+
 
 
    const Int_t nvar = 2;
@@ -1771,8 +1778,8 @@ void create_3Bumps(Int_t nEvents = 5000) {
    TFile* dataFile = TFile::Open( filename, "RECREATE" );
 
    // create signal and background trees
-   TTree* treeS = new TTree( "TreeS", "TreeS", 1 );   
-   TTree* treeB = new TTree( "TreeB", "TreeB", 1 );   
+   TTree* treeS = new TTree( "TreeS", "TreeS", 1 );
+   TTree* treeB = new TTree( "TreeB", "TreeB", 1 );
    for (Int_t ivar=0; ivar<nvar; ivar++) {
       treeS->Branch( TString(Form( "var%i", ivar )).Data(), &xvar[ivar], TString(Form( "var%i/F", ivar )).Data() );
       treeB->Branch( TString(Form( "var%i", ivar )).Data(), &xvar[ivar], TString(Form( "var%i/F", ivar )).Data() );
@@ -1783,7 +1790,7 @@ void create_3Bumps(Int_t nEvents = 5000) {
    Double_t sigma=0.2;
    Int_t type;
    Int_t iev=0;
-   Double_t Centers[nvar][6] = {{-1,0,0,0,1,1},{0,0,0,0,0,0}}; // 
+   Double_t Centers[nvar][6] = {{-1,0,0,0,1,1},{0,0,0,0,0,0}}; //
 
 
    while (iev < nEvents){
@@ -1798,7 +1805,7 @@ void create_3Bumps(Int_t nEvents = 5000) {
          iev++;
       }
    }
-   
+
    // write trees
    treeS->Write();
    treeB->Write();
@@ -1826,7 +1833,7 @@ void createOnionData(Int_t nmax = 50000){
       treeS->Branch( TString(Form( "var%i", ivar+1 )).Data(), &xvar[ivar], TString(Form( "var%i/F", ivar+1 )).Data() );
       treeB->Branch( TString(Form( "var%i", ivar+1 )).Data(), &xvar[ivar], TString(Form( "var%i/F", ivar+1 )).Data() );
    }
-   
+
    TRandom R( 100 );
    do {
       for (Int_t ivar=0; ivar<nvar; ivar++) { xvar[ivar]=R.Rndm();}
@@ -1858,8 +1865,8 @@ void create_multiclassdata(Int_t nmax  = 20000)
    Float_t weight=1;
    Float_t xcls[100];
    Float_t xmean[3][4] = {
-      { 0.   ,  0.3,  0.5, 0.9 }, 
-      { -0.2 , -0.3,  0.5, 0.4 }, 
+      { 0.   ,  0.3,  0.5, 0.9 },
+      { -0.2 , -0.3,  0.5, 0.4 },
       { 0.2  ,  0.1, -0.1, 0.7 }} ;
 
    Float_t xvar[100];
@@ -1874,27 +1881,27 @@ void create_multiclassdata(Int_t nmax  = 20000)
 
    treeR->Branch("cls", &thecls, "cls/F");
    treeR->Branch("weight", &weight, "weight/F");
-   
+
    TRandom R( 100 );
    do {
       for (Int_t icls=0; icls<ncls; icls++) xcls[icls]=0.;
       cls = R.Integer(ncls);
       thecls = cls;
       xcls[cls]=1.;
-      for (Int_t ivar=0; ivar<nvar; ivar++) { 
+      for (Int_t ivar=0; ivar<nvar; ivar++) {
          xvar[ivar]=R.Gaus(xmean[cls][ivar],1.);
       }
-      
+
       if (ndat<30) cout << "cls=" << cls <<" xvar = " << xvar[0]<<" " <<xvar[1]<<" " << xvar[2]<<" " <<xvar[3]<<endl;
-      
+
       treeR->Fill();
       ndat++;
    } while ( ndat < nmax );
 
    dataFile->Write();
    dataFile->Close();
-   
-} 
+
+}
 
 
 
@@ -1912,13 +1919,13 @@ void create_array_with_different_lengths(Int_t N = 100)
    TFile* dataFile = TFile::Open( "data.root", "RECREATE" );
 
    // create signal and background trees
-   TTree* treeS = new TTree( "TreeS", "TreeS", 1 );   
-   TTree* treeB = new TTree( "TreeB", "TreeB", 1 );   
+   TTree* treeS = new TTree( "TreeS", "TreeS", 1 );
+   TTree* treeB = new TTree( "TreeB", "TreeB", 1 );
    treeS->Branch( "arrSize", &nvarCurrent, "arrSize/I" );
    treeS->Branch( "arr", xvar, "arr[arrSize]/F" );
    treeB->Branch( "arrSize", &nvarCurrent, "arrSize/I" );
    treeB->Branch( "arr", xvar, "arr[arrSize]/F" );
-      
+
    TRandom R( 100 );
    Float_t xS[nvar] = {  0.2,  0.3,  0.5,  0.9 };
    Float_t xB[nvar] = { -0.2, -0.3, -0.5, -0.6 };
@@ -1971,7 +1978,7 @@ void create_array_with_different_lengths(Int_t N = 100)
          getGaussRnd( *v, *m, R );
 
          for (Int_t ivar=0; ivar<nvar; ivar++) xvar[ivar] = (*v)[ivar] + x[ivar];
-         
+
 
 	 nvarCurrent = (i%4)+1;
 
@@ -1996,7 +2003,7 @@ void create_array_with_different_lengths(Int_t N = 100)
 void create_MultipleBackground(Int_t N = 50000)
 {
    const int nvar = 4;
-   
+
    // output flie
    TFile* dataFile = TFile::Open( "tmva_example_multiple_background.root", "RECREATE" );
 

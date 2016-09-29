@@ -157,18 +157,19 @@ public:
 //______________________________________________________________________________
 template<typename Architecture_t, typename Layer_t>
    TNet<Architecture_t, Layer_t>::TNet()
-   : fBatchSize(0), fInputWidth(0), fDummy(0,0),
-   fJ(ELossFunction::kMeanSquaredError), fR(ERegularization::kNone)
+    : fBatchSize(0), fInputWidth(0), fLayers(), fDummy(0,0),
+    fJ(ELossFunction::kMeanSquaredError), fR(ERegularization::kNone),
+    fWeightDecay(0.0)
 {
    // Nothing to do here.
 }
 
 //______________________________________________________________________________
-
 template<typename Architecture_t, typename Layer_t>
    TNet<Architecture_t, Layer_t>::TNet(const TNet & other)
    : fBatchSize(other.fBatchSize), fInputWidth(other.fInputWidth),
-   fLayers(other.fLayers), fDummy(0,0), fJ(other.fJ), fR(other.fR)
+    fLayers(other.fLayers), fDummy(0,0), fJ(other.fJ), fR(other.fR),
+    fWeightDecay(other.fWeightDecay)
 {
    // Nothing to do here.
 }
@@ -178,8 +179,9 @@ template<typename Architecture_t, typename Layer_t>
 template<typename OtherArchitecture_t>
 TNet<Architecture_t, Layer_t>::TNet(size_t batchSize,
                                     const TNet<OtherArchitecture_t> & other)
-   : fBatchSize(batchSize), fInputWidth(other.GetInputWidth()),
-     fDummy(0,0), fJ(other.GetLossFunction()), fR(other.GetRegularization())
+    : fBatchSize(batchSize), fInputWidth(other.GetInputWidth()), fLayers(),
+    fDummy(0,0), fJ(other.GetLossFunction()), fR(other.GetRegularization()),
+    fWeightDecay(other.GetWeightDecay())
 {
    fLayers.reserve(other.GetDepth());
    for (size_t i = 0; i < other.GetDepth(); i++) {
@@ -198,8 +200,8 @@ template<typename Architecture_t, typename Layer_t>
                                        ELossFunction J,
                                        ERegularization R,
                                        Scalar_t weightDecay)
-   : fBatchSize(batchSize), fInputWidth(inputWidth), fDummy(0,0),
-     fJ(J), fR(R), fWeightDecay(weightDecay)
+    : fBatchSize(batchSize), fInputWidth(inputWidth), fLayers(), fDummy(0,0),
+    fJ(J), fR(R), fWeightDecay(weightDecay)
 {
    // Nothing to do here.
 }
@@ -209,9 +211,8 @@ template<typename Architecture_t, typename Layer_t>
    auto TNet<Architecture_t, Layer_t>::CreateClone(size_t BatchSize)
    -> TNet<Architecture_t, TSharedLayer<Architecture_t>>
 {
-   TNet<Architecture_t, TSharedLayer<Architecture_t>> other(BatchSize,
-                                                        fInputWidth,
-                                                        fJ, fR);
+   TNet<Architecture_t, TSharedLayer<Architecture_t>> other(BatchSize, fInputWidth,
+                                                            fJ, fR);
    for (auto &l : fLayers) {
       other.AddLayer(l);
    }

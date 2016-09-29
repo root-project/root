@@ -1514,20 +1514,29 @@ module "TMD5.h" { header "TMD5.h" export * }
 module "TMLPAnalyzer.h" { header "TMLPAnalyzer.h" export * }
 module "TMPClient.h" { header "TMPClient.h" export * }
 module "TMPWorker.h" { header "TMPWorker.h" export * }
-module "TMVA" {
+/*module "TMVA" {
   requires cplusplus
   umbrella "TMVA"
   module * { export * }
 
   // FIXME: Remove headers which depend on cuda or tbb since they are not well
   // protected in the cases where tbb or cuda are not present on the system.
-  exclude header "TMVA/DNN/Architectures/cuda.h"
+  exclude header "TMVA/DNN/Architectures/Cuda.h"
   exclude header "TMVA/DNN/Architectures/Cuda/CudaBuffers.h"
   exclude header "TMVA/DNN/Architectures/Cuda/CudaMatrix.h"
   exclude header "TMVA/DNN/Architectures/Cuda/Device.h"
   exclude header "TMVA/DNN/Architectures/Cpu.h"
   exclude header "TMVA/DNN/Architectures/Cpu/CpuMatrix.h"
-}
+
+  // FIXME: Optional PyMVA gets installed in $ROOTSYS/TMVA. PyMVA* depend on
+  // numpy, whose -I path gets passed only when building the related to PyMVA
+  // sources. I.e. we cannot generate this module implicitly if it included
+  // PyMVA, because we don't have always the relevant -I passed to the compiler.
+  exclude header "TMVA/PyMethodBase.h"
+  exclude header "TMVA/MethodPyAdaBoost.h"
+  exclude header "TMVA/MethodPyGTB.h"
+  exclude header "TMVA/MethodPyRandomForest.h"
+}*/
 module "TMacOSXSystem.h" { header "TMacOSXSystem.h" export * }
 module "TMacro.h" { header "TMacro.h" export * }
 module "TMakeProject.h" { header "TMakeProject.h" export * }
@@ -2035,7 +2044,6 @@ module "config.h" { header "config.h" export * }
 module "mmalloc.h" { header "mmalloc.h" export * }
 module "mmconfig.h" { header "mmconfig.h" export * }
 module "mmprivate.h" { header "mmprivate.h" export * }
-module "module.modulemap" { header "module.modulemap" export * }
 module "pq2actions.h" { header "pq2actions.h" export * }
 module "pq2ping.h" { header "pq2ping.h" export * }
 module "pq2wrappers.h" { header "pq2wrappers.h" export * }
@@ -2055,19 +2063,11 @@ module "rsalib.h" { header "rsalib.h" export * }
 module "snprintf.h" { header "snprintf.h" export * }
 module "strlcpy.h" { header "strlcpy.h" export * }
 module "tableDescriptor.h" { header "tableDescriptor.h" export * }
-module "v5/TF1Data.h" { header "v5/TF1Data.h" export * }
-module "v5/TFormula.h" { header "v5/TFormula.h" export * }
-module "v5/TFormulaPrimitive.h" { header "v5/TFormulaPrimitive.h" export * }
-module "vdt/asin.h" { header "vdt/asin.h" export * }
-module "vdt/atan.h" { header "vdt/atan.h" export * }
-module "vdt/atan2.h" { header "vdt/atan2.h" export * }
-module "vdt/cos.h" { header "vdt/cos.h" export * }
-module "vdt/exp.h" { header "vdt/exp.h" export * }
-module "vdt/inv.h" { header "vdt/inv.h" export * }
-module "vdt/log.h" { header "vdt/log.h" export * }
-module "vdt/sin.h" { header "vdt/sin.h" export * }
-module "vdt/sincos.h" { header "vdt/sincos.h" export * }
-module "vdt/sqrt.h" { header "vdt/sqrt.h" export * }
-module "vdt/tan.h" { header "vdt/tan.h" export * }
-module "vdt/vdtMath.h" { header "vdt/vdtMath.h" export * }
-module "vdt/vdtcore_common.h" { header "vdt/vdtcore_common.h" export * }
+module v5 {
+  umbrella "v5"
+  module * { export * }
+}
+module vdt {
+  umbrella "vdt"
+  module * { export * }
+}

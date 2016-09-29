@@ -65,6 +65,8 @@
 #include "TMVA/VariablePCATransform.h"
 #include "TMVA/VariableGaussTransform.h"
 #include "TMVA/VariableNormalizeTransform.h"
+#include "TMVA/VarTransformHandler.h"
+
 
 #include "TMVA/ResultsClassification.h"
 #include "TMVA/ResultsRegression.h"
@@ -126,6 +128,56 @@ TMVA::DataSetInfo& TMVA::DataLoader::AddDataSet( const TString& dsiName )
    if (dsi!=0) return *dsi;
    
    return fDataSetManager->AddDataSetInfo(*(new DataSetInfo(dsiName))); // DSMTEST
+}
+
+//_______________________________________________________________________
+TMVA::DataSetInfo& TMVA::DataLoader::GetDataSetInfo()
+{
+   return DefaultDataSetInfo(); // DSMTEST
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Transforms the variables and return a new DataLoader with the transformed 
+/// variables
+
+TMVA::DataLoader* TMVA::DataLoader::VarTransform(TString trafoDefinition)
+{
+   TString trOptions = "0";
+   TString trName = "None";
+   if (trafoDefinition.Contains("(")) {
+
+      // contains transformation parameters
+      Ssiz_t parStart = trafoDefinition.Index( "(" );
+      Ssiz_t parLen   = trafoDefinition.Index( ")", parStart )-parStart+1;
+
+      trName = trafoDefinition(0,parStart);
+      trOptions = trafoDefinition(parStart,parLen);
+      trOptions.Remove(parLen-1,1);
+      trOptions.Remove(0,1);
+   }
+   else
+      trName = trafoDefinition;
+
+   VarTransformHandler* handler = new VarTransformHandler(this);
+   // variance threshold variable transformation
+   if (trName == "VT") {
+
+      // find threshold value from given input
+      Double_t threshold = 0.0;
+      if (!trOptions.IsFloat()){
+         Log() << kFATAL << " VT transformation must be passed a floating threshold value" << Endl;
+         return this;
+      }
+      else
+         threshold =  trOptions.Atof();
+      TMVA::DataLoader *transformedLoader = handler->VarianceThreshold(threshold);
+      return transformedLoader;
+   }
+   else {
+      Log() << kFATAL << "Incorrect transformation string provided, please check" << Endl;
+   }
+   Log() << kINFO << "No transformation applied, returning original loader" << Endl;
+   return this;
 }
 
 // ________________________________________________

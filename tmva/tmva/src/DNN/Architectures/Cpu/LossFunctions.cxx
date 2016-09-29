@@ -11,10 +11,9 @@
 
  /////////////////////////////////////////////////////////////////////
  // Implementation of the loss functions for the multi-threaded CPU //
- // implementation using tbb and BLAS.                              //
+ // implementation using Roots TThreadExecutor and BLAS.                 //
  /////////////////////////////////////////////////////////////////////
 
-#include "tbb/tbb.h"
 #include "TMVA/DNN/Architectures/Reference.h"
 
 namespace TMVA
@@ -29,20 +28,14 @@ AFloat TCpu<AFloat>::MeanSquaredError(const TCpuMatrix<AFloat> &Y,
 {
    const AFloat  *dataY      = Y.GetRawDataPointer();
    const AFloat  *dataOutput = output.GetRawDataPointer();
+   std::vector<AFloat> temp(Y.GetNElements());
+   AFloat norm = 1.0 / ((AFloat) Y.GetNrows() * Y.GetNcols());
 
-   auto f = [&dataY, &dataOutput](const tbb::blocked_range<size_t> & range,
-                                  AFloat partialSum)
+   auto f = [&dataY, &dataOutput, &temp](UInt_t workerID)
    {
-      size_t rangeBegin = range.begin();
-      size_t rangeEnd   = range.end();
-
-      AFloat sum = partialSum;
-      for (size_t i = rangeBegin; i != rangeEnd; ++i) {
-          AFloat error = dataY[i] - dataOutput[i];
-          sum += error * error;
-      }
-
-      return sum;
+      AFloat dy = dataY[workerID] - dataOutput[workerID];
+      temp[workerID] = dy * dy;
+      return 0;
    };
 
    auto reduction = [](AFloat sum1, AFloat sum2)
@@ -50,9 +43,8 @@ AFloat TCpu<AFloat>::MeanSquaredError(const TCpuMatrix<AFloat> &Y,
       return sum1 + sum2;
    };
 
-   AFloat norm = 1.0 / ((AFloat) Y.GetNcols() * Y.GetNrows());
-   tbb::blocked_range<size_t> range(0, Y.GetNElements());
-   return norm * parallel_reduce(range, 0.0, f, reduction);
+   Y.GetThreadExecutor().Map(f, ROOT::TSeqI(Y.GetNElements()));
+   return norm * Y.GetThreadExecutor().Reduce(temp, reduction);
 }
 
 //______________________________________________________________________________
@@ -68,41 +60,31 @@ void TCpu<AFloat>::MeanSquaredErrorGradients(
    const AFloat  *dataOutput = output.GetRawDataPointer();
    AFloat norm = 1.0 / ((AFloat) Y.GetNrows() * Y.GetNcols());
 
-   auto f = [&dataDY, &dataY, &dataOutput, norm](const tbb::blocked_range<size_t> & range)
+   auto f = [&dataDY, &dataY, &dataOutput, norm](UInt_t workerID)
    {
-      size_t rangeBegin = range.begin();
-      size_t rangeEnd   = range.end();
-
-      for (size_t i = rangeBegin; i != rangeEnd; ++i) {
-         dataDY[i] = - 2.0 * norm * (dataY[i] - dataOutput[i]);
-      }
+      dataDY[workerID] = - 2.0 * norm * (dataY[workerID] - dataOutput[workerID]);
+      return 0;
    };
 
-   tbb::blocked_range<size_t> range(0, Y.GetNElements());
-   parallel_for(range, f);
+   Y.GetThreadExecutor().Map(f, ROOT::TSeqI(Y.GetNElements()));
 }
 
 //______________________________________________________________________________
 template<typename AFloat>
 AFloat TCpu<AFloat>::CrossEntropy(const TCpuMatrix<AFloat> &Y,
-                                               const TCpuMatrix<AFloat> &output)
+                                  const TCpuMatrix<AFloat> &output)
 {
    const AFloat  *dataY      = Y.GetRawDataPointer();
    const AFloat  *dataOutput = output.GetRawDataPointer();
+   std::vector<AFloat> temp(Y.GetNElements());
+   AFloat norm = 1.0 / ((AFloat) Y.GetNrows() * Y.GetNcols());
 
-   auto f = [&dataY, &dataOutput](const tbb::blocked_range<size_t> & range,
-                                  AFloat partialSum)
+   auto f = [&dataY, &dataOutput, &temp](UInt_t workerID)
    {
-      size_t rangeBegin = range.begin();
-         size_t rangeEnd   = range.end();
-
-         AFloat sum = partialSum;
-         for (size_t i = rangeBegin; i != rangeEnd; ++i) {
-            AFloat y   = dataY[i];
-            AFloat sig = 1.0 / (1.0 + exp(- dataOutput[i]));
-            sum += y * log(sig) + (1.0 - y) * log(1.0 - sig);
-         }
-         return sum;
+      AFloat y   = dataY[workerID];
+      AFloat sig = 1.0 / (1.0 + exp(- dataOutput[workerID]));
+      temp[workerID] = - (y * log(sig) + (1.0 - y) * log(1.0 - sig));
+      return 0;
    };
 
    auto reduction = [](AFloat sum1, AFloat sum2)
@@ -110,9 +92,8 @@ AFloat TCpu<AFloat>::CrossEntropy(const TCpuMatrix<AFloat> &Y,
       return sum1 + sum2;
    };
 
-   tbb::blocked_range<size_t> range(0, Y.GetNElements());
-   AFloat norm = 1.0 / ((AFloat) Y.GetNcols() * Y.GetNrows());
-   return - norm * parallel_reduce(range, 0.0, f, reduction);
+   Y.GetThreadExecutor().Map(f, ROOT::TSeqI(Y.GetNElements()));
+   return norm * Y.GetThreadExecutor().Reduce(temp, reduction);
 }
 
 //______________________________________________________________________________
@@ -127,20 +108,15 @@ void TCpu<AFloat>::CrossEntropyGradients(
    const AFloat  *dataOutput = output.GetRawDataPointer();
    AFloat norm = 1.0 / ((AFloat) Y.GetNrows() * Y.GetNcols());
 
-   auto f = [&dataDY, &dataY, &dataOutput, norm](const tbb::blocked_range<size_t> & range)
+   auto f = [&dataDY, &dataY, &dataOutput, norm](UInt_t workerID)
    {
-      size_t rangeBegin = range.begin();
-      size_t rangeEnd   = range.end();
-
-      for (size_t i = rangeBegin; i != rangeEnd; ++i) {
-         AFloat y   = dataY[i];
-         AFloat sig = 1.0 / (1.0 + exp(- dataOutput[i]));
-         dataDY[i] = norm * (sig - y);
-      }
+      AFloat y   = dataY[workerID];
+      AFloat sig = 1.0 / (1.0 + exp(- dataOutput[workerID]));
+      dataDY[workerID] = norm * (sig - y);
+      return 0;
    };
 
-   tbb::blocked_range<size_t> range(0, Y.GetNElements());
-   parallel_for(range, f);
+   Y.GetThreadExecutor().Map(f, ROOT::TSeqI(Y.GetNElements()));
 }
 
 } // namespace DNN

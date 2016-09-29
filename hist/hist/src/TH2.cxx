@@ -629,7 +629,7 @@ void TH2::FillRandom(const char *fname, Int_t ntimes)
 
    // Start main loop ntimes
    for (loop=0;loop<ntimes;loop++) {
-      r1 = gRandom->Rndm(loop);
+      r1 = gRandom->Rndm();
       ibin = TMath::BinarySearch(nbins,&integral[0],r1);
       biny = ibin/nbinsx;
       binx = 1 + ibin - nbinsx*biny;

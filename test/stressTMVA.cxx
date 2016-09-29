@@ -67,6 +67,9 @@ Regression_BDTG2 [4/4]...........................................OK
 // Author: Christoph Rosemann   Dec. 2009
 // TMVA unit tests
 
+#include "TMVA/IMethod.h"
+#include "TMVA/Types.h"
+
 #include <string>
 #include <iostream>
 #include <cassert>
@@ -2867,6 +2870,7 @@ private:
 ///// Standard constructor
 utIPythonInteractive::utIPythonInteractive() : UnitTesting::UnitTest("IPythonInteractive", __FILE__)
 {
+  ipyi = nullptr;
   N = 1000;
   titles.push_back("Training Error");
   titles.push_back("Testing Error");
@@ -2911,11 +2915,13 @@ void utIPythonInteractive::testMethods()
   	TObject *obj;
     while ((obj = (TObject*)next())){
       TGraph * gr = dynamic_cast<TGraph*>(obj);
+      test_(gr!=nullptr);
+      if (gr==nullptr) continue;
       test_(gr->GetN()==(i+1));
       Double_t x, y;
       test_(gr->GetPoint(i, x, y)!=-1);
       test_(x==xvec[i]);
-      test_(j==0 ? y1vec[i] : y2vec[i]);
+      test_(j==0 ? y==y1vec[i] : y==y2vec[i]);
       j++;
 	  }
   }
@@ -3034,9 +3040,9 @@ void addClassificationTests( UnitTestSuite& TMVA_test, bool full=true)
    TString configGpu      = "Architecture=GPU:" + config;
 
 
-//    TMVA_test.addTest(new MethodUnitTestWithROCLimits(
-//                          TMVA::Types::kDNN, "DNN Standard",
-//                          configStandard, 0.85, 0.98));
+    TMVA_test.addTest(new MethodUnitTestWithROCLimits(
+                          TMVA::Types::kDNN, "DNN Standard",
+                          configStandard, 0.85, 0.98));
 #ifdef DNNCPU
    TMVA_test.addTest(new MethodUnitTestWithROCLimits(
                          TMVA::Types::kDNN, "DNN CPU", configCpu, 0.85, 0.98)

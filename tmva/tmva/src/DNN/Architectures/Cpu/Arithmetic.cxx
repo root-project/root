@@ -74,23 +74,18 @@ void TCpu<Real_t>::TransposeMultiply(TCpuMatrix<Real_t> &C,
 //____________________________________________________________________________
 template<typename Real_t>
 void TCpu<Real_t>::Hadamard(TCpuMatrix<Real_t> &B,
-                                         const TCpuMatrix<Real_t> &A)
+                            const TCpuMatrix<Real_t> &A)
 {
    const Real_t *dataA      = A.GetRawDataPointer();
          Real_t *dataB      = B.GetRawDataPointer();
 
-   auto f = [&dataA, &dataB](const tbb::blocked_range<size_t> & range)
+   auto f = [&dataA, &dataB](UInt_t workerID)
    {
-      size_t rangeBegin = range.begin();
-      size_t rangeEnd   = range.end();
-
-      for (size_t i = rangeBegin; i != rangeEnd; ++i) {
-         dataB[i] *= dataA[i];
-      }
+      dataB[workerID] *= dataA[workerID];
+      return 0;
    };
 
-   tbb::blocked_range<size_t> range(0, A.GetNElements());
-   parallel_for(range, f);
+   B.GetThreadExecutor().Map(f, ROOT::TSeqI(B.GetNElements()));
 }
 
 //____________________________________________________________________________

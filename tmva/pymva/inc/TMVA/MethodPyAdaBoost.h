@@ -22,9 +22,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMVA_PyMethodBase
 #include "TMVA/PyMethodBase.h"
-#endif
+
+#include "TString.h"
 
 namespace TMVA {
 

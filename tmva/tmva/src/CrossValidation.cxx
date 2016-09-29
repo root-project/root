@@ -1,21 +1,21 @@
 // @(#)root/tmva $Id$
-// Author: Omar Zapata, Thomas James Stevenson, Pourya Vakilipourtakalou.
+// Author: Omar Zapata, Thomas James Stevenson.
 
 #include "TMVA/CrossValidation.h"
 
-#include "TMVA/Configurable.h"
+#include "TMVA/Config.h"
 #include "TMVA/DataSet.h"
 #include "TMVA/Event.h"
-#include "TMVA/IMethod.h"
 #include "TMVA/MethodBase.h"
 #include "TMVA/MsgLogger.h"
 #include "TMVA/ResultsClassification.h"
+#include "TMVA/tmvaglob.h"
 #include "TMVA/Types.h"
+
 #include "TSystem.h"
 #include "TAxis.h"
 #include "TCanvas.h"
 #include "TGraph.h"
-#include "TMVA/tmvaglob.h"
 
 #include <iostream>
 #include <memory>
@@ -30,21 +30,11 @@ TMVA::CrossValidationResult::CrossValidationResult(const CrossValidationResult &
     fROCCurves = obj.fROCCurves;
 }
 
-TMVA::CrossValidationResult::~CrossValidationResult()
-{
-    fROCCurves=nullptr;
-}
 
-std::shared_ptr<TMultiGraph> &TMVA::CrossValidationResult::GetROCCurves()
+TMultiGraph *TMVA::CrossValidationResult::GetROCCurves(Bool_t /*fLegend*/)
 {
-    return fROCCurves;
+    return fROCCurves.get();
 }
-
-void TMVA::CrossValidationResult::SetROCValue(UInt_t fold,Float_t rocint)
-{
-    fROCs[fold]=rocint;
-}
-
 
 Float_t TMVA::CrossValidationResult::GetROCAverage() const
 {
@@ -55,13 +45,18 @@ Float_t TMVA::CrossValidationResult::GetROCAverage() const
 
 
 void TMVA::CrossValidationResult::Print() const
-{    
+{
+    TMVA::MsgLogger::EnableOutput();
+    TMVA::gConfig().SetSilent(kFALSE);   
+    
     MsgLogger fLogger("CrossValidation");
     for(auto &item:fROCs)
         fLogger<<kINFO<<Form("Fold  %i ROC-Int : %f",item.first,item.second)<<std::endl;
     
     fLogger<<kINFO<<Form("Average ROC-Int : %f",GetROCAverage())<<Endl;
 
+    TMVA::gConfig().SetSilent(kTRUE);   
+    
 }
 
 
@@ -78,85 +73,86 @@ TCanvas* TMVA::CrossValidationResult::Draw(const TString name) const
     return c;
 }
 
-//CrossValidation class stuff                                                                                                                                                        
-// ClassImp(TMVA::CrossValidation)//serialization is not support yet in so many class TMVA                                                                                           
-
-TMVA::CrossValidation::CrossValidation():Configurable( ),
-					 fDataLoader(0)
+TMVA::CrossValidation::CrossValidation(TMVA::DataLoader *dataloader):TMVA::Envelope("CrossValidation",dataloader),
+fNumFolds(5),fClassifier(new TMVA::Factory("CrossValidation","!V:!ROC:Silent:!ModelPersistence:!Color:!DrawProgressBar:AnalysisType=Classification"))
 {
-  fClassifier=new TMVA::Factory("CrossValidation","!V:Silent:Color:DrawProgressBar:AnalysisType=Classification");
-}
-
-
-TMVA::CrossValidation::CrossValidation(TMVA::DataLoader *loader):Configurable(),
-								 fDataLoader(loader)
-{
-  fClassifier=new TMVA::Factory("CrossValidation","!V:Silent:Color:DrawProgressBar:AnalysisType=Classification");
+    fFoldStatus=kFALSE;
 }
 
 TMVA::CrossValidation::~CrossValidation()
 {
-  if(fClassifier) delete fClassifier;
+    fClassifier=nullptr;
 }
 
-TMVA::CrossValidationResult* TMVA::CrossValidation::CrossValidate( TString theMethodName, TString methodTitle, TString theOption, int NumFolds)
+void TMVA::CrossValidation::SetNumFolds(UInt_t i)
 {
+    fNumFolds=i;
+    fDataLoader->MakeKFoldDataSet(fNumFolds);
+    fFoldStatus=kTRUE;
+}
+
+
+void TMVA::CrossValidation::Evaluate()
+{
+    TString methodName    = fMethod.GetValue<TString>("MethodName");
+    TString methodTitle   = fMethod.GetValue<TString>("MethodTitle");
+    TString methodOptions = fMethod.GetValue<TString>("MethodOptions");
+    if(!fFoldStatus)
+    {
+        fDataLoader->MakeKFoldDataSet(fNumFolds);
+        fFoldStatus=kTRUE;
+    }
   
-  CrossValidationResult * result = new CrossValidationResult();
+      for(UInt_t i = 0; i < fNumFolds; ++i){    
+        TString foldTitle = methodTitle;
+        foldTitle += "_fold";
+        foldTitle += i+1;
+    
+        fDataLoader->PrepareFoldDataSet(i, TMVA::Types::kTesting);
 
-  fDataLoader->MakeKFoldDataSet(NumFolds);
+    
+        auto smethod=fClassifier->BookMethod(fDataLoader.get(), methodName, methodTitle, methodOptions);
 
-  for(Int_t i = 0; i < NumFolds; ++i){
+        Event::SetIsTraining(kTRUE);
+        smethod->TrainMethod();
 
-    TString foldTitle = methodTitle;
-    foldTitle += "_fold";
-    foldTitle += i+1;
+        Event::SetIsTraining(kFALSE);
+        smethod->AddOutput(Types::kTesting, smethod->GetAnalysisType());
+        smethod->TestClassification();
 
-    fDataLoader->PrepareFoldDataSet(i, TMVA::Types::kTesting);
-
-    fClassifier->BookMethod(fDataLoader, theMethodName, methodTitle, theOption);
-
-    TMVA::MethodBase * smethod = dynamic_cast<TMVA::MethodBase*>(fClassifier->fMethodsMap[fDataLoader->GetName()][0][0]);
-
-    Event::SetIsTraining(kTRUE);
-    smethod->TrainMethod();
-
-    Event::SetIsTraining(kFALSE);
-    smethod->AddOutput(Types::kTesting, smethod->GetAnalysisType());
-    smethod->TestClassification();
-
-    result->SetROCValue(i,fClassifier->GetROCIntegral(fDataLoader->GetName(), methodTitle));
-    auto  gr=fClassifier->GetROCCurve(fDataLoader->GetName(), methodTitle, true);
-    gr->SetLineColor(i+1);
-    gr->SetLineWidth(2);
-    gr->SetTitle(fDataLoader->GetName());
         
-    result->GetROCCurves()->Add(gr);
+        fResults.fROCs[i]=fClassifier->GetROCIntegral(fDataLoader->GetName(),methodTitle);
 
-    result->fSigs.push_back(smethod->GetSignificance());
-    result->fSeps.push_back(smethod->GetSeparation());
-    Double_t err;
-    result->fEff01s.push_back(smethod->GetEfficiency("Efficienct:0.01",Types::kTesting, err));
-    result->fEff10s.push_back(smethod->GetEfficiency("Efficienct:0.10",Types::kTesting,err));
-    result->fEff30s.push_back(smethod->GetEfficiency("Efficienct:0.30",Types::kTesting,err));
-    result->fEffAreas.push_back(smethod->GetEfficiency(""             ,Types::kTesting,err));
-    result->fTrainEff01s.push_back(smethod->GetTrainingEfficiency("Efficienct:0.01"));
-    result->fTrainEff10s.push_back(smethod->GetTrainingEfficiency("Efficienct:0.10"));
-    result->fTrainEff30s.push_back(smethod->GetTrainingEfficiency("Efficienct:0.30"));
+        auto  gr=fClassifier->GetROCCurve(fDataLoader->GetName(), methodTitle, true);
+    
+        gr->SetLineColor(i+1);
+        gr->SetLineWidth(2);
+        gr->SetTitle(foldTitle.Data());
+    
+        fResults.fROCCurves->Add(gr);
+    
+        fResults.fSigs.push_back(smethod->GetSignificance());
+        fResults.fSeps.push_back(smethod->GetSeparation());
+        
+        Double_t err;
+        fResults.fEff01s.push_back(smethod->GetEfficiency("Efficiency:0.01",Types::kTesting, err));
+        fResults.fEff10s.push_back(smethod->GetEfficiency("Efficiency:0.10",Types::kTesting,err));
+        fResults.fEff30s.push_back(smethod->GetEfficiency("Efficiency:0.30",Types::kTesting,err));
+        fResults.fEffAreas.push_back(smethod->GetEfficiency(""             ,Types::kTesting,err));
+        fResults.fTrainEff01s.push_back(smethod->GetTrainingEfficiency("Efficiency:0.01"));
+        fResults.fTrainEff10s.push_back(smethod->GetTrainingEfficiency("Efficiency:0.10"));
+        fResults.fTrainEff30s.push_back(smethod->GetTrainingEfficiency("Efficiency:0.30"));
+    
+        smethod->Data()->DeleteResults(smethod->GetMethodName(), Types::kTesting, Types::kClassification);
+        smethod->Data()->DeleteResults(smethod->GetMethodName(), Types::kTraining, Types::kClassification);
 
-    smethod->Data()->DeleteResults(smethod->GetMethodName(), Types::kTesting, Types::kClassification);
-    smethod->Data()->DeleteResults(smethod->GetMethodName(), Types::kTraining, Types::kClassification);
+        fClassifier->DeleteAllMethods();
+        fClassifier->fMethodsMap.clear();
+        }
+        TMVA::MsgLogger::EnableOutput();
+        TMVA::gConfig().SetSilent(kFALSE);   
+        Log()<<kINFO<<"Evaluation done."<<Endl;
+        TMVA::gConfig().SetSilent(kTRUE);   
+        
 
-    fClassifier->DeleteAllMethods();
-
-    fClassifier->fMethodsMap.clear();
-
-  }
-  
-  for(int r = 0; r < NumFolds; ++r){
-    result->fROCAVG += result->fROCs.at(r);
-  }
-  result->fROCAVG /= NumFolds;
-
-  return result;
 }

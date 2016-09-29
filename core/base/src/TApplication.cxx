@@ -1254,22 +1254,20 @@ void TApplication::SetEchoMode(Bool_t)
 void TApplication::CreateApplication()
 {
    R__LOCKGUARD2(gROOTMutex);
+   // gApplication is set at the end of 'new TApplication.
    if (!gApplication) {
-      // gApplication is set at the end of 'new TApplication.
-      if (!gApplication) {
-         char *a = StrDup("RootApp");
-         char *b = StrDup("-b");
-         char *argv[2];
-         Int_t argc = 2;
-         argv[0] = a;
-         argv[1] = b;
-         new TApplication("RootApp", &argc, argv, 0, 0);
-         if (gDebug > 0)
-            Printf("<TApplication::CreateApplication>: "
-                   "created default TApplication");
-         delete [] a; delete [] b;
-         gApplication->SetBit(kDefaultApplication);
-      }
+      char *a = StrDup("RootApp");
+      char *b = StrDup("-b");
+      char *argv[2];
+      Int_t argc = 2;
+      argv[0] = a;
+      argv[1] = b;
+      new TApplication("RootApp", &argc, argv, 0, 0);
+      if (gDebug > 0)
+         Printf("<TApplication::CreateApplication>: "
+                "created default TApplication");
+      delete [] a; delete [] b;
+      gApplication->SetBit(kDefaultApplication);
    }
 }
 

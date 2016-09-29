@@ -33,7 +33,7 @@
 #endif
 #ifdef R__USE_IMT
 #ifndef ROOT_TRWSpinLock
-#include "ROOT/TRWSpinLock.h"
+#include "ROOT/TRWSpinLock.hxx"
 #endif
 #endif
 

@@ -937,7 +937,10 @@ EXCLUDE_PATTERNS       =  */G__* \
                           */doc/v6* */doc/v5* \
                           */win32gdk/gdk/* \
                           */bindings/pyroot/*.py \
-                          makeimage.C filter.cxx
+                          makeimage.C filter.cxx \
+                          converttonotebook.py \
+                          makeimage.py \
+                          parallelNotebooks.py
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
 # (namespaces, classes, functions, etc.) that should be excluded from the
@@ -1242,7 +1245,7 @@ HTML_EXTRA_STYLESHEET  = ROOT.css
 
 HTML_EXTRA_FILES       =  ./rootlogo_s.gif \
                           ./notebook.gif
-			
+
 # The HTML_COLORSTYLE_HUE tag controls the color of the HTML output. Doxygen
 # will adjust the colors in the stylesheet and background images according to
 # this color. Hue is specified as an angle on a color-wheel, see

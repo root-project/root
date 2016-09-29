@@ -810,8 +810,17 @@ void PyROOT::Utility::ErrMsgHandler( int level, Bool_t abort, const char* locati
    else if ( level >= kWarning ) {
       static const char* emptyString = "";
       if (!location) location = emptyString;
-   // either printout or raise exception, depending on user settings
-      PyErr_WarnExplicit( NULL, (char*)msg, (char*)location, 0, (char*)"ROOT", NULL );
+      // This warning might be triggered while holding the ROOT lock, while
+      // some othe rtherad is holding the GIL and waiting for the ROOT lock.
+      // That will trigger a deadlock.
+      // So if ROOT is in MT mode, use ROOT's error handler that doesn't take
+      // the GIL.
+      if (!gGlobalMutex) {
+         // either printout or raise exception, depending on user settings
+         PyErr_WarnExplicit( NULL, (char*)msg, (char*)location, 0, (char*)"ROOT", NULL );
+      } else {
+         ::DefaultErrorHandler( level, abort, location, msg );
+      }
    }
    else
       ::DefaultErrorHandler( level, abort, location, msg );

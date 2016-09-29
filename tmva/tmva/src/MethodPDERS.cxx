@@ -72,6 +72,7 @@
 
 #include "TMVA/BinaryTree.h"
 #include "TMVA/BinarySearchTree.h"
+#include "TMVA/Configurable.h"
 #include "TMVA/ClassifierFactory.h"
 #include "TMVA/Event.h"
 #include "TMVA/IMethod.h"

@@ -2432,8 +2432,8 @@ void tgraph2d2()
    rz = new Double_t[np];
    TRandom *r = new TRandom();
    for (Int_t N=0; N<np; N++) {
-      rx[N]=2*Px*(r->Rndm(N))-Px;
-      ry[N]=2*Py*(r->Rndm(N))-Py;
+      rx[N]=2*Px*(r->Rndm())-Px;
+      ry[N]=2*Py*(r->Rndm())-Py;
       rz[N]=sin(sqrt(rx[N]*rx[N]+ry[N]*ry[N]))+1;
    }
    gStyle->SetPalette(kBird);
@@ -2473,8 +2473,8 @@ void tgraph2d3()
    rz = new Double_t[np];
    TRandom *r = new TRandom();
    for (Int_t N=0; N<np; N++) {
-      rx[N]=2*Px*(r->Rndm(N))-Px;
-      ry[N]=2*Py*(r->Rndm(N))-Py;
+      rx[N]=2*Px*(r->Rndm())-Px;
+      ry[N]=2*Py*(r->Rndm())-Py;
       rz[N]=sin(sqrt(rx[N]*rx[N]+ry[N]*ry[N]))+1;
    }
    gStyle->SetPalette(kBird);

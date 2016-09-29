@@ -43,6 +43,7 @@
 #include "TMVA/MethodMLP.h"
 
 #include "TMVA/Config.h"
+#include "TMVA/Configurable.h"
 #include "TMVA/ConvergenceTest.h"
 #include "TMVA/ClassifierFactory.h"
 #include "TMVA/DataSet.h"

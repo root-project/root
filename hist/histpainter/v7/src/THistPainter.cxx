@@ -12,9 +12,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//#include "ROOT/THistPainter.h" see ROOT/THistDrawable.h
+//#include "ROOT/THistPainter.hxx" see ROOT/THistDrawable.h
 
-#include "ROOT/THistDrawable.h"
+#include "ROOT/THistDrawable.hxx"
 #include "TH1.h"
 
 #include <iostream>
@@ -37,7 +37,7 @@ public:
 class THistPainter2D: public THistPainterBase<2> {
 public:
   void Paint(TDrawable& drw, THistDrawOptions<2> /*opts*/,
-             TCanvas& canv) final {
+             TCanvas& /* canv */) final {
     std::cout << "Painting histogram @" << &drw << '\n';
     assert(dynamic_cast<THistDrawable<2>*>(&drw) && "Wrong drawable type");
     THistDrawable<2>& hd = static_cast<THistDrawable<2>&>(drw);

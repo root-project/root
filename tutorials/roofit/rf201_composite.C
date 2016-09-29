@@ -41,7 +41,7 @@ void rf201_composite()
 
    // Build Chebychev polynomial p.d.f.  
    RooRealVar a0("a0","a0",0.5,0.,1.) ;
-   RooRealVar a1("a1","a1",-0.2,0.,1.) ;
+   RooRealVar a1("a1","a1",0.2,0.,1.) ;
    RooChebychev bkg("bkg","Background",x,RooArgSet(a0,a1)) ;
 
 

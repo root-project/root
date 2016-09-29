@@ -372,6 +372,9 @@ namespace TMVA
          double m_alpha; ///< internal parameter (learningRate)
          double m_beta;  ///< internal parameter (momentum)
          std::vector<double> m_prevGradients; ///< vector remembers the gradients of the previous step
+
+         std::vector<double> m_localWeights; ///< local weights for reuse in thread. 
+         std::vector<double> m_localGradients; ///< local gradients for reuse in thread. 
       };
 
 

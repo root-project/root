@@ -264,8 +264,11 @@ template <bool HasDropOut, typename ItSource, typename ItWeight, typename ItPrev
             double Steepest::operator() (Function& fitnessFunction, Weights& weights, PassThrough& passThrough) 
         {
             size_t numWeights = weights.size ();
-            std::vector<double> gradients (numWeights, 0.0);
-            std::vector<double> localWeights (begin (weights), end (weights));
+            // std::vector<double> gradients (numWeights, 0.0);
+            m_localGradients.assign (numWeights, 0.0);
+            // std::vector<double> localWeights (begin (weights), end (weights));
+            // m_localWeights.reserve (numWeights);
+            m_localWeights.assign (begin (weights), end (weights));
 
             double E = 1e10;
             if (m_prevGradients.size () != numWeights)
@@ -281,28 +284,28 @@ template <bool HasDropOut, typename ItSource, typename ItWeight, typename ItPrev
                 if (currentRepetition >= m_repetitions)
                     break;
 
-                gradients.assign (numWeights, 0.0);
+                m_localGradients.assign (numWeights, 0.0);
 
                 // --- nesterov momentum ---
                 // apply momentum before computing the new gradient
                 auto itPrevG = begin (m_prevGradients);
                 auto itPrevGEnd = end (m_prevGradients);
-                auto itLocWeight = begin (localWeights);
+                auto itLocWeight = begin (m_localWeights);
                 for (; itPrevG != itPrevGEnd; ++itPrevG, ++itLocWeight)
                 {
                     (*itPrevG) *= m_beta;
                     (*itLocWeight) += (*itPrevG);
                 }
 
-                E = fitnessFunction (passThrough, localWeights, gradients);
+                E = fitnessFunction (passThrough, m_localWeights, m_localGradients);
 //            plotGradients (gradients);
 //            plotWeights (localWeights);
 
                 double alpha = gaussDouble (m_alpha, m_alpha/2.0);
-//            double alpha = m_alpha;
+//                double alpha = m_alpha;
 
-                auto itG = begin (gradients);
-                auto itGEnd = end (gradients);
+                auto itG = begin (m_localGradients);
+                auto itGEnd = end (m_localGradients);
                 itPrevG = begin (m_prevGradients);
                 double maxGrad = 0.0;
                 for (; itG != itGEnd; ++itG, ++itPrevG)
@@ -333,7 +336,7 @@ template <bool HasDropOut, typename ItSource, typename ItWeight, typename ItPrev
                 else
                 {
                     auto itW = std::begin (weights);
-                    std::for_each (std::begin (gradients), std::end (gradients), [&itW](double& g)
+                    std::for_each (std::begin (m_localGradients), std::end (m_localGradients), [&itW](double& g)
                                    {
                                        *itW += g;
                                        ++itW;
@@ -781,7 +784,7 @@ template <typename LAYERDATA>
                         size_t patternPerThread = testPattern.size () / numThreads;
                         std::vector<Batch> batches;
                         auto itPat = testPattern.begin ();
-                    // auto itPatEnd = testPattern.end ();
+                        // auto itPatEnd = testPattern.end ();
                         for (size_t idxThread = 0; idxThread < numThreads-1; ++idxThread)
                         {
                             batches.push_back (Batch (itPat, itPat + patternPerThread));
@@ -798,24 +801,24 @@ template <typename LAYERDATA>
                                 std::async (std::launch::async, [&]() 
                                             {
                                                 std::vector<double> localOutput;
-                                            pass_through_type passThrough (settings, batch, dropContainerTest);
+                                                pass_through_type passThrough (settings, batch, dropContainerTest);
                                                 double testBatchError = (*this) (passThrough, weights, ModeOutput::FETCH, localOutput);
                                                 return std::make_tuple (testBatchError, localOutput);
                                             })
                                 );
                         }
 
-                    auto itBatch = batches.begin  ();
+                        auto itBatch = batches.begin  ();
                         for (auto& f : futures)
                         {
                             std::tuple<double,std::vector<double>> result = f.get ();
                             testError += std::get<0>(result) / batches.size ();
                             std::vector<double> output = std::get<1>(result);
 
-                        //if (output.size () == testPattern.size ())
+                            //if (output.size () == testPattern.size ())
                             {
-                            //auto it = begin (testPattern);
-                            auto it = (*itBatch).begin ();
+                                //auto it = begin (testPattern);
+                                auto it = (*itBatch).begin ();
                                 for (double out : output)
                                 {
                                     settings.testSample (0, out, (*it).output ().at (0), (*it).weight ());
@@ -982,8 +985,9 @@ template <typename LAYERDATA>
                                         for (auto it = batchRange.first, itEnd = batchRange.second; it != itEnd; ++it)
                                         {
                                             Batch& batch = *it;
-                                        pass_through_type settingsAndBatch (settings, batch, dropContainer);
-                                            localError += minimizer ((*this), weights, settingsAndBatch); /// call the minimizer
+                                            pass_through_type settingsAndBatch (settings, batch, dropContainer);
+                                            Minimizer minimizerClone (minimizer);
+                                            localError += minimizerClone ((*this), weights, settingsAndBatch); /// call the minimizer
                                         }
                                         return localError;
                                     })

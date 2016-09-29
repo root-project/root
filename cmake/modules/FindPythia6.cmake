@@ -9,7 +9,9 @@
 #  PYTHIA6_LIBRARIES (not cached)
 
 set(_pythia6dirs
-  ${PYTHIA6_DIR} 
+  ${PYTHIA6}
+  $ENV{PYTHIA6}
+  ${PYTHIA6_DIR}
   $ENV{PYTHIA6_DIR}
   /cern/pro/lib
   /opt/pythia

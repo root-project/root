@@ -842,8 +842,7 @@ negotia:
    }
 
    // Cleanup timer
-   if (alarm)
-      SafeDelete(alarm);
+   SafeDelete(alarm);
 
    return rc;
 
@@ -3870,10 +3869,8 @@ Int_t TAuthenticate::DecodeRSAPublic(const char *rsaPubExport, rsa_NUMBER &rsa_n
             TRSA_fun::RSA_num_sget()(&rsa_n, rsa_n_exp);
             TRSA_fun::RSA_num_sget()(&rsa_d, rsa_d_exp);
 
-            if (rsa_n_exp)
-               if (rsa_n_exp) delete[] rsa_n_exp;
-            if (rsa_d_exp)
-               if (rsa_d_exp) delete[] rsa_d_exp;
+            delete[] rsa_n_exp;
+            delete[] rsa_d_exp;
 
          } else
             ::Info("TAuthenticate::DecodeRSAPublic","bad format for input string");

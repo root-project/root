@@ -18,9 +18,9 @@
 /// The output file "TMVA.root" can be analysed with the use of dedicated
 /// macros (simply say: root -l <macro.C>), which can be conveniently
 /// invoked through a GUI that will appear at the end of the run of this macro.
-///                                                                              
+///
 /// \macro_output
-/// \macro_code 
+/// \macro_code
 /// \author Andreas Hoecker
 
 
@@ -50,7 +50,7 @@ Bool_t UseOffsetMethod = kTRUE;
 void TMVAClassificationCategory()
 {
    //---------------------------------------------------------------
-   // Example for usage of different event categories with classifiers 
+   // Example for usage of different event categories with classifiers
 
    std::cout << std::endl << "==> Start TMVAClassificationCategory" << std::endl;
 
@@ -69,7 +69,7 @@ void TMVAClassificationCategory()
   if (batchMode) factoryOptions += ":!Color:!DrawProgressBar";
 
    TMVA::Factory *factory = new TMVA::Factory( "TMVAClassificationCategory", outputFile, factoryOptions );
-  
+
    // Create DataLoader
    TMVA::DataLoader *dataloader=new TMVA::DataLoader("dataset");
 
@@ -130,7 +130,7 @@ void TMVAClassificationCategory()
 
    // Likelihood
    factory->BookMethod( dataloader, TMVA::Types::kLikelihood, "Likelihood",
-                        "!H:!V:TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=20:NSmoothBkg[0]=20:NSmoothBkg[1]=10:NSmooth=1:NAvEvtPerBin=50" ); 
+                        "!H:!V:TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=20:NSmoothBkg[0]=20:NSmoothBkg[1]=10:NSmooth=1:NAvEvtPerBin=50" );
 
    // Categorised classifier
    TMVA::MethodCategory* mcat = 0;

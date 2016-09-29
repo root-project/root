@@ -474,9 +474,9 @@ void TPolyMarker3D::PaintH3(TH1 *h, Option_t *option)
             bin = h->GetBin(binx,biny,binz);
             ncounts = Int_t(h->GetBinContent(bin)*scale+0.5);
             for (in=0;in<ncounts;in++) {
-               xp = x + xw*gRandom->Rndm(in);
-               yp = y + yw*gRandom->Rndm(in);
-               zp = z + zw*gRandom->Rndm(in);
+               xp = x + xw*gRandom->Rndm();
+               yp = y + yw*gRandom->Rndm();
+               zp = z + zw*gRandom->Rndm();
                pm3d->SetPoint(Int_t(entry),xp,yp,zp);
                entry++;
             }

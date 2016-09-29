@@ -28,6 +28,8 @@
 //_______________________________________________________________________
 
 #include "TMVA/GeneticFitter.h"
+
+#include "TMVA/Configurable.h"
 #include "TMVA/GeneticAlgorithm.h"
 #include "TMVA/Interval.h"
 #include "TMVA/FitterBase.h"
