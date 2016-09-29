@@ -19,9 +19,9 @@
 
 #include <cstddef>
 #include <vector>
-#include "tbb/tbb.h"
 
 #include "TMatrix.h"
+#include "ROOT/TThreadExecutor.hxx"
 #include "CpuBuffer.h"
 
 namespace TMVA
@@ -47,12 +47,13 @@ class TCpuMatrix
 {
 private:
 
+   static ROOT::TThreadExecutor fPool;
    static std::vector<AFloat> fOnes;  ///< Vector filled with ones used for BLAS calls.
 
    TCpuBuffer<AFloat> fBuffer; ///< The buffer holding the matrix elements
-                              ///< in column-major format.
-   size_t            fNCols;
-   size_t            fNRows;
+                               ///< in column-major format.
+   size_t     fNCols;
+   size_t     fNRows;
 
 public:
 
@@ -80,7 +81,7 @@ public:
    operator TMatrixT<Double_t>() const;
 
    /** Map the given function over the matrix elements. Executed in parallel
-    *  using tbb. */
+    *  using TThreadExecutor. */
    template <typename Function_t>
    void Map(Function_t &f);
 
@@ -102,6 +103,8 @@ public:
    AFloat *       GetRawDataPointer()        {return fBuffer;}
    const AFloat * GetRawDataPointer()  const {return fBuffer;}
 
+   ROOT::TThreadExecutor & GetThreadExecutor() const {return fPool;}
+
 private:
 
    void Initialize();
@@ -116,18 +119,13 @@ inline void TCpuMatrix<AFloat>::Map(Function_t &f)
 {
    AFloat  *data = GetRawDataPointer();
 
-   auto fRange = [data, &f](const tbb::blocked_range<size_t> & range)
+   auto ff = [data, &f](UInt_t workerID)
    {
-      size_t rangeBegin = range.begin();
-      size_t rangeEnd   = range.end();
-
-      for (size_t i = rangeBegin; i != rangeEnd; ++i) {
-         data[i] = f(data[i]);
-      }
+      data[workerID] = f(data[workerID]);
+      return 0;
    };
 
-   tbb::blocked_range<size_t> range(0, GetNElements());
-   parallel_for(range, fRange);
+   fPool.Map(ff, ROOT::TSeqI(fNCols * fNRows));
 }
 
 template<typename AFloat>
@@ -137,18 +135,13 @@ inline void TCpuMatrix<AFloat>::MapFrom(Function_t &f, const TCpuMatrix &A)
          AFloat  *dataB = GetRawDataPointer();
    const AFloat  *dataA = A.GetRawDataPointer();
 
-   auto fRange = [&dataB, &dataA, &f](const tbb::blocked_range<size_t> & range)
+   auto ff = [&dataB, &dataA, &f](UInt_t workerID)
    {
-      size_t rangeBegin = range.begin();
-         size_t rangeEnd   = range.end();
-
-         for (size_t i = rangeBegin; i != rangeEnd; ++i) {
-            dataB[i] = f(dataA[i]);
-         }
+      dataB[workerID] = f(dataA[workerID]);
+      return 0;
    };
 
-   tbb::blocked_range<size_t> range(0, GetNElements());
-   parallel_for(range, fRange);
+   fPool.Map(ff, ROOT::TSeqI(fNCols * fNRows));
 }
 
 } // namespace DNN

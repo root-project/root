@@ -267,7 +267,7 @@ TTreeReader::EEntryStatus TTreeReader::SetEntriesRange(Long64_t first, Long64_t 
       fLastEntry = last;
    else
       fLastEntry = -1;
-   return SetLocalEntry(first);
+   return SetEntry(first);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -284,7 +284,9 @@ Long64_t TTreeReader::GetCurrentEntry() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Load an entry into the tree, return the status of the read.
-/// For chains, entry is the global (i.e. not tree-local) entry number.
+/// For chains, entry is the global (i.e. not tree-local) entry number, unless
+/// `local` is `true`, in which case `entry` specifies the entry number within
+/// the current tree. This is needed for instance for TSelector::Process().
 
 TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local)
 {
@@ -295,25 +297,20 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
 
    TTree* prevTree = fDirector->GetTree();
 
-   Long64_t loadResult;
-   if (!local){
-      Int_t treeNumInChain = fTree->GetTreeNumber();
+   Int_t treeNumInChainBeforeLoad = fTree->GetTreeNumber();
 
-      loadResult = fTree->LoadTree(entry);
+   TTree* treeToCallLoadOn = local ? fTree->GetTree() : fTree;
+   Long64_t loadResult = treeToCallLoadOn->LoadTree(entry);
 
-      if (loadResult == -2) {
-         fEntryStatus = kEntryNotFound;
-         return fEntryStatus;
-      }
-
-      Int_t currentTreeNumInChain = fTree->GetTreeNumber();
-      if (treeNumInChain != currentTreeNumInChain) {
-            fDirector->SetTree(fTree->GetTree());
-      }
+   if (loadResult == -2) {
+      fEntryStatus = kEntryNotFound;
+      return fEntryStatus;
    }
-   else {
-      loadResult = entry;
+
+   if (treeNumInChainBeforeLoad != fTree->GetTreeNumber()) {
+      fDirector->SetTree(fTree->GetTree());
    }
+
    if (!prevTree || fDirector->GetReadEntry() == -1 || !fProxiesSet) {
       // Tell readers we now have a tree
       for (std::deque<ROOT::Internal::TTreeReaderValueBase*>::const_iterator

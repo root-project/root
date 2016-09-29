@@ -15,8 +15,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/THist.h"
-#include "ROOT/THistConcurrentFill.h"
+#include "ROOT/THist.hxx"
+#include "ROOT/THistConcurrentFill.hxx"
 
 #include <iostream>
 #include <future>

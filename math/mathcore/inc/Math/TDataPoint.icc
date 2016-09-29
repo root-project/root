@@ -15,6 +15,7 @@
 #define ROOT_TDataPoint_ICC
 
 #include <cassert>
+#include <math.h>
 
 namespace ROOT
 {

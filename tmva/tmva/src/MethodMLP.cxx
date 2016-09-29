@@ -42,23 +42,16 @@
 
 #include "TMVA/MethodMLP.h"
 
-#include <vector>
-#include <cmath>
-
-#include "TString.h"
-#include "TTree.h"
-#include "Riostream.h"
-#include "TFitter.h"
-#include "TMatrixD.h"
-#include "TMath.h"
-#include "TFile.h"
-
 #include "TMVA/Config.h"
+#include "TMVA/Configurable.h"
+#include "TMVA/ConvergenceTest.h"
 #include "TMVA/ClassifierFactory.h"
 #include "TMVA/DataSet.h"
 #include "TMVA/DataSetInfo.h"
 #include "TMVA/FitterBase.h"
 #include "TMVA/GeneticFitter.h"
+#include "TMVA/IFitterTarget.h"
+#include "TMVA/IMethod.h"
 #include "TMVA/Interval.h"
 #include "TMVA/MethodANNBase.h"
 #include "TMVA/MsgLogger.h"
@@ -67,6 +60,18 @@
 #include "TMVA/Timer.h"
 #include "TMVA/Tools.h"
 #include "TMVA/Types.h"
+
+#include "TH1.h"
+#include "TString.h"
+#include "TTree.h"
+#include "Riostream.h"
+#include "TFitter.h"
+#include "TMatrixD.h"
+#include "TMath.h"
+#include "TFile.h"
+
+#include <cmath>
+#include <vector>
 
 #ifdef MethodMLP_UseMinuit__
 TMVA::MethodMLP* TMVA::MethodMLP::fgThis = 0;
@@ -444,6 +449,12 @@ void TMVA::MethodMLP::Train(Int_t nEpochs)
    if (nSynapses>nEvents)
       Log()<<kWARNING<<"ANN too complicated: #events="<<nEvents<<"\t#synapses="<<nSynapses<<Endl;
 
+   fIPyMaxIter = nEpochs;
+   if (fInteractive && fInteractive->NotInitialized()){
+     std::vector<TString> titles = {"Error on training set", "Error on test set"};
+     fInteractive->Init(titles);
+   }   
+
 #ifdef MethodMLP_UseMinuit__
    if (useMinuit) MinuitMinimize();
 #else
@@ -466,6 +477,7 @@ void TMVA::MethodMLP::Train(Int_t nEpochs)
          fInvHessian.ResizeTo(numSynapses,numSynapses);
          GetApproxInvHessian( fInvHessian ,false);
       }
+    ExitFromTraining();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -517,6 +529,9 @@ void TMVA::MethodMLP::BFGSMinimize( Int_t nEpochs )
 
    // start training cycles (epochs)
    for (Int_t i = 0; i < nEpochs; i++) {
+
+     if (fExitFromTraining) break;
+     fIPyCurrentIter = i;
       if (Float_t(i)/nEpochs < fSamplingEpoch) {
          if ((i+1)%fTestRate == 0 || (i == 0)) {
             if (fSamplingTraining) {
@@ -598,6 +613,7 @@ void TMVA::MethodMLP::BFGSMinimize( Int_t nEpochs )
          //testE  = CalculateEstimator( Types::kTesting,  i ) - fPrior/Float_t(GetNEvents()); // estimator for test sample //zjh
          trainE = CalculateEstimator( Types::kTraining, i ) ; // estimator for training sample  //zjh
          testE  = CalculateEstimator( Types::kTesting,  i ) ; // estimator for test sample //zjh
+         if (fInteractive) fInteractive->AddPoint(i+1, trainE, testE);
          if(!IsSilentFile()) //saved to see in TMVAGui, no needed without file
          {
             fEstimatorHistTrain->Fill( i+1, trainE );
@@ -1045,6 +1061,8 @@ void TMVA::MethodMLP::BackPropagationMinimize(Int_t nEpochs)
    // start training cycles (epochs)
    for (Int_t i = 0; i < nEpochs; i++) {
 
+     if (fExitFromTraining) break;
+     fIPyCurrentIter = i;
       if (Float_t(i)/nEpochs < fSamplingEpoch) {
          if ((i+1)%fTestRate == 0 || (i == 0)) {
             if (fSamplingTraining) {
@@ -1074,6 +1092,7 @@ void TMVA::MethodMLP::BackPropagationMinimize(Int_t nEpochs)
       if ((i+1)%fTestRate == 0) {
          trainE = CalculateEstimator( Types::kTraining, i ); // estimator for training sample
          testE  = CalculateEstimator( Types::kTesting,  i );  // estimator for test samplea
+         if (fInteractive) fInteractive->AddPoint(i+1, trainE, testE);
          if(!IsSilentFile())
          {
             fEstimatorHistTrain->Fill( i+1, trainE );

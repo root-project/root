@@ -1381,7 +1381,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                      if (k==-3) {
                         // Error message already issued
                         err = 1;
-                     } if (k==-2) {
+                     } else if (k==-2) {
                         err = 31;
                         chaine_error = ctemp;
                      } else if ( k >= 0 ) {
@@ -2783,7 +2783,7 @@ Double_t TFormula::EvalParOld(const Double_t *x, const Double_t *uparams)
 
          case kSignInv: tab[pos-1] = -1 * tab[pos-1]; continue;
 
-         case krndm : pos++; tab[pos-1] = gRandom->Rndm(1); continue;
+         case krndm : pos++; tab[pos-1] = gRandom->Rndm(); continue;
 
          case kAnd  : pos--; if (tab[pos-1]!=0 && tab[pos]!=0) tab[pos-1]=1;
                              else tab[pos-1]=0;
@@ -4277,7 +4277,7 @@ Double_t TFormula::EvalParFast(const Double_t *x, const Double_t *uparams)
 
          case kSignInv: tab[pos-1] = -1 * tab[pos-1]; continue;
 
-         case krndm : pos++; tab[pos-1] = gRandom->Rndm(1); continue;
+         case krndm : pos++; tab[pos-1] = gRandom->Rndm(); continue;
 
 
          case kEqual: pos--; if (tab[pos-1] == tab[pos]) tab[pos-1]=1;

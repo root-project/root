@@ -502,6 +502,29 @@ Int_t TMVA::DataSetInfo::GetClassNameMaxLength() const
    return maxL;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+Int_t TMVA::DataSetInfo::GetVariableNameMaxLength() const
+{
+   Int_t maxL = 0;
+   for (UInt_t i = 0; i < GetNVariables(); i++) {
+      if (TString(GetVariableInfo(i).GetExpression()).Length() > maxL) maxL = TString(GetVariableInfo(i).GetExpression()).Length();
+   }
+
+   return maxL;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+Int_t TMVA::DataSetInfo::GetTargetNameMaxLength() const
+{
+   Int_t maxL = 0;
+   for (UInt_t i = 0; i < GetNTargets(); i++) {
+      if (TString(GetTargetInfo(i).GetExpression()).Length() > maxL) maxL = TString(GetTargetInfo(i).GetExpression()).Length();
+   }
+
+   return maxL;
+}
 
 Double_t TMVA::DataSetInfo::GetTrainingSumSignalWeights(){
    if (fTrainingSumSignalWeights<0) Log() << kFATAL << Form("Dataset[%s] : ",fName.Data()) << " asking for the sum of training signal event weights which is not initicalised yet" << Endl;

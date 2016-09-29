@@ -120,7 +120,9 @@ Bool_t TParallelMergingFile::UploadAndReset()
    fMessage.WriteLong64(GetEND());
    CopyTo(fMessage);
 
-   if (int error = fSocket->Send(fMessage) <= 0) {
+   // FIXME: CXX17: Use init-statement in if to declare `error` variable
+   int error;
+   if ((error = fSocket->Send(fMessage)) <= 0) {
       Error("UploadAndReset","Upload to the merging server failed with %d\n",error);
       delete fSocket;
       fSocket = 0;

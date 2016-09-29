@@ -17,7 +17,7 @@
 #include "RooConstVar.h"
 #include "RooProdPdf.h"
 #include "RooAddPdf.h"
-#include "RooMinuit.h"
+#include "RooMinimizer.h"
 #include "RooFitResult.h"
 #include "RooPlot.h"
 #include "TCanvas.h"
@@ -55,7 +55,7 @@ void rf601_intminuit()
    // -------------------------------------------------------------------------------
 
    // Create MINUIT interface object
-   RooMinuit m(*nll) ;
+   RooMinimizer m(*nll) ;
 
    // Activate verbose logging of MINUIT parameter space stepping
    m.setVerbose(kTRUE) ;
@@ -98,7 +98,7 @@ void rf601_intminuit()
 
    // Make contour plot of mx vs sx at 1,2,3 sigma
    RooPlot* frame = m.contour(frac,sigma_g2,1,2,3) ;
-   frame->SetTitle("RooMinuit contour plot") ;
+   frame->SetTitle("Minuit contour plot") ;
 
    // Print the fit result snapshot
    r->Print("v") ;

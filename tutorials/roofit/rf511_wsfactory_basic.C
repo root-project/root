@@ -45,7 +45,7 @@ void rf511_wsfactory_basic(Bool_t compact=kFALSE)
       // Use object factory to build p.d.f. of tutorial rs502_wspacewrite
       w->factory("Gaussian::sig1(x[-10,10],mean[5,0,10],0.5)") ;
       w->factory("Gaussian::sig2(x,mean,1)") ;
-      w->factory("Chebychev::bkg(x,{a0[0.5,0.,1],a1[-0.2,0.,1.]})") ;
+      w->factory("Chebychev::bkg(x,{a0[0.5,0.,1],a1[0.2,0.,1.]})") ;
       w->factory("SUM::sig(sig1frac[0.8,0.,1.]*sig1,sig2)") ;
       w->factory("SUM::model(bkgfrac[0.5,0.,1.]*bkg,sig)") ;
 
@@ -55,7 +55,7 @@ void rf511_wsfactory_basic(Bool_t compact=kFALSE)
       //  - Contracted to a single line recursive expression,
       //  - Omitting explicit names for components that are not referred to explicitly later
 
-      w->factory("SUM::model(bkgfrac[0.5,0.,1.]*Chebychev::bkg(x[-10,10],{a0[0.5,0.,1],a1[-0.2,0.,1.]}),"
+      w->factory("SUM::model(bkgfrac[0.5,0.,1.]*Chebychev::bkg(x[-10,10],{a0[0.5,0.,1],a1[0.2,0.,1.]}),"
                                                 "SUM(sig1frac[0.8,0.,1.]*Gaussian(x,mean[5,0,10],0.5), Gaussian(x,mean,1)))") ;
    }
 

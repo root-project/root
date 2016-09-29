@@ -48,7 +48,7 @@ matrix:
 
   include:
     - os: linux
-      env: DIST=pangolin COMPILER=g++-4.7 CCOMPILER=gcc-4.7
+      env: DIST=pangolin COMPILER=g++-4.7 CCOMPILER=gcc-4.7 NIGHTLY_CRON_SYNC=1
       addons:
         apt:
           sources: *sources
@@ -228,6 +228,20 @@ before_script:
  - $CMAKE --version
  - export CXX="ccache $COMPILER"
  - export CC="ccache $CCOMPILER"
+ - |
+   # If we are running our nightly cron job, sync.
+   if [ -n "$NIGHTLY_CRON_SYNC" ] && [ "$TRAVIS_EVENT_TYPE" = "cron" ] \
+      && [ "$TRAVIS_BRANCH" == "master" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ] \
+      && [ "$TRAVIS_REPO_SLUG" == "vgvassilev/cling" ] ; then
+      echo "Syncing repository."
+      git remote add alt http://root.cern.ch/git/cling.git
+      git pull alt master
+      git push https://$OAUTH_TOKEN@github.com/${TRAVIS_REPO_SLUG} master
+
+      # Move the tag to newest master
+      git tag --force cling-nightlies HEAD
+      git push --force https://$OAUTH_TOKEN@github.com/${TRAVIS_REPO_SLUG} cling-nightlies
+   fi
 
 script:
 - |
@@ -243,12 +257,6 @@ script:
   }
 
   if [ -z $TRAVIS_TAG ]; then
-    if [ "$TRAVIS_BRANCH" == "master" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
-      # Move the tag to newest master
-      git tag --force cling-nightlies HEAD
-      git push --force https://$OAUTH_TOKEN@github.com/${TRAVIS_REPO_SLUG} cling-nightlies
-    fi
-
     timeout -s SIGTERM $TIMEOUT tools/packaging/cpt.py \
       --current-dev=tar \
       --with-cling-url=https://github.com/$TRAVIS_REPO_SLUG \
@@ -302,6 +310,7 @@ deploy:
   file: '${RELEASE_TARBALL}'
   on:
     tags: true
+    all_branches: true
     repo: $TRAVIS_REPO_SLUG
 
 after_failure:

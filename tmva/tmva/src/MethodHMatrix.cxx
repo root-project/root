@@ -31,13 +31,17 @@
 #include "TMVA/ClassifierFactory.h"
 #include "TMVA/DataSet.h"
 #include "TMVA/DataSetInfo.h"
+#include "TMVA/IMethod.h"
 #include "TMVA/MethodBase.h"
 #include "TMVA/MsgLogger.h"
-#include "TMatrix.h"
 #include "TMVA/Tools.h"
 #include "TMVA/Types.h"
 
 #include "Riostream.h"
+#include "TMatrix.h"
+#include "TVectorT.h"
+#include "TList.h"
+
 #include <algorithm>
 
 REGISTER_METHOD(HMatrix)
@@ -189,6 +193,7 @@ void TMVA::MethodHMatrix::Train( void )
    // invert matrix
    fInvHMatrixS->Invert();
    fInvHMatrixB->Invert();
+   ExitFromTraining();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

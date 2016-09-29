@@ -36,6 +36,10 @@
 #include "TFormula.h"
 
 #include "TMVA/ClassifierFactory.h"
+#include "TMVA/Configurable.h"
+#include "TMVA/IMethod.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/MethodBase.h"
 #include "TMVA/MethodDNN.h"
 #include "TMVA/Timer.h"
 #include "TMVA/Types.h"
@@ -71,8 +75,10 @@ TMVA::MethodDNN::MethodDNN(const TString& jobName,
                            const TString& methodTitle,
                            DataSetInfo& theData,
                            const TString& theOption)
-   : MethodBase( jobName, Types::kDNN, methodTitle, theData, theOption)
-   , fResume (false)
+   : MethodBase( jobName, Types::kDNN, methodTitle, theData, theOption),
+     fWeightInitialization(), fOutputFunction(), fLayoutString(), fErrorStrategy(),
+     fTrainingStrategyString(), fWeightInitializationString(), fArchitectureString(),
+     fTrainingSettings(), fResume(false), fSettings()
 {
    // standard constructor
 }
@@ -80,7 +86,10 @@ TMVA::MethodDNN::MethodDNN(const TString& jobName,
 //______________________________________________________________________________
 TMVA::MethodDNN::MethodDNN(DataSetInfo& theData,
                            const TString& theWeightFile)
-   : MethodBase( Types::kDNN, theData, theWeightFile), fResume (false)
+    : MethodBase( Types::kDNN, theData, theWeightFile),
+     fWeightInitialization(), fOutputFunction(), fLayoutString(), fErrorStrategy(),
+     fTrainingStrategyString(), fWeightInitializationString(), fArchitectureString(),
+     fTrainingSettings(), fResume(false), fSettings()
 {
    // constructor from a weight file
 }
@@ -495,14 +504,25 @@ void TMVA::MethodDNN::ProcessOptions()
 //______________________________________________________________________________
 void TMVA::MethodDNN::Train()
 {
+   if (fInteractive && fInteractive->NotInitialized()){
+      std::vector<TString> titles = {"Error on training set", "Error on test set"};
+      fInteractive->Init(titles);
+      // JsMVA progress bar maximum (100%)
+      fIPyMaxIter = 100;
+   }
+
    if (fArchitectureString == "GPU") {
        TrainGpu();
+       if (!fExitFromTraining) fIPyMaxIter = fIPyCurrentIter;
+       ExitFromTraining();
        return;
    } else if (fArchitectureString == "OpenCL") {
       Log() << kFATAL << "OpenCL backend not yes supported." << Endl;
       return;
    } else if (fArchitectureString == "CPU") {
       TrainCpu<Double_t>();
+      if (!fExitFromTraining) fIPyMaxIter = fIPyCurrentIter;
+      ExitFromTraining();
       return;
    }
 
@@ -556,6 +576,8 @@ void TMVA::MethodDNN::Train()
 
    TMVA::DNN::Net      net;
    std::vector<double> weights;
+
+   net.SetIpythonInteractive(fInteractive, &fExitFromTraining, &fIPyMaxIter, &fIPyCurrentIter);
 
    net.setInputSize(fNet.GetInputWidth() + 1);
    net.setOutputSize(fNet.GetOutputWidth() + 1);
@@ -677,6 +699,8 @@ void TMVA::MethodDNN::Train()
          }
       }
    }
+   if (!fExitFromTraining) fIPyMaxIter = fIPyCurrentIter;
+   ExitFromTraining();
 }
 
 //______________________________________________________________________________
@@ -693,6 +717,10 @@ void TMVA::MethodDNN::TrainGpu()
    size_t trainingPhase = 1;
    fNet.Initialize(fWeightInitialization);
    for (TTrainingSettings & settings : fTrainingSettings) {
+
+      if (fInteractive){
+         fInteractive->ClearGraphs();
+      }
 
       TNet<TCuda<>> net(settings.batchSize, fNet);
       net.SetWeightDecay(settings.weightDecay);
@@ -794,6 +822,12 @@ void TMVA::MethodDNN::TrainGpu()
             }
             trainingError /= (Double_t) (nTrainingSamples / settings.batchSize);
 
+	    if (fInteractive){
+               fInteractive->AddPoint(stepCount, trainingError, testError);
+               fIPyCurrentIter = 100*(double)minimizer.GetConvergenceCount() /(double)settings.convergenceSteps;
+               if (fExitFromTraining) break;
+            }
+
             // Compute numerical throughput.
             std::chrono::duration<double> elapsed_seconds = end - start;
             double seconds = elapsed_seconds.count();
@@ -843,6 +877,10 @@ void TMVA::MethodDNN::TrainCpu()
 
    size_t trainingPhase = 1;
    for (TTrainingSettings & settings : fTrainingSettings) {
+
+      if (fInteractive){
+         fInteractive->ClearGraphs();
+      }
 
       Log() << "Training phase " << trainingPhase << " of "
             << fTrainingSettings.size() << ":" << Endl;
@@ -943,6 +981,12 @@ void TMVA::MethodDNN::TrainCpu()
             }
             trainingError /= (Double_t) (nTrainingSamples / settings.batchSize);
 
+	    if (fInteractive){
+               fInteractive->AddPoint(stepCount, trainingError, testError);
+               fIPyCurrentIter = 100*(double)minimizer.GetConvergenceCount() /(double)settings.convergenceSteps;
+               if (fExitFromTraining) break;
+            }
+
             // Compute numerical throughput.
             std::chrono::duration<double> elapsed_seconds = end - start;
             double seconds = elapsed_seconds.count();
@@ -973,8 +1017,8 @@ void TMVA::MethodDNN::TrainCpu()
 
 #else // DNNCPU flag not set.
    Log() << kFATAL << "Multi-core CPU backend not enabled. Please make sure "
-                      "you have a BLAS implementation  and tbb installed and"
-                      " it was successfully detected by CMAKE." << Endl;
+                      "you have a BLAS implementation and it was successfully "
+                      "detected by CMake as well that the imt CMake flag is set." << Endl;
 #endif // DNNCPU
 }
 
@@ -1056,9 +1100,9 @@ void TMVA::MethodDNN::AddWeightsXMLTo( void* parent ) const
    for (Int_t i = 0; i < depth; i++) {
       const auto& layer = fNet.GetLayer(i);
       auto layerxml = gTools().xmlengine().NewChild(nn, 0, "Layer");
-      char activationFunction = static_cast<char>(layer.GetActivationFunction());
+      int activationFunction = static_cast<int>(layer.GetActivationFunction());
       gTools().xmlengine().NewAttr(layerxml, 0, "ActivationFunction",
-                                   TString (activationFunction));
+                                   TString::Itoa(activationFunction, 10));
       WriteMatrixXML(layerxml, "Weights", layer.GetWeights());
       WriteMatrixXML(layerxml, "Biases",  layer.GetBiases());
    }
@@ -1095,7 +1139,7 @@ void TMVA::MethodDNN::ReadWeightsFromXML(void* rootXML)
 
       // Read activation function.
       gTools().ReadAttr(layerXML, "ActivationFunction", fString);
-      f = static_cast<EActivationFunction>(fString(0));
+      f = static_cast<EActivationFunction>(fString.Atoi());
 
       // Read number of neurons.
       size_t width;

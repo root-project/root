@@ -49,19 +49,15 @@
 //         want to use the text output then
 //_______________________________________________________________________
 
-#include <iomanip>
-
 #include "TMVA/Timer.h"
 
-#ifndef ROOT_TMVA_Config
 #include "TMVA/Config.h"
-#endif
-#ifndef ROOT_TMVA_Tools
-#include "TMVA/Tools.h"
-#endif
-#ifndef ROOT_TMVA_MsgLogger
 #include "TMVA/MsgLogger.h"
-#endif
+#include "TMVA/Tools.h"
+
+#include "TStopwatch.h"
+
+#include <iomanip>
 
 const TString TMVA::Timer::fgClassName = "Timer";
 const Int_t   TMVA::Timer::fgNbins     = 16;  

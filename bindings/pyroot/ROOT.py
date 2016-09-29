@@ -586,6 +586,7 @@ if '__IPYTHON__' in __builtins__ and __IPYTHON__:
    ip = get_ipython()
    if hasattr(ip,"kernel"):
       import JupyROOT
+      import JsMVA
 
 ### b/c of circular references, the facade needs explicit cleanup ---------------
 import atexit

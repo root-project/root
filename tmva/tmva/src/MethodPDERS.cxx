@@ -70,27 +70,27 @@
 
 #include "TMVA/MethodPDERS.h"
 
-#include <assert.h>
-#include <algorithm>
-
-#include "TBuffer.h"
-#include "TFile.h"
-#include "TObjString.h"
-#include "TMath.h"
-
 #include "TMVA/BinaryTree.h"
 #include "TMVA/BinarySearchTree.h"
+#include "TMVA/Configurable.h"
 #include "TMVA/ClassifierFactory.h"
 #include "TMVA/Event.h"
+#include "TMVA/IMethod.h"
+#include "TMVA/MethodBase.h"
 #include "TMVA/MsgLogger.h"
 #include "TMVA/RootFinder.h"
 #include "TMVA/Tools.h"
 #include "TMVA/TransformationHandler.h"
 #include "TMVA/Types.h"
 
-//FIXME: Is that really needed?
-#define TMVA_MethodPDERS__countByHand__Debug__
-#undef  TMVA_MethodPDERS__countByHand__Debug__
+#include "ThreadLocalStorage.h"
+#include "TBuffer.h"
+#include "TFile.h"
+#include "TObjString.h"
+#include "TMath.h"
+
+#include <assert.h>
+#include <algorithm>
 
 namespace TMVA {
    const Bool_t MethodPDERS_UseFindRoot = kFALSE;
@@ -360,6 +360,7 @@ void TMVA::MethodPDERS::Train( void )
    SetVolumeElement();
 
    fInitializedVolumeEle = kTRUE;
+   ExitFromTraining();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

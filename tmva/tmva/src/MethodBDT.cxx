@@ -106,26 +106,17 @@
 
 #include "TMVA/MethodBDT.h"
 
-#include <algorithm>
-
-#include <math.h>
-#include <fstream>
-
-#include "Riostream.h"
-#include "TRandom3.h"
-#include "TMath.h"
-#include "TObjString.h"
-#include "TGraph.h"
-
 #include "TMVA/BDTEventWrapper.h"
 #include "TMVA/BinarySearchTree.h"
 #include "TMVA/ClassifierFactory.h"
+#include "TMVA/Configurable.h"
 #include "TMVA/CrossEntropy.h"
 #include "TMVA/DecisionTree.h"
 #include "TMVA/DataSet.h"
 #include "TMVA/GiniIndex.h"
 #include "TMVA/GiniIndexWithLaplace.h"
 #include "TMVA/Interval.h"
+#include "TMVA/IMethod.h"
 #include "TMVA/LogInterval.h"
 #include "TMVA/MethodBase.h"
 #include "TMVA/MisClassificationError.h"
@@ -141,7 +132,18 @@
 #include "TMVA/Tools.h"
 #include "TMVA/Types.h"
 
+#include "Riostream.h"
+#include "TDirectory.h"
+#include "TRandom3.h"
+#include "TMath.h"
 #include "TMatrixTSym.h"
+#include "TObjString.h"
+#include "TGraph.h"
+
+#include <algorithm>
+#include <fstream>
+#include <math.h>
+
 
 using std::vector;
 using std::make_pair;
@@ -1145,6 +1147,12 @@ void TMVA::MethodBDT::Train()
       fNTrees = 1;
    }
 
+   if (fInteractive && fInteractive->NotInitialized()){
+     std::vector<TString> titles = {"Boost weight", "Error Fraction"};
+     fInteractive->Init(titles);
+   }
+   fIPyMaxIter = fNTrees;
+
    // HHV (it's been here since looong but I really don't know why we cannot handle
    // normalized variables in BDTs...  todo
    if (IsNormalised()) Log() << kFATAL << "\"Normalise\" option cannot be used with BDT; "
@@ -1252,6 +1260,8 @@ void TMVA::MethodBDT::Train()
    Bool_t continueBoost=kTRUE;
    //for (int itree=0; itree<fNTrees; itree++) {
    while (itree < fNTrees && continueBoost){
+     if (fExitFromTraining) break;
+     fIPyCurrentIter = itree;
       timer.DrawProgressBar( itree );
       // Results* results = Data()->GetResults(GetMethodName(), Types::kTraining, GetAnalysisType());
       // TH1 *hxx = new TH1F(Form("swdist%d",itree),Form("swdist%d",itree),10000,0,15);
@@ -1342,7 +1352,10 @@ void TMVA::MethodBDT::Train()
          nNodesAfterPruning = fForest.back()->GetNNodes();
          nNodesAfterPruningCount += nNodesAfterPruning;
          nodesAfterPruningVsTree->SetBinContent(itree+1,nNodesAfterPruning);
-         
+
+         if (fInteractive){
+           fInteractive->AddPoint(itree, fBoostWeight, fErrorFraction);
+         }
          fITree = itree;
          fMonitorNtuple->Fill();
          if (fDoBoostMonitor){
@@ -1385,6 +1398,8 @@ void TMVA::MethodBDT::Train()
    fEventSample.clear();
    fValidationSample.clear();
 
+   if (!fExitFromTraining) fIPyMaxIter = fIPyCurrentIter;
+   ExitFromTraining();
 }
 
 

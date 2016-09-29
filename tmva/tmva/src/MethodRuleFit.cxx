@@ -30,21 +30,15 @@
 
 #include "TMVA/MethodRuleFit.h"
 
-#include <algorithm>
-#include <list>
-
-#include "Riostream.h"
-#include "TRandom3.h"
-#include "TMath.h"
-#include "TMatrix.h"
-#include "TDirectory.h"
-
 #include "TMVA/ClassifierFactory.h"
 #include "TMVA/Config.h"
+#include "TMVA/Configurable.h"
 #include "TMVA/CrossEntropy.h"
 #include "TMVA/DataSet.h"
 #include "TMVA/DecisionTree.h"
 #include "TMVA/GiniIndex.h"
+#include "TMVA/IMethod.h"
+#include "TMVA/MethodBase.h"
 #include "TMVA/MisClassificationError.h"
 #include "TMVA/MsgLogger.h"
 #include "TMVA/Ranking.h"
@@ -54,6 +48,15 @@
 #include "TMVA/Timer.h"
 #include "TMVA/Tools.h"
 #include "TMVA/Types.h"
+
+#include "Riostream.h"
+#include "TRandom3.h"
+#include "TMath.h"
+#include "TMatrix.h"
+#include "TDirectory.h"
+
+#include <algorithm>
+#include <list>
 
 using std::min;
 
@@ -453,6 +456,7 @@ void TMVA::MethodRuleFit::Train( void )
    }
    fRuleFit.GetRuleEnsemblePtr()->ClearRuleMap();
    TMVA::DecisionTreeNode::fgIsTraining=false;
+   ExitFromTraining();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

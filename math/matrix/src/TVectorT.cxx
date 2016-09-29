@@ -1842,7 +1842,7 @@ template<class Element>
 TVectorT<Element> &AddElemMult(TVectorT<Element> &target,Element scalar,
                       const TVectorT<Element> &source1,const TVectorT<Element> &source2)
 {
-   if (gMatrixCheck && !(AreCompatible(target,source1) && AreCompatible(target,source1))) {
+   if (gMatrixCheck && !(AreCompatible(target,source1) && AreCompatible(target,source2))) {
       Error("AddElemMult(TVectorT<Element> &,Element,const TVectorT<Element> &,const TVectorT<Element> &)",
              "vector's are incompatible");
       return target;
@@ -1875,7 +1875,7 @@ template<class Element>
 TVectorT<Element> &AddElemMult(TVectorT<Element> &target,Element scalar,
                       const TVectorT<Element> &source1,const TVectorT<Element> &source2,const TVectorT<Element> &select)
 {
-   if (gMatrixCheck && !( AreCompatible(target,source1) && AreCompatible(target,source1) &&
+   if (gMatrixCheck && !( AreCompatible(target,source1) && AreCompatible(target,source2) &&
           AreCompatible(target,select) )) {
       Error("AddElemMult(TVectorT<Element> &,Element,const TVectorT<Element> &,const TVectorT<Element> &,onst TVectorT<Element> &)",
              "vector's are incompatible");
@@ -1915,7 +1915,7 @@ template<class Element>
 TVectorT<Element> &AddElemDiv(TVectorT<Element> &target,Element scalar,
                      const TVectorT<Element> &source1,const TVectorT<Element> &source2)
 {
-   if (gMatrixCheck && !(AreCompatible(target,source1) && AreCompatible(target,source1))) {
+   if (gMatrixCheck && !(AreCompatible(target,source1) && AreCompatible(target,source2))) {
       Error("AddElemDiv(TVectorT<Element> &,Element,const TVectorT<Element> &,const TVectorT<Element> &)",
              "vector's are incompatible");
       return target;
@@ -1969,7 +1969,7 @@ template<class Element>
 TVectorT<Element> &AddElemDiv(TVectorT<Element> &target,Element scalar,
                      const TVectorT<Element> &source1,const TVectorT<Element> &source2,const TVectorT<Element> &select)
 {
-   if (gMatrixCheck && !( AreCompatible(target,source1) && AreCompatible(target,source1) &&
+   if (gMatrixCheck && !( AreCompatible(target,source1) && AreCompatible(target,source2) &&
           AreCompatible(target,select) )) {
       Error("AddElemDiv(TVectorT<Element> &,Element,const TVectorT<Element> &,const TVectorT<Element> &,onst TVectorT<Element> &)",
              "vector's are incompatible");

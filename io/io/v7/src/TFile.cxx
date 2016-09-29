@@ -12,7 +12,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/TFile.h"
+#include "ROOT/TFile.hxx"
 #include "TFile.h"
 
 #include <memory>
@@ -40,6 +40,8 @@ public:
                                    TClass *cl) = 0;
 };
 
+// make_shared<TFile> doesn't work, as TFile() is private. Take detour
+// through a friend instead.
 class TFileSharedPtrCtor: public ROOT::Experimental::TFile {
 public:
   TFileSharedPtrCtor(std::unique_ptr<TFileStorageInterface>&& storage):

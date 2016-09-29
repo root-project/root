@@ -8,6 +8,7 @@
 /// \macro_code
 ///
 /// \author Danilo Piparo
+/// \date January 2016
 
 // Total amount of numbers
 const UInt_t nNumbers = 20000000U;
@@ -32,7 +33,7 @@ Int_t mp001_fillHistos()
    };
 
    // Create the pool of workers
-   TProcPool workers(nWorkers);
+   ROOT::TProcessExecutor workers(nWorkers);
 
    // Fill the pool with work
    workers.Map(workItem, ROOT::TSeqI(nWorkers));

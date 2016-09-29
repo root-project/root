@@ -29,16 +29,12 @@
 
 #include "TMVA/MethodLD.h"
 
-#include <iomanip>
-
-#include "TMath.h"
-#include "Riostream.h"
-#include "TMatrix.h"
-#include "TMatrixD.h"
-
 #include "TMVA/ClassifierFactory.h"
+#include "TMVA/Configurable.h"
 #include "TMVA/DataSet.h"
 #include "TMVA/DataSetInfo.h"
+#include "TMVA/IMethod.h"
+#include "TMVA/MethodBase.h"
 #include "TMVA/MsgLogger.h"
 #include "TMVA/PDF.h"
 #include "TMVA/Ranking.h"
@@ -46,6 +42,14 @@
 #include "TMVA/TransformationHandler.h"
 #include "TMVA/Types.h"
 #include "TMVA/VariableTransformBase.h"
+
+#include "Riostream.h"
+#include "TMath.h"
+#include "TMatrix.h"
+#include "TMatrixD.h"
+#include "TList.h"
+
+#include <iomanip>
 
 using std::vector;
 
@@ -144,6 +148,8 @@ void TMVA::MethodLD::Train( void )
 
    // nice output
    PrintCoefficients();
+
+   ExitFromTraining();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

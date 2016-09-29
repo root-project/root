@@ -1,28 +1,38 @@
+/// \file
+/// \ingroup tutorial_http
+///  This macro demonstrates custom access and custom drawing for TMsgList class
+///  Main motivation for this example - demonstrate how traffic between server and
+///  client can be minimized and how one could build custom UI in the browser
+///
+///  TMsgList in this tutorial keep last N messages, numbering each with unique identifier
+///  There is TMsgList::Select() method which selects messages from the list
+///  If one specifies identifier, only messages newer than this identifier are selected
+///  In the selection list (TList object of TObjString) first item always identifier for
+///  the latest message in the list
+///
+///  In JavaScript code (httptextlog.js) one uses Select() method to receive latest
+///  messages, which not yet been seen in the browser and display them as text
+///  At maximum, 1000 elements are preserved in the browser.
+///
+///  Macro should always be started in compiled mode, otherwise Select() method is not
+///  accessible via TClass instance. One also requires comments after ClassDef to
+///  correctly configure behavior of the JavaScript ROOT code
+///
+///  After macro started, one could open in browser address
+/// ~~~
+///    http://localhost:8080?item=log
+/// ~~~
+///  One could either click item again or enable monitoring to always receive latest messages
+///  Or one could open only this output and nothing else:
+/// ~~~
+///     http://localhost:8080/log/draw.htm?monitoring=2000
+/// ~~~
+///  In last case it could be used in iframe, also it requires less code to load on the page
+///
+/// \macro_code
+///
+/// \author
 
-//  This macro demonstrates custom access and custom drawing for TMsgList class
-//  Main motivation for this example - demonstrate how traffic between server and
-//  client can be minimized and how one could build custom UI in the browser
-//
-//  TMsgList in this tutorial keep last N messages, numbering each with unique identifier
-//  There is TMsgList::Select() method which selects messages from the list
-//  If one specifies identifier, only messages newer than this identifier are selected
-//  In the selection list (TList object of TObjString) first item always identifier for
-//  the latest message in the list
-//
-//  In JavaScript code (httptextlog.js) one uses Select() method to receive latest
-//  messages, which not yet been seen in the browser and display them as text
-//  At maximum, 1000 elements are preserved in the browser.
-//
-//  Macro should always be started in compiled mode, otherwise Select() method is not
-//  accessible via TClass instance. One also requires comments after ClassDef to
-//  correctly configure behavior of the JavaScript ROOT code
-//
-//  After macro started, one could open in browser address
-//    http://localhost:8080?item=log
-//  One could either click item again or enable monitoring to always receive latest messages
-//  Or one could open only this output and nothing else:
-//     http://localhost:8080/log/draw.htm?monitoring=2000
-//  In last case it could be used in iframe, also it requires less code to load on the page
 
 #include <stdio.h>
 #include <string.h>

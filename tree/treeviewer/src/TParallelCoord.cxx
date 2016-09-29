@@ -706,12 +706,12 @@ void TParallelCoord::PaintEntries(TParallelCoordSelect* sel)
          if (TestBit(kVertDisplay)) {
             a    = (y[1]-y[0])/(x[1]-x[0]);
             b    = y[0]-a*x[0];
-            x[0] = x[0]+lx*r.Rndm(n);
+            x[0] = x[0]+lx*r.Rndm();
             y[0] = a*x[0]+b;
          } else {
             a    = (x[1]-x[0])/(y[1]-y[0]);
             b    = x[0]-a*y[0];
-            y[0] = y[0]+ly*r.Rndm(n);
+            y[0] = y[0]+ly*r.Rndm();
             x[0] = a*y[0]+b;
          }
       }

@@ -10,7 +10,6 @@ set(Libraries Core MathCore Matrix TMVA)
 include_directories(${ROOT_INCLUDE_DIRS})
 
 #--- CUDA tests. ---------------------------
-find_package(CUDA QUIET)
 if (CUDA_FOUND)
 
   SET(DNN_CUDA_LIBRARIES dnn_cuda ${CUDA_CUBLAS_LIBRARIES})
@@ -51,8 +50,8 @@ if (CUDA_FOUND)
 endif (CUDA_FOUND)
 
 #--- CPU tests. ----------------------------
-find_package(BLAS QUIET)
 if (BLAS_FOUND AND imt)
+  include_directories(${TBB_INCLUDE_DIRS})
 
   # DNN - Arithmetic Functions CPU
   ROOT_EXECUTABLE(testArithmeticCpu TestMatrixArithmeticCpu.cxx
@@ -86,7 +85,7 @@ if (BLAS_FOUND AND imt)
 
   # DNN - Minimization CPU
   ROOT_EXECUTABLE(testMinimizationCpu TestMinimizationCpu.cxx
-    LIBRARIES ${Libraries} ${BLAS_openblas_LIBRARY} ${TBB_LIBRARIES} )
+    LIBRARIES ${Libraries})
   ROOT_ADD_TEST(TMVA-DNN-Minimization-Cpu COMMAND testMinimizationCpu)
 
 endif (BLAS_FOUND AND imt)

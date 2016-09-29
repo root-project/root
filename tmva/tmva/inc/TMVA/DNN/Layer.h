@@ -237,8 +237,8 @@ template<typename Architecture_t>
 //______________________________________________________________________________
 template<typename Architecture_t>
 TLayer<Architecture_t>::TLayer(const TLayer &layer)
-    : fBatchSize(layer.fBatchSize),
-    fInputWidth(layer.fInputWidth), fWidth(layer.fWidth),
+    : fBatchSize(layer.fBatchSize), fInputWidth(layer.fInputWidth),
+    fWidth(layer.fWidth), fDropoutProbability(layer.fDropoutProbability),
     fWeights(layer.fWidth, layer.fInputWidth), fBiases(layer.fWidth, 1),
     fOutput(layer.fBatchSize, layer.fWidth),
     fDerivatives(layer.fBatchSize, layer.fWidth),
@@ -329,10 +329,10 @@ template<typename Architecture_t>
 TSharedLayer<Architecture_t>::TSharedLayer(const TSharedLayer &layer)
     : fBatchSize(layer.fBatchSize),
     fInputWidth(layer.GetInputWidth()), fWidth(layer.GetWidth()),
-    fWeights(layer.fWeights), fBiases(layer.fBiases),
-    fOutput(layer.fBatchSize, fWidth), fDerivatives(layer.fBatchSize, fWidth),
-    fWeightGradients(fWidth, fInputWidth), fBiasGradients(fWidth, 1),
-    fActivationGradients(layer.fBatchSize, fWidth),
+    fDropoutProbability(layer.fDropoutProbability), fWeights(layer.fWeights),
+    fBiases(layer.fBiases), fOutput(layer.fBatchSize, fWidth),
+    fDerivatives(layer.fBatchSize, fWidth), fWeightGradients(fWidth, fInputWidth),
+    fBiasGradients(fWidth, 1), fActivationGradients(layer.fBatchSize, fWidth),
     fF(layer.fF)
 {
    // Nothing to do here.

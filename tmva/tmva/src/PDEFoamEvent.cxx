@@ -43,6 +43,7 @@
 
 #include "TMVA/Event.h"
 #include "TMVA/MsgLogger.h"
+#include "TMVA/PDEFoam.h"
 #include "TMVA/Types.h"
 
 #include "Rtypes.h"

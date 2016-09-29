@@ -90,28 +90,20 @@
 
 #include "TMVA/MethodCuts.h"
 
-#include <iostream>
-#include <cstdlib>
-
-#include "Riostream.h"
-#include "TH1F.h"
-#include "TObjString.h"
-#include "TDirectory.h"
-#include "TMath.h"
-#include "TGraph.h"
-#include "TSpline.h"
-#include "TRandom3.h"
-
 #include "TMVA/BinarySearchTree.h"
 #include "TMVA/ClassifierFactory.h"
 #include "TMVA/Config.h"
+#include "TMVA/Configurable.h"
 #include "TMVA/DataSet.h"
 #include "TMVA/DataSetInfo.h"
-#include "TMVA/GeneticFitter.h"
 #include "TMVA/Event.h"
+#include "TMVA/IFitterTarget.h"
+#include "TMVA/IMethod.h"
+#include "TMVA/GeneticFitter.h"
 #include "TMVA/Interval.h"
 #include "TMVA/FitterBase.h"
 #include "TMVA/MCFitter.h"
+#include "TMVA/MethodBase.h"
 #include "TMVA/MethodFDA.h"
 #include "TMVA/MinuitFitter.h"
 #include "TMVA/MsgLogger.h"
@@ -124,6 +116,18 @@
 #include "TMVA/Types.h"
 #include "TMVA/TSpline1.h"
 #include "TMVA/VariableTransformBase.h"
+
+#include "Riostream.h"
+#include "TH1F.h"
+#include "TObjString.h"
+#include "TDirectory.h"
+#include "TMath.h"
+#include "TGraph.h"
+#include "TSpline.h"
+#include "TRandom3.h"
+
+#include <cstdlib>
+#include <iostream>
 
 using std::atof;
 
@@ -692,6 +696,8 @@ void  TMVA::MethodCuts::Train( void )
          Log() << kFATAL << "Wrong fit method: " << fFitMethod << Endl;
       }
 
+      if (fInteractive) fitter->SetIPythonInteractive(&fExitFromTraining, &fIPyMaxIter, &fIPyCurrentIter);
+
       fitter->CheckForUnusedOptions();
 
       // perform the fit
@@ -711,11 +717,14 @@ void  TMVA::MethodCuts::Train( void )
       // timing of MC
       Int_t nsamples = Int_t(0.5*nevents*(nevents - 1));
       Timer timer( nsamples, GetName() ); 
+      fIPyMaxIter = nsamples;
 
       Log() << kINFO << "Running full event scan: " << Endl;
       for (Int_t ievt1=0; ievt1<nevents; ievt1++) {
          for (Int_t ievt2=ievt1+1; ievt2<nevents; ievt2++) {
 
+           fIPyCurrentIter = ic;
+           if (fExitFromTraining) break;
             EstimatorFunction( ievt1, ievt2 );
 
             // what's the time please?
@@ -738,6 +747,7 @@ void  TMVA::MethodCuts::Train( void )
 
       // timing of MC
       Timer timer( nsamples, GetName() ); 
+      fIPyMaxIter = nsamples;
 
       // random generator
       TRandom3*rnd = new TRandom3( seed );
@@ -746,6 +756,8 @@ void  TMVA::MethodCuts::Train( void )
       std::vector<Double_t> pars( 2*GetNvar() );
       
       for (Int_t itoy=0; itoy<nsamples; itoy++) {
+        fIPyCurrentIter = ic;
+        if (fExitFromTraining) break;
 
          for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
             
@@ -814,6 +826,9 @@ void  TMVA::MethodCuts::Train( void )
    // if not, then the wrong bin is taken in some cases.
    Double_t epsilon = 0.0001;
    for (Double_t eff=0.1; eff<0.95; eff += 0.1) PrintCuts( eff+epsilon );
+
+   if (!fExitFromTraining) fIPyMaxIter = fIPyCurrentIter;
+   ExitFromTraining();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

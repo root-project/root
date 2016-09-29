@@ -98,12 +98,28 @@ add_custom_command(OUTPUT ${stamp_file}
                    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/icons ${CMAKE_BINARY_DIR}/icons
                    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/fonts ${CMAKE_BINARY_DIR}/fonts
                    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/macros ${CMAKE_BINARY_DIR}/macros
-                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/tutorials ${CMAKE_BINARY_DIR}/tutorials
                    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/LICENSE ${CMAKE_BINARY_DIR}/LICENSE
                    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/README ${CMAKE_BINARY_DIR}/README
                    COMMAND ${CMAKE_COMMAND} -E touch ${stamp_file}
-                   COMMENT "Moving directories such as etc, icons, fonts, etc. to build area")
-add_custom_target(move_headers DEPENDS ${stamp_file}
+                   COMMENT "Copying directories such as etc, icons, fonts, etc. to build area")
+
+#---Copy the the tutorials to the build area, with dependency---------------------------------
+file(GLOB_RECURSE tutorial_files RELATIVE ${CMAKE_SOURCE_DIR} tutorials/*)
+set(tutorial_files_builddir "")
+foreach(tutorial_file ${tutorial_files})
+  # Filter out hsimple.root; someone might have created it in the src dir, and the hsimple.root
+  # target below will interfere.
+  if (NOT (tutorial_file STREQUAL "tutorials/hsimple.root"))
+    # Works, but triggers re-config for every change in tutorials/
+    #configure_file(${CMAKE_SOURCE_DIR}/${tutorial_file} ${CMAKE_BINARY_DIR}/${tutorial_file} COPYONLY)
+    add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/${tutorial_file}
+      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/${tutorial_file} ${CMAKE_BINARY_DIR}/${tutorial_file}
+      DEPENDS ${CMAKE_SOURCE_DIR}/${tutorial_file})
+    set(tutorial_files_builddir "${CMAKE_BINARY_DIR}/${tutorial_file};${tutorial_files_builddir}")
+  endif()
+endforeach()
+
+add_custom_target(move_headers DEPENDS ${stamp_file} ${tutorial_files_builddir}
                                COMMAND ${CMAKE_COMMAND} -DPREFIX=${CMAKE_BINARY_DIR}
                                                         -DCOMPONENTS="headers"
                                                         -P ${CMAKE_SOURCE_DIR}/cmake/scripts/local_install.cmake)
@@ -178,10 +194,11 @@ install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/dictpch DESTINATION ${CMAKE_INSTALL_SY
 
 #---CXX MODULES-----------------------------------------------------------------------------------
 if(cxxmodules)
-  add_custom_target(copymodulemap ALL DEPENDS build/unix/module.modulemap)
-  add_custom_command(TARGET copymodulemap PRE_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/build/unix/module.modulemap ${CMAKE_BINARY_DIR}/include/module.modulemap
-  )
+  add_custom_target(copymodulemap
+                    DEPENDS build/unix/module.modulemap
+                    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/build/unix/module.modulemap ${CMAKE_BINARY_DIR}/include/module.modulemap
+                    )
+  add_dependencies(copymodulemap move_headers)
 endif(cxxmodules)
 
 #---hsimple.root---------(use the executable for clearer dependencies and proper return code)---

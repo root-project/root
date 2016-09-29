@@ -23,11 +23,13 @@
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMVA_MethodBase
 #include "TMVA/MethodBase.h"
-#endif
+#include "TMVA/Types.h"
 
+#include "Rtypes.h"
+#include "TString.h"
 
+class TFile;
 class TGraph;
 class TTree;
 class TDirectory;

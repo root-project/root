@@ -505,8 +505,16 @@ namespace Math {
       GSLRngMinStd();
    };
 
+   /** MixMax generator based on ROOT::Math::MixMaxEngine of N=240
 
-
+       @ingroup Random 
+   */
+   class GSLRngMixMax : public GSLRandomEngine {
+   public:
+      typedef GSLRandomEngine BaseType; 
+      GSLRngMixMax();
+      virtual ~GSLRngMixMax();  // we need a dtcor since is not a standard GSL engine
+   };
 
 } // namespace Math
 } // namespace ROOT

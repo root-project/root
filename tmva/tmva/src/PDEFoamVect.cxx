@@ -29,6 +29,7 @@
 #include "TMVA/PDEFoamVect.h"
 
 #include "Rtypes.h"
+#include "TObject.h"
 
 #include <iostream>
 #include <iomanip>

@@ -7451,8 +7451,8 @@ void THistPainter::PaintScatterPlot(Option_t *option)
                   gPad->PaintPolyMarker(marker, fXbuf, fYbuf);
                   marker=0;
                }
-               fXbuf[marker] = (random.Rndm(loop)*xstep) + xk;
-               fYbuf[marker] = (random.Rndm(loop)*ystep) + yk;
+               fXbuf[marker] = (random.Rndm()*xstep) + xk;
+               fYbuf[marker] = (random.Rndm()*ystep) + yk;
                if (Hoption.Logx) {
                   if (fXbuf[marker] > 0) fXbuf[marker] = TMath::Log10(fXbuf[marker]);
                   else                   break;
@@ -8867,8 +8867,8 @@ void THistPainter::PaintTH2PolyScatterPlot(Option_t *)
                gPad->PaintPolyMarker(marker, fXbuf, fYbuf);
                marker=0;
             }
-            xp = (random.Rndm(loop)*xstep) + xk;
-            yp = (random.Rndm(loop)*ystep) + yk;
+            xp = (random.Rndm()*xstep) + xk;
+            yp = (random.Rndm()*ystep) + yk;
             if (g->IsInside(xp,yp)) {
                fXbuf[marker] = xp;
                fYbuf[marker] = yp;
@@ -8891,8 +8891,8 @@ void THistPainter::PaintTH2PolyScatterPlot(Option_t *)
                gPad->PaintPolyMarker(marker, fXbuf, fYbuf);
                marker=0;
             }
-            xp = (random.Rndm(loop)*xstep) + xk;
-            yp = (random.Rndm(loop)*ystep) + yk;
+            xp = (random.Rndm()*xstep) + xk;
+            yp = (random.Rndm()*ystep) + yk;
             if (mg->IsInside(xp,yp)) {
                fXbuf[marker] = xp;
                fYbuf[marker] = yp;

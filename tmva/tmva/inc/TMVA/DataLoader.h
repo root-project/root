@@ -49,18 +49,22 @@
 class TFile;
 class TTree;
 class TDirectory;
+class TH2;
 
 namespace TMVA {
 
    class IMethod;
+   class Envelope;
    class MethodBase;
    class DataInputHandler;
    class DataSetInfo;
    class DataSetManager;
    class VariableTransformBase;
+   class VarTransformHandler;
 
    class DataLoader : public Configurable {
       friend class Factory;
+      friend class Envelope;
    public:
 
        DataLoader( TString thedlName="default");
@@ -82,6 +86,8 @@ namespace TMVA {
 
       DataSetInfo& AddDataSet( DataSetInfo& );
       DataSetInfo& AddDataSet( const TString&  );
+      DataSetInfo& GetDataSetInfo();
+      DataLoader* VarTransform(TString trafoDefinition);
 
       // special case: signal/background
 
@@ -168,15 +174,17 @@ namespace TMVA {
       std::vector<std::vector<TMVA::Event*>> SplitSets(std::vector<TMVA::Event*>& oldSet, int seedNum, int numFolds);
 
       const DataSetInfo& GetDefaultDataSetInfo(){ return DefaultDataSetInfo(); }
+
+      TH2* GetCorrelationMatrix(const TString& className);
  
       //Copy method use in VI and CV DEPRECATED: you can just call Clone  DataLoader *dl2=(DataLoader *)dl1->Clone("dl2")
       DataLoader* MakeCopy(TString name);
       friend void DataLoaderCopy(TMVA::DataLoader* des, TMVA::DataLoader* src);      
+      DataInputHandler&        DataInput() { return *fDataInputHandler; }
  
    private:
 
  
-      DataInputHandler&        DataInput() { return *fDataInputHandler; }
       DataSetInfo&             DefaultDataSetInfo();
       void                     SetInputTreesFromEventAssignTrees();
 
@@ -223,9 +231,8 @@ namespace TMVA {
 
    protected:
 
-      ClassDef(DataLoader,2);
+      ClassDef(DataLoader,3);
    };
-   //utility function to copy dataloaders DEPRECATED: you can just call Clone  DataLoader *dl2=(DataLoader *)dl1->Clone("dl2")
    void DataLoaderCopy(TMVA::DataLoader* des, TMVA::DataLoader* src);
 } // namespace TMVA
 

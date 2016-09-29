@@ -10,6 +10,7 @@
 /// \macro_code
 ///
 /// \author Danilo Piparo
+/// \date January 2016
 
 // Some useful constants and functions
 
@@ -60,7 +61,7 @@ Int_t mp101_fillNtuples()
    };
 
    // Create the pool of workers
-   TProcPool workers(nWorkers);
+   ROOT::TProcessExecutor workers(nWorkers);
 
    // Fill the pool with work
    workers.Map(workItem, ROOT::TSeqI(nWorkers));

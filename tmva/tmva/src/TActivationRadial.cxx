@@ -28,15 +28,15 @@
 //  efficient later.
 //_______________________________________________________________________
 
-#include <iostream>
+#include "TMVA/TActivationRadial.h"
+
+#include "TMVA/TActivation.h"
 
 #include "TFormula.h"
-#include "TString.h"
 #include "TMath.h"
+#include "TString.h"
 
-#ifndef ROOT_TMVA_TActivationRadial
-#include "TMVA/TActivationRadial.h"
-#endif
+#include <iostream>
 
 static const Int_t  UNINITIALIZED = -1;
 

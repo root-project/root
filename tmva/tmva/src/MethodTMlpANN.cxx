@@ -49,20 +49,11 @@
 
 #include "TMVA/MethodTMlpANN.h"
 
-#include <cstdlib>
-#include <iostream>
-#include <fstream>
-
-#include "Riostream.h"
-#include "TLeaf.h"
-#include "TEventList.h"
-#include "TObjString.h"
-#include "TROOT.h"
-#include "TMultiLayerPerceptron.h"
-
 #include "TMVA/Config.h"
+#include "TMVA/Configurable.h"
 #include "TMVA/DataSet.h"
 #include "TMVA/DataSetInfo.h"
+#include "TMVA/IMethod.h"
 #include "TMVA/MethodBase.h"
 #include "TMVA/MsgLogger.h"
 #include "TMVA/Types.h"
@@ -72,6 +63,18 @@
 #ifndef ROOT_TMVA_Tools
 #include "TMVA/Tools.h"
 #endif
+
+#include "Riostream.h"
+#include "TLeaf.h"
+#include "TEventList.h"
+#include "TObjString.h"
+#include "TROOT.h"
+#include "TMultiLayerPerceptron.h"
+
+#include <cstdlib>
+#include <iostream>
+#include <fstream>
+
 
 using std::atoi;
 

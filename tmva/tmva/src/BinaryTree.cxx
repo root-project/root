@@ -39,6 +39,8 @@
 #include <string>
 #include <stdexcept>
 
+#include "ThreadLocalStorage.h"
+
 #include "TMVA/BinaryTree.h"
 #include "TMVA/MsgLogger.h"
 #include "TMVA/Event.h"

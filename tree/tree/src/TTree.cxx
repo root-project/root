@@ -391,7 +391,7 @@ End_Macro
 #include "TBranchSTL.h"
 #include "TSchemaRuleSet.h"
 #include "TFileMergeInfo.h"
-#include "ROOT/StringConv.h"
+#include "ROOT/StringConv.hxx"
 
 #include <chrono>
 #include <cstddef>
@@ -5238,6 +5238,9 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
    if (ROOT::IsImplicitMTEnabled() && fIMTEnabled) {
       if (fSortedBranches.empty()) InitializeSortedBranches();
 
+      // Enable this IMT use case (activate its locks)
+      ROOT::Internal::TParBranchProcessingRAII pbpRAII;
+
       Int_t errnb = 0;
       std::atomic<Int_t> pos(0);
       std::atomic<Int_t> nbpar(0);
@@ -5258,7 +5261,7 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
             if (gDebug > 0) {
                std::stringstream ss;
                ss << std::this_thread::get_id();
-               Info("GetEntry", "[IMT] Thread %lu", std::stoul(ss.str()));
+               Info("GetEntry", "[IMT] Thread %s", ss.str().c_str());
                Info("GetEntry", "[IMT] Running task for branch #%d: %s", j, branch->GetName());
             }
 
@@ -6580,7 +6583,19 @@ void TTree::OptimizeBaskets(ULong64_t maxMemory, Float_t minComp, Option_t *opti
          if (bsize < 0) bsize = bmax;
          if (bsize > bmax) bsize = bmax;
          UInt_t newBsize = UInt_t(bsize);
-         newBsize = newBsize - newBsize%512;
+         if (pass) { // only on the second pass so that it doesn't interfere with scaling
+            if (branch->GetBasket(0) != 0) {
+               newBsize = newBsize + (branch->GetBasket(0)->GetNevBuf() * sizeof(Int_t) * 2); // make room for meta data
+            }
+            // We used ATLAS fully-split xAOD for testing, which is a rather unbalanced TTree, 10K branches,
+            // with 8K having baskets smaller than 512 bytes. To achieve good I/O performance ATLAS uses auto-flush 100,
+            // resulting in the smallest baskets being ~300-400 bytes, so this change increases their memory by about 8k*150B =~ 1MB,
+            // at the same time it significantly reduces the number of total baskets because it ensures that all 100 entries can be
+            // stored in a single basket (the old optimization tended to make baskets too small). In a toy example with fixed sized
+            // structures we found a factor of 2 fewer baskets needed in the new scheme.
+            // rounds up, increases basket size to ensure all entries fit into single basket as intended
+            newBsize = newBsize - newBsize%512 + 512;
+         }
          if (newBsize < sizeOfOneEntry) newBsize = sizeOfOneEntry;
          if (newBsize < bmin) newBsize = bmin;
          if (newBsize > 10000000) newBsize = bmax;

@@ -43,25 +43,8 @@
 //_______________________________________________________________________
 
 
-#include "TROOT.h"
-#include "TFile.h"
-#include "TTree.h"
-#include "TLeaf.h"
-#include "TEventList.h"
-#include "TH2.h"
-#include "TText.h"
-#include "TLegend.h"
-#include "TGraph.h"
-#include "TStyle.h"
-#include "TMatrixF.h"
-#include "TMatrixDSym.h"
-#include "TPaletteAxis.h"
-#include "TPrincipal.h"
-#include "TMath.h"
-#include "TObjString.h"
-#include "TSystem.h"
-
 #include "TMVA/Factory.h"
+
 #include "TMVA/ClassifierFactory.h"
 #include "TMVA/Config.h"
 #include "TMVA/Configurable.h"
@@ -80,7 +63,7 @@
 #include "TMVA/ROCCurve.h"
 #include "TMVA/MsgLogger.h"
 
-
+#include "TMVA/VariableInfo.h"
 #include "TMVA/VariableTransform.h"
 
 #include "TMVA/Results.h"
@@ -92,7 +75,24 @@
 
 #include "TMVA/Types.h"
 
-#include <TCanvas.h>
+#include "TROOT.h"
+#include "TFile.h"
+#include "TTree.h"
+#include "TLeaf.h"
+#include "TEventList.h"
+#include "TH2.h"
+#include "TText.h"
+#include "TLegend.h"
+#include "TGraph.h"
+#include "TStyle.h"
+#include "TMatrixF.h"
+#include "TMatrixDSym.h"
+#include "TPaletteAxis.h"
+#include "TPrincipal.h"
+#include "TMath.h"
+#include "TObjString.h"
+#include "TSystem.h"
+#include "TCanvas.h"
 
 const Int_t  MinNoTrainingEvents = 10;
 //const Int_t  MinNoTestEvents     = 1;

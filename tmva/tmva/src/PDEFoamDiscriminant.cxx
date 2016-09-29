@@ -44,7 +44,6 @@
 
 #include "TMVA/PDEFoamDiscriminant.h"
 
-#include <climits>
 
 #include "TMVA/Event.h"
 #include "TMVA/MsgLogger.h"
@@ -53,11 +52,11 @@
 #include "TMVA/PDEFoamKernelBase.h"
 #include "TMVA/Types.h"
 
-#ifndef ROOT_TMath
+#include "TDirectory.h"
 #include "TMath.h"
-#endif
 #include "TH2D.h"
 
+#include <climits>
 
 ClassImp(TMVA::PDEFoamDiscriminant)
 

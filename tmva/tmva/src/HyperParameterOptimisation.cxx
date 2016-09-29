@@ -1,15 +1,23 @@
 // @(#)root/tmva $Id$
 // Author: Omar Zapata, Thomas James Stevenson.
 
-#include <iostream>
-#include <vector>
-
 #include "TMVA/HyperParameterOptimisation.h"
+
+#include "TMVA/Configurable.h"
+#include "TMVA/CrossValidation.h"
+#include "TMVA/DataSet.h"
+#include "TMVA/Event.h"
 #include "TMVA/MethodBase.h"
 #include "TMVA/ResultsClassification.h"
-#include "TSystem.h"
+#include "TMVA/Types.h"
+
 #include "TGraph.h"
+#include "TMultiGraph.h"
 #include "TString.h"
+#include "TSystem.h"
+
+#include <iostream>
+#include <vector>
 
 //HyperParameterOptimisationResult stuff
 // ClassImp(TMVA::HyperParameterOptimisationResult)

@@ -24,20 +24,23 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-#include <vector>
-#include <iostream>
-
 #include "TMVA/DataInputHandler.h"
+
+#include "TMVA/DataLoader.h"
 #include "TMVA/MsgLogger.h"
 #include "TMVA/Types.h"
 #include "TEventList.h"
 #include "TCut.h"
 #include "TFile.h"
 #include "TROOT.h"
+#include "TTree.h"
 
 #ifndef ROOT_TMVA_Configurable
 #include "TMVA/Configurable.h"
 #endif
+
+#include <vector>
+#include <iostream>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor

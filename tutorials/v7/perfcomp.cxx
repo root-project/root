@@ -15,9 +15,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/THist.h"
-#include "ROOT/TFit.h"
-#include "ROOT/THistBufferedFill.h"
+#include "ROOT/THist.hxx"
+#include "ROOT/TFit.hxx"
+#include "ROOT/THistBufferedFill.hxx"
 
 #include "TH2.h"
 

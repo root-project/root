@@ -696,7 +696,7 @@ void TH3::FillRandom(const char *fname, Int_t ntimes)
    if (fDimension < 2) nbinsy = -1;
    if (fDimension < 3) nbinsz = -1;
    for (loop=0;loop<ntimes;loop++) {
-      r1 = gRandom->Rndm(loop);
+      r1 = gRandom->Rndm();
       ibin = TMath::BinarySearch(nbins,&integral[0],r1);
       binz = ibin/nxy;
       biny = (ibin - nxy*binz)/nbinsx;

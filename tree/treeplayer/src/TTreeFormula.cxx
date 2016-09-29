@@ -4075,7 +4075,7 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
                          continue;
             case kint  : tab[pos-1] = T(Long64_t(tab[pos-1])); continue;
             case kSignInv: tab[pos-1] = -1 * tab[pos-1]; continue;
-            case krndm : pos++; tab[pos-1] = gRandom->Rndm(1); continue;
+            case krndm : pos++; tab[pos-1] = gRandom->Rndm(); continue;
 
             case kAnd  : pos--; if (tab[pos-1]!=0 && tab[pos]!=0) tab[pos-1]=1;
                                 else tab[pos-1]=0;

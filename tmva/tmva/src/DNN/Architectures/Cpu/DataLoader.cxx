@@ -94,26 +94,21 @@ TCpuDataLoader<Data_t, Real_t>::TCpuDataLoader(const Data_t &input,
 template<typename Data_t, typename Real_t>
 inline void TCpuDataLoader<Data_t, Real_t>::CopyData(size_t batchIndex)
 {
-   auto copy = [this](const tbb::blocked_range<size_t> & range)
+   auto copy = [this](UInt_t workerID)
    {
-      size_t rangeBegin = range.begin();
-      size_t rangeEnd   = range.end();
-      size_t sampleIndex = rangeBegin * this->fBatchSize;
-
-      for (size_t batchIndex = rangeBegin; batchIndex != rangeEnd; ++batchIndex) {
-         CopyBatch(this->fInputMatrices[batchIndex % this->fBufferSize],
-                   this->fOutputMatrices[batchIndex % this->fBufferSize],
-                   this->fInput,
-                   this->fSampleIndices.begin() + sampleIndex,
-                   this->fSampleIndices.begin() + sampleIndex + this->fBatchSize);
-         sampleIndex += this->fBatchSize;
-      }
+      CopyBatch(this->fInputMatrices[workerID % this->fBufferSize],
+                this->fOutputMatrices[workerID % this->fBufferSize],
+                this->fInput,
+                this->fSampleIndices.begin() + sampleIndex,
+                this->fSampleIndices.begin() + sampleIndex + this->fBatchSize);
+      sampleIndex += this->fBatchSize;
+      return 0;
    };
 
    size_t end   = std::min(batchIndex + fBufferSize, fNBatches);
    size_t start = batchIndex;
-   tbb::blocked_range<size_t> range(start, end);
-   parallel_for(range, copy);
+   ROOT::TThreadExecutor pool{};
+   pool.Map(copy, ROOT::TSeqI(start, end));
 }
 
 //______________________________________________________________________________

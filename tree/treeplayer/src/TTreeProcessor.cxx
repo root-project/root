@@ -24,7 +24,7 @@ objects.
 */
 
 #include "TROOT.h"
-#include "ROOT/TTreeProcessor.h"
+#include "ROOT/TTreeProcessor.hxx"
 
 #include "tbb/task.h"
 #include "tbb/task_group.h"
@@ -50,8 +50,8 @@ using namespace ROOT;
 /// \param[in] func User-defined function that processes a subrange of entries
 void TTreeProcessor::Process(std::function<void(TTreeReader&)> func)
 {
-   // Make sure this IMT use-case is enabled
-   EnableParTreeProcessing();
+   // Enable this IMT use case (activate its locks)
+   Internal::TParTreeProcessingRAII ptpRAII;
 
    auto clusterIter = treeView->GetClusterIterator();
    Long64_t start = 0, end = 0;

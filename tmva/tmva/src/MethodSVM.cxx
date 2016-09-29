@@ -42,15 +42,8 @@
 // SMO Platt's SVM classifier with Keerthi & Shavade improvements
 //_______________________________________________________________________
 
-#include "Riostream.h"
-#include "TFile.h"
-#include "TVectorD.h"
-#include "TMath.h"
-
-#include "TMVA/ClassifierFactory.h"
-#ifndef ROOT_TMVA_MethodSVM
 #include "TMVA/MethodSVM.h"
-#endif
+
 #ifndef ROOT_TMVA_Tools
 #include "TMVA/Tools.h"
 #endif
@@ -70,15 +63,25 @@
 #include "TMVA/SVKernelFunction.h"
 #endif
 
+#include "TMVA/ClassifierFactory.h"
+#include "TMVA/Configurable.h"
 #include "TMVA/DataSet.h"
 #include "TMVA/DataSetInfo.h"
 #include "TMVA/Event.h"
+#include "TMVA/IMethod.h"
 #include "TMVA/MethodBase.h"
 #include "TMVA/MsgLogger.h"
 #include "TMVA/Types.h"
 #include "TMVA/Interval.h"
 #include "TMVA/OptimizeConfigParameters.h"
+#include "TMVA/Results.h"
 #include "TMVA/ResultsClassification.h"
+#include "TMVA/VariableInfo.h"
+
+#include "Riostream.h"
+#include "TFile.h"
+#include "TVectorD.h"
+#include "TMath.h"
 
 #include <string>
 
@@ -287,6 +290,7 @@ void TMVA::MethodSVM::ProcessOptions()
 
 void TMVA::MethodSVM::Train()
 {
+   fIPyMaxIter = fMaxIter;
    Data()->SetCurrentType(Types::kTraining);
 
    Log() << kDEBUG << "Create event vector"<< Endl;
@@ -382,6 +386,8 @@ void TMVA::MethodSVM::Train()
    Timer timer( GetName() );
    Log() << kINFO << "Sorry, no computing time forecast available for SVM, please wait ..." << Endl;
 
+   if (fInteractive) fWgSet->SetIPythonInteractive(&fExitFromTraining, &fIPyCurrentIter);
+
    fWgSet->Train(fMaxIter);
 
    Log() << kINFO << "Elapsed time: " << timer.GetElapsedTime()
@@ -391,6 +397,9 @@ void TMVA::MethodSVM::Train()
    fSupportVectors = fWgSet->GetSupportVectors();
    delete fWgSet;
    fWgSet=0;
+
+    if (!fExitFromTraining) fIPyMaxIter = fIPyCurrentIter;
+    ExitFromTraining();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

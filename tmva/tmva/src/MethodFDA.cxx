@@ -39,19 +39,6 @@
 
 #include "TMVA/MethodFDA.h"
 
-#include "Riostream.h"
-#include "TList.h"
-#include "TFormula.h"
-#include "TString.h"
-#include "TObjString.h"
-#include "TRandom3.h"
-#include "TMath.h"
-#include <sstream>
-
-#include <algorithm>
-#include <iterator>
-#include <stdexcept>
-
 #include "TMVA/ClassifierFactory.h"
 #include "TMVA/Config.h"
 #include "TMVA/Configurable.h"
@@ -60,7 +47,9 @@
 #include "TMVA/GeneticFitter.h"
 #include "TMVA/Interval.h"
 #include "TMVA/IFitterTarget.h"
+#include "TMVA/IMethod.h"
 #include "TMVA/MCFitter.h"
+#include "TMVA/MethodBase.h"
 #include "TMVA/MinuitFitter.h"
 #include "TMVA/MsgLogger.h"
 #include "TMVA/Timer.h"
@@ -68,6 +57,19 @@
 #include "TMVA/TransformationHandler.h"
 #include "TMVA/Types.h"
 #include "TMVA/SimulatedAnnealingFitter.h"
+
+#include "Riostream.h"
+#include "TList.h"
+#include "TFormula.h"
+#include "TString.h"
+#include "TObjString.h"
+#include "TRandom3.h"
+#include "TMath.h"
+
+#include <algorithm>
+#include <iterator>
+#include <stdexcept>
+#include <sstream>
 
 using std::stringstream;
 
@@ -403,6 +405,7 @@ void TMVA::MethodFDA::Train( void )
       delete fConvergerFitter;
       fConvergerFitter = 0;
    }
+   ExitFromTraining();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -737,7 +737,10 @@ int TCling_GenerateDictionary(const std::vector<std::string> &classes,
       // vector is special: we need to check whether
       // vector::iterator is a typedef to pointer or a
       // class.
-      static const std::set<std::string> sSTLTypes {"vector","list","unordered_list","deque","map","multimap","set","unordered_set","multiset","queue","priority_queue","stack","iterator"};
+      static const std::set<std::string> sSTLTypes {
+         "vector","list","forward_list","deque","map","unordered_map","multimap",
+         "unordered_multimap","set","unordered_set","multiset","unordered_multiset",
+         "queue","priority_queue","stack","iterator"};
       std::vector<std::string>::const_iterator it;
       std::string fileContent("");
       for (it = headers.begin(); it != headers.end(); ++it) {
@@ -3221,7 +3224,16 @@ std::string AtlernateTuple(const char *classname)
    std::string alternateName = "TEmulatedTuple";
    alternateName.append( classname + 5 );
 
+   std::string guard_name;
+   ROOT::TMetaUtils::GetCppName(guard_name,alternateName.c_str());
+   std::ostringstream guard;
+   guard << "ROOT_INTERNAL_TEmulated_";
+   guard << guard_name;
+
    std::ostringstream alternateTuple;
+   alternateTuple << "#ifndef " << guard.str() << "\n";
+   alternateTuple << "#define " << guard.str() << "\n";
+   alternateTuple << "namespace ROOT { namespace Internal {\n";
    alternateTuple << "template <class... Types> struct TEmulatedTuple;\n";
    alternateTuple << "template <> struct " << alternateName << " {\n";
 
@@ -3256,11 +3268,14 @@ std::string AtlernateTuple(const char *classname)
       }
    }
 
-   alternateTuple << "};";
+   alternateTuple << "};\n";
+   alternateTuple << "}}\n";
+   alternateTuple << "#endif\n";
    if (!gCling->Declare(alternateTuple.str().c_str())) {
       Error("Load","Could not declare %s",alternateName.c_str());
       return "";
    }
+   alternateName = "ROOT::Internal::" + alternateName;
    return alternateName;
 }
 
@@ -3993,7 +4008,7 @@ TInterpreter::DeclId_t TCling::GetDeclId( const llvm::GlobalValue *gv ) const
 
    if (!strncmp(scopename.c_str(), "typeinfo for ", sizeof("typeinfo for ")-1)) {
       scopename.erase(0, sizeof("typeinfo for ")-1);
-   } if (!strncmp(scopename.c_str(), "vtable for ", sizeof("vtable for ")-1)) {
+   } else if (!strncmp(scopename.c_str(), "vtable for ", sizeof("vtable for ")-1)) {
       scopename.erase(0, sizeof("vtable for ")-1);
    } else {
       // See if it is a function

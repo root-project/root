@@ -1489,8 +1489,7 @@ void TTreeViewer::ExecuteDraw()
    }
    // send draw command
    fLastOption = fBarOption->GetText();
-   if (!gopt[0] && dimension!=3)
-   //{
+   //if (!gopt[0] && dimension!=3) {
    //   gopt = "hist";
    //   fLastOption = "hist";
    //}

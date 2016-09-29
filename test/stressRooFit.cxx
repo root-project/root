@@ -80,8 +80,10 @@ Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t 
       }
       TFile::SetCacheFileDir(".");
       fref = TFile::Open(refFile,"CACHEREAD") ;
+      //std::cout << "using WEB file " << refFile << std::endl;
     } else {
       fref = TFile::Open(refFile,writeRef?"RECREATE":"") ;
+      //std::cout << "using file " << refFile << std::endl;
     }
     if (fref->IsZombie()) {
       cout << "stressRooFit ERROR: cannot open reference file " << refFile << endl ;
@@ -258,7 +260,8 @@ int main(int argc,const char *argv[])
   Bool_t doDump      = kFALSE ;
   Bool_t doTreeStore = kFALSE ;
 
-  string refFileName = "http://root.cern.ch/files/stressRooFit_v534_ref.root" ;
+  //string refFileName = "http://root.cern.ch/files/stressRooFit_v534_ref.root" ;
+  string refFileName = "stressRooFit_ref.root" ;
 
   // Parse command line arguments
   for (Int_t i=1 ;  i<argc ; i++) {
@@ -358,7 +361,8 @@ Int_t stressRooFit()
    Bool_t doDump      = kFALSE ;
    Bool_t doTreeStore = kFALSE ;
 
-   string refFileName = "http://root.cern.ch/files/stressRooFit_v534_ref.root" ;
+   //string refFileName = "http://root.cern.ch/files/stressRooFit_v534_ref.root" ;
+   string refFileName = "stressRooFit_ref.root" ;
    return stressRooFit(refFileName.c_str(),doWrite,doVerbose,oneTest,dryRun,doDump,doTreeStore);
 }
 

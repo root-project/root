@@ -275,10 +275,10 @@ TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, Option_t *option)
 
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor which accepts a `THStack` and a histogram. Converts the
 /// stack to a regular sum of its containing histograms for processing.
+///
 /// \param st The THStack object
 /// \param h2 The other histogram
 /// \param option Steers the calculation of the lower plot
@@ -312,6 +312,7 @@ TRatioPlot::TRatioPlot(THStack* st, TH1* h2, Option_t *option)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor for one histogram and a fit.
+///
 /// \param h1 The histogram
 /// \param option Steers the error calculation
 /// \param fitres Explicit fit result to be used for calculation. Uses last fit if left empty
@@ -365,7 +366,7 @@ TRatioPlot::TRatioPlot(TH1* h1, Option_t *option, TFitResult *fitres)
 
    BuildLowerPlot();
 
-   // emulate option behavioud of TH1
+   // emulate option behaviour of TH1
    if (fH1->GetSumw2N() > 0) {
       fH1DrawOpt = "E";
    } else {
@@ -443,7 +444,6 @@ void TRatioPlot::SetupPads() {
 
    fUpperPad = new TPad("upper_pad", "", pm*f, fSplitFraction, 1.-pm*f, 1.-pm);
    fLowerPad = new TPad("lower_pad", "", pm*f, pm, 1.-pm*f, fSplitFraction);
-
 
    SetPadMargins();
 
@@ -642,7 +642,6 @@ void TRatioPlot::Draw(Option_t *option)
 
    fUpperPad->cd();
 
-
    fConfidenceInterval2->SetFillColor(fCi1Color);
    fConfidenceInterval1->SetFillColor(fCi2Color);
 
@@ -738,7 +737,6 @@ TGraph* TRatioPlot::GetLowerRefGraph() const
    Error("GetLowerRefGraph", "Did not find graph in list");
    return 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the reference object. Its the first TH1 or THStack type object
@@ -842,8 +840,6 @@ void TRatioPlot::CreateGridline()
       fGridlines.push_back(newline);
    }
 
-
-
    Double_t first = fSharedXAxis->GetBinLowEdge(fSharedXAxis->GetFirst());
    Double_t last = fSharedXAxis->GetBinUpEdge(fSharedXAxis->GetLast());
 
@@ -868,7 +864,6 @@ void TRatioPlot::CreateGridline()
 
    padsav->cd();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Creates the visual axes when painting.
@@ -1298,7 +1293,6 @@ void TRatioPlot::CreateVisualAxes()
    Double_t ticksize = fUpperGYaxis->GetTickSize()*ratio;
    fLowerGYaxis->SetTickSize(ticksize);
 
-
    if (fHideLabelMode == TRatioPlot::HideLabelMode::kForceHideUp) {
 
       fUpperGYaxis->ChangeLabel(1, -1, 0);
@@ -1360,7 +1354,6 @@ void TRatioPlot::CreateVisualAxes()
       ImportAxisAttributes(fLowerGXaxisMirror, GetLowerRefXaxis());
       ImportAxisAttributes(fLowerGYaxisMirror, GetLowerRefYaxis());
 
-
       // remove titles
       fUpperGXaxisMirror->SetTitle("");
       fUpperGYaxisMirror->SetTitle("");
@@ -1396,7 +1389,7 @@ void TRatioPlot::CreateVisualAxes()
       fLowerGYaxisMirror->SetWmin(lowYFirst);
       fLowerGYaxisMirror->SetWmax(lowYLast);
 
-      // also needs normalized ticksize
+      // also needs normalized tick size
       fLowerGYaxisMirror->SetTickSize(ticksize);
 
       fUpperGXaxisMirror->SetOption("-S"+xopt);
@@ -1511,7 +1504,7 @@ Bool_t TRatioPlot::SyncPadMargins()
 
 void TRatioPlot::RangeAxisChanged()
 {
-   // check if rp is already drawn.
+   // check if the ratio plot is already drawn.
    if (!IsDrawn()) {
       // not drawn yet
        return;
@@ -1593,7 +1586,7 @@ void TRatioPlot::RangeAxisChanged()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot for the UnZoomed signal that was introduced to TAxis.
-/// Unzooms both pads
+/// Unzoom both pads
 
 void TRatioPlot::UnZoomed()
 {

@@ -37,29 +37,15 @@
 // on the test sample.                                                 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <algorithm>
-#include <iomanip>
-#include <vector>
-#include <cmath>
-
-#include "Riostream.h"
-#include "TRandom3.h"
-#include "TMath.h"
-#include "TObjString.h"
-#include "TH1F.h"
-#include "TH2F.h"
-#include "TGraph.h"
-#include "TSpline.h"
-#include "TDirectory.h"
-#include "TTree.h"
+#include "TMVA/MethodBoost.h"
 
 #include "TMVA/ClassifierFactory.h"
 #include "TMVA/Config.h"
+#include "TMVA/Configurable.h"
 #include "TMVA/DataSet.h"
 #include "TMVA/DataSetInfo.h"
 #include "TMVA/IMethod.h"
 #include "TMVA/MethodBase.h"
-#include "TMVA/MethodBoost.h"
 #include "TMVA/MethodCategory.h"
 #include "TMVA/MethodCompositeBase.h"
 #include "TMVA/MethodDT.h"
@@ -76,6 +62,24 @@
 #include "TMVA/CrossEntropy.h"
 #include "TMVA/RegressionVariance.h"
 #include "TMVA/QuickMVAProbEstimator.h"
+
+#include "Riostream.h"
+#include "TRandom3.h"
+#include "TFile.h"
+#include "TMath.h"
+#include "TObjString.h"
+#include "TH1F.h"
+#include "TH2F.h"
+#include "TGraph.h"
+#include "TSpline.h"
+#include "TDirectory.h"
+#include "TTree.h"
+
+#include <algorithm>
+#include <iomanip>
+#include <vector>
+#include <cmath>
+
 
 REGISTER_METHOD(Boost)
 

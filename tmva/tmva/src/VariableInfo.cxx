@@ -26,13 +26,15 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  **********************************************************************************/
 
-#include <sstream>
-#include <iomanip>
-
 #include "TMVA/VariableInfo.h"
+
 #include "TMVA/Tools.h"
 
 #include "TMath.h"
+#include "TNamed.h"
+
+#include <iomanip>
+#include <sstream>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
@@ -42,14 +44,15 @@ TMVA::VariableInfo::VariableInfo( const TString& expression, const TString& titl
                                   char varType, void* external,
                                   Double_t min, Double_t max, Bool_t normalized )
      : TNamed(title.Data(),title.Data()),
-     fExpression  ( expression ),
-     fUnit        ( unit ),
-     fVarType     ( varType ),
-     fXmeanNorm   ( 0 ),
-     fXrmsNorm    ( 0 ),
-     fNormalized  ( normalized ),
-     fExternalData( external ),
-     fVarCounter  ( varCounter )
+     fExpression   ( expression ),
+     fUnit         ( unit ),
+     fVarType      ( varType ),
+     fXmeanNorm    ( 0 ),
+     fXrmsNorm     ( 0 ),
+     fXvarianceNorm( 0 ),
+     fNormalized   ( normalized ),
+     fExternalData ( external ),
+     fVarCounter   ( varCounter )
 {
    if ( TMath::Abs(max - min) <= FLT_MIN ) {
       fXminNorm =  FLT_MAX;
@@ -77,13 +80,14 @@ TMVA::VariableInfo::VariableInfo( const TString& expression, const TString& titl
 
 TMVA::VariableInfo::VariableInfo() 
    : TNamed(),
-     fExpression  (""),
-     fVarType     ('\0'),
-     fXmeanNorm   ( 0 ),
-     fXrmsNorm    ( 0 ),
-     fNormalized  ( kFALSE ),
-     fExternalData( 0 ),
-     fVarCounter  ( 0 )
+     fExpression   (""),
+     fVarType      ('\0'),
+     fXmeanNorm    ( 0 ),
+     fXrmsNorm     ( 0 ),
+     fXvarianceNorm( 0 ),
+     fNormalized   ( kFALSE ),
+     fExternalData ( 0 ),
+     fVarCounter   ( 0 )
 {
    fXminNorm     =  1e30;
    fXmaxNorm     = -1e30;
@@ -99,18 +103,19 @@ TMVA::VariableInfo::VariableInfo()
 
 TMVA::VariableInfo::VariableInfo( const VariableInfo& other ) 
    : TNamed(other),
-     fExpression  ( other.fExpression ),
-     fInternalName( other.fInternalName ),
-     fLabel       ( other.fLabel ),
-     fUnit        ( other.fUnit ),
-     fVarType     ( other.fVarType ),
-     fXminNorm    ( other.fXminNorm ),
-     fXmaxNorm    ( other.fXmaxNorm ),
-     fXmeanNorm   ( other.fXmeanNorm ),
-     fXrmsNorm    ( other.fXrmsNorm ),
-     fNormalized  ( other.fNormalized ),
-     fExternalData( other.fExternalData ),
-     fVarCounter  ( other.fVarCounter )
+     fExpression   ( other.fExpression ),
+     fInternalName ( other.fInternalName ),
+     fLabel        ( other.fLabel ),
+     fUnit         ( other.fUnit ),
+     fVarType      ( other.fVarType ),
+     fXminNorm     ( other.fXminNorm ),
+     fXmaxNorm     ( other.fXmaxNorm ),
+     fXmeanNorm    ( other.fXmeanNorm ),
+     fXrmsNorm     ( other.fXrmsNorm ),
+     fXvarianceNorm( other.fXvarianceNorm ),
+     fNormalized   ( other.fNormalized ),
+     fExternalData ( other.fExternalData ),
+     fVarCounter   ( other.fVarCounter )
 {
 }
 
