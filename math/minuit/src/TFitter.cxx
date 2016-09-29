@@ -543,7 +543,7 @@ void TFitter::ReleaseParameter(Int_t ipar)
 ////////////////////////////////////////////////////////////////////////////////
 /// Specify the address of the fitting algorithm (from the interpreter)
 
-void TFitter::SetFCN(void *fcn)
+void TFitter::SetFCN(void * /*fcn*/)
 {
    if (fCovar)  {delete [] fCovar; fCovar = 0;}
 
