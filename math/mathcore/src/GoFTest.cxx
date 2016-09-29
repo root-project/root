@@ -130,8 +130,7 @@ namespace Math {
    }
 
    GoFTest::GoFTest( UInt_t sample1Size, const Double_t* sample1, UInt_t sample2Size, const Double_t* sample2 )
-   : fCDF(std::auto_ptr<IGenFunction>((IGenFunction*)0)),
-     fDist(kUndefined),
+   : fDist(kUndefined),
      fSamples(std::vector<std::vector<Double_t> >(2)),
      fTestSampleFromH0(kFALSE) {
       Bool_t badSampleArg = sample1 == 0 || sample1Size == 0;
@@ -159,8 +158,7 @@ namespace Math {
    }
 
    GoFTest::GoFTest(UInt_t sampleSize, const Double_t* sample, EDistribution dist)
-   : fCDF(std::auto_ptr<IGenFunction>((IGenFunction*)0)),
-     fDist(dist),
+   : fDist(dist),
      fSamples(std::vector<std::vector<Double_t> >(1)),
      fTestSampleFromH0(kTRUE) {
       Bool_t badSampleArg = sample == 0 || sampleSize == 0;
@@ -259,7 +257,7 @@ namespace Math {
       default:
          break;
       }
-      fCDF = std::auto_ptr<IGenFunction>(cdf);
+      fCDF.reset(cdf);
    }
 
    void GoFTest::SetDistributionFunction(const IGenFunction& f, Bool_t isPDF, Double_t xmin, Double_t xmax) {
@@ -269,9 +267,9 @@ namespace Math {
       fDist = kUserDefined;
       // function will be cloned inside the wrapper PDFIntegral of CDFWrapper classes
       if (isPDF)
-         fCDF = std::auto_ptr<IGenFunction>(new PDFIntegral(f, xmin, xmax) );
+         fCDF.reset(new PDFIntegral(f, xmin, xmax) );
       else
-         fCDF = std::auto_ptr<IGenFunction>(new CDFWrapper(f, xmin, xmax) );
+         fCDF.reset(new CDFWrapper(f, xmin, xmax) );
    }
 
    void GoFTest::Instantiate(const Double_t* sample, UInt_t sampleSize) {
@@ -283,7 +281,7 @@ namespace Math {
          MATH_ERROR_MSG("GoFTest", msg.c_str());
          assert(!badSampleArg);
       }
-      fCDF = std::auto_ptr<IGenFunction>((IGenFunction*)0);
+      fCDF.reset((IGenFunction*)0);
       fDist = kUserDefined;
       fMean = 0;
       fSigma = 0;

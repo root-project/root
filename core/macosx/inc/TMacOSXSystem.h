@@ -13,11 +13,9 @@
 #ifndef ROOT_TMacOSXSystem
 #define ROOT_TMacOSXSystem
 
-#include <memory>
-
-#ifndef ROOT_TUnixSystem
 #include "TUnixSystem.h"
-#endif
+
+#include <memory>
 
 ////////////////////////////////////////////////////////////////////
 //                                                                //
@@ -58,7 +56,7 @@ private:
 
    void ProcessApplicationDefinedEvent(void *event);
 
-   std::auto_ptr<ROOT::MacOSX::Detail::MacOSXSystem> fPimpl; //!
+   std::unique_ptr<ROOT::MacOSX::Detail::MacOSXSystem> fPimpl; //!
    bool fCocoaInitialized; //!
    bool fFirstDispatch; //!
 

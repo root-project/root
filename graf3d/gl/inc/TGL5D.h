@@ -11,21 +11,13 @@
 #ifndef ROOT_TGL5D
 #define ROOT_TGL5D
 
+#include "TGLHistPainter.h"
+#include "TGLUtil.h"
+#include "TNamed.h"
+#include "TAxis.h"
+
 #include <memory>
 #include <vector>
-
-#ifndef ROOT_TGLHistPainter
-#include "TGLHistPainter.h"
-#endif
-#ifndef ROOT_TGLUtil
-#include "TGLUtil.h"
-#endif
-#ifndef ROOT_TNamed
-#include "TNamed.h"
-#endif
-#ifndef ROOT_TAxis
-#include "TAxis.h"
-#endif
 
 class TGL5DPainter;
 class TTree;
@@ -106,7 +98,7 @@ private:
    //V4 can have a string type.
    Bool_t          fV4IsString;
    //Painter to visualize dataset.
-   std::auto_ptr<TGLHistPainter> fPainter;
+   std::unique_ptr<TGLHistPainter> fPainter;
    //Indices of points, selected for some iso-level.
    std::vector<UInt_t> fIndices;
 
