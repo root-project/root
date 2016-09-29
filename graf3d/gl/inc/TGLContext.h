@@ -24,6 +24,8 @@ class TGLContextIdentity;
 #include "Rtypes.h"
 #endif
 
+#include <memory>
+
 class TGLContextPrivate;
 class TGLPaintDevice;
 //class TGLPBuffer;
