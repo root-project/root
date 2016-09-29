@@ -7,7 +7,7 @@
 /// \macro_image
 /// \macro_code
 ///
-/// \author Miroslav Morhac
+/// \authors Miroslav Morhac, Olivier Couet
 
 void Background_width2() {
    Int_t i;
