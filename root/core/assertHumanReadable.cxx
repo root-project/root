@@ -1,4 +1,4 @@
-#include "ROOT/StringConv.h"
+#include "ROOT/StringConv.hxx"
 #include "TError.h"
 #include "TString.h"
 #include <limits>
