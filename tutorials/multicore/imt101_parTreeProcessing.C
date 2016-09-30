@@ -6,7 +6,7 @@
 /// of the tree via a TTreeReader. Multiple tasks will be spawned, one for each sub-range, so that
 /// the processing of the tree is parallelised. Since two invocations of the user function can
 /// potentially run in parallel, the function code must be thread safe.
-/// The example also introduces a new class, ROOT::TThreadedObject<T>, which makes objects
+/// The example also introduces a new class, ROOT::TThreadedObject, which makes objects
 /// thread private. With the help of this class, histograms can be filled safely inside the
 /// user function and then merged at the end to get the final result. 
 ///
