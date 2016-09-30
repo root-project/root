@@ -34,6 +34,26 @@
 
 #include "rootcoreteam.h"
 
+namespace {
+#ifdef MAC_OS_X_VERSION_10_12
+const NSCompositingOperation kCompositeSourceOver = NSCompositingOperationSourceOver;
+const NSEventType kKeyDown = NSEventTypeKeyDown;
+const NSEventType kLeftMouseDown = NSEventTypeLeftMouseDown;
+const NSEventType kRightMouseDown = NSEventTypeRightMouseDown;
+const NSEventType kApplicationDefined = NSEventTypeApplicationDefined;
+const NSUInteger kEventMaskAny = NSEventMaskAny;
+const NSUInteger kNonactivatingPanelMask = NSWindowStyleMaskNonactivatingPanel;
+#else
+const NSCompositingOperation kCompositeSourceOver = NSCompositeSourceOver;
+const NSEventType kKeyDown = NSKeyDown;
+const NSEventType kLeftMouseDown = NSLeftMouseDown;
+const NSEventType kRightMouseDown = NSRightMouseDown;
+const NSEventType kApplicationDefined = NSApplicationDefined;
+const NSUInteger kEventMaskAny = NSAnyEventMask;
+const NSUInteger kNonactivatingPanelMask = NSNonactivatingPanelMask;
+#endif
+}
+
 //
 //'root' with Cocoa is a quite special application. In principle, it's a background process,
 //but it can create a GUI (in our case it's a simple splash-screen - a window with a ROOT's logo
@@ -185,7 +205,7 @@ bool showAboutInfo = false;
    const NSSize imageSize = backgroundImage.size;
    [backgroundImage drawInRect : frame
                     fromRect : NSMakeRect(0., 0., imageSize.width, imageSize.height)
-                    operation : NSCompositeSourceOver
+                    operation : kCompositeSourceOver
                     fraction : 1.];
 
    //Let's now draw a version.
@@ -251,12 +271,12 @@ bool popupDone = false;
 //_________________________________________________________________
 - (void) sendEvent : (NSEvent *) theEvent
 {
-   if ([theEvent type] == NSKeyDown) {
+   if ([theEvent type] == kKeyDown) {
       popupDone = true;
       return;
    }
 
-   if ([theEvent type] == NSLeftMouseDown || [theEvent type] == NSRightMouseDown) {
+   if ([theEvent type] == kLeftMouseDown || [theEvent type] == kRightMouseDown) {
       popupDone = true;
       return;
    }
@@ -347,7 +367,7 @@ enum CustomEventSource {//make it enum class when C++11 is here.
 - (void) exitEventLoop
 {
    //assert - we are on a main thread.
-   NSEvent * const timerEvent = [NSEvent otherEventWithType : NSApplicationDefined
+   NSEvent * const timerEvent = [NSEvent otherEventWithType : kApplicationDefined
                                  location : NSMakePoint(0, 0) modifierFlags : 0
                                  timestamp : 0. windowNumber : 0 context : nil
                                  subtype : 0 data1 : kWaitpidThread data2 : 0];
@@ -484,12 +504,12 @@ void ROOTSplashscreenTimerCallback(CFRunLoopTimerRef timer, void *info)
 #pragma unused(info)
    if (timer == signalTimer) {
       NSEvent * const timerEvent = [NSEvent otherEventWithType :
-                                    NSApplicationDefined location : NSMakePoint(0, 0) modifierFlags : 0
+                                    kApplicationDefined location : NSMakePoint(0, 0) modifierFlags : 0
                                     timestamp : 0. windowNumber : 0 context : nil
                                     subtype : 0 data1 : kSignalTimer data2 : 0];
       [NSApp postEvent : timerEvent atStart : NO];
    } else {
-      NSEvent * const timerEvent = [NSEvent otherEventWithType : NSApplicationDefined
+      NSEvent * const timerEvent = [NSEvent otherEventWithType : kApplicationDefined
                                     location : NSMakePoint(0, 0) modifierFlags : 0
                                     timestamp : 0. windowNumber : 0 context : nil
                                     subtype : 0 data1 : kScrollTimer data2 : 0];
@@ -607,11 +627,11 @@ void RunEventLoop()
       using ROOT::MacOSX::Util::NSScopeGuard;
       const NSScopeGuard<NSAutoreleasePool> pool([[NSAutoreleasePool alloc] init]);
 
-      if (NSEvent * const event = [NSApp nextEventMatchingMask : NSAnyEventMask
+      if (NSEvent * const event = [NSApp nextEventMatchingMask : kEventMaskAny
           untilDate : [NSDate distantFuture] inMode : NSDefaultRunLoopMode dequeue : YES])
       {
          //Let's first check the type:
-         if (event.type == NSApplicationDefined) {//One of our timers 'fired'.
+         if (event.type == kApplicationDefined) {//One of our timers 'fired'.
             if (event.data1 == kSignalTimer) {
                popupDone = !showAboutInfo && !StayUp() && popdown;
             } else if (showAboutInfo) {
@@ -626,7 +646,7 @@ void RunEventLoop()
 
    RemoveTimers();
    //Empty the queue (hehehe, this makes me feel ... uneasy :) ).
-   while ([NSApp nextEventMatchingMask : NSAnyEventMask untilDate : nil inMode : NSDefaultRunLoopMode dequeue : YES]);
+   while ([NSApp nextEventMatchingMask : kEventMaskAny untilDate : nil inMode : NSDefaultRunLoopMode dequeue : YES]);
 }
 
 //_________________________________________________________________
@@ -686,10 +706,10 @@ void RunEventLoopInBackground()
          using ROOT::MacOSX::Util::NSScopeGuard;
          const NSScopeGuard<NSAutoreleasePool> pool([[NSAutoreleasePool alloc] init]);
 
-         if (NSEvent * const event = [NSApp nextEventMatchingMask : NSAnyEventMask
+         if (NSEvent * const event = [NSApp nextEventMatchingMask : kEventMaskAny
              untilDate : [NSDate distantFuture] inMode : NSDefaultRunLoopMode dequeue : YES])
          {
-            if (event.type == NSApplicationDefined && event.data1 == kWaitpidThread) {
+            if (event.type == kApplicationDefined && event.data1 == kWaitpidThread) {
                [thread.Get() cancel];
                status = [thread.Get() getStatus];
                break;
@@ -801,7 +821,7 @@ bool CreateSplashscreen(bool about)
    //2. Splash-screen ('panel' + its content view).
    NSScopeGuard<ROOTSplashScreenPanel> splashGuard([[ROOTSplashScreenPanel alloc]
                                                     initWithContentRect : NSMakeRect(0, 0, pixelWidth, pixelHeight)
-                                                    styleMask : NSNonactivatingPanelMask
+                                                    styleMask : kNonactivatingPanelMask
                                                     backing : NSBackingStoreBuffered
                                                     defer : NO]);
    if (!splashGuard.Get()) {
