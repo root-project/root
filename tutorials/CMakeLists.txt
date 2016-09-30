@@ -121,6 +121,10 @@ if(NOT TBB_FOUND)
   set(tbb_veto  multicore/mtbb*.C)
 endif()
 
+if(NOT ROOT_imt_FOUND)
+  set(imt_veto multicore/imt*.C)
+endif()
+
 #---These ones requires a display to run-----------------------------
 set(gui_veto fit/fitpanel_playback.C
              cocoa/*.C
@@ -183,7 +187,8 @@ set(all_veto hsimple.C
              ${gviz_veto}
              ${r_veto}
              ${histfactory_veto}
-             ${tbb_veto})
+             ${tbb_veto}
+             ${imt_veto})
 
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
 file(GLOB tutorials_veto RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${all_veto})

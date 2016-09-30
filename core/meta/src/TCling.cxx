@@ -6262,26 +6262,6 @@ Long_t TCling::GetExecByteCode() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Interface to the CINT global object pointer which was controlling the
-/// behavior of the wrapper around the calls to operator new and the constructor
-/// and operator delete and the destructor.
-
-Long_t TCling::Getgvp() const
-{
-   Error("Getgvp","This was controlling the behavior of the wrappers for object construction and destruction.\nThis is now a nop and likely change the behavior of the calling routines.");
-   return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-const char* TCling::Getp2f2funcname(void*) const
-{
-   Error("Getp2f2funcname", "Will not be implemented: "
-         "all function pointers are compiled!");
-   return NULL;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Interface to cling function
 
 int TCling::GetSecurityError() const
@@ -6396,30 +6376,6 @@ void TCling::SetErrmsgcallback(void* p) const
 #endif
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Interface to the cling global object pointer which was controlling the
-/// behavior of the wrapper around the calls to operator new and the constructor
-/// and operator delete and the destructor.
-
-void TCling::Setgvp(Long_t gvp) const
-{
-   Error("Setgvp","This was controlling the behavior of the wrappers for object construction and destruction.\nThis is now a nop and likely change the behavior of the calling routines.");
-
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void TCling::SetRTLD_NOW() const
-{
-   Error("SetRTLD_NOW()", "Will never be implemented! Don't use!");
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void TCling::SetRTLD_LAZY() const
-{
-   Error("SetRTLD_LAZY()", "Will never be implemented! Don't use!");
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create / close a scope for temporaries. No-op for cling; use

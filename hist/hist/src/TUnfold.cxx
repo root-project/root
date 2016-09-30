@@ -53,7 +53,7 @@
 
  The term L1 is familiar from a least-square minimisation
  The term L2 defines the regularisation (smootheness condition on x),
-   where the parameter tau^2 gives the strength of teh regularisation
+   where the parameter tau^2 gives the strength of the regularisation
  The term L3 is an optional area constraint with Lagrangian parameter
    lambda, ensuring that that the normalisation of x is consistent with the
    normalisation of y
@@ -81,7 +81,7 @@
   x0: bias distribution, from simulation
 
  ## Preservation of the area
-  lambda: lagrangian multiplier
+  lambda: Lagrangian multiplier
   y_i: one component of the vector y
   (Ax)_i: one component of the vector Ax
 
@@ -113,7 +113,7 @@
     TUnfoldSys or even better TUnfoldDensity
 
  TUnfoldSys extends the functionality of TUnfold
-            such that systematic errors are propagated to teh result
+            such that systematic errors are propagated to the result
             and that the unfolding can be done with proper background
             subtraction
 
@@ -240,7 +240,7 @@
        RegularizeDerivative()  regularize the slope given by two bins
        RegularizeCurvature()   regularize the curvature given by three bins
        AddRegularisationCondition()
-                             define an arbitrary regulatisation condition
+                             define an arbitrary regularization condition
 */
 
 /*
@@ -392,7 +392,7 @@ Double_t TUnfold::DoUnfold(void)
    //     fConstraint: whether the constraint is applied
    // Data members modified:
    //     fVyyInv: inverse of input data covariance matrix
-   //     fNdf: number of dgerres of freedom
+   //     fNdf: number of degrees of freedom
    //     fEinv: inverse of the matrix needed for unfolding calculations
    //     fE:    the matrix needed for unfolding calculations
    //     fX:    unfolded data points
@@ -470,7 +470,7 @@ Double_t TUnfold::DoUnfold(void)
    TMatrixDSparse *epsilon=0;
    TMatrixDSparse *Eepsilon=0;
    if(fConstraint != kEConstraintNone) {
-      // calculate epsilon: verctor of efficiencies
+      // calculate epsilon: vector of efficiencies
       const Int_t *A_rows=fA->GetRowIndexArray();
       const Int_t *A_cols=fA->GetColIndexArray();
       const Double_t *A_data=fA->GetMatrixArray();
@@ -697,7 +697,7 @@ Double_t TUnfold::DoUnfold(void)
 TMatrixDSparse *TUnfold::CreateSparseMatrix
 (Int_t nrow,Int_t ncol,Int_t nel,Int_t *row,Int_t *col,Double_t *data) const
 {
-   // create a sparse matri
+   // create a sparse matrix
    //   nrow,ncol : dimension of the matrix
    //   nel: number of non-zero elements
    //   row[nel],col[nel],data[nel] : indices and data of the non-zero elements
@@ -1067,7 +1067,7 @@ TMatrixDSparse *TUnfold::InvertMSparseSymmPos
    //    A: the original matrix
    //    rank:
    //      if(rankPtr==0)
-   //          rerturn the inverse if it exists, or return NULL
+   //          return the inverse if it exists, or return NULL
    //      else
    //          return the pseudo-invers
    //          and return the rank of the matrix in *rankPtr
@@ -2123,7 +2123,7 @@ Int_t TUnfold::RegularizeCurvature(int left_bin, int center_bin,
 Int_t TUnfold::RegularizeBins(int start, int step, int nbin,
                               ERegMode regmode)
 {
-   // set regulatisation on a 1-dimensional curve
+   // set regularization on a 1-dimensional curve
    //   start: first bin
    //   step:  distance between neighbouring bins
    //   nbin:  total number of bins
@@ -2463,7 +2463,7 @@ Int_t TUnfold::ScanLcurve(Int_t nPoint,
    if((tauMin<=0)||(tauMax<=0.0)||(tauMin>=tauMax)) {
       // here no range is given, has to be determined automatically
       // the maximum tau is determined from the chi**2 values
-      // observed from unfolding without regulatisation
+      // observed from unfolding without regularization
 
       // first unfolding, without regularisation
       DoUnfold(0.0);
@@ -2519,7 +2519,7 @@ Int_t TUnfold::ScanLcurve(Int_t nPoint,
                ((*curve.begin()).second.first<x0));
       } else {
          // minimum tau is chosen such that is less than
-         // 1% different from the case of no regularusation
+         // 1% different from the case of no regularization
          // log10(1.01) = 0.00432
 
          // here, more than one point are inserted if necessary
@@ -2667,11 +2667,11 @@ Int_t TUnfold::ScanLcurve(Int_t nPoint,
             xMax=cTi[i];
          }
          // find maximum for x[i]<x<x[i+1]
-         // get spline coefficiencts and solve equation
+         // get spline coefficients and solve equation
          //   derivative(x)==0
          Double_t x,y,b,c,d;
          splineC->GetCoeff(i,x,y,b,c,d);
-         // coefficiencts of quadratic equation
+         // coefficients of quadratic equation
          Double_t m_p_half=-c/(3.*d);
          Double_t q=b/(3.*d);
          Double_t discr=m_p_half*m_p_half-q;
@@ -2862,7 +2862,7 @@ void TUnfold::GetFoldedOutput(TH1 *out,const Int_t *binMap) const
 
 void TUnfold::GetProbabilityMatrix(TH2 *A,EHistMap histmap) const
 {
-   // retreive matrix of probabilities
+   // retrieve matrix of probabilities
    //    histmap: on which axis to arrange the input/output vector
    //    A: histogram to store the probability matrix
    const Int_t *rows_A=fA->GetRowIndexArray();
@@ -2883,7 +2883,7 @@ void TUnfold::GetProbabilityMatrix(TH2 *A,EHistMap histmap) const
 
 void TUnfold::GetInput(TH1 *out,const Int_t *binMap) const
 {
-   // retreive input distribution
+   // retrieve input distribution
    //   out: output histogram
    //   binMap: for each bin of the original output distribution
    //           specify the destination bin. A value of -1 means that the bin
@@ -2957,8 +2957,8 @@ void TUnfold::GetInputInverseEmatrix(TH2 *out)
 
 void TUnfold::GetLsquared(TH2 *out) const
 {
-   // retreive matrix of regularisation conditions squared
-   //   out: prebooked matrix
+   // retrieve matrix of regularisation conditions squared
+   //   out: pre-booked matrix
 
    TMatrixDSparse *lSquared=MultiplyMSparseTranspMSparse(fL,fL);
    // loop over sparse matrix
@@ -2976,8 +2976,8 @@ void TUnfold::GetLsquared(TH2 *out) const
 
 void TUnfold::GetL(TH2 *out) const
 {
-   // retreive matrix of regularisation conditions
-   //   out: prebooked matrix
+   // retrieve matrix of regularisation conditions
+   //   out: pre-booked matrix
 
    // loop over sparse matrix
    const Int_t *rows=fL->GetRowIndexArray();

@@ -1492,7 +1492,7 @@ Int_t TXProofMgr::GetFile(const char *remote, const char *local, const char *opt
 
    if (rc == 0) {
       // Check if everything went fine
-      std::auto_ptr<TMD5> md5loc(TMD5::FileChecksum(fileloc));
+      std::unique_ptr<TMD5> md5loc(TMD5::FileChecksum(fileloc));
       if (!(md5loc.get())) {
          Error("GetFile", "cannot get MD5 checksum of the new local file '%s'", fileloc.Data());
          rc = -1;

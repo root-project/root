@@ -12,20 +12,12 @@
 #ifndef ROOT_TGLParametric
 #define ROOT_TGLParametric
 
-#include <memory>
-
-#ifndef ROOT_TGLHistPainter
 #include "TGLHistPainter.h"
-#endif
-#ifndef ROOT_TGLUtil
 #include "TGLUtil.h"
-#endif
-#ifndef ROOT_TAxis
 #include "TAxis.h"
-#endif
-#ifndef ROOT_TF2
 #include "TF2.h"
-#endif
+
+#include <memory>
 
 class TString;
 
@@ -42,7 +34,7 @@ typedef void (*ParametricEquation_t)(TGLVertex3 &, Double_t u, Double_t v);
 
 class TGLParametricEquation : public TNamed {
 private:
-   typedef std::auto_ptr<TF2> Ptr_t;
+   typedef std::unique_ptr<TF2> Ptr_t;
 
    Ptr_t                fXEquation;
    Ptr_t                fYEquation;
@@ -56,7 +48,7 @@ private:
    Bool_t               fConstrained;
    Bool_t               fModified;
 
-   typedef std::auto_ptr<TGLHistPainter> Painter_t;
+   typedef std::unique_ptr<TGLHistPainter> Painter_t;
    //C++ compiler do not need TGLhistPainter definition here, but I'm not sure about CINT,
    //so I've included TGLHistPainter definition.
    Painter_t            fPainter;

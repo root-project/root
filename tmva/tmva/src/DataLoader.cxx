@@ -89,6 +89,7 @@ TMVA::DataLoader::DataLoader( TString thedlName)
 {
    fDataSetManager = new DataSetManager( *fDataInputHandler ); // DSMTEST
    SetName(thedlName.Data());
+   fLogger->SetSource("DataLoader");
 }
 
 

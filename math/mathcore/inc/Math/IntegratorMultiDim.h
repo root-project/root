@@ -75,7 +75,7 @@ public:
     */
    explicit
    IntegratorMultiDim(IntegrationMultiDim::Type type = IntegrationMultiDim::kDEFAULT, double absTol = -1, double relTol = -1, unsigned int ncall = 0) :
-      fIntegrator(0), fFunc(0)
+      fIntegrator(0)
    {
        fIntegrator = CreateIntegrator(type, absTol, relTol, ncall);
    }
@@ -90,7 +90,7 @@ public:
     */
    explicit
    IntegratorMultiDim(const IMultiGenFunction &f, IntegrationMultiDim::Type type = IntegrationMultiDim::kDEFAULT, double absTol = -1, double relTol = -1, unsigned int ncall = 0) :
-      fIntegrator(0), fFunc(0)
+      fIntegrator(0)
    {
       fIntegrator = CreateIntegrator(type, absTol, relTol, ncall);
       SetFunction(f);
@@ -123,7 +123,7 @@ public:
    // disable copy constructur and assignment operator
 
 private:
-   IntegratorMultiDim(const IntegratorMultiDim &) : fIntegrator(0), fFunc(0) {}
+   IntegratorMultiDim(const IntegratorMultiDim &) : fIntegrator(0), fFunc(nullptr) {}
    IntegratorMultiDim & operator=(const IntegratorMultiDim &) { return *this; }
 
 public:
@@ -156,7 +156,7 @@ public:
    */
    template <class Function>
    void SetFunction(Function & f, unsigned int dim) {
-      fFunc = std::auto_ptr<IMultiGenFunction>(new  WrappedMultiFunction<Function &> (f, dim) );
+      fFunc.reset(new  WrappedMultiFunction<Function &> (f, dim) );
       fIntegrator->SetFunction(*fFunc);
    }
 
@@ -208,7 +208,7 @@ protected:
  private:
 
    VirtualIntegratorMultiDim * fIntegrator;     // pointer to multi-dimensional integrator base class
-   std::auto_ptr<IMultiGenFunction> fFunc;       // pointer to owned function
+   std::unique_ptr<IMultiGenFunction> fFunc;    // pointer to owned function
 
 
 };

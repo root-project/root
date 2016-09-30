@@ -8,7 +8,7 @@
 ///
 /// \authors Miroslav Morhac, Olivier Couet
 
-void Deconvolution() {
+void DeconvolutionRL_wide_boost() {
    Int_t i;
    const Int_t nbins = 256;
    Double_t xmin     = 0;
@@ -17,18 +17,18 @@ void Deconvolution() {
    Double_t response[nbins];
    gROOT->ForceStyle();
 
+
    TFile *f   = new TFile("../../tutorials/spectrum/TSpectrum.root");
-   TH1F *h = (TH1F*) f->Get("decon1");
-   h->SetTitle("Deconvolution");
-   TH1F *d = (TH1F*) f->Get("decon_response");
+   h = (TH1F*) f->Get("decon3");
+   h->SetTitle("Deconvolution of closely positioned overlapping peaks using boosted Richardson-Lucy deconvolution method");
+   d = (TH1F*) f->Get("decon_response_wide");
 
    for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
    for (i = 0; i < nbins; i++) response[i]=d->GetBinContent(i + 1);
 
-   h->SetMaximum(30000);
    h->Draw("L");
    TSpectrum *s = new TSpectrum();
-   s->Deconvolution(source,response,256,1000,1,1);
+   s->DeconvolutionRL(source,response,256,200,50,1.2);
 
    for (i = 0; i < nbins; i++) d->SetBinContent(i + 1,source[i]);
    d->SetLineColor(kRed);

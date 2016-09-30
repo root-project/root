@@ -449,15 +449,41 @@
 #endif
 
 /*---- deprecation -----------------------------------------------------------*/
-
 #if defined(__GNUC__) || defined(__clang__) || defined(__INTEL_COMPILER)
-#   define R__DEPRECATED(REASON) __attribute__((deprecated(REASON)))
+#   define _R__DEPRECATED_LATER(REASON) __attribute__((deprecated(REASON)))
 #elif defined(_MSC_VER)
-#   define R__DEPRECATED(REASON) __declspec(deprecated(REASON))
+#   define _R__DEPRECATED_LATER(REASON) __declspec(deprecated(REASON))
 #else
-#   pragma message("Deprecation not supported for this compiler.")
-#   define R__DEPRECATED(REASON)
+/* Deprecation not supported for this compiler. */
+#   define _R__DEPRECATED_LATER(REASON)
 #endif
+#define _R_DEPRECATED_REMOVE_NOW(REASON) __attribute__((REMOVE_THIS_NOW))
+
+/* To be removed by 6.12 */
+#if ROOT_VERSION_CODE < ROOT_VERSION(6,11,0)
+# define _R__DEPRECATED_612(REASON) _R__DEPRECATED_LATER(REASON)
+#else
+# define _R__DEPRECATED_612(REASON) _R_DEPRECATED_REMOVE_NOW(REASON)
+#endif
+
+/* To be removed by 6.14 */
+#if ROOT_VERSION_CODE < ROOT_VERSION(6,13,0)
+# define _R__DEPRECATED_614(REASON) _R__DEPRECATED_LATER(REASON)
+#else
+# define _R__DEPRECATED_614(REASON) _R_DEPRECATED_REMOVE_NOW(REASON)
+#endif
+
+/* To be removed by 7.00 */
+#if ROOT_VERSION_CODE < ROOT_VERSION(6,99,0)
+# define _R__DEPRECATED_700(REASON) _R__DEPRECATED_LATER(REASON)
+#else
+# define _R__DEPRECATED_700(REASON) _R_DEPRECATED_REMOVE_NOW(REASON)
+#endif
+
+
+/* Spell as R__DEPRECATED(6,04, "Not threadsafe; use TFoo::Bar().") */
+#define R__DEPRECATED(MAJOR, MINOR, REASON) \
+  _R__JOIN3_(_R__DEPRECATED_,MAJOR,MINOR)("will be removed in ROOT v" #MAJOR "." #MINOR ": " REASON)
 
 /*---- misc ------------------------------------------------------------------*/
 

@@ -340,7 +340,6 @@ into account the non-linearities much more precisely.
 #include "TError.h"
 #include "TPluginManager.h"
 #include "TClass.h"
-#include "TInterpreter.h"
 
 TMinuit *gMinuit;
 
@@ -947,24 +946,6 @@ void InteractiveFCNm(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t
    m->SetParamPtrs(args);
    Double_t result;
    m->Execute(result);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// To set the address of the minimization function
-///
-/// this function is called by the interpretor instead of the function above
-
-void TMinuit::SetFCN(void *fcn)
-{
-   if (!fcn) return;
-
-   const char *funcname = gCling->Getp2f2funcname(fcn);
-   if (funcname) {
-      fMethodCall = new TMethodCall();
-      fMethodCall->InitWithPrototype(funcname,"Int_t&,Double_t*,Double_t&,Double_t*,Int_t");
-   }
-   fFCN = InteractiveFCNm;
-   gMinuit = this; //required by InteractiveFCNm
 }
 
 ////////////////////////////////////////////////////////////////////////////////

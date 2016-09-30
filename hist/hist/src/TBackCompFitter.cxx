@@ -39,7 +39,6 @@ class before issuing a new fit to avoid deleting this information.
 
 
 #include "TMethodCall.h"
-#include "TInterpreter.h"
 
 #include "Math/Util.h"
 
@@ -741,48 +740,6 @@ void TBackCompFitter::SetFCN(void (*fcn)(Int_t &, Double_t *, Double_t &f, Doubl
    DoSetDimension();
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Static function called when SetFCN is called in interactive mode
-
-void InteractiveFCNm2(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag)
-{
-   // get method call from static instance
-   TMethodCall *m  = (TVirtualFitter::GetFitter())->GetMethodCall();
-   if (!m) return;
-
-   Long_t args[5];
-   args[0] = (Long_t)&npar;
-   args[1] = (Long_t)gin;
-   args[2] = (Long_t)&f;
-   args[3] = (Long_t)u;
-   args[4] = (Long_t)flag;
-   m->SetParamPtrs(args);
-   Double_t result;
-   m->Execute(result);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set the address of the minimization function
-/// this function is called by CINT instead of the function above
-
-void TBackCompFitter::SetFCN(void *fcn)
-{
-   if (!fcn) return;
-
-   const char *funcname = gCling->Getp2f2funcname(fcn);
-   if (funcname) {
-      fMethodCall = new TMethodCall();
-      fMethodCall->InitWithPrototype(funcname,"Int_t&,Double_t*,Double_t&,Double_t*,Int_t");
-   }
-   fFCN = InteractiveFCNm2;
-   // set the static instance (required by InteractiveFCNm)
-   TVirtualFitter::SetFitter(this);
-
-   if (fObjFunc) delete fObjFunc;
-   fObjFunc = new ROOT::Fit::FcnAdapter(fFCN);
-   DoSetDimension();
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the objective function for fitting

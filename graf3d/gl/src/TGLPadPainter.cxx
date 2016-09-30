@@ -929,7 +929,7 @@ void TGLPadPainter::SaveImage(TVirtualPad *pad, const char *fileName, Int_t type
    //glReadPixels(0, 0, canvas->GetWw(), canvas->GetWh(), GL_BGRA, GL_UNSIGNED_BYTE, (char *)&buff[0]);
    glReadPixels(0, 0, canvas->GetWw(), canvas->GetWh(), GL_RGBA, GL_UNSIGNED_BYTE, (char *)&buff[0]);
 
-   std::auto_ptr<TImage> image(TImage::Create());
+   std::unique_ptr<TImage> image(TImage::Create());
    if (!image.get()) {
       ::Error("TGLPadPainter::SaveImage", "TImage creation failed");
       return;

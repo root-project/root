@@ -11,14 +11,10 @@
 #ifndef ROOT_Math_GoFTest
 #define ROOT_Math_GoFTest
 
-#include <memory>
-
-#ifndef ROOT_Math_WrappedFunction
 #include "Math/WrappedFunction.h"
-#endif
-#ifndef ROOT_TMath
 #include "TMath.h"
-#endif
+
+#include <memory>
 
 /*
 */
@@ -182,7 +178,7 @@ private:
    GoFTest(GoFTest& gof);           // Disallowed copy constructor
    GoFTest operator=(GoFTest& gof); // Disallowed assign operator
 
-   std::auto_ptr<IGenFunction> fCDF;
+   std::unique_ptr<IGenFunction> fCDF;
 
 
    EDistribution fDist;

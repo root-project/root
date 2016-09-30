@@ -49,6 +49,7 @@ The following people have contributed to this new version:
 * Significant update of the valgrind suppression file to hide intentional lack
 of delete of some entities at the end of the process.
 * Resolved several memory leaks.
+* Added deprecation system: when compiling against interfaces marked R__DEPRECATED, the compiler will issue a warning showing the ROOT version when the interface will be removed.
 
 ## Core Libraries
 
@@ -408,6 +409,7 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 ## Class Reference Guide
 
 ## Build, Configuration and Testing Infrastructure
+- `root-config` does not suppress deprecation warnings (-Wno-deprecated-declarations) anymore. This means compilers will now diagnose the use of deprecated interfaces in user code.
 - Added new 'builtin_vc' option to bundle a version of Vc within ROOT.
   The default is OFF, however if the Vc package is not found in the system the option is switched to
   ON if the option 'vc' option is ON.
