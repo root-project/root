@@ -17,7 +17,9 @@ void Deconvolution() {
    Double_t response[nbins];
    gROOT->ForceStyle();
 
-   TFile *f   = new TFile("../../tutorials/spectrum/TSpectrum.root");
+   TString dir  = gROOT->GetTutorialsDir();
+   TString file = dir+"/spectrum/TSpectrum.root";
+   TFile *f     = new TFile(file.Data());
    TH1F *h = (TH1F*) f->Get("decon1");
    h->SetTitle("Deconvolution");
    TH1F *d = (TH1F*) f->Get("decon_response");
