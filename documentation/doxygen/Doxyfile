@@ -938,6 +938,7 @@ EXCLUDE_PATTERNS       =  */G__* \
                           */win32gdk/gdk/* \
                           */bindings/pyroot/*.py \
                           makeimage.C filter.cxx \
+                          *gl2ps* *CsgOps* \
                           converttonotebook.py \
                           makeimage.py \
                           parallelNotebooks.py
