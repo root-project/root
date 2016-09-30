@@ -128,7 +128,7 @@ if 'cppyy' in sys.builtin_module_names:
 
    def _GetCppGlobal( self, name ):
       return getattr( self, name )
-   _root.__class__._GetCppGlobal = _GetCppGlobal; del _GetCppGlobal
+   _root.__class__.GetCppGlobal = _GetCppGlobal; del _GetCppGlobal
 
    _root.__class__.Template = cppyy.Template
 
@@ -145,25 +145,26 @@ if sys.version[0:3] == '2.2':
    import copy_reg
    copy_reg.constructor( _root._ObjectProxy__expand__ )
 
-## convince inspect that PyROOT method proxies are possible drop-ins for python
-## methods and classes for pydoc
-import inspect
+if not _builtin_cppyy:
+   ## convince inspect that PyROOT method proxies are possible drop-ins for python
+   ## methods and classes for pydoc
+   import inspect
 
-inspect._old_isfunction = inspect.isfunction
-def isfunction( object ):
-   if type(object) == _root.MethodProxy and not object.im_class:
-      return True
-   return inspect._old_isfunction( object )
-inspect.isfunction = isfunction
+   inspect._old_isfunction = inspect.isfunction
+   def isfunction( object ):
+      if type(object) == _root.MethodProxy and not object.im_class:
+         return True
+      return inspect._old_isfunction( object )
+   inspect.isfunction = isfunction
 
-inspect._old_ismethod = inspect.ismethod
-def ismethod( object ):
-   if type(object) == _root.MethodProxy:
-      return True
-   return inspect._old_ismethod( object )
-inspect.ismethod = ismethod
+   inspect._old_ismethod = inspect.ismethod
+   def ismethod( object ):
+      if type(object) == _root.MethodProxy:
+         return True
+      return inspect._old_ismethod( object )
+   inspect.ismethod = ismethod
 
-del isfunction, ismethod
+   del isfunction, ismethod
 
 
 ### configuration ---------------------------------------------------------------
