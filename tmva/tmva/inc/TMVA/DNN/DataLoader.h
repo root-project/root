@@ -21,6 +21,7 @@
 #include "TMatrix.h"
 #include <vector>
 #include <iostream>
+#include <algorithm>
 
 #include "TMVA/Event.h"
 
