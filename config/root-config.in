@@ -532,6 +532,7 @@ auxcflags="$auxcflags @usercflags@"
 
 ### end of machine and compiler dependent settings ###
 
+srcdir=@top_srcdir@
 prefix=@prefix@
 if test "$platform" = "win32" && test "$prefix" != ""; then
    prefix=`cygpath -u $prefix`
@@ -547,8 +548,8 @@ noldflags=no
 
 usage="\
 Usage: root-config [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version]\
- [--cflags] [--auxcflags] [--ldflags] [--new] [--nonew] [--libs]\
- [--glibs] [--evelibs] [--bindir] [--libdir] [--incdir] [--etcdir]\
+ [--cflags] [--auxcflags] [--ldflags] [--new] [--nonew] [--libs] [--glibs]\
+ [--evelibs] [--bindir] [--libdir] [--incdir] [--etcdir] [--srcdir]\
  [--noauxcflags] [--noauxlibs] [--noldflags] [--has-<feature>] [--arch]\
  [--platform] [--dicttype] [--config] [--features] [--svn-revision]\
  [--python-version] [--ncpu] [--cc] [--cxx] [--f77] [--ld ] [--help]"
@@ -845,6 +846,10 @@ while test $# -gt 0; do
       ### output the etc directory
       out="$out $etcdir"
       ;;
+    --srcdir)
+      ### output the src directory
+      out="$out $srcdir"
+      ;;
     --config)
       ### output the configure arguments
       out="$out $configargs"
@@ -913,6 +918,7 @@ while test $# -gt 0; do
       echo "  --libdir              Print the library directory"
       echo "  --incdir              Print the header directory"
       echo "  --etcdir              Print the configuration directory"
+      echo "  --srcdir              Print the top of the original source directory"
       echo "  --auxlibs             Print auxiliary libraries"
       echo "  --auxcflags           Print auxiliary compiler flags"
       echo "  --[no]new             Turn on[off] use of libNew.so"
