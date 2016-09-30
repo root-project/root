@@ -28,9 +28,17 @@ The following people have contributed to this new version:
  Vassil Vassilev, Fermilab/CMS,\
  Wouter Verkerke, NIKHEF/Atlas, RooFit
 
+## Removed interfaces
+
+The following interfaces have been removed, after deprecation in v6.08.
+
+### CINT remnants, dysfunctional for ROOT 6
+- `TInterpreter`'s `Getgvp()`, `Getp2f2funcname(void*)`, `Setgvp(Long_t)`, `SetRTLD_NOW()`, `SetRTLD_LAZY()`.
+- `SetFCN(void*)` from TVirtualFitter, TFitter, TBackCompFitter, TMinuit
+- `TFoam::SetRhoInt(void*)`
+
 
 ## Core Libraries
-
 
 ## Histogram Libraries
 

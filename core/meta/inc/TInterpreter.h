@@ -209,12 +209,6 @@ public:
    virtual void  *FindSym(const char * /* entry */) const {return 0;}
    virtual void   GenericError(const char * /* error */) const {;}
    virtual Long_t GetExecByteCode() const {return 0;}
-   virtual Long_t Getgvp() const
-      R__DEPRECATED(6,10, "CINT remnant, not applicable to cling")
-   {return 0;}
-   virtual const char *Getp2f2funcname(void * /* receiver */) const
-      R__DEPRECATED(6,10, "CINT remnant, not applicable to cling")
-   {return 0;}
    virtual const char *GetTopLevelMacroName() const {return 0;};
    virtual const char *GetCurrentMacroName()  const {return 0;};
    virtual int    GetSecurityError() const{return 0;}
@@ -226,15 +220,6 @@ public:
    virtual int    SetClassAutoloading(int) const {return 0;}
    virtual int    SetClassAutoparsing(int) {return 0;};
    virtual void   SetErrmsgcallback(void * /* p */) const {;}
-   virtual void   Setgvp(Long_t) const
-      R__DEPRECATED(6,10, "CINT remnant, not applicable to cling")
-   {;}
-   virtual void   SetRTLD_NOW() const
-      R__DEPRECATED(6,10, "CINT remnant, not applicable to cling")
-   {;}
-   virtual void   SetRTLD_LAZY() const
-      R__DEPRECATED(6,10, "CINT remnant, not applicable to cling")
-   {;}
    virtual void   SetTempLevel(int /* val */) const {;}
    virtual int    UnloadFile(const char * /* path */) const {return 0;}
    virtual TInterpreterValue *CreateTemporary() { return 0; }

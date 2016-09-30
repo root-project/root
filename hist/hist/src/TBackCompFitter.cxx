@@ -742,44 +742,6 @@ void TBackCompFitter::SetFCN(void (*fcn)(Int_t &, Double_t *, Double_t &f, Doubl
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Static function called when SetFCN is called in interactive mode
-
-void InteractiveFCNm2(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag)
-{
-   // get method call from static instance
-   TMethodCall *m  = (TVirtualFitter::GetFitter())->GetMethodCall();
-   if (!m) return;
-
-   Long_t args[5];
-   args[0] = (Long_t)&npar;
-   args[1] = (Long_t)gin;
-   args[2] = (Long_t)&f;
-   args[3] = (Long_t)u;
-   args[4] = (Long_t)flag;
-   m->SetParamPtrs(args);
-   Double_t result;
-   m->Execute(result);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set the address of the minimization function
-/// this function is called by CINT instead of the function above
-
-void TBackCompFitter::SetFCN(void *fcn)
-{
-   if (!fcn) return;
-   Error("SetFCN", "Not used anymore.");
-
-   fFCN = InteractiveFCNm2;
-   // set the static instance (required by InteractiveFCNm)
-   TVirtualFitter::SetFitter(this);
-
-   if (fObjFunc) delete fObjFunc;
-   fObjFunc = new ROOT::Fit::FcnAdapter(fFCN);
-   DoSetDimension();
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Set the objective function for fitting
 /// Needed if fitting directly using TBackCompFitter class
 /// The class clones a copy of the function and manages it

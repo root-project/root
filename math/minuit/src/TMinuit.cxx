@@ -949,21 +949,6 @@ void InteractiveFCNm(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// To set the address of the minimization function
-///
-/// this function is called by the interpretor instead of the function above
-
-void TMinuit::SetFCN(void *fcn)
-{
-   if (!fcn) return;
-
-   Error("SetFCN", "Not used anymore.");
-
-   fFCN = InteractiveFCNm;
-   gMinuit = this; //required by InteractiveFCNm
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// set Minuit print level.
 ///
 /// printlevel:
