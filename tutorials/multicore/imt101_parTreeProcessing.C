@@ -27,9 +27,9 @@ int imt101_parTreeProcessing()
   TH1::AddDirectory(kFALSE);
 
   // Create one TThreadedObject per histogram to fill during the processing of the tree
-  auto ptHist   = ROOT::MakeThreaded<TH1F>("pt_dist","p_{T} Distribution", 100, 0, 5);
-  auto pzHist   = ROOT::MakeThreaded<TH1F>("pz_dist","p_{Z} Distribution", 100, 0, 5);
-  auto pxpyHist = ROOT::MakeThreaded<TH2F>("px_py","p_{X} vs p_{Y} Distribution", 100, -5., 5., 100, -5., 5.);
+  auto ptHist   = ROOT::MakeThreaded<TH1F>("pt_dist","p_{T} Distribution;p_{T};dN/p_{T}dp_{T}", 100, 0, 5);
+  auto pzHist   = ROOT::MakeThreaded<TH1F>("pz_dist","p_{Z} Distribution;p_{Z};dN/dp_{Z}", 100, 0, 5);
+  auto pxpyHist = ROOT::MakeThreaded<TH2F>("px_py","p_{X} vs p_{Y} Distribution;p_{X};p_{Y}", 100, -5., 5., 100, -5., 5.);
 
   // Create a TTreeProcessor: specify the file and the tree in it
   ROOT::TTreeProcessor tp("http://root.cern.ch/files/tp_process_imt.root",
@@ -48,15 +48,6 @@ int imt101_parTreeProcessing()
      auto myPzHist = pzHist.Get();
      auto myPxPyHist = pxpyHist.Get();
 
-     myPtHist->GetXaxis()->SetTitle("p_{T}");
-     myPtHist->GetYaxis()->SetTitle("dN/p_{T}dp_{T}");
-
-     myPzHist->GetXaxis()->SetTitle("p_{Z}");
-     myPzHist->GetYaxis()->SetTitle("dN/dp_{Z}");
-
-     myPxPyHist->GetXaxis()->SetTitle("p_{X}");
-     myPxPyHist->GetYaxis()->SetTitle("p_{Y}");
-     
      while (myReader.Next()) {
         auto tracks = *tracksRV;
         for (auto&& track : tracks) {
