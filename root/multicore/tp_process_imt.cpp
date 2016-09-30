@@ -1,5 +1,5 @@
 #include "TROOT.h"
-#include "ROOT/TTreeProcessor.h"
+#include "ROOT/TTreeProcessor.hxx"
 #include "TLorentzVector.h"
 #include "Math/Vector4D.h"
 
