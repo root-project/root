@@ -16,7 +16,9 @@ void Smoothing() {
    Double_t source[nbins];
    gROOT->ForceStyle();
 
-   TFile *f   = new TFile("../../tutorials/spectrum/TSpectrum.root");
+   TString dir  = gROOT->GetTutorialsDir();
+   TString file = dir+"/spectrum/TSpectrum.root";
+   TFile *f     = new TFile(file.Data());
    TH1F *h = (TH1F*) f->Get("back1");
    h->SetTitle("Smoothed spectrum for m=3");
 

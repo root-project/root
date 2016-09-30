@@ -17,7 +17,9 @@ void Deconvolution_wide() {
    Double_t response[nbins];
    gROOT->ForceStyle();
 
-   TFile *f   = new TFile("../../tutorials/spectrum/TSpectrum.root");
+   TString dir  = gROOT->GetTutorialsDir();
+   TString file = dir+"/spectrum/TSpectrum.root";
+   TFile *f     = new TFile(file.Data());
    TH1F *h = (TH1F*) f->Get("decon3");
    h->SetTitle("Deconvolution of closely positioned overlapping peaks using Gold deconvolution method");
    TH1F *d = (TH1F*) f->Get("decon_response_wide");

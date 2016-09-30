@@ -20,7 +20,9 @@ void Background_smooth() {
    TH1F *d1 = new TH1F("d1","",nbins,xmin,xmax);
    TH1F *d2 = new TH1F("d2","",nbins,xmin,xmax);
 
-   TFile *f   = new TFile("../../tutorials/spectrum/TSpectrum.root");
+   TString dir  = gROOT->GetTutorialsDir();
+   TString file = dir+"/spectrum/TSpectrum.root";
+   TFile *f     = new TFile(file.Data());
    TH1F *back = (TH1F*) f->Get("back1");
    back->SetTitle("Estimation of background with noise");
    back->SetAxisRange(3460,3830);
