@@ -91,7 +91,7 @@ namespace ROOT {
 #else
          typedef unsigned long long StateInt_t;
 #endif
-         typedef uint64_t result_t;
+         typedef uint64_t Result_t;
 
 
          MixMaxEngine(uint64_t seed=1);
@@ -109,7 +109,7 @@ namespace ROOT {
          static uint64_t MinInt();
 
          /// set the generator seed
-         void  SetSeed(result_t seed);
+         void  SetSeed(Result_t seed);
 
          // generate a random number (virtual interface)
          virtual double Rndm() { return Rndm_impl(); }
@@ -121,7 +121,7 @@ namespace ROOT {
          void RndmArray (int n, double * array);
 
          /// generate a 64  bit integer number
-         result_t IntRndm();
+         Result_t IntRndm();
 
          /// get name of the generator
          static std::string Name(); 

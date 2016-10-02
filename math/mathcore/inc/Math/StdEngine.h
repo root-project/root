@@ -68,22 +68,22 @@ namespace ROOT {
       public:
 
          typedef  StdRandomEngine BaseType; 
-         typedef  typename Generator::result_type result_t; 
+         typedef  typename Generator::result_type Result_t;
          
          StdEngine() : fGen() {
             fCONS = 1./fGen.max(); 
          }
 
          
-         void SetSeed(result_t seed) { fGen.seed(seed);}
+         void SetSeed(Result_t seed) { fGen.seed(seed);}
          
          double Rndm() {
-            result_t rndm = fGen(); // generate integer number according to the type 
+            Result_t rndm = fGen(); // generate integer number according to the type
             if (rndm != 0) return  fCONS*rndm;
             return Rndm();
          }
 
-         result_t IntRndm() {
+         Result_t IntRndm() {
             return fGen();
          }
 
