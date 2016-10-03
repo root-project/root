@@ -318,7 +318,6 @@ class transformTMVAOutputToHTML:
         for self.lineIndex in self.iterLines:
             line = self.lines[self.lineIndex]
             Header = re.match(r"^\s*-*\s*(<\w+>\s*)*\s*(\w+.*\s+)(\s+)(:)\s*(.*)", line, re.I)
-            DSHeader = re.match(r"^\s*-*\s*(<\w+>\s*)*:?\s*(\[.+\])(\s+)(:)\s*(.*)", line, re.I)
             EmptyHeader = re.match(r"\s*-*\s*(<\w+>\s*)+\s*:\s*(.*)", line, re.I)
             NewGroup = re.match(r"^\s*:\s*$", line)
 
@@ -330,11 +329,6 @@ class transformTMVAOutputToHTML:
                 self.addClassForOutputFlag(Header.group(5))
                 self.__currentHeaderName = Header.group(2)
                 self.__transformOneGroup(Header.group(5))
-            elif DSHeader:
-                self.__currentType = DSHeader.group(1)
-                self.addClassForOutputFlag(DSHeader.group(5))
-                self.__currentHeaderName = DSHeader.group(2)
-                self.__transformOneGroup(DSHeader.group(5))
             elif EmptyHeader:
                 self.__currentType = EmptyHeader.group(1)
                 self.addClassForOutputFlag(EmptyHeader.group(2))
