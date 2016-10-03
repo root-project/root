@@ -18,19 +18,14 @@ namespace mixmax_256 {
 namespace { 
 #endif
 
-#if (_N==256)
-#include "mixmax_oldS.icc"
-  
-#else
-
 #include "mixmax.icc"
-   
-#endif
+
 #undef N
 }
 
 #include "Math/MixMaxEngine.h"
 
+#include <iostream>
 
 #if (_N==17)
 using namespace mixmax_17;
@@ -42,7 +37,28 @@ using namespace mixmax_256;
 
 
 namespace ROOT {
-   namespace Math { 
+   namespace Math {
+
+
+
+         // dummy implementation
+   template<int N>
+   class MixMaxEngineImpl {
+   public: 
+      MixMaxEngineImpl(uint64_t) {
+         std::cerr << "MixMaxEngineImpl - These template parameters are not supported for MixMaxEngine" << std::endl;
+      }
+      ~MixMaxEngineImpl() {}
+      void SetSeed(uint64_t) { }
+      double Rndm() { return -1; }
+      double IntRndm() { return 0; }
+      void SetState(const std::vector<uint64_t> &) { }
+      void GetState(std::vector<uint64_t> &) { }
+      int Counter() { return -1; }
+      void SetCounter(int) {}
+      void Iterate() {} 
+   };
+
 
 template<> 
 class MixMaxEngineImpl<_N> {

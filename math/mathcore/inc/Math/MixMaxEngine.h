@@ -124,7 +124,7 @@ namespace ROOT {
          Result_t IntRndm();
 
          /// get name of the generator
-         static std::string Name(); 
+         static std::string Name();
 
       protected:
          // protected functions used for tesing the generator
@@ -132,7 +132,8 @@ namespace ROOT {
          /// get the state of the generator
          void GetState(std::vector<StateInt_t> & state) const;
 
-         ///set the full initial generator state 
+
+         ///set the full initial generator state
          void SetState(const std::vector<StateInt_t> & state);
 
          /// Get the counter (between 0 and Size-1)
@@ -153,11 +154,14 @@ namespace ROOT {
       typedef MixMaxEngine<240,0> MixMaxEngine240;
       typedef MixMaxEngine<256,2> MixMaxEngine256;
       typedef MixMaxEngine<17,0> MixMaxEngine17;
-
+      
       extern template class MixMaxEngine<240,0>;
+      extern template class MixMaxEngine<256,0>;
       extern template class MixMaxEngine<256,2>;
+      extern template class MixMaxEngine<256,4>;
       extern template class MixMaxEngine<17,0>;
       extern template class MixMaxEngine<17,1>;
+      extern template class MixMaxEngine<17,2>;
 
    } // end namespace Math
 
