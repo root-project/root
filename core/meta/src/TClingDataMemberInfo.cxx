@@ -321,10 +321,9 @@ long TClingDataMemberInfo::Offset()
       //   static constexpr Long64_t something = std::numeric_limits<Long64_t>::max();
       cling::Interpreter::PushTransactionRAII RAII(fInterp);
 
-      if (VD->hasInit() && VD->checkInitIsICE()) {
-         // FIXME: We might want in future to printout the reason why the eval
-         // failed.
-         const APValue* val = VD->evaluateValue();
+      if (long addr = reinterpret_cast<long>(fInterp->getAddressOfGlobal(GlobalDecl(VD))))
+         return addr;
+      if (const APValue* val = VD->evaluateValue()) {
          if (VD->getType()->isIntegralType(C)) {
             return reinterpret_cast<long>(val->getInt().getRawData());
          } else {
@@ -355,7 +354,6 @@ long TClingDataMemberInfo::Offset()
             // fall-through
          }
       }
-      return reinterpret_cast<long>(fInterp->getAddressOfGlobal(GlobalDecl(VD)));
    }
    // FIXME: We have to explicitly check for not enum constant because the
    // implementation of getAddressOfGlobal relies on mangling the name and in
