@@ -39,7 +39,7 @@ int iterate(rng_state_t* X){
 #if (SPECIALMUL!=0)
 inline uint64_t MULWU (uint64_t k){ return (( (k)<<(SPECIALMUL) & M61) | ( (k) >> (BITS-SPECIALMUL))  )  ;}
 #elif (SPECIALMUL==0)
-inline uint64_t MULWU (uint64_t k){ return 0;}
+inline uint64_t MULWU (uint64_t /* k */ ){ return 0;}
 #else
 #error SPECIALMUL not defined
 #endif
@@ -422,9 +422,14 @@ myuint apply_bigskip(myuint* Vout, myuint* Vin, myID_t clusterID, myID_t machine
 #include "mixmax_skip_N240.icc"
 #elif (N==120)
 #include "mixmax_skip_N120.icc"
+
 #elif (N==256)
+#if (SPECIAL==-1)
+#include "mixmax_skip_N256.oldS.icc"
+#else
 #include "mixmax_skip_N256.icc"
-    
+#endif
+
 #elif (N==8)
 #include "mixmax_skip_N8.icc"
 #elif (N==17)

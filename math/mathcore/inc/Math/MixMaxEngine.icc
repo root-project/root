@@ -23,25 +23,11 @@
 #include <cassert>
 #include "Math/Util.h"
 
+
 namespace ROOT {
 namespace Math {
 
 
-   // dummy implementation
-   template<int N>
-   class MixMaxEngineImpl {
-   public: 
-      MixMaxEngineImpl(uint64_t) {}
-      ~MixMaxEngineImpl() {}
-      void SetSeed(uint64_t) { }
-      double Rndm() { return -1; }
-      double IntRndm() { return 0; }
-      void SetState(const std::vector<uint64_t> &) { }
-      void GetState(std::vector<uint64_t> &) { }
-      int Counter() { return -1; }
-      void SetCounter(int) {}
-      void Iterate() {} 
-   };
    
    template<int N, int S>
    MixMaxEngine<N,S>::MixMaxEngine(uint64_t seed) { 
