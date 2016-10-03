@@ -1299,17 +1299,16 @@ const char* TBranch::GetIconName() const
 /// A helper function to locate the correct basket - and its first entry.
 /// Extracted to a common private function because it is needed by both GetEntry
 /// and GetEntriesFast.  It should not be called directly.
+///
+/// Assumes that this branch is enabled.
 Int_t TBranch::GetBasketAndFirst(TBasket*&basket, Long64_t &first)
 {
-   if (R__likely(enabled && fFirstBasketEntry <= entry && entry < fNextBasketEntry)) {
+   if (R__likely(fFirstBasketEntry <= entry && entry < fNextBasketEntry)) {
       // We have found the basket containing this entry.
       // make sure basket buffers are in memory.
       basket = fCurrentBasket;
       first = fFirstBasketEntry;
    } else {
-      if (!enabled) {
-         return 0;
-      }
       if ((entry < fFirstEntry) || (entry >= fEntryNumber)) {
          return 0;
       }
@@ -1440,7 +1439,8 @@ Int_t TBranch::GetEntry(Long64_t entry, Int_t getall)
    // Remember which entry we are reading.
    fReadEntry = entry;
 
-   Bool_t enabled = !TestBit(kDoNotProcess) || getall;
+   if (R__unlikely(TestBit(kDoNotProcess) && !getall)) {return 0;}
+
    TBasket *basket; // will be initialized in the if/then clauses.
    Long64_t first;
 
