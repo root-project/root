@@ -309,11 +309,10 @@ long TClingDataMemberInfo::Offset()
    ASTContext& C = D->getASTContext();
    if (const FieldDecl *FldD = dyn_cast<FieldDecl>(D)) {
       // The current member is a non-static data member.
-      clang::ASTContext &Context = FldD->getASTContext();
       const clang::RecordDecl *RD = FldD->getParent();
-      const clang::ASTRecordLayout &Layout = Context.getASTRecordLayout(RD);
+      const clang::ASTRecordLayout &Layout = C.getASTRecordLayout(RD);
       uint64_t bits = Layout.getFieldOffset(FldD->getFieldIndex());
-      int64_t offset = Context.toCharUnitsFromBits(bits).getQuantity();
+      int64_t offset = C.toCharUnitsFromBits(bits).getQuantity();
       return static_cast<long>(offset);
    }
    else if (const VarDecl *VD = dyn_cast<VarDecl>(D)) {
