@@ -855,24 +855,21 @@ void TMVA::MethodBase::AddClassifierOutput( Types::ETreeType type )
    ResultsClassification* clRes =
       (ResultsClassification*)Data()->GetResults(GetMethodName(), type, Types::kClassification );
 
-
    Long64_t nEvents =  Data()->GetNEvents();
-   std::vector<Double_t> mvaValues = GetMvaValues(0, nEvents, true); 
-
-   
    clRes->Resize( nEvents );
 
    // use timer
    Timer timer( nEvents, GetName(), kTRUE );
-
-   for (Int_t ievt=0; ievt<nEvents; ievt++) {
-      clRes->SetValue( mvaValues[ievt], ievt );
-   }
+   std::vector<Double_t> mvaValues = GetMvaValues(0, nEvents, true);
 
    // store time used for testing
    if (type==Types::kTesting)
       SetTestTime(timer.ElapsedSeconds());
 
+   // load mva values to results object
+   for (Int_t ievt=0; ievt<nEvents; ievt++) {
+      clRes->SetValue( mvaValues[ievt], ievt );
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
