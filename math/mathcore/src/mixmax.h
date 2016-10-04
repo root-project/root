@@ -21,7 +21,7 @@
 #ifndef MIXMAX_H_
 #define MIXMAX_H_
 
-#define USE_INLINE_ASM
+//#define USE_INLINE_ASM
 
 //#ifdef __cplusplus
 //extern "C" {
