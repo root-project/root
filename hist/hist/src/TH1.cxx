@@ -5877,9 +5877,9 @@ void TH1::RecursiveRemove(TObject *obj)
 /// Note that both contents and errors(if any) are scaled.
 /// This function uses the services of TH1::Add
 ///
-/// IMPORTANT NOTE: If you intend to use the errors of this histogram later
-/// you should call Sumw2 before making this operation.
-/// This is particularly important if you fit the histogram after TH1::Scale
+/// IMPORTANT NOTE: Sumw2() is called automatically when scaling
+/// If you are not interested in the histogram statistics you can call
+/// Sumw2(off) or use the option "nosw2"
 ///
 /// One can scale an histogram such that the bins integral is equal to
 /// the normalization parameter via TH1::Scale(Double_t norm), where norm
@@ -5892,6 +5892,8 @@ void TH1::Scale(Double_t c1, Option_t *option)
 {
 
    TString opt = option; opt.ToLower();
+   // store bin errors when scaling since cannot anymore be computed as sqrt(N)
+   if (!opt.Contains("nosw2") && GetSumw2N() == 0) Sumw2();
    if (opt.Contains("width")) Add(this, this, c1, -1);
    else {
       if (fBuffer) BufferEmpty(1);
