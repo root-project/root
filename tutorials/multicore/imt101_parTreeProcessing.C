@@ -23,13 +23,10 @@ int imt101_parTreeProcessing()
   int nthreads = 4;
   ROOT::EnableImplicitMT(nthreads);
 
-  // Detach the histograms from the directory 
-  TH1::AddDirectory(kFALSE);
-
   // Create one TThreadedObject per histogram to fill during the processing of the tree
-  auto ptHist   = ROOT::MakeThreaded<TH1F>("pt_dist","p_{T} Distribution;p_{T};dN/p_{T}dp_{T}", 100, 0, 5);
-  auto pzHist   = ROOT::MakeThreaded<TH1F>("pz_dist","p_{Z} Distribution;p_{Z};dN/dp_{Z}", 100, 0, 5);
-  auto pxpyHist = ROOT::MakeThreaded<TH2F>("px_py","p_{X} vs p_{Y} Distribution;p_{X};p_{Y}", 100, -5., 5., 100, -5., 5.);
+  ROOT::TThreadedObject<TH1F> ptHist("pt_dist","p_{T} Distribution;p_{T};dN/p_{T}dp_{T}", 100, 0, 5);
+  ROOT::TThreadedObject<TH1F> pzHist("pz_dist","p_{Z} Distribution;p_{Z};dN/dp_{Z}", 100, 0, 5);
+  ROOT::TThreadedObject<TH2F> pxpyHist("px_py","p_{X} vs p_{Y} Distribution;p_{X};p_{Y}", 100, -5., 5., 100, -5., 5.);
 
   // Create a TTreeProcessor: specify the file and the tree in it
   ROOT::TTreeProcessor tp("http://root.cern.ch/files/tp_process_imt.root",
