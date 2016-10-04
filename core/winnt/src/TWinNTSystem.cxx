@@ -5323,8 +5323,9 @@ int TWinNTSystem::AnnounceTcpService(int port, Bool_t reuse, int backlog,
    } else {
       int bret;
       do {
-         inserver.sin_port = ::htons(tryport++);
+         inserver.sin_port = ::htons(tryport);
          bret = ::bind(sock, (struct sockaddr*) &inserver, sizeof(inserver));
+         tryport++;
       } while (bret == SOCKET_ERROR && WSAGetLastError() == WSAEADDRINUSE &&
                tryport < kSOCKET_MAXPORT);
       if (bret == SOCKET_ERROR) {
@@ -5383,8 +5384,9 @@ int TWinNTSystem::AnnounceUdpService(int port, int backlog)
    } else {
       int bret;
       do {
-         inserver.sin_port = htons(tryport++);
+         inserver.sin_port = htons(tryport);
          bret = bind(sock, (struct sockaddr*) &inserver, sizeof(inserver));
+         tryport++;
       } while (bret == SOCKET_ERROR && WSAGetLastError() == WSAEADDRINUSE &&
                tryport < kSOCKET_MAXPORT);
       if (bret < 0) {
