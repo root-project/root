@@ -67,6 +67,7 @@ set(CMAKE_VERBOSE_MAKEFILES OFF)
 set(CMAKE_INCLUDE_CURRENT_DIR OFF)
 
 include(CMakeParseArguments)
+include(CheckCXXCompilerFlag)
 
 #---------------------------------------------------------------------------------------------------
 #---ROOT_GLOB_FILES( <variable> [REALTIVE path] [FILTER regexp] <sources> ...)
@@ -925,13 +926,18 @@ macro(ROOT_ADD_BUILTIN_DEPENDENCIES target EXTERNAL)
   add_dependencies(${target} ${EXTERNAL}LIBS)
 endmacro()
 
+CHECK_CXX_COMPILER_FLAG("-Werror" CXX_HAS__Werror)
+if(CXX_HAS__Werror)
+  set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -Werror")
+endif()
+
 #----------------------------------------------------------------------------
 # ROOT_ADD_CXX_FLAG(var flag)
 #----------------------------------------------------------------------------
 function(ROOT_ADD_CXX_FLAG var flag)
   string(REGEX REPLACE "[-.+/:= ]" "_" flag_esc "${flag}")
-  CHECK_CXX_COMPILER_FLAG("${flag}" CXX_HAS${flag_esc})
-  if(CXX_HAS${flag_esc})
+  CHECK_CXX_COMPILER_FLAG("${flag}" CXX_HAS_${flag_esc})
+  if(CXX_HAS_${flag_esc})
     set(${var} "${${var}} ${flag}" PARENT_SCOPE)
   endif()
 endfunction()
@@ -940,8 +946,8 @@ endfunction()
 #----------------------------------------------------------------------------
 function(ROOT_ADD_C_FLAG var flag)
   string(REGEX REPLACE "[-.+/:= ]" "_" flag_esc "${flag}")
-  CHECK_C_COMPILER_FLAG("${flag}" C_HAS${flag_esc})
-  if(C_HAS${flag_esc})
+  CHECK_C_COMPILER_FLAG("${flag}" C_HAS_${flag_esc})
+  if(C_HAS_${flag_esc})
     set(${var} "${${var}} ${flag}" PARENT_SCOPE)
   endif()
 endfunction()
