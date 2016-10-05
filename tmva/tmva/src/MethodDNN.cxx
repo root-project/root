@@ -1103,7 +1103,6 @@ const std::vector<Float_t> &TMVA::MethodDNN::GetRegressionValues()
 
 const std::vector<Float_t> &TMVA::MethodDNN::GetMulticlassValues()
 {
-    std::cout << "mult" << std::endl;
    size_t nVariables = GetEvent()->GetNVariables();
    Matrix_t X(1, nVariables);
    Matrix_t YHat(1, 1);
