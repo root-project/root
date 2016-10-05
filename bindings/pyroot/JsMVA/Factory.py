@@ -14,7 +14,6 @@ from ipywidgets import widgets
 from threading import Thread
 import time
 from string import Template
-import numpy as np
 
 
 # This class contains the necessary HTML, JavaScript, CSS codes (templates)
@@ -762,15 +761,15 @@ def BookDNN(self, loader, title="DNN"):
 # @param net DNN in JSON format
 # @param selectedLayers the selected layers
 def CreateWeightHist(net, selectedLayers):
-    firstLayer=int(selectedLayers.split("->")[0])
+    firstLayer = int(selectedLayers.split("->")[0])
     weights = net["layers"][firstLayer]["Weights"]
     n1 = int(weights["row"])
     n2 = int(weights["cols"])
-    tmatrix = np.reshape(weights["data"], (n1, n2))
     m = ROOT.TMatrixD(n1, n2+1)
+    vec = weights["data"]
     for i in xrange(n1):
         for j in xrange(n2):
-            m[i][j]  = tmatrix[i][j]
+            m[i][j] = vec[j+n2*i]
     bvec = net["layers"][firstLayer]["Biases"]["data"]
     if n1!=len(bvec):
         print("Something wrong.. Number of bias weights not equal with the neuron number ("+str(n1)+"!="+str(len(bvec))+")")
