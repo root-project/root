@@ -245,4 +245,18 @@ namespace ROOT {
 
 } // End ROOT namespace
 
+#include <sstream>
+
+////////////////////////////////////////////////////////////////////////////////
+/// Print a TThreadedObject at the prompt:
+
+namespace cling {
+   template<class T>
+   std::string printValue(ROOT::TThreadedObject<T> *val)
+   {
+      return "A wrapper to make object instances thread private, lazily.";
+   }
+}
+
+
 #endif
