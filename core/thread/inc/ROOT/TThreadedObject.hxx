@@ -245,6 +245,8 @@ namespace ROOT {
 
 } // End ROOT namespace
 
+#include <sstream>
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Print a TThreadedObject at the prompt:
 
