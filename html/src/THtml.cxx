@@ -1599,6 +1599,8 @@ void THtml::CreateListOfClasses(const char* filter)
       if (strstr(cname, "__gnu_cxx::")) continue;
       // Work around ROOT-6016
       if (!strcmp(cname, "timespec")) continue;
+      // "tuple"s are synthetic in the interpreter
+      if (!strncmp(cname, "tuple<", 6)) continue;
 
       // get class & filename - use TROOT::GetClass, as we also
       // want those classes without decl file name!
