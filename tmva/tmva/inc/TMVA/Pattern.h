@@ -45,8 +45,8 @@ class Pattern
       }
 
 
-   template <typename ItValue>
-      Pattern (ItValue inputBegin, ItValue inputEnd, ItValue outputBegin, ItValue outputEnd, double _weight = 1.0)
+   template <typename ItValue, typename ItOutValue>
+      Pattern (ItValue inputBegin, ItValue inputEnd, ItOutValue outputBegin, ItOutValue outputEnd, double _weight = 1.0)
       : m_input (inputBegin, inputEnd)
       , m_output (outputBegin, outputEnd)
       , m_weight (_weight)

@@ -433,6 +433,7 @@ These graphs are added to a TMultiGraph, and during an interactive training we g
       Types::EAnalysisType  GetAnalysisType() const { return fAnalysisType; }
       Bool_t                DoRegression() const { return fAnalysisType == Types::kRegression; }
       Bool_t                DoMulticlass() const { return fAnalysisType == Types::kMulticlass; }
+      Bool_t                DoClassification() const { return fAnalysisType == Types::kClassification; }
 
       // setter method for suppressing writing to XML and writing of standalone classes
       void                  DisableWriting(Bool_t setter){ fModelPersistence = setter?kFALSE:kTRUE; }//DEPRECATED
