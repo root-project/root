@@ -49,7 +49,8 @@ void TMVAMulticlass( TString myMethodList = "" )
    //---------------------------------------------------------------
    // Default MVA methods to be trained + tested
    std::map<std::string,int> Use;
-   Use["MLP"]             = 1;
+   Use["MLP"]             = 0;
+   Use["DNN"]             = 1;
    Use["BDTG"]            = 1;
    Use["DNN"]             = 0;
    Use["FDA_GA"]          = 0;
@@ -124,6 +125,36 @@ void TMVAMulticlass( TString myMethodList = "" )
 
    if (Use["BDTG"]) // gradient boosted decision trees
       factory->BookMethod( dataloader,  TMVA::Types::kBDT, "BDTG", "!H:!V:NTrees=1000:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.50:nCuts=20:MaxDepth=2");
+   // improved neural network implementation
+   if (Use["DNN"])
+   {
+    /*
+       TString layoutString ("Layout=TANH|(N+100)*2,LINEAR");
+       TString layoutString ("Layout=SOFTSIGN|100,SOFTSIGN|50,SOFTSIGN|20,LINEAR");
+       TString layoutString ("Layout=RELU|300,RELU|100,RELU|30,RELU|10,LINEAR");
+       TString layoutString ("Layout=SOFTSIGN|50,SOFTSIGN|30,SOFTSIGN|20,SOFTSIGN|10,LINEAR");
+       TString layoutString ("Layout=TANH|50,TANH|30,TANH|20,TANH|10,LINEAR");
+       TString layoutString ("Layout=SOFTSIGN|50,SOFTSIGN|20,LINEAR");
+    */
+       TString layoutString ("Layout=TANH|100,TANH|50,TANH|10,LINEAR");
+
+       TString training0 ("LearningRate=1e-1,Momentum=0.0,Repetitions=1,ConvergenceSteps=30,BatchSize=50,TestRepetitions=15,WeightDecay=0.001,Regularization=NONE,DropConfig=0.0+0.5+0.5+0.5,DropRepetitions=1,Multithreading=True");
+       TString training1 ("LearningRate=1e-2,Momentum=0.5,Repetitions=1,ConvergenceSteps=30,BatchSize=50,TestRepetitions=7,WeightDecay=0.001,Regularization=L2,Multithreading=True,DropConfig=0.0+0.1+0.1+0.1,DropRepetitions=1");
+       TString training2 ("LearningRate=1e-2,Momentum=0.3,Repetitions=1,ConvergenceSteps=30,BatchSize=60,TestRepetitions=7,WeightDecay=0.0001,Regularization=L2,Multithreading=True");
+       TString training3 ("LearningRate=1e-3,Momentum=0.1,Repetitions=1,ConvergenceSteps=20,BatchSize=70,TestRepetitions=7,WeightDecay=0.0001,Regularization=NONE,Multithreading=True");
+
+       TString trainingStrategyString ("TrainingStrategy=");
+       trainingStrategyString += training0 + "|" + training1 + "|" + training2 + "|" + training3;
+
+
+       // TString nnOptions ("!H:V:VarTransform=Normalize:ErrorStrategy=CROSSENTROPY");
+       TString nnOptions ("!H:V:ErrorStrategy=CROSSENTROPY:VarTransform=G:WeightInitialization=XAVIERUNIFORM");
+       // TString nnOptions ("!H:V:VarTransform=Normalize:ErrorStrategy=CHECKGRADIENTS");
+       nnOptions.Append (":"); nnOptions.Append (layoutString);
+       nnOptions.Append (":"); nnOptions.Append (trainingStrategyString);
+
+       factory->BookMethod(dataloader, TMVA::Types::kDNN, "DNN", nnOptions ); // NN
+   }
    if (Use["MLP"]) // neural network
       factory->BookMethod( dataloader,  TMVA::Types::kMLP, "MLP", "!H:!V:NeuronType=tanh:NCycles=1000:HiddenLayers=N+5,5:TestRate=5:EstimatorType=MSE");
    if (Use["FDA_GA"]) // functional discriminant with GA minimizer
