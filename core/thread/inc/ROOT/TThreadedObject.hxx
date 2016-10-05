@@ -137,11 +137,7 @@ namespace ROOT {
          }
          auto objPointer = fObjPointers[i];
          if (!objPointer) {
-            {
-               std::lock_guard<ROOT::TSpinMutex> lg(fThrIDSlotMutex);
-               objPointer.reset(Internal::TThreadedObjectUtils::Cloner<T>::Clone(fModel.get(), fDirectories[i]));
-            }
-
+            objPointer.reset(Internal::TThreadedObjectUtils::Cloner<T>::Clone(fModel.get(), fDirectories[i]));
             fObjPointers[i] = objPointer;
          }
          return objPointer;
