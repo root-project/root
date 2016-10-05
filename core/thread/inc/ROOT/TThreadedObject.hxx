@@ -252,7 +252,11 @@ namespace cling {
    template<class T>
    std::string printValue(ROOT::TThreadedObject<T> *val)
    {
-      return "A wrapper to make object instances thread private, lazily.";
+      auto model = ((std::unique_ptr<T>*)(val))->get();
+      std::ostringstream ret;
+      ret << "A wrapper to make object instances thread private, lazily. "
+          << "The model which is replicated is " << printValue(model);
+      return ret.str();
    }
 }
 
