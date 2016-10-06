@@ -15,6 +15,8 @@
 #ifndef ROOT_TGLContext
 #define ROOT_TGLContext
 
+#include <memory>
+
 class TGLContextIdentity;
 
 #ifndef ROOT_TGLFormat
@@ -38,7 +40,7 @@ class TGLContext
 
 private:
    TGLPaintDevice *fDevice;
-   TGLContextPrivate *fPimpl;
+   std::unique_ptr<TGLContextPrivate> fPimpl;
 
    Bool_t fFromCtor;//To prohibit user's calls of SetContext.
    Bool_t fValid;
