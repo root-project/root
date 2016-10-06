@@ -10,8 +10,9 @@
  *      Virtual base class for all MVA method based on python                     *
  *                                                                                *
  **********************************************************************************/
+
 #include <Python.h>    // Needs to be included first to avoid redefinition of _POSIX_C_SOURCE
-#include<TMVA/PyMethodBase.h>
+#include <TMVA/PyMethodBase.h>
 
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #pragma GCC diagnostic ignored "-Wunused-function"
@@ -22,7 +23,7 @@
 #include "TMVA/Results.h"
 #include "TMVA/Timer.h"
 
-#include<TApplication.h>
+#include <TApplication.h>
 
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
@@ -107,26 +108,26 @@ void PyMethodBase::PyInitialize()
    if (!pyIsInitialized) {
       _import_array();
    }
-   
+
    fMain = PyImport_AddModule("__main__");
    if (!fMain) {
       Log << kFATAL << "Can't import __main__" << Endl;
       Log << Endl;
    }
-   
+
    fGlobalNS = PyModule_GetDict(fMain);
    if (!fGlobalNS) {
       Log << kFATAL << "Can't init global namespace" << Endl;
       Log << Endl;
    }
-   
+
    fLocalNS = PyDict_New();
    if (!fMain) {
       Log << kFATAL << "Can't init local namespace" << Endl;
       Log << Endl;
    }
-   
-   #if PY_MAJOR_VERSION < 3 
+
+   #if PY_MAJOR_VERSION < 3
    //preparing objects for eval
    PyObject *bName =  PyUnicode_FromString("__builtin__");
    // Import the file as a Python module.
@@ -135,7 +136,7 @@ void PyMethodBase::PyInitialize()
       Log << kFATAL << "Can't import __builtin__" << Endl;
       Log << Endl;
    }
-   #else   
+   #else
    //preparing objects for eval
    PyObject *bName =  PyUnicode_FromString("builtins");
    // Import the file as a Python module.
@@ -145,11 +146,11 @@ void PyMethodBase::PyInitialize()
       Log << Endl;
    }
    #endif
-   
+
    PyObject *mDict = PyModule_GetDict(fModuleBuiltin);
    fEval = PyDict_GetItemString(mDict, "eval");
    fOpen = PyDict_GetItemString(mDict, "open");
-   
+
    Py_DECREF(bName);
    Py_DECREF(mDict);
    //preparing objects for pickle
@@ -182,7 +183,7 @@ void PyMethodBase::PyFinalize()
 }
 void PyMethodBase::PySetProgramName(TString name)
 {
-   #if PY_MAJOR_VERSION < 3 
+   #if PY_MAJOR_VERSION < 3
    Py_SetProgramName(const_cast<char*>(name.Data()));
    #else
    Py_SetProgramName((wchar_t *)name.Data());
@@ -196,7 +197,7 @@ size_t mystrlen(const wchar_t* s) { return wcslen(s); }
 TString PyMethodBase::Py_GetProgramName()
 {
 auto progName = ::Py_GetProgramName();
-return std::string(progName, progName + mystrlen(progName));  
+return std::string(progName, progName + mystrlen(progName));
 }
 //_______________________________________________________________________
 int  PyMethodBase::PyIsInitialized()
@@ -227,7 +228,7 @@ void PyMethodBase::UnSerialize(TString path,PyObject **obj)
 {
  PyObject *file_arg = Py_BuildValue("(ss)", path.Data(),"rb");
  PyObject *file = PyObject_CallObject(fOpen,file_arg);
- 
+
  PyObject *model_arg = Py_BuildValue("(O)", file);
  *obj = PyObject_CallObject(fPickleLoads , model_arg);
 
@@ -243,7 +244,7 @@ std::vector<Double_t> PyMethodBase::GetMvaValues(Long64_t firstEvt, Long64_t las
 {
 
    if (!fClassifier) ReadModelFromFile();
-   
+
    Long64_t nEvents = Data()->GetNEvents();
    if (firstEvt > lastEvt || lastEvt > nEvents) lastEvt = nEvents;
    if (firstEvt < 0) firstEvt = 0;
@@ -265,10 +266,10 @@ std::vector<Double_t> PyMethodBase::GetMvaValues(Long64_t firstEvt, Long64_t las
 
    // use timer
    Timer timer( nEvents, GetName(), kTRUE );
-   if (logProgress) 
+   if (logProgress)
       Log() << kINFO<<Form("Dataset[%s] : ",DataInfo().GetName())<< "Evaluation of " << GetMethodName() << " on "
             << (Data()->GetCurrentType()==Types::kTraining?"training":"testing") << " sample (" << nEvents << " events)" << Endl;
-   
+
 
    // fill numpy array with events data
    for (Int_t ievt=0; ievt<nEvents; ievt++) {
@@ -276,7 +277,7 @@ std::vector<Double_t> PyMethodBase::GetMvaValues(Long64_t firstEvt, Long64_t las
       const TMVA::Event *e = Data()->GetEvent();
       assert(nvars == e->GetNVariables());
       for (UInt_t i = 0; i < nvars; i++) {
-         pValue[ievt * nvars + i] = e->GetValue(i);         
+         pValue[ievt * nvars + i] = e->GetValue(i);
       }
       // if (ievt%100 == 0)
       //    std::cout << "Event " << ievt << "  type" << DataInfo().IsSignal(e) << " : " << pValue[ievt*nvars] << "  " << pValue[ievt*nvars+1] << "  " << pValue[ievt*nvars+2] << std::endl;
@@ -288,9 +289,9 @@ std::vector<Double_t> PyMethodBase::GetMvaValues(Long64_t firstEvt, Long64_t las
 
    // the return probabilities is a vector of pairs of (p_sig,p_backg)
    // we ar einterested only in the signal probability
-   std::vector<double> mvaValues(nEvents); 
+   std::vector<double> mvaValues(nEvents);
    for (int i = 0; i < nEvents; ++i)
-      mvaValues[i] = proba[2*i]; 
+      mvaValues[i] = proba[2*i];
 
    if (logProgress) {
       Log() << kINFO <<Form("Dataset[%s] : ",DataInfo().GetName())<< "Elapsed time for evaluation of " << nEvents <<  " events: "
@@ -299,6 +300,21 @@ std::vector<Double_t> PyMethodBase::GetMvaValues(Long64_t firstEvt, Long64_t las
 
    Py_DECREF(result);
    Py_DECREF(pEvent);
- 
-   return mvaValues; 
+
+   return mvaValues;
+}
+
+//_______________________________________________________________________
+// Helper function to run python code from string in local namespace with
+// error handling
+// `start` defines the start symbol defined in PyRun_String (Py_eval_input,
+// Py_single_input, Py_file_input)
+void PyMethodBase::PyRunString(TString code, TString errorMessage, int start) {
+   fPyReturn = PyRun_String(code, start, fGlobalNS, fLocalNS);
+   if (!fPyReturn) {
+      Log() << kWARNING << "Failed to run python code: " << code << Endl;
+      Log() << kWARNING << "Python error message:" << Endl;
+      PyErr_Print();
+      Log() << kFATAL << errorMessage << Endl;
+   }
 }
