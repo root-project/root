@@ -70,6 +70,8 @@
 #include "TVirtualTreePlayer.h"
 #endif
 
+#include <mutex>
+
 class TBranch;
 class TBrowser;
 class TFile;
@@ -99,6 +101,7 @@ class TTree : public TNamed, public TAttLine, public TAttFill, public TAttMarker
 
 protected:
    Long64_t       fEntries;               ///<  Number of entries
+// NOTE: cannot use std::atomic for these counters as it cannot be serialized.
    Long64_t       fTotBytes;              ///<  Total number of bytes in all branches before compression
    Long64_t       fZipBytes;              ///<  Total number of bytes in all branches after compression
    Long64_t       fSavedBytes;            ///<  Number of autosaved bytes
@@ -160,6 +163,9 @@ private:
    TTree(const TTree& tt);              // not implemented
    TTree& operator=(const TTree& tt);   // not implemented
 
+#ifdef R__USE_IMT
+   mutable std::mutex fCounterMutex;      ///<!Lock to protect counters
+#endif
    void             InitializeSortedBranches();
    void             SortBranchesByTime();
 
@@ -303,8 +309,8 @@ public:
    virtual TFriendElement *AddFriend(const char* treename, const char* filename = "");
    virtual TFriendElement *AddFriend(const char* treename, TFile* file);
    virtual TFriendElement *AddFriend(TTree* tree, const char* alias = "", Bool_t warn = kFALSE);
-   virtual void            AddTotBytes(Int_t tot) { fTotBytes += tot; }
-   virtual void            AddZipBytes(Int_t zip) { fZipBytes += zip; }
+   virtual void            AddTotBytes(Int_t tot) { std::lock_guard<std::mutex> sentry(fCounterMutex); fTotBytes += tot; }
+   virtual void            AddZipBytes(Int_t zip) { std::lock_guard<std::mutex> sentry(fCounterMutex); fZipBytes += zip; }
    virtual Long64_t        AutoSave(Option_t* option = "");
    virtual Int_t           Branch(TCollection* list, Int_t bufsize = 32000, Int_t splitlevel = 99, const char* name = "");
    virtual Int_t           Branch(TList* list, Int_t bufsize = 32000, Int_t splitlevel = 99);
@@ -439,7 +445,7 @@ public:
    virtual Long64_t        GetSelectedRows() { return GetPlayer()->GetSelectedRows(); }
    virtual Int_t           GetTimerInterval() const { return fTimerInterval; }
            TBuffer*        GetTransientBuffer(Int_t size);
-   virtual Long64_t        GetTotBytes() const { return fTotBytes; }
+   virtual Long64_t        GetTotBytes() const { std::lock_guard<std::mutex> sentry(fCounterMutex); return fTotBytes; }
    virtual TTree          *GetTree() const { return const_cast<TTree*>(this); }
    virtual TVirtualIndex  *GetTreeIndex() const { return fTreeIndex; }
    virtual Int_t           GetTreeNumber() const { return 0; }
@@ -467,7 +473,7 @@ public:
    virtual Double_t       *GetV4()   { return GetPlayer()->GetV4(); }
    virtual Double_t       *GetW()    { return GetPlayer()->GetW(); }
    virtual Double_t        GetWeight() const   { return fWeight; }
-   virtual Long64_t        GetZipBytes() const { return fZipBytes; }
+   virtual Long64_t        GetZipBytes() const { std::lock_guard<std::mutex> sentry(fCounterMutex); return fZipBytes; }
    virtual void            IncrementTotalBuffers(Int_t nbytes) { fTotalBuffers += nbytes; }
    Bool_t                  IsFolder() const { return kTRUE; }
    virtual Int_t           LoadBaskets(Long64_t maxmemory = 2000000000);
