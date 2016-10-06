@@ -450,7 +450,12 @@
 
 /*---- deprecation -----------------------------------------------------------*/
 #if defined(__GNUC__) || defined(__clang__) || defined(__INTEL_COMPILER)
+# if __GNUC__ == 5 && (__GNUC_MINOR__ == 1 || __GNUC_MINOR__ == 2)
+/* GCC 5.1, 5.2: false positives due to https://gcc.gnu.org/bugzilla/show_bug.cgi?id=15269 */
+#   define _R__DEPRECATED_LATER(REASON)
+# else
 #   define _R__DEPRECATED_LATER(REASON) __attribute__((deprecated(REASON)))
+# endif
 #elif defined(_MSC_VER)
 #   define _R__DEPRECATED_LATER(REASON) __declspec(deprecated(REASON))
 #else
