@@ -51,7 +51,6 @@ Bool_t TGLContext::fgGlewInitDone = kFALSE;
 TGLContext::TGLContext(TGLWidget *wid, Bool_t shareDefault,
                        const TGLContext *shareList)
    : fDevice(wid),
-     fPimpl(nullptr),
      fFromCtor(kTRUE),
      fValid(kFALSE),
      fIdentity(0)
@@ -128,8 +127,7 @@ void TGLContext::SetContext(TGLWidget *widget, const TGLContext *shareList)
       return;
    }
 
-   std::unique_ptr<TGLContextPrivate> safe_ptr(new TGLContextPrivate);
-   fPimpl = safe_ptr.get();
+   fPimpl.reset(new TGLContextPrivate);
    LayoutCompatible_t *trick =
       reinterpret_cast<LayoutCompatible_t *>(widget->GetId());
    HWND hWND = *trick->fPHwnd;
@@ -161,7 +159,6 @@ void TGLContext::SetContext(TGLWidget *widget, const TGLContext *shareList)
    TGLContextPrivate::RegisterContext(this);
 
    dcGuard.Stop();
-   safe_ptr.release();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -256,8 +253,7 @@ void TGLContext::SetContext(TGLWidget *widget, const TGLContext *shareList)
       return;
    }
 
-   std::unique_ptr<TGLContextPrivate> safe_ptr(new TGLContextPrivate);
-   fPimpl = safe_ptr.get();
+   fPimpl.reset(new TGLContextPrivate);
 
    fPimpl->fGLContext = gVirtualX->CreateOpenGLContext(widget->GetId(), shareList ? shareList->fPimpl->fGLContext : 0);
    fPimpl->fWindowID = widget->GetId();
@@ -265,8 +261,6 @@ void TGLContext::SetContext(TGLWidget *widget, const TGLContext *shareList)
    fValid = kTRUE;
    fDevice->AddContext(this);
    TGLContextPrivate::RegisterContext(this);
-
-   safe_ptr.release();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -339,8 +333,7 @@ void TGLContext::SetContext(TGLWidget *widget, const TGLContext *shareList)
       return;
    }
 
-   std::unique_ptr<TGLContextPrivate> safe_ptr(new TGLContextPrivate);
-   fPimpl = safe_ptr.get();
+   fPimpl.reset(new TGLContextPrivate);
    Display *dpy = static_cast<Display *>(widget->GetInnerData().first);
    XVisualInfo *visInfo = static_cast<XVisualInfo *>(widget->GetInnerData().second);
 
@@ -360,8 +353,6 @@ void TGLContext::SetContext(TGLWidget *widget, const TGLContext *shareList)
    fValid = kTRUE;
    fDevice->AddContext(this);
    TGLContextPrivate::RegisterContext(this);
-
-   safe_ptr.release();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -442,8 +433,6 @@ TGLContext::~TGLContext()
    }
 
    fIdentity->Release(this);
-
-   delete fPimpl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
