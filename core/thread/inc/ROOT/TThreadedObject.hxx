@@ -201,10 +201,8 @@ namespace ROOT {
       {
          if (fIsMerged) {
             Warning("TThreadedObject::SnapshotMerge", "This object was already merged. Returning the previous result.");
-            std::lock_guard<ROOT::TSpinMutex> lg(fThrIDSlotMutex);
             return std::unique_ptr<T>(Internal::TThreadedObjectUtils::Cloner<T>::Clone(fObjPointers[0].get()));
          }
-         std::lock_guard<ROOT::TSpinMutex> lg(fThrIDSlotMutex);
          auto targetPtr = Internal::TThreadedObjectUtils::Cloner<T>::Clone(fModel.get());
          std::shared_ptr<T> targetPtrShared(targetPtr, [](T *) {});
          mergeFunction(targetPtrShared, fObjPointers);
