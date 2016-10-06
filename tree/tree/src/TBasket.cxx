@@ -932,6 +932,9 @@ Int_t TBasket::WriteBuffer()
       return -1;
    }
    fMotherDir = file; // fBranch->GetDirectory();
+#ifdef R__USE_IMT
+   std::unique_lock<std::mutex> sentry(file->fWriteMutex);
+#endif  // R__USE_IMT
 
    if (R__unlikely(fBufferRef->TestBit(TBufferFile::kNotDecompressed))) {
       // Read the basket information that was saved inside the buffer.
@@ -998,7 +1001,16 @@ Int_t TBasket::WriteBuffer()
          if (i == nbuffers - 1) bufmax = fObjlen - nzip;
          else bufmax = kMAXZIPBUF;
          //compress the buffer
+#ifdef R__USE_IMT
+         sentry.unlock();
+#endif  // R__USE_IMT
+         // NOTE this is declared with C linkage, so it shouldn't except.  Also, when
+         // USE_IMT is defined, we are guaranteed that the compression buffer is unique per-branch.
+         // (see fCompressedBufferRef in constructor).
          R__zipMultipleAlgorithm(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout, cxAlgorithm);
+#ifdef R__USE_IMT
+         sentry.lock();
+#endif  // R__USE_IMT
 
          // test if buffer has really been compressed. In case of small buffers
          // when the buffer contains random data, it may happen that the compressed
