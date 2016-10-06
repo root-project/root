@@ -24,8 +24,6 @@ class TGLContextIdentity;
 #include "Rtypes.h"
 #endif
 
-#include <memory>
-
 class TGLContextPrivate;
 class TGLPaintDevice;
 //class TGLPBuffer;
@@ -40,7 +38,7 @@ class TGLContext
 
 private:
    TGLPaintDevice *fDevice;
-   std::unique_ptr<TGLContextPrivate> fPimpl;
+   TGLContextPrivate *fPimpl;
 
    Bool_t fFromCtor;//To prohibit user's calls of SetContext.
    Bool_t fValid;
