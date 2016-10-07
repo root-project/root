@@ -1336,13 +1336,13 @@ Long64_t TTree::AutoSave(Option_t* option)
 {
    if (!fDirectory || fDirectory == gROOT || !fDirectory->IsWritable()) return 0;
    if (gDebug > 0) {
-      printf("AutoSave Tree:%s after %lld bytes written\n",GetName(),GetTotBytes());
+      Info("AutoSave", "Tree:%s after %lld bytes written\n",GetName(),GetTotBytes());
    }
    TString opt = option;
    opt.ToLower();
 
    if (opt.Contains("flushbaskets")) {
-      if (gDebug > 0) printf("AutoSave:  calling FlushBaskets \n");
+      if (gDebug > 0) Info("AutoSave", "calling FlushBaskets \n");
       FlushBaskets();
    }
 
@@ -3608,7 +3608,7 @@ void TTree::Delete(Option_t* option /* = "" */)
          key = fDirectory->GetKey(GetName());
       }
       if (dirsav) dirsav->cd();
-      if (gDebug) printf(" Deleting Tree: %s: %d baskets deleted. Total space freed = %d bytes\n",GetName(),nbask,ntot);
+      if (gDebug) Info("TTree::Delete", "Deleting Tree: %s: %d baskets deleted. Total space freed = %d bytes\n",GetName(),nbask,ntot);
    }
 
    if (fDirectory) {
@@ -4417,7 +4417,7 @@ Int_t TTree::Fill()
    if (fEntries > fMaxEntries) {
       KeepCircular();
    }
-   if (gDebug > 0) printf("TTree::Fill - A:  %d %lld %lld %lld %lld %lld %lld \n",
+   if (gDebug > 0) Info("TTree::Fill", " - A:  %d %lld %lld %lld %lld %lld %lld \n",
        nbytes, fEntries, fAutoFlush,fAutoSave,GetZipBytes(),fFlushedBytes,fSavedBytes);
 
    if (fAutoFlush != 0 || fAutoSave != 0) {
@@ -6659,7 +6659,7 @@ void TTree::OptimizeBaskets(ULong64_t maxMemory, Float_t minComp, Option_t *opti
          if (newBsize < bmin) newBsize = bmin;
          if (newBsize > 10000000) newBsize = bmax;
          if (pass) {
-            if (pDebug) printf("Changing buffer size from %6d to %6d bytes for %s\n",oldBsize,newBsize,branch->GetName());
+            if (pDebug) Info("OptimizeBaskets", "Changing buffer size from %6d to %6d bytes for %s\n",oldBsize,newBsize,branch->GetName());
             branch->SetBasketSize(newBsize);
          }
          newMemsize += newBsize;
@@ -6672,7 +6672,7 @@ void TTree::OptimizeBaskets(ULong64_t maxMemory, Float_t minComp, Option_t *opti
          Double_t comp = 1;
          if (branch->GetZipBytes() > 0) comp = totBytes/Double_t(branch->GetZipBytes());
          if (comp > 1 && comp < minComp) {
-            if (pDebug) printf("Disabling compression for branch : %s\n",branch->GetName());
+            if (pDebug) Info("OptimizeBaskets", "Disabling compression for branch : %s\n",branch->GetName());
             branch->SetCompressionSettings(0);
          }
       }
@@ -6693,8 +6693,8 @@ void TTree::OptimizeBaskets(ULong64_t maxMemory, Float_t minComp, Option_t *opti
       bmax = (bmax_new > hardmax) ? bmin : (UInt_t)bmax_new;
    }
    if (pDebug) {
-      printf("oldMemsize = %d,  newMemsize = %d\n",oldMemsize, newMemsize);
-      printf("oldBaskets = %d,  newBaskets = %d\n",oldBaskets, newBaskets);
+      Info("OptimizeBaskets", "oldMemsize = %d,  newMemsize = %d\n",oldMemsize, newMemsize);
+      Info("OptimizeBaskets", "oldBaskets = %d,  newBaskets = %d\n",oldBaskets, newBaskets);
    }
 }
 
@@ -6818,7 +6818,7 @@ void TTree::Print(Option_t* option) const
          if (count[l] < 0) continue;
          leaf = (TLeaf *)const_cast<TTree*>(this)->GetListOfLeaves()->At(l);
          br   = leaf->GetBranch();
-         printf("branch: %-20s %9lld\n",br->GetName(),count[l]);
+         Printf("branch: %-20s %9lld\n",br->GetName(),count[l]);
       }
       delete [] count;
    } else {
