@@ -12,7 +12,9 @@
 #ifndef ROOT_TThreadExecutor
 #define ROOT_TThreadExecutor
 
-#include "RConfigure.h" // for R__USE_IMT
+#include "RConfigure.h"
+// exclude in case ROOT does not have IMT support
+#ifdef R__USE_IMT
 
 // exclude in case ROOT does not have IMT support
 #ifndef R__USE_IMT
@@ -22,25 +24,23 @@
 # endif
 #else
 #include "ROOT/TExecutor.hxx"
-#include "tbb/tbb.h"
 #include <numeric>
+#include <functional>
+
+namespace tbb { class task_scheduler_init;}
 
 namespace ROOT {
 
 class TThreadExecutor: public TExecutor<TThreadExecutor> {
 public:
-   explicit TThreadExecutor(){
-      fInitTBB.initialize();
-   }
+   explicit TThreadExecutor();
 
-   explicit TThreadExecutor(size_t nThreads){
-      fInitTBB.initialize(nThreads);
-   }
+   explicit TThreadExecutor(size_t nThreads);
+   
+   TThreadExecutor(TThreadExecutor &) = delete;
+   TThreadExecutor & operator=(TThreadExecutor &) = delete;
 
-   ~TThreadExecutor() {
-      fInitTBB.terminate();
-   }
-
+   ~TThreadExecutor();
 
    template<class F, class Cond = noReferenceCond<F>>
    auto Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>;
@@ -51,12 +51,13 @@ public:
    auto Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>;
    // / \endcond
    using TExecutor<TThreadExecutor>::Map;
-
+   
    template<class T, class BINARYOP> auto Reduce(const std::vector<T> &objs, BINARYOP redfunc) -> decltype(redfunc(objs.front(), objs.front()));
    using TExecutor<TThreadExecutor>::Reduce;
 
 private:
-    tbb::task_scheduler_init fInitTBB{tbb::task_scheduler_init::deferred};
+    void _parallelFor(unsigned start, unsigned end, const std::function<void(unsigned int i)> &f);
+    tbb::task_scheduler_init *fInitTBB;
 };
 
 /************ TEMPLATE METHODS IMPLEMENTATION ******************/
@@ -72,9 +73,8 @@ auto TThreadExecutor::Map(F func, unsigned nTimes) -> std::vector<typename std::
    using retType = decltype(func());
    std::vector<retType> reslist(nTimes);
 
-   tbb::parallel_for(0U, nTimes, [&](unsigned int i) {
-         reslist[i] = func();
-   });
+   auto lambda = [&](unsigned int i){reslist[i] = func();};
+   _parallelFor(0U, nTimes, lambda);
 
    return reslist;
 }
@@ -87,9 +87,8 @@ auto TThreadExecutor::Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typen
    using retType = decltype(func(start));
    std::vector<retType> reslist(end-start);
 
-   tbb::parallel_for(start, end, [&](unsigned int i) {
-         reslist[i] = func(i);
-   });
+   auto lambda = [&](unsigned int i){reslist[i] = func(i);};
+   _parallelFor(start, end, lambda);
 
    return reslist;
 }
@@ -108,9 +107,9 @@ auto TThreadExecutor::Map(F func, std::vector<T> &args) -> std::vector<typename 
    unsigned int fNToProcess = args.size();
    std::vector<retType> reslist(fNToProcess);
 
-   tbb::parallel_for(0U, fNToProcess, [&](size_t i) {
-         reslist[i] = func(args[i]);
-   });
+   auto lambda = [&](unsigned int i){reslist[i] = func(args[i]);};
+   _parallelFor(0U, fNToProcess, lambda);
+
    return reslist;
 }
 
@@ -121,11 +120,8 @@ template<class T, class BINARYOP>
 auto TThreadExecutor::Reduce(const std::vector<T> &objs, BINARYOP redfunc) -> decltype(redfunc(objs.front(), objs.front()))
 {
    // check we can apply reduce to objs
-   static_assert(std::is_same<decltype(redfunc(objs.front(), objs.front())), T>::value, "redfunc does not have the correct signature");
-   return  tbb::parallel_reduce(tbb::blocked_range<decltype(objs.begin())>(objs.begin(), objs.end()), T{},
-                              [redfunc](tbb::blocked_range<decltype(objs.begin())> const & range, T init) {
-                              return std::accumulate(range.begin(), range.end(), init, redfunc);
-                              }, redfunc);
+   static_assert(std::is_same<decltype(redfunc(objs.front(), objs.front())), T>::value, "redfunc does not have the correct signature");   
+   return std::accumulate(objs.begin(), objs.end(), T{}, redfunc);
 }
 
 } // namespace ROOT
