@@ -4805,6 +4805,30 @@ BoolRAIIToggle(Bool_t &val) : m_val(val) { m_val = true; }
 ////////////////////////////////////////////////////////////////////////////////
 /// Write to disk all the basket that have not yet been individually written.
 ///
+/// If ROOT has IMT-mode enabled, this will launch multiple TBB tasks in parallel
+/// to do this operation; one per basket compression.  If the caller utilizes
+/// TBB also, care must be taken to prevent deadlocks.
+///
+/// For example, let's say the caller holds mutex A and calls FlushBaskets; while
+/// TBB is waiting for the ROOT compression tasks to complete, it may decide to
+/// run another one of the user's tasks in this thread.  If the second user task
+/// tries to acquire A, then a deadlock will occur.  The example call sequence
+/// looks like this:
+///
+/// - User acquires mutex A
+/// - User calls FlushBaskets.
+/// - ROOT launches N tasks and calls wait.
+/// - TBB schedules another user task, T2.
+/// - T2 tries to acquire mutex A.
+///
+/// At this point, the thread will deadlock: the code may function with IMT-mode
+/// disabled if the user assumed the legacy code never would run their own TBB
+/// tasks.
+///
+/// SO: users of TBB who want to enable IMT-mode should carefully review their
+/// locking patterns and make sure they hold no coarse-grained application
+/// locks when they invoke ROOT.
+///
 /// Return the number of bytes written or -1 in case of write error.
 
 Int_t TTree::FlushBaskets() const
