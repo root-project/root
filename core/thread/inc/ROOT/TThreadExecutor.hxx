@@ -32,6 +32,9 @@ namespace tbb { class task_scheduler_init;}
 namespace ROOT {
 
 class TThreadExecutor: public TExecutor<TThreadExecutor> {
+template<class T>
+friend class ParallelReductionResolver;
+
 public:
    explicit TThreadExecutor();
 
@@ -57,7 +60,33 @@ public:
 
 private:
     void _parallelFor(unsigned start, unsigned end, const std::function<void(unsigned int i)> &f);
+    double _parallelReduceDoubles(const std::vector<double> &objs, const std::function<float(unsigned int a, float b)> &redfunc);
+    float _parallelReduceFloats(const std::vector<float> &objs, const std::function<float(unsigned int a, float b)> &redfunc);
     tbb::task_scheduler_init *fInitTBB;
+};
+
+template<class T>
+class ParallelReductionResolver{
+  public:
+  static inline T Reduce(TThreadExecutor *thE, const std::vector<T> &objs, const std::function<T(T a, T b)> &redfunc){
+    return std::accumulate(objs.begin(), objs.end(), T{}, redfunc);
+  } 
+};
+
+template<>
+class ParallelReductionResolver<double>{
+  public:
+  static inline double Reduce(TThreadExecutor *thE, const std::vector<double> &objs, const std::function<double(double a, double b)> &redfunc){
+    return thE->_parallelReduceDoubles(objs, redfunc);
+  }
+};
+
+template<>
+class ParallelReductionResolver<float>{
+  public:
+  static inline float Reduce(TThreadExecutor *thE, const std::vector<float> &objs, const std::function<float(float a, float b)> &redfunc){
+    return thE->_parallelReduceFloats(objs, redfunc);
+  }
 };
 
 /************ TEMPLATE METHODS IMPLEMENTATION ******************/
@@ -121,7 +150,7 @@ auto TThreadExecutor::Reduce(const std::vector<T> &objs, BINARYOP redfunc) -> de
 {
    // check we can apply reduce to objs
    static_assert(std::is_same<decltype(redfunc(objs.front(), objs.front())), T>::value, "redfunc does not have the correct signature");   
-   return std::accumulate(objs.begin(), objs.end(), T{}, redfunc);
+   return ParallelReductionResolver<T>::Reduce(this, objs, redfunc);
 }
 
 } // namespace ROOT
