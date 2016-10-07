@@ -70,7 +70,7 @@
 #include "TVirtualTreePlayer.h"
 #endif
 
-#include <mutex>
+#include <atomic>
 
 class TBranch;
 class TBrowser;
