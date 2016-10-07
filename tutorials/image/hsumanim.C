@@ -54,6 +54,9 @@ void hsumanim() {
         if (gROOT->IsBatch()) {
            c1->Print("hsumanim.gif+");
            printf("i = %d\n", i);
+        } else {
+           if (gSystem->ProcessEvents())
+              break;
         }
      }
   }
