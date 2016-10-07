@@ -18,3 +18,17 @@ namespace ROOT{
     tbb::parallel_for(start, end, f);
   }
 
+ double TThreadExecutor::_parallelReduceDoubles(const std::vector<double> &objs, const std::function<float(unsigned int a, float b)> &redfunc){
+   return tbb::parallel_reduce(tbb::blocked_range<decltype(objs.begin())>(objs.begin(), objs.end()), double{},
+                              [redfunc](tbb::blocked_range<decltype(objs.begin())> const & range, double init) {
+                              return std::accumulate(range.begin(), range.end(), init, redfunc);
+                              }, redfunc);
+  }
+
+  float TThreadExecutor::_parallelReduceFloats(const std::vector<float> &objs, const std::function<float(unsigned int a, float b)> &redfunc){
+   return tbb::parallel_reduce(tbb::blocked_range<decltype(objs.begin())>(objs.begin(), objs.end()), float{},
+                              [redfunc](tbb::blocked_range<decltype(objs.begin())> const & range, float init) {
+                              return std::accumulate(range.begin(), range.end(), init, redfunc);
+                              }, redfunc);
+  }
+}
