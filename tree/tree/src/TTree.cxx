@@ -4792,6 +4792,16 @@ Int_t TTree::Fit(const char* funcname, const char* varexp, const char* selection
    return -1;
 }
 
+struct BoolRAIIToggle {
+
+Bool_t &m_val;
+
+BoolRAIIToggle(Bool_t &val) : m_val(val) { m_val = true; }
+
+~BoolRAIIToggle() { m_val = false; }
+};
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Write to disk all the basket that have not yet been individually written.
 ///
@@ -4809,9 +4819,9 @@ Int_t TTree::FlushBaskets() const
    if (ROOT::IsImplicitMTEnabled() && fIMTEnabled) {
       if (fSortedBranches.empty()) { const_cast<TTree*>(this)->InitializeSortedBranches(); }
 
-      // Enable this IMT use case (activate its locks)
-      ROOT::Internal::TParBranchProcessingRAII pbpRAII;
-
+      BoolRAIIToggle sentry(fIMTFlush);
+      fIMTZipBytes.store(0);
+      fIMTTotBytes.store(0);
       std::atomic<Int_t> nerrpar(0);
       std::atomic<Int_t> nbpar(0);
       std::atomic<Int_t> pos(0);
@@ -4843,6 +4853,11 @@ Int_t TTree::FlushBaskets() const
          });
       }
       g.wait();
+
+      fIMTFlush = false;
+      const_cast<TTree*>(this)->AddTotBytes(fIMTTotBytes);
+      const_cast<TTree*>(this)->AddZipBytes(fIMTZipBytes);
+
       return nerrpar ? -1 : nbpar.load();
    }
 #endif
@@ -7397,11 +7412,8 @@ void TTree::Refresh()
 
    fAutoSave = tree->fAutoSave;
    fEntries = tree->fEntries;
-   {
-      std::lock_guard<std::mutex> sentry(fCounterMutex);
-      fTotBytes = tree->GetTotBytes();
-      fZipBytes = tree->GetZipBytes();
-   }
+   fTotBytes = tree->GetTotBytes();
+   fZipBytes = tree->GetZipBytes();
    fSavedBytes = tree->fSavedBytes;
    fTotalBuffers = tree->fTotalBuffers.load();
 
@@ -7452,11 +7464,8 @@ void TTree::Reset(Option_t* option)
    fNotify        = 0;
    fEntries       = 0;
    fNClusterRange = 0;
-   {
-      std::lock_guard<std::mutex> sentry(fCounterMutex);
-      fTotBytes      = 0;
-      fZipBytes      = 0;
-   }
+   fTotBytes      = 0;
+   fZipBytes      = 0;
    fFlushedBytes  = 0;
    fSavedBytes    = 0;
    fTotalBuffers  = 0;
@@ -7485,11 +7494,8 @@ void TTree::ResetAfterMerge(TFileMergeInfo *info)
 {
    fEntries       = 0;
    fNClusterRange = 0;
-   {
-      std::lock_guard<std::mutex> sentry(fCounterMutex);
-      fTotBytes      = 0;
-      fZipBytes      = 0;
-   }
+   fTotBytes      = 0;
+   fZipBytes      = 0;
    fSavedBytes    = 0;
    fFlushedBytes  = 0;
    fTotalBuffers  = 0;
@@ -8908,11 +8914,8 @@ void TTree::Streamer(TBuffer& b)
       b >> ijunk; fMaxEntryLoop   = (Long64_t)ijunk;
       b >> ijunk; fMaxVirtualSize = (Long64_t)ijunk;
       b >> djunk; fEntries  = (Long64_t)djunk;
-      {
-         std::lock_guard<std::mutex> sentry(fCounterMutex);
-         b >> djunk; fTotBytes = (Long64_t)djunk;
-         b >> djunk; fZipBytes = (Long64_t)djunk;
-      }
+      b >> djunk; fTotBytes = (Long64_t)djunk;
+      b >> djunk; fZipBytes = (Long64_t)djunk;
       b >> ijunk; fAutoSave = (Long64_t)ijunk;
       b >> ijunk; fEstimate = (Long64_t)ijunk;
       if (fEstimate <= 10000) fEstimate = 1000000;
@@ -8920,10 +8923,7 @@ void TTree::Streamer(TBuffer& b)
       if (fBranchRef) fBranchRef->SetTree(this);
       TBranch__SetTree(this,fBranches);
       fLeaves.Streamer(b);
-      {
-         std::lock_guard<std::mutex> sentry(fCounterMutex);
-         fSavedBytes = fTotBytes;
-      }
+      fSavedBytes = fTotBytes;
       if (R__v > 1) fIndexValues.Streamer(b);
       if (R__v > 2) fIndex.Streamer(b);
       if (R__v > 3) {
