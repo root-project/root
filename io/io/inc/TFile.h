@@ -37,6 +37,8 @@
 #endif
 #endif
 
+#include <mutex>
+
 class TFree;
 class TArrayC;
 class TArchiveFile;
