@@ -17,10 +17,10 @@ int countIncludePaths()
    // Exclude from the test the builds with R as external package
    if (std::string::npos != includePath.find("RInside/include")) return 0;
 
-   // At most 8
+   // At most 9
    auto nPaths = countSubstring(includePath, "-I");
-   if (nPaths>8){
-      std::cerr << "The number of include paths is too high" << nPaths
+   if (nPaths > 9){
+      std::cerr << "The number of include paths is too high (>9) " << nPaths
                 << ". The number of \"-I\"s has been counted in the include path of ROOT (gSystem->GetIncludePath()=" << includePath << ")." << std::endl;
       return nPaths;
    }
