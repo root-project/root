@@ -933,6 +933,12 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
 
    // replace old names xygaus -> gaus[x,y]
    formula.ReplaceAll("xygaus","gaus[x,y]");
+   formula.ReplaceAll("xgaus","gaus[x]");
+   formula.ReplaceAll("ygaus","gaus[y]");
+   formula.ReplaceAll("zgaus","gaus[z]");
+   formula.ReplaceAll("xexpo","expo[x]");
+   formula.ReplaceAll("yexpo","expo[y]");
+   formula.ReplaceAll("zexpo","expo[z]");
    formula.ReplaceAll("xylandau","landau[x,y]");
    formula.ReplaceAll("xyexpo","expo[x,y]");
    // at the moment pre-defined functions have no more than 3 dimensions
