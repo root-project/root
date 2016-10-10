@@ -828,6 +828,7 @@ Int_t TPackMgr::Install(const char *parpath, Bool_t rmold)
          // Asked to remove: do it
          if (Remove(pack, kFALSE) < 0) {
             Error("Install", "could not remove existing version of '%s'", pack.Data());
+            if (md5) delete md5;
             return -1;
          }
          install = kTRUE;
@@ -846,7 +847,7 @@ Int_t TPackMgr::Install(const char *parpath, Bool_t rmold)
          }
          // Now we need to compare with the local one
          sums = TMD5::FileChecksum(dest);
-         if (*sums != *md5) install = kTRUE;
+         if (sums && md5 && (*sums != *md5)) install = kTRUE;
       }
    }
    if (sums) delete sums;
