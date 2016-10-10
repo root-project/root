@@ -59,16 +59,16 @@ public:
    using TExecutor<TThreadExecutor>::Reduce;
 
 private:
-    void _parallelFor(unsigned start, unsigned end, const std::function<void(unsigned int i)> &f);
-    double _parallelReduceDoubles(const std::vector<double> &objs, const std::function<float(unsigned int a, float b)> &redfunc);
-    float _parallelReduceFloats(const std::vector<float> &objs, const std::function<float(unsigned int a, float b)> &redfunc);
+    void ParallelFor(unsigned start, unsigned end, const std::function<void(unsigned int i)> &f);
+    double ParallelReduceDoubles(const std::vector<double> &objs, const std::function<float(unsigned int a, float b)> &redfunc);
+    float ParallelReduceFloats(const std::vector<float> &objs, const std::function<float(unsigned int a, float b)> &redfunc);
     tbb::task_scheduler_init *fInitTBB;
 };
 
 template<class T>
 class ParallelReductionResolver{
   public:
-  static inline T Reduce(TThreadExecutor *thE, const std::vector<T> &objs, const std::function<T(T a, T b)> &redfunc){
+  static inline T Reduce(TThreadExecutor *threadExecutor, const std::vector<T> &objs, const std::function<T(T a, T b)> &redfunc){
     return std::accumulate(objs.begin(), objs.end(), T{}, redfunc);
   } 
 };
@@ -76,16 +76,16 @@ class ParallelReductionResolver{
 template<>
 class ParallelReductionResolver<double>{
   public:
-  static inline double Reduce(TThreadExecutor *thE, const std::vector<double> &objs, const std::function<double(double a, double b)> &redfunc){
-    return thE->_parallelReduceDoubles(objs, redfunc);
+  static inline double Reduce(TThreadExecutor *threadExecutor, const std::vector<double> &objs, const std::function<double(double a, double b)> &redfunc){
+    return threadExecutor->ParallelReduceDoubles(objs, redfunc);
   }
 };
 
 template<>
 class ParallelReductionResolver<float>{
   public:
-  static inline float Reduce(TThreadExecutor *thE, const std::vector<float> &objs, const std::function<float(float a, float b)> &redfunc){
-    return thE->_parallelReduceFloats(objs, redfunc);
+  static inline float Reduce(TThreadExecutor *threadExecutor, const std::vector<float> &objs, const std::function<float(float a, float b)> &redfunc){
+    return threadExecutor->ParallelReduceFloats(objs, redfunc);
   }
 };
 
@@ -103,7 +103,7 @@ auto TThreadExecutor::Map(F func, unsigned nTimes) -> std::vector<typename std::
    std::vector<retType> reslist(nTimes);
 
    auto lambda = [&](unsigned int i){reslist[i] = func();};
-   _parallelFor(0U, nTimes, lambda);
+   ParallelFor(0U, nTimes, lambda);
 
    return reslist;
 }
@@ -117,7 +117,7 @@ auto TThreadExecutor::Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typen
    std::vector<retType> reslist(end-start);
 
    auto lambda = [&](unsigned int i){reslist[i] = func(i);};
-   _parallelFor(start, end, lambda);
+   ParallelFor(start, end, lambda);
 
    return reslist;
 }
@@ -137,7 +137,7 @@ auto TThreadExecutor::Map(F func, std::vector<T> &args) -> std::vector<typename 
    std::vector<retType> reslist(fNToProcess);
 
    auto lambda = [&](unsigned int i){reslist[i] = func(args[i]);};
-   _parallelFor(0U, fNToProcess, lambda);
+   ParallelFor(0U, fNToProcess, lambda);
 
    return reslist;
 }
