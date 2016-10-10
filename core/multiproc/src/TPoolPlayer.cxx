@@ -56,17 +56,20 @@ void TPoolPlayer::ProcDataSet(unsigned int code, MPCodeBufPair& msg)
 
    //retrieve the TTree with the specified name from file
    //we are not the owner of the TTree object, the file is!
-   fTree = RetrieveTree(fFile);
-   if (fTree == nullptr) {
+   TTree *tree = RetrieveTree(fFile);
+   if (tree == nullptr) {
       //errors are handled inside RetrieveTree
       std::string errmsg = "unable to retrieve tree from open file " + fFileNames[fileN];
       SendError(errmsg);
       return;
    }
-   TTree *tree = fTree;
+   if (tree != fTree) {
+      // Setup the cache, if required
+      SetupTreeCache(tree);
+   }
+   // Store as reference
+   fTree = tree;
 
-   // Setup the cache, if required
-   SetupTreeCache(fTree);
 
    //create entries range
    Long64_t start = 0;
