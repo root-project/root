@@ -4993,6 +4993,8 @@ void THistPainter::PaintColorLevelsFast(Option_t*)
    // the appropriate value to use.
    Double_t zmin = fH->GetMinimumStored();
    Double_t zmax = fH->GetMaximumStored();
+   Double_t originalZMin = zmin;
+   Double_t originalZMax = zmax;
    if ((zmin == -1111) && (zmax == -1111)) {
       fH->GetMinimumAndMaximum(zmin, zmax);
       fH->SetMinimum(zmin);
@@ -5154,6 +5156,11 @@ void THistPainter::PaintColorLevelsFast(Option_t*)
 
    if (Hoption.Zscale) PaintPalette();
 
+   // Reset the maximum and minimum values to their original values
+   // when this function was called. If we don't do this, an initial
+   // value of -1111 will be replaced with the true max or min values.
+   fH->SetMinimum(originalZMin);
+   fH->SetMaximum(originalZMax);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

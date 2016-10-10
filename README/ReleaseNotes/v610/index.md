@@ -53,7 +53,9 @@ The following interfaces have been removed, after deprecation in v6.08.
 
 
 ## 2D Graphics Libraries
-
+- If one used "col2" or "colz2", the value of `TH1::fMaximum` got modified.
+  This deviated from the behavior of "col" or "colz". This is now fixed as
+  requested [here](https://sft.its.cern.ch/jira/browse/ROOT-8389).
 
 ## 3D Graphics Libraries
 
