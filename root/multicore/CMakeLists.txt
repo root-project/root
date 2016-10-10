@@ -26,7 +26,8 @@ ROOTTEST_ADD_TEST(procPool
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
 if(ROOT_imt_FOUND)
-  ROOTTEST_GENERATE_EXECUTABLE(threadPool threadpool.cpp LIBRARIES MultiProc Core Net TreePlayer RIO Hist tbb)
+  include_directories(${TBB_INCLUDE_DIRS})
+  ROOTTEST_GENERATE_EXECUTABLE(threadPool threadpool.cpp LIBRARIES MultiProc Core Net TreePlayer RIO Hist ${TBB_LIBRARIES})
 
   ROOTTEST_ADD_TEST(threadPool
                     EXEC threadPool
