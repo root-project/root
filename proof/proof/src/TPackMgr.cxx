@@ -868,6 +868,7 @@ Int_t TPackMgr::Install(const char *parpath, Bool_t rmold)
       rc = -1;
    }
    if (md5) delete md5;
+   if (md5d) delete md5d;
    return rc;
 }
 
