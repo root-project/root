@@ -3686,7 +3686,7 @@ void TCling::CreateListOfMethodArgs(TFunction* m) const
          arglist->Add(new TMethodArg((MethodArgInfo_t*)a, m));
       }
    }
-   m->fMethodArgs = new TList;
+   m->fMethodArgs = arglist;
 }
 
 
