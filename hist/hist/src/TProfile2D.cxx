@@ -87,25 +87,25 @@ TProfile2D::~TProfile2D()
 ////////////////////////////////////////////////////////////////////////////////
 /// Normal Constructor for Profile histograms.
 ///
-///  The first eight parameters are similar to TH2D::TH2D.
-///  All values of z are accepted at filling time.
-///  To fill a profile2D histogram, one must use TProfile2D::Fill function.
+/// The first eight parameters are similar to TH2D::TH2D.
+/// All values of z are accepted at filling time.
+/// To fill a profile2D histogram, one must use TProfile2D::Fill function.
 ///
-///  Note that when filling the profile histogram the function Fill
-///  checks if the variable z is between fZmin and fZmax.
-///  If a minimum or maximum value is set for the Z scale before filling,
-///  then all values below zmin or above zmax will be discarded.
-///  Setting the minimum or maximum value for the Z scale before filling
-///  has the same effect as calling the special TProfile2D constructor below
-///  where zmin and zmax are specified.
+/// Note that when filling the profile histogram the function Fill
+/// checks if the variable z is between fZmin and fZmax.
+/// If a minimum or maximum value is set for the Z scale before filling,
+/// then all values below zmin or above zmax will be discarded.
+/// Setting the minimum or maximum value for the Z scale before filling
+/// has the same effect as calling the special TProfile2D constructor below
+/// where zmin and zmax are specified.
 ///
-///  H(I,J) is printed as the cell contents. The errors computed are s(I,J) if CHOPT='S'
-///  (spread option), or e(I,J) if CHOPT=' ' (error on mean).
+/// H(I,J) is printed as the cell contents. The errors computed are s(I,J) if CHOPT='S'
+/// (spread option), or e(I,J) if CHOPT=' ' (error on mean).
 ///
-///   See TProfile2D::BuildOptions for explanation of parameters
+/// See TProfile2D::BuildOptions for explanation of parameters
 ///
-///   see other constructors below with all possible combinations of
-///   fix and variable bin size like in TH2D.
+/// see other constructors below with all possible combinations of
+/// fix and variable bin size like in TH2D.
 
 TProfile2D::TProfile2D(const char *name,const char *title,Int_t nx,Double_t xlow,Double_t xup,Int_t ny,Double_t ylow,Double_t yup,Option_t *option)
 : TH2D(name,title,nx,xlow,xup,ny,ylow,yup)
@@ -938,9 +938,9 @@ void TProfile2D::LabelsInflate(Option_t *ax)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Set option(s) to draw axis with labels.
+/// Set option(s) to draw axis with labels.
 ///
-///  option might have the following values:
+/// option might have the following values:
 ///
 ///  - "a" sort by alphabetic order
 ///  - ">" sort by decreasing values
@@ -1739,14 +1739,13 @@ TProfile2D * TProfile2D::RebinY(Int_t ngroup,const char * newname ) {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out.
+///
+/// Note the following restrictions in the code generated:
+///  - variable bin size not implemented
+///  - SetErrorOption not implemented
 
 void TProfile2D::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   //Note the following restrictions in the code generated:
-   // - variable bin size not implemented
-   // - SetErrorOption not implemented
-
-
    char quote = '"';
    out <<"   "<<std::endl;
    out <<"   "<<ClassName()<<" *";
