@@ -41,16 +41,19 @@
 #include<TMVA/DataLoader.h>
 #endif
 
+#ifndef ROOT_TMVA_Envelope
+#include<TMVA/Envelope.h>
+#endif
 
 namespace TMVA {
 
-   class HyperParameterOptimisationResult:public TObject
+   class HyperParameterOptimisationResult
    {
      friend class HyperParameterOptimisation;
    private:
        std::vector<Float_t> fROCs;
        Float_t              fROCAVG;
-       TMultiGraph         *fROCCurves;
+       std::shared_ptr<TMultiGraph>    fROCCurves;
 
        std::vector<Double_t> fSigs;
        std::vector<Double_t> fSeps;
@@ -61,6 +64,7 @@ namespace TMVA {
        std::vector<Double_t> fTrainEff01s;
        std::vector<Double_t> fTrainEff10s;
        std::vector<Double_t> fTrainEff30s;
+       TString               fMethodName;
 
    public:
        HyperParameterOptimisationResult();
@@ -72,6 +76,9 @@ namespace TMVA {
        Float_t GetROCAverage(){return fROCAVG;}
        TMultiGraph *GetROCCurves(Bool_t fLegend=kTRUE);
 
+       void Print() const ;       
+//        TCanvas* Draw(const TString name="HyperParameterOptimisation") const;
+       
        std::vector<Double_t> GetSigValues(){return fSigs;}
        std::vector<Double_t> GetSepValues(){return fSeps;}
        std::vector<Double_t> GetEff01Values(){return fEff01s;}
@@ -82,30 +89,39 @@ namespace TMVA {
        std::vector<Double_t> GetTrainEff10Values(){return fTrainEff10s;}
        std::vector<Double_t> GetTrainEff30Values(){return fTrainEff30s;}
 
-//        ClassDef(HyperParameterOptimisationResult,0);  
    };
     
-   class HyperParameterOptimisation : public Configurable {
+   class HyperParameterOptimisation : public Envelope {
    public:
 
-    //HyperParameterOptimisation();
-       HyperParameterOptimisation(DataLoader *loader,TString fomType="Separation", TString fitType="Minuit");
+       HyperParameterOptimisation(DataLoader *dataloader);
        ~HyperParameterOptimisation();
        
-       HyperParameterOptimisationResult* Optimise( TString theMethodName, TString methodTitle, TString theOption = "", int NumFolds = 5);
-       //HyperParameterOptimisationResult* Optimise( Types::EMVA theMethod,  TString methodTitle, TString theOption = "", int NumFolds = 5);
+       void SetFitter(TString fitType){fFitType=fitType;}
+       TString GetFiiter(){return fFitType;}
        
-       inline void SetDataLoader(DataLoader *loader){fDataLoader=loader;}
-       inline DataLoader *GetDataLoader(){return fDataLoader;}
+       
+       //Figure of Merit (FOM) default Separation
+       void SetFOMType(TString ftype){fFomType=ftype;}
+       TString GetFOMType(){return fFitType;}
+       
+       void SetNumFolds(UInt_t folds);
+       UInt_t GetNumFolds(){return fNumFolds;}
+       
+       virtual void Evaluate();
+       const HyperParameterOptimisationResult& GetResults() const {return fResults;}
+       
        
    private:
-       DataLoader *fDataLoader;
-       Factory    *fClassifier;
-       TString     fFomType;
-       TString     fFitType;
+       TString                           fFomType;     //!
+       TString                           fFitType;     //!
+       UInt_t                            fNumFolds;    //!
+       Bool_t                            fFoldStatus;  //!
+       HyperParameterOptimisationResult  fResults;     //!
+       std::unique_ptr<Factory>          fClassifier;  //!
 
    public:
-//        ClassDef(HyperParameterOptimisation,1);  
+       ClassDef(HyperParameterOptimisation,0);  
    };
 } 
 

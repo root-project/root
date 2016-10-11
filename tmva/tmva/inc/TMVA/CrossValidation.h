@@ -98,7 +98,7 @@ namespace TMVA {
    class CrossValidation : public Envelope {
        UInt_t                 fNumFolds;     //!
        CrossValidationResult  fResults;      //!
-       Bool_t                 fFoldStatus;   //
+       Bool_t                 fFoldStatus;   //!
    public:
         explicit CrossValidation(DataLoader *loader);
        ~CrossValidation();
@@ -109,7 +109,7 @@ namespace TMVA {
        virtual void Evaluate();
 //        void EvaluateFold(UInt_t fold);//used in ParallelExecution
        
-       const CrossValidationResult& GetResults() const {return fResults;}//I need to think about this which is the best way to get the results
+       const CrossValidationResult& GetResults() const {return fResults;}
                      
    private:
        std::unique_ptr<Factory>     fClassifier; //!

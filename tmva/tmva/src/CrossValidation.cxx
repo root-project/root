@@ -50,6 +50,7 @@ void TMVA::CrossValidationResult::Print() const
     TMVA::gConfig().SetSilent(kFALSE);   
     
     MsgLogger fLogger("CrossValidation");
+    fLogger<<kHEADER<<" ==== Results ===="<<Endl;
     for(auto &item:fROCs)
         fLogger<<kINFO<<Form("Fold  %i ROC-Int : %f",item.first,item.second)<<std::endl;
     

@@ -317,7 +317,7 @@ namespace TMVA {
       std::vector<TTreeFormula*> fWeightFormula;   // weights
       std::vector<TTreeFormula*> fSpectatorFormulas; // spectators
 
-      MsgLogger*                 fLogger;          // message logger
+      MsgLogger*                 fLogger;          //! message logger
       MsgLogger& Log() const { return *fLogger; }
    public:
        
