@@ -78,7 +78,7 @@ namespace TMVA {
 
       DataInputHandler           *fDataInput;             // source of input data
       TList                      fDataSetInfoCollection; // all registered dataset definitions
-      MsgLogger*                 fLogger;   // message logger
+      MsgLogger*                 fLogger;   //! message logger
       MsgLogger& Log() const { return *fLogger; }
    public:
        

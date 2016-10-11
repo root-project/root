@@ -135,7 +135,7 @@ namespace TMVA {
       
       mutable std::map< TString, std::vector<TreeInfo> > fInputTrees;        // list of input trees per class (classname is given as first parameter in the map)
       std::map< std::string, Bool_t   >                  fExplicitTrainTest; // if set to true the user has specified training and testing data explicitly
-      mutable MsgLogger*                                 fLogger;            // message logger
+      mutable MsgLogger*                                 fLogger;            //! message logger
       MsgLogger& Log() const { return *fLogger; }
    protected:
        ClassDef(DataInputHandler,1);

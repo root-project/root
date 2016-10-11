@@ -131,7 +131,7 @@ namespace TMVA {
       void SetMsgType( EMsgType t ) { fLogger->SetMinType(t); }
 
    protected:
-      mutable MsgLogger* fLogger;                     // message logger
+      mutable MsgLogger* fLogger;                     //! message logger
       
    private:
 
