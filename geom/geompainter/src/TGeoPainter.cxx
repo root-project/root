@@ -1347,7 +1347,7 @@ void TGeoPainter::PaintVolume(TGeoVolume *top, Option_t *option, TGeoMatrix* glo
    if ((fTopVisible && vis) || !top->GetNdaughters() || !top->IsVisDaughters() || top->IsVisOnly()) {
       fGeoManager->SetPaintVolume(vol);
       fGeoManager->SetMatrixReflection(fGlobal->IsReflection());
-      drawDaughters = PaintShape(*(vol->GetShape()),option);
+      PaintShape(*(vol->GetShape()),option);
       if (!fVisLock && !vol->TestAttBit(TGeoAtt::kVisOnScreen)) {
          fVisVolumes->Add(vol);
          vol->SetAttBit(TGeoAtt::kVisOnScreen);

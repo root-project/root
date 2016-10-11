@@ -55,7 +55,7 @@ TGeoBuilder *TGeoBuilder::fgInstance = NULL;
 /// Default constructor.
 
 TGeoBuilder::TGeoBuilder()
-            :fGeometry(NULL)
+            :fGeometry(nullptr)
 {
    fgInstance = this;
 }
@@ -64,7 +64,7 @@ TGeoBuilder::TGeoBuilder()
 /// Copy constructor.
 
 TGeoBuilder::TGeoBuilder(const TGeoBuilder& other)
-            :TObject(other)
+            :TObject(other), fGeometry(nullptr)
 {
    Error("copy constructor","copying not allowed for TGeoBuilder");
 }
@@ -74,7 +74,7 @@ TGeoBuilder::TGeoBuilder(const TGeoBuilder& other)
 
 TGeoBuilder::~TGeoBuilder()
 {
-   fgInstance = NULL;
+   fgInstance = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

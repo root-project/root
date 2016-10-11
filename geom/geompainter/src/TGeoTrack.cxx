@@ -284,10 +284,6 @@ Int_t TGeoTrack::DistancetoPrimitive(Int_t px, Int_t py)
             }
          }
       }
-      if (dist<maxdist) {
-         gPad->SetSelected(this);
-         return 0;
-      }
    }
    // check now daughters
    Int_t nd = GetNdaughters();

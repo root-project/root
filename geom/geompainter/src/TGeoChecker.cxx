@@ -2520,7 +2520,6 @@ Double_t *TGeoChecker::ShootRay(Double_t *start, Double_t dirx, Double_t diry, D
          memcpy(&array[3*nelem], point, 3*sizeof(Double_t));
 //         if (endnode) printf("%i (%f, %f, %f) step=%f\n", nelem, point[0], point[1], point[2], step);
          nelem++;
-         is_entering = kTRUE;
       }
       fGeoManager->FindNextBoundary();
       step = fGeoManager->GetStep();
