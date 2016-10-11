@@ -323,12 +323,15 @@ Int_t TProfile2D::BufferEmpty(Int_t action)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// accumulate arguments in buffer. When buffer is full, empty the buffer
-///     fBuffer[0] = number of entries in buffer
-///     fBuffer[1] = w of first entry
-///     fBuffer[2] = x of first entry
-///     fBuffer[3] = y of first entry
-///     fBuffer[4] = z of first entry
+/// Accumulate arguments in buffer.
+///
+/// When buffer is full, empty the buffer.
+///
+///  - fBuffer[0] = number of entries in buffer
+///  - fBuffer[1] = w of first entry
+///  - fBuffer[2] = x of first entry
+///  - fBuffer[3] = y of first entry
+///  - fBuffer[4] = z of first entry
 
 Int_t TProfile2D::BufferFill(Double_t x, Double_t y, Double_t z, Double_t w)
 {
@@ -356,7 +359,7 @@ Int_t TProfile2D::BufferFill(Double_t x, Double_t y, Double_t z, Double_t w)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Copy a Profile2D histogram to a new profile2D histogram*
+/// Copy a Profile2D histogram to a new profile2D histogram.
 
 void TProfile2D::Copy(TObject &obj) const
 {
@@ -383,9 +386,8 @@ void TProfile2D::Copy(TObject &obj) const
 
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Performs the operation: this = this/(c1*f1)
+/// Performs the operation: `this = this/(c1*f1)` .
 /// This function is not implemented
 
 Bool_t TProfile2D::Divide(TF1 *, Double_t )
@@ -395,11 +397,11 @@ Bool_t TProfile2D::Divide(TF1 *, Double_t )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Divide this profile2D by h1
+/// Divide this profile2D by h1.
 ///
-///   this = this/h1
+/// `this = this/h1`
 ///
-///   This function return kFALSE if the divide operation failed
+///This function return kFALSE if the divide operation failed
 
 Bool_t TProfile2D::Divide(const TH1 *h1)
 {
@@ -417,7 +419,7 @@ Bool_t TProfile2D::Divide(const TH1 *h1)
    // delete buffer if it is there since it will become invalid
    if (fBuffer) BufferEmpty(1);
 
-   //*-*- Check profile compatibility
+   // Check profile compatibility
    Int_t nx = GetNbinsX();
    if (nx != p1->GetNbinsX()) {
       Error("Divide","Attempt to divide profiles with different number of bins");
@@ -429,10 +431,10 @@ Bool_t TProfile2D::Divide(const TH1 *h1)
       return kFALSE;
    }
 
-   //*-*- Reset statistics
+   // Reset statistics
    fEntries = fTsumw   = fTsumw2 = fTsumwx = fTsumwx2 = 0;
 
-   //*-*- Loop on bins (including underflows/overflows)
+   // Loop on bins (including underflows/overflows)
    Int_t bin,binx,biny;
    Double_t *cu1 = p1->GetW();
    Double_t *er1 = p1->GetW2();
@@ -477,11 +479,10 @@ Bool_t TProfile2D::Divide(const TH1 *h1)
    return kTRUE;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Replace contents of this profile2D by the division of h1 by h2
+/// Replace contents of this profile2D by the division of h1 by h2.
 ///
-///   this = c1*h1/(c2*h2)
+/// `this = c1*h1/(c2*h2)`
 ///
 ///   This function return kFALSE if the divide operation failed
 
@@ -509,7 +510,7 @@ Bool_t TProfile2D::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2
    // delete buffer if it is there since it will become invalid
    if (fBuffer) BufferEmpty(1);
 
-   //*-*- Check histogram compatibility
+   // Check histogram compatibility
    Int_t nx = GetNbinsX();
    if (nx != p1->GetNbinsX() || nx != p2->GetNbinsX()) {
       Error("Divide","Attempt to divide profiles with different number of bins");
@@ -525,10 +526,10 @@ Bool_t TProfile2D::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2
       return kFALSE;
    }
 
-   //*-*- Reset statistics
+   // Reset statistics
    fEntries = fTsumw   = fTsumw2 = fTsumwx = fTsumwx2 = 0;
 
-   //*-*- Loop on bins (including underflows/overflows)
+   // Loop on bins (including underflows/overflows)
    Int_t bin,binx,biny;
    Double_t *cu1 = p1->GetW();
    Double_t *cu2 = p2->GetW();
@@ -580,8 +581,7 @@ Bool_t TProfile2D::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Fill a Profile2D histogram (no weights)
-///*-*                  =======================================
+/// Fill a Profile2D histogram (no weights).
 
 Int_t TProfile2D::Fill(Double_t x, Double_t y, Double_t z)
 {
@@ -621,8 +621,7 @@ Int_t TProfile2D::Fill(Double_t x, Double_t y, Double_t z)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Fill a Profile2D histogram (no weights)
-///
+/// Fill a Profile2D histogram (no weights).
 
 Int_t TProfile2D::Fill(Double_t x, const char *namey, Double_t z)
 {
@@ -659,8 +658,7 @@ Int_t TProfile2D::Fill(Double_t x, const char *namey, Double_t z)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Fill a Profile2D histogram (no weights)
-///
+/// Fill a Profile2D histogram (no weights).
 
 Int_t TProfile2D::Fill(const char *namex, const char *namey, Double_t z)
 {
@@ -696,8 +694,7 @@ Int_t TProfile2D::Fill(const char *namex, const char *namey, Double_t z)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Fill a Profile2D histogram (no weights)
-///
+/// Fill a Profile2D histogram (no weights).
 
 Int_t TProfile2D::Fill(const char *namex, Double_t y, Double_t z)
 {
@@ -734,7 +731,7 @@ Int_t TProfile2D::Fill(const char *namex, Double_t y, Double_t z)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Fill a Profile2D histogram with weights
+/// Fill a Profile2D histogram with weights.
 
 Int_t TProfile2D::Fill(Double_t x, Double_t y, Double_t z, Double_t w)
 {
@@ -776,7 +773,7 @@ Int_t TProfile2D::Fill(Double_t x, Double_t y, Double_t z, Double_t w)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return bin content of a Profile2D histogram
+/// Return bin content of a Profile2D histogram.
 
 Double_t TProfile2D::GetBinContent(Int_t bin) const
 {
@@ -789,7 +786,7 @@ Double_t TProfile2D::GetBinContent(Int_t bin) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return bin entries of a Profile2D histogram
+/// Return bin entries of a Profile2D histogram.
 
 Double_t TProfile2D::GetBinEntries(Int_t bin) const
 {
@@ -806,8 +803,6 @@ Double_t TProfile2D::GetBinEntries(Int_t bin) const
 /// sum of the weights square.
 /// TProfile::Sumw2() must be called before filling the profile with weights.
 /// Only by calling this method the  sum of the square of the weights per bin is stored.
-///
-///*-*          =========================================
 
 Double_t TProfile2D::GetBinEffectiveEntries(Int_t bin)
 {
@@ -815,10 +810,10 @@ Double_t TProfile2D::GetBinEffectiveEntries(Int_t bin)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  -*Return bin error of a Profile2D histogram
+/// Return bin error of a Profile2D histogram.
 ///
-/// Computing errors: A moving field
-/// =================================
+/// ### Computing errors: A moving field
+///
 /// The computation of errors for a TProfile2D has evolved with the versions
 /// of ROOT. The difficulty is in computing errors for bins with low statistics.
 /// - prior to version 3.10, we had no special treatment of low statistic bins.
@@ -838,8 +833,7 @@ Double_t TProfile2D::GetBinError(Int_t bin) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// -*Return option to compute profile2D errors
-///*-*                =========================================
+/// Return option to compute profile2D errors.
 
 Option_t *TProfile2D::GetErrorOption() const
 {
@@ -850,7 +844,7 @@ Option_t *TProfile2D::GetErrorOption() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Fill the array stats from the contents of this profile
+/// Fill the array stats from the contents of this profile.
 /// The array stats must be correctly dimensioned in the calling program.
 ///
 /// - stats[0] = sumw
@@ -945,6 +939,7 @@ void TProfile2D::LabelsInflate(Option_t *ax)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///  Set option(s) to draw axis with labels.
+///
 ///  option might have the following values:
 ///
 ///  - "a" sort by alphabetic order
@@ -1137,11 +1132,9 @@ Bool_t TProfile2D::Multiply(TF1 *, Double_t )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Multiply this profile2D by h1 -
-///*-*                  =============================
+/// Multiply this profile2D by h1.
 ///
-///   this = this*h1
-///
+///   `this = this*h1`
 
 Bool_t TProfile2D::Multiply(const TH1 *)
 {
@@ -1149,13 +1142,10 @@ Bool_t TProfile2D::Multiply(const TH1 *)
    return kFALSE;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-///*-*Replace contents of this profile2D by multiplication of h1 by h2*-*
-///*-*      ================================================================
+/// Replace contents of this profile2D by multiplication of h1 by h2.
 ///
-///   this = (c1*h1)*(c2*h2)
-///
+/// `this = (c1*h1)*(c2*h2)`
 
 Bool_t TProfile2D::Multiply(const TH1 *, const TH1 *, Double_t, Double_t, Option_t *)
 {
@@ -1164,29 +1154,28 @@ Bool_t TProfile2D::Multiply(const TH1 *, const TH1 *, Double_t, Double_t, Option
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*Project this profile2D into a 2-D histogram along X,Y -*
-///*-*      =====================================================
+/// Project this profile2D into a 2-D histogram along X,Y.
 ///
-///   The projection is always of the type TH2D.
+/// The projection is always of the type TH2D.
 ///
-///   if option "E" is specified  the errors of the projected histogram are computed and set
-///      to be equal to the errors of the profile.
-///      Option "E" is defined as the default one in the header file.
-///   if option "" is specified the histogram errors are simply the sqrt of its content
-///   if option "B" is specified, the content of bin of the returned histogram
-///      will be equal to the GetBinEntries(bin) of the profile,
-///   if option "C=E" the bin contents of the projection are set to the
-///       bin errors of the profile
-///   if option "W" is specified the bin content of the projected histogram  is set to the
-///       product of the bin content of the profile and the entries.
-///       With this option the returned histogram will be equivalent to the one obtained by
-///       filling directly a TH2D using the 3-rd value as a weight.
-///       This option makes sense only for profile filled with all weights =1.
-///       When the profile is weighted (filled with weights different than 1) the
-///       bin error of the projected histogram (obtained using this option "W") cannot be
-///       correctly computed from the information stored in the profile. In that case the
-///       obtained histogram contains as bin error square the weighted sum of the square of the
-///       profiled observable (TProfile2D::fSumw2[bin] )
+///  - if option "E" is specified  the errors of the projected histogram are computed and set
+///    to be equal to the errors of the profile.
+///    Option "E" is defined as the default one in the header file.
+///  - if option "" is specified the histogram errors are simply the sqrt of its content
+///  - if option "B" is specified, the content of bin of the returned histogram
+///    will be equal to the GetBinEntries(bin) of the profile,
+///  - if option "C=E" the bin contents of the projection are set to the
+///    bin errors of the profile
+///  - if option "W" is specified the bin content of the projected histogram  is set to the
+///    product of the bin content of the profile and the entries.
+///    With this option the returned histogram will be equivalent to the one obtained by
+///    filling directly a TH2D using the 3-rd value as a weight.
+///    This option makes sense only for profile filled with all weights =1.
+///    When the profile is weighted (filled with weights different than 1) the
+///    bin error of the projected histogram (obtained using this option "W") cannot be
+///    correctly computed from the information stored in the profile. In that case the
+///    obtained histogram contains as bin error square the weighted sum of the square of the
+///    profiled observable (TProfile2D::fSumw2[bin] )
 
 TH2D *TProfile2D::ProjectionXY(const char *name, Option_t *option) const
 {
@@ -1256,7 +1245,7 @@ TH2D *TProfile2D::ProjectionXY(const char *name, Option_t *option) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Project a 2-D histogram into a profile histogram along X
+/// Project a 2-D histogram into a profile histogram along X.
 ///
 /// The projection is made from the channels along the Y axis
 /// ranging from firstybin to lastybin included.
@@ -1387,8 +1376,7 @@ void TProfile2D::PutStats(Double_t *stats)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// -*Reset contents of a Profile2D histogram
-///*-*                =======================================
+/// Reset contents of a Profile2D histogram.
 
 void TProfile2D::Reset(Option_t *option)
 {
@@ -1404,6 +1392,7 @@ void TProfile2D::Reset(Option_t *option)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Profile histogram is resized along axis such that x is in the axis range.
+///
 /// The new axis limits are recomputed by doubling iteratively
 /// the current axis range until the specified value x is within the limits.
 /// The algorithm makes a copy of the histogram, then loops on all bins
@@ -1425,6 +1414,7 @@ void TProfile2D::ExtendAxis(Double_t x, TAxis *axis)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Rebin this histogram grouping nxgroup/nygroup bins along the xaxis/yaxis together.
+///
 /// if newname is not blank a new profile hnew is created.
 /// else the current histogram is modified (default)
 /// The parameter nxgroup/nygroup indicate how many bins along the xaxis/yaxis of this
@@ -1732,7 +1722,7 @@ TProfile2D * TProfile2D::Rebin2D(Int_t nxgroup ,Int_t nygroup,const char * newna
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Rebin only the X axis
+/// Rebin only the X axis.
 /// see Rebin2D
 
 TProfile2D * TProfile2D::RebinX(Int_t ngroup,const char * newname ) {
@@ -1740,7 +1730,7 @@ TProfile2D * TProfile2D::RebinX(Int_t ngroup,const char * newname ) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Rebin only the Y axis
+/// Rebin only the Y axis.
 /// see Rebin2D
 
 TProfile2D * TProfile2D::RebinY(Int_t ngroup,const char * newname ) {
@@ -1748,7 +1738,7 @@ TProfile2D * TProfile2D::RebinY(Int_t ngroup,const char * newname ) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Save primitive as a C++ statement(s) on output stream out
+/// Save primitive as a C++ statement(s) on output stream out.
 
 void TProfile2D::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
@@ -1803,9 +1793,9 @@ void TProfile2D::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Multiply this profile2D by a constant c1
+/// Multiply this profile2D by a constant c1.
 ///
-///   this = c1*this
+/// `this = c1*this
 ///
 /// This function uses the services of TProfile2D::Add
 
@@ -1815,7 +1805,7 @@ void TProfile2D::Scale(Double_t c1, Option_t * option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set the number of entries in bin -
+/// Set the number of entries in bin.
 
 void TProfile2D::SetBinEntries(Int_t bin, Double_t w)
 {
@@ -1823,7 +1813,7 @@ void TProfile2D::SetBinEntries(Int_t bin, Double_t w)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Redefine  x and y axis parameters -
+/// Redefine  x and y axis parameters.
 
 void TProfile2D::SetBins(Int_t nx, Double_t xmin, Double_t xmax, Int_t ny, Double_t ymin, Double_t ymax)
 {
@@ -1833,7 +1823,7 @@ void TProfile2D::SetBins(Int_t nx, Double_t xmin, Double_t xmax, Int_t ny, Doubl
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Redefine  x and y axis parameters for variable bin sizes - -*
+/// Redefine  x and y axis parameters for variable bin sizes.
 
 void TProfile2D::SetBins(Int_t nx,  const Double_t *xbins, Int_t ny, const Double_t *ybins)
 {
@@ -1843,7 +1833,7 @@ void TProfile2D::SetBins(Int_t nx,  const Double_t *xbins, Int_t ny, const Doubl
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set total number of bins including under/overflow
+/// Set total number of bins including under/overflow.
 /// Reallocate bin contents array
 
 void TProfile2D::SetBinsLength(Int_t n)
@@ -1853,7 +1843,7 @@ void TProfile2D::SetBinsLength(Int_t n)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// set the buffer size in units of 8 bytes (double)
+/// Set the buffer size in units of 8 bytes (double).
 
 void TProfile2D::SetBuffer(Int_t buffersize, Option_t *)
 {
@@ -1938,9 +1928,9 @@ void TProfile2D::Streamer(TBuffer &R__b)
 /// This is needed to compute  the correct statistical quantities
 /// of a profile filled with weights
 ///
-///  This function is automatically called when the histogram is created
-///  if the static function TH1::SetDefaultSumw2 has been called before.
-///  If flag is false the structure is deleted
+/// This function is automatically called when the histogram is created
+/// if the static function TH1::SetDefaultSumw2 has been called before.
+/// If flag is false the structure is deleted
 
 void TProfile2D::Sumw2(Bool_t flag)
 {
