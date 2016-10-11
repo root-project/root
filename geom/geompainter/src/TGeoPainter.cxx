@@ -305,11 +305,11 @@ Int_t TGeoPainter::GetColor(Int_t base, Float_t light) const
       color = 1;
    }
    // Create a color palette for col_base
-   Float_t r,g,b,h,l,s;
+   Float_t r=0., g=0., b=0., h=0., l=0., s=0.;
    Double_t red[2], green[2], blue[2];
    Double_t stop[] = {0., 1.0};
 
-   col_base->GetRGB(r,g,b);
+   if (col_base) col_base->GetRGB(r,g,b);
    TColor::RGB2HLS(r,g,b,h,l,s);
    TColor::HLS2RGB(h,lmin,s,r,g,b);
    red[0] = r;

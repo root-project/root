@@ -2036,6 +2036,8 @@ void TGeoChecker::ShapeNormal(TGeoShape *shape, Int_t nsamples, Option_t *)
 
    new TCanvas("shape03", Form("Shape %s (%s)",shape->GetName(),shape->ClassName()), 1000, 800);
    pm2->Draw();
+   delete [] spoint;
+   delete [] sdir;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
