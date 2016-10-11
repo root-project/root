@@ -5,32 +5,32 @@ if(ROOTTEST_OS_ID MATCHES Ubuntu)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-as-needed")
 endif()
 
-ROOTTEST_GENERATE_EXECUTABLE(procPoolTreeTest tProcPoolTreeTest.cpp LIBRARIES MultiProc Core Net TreePlayer Tree RIO Hist)
+ROOTTEST_GENERATE_EXECUTABLE(processExecutorTreeTest tProcessExecutorTreeTest.cpp LIBRARIES MultiProc Core Net TreePlayer Tree RIO Hist)
 
-ROOTTEST_ADD_TEST(procPoolTreeTest
-                  EXEC procPoolTreeTest
-                  OUTREF tProcPoolTreeTest.ref
+ROOTTEST_ADD_TEST(processExecutorTreeTest
+                  EXEC processExecutorTreeTest
+                  OUTREF tProcessExecutorTreeTest.ref
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
-ROOTTEST_GENERATE_EXECUTABLE(procPoolProcessTest tProcPoolProcessTest.cpp LIBRARIES MultiProc Core Net TreePlayer Tree RIO Hist)
+ROOTTEST_GENERATE_EXECUTABLE(processExecutorProcessTest tProcessExecutorProcessTest.cpp LIBRARIES MultiProc Core Net TreePlayer Tree RIO Hist)
 
-ROOTTEST_ADD_TEST(procPoolProcess
-                  EXEC procPoolProcessTest
-                  OUTREF tProcPoolProcessTest.ref
+ROOTTEST_ADD_TEST(processExecutorProcess
+                  EXEC processExecutorProcessTest
+                  OUTREF tProcessExecutorProcessTest.ref
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
-ROOTTEST_GENERATE_EXECUTABLE(procPool tprocpool.cpp LIBRARIES MultiProc Core Net TreePlayer RIO Hist)
+ROOTTEST_GENERATE_EXECUTABLE(processExecutor tProcessExecutor.cpp LIBRARIES MultiProc Core Net TreePlayer RIO Hist)
 
-ROOTTEST_ADD_TEST(procPool
-                  EXEC procPool
+ROOTTEST_ADD_TEST(processExecutor
+                  EXEC processExecutor
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
 if(ROOT_imt_FOUND)
   include_directories(${TBB_INCLUDE_DIRS})
-  ROOTTEST_GENERATE_EXECUTABLE(threadPool threadpool.cpp LIBRARIES MultiProc Core Net TreePlayer RIO Hist ${TBB_LIBRARIES})
+  ROOTTEST_GENERATE_EXECUTABLE(threadExecutor tThreadExecutor.cpp LIBRARIES MultiProc Core Net TreePlayer RIO Hist ${TBB_LIBRARIES})
 
-  ROOTTEST_ADD_TEST(threadPool
-                    EXEC threadPool
+ROOTTEST_ADD_TEST(tThreadExecutor
+                    EXEC threadExecutor
                     DEPENDS ${GENERATE_EXECUTABLE_TEST})
 endif()
                   

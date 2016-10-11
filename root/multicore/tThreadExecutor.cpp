@@ -28,7 +28,7 @@ int PoolTest() {
    fClass c;
    auto boundF = std::bind(f, 1);
 
-   /**** TProcPool::Map ****/
+   /**** TThreadExecutor::Map ****/
    std::vector<int> truth = {1,1,1,1};
 
    // init list and lambda
@@ -52,7 +52,7 @@ int PoolTest() {
    if(res6 != std::vector<int>(100,2))
       return 4;
 
-   /**** TProcPool::MapReduce ****/
+   /**** TThreadExecutor::MapReduce ****/
    int redtruth = 4;
    auto redfunc = [](std::vector<int> a) -> int { return std::accumulate(a.begin(), a.end(), 0); };
 

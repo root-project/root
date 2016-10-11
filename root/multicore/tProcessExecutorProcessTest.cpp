@@ -1,4 +1,4 @@
-#include "TProcPool.h"
+#include "ROOT/TProcessExecutor.hxx"
 #include "TTreeReader.h"
 #include "TTreeReaderValue.h"
 #include "TFileCollection.h"
@@ -27,29 +27,29 @@ int main() {
 
    std::vector<std::unique_ptr<TH1F>> res(6);
    std::vector<std::string> files(4,hsimpleLocation.Data());
-   TProcPool pool(3);
+   ROOT::TProcessExecutor pool(3);
 
-   //TProcPool::Process with single file name and tree name
+   //TProcessExecutor::Process with single file name and tree name
    //Note: we have less files than workers here
    res[0].reset(pool.ProcTree(hsimpleLocation.Data(), myMacro, "ntuple"));
 
-   //TProcPool::Process with vector of files and tree name
+   //TProcessExecutor::Process with vector of files and tree name
    //Note: we have more files than workers here (different behaviour)
    res[1].reset(pool.ProcTree(files, myMacro, "ntuple"));
 
-   //TProcPool::Process with single file name, tree name and entries limit
+   //TProcessExecutor::Process with single file name, tree name and entries limit
    res[2].reset(pool.ProcTree(hsimpleLocation.Data(), myMacro, "ntuple", 42));
 
-   //TProcPool::Process with vector of files, no tree name and entries limit
+   //TProcessExecutor::Process with vector of files, no tree name and entries limit
    res[3].reset(pool.ProcTree(files, myMacro, "ntuple", 10000));
 
-   //TProcPool::Process with TFileCollection, no tree name and entries limit
+   //TProcessExecutor::Process with TFileCollection, no tree name and entries limit
    TFileCollection fc;
    fc.Add(hsimpleLocation.Data());
    fc.Add(hsimpleLocation.Data());
    res[4].reset(pool.ProcTree(fc, myMacro, "", 42));
 
-   //TProcPool::Process with TChain, no tree name and entries limit
+   //TProcessExecutor::Process with TChain, no tree name and entries limit
    TChain c;
    c.Add(hsimpleLocation.Data());
    c.Add(hsimpleLocation.Data());
