@@ -3678,14 +3678,15 @@ void TCling::CreateListOfMethodArgs(TFunction* m) const
    if (m->fMethodArgs) {
       return;
    }
-   m->fMethodArgs = new TList;
+   TList *arglist = new TList;
    TClingMethodArgInfo t(fInterpreter, (TClingMethodInfo*)m->fInfo);
    while (t.Next()) {
       if (t.IsValid()) {
          TClingMethodArgInfo* a = new TClingMethodArgInfo(t);
-         m->fMethodArgs->Add(new TMethodArg((MethodArgInfo_t*)a, m));
+         arglist->Add(new TMethodArg((MethodArgInfo_t*)a, m));
       }
    }
+   m->fMethodArgs = new TList;
 }
 
 
