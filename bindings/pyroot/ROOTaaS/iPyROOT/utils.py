@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import sys
 import select
@@ -109,7 +110,7 @@ def _getLibExtension(thePlatform):
     return pExtMap.get(thePlatform, '.so')
 
 def welcomeMsg():
-    print "Welcome to ROOTaaS %s" %ROOT.gROOT.GetVersion()
+    print("Welcome to ROOTaaS %s" %ROOT.gROOT.GetVersion())
 
 @contextmanager
 def _setIgnoreLevel(level):
@@ -276,7 +277,7 @@ def toCpp():
     cpptransformer.load_ipython_extension(ip)
     # Change highlight mode
     IPython.display.display_javascript(_jsDefaultHighlight.format(mimeType = cppMIME), raw=True)
-    print "Notebook is in Cpp mode"
+    print("Notebook is in Cpp mode")
 
 class CanvasDrawer(object):
     '''
@@ -316,7 +317,7 @@ class CanvasDrawer(object):
         for unsupportedPattern in _jsNotDrawableClassesPatterns:
             for primitiveTypeName in primitivesTypesNames:
                 if fnmatch.fnmatch(primitiveTypeName,unsupportedPattern):
-                    print >> sys.stderr, "The canvas contains an object of a type jsROOT cannot currently handle (%s). Falling back to a static png." %primitiveTypeName
+                    print(file=sys.stderr, "The canvas contains an object of a type jsROOT cannot currently handle (%s). Falling back to a static png." %primitiveTypeName)
                     return False
         return True
 

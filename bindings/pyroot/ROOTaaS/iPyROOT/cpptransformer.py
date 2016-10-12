@@ -1,3 +1,4 @@
+from __future__ import print_function
 import sys
 import re
 from IPython.core.inputtransformer import InputTransformer
@@ -97,7 +98,7 @@ class CppTransformer(InputTransformer):
             cppcompleter.unload_ipython_extension(ip)
             # Change highlight mode
             display.display_javascript(utils.jsDefaultHighlight.format(mimeType = utils.ipyMIME), raw=True)
-            print "Notebook is in Python mode"
+            print("Notebook is in Python mode")
 
 _transformer = CppTransformer()
 
