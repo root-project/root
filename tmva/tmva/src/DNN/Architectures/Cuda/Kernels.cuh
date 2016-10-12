@@ -304,6 +304,7 @@ __global__ void Sigmoid(AFloat * B,
       B[index] = sig;
    }
 }
+
 //____________________________________________________________________________
 template<typename AFloat>
 __global__ void SigmoidDerivative(AFloat * B,
@@ -317,6 +318,25 @@ __global__ void SigmoidDerivative(AFloat * B,
    if ((i < m) && (j < n)) {
       AFloat sig = 1.0 / (1.0 + exp(-A[index]));
       B[index] = sig * (1.0 - sig);
+   }
+}
+
+//____________________________________________________________________________
+template<typename AFloat>
+__global__ void Softmax(AFloat * B,
+                        const AFloat * A,
+                        int m, int n)
+{
+   int i = blockDim.x * blockIdx.x + threadIdx.x;
+
+   if (i < m) {
+      AFloat sum = 0.0;
+      for (int j = 0; j < n; j++) {
+         sum += exp(A[i + j * n]);
+      }
+      for (int j = 0; j < n; j++) {
+         B[i + j * n] = exp(A[i * n + j]) / sum;
+      }
    }
 }
 
@@ -599,6 +619,59 @@ __global__ void CrossEntropyGradients(AFloat * dY,
       AFloat y = Y[index];
       AFloat sig = 1.0 / (1.0 + exp(-output[index]));
       dY[index] = norm * (sig - y);
+   }
+}
+
+//____________________________________________________________________________
+template<typename AFloat>
+__global__ void SoftmaxCrossEntropy(AFloat * result,
+                                    const AFloat * Y,
+                                    const AFloat * output,
+                                    int m, int n)
+{
+   int i = blockDim.y * blockIdx.y + threadIdx.y;
+   int tid = threadIdx.y;
+
+   __shared__ AFloat sdata[TDevice::BlockSize];
+   AFloat norm = 1.0 / ((AFloat) m);
+
+   sdata[tid] = 0.0;
+   if (i < m) {
+      AFloat sum  = 0.0;
+      for (int j = 0; j < n; j++) {
+         sum  += exp(output[i + j * m]);
+      }
+      for (int j = 0; j < n; j++) {
+         sdata[tid] += Y[i + j * m] * log(exp(output[i + j * m]) / sum);
+      }
+      sdata[tid] *= - norm;
+   } else {
+      sdata[tid] = 0.0;
+   }
+
+   ReduceSum(result, sdata);
+}
+
+//____________________________________________________________________________
+template<typename AFloat>
+__global__ void SoftmaxCrossEntropyGradients(AFloat * dY,
+                                             const AFloat * Y,
+                                             const AFloat * output,
+                                             int m, int n)
+{
+   int i = blockDim.y * blockIdx.y + threadIdx.y;
+   AFloat norm = 1.0 / ((AFloat) m);
+
+   if (i < m) {
+      AFloat sum  = 0.0;
+      AFloat sumY = 0.0;
+      for (int j = 0; j < n; j++) {
+         sum  += exp(output[i + j * m]);
+         sumY += Y[i + j * m];
+      }
+      for (int j = 0; j < n; j++) {
+         dY[i + j * m] = norm * (sumY * exp(output[i + j * m]) / sum - Y[i + j * m]);
+      }
    }
 }
 

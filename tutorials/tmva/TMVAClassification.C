@@ -85,36 +85,36 @@ int TMVAClassification( TString myMethodList = "" )
    std::map<std::string,int> Use;
 
    // Cut optimisation
-   Use["Cuts"]            = 1;
-   Use["CutsD"]           = 1;
+   Use["Cuts"]            = 0;
+   Use["CutsD"]           = 0;
    Use["CutsPCA"]         = 0;
    Use["CutsGA"]          = 0;
    Use["CutsSA"]          = 0;
    //
    // 1-dimensional likelihood ("naive Bayes estimator")
-   Use["Likelihood"]      = 1;
+   Use["Likelihood"]      = 0;
    Use["LikelihoodD"]     = 0; // the "D" extension indicates decorrelated input variables (see option strings)
-   Use["LikelihoodPCA"]   = 1; // the "PCA" extension indicates PCA-transformed input variables (see option strings)
+   Use["LikelihoodPCA"]   = 0; // the "PCA" extension indicates PCA-transformed input variables (see option strings)
    Use["LikelihoodKDE"]   = 0;
    Use["LikelihoodMIX"]   = 0;
    //
    // Mutidimensional likelihood and Nearest-Neighbour methods
-   Use["PDERS"]           = 1;
+   Use["PDERS"]           = 0;
    Use["PDERSD"]          = 0;
    Use["PDERSPCA"]        = 0;
-   Use["PDEFoam"]         = 1;
+   Use["PDEFoam"]         = 0;
    Use["PDEFoamBoost"]    = 0; // uses generalised MVA method boosting
    Use["KNN"]             = 1; // k-nearest neighbour method
    //
    // Linear Discriminant Analysis
-   Use["LD"]              = 1; // Linear Discriminant identical to Fisher
+   Use["LD"]              = 0; // Linear Discriminant identical to Fisher
    Use["Fisher"]          = 0;
    Use["FisherG"]         = 0;
    Use["BoostedFisher"]   = 0; // uses generalised MVA method boosting
    Use["HMatrix"]         = 0;
    //
    // Function Discriminant analysis
-   Use["FDA_GA"]          = 1; // minimisation of user-defined function using Genetics Algorithm
+   Use["FDA_GA"]          = 0; // minimisation of user-defined function using Genetics Algorithm
    Use["FDA_SA"]          = 0;
    Use["FDA_MC"]          = 0;
    Use["FDA_MT"]          = 0;
@@ -124,16 +124,18 @@ int TMVAClassification( TString myMethodList = "" )
    // Neural Networks (all are feed-forward Multilayer Perceptrons)
    Use["MLP"]             = 0; // Recommended ANN
    Use["MLPBFGS"]         = 0; // Recommended ANN with optional training method
-   Use["MLPBNN"]          = 1; // Recommended ANN with BFGS training method and bayesian regulator
+   Use["MLPBNN"]          = 0; // Recommended ANN with BFGS training method and bayesian regulator
    Use["CFMlpANN"]        = 0; // Depreciated ANN from ALEPH
    Use["TMlpANN"]         = 0; // ROOT's own ANN
-   Use["DNN"]             = 0; // improved implementation of a NN
+   Use["DNN"]             = 0;     // Deep Neural Network
+   Use["DNN_GPU"]         = 0; // CUDA-accelerated DNN training.
+   Use["DNN_CPU"]         = 0; // Multi-core accelerated DNN.
    //
    // Support Vector Machine
    Use["SVM"]             = 1;
    //
    // Boosted Decision Trees
-   Use["BDT"]             = 1; // uses Adaptive Boost
+   Use["BDT"]             = 0; // uses Adaptive Boost
    Use["BDTG"]            = 0; // uses Gradient Boost
    Use["BDTB"]            = 0; // uses Bagging
    Use["BDTD"]            = 0; // decorrelation + Adaptive Boost
@@ -436,38 +438,49 @@ int TMVAClassification( TString myMethodList = "" )
       factory->BookMethod( dataloader, TMVA::Types::kMLP, "MLPBNN", "H:!V:NeuronType=tanh:VarTransform=N:NCycles=600:HiddenLayers=N+5:TestRate=5:TrainingMethod=BFGS:UseRegulator" ); // BFGS training with bayesian regulators
 
 
-   // improved neural network implementation
+   // Multi-architecture DNN implementation.
    if (Use["DNN"])
    {
-    /*
-       TString layoutString ("Layout=TANH|(N+100)*2,LINEAR");
-       TString layoutString ("Layout=SOFTSIGN|100,SOFTSIGN|50,SOFTSIGN|20,LINEAR");
-       TString layoutString ("Layout=RELU|300,RELU|100,RELU|30,RELU|10,LINEAR");
-       TString layoutString ("Layout=SOFTSIGN|50,SOFTSIGN|30,SOFTSIGN|20,SOFTSIGN|10,LINEAR");
-       TString layoutString ("Layout=TANH|50,TANH|30,TANH|20,TANH|10,LINEAR");
-       TString layoutString ("Layout=SOFTSIGN|50,SOFTSIGN|20,LINEAR");
-    */
-       TString layoutString ("Layout=TANH|100,TANH|50,TANH|10,LINEAR");
+      // General layout.
+      TString layoutString ("Layout=TANH|128,TANH|128,TANH|128,LINEAR");
 
-       TString training0 ("LearningRate=1e-1,Momentum=0.0,Repetitions=1,ConvergenceSteps=300,BatchSize=20,TestRepetitions=15,WeightDecay=0.001,Regularization=NONE,DropConfig=0.0+0.5+0.5+0.5,DropRepetitions=1,Multithreading=True");
-       TString training1 ("LearningRate=1e-2,Momentum=0.5,Repetitions=1,ConvergenceSteps=300,BatchSize=30,TestRepetitions=7,WeightDecay=0.001,Regularization=L2,Multithreading=True,DropConfig=0.0+0.1+0.1+0.1,DropRepetitions=1");
-       TString training2 ("LearningRate=1e-2,Momentum=0.3,Repetitions=1,ConvergenceSteps=300,BatchSize=40,TestRepetitions=7,WeightDecay=0.0001,Regularization=L2,Multithreading=True");
-       TString training3 ("LearningRate=1e-3,Momentum=0.1,Repetitions=1,ConvergenceSteps=200,BatchSize=70,TestRepetitions=7,WeightDecay=0.0001,Regularization=NONE,Multithreading=True");
+      // Training strategies.
+      TString training0("LearningRate=1e-1,Momentum=0.9,Repetitions=1,"
+                        "ConvergenceSteps=20,BatchSize=256,TestRepetitions=10,"
+                        "WeightDecay=1e-4,Regularization=L2,"
+                        "DropConfig=0.0+0.5+0.5+0.5, Multithreading=True");
+      TString training1("LearningRate=1e-2,Momentum=0.9,Repetitions=1,"
+                        "ConvergenceSteps=20,BatchSize=256,TestRepetitions=10,"
+                        "WeightDecay=1e-4,Regularization=L2,"
+                        "DropConfig=0.0+0.0+0.0+0.0, Multithreading=True");
+      TString training2("LearningRate=1e-3,Momentum=0.0,Repetitions=1,"
+                        "ConvergenceSteps=20,BatchSize=256,TestRepetitions=10,"
+                        "WeightDecay=1e-4,Regularization=L2,"
+                        "DropConfig=0.0+0.0+0.0+0.0, Multithreading=True");
+      TString trainingStrategyString ("TrainingStrategy=");
+      trainingStrategyString += training0 + "|" + training1 + "|" + training2;
 
-       TString trainingStrategyString ("TrainingStrategy=");
-       trainingStrategyString += training0 + "|" + training1 + "|" + training2 + "|" + training3;
+      // General Options.
+      TString dnnOptions ("!H:V:ErrorStrategy=CROSSENTROPY:VarTransform=N:"
+                          "WeightInitialization=XAVIERUNIFORM");
+      dnnOptions.Append (":"); nnOptions.Append (layoutString);
+      dnnOptions.Append (":"); nnOptions.Append (trainingStrategyString);
 
+      // Standard implementation, no dependencies.
+      TString stdOptions = dnnOptions + ":Architecture=STANDARD";
+      factory->BookMethod(dataloader, TMVA::Types::kDNN, "DNN", stdOptions);
 
-       // TString nnOptions ("!H:V:VarTransform=Normalize:ErrorStrategy=CROSSENTROPY");
-       TString nnOptions ("!H:V:ErrorStrategy=CROSSENTROPY:VarTransform=G:WeightInitialization=XAVIERUNIFORM");
-       // TString nnOptions ("!H:V:VarTransform=Normalize:ErrorStrategy=CHECKGRADIENTS");
-       nnOptions.Append (":"); nnOptions.Append (layoutString);
-       nnOptions.Append (":"); nnOptions.Append (trainingStrategyString);
-
-       factory->BookMethod(dataloader, TMVA::Types::kDNN, "DNN", nnOptions ); // NN
+      // Cuda implementation.
+      if (Use["DNN_GPU"]) {
+         TString gpuOptions = dnnOptions + ":Architecture=GPU";
+         factory->BookMethod(dataloader, TMVA::Types::kDNN, "DNN GPU", gpuOptions);
+      }
+      // Multi-core CPU implementation.
+      if (Use["DNN_CPU"]) {
+         TString cpuOptions = dnnOptions + ":Architecture=CPU";
+         factory->BookMethod(dataloader, TMVA::Types::kDNN, "DNN CPU", cpuOptions);
+      }
    }
-
-
 
    // CF(Clermont-Ferrand)ANN
    if (Use["CFMlpANN"])

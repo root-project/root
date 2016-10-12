@@ -27,10 +27,25 @@ template<typename AFloat>
 void TCuda<AFloat>::Sigmoid(TCudaMatrix<AFloat> & B,
                             const TCudaMatrix<AFloat> & A)
 {
-   dim3 blockDims = TDevice::BlockDims();
-   dim3 gridDims  = TDevice::GridDims(B);
+   dim3 blockDims = TDevice::BlockDims2D();
+   dim3 gridDims  = TDevice::GridDims2D(B);
    cudaStream_t s = A.GetComputeStream();
    ::TMVA::DNN::Cuda::Sigmoid<<<gridDims, blockDims, 0, s>>>(B.GetDataPointer(),
+                                                             A.GetDataPointer(),
+                                                             (int) A.GetNrows(),
+                                                             (int) A.GetNcols());
+   B.SetComputeStream(s);
+}
+
+//______________________________________________________________________________
+template<typename AFloat>
+void TCuda<AFloat>::Softmax(TCudaMatrix<AFloat> & B,
+                            const TCudaMatrix<AFloat> & A)
+{
+   dim3 blockDims = TDevice::BlockDims1D();
+   dim3 gridDims  = TDevice::GridDims1D(B);
+   cudaStream_t s = A.GetComputeStream();
+   ::TMVA::DNN::Cuda::Softmax<<<gridDims, blockDims, 0, s>>>(B.GetDataPointer(),
                                                              A.GetDataPointer(),
                                                              (int) A.GetNrows(),
                                                              (int) A.GetNcols());
