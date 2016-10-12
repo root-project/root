@@ -48,6 +48,19 @@ Example:
 Begin_Macro(source)
 ../../../tutorials/graphics/pavetext.C
 End_Macro
+
+GetListOfLines can also be used to retrieve all the lines in the TPaveText as
+a TList:
+
+Begin_Macro(source)
+{
+   TPaveText *t = new TPaveText(.05,.3,.95,.6);
+   t->AddText("This line is blue"); ((TText*)t->GetListOfLines()->Last())->SetTextColor(kBlue);
+   t->AddText("This line is red");  ((TText*)t->GetListOfLines()->Last())->SetTextColor(kRed);
+   t->Draw();
+}
+End_Macro
+
 */
 
 ////////////////////////////////////////////////////////////////////////////////
