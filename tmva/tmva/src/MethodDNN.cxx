@@ -401,7 +401,12 @@ void TMVA::MethodDNN::ProcessOptions()
 
    fLayout = TMVA::MethodDNN::ParseLayoutString (fLayoutString);
    size_t inputSize = GetNVariables ();
-   size_t outputSize = (GetNTargets() == 0) ? 1 : GetNTargets();
+   size_t outputSize = 1;
+   if (GetNTargets() != 0) {
+      outputSize = GetNTargets();
+   } else if (DataInfo().GetNClasses() > 2) {
+      outputSize = DataInfo().GetNClasses();
+   }
 
    fNet.SetBatchSize(1);
    fNet.SetInputWidth(inputSize);
@@ -443,9 +448,9 @@ void TMVA::MethodDNN::ProcessOptions()
          fNet.SetLossFunction(ELossFunction::kCrossEntropy);
       }
       if (fErrorStrategy == "MUTUALEXCLUSIVE") {
-         Log () << kFatal << "MUTUALEXCLUSIVE not yet implemented." << Endl;
+         fNet.SetLossFunction(ELossFunction::kSoftmaxCrossEntropy);
       }
-      fOutputFunction = EOutputFunction::kSigmoid;
+      fOutputFunction = EOutputFunction::kSoftmax;
    }
 
    //
@@ -543,6 +548,13 @@ void TMVA::MethodDNN::Train()
                                          outputValue,
                                          event->GetWeight()));
          trainPattern.back().addInput(1.0);
+      } else if (fAnalysisType == Types::kMulticlass) {
+         std::vector<Float_t> oneHot(DataInfo().GetNClasses(), 0.0);
+         oneHot[event->GetClass()] = 1.0;
+         trainPattern.push_back(Pattern (values.begin(), values.end(),
+                                        oneHot.cbegin(), oneHot.cend(),
+                                        event->GetWeight()));
+         trainPattern.back().addInput(1.0);
       } else {
          const std::vector<Float_t>& targets = event->GetTargets ();
          trainPattern.push_back(Pattern(values.begin(),
@@ -562,6 +574,13 @@ void TMVA::MethodDNN::Train()
                                          values.end(),
                                          outputValue,
                                          event->GetWeight()));
+         testPattern.back().addInput(1.0);
+      } else if (fAnalysisType == Types::kMulticlass) {
+         std::vector<Float_t> oneHot(DataInfo().GetNClasses(), 0.0);
+         oneHot[event->GetClass()] = 1.0;
+         testPattern.push_back(Pattern (values.begin(), values.end(),
+                                        oneHot.cbegin(), oneHot.cend(),
+                                        event->GetWeight()));
          testPattern.back().addInput(1.0);
       } else {
          const std::vector<Float_t>& targets = event->GetTargets ();
@@ -601,6 +620,7 @@ void TMVA::MethodDNN::Train()
          switch(fOutputFunction) {
             case EOutputFunction::kIdentity: h = ModeOutputValues::DIRECT;  break;
             case EOutputFunction::kSigmoid:  h = ModeOutputValues::SIGMOID; break;
+            case EOutputFunction::kSoftmax:  h = ModeOutputValues::SOFTMAX; break;
          }
          net.addLayer(Layer(fNet.GetLayer(i).GetWidth(), g, h));
       }
@@ -612,6 +632,9 @@ void TMVA::MethodDNN::Train()
          break;
       case ELossFunction::kCrossEntropy:
          net.setErrorFunction(ModeErrorFunction::CROSSENTROPY);
+         break;
+      case ELossFunction::kSoftmaxCrossEntropy:
+         net.setErrorFunction(ModeErrorFunction::CROSSENTROPY_MUTUALEXCLUSIVE);
          break;
    }
 
@@ -629,7 +652,6 @@ void TMVA::MethodDNN::Train()
                                 std::back_inserter(weights));
           break;
    }
-
 
    int idxSetting = 0;
    for (auto s : fTrainingSettings) {
@@ -1039,7 +1061,7 @@ Double_t TMVA::MethodDNN::GetMvaValue( Double_t* /*errLower*/, Double_t* /*errUp
 }
 
 //______________________________________________________________________________
-const std::vector<Float_t> &TMVA::MethodDNN::GetRegressionValues()
+const std::vector<Float_t> & TMVA::MethodDNN::GetRegressionValues()
 {
    size_t nVariables = GetEvent()->GetNVariables();
    Matrix_t X(1, nVariables);
@@ -1077,12 +1099,27 @@ const std::vector<Float_t> &TMVA::MethodDNN::GetRegressionValues()
    return *fRegressionReturnVal;
 }
 
-const std::vector<Float_t> &TMVA::MethodDNN::GetMulticlassValues()
+const std::vector<Float_t> & TMVA::MethodDNN::GetMulticlassValues()
 {
-   Log() << kFATAL << "ERROR: Multiclass classification not yet implemented."
-         << Endl;
+   size_t nVariables = GetEvent()->GetNVariables();
+   Matrix_t X(1, nVariables);
+   Matrix_t YHat(1, DataInfo().GetNClasses());
+   if (fMulticlassReturnVal == NULL) {
+      fMulticlassReturnVal = new std::vector<Float_t>(DataInfo().GetNClasses());
+   }
+
+   const std::vector<Float_t>& inputValues = GetEvent()->GetValues();
+   for (size_t i = 0; i < nVariables; i++) {
+      X(0,i) = inputValues[i];
+   }
+
+   fNet.Prediction(YHat, X, fOutputFunction);
+   for (size_t i = 0; i < (size_t) YHat.GetNcols(); i++) {
+      (*fMulticlassReturnVal)[i] = YHat(0, i);
+   }
    return *fMulticlassReturnVal;
 }
+
 //______________________________________________________________________________
 void TMVA::MethodDNN::AddWeightsXMLTo( void* parent ) const 
 {

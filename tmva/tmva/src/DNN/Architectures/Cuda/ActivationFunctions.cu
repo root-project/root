@@ -28,8 +28,8 @@ template<typename AFloat>
 void TCuda<AFloat>::IdentityDerivative(TCudaMatrix<AFloat> & B,
                                            const TCudaMatrix<AFloat> & A)
 {
-   dim3 blockDims = TDevice::BlockDims();
-   dim3 gridDims  = TDevice::GridDims(B);
+   dim3 blockDims = TDevice::BlockDims2D();
+   dim3 gridDims  = TDevice::GridDims2D(B);
    cudaStream_t s = A.GetComputeStream();
    ::TMVA::DNN::Cuda::IdentityDerivative<<<gridDims, blockDims, 0, s>>>(
        B.GetDataPointer(),
@@ -42,8 +42,8 @@ void TCuda<AFloat>::IdentityDerivative(TCudaMatrix<AFloat> & B,
 template<typename AFloat>
 void TCuda<AFloat>::Relu(TCudaMatrix<AFloat> & A)
 {
-   dim3 blockDims = TDevice::BlockDims();
-   dim3 gridDims  = TDevice::GridDims(A);
+   dim3 blockDims = TDevice::BlockDims2D();
+   dim3 gridDims  = TDevice::GridDims2D(A);
    cudaStream_t s = A.GetComputeStream();
    ::TMVA::DNN::Cuda::Relu<<<gridDims, blockDims, 0, s>>>(
        A.GetDataPointer(),
@@ -56,8 +56,8 @@ template<typename AFloat>
 void TCuda<AFloat>::ReluDerivative(TCudaMatrix<AFloat> & B,
                                        const TCudaMatrix<AFloat> & A)
 {
-   dim3 blockDims = TDevice::BlockDims();
-   dim3 gridDims  = TDevice::GridDims(B);
+   dim3 blockDims = TDevice::BlockDims2D();
+   dim3 gridDims  = TDevice::GridDims2D(B);
    cudaStream_t s = A.GetComputeStream();
    ::TMVA::DNN::Cuda::ReluDerivative<<<gridDims, blockDims, 0, s>>>(
        B.GetDataPointer(),
@@ -71,8 +71,8 @@ void TCuda<AFloat>::ReluDerivative(TCudaMatrix<AFloat> & B,
 template<typename AFloat>
 void TCuda<AFloat>::Sigmoid(TCudaMatrix<AFloat> & A)
 {
-   dim3 blockDims = TDevice::BlockDims();
-   dim3 gridDims  = TDevice::GridDims(A);
+   dim3 blockDims = TDevice::BlockDims2D();
+   dim3 gridDims  = TDevice::GridDims2D(A);
    cudaStream_t s = A.GetComputeStream();
    ::TMVA::DNN::Cuda::Sigmoid<<<gridDims, blockDims, 0, s>>>(
        A.GetDataPointer(),
@@ -85,8 +85,8 @@ template<typename AFloat>
 void TCuda<AFloat>::SigmoidDerivative(TCudaMatrix<AFloat> & B,
                                           const TCudaMatrix<AFloat> & A)
 {
-   dim3 blockDims = TDevice::BlockDims();
-   dim3 gridDims  = TDevice::GridDims(B);
+   dim3 blockDims = TDevice::BlockDims2D();
+   dim3 gridDims  = TDevice::GridDims2D(B);
    cudaStream_t s = A.GetComputeStream();
    ::TMVA::DNN::Cuda::SigmoidDerivative<<<gridDims, blockDims, 0, s>>>(
        B.GetDataPointer(),
@@ -100,8 +100,8 @@ void TCuda<AFloat>::SigmoidDerivative(TCudaMatrix<AFloat> & B,
 template<typename AFloat>
 void TCuda<AFloat>::Tanh(TCudaMatrix<AFloat> & A)
 {
-   dim3 blockDims = TDevice::BlockDims();
-   dim3 gridDims  = TDevice::GridDims(A);
+   dim3 blockDims = TDevice::BlockDims2D();
+   dim3 gridDims  = TDevice::GridDims2D(A);
    cudaStream_t s = A.GetComputeStream();
    ::TMVA::DNN::Cuda::Tanh<<<gridDims, blockDims, 0, s>>>(
        A.GetDataPointer(),
@@ -114,8 +114,8 @@ template<typename AFloat>
 void TCuda<AFloat>::TanhDerivative(TCudaMatrix<AFloat> & B,
                                        const TCudaMatrix<AFloat> & A)
 {
-   dim3 blockDims = TDevice::BlockDims();
-   dim3 gridDims  = TDevice::GridDims(B);
+   dim3 blockDims = TDevice::BlockDims2D();
+   dim3 gridDims  = TDevice::GridDims2D(B);
    cudaStream_t s = A.GetComputeStream();
    ::TMVA::DNN::Cuda::TanhDerivative<<<gridDims, blockDims, 0, s>>>(
        B.GetDataPointer(),
@@ -129,8 +129,8 @@ void TCuda<AFloat>::TanhDerivative(TCudaMatrix<AFloat> & B,
 template<typename AFloat>
 void TCuda<AFloat>::SymmetricRelu(TCudaMatrix<AFloat> & A)
 {
-   dim3 blockDims = TDevice::BlockDims();
-   dim3 gridDims  = TDevice::GridDims(A);
+   dim3 blockDims = TDevice::BlockDims2D();
+   dim3 gridDims  = TDevice::GridDims2D(A);
    cudaStream_t s = A.GetComputeStream();
    ::TMVA::DNN::Cuda::SymmetricRelu<<<gridDims, blockDims, 0, s>>>(
        A.GetDataPointer(),
@@ -143,8 +143,8 @@ template<typename AFloat>
 void TCuda<AFloat>::SymmetricReluDerivative(TCudaMatrix<AFloat> & B,
                                                 const TCudaMatrix<AFloat> & A)
 {
-   dim3 blockDims = TDevice::BlockDims();
-   dim3 gridDims  = TDevice::GridDims(B);
+   dim3 blockDims = TDevice::BlockDims2D();
+   dim3 gridDims  = TDevice::GridDims2D(B);
    cudaStream_t s = A.GetComputeStream();
    ::TMVA::DNN::Cuda::SymmetricReluDerivative<<<gridDims, blockDims, 0, s>>>(
        B.GetDataPointer(),
@@ -158,8 +158,8 @@ void TCuda<AFloat>::SymmetricReluDerivative(TCudaMatrix<AFloat> & B,
 template<typename AFloat>
 void TCuda<AFloat>::SoftSign(TCudaMatrix<AFloat> & A)
 {
-   dim3 blockDims = TDevice::BlockDims();
-   dim3 gridDims  = TDevice::GridDims(A);
+   dim3 blockDims = TDevice::BlockDims2D();
+   dim3 gridDims  = TDevice::GridDims2D(A);
    cudaStream_t s = A.GetComputeStream();
    ::TMVA::DNN::Cuda::SoftSign<<<gridDims, blockDims, 0, s>>>(
        A.GetDataPointer(),
@@ -172,8 +172,8 @@ template<typename AFloat>
 void TCuda<AFloat>::SoftSignDerivative(TCudaMatrix<AFloat> & B,
                                            const TCudaMatrix<AFloat> & A)
 {
-   dim3 blockDims = TDevice::BlockDims();
-   dim3 gridDims  = TDevice::GridDims(B);
+   dim3 blockDims = TDevice::BlockDims2D();
+   dim3 gridDims  = TDevice::GridDims2D(B);
    cudaStream_t s = A.GetComputeStream();
    ::TMVA::DNN::Cuda::SoftSignDerivative<<<gridDims, blockDims, 0, s>>>(
        B.GetDataPointer(),
@@ -187,8 +187,8 @@ void TCuda<AFloat>::SoftSignDerivative(TCudaMatrix<AFloat> & B,
 template<typename AFloat>
 void TCuda<AFloat>::Gauss(TCudaMatrix<AFloat> & A)
 {
-   dim3 blockDims = TDevice::BlockDims();
-   dim3 gridDims  = TDevice::GridDims(A);
+   dim3 blockDims = TDevice::BlockDims2D();
+   dim3 gridDims  = TDevice::GridDims2D(A);
    cudaStream_t s = A.GetComputeStream();
    ::TMVA::DNN::Cuda::Gauss<<<gridDims, blockDims, 0, s>>>(
        A.GetDataPointer(),
@@ -201,8 +201,8 @@ template<typename AFloat>
 void TCuda<AFloat>::GaussDerivative(TCudaMatrix<AFloat> & B,
                                     const TCudaMatrix<AFloat> & A)
 {
-   dim3 blockDims = TDevice::BlockDims();
-   dim3 gridDims  = TDevice::GridDims(B);
+   dim3 blockDims = TDevice::BlockDims2D();
+   dim3 gridDims  = TDevice::GridDims2D(B);
    cudaStream_t s = A.GetComputeStream();
    ::TMVA::DNN::Cuda::GaussDerivative<<<gridDims, blockDims, 0, s>>>(
        B.GetDataPointer(),

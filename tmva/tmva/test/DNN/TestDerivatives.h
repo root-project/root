@@ -176,7 +176,8 @@ auto testLossFunctionGradients()
 
     std::vector<ELossFunction> LossFunctions
         = {ELossFunction::kMeanSquaredError,
-           ELossFunction::kCrossEntropy};
+           ELossFunction::kCrossEntropy,
+           ELossFunction::kSoftmaxCrossEntropy};
 
     Scalar_t error, maximum_error;
     maximum_error = 0.0;

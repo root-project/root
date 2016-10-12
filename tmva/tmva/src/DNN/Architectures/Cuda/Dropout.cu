@@ -25,8 +25,8 @@ template<typename AFloat>
 void TCuda<AFloat>::Dropout(TCudaMatrix<AFloat> &A,
                             AFloat dropoutProbability)
 {
-   dim3 blockDims = TDevice::BlockDims();
-   dim3 gridDims  = TDevice::GridDims(A);
+   dim3 blockDims = TDevice::BlockDims2D();
+   dim3 gridDims  = TDevice::GridDims2D(A);
    cudaStream_t s = A.GetComputeStream();
    ::TMVA::DNN::Cuda::Dropout<<<gridDims, blockDims, 0, s>>>(
        A.GetDataPointer(),
