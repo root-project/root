@@ -3527,9 +3527,9 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
 
    l = strstr(chopt,"CANDLE");
    if (l) {
-	   TCandle candle;
-	   Hoption.Candle = candle.ParseOption(l);
-	   Hoption.Scat = 0;
+      TCandle candle;
+      Hoption.Candle = candle.ParseOption(l);
+      Hoption.Scat = 0;
    }
 
    l = strstr(chopt,"VIOLIN");
@@ -4698,16 +4698,15 @@ void THistPainter::PaintCandlePlot(Option_t *)
    TH1D *hproj;
    TH2D *h2 = (TH2D*)fH;
 
-
-	TCandle myCandle;
-	myCandle.SetOption((TCandle::CandleOption)Hoption.Candle);
-	myCandle.SetMarkerColor(fH->GetLineColor());
-	myCandle.SetLineColor(fH->GetLineColor());
-	myCandle.SetFillColor(fH->GetFillColor());
-	myCandle.SetFillStyle(fH->GetFillStyle());
-	myCandle.SetMarkerSize(fH->GetMarkerSize());
-	myCandle.SetMarkerStyle(fH->GetMarkerStyle());
-	myCandle.SetLog(Hoption.Logx,Hoption.Logy);
+   TCandle myCandle;
+   myCandle.SetOption((TCandle::CandleOption)Hoption.Candle);
+   myCandle.SetMarkerColor(fH->GetLineColor());
+   myCandle.SetLineColor(fH->GetLineColor());
+   myCandle.SetFillColor(fH->GetFillColor());
+   myCandle.SetFillStyle(fH->GetFillStyle());
+   myCandle.SetMarkerSize(fH->GetMarkerSize());
+   myCandle.SetMarkerStyle(fH->GetMarkerStyle());
+   myCandle.SetLog(Hoption.Logx,Hoption.Logy);
 
    Bool_t swapXY = myCandle.IsHorizontal();
    const Double_t standardCandleWidth = 0.66;
