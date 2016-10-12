@@ -23,9 +23,10 @@
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <Python.h>    // Needs to be included first to avoid redefinition of _POSIX_C_SOURCE
 #include "TMVA/MethodBase.h"
 #include "TMVA/Types.h"
+
+#include <Python.h>    // Needs to be included first to avoid redefinition of _POSIX_C_SOURCE
 
 #include "Rtypes.h"
 #include "TString.h"
@@ -37,9 +38,6 @@ class TDirectory;
 class TSpline;
 class TH1F;
 class TH1D;
-
-struct _object;
-typedef _object PyObject;
 
 // needed by NPY_API_VERSION
 #include "numpy/numpyconfig.h"
