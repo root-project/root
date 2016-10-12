@@ -53,7 +53,7 @@ int main()
         return 1;
 
     error = testCrossEntropyGradients<TReference<double>>(10);
-    std::cout << "Testing mean squared error gradient: ";
+    std::cout << "Testing cross entropy gradient:      ";
     std::cout << "maximum relative error = " << error << std::endl;
     if (error > 1e-10)
         return 1;

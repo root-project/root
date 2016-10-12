@@ -119,5 +119,73 @@ void TCpu<AFloat>::CrossEntropyGradients(
    Y.GetThreadExecutor().Map(f, ROOT::TSeqI(Y.GetNElements()));
 }
 
+//______________________________________________________________________________
+template<typename AFloat>
+AFloat TCpu<AFloat>::SoftmaxCrossEntropy(
+    const TCpuMatrix<AFloat> &Y,
+    const TCpuMatrix<AFloat> &output)
+{
+   const AFloat  *dataY      = Y.GetRawDataPointer();
+   const AFloat  *dataOutput = output.GetRawDataPointer();
+   std::vector<AFloat> temp(Y.GetNrows());
+   size_t m = Y.GetNrows();
+   size_t n = Y.GetNcols();
+   AFloat norm = 1.0 / ((AFloat) m);
+
+   auto f = [&dataY, &dataOutput, &temp, n, m](UInt_t workerID)
+   {
+      AFloat sum = 0.0;
+      for (size_t j = 0; j < n; j++) {
+         sum += exp(dataOutput[workerID + j * m]);
+      }
+      for (size_t j = 0; j < n; j++) {
+         temp[workerID] -=
+            dataY[workerID + j * m] * log(exp(dataOutput[workerID + j * m]) / sum);
+      }
+      return 0;
+   };
+
+   auto reduction = [](AFloat sum1, AFloat sum2)
+   {
+      return sum1 + sum2;
+   };
+
+   Y.GetThreadPool().Map(f, ROOT::TSeqI(Y.GetNrows()));
+   return norm * Y.GetThreadPool().Reduce(temp, reduction);
+}
+
+//______________________________________________________________________________
+template<typename AFloat>
+void TCpu<AFloat>::SoftmaxCrossEntropyGradients(
+    TCpuMatrix<AFloat> & dY,
+    const TCpuMatrix<AFloat> & Y,
+    const TCpuMatrix<AFloat> & output)
+{
+         AFloat  *dataDY     = dY.GetRawDataPointer();
+   const AFloat  *dataY      = Y.GetRawDataPointer();
+   const AFloat  *dataOutput = output.GetRawDataPointer();
+   size_t m = Y.GetNrows();
+   size_t n = Y.GetNcols();
+   AFloat norm = 1.0 / ((AFloat) m);
+
+   auto f = [&dataDY, &dataY, &dataOutput, norm, n, m](UInt_t workerID)
+   {
+      AFloat sum  = 0.0;
+      AFloat sumY = 0.0;
+      for (size_t j = 0; j < n; j++) {
+         sum  += exp(dataOutput[workerID + j * m]);
+         sumY += dataY[workerID + j * m];
+      }
+      for (size_t j = 0; j < n; j++) {
+         dataDY[workerID + j * m] =
+            norm * (exp(dataOutput[workerID + j * m]) / sum * sumY - dataY[workerID + j * m]);
+
+      }
+      return 0;
+   };
+
+   Y.GetThreadPool().Map(f, ROOT::TSeqI(Y.GetNrows()));
+}
+
 } // namespace DNN
 } // namespace TMVA
