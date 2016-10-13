@@ -711,6 +711,7 @@ endmacro()
 #                        [OUTPUT outfile] [ERROR errfile] [INPUT infile]
 #                        [ENVIRONMENT var1=val1 var2=val2 ...
 #                        [DEPENDS test1 ...]
+#                        [RUN_SERIAL]
 #                        [TIMEOUT seconds]
 #                        [DEBUG]
 #                        [SOURCE_DIR dir] [BINARY_DIR dir]
@@ -720,7 +721,7 @@ endmacro()
 #                        [PASSRC code])
 #
 function(ROOT_ADD_TEST test)
-  CMAKE_PARSE_ARGUMENTS(ARG "DEBUG;WILLFAIL;CHECKOUT;CHECKERR"
+  CMAKE_PARSE_ARGUMENTS(ARG "DEBUG;WILLFAIL;CHECKOUT;CHECKERR;RUN_SERIAL"
                             "TIMEOUT;BUILD;INPUT;OUTPUT;ERROR;SOURCE_DIR;BINARY_DIR;WORKING_DIR;PROJECT;PASSRC"
                              "COMMAND;COPY_TO_BUILDDIR;DIFFCMD;OUTCNV;OUTCNVCMD;PRECMD;POSTCMD;ENVIRONMENT;COMPILEMACROS;DEPENDS;PASSREGEX;OUTREF;ERRREF;FAILREGEX;LABELS"
                             ${ARGN})
@@ -902,6 +903,10 @@ function(ROOT_ADD_TEST test)
 
   if(ARG_LABELS)
     set_tests_properties(${test} PROPERTIES LABELS "${ARG_LABELS}")
+  endif()
+
+  if(ARG_RUN_SERIAL)
+    set_property(TEST ${test} PROPERTY RUN_SERIAL true)
   endif()
 
 endfunction()
