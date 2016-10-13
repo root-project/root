@@ -40,6 +40,9 @@ the pave (%).
 The text lines are added in order using the AddText method. Also line separators
 can be added, in order too, using the AddLine method.
 
+AddText returns a TText corresponding to the line added to the pave. This
+return value can be used to modify the text attributes.
+
 Once the TPaveText is build the text of each line can be retrieved using
 GetLine or GetLineWith as a TText wich is useful to modify the text attributes
 of a line.
