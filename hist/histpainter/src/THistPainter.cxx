@@ -4594,6 +4594,7 @@ void THistPainter::PaintBoxes(Option_t *)
 
          if (z <  zmin) continue; // Can be the case with
          if (z >  zmax) z = zmax; // option Same
+         if (zmin < 0 && z==0) continue; // do not draw empty bins if case of histo with netgative bins.
 
          if (z < 0) {
             if (Hoption.Logz) continue;

@@ -56,6 +56,8 @@ The following interfaces have been removed, after deprecation in v6.08.
 - If one used "col2" or "colz2", the value of `TH1::fMaximum` got modified.
   This deviated from the behavior of "col" or "colz". This is now fixed as
   requested [here](https://sft.its.cern.ch/jira/browse/ROOT-8389).
+- With option BOX on 2D histos: do not draw the empty bins as requested
+  [here](https://sft.its.cern.ch/jira/browse/ROOT-8385)
 
 ## 3D Graphics Libraries
 
