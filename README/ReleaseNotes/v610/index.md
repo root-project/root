@@ -58,6 +58,8 @@ The following interfaces have been removed, after deprecation in v6.08.
   requested [here](https://sft.its.cern.ch/jira/browse/ROOT-8389).
 - With option BOX on 2D histos: do not draw the empty bins as requested
   [here](https://sft.its.cern.ch/jira/browse/ROOT-8385)
+- In TLatex: Do not paint the text when the text size is <= 0. This fixes
+  the problem mentioned [here](https://sft.its.cern.ch/jira/browse/ROOT-8305)
 
 ## 3D Graphics Libraries
 
