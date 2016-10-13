@@ -171,7 +171,9 @@ TChain::TChain(const char* name, const char* title)
 
 TChain::~TChain()
 {
-   gROOT->GetListOfCleanups()->Remove(this);
+   bool rootAlive = gROOT && !gROOT->TestBit(TObject::kInvalidObject);
+
+   if (rootAlive) gROOT->GetListOfCleanups()->Remove(this);
 
    SafeDelete(fProofChain);
    fStatus->Delete();
@@ -194,10 +196,10 @@ TChain::~TChain()
    delete[] fTreeOffset;
    fTreeOffset = 0;
 
-   gROOT->GetListOfSpecials()->Remove(this);
+   if (rootAlive) gROOT->GetListOfSpecials()->Remove(this);
 
    // Remove from the global list
-   gROOT->GetListOfDataSets()->Remove(this);
+   if (rootAlive) gROOT->GetListOfDataSets()->Remove(this);
 
    // This is the same as fFile, don't delete it a second time.
    fDirectory = 0;

@@ -83,7 +83,8 @@ TDatabasePDG::~TDatabasePDG()
       fListOfClasses->Delete();
       delete fListOfClasses;
    }
-   gROOT->GetListOfSpecials()->Remove(this);
+   if (gROOT && !gROOT->TestBit(TObject::kInvalidObject))
+      gROOT->GetListOfSpecials()->Remove(this);
    fgInstance = 0;
 }
 
