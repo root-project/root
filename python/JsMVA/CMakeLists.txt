@@ -14,7 +14,8 @@ if(PY_IPYTHON_FOUND)
   foreach(NOTEBOOK ${NOTEBOOKS})
     get_filename_component(NOTEBOOKBASE ${NOTEBOOK} NAME_WE)
     ROOTTEST_ADD_TEST(${NOTEBOOKBASE}
-                      COMMAND ${PYTHON_EXECUTABLE} ${NBDIFFUTIL} ${NOTEBOOK})
+                      COMMAND ${PYTHON_EXECUTABLE} ${NBDIFFUTIL} ${NOTEBOOK}
+                      RUN_SERIAL)
   endforeach()
 endif()
 
