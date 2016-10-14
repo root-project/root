@@ -29,7 +29,7 @@
 
 namespace ROOT {
 namespace MacOSX {
-namespace Detail {
+namespace Details {
 
 //'Private' pimpl class to hide Apple's specific things from CINT.
 class MacOSXSystem;
@@ -58,7 +58,7 @@ private:
 
    void ProcessApplicationDefinedEvent(void *event);
 
-   std::auto_ptr<ROOT::MacOSX::Detail::MacOSXSystem> fPimpl; //!
+   std::auto_ptr<ROOT::MacOSX::Details::MacOSXSystem> fPimpl; //!
    bool fCocoaInitialized;//!
    bool fFirstDispatch;//!
 

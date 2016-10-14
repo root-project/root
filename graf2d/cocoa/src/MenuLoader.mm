@@ -2,6 +2,7 @@
 
 #include <Cocoa/Cocoa.h>
 
+#include "CocoaConstants.h"
 #include "MenuLoader.h"
 #include "CocoaUtils.h"
 
@@ -70,7 +71,7 @@ void PopulateApplicationMenu(NSMenu *aMenu)
    
    menuItem = [aMenu addItemWithTitle : NSLocalizedString(@"Hide Others", nil)
                action : @selector(hideOtherApplications:) keyEquivalent : @"h"];
-   [menuItem setKeyEquivalentModifierMask : NSCommandKeyMask | NSAlternateKeyMask];
+   [menuItem setKeyEquivalentModifierMask : kCommandKeyMask | kAlternateKeyMask];
    [menuItem setTarget : NSApp];
    
    menuItem = [aMenu addItemWithTitle : NSLocalizedString(@"Show All", nil)

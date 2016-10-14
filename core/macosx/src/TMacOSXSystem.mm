@@ -18,10 +18,27 @@
 
 #include "TSeqCollection.h"
 #include "TMacOSXSystem.h"
+#include "CocoaConstants.h"
 #include "CocoaUtils.h"
 #include "TVirtualX.h"
 #include "TError.h"
 #include "TROOT.h"
+
+//Handle deprecated symbols
+namespace ROOT {
+namespace MacOSX {
+namespace Details {
+#ifdef MAC_OS_X_VERSION_10_12
+const NSUInteger kEventMaskAny = NSEventMaskAny;
+const NSEventType kApplicationDefined = NSEventTypeApplicationDefined;
+#else
+const NSUInteger kEventMaskAny = NSAnyEventMask;
+const NSEventType kApplicationDefined = NSApplicationDefined;
+#endif
+}
+}
+}
+
 
 //The special class to perform a selector to stop a -run: method.
 @interface RunStopper : NSObject
@@ -43,7 +60,7 @@
 
 
    //I'm sending a fake event, to stop.
-   NSEvent* stopEvent = [NSEvent otherEventWithType : NSApplicationDefined
+   NSEvent* stopEvent = [NSEvent otherEventWithType : ROOT::MacOSX::Details::kApplicationDefined
                          location : NSMakePoint(0., 0.) modifierFlags : 0 timestamp : 0.
                                  windowNumber : 0 context : nil subtype: 0 data1 : 0 data2 : 0];
    [NSApp postEvent : stopEvent atStart : true];
@@ -114,7 +131,7 @@ public:
 
 namespace ROOT {
 namespace MacOSX {
-namespace Detail {
+namespace Details {
 
 class MacOSXSystem {
 public:
@@ -160,7 +177,7 @@ void TMacOSXSystem_ReadCallback(CFFileDescriptorRef fdref, CFOptionFlags /*callB
    CFFileDescriptorInvalidate(fdref);
    CFRelease(fdref);
 
-   NSEvent *fdEvent = [NSEvent otherEventWithType : NSApplicationDefined
+   NSEvent *fdEvent = [NSEvent otherEventWithType : kApplicationDefined
                        location : NSMakePoint(0, 0) modifierFlags : 0
                        timestamp: 0. windowNumber : 0 context : nil
                        subtype : 0 data1 : nativeFD data2 : 0];
@@ -180,7 +197,7 @@ void TMacOSXSystem_WriteCallback(CFFileDescriptorRef fdref, CFOptionFlags /*call
    CFFileDescriptorInvalidate(fdref);
    CFRelease(fdref);
 
-   NSEvent *fdEvent = [NSEvent otherEventWithType : NSApplicationDefined
+   NSEvent *fdEvent = [NSEvent otherEventWithType : kApplicationDefined
                        location : NSMakePoint(0, 0) modifierFlags : 0
                        timestamp: 0. windowNumber : 0 context : nil
                        subtype : 0 data1 : nativeFD data2 : 0];
@@ -303,11 +320,11 @@ void MacOSXSystem::SetFileDescriptor(int fd, DescriptorType fdType)
    fCFFileDescriptors.insert(fdref);
 }
 
-}//Detail
+}//Details
 }//MacOSX
 }//ROOT
 
-namespace Private = ROOT::MacOSX::Detail;
+namespace Private = ROOT::MacOSX::Details;
 
 ClassImp(TMacOSXSystem)
 
@@ -453,7 +470,7 @@ bool TMacOSXSystem::ProcessPendingEvents()
    assert(fCocoaInitialized == true && "ProcessPendingEvents, called while Cocoa was not initialized");
 
    bool processed = false;
-   while (NSEvent *event = [NSApp nextEventMatchingMask : NSAnyEventMask
+   while (NSEvent *event = [NSApp nextEventMatchingMask : Private::kEventMaskAny
                             untilDate : nil inMode : NSDefaultRunLoopMode dequeue : YES]) {
       [NSApp sendEvent : event];
       processed = true;
@@ -483,19 +500,19 @@ void TMacOSXSystem::WaitEvents(Long_t nextto)
    fWriteready->Zero();
    fNfd = 0;
 
-   NSEvent *event = [NSApp nextEventMatchingMask : NSAnyEventMask
+   NSEvent *event = [NSApp nextEventMatchingMask : Private::kEventMaskAny
                      untilDate : untilDate inMode : NSDefaultRunLoopMode dequeue : YES];
    if (event) {
-      if (event.type == NSApplicationDefined)
+      if (event.type == Private::kApplicationDefined)
          ProcessApplicationDefinedEvent(event);
       else
          [NSApp sendEvent : event];
    }
 
-   while ((event = [NSApp nextEventMatchingMask : NSAnyEventMask
+   while ((event = [NSApp nextEventMatchingMask : Private::kEventMaskAny
           untilDate : nil inMode : NSDefaultRunLoopMode dequeue : YES]))
    {
-      if (event.type == NSApplicationDefined)
+      if (event.type == Private::kApplicationDefined)
          ProcessApplicationDefinedEvent(event);
       else
          [NSApp sendEvent : event];
@@ -539,7 +556,7 @@ void TMacOSXSystem::ProcessApplicationDefinedEvent(void *e)
    NSEvent *event = (NSEvent *)e;
    assert(event != nil &&
           "ProcessApplicationDefinedEvent, event parameter is nil");
-   assert(event.type == NSApplicationDefined &&
+   assert(event.type == Private::kApplicationDefined &&
           "ProcessApplicationDefinedEvent, event parameter has wrong type");
 
    bool descriptorFound = false;
