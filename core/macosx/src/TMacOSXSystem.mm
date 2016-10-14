@@ -18,7 +18,6 @@
 
 #include "TSeqCollection.h"
 #include "TMacOSXSystem.h"
-#include "CocoaConstants.h"
 #include "CocoaUtils.h"
 #include "TVirtualX.h"
 #include "TError.h"
@@ -320,7 +319,7 @@ void MacOSXSystem::SetFileDescriptor(int fd, DescriptorType fdType)
    fCFFileDescriptors.insert(fdref);
 }
 
-}//Detail
+}//Details
 }//MacOSX
 }//ROOT
 
