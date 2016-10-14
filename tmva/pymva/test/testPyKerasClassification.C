@@ -23,12 +23,14 @@ model.save(\"kerasModelClassification.h5\")\n";
 
 int testPyKerasClassification(){
    // Get data file
+   std::cout << "Get test data..." << std::endl;
    TString fname = "./tmva_class_example.root";
    if (gSystem->AccessPathName(fname))  // file does not exist in local directory
       gSystem->Exec("curl -O http://root.cern.ch/files/tmva_class_example.root");
    TFile *input = TFile::Open(fname);
 
    // Build model from python file
+   std::cout << "Generate keras model..." << std::endl;
    UInt_t ret;
    ret = gSystem->Exec("echo '"+pythonSrc+"' > generateKerasModelClassification.py");
    if(ret!=0){
@@ -42,6 +44,7 @@ int testPyKerasClassification(){
    }
 
    // Setup PyMVA and factory
+   std::cout << "Setup TMVA..." << std::endl;
    TMVA::PyMethodBase::PyInitialize();
    TFile* outputFile = TFile::Open("ResultsTestPyKerasClassification.root", "RECREATE");
    TMVA::Factory *factory = new TMVA::Factory("testPyKerasClassification", outputFile,
@@ -66,6 +69,7 @@ int testPyKerasClassification(){
    // Book and train method
    factory->BookMethod(dataloader, TMVA::Types::kPyKeras, "PyKeras",
       "!H:!V:VarTransform=D,G:FilenameModel=kerasModelClassification.h5:FilenameTrainedModel=trainedKerasModelClassification.h5:NumEpochs=10:BatchSize=32:SaveBestOnly=false:Verbose=0");
+   std::cout << "Train model..." << std::endl;
    factory->TrainAllMethods();
 
    // Clean-up
@@ -74,6 +78,8 @@ int testPyKerasClassification(){
    delete outputFile;
 
    // Setup reader
+   UInt_t numEvents = 100;
+   std::cout << "Run reader and classify " << numEvents << " events..." << std::endl;
    TMVA::Reader *reader = new TMVA::Reader("!Color:Silent");
    Float_t vars[4];
    reader->AddVariable("var1", vars+0);
@@ -93,7 +99,6 @@ int testPyKerasClassification(){
    background->SetBranchAddress("var3", vars+2);
    background->SetBranchAddress("var4", vars+3);
 
-   UInt_t numEvents = 100;
    Float_t meanMvaSignal = 0;
    Float_t meanMvaBackground = 0;
    for(UInt_t i=0; i<numEvents; i++){
@@ -106,10 +111,12 @@ int testPyKerasClassification(){
    meanMvaBackground = meanMvaBackground/float(numEvents);
 
    // Check whether the response is obviously better than guessing
+   std::cout << "Mean MVA response on signal: " << meanMvaSignal << std::endl;
    if(meanMvaSignal < 0.6){
       std::cout << "[ERROR] Mean response on signal is " << meanMvaSignal << " (<0.6)" << std::endl;
       return 1;
    }
+   std::cout << "Mean MVA response on background: " << meanMvaBackground << std::endl;
    if(meanMvaBackground > 0.4){
       std::cout << "[ERROR] Mean response on background is " << meanMvaBackground << " (>0.4)" << std::endl;
       return 1;
