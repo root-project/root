@@ -17,9 +17,10 @@ endif()
 
 if(xrootd)
   add_subdirectory(netx)
-  if(alien)
-    add_subdirectory(alien)
-  endif()
+endif()
+
+if(alien)
+  add_subdirectory(alien)
 endif()
 
 if(monalisa)
