@@ -1744,24 +1744,9 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset,
       char *pconst = sconst-1;
       if (*pconst == ' ' || *pconst == '<' || *pconst == '*' || *pconst == '\0') sopen = sconst + 5;
    }
-   fSTLtype = 0;
+   fSTLtype = TClassEdit::STLKind(s);
    fCtype   = 0;
-   // Any class name that 'contains' the word will be counted
-   // as a STL container. Is that really what we want.
-   if      (strstr(s,"vector"))                 fSTLtype = ROOT::kSTLvector;
-   else if (strstr(s,"list"))                   fSTLtype = ROOT::kSTLlist;
-   else if (strstr(s,"forward_list"))           fSTLtype = ROOT::kSTLforwardlist;
-   else if (strstr(s,"deque"))                  fSTLtype = ROOT::kSTLdeque;
-   else if (strstr(s,"multimap"))               fSTLtype = ROOT::kSTLmultimap;
-   else if (strstr(s,"multiset"))               fSTLtype = ROOT::kSTLmultiset;
-   else if (strstr(s,"bitset"))                 fSTLtype = ROOT::kSTLbitset;
-   else if (strstr(s,"map"))                    fSTLtype = ROOT::kSTLmap;
-   else if (strstr(s,"set"))                    fSTLtype = ROOT::kSTLset;
-   else if (strstr(s,"unordered_set"))          fSTLtype = ROOT::kSTLunorderedset;
-   else if (strstr(s,"unordered_multiset"))     fSTLtype = ROOT::kSTLunorderedmultiset;
-   else if (strstr(s,"unordered_map"))          fSTLtype = ROOT::kSTLunorderedmap;
-   else if (strstr(s,"unordered_multimap"))     fSTLtype = ROOT::kSTLunorderedmultimap;
-   if (fSTLtype == 0) { delete [] s; return;}
+   if (fSTLtype == ROOT::kNotSTL) { delete [] s; return;}
    if (dmPointer) fSTLtype += TVirtualStreamerInfo::kOffsetP;
 
    // find STL contained type
