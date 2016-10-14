@@ -23,12 +23,14 @@ model.save(\"kerasModelRegression.h5\")\n";
 
 int testPyKerasRegression(){
    // Get data file
+   std::cout << "Get test data..." << std::endl;
    TString fname = "./tmva_reg_example.root";
    if (gSystem->AccessPathName(fname))  // file does not exist in local directory
       gSystem->Exec("curl -O http://root.cern.ch/files/tmva_reg_example.root");
    TFile *input = TFile::Open(fname);
 
    // Build model from python file
+   std::cout << "Generate keras model..." << std::endl;
    UInt_t ret;
    ret = gSystem->Exec("echo '"+pythonSrc+"' > generateKerasModelRegression.py");
    if(ret!=0){
@@ -42,6 +44,7 @@ int testPyKerasRegression(){
    }
 
    // Setup PyMVA and factory
+   std::cout << "Setup TMVA..." << std::endl;
    TMVA::PyMethodBase::PyInitialize();
    TFile* outputFile = TFile::Open("ResultsTestPyKerasRegression.root", "RECREATE");
    TMVA::Factory *factory = new TMVA::Factory("testPyKerasRegression", outputFile,
@@ -63,6 +66,7 @@ int testPyKerasRegression(){
    // Book and train method
    factory->BookMethod(dataloader, TMVA::Types::kPyKeras, "PyKeras",
       "!H:!V:VarTransform=D,G:FilenameModel=kerasModelRegression.h5:FilenameTrainedModel=trainedKerasModelRegression.h5:NumEpochs=10:BatchSize=32:SaveBestOnly=false:Verbose=0");
+   std::cout << "Train model..." << std::endl;
    factory->TrainAllMethods();
 
    // Clean-up
@@ -71,6 +75,8 @@ int testPyKerasRegression(){
    delete outputFile;
 
    // Setup reader
+   UInt_t numEvents = 100;
+   std::cout << "Run reader and estimate target of " << numEvents << " events..." << std::endl;
    TMVA::Reader *reader = new TMVA::Reader("!Color:Silent");
    Float_t vars[3];
    reader->AddVariable("var1", vars+0);
@@ -82,7 +88,6 @@ int testPyKerasRegression(){
    tree->SetBranchAddress("var2", vars+1);
    tree->SetBranchAddress("fvalue", vars+2);
 
-   UInt_t numEvents = 100;
    Float_t meanMvaError = 0;
    for(UInt_t i=0; i<numEvents; i++){
       tree->GetEntry(i);
@@ -91,6 +96,7 @@ int testPyKerasRegression(){
    meanMvaError = meanMvaError/float(numEvents);
 
    // Check whether the response is obviously better than guessing
+   std::cout << "Mean squared error: " << meanMvaError << std::endl;
    if(meanMvaError > 30.0){
       std::cout << "[ERROR] Mean squared error is " << meanMvaError << " (>30.0)" << std::endl;
       return 1;
