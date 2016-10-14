@@ -451,11 +451,7 @@ TEnum* TCling::CreateEnum(void *VD, TClass *cl) const
       return 0;
    }
    const char* name = buf.c_str();
-   if (cl) {
-      enumType = new TEnum(name, VD, cl);
-   } else {
-      enumType = new TEnum(name, VD, cl);
-   }
+   enumType = new TEnum(name, VD, cl);
    UpdateEnumConstants(enumType, cl);
 
    return enumType;
