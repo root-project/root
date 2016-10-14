@@ -88,7 +88,10 @@ public:
    friend Bool_t operator> (const TDatime &d1, const TDatime &d2);
    friend Bool_t operator>=(const TDatime &d1, const TDatime &d2);
 
-   static void GetDateTime(UInt_t datetime, Int_t &date, Int_t &time);
+   static void  GetDateTime(UInt_t datetime, Int_t &date, Int_t &time);
+   static Int_t GetGlobalDayFromDate(Int_t date);
+   static Int_t GetDateFromGlobalDay(Int_t day);
+   static Int_t GetLegalGlobalDayFromDate(Int_t date);
 
    ClassDef(TDatime,1)  //Date and time 950130 124559
 };
