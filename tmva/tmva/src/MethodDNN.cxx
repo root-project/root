@@ -747,7 +747,15 @@ void TMVA::MethodDNN::TrainGpu()
       TNet<TCuda<>> net(settings.batchSize, fNet);
       net.SetWeightDecay(settings.weightDecay);
       net.SetRegularization(settings.regularization);
-      net.SetDropoutProbabilities(settings.dropoutProbabilities);
+
+      // Need to convert dropoutprobabilities to conventions used
+      // by backend implementation.
+      std::vector<Double_t> dropoutVector(settings.dropoutProbabilities);
+      for (auto & p : dropoutVector) {
+         p = 1.0 - p;
+      }
+      net.SetDropoutProbabilities(dropoutVector);
+
       net.InitializeGradients();
       auto testNet = net.CreateClone(settings.batchSize);
 
@@ -911,6 +919,13 @@ void TMVA::MethodDNN::TrainCpu()
       TNet<TCpu<AFloat>> net(settings.batchSize, fNet);
       net.SetWeightDecay(settings.weightDecay);
       net.SetRegularization(settings.regularization);
+      // Need to convert dropoutprobabilities to conventions used
+      // by backend implementation.
+      std::vector<Double_t> dropoutVector(settings.dropoutProbabilities);
+      for (auto & p : dropoutVector) {
+         p = 1.0 - p;
+      }
+      net.SetDropoutProbabilities(dropoutVector);
       net.SetDropoutProbabilities(settings.dropoutProbabilities);
       net.InitializeGradients();
       auto testNet = net.CreateClone(settings.batchSize);
@@ -1121,7 +1136,7 @@ const std::vector<Float_t> & TMVA::MethodDNN::GetMulticlassValues()
 }
 
 //______________________________________________________________________________
-void TMVA::MethodDNN::AddWeightsXMLTo( void* parent ) const 
+void TMVA::MethodDNN::AddWeightsXMLTo( void* parent ) const
 {
    void* nn = gTools().xmlengine().NewChild(parent, 0, "Weights");
    Int_t inputWidth = fNet.GetInputWidth();

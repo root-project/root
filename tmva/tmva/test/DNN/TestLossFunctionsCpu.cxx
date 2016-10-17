@@ -34,13 +34,13 @@ int main()
     //
 
     error = testMeanSquaredError<TCpu<Scalar_t>>(10);
-    std::cout << "Testing mean squared error loss:     ";
+    std::cout << "Testing mean squared error loss:        ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
     if (error > 1e-3)
         return 1;
 
     error = testMeanSquaredErrorGradients<TCpu<Scalar_t>>(10);
-    std::cout << "Testing mean squared error gradient: ";
+    std::cout << "Testing mean squared error gradient:    ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
     if (error > 1e-3)
         return 1;
