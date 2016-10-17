@@ -150,8 +150,8 @@ AFloat TCpu<AFloat>::SoftmaxCrossEntropy(
       return sum1 + sum2;
    };
 
-   Y.GetThreadPool().Map(f, ROOT::TSeqI(Y.GetNrows()));
-   return norm * Y.GetThreadPool().Reduce(temp, reduction);
+   Y.GetThreadExecutor().Map(f, ROOT::TSeqI(Y.GetNrows()));
+   return norm * Y.GetThreadExecutor().Reduce(temp, reduction);
 }
 
 //______________________________________________________________________________
@@ -184,7 +184,7 @@ void TCpu<AFloat>::SoftmaxCrossEntropyGradients(
       return 0;
    };
 
-   Y.GetThreadPool().Map(f, ROOT::TSeqI(Y.GetNrows()));
+   Y.GetThreadExecutor().Map(f, ROOT::TSeqI(Y.GetNrows()));
 }
 
 } // namespace DNN
