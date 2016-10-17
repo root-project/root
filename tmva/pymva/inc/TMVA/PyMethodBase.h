@@ -26,8 +26,6 @@
 #include "TMVA/MethodBase.h"
 #include "TMVA/Types.h"
 
-#include <Python.h>    // Needs to be included first to avoid redefinition of _POSIX_C_SOURCE
-
 #include "Rtypes.h"
 #include "TString.h"
 
@@ -39,9 +37,14 @@ class TSpline;
 class TH1F;
 class TH1D;
 
+#ifndef PyObject_HEAD
+struct _object;
+typedef _object PyObject;
+#define Py_single_input 256
+#endif
+
 // needed by NPY_API_VERSION
 #include "numpy/numpyconfig.h"
-
 #if (NPY_API_VERSION >= 0x00000007 )
 struct tagPyArrayObject;
 typedef tagPyArrayObject PyArrayObject;
