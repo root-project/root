@@ -12,14 +12,9 @@
 #ifndef ROOT_TThreadExecutor
 #define ROOT_TThreadExecutor
 
-#include "RConfigure.h" // for R__USE_IMT
-
 // exclude in case ROOT does not have IMT support
 #ifndef R__USE_IMT
-// No need to error out for dictionaries.
-# if !defined(__ROOTCLING__) && !defined(G__DICTIONARY)
-#  error "Cannot use ROOT::TThreadExecutor without defining R__USE_IMT."
-# endif
+# error "Cannot use ROOT::TThreadExecutor without defining R__USE_IMT."
 #else
 #include "ROOT/TExecutor.hxx"
 #include "tbb/tbb.h"
