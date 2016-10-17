@@ -11,9 +11,9 @@ include_directories(${ROOT_INCLUDE_DIRS})
 include_directories(${PYTHON_INCLUDE_DIRS} ${NUMPY_INCLUDE_DIRS})
 
 # Look for needed python modules
-find_python_module(keras)
-find_python_module(theano)
-find_python_module(tensorflow)
+find_python_module(keras QUIET)
+find_python_module(theano QUIET)
+find_python_module(tensorflow QUIET)
 
 # Enable tests based on available python modules
 if((PY_KERAS_FOUND AND PY_THEANO_FOUND) OR (PY_KERAS_FOUND AND PY_TENSORFLOW_FOUND))
