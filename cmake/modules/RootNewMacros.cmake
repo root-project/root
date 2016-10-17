@@ -952,27 +952,37 @@ function(ROOT_ADD_C_FLAG var flag)
 endfunction()
 
 #----------------------------------------------------------------------------
-# find_python_module(module [REQUIRED])
+# find_python_module(module [REQUIRED] [QUIET])
 #----------------------------------------------------------------------------
 function(find_python_module module)
-  string(TOUPPER ${module} module_upper)
-  if(NOT PY_${module_upper})
-    if(ARGC GREATER 1 AND ARGV1 STREQUAL "REQUIRED")
-      set(${module}_FIND_REQUIRED TRUE)
-    endif()
-    # A module's location is usually a directory, but for binary modules
-    # it's a .so file.
-    execute_process(COMMAND "${PYTHON_EXECUTABLE}" "-c"
-      "import re, ${module}; print re.compile('/__init__.py.*').sub('',${module}.__file__)"
-      RESULT_VARIABLE _${module}_status
-      OUTPUT_VARIABLE _${module}_location
-      ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
-    if(NOT _${module}_status)
-      set(PY_${module_upper} ${_${module}_location} CACHE STRING  "Location of Python module ${module}")
-    endif()
-  endif()
-  find_package_handle_standard_args(PY_${module} DEFAULT_MSG PY_${module_upper})
-  set(PY_${module_upper}_FOUND ${PY_${module_upper}_FOUND} PARENT_SCOPE) 
+   CMAKE_PARSE_ARGUMENTS(ARG "REQUIRED;QUIET" "" "" ${ARGN})
+   string(TOUPPER ${module} module_upper)
+   if(NOT PY_${module_upper})
+      if(ARG_REQUIRED)
+         set(py_${module}_FIND_REQUIRED TRUE)
+      endif()
+      if(ARG_QUIET)
+         set(py_${module}_FIND_QUIETLY TRUE)
+      endif()
+      # A module's location is usually a directory, but for binary modules
+      # it's a .so file.
+      execute_process(COMMAND "${PYTHON_EXECUTABLE}" "-c"
+         "import re, ${module}; print(re.compile('/__init__.py.*').sub('',${module}.__file__))"
+         RESULT_VARIABLE _${module}_status
+         OUTPUT_VARIABLE _${module}_location
+         ERROR_VARIABLE _${module}_error
+         OUTPUT_STRIP_TRAILING_WHITESPACE
+         ERROR_STRIP_TRAILING_WHITESPACE)
+      if(NOT _${module}_status)
+         set(PY_${module_upper} ${_${module}_location} CACHE STRING "Location of Python module ${module}")
+      else()
+         if(NOT ARG_QUIET)
+            message(STATUS "Failed to find Python module ${module}: ${_${module}_error}")
+          endif()
+      endif()
+   endif()
+   find_package_handle_standard_args(py_${module} DEFAULT_MSG PY_${module_upper})
+   set(PY_${module_upper}_FOUND ${PY_${module_upper}_FOUND} PARENT_SCOPE)
 endfunction()
 
 
