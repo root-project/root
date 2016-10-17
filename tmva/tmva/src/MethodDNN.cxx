@@ -803,13 +803,15 @@ void TMVA::MethodDNN::TrainGpu()
       std::chrono::time_point<std::chrono::system_clock> start, end;
       start = std::chrono::system_clock::now();
 
-      Log() << std::setw(10) << "Epoch" << " | "
-            << std::setw(12) << "Train Err."
-            << std::setw(12) << "Test  Err."
-            << std::setw(12) << "GFLOP/s"
-            << std::setw(12) << "Conv. Steps" << Endl;
-      std::string separator(62, '-');
-      Log() << separator << Endl;
+      if (!fInteractive) {
+         Log() << std::setw(10) << "Epoch" << " | "
+               << std::setw(12) << "Train Err."
+               << std::setw(12) << "Test  Err."
+               << std::setw(12) << "GFLOP/s"
+               << std::setw(12) << "Conv. Steps" << Endl;
+         std::string separator(62, '-');
+         Log() << separator << Endl;
+      }
 
       while (!converged)
       {
@@ -852,12 +854,6 @@ void TMVA::MethodDNN::TrainGpu()
             }
             trainingError /= (Double_t) (nTrainingSamples / settings.batchSize);
 
-	    if (fInteractive){
-               fInteractive->AddPoint(stepCount, trainingError, testError);
-               fIPyCurrentIter = 100*(double)minimizer.GetConvergenceCount() /(double)settings.convergenceSteps;
-               if (fExitFromTraining) break;
-            }
-
             // Compute numerical throughput.
             std::chrono::duration<double> elapsed_seconds = end - start;
             double seconds = elapsed_seconds.count();
@@ -867,13 +863,20 @@ void TMVA::MethodDNN::TrainGpu()
             converged = minimizer.HasConverged(testError);
             start = std::chrono::system_clock::now();
 
-            Log() << std::setw(10) << stepCount << " | "
-                  << std::setw(12) << trainingError
-                  << std::setw(12) << testError
-                  << std::setw(12) << nFlops / seconds
-                  << std::setw(12) << minimizer.GetConvergenceCount() << Endl;
-            if (converged) {
-               Log() << Endl;
+            if (fInteractive) {
+               fInteractive->AddPoint(stepCount, trainingError, testError);
+               fIPyCurrentIter = 100.0 * minimizer.GetConvergenceCount()
+                                  / minimizer.GetConvergenceSteps ();
+               if (fExitFromTraining) break;
+            } else {
+               Log() << std::setw(10) << stepCount << " | "
+                     << std::setw(12) << trainingError
+                     << std::setw(12) << testError
+                     << std::setw(12) << nFlops / seconds
+                     << std::setw(12) << minimizer.GetConvergenceCount() << Endl;
+               if (converged) {
+                  Log() << Endl;
+               }
             }
          }
       }
@@ -970,13 +973,15 @@ void TMVA::MethodDNN::TrainCpu()
       std::chrono::time_point<std::chrono::system_clock> start, end;
       start = std::chrono::system_clock::now();
 
-      Log() << std::setw(10) << "Epoch" << " | "
-            << std::setw(12) << "Train Err."
-            << std::setw(12) << "Test  Err."
-            << std::setw(12) << "GFLOP/s"
-            << std::setw(12) << "Conv. Steps" << Endl;
-      std::string separator(62, '-');
-      Log() << separator << Endl;
+      if (fInteractive) {
+         Log() << std::setw(10) << "Epoch" << " | "
+               << std::setw(12) << "Train Err."
+               << std::setw(12) << "Test  Err."
+               << std::setw(12) << "GFLOP/s"
+               << std::setw(12) << "Conv. Steps" << Endl;
+         std::string separator(62, '-');
+         Log() << separator << Endl;
+      }
 
       while (!converged)
       {
@@ -1033,13 +1038,20 @@ void TMVA::MethodDNN::TrainCpu()
             converged = minimizer.HasConverged(testError);
             start = std::chrono::system_clock::now();
 
-            Log() << std::setw(10) << stepCount << " | "
-                  << std::setw(12) << trainingError
-                  << std::setw(12) << testError
-                  << std::setw(12) << nFlops / seconds
-                  << std::setw(12) << minimizer.GetConvergenceCount() << Endl;
-            if (converged) {
-               Log() << Endl;
+            if (fInteractive) {
+               fInteractive->AddPoint(stepCount, trainingError, testError);
+               fIPyCurrentIter = 100.0 * minimizer.GetConvergenceCount()
+                                  / minimizer.GetConvergenceSteps ();
+               if (fExitFromTraining) break;
+            } else {
+               Log() << std::setw(10) << stepCount << " | "
+                     << std::setw(12) << trainingError
+                     << std::setw(12) << testError
+                     << std::setw(12) << nFlops / seconds
+                     << std::setw(12) << minimizer.GetConvergenceCount() << Endl;
+               if (converged) {
+                  Log() << Endl;
+               }
             }
          }
       }
