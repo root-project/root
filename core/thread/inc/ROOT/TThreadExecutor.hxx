@@ -13,8 +13,9 @@
 #define ROOT_TThreadExecutor
 
 // exclude in case ROOT does not have IMT support
-#ifdef R__USE_IMT
-
+#ifndef R__USE_IMT
+# error "Cannot use ROOT::TThreadExecutor without defining R__USE_IMT."
+#else
 #include "ROOT/TExecutor.hxx"
 #include "tbb/tbb.h"
 #include <numeric>
