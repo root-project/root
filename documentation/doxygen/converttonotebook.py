@@ -771,9 +771,10 @@ def mainfunction(text):
     r = subprocess.call(["jupyter", "nbconvert", "--ExecutePreprocessor.timeout=%d" % timeout,  "--to=notebook", "--execute",  outPathName])
     if r != 0:
         sys.stderr.write("NOTEBOOK_CONVERSION_WARNING: Nbconvert failed for notebook %s with return code %s\n" %(outname,r))
-    if isJsroot:
-        subprocess.call(["jupyter", "trust",  os.path.join(outdir, outnameconverted)])
-    if r == 0:  # Only remove notebook without output if nbconvert succeedes 
+    else:
+        if isJsroot:
+            subprocess.call(["jupyter", "trust",  os.path.join(outdir, outnameconverted)])
+        # Only remove notebook without output if nbconvert succeedes 
         os.remove(outPathName)
 
 
