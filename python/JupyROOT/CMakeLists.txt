@@ -11,7 +11,7 @@ set(NOTEBOOKS ${CMAKE_CURRENT_SOURCE_DIR}/importROOT.ipynb
               ${CMAKE_CURRENT_SOURCE_DIR}/simpleCppMagic.ipynb)
 #              ${CMAKE_CURRENT_SOURCE_DIR}/ROOT_kernel.ipynb)
 
-find_python_module(IPython)
+find_python_module(IPython QUIET)
 
 if(PY_IPYTHON_FOUND)
 # Test all modules with doctest. All new tests will be automatically picked up

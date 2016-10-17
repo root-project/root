@@ -7,7 +7,7 @@ set(NOTEBOOKS ${CMAKE_CURRENT_SOURCE_DIR}/EnableJsMVA.ipynb
 	      ${CMAKE_CURRENT_SOURCE_DIR}/UserInterface.ipynb
 	      ${CMAKE_CURRENT_SOURCE_DIR}/NewMethods.ipynb)
 
-find_python_module(IPython)
+find_python_module(IPython QUIET)
 
 if(PY_IPYTHON_FOUND)
 # Test all notebooks available
