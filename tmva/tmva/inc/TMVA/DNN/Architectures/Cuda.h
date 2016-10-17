@@ -36,7 +36,7 @@ namespace DNN
  * for this architecture as well as the remaining functions in the low-level
  * interface in the form of static members.
  */
-template<typename AFloat = Double_t>
+template<typename AFloat = Real_t>
 class TCuda
 {
 
