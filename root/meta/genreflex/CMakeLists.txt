@@ -1,5 +1,13 @@
 ROOTTEST_ADD_TESTDIRS()
 
+# ROOT-8380
+ROOTTEST_GENERATE_REFLEX_DICTIONARY(canSplit canSplit.h SELECTION canSplit_selection.xml)
+
+ROOTTEST_ADD_TEST(canSplit
+                  MACRO canSplit.C
+                  DEPENDS ${GENERATE_REFLEX_TEST})
+
+
 # ROOT-8381
 ROOTTEST_ADD_TEST(vectorOfTStar
                   COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/vectorOfTStar.h
