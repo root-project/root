@@ -4532,7 +4532,7 @@ void THistPainter::PaintBoxes(Option_t *)
    Double_t dxmin = 0.51*(gPad->PadtoX(ux1)-gPad->PadtoX(ux0));
    Double_t dymin = 0.51*(gPad->PadtoY(uy0)-gPad->PadtoY(uy1));
 
-   Double_t zmin = fH->GetMinimum();
+   Double_t zmin = TMath::Max(fH->GetMinimum(),0.);
    Double_t zmax = TMath::Max(TMath::Abs(fH->GetMaximum()),
                               TMath::Abs(fH->GetMinimum()));
 
@@ -4543,7 +4543,7 @@ void THistPainter::PaintBoxes(Option_t *)
       TIter next(gPad->GetListOfPrimitives());
       while ((h2 = (TH2 *)next())) {
          if (!h2->InheritsFrom(TH2::Class())) continue;
-         zmin = h2->GetMinimum();
+         zmin = TMath::Max(h2->GetMinimum(), 0.);
          zmax = TMath::Max(TMath::Abs(h2->GetMaximum()),
                            TMath::Abs(h2->GetMinimum()));
          if (Hoption.Logz) {
@@ -4566,8 +4566,9 @@ void THistPainter::PaintBoxes(Option_t *)
          return;
       }
    }
-
    Double_t zratio, dz = zmax - zmin;
+   Bool_t kZminNeg     = kFALSE;
+   if (fH->GetMinimum()<0) kZminNeg = kTRUE;
    Bool_t kZNeg        = kFALSE;
 
    // Define the dark and light colors the "button style" boxes.
@@ -4592,9 +4593,9 @@ void THistPainter::PaintBoxes(Option_t *)
          z     = Hparam.factor*fH->GetBinContent(bin);
          kZNeg = kFALSE;
 
-         if (z <  zmin) continue; // Can be the case with
-         if (z >  zmax) z = zmax; // option Same
-         if (zmin < 0 && z==0) continue; // do not draw empty bins if case of histo with netgative bins.
+         if (TMath::Abs(z) <  zmin) continue; // Can be the case with ...
+         if (TMath::Abs(z) >  zmax) z = zmax; // ... option Same
+         if (kZminNeg && z==0) continue;      // Do not draw empty bins if case of histo with netgative bins.
 
          if (z < 0) {
             if (Hoption.Logz) continue;
