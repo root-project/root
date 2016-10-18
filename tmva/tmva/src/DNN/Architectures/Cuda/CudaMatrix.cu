@@ -130,8 +130,8 @@ inline void TCudaMatrix<AFloat>::InitializeCuda()
 template<typename AFloat>
 void TCudaMatrix<AFloat>::InitializeCurandStates()
 {
-   dim3 blockDims = TDevice::BlockDims();
-   dim3 gridDims  = TDevice::GridDims(*this);
+   dim3 blockDims = TDevice::BlockDims2D();
+   dim3 gridDims  = TDevice::GridDims2D(*this);
    CurandInitializationKernel<<<gridDims, blockDims>>>(time(nullptr), fCurandStates);
 }
 

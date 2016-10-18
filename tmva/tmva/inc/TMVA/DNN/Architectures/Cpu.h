@@ -33,7 +33,7 @@ namespace DNN
  * for this architecture as well as the remaining functions in the low-level
  * interface in the form of static members.
  */
-template<typename AReal>
+template<typename AReal = Real_t>
 class TCpu
 {
 public:
@@ -162,6 +162,14 @@ public:
    static void CrossEntropyGradients(TCpuMatrix<Scalar_t> & dY,
                                      const TCpuMatrix<Scalar_t> & Y,
                                      const TCpuMatrix<Scalar_t> & output);
+
+    /** Softmax transformation is implicitly applied, thus \p output should
+     *  hold the linear activations of the last layer in the net. */
+   static Scalar_t SoftmaxCrossEntropy(const TCpuMatrix<Scalar_t> &Y,
+                                     const TCpuMatrix<Scalar_t> &output);
+   static void SoftmaxCrossEntropyGradients(TCpuMatrix<Scalar_t> & dY,
+                                            const TCpuMatrix<Scalar_t> & Y,
+                                            const TCpuMatrix<Scalar_t> & output);
    ///@}
 
    //____________________________________________________________________________
@@ -179,6 +187,8 @@ public:
    ///@{
    static void Sigmoid(TCpuMatrix<Scalar_t> &YHat,
                         const TCpuMatrix<Scalar_t> & );
+   static void Softmax(TCpuMatrix<Scalar_t> &YHat,
+                       const TCpuMatrix<Scalar_t> & );
    ///@}
 
    //____________________________________________________________________________

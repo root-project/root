@@ -177,20 +177,30 @@ void TDataLoader<TMVAInput_t, TCpu<Double_t>>::CopyOutput(
     size_t batchSize)
 {
    Event * event  = fData.front();
-   size_t n       = (event->GetNTargets() == 0) ? 1 : event->GetNTargets();
+   size_t n       = buffer.GetSize() / batchSize;
 
    // Copy target(s).
 
    for (size_t i = 0; i < batchSize; i++) {
-       size_t sampleIndex = * sampleIterator++;
-       event = fData[sampleIndex];
+      size_t sampleIndex = * sampleIterator++;
+      event = fData[sampleIndex];
       for (size_t j = 0; j < n; j++) {
          // Copy output matrices.
          size_t bufferIndex = j * batchSize + i;
+         // Classification
          if (event->GetNTargets() == 0) {
-            buffer[bufferIndex] = (event->GetClass() == 0) ? 1.0 : 0.0;
+            if (n == 1) {
+               // Binary.
+               buffer[bufferIndex] = (event->GetClass() == 0) ? 1.0 : 0.0;
+            } else {
+               // Multiclass.
+               buffer[bufferIndex] = 0.0;
+               if (j == event->GetClass()) {
+                  buffer[bufferIndex] = 1.0;
+               }
+            }
          } else {
-            buffer[bufferIndex] = event->GetTarget(j);
+            buffer[bufferIndex] = static_cast<Real_t>(event->GetTarget(j));
          }
       }
    }
@@ -226,18 +236,28 @@ void TDataLoader<TMVAInput_t, TCpu<Real_t>>::CopyOutput(
     size_t batchSize)
 {
    Event * event  = fData.front();
-   size_t n       = (event->GetNTargets() == 0) ? 1 : event->GetNTargets();
+   size_t n       = buffer.GetSize() / batchSize;
 
    // Copy target(s).
 
    for (size_t i = 0; i < batchSize; i++) {
-       size_t sampleIndex = * sampleIterator++;
-       event = fData[sampleIndex];
+      size_t sampleIndex = * sampleIterator++;
+      event = fData[sampleIndex];
       for (size_t j = 0; j < n; j++) {
          // Copy output matrices.
          size_t bufferIndex = j * batchSize + i;
+         // Classification
          if (event->GetNTargets() == 0) {
-            buffer[bufferIndex] = (event->GetClass() == 0) ? 1.0 : 0.0;
+            if (n == 1) {
+               // Binary.
+               buffer[bufferIndex] = (event->GetClass() == 0) ? 1.0 : 0.0;
+            } else {
+               // Multiclass.
+               buffer[bufferIndex] = 0.0;
+               if (j == event->GetClass()) {
+                  buffer[bufferIndex] = 1.0;
+               }
+            }
          } else {
             buffer[bufferIndex] = static_cast<Real_t>(event->GetTarget(j));
          }

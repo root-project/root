@@ -77,8 +77,8 @@ template<typename AFloat>
 void TCuda<AFloat>::AddRowWise(TCudaMatrix<AFloat> &Weights,
                                const TCudaMatrix<AFloat> &theta)
 {
-   dim3 blockDims = TDevice::BlockDims();
-   dim3 gridDims  = TDevice::GridDims(Weights);
+   dim3 blockDims = TDevice::BlockDims2D();
+   dim3 gridDims  = TDevice::GridDims2D(Weights);
    cudaStream_t s = Weights.GetComputeStream();
    ::TMVA::DNN::Cuda::AddRowWise<<<gridDims, blockDims, 0, s>>>(
        Weights.GetDataPointer(),

@@ -29,5 +29,29 @@ void TCpu<AFloat>::Sigmoid(TCpuMatrix<AFloat> & B,
    B.MapFrom(f, A);
 }
 
+template<typename AFloat>
+void TCpu<AFloat>::Softmax(TCpuMatrix<AFloat> & B,
+                           const TCpuMatrix<AFloat> & A)
+{
+   const AFloat  *dataA = A.GetRawDataPointer();
+         AFloat  *dataB = B.GetRawDataPointer();
+   size_t n = A.GetNcols();
+   size_t m = A.GetNrows();
+
+   auto f = [&dataA, &dataB, n, m](UInt_t workerID)
+   {
+      AFloat sum = 0.0;
+      for (size_t i = 0; i < n; i++) {
+         sum += exp(dataA[workerID + i * m]);
+      }
+      for (size_t i = 0; i < n; i++) {
+         dataB[workerID + i * m] = exp(dataA[workerID + i * m]) / sum;
+      }
+      return 0;
+   };
+
+   B.GetThreadExecutor().Map(f, ROOT::TSeqI(A.GetNrows()));
+}
+
 } // namespace DNN
 } // namespace TMVA

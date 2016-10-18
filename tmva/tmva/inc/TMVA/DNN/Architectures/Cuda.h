@@ -36,7 +36,7 @@ namespace DNN
  * for this architecture as well as the remaining functions in the low-level
  * interface in the form of static members.
  */
-template<typename AFloat = Double_t>
+template<typename AFloat = Real_t>
 class TCuda
 {
 
@@ -167,6 +167,14 @@ public:
    static void CrossEntropyGradients(TCudaMatrix<AFloat> & dY,
                                      const TCudaMatrix<AFloat> & Y,
                                      const TCudaMatrix<AFloat> & output);
+
+    /** Softmax transformation is implicitly applied, thus \p output should
+     *  hold the linear activations of the last layer in the net. */
+   static AFloat SoftmaxCrossEntropy(const TCudaMatrix<AFloat> &Y,
+                                     const TCudaMatrix<AFloat> &output);
+   static void SoftmaxCrossEntropyGradients(TCudaMatrix<AFloat> & dY,
+                                            const TCudaMatrix<AFloat> & Y,
+                                            const TCudaMatrix<AFloat> & output);
    ///@}
 
    //____________________________________________________________________________
@@ -183,6 +191,8 @@ public:
     */
    ///@{
    static void Sigmoid(TCudaMatrix<AFloat> &YHat,
+                       const TCudaMatrix<AFloat> & );
+   static void Softmax(TCudaMatrix<AFloat> &YHat,
                        const TCudaMatrix<AFloat> & );
    ///@}
 
