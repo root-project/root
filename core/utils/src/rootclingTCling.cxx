@@ -200,17 +200,7 @@ bool CloseStreamerInfoROOTFile(bool writeEmptyRootPCM)
          auto dm = (TDataMember *) dmObj;
          if (!dm->IsPersistent() || cl->GetClassVersion()==0) continue;
          if (IsUnsupportedUniquePointer(normName.c_str(), dm)) return false;
-         // We need this for the collections of T automatically selected by rootcling
-         if (!dm->GetDataType() && dm->IsSTLContainer()) {
-            auto dmTypeName = dm->GetTypeName();
-            auto clm = TClass::GetClass(dmTypeName);
-            if (!clm) {
-               Error("CloseStreamerInfoROOTFile", "Cannot find class %s.\n", dmTypeName);
-               return false;
-            }
-         }
       }
-
 
       // Never store a proto class for a class which rootcling already has
       // an 'official' TClass (i.e. the dictionary is in libCore or libRIO).
