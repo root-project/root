@@ -827,8 +827,8 @@ INPUT                  = . \
                          ../../roofit/ \
                          ../../tree/ \
                          ../../sql/ \
-                         ../../tutorials/
-#                         ../../bindings/r/ \
+                         ../../tutorials/ \
+                         ../../bindings/r/ \
 #                         ../../bindings/ruby/ \
 #                         ../../core/clib/
 #                         ../../core/lzma/
