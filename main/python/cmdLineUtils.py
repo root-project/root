@@ -708,7 +708,7 @@ REPLACE_HELP = "replace object if already existing"
 def _openBrowser(rootFile=None):
     browser = ROOT.TBrowser()
     if rootFile: rootFile.Browse(browser)
-    ROOT.PyROOT.TPyROOTApplication.Run(ROOT.gApplication)
+    raw_input("Press enter to exit.")
 
 def rootBrowse(fileName=None):
     if fileName:
