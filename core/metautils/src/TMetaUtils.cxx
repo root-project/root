@@ -2677,7 +2677,9 @@ void ROOT::TMetaUtils::WriteClassCode(CallWriteStreamer_t WriteStreamerFunc,
    }
 
    if (ROOT::TMetaUtils::ClassInfo__HasMethod(cl,"Streamer",interp)) {
-      if (cl.RootFlag()) ROOT::TMetaUtils::WritePointersSTL(cl, interp, normCtxt); // In particular this detect if the class has a version number.
+      // The !genreflex is there to prevent genreflex to select collections which are data members
+      // This is to maintain the behaviour of ROOT5 and ROOT6 up to 6.07 included.
+      if (cl.RootFlag() && !isGenreflex) ROOT::TMetaUtils::WritePointersSTL(cl, interp, normCtxt); // In particular this detect if the class has a version number.
       if (!(cl.RequestNoStreamer())) {
          (*WriteStreamerFunc)(cl, interp, normCtxt, dictStream, isGenreflex || cl.RequestStreamerInfo());
       } else
@@ -2685,7 +2687,8 @@ void ROOT::TMetaUtils::WriteClassCode(CallWriteStreamer_t WriteStreamerFunc,
    } else {
       ROOT::TMetaUtils::Info(0, "Class %s: Streamer() not declared\n", fullname.c_str());
 
-      if (cl.RequestStreamerInfo()) ROOT::TMetaUtils::WritePointersSTL(cl, interp, normCtxt);
+      // See comment above about the !isGenreflex
+      if (cl.RequestStreamerInfo() && !isGenreflex) ROOT::TMetaUtils::WritePointersSTL(cl, interp, normCtxt);
    }
    ROOT::TMetaUtils::WriteAuxFunctions(dictStream, cl, decl, interp, ctorTypes, normCtxt);
 }
