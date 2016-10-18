@@ -128,9 +128,8 @@ if (UNIX)
 
   if(NOT CLING_CXX_PATH)
     # Remove absolute path from CMAKE_CXX_COMPILER
-    get_filename_component(_real_cxx_compiler ${CMAKE_CXX_COMPILER} REALPATH)
-    get_filename_component(_name ${_real_cxx_compiler} NAME)
-    get_filename_component(_path ${_real_cxx_compiler} PATH)
+    get_filename_component(_name ${CMAKE_CXX_COMPILER} NAME)
+    get_filename_component(_path ${CMAKE_CXX_COMPILER} PATH)
 
     # This should probably be more general...but how?
     if(_name STREQUAL "ccache" OR _name STREQUAL "distcc")
