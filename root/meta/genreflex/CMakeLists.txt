@@ -1,5 +1,12 @@
 ROOTTEST_ADD_TESTDIRS()
 
+# ROOT-8381
+ROOTTEST_ADD_TEST(vectorOfTStar
+                  COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/vectorOfTStar.h
+                          --select=${CMAKE_CURRENT_SOURCE_DIR}/vectorOfTStar_selection.xml
+                  OUTREF vectorOfTStar.ref
+                  ERRREF vectorOfTStar.eref)
+
 # ROOT-3745
 ROOTTEST_ADD_TEST(ioreadrulesfailonwarning
                   COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/ioreadrulesfailonwarning.h
