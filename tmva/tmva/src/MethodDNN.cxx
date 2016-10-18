@@ -525,7 +525,7 @@ void TMVA::MethodDNN::Train()
       Log() << kFATAL << "OpenCL backend not yes supported." << Endl;
       return;
    } else if (fArchitectureString == "CPU") {
-      TrainCpu<Double_t>();
+      TrainCpu();
       if (!fExitFromTraining) fIPyMaxIter = fIPyCurrentIter;
       ExitFromTraining();
       return;
@@ -895,7 +895,6 @@ void TMVA::MethodDNN::TrainGpu()
 }
 
 //______________________________________________________________________________
-template<typename AFloat>
 void TMVA::MethodDNN::TrainCpu()
 {
 
@@ -919,7 +918,7 @@ void TMVA::MethodDNN::TrainCpu()
             << fTrainingSettings.size() << ":" << Endl;
       trainingPhase++;
 
-      TNet<TCpu<AFloat>> net(settings.batchSize, fNet);
+      TNet<TCpu<>> net(settings.batchSize, fNet);
       net.SetWeightDecay(settings.weightDecay);
       net.SetRegularization(settings.regularization);
       // Need to convert dropoutprobabilities to conventions used
@@ -933,7 +932,7 @@ void TMVA::MethodDNN::TrainCpu()
       net.InitializeGradients();
       auto testNet = net.CreateClone(settings.batchSize);
 
-      using DataLoader_t = TDataLoader<TMVAInput_t, TCpu<AFloat>>;
+      using DataLoader_t = TDataLoader<TMVAInput_t, TCpu<>>;
 
       size_t nThreads = 1;
       DataLoader_t trainingData(GetEventCollection(Types::kTraining),
@@ -946,12 +945,12 @@ void TMVA::MethodDNN::TrainCpu()
                             testNet.GetBatchSize(),
                             net.GetInputWidth(),
                             net.GetOutputWidth(), nThreads);
-      DNN::TGradientDescent<TCpu<AFloat>> minimizer(settings.learningRate,
+      DNN::TGradientDescent<TCpu<>> minimizer(settings.learningRate,
                                                settings.convergenceSteps,
                                                settings.testInterval);
 
-      std::vector<TNet<TCpu<AFloat>>>   nets{};
-      std::vector<TBatch<TCpu<AFloat>>> batches{};
+      std::vector<TNet<TCpu<>>>   nets{};
+      std::vector<TBatch<TCpu<>>> batches{};
       nets.reserve(nThreads);
       for (size_t i = 0; i < nThreads; i++) {
          nets.push_back(net);
@@ -959,9 +958,9 @@ void TMVA::MethodDNN::TrainCpu()
          {
             auto &masterLayer = net.GetLayer(j);
             auto &layer = nets.back().GetLayer(j);
-            TCpu<AFloat>::Copy(layer.GetWeights(),
+            TCpu<>::Copy(layer.GetWeights(),
                           masterLayer.GetWeights());
-            TCpu<AFloat>::Copy(layer.GetBiases(),
+            TCpu<>::Copy(layer.GetBiases(),
                           masterLayer.GetBiases());
          }
       }
@@ -1004,7 +1003,7 @@ void TMVA::MethodDNN::TrainCpu()
          if ((stepCount % minimizer.GetTestInterval()) == 0) {
 
             // Compute test error.
-            AFloat testError = 0.0;
+            Double_t testError = 0.0;
             for (auto batch : testData) {
                auto inputMatrix  = batch.GetInput();
                auto outputMatrix = batch.GetOutput();
@@ -1015,7 +1014,7 @@ void TMVA::MethodDNN::TrainCpu()
             end   = std::chrono::system_clock::now();
 
             // Compute training error.
-            AFloat trainingError = 0.0;
+            Double_t trainingError = 0.0;
             for (auto batch : trainingData) {
                auto inputMatrix  = batch.GetInput();
                auto outputMatrix = batch.GetOutput();
