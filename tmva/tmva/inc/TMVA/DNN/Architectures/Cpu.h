@@ -33,7 +33,7 @@ namespace DNN
  * for this architecture as well as the remaining functions in the low-level
  * interface in the form of static members.
  */
-template<typename AReal>
+template<typename AReal = Real_t>
 class TCpu
 {
 public:
