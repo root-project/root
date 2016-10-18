@@ -94,7 +94,7 @@ int main(int argc, char** argv) {
 
      std::lock_guard<std::mutex> lock(mutex);
      if (maxPt > globalMaxPt) globalMaxPt = maxPt;
-     std::cout << "[IMT] Finished task with range " << start << "-" << end << std::endl;
+     std::cout << "[IMT] Finished task with range " << start + 1 << "-" << end << std::endl;
   });
 
   std::cout << "[IMT] Global max pt is " << globalMaxPt << std::endl; 
