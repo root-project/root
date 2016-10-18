@@ -30,6 +30,13 @@
 // }
 //
 
+#include "TList.h"
+#include "TGLabel.h"
+#include "TGButton.h"
+#include "TGText.h"
+#include "TGFileDialog.h"
+#include "TGTextEntry.h"
+
 ///////////////////////////////////////////////////////////////////////////
 //                                                                       //
 // Input Dialog Widget                                                   //
@@ -41,7 +48,6 @@ class InputDialog {
 private:
    TGTransientFrame *fDialog;  // transient frame, main dialog window
    TGTextEntry      *fTE;      // text entry widget containing
-   TList            *fWidgets; // keep track of widgets to be deleted in dtor
    char             *fRetStr;  // address to store return string
 
 public:
@@ -54,21 +60,16 @@ InputDialog::~InputDialog()
 {
    // Cleanup dialog.
 
-   fWidgets->Delete();
-   delete fWidgets;
-
-   delete fTE;
-   delete fDialog;
+   fDialog->DeleteWindow();  // cleanup and delete fDialog
 }
 
 InputDialog::InputDialog(const char *prompt, const char *defval, char *retstr)
 {
    // Create simple input dialog.
 
-   fWidgets = new TList;
-
-   TGWindow *main = gClient->GetRoot();
+   const TGWindow *main = gClient->GetRoot();
    fDialog = new TGTransientFrame(main, main, 10, 10);
+   fDialog->SetCleanup(kDeepCleanup);
 
    // command to be executed by buttons and text entry widget
    char cmd[128];
@@ -76,7 +77,6 @@ InputDialog::InputDialog(const char *prompt, const char *defval, char *retstr)
 
    // create prompt label and textentry widget
    TGLabel *label = new TGLabel(fDialog, prompt);
-   fWidgets->Add(label);
 
    TGTextBuffer *tbuf = new TGTextBuffer(256);  //will be deleted by TGtextEntry
    tbuf->AddText(0, defval);
@@ -87,8 +87,6 @@ InputDialog::InputDialog(const char *prompt, const char *defval, char *retstr)
 
    TGLayoutHints *l1 = new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 5, 0);
    TGLayoutHints *l2 = new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 5, 5);
-   fWidgets->Add(l1);
-   fWidgets->Add(l2);
 
    fDialog->AddFrame(label, l1);
    fDialog->AddFrame(fTE, l2);
@@ -97,22 +95,17 @@ InputDialog::InputDialog(const char *prompt, const char *defval, char *retstr)
    TGHorizontalFrame *hf = new TGHorizontalFrame(fDialog, 60, 20, kFixedWidth);
    TGLayoutHints     *l3 = new TGLayoutHints(kLHintsCenterY | kLHintsExpandX, 5, 5, 0, 0);
 
-   // put hf as last in list to be deleted
-   fWidgets->Add(l3);
-
    // create OK and Cancel buttons in their own frame (hf)
    UInt_t  nb = 0, width = 0, height = 0;
    TGTextButton *b;
 
    b = new TGTextButton(hf, "&Ok", cmd, 1);
-   fWidgets->Add(b);
    b->Associate(fDialog);
    hf->AddFrame(b, l3);
    height = b->GetDefaultHeight();
    width  = TMath::Max(width, b->GetDefaultWidth()); ++nb;
 
    b = new TGTextButton(hf, "&Cancel", cmd, 2);
-   fWidgets->Add(b);
    b->Associate(fDialog);
    hf->AddFrame(b, l3);
    height = b->GetDefaultHeight();
@@ -120,8 +113,6 @@ InputDialog::InputDialog(const char *prompt, const char *defval, char *retstr)
 
    // place button frame (hf) at the bottom
    TGLayoutHints *l4 = new TGLayoutHints(kLHintsBottom | kLHintsCenterX, 0, 0, 5, 5);
-   fWidgets->Add(l4);
-   fWidgets->Add(hf);
 
    fDialog->AddFrame(hf, l4);
 
