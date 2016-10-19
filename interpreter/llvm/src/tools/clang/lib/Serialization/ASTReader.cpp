@@ -1192,7 +1192,9 @@ resolveFileThroughHeaderSearch(Preprocessor& PP, StringRef Filename,
  ArrayRef<std::pair<const FileEntry *, const DirectoryEntry *>>() /*Includers*/,
                                0/*Searchpath*/, 0/*RelPath*/,
                                0/*RequestingModule*/, 0/*SuggestedModule*/,
-                               false /*SkipCache*/, false /*OpenFile*/,
+                               false /*SkipCache*/,
+                               false /*BuildSystemModule*/,
+                               false /*OpenFile*/,
                                true /*CacheFailure*/);
       if (FE)
         return FE->getName();
