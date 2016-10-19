@@ -325,7 +325,7 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
       // If at least one proxy was there and no error occurred, we assume the proxies to be set.
       fProxiesSet = !fValues.empty();
    }
-   if (fLastEntry >= 0 && loadResult >= fLastEntry) {
+   if (fLastEntry >= 0 && entry >= fLastEntry) {
       fEntryStatus = kEntryLast;
       return fEntryStatus;
    }
