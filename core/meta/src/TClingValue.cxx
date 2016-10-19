@@ -16,6 +16,8 @@ Bridge between cling::Value and ROOT.
 #include "TClingValue.h"
 
 #include "cling/Interpreter/Value.h"
+#include "llvm/Support/raw_ostream.h"
+
 #include <cassert>
 
 TClingValue::TClingValue() {
@@ -60,4 +62,11 @@ ULong_t TClingValue::GetAsUnsignedLong() const {
 
 void* TClingValue::GetAsPointer() const {
    return ToCV().getPtr();
+}
+
+std::string TClingValue::GetAsString() const {
+   std::string retVal;
+   llvm::raw_string_ostream ost(retVal);
+   ToCV().print(ost);
+   return ost.str();
 }

@@ -58,11 +58,12 @@ public:
    const void* GetValAddr() const { return &fValue; }
    void* GetValAddr() { return &fValue; }
 
-   Bool_t   IsValid() const;
-   Double_t GetAsDouble() const;
-   Long_t   GetAsLong() const;
-   ULong_t  GetAsUnsignedLong() const;
-   void*    GetAsPointer() const;
+   Bool_t      IsValid() const;
+   Double_t    GetAsDouble() const;
+   Long_t      GetAsLong() const;
+   ULong_t     GetAsUnsignedLong() const;
+   void*       GetAsPointer() const;
+   std::string GetAsString() const;
 };
 
 #endif // ROOT_TClingValue
