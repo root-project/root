@@ -21,9 +21,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_Rtypes
+#include "RConfigure.h"
 #include "Rtypes.h"
-#endif
 
 typedef void (*FreeHookFun_t)(void*, void *addr, size_t);
 typedef void *(*ReAllocFun_t)(void*, size_t);
