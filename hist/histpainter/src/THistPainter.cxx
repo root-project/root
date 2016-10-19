@@ -368,7 +368,6 @@ the histograms by calling:
     gPad->RedrawAxis();
 
 
-
 ### <a name="HP05"></a> Giving titles to the X, Y and Z axis
 
 
@@ -1003,6 +1002,39 @@ Begin_Macro(source)
    hcol22->SetMaximum(100);
    hcol22->SetMinimum(40);
    return c1;
+}
+End_Macro
+
+\since **ROOT version 6.09/01:**
+When the option SAME (or "SAMES") is used with the option COL, the boxes' color
+are computing taking the previous plots into account. The range along the Z axis
+is imposed by the first plot (the one without option SAME); therefore the order
+in which the plots are done is relevant.
+
+Begin_Macro(source)
+{
+   c = new TCanvas("c","Example of col plots with option SAME",200,10,700,500);
+   TH2F *h1 = new TH2F("h1","h1",40,-3,3,40,-3,3);
+   TH2F *h2 = new TH2F("h2","h2",40,-3,3,40,-3,3);
+   TH2F *h3 = new TH2F("h3","h3",40,-3,3,40,-3,3);
+   TH2F *h4 = new TH2F("h4","h4",40,-3,3,40,-3,3);
+   h1->SetBit(TH1::kNoStats);
+   for (Int_t i=0;i<5000;i++) {
+      double x,y;
+      gRandom->Rannor(x,y);
+      if(x>0 && y>0) h1->Fill(x,y,4);
+      if(x<0 && y<0) h2->Fill(x,y,3);
+      if(x>0 && y<0) h3->Fill(x,y,2);
+      if(x<0 && y>0) h4->Fill(x,y,1);
+   }
+   h1->SetFillColor(1);
+   h2->SetFillColor(2);
+   h3->SetFillColor(3);
+   h4->SetFillColor(4);
+   h1->Draw("colz");
+   h2->Draw("col same");
+   h3->Draw("col same");
+   h4->Draw("col same");
 }
 End_Macro
 
@@ -5181,13 +5213,35 @@ void THistPainter::PaintColorLevels(Option_t*)
       dz = zmax - zmin;
    }
 
-   if (Hoption.Logz) {
-      if (zmin > 0) {
-         zmin = TMath::Log10(zmin);
-         zmax = TMath::Log10(zmax);
+   // In case of option SAME, zmin and zmax values are taken from the
+   // first plotted 2D histogram.
+   if (Hoption.Same) {
+      TH2 *h2;
+      TIter next(gPad->GetListOfPrimitives());
+      while ((h2 = (TH2 *)next())) {
+         if (!h2->InheritsFrom(TH2::Class())) continue;
+         zmin = h2->GetMinimum();
+         zmax = h2->GetMaximum();
+         if (Hoption.Logz) {
+            if (zmin <= 0) {
+               zmin = TMath::Log10(zmax*0.001);
+            } else {
+               zmin = TMath::Log10(zmin);
+            }
+            zmax = TMath::Log10(zmax);
+         }
          dz = zmax - zmin;
-      } else {
-         return;
+         break;
+      }
+   } else {
+      if (Hoption.Logz) {
+         if (zmin > 0) {
+            zmin = TMath::Log10(zmin);
+            zmax = TMath::Log10(zmax);
+            dz   = zmax - zmin;
+         } else {
+            return;
+         }
       }
    }
 

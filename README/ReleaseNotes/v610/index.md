@@ -56,13 +56,17 @@ The following interfaces have been removed, after deprecation in v6.08.
 - If one used "col2" or "colz2", the value of `TH1::fMaximum` got modified.
   This deviated from the behavior of "col" or "colz". This is now fixed as
   requested [here](https://sft.its.cern.ch/jira/browse/ROOT-8389).
+- When the option SAME (or "SAMES") is used with the option COL, the boxes' color
+  are computing taking the previous plots into account. The range along the Z axis
+  is imposed by the first plot (the one without option SAME); therefore the order
+  in which the plots are done is relevant.
 - With option BOX on 2D histos with negative content:
     - do not draw the empty bins as requested [here](https://sft.its.cern.ch/jira/browse/ROOT-8385).
     - fix the issue mentioned [here](https://sft.its.cern.ch/jira/browse/ROOT-*402).
-    - when several histogram were drawn on top of each other with the option
-      `BOX SAME` and if the log scale along Z was on, the plot showed only the
-      first histogram. This can be reproduce by using the documentation example
-      illustrating `BOX SAME`and turning the canvas into log scale along Z.
+- When several histogram were drawn on top of each other with the option
+  `BOX SAME` and if the log scale along Z was on, the plot showed only the
+  first histogram. This can be reproduce by using the documentation example
+  illustrating `BOX SAME`and turning the canvas into log scale along Z.
 - In TLatex: Do not paint the text when the text size is <= 0. This fixes
   the problem mentioned [here](https://sft.its.cern.ch/jira/browse/ROOT-8305)
 
