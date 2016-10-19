@@ -4547,25 +4547,26 @@ void THistPainter::PaintBoxes(Option_t *)
          zmax = TMath::Max(TMath::Abs(h2->GetMaximum()),
                            TMath::Abs(h2->GetMinimum()));
          if (Hoption.Logz) {
-            zmax = TMath::Log10(zmax);
             if (zmin <= 0) {
                zmin = TMath::Log10(zmax*0.001);
             } else {
                zmin = TMath::Log10(zmin);
             }
+            zmax = TMath::Log10(zmax);
          }
          break;
       }
-   }
-
-   if (Hoption.Logz) {
-      if (zmin > 0) {
-         zmin = TMath::Log10(zmin*0.1);
-         zmax = TMath::Log10(zmax);
-      } else {
-         return;
+   } else {
+      if (Hoption.Logz) {
+         if (zmin > 0) {
+            zmin = TMath::Log10(zmin);
+            zmax = TMath::Log10(zmax);
+         } else {
+            return;
+         }
       }
    }
+
    Double_t zratio, dz = zmax - zmin;
    Bool_t kZminNeg     = kFALSE;
    if (fH->GetMinimum()<0) kZminNeg = kTRUE;
