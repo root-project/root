@@ -28,6 +28,7 @@
 #include "Rtypes.h"
 #endif
 
+#include <string>
 
 class TInterpreterValue {
 private:
@@ -40,11 +41,12 @@ public:
    virtual const void* GetValAddr() const = 0;
    virtual void* GetValAddr() = 0;
 
-   virtual Bool_t   IsValid() const = 0;
-   virtual Double_t GetAsDouble() const = 0;
-   virtual Long_t   GetAsLong() const = 0;
-   virtual ULong_t  GetAsUnsignedLong() const = 0;
-   virtual void*    GetAsPointer() const = 0;
+   virtual Bool_t      IsValid() const = 0;
+   virtual Double_t    GetAsDouble() const = 0;
+   virtual Long_t      GetAsLong() const = 0;
+   virtual ULong_t     GetAsUnsignedLong() const = 0;
+   virtual void*       GetAsPointer() const = 0;
+   virtual std::string GetAsString() const = 0;
 };
 
 #endif // ROOT_TInterpreterValue
