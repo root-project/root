@@ -1027,10 +1027,6 @@ Begin_Macro(source)
       if(x>0 && y<0) h3->Fill(x,y,2);
       if(x<0 && y>0) h4->Fill(x,y,1);
    }
-   h1->SetFillColor(1);
-   h2->SetFillColor(2);
-   h3->SetFillColor(3);
-   h4->SetFillColor(4);
    h1->Draw("colz");
    h2->Draw("col same");
    h3->Draw("col same");
