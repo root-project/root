@@ -13,18 +13,11 @@
 #define ROOT_TObject
 
 
-#ifndef ROOT_Rtypes
-#include "Rtypes.h"
-#endif
-#ifndef ROOT_TStorage
-#include "TStorage.h"
-#endif
-#ifndef ROOT_TVersionCheck
-#include "TVersionCheck.h"
-#endif
-#ifndef ROOT_Riosfwd
+#include "RConfigure.h"
 #include "Riosfwd.h"
-#endif
+#include "Rtypes.h"
+#include "TStorage.h"
+#include "TVersionCheck.h"
 
 #include <stdarg.h>
 #include <string>
