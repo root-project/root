@@ -69,6 +69,7 @@ The following interfaces have been removed, after deprecation in v6.08.
   illustrating `BOX SAME`and turning the canvas into log scale along Z.
 - In TLatex: Do not paint the text when the text size is <= 0. This fixes
   the problem mentioned [here](https://sft.its.cern.ch/jira/browse/ROOT-8305)
+- From: Sergey Linev: In `TPad::SaveAs` method json file extension is now handled
 
 ## 3D Graphics Libraries
 
