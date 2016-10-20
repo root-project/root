@@ -1188,9 +1188,9 @@ void TEntryList::SetTree(const TTree *tree)
    if (!thisTree) return;
 
    TString treename;
-   if (TFile::Class() == tree->GetDirectory()->IsA())
+   if (tree->GetDirectory()->InheritsFrom("TFile")) {
       treename = thisTree->GetName();
-   else {
+   } else {
       treename = TString::Format("%s/%s",tree->GetDirectory()->GetName(),thisTree->GetName());
    }
 
