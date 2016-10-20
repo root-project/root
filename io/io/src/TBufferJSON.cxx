@@ -77,6 +77,7 @@ ClassImp(TBufferJSON)
 
 
 const char *TBufferJSON::fgFloatFmt = "%e";
+const char *TBufferJSON::fgDoubleFmt = "%.14e";
 
 
 // TJSONStackObj is used to keep stack of object hierarchy,
@@ -2952,7 +2953,7 @@ void TBufferJSON::JsonWriteBasic(Double_t value)
    if (value == TMath::Floor(value)) {
       snprintf(buf, sizeof(buf), "%1.0f", value);
    } else {
-      snprintf(buf, sizeof(buf), fgFloatFmt, value);
+      snprintf(buf, sizeof(buf), fgDoubleFmt, value);
       CompactFloatString(buf, sizeof(buf));
    }
    fValue.Append(buf);
@@ -3065,23 +3066,43 @@ void TBufferJSON::JsonWriteConstChar(const char* value, Int_t len)
    fValue.Append("\"");
 }
 
-
 //______________________________________________________________________________
 void TBufferJSON::SetFloatFormat(const char *fmt)
 {
-   // set printf format for float/double members, default "%e"
+   // set printf format for float and double members, default "%e"
+   // changes format for both, doubles format can be changed afterwards with SetDoubleFormat
 
    if (fmt == 0) fmt = "%e";
    fgFloatFmt = fmt;
+   fgDoubleFmt = fmt;
 }
 
 //______________________________________________________________________________
 const char *TBufferJSON::GetFloatFormat()
 {
-   // return current printf format for float/double members, default "%e"
+   // return current printf format for float members, default "%e"
 
    return fgFloatFmt;
 }
+
+//______________________________________________________________________________
+void TBufferJSON::SetDoubleFormat(const char *fmt)
+{
+   // set printf format for double members, default "%.14e"
+   // use it after SetFloatFormat, which also overwrites format for doubles
+
+   if (fmt == 0) fmt = "%.14e";
+   fgDoubleFmt = fmt;
+}
+
+//______________________________________________________________________________
+const char *TBufferJSON::GetDoubleFormat()
+{
+   // return current printf format for double members, default "%.14e"
+
+   return fgDoubleFmt;
+}
+
 
 //______________________________________________________________________________
 Int_t TBufferJSON::ApplySequence(const TStreamerInfoActions::TActionSequence &sequence,
