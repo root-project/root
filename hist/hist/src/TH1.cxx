@@ -5540,8 +5540,8 @@ void TH1::Paint(Option_t *option)
 /// ~~~ {.cpp}
 ///     h1->Rebin();  //merges two bins in one in h1: previous contents of h1 are lost
 ///     h1->Rebin(5); //merges five bins in one in h1
-///     TH1F *hnew = h1->Rebin(5,"hnew"); // creates a new histogram hnew
-///                                       // merging 5 bins of h1 in one bin
+///     TH1F *hnew = dynamic_cast<TH1F*>(h1->Rebin(5,"hnew")); // creates a new histogram hnew
+///                                                            // merging 5 bins of h1 in one bin
 /// ~~~
 ///
 /// NOTE:  If ngroup is not an exact divider of the number of bins,
