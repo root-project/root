@@ -849,8 +849,8 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
          if (iter != fJsonrMap.end()) {
             // old-style refs, coded into string like "$ref12"
             AppendOutput(Form("\"$ref:%u\"", iter->second));
-            // new-style refs, coded into extra object {"ref":12}, auto-detected by JSROOT
-            // AppendOutput(Form("{\"ref\":%u}", iter->second));
+            // new-style refs, coded into extra object {"$ref":12}, auto-detected by JSROOT
+            //AppendOutput(Form("{\"$ref\":%u}", iter->second));
             goto post_process;
          }
          fJsonrMap[obj] = fJsonrCnt;
