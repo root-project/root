@@ -2849,15 +2849,97 @@ void TBufferJSON::JsonWriteBasic(Long64_t value)
 }
 
 //______________________________________________________________________________
+void TBufferJSON::CompactFloatString(char* sbuf, unsigned len)
+{
+   // method compress float string, excluding exp and/or move float point
+   // 1.000000e-01 -> 0.1
+   // 3.750000e+00 -> 3.75
+   // 3.750000e-03 -> 0.00375
+   // 3.750000e-04 -> 3.75e-4
+   // 1.100000e-10 -> 1.1e-10
+
+   char* pnt = 0, *exp = 0, *lastdecimal = 0, *s = sbuf;
+   bool negative_exp = false;
+   int power = 0;
+   while(*s && --len) {
+      switch (*s) {
+         case '.': pnt = s; break;
+         case 'E':
+         case 'e': exp = s; break;
+         case '-': if (exp) negative_exp = true; break;
+         case '+': break;
+         default: // should be digits from '0' to '9'
+            if ((*s <'0') || (*s >'9')) return;
+            if (exp) power = power*10 + (*s - '0'); else
+            if (pnt && *s!='0') lastdecimal = s;
+            break;
+      }
+      ++s;
+   }
+   if (*s) return; // if end-of-string was not found
+
+   if (!exp) {
+      // value without exponent like 123.4569000
+      if (pnt) {
+         if (lastdecimal) *(lastdecimal+1) = 0;
+                     else *pnt = 0;
+      }
+   } else
+   if (power==0) {
+      if (lastdecimal) *(lastdecimal+1) = 0; else
+      if (pnt) *pnt = 0;
+   } else
+   if (!negative_exp && pnt && exp && (exp-pnt > power)) {
+      // this is case of value 1.23000e+02
+      // we can move point and exclude exponent easily
+      for (int cnt=0;cnt<power;++cnt) {
+         char tmp = *pnt;
+         *pnt = *(pnt+1);
+         *(++pnt) = tmp;
+      }
+      if (lastdecimal && (pnt<lastdecimal)) *(lastdecimal+1) = 0;
+                                       else *pnt = 0;
+   } else
+   if (negative_exp && pnt && exp && (power < (s-exp))) {
+      // this is small negative exponent like 1.2300e-02
+      if (!lastdecimal) lastdecimal = pnt;
+      *(lastdecimal+1) = 0;
+      // copy most significant digit on the point place
+      *pnt = *(pnt-1);
+
+      for (char* pos = lastdecimal+1; pos>=pnt; --pos)
+         *(pos+power) = *pos;
+      *(pnt-1) = '0';
+      *pnt = '.';
+      for (int cnt=1;cnt<power;++cnt)
+         *(pnt+cnt) = '0';
+   } else
+   if (pnt && exp) {
+      // keep exponent, but remove mantice
+      if (lastdecimal) pnt = lastdecimal+1;
+      // copy exponent sign
+      *pnt++ = *exp++;
+      if (*exp=='+') ++exp; else
+      if (*exp=='-') *pnt++ = *exp++;
+      // exclude zeros in the bgein of exponent
+      while (*exp=='0') ++exp;
+      while (*exp) *pnt++ = *exp++;
+      *pnt = 0;
+   }
+}
+
+//______________________________________________________________________________
 void TBufferJSON::JsonWriteBasic(Float_t value)
 {
    // converts Float_t to string and add to json value buffer
 
    char buf[200];
-   if (value == TMath::Floor(value))
+   if (value == TMath::Floor(value)) {
       snprintf(buf, sizeof(buf), "%1.0f", value);
-   else
+   } else {
       snprintf(buf, sizeof(buf), fgFloatFmt, value);
+      CompactFloatString(buf, sizeof(buf));
+   }
    fValue.Append(buf);
 }
 
@@ -2867,10 +2949,12 @@ void TBufferJSON::JsonWriteBasic(Double_t value)
    // converts Double_t to string and add to json value buffer
 
    char buf[200];
-   if (value == TMath::Floor(value))
+   if (value == TMath::Floor(value)) {
       snprintf(buf, sizeof(buf), "%1.0f", value);
-   else
+   } else {
       snprintf(buf, sizeof(buf), fgFloatFmt, value);
+      CompactFloatString(buf, sizeof(buf));
+   }
    fValue.Append(buf);
 }
 

@@ -451,6 +451,8 @@ protected:
 
    void              AppendOutput(const char *line0, const char *line1 = 0);
 
+   void              CompactFloatString(char* buf, unsigned len);
+
    TString                   fOutBuffer;    //!  main output buffer for json code
    TString                  *fOutput;       //!  current output buffer for json code
    TString                   fValue;        //!  buffer for current value
