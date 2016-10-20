@@ -317,7 +317,7 @@ class CanvasDrawer(object):
         for unsupportedPattern in _jsNotDrawableClassesPatterns:
             for primitiveTypeName in primitivesTypesNames:
                 if fnmatch.fnmatch(primitiveTypeName,unsupportedPattern):
-                    print(file=sys.stderr, "The canvas contains an object of a type jsROOT cannot currently handle (%s). Falling back to a static png." %primitiveTypeName)
+                    print("The canvas contains an object of a type jsROOT cannot currently handle (%s). Falling back to a static png." %primitiveTypeName, file=sys.stderr)
                     return False
         return True
 
