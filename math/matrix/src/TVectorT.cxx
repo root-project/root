@@ -270,7 +270,7 @@ TVectorT<Element>::TVectorT(Int_t lwb,Int_t upb,Element iv1, ...)
    Allocate(upb-lwb+1,lwb);
 
    va_list args;
-   va_start(args,va_(iv1));             // Init 'args' to the beginning of
+   va_start(args,iv1);             // Init 'args' to the beginning of
                                         // the variable length list of args
 
    (*this)(lwb) = iv1;
