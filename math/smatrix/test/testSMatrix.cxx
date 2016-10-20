@@ -1039,7 +1039,7 @@ int test18() {
   for (int i = 0; i < 7; ++i) {
      int iiret = compare(Id(i,i),1.,"inv result",10);
      if (iiret) {
-        std::cout << "Comparison failed for id(" << i << "," << i << ") == " << id(i,i) << " != 1."
+        std::cout << "Comparison failed for Id(" << i << "," << i << ") == " << Id(i,i) << " != 1."
                   << " with delta == " << std::abs(Id(i,i) - 1)
                   << " > " << 10 * 8.*std::numeric_limits<double>::epsilon() << std::endl;
      }
