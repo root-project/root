@@ -406,6 +406,7 @@ public:
    static    void     SetDoubleFormat(const char *fmt = "%.14e");
    static const char *GetDoubleFormat();
 
+   static    void     CompactFloatString(char* buf, unsigned len);
 
 protected:
    // redefined protected virtual functions
@@ -452,8 +453,6 @@ protected:
    void              JsonStreamCollection(TCollection *obj, const TClass *objClass);
 
    void              AppendOutput(const char *line0, const char *line1 = 0);
-
-   void              CompactFloatString(char* buf, unsigned len);
 
    TString                   fOutBuffer;    //!  main output buffer for json code
    TString                  *fOutput;       //!  current output buffer for json code
