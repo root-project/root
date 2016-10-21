@@ -404,6 +404,8 @@ public:
    static    void     SetFloatFormat(const char *fmt = "%e");
    static const char *GetFloatFormat();
 
+   static    void     CompactFloatString(char* buf, unsigned len);
+
 
 protected:
    // redefined protected virtual functions
