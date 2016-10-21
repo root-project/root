@@ -326,6 +326,14 @@
 #   endif
 #endif
 
+#ifdef R__USE_CXX14
+#   if !defined(__GNUC__)
+#      define R__SIZEDDELETE
+#   elif __GNUC__ > 4 
+#      define R__SIZEDDELETE
+#   endif
+#endif
+
 /* allows symbols to be hidden from the shared library export symbol table */
 /* use typically on file statics and private methods */
 #if defined(__GNUC__) && (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3))

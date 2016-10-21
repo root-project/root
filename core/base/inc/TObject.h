@@ -140,7 +140,7 @@ public:
    void    *operator new[](size_t sz, void *vp) { return TStorage::ObjectAlloc(sz, vp); }
    void     operator delete(void *ptr);
    void     operator delete[](void *ptr);
-#ifdef R__USE_CXX14
+#ifdef R__SIZEDDELETE
    // Sized deallocation.
    void     operator delete(void*, size_t);
    void     operator delete[](void*, size_t);

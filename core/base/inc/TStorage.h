@@ -60,7 +60,7 @@ public:
    static void          *ObjectAllocArray(size_t size);
    static void          *ObjectAlloc(size_t size, void *vp);
    static void           ObjectDealloc(void *vp);
-#ifdef R__USE_CXX14
+#ifdef R__SIZEDDELETE
    static void           ObjectDealloc(void *vp, size_t size);
 #endif
    static void           ObjectDealloc(void *vp, void *ptr);
