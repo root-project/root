@@ -260,7 +260,7 @@ TVectorT<Element>::TVectorT(const TMatrixTDiag_const<Element> &md) : TObject()
 /// TVectorT foo(1,3,0.0,1.0,1.5,"END");
 
 template<class Element>
-TVectorT<Element>::TVectorT(Int_t lwb,Int_t upb,Element iv1, ...)
+TVectorT<Element>::TVectorT(Int_t lwb,Int_t upb,Double_t iv1, ...)
 {
    if (upb < lwb) {
       Error("TVectorT(Int_t, Int_t, ...)","upb(%d) < lwb(%d)",upb,lwb);

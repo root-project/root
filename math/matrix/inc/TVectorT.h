@@ -72,7 +72,7 @@ public:
       *this = another;
    }
 #ifndef __CINT__
-   TVectorT(Int_t lwb,Int_t upb,Element iv1, ...);
+   TVectorT(Int_t lwb,Int_t upb,Double_t iv1, ...);
 #endif
    virtual ~TVectorT() { Clear(); }
 
