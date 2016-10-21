@@ -1264,7 +1264,7 @@ endif()
 #---Check for CUDA and BLAS ---------------------------------------------------------
 if(tmva AND cuda)
   message(STATUS "Looking for CUDA for optional parts of TMVA")
-  find_package(CUDA QUIET)
+  find_package(CUDA 7.5)
   if(NOT CUDA_FOUND)
     if(fail-on-missing)
       message(FATAL_ERROR "CUDA not found. Ensure that the installation of CUDA is in the CMAKE_PREFIX_PATH")
