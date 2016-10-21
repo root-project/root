@@ -788,6 +788,7 @@ void TF1::Copy(TObject &obj) const
    ((TF1 &)obj).fNdim = fNdim;
    ((TF1 &)obj).fType = fType;
    ((TF1 &)obj).fFunctor   = fFunctor;
+   ((TF1 &)obj).fFunctp   = fFunctp;
    ((TF1 &)obj).fChisquare = fChisquare;
    ((TF1 &)obj).fNpfits  = fNpfits;
    ((TF1 &)obj).fNDF     = fNDF;
@@ -1259,7 +1260,8 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
    }
 
    if (fType == 3) {
-      return EvalParVec(x, params);
+      if (params) return EvalParVec( x, params);
+      else return EvalParVec( x, (Double_t*) fParams->GetParameters());
    }
    return result;
 }

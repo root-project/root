@@ -69,20 +69,22 @@ public:
    /**
       Constructor from data set (binned ) and model function
    */
-   Chi2FCN (const std::shared_ptr<BinData> & data, const std::shared_ptr<IModelFunction> & func) :
+   Chi2FCN (const std::shared_ptr<BinData> & data, const std::shared_ptr<IModelFunction> & func, unsigned executionPolicy=0) :
       BaseFCN( data, func),
       fNEffPoints(0),
-      fGrad ( std::vector<double> ( func->NPar() ) )
+      fGrad ( std::vector<double> ( func->NPar() ) ),
+      fExecutionPolicy(executionPolicy)
    { }
 
    /**
       Same Constructor from data set (binned ) and model function but now managed by the user
       we clone the function but not the data
    */
-   Chi2FCN ( const BinData & data, const IModelFunction & func) :
+   Chi2FCN ( const BinData & data, const IModelFunction & func, unsigned executionPolicy=0) :
       BaseFCN(std::shared_ptr<BinData>(const_cast<BinData*>(&data), DummyDeleter<BinData>()), std::shared_ptr<IModelFunction>(dynamic_cast<IModelFunction*>(func.Clone() ) ) ),
       fNEffPoints(0),
-      fGrad ( std::vector<double> ( func.NPar() ) )
+      fGrad ( std::vector<double> ( func.NPar() ) ),
+      fExecutionPolicy(executionPolicy)
    { }
 
    /**
@@ -95,7 +97,8 @@ public:
    Chi2FCN(const Chi2FCN & f) :
       BaseFCN(f.DataPtr(), f.ModelFunctionPtr() ),
       fNEffPoints( f.fNEffPoints ),
-      fGrad( f.fGrad)
+      fGrad( f.fGrad),
+      fExecutionPolicy(f.fExecutionPolicy)
    {  }
 
    /**
@@ -152,7 +155,7 @@ private:
       // return FitUtilParallel::EvaluateChi2(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints);
 // #else
 //       if (!BaseFCN::Data().HaveCoordErrors() )
-         return FitUtil::EvalChi2<T>::DoEval(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints);
+         return FitUtil::EvalChi2<T>::DoEval(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints, fExecutionPolicy);
 //       else
 //          return FitUtil::EvaluateChi2Effective(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints);
 // #endif
@@ -168,6 +171,7 @@ private:
    mutable unsigned int fNEffPoints;  // number of effective points used in the fit
 
    mutable std::vector<double> fGrad; // for derivatives
+   unsigned fExecutionPolicy;
 
 };
 

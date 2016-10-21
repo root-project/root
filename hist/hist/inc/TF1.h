@@ -395,6 +395,9 @@ public:
    template<class T> T operator()(const T *data, const Double_t *params);
    virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual void     FixParameter(Int_t ipar, Double_t value);
+   bool      IsVectorized(){
+     return fType==3;
+   }
    Double_t     GetChisquare() const
    {
       return fChisquare;
@@ -693,9 +696,6 @@ namespace ROOT {
       };
    }
 }
-
-
-
 
 inline Double_t TF1::operator()(Double_t x, Double_t y, Double_t z, Double_t t) const
 {

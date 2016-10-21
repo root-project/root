@@ -14,6 +14,10 @@
 #define ROOT_Fit_FitUtil
 
 #include "Math/IParamFunctionfwd.h"
+
+#include "ROOT/TThreadExecutor.hxx"
+#include "ROOT/TProcessExecutor.hxx"
+
 #include "Fit/BinData.h"
 #include "Fit/UnBinData.h"
 
@@ -47,7 +51,7 @@ namespace FitUtil {
        evaluate the Chi2 given a model function and the data at the point x.
        return also nPoints as the effective number of used points in the Chi2 evaluation
    */
-   double EvaluateChi2(const IModelFunction & func, const BinData & data, const double * x, unsigned int & nPoints);
+   double EvaluateChi2(const IModelFunction & func, const BinData & data, const double * x, unsigned int & nPoints, const unsigned int &executionPolicy);
 
    /**
        evaluate the effective Chi2 given a model function and the data at the point x.
@@ -121,7 +125,7 @@ namespace FitUtil {
 
   template<class T>
   struct EvalChi2{
-    static double DoEval(const IModelFunctionTempl<T> & func, const BinData & data, const double * p, unsigned int & nPoints){
+    static double DoEval(const IModelFunctionTempl<T> & func, const BinData & data, const double * p, unsigned int & nPoints, const unsigned int &executionPolicy){
       // evaluate the chi2 given a  vectorized function reference  , the data and returns the value and also in nPoints
       // the actual number of used points
       // normal chi2 using only error on values (from fitting histogram)
@@ -129,7 +133,6 @@ namespace FitUtil {
 
       unsigned int n = data.Size();
 
-      T chi2{};
       nPoints = 0; // count the effective non-zero points
       // set parameters of the function to cache integral value
       #ifdef USE_PARAMCACHE
@@ -150,18 +153,18 @@ namespace FitUtil {
       double wrefVolume = 1.0;
       std::vector<double> xc;
       std::vector<double> ones{1,1,1,1};
-      for (unsigned int i=0; i<data.Size(); i+=vecCore::VectorSize<T>()) {
+      auto vecSize = vecCore::VectorSize<T>();
 
-          // double invError = 1.;
-
+      auto mapFunction = [&](unsigned int i){
           // in case of no error in y invError=1 is returned
-          const auto x = vecCore::FromPtr<T>(data.GetCoordComponent(i,0));
-          const auto y = vecCore::FromPtr<T>(data.ValuePtr(i));
-          const auto invError = data.ErrorPtr(i);
+          const auto x = vecCore::FromPtr<T>(data.GetCoordComponent(i*vecSize,0));
+          const auto y = vecCore::FromPtr<T>(data.ValuePtr(i*vecSize));
+          const auto invError = data.ErrorPtr(i*vecSize);
           auto invErrorptr = (invError != nullptr) ? invError : &ones.front();
           const auto invErrorVec = vecCore::FromPtr<T>(invErrorptr);
 
-          T fval = {};
+          T fval{};
+          T chi2{};
 
           double binVolume = 1.0;
 
@@ -181,9 +184,29 @@ namespace FitUtil {
           if(m.isFull()){
             chi2 += resval;
           } else {
-            for(unsigned it=0; it<vecCore::VectorSize<T>(); it++)
+            for(unsigned it=0; it<vecSize; it++)
               chi2[it] += m[it]==1? resval[it] : maxResValue;
           }
+          return chi2;
+      };
+
+      auto redFunction = [](const std::vector<T> & objs){
+                          return std::accumulate(objs.begin(), objs.end(), T{});
+      };
+
+      T res{};
+      if(executionPolicy == 0){
+        for (unsigned int i=0; i<(data.Size()/vecSize); i++) {
+          res += mapFunction(i);
+        }
+      }else if(executionPolicy == 1) {
+        ROOT::TThreadExecutor pool;
+        res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size()/vecSize), redFunction);
+      // } else if(executionPolicy == 2){
+      //   ROOT::TProcessExecutor pool;
+      //   res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size()/vecSize), redFunction);
+      } else{
+        Error("FitUtil::EvaluateChi2","Execution policy unknown. Avalaible choices:\n 0: Serial (default)\n 1: MultiThread\n 2: MultiProcess");
       }
       nPoints=n;
 
@@ -191,18 +214,18 @@ namespace FitUtil {
       std::cout << "chi2 = " << chi2 << " n = " << nPoints  /*<< " rejected = " << nRejected */ << std::endl;
     #endif
 
-      return chi2.sum();
+      return res.sum();
     }
   };
 
   template<>
   struct EvalChi2<double>{
-    static double DoEval(const IModelFunction & func, const BinData & data, const double * p, unsigned int & nPoints) {
+    static double DoEval(const IModelFunction & func, const BinData & data, const double * p, unsigned int & nPoints, const unsigned int &executionPolicy) {
       // evaluate the chi2 given a  function reference  , the data and returns the value and also in nPoints
       // the actual number of used points
       // normal chi2 using only error on values (from fitting histogram)
       // optionally the integral of function in the bin is used
-      return FitUtil::EvaluateChi2(func, data, p, nPoints);
+      return FitUtil::EvaluateChi2(func, data, p, nPoints, executionPolicy);
     }
   };
 

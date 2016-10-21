@@ -334,7 +334,7 @@ namespace ROOT {
 // for chi2 functions
 //___________________________________________________________________________________________________________________________
 
-double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, const double * p, unsigned int & nPoints) {
+double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, const double * p, unsigned int & nPoints, const unsigned int & executionPolicy) {
    // evaluate the chi2 given a  function reference  , the data and returns the value and also in nPoints
    // the actual number of used points
    // normal chi2 using only error on values (from fitting histogram)
@@ -342,8 +342,6 @@ double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, 
 
    unsigned int n = data.Size();
 
-   double chi2 = 0;
-   nPoints = 0; // count the effective non-zero points
    // set parameters of the function to cache integral value
 #ifdef USE_PARAMCACHE
    (const_cast<IModelFunction &>(func)).SetParameters(p);
@@ -373,28 +371,31 @@ double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, 
 #endif
    double maxResValue = std::numeric_limits<double>::max() /n;
    double wrefVolume = 1.0;
-   std::vector<double> xc;
    if (useBinVolume) {
       if (fitOpt.fNormBinVolume) wrefVolume /= data.RefVolume();
-      xc.resize(data.NDim() );
    }
 
    (const_cast<IModelFunction &>(func)).SetParameters(p);
-   for (unsigned int i = 0; i < n; ++ i) {
 
-      double y = 0, invError = 1.;
+   auto mapFunction = [&](const unsigned i){
 
-      // in case of no error in y invError=1 is returned
-      const double * x1 = data.GetPoint(i,y, invError);
+      double chi2{};
+      double fval{};
 
-      double fval = 0;
+      const auto x1 = data.GetCoordComponent(i, 0);
+      const auto y = data.Value(i);
+      auto invError = data.Error(i);
 
+      invError = (invError!= 0.0) ? 1.0/invError :1;
+
+      std::vector<double> xc;
       double binVolume = 1.0;
         if (useBinVolume) {
          unsigned int ndim = data.NDim();
          const double * x2 = data.BinUpEdge(i);
+         xc.resize(data.NDim());
          for (unsigned int j = 0; j < ndim; ++j) {
-            binVolume *= std::abs( x2[j]-x1[j] );
+            binVolume *= std::abs(x2[j]-x1[j]);
             xc[j] = 0.5*(x2[j]+ x1[j]);
          }
          // normalize the bin volume using a reference value
@@ -438,9 +439,7 @@ double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, 
 #endif
 //#undef DEBUG
 
-
       if (invError > 0) {
-         nPoints++;
 
          double tmp = ( y -fval )* invError;
          double resval = tmp * tmp;
@@ -454,17 +453,29 @@ double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, 
             chi2 += maxResValue;
          }
       }
+      return chi2;
+  };
 
+  auto redFunction = [](const std::vector<double> & objs){
+                          return std::accumulate(objs.begin(), objs.end(), double{});
+  };
 
-   }
-   nPoints=n;
+  double res{};
+  if(executionPolicy == 0){
+    for (unsigned int i=0; i<n; ++i) {
+      res += mapFunction(i);
+    }
+  } else if(executionPolicy == 1) {
+    ROOT::TThreadExecutor pool;
+    res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
+//   } else if(executionPolicy == 2){
+    // ROOT::TProcessExecutor pool;
+    // res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
+  } else{
+    Error("FitUtil::EvaluateChi2","Execution policy unknown. Avalaible choices:\n 0: Serial (default)\n 1: MultiThread\n 2: MultiProcess");
+  }
 
-#ifdef DEBUG
-   std::cout << "chi2 = " << chi2 << " n = " << nPoints  /*<< " rejected = " << nRejected */ << std::endl;
-#endif
-
-
-   return chi2;
+   return res;
 }
 
 
