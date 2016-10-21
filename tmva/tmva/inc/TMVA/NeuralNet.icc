@@ -1606,6 +1606,7 @@ template <typename LAYERDATA>
             }
             case ModeErrorFunction::CROSSENTROPY_MUTUALEXCLUSIVE:
             {
+                std::cout << "softmax." << std::endl;
                 assert (!TMVA::DNN::isFlagSet (ModeOutputValues::DIRECT, layerData.outputMode ()));
                 std::vector<double> probabilities = layerData.probabilities ();
                 error = softMaxCrossEntropy (begin (probabilities), end (probabilities), 

@@ -17,9 +17,9 @@
 namespace TMVA {
 namespace DNN  {
 
-template<typename Real_t>
-void TReference<Real_t>::Sigmoid(TMatrixT<Real_t> & B,
-                                const TMatrixT<Real_t> & A)
+template<typename AReal>
+void TReference<AReal>::Sigmoid(TMatrixT<AReal> & B,
+                                const TMatrixT<AReal> & A)
 {
    size_t m,n;
    m = A.GetNrows();
@@ -27,8 +27,27 @@ void TReference<Real_t>::Sigmoid(TMatrixT<Real_t> & B,
 
    for (size_t i = 0; i < m; i++) {
       for (size_t j = 0; j < n; j++) {
-         Real_t sig = 1.0 / (1.0 + std::exp(-A(i,j)));
+         AReal sig = 1.0 / (1.0 + std::exp(-A(i,j)));
          B(i,j) = sig;
+      }
+   }
+}
+
+template<typename AReal>
+void TReference<AReal>::Softmax(TMatrixT<AReal> & B,
+                                const TMatrixT<AReal> & A)
+{
+   size_t m,n;
+   m = A.GetNrows();
+   n = A.GetNcols();
+
+   for (size_t i = 0; i < m; i++) {
+      AReal sum = 0.0;
+      for (size_t j = 0; j < n; j++) {
+         sum += exp(A(i,j));
+      }
+      for (size_t j = 0; j < n; j++) {
+         B(i,j) = exp(A(i,j)) / sum;
       }
    }
 }

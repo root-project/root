@@ -43,7 +43,8 @@ enum class EActivationFunction
 enum class EOutputFunction
 {
    kIdentity = 'I',
-   kSigmoid  = 'S'
+   kSigmoid  = 'S',
+   kSoftmax  = 'M'
 };
 
 /*! Enum that represents objective functions for the net, i.e. functions
@@ -52,8 +53,9 @@ enum class EOutputFunction
 *  in the training process. */
 enum class ELossFunction
 {
-    kCrossEntropy     = 'C',
-    kMeanSquaredError = 'R'
+    kCrossEntropy        = 'C',
+    kMeanSquaredError    = 'R',
+    kSoftmaxCrossEntropy = 'S'
 };
 
 /*! Enum representing the regularization type applied for a given layer */
@@ -147,6 +149,8 @@ inline void evaluate(typename Architecture_t::Matrix_t &A,
                                       break;
     case EOutputFunction::kSigmoid  : Architecture_t::Sigmoid(A, X);
                                       break;
+    case EOutputFunction::kSoftmax  : Architecture_t::Softmax(A, X);
+                                      break;
     }
 }
 
@@ -169,6 +173,8 @@ inline auto evaluate(ELossFunction f,
         return Architecture_t::CrossEntropy(Y, output);
     case ELossFunction::kMeanSquaredError :
         return Architecture_t::MeanSquaredError(Y, output);
+    case ELossFunction::kSoftmaxCrossEntropy :
+        return Architecture_t::SoftmaxCrossEntropy(Y, output);
     }
     return 0.0;
 }
@@ -178,9 +184,9 @@ inline auto evaluate(ELossFunction f,
 //______________________________________________________________________________
 template<typename Architecture_t>
 inline void evaluateGradients(typename Architecture_t::Matrix_t & dY,
-                                ELossFunction f,
-                                const typename Architecture_t::Matrix_t &Y,
-                                const typename Architecture_t::Matrix_t &output)
+                              ELossFunction f,
+                              const typename Architecture_t::Matrix_t &Y,
+                              const typename Architecture_t::Matrix_t &output)
 {
     switch(f)
     {
@@ -189,6 +195,9 @@ inline void evaluateGradients(typename Architecture_t::Matrix_t & dY,
         break;
     case ELossFunction::kMeanSquaredError :
         Architecture_t::MeanSquaredErrorGradients(dY, Y, output);
+        break;
+    case ELossFunction::kSoftmaxCrossEntropy :
+        Architecture_t::SoftmaxCrossEntropyGradients(dY, Y, output);
         break;
     }
 }

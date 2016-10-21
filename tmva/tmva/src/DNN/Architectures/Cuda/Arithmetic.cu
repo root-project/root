@@ -135,8 +135,8 @@ template<typename AFloat>
 void TCuda<AFloat>::Hadamard(TCudaMatrix<AFloat> & B,
                              const TCudaMatrix<AFloat> &A)
 {
-   dim3 blockDims = TDevice::BlockDims();
-   dim3 gridDims  = TDevice::GridDims(B);
+   dim3 blockDims = TDevice::BlockDims2D();
+   dim3 gridDims  = TDevice::GridDims2D(B);
    cudaStream_t s = A.GetComputeStream();
    ::TMVA::DNN::Cuda::Hadamard<<<gridDims, blockDims, 0, s>>>(B.GetDataPointer(),
                                                               A.GetDataPointer(),
@@ -149,8 +149,8 @@ void TCuda<AFloat>::Hadamard(TCudaMatrix<AFloat> & B,
 template<typename AFloat>
 AFloat TCuda<AFloat>::Sum(const TCudaMatrix<AFloat> & A)
 {
-   dim3 blockDims = TDevice::BlockDims();
-   dim3 gridDims  = TDevice::GridDims(A);
+   dim3 blockDims = TDevice::BlockDims2D();
+   dim3 gridDims  = TDevice::GridDims2D(A);
    cudaStream_t s = A.GetComputeStream();
 
    TCudaMatrix<AFloat>::ResetDeviceReturn();

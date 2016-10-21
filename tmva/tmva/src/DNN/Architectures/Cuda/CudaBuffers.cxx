@@ -35,7 +35,7 @@ void TCudaHostBuffer<AFloat>::TDestructor::operator()(AFloat ** devicePointer)
 //______________________________________________________________________________
 template<typename AFloat>
 TCudaHostBuffer<AFloat>::TCudaHostBuffer(size_t size)
-    : fOffset(0), fComputeStream(0), fDestructor()
+    : fOffset(0), fSize(size), fComputeStream(0), fDestructor()
 {
    AFloat ** pointer = new AFloat * [1];
    cudaMallocHost(pointer, size * sizeof(AFloat));
@@ -52,10 +52,11 @@ TCudaHostBuffer<AFloat>::operator AFloat * () const
 //______________________________________________________________________________
 template<typename AFloat>
 TCudaHostBuffer<AFloat> TCudaHostBuffer<AFloat>::GetSubBuffer(size_t offset,
-                                                              size_t /*size*/)
+                                                              size_t size)
 {
    TCudaHostBuffer buffer = *this;
    buffer.fOffset         = offset;
+   buffer.fSize           = size;
    return buffer;
 }
 
@@ -209,7 +210,7 @@ void TDataLoader<TMVAInput_t, TCuda<float>>::CopyOutput(
     size_t batchSize)
 {
    Event * event  = fData.front();
-   size_t n       = (event->GetNTargets() == 0) ? 1 : event->GetNTargets();
+   size_t n       = buffer.GetSize() / batchSize;
 
    // Copy target(s).
 
@@ -219,8 +220,18 @@ void TDataLoader<TMVAInput_t, TCuda<float>>::CopyOutput(
       for (size_t j = 0; j < n; j++) {
          // Copy output matrices.
          size_t bufferIndex = j * batchSize + i;
+         // Classification
          if (event->GetNTargets() == 0) {
-            buffer[bufferIndex] = (event->GetClass() == 0) ? 1.0 : 0.0;
+            if (n == 1) {
+               // Binary.
+               buffer[bufferIndex] = (event->GetClass() == 0) ? 1.0 : 0.0;
+            } else {
+               // Multiclass.
+               buffer[bufferIndex] = 0.0;
+               if (j == event->GetClass()) {
+                  buffer[bufferIndex] = 1.0;
+               }
+            }
          } else {
             buffer[bufferIndex] = static_cast<float>(event->GetTarget(j));
          }
@@ -298,7 +309,7 @@ void TDataLoader<TMVAInput_t, TCuda<double>>::CopyOutput(
     size_t batchSize)
 {
    Event * event  = fData.front();
-   size_t n       = (event->GetNTargets() == 0) ? 1 : event->GetNTargets();
+   size_t n       = buffer.GetSize() / batchSize;
 
    // Copy target(s).
 
@@ -308,8 +319,18 @@ void TDataLoader<TMVAInput_t, TCuda<double>>::CopyOutput(
       for (size_t j = 0; j < n; j++) {
          // Copy output matrices.
          size_t bufferIndex = j * batchSize + i;
+         // Classification
          if (event->GetNTargets() == 0) {
-            buffer[bufferIndex] = (event->GetClass() == 0) ? 1.0 : 0.0;
+               // Binary.
+            if (n == 1) {
+               buffer[bufferIndex] = (event->GetClass() == 0) ? 1.0 : 0.0;
+            } else {
+               // Multiclass.
+               buffer[bufferIndex] = 0.0;
+               if (j == event->GetClass()) {
+                  buffer[bufferIndex] = 1.0;
+               }
+            }
          } else {
             buffer[bufferIndex] = event->GetTarget(j);
          }

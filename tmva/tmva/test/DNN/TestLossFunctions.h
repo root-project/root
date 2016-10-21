@@ -191,3 +191,102 @@ auto testCrossEntropyGradients(size_t ntests)
    }
    return maximumError;
 }
+
+//______________________________________________________________________________
+//
+//  Softmax Cross Entropy
+//______________________________________________________________________________
+
+template <typename Architecture>
+auto testSoftmaxCrossEntropy(size_t ntests)
+-> typename Architecture::Scalar_t
+{
+   using Matrix_t = typename Architecture::Matrix_t;
+   using Scalar_t   = typename Architecture::Scalar_t;
+   Double_t maximumError = 0.0;
+
+   for (size_t i = 0; i < ntests; i++) {
+      size_t m = rand() % 100 + 1;
+      size_t n = rand() % 100 + 1;
+
+      TMatrixT<Double_t> X(m, n);
+      TMatrixT<Double_t> Y(m, n);
+      TMatrixT<Double_t> Z(m, n);
+
+      randomMatrix(X);
+      randomMatrix(Y);
+
+      Matrix_t XArch(X);
+      Matrix_t YArch(Y);
+
+      Scalar_t ce = evaluate<Architecture>(ELossFunction::kSoftmaxCrossEntropy,
+                                           YArch, XArch);
+
+      Scalar_t ceReference = 0.0;
+      for (size_t j = 0; j < m; j++) {
+         Scalar_t sum  = 0.0;
+         for (size_t k = 0; k < n; k++) {
+            sum  += exp(X(j,k));
+         }
+         for (size_t k = 0; k < n; k++) {
+            ceReference -= Y(j,k) * log(exp(X(j,k)) / sum);
+         }
+      }
+      ceReference /= (Scalar_t) m;
+
+      Double_t error;
+      if (ceReference != 0.0)
+          error = std::fabs((ce - ceReference) / ceReference);
+      else
+          error = std::fabs(ce - ceReference);
+      maximumError = std::max(error, maximumError);
+   }
+   return maximumError;
+}
+
+//______________________________________________________________________________
+template <typename Architecture>
+auto testSoftmaxCrossEntropyGradients(size_t ntests)
+-> typename Architecture::Scalar_t
+{
+   using Matrix_t = typename Architecture::Matrix_t;
+   using Scalar_t   = typename Architecture::Scalar_t;
+   Double_t maximumError = 0.0;
+
+   for (size_t i = 0; i < ntests; i++) {
+      size_t m = 8; //rand() % 100 + 1;
+      size_t n = 8; //rand() % 100 + 1;
+
+      TMatrixT<Double_t> X(m, n);
+      TMatrixT<Double_t> Y(m, n);
+      TMatrixT<Double_t> ZRef(m, n);
+
+      randomMatrix(X);
+      randomMatrix(Y);
+
+      Matrix_t XArch(X);
+      Matrix_t YArch(Y);
+      Matrix_t ZArch(Y);
+
+      evaluateGradients<Architecture>(ZArch, ELossFunction::kSoftmaxCrossEntropy,
+                                     YArch, XArch);
+
+      for (size_t j = 0; j < m; j++) {
+         Scalar_t sum  = 0.0;
+         Scalar_t sumY = 0.0;
+         for (size_t k = 0; k < n; k++) {
+            sum  += exp(X(j,k));
+            sumY += Y(j,k);
+         }
+         for (size_t k = 0; k < n; k++) {
+            Scalar_t sig = exp(X(j,k)) / sum;
+            ZRef(j,k) = (sig * sumY - Y(j,k)) / ((Scalar_t) m);
+         }
+      }
+
+      TMatrixT<Double_t> Z(ZArch);
+      Double_t error = maximumRelativeError(Z, ZRef);
+      maximumError = std::max(error, maximumError);
+   }
+   return maximumError;
+}

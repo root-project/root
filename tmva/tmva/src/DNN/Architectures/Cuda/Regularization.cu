@@ -26,8 +26,8 @@ namespace DNN  {
 template<typename AFloat>
 AFloat TCuda<AFloat>::L1Regularization(const TCudaMatrix<AFloat> & A)
 {
-    dim3 blockDims = TDevice::BlockDims();
-    dim3 gridDims  = TDevice::GridDims(A);
+    dim3 blockDims = TDevice::BlockDims2D();
+    dim3 gridDims  = TDevice::GridDims2D(A);
     cudaStream_t s = A.GetComputeStream();
     TCudaMatrix<AFloat>::ResetDeviceReturn();
     ::TMVA::DNN::Cuda::AbsoluteSum<<<gridDims, blockDims, 0, s>>>(
@@ -44,8 +44,8 @@ void TCuda<AFloat>::AddL1RegularizationGradients(TCudaMatrix<AFloat> & B,
                                                  const TCudaMatrix<AFloat> & A,
                                                  AFloat weightDecay)
 {
-   dim3 blockDims = TDevice::BlockDims();
-   dim3 gridDims  = TDevice::GridDims(B);
+   dim3 blockDims = TDevice::BlockDims2D();
+   dim3 gridDims  = TDevice::GridDims2D(B);
    cudaStream_t s = A.GetComputeStream();
    ::TMVA::DNN::Cuda::AddL1RegularizationGradients<<<gridDims, blockDims, 0, s>>>(
        B.GetDataPointer(),
@@ -59,8 +59,8 @@ void TCuda<AFloat>::AddL1RegularizationGradients(TCudaMatrix<AFloat> & B,
 template<typename AFloat>
 AFloat TCuda<AFloat>::L2Regularization(const TCudaMatrix<AFloat> & A)
 {
-   dim3 blockDims = TDevice::BlockDims();
-   dim3 gridDims  = TDevice::GridDims(A);
+   dim3 blockDims = TDevice::BlockDims2D();
+   dim3 gridDims  = TDevice::GridDims2D(A);
    cudaStream_t s = A.GetComputeStream();
    TCudaMatrix<AFloat>::ResetDeviceReturn();
    ::TMVA::DNN::Cuda::SquaredSum<<<gridDims, blockDims, 0, s>>>(
@@ -77,8 +77,8 @@ void TCuda<AFloat>::AddL2RegularizationGradients(TCudaMatrix<AFloat> & B,
                                                  const TCudaMatrix<AFloat> & A,
                                                  AFloat weightDecay)
 {
-   dim3 blockDims = TDevice::BlockDims();
-   dim3 gridDims  = TDevice::GridDims(B);
+   dim3 blockDims = TDevice::BlockDims2D();
+   dim3 gridDims  = TDevice::GridDims2D(B);
    cudaStream_t s = A.GetComputeStream();
    ::TMVA::DNN::Cuda::AddL2RegularizationGradients<<<gridDims, blockDims, 0, s>>>(
        B.GetDataPointer(),

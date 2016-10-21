@@ -31,15 +31,15 @@ namespace DNN
 * interface for the DNN implementation. The reference implementation uses the
 * TMatrixT class template to represent matrices.
 *
-* \tparam Real_t The floating point type used to represent scalars.
+* \tparam AReal The floating point type used to represent scalars.
 */
-template<typename Real_t>
+template<typename AReal>
 class TReference
 {
 public:
 
-   using Scalar_t     = Real_t;
-   using Matrix_t     = TMatrixT<Real_t>;
+   using Scalar_t     = AReal;
+   using Matrix_t     = TMatrixT<AReal>;
 
    //____________________________________________________________________________
    //
@@ -104,33 +104,33 @@ public:
     * and writes the results into the result matrix.
     */
    ///@{
-   static void Identity(TMatrixT<Real_t> & B);
-   static void IdentityDerivative(TMatrixT<Real_t> & B,
-                                  const TMatrixT<Real_t> & A);
+   static void Identity(TMatrixT<AReal> & B);
+   static void IdentityDerivative(TMatrixT<AReal> & B,
+                                  const TMatrixT<AReal> & A);
 
-   static void Relu(TMatrixT<Real_t> & B);
-   static void ReluDerivative(TMatrixT<Real_t> & B,
-                              const TMatrixT<Real_t> & A);
+   static void Relu(TMatrixT<AReal> & B);
+   static void ReluDerivative(TMatrixT<AReal> & B,
+                              const TMatrixT<AReal> & A);
 
-   static void Sigmoid(TMatrixT<Real_t> & B);
-   static void SigmoidDerivative(TMatrixT<Real_t> & B,
-                                 const TMatrixT<Real_t> & A);
+   static void Sigmoid(TMatrixT<AReal> & B);
+   static void SigmoidDerivative(TMatrixT<AReal> & B,
+                                 const TMatrixT<AReal> & A);
 
-   static void Tanh(TMatrixT<Real_t> & B);
-   static void TanhDerivative(TMatrixT<Real_t> & B,
-                              const TMatrixT<Real_t> & A);
+   static void Tanh(TMatrixT<AReal> & B);
+   static void TanhDerivative(TMatrixT<AReal> & B,
+                              const TMatrixT<AReal> & A);
 
-   static void SymmetricRelu(TMatrixT<Real_t> & B);
-   static void SymmetricReluDerivative(TMatrixT<Real_t> & B,
-                                       const TMatrixT<Real_t> & A);
+   static void SymmetricRelu(TMatrixT<AReal> & B);
+   static void SymmetricReluDerivative(TMatrixT<AReal> & B,
+                                       const TMatrixT<AReal> & A);
 
-   static void SoftSign(TMatrixT<Real_t> & B);
-   static void SoftSignDerivative(TMatrixT<Real_t> & B,
-                                  const TMatrixT<Real_t> & A);
+   static void SoftSign(TMatrixT<AReal> & B);
+   static void SoftSignDerivative(TMatrixT<AReal> & B,
+                                  const TMatrixT<AReal> & A);
 
-   static void Gauss(TMatrixT<Real_t> & B);
-   static void GaussDerivative(TMatrixT<Real_t> & B,
-                               const TMatrixT<Real_t> & A);
+   static void Gauss(TMatrixT<AReal> & B);
+   static void GaussDerivative(TMatrixT<AReal> & B,
+                               const TMatrixT<AReal> & A);
 
    ///@}
 
@@ -148,20 +148,28 @@ public:
     */
    ///@{
 
-   static Real_t MeanSquaredError(const TMatrixT<Real_t> &Y,
-                                  const TMatrixT<Real_t> &output);
-   static void MeanSquaredErrorGradients(TMatrixT<Real_t> & dY,
-                                         const TMatrixT<Real_t> &Y,
-                                         const TMatrixT<Real_t> &output);
+   static AReal MeanSquaredError(const TMatrixT<AReal> &Y,
+                                  const TMatrixT<AReal> &output);
+   static void MeanSquaredErrorGradients(TMatrixT<AReal> & dY,
+                                         const TMatrixT<AReal> &Y,
+                                         const TMatrixT<AReal> &output);
 
     /** Sigmoid transformation is implicitly applied, thus \p output should
      *  hold the linear activations of the last layer in the net. */
-   static Real_t CrossEntropy(const TMatrixT<Real_t> &Y,
-                              const TMatrixT<Real_t> &output);
+   static AReal CrossEntropy(const TMatrixT<AReal> &Y,
+                              const TMatrixT<AReal> &output);
 
-   static void CrossEntropyGradients(TMatrixT<Real_t> & dY,
-                                     const TMatrixT<Real_t> & Y,
-                                     const TMatrixT<Real_t> & output);
+   static void CrossEntropyGradients(TMatrixT<AReal> & dY,
+                                     const TMatrixT<AReal> & Y,
+                                     const TMatrixT<AReal> & output);
+
+    /** Softmax transformation is implicitly applied, thus \p output should
+     *  hold the linear activations of the last layer in the net. */
+   static AReal SoftmaxCrossEntropy(const TMatrixT<AReal> &Y,
+                                    const TMatrixT<AReal> &output);
+   static void SoftmaxCrossEntropyGradients(TMatrixT<AReal> & dY,
+                                            const TMatrixT<AReal> & Y,
+                                            const TMatrixT<AReal> & output);
    ///@}
 
    //____________________________________________________________________________
@@ -177,8 +185,10 @@ public:
     * classification.
     */
    ///@{
-   static void Sigmoid(TMatrixT<Real_t> &YHat,
-                        const TMatrixT<Real_t> & );
+   static void Sigmoid(TMatrixT<AReal> &YHat,
+                       const TMatrixT<AReal> & );
+   static void Softmax(TMatrixT<AReal> &YHat,
+                       const TMatrixT<AReal> & );
    ///@}
 
    //____________________________________________________________________________
@@ -195,15 +205,15 @@ public:
     */
    ///@{
 
-   static Real_t L1Regularization(const TMatrixT<Real_t> & W);
-   static void AddL1RegularizationGradients(TMatrixT<Real_t> & A,
-                                            const TMatrixT<Real_t> & W,
-                                            Real_t weightDecay);
+   static AReal L1Regularization(const TMatrixT<AReal> & W);
+   static void AddL1RegularizationGradients(TMatrixT<AReal> & A,
+                                            const TMatrixT<AReal> & W,
+                                            AReal weightDecay);
 
-   static Real_t L2Regularization(const TMatrixT<Real_t> & W);
-   static void AddL2RegularizationGradients(TMatrixT<Real_t> & A,
-                                            const TMatrixT<Real_t> & W,
-                                            Real_t weightDecay);
+   static AReal L2Regularization(const TMatrixT<AReal> & W);
+   static void AddL2RegularizationGradients(TMatrixT<AReal> & A,
+                                            const TMatrixT<AReal> & W,
+                                            AReal weightDecay);
    ///@}
 
    //____________________________________________________________________________
@@ -218,13 +228,13 @@ public:
     */
    ///@{
 
-   static void InitializeGauss(TMatrixT<Real_t> & A);
+   static void InitializeGauss(TMatrixT<AReal> & A);
 
-   static void InitializeUniform(TMatrixT<Real_t> & A);
+   static void InitializeUniform(TMatrixT<AReal> & A);
 
-   static void InitializeIdentity(TMatrixT<Real_t> & A);
+   static void InitializeIdentity(TMatrixT<AReal> & A);
 
-   static void InitializeZero(TMatrixT<Real_t> & A);
+   static void InitializeZero(TMatrixT<AReal> & A);
 
    ///@}
 
@@ -239,7 +249,7 @@ public:
 
    /** Apply dropout with activation probability \p p to the given
     *  matrix \p A and scale the result by reciprocal of \p p. */
-   static void Dropout(TMatrixT<Real_t> & A, Real_t dropoutProbability);
+   static void Dropout(TMatrixT<AReal> & A, AReal dropoutProbability);
 
    ///@}
 };

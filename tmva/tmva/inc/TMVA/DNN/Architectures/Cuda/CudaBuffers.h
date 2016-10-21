@@ -43,6 +43,7 @@ class TCudaHostBuffer
 private:
 
    size_t                    fOffset;        ///< Offset for sub-buffers
+   size_t                    fSize;
    mutable cudaStream_t      fComputeStream; ///< cudaStream for data transfer
    std::shared_ptr<AFloat *> fHostPointer;   ///< Pointer to the buffer data
 
@@ -76,6 +77,8 @@ public:
 
    inline AFloat & operator[](size_t index);
    inline AFloat   operator[](size_t index) const;
+
+   size_t GetSize() const {return fSize;}
 
 };
 
