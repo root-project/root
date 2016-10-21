@@ -1046,7 +1046,7 @@ void TObject::operator delete[](void *ptr)
       fgDtorOnly = 0;
 }
 
-#ifdef R__USE_CXX14
+#ifdef R__SIZEDDELETE
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator delete for sized deallocation.
 

@@ -365,7 +365,7 @@ void TStorage::ObjectDealloc(void *vp, void *ptr)
    if (vp && ptr) { }
 }
 
-#ifdef R__USE_CXX14
+#ifdef R__SIZEDDELETE
 ////////////////////////////////////////////////////////////////////////////////
 /// Used to deallocate a TObject on the heap (via TObject::operator delete()),
 /// for sized deallocation.
