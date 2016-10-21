@@ -65,7 +65,7 @@ void TTreeProcessor::Process(std::function<void(TTreeReader&)> func)
 
       g.run([this, &func, start, end]() {
          auto tr = treeView->GetTreeReader();
-         tr->SetEntriesRange(start - 1, end);
+         tr->SetEntriesRange(start, end);
          func(*tr);
       });
    }
