@@ -14,8 +14,8 @@ namespace ROOT{
     fInitTBB->terminate();
   }
 
-  void TThreadExecutor::ParallelFor(unsigned int start, unsigned int end, const std::function<void(unsigned int i)> &f){
-    tbb::parallel_for(start, end, f);
+  void TThreadExecutor::ParallelFor(unsigned int start, unsigned int end, unsigned step, const std::function<void(unsigned int i)> &f){
+    tbb::parallel_for(start, end, step, f);
   }
 
  double TThreadExecutor::ParallelReduceDoubles(const std::vector<double> &objs, const std::function<float(unsigned int a, float b)> &redfunc){
