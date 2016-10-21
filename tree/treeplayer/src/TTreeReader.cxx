@@ -255,11 +255,13 @@ void TTreeReader::Initialize()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set the range of entries to be processed.
+/// Set the range of entries to be processed. This call is usually followed by
+/// an iteration of the range using TTreeReader::Next(), which will visit the
+/// the entries from `first` to `last - 1`.
 /// If last > first, this call is equivalent to
-/// `SetEntry(first); SetLastEntry(last);`. Otherwise `last` is ignored and
+/// `SetEntry(first - 1); SetLastEntry(last);`. Otherwise `last` is ignored and
 /// only `first` is set.
-/// \return the EEntryStatus that would be returned by SetEntry(first)
+/// \return the EEntryStatus that would be returned by SetEntry(first - 1)
 
 TTreeReader::EEntryStatus TTreeReader::SetEntriesRange(Long64_t first, Long64_t last)
 {
@@ -267,7 +269,7 @@ TTreeReader::EEntryStatus TTreeReader::SetEntriesRange(Long64_t first, Long64_t 
       fLastEntry = last;
    else
       fLastEntry = -1;
-   return SetEntry(first);
+   return SetEntry(first - 1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
