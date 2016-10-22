@@ -372,8 +372,12 @@ void TStorage::ObjectDealloc(void *vp, void *ptr)
 
 void TStorage::ObjectDealloc(void *vp, size_t size)
 {
-
+#if !defined(R__MACOSX) || !defined(MAC_OS_X_VERSION_10_12)
+   (void)size;
+   ::operator delete(vp);
+#else
    ::operator delete(vp, size);
+#endif
 }
 #endif
 
