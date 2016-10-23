@@ -78,6 +78,7 @@ namespace TMVA {
 
       std::map<UInt_t,Float_t> GetROCValues(){return fROCs;}
       Float_t GetROCAverage() const;
+      Float_t GetROCStandardDeviation() const;
       TMultiGraph *GetROCCurves(Bool_t fLegend=kTRUE);
       void Print() const ;
 

@@ -16,6 +16,7 @@
 #include "TAxis.h"
 #include "TCanvas.h"
 #include "TGraph.h"
+#include "TMath.h"
 
 #include <iostream>
 #include <memory>
@@ -42,6 +43,15 @@ Float_t TMVA::CrossValidationResult::GetROCAverage() const
    return avg/fROCs.size();
 }
 
+Float_t TMVA::CrossValidationResult::GetROCStandardDeviation() const
+{
+   // NOTE: We are using here the unbiased estimation of the standard deviation.
+   Float_t std=0;
+   Float_t avg=GetROCAverage();
+   for(auto &roc:fROCs) std+=TMath::Power(roc.second-avg, 2);
+   return TMath::Sqrt(std/float(fROCs.size()-1.0));
+}
+
 void TMVA::CrossValidationResult::Print() const
 {
    TMVA::MsgLogger::EnableOutput();
@@ -50,9 +60,11 @@ void TMVA::CrossValidationResult::Print() const
    MsgLogger fLogger("CrossValidation");
    fLogger << kHEADER << " ==== Results ====" << Endl;
    for(auto &item:fROCs)
-      fLogger << kINFO << Form("Fold  %i ROC-Int : %f",item.first,item.second) << std::endl;
+      fLogger << kINFO << Form("Fold  %i ROC-Int : %.4f",item.first,item.second) << std::endl;
 
-   fLogger << kINFO << Form("Average ROC-Int : %f",GetROCAverage()) << Endl;
+   fLogger << kINFO << "------------------------" << Endl;
+   fLogger << kINFO << Form("Average ROC-Int : %.4f",GetROCAverage()) << Endl;
+   fLogger << kINFO << Form("Std-Dev ROC-Int : %.4f",GetROCStandardDeviation()) << Endl;
 
    TMVA::gConfig().SetSilent(kTRUE);
 }
