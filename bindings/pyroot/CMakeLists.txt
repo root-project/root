@@ -47,7 +47,7 @@ file(COPY ${JupyROOTDirName} DESTINATION ${localruntimedir})
 
 set( JsMVADirName "JsMVA")
 install (DIRECTORY ${JsMVADirName} DESTINATION ${runtimedir})
-file(COPY ${JsMVADirName} DESTINATION ${CMAKE_BINARY_DIR}/${runtimedir})
+file(COPY ${JsMVADirName} DESTINATION ${localruntimedir})
 
 #---Install headers----------------------------------------------------------
 ROOT_INSTALL_HEADERS()
