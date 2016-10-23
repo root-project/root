@@ -373,6 +373,9 @@ void TStorage::ObjectDealloc(void *vp, void *ptr)
 void TStorage::ObjectDealloc(void *vp, size_t size)
 {
 #if !defined(R__MACOSX) || !defined(MAC_OS_X_VERSION_10_12)
+   // At least on 10.11, the compiler defines but the c++ library does not provide the size operator delete.
+   // See for example https://llvm.org/bugs/show_bug.cgi?id=22951 or
+   // https://github.com/gperftools/gperftools/issues/794.
    (void)size;
    ::operator delete(vp);
 #else
