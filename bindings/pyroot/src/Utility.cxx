@@ -337,6 +337,7 @@ Bool_t PyROOT::Utility::AddBinaryOperator(
    PyObject* pyclass, const char* op, const char* label, const char* alt )
 {
    PyObject* pyname = PyObject_GetAttr( pyclass, PyStrings::gCppName );
+   if ( ! pyname ) pyname = PyObject_GetAttr( pyclass, PyStrings::gName );
    std::string cname = Cppyy::ResolveName( PyROOT_PyUnicode_AsString( pyname ) );
    Py_DECREF( pyname ); pyname = 0;
 
@@ -706,12 +707,19 @@ const std::string PyROOT::Utility::ClassName( PyObject* pyobj )
       if ( pyname != 0 ) {
          clname = PyROOT_PyUnicode_AsString( pyname );
          Py_DECREF( pyname );
-      } else
-         PyErr_Clear();
-
+      } else {
+         pyname = PyObject_GetAttr( pyclass, PyStrings::gName );
+         if ( pyname != 0 ) {
+            clname = PyROOT_PyUnicode_AsString( pyname );
+            Py_DECREF( pyname );
+         } else {
+            PyErr_Clear();
+         }
+      }
       Py_DECREF( pyclass );
-   } else
+   } else {
       PyErr_Clear();
+   }
 
    return clname;
 }

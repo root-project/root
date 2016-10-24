@@ -275,6 +275,7 @@ namespace {
       }
 
       PyObject* clName = PyObject_GetAttr( pytmpl->fPyClass, PyStrings::gCppName );
+      if ( ! clName ) clName = PyObject_GetAttr( pytmpl->fPyClass, PyStrings::gName );
       TClass* klass = TClass::GetClass( PyROOT_PyUnicode_AsString( clName ) );
       Py_DECREF( clName );
       const std::string& tmplname = pytmpl->fNonTemplated->fMethodInfo->fName;

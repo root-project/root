@@ -501,6 +501,7 @@ namespace {
    {
       if ( ! PyROOT_PyUnicode_Check( pyname ) ) {     // name given as string
          PyObject* nattr = PyObject_GetAttr( pyname, PyStrings::gCppName );
+         if ( ! nattr ) nattr = PyObject_GetAttr( pyname, PyStrings::gName );
          if ( nattr )                        // object is actually a class
             pyname = nattr;
          pyname = PyObject_Str( pyname );
