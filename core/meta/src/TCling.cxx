@@ -6431,7 +6431,7 @@ void TCling::CodeComplete(const std::string& line, size_t& cursor,
 int TCling::Evaluate(const char* code, TInterpreterValue& value)
 {
    auto V = reinterpret_cast<cling::Value*>(value.GetValAddr());
-   auto interpreter = ((TCling*)gCling)->GetInterpreter();
+   auto interpreter = this->GetInterpreter();
    auto compRes = interpreter->evaluate(code, *V);
    return compRes!=cling::Interpreter::kSuccess ? 0 : 1 ;
 }
