@@ -327,7 +327,11 @@
 #endif
 
 #ifdef R__USE_CXX14
-#   if !defined(__GNUC__)
+#   if defined(R__MACOSX) && !defined(MAC_OS_X_VERSION_10_12)
+      // At least on 10.11, the compiler defines but the c++ library does not provide the size operator delete.
+      // See for example https://llvm.org/bugs/show_bug.cgi?id=22951 or
+      // https://github.com/gperftools/gperftools/issues/794.
+#   elif !defined(__GNUC__)
 #      define R__SIZEDDELETE
 #   elif __GNUC__ > 4 
 #      define R__SIZEDDELETE
