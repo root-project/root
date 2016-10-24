@@ -46,7 +46,7 @@ public:
    virtual Long_t      GetAsLong() const = 0;
    virtual ULong_t     GetAsUnsignedLong() const = 0;
    virtual void*       GetAsPointer() const = 0;
-   virtual std::string GetAsString() const = 0;
+   virtual std::string ToString() const = 0;
 };
 
 #endif // ROOT_TInterpreterValue

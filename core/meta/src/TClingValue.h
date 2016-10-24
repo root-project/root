@@ -63,7 +63,7 @@ public:
    Long_t      GetAsLong() const;
    ULong_t     GetAsUnsignedLong() const;
    void*       GetAsPointer() const;
-   std::string GetAsString() const;
+   std::string ToString() const;
 };
 
 #endif // ROOT_TClingValue

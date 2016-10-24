@@ -64,7 +64,7 @@ void* TClingValue::GetAsPointer() const {
    return ToCV().getPtr();
 }
 
-std::string TClingValue::GetAsString() const {
+std::string TClingValue::ToString() const {
    std::string retVal;
    llvm::raw_string_ostream ost(retVal);
    ToCV().print(ost);
