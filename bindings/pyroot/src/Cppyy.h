@@ -22,6 +22,7 @@ namespace Cppyy {
    std::string GetScopeName( TCppScope_t parent, TCppIndex_t iscope );
    std::string ResolveName( const std::string& cppitem_name );
    TCppScope_t GetScope( const std::string& scope_name );
+   std::string GetName( const std::string& scope_name );
    TCppType_t  GetTemplate( const std::string& template_name );
    TCppType_t  GetActualClass( TCppType_t klass, TCppObject_t obj );
    size_t      SizeOf( TCppType_t klass );

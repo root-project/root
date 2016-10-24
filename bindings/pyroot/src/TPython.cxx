@@ -177,7 +177,7 @@ Bool_t TPython::Import( const char* mod_name )
    // collect classes
       if ( PyClass_Check( value ) || PyObject_HasAttr( value, PyROOT::PyStrings::gBases ) ) {
       // get full class name (including module)
-         PyObject* pyClName  = PyObject_GetAttr( value, PyROOT::PyStrings::gName );
+         PyObject* pyClName  = PyObject_GetAttr( value, PyROOT::PyStrings::gCppName );
 
          if ( PyErr_Occurred() )
             PyErr_Clear();
