@@ -15,7 +15,7 @@ std::string getFunctionBodyFromName(const char* fname)
 {
    auto v = gInterpreter->CreateTemporary();
    gInterpreter->Evaluate(fname,*v);
-   return v->GetAsString();
+   return v->ToString();
 }
 
 int checkFunc(const char* name, const char* code)
