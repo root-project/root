@@ -13,8 +13,6 @@
 #define ROOT_TThreadExecutor
 
 #include "RConfigure.h"
-// exclude in case ROOT does not have IMT support
-#ifdef R__USE_IMT
 
 // exclude in case ROOT does not have IMT support
 #ifndef R__USE_IMT
