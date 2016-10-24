@@ -26,6 +26,12 @@ etc/allDict.h
 xcuserdata
 project.xcworkspace
 
+# Visual Code
+.vscode/*
+
+# Vim
+*.swp
+
 # Other Stuff
 *.d
 
