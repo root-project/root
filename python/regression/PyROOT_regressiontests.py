@@ -212,9 +212,9 @@ class Regression05LoKiNamespace( MyTestCase ):
       gROOT.LoadMacro( 'LoKiNamespace.C+' )
       LoKi = ROOT.LoKi
 
-      self.assertEqual( LoKi.Constant( rcp ).__name__, 'LoKi::Constant<%s>' % rcp )
+      self.assertEqual( LoKi.Constant( rcp ).__name__, 'Constant<%s>' % rcp )
       self.assertEqual(
-         LoKi.BooleanConstant( rcp ).__name__, 'LoKi::BooleanConstant<%s>' % rcp )
+         LoKi.BooleanConstant( rcp ).__name__, 'BooleanConstant<%s>' % rcp )
 
 ### Test conversion of int64 objects to ULong64_t and ULong_t ================
 class Regression06Int64Conversion( MyTestCase ):
