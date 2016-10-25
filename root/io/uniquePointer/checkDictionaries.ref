@@ -10,4 +10,5 @@ Class set<vector<double*> > has a dictionary
 Class map<char,vector<list<double>*> > has a dictionary
 Class set<vector<Class01*> > has a dictionary
 Class map<char,vector<list<Class01>*> > has a dictionary
+Class edm::Wrapper<vector<unique_ptr<TrackingRegion,default_delete<TrackingRegion> > > > has a dictionary
 (int) 0

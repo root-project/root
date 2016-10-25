@@ -32,7 +32,9 @@ int checkDictionaries(){
                       "set<vector<double*>>",
                       "map<char, vector<list<double>*>>",
                       "set<vector<Class01*>>",
-                      "map<char, vector<list<Class01>*>>"};
+                      "map<char, vector<list<Class01>*>>",
+                      "edm::Wrapper<std::vector<std::unique_ptr<TrackingRegion> > >",
+   };
 
    for (auto& className : classNames)
       ret += checkDict(className);

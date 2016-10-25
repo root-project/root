@@ -9,6 +9,13 @@ class Class01{
    vector<unique_ptr<double>> a1;
 };
 
+class  TrackingRegion{};
+
+namespace edm {
+   template <class T>
+   class Wrapper{};
+}
+
 namespace DummyNS {
    vector<unique_ptr<int>> a0;
    vector<unique_ptr<double>> a1;

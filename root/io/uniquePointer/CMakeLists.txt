@@ -1,12 +1,14 @@
 ROOTTEST_ADD_TESTDIRS()
 
+ROOTTEST_ADD_TEST(checkNamesForIO
+                  MACRO  checkNameForIO.C)
+
 ROOTTEST_GENERATE_REFLEX_DICTIONARY(classes3 classes3.h  SELECTION sel3.xml)
 
 ROOTTEST_ADD_TEST(checkDictionaries
                   MACRO  checkDictionaries.C
                   OUTREF checkDictionaries.ref
                   DEPENDS ${GENERATE_REFLEX_TEST})
-
 
 ROOTTEST_ADD_TEST(aclicDataMemberSelection
                   MACRO  aclic01.C+

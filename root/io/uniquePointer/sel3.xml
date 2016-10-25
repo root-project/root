@@ -5,4 +5,6 @@
    <class pattern="std::set<*" />
    <class pattern="std::map<*" />
    <class pattern="std::vector<*" />
+   <class name="std::vector<std::unique_ptr<TrackingRegion> >" />
+   <class name="edm::Wrapper<std::vector<std::unique_ptr<TrackingRegion> > >" />
 </rootdict>
