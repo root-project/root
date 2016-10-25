@@ -609,6 +609,12 @@ CXXFLAGS += $(ROOT_CXXMODULES_CXXFLAGS)
 CFLAGS   += $(ROOT_CXXMODULES_CFLAGS)
 endif
 
+ifneq ($(GCCTOOLCHAIN),)
+CXXFLAGS += --gcc-toolchain=$(GCCTOOLCHAIN)
+CFLAGS   += --gcc-toolchain=$(GCCTOOLCHAIN)
+LDFLAGS  += --gcc-toolchain=$(GCCTOOLCHAIN)
+endif
+
 
 ALLLIBS      := $(CORELIB)
 ALLMAPS      := $(COREMAP)

@@ -172,6 +172,9 @@ $(LLVMDEPO): $(LLVMDEPS)
 		if [ $(LIBCXX) = "yes" ]; then \
 			LLVMLIBCXX="-DLLVM_ENABLE_LIBCXX=ON"; \
 		fi; \
+		if [ $(GCCTOOLCHAIN) ]; then \
+			LLVM_CFLAGS="$(LLVM_CFLAGS) --gcc-toolchain=$(GCCTOOLCHAIN) "; \
+		fi; \
 		echo "*** Configuring LLVM in $(dir $@) ..."; \
 		mkdir -p $(dir $@) && \
 		cd $(dir $@)  && \
