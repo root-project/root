@@ -1152,6 +1152,7 @@ void TMVA::MethodBDT::Train()
      fInteractive->Init(titles);
    }
    fIPyMaxIter = fNTrees;
+   fExitFromTraining = false;
 
    // HHV (it's been here since looong but I really don't know why we cannot handle
    // normalized variables in BDTs...  todo
