@@ -88,7 +88,13 @@ std::unique_ptr<TargetMachine>
   Options.NoFramePointerElim = 1;
   Options.JITEmitDebugInfo = 1;
   Reloc::Model RelocModel = Reloc::Default;
+// We have to use large code model for PowerPC64 because TOC and text sections
+// can be more than 2GB apart.
+#if defined(__powerpc64__) || defined(__PPC64__)
+  CodeModel::Model CMModel = CodeModel::Large;
+#else
   CodeModel::Model CMModel = CodeModel::JITDefault;
+#endif
   CodeGenOpt::Level OptLevel = CodeGenOpt::Less;
 
   std::unique_ptr<TargetMachine> TM;
