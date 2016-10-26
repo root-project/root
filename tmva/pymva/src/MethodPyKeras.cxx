@@ -186,6 +186,7 @@ void MethodPyKeras::Train() {
 
    float* valDataX = new float[nValEvents*fNVars];
    float* valDataY = new float[nValEvents*fNOutputs];
+   float* valDataWeights = new float[nValEvents];
    for (UInt_t i=0; i<nValEvents; i++) {
       const TMVA::Event* e = GetTestingEvent(i);
       // Fill variables
@@ -205,14 +206,19 @@ void MethodPyKeras::Train() {
          }
       }
       else Log() << kFATAL << "Can not fill target vector because analysis type is not known" << Endl;
+      // Fill weights
+      valDataWeights[i] = e->GetWeight();
    }
 
    npy_intp dimsValX[2] = {(npy_intp)nValEvents, (npy_intp)fNVars};
    npy_intp dimsValY[2] = {(npy_intp)nValEvents, (npy_intp)fNOutputs};
+   npy_intp dimsValWeights[1] = {(npy_intp)nValEvents};
    PyArrayObject* pValDataX = (PyArrayObject*)PyArray_SimpleNewFromData(2, dimsValX, NPY_FLOAT, (void*)valDataX);
    PyArrayObject* pValDataY = (PyArrayObject*)PyArray_SimpleNewFromData(2, dimsValY, NPY_FLOAT, (void*)valDataY);
+   PyArrayObject* pValDataWeights = (PyArrayObject*)PyArray_SimpleNewFromData(1, dimsValWeights, NPY_FLOAT, (void*)valDataWeights);
    PyDict_SetItemString(fLocalNS, "valX", (PyObject*)pValDataX);
    PyDict_SetItemString(fLocalNS, "valY", (PyObject*)pValDataY);
+   PyDict_SetItemString(fLocalNS, "valWeights", (PyObject*)pValDataWeights);
 
    /*
     * Train Keras model
@@ -267,7 +273,7 @@ void MethodPyKeras::Train() {
    }
 
    // Train model
-   PyRunString("history = model.fit(trainX, trainY, sample_weight=trainWeights, batch_size=batchSize, nb_epoch=numEpochs, verbose=verbose, validation_data=(valX, valY), callbacks=callbacks)",
+   PyRunString("history = model.fit(trainX, trainY, sample_weight=trainWeights, batch_size=batchSize, nb_epoch=numEpochs, verbose=verbose, validation_data=(valX, valY, valWeights), callbacks=callbacks)",
                "Failed to train model");
 
    /*
@@ -290,6 +296,7 @@ void MethodPyKeras::Train() {
    delete[] trainDataWeights;
    delete[] valDataX;
    delete[] valDataY;
+   delete[] valDataWeights;
 }
 
 void MethodPyKeras::TestClassification() {
