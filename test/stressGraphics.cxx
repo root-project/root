@@ -75,7 +75,6 @@
 #include <TParallelCoord.h>
 #include <TImage.h>
 #include <TMath.h>
-#include <TSystem.h>
 
 
 void     stressGraphics (Int_t verbose);
