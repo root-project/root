@@ -1759,7 +1759,7 @@ Begin_Macro(source)
    hlego3->SetFillColor(kRed);
    hlego3->Draw("LEGO3");
    return c2;
- }
+}
 End_Macro
 
 The following example shows a 2D histogram plotted with the option
