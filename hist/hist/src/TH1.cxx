@@ -2863,7 +2863,7 @@ void TH1::Draw(Option_t *option)
       }
    }
 
-   // If there is no pad or an empty pad the the "same" is ignored.
+   // If there is no pad or an empty pad the "same" option is ignored.
    if (gPad) {
       if (!gPad->IsEditable()) gROOT->MakeDefCanvas();
       if (index>=0) {
