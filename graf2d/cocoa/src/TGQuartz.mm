@@ -48,19 +48,6 @@ const Float_t kScale = 0.93376068;
 
 ClassImp(TGQuartz)
 
-//TODO:
-//Originally, Olivier Couet suggested to have a separate module quartz with quartz-related graphics,
-//to be used by both iOS and MacOSX code. Also, the separation of non-GUI and gui parts was suggested
-//that's why we have TGQuartz and TGCocoa classes (TGCocoa is never used as it is, TGQuartz is
-//created and initialzed by TROOT.
-//Today it's clear that there is not need in any special quartz classes anymore -
-//in my iOS applications/module I do not need anything from quartz module, also, the
-//amount of code in quartz module is so small, that it can be merged back into cocoa module.
-
-//At some point, I'll merge cocoa and quartz modules and cleanup all this
-//mess and weird code we have in a quartz module.
-
-
 namespace X11 = ROOT::MacOSX::X11;
 namespace Quartz = ROOT::Quartz;
 namespace Util = ROOT::MacOSX::Util;
