@@ -221,6 +221,18 @@ class TestClassOVERLOADS:
       # fails if short int selected for overload
         assert cppyy.gbl.TMath.Abs(104125) == 104125
 
+    def test11_free_function_namespace(self):
+        """Free functions on a namespace"""
+        import cppyy
+        cppyy.gbl.gInterpreter.Declare("""
+          namespace Gaudi { 
+            namespace Utils { 
+              namespace Histos { 
+                int histoDump() { return 42; }
+              }
+            }
+          }""")
+        assert cppyy.gbl.Gaudi.Utils.Histos.histoDump() == 42
 
 ## actual test run
 if __name__ == '__main__':
