@@ -3023,9 +3023,14 @@ void TBufferJSON::JsonWriteConstChar(const char* value, Int_t len)
 {
    // writes string value, processing all kind of special characters
 
-   fValue.Append("\"");
+   if (value==0) {
 
-   if (value!=0) {
+      fValue.Append("null");
+
+   } else {
+
+      fValue.Append("\"");
+
       if (len<0) len = strlen(value);
 
       for (Int_t n=0;n<len;n++) {
@@ -3062,9 +3067,9 @@ void TBufferJSON::JsonWriteConstChar(const char* value, Int_t len)
                   fValue.Append(TString::Format("\\u%04x", (unsigned) c));
          }
       }
-   }
 
-   fValue.Append("\"");
+      fValue.Append("\"");
+   }
 }
 
 //______________________________________________________________________________
