@@ -1389,13 +1389,17 @@ void TBufferJSON::PerformPostProcessing(TJSONStackObj *stack,
 
    const char *typname = elem->IsBase() ? elem->GetName() : elem->GetTypeName();
    Bool_t isTObject = (elem->GetType() == TStreamerInfo::kTObject) || (strcmp("TObject", typname) == 0);
+   Bool_t isCharStar = elem->GetType() == TStreamerInfo::kCharStar;
    Bool_t isTString = elem->GetType() == TStreamerInfo::kTString;
    Bool_t isSTLstring = elem->GetType() == TStreamerInfo::kSTLstring;
    Bool_t isOffsetPArray = (elem->GetType() > TStreamerInfo::kOffsetP) && (elem->GetType() < TStreamerInfo::kOffsetP + 20);
 
    Bool_t isTArray = (strncmp("TArray", typname, 6) == 0);
 
-   if (isTString || isSTLstring) {
+   if (isCharStar) {
+      stack->fValues.Delete();
+      if (fValue == "0") fValue = "null";
+   } else if (isTString || isSTLstring) {
       // just remove all kind of string length information
 
       if (gDebug > 3)
