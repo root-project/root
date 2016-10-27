@@ -3059,6 +3059,7 @@ void TBufferJSON::JsonWriteConstChar(const char* value, Int_t len)
 
       for (Int_t n=0;n<len;n++) {
          char c = value[n];
+         if (c==0) break;
          switch(c) {
             case '\n':
                fValue.Append("\\n");
