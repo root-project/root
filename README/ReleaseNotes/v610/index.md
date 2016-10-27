@@ -72,7 +72,7 @@ The following interfaces have been removed, after deprecation in v6.08.
 - From: Sergey Linev: In `TPad::SaveAs` method json file extension is now handled
 
 ## 3D Graphics Libraries
-
+- In `TMarker3DBox::PaintH3` the boxes' sizes was not correct.
 
 ## Geometry Libraries
 
