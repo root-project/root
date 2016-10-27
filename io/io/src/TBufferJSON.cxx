@@ -2452,6 +2452,11 @@ void  TBufferJSON::WriteFastArray(void *start, const TClass *cl, Int_t n,
       if (j > 0) AppendOutput(fArraySepar.Data());
 
       JsonWriteObject(obj, cl, kFALSE);
+
+      if ((n > 1) && (fValue.Length() > 0)) {
+         AppendOutput(fValue.Data());
+         fValue.Clear();
+      }
    }
 
    if (n > 1) {
@@ -2489,6 +2494,10 @@ Int_t TBufferJSON::WriteFastArray(void **start, const TClass *cl, Int_t n,
       for (Int_t j = 0; j < n; j++) {
          if (j > 0) AppendOutput(fArraySepar.Data());
          res |= WriteObjectAny(start[j], cl);
+         if ((n > 1) && (fValue.Length() > 0)) {
+            AppendOutput(fValue.Data());
+            fValue.Clear();
+         }
       }
 
    } else {
@@ -2500,6 +2509,11 @@ Int_t TBufferJSON::WriteFastArray(void **start, const TClass *cl, Int_t n,
          if (!start[j]) start[j] = ((TClass *)cl)->New();
          // ((TClass*)cl)->Streamer(start[j],*this);
          JsonWriteObject(start[j], cl, kFALSE);
+
+         if ((n > 1) && (fValue.Length() > 0)) {
+            AppendOutput(fValue.Data());
+            fValue.Clear();
+         }
       }
    }
 
