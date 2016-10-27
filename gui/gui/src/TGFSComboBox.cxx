@@ -351,6 +351,7 @@ TGFSComboBox::TGFSComboBox(const TGWindow *parent, Int_t id, UInt_t options,
             p = new char[blen];
             strlcpy(p, homeDir, blen);
             strlcat(p, &gLbc[i].fPath[5], blen-strlen(&gLbc[i].fPath[5]));
+            delete [] gLbc[i].fPath;
             gLbc[i].fPath = p;
          } else {
             gLbc[i].fFlags = 0;
@@ -379,6 +380,7 @@ TGFSComboBox::TGFSComboBox(const TGWindow *parent, Int_t id, UInt_t options,
             // Figure out where to put the terminating NULL
             int npos = hlen + strlen(&(gLbc[i].fPath[plen]));
             p[npos] = '\0';
+            delete [] gLbc[i].fPath;
             gLbc[i].fPath = p;
          } else {
             gLbc[i].fFlags = 0;

@@ -685,11 +685,13 @@ void TGFileContainer::ChangeDirectory(const char *path)
 {
    TString savdir = gSystem->WorkingDirectory();
    gSystem->ChangeDirectory(fDirectory.Data());   // so path of ".." will work
-   if (gSystem->ChangeDirectory(gSystem->ExpandPathName(path))) {
+   char *exppath = gSystem->ExpandPathName(path);
+   if (gSystem->ChangeDirectory(exppath)) {
       fDirectory = gSystem->WorkingDirectory();
       gSystem->ChangeDirectory(savdir.Data());
       DisplayDirectory();
    }
+   delete[] exppath;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
