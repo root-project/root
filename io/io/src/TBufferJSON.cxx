@@ -3056,7 +3056,7 @@ void TBufferJSON::JsonWriteConstChar(const char* value, Int_t len)
 
    if (value==0) {
 
-      fValue.Append("null");
+      fValue.Append("\"\"");
 
    } else {
 
