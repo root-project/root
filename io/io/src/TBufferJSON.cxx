@@ -2227,7 +2227,7 @@ void TBufferJSON::WriteArrayDouble32(const Double_t *d, Int_t n,
 // write array without size attribute
 // macro also treat situation, when instead of one single array
 // chain of several elements should be produced
-#define TBufferJSON_WriteFastArray(vname)                                    \
+#define TBufferJSON_WriteFastArray(vname,method)                          \
    {                                                                         \
       TJSONPushValue();                                                      \
       if (n <= 0) { /*fJsonrCnt++;*/ fValue.Append("[]"); return; }          \
@@ -2247,7 +2247,7 @@ void TBufferJSON::WriteArrayDouble32(const Double_t *d, Int_t n,
                JsonWriteBasic(vname[index]);                                 \
                index++;                                                      \
             } else {                                                         \
-               TJSONWriteArrayContent((vname+index), elem->GetArrayLength());\
+               method((vname+index), elem->GetArrayLength());                \
                index+=elem->GetArrayLength();                                \
             }                                                                \
             PerformPostProcessing(Stack(0), elem);                           \
@@ -2256,7 +2256,7 @@ void TBufferJSON::WriteArrayDouble32(const Double_t *d, Int_t n,
          if ((elem!=0) && (elem->GetArrayDim()>1) && (elem->GetArrayLength()==n)) { \
             TArrayI indexes(elem->GetArrayDim() - 1);                           \
             indexes.Reset(0);                                                   \
-            Int_t cnt = 0;                                                      \
+            Int_t cnt = 0, shift = 0, len = elem->GetMaxIndex(indexes.GetSize()); \
             while (cnt >= 0) {                                                  \
                if (indexes[cnt] >= elem->GetMaxIndex(cnt)) {                    \
                   fValue.Append("]");                                           \
@@ -2266,65 +2266,32 @@ void TBufferJSON::WriteArrayDouble32(const Double_t *d, Int_t n,
                }                                                                \
                fValue.Append(indexes[cnt] == 0 ? "[" : fArraySepar.Data());     \
                if (++cnt == indexes.GetSize()) {                                \
-                  Int_t shift = 0;                                              \
-                  for (Int_t k = 0; k < indexes.GetSize(); k++)                 \
-                     shift = shift * elem->GetMaxIndex(k) + indexes[k];         \
-                  Int_t len = elem->GetMaxIndex(indexes.GetSize());             \
-                  shift *= len;                                                 \
-                  TJSONWriteArrayContent((vname+shift), len);                   \
+                  method((vname+shift), len);                                   \
                   indexes[--cnt]++;                                             \
+                  shift+=len;                                                   \
                }                                                                \
             }                                                                   \
          } else {                                                               \
-            TJSONWriteArrayContent(vname, n);                                   \
+            method(vname, n);                                                   \
          }                                                                      \
    }
+
 
 //______________________________________________________________________________
 void TBufferJSON::WriteFastArray(const Bool_t *b, Int_t n)
 {
    // Write array of Bool_t to buffer
 
-   TBufferJSON_WriteFastArray(b);
+   TBufferJSON_WriteFastArray(b,TJSONWriteArrayContent);
 }
 
 //______________________________________________________________________________
 void TBufferJSON::WriteFastArray(const Char_t *c, Int_t n)
 {
    // Write array of Char_t to buffer
-   // If array does not include any special characters,
-   // it will be reproduced as CharStar node with string as attribute
+   // It will be written as string (or array of strings)
 
-   TStreamerElement* el = Stack(0)->fElem;
-
-   if (fExpectedChain || (el && (el->GetType() == TStreamerInfo::kOffsetP + TStreamerInfo::kChar))) {
-      TBufferJSON_WriteFastArray(c);
-   } else
-   if (!el || (el->GetArrayDim() < 2) || (el->GetArrayLength() != n)) {
-      // write as simple const char
-      TJSONPushValue();
-      JsonWriteConstChar(c, n);
-   } else {
-      // write as multi-dim array of strings
-      TJSONPushValue();
-      TArrayI indexes(el->GetArrayDim() - 1);
-      indexes.Reset(0);
-      Int_t cnt = 0, shift = 0, len = el->GetMaxIndex(indexes.GetSize());
-      while (cnt >= 0) {
-         if (indexes[cnt] >= el->GetMaxIndex(cnt)) {
-            fValue.Append("]");
-            indexes[cnt--] = 0;
-            if (cnt >= 0) indexes[cnt]++;
-            continue;
-         }
-         fValue.Append(indexes[cnt] == 0 ? "[" : fArraySepar.Data());
-         if (++cnt == indexes.GetSize()) {
-            JsonWriteConstChar(c+shift*len, len);
-            indexes[--cnt]++;
-            shift++;
-         }
-      }
-   }
+   TBufferJSON_WriteFastArray(c,JsonWriteConstChar);
 }
 
 //______________________________________________________________________________
@@ -2332,16 +2299,15 @@ void TBufferJSON::WriteFastArrayString(const Char_t *c, Int_t n)
 {
    // Write array of Char_t to buffer
 
-   WriteFastArray(c, n);
+   TBufferJSON_WriteFastArray(c,JsonWriteConstChar);
 }
-
 
 //______________________________________________________________________________
 void TBufferJSON::WriteFastArray(const UChar_t *c, Int_t n)
 {
    // Write array of UChar_t to buffer
 
-   TBufferJSON_WriteFastArray(c);
+   TBufferJSON_WriteFastArray(c,TJSONWriteArrayContent);
 }
 
 //______________________________________________________________________________
@@ -2349,7 +2315,7 @@ void TBufferJSON::WriteFastArray(const Short_t *h, Int_t n)
 {
    // Write array of Short_t to buffer
 
-   TBufferJSON_WriteFastArray(h);
+   TBufferJSON_WriteFastArray(h,TJSONWriteArrayContent);
 }
 
 //______________________________________________________________________________
@@ -2357,7 +2323,7 @@ void TBufferJSON::WriteFastArray(const UShort_t *h, Int_t n)
 {
    // Write array of UShort_t to buffer
 
-   TBufferJSON_WriteFastArray(h);
+   TBufferJSON_WriteFastArray(h,TJSONWriteArrayContent);
 }
 
 //______________________________________________________________________________
@@ -2365,7 +2331,7 @@ void TBufferJSON::WriteFastArray(const Int_t *i, Int_t n)
 {
    // Write array of Int_t to buffer
 
-   TBufferJSON_WriteFastArray(i);
+   TBufferJSON_WriteFastArray(i,TJSONWriteArrayContent);
 }
 
 //______________________________________________________________________________
@@ -2373,7 +2339,7 @@ void TBufferJSON::WriteFastArray(const UInt_t *i, Int_t n)
 {
    // Write array of UInt_t to buffer
 
-   TBufferJSON_WriteFastArray(i);
+   TBufferJSON_WriteFastArray(i,TJSONWriteArrayContent);
 }
 
 //______________________________________________________________________________
@@ -2381,7 +2347,7 @@ void TBufferJSON::WriteFastArray(const Long_t *l, Int_t n)
 {
    // Write array of Long_t to buffer
 
-   TBufferJSON_WriteFastArray(l);
+   TBufferJSON_WriteFastArray(l,TJSONWriteArrayContent);
 }
 
 //______________________________________________________________________________
@@ -2389,7 +2355,7 @@ void TBufferJSON::WriteFastArray(const ULong_t *l, Int_t n)
 {
    // Write array of ULong_t to buffer
 
-   TBufferJSON_WriteFastArray(l);
+   TBufferJSON_WriteFastArray(l,TJSONWriteArrayContent);
 }
 
 //______________________________________________________________________________
@@ -2397,7 +2363,7 @@ void TBufferJSON::WriteFastArray(const Long64_t *l, Int_t n)
 {
    // Write array of Long64_t to buffer
 
-   TBufferJSON_WriteFastArray(l);
+   TBufferJSON_WriteFastArray(l,TJSONWriteArrayContent);
 }
 
 //______________________________________________________________________________
@@ -2405,7 +2371,7 @@ void TBufferJSON::WriteFastArray(const ULong64_t *l, Int_t n)
 {
    // Write array of ULong64_t to buffer
 
-   TBufferJSON_WriteFastArray(l);
+   TBufferJSON_WriteFastArray(l,TJSONWriteArrayContent);
 }
 
 //______________________________________________________________________________
@@ -2413,7 +2379,7 @@ void TBufferJSON::WriteFastArray(const Float_t *f, Int_t n)
 {
    // Write array of Float_t to buffer
 
-   TBufferJSON_WriteFastArray(f);
+   TBufferJSON_WriteFastArray(f,TJSONWriteArrayContent);
 }
 
 //______________________________________________________________________________
@@ -2421,7 +2387,7 @@ void TBufferJSON::WriteFastArray(const Double_t *d, Int_t n)
 {
    // Write array of Double_t to buffer
 
-   TBufferJSON_WriteFastArray(d);
+   TBufferJSON_WriteFastArray(d,TJSONWriteArrayContent);
 }
 
 //______________________________________________________________________________
@@ -2430,7 +2396,7 @@ void TBufferJSON::WriteFastArrayFloat16(const Float_t *f, Int_t n,
 {
    // Write array of Float16_t to buffer
 
-   TBufferJSON_WriteFastArray(f);
+   TBufferJSON_WriteFastArray(f,TJSONWriteArrayContent);
 }
 
 //______________________________________________________________________________
@@ -2439,7 +2405,7 @@ void TBufferJSON::WriteFastArrayDouble32(const Double_t *d, Int_t n,
 {
    // Write array of Double32_t to buffer
 
-   TBufferJSON_WriteFastArray(d);
+   TBufferJSON_WriteFastArray(d,TJSONWriteArrayContent);
 }
 
 //______________________________________________________________________________
