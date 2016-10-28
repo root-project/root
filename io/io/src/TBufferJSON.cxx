@@ -2302,15 +2302,35 @@ void TBufferJSON::WriteFastArray(const Bool_t *b, Int_t n)
 
 void TBufferJSON::WriteFastArray(const Char_t *c, Int_t n)
 {
-   Bool_t asarray = fExpectedChain;
-   if (Stack(0)->fElem != 0)
-      if (Stack(0)->fElem->GetType() == TStreamerInfo::kOffsetP + TStreamerInfo::kChar) asarray = kTRUE;
+   TStreamerElement* el = Stack(0)->fElem;
 
-   if (asarray) {
+   if (fExpectedChain || (el && (el->GetType() == TStreamerInfo::kOffsetP + TStreamerInfo::kChar))) {
       TBufferJSON_WriteFastArray(c);
-   } else {
+   } else
+   if (!el || (el->GetArrayDim() < 2) || (el->GetArrayLength() != n)) {
+      // write as simple const char
       TJSONPushValue();
       JsonWriteConstChar(c, n);
+   } else {
+      // write as multi-dim array of strings
+      TJSONPushValue();
+      TArrayI indexes(el->GetArrayDim() - 1);
+      indexes.Reset(0);
+      Int_t cnt = 0, shift = 0, len = el->GetMaxIndex(indexes.GetSize());
+      while (cnt >= 0) {
+         if (indexes[cnt] >= el->GetMaxIndex(cnt)) {
+            fValue.Append("]");
+            indexes[cnt--] = 0;
+            if (cnt >= 0) indexes[cnt]++;
+            continue;
+         }
+         fValue.Append(indexes[cnt] == 0 ? "[" : fArraySepar.Data());
+         if (++cnt == indexes.GetSize()) {
+            JsonWriteConstChar(c+shift*len, len);
+            indexes[--cnt]++;
+            shift++;
+         }
+      }
    }
 }
 
