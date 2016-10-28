@@ -2449,26 +2449,44 @@ void  TBufferJSON::WriteFastArray(void *start, const TClass *cl, Int_t n,
    if (!n) n = 1;
    int size = cl->Size();
 
-   if (n > 1) {
-      JsonDisablePostprocessing();
-      AppendOutput("[");
-      /* fJsonrCnt++; */ // count array, but do not add to references
-   }
+   TStreamerElement* elem = Stack(0)->fElem;
+   Bool_t isarray = (n>1) || (elem && (elem->GetArrayDim()>0));
+   Bool_t usindicies = isarray && (elem!=0) && (elem->GetArrayDim() > 1) && (elem->GetArrayLength()==n);
+   TArrayI indexes(usindicies ? elem->GetArrayDim() : 1);
+   indexes.Reset(0);
+   Int_t cnt = 0;
+
+   if (isarray) JsonDisablePostprocessing();
 
    for (Int_t j = 0; j < n; j++, obj += size) {
-      if (j > 0) AppendOutput(fArraySepar.Data());
+      if (isarray) {
+         if (usindicies) {
+            while ((cnt >= 0) && (cnt < indexes.GetSize()))  {
+               if (indexes[cnt] >= elem->GetMaxIndex(cnt)) {
+                  AppendOutput("]");
+                  indexes[cnt--] = 0;
+                  if (cnt >= 0) indexes[cnt]++;
+                  continue;
+               }
+               AppendOutput(indexes[cnt] == 0 ? "[" : fArraySepar.Data());
+               cnt++;
+            }
+            if (cnt>0) indexes[--cnt]++;
+         } else {
+            AppendOutput((j==0) ? "[" : fArraySepar.Data());
+         }
+      }
 
       JsonWriteObject(obj, cl, kFALSE);
 
-      if ((n > 1) && (fValue.Length() > 0)) {
+      if (isarray && (fValue.Length() > 0)) {
          AppendOutput(fValue.Data());
          fValue.Clear();
       }
    }
 
-   if (n > 1) {
-      AppendOutput("]");
-   }
+   if (isarray)
+      for (Int_t k=0;k<indexes.GetSize();++k) AppendOutput("]");
 
 }
 
@@ -2488,45 +2506,54 @@ Int_t TBufferJSON::WriteFastArray(void **start, const TClass *cl, Int_t n,
       return 0;
    }
 
+   if (n<=0) return 0;
+
    Int_t res = 0;
 
-   if (n > 1) {
-      JsonDisablePostprocessing();
-      AppendOutput("[");
-      /* fJsonrCnt++; */ // count array, but do not add to references
-   }
+   TStreamerElement* elem = Stack(0)->fElem;
+   Bool_t isarray = (n>1) || (elem && (elem->GetArrayDim()>0));
+   Bool_t usindicies = isarray && (elem!=0) && (elem->GetArrayDim() > 1) && (elem->GetArrayLength()==n);
+   TArrayI indexes(usindicies ? elem->GetArrayDim() : 1);
+   indexes.Reset(0);
+   Int_t cnt = 0;
 
-   if (!isPreAlloc) {
+   if (isarray) JsonDisablePostprocessing();
 
-      for (Int_t j = 0; j < n; j++) {
-         if (j > 0) AppendOutput(fArraySepar.Data());
-         res |= WriteObjectAny(start[j], cl);
-         if ((n > 1) && (fValue.Length() > 0)) {
-            AppendOutput(fValue.Data());
-            fValue.Clear();
+   for (Int_t j = 0; j < n; j++) {
+      if (isarray) {
+         if (usindicies) {
+            while ((cnt >= 0) && (cnt < indexes.GetSize()))  {
+               if (indexes[cnt] >= elem->GetMaxIndex(cnt)) {
+                  AppendOutput("]");
+                  indexes[cnt--] = 0;
+                  if (cnt >= 0) indexes[cnt]++;
+                  continue;
+               }
+               AppendOutput(indexes[cnt] == 0 ? "[" : fArraySepar.Data());
+               cnt++;
+            }
+            if (cnt>0) indexes[--cnt]++;
+         } else {
+            AppendOutput((j==0) ? "[" : fArraySepar.Data());
          }
       }
 
-   } else {
-      //case //-> in comment
-
-      for (Int_t j = 0; j < n; j++) {
-         if (j > 0) AppendOutput(fArraySepar.Data());
-
+      if (!isPreAlloc) {
+         res |= WriteObjectAny(start[j], cl);
+      } else {
          if (!start[j]) start[j] = ((TClass *)cl)->New();
          // ((TClass*)cl)->Streamer(start[j],*this);
          JsonWriteObject(start[j], cl, kFALSE);
+      }
 
-         if ((n > 1) && (fValue.Length() > 0)) {
-            AppendOutput(fValue.Data());
-            fValue.Clear();
-         }
+      if (isarray && (fValue.Length() > 0)) {
+         AppendOutput(fValue.Data());
+         fValue.Clear();
       }
    }
 
-   if (n > 1) {
-      AppendOutput("]");
-   }
+   if (isarray)
+      for (Int_t k=0;k<indexes.GetSize();++k) AppendOutput("]");
 
    return res;
 }
