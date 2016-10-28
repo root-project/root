@@ -322,7 +322,7 @@ static void InstantiateFuncTemplateWithDefaults(clang::FunctionTemplateDecl* FTD
          paramType = S.SubstType(paramType, MLTAL, SourceLocation(),
                                  templatedDecl->getDeclName());
 
-         if (paramType->isDependentType()) {
+         if (paramType.isNull() || paramType->isDependentType()) {
             // Even after resolving the types through the surrounding template
             // this argument type is still dependent: do not look it up.
             skip = true;
