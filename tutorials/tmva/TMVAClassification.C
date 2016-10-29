@@ -68,14 +68,6 @@ int TMVAClassification( TString myMethodList = "" )
    // Methods to be processed can be given as an argument; use format:
    //
    //     mylinux~> root -l TMVAClassification.C\(\"myMethod1,myMethod2,myMethod3\"\)
-   //
-   // if you like to use a method via the plugin mechanism, we recommend using
-   //
-   //     mylinux~> root -l TMVAClassification.C\(\"P_myMethod\"\)
-   //
-   // (an example is given for using the BDT as plugin (see below),
-   // but of course the real application is when you write your own
-   // method based)
 
    //---------------------------------------------------------------
    // This loads the library
