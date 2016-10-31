@@ -730,6 +730,9 @@ void TBufferJSON::JsonStartElement(const TStreamerElement *elem, const TClass *b
          case TClassEdit::kList   :
             elem_name = "fList";
             break;
+         case TClassEdit::kForwardist :
+            elem_name = "fForwardlist";
+            break;
          case TClassEdit::kDeque  :
             elem_name = "fDeque";
             break;
@@ -744,6 +747,18 @@ void TBufferJSON::JsonStartElement(const TStreamerElement *elem, const TClass *b
             break;
          case TClassEdit::kMultiSet :
             elem_name = "fMultiSet";
+            break;
+         case TClassEdit::kUnorderedSet :
+            elem_name = "fUnorderedSet";
+            break;
+         case TClassEdit::kUnorderedMultiSet :
+            elem_name = "fUnorderedMultiSet";
+            break;
+         case TClassEdit::kUnorderedMap :
+            elem_name = "fUnorderedMap";
+            break;
+         case TClassEdit::kUnorderedMultiMap :
+            elem_name = "fUnorderedMultiMap";
             break;
          case TClassEdit::kBitSet :
             elem_name = "fBitSet";
@@ -925,7 +940,8 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
          Int_t size = TString(stack->fValues.At(0)->GetName()).Atoi();
 
          if ((size * 2 == stack->fValues.GetLast()) &&
-               ((special_kind == TClassEdit::kMap) || (special_kind == TClassEdit::kMultiMap))) {
+               ((special_kind == TClassEdit::kMap) || (special_kind == TClassEdit::kMultiMap) ||
+                (special_kind == TClassEdit::kUnorderedMap) || (special_kind == TClassEdit::kUnorderedMultiMap))) {
             // special handling for std::map. Create entries like { 'first' : key, 'second' : value }
             for (Int_t k = 1; k < stack->fValues.GetLast(); k += 2) {
                fValue.Append(separ);
