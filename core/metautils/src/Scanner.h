@@ -41,6 +41,7 @@ namespace cling {
 
 class SelectionRules;
 class BaseSelectionRule;
+class ClassSelectionRule;
 
 class RScanner: public clang::RecursiveASTVisitor<RScanner>
 {
@@ -109,7 +110,7 @@ public:
    // Utility routines.  Most belongs in TMetaUtils and should be shared with rootcling.cxx
    std::string GetClassName(clang::DeclContext* DC) const;
    bool GetDeclName(clang::Decl* D, std::string& name) const;
-   bool GetDeclQualName(clang::Decl* D, std::string& qual_name) const;
+   bool GetDeclQualName(const clang::Decl* D, std::string& qual_name) const;
    bool GetFunctionPrototype(clang::Decl* D, std::string& prototype) const;
 
    static const char* fgClangDeclKey; // property key used for CLang declaration objects
@@ -131,6 +132,12 @@ public:
 
 private:
 
+   void AddAnnotatedRecordDecl(const ClassSelectionRule*,
+                               const clang::Type*,
+                               const clang::RecordDecl*,
+                               const std::string&,
+                               const clang::TypedefNameDecl*,
+                               unsigned int indexOffset=0);
    std::string ConvTemplateArguments(const clang::TemplateArgumentList& list) const;
    std::string ConvTemplateName(clang::TemplateName& N) const;
    std::string ConvTemplateParameterList(clang::TemplateParameterList* list) const;

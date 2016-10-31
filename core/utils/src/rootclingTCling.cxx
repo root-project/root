@@ -136,27 +136,27 @@ static bool IsUnsupportedUniquePointer(const char *normName, TDataMember *dm)
    return false;
 }
 
-static bool IsSupportedClass(TClass *cl)
-{
-   // Check if the Class is of an unsupported type
-   using namespace ROOT::TMetaUtils;
-
-   // Check if this is a collection of unique_ptrs
-   if (ROOT::ESTLType::kNotSTL != cl->GetCollectionType()) {
-      std::vector<std::string> out;
-      int i;
-      TClassEdit::GetSplit(cl->GetName(), out, i);
-      std::string_view containedObjectTypeName(out[1].c_str());
-      if (TClassEdit::IsUniquePtr(containedObjectTypeName)) {
-         auto clName = cl->GetName();
-         // Here we can use the new name for the error message
-         Error("CloseStreamerInfoROOTFile", "A collection of unique pointers was selected: %s. These are not supported. If you wish to perform I/O operations with %s, just select the same collection of raw C pointers.\n", clName, clName);
-         return false;
-      }
-   }
-   return true;
-
-}
+// static bool IsSupportedClass(TClass *cl)
+// {
+//    // Check if the Class is of an unsupported type
+//    using namespace ROOT::TMetaUtils;
+//
+//    // Check if this is a collection of unique_ptrs
+//    if (ROOT::ESTLType::kNotSTL != cl->GetCollectionType()) {
+//       std::vector<std::string> out;
+//       int i;
+//       TClassEdit::GetSplit(cl->GetName(), out, i);
+//       std::string_view containedObjectTypeName(out[1].c_str());
+//       if (TClassEdit::IsUniquePtr(containedObjectTypeName)) {
+//          auto clName = cl->GetName();
+//          // Here we can use the new name for the error message
+//          Error("CloseStreamerInfoROOTFile", "A collection of unique pointers was selected: %s. These are not supported. If you wish to perform I/O operations with %s, just select the same collection of raw C pointers.\n", clName, clName);
+//          return false;
+//       }
+//    }
+//    return true;
+//
+// }
 
 extern "C"
 bool CloseStreamerInfoROOTFile(bool writeEmptyRootPCM)
@@ -186,7 +186,7 @@ bool CloseStreamerInfoROOTFile(bool writeEmptyRootPCM)
          return false;
       }
 
-      if (!IsSupportedClass(cl)) return false;
+//       if (!IsSupportedClass(cl)) return false;
 
       // Check if a datamember is a unique_ptr and if yes that it has a default
       // deleter.

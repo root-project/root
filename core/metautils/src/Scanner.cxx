@@ -720,6 +720,64 @@ bool RScanner::VisitRecordDecl(clang::RecordDecl* D)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void RScanner::AddAnnotatedRecordDecl(const ClassSelectionRule* selected,
+                                      const clang::Type* req_type,
+                                      const clang::RecordDecl* recordDecl,
+                                      const std::string& attr_name,
+                                      const clang::TypedefNameDecl* typedefNameDecl,
+                                      unsigned int indexOffset)
+{
+   if (selected->HasAttributeName()) {
+      fSelectedClasses.emplace_back(selected->GetIndex() + indexOffset,
+                                    req_type,
+                                    recordDecl,
+                                    attr_name.c_str(),
+                                    selected->RequestStreamerInfo(),
+                                    selected->RequestNoStreamer(),
+                                    selected->RequestNoInputOperator(),
+                                    selected->RequestOnlyTClass(),
+                                    selected->RequestedVersionNumber(),
+                                    fInterpreter,
+                                    fNormCtxt);
+   } else {
+      fSelectedClasses.emplace_back(selected->GetIndex() + indexOffset,
+                                    recordDecl,
+                                    selected->RequestStreamerInfo(),
+                                    selected->RequestNoStreamer(),
+                                    selected->RequestNoInputOperator(),
+                                    selected->RequestOnlyTClass(),
+                                    selected->RequestedVersionNumber(),
+                                    fInterpreter,
+                                    fNormCtxt);
+   }
+
+   if (fVerboseLevel > 0) {
+      std::string qual_name;
+      GetDeclQualName(recordDecl,qual_name);
+      std::string normName;
+      TMetaUtils::GetNormalizedName(normName,
+                                    recordDecl->getASTContext().getTypeDeclType(recordDecl),
+                                    fInterpreter,
+                                    fNormCtxt);
+      std::string typedef_qual_name;
+      std::string typedefMsg;
+      if (typedefNameDecl){
+         GetDeclQualName(typedefNameDecl,typedef_qual_name);
+         typedefMsg = "(through typedef/alias " + typedef_qual_name + ") ";
+      }
+
+      std::cout << "selected class "
+      << typedefMsg
+      << "-> "
+      << qual_name
+      << " for root: "
+      << normName
+      << "\n";
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
 {
    // For every class is created a new class buider irrespectful of weather the
@@ -905,6 +963,9 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
          auto req_type = selected->GetRequestedType();
          clang::QualType thisType(req_type, 0);
          std::string attr_name = selected->GetAttributeName().c_str();
+
+         AddAnnotatedRecordDecl(selected, req_type, recordDecl, attr_name, typedefNameDecl);
+
          if (llvm::isa<clang::ClassTemplateSpecializationDecl>(recordDecl)) {
             if (!req_type) {
                thisType = recordDecl->getASTContext().getTypeDeclType(recordDecl);
@@ -918,71 +979,17 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
                if (auto recordDeclForIO = typeForIO->getAsCXXRecordDecl()) {
                   auto canRecordDeclForIO = recordDeclForIO->getCanonicalDecl();
                   if (!fselectedRecordDecls.insert(canRecordDeclForIO).second) return true;
-                  auto canRecordDecl = recordDecl->getCanonicalDecl();
-                  fDeclSelRuleMap.erase(fDeclSelRuleMap.find(canRecordDecl));
-                  fDeclSelRuleMap[recordDeclForIO]=selected;
-                  recordDecl = recordDeclForIO;
+                  recordDecl = canRecordDeclForIO;
+                  fDeclSelRuleMap[recordDecl]=selected;
                   thisType = typeForIO;
-                  attr_name = nameTypeForIO.first;
                }
+               if (!thisType.isNull()) {
+                  req_type = thisType.getTypePtr();
+               }
+
+               AddAnnotatedRecordDecl(selected, req_type, recordDecl, nameTypeForIO.first, typedefNameDecl, 1000);
             }
          }
-         if (!thisType.isNull()) {
-            req_type = thisType.getTypePtr();
-         }
-         if (selected->HasAttributeName()) {
-            ROOT::TMetaUtils::AnnotatedRecordDecl annRecDecl(selected->GetIndex(),
-                                                            req_type,
-                                                            recordDecl,
-                                                            attr_name.c_str(),
-                                                            selected->RequestStreamerInfo(),
-                                                            selected->RequestNoStreamer(),
-                                                            selected->RequestNoInputOperator(),
-                                                            selected->RequestOnlyTClass(),
-                                                            selected->RequestedVersionNumber(),
-                                                            fInterpreter,
-                                                            fNormCtxt);
-            fSelectedClasses.push_back(annRecDecl);
-
-
-
-         } else {
-            ROOT::TMetaUtils::AnnotatedRecordDecl annRecDecl(selected->GetIndex(),
-                                                            recordDecl,
-                                                            selected->RequestStreamerInfo(),
-                                                            selected->RequestNoStreamer(),
-                                                            selected->RequestNoInputOperator(),
-                                                            selected->RequestOnlyTClass(),
-                                                            selected->RequestedVersionNumber(),
-                                                            fInterpreter,
-                                                            fNormCtxt);
-            fSelectedClasses.push_back(annRecDecl);
-         }
-
-         if (fVerboseLevel > 0) {
-            std::string qual_name;
-            GetDeclQualName(recordDecl,qual_name);
-            std::string normName;
-            TMetaUtils::GetNormalizedName(normName,
-                                          recordDecl->getASTContext().getTypeDeclType(recordDecl),
-                                          fInterpreter,
-                                          fNormCtxt);
-            std::string typedef_qual_name;
-            std::string typedefMsg;
-            if (typedefNameDecl){
-               GetDeclQualName(typedefNameDecl,typedef_qual_name);
-               typedefMsg = "(through typedef/alias " + typedef_qual_name + ") ";
-            }
-
-         std::cout <<"Selected class "
-         << typedefMsg
-         << "-> "
-         << qual_name
-         << " for ROOT: "
-         << normName
-         << "\n";
-         }
-
       }
    }
 
@@ -1155,9 +1162,9 @@ bool RScanner::GetDeclName(clang::Decl* D, std::string& name) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool RScanner::GetDeclQualName(clang::Decl* D, std::string& qual_name) const
+bool RScanner::GetDeclQualName(const clang::Decl* D, std::string& qual_name) const
 {
-   clang::NamedDecl* N = dyn_cast<clang::NamedDecl> (D);
+   auto N = dyn_cast<const clang::NamedDecl> (D);
 
    if (N) {
       llvm::raw_string_ostream stream(qual_name);
