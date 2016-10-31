@@ -33,32 +33,19 @@ Contents:
 
 To install ROOT from source you first have to get the tar file
 containing the source. This tar file can be found in the usual
-ROOT download area (ftp://root.cern.ch/root). The files are named
+ROOT download page http://root.cern.ch/downloading-root. The files are named
 root-<version>.source.tar.gz.
 
 Here's a short summary:
 
-1) Get access to the FTP area (substitute any FTP client and appropriate
-   email address below):
 
-     prompt% ftp root.cern.ch
-     User: anonymous
-     Password: <your-email-address>
+1) Get the sources
 
-2) Go to the directory, and prepare for binary transfer of files:
+     wget https://root.cern.ch/download/root_<version>.source.tar.gz
 
-     ftp> cd /root
-     ftp> bin
+2) Unpack the distribution:
 
-3) Get the sources tar-ball (substitute the appropriate version
-   number), and exit FTP client:
-
-     ftp> get root-<version>.source.tar.gz
-     ftp> bye
-
-4) Unpack the distribution:
-
-     prompt% gzip -dc root-<version>.source.tar.gz | tar -xf -
+     tar -zxf root_<version>.source.tar.gz
 
 An alternative approach is to use our public GIT repository to get
 the latest version.
@@ -81,7 +68,7 @@ You may want to compile features into ROOT, which depends on third
 party libraries. Make sure you meet all demands for additional
 features before trying to enable them (see below).
 
-The prerequisites neded for the different platforms are documented at 
+The prerequisites needed for the different platforms are documented at 
 
   https://root.cern.ch/build-prerequisites
 
@@ -97,7 +84,7 @@ Both require to set the CMAKE_INSTALL_PREFIX variable at configuration time.
 The 'fix location' requires in addition to set the 'gnuinstall' option at configuration. 
 
 
-3.1. Environment driven build:
+3.1. Location independent build:
 ------------------------------
 
 You want to install in a generic directory, depending on environment
@@ -109,7 +96,7 @@ variables ROOTSYS, LD_LIBRARY_PATH, and PATH.
         mkdir <builddir>
         cd <builddir>
         cmake ../root
-        cmake --build .  [ or simply "make -j<N>" on Unix systems ] 
+        cmake --build . [ -- -j<N> ] [ or simply "make -j<N>" on Unix systems ] 
 
    3) Add bin/ to PATH and lib/ to LD_LIBRARY_PATH. For the sh shell family do:
         . bin/thisroot.sh
@@ -120,7 +107,7 @@ variables ROOTSYS, LD_LIBRARY_PATH, and PATH.
    4) try running root:
         root
 
-3.2. Fixed locations build:
+3.2. Fixed location build:
 ---------------------------
 
 You want to install ROOT in a fixed location, not depending on
@@ -231,7 +218,7 @@ Here's the complete list:
 5. Makefile targets:
 ====================
 
-The availble Makefile top level targets are shown by doing 
+The available Makefile top level targets are shown by doing 
 
     make help
 
@@ -267,7 +254,7 @@ On how to get an open source version of OpenGL see:
 
    http://www.mesa3d.org
 
-For prebuilt versions see:
+For pre-built versions see:
 
    ftp://root.cern.ch/root/opengl/
 
@@ -403,7 +390,7 @@ containing Globus lib, include and bin. For compilation purposes
 you can pass this directory to the configure script with the option
 --with-globus-dir=<globus_dir>. An experimental path is available
 for versions 2.2.3 and 2.2.4 of the Globus Tool Kit to fix a small
-bug preventing full functionallity of the root implementation; this
+bug preventing full functionality of the root implementation; this
 is activated by setting --with-globus-patch-dir=<globus_src_dir>
 where <globus_src_dir> is the globus tool kit source,
 

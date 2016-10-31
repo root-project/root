@@ -11,6 +11,12 @@
 # this easily.
 #
 ######################################################################
+
+echo "****************************************************************************************************************"
+echo "*  The classic configure/make method of building ROOT is now DEPRECATED in favor of the CMake one.             *"
+echo "*  Refer to README/INSTALL file for updated instructions or visit the page https://root.cern.ch/building-root  *"
+echo "****************************************************************************************************************"
+
 #
 ### echo %%% Some global variables
 #
@@ -8480,5 +8486,10 @@ if [ "x$run_maintainer_clean" = "xyes" ]; then
    $gnumake maintainer-clean
    $0 `cat config.status 2>/dev/null`
 fi
+
+echo "****************************************************************************************************************"
+echo "*  The classic configure/make method of building ROOT is now DEPRECATED in favor of the CMake one.             *"
+echo "*  Refer to README/INSTALL file for updated instructions or visit the page https://root.cern.ch/building-root  *"
+echo "****************************************************************************************************************"
 
 exit 0
