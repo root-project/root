@@ -1,5 +1,5 @@
 <rootdict>
-   <class name="std::unique_ptr<Class01>" />
+   <class name="Class01" />
    <class pattern="Class0*"/>
    <class name="std::vector<std::unique_ptr<const double>>" />
    <class pattern="std::set<*" />
