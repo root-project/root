@@ -770,7 +770,7 @@ void RScanner::AddAnnotatedRecordDecl(const ClassSelectionRule* selected,
       << typedefMsg
       << "-> "
       << qual_name
-      << " for root: "
+      << " for ROOT: "
       << normName
       << "\n";
    }
