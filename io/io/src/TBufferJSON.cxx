@@ -1398,7 +1398,7 @@ void TBufferJSON::PerformPostProcessing(TJSONStackObj *stack,
 
    if (isCharStar) {
       stack->fValues.Delete();
-      if (fValue == "0") fValue = "null";
+      if (fValue == "0") fValue = "\"\"";
    } else if (isTString || isSTLstring) {
       // just remove all kind of string length information
 
