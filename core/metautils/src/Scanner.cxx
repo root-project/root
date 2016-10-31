@@ -27,29 +27,6 @@
 
 #include "SelectionRules.h"
 
-//#define DEBUG
-
-#define SHOW_WARNINGS
-// #define SHOW_TEMPLATE_INFO
-
-// #define COMPLETE_TEMPLATES
-// #define CHECK_TYPES
-
-#define FILTER_WARNINGS
-#define DIRECT_OUTPUT
-
-// SHOW_WARNINGS - enable warnings
-// SHOW_TEMPLATE_INFO - enable informations about encoutered tempaltes
-
-// COMPLETE_TEMPLATES - process templates, not only specializations (instantiations)
-
-// FILTER_WARNINGS -- do not repeat same type of warning
-// DIRECT_OUTPUT -- output to std err with gcc compatible filename an line number
-
-// #define SELECTION_DEBUG
-
-
-
 namespace {
 
    class RPredicateIsSameNamespace
@@ -176,14 +153,6 @@ inline std::string Message(const std::string &msg, const std::string &location)
 {
    std::string loc = location;
 
-#ifdef DIRECT_OUTPUT
-   int n = loc.length ();
-   while (n > 0 && loc [n] != ':')
-      n--;
-   if (n > 0)
-      loc = loc.substr (0, n) + ":";
-#endif
-
    if (loc == "")
       return msg;
    else
@@ -195,25 +164,15 @@ inline std::string Message(const std::string &msg, const std::string &location)
 void RScanner::ShowInfo(const std::string &msg, const std::string &location) const
 {
    const std::string message = Message(msg, location);
-#ifdef DIRECT_OUTPUT
    std::cout << message << std::endl;
-#else
-   fReporter->Info("RScanner:ShowInfo", "CLR %s", message.Data());
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void RScanner::ShowWarning(const std::string &msg, const std::string &location) const
 {
-#ifdef SHOW_WARNINGS
    const std::string message = Message(msg, location);
-#ifdef DIRECT_OUTPUT
    std::cout << message << std::endl;
-#else
-   fReporter->Warning("RScanner:ShowWarning", "CLR %s", message.Data());
-#endif
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -221,23 +180,17 @@ void RScanner::ShowWarning(const std::string &msg, const std::string &location) 
 void RScanner::ShowError(const std::string &msg, const std::string &location) const
 {
    const std::string message = Message(msg, location);
-#ifdef DIRECT_OUTPUT
    std::cout << message << std::endl;
-#else
-   fReporter->Error("RScanner:ShowError", "CLR %s", message.Data());
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void RScanner::ShowTemplateInfo(const std::string &msg, const std::string &location) const
 {
-#ifdef SHOW_TEMPLATE_INFO
    std::string loc = location;
    if (loc == "")
       loc = GetLocation (fLastDecl);
    ShowWarning(msg, loc);
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -349,14 +302,12 @@ void RScanner::UnimplementedDecl(clang::Decl* D, const std::string &txt)
    clang::Decl::Kind k = D->getKind();
 
    bool show = true;
-#ifdef FILTER_WARNINGS
    if (k >= 0 || k <= fgDeclLast) {
       if (fDeclTable [k])
          show = false; // already displayed
       else
          fDeclTable [k] = true;
    }
-#endif
 
    if (show)
    {
@@ -393,88 +344,6 @@ void RScanner::UnsupportedType(clang::QualType qual_type) const
    std::string location = GetLocation(fLastDecl);
    std::string kind = qual_type.getTypePtr()->getTypeClassName();
    ShowWarning("Unsupported " + kind + " type " + qual_type.getAsString(), location);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// unimportant - this kind of declaration is not stored into reflex
-
-void RScanner::UnimportantType(clang::QualType qual_type) const
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void RScanner::UnimplementedType(clang::QualType qual_type)
-{
-   clang::Type::TypeClass k = qual_type.getTypePtr()->getTypeClass();
-
-   bool show = true;
-#ifdef FILTER_WARNINGS
-   if (k >= 0 || k <= fgTypeLast) {
-      if (fTypeTable [k])
-         show = false; // already displayed
-      else
-         fTypeTable [k] = true;
-   }
-#endif
-
-   if (show)
-   {
-      std::string location = GetLocation(fLastDecl);
-      std::string kind = qual_type.getTypePtr()->getTypeClassName();
-      ShowWarning("Unimplemented type: " + kind + " " + qual_type.getAsString(), location);
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void RScanner::UnimplementedType (const clang::Type* T)
-{
-   clang::Type::TypeClass k = T->getTypeClass();
-
-   bool show = true;
-#ifdef FILTER_WARNINGS
-   if (k >= 0 || k <= fgTypeLast) {
-      if (fTypeTable [k])
-         show = false; // already displayed
-      else
-         fTypeTable [k] = true;
-   }
-#endif
-
-   if (show)
-   {
-      std::string location = GetLocation(fLastDecl);
-      std::string kind = T->getTypeClassName ();
-      ShowWarning ("Unimplemented type: " + kind, location);
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::string RScanner::GetClassName(clang::RecordDecl* D) const
-{
-   std::string cls_name = D->getQualifiedNameAsString();
-
-   // NO if (cls_name == "")
-   // NO if (D->isAnonymousStructOrUnion())
-   // NO if (cls_name == "(anonymous)") {
-   if (! D->getDeclName ()) {
-      if (fgAnonymousClassMap.find (D) != fgAnonymousClassMap.end())
-      {
-         // already encountered anonymous class
-         cls_name = fgAnonymousClassMap [D];
-      }
-      else
-      {
-         fgAnonymousClassCounter ++;
-         cls_name = "_ANONYMOUS_CLASS_" + IntToStd(fgAnonymousClassCounter) + "_";  // !?
-         fgAnonymousClassMap [D] = cls_name;
-         // ShowInfo ("anonymous class " + cls_name, GetLocation (D));
-      }
-   }
-
-   return cls_name;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -530,87 +399,6 @@ std::string RScanner::ConvTemplateName(clang::TemplateName& N) const
 
    return stream.str();
 }
-
-#ifdef COMPLETE_TEMPLATES
-////////////////////////////////////////////////////////////////////////////////
-
-std::string RScanner::ConvTemplateParameterList(clang::TemplateParameterList* list) const
-{
-   std::string result = "";
-   bool any = false;
-
-   for (clang::TemplateParameterList::iterator I = list->begin(), E = list->end(); I != E; ++I) {
-      if (any)
-         result += ",";
-      any = true;
-
-      clang::NamedDecl * D = *I;
-
-      switch (D->getKind()) {
-
-         case clang::Decl::TemplateTemplateParm:
-            UnimplementedDecl(dyn_cast <clang::TemplateTemplateParmDecl> (D), "template parameter");
-            break;
-
-         case clang::Decl::TemplateTypeParm:
-         {
-            clang::TemplateTypeParmDecl* P = dyn_cast <clang::TemplateTypeParmDecl> (D);
-
-            if (P->wasDeclaredWithTypename())
-               result += "typename ";
-            else
-               result += "class ";
-
-            if (P->isParameterPack())
-               result += "... ";
-
-            result += P->getNameAsString();
-         }
-            break;
-
-         case clang::Decl::NonTypeTemplateParm:
-         {
-            clang::NonTypeTemplateParmDecl* P = dyn_cast <clang::NonTypeTemplateParmDecl> (D);
-            result += P->getType().getAsString();
-
-            if (clang::IdentifierInfo* N = P->getIdentifier()) {
-               result += " ";
-               std::string s = N->getName();
-               result += s;
-            }
-
-            if (P->hasDefaultArgument())
-               result += " = " + ExprToStr(P->getDefaultArgument());
-         }
-            break;
-
-         default:
-            UnknownDecl(*I, "template parameter");
-      }
-   }
-
-   // ShowInfo ("template parameters <" + result + ">");
-
-   return "<" + result + ">";
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::string RScanner::ConvTemplateParams(clang::TemplateDecl* D)
-{
-   return ConvTemplateParameterList(D->getTemplateParameters());
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::string RScanner::ConvTemplateArguments(const clang::TemplateArgumentList& list)
-{
-   clang::LangOptions lang_opts;
-   clang::PrintingPolicy print_opts(lang_opts);  // !?
-   return clang::TemplateSpecializationType::PrintTemplateArgumentList
-   (list.data(), list.size(), print_opts);
-}
-#endif // COMPLETE_TEMPLATES
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -677,9 +465,6 @@ bool RScanner::VisitNamespaceDecl(clang::NamespaceDecl* N)
    const ClassSelectionRule *selected = fSelectionRules.IsDeclSelected(N);
    if (selected) {
 
-#ifdef SELECTION_DEBUG
-      if (fVerboseLevel > 3) std::cout<<"\n\tSelected -> true";
-#endif
       clang::DeclContext* primary_ctxt = N->getPrimaryContext();
       clang::NamespaceDecl* primary = llvm::dyn_cast<clang::NamespaceDecl>(primary_ctxt);
 
@@ -697,14 +482,7 @@ bool RScanner::VisitNamespaceDecl(clang::NamespaceDecl* N)
       }
       ret = true;
    }
-   else {
-#ifdef SELECTION_DEBUG
-      if (fVerboseLevel > 3) std::cout<<"\n\tSelected -> false";
-#endif
-   }
 
-   // DEBUG if(ret) std::cout<<"\n\tReturning true ...";
-   // DEBUG else std::cout<<"\n\tReturning false ...";
    return ret;
 }
 
@@ -1066,9 +844,6 @@ bool RScanner::VisitFieldDecl(clang::FieldDecl* D)
 //    bool ret = true;
 //
 //    if(fSelectionRules.IsDeclSelected(D)){
-// #ifdef SELECTION_DEBUG
-//       if (fVerboseLevel > 3) std::cout<<"\n\tSelected -> true";
-// #endif
 //
 //       // if (fVerboseLevel > 0) {
 // //      std::string qual_name;
@@ -1077,9 +852,6 @@ bool RScanner::VisitFieldDecl(clang::FieldDecl* D)
 //       // }
 //    }
 //    else {
-// #ifdef SELECTION_DEBUG
-//       if (fVerboseLevel > 3) std::cout<<"\n\tSelected -> false";
-// #endif
 //    }
 //
 //    return ret;
@@ -1130,18 +902,6 @@ bool RScanner::TraverseDeclContextHelper(DeclContext *DC)
 
    return ret;
 
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::string RScanner::GetClassName(clang::DeclContext* DC) const
-{
-   clang::NamedDecl* N=dyn_cast<clang::NamedDecl>(DC);
-   std::string ret;
-   if(N && (N->getIdentifier()!=NULL))
-      ret = N->getNameAsString().c_str();
-
-   return ret;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
