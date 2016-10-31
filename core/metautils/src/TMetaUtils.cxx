@@ -1911,7 +1911,10 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
             methodTCP="Insert";
             break;
       }
-      finalString << "      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::" << methodTCP << "< " << classname.c_str() << " >()));" << "\n";
+      // FIXME Workaround: for the moment we do not generate coll proxies with unique ptrs sincelast
+      // they imply copies and therefore do not compile.
+      auto classNameForIO = TClassEdit::GetNameForIO(classname);
+      finalString << "      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::" << methodTCP << "< " << classNameForIO.c_str() << " >()));" << "\n";
 
       needCollectionProxy = true;
    }
