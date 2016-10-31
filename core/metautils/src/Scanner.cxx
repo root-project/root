@@ -766,7 +766,7 @@ void RScanner::AddAnnotatedRecordDecl(const ClassSelectionRule* selected,
          typedefMsg = "(through typedef/alias " + typedef_qual_name + ") ";
       }
 
-      std::cout << "selected class "
+      std::cout << "Selected Class "
       << typedefMsg
       << "-> "
       << qual_name
