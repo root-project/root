@@ -23,6 +23,7 @@
 #include <sys/socket.h> //socketpair
 #include <sys/wait.h> // waitpid
 #include <unistd.h> // close, fork
+#include <dlfcn.h>
 
 //////////////////////////////////////////////////////////////////////////
 ///
@@ -79,6 +80,34 @@ TMPClient::~TMPClient()
    ReapWorkers();
 }
 
+namespace ROOT {
+   namespace Internal {
+      /// Class to acquire and release the Python GIL where it applies, i.e.
+      /// if libPython is loaded and the interpreter is initialized.
+      class TGILRAII {
+         using Py_IsInitialized_type = int (*)(void);
+         using PyGILState_Ensure_type = void* (*)(void);
+         using PyGILState_Release_type = void (*)(void*);
+         void* fPyGILState_STATE = nullptr;
+         template<class FPTYPE>
+         FPTYPE GetSymT(const char* name) {return (FPTYPE) dlsym(nullptr,name);}
+      public:
+         TGILRAII()
+         {
+            auto Py_IsInitialized = GetSymT<Py_IsInitialized_type>("Py_IsInitialized");
+            if (!Py_IsInitialized || !Py_IsInitialized()) return;
+            auto PyGILState_Ensure = GetSymT<PyGILState_Ensure_type>("PyGILState_Ensure");
+            if (PyGILState_Ensure) fPyGILState_STATE = PyGILState_Ensure();
+         }
+
+         ~TGILRAII()
+         {
+            auto PyGILState_Release = GetSymT<PyGILState_Release_type>("PyGILState_Release");
+            if (fPyGILState_STATE && PyGILState_Release) PyGILState_Release(fPyGILState_STATE);
+         }
+      };
+   }
+}
 
 //////////////////////////////////////////////////////////////////////////
 /// This method forks the ROOT session into fNWorkers children processes.
@@ -114,7 +143,10 @@ bool TMPClient::Fork(TMPWorker &server)
       }
 
       //fork
-      pid = fork();
+      {
+         ROOT::Internal::TGILRAII tgilraai;
+         pid = fork();
+      }
 
       if (!pid) {
          //child process, exit loop. sockets[1] is the fd that should be used
