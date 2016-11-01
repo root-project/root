@@ -649,13 +649,21 @@ Double_t TDavixFile::eventStart()
 ////////////////////////////////////////////////////////////////////////////////
 /// set TFile state info
 
-void TDavixFile::eventStop(Double_t t_start, Long64_t len)
+void TDavixFile::eventStop(Double_t t_start, Long64_t len, bool read)
 {
+  if(read) {
    fBytesRead += len;
    fReadCalls += 1;
 
+   SetFileBytesRead(GetFileBytesRead() + len);
+   SetFileReadCalls(GetFileReadCalls() + 1);
+
    if (gPerfStats)
       gPerfStats->FileReadEvent(this, (Int_t) len, t_start);
+  } else {
+    fBytesWrite += len;
+    SetFileBytesWritten(GetFileBytesWritten() + len);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -692,7 +700,7 @@ Long64_t TDavixFile::DavixWriteBuffer(Davix_fd *fd, const char *buf, Int_t len)
       DavixError::clearError(&davixErr);
    } else {
       fOffset += ret;
-      eventStop(start_time, ret);
+      eventStop(start_time, ret, false);
    }
 
    return ret;
@@ -746,4 +754,3 @@ Long64_t TDavixFile::DavixReadBuffers(Davix_fd *fd, char *buf, Long64_t *pos, In
 
    return ret;
 }
-
