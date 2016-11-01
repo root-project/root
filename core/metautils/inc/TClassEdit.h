@@ -95,7 +95,7 @@ namespace TClassEdit {
       kNotSTL            = ROOT::kNotSTL,
       kVector            = ROOT::kSTLvector,
       kList              = ROOT::kSTLlist,
-      kForwardist        = ROOT::kSTLforwardlist,
+      kForwardlist       = ROOT::kSTLforwardlist,
       kDeque             = ROOT::kSTLdeque,
       kMap               = ROOT::kSTLmap,
       kMultiMap          = ROOT::kSTLmultimap,
