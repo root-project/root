@@ -432,30 +432,30 @@
 
    JSROOT.Painter.createAttLine = function(attline, borderw, can_excl) {
 
-      var color = 0, _width = 0, style = 0;
+      var color = 'black', _width = 0, style = 0;
       if (typeof attline == 'string') {
-         if (attline=='black') { color = 1; _width = 1; } else
-         if (attline=='none') { _width = 0; }
+         color = attline;
+         if (color!=='none') _width = 1;
       } else
       if (typeof attline == 'object') {
-         if ('fLineColor' in attline) color = attline.fLineColor;
+         if ('fLineColor' in attline) color = JSROOT.Painter.root_colors[attline.fLineColor];
          if ('fLineWidth' in attline) _width = attline.fLineWidth;
          if ('fLineStyle' in attline) style = attline.fLineStyle;
       } else
       if ((attline!==undefined) && !isNaN(attline)) {
-         color = attline;
+         color = JSROOT.Painter.root_colors[attline];
       }
 
       if (borderw!==undefined) _width = borderw;
 
       var line = {
           used: true, // can mark object if it used or not,
-          color: JSROOT.Painter.root_colors[color],
+          color: color,
           width: _width,
           dash: JSROOT.Painter.root_line_styles[style]
       };
 
-      if ((_width==0) || (color==0)) line.color = 'none';
+      if (_width==0) line.color = 'none';
 
       if (can_excl) {
          line.excl_side = 0;
@@ -478,7 +478,7 @@
       }
 
       // if custom color number used, use lightgrey color to show lines
-      if ((line.color === undefined) && (color>0))
+      if ((line.color === undefined) && (line.width>0))
          line.color = 'lightgrey';
 
       line.Apply = function(selection) {
@@ -598,19 +598,30 @@
       var idF = axis.fTimeFormat.indexOf('%F');
       if (idF < 0) return JSROOT.gStyle.TimeOffset;
       var sof = axis.fTimeFormat.substr(idF + 2);
-      if (sof == '1995-01-01 00:00:00s0') return 788918400000;
+      // default string in axis offset
+      if (sof.indexOf('1995-01-01 00:00:00s0')==0) return 788918400000;
       // special case, used from DABC painters
       if ((sof == "0") || (sof == "")) return 0;
 
       // decode time from ROOT string
-      var dt = new Date(0);
-      var pos = sof.indexOf("-"); dt.setFullYear(sof.substr(0,pos)); sof = sof.substr(pos+1);
-      pos = sof.indexOf("-"); dt.setMonth(parseInt(sof.substr(0,pos))-1); sof = sof.substr(pos+1);
-      pos = sof.indexOf(" "); dt.setDate(sof.substr(0,pos)); sof = sof.substr(pos+1);
-      pos = sof.indexOf(":"); dt.setHours(sof.substr(0,pos)); sof = sof.substr(pos+1);
-      pos = sof.indexOf(":"); dt.setMinutes(sof.substr(0,pos)); sof = sof.substr(pos+1);
-      pos = sof.indexOf("s"); dt.setSeconds(sof.substr(0,pos));
-      if (pos>0) { sof = sof.substr(pos+1); dt.setMilliseconds(sof); }
+      function next(separ, min, max) {
+         var pos = sof.indexOf(separ);
+         if (pos < 0) { pos = ""; return min; }
+         var val = parseInt(sof.substr(0,pos));
+         sof = sof.substr(pos+1);
+         if (isNaN(val) || (val<min) || (val>max)) { pos = ""; return min; }
+         return val;
+      }
+
+      var year = next("-", 1970, 2300),
+          month = next("-", 1, 12) - 1,
+          day = next(" ", 1, 31),
+          hour = next(":", 0, 23),
+          min = next(":", 0, 59),
+          sec = next("s", 0, 59),
+          msec = next(" ", 0, 999);
+
+      var dt = new Date(Date.UTC(year, month, day, hour, min, sec, msec));
       return dt.getTime();
    }
 
@@ -1003,6 +1014,7 @@
 
    JSROOT.TBasePainter.prototype.Cleanup = function() {
       // generic method to cleanup painter
+      this.divid = null;
    }
 
    JSROOT.TBasePainter.prototype.DrawingReady = function() {
@@ -1121,6 +1133,28 @@
    }
 
    JSROOT.TObjectPainter.prototype = Object.create(JSROOT.TBasePainter.prototype);
+
+   JSROOT.TObjectPainter.prototype.Cleanup = function() {
+//      console.log('Cleanup ', this.GetObject() ? this.GetObject()._typename : "---");
+
+      this.RemoveDrawG();
+
+      // generic method to cleanup painters
+      //if (this.is_main_painter())
+      //   this.select_main().html("");
+
+      // cleanup all existing references
+      this.pad_name = "";
+      this.main = null;
+      this.draw_object = null;
+      this.divid = null;
+
+      // remove attributes objects (if any)
+      delete this.fillatt;
+      delete this.lineatt;
+      delete this.markeratt;
+      delete this.bins;
+   }
 
    JSROOT.TObjectPainter.prototype.GetObject = function() {
       return this.draw_object;
@@ -1290,8 +1324,9 @@
    }
 
    JSROOT.TObjectPainter.prototype.frame_painter = function() {
-      var res = this.svg_frame().property('frame_painter');
-      return (res===undefined) ? null : res;
+      var elem = this.svg_frame();
+      var res = elem.empty() ? null : elem.property('frame_painter');
+      return res ? res : null;
    }
 
    JSROOT.TObjectPainter.prototype.pad_width = function(pad_name) {
@@ -1487,12 +1522,15 @@
             elem = d3.select(prnt).append('div').attr("class", size.clname);
 
          // our position inside canvas, but to set 'absolute' position we should use
-         // canvas element offset relative to first parent with position
+         // canvas element offset relative to first parent with absolute position
+         // workaround - TR is not handled correctly, wherefore ignored
          var offx = 0, offy = 0;
-         while (prnt && !offx && !offy) {
+         while (prnt /*&& !offx && !offy*/) {
             if (getComputedStyle(prnt).position !== 'static') break;
-            offx += prnt.offsetLeft;
-            offy += prnt.offsetTop;
+            if (prnt.nodeName!=='TR') {
+               offx += prnt.offsetLeft;
+               offy += prnt.offsetTop;
+            }
             prnt = prnt.parentNode;
          }
 
@@ -1508,19 +1546,31 @@
 
 
    /** Returns main pad painter - normally TH1/TH2 painter, which draws all axis */
-   JSROOT.TObjectPainter.prototype.main_painter = function() {
-      if (this.main === null) {
+   JSROOT.TObjectPainter.prototype.main_painter = function(not_store) {
+      var res = this.main;
+      if (!res) {
          var svg_p = this.svg_pad();
-         if (!svg_p.empty()) {
-            this.main = svg_p.property('mainpainter');
-            if (this.main === undefined) this.main = null;
+         if (svg_p.empty()) {
+            var mnode = this.select_main();
+            if (mnode.node() && mnode.node().firstChild)
+               res = mnode.node().firstChild.painter;
+         } else {
+            res = svg_p.property('mainpainter');
          }
+         if (!res) res = null;
+         if (!not_store) this.main = res;
       }
-      return this.main;
+      return res;
    }
 
    JSROOT.TObjectPainter.prototype.is_main_painter = function() {
       return this === this.main_painter();
+   }
+
+   JSROOT.TObjectPainter.prototype.set_as_main_painter = function() {
+      var main = this.select_main();
+      if (main.node() && main.node().firstChild)
+         main.node().firstChild.painter = this;
    }
 
    JSROOT.TObjectPainter.prototype.SetDivId = function(divid, is_main, pad_name) {
@@ -1554,9 +1604,7 @@
 
       if (svg_c.empty()) {
          if ((is_main < 0) || (is_main===5) || this.iscan) return;
-         var main = this.select_main();
-         if (main.node() && main.node().firstChild)
-            main.node().firstChild.painter = this;
+         this.set_as_main_painter();
          return;
       }
 
@@ -1739,22 +1787,15 @@
    JSROOT.TObjectPainter.prototype.ForEachPainter = function(userfunc) {
       // Iterate over all known painters
 
+      // special case of the painter set as pointer of first child of main element
       var main = this.select_main();
       var painter = (main.node() && main.node().firstChild) ? main.node().firstChild['painter'] : null;
-      if (painter!=null) return userfunc(painter);
+      if (painter) return userfunc(painter);
 
+      // iterate over all painters from pad list
       var pad_painter = this.pad_painter(true);
-      if (pad_painter == null) return;
-
-      userfunc(pad_painter);
-      if ('painters' in pad_painter)
-         for (var k = 0; k < pad_painter.painters.length; ++k)
-            userfunc(pad_painter.painters[k]);
-   }
-
-   JSROOT.TObjectPainter.prototype.Cleanup = function() {
-      // generic method to cleanup painters
-      this.select_main().html("");
+      if (pad_painter)
+         pad_painter.ForEachPainterInPad(userfunc);
    }
 
    JSROOT.TObjectPainter.prototype.RedrawPad = function() {
@@ -1822,9 +1863,8 @@
          if (callback.minwidth && newwidth < callback.minwidth) newwidth = callback.minwidth;
          if (callback.minheight && newheight < callback.minheight) newheight = callback.minheight;
 
-
-         var change_size = (newwidth !== rect_width()) || (newheight !== rect_height());
-         var change_pos = (newx !== oldx) || (newy !== oldy);
+         var change_size = (newwidth !== rect_width()) || (newheight !== rect_height()),
+             change_pos = (newx !== oldx) || (newy !== oldy);
 
          pthis.draw_g.attr('x', newx).attr('y', newy)
                      .attr("transform", "translate(" + newx + "," + newy + ")")
@@ -2437,11 +2477,11 @@
 
       draw_g.call(font.func);
 
-      draw_g.property('text_font', font);
-      draw_g.property('mathjax_use', false);
-      draw_g.property('text_factor', 0.);
-      draw_g.property('max_text_width', 0); // keep maximal text width, use it later
-      draw_g.property('max_font_size', max_font_size);
+      draw_g.property('text_font', font)
+            .property('mathjax_use', false)
+            .property('text_factor', 0.)
+            .property('max_text_width', 0) // keep maximal text width, use it later
+            .property('max_font_size', max_font_size);
    }
 
    JSROOT.TObjectPainter.prototype.TextScaleFactor = function(value, draw_g) {
@@ -2456,8 +2496,8 @@
       // are there good solution?
 
       if (elem===null) { console.warn('empty node in GetBoundarySizes'); return { width:0, height:0 }; }
-      var box = elem.getBoundingClientRect(); // works always, but returns sometimes wrong results
-      if (parseInt(box.width) > 0) box = elem.getBBox(); // check that elements visible, request precise value
+      var box = elem.getBoundingClientRect(); // works always, but returns sometimes results in ex values, which is difficult to use
+      if (parseFloat(box.width) > 0) box = elem.getBBox(); // check that elements visible, request precise value
       var res = { width : parseInt(box.width), height : parseInt(box.height) };
       if ('left' in box) { res.x = parseInt(box.left); res.y = parseInt(box.right); } else
       if ('x' in box) { res.x = parseInt(box.x); res.y = parseInt(box.y); }
@@ -2498,9 +2538,9 @@
       var painter = this, svg_factor = 0.;
 
       // adjust font size (if there are normal text)
-      var f = draw_g.property('text_factor');
+      var f = draw_g.property('text_factor'),
+          font = draw_g.property('text_font');
       if ((f>0) && ((f<0.9) || (f>1.))) {
-         var font = draw_g.property('text_font');
          font.size = Math.floor(font.size/f);
          if (draw_g.property('max_font_size') && (font.size>draw_g.property('max_font_size')))
             font.size = draw_g.property('max_font_size');
@@ -2527,10 +2567,15 @@
 
          fo_g.append(function() { return vvv.node(); });
 
+         var box = painter.GetBoundarySizes(fo_g.node());
+
          if (fo_g.property('_scale')) {
-            var box = painter.GetBoundarySizes(fo_g.node());
             svg_factor = Math.max(svg_factor, 1.05*box.width / fo_g.property('_width'),
                                               1.05*box.height / fo_g.property('_height'));
+         } else
+         if ((box.height > 3) && (font.size > 1.2*box.height)) {
+            // workaround for Firefox, where SVG output does not correspond to font size
+            svg_factor = Math.max(svg_factor, 1.2*box.height / font.size);
          }
       });
 
@@ -2634,7 +2679,7 @@
          if (h>0) {
             if (align[1] == 'bottom') pos_y = (y + h).toFixed(1); else
             if (align[1] == 'top') pos_dy = ".8em"; else {
-               pos_y = (y + h/2).toFixed(1);
+               pos_y = (y + h/2 + 1).toFixed(1);
                if (JSROOT.browser.isIE) pos_dy = ".4em"; else middleline = true;
             }
          } else {
@@ -2941,6 +2986,8 @@
           textheight = 11, hmargin = 3, wmargin = 3, hstep = 1.2,
           height = this.frame_height(),
           width = this.frame_width(),
+          pad_width = this.pad_width(),
+          frame_x = this.frame_x();
           pp = this.pad_painter(true),
           maxhinty = this.pad_height() - this.draw_g.property('draw_y'),
           font = JSROOT.Painter.getFontDetails(160, textheight);
@@ -2971,7 +3018,7 @@
           hintsg = layer.select(".objects_hints"); // group with all tooltips
 
       // end of closing tooltips
-      if ((pnt === null) || (hints.length===0) || (maxlen===0)) {
+      if ((pnt === null) || (hints.length===0) || (maxlen===0) || (nhints > 15)) {
          hintsg.remove();
          return;
       }
@@ -3129,6 +3176,11 @@
 
       if ((viewmode == "right") && (posx + actualw > width - 20)) {
          posx = width - actualw - 20;
+         svgs.attr("x", posx);
+      }
+
+      if ((viewmode == "single") && (posx + actualw > pad_width - frame_x) && (posx > actualw+20)) {
+         posx -= (actualw + 20);
          svgs.attr("x", posx);
       }
 
@@ -3602,11 +3654,37 @@
       this.this_pad_name = "";
       if (!this.iscan && (pad !== null) && ('fName' in pad))
          this.this_pad_name = pad.fName.replace(" ", "_"); // avoid empty symbol in pad name
-      this.painters = new Array; // complete list of all painters in the pad
+      this.painters = []; // complete list of all painters in the pad
       this.has_canvas = true;
    }
 
    JSROOT.TPadPainter.prototype = Object.create(JSROOT.TObjectPainter.prototype);
+
+
+   JSROOT.TPadPainter.prototype.Cleanup = function() {
+      // cleanup only pad itself, all child elements will be collected and cleanup separately
+
+      this.painters = [];
+      this.pad = null;
+      this.this_pad_name = "";
+      this.has_canvas = false;
+
+      JSROOT.TObjectPainter.prototype.Cleanup.call(this);
+   }
+
+   JSROOT.TPadPainter.prototype.ForEachPainterInPad = function(userfunc) {
+
+      userfunc(this);
+
+      for (var k = 0; k < this.painters.length; ++k) {
+         var sub =  this.painters[k];
+
+         if (typeof sub.ForEachPainterInPad === 'function')
+            sub.ForEachPainterInPad(userfunc);
+         else
+            userfunc(sub);
+      }
+   }
 
    JSROOT.TPadPainter.prototype.ButtonSize = function(fact) {
       return Math.round((!fact ? 1 : fact) * (this.iscan || !this.has_canvas ? 16 : 12));
@@ -3772,7 +3850,7 @@
          if (!this.fillatt || !this.fillatt.changed)
             this.fillatt = this.createAttFill(this.pad, 1001, 0);
          if (!this.lineatt || !this.lineatt.changed)
-            this.lineatt = JSROOT.Painter.createAttLine(this.pad)
+            this.lineatt = JSROOT.Painter.createAttLine(this.pad);
          if (this.pad.fBorderMode == 0) this.lineatt.color = 'none';
       }
 
@@ -3915,20 +3993,11 @@
 
       menu.add("separator");
 
-      var file_name = "canvas.png";
-      if (!this.iscan) file_name = this.this_pad_name + ".png";
+      var fname = this.this_pad_name;
+      if (fname.length===0) fname = this.iscan ? "canvas" : "pad";
+      fname += ".png";
 
-      menu.add("Save as "+file_name, file_name, function(arg) {
-         // todo - use jqury dialog here
-         var top = this.svg_pad(this.this_pad_name);
-         if (!top.empty())
-            JSROOT.AssertPrerequisites("savepng", function() {
-               console.log('create', arg);
-               top.selectAll(".btns_layer").style("display","none");
-               saveSvgAsPng(top.node(), arg);
-               top.selectAll(".btns_layer").style("display","");
-            });
-      });
+      menu.add("Save as "+fname, fname, this.SaveAsPng.bind(this, false));
 
       return true;
    }
@@ -4002,10 +4071,11 @@
 
       var changed = this.CreateCanvasSvg(force ? 2 : 1, size);
 
-      // if canvas changed, redraw all its subitems
+      // if canvas changed, redraw all its subitems.
+      // If redrawing was forced for canvas, same applied for sub-elements
       if (changed)
          for (var i = 0; i < this.painters.length; ++i)
-            this.painters[i].Redraw(true);
+            this.painters[i].Redraw(force ? false : true);
 
       return changed;
    }
@@ -4066,9 +4136,15 @@
        var selp = null, selkind;
 
        switch(name) {
-          case "xaxis": selp = this.main_painter(); selkind = "x"; break;
-          case "yaxis": selp = this.main_painter(); selkind = "y"; break;
-          case "frame": selp = this.frame_painter(); break;
+          case "xaxis":
+          case "yaxis":
+          case "zaxis":
+             selp = this.main_painter();
+             selkind = name.charAt(0);
+             break;
+          case "frame":
+             selp = this.frame_painter();
+             break;
           default: {
              var indx = parseInt(name);
              if (!isNaN(indx)) selp = this.painters[indx];
@@ -4085,41 +4161,47 @@
 
    }
 
+   JSROOT.TPadPainter.prototype.SaveAsPng = function(full_canvas, filename) {
+      if (!filename) {
+         filename = this.this_pad_name;
+         if (filename.length === 0) filename = this.iscan ? "canvas" : "pad";
+         filename += ".png";
+      }
+
+      var elem = full_canvas ? this.svg_canvas() : this.svg_pad(this.this_pad_name);
+
+      if (elem.empty()) return;
+
+      var main = this.main_painter(),
+          can3d = this.access_3d_kind();
+
+      if (((can3d === 1) || (can3d === 2)) && main && main.Render3D) {
+         var canvas = main.renderer.domElement;
+         main.Render3D(0); // WebGL clears buffers, therefore we should render scene and convert immedaitely
+         var dataUrl = canvas.toDataURL("image/png");
+         dataUrl.replace("image/png", "image/octet-stream");
+         var link = document.createElement('a');
+         if (typeof link.download === 'string') {
+            document.body.appendChild(link); //Firefox requires the link to be in the body
+            link.download = filename;
+            link.href = dataUrl;
+            link.click();
+            document.body.removeChild(link); //remove the link when done
+         }
+      } else {
+         JSROOT.AssertPrerequisites("savepng", function() {
+            elem.selectAll(".btns_layer").style("display","none");
+            saveSvgAsPng(elem.node(), filename);
+            elem.selectAll(".btns_layer").style("display","");
+         });
+      }
+   }
+
    JSROOT.TPadPainter.prototype.PadButtonClick = function(funcname) {
 
-      var elem = null, filename = "";
+      if (funcname == "CanvasSnapShot") return this.SaveAsPng(true);
 
-      if (funcname == "CanvasSnapShot") {
-         elem = this.svg_canvas();
-         filename = (this.pad ? this.pad.fName : "jsroot_canvas") + ".png";
-      } else
-      if (funcname == "PadSnapShot") {
-         elem = this.svg_pad(this.this_pad_name);
-         filename = this.this_pad_name + ".png";
-      }
-      if ((elem!==null) && !elem.empty()) {
-         var main = elem.property('mainpainter');
-
-         if ((elem.property('can3d') === 1) && (main!==undefined) && (main.renderer!==undefined)) {
-            var dataUrl = main.renderer.domElement.toDataURL("image/png");
-            dataUrl.replace("image/png", "image/octet-stream");
-            var link = document.createElement('a');
-            if (typeof link.download === 'string') {
-               document.body.appendChild(link); //Firefox requires the link to be in the body
-               link.download = filename;
-               link.href = dataUrl;
-               link.click();
-               document.body.removeChild(link); //remove the link when done
-            }
-         } else {
-            JSROOT.AssertPrerequisites("savepng", function() {
-               elem.selectAll(".btns_layer").style("display","none");
-               saveSvgAsPng(elem.node(), filename);
-               elem.selectAll(".btns_layer").style("display","");
-            });
-         }
-         return;
-      }
+      if (funcname == "PadSnapShot") return this.SaveAsPng(false);
 
       if (funcname == "PadContextMenus") {
 
@@ -4140,9 +4222,13 @@
             if (pthis.frame_painter())
                menu.add("Frame", "frame", pthis.ItemContextMenu);
 
-            if (pthis.main_painter()) {
+            var main = pthis.main_painter();
+
+            if (main) {
                menu.add("X axis", "xaxis", pthis.ItemContextMenu);
                menu.add("Y axis", "yaxis", pthis.ItemContextMenu);
+               if ((typeof main.Dimension === 'function') && (main.Dimension() > 1))
+                  menu.add("Z axis", "zaxis", pthis.ItemContextMenu);
             }
 
             if (pthis.painters && (pthis.painters.length>0)) {
@@ -4181,7 +4267,22 @@
       }
    }
 
-   JSROOT.TPadPainter.prototype.AddButton = function(btn, tooltip, funcname) {
+   JSROOT.TPadPainter.prototype.FindButton = function(keyname) {
+      var group = this.svg_layer("btns_layer", this.this_pad_name);
+      if (group.empty()) return;
+
+      var found_func = "";
+
+      group.selectAll("svg").each(function() {
+         if (d3.select(this).attr("key") === keyname)
+            found_func = d3.select(this).attr("name");
+      });
+
+      return found_func;
+
+   }
+
+   JSROOT.TPadPainter.prototype.AddButton = function(btn, tooltip, funcname, keyname) {
 
       // do not add buttons when not allowed
       if (!JSROOT.gStyle.ToolBar) return;
@@ -4207,7 +4308,10 @@
                      .attr("viewBox", "0 0 512 512")
                      .style("overflow","hidden");
 
-      svg.append("svg:title").text(tooltip + (iscan ? "" : (" on pad " + this.this_pad_name)));
+      if (keyname) svg.attr("key", keyname);
+
+      svg.append("svg:title").text(tooltip + (iscan ? "" : (" on pad " + this.this_pad_name)) +
+            (keyname ? " (keyshortcut " + keyname + ")" : ""));
 
       if ('recs' in btn) {
          var rec = {};
@@ -4248,7 +4352,7 @@
       painter.CreateCanvasSvg(0);
       painter.SetDivId(divid);  // now add to painters list
 
-      painter.AddButton(JSROOT.ToolbarIcons.camera, "Create PNG", "CanvasSnapShot");
+      painter.AddButton(JSROOT.ToolbarIcons.camera, "Create PNG", "CanvasSnapShot", "Ctrl PrintScreen");
       if (JSROOT.gStyle.ContextMenu)
          painter.AddButton(JSROOT.ToolbarIcons.question, "Access context menus", "PadContextMenus");
 
@@ -4314,6 +4418,16 @@
    }
 
    JSROOT.TAxisPainter.prototype = Object.create(JSROOT.TObjectPainter.prototype);
+
+   JSROOT.TAxisPainter.prototype.Cleanup = function() {
+
+      this.ticks = [];
+      this.func = null;
+      delete this.format;
+      delete this.range;
+
+      JSROOT.TObjectPainter.prototype.Cleanup.call(this);
+   }
 
    JSROOT.TAxisPainter.prototype.SetAxisConfig = function(name, kind, func, min, max, smin, smax) {
       this.name = name;
@@ -4426,7 +4540,7 @@
                if (this.order===0) {
                   if (val === rnd) return rnd.toString();
                   if (Math.abs(val) < 1e-10 * this.range) return 0;
-                  val = val.toFixed(this.ndig > 0 ? this.ndig : 0);
+                  val = (this.ndig>10) ? val.toExponential(4) : val.toFixed(this.ndig > 0 ? this.ndig : 0);
                   if ((typeof d == 'string') && (d.length <= val.length+1)) return d;
                   return val;
                }
@@ -4438,17 +4552,26 @@
 
             if (val === rnd)
                return (Math.abs(rnd)<1e9) ? rnd.toString() : val.toExponential(4);
-            return val.toFixed(this.ndig+2 > 0 ? this.ndig+2 : 0);
+
+            return this.ndig>10 ? val.toExponential(4) : val.toFixed(this.ndig+2 > 0 ? this.ndig+2 : 0);
          }
       }
    }
 
-   JSROOT.TAxisPainter.prototype.CreateTicks = function() {
+   JSROOT.TAxisPainter.prototype.CreateTicks = function(only_major_as_array) {
       // function used to create array with minor/middle/major ticks
 
       var handle = { nminor: 0, nmiddle: 0, nmajor: 0, func: this.func };
 
       handle.minor = handle.middle = handle.major = this.func.ticks(this.nticks);
+
+      if (only_major_as_array) {
+         var res = handle.major;
+         var delta = (this.scale_max - this.scale_min)*1e-5;
+         if (res[0] > this.scale_min + delta) res.unshift(this.scale_min);
+         if (res[res.length-1] < this.scale_max - delta) res.push(this.scale_max);
+         return res;
+      }
 
       if (this.nticks2 > 1) {
          handle.minor = handle.middle = this.func.ticks(handle.major.length * this.nticks2);
@@ -4559,7 +4682,8 @@
       this.CreateFormatFuncs();
 
       var center_lbls = this.IsCenterLabels(),
-          res = "", res2 = "", lastpos = 0, lasth = 0, textscale = 1;
+          res = "", res2 = "", lastpos = 0, lasth = 0,
+          textscale = 1, maxtextlen = 0;
 
       // first draw ticks
 
@@ -4633,6 +4757,8 @@
 
          var t = label_g.append("svg:text").attr("fill", label_color).text(lbl);
 
+         maxtextlen = Math.max(maxtextlen, lbl.length);
+
          if (vertical)
             t.attr("x", -labeloffset*side)
              .attr("y", pos)
@@ -4696,7 +4822,7 @@
 
      if ((textscale>0) && (textscale<1.)) {
         // rotate X lables if they are too big
-        if ((textscale < 0.7) && !vertical && (side>0)) {
+        if ((textscale < 0.7) && !vertical && (side>0) && (maxtextlen > 5)) {
            label_g.selectAll("text").each(function() {
               var txt = d3.select(this), x = txt.attr("x"), y = txt.attr("y") - 5;
 
@@ -4847,6 +4973,8 @@
       this.nbinsy = 0;
       this.x_kind = 'normal'; // 'normal', 'time', 'labels'
       this.y_kind = 'normal'; // 'normal', 'time', 'labels'
+      this.keys_handler = null;
+      this.accept_drops = true; // indicate that one can drop other objects like doing Draw("same")
    }
 
    JSROOT.THistPainter.prototype = Object.create(JSROOT.TObjectPainter.prototype);
@@ -4861,6 +4989,45 @@
 
    JSROOT.THistPainter.prototype.IsTH2Poly = function() {
       return this.histo && this.histo._typename.match(/^TH2Poly/);
+   }
+
+   JSROOT.THistPainter.prototype.Cleanup = function() {
+      if (this.keys_handler) {
+         window.removeEventListener( 'keydown', this.keys_handler, false );
+         this.keys_handler = null;
+      }
+
+      // clear all 3D buffers
+      if (typeof this.Create3DScene === 'function')
+         this.Create3DScene(-1);
+
+      this.histo = null; // cleanup histogram reference
+      delete this.x; delete this.grx;
+      delete this.ConvertX; delete this.RevertX;
+      delete this.y; delete this.gry;
+      delete this.ConvertY; delete this.RevertY;
+      delete this.z; delete this.grz;
+
+      if (this.x_handle) {
+         this.x_handle.Cleanup();
+         delete this.x_handle;
+      }
+
+      if (this.y_handle) {
+         this.y_handle.Cleanup();
+         delete this.y_handle;
+      }
+
+      if (this.z_handle) {
+         this.z_handle.Cleanup();
+         delete this.z_handle;
+      }
+
+      delete this.fPalette;
+      delete this.fContour;
+      delete this.options;
+
+      JSROOT.TObjectPainter.prototype.Cleanup.call(this);
    }
 
    JSROOT.THistPainter.prototype.Dimension = function() {
@@ -4909,7 +5076,6 @@
             chopt = chopt.replace(chopt.substring(i,i2),"");
          }
       }
-
 
       var part = ""; // used to return part of string
 
@@ -4979,7 +5145,7 @@
 
       if (check('CANDLE', true)) option.Candle = part;
 
-      if (check('LEGO', true)) {
+      if (check('GLLEGO', true) || check('LEGO', true)) {
          option.Scat = 0;
          option.Lego = 1;
          if (part.indexOf('0') >= 0) option.Zero = 1;
@@ -4992,12 +5158,13 @@
          if (part.indexOf('Z')>=0) option.Zscale = 1;
       }
 
-      if (check('SURF', true)) {
+      if (check('GLSURF', true) || check('SURF', true)) {
          option.Scat = 0;
          option.Surf = 1;
          if (part.indexOf('FB') >= 0) { option.FrontBox = 0; part = part.replace('FB',''); }
          if (part.indexOf('BB') >= 0) { option.BackBox = 0; part = part.replace('BB',''); }
          if ((part.length>0) && !isNaN(parseInt(part))) option.Surf = 10 + parseInt(part);
+         if (part.indexOf('Z')>=0) option.Zscale = 1;
       }
 
       if (check('TF3', true)) {
@@ -5016,7 +5183,11 @@
          if (hdim > 1) {
             option.Scat = 0;
             option.Contour = 1;
-            if (!isNaN(parseInt(part))) option.Contour = 10 + parseInt(part);
+            if (part.indexOf('Z')>=0) option.Zscale = 1;
+            if (part.indexOf('1') >= 0) option.Contour = 11;
+            if (part.indexOf('2') >= 0) option.Contour = 12;
+            if (part.indexOf('3') >= 0) option.Contour = 13;
+            if (part.indexOf('4') >= 0) option.Contour = 14;
          } else {
             option.Hist = 1;
          }
@@ -5109,6 +5280,7 @@
       if (check('F')) option.Fill = 1;
       if (check('][')) { option.Off = 1; option.Hist = 1; }
       if (check('F2')) option.Fill = 2;
+
       if (check('L')) { option.Line = 1; option.Hist = -1; }
 
       if (check('P0')) { option.Mark = 10; option.Hist = -1; }
@@ -5146,6 +5318,8 @@
          }
       }
       if (check('9')) option.HighRes = 1;
+      if (check('0')) option.Zero = 1;
+
 
       //if (option.Surf == 15)
       //   if (option.System == JSROOT.Painter.Coord.kPOLAR || option.System == JSROOT.Painter.Coord.kCARTESIAN)
@@ -5730,7 +5904,7 @@
    JSROOT.THistPainter.prototype.GetSelectIndex = function(axis, size, add) {
       // be aware - here indexs starts from 0
       var indx = 0, obj = this.main_painter();
-      if (obj == null) obj = this;
+      if (!obj) obj = this;
       var nbin = this['nbins'+axis];
       if (!nbin) nbin = 0;
       if (!add) add = 0;
@@ -5779,7 +5953,7 @@
       return null;
    }
 
-   JSROOT.THistPainter.prototype.CreateStat = function() {
+   JSROOT.THistPainter.prototype.CreateStat = function(opt_stat) {
 
       if (!this.draw_content) return null;
 
@@ -5788,7 +5962,7 @@
 
       stats = JSROOT.Create('TPaveStats');
       JSROOT.extend(stats, { fName : 'stats',
-                             fOptStat: JSROOT.gStyle.OptStat,
+                             fOptStat: opt_stat || JSROOT.gStyle.OptStat,
                              fOptFit: JSROOT.gStyle.OptFit,
                              fBorderSize : 1} );
       JSROOT.extend(stats, JSROOT.gStyle.StatNDC);
@@ -5899,7 +6073,11 @@
 
    JSROOT.THistPainter.prototype.Zoom = function(xmin, xmax, ymin, ymax, zmin, zmax) {
       // function can be used for zooming into specified range
-      // if both ranges for axis 0 (like xmin==xmax==0), axis will be unzoomed
+      // if both limits for each axis 0 (like xmin==xmax==0), axis will be unzoomed
+
+      if (xmin==="x") { xmin = xmax; xmax = ymin; ymin = undefined; } else
+      if (xmin==="y") { ymax = ymin; ymin = xmax; xmin = xmax = undefined; } else
+      if (xmin==="z") { zmin = xmax; zmax = ymin; xmin = xmax = ymin = undefined; }
 
       var main = this.main_painter(),
           zoom_x = (xmin !== xmax), zoom_y = (ymin !== ymax), zoom_z = (zmin !== zmax),
@@ -6016,8 +6194,8 @@
       var m = d3.mouse(this.svg_frame().node());
       this.clearInteractiveElements();
       var kind = "xyz";
-      if (m[0] < 0) kind = "y"; else
-      if (m[1] > this.frame_height()) kind = "x";
+      if (m[0] < 0) kind = this.swap_xy ? "x" : "y"; else
+      if (m[1] > this.frame_height()) kind = this.swap_xy ? "y" : "x";
       this.Unzoom(kind);
    }
 
@@ -6315,65 +6493,113 @@
       d3.event.stopPropagation();
    }
 
+   JSROOT.THistPainter.prototype.AllowDefaultYZooming = function() {
+      // return true if default Y zooming should be enabled
+      // it is typically for 2-Dim histograms or
+      // when histogram not draw, defined by other painters
+
+      if (this.Dimension()>1) return true;
+      if (this.draw_content) return false;
+
+      var pad_painter = this.pad_painter(true);
+      if (pad_painter &&  pad_painter.painters)
+         for (var k = 0; k < pad_painter.painters.length; ++k) {
+            var subpainter = pad_painter.painters[k];
+            if ((subpainter!==this) && subpainter.wheel_zoomy!==undefined)
+               return subpainter.wheel_zoomy;
+         }
+
+      return false;
+   }
+
+   JSROOT.THistPainter.prototype.AnalyzeMouseWheelEvent = function(event, item, dmin, ignore) {
+
+      item.min = item.max = undefined;
+      item.changed = false;
+      if (ignore && item.ignore) return;
+
+      var delta = 0, delta_left = 1, delta_right = 1;
+
+      if ('dleft' in item) { delta_left = item.dleft; delta = 1; }
+      if ('dright' in item) { delta_right = item.dright; delta = 1; }
+
+      if ('delta' in item)
+         delta = item.delta;
+      else
+      if (event && event.wheelDelta !== undefined ) {
+         // WebKit / Opera / Explorer 9
+         delta = -event.wheelDelta;
+      } else if (event && event.deltaY !== undefined ) {
+         // Firefox
+         delta = event.deltaY;
+      } else if (event && event.detail !== undefined) {
+         delta = event.detail;
+      }
+
+      if (delta===0) return;
+      delta = (delta<0) ? -0.2 : 0.2;
+
+      delta_left *= delta
+      delta_right *= delta;
+
+      var lmin = item.min = this["scale_"+item.name+"min"],
+          lmax = item.max = this["scale_"+item.name+"max"],
+          gmin = this[item.name+"min"],
+          gmax = this[item.name+"max"];
+
+      if ((item.min === item.max) && (delta<0)) {
+         item.min = gmin;
+         item.max = gmax;
+      }
+
+      if (item.min >= item.max) return;
+
+      if ((dmin>0) && (dmin<1)) {
+         if (this['log'+item.name]) {
+            var factor = (item.min>0) ? JSROOT.log10(item.max/item.min) : 2;
+            if (factor>10) factor = 10; else if (factor<0.01) factor = 0.01;
+            item.min = item.min / Math.pow(10, factor*delta_left*dmin);
+            item.max = item.max * Math.pow(10, factor*delta_right*(1-dmin));
+         } else {
+            var rx_left = (item.max - item.min),
+                rx_right = rx_left;
+            if (delta_left>0) rx_left = 1.001 * rx_left / (1-delta_left);
+            item.min += -delta_left*dmin*rx_left;
+
+            if (delta_right>0) rx_right = 1.001 * rx_right / (1-delta_right);
+
+            item.max -= -delta_right*(1-dmin)*rx_right;
+         }
+         if (item.min >= item.max)
+            item.min = item.max = undefined;
+         else
+         if (delta_left !== delta_right) {
+            // extra check case when moving left or right
+            if (((item.min < gmin) && (lmin===gmin)) ||
+                ((item.max > gmax) && (lmax==gmax)))
+                   item.min = item.max = undefined;
+         }
+
+      } else {
+         item.min = item.max = undefined;
+      }
+
+      item.changed = ((item.min !== undefined) && (item.max !== undefined));
+   }
+
    JSROOT.THistPainter.prototype.mouseWheel = function() {
       d3.event.stopPropagation();
 
-      var delta = 0;
-      switch (d3.event.deltaMode) {
-         case 0: delta = d3.event.deltaY / this.pad_height() * 2; break; // DOM_DELTA_PIXEL
-         case 1: delta = d3.event.deltaY / this.pad_height() * 40; break; // DOM_DELTA_LINE
-         case 2: delta = d3.event.deltaY / this.pad_height() * 200; break; // DOM_DELTA_PAGE
-      }
-      if (delta===0) return;
-
       d3.event.preventDefault();
-
       this.clearInteractiveElements();
 
-      if (delta < -0.2) delta = -0.2; else if (delta>0.2) delta = 0.2;
-
       var itemx = { name: "x", ignore: false },
-          itemy = { name: "y", ignore: (this.Dimension() == 1) },
-          cur = d3.mouse(this.svg_frame().node()),
-          painter = this;
+          itemy = { name: "y", ignore: !this.AllowDefaultYZooming() },
+          cur = d3.mouse(this.svg_frame().node());
 
-      function ProcessAxis(item, dmin, ignore) {
-         item.min = item.max = undefined;
-         item.changed = false;
-         if (ignore && item.ignore) return;
+      this.AnalyzeMouseWheelEvent(d3.event, this.swap_xy ? itemy : itemx, cur[0] / this.frame_width(), (cur[1] <= this.frame_height()));
 
-         item.min = painter["scale_" + item.name+"min"];
-         item.max = painter["scale_" + item.name+"max"];
-         if ((item.min === item.max) && (delta<0)) {
-            item.min = painter[item.name+"min"];
-            item.max = painter[item.name+"max"];
-         }
-
-         if (item.min >= item.max) return;
-
-         if ((dmin>0) && (dmin<1)) {
-            if (painter['log'+item.name]) {
-               var factor = (item.min>0) ? JSROOT.log10(item.max/item.min) : 2;
-               if (factor>10) factor = 10; else if (factor<1.5) factor = 1.5;
-               item.min = item.min / Math.pow(factor, delta*dmin);
-               item.max = item.max * Math.pow(factor, delta*(1-dmin));
-            } else {
-               var rx = (item.max - item.min);
-               if (delta>0) rx = 1.001 * rx / (1-delta);
-               item.min += -delta*dmin*rx;
-               item.max -= -delta*(1-dmin)*rx;
-            }
-            if (item.min >= item.max) item.min = item.max = undefined;
-         } else {
-            item.min = item.max = undefined;
-         }
-
-         item.changed = ((item.min !== undefined) && (item.max !== undefined));
-      }
-
-      ProcessAxis(this.swap_xy ? itemy : itemx, cur[0] / this.frame_width(), (cur[1] <= this.frame_height()));
-
-      ProcessAxis(this.swap_xy ? itemx : itemy, 1 - cur[1] / this.frame_height(), (cur[0] >= 0));
+      this.AnalyzeMouseWheelEvent(d3.event, this.swap_xy ? itemx : itemy, 1 - cur[1] / this.frame_height(), (cur[0] >= 0));
 
       this.Zoom(itemx.min, itemx.max, itemy.min, itemy.max);
 
@@ -6388,6 +6614,8 @@
       var svg = this.svg_frame();
 
       if (svg.empty() || svg.property('interactive_set')) return;
+
+      this.AddKeysHandler();
 
       this.last_touch = new Date(0);
       this.zoom_kind = 0; // 0 - none, 1 - XY, 2 - only X, 3 - only Y, (+100 for touches)
@@ -6420,6 +6648,71 @@
       }
 
       svg.property('interactive_set', true);
+   }
+
+   JSROOT.THistPainter.prototype.AddKeysHandler = function() {
+      if (this.keys_handler) return;
+
+      this.keys_handler = this.ProcessKeyPress.bind(this);
+
+      window.addEventListener( 'keydown', this.keys_handler, false );
+   }
+
+   JSROOT.THistPainter.prototype.ProcessKeyPress = function(evnt) {
+
+      var isactive = this.select_main().attr('frame_active');
+      if (isactive && isactive!=='true') return;
+
+      var key = "";
+      switch (evnt.keyCode) {
+         case 33: key = "PageUp"; break;
+         case 34: key = "PageDown"; break;
+         case 37: key = "ArrowLeft"; break;
+         case 38: key = "ArrowUp"; break;
+         case 39: key = "ArrowRight"; break;
+         case 40: key = "ArrowDown"; break;
+         case 42: key = "PrintScreen"; break;
+         case 106: key = "*"; break;
+         default: return false;
+      }
+
+      if (evnt.shiftKey) key = "Shift " + key;
+      if (evnt.altKey) key = "Alt " + key;
+      if (evnt.ctrlKey) key = "Ctrl " + key;
+
+      var zoom = { name: "x", dleft: 0, dright: 0 };
+
+      switch (key) {
+         case "ArrowLeft":  zoom.dleft = -1; zoom.dright = 1; break;
+         case "ArrowRight":  zoom.dleft = 1; zoom.dright = -1; break;
+         case "Ctrl ArrowLeft": zoom.dleft = zoom.dright = -1; break;
+         case "Ctrl ArrowRight": zoom.dleft = zoom.dright = 1; break;
+         case "ArrowUp":  zoom.name = "y"; zoom.dleft = 1; zoom.dright = -1; break;
+         case "ArrowDown":  zoom.name = "y"; zoom.dleft = -1; zoom.dright = 1; break;
+         case "Ctrl ArrowUp": zoom.name = "y"; zoom.dleft = zoom.dright = 1; break;
+         case "Ctrl ArrowDown": zoom.name = "y"; zoom.dleft = zoom.dright = -1; break;
+      }
+
+      if (zoom.dleft || zoom.dright) {
+         if (!JSROOT.gStyle.Zooming) return false;
+         // in 3dmode with orbit control ignore simple arrows
+         if (this.mode3d && (key.indexOf("Ctrl")!==0)) return false;
+         this.AnalyzeMouseWheelEvent(null, zoom, 0.5);
+         this.Zoom(zoom.name, zoom.min, zoom.max);
+         if (zoom.changed) this.zoom_changed_interactive = true;
+         evnt.stopPropagation();
+         evnt.preventDefault();
+      } else {
+         var pp = this.pad_painter(true),
+             func = pp ? pp.FindButton(key) : "";
+         if (func) {
+            pp.PadButtonClick(func);
+            evnt.stopPropagation();
+            evnt.preventDefault();
+         }
+      }
+
+      return true; // just process any key press
    }
 
    JSROOT.THistPainter.prototype.ShowContextMenu = function(kind, evnt, obj) {
@@ -6595,7 +6888,7 @@
             this.FillHistContextMenu(menu);
       }
 
-      if ((this.options.Lego > 0) || (this.Dimension() === 3)) {
+      if ((this.options.Lego > 0) || (this.options.Surf > 0) || (this.Dimension() === 3)) {
          // menu for 3D drawings
 
          if (menu.size() > 0)
@@ -6654,7 +6947,7 @@
                this.Unzoom();
                return true;
             }
-            if (this.draw_content && ('AutoZoom' in this) && (this.Dimension() < 3)) {
+            if (this.draw_content && (typeof this.AutoZoom === 'function')) {
                this.AutoZoom();
                return true;
             }
@@ -6671,9 +6964,9 @@
       var pp = this.pad_painter(true);
       if (pp===null) return;
 
-      pp.AddButton(JSROOT.ToolbarIcons.auto_zoom, 'Toggle between unzoom and autozoom-in', 'ToggleZoom');
-      pp.AddButton(JSROOT.ToolbarIcons.arrow_right, "Toggle log x", "ToggleLogX");
-      pp.AddButton(JSROOT.ToolbarIcons.arrow_up, "Toggle log y", "ToggleLogY");
+      pp.AddButton(JSROOT.ToolbarIcons.auto_zoom, 'Toggle between unzoom and autozoom-in', 'ToggleZoom', "Ctrl *");
+      pp.AddButton(JSROOT.ToolbarIcons.arrow_right, "Toggle log x", "ToggleLogX", "PageDown");
+      pp.AddButton(JSROOT.ToolbarIcons.arrow_up, "Toggle log y", "ToggleLogY", "PageUp");
       if (this.Dimension() > 1)
          pp.AddButton(JSROOT.ToolbarIcons.arrow_diag, "Toggle log z", "ToggleLogZ");
       if (this.draw_content)
@@ -6829,8 +7122,8 @@
       if (stat_sumw > 0) {
          res.meanx = stat_sumwx / stat_sumw;
          res.meany = stat_sumwy / stat_sumw;
-         res.rmsx = Math.sqrt(stat_sumwx2 / stat_sumw - res.meanx * res.meanx);
-         res.rmsy = Math.sqrt(stat_sumwy2 / stat_sumw - res.meany * res.meany);
+         res.rmsx = Math.sqrt(Math.abs(stat_sumwx2 / stat_sumw - res.meanx * res.meanx));
+         res.rmsy = Math.sqrt(Math.abs(stat_sumwy2 / stat_sumw - res.meany * res.meany));
       }
 
       if (xmax!=null) {
@@ -6879,27 +7172,20 @@
          if (print_entries > 0)
             pave.AddText("Entries = " + stat.Format(data.entries,"entries"));
 
-         if (print_mean > 0) {
+         if (print_mean > 0)
             pave.AddText("Mean = " + stat.Format(data.meanx));
-         }
 
-         if (print_rms > 0) {
+         if (print_rms > 0)
             pave.AddText("Std Dev = " + stat.Format(data.rmsx));
-         }
 
-         if (print_under > 0) {
-            var res = (this.histo.fArray.length > 0) ? this.histo.fArray[0] : 0;
-            pave.AddText("Underflow = " + stat.Format(res));
-         }
+         if (print_under > 0)
+            pave.AddText("Underflow = " + stat.Format((this.histo.fArray.length > 0) ? this.histo.fArray[0] : 0,"entries"));
 
-         if (print_over > 0) {
-            var res = (this.histo.fArray.length > 0) ? this.histo.fArray[this.histo.fArray.length - 1] : 0;
-            pave.AddText("Overflow = " + stat.Format(res));
-         }
+         if (print_over > 0)
+            pave.AddText("Overflow = " + stat.Format((this.histo.fArray.length > 0) ? this.histo.fArray[this.histo.fArray.length - 1] : 0,"entries"));
 
-         if (print_integral > 0) {
+         if (print_integral > 0)
             pave.AddText("Integral = " + stat.Format(data.integral,"entries"));
-         }
 
          if (print_skew > 0)
             pave.AddText("Skew = <not avail>");
@@ -7255,7 +7541,7 @@
    }
 
    JSROOT.TH1Painter.prototype.ProcessTooltip = function(pnt) {
-      if ((pnt === null) || !this.draw_content || (this.options.Lego > 0)) {
+      if ((pnt === null) || !this.draw_content || (this.options.Lego > 0) || (this.options.Surf > 0)) {
          if (this.draw_g !== null)
             this.draw_g.select(".tooltip_bin").remove();
          this.ProvideUserTooltip(null);
@@ -7394,7 +7680,8 @@
       }
 
       var res = { x: midx, y: midy,
-                  color1: this.lineatt.color, color2: this.fillatt.color,
+                  color1: this.lineatt ? this.lineatt.color : 'green',
+                  color2: this.fillatt ? this.fillatt.color : 'blue',
                   lines: this.GetBinTips(findbin) };
 
       if (show_rect) {
@@ -7458,13 +7745,16 @@
 
       menu.add("Auto zoom-in", this.AutoZoom);
 
-      menu.addDrawMenu("Draw with", ["hist", "p", "e", "e1", "pe2", "lego"], function(arg) {
+      var sett = JSROOT.getDrawSettings("ROOT." + this.GetObject()._typename, 'nosame');
+
+      menu.addDrawMenu("Draw with", sett.opts, function(arg) {
+         if (arg==='inspect')
+            return JSROOT.draw(this.divid, this.GetObject(), arg);
+
          this.options = this.DecodeOptions(arg);
 
          // redraw all objects
          this.RedrawPad();
-
-         // if (this.options.Lego == 0) this.AddInteractive();
       });
    }
 
@@ -7478,12 +7768,16 @@
       // first find minimum
       var min = this.histo.getBinContent(left + 1);
       for (var indx = left; indx < right; ++indx)
-         if (this.histo.getBinContent(indx + 1) < min)
-            min = this.histo.getBinContent(indx + 1);
-      if (min>0) return; // if all points positive, no chance for autoscale
+         min = Math.min(min, this.histo.getBinContent(indx+1));
+      if (min > 0) return; // if all points positive, no chance for autoscale
 
-      while ((left < right) && (this.histo.getBinContent(left + 1) <= min)) ++left;
+      while ((left < right) && (this.histo.getBinContent(left+1) <= min)) ++left;
       while ((left < right) && (this.histo.getBinContent(right) <= min)) --right;
+
+      // if singular bin
+      if ((left === right-1) && (left > 2) && (right < this.nbinsx-2)) {
+         --left; ++right;
+      }
 
       if ((right - left < dist) && (left < right))
          this.Zoom(this.GetBinX(left), this.GetBinX(right));
@@ -7501,6 +7795,9 @@
    JSROOT.TH1Painter.prototype.Draw2D = function(call_back) {
       if (typeof this.Create3DScene === 'function')
          this.Create3DScene(-1);
+
+      this.CreateXY();
+
       if (typeof this.DrawColorPalette === 'function')
          this.DrawColorPalette(false);
 
@@ -7515,46 +7812,40 @@
    JSROOT.TH1Painter.prototype.Draw3D = function(call_back) {
       JSROOT.AssertPrerequisites('more2d;3d', function() {
          this.Create3DScene = JSROOT.Painter.HPainter_Create3DScene;
+         this.PrepareColorDraw = JSROOT.TH2Painter.prototype.PrepareColorDraw;
          this.Draw3D = JSROOT.Painter.TH1Painter_Draw3D;
          this.Draw3D(call_back);
       }.bind(this));
    }
 
    JSROOT.THistPainter.prototype.Get3DToolTip = function(indx) {
-      var tip = { bin: indx }, arr;
+      var tip = { bin: indx };
       switch (this.Dimension()) {
          case 1:
             tip.ix = indx; tip.iy = 1;
             tip.value = this.histo.getBinContent(tip.ix);
-            arr = this.GetBinTips(indx-1);
+            tip.info = this.GetBinTips(indx-1);
             break;
-         case 2: {
+         case 2:
             tip.ix = indx % (this.nbinsx + 2);
             tip.iy = (indx - tip.ix) / (this.nbinsx + 2);
             tip.value = this.histo.getBinContent(tip.ix, tip.iy);
-            arr = this.GetBinTips(tip.ix-1, tip.iy-1);
+            tip.info = this.GetBinTips(tip.ix-1, tip.iy-1);
             break;
-         }
-         case 3: {
+         case 3:
             tip.ix = indx % (this.nbinsx+2);
             tip.iy = ((indx - tip.ix) / (this.nbinsx+2)) % (this.nbinsy+2);
             tip.iz = (indx - tip.ix - tip.iy * (this.nbinsx+2)) / (this.nbinsx+2) / (this.nbinsy+2);
             tip.value = this.GetObject().getBinContent(tip.ix, tip.iy, tip.iz);
-            arr = this.GetBinTips(tip.ix-1, tip.iy-1, tip.iz-1);
+            tip.info = this.GetBinTips(tip.ix-1, tip.iy-1, tip.iz-1);
             break;
-         }
       }
 
-      if (arr) {
-         tip.info = arr[0];
-         for (var n=1;n<arr.length;++n) tip.info +="<br/>"+arr[n];
-      }
       return tip;
    }
 
 
    JSROOT.TH1Painter.prototype.Redraw = function(resize) {
-      this.CreateXY();
 
       var func_name = (this.options.Lego > 0) ? "Draw3D" : "Draw2D";
 
@@ -7574,10 +7865,8 @@
 
       painter.ScanContent();
 
-      painter.CreateXY();
-
       if (JSROOT.gStyle.AutoStat && painter.create_canvas)
-         painter.CreateStat();
+         painter.CreateStat(histo.fCustomStat);
 
       var func_name = (painter.options.Lego > 0) ? "Draw3D" : "Draw2D";
 
@@ -7585,7 +7874,6 @@
          painter.DrawNextFunction(0, function() {
 
             if (painter.options.Lego === 0) {
-               // painter.AddInteractive();
                if (painter.options.AutoZoom) painter.AutoZoom();
             }
 
@@ -7767,7 +8055,7 @@
 
          var item;
 
-         if (obj===null) {
+         if (!obj || !obj._typename) {
             item = {
                _name: i.toString(),
                _kind: "ROOT.NULL",
@@ -7781,11 +8069,18 @@
              _title : obj.fTitle,
              _obj : obj
            };
+
+           switch(obj._typename) {
+              case 'TColor': item._value = JSROOT.Painter.MakeColorRGB(obj); break;
+              case 'TText': item._value = obj.fTitle; break;
+              case 'TLatex': item._value = obj.fTitle; break;
+           }
+
            // if name is integer value, it should match array index
-           if ((item._name === undefined) ||
-               (!isNaN(parseInt(item._name)) && (parseInt(item._name)!==i))
-               || (lst.arr.indexOf(obj)<i))
-                 item._name = i.toString();
+           if ((item._name === undefined) || (item._name === "") ||
+                 (!isNaN(parseInt(item._name)) && (parseInt(item._name)!==i))
+                 || (lst.arr.indexOf(obj)<i))
+                   item._name = i.toString();
 
            if (item._title === undefined)
               item._title = obj._typename ? item._kind : item._name;
@@ -7796,36 +8091,340 @@
       return true;
    }
 
+
+   JSROOT.Painter.TreeDrawGet = function(item, itemname, get_callback, option) {
+      // function used to handle get request for branch/subbranch
+
+      var bitem = item;
+//      if (item._usestreamer) bitem = item._parent;
+
+      if (option==='inspect')
+         return JSROOT.CallBack(get_callback, item, bitem._branch);
+
+      var fprnt = item._parent;
+      while (fprnt && !fprnt._file) fprnt = fprnt._parent;
+      if (!fprnt) return JSROOT.CallBack(get_callback, item, null);
+
+      var b = bitem._branch,
+          f = fprnt._file,
+          histo = null, break_execution = 0;
+      // var streamer = null;
+
+//      if (item._usestreamer) {
+//         streamer = f.GetStreamer(b.fClassName, b.fClassVersion);
+//         console.log('Request streamer for', b.fClassName, streamer.length, b.fMaxBaskets);
+//         if (!streamer) return JSROOT.CallBack(get_callback, item, null);
+//      }
+
+      function ShowProgress(value) {
+         var main_box = document.createElement("p");
+         var text_node = document.createTextNode(value);
+         main_box.appendChild(text_node);
+         main_box.title = "Click on element to break drawing";
+
+         main_box.onclick = function() {
+            if (++break_execution<3) {
+               main_box.title = "Tree draw will break after next I/O operation";
+               return text_node.nodeValue = "Breaking ... ";
+            }
+            break_execution = -1111;
+            JSROOT.progress();
+            JSROOT.CallBack(get_callback, item, histo);
+         }
+
+         JSROOT.progress(main_box);
+      }
+
+      function ReadNextBaskets(indx) {
+         var places = [], totalsz = 0, indx0 = indx;
+         while ((indx>=0) && (indx<b.fMaxBaskets) && (totalsz < 1e7) && (places.length<200)) {
+            if (b.fBasketBytes[indx] === 0) break;
+            places.push(b.fBasketSeek[indx], b.fBasketBytes[indx]);
+            totalsz += b.fBasketBytes[indx];
+            indx++;
+            //break; // only single basket
+         }
+
+         // console.log('select ', places, b.fBasketBytes, b.fBasketSeek);
+
+         if ((places.length === 0) || (break_execution>0)) {
+            JSROOT.progress();
+            return JSROOT.CallBack(get_callback, item, histo);
+         }
+
+         var maxindx = b.fWriteBasket || b.fMaxBaskets;
+         if (maxindx<=0) maxindx = 1;
+
+         ShowProgress("TTree draw " + Math.round((indx0/maxindx*100)) + " %  ");
+
+         // setTimeout(ContinueRead, 1000);
+         // function ContinueRead() {
+
+         f.ReadBaskets(places, function(baskets) {
+
+            if (break_execution<0) return; // hard break
+
+            if (!baskets) return ReadNextBaskets(-1);
+
+            var arrays = []; // all data from baskets
+
+            // first convert raw data
+            for (var n=0;n<baskets.length;++n)
+/*               if (streamer) {
+                  var buf = baskets[n].raw, nread = 0, arr = [];
+                  while ((buf.remain() > 4) && (nread++ < baskets[n].fNevBuf))  {
+                     var obj = {};
+                     buf.ClearObjectMap();
+                     buf.MapObject(1, obj); // tag object itself with id==1
+
+                     var ver = buf.ReadVersion();
+                     for (var n = 0; n < streamer.length; ++n)
+                        streamer[n].func(buf, obj);
+                     buf.CheckBytecount(ver, 'tree_streamer');
+
+                     arr.push(nread); // just fake push
+
+                  }
+                  arrays.push(arr);
+               } else
+*/
+               if (item._isvector) {
+                  var buf = baskets[n].raw, nread = 0;
+                  while ((buf.remain() > 4) && (nread++ < baskets[n].fNevBuf))  {
+                     var ver = buf.ReadVersion();
+                     arrays.push(buf.ReadFastArray(buf.ntoi4(), item._datakind));
+                     buf.CheckBytecount(ver, 'branch_vector_read');
+                  }
+               } else {
+                  arrays.push(baskets[n].raw.ReadFastArray(baskets[n].fNevBuf * item._arrsize, item._datakind));
+               }
+
+            // console.log('array', arr.length);
+
+            if (histo === null) {
+               var xmin, xmax;
+
+               for (var n=0;n<arrays.length;++n) {
+                  var lmin = Math.min.apply(null, arrays[n]);
+                  var lmax = Math.max.apply(null, arrays[n]);
+                  if ((n===0) || (lmin < xmin)) xmin = lmin;
+                  if ((n===0) || (lmax > xmax)) xmax = lmax;
+               }
+
+               var nbins = 200;
+
+               if (xmin>=xmax) {
+                  xmax = xmin;
+                  if (Math.abs(xmin<100)) { xmin-=1; xmax+=1; } else
+                  if (xmin>0) { xmin*=0.9; xmax*=1.1; } else
+                              { xmin*=1.1; xmax*=0.9; }
+               } else
+               if (JSROOT.IO.IsInteger(item._datakind) && (xmax-xmin >=1) && (xmax-xmin<5000)) {
+                  xmin -= 1;
+                  xmax += 2;
+                  nbins = xmax - xmin;
+               } else    {
+                  xmax += (xmax-xmin)/nbins;
+               }
+
+               histo = JSROOT.CreateTH1(nbins);
+               histo.fXaxis.fXmin = xmin;
+               histo.fXaxis.fXmax = xmax;
+               histo.fName = "draw_" + item._name;
+               histo.fTitle = "drawing '" + item._name + "' from " + item._parent._name;
+               histo.fCustomStat = 111110;
+            }
+
+            for (var n=0;n<arrays.length;++n) {
+               var arr = arrays[n];
+               for (var k=0;k<arr.length;++k)
+                  histo.Fill(arr[k]);
+            }
+
+            ReadNextBaskets(indx);
+         });
+
+         //} // for debugging with timeout
+      }
+
+      ReadNextBaskets(0);
+   }
+
+/*
+   JSROOT.Painter.CreateBranchLeaves = function(s_i, hitem) {
+      // not yet used, in the feauture one can streamer objects from branch and access its fields
+
+      if (!s_i || !s_i.fElements) return 0;
+
+      var cnt = 0;
+
+      for (var j=0; j<s_i.fElements.arr.length; ++j) {
+         // extract streamer info for each class member
+         var element = s_i.fElements.arr[j];
+
+         // first ignore base types
+         if (element.fTypeName === 'BASE') continue;
+
+         var type = element.fType;
+
+         switch(type) {
+            case JSROOT.IO.kChar:
+            case JSROOT.IO.kShort:
+            case JSROOT.IO.kInt:
+            case JSROOT.IO.kCounter:
+            case JSROOT.IO.kLong:
+            case JSROOT.IO.kLong64:
+            case JSROOT.IO.kDouble:
+            case JSROOT.IO.kFloat:
+            case JSROOT.IO.kDouble32:
+            case JSROOT.IO.kLegacyChar:
+            case JSROOT.IO.kUChar:
+            case JSROOT.IO.kUShort:
+            case JSROOT.IO.kUInt:
+            case JSROOT.IO.kULong64:
+            case JSROOT.IO.kULong:
+            case JSROOT.IO.kBool:
+               cnt++;
+
+               if (hitem && hitem._childs) {
+                  var leafitem = {
+                     _name : element.fName,
+                     _kind : "ROOT.TLeaf",
+                     _title : element.fTypeName,
+                     _usestreamer : true,
+                     _get : JSROOT.Painter.TreeDrawGet
+                  };
+                  if (element.fTitle != '') leafitem._title += " // " + element.fTitle;
+                  hitem._childs.push(leafitem);
+               }
+
+               break;
+            default:
+               // not yet supported types in tree-draw
+               break;
+         }
+      }
+
+      return cnt;
+   }
+*/
+
+   JSROOT.Painter.CreateBranchItem = function(node, branch) {
+      if (!node || !branch) return false;
+
+      var nb_branches = branch.fBranches ? branch.fBranches.arr.length : 0,
+          nb_leaves = branch.fLeaves ? branch.fLeaves.arr.length : 0,
+          leaf = (nb_leaves>0) ? branch.fLeaves.arr[0] : null,
+          datakind = 0, arrsize = 1,
+          isvector = false,
+          fprnt = node._parent;
+
+      // check that we have file
+      while (fprnt && !fprnt._file) fprnt = fprnt._parent;
+
+      // display branch with the only leaf
+      if ((nb_leaves === 1) && fprnt && ((leaf.fName === branch.fName) || (branch.fName.indexOf(leaf.fName)===0)) ) {
+         switch (leaf._typename) {
+            case 'TLeafF' : datakind = JSROOT.IO.kFloat; break;
+            case 'TLeafD' : datakind = JSROOT.IO.kDouble; break;
+            case 'TLeafO' : datakind = JSROOT.IO.kBool; break;
+            case 'TLeafB' : datakind = leaf.fIsUnsigned ? JSROOT.IO.kUChar : JSROOT.IO.kChar; break;
+            case 'TLeafS' : datakind = leaf.fIsUnsigned ? JSROOT.IO.kUShort : JSROOT.IO.kShort; break;
+            case 'TLeafI' : datakind = leaf.fIsUnsigned ? JSROOT.IO.kUInt : JSROOT.IO.kInt; break;
+            case 'TLeafL' : datakind = leaf.fIsUnsigned ? JSROOT.IO.kULong64 : JSROOT.IO.kLong64; break;
+            case 'TLeafElement' :
+               if ((leaf.fType < 0) && (branch._typename==='TBranchElement')) {
+                  switch (branch.fClassName) {
+                    case "vector<double>": isvector = true; datakind = JSROOT.IO.kDouble; break;
+                    case "vector<int>":  isvector = true; datakind = JSROOT.IO.kInt; break;
+                    case "vector<float>": isvector = true; datakind = JSROOT.IO.kFloat; break;
+                    case "vector<bool>": isvector = true; datakind = JSROOT.IO.kBool; break;
+                  }
+               } else
+               if (JSROOT.IO.IsNumeric(leaf.fType)) {
+                   datakind = leaf.fType;
+               } else
+               if (JSROOT.IO.IsNumeric(leaf.fType-JSROOT.IO.kOffsetL)) {
+                  datakind = leaf.fType - JSROOT.IO.kOffsetL;
+                  arrsize = leaf.fLen; // fixed-size array
+               }
+
+               break;
+         }
+      }
+
+      function ClearName(arg) {
+         if ((arg.length>0) && (arg.charAt(0)=='/')) arg = arg.substr(1);
+         return arg.replace(/\//g,'_').replace(/#/g,'_');
+      }
+
+      var subitem = {
+            _name : ClearName(branch.fName),
+            _kind : "ROOT." + branch._typename,
+            _title : branch.fTitle
+            // _obj: branch // only for debug purposes
+      };
+
+      if (!node._childs) node._childs = [];
+
+      node._childs.push(subitem);
+
+      if (datakind > 0) {
+         // supported elementary branch
+         subitem._kind = "ROOT." + leaf._typename; // mark branch as leaf
+         if (isvector) subitem._title += " " + branch.fClassName; else
+         if (leaf._typename === 'TLeafElement') subitem._title += " type:" + leaf.fType;
+         subitem._can_draw = true;
+         subitem._branch = branch;
+         subitem._datakind = datakind;
+         subitem._arrsize = arrsize;
+         subitem._isvector = isvector;
+         subitem._get = JSROOT.Painter.TreeDrawGet;
+
+         return true;
+      }
+
+      if (branch._typename==='TBranchElement')
+         subitem._title += " " + branch.fClassName + ";" + branch.fClassVersion;
+
+      subitem._obj = branch;
+
+      if (nb_branches > 0) {
+         subitem._more = true;
+         subitem._obj = branch;
+         subitem._expand = function(bnode,bobj) {
+            // really create all sub-branch items
+            if (!bobj) return false;
+            for ( var i = 0; i < bobj.fBranches.arr.length; ++i)
+               JSROOT.Painter.CreateBranchItem(bnode, bobj.fBranches.arr[i], true);
+            return true;
+         }
+         return true;
+      }
+
+      if (nb_leaves > 1) {
+         // not yet supported many leafs in one branch
+         subitem._childs = [];
+         for (var j = 0; j < nb_leaves; ++j) {
+            var leafitem = {
+                  _name : ClearName(branch.fLeaves.arr[j].fName),
+                  _kind : "ROOT." + branch.fLeaves.arr[j]._typename
+                  // _obj: branch.fLeaves.arr[j]
+            }
+            subitem._childs.push(leafitem);
+         }
+      }
+
+      return true;
+   }
+
    JSROOT.Painter.TreeHierarchy = function(node, obj) {
       if (obj._typename != 'TTree' && obj._typename != 'TNtuple') return false;
 
       node._childs = [];
 
-      for ( var i = 0; i < obj.fBranches.arr.length; ++i) {
-         var branch = obj.fBranches.arr[i];
-         var nb_leaves = branch.fLeaves.arr.length;
-
-         // display branch with only leaf as leaf
-         if (nb_leaves == 1 && branch.fLeaves.arr[0].fName == branch.fName) nb_leaves = 0;
-
-         var subitem = {
-            _name : branch.fName,
-            _kind : nb_leaves > 0 ? "ROOT.TBranch" : "ROOT.TLeafF"
-         }
-
-         node._childs.push(subitem);
-
-         if (nb_leaves > 0) {
-            subitem._childs = [];
-            for (var j = 0; j < nb_leaves; ++j) {
-               var leafitem = {
-                  _name : branch.fLeaves.arr[j].fName,
-                  _kind : "ROOT.TLeafF"
-               }
-               subitem._childs.push(leafitem);
-            }
-         }
-      }
+      for ( var i = 0; i < obj.fBranches.arr.length; ++i)
+         JSROOT.Painter.CreateBranchItem(node, obj.fBranches.arr[i]);
 
       return true;
    }
@@ -8125,9 +8724,10 @@
 
       function find_in_hierarchy(top, fullname) {
 
-         if (!fullname || (fullname.length == 0) || (top==null)) return top;
+         if (!fullname || (fullname.length == 0) || !top) return top;
 
-         var pos = -1;
+         var pos = -1, once_again = false,
+             check_top = !top._parent && (top._kind !== 'TopFolder');
 
          function process_child(child) {
             // set parent pointer when searching child
@@ -8140,8 +8740,19 @@
          do {
             // we try to find element with slashes inside
             pos = fullname.indexOf("/", pos + 1);
+            once_again = false;
 
             var localname = (pos < 0) ? fullname : fullname.substr(0, pos);
+
+            if (check_top && (localname === top._name)) {
+               // it is allowed to provide item name, which includes top-parent like file.root/folder/item
+               // but one could skip top-item name, if there are no other items
+               check_top = false;
+               if (localname===fullname) return top;
+               fullname = fullname.substr(pos+1);
+               pos = -1; once_again = true;
+               continue;
+            }
 
             if (top._childs) {
                // first try to find direct matched item
@@ -8180,13 +8791,12 @@
                return process_child(child);
             }
 
-         } while (pos > 0);
+         } while ((pos >= 0) || once_again);
 
          return (arg.last_exists && top) ? { last: top, rest: fullname } : null;
       }
 
-      var top = this.h;
-      var itemname = "";
+      var top = this.h, itemname = "";
 
       if (typeof arg == 'string') { itemname = arg; arg = {}; } else
       if (typeof arg == 'object') { itemname = arg.name; if ('top' in arg) top = arg.top; } else
@@ -8195,15 +8805,25 @@
       return find_in_hierarchy(top, itemname);
    }
 
-   JSROOT.HierarchyPainter.prototype.itemFullName = function(node, uptoparent) {
+   JSROOT.HierarchyPainter.prototype.itemFullName = function(node, uptoparent, compact) {
       var res = "";
 
-      while (node && ('_parent' in node)) {
+      while (node) {
+         if (node._online!==undefined) {
+            if (uptoparent === 'onlineurl') return node._online!=="" ? node._online + res : res;
+            // all online items does not include top-folder names
+            return res;
+         }
+
+         if (uptoparent && (node === uptoparent)) break;
+         if (node._kind==='TopFolder') break; // name of top folder never included
+         if (compact && !node._parent) break; // in compact form top-parent is not included
          if (res.length > 0) res = "/" + res;
          res = node._name + res;
          node = node._parent;
-         if (uptoparent && (node === uptoparent)) break;
       }
+
+      if (uptoparent === 'onlineurl') return null;
 
       return res;
    }
@@ -8214,7 +8834,7 @@
       // Or they will be requested interactive
 
       var hitem = this.Find(itemname);
-      var url = itemname + "/cmd.json";
+      var url = this.GetOnlineItemUrl(hitem) + "/cmd.json";
       var pthis = this;
       var d3node = d3.select((typeof callback == 'function') ? null : callback);
 
@@ -8279,9 +8899,20 @@
       // get object item with specified name
       // depending from provided option, same item can generate different object types
 
-      var itemname = (typeof arg == 'object') ? arg.arg : arg;
+      var itemname, item, hpainter = this;
 
-      var item = this.Find( { name: itemname, allow_index: true } );
+      if (typeof arg === 'string') {
+         itemname = arg;
+      } else
+      if (typeof arg === 'object') {
+         if ((arg._parent!==undefined) && (arg._name!==undefined) && (arg._kind!==undefined)) item = arg; else
+         if (arg.name!==undefined) itemname = arg.name; else
+         if (arg.arg!==undefined) itemname = arg.arg; else
+         if (arg.item!==undefined) item = arg.item;
+      }
+
+      if (item) itemname = this.itemFullName(item);
+           else item = this.Find( { name: itemname, allow_index: true } );
 
       // if item not found, try to find nearest parent which could allow us to get inside
       var d = (item!=null) ? null : this.Find({ name: itemname, last_exists: true, check_keys: true, allow_index: true });
@@ -8290,7 +8921,6 @@
       // implements not process get in central method of hierarchy item (if exists)
       // if last_parent found, try to expand it
       if ((d !== null) && ('last' in d) && (d.last !== null)) {
-         var hpainter = this;
          var parentname = this.itemFullName(d.last);
 
          // this is indication that expand does not give us better path to searched item
@@ -8302,8 +8932,8 @@
             if (!res) JSROOT.CallBack(call_back);
             var newparentname = hpainter.itemFullName(d.last);
             if (newparentname.length>0) newparentname+="/";
-            hpainter.get( { arg: newparentname + d.rest, rest: d.rest }, call_back, options);
-         });
+            hpainter.get( { name: newparentname + d.rest, rest: d.rest }, call_back, options);
+         }, null, true);
       }
 
       if ((item !== null) && (typeof item._obj == 'object'))
@@ -8353,11 +8983,12 @@
    }
 
    JSROOT.HierarchyPainter.prototype.canDisplay = function(item, drawopt) {
-      if (item == null) return false;
+      if (!item) return false;
       if ('_player' in item) return true;
+      if (item._can_draw === true) return true;
       if (drawopt == 'inspect') return true;
       var handle = JSROOT.getDrawHandle(item._kind, drawopt);
-      return (handle!=null) && ('func' in handle);
+      return handle && (('func' in handle) || ('draw_field' in handle));
    }
 
    JSROOT.HierarchyPainter.prototype.isItemDisplayed = function(itemname) {
@@ -8434,6 +9065,12 @@
                   if (!updating && (drawopt!=null) && (p.GetItemDrawOpt()!=drawopt)) return;
                   painter = p;
                   mdi.ActivateFrame(frame);
+
+                  var handle = null;
+                  if (obj._typename) handle = JSROOT.getDrawHandle("ROOT." + obj._typename);
+                  if (handle && handle.draw_field && obj[handle.draw_field])
+                     obj = obj[handle.draw_field];
+
                   painter.RedrawObject(obj);
                });
             }
@@ -8474,11 +9111,25 @@
       var h = this;
 
       h.get(itemname, function(item, obj) {
-         if (obj!=null) {
-            var painter = h.draw(divid, obj, "same");
-            if (painter) painter.WhenReady(function() { painter.SetItemName(itemname); });
-         }
+         if (obj) {
+            var dummy = new JSROOT.TObjectPainter();
 
+            dummy.SetDivId(divid, -1);
+            var main_painter = dummy.main_painter(true), drop_painter;
+
+            if (main_painter && (typeof main_painter.PerformDrop === 'function'))
+               main_painter.PerformDrop(obj, itemname, item);
+            else
+            if (main_painter && main_painter.accept_drops) {
+               drop_painter = h.draw(divid, obj, "same");
+            } else {
+               h.CleanupFrame(divid);
+               drop_painter = h.draw(divid, obj);
+            }
+
+            if (drop_painter)
+               return drop_painter.WhenReady(function() { drop_painter.SetItemName(itemname); JSROOT.CallBack(call_back); });
+         }
          JSROOT.CallBack(call_back);
       });
 
@@ -8515,6 +9166,8 @@
       // if only_auto_items specified, only automatic items will be updated
 
       if (this.disp == null) return;
+
+      if (only_auto_items === "monitoring") only_auto_items = !this._monitoring_on;
 
       var allitems = [], options = [], hpainter = this;
 
@@ -8617,7 +9270,7 @@
          var hitem = h.Find(items[n]);
          if ((hitem==null) || h.canDisplay(hitem, options[n])) continue;
          // try to expand specified item
-         h.expand(items[n]);
+         h.expand(items[n], null, null, true);
          items.splice(n, 1);
          options.splice(n, 1);
          dropitems.splice(n, 1);
@@ -8745,7 +9398,6 @@
                prnt = prnt._parent;
             }
 
-
             hitem._background = 'grey';
             if (active.indexOf(hitem)<0) active.push(hitem);
          }
@@ -8757,7 +9409,7 @@
       find_next();
    }
 
-   JSROOT.HierarchyPainter.prototype.expand = function(itemname, call_back, d3cont) {
+   JSROOT.HierarchyPainter.prototype.expand = function(itemname, call_back, d3cont, silent) {
       var hpainter = this, hitem = this.Find(itemname);
 
       if (!hitem && d3cont) return JSROOT.CallBack(call_back);
@@ -8765,31 +9417,35 @@
       function DoExpandItem(_item, _obj, _name) {
          if (!_name) _name = hpainter.itemFullName(_item);
 
+         var handle = _item._expand ? null : JSROOT.getDrawHandle(_item._kind, "::expand");
+         if (_obj && handle && handle.expand_item) {
+            _obj = _obj[handle.expand_item]; // just take specified field from the object
+            if (_obj && _obj._typename)
+               handle = JSROOT.getDrawHandle("ROOT."+_obj._typename, "::expand");
+         }
+
+         if (handle && handle.expand) {
+            JSROOT.AssertPrerequisites(handle.prereq, function() {
+               _item._expand = JSROOT.findFunction(handle.expand);
+               if (_item._expand)
+                  DoExpandItem(_item, _obj, _name);
+               else
+                  delete _item._expand;
+            });
+            return true;
+         }
+
          // try to use expand function
          if (_obj && _item && (typeof _item._expand === 'function')) {
             if (_item._expand(_item, _obj)) {
                _item._isopen = true;
                if (_item._parent && !_item._parent._isopen) {
                   _item._parent._isopen = true; // also show parent
-                  hpainter.UpdateTreeNode(_item._parent);
+                  if (!silent) hpainter.UpdateTreeNode(_item._parent);
                } else {
-                  hpainter.UpdateTreeNode(_item, d3cont);
+                  if (!silent) hpainter.UpdateTreeNode(_item, d3cont);
                }
                JSROOT.CallBack(call_back, _item);
-               return true;
-            }
-         }
-
-         if (!('_expand' in _item)) {
-            var handle = JSROOT.getDrawHandle(_item._kind, "::expand");
-            if (handle && ('expand' in handle)) {
-               JSROOT.AssertPrerequisites(handle.prereq, function() {
-                  _item._expand = JSROOT.findFunction(handle.expand);
-                  if (!_item._expand)
-                     delete _item._expand;
-                  else
-                     hpainter.expand(_name, call_back, d3cont);
-               });
                return true;
             }
          }
@@ -8798,9 +9454,9 @@
             _item._isopen = true;
             if (_item._parent && !_item._parent._isopen) {
                _item._parent._isopen = true; // also show parent
-               hpainter.UpdateTreeNode(_item._parent);
+               if (!silent) hpainter.UpdateTreeNode(_item._parent);
             } else {
-               hpainter.UpdateTreeNode(_item, d3cont);
+               if (!silent) hpainter.UpdateTreeNode(_item, d3cont);
             }
             JSROOT.CallBack(call_back, _item);
             return true;
@@ -8811,9 +9467,15 @@
 
       if (hitem) {
          // item marked as it cannot be expanded
-         if (('_more' in hitem) && !hitem._more) return JSROOT.CallBack(call_back);
+         if (hitem._more === false) return JSROOT.CallBack(call_back);
 
-         if (DoExpandItem(hitem, hitem._obj, itemname)) return;
+         if (hitem._childs && hitem._isopen) {
+            hitem._isopen = false;
+            if (!silent) hpainter.UpdateTreeNode(hitem, d3cont);
+            return;
+         }
+
+         if (hitem._obj && DoExpandItem(hitem, hitem._obj, itemname)) return;
       }
 
       JSROOT.progress("Loading " + itemname);
@@ -8913,10 +9575,12 @@
          var h1 = pthis.FileHierarchy(file);
          h1._isopen = true;
          if (pthis.h == null) pthis.h = h1; else
-            if (pthis.h._kind == 'TopFolder') pthis.h._childs.push(h1); else {
+            if (pthis.h._kind == 'TopFolder') {
+               pthis.h._childs.push(h1);
+            }  else {
                var h0 = pthis.h;
                var topname = (h0._kind == "ROOT.TFile") ? "Files" : "Items";
-               pthis.h = { _name: topname, _kind: 'TopFolder', _childs : [h0, h1] };
+               pthis.h = { _name: topname, _kind: 'TopFolder', _childs : [h0, h1], _isopen: true };
             }
 
          pthis.RefreshHtml(call_back);
@@ -8951,13 +9615,9 @@
 
    JSROOT.HierarchyPainter.prototype.GetOnlineItemUrl = function(item) {
       // returns URL, which could be used to request item from the online server
-      if ((item!=null) && (typeof item == "string")) item = this.Find(item);
-      var top = this.GetTopOnlineItem(item);
-      if (item==null) return null;
+      if (typeof item == "string") item = this.Find(item);
 
-      var urlpath = this.itemFullName(item, top);
-      if (top && ('_online' in top) && (top._online!="")) urlpath = top._online + urlpath;
-      return urlpath;
+      return item ? this.itemFullName(item, 'onlineurl') : null;
    }
 
    JSROOT.HierarchyPainter.prototype.GetOnlineItem = function(item, itemname, callback, option) {
@@ -9136,17 +9796,18 @@
 
    JSROOT.HierarchyPainter.prototype.FillOnlineMenu = function(menu, onlineprop, itemname) {
 
-      var painter = this;
+      var painter = this,
+          node = this.Find(itemname),
+          sett = JSROOT.getDrawSettings(node._kind, 'nosame;noinspect'),
+          handle = JSROOT.getDrawHandle(node._kind),
+          root_type = ('_kind' in node) ? node._kind.indexOf("ROOT.") == 0 : false;
 
-      var node = this.Find(itemname);
-      var opts = JSROOT.getDrawOptions(node._kind, 'nosame');
-      var handle = JSROOT.getDrawHandle(node._kind);
-      var root_type = ('_kind' in node) ? node._kind.indexOf("ROOT.") == 0 : false;
+      if (sett.opts) {
+         sett.opts.push('inspect');
+         menu.addDrawMenu("Draw", sett.opts, function(arg) { painter.display(itemname, arg); });
+      }
 
-      if (opts != null)
-         menu.addDrawMenu("Draw", opts, function(arg) { painter.display(itemname, arg); });
-
-      if ((node['_childs'] == null) && (node['_more'] || root_type))
+      if (!node._childs && (node._more || root_type || sett.expand))
          menu.add("Expand", function() { painter.expand(itemname); });
 
       if (handle && ('execute' in handle))
@@ -9159,11 +9820,11 @@
          separ = "&";
       }
 
-      if (opts != null)
-         menu.addDrawMenu("Draw in new window", opts, function(arg) { window.open(drawurl+separ+"opt=" +arg); });
+      if (sett.opts)
+         menu.addDrawMenu("Draw in new window", sett.opts, function(arg) { window.open(drawurl+separ+"opt=" +arg); });
 
-      if ((opts!=null) && (opts.length > 0) && root_type)
-         menu.addDrawMenu("Draw as png", opts, function(arg) {
+      if (sett.opts && (sett.opts.length > 0) && root_type)
+         menu.addDrawMenu("Draw as png", sett.opts, function(arg) {
             window.open(onlineprop.server + onlineprop.itemname + "/root.png?w=400&h=300&opt=" + arg);
          });
 
@@ -9176,16 +9837,28 @@
       this.RefreshHtml();
    }
 
-   JSROOT.HierarchyPainter.prototype.SetMonitoring = function(val) {
-      this._monitoring_on = false;
-      this._monitoring_interval = 3000;
+   JSROOT.HierarchyPainter.prototype.SetMonitoring = function(interval, flag) {
 
-      val = (val === undefined) ? 0 : parseInt(val);
+      if (interval!==undefined) {
+         this._monitoring_on = false;
+         this._monitoring_interval = 3000;
 
-      if (!isNaN(val) && (val>0)) {
-         this._monitoring_on = true;
-         this._monitoring_interval = Math.max(100,val);
+         interval = !interval ? 0 : parseInt(interval);
+
+         if (!isNaN(interval) && (interval>0)) {
+            this._monitoring_on = true;
+            this._monitoring_interval = Math.max(100,interval);
+         }
       }
+
+      if (flag !== undefined)
+         this._monitoring_on = flag;
+
+      // first clear old handle
+      if (this._monitoring_handle) clearInterval(this._monitoring_handle);
+
+      // now set new interval (if necessary)
+      this._monitoring_handle = setInterval(this.updateAll.bind(this, "monitoring"),  this._monitoring_interval);
    }
 
    JSROOT.HierarchyPainter.prototype.MonitoringInterval = function(val) {
@@ -9222,14 +9895,25 @@
          delete this.disp;
       }
 
+      var plainarr = [];
+
       this.ForEach(function(item) {
          delete item._painter; // remove reference on the painter
          // when only display cleared, try to clear all browser items
          if (!withbrowser && (typeof item.clear=='function')) item.clear();
+         if (withbrowser) plainarr.push(item);
       });
 
       if (withbrowser) {
+
+         if (this._monitoring_handle) {
+            clearInterval(this._monitoring_handle);
+            delete this._monitoring_handle;
+         }
+
+         // simplify work for javascript and delete all (ok, most of) cross-references
          this.select_main().html("");
+         plainarr.forEach(function(iii) { delete iii._parent; delete iii._childs; delete iii._obj; });
          delete this.h;
       }
    }
@@ -9238,35 +9922,53 @@
       return ('disp' in this) ? this.disp : null;
    }
 
+   JSROOT.HierarchyPainter.prototype.CleanupFrame = function(divid) {
+      // hook to perform extra actions when frame is cleaned
+
+      var lst = JSROOT.cleanup(divid);
+
+      // we remove all painters references from items
+      if (lst && (lst.length>0))
+         this.ForEach(function(item) {
+            if (item._painter && lst.indexOf(item._painter)>0) delete item._painter;
+         });
+   }
+
    JSROOT.HierarchyPainter.prototype.CreateDisplay = function(callback) {
 
-      var h = this;
-
       if ('disp' in this) {
-         if ((h.disp.NumDraw() > 0) || (h.disp_kind == "custom")) return JSROOT.CallBack(callback, h.disp);
-         h.disp.Reset();
-         delete h.disp;
+         if ((this.disp.NumDraw() > 0) || (this.disp_kind == "custom")) return JSROOT.CallBack(callback, this.disp);
+         this.disp.Reset();
+         delete this.disp;
       }
 
       // check that we can found frame where drawing should be done
       if (document.getElementById(this.disp_frameid) == null)
          return JSROOT.CallBack(callback, null);
 
-      if (h.disp_kind == "simple")
-         h.disp = new JSROOT.SimpleDisplay(h.disp_frameid);
+      if (this.disp_kind == "simple")
+         this.disp = new JSROOT.SimpleDisplay(this.disp_frameid);
       else
-      if (h.disp_kind.search("grid") == 0)
-         h.disp = new JSROOT.GridDisplay(h.disp_frameid, h.disp_kind);
+      if (this.disp_kind.search("grid") == 0)
+         this.disp = new JSROOT.GridDisplay(this.disp_frameid, this.disp_kind);
       else
-         return JSROOT.AssertPrerequisites('jq2d', function() { h.CreateDisplay(callback); });
+         return JSROOT.AssertPrerequisites('jq2d', this.CreateDisplay.bind(this,callback));
 
-      JSROOT.CallBack(callback, h.disp);
+      if (this.disp)
+         this.disp.CleanupFrame = this.CleanupFrame.bind(this);
+
+      JSROOT.CallBack(callback, this.disp);
    }
 
    JSROOT.HierarchyPainter.prototype.updateOnOtherFrames = function(painter, obj) {
       // function should update object drawings for other painters
       var mdi = this.disp;
       if (mdi==null) return false;
+
+      var handle = null;
+      if (obj._typename) handle = JSROOT.getDrawHandle("ROOT." + obj._typename);
+      if (handle && handle.draw_field && obj[handle.draw_field])
+         obj = obj[handle.draw_field];
 
       var isany = false;
       mdi.ForEachPainter(function(p, frame) {
@@ -9320,8 +10022,6 @@
 
       if (JSROOT.GetUrlOption('files_monitoring')!=null) this.files_monitoring = true;
 
-      this.SetMonitoring(monitor);
-
       function OpenAllFiles() {
          if (jsonarr.length>0)
             hpainter.OpenJsonFile(jsonarr.shift(), OpenAllFiles);
@@ -9335,9 +10035,7 @@
 
                JSROOT.RegisterForResize(hpainter);
 
-               // assign regular update only when monitoring specified (or when work with online application)
-               if (h0 || hpainter.GetTopOnlineItem() || hpainter.IsMonitoring())
-                  setInterval(function() { hpainter.updateAll(!hpainter.IsMonitoring()); }, hpainter.MonitoringInterval());
+               hpainter.SetMonitoring(monitor);
 
                JSROOT.CallBack(call_back);
            });
@@ -9345,21 +10043,19 @@
 
       function AfterOnlineOpened() {
          // check if server enables monitoring
-         if (('_monitoring' in hpainter.h) && (monitor==null)) {
-            hpainter.SetMonitoring(hpainter.h._monitoring);
-         }
 
-         if (('_layout' in hpainter.h) && (layout==null)) {
+         if (('_monitoring' in hpainter.h) && !monitor)
+            monitor = hpainter.h._monitoring;
+
+         if (('_layout' in hpainter.h) && (layout==null))
             hpainter.disp_kind = hpainter.h._layout;
-         }
 
-         if (('_loadfile' in hpainter.h) && (filesarr.length==0)) {
+         if (('_loadfile' in hpainter.h) && (filesarr.length==0))
             filesarr = JSROOT.ParseAsArray(hpainter.h._loadfile);
-         }
 
          if (('_drawitem' in hpainter.h) && (itemsarr.length==0)) {
             itemsarr = JSROOT.ParseAsArray(hpainter.h._drawitem);
-            optionsarr = JSROOT.ParseAsArray(hpainter.h['_drawopt']);
+            optionsarr = JSROOT.ParseAsArray(hpainter.h._drawopt);
          }
 
          OpenAllFiles();
@@ -9370,8 +10066,8 @@
    }
 
    JSROOT.BuildNobrowserGUI = function() {
-      var myDiv = d3.select('#simpleGUI');
-      var online = false, drawing = false;
+      var myDiv = d3.select('#simpleGUI'),
+          online = false, drawing = false;
 
       if (myDiv.empty()) {
          online = true;
@@ -9442,7 +10138,13 @@
          for ( var l = 0; l < entry.fElements.arr.length; ++l) {
             var elem = entry.fElements.arr[l];
             if ((elem == null) || (typeof (elem.fName) == 'undefined')) continue;
-            var info = elem.fTypeName + " " + elem.fName + ";";
+            var info = elem.fTypeName + " " + elem.fName;
+            if (elem.fArrayDim===1)
+               info += "[" + elem.fArrayLength + "]";
+            else
+               for (var dim=0;dim<elem.fArrayDim;++dim)
+                  info+="[" + element.fMaxIndex[dim] + "]";
+            info += ";";
             if (elem.fTitle != '') info += " // " + elem.fTitle;
             item._childs.push({ _name : info, _title: elem.fTypeName, _kind:elem.fTypeName, _icon: (elem.fTypeName == 'BASE') ? "img_class" : "img_member" });
          }
@@ -9460,6 +10162,9 @@
    }
 
    JSROOT.Painter.drawInspector = function(divid, obj) {
+
+      JSROOT.cleanup(divid);
+
       var painter = new JSROOT.HierarchyPainter('inspector', divid, 'white');
       painter.default_by_click = "expand"; // that painter tries to do by default
       painter.with_icons = false;
@@ -9485,6 +10190,13 @@
    JSROOT.MDIDisplay = function(frameid) {
       this.frameid = frameid;
       d3.select("#"+this.frameid).property('mdi', this);
+      this.CleanupFrame = JSROOT.cleanup; // use standard cleanup function by default
+      this.active_frame_title = ""; // keep title of active frame
+   }
+
+   JSROOT.MDIDisplay.prototype.BeforeCreateFrame = function(title) {
+
+      this.active_frame_title = title;
    }
 
    JSROOT.MDIDisplay.prototype.ForEachFrame = function(userfunc, only_visible) {
@@ -9500,7 +10212,7 @@
 
       this.ForEachFrame(function(frame) {
          var dummy = new JSROOT.TObjectPainter();
-         dummy.SetDivId(d3.select(frame).attr('id'), -1);
+         dummy.SetDivId(frame, -1);
          dummy.ForEachPainter(function(painter) { userfunc(painter, frame); });
       }, only_visible);
    }
@@ -9526,7 +10238,11 @@
    }
 
    JSROOT.MDIDisplay.prototype.ActivateFrame = function(frame) {
-      // do nothing by default
+      this.active_frame_title = d3.select(frame).attr('frame_title');
+   }
+
+   JSROOT.MDIDisplay.prototype.GetActiveFrame = function() {
+      return this.FindFrame(this.active_frame_title);
    }
 
    JSROOT.MDIDisplay.prototype.CheckMDIResize = function(only_frame_id, size) {
@@ -9548,9 +10264,9 @@
 
    JSROOT.MDIDisplay.prototype.Reset = function() {
 
-      this.ForEachFrame(function(frame) {
-         JSROOT.cleanup(frame);
-      });
+      this.active_frame_title = "";
+
+      this.ForEachFrame(this.CleanupFrame);
 
       d3.select("#"+this.frameid).html("").property('mdi', null);
    }
@@ -9594,6 +10310,9 @@
    }
 
    JSROOT.CustomDisplay.prototype.CreateFrame = function(title) {
+
+      this.BeforeCreateFrame(title);
+
       var ks = Object.keys(this.frames);
       for (var k = 0; k < ks.length; ++k) {
          var items = this.frames[ks[k]];
@@ -9624,9 +10343,16 @@
          JSROOT.CallBack(userfunc, node.node());
    }
 
+   JSROOT.SimpleDisplay.prototype.GetActiveFrame = function() {
+      var node = d3.select("#"+this.frameid + "_simple_display");
+      return node.empty() ? null : node.node();
+   }
+
    JSROOT.SimpleDisplay.prototype.CreateFrame = function(title) {
 
-      JSROOT.cleanup(this.frameid+"_simple_display");
+      this.BeforeCreateFrame(title);
+
+      this.CleanupFrame(this.frameid+"_simple_display");
 
       return d3.select("#"+this.frameid)
                .html("")
@@ -9701,6 +10427,8 @@
 
    JSROOT.GridDisplay.prototype.CreateFrame = function(title) {
 
+      this.BeforeCreateFrame(title);
+
       var main = d3.select("#" + this.frameid);
       if (main.empty()) return null;
 
@@ -9732,7 +10460,7 @@
          if (++this.cnt >= this.sizex * this.sizey) this.cnt = 0;
       }
 
-      JSROOT.cleanup(drawid);
+      this.CleanupFrame(drawid);
 
       return d3.select("#" + drawid).html("").attr('frame_title', title).node();
    }
@@ -9800,8 +10528,8 @@
       window.addEventListener('resize', ProcessResize);
    }
 
-   JSROOT.addDrawFunc({ name: "TCanvas", icon: "img_canvas", func: JSROOT.Painter.drawCanvas });
-   JSROOT.addDrawFunc({ name: "TPad", icon: "img_canvas", func: JSROOT.Painter.drawPad });
+   JSROOT.addDrawFunc({ name: "TCanvas", icon: "img_canvas", func: JSROOT.Painter.drawCanvas, expand_item: "fPrimitives" });
+   JSROOT.addDrawFunc({ name: "TPad", icon: "img_canvas", func: JSROOT.Painter.drawPad, expand_item: "fPrimitives" });
    JSROOT.addDrawFunc({ name: "TSlider", icon: "img_canvas", func: JSROOT.Painter.drawPad });
    JSROOT.addDrawFunc({ name: "TFrame", icon: "img_frame", func: JSROOT.Painter.drawFrame });
    JSROOT.addDrawFunc({ name: "TPaveText", icon: "img_pavetext", func: JSROOT.Painter.drawPaveText });
@@ -9810,19 +10538,20 @@
    JSROOT.addDrawFunc({ name: "TLatex", icon:"img_text", func: JSROOT.Painter.drawText });
    JSROOT.addDrawFunc({ name: "TMathText", icon:"img_text", func: JSROOT.Painter.drawText });
    JSROOT.addDrawFunc({ name: "TText", icon:"img_text", func: JSROOT.Painter.drawText });
-   JSROOT.addDrawFunc({ name: /^TH1/, icon: "img_histo1d", func: JSROOT.Painter.drawHistogram1D, opt:";hist;P;P0;E;E1;E2;same"});
+   JSROOT.addDrawFunc({ name: /^TH1/, icon: "img_histo1d", func: JSROOT.Painter.drawHistogram1D, opt:";hist;P;P0;E;E1;E2;LEGO;same"});
    JSROOT.addDrawFunc({ name: "TProfile", icon: "img_profile", func: JSROOT.Painter.drawHistogram1D, opt:";E0;E1;E2;p;hist"});
-   JSROOT.addDrawFunc({ name: "TH2Poly", icon: "img_histo2d" }); // not yet supported
-   JSROOT.addDrawFunc({ name: /^TH2/, icon: "img_histo2d", prereq: "more2d", func: "JSROOT.Painter.drawHistogram2D", opt:";COL;COLZ;COL0Z;BOX;SCAT;TEXT;LEGO;LEGO0;LEGO1;LEGO2;LEGO3;LEGO4;same" });
+   JSROOT.addDrawFunc({ name: "TH2Poly", icon: "img_histo2d", prereq: "more2d", func: "JSROOT.Painter.drawHistogram2D", opt:";COL;COLZ;LCOL;LEGO;same", expand_item: "fBins", theonly: true });
+   JSROOT.addDrawFunc({ name: "TH2PolyBin", icon: "img_histo2d", draw_field: "fPoly" });
+   JSROOT.addDrawFunc({ name: /^TH2/, icon: "img_histo2d", prereq: "more2d", func: "JSROOT.Painter.drawHistogram2D", opt:";COL;COLZ;COL0Z;BOX;SCAT;TEXT;CONT;CONT1;CONT2;CONT3;CONT4;ARR;SURF;SURF1;SURF2;SURF4;SURF6;LEGO;LEGO0;LEGO1;LEGO2;LEGO3;LEGO4;same" });
    JSROOT.addDrawFunc({ name: /^TH3/, icon: 'img_histo3d', prereq: "3d", func: "JSROOT.Painter.drawHistogram3D" });
-   JSROOT.addDrawFunc({ name: "THStack", prereq: "more2d", func: "JSROOT.Painter.drawHStack" });
+   JSROOT.addDrawFunc({ name: "THStack", icon: "img_histo1d", prereq: "more2d", func: "JSROOT.Painter.drawHStack", expand_item: "fHists" });
    JSROOT.addDrawFunc({ name: "TPolyMarker3D", icon: 'img_histo3d', prereq: "3d", func: "JSROOT.Painter.drawPolyMarker3D" });
    JSROOT.addDrawFunc({ name: "TGraphPolargram" }); // just dummy entry to avoid drawing of this object
    JSROOT.addDrawFunc({ name: /^TGraph/, icon:"img_graph", prereq: "more2d", func: "JSROOT.Painter.drawGraph", opt:";L;P"});
    JSROOT.addDrawFunc({ name: "TCutG", icon:"img_graph", prereq: "more2d", func: "JSROOT.Painter.drawGraph", opt:";L;P"});
    JSROOT.addDrawFunc({ name: /^RooHist/, icon:"img_graph", prereq: "more2d", func: "JSROOT.Painter.drawGraph", opt:";L;P" });
    JSROOT.addDrawFunc({ name: /^RooCurve/, icon:"img_graph", prereq: "more2d", func: "JSROOT.Painter.drawGraph", opt:";L;P" });
-   JSROOT.addDrawFunc({ name: "TMultiGraph", icon:"img_mgraph", prereq: "more2d", func: "JSROOT.Painter.drawMultiGraph" });
+   JSROOT.addDrawFunc({ name: "TMultiGraph", icon:"img_mgraph", prereq: "more2d", func: "JSROOT.Painter.drawMultiGraph", expand_item: "fGraphs" });
    JSROOT.addDrawFunc({ name: "TStreamerInfoList", icon:'img_question', func: JSROOT.Painter.drawStreamerInfo });
    JSROOT.addDrawFunc({ name: "TPaletteAxis", icon: "img_colz", prereq: "more2d", func: "JSROOT.Painter.drawPaletteAxis" });
    JSROOT.addDrawFunc({ name: "kind:Text", icon:"img_text", func: JSROOT.Painter.drawRawText });
@@ -9830,23 +10559,24 @@
    JSROOT.addDrawFunc({ name: "TEllipse", icon: 'img_graph', prereq: "more2d", func: "JSROOT.Painter.drawEllipse" });
    JSROOT.addDrawFunc({ name: "TLine", icon: 'img_graph', prereq: "more2d", func: "JSROOT.Painter.drawLine" });
    JSROOT.addDrawFunc({ name: "TArrow", icon: 'img_graph', prereq: "more2d", func: "JSROOT.Painter.drawArrow" });
+   JSROOT.addDrawFunc({ name: "TPolyLine", icon: 'img_graph', prereq: "more2d", func: "JSROOT.Painter.drawPolyLine" });
    JSROOT.addDrawFunc({ name: "TGaxis", icon: "img_graph", func: JSROOT.drawGaxis });
    JSROOT.addDrawFunc({ name: "TLegend", icon: "img_pavelabel", prereq: "more2d", func: "JSROOT.Painter.drawLegend" });
    JSROOT.addDrawFunc({ name: "TBox", icon: 'img_graph', prereq: "more2d", func: "JSROOT.Painter.drawBox" });
    JSROOT.addDrawFunc({ name: "TWbox", icon: 'img_graph', prereq: "more2d", func: "JSROOT.Painter.drawBox" });
    JSROOT.addDrawFunc({ name: "TSliderBox", icon: 'img_graph', prereq: "more2d", func: "JSROOT.Painter.drawBox" });
-   JSROOT.addDrawFunc({ name: "TGeoVolume", icon: 'img_histo3d', prereq: "geom", func: "JSROOT.Painter.drawGeoObject", expand: "JSROOT.GEO.expandObject", opt:";more;all;count" });
-   JSROOT.addDrawFunc({ name: "TEveGeoShapeExtract", icon: 'img_histo3d', prereq: "geom", func: "JSROOT.Painter.drawGeoObject", expand: "JSROOT.GEO.expandObject", opt: ";more;all;count"  });
-   JSROOT.addDrawFunc({ name: "TGeoManager", icon: 'img_histo3d', prereq: "geom", expand: "JSROOT.GEO.expandObject", func: "JSROOT.Painter.drawGeoObject", opt: ";more;all;count", dflt: "expand" });
-   JSROOT.addDrawFunc({ name: /^TGeo/, icon: 'img_histo3d', prereq: "geom", func: "JSROOT.Painter.drawGeoObject", opt: ";more;all;axis;compa;count" });
+   JSROOT.addDrawFunc({ name: "TGeoVolume", icon: 'img_histo3d', prereq: "geom", func: "JSROOT.Painter.drawGeoObject", expand: "JSROOT.GEO.expandObject", opt:";more;all;count;dflt_colors" });
+   JSROOT.addDrawFunc({ name: "TEveGeoShapeExtract", icon: 'img_histo3d', prereq: "geom", func: "JSROOT.Painter.drawGeoObject", expand: "JSROOT.GEO.expandObject", opt: ";more;all;count;dflt_colors"  });
+   JSROOT.addDrawFunc({ name: "TGeoManager", icon: 'img_histo3d', prereq: "geom", expand: "JSROOT.GEO.expandObject", func: "JSROOT.Painter.drawGeoObject", opt: ";more;all;count;dflt_colors", dflt: "expand" });
+   JSROOT.addDrawFunc({ name: /^TGeo/, icon: 'img_histo3d', prereq: "geom", func: "JSROOT.Painter.drawGeoObject", opt: ";more;all;axis;compa;count;dflt_colors" });
    // these are not draw functions, but provide extra info about correspondent classes
    JSROOT.addDrawFunc({ name: "kind:Command", icon: "img_execute", execute: true });
    JSROOT.addDrawFunc({ name: "TFolder", icon: "img_folder", icon2: "img_folderopen", noinspect: true, expand: JSROOT.Painter.FolderHierarchy });
    JSROOT.addDrawFunc({ name: "TTask", icon: "img_task", expand: JSROOT.Painter.TaskHierarchy, for_derived: true });
    JSROOT.addDrawFunc({ name: "TTree", icon: "img_tree", noinspect:true, expand: JSROOT.Painter.TreeHierarchy });
    JSROOT.addDrawFunc({ name: "TNtuple", icon: "img_tree", noinspect:true, expand: JSROOT.Painter.TreeHierarchy });
-   JSROOT.addDrawFunc({ name: "TBranch", icon: "img_branch", noinspect:true });
-   JSROOT.addDrawFunc({ name: /^TLeaf/, icon: "img_leaf", noinspect:true });
+   JSROOT.addDrawFunc({ name: /^TBranch/, icon: "img_branch" });
+   JSROOT.addDrawFunc({ name: /^TLeaf/, icon: "img_leaf", noinspect:true, noexpand:true });
    JSROOT.addDrawFunc({ name: "TList", icon: "img_list", noinspect:true, expand: JSROOT.Painter.ListHierarchy });
    JSROOT.addDrawFunc({ name: "TObjArray", icon: "img_list", noinspect:true, expand: JSROOT.Painter.ListHierarchy });
    JSROOT.addDrawFunc({ name: "TClonesArray", icon: "img_list", noinspect:true, expand: JSROOT.Painter.ListHierarchy });
@@ -9893,7 +10623,7 @@
             // if drawoption specified, check it present in the list
 
             if (selector == "::expand") {
-               if ('expand' in h) return h;
+               if (('expand' in h) || ('expand_item' in h)) return h;
             } else
             if ('opt' in h) {
                var opts = h.opt.split(';');
@@ -9954,40 +10684,56 @@
       }
    }
 
-   // returns array with supported draw options for the specified class
-   JSROOT.getDrawOptions = function(kind, selector) {
-      if (typeof kind != 'string') return null;
-      var allopts = null, isany = false, noinspect = false;
+   JSROOT.getDrawSettings = function(kind, selector) {
+      var res = { opts: null, inspect: false, expand: false, draw: false, handle: null };
+      if (typeof kind != 'string') return res;
+      var allopts = null, isany = false, noinspect = false, canexpand = false;
+      if (typeof selector !== 'string') selector = "";
+
       for (var cnt=0;cnt<1000;++cnt) {
          var h = JSROOT.getDrawHandle(kind, cnt);
-         if (h==null) break;
+         if (!h) break;
+         if (!res.handle) res.handle = h;
          if (h.noinspect) noinspect = true;
+         if (h.expand || h.expand_item || h.can_expand) canexpand = true;
          if (!('func' in h)) break;
          isany = true;
          if (! ('opt' in h)) continue;
          var opts = h.opt.split(';');
          for (var i = 0; i < opts.length; ++i) {
             opts[i] = opts[i].toLowerCase();
-            if ((selector=='nosame') && (opts[i].indexOf('same')==0)) continue;
+            if ((selector.indexOf('nosame')>=0) && (opts[i].indexOf('same')==0)) continue;
 
-            if (allopts===null) allopts = [];
-            if (allopts.indexOf(opts[i])<0) allopts.push(opts[i]);
+            if (res.opts===null) res.opts = [];
+            if (res.opts.indexOf(opts[i])<0) res.opts.push(opts[i]);
          }
+         if (h.theonly) break;
       }
 
-      if (isany && (allopts===null)) allopts = [""];
+      if (selector.indexOf('noinspect')>=0) noinspect = true;
+
+      if (isany && (res.opts===null)) res.opts = [""];
 
       // if no any handle found, let inspect ROOT-based objects
-      if (!isany && kind.indexOf("ROOT.")==0) allopts = [];
+      if (!isany && (kind.indexOf("ROOT.")==0) && !noinspect) res.opts = [];
 
-      if (!noinspect && allopts)
-         allopts.push("inspect");
+      if (!noinspect && res.opts)
+         res.opts.push("inspect");
 
-      return allopts;
+      res.inspect = !noinspect;
+      res.expand = canexpand;
+      res.draw = res.opts && (res.opts.length>0);
+
+      return res;
+   }
+
+   // returns array with supported draw options for the specified class
+   JSROOT.getDrawOptions = function(kind, selector) {
+      return JSROOT.getDrawSettings(kind).opts;
    }
 
    JSROOT.canDraw = function(classname) {
-      return JSROOT.getDrawOptions("ROOT." + classname) !== null;
+      return JSROOT.getDrawSettings("ROOT." + classname).opts !== null;
    }
 
    /** @fn JSROOT.draw(divid, obj, opt)
@@ -10003,7 +10749,12 @@
       if ('_typename' in obj) handle = JSROOT.getDrawHandle("ROOT." + obj._typename, opt);
       else if ('_kind' in obj) handle = JSROOT.getDrawHandle(obj._kind, opt);
 
-      if ((handle==null) || !('func' in handle)) return null;
+      if (!handle) return null;
+
+      if (handle.draw_field && obj[handle.draw_field])
+         return JSROOT.draw(divid, obj[handle.draw_field], opt);
+
+      if (!handle.func) return null;
 
       function performDraw() {
          if ((painter===null) && ('painter_kind' in handle))
@@ -10069,13 +10820,18 @@
     * If drawing was already done, that content will be updated */
 
    JSROOT.redraw = function(divid, obj, opt) {
-      if (obj==null) return;
+      if (!obj) return;
 
       var dummy = new JSROOT.TObjectPainter();
       dummy.SetDivId(divid, -1);
       var can_painter = dummy.pad_painter();
 
-      if (can_painter !== null) {
+      var handle = null;
+      if (obj._typename) handle = JSROOT.getDrawHandle("ROOT." + obj._typename);
+      if (handle && handle.draw_field && obj[handle.draw_field])
+         obj = obj[handle.draw_field];
+
+      if (can_painter) {
          if (obj._typename === "TCanvas") {
             can_painter.RedrawObject(obj);
             return can_painter;
@@ -10115,6 +10871,7 @@
          if (!done && typeof painter.CheckResize == 'function')
             done = painter.CheckResize(arg);
       });
+      return done;
    }
 
    // for compatibility, keep old name
@@ -10122,13 +10879,14 @@
 
    // safely remove all JSROOT objects from specified element
    JSROOT.cleanup = function(divid) {
-      var dummy = new JSROOT.TObjectPainter();
+      var dummy = new JSROOT.TObjectPainter(), lst = [];
       dummy.SetDivId(divid, -1);
       dummy.ForEachPainter(function(painter) {
-         if (typeof painter.Cleanup === 'function')
-            painter.Cleanup();
+         if (lst.indexOf(painter) < 0) lst.push(painter);
       });
+      for (var n=0;n<lst.length;++n) lst[n].Cleanup();
       dummy.select_main().html("");
+      return lst;
    }
 
    // function to display progress message in the left bottom corner
@@ -10150,7 +10908,12 @@
          box.append("p");
       }
 
-      box.select("p").html(msg);
+      if (typeof msg === "string")
+         box.select("p").html(msg);
+      else {
+         box.html("");
+         box.node().appendChild(msg);
+      }
    }
 
    return JSROOT;
