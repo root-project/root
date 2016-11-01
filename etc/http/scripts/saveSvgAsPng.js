@@ -114,9 +114,15 @@
         height = options.height || getDimension(el, clone, 'height');
       } else if(el.getBBox) {
         var box = el.getBBox();
-        width = box.x + box.width;
-        height = box.y + box.height;
-        clone.setAttribute('transform', clone.getAttribute('transform').replace(/translate\(.*?\)/, ''));
+
+        // SL - use other coordinates if single element is cloned
+        width = box.width;
+        height = box.height;
+        clone.setAttribute('transform','translate(' + (-box.x) + "," + (-box.y)  + ')');
+
+        //width = box.x + box.width;
+        //height = box.y + box.height;
+        //clone.setAttribute('transform', clone.getAttribute('transform').replace(/translate\(.*?\)/, ''));
 
         var svg = document.createElementNS('http://www.w3.org/2000/svg','svg')
         svg.appendChild(clone)
