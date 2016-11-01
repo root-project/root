@@ -9,6 +9,8 @@
 //( need to be declared as extern template in the .h file)
 namespace ROOT {
    namespace Math {
+      template class MixMaxEngine<256,0>;
       template class MixMaxEngine<256,2>;
+      template class MixMaxEngine<256,4>;
    }
 }

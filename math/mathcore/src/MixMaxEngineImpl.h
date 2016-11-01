@@ -18,19 +18,14 @@ namespace mixmax_256 {
 namespace { 
 #endif
 
-#if (_N==256)
-#include "mixmax_oldS.icc"
-  
-#else
-
 #include "mixmax.icc"
-   
-#endif
+
 #undef N
 }
 
 #include "Math/MixMaxEngine.h"
 
+#include <iostream>
 
 #if (_N==17)
 using namespace mixmax_17;
@@ -42,7 +37,28 @@ using namespace mixmax_256;
 
 
 namespace ROOT {
-   namespace Math { 
+   namespace Math {
+
+
+
+         // dummy implementation
+   template<int N>
+   class MixMaxEngineImpl {
+   public: 
+      MixMaxEngineImpl(uint64_t) {
+         std::cerr << "MixMaxEngineImpl - These template parameters are not supported for MixMaxEngine" << std::endl;
+      }
+      ~MixMaxEngineImpl() {}
+      void SetSeed(uint64_t) { }
+      double Rndm() { return -1; }
+      double IntRndm() { return 0; }
+      void SetState(const std::vector<uint64_t> &) { }
+      void GetState(std::vector<uint64_t> &) { }
+      int Counter() { return -1; }
+      void SetCounter(int) {}
+      void Iterate() {} 
+   };
+
 
 template<> 
 class MixMaxEngineImpl<_N> {
@@ -50,7 +66,7 @@ class MixMaxEngineImpl<_N> {
 public:
 
    typedef MixMaxEngine<_N,0>::StateInt_t StateInt_t; 
-   typedef MixMaxEngine<_N,0>::result_t result_t; 
+   typedef MixMaxEngine<_N,0>::Result_t Result_t;
    
    MixMaxEngineImpl(uint64_t seed) {
       fRngState = rng_alloc();
@@ -59,10 +75,10 @@ public:
    ~MixMaxEngineImpl() {
       rng_free(fRngState);
    }
-   void SetSeedFast(result_t seed) {
+   void SetSeedFast(Result_t seed) {
       seed_spbox(fRngState, seed);
    }
-   void SetSeed(result_t seed) { 
+   void SetSeed(Result_t seed) {
       //seed_spbox(fRngState, seed);
       seed_uniquestream(fRngState, 0, 0, (uint32_t)(seed>>32), (uint32_t)seed );
    }
@@ -70,7 +86,7 @@ public:
        return get_next_float(fRngState);
    }
    // generate one integer number 
-   result_t IntRndm() { 
+   Result_t IntRndm() {
       return get_next(fRngState);
    }
    void SetState(const std::vector<StateInt_t> & state) {

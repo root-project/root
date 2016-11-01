@@ -9,6 +9,7 @@
 #include "RootWrapper.h"
 #include "TFunctionHolder.h"
 #include "TemplateProxy.h"
+#include "PyStrings.h"
 
 // ROOT
 #include "TClass.h"     // for method and enum finding
@@ -98,9 +99,11 @@ namespace {
          // are available as "methods" even though they're not really that
             if ( ! attr && ! PyRootType_CheckExact( pyclass ) && PyType_Check( pyclass ) ) {
                PyErr_Clear();
-
-               Cppyy::TCppScope_t scope = Cppyy::GetScope( ((PyTypeObject*)pyclass)->tp_name );
-               TClass* klass = TClass::GetClass( ((PyTypeObject*)pyclass)->tp_name );
+               PyObject* pycppname = PyObject_GetAttr( pyclass, PyStrings::gCppName );
+               char* cppname = PyROOT_PyUnicode_AsString(pycppname);
+               Py_DECREF(pycppname);
+               Cppyy::TCppScope_t scope = Cppyy::GetScope( cppname );
+               TClass* klass = TClass::GetClass( cppname );
                if ( Cppyy::IsNamespace( scope ) ) {
 
                // tickle lazy lookup of functions

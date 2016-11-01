@@ -714,6 +714,7 @@ endmacro()
 #                        [OUTPUT outfile] [ERROR errfile] [INPUT infile]
 #                        [ENVIRONMENT var1=val1 var2=val2 ...
 #                        [DEPENDS test1 ...]
+#                        [RUN_SERIAL]
 #                        [TIMEOUT seconds]
 #                        [DEBUG]
 #                        [SOURCE_DIR dir] [BINARY_DIR dir]
@@ -723,7 +724,7 @@ endmacro()
 #                        [PASSRC code])
 #
 function(ROOT_ADD_TEST test)
-  CMAKE_PARSE_ARGUMENTS(ARG "DEBUG;WILLFAIL;CHECKOUT;CHECKERR"
+  CMAKE_PARSE_ARGUMENTS(ARG "DEBUG;WILLFAIL;CHECKOUT;CHECKERR;RUN_SERIAL"
                             "TIMEOUT;BUILD;INPUT;OUTPUT;ERROR;SOURCE_DIR;BINARY_DIR;WORKING_DIR;PROJECT;PASSRC"
                              "COMMAND;COPY_TO_BUILDDIR;DIFFCMD;OUTCNV;OUTCNVCMD;PRECMD;POSTCMD;ENVIRONMENT;COMPILEMACROS;DEPENDS;PASSREGEX;OUTREF;ERRREF;FAILREGEX;LABELS"
                             ${ARGN})
@@ -910,6 +911,10 @@ function(ROOT_ADD_TEST test)
     set_tests_properties(${test} PROPERTIES LABELS "${ARG_LABELS}")
   endif()
 
+  if(ARG_RUN_SERIAL)
+    set_property(TEST ${test} PROPERTY RUN_SERIAL true)
+  endif()
+
 endfunction()
 
 #----------------------------------------------------------------------------
@@ -936,7 +941,7 @@ endmacro()
 #----------------------------------------------------------------------------
 function(ROOT_ADD_CXX_FLAG var flag)
   string(REGEX REPLACE "[-.+/:= ]" "_" flag_esc "${flag}")
-  CHECK_CXX_COMPILER_FLAG("${flag}" CXX_HAS${flag_esc})
+  CHECK_CXX_COMPILER_FLAG("-Werror ${flag}" CXX_HAS${flag_esc})
   if(CXX_HAS${flag_esc})
     set(${var} "${${var}} ${flag}" PARENT_SCOPE)
   endif()
@@ -946,34 +951,44 @@ endfunction()
 #----------------------------------------------------------------------------
 function(ROOT_ADD_C_FLAG var flag)
   string(REGEX REPLACE "[-.+/:= ]" "_" flag_esc "${flag}")
-  CHECK_C_COMPILER_FLAG("${flag}" C_HAS${flag_esc})
+  CHECK_C_COMPILER_FLAG("-Werror ${flag}" C_HAS${flag_esc})
   if(C_HAS${flag_esc})
     set(${var} "${${var}} ${flag}" PARENT_SCOPE)
   endif()
 endfunction()
 
 #----------------------------------------------------------------------------
-# find_python_module(module [REQUIRED])
+# find_python_module(module [REQUIRED] [QUIET])
 #----------------------------------------------------------------------------
 function(find_python_module module)
-  string(TOUPPER ${module} module_upper)
-  if(NOT PY_${module_upper})
-    if(ARGC GREATER 1 AND ARGV1 STREQUAL "REQUIRED")
-      set(${module}_FIND_REQUIRED TRUE)
-    endif()
-    # A module's location is usually a directory, but for binary modules
-    # it's a .so file.
-    execute_process(COMMAND "${PYTHON_EXECUTABLE}" "-c"
-      "import re, ${module}; print re.compile('/__init__.py.*').sub('',${module}.__file__)"
-      RESULT_VARIABLE _${module}_status
-      OUTPUT_VARIABLE _${module}_location
-      ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
-    if(NOT _${module}_status)
-      set(PY_${module_upper} ${_${module}_location} CACHE STRING  "Location of Python module ${module}")
-    endif()
-  endif()
-  find_package_handle_standard_args(PY_${module} DEFAULT_MSG PY_${module_upper})
-  set(PY_${module_upper}_FOUND ${PY_${module_upper}_FOUND} PARENT_SCOPE) 
+   CMAKE_PARSE_ARGUMENTS(ARG "REQUIRED;QUIET" "" "" ${ARGN})
+   string(TOUPPER ${module} module_upper)
+   if(NOT PY_${module_upper})
+      if(ARG_REQUIRED)
+         set(py_${module}_FIND_REQUIRED TRUE)
+      endif()
+      if(ARG_QUIET)
+         set(py_${module}_FIND_QUIETLY TRUE)
+      endif()
+      # A module's location is usually a directory, but for binary modules
+      # it's a .so file.
+      execute_process(COMMAND "${PYTHON_EXECUTABLE}" "-c"
+         "import re, ${module}; print(re.compile('/__init__.py.*').sub('',${module}.__file__))"
+         RESULT_VARIABLE _${module}_status
+         OUTPUT_VARIABLE _${module}_location
+         ERROR_VARIABLE _${module}_error
+         OUTPUT_STRIP_TRAILING_WHITESPACE
+         ERROR_STRIP_TRAILING_WHITESPACE)
+      if(NOT _${module}_status)
+         set(PY_${module_upper} ${_${module}_location} CACHE STRING "Location of Python module ${module}")
+      else()
+         if(NOT ARG_QUIET)
+            message(STATUS "Failed to find Python module ${module}: ${_${module}_error}")
+          endif()
+      endif()
+   endif()
+   find_package_handle_standard_args(py_${module} DEFAULT_MSG PY_${module_upper})
+   set(PY_${module_upper}_FOUND ${PY_${module_upper}_FOUND} PARENT_SCOPE)
 endfunction()
 
 

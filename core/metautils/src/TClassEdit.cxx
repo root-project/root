@@ -1857,7 +1857,7 @@ string TClassEdit::InsertStd(const char *tname)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// An helper class to dismaount the name and remount it changed whenever
+/// An helper class to dismount the name and remount it changed whenever
 /// necessary
 
 class NameCleanerForIO {
@@ -1865,11 +1865,17 @@ class NameCleanerForIO {
    std::vector<std::unique_ptr<NameCleanerForIO>> fArgumentNodes = {};
    NameCleanerForIO* fMother;
    bool fHasChanged = false;
-   bool IsMotherSTLContOrArray()
+   bool AreAncestorsSTLContOrArray()
    {
-      if (!fMother) return false;
-      auto stlType = TClassEdit::IsSTLCont(fMother->fName+"<>");
-      auto isSTLContOrArray = ROOT::kNotSTL != stlType || TClassEdit::IsStdArray(fMother->fName+"<");
+      NameCleanerForIO* mother = fMother;
+      if (!mother) return false;
+      bool isSTLContOrArray = true;
+      while (nullptr != mother){
+         auto stlType = TClassEdit::IsSTLCont(mother->fName+"<>");
+         isSTLContOrArray &= ROOT::kNotSTL != stlType || TClassEdit::IsStdArray(mother->fName+"<");
+         mother = mother->fMother;
+      }
+
       return isSTLContOrArray;
    }
 
@@ -1952,7 +1958,7 @@ public:
       }
 
       // Now we treat the case of the collections of unique ptrs
-      auto stlContType = IsMotherSTLContOrArray();
+      auto stlContType = AreAncestorsSTLContOrArray();
       if (stlContType != ROOT::kNotSTL && TClassEdit::IsUniquePtr(fName+"<")) {
          name = fArgumentNodes.front()->ToString();
          name += "*";

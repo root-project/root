@@ -159,7 +159,6 @@ void TGLContext::SetContext(TGLWidget *widget, const TGLContext *shareList)
    TGLContextPrivate::RegisterContext(this);
 
    dcGuard.Stop();
-   fPimpl.reset();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -262,8 +261,6 @@ void TGLContext::SetContext(TGLWidget *widget, const TGLContext *shareList)
    fValid = kTRUE;
    fDevice->AddContext(this);
    TGLContextPrivate::RegisterContext(this);
-
-   fPimpl.reset();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -356,8 +353,6 @@ void TGLContext::SetContext(TGLWidget *widget, const TGLContext *shareList)
    fValid = kTRUE;
    fDevice->AddContext(this);
    TGLContextPrivate::RegisterContext(this);
-
-   fPimpl.reset();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

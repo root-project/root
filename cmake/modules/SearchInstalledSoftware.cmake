@@ -807,16 +807,6 @@ if(shadowpw)
   endif()
 endif()
 
-#---Alien support----------------------------------------------------------------
-if(alien)
-  find_package(Alien)
-  if(NOT ALIEN_FOUND)
-    message(STATUS "Alien API not found. Set variable ALIEN_DIR to point to your Alien installation")
-    message(STATUS "For the time being switching OFF 'alien' option")
-    set(alien OFF CACHE BOOL "" FORCE)
-  endif()
-endif()
-
 #---Monalisa support----------------------------------------------------------------
 if(monalisa)
   find_package(Monalisa)
@@ -890,6 +880,25 @@ if(xrootd AND xrootd_versionnum VERSION_GREATER 300030005)
   set(netxng ON)
 else()
   set(netxng OFF)
+endif()
+
+#---Alien support----------------------------------------------------------------
+if(alien)
+  if(NOT xrootd)
+    message(FATAL_ERROR "The Alien plugin requires option 'xrootd' to be enabled. Re-run the configuration with 'xrootd=ON'")
+  endif()
+  find_package(Alien)
+  if(NOT ALIEN_FOUND)
+    if(fail-on-missing)
+      message(FATAL_ERROR "Alien API not found and is required. Set the variable ALIEN_DIR to point to your Alien installation,"
+                          "or include the installation of Alien in the CMAKE_PREFIX_PATH. ")
+    else()
+      message(STATUS "Alien API not found. Set variable ALIEN_DIR to point to your Alien installation,"
+                     "or include the installation of Alien in the CMAKE_PREFIX_PATH.")
+      message(STATUS "For the time being switching OFF 'alien' option")
+      set(alien OFF CACHE BOOL "" FORCE)
+    endif()
+  endif()
 endif()
 
 #---Check for cling and llvm --------------------------------------------------------

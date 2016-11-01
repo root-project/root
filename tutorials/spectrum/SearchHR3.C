@@ -22,7 +22,9 @@ void SearchHR3() {
    Double_t source[nbins], dest[nbins];
    gROOT->ForceStyle();
 
-   TFile *f   = new TFile("../../tutorials/spectrum/TSpectrum.root");
+   TString dir  = gROOT->GetTutorialsDir();
+   TString file = dir+"/spectrum/TSpectrum.root";
+   TFile *f     = new TFile(file.Data());
    TH1F *h = (TH1F*) f->Get("back2");
    h->SetTitle("Influence of # of iterations in deconvolution in peak searching");
    h->GetXaxis()->SetRange(1,nbins);

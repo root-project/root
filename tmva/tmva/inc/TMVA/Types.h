@@ -105,6 +105,7 @@ namespace TMVA {
          kPyRandomForest ,
          kPyAdaBoost     ,
          kPyGTB          ,
+         kPyKeras        ,
          kC50            ,
          kRSNNS          ,
          kRSVM           ,

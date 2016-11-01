@@ -32,6 +32,7 @@
 #include "volumes/UnplacedPolycone.h"
 #include "volumes/UnplacedScaledShape.h"
 #include "volumes/UnplacedGenTrap.h"
+#include "volumes/UnplacedSExtruVolume.h"
 #include "TError.h"
 #include "TGeoManager.h"
 #include "TGeoMaterial.h"
@@ -52,6 +53,7 @@
 #include "TGeoScaledShape.h"
 #include "TGeoTorus.h"
 #include "TGeoEltu.h"
+#include "TGeoXtru.h"
 
 //_____________________________________________________________________________
 TGeoVGShape::TGeoVGShape(TGeoShape *shape,  vecgeom::cxx::VPlacedVolume *vgshape)
@@ -290,6 +292,31 @@ vecgeom::cxx::VUnplacedVolume* TGeoVGShape::Convert(TGeoShape const *const shape
          verticesy[ivert] = vertices[2 * ivert + 1];
       }
       unplaced_volume = new UnplacedGenTrap(verticesx, verticesy, p->GetDz());
+   }
+
+   // THE SIMPLE XTRU
+   if (shape->IsA() == TGeoXtru::Class()) {
+      TGeoXtru *p = (TGeoXtru *)(shape);
+      // analyse convertability
+      if (p->GetNz() == 2) {
+         // add check on scaling and distortions
+         size_t Nvert = (size_t)p->GetNvert();
+         double *x    = new double[Nvert];
+         double *y    = new double[Nvert];
+         for (size_t i = 0; i < Nvert; ++i) {
+            x[i] = p->GetX(i);
+            y[i] = p->GetY(i);
+         }
+         // check in which orientation the polygon in given
+         if (PlanarPolygon::GetOrientation(x, y, Nvert) > 0.) {
+            // std::cerr << "Points not given in clockwise order ... reordering \n";
+            for (size_t i = 0; i < Nvert; ++i) {
+               x[Nvert - 1 - i] = p->GetX(i);
+               y[Nvert - 1 - i] = p->GetY(i);
+            }
+         }
+         unplaced_volume = new UnplacedSExtruVolume(p->GetNvert(), x, y, p->GetZ()[0], p->GetZ()[1]);
+      }
    }
 
    // New volumes should be implemented here...

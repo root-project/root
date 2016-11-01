@@ -41,6 +41,7 @@ namespace cling {
 
 class SelectionRules;
 class BaseSelectionRule;
+class ClassSelectionRule;
 
 class RScanner: public clang::RecursiveASTVisitor<RScanner>
 {
@@ -107,9 +108,8 @@ public:
    void Scan(const clang::ASTContext &C);
 
    // Utility routines.  Most belongs in TMetaUtils and should be shared with rootcling.cxx
-   std::string GetClassName(clang::DeclContext* DC) const;
    bool GetDeclName(clang::Decl* D, std::string& name) const;
-   bool GetDeclQualName(clang::Decl* D, std::string& qual_name) const;
+   bool GetDeclQualName(const clang::Decl* D, std::string& qual_name) const;
    bool GetFunctionPrototype(clang::Decl* D, std::string& prototype) const;
 
    static const char* fgClangDeclKey; // property key used for CLang declaration objects
@@ -131,6 +131,12 @@ public:
 
 private:
 
+   void AddAnnotatedRecordDecl(const ClassSelectionRule*,
+                               const clang::Type*,
+                               const clang::RecordDecl*,
+                               const std::string&,
+                               const clang::TypedefNameDecl*,
+                               unsigned int indexOffset=0);
    std::string ConvTemplateArguments(const clang::TemplateArgumentList& list) const;
    std::string ConvTemplateName(clang::TemplateName& N) const;
    std::string ConvTemplateParameterList(clang::TemplateParameterList* list) const;
@@ -139,7 +145,6 @@ private:
    std::string ExprToStr(clang::Expr* expr) const;
    std::string FuncParameterList(clang::FunctionDecl* D) const;
    std::string FuncParameters(clang::FunctionDecl* D) const;
-   std::string GetClassName(clang::RecordDecl* D) const;
    std::string GetEnumName(clang::EnumDecl* D) const;
    std::string GetLocation(clang::Decl* D) const;
    std::string GetName(clang::Decl* D) const;
@@ -157,10 +162,7 @@ private:
    static std::map <clang::Decl*, std::string> fgAnonymousEnumMap;
    void UnexpectedDecl(clang::Decl* D,const std::string &txt = "") const;
    void UnimplementedDecl(clang::Decl* D,const std::string &txt = "");
-   void UnimplementedType(clang::QualType qual_type);
-   void UnimplementedType (const clang::Type* T);
    void UnimportantDecl(clang::Decl* D,const std::string &txt = "") const;
-   void UnimportantType(clang::QualType qual_type) const;
    void UnknownDecl(clang::Decl* D, const std::string &txt = "") const;
    void UnknownType(clang::QualType qual_type) const;
    void UnsupportedDecl(clang::Decl* D,const std::string &txt = "") const;

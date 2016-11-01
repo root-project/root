@@ -504,7 +504,7 @@ CTFontRef FontCache::SelectSymbolFont(Float_t fontSize, unsigned fontIndex)
    font_map_iterator it = fFonts[fontIndex].find(fixedSize);//In ROOT, 11 is a font from symbol.ttf.
 
    if (it == fFonts[fontIndex].end()) {
-      //This GetValue + Which I took from Olivier's code.
+      //This GetValue
       const char * const fontDirectoryPath = gEnv->GetValue("Root.TTFontPath","$(ROOTSYS)/fonts");//This one I do not own.
       char * const fontFileName = gSystem->Which(fontDirectoryPath, "symbol.ttf", kReadPermission);//This must be deleted.
 

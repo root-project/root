@@ -18,7 +18,9 @@ void Background_decr() {
 
    TH1F *d    = new TH1F("d","",nbins,xmin,xmax);
 
-   TFile *f   = new TFile("../../tutorials/spectrum/TSpectrum.root");
+   TString dir  = gROOT->GetTutorialsDir();
+   TString file = dir+"/spectrum/TSpectrum.root";
+   TFile *f     = new TFile(file.Data());
    TH1F *back = (TH1F*) f->Get("back1");
    back->SetTitle("Estimation of background with decreasing window");
    back->GetXaxis()->SetRange(1,nbins);

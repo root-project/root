@@ -5,7 +5,7 @@
 set(headers TAtomicCount.h TCondition.h TConditionImp.h TMutex.h TMutexImp.h
             ROOT/TExecutor.hxx TRWLock.h ROOT/TRWSpinLock.hxx TSemaphore.h TThread.h TThreadFactory.h
             TThreadImp.h ROOT/TThreadedObject.hxx TThreadPool.h
-            ThreadLocalStorage.h ROOT/TSpinMutex.hxx ROOT/TThreadExecutor.hxx)
+            ThreadLocalStorage.h ROOT/TSpinMutex.hxx)
 if(NOT WIN32)
   set(headers ${headers} TPosixCondition.h TPosixMutex.h
                          TPosixThread.h TPosixThreadFactory.h PosixThreadInc.h)
@@ -28,12 +28,13 @@ else()
 endif()
 
 if (imt)
-  set(sources_imt TImplicitMT.cxx)
+  set(sources_imt TImplicitMT.cxx TThreadExecutor.cxx)
+  set(headers_imt ROOT/TThreadExecutor.hxx)
 endif()
 
 include_directories(${TBB_INCLUDE_DIRS})
 
-ROOT_GENERATE_DICTIONARY(G__Thread ${headers} STAGE1 MODULE Thread LINKDEF LinkDef.h)
+ROOT_GENERATE_DICTIONARY(G__Thread ${headers} ${headers_imt} STAGE1 MODULE Thread LINKDEF LinkDef.h)
 
 ROOT_OBJECT_LIBRARY(ThreadObjs ${sources} G__Thread.cxx)
 ROOT_LINKER_LIBRARY(Thread $<TARGET_OBJECTS:ThreadObjs> ${sources_imt} LIBRARIES ${CMAKE_THREAD_LIBS_INIT} ${TBB_LIBRARIES} DEPENDENCIES Core)

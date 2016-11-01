@@ -260,7 +260,7 @@ TVectorT<Element>::TVectorT(const TMatrixTDiag_const<Element> &md) : TObject()
 /// TVectorT foo(1,3,0.0,1.0,1.5,"END");
 
 template<class Element>
-TVectorT<Element>::TVectorT(Int_t lwb,Int_t upb,Element va_(iv1), ...)
+TVectorT<Element>::TVectorT(Int_t lwb,Int_t upb,Double_t iv1, ...)
 {
    if (upb < lwb) {
       Error("TVectorT(Int_t, Int_t, ...)","upb(%d) < lwb(%d)",upb,lwb);
@@ -270,7 +270,7 @@ TVectorT<Element>::TVectorT(Int_t lwb,Int_t upb,Element va_(iv1), ...)
    Allocate(upb-lwb+1,lwb);
 
    va_list args;
-   va_start(args,va_(iv1));             // Init 'args' to the beginning of
+   va_start(args,iv1);             // Init 'args' to the beginning of
                                         // the variable length list of args
 
    (*this)(lwb) = iv1;

@@ -6003,8 +6003,7 @@ void TProofServ::SendAsynMessage(const char *msg, Bool_t lf)
       m.Reset(kPROOF_MESSAGE);
       m << TString(msg) << lf;
       if (fSocket->Send(m) <= 0)
-         Warning("SendAsynMessage",
-                 "could not send message '%s'", (msg ? msg : "(null)"));
+         Warning("SendAsynMessage", "could not send message '%s'", msg);
    }
 
    return;

@@ -474,9 +474,7 @@ void FindRad(Double_t x, Double_t y, Double_t z,Double_t theta, Double_t phi, In
    TGeoNode *nextnode = gGeoManager->GetCurrentNode();
    safe = gGeoManager->Safety();
    while (nextnode) {
-      med = 0;
-      if (nextnode) med = nextnode->GetVolume()->GetMedium();
-      else return;
+      med = nextnode->GetVolume()->GetMedium();
       shape = nextnode->GetVolume()->GetShape();
       lastnode = nextnode;
       nextnode = gGeoManager->FindNextBoundaryAndStep();

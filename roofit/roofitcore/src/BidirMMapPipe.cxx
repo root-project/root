@@ -114,9 +114,8 @@ namespace BidirMMapPipe_impl {
             unsigned short m_pos;       ///< index of next byte in payload area
             /// copy construction forbidden
             Page(const Page&) {}
-            /// assertignment forbidden
-            Page& operator=(const Page&)
-            { return *reinterpret_cast<Page*>(0); }
+            /// assigment forbidden
+            Page& operator=(const Page&) = delete;
         public:
             /// constructor
             Page() : m_next(0), m_size(0), m_pos(0)

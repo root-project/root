@@ -75,7 +75,6 @@
 #include <TParallelCoord.h>
 #include <TImage.h>
 #include <TMath.h>
-#include <TSystem.h>
 
 
 void     stressGraphics (Int_t verbose);
@@ -1807,7 +1806,7 @@ void ratioplot()
    rh1->FillRandom("rf1", 1900);
    rh2->FillRandom("rf1", 2000);
    rh1->Sumw2();
-   rh2->Scale(1.9 / 2.);
+   rh2->Scale(1.9 / 2.,"nosw2");
    TRatioPlot *rp = new TRatioPlot(rh1, rh2);
    C->SetTicks(0, 1);
    rp->Draw();

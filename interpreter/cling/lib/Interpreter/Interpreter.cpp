@@ -107,34 +107,30 @@ namespace cling {
 
   Interpreter::StateDebuggerRAII::StateDebuggerRAII(const Interpreter* i)
     : m_Interpreter(i) {
-    if (!i->isPrintingDebug())
-      return;
-    const CompilerInstance& CI = *m_Interpreter->getCI();
-    CodeGenerator* CG = i->m_IncrParser->getCodeGenerator();
+    if (m_Interpreter->isPrintingDebug()) {
+      const CompilerInstance& CI = *m_Interpreter->getCI();
+      CodeGenerator* CG = i->m_IncrParser->getCodeGenerator();
 
-    // The ClangInternalState constructor can provoke deserialization,
-    // we need a transaction.
-    PushTransactionRAII pushedT(i);
+      // The ClangInternalState constructor can provoke deserialization,
+      // we need a transaction.
+      PushTransactionRAII pushedT(i);
 
-    m_State.reset(new ClangInternalState(CI.getASTContext(),
-                                         CI.getPreprocessor(),
-                                         CG ? CG->GetModule() : 0,
-                                         CG,
-                                         "aName"));
+      m_State.reset(new ClangInternalState(CI.getASTContext(),
+                                           CI.getPreprocessor(),
+                                           CG ? CG->GetModule() : 0,
+                                           CG,
+                                           "aName"));
+    }
   }
 
   Interpreter::StateDebuggerRAII::~StateDebuggerRAII() {
-    // The ClangInternalState destructor can provoke deserialization,
-    // we need a transaction.
-    PushTransactionRAII pushedT(m_Interpreter);
-
-    pop();
-  }
-
-  void Interpreter::StateDebuggerRAII::pop() const {
-    if (!m_Interpreter->isPrintingDebug())
-      return;
-    m_State->compare("aName");
+    if (m_State) {
+      // The ClangInternalState destructor can provoke deserialization,
+      // we need a transaction.
+      PushTransactionRAII pushedT(m_Interpreter);
+      m_State->compare("aName");
+      m_State.reset();
+    }
   }
 
   const Parser& Interpreter::getParser() const {
@@ -691,7 +687,7 @@ namespace cling {
     std::string mangledNameIfNeeded;
     utils::Analyze::maybeMangleDeclName(FD, mangledNameIfNeeded);
     IncrementalExecutor::ExecutionResult ExeRes =
-       m_Executor->executeWrapper(mangledNameIfNeeded.c_str(), res);
+       m_Executor->executeWrapper(mangledNameIfNeeded, res);
     return ConvertExecutionResult(ExeRes);
   }
 
@@ -1114,7 +1110,8 @@ namespace cling {
   }
 
   void Interpreter::installLazyFunctionCreator(void* (*fp)(const std::string&)) {
-    m_Executor->installLazyFunctionCreator(fp);
+    if (m_Executor)
+      m_Executor->installLazyFunctionCreator(fp);
   }
 
   Value Interpreter::Evaluate(const char* expr, DeclContext* DC,
@@ -1214,7 +1211,7 @@ namespace cling {
     // Return a symbol's address, and whether it was jitted.
     std::string mangledName;
     utils::Analyze::maybeMangleDeclName(GD, mangledName);
-    return getAddressOfGlobal(mangledName.c_str(), fromJIT);
+    return getAddressOfGlobal(mangledName, fromJIT);
   }
 
   void* Interpreter::getAddressOfGlobal(llvm::StringRef SymName,

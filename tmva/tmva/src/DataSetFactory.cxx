@@ -646,9 +646,11 @@ TMVA::DataSetFactory::InitOptions( TMVA::DataSetInfo& dsi,
       TString clName = dsi.GetClassInfo(cl)->GetName();
       TString titleTrain =  TString().Format("Number of training events of class %s (default: 0 = all)",clName.Data()).Data();
       TString titleTest  =  TString().Format("Number of test events of class %s (default: 0 = all)",clName.Data()).Data();
+      TString titleSplit =  TString().Format("Split in training and test events of class %s (default: 0 = deactivated)",clName.Data()).Data();
 
       splitSpecs.DeclareOptionRef( nEventRequests.at(cl).nTrainingEventsRequested, TString("nTrain_")+clName, titleTrain );
       splitSpecs.DeclareOptionRef( nEventRequests.at(cl).nTestingEventsRequested , TString("nTest_")+clName , titleTest  );
+      splitSpecs.DeclareOptionRef( nEventRequests.at(cl).TrainTestSplitRequested , TString("TrainTestSplit_")+clName , titleTest  );
    }
 
    splitSpecs.DeclareOptionRef( fVerbose, "V", "Verbosity (default: true)" );
@@ -1019,13 +1021,22 @@ TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
             Log() << kINFO << Form("Dataset[%s] : ",dsi.GetName()) << " you have opted for interpreting the requested number of training/testing events\n to be the number of events AFTER your preselection cuts" <<  Endl;
 
       }
+
+      // If TrainTestSplit_<class> is set, set number of requested training events to split*num_all_events
+      // Requested number of testing events is set to zero and therefore takes all other events
+      // The option TrainTestSplit_<class> overrides nTrain_<class> or nTest_<class>
+      if(eventCounts[cls].TrainTestSplitRequested < 1.0 && eventCounts[cls].TrainTestSplitRequested > 0.0){
+         eventCounts[cls].nTrainingEventsRequested = Int_t(eventCounts[cls].TrainTestSplitRequested*(availableTraining+availableTesting+availableUndefined));
+         eventCounts[cls].nTestingEventsRequested = Int_t(0);
+      }
+      else if(eventCounts[cls].TrainTestSplitRequested != 0.0) Log() << kFATAL << Form("The option TrainTestSplit_<class> has to be in range (0, 1] but is set to %f.",eventCounts[cls].TrainTestSplitRequested) << Endl;
       Int_t requestedTraining = Int_t(eventCounts[cls].nTrainingEventsRequested * presel_scale);
       Int_t requestedTesting  = Int_t(eventCounts[cls].nTestingEventsRequested  * presel_scale);
 
       Log() << kDEBUG << Form("Dataset[%s] : ",dsi.GetName())<< "events in training trees    : " << availableTraining  << Endl;
       Log() << kDEBUG << Form("Dataset[%s] : ",dsi.GetName())<< "events in testing trees     : " << availableTesting   << Endl;
       Log() << kDEBUG << Form("Dataset[%s] : ",dsi.GetName())<< "events in unspecified trees : " << availableUndefined << Endl;
-      Log() << kDEBUG << Form("Dataset[%s] : ",dsi.GetName())<< "requested for training      : " << requestedTraining;
+      Log() << kDEBUG << Form("Dataset[%s] : ",dsi.GetName())<< "requested for training      : " << requestedTraining << Endl;;
       
       if(presel_scale<1)
          Log() << " ( " << eventCounts[cls].nTrainingEventsRequested

@@ -24,12 +24,12 @@ namespace ROOT {
    // how-to-convert-byte-size-into-human-readable-format-in-java
    // and http://agentzlerich.blogspot.com/2011/01/converting-to-and-from-human-readable.html
    // However those sources use the 'conventional' 'legacy' nomenclature,
-   // rather than the official Standrard Units.  See
+   // rather than the official Standard Units.  See
    // http://physics.nist.gov/cuu/Units/binary.html
    // and http://www.dr-lex.be/info-stuff/bytecalc.html for example.
 
 ///////////////////////////////////////////////////////////////////////////////
-/// Return the size expressed in 'human readeable' format.
+/// Return the size expressed in 'human readable' format.
 /// \param bytes the size in bytes to be converted
 /// \param si whether to use the SI units or not.
 /// \param coeff return the size expressed in the new unit.
@@ -55,7 +55,7 @@ void ToHumanReadableSize(value_type bytes,
    if (bytes == unit) {
       // On some 32bit platforms, the result of
       //    (int) (std::log(bytes) / std::log(unit)
-      // in the case of bytes==unit ends up surpringly to be zero
+      // in the case of bytes==unit ends up surprisingly to be zero
       // rather than one, so 'hard code' the result
       exp = 1;
    } else if (bytes > 0) {
@@ -79,7 +79,7 @@ enum class EFromHumanReadableSize {
 /// For this routine we use the official SI unit where the [i] is reserved
 /// for the 'legacy' power of two units.  1KB = 1000 bytes, 1KiB = 1024 bytes.
 /// \param str the string to be parsed
-/// \param value will be updated with the result if and only if the parse is sucessfull and does not overflow for the type of value.
+/// \param value will be updated with the result if and only if the parse is successful and does not overflow for the type of value.
 /// \return return a EFromHumanReadableSize enum value indicating the success or failure of the parse.
 ///
 template <typename T>

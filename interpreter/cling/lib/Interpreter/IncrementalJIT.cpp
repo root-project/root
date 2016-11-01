@@ -10,6 +10,7 @@
 #include "IncrementalJIT.h"
 
 #include "IncrementalExecutor.h"
+#include "cling/Utils/Platform.h"
 
 #include "llvm/ExecutionEngine/Orc/LambdaResolver.h"
 #include "llvm/Support/DynamicLibrary.h"
@@ -191,7 +192,7 @@ IncrementalJIT::IncrementalJIT(IncrementalExecutor& exe,
 
 
 llvm::orc::JITSymbol
-IncrementalJIT::getInjectedSymbols(llvm::StringRef Name) const {
+IncrementalJIT::getInjectedSymbols(const std::string& Name) const {
   using JITSymbol = llvm::orc::JITSymbol;
   if (Name == MANGLE_PREFIX "__cxa_atexit") {
     // Rewire __cxa_atexit to ~Interpreter(), thus also global destruction
@@ -211,8 +212,24 @@ IncrementalJIT::getInjectedSymbols(llvm::StringRef Name) const {
   return JITSymbol(nullptr);
 }
 
+std::pair<void*, bool>
+IncrementalJIT::searchLibraries(llvm::StringRef Name, void *InAddr) {
+  // FIXME: See comments on DLSym below.
+#if !defined(LLVM_ON_WIN32)
+  void* Addr = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(Name);
+#else
+  void* Addr = const_cast<void*>(platform::DLSym(Name));
+#endif
+
+  if (InAddr && !Addr) {
+    llvm::sys::DynamicLibrary::AddSymbol(Name, InAddr);
+    return std::make_pair(InAddr, true);
+  }
+  return std::make_pair(Addr, false);
+}
+    
 llvm::orc::JITSymbol
-IncrementalJIT::getSymbolAddressWithoutMangling(llvm::StringRef Name,
+IncrementalJIT::getSymbolAddressWithoutMangling(const std::string& Name,
                                                 bool AlsoInProcess) {
   if (auto Sym = getInjectedSymbols(Name))
     return Sym;
@@ -221,6 +238,18 @@ IncrementalJIT::getSymbolAddressWithoutMangling(llvm::StringRef Name,
     if (RuntimeDyld::SymbolInfo SymInfo = m_ExeMM->findSymbol(Name))
       return llvm::orc::JITSymbol(SymInfo.getAddress(),
                                   llvm::JITSymbolFlags::Exported);
+#ifdef LLVM_ON_WIN32
+    // FIXME: DLSym symbol lookup can overlap m_ExeMM->findSymbol wasting time
+    // looking for a symbol in libs where it is already known not to exist.
+    // Perhaps a better solution would be to have IncrementalJIT own the
+    // DynamicLibraryManger instance (or at least have a reference) that will
+    // look only through user loaded libraries.
+    // An upside to doing it this way is RTLD_GLOBAL won't need to be used
+    // allowing libs with competing symbols to co-exists.
+    if (const void* Sym = platform::DLSym(Name))
+      return llvm::orc::JITSymbol(llvm::orc::TargetAddress(Sym),
+                                  llvm::JITSymbolFlags::Exported);
+#endif
   }
 
   if (auto Sym = m_LazyEmitLayer.findSymbol(Name, false))

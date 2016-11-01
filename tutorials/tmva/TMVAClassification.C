@@ -68,14 +68,6 @@ int TMVAClassification( TString myMethodList = "" )
    // Methods to be processed can be given as an argument; use format:
    //
    //     mylinux~> root -l TMVAClassification.C\(\"myMethod1,myMethod2,myMethod3\"\)
-   //
-   // if you like to use a method via the plugin mechanism, we recommend using
-   //
-   //     mylinux~> root -l TMVAClassification.C\(\"P_myMethod\"\)
-   //
-   // (an example is given for using the BDT as plugin (see below),
-   // but of course the real application is when you write your own
-   // method based)
 
    //---------------------------------------------------------------
    // This loads the library
@@ -127,7 +119,9 @@ int TMVAClassification( TString myMethodList = "" )
    Use["MLPBNN"]          = 1; // Recommended ANN with BFGS training method and bayesian regulator
    Use["CFMlpANN"]        = 0; // Depreciated ANN from ALEPH
    Use["TMlpANN"]         = 0; // ROOT's own ANN
-   Use["DNN"]             = 0; // improved implementation of a NN
+   Use["DNN"]             = 0;     // Deep Neural Network
+   Use["DNN_GPU"]         = 0; // CUDA-accelerated DNN training.
+   Use["DNN_CPU"]         = 0; // Multi-core accelerated DNN.
    //
    // Support Vector Machine
    Use["SVM"]             = 1;
@@ -436,38 +430,49 @@ int TMVAClassification( TString myMethodList = "" )
       factory->BookMethod( dataloader, TMVA::Types::kMLP, "MLPBNN", "H:!V:NeuronType=tanh:VarTransform=N:NCycles=600:HiddenLayers=N+5:TestRate=5:TrainingMethod=BFGS:UseRegulator" ); // BFGS training with bayesian regulators
 
 
-   // improved neural network implementation
+   // Multi-architecture DNN implementation.
    if (Use["DNN"])
    {
-    /*
-       TString layoutString ("Layout=TANH|(N+100)*2,LINEAR");
-       TString layoutString ("Layout=SOFTSIGN|100,SOFTSIGN|50,SOFTSIGN|20,LINEAR");
-       TString layoutString ("Layout=RELU|300,RELU|100,RELU|30,RELU|10,LINEAR");
-       TString layoutString ("Layout=SOFTSIGN|50,SOFTSIGN|30,SOFTSIGN|20,SOFTSIGN|10,LINEAR");
-       TString layoutString ("Layout=TANH|50,TANH|30,TANH|20,TANH|10,LINEAR");
-       TString layoutString ("Layout=SOFTSIGN|50,SOFTSIGN|20,LINEAR");
-    */
-       TString layoutString ("Layout=TANH|100,TANH|50,TANH|10,LINEAR");
+      // General layout.
+      TString layoutString ("Layout=TANH|128,TANH|128,TANH|128,LINEAR");
 
-       TString training0 ("LearningRate=1e-1,Momentum=0.0,Repetitions=1,ConvergenceSteps=300,BatchSize=20,TestRepetitions=15,WeightDecay=0.001,Regularization=NONE,DropConfig=0.0+0.5+0.5+0.5,DropRepetitions=1,Multithreading=True");
-       TString training1 ("LearningRate=1e-2,Momentum=0.5,Repetitions=1,ConvergenceSteps=300,BatchSize=30,TestRepetitions=7,WeightDecay=0.001,Regularization=L2,Multithreading=True,DropConfig=0.0+0.1+0.1+0.1,DropRepetitions=1");
-       TString training2 ("LearningRate=1e-2,Momentum=0.3,Repetitions=1,ConvergenceSteps=300,BatchSize=40,TestRepetitions=7,WeightDecay=0.0001,Regularization=L2,Multithreading=True");
-       TString training3 ("LearningRate=1e-3,Momentum=0.1,Repetitions=1,ConvergenceSteps=200,BatchSize=70,TestRepetitions=7,WeightDecay=0.0001,Regularization=NONE,Multithreading=True");
+      // Training strategies.
+      TString training0("LearningRate=1e-1,Momentum=0.9,Repetitions=1,"
+                        "ConvergenceSteps=20,BatchSize=256,TestRepetitions=10,"
+                        "WeightDecay=1e-4,Regularization=L2,"
+                        "DropConfig=0.0+0.5+0.5+0.5, Multithreading=True");
+      TString training1("LearningRate=1e-2,Momentum=0.9,Repetitions=1,"
+                        "ConvergenceSteps=20,BatchSize=256,TestRepetitions=10,"
+                        "WeightDecay=1e-4,Regularization=L2,"
+                        "DropConfig=0.0+0.0+0.0+0.0, Multithreading=True");
+      TString training2("LearningRate=1e-3,Momentum=0.0,Repetitions=1,"
+                        "ConvergenceSteps=20,BatchSize=256,TestRepetitions=10,"
+                        "WeightDecay=1e-4,Regularization=L2,"
+                        "DropConfig=0.0+0.0+0.0+0.0, Multithreading=True");
+      TString trainingStrategyString ("TrainingStrategy=");
+      trainingStrategyString += training0 + "|" + training1 + "|" + training2;
 
-       TString trainingStrategyString ("TrainingStrategy=");
-       trainingStrategyString += training0 + "|" + training1 + "|" + training2 + "|" + training3;
+      // General Options.
+      TString dnnOptions ("!H:V:ErrorStrategy=CROSSENTROPY:VarTransform=N:"
+                          "WeightInitialization=XAVIERUNIFORM");
+      dnnOptions.Append (":"); dnnOptions.Append (layoutString);
+      dnnOptions.Append (":"); dnnOptions.Append (trainingStrategyString);
 
+      // Standard implementation, no dependencies.
+      TString stdOptions = dnnOptions + ":Architecture=STANDARD";
+      factory->BookMethod(dataloader, TMVA::Types::kDNN, "DNN", stdOptions);
 
-       // TString nnOptions ("!H:V:VarTransform=Normalize:ErrorStrategy=CROSSENTROPY");
-       TString nnOptions ("!H:V:ErrorStrategy=CROSSENTROPY:VarTransform=G:WeightInitialization=XAVIERUNIFORM");
-       // TString nnOptions ("!H:V:VarTransform=Normalize:ErrorStrategy=CHECKGRADIENTS");
-       nnOptions.Append (":"); nnOptions.Append (layoutString);
-       nnOptions.Append (":"); nnOptions.Append (trainingStrategyString);
-
-       factory->BookMethod(dataloader, TMVA::Types::kDNN, "DNN", nnOptions ); // NN
+      // Cuda implementation.
+      if (Use["DNN_GPU"]) {
+         TString gpuOptions = dnnOptions + ":Architecture=GPU";
+         factory->BookMethod(dataloader, TMVA::Types::kDNN, "DNN GPU", gpuOptions);
+      }
+      // Multi-core CPU implementation.
+      if (Use["DNN_CPU"]) {
+         TString cpuOptions = dnnOptions + ":Architecture=CPU";
+         factory->BookMethod(dataloader, TMVA::Types::kDNN, "DNN CPU", cpuOptions);
+      }
    }
-
-
 
    // CF(Clermont-Ferrand)ANN
    if (Use["CFMlpANN"])
@@ -499,7 +504,7 @@ int TMVAClassification( TString myMethodList = "" )
                            "!H:!V:NTrees=400:MinNodeSize=5%:MaxDepth=3:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:VarTransform=Decorrelate" );
 
    if (Use["BDTF"])  // Allow Using Fisher discriminant in node splitting for (strong) linearly correlated variables
-      factory->BookMethod( dataloader, TMVA::Types::kBDT, "BDTMitFisher",
+      factory->BookMethod( dataloader, TMVA::Types::kBDT, "BDTF",
                            "!H:!V:NTrees=50:MinNodeSize=2.5%:UseFisherCuts:MaxDepth=3:BoostType=AdaBoost:AdaBoostBeta=0.5:SeparationType=GiniIndex:nCuts=20" );
 
    // RuleFit -- TMVA implementation of Friedman's method

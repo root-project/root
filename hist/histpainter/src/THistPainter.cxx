@@ -368,7 +368,6 @@ the histograms by calling:
     gPad->RedrawAxis();
 
 
-
 ### <a name="HP05"></a> Giving titles to the X, Y and Z axis
 
 
@@ -1003,6 +1002,35 @@ Begin_Macro(source)
    hcol22->SetMaximum(100);
    hcol22->SetMinimum(40);
    return c1;
+}
+End_Macro
+
+\since **ROOT version 6.09/01:**
+When the option SAME (or "SAMES") is used with the option COL, the boxes' color
+are computing taking the previous plots into account. The range along the Z axis
+is imposed by the first plot (the one without option SAME); therefore the order
+in which the plots are done is relevant.
+
+Begin_Macro(source)
+{
+   c = new TCanvas("c","Example of col plots with option SAME",200,10,700,500);
+   TH2F *h1 = new TH2F("h1","h1",40,-3,3,40,-3,3);
+   TH2F *h2 = new TH2F("h2","h2",40,-3,3,40,-3,3);
+   TH2F *h3 = new TH2F("h3","h3",40,-3,3,40,-3,3);
+   TH2F *h4 = new TH2F("h4","h4",40,-3,3,40,-3,3);
+   h1->SetBit(TH1::kNoStats);
+   for (Int_t i=0;i<5000;i++) {
+      double x,y;
+      gRandom->Rannor(x,y);
+      if(x>0 && y>0) h1->Fill(x,y,4);
+      if(x<0 && y<0) h2->Fill(x,y,3);
+      if(x>0 && y<0) h3->Fill(x,y,2);
+      if(x<0 && y>0) h4->Fill(x,y,1);
+   }
+   h1->Draw("colz");
+   h2->Draw("col same");
+   h3->Draw("col same");
+   h4->Draw("col same");
 }
 End_Macro
 
@@ -1731,7 +1759,7 @@ Begin_Macro(source)
    hlego3->SetFillColor(kRed);
    hlego3->Draw("LEGO3");
    return c2;
- }
+}
 End_Macro
 
 The following example shows a 2D histogram plotted with the option
@@ -3527,9 +3555,9 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
 
    l = strstr(chopt,"CANDLE");
    if (l) {
-	   TCandle candle;
-	   Hoption.Candle = candle.ParseOption(l);
-	   Hoption.Scat = 0;
+      TCandle candle;
+      Hoption.Candle = candle.ParseOption(l);
+      Hoption.Scat = 0;
    }
 
    l = strstr(chopt,"VIOLIN");
@@ -4532,7 +4560,7 @@ void THistPainter::PaintBoxes(Option_t *)
    Double_t dxmin = 0.51*(gPad->PadtoX(ux1)-gPad->PadtoX(ux0));
    Double_t dymin = 0.51*(gPad->PadtoY(uy0)-gPad->PadtoY(uy1));
 
-   Double_t zmin = fH->GetMinimum();
+   Double_t zmin = TMath::Max(fH->GetMinimum(),0.);
    Double_t zmax = TMath::Max(TMath::Abs(fH->GetMaximum()),
                               TMath::Abs(fH->GetMinimum()));
 
@@ -4543,31 +4571,33 @@ void THistPainter::PaintBoxes(Option_t *)
       TIter next(gPad->GetListOfPrimitives());
       while ((h2 = (TH2 *)next())) {
          if (!h2->InheritsFrom(TH2::Class())) continue;
-         zmin = h2->GetMinimum();
+         zmin = TMath::Max(h2->GetMinimum(), 0.);
          zmax = TMath::Max(TMath::Abs(h2->GetMaximum()),
                            TMath::Abs(h2->GetMinimum()));
          if (Hoption.Logz) {
-            zmax = TMath::Log10(zmax);
             if (zmin <= 0) {
                zmin = TMath::Log10(zmax*0.001);
             } else {
                zmin = TMath::Log10(zmin);
             }
+            zmax = TMath::Log10(zmax);
          }
          break;
       }
-   }
-
-   if (Hoption.Logz) {
-      if (zmin > 0) {
-         zmin = TMath::Log10(zmin*0.1);
-         zmax = TMath::Log10(zmax);
-      } else {
-         return;
+   } else {
+      if (Hoption.Logz) {
+         if (zmin > 0) {
+            zmin = TMath::Log10(zmin);
+            zmax = TMath::Log10(zmax);
+         } else {
+            return;
+         }
       }
    }
 
    Double_t zratio, dz = zmax - zmin;
+   Bool_t kZminNeg     = kFALSE;
+   if (fH->GetMinimum()<0) kZminNeg = kTRUE;
    Bool_t kZNeg        = kFALSE;
 
    // Define the dark and light colors the "button style" boxes.
@@ -4592,8 +4622,9 @@ void THistPainter::PaintBoxes(Option_t *)
          z     = Hparam.factor*fH->GetBinContent(bin);
          kZNeg = kFALSE;
 
-         if (z <  zmin) continue; // Can be the case with
-         if (z >  zmax) z = zmax; // option Same
+         if (TMath::Abs(z) <  zmin) continue; // Can be the case with ...
+         if (TMath::Abs(z) >  zmax) z = zmax; // ... option Same
+         if (kZminNeg && z==0) continue;      // Do not draw empty bins if case of histo with netgative bins.
 
          if (z < 0) {
             if (Hoption.Logz) continue;
@@ -4698,16 +4729,15 @@ void THistPainter::PaintCandlePlot(Option_t *)
    TH1D *hproj;
    TH2D *h2 = (TH2D*)fH;
 
-
-	TCandle myCandle;
-	myCandle.SetOption((TCandle::CandleOption)Hoption.Candle);
-	myCandle.SetMarkerColor(fH->GetLineColor());
-	myCandle.SetLineColor(fH->GetLineColor());
-	myCandle.SetFillColor(fH->GetFillColor());
-	myCandle.SetFillStyle(fH->GetFillStyle());
-	myCandle.SetMarkerSize(fH->GetMarkerSize());
-	myCandle.SetMarkerStyle(fH->GetMarkerStyle());
-	myCandle.SetLog(Hoption.Logx,Hoption.Logy);
+   TCandle myCandle;
+   myCandle.SetOption((TCandle::CandleOption)Hoption.Candle);
+   myCandle.SetMarkerColor(fH->GetLineColor());
+   myCandle.SetLineColor(fH->GetLineColor());
+   myCandle.SetFillColor(fH->GetFillColor());
+   myCandle.SetFillStyle(fH->GetFillStyle());
+   myCandle.SetMarkerSize(fH->GetMarkerSize());
+   myCandle.SetMarkerStyle(fH->GetMarkerStyle());
+   myCandle.SetLog(Hoption.Logx,Hoption.Logy);
 
    Bool_t swapXY = myCandle.IsHorizontal();
    const Double_t standardCandleWidth = 0.66;
@@ -4993,6 +5023,8 @@ void THistPainter::PaintColorLevelsFast(Option_t*)
    // the appropriate value to use.
    Double_t zmin = fH->GetMinimumStored();
    Double_t zmax = fH->GetMaximumStored();
+   Double_t originalZMin = zmin;
+   Double_t originalZMax = zmax;
    if ((zmin == -1111) && (zmax == -1111)) {
       fH->GetMinimumAndMaximum(zmin, zmax);
       fH->SetMinimum(zmin);
@@ -5154,6 +5186,11 @@ void THistPainter::PaintColorLevelsFast(Option_t*)
 
    if (Hoption.Zscale) PaintPalette();
 
+   // Reset the maximum and minimum values to their original values
+   // when this function was called. If we don't do this, an initial
+   // value of -1111 will be replaced with the true max or min values.
+   fH->SetMinimum(originalZMin);
+   fH->SetMaximum(originalZMax);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -5172,13 +5209,35 @@ void THistPainter::PaintColorLevels(Option_t*)
       dz = zmax - zmin;
    }
 
-   if (Hoption.Logz) {
-      if (zmin > 0) {
-         zmin = TMath::Log10(zmin);
-         zmax = TMath::Log10(zmax);
+   // In case of option SAME, zmin and zmax values are taken from the
+   // first plotted 2D histogram.
+   if (Hoption.Same) {
+      TH2 *h2;
+      TIter next(gPad->GetListOfPrimitives());
+      while ((h2 = (TH2 *)next())) {
+         if (!h2->InheritsFrom(TH2::Class())) continue;
+         zmin = h2->GetMinimum();
+         zmax = h2->GetMaximum();
+         if (Hoption.Logz) {
+            if (zmin <= 0) {
+               zmin = TMath::Log10(zmax*0.001);
+            } else {
+               zmin = TMath::Log10(zmin);
+            }
+            zmax = TMath::Log10(zmax);
+         }
          dz = zmax - zmin;
-      } else {
-         return;
+         break;
+      }
+   } else {
+      if (Hoption.Logz) {
+         if (zmin > 0) {
+            zmin = TMath::Log10(zmin);
+            zmax = TMath::Log10(zmax);
+            dz   = zmax - zmin;
+         } else {
+            return;
+         }
       }
    }
 

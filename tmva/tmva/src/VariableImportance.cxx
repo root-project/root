@@ -211,6 +211,7 @@ void TMVA::VariableImportance::EvaluateImportanceShort()
     
     delete seeddl;  
     fClassifier->DeleteAllMethods();
+    fClassifier->fMethodsMap.clear();
         
     for (uint32_t i = 0; i < NBITS; ++i) {
         if (x & (1 << i)) {
@@ -249,6 +250,7 @@ void TMVA::VariableImportance::EvaluateImportanceShort()
             
             delete subseeddl;
             fClassifier->DeleteAllMethods();
+	    fClassifier->fMethodsMap.clear();
         }
     }
     Float_t normalization = 0.0;
@@ -321,6 +323,7 @@ void TMVA::VariableImportance::EvaluateImportanceRandom(UInt_t seeds)
         
         delete seeddl;
         fClassifier->DeleteAllMethods();
+	fClassifier->fMethodsMap.clear();
         
         for (uint32_t i = 0; i < 32; ++i) {
             if (x & (1 << i)) {
@@ -360,6 +363,7 @@ void TMVA::VariableImportance::EvaluateImportanceRandom(UInt_t seeds)
                 
                 delete subseeddl;
                 fClassifier->DeleteAllMethods();
+		fClassifier->fMethodsMap.clear();
             }
         }
     }
@@ -434,6 +438,7 @@ void TMVA::VariableImportance::EvaluateImportanceAll()
         
         delete seeddl;    
         fClassifier->DeleteAllMethods();
+	fClassifier->fMethodsMap.clear();
     }
     
     

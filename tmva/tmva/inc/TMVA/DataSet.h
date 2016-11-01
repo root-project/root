@@ -183,7 +183,7 @@ namespace TMVA {
 
       Bool_t                     fHasNegativeEventWeights;     // true if at least one signal or bkg event has negative weight
 
-      mutable MsgLogger*         fLogger;                      //-> message logger
+      mutable MsgLogger*         fLogger;                      //! message logger
       MsgLogger& Log() const { return *fLogger; }
       std::vector<Char_t>        fBlockBelongToTraining;       // when dividing the dataset to blocks, sets whether 
                                                                // the certain block is in the Training set or else 

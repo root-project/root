@@ -33,8 +33,7 @@ if sys.version[0:3] == '2.2':
    sys.setcheckinterval( 100 )
 
 ## hooks and other customizations are not used ith iPython
-def _is_ipython():
-   return hasattr(__builtins__, '__IPYTHON__') and __IPYTHON__
+_is_ipython = hasattr(__builtins__, '__IPYTHON__') or 'IPython' in sys.modules
 
 ## readline support, if available
 try:
@@ -292,7 +291,7 @@ please use operator[] instead, as in e.g. "mymatrix[i][j] = somevalue".
    _orig_ehook( exctype, value, traceb )
 
 
-if not _is_ipython():
+if not _is_ipython:
  # IPython has its own ways of executing shell commands etc.
    sys.excepthook = _excepthook
 
@@ -428,7 +427,7 @@ class ModuleFacade( types.ModuleType ):
    def __getattr2( self, name ):             # "running" getattr
     # handle "from ROOT import *" ... can be called multiple times
       if name == '__all__':
-         if _is_ipython():
+         if _is_ipython:
             import warnings
             warnings.warn( '"from ROOT import *" is not supported under IPython' )
             # continue anyway, just in case it works ...
@@ -504,7 +503,7 @@ class ModuleFacade( types.ModuleType ):
          sys.argv = argv
 
     # must be called after gApplication creation:
-      if _is_ipython():
+      if _is_ipython:
        # IPython's FakeModule hack otherwise prevents usage of python from Cling (TODO: verify necessity)
          _root.gROOT.ProcessLine( 'TPython::Exec( "" );' )
          sys.modules[ '__main__' ].__builtins__ = __builtins__
@@ -553,7 +552,7 @@ class ModuleFacade( types.ModuleType ):
     # use either the input hook or thread to send events to GUIs
       if self.PyConfig.StartGuiThread and \
             not ( self.keeppolling or _root.gROOT.IsBatch() ):
-         if _is_ipython() and 'IPython' in sys.modules and sys.modules['IPython'].version_info[0] >= 5 :
+         if _is_ipython and 'IPython' in sys.modules and sys.modules['IPython'].version_info[0] >= 5 :
             from IPython.terminal import pt_inputhooks
             def _inputhook(context):
                while not context.input_is_ready():
@@ -608,7 +607,7 @@ sys.modules[ __name__ ] = ModuleFacade( sys.modules[ __name__ ] )
 del ModuleFacade
 
 ### Add some infrastructure if we are being imported via a Jupyter Kernel ------
-if _is_ipython():
+if _is_ipython:
    from IPython import get_ipython
    ip = get_ipython()
    if hasattr(ip,"kernel"):
@@ -624,7 +623,7 @@ def cleanup():
  # restore hooks
    import sys
    sys.displayhook = sys.__displayhook__
-   if not _is_ipython():
+   if not _is_ipython:
       sys.excepthook = sys.__excepthook__
    __builtin__.__import__ = _orig_ihook
 

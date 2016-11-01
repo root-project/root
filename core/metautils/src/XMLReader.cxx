@@ -524,6 +524,7 @@ bool XMLReader::Parse(const std::string &fileName, SelectionRules& out)
                   inClass = true;
                }
                csr.reset(new ClassSelectionRule(fCount++, fInterp, fileName.c_str(), lineNum)); // create new class selection rule
+               csr->SetRequestStreamerInfo(true);
                bsr = csr.get(); // we could access it through the base class pointer
                break;
             }

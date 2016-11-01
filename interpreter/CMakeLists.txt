@@ -54,6 +54,7 @@ ROOT_ADD_C_FLAG(INTERP_ADDITIONAL_C_FLAGS -Wno-unused-parameter)
 ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-unused-variable)
 ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-unused-but-set-variable)
 ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-unused-function)
+ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-range-loop-analysis)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${INTERP_ADDITIONAL_CXX_FLAGS}")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${INTERP_ADDITIONAL_C_FLAGS}")
@@ -130,6 +131,7 @@ mark_as_advanced(FORCE BUG_REPORT_URL BUILD_CLANG_FORMAT_VS_PLUGIN BUILD_SHARED_
                        C_INCLUDE_DIRS DEFAULT_SYSROOT FFI_INCLUDE_DIR FFI_LIBRARY_DIR
                        GCC_INSTALL_PREFIX LIBCLANG_BUILD_STATIC TOOL_INFO_PLIST)
 mark_as_advanced(CLEAR LLVM_ENABLE_ASSERTIONS LLVM_BUILD_TYPE)
+
 #---Set into parent scope LLVM_VERSION --------------------------------------------------------------
 set(llvmconfigfile "${CMAKE_CURRENT_SOURCE_DIR}/llvm/src/CMakeLists.txt")
 file(READ ${llvmconfigfile} _filestr)
@@ -141,8 +143,3 @@ foreach(versionpart LLVM_VERSION_MAJOR LLVM_VERSION_MINOR LLVM_VERSION_PATCH)
   endif()
 endforeach()
 set(LLVM_VERSION "${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}.${LLVM_VERSION_PATCH}" PARENT_SCOPE)
-
-#---Added some missing dependencies------------------------------------------------------------------
-add_dependencies(clingUtils clangCodeGen clangAST)
-add_dependencies(clingInterpreter clangBasic clangAST ClangDriverOptions)
-add_dependencies(clingMetaProcessor clangAST ClangDriverOptions)

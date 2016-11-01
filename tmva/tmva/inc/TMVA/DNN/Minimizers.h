@@ -372,7 +372,7 @@ template<typename Architecture_t>
 {
    //Scalar_t loss = net.Loss(input, output);
    //fTrainingError = loss;
-   net.Forward(input);
+   net.Forward(input, true);
    net.Backward(input, output);
 
    for (size_t i = 0; i < net.GetDepth(); i++)
@@ -426,13 +426,13 @@ template<typename Architecture_t>
 
    // Forward
    for (size_t j = 0; j < nets.size(); j++) {
-      nets[j].GetLayer(0).Forward(batches[j].GetInput());
+      nets[j].GetLayer(0).Forward(batches[j].GetInput(), true);
    }
 
    for (size_t i = 1; i < depth; i++)
    {
       for (size_t j = 0; j < nets.size(); j++) {
-         nets[j].GetLayer(i).Forward(nets[j].GetLayer(i-1).GetOutput());
+         nets[j].GetLayer(i).Forward(nets[j].GetLayer(i-1).GetOutput(), true);
       }
    }
    // Gradients
@@ -493,13 +493,13 @@ void inline TGradientDescent<Architecture_t>::StepMomentum(
 
    // Forward
    for (size_t j = 0; j < nets.size(); j++) {
-      nets[j].GetLayer(0).Forward(batches[j].GetInput());
+      nets[j].GetLayer(0).Forward(batches[j].GetInput(), true);
    }
 
    for (size_t i = 1; i < depth; i++)
    {
       for (size_t j = 0; j < nets.size(); j++) {
-         nets[j].GetLayer(i).Forward(nets[j].GetLayer(i-1).GetOutput());
+         nets[j].GetLayer(i).Forward(nets[j].GetLayer(i-1).GetOutput(), true);
       }
    }
    // Gradients
@@ -585,13 +585,13 @@ void inline TGradientDescent<Architecture_t>::StepNesterov(
 
    // Forward
    for (size_t j = 0; j < nets.size(); j++) {
-      nets[j].GetLayer(0).Forward(batches[j].GetInput());
+      nets[j].GetLayer(0).Forward(batches[j].GetInput(), true);
    }
 
    for (size_t i = 1; i < depth; i++)
    {
       for (size_t j = 0; j < nets.size(); j++) {
-         nets[j].GetLayer(i).Forward(nets[j].GetLayer(i-1).GetOutput());
+         nets[j].GetLayer(i).Forward(nets[j].GetLayer(i-1).GetOutput(), true);
       }
    }
 
@@ -670,7 +670,7 @@ void inline TGradientDescent<Architecture_t>::StepReducedWeights(
     Matrix_t &input,
     const Matrix_t &output)
 {
-   net.Forward(input);
+   net.Forward(input, true);
    net.Backward(input, output);
 
    for (size_t i = 0; i < net.GetDepth(); i++)

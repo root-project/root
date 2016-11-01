@@ -21,7 +21,7 @@
 #ifndef MIXMAX_H_
 #define MIXMAX_H_
 
-#define USE_INLINE_ASM
+//#define USE_INLINE_ASM
 
 //#ifdef __cplusplus
 //extern "C" {
@@ -130,8 +130,15 @@ void branch_inplace( rng_state_t* Xin, myID_t* ID ); // almost the same as apply
 
 #if (N==256)
 #define SPECIALMUL 0
+#ifdef USE_MIXMAX_256_NEW
+// for 1.1
 #define SPECIAL 487013230256099064 // s=487013230256099064, m=1 -- good old MIXMAX
 #define MOD_MULSPEC(k) fmodmulM61( 0, SPECIAL , (k) )
+#else
+// for 1.0
+#define SPECIAL -1
+#define MOD_MULSPEC(k) (MERSBASE - (k));
+#endif
     
 #elif (N==8)
 #define SPECIALMUL 53 // m=2^53+1

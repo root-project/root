@@ -91,7 +91,7 @@ TextEntryWindow::TextEntryWindow()
    combo->AddEntry("Normal", TGTextEntry::kNormal);
    combo->AddEntry("Password", TGTextEntry::kPassword);
    combo->AddEntry("No Echo", TGTextEntry::kNoEcho);
-   combo->Connect("Selected(Int_t)", "TGTextEntry", entry, "SetEchoMode(Int_t)");
+   combo->Connect("Selected(Int_t)", "TGTextEntry", entry, "SetEchoMode(TGTextEntry::EEchoMode)");
    combo->Select(TGTextEntry::kNormal);
 
    fAlign = new GroupBox(fMain, "Alignment", "Type:");
@@ -102,7 +102,7 @@ TextEntryWindow::TextEntryWindow()
    combo->AddEntry("Left", kTextLeft);
    combo->AddEntry("Centered", kTextCenterX);
    combo->AddEntry("Right", kTextRight);
-   combo->Connect("Selected(Int_t)", "TGTextEntry", entry, "SetAlignment(Int_t)");
+   combo->Connect("Selected(Int_t)", "TGTextEntry", entry, "SetAlignment(ETextJustification)");
    combo->Select(kTextLeft);
 
    fAccess = new GroupBox(fMain, "Access", "Read-only:");

@@ -260,7 +260,8 @@ A good way to remove tick marks on an axis is to set the tick length to 0:
 ## <a name="GA06"></a> Labels' positionning
 
 Labels are normally drawn on side opposite to tick marks. However the option
-`"="` allows to draw them on the same side.
+`"="` allows to draw them on the same side. The distance between the labels and
+the axis body can be changed with `SetLabelOffset`.
 
 ## <a name="GA07"></a> Labels' orientation
 

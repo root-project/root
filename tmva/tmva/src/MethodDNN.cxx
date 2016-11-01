@@ -401,7 +401,12 @@ void TMVA::MethodDNN::ProcessOptions()
 
    fLayout = TMVA::MethodDNN::ParseLayoutString (fLayoutString);
    size_t inputSize = GetNVariables ();
-   size_t outputSize = (GetNTargets() == 0) ? 1 : GetNTargets();
+   size_t outputSize = 1;
+   if (GetNTargets() != 0) {
+      outputSize = GetNTargets();
+   } else if (DataInfo().GetNClasses() > 2) {
+      outputSize = DataInfo().GetNClasses();
+   }
 
    fNet.SetBatchSize(1);
    fNet.SetInputWidth(inputSize);
@@ -443,9 +448,9 @@ void TMVA::MethodDNN::ProcessOptions()
          fNet.SetLossFunction(ELossFunction::kCrossEntropy);
       }
       if (fErrorStrategy == "MUTUALEXCLUSIVE") {
-         Log () << kFatal << "MUTUALEXCLUSIVE not yet implemented." << Endl;
+         fNet.SetLossFunction(ELossFunction::kSoftmaxCrossEntropy);
       }
-      fOutputFunction = EOutputFunction::kSigmoid;
+      fOutputFunction = EOutputFunction::kSoftmax;
    }
 
    //
@@ -520,7 +525,7 @@ void TMVA::MethodDNN::Train()
       Log() << kFATAL << "OpenCL backend not yes supported." << Endl;
       return;
    } else if (fArchitectureString == "CPU") {
-      TrainCpu<Double_t>();
+      TrainCpu();
       if (!fExitFromTraining) fIPyMaxIter = fIPyCurrentIter;
       ExitFromTraining();
       return;
@@ -543,6 +548,13 @@ void TMVA::MethodDNN::Train()
                                          outputValue,
                                          event->GetWeight()));
          trainPattern.back().addInput(1.0);
+      } else if (fAnalysisType == Types::kMulticlass) {
+         std::vector<Float_t> oneHot(DataInfo().GetNClasses(), 0.0);
+         oneHot[event->GetClass()] = 1.0;
+         trainPattern.push_back(Pattern (values.begin(), values.end(),
+                                        oneHot.cbegin(), oneHot.cend(),
+                                        event->GetWeight()));
+         trainPattern.back().addInput(1.0);
       } else {
          const std::vector<Float_t>& targets = event->GetTargets ();
          trainPattern.push_back(Pattern(values.begin(),
@@ -562,6 +574,13 @@ void TMVA::MethodDNN::Train()
                                          values.end(),
                                          outputValue,
                                          event->GetWeight()));
+         testPattern.back().addInput(1.0);
+      } else if (fAnalysisType == Types::kMulticlass) {
+         std::vector<Float_t> oneHot(DataInfo().GetNClasses(), 0.0);
+         oneHot[event->GetClass()] = 1.0;
+         testPattern.push_back(Pattern (values.begin(), values.end(),
+                                        oneHot.cbegin(), oneHot.cend(),
+                                        event->GetWeight()));
          testPattern.back().addInput(1.0);
       } else {
          const std::vector<Float_t>& targets = event->GetTargets ();
@@ -601,6 +620,7 @@ void TMVA::MethodDNN::Train()
          switch(fOutputFunction) {
             case EOutputFunction::kIdentity: h = ModeOutputValues::DIRECT;  break;
             case EOutputFunction::kSigmoid:  h = ModeOutputValues::SIGMOID; break;
+            case EOutputFunction::kSoftmax:  h = ModeOutputValues::SOFTMAX; break;
          }
          net.addLayer(Layer(fNet.GetLayer(i).GetWidth(), g, h));
       }
@@ -612,6 +632,9 @@ void TMVA::MethodDNN::Train()
          break;
       case ELossFunction::kCrossEntropy:
          net.setErrorFunction(ModeErrorFunction::CROSSENTROPY);
+         break;
+      case ELossFunction::kSoftmaxCrossEntropy:
+         net.setErrorFunction(ModeErrorFunction::CROSSENTROPY_MUTUALEXCLUSIVE);
          break;
    }
 
@@ -629,7 +652,6 @@ void TMVA::MethodDNN::Train()
                                 std::back_inserter(weights));
           break;
    }
-
 
    int idxSetting = 0;
    for (auto s : fTrainingSettings) {
@@ -725,7 +747,15 @@ void TMVA::MethodDNN::TrainGpu()
       TNet<TCuda<>> net(settings.batchSize, fNet);
       net.SetWeightDecay(settings.weightDecay);
       net.SetRegularization(settings.regularization);
-      net.SetDropoutProbabilities(settings.dropoutProbabilities);
+
+      // Need to convert dropoutprobabilities to conventions used
+      // by backend implementation.
+      std::vector<Double_t> dropoutVector(settings.dropoutProbabilities);
+      for (auto & p : dropoutVector) {
+         p = 1.0 - p;
+      }
+      net.SetDropoutProbabilities(dropoutVector);
+
       net.InitializeGradients();
       auto testNet = net.CreateClone(settings.batchSize);
 
@@ -773,18 +803,188 @@ void TMVA::MethodDNN::TrainGpu()
       std::chrono::time_point<std::chrono::system_clock> start, end;
       start = std::chrono::system_clock::now();
 
-      Log() << std::setw(10) << "Epoch" << " | "
-            << std::setw(12) << "Train Err."
-            << std::setw(12) << "Test  Err."
-            << std::setw(12) << "GFLOP/s"
-            << std::setw(12) << "Conv. Steps" << Endl;
-      std::string separator(62, '-');
-      Log() << separator << Endl;
+      if (!fInteractive) {
+         Log() << std::setw(10) << "Epoch" << " | "
+               << std::setw(12) << "Train Err."
+               << std::setw(12) << "Test  Err."
+               << std::setw(12) << "GFLOP/s"
+               << std::setw(12) << "Conv. Steps" << Endl;
+         std::string separator(62, '-');
+         Log() << separator << Endl;
+      }
 
       while (!converged)
       {
          stepCount++;
 
+         // Perform minimization steps for a full epoch.
+         trainingData.Shuffle();
+         for (size_t i = 0; i < batchesInEpoch; i += nThreads) {
+             batches.clear();
+             for (size_t j = 0; j < nThreads; j++) {
+                 batches.reserve(nThreads);
+                 batches.push_back(trainingData.GetBatch());
+             }
+             if (settings.momentum > 0.0) {
+                 minimizer.StepMomentum(net, nets, batches, settings.momentum);
+             } else {
+                 minimizer.Step(net, nets, batches);
+             }
+         }
+
+         if ((stepCount % minimizer.GetTestInterval()) == 0) {
+
+            // Compute test error.
+            Double_t testError = 0.0;
+            for (auto batch : testData) {
+               auto inputMatrix  = batch.GetInput();
+               auto outputMatrix = batch.GetOutput();
+               testError += testNet.Loss(inputMatrix, outputMatrix);
+            }
+            testError /= (Double_t) (nTestSamples / settings.batchSize);
+
+            end   = std::chrono::system_clock::now();
+
+            // Compute training error.
+            Double_t trainingError = 0.0;
+            for (auto batch : trainingData) {
+               auto inputMatrix  = batch.GetInput();
+               auto outputMatrix = batch.GetOutput();
+               trainingError += net.Loss(inputMatrix, outputMatrix);
+            }
+            trainingError /= (Double_t) (nTrainingSamples / settings.batchSize);
+
+            // Compute numerical throughput.
+            std::chrono::duration<double> elapsed_seconds = end - start;
+            double seconds = elapsed_seconds.count();
+            double nFlops  = (double) (settings.testInterval * batchesInEpoch);
+            nFlops *= net.GetNFlops() * 1e-9;
+
+            converged = minimizer.HasConverged(testError);
+            start = std::chrono::system_clock::now();
+
+            if (fInteractive) {
+               fInteractive->AddPoint(stepCount, trainingError, testError);
+               fIPyCurrentIter = 100.0 * minimizer.GetConvergenceCount()
+                                  / minimizer.GetConvergenceSteps ();
+               if (fExitFromTraining) break;
+            } else {
+               Log() << std::setw(10) << stepCount << " | "
+                     << std::setw(12) << trainingError
+                     << std::setw(12) << testError
+                     << std::setw(12) << nFlops / seconds
+                     << std::setw(12) << minimizer.GetConvergenceCount() << Endl;
+               if (converged) {
+                  Log() << Endl;
+               }
+            }
+         }
+      }
+      for (size_t l = 0; l < net.GetDepth(); l++) {
+         fNet.GetLayer(l).GetWeights() = (TMatrixT<Double_t>) net.GetLayer(l).GetWeights();
+         fNet.GetLayer(l).GetBiases()  = (TMatrixT<Double_t>) net.GetLayer(l).GetBiases();
+      }
+   }
+
+#else // DNNCUDA flag not set.
+
+   Log() << kFATAL << "CUDA backend not enabled. Please make sure "
+                      "you have CUDA installed and it was successfully "
+                      "detected by CMAKE." << Endl;
+#endif // DNNCUDA
+}
+
+//______________________________________________________________________________
+void TMVA::MethodDNN::TrainCpu()
+{
+
+#ifdef DNNCPU // Included only if DNNCPU flag is set.
+
+   size_t nTrainingSamples = GetEventCollection(Types::kTraining).size();
+   size_t nTestSamples     = GetEventCollection(Types::kTesting).size();
+
+   Log() << kINFO << "Start of neural network training on CPU." << Endl << Endl;
+
+   fNet.Initialize(fWeightInitialization);
+
+   size_t trainingPhase = 1;
+   for (TTrainingSettings & settings : fTrainingSettings) {
+
+      if (fInteractive){
+         fInteractive->ClearGraphs();
+      }
+
+      Log() << "Training phase " << trainingPhase << " of "
+            << fTrainingSettings.size() << ":" << Endl;
+      trainingPhase++;
+
+      TNet<TCpu<>> net(settings.batchSize, fNet);
+      net.SetWeightDecay(settings.weightDecay);
+      net.SetRegularization(settings.regularization);
+      // Need to convert dropoutprobabilities to conventions used
+      // by backend implementation.
+      std::vector<Double_t> dropoutVector(settings.dropoutProbabilities);
+      for (auto & p : dropoutVector) {
+         p = 1.0 - p;
+      }
+      net.SetDropoutProbabilities(dropoutVector);
+      net.SetDropoutProbabilities(settings.dropoutProbabilities);
+      net.InitializeGradients();
+      auto testNet = net.CreateClone(settings.batchSize);
+
+      using DataLoader_t = TDataLoader<TMVAInput_t, TCpu<>>;
+
+      size_t nThreads = 1;
+      DataLoader_t trainingData(GetEventCollection(Types::kTraining),
+                                nTrainingSamples,
+                                net.GetBatchSize(),
+                                net.GetInputWidth(),
+                                net.GetOutputWidth(), nThreads);
+      DataLoader_t testData(GetEventCollection(Types::kTesting),
+                            nTestSamples,
+                            testNet.GetBatchSize(),
+                            net.GetInputWidth(),
+                            net.GetOutputWidth(), nThreads);
+      DNN::TGradientDescent<TCpu<>> minimizer(settings.learningRate,
+                                               settings.convergenceSteps,
+                                               settings.testInterval);
+
+      std::vector<TNet<TCpu<>>>   nets{};
+      std::vector<TBatch<TCpu<>>> batches{};
+      nets.reserve(nThreads);
+      for (size_t i = 0; i < nThreads; i++) {
+         nets.push_back(net);
+         for (size_t j = 0; j < net.GetDepth(); j++)
+         {
+            auto &masterLayer = net.GetLayer(j);
+            auto &layer = nets.back().GetLayer(j);
+            TCpu<>::Copy(layer.GetWeights(),
+                          masterLayer.GetWeights());
+            TCpu<>::Copy(layer.GetBiases(),
+                          masterLayer.GetBiases());
+         }
+      }
+
+      bool   converged = false;
+      size_t stepCount = 0;
+      size_t batchesInEpoch = nTrainingSamples / net.GetBatchSize();
+
+      std::chrono::time_point<std::chrono::system_clock> start, end;
+      start = std::chrono::system_clock::now();
+
+      if (fInteractive) {
+         Log() << std::setw(10) << "Epoch" << " | "
+               << std::setw(12) << "Train Err."
+               << std::setw(12) << "Test  Err."
+               << std::setw(12) << "GFLOP/s"
+               << std::setw(12) << "Conv. Steps" << Endl;
+         std::string separator(62, '-');
+         Log() << separator << Endl;
+      }
+
+      while (!converged)
+      {
+         stepCount++;
          // Perform minimization steps for a full epoch.
          trainingData.Shuffle();
          for (size_t i = 0; i < batchesInEpoch; i += nThreads) {
@@ -837,172 +1037,20 @@ void TMVA::MethodDNN::TrainGpu()
             converged = minimizer.HasConverged(testError);
             start = std::chrono::system_clock::now();
 
-            Log() << std::setw(10) << stepCount << " | "
-                  << std::setw(12) << trainingError
-                  << std::setw(12) << testError
-                  << std::setw(12) << nFlops / seconds
-                  << std::setw(12) << minimizer.GetConvergenceCount() << Endl;
-            if (converged) {
-               Log() << Endl;
-            }
-         }
-      }
-      for (size_t l = 0; l < net.GetDepth(); l++) {
-         fNet.GetLayer(l).GetWeights() = (TMatrixT<Double_t>) net.GetLayer(l).GetWeights();
-         fNet.GetLayer(l).GetBiases()  = (TMatrixT<Double_t>) net.GetLayer(l).GetBiases();
-      }
-   }
-
-#else // DNNCUDA flag not set.
-
-   Log() << kFATAL << "CUDA backend not enabled. Please make sure "
-                      "you have CUDA installed and it was successfully "
-                      "detected by CMAKE." << Endl;
-#endif // DNNCUDA
-}
-
-//______________________________________________________________________________
-template<typename AFloat>
-void TMVA::MethodDNN::TrainCpu()
-{
-
-#ifdef DNNCPU // Included only if DNNCPU flag is set.
-
-   size_t nTrainingSamples = GetEventCollection(Types::kTraining).size();
-   size_t nTestSamples     = GetEventCollection(Types::kTesting).size();
-
-   Log() << kINFO << "Start of neural network training on CPU." << Endl << Endl;
-
-   fNet.Initialize(fWeightInitialization);
-
-   size_t trainingPhase = 1;
-   for (TTrainingSettings & settings : fTrainingSettings) {
-
-      if (fInteractive){
-         fInteractive->ClearGraphs();
-      }
-
-      Log() << "Training phase " << trainingPhase << " of "
-            << fTrainingSettings.size() << ":" << Endl;
-      trainingPhase++;
-
-      TNet<TCpu<AFloat>> net(settings.batchSize, fNet);
-      net.SetWeightDecay(settings.weightDecay);
-      net.SetRegularization(settings.regularization);
-      net.SetDropoutProbabilities(settings.dropoutProbabilities);
-      net.InitializeGradients();
-      auto testNet = net.CreateClone(settings.batchSize);
-
-      using DataLoader_t = TDataLoader<TMVAInput_t, TCpu<AFloat>>;
-
-      size_t nThreads = 1;
-      DataLoader_t trainingData(GetEventCollection(Types::kTraining),
-                                nTrainingSamples,
-                                net.GetBatchSize(),
-                                net.GetInputWidth(),
-                                net.GetOutputWidth(), nThreads);
-      DataLoader_t testData(GetEventCollection(Types::kTesting),
-                            nTestSamples,
-                            testNet.GetBatchSize(),
-                            net.GetInputWidth(),
-                            net.GetOutputWidth(), nThreads);
-      DNN::TGradientDescent<TCpu<AFloat>> minimizer(settings.learningRate,
-                                               settings.convergenceSteps,
-                                               settings.testInterval);
-
-      std::vector<TNet<TCpu<AFloat>>>   nets{};
-      std::vector<TBatch<TCpu<AFloat>>> batches{};
-      nets.reserve(nThreads);
-      for (size_t i = 0; i < nThreads; i++) {
-         nets.push_back(net);
-         for (size_t j = 0; j < net.GetDepth(); j++)
-         {
-            auto &masterLayer = net.GetLayer(j);
-            auto &layer = nets.back().GetLayer(j);
-            TCpu<AFloat>::Copy(layer.GetWeights(),
-                          masterLayer.GetWeights());
-            TCpu<AFloat>::Copy(layer.GetBiases(),
-                          masterLayer.GetBiases());
-         }
-      }
-
-      bool   converged = false;
-      size_t stepCount = 0;
-      size_t batchesInEpoch = nTrainingSamples / net.GetBatchSize();
-
-      std::chrono::time_point<std::chrono::system_clock> start, end;
-      start = std::chrono::system_clock::now();
-
-      Log() << std::setw(10) << "Epoch" << " | "
-            << std::setw(12) << "Train Err."
-            << std::setw(12) << "Test  Err."
-            << std::setw(12) << "GFLOP/s"
-            << std::setw(12) << "Conv. Steps" << Endl;
-      std::string separator(62, '-');
-      Log() << separator << Endl;
-
-      while (!converged)
-      {
-         stepCount++;
-         // Perform minimization steps for a full epoch.
-         trainingData.Shuffle();
-         for (size_t i = 0; i < batchesInEpoch; i += nThreads) {
-             batches.clear();
-             for (size_t j = 0; j < nThreads; j++) {
-                 batches.reserve(nThreads);
-                 batches.push_back(trainingData.GetBatch());
-             }
-             if (settings.momentum > 0.0) {
-                 minimizer.StepMomentum(net, nets, batches, settings.momentum);
-             } else {
-                 minimizer.Step(net, nets, batches);
-             }
-         }
-
-         if ((stepCount % minimizer.GetTestInterval()) == 0) {
-
-            // Compute test error.
-            AFloat testError = 0.0;
-            for (auto batch : testData) {
-               auto inputMatrix  = batch.GetInput();
-               auto outputMatrix = batch.GetOutput();
-               testError += testNet.Loss(inputMatrix, outputMatrix);
-            }
-            testError /= (Double_t) (nTestSamples / settings.batchSize);
-
-            end   = std::chrono::system_clock::now();
-
-            // Compute training error.
-            AFloat trainingError = 0.0;
-            for (auto batch : trainingData) {
-               auto inputMatrix  = batch.GetInput();
-               auto outputMatrix = batch.GetOutput();
-               trainingError += net.Loss(inputMatrix, outputMatrix);
-            }
-            trainingError /= (Double_t) (nTrainingSamples / settings.batchSize);
-
-	    if (fInteractive){
+            if (fInteractive) {
                fInteractive->AddPoint(stepCount, trainingError, testError);
-               fIPyCurrentIter = 100*(double)minimizer.GetConvergenceCount() /(double)settings.convergenceSteps;
+               fIPyCurrentIter = 100.0 * minimizer.GetConvergenceCount()
+                                  / minimizer.GetConvergenceSteps ();
                if (fExitFromTraining) break;
-            }
-
-            // Compute numerical throughput.
-            std::chrono::duration<double> elapsed_seconds = end - start;
-            double seconds = elapsed_seconds.count();
-            double nFlops  = (double) (settings.testInterval * batchesInEpoch);
-            nFlops *= net.GetNFlops() * 1e-9;
-
-            converged = minimizer.HasConverged(testError);
-            start = std::chrono::system_clock::now();
-
-            Log() << std::setw(10) << stepCount << " | "
-                  << std::setw(12) << trainingError
-                  << std::setw(12) << testError
-                  << std::setw(12) << nFlops / seconds
-                  << std::setw(12) << minimizer.GetConvergenceCount() << Endl;
-            if (converged) {
-               Log() << Endl;
+            } else {
+               Log() << std::setw(10) << stepCount << " | "
+                     << std::setw(12) << trainingError
+                     << std::setw(12) << testError
+                     << std::setw(12) << nFlops / seconds
+                     << std::setw(12) << minimizer.GetConvergenceCount() << Endl;
+               if (converged) {
+                  Log() << Endl;
+               }
             }
          }
       }
@@ -1039,7 +1087,7 @@ Double_t TMVA::MethodDNN::GetMvaValue( Double_t* /*errLower*/, Double_t* /*errUp
 }
 
 //______________________________________________________________________________
-const std::vector<Float_t> &TMVA::MethodDNN::GetRegressionValues()
+const std::vector<Float_t> & TMVA::MethodDNN::GetRegressionValues()
 {
    size_t nVariables = GetEvent()->GetNVariables();
    Matrix_t X(1, nVariables);
@@ -1077,14 +1125,29 @@ const std::vector<Float_t> &TMVA::MethodDNN::GetRegressionValues()
    return *fRegressionReturnVal;
 }
 
-const std::vector<Float_t> &TMVA::MethodDNN::GetMulticlassValues()
+const std::vector<Float_t> & TMVA::MethodDNN::GetMulticlassValues()
 {
-   Log() << kFATAL << "ERROR: Multiclass classification not yet implemented."
-         << Endl;
+   size_t nVariables = GetEvent()->GetNVariables();
+   Matrix_t X(1, nVariables);
+   Matrix_t YHat(1, DataInfo().GetNClasses());
+   if (fMulticlassReturnVal == NULL) {
+      fMulticlassReturnVal = new std::vector<Float_t>(DataInfo().GetNClasses());
+   }
+
+   const std::vector<Float_t>& inputValues = GetEvent()->GetValues();
+   for (size_t i = 0; i < nVariables; i++) {
+      X(0,i) = inputValues[i];
+   }
+
+   fNet.Prediction(YHat, X, fOutputFunction);
+   for (size_t i = 0; i < (size_t) YHat.GetNcols(); i++) {
+      (*fMulticlassReturnVal)[i] = YHat(0, i);
+   }
    return *fMulticlassReturnVal;
 }
+
 //______________________________________________________________________________
-void TMVA::MethodDNN::AddWeightsXMLTo( void* parent ) const 
+void TMVA::MethodDNN::AddWeightsXMLTo( void* parent ) const
 {
    void* nn = gTools().xmlengine().NewChild(parent, 0, "Weights");
    Int_t inputWidth = fNet.GetInputWidth();

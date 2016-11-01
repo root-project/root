@@ -4328,8 +4328,9 @@ int TUnixSystem::UnixTcpService(int port, Bool_t reuse, int backlog,
    } else {
       int bret;
       do {
-         inserver.sin_port = htons(tryport++);
+         inserver.sin_port = htons(tryport);
          bret = ::bind(sock, (struct sockaddr*) &inserver, sizeof(inserver));
+         tryport++;
       } while (bret < 0 && GetErrno() == EADDRINUSE && tryport < kSOCKET_MAXPORT);
       if (bret < 0) {
          ::SysError("TUnixSystem::UnixTcpService", "bind (port scan)");
@@ -4389,8 +4390,9 @@ int TUnixSystem::UnixUdpService(int port, int backlog)
    } else {
       int bret;
       do {
-         inserver.sin_port = htons(tryport++);
+         inserver.sin_port = htons(tryport);
          bret = ::bind(sock, (struct sockaddr*) &inserver, sizeof(inserver));
+         tryport++;
       } while (bret < 0 && GetErrno() == EADDRINUSE && tryport < kSOCKET_MAXPORT);
       if (bret < 0) {
          ::SysError("TUnixSystem::UnixUdpService", "bind (port scan)");

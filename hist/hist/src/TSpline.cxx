@@ -11,7 +11,7 @@
 
 /** \class TSpline
     \ingroup Hist
- Base class for spline implementation containing the Draw/Paint methods                                                              //
+ Base class for spline implementation containing the Draw/Paint methods.
 */
 
 #include "TROOT.h"
@@ -31,9 +31,8 @@ ClassImp(TSpline3)
 ClassImp(TSpline5)
 ClassImp(TSpline)
 
-
 ////////////////////////////////////////////////////////////////////////////////
-///copy constructor
+/// Copy constructor.
 
 TSpline::TSpline(const TSpline &sp) :
   TNamed(sp),
@@ -51,9 +50,8 @@ TSpline::TSpline(const TSpline &sp) :
 {
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-///destructor
+/// Destructor.
 
 TSpline::~TSpline()
 {
@@ -61,9 +59,8 @@ TSpline::~TSpline()
    if(fGraph) delete fGraph;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-///assignment operator
+/// Assignment operator.
 
 TSpline& TSpline::operator=(const TSpline &sp)
 {
@@ -84,15 +81,15 @@ TSpline& TSpline::operator=(const TSpline &sp)
    return *this;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this function with its current attributes.
 ///
 /// Possible option values are:
-///   "SAME"  superimpose on top of existing picture
-///   "L"     connect all computed points with a straight line
-///   "C"     connect all computed points with a smooth curve.
-///   "P"     add a polymarker at each knot
+///
+///  - "SAME"  superimpose on top of existing picture
+///  - "L"     connect all computed points with a straight line
+///  - "C"     connect all computed points with a smooth curve.
+///  - "P"     add a polymarker at each knot
 ///
 /// Note that the default value is "L". Therefore to draw on top
 /// of an existing picture, specify option "LSAME"
@@ -106,7 +103,6 @@ void TSpline::Draw(Option_t *option)
    AppendPad(option);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute distance from point px,py to a spline.
 
@@ -116,7 +112,6 @@ Int_t TSpline::DistancetoPrimitive(Int_t px, Int_t py)
    return fHistogram->DistancetoPrimitive(px, py);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute action corresponding to one event.
 
@@ -125,7 +120,6 @@ void TSpline::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    if (!fHistogram) return;
    fHistogram->ExecuteEvent(event, px, py);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint this function with its current attributes.
@@ -227,7 +221,6 @@ void TSpline::Paint(Option_t *option)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Stream an object of class TSpline.
 
@@ -265,18 +258,13 @@ void TSpline::Streamer(TBuffer &R__b)
    }
 }
 
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TSplinePoly                                                          //
-//                                                                      //
-// Base class for TSpline knot                                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
+/** \class TSplinePoly
+    \ingroup Hist
+ Base class for TSpline knot.
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
-///assignment operator
+/// Assignment operator.
 
 TSplinePoly &TSplinePoly::operator=(TSplinePoly const &other)
 {
@@ -288,7 +276,7 @@ TSplinePoly &TSplinePoly::operator=(TSplinePoly const &other)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///utility called by the copy constructors and = operator
+/// Utility called by the copy constructors and = operator.
 
 void TSplinePoly::CopyPoly(TSplinePoly const &other)
 {
@@ -296,17 +284,13 @@ void TSplinePoly::CopyPoly(TSplinePoly const &other)
    fY = other.fY;
 }
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TSplinePoly3                                                         //
-//                                                                      //
-// Class for TSpline3 knot                                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
+/** \class TSplinePoly3
+    \ingroup Hist
+ Class for TSpline3 knot.
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
-///assignment operator
+/// Assignment operator.
 
 TSplinePoly3 &TSplinePoly3::operator=(TSplinePoly3 const &other)
 {
@@ -318,7 +302,7 @@ TSplinePoly3 &TSplinePoly3::operator=(TSplinePoly3 const &other)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///utility called by the copy constructors and = operator
+/// Utility called by the copy constructors and = operator.
 
 void TSplinePoly3::CopyPoly(TSplinePoly3 const &other)
 {
@@ -327,17 +311,13 @@ void TSplinePoly3::CopyPoly(TSplinePoly3 const &other)
    fD = other.fD;
 }
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TSplinePoly5                                                         //
-//                                                                      //
-// Class for TSpline5 knot                                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
+/** \class TSplinePoly5
+    \ingroup Hist
+ Class for TSpline5 knot.
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
-///assignment operator
+/// Assignment operator.
 
 TSplinePoly5 &TSplinePoly5::operator=(TSplinePoly5 const &other)
 {
@@ -349,7 +329,7 @@ TSplinePoly5 &TSplinePoly5::operator=(TSplinePoly5 const &other)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///utility called by the copy constructors and = operator
+/// Utility called by the copy constructors and = operator.
 
 void TSplinePoly5::CopyPoly(TSplinePoly5 const &other)
 {
@@ -360,23 +340,16 @@ void TSplinePoly5::CopyPoly(TSplinePoly5 const &other)
    fF = other.fF;
 }
 
-
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TSpline3                                                             //
-//                                                                      //
-// Class to create third splines to interpolate knots                   //
-// Arbitrary conditions can be introduced for first and second          //
-// derivatives at beginning and ending points                           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
+/** \class TSpline3
+    \ingroup Hist
+ Class to create third splines to interpolate knots
+ Arbitrary conditions can be introduced for first and second
+ derivatives at beginning and ending points
+ */
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Third spline creator given an array of
-/// arbitrary knots in increasing abscissa order and
-/// possibly end point conditions
+/// Third spline creator given an array of arbitrary knots in increasing
+/// abscissa order and possibly end point conditions.
 
 TSpline3::TSpline3(const char *title,
                    Double_t x[], Double_t y[], Int_t n, const char *opt,
@@ -389,7 +362,7 @@ TSpline3::TSpline3(const char *title,
    // Set endpoint conditions
    if(opt) SetCond(opt);
 
-   // Create the plynomial terms and fill
+   // Create the polynomial terms and fill
    // them with node information
    fPoly = new TSplinePoly3[n];
    for (Int_t i=0; i<n; ++i) {
@@ -404,7 +377,7 @@ TSpline3::TSpline3(const char *title,
 ////////////////////////////////////////////////////////////////////////////////
 /// Third spline creator given an array of
 /// arbitrary function values on equidistant n abscissa
-/// values from xmin to xmax and possibly end point conditions
+/// values from xmin to xmax and possibly end point conditions.
 
 TSpline3::TSpline3(const char *title,
                    Double_t xmin, Double_t xmax,
@@ -419,7 +392,7 @@ TSpline3::TSpline3(const char *title,
    // Set endpoint conditions
    if(opt) SetCond(opt);
 
-   // Create the plynomial terms and fill
+   // Create the polynomial terms and fill
    // them with node information
    fPoly = new TSplinePoly3[n];
    for (Int_t i=0; i<n; ++i) {
@@ -431,11 +404,10 @@ TSpline3::TSpline3(const char *title,
    BuildCoeff();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Third spline creator given an array of
 /// arbitrary abscissas in increasing order and a function
-/// to interpolate and possibly end point conditions
+/// to interpolate and possibly end point conditions.
 
 TSpline3::TSpline3(const char *title,
                    Double_t x[], const TF1 *func, Int_t n, const char *opt,
@@ -449,7 +421,7 @@ TSpline3::TSpline3(const char *title,
    // Set endpoint conditions
    if(opt) SetCond(opt);
 
-   // Create the plynomial terms and fill
+   // Create the polynomial terms and fill
    // them with node information
    fPoly = new TSplinePoly3[n];
    for (Int_t i=0; i<n; ++i) {
@@ -461,11 +433,10 @@ TSpline3::TSpline3(const char *title,
    BuildCoeff();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Third spline creator given a function to be
-/// evaluated on n equidistand abscissa points between xmin
-/// and xmax and possibly end point conditions
+/// evaluated on n equidistant abscissa points between xmin
+/// and xmax and possibly end point conditions.
 
 TSpline3::TSpline3(const char *title,
                    Double_t xmin, Double_t xmax,
@@ -480,7 +451,7 @@ TSpline3::TSpline3(const char *title,
    // Set endpoint conditions
    if(opt) SetCond(opt);
 
-   // Create the plynomial terms and fill
+   // Create the polynomial terms and fill
    // them with node information
    fPoly = new TSplinePoly3[n];
    //when func is null we return. In this case it is assumed that the spline
@@ -496,11 +467,10 @@ TSpline3::TSpline3(const char *title,
    BuildCoeff();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Third spline creator given a TGraph with
 /// abscissa in increasing order and possibly end
-/// point conditions
+/// point conditions.
 
 TSpline3::TSpline3(const char *title,
                    const TGraph *g, const char *opt,
@@ -514,7 +484,7 @@ TSpline3::TSpline3(const char *title,
    // Set endpoint conditions
    if(opt) SetCond(opt);
 
-   // Create the plynomial terms and fill
+   // Create the polynomial terms and fill
    // them with node information
    fPoly = new TSplinePoly3[fNp];
    for (Int_t i=0; i<fNp; ++i) {
@@ -530,9 +500,8 @@ TSpline3::TSpline3(const char *title,
    BuildCoeff();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Third spline creator given a TH1
+/// Third spline creator given a TH1.
 
 TSpline3::TSpline3(const TH1 *h, const char *opt,
                    Double_t valbeg, Double_t valend) :
@@ -545,7 +514,7 @@ TSpline3::TSpline3(const TH1 *h, const char *opt,
    // Set endpoint conditions
    if(opt) SetCond(opt);
 
-   // Create the plynomial terms and fill
+   // Create the polynomial terms and fill
    // them with node information
    fPoly = new TSplinePoly3[fNp];
    for (Int_t i=0; i<fNp; ++i) {
@@ -559,9 +528,8 @@ TSpline3::TSpline3(const TH1 *h, const char *opt,
    BuildCoeff();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-///copy constructor
+/// Copy constructor.
 
 TSpline3::TSpline3(const TSpline3& sp3) :
   TSpline(sp3),
@@ -576,9 +544,8 @@ TSpline3::TSpline3(const TSpline3& sp3) :
       fPoly[i] = sp3.fPoly[i];
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-///assignment operator
+/// Assignment operator.
 
 TSpline3& TSpline3::operator=(const TSpline3& sp3)
 {
@@ -597,9 +564,8 @@ TSpline3& TSpline3::operator=(const TSpline3& sp3)
    return *this;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Check the boundary conditions
+/// Check the boundary conditions.
 
 void TSpline3::SetCond(const char *opt)
 {
@@ -617,10 +583,10 @@ void TSpline3::SetCond(const char *opt)
    else if (e2) fEndCond=2;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Test method for TSpline5
 ///
+/// ~~~ {.cpp}
 ///   n          number of data points.
 ///   m          2*m-1 is order of spline.
 ///                 m = 2 always for third spline.
@@ -635,10 +601,10 @@ void TSpline3::SetCond(const char *opt)
 ///   diff[3]    maximum values of differences of values and
 ///                 derivatives to right and left of knots.
 ///   com[3]     maximum values of coefficients.
+/// ~~~
 ///
-///
-///   test of TSpline3 with nonequidistant knots and
-///      equidistant knots follows.
+/// test of TSpline3 with non equidistant knots and
+/// equidistant knots follows.
 
 void TSpline3::Test()
 {
@@ -768,9 +734,8 @@ void TSpline3::Test()
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Find X
+/// Find X.
 
 Int_t TSpline3::FindX(Double_t x) const
 {
@@ -811,9 +776,8 @@ Int_t TSpline3::FindX(Double_t x) const
    return klow;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Eval this spline at x
+/// Eval this spline at x.
 
 Double_t TSpline3::Eval(Double_t x) const
 {
@@ -822,9 +786,8 @@ Double_t TSpline3::Eval(Double_t x) const
    return fPoly[klow].Eval(x);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Derivative
+/// Derivative.
 
 Double_t TSpline3::Derivative(Double_t x) const
 {
@@ -833,10 +796,9 @@ Double_t TSpline3::Derivative(Double_t x) const
    return fPoly[klow].Derivative(x);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// write this spline as a C++ function that can be executed without ROOT
-/// the name of the function is the name of the file up to the "." if any
+/// Write this spline as a C++ function that can be executed without ROOT
+/// the name of the function is the name of the file up to the "." if any.
 
 void TSpline3::SaveAs(const char *filename, Option_t * /*option*/) const
 {
@@ -994,9 +956,8 @@ void TSpline3::SaveAs(const char *filename, Option_t * /*option*/) const
    if (f) { f->close(); delete f;}
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Save primitive as a C++ statement(s) on output stream out
+/// Save primitive as a C++ statement(s) on output stream out.
 
 void TSpline3::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
@@ -1024,9 +985,8 @@ void TSpline3::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    out<<"   spline3->Draw("<<quote<<option<<quote<<");"<<std::endl;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-///set point number i.
+/// Set point number i.
 
 void TSpline3::SetPoint(Int_t i, Double_t x, Double_t y)
 {
@@ -1036,7 +996,7 @@ void TSpline3::SetPoint(Int_t i, Double_t x, Double_t y)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// set point coefficient number i
+/// Set point coefficient number i.
 
 void TSpline3::SetPointCoeff(Int_t i, Double_t b, Double_t c, Double_t d)
 {
@@ -1047,6 +1007,9 @@ void TSpline3::SetPointCoeff(Int_t i, Double_t b, Double_t c, Double_t d)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Build coefficients.
+///
+/// ~~~ {.cpp}
 ///      subroutine cubspl ( tau, c, n, ibcbeg, ibcend )
 ///  from  * a practical guide to splines *  by c. de boor
 ///     ************************  input  ***************************
@@ -1076,6 +1039,7 @@ void TSpline3::SetPointCoeff(Int_t i, Double_t b, Double_t c, Double_t d)
 ///        where h = x - tau(i). the function program *ppvalu* may be
 ///        used to evaluate f or its derivatives from tau,c, l = n-1,
 ///        and k=4.
+/// ~~~
 
 void TSpline3::BuildCoeff()
 {
@@ -1199,7 +1163,6 @@ L30: j = l-1;
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Stream an object of class TSpline3.
 
@@ -1230,23 +1193,18 @@ void TSpline3::Streamer(TBuffer &R__b)
    }
 }
 
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TSpline5                                                             //
-//                                                                      //
-// Class to create quintic natural splines to interpolate knots         //
-// Arbitrary conditions can be introduced for first and second          //
-// derivatives using double knots (see BuildCoeff) for more on this.    //
-// Double knots are automatically introduced at ending points           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
+/** \class TSpline5
+    \ingroup Hist
+ Class to create quintic natural splines to interpolate knots
+ Arbitrary conditions can be introduced for first and second
+ derivatives using double knots (see BuildCoeff) for more on this.
+ Double knots are automatically introduced at ending points
+ */
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Quintic natural spline creator given an array of
 /// arbitrary knots in increasing abscissa order and
-/// possibly end point conditions
+/// possibly end point conditions.
 
 TSpline5::TSpline5(const char *title,
                    Double_t x[], Double_t y[], Int_t n,
@@ -1261,7 +1219,7 @@ TSpline5::TSpline5(const char *title,
    // Check endpoint conditions
    BoundaryConditions(opt,beg,end,cb1,ce1,cb2,ce2);
 
-   // Create the plynomial terms and fill
+   // Create the polynomial terms and fill
    // them with node information
    fPoly = new TSplinePoly5[fNp];
    for (Int_t i=0; i<n; ++i) {
@@ -1276,11 +1234,10 @@ TSpline5::TSpline5(const char *title,
    BuildCoeff();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Quintic natural spline creator given an array of
 /// arbitrary function values on equidistant n abscissa
-/// values from xmin to xmax and possibly end point conditions
+/// values from xmin to xmax and possibly end point conditions.
 
 TSpline5::TSpline5(const char *title,
                    Double_t xmin, Double_t xmax,
@@ -1296,7 +1253,7 @@ TSpline5::TSpline5(const char *title,
    // Check endpoint conditions
    BoundaryConditions(opt,beg,end,cb1,ce1,cb2,ce2);
 
-   // Create the plynomial terms and fill
+   // Create the polynomial terms and fill
    // them with node information
    fPoly = new TSplinePoly5[fNp];
    for (Int_t i=0; i<n; ++i) {
@@ -1311,11 +1268,10 @@ TSpline5::TSpline5(const char *title,
    BuildCoeff();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Quintic natural spline creator given an array of
 /// arbitrary abscissas in increasing order and a function
-/// to interpolate and possibly end point conditions
+/// to interpolate and possibly end point conditions.
 
 TSpline5::TSpline5(const char *title,
                    Double_t x[], const TF1 *func, Int_t n,
@@ -1330,7 +1286,7 @@ TSpline5::TSpline5(const char *title,
    // Check endpoint conditions
    BoundaryConditions(opt,beg,end,cb1,ce1,cb2,ce2);
 
-   // Create the plynomial terms and fill
+   // Create the polynomial terms and fill
    // them with node information
    fPoly = new TSplinePoly5[fNp];
    for (Int_t i=0; i<n; i++) {
@@ -1345,11 +1301,10 @@ TSpline5::TSpline5(const char *title,
    BuildCoeff();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Quintic natural spline creator given a function to be
-/// evaluated on n equidistand abscissa points between xmin
-/// and xmax and possibly end point conditions
+/// evaluated on n equidistant abscissa points between xmin
+/// and xmax and possibly end point conditions.
 
 TSpline5::TSpline5(const char *title,
                    Double_t xmin, Double_t xmax,
@@ -1365,7 +1320,7 @@ TSpline5::TSpline5(const char *title,
    // Check endpoint conditions
    BoundaryConditions(opt,beg,end,cb1,ce1,cb2,ce2);
 
-   // Create the plynomial terms and fill
+   // Create the polynomial terms and fill
    // them with node information
    fPoly = new TSplinePoly5[fNp];
    for (Int_t i=0; i<n; ++i) {
@@ -1382,11 +1337,10 @@ TSpline5::TSpline5(const char *title,
    if (func) BuildCoeff();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Quintic natural spline creator given a TGraph with
 /// abscissa in increasing order and possibly end
-/// point conditions
+/// point conditions.
 
 TSpline5::TSpline5(const char *title,
                    const TGraph *g,
@@ -1401,7 +1355,7 @@ TSpline5::TSpline5(const char *title,
    // Check endpoint conditions
    BoundaryConditions(opt,beg,end,cb1,ce1,cb2,ce2);
 
-   // Create the plynomial terms and fill
+   // Create the polynomial terms and fill
    // them with node information
    fPoly = new TSplinePoly5[fNp];
    for (Int_t i=0; i<fNp-beg; ++i) {
@@ -1420,9 +1374,8 @@ TSpline5::TSpline5(const char *title,
    BuildCoeff();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Quintic natural spline creator given a TH1
+/// Quintic natural spline creator given a TH1.
 
 TSpline5::TSpline5(const TH1 *h,
                    const char *opt, Double_t b1, Double_t e1,
@@ -1436,7 +1389,7 @@ TSpline5::TSpline5(const TH1 *h,
    // Check endpoint conditions
    BoundaryConditions(opt,beg,end,cb1,ce1,cb2,ce2);
 
-   // Create the plynomial terms and fill
+   // Create the polynomial terms and fill
    // them with node information
    fPoly = new TSplinePoly5[fNp];
    for (Int_t i=0; i<fNp-beg; ++i) {
@@ -1453,9 +1406,8 @@ TSpline5::TSpline5(const TH1 *h,
    BuildCoeff();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-///copy constructor
+/// Copy constructor.
 
 TSpline5::TSpline5(const TSpline5& sp5) :
   TSpline(sp5),
@@ -1467,9 +1419,8 @@ TSpline5::TSpline5(const TSpline5& sp5) :
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-///assignment operator
+/// Assignment operator.
 
 TSpline5& TSpline5::operator=(const TSpline5& sp5)
 {
@@ -1484,10 +1435,9 @@ TSpline5& TSpline5::operator=(const TSpline5& sp5)
    return *this;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Check the boundary conditions and the
-/// amount of extra double knots needed
+/// amount of extra double knots needed.
 
 void TSpline5::BoundaryConditions(const char *opt,Int_t &beg,Int_t &end,
                                   const char *&cb1,const char *&ce1,
@@ -1517,9 +1467,8 @@ void TSpline5::BoundaryConditions(const char *opt,Int_t &beg,Int_t &end,
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Set the boundary conditions at double/triple knots
+/// Set the boundary conditions at double/triple knots.
 
 void TSpline5::SetBoundaries(Double_t b1, Double_t e1, Double_t b2, Double_t e2,
                              const char *cb1, const char *ce1, const char *cb2,
@@ -1567,9 +1516,8 @@ void TSpline5::SetBoundaries(Double_t b1, Double_t e1, Double_t b2, Double_t e2,
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Find X
+/// Find X.
 
 Int_t TSpline5::FindX(Double_t x) const
 {
@@ -1604,9 +1552,8 @@ Int_t TSpline5::FindX(Double_t x) const
    return klow;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Eval this spline at x
+/// Eval this spline at x.
 
 Double_t TSpline5::Eval(Double_t x) const
 {
@@ -1614,9 +1561,8 @@ Double_t TSpline5::Eval(Double_t x) const
    return fPoly[klow].Eval(x);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Derivative
+/// Derivative.
 
 Double_t TSpline5::Derivative(Double_t x) const
 {
@@ -1624,10 +1570,9 @@ Double_t TSpline5::Derivative(Double_t x) const
    return fPoly[klow].Derivative(x);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// write this spline as a C++ function that can be executed without ROOT
-/// the name of the function is the name of the file up to the "." if any
+/// Write this spline as a C++ function that can be executed without ROOT
+/// the name of the function is the name of the file up to the "." if any.
 
 void TSpline5::SaveAs(const char *filename, Option_t * /*option*/) const
 {
@@ -1817,9 +1762,8 @@ void TSpline5::SaveAs(const char *filename, Option_t * /*option*/) const
    if (f) { f->close(); delete f;}
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Save primitive as a C++ statement(s) on output stream out
+/// Save primitive as a C++ statement(s) on output stream out.
 
 void TSpline5::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
@@ -1851,9 +1795,8 @@ void TSpline5::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    out<<"   spline5->Draw("<<quote<<option<<quote<<");"<<std::endl;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-///set point number i.
+/// Set point number i.
 
 void TSpline5::SetPoint(Int_t i, Double_t x, Double_t y)
 {
@@ -1864,7 +1807,7 @@ void TSpline5::SetPoint(Int_t i, Double_t x, Double_t y)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// set point coefficient number i
+/// Set point coefficient number i.
 
 void TSpline5::SetPointCoeff(Int_t i, Double_t b, Double_t c, Double_t d,
                              Double_t e, Double_t f)
@@ -1877,26 +1820,29 @@ void TSpline5::SetPointCoeff(Int_t i, Double_t b, Double_t c, Double_t d,
    fPoly[i].F()= f;
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
-///     algorithm 600, collected algorithms from acm.
-///     algorithm appeared in acm-trans. math. software, vol.9, no. 2,
-///     jun., 1983, p. 258-259.
+/// Algorithm 600, collected algorithms from acm.
+///
+/// algorithm appeared in acm-trans. math. software, vol.9, no. 2,
+/// jun., 1983, p. 258-259.
 ///
 ///     TSpline5 computes the coefficients of a quintic natural quintic spli
 ///     s(x) with knots x(i) interpolating there to given function values:
+/// ~~~ {.cpp}
 ///               s(x(i)) = y(i)  for i = 1,2, ..., n.
+/// ~~~
 ///     in each interval (x(i),x(i+1)) the spline function s(xx) is a
 ///     polynomial of fifth degree:
+/// ~~~ {.cpp}
 ///     s(xx) = ((((f(i)*p+e(i))*p+d(i))*p+c(i))*p+b(i))*p+y(i)    (*)
 ///           = ((((-f(i)*q+e(i+1))*q-d(i+1))*q+c(i+1))*q-b(i+1))*q+y(i+1)
+/// ~~~
 ///     where  p = xx - x(i)  and  q = x(i+1) - xx.
 ///     (note the first subscript in the second expression.)
 ///     the different polynomials are pieced together so that s(x) and
 ///     its derivatives up to s"" are continuous.
 ///
-///        input:
+/// ### input:
 ///
 ///     n          number of data points, (at least three, i.e. n > 2)
 ///     x(1:n)     the strictly increasing or decreasing sequence of
@@ -1905,7 +1851,7 @@ void TSpline5::SetPointCoeff(Int_t i, Double_t b, Double_t c, Double_t d,
 ///                underflow of exponents.
 ///     y(1:n)     the prescribed function values at the knots.
 ///
-///        output:
+/// ### output:
 ///
 ///     b,c,d,e,f  the computed spline coefficients as in (*).
 ///         (1:n)  specifically
@@ -1914,15 +1860,17 @@ void TSpline5::SetPointCoeff(Int_t i, Double_t b, Double_t c, Double_t d,
 ///                f(n) is neither used nor altered.  the five arrays
 ///                b,c,d,e,f must always be distinct.
 ///
-///        option:
+/// ### option:
 ///
 ///     it is possible to specify values for the first and second
 ///     derivatives of the spline function at arbitrarily many knots.
 ///     this is done by relaxing the requirement that the sequence of
 ///     knots be strictly increasing or decreasing.  specifically:
 ///
+/// ~~~ {.cpp}
 ///     if x(j) = x(j+1) then s(x(j)) = y(j) and s'(x(j)) = y(j+1),
 ///     if x(j) = x(j+1) = x(j+2) then in addition s"(x(j)) = y(j+2).
+/// ~~~
 ///
 ///     note that s""(x) is discontinuous at a double knot and, in
 ///     addition, s"'(x) is discontinuous at a triple knot.  the
@@ -1930,20 +1878,24 @@ void TSpline5::SetPointCoeff(Int_t i, Double_t b, Double_t c, Double_t d,
 ///     y(i+2) at a triple knot.  the representation (*) remains
 ///     valid in each open interval (x(i),x(i+1)).  at a double knot,
 ///     x(j) = x(j+1), the output coefficients have the following values:
+/// ~~~ {.cpp}
 ///       y(j) = s(x(j))          = y(j+1)
 ///       b(j) = s'(x(j))         = b(j+1)
 ///       c(j) = s"(x(j))/2       = c(j+1)
 ///       d(j) = s"'(x(j))/6      = d(j+1)
 ///       e(j) = s""(x(j)-0)/24     e(j+1) = s""(x(j)+0)/24
 ///       f(j) = s""'(x(j)-0)/120   f(j+1) = s""'(x(j)+0)/120
+/// ~~~
 ///     at a triple knot, x(j) = x(j+1) = x(j+2), the output
 ///     coefficients have the following values:
+/// ~~~ {.cpp}
 ///       y(j) = s(x(j))         = y(j+1)    = y(j+2)
 ///       b(j) = s'(x(j))        = b(j+1)    = b(j+2)
 ///       c(j) = s"(x(j))/2      = c(j+1)    = c(j+2)
 ///       d(j) = s"'((x(j)-0)/6    d(j+1) = 0  d(j+2) = s"'(x(j)+0)/6
 ///       e(j) = s""(x(j)-0)/24    e(j+1) = 0  e(j+2) = s""(x(j)+0)/24
 ///       f(j) = s""'(x(j)-0)/120  f(j+1) = 0  f(j+2) = s""'(x(j)+0)/120
+/// ~~~
 
 void TSpline5::BuildCoeff()
 {
@@ -2100,11 +2052,10 @@ void TSpline5::BuildCoeff()
    fPoly[fNp-1].B() += (fPoly[fNp-1].C()-t)*q;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Test method for TSpline5
 ///
-///
+/// ~~~ {.cpp}
 ///   n          number of data points.
 ///   m          2*m-1 is order of spline.
 ///                 m = 3 always for quintic spline.
@@ -2119,9 +2070,9 @@ void TSpline5::BuildCoeff()
 ///   diff[5]    maximum values of differences of values and
 ///                 derivatives to right and left of knots.
 ///   com[5]     maximum values of coefficients.
+/// ~~~
 ///
-///
-///   test of TSpline5 with nonequidistant knots and
+///   test of TSpline5 with non equidistant knots and
 ///      equidistant knots follows.
 
 void TSpline5::Test()
@@ -2254,7 +2205,7 @@ void TSpline5::Test()
       printf("\n");
    }
 
-   //     Test of TSpline5 with nonequidistant double knots follows
+   //     Test of TSpline5 with non equidistant double knots follows
    printf("1  TEST OF TSpline5 WITH NONEQUIDISTANT DOUBLE KNOTS\n");
    n = 5;
    x[0] = -3;
@@ -2387,7 +2338,7 @@ void TSpline5::Test()
       printf("\n");
    }
 
-   //     test of TSpline5 with nonequidistant knots, one double knot,
+   //     test of TSpline5 with non equidistant knots, one double knot,
    //        one triple knot, follows.
    printf("1         TEST OF TSpline5 WITH NONEQUIDISTANT KNOTS,\n");
    printf("             ONE DOUBLE, ONE TRIPLE KNOT\n");
@@ -2454,7 +2405,7 @@ void TSpline5::Test()
    for (i = 0; i < mm1; ++i) printf("%16.8f",com[i]);
    printf("\n");
 
-   //     Test of TSpline5 with nonequidistant knots, two double knots,
+   //     Test of TSpline5 with non equidistant knots, two double knots,
    //        one triple knot,follows.
    printf("1         TEST OF TSpline5 WITH NONEQUIDISTANT KNOTS,\n");
    printf("             TWO DOUBLE, ONE TRIPLE KNOT\n");
@@ -2525,7 +2476,6 @@ void TSpline5::Test()
    for (i = 0; i < mm1; ++i) printf("%16.8f",com[i]);
    printf("\n");
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Stream an object of class TSpline5.

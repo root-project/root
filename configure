@@ -11,6 +11,12 @@
 # this easily.
 #
 ######################################################################
+
+echo "****************************************************************************************************************"
+echo "*  The classic configure/make method of building ROOT is now DEPRECATED in favor of the CMake one.             *"
+echo "*  Refer to README/INSTALL file for updated instructions or visit the page https://root.cern.ch/building-root  *"
+echo "****************************************************************************************************************"
+
 #
 ### echo %%% Some global variables
 #
@@ -1089,8 +1095,13 @@ include ${ac_srcdir}/config/Makefile.${arch}
 CC  = ${altcc}
 CXX = ${altcxx}
 LD  = ${altld}
+GCCTOOLCHAIN_OPT =
+ifneq (${gcctoolchain},)
+GCCTOOLCHAIN_OPT = --gcc-toolchain=${gcctoolchain}
+endif
+
 conftest: conftest.cxx
-	\$(CXX) \$(CFLAGS) $cxxopt \$(LDFLAGS) \$< -o \$@
+	\$(CXX) \$(CFLAGS) \$(GCCTOOLCHAIN_OPT) $cxxopt \$(LDFLAGS) \$< -o \$@
 
 conftest.cxx:
 	echo "int main() { return 0; }" > \$@
@@ -7775,6 +7786,7 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@ftgllibdir@|$ftgllibdir|"            \
     -e "s|@ftgllibs@|$ftgllibs|"                \
     -e "s|@builtingl2ps@|$enable_builtin_gl2ps|" \
+    -e "s|@gcctoolchain@|$gcctoolchain|"        \
     -e "s|@gl2psincdir@|$gl2psincdir|"          \
     -e "s|@gl2pslib@|$gl2pslib|"                \
     -e "s|@gl2pslibdir@|$gl2pslibdir|"          \
@@ -8195,6 +8207,7 @@ sed -e "s|@architecture@|$arch|"           \
     -e "s|@libdir@|$libdir2|"              \
     -e "s|@incdir@|$incdir2|"              \
     -e "s|@etcdir@|$etcdir2|"              \
+    -e "s|@top_srcdir@|$top_srcdir|"       \
     -e "s|@features@|$features|"           \
     -e "s|@winrtdebug@|$enable_winrtdebug|"\
     -e "s|@configargs@|$configargs|"       \
@@ -8474,5 +8487,10 @@ if [ "x$run_maintainer_clean" = "xyes" ]; then
    $gnumake maintainer-clean
    $0 `cat config.status 2>/dev/null`
 fi
+
+echo "****************************************************************************************************************"
+echo "*  The classic configure/make method of building ROOT is now DEPRECATED in favor of the CMake one.             *"
+echo "*  Refer to README/INSTALL file for updated instructions or visit the page https://root.cern.ch/building-root  *"
+echo "****************************************************************************************************************"
 
 exit 0

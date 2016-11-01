@@ -16,6 +16,7 @@
 
 #include <string>
 #include <tuple>
+#include <type_traits>
 
 namespace cling {
 
@@ -23,6 +24,11 @@ namespace cling {
 
   // General fallback - prints the address
   std::string printValue(const void *ptr);
+
+  // Fallback for e.g. vector<bool>'s bit iterator:
+  template <class T,
+    class = typename std::enable_if<!std::is_pointer<T>::value>::type>
+  std::string printValue(const T& val) { return "{not representable}"; }
 
   // void pointer
   std::string printValue(const void **ptr);
@@ -82,13 +88,21 @@ namespace cling {
         obj->begin()->first, obj->begin()->second,
         std::string());
 
-    // Vector, set, deque etc. declaration
+    // Vector, set, deque etc. declaration.
     template<typename CollectionType>
     auto printValue_impl(const CollectionType *obj, int)
       -> decltype(
-      ++(obj->begin()), obj->end(),
-        *(obj->begin()),
-        std::string());
+                  ++(obj->begin()), obj->end(),
+                  *(obj->begin()),  &(*(obj->begin())),
+                  std::string());
+
+    // As above, but without ability to take address of elements.
+    template<typename CollectionType>
+    auto printValue_impl(const CollectionType *obj, long)
+      -> decltype(
+                  ++(obj->begin()), obj->end(),
+                  *(obj->begin()),
+                  std::string());
 
     // No general fallback anymore here, void* overload used for that now
   }
@@ -164,9 +178,9 @@ namespace cling {
       return str + " }";
     }
 
-    // Vector, set, deque etc.
+    // As above, but without ability to take address of elements.
     template<typename CollectionType>
-    auto printValue_impl(const CollectionType *obj, int)
+    auto printValue_impl(const CollectionType *obj, long)
     -> decltype(
     ++(obj->begin()), obj->end(),
         *(obj->begin()),

@@ -211,7 +211,8 @@ void TFumili::BuildArrays(){
 
 TFumili::~TFumili() {
    DeleteArrays();
-   gROOT->GetListOfSpecials()->Remove(this);
+   if (gROOT && !gROOT->TestBit(TObject::kInvalidObject))
+      gROOT->GetListOfSpecials()->Remove(this);
    if (gFumili == this) gFumili = 0;
 }
 

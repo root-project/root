@@ -44,8 +44,8 @@ if (args.configFile != '' and (args.output != '' or args.inputFiles != [] or arg
 	exit(1)
 if (args.configFile != ''):
 	a = ROOT.TSimpleAnalysis(args.configFile)
-	a.Configure()
-	a.Run()
+	if a.Configure():
+		a.Run()
 else:
 	inputfile = ROOT.vector("string")(len(args.inputFiles))
 	for i,s in enumerate(args.inputFiles):

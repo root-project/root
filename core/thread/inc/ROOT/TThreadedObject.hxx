@@ -1,5 +1,5 @@
 // @(#)root/thread:$Id$
-// Author: Danilo Piparo, CERN  11/2/2015
+// Author: Danilo Piparo, CERN  11/2/2016
 
 /*************************************************************************
  * Copyright (C) 1995-2016, Rene Brun and Fons Rademakers.               *
@@ -19,8 +19,12 @@
 #include <map>
 #include <memory>
 #include <mutex>
+#include <string>
 #include <thread>
 #include <vector>
+
+#include "ROOT/TSpinMutex.hxx"
+#include "TROOT.h"
 
 namespace ROOT {
 
@@ -28,18 +32,38 @@ namespace ROOT {
 
       namespace TThreadedObjectUtils {
 
+         /// Get the unique index identifying a TThreadedObject.
+         inline unsigned GetTThreadedObjectIndex() {
+            static unsigned fgTThreadedObjectIndex = 0;
+            return fgTThreadedObjectIndex++;
+         }
+
          /// Return a copy of the object or a "Clone" if the copy constructor is not implemented.
          template<class T, bool isCopyConstructible = std::is_copy_constructible<T>::value>
          struct Cloner {
-            static T *Clone(const T &obj) {
-               return new T(obj);
+            static T *Clone(const T *obj, TDirectory* d = nullptr) {
+               T* clone;
+               if (d){
+                  TDirectory::TContext ctxt(d);
+                  clone = new T(*obj);
+               } else {
+                  clone = new T(*obj);
+               }
+               return clone;
             }
          };
 
          template<class T>
          struct Cloner<T, false> {
-            static T *Clone(const T &obj) {
-               return (T*)obj.Clone();
+            static T *Clone(const T *obj, TDirectory* d = nullptr) {
+               T* clone;
+               if (d){
+                  TDirectory::TContext ctxt(d);
+                  clone = (T*)obj->Clone();
+               } else {
+                  clone = (T*)obj->Clone();
+               }
+               return clone;
             }
          };
 
@@ -83,12 +107,24 @@ namespace ROOT {
    class TThreadedObject {
    public:
       static unsigned fgMaxSlots; ///< The maximum number of processing slots (distinct threads) which the instances can manage
+      TThreadedObject(const TThreadedObject&) = delete;
       /// Construct the TThreaded object and the "model" of the thread private
       /// objects.
       /// \tparam ARGS Arguments of the constructor of T
       template<class ...ARGS>
-      TThreadedObject(ARGS... args):
-      fModel(std::forward<ARGS>(args)...), fObjPointers(fgMaxSlots, nullptr) {}
+      TThreadedObject(ARGS... args): fObjPointers(fgMaxSlots, nullptr)
+      {
+         fDirectories.reserve(fgMaxSlots);
+
+         std::string dirName = "__TThreaded_dir_";
+         dirName += std::to_string(ROOT::Internal::TThreadedObjectUtils::GetTThreadedObjectIndex()) + "_";
+         for (unsigned i=0; i< fgMaxSlots;++i) {
+            fDirectories.emplace_back(gROOT->mkdir((dirName+std::to_string(i)).c_str()));
+         }
+
+         TDirectory::TContext ctxt(fDirectories[0]);
+         fModel.reset(new T(std::forward<ARGS>(args)...));
+      }
 
       /// Access a particular processing slot. This
       /// method is *thread-unsafe*: it cannot be invoked from two different
@@ -101,7 +137,7 @@ namespace ROOT {
          }
          auto objPointer = fObjPointers[i];
          if (!objPointer) {
-            objPointer.reset(Internal::TThreadedObjectUtils::Cloner<T>::Clone(fModel));
+            objPointer.reset(Internal::TThreadedObjectUtils::Cloner<T>::Clone(fModel.get(), fDirectories[i]));
             fObjPointers[i] = objPointer;
          }
          return objPointer;
@@ -165,21 +201,22 @@ namespace ROOT {
       {
          if (fIsMerged) {
             Warning("TThreadedObject::SnapshotMerge", "This object was already merged. Returning the previous result.");
-            return std::unique_ptr<T>(Internal::TThreadedObjectUtils::Cloner<T>::Clone(*fObjPointers[0].get()));
+            return std::unique_ptr<T>(Internal::TThreadedObjectUtils::Cloner<T>::Clone(fObjPointers[0].get()));
          }
-         auto targetPtr = Internal::TThreadedObjectUtils::Cloner<T>::Clone(fModel);
+         auto targetPtr = Internal::TThreadedObjectUtils::Cloner<T>::Clone(fModel.get());
          std::shared_ptr<T> targetPtrShared(targetPtr, [](T *) {});
          mergeFunction(targetPtrShared, fObjPointers);
          return std::unique_ptr<T>(targetPtr);
       }
 
    private:
-      const T fModel;                                    ///< Use to store a "model" of the object
+      std::unique_ptr<T> fModel;                         ///< Use to store a "model" of the object
       std::vector<std::shared_ptr<T>> fObjPointers;      ///< A pointer per thread is kept.
+      std::vector<TDirectory*> fDirectories;             ///< A TDirectory per thread is kept.
       std::map<std::thread::id, unsigned> fThrIDSlotMap; ///< A mapping between the thread IDs and the slots
       unsigned fCurrMaxSlotIndex = 0;                    ///< The maximum slot index
       bool fIsMerged = false;                            ///< Remember if the objects have been merged already
-      std::mutex* fThrIDSlotMutex = new std::mutex;      ///< Mutex to protect the ID-slot map access
+      ROOT::TSpinMutex fThrIDSlotMutex;                  ///< Mutex to protect the ID-slot map access
 
       /// Get the slot number for this threadID.
       unsigned GetThisSlotNumber()
@@ -187,7 +224,7 @@ namespace ROOT {
          const auto thisThreadID = std::this_thread::get_id();
          unsigned thisIndex;
          {
-            std::lock_guard<std::mutex> lg(*fThrIDSlotMutex);
+            std::lock_guard<ROOT::TSpinMutex> lg(fThrIDSlotMutex);
             auto thisSlotNumIt = fThrIDSlotMap.find(thisThreadID);
             if (thisSlotNumIt != fThrIDSlotMap.end()) return thisSlotNumIt->second;
             thisIndex = fCurrMaxSlotIndex++;
@@ -200,16 +237,24 @@ namespace ROOT {
 
    template<class T> unsigned TThreadedObject<T>::fgMaxSlots = 64;
 
-   ////////////////////////////////////////////////////////////////////////////////
-   /// Obtain a TThreadedObject instance
-   /// \tparam T Class of the object to be made thread private (e.g. TH1F)
-   /// \tparam ARGS Arguments of the constructor
-   template<class T, class ...ARGS>
-   TThreadedObject<T> MakeThreaded(ARGS &&... args)
-   {
-      return TThreadedObject<T>(std::forward<ARGS>(args)...);
-   }
-
 } // End ROOT namespace
+
+#include <sstream>
+
+////////////////////////////////////////////////////////////////////////////////
+/// Print a TThreadedObject at the prompt:
+
+namespace cling {
+   template<class T>
+   std::string printValue(ROOT::TThreadedObject<T> *val)
+   {
+      auto model = ((std::unique_ptr<T>*)(val))->get();
+      std::ostringstream ret;
+      ret << "A wrapper to make object instances thread private, lazily. "
+          << "The model which is replicated is " << printValue(model);
+      return ret.str();
+   }
+}
+
 
 #endif

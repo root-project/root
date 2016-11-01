@@ -225,6 +225,7 @@ public:
    virtual TInterpreterValue *CreateTemporary() { return 0; }
    virtual void   CodeComplete(const std::string&, size_t&,
                                std::vector<std::string>&) {;}
+   virtual int Evaluate(const char*, TInterpreterValue&) {return 0;}
 
    // core/meta helper functions.
    virtual EReturnType MethodCallReturnType(TFunction *func) const = 0;

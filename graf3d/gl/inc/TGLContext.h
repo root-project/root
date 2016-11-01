@@ -15,6 +15,8 @@
 #ifndef ROOT_TGLContext
 #define ROOT_TGLContext
 
+#include <memory>
+
 class TGLContextIdentity;
 
 #ifndef ROOT_TGLFormat
@@ -23,8 +25,6 @@ class TGLContextIdentity;
 #ifndef ROOT_Rtypes
 #include "Rtypes.h"
 #endif
-
-#include <memory>
 
 class TGLContextPrivate;
 class TGLPaintDevice;

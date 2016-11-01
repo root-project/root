@@ -609,6 +609,12 @@ CXXFLAGS += $(ROOT_CXXMODULES_CXXFLAGS)
 CFLAGS   += $(ROOT_CXXMODULES_CFLAGS)
 endif
 
+ifneq ($(GCCTOOLCHAIN),)
+CXXFLAGS += --gcc-toolchain=$(GCCTOOLCHAIN)
+CFLAGS   += --gcc-toolchain=$(GCCTOOLCHAIN)
+LDFLAGS  += --gcc-toolchain=$(GCCTOOLCHAIN)
+endif
+
 
 ALLLIBS      := $(CORELIB)
 ALLMAPS      := $(COREMAP)
@@ -1072,6 +1078,7 @@ endif
 	-@(mv -f tutorials/tmva/data/toy_sigbkg_categ_offset.root tutorials/tmva/data/toy_sigbkg_categ_offset.root- >/dev/null 2>&1;true)
 	-@(mv -f tutorials/tmva/data/toy_sigbkg_categ_varoff.root tutorials/tmva/data/toy_sigbkg_categ_varoff.root- >/dev/null 2>&1;true)
 	-@(mv -f tutorials/tmva/tmva_logo.gif tutorials/tmva/tmva_logo.gif- >/dev/null 2>&1;true)
+	-@(mv -f tutorials/spectrum/TSpectrum.root tutorials/spectrum/TSpectrum.root- >/dev/null 2>&1;true)
 	@(find tutorials -name "files" -exec rm -rf {} \; >/dev/null 2>&1;true)
 	@(find tutorials -name "*.root" -exec rm -rf {} \; >/dev/null 2>&1;true)
 	@(find tutorials -name "*.ps" -exec rm -rf {} \; >/dev/null 2>&1;true)
@@ -1089,6 +1096,7 @@ endif
 	-@(mv -f tutorials/tmva/data/toy_sigbkg_categ_offset.root- tutorials/tmva/data/toy_sigbkg_categ_offset.root >/dev/null 2>&1;true)
 	-@(mv -f tutorials/tmva/data/toy_sigbkg_categ_varoff.root- tutorials/tmva/data/toy_sigbkg_categ_varoff.root >/dev/null 2>&1;true)
 	-@(mv -f tutorials/tmva/tmva_logo.gif- tutorials/tmva/tmva_logo.gif >/dev/null 2>&1;true)
+	-@(mv -f tutorials/spectrum/TSpectrum.root- tutorials/spectrum/TSpectrum.root >/dev/null 2>&1;true)
 	@rm -f $(ROOTA) $(PROOFSERVA) $(ROOTALIB)
 	@rm -f README/ChangeLog build/dummy.d
 	@rm -f etc/gitinfo.txt

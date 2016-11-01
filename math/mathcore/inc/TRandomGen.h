@@ -65,8 +65,8 @@ public:
 #ifdef DEFINE_TEMPL_INSTANCE
 
 extern template class  TRandomGen<ROOT::Math::MixMaxEngine<240,0>>;
-extern template class TRandomGen<ROOT::Math::MixMaxEngine<256,2>>; 
-extern template class TRandomGen<ROOT::Math::MixMaxEngine<256,4>>; 
+extern template class TRandomGen<ROOT::Math::MixMaxEngine<256,2>>;
+extern template class TRandomGen<ROOT::Math::MixMaxEngine<256,4>>;
 extern template class TRandomGen<ROOT::Math::MixMaxEngine<17,0>>;
 extern template class TRandomGen<ROOT::Math::MixMaxEngine<17,1>>;
 

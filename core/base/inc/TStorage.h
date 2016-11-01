@@ -21,9 +21,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_Rtypes
+#include "RConfigure.h"
 #include "Rtypes.h"
-#endif
 
 typedef void (*FreeHookFun_t)(void*, void *addr, size_t);
 typedef void *(*ReAllocFun_t)(void*, size_t);
@@ -61,6 +60,9 @@ public:
    static void          *ObjectAllocArray(size_t size);
    static void          *ObjectAlloc(size_t size, void *vp);
    static void           ObjectDealloc(void *vp);
+#ifdef R__SIZEDDELETE
+   static void           ObjectDealloc(void *vp, size_t size);
+#endif
    static void           ObjectDealloc(void *vp, void *ptr);
 
    static void EnterStat(size_t size, void *p);

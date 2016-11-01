@@ -3,8 +3,8 @@
 /// Demonstrate how to activate and use the implicit parallelisation of TTree::GetEntry.
 /// Such parallelisation creates one task per top-level branch of the tree being read.
 /// In this example, most of the branches are floating point numbers, which are very fast to read.
-//  This parallelisation can be used, though, on bigger trees with many (complex) branches, which
-//  are more likely to benefit from speedup gains. 
+///  This parallelisation can be used, though, on bigger trees with many (complex) branches, which
+///  are more likely to benefit from speedup gains.
 ///
 /// \macro_code
 ///
@@ -45,13 +45,13 @@ int imt001_parBranchProcessing()
 
   // IMT can be also disabled globally.
   // As a result, no tree will run GetEntry in parallel
-  ROOT::DisableImplicitMT(); 
+  ROOT::DisableImplicitMT();
 
   // This is still sequential: the global flag is disabled, even if the
-  // flag for this particular tree is enabled 
+  // flag for this particular tree is enabled
   for (Long64_t i = 0; i < tree->GetEntries(); ++i) {
      tree->GetEntry(i);  // sequential read
   }
- 
+
   return 0;
 }
