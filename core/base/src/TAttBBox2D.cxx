@@ -1,5 +1,5 @@
 // @(#)root/graf:$Id$
-// Author: Rene Brun   16/10/95
+// Author: Anna-Pia Lohfink 27.3.2014
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
