@@ -48,6 +48,7 @@ compiler, not CINT.
 #include "clang/Sema/Lookup.h"
 #include "clang/Sema/Sema.h"
 #include "clang/Sema/Template.h"
+#include "clang/Sema/TemplateDeduction.h"
 
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/raw_ostream.h"
@@ -302,6 +303,18 @@ static void InstantiateFuncTemplateWithDefaults(clang::FunctionTemplateDecl* FTD
    bool skip = false; // whether we should not look this up.
    const ClassTemplateSpecializationDecl *ctxInstance
       = dyn_cast<ClassTemplateSpecializationDecl>(declCtxDecl);
+
+   // Provide an instantiation context that suppresses errors:
+   // DeducedTemplateArgumentSubstitution! (ROOT-8422)
+   SmallVector<DeducedTemplateArgument, 4> DeducedArgs;
+   ArrayRef< TemplateArgument > TemplateArgs;
+   sema::TemplateDeductionInfo Info{SourceLocation()};
+
+   Sema::InstantiatingTemplate Inst(S, Info.getLocation(), FTDecl,
+                                    TemplateArgs,
+                                    Sema::ActiveTemplateInstantiation::DeducedTemplateArgumentSubstitution,
+                                    Info);
+
    // Collect the function arguments of the templated function, substituting
    // dependent types as possible.
    for (const clang::ParmVarDecl *param: templatedDecl->parameters()) {
@@ -318,7 +331,6 @@ static void InstantiateFuncTemplateWithDefaults(clang::FunctionTemplateDecl* FTD
 
          MultiLevelTemplateArgumentList MLTAL(
             ctxInstance->getTemplateInstantiationArgs());
-         Sema::InstantiatingTemplate Inst(S, SourceLocation(), templatedDecl);
          paramType = S.SubstType(paramType, MLTAL, SourceLocation(),
                                  templatedDecl->getDeclName());
 
