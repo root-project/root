@@ -2905,3 +2905,11 @@ const TString& TROOT::GetTTFFontDir() {
    }
 #endif
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get the tutorials directory in the installation. Static utility function.
+/// Backward compatibility function - do not use for new code
+
+const char *TROOT::GetTutorialsDir() {
+   return GetTutorialDir();
+}

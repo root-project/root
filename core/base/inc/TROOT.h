@@ -363,6 +363,9 @@ public:
    static const TString& GetIconPath();
    static const TString& GetTTFFontDir();
 
+   // Backward compatibility function - do not use for new code
+   static const char *GetTutorialsDir();
+
    ClassDef(TROOT,0)  //Top level (or root) structure for all classes
 };
 
