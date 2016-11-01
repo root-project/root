@@ -4,7 +4,7 @@
 
 ROOTETCDIR=`root -b -q -l -n -e "std::cout << TROOT::GetEtcDir() << std::endl;" | tail -1`
 echo "Using etcdir "$ROOTETCDIR
-ROOTTUTDIR=`root -b -q -l -n -e "std::cout << TROOT::GetTutorialsDir() << std::endl;" | tail -1`
+ROOTTUTDIR=`root -b -q -l -n -e "std::cout << TROOT::GetTutorialDir() << std::endl;" | tail -1`
 echo "Using tutorials dir" $ROOTTUTDIR 
 
 if [ $# -eq 1 ]

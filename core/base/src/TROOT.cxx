@@ -652,7 +652,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    GetDataDir();
    GetDocDir();
    GetMacroDir();
-   GetTutorialsDir();
+   GetTutorialDir();
    GetSourceDir();
    GetIconPath();
    GetTTFFontDir();
@@ -2825,7 +2825,7 @@ const TString& TROOT::GetMacroDir() {
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the tutorials directory in the installation. Static utility function.
 
-const TString& TROOT::GetTutorialsDir() {
+const TString& TROOT::GetTutorialDir() {
 #ifdef ROOTTUTDIR
    if (IgnorePrefix()) {
 #endif

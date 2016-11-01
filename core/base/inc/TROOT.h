@@ -358,7 +358,7 @@ public:
    static const TString& GetDataDir();
    static const TString& GetDocDir();
    static const TString& GetMacroDir();
-   static const TString& GetTutorialsDir();
+   static const TString& GetTutorialDir();
    static const TString& GetSourceDir();
    static const TString& GetIconPath();
    static const TString& GetTTFFontDir();

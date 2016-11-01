@@ -884,7 +884,7 @@ Long_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
          Error("ProcessLine", "Cannot show demos in batch mode!");
          return 1;
       }
-      ProcessLine(".x " + TROOT::GetTutorialsDir() + "/demos.C");
+      ProcessLine(".x " + TROOT::GetTutorialDir() + "/demos.C");
       return 0;
    }
 

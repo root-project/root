@@ -17,7 +17,7 @@ void Background_width() {
    Double_t source[nbins];
    gROOT->ForceStyle();
 
-   TString dir  = gROOT->GetTutorialsDir();
+   TString dir  = gROOT->GetTutorialDir();
    TString file = dir+"/spectrum/TSpectrum.root";
    TFile *f     = new TFile(file.Data());
    TH1F *back = (TH1F*) f->Get("back1");

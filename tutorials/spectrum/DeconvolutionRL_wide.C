@@ -17,7 +17,7 @@ void DeconvolutionRL_wide() {
    Double_t response[nbins];
    gROOT->ForceStyle();
 
-   TString dir  = gROOT->GetTutorialsDir();
+   TString dir  = gROOT->GetTutorialDir();
    TString file = dir+"/spectrum/TSpectrum.root";
    TFile *f     = new TFile(file.Data());
    h = (TH1F*) f->Get("decon3");
