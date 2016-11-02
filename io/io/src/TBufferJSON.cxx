@@ -89,6 +89,7 @@ class TArrayIndexProducer {
    protected:
 
       Int_t fTotalLen;
+      Int_t fCnt;
       Bool_t fUseIndicies;
       TStreamerElement* fElem;
       const char* fSepar;
@@ -98,24 +99,28 @@ class TArrayIndexProducer {
    public:
       TArrayIndexProducer(Int_t totallen, TStreamerElement* elem, const char* separ) :
          fTotalLen(totallen),
+         fCnt(-1),
          fUseIndicies(kFALSE),
          fElem(elem),
          fSepar(separ),
-         fIndicies() {
+         fIndicies()
+      {
+         fUseIndicies = IsArray() && (elem!=0) && (elem->GetArrayDim() > 1) && (elem->GetArrayLength()==totallen);
 
-            fUseIndicies = IsArray() && (elem!=0) && (elem->GetArrayDim() > 1) && (elem->GetArrayLength()==totallen);
-
-            if (fUseIndicies) {
-               fIndicies.Set(elem->GetArrayDim());
-               fIndicies.Reset(0);
-            }
+         if (fUseIndicies) {
+            fIndicies.Set(elem->GetArrayDim());
+            fIndicies.Reset(0);
          }
+      }
 
-      Bool_t IsArray() const {
+      Bool_t IsArray() const
+      {
          return (fTotalLen>1) || (fElem && (fElem->GetArrayDim()>0));
       }
 
-      const char* GetBegin() {
+      const char* GetBegin()
+      {
+         ++fCnt;
          // return starting separator
          if (!fUseIndicies) return "[";
          fRes.Clear();
@@ -123,7 +128,8 @@ class TArrayIndexProducer {
          return fRes.Data();
       }
 
-      const char* GetEnd() {
+      const char* GetEnd()
+      {
          // return ending separator
          if (!fUseIndicies) return "]";
          fRes.Clear();
@@ -131,9 +137,11 @@ class TArrayIndexProducer {
          return fRes.Data();
       }
 
-      const char* NextSeparator() {
+      const char* NextSeparator()
+      {
+         // return intermidiate or last separator
 
-         // return internal separator
+         if (++fCnt >= fTotalLen) return GetEnd();
 
          if (!fUseIndicies) return fSepar;
 
@@ -175,6 +183,7 @@ public:
    Bool_t            fAccObjects;     //! if true, accumulate whole objects in values
    TObjArray         fValues;         //! raw values
    Int_t             fLevel;          //! indent level
+   TArrayIndexProducer *fIndx;        //! producer of ndim indexes
 
    TJSONStackObj() :
       TObject(),
@@ -187,7 +196,8 @@ public:
       fIsObjStarted(kFALSE),
       fAccObjects(kFALSE),
       fValues(),
-      fLevel(0)
+      fLevel(0),
+      fIndx(0)
    {
       fValues.SetOwner(kTRUE);
    }
@@ -195,6 +205,7 @@ public:
    virtual ~TJSONStackObj()
    {
       if (fIsElemOwner) delete fElem;
+      if (fIndx) delete fIndx;
    }
 
    Bool_t IsStreamerInfo() const
@@ -1294,6 +1305,12 @@ void TBufferJSON::WorkWithElement(TStreamerElement *elem, Int_t comp_type)
    stack->fIsElemOwner = (number < 0);
 
    JsonStartElement(elem, base_class);
+
+   if ((elem->GetType() == TStreamerInfo::kOffsetL + TStreamerInfo::kStreamLoop) &&
+       (elem->GetArrayDim() > 0)) {
+          stack->fIndx = new TArrayIndexProducer(elem->GetArrayLength(), elem, fArraySepar.Data());
+          AppendOutput(stack->fIndx->GetBegin());
+       }
 }
 
 //______________________________________________________________________________
@@ -2507,10 +2524,9 @@ void  TBufferJSON::WriteFastArray(void *start, const TClass *cl, Int_t n,
    if (!n) n = 1;
    int size = cl->Size();
 
+   printf("WriteFastArray* sz %d cl %s elem %s ndim %d\n", n, cl->GetName(), Stack(0)->fElem->GetName(), Stack(0)->fElem->GetArrayDim());
 
    TArrayIndexProducer indexes(n, Stack(0)->fElem, fArraySepar.Data());
-
-   printf("WriteFastArray* sz %d cl %s elem %s ndim %d\n", n, cl->GetName(), Stack(0)->fElem->GetName(), Stack(0)->fElem->GetArrayDim());
 
    if (indexes.IsArray()) {
       JsonDisablePostprocessing();
@@ -2532,6 +2548,8 @@ void  TBufferJSON::WriteFastArray(void *start, const TClass *cl, Int_t n,
    if (indexes.IsArray())
       AppendOutput(indexes.GetEnd());
 
+   if (Stack(0)->fIndx)
+      AppendOutput(Stack(0)->fIndx->NextSeparator());
 }
 
 //______________________________________________________________________________
@@ -2583,6 +2601,9 @@ Int_t TBufferJSON::WriteFastArray(void **start, const TClass *cl, Int_t n,
 
    if (indexes.IsArray())
       AppendOutput(indexes.GetEnd());
+
+   if (Stack(0)->fIndx)
+      AppendOutput(Stack(0)->fIndx->NextSeparator());
 
    return res;
 }
