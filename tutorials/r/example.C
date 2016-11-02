@@ -22,8 +22,8 @@ void example() {
 
    // compute standard deviation of 1000 vector normal numbers
 
-   double std_dev_r  = r.Eval("sd(rnorm(1000))");
-   std::vector<double> v = r.Eval("rnorm(1000)");
+   double std_dev_r  = r.Eval("sd(rnorm(10000))");
+   std::vector<double> v = r.Eval("rnorm(10000)");
    double std_dev_root = TMath::StdDev(v.begin(),v.end());
    std::cout << "standard deviation from R    = " << std_dev_r << std::endl;
    std::cout << "standard deviation from ROOT = " <<  std_dev_root << std::endl;
