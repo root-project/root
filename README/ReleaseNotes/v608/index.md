@@ -129,6 +129,12 @@ Add a new mode for `TClass::SetCanSplit` (2) which indicates that this class and
 * Added support for AWS temporary security credentials to TS3WebFile by allowing the security token to be given.
 * Resolve an issue when space is freed in a large `ROOT` file and a TDirectory is updated and stored the lower (less than 2GB) freed portion of the file [ROOT-8055].
 
+- ##### TBufferJSON:
+   - support data members with //[fN] comment
+   - preliminary support of STL containers
+   - JSON data can be produced with TObject::SaveAs() method
+
+
 ## TTree Libraries
 
 * TChains can now be histogrammed without any C++ code, using the command line tool `rootdrawtree`. It is based on the new class `TSimpleAnalysis`.
@@ -398,6 +404,34 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
   * Capture unlimited output also when using an IPython Kernel (fixes ROOT-7960)
 
 ## JavaScript ROOT
+
+- New geometry (TGeo) classes support:
+   - browsing  through volumes hieararchy
+   - changing visibility flags
+   - drawing of selected volumes
+   - support of large (~10M volumes) models, only most significant volumes are shown
+   - one could activate several clip planes (only with WebGL)
+   - interaction with object browser to change visibility flags or focus on selected volume
+   - support of floating browser for TGeo objects
+   - intensive use of HTML Worker to offload computation tasks and keep interactivity   
+   - enable more details when changing camera position/zoom
+- Improvements in histograms 3D drawing
+   - all lego options: lego1..lego4, combined with 'fb', 'bb', '0' or 'z'
+   - support axis labels on lego plots
+   - support lego plots for TH1
+- Significant (up to factor 10) performance improvement in 3D-graphics
+- Implement ROOT6-like color palettes
+- Support non-equidistant bins for TH1/TH2 objects.
+- Improve TF1 drawing - support exp function in TFormula, fix errors with logx scale, enable zoom-in, (re)calculate function points when zooming
+- Introduce many context menus for improving interactivity
+- Implement col0 and col0z draw option for TH2 histograms, similar to ROOT6
+- Implement box and hbox draw options for TH1 class
+- Significant (factor 4) I/O performance improvement
+- New 'flex' layout:
+   - create frames like in Multi Document Interface
+   - one could move/resize/minimize/maximize such frames
+
+For more details, like the complete change log, the documentation, and very detailed examples, see the [JSROOT home page](https://root.cern.ch/js) and the [JSROOT project github page](https://github.com/linev/jsroot) 
 
 
 ## Tutorials
