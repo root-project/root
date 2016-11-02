@@ -22,6 +22,8 @@
 #include "TDecompBase.h"
 #endif
 
+#include "Rtypes.h"
+
 class TDecompQRH : public TDecompBase
 {
 protected :

@@ -36,6 +36,7 @@ however Cramer algorithm is about 10 (!) times faster
 */
 
 #include "TMatrixTCramerInv.h"
+#include "TError.h"
 
 #if !defined(R__SOLARIS) && !defined(R__ACC) && !defined(R__FBSD)
 NamespaceImp(TMatrixTCramerInv);
