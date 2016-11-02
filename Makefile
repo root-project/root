@@ -867,7 +867,7 @@ endif
 $(COREDS): $(COREDICTHDEP) $(COREL) $(ROOTCLINGSTAGE1DEP) $(LLVMDEP)
 	$(MAKEDIR)
 	@echo "Generating dictionary $@..."
-	$(ROOTCLINGSTAGE1) -f $@ -s lib/libCore.$(SOEXT) -c $(COREDICTCXXFLAGS) \
+	$(ROOTCLINGSTAGE1) -f $@ -s $(CORELIB) -c $(COREDICTCXXFLAGS) \
 	   $(COREDICTH) $(COREL0) && touch lib/libCore_rdict.pcm
 
 $(call pcmname,$(CORELIB)): $(COREDS)
