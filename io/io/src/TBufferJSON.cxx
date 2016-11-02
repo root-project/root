@@ -78,6 +78,90 @@ ClassImp(TBufferJSON)
 const char *TBufferJSON::fgFloatFmt = "%e";
 const char *TBufferJSON::fgDoubleFmt = "%.14e";
 
+// TArrayIndexProducer is used to correctly create
+// JSON array separators for multi-dimensional JSON arrays
+// It fully reproduces array dimensions as in original ROOT classes
+// Contrary to binary I/O, which always writes flat arrays
+
+class TArrayIndexProducer {
+   protected:
+
+      Int_t fTotalLen;
+      Int_t fCnt;
+      Bool_t fUseIndicies;
+      TStreamerElement* fElem;
+      const char* fSepar;
+      TArrayI fIndicies;
+      TString fRes;
+
+   public:
+      TArrayIndexProducer(Int_t totallen, TStreamerElement* elem, const char* separ) :
+         fTotalLen(totallen),
+         fCnt(-1),
+         fUseIndicies(kFALSE),
+         fElem(elem),
+         fSepar(separ),
+         fIndicies()
+      {
+         fUseIndicies = IsArray() && (elem!=0) && (elem->GetArrayDim() > 1) && (elem->GetArrayLength()==totallen);
+
+         if (fUseIndicies) {
+            fIndicies.Set(elem->GetArrayDim());
+            fIndicies.Reset(0);
+         }
+      }
+
+      Bool_t IsArray() const
+      {
+         return (fTotalLen>1) || (fElem && (fElem->GetArrayDim()>0));
+      }
+
+      const char* GetBegin()
+      {
+         ++fCnt;
+         // return starting separator
+         if (!fUseIndicies) return "[";
+         fRes.Clear();
+         for (Int_t n=0;n<fIndicies.GetSize();++n) fRes.Append("[");
+         return fRes.Data();
+      }
+
+      const char* GetEnd()
+      {
+         // return ending separator
+         if (!fUseIndicies) return "]";
+         fRes.Clear();
+         for (Int_t n=0;n<fIndicies.GetSize();++n) fRes.Append("]");
+         return fRes.Data();
+      }
+
+      const char* NextSeparator()
+      {
+         // return intermidiate or last separator
+
+         if (++fCnt >= fTotalLen) return GetEnd();
+
+         if (!fUseIndicies) return fSepar;
+
+         Int_t cnt = fIndicies.GetSize() - 1;
+         fIndicies[cnt]++;
+
+         fRes.Clear();
+
+         while ((cnt >= 0) && (cnt < fIndicies.GetSize()))  {
+            if (fIndicies[cnt] >= fElem->GetMaxIndex(cnt)) {
+               fRes.Append("]");
+               fIndicies[cnt--] = 0;
+               if (cnt >= 0) fIndicies[cnt]++;
+               continue;
+            }
+            fRes.Append(fIndicies[cnt] == 0 ? "[" : fSepar);
+            cnt++;
+         }
+         return fRes.Data();
+      }
+};
+
 
 // TJSONStackObj is used to keep stack of object hierarchy,
 // stored in TBuffer. For instance, data for parent class(es)
@@ -95,6 +179,7 @@ public:
    Bool_t            fAccObjects;     //! if true, accumulate whole objects in values
    TObjArray         fValues;         //! raw values
    Int_t             fLevel;          //! indent level
+   TArrayIndexProducer *fIndx;        //! producer of ndim indexes
 
    TJSONStackObj() :
       TObject(),
@@ -107,7 +192,8 @@ public:
       fIsObjStarted(kFALSE),
       fAccObjects(kFALSE),
       fValues(),
-      fLevel(0)
+      fLevel(0),
+      fIndx(0)
    {
       fValues.SetOwner(kTRUE);
    }
@@ -115,6 +201,7 @@ public:
    virtual ~TJSONStackObj()
    {
       if (fIsElemOwner) delete fElem;
+      if (fIndx) delete fIndx;
    }
 
    Bool_t IsStreamerInfo() const
@@ -730,7 +817,7 @@ void TBufferJSON::JsonStartElement(const TStreamerElement *elem, const TClass *b
          case TClassEdit::kList   :
             elem_name = "fList";
             break;
-         case TClassEdit::kForwardist :
+         case TClassEdit::kForwardlist :
             elem_name = "fForwardlist";
             break;
          case TClassEdit::kDeque  :
@@ -1234,6 +1321,12 @@ void TBufferJSON::WorkWithElement(TStreamerElement *elem, Int_t comp_type)
    stack->fIsElemOwner = (number < 0);
 
    JsonStartElement(elem, base_class);
+
+   if ((elem->GetType() == TStreamerInfo::kOffsetL + TStreamerInfo::kStreamLoop) &&
+       (elem->GetArrayDim() > 0)) {
+          stack->fIndx = new TArrayIndexProducer(elem->GetArrayLength(), elem, fArraySepar.Data());
+          AppendOutput(stack->fIndx->GetBegin());
+       }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2450,45 +2543,30 @@ void  TBufferJSON::WriteFastArray(void *start, const TClass *cl, Int_t n,
    if (!n) n = 1;
    int size = cl->Size();
 
-   TStreamerElement* elem = Stack(0)->fElem;
-   Bool_t isarray = (n>1) || (elem && (elem->GetArrayDim()>0));
-   Bool_t usindicies = isarray && (elem!=0) && (elem->GetArrayDim() > 1) && (elem->GetArrayLength()==n);
-   TArrayI indexes(usindicies ? elem->GetArrayDim() : 1);
-   indexes.Reset(0);
-   Int_t cnt = 0;
+   TArrayIndexProducer indexes(n, Stack(0)->fElem, fArraySepar.Data());
 
-   if (isarray) JsonDisablePostprocessing();
+   if (indexes.IsArray()) {
+      JsonDisablePostprocessing();
+      AppendOutput(indexes.GetBegin());
+   }
 
    for (Int_t j = 0; j < n; j++, obj += size) {
-      if (isarray) {
-         if (usindicies) {
-            while ((cnt >= 0) && (cnt < indexes.GetSize()))  {
-               if (indexes[cnt] >= elem->GetMaxIndex(cnt)) {
-                  AppendOutput("]");
-                  indexes[cnt--] = 0;
-                  if (cnt >= 0) indexes[cnt]++;
-                  continue;
-               }
-               AppendOutput(indexes[cnt] == 0 ? "[" : fArraySepar.Data());
-               cnt++;
-            }
-            if (cnt>0) indexes[--cnt]++;
-         } else {
-            AppendOutput((j==0) ? "[" : fArraySepar.Data());
-         }
-      }
+
+      if (j>0) AppendOutput(indexes.NextSeparator());
 
       JsonWriteObject(obj, cl, kFALSE);
 
-      if (isarray && (fValue.Length() > 0)) {
+      if (indexes.IsArray() && (fValue.Length() > 0)) {
          AppendOutput(fValue.Data());
          fValue.Clear();
       }
    }
 
-   if (isarray)
-      for (Int_t k=0;k<indexes.GetSize();++k) AppendOutput("]");
+   if (indexes.IsArray())
+      AppendOutput(indexes.GetEnd());
 
+   if (Stack(0)->fIndx)
+      AppendOutput(Stack(0)->fIndx->NextSeparator());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2511,33 +2589,16 @@ Int_t TBufferJSON::WriteFastArray(void **start, const TClass *cl, Int_t n,
 
    Int_t res = 0;
 
-   TStreamerElement* elem = Stack(0)->fElem;
-   Bool_t isarray = (n>1) || (elem && (elem->GetArrayDim()>0));
-   Bool_t usindicies = isarray && (elem!=0) && (elem->GetArrayDim() > 1) && (elem->GetArrayLength()==n);
-   TArrayI indexes(usindicies ? elem->GetArrayDim() : 1);
-   indexes.Reset(0);
-   Int_t cnt = 0;
+   TArrayIndexProducer indexes(n, Stack(0)->fElem, fArraySepar.Data());
 
-   if (isarray) JsonDisablePostprocessing();
+   if (indexes.IsArray()) {
+      JsonDisablePostprocessing();
+      AppendOutput(indexes.GetBegin());
+   }
 
    for (Int_t j = 0; j < n; j++) {
-      if (isarray) {
-         if (usindicies) {
-            while ((cnt >= 0) && (cnt < indexes.GetSize()))  {
-               if (indexes[cnt] >= elem->GetMaxIndex(cnt)) {
-                  AppendOutput("]");
-                  indexes[cnt--] = 0;
-                  if (cnt >= 0) indexes[cnt]++;
-                  continue;
-               }
-               AppendOutput(indexes[cnt] == 0 ? "[" : fArraySepar.Data());
-               cnt++;
-            }
-            if (cnt>0) indexes[--cnt]++;
-         } else {
-            AppendOutput((j==0) ? "[" : fArraySepar.Data());
-         }
-      }
+
+      if (j>0) AppendOutput(indexes.NextSeparator());
 
       if (!isPreAlloc) {
          res |= WriteObjectAny(start[j], cl);
@@ -2547,14 +2608,17 @@ Int_t TBufferJSON::WriteFastArray(void **start, const TClass *cl, Int_t n,
          JsonWriteObject(start[j], cl, kFALSE);
       }
 
-      if (isarray && (fValue.Length() > 0)) {
+      if (indexes.IsArray() && (fValue.Length() > 0)) {
          AppendOutput(fValue.Data());
          fValue.Clear();
       }
    }
 
-   if (isarray)
-      for (Int_t k=0;k<indexes.GetSize();++k) AppendOutput("]");
+   if (indexes.IsArray())
+      AppendOutput(indexes.GetEnd());
+
+   if (Stack(0)->fIndx)
+      AppendOutput(Stack(0)->fIndx->NextSeparator());
 
    return res;
 }
