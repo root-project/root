@@ -27,7 +27,7 @@ proc.wait()
 out, err = proc.communicate()
 
 # Then write the subprocess's output to our output streams.
-sys.stdout.write(out)
-sys.stderr.write(err)
+sys.stdout.write(out.decode('utf-8'))
+sys.stderr.write(err.decode('utf-8'))
 
 exit(proc.returncode)

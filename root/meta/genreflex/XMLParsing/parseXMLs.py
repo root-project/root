@@ -11,7 +11,7 @@ For example, if 31 selection xml files in total are available:
 3) size 10, index 2: will analyze the 31st xml (the reminder)
 This utility has been written to be used within the ctest infrastructure.
 """
-
+from __future__ import print_function
 import os
 import subprocess
 import sys
@@ -23,10 +23,10 @@ def touch(fname, times=None):
     os.utime(fname, times)
 
 def getXMLsList(XMLPath):
-  return filter(lambda s: s.endswith(".xml"),os.listdir(XMLPath))
+  return list(filter(lambda s: s.endswith(".xml"),os.listdir(XMLPath)))
 
 def chunkXMLList(XMLList,chunkSize):
-  return [XMLList[x:x+chunkSize] for x in xrange(0, len(XMLList), chunkSize)]
+  return [XMLList[x:x+chunkSize] for x in range(0, len(XMLList), chunkSize)]
 
 def executeGenreflex(XMLFileName,headerName):
   """
@@ -36,7 +36,7 @@ def executeGenreflex(XMLFileName,headerName):
   retcode=0
   dictName=os.path.basename(XMLFileName)+"dummy_dict.cxx"
   genreflexCommand="genreflex %s -o %s -s %s --selSyntaxOnly" %(headerName,dictName, XMLFileName)
-  print "Parsing %s" %XMLFileName
+  print("Parsing %s" %XMLFileName)
   try:
     subprocess.check_output(genreflexCommand, shell=True)
   except subprocess.CalledProcessError as inst:
@@ -45,15 +45,15 @@ def executeGenreflex(XMLFileName,headerName):
 
 def runTests(chunkSize,chunkIndex,XMLPath):
   if chunkIndex<0:
-    print "Chunk index cannot be negative!"
+    print("Chunk index cannot be negative!")
     sys.exit(1)
   XMLList=getXMLsList(XMLPath)
   XMLChunks=chunkXMLList(XMLList,chunkSize)   
   if chunkIndex>=len(XMLChunks):
-    print "Chunk index is %s while the chunks are %s" %(chunkIndex,len(XMLChunks))
+    print("Chunk index is %s while the chunks are %s" %(chunkIndex,len(XMLChunks)))
     sys.exit(1)  
   retcode=0
-  print "Analysing chunk %s, which consist of %s files" %(chunkIndex,len(XMLChunks[chunkIndex]))
+  print("Analysing chunk %s, which consist of %s files" %(chunkIndex,len(XMLChunks[chunkIndex])))
   headerName=emptyHeaderName %chunkIndex
   touch(headerName)
   for XMLFileName in XMLChunks[chunkIndex]:
@@ -63,7 +63,7 @@ def runTests(chunkSize,chunkIndex,XMLPath):
 if __name__ == "__main__":
   #FIXME: the dummy is present for the --fixcling imposed to python scripts by ctest
   if len(sys.argv) != 5:
-    print "Usage: %s DUMMY ChunkSize ChunkIndex XMLpath" %os.path.basename(__file__)
+    print("Usage: %s DUMMY ChunkSize ChunkIndex XMLpath" %os.path.basename(__file__))
     sys.exit(1)
   dummy, chunkSizes,chunkIndexs,XMLPath = sys.argv[1:]
   retcode = runTests(int(chunkSizes),int(chunkIndexs),XMLPath)
