@@ -2201,6 +2201,33 @@ const char *TSystem::GetLibraries(const char *regexp, const char *options,
    } else
       fListLibs = libs;
 
+#if defined(R__MACOSX)
+// We need to remove the libraries that are dynamically loaded and not linked
+{
+   TString libs2 = fListLibs;
+   TString maclibs;
+
+   static TRegexp separator("[^ \\t\\s]+");
+   static TRegexp dynload("/lib-dynload/");
+
+   Ssiz_t start, index, end;
+   start = index = end = 0;
+
+   while ((start < libs2.Length()) && (index != kNPOS)) {
+      index = libs2.Index(separator, &end, start);
+      if (index >= 0) {
+         TString s = libs2(index, end);
+         if (s.Index(dynload) == kNPOS) {
+            if (!maclibs.IsNull()) maclibs.Append(" ");
+            maclibs.Append(s);
+         }
+      }
+      start += end+1;
+   }
+   fListLibs = maclibs;
+}
+#endif
+
 #if defined(R__MACOSX) && !defined(MAC_OS_X_VERSION_10_5)
    if (so2dylib) {
       TString libs2 = fListLibs;
