@@ -846,7 +846,7 @@ bool TBackCompFitter::Scan(unsigned int ipar, TGraph * gr, double xmin, double x
 /// Create a 2D contour around the minimum for the parameter ipar and jpar
 /// if a minimum does not exist or is invalid it will return false
 /// on exit a TGraph is filled with the contour points
-/// the number of contur points is determined by the size of the TGraph.
+/// the number of contour points is determined by the size of the TGraph.
 /// if the size is zero a default number of points = 20 is used
 /// pass optionally the confidence level, default is 0.683
 /// it is assumed that ErrorDef() defines the right error definition
