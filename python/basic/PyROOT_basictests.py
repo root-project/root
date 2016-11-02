@@ -6,7 +6,8 @@
 """Basic unit tests for PyROOT package."""
 
 import sys, os, unittest
-sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+os.chdir(os.path.dirname(__file__))
 
 import ROOT
 from ROOT import gROOT, gApplication, gSystem, gInterpreter, gDirectory, TLorentzVector,\
@@ -407,6 +408,6 @@ class Basic6ReturnValueTestCase( MyTestCase ):
 
 ## actual test run
 if __name__ == '__main__':
-   import common
-   result = common.run_pytest(__file__)
+   #import common
+   result = run_pytest(__file__)
    sys.exit(result)

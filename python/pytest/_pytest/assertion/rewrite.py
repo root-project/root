@@ -466,7 +466,10 @@ class AssertionRewriter(ast.NodeVisitor):
         """Call a helper in this module."""
         py_name = ast.Name("@pytest_ar", ast.Load())
         attr = ast.Attribute(py_name, "_" + name, ast.Load())
-        return ast.Call(attr, list(args), [], None, None)
+        if sys.hexversion >= 0x3000000:
+            return ast.Call(attr, list(args), [])
+        else:
+            return ast.Call(attr, list(args), [], None, None)
 
     def builtin(self, name):
         """Return the builtin called *name*."""
@@ -521,7 +524,10 @@ class AssertionRewriter(ast.NodeVisitor):
         msg = self.pop_format_context(template)
         fmt = self.helper("format_explanation", msg)
         err_name = ast.Name("AssertionError", ast.Load())
-        exc = ast.Call(err_name, [fmt], [], None, None)
+        if sys.hexversion >= 0x3000000:
+            exc = ast.Call(err_name, [fmt], [])
+        else:
+            exc = ast.Call(err_name, [fmt], [], None, None)
         if sys.version_info[0] >= 3:
             raise_ = ast.Raise(exc, None)
         else:
@@ -541,7 +547,10 @@ class AssertionRewriter(ast.NodeVisitor):
     def visit_Name(self, name):
         # Display the repr of the name if it's a local variable or
         # _should_repr_global_name() thinks it's acceptable.
-        locs = ast.Call(self.builtin("locals"), [], [], None, None)
+        if sys.hexversion >= 0x3000000:
+            locs = ast.Call(self.builtin("locals"), [], [])
+        else:
+            locs = ast.Call(self.builtin("locals"), [], [], None, None)
         inlocs = ast.Compare(ast.Str(name.id), [ast.In()], [locs])
         dorepr = self.helper("should_repr_global_name", name)
         test = ast.BoolOp(ast.Or(), [inlocs, dorepr])
@@ -568,7 +577,10 @@ class AssertionRewriter(ast.NodeVisitor):
             res, expl = self.visit(v)
             body.append(ast.Assign([ast.Name(res_var, ast.Store())], res))
             expl_format = self.pop_format_context(ast.Str(expl))
-            call = ast.Call(app, [expl_format], [], None, None)
+            if sys.hexversion >= 0x3000000:
+                call = ast.Call(app, [expl_format], [])
+            else:
+                call = ast.Call(app, [expl_format], [], None, None)
             self.on_failure.append(ast.Expr(call))
             if i < levels:
                 cond = res
@@ -611,14 +623,18 @@ class AssertionRewriter(ast.NodeVisitor):
             res, expl = self.visit(keyword.value)
             new_kwargs.append(ast.keyword(keyword.arg, res))
             arg_expls.append(keyword.arg + "=" + expl)
-        if call.starargs:
-            new_star, expl = self.visit(call.starargs)
-            arg_expls.append("*" + expl)
-        if call.kwargs:
-            new_kwarg, expl = self.visit(call.kwargs)
-            arg_expls.append("**" + expl)
+        if sys.hexversion < 0x3000000:
+            if call.starargs:
+                new_star, expl = self.visit(call.starargs)
+                arg_expls.append("*" + expl)
+            if call.kwargs:
+                new_kwarg, expl = self.visit(call.kwargs)
+                arg_expls.append("**" + expl)
         expl = "%s(%s)" % (func_expl, ', '.join(arg_expls))
-        new_call = ast.Call(new_func, new_args, new_kwargs,
+        if sys.hexversion >= 0x3000000:
+            new_call = ast.Call(new_func, new_args, new_kwargs)
+        else:
+            new_call = ast.Call(new_func, new_args, new_kwargs,
                             new_star, new_kwarg)
         res = self.assign(new_call)
         res_expl = self.explanation_param(self.display(res))

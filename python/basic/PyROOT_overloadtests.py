@@ -6,7 +6,8 @@
 """Overload unit tests for PyROOT package."""
 
 import os, sys
-sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
+sys.path.append(os.path.dirname( os.path.dirname(__file__)))
+os.chdir(os.path.dirname(__file__))
 
 from common import *
 from pytest import raises

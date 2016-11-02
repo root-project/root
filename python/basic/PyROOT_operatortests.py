@@ -6,7 +6,8 @@
 """C++ operators interface unit tests for PyROOT package."""
 
 import sys, os, unittest
-sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
+sys.path.append(os.path.dirname( os.path.dirname(__file__)))
+os.chdir(os.path.dirname(__file__))
 
 import ROOT
 from ROOT import gROOT
