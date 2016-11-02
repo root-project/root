@@ -2524,8 +2524,6 @@ void  TBufferJSON::WriteFastArray(void *start, const TClass *cl, Int_t n,
    if (!n) n = 1;
    int size = cl->Size();
 
-   printf("WriteFastArray* sz %d cl %s elem %s ndim %d\n", n, cl->GetName(), Stack(0)->fElem->GetName(), Stack(0)->fElem->GetArrayDim());
-
    TArrayIndexProducer indexes(n, Stack(0)->fElem, fArraySepar.Data());
 
    if (indexes.IsArray()) {
@@ -2573,8 +2571,6 @@ Int_t TBufferJSON::WriteFastArray(void **start, const TClass *cl, Int_t n,
    Int_t res = 0;
 
    TArrayIndexProducer indexes(n, Stack(0)->fElem, fArraySepar.Data());
-
-   printf("WriteFastArray** sz %d cl %s elem %s ndim %d\n", n, cl->GetName(), Stack(0)->fElem->GetName(), Stack(0)->fElem->GetArrayDim());
 
    if (indexes.IsArray()) {
       JsonDisablePostprocessing();
