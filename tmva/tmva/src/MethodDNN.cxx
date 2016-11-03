@@ -1135,21 +1135,42 @@ const std::vector<Float_t> & TMVA::MethodDNN::GetMulticlassValues()
 {
    size_t nVariables = GetEvent()->GetNVariables();
    Matrix_t X(1, nVariables);
+<<<<<<< HEAD
    Matrix_t YHat(1, DataInfo().GetNClasses());
    if (fMulticlassReturnVal == NULL) {
       fMulticlassReturnVal = new std::vector<Float_t>(DataInfo().GetNClasses());
    }
 
+=======
+   Matrix_t YHat(1, 1);
+
+   UInt_t nClasses = DataInfo().GetNClasses();
+   
+>>>>>>> 1200ae623678755f5e5344724021539ad411c7f2
    const std::vector<Float_t>& inputValues = GetEvent()->GetValues();
    for (size_t i = 0; i < nVariables; i++) {
       X(0,i) = inputValues[i];
    }
 
    fNet.Prediction(YHat, X, fOutputFunction);
+<<<<<<< HEAD
    for (size_t i = 0; i < (size_t) YHat.GetNcols(); i++) {
       (*fMulticlassReturnVal)[i] = YHat(0, i);
    }
    return *fMulticlassReturnVal;
+=======
+ 
+   if (fRegressionReturnVal == NULL) {
+       fRegressionReturnVal = new std::vector<Float_t>();
+   }
+   else
+       fRegressionReturnVal->clear();
+   
+   for (size_t i = 0; i < nClasses; i++)
+       fRegressionReturnVal->push_back (YHat(0, i));
+
+   return *fRegressionReturnVal;
+>>>>>>> 1200ae623678755f5e5344724021539ad411c7f2
 }
 
 //______________________________________________________________________________
