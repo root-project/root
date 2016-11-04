@@ -4792,6 +4792,8 @@ Int_t TTree::Fit(const char* funcname, const char* varexp, const char* selection
    return -1;
 }
 
+namespace {
+
 struct BoolRAIIToggle {
 
 Bool_t &m_val;
@@ -4801,6 +4803,7 @@ BoolRAIIToggle(Bool_t &val) : m_val(val) { m_val = true; }
 ~BoolRAIIToggle() { m_val = false; }
 };
 
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write to disk all the basket that have not yet been individually written.

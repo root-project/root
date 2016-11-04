@@ -163,11 +163,11 @@ private:
    TTree(const TTree& tt);              // not implemented
    TTree& operator=(const TTree& tt);   // not implemented
 
-#ifdef R__USE_IMT
+   // For simplicity, although fIMTFlush is always disabled in non-IMT builds, we don't #ifdef it out.
    mutable Bool_t fIMTFlush{false};               ///<! True if we are doing a multithreaded flush.
    mutable std::atomic<Long64_t> fIMTTotBytes;    ///<! Total bytes for the IMT flush baskets
    mutable std::atomic<Long64_t> fIMTZipBytes;    ///<! Zip bytes for the IMT flush baskets.
-#endif
+
    void             InitializeSortedBranches();
    void             SortBranchesByTime();
 
