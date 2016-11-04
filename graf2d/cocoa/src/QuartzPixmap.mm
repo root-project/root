@@ -25,32 +25,6 @@
 #include "CocoaUtils.h"
 #include "X11Colors.h"
 
-//Call backs for data provider.
-extern "C" {
-
-//______________________________________________________________________________
-const void* ROOT_QuartzImage_GetBytePointer(void *info)
-{
-   assert(info != 0 && "ROOT_QuartzImage_GetBytePointer, info parameter is null");
-   return info;
-}
-
-//______________________________________________________________________________
-void ROOT_QuartzImage_ReleaseBytePointer(void *, const void *)
-{
-   //Do nothing.
-}
-
-//______________________________________________________________________________
-std::size_t ROOT_QuartzImage_GetBytesAtPosition(void *info, void *buffer, off_t position,
-                                                std::size_t count)
-{
-    std::copy((char *)info + position, (char *)info + position + count, (char*)buffer);
-    return count;
-}
-
-}
-
 namespace X11 = ROOT::MacOSX::X11;
 namespace Util = ROOT::MacOSX::Util;
 namespace Quartz = ROOT::Quartz;
@@ -144,19 +118,14 @@ namespace Quartz = ROOT::Quartz;
    assert(cropArea.fWidth <= fWidth && "createImageFromPixmap:, bad cropArea.fWidth");
    assert(cropArea.fHeight <= fHeight && "createImageFromPixmap:, bad cropArea.fHeight");
 
-   //
-   const CGDataProviderDirectCallbacks providerCallbacks = {0, ROOT_QuartzImage_GetBytePointer,
-                                                            ROOT_QuartzImage_ReleaseBytePointer,
-                                                            ROOT_QuartzImage_GetBytesAtPosition, 0};
-
    const unsigned scaledW = fWidth * fScaleFactor;
    const unsigned scaledH = fHeight * fScaleFactor;
 
 
-   const Util::CFScopeGuard<CGDataProviderRef> provider(CGDataProviderCreateDirect(&fData[0],
-                                                        scaledW * scaledH * 4, &providerCallbacks));
+   const Util::CFScopeGuard<CGDataProviderRef> provider(CGDataProviderCreateWithData(nullptr, &fData[0],
+                                                        scaledW * scaledH * 4, nullptr));
    if (!provider.Get()) {
-      NSLog(@"QuartzPixmap: -pixmapToImage, CGDataProviderCreateDirect failed");
+      NSLog(@"QuartzPixmap: -pixmapToImage, CGDataProviderCreateWithData failed");
       return 0;
    }
 
@@ -463,14 +432,10 @@ namespace Quartz = ROOT::Quartz;
       std::copy(data, data + width * height * 4, &fImageData[0]);
 
       fIsStippleMask = NO;
-      const CGDataProviderDirectCallbacks providerCallbacks = {0, ROOT_QuartzImage_GetBytePointer,
-                                                               ROOT_QuartzImage_ReleaseBytePointer,
-                                                               ROOT_QuartzImage_GetBytesAtPosition, 0};
-
       const Util::CFScopeGuard<CGDataProviderRef>
-         provider(CGDataProviderCreateDirect(&fImageData[0], width * height * 4, &providerCallbacks));
+         provider(CGDataProviderCreateWithData(nullptr, &fImageData[0], width * height * 4, nullptr));
       if (!provider.Get()) {
-         NSLog(@"QuartzImage: -initWithW:H:data: CGDataProviderCreateDirect failed");
+         NSLog(@"QuartzImage: -initWithW:H:data: CGDataProviderCreateWithData failed");
          return nil;
       }
 
@@ -521,15 +486,10 @@ namespace Quartz = ROOT::Quartz;
       std::copy(mask, mask + width * height, &fImageData[0]);
 
       fIsStippleMask = YES;
-      const CGDataProviderDirectCallbacks providerCallbacks = {0, ROOT_QuartzImage_GetBytePointer,
-                                                               ROOT_QuartzImage_ReleaseBytePointer,
-                                                               ROOT_QuartzImage_GetBytesAtPosition, 0};
-
-
-      const Util::CFScopeGuard<CGDataProviderRef> provider(CGDataProviderCreateDirect(&fImageData[0],
-                                                           width * height, &providerCallbacks));
+      const Util::CFScopeGuard<CGDataProviderRef> provider(CGDataProviderCreateWithData(nullptr, &fImageData[0],
+                                                           width * height, nullptr));
       if (!provider.Get()) {
-         NSLog(@"QuartzImage: -initMaskWithW:H:bitmapMask: CGDataProviderCreateDirect failed");
+         NSLog(@"QuartzImage: -initMaskWithW:H:bitmapMask: CGDataProviderCreateWithData failed");
          return nil;
       }
 
@@ -568,14 +528,10 @@ namespace Quartz = ROOT::Quartz;
       }
 
       fIsStippleMask = YES;
-      const CGDataProviderDirectCallbacks providerCallbacks = {0, ROOT_QuartzImage_GetBytePointer,
-                                                               ROOT_QuartzImage_ReleaseBytePointer,
-                                                               ROOT_QuartzImage_GetBytesAtPosition, 0};
-
-      const Util::CFScopeGuard<CGDataProviderRef> provider(CGDataProviderCreateDirect(&fImageData[0],
-                                                           width * height, &providerCallbacks));
+      const Util::CFScopeGuard<CGDataProviderRef> provider(CGDataProviderCreateWithData(nullptr, &fImageData[0],
+                                                           width * height, nullptr));
       if (!provider.Get()) {
-         NSLog(@"QuartzImage: -initMaskWithW:H: CGDataProviderCreateDirect failed");
+         NSLog(@"QuartzImage: -initMaskWithW:H: CGDataProviderCreateWithData failed");
          return nil;
       }
 
@@ -648,16 +604,12 @@ namespace Quartz = ROOT::Quartz;
          std::copy(sourceLine, sourceLine + lineSize, dstLine);
       }
 
-      const CGDataProviderDirectCallbacks providerCallbacks = {0, ROOT_QuartzImage_GetBytePointer,
-                                                               ROOT_QuartzImage_ReleaseBytePointer,
-                                                               ROOT_QuartzImage_GetBytesAtPosition, 0};
-
       if (bpp == 1) {
          fIsStippleMask = YES;
-         const Util::CFScopeGuard<CGDataProviderRef> provider(CGDataProviderCreateDirect(&fImageData[0],
-                                                              width * height, &providerCallbacks));
+         const Util::CFScopeGuard<CGDataProviderRef> provider(CGDataProviderCreateWithData(nullptr, &fImageData[0],
+                                                              width * height, nullptr));
          if (!provider.Get()) {
-            NSLog(@"QuartzImage: -initFromImageFlipped:, CGDataProviderCreateDirect failed");
+            NSLog(@"QuartzImage: -initFromImageFlipped:, CGDataProviderCreateWithData failed");
             return nil;
          }
 
@@ -669,10 +621,10 @@ namespace Quartz = ROOT::Quartz;
          }
       } else {
          fIsStippleMask = NO;
-         const Util::CFScopeGuard<CGDataProviderRef> provider(CGDataProviderCreateDirect(&fImageData[0],
-                                                              width * height * 4, &providerCallbacks));
+         const Util::CFScopeGuard<CGDataProviderRef> provider(CGDataProviderCreateWithData(nullptr, &fImageData[0],
+                                                              width * height * 4, nullptr));
          if (!provider.Get()) {
-            NSLog(@"QuartzImage: -initFromImageFlipped:, CGDataProviderCreateDirect failed");
+            NSLog(@"QuartzImage: -initFromImageFlipped:, CGDataProviderCreateWithData failed");
             return nil;
          }
 
