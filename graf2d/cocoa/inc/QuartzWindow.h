@@ -38,10 +38,8 @@
 
 @interface QuartzWindow : NSWindow<X11Window, NSWindowDelegate> {
 @private
-   // 32-bit build requires explicit i-vars for synthesized props.
    QuartzWindow *fMainWindow;
    BOOL fHasFocus;
-   //
    
    QuartzView *fContentView;
    BOOL fDelayedTransient;
@@ -49,10 +47,6 @@
    BOOL fIsDeleted;
 }
 
-//In Obj-C you do not have to declared everything in an interface declaration.
-//I do declare all methods here, just for clarity.
-
-//Life-cycle: "ctor".
 - (id) initWithContentRect : (NSRect) contentRect styleMask : (NSUInteger) windowStyle
        backing : (NSBackingStoreType) bufferingType defer : (BOOL) deferCreation
        windowAttributes : (const SetWindowAttributes_t *) attr;
@@ -164,8 +158,6 @@
 
 @interface QuartzView : NSView<X11Window> {
 @protected
-   // 32-bit build requires explicit i-vars
-   // declared for synthesized props.
    unsigned fID;
    CGContextRef fContext;
    long fEventMask;
@@ -187,10 +179,6 @@
    BOOL fSnapshotDraw;
    ECursor fCurrentCursor;
    BOOL fIsDNDAware;
-
-   // TODO: std::unique_ptr (with deleter) can
-   // perfectly be an i-var, removing the manual
-   // memory management and raw pointer.
 
    QuartzPixmap   *fBackBuffer;
    NSMutableArray *fPassiveKeyGrabs;
@@ -240,7 +228,7 @@
 @property (nonatomic, assign) int           fBitGravity;
 @property (nonatomic, assign) int           fWinGravity;
 @property (nonatomic, assign) unsigned long fBackgroundPixel;
-@property (nonatomic, retain) QuartzImage  *fBackgroundPixmap;//Hmm, image, pixmap ...
+@property (nonatomic, retain) QuartzImage  *fBackgroundPixmap;
 @property (nonatomic, readonly) int         fMapState;
 @property (nonatomic, assign) BOOL          fOverrideRedirect;
 
@@ -255,8 +243,6 @@
 @property (nonatomic, readonly) NSView<X11Window> *fContentView;
 @property (nonatomic, readonly) QuartzWindow      *fQuartzWindow;
 
-//
-
 @property (nonatomic, assign) int      fPassiveGrabButton;
 @property (nonatomic, assign) unsigned fPassiveGrabEventMask;
 @property (nonatomic, assign) unsigned fPassiveGrabKeyModifiers;
@@ -270,8 +256,6 @@
 
 - (BOOL) acceptsCrossingEvents : (unsigned) eventMask;
 
-//
-
 //Children subviews.
 - (void) addChild : (NSView<X11Window> *)child;
 
@@ -279,16 +263,14 @@
 - (void) getAttributes : (WindowAttributes_t *) attr;
 - (void) setAttributes : (const SetWindowAttributes_t *) attr;
 
-//
 - (void) mapRaised;
 - (void) mapWindow;
 - (void) mapSubwindows;
 
 - (void) unmapWindow;
-//
+
 - (void) raiseWindow;
 - (void) lowerWindow;
-//
 
 - (BOOL) fIsOverlapped;
 - (void) setOverlapped : (BOOL) overlap;
@@ -324,8 +306,6 @@
 
 @end
 
-
-//Aux. functions.
 namespace ROOT {
 namespace MacOSX {
 namespace X11 {
@@ -361,7 +341,7 @@ NSPoint TranslateCoordinates(NSView<X11Window> *fromView, NSView<X11Window> *toV
 bool ViewIsTextViewFrame(NSView<X11Window> *view, bool checkParent);
 bool ViewIsHtmlViewFrame(NSView<X11Window> *view, bool checkParent);
 bool LockFocus(NSView<X11Window> *view);
-void UnlockFocus(NSView<X11Window> *view);//For symmetry only.
+void UnlockFocus(NSView<X11Window> *view);
 
 bool ScreenPointIsInView(NSView<X11Window> *view, Int_t x, Int_t y);
 QuartzWindow *FindWindowInPoint(Int_t x, Int_t y);
