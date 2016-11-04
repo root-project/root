@@ -22,9 +22,6 @@
 #include "TError.h"
 #include "TROOT.h"
 
-//TODO: either use Color_t or use gVirtualX->GetLine/Fill/Color -
-//not both, it's a complete mess now!
-
 namespace ROOT {
 namespace Quartz {
 
@@ -50,7 +47,7 @@ struct GradientFactory {
       assert(extendedColor != nullptr &&
              "GradientFactory::CreateGradient, parameter 'extendedColor' is null");
       const SRC *compStart = extendedColor->GetColors();
-      const SRC *compEnd = compStart + extendedColor->GetNumberOfSteps() * 4;//TODO: this assumes RGBA.
+      const SRC *compEnd = compStart + extendedColor->GetNumberOfSteps() * 4;
       const std::vector<DST> convertedComponents(compStart, compEnd);
       const SRC *posStart = extendedColor->GetColorPositions();
       const SRC *posEnd = posStart + extendedColor->GetNumberOfSteps();
@@ -500,7 +497,6 @@ void DrawPolygonWithGradientFill(CGContextRef ctx, const TColorGradient *extende
    }
 
    //Create a gradient.
-   //TODO: must be a generic RGB color space???
    const CFScopeGuard<CGColorSpaceRef> baseSpace(CGColorSpaceCreateDeviceRGB());
    if (!baseSpace.Get()) {
       ::Error("DrawPolygonWithGradientFill", "CGColorSpaceCreateDeviceRGB failed");
