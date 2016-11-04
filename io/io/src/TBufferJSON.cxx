@@ -50,6 +50,7 @@
 #include "TRealData.h"
 #include "TDataMember.h"
 #include "TMath.h"
+#include "TMap.h"
 #include "TExMap.h"
 #include "TMethodCall.h"
 #include "TStreamerInfo.h"
@@ -1099,42 +1100,57 @@ void TBufferJSON::JsonStreamCollection(TCollection *col, const TClass *)
    AppendOutput("\",", "\"arr\"");
    AppendOutput(fSemicolon.Data());
 
-   // collection treated as JS Array and its reference kept in the objects map
-   AppendOutput("[");   // fJsonrCnt++; // account array of objects
+   // collection treated as JS Array
+   AppendOutput("[");
 
    bool islist = col->InheritsFrom(TList::Class());
+   TMap* map = 0;
+   if (col->InheritsFrom(TMap::Class())) map = dynamic_cast<TMap*> (col);
+
    TString sopt;
-   sopt.Capacity(500);
-   sopt = "[";
+   if (islist) { sopt.Capacity(500); sopt = "["; }
 
    TIter iter(col);
    TObject *obj;
    Bool_t first = kTRUE;
    while ((obj = iter()) != 0) {
-      if (!first) {
-         AppendOutput(fArraySepar.Data());
-         sopt.Append(fArraySepar.Data());
+      if (!first) AppendOutput(fArraySepar.Data());
+
+      if (map) {
+         fJsonrCnt++; // account map pair as JSON object
+         AppendOutput("{", "\"_typename\"");
+         AppendOutput(fSemicolon.Data());
+         AppendOutput("\"TPair\"");
+         AppendOutput(fArraySepar.Data(), "\"first\"");
+         AppendOutput(fSemicolon.Data());
       }
+
+      WriteObjectAny(obj, TObject::Class());
+
+      if (map) {
+         AppendOutput(fArraySepar.Data(), "\"second\"");
+         AppendOutput(fSemicolon.Data());
+         WriteObjectAny(map->GetValue(obj), TObject::Class());
+         AppendOutput("", "}");
+      }
+
       if (islist) {
+         if (!first) sopt.Append(fArraySepar.Data());
          sopt.Append("\"");
          sopt.Append(iter.GetOption());
          sopt.Append("\"");
       }
 
-      WriteObjectAny(obj, TObject::Class());
-
       first = kFALSE;
    }
-
-   sopt.Append("]");
 
    AppendOutput("]");
 
    if (islist) {
+      sopt.Append("]");
       AppendOutput(",", "\"opt\"");
       AppendOutput(fSemicolon.Data());
       AppendOutput(sopt.Data());
-      /* fJsonrCnt++; */ // account array of options
    }
    fValue.Clear();
 }
