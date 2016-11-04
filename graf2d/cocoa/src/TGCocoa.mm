@@ -1503,19 +1503,14 @@ void TGCocoa::ShapeCombineMask(Window_t windowID, Int_t /*x*/, Int_t /*y*/, Pixm
    assert([fPimpl->GetDrawable(pixmapID) isKindOfClass : [QuartzImage class]] &&
           "ShapeCombineMask, pixmapID parameter must point to QuartzImage object");
 
-   //TODO: nonrectangular window can be only NSWindow object,
-   //not NSView (and mask is attached to a window).
-   //This means, if some nonrectangular window is created as a child
-   //first, and detached later (becoming top-level), the shape will be lost.
-   //Find a better way to fix it.
    if (fPimpl->GetWindow(windowID).fContentView.fParentView)
       return;
 
    QuartzImage * const srcImage = (QuartzImage *)fPimpl->GetDrawable(pixmapID);
    assert(srcImage.fIsStippleMask == YES && "ShapeCombineMask, source image is not a stipple mask");
 
-   //TODO: there is some kind of problems with shape masks and
-   //flipped views, I have to do an image flip here - check this!
+   // There is some kind of problems with shape masks and
+   // flipped views, I have to do an image flip here.
    const Util::NSScopeGuard<QuartzImage> image([[QuartzImage alloc] initFromImageFlipped : srcImage]);
    if (image.Get()) {
       QuartzWindow * const qw = fPimpl->GetWindow(windowID).fQuartzWindow;
@@ -1666,7 +1661,6 @@ void TGCocoa::DrawLineAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x1, In
       CGContextTranslateCTM(ctx, 0.5, 0.5);
    else {
       //Pixmap uses native Cocoa's left-low-corner system.
-      //TODO: check the line on the edge.
       y1 = Int_t(X11::LocalYROOTToCocoa(drawable, y1));
       y2 = Int_t(X11::LocalYROOTToCocoa(drawable, y2));
    }
@@ -1794,7 +1788,6 @@ void TGCocoa::DrawRectangleAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x
             h -= 1;
       }
    } else {
-      //TODO: check the line on the edge.
       //Pixmap has native Cocoa's low-left-corner system.
       y = Int_t(X11::LocalYROOTToCocoa(drawable, y + h));
    }
@@ -1873,7 +1866,6 @@ void TGCocoa::FillRectangleAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x
 
    if (drawable.fIsPixmap) {
       //Pixmap has low-left-corner based system.
-      //TODO: check how pixmap works with pattern fill.
       y = Int_t(X11::LocalYROOTToCocoa(drawable, y + h));
    }
 
@@ -2345,7 +2337,6 @@ Int_t TGCocoa::OpenPixmap(UInt_t w, UInt_t h)
    newSize.width = w;
    newSize.height = h;
 
-   //TODO: what about multi-head setup and scaling factor?
    Util::NSScopeGuard<QuartzPixmap> pixmap([[QuartzPixmap alloc] initWithW : w H : h
                                            scaleFactor : [[NSScreen mainScreen] backingScaleFactor]]);
    if (pixmap.Get()) {
@@ -2370,7 +2361,6 @@ Int_t TGCocoa::ResizePixmap(Int_t wid, UInt_t w, UInt_t h)
    if (w == pixmap.fWidth && h == pixmap.fHeight)
       return 1;
 
-   //TODO: what about multi-head setup and scale factor?
    if ([pixmap resizeW : w H : h scaleFactor : [[NSScreen mainScreen] backingScaleFactor]])
       return 1;
 
@@ -3206,7 +3196,6 @@ Double_t TGCocoa::GetOpenGLScalingFactor()
    //Scaling factor to let our OpenGL code know, that we probably
    //work on a retina display.
 
-   //TODO: what about multi-head setup?
    return [[NSScreen mainScreen] backingScaleFactor];
 }
 
@@ -3351,8 +3340,6 @@ Bool_t TGCocoa::MakeOpenGLContextCurrent(Handle_t ctxID, Window_t windowID)
       //Funny enough, but if you have invisible window with visible view,
       //this trick works.
 
-      //TODO: this code is a total mess, refactor.
-
       NSView *fakeView = nil;
       QuartzWindow *fakeWindow = fPimpl->GetFakeGLWindow();
 
@@ -3490,7 +3477,6 @@ void TGCocoa::SetDoubleBufferON()
          return;
    }
 
-   //TODO: what about multi-head setup?
    Util::NSScopeGuard<QuartzPixmap> pixmap([[QuartzPixmap alloc] initWithW : currW
                                             H : currH scaleFactor : [[NSScreen mainScreen] backingScaleFactor]]);
    if (pixmap.Get())
@@ -3576,8 +3562,6 @@ Handle_t TGCocoa::GetNativeEvent() const
 Atom_t  TGCocoa::InternAtom(const char *name, Bool_t onlyIfExist)
 {
    //X11 properties emulation.
-   //TODO: this is a temporary hack to make
-   //client message (close window) work.
 
    assert(name != 0 && "InternAtom, parameter 'name' is null");
    return FindAtom(name, !onlyIfExist);
@@ -3596,7 +3580,6 @@ void TGCocoa::SetPrimarySelectionOwner(Window_t windowID)
    if (!windowID)//From TGWin32.
       return;
 
-   //TODO: check, if this really happens and probably remove assert.
    assert(!fPimpl->IsRootWindow(windowID) &&
           "SetPrimarySelectionOwner, windowID parameter is a 'root' window");
    assert(fPimpl->GetDrawable(windowID).fIsPixmap == NO &&
@@ -3728,8 +3711,6 @@ Int_t TGCocoa::GetProperty(Window_t windowID, Atom_t propertyID, Long_t, Long_t,
    // actually returned.
    //End of comment.
 
-   //TODO: actually, property can be set for root window.
-   //I have to save this data somehow.
    if (fPimpl->IsRootWindow(windowID))
       return 0;
 
@@ -3907,7 +3888,6 @@ void TGCocoa::DeleteProperty(Window_t windowID, Atom_t &propertyID)
       return;
 
    //Strange signature - why propertyID is a reference?
-   //TODO: check, if ROOT sets/deletes properties on a 'root' window.
    assert(!fPimpl->IsRootWindow(windowID) &&
           "DeleteProperty, parameter 'windowID' is root window");
    assert(fPimpl->GetDrawable(windowID).fIsPixmap == NO &&
@@ -3957,7 +3937,6 @@ void TGCocoa::SetDNDAware(Window_t windowID, Atom_t *typeList)
    //While calling XChangeProperty, it passes the address of this typelist
    //and format is ... 32. I have to pack data into unsigned and force the size:
    assert(sizeof(unsigned) == 4 && "SetDNDAware, sizeof(unsigned) must be 4");
-   //TODO: find fixed-width integer type (I do not have cstdint header at the moment?)
 
    std::vector<unsigned> propertyData;
    propertyData.push_back(4);//This '4' is from TGX11 (is it XA_ATOM???)

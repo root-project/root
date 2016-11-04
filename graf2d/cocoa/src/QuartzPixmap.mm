@@ -59,10 +59,6 @@ namespace Quartz = ROOT::Quartz;
 
 @synthesize fID;
 
-// TODO: std::vector can be an i-var in Objective-C++,
-// this will simplify and clear the error handling and
-// memory management: fData does not have to be a raw pointer.
-
 //______________________________________________________________________________
 - (id) initWithW : (unsigned) width H : (unsigned) height scaleFactor : (CGFloat) scaleFactor
 {
@@ -99,7 +95,6 @@ namespace Quartz = ROOT::Quartz;
       return NO;
    }
 
-   //TODO: device RGB? should it be generic?
    const Util::CFScopeGuard<CGColorSpaceRef> colorSpace(CGColorSpaceCreateDeviceRGB());//[1]
    if (!colorSpace.Get()) {
       NSLog(@"QuartzPixmap: -resizeW:H:, CGColorSpaceCreateDeviceRGB failed");
@@ -119,7 +114,6 @@ namespace Quartz = ROOT::Quartz;
    if (fScaleFactor > 1)
       CGContextScaleCTM(ctx.Get(), fScaleFactor, fScaleFactor);
 
-   // TODO: something like move would be better.
    fContext.Reset(ctx.Release());
 
 
@@ -144,7 +138,6 @@ namespace Quartz = ROOT::Quartz;
 
    //This function is incorrect in a general case, it does not care about
    //cropArea.fX and cropArea.fY, very sloppy implementation.
-   //TODO: either fix it or remove completely.
 
    assert(cropArea.fX >= 0 && "createImageFromPixmap:, cropArea.fX is negative");
    assert(cropArea.fY >= 0 && "createImageFromPixmap:, cropArea.fY is negative");
@@ -447,9 +440,6 @@ namespace Quartz = ROOT::Quartz;
 
 @synthesize fIsStippleMask;
 @synthesize fID;
-
-//TODO: all these "ctors" were added at different times, not from the beginnning.
-//Refactor them to reduce code duplication, where possible.
 
 //______________________________________________________________________________
 - (id) initWithW : (unsigned) width H : (unsigned) height data : (unsigned char *) data

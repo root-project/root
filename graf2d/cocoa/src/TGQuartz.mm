@@ -822,7 +822,7 @@ void TGQuartz::RenderTTFString(Int_t x, Int_t y, ETextMode mode)
          return;
       }
 
-      //TODO: this is copy & paste from TGX11TTF, needs more checks (indices).
+      // This is copy & paste from TGX11TTF:
       const Int_t xo = x1 < 0 ? -x1 : 0;
       const Int_t yo = y1 < 0 ? -y1 : 0;
 
@@ -991,7 +991,6 @@ void TGQuartz::SetAA()
    if (gEnv) {
       const TString value(TString(gEnv->GetValue("Cocoa.EnableAntiAliasing", "auto")).Strip());
       if (value == "auto") {
-         //TODO: what about multi-head setup?
          [[NSScreen mainScreen] backingScaleFactor] > 1. ? fUseAA = true : fUseAA = false;
       } else if (value == "no")
          fUseAA = false;
