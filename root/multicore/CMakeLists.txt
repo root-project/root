@@ -135,12 +135,17 @@ if(ROOT_imt_FOUND)
                      MACRO generate_imt_tree.C+)
 
    ROOTTEST_GENERATE_EXECUTABLE(ttree_read_imt ttree_read_imt.cpp LIBRARIES Core Thread Tree)
+   ROOTTEST_GENERATE_EXECUTABLE(ttree_write_imt ttree_write_imt.cpp LIBRARIES Core Thread Tree Hist)
 
    ROOTTEST_ADD_TEST(ttree_read_imt
                      COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/ttree_read_imt.sh
                      FAILREGEX "ERROR"
                      OUTREF ttree_read_imt.ref
                      DEPENDS generate_imt_tree ${GENERATE_EXECUTABLE_TEST})
+
+   ROOTTEST_ADD_TEST(ttree_write_imt
+                     EXEC ttree_write_imt
+                     DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
    ROOTTEST_GENERATE_EXECUTABLE(tp_process_imt tp_process_imt.cpp LIBRARIES Core Thread Tree TreePlayer)
 
