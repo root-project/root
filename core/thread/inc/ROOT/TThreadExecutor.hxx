@@ -66,7 +66,7 @@ private:
 template<class T>
 class ParallelReductionResolver{
   public:
-  static inline T Reduce(TThreadExecutor *threadExecutor, const std::vector<T> &objs, const std::function<T(T a, T b)> &redfunc){
+  static inline T Reduce(TThreadExecutor *, const std::vector<T> &objs, const std::function<T(T a, T b)> &redfunc){
     return std::accumulate(objs.begin(), objs.end(), T{}, redfunc);
   } 
 };
