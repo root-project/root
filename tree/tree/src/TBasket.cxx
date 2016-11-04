@@ -932,6 +932,12 @@ Int_t TBasket::WriteBuffer()
       return -1;
    }
    fMotherDir = file; // fBranch->GetDirectory();
+
+   // This mutex prevents multiple TBasket::WriteBuffer invocations from interacting
+   // with the underlying TFile at once - TFile is assumed to *not* be thread-safe.
+   //
+   // The only parallelism we'd like to exploit (right now!) is the compression
+   // step - everything else should be serialized at the TFile level.
 #ifdef R__USE_IMT
    std::unique_lock<std::mutex> sentry(file->fWriteMutex);
 #endif  // R__USE_IMT
@@ -1000,7 +1006,9 @@ Int_t TBasket::WriteBuffer()
       for (Int_t i = 0; i < nbuffers; ++i) {
          if (i == nbuffers - 1) bufmax = fObjlen - nzip;
          else bufmax = kMAXZIPBUF;
-         //compress the buffer
+         // Compress the buffer.  Note that we allow multiple TBasket compressions to occur at once
+         // for a given TFile: that's because the compression buffer when we use IMT is no longer
+         // shared amongst several threads.
 #ifdef R__USE_IMT
          sentry.unlock();
 #endif  // R__USE_IMT
