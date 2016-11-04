@@ -12,8 +12,8 @@
 #ifndef ROOT_TExecutor
 #define ROOT_TExecutor
 
-#include "TCollection.h"
 #include "ROOT/TSeq.hxx"
+#include <vector>
 
 namespace ROOT {
 
@@ -31,13 +31,9 @@ public:
    // //and a compile-time check that the argument list implements a front() method (all STL sequence containers have it)
    template<class F, class Cond = noReferenceCond<F>>
    auto Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>;
-   template<class F, class T, class Cond = noReferenceCond<F, typename T::value_type>>
-   auto Map(F func, T &args) -> std::vector < decltype(++(args.begin()), args.end(), func(args.front()))>;
    // /// \cond doxygen should ignore these methods
    template<class F, class INTEGER, class Cond = noReferenceCond<F, INTEGER>>
    auto Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>;
-   template<class F, class Cond = noReferenceCond<F, TObject*>>
-   auto Map(F func, TCollection &args) -> std::vector<typename std::result_of<F(TObject*)>::type>;
    template<class F, class T, class Cond = noReferenceCond<F, T>>
    auto Map(F func, std::initializer_list<T> args) -> std::vector<typename std::result_of<F(T)>::type>;
    template<class F, class T, class Cond = noReferenceCond<F, T>>
