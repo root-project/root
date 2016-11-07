@@ -2634,7 +2634,7 @@ void TBufferJSON::ReadTString(TString & /*s*/)
 }
 
 //______________________________________________________________________________
-void TBufferJSON::ReadStdString(std::string &/*s*/)
+void TBufferJSON::ReadStdString(std::string */*s*/)
 {
    // Reads a std::string
 }
@@ -2790,13 +2790,14 @@ void TBufferJSON::WriteTString(const TString &s)
 }
 
 //______________________________________________________________________________
-void TBufferJSON::WriteStdString(const std::string &s)
+void TBufferJSON::WriteStdString(const std::string *s)
 {
    // Writes a std::string
 
    TJSONPushValue();
 
-   JsonWriteConstChar(s.c_str(), s.length());
+   if (s) JsonWriteConstChar(s->c_str(), s->length());
+     else JsonWriteConstChar("",0);
 }
 
 //______________________________________________________________________________

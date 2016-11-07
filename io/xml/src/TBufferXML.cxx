@@ -2709,7 +2709,7 @@ void TBufferXML::ReadTString(TString &s)
 }
 
 //______________________________________________________________________________
-void TBufferXML::ReadStdString(std::string &s)
+void TBufferXML::ReadStdString(std::string *s)
 {
    // Reads a std::string
 
@@ -2719,7 +2719,7 @@ void TBufferXML::ReadStdString(std::string &s)
       BeforeIOoperation();
       const char* buf;
       if ((buf = XmlReadValue(xmlio::String)))
-         s = buf;
+         if (s) *s = buf;
    }
 }
 
@@ -2858,7 +2858,7 @@ void TBufferXML::WriteTString(const TString &s)
 }
 
 //______________________________________________________________________________
-void TBufferXML::WriteStdString(const std::string &s)
+void TBufferXML::WriteStdString(const std::string *s)
 {
    // Writes a TString
 
@@ -2866,7 +2866,8 @@ void TBufferXML::WriteStdString(const std::string &s)
       TBufferFile::WriteStdString(s);
    } else {
       BeforeIOoperation();
-      XmlWriteValue(s.c_str(), xmlio::String);
+      if (s) XmlWriteValue(s->c_str(), xmlio::String);
+        else XmlWriteValue("", xmlio::String);
    }
 }
 

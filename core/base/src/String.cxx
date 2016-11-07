@@ -21,13 +21,13 @@
 
 namespace std {} using namespace std;
 
-void std_string_streamer(TBuffer &b, void *objadd) 
+void std_string_streamer(TBuffer &b, void *objadd)
 {
    // Streamer function for std::string object.
    if (b.IsReading()) {
-      b.ReadStdString(*(std::string*)objadd);
+      b.ReadStdString((std::string*)objadd);
    } else {
-      b.WriteStdString(*(std::string*)objadd);
+      b.WriteStdString((std::string*)objadd);
    }
 }
 

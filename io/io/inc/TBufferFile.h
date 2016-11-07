@@ -161,7 +161,7 @@ public:
    virtual   void     ReadWithNbits(Float_t *ptr, Int_t nbits);
    virtual   void     ReadWithFactor(Double_t *ptr, Double_t factor, Double_t minvalue);
    virtual   void     ReadWithNbits(Double_t *ptr, Int_t nbits);
-   
+
    virtual   Int_t    ReadArray(Bool_t    *&b);
    virtual   Int_t    ReadArray(Char_t    *&c);
    virtual   Int_t    ReadArray(UChar_t   *&c);
@@ -272,7 +272,7 @@ public:
    virtual   void     ReadDouble(Double_t   &d);
    virtual   void     ReadCharP(Char_t      *c);
    virtual   void     ReadTString(TString   &s);
-   virtual   void     ReadStdString(std::string &s);
+   virtual   void     ReadStdString(std::string *s);
 
    virtual   void     WriteBool(Bool_t       b);
    virtual   void     WriteChar(Char_t       c);
@@ -289,7 +289,7 @@ public:
    virtual   void     WriteDouble(Double_t   d);
    virtual   void     WriteCharP(const Char_t *c);
    virtual   void     WriteTString(const TString &s);
-   virtual   void     WriteStdString(const std::string &s);
+   virtual   void     WriteStdString(const std::string *s);
 
    // Special basic ROOT objects and collections
    virtual   TProcessID *GetLastProcessID(TRefTable *reftable) const;
@@ -308,10 +308,10 @@ public:
    virtual   Int_t  ReadClassBuffer(const TClass *cl, void *pointer, const TClass *onfile_class);
    virtual   Int_t  ReadClassBuffer(const TClass *cl, void *pointer, Int_t version, UInt_t start, UInt_t count, const TClass *onfile_class);
    virtual   Int_t  WriteClassBuffer(const TClass *cl, void *pointer);
-   
+
    // Utilites to streamer using sequences.
-   Int_t ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *object);      
-   Int_t ApplySequenceVecPtr(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection);      
+   Int_t ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *object);
+   Int_t ApplySequenceVecPtr(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection);
    Int_t ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection);
 
    static void    SetGlobalReadParam(Int_t mapsize);
