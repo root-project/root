@@ -45,6 +45,7 @@ namespace Internal {
    class TTreeReaderValueBase {
    public:
       TTreeReaderValueBase(const TTreeReaderValueBase&) = delete;
+      TTreeReaderValueBase(TTreeReaderValueBase&&) = default;
 
       // Status flags, 0 is good
       enum ESetupStatus {
