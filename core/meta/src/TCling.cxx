@@ -99,6 +99,7 @@ clang/LLVM technology.
 #include "cling/Interpreter/Transaction.h"
 #include "cling/MetaProcessor/MetaProcessor.h"
 #include "cling/Utils/AST.h"
+#include "cling/Utils/ParserStateRAII.h"
 #include "cling/Utils/SourceNormalization.h"
 #include "cling/Interpreter/Exception.h"
 
@@ -5310,6 +5311,7 @@ static cling::Interpreter::CompilationResult ExecAutoParse(const char *what,
    // is safe (semi colon usually means empty decl)
    Token& Tok = const_cast<Token&>(P.getCurToken());
    Tok.setKind(tok::semi);
+   cling::ParserStateRAII parserRAII(P);
 
    // We can't PushDeclContext, because we go up and the routine that pops
    // the DeclContext assumes that we drill down always.
