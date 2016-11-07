@@ -77,19 +77,42 @@ int PoolTest() {
    if(redres6 != 200)
       return 8;
 
+   /***** chunking tests *****/
+
+  // init list and C++ function
+   std::vector<int> partialRedTruth = {3, 3};
+   auto partialredres1 = pool.Map(f, {0,1,0,1}, redfunc, 2);
+   auto chunkedredres1 = pool.MapReduce(f, {0,1,0,1}, redfunc, 2);
+   if(partialredres1 != partialRedTruth || chunkedredres1 != 6)
+      return 9;
+  
+  //nTimes + lambda signature
+   auto partialredres2 = pool.Map([](){return 1;}, 6, redfunc, 2);
+   unsigned xo=6;
+   auto chunkedredres2 = pool.MapReduce([](){return 1;}, xo, redfunc);
+   if(partialredres2 != partialRedTruth || chunkedredres2 != 6)
+      return 10;
+
+  //TSeq signature, uneven chunks (8 elements in 3 chunks)
+   partialRedTruth = {6, 15, 15}; //1+2+3, 4+5+6, 7+8
+   auto partialredres3 = pool.Map(f, ROOT::TSeq<int>(0,8), redfunc, 3);
+   auto chunkedredres3 = pool.MapReduce(f, ROOT::TSeq<int>(0,6), redfunc, 2);
+   if(partialredres3 != partialRedTruth  || chunkedredres3 != 21)
+      return 11;
+
    /***** other tests *****/
 
    //returning a c-string
     auto extrares1 = pool.Map([]() { return "42"; }, 25);
     for(auto c_str : extrares1)
        if(strcmp(c_str, "42") != 0)
-          return 9;
+          return 12;
 
    //returning a string
    auto extrares2 = pool.Map([]() { return std::string("fortytwo"); }, 25);
    for(auto str : extrares2)
       if(str != "fortytwo")
-         return 10;
+         return 13;
 
    return 0;
 }
