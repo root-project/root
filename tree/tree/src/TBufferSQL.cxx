@@ -324,6 +324,23 @@ void TBufferSQL::WriteStdString(const std::string *s)
    TBufferFile::WriteStdString(s);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Read a char* string
+
+void TBufferSQL::ReadCharStar(char* &s)
+{
+   TBufferFile::ReadCharStar(s);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Write a char* string
+
+void TBufferSQL::WriteCharStar(char *s)
+{
+   TBufferFile::WriteCharStar(s);
+}
+
+
 // Method to send to database.
 
 ////////////////////////////////////////////////////////////////////////////////
