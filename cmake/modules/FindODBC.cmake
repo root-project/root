@@ -36,5 +36,5 @@ set(ODBC_LIBRARIES ${ODBC_LIBRARY})
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(ODBC DEFAULT_MSG ODBC_INCLUDE_DIR ODBC_LIBRARY)
-mark_as_advanced(ODBC_INCLUDE_DIR OBC_LIBRARY)
+mark_as_advanced(ODBC_INCLUDE_DIR ODBC_LIBRARY)
 
