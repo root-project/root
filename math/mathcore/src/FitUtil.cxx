@@ -917,8 +917,23 @@ double FitUtil::EvaluateLogL(const IModelFunction & func, const UnBinData & data
       std::vector<double> xmin(data.NDim());
       std::vector<double> xmax(data.NDim());
       IntegralEvaluator<> igEval( func, p, true);
-      data.Range().GetRange(&xmin[0],&xmax[0]);
-      norm = igEval.Integral(&xmin[0],&xmax[0]);
+      // compute integral in the ranges where is defined 
+      if (data.Range().Size() > 0 ) {
+         norm = 0; 
+         for (unsigned int ir = 0; ir < data.Range().Size(); ++ir) {
+            data.Range().GetRange(&xmin[0],&xmax[0],ir);
+            norm += igEval.Integral(xmin.data(),xmax.data());
+         }
+      } else {
+         // use (-inf +inf)
+         data.Range().GetRange(&xmin[0],&xmax[0]);
+         // check if funcition is zero at +- inf
+         if (func(xmin.data()) != 0 || func(xmax.data()) != 0) {
+            MATH_ERROR_MSG("FitUtil::EvaluateLogLikelihood","A range has not been set and the function is not zero at +/- inf");
+            return 0; 
+         }
+         norm = igEval.Integral(&xmin[0],&xmax[0]);
+      }
    }
 
    // needed to compue effective global weight in case of extended likelihood
@@ -935,13 +950,17 @@ double FitUtil::EvaluateLogL(const IModelFunction & func, const UnBinData & data
       if (normalizeFunc) fval = fval / norm;
 
 #ifdef DEBUG
-      std::cout << "x [ " << data.NDim() << " ] = ";
-      for (unsigned int j = 0; j < data.NDim(); ++j)
-         std::cout << x[j] << "\t";
-      std::cout << "\tpar = [ " << func.NPar() << " ] =  ";
-      for (unsigned int ipar = 0; ipar < func.NPar(); ++ipar)
-         std::cout << p[ipar] << "\t";
-      std::cout << "\tfval = " << fval << std::endl;
+      if (i == 0) { 
+         std::cout << "x [ " << data.NDim() << " ] = ";
+         for (unsigned int j = 0; j < data.NDim(); ++j)
+            std::cout << x[j] << "\t";
+         std::cout << "\tpar = [ " << func.NPar() << " ] =  ";
+         for (unsigned int ipar = 0; ipar < func.NPar(); ++ipar)
+            std::cout << p[ipar] << "\t";
+         std::cout << "\tfval = " << fval << std::endl;
+      } else {
+         std::cout << ".";
+      }
 #endif
       // function EvalLog protects against negative or too small values of fval
       double logval =  ROOT::Math::Util::EvalLog( fval);
@@ -960,6 +979,10 @@ double FitUtil::EvaluateLogL(const IModelFunction & func, const UnBinData & data
       logl += logval;
    }
 
+#ifdef DEBUG
+   std::cout << std::endl;
+#endif  
+
    if (extended) {
       // add Poisson extended term
       double extendedTerm = 0; // extended term in likelihood
@@ -970,8 +993,31 @@ double FitUtil::EvaluateLogL(const IModelFunction & func, const UnBinData & data
          IntegralEvaluator<> igEval( func, p, true);
          std::vector<double> xmin(data.NDim());
          std::vector<double> xmax(data.NDim());
-         data.Range().GetRange(&xmin[0],&xmax[0]);
-         nuTot = igEval.Integral( &xmin[0], &xmax[0]);
+
+         // compute integral in the ranges where is defined 
+         if (data.Range().Size() > 0 ) {
+            nuTot = 0; 
+            for (unsigned int ir = 0; ir < data.Range().Size(); ++ir) {
+               data.Range().GetRange(&xmin[0],&xmax[0],ir);
+               nuTot += igEval.Integral(xmin.data(),xmax.data());
+#ifdef DEBUG
+         std::cout << "After Integral bewteen " << xmin[0] << " and " << xmax[0] << " nexp is  " << nuTot << std::endl;
+#endif 
+            }
+         } else {
+            // use (-inf +inf)
+            data.Range().GetRange(&xmin[0],&xmax[0]);
+            // check if funcition is zero at +- inf
+            if (func(xmin.data()) != 0 || func(xmax.data()) != 0) {
+               MATH_ERROR_MSG("FitUtil::EvaluateLogLikelihood","A range has not been set and the function is not zero at +/- inf");
+               return 0; 
+            }
+            nuTot = igEval.Integral(&xmin[0],&xmax[0]);
+#ifdef DEBUG
+         std::cout << "Range not existig - integral bewteen " << xmin[0] << " and " << xmax[0] << "  is  " << nuTot << std::endl;
+#endif 
+         }
+
          // force to be last parameter value
          //nutot = p[func.NDim()-1];
          if (iWeight != 2)
