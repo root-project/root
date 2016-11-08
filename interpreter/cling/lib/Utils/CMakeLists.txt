@@ -21,6 +21,7 @@ add_cling_library(clingUtils OBJECT
   clangAST
   clangLex
   clangBasic
+  clangParse
 )
 
 if ( MSVC )
