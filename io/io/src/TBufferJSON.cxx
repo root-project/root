@@ -431,9 +431,12 @@ TString TBufferJSON::JsonWriteMember(const void *ptr, TDataMember *member,
    PushStack(0);
    fValue.Clear();
 
-   if (member->IsBasic()) {
+   Int_t tid = member->GetDataType() ? member->GetDataType()->GetType() : kNoType_t;
 
-      Int_t tid = member->GetDataType() ? member->GetDataType()->GetType() : kNoType_t;
+   if (strcmp(member->GetTrueTypeName(),"const char*")==0) tid = kCharStar; else
+   if (!member->IsBasic()) tid = kNoType_t;
+
+   if (tid != kNoType_t) {
 
       if (ptr == 0) {
          fValue = "null";
@@ -458,7 +461,7 @@ TString TBufferJSON::JsonWriteMember(const void *ptr, TDataMember *member,
                JsonWriteBasic(*((Int_t *)ptr));
                break;
             case kCharStar:
-               WriteCharP((Char_t *)ptr);
+               WriteCharStar((Char_t *)ptr);
                break;
             case kDouble_t:
                JsonWriteBasic(*((Double_t *)ptr));
@@ -671,9 +674,7 @@ TString TBufferJSON::JsonWriteMember(const void *ptr, TDataMember *member,
       }
    } else if (memberClass == TString::Class()) {
       TString *str = (TString *) ptr;
-      fValue.Append("\"");
-      if (str != 0) fValue.Append(*str);
-      fValue.Append("\"");
+      JsonWriteConstChar(str ? str->Data() : 0);
    } else if ((member->IsSTLContainer() == ROOT::kSTLvector) ||
               (member->IsSTLContainer() == ROOT::kSTLlist) ||
               (member->IsSTLContainer() == ROOT::kSTLforwardlist)) {
