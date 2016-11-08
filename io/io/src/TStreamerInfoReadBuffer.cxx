@@ -1006,12 +1006,8 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
          // char*
          case TStreamerInfo::kCharStar: {
             DOLOOP {
-               Int_t nch; b >> nch;
                char **f = (char**)(arr[k]+ioffset);
-               delete [] *f;
-               *f = 0; if (nch <=0) continue;
-               *f = new char[nch+1];
-               b.ReadFastArray(*f,nch); (*f)[nch] = 0;
+               b.ReadCharStar(*f);
             }
          }
          continue;

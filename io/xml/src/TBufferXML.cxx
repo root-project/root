@@ -2723,6 +2723,14 @@ void TBufferXML::ReadStdString(std::string *s)
    }
 }
 
+//______________________________________________________________________________
+void TBufferXML::ReadCharStar(char* &s)
+{
+   // Read a char* string
+
+   TBufferFile::ReadCharStar(s);
+}
+
 
 // macro for left shift operator for basic types
 #define TBufferXML_operatorout(vname) \
@@ -2869,6 +2877,14 @@ void TBufferXML::WriteStdString(const std::string *s)
       if (s) XmlWriteValue(s->c_str(), xmlio::String);
         else XmlWriteValue("", xmlio::String);
    }
+}
+
+//______________________________________________________________________________
+void TBufferXML::WriteCharStar(char *s)
+{
+   // Write a char* string
+
+   TBufferFile::WriteCharStar(s);
 }
 
 //______________________________________________________________________________

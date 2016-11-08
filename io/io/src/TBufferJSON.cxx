@@ -1498,17 +1498,13 @@ void TBufferJSON::PerformPostProcessing(TJSONStackObj *stack,
 
    const char *typname = elem->IsBase() ? elem->GetName() : elem->GetTypeName();
    Bool_t isTObject = (elem->GetType() == TStreamerInfo::kTObject) || (strcmp("TObject", typname) == 0);
-   Bool_t isCharStar = elem->GetType() == TStreamerInfo::kCharStar;
    Bool_t isTString = elem->GetType() == TStreamerInfo::kTString;
    Bool_t isSTLstring = elem->GetType() == TStreamerInfo::kSTLstring;
    Bool_t isOffsetPArray = (elem->GetType() > TStreamerInfo::kOffsetP) && (elem->GetType() < TStreamerInfo::kOffsetP + 20);
 
    Bool_t isTArray = (strncmp("TArray", typname, 6) == 0);
 
-   if (isCharStar) {
-      stack->fValues.Delete();
-      if (fValue == "0") fValue = "\"\"";
-   } else if (isTString || isSTLstring) {
+   if (isTString || isSTLstring) {
       // just remove all kind of string length information
 
       if (gDebug > 3)
@@ -2754,6 +2750,12 @@ void TBufferJSON::ReadStdString(std::string * /*s*/)
 }
 
 //______________________________________________________________________________
+void TBufferJSON::ReadCharStar(char* &/*s*/)
+{
+   // Reads a char* string
+}
+
+//______________________________________________________________________________
 void TBufferJSON::WriteBool(Bool_t b)
 {
    // Writes Bool_t value to buffer
@@ -2912,6 +2914,16 @@ void TBufferJSON::WriteStdString(const std::string *s)
 
    if (s) JsonWriteConstChar(s->c_str(), s->length());
      else JsonWriteConstChar("",0);
+}
+
+//______________________________________________________________________________
+void TBufferJSON::WriteCharStar(char *s)
+{
+   // Writes a char*
+
+   TJSONPushValue();
+
+   JsonWriteConstChar(s);
 }
 
 //______________________________________________________________________________

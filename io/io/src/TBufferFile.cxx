@@ -343,6 +343,40 @@ void TBufferFile::WriteStdString(const std::string *obj)
    WriteFastArray(obj->data(),nbig);
 }
 
+
+//______________________________________________________________________________
+void TBufferFile::ReadCharStar(char* &s)
+{
+   // Read char* from TBuffer.
+
+   delete [] s;
+   s = 0;
+
+   Int_t nch;
+   *this >> nch;
+   if (nch > 0) {
+      s = new char[nch+1];
+      ReadFastArray(s, nch);
+      s[nch] = 0;
+   }
+}
+
+//______________________________________________________________________________
+void TBufferFile::WriteCharStar(char *s)
+{
+   // Write char* into TBuffer.
+
+   Int_t nch = 0;
+   if (s) {
+      nch = strlen(s);
+      *this  << nch;
+      WriteFastArray(s,nch);
+   } else {
+      *this << nch;
+   }
+
+}
+
 //______________________________________________________________________________
 void TBufferFile::SetByteCount(UInt_t cntpos, Bool_t packInVersion)
 {
