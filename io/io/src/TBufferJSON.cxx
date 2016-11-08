@@ -318,8 +318,14 @@ TString TBufferJSON::ConvertToJSON(const void *obj, const TClass *cl,
 {
    if ((member_name!=0) && (obj!=0)) {
       TRealData *rdata = cl->GetRealData(member_name);
-      if (rdata==0) return TString();
-      TDataMember *member = rdata->GetDataMember();
+      TDataMember *member = rdata ? rdata->GetDataMember() : 0;
+      if (member==0) {
+         TIter iter(cl->GetListOfRealData());
+         while ((rdata = dynamic_cast<TRealData*>(iter())) != 0) {
+            member = rdata->GetDataMember();
+            if (member && strcmp(member->GetName(), member_name)==0) break;
+         }
+      }
       if (member==0) return TString();
 
       Int_t arraylen = -1;
