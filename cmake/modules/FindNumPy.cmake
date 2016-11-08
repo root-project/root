@@ -10,7 +10,7 @@
 #  NUMPY_VERSION_MINOR       - the minor version number of NumPy
 #  NUMPY_VERSION_PATCH       - the patch version number of NumPy
 #  NUMPY_VERSION_DECIMAL     - e.g. version 1.6.1 is 10601
-#  NUMPY_INCLUDE_DIRS        - path to the NumPy include files
+#  NUMPY_INCLUDE_DIRS        - path to the NumPy include files (non cached)
 
 #============================================================================
 # Copyright 2012 Continuum Analytics, Inc.
@@ -71,7 +71,7 @@ string(REGEX REPLACE ";" "\\\\;" _NUMPY_VALUES ${_NUMPY_VALUES_OUTPUT})
 string(REGEX REPLACE "\n" ";" _NUMPY_VALUES ${_NUMPY_VALUES})
 # Just in case there is unexpected output from the Python command.
 list(GET _NUMPY_VALUES -2 NUMPY_VERSION)
-list(GET _NUMPY_VALUES -1 NUMPY_INCLUDE_DIRS)
+list(GET _NUMPY_VALUES -1 _numpy_include_path)
 
 string(REGEX MATCH "^[0-9]+\\.[0-9]+\\.[0-9]+" _VER_CHECK "${NUMPY_VERSION}")
 if("${_VER_CHECK}" STREQUAL "")
@@ -82,8 +82,10 @@ if("${_VER_CHECK}" STREQUAL "")
     return()
 endif()
 
-# Make sure all directory separators are '/'
-string(REGEX REPLACE "\\\\" "/" NUMPY_INCLUDE_DIRS ${NUMPY_INCLUDE_DIRS})
+find_path(NUMPY_INCLUDE_DIR numpy/numpyconfig.h PATHS ${_numpy_include_path})
+if(NUMPY_INCLUDE_DIR)
+  set(NUMPY_INCLUDE_DIRS ${NUMPY_INCLUDE_DIR})
+endif()
 
 # Get the major and minor version numbers
 string(REGEX REPLACE "\\." ";" _NUMPY_VERSION_LIST ${NUMPY_VERSION})
@@ -94,8 +96,8 @@ string(REGEX MATCH "[0-9]*" NUMPY_VERSION_PATCH ${NUMPY_VERSION_PATCH})
 math(EXPR NUMPY_VERSION_DECIMAL
     "(${NUMPY_VERSION_MAJOR} * 10000) + (${NUMPY_VERSION_MINOR} * 100) + ${NUMPY_VERSION_PATCH}")
 
-find_package_message(NUMPY
-    "Found NumPy: version \"${NUMPY_VERSION}\" ${NUMPY_INCLUDE_DIRS}"
-    "${NUMPY_INCLUDE_DIRS}${NUMPY_VERSION}")
+find_package_handle_standard_args(NUMPY
+                                  REQUIRED_VARS NUMPY_INCLUDE_DIR
+                                  VERSION_VAR NUMPY_VERSION)
+mark_as_advanced(NUMPY_INCLUDE_DIR)
 
-set(NUMPY_FOUND TRUE)
