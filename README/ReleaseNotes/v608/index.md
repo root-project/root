@@ -217,7 +217,7 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 * `TASImage` When the first or last point of a wide line is exactly on the
   window limit the line is drawn vertically or horizontally.
   This problem was mentioned [here](https://sft.its.cern.ch/jira/browse/ROOT-8021)
-* Make sure that `TLatex` text strings containing "\" (ie: rendered using `TMathText`)
+* Make sure that `TLatex` text strings containing "\\" (ie: rendered using `TMathText`)
   produce an output in PDF et SVG files.
 * In TLatex, with the Cocoa backend on Mac the Angstroem characters did not render correctly.
   This problem was mentioned [here](https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=21321)
@@ -409,19 +409,19 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 ## JavaScript ROOT
 
 - New geometry (TGeo) classes support:
-   - browsing  through volumes hieararchy
-   - changing visibility flags
-   - drawing of selected volumes
-   - support of large (~10M volumes) models, only most significant volumes are shown
-   - one could activate several clip planes (only with WebGL)
-   - interaction with object browser to change visibility flags or focus on selected volume
-   - support of floating browser for TGeo objects
-   - intensive use of HTML Worker to offload computation tasks and keep interactivity   
+    - browsing  through volumes hieararchy
+    - changing visibility flags
+    - drawing of selected volumes
+    - support of large (~10M volumes) models, only most significant volumes are shown
+    - one could activate several clip planes (only with WebGL)
+    - interaction with object browser to change visibility flags or focus on selected volume
+    - support of floating browser for TGeo objects
+    - intensive use of HTML Worker to offload computation tasks and keep interactivity
    - enable more details when changing camera position/zoom
 - Improvements in histograms 3D drawing
-   - all lego options: lego1..lego4, combined with 'fb', 'bb', '0' or 'z'
-   - support axis labels on lego plots
-   - support lego plots for TH1
+    - all lego options: lego1..lego4, combined with 'fb', 'bb', '0' or 'z'
+    - support axis labels on lego plots
+    - support lego plots for TH1
 - Significant (up to factor 10) performance improvement in 3D-graphics
 - Implement ROOT6-like color palettes
 - Support non-equidistant bins for TH1/TH2 objects.
@@ -431,8 +431,8 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 - Implement box and hbox draw options for TH1 class
 - Significant (factor 4) I/O performance improvement
 - New 'flex' layout:
-   - create frames like in Multi Document Interface
-   - one could move/resize/minimize/maximize such frames
+    - create frames like in Multi Document Interface
+    - one could move/resize/minimize/maximize such frames
 
 For more details, like the complete change log, the documentation, and very detailed examples, see the [JSROOT home page](https://root.cern.ch/js) and the [JSROOT project github page](https://github.com/linev/jsroot) 
 
@@ -440,8 +440,8 @@ For more details, like the complete change log, the documentation, and very deta
 ## Tutorials
 * New tutorial `treegetval.C` illustrating how to retrieve  `TTree` variables in arrays.
 * Add script to automatically translate tutorials into notebooks
-   * Embed it into the documentation generation
-   * Make the notebooks available at https://root.cern/doc/master/group__Tutorials.html
+    * Embed it into the documentation generation
+    * Make the notebooks available in the [tutorials section of the class documentation](https://root.cern/doc/master/group__Tutorials.html)
 
 ## Class Reference Guide
 
@@ -451,21 +451,21 @@ For more details, like the complete change log, the documentation, and very deta
   The default is OFF, however if the Vc package is not found in the system the option is switched to
   ON if the option 'vc' option is ON.
 - Many improvements (provided by Mattias Ellert):
-   - Build RFIO using dpm libraries if castor libraries are not available
-   - Add missing glib header path in GFAL module for version > 2
-   - Search also for globus libraries wouthout the flavour in the name
-   - Add missing io/hdfs/CMakeLists.txt
-   - net/globusauth has no installed headers - remove ROOT_INSTALL_HEADERS()
-   - Add missing pieces to the cmake config that are built by configure: bin/pq2, bin/rootd, bin/xpdtest, initd and xinitd start-up scripts
-   - Only link to libgfortranbegin.a when it is provided by the compiler
-   - Don't remove -Wall without also removing -Werror=*
-   - Don't overwrite the initial value of CMAKE_Fortran_FLAGS. Inconsistent case variant of CMAKE_Fortran_FLAGS
-   - Use the same sonames in cmake as in configure
-   - Allow building for ppc64 as well as ppc64le
-   - Add build instructions for 32 bit ARM
-   - Add build instructions for System Z (s390 and s390x)
-   - Make sure that the roots wrapper can be executed
-   - Move gl2ps.h to its own subdir
+    - Build RFIO using dpm libraries if castor libraries are not available
+    - Add missing glib header path in GFAL module for version > 2
+    - Search also for globus libraries wouthout the flavour in the name
+    - Add missing io/hdfs/CMakeLists.txt
+    - net/globusauth has no installed headers - remove ROOT_INSTALL_HEADERS()
+    - Add missing pieces to the cmake config that are built by configure: bin/pq2, bin/rootd, bin/xpdtest, initd and xinitd start-up scripts
+    - Only link to libgfortranbegin.a when it is provided by the compiler
+    - Don't remove -Wall without also removing -Werror=*
+    - Don't overwrite the initial value of CMAKE_Fortran_FLAGS. Inconsistent case variant of CMAKE_Fortran_FLAGS
+    - Use the same sonames in cmake as in configure
+    - Allow building for ppc64 as well as ppc64le
+    - Add build instructions for 32 bit ARM
+    - Add build instructions for System Z (s390 and s390x)
+    - Make sure that the roots wrapper can be executed
+    - Move gl2ps.h to its own subdir
 - Added new 'builtin-unuran' option (provided by Mattias Ellert)
 - Added new 'builtin-gl2ps' option (provided by Mattias Ellert)
 - Added new 'macos_native' option (only for MacOS) to disable looking for binaries, libraires and headers for dependent
