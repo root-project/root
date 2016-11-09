@@ -435,7 +435,7 @@ TString TBufferJSON::ConvertToJSON(const void *ptr, TDataMember *member,
    TClass *mcl = member->IsBasic() ? 0 : gROOT->GetClass(member->GetTypeName());
 
    if ((mcl != 0) && (mcl != TString::Class()) && !stlstring && !isstl &&
-         (mcl->GetBaseClassOffset(TArray::Class()) != 0))
+         (mcl->GetBaseClassOffset(TArray::Class()) != 0) && (arraylen<=0) && (member->GetArrayDim()==0))
       return TBufferJSON::ConvertToJSON(ptr, mcl, compact);
 
    TBufferJSON buf;
@@ -632,7 +632,7 @@ TString TBufferJSON::JsonWriteMember(const void *ptr, TDataMember *member,
 
    if (fValue.Length()) return fValue;
 
-   if ((memberClass == 0) || (member->GetArrayDim() > 0)) return "\"not supported\"";
+   if ((memberClass == 0) || (member->GetArrayDim() > 0) || (arraylen > 0)) return "<not supported>";
 
    return TBufferJSON::ConvertToJSON(ptr, memberClass);
 }
