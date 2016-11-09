@@ -170,9 +170,6 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 * Vc has ben removed from the ROOT sources. If the option 'vc' is enabled, the package will be searched (by default),
   alternatively the source tarfile can be downloded and build with the option 'builtin_vc'.
 
-## RooFit Libraries
-
-
 ## 2D Graphics Libraries
 
 * In `TColor::SetPalette`, make sure the high quality palettes are defined
@@ -377,12 +374,6 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 * A new `Browser.ExpandDirectories` option (the default is `yes`) has been added, allowing to prevent expanding the parent directory tree in the ROOT Browser (for example on nfs).
 
 
-## Montecarlo Libraries
-
-
-## PROOF Libraries
-
-
 ## Language Bindings
 
 ### PyROOT
@@ -442,8 +433,6 @@ For more details, like the complete change log, the documentation, and very deta
 * Add script to automatically translate tutorials into notebooks
     * Embed it into the documentation generation
     * Make the notebooks available in the [tutorials section of the class documentation](https://root.cern/doc/master/group__Tutorials.html)
-
-## Class Reference Guide
 
 ## Build, Configuration and Testing Infrastructure
 - `root-config` does not suppress deprecation warnings (-Wno-deprecated-declarations) anymore. This means compilers will now diagnose the use of deprecated interfaces in user code.
