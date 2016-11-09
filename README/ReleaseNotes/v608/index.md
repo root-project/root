@@ -12,8 +12,8 @@ For more information, see:
 
 The following people have contributed to this new version:
 
- David Abdurachmanov, CERN, CMS,\ 
- Adrian Bevan, Queen Mary University of London, ATLAS\
+ David Abdurachmanov, CERN, CMS,\
+ Adrian Bevan, Queen Mary University of London, ATLAS,\
  Attila Bagoly, GSoC,\
  Bertrand Bellenot, CERN/SFT,\
  Rene Brun, CERN/SFT,\
@@ -187,12 +187,11 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 
 * New template class `TRandomGen<Engine>` which derives from `TRandom` and integrate new random generator engines as TRandom classes.
 * New TRandom specific types have been defined for these following generators:
-  *  `TRandomMixMax`  - recommended MIXMAX generator with N=240
-  *  `TRandomMixMax17` - MIXMAX generator with smaller state (N=17) and faster seeding time
-  *  `TRandomMixMax256` - old version of MIXMAX generator (N=256)
-  *  `TRandomMT64`  - 64 bit Mersenenne Twister generator from the standard library (based on `std::mt19937_64`). This generates 64 bit random numbers, while `TRandom3` generates only 32 bit random numbers.
-  *  `TRandomRanlux48` - 48 bit Ranlux generator. Note that `TRandom1` is a 24 bit generator.
-  
+    *  `TRandomMixMax`  - recommended MIXMAX generator with N=240
+    *  `TRandomMixMax17` - MIXMAX generator with smaller state (N=17) and faster seeding time
+    *  `TRandomMixMax256` - old version of MIXMAX generator (N=256)
+    *  `TRandomMT64`  - 64 bit Mersenenne Twister generator from the standard library (based on `std::mt19937_64`). This generates 64 bit random numbers, while `TRandom3` generates only 32 bit random numbers.
+    *  `TRandomRanlux48` - 48 bit Ranlux generator. Note that `TRandom1` is a 24 bit generator. 
  * Improve thread safety of `TMinuit` constructor [ROOT-8217]
 * Vc has ben removed from the ROOT sources. If the option 'vc' is enabled, the package will be searched (by default),
   alternatively the source tarfile can be downloded and build with the option 'builtin_vc'.
@@ -201,9 +200,9 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 
 * New `DataLoader` class that allows flexibility in variable and dataset selection. 
 * New Deep Neural Network. Three different versions are available, which can be selected with the 'Architecture' option. See also the tutorial`tmva/TMVAClassification.C` for using the new DNN.
-  * `Architecture=STANDARD`  to select the earlier version.
-  * `Architecture=CPU` to select the newer version for CPU, but designed also for GPU and optimized for speed and with multi-class support. 
-  * `Architecture=GPU` to select the newer GPU version. Requires configuration of ROOT with CUDA or OpenCL enabled. 
+    * `Architecture=STANDARD`  to select the earlier version.
+    * `Architecture=CPU` to select the newer version for CPU, but designed also for GPU and optimized for speed and with multi-class support. 
+    * `Architecture=GPU` to select the newer GPU version. Requires configuration of ROOT with CUDA or OpenCL enabled. 
 * Support for Cross Validation (see tutorial `tmva/TMVACrossValidation` as an example).
 * Support for Hyper-Parameter tuning for BDT and SVM methods.
 * New Variable Importance algorithm independent of the MVA method.
@@ -212,9 +211,9 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 * New `ROCCurve` class. 
 * New interface to Keras (PyKeras)  available in the PyMVA library.
 * Support for Jupyter notebooks
-  * Support for all the functionality available in GUI: preprocessing, variable correlations, classifier output.
-  * New classifier visualization for BDT, ANN and DNN.
-  * Interactive training for all methods.
+    * Support for all the functionality available in GUI: preprocessing, variable correlations, classifier output.
+    * New classifier visualization for BDT, ANN and DNN.
+    * Interactive training for all methods.
 
 
 ## 2D Graphics Libraries
