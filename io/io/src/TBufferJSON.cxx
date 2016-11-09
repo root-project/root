@@ -441,7 +441,7 @@ TString TBufferJSON::ConvertToJSON(const void *ptr, TDataMember *member,
    TClass *mcl = member->IsBasic() ? 0 : gROOT->GetClass(member->GetTypeName());
 
    if ((mcl != 0) && (mcl != TString::Class()) && !stlstring && !isstl &&
-         (mcl->GetBaseClassOffset(TArray::Class()) != 0))
+         (mcl->GetBaseClassOffset(TArray::Class()) != 0) && (arraylen<=0) && (member->GetArrayDim()==0))
       return TBufferJSON::ConvertToJSON(ptr, mcl, compact);
 
    TBufferJSON buf;
@@ -501,7 +501,7 @@ TString TBufferJSON::JsonWriteMember(const void *ptr, TDataMember *member,
 
    if (member == 0) return "null";
 
-   //if (gDebug > 2)
+   if (gDebug > 2)
       Info("JsonWriteMember", "Write member %s type %s ndim %d",
            member->GetName(), member->GetTrueTypeName(), member->GetArrayDim());
 
@@ -509,7 +509,7 @@ TString TBufferJSON::JsonWriteMember(const void *ptr, TDataMember *member,
    if (strcmp(member->GetTrueTypeName(),"const char*")==0) tid = kCharStar; else
    if (!member->IsBasic() || (tid == kOther_t) || (tid == kVoid_t)) tid = kNoType_t;
 
-   if (ptr==0) return tid==kCharStar ? "\"\"" : "null";
+   if (ptr==0) return (tid == kCharStar) ? "\"\"" : "null";
 
    PushStack(0);
    fValue.Clear();
@@ -605,245 +605,6 @@ TString TBufferJSON::JsonWriteMember(const void *ptr, TDataMember *member,
 
       fValue = fOutBuffer;
 
-
-
-
-/*      if (ptr == 0) {
-         fValue = "null";
-      } else if ((member->GetArrayDim() == 0) && (arraylen<0)) {
-         switch (tid) {
-            case kChar_t:
-               JsonWriteBasic(*((Char_t *)ptr));
-               break;
-            case kShort_t:
-               JsonWriteBasic(*((Short_t *)ptr));
-               break;
-            case kInt_t:
-               JsonWriteBasic(*((Int_t *)ptr));
-               break;
-            case kLong_t:
-               JsonWriteBasic(*((Long_t *)ptr));
-               break;
-            case kFloat_t:
-               JsonWriteBasic(*((Float_t *)ptr));
-               break;
-            case kCounter:
-               JsonWriteBasic(*((Int_t *)ptr));
-               break;
-            case kCharStar:
-               WriteCharStar((Char_t *)ptr);
-               break;
-            case kDouble_t:
-               JsonWriteBasic(*((Double_t *)ptr));
-               break;
-            case kDouble32_t:
-               JsonWriteBasic(*((Double_t *)ptr));
-               break;
-            case kchar:
-               JsonWriteBasic(*((char *)ptr));
-               break;
-            case kUChar_t:
-               JsonWriteBasic(*((UChar_t *)ptr));
-               break;
-            case kUShort_t:
-               JsonWriteBasic(*((UShort_t *)ptr));
-               break;
-            case kUInt_t:
-               JsonWriteBasic(*((UInt_t *)ptr));
-               break;
-            case kULong_t:
-               JsonWriteBasic(*((ULong_t *)ptr));
-               break;
-            case kBits:
-               JsonWriteBasic(*((UInt_t *)ptr));
-               break;
-            case kLong64_t:
-               JsonWriteBasic(*((Long64_t *)ptr));
-               break;
-            case kULong64_t:
-               JsonWriteBasic(*((ULong64_t *)ptr));
-               break;
-            case kBool_t:
-               JsonWriteBasic(*((Bool_t *)ptr));
-               break;
-            case kFloat16_t:
-               JsonWriteBasic(*((Float_t *)ptr));
-               break;
-            case kOther_t:
-            case kNoType_t:
-            case kVoid_t:
-               break;
-         }
-      } else if ((member->GetArrayDim() == 1) || (arraylen>=0)) {
-         Int_t n = (arraylen>=0) ? arraylen : member->GetMaxIndex(0);
-         switch (tid) {
-            case kChar_t:
-               WriteFastArray((Char_t *)ptr, n);
-               break;
-            case kShort_t:
-               WriteFastArray((Short_t *)ptr, n);
-               break;
-            case kInt_t:
-               WriteFastArray((Int_t *)ptr, n);
-               break;
-            case kLong_t:
-               WriteFastArray((Long_t *)ptr, n);
-               break;
-            case kFloat_t:
-               WriteFastArray((Float_t *)ptr, n);
-               break;
-            case kCounter:
-               WriteFastArray((Int_t *)ptr, n);
-               break;
-            case kCharStar:
-               WriteFastArray((Char_t *)ptr, n);
-               break;
-            case kDouble_t:
-               WriteFastArray((Double_t *)ptr, n);
-               break;
-            case kDouble32_t:
-               WriteFastArray((Double_t *)ptr, n);
-               break;
-            case kchar:
-               WriteFastArray((char *)ptr, n);
-               break;
-            case kUChar_t:
-               WriteFastArray((UChar_t *)ptr, n);
-               break;
-            case kUShort_t:
-               WriteFastArray((UShort_t *)ptr, n);
-               break;
-            case kUInt_t:
-               WriteFastArray((UInt_t *)ptr, n);
-               break;
-            case kULong_t:
-               WriteFastArray((ULong_t *)ptr, n);
-               break;
-            case kBits:
-               WriteFastArray((UInt_t *)ptr, n);
-               break;
-            case kLong64_t:
-               WriteFastArray((Long64_t *)ptr, n);
-               break;
-            case kULong64_t:
-               WriteFastArray((ULong64_t *)ptr, n);
-               break;
-            case kBool_t:
-               WriteFastArray((Bool_t *)ptr, n);
-               break;
-            case kFloat16_t:
-               WriteFastArray((Float_t *)ptr, n);
-               break;
-            case kOther_t:
-            case kNoType_t:
-            case kVoid_t:
-               break;
-         }
-      } else {
-         // here generic code to write n-dimensional array
-
-         TArrayI indexes(member->GetArrayDim() - 1);
-         indexes.Reset(0);
-
-         Int_t cnt = 0;
-         while (cnt >= 0) {
-            if (indexes[cnt] >= member->GetMaxIndex(cnt)) {
-               fOutBuffer.Append(" ]");
-               indexes[cnt--] = 0;
-               if (cnt >= 0) indexes[cnt]++;
-               continue;
-            }
-
-            if (indexes[cnt] > 0)
-               fOutBuffer.Append(fArraySepar);
-            else
-               fOutBuffer.Append("[ ");
-
-            if (++cnt == indexes.GetSize()) {
-               Int_t shift = 0;
-               for (Int_t k = 0; k < indexes.GetSize(); k++) {
-                  shift = shift * member->GetMaxIndex(k) + indexes[k];
-               }
-
-               Int_t len = member->GetMaxIndex(indexes.GetSize());
-               shift *= len;
-
-               fValue.Clear();
-
-               switch (tid) {
-                  case kChar_t:
-                     WriteFastArray((Char_t *)ptr + shift, len);
-                     break;
-                  case kShort_t:
-                     WriteFastArray((Short_t *)ptr + shift, len);
-                     break;
-                  case kInt_t:
-                     WriteFastArray((Int_t *)ptr + shift, len);
-                     break;
-                  case kLong_t:
-                     WriteFastArray((Long_t *)ptr + shift, len);
-                     break;
-                  case kFloat_t:
-                     WriteFastArray((Float_t *)ptr + shift, len);
-                     break;
-                  case kCounter:
-                     WriteFastArray((Int_t *)ptr + shift, len);
-                     break;
-                  case kCharStar:
-                     WriteFastArray((Char_t *)ptr + shift, len);
-                     break;
-                  case kDouble_t:
-                     WriteFastArray((Double_t *)ptr + shift, len);
-                     break;
-                  case kDouble32_t:
-                     WriteFastArray((Double_t *)ptr + shift, len);
-                     break;
-                  case kchar:
-                     WriteFastArray((char *)ptr + shift, len);
-                     break;
-                  case kUChar_t:
-                     WriteFastArray((UChar_t *)ptr + shift, len);
-                     break;
-                  case kUShort_t:
-                     WriteFastArray((UShort_t *)ptr + shift, len);
-                     break;
-                  case kUInt_t:
-                     WriteFastArray((UInt_t *)ptr + shift, len);
-                     break;
-                  case kULong_t:
-                     WriteFastArray((ULong_t *)ptr + shift, len);
-                     break;
-                  case kBits:
-                     WriteFastArray((UInt_t *)ptr + shift, len);
-                     break;
-                  case kLong64_t:
-                     WriteFastArray((Long64_t *)ptr + shift, len);
-                     break;
-                  case kULong64_t:
-                     WriteFastArray((ULong64_t *)ptr + shift, len);
-                     break;
-                  case kBool_t:
-                     WriteFastArray((Bool_t *)ptr + shift, len);
-                     break;
-                  case kFloat16_t:
-                     WriteFastArray((Float_t *)ptr + shift, len);
-                     break;
-                  case kOther_t:
-                  case kNoType_t:
-                  case kVoid_t:
-                     fValue = "null";
-                     break;
-               }
-
-               fOutBuffer.Append(fValue);
-               indexes[--cnt]++;
-            }
-         }
-
-         fValue = fOutBuffer;
-      }
-
-      */
    } else if (memberClass == TString::Class()) {
       TString *str = (TString *) ptr;
       JsonWriteConstChar(str ? str->Data() : 0);
@@ -875,7 +636,7 @@ TString TBufferJSON::JsonWriteMember(const void *ptr, TDataMember *member,
 
    if (fValue.Length()) return fValue;
 
-   if ((memberClass == 0) || (member->GetArrayDim() > 0)) return "\"not supported\"";
+   if ((memberClass == 0) || (member->GetArrayDim() > 0) || (arraylen > 0)) return "<not supported>";
 
    return TBufferJSON::ConvertToJSON(ptr, memberClass);
 }
