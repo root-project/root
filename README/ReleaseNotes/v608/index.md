@@ -141,7 +141,7 @@ Add a new mode for `TClass::SetCanSplit` (2) which indicates that this class and
 
 * TChains can now be histogrammed without any C++ code, using the command line tool `rootdrawtree`. It is based on the new class `TSimpleAnalysis`.
 * Do not automatically setup read cache during `TTree::Fill()`. This fixes [ROOT-8031].
-* Make sure the option "PARA" in `TTre::Draw` is used with at least tow variables [ROOT-8196].
+* Make sure the option "PARA" in `TTree::Draw` is used with at least tow variables [ROOT-8196].
 * The with `goff` option one can use as many variables as needed. There no more
   limitation, like with the options `para`and `candle`.
 * Fix detection of errors that appears in nested TTreeFormula [ROOT-8218]
