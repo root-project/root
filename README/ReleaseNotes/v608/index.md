@@ -8,7 +8,7 @@ ROOT version 6.08/00 has been released on November 4, 2016.
 
 For more information, see:
 
-[http://root.cern.ch](http://root.cern.ch)
+[http://root.cern](http://root.cern)
 
 The following people have contributed to this new version:
 
@@ -173,7 +173,7 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 ## 2D Graphics Libraries
 
 * In `TColor::SetPalette`, make sure the high quality palettes are defined
-  only ones taking care of transparency. Also `CreateGradientColorTable` has been
+  only once taking care of transparency. Also `CreateGradientColorTable` has been
   simplified.
 * New fast constructor for `TColor` avoiding to call `gROOT->GetColor()`. The
   normal constructor generated a big slow down when creating a Palette with
