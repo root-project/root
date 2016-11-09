@@ -71,7 +71,7 @@ by including a ROOT header. For example:
 
 Other improvements, which may cause compilation errors in third party code:
 
-  * If you get std::type_info from Rtypeinfo.h, type_info should be spelled
+  * If you get `std::type_info` from Rtypeinfo.h, `type_info` should be spelled
     `std::type_info`.
 
 Also:
@@ -82,7 +82,7 @@ Also:
 
 ### Containers
 
-* A pseudo-container (generator) was created, ROOT::TSeq<T>. This template is inspired by the xrange built-in function of Python. See the example [here](https://root.cern.ch/doc/master/cnt001__basictseq_8C.html).
+* A pseudo-container (generator) was created, `ROOT::TSeq<T>`. This template is inspired by the xrange built-in function of Python. See the example [here](https://root.cern.ch/doc/master/cnt001__basictseq_8C.html).
 
 ### Meta Library
 
@@ -92,14 +92,14 @@ Add a new mode for `TClass::SetCanSplit` (2) which indicates that this class and
 
 * Add the -excludePath option to rootcling to forbid dictionaries to remember include paths expressed in the command line invocation.
 * Genreflex and rootcling cannot generate capability files anymore.
-* Fix ROOT-7760: Fully allow the usage of the dylib extension on OSx.
-* Fix ROOT-7879: Prevent LinkDef files to be listed in a rootmap file and use (as the user actually expects) the header files #included in the linkdef file, if any, as the top level headers.
+* Fix [ROOT-7760]: Fully allow the usage of the dylib extension on OSx.
+* Fix [ROOT-7879]: Prevent LinkDef files to be listed in a rootmap file and use (as the user actually expects) the header files #included in the linkdef file, if any, as the top level headers.
 * Add the *noIncludePaths* switch both for rootcling and genreflex to allow to loose track of the include paths in input to the dictionary generator.
 * Fix handling of template parameter pack in the forward declaration printer. [ROOT-8096]
 * Do not autoparse headers for classes in the pch.
 * Avoid autoparse on IsForeign() if possible.
 * Check for new-style empty pcm with key named "EMPTY" created since commit 90047b0cba6fd295f5c5722749a0d043fbc11ea5.
-* Do not insert macro definition of __ROOTCLING__ into the pch.
+* Do not insert macro definition of `__ROOTCLING__` into the pch.
 
 ### Interpreter Library
 
@@ -117,31 +117,31 @@ Add a new mode for `TClass::SetCanSplit` (2) which indicates that this class and
 * Add a new class named `TThreadedObject` which helps making objects thread private and merging them.
 * Add tutorial showing how to fill randomly histograms using the `TProcessExecutor` class.
 * Add tutorial showing how to fill randomly histograms from multiple threads.
-* Add the ROOT::TSPinMutex class, a spin mutex compliant with C++11 requirements.
-* Add a new Implicit Multi-Threading (IMT) use case, incarnated in method TTreeProcessor::Process. TTProcessor::Process allows to process the entries of a TTree in parallel. The user provides a function that receives one parameter, a TTreeReader, that can be used to iterate over a subrange of entries. Each subrange corresponds to a cluster in the TTree and is processed by a task, which can potentially be run in parallel with other tasks.
-* Add a new implementation of a RW lock, ROOT::TRWSpinLock, which is based on a ROOT::TSPinMutex. TRWSpinLock tries to make faster the scenario when readers come and go but there is no writer, while still preventing starvation of writers.
+* Add the `ROOT::TSpinMutex` class, a spin mutex compliant with C++11 requirements.
+* Add a new Implicit Multi-Threading (IMT) use case, incarnated in method `TTreeProcessor::Process`. `TTProcessor::Process` allows to process the entries of a TTree in parallel. The user provides a function that receives one parameter, a TTreeReader, that can be used to iterate over a subrange of entries. Each subrange corresponds to a cluster in the TTree and is processed by a task, which can potentially be run in parallel with other tasks.
+* Add a new implementation of a RW lock, `ROOT::TRWSpinLock`, which is based on a `ROOT::TSpinMutex`. `TRWSpinLock` tries to make faster the scenario when readers come and go but there is no writer, while still preventing starvation of writers.
 
 ## I/O Libraries
 
-* Support I/O of std::unique_ptrs and STL collections thereof.
-* Support I/O of std::array.
-* Support I/O of std::tuple. The dictionary for those is never auto generated and thus requires explicit request of the dictionary for each std::tuple class template instantiation used, like most other class templates.
+* Support I/O of `std::unique_ptr`s and STL collections thereof.
+* Support I/O of `std::array`.
+* Support I/O of `std::tuple`. The dictionary for those is never auto generated and thus requires explicit request of the dictionary for each std::tuple class template instantiation used, like most other class templates.
 * Custom streamers need to #include TBuffer.h explicitly (see [section Core Libraries](#core-libs))
 * Check and flag short reads as errors in the xroot plugins. This fixes [ROOT-3341].
 * Added support for AWS temporary security credentials to TS3WebFile by allowing the security token to be given.
 * Resolve an issue when space is freed in a large `ROOT` file and a TDirectory is updated and stored the lower (less than 2GB) freed portion of the file [ROOT-8055].
 
 - ##### TBufferJSON:
-   - support data members with //[fN] comment
-   - preliminary support of STL containers
-   - JSON data can be produced with TObject::SaveAs() method
+    + support data members with `//[fN]` comment
+    + preliminary support of STL containers
+    + JSON data can be produced with `TObject::SaveAs()` method
 
 
 ## TTree Libraries
 
 * TChains can now be histogrammed without any C++ code, using the command line tool `rootdrawtree`. It is based on the new class `TSimpleAnalysis`.
-* Do not automatically setup read cache during TTree::Fill(). This fixes [ROOT-8031].
-* Make sure the option "PARA" in TTRe::Draw is used with at least tow variables [ROOT-8196].
+* Do not automatically setup read cache during `TTree::Fill()`. This fixes [ROOT-8031].
+* Make sure the option "PARA" in `TTre::Draw` is used with at least tow variables [ROOT-8196].
 * The with `goff` option one can use as many variables as needed. There no more
   limitation, like with the options `para`and `candle`.
 * Fix detection of errors that appears in nested TTreeFormula [ROOT-8218]
@@ -156,7 +156,7 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 * Update `TChain::LoadTree` so that the user call back routine is actually called for each input file even those containing `TTree` objects with no entries.
 * Repair setting the branch address of a leaflist style branch taking directly the address of the struct.  (Note that leaflist is nonetheless still deprecated and declaring the struct to the interpreter and passing the object directly to create the branch is much better).
 * Provide an implicitly parallel implementation of `TTree::GetEntry`. The approach is based on creating a task per top-level branch in order to do the reading, unzipping and deserialisation in parallel. In addition, a getter and a setter methods are provided to check the status and enable/disable implicit multi-threading for that tree (see Parallelisation section for more information about implicit multi-threading).
-* Properly support std::cin (and other stream that can not be rewound) in `TTree::ReadStream`. This fixes [ROOT-7588].
+* Properly support `std::cin` (and other stream that can not be rewound) in `TTree::ReadStream`. This fixes [ROOT-7588].
 * Prevent `TTreeCloner::CopyStreamerInfos()` from causing an autoparse on an abstract base class.
 
 ## Histogram Libraries
@@ -203,7 +203,7 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
   [this](https://sft.its.cern.ch/jira/browse/ROOT-7985) little program,
   resulted in a crash.
 * Ease the setting of the appearance of joining lines for PostScript and PDF
-  output. [TPostScript::SetLineJoin](https://root.cern.ch/doc/master/classTPostScript.html#ae4917bab9cc6b11fdc88478be03367d1)
+  output. `TPostScript::SetLineJoin`
   allowed to set the line joining style for PostScript files. But the setting this
   parameter implied to create a `TPostScript` object. Now a `TStyle` setting has been
   implemented and it is enough to do:
@@ -227,7 +227,7 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
   See the THistPainter reference guide for all the details and examples.
 * Fix `TText` copy constructor as requested [here](https://sft.its.cern.ch/jira/browse/ROOT-8116).
   New example to check this fix.
-* SVG boxes were not correct when x2<1 (reported [here](https://sft.its.cern.ch/jira/browse/ROOT-8126)).
+* SVG boxes were not correct when `x2<1` (reported [here](https://sft.its.cern.ch/jira/browse/ROOT-8126)).
 * In TASImage there was no protection against graphics being drawn outside the assigned
   memory. That may generate some crashes like described [here](https://sft.its.cern.ch/jira/browse/ROOT-8123).
 * In TASImage: transparent rectangles did not work when png files were created in batch mode.
@@ -238,7 +238,7 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
   to be editable later on using external softwares like "inkscape". This improvement
   was suggested [here](https://sft.its.cern.ch/jira/browse/ROOT-8161).
 * In TLatex with the Cocoa backend on Mac the `#tilde` position was too low.
-* New optional parameter "option" in TPad::BuildLegend to set the TLegend option (Georg Troska).
+* New optional parameter "option" in `TPad::BuildLegend` to set the TLegend option (Georg Troska).
 * TCandle: a new candle plot painter class. It is now used in THistPainter and THStack
   to paint candle plots (Georg Troska).
 * Fix two issues with the fill patterns in `TTeXDump` (reported [here](https://sft.its.cern.ch/jira/browse/ROOT-8206)):
@@ -404,7 +404,7 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
     * The methods "toCpp" and "toPython" have been removed.
   * Factorise output capturing and execution in an accelerator library and use ctypes to invoke functions.
   * When the ROOT kernel is used, the output is consumed progressively
-  * Capture unlimited output also when using an IPython Kernel (fixes ROOT-7960)
+  * Capture unlimited output also when using an IPython Kernel (fixes [ROOT-7960])
 
 ## JavaScript ROOT
 
