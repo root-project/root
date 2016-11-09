@@ -91,39 +91,106 @@ class TArrayIndexProducer {
 
       Int_t fTotalLen;
       Int_t fCnt;
-      Bool_t fUseIndicies;
-      TStreamerElement* fElem;
       const char* fSepar;
       TArrayI fIndicies;
+      TArrayI fMaxIndex;
       TString fRes;
 
    public:
-      TArrayIndexProducer(Int_t totallen, TStreamerElement* elem, const char* separ) :
-         fTotalLen(totallen),
+      TArrayIndexProducer(TStreamerElement* elem, Int_t arraylen, const char* separ) :
+         fTotalLen(0),
          fCnt(-1),
-         fUseIndicies(kFALSE),
-         fElem(elem),
          fSepar(separ),
-         fIndicies()
+         fIndicies(),
+         fMaxIndex(),
+         fRes()
       {
-         fUseIndicies = IsArray() && (elem!=0) && (elem->GetArrayDim() > 1) && (elem->GetArrayLength()==totallen);
+         Bool_t usearrayindx = elem && (elem->GetArrayDim() > 0);
 
-         if (fUseIndicies) {
-            fIndicies.Set(elem->GetArrayDim());
+         if (usearrayindx && (arraylen > 0)) {
+            if ((elem->GetType() == TStreamerInfo::kOffsetL + TStreamerInfo::kStreamLoop) ||
+                (elem->GetType() == TStreamerInfo::kStreamLoop)) usearrayindx = kFALSE;
+            else
+               if (arraylen != elem->GetArrayLength()) {
+                  printf("Problem with JSON coding of element %s type %d \n", elem->GetName(), elem->GetType());
+               }
+         }
+
+         if (usearrayindx) {
+            fTotalLen = elem->GetArrayLength();
+            fMaxIndex.Set(elem->GetArrayDim());
+            for(int dim=0;dim<elem->GetArrayDim();dim++)
+               fMaxIndex[dim] = elem->GetMaxIndex(dim);
+         } else
+         if (arraylen > 1) {
+            fTotalLen = arraylen;
+            fMaxIndex.Set(1);
+            fMaxIndex[0] = arraylen;
+         }
+
+         if (fMaxIndex.GetSize() > 0) {
+            fIndicies.Set(fMaxIndex.GetSize());
             fIndicies.Reset(0);
          }
       }
 
+      TArrayIndexProducer(TDataMember* member, Int_t extradim, const char* separ) :
+         fTotalLen(0),
+         fCnt(-1),
+         fSepar(separ),
+         fIndicies(),
+         fMaxIndex(),
+         fRes()
+      {
+         Int_t ndim = member->GetArrayDim();
+         if (extradim > 0) ndim++;
+
+         if (ndim > 0) {
+            fIndicies.Set(ndim);
+            fIndicies.Reset(0);
+            fMaxIndex.Set(ndim);
+            fTotalLen = 1;
+            for (int dim=0;dim<member->GetArrayDim();dim++) {
+               fMaxIndex[dim] = member->GetMaxIndex(dim);
+               fTotalLen *= member->GetMaxIndex(dim);
+            }
+
+            if (extradim > 0) {
+               fMaxIndex[ndim-1] = extradim;
+               fTotalLen *= extradim;
+            }
+         }
+      }
+
+      Int_t ReduceDimension()
+      {
+         // reduce one dimension of the array
+         // return size of reduced dimension
+         if (fMaxIndex.GetSize() == 0) return 0;
+         Int_t ndim = fMaxIndex.GetSize()-1;
+         Int_t len = fMaxIndex[ndim];
+         fMaxIndex.Set(ndim);
+         fIndicies.Set(ndim);
+         fTotalLen = fTotalLen/len;
+         return len;
+      }
+
+
       Bool_t IsArray() const
       {
-         return (fTotalLen>1) || (fElem && (fElem->GetArrayDim()>0));
+         return (fTotalLen>1);
+      }
+
+      Bool_t IsDone() const
+      {
+         // return true when iteration over all arrays indexes are done
+         return !IsArray() || (fCnt >= fTotalLen);
       }
 
       const char* GetBegin()
       {
          ++fCnt;
          // return starting separator
-         if (!fUseIndicies) return "[";
          fRes.Clear();
          for (Int_t n=0;n<fIndicies.GetSize();++n) fRes.Append("[");
          return fRes.Data();
@@ -132,7 +199,6 @@ class TArrayIndexProducer {
       const char* GetEnd()
       {
          // return ending separator
-         if (!fUseIndicies) return "]";
          fRes.Clear();
          for (Int_t n=0;n<fIndicies.GetSize();++n) fRes.Append("]");
          return fRes.Data();
@@ -140,11 +206,9 @@ class TArrayIndexProducer {
 
       const char* NextSeparator()
       {
-         // return intermidiate or last separator
+         // return intermediate or last separator
 
          if (++fCnt >= fTotalLen) return GetEnd();
-
-         if (!fUseIndicies) return fSepar;
 
          Int_t cnt = fIndicies.GetSize() - 1;
          fIndicies[cnt]++;
@@ -152,7 +216,7 @@ class TArrayIndexProducer {
          fRes.Clear();
 
          while ((cnt >= 0) && (cnt < fIndicies.GetSize()))  {
-            if (fIndicies[cnt] >= fElem->GetMaxIndex(cnt)) {
+            if (fIndicies[cnt] >= fMaxIndex[cnt]) {
                fRes.Append("]");
                fIndicies[cnt--] = 0;
                if (cnt >= 0) fIndicies[cnt]++;
@@ -437,21 +501,114 @@ TString TBufferJSON::JsonWriteMember(const void *ptr, TDataMember *member,
 
    if (member == 0) return "null";
 
-   if (gDebug > 2)
+   //if (gDebug > 2)
       Info("JsonWriteMember", "Write member %s type %s ndim %d",
            member->GetName(), member->GetTrueTypeName(), member->GetArrayDim());
+
+   Int_t tid = member->GetDataType() ? member->GetDataType()->GetType() : kNoType_t;
+   if (strcmp(member->GetTrueTypeName(),"const char*")==0) tid = kCharStar; else
+   if (!member->IsBasic() || (tid == kOther_t) || (tid == kVoid_t)) tid = kNoType_t;
+
+   if (ptr==0) return tid==kCharStar ? "\"\"" : "null";
 
    PushStack(0);
    fValue.Clear();
 
-   Int_t tid = member->GetDataType() ? member->GetDataType()->GetType() : kNoType_t;
-
-   if (strcmp(member->GetTrueTypeName(),"const char*")==0) tid = kCharStar; else
-   if (!member->IsBasic()) tid = kNoType_t;
-
    if (tid != kNoType_t) {
 
-      if (ptr == 0) {
+      TArrayIndexProducer indx(member, arraylen, fArraySepar.Data());
+
+      Int_t shift = 1;
+
+      if (indx.IsArray() && (tid==kChar_t))
+         shift = indx.ReduceDimension();
+
+      char* ppp = (char*) ptr;
+
+      if (indx.IsArray()) fOutBuffer.Append(indx.GetBegin());
+
+      do {
+         fValue.Clear();
+
+         switch (tid) {
+            case kChar_t:
+               if (shift>1)
+                  JsonWriteConstChar((Char_t *)ppp, shift);
+               else
+                  JsonWriteBasic(*((Char_t *)ppp));
+               break;
+            case kShort_t:
+               JsonWriteBasic(*((Short_t *)ppp));
+               break;
+            case kInt_t:
+               JsonWriteBasic(*((Int_t *)ppp));
+               break;
+            case kLong_t:
+               JsonWriteBasic(*((Long_t *)ppp));
+               break;
+            case kFloat_t:
+               JsonWriteBasic(*((Float_t *)ppp));
+               break;
+            case kCounter:
+               JsonWriteBasic(*((Int_t *)ppp));
+               break;
+            case kCharStar:
+               JsonWriteConstChar((Char_t *)ppp);
+               break;
+            case kDouble_t:
+               JsonWriteBasic(*((Double_t *)ppp));
+               break;
+            case kDouble32_t:
+               JsonWriteBasic(*((Double_t *)ppp));
+               break;
+            case kchar:
+               JsonWriteBasic(*((char *)ppp));
+               break;
+            case kUChar_t:
+               JsonWriteBasic(*((UChar_t *)ppp));
+               break;
+            case kUShort_t:
+               JsonWriteBasic(*((UShort_t *)ppp));
+               break;
+            case kUInt_t:
+               JsonWriteBasic(*((UInt_t *)ppp));
+               break;
+            case kULong_t:
+               JsonWriteBasic(*((ULong_t *)ppp));
+               break;
+            case kBits:
+               JsonWriteBasic(*((UInt_t *)ppp));
+               break;
+            case kLong64_t:
+               JsonWriteBasic(*((Long64_t *)ppp));
+               break;
+            case kULong64_t:
+               JsonWriteBasic(*((ULong64_t *)ppp));
+               break;
+            case kBool_t:
+               JsonWriteBasic(*((Bool_t *)ppp));
+               break;
+            case kFloat16_t:
+               JsonWriteBasic(*((Float_t *)ppp));
+               break;
+            case kOther_t:
+            case kVoid_t:
+               break;
+         }
+
+         fOutBuffer.Append(fValue);
+         if (indx.IsArray()) fOutBuffer.Append(indx.NextSeparator());
+
+         ppp += shift*member->GetUnitSize();
+
+      } while (!indx.IsDone());
+
+      fValue = fOutBuffer;
+
+
+
+
+/*      if (ptr == 0) {
          fValue = "null";
       } else if ((member->GetArrayDim() == 0) && (arraylen<0)) {
          switch (tid) {
@@ -685,6 +842,8 @@ TString TBufferJSON::JsonWriteMember(const void *ptr, TDataMember *member,
 
          fValue = fOutBuffer;
       }
+
+      */
    } else if (memberClass == TString::Class()) {
       TString *str = (TString *) ptr;
       JsonWriteConstChar(str ? str->Data() : 0);
@@ -1332,7 +1491,7 @@ void TBufferJSON::WorkWithElement(TStreamerElement *elem, Int_t comp_type)
 
    if ((elem->GetType() == TStreamerInfo::kOffsetL + TStreamerInfo::kStreamLoop) &&
        (elem->GetArrayDim() > 0)) {
-          stack->fIndx = new TArrayIndexProducer(elem->GetArrayLength(), elem, fArraySepar.Data());
+          stack->fIndx = new TArrayIndexProducer(elem, -1, fArraySepar.Data());
           AppendOutput(stack->fIndx->GetBegin());
        }
 }
@@ -2544,7 +2703,7 @@ void  TBufferJSON::WriteFastArray(void *start, const TClass *cl, Int_t n,
    if (!n) n = 1;
    int size = cl->Size();
 
-   TArrayIndexProducer indexes(n, Stack(0)->fElem, fArraySepar.Data());
+   TArrayIndexProducer indexes(Stack(0)->fElem, n, fArraySepar.Data());
 
    if (indexes.IsArray()) {
       JsonDisablePostprocessing();
@@ -2590,7 +2749,7 @@ Int_t TBufferJSON::WriteFastArray(void **start, const TClass *cl, Int_t n,
 
    Int_t res = 0;
 
-   TArrayIndexProducer indexes(n, Stack(0)->fElem, fArraySepar.Data());
+   TArrayIndexProducer indexes(Stack(0)->fElem, n, fArraySepar.Data());
 
    if (indexes.IsArray()) {
       JsonDisablePostprocessing();
