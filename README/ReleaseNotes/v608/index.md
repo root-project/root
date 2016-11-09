@@ -70,10 +70,12 @@ by including a ROOT header. For example:
   * ...
 
 Other improvements, which may cause compilation errors in third party code:
+
   * If you get std::type_info from Rtypeinfo.h, type_info should be spelled
     `std::type_info`.
 
 Also:
+
   * `TPluginManager` was made thread-safe [ROOT-7927].
   * On MacOSX, backtraces are now generated without external tools [ROOT-6667].
   * The set of include paths considered by the interpreter has been reduced to the bare minimum.
@@ -205,9 +207,9 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
   allowed to set the line joining style for PostScript files. But the setting this
   parameter implied to create a `TPostScript` object. Now a `TStyle` setting has been
   implemented and it is enough to do:
-  ~~~ {.cpp}
+``` {.cpp}
   gStyle->SetLineJoinPS(2);
-  ~~~
+```
   Also this setting is now active for PDF output.
   This enhancement was triggered by [this forum question](https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=21077).
 * Make sure the palette axis title is correct after a histogram cloning. This
@@ -249,7 +251,7 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 * New method `ChangeLabel` in `TGaxis` and `TAxis`allowing to a fine tuning of
   individual labels attributes. All the attributes can be changed and even the
   label text itself. Example:
-  ~~~ {.cpp}
+``` {.cpp}
   {
      c1 = new TCanvas("c1","Examples of Gaxis",10,10,900,500);
      c1->Range(-6,-0.1,6,0.1);
@@ -265,13 +267,13 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
      axis1->ChangeLabel(6,-1,-1,-1,3,-1,"6th label");
      axis1->Draw();
   }
-  ~~~
+```
   Being available in `TAxis`, this method allow to change a label on and histogram
   plot like:
-  ~~~ {.cpp}
+``` {.cpp}
    hpx->Draw();
    hpx->GetXaxis()->ChangeLabel(5,-1,-1,-1,kRed,-1,"Zero");
-  ~~~
+```
 * New class `TAxisModLab`: a  TAxis helper class used to store the modified labels.
 * `TPie` the format parameter set by `SetPercentFormat` was ignored.
   (reported [here](https://sft.its.cern.ch/jira/browse/ROOT-8294))
@@ -304,6 +306,7 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
 
   Several examples illustrate how to use this class. See:
   `$ROOTSYS/tutorials/hist/ratioplot?.C`
+
 * New option "I" allowing to draw TGraph with invisible axis (used by `TRatioPlot`);
 
 ## New histogram drawing options
