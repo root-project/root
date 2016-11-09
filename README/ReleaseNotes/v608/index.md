@@ -50,6 +50,7 @@ The following people have contributed to this new version:
 of delete of some entities at the end of the process.
 * Resolved several memory leaks.
 * Added deprecation system: when compiling against interfaces marked R__DEPRECATED, the compiler will issue a warning showing the ROOT version when the interface will be removed.
+* From this version on, building ROOT with CMake requires CMake &gt;= 3.4.3
 
 ## Core Libraries
 
