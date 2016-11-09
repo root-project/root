@@ -48,6 +48,7 @@ The following people have contributed to this new version:
  Tom Stevenson, Queen Mary University of London, ATLAS\
  Matevz Tadel, UCSD/CMS, Eve,\
  Peter van Gemmeren, ANL, ATLAS,\
+ Xavier Valls, CERN/SFT, \
  Vassil Vassilev, Fermilab/CMS,\
  Stefan Wunsch, KIT, CMS\
  Omar Zapata, University of Antioquia, CERN/SFT.
