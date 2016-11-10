@@ -5293,6 +5293,49 @@ Int_t TCling::AutoLoad(const char *cls, Bool_t knowDictNotLoaded /* = kFALSE */)
    return status;
 }
 
+namespace {
+////////////////////////////////////////////////////////////////////////////////
+/// RAII used to store Parser, Sema, Preprocessor state for recursive parsing.
+   struct ParsingStateRAII_t {
+      Preprocessor::CleanupAndRestoreCacheRAII fCleanupRAII;
+      Parser::ParserCurTokRestoreRAII fSavedCurToken;
+      cling::ParserStateRAII fParserRAII;
+
+      // We can't PushDeclContext, because we go up and the routine that pops
+      // the DeclContext assumes that we drill down always.
+      // We have to be on the global context. At that point we are in a
+      // wrapper function so the parent context must be the global.
+      Sema::ContextAndScopeRAII fPushedDCAndS;
+
+      struct SemaParsingInitForAutoVarsRAII_t {
+         using PIFAV_t = decltype(Sema::ParsingInitForAutoVars);
+         PIFAV_t& fSemaPIFAV;
+         PIFAV_t fSavedPIFAV;
+         SemaParsingInitForAutoVarsRAII_t(PIFAV_t& PIFAV): fSemaPIFAV(PIFAV) {
+            fSavedPIFAV.swap(PIFAV);
+         }
+         ~SemaParsingInitForAutoVarsRAII_t() {
+            fSavedPIFAV.swap(fSemaPIFAV);
+         }
+      };
+      SemaParsingInitForAutoVarsRAII_t fSemaParsingInitForAutoVarsRAII;
+
+      ParsingStateRAII_t(Parser& parser, Sema& sema):
+         fCleanupRAII(sema.getPreprocessor()),
+         fSavedCurToken(parser),
+         fParserRAII(parser, false /*skipToEOF*/),
+         fPushedDCAndS(sema, sema.getASTContext().getTranslationUnitDecl(),
+                       sema.TUScope),
+         fSemaParsingInitForAutoVarsRAII(sema.ParsingInitForAutoVars)
+      {
+         // After we have saved the token reset the current one to something which
+         // is safe (semi colon usually means empty decl)
+         Token& Tok = const_cast<Token&>(parser.getCurToken());
+         Tok.setKind(tok::semi);
+      }
+   };
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Parse the payload or header.
 
@@ -5300,25 +5343,6 @@ static cling::Interpreter::CompilationResult ExecAutoParse(const char *what,
                                                            Bool_t header,
                                                            cling::Interpreter *interpreter)
 {
-   // Save state of the PP
-   Sema &SemaR = interpreter->getSema();
-   ASTContext& C = SemaR.getASTContext();
-   Preprocessor &PP = SemaR.getPreprocessor();
-   Parser& P = const_cast<Parser&>(interpreter->getParser());
-   Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
-   Parser::ParserCurTokRestoreRAII savedCurToken(P);
-   // After we have saved the token reset the current one to something which
-   // is safe (semi colon usually means empty decl)
-   Token& Tok = const_cast<Token&>(P.getCurToken());
-   Tok.setKind(tok::semi);
-   cling::ParserStateRAII parserRAII(P);
-
-   // We can't PushDeclContext, because we go up and the routine that pops
-   // the DeclContext assumes that we drill down always.
-   // We have to be on the global context. At that point we are in a
-   // wrapper function so the parent context must be the global.
-   Sema::ContextAndScopeRAII pushedDCAndS(SemaR, C.getTranslationUnitDecl(),
-                                          SemaR.TUScope);
    std::string code = gNonInterpreterClassDef ;
    if (!header) {
       // This is the complete header file content and not the
@@ -5341,6 +5365,8 @@ static cling::Interpreter::CompilationResult ExecAutoParse(const char *what,
       // For now we disable diagnostics because we saw them already at
       // dictionary generation time. That won't be an issue with the PCMs.
 
+      Sema &SemaR = interpreter->getSema();
+      ParsingStateRAII_t parsingStateRAII(interpreter->getParser(), SemaR);
       clangDiagSuppr diagSuppr(SemaR.getDiagnostics());
 
       #if defined(R__MUST_REVISIT)
@@ -5512,8 +5538,12 @@ Int_t TCling::AutoParse(const char *cls)
    }
 
    // The catalogue of headers is in the dictionary
-   if (fClingCallbacks->IsAutoloadingEnabled()) {
-      AutoLoad(cls);
+   if (fClingCallbacks->IsAutoloadingEnabled()
+         && !gClassTable->GetDictNorm(cls)) {
+      // Need RAII against recursive (dictionary payload) parsing (ROOT-8445).
+      ParsingStateRAII_t parsingStateRAII(fInterpreter->getParser(),
+         fInterpreter->getSema());
+      AutoLoad(cls, true /*knowDictNotLoaded*/);
    }
 
    // Prevent the recursion when the library dictionary are loaded.
