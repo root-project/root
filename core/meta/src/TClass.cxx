@@ -1741,7 +1741,7 @@ Int_t TClass::ReadRules()
       res = ReadRulesContent(f);
       fclose(f);
    } else {
-      Error("ReadRules()", "Cannot find rules file %s", sname.Data());
+      ::Error("TClass::ReadRules()", "Cannot find rules file %s", sname.Data());
    }
    return res;
 }
