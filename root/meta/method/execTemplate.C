@@ -46,7 +46,7 @@ struct Outer {
 };
 
 
-// ROOT-8432
+// ROOT-8422
 template<typename T>
 struct Wrapper {
    template <typename U = T,
