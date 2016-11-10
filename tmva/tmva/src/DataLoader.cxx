@@ -85,7 +85,8 @@ TMVA::DataLoader::DataLoader( TString thedlName)
    fTransformations      ( "I" ),
    fVerbose              ( kFALSE ),
    fDataAssignType       ( kAssignEvents ),
-   fATreeEvent           (0)
+   fATreeEvent           (0),
+   fMakeFoldDataSet      ( kFALSE )
 {
    fDataSetManager = new DataSetManager( *fDataInputHandler ); // DSMTEST
    SetName(thedlName.Data());
@@ -609,140 +610,147 @@ void TMVA::DataLoader::PrepareTrainingAndTestTree( TCut sigcut, TCut bkgcut, con
 // a validation set is implemented but not currently used.
 void TMVA::DataLoader::MakeKFoldDataSet(UInt_t numberFolds, bool validationSet){
 
-  if(!fMakeFoldDataSet){ return; } // No need to do it again if the sets have already been split.
 
-  // Get the original event vectors for testing and training from the dataset.
-  const std::vector<Event*> TrainingData = DefaultDataSetInfo().GetDataSet()->GetEventCollection(Types::kTraining);
-  const std::vector<Event*> TestingData = DefaultDataSetInfo().GetDataSet()->GetEventCollection(Types::kTesting);
+   // No need to do it again if the sets have already been split.
+   if(fMakeFoldDataSet){
+      Log() << kInfo << "Splitting in k-folds has been already done" << Endl;
+      return;
+   }
 
-  std::vector<Event*> TrainSigData;
-  std::vector<Event*> TrainBkgData;
-  std::vector<Event*> TestSigData;
-  std::vector<Event*> TestBkgData;
+   fMakeFoldDataSet = kTRUE; 
+  
+   // Get the original event vectors for testing and training from the dataset.
+   const std::vector<Event*> TrainingData = DefaultDataSetInfo().GetDataSet()->GetEventCollection(Types::kTraining);
+   const std::vector<Event*> TestingData = DefaultDataSetInfo().GetDataSet()->GetEventCollection(Types::kTesting);
 
-  // Split the testing and training sets into signal and background classes.
-  for(UInt_t i=0; i<TrainingData.size(); ++i){
-    if( strncmp( DefaultDataSetInfo().GetClassInfo( TrainingData.at(i)->GetClass() )->GetName(), "Signal", 6) == 0){ TrainSigData.push_back(TrainingData.at(i)); }
-    else if( strncmp( DefaultDataSetInfo().GetClassInfo( TrainingData.at(i)->GetClass() )->GetName(), "Background", 10) == 0){ TrainBkgData.push_back(TrainingData.at(i)); }
-    else{ 
-      Log() << kFATAL << "DataSets should only contain Signal and Background classes for classification, " << DefaultDataSetInfo().GetClassInfo( TrainingData.at(i)->GetClass() )->GetName() << " is not a recognised class" << Endl;
-    }
-  }
+   std::vector<Event*> TrainSigData;
+   std::vector<Event*> TrainBkgData;
+   std::vector<Event*> TestSigData;
+   std::vector<Event*> TestBkgData;
 
-  for(UInt_t i=0; i<TestingData.size(); ++i){
-    if( strncmp( DefaultDataSetInfo().GetClassInfo( TestingData.at(i)->GetClass() )->GetName(), "Signal", 6) == 0){ TestSigData.push_back(TestingData.at(i)); }
-    else if( strncmp( DefaultDataSetInfo().GetClassInfo( TestingData.at(i)->GetClass() )->GetName(), "Background", 10) == 0){ TestBkgData.push_back(TestingData.at(i)); }
-    else{
-      Log() << kFATAL << "DataSets should only contain Signal and Background classes for classification, " << DefaultDataSetInfo().GetClassInfo( TrainingData.at(i)->GetClass() )->GetName() << " is not a recognised class" << Endl;
-    }
-  }
+   // Split the testing and training sets into signal and background classes.
+   for(UInt_t i=0; i<TrainingData.size(); ++i){
+      if( strncmp( DefaultDataSetInfo().GetClassInfo( TrainingData.at(i)->GetClass() )->GetName(), "Signal", 6) == 0){ TrainSigData.push_back(TrainingData.at(i)); }
+      else if( strncmp( DefaultDataSetInfo().GetClassInfo( TrainingData.at(i)->GetClass() )->GetName(), "Background", 10) == 0){ TrainBkgData.push_back(TrainingData.at(i)); }
+      else{ 
+         Log() << kFATAL << "DataSets should only contain Signal and Background classes for classification, " << DefaultDataSetInfo().GetClassInfo( TrainingData.at(i)->GetClass() )->GetName() << " is not a recognised class" << Endl;
+      }
+   }
+
+   for(UInt_t i=0; i<TestingData.size(); ++i){
+      if( strncmp( DefaultDataSetInfo().GetClassInfo( TestingData.at(i)->GetClass() )->GetName(), "Signal", 6) == 0){ TestSigData.push_back(TestingData.at(i)); }
+      else if( strncmp( DefaultDataSetInfo().GetClassInfo( TestingData.at(i)->GetClass() )->GetName(), "Background", 10) == 0){ TestBkgData.push_back(TestingData.at(i)); }
+      else{
+         Log() << kFATAL << "DataSets should only contain Signal and Background classes for classification, " << DefaultDataSetInfo().GetClassInfo( TrainingData.at(i)->GetClass() )->GetName() << " is not a recognised class" << Endl;
+      }
+   }
 
 
-  // Split the sets into the number of folds.
-  if(validationSet){
-    std::vector<std::vector<Event*>> tempSigEvents = SplitSets(TrainSigData,0,2);
-    std::vector<std::vector<Event*>> tempBkgEvents = SplitSets(TrainBkgData,0,2);
-    fTrainSigEvents = SplitSets(tempSigEvents.at(0),0,numberFolds);
-    fTrainBkgEvents = SplitSets(tempBkgEvents.at(0),0,numberFolds);
-    fValidSigEvents = SplitSets(tempSigEvents.at(1),0,numberFolds);
-    fValidBkgEvents = SplitSets(tempBkgEvents.at(1),0,numberFolds);
-  }
-  else{
-    fTrainSigEvents = SplitSets(TrainSigData,0,numberFolds);
-    fTrainBkgEvents = SplitSets(TrainBkgData,0,numberFolds);
-  }
+   // Split the sets into the number of folds.
+   if(validationSet){
+      std::vector<std::vector<Event*>> tempSigEvents = SplitSets(TrainSigData,0,2);
+      std::vector<std::vector<Event*>> tempBkgEvents = SplitSets(TrainBkgData,0,2);
+      fTrainSigEvents = SplitSets(tempSigEvents.at(0),0,numberFolds);
+      fTrainBkgEvents = SplitSets(tempBkgEvents.at(0),0,numberFolds);
+      fValidSigEvents = SplitSets(tempSigEvents.at(1),0,numberFolds);
+      fValidBkgEvents = SplitSets(tempBkgEvents.at(1),0,numberFolds);
+   }
+   else{
+      fTrainSigEvents = SplitSets(TrainSigData,0,numberFolds);
+      fTrainBkgEvents = SplitSets(TrainBkgData,0,numberFolds);
+   }
 
-  fTestSigEvents = SplitSets(TestSigData,0,numberFolds);
-  fTestBkgEvents = SplitSets(TestBkgData,0,numberFolds);
+   fTestSigEvents = SplitSets(TestSigData,0,numberFolds);
+   fTestBkgEvents = SplitSets(TestBkgData,0,numberFolds);
 }
 
 //______________________________________________________________________
 // Function for assigning the correct folds to the testing or training set.
 void TMVA::DataLoader::PrepareFoldDataSet(UInt_t foldNumber, Types::ETreeType tt){
 
-  UInt_t numFolds = fTrainSigEvents.size();
+   UInt_t numFolds = fTrainSigEvents.size();
 
-  std::vector<Event*>* tempTrain = new std::vector<Event*>;
-  std::vector<Event*>* tempTest = new std::vector<Event*>;
+   std::vector<Event*>* tempTrain = new std::vector<Event*>;
+   std::vector<Event*>* tempTest = new std::vector<Event*>;
 
-  UInt_t nTrain = 0;
-  UInt_t nTest = 0;
+   UInt_t nTrain = 0;
+   UInt_t nTest = 0;
 
-  // Get the number of events so the memory can be reserved.
-  for(UInt_t i=0; i<numFolds; ++i){
-    if(tt == Types::kTraining){
-      if(i!=foldNumber){
-        nTrain += fTrainSigEvents.at(i).size();
-        nTrain += fTrainBkgEvents.at(i).size();
+   // Get the number of events so the memory can be reserved.
+   for(UInt_t i=0; i<numFolds; ++i){
+      if(tt == Types::kTraining){
+         if(i!=foldNumber){
+            nTrain += fTrainSigEvents.at(i).size();
+            nTrain += fTrainBkgEvents.at(i).size();
+         }
+         else{
+            nTest += fTrainSigEvents.at(i).size();
+            nTest += fTrainSigEvents.at(i).size();
+         }
       }
-      else{
-        nTest += fTrainSigEvents.at(i).size();
-        nTest += fTrainSigEvents.at(i).size();
+      else if(tt == Types::kValidation){
+         if(i!=foldNumber){
+            nTrain += fValidSigEvents.at(i).size();
+            nTrain += fValidBkgEvents.at(i).size();
+         }
+         else{
+            nTest += fValidSigEvents.at(i).size();
+            nTest += fValidSigEvents.at(i).size();
+         }
       }
-    }
-    else if(tt == Types::kValidation){
-      if(i!=foldNumber){
-        nTrain += fValidSigEvents.at(i).size();
-        nTrain += fValidBkgEvents.at(i).size();
+      else if(tt == Types::kTesting){
+         if(i!=foldNumber){
+            nTrain += fTestSigEvents.at(i).size();
+            nTrain += fTestBkgEvents.at(i).size();
+         }
+         else{
+            nTest += fTestSigEvents.at(i).size();
+            nTest += fTestSigEvents.at(i).size();
+         }
       }
-      else{
-        nTest += fValidSigEvents.at(i).size();
-        nTest += fValidSigEvents.at(i).size();
-      }
-    }
-    else if(tt == Types::kTesting){
-      if(i!=foldNumber){
-        nTrain += fTestSigEvents.at(i).size();
-        nTrain += fTestBkgEvents.at(i).size();
-      }
-      else{
-        nTest += fTestSigEvents.at(i).size();
-        nTest += fTestSigEvents.at(i).size();
-      }
-    }
-  }
+   }
 
-  // Reserve memory before filling vectors
-  tempTrain->reserve(nTrain);
-  tempTest->reserve(nTest);
+   // Reserve memory before filling vectors
+   tempTrain->reserve(nTrain);
+   tempTest->reserve(nTest);
 
-  // Fill vectors with correct folds for testing and training.
-  for(UInt_t j=0; j<numFolds; ++j){
-    if(tt == Types::kTraining){
-      if(j!=foldNumber){
-        tempTrain->insert(tempTrain->end(), fTrainSigEvents.at(j).begin(), fTrainSigEvents.at(j).end());
-        tempTrain->insert(tempTrain->end(), fTrainBkgEvents.at(j).begin(), fTrainBkgEvents.at(j).end());
+   // Fill vectors with correct folds for testing and training.
+   for(UInt_t j=0; j<numFolds; ++j){
+      if(tt == Types::kTraining){
+         if(j!=foldNumber){
+            tempTrain->insert(tempTrain->end(), fTrainSigEvents.at(j).begin(), fTrainSigEvents.at(j).end());
+            tempTrain->insert(tempTrain->end(), fTrainBkgEvents.at(j).begin(), fTrainBkgEvents.at(j).end());
+         }
+         else{
+            tempTest->insert(tempTest->end(), fTrainSigEvents.at(j).begin(), fTrainSigEvents.at(j).end());
+            tempTest->insert(tempTest->end(), fTrainBkgEvents.at(j).begin(), fTrainBkgEvents.at(j).end());
+         }
       }
-      else{
-        tempTest->insert(tempTest->end(), fTrainSigEvents.at(j).begin(), fTrainSigEvents.at(j).end());
-        tempTest->insert(tempTest->end(), fTrainBkgEvents.at(j).begin(), fTrainBkgEvents.at(j).end());
+      else if(tt == Types::kValidation){
+         if(j!=foldNumber){
+            tempTrain->insert(tempTrain->end(), fValidSigEvents.at(j).begin(), fValidSigEvents.at(j).end());
+            tempTrain->insert(tempTrain->end(), fValidBkgEvents.at(j).begin(), fValidBkgEvents.at(j).end());
+         }
+         else{
+            tempTest->insert(tempTest->end(), fValidSigEvents.at(j).begin(), fValidSigEvents.at(j).end());
+            tempTest->insert(tempTest->end(), fValidBkgEvents.at(j).begin(), fValidBkgEvents.at(j).end());
+         }
       }
-    }
-    else if(tt == Types::kValidation){
-      if(j!=foldNumber){
-        tempTrain->insert(tempTrain->end(), fValidSigEvents.at(j).begin(), fValidSigEvents.at(j).end());
-        tempTrain->insert(tempTrain->end(), fValidBkgEvents.at(j).begin(), fValidBkgEvents.at(j).end());
+      else if(tt == Types::kTesting){
+         if(j!=foldNumber){
+            tempTrain->insert(tempTrain->end(), fTestSigEvents.at(j).begin(), fTestSigEvents.at(j).end());
+            tempTrain->insert(tempTrain->end(), fTestBkgEvents.at(j).begin(), fTestBkgEvents.at(j).end());
+         }
+         else{
+            tempTest->insert(tempTest->end(), fTestSigEvents.at(j).begin(), fTestSigEvents.at(j).end());
+            tempTest->insert(tempTest->end(), fTestBkgEvents.at(j).begin(), fTestBkgEvents.at(j).end());
+         }
       }
-      else{
-        tempTest->insert(tempTest->end(), fValidSigEvents.at(j).begin(), fValidSigEvents.at(j).end());
-        tempTest->insert(tempTest->end(), fValidBkgEvents.at(j).begin(), fValidBkgEvents.at(j).end());
-      }
-    }
-    else if(tt == Types::kTesting){
-      if(j!=foldNumber){
-        tempTrain->insert(tempTrain->end(), fTestSigEvents.at(j).begin(), fTestSigEvents.at(j).end());
-        tempTrain->insert(tempTrain->end(), fTestBkgEvents.at(j).begin(), fTestBkgEvents.at(j).end());
-      }
-      else{
-        tempTest->insert(tempTest->end(), fTestSigEvents.at(j).begin(), fTestSigEvents.at(j).end());
-        tempTest->insert(tempTest->end(), fTestBkgEvents.at(j).begin(), fTestBkgEvents.at(j).end());
-      }
-    }
-  }
+   }
 
-  // Assign the vectors of the events to rebuild the dataset
-  DefaultDataSetInfo().GetDataSet()->SetEventCollection(tempTrain,Types::kTraining,false);
-  DefaultDataSetInfo().GetDataSet()->SetEventCollection(tempTest,Types::kTesting,false);
+   // Assign the vectors of the events to rebuild the dataset
+   DefaultDataSetInfo().GetDataSet()->SetEventCollection(tempTrain,Types::kTraining,false);
+   DefaultDataSetInfo().GetDataSet()->SetEventCollection(tempTest,Types::kTesting,false);
 
 }
 
@@ -750,34 +758,34 @@ void TMVA::DataLoader::PrepareFoldDataSet(UInt_t foldNumber, Types::ETreeType tt
 // Splits the input vector in to equally sized randomly sampled folds.
 std::vector<std::vector<TMVA::Event*>> TMVA::DataLoader::SplitSets(std::vector<TMVA::Event*>& oldSet, int seedNum, int numFolds){
 
-  ULong64_t nEntries = oldSet.size();
-  ULong64_t foldSize = nEntries/numFolds;
+   ULong64_t nEntries = oldSet.size();
+   ULong64_t foldSize = nEntries/numFolds;
 
-  std::vector<std::vector<Event*>> tempSets;
-  tempSets.resize(numFolds);
+   std::vector<std::vector<Event*>> tempSets;
+   tempSets.resize(numFolds);
 
-  TRandom3 r(seedNum);
+   TRandom3 r(seedNum);
 
-  ULong64_t inSet = 0;
+   ULong64_t inSet = 0;
 
-  for(ULong64_t i=0; i<nEntries; i++){
-    bool inTree = false;
-    if(inSet == foldSize*numFolds){
-      break;
-    }
-    else{
-      while(!inTree){
-        int s = r.Integer(numFolds);
-        if(tempSets.at(s).size()<foldSize){
-          tempSets.at(s).push_back(oldSet.at(i));
-          inSet++;
-          inTree=true;
-        }
+   for(ULong64_t i=0; i<nEntries; i++){
+      bool inTree = false;
+      if(inSet == foldSize*numFolds){
+         break;
       }
-    }
-  }
+      else{
+         while(!inTree){
+            int s = r.Integer(numFolds);
+            if(tempSets.at(s).size()<foldSize){
+               tempSets.at(s).push_back(oldSet.at(i));
+               inSet++;
+               inTree=true;
+            }
+         }
+      }
+   }
 
-  return tempSets;
+   return tempSets;
 
 }
 
@@ -785,24 +793,24 @@ std::vector<std::vector<TMVA::Event*>> TMVA::DataLoader::SplitSets(std::vector<T
 //Copy method use in VI and CV
 TMVA::DataLoader* TMVA::DataLoader::MakeCopy(TString name)
 {
-    TMVA::DataLoader* des=new TMVA::DataLoader(name);
-    DataLoaderCopy(des,this);
-    return des;
+   TMVA::DataLoader* des=new TMVA::DataLoader(name);
+   DataLoaderCopy(des,this);
+   return des;
 }
 
 //_______________________________________________________________________
 void TMVA::DataLoaderCopy(TMVA::DataLoader* des, TMVA::DataLoader* src)
 {
-    //Loading Dataset from DataInputHandler for subseed
-    for( std::vector<TreeInfo>::const_iterator treeinfo=src->DataInput().Sbegin();treeinfo!=src->DataInput().Send();treeinfo++)
-    {
+   //Loading Dataset from DataInputHandler for subseed
+   for( std::vector<TreeInfo>::const_iterator treeinfo=src->DataInput().Sbegin();treeinfo!=src->DataInput().Send();treeinfo++)
+   {
       des->AddSignalTree( (*treeinfo).GetTree(), (*treeinfo).GetWeight(),(*treeinfo).GetTreeType());
-    }
+   }
 
-    for( std::vector<TreeInfo>::const_iterator treeinfo=src->DataInput().Bbegin();treeinfo!=src->DataInput().Bend();treeinfo++)
-    {
+   for( std::vector<TreeInfo>::const_iterator treeinfo=src->DataInput().Bbegin();treeinfo!=src->DataInput().Bend();treeinfo++)
+   {
       des->AddBackgroundTree( (*treeinfo).GetTree(), (*treeinfo).GetWeight(),(*treeinfo).GetTreeType());
-    }
+   }
 }
 
 //_______________________________________________________________________
@@ -811,7 +819,7 @@ TH2* TMVA::DataLoader::GetCorrelationMatrix(const TString& className)
    //returns the correlation matrix of datasets
    const TMatrixD * m = DefaultDataSetInfo().CorrelationMatrix(className);
    return DefaultDataSetInfo().CreateCorrelationMatrixHist(m,
-           "CorrelationMatrix"+className, "Correlation Matrix ("+className+")");
+                                                           "CorrelationMatrix"+className, "Correlation Matrix ("+className+")");
 }
 
 
