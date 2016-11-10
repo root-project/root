@@ -1740,6 +1740,8 @@ Int_t TClass::ReadRules()
    if (f != 0) {
       res = ReadRulesContent(f);
       fclose(f);
+   } else {
+      Error("ReadRules()", "Cannot find rules file %s", sname.Data());
    }
    return res;
 }
