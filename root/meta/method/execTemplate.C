@@ -1,4 +1,5 @@
 #include <type_traits>
+#include <utility>
 
 class UserClass
 {
@@ -43,6 +44,23 @@ struct Outer {
 
    void AFunction(double);
 };
+
+
+// ROOT-8432
+template<typename T>
+struct Wrapper {
+   template <typename U = T,
+             class = typename std::enable_if<!std::is_reference<U>::value>::type>
+  Wrapper(): data() {}
+
+  template<typename V>
+  Wrapper(V&& value): data(std::forward<V>(value)) {}
+
+  T data;
+};
+
+using WIntRef = Wrapper<int&>;
+
 
 void CheckTemplate(TClass *cl)
 {
@@ -217,6 +235,9 @@ void CheckEnableIf() {
    cl->GetListOfMethods(true)->ls("noaddr");
    printf("TClass::New() on Outer<int> does%s create an object\n",
           cl->New() ? "": " not");
+
+   TClass* cl2 = TClass::GetClass("WIntRef");
+   cl2->GetListOfMethods()->ls("noaddr");
 }
 
 void execTemplate()
