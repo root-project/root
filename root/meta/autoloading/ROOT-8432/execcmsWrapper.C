@@ -1,4 +1,4 @@
-R__LOAD_LIBRARY(libcmswrapper_dictrflx.so)
+R__LOAD_LIBRARY(libcmswrapper_dictrflx)
 
 template <class X>
 struct cmsWrapperTest {
