@@ -736,12 +736,15 @@ void TBranch::ExpandBasketArrays()
 ////////////////////////////////////////////////////////////////////////////////
 /// Loop on all leaves of this branch to fill Basket buffer.
 ///
+/// If TBranchIMTHelper is non-null and it is time to WriteBasket, then we will
+/// use TBB to compress in parallel.
+///
 /// The function returns the number of bytes committed to the memory basket.
 /// If a write error occurs, the number of bytes returned is -1.
 /// If no data are written, because e.g. the branch is disabled,
 /// the number of bytes returned is 0.
 
-Int_t TBranch::Fill()
+Int_t TBranch::FillImpl(TBranchIMTHelper *imt_helper)
 {
    if (TestBit(kDoNotProcess)) {
       return 0;
@@ -803,7 +806,8 @@ Int_t TBranch::Fill()
       if (fTree->TestBit(TTree::kCircular)) {
          return nbytes;
       }
-      Int_t nout = WriteBasket(basket,fWriteBasket);
+      Int_t nout = WriteBasketImpl(basket,fWriteBasket, imt_helper);
+      if (nout < 0) {Error("TBranch::Fill", "Failed to write out basket.\n");}
       return (nout >= 0) ? nbytes : -1;
    }
    return nbytes;
@@ -2581,7 +2585,7 @@ void TBranch::Streamer(TBuffer& b)
 /// Write the current basket to disk and return the number of bytes
 /// written to the file.
 
-Int_t TBranch::WriteBasket(TBasket* basket, Int_t where)
+Int_t TBranch::WriteBasketImpl(TBasket* basket, Int_t where, TBranchIMTHelper *imt_helper)
 {
    Int_t nevbuf = basket->GetNevBuf();
    if (fEntryOffsetLen > 10 &&  (4*nevbuf) < fEntryOffsetLen ) {
@@ -2592,51 +2596,59 @@ Int_t TBranch::WriteBasket(TBasket* basket, Int_t where)
       fEntryOffsetLen = 2*nevbuf; // assume some fluctuations.
    }
 
-   Int_t nout  = basket->WriteBuffer();    //  Write buffer
-   fBasketBytes[where]  = basket->GetNbytes();
-   fBasketSeek[where]   = basket->GetSeekKey();
-   Int_t addbytes = basket->GetObjlen() + basket->GetKeylen();
-   TBasket *reusebasket = 0;
-   if (nout>0) {
-      // The Basket was written so we can now safely reuse it.
-      fBaskets[where] = 0;
+   auto do_updates = [=]() {
+      Int_t nout  = basket->WriteBuffer();    //  Write buffer
+      if (nout < 0) {Error("TBranch::WriteBasketImpl", "basket's WriteBuffer failed.\n");}
+      fBasketBytes[where]  = basket->GetNbytes();
+      fBasketSeek[where]   = basket->GetSeekKey();
+      Int_t addbytes = basket->GetObjlen() + basket->GetKeylen();
+      TBasket *reusebasket = 0;
+      if (nout>0) {
+         // The Basket was written so we can now safely reuse it.
+         fBaskets[where] = 0;
 
-      reusebasket = basket;
-      reusebasket->Reset();
+         reusebasket = basket;
+         reusebasket->Reset();
 
-      fZipBytes += nout;
-      fTotBytes += addbytes;
-      fTree->AddTotBytes(addbytes);
-      fTree->AddZipBytes(nout);
-   }
-
-   if (where==fWriteBasket) {
-      ++fWriteBasket;
-      if (fWriteBasket >= fMaxBaskets) {
-         ExpandBasketArrays();
+         fZipBytes += nout;
+         fTotBytes += addbytes;
+         fTree->AddTotBytes(addbytes);
+         fTree->AddZipBytes(nout);
       }
-      if (reusebasket && reusebasket == fCurrentBasket) {
-         // The 'current' basket has Reset, so if we need it we will need
-         // to reload it.
-         fCurrentBasket    = 0;
-         fFirstBasketEntry = -1;
-         fNextBasketEntry  = -1;
+
+      if (where==fWriteBasket) {
+         ++fWriteBasket;
+         if (fWriteBasket >= fMaxBaskets) {
+            ExpandBasketArrays();
+         }
+         if (reusebasket && reusebasket == fCurrentBasket) {
+            // The 'current' basket has Reset, so if we need it we will need
+            // to reload it.
+            fCurrentBasket    = 0;
+            fFirstBasketEntry = -1;
+            fNextBasketEntry  = -1;
+         }
+         fBaskets.AddAtAndExpand(reusebasket,fWriteBasket);
+         fBasketEntry[fWriteBasket] = fEntryNumber;
+      } else {
+         --fNBaskets;
+         fBaskets[where] = 0;
+         basket->DropBuffers();
+         if (basket == fCurrentBasket) {
+            fCurrentBasket    = 0;
+            fFirstBasketEntry = -1;
+            fNextBasketEntry  = -1;
+         }
+         delete basket;
       }
-      fBaskets.AddAtAndExpand(reusebasket,fWriteBasket);
-      fBasketEntry[fWriteBasket] = fEntryNumber;
+      return nout;
+   };
+   if (imt_helper) {
+      imt_helper->run(do_updates);
+      return 0;
    } else {
-      --fNBaskets;
-      fBaskets[where] = 0;
-      basket->DropBuffers();
-      if (basket == fCurrentBasket) {
-         fCurrentBasket    = 0;
-         fFirstBasketEntry = -1;
-         fNextBasketEntry  = -1;
-      }
-      delete basket;
+      return do_updates();
    }
-
-   return nout;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

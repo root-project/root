@@ -1182,7 +1182,7 @@ void TBranchElement::BuildTitle(const char* name)
 ///
 /// Note: We not not use any member functions from TLeafElement!
 
-Int_t TBranchElement::Fill()
+Int_t TBranchElement::FillImpl(TBranchIMTHelper *imt_helper)
 {
    Int_t nbytes = 0;
    Int_t nwrite = 0;
@@ -1218,7 +1218,7 @@ Int_t TBranchElement::Fill()
    if (!nbranches) {
       // No sub-branches.
       if (!TestBit(kDoNotProcess)) {
-         nwrite = TBranch::Fill();
+         nwrite = TBranch::FillImpl(imt_helper);
          if (nwrite < 0) {
             Error("Fill", "Failed filling branch:%s, nbytes=%d", GetName(), nwrite);
             ++nerror;
@@ -1230,7 +1230,7 @@ Int_t TBranchElement::Fill()
       // We have sub-branches.
       if (fType == 3 || fType == 4) {
          // TClonesArray or STL container counter
-         nwrite = TBranch::Fill();
+         nwrite = TBranch::FillImpl(imt_helper);
          if (nwrite < 0) {
             Error("Fill", "Failed filling branch:%s, nbytes=%d", GetName(), nwrite);
             ++nerror;
@@ -1243,7 +1243,7 @@ Int_t TBranchElement::Fill()
       for (Int_t i = 0; i < nbranches; ++i) {
          TBranchElement* branch = (TBranchElement*) fBranches[i];
          if (!branch->TestBit(kDoNotProcess)) {
-            nwrite = branch->Fill();
+            nwrite = branch->FillImpl(imt_helper);
             if (nwrite < 0) {
                Error("Fill", "Failed filling branch:%s.%s, nbytes=%d", GetName(), branch->GetName(), nwrite);
                nerror++;

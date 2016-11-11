@@ -45,7 +45,6 @@ public:
    TBranchRef(TTree *tree);
    virtual ~TBranchRef();
    virtual void    Clear(Option_t *option="");
-   virtual Int_t   Fill();
    TRefTable      *GetRefTable() const {return fRefTable;}
    virtual Bool_t  Notify();
    virtual void    Print(Option_t *option="") const;
@@ -53,6 +52,9 @@ public:
    virtual void    ResetAfterMerge(TFileMergeInfo *);
    virtual Int_t   SetParent(const TObject* obj, Int_t branchID);
    virtual void    SetRequestedEntry(Long64_t entry) {fRequestedEntry = entry;}
+
+private:
+   virtual Int_t   FillImpl(TBranchIMTHelper *);
 
    ClassDef(TBranchRef,1);  //to support referenced objects on other branches
 };

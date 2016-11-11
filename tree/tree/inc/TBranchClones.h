@@ -49,7 +49,6 @@ public:
    virtual ~TBranchClones();
 
    virtual void    Browse(TBrowser *b);
-   virtual Int_t   Fill();
    virtual const char* GetClassName() const { return fClassName; }
    virtual Int_t   GetEntry(Long64_t entry=0, Int_t getall = 0);
    virtual Int_t   GetN() const {return fN;}
@@ -62,6 +61,9 @@ public:
    virtual void    SetBasketSize(Int_t buffsize);
    virtual void    SetTree(TTree *tree) { fTree = tree; fBranchCount->SetTree(tree); }
    virtual void    UpdateFile();
+   virtual Int_t   FillImpl(TBranchIMTHelper *);
+
+private:
 
    ClassDef(TBranchClones,2);  //Branch in case of an array of clone objects
 };
