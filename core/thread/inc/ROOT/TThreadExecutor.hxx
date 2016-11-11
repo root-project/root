@@ -37,7 +37,7 @@ public:
    explicit TThreadExecutor();
 
    explicit TThreadExecutor(size_t nThreads);
-   
+
    TThreadExecutor(TThreadExecutor &) = delete;
    TThreadExecutor & operator=(TThreadExecutor &) = delete;
 
@@ -46,18 +46,10 @@ public:
    template<class F, class Cond = noReferenceCond<F>>
    auto Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>;
    /// \cond
-   template<class F, class R, class Cond = noReferenceCond<F>>
-   auto Map(F func, unsigned nTimes, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F()>::type>;
    template<class F, class INTEGER, class Cond = noReferenceCond<F, INTEGER>>
    auto Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>;
-   template<class F, class INTEGER, class R, class Cond = noReferenceCond<F, INTEGER>>
-   auto Map(F func, ROOT::TSeq<INTEGER> args, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F(INTEGER)>::type>;
    template<class F, class T, class Cond = noReferenceCond<F, T>>
    auto Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>;
-   template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
-   auto Map(F func, std::vector<T> &args, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F(T)>::type>;
-   template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
-   auto Map(F func, std::initializer_list<T> args, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F(T)>::type>;
    // / \endcond
    using TExecutor<TThreadExecutor>::Map;
 
@@ -76,40 +68,29 @@ public:
    auto MapReduce(F func, std::vector<T> &args, R redfunc, unsigned nChunks) -> typename std::result_of<F(T)>::type;
    // /// \endcond
    using TExecutor<TThreadExecutor>::MapReduce;
-
    
-   template<class T, class BINARYOP> auto Reduce(const std::vector<T> &objs, BINARYOP redfunc) -> decltype(redfunc(objs.front(), objs.front()));
-   using TExecutor<TThreadExecutor>::Reduce;
+  template<class T, class BINARYOP> auto Reduce(const std::vector<T> &objs, BINARYOP redfunc) -> decltype(redfunc(objs.front(), objs.front()));
+  template<class T, class R> auto Reduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs));
+
+protected:
+
+   template<class F, class R, class Cond = noReferenceCond<F>>
+   auto Map(F func, unsigned nTimes, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F()>::type>;
+   template<class F, class INTEGER, class R, class Cond = noReferenceCond<F, INTEGER>>
+   auto Map(F func, ROOT::TSeq<INTEGER> args, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F(INTEGER)>::type>;
+   template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
+   auto Map(F func, std::vector<T> &args, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F(T)>::type>;
+   template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
+   auto Map(F func, std::initializer_list<T> args, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F(T)>::type>;
 
 private:
-    void ParallelFor(unsigned start, unsigned end, unsigned step, const std::function<void(unsigned int i)> &f);
-    double ParallelReduceDoubles(const std::vector<double> &objs, const std::function<float(unsigned int a, float b)> &redfunc);
-    float ParallelReduceFloats(const std::vector<float> &objs, const std::function<float(unsigned int a, float b)> &redfunc);
-    tbb::task_scheduler_init *fInitTBB;
-};
+    void   ParallelFor(unsigned start, unsigned end, unsigned step, const std::function<void(unsigned int i)> &f);
+    double ParallelReduce(const std::vector<double> &objs, const std::function<double(double a, double b)> &redfunc);
+    float  ParallelReduce(const std::vector<float> &objs, const std::function<float(float a, float b)> &redfunc);
+    template<class T, class R> 
+    auto SeqReduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs));
 
-template<class T>
-class ParallelReductionResolver{
-  public:
-  static inline T Reduce(TThreadExecutor *, const std::vector<T> &objs, const std::function<T(T a, T b)> &redfunc){
-    return std::accumulate(objs.begin(), objs.end(), T{}, redfunc);
-  } 
-};
-
-template<>
-class ParallelReductionResolver<double>{
-  public:
-  static inline double Reduce(TThreadExecutor *threadExecutor, const std::vector<double> &objs, const std::function<double(double a, double b)> &redfunc){
-    return threadExecutor->ParallelReduceDoubles(objs, redfunc);
-  }
-};
-
-template<>
-class ParallelReductionResolver<float>{
-  public:
-  static inline float Reduce(TThreadExecutor *threadExecutor, const std::vector<float> &objs, const std::function<float(float a, float b)> &redfunc){
-    return threadExecutor->ParallelReduceFloats(objs, redfunc);
-  }
+    std::unique_ptr<tbb::task_scheduler_init> fInitTBB;
 };
 
 /************ TEMPLATE METHODS IMPLEMENTATION ******************/
@@ -269,13 +250,6 @@ auto TThreadExecutor::MapReduce(F func, unsigned nTimes, R redfunc, unsigned nCh
    return Reduce(Map(func, nTimes, redfunc, nChunks), redfunc);
 }
 
-//////////////////////////////////////////////////////////////////////////
-/// This method behaves just like Map, but an additional redfunc function
-/// must be provided. redfunc is applied to the vector Map would return and
-/// must return the same type as func. In practice, redfunc can be used to
-/// "squash" the vector returned by Map into a single object by merging,
-/// adding, mixing the elements of the vector.
-
 /// \cond doxygen should ignore these methods
 template<class F, class INTEGER, class R, class Cond>
 auto TThreadExecutor::MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc, unsigned nChunks) -> typename std::result_of<F(INTEGER)>::type
@@ -295,12 +269,27 @@ auto TThreadExecutor::MapReduce(F func, std::vector<T> &args, R redfunc, unsigne
    return Reduce(Map(func, args, redfunc, nChunks), redfunc);
 }
 
+/// Check that redfunc has the right signature and call it on objs
 template<class T, class BINARYOP>
 auto TThreadExecutor::Reduce(const std::vector<T> &objs, BINARYOP redfunc) -> decltype(redfunc(objs.front(), objs.front()))
 {
    // check we can apply reduce to objs
-   static_assert(std::is_same<decltype(redfunc(objs.front(), objs.front())), T>::value, "redfunc does not have the correct signature");   
-   return ParallelReductionResolver<T>::Reduce(this, objs, redfunc);
+   static_assert(std::is_same<decltype(redfunc(objs.front(), objs.front())), T>::value, "redfunc does not have the correct signature");
+   return ParallelReduce(objs, redfunc);
+}
+
+template<class T, class R>
+auto TThreadExecutor::Reduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs))
+{
+   // check we can apply reduce to objs
+   static_assert(std::is_same<decltype(redfunc(objs)), T>::value, "redfunc does not have the correct signature");
+   return SeqReduce(objs, redfunc);
+}
+
+template<class T, class R>
+auto TThreadExecutor::SeqReduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs))
+{
+   return redfunc(objs);
 }
 
 } // namespace ROOT
