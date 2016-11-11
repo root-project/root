@@ -182,7 +182,6 @@ public:
    virtual                  ~TBranchElement();
 
    virtual void             Browse(TBrowser* b);
-   virtual Int_t            Fill();
    virtual TBranch         *FindBranch(const char *name);
    virtual TLeaf           *FindLeaf(const char *name);
    virtual char            *GetAddress() const;
@@ -250,6 +249,9 @@ public:
       kClonesMemberNode = 31,
       kSTLMemberNode = 41
    };
+
+private:
+   virtual Int_t            FillImpl(TBranchIMTHelper *);
 
    ClassDef(TBranchElement,10)  // Branch in case of an object
 };
