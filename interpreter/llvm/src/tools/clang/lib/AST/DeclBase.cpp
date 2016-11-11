@@ -1260,7 +1260,7 @@ void DeclContext::removeDecl(Decl *D) {
       if (Map) {
         StoredDeclsMap::iterator Pos = Map->find(ND->getDeclName());
 #ifndef NDEBUG
-        assert(Pos != Map->end() && "no lookup entry for decl");
+        assert((DC->hasExternalVisibleStorage() || Pos != Map->end()) && "no lookup entry for decl");
 #endif
         if (Pos != Map->end()) {
         StoredDeclsList::DeclsTy* Vec = Pos->second.getAsVector();
