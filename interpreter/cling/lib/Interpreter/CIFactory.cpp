@@ -13,7 +13,7 @@
 #include "ClingUtils.h"
 
 #include "DeclCollector.h"
-#include "cling-compiledata.h"
+#include <cling-compiledata.h>
 
 #include "clang/AST/ASTContext.h"
 #include "clang/Basic/TargetInfo.h"
