@@ -70,6 +70,9 @@ The following interfaces have been removed, after deprecation in v6.08.
 - In TLatex: Do not paint the text when the text size is <= 0. This fixes
   the problem mentioned [here](https://sft.its.cern.ch/jira/browse/ROOT-8305)
 - From: Sergey Linev: In `TPad::SaveAs` method json file extension is now handled
+- Because of some precision issue some data points exactly on the plot limits of
+  a `TGraph2D` were not drawn (option `P`).
+  The problem was reported [here](https://sft.its.cern.ch/jira/browse/ROOT-8447).
 
 ## 3D Graphics Libraries
 - In `TMarker3DBox::PaintH3` the boxes' sizes was not correct.
