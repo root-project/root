@@ -55,9 +55,7 @@ public:
    auto MapReduce(F func, std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type;
    // /// \endcond
 
-protected:
-   template<class T, class R> auto Reduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs));
-   template<class T, class BINARYOP> auto Reduce(const std::vector<T> &objs, BINARYOP redfunc) -> decltype(redfunc(objs.front(), objs.front()));
+   template<class T, class R> T Reduce(const std::vector<T> &objs, R redfunc);
 
 private:
   inline subc & Derived()
@@ -145,26 +143,16 @@ auto TExecutor<subc>::MapReduce(F func, std::initializer_list<T> args, R redfunc
 template<class subc> template<class F, class T, class R, class Cond>
 auto TExecutor<subc>::MapReduce(F func, std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type
 {
-   return Reduce(Derived().Map(func, args), redfunc);
+   return Reduce(Map(func, args), redfunc);
 }
 
 /// \endcond
 
 /// Check that redfunc has the right signature and call it on objs
-template<class subc> template<class T, class BINARYOP>
-auto TExecutor<subc>::Reduce(const std::vector<T> &objs, BINARYOP redfunc) -> decltype(redfunc(objs.front(), objs.front()))
-{
-   // check we can apply reduce to objs
-   static_assert(std::is_same<decltype(redfunc(objs.front(), objs.front())), T>::value, "redfunc does not have the correct signature");
-   return Derived().Reduce(objs, redfunc);
-}
-
 template<class subc> template<class T, class R>
-auto TExecutor<subc>::Reduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs))
+T TExecutor<subc>::Reduce(const std::vector<T> &objs, R redfunc)
 {
-   // check we can apply reduce to objs
-   static_assert(std::is_same<decltype(redfunc(objs)), T>::value, "redfunc does not have the correct signature");
-   return redfunc(objs);
+  return Derived().Reduce(objs, redfunc);
 }
 
 }
