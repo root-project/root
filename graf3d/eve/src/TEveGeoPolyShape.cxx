@@ -10,6 +10,8 @@
  *************************************************************************/
 
 #include "TEveGeoPolyShape.h"
+
+#include "Rtypes.h"
 #include "TEveGeoShape.h"
 #include "TEvePad.h"
 #include "TEveUtil.h"

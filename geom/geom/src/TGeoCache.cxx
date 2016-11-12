@@ -9,10 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include "TGeoCache.h"
+
+#include "Rtypes.h"
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
 #include "TGeoVolume.h"
-#include "TGeoCache.h"
+#include "TObject.h"
 
 //const Int_t kN3 = 3*sizeof(Double_t);
 

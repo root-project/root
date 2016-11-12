@@ -11,6 +11,8 @@
 
 #include "TGeoExtension.h"
 
+#include "Rtypes.h"
+
 ClassImp(TGeoExtension)
 
 /** \class TGeoExtension
