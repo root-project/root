@@ -238,6 +238,12 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     endif()
   endforeach()
   string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/inc/" ""  rheaderfiles "${headerfiles}")
+  # Replace the non-standard folder layout of Core.
+  if (ARG_STAGE1 AND ${ARG_MODULE} STREQUAL "Core")
+    set(core_folders "base|clib|cont|doc|lzma|macosx|meta|metautils|multiproc|newdelete|pcre|rint|textinput|thread|unix|utils|winnt|zip")
+    string(REGEX REPLACE "${CMAKE_SOURCE_DIR}/core/(${core_folders})/inc/" ""  rheaderfiles "${rheaderfiles}")
+  endif()
+
   #---Get the list of include directories------------------
   get_directory_property(incdirs INCLUDE_DIRECTORIES)
   if(CMAKE_PROJECT_NAME STREQUAL ROOT)
