@@ -1260,6 +1260,37 @@ if(vc OR builtin_vc)
   endif()
 endif()
 
+#---Check for Vdt--------------------------------------------------------------------
+if(vdt OR builtin_vdt)
+  if(NOT builtin_vdt)
+    message(STATUS "Looking for VDT")
+    find_package(Vdt 0.3.9 CONFIG QUIET)
+    if(NOT Vdt_FOUND)
+      if(fail-on-missing)
+        message(FATAL_ERROR "VDT not found. Ensure that the installation of VDT is in the CMAKE_PREFIX_PATH")
+      else()
+        message(STATUS "VDT not found. Ensure that the installation of VDT is in the CMAKE_PREFIX_PATH")
+        message(STATUS "              Alternatively, you can also enable the option 'builtin_vdt' to build the VDT libraries internally")
+        message(STATUS "              For the time being switching OFF 'vdt' option")
+        set(vdt OFF CACHE BOOL "" FORCE)
+      endif()
+    endif()
+    set(Vdt_INCLUDE_DIRS ${Vdt_INCLUDE_DIR})
+  endif()
+  if(builtin_vdt)
+    set(vdt_version 0.3.9)
+    ExternalProject_Add(
+      VDT
+      URL ${repository_tarfiles}/vdt-${vdt_version}.tar.gz
+      INSTALL_DIR ${CMAKE_BINARY_DIR}
+      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
+    )
+    set(Vdt_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include)
+    set(Vdt_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${CMAKE_STATIC_LIBRARY_SUFFIX})
+    set(vdt ON CACHE BOOL "" FORCE)
+  endif()
+endif()
 
 #---Check for CUDA and BLAS ---------------------------------------------------------
 if(tmva AND cuda)
