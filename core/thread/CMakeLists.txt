@@ -28,7 +28,7 @@ else()
 endif()
 
 if (imt)
-  set(sources_imt TImplicitMT.cxx)
+  set(sources_imt TImplicitMT.cxx TThreadExecutor.cxx)
   set(headers_imt ROOT/TThreadExecutor.hxx)
 endif()
 
