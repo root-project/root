@@ -3,6 +3,8 @@
 #Set the list of files to be deleted by clean (Targets can also be specified).:
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog
 
+cleantest: localclean
+
 # Set the list of target to make while testing.  By default, mytest is the
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
@@ -38,6 +40,7 @@ endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 clean: localclean
+
 
 localclean:
 	$(CMDECHO) $(MAKE) --no-print-directory -C libcond -f libcondMakefile clean
