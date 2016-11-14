@@ -106,10 +106,7 @@ distclean::     distclean-$(MODNAME)
 ifeq ($(ARCH),win32)
 $(EVEO) $(EVEDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%) $(FTGLINCDIR:%=-I%) $(FTGLCPPFLAGS)
 else
-# We need to disallow the direct use of gl.h. This way people will see the error
-# and the suggested fix. This happens by providing our own "fake" system gl.h.
-$(EVEO) $(EVEDO): CXXFLAGS += -isystem $(ROOT_SRCDIR)/graf3d/glew/isystem/ \
-		  $(OPENGLINCDIR:%=-I%) $(FTGLINCDIR:%=-I%) $(FTGLCPPFLAGS)
+$(EVEO) $(EVEDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%) $(FTGLINCDIR:%=-I%) $(FTGLCPPFLAGS)
 $(EVEO): CXXFLAGS += $(GLEWINCDIR:%=-I%) $(GLEWCPPFLAGS)
 endif
 ifeq ($(MACOSX_GLU_DEPRECATED),yes)

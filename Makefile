@@ -601,10 +601,23 @@ CXXMODULES_MODULEMAP_CONTENTS :=
 ALLHDRS  := include/module.modulemap
 ROOT_CXXMODULES_CXXFLAGS =  -fmodules -fcxx-modules -fmodules-cache-path=$(ROOT_OBJDIR)/include/pcms/
 ROOT_CXXMODULES_CFLAGS =  -fmodules -fmodules-cache-path=$(ROOT_OBJDIR)/include/pcms/
+
 # FIXME: OSX doesn't support -fmodules-local-submodule-visibility because its
 # Frameworks' modulemaps predate the flag.
 ifneq ($(PLATFORM),macosx)
 ROOT_CXXMODULES_CXXFLAGS += -Xclang -fmodules-local-submodule-visibility
+else
+# FIXME: TGLIncludes and alike depend on glew.h doing special preprocessor
+# trickery to override the contents of system's OpenGL.
+# On OSX #include TGLIncludes.h will trigger the creation of the system
+# OpenGL.pcm. Once it is built, glew cannot use preprocessor trickery to 'fix'
+# the translation units which it needs to 'rewrite'. The translation units
+# which need glew support are in graf3d. However, depending on the modulemap
+# organization we could request it implicitly (eg. one big module for ROOT).
+# In these cases we need to 'prepend' this include path to the compiler in order
+# for glew.h to it its trick.
+ROOT_CXXMODULES_CXXFLAGS +=  -isystem $(ROOT_SRCDIR)/graf3d/glew/isystem/
+ROOT_CXXMODULES_CFLAGS +=  -isystem $(ROOT_SRCDIR)/graf3d/glew/isystem/
 endif # not macos
 
 CXXFLAGS += $(ROOT_CXXMODULES_CXXFLAGS)

@@ -128,9 +128,7 @@ $(GLO) $(GLDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%) -I$(WIN32GDKDIR)/gdk/src \
 $(GLDS):        CINTFLAGS += $(OPENGLINCDIR:%=-I%) -I$(WIN32GDKDIR)/gdk/src \
                              $(GDKDIRI:%=-I%) $(GLIBDIRI:%=-I%) $(GL2PSFLAGS)
 else
-# We need to disallow the direct use of gl.h. This way people will see the error
-# and the suggested fix. This happens by providing our own "fake" system gl.h.
-$(GLO) $(GLDO): CXXFLAGS += -isystem $(ROOT_SRCDIR)/graf3d/glew/isystem/ $(OPENGLINCDIR:%=-I%) $(GL2PSFLAGS)
+$(GLO) $(GLDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%) $(GL2PSFLAGS)
 $(GLDS):        CINTFLAGS += $(OPENGLINCDIR:%=-I%) $(GL2PSFLAGS)
 endif
 
