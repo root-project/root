@@ -87,10 +87,20 @@ ASIMAGEGUILIB := $(LPATH)/libASImageGui.$(SOEXT)
 ASIMAGEGUIMAP := $(ASIMAGEGUILIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(ASIMAGEH))
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(ASIMAGEGUIH))
+ASIMAGE_REL := $(patsubst $(MODDIRI)/%.h,include/%.h,$(ASIMAGEH) $(ASIMAGEGUIH))
+ALLHDRS     += $(ASIMAGE_REL)
 ALLLIBS     += $(ASIMAGELIB) $(ASIMAGEGUILIB)
 ALLMAPS     += $(ASIMAGEMAP) $(ASIMAGEGUIMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(ASIMAGE_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Graf2d_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(ASIMAGELIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(ASIMAGEGUILIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
+
 
 # include all dependency files
 INCLUDEFILES += $(ASIMAGEDEP) $(ASIMAGEGUIDEP)

@@ -22,8 +22,17 @@ GLEWDEP      := $(GLEWO:.o=.d)
 GLEWLIB      := $(LPATH)/libGLEW.$(SOEXT)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(GLEWH))
+GLEWH_REL   := $(patsubst $(MODDIRI)/%.h,include/%.h,$(GLEWH))
+ALLHDRS     += $(GLEWH_REL)
 ALLLIBS     += $(GLEWLIB)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,exclude header \"%\"\\n,$(GLEWH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Graph3d_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(GLEWLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(GLEWDEP)

@@ -69,9 +69,18 @@ MATHMORELIB  := $(LPATH)/libMathMore.$(SOEXT)
 MATHMOREMAP  := $(MATHMORELIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/Math/%.h,include/Math/%.h,$(MATHMOREH))
+MATHMOREH_REL := $(patsubst $(MODDIRI)/Math/%.h,include/Math/%.h,$(MATHMOREH))
+ALLHDRS      += $(MATHMOREH_REL)
 ALLLIBS      += $(MATHMORELIB)
 ALLMAPS      += $(MATHMOREMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(MATHMOREH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Math_More { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(MATHMORELIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(MATHMOREDEP)

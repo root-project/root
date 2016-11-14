@@ -61,9 +61,18 @@ ROOTAASC     := $(ROOTAAS:.py=.pyc)
 ROOTAASO     := $(ROOTAAS:.py=.pyo)
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PYROOTH))
+PYROOTH_REL  := $(patsubst $(MODDIRI)/%.h,include/%.h,$(PYROOTH))
+ALLHDRS      += $(PYROOTH_REL)
 ALLLIBS      += $(PYROOTLIB)
 ALLMAPS      += $(PYROOTMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(PYROOTH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module $(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(PYROOTLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(PYROOTDEP)

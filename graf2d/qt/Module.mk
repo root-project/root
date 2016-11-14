@@ -67,11 +67,20 @@ QMAKERULES     += $(GQTDIRI)/rootcint.pri $(GQTDIRI)/rootcintrule.pri \
                   $(GQTDIRI)/rootlibs.pri
 
 # used in the main Makefile
-ALLHDRS       += $(patsubst $(MODDIRI)/%.h,include/%.h,$(GQTH))
+GQTH_REL      := $(patsubst $(MODDIRI)/%.h,include/%.h,$(GQTH))
+ALLHDRS       += $(GQTH_REL)
 ALLHDRS       += $(patsubst $(MODDIRI)/%.cw,include/%.cw,$(QCUSTOMWIDGETS))
 ALLHDRS       += $(patsubst $(MODDIRI)/%.pri,include/%.pri,$(QMAKERULES))
 ALLLIBS       += $(GQTLIB)
 ALLMAPS       += $(GQTMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(GQTH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Qt_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(GQTLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES  += $(GQTDEP)

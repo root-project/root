@@ -29,9 +29,18 @@ EGLIB        := $(LPATH)/libEG.$(SOEXT)
 EGMAP        := $(EGLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(EGH))
+EGH_REL     := $(patsubst $(MODDIRI)/%.h,include/%.h,$(EGH))
+ALLHDRS     += $(EGH_REL)
 ALLLIBS     += $(EGLIB)
 ALLMAPS     += $(EGMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(EGH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Montecarlo_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(EGLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(EGDEP)

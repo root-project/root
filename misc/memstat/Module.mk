@@ -34,10 +34,19 @@ MEMSTATLIB    := $(LPATH)/libMemStat.$(SOEXT)
 MEMSTATMAP    := $(MEMSTATLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(MEMSTATH))
+MEMSTATH_REL := $(patsubst $(MODDIRI)/%.h,include/%.h,$(MEMSTATH))
+ALLHDRS     += $(MEMSTATH_REL)
 ALLLIBS     += $(MEMSTATLIB)
 ALLMAPS     += $(MEMSTATMAP)
-  
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(MEMSTATH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Misc_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(MEMSTATLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
+
 # include all dependency files
 INCLUDEFILES += $(MEMSTATDEP)
 

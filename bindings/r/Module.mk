@@ -48,9 +48,18 @@ RLIB  := $(LPATH)/libRInterface.$(SOEXT)
 RMAP  := $(RLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(RH))
+RH_REL       := $(patsubst $(MODDIRI)/%.h,include/%.h,$(RH))
+ALLHDRS      += $(RH_REL)
 ALLLIBS      += $(RLIB)
 ALLMAPS      += $(RMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(RH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module $(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(RLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(RDEP)

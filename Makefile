@@ -592,6 +592,11 @@ endif
 ##### all #####
 ALLHDRS :=
 ifeq ($(CXXMODULES),yes)
+# Add the ROOT Core module. It is organized differently and we cannot do it in
+# a Module.mk
+CXXMODULES_HEADERS :=
+CXXMODULES_MODULEMAP_CONTENTS :=
+
 # Copy the modulemap in $ROOTSYS/include first.
 ALLHDRS  := include/module.modulemap
 ROOT_CXXMODULES_CXXFLAGS =  -fmodules -fcxx-modules -fmodules-cache-path=$(ROOT_OBJDIR)/include/pcms/
@@ -832,8 +837,40 @@ $(COMPILEDATA): $(ROOT_SRCDIR)/config/Makefile.$(ARCH) config/Makefile.comp Make
 	   "$(EXPLICITLINK)"
 
 ifeq ($(CXXMODULES),yes)
-include/module.modulemap:    $(ROOT_SRCDIR)/build/unix/module.modulemap
+
+# We cannot use the usual way of setting CXXMODULES_MODULEMAP_CONTENTS for core,
+# because we require information from the core submodules. Thus we have to access
+# the information at the target.
+#
+# We use the relative path of COREDICT.
+# FIXME: We probably should be chaning the COREDICTH to use relative paths, too.
+# COREDICTH     = $(BASEDICTH) $(CONTH) $(METADICTH) $(SYSTEMDICTH) \
+#                $(ZIPDICTH) $(CLIBHH) $(METAUTILSH) $(TEXTINPUTH)
+include/module.modulemap:
+COREDICTH_REL := $(BASEH_REL) $(CONTH_REL) $(METAH_REL) $(METAUTILSH_REL)
+COREDICTH_REL := $(patsubst include/%,%, $(COREDICTH_REL))
+CXXMODULES_CORE_EXCLUDE := RConversionRuleParser.h RConfig.h RVersion.h RtypesImp.h \
+			   Rtypes.h RtypesCore.h TClassEdit.h TMetaUtils.h \
+			   TSchemaType.h DllImport.h Rtypeinfo.h TGenericClassInfo.h \
+			   TSchemaHelper.h ESTLType.h RStringView.h Varargs.h \
+			   RootMetaSelection.h TString.h Riosfwd.h TMathBase.h \
+			   RWrap_libcpp_string_view.h TAtomicCountGcc.h \
+			   TException.h ROOT/TThreadExecutor.hxx TBranchProxyTemplate.h \
+			   TGLIncludes.h TGLWSIncludes.h snprintf.h strlcpy.h
+COREDICTH_REL := $(filter-out $(CXXMODULES_CORE_EXCLUDE),$(COREDICTH_REL))
+CXXMODULES_CORE_HEADERS := $(patsubst %,header \"%\"\\n, $(COREDICTH_REL))
+CXXMODULES_CORE_MODULEMAP_CONTENTS := module Core { \\n \
+  requires cplusplus \\n \
+  $(CXXMODULES_CORE_HEADERS) \
+  export *  \\n \
+  link \"$(CORELIB)\" \\n \
+  } \\n
+include/module.modulemap: $(ROOT_SRCDIR)/build/unix/module.modulemap
 	cp $< $@
+	@echo "module ROOT {\\n" >> $@
+	@echo "$(CXXMODULES_CORE_MODULEMAP_CONTENTS)" >> $@
+	@echo "$(CXXMODULES_MODULEMAP_CONTENTS)" >> $@
+	@echo "} //module ROOT \\n" >> $@
 endif
 
 # We rebuild GITCOMMITH only when we would re-link libCore anyway.

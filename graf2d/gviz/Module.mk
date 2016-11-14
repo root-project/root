@@ -28,9 +28,18 @@ GVIZLIB      := $(LPATH)/libGviz.$(SOEXT)
 GVIZMAP      := $(GVIZLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(GVIZH))
+GVIZH_REL   := $(patsubst $(MODDIRI)/%.h,include/%.h,$(GVIZH))
+ALLHDRS     += $(GVIZH_REL)
 ALLLIBS     += $(GVIZLIB)
 ALLMAPS     += $(GVIZMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(GVIZH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Graf2d_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(GVIZLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(GVIZDEP)

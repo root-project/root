@@ -27,9 +27,18 @@ CHIRPLIB    := $(LPATH)/libChirp.$(SOEXT)
 CHIRPMAP    := $(CHIRPLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(CHIRPH))
+CHIRPH_REL  := $(patsubst $(MODDIRI)/%.h,include/%.h,$(CHIRPH))
+ALLHDRS     += $(CHIRPH_REL)
 ALLLIBS     += $(CHIRPLIB)
 ALLMAPS     += $(CHIRPMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(CHIRPH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Io_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(CHIRPLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(CHIRPDEP)

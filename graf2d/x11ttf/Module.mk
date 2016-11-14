@@ -28,9 +28,18 @@ X11TTFLIB    := $(LPATH)/libGX11TTF.$(SOEXT)
 X11TTFMAP    := $(X11TTFLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(X11TTFH))
+X11TTFH_REL := $(patsubst $(MODDIRI)/%.h,include/%.h,$(X11TTFH))
+ALLHDRS     += $(X11TTFH_REL)
 ALLLIBS     += $(X11TTFLIB)
 ALLMAPS     += $(X11TTFMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(X11TTFH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Graf2d_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(X11TTFLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(X11TTFDEP)

@@ -31,9 +31,18 @@ RTOOLSLIB  := $(LPATH)/libRtools.$(SOEXT)
 RTOOLSMAP  := $(RTOOLSLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/Math/%.h,include/Math/%.h,$(RTOOLSH))
+RTOOLSH_REL  := $(patsubst $(MODDIRI)/Math/%.h,include/Math/%.h,$(RTOOLSH))
+ALLHDRS      += $(RTOOLSH_REL)
 ALLLIBS      += $(RTOOLSLIB)
 ALLMAPS      += $(RTOOLSMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(RTOOLSH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Math_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(RTOOLSLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(RTOOLSDEP)

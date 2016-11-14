@@ -28,9 +28,18 @@ QUADPLIB     := $(LPATH)/libQuadp.$(SOEXT)
 QUADPMAP     := $(QUADPLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(QUADPH))
+QUADPH_REL  := $(patsubst $(MODDIRI)/%.h,include/%.h,$(QUADPH))
+ALLHDRS     += $(QUADPH_REL)
 ALLLIBS     += $(QUADPLIB)
 ALLMAPS     += $(QUADPMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(QUADPH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Math_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(QUADPLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(QUADPDEP)

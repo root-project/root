@@ -28,9 +28,18 @@ PYTHIA8LIB   := $(LPATH)/libEGPythia8.$(SOEXT)
 PYTHIA8MAP   := $(PYTHIA8LIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PYTHIA8H))
+PYTHIA8H_REL := $(patsubst $(MODDIRI)/%.h,include/%.h,$(PYTHIA8H))
+ALLHDRS     += $(PYTHIA8H_REL)
 ALLLIBS     += $(PYTHIA8LIB)
 ALLMAPS     += $(PYTHIA8MAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(PYTHIA8H_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Montecarlo_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(PYTHIA8LIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(PYTHIA8DEP)

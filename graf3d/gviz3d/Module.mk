@@ -28,9 +28,18 @@ GVIZ3DLIB    := $(LPATH)/libGviz3d.$(SOEXT)
 GVIZ3DMAP    := $(GVIZ3DLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(GVIZ3DH))
+GVIZ3DH_REL := $(patsubst $(MODDIRI)/%.h,include/%.h,$(GVIZ3DH))
+ALLHDRS     += $(GVIZ3DH_REL)
 ALLLIBS     += $(GVIZ3DLIB)
 ALLMAPS     += $(GVIZ3DMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(GVIZ3DH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Graph3d_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(GVIZ3DLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(GVIZ3DDEP)

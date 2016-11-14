@@ -30,9 +30,18 @@ X11LIB       := $(LPATH)/libGX11.$(SOEXT)
 X11MAP       := $(X11LIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(X11H))
+X11H_REL    := $(patsubst $(MODDIRI)/%.h,include/%.h,$(X11H))
+ALLHDRS     += $(X11H_REL)
 ALLLIBS     += $(X11LIB)
 ALLMAPS     += $(X11MAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(X11H_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Graf2d_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(X11LIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(X11DEP)

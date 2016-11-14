@@ -28,9 +28,18 @@ GRAFLIB      := $(LPATH)/libGraf.$(SOEXT)
 GRAFMAP      := $(GRAFLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(GRAFH))
+GRAFH_REL   := $(patsubst $(MODDIRI)/%.h,include/%.h,$(GRAFH))
+ALLHDRS     += $(GRAFH_REL)
 ALLLIBS     += $(GRAFLIB)
 ALLMAPS     += $(GRAFMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(GRAFH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Grad2d_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(GRAFLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(GRAFDEP)

@@ -28,9 +28,18 @@ MLPLIB       := $(LPATH)/libMLP.$(SOEXT)
 MLPMAP       := $(MLPLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(MLPH))
+MLPH_REL    := $(patsubst $(MODDIRI)/%.h,include/%.h,$(MLPH))
+ALLHDRS     += $(MLPH_REL)
 ALLLIBS     += $(MLPLIB)
 ALLMAPS     += $(MLPMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(MLPH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Math_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(MLPLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(MLPDEP)

@@ -55,9 +55,18 @@ endif
 QTTESTPATH    := $(PATH):$(abspath ./bin)
 
 # used in the main Makefile
-ALLHDRS       += $(patsubst $(MODDIRI)/%.h,include/%.h,$(QTGSIH))
+QTGSIH_REL    := $(patsubst $(MODDIRI)/%.h,include/%.h,$(QTGSIH))
+ALLHDRS       += $(QTGSIH_REL)
 ALLLIBS       += $(QTGSILIB)
 ALLMAPS       += $(QTGSIMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(QTGSIH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Gui_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(QTGSILIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES  += $(QTGSIDEP)

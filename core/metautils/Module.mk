@@ -41,7 +41,8 @@ METAUTILSL     := $(MODDIRI)/LinkDef.h
 METAUTILSDEP   := $(METAUTILSO:.o=.d) $(METAUTILSTO:.o=.d)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(METAUTILSH) $(METAUTILSTH))
+METAUTILSH_REL := $(patsubst $(MODDIRI)/%,include/%,$(METAUTILSH) $(METAUTILSTH))
+ALLHDRS     += $(METAUTILSH_REL)
 
 # include all dependency files
 INCLUDEFILES += $(METAUTILSDEP)

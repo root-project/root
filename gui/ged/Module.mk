@@ -28,9 +28,18 @@ GEDLIB    := $(LPATH)/libGed.$(SOEXT)
 GEDMAP    := $(GEDLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(GEDH))
+GEDH_REL    := $(patsubst $(MODDIRI)/%.h,include/%.h,$(GEDH))
+ALLHDRS     += $(GEDH_REL)
 ALLLIBS     += $(GEDLIB)
 ALLMAPS     += $(GEDMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(GEDH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Gui_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(GEDLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(GEDDEP)

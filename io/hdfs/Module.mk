@@ -28,9 +28,18 @@ HDFSLIB      := $(LPATH)/libHDFS.$(SOEXT)
 HDFSMAP      := $(HDFSLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(HDFSH))
+HDFSH_REL   := $(patsubst $(MODDIRI)/%.h,include/%.h,$(HDFSH))
+ALLHDRS     += $(HDFSH_REL)
 ALLLIBS     += $(HDFSLIB)
 ALLMAPS     += $(HDFSMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(HDFSH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Io_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(HDFSLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(HDFSDEP)

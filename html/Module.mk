@@ -19,7 +19,6 @@ HTMLDO       := $(HTMLDS:.cxx=.o)
 HTMLDH       := $(HTMLDS:.cxx=.h)
 
 HTMLH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
-HTMLINCH     := $(patsubst $(MODDIRI)/%.h,include/%.h,$(HTMLH))
 HTMLS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 HTMLO        := $(call stripsrc,$(HTMLS:.cxx=.o))
 
@@ -29,9 +28,18 @@ HTMLLIB      := $(LPATH)/libHtml.$(SOEXT)
 HTMLMAP      := $(HTMLLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(HTMLINCH)
+HTMLH_REL   := $(patsubst $(MODDIRI)/%.h,include/%.h,$(HTMLH))
+ALLHDRS     += $(HTMLH_REL)
 ALLLIBS     += $(HTMLLIB)
 ALLMAPS     += $(HTMLMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(HTMLH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Html_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(HTMLLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(HTMLDEP)
@@ -50,12 +58,12 @@ $(HTMLLIB):     $(HTMLO) $(HTMLDO) $(ORDER_) $(MAINLIBS) $(HTMLLIBDEP)
 $(call pcmrule,HTML)
 	$(noop)
 
-$(HTMLDS):      $(HTMLINCH) $(HTMLL) $(ROOTCLINGEXE) $(call pcmdep,HTML)
+$(HTMLDS):      $(HTMLH_REL) $(HTMLL) $(ROOTCLINGEXE) $(call pcmdep,HTML)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,HTML) -c $(HTMLH) $(HTMLL)
 
-$(HTMLMAP):     $(HTMLINCH) $(HTMLL) $(ROOTCLINGEXE) $(call pcmdep,HTML)
+$(HTMLMAP):     $(HTMLH_REL) $(HTMLL) $(ROOTCLINGEXE) $(call pcmdep,HTML)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
 		$(ROOTCLINGSTAGE2) -r $(HTMLDS) $(call dictModule,HTML) -c $(HTMLH) $(HTMLL)

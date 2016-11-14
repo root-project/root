@@ -28,9 +28,18 @@ MINUITLIB    := $(LPATH)/libMinuit.$(SOEXT)
 MINUITMAP    := $(MINUITLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(MINUITH))
+MINUITH_REL := $(patsubst $(MODDIRI)/%.h,include/%.h,$(MINUITH))
+ALLHDRS     += $(MINUITH_REL)
 ALLLIBS     += $(MINUITLIB)
 ALLMAPS     += $(MINUITMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(MINUITH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Math_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(MINUITLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(MINUITDEP)

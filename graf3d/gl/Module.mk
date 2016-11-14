@@ -67,9 +67,18 @@ GLLIB        := $(LPATH)/libRGL.$(SOEXT)
 GLMAP        := $(GLLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(GLH))
+GLH_REL      := $(patsubst $(MODDIRI)/%.h,include/%.h,$(GLH))
+ALLHDRS      += $(GLH_REL)
 ALLLIBS      += $(GLLIB)
 ALLMAPS      += $(GLMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(GLH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Graph3d_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(GLLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(GLDEP)

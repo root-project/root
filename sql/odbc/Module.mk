@@ -28,9 +28,18 @@ ODBCLIB     := $(LPATH)/libRODBC.$(SOEXT)
 ODBCMAP     := $(ODBCLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(ODBCH))
+ODBCH_REL   := $(patsubst $(MODDIRI)/%.h,include/%.h,$(ODBCH))
+ALLHDRS     += $(ODBCH_REL)
 ALLLIBS     += $(ODBCLIB)
 ALLMAPS     += $(ODBCMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(ODBCH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Sql_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(ODBCLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(ODBCDEP)

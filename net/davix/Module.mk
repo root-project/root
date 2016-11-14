@@ -27,9 +27,18 @@ DAVIXLIB    := $(LPATH)/libRDAVIX.$(SOEXT)
 DAVIXMAP    := $(DAVIXLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(DAVIXH))
+DAVIXH_REL  := $(patsubst $(MODDIRI)/%.h,include/%.h,$(DAVIXH))
+ALLHDRS     += $(DAVIXH_REL)
 ALLLIBS     += $(DAVIXLIB)
 ALLMAPS     += $(DAVIXMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(DAVIXH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Net_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(DAVIXLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(DAVIXDEP)

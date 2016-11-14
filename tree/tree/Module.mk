@@ -28,9 +28,18 @@ TREELIB      := $(LPATH)/libTree.$(SOEXT)
 TREEMAP      := $(TREELIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(TREEH))
+TREEH_REL   := $(patsubst $(MODDIRI)/%.h,include/%.h,$(TREEH))
+ALLHDRS     += $(TREEH_REL)
 ALLLIBS     += $(TREELIB)
 ALLMAPS     += $(TREEMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(TREEH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Tree_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(TREELIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(TREEDEP)

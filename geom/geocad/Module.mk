@@ -7,7 +7,7 @@ MODNAME      := geocad
 MODDIR       := $(ROOT_SRCDIR)/geom/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
- 
+
 GEOCADDIR    := $(MODDIR)
 GEOCADDIRS   := $(GEOCADDIR)/src
 GEOCADDIRI   := $(GEOCADDIR)/inc
@@ -32,9 +32,18 @@ GEOCADLIB    := $(LPATH)/libGeoCad.$(SOEXT)
 GEOCADMAP    := $(GEOCADLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(GEOCADH))
+GEOCADH_REL := $(patsubst $(MODDIRI)/%.h,include/%.h,$(GEOCADH))
+ALLHDRS     += $(GEOCADH_REL)
 ALLLIBS     += $(GEOCADLIB)
 ALLMAPS     += $(GEOCADMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(GEOCADH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Geom_GeoCad { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(GEOCADHLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(GEOCADDEP)
