@@ -51,7 +51,7 @@ TMVAH2       := $(patsubst %,$(MODDIRI)/TMVA/%,$(TMVAH2))
 TMVAH3       := $(patsubst %,$(MODDIRI)/TMVA/%,$(TMVAH3))
 TMVAH4       := $(patsubst %,$(MODDIRI)/TMVA/%,$(TMVAH4))
 
-TMVAH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/TMVA/*.h))
+TMVAH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/TMVA/*.*))
 TMVAS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 TMVADNNS     := $(MODDIRS)/DNN/Architectures/Reference.cxx
 TMVAO        := $(call stripsrc,$(TMVAS:.cxx=.o))  $(call stripsrc,$(TMVADNNS:.cxx=.o))
@@ -62,12 +62,12 @@ TMVALIB      := $(LPATH)/libTMVA.$(SOEXT)
 TMVAMAP      := $(TMVALIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-TMVAH_REL    := $(patsubst $(MODDIRI)/TMVA/%,include/TMVA/%,$(TMVAH))
-ALLHDRS      += $(TMVAH_REL)
+TMVA_REL     := $(patsubst $(MODDIRI)/TMVA/%,include/TMVA/%,$(TMVAH) $(TMVADNN))
+ALLHDRS      += $(TMVA_REL)
 ALLLIBS      += $(TMVALIB)
 ALLMAPS      += $(TMVAMAP)
 ifeq ($(CXXMODULES),yes)
-  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(TMVAH_REL))
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(TMVA_REL))
   CXXMODULES_MODULEMAP_CONTENTS += module Tmva_$(MODNAME) { \\n
   CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
   CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
@@ -108,15 +108,15 @@ $(TMVALIB):     $(TMVAO) $(TMVADO) $(ORDER_) $(MAINLIBS) $(TMVALIBDEP)
 $(call pcmrule,TMVA)
 	$(noop)
 
-$(TMVADS):      $(TMVAH_REL) $(TMVAL0) $(TMVALS) $(ROOTCLINGEXE) $(call pcmdep,TMVA)
+$(TMVADS):      $(TMVA_REL) $(TMVAL0) $(TMVALS) $(ROOTCLINGEXE) $(call pcmdep,TMVA)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,TMVA) -c -writeEmptyRootPCM $(patsubst include/%,%,$(TMVAH_REL)) -I$(ROOT_SRCDIR) $(TMVAL0)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,TMVA) -c -writeEmptyRootPCM $(patsubst include/%,%,$(TMVA_REL)) -I$(ROOT_SRCDIR) $(TMVAL0)
 
-$(TMVAMAP):     $(TMVAH_REL) $(TMVAL0) $(TMVALS) $(ROOTCLINGEXE) $(call pcmdep,TMVA)
+$(TMVAMAP):     $(TMVA_REL) $(TMVAL0) $(TMVALS) $(ROOTCLINGEXE) $(call pcmdep,TMVA)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCLINGSTAGE2) -r $(TMVADS) $(call dictModule,TMVA) -c -I$(ROOT_SRCDIR) $(TMVAH_REL) $(TMVAL0)
+		$(ROOTCLINGSTAGE2) -r $(TMVADS) $(call dictModule,TMVA) -c -I$(ROOT_SRCDIR) $(TMVA_REL) $(TMVAL0)
 
 all-$(MODNAME): $(TMVALIB)
 
