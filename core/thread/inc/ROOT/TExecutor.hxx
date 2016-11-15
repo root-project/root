@@ -169,11 +169,13 @@ T TExecutor<subc>::Reduce(const std::vector<T> &objs, R redfunc)
 template<class subc> template<class T>
 T* TExecutor<subc>::Reduce(const std::vector<T*> &mergeObjs)
 {
-  TList *l{};
-  for(auto obj : mergeObjs)
-    l->Add(obj);
-  mergeObjs.front()->Merge(l);
-  return mergeObjs.front();
+  TList *l = new TList();
+  for(unsigned i =1; i<mergeObjs.size(); i++){
+    l->Add(mergeObjs[i]);
+  }
+  auto retHist = mergeObjs.front();
+  retHist->Merge(l);
+  return retHist;
 }
 
 } // end namespace ROOT
