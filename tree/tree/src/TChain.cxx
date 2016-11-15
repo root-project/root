@@ -2069,77 +2069,36 @@ Long64_t TChain::Merge(TFile* file, Int_t basketsize, Option_t* option)
 ///                        a fragment this will be empty.
 /// \param[out] suffix     the portion of name which was removed to form filename.
 
-void TChain::ParseTreeFilename(const char *name, TString &filename, TString &treename, TString &query, TString &suffix, Bool_t wildcards) const
+void TChain::ParseTreeFilename(const char *name, TString &filename, TString &treename,
+                               TString &query, TString &suffix, Bool_t) const
 {
    Ssiz_t pIdx;
-   Bool_t isUrl = kFALSE;
-   Bool_t isUrlDoFull = kFALSE;
    filename = name;
    treename.Clear();
    query.Clear();
    suffix.Clear();
 
-   pIdx = filename.Index("://");
-   if (pIdx != kNPOS && pIdx > 0 && filename.Index("/") > pIdx) {
-      // filename has a url format "xxx://"
-      // decide if to do full search for url query and fragment identifiers
-      isUrl = kTRUE;
-      if (wildcards) {
-         TUrl url(name);
-         if (url.IsValid()) {
-            TString proto = url.GetProtocol();
-            if (proto == "http" || proto == "https") {
-               isUrlDoFull = kTRUE;
-            }
-         }
-      } else {
-         isUrlDoFull = kTRUE;
-      }
-   }
+   // General case
+   TUrl url(name);
 
-   if (isUrlDoFull) {
-      pIdx = filename.Index("?");
-      if (pIdx != kNPOS) {
-         query = filename(pIdx,filename.Length()-pIdx);
-         suffix = filename(pIdx, filename.Length()-pIdx);
-         filename.Remove(pIdx);
-      }
-      pIdx = query.Index("#");
-      if (pIdx != kNPOS) {
-         treename = query(pIdx+1,query.Length()-pIdx-1);
-         query.Remove(pIdx);
-         if (query.Length() == 1) {
-            // was only followed by the fragment
-            query.Clear();
-         }
-      }
-   }
+   // Extract query (and treename, if any)
+   query.Form("?%s", url.GetOptions());
+   treename = url.GetAnchor();
 
-   if (treename.IsNull()) {
-      Ssiz_t dotSlashPos = kNPOS;
-      pIdx = filename.Index(".root");
-      while(pIdx != kNPOS) {
-         dotSlashPos = pIdx;
-         pIdx = filename.Index(".root",dotSlashPos+1);
-      }
-      if (dotSlashPos != kNPOS && filename[dotSlashPos+5]!='/') {
-         // We found the 'last' .root in the name and it is not followed by
-         // a '/', so the tree name is _not_ specified in the name.
-         dotSlashPos = kNPOS;
-      }
-      if (dotSlashPos != kNPOS) {
-         // Copy the tree name specification and remove it from filename
-         treename = filename(dotSlashPos+6,filename.Length()-dotSlashPos-6);
-         suffix.Prepend(filename(dotSlashPos+5, filename.Length()-dotSlashPos-5));
-         filename.Remove(dotSlashPos+5);
-      }
-      if (isUrl && !isUrlDoFull) {
-         pIdx = treename.Index("?");
-         if (pIdx != kNPOS) {
-            query = treename(pIdx,treename.Length()-pIdx);
-            treename.Remove(pIdx);
-         }
-      }
+   // Save suffix, if any
+   suffix = url.GetFileAndOptions();
+   TString fn = url.GetFile();
+   suffix.Replace(suffix.Index(fn), fn.Length(), "");
+   // Remove it from the file name
+   filename.Remove(filename.Index(fn) + fn.Length());
+
+   // Special case: [...]file.root/treename
+   static const char *dotr = ".root/";
+   static Ssiz_t dotrl = strlen(dotr);
+   pIdx = filename.Index(dotr);
+   if (pIdx != kNPOS) {
+      treename = filename(pIdx + dotrl, filename.Length());
+      filename.Remove(pIdx + dotrl - 1); 
    }
 }
 
