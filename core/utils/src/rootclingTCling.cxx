@@ -42,11 +42,11 @@ const char ** *TROOT__GetExtraInterpreterArgs()
 extern "C"
 cling::Interpreter *TCling__GetInterpreter()
 {
-   static bool sInitialized = false;
+   static bool isInitialized = false;
    gROOT; // trigger initialization
-   if (!sInitialized) {
+   if (!isInitialized) {
       gCling->SetClassAutoloading(false);
-      sInitialized = true;
+      isInitialized = true;
    }
    return ((TCling *)gCling)->GetInterpreter();
 }
