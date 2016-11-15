@@ -504,8 +504,15 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
                ((TObjectArrayReader*)fImpl)->SetBasicTypeSize(((TDataType*)fDict)->Size());
             }
          }
+         else if (element->IsA() == TStreamerBasicPointer::Class()) {
+            fImpl = new TArrayParameterSizeReader(fTreeReader, branchElement->GetBranchCount()->GetName());
+         }
          else if (element->IsA() == TStreamerBase::Class()){
             fImpl = new TClonesReader();
+         } else {
+            Error("TTreeReaderArrayBase::CreateProxy()",
+                  "Cannot read branch %s: unhandled streamer element type %s",
+                  fBranchName.Data(), element->IsA()->GetName());
          }
       }
       else { // We are at root node?
