@@ -880,10 +880,16 @@ CXXMODULES_CORE_MODULEMAP_CONTENTS := module Core { \\n \
   } \\n
 include/module.modulemap: $(ROOT_SRCDIR)/build/unix/module.modulemap
 	cp $< $@
+ifneq ($(PLATFORM),macosx)
+# FIXME: We should be able to remove this once OSX supports properly
+# -fmodules-local-submodule-visibility flag and we can turn it on.
 	@echo "module ROOT {\\n" >> $@
+endif
 	@echo "$(CXXMODULES_CORE_MODULEMAP_CONTENTS)" >> $@
 	@echo "$(CXXMODULES_MODULEMAP_CONTENTS)" >> $@
+ifneq ($(PLATFORM),macosx)
 	@echo "} //module ROOT \\n" >> $@
+endif
 endif
 
 # We rebuild GITCOMMITH only when we would re-link libCore anyway.
