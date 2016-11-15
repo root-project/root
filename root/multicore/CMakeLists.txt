@@ -29,7 +29,7 @@ if(ROOT_imt_FOUND)
   include_directories(${TBB_INCLUDE_DIRS})
   ROOTTEST_GENERATE_EXECUTABLE(threadExecutor tThreadExecutor.cpp LIBRARIES MultiProc Core Net TreePlayer RIO Hist ${TBB_LIBRARIES})
 
-ROOTTEST_ADD_TEST(tThreadExecutor
+ROOTTEST_ADD_TEST(threadExecutor
                     EXEC threadExecutor
                     DEPENDS ${GENERATE_EXECUTABLE_TEST})
 endif()
