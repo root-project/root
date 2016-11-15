@@ -13,7 +13,13 @@ GLEWDIRS     := $(GLEWDIR)/src
 GLEWDIRI     := $(GLEWDIR)/inc
 
 ##### libGLEW #####
-GLEWH        := $(filter-out $(MODDIRI)/GL/LinkDef%,$(wildcard $(MODDIRI)/GL/*.h))
+GLEWH        := $(MODDIRI)/GL/glew.h
+ifeq ($(BUILDX11),yes)
+GLEWH        += $(MODDIRI)/GL/glxew.h
+endif
+ifeq ($(ARCH),win32)
+GLEWH        += $(MODDIRI)/GL/wglew.h
+endif
 GLEWS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.c))
 GLEWO        := $(call stripsrc,$(GLEWS:.c=.o))
 
@@ -25,14 +31,6 @@ GLEWLIB      := $(LPATH)/libGLEW.$(SOEXT)
 GLEWH_REL   := $(patsubst $(MODDIRI)/%.h,include/%.h,$(GLEWH))
 ALLHDRS     += $(GLEWH_REL)
 ALLLIBS     += $(GLEWLIB)
-ifeq ($(CXXMODULES),yes)
-  CXXMODULES_HEADERS := $(patsubst include/%,exclude header \"%\"\\n,$(GLEWH_REL))
-  CXXMODULES_MODULEMAP_CONTENTS += module Graph3d_$(MODNAME) { \\n
-  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
-  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
-  CXXMODULES_MODULEMAP_CONTENTS += link \"$(GLEWLIB)\" \\n
-  CXXMODULES_MODULEMAP_CONTENTS += } \\n
-endif
 
 # include all dependency files
 INCLUDEFILES += $(GLEWDEP)

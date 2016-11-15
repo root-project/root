@@ -1,5 +1,3 @@
-
-
 // This can be used in C mode. It cannot go in ROOT_Type because ThreadLocalStorage.h
 // uses kFALSE and kTRUE, which come from Rtypes.h causing a cycle.
 module ThreadLocalStorage {
@@ -50,3 +48,15 @@ module ROOT_Core_Config_C {
 
  export *
 }
+
+// Some frameworks include gl.h or gltypes.h (eg. Cocoa) and thus we cannot build
+// this module as part of the ROOT. The only way is either by outlining it here
+// or relying on fragile module ordering (eg. order before things such as Cocoa.h
+// including gltypes.h.
+module ROOT_Glew {
+  umbrella "GL"
+  module * { export * }
+  link "lib/libGLEW.so"
+}
+
+// From this point on the contents of this file are automatically generated.
