@@ -286,6 +286,30 @@ void TDavixFileInternal::enableGridMode()
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void TDavixFileInternal::setAwsRegion(const std::string & region) {
+   if(!region.empty()) {
+#ifdef DAVIX_HAS_AWS_V4
+      Info("setAwsRegion", "Setting S3 Region to '%s' - v4 signature will be used", region.c_str());
+      davixParam->setAwsRegion(region);
+#else
+#warning "Using an old version of davix - no support for AWS v4 signatures. Configure ROOT with -builtin_davix to use a newer version."
+      Warning("setAwsRegion", "Unable to set AWS region, not supported by this version of davix");
+#endif
+   }
+}
+
+void TDavixFileInternal::setAwsToken(const std::string & token) {
+   if(!token.empty()) {
+#ifdef DAVIX_HAS_AWS_TOKEN
+      Info("setAwsToken", "Setting S3 STS temporary credentials");
+      davixParam->setAwsToken(token);
+#else
+#warning "Using an old version of davix - no support for AWS STS tokens. Configure ROOT with -builtin_davix to use a newer version."
+      Warning("setAwsToken", "Unable to set AWS token, not supported by this version of davix");
+#endif
+   }
+}
+
 void TDavixFileInternal::setS3Auth(const std::string &secret, const std::string &access,
                                    const std::string &region, const std::string &token)
 {
@@ -297,8 +321,8 @@ void TDavixFileInternal::setS3Auth(const std::string &secret, const std::string 
    davixParam->setAwsAuthorizationKeys(secret, access);
    davixParam->setProtocol(RequestProtocol::AwsS3);
 
-   davixParam->setAwsRegion(region);
-   davixParam->setAwsToken(token);
+   setAwsRegion(region);
+   setAwsToken(token);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -331,13 +355,11 @@ void TDavixFileInternal::parseConfig()
 
       // need to set region?
       if ( (env_var = gEnv->GetValue("Davix.S3.Region", getenv("S3_REGION"))) != NULL) {
-         Info("parseConfig", "Setting S3 Region to '%s' - v4 signature will be used", env_var);
-         davixParam->setAwsRegion(env_var);
+         setAwsRegion(env_var);
       }
       // need to set STS token?
       if( (env_var = gEnv->GetValue("Davix.S3.Token", getenv("S3_TOKEN"))) != NULL) {
-         Info("parseConfig", "Setting S3 STS temporary credentials");
-         davixParam->setAwsToken(env_var);
+         setAwsToken(env_var);
       }
    }
 
