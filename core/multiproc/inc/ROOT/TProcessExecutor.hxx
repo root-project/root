@@ -73,6 +73,7 @@ public:
    unsigned GetNWorkers() const { return TMPClient::GetNWorkers(); }
 
    template<class T, class R> T Reduce(const std::vector<T> &objs, R redfunc);
+   using TExecutor<TProcessExecutor>::Reduce;
 
 private:
    template<class T> void Collect(std::vector<T> &reslist);
