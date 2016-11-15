@@ -33,13 +33,21 @@ G3DLIB       := $(LPATH)/libGraf3d.$(SOEXT)
 G3DMAP       := $(G3DLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-G3DH_REL    := $(patsubst $(MODDIRI)/%.h,include/%.h,$(G3DH))
-ALLHDRS     += $(G3DH_REL)
+G3DH1_REL    := $(patsubst $(MODDIRI)/%.h,include/%.h,$(G3DH1))
+G3DH2_REL    := $(patsubst $(MODDIRI)/%.h,include/%.h,$(G3DH2))
+ALLHDRS     += $(G3DH_REL1) $(G3DH_REL2)
 ALLLIBS     += $(G3DLIB)
 ALLMAPS     += $(G3DMAP)
 ifeq ($(CXXMODULES),yes)
-  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(G3DH_REL))
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(G3DH1_REL))
   CXXMODULES_MODULEMAP_CONTENTS += module Graf3d_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(G3DLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(G3DH2_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Graf3d_$(MODNAME)_C [extern_c] { \\n
   CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
   CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
   CXXMODULES_MODULEMAP_CONTENTS += link \"$(G3DLIB)\" \\n
