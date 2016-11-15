@@ -98,6 +98,9 @@ private:
 
    void enableGridMode();
 
+   void setAwsRegion(const std::string & region);
+   void setAwsToken(const std::string & token);
+
    void setS3Auth(const std::string & secret, const std::string & access,
                   const std::string & region, const std::string & token);
 
