@@ -21,9 +21,11 @@
 #  error "Cannot use ROOT::TThreadExecutor without defining R__USE_IMT."
 # endif
 #else
+
 #include "ROOT/TExecutor.hxx"
-#include <numeric>
 #include <functional>
+#include <memory>
+#include <numeric>
 
 namespace tbb { class task_scheduler_init;}
 
