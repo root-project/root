@@ -1,5 +1,6 @@
 #include "TH1F.h"
 #include "ROOT/TProcessExecutor.hxx"
+#include "TRandom.h"
 #include <functional>
 #include <vector>
 #include <numeric> //accumulate
@@ -93,6 +94,27 @@ int PoolTest() {
    for(auto str : extrares2)
       if(str != "fortytwo")
          return 10;
+
+  //TObject::Merge() reduction signature.
+   TH1F *htot = new TH1F("htot", "htot", 10, 0, 1);
+   std::vector<TH1 *> vhist(5);
+   vhist[0] = new TH1F("h0", "h0", 10, 0, 1);
+   vhist[1] = new TH1F("h1", "h1", 10, 0, 1);
+   vhist[2] = new TH1F("h2", "h2", 10, 0, 1);
+   vhist[3] = new TH1F("h3", "h3", 10, 0, 1);
+   vhist[4] = new TH1F("h4", "h4", 10, 0, 1);
+
+   for(auto i=0; i<50; i++){
+       auto x = gRandom->Gaus(-3,2);
+       vhist[i/10]->Fill(x);
+       htot->Fill(x);
+   }
+   auto h0 = pool.Reduce(vhist);
+
+   for(auto i = 0; i<52; i++){
+        if(htot->GetBinContent(i) != h0->GetBinContent(i))
+            return 11;
+   }
 
    return 0;
  }
