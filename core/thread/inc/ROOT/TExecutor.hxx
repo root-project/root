@@ -13,6 +13,7 @@
 #define ROOT_TExecutor
 
 #include "ROOT/TSeq.hxx"
+#include "TList.h"
 #include <vector>
 
 namespace ROOT {
@@ -53,9 +54,12 @@ public:
    auto MapReduce(F func, std::initializer_list<T> args, R redfunc) -> typename std::result_of<F(T)>::type;
    template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
    auto MapReduce(F func, std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type;
+   template<class F, class T, class Cond = noReferenceCond<F, T>>
+   T* MapReduce(F func, std::vector<T*> &args);
    // /// \endcond
 
    template<class T, class R> T Reduce(const std::vector<T> &objs, R redfunc);
+   template<class T> T* Reduce(const std::vector<T*> &mergeObjs);// -> typename std::result_of<T::Merge(TList *)>::type;
 
 private:
   inline subc & Derived()
@@ -146,6 +150,12 @@ auto TExecutor<subc>::MapReduce(F func, std::vector<T> &args, R redfunc) -> type
    return Reduce(Map(func, args), redfunc);
 }
 
+template<class subc> template<class F, class T, class Cond>
+T* TExecutor<subc>::MapReduce(F func, std::vector<T*> &args)
+{
+   return Reduce(Map(func, args));
+}
+
 /// \endcond
 
 /// Check that redfunc has the right signature and call it on objs
@@ -155,6 +165,17 @@ T TExecutor<subc>::Reduce(const std::vector<T> &objs, R redfunc)
   return Derived().Reduce(objs, redfunc);
 }
 
+//Reduction for objects with the Merge() method
+template<class subc> template<class T>
+T* TExecutor<subc>::Reduce(const std::vector<T*> &mergeObjs)
+{
+  TList *l{};
+  for(auto obj : mergeObjs)
+    l->Add(obj);
+  mergeObjs.front()->Merge(l);
+  return mergeObjs.front();
 }
+
+} // end namespace ROOT
 
 #endif
