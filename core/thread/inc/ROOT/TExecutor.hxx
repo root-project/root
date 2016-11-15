@@ -169,7 +169,7 @@ T TExecutor<subc>::Reduce(const std::vector<T> &objs, R redfunc)
 template<class subc> template<class T>
 T* TExecutor<subc>::Reduce(const std::vector<T*> &mergeObjs)
 {
-  TList *l{};
+  TList *l = new TList();
   for(auto obj : mergeObjs)
     l->Add(obj);
   mergeObjs.front()->Merge(l);
