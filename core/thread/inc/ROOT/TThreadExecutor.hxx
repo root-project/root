@@ -71,6 +71,7 @@ public:
    
   template<class T, class BINARYOP> auto Reduce(const std::vector<T> &objs, BINARYOP redfunc) -> decltype(redfunc(objs.front(), objs.front()));
   template<class T, class R> auto Reduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs));
+  using TExecutor<TThreadExecutor>::Reduce;
 
 protected:
 
