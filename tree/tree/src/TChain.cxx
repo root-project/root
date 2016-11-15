@@ -2069,8 +2069,8 @@ Long64_t TChain::Merge(TFile* file, Int_t basketsize, Option_t* option)
 ///                        a fragment this will be empty.
 /// \param[out] suffix     the portion of name which was removed to form filename.
 
-void TChain::ParseTreeFilename(const char *name, TString &filename, TString &treename,
-                               TString &query, TString &suffix, Bool_t) const
+void TChain::ParseTreeFilename(const char *name, TString &filename, TString &treename, TString &query, TString &suffix,
+                               Bool_t) const
 {
    Ssiz_t pIdx;
    filename = name;
@@ -2098,7 +2098,7 @@ void TChain::ParseTreeFilename(const char *name, TString &filename, TString &tre
    pIdx = filename.Index(dotr);
    if (pIdx != kNPOS) {
       treename = filename(pIdx + dotrl, filename.Length());
-      filename.Remove(pIdx + dotrl - 1); 
+      filename.Remove(pIdx + dotrl - 1);
    }
 }
 

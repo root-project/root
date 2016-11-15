@@ -485,7 +485,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
             path = udir.GetUrl();
             path.Replace(path.Index(sfx), sfx.Length(), "");
          }
-         // 'path' is the full URL without suffices (options and/or anchor) 
+         // 'path' is the full URL without suffices (options and/or anchor)
          if (arg) *arg = '(';
          if (!gSystem->GetPathInfo(path.Data(), &id, &size, &flags, &modtime)) {
             if ((flags & 2)) {
