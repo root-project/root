@@ -286,27 +286,50 @@ void TDavixFileInternal::enableGridMode()
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// Only newer versions of davix support setting the S3 region and STS tokens.
+// But it's only possible to check the davix version through a #define starting from
+// 0.6.4.
+// I have no way to check if setAwsRegion is available, so let's use SFINAE. :-)
+// The first overload will always take priority - if "substitution" fails, meaning
+// setAwsRegion is not there, the compiler will pick the second overload with
+// the ellipses. (...)
+
+template<typename TRequestParams = Davix::RequestParams>
+static auto awsRegion(TRequestParams *parameters, const char *region)
+  -> decltype(parameters->setAwsRegion(region), void())
+{
+   if (gDebug > 1) Info("awsRegion", "Setting S3 Region to '%s' - v4 signature will be used", region);
+   parameters->setAwsRegion(region);
+}
+
+template<typename TRequestParams = Davix::RequestParams>
+static void awsRegion(...) {
+   Warning("setAwsRegion", "Unable to set AWS region, not supported by this version of davix");
+}
+
+// Identical SFINAE trick as above for setAwsToken
+template<typename TRequestParams = Davix::RequestParams>
+static auto awsToken(TRequestParams *parameters, const char *token)
+  -> decltype(parameters->setAwsToken(token), void())
+{
+   if (gDebug > 1) Info("awsToken", "Setting S3 STS temporary credentials");
+   parameters->setAwsToken(token);
+}
+
+template<typename TRequestParams = Davix::RequestParams>
+static void awsToken(...) {
+   Warning("awsToken", "Unable to set AWS token, not supported by this version of davix");
+}
+
 void TDavixFileInternal::setAwsRegion(const std::string & region) {
    if(!region.empty()) {
-#ifdef DAVIX_HAS_AWS_V4
-      Info("setAwsRegion", "Setting S3 Region to '%s' - v4 signature will be used", region.c_str());
-      davixParam->setAwsRegion(region);
-#else
-#warning "Using an old version of davix - no support for AWS v4 signatures. Configure ROOT with -Dbuiltin_davix=ON to use a newer version."
-      Warning("setAwsRegion", "Unable to set AWS region, not supported by this version of davix");
-#endif
+      awsRegion(davixParam, region.c_str());
    }
 }
 
 void TDavixFileInternal::setAwsToken(const std::string & token) {
    if(!token.empty()) {
-#ifdef DAVIX_HAS_AWS_TOKENS
-      Info("setAwsToken", "Setting S3 STS temporary credentials");
-      davixParam->setAwsToken(token);
-#else
-#warning "Using an old version of davix - no support for AWS STS tokens. Configure ROOT with -Dbuiltin_davix=ON to use a newer version."
-      Warning("setAwsToken", "Unable to set AWS token, not supported by this version of davix");
-#endif
+      awsToken(davixParam, token.c_str());
    }
 }
 
@@ -315,8 +338,6 @@ void TDavixFileInternal::setS3Auth(const std::string &secret, const std::string 
 {
    if (gDebug > 1) {
       Info("setS3Auth", " Aws S3 tokens configured");
-      if (!region.empty()) Info("setS3Auth", " Aws region configured - using v4 signatures");
-      if (!token.empty()) Info("setS3Auth", " Aws STS token was provided");
    }
    davixParam->setAwsAuthorizationKeys(secret, access);
    davixParam->setProtocol(RequestProtocol::AwsS3);
