@@ -42,9 +42,16 @@ TLeafElement::TLeafElement(TBranch *parent, const char *name, Int_t id, Int_t ty
    fAbsAddress = 0;
    fID         = id;
    fType       = type;
-   if ((type >= TVirtualStreamerInfo::kUChar && type <= TVirtualStreamerInfo::kULong)
-       || type == TVirtualStreamerInfo::kULong64)
+   if (type < TVirtualStreamerInfo::kObject) {
+      Int_t bareType = type;
+      if (bareType > TVirtualStreamerInfo::kOffsetL)
+         bareType -= TVirtualStreamerInfo::kOffsetL;
+      if (bareType > TVirtualStreamerInfo::kOffsetP)
+         bareType -= TVirtualStreamerInfo::kOffsetP;
+      if ((bareType >= TVirtualStreamerInfo::kUChar && bareType <= TVirtualStreamerInfo::kULong)
+          || bareType == TVirtualStreamerInfo::kULong64)
       SetUnsigned();
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
