@@ -56,13 +56,15 @@ ROOT::Internal::TTreeReaderValueBase::TTreeReaderValueBase(TTreeReader* reader /
 
 ROOT::Internal::TTreeReaderValueBase::TTreeReaderValueBase(const TTreeReaderValueBase& rhs):
    fBranchName(rhs.fBranchName),
+   fLeafName(rhs.fLeafName),
    fTreeReader(rhs.fTreeReader),
    fDict(rhs.fDict),
    fProxy(rhs.fProxy),
    fLeaf(rhs.fLeaf),
    fTreeLastOffset(rhs.fTreeLastOffset),
    fSetupStatus(rhs.fSetupStatus),
-   fReadStatus(rhs.fReadStatus)
+   fReadStatus(rhs.fReadStatus),
+   fStaticClassOffsets(rhs.fStaticClassOffsets)
 {
    if (fTreeReader) fTreeReader->RegisterValueReader(this);
 }
@@ -74,6 +76,7 @@ ROOT::Internal::TTreeReaderValueBase&
 ROOT::Internal::TTreeReaderValueBase::operator=(const TTreeReaderValueBase& rhs) {
    if (&rhs != this) {
       fBranchName = rhs.fBranchName;
+      fLeafName = rhs.fLeafName;
       if (fTreeReader != rhs.fTreeReader) {
          if (fTreeReader)
             fTreeReader->DeregisterValueReader(this);
@@ -87,6 +90,7 @@ ROOT::Internal::TTreeReaderValueBase::operator=(const TTreeReaderValueBase& rhs)
       fTreeLastOffset = rhs.fTreeLastOffset;
       fSetupStatus = rhs.fSetupStatus;
       fReadStatus = rhs.fReadStatus;
+      fStaticClassOffsets = rhs.fStaticClassOffsets;
    }
    return *this;
 }
