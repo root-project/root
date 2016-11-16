@@ -292,7 +292,7 @@ void TDavixFileInternal::setAwsRegion(const std::string & region) {
       Info("setAwsRegion", "Setting S3 Region to '%s' - v4 signature will be used", region.c_str());
       davixParam->setAwsRegion(region);
 #else
-#warning "Using an old version of davix - no support for AWS v4 signatures. Configure ROOT with -builtin_davix to use a newer version."
+#warning "Using an old version of davix - no support for AWS v4 signatures. Configure ROOT with -Dbuiltin_davix=ON to use a newer version."
       Warning("setAwsRegion", "Unable to set AWS region, not supported by this version of davix");
 #endif
    }
@@ -300,11 +300,11 @@ void TDavixFileInternal::setAwsRegion(const std::string & region) {
 
 void TDavixFileInternal::setAwsToken(const std::string & token) {
    if(!token.empty()) {
-#ifdef DAVIX_HAS_AWS_TOKEN
+#ifdef DAVIX_HAS_AWS_TOKENS
       Info("setAwsToken", "Setting S3 STS temporary credentials");
       davixParam->setAwsToken(token);
 #else
-#warning "Using an old version of davix - no support for AWS STS tokens. Configure ROOT with -builtin_davix to use a newer version."
+#warning "Using an old version of davix - no support for AWS STS tokens. Configure ROOT with -Dbuiltin_davix=ON to use a newer version."
       Warning("setAwsToken", "Unable to set AWS token, not supported by this version of davix");
 #endif
    }
