@@ -299,6 +299,7 @@ void TBufferFile::ReadStdString(std::string *obj)
 {
    if (obj == 0) {
       Error("TBufferFile::ReadStdString","The std::string address is nullptr but should not");
+      return;
    }
    Int_t   nbig;
    UChar_t nwh;
