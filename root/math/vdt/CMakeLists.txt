@@ -1,3 +1,5 @@
+if (ROOT_vdt_FOUND AND NOT ROOT_CLASSIC_BUILD)
+
 set (testname stressVdt)
 
 if( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
@@ -20,3 +22,4 @@ ROOTTEST_ADD_TEST(${testname}
                   EXEC ${testname}
                   FAILREGEX "too" # for "too slow" and "too inaccurate" :)
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
+endif()
