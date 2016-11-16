@@ -27,6 +27,10 @@ THREADH      := $(MODDIRI)/TCondition.h $(MODDIRI)/TConditionImp.h \
                 $(MODDIRI)/ROOT/TExecutor.hxx $(MODDIRI)/ROOT/TThreadedObject.hxx \
                 $(MODDIRI)/ROOT/TSpinMutex.hxx
 
+ifeq ($(IMT),yes)
+THREADH      += $(MODDIRI)/ROOT/TThreadExecutor.hxx
+endif
+
 ifneq ($(ARCH),win32)
 THREADH      += $(MODDIRI)/TPosixCondition.h $(MODDIRI)/TPosixMutex.h \
                 $(MODDIRI)/TPosixThread.h $(MODDIRI)/TPosixThreadFactory.h \
