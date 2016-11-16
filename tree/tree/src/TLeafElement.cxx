@@ -19,6 +19,8 @@ a TStreamerInfo (i.e. using TBranchElement).
 #include "TLeafElement.h"
 //#include "TMethodCall.h"
 
+#include "TVirtualStreamerInfo.h"
+
 ClassImp(TLeafElement)
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -40,6 +42,9 @@ TLeafElement::TLeafElement(TBranch *parent, const char *name, Int_t id, Int_t ty
    fAbsAddress = 0;
    fID         = id;
    fType       = type;
+   if ((type >= TVirtualStreamerInfo::kUChar && type <= TVirtualStreamerInfo::kULong)
+       || type == TVirtualStreamerInfo::kULong64)
+      SetUnsigned();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
