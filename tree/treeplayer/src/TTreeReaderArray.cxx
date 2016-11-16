@@ -788,7 +788,7 @@ const char* ROOT::Internal::TTreeReaderArrayBase::GetBranchContentDataType(TBran
          }
 
          // leaflist. Can't represent.
-         Error("TTreeReaderArrayBase::GetBranchContentDataType()", "The branch %s was created using a leaf list and cannot be represented as a C++ type. Please access one of its siblings using a TTreeReaderValueArray:", branch->GetName());
+         Error("TTreeReaderArrayBase::GetBranchContentDataType()", "The branch %s was created using a leaf list and cannot be represented as a C++ type. Please access one of its siblings using a TTreeReaderArray:", branch->GetName());
          TIter iLeaves(branch->GetListOfLeaves());
          TLeaf* leaf = 0;
          while ((leaf = (TLeaf*) iLeaves())) {
