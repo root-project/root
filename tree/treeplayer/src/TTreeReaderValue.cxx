@@ -52,6 +52,46 @@ ROOT::Internal::TTreeReaderValueBase::TTreeReaderValueBase(TTreeReader* reader /
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Copy-construct.
+
+ROOT::Internal::TTreeReaderValueBase::TTreeReaderValueBase(const TTreeReaderValueBase& rhs):
+   fBranchName(rhs.fBranchName),
+   fTreeReader(rhs.fTreeReader),
+   fDict(rhs.fDict),
+   fProxy(rhs.fProxy),
+   fLeaf(rhs.fLeaf),
+   fTreeLastOffset(rhs.fTreeLastOffset),
+   fSetupStatus(rhs.fSetupStatus),
+   fReadStatus(rhs.fReadStatus)
+{
+   if (fTreeReader) fTreeReader->RegisterValueReader(this);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Copy-assign.
+
+ROOT::Internal::TTreeReaderValueBase&
+ROOT::Internal::TTreeReaderValueBase::operator=(const TTreeReaderValueBase& rhs) {
+   if (&rhs != this) {
+      fBranchName = rhs.fBranchName;
+      if (fTreeReader != rhs.fTreeReader) {
+         if (fTreeReader)
+            fTreeReader->DeregisterValueReader(this);
+         fTreeReader = rhs.fTreeReader;
+         if (fTreeReader)
+            fTreeReader->RegisterValueReader(this);
+      }
+      fDict = rhs.fDict;
+      fProxy = rhs.fProxy;
+      fLeaf = rhs.fLeaf;
+      fTreeLastOffset = rhs.fTreeLastOffset;
+      fSetupStatus = rhs.fSetupStatus;
+      fReadStatus = rhs.fReadStatus;
+   }
+   return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Unregister from tree reader, cleanup.
 
 ROOT::Internal::TTreeReaderValueBase::~TTreeReaderValueBase()
