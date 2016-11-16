@@ -476,7 +476,7 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
       if (fDict != branchActualType) {
          Error("TTreeReaderArrayBase::CreateContentProxy()", "The branch %s contains data of type %s. It cannot be accessed by a TTreeReaderArray<%s>",
                fBranchName.Data(), branchActualType->GetName(), fDict->GetName());
-         if (fSetupStatus == kSetupInternalError)
+         if (fSetupStatus == kSetupInternalError || fSetupStatus >= 0)
             fSetupStatus = kSetupMismatch;
 
          // Update named proxy's dictionary
