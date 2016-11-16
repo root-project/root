@@ -58,7 +58,6 @@ public:
    T* MapReduce(F func, std::vector<T*> &args);
    // /// \endcond
 
-   template<class T, class R> T Reduce(const std::vector<T> &objs, R redfunc);
    template<class T> T* Reduce(const std::vector<T*> &mergeObjs);
 
 private:
@@ -121,7 +120,7 @@ auto TExecutor<subc>::Map(F func, std::vector<T> &args) -> std::vector<typename 
 template<class subc> template<class F, class R, class Cond>
 auto TExecutor<subc>::MapReduce(F func, unsigned nTimes, R redfunc) -> typename std::result_of<F()>::type
 {
-   return Reduce(Map(func, nTimes), redfunc);
+   return Derived().Reduce(Map(func, nTimes), redfunc);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -135,35 +134,28 @@ auto TExecutor<subc>::MapReduce(F func, unsigned nTimes, R redfunc) -> typename 
 template<class subc> template<class F, class INTEGER, class R, class Cond>
 auto TExecutor<subc>::MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc) -> typename std::result_of<F(INTEGER)>::type
 {
-  return Reduce(Map(func, args), redfunc);
+  return Derived().Reduce(Map(func, args), redfunc);
 }
 
 template<class subc> template<class F, class T, class R, class Cond>
 auto TExecutor<subc>::MapReduce(F func, std::initializer_list<T> args, R redfunc) -> typename std::result_of<F(T)>::type
 {
-   return Reduce(Map(func, args), redfunc);
+   return Derived().Reduce(Map(func, args), redfunc);
 }
 
 template<class subc> template<class F, class T, class R, class Cond>
 auto TExecutor<subc>::MapReduce(F func, std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type
 {
-   return Reduce(Map(func, args), redfunc);
+   return Derived().Reduce(Map(func, args), redfunc);
 }
 
 template<class subc> template<class F, class T, class Cond>
 T* TExecutor<subc>::MapReduce(F func, std::vector<T*> &args)
 {
-   return Reduce(Map(func, args));
+   return Derived().Reduce(Map(func, args));
 }
 
 /// \endcond
-
-/// Check that redfunc has the right signature and call it on objs
-template<class subc> template<class T, class R>
-T TExecutor<subc>::Reduce(const std::vector<T> &objs, R redfunc)
-{
-  return Derived().Reduce(objs, redfunc);
-}
 
 //Reduction for objects with the Merge() method
 template<class subc> template<class T>
