@@ -30,6 +30,8 @@
 // Deep Neural Network Implementation
 //______________________________________________________________________________
 
+#include "TMVA/MethodDNN.h"
+
 #include "TString.h"
 #include "TTree.h"
 #include "TFile.h"
@@ -40,7 +42,6 @@
 #include "TMVA/IMethod.h"
 #include "TMVA/MsgLogger.h"
 #include "TMVA/MethodBase.h"
-#include "TMVA/MethodDNN.h"
 #include "TMVA/Timer.h"
 #include "TMVA/Types.h"
 #include "TMVA/Tools.h"
