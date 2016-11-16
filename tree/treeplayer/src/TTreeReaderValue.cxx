@@ -193,9 +193,12 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
    if (fProxy) {
       return;
    }
+
+   fSetupStatus = kSetupInternalError; // Fallback; set to something concrete below.
    if (!fTreeReader) {
       Error("TTreeReaderValueBase::CreateProxy()", "TTreeReader object not set / available for branch %s!",
             fBranchName.Data());
+      fSetupStatus = kSetupTreeDestructed;
       return;
    }
    if (!fDict) {
@@ -207,6 +210,7 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
       }
       Error("TTreeReaderValueBase::CreateProxy()", "The template argument type T of %s accessing branch %s (which contains data of type %s) is not known to ROOT. You will need to create a dictionary for it.",
             GetDerivedTypeName(), fBranchName.Data(), brDataType);
+      fSetupStatus = kSetupMissingDictionary;
       return;
    }
 
@@ -217,6 +221,7 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
       = (TNamedBranchProxy*)fTreeReader->FindObject(fBranchName);
    if (namedProxy && namedProxy->GetDict() == fDict) {
       fProxy = namedProxy->GetProxy();
+      fSetupStatus = kSetupMatch;
       return;
    }
 
@@ -313,6 +318,7 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
 
                   if (fDict != finalDataType && fDict != elementClass){
                      Error("TTreeReaderValueBase::CreateProxy", "Wrong data type %s", finalDataType ? finalDataType->GetName() : elementClass ? elementClass->GetName() : "UNKNOWN");
+                     fSetupStatus = kSetupMismatch;
                      fProxy = 0;
                      return;
                   }
@@ -322,6 +328,7 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
 
             if (!fStaticClassOffsets.size()) {
                Error("TTreeReaderValueBase::CreateProxy()", "The tree does not have a branch called %s. You could check with TTree::Print() for available branches.", fBranchName.Data());
+               fSetupStatus = kSetupMissingBranch;
                fProxy = 0;
                return;
             }
@@ -331,6 +338,7 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
             if (!myLeaf){
                Error("TTreeReaderValueBase::CreateProxy()",
                      "The tree does not have a branch, nor a sub-branch called %s. You could check with TTree::Print() for available branches.", fBranchName.Data());
+               fSetupStatus = kSetupMissingBranch;
                fProxy = 0;
                return;
             }
@@ -342,10 +350,12 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
                   fLeaf = myLeaf;
                   fBranchName = branchName;
                   fLeafName = leafName(1, leafName.Length());
+                  fSetupStatus = kSetupMatchLeaf;
                }
                else {
                   Error("TTreeReaderValueBase::CreateProxy()",
                         "Leaf of type %s cannot be read by TTreeReaderValue<%s>.", myLeaf->GetTypeName(), fDict->GetName());
+                  fSetupStatus = kSetupMismatch;
                }
             }
          }
@@ -388,6 +398,8 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
    if (namedProxy && !namedProxy->GetDict()) {
       namedProxy->SetDict(fDict);
       fProxy = namedProxy->GetProxy();
+      if (fProxy)
+         fSetupStatus = kSetupMatch;
       return;
    }
 
@@ -408,6 +420,11 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
    namedProxy = new TNamedBranchProxy(fTreeReader->fDirector, branch, membername);
    fTreeReader->GetProxies()->Add(namedProxy);
    fProxy = namedProxy->GetProxy();
+   if (fProxy) {
+      fSetupStatus = kSetupMatch;
+   } else {
+      fSetupStatus = kSetupMismatch;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
