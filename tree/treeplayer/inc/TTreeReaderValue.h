@@ -44,7 +44,6 @@ namespace Internal {
 
    class TTreeReaderValueBase {
    public:
-      TTreeReaderValueBase(const TTreeReaderValueBase&) = delete;
 
       // Status flags, 0 is good
       enum ESetupStatus {
@@ -86,6 +85,8 @@ namespace Internal {
 
    protected:
       TTreeReaderValueBase(TTreeReader* reader = 0, const char* branchname = 0, TDictionary* dict = 0);
+      TTreeReaderValueBase(const TTreeReaderValueBase&);
+      TTreeReaderValueBase& operator=(const TTreeReaderValueBase&);
 
       virtual ~TTreeReaderValueBase();
 
