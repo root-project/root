@@ -83,7 +83,7 @@ ROOT_BUILD_OPTION(builtin_cfitsio OFF "Build the FITSIO library internally (down
 ROOT_BUILD_OPTION(builtin_xrootd OFF "Build the XROOTD internally (downloading tarfile from the Web)")
 ROOT_BUILD_OPTION(builtin_llvm ON "Build the LLVM internally")
 ROOT_BUILD_OPTION(builtin_tbb OFF "Build the TBB internally")
-ROOT_BUILD_OPTION(builtin_vdt ON "Build the VDT package internally")
+ROOT_BUILD_OPTION(builtin_vdt OFF "Build the VDT package internally")
 ROOT_BUILD_OPTION(builtin_vc OFF "Build the Vc package internally")
 ROOT_BUILD_OPTION(cxx11 ON "Build using C++11 compatible mode, requires gcc > 4.7.x or clang")
 ROOT_BUILD_OPTION(cxx14 OFF "Build using C++14 compatible mode, requires gcc > 4.9.x or clang")
