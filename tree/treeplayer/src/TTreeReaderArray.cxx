@@ -520,6 +520,7 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
          }
          else if (element->IsA() == TStreamerBasicPointer::Class()) {
             fImpl = new TArrayParameterSizeReader(fTreeReader, branchElement->GetBranchCount()->GetName());
+            ((TArrayParameterSizeReader*)fImpl)->SetBasicTypeSize(((TDataType*)fDict)->Size());
          }
          else if (element->IsA() == TStreamerBase::Class()){
             fImpl = new TClonesReader();
