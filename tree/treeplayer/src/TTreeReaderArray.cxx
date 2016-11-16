@@ -522,7 +522,8 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
          // Bool_t isPointer = element->IsaPointer();
          // TClass *classPointer = element->GetClassPointer();
 
-         fSetupStatus = kSetupMatch;
+         if (fSetupStatus == kSetupInternalError)
+            fSetupStatus = kSetupMatch;
          if (element->IsA() == TStreamerSTL::Class()){
             fImpl = new TSTLReader();
          }
@@ -578,7 +579,8 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
       }
       Int_t size = 0;
       TLeaf *sizeLeaf = topLeaf->GetLeafCounter(size);
-      fSetupStatus = kSetupMatch;
+      if (fSetupStatus == kSetupInternalError)
+         fSetupStatus = kSetupMatch;
       if (!sizeLeaf) {
          fImpl = new TArrayFixedSizeReader(size);
       }
