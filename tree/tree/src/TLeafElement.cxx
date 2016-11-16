@@ -44,10 +44,11 @@ TLeafElement::TLeafElement(TBranch *parent, const char *name, Int_t id, Int_t ty
    fType       = type;
    if (type < TVirtualStreamerInfo::kObject) {
       Int_t bareType = type;
-      if (bareType > TVirtualStreamerInfo::kOffsetL)
-         bareType -= TVirtualStreamerInfo::kOffsetL;
       if (bareType > TVirtualStreamerInfo::kOffsetP)
          bareType -= TVirtualStreamerInfo::kOffsetP;
+      else if (bareType > TVirtualStreamerInfo::kOffsetL)
+         bareType -= TVirtualStreamerInfo::kOffsetL;
+
       if ((bareType >= TVirtualStreamerInfo::kUChar && bareType <= TVirtualStreamerInfo::kULong)
           || bareType == TVirtualStreamerInfo::kULong64)
       SetUnsigned();
