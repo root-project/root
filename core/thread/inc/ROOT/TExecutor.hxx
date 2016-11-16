@@ -166,8 +166,8 @@ T* TExecutor<subc>::Reduce(const std::vector<T*> &mergeObjs)
     l.Add(mergeObjs[i]);
   }
   // use clone to return a new object 
-  auto retHist = (mergeObjs.front())->Clone();
-  retHist->Merge(&l);
+  auto retHist = dynamic_cast<T*>((mergeObjs.front())->Clone());
+  if (retHist) retHist->Merge(&l);
   return retHist;
 }
 
