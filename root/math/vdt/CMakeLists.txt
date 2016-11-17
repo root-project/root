@@ -13,10 +13,12 @@ elseif(alwaysInlineClang)
    set(additional_compile_flags "-O3 -funsafe-math-optimizations -fno-trapping-math -ffinite-math-only ${alwaysInlineClang} ")
 endif()
 
+include_directories(${VDT_INCLUDE_DIRS})
+
 ROOTTEST_GENERATE_EXECUTABLE(${testname}
                              ${testname}.cxx
                              ADDITIONAL_COMPILE_FLAGS ${additional_compile_flags}
-                             LIBRARIES Core Hist Gpad MathCore)
+                             LIBRARIES Core Hist Gpad MathCore ${VDT_LIBRARIES})
 
 ROOTTEST_ADD_TEST(${testname}
                   EXEC ${testname}
