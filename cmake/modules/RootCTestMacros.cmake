@@ -338,6 +338,12 @@ endfunction(ROOTTEST_ADD_TEST)
 #-------------------------------------------------------------------------------
 
 function(ROOTTEST_ADD_UNITTEST_DIR)
+  CMAKE_PARSE_ARGUMENTS(ARG
+    "WILLFAIL"
+    ""
+    "COPY_TO_BUILDDIR;DEPENDS;OPTS;LABELS;ENVIRONMENT"
+    ${ARGN})
+
   # Test name
   ROOTTEST_TARGETNAME_FROM_FILE(testprefix .)
   set(fulltestname ${testprefix}_unittests)
@@ -355,6 +361,87 @@ function(ROOTTEST_ADD_UNITTEST_DIR)
 
   add_executable(${binary} ${unittests_SRC})
   target_include_directories(${binary} PRIVATE ${ROOTTEST_DIR}/googletest/include)
-  target_link_libraries(${binary} gtest_main ${ARGV})
-  add_test(${fulltestname} ${binary})
+  target_link_libraries(${binary} gtest_main ${ARG_UNPARSED_ARGUMENTS})
+
+  # Mark the test as known to fail.
+  if(ARG_WILLFAIL)
+    set(willfail WILLFAIL)
+  endif()
+
+  if(ARG_LABELS)
+    set(labels LABELS ${ARG_LABELS})
+    if(testowner)
+      set(labels ${labels} ${testowner}) 
+    endif()
+  else()
+    if(testowner)
+      set(labels LABELS ${testowner}) 
+    endif()
+  endif()
+
+  # Add ownership and test labels.
+  get_property(testowner DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                         PROPERTY ROOTTEST_TEST_OWNER)
+
+  if(ARG_TESTOWNER)
+    set(testowner ${ARG_TESTOWNER})
+  endif()
+
+  if(ARG_LABELS)
+    set(labels LABELS ${ARG_LABELS})
+    if(testowner)
+      set(labels ${labels} ${testowner}) 
+    endif()
+  else()
+    if(testowner)
+      set(labels LABELS ${testowner}) 
+    endif()
+  endif()
+
+  # Copy files into the build directory first.
+  if(ARG_COPY_TO_BUILDDIR)
+    foreach(copyfile ${ARG_COPY_TO_BUILDDIR})
+      get_filename_component(absfilep ${copyfile} ABSOLUTE)
+      set(copy_files ${copy_files} ${absfilep})
+    endforeach()
+    set(copy_to_builddir COPY_TO_BUILDDIR ${copy_files})
+  endif()
+
+  # Add dependencies. If the test depends on a macro file, the macro
+  # will be compiled and the dependencies are set accordingly.
+  if(ARG_DEPENDS)
+    foreach(dep ${ARG_DEPENDS})
+      if(${dep} MATCHES "[.]C" OR ${dep} MATCHES "[.]cxx" OR ${dep} MATCHES "[.]h")
+        ROOTTEST_COMPILE_MACRO(${dep})
+        list(APPEND deplist ${COMPILE_MACRO_TEST})
+      elseif(NOT ${dep} MATCHES "^roottest-")
+        list(APPEND deplist ${testprefix}-${dep})
+      else()
+        list(APPEND deplist ${dep})
+      endif()
+    endforeach()
+  endif(ARG_DEPENDS)
+
+  string(REPLACE ";" ":" _path "${ROOTTEST_ENV_PATH}")
+  string(REPLACE ";" ":" _pythonpath "${ROOTTEST_ENV_PYTHONPATH}")
+  string(REPLACE ";" ":" _librarypath "${ROOTTEST_ENV_LIBRARYPATH}")
+
+
+  set(environment ENVIRONMENT
+                  ${ROOTTEST_ENV_EXTRA}
+                  ${ARG_ENVIRONMENT}
+                  ROOTSYS=${ROOTSYS}
+                  PATH=${_path}:$ENV{PATH}
+                  PYTHONPATH=${_pythonpath}:$ENV{PYTHONPATH}
+                  ${ld_library_path}=${_librarypath}:$ENV{${ld_library_path}})
+ 
+
+  ROOT_ADD_TEST(${fulltestname} COMMAND ${binary}
+    ${environment}
+    ${willfail}
+    ${labels}
+    ${copy_to_builddir}
+    TIMEOUT 3600
+    DEPENDS ${deplist}
+    )
 endfunction(ROOTTEST_ADD_UNITTEST_DIR)
