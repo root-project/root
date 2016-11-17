@@ -4990,7 +4990,7 @@ const std::string ROOT::TMetaUtils::AST2SourceTools::Decls2FwdDecls(const std::v
    }
    std::string newFwdDecl;
    llvm::raw_string_ostream llvmOstr(newFwdDecl);
-   interp.forwardDeclare(theTransaction, sema, llvmOstr, true, nullptr, ignoreFiles);
+   interp.forwardDeclare(theTransaction, sema.getPreprocessor(), sema.getASTContext(), llvmOstr, true, nullptr, ignoreFiles);
    llvmOstr.flush();
    return newFwdDecl;
 }
