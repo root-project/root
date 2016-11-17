@@ -466,8 +466,9 @@ double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, 
       res += mapFunction(i);
     }
   } else if(executionPolicy == 1) {
+    auto chunks = nChunks !=0? nChunks: setAutomaticChunking(data.Size());
     ROOT::TThreadExecutor pool;
-    res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction, nChunks);
+    res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction, chunks);
 //   } else if(executionPolicy == 2){
     // ROOT::TProcessExecutor pool;
     // res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
@@ -1478,6 +1479,13 @@ void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction & f, const BinDat
       // copy result
       std::copy(g.begin(), g.end(), grad);
    }
+}
+
+unsigned FitUtil::setAutomaticChunking(unsigned nEvents){
+      SysInfo_t s;
+      gSystem->GetSysInfo(&s);
+      auto ncpu  = s.fCpus;
+      return ((nEvents/ncpu + 1) % 1000) *40 ; //arbitrary formula
 }
 
 }

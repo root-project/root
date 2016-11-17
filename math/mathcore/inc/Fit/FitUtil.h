@@ -25,6 +25,7 @@
 #include "Math/IntegratorMultiDim.h"
 
 #include "TError.h"
+#include "TSystem.h"
 
 namespace ROOT {
 
@@ -122,6 +123,8 @@ namespace FitUtil {
    */
    double EvaluatePoissonBinPdf(const IModelFunction & func, const BinData & data, const double * x, unsigned int ipoint, double * g = 0);
 
+   unsigned setAutomaticChunking(unsigned nEvents);
+
   template<class T>
   struct EvalChi2{
     static double DoEval(const IModelFunctionTempl<T> & func, const BinData & data, const double * p, unsigned int & nPoints, const unsigned int &executionPolicy, unsigned nChunks = 0){
@@ -192,8 +195,9 @@ namespace FitUtil {
           res += mapFunction(i);
         }
       } else if(executionPolicy == 1) {
+        auto chunks = nChunks !=0? nChunks: setAutomaticChunking(data.Size()/vecSize);
         ROOT::TThreadExecutor pool;
-        res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size()/vecSize), redFunction, nChunks);
+        res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size()/vecSize), redFunction, chunks);
       // } else if(executionPolicy == 2){
       //   ROOT::TProcessExecutor pool;
       //   res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size()/vecSize), redFunction);
