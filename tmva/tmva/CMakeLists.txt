@@ -62,6 +62,7 @@ if(CUDA_FOUND)
   add_dependencies(dnn_cuda move_headers)
 else()
   set(DNN_CUDA_LIBRARIES)
+  set(installoptions ${installoptions} OPTIONS REGEX "Cuda" EXCLUDE)
 endif()
 
 #---Handle BLAS dependent code. -----------------
@@ -72,6 +73,7 @@ if(BLAS_FOUND AND imt)
 else()
   set(DNN_CPU_LIBRARIES)
   set(DNN_CPU_FILES)
+  set(installoptions ${installoptions} OPTIONS REGEX "Cpu" EXCLUDE)
 endif()
 
 ROOT_GENERATE_DICTIONARY(G__TMVA ${theaders1} ${theaders2} ${theaders3} ${theaders4} ${theaders5}  MODULE TMVA LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
@@ -80,10 +82,8 @@ ROOT_LINKER_LIBRARY(TMVA *.cxx G__TMVA.cxx ${DNN_FILES} ${DNN_CPU_FILES}
                     LIBRARIES Core ${DNN_CUDA_LIBRARIES} ${DNN_CPU_LIBRARIES}
                     DEPENDENCIES RIO Hist Tree TreePlayer MLP Minuit XMLIO)
 
-install(DIRECTORY inc/TMVA/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/TMVA
-                            COMPONENT headers
-                            PATTERN ".svn" EXCLUDE
-                            REGEX "LinkDef" EXCLUDE )
+ROOT_INSTALL_HEADERS(${installoptions})
+
 set_property(GLOBAL APPEND PROPERTY ROOT_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
 
 if(NOT gnuinstall)
