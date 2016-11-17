@@ -54,6 +54,7 @@ TEST(TTreeReaderBasic, Interfaces) {
    EXPECT_FALSE(tr.IsChain());
 
    EXPECT_EQ(nullptr, ny.GetAddress());
+   EXPECT_FALSE(ny.IsValid());
    EXPECT_STREQ("two.ny", ny.GetBranchName());
    EXPECT_EQ(ROOT::Internal::TTreeReaderValueBase::kReadNothingYet, ny.GetReadStatus());
    EXPECT_EQ(ROOT::Internal::TTreeReaderValueBase::kSetupNotSetup, ny.GetSetupStatus());
@@ -71,6 +72,7 @@ TEST(TTreeReaderBasic, Interfaces) {
 
    EXPECT_EQ(5, *ny);
    EXPECT_NE(nullptr, ny.GetAddress());
+   EXPECT_TRUE(ny.IsValid());
    EXPECT_EQ(ny.GetAddress(), ny.Get());
    EXPECT_STREQ("two", ny.GetBranchName());
    EXPECT_STREQ("ny", ny.GetLeaf()->GetName());
@@ -85,6 +87,7 @@ TEST(TTreeReaderBasic, Interfaces) {
 
 
    EXPECT_FALSE(tr.Next());
+   //FAILS: EXPECT_FALSE(ny.IsValid());
 }
 
 
