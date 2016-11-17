@@ -17,6 +17,7 @@
 #include "TBranchRef.h"
 #include "TBranchSTL.h"
 #include "TBranchProxyDirector.h"
+#include "TClassEdit.h"
 #include "TLeaf.h"
 #include "TTreeProxyGenerator.h"
 #include "TTreeReaderValue.h"
@@ -117,6 +118,17 @@ ROOT::Internal::TTreeReaderValueBase::ProxyRead() {
    }
    return fReadStatus;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Stringify the template argument.
+std::string ROOT::Internal::TTreeReaderValueBase::GetElementTypeName(const std::type_info& ti) {
+   int err;
+   char* buf = TClassEdit::DemangleTypeIdName(ti, err);
+   std::string ret = buf;
+   free(buf);
+   return ret;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// If we are reading a leaf, return the corresponding TLeaf.

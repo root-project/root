@@ -100,6 +100,9 @@ namespace Internal {
 
       void MarkTreeReaderUnavailable() { fTreeReader = 0; fSetupStatus = kSetupTreeDestructed; }
 
+      /// Stringify the template argument.
+      static std::string GetElementTypeName(const std::type_info& ti);
+
       TString      fBranchName; // name of the branch to read data from.
       TString      fLeafName;
       TTreeReader* fTreeReader; // tree reader we belong to
@@ -142,9 +145,11 @@ public:
 
 protected:
    // FIXME: use IsA() instead once we have ClassDefTInline
-#define R__TTreeReaderValue_TypeString(T) #T
-   virtual const char* GetDerivedTypeName() const { return R__TTreeReaderValue_TypeString(T); }
-#undef R__TTreeReaderValue_TypeString
+   /// Get the template argument as a string.
+   virtual const char* GetDerivedTypeName() const {
+      static const std::string sElementTypeName = GetElementTypeName(typeid(T));
+      return sElementTypeName.data();
+   }
 
    // FIXME: re-introduce once we have ClassDefTInline!
    //ClassDefT(TTreeReaderValue, 0);//Accessor to data via TTreeReader
