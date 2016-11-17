@@ -3,6 +3,9 @@
 int assertUnload() {
    gInterpreter->Declare("int myFunc() { return 42; }");
 
+   TString path = gSystem->DirName(gInterpreter->GetCurrentMacroName());
+   gInterpreter->AddIncludePath(path);
+
    TInterpreter::EErrorCode status;
    gInterpreter->ProcessLine(".x assertUnloadHelper.C",&status);
    if (status != TInterpreter::EErrorCode::kNoError) {
