@@ -17,7 +17,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <initializer_list>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -764,11 +763,6 @@ public:
   TAxisConfig(const std::vector<double> &binborders):
     TAxisBase(binborders.size() - 1, false /*canGrow*/), fKind(kIrregular),
     fBinBorders(binborders) { }
-
-  /// Represents a `TAxisIrregular` with `binborders`. Tie-breaker for
-  /// TAxisConfig{{0., 1.}}, see https://gcc.gnu.org/bugzilla/show_bug.cgi?id=71468
-  TAxisConfig(std::initializer_list<double> il):
-   TAxisConfig(std::vector<double>(il)) {}
 
   /// Represents a `TAxisIrregular` with `binborders` and title.
   TAxisConfig(std::string_view title, const std::vector<double> &binborders):
