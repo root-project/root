@@ -108,6 +108,7 @@ int main(int argc, char **argv)
    Int_t read   = 0;
    Int_t arg4   = 1;
    Int_t arg5   = 600;     //default number of tracks per event
+   Int_t enable_imt = 0;   // Whether to enable IMT mode.
    Int_t netf   = 0;
    Int_t punzip = 0;
 
@@ -116,6 +117,7 @@ int main(int argc, char **argv)
    if (argc > 3)  split  = atoi(argv[3]);
    if (argc > 4)  arg4   = atoi(argv[4]);
    if (argc > 5)  arg5   = atoi(argv[5]);
+   if (argc > 6)  enable_imt = atoi(argv[6]);
    if (arg4 ==  0) { write = 0; hfill = 0; read = 1;}
    if (arg4 ==  1) { write = 1; hfill = 0;}
    if (arg4 ==  2) { write = 0; hfill = 0;}
@@ -130,6 +132,18 @@ int main(int argc, char **argv)
    if (arg4 == 36) { write = 1; }            //netfile + write sequential
    Int_t branchStyle = 1; //new style by default
    if (split < 0) {branchStyle = 0; split = -1-split;}
+
+#ifdef R__USE_IMT
+   if (enable_imt) {
+     ROOT::EnableImplicitMT();
+   }
+#else
+   if (enable_imt) {
+     std::cerr << "IMT mode requested, but this version of ROOT "
+                  "is built without IMT support." << std::endl;
+     return 1;
+   }
+#endif
 
    TFile *hfile;
    TTree *tree;
@@ -258,7 +272,7 @@ int main(int argc, char **argv)
       printf("You read %f Mbytes/Realtime seconds\n",mbytes/rtime);
       printf("You read %f Mbytes/Cputime seconds\n",mbytes/ctime);
    } else {
-      printf("compression level=%d, split=%d, arg4=%d\n",comp,split,arg4);
+      printf("compression level=%d, split=%d, arg4=%d, IMT=%d\n",comp,split,arg4, enable_imt);
       printf("You write %f Mbytes/Realtime seconds\n",mbytes/rtime);
       printf("You write %f Mbytes/Cputime seconds\n",mbytes/ctime);
       //printf("file compression factor = %f\n",hfile.GetCompressionFactor());
