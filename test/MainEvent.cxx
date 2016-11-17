@@ -131,12 +131,9 @@ int main(int argc, char **argv)
    Int_t branchStyle = 1; //new style by default
    if (split < 0) {branchStyle = 0; split = -1-split;}
 
-   ROOT::EnableImplicitMT(4);
-
    TFile *hfile;
    TTree *tree;
    Event *event = 0;
-   Event *event2 = 0;
 
    // Fill event, header and tracks with some random numbers
    //   Create a timer object to benchmark this loop
@@ -198,7 +195,6 @@ int main(int argc, char **argv)
       } else
          hfile = new TFile("Event.root","RECREATE","TTree benchmark ROOT file");
       hfile->SetCompressionLevel(comp);
-      //hfile->SetCompressionAlgorithm(2);
 
      // Create histogram to show write_time in function of time
      Float_t curtime = -0.5;
@@ -217,16 +213,9 @@ int main(int argc, char **argv)
       bufsize = 64000;
       if (split)  bufsize /= 4;
       event = new Event();           // By setting the value, we own the pointer and must delete it.
-      event2 = new Event();           // By setting the value, we own the pointer and must delete it.
       TTree::SetBranchStyle(branchStyle);
       TBranch *branch = tree->Branch("event", &event, bufsize,split);
-      TBranch *branch2 = tree->Branch("event2", &event, bufsize,split);
-      TBranch *branch3 = tree->Branch("event3", &event2, bufsize,split);
-      TBranch *branch4 = tree->Branch("event4", &event2, bufsize,split);
       branch->SetAutoDelete(kFALSE);
-      branch2->SetAutoDelete(kFALSE);
-      branch3->SetAutoDelete(kFALSE);
-      branch4->SetAutoDelete(kFALSE);
       if(split >= 0 && branchStyle) tree->BranchRef();
       Float_t ptmin = 1;
 
@@ -241,7 +230,6 @@ int main(int argc, char **argv)
          }
 
          event->Build(ev, arg5, ptmin);
-         event2->Build(ev, arg5, ptmin);
 
          if (write) nb += tree->Fill();  //fill the tree
 
@@ -254,8 +242,7 @@ int main(int argc, char **argv)
       }
    }
    // We own the event (since we set the branch address explicitly), we need to delete it.
-   // delete event;  event = 0;
-   // delete event2;  event2 = 0;
+   delete event;  event = 0;
 
    //  Stop timer and print results
    timer.Stop();
