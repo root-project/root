@@ -70,7 +70,7 @@ TEST(TTreeReaderBasic, Interfaces) {
    EXPECT_EQ(2, tr.GetEntries(false));
 
 
-   EXPECT_EQ(5, *ny);
+   EXPECT_EQ(5u, *ny);
    EXPECT_NE(nullptr, ny.GetAddress());
    EXPECT_TRUE(ny.IsValid());
    EXPECT_EQ(ny.GetAddress(), ny.Get());
