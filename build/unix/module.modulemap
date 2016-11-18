@@ -26,6 +26,9 @@ module ROOT_Core_Config_C {
  
  // needs C++ and in some cases we build with C (ZTrees.h, through ZDeflate.c)
  textual header "RConversionRuleParser.h"
+ // FIXME: #included by RConversionRuleParser.h. Do we need the dependency on
+ // RConversionRuleParser.h at all?
+ header "TSchemaRuleProcessor.h"
  exclude header "RtypesImp.h"
  header "Rtypes.h"
  header "TClassEdit.h"

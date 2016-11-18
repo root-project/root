@@ -862,7 +862,8 @@ ifeq ($(CXXMODULES),yes)
 include/module.modulemap:
 COREDICTH_REL := $(BASEH_REL) $(CONTH_REL) $(METAH_REL) $(METAUTILSH_REL)
 COREDICTH_REL := $(patsubst include/%,%, $(COREDICTH_REL))
-CXXMODULES_CORE_EXCLUDE := RConversionRuleParser.h RConfig.h RVersion.h RtypesImp.h \
+CXXMODULES_CORE_EXCLUDE := RConversionRuleParser.h TSchemaRuleProcessor.h \
+			   RConfig.h RVersion.h  RtypesImp.h \
 			   Rtypes.h RtypesCore.h TClassEdit.h TMetaUtils.h \
 			   TSchemaType.h DllImport.h Rtypeinfo.h TGenericClassInfo.h \
 			   TSchemaHelper.h ESTLType.h RStringView.h Varargs.h \
