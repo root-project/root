@@ -199,6 +199,7 @@ TTreeReader::TTreeReader(TTree* tree):
    fTree(tree),
    fDirectory(0),
    fEntryStatus(kEntryNotLoaded),
+   fMostRecentTreeNumber(-1),
    fDirector(0),
    fLastEntry(-1),
    fProxiesSet(kFALSE)
@@ -219,6 +220,7 @@ TTreeReader::TTreeReader(const char* keyname, TDirectory* dir /*= NULL*/):
    fTree(0),
    fDirectory(dir),
    fEntryStatus(kEntryNotLoaded),
+   fMostRecentTreeNumber(-1),
    fDirector(0),
    fLastEntry(-1),
    fProxiesSet(kFALSE)
@@ -249,6 +251,7 @@ void TTreeReader::Initialize()
    if (!fTree) {
       MakeZombie();
       fEntryStatus = kEntryNoTree;
+      fMostRecentTreeNumber = -1;
    } else {
       fDirector = new ROOT::Internal::TBranchProxyDirector(fTree, -1);
    }
