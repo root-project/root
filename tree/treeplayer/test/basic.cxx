@@ -115,5 +115,5 @@ TEST(TTreeReaderBasic, Range) {
    // Read beyond end:
    EXPECT_FALSE(tr.Next());
    EXPECT_EQ(TTreeReader::kEntryNotFound, tr.GetEntryStatus());
-   EXPECT_EQ(1, tr.GetCurrentEntry());
+   EXPECT_EQ(-1, tr.GetCurrentEntry());
 }
