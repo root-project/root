@@ -253,6 +253,10 @@ void TTreeReader::Initialize()
       fEntryStatus = kEntryNoTree;
       fMostRecentTreeNumber = -1;
    } else {
+      ResetBit(kZombie);
+      if (fTree->InheritsFrom(TChain::Class())) {
+         SetBit(kBitIsChain);
+      }
       fDirector = new ROOT::Internal::TBranchProxyDirector(fTree, -1);
    }
 }
@@ -276,12 +280,12 @@ TTreeReader::EEntryStatus TTreeReader::SetEntriesRange(Long64_t first, Long64_t 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Returns the index of the current entry being read
+/// Returns the index of the current entry being read
 
 Long64_t TTreeReader::GetCurrentEntry() const {
    if (!fDirector) return 0;
    Long64_t currentTreeEntry = fDirector->GetReadEntry();
-   if (fTree->IsA() == TChain::Class() && currentTreeEntry >= 0) {
+   if (TestBit(kBitIsChain) && currentTreeEntry >= 0) {
       return ((TChain*)fTree)->GetChainEntryNumber(currentTreeEntry);
    }
    return currentTreeEntry;
@@ -330,6 +334,7 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
       // If at least one proxy was there and no error occurred, we assume the proxies to be set.
       fProxiesSet = !fValues.empty();
    }
+
    if (fLastEntry >= 0 && entry >= fLastEntry) {
       fEntryStatus = kEntryLast;
       return fEntryStatus;
