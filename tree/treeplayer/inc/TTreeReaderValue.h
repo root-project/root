@@ -109,7 +109,7 @@ namespace Internal {
       TDictionary* fDict; // type that the branch should contain
       Detail::TBranchProxy* fProxy; // proxy for this branch, owned by TTreeReader
       TLeaf*       fLeaf;
-      Long64_t     fTreeLastOffset;
+      Int_t        fLastTreeNumber; // Tree index (in a TChain) that the TLeaf* belongs to.
       ESetupStatus fSetupStatus; // setup status of this data access
       EReadStatus  fReadStatus; // read status of this data access
       std::vector<Long64_t> fStaticClassOffsets;

@@ -45,7 +45,7 @@ ROOT::Internal::TTreeReaderValueBase::TTreeReaderValueBase(TTreeReader* reader /
    fDict(dict),
    fProxy(NULL),
    fLeaf(NULL),
-   fTreeLastOffset(-1),
+   fLastTreeNumber(-1),
    fSetupStatus(kSetupNotSetup),
    fReadStatus(kReadNothingYet)
 {
@@ -62,7 +62,7 @@ ROOT::Internal::TTreeReaderValueBase::TTreeReaderValueBase(const TTreeReaderValu
    fDict(rhs.fDict),
    fProxy(rhs.fProxy),
    fLeaf(rhs.fLeaf),
-   fTreeLastOffset(rhs.fTreeLastOffset),
+   fLastTreeNumber(rhs.fLastTreeNumber),
    fSetupStatus(rhs.fSetupStatus),
    fReadStatus(rhs.fReadStatus),
    fStaticClassOffsets(rhs.fStaticClassOffsets)
@@ -88,7 +88,7 @@ ROOT::Internal::TTreeReaderValueBase::operator=(const TTreeReaderValueBase& rhs)
       fDict = rhs.fDict;
       fProxy = rhs.fProxy;
       fLeaf = rhs.fLeaf;
-      fTreeLastOffset = rhs.fTreeLastOffset;
+      fLastTreeNumber = rhs.fLastTreeNumber;
       fSetupStatus = rhs.fSetupStatus;
       fReadStatus = rhs.fReadStatus;
       fStaticClassOffsets = rhs.fStaticClassOffsets;
@@ -136,10 +136,10 @@ std::string ROOT::Internal::TTreeReaderValueBase::GetElementTypeName(const std::
 TLeaf* ROOT::Internal::TTreeReaderValueBase::GetLeaf() {
    if (fLeafName.Length() > 0){
 
-      Long64_t newChainOffset = fTreeReader->GetTree()->GetChainOffset();
+      Int_t newTreeNumber = fTreeReader->GetTree()->GetTreeNumber();
 
-      if (newChainOffset != fTreeLastOffset){
-         fTreeLastOffset = newChainOffset;
+      if (newTreeNumber != fLastTreeNumber){
+         fLastTreeNumber = newTreeNumber;
 
          TTree *myTree = fTreeReader->GetTree();
 
