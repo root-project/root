@@ -285,6 +285,14 @@ void operator delete(void *ptr) R__THROW_NULL
    }
 }
 
+#ifdef R__SIZEDDELETE
+////////////////////////////////////////////////////////////////////////////////
+/// Sized-delete calling non-sized one.
+void operator delete(void* ptr, std::size_t) {
+   operator delete(ptr);
+}
+#endif
+
 #ifdef R__VECNEWDELETE
 ////////////////////////////////////////////////////////////////////////////////
 /// Custom vector new operator.
@@ -310,6 +318,15 @@ void operator delete[](void *ptr) R__THROW_NULL
 {
    ::operator delete(ptr);
 }
+
+#ifdef R__SIZEDDELETE
+////////////////////////////////////////////////////////////////////////////////
+/// Sized-delete calling non-sized one.
+void operator delete[](void* ptr, std::size_t) {
+   operator delete[](ptr);
+}
+#endif
+
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
