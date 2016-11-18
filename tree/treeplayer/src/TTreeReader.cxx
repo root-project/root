@@ -304,20 +304,39 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
       return fEntryStatus;
    }
 
-   TTree* prevTree = fDirector->GetTree();
+   Int_t treeNumberBeforeLoadTree = fTree->GetTreeNumber();
 
-   Int_t treeNumInChainBeforeLoad = fTree->GetTreeNumber();
+   TTree* prevTree = fDirector->GetTree();
 
    TTree* treeToCallLoadOn = local ? fTree->GetTree() : fTree;
    Long64_t loadResult = treeToCallLoadOn->LoadTree(entry);
 
    if (loadResult == -2) {
+      fDirector->SetTree(nullptr);
       fEntryStatus = kEntryNotFound;
       return fEntryStatus;
    }
 
-   if (treeNumInChainBeforeLoad != fTree->GetTreeNumber()) {
+   if (fMostRecentTreeNumber != treeNumberBeforeLoadTree) {
+      // This can happen if someone switched trees behind us.
+      // Likely cause: a TChain::LoadTree() e.g. from TTree::Process().
+      // This means that "local" should be set!
+
+      if (fTree->GetTreeNumber() != treeNumberBeforeLoadTree) {
+         // we have switched trees again, which means that "local" was not set!
+         // There are two entities switching trees which is bad.
+         R__ASSERT(!local && "Logic error - !local but tree number changed?");
+         Warning("SetEntryBase()",
+                 "The current tree in the TChain %s has changed (e.g. by TTree::Process) "
+                 "even though TTreeReader::SetEntry() was called, which switched the tree "
+                 "again. Did you mean to call TTreeReader::SetLocalEntry()?",
+                 fTree->GetName());
+      }
+   }
+
+   if (fMostRecentTreeNumber != fTree->GetTreeNumber()) {
       fDirector->SetTree(fTree->GetTree());
+      fMostRecentTreeNumber = fTree->GetTreeNumber();
    }
 
    if (!prevTree || fDirector->GetReadEntry() == -1 || !fProxiesSet) {
