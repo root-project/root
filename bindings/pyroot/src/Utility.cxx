@@ -473,13 +473,15 @@ PyObject* PyROOT::Utility::BuildTemplateName( PyObject* pyname, PyObject* args, 
       PyObject* tn = PyTuple_GET_ITEM( args, i );
       if ( PyROOT_PyUnicode_Check( tn ) ) {
          PyROOT_PyUnicode_Append( &pyname, tn );
-      } else if ( PyObject_HasAttr( tn, PyStrings::gCppName ) ) {
-      // this works for type objects
-         PyObject* tpName = PyObject_GetAttr( tn, PyStrings::gCppName );
-         PyROOT_PyUnicode_AppendAndDel( &pyname, tpName );
       } else if (PyObject_HasAttr( tn, PyStrings::gName ) ) {
-         PyObject* tpName = PyObject_GetAttr( tn, PyStrings::gName );
-      // special case for strings
+         // __cppname__ provides a better name for C++ classes (namespaces)
+         PyObject* tpName;
+         if ( PyObject_HasAttr( tn, PyStrings::gCppName ) ) {
+            tpName = PyObject_GetAttr( tn, PyStrings::gCppName );
+         } else {
+            tpName = PyObject_GetAttr( tn, PyStrings::gName );
+         }
+         // special case for strings
          if ( strcmp( PyROOT_PyUnicode_AsString( tpName ), "str" ) == 0 ) {
             Py_DECREF( tpName );
             tpName = PyROOT_PyUnicode_FromString( "std::string" );
