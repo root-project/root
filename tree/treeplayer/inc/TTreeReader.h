@@ -141,6 +141,7 @@ public:
       fTree(0),
       fDirectory(0),
       fEntryStatus(kEntryNoTree),
+      fMostRecentTreeNumber(-1),
       fDirector(0),
       fLastEntry(-1),
       fProxiesSet(false)
@@ -195,6 +196,7 @@ private:
    TTree* fTree; ///< tree that's read
    TDirectory* fDirectory; ///< directory (or current file for chains)
    EEntryStatus fEntryStatus; ///< status of most recent read request
+   Int_t fMostRecentTreeNumber; ///< TTree::GetTreeNumber() of the most recent tree
    ROOT::Internal::TBranchProxyDirector* fDirector; ///< proxying director, owned
    std::deque<ROOT::Internal::TTreeReaderValueBase*> fValues; ///< readers that use our director
    THashTable   fProxies; ///< attached ROOT::TNamedBranchProxies; owned
