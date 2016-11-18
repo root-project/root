@@ -148,7 +148,6 @@ public:
 
    TTreeReader(TTree* tree);
    TTreeReader(const char* keyname, TDirectory* dir = NULL );
-   TTreeReader(const char* /*keyname*/, TFileCollection* /*files*/) { Error("TTreeReader()", "Not Implemented!");};
 
    ~TTreeReader();
 
