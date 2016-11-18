@@ -83,6 +83,7 @@
 - [Giving titles to the X, Y and Z axis](#HP05)
 - [The option "SAME"](#HP060)
    - [Limitations](#HP060a)
+- [Colors automatically picked in palette](#HP061)
 - [Superimposing two histograms with different scales in the same pad](#HP06)
 - [Statistics Display](#HP07)
 - [Fit Statistics](#HP08)
@@ -220,6 +221,9 @@ using `TH1::GetOption`:
 | <a name="OPTHIST">"HIST"</a>   | When an histogram has errors it is visualized by default with error bars. To visualize it without errors use the option "HIST" together with the required option (eg "hist same c").  The "HIST" option can also be used to plot only the histogram and not the associated function(s). |
 | "FUNC"   | When an histogram has a fitted function, this option allows to draw the fit result only. |
 | "SAME"   | Superimpose on previous picture in the same pad. |
+| "PFC"    | Palette Fill Color: histogram's fill color is taken in the current palette. |
+| "PLC"    | Palette Line Color: histogram's line color is taken in the current palette. |
+| "PMC"    | Palette Marker Color: histogram's marker color is taken in the current palette. |
 | "LEGO"   | Draw a lego plot with hidden line removal. |
 | "LEGO1"  | Draw a lego plot with hidden surface removal. |
 | "LEGO2"  | Draw a lego plot using colors to show the cell contents When the option "0" is used with any LEGO option, the empty bins are not drawn.|
@@ -318,6 +322,9 @@ using `TH1::GetOption`:
 | "NOSTACK"  | Histograms in the stack are all paint in the same pad as if the option `SAME` had been specified.|
 | "NOSTACKB" | Histograms are  drawn next to each other as bar charts.|
 | "PADS"     | The current pad/canvas is subdivided into a number of pads equal to the number of histograms in the stack and each histogram is paint into a separate pad.|
+| "PFC"      | Palette Fill Color: stack's fill color is taken in the current palette. |
+| "PLC"      | Palette Line Color: stack's line color is taken in the current palette. |
+| "PMC"      | Palette Marker Color: stack's marker color is taken in the current palette. |
 
 
 
@@ -396,6 +403,32 @@ some combinations must be use with care.
   ranges on the X, Y and Z axis as the currently drawn histogram. To superimpose
   lego plots [histograms' stacks](#HP26) should be used.</li>
 
+
+### <a name="HP061"></a> Colors automatically picked in palette
+
+\since **ROOT version 6.09/01**
+
+When several histograms are painted in the same canvas thanks to the option "SAME"
+or via a `THStack` it might be useful to have an easy and automatic way to choose
+their color. The simplest way is to pick colors in the current active color
+palette. Palette coloring for histogram is activated thanks to the options `PFC`
+(Palette Fill Color), `PLC` (Palette Line Color) and `AMC` (Palette Marker Color).
+When one of these options is given to `TH1::Draw` the histogram get its color
+from the current color palette defined by `gStyle->SetPalette(…)`. The color
+is determined according to the number of objects having palette coloring in
+the current pad.
+
+Begin_Macro(source)
+../../../tutorials/hist/histpalettecolor.C
+End_Macro
+
+Begin_Macro(source)
+../../../tutorials/hist/thstackpalettecolor.C
+End_Macro
+
+Begin_Macro(source)
+../../../tutorials/hist/thstack2palettecolor.C
+End_Macro
 
 ### <a name="HP06"></a> Superimposing two histograms with different scales in the same pad
 
@@ -3495,6 +3528,16 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    if (!nch) Hoption.Hist = 1;
    if (fFunctions->First()) Hoption.Func = 1;
    if (fH->GetSumw2N() && hdim == 1) Hoption.Error = 2;
+
+   char *l1 = strstr(chopt,"PFC"); // Automatic Fill Color
+   char *l2 = strstr(chopt,"PLC"); // Automatic Line Color
+   char *l3 = strstr(chopt,"PMC"); // Automatic Marker Color
+   if (l1 || l2 || l3) {
+      Int_t i = gPad->NextPaletteColor();
+      if (l1) {strncpy(l1,"   ",3); fH->SetFillColor(i);}
+      if (l2) {strncpy(l2,"   ",3); fH->SetLineColor(i);}
+      if (l3) {strncpy(l3,"   ",3); fH->SetMarkerColor(i);}
+   }
 
    l = strstr(chopt,"SPEC");
    if (l) {

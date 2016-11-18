@@ -73,6 +73,16 @@ The following interfaces have been removed, after deprecation in v6.08.
 - Because of some precision issue some data points exactly on the plot limits of
   a `TGraph2D` were not drawn (option `P`).
   The problem was reported [here](https://sft.its.cern.ch/jira/browse/ROOT-8447).
+- New options for automatic coloring of graphs and histograms. When several
+  histograms or graphs are painted in the same canvas thanks to the option "SAME"
+  via a `THStack` or `TMultigraph` it might be useful to have an easy and automatic
+  way to choose their color. The simplest way is to pick colors in the current active color
+  palette. Palette coloring for histogram is activated thanks to the options `PFC`
+  (Palette Fill Color), `PLC` (Palette Line Color) and `AMC` (Palette Marker Color).
+  When one of these options is given to `TH1::Draw` the histogram get its color
+  from the current color palette defined by `gStyle->SetPalette(…)`. The color
+  is determined according to the number of objects having palette coloring in
+  the current pad.
 
 ## 3D Graphics Libraries
 - In `TMarker3DBox::PaintH3` the boxes' sizes was not correct.

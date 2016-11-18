@@ -120,6 +120,8 @@ protected:
    TObject      *fPadPointer;       ///<! free pointer
    TObject      *fPadView3D;        ///<! 3D View of this TPad
    static Int_t  fgMaxPickDistance; ///<  Maximum Pick Distance
+   Int_t         fNumPaletteColor;     ///< Number of objects with an automatic color
+   Int_t         fNextPaletteColor;    ///< Next automatic color
 
    // 3D Viewer support
    TVirtualViewer3D *fViewer3D;     ///<! Current 3D viewer
@@ -370,6 +372,9 @@ public:
    virtual void      ResetToolTip(TObject *tip);
    virtual void      CloseToolTip(TObject *tip);
 
+   Int_t             IncrementPaletteColor(Int_t i, TString opt);
+   Int_t             NextPaletteColor();
+
    virtual void      x3d(Option_t *type=""); // Depreciated
 
    virtual TVirtualViewer3D *GetViewer3D(Option_t * type = "");
@@ -391,7 +396,7 @@ public:
    virtual void      EventPave() { Emit("EventPave()"); }         // *SIGNAL*
    virtual void      StartEditing() { Emit("StartEditing()"); }   // *SIGNAL*
 
-   ClassDef(TPad,11)  //A Graphics pad
+   ClassDef(TPad,12)  //A Graphics pad
 };
 
 

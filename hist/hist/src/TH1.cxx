@@ -2876,6 +2876,7 @@ void TH1::Draw(Option_t *option)
          if (TestBit(kCanDelete)) gPad->GetListOfPrimitives()->Remove(this);
          gPad->Clear();
       }
+      gPad->IncrementPaletteColor(1, opt1);
    } else {
       if (index>=0) opt2.Remove(index,4);
    }
@@ -7809,8 +7810,8 @@ void TH1::GetMinimumAndMaximum(Double_t& min, Double_t& max) const
    Int_t ylast   = fYaxis.GetLast();
    Int_t zfirst  = fZaxis.GetFirst();
    Int_t zlast   = fZaxis.GetLast();
-   min=TMath::Infinity(); 
-   max=-TMath::Infinity(); 
+   min=TMath::Infinity();
+   max=-TMath::Infinity();
    Double_t value;
    for (binz=zfirst;binz<=zlast;binz++) {
       for (biny=yfirst;biny<=ylast;biny++) {

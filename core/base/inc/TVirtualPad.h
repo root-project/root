@@ -244,6 +244,9 @@ public:
    virtual Int_t    XtoPixel(Double_t x) const = 0;
    virtual Int_t    YtoPixel(Double_t y) const = 0;
 
+   virtual Int_t    IncrementPaletteColor(Int_t i, TString opt) = 0;
+   virtual Int_t    NextPaletteColor() = 0;
+
    virtual TObject *CreateToolTip(const TBox *b, const char *text, Long_t delayms) = 0;
    virtual void     DeleteToolTip(TObject *tip) = 0;
    virtual void     ResetToolTip(TObject *tip) = 0;

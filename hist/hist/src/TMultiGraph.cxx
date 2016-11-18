@@ -1021,18 +1021,45 @@ TAxis *TMultiGraph::GetYaxis() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint all the graphs of this multigraph.
 
-void TMultiGraph::Paint(Option_t *option)
+void TMultiGraph::Paint(Option_t *choptin)
 {
    const TPickerStackGuard pushGuard(this);
 
    if (!fGraphs) return;
    if (fGraphs->GetSize() == 0) return;
 
+   char option[128];
+   strlcpy(option,choptin,128);
+   Int_t nch = strlen(choptin);
+   for (Int_t i=0;i<nch;i++) option[i] = toupper(option[i]);
+
+   // Automatic color
+   char *l1 = strstr(option,"PFC"); // Automatic Fill Color
+   char *l2 = strstr(option,"PLC"); // Automatic Line Color
+   char *l3 = strstr(option,"PMC"); // Automatic Marker Color
+   if (l1 || l2 || l3) {
+      TString opt1 = option; opt1.ToLower();
+      if (l1) strncpy(l1,"   ",3);
+      if (l2) strncpy(l2,"   ",3);
+      if (l3) strncpy(l3,"   ",3);
+      TObjOptLink *lnk = (TObjOptLink*)fGraphs->FirstLink();
+      TGraph* gAti;
+      Int_t ngraphs = fGraphs->GetSize();
+      Int_t ic;
+      gPad->IncrementPaletteColor(ngraphs, opt1);
+      for (Int_t i=0;i<ngraphs;i++) {
+         ic = gPad->NextPaletteColor();
+         gAti = (TGraph*)(fGraphs->At(i));
+         if (l1) gAti->SetFillColor(ic);
+         if (l2) gAti->SetLineColor(ic);
+         if (l3) gAti->SetMarkerColor(ic);
+         lnk = (TObjOptLink*)lnk->Next();
+      }
+   }
+
    char *l;
-   Int_t nch = strlen(option);
 
    TString chopt = option;
-   chopt.ToUpper();
 
    l = (char*)strstr(chopt.Data(),"3D");
    if (l) {

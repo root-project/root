@@ -678,10 +678,39 @@ void THStack::Modified()
 ///
 /// See THistPainter::Paint for a list of valid options.
 
-void THStack::Paint(Option_t *option)
+void THStack::Paint(Option_t *choptin)
 {
    if (!fHists) return;
    if (!fHists->GetSize()) return;
+
+   char option[128];
+   strlcpy(option,choptin,128);
+
+   // Automatic color
+   char *l1 = strstr(option,"pfc"); // Automatic Fill Color
+   char *l2 = strstr(option,"plc"); // Automatic Line Color
+   char *l3 = strstr(option,"pmc"); // Automatic Marker Color
+   if (l1 || l2 || l3) {
+      TString opt1 = option;
+      if (l1) strncpy(l1,"   ",3);
+      if (l2) strncpy(l2,"   ",3);
+      if (l3) strncpy(l3,"   ",3);
+      TString ws = option;
+      if (ws.IsWhitespace()) strncpy(option,"\0",1);
+      TObjOptLink *lnk = (TObjOptLink*)fHists->FirstLink();
+      TH1* hAti;
+      Int_t nhists = fHists->GetSize();
+      Int_t ic;
+      gPad->IncrementPaletteColor(nhists, opt1);
+      for (Int_t i=0;i<nhists;i++) {
+         ic = gPad->NextPaletteColor();
+         hAti = (TH1F*)(fHists->At(i));
+         if (l1) hAti->SetFillColor(ic);
+         if (l2) hAti->SetLineColor(ic);
+         if (l3) hAti->SetMarkerColor(ic);
+         lnk = (TObjOptLink*)lnk->Next();
+      }
+   }
 
    TString opt = option;
    opt.ToLower();

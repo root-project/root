@@ -777,6 +777,9 @@ void TGraph::Draw(Option_t *option)
    }
 
    AppendPad(opt);
+
+   gPad->IncrementPaletteColor(1, opt);
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
