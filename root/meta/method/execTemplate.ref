@@ -1,5 +1,5 @@
 
-Processing /home/axel/build/root/github/roottest/root/meta/method/execTemplate.C...
+Processing execTemplate.C...
 Looking at UserClass.
 OBJ: TListOfFunctions	TListOfFunctions	List of TFunctions for a class : 0
 As expected, can not find getA without an instantiation.
