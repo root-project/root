@@ -1,5 +1,8 @@
 // This can be used in C mode. It cannot go in ROOT_Type because ThreadLocalStorage.h
 // uses kFALSE and kTRUE, which come from Rtypes.h causing a cycle.
+// FIXME: This should be separated because it introduces header dependency
+// libThread->libCore->libThread. We should figure out a way to implement it in
+// a more reasonable way.
 module ThreadLocalStorage {
   header "ThreadLocalStorage.h"
   export *

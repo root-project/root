@@ -80,7 +80,11 @@ ALLHDRS      += $(THREADH_REL) $(patsubst $(MODDIRI)/%,include/%, $(THREADH_EXT)
 ALLLIBS      += $(THREADLIB)
 ALLMAPS      += $(THREADMAP)
 ifeq ($(CXXMODULES),yes)
-  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(THREADH_REL))
+  # We need to prefilter ThreadLocalStorage.h because this is a non-modular header,
+  # on which depends libCore. Otherwise we end up having a libThread->libCore->libThread
+  # header file dependency.
+  THREADH_FILTERED_REL := $(filter-out include/ThreadLocalStorage.h, $(THREADH_REL))
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(THREADH_FILTERED_REL))
   CXXMODULES_MODULEMAP_CONTENTS += module Core_$(MODNAME) { \\n
   CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
   CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"

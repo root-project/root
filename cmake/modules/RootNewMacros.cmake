@@ -416,7 +416,7 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
 			TSchemaHelper.h ESTLType.h RStringView.h Varargs.h
 			RootMetaSelection.h TString.h Riosfwd.h TMathBase.h
 			RWrap_libcpp_string_view.h TAtomicCountGcc.h
-			TException.h ROOT/TThreadExecutor.hxx
+			TException.h ThreadLocalStorage.h ROOT/TThreadExecutor.hxx
                         TBranchProxyTemplate.h TGLIncludes.h TGLWSIncludes.h
                         snprintf.h strlcpy.h")
   set(modulemap_entry "module \"${library}\" { \\n")
