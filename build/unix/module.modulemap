@@ -11,6 +11,7 @@ module ThreadLocalStorage {
 module ROOT_Types {
   header "RtypesCore.h"
   textual header "RConfig.h"
+  textual header "RConfigure.h"
   textual header "RVersion.h"
   textual header "TException.h" // This should go in RConfig.h as it defines macros.
   export *
