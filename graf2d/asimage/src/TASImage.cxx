@@ -2592,14 +2592,19 @@ void TASImage::DrawText(Int_t x, Int_t y, const char *text, Int_t size,
 
    TString fn = font_name;
    fn.Strip();
-   char *tmpstr = 0;
+
+   // This is for backward compatibility...
+   if (fn.Last('/') == 0) fn = fn(1, f.Length() - 1);
+
+   const char *ttpath = gEnv->GetValue("Root.TTFontPath",
+                                       TROOT::GetTTFFontDir());
+   char *tmpstr = gSystem->Which(ttpath, fn, kReadPermission);
+   fn = tmpstr;
+   delete [] tmpstr;
 
    if (fn.EndsWith(".pfa") || fn.EndsWith(".PFA") || fn.EndsWith(".pfb") || fn.EndsWith(".PFB") || fn.EndsWith(".ttf") || fn.EndsWith(".TTF") || fn.EndsWith(".otf") || fn.EndsWith(".OTF")) {
-      tmpstr = gSystem->ExpandPathName(fn.Data());
-      fn = tmpstr;
       ttfont = kTRUE;
    }
-   delete [] tmpstr;
 
    if (color) {
       parse_argb_color(color, &text_color);
