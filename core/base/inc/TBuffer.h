@@ -49,7 +49,8 @@ protected:
    char            *fBufCur;        //Current position in buffer
    char            *fBufMax;        //End of buffer
    TObject         *fParent;        //Pointer to parent object owning this buffer
-   ReAllocCharFun_t fReAllocFunc;   //! Realloc function to be used when extending the buffer.
+   ReAllocStateFun_t fReAllocFunc{nullptr}; //! Realloc function to be used when extending the buffer.
+   void            *fReAllocData;   //! Realloc data pointer.  Used if the realloc function needs some state.
    CacheList_t      fCacheStack;    //Stack of pointers to the cache where to temporarily store the value of 'missing' data members
 
    // Default ctor
@@ -76,7 +77,7 @@ public:
 
    TBuffer(EMode mode);
    TBuffer(EMode mode, Int_t bufsiz);
-   TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = 0);
+   TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt = kTRUE, ReAllocStateFun_t reallocfunc = 0, void *reallocData = nullptr);
    virtual ~TBuffer();
 
    Int_t    GetBufferVersion() const { return fVersion; }
@@ -84,9 +85,10 @@ public:
    Bool_t   IsWriting() const { return (fMode & kWrite) != 0; }
    void     SetReadMode();
    void     SetWriteMode();
-   void     SetBuffer(void *buf, UInt_t bufsiz = 0, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = 0);
-   ReAllocCharFun_t GetReAllocFunc() const;
-   void     SetReAllocFunc(ReAllocCharFun_t reallocfunc = 0);
+   void     SetBuffer(void *buf, UInt_t bufsiz = 0, Bool_t adopt = kTRUE, ReAllocStateFun_t reallocfunc = 0, void *reallocData = nullptr);
+   ReAllocStateFun_t GetReAllocFunc() const;
+   void    *GetReAllocData() const;
+   void     SetReAllocFunc(ReAllocStateFun_t reallocfunc = 0, void *reallocData = nullptr);
    void     SetBufferOffset(Int_t offset = 0) { fBufCur = fBuffer+offset; }
    void     SetParent(TObject *parent);
    TObject *GetParent()  const;

@@ -37,7 +37,7 @@ void ROOT::Internal::DefaultStreamer(TBuffer &R__b, const TClass *cl, void *objp
 /// The user has provided memory than we don't own, thus we can not extent it
 /// either.
 
-static char *R__NoReAllocChar(char *, size_t, size_t)
+static char *R__NoReAllocState(void *, char *, size_t, size_t)
 {
    return 0;
 }
@@ -83,7 +83,7 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz)
    fBufCur = fBuffer;
    fBufMax = fBuffer + fBufSize;
 
-   SetReAllocFunc( 0 );
+   SetReAllocFunc( nullptr, nullptr );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -97,7 +97,8 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz)
 /// is provided, a Fatal error will be issued if the Buffer attempts to
 /// expand.
 
-TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt, ReAllocCharFun_t reallocfunc)
+TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt, ReAllocStateFun_t reallocfunc, void *reallocData)
+  : fReAllocData(reallocData)
 {
    fBufSize  = bufsiz;
    fMode     = mode;
@@ -172,7 +173,7 @@ void TBuffer::AutoExpand(Int_t size_needed)
 /// is provided, a Fatal error will be issued if the Buffer attempts to
 /// expand.
 
-void TBuffer::SetBuffer(void *buf, UInt_t newsiz, Bool_t adopt, ReAllocCharFun_t reallocfunc)
+void TBuffer::SetBuffer(void *buf, UInt_t newsiz, Bool_t adopt, ReAllocStateFun_t reallocfunc, void *reallocData)
 {
    if (fBuffer && TestBit(kIsOwner))
       delete [] fBuffer;
@@ -193,7 +194,7 @@ void TBuffer::SetBuffer(void *buf, UInt_t newsiz, Bool_t adopt, ReAllocCharFun_t
    }
    fBufMax = fBuffer + fBufSize;
 
-   SetReAllocFunc( reallocfunc );
+   SetReAllocFunc( reallocfunc, reallocData );
 
    if (buf && ( (fMode&kWrite)!=0 ) && fBufSize < 0) {
       Expand( kMinimalSize );
@@ -215,16 +216,16 @@ void TBuffer::Expand(Int_t newsize, Bool_t copy)
       newsize = l;
    }
    if ( (fMode&kWrite)!=0 ) {
-      fBuffer  = fReAllocFunc(fBuffer, newsize+kExtraSpace,
+      fBuffer  = fReAllocFunc(fReAllocData, fBuffer, newsize+kExtraSpace,
                               copy ? fBufSize+kExtraSpace : 0);
    } else {
-      fBuffer  = fReAllocFunc(fBuffer, newsize,
+      fBuffer  = fReAllocFunc(fReAllocData, fBuffer, newsize,
                               copy ? fBufSize : 0);
    }
    if (fBuffer == 0) {
-      if (fReAllocFunc == TStorage::ReAllocChar) {
-         Fatal("Expand","Failed to expand the data buffer using TStorage::ReAllocChar.");
-      } else if (fReAllocFunc == R__NoReAllocChar) {
+      if (fReAllocFunc == TStorage::ReAllocState) {
+         Fatal("Expand","Failed to expand the data buffer using TStorage::ReAllocState.");
+      } else if (fReAllocFunc == R__NoReAllocState) {
          Fatal("Expand","Failed to expand the data buffer because TBuffer does not own it and no custom memory reallocator was provided.");
       } else {
          Fatal("Expand","Failed to expand the data buffer using custom memory reallocator 0x%lx.", (Long_t)fReAllocFunc);
@@ -253,26 +254,36 @@ void TBuffer::SetParent(TObject *parent)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the reallocation method currently used.
 
-ReAllocCharFun_t TBuffer::GetReAllocFunc() const
+ReAllocStateFun_t TBuffer::GetReAllocFunc() const
 {
    return fReAllocFunc;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set which memory reallocation method to use.  If reallocafunc is null,
-/// reset it to the default value (TStorage::ReAlloc)
+/// Return the reallocation state currently used.
+void *TBuffer::GetReAllocData() const
+{
+   return fReAllocData;
+}
 
-void  TBuffer::SetReAllocFunc(ReAllocCharFun_t reallocfunc )
+////////////////////////////////////////////////////////////////////////////////
+/// Set which memory reallocation method to use.  If reallocafunc is null,
+/// reset it to the default value (TStorage::ReAlloc).
+//
+//  Also allows the user to provide a void* as state for the reallocation.
+
+void  TBuffer::SetReAllocFunc(ReAllocStateFun_t reallocfunc, void *reallocData)
 {
    if (reallocfunc) {
       fReAllocFunc = reallocfunc;
    } else {
       if (TestBit(kIsOwner)) {
-         fReAllocFunc = TStorage::ReAllocChar;
+         fReAllocFunc = TStorage::ReAllocState;
       } else {
-         fReAllocFunc = R__NoReAllocChar;
+         fReAllocFunc = R__NoReAllocState;
       }
    }
+   fReAllocData = reallocData;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
