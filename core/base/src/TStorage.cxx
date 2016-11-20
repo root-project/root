@@ -288,6 +288,11 @@ char *TStorage::ReAllocChar(char *ovp, size_t size, size_t oldsize)
    return vp;
 }
 
+char *TStorage::ReAllocState(void *, char*ovp, size_t size, size_t oldsize)
+{
+    return TStorage::ReAllocChar(ovp, size, oldsize);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Reallocate (i.e. resize) array of integers. Size and oldsize are
 /// number of integers (not number of bytes).

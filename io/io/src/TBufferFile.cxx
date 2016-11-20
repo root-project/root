@@ -102,7 +102,7 @@ TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsiz)
 /// expand.
 
 TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsiz, void *buf, Bool_t adopt, ReAllocCharFun_t reallocfunc) :
-   TBufferIO(mode,bufsiz,buf,adopt,reallocfunc),
+   TBufferIO(mode,bufsiz,buf,adopt,reallocfunc,reallocdata),
    fInfo(nullptr), fInfoStack()
 {
 }
