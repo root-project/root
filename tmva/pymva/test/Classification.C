@@ -16,6 +16,10 @@
 #include "TMVA/Tools.h"
 #include "TMVA/MethodPyRandomForest.h"
 
+/*
+ * NOTE: This file is deprecated!
+ */
+
 void Classification()
 {
    TMVA::Tools::Instance();
