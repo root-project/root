@@ -52,7 +52,6 @@ typedef tagPyArrayObject PyArrayObject;
 struct PyArrayObject;
 #endif
 
-
 namespace TMVA {
 
    class Ranking;
@@ -91,7 +90,7 @@ namespace TMVA {
 
       PyObject *Eval(TString code); // required to parse booking options from string to pyobjects
       static void Serialize(TString file,PyObject *classifier);
-      static void UnSerialize(TString file,PyObject** obj);
+      static Int_t UnSerialize(TString file,PyObject** obj);
 
       virtual void     Train() = 0;
       // options treatment
@@ -146,8 +145,7 @@ namespace TMVA {
       ClassDef(PyMethodBase, 0) // Virtual base class for all TMVA method
 
    };
+
 } // namespace TMVA
 
 #endif
-
-
