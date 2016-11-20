@@ -30,9 +30,8 @@ void rose_image()
    img->SetConstRatio(0);
    img->SetImageQuality(TAttImage::kImgBest);
 
-   TString fp = gEnv->GetValue("Root.TTFontPath", "");
-   TString bc = fp + "/BlackChancery.ttf";
-   TString ar = fp + "/arial.ttf";
+   TString bc = "BlackChancery.ttf";
+   TString ar = "arial.ttf";
 
    // draw text over image with funny font
    img->DrawText(120, 160, "Hello World!", 32,

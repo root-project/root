@@ -291,8 +291,7 @@ void TGShapedToolTip::Refresh()
    const char *str = fText.Data();
    char *string = strdup(str);
    Int_t nlines = 0, size = fTextH;
-   TString fp = gEnv->GetValue("Root.TTFontPath", "");
-   TString ar = fp + "/arial.ttf";
+   TString ar = "arial.ttf";
    char *s = strtok((char *)string, "\n");
    TImage *img = (TImage*)fImage->Clone("img");
    img->DrawText(fTextX, fTextY+(nlines*size), s, size, fTextCol, ar);
