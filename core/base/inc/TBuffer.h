@@ -37,6 +37,9 @@ namespace TStreamerInfoActions {
    class TActionSequence;
 }
 
+// Will be used to reallocate the contents of a shared buffer.
+char *R__ReAllocShared(void *obj_void, char *current, size_t new_size, size_t old_size);
+
 class TBuffer : public TObject {
 
 protected:
@@ -49,7 +52,8 @@ protected:
    char            *fBufCur;        //Current position in buffer
    char            *fBufMax;        //End of buffer
    TObject         *fParent;        //Pointer to parent object owning this buffer
-   ReAllocCharFun_t fReAllocFunc;   //! Realloc function to be used when extending the buffer.
+   ReAllocStateFun_t fReAllocFunc{nullptr}; //! Realloc function to be used when extending the buffer.
+   void            *fReAllocData;   //! Realloc data pointer.  Used if the realloc function needs some state.
    CacheList_t      fCacheStack;    //Stack of pointers to the cache where to temporarily store the value of 'missing' data members
 
    // Default ctor
@@ -76,7 +80,7 @@ public:
 
    TBuffer(EMode mode);
    TBuffer(EMode mode, Int_t bufsiz);
-   TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = 0);
+   TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt = kTRUE, ReAllocStateFun_t reallocfunc = 0, void *reallocData = nullptr);
    virtual ~TBuffer();
 
    Int_t    GetBufferVersion() const { return fVersion; }
@@ -84,9 +88,10 @@ public:
    Bool_t   IsWriting() const { return (fMode & kWrite) != 0; }
    void     SetReadMode();
    void     SetWriteMode();
-   void     SetBuffer(void *buf, UInt_t bufsiz = 0, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = 0);
-   ReAllocCharFun_t GetReAllocFunc() const;
-   void     SetReAllocFunc(ReAllocCharFun_t reallocfunc = 0);
+   void     SetBuffer(void *buf, UInt_t bufsiz = 0, Bool_t adopt = kTRUE, ReAllocStateFun_t reallocfunc = 0, void *reallocData = nullptr);
+   ReAllocStateFun_t GetReAllocFunc() const;
+   void    *GetReAllocData() const;
+   void     SetReAllocFunc(ReAllocStateFun_t reallocfunc = 0, void *reallocData = nullptr);
    void     SetBufferOffset(Int_t offset = 0) { fBufCur = fBuffer+offset; }
    void     SetParent(TObject *parent);
    TObject *GetParent()  const;
@@ -97,6 +102,30 @@ public:
    Int_t    Length()     const { return (Int_t)(fBufCur - fBuffer); }
    void     Expand(Int_t newsize, Bool_t copy = kTRUE);  // expand buffer to newsize
    void     AutoExpand(Int_t size_needed);  // expand buffer to newsize
+
+////////////////////////////////////////////////////////////////////////////////
+/// Share the underlying memory allocation with another buffer.
+//
+// This causes the passed TBuffer object to share our memory buffer.  This is
+// useful if two objects want to have their own view of the TBuffer state but
+// see identical data.
+//
+// Internally, not only do both buffers get the same memory location but a
+// resize done by the "slave" buffer updates the "owner" buffer (the opposite
+// is not true!).
+//
+// This is most useful if the "slave" does all the writings and the "owner"
+// only does reads.
+//
+   virtual void       SetSlaveBuffer(TBuffer &other) { // Share the underlying memory allocation with another TBuffer object.
+       if (other.Buffer() == Buffer()) {return;}
+       Int_t other_buf_size = BufferSize();
+       other.Expand(0, false); // Free up other buffer.
+       other.fBuffer = fBuffer;
+       ResetBit(other.kIsOwner);
+       other.SetReAllocFunc(R__ReAllocShared, this);
+       if (other_buf_size > BufferSize()) {other.Expand(other_buf_size);}
+   }
 
    virtual Bool_t     CheckObject(const TObject *obj) = 0;
    virtual Bool_t     CheckObject(const void *obj, const TClass *ptrClass) = 0;

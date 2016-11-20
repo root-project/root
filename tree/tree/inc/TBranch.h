@@ -136,13 +136,14 @@ protected:
    void     SetSkipZip(Bool_t skip = kTRUE) { fSkipZip = skip; }
    void     Init(const char *name, const char *leaflist, Int_t compress);
 
-   TBasket *GetFreshBasket();
+   TBasket *GetFreshBasket(TBuffer *user_buffer);
    TBasket *GetFreshCluster();
    Int_t    WriteBasket(TBasket* basket, Int_t where) { return WriteBasketImpl(basket, where, nullptr); }
 
    TString  GetRealFileName() const;
 
 private:
+   Int_t GetBasketAndFirst(TBasket*& basket, Long64_t& first, TBuffer* user_buffer);
    Int_t FillEntryBuffer(TBasket* basket,TBuffer* buf, Int_t& lnew);
    Int_t    WriteBasketImpl(TBasket* basket, Int_t where, ROOT::Internal::TBranchIMTHelper *);
    TBranch(const TBranch&) = delete;             // not implemented
@@ -169,7 +170,7 @@ public:
            Int_t     FlushOneBasket(UInt_t which);
 
    virtual char     *GetAddress() const {return fAddress;}
-           TBasket  *GetBasket(Int_t basket);
+           TBasket  *GetBasket(Int_t basket, TBuffer* user_buffer=nullptr);
            Int_t    *GetBasketBytes() const {return fBasketBytes;}
            Long64_t *GetBasketEntry() const {return fBasketEntry;}
    virtual Long64_t  GetBasketSeek(Int_t basket) const;
